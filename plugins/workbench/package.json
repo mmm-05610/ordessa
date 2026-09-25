@@ -5,6 +5,9 @@
   "ordessa": {
     "id": "ordessa.workbench"
   },
+  "scripts": {
+    "test": "vitest run --maxWorkers=1"
+  },
   "dependencies": {
     "react-resizable-panels": "4.13.2"
   }

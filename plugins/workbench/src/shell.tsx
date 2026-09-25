@@ -1,10 +1,11 @@
-import { useLayoutEffect, useRef, useState, useSyncExternalStore, type RefObject } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { Group, Panel, Separator, type PanelImperativeHandle } from 'react-resizable-panels'
-import type { Commands, Region, UIContribution, View } from '@extensions/ordessa.contracts/contract.js'
+import type { Commands, Region, UIContribution, View, WorkbenchSettingsSection } from '@extensions/ordessa.contracts/contract.js'
 import { ordered } from '../shared/registry'
 import { Boundary } from '../shared/boundary'
-import type { WorkbenchModel } from './model'
+import { placePopover } from './popover'
+import { SETTINGS_OVERLAY_ID, type OverlayInstance, type WorkbenchModel } from './model'
 import { styles } from './styles'
 
 const regions: Region[] = ['left', 'main', 'right', 'top', 'bottom']
@@ -23,12 +24,88 @@ function RegionIcon({ region }: { region: Region }) {
     {region === 'left' ? <path d="M7 3v14" /> : region === 'right' ? <path d="M13 3v14" /> : region === 'bottom' ? <path d="M2 12h16" /> : <path d="M2 8h16" />}</svg>
 }
 
+// Overlays share one stack and one mount container: each instance captures the
+// focus on mount and restores it to a connected safe target on unmount.
+function useOverlayFocus(surface: RefObject<HTMLDivElement | null>, workspace: RefObject<HTMLDivElement | null>) {
+  const restore = useRef<HTMLElement | null>(null)
+  useLayoutEffect(() => {
+    restore.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    surface.current?.focus()
+    return () => {
+      const target = restore.current
+      queueMicrotask(() => {
+        if (target?.isConnected && !target.closest('[inert]')) target.focus()
+        else workspace.current?.focus()
+      })
+    }
+  }, [])
+}
+
+function OverlaySurface({ entry, title, presentation, inert, close, workspace, children }: {
+  entry: OverlayInstance; title: string; presentation: 'popover' | 'dialog' | 'page'; inert: boolean
+  close(): void; workspace: RefObject<HTMLDivElement | null>; children: ReactNode
+}) {
+  const surface = useRef<HTMLDivElement>(null)
+  const [position, setPosition] = useState<{ left: number; top: number } | null>(null)
+  useOverlayFocus(surface, workspace)
+  const anchor = entry.anchor
+  useLayoutEffect(() => {
+    if (presentation !== 'popover' || !anchor) return
+    const update = () => {
+      const size = surface.current?.getBoundingClientRect()
+      setPosition(placePopover(anchor.getBoundingClientRect(), { width: window.innerWidth, height: window.innerHeight }, { width: size?.width ?? 0, height: size?.height ?? 0 }))
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [presentation, anchor])
+  const modal = presentation !== 'popover'
+  return <div className={`wb-overlay wb-overlay-${presentation}`} data-overlay-id={entry.overlayId} data-presentation={presentation}
+    style={presentation === 'popover' && position ? { left: position.left, top: position.top } : undefined} inert={inert}>
+    <div ref={surface} tabIndex={-1} className="wb-overlay-surface" role="dialog" aria-label={title} aria-modal={modal || undefined}>
+      <header className="wb-overlay-bar"><strong>{title}</strong><button aria-label={`关闭${title}`} onClick={close}>×</button></header>
+      <div className="wb-overlay-content"><Boundary>{children}</Boundary></div>
+    </div>
+  </div>
+}
+
+function SettingsOverlay({ entry, sections, inert, close, workspace }: {
+  entry: OverlayInstance; sections: readonly WorkbenchSettingsSection[]; inert: boolean
+  close(): void; workspace: RefObject<HTMLDivElement | null>
+}) {
+  const surface = useRef<HTMLDivElement>(null)
+  useOverlayFocus(surface, workspace)
+  useLayoutEffect(() => {
+    if (!entry.sectionId || !surface.current) return
+    const target = [...surface.current.querySelectorAll<HTMLElement>('[data-section-id]')].find(node => node.dataset.sectionId === entry.sectionId)
+    target?.scrollIntoView?.({ block: 'start' })
+  }, [entry.sectionId, sections])
+  return <div className="wb-overlay wb-overlay-page" data-overlay-id={SETTINGS_OVERLAY_ID} data-presentation="page" inert={inert}>
+    <div ref={surface} tabIndex={-1} className="wb-overlay-surface wb-settings" role="dialog" aria-label="设置" aria-modal="true">
+      <header className="wb-overlay-bar"><strong>设置</strong><button aria-label="关闭设置" onClick={close}>×</button></header>
+      <div className="wb-overlay-content">
+        {ordered(sections).map(section => {
+          const Content = section.component
+          return <section key={section.id} className="wb-settings-section" data-section-id={section.id} data-active-section={entry.sectionId === section.id || undefined}>
+            <h2>{section.title}</h2><Boundary><Content /></Boundary>
+          </section>
+        })}
+        {!sections.length && <p className="wb-settings-empty">没有已注册的设置分区。</p>}
+      </div>
+    </div>
+  </div>
+}
+
 export function WorkbenchShell({ model, commands }: { model: WorkbenchModel; commands: Commands }) {
   const views = useSyncExternalStore(model.views.subscribe, model.views.getSnapshot)
   const items = useSyncExternalStore(model.ui.subscribe, model.ui.getSnapshot)
   const selection = useSyncExternalStore(model.subscribe, model.getSelection)
   const layout = useSyncExternalStore(model.subscribe, model.getLayout)
   const available = useSyncExternalStore(commands.subscribe, commands.getSnapshot)
+  const modules = useSyncExternalStore(model.modules.subscribe, model.modules.getSnapshot)
+  const overlayDefs = useSyncExternalStore(model.overlays.subscribe, model.overlays.getSnapshot)
+  const sections = useSyncExternalStore(model.sections.subscribe, model.sections.getSnapshot)
+  const overlayStack = useSyncExternalStore(model.subscribe, model.getOverlayStack)
   const [error, setError] = useState(''), [dragged, setDragged] = useState<string | null>(null)
   const dragSession = useRef<string | null>(null)
   const full = views.find(v => v.id === selection['full-page'])
@@ -38,6 +115,9 @@ export function WorkbenchShell({ model, commands }: { model: WorkbenchModel; com
   const sizes = useRef<Partial<Record<Region, number>>>({ left: 22, right: 22, top: 18, bottom: 24 })
   const entries = (region: Region) => ordered(views.filter(v => model.regionOf(v) === region))
   const has = Object.fromEntries(regions.map(r => [r, entries(r).length > 0])) as Record<Region, boolean>
+  const presentationOf = (entry: OverlayInstance): 'popover' | 'dialog' | 'page' =>
+    entry.overlayId === SETTINGS_OVERLAY_ID ? 'page' : overlayDefs.find(o => o.id === entry.overlayId)?.presentation ?? 'dialog'
+  const hasModal = overlayStack.some(entry => presentationOf(entry) !== 'popover')
   useLayoutEffect(() => {
     for (const r of auxiliary) {
       const panel = panels.current[r]
@@ -58,6 +138,18 @@ export function WorkbenchShell({ model, commands }: { model: WorkbenchModel; com
       })
     }
   }, [full?.id])
+  useEffect(() => {
+    if (!overlayStack.length) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      model.closeTopOverlay()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [overlayStack.length, model])
+  const activate = (id: string) => { setError(''); try { model.composition.activateModule(id) } catch (e) { setError(String(e)) } }
+  const openSettings = () => { setError(''); try { model.composition.openSettings() } catch (e) { setError(String(e)) } }
   const contribution = (item: UIContribution) => {
     if (item.kind === 'component') { const Content = item.component; return <Boundary key={item.id}><Content /></Boundary> }
     const command = available.find(c => c.id === item.command), title = item.label ?? command?.title ?? item.command
@@ -70,10 +162,17 @@ export function WorkbenchShell({ model, commands }: { model: WorkbenchModel; com
   }
   const slot = (name: UIContribution['slot'], section?: 'primary' | 'utility') => ordered(items.filter(i => i.slot === name && (!section || (i.kind === 'command' && (i.section ?? 'primary') === section)))).map(contribution)
   const move = (id: string, region: Region) => { try { model.move(id, region) } catch (e) { setError(String(e)) } finally { setDragged(null) } }
+  const navItems = slot('navigation', 'primary')
+  const moduleNav = ordered(modules).map(m => {
+    const Icon = m.icon
+    return <button key={m.id} data-module-nav={m.id} aria-label={m.title} aria-pressed={selection.main === m.homeViewId} title={m.title} onClick={() => activate(m.id)}>
+      <span className="wb-nav-icon" aria-hidden="true">{Icon ? <Icon /> : m.title.slice(0, 1)}</span><span>{m.title}</span>
+    </button>
+  })
   const region = (name: Region) => {
     const list = entries(name), active = list.find(v => v.id === selection[name])
     return <section className={`wb-region wb-${name}`} data-region={name} aria-label={labels[name]} inert={name !== 'main' && (!has[name] || !!layout.collapsed[name])}>
-      <header>{name === 'left' && <><strong className="wb-brand">Ordessa</strong><nav className="wb-nav" aria-label="导航">{slot('navigation', 'primary')}</nav></>}
+      <header>{name === 'left' && <strong className="wb-brand">Ordessa</strong>}
         <div role="group" aria-label={`${name}视图`}>{list.map(v => <button key={v.id} draggable aria-pressed={v.id === active?.id}
           onDragStart={e => {
             e.dataTransfer.setData('application/x-ordessa-view', v.id); e.dataTransfer.setData('text/plain', v.title); e.dataTransfer.effectAllowed = 'move'
@@ -94,6 +193,7 @@ export function WorkbenchShell({ model, commands }: { model: WorkbenchModel; com
           <button title="恢复默认位置和尺寸" aria-label="重置布局" onClick={reset}>↺</button>
         </div></>}
       </header>
+      {name === 'left' && (moduleNav.length > 0 || navItems.length > 0) && <nav className="wb-nav" aria-label="导航">{moduleNav}{navItems}</nav>}
       <div className="wb-content" ref={node => { hosts.current[name] = node }} />
       {!active && name === 'main' && <div className="wb-empty"><span className="wb-empty-mark" aria-hidden="true">O</span><h1>工作区已就绪</h1><p>从左侧打开扩展，或选择一个视图。</p><small>拖动视图标题可移动位置 · 拖动分隔线可调整大小</small></div>}
     </section>
@@ -121,7 +221,7 @@ export function WorkbenchShell({ model, commands }: { model: WorkbenchModel; com
   const Full = full?.component
   const activeViews = views.filter(v => v.presentation === 'region' && selection[model.regionOf(v)!] === v.id)
   return <div className="wb"><style>{styles}</style>
-    <div ref={workspace} tabIndex={-1} hidden={!!full} inert={!!full} aria-hidden={!!full} data-testid="workspace">
+    <div ref={workspace} tabIndex={-1} hidden={!!full} inert={!!full || hasModal} aria-hidden={!!full} data-testid="workspace">
       <div className="wb-body">
         <div className="wb-layout">
           <Group id="wb-vertical" orientation="vertical" className="wb-group" onLayoutChanged={resized(['top', 'bottom'])}>
@@ -140,13 +240,28 @@ export function WorkbenchShell({ model, commands }: { model: WorkbenchModel; com
           </div>}
         </div>
       </div>
-      <footer className="wb-status"><span className="wb-status-dot" />{slot('navigation', 'utility')}{slot('statusbar')}<span className="wb-status-end">本地工作台</span></footer>
+      <footer className="wb-status"><span className="wb-status-dot" />{slot('navigation', 'utility')}{slot('statusbar')}
+        <button aria-label="打开设置" onClick={openSettings}>设置</button><span className="wb-status-end">本地工作台</span></footer>
     </div>
     {activeViews.map(v => <ViewSurface key={v.id} view={v} region={model.regionOf(v)!} hosts={hosts} />)}
     {Full && <section className="wb-full" data-testid="full-page" aria-label={full.title}>
       <header className="wb-bar"><button ref={back} onClick={() => model.service.close(full.id)}>← 返回工作区</button><h1>{full.title}</h1></header>
       <div className="wb-full-content"><Boundary key={full.id}><Full /></Boundary></div>
     </section>}
+    {overlayStack.length > 0 && <div className="wb-overlays" data-testid="wb-overlays">
+      {overlayStack.map((entry, index) => {
+        const inert = overlayStack.slice(index + 1).some(later => presentationOf(later) !== 'popover')
+        if (entry.overlayId === SETTINGS_OVERLAY_ID) return <SettingsOverlay key={entry.key} entry={entry} sections={sections} inert={inert}
+          close={() => model.closeOverlayInstance(entry.key)} workspace={workspace} />
+        const def = overlayDefs.find(o => o.id === entry.overlayId)
+        if (!def) return null
+        const Content = def.component
+        return <OverlaySurface key={entry.key} entry={entry} title={def.title} presentation={presentationOf(entry)} inert={inert}
+          close={() => model.closeOverlayInstance(entry.key)} workspace={workspace}>
+          <Content close={() => model.closeOverlayInstance(entry.key)} />
+        </OverlaySurface>
+      })}
+    </div>}
     {error && <div role="alert" className="wb-error">{error}<button onClick={() => setError('')}>关闭提示</button></div>}
   </div>
 }
