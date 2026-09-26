@@ -1424,3 +1424,58 @@ def test_a_failed_start_keeps_its_error_primary_with_cleanup_errors(tmp_path):
     except BaseException:
         retry.stop()
         raise
+
+
+# -- review round 5: the pre-startup mounting window --------------------------
+
+
+def test_a_pre_startup_auth_swap_cannot_double_mount(tmp_path):
+    """create_app mounts routes before the lifespan freezes the served set.
+    In that window an unload + re-activation with a flipped auth shape must
+    not survive startup: the mount stage sees the overlap (same path and
+    methods, different shape) and refuses type-wise — the app never enters a
+    state where the unauthenticated wall serves, and the failed startup
+    cleans the round and the data root up."""
+    plugin = _ServedPlugin("fake.window", authenticated=False)
+    runtime = build_runtime(tmp_path / "data", server_plugins=[plugin])
+    app = create_app(runtime)  # mounts the unauthenticated shape; frozen not yet set
+    runtime.plugin_host.deactivate("fake.window")
+    plugin.authenticated = True
+    runtime.plugin_host.activate(plugin)  # the window: no freeze to refuse yet
+    from server_plugin_api import ServerPluginError
+
+    with pytest.raises(ServerPluginError) as captured:
+        with TestClient(app, base_url="http://127.0.0.1"):
+            pass
+    assert "PLUGIN_HTTP_ROUTE_SHAPE_CHANGED" in str(captured.value), captured.value
+    # the covered cleanup: the failed startup disposed the round and the root
+    assert runtime.plugin_host.active_ids() == ()
+    assert runtime.owner.acquired is False
+    retry = build_runtime(tmp_path / "data")
+    try:
+        with _Started(retry):
+            assert len(_hello_caps(retry)) == 67
+    except BaseException:
+        retry.stop()
+        raise
+
+
+def test_a_pre_startup_owner_takeover_cannot_double_mount(tmp_path):
+    """The same window with a different owner: after the mounted plugin
+    unloads, another plugin claiming the same path and methods must be
+    refused at the mount stage — one route, one owner, also before the
+    freeze exists."""
+    first = _ServedPlugin("fake.first", path="/api/v1/plugin-fake/echo")
+    runtime = build_runtime(tmp_path / "data", server_plugins=[first])
+    app = create_app(runtime)  # mounts fake.first's shape
+    runtime.plugin_host.deactivate("fake.first")
+    second = _ServedPlugin("fake.second", path="/api/v1/plugin-fake/echo")
+    runtime.plugin_host.activate(second)  # the window
+    from server_plugin_api import ServerPluginError
+
+    with pytest.raises(ServerPluginError) as captured:
+        with TestClient(app, base_url="http://127.0.0.1"):
+            pass
+    assert "PLUGIN_HTTP_ROUTE_DUPLICATE" in str(captured.value), captured.value
+    assert runtime.plugin_host.active_ids() == ()
+    assert runtime.owner.acquired is False

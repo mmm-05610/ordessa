@@ -38,11 +38,13 @@ def create_app(runtime: ServerRuntime) -> FastAPI:
         # routes mount now (deduped against the creation-time mounts), and
         # the served route set freezes only once startup is complete — so a
         # later activation with unmounted routes refuses instead of leaking
-        # a half-effective plugin.
-        _mount_plugin_routes()
-        if getattr(runtime, "plugin_host", None) is not None:
-            runtime.plugin_host.frozen_http_routes = frozenset(_mounted_routes)
+        # a half-effective plugin. The mounting sits inside the cleanup: a
+        # mount-stage refusal must still dispose the round and release the
+        # data root, not leave a started runtime behind.
         try:
+            _mount_plugin_routes()
+            if getattr(runtime, "plugin_host", None) is not None:
+                runtime.plugin_host.frozen_http_routes = frozenset(_mounted_routes)
             yield
         finally:
             runtime.stop()
@@ -343,8 +345,16 @@ def create_app(runtime: ServerRuntime) -> FastAPI:
             yet. Idempotent: creation-time mounting and restart-time mounting
             share the same shape-keyed dedup. The mounted shape carries the
             auth flag and the endpoint's signature — the request machinery
-            the app actually built."""
+            the app actually built. A declaration that OVERLAPS a mounted
+            route (same path, intersecting methods) without matching its
+            shape exactly refuses type-wise here — before the freeze exists
+            too: no second same-path route is ever added, and no new owner
+            takes over a mounted route through the pre-startup window."""
             import inspect
+
+            from server_plugin_api import (
+                DuplicateHttpRouteError, HttpRouteShapeChangedError,
+            )
 
             newly = []
             for descriptor in runtime.plugin_host.http_routes.descriptors():
@@ -353,6 +363,22 @@ def create_app(runtime: ServerRuntime) -> FastAPI:
                          str(inspect.signature(descriptor.endpoint)))
                 if shape in _mounted_routes:
                     continue
+                overlap = next((m for m in _mounted_routes
+                                if m[0] == descriptor.path
+                                and m[1] & frozenset(descriptor.methods)), None)
+                if overlap is not None:
+                    label = (f"{descriptor.path} ({', '.join(sorted(descriptor.methods))})")
+                    if overlap[2] != descriptor.owner:
+                        raise DuplicateHttpRouteError(
+                            descriptor.path, tuple(descriptor.methods),
+                            overlap[2], descriptor.owner)
+                    changed = []
+                    if overlap[3] != descriptor.authenticated:
+                        changed.append(
+                            f"{label}: auth {overlap[3]} -> {descriptor.authenticated}")
+                    if overlap[4] != shape[4]:
+                        changed.append(f"{label}: endpoint signature changed")
+                    raise HttpRouteShapeChangedError(descriptor.owner, tuple(changed))
                 clash = host_methods.get(descriptor.path)
                 if clash and (clash & set(descriptor.methods)):
                     raise RuntimeError(
