@@ -24,3 +24,6 @@ verify-logs/
 
 # --- batch evidence runs (regenerable; numbers recorded in docs) ---
 .baseline-evidence/
+
+# server-core-cleanup batch evidence (frozen per-ID red ledger)
+.cleanup-evidence/
