@@ -119,10 +119,13 @@ class StreamRouteDescriptor:
 class ServerPluginContext:
     """What a plugin may touch while building.
 
-    `ports` are typed objects the host vends under documented names (storage
-    facades, connectors, an environment provider). No raw database handle, no
-    credential contents, no mutable host registry, no transport app object —
-    a port is the only door, and the host decides what stands behind it.
+    `ports` are typed objects under documented names. Two sources, stated
+    separately by the host: the host's own scoped facades (storage, record
+    facades, connectors — no raw database, no credentials, no mutable host
+    registry, no transport app object), and the `provided_ports` of every
+    plugin this one **declared** in `requires`. A plugin that did not declare
+    a dependency cannot see that plugin's ports — declaring the dependency is
+    the access grant.
     """
 
     plugin_id: str

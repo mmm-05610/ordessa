@@ -25,6 +25,7 @@ from .contract import (
 from .errors import (
     CyclicDependencyError,
     DependencyError,
+    DependentActiveError,
     DuplicateMethodError,
     DuplicatePluginError,
     DuplicateStreamRouteError,
@@ -47,5 +48,6 @@ __all__ = [
     "DuplicateStreamRouteError",
     "DependencyError",
     "CyclicDependencyError",
+    "DependentActiveError",
     "InvalidDeclarationError",
 ]

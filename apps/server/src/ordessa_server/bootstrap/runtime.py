@@ -248,10 +248,12 @@ class ServerRuntime:
             return
         if not self.owner.acquired:
             self.owner.acquire()
-        if (self.plugin_host is not None and self.plugin_selection
-                and not self.plugin_host.active_ids()):
-            self.plugin_host.activate_all(self.plugin_selection)
         try:
+            # Re-activation after a stop is inside the cleanup: a flaky plugin
+            # failing its second build must not keep the data-root lock.
+            if (self.plugin_host is not None and self.plugin_selection
+                    and not self.plugin_host.active_ids()):
+                self.plugin_host.activate_all(self.plugin_selection)
             self.database.initialize()
             _import_declared_credentials(self, self.declared_credentials)
             if self.native_harness_id is not None:
@@ -540,7 +542,13 @@ def build_runtime(
             TransitionCorePlugin(wire) if item == "ordessa.transition-core" else item
             for item in server_plugins
         )
-    plugin_host.activate_all(selected_plugins)
+    try:
+        plugin_host.activate_all(selected_plugins)
+    except BaseException:
+        # An activation failure must not keep the data-root lock: composing
+        # the same root again in this process is the retry path.
+        owner.release()
+        raise
     # Resolved through the host on every read: unloading the Workspace plugin
     # unbinds its port for the adapter too — never a stale snapshot.
     wire.bind_workspace_resolution(

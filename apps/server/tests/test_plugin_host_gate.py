@@ -438,6 +438,129 @@ def test_a_restart_re_activates_the_same_selection(tmp_path):
         assert "profiles.list" in caps
 
 
+# -- review round 1: lifecycle holes the first batch missed ------------------
+
+
+def test_activation_failure_releases_the_data_root_lock(tmp_path):
+    """A plugin that fails to build must not keep the data-root lock: the same
+    process composing the same root again is the retry path, and it must not
+    die of DATA_ROOT_IN_USE."""
+    class Boom(RuntimeError):
+        pass
+
+    root = tmp_path / "data"
+    with pytest.raises(Boom):
+        build_runtime(root, server_plugins=[FakePlugin("fake.boom", raises=Boom())])
+    runtime = build_runtime(root)
+    try:
+        with _Started(runtime):
+            assert len(_hello_caps(runtime)) == 67
+    except BaseException:
+        runtime.stop()
+        raise
+
+
+def test_reactivation_failure_in_start_releases_the_lock(tmp_path):
+    """start()'s re-activation is inside its cleanup: if the second build of a
+    flaky plugin fails, the lock is released, the runtime stays stopped, and
+    the data root stays usable."""
+    calls = {"n": 0}
+
+    class FlakyPlugin:
+        def descriptor(self):
+            return ServerPluginDescriptor(id="fake.flaky", display_name="flaky", version="1")
+
+        def build(self, context):
+            calls["n"] += 1
+            if calls["n"] >= 2:
+                raise RuntimeError("SECOND_BUILD_BOOM")
+            return ServerPluginRegistration()
+
+    root = tmp_path / "data"
+    runtime = build_runtime(root, server_plugins=[FlakyPlugin()])
+    runtime.stop()
+    with pytest.raises(RuntimeError, match="SECOND_BUILD_BOOM"):
+        runtime.start()
+    assert runtime.started is False
+    fresh = build_runtime(root)
+    try:
+        with _Started(fresh):
+            assert "server.hello" in _hello_caps(fresh)
+    except BaseException:
+        fresh.stop()
+        raise
+
+
+def test_a_declared_dependency_provides_ports_to_its_dependent():
+    """`requires` is the access grant: the dependency's provided ports reach
+    the dependent's context; a plugin that never declared the dependency
+    cannot see them."""
+    sentinel = object()
+    captured: dict[str, object] = {}
+
+    class _Consumer(FakePlugin):
+        def build(self, context):
+            captured[self.descriptor().id] = context.ports.get("fake.port")
+            return super().build(context)
+
+    host = _new_host()
+    host.activate_all([
+        FakePlugin("fake.provider", methods=(("fake.provide", set()),),
+                   ports={"fake.port": sentinel}),
+        _Consumer("fake.child", requires=("fake.provider",),
+                  methods=(("fake.child.method", set()),)),
+        _Consumer("fake.outsider", methods=(("fake.outsider.method", set()),)),
+    ])
+    assert captured["fake.child"] is sentinel, (
+        "a declared dependency's port must reach its dependent's context")
+    assert captured["fake.outsider"] is None, (
+        "an undeclared plugin must not see another plugin's port")
+    assert host.methods.lookup("fake.child.method") is not None
+
+
+def test_method_conflict_disposes_the_plugin_that_already_built():
+    """A plugin whose registration fails mid-staging has already built its
+    resources: rollback removes its rows and its disposal runs exactly once."""
+    records: list[str] = []
+    host = _new_host()
+    host.activate(FakePlugin("fake.stable", methods=(("fake.dup", set()),)))
+    with pytest.raises(DuplicateMethodError):
+        host.activate(FakePlugin("fake.clash", methods=(("fake.dup", set()),),
+                                 dispose_records=records))
+    assert records == ["fake.clash"]
+    assert host.active_ids() == ("fake.stable",)
+    assert host.methods.lookup("fake.dup").owner == "fake.stable"
+
+
+def test_unload_refuses_while_a_declared_dependent_is_active():
+    """Unloading a dependency under its dependent would orphan the dependent:
+    the host refuses, names the dependents, and changes nothing; reverse
+    order (dependent first) unloads cleanly, and shutdown's reverse order
+    never trips the guard."""
+    host = _new_host()
+    host.activate_all([
+        FakePlugin("fake.dep", methods=(("fake.dep.method", set()),)),
+        FakePlugin("fake.child", requires=("fake.dep",),
+                   methods=(("fake.child.method", set()),)),
+    ])
+    with pytest.raises(Exception) as refused:
+        host.deactivate("fake.dep")
+    assert "fake.child" in str(refused.value)
+    assert host.is_active("fake.dep") and host.is_active("fake.child")
+    host.deactivate("fake.child")
+    host.deactivate("fake.dep")
+    assert host.active_ids() == ()
+    # shutdown's reverse activation order disposes dependents first.
+    records: list[str] = []
+    host2 = _new_host()
+    host2.activate_all([
+        FakePlugin("fake.dep2", dispose_records=records),
+        FakePlugin("fake.child2", requires=("fake.dep2",), dispose_records=records),
+    ])
+    host2.shutdown()
+    assert records == ["fake.child2", "fake.dep2"]
+
+
 # -- stream routes: host-owned admission, plugin-owned resolution -------------
 
 

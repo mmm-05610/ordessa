@@ -11,9 +11,11 @@ Lifecycle rules (each pinned by `apps/server/tests/test_plugin_host_gate.py`):
 - Duplicate plugin ids, duplicate method ids, duplicate stream routes, and
   declarations that violate the contract refuse startup, not first request.
 - `requires` forms a directed acyclic graph validated across the activation
-  set; missing dependencies and cycles are startup refusals.
-- A plugin whose activation fails rolls back only its own contributions;
-  unrelated plugins stay active.
+  set; missing dependencies and cycles are startup refusals. It is also the
+  access grant for dependency-provided ports, and unload refuses while a
+  declared dependent is still active.
+- A plugin whose activation fails rolls back its own contributions and
+  disposes what its build created; unrelated plugins stay active.
 - Unload removes exactly the plugin's own methods/routes/ports and calls its
   disposal exactly once; shutdown disposes every active plugin exactly once.
 """
@@ -26,6 +28,7 @@ from server_plugin_api import (
     SERVER_PLUGIN_API_VERSION,
     CyclicDependencyError,
     DependencyError,
+    DependentActiveError,
     DuplicateMethodError,
     DuplicatePluginError,
     DuplicateStreamRouteError,
@@ -262,9 +265,17 @@ class ServerPluginHost:
     def _activate_one(
         self, plugin: ServerPlugin, descriptor: ServerPluginDescriptor,
     ) -> ActivePlugin:
+        # Ports are host facades plus what this plugin's *declared*
+        # dependencies provide (they are active already — topological order
+        # guaranteed it). An undeclared plugin's ports are not visible:
+        # `requires` is the access grant.
+        ports = dict(self.host_ports)
+        for dep in descriptor.requires:
+            dep_active = self._active.get(dep)
+            if dep_active is not None:
+                ports.update(dep_active.registration.provided_ports)
         context = ServerPluginContext(
-            plugin_id=descriptor.id, data_root=self.data_root,
-            ports=dict(self.host_ports),
+            plugin_id=descriptor.id, data_root=self.data_root, ports=ports,
         )
         registration = plugin.build(context)
         if not isinstance(registration, ServerPluginRegistration):
@@ -288,12 +299,15 @@ class ServerPluginHost:
                 self.stream_routes.register(item)
                 staged_routes.append(item.route_id)
         except BaseException:
-            # Roll back only this plugin's staged contributions; a half-claimed
-            # surface must not outlive the failure that produced it.
+            # Roll back only this plugin's staged contributions — and dispose
+            # what build() already created: a plugin that never became active
+            # must not leak the resources it built while failing.
             for method_id in staged_methods:
                 self.methods.unregister(method_id, owner=descriptor.id)
             for route_id in staged_routes:
                 self.stream_routes.unregister(route_id, owner=descriptor.id)
+            if registration.disposal is not None:
+                registration.disposal()
             raise
         active = ActivePlugin(
             descriptor=descriptor, registration=registration,
@@ -306,10 +320,22 @@ class ServerPluginHost:
     # -- unload / shutdown ----------------------------------------------------
 
     def deactivate(self, plugin_id: str) -> None:
-        """Remove one plugin's contributions and dispose it exactly once."""
+        """Remove one plugin's contributions and dispose it exactly once.
+
+        A plugin whose declared dependents are still active cannot be
+        unloaded: that would orphan them mid-flight. Unload the dependent
+        first (shutdown's reverse activation order does exactly that).
+        """
         active = self._active.get(plugin_id)
         if active is None:
             raise InvalidDeclarationError(f"plugin {plugin_id!r} is not active")
+        dependents = tuple(
+            other_id for other_id in self._activation_order
+            if other_id != plugin_id
+            and plugin_id in self._active[other_id].descriptor.requires
+        )
+        if dependents:
+            raise DependentActiveError(plugin_id, dependents)
         for method_id in active.method_ids:
             self.methods.unregister(method_id, owner=plugin_id)
         for route_id in active.stream_route_ids:

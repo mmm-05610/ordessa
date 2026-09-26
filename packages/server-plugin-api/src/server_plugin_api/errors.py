@@ -65,3 +65,17 @@ class CyclicDependencyError(ServerPluginError):
             "plugin requires form a cycle: " + " -> ".join(cycle),
         )
         self.cycle = cycle
+
+
+class DependentActiveError(ServerPluginError):
+    """Unloading a plugin whose declared dependents are still active would
+    orphan them; the host refuses and names them."""
+
+    def __init__(self, plugin_id: str, dependents: tuple[str, ...]) -> None:
+        super().__init__(
+            "PLUGIN_DEPENDENT_ACTIVE",
+            f"plugin {plugin_id!r} cannot be unloaded while its declared "
+            f"dependent(s) are active: {', '.join(sorted(dependents))}",
+        )
+        self.plugin_id = plugin_id
+        self.dependents = tuple(dependents)
