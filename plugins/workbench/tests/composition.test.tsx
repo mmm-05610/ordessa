@@ -39,6 +39,13 @@ function openerButton(label: string) {
   cleanup.push(async () => opener.remove())
   return opener
 }
+/** Focuses the target and dispatches a (Shift+)Tab keydown, asserting the surface swallowed it. */
+function pressTab(target: HTMLElement, shift = false) {
+  target.focus()
+  const event = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: shift, bubbles: true, cancelable: true })
+  target.dispatchEvent(event)
+  expect(event.defaultPrevented, shift ? 'Shift+Tab' : 'Tab').toBe(true)
+}
 
 describe('workbench composition: module registration and navigation', () => {
   it('counterexample: empty product mounts with an empty state, no module entries — and shows one as soon as a module registers', async () => {
@@ -229,6 +236,8 @@ describe('workbench composition: overlays', () => {
     expect(container.querySelector('[data-testid="workspace"]')?.hasAttribute('inert')).toBe(false)
     expect(opener.isConnected).toBe(true)
     expect(document.activeElement).toBe(opener)
+    // the handle reports the truth: the instance is already gone from the stack
+    expect(handle.isDisposed).toBe(true)
     // a late dispose of the returned handle is harmless and observable
     handle.dispose()
     expect(handle.isDisposed).toBe(true)
@@ -262,6 +271,29 @@ describe('workbench composition: overlays', () => {
     expect(parseInt(style.left, 10)).toBeLessThanOrEqual(window.innerWidth)
     expect(parseInt(style.top, 10)).toBeGreaterThanOrEqual(0)
     expect(parseInt(style.top, 10)).toBeLessThanOrEqual(window.innerHeight)
+    await act(async () => scope.dispose())
+  })
+
+  it('counterexample: a popover whose anchor leaves the DOM closes explicitly and refocuses a safe target', async () => {
+    const lifetime = new OwnedResources(), scope = new OwnedResources()
+    const model = createWorkbench(lifetime), commands = createCommands(lifetime)
+    model.composition.forScope(scope).addOverlay({ id: 'picker', title: 'Picker', presentation: 'popover', component: () => <p>picker content</p> })
+    const container = await mount(<WorkbenchShell model={model} commands={commands} />)
+    const anchor = openerButton('anchor opener')
+    await act(async () => anchor.focus())
+    let handle!: IDisposable
+    await act(async () => { handle = model.composition.openOverlay('picker', { anchor }) })
+    expect(container.querySelector('[data-overlay-id="picker"]')).not.toBeNull()
+    // the anchor is the restore target too: removing it must close and land focus on the workspace
+    await act(async () => { anchor.remove() })
+    expect(container.querySelector('[data-overlay-id="picker"]')).toBeNull()
+    expect(handle.isDisposed).toBe(true)
+    await act(async () => {}) // flush the queued focus restoration
+    const workspace = container.querySelector('[data-testid="workspace"]')
+    expect(workspace).not.toBeNull()
+    const active = document.activeElement
+    expect(active === workspace || (workspace as HTMLElement).contains(active)).toBe(true)
+    expect((active as HTMLElement).isConnected).toBe(true)
     await act(async () => scope.dispose())
   })
 
@@ -299,6 +331,67 @@ describe('workbench composition: overlays', () => {
     expect(container.querySelector('[data-overlay-id="ask"]')).toBeNull()
     await act(async () => {})
     expect(document.activeElement).toBe(opener)
+    await act(async () => scope.dispose())
+  })
+
+  it('counterexample: workbench errors stay visible above an open overlay', async () => {
+    const lifetime = new OwnedResources(), scope = new OwnedResources()
+    const model = createWorkbench(lifetime), commands = createCommands(lifetime)
+    const api = model.composition.forScope(scope)
+    api.addOverlay({ id: 'dialog', title: 'Dialog', presentation: 'dialog', component: () => <p>dialog content</p> })
+    api.addModule({ id: 'ghost', title: 'Ghost', homeViewId: 'ghost.main' })
+    const container = await mount(<WorkbenchShell model={model} commands={commands} />)
+    await act(async () => model.composition.openOverlay('dialog'))
+    expect(container.querySelector('[data-overlay-id="dialog"]')).not.toBeNull()
+    // jsdom does not block clicks into an inert background: activation fails into the shell error
+    const nav = container.querySelector<HTMLButtonElement>('[data-module-nav="ghost"]')
+    expect(nav, 'ghost').toBeTruthy()
+    await act(async () => { nav!.focus(); nav!.click() })
+    const alert = container.querySelector('[role="alert"]')
+    expect(alert?.textContent).toContain('not registered')
+    const errorZ = parseInt(getComputedStyle(alert as HTMLElement).zIndex, 10)
+    const overlayZ = parseInt(getComputedStyle(container.querySelector('.wb-overlays') as HTMLElement).zIndex, 10)
+    expect(errorZ).toBeGreaterThan(overlayZ)
+    await act(async () => scope.dispose())
+  })
+
+  it('counterexample: modal overlay Tab cycling stays inside the surface, off the inert workspace', async () => {
+    const lifetime = new OwnedResources(), scope = new OwnedResources()
+    const model = createWorkbench(lifetime), commands = createCommands(lifetime)
+    model.composition.forScope(scope).addOverlay({ id: 'dialog', title: 'Dialog', presentation: 'dialog',
+      component: () => <><button>内容甲</button><button>内容乙</button></> })
+    const container = await mount(<WorkbenchShell model={model} commands={commands} />)
+    await act(async () => model.composition.openOverlay('dialog'))
+    const surface = container.querySelector('.wb-overlay-dialog .wb-overlay-surface') as HTMLElement
+    const buttons = [...surface.querySelectorAll('button')]
+    expect(buttons.map(b => b.textContent)).toEqual(['×', '内容甲', '内容乙'])
+    expect(surface.contains(document.activeElement)).toBe(true)
+    const workspace = container.querySelector('[data-testid="workspace"]') as HTMLElement
+    const inSurface = () => surface.contains(document.activeElement) && !workspace.contains(document.activeElement)
+    // Tab from the last focusable wraps to the first
+    pressTab(buttons[buttons.length - 1])
+    expect(document.activeElement).toBe(buttons[0])
+    expect(inSurface()).toBe(true)
+    // Shift+Tab from the first wraps back to the last
+    pressTab(buttons[0], true)
+    expect(document.activeElement).toBe(buttons[buttons.length - 1])
+    expect(inSurface()).toBe(true)
+    await act(async () => scope.dispose())
+  })
+
+  it('counterexample: the settings page wraps Tab inside its surface too', async () => {
+    const lifetime = new OwnedResources(), scope = new OwnedResources()
+    const model = createWorkbench(lifetime), commands = createCommands(lifetime)
+    model.composition.forScope(scope).addSettingsSection({ id: 'general', title: 'General', component: () => <><button>设置甲</button><button>设置乙</button></> })
+    const container = await mount(<WorkbenchShell model={model} commands={commands} />)
+    await click(container, '打开设置')
+    const surface = container.querySelector('.wb-settings') as HTMLElement
+    const buttons = [...surface.querySelectorAll('button')]
+    const last = buttons[buttons.length - 1]
+    pressTab(last)
+    expect(document.activeElement).toBe(buttons[0])
+    pressTab(buttons[0], true)
+    expect(document.activeElement).toBe(last)
     await act(async () => scope.dispose())
   })
 })
@@ -354,6 +447,34 @@ describe('workbench composition: settings and screen structure', () => {
     await act(async () => { chatScope.dispose(); workflowScope.dispose() })
   })
 
+  it('counterexample: activating a sidebar-less module clears the module sidebar yet keeps user-opened views', async () => {
+    const lifetime = new OwnedResources(), chatScope = new OwnedResources(), bareScope = new OwnedResources()
+    const model = createWorkbench(lifetime), commands = createCommands(lifetime)
+    moduleBundle('chat', 'Chat', chatScope, model)
+    model.service.forScope(bareScope).addView({ id: 'bare.main', title: 'Bare主区', presentation: 'region', region: 'main', component: () => <p>bare main content</p> })
+    model.composition.forScope(bareScope).addModule({ id: 'bare', title: 'Bare', homeViewId: 'bare.main' })
+    const container = await mount(<WorkbenchShell model={model} commands={commands} />)
+    await act(async () => model.composition.activateModule('chat'))
+    expect(model.getSelection()).toEqual({ main: 'chat.main', left: 'chat.side' })
+    expect(container.querySelector('[data-region="left"]')?.textContent).toContain('chat sidebar content')
+    // a module without a sidebarViewId must not inherit another module's sidebar
+    await act(async () => model.composition.activateModule('bare'))
+    expect(model.getSelection().left).toBeUndefined()
+    expect(container.querySelector('[data-region="left"]')?.textContent).not.toContain('chat sidebar content')
+    expect(container.querySelector('[data-region="main"]')?.textContent).toContain('bare main content')
+    // switching back restores the module pair
+    await act(async () => model.composition.activateModule('chat'))
+    expect(model.getSelection().left).toBe('chat.side')
+    expect(container.querySelector('[data-region="left"]')?.textContent).toContain('chat sidebar content')
+    // a user-opened non-module view is not a module sidebar: it survives bare activation
+    await act(async () => model.service.forScope(bareScope).addView({ id: 'user.left', title: '用户面板', presentation: 'region', region: 'left', component: () => <p>user panel content</p> }))
+    await act(async () => model.service.open('user.left'))
+    await act(async () => model.composition.activateModule('bare'))
+    expect(model.getSelection().left).toBe('user.left')
+    expect(container.querySelector('[data-region="left"]')?.textContent).toContain('user panel content')
+    await act(async () => { chatScope.dispose(); bareScope.dispose() })
+  })
+
   it('counterexample: narrow window keeps navigation usable; single view shows no empty tab strip', async () => {
     const originalWidth = window.innerWidth, originalHeight = window.innerHeight
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 360 })
@@ -373,11 +494,13 @@ describe('workbench composition: settings and screen structure', () => {
     expect(navButtons.map(b => b.getAttribute('aria-label'))).toContain('Chat')
     await click(container, 'Chat')
     expect(container.querySelector('[data-region="main"]')?.textContent).toContain('chat main content')
-    // exactly one main tab for the one main view — no empty strip, no placeholder label
+    // a single main view needs no visible tab strip — content and move/close controls stay
     const mainTabs = [...container.querySelectorAll('[data-region="main"] [role="group"] button')]
-    expect(mainTabs).toHaveLength(1)
-    expect(mainTabs[0].textContent).toContain('Chat主区')
+    expect(mainTabs).toHaveLength(0)
     expect(container.querySelector('[data-region="main"] .wb-region-label')).toBeNull()
+    expect(container.querySelector('[data-region="main"]')?.textContent).toContain('chat main content')
+    expect(container.querySelector('select[aria-label="移动 Chat主区 到"]')).not.toBeNull()
+    expect(container.querySelector('button[aria-label="关闭Chat主区"]')).not.toBeNull()
     await act(async () => scope.dispose())
   })
 
@@ -387,14 +510,34 @@ describe('workbench composition: settings and screen structure', () => {
     moduleBundle('chat', 'Chat', scope, model)
     await act(async () => model.composition.activateModule('chat'))
     const container = await mount(<WorkbenchShell model={model} commands={commands} />)
-    // presence where content exists: main has one tab, left has one tab
-    expect(container.querySelectorAll('[data-region="main"] [role="group"] button')).toHaveLength(1)
-    expect(container.querySelectorAll('[data-region="left"] [role="group"] button')).toHaveLength(1)
     // absence where it does not: right/bottom/top have zero tabs and show their label instead
+    // main and left each hold exactly one view here — a single view renders no tab strip either
+    expect(container.querySelectorAll('[data-region="main"] [role="group"] button')).toHaveLength(0)
+    expect(container.querySelectorAll('[data-region="left"] [role="group"] button')).toHaveLength(0)
     for (const [region, label] of [['right', '右侧栏'], ['bottom', '底部面板'], ['top', '顶部面板']] as const) {
       expect(container.querySelectorAll(`[data-region="${region}"] [role="group"] button`)).toHaveLength(0)
       expect(container.querySelector(`[data-region="${region}"] .wb-region-label`)?.textContent).toBe(label)
     }
+    await act(async () => scope.dispose())
+  })
+
+  it('a second view in a region brings the tab strip back: pressed states and switching work', async () => {
+    const lifetime = new OwnedResources(), scope = new OwnedResources()
+    const model = createWorkbench(lifetime), commands = createCommands(lifetime)
+    const api = model.service.forScope(scope)
+    api.addView({ id: 'first.main', title: 'First主区', presentation: 'region', region: 'main', component: () => <p>first content</p> })
+    api.addView({ id: 'second.main', title: 'Second主区', presentation: 'region', region: 'main', component: () => <p>second content</p> })
+    await act(async () => model.service.open('first.main'))
+    const container = await mount(<WorkbenchShell model={model} commands={commands} />)
+    const tabs = () => [...container.querySelectorAll('[data-region="main"] [role="group"] button')]
+    expect(tabs()).toHaveLength(2)
+    expect(tabs()[0].getAttribute('aria-pressed')).toBe('true')
+    expect(tabs()[1].getAttribute('aria-pressed')).toBe('false')
+    expect(container.querySelector('[data-region="main"]')?.textContent).toContain('first content')
+    await click(container, 'Second主区')
+    expect(tabs()[0].getAttribute('aria-pressed')).toBe('false')
+    expect(tabs()[1].getAttribute('aria-pressed')).toBe('true')
+    expect(container.querySelector('[data-region="main"]')?.textContent).toContain('second content')
     await act(async () => scope.dispose())
   })
 

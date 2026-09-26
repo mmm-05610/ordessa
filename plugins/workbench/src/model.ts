@@ -73,7 +73,12 @@ export function createWorkbench(lifetime: ResourceScope) {
     }
     const home = check(module.homeViewId, 'main', 'home')
     const sidebar = module.sidebarViewId === undefined ? undefined : check(module.sidebarViewId, 'left', 'sidebar')
-    selected = { ...selected, main: home.id, ...(sidebar ? { left: sidebar.id } : {}) }
+    const next = { ...selected, main: home.id }
+    // A module sidebar never outlives its module: a sidebar-less activation clears any
+    // registered module's sidebar, while a user-opened non-module view keeps its place.
+    if (sidebar) next.left = sidebar.id
+    else if (next.left !== undefined && modules.getSnapshot().some(m => m.sidebarViewId === next.left)) delete next.left
+    selected = next
     if (sidebar) layout = { ...layout, collapsed: { ...layout.collapsed, left: false } }
     publish()
   }
@@ -93,10 +98,11 @@ export function createWorkbench(lifetime: ResourceScope) {
     const key = nextInstance++
     overlayStack = [...overlayStack, { key, overlayId: id, anchor }]
     publish()
-    let open = true
+    // isDisposed reads the stack: every close path (dispose, Escape, contributor
+    // close, contributor unload) flips it, and a late dispose is a harmless no-op.
     return {
-      get isDisposed() { return !open },
-      dispose() { if (!open) return; open = false; closeInstance(key) },
+      get isDisposed() { return !overlayStack.some(i => i.key === key) },
+      dispose() { closeInstance(key) },
     }
   }
   const openSettings = (sectionId?: string) => {

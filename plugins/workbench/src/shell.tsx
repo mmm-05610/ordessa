@@ -24,6 +24,19 @@ function RegionIcon({ region }: { region: Region }) {
     {region === 'left' ? <path d="M7 3v14" /> : region === 'right' ? <path d="M13 3v14" /> : region === 'bottom' ? <path d="M2 12h16" /> : <path d="M2 8h16" />}</svg>
 }
 
+// Modal surfaces wrap Tab at their edges: focus cycles inside the surface and
+// never reaches the inert background behind the overlay.
+const trapTab = (surface: RefObject<HTMLElement | null>) => (event: { key: string; shiftKey: boolean; preventDefault(): void }) => {
+  if (event.key !== 'Tab' || !surface.current) return
+  const node = surface.current
+  const items = [...node.querySelectorAll<HTMLElement>('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+  if (!items.length) return
+  const edge = event.shiftKey ? items[0] : items[items.length - 1], wrap = event.shiftKey ? items[items.length - 1] : items[0]
+  if (document.activeElement !== edge && node.contains(document.activeElement)) return
+  event.preventDefault()
+  wrap.focus()
+}
+
 // Overlays share one stack and one mount container: each instance captures the
 // focus on mount and restores it to a connected safe target on unmount.
 function useOverlayFocus(surface: RefObject<HTMLDivElement | null>, workspace: RefObject<HTMLDivElement | null>) {
@@ -49,6 +62,14 @@ function OverlaySurface({ entry, title, presentation, inert, close, workspace, c
   const [position, setPosition] = useState<{ left: number; top: number } | null>(null)
   useOverlayFocus(surface, workspace)
   const anchor = entry.anchor
+  const closeRef = useRef(close); closeRef.current = close
+  useEffect(() => {
+    if (presentation !== 'popover' || !anchor) return
+    // A popover whose anchor left the DOM closes explicitly instead of lingering detached.
+    const observer = new MutationObserver(() => { if (!anchor.isConnected) closeRef.current() })
+    observer.observe(document, { childList: true, subtree: true })
+    return () => observer.disconnect()
+  }, [presentation, anchor])
   useLayoutEffect(() => {
     if (presentation !== 'popover' || !anchor) return
     const update = () => {
@@ -62,7 +83,7 @@ function OverlaySurface({ entry, title, presentation, inert, close, workspace, c
   const modal = presentation !== 'popover'
   return <div className={`wb-overlay wb-overlay-${presentation}`} data-overlay-id={entry.overlayId} data-presentation={presentation}
     style={presentation === 'popover' && position ? { left: position.left, top: position.top } : undefined} inert={inert}>
-    <div ref={surface} tabIndex={-1} className="wb-overlay-surface" role="dialog" aria-label={title} aria-modal={modal || undefined}>
+    <div ref={surface} tabIndex={-1} className="wb-overlay-surface" role="dialog" aria-label={title} aria-modal={modal || undefined} onKeyDown={modal ? trapTab(surface) : undefined}>
       <header className="wb-overlay-bar"><strong>{title}</strong><button aria-label={`关闭${title}`} onClick={close}>×</button></header>
       <div className="wb-overlay-content"><Boundary>{children}</Boundary></div>
     </div>
@@ -81,7 +102,7 @@ function SettingsOverlay({ entry, sections, inert, close, workspace }: {
     target?.scrollIntoView?.({ block: 'start' })
   }, [entry.sectionId, sections])
   return <div className="wb-overlay wb-overlay-page" data-overlay-id={SETTINGS_OVERLAY_ID} data-presentation="page" inert={inert}>
-    <div ref={surface} tabIndex={-1} className="wb-overlay-surface wb-settings" role="dialog" aria-label="设置" aria-modal="true">
+    <div ref={surface} tabIndex={-1} className="wb-overlay-surface wb-settings" role="dialog" aria-label="设置" aria-modal="true" onKeyDown={trapTab(surface)}>
       <header className="wb-overlay-bar"><strong>设置</strong><button aria-label="关闭设置" onClick={close}>×</button></header>
       <div className="wb-overlay-content">
         {ordered(sections).map(section => {
@@ -171,17 +192,19 @@ export function WorkbenchShell({ model, commands }: { model: WorkbenchModel; com
   })
   const region = (name: Region) => {
     const list = entries(name), active = list.find(v => v.id === selection[name])
+    // A tab strip is worth showing only for two or more views; a single view
+    // renders bare and keeps its move/close controls in wb-region-actions.
     return <section className={`wb-region wb-${name}`} data-region={name} aria-label={labels[name]} inert={name !== 'main' && (!has[name] || !!layout.collapsed[name])}>
       <header>{name === 'left' && <strong className="wb-brand">Ordessa</strong>}
-        <div role="group" aria-label={`${name}视图`}>{list.map(v => <button key={v.id} draggable aria-pressed={v.id === active?.id}
+        {list.length >= 2 && <div role="group" aria-label={`${name}视图`}>{list.map(v => <button key={v.id} draggable aria-pressed={v.id === active?.id}
           onDragStart={e => {
             e.dataTransfer.setData('application/x-ordessa-view', v.id); e.dataTransfer.setData('text/plain', v.title); e.dataTransfer.effectAllowed = 'move'
             dragSession.current = v.id
             // Let Chromium capture its drag image before adding an overlay over the source.
             setTimeout(() => { if (dragSession.current === v.id) setDragged(v.id) }, 0)
           }}
-          onDragEnd={() => { dragSession.current = null; setDragged(null) }} onClick={() => model.service.open(v.id)} title={`${v.title} · 拖动以移动`}>{v.title}</button>)}
-          {!list.length && <span className="wb-region-label">{labels[name]}</span>}</div>
+          onDragEnd={() => { dragSession.current = null; setDragged(null) }} onClick={() => model.service.open(v.id)} title={`${v.title} · 拖动以移动`}>{v.title}</button>)}</div>}
+        {!list.length && <span className="wb-region-label">{labels[name]}</span>}
         <div className="wb-region-actions">{active && <>
           <select aria-label={`移动 ${active.title} 到`} value="" onChange={e => { if (e.target.value) move(active.id, e.target.value as Region) }}>
             <option value="">移动…</option>{regions.filter(r => r !== name).map(r => <option key={r} value={r}>{labels[r]}</option>)}

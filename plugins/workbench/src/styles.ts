@@ -56,7 +56,8 @@ export const styles = `
 .wb-full { height:100vh; display:flex; flex-direction:column; background:var(--ui-surface); }
 .wb-full>.wb-bar { height:44px; justify-content:space-between; background:var(--ui-nav); }
 .wb-full-content { width:100%; max-width:1100px; margin:0 auto; padding:28px; overflow:auto; }
-.wb-error { position:fixed; bottom:44px; right:16px; padding:12px 16px; max-width:80vw; border:1px solid #f0c4c1; border-radius:14px; background:var(--ui-surface); color:var(--ui-error); box-shadow:0 8px 24px rgba(32,33,35,.14); z-index:5; }
+/* Errors sit above the overlay stack (z-index:10): a failure during an overlay must stay visible. */
+.wb-error { position:fixed; bottom:44px; right:16px; padding:12px 16px; max-width:80vw; border:1px solid #f0c4c1; border-radius:14px; background:var(--ui-surface); color:var(--ui-error); box-shadow:0 8px 24px rgba(32,33,35,.14); z-index:20; }
 .wb-error button { margin-left:16px; color:var(--ui-ink-secondary); }
 .wb-overlays { position:fixed; inset:0; z-index:10; pointer-events:none; }
 .wb-overlay { position:absolute; pointer-events:auto; }
