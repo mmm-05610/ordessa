@@ -16,13 +16,18 @@ Lifecycle rules (each pinned by `apps/server/tests/test_plugin_host_gate.py`):
   declared dependent is still active.
 - An activation round is transactional at plugin granularity: if any
   activation fails, the plugins this round activated are disposed (reverse
-  order) and the failure propagates; earlier-round plugins stay active.
+  order) and the failure propagates; earlier-round plugins stay active. A
+  disposal that raises during that rollback never stops the cleanups behind
+  it: the round's own failure stays the primary exception and the disposal
+  failures ride on its `cleanup_errors` attribute.
 - A provided port that would shadow an existing binding (a host facade or
   another dependency's port) is a typed refusal, never a silent override.
 - A plugin whose own activation fails rolls back its contributions and
   disposes what its build created; unrelated plugins stay active.
 - Unload removes exactly the plugin's own methods/routes/ports and calls its
-  disposal exactly once; shutdown disposes every active plugin exactly once.
+  disposal exactly once; shutdown disposes every active plugin exactly once,
+  and one plugin's disposal raising never orphans the rest — the collected
+  failures surface as one `CleanupError` after every plugin is released.
 """
 from __future__ import annotations
 
@@ -31,6 +36,7 @@ from typing import Any, Iterable, Mapping
 
 from server_plugin_api import (
     SERVER_PLUGIN_API_VERSION,
+    CleanupError,
     CyclicDependencyError,
     DependencyError,
     DependentActiveError,
@@ -38,6 +44,7 @@ from server_plugin_api import (
     DuplicatePluginError,
     DuplicateStreamRouteError,
     InvalidDeclarationError,
+    PluginCleanupError,
     PortConflictError,
     ServerMethodDescriptor,
     ServerPlugin,
@@ -48,6 +55,24 @@ from server_plugin_api import (
 )
 
 __all__ = ["MethodRegistry", "StreamRouteRegistry", "ServerPluginHost", "ActivePlugin"]
+
+
+def _carry_cleanup_errors(errors: list[PluginCleanupError]) -> None:
+    """Attach a rollback's disposal failures to the exception in flight.
+
+    The plugin's own failure stays the primary exception; the cleanup facts
+    ride on its `cleanup_errors` attribute so a caller can inspect what the
+    rollback did on the way out. An exception object that refuses attributes
+    still propagates unchanged."""
+    import sys
+
+    primary = sys.exc_info()[1]
+    if primary is None:
+        return
+    try:
+        primary.cleanup_errors = tuple(errors)
+    except (AttributeError, TypeError):
+        pass
 
 
 class MethodRegistry:
@@ -234,8 +259,18 @@ class ServerPluginHost:
             for plugin_id in order:
                 activated.append(self._activate_one(by_id[plugin_id], descriptors[plugin_id]))
         except BaseException:
+            # Transactional at plugin granularity: every plugin this round
+            # activated is disposed, reverse order. One plugin's disposal
+            # raising never stops the cleanups behind it — the round's own
+            # failure (the exception in flight) stays primary, and the
+            # disposal failures ride on its `cleanup_errors` attribute.
+            cleanup: list[PluginCleanupError] = []
             for active in reversed(activated):
-                self.deactivate(active.descriptor.id)
+                failure = self._dispose_active(active)
+                if failure is not None:
+                    cleanup.append(failure)
+            if cleanup:
+                _carry_cleanup_errors(cleanup)
             raise
         return tuple(activated)
 
@@ -340,6 +375,22 @@ class ServerPluginHost:
 
     # -- unload / shutdown ----------------------------------------------------
 
+    def _dispose_active(self, active: ActivePlugin) -> PluginCleanupError | None:
+        """Tear one active plugin down; a raising disposal is captured and
+        carried, never allowed to stop the cleanups behind it.
+
+        The plugin's registrations were already revoked by `deactivate` before
+        its disposal ran, so a captured failure is a hygiene fact, not a
+        registry leak. A `DependentActiveError` here would mean the host tore
+        down in the wrong order — that is a host bug and propagates."""
+        try:
+            self.deactivate(active.descriptor.id)
+        except DependentActiveError:
+            raise
+        except Exception as err:  # noqa: BLE001 - captured, carried, never hidden
+            return PluginCleanupError(active.descriptor.id, err)
+        return None
+
     def deactivate(self, plugin_id: str) -> None:
         """Remove one plugin's contributions and dispose it exactly once.
 
@@ -367,6 +418,16 @@ class ServerPluginHost:
             active.registration.disposal()
 
     def shutdown(self) -> None:
-        """Dispose every active plugin exactly once, reverse activation order."""
+        """Dispose every active plugin exactly once, reverse activation order.
+
+        One plugin's disposal raising never orphans the rest: every remaining
+        plugin is still released, and the collected failures raise as one
+        `CleanupError` after the loop — a shutdown that swallowed a disposal
+        failure would be a silent lie."""
+        cleanup: list[PluginCleanupError] = []
         for plugin_id in reversed(list(self._activation_order)):
-            self.deactivate(plugin_id)
+            failure = self._dispose_active(self._active[plugin_id])
+            if failure is not None:
+                cleanup.append(failure)
+        if cleanup:
+            raise CleanupError(tuple(cleanup))

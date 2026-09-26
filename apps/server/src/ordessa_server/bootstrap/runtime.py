@@ -301,11 +301,15 @@ class ServerRuntime:
             from pacthold.work_core import db as core_db
             core_db.configure_database(None)
         # Plugins release what they own exactly once, reverse activation
-        # order, before the data root itself is given up.
-        if self.plugin_host is not None:
-            self.plugin_host.shutdown()
-        self.owner.release()
-        self.started = False
+        # order. A plugin whose disposal raises must not keep the data root:
+        # the lock is released no matter how the shutdown ends, and the
+        # collected disposal failures surface to the caller.
+        try:
+            if self.plugin_host is not None:
+                self.plugin_host.shutdown()
+        finally:
+            self.owner.release()
+            self.started = False
 
 
 def _server_id(database: Database) -> str:

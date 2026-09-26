@@ -95,3 +95,35 @@ class PortConflictError(ServerPluginError):
         self.consumer_id = consumer_id
         self.provider_id = provider_id
         self.port_name = port_name
+
+
+class PluginCleanupError(ServerPluginError):
+    """One plugin's disposal raised while the host was cleaning up.
+
+    The original exception the disposal raised travels unmodified in `error`;
+    the plugin's registrations were already revoked before `error` was
+    captured, so this is a hygiene fact, not a registry leak."""
+
+    def __init__(self, plugin_id: str, error: BaseException) -> None:
+        super().__init__(
+            "PLUGIN_DISPOSAL_RAISED",
+            f"plugin {plugin_id!r}'s disposal raised "
+            f"{type(error).__name__} during host cleanup",
+        )
+        self.plugin_id = plugin_id
+        self.error = error
+
+
+class CleanupError(ServerPluginError):
+    """The host finished releasing every plugin, but at least one disposal
+    raised; the per-plugin failures travel in `errors`, reverse activation
+    order. Nothing was skipped — this is what "all cleaned, some failed"
+    looks like."""
+
+    def __init__(self, errors: "tuple[PluginCleanupError, ...]") -> None:
+        super().__init__(
+            "PLUGIN_CLEANUP_FAILED",
+            f"{len(errors)} plugin disposal(s) raised during host cleanup: "
+            + ", ".join(f"{e.plugin_id}({type(e.error).__name__})" for e in errors),
+        )
+        self.errors = tuple(errors)

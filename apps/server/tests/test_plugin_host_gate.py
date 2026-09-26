@@ -438,6 +438,157 @@ def test_a_restart_re_activates_the_same_selection(tmp_path):
         assert "profiles.list" in caps
 
 
+# -- core-cleanup stage 1: a throwing disposal never stops the cleanup --------
+
+
+class _LifecyclePlugin:
+    """A contract plugin with independently observable build/disposal facts."""
+
+    def __init__(self, plugin_id, *, records, method="fake.method",
+                build_raises=None, dispose_raises=None):
+        self._id = plugin_id
+        self._records = records
+        self._method = method
+        self._build_raises = build_raises
+        self._dispose_raises = dispose_raises
+
+    def descriptor(self):
+        return ServerPluginDescriptor(id=self._id, display_name=self._id, version="1")
+
+    def build(self, context):
+        self._records.append(("build", self._id))
+        if self._build_raises is not None:
+            raise self._build_raises
+        def _disposal():
+            self._records.append(("dispose", self._id))
+            if self._dispose_raises is not None:
+                raise self._dispose_raises
+        return ServerPluginRegistration(
+            methods=(ServerMethodDescriptor(
+                method_id=self._method, required_params=frozenset({"requestId"}),
+                optional_params=frozenset(), handler=lambda params: {"ok": self._id},
+                owner=self._id,
+            ),),
+            disposal=_disposal,
+        )
+
+
+def test_a_throwing_disposal_does_not_stop_the_rollback_of_the_rest():
+    """A activated, B activated, C's build fails, and B's disposal throws on
+    the way down: A must still be cleaned, every registration of the round
+    revoked, and C's original error must stay the primary failure with B's
+    cleanup error inspectable on it."""
+    from server_plugin_api import PluginCleanupError
+
+    records: list[tuple[str, str]] = []
+    a = _LifecyclePlugin("fake.a", records=records)
+    boom = RuntimeError("B cleanup boom")
+    b = _LifecyclePlugin("fake.b", records=records, method="fake.other",
+                         dispose_raises=boom)
+    c_failure = RuntimeError("C original failure")
+    c = _LifecyclePlugin("fake.c", records=records, build_raises=c_failure)
+    host = _new_host()
+    with pytest.raises(RuntimeError) as captured:
+        host.activate_all([a, b, c])
+    assert captured.value is c_failure, "the plugin's own failure must stay primary"
+    assert records == [
+        ("build", "fake.a"), ("build", "fake.b"), ("build", "fake.c"),
+        ("dispose", "fake.b"), ("dispose", "fake.a"),
+    ], records
+    carried = getattr(captured.value, "cleanup_errors", None)
+    assert carried is not None, "the disposal failure must be inspectable"
+    assert len(carried) == 1
+    assert isinstance(carried[0], PluginCleanupError)
+    assert carried[0].plugin_id == "fake.b"
+    assert carried[0].error is boom
+    assert host.active_ids() == ()
+    assert len(host.methods) == 0, "every registration of the round must be revoked"
+    assert host.stream_routes.resolve("fake.a", "ref") is None
+
+
+def test_a_failed_composition_with_a_throwing_disposal_releases_the_root(tmp_path):
+    """The same shape through build_runtime: the round returns no runtime, the
+    data-root lock is released for the retry path, and every disposal of the
+    round ran — including the one that threw."""
+    class Boom(RuntimeError):
+        pass
+
+    records: list[tuple[str, str]] = []
+    root = tmp_path / "data"
+    with pytest.raises(Boom) as captured:
+        build_runtime(root, server_plugins=[
+            _LifecyclePlugin("fake.ok", records=records, method="fake.first"),
+            _LifecyclePlugin("fake.messy", records=records, method="fake.second",
+                             dispose_raises=RuntimeError("messy cleanup")),
+            _LifecyclePlugin("fake.boom", records=records, method="fake.third",
+                             build_raises=Boom()),
+        ])
+    assert ("dispose", "fake.messy") in records
+    assert ("dispose", "fake.ok") in records
+    carried = getattr(captured.value, "cleanup_errors", None)
+    assert carried is not None and [e.plugin_id for e in carried] == ["fake.messy"]
+    runtime = build_runtime(root)
+    try:
+        with _Started(runtime):
+            assert len(_hello_caps(runtime)) == 67
+    except BaseException:
+        runtime.stop()
+        raise
+
+
+def test_shutdown_disposes_every_plugin_even_when_one_disposal_throws():
+    """Normal shutdown is the same promise: one plugin's disposal raising must
+    not orphan the others — every plugin is disposed exactly once, reverse
+    order, and the collected failures surface as one typed error."""
+    from server_plugin_api import CleanupError, PluginCleanupError
+
+    records: list[tuple[str, str]] = []
+    mess = RuntimeError("B cleanup boom")
+    host = _new_host()
+    host.activate_all([
+        _LifecyclePlugin("fake.a", records=records),
+        _LifecyclePlugin("fake.b", records=records, method="fake.other",
+                         dispose_raises=mess),
+        _LifecyclePlugin("fake.c", records=records, method="fake.third"),
+    ])
+    with pytest.raises(CleanupError) as captured:
+        host.shutdown()
+    assert records == [
+        ("build", "fake.a"), ("build", "fake.b"), ("build", "fake.c"),
+        ("dispose", "fake.c"), ("dispose", "fake.b"), ("dispose", "fake.a"),
+    ], records
+    errors = captured.value.errors
+    assert len(errors) == 1
+    assert isinstance(errors[0], PluginCleanupError)
+    assert errors[0].plugin_id == "fake.b" and errors[0].error is mess
+    assert host.active_ids() == ()
+    assert len(host.methods) == 0
+
+
+def test_runtime_stop_releases_the_root_even_when_a_disposal_throws(tmp_path):
+    """stop() must not leave the data-root lock behind because a plugin's
+    disposal raised: the root stays usable for the next composition."""
+    from server_plugin_api import CleanupError
+
+    records: list[tuple[str, str]] = []
+    runtime = build_runtime(tmp_path / "data", server_plugins=[
+        _LifecyclePlugin("fake.messy", records=records,
+                         dispose_raises=RuntimeError("messy cleanup")),
+    ])
+    runtime.start()
+    with pytest.raises(CleanupError):
+        runtime.stop()
+    assert ("dispose", "fake.messy") in records
+    assert runtime.owner.acquired is False, "the lock must be released"
+    retry = build_runtime(tmp_path / "data")
+    try:
+        with _Started(retry):
+            assert len(_hello_caps(retry)) == 67
+    except BaseException:
+        retry.stop()
+        raise
+
+
 # -- review round 1: lifecycle holes the first batch missed ------------------
 
 

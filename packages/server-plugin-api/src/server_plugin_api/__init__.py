@@ -23,6 +23,7 @@ from .contract import (
     StreamRouteDescriptor,
 )
 from .errors import (
+    CleanupError,
     CyclicDependencyError,
     DependencyError,
     DependentActiveError,
@@ -30,6 +31,7 @@ from .errors import (
     DuplicatePluginError,
     DuplicateStreamRouteError,
     InvalidDeclarationError,
+    PluginCleanupError,
     PortConflictError,
     ServerPluginError,
 )
@@ -52,4 +54,6 @@ __all__ = [
     "DependentActiveError",
     "PortConflictError",
     "InvalidDeclarationError",
+    "PluginCleanupError",
+    "CleanupError",
 ]
