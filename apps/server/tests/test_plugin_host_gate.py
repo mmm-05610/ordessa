@@ -1018,14 +1018,21 @@ class _ServedPlugin:
     n-th build's port object (its `round`), `starts` only records that a
     start hook ran — a hook must never shift the round numbering."""
 
-    def __init__(self, plugin_id="fake.served", *, path="/api/v1/plugin-fake/echo"):
+    def __init__(self, plugin_id="fake.served", *, path="/api/v1/plugin-fake/echo",
+                 authenticated=True):
         self._id = plugin_id
         self._path = path
+        self.authenticated = authenticated
         self.builds: list[dict] = []
         self.starts: list[bool] = []
 
     def descriptor(self):
         return ServerPluginDescriptor(id=self._id, display_name=self._id, version="1")
+
+    def endpoint_for(self, obj):
+        def echo(body: dict):
+            return {"echo": body, "round": obj["round"]}
+        return echo
 
     def build(self, context):
         from server_plugin_api import HttpRouteDescriptor
@@ -1033,13 +1040,11 @@ class _ServedPlugin:
         obj = {"round": len(self.builds)}
         self.builds.append(obj)
 
-        def echo(body: dict):
-            return {"echo": body, "round": obj["round"]}
-
         return ServerPluginRegistration(
             http_routes=(HttpRouteDescriptor(
                 path=self._path, methods=frozenset({"POST"}),
-                endpoint=echo, owner=self._id,
+                endpoint=self.endpoint_for(obj), owner=self._id,
+                authenticated=self.authenticated,
             ),),
             provided_ports={"fake.obj": obj},
             start_hooks=(lambda: self.starts.append(True),),
@@ -1284,3 +1289,138 @@ def test_an_app_created_activation_with_unmounted_http_routes_refuses(tmp_path):
             assert client.post("/api/v1/plugin-fake/echo", json={}, headers=headers).status_code == 200
     finally:
         runtime.stop()
+
+
+# -- review round 4: the mounted route's SHAPE is part of the freeze ----------
+
+
+def test_a_reactivated_route_cannot_loosen_its_auth_wall(tmp_path):
+    """The frozen route shape includes the auth flag. First mount
+    unauthenticated, then unload and re-activate declaring bearer-required:
+    the activation must refuse type-wise — otherwise the old app keeps
+    serving the new registration behind the wall that was mounted first,
+    and the wall silently moved without the transport knowing."""
+    from server_plugin_api import ServerPluginError
+
+    plugin = _ServedPlugin("fake.auth", authenticated=False)
+    disposals: list[int] = []
+
+    class _Counted(_ServedPlugin):
+        def build(self, context):
+            registration = super().build(context)
+            def _disposal():
+                disposals.append(1)
+            return ServerPluginRegistration(
+                methods=registration.methods, stream_routes=registration.stream_routes,
+                http_routes=registration.http_routes,
+                provided_ports=registration.provided_ports,
+                start_hooks=registration.start_hooks, disposal=_disposal,
+            )
+
+    plugin = _Counted("fake.auth", authenticated=False)
+    runtime = build_runtime(tmp_path / "data", server_plugins=[plugin])
+    try:
+        with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
+            # first mount: unauthenticated — no bearer, 200
+            assert client.post("/api/v1/plugin-fake/echo", json={}).status_code == 200
+            plugin.authenticated = True
+            runtime.plugin_host.deactivate("fake.auth")
+            with pytest.raises(ServerPluginError) as captured:
+                runtime.plugin_host.activate(plugin)
+            assert "PLUGIN_HTTP_ROUTE_SHAPE_CHANGED" in str(captured.value), captured.value
+            # transactional: not active; the owed disposal ran exactly once
+            # for the unload and exactly once for the refused activation
+            assert runtime.plugin_host.active_ids() == ()
+            assert disposals == [1, 1], disposals
+            # the wall did not loosen: the route is gone (owner inactive)
+            assert client.post("/api/v1/plugin-fake/echo", json={}).status_code == 404
+    finally:
+        runtime.stop()
+
+
+def test_a_reactivated_route_cannot_change_its_endpoint_signature(tmp_path):
+    """The frozen route shape includes the endpoint's FastAPI-visible
+    signature. A re-activation whose endpoint takes different parameters
+    must refuse type-wise — the old app's request machinery would otherwise
+    call a new endpoint with the old call shape and answer 500."""
+    from server_plugin_api import ServerPluginError
+
+    class _Flipping(_ServedPlugin):
+        def endpoint_for(self, obj):
+            if obj["round"] == 0:
+                def echo(body: dict):
+                    return {"echo": body, "round": obj["round"]}
+                return echo
+            def echo(body: dict, extra: int):  # a new required parameter
+                return {"echo": body, "extra": extra}
+            return echo
+
+    plugin = _Flipping("fake.sig")
+    runtime = build_runtime(tmp_path / "data", server_plugins=[plugin])
+    try:
+        with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
+            assert client.post("/api/v1/plugin-fake/echo", json={},
+                               headers={"Authorization": f"Bearer {runtime.token}"}).status_code == 200
+            runtime.plugin_host.deactivate("fake.sig")
+            with pytest.raises(ServerPluginError) as captured:
+                runtime.plugin_host.activate(plugin)
+            assert "PLUGIN_HTTP_ROUTE_SHAPE_CHANGED" in str(captured.value), captured.value
+            assert runtime.plugin_host.active_ids() == ()
+    finally:
+        runtime.stop()
+
+
+def test_a_failed_start_keeps_its_error_primary_with_cleanup_errors(tmp_path):
+    """The reviewer's second round-4 gap: the cleanup failure must attach to
+    the START error explicitly — reading sys.exc_info() inside the inner
+    except captures the cleanup exception itself, so cleanup_errors ends up
+    missing. The start error stays primary; the disposal failure is
+    inspectable."""
+
+    class HookBoom(ValueError):
+        pass
+
+    class CleanBoom(RuntimeError):
+        pass
+
+    records: list[tuple[str, str]] = []
+
+    class _DoubleFault:
+        def descriptor(self):
+            return ServerPluginDescriptor(id="fake.double", display_name="d", version="1")
+
+        def build(self, context):
+            def _disposal():
+                records.append(("dispose", "fake.double"))
+                raise CleanBoom("disposal refused")
+            def _hook():
+                raise HookBoom("start refused")
+            return ServerPluginRegistration(
+                methods=(ServerMethodDescriptor(
+                    method_id="fake.double.ping", required_params=frozenset({"requestId"}),
+                    optional_params=frozenset(), handler=lambda params: {"ok": True},
+                    owner="fake.double",
+                ),),
+                start_hooks=(_hook,), disposal=_disposal,
+            )
+
+    root = tmp_path / "data"
+    runtime = build_runtime(root, server_plugins=[_DoubleFault()])
+    with pytest.raises(HookBoom) as captured:
+        runtime.start()
+    assert isinstance(captured.value, HookBoom), "the start error stays primary"
+    carried = getattr(captured.value, "cleanup_errors", None)
+    assert carried is not None and len(carried) == 1, (
+        "the disposal failure must be inspectable on the start error")
+    assert carried[0].plugin_id == "fake.double"
+    assert isinstance(carried[0].error, CleanBoom)
+    assert records == [("dispose", "fake.double")]
+    assert runtime.plugin_host.active_ids() == ()
+    assert runtime.owner.acquired is False
+    retry = build_runtime(root)
+    try:
+        with _Started(retry):
+            assert len(_hello_caps(retry)) == 67
+    except BaseException:
+        retry.stop()
+        raise

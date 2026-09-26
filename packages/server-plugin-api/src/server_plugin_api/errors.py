@@ -79,6 +79,23 @@ class HttpRouteUnmountedError(ServerPluginError):
         self.unmounted = tuple(unmounted)
 
 
+class HttpRouteShapeChangedError(ServerPluginError):
+    """A re-activated plugin's route matches a mounted route by path, methods
+    and owner, but its mounted shape differs — the authentication flag or the
+    endpoint's FastAPI-visible signature changed. The live transport would
+    keep serving the new registration behind the wall and call shape that the
+    first mount installed; the activation refuses instead."""
+
+    def __init__(self, plugin_id: str, changed: "tuple[str, ...]") -> None:
+        super().__init__(
+            "PLUGIN_HTTP_ROUTE_SHAPE_CHANGED",
+            f"plugin {plugin_id!r} re-declares mounted routes with a changed "
+            f"shape (auth flag or endpoint signature): {'; '.join(sorted(changed))}",
+        )
+        self.plugin_id = plugin_id
+        self.changed = tuple(changed)
+
+
 class DependencyError(ServerPluginError):
     """A declared `requires` names no activatable plugin."""
 

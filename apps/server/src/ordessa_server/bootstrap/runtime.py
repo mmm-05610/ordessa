@@ -258,7 +258,7 @@ class ServerRuntime:
             from pacthold.work_core import db as core_db
             core_db.configure_database(self.database.path)
             core_db.get_conn()
-        except BaseException:
+        except BaseException as start_failure:
             from pacthold.work_core import db as core_db
             core_db.configure_database(None)
             # A failed start must not leave the round active with the lock
@@ -266,11 +266,13 @@ class ServerRuntime:
             # round's plugin resources are still alive. Dispose the round
             # (reverse order, every plugin exactly once), keep the start
             # error primary with any disposal failures attached, then release.
+            # The start failure is passed EXPLICITLY: reading sys.exc_info()
+            # inside the inner except would capture the cleanup exception.
             if self.plugin_host is not None and self.plugin_host.active_ids():
                 try:
                     self.plugin_host.shutdown()
                 except BaseException as cleanup_failure:
-                    _attach_shutdown_cleanup(cleanup_failure)
+                    _attach_shutdown_cleanup(start_failure, cleanup_failure)
                 _bind_runtime_facades(self)
             self.owner.release()
             raise
@@ -337,18 +339,16 @@ def _bind_runtime_facades(runtime: "ServerRuntime") -> None:
         runtime.execution = runtime._injected_execution
 
 
-def _attach_shutdown_cleanup(cleanup_failure: BaseException) -> None:
-    """Attach a failed shutdown's per-plugin cleanup errors to the start
-    error in flight (the start failure stays primary)."""
-    import sys
-
-    primary = sys.exc_info()[1]
-    if primary is None:
-        return
+def _attach_shutdown_cleanup(start_failure: BaseException,
+                             cleanup_failure: BaseException) -> None:
+    """Attach a failed shutdown's per-plugin cleanup errors to the START
+    error (the start failure stays primary). The start error travels
+    explicitly — sys.exc_info() inside the cleanup's own except would name
+    the cleanup exception instead."""
     errors = getattr(cleanup_failure, "errors", ())
     try:
-        existing = getattr(primary, "cleanup_errors", ())
-        primary.cleanup_errors = tuple(existing) + tuple(errors)
+        existing = getattr(start_failure, "cleanup_errors", ())
+        start_failure.cleanup_errors = tuple(existing) + tuple(errors)
     except (AttributeError, TypeError):
         pass
 

@@ -336,18 +336,22 @@ def create_app(runtime: ServerRuntime) -> FastAPI:
                 return current(*args, **kwargs)
             return guarded
 
-        _mounted_routes: set[tuple[str, frozenset[str], str]] = set()
+        _mounted_routes: set[tuple[str, frozenset[str], str, bool, str]] = set()
 
         def _mount_plugin_routes() -> list:
             """Mount every registered plugin route this app does not serve
             yet. Idempotent: creation-time mounting and restart-time mounting
-            share the same triple-keyed dedup."""
-            from server_plugin_api import HttpRouteDescriptor
+            share the same shape-keyed dedup. The mounted shape carries the
+            auth flag and the endpoint's signature — the request machinery
+            the app actually built."""
+            import inspect
 
             newly = []
             for descriptor in runtime.plugin_host.http_routes.descriptors():
-                triple = (descriptor.path, frozenset(descriptor.methods), descriptor.owner)
-                if triple in _mounted_routes:
+                shape = (descriptor.path, frozenset(descriptor.methods), descriptor.owner,
+                         descriptor.authenticated,
+                         str(inspect.signature(descriptor.endpoint)))
+                if shape in _mounted_routes:
                     continue
                 clash = host_methods.get(descriptor.path)
                 if clash and (clash & set(descriptor.methods)):
@@ -362,7 +366,7 @@ def create_app(runtime: ServerRuntime) -> FastAPI:
                     dependencies=protected if descriptor.authenticated else None,
                     name=f"plugin:{descriptor.owner}:{descriptor.path}",
                 )
-                _mounted_routes.add(triple)
+                _mounted_routes.add(shape)
                 newly.append(descriptor)
             return newly
 

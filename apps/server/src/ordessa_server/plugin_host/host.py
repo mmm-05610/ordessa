@@ -45,6 +45,7 @@ from server_plugin_api import (
     DuplicatePluginError,
     DuplicateStreamRouteError,
     HttpRouteDescriptor,
+    HttpRouteShapeChangedError,
     HttpRouteUnmountedError,
     InvalidDeclarationError,
     PluginCleanupError,
@@ -61,6 +62,14 @@ __all__ = [
     "MethodRegistry", "StreamRouteRegistry", "HttpRouteRegistry",
     "ServerPluginHost", "ActivePlugin",
 ]
+
+
+def _route_signature(endpoint) -> str:
+    """The endpoint's FastAPI-visible parameter shape, as a stable string:
+    what the mounted route's request machinery was built against."""
+    import inspect
+
+    return str(inspect.signature(endpoint))
 
 
 def _carry_cleanup_errors(errors: list[PluginCleanupError]) -> None:
@@ -224,11 +233,15 @@ class ServerPluginHost:
     methods: MethodRegistry = field(default_factory=MethodRegistry)
     stream_routes: StreamRouteRegistry = field(default_factory=StreamRouteRegistry)
     http_routes: HttpRouteRegistry = field(default_factory=HttpRouteRegistry)
-    #: The (path, methods, owner) triples the live transport mounted at its
-    #: creation — None until a transport freezes them. While frozen, a plugin
-    #: activation declaring HTTP routes outside this set refuses type-wise:
-    ## a route that was never mounted must not silently never serve.
-    frozen_http_routes: "frozenset[tuple[str, frozenset[str], str]] | None" = None
+    #: The route shapes the live transport mounted at its startup — None
+    #: until a transport freezes them. Each entry is
+    #: (path, methods, owner, authenticated, endpoint-signature). While
+    #: frozen, a plugin activation declaring HTTP routes outside this set
+    #: refuses type-wise (never mounted), and one re-declaring a mounted
+    #: route with a changed auth flag or signature refuses too: the running
+    #: app would otherwise serve the new registration behind the wall and
+    ## call shape the first mount installed.
+    frozen_http_routes: "frozenset[tuple[str, frozenset[str], str, bool, str]] | None" = None
     data_root: Any = None
     host_ports: Mapping[str, Any] = field(default_factory=dict)
     _active: dict[str, ActivePlugin] = field(default_factory=dict)
@@ -403,14 +416,23 @@ class ServerPluginHost:
                 self.stream_routes.register(item)
                 staged_routes.append(item.route_id)
             if self.frozen_http_routes is not None and registration.http_routes:
-                unmounted = sorted(
-                    f"{item.path} ({', '.join(sorted(item.methods))})"
-                    for item in registration.http_routes
-                    if (item.path, frozenset(item.methods), item.owner)
-                    not in self.frozen_http_routes
-                )
+                unmounted: list[str] = []
+                reshaped: list[str] = []
+                for item in registration.http_routes:
+                    mounted_shape = next(
+                        (shape for shape in self.frozen_http_routes
+                         if shape[:3] == (item.path, frozenset(item.methods), item.owner)),
+                        None)
+                    label = f"{item.path} ({', '.join(sorted(item.methods))})"
+                    if mounted_shape is None:
+                        unmounted.append(label)
+                    elif (mounted_shape[3] != item.authenticated
+                          or mounted_shape[4] != _route_signature(item.endpoint)):
+                        reshaped.append(label)
                 if unmounted:
                     raise HttpRouteUnmountedError(descriptor.id, tuple(unmounted))
+                if reshaped:
+                    raise HttpRouteShapeChangedError(descriptor.id, tuple(reshaped))
             for item in registration.http_routes:
                 if item.owner != descriptor.id:
                     raise InvalidDeclarationError(
