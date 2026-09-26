@@ -11,7 +11,7 @@ import pytest
 from tests.acp_orchestration.conftest import (
     peer_events, pid_alive, session_new_events, wait_until,
 )
-from ordessa_server.execution.sidecar import SidecarError
+from ordessa_server_compat.execution.sidecar import SidecarError
 
 
 # -- requirement 7 ------------------------------------------------------------

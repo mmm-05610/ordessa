@@ -13,7 +13,7 @@ import sqlite3
 
 import pytest
 
-from ordessa_server.execution.session_store_guard import (
+from ordessa_server_compat.execution.session_store_guard import (
     CREDENTIAL_TABLES,
     SessionStoreGuardError,
     guard_shared_store,

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_server.hooks.model import (
+from ordessa_server_compat.hooks.model import (
     DEFAULT_TIMEOUT_SECONDS,
     MAX_TIMEOUT_SECONDS,
     HookModelError,
@@ -17,7 +17,7 @@ from ordessa_server.hooks.model import (
     schema_for,
     validate_model,
 )
-from ordessa_server.hooks.records import HookRecords
+from ordessa_server_compat.hooks.records import HookRecords
 from ordessa_server.idempotency import IdempotentRecords
 from pacthold.storage import Database
 
@@ -128,7 +128,7 @@ def test_the_ledger_crud_keeps_hooks_disabled_until_enabled(tmp_path):
 
 
 def test_hooks_render_in_the_families_own_shape_and_merge_into_one_document():
-    from ordessa_server.hooks.rendering import (
+    from ordessa_server_compat.hooks.rendering import (
         merge_fragments,
         render_hooks_fragment,
     )
@@ -161,7 +161,7 @@ def test_hooks_render_in_the_families_own_shape_and_merge_into_one_document():
 
 
 def test_trigger_facts_are_bounded_scanned_and_blocking_is_explicit(tmp_path):
-    from ordessa_server.hooks.triggers import (
+    from ordessa_server_compat.hooks.triggers import (
         BLOCKING_EXIT_CODE,
         MAX_SUMMARY_CHARS,
         HookTriggerRecords,

@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_server.execution.sidecar_backend import _safe_code
+from ordessa_server_compat.execution.sidecar_backend import _safe_code
 from pacthold.storage.secrets import MemorySecretStore, SecretLocatorUnavailable
 
 

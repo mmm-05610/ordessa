@@ -17,7 +17,7 @@ import shutil
 
 import pytest
 
-from ordessa_server.execution.sidecar import (
+from ordessa_server_compat.execution.sidecar import (
     LocalProcessLauncher,
     SidecarHarnessPort,
     sidecar_bundle_files,

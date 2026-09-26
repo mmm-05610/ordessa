@@ -18,12 +18,12 @@ import pytest
 from pacthold.resource_contracts import harness_capabilities as caps
 from ordessa_server.bootstrap import build_runtime
 from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
-from ordessa_server.execution import HarnessDescriptor, HarnessRegistry
-from ordessa_server.execution.sidecar import LocalProcessLauncher, SidecarError, SidecarHarnessPort
-from ordessa_server.execution.sidecar_backend import (
+from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
+from ordessa_server_compat.execution.sidecar import LocalProcessLauncher, SidecarError, SidecarHarnessPort
+from ordessa_server_compat.execution.sidecar_backend import (
     _effective_attachment_support, _sidecar_attachments,
 )
-from ordessa_server.profiles import ProfileRecords, ProfileService
+from ordessa_server_compat.profiles import ProfileRecords, ProfileService
 from ordessa_server.credentials import CredentialRecords
 from ordessa_server.idempotency import IdempotentRecords
 from pacthold.storage import Database, ObjectStore
@@ -645,7 +645,7 @@ def test_backend_reads_attachment_support_from_the_port_view_not_a_snapshot():
 def test_backend_refuses_attachment_dispatch_and_leaves_no_orphan_native_session():
     """后端在派发前读有效 attach；拒绝时关闭刚打开的原生会话。"""
     from pacthold.resource_contracts import PromptFragmentV1
-    from ordessa_server.execution.sidecar_backend import SidecarExecutionBackend
+    from ordessa_server_compat.execution.sidecar_backend import SidecarExecutionBackend
 
     class Objects:
         def __init__(self, values): self._values = values

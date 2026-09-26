@@ -18,8 +18,8 @@ import sqlite3
 
 from pacthold.storage import database as db
 from ordessa_server.idempotency import IdempotentRecords
-from ordessa_server.model_configs.repository import ProviderModelRecords
-from ordessa_server.model_configs.service import ProviderModelService
+from ordessa_server_compat.model_configs.repository import ProviderModelRecords
+from ordessa_server_compat.model_configs.service import ProviderModelService
 
 
 def _v19_table(conn):

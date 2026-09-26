@@ -92,9 +92,9 @@ def test_freeze_to_native_bytes_end_to_end_via_the_real_service(tmp_path):
     # not a hand-made frozen dict. Proves the record's URL+dialect actually reach
     # the native bytes without a live sidecar (the guest write itself is env-gated).
     from ordessa_server.idempotency import IdempotentRecords
-    from ordessa_server.model_configs.repository import ProviderModelRecords
-    from ordessa_server.model_configs.service import ProviderModelService
-    from ordessa_server.execution import HarnessDescriptor, HarnessRegistry
+    from ordessa_server_compat.model_configs.repository import ProviderModelRecords
+    from ordessa_server_compat.model_configs.service import ProviderModelService
+    from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
     from pacthold.storage import Database, ObjectStore
 
     root = tmp_path / "data"

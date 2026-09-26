@@ -15,11 +15,11 @@ import pytest
 
 from ordessa_server.errors import ServerError
 from ordessa_server.idempotency import IdempotentRecords
-from ordessa_server.workspaces.local_environment import (
+from ordessa_workspace.local_environment import (
     EXECUTION_MODES, LocalEnvironmentProvider,
 )
-from ordessa_server.workspaces.repository import WorkspaceRecords
-from ordessa_server.workspaces.service import WorkspaceService
+from ordessa_workspace.records import WorkspaceRecords
+from ordessa_workspace.service import WorkspaceService
 from pacthold.storage import Database
 
 UNAVAILABLE = {"status": "unavailable", "code": "sandbox_provider_unresolved"}

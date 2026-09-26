@@ -13,8 +13,8 @@ from pathlib import Path
 import pytest
 
 from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
-from ordessa_server.execution.local_channel import LocalSidecarLauncher
-from ordessa_server.execution.placement import PlacementUnsupported, resolve_placement
+from ordessa_server_compat.execution.local_channel import LocalSidecarLauncher
+from ordessa_server_compat.execution.placement import PlacementUnsupported, resolve_placement
 
 PLUGIN = Path(__file__).resolve().parents[3] / "plugins"  / "harness"
 
@@ -80,8 +80,8 @@ def _channel_for(tmp_path, monkeypatch, env_kind: str, *, ssh_connector: bool = 
     condition order 090 broke under.
     """
     import ordessa_server.bootstrap.runtime as runtime_module
-    import ordessa_server.execution.local_channel as local_module
-    import ordessa_server.execution.sidecar as sidecar_module
+    import ordessa_server_compat.execution.local_channel as local_module
+    import ordessa_server_compat.execution.sidecar as sidecar_module
 
     chosen: dict = {}
 

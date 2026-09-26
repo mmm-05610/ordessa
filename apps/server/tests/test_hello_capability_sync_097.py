@@ -15,7 +15,7 @@ import pytest
 
 from ordessa_server.bootstrap import build_runtime
 from ordessa_server.transport.http import create_app
-from ordessa_server.workspaces.local_environment import LocalEnvironmentProvider
+from ordessa_workspace.local_environment import LocalEnvironmentProvider
 
 HELLO = {"clientVersions": ["wire/1"], "clientPresentationSupports": []}
 

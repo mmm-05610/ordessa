@@ -24,7 +24,7 @@ import pytest
 
 from pacthold.resource_contracts import harness_capabilities as caps
 from ordessa_harness.registry.loader import load_builtin_registry
-from ordessa_server.execution import HarnessDescriptor, HarnessRegistry
+from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 
 
 ALL_TRUE = {capability_id: True for capability_id in caps.CANONICAL_CAPABILITY_IDS}
@@ -156,7 +156,7 @@ def test_the_effective_view_is_read_through_the_port_only_after_operations(tmp_p
     see any of them supported before the corresponding operation actually
     returned, and the stream must stay unsupported until a delta arrives.
     """
-    from ordessa_server.execution.sidecar import LocalProcessLauncher, SidecarHarnessPort
+    from ordessa_server_compat.execution.sidecar import LocalProcessLauncher, SidecarHarnessPort
 
     plugin = Path(__file__).resolve().parents[3] / "plugins"  / "harness"
     state: dict = {}
@@ -203,7 +203,7 @@ def test_the_effective_view_is_read_through_the_port_only_after_operations(tmp_p
 
 def test_the_effective_view_never_pre_fills_observations(tmp_path):
     """Fail if anyone answers the honesty problem by inventing observations."""
-    from ordessa_server.execution.sidecar import LocalProcessLauncher, SidecarHarnessPort
+    from ordessa_server_compat.execution.sidecar import LocalProcessLauncher, SidecarHarnessPort
 
     plugin = Path(__file__).resolve().parents[3] / "plugins"  / "harness"
     port = SidecarHarnessPort(

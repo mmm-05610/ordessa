@@ -34,8 +34,8 @@ import pytest
 from pacthold.extensions.runtime_composition.sandbox_port import (
     SandboxPortUnavailable, register_sandbox_port_factory, resolve_sandbox_port,
 )
-from ordessa_server.execution import sidecar_backend as sb
-from ordessa_server.execution.sidecar_backend import (
+from ordessa_server_compat.execution import sidecar_backend as sb
+from ordessa_server_compat.execution.sidecar_backend import (
     SidecarExecutionBackend, _Run, _terminal_reason_from_result,
 )
 
@@ -137,7 +137,7 @@ def _classify(outcome) -> str:
 def test_cancel_public_return_is_not_a_bare_bool():
     # bool is the temporary compatibility shell (C ruling O-3); after E-INC1
     # the new tristate method must exist additively on TurnExecutionPort.
-    from ordessa_server.execution import TurnExecutionPort
+    from ordessa_server_compat.execution import TurnExecutionPort
     tristate = [
         m for m in dir(TurnExecutionPort)
         if "cancel" in m.lower() and m != "cancel"
@@ -221,7 +221,7 @@ def test_sidecar_backend_does_not_import_product_domain_privates():
 
 def test_delegation_product_domain_reach_is_top_level_declared_only():
     import ast
-    import ordessa_server.execution.delegation as delegation
+    import ordessa_server_compat.execution.delegation as delegation
     tree = ast.parse(inspect.getsource(delegation))
 
     def module_of(node):

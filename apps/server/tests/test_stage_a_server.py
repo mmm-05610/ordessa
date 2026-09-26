@@ -10,9 +10,9 @@ import pytest
 
 from ordessa_server.bootstrap import build_runtime
 from ordessa_server.credentials import CredentialRecords
-from ordessa_server.execution import HarnessDescriptor, HarnessRegistry
+from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server.idempotency import IdempotentRecords
-from ordessa_server.profiles import ProfileRecords, ProfileService
+from ordessa_server_compat.profiles import ProfileRecords, ProfileService
 from ordessa_server.transport.http import create_app
 from pacthold.storage import Database, FutureSchemaError, ObjectStore
 from pacthold.storage import database as product_db
@@ -163,7 +163,7 @@ def test_unconfigured_runtime_reports_typed_capability_blockers(tmp_path):
     # A Server with no connector can still serve local workspaces whenever the
     # host can run the room; this test pins the typed-blocker contract on a
     # host where it cannot, so the blocker names the placement that is missing.
-    from ordessa_server.workspaces.local_environment import LocalEnvironmentProvider
+    from ordessa_workspace.local_environment import LocalEnvironmentProvider
     runtime.service.workspaces.local = LocalEnvironmentProvider(
         sandbox_probe=lambda: {"status": "unavailable", "code": "binary_missing"},
     )

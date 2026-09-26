@@ -11,7 +11,7 @@ import threading
 import pytest
 
 from tests.acp_orchestration.conftest import peer_events, wait_until
-from ordessa_server.execution.sidecar import SidecarError
+from ordessa_server_compat.execution.sidecar import SidecarError
 
 
 def prompt_in_thread(port, execution_id, text):

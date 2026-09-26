@@ -10,7 +10,7 @@ from __future__ import annotations
 import pytest
 
 from ordessa_server.errors import ServerError
-from ordessa_server.execution.control_plane_sync import (
+from ordessa_server_compat.execution.control_plane_sync import (
     ControlPlaneSyncError, ExecutionSideProjection, SYNC_SET,
     collect_sync_snapshot, plan_deployment, verify_parity,
     SyncItem,

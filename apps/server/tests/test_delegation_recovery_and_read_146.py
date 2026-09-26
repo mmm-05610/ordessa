@@ -18,15 +18,15 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_server.execution import HarnessDescriptor, HarnessRegistry
+from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server.errors import ServerError
-from ordessa_server.execution import CancelOutcome
-from ordessa_server.execution.delegation import DelegationService
+from ordessa_server_compat.execution import CancelOutcome
+from ordessa_server_compat.execution.delegation import DelegationService
 from ordessa_server.idempotency import IdempotentRecords
-from ordessa_server.profiles import ProfileRecords
-from ordessa_server.profiles.subagents import DelegationError
+from ordessa_server_compat.profiles import ProfileRecords
+from ordessa_server_compat.profiles.subagents import DelegationError
 from ordessa_server_compat.sessions import SessionRecords, SessionService
-from ordessa_server.workspaces import WorkspaceRecords
+from ordessa_workspace import WorkspaceRecords
 from pacthold.storage import Database, ObjectStore
 
 
@@ -234,7 +234,7 @@ def test_continuation_summary_is_the_new_turns_text_not_empty(tmp_path):
 def test_over_window_summary_is_marked_never_silent(tmp_path):
     # The contract's bound is MAX_SUMMARY_CHARS on the *summary*; exceeding it must
     # carry the declared marker instead of dropping the tail without a word.
-    from ordessa_server.execution.delegation import MAX_SUMMARY_CHARS
+    from ordessa_server_compat.execution.delegation import MAX_SUMMARY_CHARS
     env = _delta_env(tmp_path, count=400, text="z" * 40, native_id="native-long")
     result = env["service"].run(
         parent_turn_id=env["parent_turn_id"], parent_profile_id=env["parent"]["profile_id"],

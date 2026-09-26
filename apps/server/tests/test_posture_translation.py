@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_server.profiles.permissions import resolve_all
-from ordessa_server.profiles.posture_translation import (
+from ordessa_server_compat.profiles.permissions import resolve_all
+from ordessa_server_compat.profiles.posture_translation import (
     PostureTranslationError,
     translate_posture,
 )

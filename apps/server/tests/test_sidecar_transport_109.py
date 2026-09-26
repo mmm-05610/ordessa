@@ -14,9 +14,9 @@ from __future__ import annotations
 import threading
 from types import SimpleNamespace
 
-from ordessa_server.execution import SidecarExecutionBackend
-from ordessa_server.execution.sidecar import SidecarError
-from ordessa_server.execution.sidecar_backend import _Run
+from ordessa_server_compat.execution import SidecarExecutionBackend
+from ordessa_server_compat.execution.sidecar import SidecarError
+from ordessa_server_compat.execution.sidecar_backend import _Run
 
 
 class _FailingRecords:

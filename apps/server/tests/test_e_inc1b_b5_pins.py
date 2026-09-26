@@ -28,9 +28,9 @@ import ast
 import inspect
 import threading
 
-from ordessa_server.execution import SidecarExecutionBackend
-from ordessa_server.execution import sidecar_backend as sb_module
-from ordessa_server.execution.execution_contract import (
+from ordessa_server_compat.execution import SidecarExecutionBackend
+from ordessa_server_compat.execution import sidecar_backend as sb_module
+from ordessa_server_compat.execution.execution_contract import (
     CancelOutcome, ExecutionReceipt, ExecutionRequest, NeutralBinding,
     ObservationState,
 )
@@ -58,7 +58,7 @@ def test_cancel_answer_surface_collapses_to_exactly_one_public_verb():
     one on the contract surface; a resurrected bool leg would show up here as
     a second name, not as a red window elsewhere."""
     assert _public_cancel_surface(SidecarExecutionBackend) == ["cancel_execution"]
-    from ordessa_server.execution import TurnExecutionPort
+    from ordessa_server_compat.execution import TurnExecutionPort
     assert _public_cancel_surface(TurnExecutionPort) == ["cancel_execution"]
 
 

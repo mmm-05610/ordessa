@@ -19,7 +19,7 @@ import pytest
 REPO = pathlib.Path(__file__).resolve().parents[3]
 PLUGIN = REPO / "plugins"  / "harness"
 
-from ordessa_server.assets.skills import (
+from ordessa_server_compat.assets.skills import (
     MAX_ASSET_ENTRIES,
     SkillAssetError,
     SkillAssetStore,
@@ -114,7 +114,7 @@ def test_a_missing_skill_md_is_refused(tmp_path):
 
 
 def test_a_stdio_definition_canonicalises_and_refuses_misuse():
-    from ordessa_server.assets.mcp import McpAssetError, canonical_definition
+    from ordessa_server_compat.assets.mcp import McpAssetError, canonical_definition
 
     canonical = canonical_definition({
         "name": "web-tools",
@@ -147,7 +147,7 @@ def test_a_stdio_definition_canonicalises_and_refuses_misuse():
 
 
 def test_the_mcp_store_publishes_one_revision_and_verifies_it(tmp_path):
-    from ordessa_server.assets.mcp import McpAssetError, McpAssetStore
+    from ordessa_server_compat.assets.mcp import McpAssetError, McpAssetStore
 
     store = McpAssetStore(tmp_path / "assets")
     definition = {"name": "web-tools", "transport": {"stdio": {"command": "/bin/x", "args": []}}}
@@ -161,8 +161,8 @@ def test_the_mcp_store_publishes_one_revision_and_verifies_it(tmp_path):
 
 
 def test_the_two_observed_spellings_render_and_unsupported_families_refuse():
-    from ordessa_server.assets.mcp import canonical_definition
-    from ordessa_server.assets.rendering import McpRenderError, render_for_family
+    from ordessa_server_compat.assets.mcp import canonical_definition
+    from ordessa_server_compat.assets.rendering import McpRenderError, render_for_family
     from ordessa_harness.registry.loader import load_builtin_registry
 
     registry = load_builtin_registry()
@@ -209,7 +209,7 @@ def test_the_two_observed_spellings_render_and_unsupported_families_refuse():
 
 
 def test_assets_are_catalogued_bound_and_never_carry_content(tmp_path):
-    from ordessa_server.assets.records import AssetRecords, asset_view
+    from ordessa_server_compat.assets.records import AssetRecords, asset_view
     from ordessa_server.idempotency import IdempotentRecords
     from pacthold.storage import Database
 
@@ -374,7 +374,7 @@ def test_a_bound_mcp_asset_is_rendered_and_materialised_without_writeback(tmp_pa
                 "env": {"API_KEY": {"credentialRef": "credential_1"}},
             }},
         }, asset_id="needs-key", revision=1)
-        from ordessa_server.assets.mcp import definition_digest
+        from ordessa_server_compat.assets.mcp import definition_digest
 
         needs_key = runtime.mcp_assets.read(asset_id="needs-key", revision=1)
         runtime.asset_records.publish(
@@ -593,10 +593,10 @@ def _catalog_source(root: pathlib.Path) -> pathlib.Path:
 
 
 def test_the_catalog_snapshots_and_installs_with_pinned_provenance(tmp_path):
-    from ordessa_server.assets.catalog import CatalogError, CatalogStore
-    from ordessa_server.assets.mcp import McpAssetStore
-    from ordessa_server.assets.records import AssetRecords
-    from ordessa_server.assets.skills import SkillAssetStore
+    from ordessa_server_compat.assets.catalog import CatalogError, CatalogStore
+    from ordessa_server_compat.assets.mcp import McpAssetStore
+    from ordessa_server_compat.assets.records import AssetRecords
+    from ordessa_server_compat.assets.skills import SkillAssetStore
     from ordessa_server.idempotency import IdempotentRecords
     from pacthold.storage import Database
 
@@ -642,7 +642,7 @@ def test_the_catalog_snapshots_and_installs_with_pinned_provenance(tmp_path):
 
 
 def test_a_catalog_index_with_unknown_or_escaping_entries_is_refused():
-    from ordessa_server.assets.catalog import CatalogError, parse_index
+    from ordessa_server_compat.assets.catalog import CatalogError, parse_index
 
     def index(entries):
         return json.dumps({"schema_version": 1, "entries": entries}).encode()
@@ -660,7 +660,7 @@ def test_a_catalog_index_with_unknown_or_escaping_entries_is_refused():
 
 
 def test_the_mcp_probe_answers_bounded_and_types_every_failure(tmp_path):
-    from ordessa_server.assets.mcp_probe import McpProbeError, probe_stdio
+    from ordessa_server_compat.assets.mcp_probe import McpProbeError, probe_stdio
 
     server = REPO / "apps" / "server" / "tests" / "fixtures" / "fake_mcp_server.py"
     ok = probe_stdio("/usr/bin/python3", args=[str(server)], timeout=5.0)
@@ -708,7 +708,7 @@ def test_a_plugin_is_stored_as_code_with_a_digest_and_a_preview(tmp_path):
     duplicate revision all refuse typed, and nothing ever assembles code from
     form fields - what the user wrote is what the digest covers.
     """
-    from ordessa_server.assets.plugins import PluginAssetError, preview_of, PluginAssetStore
+    from ordessa_server_compat.assets.plugins import PluginAssetError, preview_of, PluginAssetStore
 
     store = PluginAssetStore(tmp_path / "assets")
     source = tmp_path / "guard.js"

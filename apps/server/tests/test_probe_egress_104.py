@@ -23,7 +23,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
 
-from ordessa_server.model_configs import probe
+from ordessa_server_compat.model_configs import probe
 
 FAKE_KEY = "DUMMY-NOT-A-REAL-SECRET-0123456789"
 

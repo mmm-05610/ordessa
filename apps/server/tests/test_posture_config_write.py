@@ -12,15 +12,15 @@ import json
 
 import pytest
 
-from ordessa_server.profiles.permissions import resolve_all
-from ordessa_server.profiles.posture_config import (
+from ordessa_server_compat.profiles.permissions import resolve_all
+from ordessa_server_compat.profiles.posture_config import (
     PINNED_FAMILIES,
     RENDERERS,
     PostureConfigError,
     render_posture_config,
     write_posture_config,
 )
-from ordessa_server.profiles.posture_translation import _CLAUDE_TOOLS
+from ordessa_server_compat.profiles.posture_translation import _CLAUDE_TOOLS
 
 CLAUDE_BASE = json.dumps({
     "env": {"ANTHROPIC_BASE_URL": "https://api.deepseek.com/anthropic"},
@@ -323,7 +323,7 @@ def test_posture_write_claude_rule_names_agree_with_order_60_flag_names():
     # 60 translates for the flag vocabulary; this writer lands in the settings
     # vocabulary. The two must name the same tools per key, or one of them is
     # quietly gating a different set.
-    from ordessa_server.profiles.posture_config import _CLAUDE_SETTINGS_TOOLS
+    from ordessa_server_compat.profiles.posture_config import _CLAUDE_SETTINGS_TOOLS
     assert _CLAUDE_SETTINGS_TOOLS.keys() == _CLAUDE_TOOLS.keys()
     for key in _CLAUDE_SETTINGS_TOOLS:
         assert set(_CLAUDE_SETTINGS_TOOLS[key]) == set(_CLAUDE_TOOLS[key])

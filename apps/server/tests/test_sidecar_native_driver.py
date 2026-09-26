@@ -21,7 +21,7 @@ import threading
 
 import pytest
 
-from ordessa_server.execution.sidecar import (
+from ordessa_server_compat.execution.sidecar import (
     LocalProcessLauncher,
     SidecarEnvelope,
     SidecarError,
@@ -343,7 +343,7 @@ def test_deployment_carries_a_declared_driver_module_into_the_reviewed_bundle(tm
     captured: dict = {}
     import ordessa_server_compat.composition as runtime_module
     import ordessa_server.bootstrap.runtime as host_module
-    import ordessa_server.execution.sidecar as sidecar_module
+    import ordessa_server_compat.execution.sidecar as sidecar_module
 
     monkeypatch.setattr(host_module, "_builtin_connector", lambda _instance_id: object())
     monkeypatch.setattr(

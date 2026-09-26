@@ -19,10 +19,10 @@ from __future__ import annotations
 import pytest
 
 from ordessa_server.errors import ServerError
-from ordessa_server.execution import HarnessDescriptor, HarnessDescriptorError, HarnessRegistry
+from ordessa_server_compat.execution import HarnessDescriptor, HarnessDescriptorError, HarnessRegistry
 from ordessa_server.idempotency import IdempotentRecords
-from ordessa_server.model_configs.repository import ProviderModelRecords
-from ordessa_server.model_configs.service import ProviderModelService
+from ordessa_server_compat.model_configs.repository import ProviderModelRecords
+from ordessa_server_compat.model_configs.service import ProviderModelService
 from pacthold.storage import Database, ObjectStore
 
 

@@ -13,16 +13,16 @@ from fastapi.testclient import TestClient
 
 from ordessa_server.bootstrap import build_runtime
 from ordessa_server.credentials import CredentialRecords
-from ordessa_server.execution import (
+from ordessa_server_compat.execution import (
     CancelOutcome, HarnessDescriptor, HarnessRegistry,
 )
 from ordessa_server.idempotency import IdempotentRecords
-from ordessa_server.persistence import ProductRepositoryView
-from ordessa_server.profiles import ProfileRecords
+from ordessa_server_compat.persistence import ProductRepositoryView
+from ordessa_server_compat.profiles import ProfileRecords
 from ordessa_server_compat.sessions import SessionRecords, SessionService
 from ordessa_server.transport.http import create_app
 from pacthold.storage import Database, ObjectStore
-from ordessa_server.workspaces import WorkspaceRecords
+from ordessa_workspace import WorkspaceRecords
 
 
 class RecordingExecution:

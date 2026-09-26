@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 from pacthold.resource_contracts import harness_capabilities as caps
-from ordessa_server.execution.sidecar_backend import _CoreSidecarProvider
+from ordessa_server_compat.execution.sidecar_backend import _CoreSidecarProvider
 from pacthold.work_core.registry import CapabilityUnsupported, ExtensionRegistry
 
 
@@ -53,7 +53,7 @@ def test_require_capability_is_the_consumer_of_the_operation_vocabulary():
 
 def test_no_canonical_surface_exposes_a_work_core_operation_key():
     """Ceilings, effective views and the wire namespace stay canonical."""
-    from ordessa_server.execution import HarnessDescriptor, HarnessRegistry
+    from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 
     registry = HarnessRegistry()
     registry.register(HarnessDescriptor(

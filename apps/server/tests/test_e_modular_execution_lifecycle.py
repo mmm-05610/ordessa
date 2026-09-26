@@ -37,13 +37,13 @@ from typing import Any
 
 import pacthold.execution.first_run_lock as new_lock
 import pacthold.execution.lifecycle as lifecycle
-import ordessa_server.execution.first_run_lock as old_lock
-import ordessa_server.execution.sidecar_backend as sb_module
+import ordessa_server_compat.execution.first_run_lock as old_lock
+import ordessa_server_compat.execution.sidecar_backend as sb_module
 from pacthold.execution.contracts import (
     CancelOutcome, EvidenceClass, ExecutionRequest, NeutralBinding,
     ObservationState,
 )
-from ordessa_server.execution import SidecarExecutionBackend
+from ordessa_server_compat.execution import SidecarExecutionBackend
 
 STDLIB_ALLOWED_ROOTS = frozenset({
     "__future__", "dataclasses", "datetime", "enum", "threading", "types",

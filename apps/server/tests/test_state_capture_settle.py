@@ -16,7 +16,7 @@ import hashlib
 
 import pytest
 
-from ordessa_server.execution.sidecar import SidecarError, _WorkerChannels
+from ordessa_server_compat.execution.sidecar import SidecarError, _WorkerChannels
 
 
 WINDOW = ".pi/sessions"

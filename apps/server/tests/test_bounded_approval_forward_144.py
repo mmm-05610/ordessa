@@ -18,7 +18,7 @@ would be red - the boundary is on the books, not implied.
 """
 from __future__ import annotations
 
-from ordessa_server.execution.sidecar import SidecarHarnessPort
+from ordessa_server_compat.execution.sidecar import SidecarHarnessPort
 
 
 class _RecordingChannel:

@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_server.workspaces.git_status import (
+from ordessa_workspace.git_status import (
     GitStatus,
     local_git_status,
     parse_numstat,

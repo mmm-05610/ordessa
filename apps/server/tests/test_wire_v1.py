@@ -19,11 +19,11 @@ from fastapi.testclient import TestClient
 import pytest
 
 from ordessa_server.bootstrap import build_runtime
-from ordessa_server.execution import (
+from ordessa_server_compat.execution import (
     CancelOutcome, HarnessDescriptor, HarnessRegistry,
 )
 from ordessa_server.transport.http import create_app
-from ordessa_server.workspaces.local_environment import LocalEnvironmentProvider
+from ordessa_workspace.local_environment import LocalEnvironmentProvider
 
 
 class FakeConnector:

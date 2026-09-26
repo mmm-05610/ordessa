@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_server.profiles.permissions import (
+from ordessa_server_compat.profiles.permissions import (
     PRESET_ACTIONS,
     PermissionRuleError,
     effective_rules,
@@ -98,7 +98,7 @@ def test_the_posture_is_stored_validated_and_frozen_into_the_next_turn(tmp_path)
 
     from ordessa_server.errors import ServerError
     from ordessa_server.idempotency import IdempotentRecords
-    from ordessa_server.profiles import ProfileRecords
+    from ordessa_server_compat.profiles import ProfileRecords
     from ordessa_server_compat.sessions import SessionRecords
     from pacthold.storage import Database
 
@@ -240,7 +240,7 @@ def test_clone_plans_what_travels_and_never_pretends_about_sessions():
     target's schema accepts) and lists everything else with its reason. Native
     sessions never travel.
     """
-    from ordessa_server.profiles.clone import CloneError, plan_migration
+    from ordessa_server_compat.profiles.clone import CloneError, plan_migration
     from ordessa_harness.registry.loader import load_builtin_registry
 
     registry = load_builtin_registry()
@@ -301,7 +301,7 @@ def test_clone_plans_what_travels_and_never_pretends_about_sessions():
 
 def test_a_clone_row_records_its_origin_and_carries_only_what_the_plan_allows(tmp_path):
     from ordessa_server.idempotency import IdempotentRecords
-    from ordessa_server.profiles import ProfileRecords
+    from ordessa_server_compat.profiles import ProfileRecords
     from pacthold.storage import Database
 
     database = Database(tmp_path / "data")

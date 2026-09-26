@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_server.profiles.memory import (
+from ordessa_server_compat.profiles.memory import (
     MAX_MEMORY_FILE_BYTES,
     read_memory,
 )

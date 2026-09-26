@@ -11,8 +11,8 @@ import pytest
 
 from ordessa_server.errors import ServerError
 from ordessa_server.idempotency import IdempotentRecords
-from ordessa_server.profiles import ProfileRecords
-from ordessa_server.profiles.subagents import (
+from ordessa_server_compat.profiles import ProfileRecords
+from ordessa_server_compat.profiles.subagents import (
     DEFAULT_TURNS_LIMIT,
     MAX_TIMEOUT_SECONDS,
     DelegationError,

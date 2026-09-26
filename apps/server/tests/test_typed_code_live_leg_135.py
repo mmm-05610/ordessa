@@ -22,7 +22,7 @@ from __future__ import annotations
 import pytest
 
 from pacthold.resource_contracts import PromptFragmentV1
-from ordessa_server.execution.sidecar_backend import _safe_code
+from ordessa_server_compat.execution.sidecar_backend import _safe_code
 from ordessa_server.wire.projection import _event_body
 from pacthold.storage.secrets import SecretLocatorUnavailable
 from pacthold.work_core.errors import DispatchAmbiguous

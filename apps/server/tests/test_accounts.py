@@ -18,14 +18,14 @@ PLUGIN = REPO / "plugins"  / "harness"
 
 import pytest
 
-from ordessa_server.accounts.assets import (
+from ordessa_server_compat.accounts.assets import (
     MAX_ASSET_FILE_BYTES,
     AccountAssetError,
     AccountAssetStore,
     pack_asset,
     unpack_asset,
 )
-from ordessa_server.accounts.records import AccountRecords, account_view
+from ordessa_server_compat.accounts.records import AccountRecords, account_view
 from ordessa_server.idempotency import IdempotentRecords
 from pacthold.storage import Database
 from pacthold.storage.secrets import MemorySecretStore
@@ -177,7 +177,7 @@ def test_a_bound_account_materialises_reclaims_and_conflicts_typed(tmp_path):
 
     from fastapi.testclient import TestClient
 
-    from ordessa_server.accounts.assets import AccountAssetError
+    from ordessa_server_compat.accounts.assets import AccountAssetError
     from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
     from ordessa_server.transport.http import create_app
     from pacthold.storage.secrets import MemorySecretStore
@@ -403,7 +403,7 @@ def test_the_worker_channel_materialises_and_reads_the_working_copy():
     """
     import base64 as _base64
 
-    from ordessa_server.execution.sidecar import _WorkerChannels
+    from ordessa_server_compat.execution.sidecar import _WorkerChannels
 
     class _Client:
         def __init__(self, files):
@@ -433,7 +433,7 @@ def test_the_worker_channel_materialises_and_reads_the_working_copy():
 
     # Materialisation: exactly one home.put per name the asset carries, and
     # nothing for a declared name the asset does not hold.
-    from ordessa_server.execution.sidecar import materialize_subscription
+    from ordessa_server_compat.execution.sidecar import materialize_subscription
 
     client.calls.clear()
     written = materialize_subscription(

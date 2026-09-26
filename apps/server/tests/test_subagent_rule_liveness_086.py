@@ -23,8 +23,8 @@ from __future__ import annotations
 import pytest
 
 from ordessa_server.errors import ServerError
-from ordessa_server.execution import CancelOutcome
-from ordessa_server.execution.delegation import (
+from ordessa_server_compat.execution import CancelOutcome
+from ordessa_server_compat.execution.delegation import (
     MAX_SUMMARY_CHARS,
     DelegationError,
     DelegationService,

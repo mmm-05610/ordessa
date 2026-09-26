@@ -12,7 +12,7 @@ import os
 import stat
 from pathlib import Path
 
-from ordessa_server.execution.change_set import (
+from ordessa_server_compat.execution.change_set import (
     MAX_SNAPSHOT_FILES,
     diff_snapshots,
     snapshot_with_copies,

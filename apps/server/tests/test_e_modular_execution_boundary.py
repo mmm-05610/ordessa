@@ -32,8 +32,8 @@ from pathlib import Path
 
 import pacthold.execution as execution_pkg
 import pacthold.execution.contracts as contracts
-import ordessa_server.execution as server_execution
-import ordessa_server.execution.execution_contract as legacy_contract
+import ordessa_server_compat.execution as server_execution
+import ordessa_server_compat.execution.execution_contract as legacy_contract
 
 MOVED_DEFINITIONS = (
     "CancelOutcome", "DeadlinePolicy", "DeliveryOutcome", "EvidenceClass",
@@ -92,7 +92,7 @@ def test_legacy_package_surface_did_not_grow() -> None:
 
 
 def test_execution_contract_submodule_attribute_survives() -> None:
-    # ``from ordessa_server.execution import execution_contract`` must keep
+    # ``from ordessa_server_compat.execution import execution_contract`` must keep
     # resolving to the same module object, not only its re-exported names.
     assert server_execution.execution_contract is legacy_contract
 
@@ -209,7 +209,7 @@ def test_port_method_surface_unchanged() -> None:
 
 
 def test_s_consumer_import_paths_keep_identity() -> None:
-    sessions_service = importlib.import_module("ordessa_server.sessions.service")
+    sessions_service = importlib.import_module("ordessa_server_compat.sessions.service")
     assert sessions_service.CancelOutcome is contracts.CancelOutcome
     assert sessions_service.TurnExecutionPort is contracts.TurnExecutionPort
     assert sessions_service.HarnessRegistry is server_execution.HarnessRegistry

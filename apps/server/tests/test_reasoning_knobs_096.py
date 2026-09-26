@@ -10,7 +10,7 @@ from __future__ import annotations
 import pytest
 
 from ordessa_server.errors import ServerError
-from ordessa_server.model_configs.reasoning_knobs import (
+from ordessa_server_compat.model_configs.reasoning_knobs import (
     default_effort, effective_domain, validate_reasoning_value,
 )
 

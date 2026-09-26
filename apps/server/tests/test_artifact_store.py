@@ -12,7 +12,7 @@ import json
 
 import pytest
 
-from ordessa_server.execution.artifact_store import (
+from ordessa_server_compat.execution.artifact_store import (
     ArtifactStore,
     ArtifactStoreError,
 )
@@ -95,7 +95,7 @@ def test_wire_artifact_methods_round_trip(tmp_path):
     """Order 57 C: the four wire methods over a real ServerRuntime store."""
     import shutil as _shutil
 
-    from ordessa_server.execution.artifact_store import ArtifactStore
+    from ordessa_server_compat.execution.artifact_store import ArtifactStore
 
     source = _make_source(tmp_path, "src-v1", {"bin/agent": b"#!/bin/sh\nexit 0\n"})
     digest = _digest_of(source)

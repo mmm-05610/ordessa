@@ -27,7 +27,7 @@ REPO = Path(__file__).resolve().parents[3]
 PLUGIN = REPO / "plugins"  / "harness"
 REPORT = REPO / "docs/server-round1/import-asset-request-id-129.md"
 
-from ordessa_server.accounts.assets import AccountAssetStore
+from ordessa_server_compat.accounts.assets import AccountAssetStore
 from ordessa_server.wire import handlers as handlers_module
 from ordessa_server_compat import core_wire as compat_wire
 
@@ -279,7 +279,7 @@ def _pre_129_import_asset(self, params):
         account_id=account_id, files={name: source.read_bytes()}, kind="subscription")
     accounts.record_asset(account_id, locator=locator, digest=digest_value,
                           state=str(account["state"]))
-    from ordessa_server.accounts.records import account_view
+    from ordessa_server_compat.accounts.records import account_view
     return {"account": account_view(accounts.get(account_id))}
 
 

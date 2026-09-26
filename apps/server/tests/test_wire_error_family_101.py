@@ -21,9 +21,9 @@ from fastapi.testclient import TestClient
 import pytest
 
 from ordessa_server.bootstrap import build_runtime
-from ordessa_server.execution.artifact_store import ArtifactStore, ArtifactStoreError
+from ordessa_server_compat.execution.artifact_store import ArtifactStore, ArtifactStoreError
 from ordessa_server.transport.http import create_app
-from ordessa_server.usage_aggregate import UsageAggregator
+from ordessa_server_compat.usage_aggregate import UsageAggregator
 from ordessa_server.wire import handlers as handlers_module
 from ordessa_server_compat import core_wire as compat_wire
 from ordessa_server.wire.errors import FAMILIES, WireError

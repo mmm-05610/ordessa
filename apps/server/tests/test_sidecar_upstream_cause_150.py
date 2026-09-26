@@ -25,14 +25,14 @@ import pathlib
 import re
 import shutil
 
-from ordessa_server.execution.sidecar import (
+from ordessa_server_compat.execution.sidecar import (
     LocalProcessLauncher, SidecarEnvelope, SidecarError,
 )
-from ordessa_server.execution.sidecar_backend import _safe_code
+from ordessa_server_compat.execution.sidecar_backend import _safe_code
 from ordessa_server.idempotency import IdempotentRecords
-from ordessa_server.profiles import ProfileRecords
+from ordessa_server_compat.profiles import ProfileRecords
 from ordessa_server_compat.sessions import SessionRecords
-from ordessa_server.workspaces import WorkspaceRecords
+from ordessa_workspace import WorkspaceRecords
 from pacthold.storage import Database, ObjectStore
 
 PLUGIN = pathlib.Path(__file__).resolve().parents[3] / "plugins"  / "harness"
@@ -233,8 +233,8 @@ def test_an_accepted_turn_whose_adapter_cannot_start_reports_that_cause_to_the_c
     from fastapi.testclient import TestClient
 
     from ordessa_server.bootstrap import build_runtime
-    from ordessa_server.execution import HarnessDescriptor, HarnessRegistry, SidecarExecutionBackend
-    from ordessa_server.execution.sidecar import SidecarHarnessPort
+    from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry, SidecarExecutionBackend
+    from ordessa_server_compat.execution.sidecar import SidecarHarnessPort
     from ordessa_server.transport.http import create_app
     from test_harness_sidecar import (
         FAKE_PEER, PLUGIN, SIDEcar_ENTRY, _fixture_capability_material, _wire_post,

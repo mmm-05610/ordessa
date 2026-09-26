@@ -10,14 +10,14 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_server.execution import HarnessDescriptor, HarnessRegistry
+from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server.errors import ServerError
-from ordessa_server.execution.delegation import DelegationService
+from ordessa_server_compat.execution.delegation import DelegationService
 from ordessa_server.idempotency import IdempotentRecords
-from ordessa_server.profiles import ProfileRecords
-from ordessa_server.profiles.subagents import DelegationError
+from ordessa_server_compat.profiles import ProfileRecords
+from ordessa_server_compat.profiles.subagents import DelegationError
 from ordessa_server_compat.sessions import SessionRecords, SessionService
-from ordessa_server.workspaces import WorkspaceRecords
+from ordessa_workspace import WorkspaceRecords
 from pacthold.storage import Database, ObjectStore
 
 
@@ -490,7 +490,7 @@ def test_a_child_approval_is_mirrored_into_the_parent_turn(tmp_path):
                                     "prompt": "x"}, )
     child_turn = result["turnId"]
 
-    from ordessa_server.approvals import ApprovalRecords
+    from ordessa_server_compat.approvals import ApprovalRecords
 
     class _Port:
         def register_approval(self, approval_id, turn_id, request_id):
@@ -524,7 +524,7 @@ class _Backend:
         self.on_event = lambda *args, **kwargs: None
         self._message_parts = {}
 
-    from ordessa_server.execution.sidecar_backend import SidecarExecutionBackend as _B
+    from ordessa_server_compat.execution.sidecar_backend import SidecarExecutionBackend as _B
 
     _native_event = _B._native_event
 

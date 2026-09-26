@@ -8,15 +8,15 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_server.execution.inventory import (
+from ordessa_server_compat.execution.inventory import (
     MAX_EXECUTIONS,
     InventoryError,
     list_executions,
 )
 from ordessa_server.idempotency import IdempotentRecords
-from ordessa_server.profiles import ProfileRecords
+from ordessa_server_compat.profiles import ProfileRecords
 from ordessa_server_compat.sessions import SessionRecords
-from ordessa_server.workspaces import WorkspaceRecords
+from ordessa_workspace import WorkspaceRecords
 from pacthold.storage import Database
 
 

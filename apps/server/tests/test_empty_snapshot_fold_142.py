@@ -13,7 +13,7 @@ These gates drive the real `workspace_change_set` (the same method the envelope 
 """
 from __future__ import annotations
 
-from ordessa_server.execution.sidecar import _WorkerChannels
+from ordessa_server_compat.execution.sidecar import _WorkerChannels
 
 
 class _FakeClient:

@@ -160,7 +160,7 @@ def test_workspace_plugin_presence_and_honest_absence(tmp_path):
     """The absent/present pair on one real domain: the five methods exist only
     when the plugin is composed, and their support state follows readiness
     exactly as wire/1 always reported it."""
-    from ordessa_server.workspaces.local_environment import LocalEnvironmentProvider
+    from ordessa_workspace.local_environment import LocalEnvironmentProvider
 
     bare = build_runtime(tmp_path / "bare", server_plugins=[])
     try:

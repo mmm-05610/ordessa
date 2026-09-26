@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_server.accounts.login_engine import LoginEngine
+from ordessa_server_compat.accounts.login_engine import LoginEngine
 from ordessa_server.errors import ServerError
 
 

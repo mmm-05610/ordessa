@@ -26,7 +26,7 @@ REPO = Path(__file__).resolve().parents[3]
 ABSOLUTE_PATH = re.compile(r"(^|[\s:'\"])/[A-Za-z0-9._/-]{2,}")
 
 from ordessa_server.bootstrap import build_runtime
-from ordessa_server.execution import HarnessDescriptor, HarnessRegistry
+from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server.transport.http import create_app
 from ordessa_server_compat import core_wire as handlers_module
 from ordessa_server.wire.errors import FAMILIES, family_for

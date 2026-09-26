@@ -29,7 +29,7 @@ import time
 
 import pytest
 
-from ordessa_server.execution.first_run_lock import (
+from ordessa_server_compat.execution.first_run_lock import (
     FirstRunGate,
     FirstRunLockTimeout,
     first_run_gate,
@@ -269,7 +269,7 @@ def test_without_the_gate_the_same_first_runs_overlap(tmp_path, monkeypatch):
     *produced* (the bypassed first section stays open until a second arrives)
     instead of sampled, so no amount of machine load can make it go away.
     """
-    import ordessa_server.execution.sidecar_backend as backend_module
+    import ordessa_server_compat.execution.sidecar_backend as backend_module
 
     spy = _SeamSpy(bypass=True, hold_first_open=True)
     monkeypatch.setattr(backend_module, "first_run_gate", lambda: spy)
@@ -288,7 +288,7 @@ def test_the_guard_keeps_one_first_run_inside_the_window_at_a_time(tmp_path, mon
     by timing, and it is what bites if the product stops consulting the guard
     (`consults` falls to 0, which no clock-based reading would ever notice).
     """
-    import ordessa_server.execution.sidecar_backend as backend_module
+    import ordessa_server_compat.execution.sidecar_backend as backend_module
 
     spy = _SeamSpy(bypass=False)
     monkeypatch.setattr(backend_module, "first_run_gate", lambda: spy)

@@ -13,7 +13,7 @@ import tempfile
 
 import pytest
 
-from ordessa_server.execution.usage import (
+from ordessa_server_compat.execution.usage import (
     UsageParseError,
     parse_pi_acp_journal,
     parse_usage,
@@ -89,7 +89,7 @@ def test_the_registered_parser_is_reachable_by_name():
 def test_codex_rollout_copies_the_cumulative_counters():
     """First-hand shape (stage A): rollout lines carry the harness's own
     session-to-date counters — copied verbatim, not re-derived."""
-    from ordessa_server.execution.usage import parse_codex_rollout
+    from ordessa_server_compat.execution.usage import parse_codex_rollout
 
     # The real nesting (first-hand): payload.info.total_token_usage.
     content = _journal(
@@ -109,7 +109,7 @@ def test_codex_rollout_copies_the_cumulative_counters():
 def test_claude_projects_line_maps_the_message_usage():
     """First-hand shape (stage A): assistant rows carry message.usage with the
     Anthropic token names, including the two cache fields."""
-    from ordessa_server.execution.usage import parse_claude_projects_line
+    from ordessa_server_compat.execution.usage import parse_claude_projects_line
 
     content = _journal(
         {"type": "user", "message": {"role": "user", "content": "hi"}},
@@ -144,7 +144,7 @@ def test_hermes_state_db_reads_the_newest_session_row(tmp_path):
     connection.commit()
     connection.close()
 
-    from ordessa_server.execution.usage import parse_hermes_state_db
+    from ordessa_server_compat.execution.usage import parse_hermes_state_db
 
     fact = parse_hermes_state_db(db.read_bytes())
     assert fact == {"inputTokens": 300, "outputTokens": 40, "cacheReadTokens": 12,
@@ -152,7 +152,7 @@ def test_hermes_state_db_reads_the_newest_session_row(tmp_path):
 
 
 def test_hermes_db_without_the_sessions_table_is_a_none_not_a_guess(tmp_path):
-    from ordessa_server.execution.usage import parse_hermes_state_db
+    from ordessa_server_compat.execution.usage import parse_hermes_state_db
     import sqlite3
 
     db = tmp_path / "state.db"
@@ -199,7 +199,7 @@ def test_opencode_db_maps_the_assistant_token_blob(tmp_path):
     ``message`` carry the per-call token blob (total/input/output/reasoning
     plus cache.read/write) in their data JSON. The last assistant row wins;
     fields the newest call did not report stay absent."""
-    from ordessa_server.execution.usage import parse_opencode_db
+    from ordessa_server_compat.execution.usage import parse_opencode_db
 
     content = _sqlite_bytes(tmp_path, "opencode.db", OPENCODE_SCHEMA)
     assert parse_opencode_db(content) == {
@@ -212,7 +212,7 @@ def test_opencode_db_maps_the_assistant_token_blob(tmp_path):
 
 
 def test_opencode_db_without_the_message_table_is_none(tmp_path):
-    from ordessa_server.execution.usage import parse_opencode_db
+    from ordessa_server_compat.execution.usage import parse_opencode_db
 
     content = _sqlite_bytes(tmp_path, "opencode.db",
                             ("CREATE TABLE unrelated (x INTEGER)",))
@@ -225,7 +225,7 @@ def test_kilo_db_reads_the_newest_session_totals(tmp_path):
     """First-hand shape (stage A on this machine): kilo's ``session`` table
     carries per-session totals in dedicated token columns; the newest session
     by the store's own time_updated wins."""
-    from ordessa_server.execution.usage import parse_kilo_db
+    from ordessa_server_compat.execution.usage import parse_kilo_db
 
     content = _sqlite_bytes(tmp_path, "kilo.db", (
         "CREATE TABLE session (id TEXT PRIMARY KEY, tokens_input INTEGER, "
@@ -247,7 +247,7 @@ def test_kilo_db_reads_the_newest_session_totals(tmp_path):
 
 def test_kilo_db_copies_only_the_columns_the_store_reports(tmp_path):
     """A store that predates some token columns reports only what it has."""
-    from ordessa_server.execution.usage import parse_kilo_db
+    from ordessa_server_compat.execution.usage import parse_kilo_db
 
     content = _sqlite_bytes(tmp_path, "kilo.db", (
         "CREATE TABLE session (id TEXT PRIMARY KEY, tokens_input INTEGER, "
@@ -270,7 +270,7 @@ REAL_OPENCODE_ASSISTANT_ROW = {
 
 def test_the_recorded_real_opencode_row_still_maps_to_the_recorded_fact(tmp_path):
     """The blob mapping holds for the values copied off the live store."""
-    from ordessa_server.execution.usage import parse_opencode_db
+    from ordessa_server_compat.execution.usage import parse_opencode_db
 
     content = _sqlite_bytes(tmp_path, "opencode.db", (
         "CREATE TABLE message (id TEXT PRIMARY KEY, session_id TEXT, "
@@ -291,7 +291,7 @@ def test_a_null_column_is_unknown_and_never_becomes_a_zero(tmp_path):
     store row has input reported and output/reasoning left unreported, so a
     zero would be an invented number in the ledger.
     """
-    from ordessa_server.execution.usage import parse_hermes_state_db
+    from ordessa_server_compat.execution.usage import parse_hermes_state_db
 
     content = _sqlite_bytes(tmp_path, "state.db", (
         "CREATE TABLE sessions (id TEXT PRIMARY KEY, input_tokens INTEGER, "
@@ -315,7 +315,7 @@ _SECRET_BEARING_TABLES = (
 def test_the_probe_own_statements_name_no_secret_bearing_table(tmp_path, monkeypatch):
     """G2: the carrier keeps credentials in the same file; the probe never
     issues a statement that names those tables, and the fact still parses."""
-    from ordessa_server.execution import usage as usage_module
+    from ordessa_server_compat.execution import usage as usage_module
 
     recorded: list[str] = []
     refuse = usage_module._refuse_credential_queries
@@ -344,7 +344,7 @@ def test_the_probe_own_statements_name_no_secret_bearing_table(tmp_path, monkeyp
 def test_a_statement_that_reaches_for_the_credential_table_is_refused(tmp_path):
     """G2's counter-example, with teeth: one extra statement is a typed
     refusal, and the scratch copy is still taken away afterwards."""
-    from ordessa_server.execution.usage import _scratch_sqlite
+    from ordessa_server_compat.execution.usage import _scratch_sqlite
 
     content = _sqlite_bytes(tmp_path, "state.db", _SECRET_BEARING_TABLES)
     with pytest.raises(UsageParseError) as refusal:
@@ -365,7 +365,7 @@ def test_a_failed_usage_read_keeps_the_fact_unknown_and_records_why(caplog):
     import logging
     import threading
 
-    from ordessa_server.execution import sidecar_backend
+    from ordessa_server_compat.execution import sidecar_backend
 
     class _Port:
         usage_probe = {"journalSuffix": "state.db", "format": "hermes-state-db"}
@@ -391,7 +391,7 @@ def test_a_failed_usage_read_keeps_the_fact_unknown_and_records_why(caplog):
 
 def test_probe_validates_the_endpoint_before_any_network_call():
     """SSRF/Order-55 §2: only https (loopback http exempt), no private nets."""
-    from ordessa_server.model_configs.probe import ProbeError, pull_models
+    from ordessa_server_compat.model_configs.probe import ProbeError, pull_models
 
     with pytest.raises(ProbeError) as blocked:
         pull_models("http://10.1.2.3/v1", None)
@@ -446,7 +446,7 @@ def test_pull_models_parses_a_loopback_fake(tmp_path):
         time.sleep(0.01)
 
     try:
-        from ordessa_server.model_configs.probe import (
+        from ordessa_server_compat.model_configs.probe import (
             ProbeError,
             pull_models,
             probe_connection,
@@ -482,12 +482,12 @@ def test_pull_models_rejects_oversized_and_shapeless_responses(monkeypatch):
     refusals, never truncated-then-trusted."""
     import socket
 
-    from ordessa_server.model_configs.probe import (
+    from ordessa_server_compat.model_configs.probe import (
         MAX_RESPONSE_BYTES,
         ProbeError,
         pull_models,
     )
-    import ordessa_server.model_configs.probe as probe_module
+    import ordessa_server_compat.model_configs.probe as probe_module
 
     #: Order 104 made the endpoint check resolve the name, so a test that fakes
     #: only the transport would otherwise start needing real DNS. A public
@@ -560,7 +560,7 @@ def test_a_wal_resident_row_is_read_with_its_sidecar(tmp_path):
     committed."""
     import sqlite3
 
-    from ordessa_server.execution.usage import parse_hermes_state_db, parse_usage
+    from ordessa_server_compat.execution.usage import parse_hermes_state_db, parse_usage
 
     db = tmp_path / "state.db"
     writer = sqlite3.connect(db)
@@ -596,7 +596,7 @@ def test_a_slow_drip_answer_hits_the_total_deadline(monkeypatch):
     PROBE_TIMEOUT - not the size cap, which this body never reaches."""
     import socket
 
-    import ordessa_server.model_configs.probe as probe_module
+    import ordessa_server_compat.model_configs.probe as probe_module
 
     #: As in the oversized-response test above: the transport is faked, so the
     #: name must not have to exist. (Order 104 is what made the check resolve.)
@@ -640,7 +640,7 @@ def test_a_probe_invents_no_window_capability_or_price_values():
     """
     from dataclasses import fields
 
-    import ordessa_server.model_configs.probe as probe_module
+    import ordessa_server_compat.model_configs.probe as probe_module
 
     names = {field.name for field in fields(probe_module.ProbeResult)}
     assert names == {"status", "detail", "models"}, names

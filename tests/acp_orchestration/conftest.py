@@ -237,15 +237,15 @@ def _contains(payload, wanted) -> bool:
 @pytest.fixture
 def ports(tmp_path, monkeypatch):
     """Factory for real NativeHarnessPort instances over the plugin worker entry."""
-    from ordessa_server.execution.sidecar import NativeHarnessPort, NativeProcessLauncher
+    from ordessa_server_compat.execution.sidecar import NativeHarnessPort, NativeProcessLauncher
 
     log_base = str(tmp_path / "peer-log")
     monkeypatch.setenv("HD003_LOG", log_base)
     created: list[PortHandle] = []
 
     def make(project: Path, *, environment: dict[str, str] | None = None) -> PortHandle:
-        from ordessa_server.execution import HarnessRegistry
-        from ordessa_server.execution import HarnessDescriptor
+        from ordessa_server_compat.execution import HarnessRegistry
+        from ordessa_server_compat.execution import HarnessDescriptor
         env = dict(os.environ) if environment is None else dict(environment)
         env.pop("AGENTBOX_SIDECAR_ISOLATED", None)
         env["HD003_LOG"] = log_base

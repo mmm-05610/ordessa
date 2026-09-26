@@ -43,8 +43,8 @@ import threading
 
 import pytest
 
-from ordessa_server.execution import sidecar_backend as sb
-from ordessa_server.execution.sidecar_backend import SidecarExecutionBackend
+from ordessa_server_compat.execution import sidecar_backend as sb
+from ordessa_server_compat.execution.sidecar_backend import SidecarExecutionBackend
 from pacthold.storage import ObjectStore
 
 PROFILE_CONTRACT = "agent-box.profile@1"
@@ -218,7 +218,7 @@ def test_overrides_parameter_is_retired_from_the_accept_signature(tmp_path, tmp_
     # the parameter is deleted from the Protocol and both concrete accepts.
     # Word change is the ruling's result, not a weakening of a green promise.
     import inspect as _inspect
-    from ordessa_server.execution import TurnExecutionPort
+    from ordessa_server_compat.execution import TurnExecutionPort
     for target in (TurnExecutionPort.accept, SidecarExecutionBackend.accept):
         assert "overrides" not in _inspect.signature(target).parameters, target
     store, i, frozen, live_v1, _ = _seed(tmp_path)

@@ -18,13 +18,13 @@ from __future__ import annotations
 import json
 
 from ordessa_server.credentials import CredentialRecords
-from ordessa_server.execution import HarnessDescriptor, HarnessRegistry
+from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server.idempotency import IdempotentRecords
-from ordessa_server.profiles import ProfileRecords
-from ordessa_server.profiles.permissions import resolve_all
+from ordessa_server_compat.profiles import ProfileRecords
+from ordessa_server_compat.profiles.permissions import resolve_all
 from ordessa_server_compat.sessions import SessionRecords, SessionService
 from ordessa_server_compat.sessions.queue import QueueRecords
-from ordessa_server.workspaces import WorkspaceRecords
+from ordessa_workspace import WorkspaceRecords
 from pacthold.storage import Database, ObjectStore
 
 CONFIG = {"schema_version": 1, "harness_type": "alpha", "configuration": {"model": "one"}}

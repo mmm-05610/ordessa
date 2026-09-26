@@ -38,12 +38,12 @@ import json
 import pytest
 
 from ordessa_server.errors import ServerError
-from ordessa_server.execution.delegation import DelegationService
-from ordessa_server.execution.sidecar_backend import SidecarExecutionBackend
+from ordessa_server_compat.execution.delegation import DelegationService
+from ordessa_server_compat.execution.sidecar_backend import SidecarExecutionBackend
 from ordessa_server.idempotency import IdempotentRecords
-from ordessa_server.profiles import ProfileRecords
+from ordessa_server_compat.profiles import ProfileRecords
 from ordessa_server_compat.sessions import SessionRecords, SessionService
-from ordessa_server.workspaces import WorkspaceRecords
+from ordessa_workspace import WorkspaceRecords
 from pacthold.storage import Database, ObjectStore
 
 

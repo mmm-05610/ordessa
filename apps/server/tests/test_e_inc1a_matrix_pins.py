@@ -32,17 +32,17 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_server.execution import (
+from ordessa_server_compat.execution import (
     SidecarExecutionBackend, TurnExecutionPort, execution_contract,
 )
-from ordessa_server.execution import sidecar as sidecar_module
-from ordessa_server.execution import sidecar_backend as sb
-from ordessa_server.execution.execution_contract import (
+from ordessa_server_compat.execution import sidecar as sidecar_module
+from ordessa_server_compat.execution import sidecar_backend as sb
+from ordessa_server_compat.execution.execution_contract import (
     CancelOutcome, DeadlinePolicy, EvidenceClass, ExecutionObservation,
     ExecutionReceipt, ExecutionRequest, NeutralBinding, ObservationState,
 )
-from ordessa_server.execution.sidecar import sidecar_bundle_files
-from ordessa_server.execution.sidecar_backend import _Run
+from ordessa_server_compat.execution.sidecar import sidecar_bundle_files
+from ordessa_server_compat.execution.sidecar_backend import _Run
 
 
 def _backend() -> SidecarExecutionBackend:

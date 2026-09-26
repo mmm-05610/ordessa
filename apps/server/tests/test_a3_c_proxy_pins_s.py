@@ -8,7 +8,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from ordessa_server_compat.plugin import _core_filer
-from ordessa_server.execution.delegation import DelegationService
+from ordessa_server_compat.execution.delegation import DelegationService
 from pacthold.work_core import db as core_db
 from pacthold.work_core.repository import CoreRepository
 from pacthold.work_core.services import ExecutionService, WorkService

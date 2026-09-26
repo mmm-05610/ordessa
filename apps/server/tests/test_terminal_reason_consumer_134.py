@@ -14,7 +14,7 @@ change); this order is only the safe consumer that turns it on when it arrives.
 """
 from __future__ import annotations
 
-from ordessa_server.execution.sidecar_backend import _terminal_reason_from_result
+from ordessa_server_compat.execution.sidecar_backend import _terminal_reason_from_result
 from ordessa_server.wire.projection import execution_state
 from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server_compat.sessions import SessionRecords
@@ -162,7 +162,7 @@ import pathlib  # noqa: E402
 
 import pytest  # noqa: E402
 
-from ordessa_server.execution.sidecar import (  # noqa: E402
+from ordessa_server_compat.execution.sidecar import (  # noqa: E402
     LocalProcessLauncher,
     SidecarHarnessPort,
 )

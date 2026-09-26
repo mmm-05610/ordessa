@@ -26,7 +26,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 from ordessa_server.bootstrap import build_runtime
-from ordessa_server.execution import HarnessDescriptor, HarnessRegistry
+from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server.transport.http import create_app
 from pacthold.storage import MemorySecretStore
 

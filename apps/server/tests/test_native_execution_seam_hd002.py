@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_server.execution.sidecar import NativeHarnessPort, NativeProcessLauncher
-from ordessa_server.execution.sidecar_backend import (
+from ordessa_server_compat.execution.sidecar import NativeHarnessPort, NativeProcessLauncher
+from ordessa_server_compat.execution.sidecar_backend import (
     CapabilityGateRefusal, NativeProjectRefusal, NativeSessionUnavailable,
     SidecarExecutionBackend,
     _capability_gate, _resumable,

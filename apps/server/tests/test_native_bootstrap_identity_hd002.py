@@ -13,7 +13,7 @@ from ordessa_server.bootstrap import build_runtime
 from ordessa_server_compat.composition import build_runtime_from_native_adapter
 from ordessa_server.wire.errors import WireError
 from ordessa_server.transport.http import create_app
-from ordessa_server.execution.sidecar import NativeProcessLauncher
+from ordessa_server_compat.execution.sidecar import NativeProcessLauncher
 
 
 HELLO = {"clientVersions": ["wire/1"], "clientPresentationSupports": []}

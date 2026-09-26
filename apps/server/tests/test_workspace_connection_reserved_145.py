@@ -61,18 +61,18 @@ class _StubExecution:
         return True
 
     def cancel_execution(self, execution_id):
-        from ordessa_server.execution import CancelOutcome
+        from ordessa_server_compat.execution import CancelOutcome
         return (CancelOutcome.CONFIRMED_STOPPED if self.cancel(execution_id)
                 else CancelOutcome.REFUSED_NO_ACTIVE_RUN)
 
 
 @pytest.fixture
 def server(tmp_path, monkeypatch):
-    from ordessa_server.workspaces import local_environment as local_env
+    from ordessa_workspace import local_environment as local_env
 
     monkeypatch.setattr(local_env.LocalEnvironmentProvider, "sandbox_available",
                         lambda self: True)
-    from ordessa_server.execution import HarnessDescriptor, HarnessRegistry
+    from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 
     registry = HarnessRegistry()
     registry.register(HarnessDescriptor("alpha", capability_claims={"stream": True}))
