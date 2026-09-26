@@ -139,13 +139,13 @@ def test_an_unreadable_blocker_is_unknown_and_not_ready(server, monkeypatch):
     """
     runtime, client, headers = server
     profile = make_profile(client, headers, name="legacy-row")
-    original = runtime.wire.profiles.records.list
+    original = runtime.compat_handlers.profiles.records.list
 
     def rows_without_the_column(*args, **kwargs):
         return [{key: value for key, value in row.items() if key != "recovery_pending"}
                 for row in original(*args, **kwargs)]
 
-    monkeypatch.setattr(runtime.wire.profiles.records, "list", rows_without_the_column)
+    monkeypatch.setattr(runtime.compat_handlers.profiles.records, "list", rows_without_the_column)
     item = listed(runtime, client, headers, profile["profile_id"])
     assert item["recoveryPending"] is None, item
     recovery = next(check for check in item["sendability"]["checks"] if check["key"] == "recovery")

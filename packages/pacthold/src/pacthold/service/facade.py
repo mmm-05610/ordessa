@@ -12,7 +12,7 @@ from ordessa_server.errors import unavailable
 from ordessa_server.execution import HarnessRegistry, TurnExecutionPort
 from ordessa_server.events import EventNotifier
 from ordessa_server.profiles import ProfileService
-from ordessa_server.sessions import SessionService
+from pacthold.service.sessions import SessionService
 from ordessa_server.workspaces import WorkspaceService
 
 

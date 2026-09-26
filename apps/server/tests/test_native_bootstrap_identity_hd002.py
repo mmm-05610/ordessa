@@ -10,7 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from ordessa_server.bootstrap import build_runtime
-from ordessa_server.bootstrap.runtime import build_runtime_from_native_adapter
+from ordessa_server_compat.composition import build_runtime_from_native_adapter
 from ordessa_server.wire.errors import WireError
 from ordessa_server.transport.http import create_app
 from ordessa_server.execution.sidecar import NativeProcessLauncher

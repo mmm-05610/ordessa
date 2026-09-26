@@ -10,7 +10,7 @@ requires-python = ">=3.10"
 # The historical `agent-box-terminal-session` dependency is dropped in the
 # monorepo baseline: that plugin is not part of main (see MIGRATION-TABLE.md);
 # no active import in this package referenced it.
-dependencies = ["pacthold==2.0.0a1"]
+dependencies = ["pacthold==2.0.0a1", "ordessa-server==2.0.0a1", "ordessa-server-plugin-api>=0.1.0,<1"]
 [project.entry-points."agent_box.plugins"]
 # The entry-point group keeps its historical `agent_box.plugins` spelling on
 # purpose: it is the plugin-discovery compatibility surface (order 61

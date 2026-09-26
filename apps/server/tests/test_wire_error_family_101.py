@@ -25,6 +25,7 @@ from ordessa_server.execution.artifact_store import ArtifactStore, ArtifactStore
 from ordessa_server.transport.http import create_app
 from ordessa_server.usage_aggregate import UsageAggregator
 from ordessa_server.wire import handlers as handlers_module
+from ordessa_server_compat import core_wire as compat_wire
 from ordessa_server.wire.errors import FAMILIES, WireError
 
 FIVE_METHODS = ("usage.aggregate", "usage.export", "providerArtifacts.list",
@@ -92,6 +93,7 @@ def test_no_wire_error_is_constructed_with_a_non_family_first_argument():
     test ever built them.
     """
     source = Path(handlers_module.__file__).read_text(encoding="utf-8")
+    source += Path(compat_wire.__file__).read_text(encoding="utf-8")
     found = re.findall(r'WireError\(\s*"([A-Z_]+)"', source)
     found += re.findall(r'WireError\(\s*\n\s*"([A-Z_]+)"', source)
     assert found, "the scan found nothing - it has stopped matching reality"
@@ -110,7 +112,7 @@ def test_the_families_are_the_twelve_locked_ones():
 
 def test_usage_aggregate_answers_with_real_numbers_once_injected(server):
     runtime, client, headers = server
-    runtime.wire.usage_aggregator = UsageAggregator(runtime.repository)
+    runtime.compat_handlers.usage_aggregator = UsageAggregator(runtime.repository)
     body = post(client, headers, "usage.aggregate", {"sessions": []}).json()
     assert "result" in body, body
     assert body["result"] == {"sessions": []}
@@ -120,7 +122,7 @@ def test_usage_aggregate_answers_with_real_numbers_once_injected(server):
 
 def test_provider_artifacts_list_answers_once_the_store_is_injected(server, tmp_path):
     runtime, client, headers = server
-    runtime.wire.artifact_store = ArtifactStore(tmp_path / "artifacts")
+    runtime.compat_handlers.artifact_store = ArtifactStore(tmp_path / "artifacts")
     body = post(client, headers, "providerArtifacts.list", {"harness": "alpha"}).json()
     assert body["result"] == {"harness": "alpha", "versions": [], "current": None}, body
 
@@ -128,7 +130,7 @@ def test_provider_artifacts_list_answers_once_the_store_is_injected(server, tmp_
 def test_rolling_back_to_an_uninstalled_version_is_not_found(server, tmp_path):
     """A user-correctable fact, measured before this order as a 500."""
     runtime, client, headers = server
-    runtime.wire.artifact_store = ArtifactStore(tmp_path / "artifacts")
+    runtime.compat_handlers.artifact_store = ArtifactStore(tmp_path / "artifacts")
     response = post(client, headers, "providerArtifacts.rollback",
                     PARAMS["providerArtifacts.rollback"])
     assert response.status_code == 200, response.text
@@ -142,7 +144,7 @@ def test_a_digest_that_does_not_match_the_staged_tree_is_an_invalid_request(serv
     source = tmp_path / "artifacts" / "incoming" / "staged-token"
     source.mkdir(parents=True)
     (source / "harness.js").write_text("export default 1;\n", encoding="utf-8")
-    runtime.wire.artifact_store = ArtifactStore(tmp_path / "artifacts")
+    runtime.compat_handlers.artifact_store = ArtifactStore(tmp_path / "artifacts")
     response = post(client, headers, "providerArtifacts.install",
                     PARAMS["providerArtifacts.install"])
     assert response.status_code == 200, response.text
@@ -158,7 +160,7 @@ def test_install_declares_the_digest_its_locked_contract_requires():
     Server's shape did not, so no request could ever succeed: omit it and the
     handler raised `KeyError` (a 500), send it and the shape rejected it.
     """
-    required, optional = handlers_module._PARAM_SHAPES["providerArtifacts.install"]  # noqa: SLF001
+    required, optional = compat_wire._PARAM_SHAPES["providerArtifacts.install"]  # noqa: SLF001
     assert "digest" in required
     assert "digest" not in optional
 
@@ -178,7 +180,7 @@ def test_an_already_installed_version_is_reported_as_a_state_conflict():
     full install through the wire would need a bundle whose digest both sides
     compute identically, and that belongs to 57's tests, not to this gate.
     """
-    error = handlers_module._artifact_error(  # noqa: SLF001
+    error = compat_wire._artifact_error(  # noqa: SLF001
         ArtifactStoreError("ARTIFACT_VERSION_EXISTS", "alpha/1.2.3 is already installed"))
     assert (error.family, error.details["internalCode"]) == (
         "CONFLICT_REQUEST", "ARTIFACT_VERSION_EXISTS")
@@ -200,7 +202,7 @@ def test_counter_example_the_internal_code_in_the_family_slot_is_no_longer_a_500
         raise WireError("ARTIFACT_STORE_UNAVAILABLE",
                         "this composition has no artifact management face")
 
-    monkeypatch.setattr(handlers_module.WireService, "_artifact_store", old_shape)
+    monkeypatch.setattr(compat_wire.CoreWireHandlers, "_artifact_store", old_shape)
     _runtime, client, headers = server
     response = post(client, headers, "providerArtifacts.list", {"harness": "alpha"})
     assert response.status_code == 200, (
@@ -209,7 +211,7 @@ def test_counter_example_the_internal_code_in_the_family_slot_is_no_longer_a_500
     assert error["code"] == "UNAVAILABLE", error
     assert error["details"]["internalCode"] == "ARTIFACT_STORE_UNAVAILABLE", error
     monkeypatch.undo()
-    assert handlers_module.WireService._artifact_store is not old_shape
+    assert compat_wire.CoreWireHandlers._artifact_store is not old_shape
 
 
 def test_counter_example_the_shape_without_digest_reports_a_crash_not_a_500(server):
@@ -240,5 +242,5 @@ def test_counter_example_the_shape_without_digest_reports_a_crash_not_a_500(serv
         runtime.wire.amend_shape(
             "providerArtifacts.install",
             required=original.required_params, optional=original.optional_params)
-    restored_required, _ = handlers_module._PARAM_SHAPES["providerArtifacts.install"]  # noqa: SLF001
+    restored_required, _ = compat_wire._PARAM_SHAPES["providerArtifacts.install"]  # noqa: SLF001
     assert "digest" in restored_required

@@ -396,7 +396,7 @@ def test_two_profiles_with_one_name_get_two_homes():
     """The locator carries the Profile's identity, so a shared display name
     cannot collide two homes (the HOME_MARKER_CONFLICT class the family gates
     kept hitting across runs on a persistent home root)."""
-    from ordessa_server.bootstrap.runtime import _profile_home_locator
+    from ordessa_server_compat.composition import _profile_home_locator
 
     first = _profile_home_locator("role", ".config/kilo",
                                   profile_id="profile_0123456789abcdef")

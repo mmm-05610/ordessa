@@ -185,7 +185,7 @@ class ServerHandle:
 
 @pytest.fixture
 def server(tmp_path, monkeypatch) -> ServerHandle:
-    from ordessa_server.bootstrap.runtime import build_runtime_from_native_adapter
+    from ordessa_server_compat.composition import build_runtime_from_native_adapter
     from ordessa_server.transport.http.app import create_app
     from fastapi.testclient import TestClient
 

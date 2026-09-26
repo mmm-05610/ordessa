@@ -1318,7 +1318,7 @@ def test_every_projected_frame_matches_the_strict_frontend_event_schema(wire):
         page = {"cursor": snapshot["olderCursor"], "limit": 200}
     snapshot_counts = _validate_frames(frames, context="history.snapshot")
 
-    live, _resume = runtime.wire.event_stream_batch(session_id, None)
+    live, _resume = runtime.events_stream_source(session_id, None)
     live_counts = _validate_frames(live, context="event-stream batch")
 
     observed = set(snapshot_counts) | set(live_counts)

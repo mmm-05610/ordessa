@@ -95,7 +95,7 @@ def test_the_memory_wire_face_reads_the_profile_home_or_hides_the_partition(tmp_
         assert before["available"] is False and before["reason"] == "MEMORY_HOME_MISSING"
 
         # Lay out the home the way a turn would have created it, then read.
-        from ordessa_server.bootstrap.runtime import (
+        from ordessa_server_compat.composition import (
             _profile_home_locator, _registry_native_homes,
         )
 

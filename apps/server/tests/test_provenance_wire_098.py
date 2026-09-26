@@ -28,7 +28,7 @@ import pytest
 
 from ordessa_server.bootstrap import build_runtime
 from ordessa_server.transport.http import create_app
-from ordessa_server.wire import handlers as handlers_module
+from ordessa_server_compat import core_wire as handlers_module
 from test_wire_v1 import Wire, registry
 
 PROVENANCE = {
@@ -157,7 +157,7 @@ def test_the_handler_speaks_wire_field_names_to_the_service(api):
     service never looked at those keys. This pins the direction of the contract:
     the handler validates wire vocabulary and hands wire vocabulary over.
     """
-    parsed = handlers_module.WireService._provenance({"provenance": dict(PROVENANCE)})
+    parsed = handlers_module.CoreWireHandlers._provenance({"provenance": dict(PROVENANCE)})
     assert parsed == PROVENANCE
     assert not set(parsed) & set(COLUMN_KEYS), parsed
 
@@ -170,7 +170,7 @@ def test_counter_example_the_scope_bug_returns_the_500(api, monkeypatch):
     Nothing on disk changes; the attribute is put back by `monkeypatch`, and the
     restoration is asserted rather than assumed.
     """
-    original = handlers_module.WireService._provenance
+    original = handlers_module.CoreWireHandlers._provenance
 
     def broken(params):
         raw = params.get("provenance")
@@ -182,7 +182,7 @@ def test_counter_example_the_scope_bug_returns_the_500(api, monkeypatch):
             raise handlers_module.WireError("INVALID_REQUEST", "provenance carries unknown fields")
         return dict(raw)
 
-    monkeypatch.setattr(handlers_module.WireService, "_provenance", staticmethod(broken))
+    monkeypatch.setattr(handlers_module.CoreWireHandlers, "_provenance", staticmethod(broken))
     status, text = _raw_create(api, {"authStyle": "api_key"}, "prov-counter-01")
     # Superseded by order 115, which closed the family this defect used to escape
     # through: a `NameError` inside a handler can no longer leave as a bare 500.
@@ -196,7 +196,7 @@ def test_counter_example_the_scope_bug_returns_the_500(api, monkeypatch):
     assert "authStyle" not in text or body["error"]["code"] == "UNAVAILABLE", text
 
     monkeypatch.undo()
-    assert handlers_module.WireService._provenance == original
+    assert handlers_module.CoreWireHandlers._provenance == original
     #: Same request, same client, only the patch removed - so the failure above
     #: is attributed to the defect and not to the payload.
     fixed_status, fixed_text = _raw_create(api, {"authStyle": "api_key"}, "prov-counter-01b")
@@ -227,7 +227,7 @@ def test_counter_example_the_half_fix_stores_nothing(api, monkeypatch):
     that checked the status code alone would call that green. This is the
     counter-example that makes the read-back assertions worth having.
     """
-    original = handlers_module.WireService._provenance
+    original = handlers_module.CoreWireHandlers._provenance
     to_column = dict(zip(("baseUrl", "authStyle", "wireApi", "fieldsSource"), COLUMN_KEYS))
 
     def column_keyed(cls, params):
@@ -236,7 +236,7 @@ def test_counter_example_the_half_fix_stores_nothing(api, monkeypatch):
             return None
         return {to_column[field]: value for field, value in parsed.items()}
 
-    monkeypatch.setattr(handlers_module.WireService, "_provenance",
+    monkeypatch.setattr(handlers_module.CoreWireHandlers, "_provenance",
                         classmethod(column_keyed))
     status, body = create(api, provenance=PROVENANCE, request_id="prov-counter-02")
     assert status == 200, body
@@ -244,4 +244,4 @@ def test_counter_example_the_half_fix_stores_nothing(api, monkeypatch):
         "the half-fix was supposed to lose the data; if this is not None the "
         "read-back assertions below are not doing their job")
     monkeypatch.undo()
-    assert handlers_module.WireService._provenance == original
+    assert handlers_module.CoreWireHandlers._provenance == original

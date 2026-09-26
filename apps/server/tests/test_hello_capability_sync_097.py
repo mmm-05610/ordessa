@@ -15,7 +15,6 @@ import pytest
 
 from ordessa_server.bootstrap import build_runtime
 from ordessa_server.transport.http import create_app
-from ordessa_server.wire import handlers as handlers_module
 from ordessa_server.workspaces.local_environment import LocalEnvironmentProvider
 
 HELLO = {"clientVersions": ["wire/1"], "clientPresentationSupports": []}
@@ -85,7 +84,7 @@ def _hello_on_composition(root, *, sandbox_status):
     schema and all - is part of what makes the answer reachable.
     """
     runtime = build_runtime(root / "data")
-    runtime.wire.workspaces.local = LocalEnvironmentProvider(
+    runtime.compat_handlers.workspaces.local = LocalEnvironmentProvider(
         sandbox_probe=lambda: {"status": sandbox_status, "code": "binary_missing"})
     with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
         api = Wire(client, {"Authorization": f"Bearer {runtime.token}"})

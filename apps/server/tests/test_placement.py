@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_server.bootstrap import build_runtime_from_sidecar_deployment
+from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
 from ordessa_server.execution.local_channel import LocalSidecarLauncher
 from ordessa_server.execution.placement import PlacementUnsupported, resolve_placement
 
@@ -178,7 +178,10 @@ def test_the_local_channel_is_the_one_that_runs_a_command_it_is_handed():
     """Its contract, stated as an attribute of the class: no host paths, no
     isolation mechanics, no Harness knowledge - it stages, runs, captures."""
     source = Path(LocalSidecarLauncher.__module__.replace(".", "/") + ".py")
-    text = (Path(__file__).resolve().parents[3] / "apps" / "server" / "src" / source).read_text()
+    # the implementation moved with the execution domain (core-cleanup stage 3)
+    root = ("plugins/server-compat/src"
+            if source.parts[0] == "ordessa_server_compat" else "apps/server/src")
+    text = (Path(__file__).resolve().parents[3] / root / source).read_text()
     assert "compile_remote_sidecar_bwrap_argv" not in text
     assert "bwrap" not in text.replace("agent_box_sandbox_bwrap", "")
 
@@ -188,7 +191,7 @@ def test_the_sandbox_default_follows_the_placement_not_the_host(monkeypatch):
     the machine hosting the Server. A WSL/SSH placement is Linux even under a
     Windows control plane; only a native local placement may use the Windows
     sandbox, and an explicit deployment provider still wins."""
-    from ordessa_server.bootstrap import runtime as runtime_module
+    from ordessa_server_compat import composition as runtime_module
     monkeypatch.delenv("AGENT_BOX_SANDBOX_PROVIDER", raising=False)
     choose = runtime_module._sandbox_provider_name
     monkeypatch.setattr(runtime_module.os, "name", "nt")   # Windows control plane

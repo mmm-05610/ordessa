@@ -34,8 +34,8 @@ TRANSITIONAL_EDGES = frozenset((
     "typing", "__future__",
     "ordessa_server.credentials", "ordessa_server.errors",
     "ordessa_server.execution", "ordessa_server.events",
-    "ordessa_server.profiles", "ordessa_server.sessions",
-    "ordessa_server.workspaces",
+    "ordessa_server.profiles", "ordessa_server.workspaces",
+    "pacthold.service.sessions",
 ))
 
 
@@ -104,9 +104,15 @@ def test_facade_imports_only_declared_transitional_edges():
 
 
 def test_composition_root_imports_new_entry():
-    source = (REPO_ROOT / "apps" / "server" / "src" / "ordessa_server" / "bootstrap" / "runtime.py").read_text(encoding="utf-8")
-    assert "from pacthold.service import ProductService" in source
+    # The composition root moved with the domains (core-cleanup stage 3):
+    # the compatibility core's plugin is what composes the facade now, and
+    # the host bootstrap imports no product code at all.
+    source = (REPO_ROOT / "plugins" / "server-compat" / "src" / "ordessa_server_compat" / "plugin.py").read_text(encoding="utf-8")
+    assert "from pacthold.service.facade import ProductService" in source
     assert "from ordessa_server.services import" not in source
+    host = (REPO_ROOT / "apps" / "server" / "src" / "ordessa_server" / "bootstrap" / "runtime.py").read_text(encoding="utf-8")
+    assert "pacthold.service" not in host, (
+        "the host composition root must not know the product facade")
 
 
 def test_constructor_signature_unchanged():

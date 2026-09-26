@@ -133,7 +133,7 @@ def test_the_name_is_declared_and_numbered_but_nothing_appends_it():
 def test_the_sidecar_event_vocabulary_does_not_name_it():
     """The one call site that appends by *variable* kind is the native-event
     bridge; if this list ever grows the name, 145's档 changes with it."""
-    text = (REPO / "apps" / "server" / "src" / "ordessa_server" / "execution" / "sidecar_backend.py").read_text(encoding="utf-8")
+    text = (REPO / "plugins" / "server-compat" / "src" / "ordessa_server_compat" / "execution" / "sidecar_backend.py").read_text(encoding="utf-8")
     bridge = text[text.index("def _native_event("):]
     bridge = bridge[:bridge.index("\n    def ")] if "\n    def " in bridge else bridge
     assert KIND not in bridge, "the native bridge now routes this kind - recheck 145"

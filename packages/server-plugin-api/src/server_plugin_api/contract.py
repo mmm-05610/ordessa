@@ -137,11 +137,17 @@ class HttpRouteDescriptor:
     methods: frozenset[str]
     endpoint: Callable[..., Any]
     owner: str
+    #: Host bearer authentication is the default for every plugin route. A
+    #: route that carries its own admission token (the delegation bridge's
+    #: attempt-scoped token) may opt out explicitly — never implicitly.
+    authenticated: bool = True
 
     def __post_init__(self) -> None:
         if (not isinstance(self.path, str) or not self.path.startswith("/")
                 or len(self.path) > 1024 or "{" not in self.path and ".." in self.path):
             raise ValueError(f"invalid http route path: {self.path!r}")
+        if type(self.authenticated) is not bool:
+            raise ValueError("authenticated must be a boolean")
         if not isinstance(self.methods, frozenset) or not self.methods:
             raise ValueError("http route methods must be a non-empty frozenset")
         unknown = {m for m in self.methods
@@ -191,10 +197,15 @@ class ServerPluginRegistration:
     stream_routes: tuple[StreamRouteDescriptor, ...] = ()
     http_routes: tuple[HttpRouteDescriptor, ...] = ()
     provided_ports: Mapping[str, Any] = field(default_factory=dict)
+    #: Called by the host after the database is initialized on every start,
+    #: in activation order. Startup recovery that a plugin owns (marking its
+    #: records unverified, sealing interrupted turns) belongs here, not in
+    #: the host's own start sequence.
+    start_hooks: "tuple[Callable[[], None], ...]" = ()
     disposal: Callable[[], None] | None = None
 
     def __post_init__(self) -> None:
-        for name in ("methods", "stream_routes", "http_routes"):
+        for name in ("methods", "stream_routes", "http_routes", "start_hooks"):
             value = getattr(self, name)
             if not isinstance(value, tuple):
                 raise ValueError(f"ServerPluginRegistration.{name} must be a tuple")

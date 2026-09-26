@@ -28,7 +28,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 REPO = Path(__file__).resolve().parents[3]
-TARGETS = ("apps/server/src/ordessa_server/wire/handlers.py", "apps/server/src/ordessa_server/model_configs/service.py")
+TARGETS = ("plugins/server-compat/src/ordessa_server_compat/core_wire.py", "plugins/server-compat/src/ordessa_server_compat/model_configs/service.py")
 
 _spec = importlib.util.spec_from_file_location(
     "wire_v1_helpers", REPO / "apps/server/tests/test_wire_v1.py")
@@ -39,7 +39,7 @@ from ordessa_server.bootstrap import build_runtime
 from ordessa_server.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server.transport.http import create_app
 from ordessa_server.model_configs.service import _model_references
-from ordessa_server.wire import handlers as handlers_module
+from ordessa_server_compat import core_wire as handlers_module
 
 
 def _registry():
@@ -147,12 +147,12 @@ def test_counter_example_the_first_slot_only_projection_is_back(api, monkeypatch
     profile_id = _profile_with_value(client, [
         {"providerId": first[0], "modelId": first[1]},
         {"providerId": second[0], "modelId": second[1]}])
-    original = handlers_module.WireService._slot_entries
+    original = handlers_module.CoreWireHandlers._slot_entries
 
     def one_slot_only(self, control_id, references, current):
         return original(self, control_id, references[:1], current)
 
-    monkeypatch.setattr(handlers_module.WireService, "_slot_entries", one_slot_only)
+    monkeypatch.setattr(handlers_module.CoreWireHandlers, "_slot_entries", one_slot_only)
     slots = _model_control(client, profile_id)["slots"]
     assert len(slots) == 1, slots
     monkeypatch.undo()
@@ -231,4 +231,4 @@ def test_resolve_still_rejects_an_unknown_control_naming_it(api):
 def test_125_touched_only_its_own_surface():
     changed = [path for path in TARGETS
                if "def _slot_entries" in (REPO / path).read_text(encoding="utf-8")]
-    assert changed == ["apps/server/src/ordessa_server/wire/handlers.py"], changed
+    assert changed == ["plugins/server-compat/src/ordessa_server_compat/core_wire.py"], changed

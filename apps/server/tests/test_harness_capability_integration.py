@@ -31,11 +31,11 @@ JS_PROJECTION = PLUGIN / "runtime" / "capability_declarations.json"
 #: Files on the capability path of the Server: none of them may name a Harness.
 NEUTRAL_FILES = (
     "packages/pacthold/src/pacthold/resource_contracts/harness_capabilities.py",
-    "apps/server/src/ordessa_server/execution/__init__.py",
-    "apps/server/src/ordessa_server/execution/sidecar.py",
-    "apps/server/src/ordessa_server/execution/sidecar_backend.py",
+    "plugins/server-compat/src/ordessa_server_compat/execution/__init__.py",
+    "plugins/server-compat/src/ordessa_server_compat/execution/sidecar.py",
+    "plugins/server-compat/src/ordessa_server_compat/execution/sidecar_backend.py",
     "apps/server/src/ordessa_server/bootstrap/runtime.py",
-    "apps/server/src/ordessa_server/profiles/service.py",
+    "plugins/server-compat/src/ordessa_server_compat/profiles/service.py",
 )
 BRAND_TOKEN = re.compile(r"\b(?:codex|claude|hermes|opencode|pi-acp|deepseek|omp)\b", re.I)
 
@@ -70,7 +70,7 @@ def test_registry_and_the_checked_in_projection_agree_item_for_item():
 
 def test_a_deployment_may_only_declare_canonical_boolean_abilities(tmp_path, monkeypatch):
     """The deployment seat is validated by the same contract, not a free dict."""
-    from ordessa_server.bootstrap import build_runtime_from_sidecar_deployment
+    from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
 
     import ordessa_server.bootstrap.runtime as runtime_module
 

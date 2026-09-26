@@ -321,8 +321,9 @@ def _wire(base_url: str, token: str, method: str, params: dict) -> dict:
 
 def test_a_real_claude_parent_round_calls_run_subagent_itself(tmp_path):
     gate = _load_gate()
-    from ordessa_server.bootstrap import build_runtime_from_sidecar_deployment
-    from ordessa_server.bootstrap import runtime as runtime_module
+    from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
+    from ordessa_server_compat import composition as runtime_module
+    import ordessa_server.bootstrap.runtime as host_module
     from ordessa_server.credentials import CredentialRecords
     from ordessa_server.transport.http import create_app
     from pacthold.storage import MemorySecretStore
@@ -345,7 +346,7 @@ def test_a_real_claude_parent_round_calls_run_subagent_itself(tmp_path):
     runtime = None
     token_path = None
     original_file = runtime_module._sidecar_deployment_file
-    original_connector = runtime_module._builtin_connector
+    original_connector = host_module._builtin_connector
     try:
         guard = gate.compile_guard(temporary, report)
         if PREBUILT:
@@ -387,7 +388,7 @@ def test_a_real_claude_parent_round_calls_run_subagent_itself(tmp_path):
             return original_file(root, relative)
 
         runtime_module._sidecar_deployment_file = deployment_file
-        runtime_module._builtin_connector = lambda _id: gate.DirectWorkerConnector(
+        host_module._builtin_connector = lambda _id: gate.DirectWorkerConnector(
             temporary, WORKER, workspace)
         store = MemorySecretStore(values={})
         runtime = build_runtime_from_sidecar_deployment(
@@ -556,7 +557,7 @@ def test_a_real_claude_parent_round_calls_run_subagent_itself(tmp_path):
             except BaseException as error:  # a stuck stop is reported, not swallowed
                 report["runtimeStopError"] = f"{type(error).__name__}: {error}"
         runtime_module._sidecar_deployment_file = original_file
-        runtime_module._builtin_connector = original_connector
+        host_module._builtin_connector = original_connector
         try:
             gate.cleanup_check(temporary, workspace, token_path, None)
             report["cleanup"] = dict(gate.REPORT.get("cleanup") or {})

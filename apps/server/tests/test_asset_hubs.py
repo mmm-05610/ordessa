@@ -266,11 +266,11 @@ def test_a_bound_mcp_asset_is_rendered_and_materialised_without_writeback(tmp_pa
     """
     from fastapi.testclient import TestClient
 
-    from ordessa_server.bootstrap import build_runtime_from_sidecar_deployment
+    from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
     from ordessa_server.transport.http import create_app
     from pacthold.storage.secrets import MemorySecretStore
 
-    import ordessa_server.bootstrap.runtime as runtime_module
+    import ordessa_server_compat.composition as runtime_module
 
     peer_source = "tests/harness_remote/home_probe_acp_peer.mjs"
     peer_bytes = REPO / "apps" / "server" / "tests" / "fixtures" / "home_probe_acp_peer.mjs"
@@ -417,11 +417,11 @@ def test_the_assets_wire_face_publishes_binds_and_lists(tmp_path):
     """
     from fastapi.testclient import TestClient
 
-    from ordessa_server.bootstrap import build_runtime_from_sidecar_deployment
+    from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
     from ordessa_server.transport.http import create_app
     from pacthold.storage.secrets import MemorySecretStore
 
-    import ordessa_server.bootstrap.runtime as runtime_module
+    import ordessa_server_compat.composition as runtime_module
 
     peer_source = "tests/harness_remote/home_probe_acp_peer.mjs"
     peer_bytes = REPO / "apps" / "server" / "tests" / "fixtures" / "home_probe_acp_peer.mjs"
@@ -758,11 +758,11 @@ def test_a_plugin_is_stored_as_code_with_a_digest_and_a_preview(tmp_path):
 def test_assets_publish_plugin_over_the_wire_returns_a_preview(tmp_path):
     from fastapi.testclient import TestClient
 
-    from ordessa_server.bootstrap import build_runtime_from_sidecar_deployment
+    from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
     from ordessa_server.transport.http import create_app
     from pacthold.storage.secrets import MemorySecretStore
 
-    import ordessa_server.bootstrap.runtime as runtime_module
+    import ordessa_server_compat.composition as runtime_module
 
     peer_source = "tests/harness_remote/home_probe_acp_peer.mjs"
     peer_bytes = REPO / "apps" / "server" / "tests" / "fixtures" / "home_probe_acp_peer.mjs"

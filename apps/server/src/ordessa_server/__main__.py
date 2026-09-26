@@ -50,9 +50,13 @@ def main(argv: list[str] | None = None) -> int:
     if not 1 <= args.port <= 65535:
         parser().error("--port must be between 1 and 65535")
     from uvicorn import run
-    from ordessa_server.bootstrap import build_runtime, build_runtime_from_sidecar_deployment
-    from ordessa_server.bootstrap.runtime import build_runtime_from_native_adapter
+    from ordessa_server.bootstrap import _resolve_product_composition
     from ordessa_server.transport.http import create_app
+
+    # The CLI owns the argument grammar; the product owns what the arguments
+    # mean. Exactly one installed product answers the composition seam —
+    # starting without one is a typed refusal, not a silently bare Server.
+    composition = _resolve_product_composition()
 
     if args.sidecar_deployment and args.plugin_root is None:
         parser().error("--plugin-root is required with --sidecar-deployment")
@@ -61,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
                 or not args.native_harness or not args.native_adapter_command):
             parser().error("native mode requires --plugin-root, --native-harness and "
                            "--native-adapter-command, without sidecar deployment or mounts")
-        runtime = build_runtime_from_native_adapter(
+        runtime = composition.native_runtime(
             args.data_root, plugin_root=args.plugin_root,
             harness_id=args.native_harness,
             adapter_command=args.native_adapter_command,
@@ -72,10 +76,10 @@ def main(argv: list[str] | None = None) -> int:
         if (args.native_harness or args.native_adapter_command or args.native_adapter_arg
                 or args.native_continuation):
             parser().error("native adapter options require --execution-mode native")
-        runtime = (build_runtime_from_sidecar_deployment(
+        runtime = (composition.sidecar_runtime(
             args.data_root, args.sidecar_deployment,
             plugin_root=args.plugin_root, mount_bindings=mount_bindings(args.mount),
-        ) if args.sidecar_deployment else build_runtime(args.data_root))
+        ) if args.sidecar_deployment else composition.default_runtime(args.data_root))
     # One ASGI worker is an invariant: no CLI knob exposes a multi-worker mode.
     run(create_app(runtime), host="127.0.0.1", port=args.port, workers=1, log_config=None)
     return 0

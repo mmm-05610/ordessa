@@ -98,11 +98,13 @@ def test_transitional_edges_are_exactly_declared():
 
 
 def test_composition_root_and_persistence_anchor_new_entry():
-    runtime = (REPO_ROOT / "apps" / "server" / "src" / "ordessa_server" / "bootstrap" / "runtime.py").read_text(encoding="utf-8")
+    runtime = (REPO_ROOT / "plugins" / "server-compat" / "src" / "ordessa_server_compat" / "plugin.py").read_text(encoding="utf-8")
     assert "from pacthold.service.sessions import SessionRecords, SessionService" in runtime
     assert "from pacthold.service.sessions.queue import QueueRecords" in runtime
     assert "from ordessa_server.sessions" not in runtime
-    persistence = (REPO_ROOT / "apps" / "server" / "src" / "ordessa_server" / "persistence.py").read_text(encoding="utf-8")
+    # persistence moved with the domains (core-cleanup stage 3); the legacy
+    # entry stays a zero-implementation alias.
+    persistence = (REPO_ROOT / "plugins" / "server-compat" / "src" / "ordessa_server_compat" / "persistence.py").read_text(encoding="utf-8")
     assert "from pacthold.service.sessions import SessionRecords" in persistence
     assert "from ordessa_server.sessions" not in persistence
 

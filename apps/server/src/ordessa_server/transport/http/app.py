@@ -1,64 +1,28 @@
-"""Authenticated loopback HTTP API for the independent Server."""
+"""Authenticated loopback HTTP API for the independent Server.
+
+The host owns the transport walls and the generic surfaces: health, the
+wire/1 dispatch route, the OpenAPI view, the two websocket channels and the
+plugin route admission seam. Business REST routes are contributed by the
+domain plugins through `HttpRouteDescriptor`s and admitted behind the same
+walls below — never re-declared here.
+"""
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-import json
 import secrets
+from typing import Annotated
 from typing import Annotated, Any
 from uuid import uuid4
 
-from fastapi import Depends, FastAPI, Header, Query, Request, Response, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, Header, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from ordessa_server.bootstrap import ServerRuntime
 from ordessa_server.errors import ServerError
 from ordessa_server.wire import WireError, decode_request, encode_error, encode_result
 from ordessa_server.wire.handlers import WIRE_VERSION
-
-
-class StrictModel(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
-
-
-class ProbeRequest(StrictModel):
-    kind: str
-    distribution: str = Field(min_length=1, max_length=128)
-    user: str | None = Field(default=None, min_length=1, max_length=128)
-
-
-class CredentialImportRequest(StrictModel):
-    kind: str = Field(min_length=1, max_length=32)
-    source_path: str = Field(min_length=1, max_length=4096)
-    confirm_source_path: str = Field(min_length=1, max_length=4096)
-
-
-class BrowseRequest(StrictModel):
-    probe_id: str = Field(min_length=1, max_length=160)
-    path: str = Field(min_length=1, max_length=4096)
-
-
-class WorkspaceRequest(BrowseRequest):
-    pass
-
-
-class ProfileRequest(StrictModel):
-    name: str = Field(min_length=1, max_length=128)
-    harness_type: str = Field(min_length=1, max_length=64)
-    configuration: dict[str, Any]
-    credential_id: str | None = Field(default=None, min_length=1, max_length=160)
-
-
-class SessionRequest(StrictModel):
-    workspace_id: str = Field(min_length=1, max_length=160)
-    profile_id: str = Field(min_length=1, max_length=160)
-
-
-class TurnRequest(StrictModel):
-    text: str = Field(min_length=1, max_length=4096)
-    expected_profile_revision: int = Field(ge=1)
-    overrides: dict[str, Any] | None = None
 
 
 def _loopback_authority(value: str) -> bool:
@@ -132,13 +96,6 @@ def create_app(runtime: ServerRuntime) -> FastAPI:
         if provided is None or not secrets.compare_digest(provided, expected):
             raise ServerError("AUTHENTICATION_REQUIRED", "A valid bearer token is required", status=401)
 
-    def idempotency_key(
-        value: Annotated[str | None, Header(alias="Idempotency-Key")] = None,
-    ) -> str:
-        if value is None or not (1 <= len(value) <= 160):
-            raise ServerError("IDEMPOTENCY_KEY_REQUIRED", "A bounded Idempotency-Key is required", status=400)
-        return value
-
     protected = [Depends(authorize)]
 
     @app.get("/live")
@@ -192,166 +149,9 @@ def create_app(runtime: ServerRuntime) -> FastAPI:
         response.headers["X-Wire-Version"] = WIRE_VERSION
         return encode_result(request_id, result)
 
-    # -- delegation bridge (order 65 C) ------------------------------------
-    #
-    # The bridge inside the sandbox is not a bearer of the user's token: it
-    # carries an attempt-scoped token minted when the parent turn was
-    # assembled, and this surface resolves it to that one turn. Reads only the
-    # two delegation operations, loops back to the same policy as every other
-    # route (the loopback middleware above), and answers nothing else.
-    @app.post("/internal/delegation/{token}")
-    async def delegation(token: str, request: Request) -> JSONResponse:
-        body = await request.json()
-        registry = getattr(runtime, "delegation_tokens", None)
-        grant = (registry or {}).get(token)
-        if grant is None:
-            return JSONResponse({"error": "DELEGATION_TOKEN_UNKNOWN"}, status_code=404)
-        op = body.get("op")
-        service = getattr(runtime, "delegation_service", None)
-        if service is None:
-            return JSONResponse({"error": "DELEGATION_UNAVAILABLE"}, status_code=503)
-        try:
-            if op == "list":
-                payload = service.list_for(parent_profile_id=grant["profileId"])
-                return JSONResponse({"result": payload})
-            if op == "run":
-                payload = service.run(
-                    parent_turn_id=grant["turnId"], parent_profile_id=grant["profileId"],
-                    arguments=dict(body.get("arguments") or {}),
-                    calls_this_turn=int(body.get("callsThisTurn") or 0),
-                )
-                return JSONResponse({"result": payload})
-        except Exception as refusal:  # noqa: BLE001 - typed by the service
-            return JSONResponse({
-                "error": getattr(refusal, "code", type(refusal).__name__),
-                "message": getattr(refusal, "message", str(refusal)),
-                "available": list(getattr(refusal, "available", ()) or ()),
-            }, status_code=409)
-        return JSONResponse({"error": "DELEGATION_OP_UNKNOWN"}, status_code=400)
-
-    @app.get("/api/v1/readiness", dependencies=protected)
-    def readiness():
-        return runtime.service.readiness()
-
     @app.get("/api/v1/openapi.json", dependencies=protected)
     def openapi():
         return app.openapi()
-
-    @app.get("/api/v1/wsl/distributions", dependencies=protected)
-    def distributions():
-        return {"items": runtime.service.distributions()}
-
-    @app.get("/api/v1/credentials", dependencies=protected)
-    def credentials():
-        """Which credentials this Server can resolve (ids and kinds only)."""
-        return {"items": runtime.service.list_credentials()}
-
-    @app.post("/api/v1/credentials", dependencies=protected)
-    def import_credential(
-        body: CredentialImportRequest, response: Response,
-        key: str = Depends(idempotency_key),
-    ):
-        """Import one credential from a *path*, never from a payload.
-
-        The body names where the secret is; this Server's own secret store reads
-        it (with the store's symlink, type and size rules), so credential
-        material never travels in a request. The caller must repeat the source
-        path, the same discipline the one-shot CLI applies, because a mistyped
-        path would silently import the wrong file. The answer carries the opaque
-        id the product will reference and nothing else.
-        """
-        if body.source_path != body.confirm_source_path:
-            raise ServerError(
-                "CREDENTIAL_SOURCE_UNCONFIRMED",
-                "confirm_source_path must repeat source_path exactly",
-                status=422,
-            )
-        status, result = runtime.service.import_credential(
-            kind=body.kind, source=body.source_path, key=key,
-        )
-        response.status_code = status
-        return result
-
-    @app.post("/api/v1/connections/probe", dependencies=protected)
-    def probe(body: ProbeRequest, response: Response, key: str = Depends(idempotency_key)):
-        if body.kind != "wsl":
-            raise ServerError("CONNECTION_KIND_UNSUPPORTED", "Only WSL connections are supported", status=422)
-        status, result = runtime.service.probe(key, body.distribution, body.user)
-        response.status_code = status
-        return result
-
-    @app.post("/api/v1/connections/browse", dependencies=protected)
-    def browse(body: BrowseRequest, response: Response, key: str = Depends(idempotency_key)):
-        status, result = runtime.service.browse(key, body.probe_id, body.path)
-        response.status_code = status
-        return result
-
-    @app.post("/api/v1/workspaces", dependencies=protected)
-    def create_workspace(body: WorkspaceRequest, response: Response, key: str = Depends(idempotency_key)):
-        status, result = runtime.service.create_workspace(key, body.model_dump())
-        response.status_code = status
-        return result
-
-    @app.get("/api/v1/workspaces", dependencies=protected)
-    def list_workspaces():
-        return {"items": runtime.repository.list_workspaces()}
-
-    @app.post("/api/v1/profiles", dependencies=protected)
-    def create_profile(body: ProfileRequest, response: Response, key: str = Depends(idempotency_key)):
-        status, result = runtime.service.create_profile(key, body.model_dump())
-        response.status_code = status
-        return result
-
-    @app.get("/api/v1/profiles", dependencies=protected)
-    def list_profiles():
-        return {"items": runtime.service.profiles.list()}
-
-    @app.post("/api/v1/sessions", dependencies=protected)
-    def create_session(body: SessionRequest, response: Response, key: str = Depends(idempotency_key)):
-        status, result = runtime.service.create_session(key, body.model_dump())
-        response.status_code = status
-        return result
-
-    @app.get("/api/v1/sessions/{session_id}", dependencies=protected)
-    def get_session(session_id: str):
-        return runtime.repository.get_session(session_id)
-
-    @app.post("/api/v1/sessions/{session_id}/turns", dependencies=protected)
-    def create_turn(
-        session_id: str, body: TurnRequest, response: Response,
-        key: str = Depends(idempotency_key),
-    ):
-        status, result = runtime.service.create_turn(session_id, key, body.model_dump())
-        response.status_code = status
-        return result
-
-    @app.get("/api/v1/sessions/{session_id}/events", dependencies=protected)
-    def events(session_id: str, after: int = Query(default=0, ge=0)):
-        generation = runtime.notifier.generation()
-        history = runtime.repository.list_events(session_id, after)
-
-        def stream():
-            cursor = after
-            for item in history:
-                payload = json.dumps(item, ensure_ascii=False, separators=(",", ":"))
-                yield f"id: {item['seq']}\nevent: {item['kind']}\ndata: {payload}\n\n"
-                cursor = item["seq"]
-            current_generation = generation
-            while True:
-                batch = runtime.repository.list_events(session_id, cursor)
-                if batch:
-                    for item in batch:
-                        payload = json.dumps(item, ensure_ascii=False, separators=(",", ":"))
-                        yield f"id: {item['seq']}\nevent: {item['kind']}\ndata: {payload}\n\n"
-                        cursor = item["seq"]
-                    current_generation = runtime.notifier.generation()
-                    continue
-                next_generation = runtime.notifier.wait_after(current_generation)
-                if next_generation == current_generation:
-                    yield ": keepalive\n\n"
-                current_generation = next_generation
-
-        return StreamingResponse(stream(), media_type="text/event-stream")
 
     @app.websocket("/wire/v1/event-stream")
     async def wire_event_stream(websocket: WebSocket):
@@ -371,8 +171,14 @@ def create_app(runtime: ServerRuntime) -> FastAPI:
         if not session_id or len(session_id) > 160:
             await websocket.close(code=4400, reason="INVALID_REQUEST")
             return
+        # The push relay is host transport; the event source is the sessions
+        # domain's port. Absent plugin = fail closed, the typed close below.
+        stream_source = getattr(runtime, "events_stream_source", None)
+        if stream_source is None:
+            await websocket.close(code=4400, reason="UNKNOWN_ROUTE")
+            return
         try:
-            frames, cursor = runtime.wire.event_stream_batch(session_id, cursor)
+            frames, cursor = stream_source(session_id, cursor)
         except (WireError, ServerError):
             await websocket.close(code=4400, reason="INVALID_CURSOR_OR_SESSION")
             return
@@ -388,7 +194,7 @@ def create_app(runtime: ServerRuntime) -> FastAPI:
                         await websocket.send_json(frame)
                     frames = []
                     continue
-                frames, cursor = runtime.wire.event_stream_batch(session_id, cursor)
+                frames, cursor = stream_source(session_id, cursor)
                 if frames:
                     continue
                 import asyncio
@@ -475,12 +281,6 @@ def create_app(runtime: ServerRuntime) -> FastAPI:
             connection.detach(loop, _sink)
             pump.cancel()
 
-    @app.post("/api/v1/turns/{turn_id}/cancel", dependencies=protected)
-    def cancel(turn_id: str, response: Response, key: str = Depends(idempotency_key)):
-        status, result = runtime.service.cancel_turn(turn_id, key)
-        response.status_code = status
-        return result
-
     # -- plugin-contributed business routes (the plugin-host HTTP seam) -----
     # Admitted behind exactly the host's walls: the `protected` bearer
     # dependency, the loopback middleware above, and the app-level error
@@ -504,7 +304,8 @@ def create_app(runtime: ServerRuntime) -> FastAPI:
                 )
             app.add_api_route(
                 descriptor.path, descriptor.endpoint,
-                methods=sorted(descriptor.methods), dependencies=protected,
+                methods=sorted(descriptor.methods),
+                dependencies=protected if descriptor.authenticated else None,
                 name=f"plugin:{descriptor.owner}:{descriptor.path}",
             )
 

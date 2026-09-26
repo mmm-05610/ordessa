@@ -16,7 +16,8 @@ import shutil
 import pytest
 
 from pacthold.resource_contracts import harness_capabilities as caps
-from ordessa_server.bootstrap import build_runtime, build_runtime_from_sidecar_deployment
+from ordessa_server.bootstrap import build_runtime
+from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
 from ordessa_server.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server.execution.sidecar import LocalProcessLauncher, SidecarError, SidecarHarnessPort
 from ordessa_server.execution.sidecar_backend import (

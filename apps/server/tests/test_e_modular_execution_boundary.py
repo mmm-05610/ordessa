@@ -214,6 +214,9 @@ def test_s_consumer_import_paths_keep_identity() -> None:
     assert sessions_service.TurnExecutionPort is contracts.TurnExecutionPort
     assert sessions_service.HarnessRegistry is server_execution.HarnessRegistry
 
-    bootstrap_runtime = importlib.import_module("ordessa_server.bootstrap.runtime")
-    assert bootstrap_runtime.TurnExecutionPort is contracts.TurnExecutionPort
-    assert bootstrap_runtime.HarnessRegistry is server_execution.HarnessRegistry
+    # The host bootstrap composes no product code any more (core-cleanup
+    # stage 3): the identity chain anchors at the compatibility core, which
+    # is what the composition serves through the plugin ports.
+    compat_execution = importlib.import_module("ordessa_server_compat.execution")
+    assert compat_execution.TurnExecutionPort is contracts.TurnExecutionPort
+    assert compat_execution.HarnessRegistry is server_execution.HarnessRegistry

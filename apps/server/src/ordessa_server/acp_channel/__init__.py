@@ -1,36 +1,20 @@
-"""Managed bidirectional ACP channel (Server orchestration side).
+"""Compatibility alias — the implementation moved to `ordessa_harness.server_acp`
+(core-cleanup stage 3).
 
-The seam contract is fixed by `docs/acp-channel-minimal-seam.md` and the
-approved target tests in `tests/acp_orchestration`.  This package owns three
-facts and nothing else:
-
-  * the connection registry (who holds a channel, on which project, through
-    which transport), keyed by (harnessId, projectId) so a re-acquire returns
-    the same connection and never a silently different binding;
-  * the run record for a channel: exactly one Work Core execution in the
-    existing `server_turns` ledger, opened at acquire and ended by release or
-    by the Agent's own exit — the state machine is the product's, reused, not
-    rewritten here;
-  * `channel_run_view`, the single adaptation point where the ledger's real
-    terminal facts are read as the client-facing run vocabulary.
-
-It never parses an ACP frame: the relay is a byte-line pipe.  The Server does
-not speak on the client's behalf during setup or teardown, and in-flight
-requests are answered by nobody when a channel ends — that is the honest
-outcome the contract pins.
-
-The transport itself comes from a composition-injected `launch` callback.
-The native composition plugs the Harness plugin's production access entry in
-there (`access_entry.AccessEntryTransport`): the entry launches the declared
-adapter, and the Server speaks ACP through it only after the entry's own
-`connect` succeeded - control-plane replies and events are consumed at that
-bridge and never relayed, ACP lines are.  Which entry is live is a deployment
-fact, never a branch on a Harness name here.
+M1-P-A① alias discipline: submodules are pre-registered in `sys.modules`
+before this package name is replaced, so both names resolve to the **same**
+module objects and no file ever executes twice.
 """
-from ordessa_server.acp_channel.access_entry import AccessEntryTransport
-from ordessa_server.acp_channel.registry import AcpChannelRegistry
-from ordessa_server.acp_channel.runs import channel_run_view
-from ordessa_server.acp_channel.transport import NDJSONTransport
+import sys as _sys
 
-__all__ = ["AccessEntryTransport", "AcpChannelRegistry", "channel_run_view",
-           "NDJSONTransport"]
+import ordessa_harness.server_acp as _implementation
+from ordessa_harness.server_acp import access_entry as _access_entry
+from ordessa_harness.server_acp import registry as _registry
+from ordessa_harness.server_acp import runs as _runs
+from ordessa_harness.server_acp import transport as _transport
+
+_sys.modules[__name__ + ".access_entry"] = _access_entry
+_sys.modules[__name__ + ".registry"] = _registry
+_sys.modules[__name__ + ".runs"] = _runs
+_sys.modules[__name__ + ".transport"] = _transport
+_sys.modules[__name__] = _implementation

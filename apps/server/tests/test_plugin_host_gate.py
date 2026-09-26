@@ -32,9 +32,10 @@ from server_plugin_api import (
 )
 
 from ordessa_server.bootstrap import build_runtime
+from ordessa_server_compat.plugin import ServerCompatPlugin
 from ordessa_server.plugin_host import MethodRegistry, ServerPluginHost, StreamRouteRegistry
-from ordessa_server.plugin_host.workspace_plugin import PLUGIN_ID as WORKSPACE_ID
-from ordessa_server.plugin_host.workspace_plugin import WorkspaceServerPlugin
+from ordessa_workspace.plugin import PLUGIN_ID as WORKSPACE_ID
+from ordessa_workspace.plugin import WorkspaceServerPlugin
 from ordessa_server.transport.http import create_app
 
 HELLO = {"clientVersions": ["wire/1"], "clientPresentationSupports": []}
@@ -212,7 +213,8 @@ def test_default_composition_advertises_the_full_baseline_table(tmp_path):
             caps = _hello_caps(runtime)
             assert WORKSPACE_METHODS <= set(caps)
             assert len(caps) == 67
-            assert runtime.plugin_host.active_ids() == (WORKSPACE_ID, "ordessa.transition-core")
+            assert runtime.plugin_host.active_ids() == (
+                    WORKSPACE_ID, "ordessa.server-compat", "ordessa.harness.acp")
     except BaseException:
         runtime.stop()
         raise
@@ -225,7 +227,7 @@ def test_unload_removes_only_that_plugins_methods_and_disposes_exactly_once(tmp_
     records: list[str] = []
     runtime = build_runtime(tmp_path / "data", server_plugins=[
         WorkspaceServerPlugin(),
-        "ordessa.transition-core",
+        ServerCompatPlugin(),
         FakePlugin("fake.extra", methods=(("fake.ping", {"x"}),),
                    dispose_records=records),
     ])
@@ -240,18 +242,23 @@ def test_unload_removes_only_that_plugins_methods_and_disposes_exactly_once(tmp_
             assert WORKSPACE_METHODS <= set(caps), (
                 "unrelated plugin methods must survive an unload")
             assert records == ["fake.extra"]
-            runtime.plugin_host.deactivate(WORKSPACE_ID)
-            assert not (WORKSPACE_METHODS & set(_hello_caps(runtime)))
-            # The adapter (still active) keeps its own methods.
-            assert "profiles.list" in _hello_caps(runtime)
+            # The compatibility core declares its dependency on the Workspace
+            # plugin, so it must be unloaded FIRST — the round-1 guard names
+            # the dependent instead of orphaning it.
+            from server_plugin_api import DependentActiveError
+
+            with pytest.raises(DependentActiveError):
+                runtime.plugin_host.deactivate(WORKSPACE_ID)
+            assert WORKSPACE_METHODS <= set(_hello_caps(runtime)), (
+                "the refused unload must not have removed the dependency's rows")
+            runtime.plugin_host.deactivate("ordessa.server-compat")
+            # The dependency is now the only provider left of the workspace
+            # facts the compat handlers consume: with the consumer gone, its
+            # methods are gone and the workspace rows survive it.
+            assert "profiles.list" not in _hello_caps(runtime)
+            assert WORKSPACE_METHODS <= set(_hello_caps(runtime)), (
+                "unloading the dependent must not touch the dependency's rows")
             assert records == ["fake.extra"], "deactivate must dispose its own plugin only"
-            # The workspace resolution port is gone with its plugin: the remaining
-            # adapter answers the workspace-dependent paths with a typed refusal.
-            with pytest.raises(Exception) as refused:
-                runtime.wire.dispatch("sessions.createAndSend", {
-                    "requestId": "unloaded-1", "workspaceId": "ws_x", "profileId": "p_x",
-                    "message": {"text": "hi", "attachments": []}, "overrides": []})
-            assert "workspace resolution is not composed" in str(refused.value)
     finally:
         runtime.stop()
 
@@ -415,12 +422,16 @@ def test_error_isolation_one_plugins_crash_needs_nothing_from_another(tmp_path):
         runtime.stop()
 
 
-def test_transition_adapter_declaration_covers_exactly_its_registered_rows():
-    """The adapter's module-level declaration literal and its registry rows
-    must agree: a row added to one and not the other is the order-097 hole."""
-    from ordessa_server.plugin_host.transition_core import undeclared_adapter_methods
+def test_compat_core_declaration_covers_exactly_its_registered_rows():
+    """The compatibility core's declaration literals and its registry rows
+    must agree: a row added to one and not the other is the order-097 hole.
+    (Successor of the transition-adapter gate: the declarations moved with
+    the domains into `ordessa_server_compat.core_wire`.)"""
+    from ordessa_server_compat.core_wire import (
+        _COMPAT_METHODS, _PARAM_SHAPES, _require_declared,
+    )
 
-    assert undeclared_adapter_methods() == ()
+    assert _require_declared() == ()
 
 
 def test_a_restart_re_activates_the_same_selection(tmp_path):

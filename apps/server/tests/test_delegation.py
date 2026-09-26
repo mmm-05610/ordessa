@@ -286,11 +286,11 @@ def test_a_granted_parent_renders_the_bridge_entry_and_zero_grants_does_not(tmp_
 
     from fastapi.testclient import TestClient
 
-    from ordessa_server.bootstrap import build_runtime_from_sidecar_deployment
+    from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
     from ordessa_server.transport.http import create_app
     from pacthold.storage.secrets import MemorySecretStore
 
-    import ordessa_server.bootstrap.runtime as runtime_module
+    import ordessa_server_compat.composition as runtime_module
 
     REPO = __import__("pathlib").Path(__file__).resolve().parents[3]
     PLUGIN = REPO / "plugins"  / "harness"
@@ -547,11 +547,11 @@ def test_the_real_bridge_process_runs_a_child_turn_end_to_end(tmp_path, monkeypa
 
     import uvicorn
 
-    from ordessa_server.bootstrap import build_runtime_from_sidecar_deployment
+    from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
     from ordessa_server.transport.http import create_app
     from pacthold.storage.secrets import MemorySecretStore
 
-    import ordessa_server.bootstrap.runtime as runtime_module
+    import ordessa_server_compat.composition as runtime_module
 
     if shutil.which("bwrap") is None or shutil.which("node") is None:
         pytest.skip("bwrap and node are required")

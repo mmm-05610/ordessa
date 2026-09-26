@@ -28,7 +28,7 @@ ABSOLUTE_PATH = re.compile(r"(^|[\s:'\"])/[A-Za-z0-9._/-]{2,}")
 from ordessa_server.bootstrap import build_runtime
 from ordessa_server.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server.transport.http import create_app
-from ordessa_server.wire import handlers as handlers_module
+from ordessa_server_compat import core_wire as handlers_module
 from ordessa_server.wire.errors import FAMILIES, family_for
 
 
@@ -95,13 +95,13 @@ def test_an_unwritable_snapshot_dir_is_the_same_shape(server, tmp_path):
     source = source_dir(tmp_path)
     # The store creates its root lazily, so the unwritable directory has to
     # exist before the write is what fails (that is failure ⑥, not ⑤).
-    runtime.wire.catalogs.root.mkdir(parents=True, exist_ok=True)
-    os.chmod(runtime.wire.catalogs.root, 0o500)
+    runtime.compat_handlers.catalogs.root.mkdir(parents=True, exist_ok=True)
+    os.chmod(runtime.compat_handlers.catalogs.root, 0o500)
     try:
         error = api.call("assets.syncCatalog", {
             "requestId": "p147-write", "sourceId": "community", "sourcePath": str(source)})["error"]
     finally:
-        os.chmod(runtime.wire.catalogs.root, 0o700)
+        os.chmod(runtime.compat_handlers.catalogs.root, 0o700)
     assert error["code"] == "UNAVAILABLE", error
     assert error["details"]["internalCode"] in {
         "PermissionError", "OSError", "FileExistsError", "IsADirectoryError"}, error
@@ -172,7 +172,7 @@ def test_the_catalog_codes_are_registered_and_no_family_was_invented():
 
 
 def test_the_five_copies_are_replaced_by_one_path():
-    source = (REPO / "apps/server/src/ordessa_server/wire/handlers.py").read_text(encoding="utf-8")
+    source = (REPO / "plugins/server-compat/src/ordessa_server_compat/core_wire.py").read_text(encoding="utf-8")
     assert source.count("getattr(refusal") == 0
     assert source.count("raise _asset_refusal(refusal) from refusal") == 5
 
@@ -214,12 +214,12 @@ def _forty_profiles(api, models=500):
 def _counted_list(server):
     runtime, api = server
     _forty_profiles(api)
-    counter = _CountingObjects(runtime.wire.objects)
-    runtime.wire.objects = counter
+    counter = _CountingObjects(runtime.compat_handlers.objects)
+    runtime.compat_handlers.objects = counter
     try:
         listed = api.ok("profiles.list", {"includeArchived": False})
     finally:
-        runtime.wire.objects = counter.inner
+        runtime.compat_handlers.objects = counter.inner
     assert len(listed["items"]) == 40, len(listed["items"])
     return listed, counter
 
@@ -251,12 +251,12 @@ def test_counter_example_bypassing_the_memo_goes_back_to_eighty_reads(
     monkeypatch.setattr(handlers_module._CallReader, "read", uncached_read)
     monkeypatch.setattr(handlers_module._CallReader, "parsed", uncached_parsed)
     monkeypatch.setattr(handlers_module._CallReader, "index", uncached_index)
-    counter = _CountingObjects(runtime.wire.objects)
-    runtime.wire.objects = counter
+    counter = _CountingObjects(runtime.compat_handlers.objects)
+    runtime.compat_handlers.objects = counter
     try:
         api.ok("profiles.list", {"includeArchived": False})
     finally:
-        runtime.wire.objects = counter.inner
+        runtime.compat_handlers.objects = counter.inner
     assert counter.reads >= 80, counter.reads
 
 
@@ -317,7 +317,7 @@ def _params_for(method, tmp_path, runtime):
 def test_all_five_sites_answer_a_server_fault_the_same_way(
         server, tmp_path, monkeypatch, method, attribute, function):
     runtime, api = server
-    owner = getattr(runtime.wire, attribute)
+    owner = getattr(runtime.compat_handlers, attribute)
     assert owner is not None, (
         f"{attribute} is not composed in this tree; the gate would be vacuous")
     if method == "assets.installFromCatalog":

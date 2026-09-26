@@ -178,11 +178,11 @@ def test_a_bound_account_materialises_reclaims_and_conflicts_typed(tmp_path):
     from fastapi.testclient import TestClient
 
     from ordessa_server.accounts.assets import AccountAssetError
-    from ordessa_server.bootstrap import build_runtime_from_sidecar_deployment
+    from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
     from ordessa_server.transport.http import create_app
     from pacthold.storage.secrets import MemorySecretStore
 
-    import ordessa_server.bootstrap.runtime as runtime_module
+    import ordessa_server_compat.composition as runtime_module
 
     peer_source = "tests/harness_remote/home_probe_acp_peer.mjs"
     peer_bytes = REPO / "tests" / "server" / "fixtures" / "home_probe_acp_peer.mjs"
@@ -303,11 +303,11 @@ def test_the_accounts_wire_face_creates_imports_binds_lists(tmp_path):
     """
     from fastapi.testclient import TestClient
 
-    from ordessa_server.bootstrap import build_runtime_from_sidecar_deployment
+    from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
     from ordessa_server.transport.http import create_app
     from pacthold.storage.secrets import MemorySecretStore
 
-    import ordessa_server.bootstrap.runtime as runtime_module
+    import ordessa_server_compat.composition as runtime_module
 
     peer_source = "tests/harness_remote/home_probe_acp_peer.mjs"
     peer_bytes = REPO / "tests" / "server" / "fixtures" / "home_probe_acp_peer.mjs"

@@ -1,13 +1,18 @@
-"""Order 56: managed subscription accounts - records, assets, and reclamation.
+"""Compatibility alias — the implementation moved to `ordessa_server_compat.accounts`
+(core-cleanup stage 3).
 
-A subscription login is a *credential asset*, not native state: the control
-plane owns it, every turn materialises a working copy into the Harness home,
-and the turn's end reclaims it (the Harness may have refreshed it in place).
-This package is the backend half of that model:
-
-* :mod:`records` - the ledger rows (identity, state, asset locator and digest;
-  never a token);
-* :mod:`assets` - the bounded, declared-files-only archive, its digest, the
-  per-account lock, and the reclaim rule that refuses to overwrite an asset
-  that changed underneath a turn.
+M1-P-A① alias discipline: submodules are pre-registered in `sys.modules`
+before this package name is replaced, so both names resolve to the **same**
+module objects and no file ever executes twice.
 """
+import sys as _sys
+
+import ordessa_server_compat.accounts as _implementation
+from ordessa_server_compat.accounts import assets as _assets
+from ordessa_server_compat.accounts import login_engine as _login_engine
+from ordessa_server_compat.accounts import records as _records
+_sys.modules[__name__ + ".assets"] = _assets
+_sys.modules[__name__ + ".login_engine"] = _login_engine
+_sys.modules[__name__ + ".records"] = _records
+
+_sys.modules[__name__] = _implementation

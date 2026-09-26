@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_server.bootstrap import build_runtime_from_sidecar_deployment
+from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
 from pacthold.storage import MemorySecretStore
 
 
@@ -33,17 +33,18 @@ def build(document: Path, *, secret_store, data_root: Path | None = None):
     test is which credentials the Server ends up able to resolve, not the chain
     that would use them.
     """
-    import ordessa_server.bootstrap.runtime as runtime_module
+    import ordessa_server_compat.composition as runtime_module
+    import ordessa_server.bootstrap.runtime as host_module
 
-    original = runtime_module._builtin_connector
-    runtime_module._builtin_connector = lambda _instance_id: object()
+    original = host_module._builtin_connector
+    host_module._builtin_connector = lambda _instance_id: object()
     try:
         return build_runtime_from_sidecar_deployment(
             data_root if data_root is not None else document.parent / f"data-{next(_CALLS)}",
             document, secret_store=secret_store, plugin_root=PLUGIN_ROOT,
         )
     finally:
-        runtime_module._builtin_connector = original
+        host_module._builtin_connector = original
 
 
 CREDENTIAL_ID = "credential_0123456789abcdef0123456789abcdef"

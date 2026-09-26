@@ -218,7 +218,7 @@ def test_the_wire_stop_applies_the_same_rule(tmp_path):
     second door is the real one. A rule wired at one door only is how 103's
     finding stays found.
     """
-    from ordessa_server.wire.handlers import WireService
+    from ordessa_server_compat.core_wire import CoreWireHandlers
 
     env = _delegating_parent(tmp_path / "wire")
     service, records, sessions, parent = (
@@ -235,7 +235,7 @@ def test_the_wire_stop_applies_the_same_rule(tmp_path):
 
     from types import SimpleNamespace
 
-    outcome = WireService.runs_stop(
+    outcome = CoreWireHandlers.runs_stop(
         SimpleNamespace(sessions=sessions, execution=stalled), {
             "requestId": "stop-1",
             "sessionId": records.get_turn_context(env["parent_turn_id"])["session_id"],
@@ -350,9 +350,9 @@ def test_the_bridge_endpoint_hands_run_the_same_call_this_file_drives(tmp_path):
     import re
 
     source = (pathlib.Path(__file__).resolve().parents[3]
-              / "apps" / "server" / "src" / "ordessa_server" / "transport" / "http" / "app.py")
+              / "plugins" / "server-compat" / "src" / "ordessa_server_compat" / "http.py")
     body = source.read_text(encoding="utf-8")
-    call = re.search(r"payload = service\.run\((.*?)\n            \)", body, re.S)
+    call = re.search(r"payload = delegation_service\.run\((.*?)\n\s*\)", body, re.S)
     assert call, "the delegation endpoint's run call moved; re-read it before trusting the gates"
     assert "chain" not in call.group(1), call.group(1)
     assert "parent_turn_id=grant[\"turnId\"]" in call.group(1), call.group(1)

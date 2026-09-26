@@ -86,8 +86,8 @@ def test_a_deployment_cannot_declare_a_work_core_operation():
 
 def test_the_sidecar_backend_declares_the_boundary_in_code():
     """The docstring is part of the evidence: it names both namespaces."""
-    source = (REPO / "apps" / "server" / "src" / "ordessa_server" / "execution"
-              / "sidecar_backend.py").read_text(encoding="utf-8")
+    source = (REPO / "plugins" / "server-compat" / "src" / "ordessa_server_compat"
+              / "execution" / "sidecar_backend.py").read_text(encoding="utf-8")
     marker = "Work Core execution-provider operation contract"
     assert marker in source
     window = source[source.index(marker):source.index(marker) + 1200]

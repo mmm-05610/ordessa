@@ -341,10 +341,11 @@ def test_deployment_carries_a_declared_driver_module_into_the_reviewed_bundle(tm
         encoding="utf-8",
     )
     captured: dict = {}
-    import ordessa_server.bootstrap.runtime as runtime_module
+    import ordessa_server_compat.composition as runtime_module
+    import ordessa_server.bootstrap.runtime as host_module
     import ordessa_server.execution.sidecar as sidecar_module
 
-    monkeypatch.setattr(runtime_module, "_builtin_connector", lambda _instance_id: object())
+    monkeypatch.setattr(host_module, "_builtin_connector", lambda _instance_id: object())
     monkeypatch.setattr(
         sidecar_module, "sidecar_bundle_files",
         lambda root, additional_files=None: captured.update({"files": dict(additional_files or {})}) or {},
@@ -403,9 +404,10 @@ def test_deployment_carries_a_declared_driver_module_into_the_reviewed_bundle(tm
 def test_deployment_refuses_a_malformed_driver_declaration(tmp_path, monkeypatch, driver):
     source = tmp_path / "driver.mjs"
     source.write_text("export async function createDriver() {}\n", encoding="utf-8")
-    import ordessa_server.bootstrap.runtime as runtime_module
+    import ordessa_server_compat.composition as runtime_module
+    import ordessa_server.bootstrap.runtime as host_module
 
-    monkeypatch.setattr(runtime_module, "_builtin_connector", lambda _instance_id: object())
+    monkeypatch.setattr(host_module, "_builtin_connector", lambda _instance_id: object())
     deployment = tmp_path / "deployment.json"
     deployment.write_text(json.dumps({
         "schemaVersion": 1,

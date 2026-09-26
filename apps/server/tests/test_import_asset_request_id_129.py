@@ -29,6 +29,7 @@ REPORT = REPO / "docs/server-round1/import-asset-request-id-129.md"
 
 from ordessa_server.accounts.assets import AccountAssetStore
 from ordessa_server.wire import handlers as handlers_module
+from ordessa_server_compat import core_wire as compat_wire
 
 PEER_SOURCE = "tests/harness_remote/home_probe_acp_peer.mjs"
 PEER_BYTES = REPO / "tests" / "server" / "fixtures" / "home_probe_acp_peer.mjs"
@@ -48,11 +49,11 @@ DEPLOYMENT = {
 @pytest.fixture
 def server(tmp_path, monkeypatch):
     """A wire composition with a real secret store and one declared login file."""
-    from ordessa_server.bootstrap import build_runtime_from_sidecar_deployment
+    from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
     from ordessa_server.transport.http import create_app
     from pacthold.storage.secrets import MemorySecretStore
 
-    import ordessa_server.bootstrap.runtime as runtime_module
+    import ordessa_server_compat.composition as runtime_module
 
     original_file = runtime_module._sidecar_deployment_file  # noqa: SLF001
 
@@ -129,7 +130,7 @@ def test_a_retry_of_one_import_replays_and_writes_the_asset_once(server, monkeyp
     assert second.status_code == 200 and "result" in second.json(), second.text
     assert len(writes) == 1, f"the import executed {len(writes)} times for one requestId"
     assert second.json() == first.json(), "a replay did not answer identically"
-    assert runtime.wire.accounts.asset_reference(account_id)[0] == writes[0][1], (
+    assert runtime.compat_handlers.accounts.asset_reference(account_id)[0] == writes[0][1], (
         "the account's asset reference moved under a retry")
 
 
@@ -143,7 +144,7 @@ def test_a_replayed_import_leaves_exactly_one_idempotency_row_and_one_asset(serv
         call(client, headers, "accounts.importAsset", params)
     locators = {locator for _account, locator in writes}
     assert len(locators) == 1, locators
-    with runtime.wire.accounts.database.read() as conn:
+    with runtime.compat_handlers.accounts.database.read() as conn:
         rows = conn.execute(
             "SELECT key, request_digest FROM server_idempotency WHERE scope=?",
             ("accounts.importAsset",)).fetchall()
@@ -183,7 +184,7 @@ def test_the_same_key_with_a_changed_file_is_a_conflict_request(server, monkeypa
     error = response.json()["error"]
     assert error["code"] == "CONFLICT_REQUEST", error
     assert error["details"]["internalCode"] == "IDEMPOTENCY_CONFLICT", error
-    assert runtime.wire.accounts.asset_reference(account_id)[0] is not None
+    assert runtime.compat_handlers.accounts.asset_reference(account_id)[0] is not None
 
 
 def test_the_conflict_family_matches_the_sibling_that_uses_the_same_layer(server):
@@ -225,7 +226,7 @@ def test_a_request_without_the_key_is_refused_by_the_shape_before_any_write(serv
     """The contract required `requestId` all along (this is the declared half);
     129 is about the used half. Both are pinned so neither can quietly go."""
     runtime = server[0]
-    required, optional = handlers_module._PARAM_SHAPES["accounts.importAsset"]  # noqa: SLF001
+    required, optional = compat_wire._PARAM_SHAPES["accounts.importAsset"]  # noqa: SLF001
     assert "requestId" in required and "requestId" not in optional
     _runtime, client, headers, tmp_path = server
     writes = counted_asset_writes(server, monkeypatch)

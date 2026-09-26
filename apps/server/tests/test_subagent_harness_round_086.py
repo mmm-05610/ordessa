@@ -69,12 +69,12 @@ def _runtime_root(tmp_path: pathlib.Path) -> pathlib.Path:
 @pytest.fixture()
 def granted_parent(tmp_path, monkeypatch):
     """A Server on the claude production deployment with one delegation edge."""
-    from ordessa_server.bootstrap import build_runtime_from_sidecar_deployment
+    from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
     from ordessa_server.transport.http import create_app
     from pacthold.storage.secrets import MemorySecretStore
     from fastapi.testclient import TestClient
 
-    import ordessa_server.bootstrap.runtime as runtime_module
+    import ordessa_server_compat.composition as runtime_module
 
     from ordessa_harness.claude import production
 

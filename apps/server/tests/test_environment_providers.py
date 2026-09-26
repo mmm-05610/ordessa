@@ -20,7 +20,7 @@ import pytest
 from ordessa_server.bootstrap import build_runtime
 from ordessa_server.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server.execution.placement import resolve_placement
-from ordessa_server.execution.ssh_connector import SshConnector, ssh_identity_permissions
+from ordessa_server.connectors import SshConnector, ssh_identity_permissions
 from ordessa_server.transport.http import create_app
 from ordessa_server.workspaces.local_environment import LocalEnvironmentProvider
 from ordessa_server.workspaces.repository import WorkspaceRecords
@@ -209,7 +209,7 @@ def test_a_connector_construction_refuses_what_it_cannot_trust(tmp_path):
 def test_the_locator_never_appears_in_a_command_line(tmp_path):
     connector = _connector(tmp_path)
     try:
-        from ordessa_server.execution.ssh_connector import _location
+        from ordessa_server.connectors import _location
 
         argv = connector._ssh_prefix(_location("203.0.113.7", "root"))
         assert argv[0] == "ssh" and argv[1] == "-F"
@@ -229,7 +229,7 @@ def test_the_locator_never_appears_in_a_command_line(tmp_path):
     ("", None),
 ])
 def test_an_unsafe_target_or_user_is_refused_before_any_ssh_runs(target, user):
-    from ordessa_server.execution.ssh_connector import _location
+    from ordessa_server.connectors import _location
 
     with pytest.raises(Exception) as refused:
         _location(target, user)
@@ -239,7 +239,7 @@ def test_an_unsafe_target_or_user_is_refused_before_any_ssh_runs(target, user):
 def test_a_worker_that_does_not_match_the_pinned_build_is_refused(tmp_path):
     connector = _connector(tmp_path)
     try:
-        from ordessa_server.execution.ssh_connector import _location
+        from ordessa_server.connectors import _location
 
         connector._run = lambda location, script: SimpleNamespace(
             returncode=0, stdout="root\n" + "b" * 64 + "  /opt/agentbox/worker\n", stderr="",
@@ -254,7 +254,7 @@ def test_a_worker_that_does_not_match_the_pinned_build_is_refused(tmp_path):
 def test_a_probe_records_the_remote_user_and_expires(tmp_path):
     connector = _connector(tmp_path)
     try:
-        from ordessa_server.execution.ssh_connector import _location
+        from ordessa_server.connectors import _location
 
         connector._run = lambda location, script: SimpleNamespace(
             returncode=0, stdout="deploy\n" + "a" * 64 + "  /opt/agentbox/worker\n", stderr="",
