@@ -22,6 +22,7 @@ import ast
 import builtins
 import importlib
 import pkgutil
+import pytest
 import sys
 import types
 from pathlib import Path
@@ -149,10 +150,12 @@ LEGACY_BUSINESS_ENTRIES = (
 
 def test_the_legacy_business_entries_no_longer_exist():
     """The compat-alias discipline is retired: a legacy entry must not
-    import — and the ONLY passing failure is `ModuleNotFoundError` naming
-    the entry itself. Any other ImportError (a broken shim that partially
-    imports, a fallback chain dying halfway) or any other exception fails
-    the gate: "it blew up" is not "it is gone"."""
+    import — and the ONLY passing failure is `ModuleNotFoundError` whose
+    `name` is EXACTLY the entry. `exc.name` naming a child
+    (`entry + ".something"`) means the entry EXISTS but died importing an
+    inner module — that is a half-working legacy provider, not absence, and
+    it fails the gate. So does any other ImportError, any other exception,
+    and a successful import: "it blew up" is not "it is gone"."""
     for entry in LEGACY_BUSINESS_ENTRIES:
         # A cached entry IS the resurrection: popping it first would destroy
         # the evidence and let a shim that only ever lived in sys.modules
@@ -165,8 +168,9 @@ def test_the_legacy_business_entries_no_longer_exist():
             try:
                 importlib.import_module(entry)
             except ModuleNotFoundError as exc:
-                assert exc.name == entry or (exc.name or "").startswith(entry + "."), (
-                    f"{entry}: unexpected ModuleNotFoundError for {exc.name!r}")
+                assert exc.name == entry, (
+                    f"{entry}: ModuleNotFoundError names {exc.name!r} — the "
+                    "entry exists but is broken inside, which is not absence")
             except ImportError as exc:
                 raise AssertionError(
                     f"{entry}: import failed in a NON-absence way "
@@ -183,6 +187,44 @@ def test_the_legacy_business_entries_no_longer_exist():
         finally:
             # absence is the state under test: never resurrect a legacy entry
             sys.modules.pop(entry, None)
+
+
+def test_a_half_broken_legacy_entry_is_not_mistaken_for_absence():
+    """The counterexample: a legacy entry that EXISTS as a package but whose
+    import dies on a missing inner module. `ModuleNotFoundError.name` then
+    names the CHILD — the old gate accepted that as absence and waved a
+    half-working provider through. The gate must refuse it."""
+    import shutil
+    import tempfile
+
+    pkg_name = "ordessa_server.profiles"
+    probe_root = Path(tempfile.mkdtemp())
+    try:
+        pkg_dir = probe_root / "ordessa_server"
+        pkg_dir.mkdir()
+        (pkg_dir / "__init__.py").write_text("", encoding="utf-8")
+        (pkg_dir / "profiles.py").write_text(
+            "from ordessa_server.profiles.missing_child import thing\n",
+            encoding="utf-8")
+        sys.path.insert(0, str(probe_root))
+        saved_entry = sys.modules.pop(pkg_name, None)
+        saved_host = sys.modules.pop("ordessa_server", None)
+        try:
+            with pytest.raises(AssertionError) as captured:
+                test_the_legacy_business_entries_no_longer_exist()
+            assert "exists but is broken inside" in str(captured.value), (
+                captured.value)
+        finally:
+            sys.path.remove(str(probe_root))
+            sys.modules.pop(pkg_name, None)
+            sys.modules.pop(pkg_name + ".profiles", None)
+            sys.modules.pop("ordessa_server", None)
+            if saved_host is not None:
+                sys.modules["ordessa_server"] = saved_host
+            if saved_entry is not None:
+                sys.modules[pkg_name] = saved_entry
+    finally:
+        shutil.rmtree(probe_root, ignore_errors=True)
 
 
 def test_the_isolation_scanner_is_not_silently_tolerant():
