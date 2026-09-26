@@ -115,6 +115,45 @@ class StreamRouteDescriptor:
             raise ValueError("owner must name the registering plugin")
 
 
+_HTTP_METHODS = frozenset({
+    "GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS",
+})
+
+
+@dataclass(frozen=True)
+class HttpRouteDescriptor:
+    """One business HTTP route, admitted through the host's transport wall.
+
+    The endpoint is the plugin's own callable, shaped for the host transport
+    (path/query/body parameters and a response exactly as the transport's
+    framework expects); the descriptor carries no transport types, so this
+    contract stays dependency-free. Admission is host-owned: the route is
+    mounted behind the host's bearer authentication, loopback policy and
+    error sanitisation, and a route that would shadow a host route or another
+    plugin's route is a typed refusal, never a silent second handler.
+    """
+
+    path: str
+    methods: frozenset[str]
+    endpoint: Callable[..., Any]
+    owner: str
+
+    def __post_init__(self) -> None:
+        if (not isinstance(self.path, str) or not self.path.startswith("/")
+                or len(self.path) > 1024 or "{" not in self.path and ".." in self.path):
+            raise ValueError(f"invalid http route path: {self.path!r}")
+        if not isinstance(self.methods, frozenset) or not self.methods:
+            raise ValueError("http route methods must be a non-empty frozenset")
+        unknown = {m for m in self.methods
+                   if not isinstance(m, str) or m.upper() not in _HTTP_METHODS}
+        if unknown:
+            raise ValueError(f"unknown http methods: {sorted(unknown)}")
+        if not callable(self.endpoint):
+            raise ValueError("endpoint must be callable")
+        if not isinstance(self.owner, str) or not self.owner:
+            raise ValueError("owner must name the registering plugin")
+
+
 @dataclass(frozen=True)
 class ServerPluginContext:
     """What a plugin may touch while building.
@@ -150,11 +189,12 @@ class ServerPluginRegistration:
 
     methods: tuple[ServerMethodDescriptor, ...] = ()
     stream_routes: tuple[StreamRouteDescriptor, ...] = ()
+    http_routes: tuple[HttpRouteDescriptor, ...] = ()
     provided_ports: Mapping[str, Any] = field(default_factory=dict)
     disposal: Callable[[], None] | None = None
 
     def __post_init__(self) -> None:
-        for name in ("methods", "stream_routes"):
+        for name in ("methods", "stream_routes", "http_routes"):
             value = getattr(self, name)
             if not isinstance(value, tuple):
                 raise ValueError(f"ServerPluginRegistration.{name} must be a tuple")

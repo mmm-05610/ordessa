@@ -589,6 +589,118 @@ def test_runtime_stop_releases_the_root_even_when_a_disposal_throws(tmp_path):
         raise
 
 
+# -- core-cleanup stage 2: the plugin HTTP route seam -------------------------
+
+_ROUTE_PATH = "/api/v1/plugin-fake/echo"
+
+
+def _echo_endpoint(body: dict):
+    """A plugin-owned endpoint shape a FastAPI app can admit as-is."""
+    return {"echo": body}
+
+
+class _HttpRoutePlugin:
+    """Contract plugin contributing one HTTP route through the host seam."""
+
+    def __init__(self, plugin_id="fake.route", *, path=_ROUTE_PATH,
+                 methods=("POST",), endpoint=_echo_endpoint):
+        self._id = plugin_id
+        self._path = path
+        self._methods = frozenset(methods)
+        self._endpoint = endpoint
+
+    def descriptor(self):
+        return ServerPluginDescriptor(id=self._id, display_name=self._id, version="1")
+
+    def build(self, context):
+        from server_plugin_api import HttpRouteDescriptor
+
+        return ServerPluginRegistration(stream_routes=(), http_routes=(
+            HttpRouteDescriptor(path=self._path, methods=self._methods,
+                                endpoint=self._endpoint, owner=self._id),
+        ))
+
+
+def test_a_plugin_http_route_passes_host_auth_and_answers(tmp_path):
+    """The route is the plugin's, the wall is the host's: without a bearer
+    token the answer is 401, with it the plugin endpoint answers, and the
+    loopback policy covers it like every host route."""
+    runtime = build_runtime(tmp_path / "data", server_plugins=[_HttpRoutePlugin()])
+    try:
+        with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
+            unauthenticated = client.post(_ROUTE_PATH, json={"ping": 1})
+            assert unauthenticated.status_code == 401, unauthenticated.text
+            answer = client.post(_ROUTE_PATH, json={"ping": 1}, headers={
+                "Authorization": f"Bearer {runtime.token}"})
+            assert answer.status_code == 200, answer.text
+            assert answer.json() == {"echo": {"ping": 1}}
+    finally:
+        runtime.stop()
+
+
+def test_a_plugin_http_route_error_never_leaks_its_text(tmp_path):
+    """A plugin endpoint that raises answers the transport's last wall: the
+    status stays 500 and the exception's text (paths, credentials) never
+    leaves — only its type, as internalCode."""
+    def _leaky(body: dict):
+        raise RuntimeError("leak: /secret/data-root/credentials.token")
+
+    runtime = build_runtime(tmp_path / "data", server_plugins=[
+        _HttpRoutePlugin(endpoint=_leaky)])
+    try:
+        with TestClient(create_app(runtime), base_url="http://127.0.0.1",
+                        raise_server_exceptions=False) as client:
+            answer = client.post(_ROUTE_PATH, json={}, headers={
+                "Authorization": f"Bearer {runtime.token}"})
+            assert answer.status_code == 500
+            assert answer.json()["error"]["details"]["internalCode"] == "RuntimeError"
+            assert "secret" not in answer.text
+    finally:
+        runtime.stop()
+
+
+def test_two_plugins_claiming_the_same_http_route_refuse_activation():
+    """One path+method, one owner: the second claim is a typed refusal and the
+    round stays transactional."""
+    from server_plugin_api import DuplicateHttpRouteError
+
+    host = _new_host()
+    with pytest.raises(DuplicateHttpRouteError):
+        host.activate_all([_HttpRoutePlugin("fake.route.a"), _HttpRoutePlugin("fake.route.b")])
+    assert host.active_ids() == ()
+
+
+def test_a_plugin_route_on_a_host_path_refuses_at_the_transport(tmp_path):
+    """A plugin route that would shadow a host route (health, wire dispatch)
+    is a startup refusal, never a silent second handler."""
+    runtime = build_runtime(tmp_path / "data", server_plugins=[
+        _HttpRoutePlugin(path="/live", methods=("GET",))])
+    try:
+        with pytest.raises(RuntimeError) as captured:
+            create_app(runtime)
+        assert "PLUGIN_HTTP_ROUTE_CONFLICT" in str(captured.value)
+    finally:
+        runtime.stop()
+
+
+def test_unloading_the_plugin_removes_its_http_route(tmp_path):
+    """Uninstalling the capability removes exactly that capability: a fresh
+    transport after unload answers 404 where the route used to be. (Clients
+    run without a lifespan here: start, the unload and the stop are driven by
+    hand — a TestClient context would stop the runtime mid-test.)"""
+    runtime = build_runtime(tmp_path / "data", server_plugins=[_HttpRoutePlugin()])
+    try:
+        runtime.start()
+        headers = {"Authorization": f"Bearer {runtime.token}"}
+        live = TestClient(create_app(runtime), base_url="http://127.0.0.1")
+        assert live.post(_ROUTE_PATH, json={}, headers=headers).status_code == 200
+        runtime.plugin_host.deactivate("fake.route")
+        fresh = TestClient(create_app(runtime), base_url="http://127.0.0.1")
+        assert fresh.post(_ROUTE_PATH, json={}, headers=headers).status_code == 404
+    finally:
+        runtime.stop()
+
+
 # -- review round 1: lifecycle holes the first batch missed ------------------
 
 

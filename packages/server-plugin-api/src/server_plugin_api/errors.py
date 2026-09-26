@@ -46,6 +46,21 @@ class DuplicateStreamRouteError(ServerPluginError):
         self.route_id = route_id
 
 
+class DuplicateHttpRouteError(ServerPluginError):
+    """Two plugins claim the same HTTP path with overlapping methods; the host
+    refuses instead of letting registration order pick a silent winner."""
+
+    def __init__(self, path: str, methods: "tuple[str, ...]",
+                 first_owner: str, second_owner: str) -> None:
+        super().__init__(
+            "PLUGIN_HTTP_ROUTE_DUPLICATE",
+            f"http route {path} for {', '.join(sorted(methods))} is already "
+            f"owned by {first_owner!r} (refused re-registration by {second_owner!r})",
+        )
+        self.path = path
+        self.methods = tuple(methods)
+
+
 class DependencyError(ServerPluginError):
     """A declared `requires` names no activatable plugin."""
 

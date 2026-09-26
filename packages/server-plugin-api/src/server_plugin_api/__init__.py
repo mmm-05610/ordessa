@@ -15,6 +15,7 @@ from __future__ import annotations
 from .contract import (
     PLUGIN_METHOD_ID,
     SERVER_PLUGIN_API_VERSION,
+    HttpRouteDescriptor,
     ServerMethodDescriptor,
     ServerPlugin,
     ServerPluginContext,
@@ -27,6 +28,7 @@ from .errors import (
     CyclicDependencyError,
     DependencyError,
     DependentActiveError,
+    DuplicateHttpRouteError,
     DuplicateMethodError,
     DuplicatePluginError,
     DuplicateStreamRouteError,
@@ -39,6 +41,7 @@ from .errors import (
 __all__ = [
     "SERVER_PLUGIN_API_VERSION",
     "PLUGIN_METHOD_ID",
+    "HttpRouteDescriptor",
     "ServerMethodDescriptor",
     "ServerPlugin",
     "ServerPluginContext",
@@ -49,6 +52,7 @@ __all__ = [
     "DuplicateMethodError",
     "DuplicatePluginError",
     "DuplicateStreamRouteError",
+    "DuplicateHttpRouteError",
     "DependencyError",
     "CyclicDependencyError",
     "DependentActiveError",

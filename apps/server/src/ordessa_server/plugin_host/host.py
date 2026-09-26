@@ -40,9 +40,11 @@ from server_plugin_api import (
     CyclicDependencyError,
     DependencyError,
     DependentActiveError,
+    DuplicateHttpRouteError,
     DuplicateMethodError,
     DuplicatePluginError,
     DuplicateStreamRouteError,
+    HttpRouteDescriptor,
     InvalidDeclarationError,
     PluginCleanupError,
     PortConflictError,
@@ -54,7 +56,10 @@ from server_plugin_api import (
     StreamRouteDescriptor,
 )
 
-__all__ = ["MethodRegistry", "StreamRouteRegistry", "ServerPluginHost", "ActivePlugin"]
+__all__ = [
+    "MethodRegistry", "StreamRouteRegistry", "HttpRouteRegistry",
+    "ServerPluginHost", "ActivePlugin",
+]
 
 
 def _carry_cleanup_errors(errors: list[PluginCleanupError]) -> None:
@@ -167,6 +172,40 @@ class StreamRouteRegistry:
         return descriptor.resolver(connection_ref)
 
 
+class HttpRouteRegistry:
+    """Business HTTP routes plugins contribute, admitted through the host's
+    transport wall (bearer auth, loopback policy, error sanitisation).
+
+    One path with overlapping methods has exactly one owner: a second claim
+    is a typed refusal at activation, never a registration-order race."""
+
+    def __init__(self) -> None:
+        self._routes: list[HttpRouteDescriptor] = []
+
+    def register(self, descriptor: HttpRouteDescriptor) -> None:
+        try:
+            HttpRouteDescriptor(
+                path=descriptor.path, methods=descriptor.methods,
+                endpoint=descriptor.endpoint, owner=descriptor.owner,
+            )
+        except (TypeError, ValueError) as exc:
+            raise InvalidDeclarationError(f"{descriptor.path}: {exc}") from exc
+        for existing in self._routes:
+            if existing.path == descriptor.path:
+                overlap = existing.methods & descriptor.methods
+                if overlap:
+                    raise DuplicateHttpRouteError(
+                        descriptor.path, tuple(overlap),
+                        existing.owner, descriptor.owner)
+        self._routes.append(descriptor)
+
+    def unregister_owner(self, owner: str) -> None:
+        self._routes = [item for item in self._routes if item.owner != owner]
+
+    def descriptors(self) -> tuple[HttpRouteDescriptor, ...]:
+        return tuple(self._routes)
+
+
 @dataclass
 class ActivePlugin:
     descriptor: ServerPluginDescriptor
@@ -181,6 +220,7 @@ class ServerPluginHost:
 
     methods: MethodRegistry = field(default_factory=MethodRegistry)
     stream_routes: StreamRouteRegistry = field(default_factory=StreamRouteRegistry)
+    http_routes: HttpRouteRegistry = field(default_factory=HttpRouteRegistry)
     data_root: Any = None
     host_ports: Mapping[str, Any] = field(default_factory=dict)
     _active: dict[str, ActivePlugin] = field(default_factory=dict)
@@ -354,6 +394,12 @@ class ServerPluginHost:
                         f"owned by {item.owner!r}")
                 self.stream_routes.register(item)
                 staged_routes.append(item.route_id)
+            for item in registration.http_routes:
+                if item.owner != descriptor.id:
+                    raise InvalidDeclarationError(
+                        f"{descriptor.id} declares http route {item.path} "
+                        f"owned by {item.owner!r}")
+                self.http_routes.register(item)
         except BaseException:
             # Roll back only this plugin's staged contributions — and dispose
             # what build() already created: a plugin that never became active
@@ -362,6 +408,7 @@ class ServerPluginHost:
                 self.methods.unregister(method_id, owner=descriptor.id)
             for route_id in staged_routes:
                 self.stream_routes.unregister(route_id, owner=descriptor.id)
+            self.http_routes.unregister_owner(descriptor.id)
             if registration.disposal is not None:
                 registration.disposal()
             raise
@@ -412,6 +459,7 @@ class ServerPluginHost:
             self.methods.unregister(method_id, owner=plugin_id)
         for route_id in active.stream_route_ids:
             self.stream_routes.unregister(route_id, owner=plugin_id)
+        self.http_routes.unregister_owner(plugin_id)
         del self._active[plugin_id]
         self._activation_order.remove(plugin_id)
         if active.registration.disposal is not None:

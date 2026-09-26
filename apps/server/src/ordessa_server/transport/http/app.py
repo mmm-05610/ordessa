@@ -481,6 +481,33 @@ def create_app(runtime: ServerRuntime) -> FastAPI:
         response.status_code = status
         return result
 
+    # -- plugin-contributed business routes (the plugin-host HTTP seam) -----
+    # Admitted behind exactly the host's walls: the `protected` bearer
+    # dependency, the loopback middleware above, and the app-level error
+    # handlers. A plugin route that would shadow a host route (same path,
+    # overlapping method) is a startup refusal, never a silent second
+    # handler; plugin-vs-plugin duplicates are refused at activation.
+    if getattr(runtime, "plugin_host", None) is not None:
+        from fastapi.routing import APIRoute
+
+        host_methods: dict[str, set[str]] = {}
+        for route in app.routes:
+            if isinstance(route, APIRoute):
+                host_methods.setdefault(route.path, set()).update(route.methods)
+        for descriptor in runtime.plugin_host.http_routes.descriptors():
+            clash = host_methods.get(descriptor.path)
+            if clash and (clash & set(descriptor.methods)):
+                raise RuntimeError(
+                    "PLUGIN_HTTP_ROUTE_CONFLICT: "
+                    f"{descriptor.path} ({', '.join(sorted(descriptor.methods))}) "
+                    f"declared by {descriptor.owner} collides with a host route"
+                )
+            app.add_api_route(
+                descriptor.path, descriptor.endpoint,
+                methods=sorted(descriptor.methods), dependencies=protected,
+                name=f"plugin:{descriptor.owner}:{descriptor.path}",
+            )
+
     return app
 
 
