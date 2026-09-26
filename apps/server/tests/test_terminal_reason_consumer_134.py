@@ -17,7 +17,7 @@ from __future__ import annotations
 from ordessa_server.execution.sidecar_backend import _terminal_reason_from_result
 from ordessa_server.wire.projection import execution_state
 from ordessa_server.idempotency import IdempotentRecords
-from ordessa_server.sessions import SessionRecords
+from ordessa_server_compat.sessions import SessionRecords
 from pacthold.storage import Database
 
 

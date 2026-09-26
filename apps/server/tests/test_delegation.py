@@ -16,7 +16,7 @@ from ordessa_server.execution.delegation import DelegationService
 from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server.profiles import ProfileRecords
 from ordessa_server.profiles.subagents import DelegationError
-from ordessa_server.sessions import SessionRecords, SessionService
+from ordessa_server_compat.sessions import SessionRecords, SessionService
 from ordessa_server.workspaces import WorkspaceRecords
 from pacthold.storage import Database, ObjectStore
 
@@ -586,7 +586,7 @@ def test_the_real_bridge_process_runs_a_child_turn_end_to_end(tmp_path, monkeypa
         runtime.start()
 
         from ordessa_server.idempotency import IdempotentRecords
-        from ordessa_server.sessions import SessionService
+        from ordessa_server_compat.sessions import SessionService
 
         sessions = SessionService(
             runtime.repository.sessions, IdempotentRecords(runtime.database),

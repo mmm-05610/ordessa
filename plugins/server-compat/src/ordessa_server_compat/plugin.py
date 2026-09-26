@@ -119,8 +119,8 @@ class ServerCompatPlugin:
             ProviderModelRecords, ProviderModelService,
         )
         from ordessa_server_compat.profiles import ProfileRecords, ProfileService
-        from pacthold.service.sessions import SessionRecords, SessionService
-        from pacthold.service.sessions.queue import QueueRecords
+        from ordessa_server_compat.sessions import SessionRecords, SessionService
+        from ordessa_server_compat.sessions.queue import QueueRecords
 
         assets_root = context.data_root / "assets"
         profile_records = ProfileRecords(database, idempotency)
@@ -165,7 +165,7 @@ class ServerCompatPlugin:
         if execution is not None and hasattr(execution, "bind_queue"):
             execution.bind_queue(queue_records)
 
-        from pacthold.service.facade import ProductService
+        from ordessa_server_compat.facade import ProductService
 
         workspace_service = ports["workspace.service"]
         profile_service = ProfileService(profile_records, idempotency, objects,

@@ -6,10 +6,11 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from ordessa_server.errors import ServerError, unavailable
-from ordessa_server.execution import CancelOutcome, HarnessRegistry, TurnExecutionPort
-from ordessa_server.profiles.permissions import resolve_all
+from ordessa_server_compat.execution import HarnessRegistry
+from pacthold.execution.contracts import CancelOutcome, TurnExecutionPort
+from ordessa_server_compat.profiles.permissions import resolve_all
 from ordessa_server.records import digest, reject_sensitive_keys
-from pacthold.service.sessions.repository import SessionRecords
+from ordessa_server_compat.sessions.repository import SessionRecords
 
 
 class SessionService:

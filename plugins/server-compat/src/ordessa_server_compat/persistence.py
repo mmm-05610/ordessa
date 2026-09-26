@@ -10,7 +10,7 @@ from typing import Any
 from ordessa_server.credentials import CredentialRecords
 from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server_compat.profiles import ProfileRecords
-from pacthold.service.sessions import SessionRecords
+from ordessa_server_compat.sessions import SessionRecords
 from pacthold.storage import Database
 
 

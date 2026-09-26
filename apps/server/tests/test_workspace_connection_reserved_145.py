@@ -150,7 +150,7 @@ def test_the_reservation_is_written_next_to_the_name():
 def test_the_numbering_set_still_carries_it_unchanged():
     """128's invariant, reasserted: 145 changes no vocabulary and no numbering,
     and the one-line exception the order offered was **not used**."""
-    from ordessa_server.sessions import repository as repo_module
+    from ordessa_server_compat.sessions import repository as repo_module
 
     assert KIND in repo_module.WIRE_VISIBLE_EVENT_KINDS
     assert len(repo_module.WIRE_VISIBLE_EVENT_KINDS) == 14

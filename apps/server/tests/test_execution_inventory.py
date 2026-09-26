@@ -15,7 +15,7 @@ from ordessa_server.execution.inventory import (
 )
 from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server.profiles import ProfileRecords
-from ordessa_server.sessions import SessionRecords
+from ordessa_server_compat.sessions import SessionRecords
 from ordessa_server.workspaces import WorkspaceRecords
 from pacthold.storage import Database
 

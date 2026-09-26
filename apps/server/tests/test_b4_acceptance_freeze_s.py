@@ -33,7 +33,7 @@ from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server.persistence import ProductRepositoryView
 from ordessa_server.profiles import ProfileRecords
 from ordessa_server.profiles.permissions import resolve_all
-from ordessa_server.sessions import SessionRecords, SessionService
+from ordessa_server_compat.sessions import SessionRecords, SessionService
 from pacthold.storage import Database, ObjectStore
 from ordessa_server.workspaces import WorkspaceRecords
 

@@ -34,7 +34,6 @@ dev = ["pytest>=7", "httpx>=0.28"]
 
 [project.scripts]
 ordessa-server = "ordessa_server.__main__:main"
-ordessa-server-credential = "ordessa_server.credential_cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

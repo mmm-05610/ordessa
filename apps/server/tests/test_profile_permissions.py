@@ -99,7 +99,7 @@ def test_the_posture_is_stored_validated_and_frozen_into_the_next_turn(tmp_path)
     from ordessa_server.errors import ServerError
     from ordessa_server.idempotency import IdempotentRecords
     from ordessa_server.profiles import ProfileRecords
-    from ordessa_server.sessions import SessionRecords
+    from ordessa_server_compat.sessions import SessionRecords
     from pacthold.storage import Database
 
     database = Database(tmp_path / "data")
@@ -172,7 +172,7 @@ def test_sessions_belong_to_the_workspace_and_turns_carry_the_profile(tmp_path):
     second = profiles.create(key="p2", request_digest="p2", name="role-b",
                              harness_type="codex", config_digest=digests["codex"],
                              credential_id=None)[1]
-    from ordessa_server.sessions import SessionService
+    from ordessa_server_compat.sessions import SessionService
     from ordessa_server.idempotency import IdempotentRecords
 
     service = SessionService(runtime.repository.sessions, IdempotentRecords(runtime.database),

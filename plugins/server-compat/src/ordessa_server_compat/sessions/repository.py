@@ -10,7 +10,7 @@ import json
 from typing import Any, Callable, Mapping
 
 from ordessa_server.errors import ServerError
-from ordessa_server.execution.session_store_guard import SessionStoreGuardError
+from ordessa_server_compat.execution.session_store_guard import SessionStoreGuardError
 from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server.ids import now, opaque_id
 from pacthold.storage import Database

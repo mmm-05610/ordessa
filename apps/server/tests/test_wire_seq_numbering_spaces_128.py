@@ -21,7 +21,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 from ordessa_server.bootstrap import build_runtime
-from ordessa_server.sessions import repository as repo_module
+from ordessa_server_compat.sessions import repository as repo_module
 from ordessa_server.transport.http import create_app
 from ordessa_server.wire import projection as projection_module
 

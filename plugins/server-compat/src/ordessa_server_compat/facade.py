@@ -9,11 +9,12 @@ from typing import Any
 
 from ordessa_server.credentials import CredentialRecords
 from ordessa_server.errors import unavailable
-from ordessa_server.execution import HarnessRegistry, TurnExecutionPort
+from ordessa_server_compat.execution import HarnessRegistry
+from pacthold.execution.contracts import TurnExecutionPort
 from ordessa_server.events import EventNotifier
-from ordessa_server.profiles import ProfileService
-from pacthold.service.sessions import SessionService
-from ordessa_server.workspaces import WorkspaceService
+from ordessa_server_compat.profiles import ProfileService
+from ordessa_server_compat.sessions import SessionService
+from ordessa_workspace import WorkspaceService
 
 
 class ProductService:
