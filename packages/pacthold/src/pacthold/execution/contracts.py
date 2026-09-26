@@ -1,8 +1,7 @@
 """Neutral execution-domain contract types (C-EXEC@v1 block1 carrier, E-INC1a a-1).
 
 MB-E2a equal-move: these definitions previously lived in
-``ordessa_server.execution.execution_contract`` (and ``TurnExecutionPort``
-in ``ordessa_server.execution``); they are defined once here and the
+a former sidecar-local contract module; they are defined once here and the
 historical entries re-export the same objects.
 
 Pure frozen data and enumerations only: no IO, no imports beyond the standard

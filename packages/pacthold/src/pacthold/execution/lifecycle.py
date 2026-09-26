@@ -1,7 +1,7 @@
 """Neutral execution lifecycle coordination (C-EXEC@v1 block1, MB-E2b).
 
 Single implementation of the neutral run bookkeeping moved equal from
-``ordessa_server.execution.sidecar_backend`` (``_NeutralRun`` plus the
+the sidecar backend (``_NeutralRun`` plus the
 ``submit``/``cancel_execution``/``observe_execution``/``_neutral_event``
 mechanics): key claim/release/replay, the tristate cancel state machine,
 observation classification and evidence append, over two ledgers and one
