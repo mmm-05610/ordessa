@@ -96,17 +96,18 @@ def _hello_on_composition(root, *, sandbox_status):
 def test_the_table_is_the_dispatch_table_and_nothing_more(hello):
     """G1: three statements of "what exists" have to agree, without duplicates.
 
-    The dispatch table answers a call, the request-shape table validates it, and
-    this table advertises it. Requiring all three to agree is what makes
-    "handler added, everything else forgotten" fail loudly: `dispatch` reads
-    `_PARAM_SHAPES[method]` right after the handler lookup, so a handler without
-    a shape entry is a KeyError, and a shape entry without a handler is a method
-    advertised that cannot be called.
+    The dispatch registry answers a call, each plugin's declared shape
+    validates it, and hello advertises it. Requiring all three to agree is
+    what makes "handler added, everything else forgotten" fail loudly: the
+    registry refuses a descriptor whose shape and handler do not arrive
+    together, and a declaration that never reached the registry (or a
+    registry row with no declaration behind it) shows up as a difference
+    against `plugin_host.declared_shapes()`.
     """
     runtime, _, result = hello
     declared = [item["id"] for item in result["capabilities"]]
     dispatched = list(runtime.wire._handlers)
-    shapes = list(handlers_module._PARAM_SHAPES)
+    shapes = list(runtime.plugin_host.declared_shapes())
 
     duplicates = sorted({name for name in declared if declared.count(name) > 1})
     assert duplicates == [], f"the table declares a method twice: {duplicates}"
@@ -141,17 +142,18 @@ def test_a_method_dropped_from_dispatch_diverges_and_the_gate_bites(hello):
 
     Derivation alone cannot catch a missing handler - both sides of that
     equality shrink together. The gate that bites is the one against the *other*
-    statement: drop `usage.export` from dispatch and hello honestly follows it
-    down to 66 while the shape table still says 67. If this case ever stops
-    reporting the hole, someone has put a hand-maintained list back.
+    statement: retire `usage.export` from the live registry and hello honestly
+    follows it down to 66 while the plugin's declaration still says 67. If
+    this case ever stops reporting the hole, the registry has stopped being
+    the one table hello is fed from.
     """
     runtime, _, result = hello
     service = runtime.wire
-    shapes = set(handlers_module._PARAM_SHAPES)
+    shapes = set(runtime.plugin_host.declared_shapes())
     before = {item["id"] for item in result["capabilities"]}
     assert before == shapes, "the two tables must agree before a mutation means anything"
 
-    service._handlers.pop("usage.export")
+    service.retire("usage.export")
     after = {item["id"] for item in service.hello(HELLO)["capabilities"]}
 
     assert after == before - {"usage.export"}, (
@@ -234,13 +236,15 @@ def test_the_baseline_deployment_answers_the_pre_existing_27_verbatim(tmp_path):
 def test_an_id_that_no_rule_covers_still_answers_supported(hello):
     """The fallback is pinned, not inherited by accident.
 
-    Most of the 67 rows are answered by `return True, None` now that the table is
-    derived. That is right for support state and wrong for existence, which is
-    why the same composition still refuses the call: the two questions stay in
-    two places.
+    Most of the 67 rows carry no availability predicate, so the registry
+    answers `(True, None)` for them - right for support state, wrong for
+    existence, which is why an id outside the registry is answered `False`
+    by `_capability` and refused by dispatch: the two questions stay in two
+    places.
     """
     runtime, api, _ = hello
-    assert runtime.wire._capability("nothing.here") == (True, None)
+    assert runtime.wire._capability("queue.get") == (True, None)
+    assert runtime.wire._capability("nothing.here") == (False, "UNKNOWN_METHOD")
     refused = api.err("nothing.here", {})
     assert refused["code"] == "INVALID_REQUEST", refused
     assert "nothing.here" in refused["message"], refused

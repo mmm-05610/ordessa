@@ -212,25 +212,33 @@ def test_counter_example_the_internal_code_in_the_family_slot_is_no_longer_a_500
     assert handlers_module.WireService._artifact_store is not old_shape
 
 
-def test_counter_example_the_shape_without_digest_reports_a_crash_not_a_500(server, monkeypatch):
+def test_counter_example_the_shape_without_digest_reports_a_crash_not_a_500(server):
     """And the half-fix that only touches the family slot: with `digest` still
     missing from the shape, a client that omits it walks into `KeyError`.
 
     Same supersession note as the gate above: 115's dispatch wall means the
-    client now gets a JSON-RPC error object naming the exception type — which is
-    why 101's shape fix still has to stand, since `UNAVAILABLE/KeyError` is a far
+    client now gets a JSON-RPC error object naming the exception type — which
+    is why 101's shape fix still has to stand, since `UNAVAILABLE/KeyError` is a far
     worse answer than `INVALID_REQUEST` naming the missing field.
+
+    The defect is restored on the live method registry (`amend_shape`) — the
+    one table dispatch reads. A registry mutation is not monkeypatch-undoable,
+    so the original descriptor's shape is re-declared before returning.
     """
-    shapes = dict(handlers_module._PARAM_SHAPES)  # noqa: SLF001
-    shapes["providerArtifacts.install"] = (
-        {"requestId", "harness", "version", "sourceToken"}, set())
-    monkeypatch.setattr(handlers_module, "_PARAM_SHAPES", shapes)
-    _runtime, client, headers = server
-    params = {k: v for k, v in PARAMS["providerArtifacts.install"].items() if k != "digest"}
-    response = post(client, headers, "providerArtifacts.install", params)
-    assert response.status_code == 200, response.text[:200]
-    error = response.json()["error"]
-    assert (error["code"], error["details"]["internalCode"]) == ("UNAVAILABLE", "KeyError"), error
-    monkeypatch.undo()
+    runtime, client, headers = server
+    original = runtime.wire._registry.lookup("providerArtifacts.install")  # noqa: SLF001
+    runtime.wire.amend_shape(
+        "providerArtifacts.install",
+        required={"requestId", "harness", "version", "sourceToken"}, optional=set())
+    try:
+        params = {k: v for k, v in PARAMS["providerArtifacts.install"].items() if k != "digest"}
+        response = post(client, headers, "providerArtifacts.install", params)
+        assert response.status_code == 200, response.text[:200]
+        error = response.json()["error"]
+        assert (error["code"], error["details"]["internalCode"]) == ("UNAVAILABLE", "KeyError"), error
+    finally:
+        runtime.wire.amend_shape(
+            "providerArtifacts.install",
+            required=original.required_params, optional=original.optional_params)
     restored_required, _ = handlers_module._PARAM_SHAPES["providerArtifacts.install"]  # noqa: SLF001
     assert "digest" in restored_required
