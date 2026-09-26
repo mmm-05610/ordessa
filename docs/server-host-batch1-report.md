@@ -86,7 +86,9 @@ Red ledger after the fixes (same commands, same per-ID comparison):
 
 ## Rollback point and source identity
 
-- Branch base: local `main` at `dda84eb49c`; the branch is 4 commits ahead.
+- Branch base: local `main` at `dda84eb49c`; the branch is 9 commits ahead
+  (3 batch stages + report, then two review rounds each adding fixes and
+  report updates).
 - Rollback: `main` is untouched — discard the branch (or revert the 4 commit
   range) to restore the pre-batch Server byte-for-byte.
 - Reference tree `worktrees/backend-multi-harness-acp` @ `edc0f23a0d` with its
@@ -102,6 +104,9 @@ Red ledger after the fixes (same commands, same per-ID comparison):
 | `8a70f02054` | Contract | new `packages/server-plugin-api` (`ordessa-server-plugin-api`, module `server_plugin_api`, zero deps): descriptors, context/registration, typed refusals |
 | `0d6b3330f0` | Host + Workspace | new `ordessa_server/plugin_host/` (registry, lifecycle, workspace plugin, transition adapter); `wire/handlers.py` registry-backed; bootstrap composition (`server_plugins` selection, ports, restart re-activation); stream route admission in `transport/http/app.py`; `apps/server` dep on the contract |
 | `3b5dbcb125` | Gates | new `test_plugin_host_gate.py` (19 tests); order-097/101/129 access points adapted to the registry (semantics unchanged) |
+| `ef333cff42` | Report | `docs/server-host-batch1-report.md` (first version) |
+| `eee778500a` + `8433d1932e` | Review round 1 | data-root lock released on activation failure (composition + start paths), dependency-provided ports into `context.ports` (`requires` as access grant), disposal on staging failure, `DependentActiveError` on unload under active dependents; 5 gates |
+| `1653cefdb8` + `b6908512a3` | Review round 2 | transactional activation rounds (a failed composition or failed start disposes what it activated before the lock is released), `PortConflictError` refusing port shadowing; 5 gates (29 total) |
 
 ## Measured results (all runs from the worktree, isolated `.venv`)
 
