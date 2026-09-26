@@ -9,6 +9,7 @@ worktrees are byte-for-byte untouched.
 
 | SHA | Stage | Change surface |
 | --- | --- | --- |
+| `0e09112187` | Review round 3 | The five runtime-lifecycle holes the reviewer reproduced, each pinned red first (8 counterexamples reusing the same App / same runtime): mounted plugin routes follow their owner live (request-time ownership + endpoint resolution; restart mounting at lifespan startup); runtime port facades re-bind per activation round and clear on shutdown; a failed start hook disposes the round before the lock releases; staging-rollback disposal failures accumulate onto the primary conflict's `cleanup_errors`; unmounted-route activation refuses typed (`PLUGIN_HTTP_ROUTE_UNMOUNTED`). Install boundary: no ordessa-harness in the core's requirements, acp_channel alias deleted, packaging + AST import gates |
 | `ec79af9fb2` | 0 · Freeze | `docs/server-core-cleanup-baseline.md` (67 wire methods, REST/WS/CLI, service construction, storage identifiers — each with source → owner → cleanup target), fresh per-ID red ledger re-run on the branch base (`.cleanup-evidence/`) |
 | `c4cae7d36d` | 1 · Disposal hardening | A throwing disposal never breaks the cleanup: activation rollback stays transactional with the round's own failure primary and disposal failures on its `cleanup_errors`; shutdown disposes every plugin exactly once and raises one typed `CleanupError`; `runtime.stop()` releases the data root even when shutdown raises. 4 new gates (33 total) |
 | `3dc57ceac6` | 2 · HTTP route seam | `server_plugin_api.HttpRouteDescriptor` (no transport types), typed `DuplicateHttpRouteError`, host `HttpRouteRegistry` (activation-stage duplicate refusal, owner-scoped unload), transport admission behind the host's bearer auth / loopback policy / error sanitisation, host-route shadowing refused at startup. 5 new gates (38 total) |
@@ -93,9 +94,9 @@ After:
 | pacthold | `pytest packages/pacthold -q` | 238P | 238P | none |
 | harness | `pytest plugins/harness -q` | 308P/2F/3S | 308P/2F/3S | identical 2 IDs |
 | ACP orchestration | `pytest tests/acp_orchestration -q` | 40P/18F | 40P/18F | identical 18 IDs |
-| server | `pytest apps/server -q` | 812P/43F/10S/25E | **833P**/43F/10S/25E | **identical 68 IDs, zero new, zero resolved** |
+| server | `pytest apps/server -q` | 812P/43F/10S/25E | **841P**/43F/10S/25E | **identical 68 IDs, zero new, zero resolved** |
 
-(+21 gate tests: 4 stage-1, 5 stage-2, 6 compat-boundary, 6 stage-4.)
+(+29 gate tests: 4 stage-1, 5 stage-2, 6 compat-boundary, 6 stage-4, 8 review-round-3.)
 
 Environment note: the worktree `.venv` now also installs
 `ordessa-workspace`, `ordessa-server-compat` and `ordessa-server-product`
