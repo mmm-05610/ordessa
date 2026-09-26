@@ -1,7 +1,19 @@
 # Desktop Workbench composition: contract-first plan
 
-Status: phase 0 decision recorded; phase 1 type contract added. Phases 2–5 are
-not implemented by this document. Branch: `feature/desktop-workbench-registration`.
+Status: phases 1–2 (contract + Workbench composition implementation,
+with the four review-round acceptance gaps fixed tests-first:
+sidebar-less module switching clears the previous module sidebar,
+single-view regions show no tab strip, openOverlay handles report every
+close path truthfully and popovers close on anchor detach, error toast
+layers above overlays with modal Tab containment) integrated into main
+on 2026-09-26 via cherry-picks of 0bc1afafba, 16c085227d and 4575e5d6c1
+from `feature/desktop-workbench-registration` (27/27 workbench tests,
+146/146 desktop regression, typecheck and `test:electron` clean on the
+integrated tree). Phases 3–5 (Chat package 791bdf10b4, product assembly
+d6bc1ab193, review record 684bcd4f3f) remain on the branch and are not
+in main; the branch carries the full phase history and follow-up
+registry (Chat presentation parity, legacy conversation retirement
+decision) in `docs/known-issues.md` §Desktop.
 
 ## Ownership
 
