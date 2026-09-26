@@ -18,3 +18,9 @@ worktrees/
 .qoder/
 runtime/
 verify-logs/
+
+# --- python editable-install build artifacts (never source) ---
+*.egg-info/
+
+# --- batch evidence runs (regenerable; numbers recorded in docs) ---
+.baseline-evidence/
