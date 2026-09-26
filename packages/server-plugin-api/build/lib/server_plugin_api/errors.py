@@ -1,0 +1,179 @@
+"""Typed plugin failures. A host rejects startup with these, never with prose."""
+from __future__ import annotations
+
+
+class ServerPluginError(RuntimeError):
+    """Base class for every plugin-boundary refusal."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(f"{code}: {message}")
+        self.code = code
+        self.message = message
+
+
+class InvalidDeclarationError(ServerPluginError):
+    """A descriptor violates the contract's shape rules."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__("PLUGIN_DECLARATION_INVALID", message)
+
+
+class DuplicateMethodError(ServerPluginError):
+    """Two plugins, or two registrations, claim the same wire method id."""
+
+    def __init__(self, method_id: str, first_owner: str, second_owner: str) -> None:
+        super().__init__(
+            "PLUGIN_METHOD_DUPLICATE",
+            f"method {method_id} is already owned by {first_owner!r}"
+            f" (refused re-registration by {second_owner!r})",
+        )
+        self.method_id = method_id
+
+
+class DuplicatePluginError(ServerPluginError):
+    def __init__(self, plugin_id: str) -> None:
+        super().__init__("PLUGIN_ID_DUPLICATE", f"plugin {plugin_id!r} is already active")
+        self.plugin_id = plugin_id
+
+
+class DuplicateStreamRouteError(ServerPluginError):
+    def __init__(self, route_id: str, first_owner: str, second_owner: str) -> None:
+        super().__init__(
+            "PLUGIN_STREAM_ROUTE_DUPLICATE",
+            f"stream route {route_id} is already owned by {first_owner!r}"
+            f" (refused re-registration by {second_owner!r})",
+        )
+        self.route_id = route_id
+
+
+class DuplicateHttpRouteError(ServerPluginError):
+    """Two plugins claim the same HTTP path with overlapping methods; the host
+    refuses instead of letting registration order pick a silent winner."""
+
+    def __init__(self, path: str, methods: "tuple[str, ...]",
+                 first_owner: str, second_owner: str) -> None:
+        super().__init__(
+            "PLUGIN_HTTP_ROUTE_DUPLICATE",
+            f"http route {path} for {', '.join(sorted(methods))} is already "
+            f"owned by {first_owner!r} (refused re-registration by {second_owner!r})",
+        )
+        self.path = path
+        self.methods = tuple(methods)
+
+
+class HttpRouteUnmountedError(ServerPluginError):
+    """A plugin activated while a live transport holds a frozen route set
+    declares HTTP routes that set never mounted. The transport is a snapshot
+    at creation; a route that was not mounted cannot silently never serve.
+    The activation refuses and rolls back — wire methods and HTTP routes
+    succeed or refuse together."""
+
+    def __init__(self, plugin_id: str, unmounted: "tuple[str, ...]") -> None:
+        super().__init__(
+            "PLUGIN_HTTP_ROUTE_UNMOUNTED",
+            f"plugin {plugin_id!r} declares HTTP routes the live transport "
+            f"never mounted: {', '.join(sorted(unmounted))} — activate before "
+            "the transport is created, or restart the transport",
+        )
+        self.plugin_id = plugin_id
+        self.unmounted = tuple(unmounted)
+
+
+class HttpRouteShapeChangedError(ServerPluginError):
+    """A re-activated plugin's route matches a mounted route by path, methods
+    and owner, but its mounted shape differs — the authentication flag or the
+    endpoint's FastAPI-visible signature changed. The live transport would
+    keep serving the new registration behind the wall and call shape that the
+    first mount installed; the activation refuses instead."""
+
+    def __init__(self, plugin_id: str, changed: "tuple[str, ...]") -> None:
+        super().__init__(
+            "PLUGIN_HTTP_ROUTE_SHAPE_CHANGED",
+            f"plugin {plugin_id!r} re-declares mounted routes with a changed "
+            f"shape (auth flag or endpoint signature): {'; '.join(sorted(changed))}",
+        )
+        self.plugin_id = plugin_id
+        self.changed = tuple(changed)
+
+
+class DependencyError(ServerPluginError):
+    """A declared `requires` names no activatable plugin."""
+
+    def __init__(self, plugin_id: str, missing: tuple[str, ...]) -> None:
+        super().__init__(
+            "PLUGIN_DEPENDENCY_MISSING",
+            f"plugin {plugin_id!r} requires {', '.join(sorted(missing))}"
+            " which no active or requested plugin provides",
+        )
+        self.plugin_id = plugin_id
+
+
+class CyclicDependencyError(ServerPluginError):
+    def __init__(self, cycle: tuple[str, ...]) -> None:
+        super().__init__(
+            "PLUGIN_DEPENDENCY_CYCLE",
+            "plugin requires form a cycle: " + " -> ".join(cycle),
+        )
+        self.cycle = cycle
+
+
+class DependentActiveError(ServerPluginError):
+    """Unloading a plugin whose declared dependents are still active would
+    orphan them; the host refuses and names them."""
+
+    def __init__(self, plugin_id: str, dependents: tuple[str, ...]) -> None:
+        super().__init__(
+            "PLUGIN_DEPENDENT_ACTIVE",
+            f"plugin {plugin_id!r} cannot be unloaded while its declared "
+            f"dependent(s) are active: {', '.join(sorted(dependents))}",
+        )
+        self.plugin_id = plugin_id
+        self.dependents = tuple(dependents)
+
+
+class PortConflictError(ServerPluginError):
+    """A provided port would silently override an existing binding in a
+    consumer's activation context (a host facade or another dependency's
+    port of the same name); the host refuses instead of shadowing."""
+
+    def __init__(self, consumer_id: str, provider_id: str, port_name: str) -> None:
+        super().__init__(
+            "PLUGIN_PORT_CONFLICT",
+            f"port {port_name!r} provided by {provider_id!r} collides with an "
+            f"existing binding in {consumer_id!r}'s activation context",
+        )
+        self.consumer_id = consumer_id
+        self.provider_id = provider_id
+        self.port_name = port_name
+
+
+class PluginCleanupError(ServerPluginError):
+    """One plugin's disposal raised while the host was cleaning up.
+
+    The original exception the disposal raised travels unmodified in `error`;
+    the plugin's registrations were already revoked before `error` was
+    captured, so this is a hygiene fact, not a registry leak."""
+
+    def __init__(self, plugin_id: str, error: BaseException) -> None:
+        super().__init__(
+            "PLUGIN_DISPOSAL_RAISED",
+            f"plugin {plugin_id!r}'s disposal raised "
+            f"{type(error).__name__} during host cleanup",
+        )
+        self.plugin_id = plugin_id
+        self.error = error
+
+
+class CleanupError(ServerPluginError):
+    """The host finished releasing every plugin, but at least one disposal
+    raised; the per-plugin failures travel in `errors`, reverse activation
+    order. Nothing was skipped — this is what "all cleaned, some failed"
+    looks like."""
+
+    def __init__(self, errors: "tuple[PluginCleanupError, ...]") -> None:
+        super().__init__(
+            "PLUGIN_CLEANUP_FAILED",
+            f"{len(errors)} plugin disposal(s) raised during host cleanup: "
+            + ", ".join(f"{e.plugin_id}({type(e.error).__name__})" for e in errors),
+        )
+        self.errors = tuple(errors)
