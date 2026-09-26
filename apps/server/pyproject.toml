@@ -23,6 +23,7 @@ classifiers = [
 dependencies = [
     "pacthold==2.0.0a1",
     "ordessa-harness==2.0.0a1",
+    "ordessa-server-plugin-api>=0.1.0,<1",
     "fastapi>=0.115,<1",
     "uvicorn>=0.30,<1",
     "wsproto>=1.2,<2",

@@ -234,6 +234,13 @@ class ServerRuntime:
     #: Managed ACP channel registry (owned transports and their run records);
     #: composed only where a transport provider is injected.
     acp_channels: Any | None = None
+    #: The plugin host (batch 1): the one wire/1 dispatch registry and the
+    #: activation/lifecycle of the Server's plugins.
+    plugin_host: Any | None = None
+    #: The explicit selection this runtime was composed with, kept so a
+    #: start() after a stop() re-activates the same plugins (a wire surface
+    #: that loses its domains on restart is a broken restart).
+    plugin_selection: Any | None = None
     started: bool = False
 
     def start(self) -> None:
@@ -241,6 +248,9 @@ class ServerRuntime:
             return
         if not self.owner.acquired:
             self.owner.acquire()
+        if (self.plugin_host is not None and self.plugin_selection
+                and not self.plugin_host.active_ids()):
+            self.plugin_host.activate_all(self.plugin_selection)
         try:
             self.database.initialize()
             _import_declared_credentials(self, self.declared_credentials)
@@ -288,6 +298,10 @@ class ServerRuntime:
         if self.started:
             from pacthold.work_core import db as core_db
             core_db.configure_database(None)
+        # Plugins release what they own exactly once, reverse activation
+        # order, before the data root itself is given up.
+        if self.plugin_host is not None:
+            self.plugin_host.shutdown()
         self.owner.release()
         self.started = False
 
@@ -343,6 +357,7 @@ def build_runtime(
     shared_store_guards: Mapping[str, Any] | None = None,
     subscription_files_for=None,
     local_workspace_provider=None,
+    server_plugins: "tuple[Any, ...] | list[Any] | None" = None,
 ) -> ServerRuntime:
     """Assemble a provider-neutral Server runtime.
 
@@ -350,6 +365,12 @@ def build_runtime(
     this deployment. `execution` is an explicit port injection (tests, or a
     future bootstrap that composes the Work Order 40 Harness plugin); the
     production default stays None so capability answers stay honest.
+
+    `server_plugins` is the explicit plugin selection (the composition decides
+    what is enabled; installing a distribution never enables one silently).
+    ``None`` — the production default — enables the batch-1 composition: the
+    Workspace domain plugin followed by the transitional core adapter. An
+    empty sequence composes a bare host: only `server.hello` is advertised.
     """
     root = Path(data_root).resolve()
     owner = DataRootOwner(root)
@@ -467,11 +488,35 @@ def build_runtime(
         database=database, idempotency=idempotency, credentials=credentials,
         workspaces=workspace_records, profiles=profile_records, sessions=session_records,
     )
+    # -- the plugin-host boundary (batch 1) ---------------------------------
+    # One dispatch truth: the host's method registry. WireService owns no
+    # table of its own any more; the Workspace plugin and the transitional
+    # core adapter register their methods on it, in that order, which
+    # reproduces the baseline hello capability order byte for byte.
+    from server_plugin_api import StreamRouteDescriptor
+    from ordessa_server.plugin_host import MethodRegistry, ServerPluginHost, StreamRouteRegistry
+    from ordessa_server.plugin_host.transition_core import TransitionCorePlugin
+    from ordessa_server.plugin_host.workspace_plugin import WorkspaceServerPlugin
+    from ordessa_server.wire.handlers import HOST_OWNER_ID
+
+    method_registry = MethodRegistry()
+    stream_route_registry = StreamRouteRegistry()
+    plugin_host = ServerPluginHost(
+        methods=method_registry, stream_routes=stream_route_registry, data_root=root,
+        host_ports={
+            "workspaces.records": workspace_records,
+            "idempotency": idempotency,
+            "workspace.wsl_connector": connector_instance,
+            "workspace.ssh_connector": ssh_instance,
+            "workspace.local_provider": local_workspace_provider,
+        },
+    )
     wire = WireService(
         server_id_provider=lambda: _server_id(database),
-        workspaces=workspace_service, profiles=profile_service, sessions=session_service,
+        profiles=profile_service, sessions=session_service,
         queue=queue_records, approvals=approval_records, harnesses=registry,
         objects=objects, execution=execution, cursor_secret=token.encode("utf-8"),
+        method_registry=method_registry, stream_routes=stream_route_registry,
         model_configs=provider_model_service,
         accounts=account_records, account_assets=account_assets,
         subscription_files_for=subscription_files_for,
@@ -481,11 +526,31 @@ def build_runtime(
         hooks=hook_records, hook_triggers=hook_triggers,
         connectors=connectors, data_root=root,
     )
+    # Explicit selection only: None means the batch-1 product composition
+    # (Workspace domain, then the transitional adapter); an empty sequence is
+    # the bare host the boundary gates require. The string
+    # "ordessa.transition-core" references the adapter by id — the only way to
+    # compose adapter-inclusive custom selections, since the adapter wraps the
+    # WireService built here. Activation failure here fails startup — never a
+    # half-composed wire surface.
+    if server_plugins is None:
+        selected_plugins: "tuple[Any, ...]" = (WorkspaceServerPlugin(), TransitionCorePlugin(wire))
+    else:
+        selected_plugins = tuple(
+            TransitionCorePlugin(wire) if item == "ordessa.transition-core" else item
+            for item in server_plugins
+        )
+    plugin_host.activate_all(selected_plugins)
+    # Resolved through the host on every read: unloading the Workspace plugin
+    # unbinds its port for the adapter too — never a stale snapshot.
+    wire.bind_workspace_resolution(
+        lambda: plugin_host.provided_port("workspace.service"))
     runtime = ServerRuntime(
         root, database, objects, repository, service, owner, token, token_path,
         notifier, secrets_store, registry, execution, wire,
         approval_records, queue_records,
         provider_model_service,
+        plugin_host=plugin_host, plugin_selection=selected_plugins,
     )
     # Order 56: the managed-account half of the composition, reachable where
     # the product and the acceptance gates need it (records + assets).
@@ -646,6 +711,15 @@ def build_runtime_from_native_adapter(
         launch=launch_channel_transport,
     )
     runtime.wire.acp_channels = runtime.acp_channels
+    # The stream route is admitted through the host transport (origin/bearer/
+    # close stay host-owned); batch 1 holds it under the host owner — the
+    # Harness server facet takes ownership when that domain moves (next batch).
+    from server_plugin_api import StreamRouteDescriptor
+    from ordessa_server.wire.handlers import HOST_OWNER_ID
+
+    runtime.wire.stream_routes.register(StreamRouteDescriptor(
+        route_id="acp-channel", resolver=runtime.acp_channels.get, owner=HOST_OWNER_ID,
+    ))
     return runtime
 
 
