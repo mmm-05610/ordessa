@@ -1,8 +1,18 @@
-"""wire/1 method dispatch.
+"""wire/1 method dispatch — the contract's edge, and the TRANSITIONAL core adapter.
 
-Every method here validates the request shape, calls a neutral use case, and
-projects the result onto the contract. No Harness brand is branched on and no
-behavior lives here: this module is the contract's edge.
+Since the plugin-host boundary (batch 1), the one dispatch table is the plugin
+host's method registry: shape, handler, availability and owner travel as one
+atomic descriptor, and `dispatch`/`hello` read only from it. This module now
+carries two things:
+
+- the host-owned `server.hello` method, and
+- `WireService` acting as the **transitional core adapter** (`ordessa.transition-core`):
+  the business domains that have not yet moved behind the plugin boundary are
+  registered through the registry by `TransitionCorePlugin`, here, exactly
+  once. This adapter is a bridge for wire/1 stability, NOT evidence that
+  business ownership has moved; its remaining domains are listed in
+  `docs/server-host-baseline.md` and each later batch retires a slice.
+  The Workspace domain already moved: see `plugin_host/workspace_plugin.py`.
 """
 from __future__ import annotations
 
@@ -31,19 +41,19 @@ from ordessa_server.wire.projection import (
     execution_state,
     profile_record,
     session_record,
-    workspace_record,
 )
 
 
 WIRE_VERSION = "wire/1"
 
+#: The transitional adapter's declared param shapes. The plugin host's method
+#: registry is the one live table (shape + handler + availability + owner);
+#: this literal is what `TransitionCorePlugin` declares from, and order-097's
+#: gates compare it against the registry so a declaration that never reached
+#: the registry stays visible. The five `workspaces.*` shapes moved with the
+#: Workspace plugin (`plugin_host/workspace_plugin.py`).
 _PARAM_SHAPES = {
     "server.hello": ({"clientVersions", "clientPresentationSupports"}, set()),
-    "workspaces.open": ({"requestId", "environment", "path"}, {"expectedVersion"}),
-    "workspaces.list": ({"includeArchived"}, set()),
-    "workspaces.browse": ({"requestId", "environment", "path"}, set()),
-    "workspaces.archive": ({"requestId", "workspaceId", "expectedVersion"}, set()),
-    "workspaces.gitStatus": ({"requestId", "workspaceId"}, set()),
     "executions.list": ({"requestId"}, {"limit"}),
     "executions.get": ({"requestId", "executionId"}, set()),
     "acp.channel.open": ({"harnessId", "projectId"}, {"requestId"}),
@@ -383,12 +393,97 @@ class _CallReader:
         return self._records[provider_id]
 
 
+TRANSITIONAL_ADAPTER_ID = "ordessa.transition-core"
+HOST_OWNER_ID = "server.host"
+
+#: The transitional adapter's method declarations: wire id -> the WireService
+#: attribute that handles it, in the exact order the old `_handlers` dict
+#: listed them (minus the five `workspaces.*` methods, which moved to the
+#: Workspace plugin). `TransitionCorePlugin` turns each row into one atomic
+#: descriptor on the registry — this mapping is a declaration, not a table.
+_ADAPTER_METHODS: dict[str, str] = {
+    "server.hello": "hello",
+    "executions.list": "executions_list",
+    "executions.get": "executions_get",
+    "acp.channel.open": "acp_channel_open",
+    "acp.channel.release": "acp_channel_release",
+    "profiles.list": "profiles_list",
+    "profiles.create": "profiles_create",
+    "profiles.update": "profiles_update",
+    "profiles.updateConfig": "profiles_update_config",
+    "profiles.archive": "profiles_archive",
+    "profiles.clone": "profiles_clone",
+    "profiles.setPermissions": "profiles_set_permissions",
+    "profiles.memory": "profiles_memory",
+    "profiles.subagentGrants": "profiles_subagent_grants",
+    "profiles.grantSubagent": "profiles_grant_subagent",
+    "profiles.revokeSubagent": "profiles_revoke_subagent",
+    "providerModels.list": "provider_models_list",
+    "providerModels.create": "provider_models_create",
+    "providerModels.update": "provider_models_update",
+    "providerModels.archive": "provider_models_archive",
+    "providerModels.probeModels": "provider_models_probe_models",
+    "assets.list": "assets_list",
+    "assets.publishSkill": "assets_publish_skill",
+    "assets.publishMcp": "assets_publish_mcp",
+    "assets.publishPlugin": "assets_publish_plugin",
+    "assets.bind": "assets_bind",
+    "assets.unbind": "assets_unbind",
+    "assets.bindings": "assets_bindings",
+    "assets.syncCatalog": "assets_sync_catalog",
+    "assets.catalog": "assets_catalog",
+    "assets.installFromCatalog": "assets_install_from_catalog",
+    "assets.probe": "assets_probe",
+    "hooks.list": "hooks_list",
+    "hooks.create": "hooks_create",
+    "hooks.update": "hooks_update",
+    "hooks.setEnabled": "hooks_set_enabled",
+    "hooks.delete": "hooks_delete",
+    "hooks.triggers": "hooks_triggers",
+    "accounts.list": "accounts_list",
+    "accounts.create": "accounts_create",
+    "accounts.bind": "accounts_bind",
+    "accounts.importAsset": "accounts_import_asset",
+    "providerModels.probeConnection": "provider_models_probe_connection",
+    "providerArtifacts.list": "provider_artifacts_list",
+    "providerArtifacts.install": "provider_artifacts_install",
+    "providerArtifacts.rollback": "provider_artifacts_rollback",
+    "usage.aggregate": "usage_aggregate",
+    "usage.export": "usage_export",
+    "config.describe": "config_describe",
+    "config.resolve": "config_resolve",
+    "sessions.list": "sessions_list",
+    "sessions.update": "sessions_update",
+    "sessions.archive": "sessions_archive",
+    "sessions.createAndSend": "sessions_create_and_send",
+    "sessions.send": "sessions_send",
+    "sessions.switchProfile": "sessions_switch_profile",
+    "sendOutcome.query": "send_outcome_query",
+    "queue.get": "queue_get",
+    "queue.withdraw": "queue_withdraw",
+    "runs.stop": "runs_stop",
+    "approvals.decide": "approvals_decide",
+    "history.snapshot": "history_snapshot",
+}
+
+#: The families whose support state depends on the execution port being
+#: composed (the one rule the old `_capability` carried that still belongs to
+#: the adapter; the Workspace blockers moved with the Workspace plugin).
+_EXECUTION_GATE_FAMILY = frozenset({
+    "sessions.list", "sessions.update", "sessions.archive",
+    "sessions.createAndSend", "sessions.send", "sessions.switchProfile",
+    "sendOutcome.query",
+})
+
+
 class WireService:
-    """Dispatches wire/1 methods onto neutral use cases."""
+    """Dispatches wire/1 methods through the plugin host's method registry."""
 
     def __init__(
-        self, *, server_id_provider: Callable[[], str], workspaces, profiles, sessions,
+        self, *, server_id_provider: Callable[[], str], profiles, sessions,
         queue, approvals, harnesses, objects, execution, cursor_secret: bytes,
+        method_registry=None,
+        stream_routes=None,
         model_configs=None,
         token_required: bool = True,
         artifact_store=None,
@@ -439,7 +534,28 @@ class WireService:
         #: Order 56: harness -> its declared subscription login-state files,
         #: read from the deployment set the composition loaded.
         self.subscription_files_for = subscription_files_for or (lambda _harness: ())
-        self.workspaces = workspaces
+        #: Workspace facts reach the remaining transitional domains only
+        #: through a resolver the composition binds after activation; it reads
+        #: the plugin host live, so unloading the Workspace plugin unbinds the
+        #: port too. None resolver = the domain can never be present.
+        self._workspace_resolver = None
+        self._registry = method_registry
+        #: The host's stream-route registry (ACP today): resolution of owned
+        #: endpoints only — origin/bearer checks and close semantics stay in
+        #: the host transport, which is where the wire reads it from.
+        self.stream_routes = stream_routes
+        self._adapter_owner = TRANSITIONAL_ADAPTER_ID
+        # The host-owned discovery method; every other row arrives through a
+        # plugin's registration (Workspace plugin, then the transitional
+        # adapter — order preserved from the baseline dispatch table).
+        from server_plugin_api import ServerMethodDescriptor
+
+        self._registry.register(ServerMethodDescriptor(
+            method_id="server.hello",
+            required_params=frozenset({"clientVersions", "clientPresentationSupports"}),
+            optional_params=frozenset(),
+            handler=self.hello, owner=HOST_OWNER_ID,
+        ))
         self.profiles = profiles
         self.sessions = sessions
         self.queue = queue
@@ -450,83 +566,73 @@ class WireService:
         self.model_configs = model_configs
         self.codec = CursorCodec(cursor_secret)
         self.token_required = token_required
-        self._handlers: dict[str, Callable[[Mapping[str, Any]], Any]] = {
-            "server.hello": self.hello,
-            "workspaces.browse": self.workspaces_browse,
-            "workspaces.open": self.workspaces_open,
-            "workspaces.list": self.workspaces_list,
-            "workspaces.archive": self.workspaces_archive,
-            "workspaces.gitStatus": self.workspaces_git_status,
-            "executions.list": self.executions_list,
-            "executions.get": self.executions_get,
-            "acp.channel.open": self.acp_channel_open,
-            "acp.channel.release": self.acp_channel_release,
-            "profiles.list": self.profiles_list,
-            "profiles.create": self.profiles_create,
-            "profiles.update": self.profiles_update,
-            "profiles.updateConfig": self.profiles_update_config,
-            "profiles.archive": self.profiles_archive,
-            "profiles.clone": self.profiles_clone,
-            "profiles.setPermissions": self.profiles_set_permissions,
-            "profiles.memory": self.profiles_memory,
-            "profiles.subagentGrants": self.profiles_subagent_grants,
-            "profiles.grantSubagent": self.profiles_grant_subagent,
-            "profiles.revokeSubagent": self.profiles_revoke_subagent,
-            "providerModels.list": self.provider_models_list,
-            "providerModels.create": self.provider_models_create,
-            "providerModels.update": self.provider_models_update,
-            "providerModels.archive": self.provider_models_archive,
-            "providerModels.probeModels": self.provider_models_probe_models,
-            "assets.list": self.assets_list,
-            "assets.publishSkill": self.assets_publish_skill,
-            "assets.publishMcp": self.assets_publish_mcp,
-            "assets.publishPlugin": self.assets_publish_plugin,
-            "assets.bind": self.assets_bind,
-            "assets.unbind": self.assets_unbind,
-            "assets.bindings": self.assets_bindings,
-            "assets.syncCatalog": self.assets_sync_catalog,
-            "assets.catalog": self.assets_catalog,
-            "assets.installFromCatalog": self.assets_install_from_catalog,
-            "assets.probe": self.assets_probe,
-            "hooks.list": self.hooks_list,
-            "hooks.create": self.hooks_create,
-            "hooks.update": self.hooks_update,
-            "hooks.setEnabled": self.hooks_set_enabled,
-            "hooks.delete": self.hooks_delete,
-            "hooks.triggers": self.hooks_triggers,
-            "accounts.list": self.accounts_list,
-            "accounts.create": self.accounts_create,
-            "accounts.bind": self.accounts_bind,
-            "accounts.importAsset": self.accounts_import_asset,
-            "providerModels.probeConnection": self.provider_models_probe_connection,
-            "providerArtifacts.list": self.provider_artifacts_list,
-            "providerArtifacts.install": self.provider_artifacts_install,
-            "providerArtifacts.rollback": self.provider_artifacts_rollback,
-            "usage.aggregate": self.usage_aggregate,
-            "usage.export": self.usage_export,
-            "config.describe": self.config_describe,
-            "config.resolve": self.config_resolve,
-            "sessions.list": self.sessions_list,
-            "sessions.update": self.sessions_update,
-            "sessions.archive": self.sessions_archive,
-            "sessions.createAndSend": self.sessions_create_and_send,
-            "sessions.send": self.sessions_send,
-            "sessions.switchProfile": self.sessions_switch_profile,
-            "sendOutcome.query": self.send_outcome_query,
-            "queue.get": self.queue_get,
-            "queue.withdraw": self.queue_withdraw,
-            "runs.stop": self.runs_stop,
-            "approvals.decide": self.approvals_decide,
-            "history.snapshot": self.history_snapshot,
-        }
+    # -- the one dispatch table: registry views and lifecycle primitives ----
+
+    @property
+    def _handlers(self) -> dict[str, Callable[[Mapping[str, Any]], Any]]:
+        """The registry's `{method_id: handler}` view, in registry order.
+
+        Reading is the only thing this offers: the live table is the registry,
+        and mutating it goes through `retire`/`replace_handler`/`amend_shape`
+        (or a plugin's own unload), never by editing a copy.
+        """
+        return self._registry.handler_view()
+
+    def retire(self, method_id: str) -> None:
+        """Remove one of the adapter's own methods from the live table.
+
+        This is the plugin-unload primitive applied to the transitional
+        adapter; real plugins get the same effect through host unload.
+        """
+        self._registry.unregister(method_id, owner=self._adapter_owner)
+
+    def replace_handler(self, method_id: str, handler: Callable) -> None:
+        """Rebind one of the adapter's own methods on the live registry."""
+        from server_plugin_api import ServerMethodDescriptor
+
+        descriptor = self._registry.lookup(method_id)
+        if descriptor is None or descriptor.owner != self._adapter_owner:
+            raise WireError("INVALID_REQUEST", f"{method_id} is not an adapter method")
+        self._registry.unregister(method_id, owner=self._adapter_owner)
+        self._registry.register(ServerMethodDescriptor(
+            method_id=method_id, required_params=descriptor.required_params,
+            optional_params=descriptor.optional_params, handler=handler,
+            owner=self._adapter_owner, availability=descriptor.availability,
+        ))
+
+    def amend_shape(self, method_id: str, *, required: "frozenset[str] | set[str]",
+                    optional: "frozenset[str] | set[str]") -> None:
+        """Re-declare one of the adapter's own param shapes on the registry."""
+        from server_plugin_api import ServerMethodDescriptor
+
+        descriptor = self._registry.lookup(method_id)
+        if descriptor is None or descriptor.owner != self._adapter_owner:
+            raise WireError("INVALID_REQUEST", f"{method_id} is not an adapter method")
+        self._registry.unregister(method_id, owner=self._adapter_owner)
+        self._registry.register(ServerMethodDescriptor(
+            method_id=method_id, required_params=frozenset(required),
+            optional_params=frozenset(optional), handler=descriptor.handler,
+            owner=self._adapter_owner, availability=descriptor.availability,
+        ))
+
+    def bind_workspace_resolution(self, resolver: Callable[[], Any] | None) -> None:
+        """Bind how workspace facts are resolved (a zero-arg callable reading
+        the plugin host live, or None to declare the domain absent)."""
+        self._workspace_resolver = resolver
+
+    @property
+    def workspaces(self):
+        """The Workspace plugin's live resolution port, or None when absent."""
+        if self._workspace_resolver is None:
+            return None
+        return self._workspace_resolver()
 
     def dispatch(self, method: str, params: Mapping[str, Any]) -> Any:
-        handler = self._handlers.get(method)
-        if handler is None:
+        descriptor = self._registry.lookup(method)
+        if descriptor is None:
             raise WireError("INVALID_REQUEST", f"{method} is not a wire/1 method")
-        required, optional = _PARAM_SHAPES[method]
-        missing = required - set(params)
-        extra = set(params) - required - optional
+        missing = descriptor.required_params - set(params)
+        extra = set(params) - descriptor.required_params - descriptor.optional_params
         if missing or extra:
             reason = "missing " + ", ".join(sorted(missing)) if missing else (
                 "unexpected " + ", ".join(sorted(extra))
@@ -535,7 +641,7 @@ class WireService:
         if "requestId" in params:
             _request_id(params["requestId"])
         try:
-            return handler(params)
+            return descriptor.handler(params)
         except WireError:
             # A typed refusal is the contract answering, not a crash: the wall
             # below must never re-project it onto `UNAVAILABLE`.
@@ -564,15 +670,17 @@ class WireService:
                 or any(not isinstance(item, str) for item in presentations)):
             raise WireError("INVALID_REQUEST", "clientVersions must be a non-empty list")
         capabilities = []
-        # The table is this object's dispatch table: a method the Server cannot
-        # dispatch is not a capability, and one it can must never go undeclared
-        # (a hand-maintained list had fallen 37 methods behind). Iteration order
-        # is the table's literal order, so the list stays deterministic for a
-        # client that caches it. `server.hello` declares itself - the discovery
-        # entry point that said "I do not exist" would be the one lie here.
-        for capability_id in self._handlers:
-            supported, reason = self._capability(capability_id)
-            entry: dict[str, Any] = {"id": capability_id, "supported": supported}
+        # The table is the plugin host's method registry: a method no plugin
+        # registered does not exist here, and one that exists must never go
+        # undeclared (a hand-maintained list had fallen 37 methods behind).
+        # Iteration order is registration order — host, then each plugin in
+        # activation order — so the list stays deterministic for a client that
+        # caches it. `server.hello` declares itself - the discovery entry
+        # point that said "I do not exist" would be the one lie here.
+        for item in self._registry.descriptors():
+            supported, reason = (
+                item.availability() if item.availability is not None else (True, None))
+            entry: dict[str, Any] = {"id": item.method_id, "supported": supported}
             if not supported:
                 entry["reason"] = reason
             capabilities.append(entry)
@@ -610,78 +718,23 @@ class WireService:
         return result
 
     def _capability(self, capability_id: str) -> tuple[bool, str | None]:
-        """Support state for one id - and an id no rule below covers is supported.
+        """Support state for one id, read from its registered descriptor.
 
-        That last `return True, None` is what answers most of the table now that
-        the table is derived. So this answers two questions and no third: does the
-        method exist (the dispatch table, the only thing that can say no to a
-        call), and do the composition rules written below hold. Whether a call
-        would then *succeed* is a third question these rules do not ask - a family
-        with no blocker rule says `true` even when its call path is broken, which
-        is why an unwritten rule is a gap to file, not something to guess here.
+        So this answers two questions and no third: does the method exist (the
+        registry, the only thing that can say no to a call), and does its
+        availability predicate hold. Whether a call would then *succeed* is a
+        third question these rules do not ask - a family with no blocker rule
+        says `true` even when its call path is broken, which is why an
+        unwritten rule is a gap to file, not something to guess here. An id
+        that is not registered at all is an existence refusal at dispatch,
+        never a support claim.
         """
-        if capability_id.startswith("workspaces."):
-            # Environments are answered per request; this is the composition's
-            # one fact - whether *any* placement can be served here at all.
-            blockers = self.workspaces.readiness_blockers()
-            if blockers:
-                return False, str(blockers[0]["code"])
-            return True, None
-        if capability_id.startswith("sessions.") or capability_id == "sendOutcome.query":
-            if self.execution is None:
-                return False, "EXECUTION_CAPABILITY_UNAVAILABLE"
-            return True, None
-        if capability_id in {"queue.get", "queue.withdraw"}:
-            return True, None
-        if capability_id == "approvals.decide":
-            return True, None
-        if capability_id.startswith("profiles.") or capability_id.startswith("providerModels."):
-            return True, None
+        item = self._registry.lookup(capability_id)
+        if item is None:
+            return False, "UNKNOWN_METHOD"
+        if item.availability is not None:
+            return item.availability()
         return True, None
-
-    # -- workspaces ---------------------------------------------------------
-
-    def workspaces_browse(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        _require(params, "requestId", "environment", "path")
-        return self.workspaces.browse_environment(
-            environment=params["environment"], path=_bounded(params["path"], "path"),
-        )
-
-    def workspaces_open(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        _require(params, "requestId", "environment", "path")
-        expected = params.get("expectedVersion")
-        if expected is not None:
-            expected = _version(expected)
-        created, row = self.workspaces.open_environment(
-            environment=params["environment"], path=_bounded(params["path"], "path"),
-            expected_version=expected,
-        )
-        return {"created": created, "workspace": self._workspace(row)}
-
-    def workspaces_list(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        include = params.get("includeArchived", False)
-        if not isinstance(include, bool):
-            raise WireError("INVALID_REQUEST", "includeArchived must be a boolean")
-        return {"items": [self._workspace(row) for row in self.workspaces.list(include_archived=include)],
-                "nextCursor": None}
-
-    def workspaces_archive(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        _require(params, "requestId", "workspaceId", "expectedVersion")
-        try:
-            row = self.workspaces.archive(
-                workspace_id=_bounded(params["workspaceId"], "workspaceId"),
-                expected_version=_version(params["expectedVersion"]),
-            )
-        except ServerError as exc:
-            current = getattr(exc, "current", None)
-            error = WireError.from_server_error(exc)
-            if current is not None:
-                error.current = self._workspace(current)
-            raise error from exc
-        return {"workspace": self._workspace(row)}
-
-    def _workspace(self, row: Mapping[str, Any]) -> dict[str, Any]:
-        return workspace_record(row)
 
     # -- profiles ----------------------------------------------------------
 
@@ -912,6 +965,18 @@ class WireService:
         if self.hooks is None or self.hook_triggers is None:
             raise WireError("UNAVAILABLE", "the hook ledger is not composed")
         return self.hooks, self.hook_triggers
+
+    def _require_workspace_resolution(self):
+        """The Workspace plugin's provided port, or a typed refusal.
+
+        The remaining session/ACP/attachment paths read workspace facts only
+        through the port the Workspace plugin provides; when that plugin is
+        not composed, the honest answer is a typed refusal, never an
+        AttributeError collapsing into a 500.
+        """
+        if self.workspaces is None:
+            raise WireError("UNAVAILABLE", "workspace resolution is not composed")
+        return self.workspaces
 
     def hooks_list(self, params: Mapping[str, Any]) -> dict[str, Any]:
         _require(params, "requestId")
@@ -1483,13 +1548,14 @@ class WireService:
                 f"{harness_id} is not the native Harness this Server answers channels for",
             )
         workspace_id = _bounded(params["projectId"], "projectId")
-        row = self.workspaces.records.get(workspace_id)
+        workspaces = self._require_workspace_resolution()
+        row = workspaces.records.get(workspace_id)
         if str(row.get("env_kind") or "") != "local":
             raise WireError("CAPABILITY_UNSUPPORTED", "managed channels are placed on local projects only")
         selected = str(row.get("normalized_path") or "")
         if not selected:
             raise WireError("INVALID_REQUEST", "the project record carries no authoritative path")
-        normalized = self.workspaces.local.validate(selected)
+        normalized = self._require_workspace_resolution().local.validate(selected)
         if normalized != selected:
             raise ServerError("NATIVE_PROJECT_CHANGED", "selected project changed", status=409)
         return self.acp_channels.acquire(
@@ -1508,50 +1574,6 @@ class WireService:
         if result is None:
             raise WireError("NOT_FOUND", "no live managed channel carries that connectionId")
         return result
-
-    def workspaces_git_status(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        """Read-only Git status of one workspace, on the side that owns it.
-
-        `local` runs the fixed porcelain command here; `wsl` runs it through
-        the connector's own fixed command (no Worker protocol change); `ssh`
-        is not wired yet and answers the typed unavailable reason - the six
-        fields stay null rather than guessing. No path enters the answer.
-        """
-        from ordessa_server.workspaces.git_status import (
-            DEFAULT_MAX_BYTES, DEFAULT_TIMEOUT_SECONDS, GitStatus, local_git_status,
-            parse_porcelain_v2,
-        )
-
-        _require(params, "requestId", "workspaceId")
-        row = self.workspaces.records.get(_bounded(params["workspaceId"], "workspaceId"))
-        kind = str(row.get("env_kind") or "wsl")
-        if kind == "local":
-            path = row.get("normalized_path") or row.get("remote_path")
-            status = local_git_status(
-                str(path), timeout=DEFAULT_TIMEOUT_SECONDS, max_bytes=DEFAULT_MAX_BYTES)
-            return {"git": status.as_wire()}
-        if kind == "wsl" and self.connectors is not None:
-            connector = self.connectors.get("wsl")
-            read = getattr(connector, "read_only_git_status", None)
-            if callable(read):
-                stdout, reason = read(
-                    distribution=str(row["distribution"]),
-                    user=row.get("remote_user"),
-                    path=str(row["remote_path"]),
-                    timeout=DEFAULT_TIMEOUT_SECONDS, max_bytes=DEFAULT_MAX_BYTES,
-                )
-                if reason is not None:
-                    return {"git": GitStatus(reason=reason, reasons=(reason,)).as_wire()}
-                try:
-                    branch, changed, ahead, behind = parse_porcelain_v2(stdout)
-                except (ValueError, TypeError):
-                    return {"git": GitStatus(
-                        reason="GIT_PARSE_FAILED", reasons=("GIT_PARSE_FAILED",)).as_wire()}
-                return {"git": GitStatus(
-                    branch=branch, changed_files=changed, ahead=ahead, behind=behind,
-                ).as_wire()}
-        return {"git": GitStatus(
-            reason="GIT_UNAVAILABLE", reasons=("GIT_UNAVAILABLE",)).as_wire()}
 
     def profiles_clone(self, params: Mapping[str, Any]) -> dict[str, Any]:
         """Clone one Profile into a new one, with the migration report.
@@ -2100,7 +2122,7 @@ class WireService:
     def sessions_create_and_send(self, params: Mapping[str, Any]) -> dict[str, Any]:
         _require(params, "requestId", "workspaceId", "profileId", "message", "overrides")
         workspace_id = _bounded(params["workspaceId"], "workspaceId")
-        workspace = self.workspaces.records.get(workspace_id)
+        workspace = self._require_workspace_resolution().records.get(workspace_id)
         message = self._message(params["message"], workspace)
         overrides = _overrides(params) or []
         request_id = _bounded(params["requestId"], "requestId")
@@ -2152,7 +2174,7 @@ class WireService:
         request_id = _bounded(params["requestId"], "requestId")
         session_id = _bounded(params["sessionId"], "sessionId")
         session = self.sessions.records.get_session(session_id)
-        workspace = self.workspaces.records.get(session["workspace_id"])
+        workspace = self._require_workspace_resolution().records.get(session["workspace_id"])
         message = self._message(params["message"], workspace)
         digest_value = digest({
             "sessionId": session_id, "message": message, "overrides": overrides,
@@ -2399,7 +2421,7 @@ class WireService:
                     or relative.as_posix() != item["ref"]):
                 raise WireError("INVALID_REQUEST", "attachment ref must be a normalized workspace path")
             try:
-                content, content_digest = self.workspaces.read_workspace_file(
+                content, content_digest = self._require_workspace_resolution().read_workspace_file(
                     workspace, relative.as_posix(),
                 )
             except Exception as exc:

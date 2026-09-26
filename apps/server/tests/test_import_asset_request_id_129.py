@@ -286,23 +286,28 @@ def test_counter_example_the_pre_129_handler_writes_twice_and_moves_the_locator(
         server, monkeypatch):
     runtime, client, headers, tmp_path = server
     writes = counted_asset_writes(server, monkeypatch)
-    # The dispatch table captured the *bound* method when the service was built
+    # The registry captured the *bound* method when the plugin registered it
     # (the same lesson order 123 learned: patching the class after startup
-    # changes nothing), so the revert has to go where the wire actually looks.
+    # changes nothing), so the revert has to go where the wire actually looks:
+    # the live method registry, through `replace_handler`. A registry mutation
+    # is not monkeypatch-undoable, so the original handler is re-bound before
+    # the gate returns.
     original = runtime.wire._handlers["accounts.importAsset"]  # noqa: SLF001
-    monkeypatch.setitem(runtime.wire._handlers, "accounts.importAsset",  # noqa: SLF001
-                        lambda params: _pre_129_import_asset(runtime.wire, params))
-    account_id = new_account(server)
-    params = {"requestId": "import-old-1", "accountId": account_id,
-              "sourcePath": str(login_file(tmp_path, "auth-7.json", '{"tokens":"seven"}'))}
-    first = call(client, headers, "accounts.importAsset", params).json()
-    second = call(client, headers, "accounts.importAsset", params).json()
-    assert len(writes) == 2, "the old shape did not reproduce: it wrote only once"
-    assert writes[0][1] != writes[1][1], "the locator did not move - not the defect"
-    assert "error" not in second, "the old handler never conflicted - that was the defect"
-    assert first["result"]["account"]["hasAsset"] and second["result"]["account"]["hasAsset"], (
-        "both attempts answered successfully, which is how this survived")
-    monkeypatch.undo()
+    try:
+        runtime.wire.replace_handler(
+            "accounts.importAsset", lambda params: _pre_129_import_asset(runtime.wire, params))
+        account_id = new_account(server)
+        params = {"requestId": "import-old-1", "accountId": account_id,
+                  "sourcePath": str(login_file(tmp_path, "auth-7.json", '{"tokens":"seven"}'))}
+        first = call(client, headers, "accounts.importAsset", params).json()
+        second = call(client, headers, "accounts.importAsset", params).json()
+        assert len(writes) == 2, "the old shape did not reproduce: it wrote only once"
+        assert writes[0][1] != writes[1][1], "the locator did not move - not the defect"
+        assert "error" not in second, "the old handler never conflicted - that was the defect"
+        assert first["result"]["account"]["hasAsset"] and second["result"]["account"]["hasAsset"], (
+            "both attempts answered successfully, which is how this survived")
+    finally:
+        runtime.wire.replace_handler("accounts.importAsset", original)
     assert runtime.wire._handlers["accounts.importAsset"] == original  # noqa: SLF001
     assert runtime.wire.accounts_import_asset.__func__ is not _pre_129_import_asset
 

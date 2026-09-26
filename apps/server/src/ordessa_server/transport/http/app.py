@@ -427,8 +427,10 @@ def create_app(runtime: ServerRuntime) -> FastAPI:
         if provided is None or not secrets.compare_digest(provided, "Bearer " + runtime.token):
             await websocket.close(code=4401, reason="UNAUTHENTICATED")
             return
-        registry = getattr(runtime, "acp_channels", None)
-        connection = registry.get(connection_id) if registry is not None else None
+        # Stream admission goes through the host's route registry: the route's
+        # owner only resolves the connection; origin, bearer and close codes
+        # above and below stay host-owned.
+        connection = runtime.wire.stream_routes.resolve("acp-channel", connection_id)
         if connection is None:
             await websocket.close(code=4400, reason="UNKNOWN_CONNECTION")
             return
