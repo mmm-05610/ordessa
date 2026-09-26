@@ -105,7 +105,7 @@ def test_the_host_core_imports_no_plugin_no_product():
         "ordessa_server_compat", "ordessa_workspace", "ordessa_harness",
         "ordessa_server_product", "ordessa_server.profiles", "ordessa_server.accounts",
         "ordessa_server.assets", "ordessa_server.hooks", "ordessa_server.model_configs",
-        "ordessa_server.execution", "ordessa_server.approvals", "ordessa_server.acp_channel",
+        "ordessa_server.execution", "ordessa_server.approvals",
         "ordessa_server.workspaces", "ordessa_server.persistence",
         "ordessa_server.usage_aggregate", "ordessa_server.credential_cli",
     )
@@ -142,7 +142,7 @@ _PLUGIN_FORBIDDEN_PREFIXES = (
     "ordessa_server.plugin_host",
     "ordessa_server.profiles", "ordessa_server.accounts", "ordessa_server.assets",
     "ordessa_server.hooks", "ordessa_server.model_configs", "ordessa_server.execution",
-    "ordessa_server.approvals", "ordessa_server.acp_channel", "ordessa_server.workspaces",
+    "ordessa_server.approvals", "ordessa_server.workspaces",
     "ordessa_server.persistence", "ordessa_server.usage_aggregate",
     "ordessa_server.credential_cli", "ordessa_server.services",
     "ordessa_server_product",
@@ -166,8 +166,10 @@ def test_workspace_plugin_imports_stay_in_the_declared_surface():
 def test_the_moved_domain_aliases_are_zero_implementation():
     """The legacy `ordessa_server.*` entries the moved domains left behind are
     alias shims: no def/class anywhere in them (M1-P-A① discipline)."""
+    # acp_channel has no legacy alias at all: its ownership moved to the
+    # harness package outright, so a bare-host install imports cleanly.
     for legacy in ("profiles", "accounts", "assets", "hooks", "model_configs",
-                   "execution", "approvals", "workspaces", "acp_channel"):
+                   "execution", "approvals", "workspaces"):
         for path in (HOST_DIR / legacy).rglob("*.py"):
             tree = _tree(path)
             assert not [n for n in ast.walk(tree) if isinstance(n, ast.ClassDef)], path

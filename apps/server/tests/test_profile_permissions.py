@@ -155,6 +155,9 @@ def test_sessions_belong_to_the_workspace_and_turns_carry_the_profile(tmp_path):
     runtime.start()
     profiles = runtime.repository.profiles
     workspaces = runtime.repository.workspaces
+    # Alias discipline: stopped-runtime facades read None; the round's record
+    # objects stay usable across client sessions over the same database.
+    sessions_repo = runtime.repository.sessions
     workspace = workspaces.create(
         key="w", request_digest="w", distribution="Ubuntu", remote_user="tester",
         remote_path="/workspace", connection_id="connection")[1]
@@ -213,18 +216,18 @@ def test_sessions_belong_to_the_workspace_and_turns_carry_the_profile(tmp_path):
                             harness_type="claude-code", config_digest=digests["claude-code"],
                             credential_id=None)[1]
     with pytest.raises(Exception) as cross_family:
-        runtime.repository.sessions.switch_profile(
+        sessions_repo.switch_profile(
             session_id=session_a["session_id"], profile_id=second["profile_id"],
-            expected_version=runtime.repository.sessions.get_session(
+            expected_version=sessions_repo.get_session(
                 session_a["session_id"])["version"],
             request_id="switch-c0", request_digest="switch-c0")
     assert cross_family.value.code == "PROFILE_HARNESS_MISMATCH"
-    runtime.repository.sessions.switch_profile(
+    sessions_repo.switch_profile(
         session_id=session_a["session_id"], profile_id=third["profile_id"],
-        expected_version=runtime.repository.sessions.get_session(
+        expected_version=sessions_repo.get_session(
             session_a["session_id"])["version"],
         request_id="switch-c1", request_digest="switch-c1")
-    moved = runtime.repository.sessions.get_session(session_a["session_id"])
+    moved = sessions_repo.get_session(session_a["session_id"])
     assert moved["profile_id"] == third["profile_id"]
     assert moved["workspace_id"] == workspace["workspace_id"]
 

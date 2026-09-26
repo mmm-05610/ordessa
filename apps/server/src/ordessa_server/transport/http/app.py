@@ -34,6 +34,14 @@ def create_app(runtime: ServerRuntime) -> FastAPI:
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
         runtime.start()
+        # A restart activates plugins after this app was created: their HTTP
+        # routes mount now (deduped against the creation-time mounts), and
+        # the served route set freezes only once startup is complete — so a
+        # later activation with unmounted routes refuses instead of leaking
+        # a half-effective plugin.
+        _mount_plugin_routes()
+        if getattr(runtime, "plugin_host", None) is not None:
+            runtime.plugin_host.frozen_http_routes = frozenset(_mounted_routes)
         try:
             yield
         finally:
@@ -294,20 +302,72 @@ def create_app(runtime: ServerRuntime) -> FastAPI:
         for route in app.routes:
             if isinstance(route, APIRoute):
                 host_methods.setdefault(route.path, set()).update(route.methods)
-        for descriptor in runtime.plugin_host.http_routes.descriptors():
-            clash = host_methods.get(descriptor.path)
-            if clash and (clash & set(descriptor.methods)):
-                raise RuntimeError(
-                    "PLUGIN_HTTP_ROUTE_CONFLICT: "
-                    f"{descriptor.path} ({', '.join(sorted(descriptor.methods))}) "
-                    f"declared by {descriptor.owner} collides with a host route"
+
+        def _owner_guard(descriptor, endpoint):
+            """The mounted route serves exactly while its owner is active,
+            and serves the owner's CURRENT registration: both the ownership
+            check and the endpoint resolution run at request time against
+            the live registry, so an unload takes the capability away from
+            the RUNNING app and a re-activated owner serves its new build —
+            not just stale table rows."""
+            import functools
+
+            @functools.wraps(endpoint)
+            def guarded(*args, **kwargs):
+                if not runtime.plugin_host.is_active(descriptor.owner):
+                    raise ServerError(
+                        "PLUGIN_CAPABILITY_UNAVAILABLE",
+                        f"the plugin owning {descriptor.path} is not active",
+                        status=404,
+                    )
+                current = None
+                for item in runtime.plugin_host.http_routes.descriptors():
+                    if (item.path == descriptor.path
+                            and item.methods == descriptor.methods
+                            and item.owner == descriptor.owner):
+                        current = item.endpoint
+                        break
+                if current is None:  # unregistered between the two checks
+                    raise ServerError(
+                        "PLUGIN_CAPABILITY_UNAVAILABLE",
+                        f"the plugin owning {descriptor.path} is not active",
+                        status=404,
+                    )
+                return current(*args, **kwargs)
+            return guarded
+
+        _mounted_routes: set[tuple[str, frozenset[str], str]] = set()
+
+        def _mount_plugin_routes() -> list:
+            """Mount every registered plugin route this app does not serve
+            yet. Idempotent: creation-time mounting and restart-time mounting
+            share the same triple-keyed dedup."""
+            from server_plugin_api import HttpRouteDescriptor
+
+            newly = []
+            for descriptor in runtime.plugin_host.http_routes.descriptors():
+                triple = (descriptor.path, frozenset(descriptor.methods), descriptor.owner)
+                if triple in _mounted_routes:
+                    continue
+                clash = host_methods.get(descriptor.path)
+                if clash and (clash & set(descriptor.methods)):
+                    raise RuntimeError(
+                        "PLUGIN_HTTP_ROUTE_CONFLICT: "
+                        f"{descriptor.path} ({', '.join(sorted(descriptor.methods))}) "
+                        f"declared by {descriptor.owner} collides with a host route"
+                    )
+                app.add_api_route(
+                    descriptor.path, _owner_guard(descriptor, descriptor.endpoint),
+                    methods=sorted(descriptor.methods),
+                    dependencies=protected if descriptor.authenticated else None,
+                    name=f"plugin:{descriptor.owner}:{descriptor.path}",
                 )
-            app.add_api_route(
-                descriptor.path, descriptor.endpoint,
-                methods=sorted(descriptor.methods),
-                dependencies=protected if descriptor.authenticated else None,
-                name=f"plugin:{descriptor.owner}:{descriptor.path}",
-            )
+                _mounted_routes.add(triple)
+                newly.append(descriptor)
+            return newly
+
+        for descriptor in runtime.plugin_host.http_routes.descriptors():
+            _mount_plugin_routes()
 
     return app
 

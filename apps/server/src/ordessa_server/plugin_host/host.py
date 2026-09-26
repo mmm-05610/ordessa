@@ -45,6 +45,7 @@ from server_plugin_api import (
     DuplicatePluginError,
     DuplicateStreamRouteError,
     HttpRouteDescriptor,
+    HttpRouteUnmountedError,
     InvalidDeclarationError,
     PluginCleanupError,
     PortConflictError,
@@ -67,15 +68,17 @@ def _carry_cleanup_errors(errors: list[PluginCleanupError]) -> None:
 
     The plugin's own failure stays the primary exception; the cleanup facts
     ride on its `cleanup_errors` attribute so a caller can inspect what the
-    rollback did on the way out. An exception object that refuses attributes
-    still propagates unchanged."""
+    rollback did on the way out. Attachments ACCUMULATE: a staging rollback
+    and the round-level rollback both contribute to the same failure. An
+    exception object that refuses attributes still propagates unchanged."""
     import sys
 
     primary = sys.exc_info()[1]
     if primary is None:
         return
     try:
-        primary.cleanup_errors = tuple(errors)
+        existing = getattr(primary, "cleanup_errors", ())
+        primary.cleanup_errors = tuple(existing) + tuple(errors)
     except (AttributeError, TypeError):
         pass
 
@@ -221,6 +224,11 @@ class ServerPluginHost:
     methods: MethodRegistry = field(default_factory=MethodRegistry)
     stream_routes: StreamRouteRegistry = field(default_factory=StreamRouteRegistry)
     http_routes: HttpRouteRegistry = field(default_factory=HttpRouteRegistry)
+    #: The (path, methods, owner) triples the live transport mounted at its
+    #: creation — None until a transport freezes them. While frozen, a plugin
+    #: activation declaring HTTP routes outside this set refuses type-wise:
+    ## a route that was never mounted must not silently never serve.
+    frozen_http_routes: "frozenset[tuple[str, frozenset[str], str]] | None" = None
     data_root: Any = None
     host_ports: Mapping[str, Any] = field(default_factory=dict)
     _active: dict[str, ActivePlugin] = field(default_factory=dict)
@@ -394,6 +402,15 @@ class ServerPluginHost:
                         f"owned by {item.owner!r}")
                 self.stream_routes.register(item)
                 staged_routes.append(item.route_id)
+            if self.frozen_http_routes is not None and registration.http_routes:
+                unmounted = sorted(
+                    f"{item.path} ({', '.join(sorted(item.methods))})"
+                    for item in registration.http_routes
+                    if (item.path, frozenset(item.methods), item.owner)
+                    not in self.frozen_http_routes
+                )
+                if unmounted:
+                    raise HttpRouteUnmountedError(descriptor.id, tuple(unmounted))
             for item in registration.http_routes:
                 if item.owner != descriptor.id:
                     raise InvalidDeclarationError(
@@ -403,14 +420,23 @@ class ServerPluginHost:
         except BaseException:
             # Roll back only this plugin's staged contributions — and dispose
             # what build() already created: a plugin that never became active
-            # must not leak the resources it built while failing.
+            # must not leak the resources it built while failing. A disposal
+            # that raises here is contained and carried on the in-flight
+            # failure's `cleanup_errors` — it may never replace the typed
+            # conflict (or whatever else) that caused the rollback.
+            cleanup: list[PluginCleanupError] = []
             for method_id in staged_methods:
                 self.methods.unregister(method_id, owner=descriptor.id)
             for route_id in staged_routes:
                 self.stream_routes.unregister(route_id, owner=descriptor.id)
             self.http_routes.unregister_owner(descriptor.id)
             if registration.disposal is not None:
-                registration.disposal()
+                try:
+                    registration.disposal()
+                except Exception as err:  # noqa: BLE001 - carried, never primary
+                    cleanup.append(PluginCleanupError(descriptor.id, err))
+            if cleanup:
+                _carry_cleanup_errors(cleanup)
             raise
         active = ActivePlugin(
             descriptor=descriptor, registration=registration,

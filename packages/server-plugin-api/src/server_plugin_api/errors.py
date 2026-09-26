@@ -61,6 +61,24 @@ class DuplicateHttpRouteError(ServerPluginError):
         self.methods = tuple(methods)
 
 
+class HttpRouteUnmountedError(ServerPluginError):
+    """A plugin activated while a live transport holds a frozen route set
+    declares HTTP routes that set never mounted. The transport is a snapshot
+    at creation; a route that was not mounted cannot silently never serve.
+    The activation refuses and rolls back — wire methods and HTTP routes
+    succeed or refuse together."""
+
+    def __init__(self, plugin_id: str, unmounted: "tuple[str, ...]") -> None:
+        super().__init__(
+            "PLUGIN_HTTP_ROUTE_UNMOUNTED",
+            f"plugin {plugin_id!r} declares HTTP routes the live transport "
+            f"never mounted: {', '.join(sorted(unmounted))} — activate before "
+            "the transport is created, or restart the transport",
+        )
+        self.plugin_id = plugin_id
+        self.unmounted = tuple(unmounted)
+
+
 class DependencyError(ServerPluginError):
     """A declared `requires` names no activatable plugin."""
 

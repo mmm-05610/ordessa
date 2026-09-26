@@ -241,6 +241,9 @@ class ServerRuntime:
             if (self.plugin_host is not None and self.plugin_selection
                     and not self.plugin_host.active_ids()):
                 self.plugin_host.activate_all(self.plugin_selection)
+                # The facades follow the live activation round: a restart
+                # must expose THIS round's ports, not the disposed round's.
+                _bind_runtime_facades(self)
             self.database.initialize()
             # Each plugin's own startup recovery runs after the schema is up,
             # in activation order: the workspace domain marks its records
@@ -258,6 +261,17 @@ class ServerRuntime:
         except BaseException:
             from pacthold.work_core import db as core_db
             core_db.configure_database(None)
+            # A failed start must not leave the round active with the lock
+            # gone: the next process could own the same data root while this
+            # round's plugin resources are still alive. Dispose the round
+            # (reverse order, every plugin exactly once), keep the start
+            # error primary with any disposal failures attached, then release.
+            if self.plugin_host is not None and self.plugin_host.active_ids():
+                try:
+                    self.plugin_host.shutdown()
+                except BaseException as cleanup_failure:
+                    _attach_shutdown_cleanup(cleanup_failure)
+                _bind_runtime_facades(self)
             self.owner.release()
             raise
         self.started = True
@@ -282,6 +296,10 @@ class ServerRuntime:
             if self.plugin_host is not None:
                 self.plugin_host.shutdown()
         finally:
+            # The facades follow the live activation round: with every plugin
+            # disposed they resolve to None — a stopped runtime must not keep
+            # references to a disposed round's objects.
+            _bind_runtime_facades(self)
             self.owner.release()
             self.started = False
 
@@ -302,6 +320,38 @@ def _server_id(database: Database) -> str:
             (identity, datetime.now(timezone.utc).isoformat()),
         )
         return identity
+
+def _bind_runtime_facades(runtime: "ServerRuntime") -> None:
+    """(Re-)bind the runtime's port facades to the live activation round.
+
+    Called at composition, after every re-activation, and after every
+    shutdown: a facade must never outlive the round it was bound to — the
+    reviewer's stop→start counterexample had `runtime.acp_channels` pointing
+    at the disposed first round's registry, and `stop()` then operating on a
+    dead object."""
+    for facade_field, port_name in _RUNTIME_PORT_FACADES.items():
+        setattr(runtime, facade_field,
+                runtime.plugin_host.provided_port(port_name)
+                if runtime.plugin_host is not None else None)
+    if runtime.execution is None and getattr(runtime, "_injected_execution", None) is not None:
+        runtime.execution = runtime._injected_execution
+
+
+def _attach_shutdown_cleanup(cleanup_failure: BaseException) -> None:
+    """Attach a failed shutdown's per-plugin cleanup errors to the start
+    error in flight (the start failure stays primary)."""
+    import sys
+
+    primary = sys.exc_info()[1]
+    if primary is None:
+        return
+    errors = getattr(cleanup_failure, "errors", ())
+    try:
+        existing = getattr(primary, "cleanup_errors", ())
+        primary.cleanup_errors = tuple(existing) + tuple(errors)
+    except (AttributeError, TypeError):
+        pass
+
 
 #: The runtime fields that are facades over what the active plugins provide.
 #: One row per port; a plugin-absent field stays None — the honest absence
@@ -489,16 +539,17 @@ def build_runtime(
         data_root=root, database=database, objects=objects,
         repository=None, service=None, owner=owner, token=token,
         token_path=token_path, notifier=notifier, secret_store=secrets_store,
-        harnesses=None, execution=execution, wire=wire,
+        harnesses=None, execution=None, wire=wire,
         declared_credentials=tuple(declared_credentials),
         plugin_host=plugin_host, plugin_selection=selected_plugins,
     )
+    # An explicitly injected execution port (tests, or a composition that has
+    # already built one) is composition-owned, not round-owned: it survives
+    # facades re-binding and re-applies whenever no plugin provides one.
+    runtime._injected_execution = execution
     # Runtime fields are facades over what the active plugins provide: the
     # product surface (runtime.service, runtime.repository, ...) keeps its
     # shape, and a plugin's absence reads as None instead of a second
     # composition hiding inside the host.
-    for facade_field, port_name in _RUNTIME_PORT_FACADES.items():
-        setattr(runtime, facade_field, plugin_host.provided_port(port_name))
-    if runtime.execution is None and execution is not None:
-        runtime.execution = execution
+    _bind_runtime_facades(runtime)
     return runtime

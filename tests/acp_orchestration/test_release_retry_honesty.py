@@ -19,7 +19,7 @@ import os
 from pathlib import Path
 
 from tests.acp_orchestration.conftest import NODE, PEER, wait_until, pid_alive
-from ordessa_server.acp_channel.access_entry import AccessEntryTransport
+from ordessa_harness.server_acp.access_entry import AccessEntryTransport
 
 FAKE_ENTRY = Path(__file__).with_name("fixtures") / "fake_access_entry.mjs"
 

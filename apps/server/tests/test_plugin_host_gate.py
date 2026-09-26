@@ -1006,3 +1006,281 @@ class _RoutePlugin:
             resolver=lambda ref: self._table.get(ref),
             owner=self._id,
         ),))
+
+
+# -- review round 3 (core cleanup): runtime-lifecycle counterexamples ---------
+
+
+class _ServedPlugin:
+    """A contract plugin with an HTTP route and a per-build port object.
+
+    Build counting and start recording are separate facts: `builds[n]` is the
+    n-th build's port object (its `round`), `starts` only records that a
+    start hook ran — a hook must never shift the round numbering."""
+
+    def __init__(self, plugin_id="fake.served", *, path="/api/v1/plugin-fake/echo"):
+        self._id = plugin_id
+        self._path = path
+        self.builds: list[dict] = []
+        self.starts: list[bool] = []
+
+    def descriptor(self):
+        return ServerPluginDescriptor(id=self._id, display_name=self._id, version="1")
+
+    def build(self, context):
+        from server_plugin_api import HttpRouteDescriptor
+
+        obj = {"round": len(self.builds)}
+        self.builds.append(obj)
+
+        def echo(body: dict):
+            return {"echo": body, "round": obj["round"]}
+
+        return ServerPluginRegistration(
+            http_routes=(HttpRouteDescriptor(
+                path=self._path, methods=frozenset({"POST"}),
+                endpoint=echo, owner=self._id,
+            ),),
+            provided_ports={"fake.obj": obj},
+            start_hooks=(lambda: self.starts.append(True),),
+        )
+
+
+def test_a_mounted_route_stops_serving_when_its_owner_unloads_on_the_same_app(tmp_path):
+    """The counterexample the fresh-app test missed: the SAME App, the SAME
+    client — unload must take the route away from the running transport, not
+    just from the registry."""
+    runtime = build_runtime(tmp_path / "data", server_plugins=[_ServedPlugin()])
+    headers = {"Authorization": f"Bearer {runtime.token}"}
+    try:
+        runtime.start()
+        app = create_app(runtime)
+        client = TestClient(app, base_url="http://127.0.0.1")
+        assert client.post("/api/v1/plugin-fake/echo", json={}, headers=headers).status_code == 200
+        runtime.plugin_host.deactivate("fake.served")
+        answer = client.post("/api/v1/plugin-fake/echo", json={}, headers=headers)
+        assert answer.status_code == 404, (
+            f"unloaded capability still served by the running app: {answer.text}")
+    finally:
+        runtime.stop()
+
+
+def test_a_route_mounted_at_creation_resumes_with_its_owner(tmp_path):
+    """The app is a route snapshot mounted at creation; each mounted route
+    serves exactly while its owner is active. Re-activating the same plugin
+    resumes the mounted route; a plugin activated AFTER creation gets no
+    routes on that app (documented snapshot semantics)."""
+    plugin = _ServedPlugin()
+    runtime = build_runtime(tmp_path / "data", server_plugins=[plugin])
+    headers = {"Authorization": f"Bearer {runtime.token}"}
+    try:
+        runtime.start()
+        client = TestClient(create_app(runtime), base_url="http://127.0.0.1")
+        assert client.post("/api/v1/plugin-fake/echo", json={}, headers=headers).status_code == 200
+        runtime.plugin_host.deactivate("fake.served")
+        assert client.post("/api/v1/plugin-fake/echo", json={}, headers=headers).status_code == 404
+        runtime.plugin_host.activate(plugin)
+        answer = client.post("/api/v1/plugin-fake/echo", json={}, headers=headers)
+        assert answer.status_code == 200, answer.text
+        assert answer.json()["round"] == 1, "the re-activated build serves again"
+    finally:
+        runtime.stop()
+
+
+class _PortPlugin:
+    """Provides one mapped runtime facade port with a fresh object per build."""
+
+    def __init__(self, plugin_id="fake.ports"):
+        self._id = plugin_id
+        self.builds: list[dict] = []
+
+    def descriptor(self):
+        return ServerPluginDescriptor(id=self._id, display_name=self._id, version="1")
+
+    def build(self, context):
+        obj = {"build": len(self.builds)}
+        self.builds.append(obj)
+        return ServerPluginRegistration(provided_ports={"approvals.records": obj})
+
+
+def test_runtime_facades_follow_the_live_activation_round(tmp_path):
+    """stop→start re-activates plugins: the mapped runtime facades must
+    re-bind to the ports of the round that is actually active — and fall to
+    None once the plugins are disposed. A stale facade makes the runtime
+    operate on a disposed round's objects (the reviewer's stop→start
+    counterexample)."""
+    plugin = _PortPlugin()
+    runtime = build_runtime(tmp_path / "data", server_plugins=[plugin])
+    try:
+        runtime.start()
+        first = runtime.approvals
+        assert first is not None and first is plugin.builds[0], (
+            "the facade binds to the active round's port at composition")
+        runtime.stop()
+        assert runtime.plugin_host.active_ids() == ()
+        assert runtime.approvals is None, (
+            "after stop the round's ports are gone; a facade must not keep one")
+        runtime.start()
+        second = runtime.approvals
+        assert second is not None and second is plugin.builds[1], (
+            "the re-activated round's facade must be the new port object, "
+            "not the disposed first round's")
+        assert second is not first
+    finally:
+        runtime.stop()
+
+
+def test_a_failed_start_hook_disposes_the_round_and_releases_the_root(tmp_path):
+    """A start hook that raises must not leave the round active with the lock
+    released: the plugins are disposed (reverse order), the start error stays
+    primary with any cleanup errors attached, and the same root retries."""
+
+    class HookBoom(RuntimeError):
+        pass
+
+    records: list[tuple[str, str]] = []
+
+    class _HookedPlugin:
+        def descriptor(self):
+            return ServerPluginDescriptor(id="fake.start", display_name="s", version="1")
+
+        def build(self, context):
+            def _disposal():
+                records.append(("dispose", "fake.start"))
+            def _hook():
+                raise HookBoom("start hook refused this round")
+            return ServerPluginRegistration(
+                methods=(ServerMethodDescriptor(
+                    method_id="fake.start.ping", required_params=frozenset({"requestId"}),
+                    optional_params=frozenset(), handler=lambda params: {"ok": True},
+                    owner="fake.start",
+                ),),
+                start_hooks=(_hook,), disposal=_disposal,
+            )
+
+    root = tmp_path / "data"
+    runtime = build_runtime(root, server_plugins=[_HookedPlugin()])
+    with pytest.raises(HookBoom) as captured:
+        runtime.start()
+    assert runtime.plugin_host.active_ids() == (), (
+        "a failed start must not leave the round active")
+    assert records == [("dispose", "fake.start")], records
+    assert runtime.owner.acquired is False, "the lock must be released"
+    retry = build_runtime(root)
+    try:
+        with _Started(retry):
+            assert len(_hello_caps(retry)) == 67
+    except BaseException:
+        retry.stop()
+        raise
+
+
+def test_a_staging_rollback_keeps_the_conflict_primary(tmp_path):
+    """The duplicate-method conflict is the failure under test. BOTH owed
+    disposals raise — the already-activated plugin's (transactional rollback)
+    and the staging-failed plugin's own (its build succeeded, so its
+    resources exist) — and both must stay inspectable on the primary error's
+    `cleanup_errors`. A cleanup failure may never replace the typed
+    conflict, and a fix that captures only one of the two is incomplete."""
+
+    class Boom(RuntimeError):
+        pass
+
+    class _MessyPlugin:
+        def __init__(self, plugin_id):
+            self._id = plugin_id
+
+        def descriptor(self):
+            return ServerPluginDescriptor(id=self._id, display_name=self._id, version="1")
+
+        def build(self, context):
+            def _disposal():
+                self.disposed = True
+                raise Boom(f"cleanup failed: {self._id}")
+            self.disposed = False
+            return ServerPluginRegistration(
+                methods=(ServerMethodDescriptor(
+                    method_id="fake.dup", required_params=frozenset({"requestId"}),
+                    optional_params=frozenset(), handler=lambda params: {"ok": self._id},
+                    owner=self._id,
+                ),),
+                disposal=_disposal,
+            )
+
+    host = _new_host()
+    first = _MessyPlugin("fake.messy")
+    second = _MessyPlugin("fake.second")
+    with pytest.raises(DuplicateMethodError) as captured:
+        host.activate_all([first, second])
+    assert "fake.dup" in str(captured.value), captured.value
+    assert first.disposed and second.disposed, (
+        "both owed disposals must have been called exactly once")
+    carried = getattr(captured.value, "cleanup_errors", None)
+    assert carried is not None, (
+        "both cleanup failures must be inspectable on the primary conflict")
+    assert {e.plugin_id for e in carried} == {"fake.messy", "fake.second"}, carried
+    assert all(isinstance(e.error, Boom) for e in carried)
+    assert host.active_ids() == ()
+
+
+def test_an_app_created_activation_with_unmounted_http_routes_refuses(tmp_path):
+    """A live App serves a frozen route set. A plugin activated after the app
+    was created that contributes HTTP routes which were never mounted on it
+    must be refused type-wise, with the usual transactional rollback — the
+    alternative (wire methods live, HTTP routes silently never served) is a
+    half-effective plugin, and half-effective is dishonest either way. The
+    late plugin carries a real wire method and a countable disposal, so
+    "refused and not half-effective" is checkable: the method is not
+    registered, the owed disposal ran exactly once, and the same App answers
+    404 on the never-mounted route."""
+    from server_plugin_api import ServerPluginError
+
+    late_disposals: list[int] = []
+
+    class _LatePlugin(_ServedPlugin):
+        def build(self, context):
+            registration = super().build(context)
+
+            def _disposal():
+                late_disposals.append(1)
+
+            return ServerPluginRegistration(
+                methods=registration.methods + (ServerMethodDescriptor(
+                    method_id="fake.late.ping", required_params=frozenset({"requestId"}),
+                    optional_params=frozenset(), handler=lambda params: {"ok": "late"},
+                    owner=self._id,
+                ),),
+                stream_routes=registration.stream_routes,
+                http_routes=registration.http_routes,
+                provided_ports=registration.provided_ports,
+                disposal=_disposal,
+            )
+
+    mounted = _ServedPlugin("fake.mounted")
+    late = _LatePlugin("fake.late", path="/api/v1/plugin-fake/late")
+    runtime = build_runtime(tmp_path / "data", server_plugins=[mounted])
+    headers = {"Authorization": f"Bearer {runtime.token}"}
+    try:
+        with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
+            assert client.post("/api/v1/plugin-fake/echo", json={}, headers=headers).status_code == 200
+
+            with pytest.raises(ServerPluginError) as captured:
+                runtime.plugin_host.activate(late)
+            assert "PLUGIN_HTTP_ROUTE_UNMOUNTED" in str(captured.value), captured.value
+            # transactional: the refused plugin never became active, its owed
+            # disposal ran exactly once, and the mounted plugin is untouched
+            assert runtime.plugin_host.active_ids() == ("fake.mounted",)
+            assert len(late.builds) == 1, "exactly one build attempt, rolled back"
+            assert late_disposals == [1], late_disposals
+            # no wire surface leakage: the method is not registered...
+            assert runtime.wire._registry.lookup("fake.late.ping") is None
+            assert client.post("/wire/v1/fake.late.ping", json={
+                "jsonrpc": "2.0", "id": "1", "method": "fake.late.ping",
+                "params": {"requestId": "late-1"}}, headers=headers,
+            ).json()["error"]["code"] == "INVALID_REQUEST"
+            # ...and the same App never serves the never-mounted route
+            assert client.post("/api/v1/plugin-fake/late", json={}, headers=headers).status_code == 404
+            # the mounted route still serves its owner
+            assert client.post("/api/v1/plugin-fake/echo", json={}, headers=headers).status_code == 200
+    finally:
+        runtime.stop()

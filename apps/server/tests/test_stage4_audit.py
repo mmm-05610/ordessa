@@ -164,3 +164,52 @@ def test_the_host_source_carries_no_harness_business_knowledge():
             assert brand not in source.lower(), f"{relative} names {brand}"
         # and no family list is spelled in the host either
         assert "HarnessDescriptor" not in source, relative
+
+
+def test_the_server_core_package_declares_no_business_dependency():
+    """The install boundary: `ordessa-server` must start a bare host with no
+    business package installed. Its declared requirements may therefore name
+    only the kernel's own surface — not ordessa-harness, not the domain
+    plugins, not the product selection."""
+    from importlib import metadata
+
+    requires = metadata.requires("ordessa-server") or []
+    business = ("ordessa-harness", "ordessa-workspace", "ordessa-server-compat",
+                "ordessa-server-product")
+    declared_business = [r for r in requires
+                         if any(b in r for b in business)]
+    assert declared_business == [], (
+        "the Server core's install boundary pulls business packages: "
+        f"{declared_business}")
+
+
+def test_the_host_source_imports_no_harness_package():
+    """The harness package is a plugin dependency, not a host dependency: no
+    file under apps/server — including the legacy alias shims — may IMPORT
+    ordessa_harness. Prose and comments may mention it; only real imports
+    count, so this parses the AST instead of scanning strings. (The
+    acp_channel alias's ownership moves with the domain; a bare-host install
+    without the harness package must import cleanly.)
+
+    Note for the packaging half of this boundary: after any pyproject.toml
+    dependency change the distribution metadata must be refreshed (reinstall
+    in the environment) before the metadata-based gate can see it."""
+    import ast
+    from pathlib import Path
+
+    host = Path(__file__).resolve().parents[3] / "apps" / "server" / "src" / "ordessa_server"
+    for path in host.rglob("*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    assert alias.name != "ordessa_harness"
+                    assert not alias.name.startswith("ordessa_harness."), (
+                        f"{path.name} imports {alias.name}")
+            elif isinstance(node, ast.ImportFrom):
+                module = node.module or ""
+                if node.level:  # relative import — inside the host package
+                    continue
+                assert module != "ordessa_harness"
+                assert not module.startswith("ordessa_harness."), (
+                    f"{path.name} imports {module}")

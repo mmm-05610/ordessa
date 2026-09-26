@@ -979,7 +979,7 @@ def test_concurrent_releases_settle_the_run_record_exactly_once(server, project,
                                                                 monkeypatch):
     """并发 release 不得重复结账：两个线程同时释放同一连接，账本终态
     转换恰好发生一次，且没有任何一次返回被换算成假的失败或假的重复。"""
-    import ordessa_server.acp_channel.registry as registry_module
+    import ordessa_harness.server_acp.registry as registry_module
 
     settlements: list[tuple[str, str]] = []
     real_end = registry_module.end_run_released

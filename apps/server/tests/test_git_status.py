@@ -129,7 +129,11 @@ def test_the_workspace_git_status_wire_returns_the_six_fields(tmp_path, repo):
 
     runtime = build_runtime(tmp_path / "server")
     runtime.start()
-    workspace = runtime.repository.workspaces.create(
+    # Local record aliases, the same discipline as test_profile_permissions:
+    # a stopped runtime's facades read None (the ports belong to the active
+    # round), but the round's records stay usable across client sessions.
+    workspaces_repo = runtime.repository.workspaces
+    workspace = workspaces_repo.create(
         key="w", request_digest="w", distribution="Ubuntu", remote_user="tester",
         remote_path=str(repo), connection_id="connection")[1]
     with runtime.database.transaction() as conn:
@@ -155,7 +159,7 @@ def test_the_workspace_git_status_wire_returns_the_six_fields(tmp_path, repo):
     # A workspace that is not a repository answers the typed reason, all nulls.
     plain = tmp_path / "plain"
     plain.mkdir()
-    second = runtime.repository.workspaces.create(
+    second = workspaces_repo.create(
         key="w2", request_digest="w2", distribution="Ubuntu", remote_user="tester",
         remote_path=str(plain), connection_id="connection-2")[1]
     with runtime.database.transaction() as conn:
