@@ -4,44 +4,6 @@ Status: implemented, tested, committed on `feature/server-plugin-host`
 (worktree `worktrees/server-plugin-host`). Multi-Harness work is **not**
 included; that stays in its own tree for a later, separate batch.
 
-## Review round 2 (2026-09-26): the composition cleans up after itself
-
-
-risk; each is pinned by failing counterexamples first (5 new tests), then
-fixed:
-
-1. **A failed round leaked the plugins it had already activated.** With A
-   activated and B failing to build, `build_runtime` released the data-root
-   lock but never disposed A — the round returns no runtime, so nobody else
-   could clean up ("same-root retry succeeds, A's disposal count is 0").
-   Fixed: an activation round is now transactional at plugin granularity —
-   `activate_all` disposes exactly what *this round* activated, in reverse
-   order, before the failure propagates (earlier-round plugins untouched);
-   `build_runtime` then releases the lock, and `start()`'s failed
-   re-activation round gets the same treatment through the same path.
-   Gates: `test_a_failed_composition_disposes_activated_plugins_and_releases_the_root`,
-   `test_a_failed_start_round_disposes_activated_plugins_and_releases_the_lock`,
-   `test_a_failed_activation_round_is_transactional_for_this_round`.
-2. **Provided ports could silently shadow existing bindings.** The
-   dependency-port merge used `dict.update`, so a provided port named like a
-   host facade (or like another dependency's port) would quietly override
-   it. Fixed: the merge refuses with a typed
-   `PLUGIN_PORT_CONFLICT` (`server_plugin_api.PortConflictError`) naming the
-   consumer, provider and port; the refusal is transactional like any other
-   activation failure. Gates:
-   `test_a_dependency_port_shadowing_an_existing_binding_refuses_the_composition`,
-   `test_port_conflicts_are_refused_between_dependencies_too` (both the
-   host-facade shadow and the dependency-to-dependency collision).
-
-Red ledger after the fixes (same commands, same per-ID comparison):
-
-| Suite | Round 3 | Red-ID diff vs frozen baseline |
-| --- | --- | --- |
-| pacthold | 238P | none (0→0) |
-| harness | 308P/2F/3S | identical 2 IDs |
-| ACP orchestration | 40P/18F | identical 18 IDs |
-| server | 812P/43F/10S/25E (890 collected, +5 gates) | **identical 68 IDs, zero new, zero resolved** |
-
 ## Review round 1 (2026-09-26): lifecycle hardening
 
 The independent review reproduced three lifecycle holes the first batch's
@@ -84,6 +46,43 @@ Red ledger after the fixes (same commands, same per-ID comparison):
 | ACP orchestration | 40P/18F | identical 18 IDs |
 | server | 807P/43F/10S/25E (885 collected, +5 gates) | **identical 68 IDs, zero new, zero resolved** |
 
+## Review round 2 (2026-09-26): the composition cleans up after itself
+
+The independent review reproduced one follow-up gap and flagged one boundary
+risk; each is pinned by failing counterexamples first (5 new tests), then
+fixed:
+
+1. **A failed round leaked the plugins it had already activated.** With A
+   activated and B failing to build, `build_runtime` released the data-root
+   lock but never disposed A — the round returns no runtime, so nobody else
+   could clean up ("same-root retry succeeds, A's disposal count is 0").
+   Fixed: an activation round is now transactional at plugin granularity —
+   `activate_all` disposes exactly what *this round* activated, in reverse
+   order, before the failure propagates (earlier-round plugins untouched);
+   `build_runtime` then releases the lock, and `start()`'s failed
+   re-activation round gets the same treatment through the same path.
+   Gates: `test_a_failed_composition_disposes_activated_plugins_and_releases_the_root`,
+   `test_a_failed_start_round_disposes_activated_plugins_and_releases_the_lock`,
+   `test_a_failed_activation_round_is_transactional_for_this_round`.
+2. **Provided ports could silently shadow existing bindings.** The
+   dependency-port merge used `dict.update`, so a provided port named like a
+   host facade (or like another dependency's port) would quietly override
+   it. Fixed: the merge refuses with a typed
+   `PLUGIN_PORT_CONFLICT` (`server_plugin_api.PortConflictError`) naming the
+   consumer, provider and port; the refusal is transactional like any other
+   activation failure. Gates:
+   `test_a_dependency_port_shadowing_an_existing_binding_refuses_the_composition`,
+   `test_port_conflicts_are_refused_between_dependencies_too` (both the
+   host-facade shadow and the dependency-to-dependency collision).
+
+Red ledger after the fixes (same commands, same per-ID comparison):
+
+| Suite | Round 3 | Red-ID diff vs frozen baseline |
+| --- | --- | --- |
+| pacthold | 238P | none (0→0) |
+| harness | 308P/2F/3S | identical 2 IDs |
+| ACP orchestration | 40P/18F | identical 18 IDs |
+| server | 812P/43F/10S/25E (890 collected, +5 gates) | **identical 68 IDs, zero new, zero resolved** |
 
 ## Rollback point and source identity
 
