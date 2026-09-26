@@ -20,6 +20,7 @@ runtime/
 verify-logs/
 
 # --- python editable-install build artifacts (never source) ---
+build/
 *.egg-info/
 
 # --- batch evidence runs (regenerable; numbers recorded in docs) ---
