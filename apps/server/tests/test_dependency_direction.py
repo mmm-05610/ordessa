@@ -72,7 +72,9 @@ class _ForbidProductImports:
             f"DEPENDENCY_DIRECTION: {module.__spec__.name!r} is forbidden")
 
 
-def _import_all_under_blocker(package_name: str, forbidden) -> list[str]:
+def _import_all_under_blocker(package_name: str, forbidden, *,
+                              report_tolerated: bool = False,
+                              keep: "frozenset[str] | set[str] | None" = None):
     """Import every module of `package_name` fresh under the blocker.
 
     Isolation is REAL: the forbidden packages are EVICTED from sys.modules
@@ -80,7 +82,13 @@ def _import_all_under_blocker(package_name: str, forbidden) -> list[str]:
     hit and the machinery would never consult the blocker (the blind gate
     the first draft had). The whole sys.modules snapshot is restored after,
     so the surrounding suite keeps its imported state; the gate's own
-    re-imports are discarded."""
+    re-imports are discarded.
+
+    Non-direction import failures (module-level side effects unrelated to
+    the boundary) do not count as violations, but they are never silently
+    eaten: they are collected and returned alongside the failures, so a
+    module that fails to import for another reason is VISIBLE — `pass` was
+    exactly the false-green this file existed to prevent."""
     package = importlib.import_module(package_name)
     module_names = [package_name] + [
         name for finder, name, is_pkg in pkgutil.walk_packages(
@@ -89,10 +97,13 @@ def _import_all_under_blocker(package_name: str, forbidden) -> list[str]:
     ]
     blocker = _ForbidProductImports(forbidden)
     failures: list[str] = []
+    tolerated: list[str] = []
     snapshot = dict(sys.modules)
     evict_prefixes = tuple({package_name, *forbidden})
+    keep = keep or frozenset()
     for name in list(sys.modules):
-        if name.startswith(evict_prefixes):
+        if name.startswith(evict_prefixes) and not any(
+                name == k or name.startswith(k + ".") for k in keep):
             sys.modules.pop(name, None)
     sys.meta_path.insert(0, blocker)
     try:
@@ -102,25 +113,29 @@ def _import_all_under_blocker(package_name: str, forbidden) -> list[str]:
             except ImportError as exc:
                 if "DEPENDENCY_DIRECTION" in str(exc):
                     failures.append(f"{name}: {exc}")
-                # a genuine ImportError of the module itself is not this
-                # gate's subject
-            except Exception:
-                pass  # module-level side effects unrelated to the direction
+                else:
+                    tolerated.append(f"{name}: ImportError {exc}")
+            except Exception as exc:
+                tolerated.append(f"{name}: {type(exc).__name__} {exc}")
     finally:
         sys.meta_path.remove(blocker)
         sys.modules.clear()
         sys.modules.update(snapshot)
-    return failures
+    return (failures, tolerated) if report_tolerated else failures
 
 
 def test_pacthold_imports_isolated_from_every_product_package():
-    failures = _import_all_under_blocker("pacthold", PRODUCT_PACKAGES)
+    failures, tolerated = _import_all_under_blocker(
+        "pacthold", PRODUCT_PACKAGES, report_tolerated=True)
     assert failures == [], "\n".join(failures)
+    assert tolerated == [], "modules failed to import for NON-direction reasons:\n" + "\n".join(tolerated)
 
 
 def test_the_host_imports_isolated_from_every_plugin_package():
-    failures = _import_all_under_blocker("ordessa_server", PLUGIN_PACKAGES)
+    failures, tolerated = _import_all_under_blocker(
+        "ordessa_server", PLUGIN_PACKAGES, report_tolerated=True)
     assert failures == [], "\n".join(failures)
+    assert tolerated == [], "modules failed to import for NON-direction reasons:\n" + "\n".join(tolerated)
 
 
 LEGACY_BUSINESS_ENTRIES = (
@@ -133,21 +148,73 @@ LEGACY_BUSINESS_ENTRIES = (
 
 
 def test_the_legacy_business_entries_no_longer_exist():
-    """The compat-alias discipline is retired: a legacy entry either never
-    imports again (deleted) — a silent fallback to a plugin implementation
-    through a hidden path is exactly what this forbids."""
+    """The compat-alias discipline is retired: a legacy entry must not
+    import — and the ONLY passing failure is `ModuleNotFoundError` naming
+    the entry itself. Any other ImportError (a broken shim that partially
+    imports, a fallback chain dying halfway) or any other exception fails
+    the gate: "it blew up" is not "it is gone"."""
     for entry in LEGACY_BUSINESS_ENTRIES:
-        assert entry not in sys.modules or True  # absence is the assertion
-        saved = sys.modules.pop(entry, None)
+        # A cached entry IS the resurrection: popping it first would destroy
+        # the evidence and let a shim that only ever lived in sys.modules
+        # pass (exactly what the zombie probe caught). Absence in the module
+        # cache is the primary assertion; the fresh import then proves no
+        # provider exists on disk either.
+        assert entry not in sys.modules, (
+            f"legacy business entry resurrected in sys.modules: {entry}")
         try:
-            importlib.import_module(entry)
-        except ImportError:
-            pass  # gone, as it must be
-        else:
-            raise AssertionError(f"legacy business entry still importable: {entry}")
+            try:
+                importlib.import_module(entry)
+            except ModuleNotFoundError as exc:
+                assert exc.name == entry or (exc.name or "").startswith(entry + "."), (
+                    f"{entry}: unexpected ModuleNotFoundError for {exc.name!r}")
+            except ImportError as exc:
+                raise AssertionError(
+                    f"{entry}: import failed in a NON-absence way "
+                    f"(a shim residue?): {exc!r}") from exc
+            except Exception as exc:
+                raise AssertionError(
+                    f"{entry}: import raised {type(exc).__name__} — that is not "
+                    "absence either") from exc
+            else:
+                raise AssertionError(f"legacy business entry still importable: {entry}")
+            # the fresh import must not have left anything behind
+            assert entry not in sys.modules, (
+                f"a failed import still cached {entry}")
         finally:
-            if saved is not None:
-                sys.modules[entry] = saved
+            # absence is the state under test: never resurrect a legacy entry
+            sys.modules.pop(entry, None)
+
+
+def test_the_isolation_scanner_is_not_silently_tolerant():
+    """The module-isolation scan swallows only unexpected module-level side
+    effects of the scanned tree itself — and it REPORTS them. Injected here:
+    a submodule whose import raises SystemError under the blocker must
+    surface in the scan's tolerated-report, proving the scanner sees
+    non-direction failures instead of eating them into a bare `pass`. A
+    clean scan stays clean (zero failures, zero tolerated)."""
+    import shutil
+    import tempfile
+
+    pkg_name = "fake_direction_probe"
+    probe_dir = Path(tempfile.mkdtemp()) / pkg_name
+    probe_dir.mkdir(parents=True)
+    (probe_dir / "__init__.py").write_text("", encoding="utf-8")
+    (probe_dir / "boom.py").write_text(
+        "raise SystemError('injected boom: a non-direction import failure')\n",
+        encoding="utf-8")
+    sys.path.insert(0, str(probe_dir.parent))
+    try:
+        failures, tolerated = _import_all_under_blocker(
+            pkg_name, PRODUCT_PACKAGES, report_tolerated=True)
+        assert failures == [], failures
+        assert tolerated and any(
+            item.split(":")[0] == pkg_name + ".boom" and "SystemError" in item
+            for item in tolerated), tolerated
+    finally:
+        sys.path.remove(str(probe_dir.parent))
+        sys.modules.pop(pkg_name, None)
+        sys.modules.pop(pkg_name + ".boom", None)
+        shutil.rmtree(probe_dir.parent, ignore_errors=True)
 
 
 def test_the_neutral_facilities_carry_no_business_imports():
