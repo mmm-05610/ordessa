@@ -30,6 +30,7 @@ from .errors import (
     DuplicatePluginError,
     DuplicateStreamRouteError,
     InvalidDeclarationError,
+    PortConflictError,
     ServerPluginError,
 )
 
@@ -49,5 +50,6 @@ __all__ = [
     "DependencyError",
     "CyclicDependencyError",
     "DependentActiveError",
+    "PortConflictError",
     "InvalidDeclarationError",
 ]

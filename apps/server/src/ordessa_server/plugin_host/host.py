@@ -14,7 +14,12 @@ Lifecycle rules (each pinned by `apps/server/tests/test_plugin_host_gate.py`):
   set; missing dependencies and cycles are startup refusals. It is also the
   access grant for dependency-provided ports, and unload refuses while a
   declared dependent is still active.
-- A plugin whose activation fails rolls back its own contributions and
+- An activation round is transactional at plugin granularity: if any
+  activation fails, the plugins this round activated are disposed (reverse
+  order) and the failure propagates; earlier-round plugins stay active.
+- A provided port that would shadow an existing binding (a host facade or
+  another dependency's port) is a typed refusal, never a silent override.
+- A plugin whose own activation fails rolls back its contributions and
   disposes what its build created; unrelated plugins stay active.
 - Unload removes exactly the plugin's own methods/routes/ports and calls its
   disposal exactly once; shutdown disposes every active plugin exactly once.
@@ -33,6 +38,7 @@ from server_plugin_api import (
     DuplicatePluginError,
     DuplicateStreamRouteError,
     InvalidDeclarationError,
+    PortConflictError,
     ServerMethodDescriptor,
     ServerPlugin,
     ServerPluginContext,
@@ -199,8 +205,12 @@ class ServerPluginHost:
 
         The graph is validated across `requires` plus what is already active
         before anything is built: a missing dependency or a cycle refuses the
-        whole round without touching any plugin. A build failure then rolls
-        back only the failing plugin; plugins activated before it stay.
+        whole round without touching any plugin. The round is transactional
+        at plugin granularity: if any activation fails, the plugins *this
+        round* activated are disposed (reverse order, exactly once each) and
+        the failure propagates — a round that never became a runtime leaves
+        nothing of itself behind. Plugins activated by earlier rounds are
+        untouched.
         """
         requested = list(plugins)
         descriptors: dict[str, ServerPluginDescriptor] = {}
@@ -220,8 +230,13 @@ class ServerPluginHost:
             by_id[descriptor.id] = plugin
         order = self._topological_order(descriptors)
         activated: list[ActivePlugin] = []
-        for plugin_id in order:
-            activated.append(self._activate_one(by_id[plugin_id], descriptors[plugin_id]))
+        try:
+            for plugin_id in order:
+                activated.append(self._activate_one(by_id[plugin_id], descriptors[plugin_id]))
+        except BaseException:
+            for active in reversed(activated):
+                self.deactivate(active.descriptor.id)
+            raise
         return tuple(activated)
 
     def activate(self, plugin: ServerPlugin) -> ActivePlugin:
@@ -267,13 +282,19 @@ class ServerPluginHost:
     ) -> ActivePlugin:
         # Ports are host facades plus what this plugin's *declared*
         # dependencies provide (they are active already — topological order
-        # guaranteed it). An undeclared plugin's ports are not visible:
-        # `requires` is the access grant.
+        # guaranteed it). A provided port that would shadow an existing
+        # binding — a host facade or another dependency's port — is a typed
+        # refusal, never a silent override. An undeclared plugin's ports are
+        # not visible at all: `requires` is the access grant.
         ports = dict(self.host_ports)
         for dep in descriptor.requires:
             dep_active = self._active.get(dep)
-            if dep_active is not None:
-                ports.update(dep_active.registration.provided_ports)
+            if dep_active is None:
+                continue
+            for port_name, port in dep_active.registration.provided_ports.items():
+                if port_name in ports:
+                    raise PortConflictError(descriptor.id, dep, port_name)
+                ports[port_name] = port
         context = ServerPluginContext(
             plugin_id=descriptor.id, data_root=self.data_root, ports=ports,
         )

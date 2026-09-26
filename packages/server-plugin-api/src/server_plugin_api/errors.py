@@ -79,3 +79,19 @@ class DependentActiveError(ServerPluginError):
         )
         self.plugin_id = plugin_id
         self.dependents = tuple(dependents)
+
+
+class PortConflictError(ServerPluginError):
+    """A provided port would silently override an existing binding in a
+    consumer's activation context (a host facade or another dependency's
+    port of the same name); the host refuses instead of shadowing."""
+
+    def __init__(self, consumer_id: str, provider_id: str, port_name: str) -> None:
+        super().__init__(
+            "PLUGIN_PORT_CONFLICT",
+            f"port {port_name!r} provided by {provider_id!r} collides with an "
+            f"existing binding in {consumer_id!r}'s activation context",
+        )
+        self.consumer_id = consumer_id
+        self.provider_id = provider_id
+        self.port_name = port_name

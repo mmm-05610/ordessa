@@ -561,6 +561,143 @@ def test_unload_refuses_while_a_declared_dependent_is_active():
     assert records == ["fake.child2", "fake.dep2"]
 
 
+# -- review round 2: the composition itself must clean up --------------------
+
+
+def test_a_failed_composition_disposes_activated_plugins_and_releases_the_root(tmp_path):
+    """A succeeded, B failed to build: the round never returns a runtime, so
+    the host must dispose A exactly once and release the lock — the same-root
+    retry then starts clean, with none of A's methods still advertised."""
+    class Boom(RuntimeError):
+        pass
+
+    records: list[str] = []
+    root = tmp_path / "data"
+    with pytest.raises(Boom):
+        build_runtime(root, server_plugins=[
+            FakePlugin("fake.first", methods=(("fake.first.method", set()),),
+                       dispose_records=records),
+            FakePlugin("fake.boom", raises=Boom()),
+        ])
+    assert records == ["fake.first"], (
+        f"the activated plugin must be disposed exactly once, saw {records}")
+    runtime = build_runtime(root)
+    try:
+        with _Started(runtime):
+            assert "fake.first.method" not in _hello_caps(runtime)
+            assert len(_hello_caps(runtime)) == 67
+    except BaseException:
+        runtime.stop()
+        raise
+
+
+def test_a_failed_start_round_disposes_activated_plugins_and_releases_the_lock(tmp_path):
+    """The start() re-activation round is transactional too: A re-activates,
+    the flaky plugin fails on its second build, A is disposed once more, and
+    the data root stays usable."""
+    calls = {"n": 0}
+
+    class FlakyPlugin:
+        def descriptor(self):
+            return ServerPluginDescriptor(id="fake.flaky", display_name="flaky", version="1")
+
+        def build(self, context):
+            calls["n"] += 1
+            if calls["n"] >= 2:
+                raise RuntimeError("SECOND_BUILD_BOOM")
+            return ServerPluginRegistration()
+
+    records: list[str] = []
+    root = tmp_path / "data"
+    runtime = build_runtime(root, server_plugins=[
+        FakePlugin("fake.first", dispose_records=records), FlakyPlugin()])
+    runtime.stop()
+    assert records == ["fake.first"]
+    with pytest.raises(RuntimeError, match="SECOND_BUILD_BOOM"):
+        runtime.start()
+    assert records == ["fake.first", "fake.first"], (
+        f"the failed start round must dispose its activated plugin once more: {records}")
+    assert runtime.started is False
+    fresh = build_runtime(root)
+    try:
+        with _Started(fresh):
+            assert "server.hello" in _hello_caps(fresh)
+    except BaseException:
+        fresh.stop()
+        raise
+
+
+def test_a_failed_activation_round_is_transactional_for_this_round():
+    """Rolling back a failed round removes exactly what the round activated:
+    earlier-round plugins stay active, this round's are disposed."""
+    class Boom(RuntimeError):
+        pass
+
+    host = _new_host()
+    host.activate(FakePlugin("fake.earlier", methods=(("fake.earlier.method", set()),)))
+    records: list[str] = []
+    with pytest.raises(Boom):
+        host.activate_all([
+            FakePlugin("fake.a", methods=(("fake.a.method", set()),),
+                       dispose_records=records),
+            FakePlugin("fake.b", raises=Boom()),
+        ])
+    assert records == ["fake.a"]
+    assert host.active_ids() == ("fake.earlier",)
+    assert host.methods.lookup("fake.a.method") is None
+    assert host.methods.lookup("fake.earlier.method") is not None
+
+
+def test_a_dependency_port_shadowing_an_existing_binding_refuses_the_composition(tmp_path):
+    """A provided port must never silently override an existing binding: a
+    name colliding with a host port refuses the consumer's activation as a
+    typed conflict; the round stays transactional and the root reusable."""
+    from server_plugin_api import PortConflictError
+
+    root = tmp_path / "data"
+    with pytest.raises(PortConflictError) as refused:
+        build_runtime(root, server_plugins=[
+            FakePlugin("fake.shadow", ports={"idempotency": object()}),
+            FakePlugin("fake.child", requires=("fake.shadow",),
+                       methods=(("fake.child.method", set()),)),
+        ])
+    assert refused.value.port_name == "idempotency"
+    runtime = build_runtime(root)
+    runtime.stop()
+
+
+def test_port_conflicts_are_refused_between_dependencies_too():
+    """The same refusal guards dependency-to-dependency collisions: two
+    dependencies providing the same name leave the consumer with an
+    ambiguous binding, so its activation is refused and the providers stay
+    active untouched."""
+    from server_plugin_api import PortConflictError
+
+    host = ServerPluginHost(
+        methods=MethodRegistry(), stream_routes=StreamRouteRegistry(),
+        host_ports={"idempotency": object()},
+    )
+    host.activate_all([
+        FakePlugin("fake.p1", methods=(("fake.p1.method", set()),),
+                   ports={"fake.same": object()}),
+        FakePlugin("fake.p2", methods=(("fake.p2.method", set()),),
+                   ports={"fake.same": object()}),
+    ])
+    with pytest.raises(PortConflictError):
+        host.activate(FakePlugin("fake.child", requires=("fake.p1", "fake.p2"),
+                                 methods=(("fake.child.method", set()),)))
+    assert host.active_ids() == ("fake.p1", "fake.p2")
+    # A host-port shadow is the same refusal: a dependency providing a port
+    # named like a host facade ("idempotency") is refused at the consumer.
+    host.activate(FakePlugin("fake.shadow", methods=(("fake.shadow.method", set()),),
+                             ports={"idempotency": object()}))
+    with pytest.raises(PortConflictError) as refused:
+        host.activate(FakePlugin("fake.child2", requires=("fake.shadow",),
+                                 methods=(("fake.child2.method", set()),)))
+    assert refused.value.port_name == "idempotency"
+    assert host.active_ids() == ("fake.p1", "fake.p2", "fake.shadow")
+
+
 # -- stream routes: host-owned admission, plugin-owned resolution -------------
 
 

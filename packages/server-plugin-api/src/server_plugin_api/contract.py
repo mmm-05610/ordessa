@@ -125,7 +125,8 @@ class ServerPluginContext:
     registry, no transport app object), and the `provided_ports` of every
     plugin this one **declared** in `requires`. A plugin that did not declare
     a dependency cannot see that plugin's ports — declaring the dependency is
-    the access grant.
+    the access grant — and a port that would shadow an existing binding is a
+    typed conflict (`PortConflictError`), never a silent override.
     """
 
     plugin_id: str
