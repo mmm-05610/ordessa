@@ -1,9 +1,18 @@
-# Server core cleanup batch — IMPLEMENTATION_REVIEW_READY
+# Server core cleanup batch — review closed, approved for merge
 
 Status: implemented, tested, committed on `feature/server-core-cleanup`
 (worktree `worktrees/server-plugin-host`). Base: local `main` at `cb3132da65`
 (the batch-1 plugin-host merge). The multi-Harness work and the frontend
 worktrees are byte-for-byte untouched.
+
+Final review (dependency-direction rounds 6–6c): **passed**. The reviewer
+independently ran the direction/boundary gates (21/21) and the earlier
+host-lifecycle gates (55/55 in round 4; 52/52 in round 5), reproduced and
+accepted every counterexample chain, and approved proceeding to merge via
+the normal process with integration gates re-run on main. The four-suite
+per-ID numbers below remain executor-reported from this worktree
+(`.cleanup-evidence/junit-r65-*.xml` is the final ledger run); the merge
+integration re-run supersedes them as the closing evidence.
 
 ## Commit list
 
