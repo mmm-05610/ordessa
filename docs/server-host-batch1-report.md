@@ -4,6 +4,49 @@ Status: implemented, tested, committed on `feature/server-plugin-host`
 (worktree `worktrees/server-plugin-host`). Multi-Harness work is **not**
 included; that stays in its own tree for a later, separate batch.
 
+## Review round 1 (2026-09-26): lifecycle hardening
+
+The independent review reproduced three lifecycle holes the first batch's
+gates missed. Each was pinned with failing counterexamples first (5 new
+tests in `test_plugin_host_gate.py`), then fixed:
+
+1. **Data-root lock leaked on activation failure.** `build_runtime` released
+   the lock only around token creation, so a plugin failing to build kept
+   the flock (a same-process retry got `DATA_ROOT_IN_USE`); `start()`'s
+   re-activation also ran outside its cleanup try. Fixed: activation is
+   wrapped with `owner.release()` in `build_runtime`, and re-activation
+   moved inside `start()`'s try. Gates:
+   `test_activation_failure_releases_the_data_root_lock`,
+   `test_reactivation_failure_in_start_releases_the_lock`.
+2. **Dependency-provided ports never reached the dependent's context.**
+   `context.ports` carried only host ports, so a declared dependency could
+   not actually compose its dependent. Fixed: `context.ports` = host
+   facades + `provided_ports` of every plugin declared in `requires`
+   (topological order guarantees they are active); undeclared plugins see
+   nothing — `requires` is the access grant. Contract docstring updated.
+   Gate: `test_a_declared_dependency_provides_ports_to_its_dependent`
+   (plus the negative boundary assertion).
+3. **Lifecycle disposal/isolation gaps.** A plugin whose registration
+   failed mid-staging was rolled back but its already-built resources were
+   never disposed (build succeeded → disposal owed); and `deactivate(A)`
+   silently orphaned `B` when `B.requires` contained A. Fixed: staging
+   failure now calls `registration.disposal()` exactly once after rollback;
+   unload refuses with a typed `PLUGIN_DEPENDENT_ACTIVE`
+   (`server_plugin_api.DependentActiveError`) naming the active dependents —
+   reverse-order shutdown disposes dependents first and never trips the
+   guard. Gates: `test_method_conflict_disposes_the_plugin_that_already_built`,
+   `test_unload_refuses_while_a_declared_dependent_is_active`.
+
+Red ledger after the fixes (same commands, same per-ID comparison):
+
+| Suite | Round 2 | Red-ID diff vs frozen baseline |
+| --- | --- | --- |
+| pacthold | 238P | none (0→0) |
+| harness | 308P/2F/3S | identical 2 IDs |
+| ACP orchestration | 40P/18F | identical 18 IDs |
+| server | 807P/43F/10S/25E (885 collected, +5 gates) | **identical 68 IDs, zero new, zero resolved** |
+
+
 ## Rollback point and source identity
 
 - Branch base: local `main` at `dda84eb49c`; the branch is 4 commits ahead.
