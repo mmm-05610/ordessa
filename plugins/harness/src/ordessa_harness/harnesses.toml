@@ -91,7 +91,7 @@ capabilities = ["start", "observe", "finish", "stream", "native_continuation"]
 harness_type = "claude-code"
 display_name = "Claude Code"
 description = "Anthropic Claude Code Harness (official ACP adapter)"
-version = "0.77.0"
+version = "0.81.2"
 [harness.executable]
 identity = "claude"
 resolver_kind = "PATH_OR_BUNDLE"
