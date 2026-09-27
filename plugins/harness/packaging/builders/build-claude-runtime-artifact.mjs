@@ -46,7 +46,7 @@ const DEFAULT_SOURCE = path.join(REPO, "packaging", "claude")
 export const MARKER_NAME = ".agentbox-claude-runtime-artifact"
 export const MARKER_CONTENT = "agentbox-claude-runtime-artifact-r1\n"
 export const ADAPTER_PACKAGE = "@agentclientprotocol/claude-agent-acp"
-export const ADAPTER_VERSION = "0.77.0"
+export const ADAPTER_VERSION = "0.81.2"
 export const EXCLUDED_ADAPTERS = [
   "@automatalabs/pi-acp",
   "@agentclientprotocol/codex-acp",

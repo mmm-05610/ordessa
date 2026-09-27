@@ -39,7 +39,7 @@ def test_production_template_pins_the_confirmed_model_and_official_root():
     assert production.CREDENTIAL_KIND == "api-key"
     assert production.CREDENTIAL_ENVIRONMENT == "ANTHROPIC_AUTH_TOKEN"
     assert production.ADAPTER_PACKAGE == "@agentclientprotocol/claude-agent-acp"
-    assert production.ADAPTER_VERSION == "0.77.0"
+    assert production.ADAPTER_VERSION == "0.81.2"
 
 
 def test_loopback_override_changes_only_the_base_url():

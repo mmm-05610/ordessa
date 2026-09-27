@@ -203,12 +203,12 @@ FAMILY_MATRIX: dict[str, dict[str, tuple[bool, str, str]]] = {
                         "未声明；官方 ACP 面有 request_permission，但门里没有任何运行时"
                         "权限裁决被观测到，按诚实规则保持未声明"),
     },
-    # Work Order 43。claude-code 0.77.0（官方 ACP 适配器 + Anthropic 专有 SDK/二进制，
+    # Work Order 43。claude-code 0.81.2（官方 ACP 适配器 + Anthropic 专有 SDK/二进制，
     # 许可边界见 claude-production-packaging.md）：observed 来自 2026-09-16 的
     # claude 假端点全链门真实运行（exit 0，门报告见 claude-production-packaging.md §5）。
     "claude-code": {
         "start": (True, OBSERVED,
-                  f"{CLAUDE_PACKAGING} §5：真实 claude-agent-acp 0.77.0（内嵌 Anthropic CLI 二进制）"
+                  f"{CLAUDE_PACKAGING} §5：真实 claude-agent-acp 0.81.2（内嵌 Anthropic CLI 二进制）"
                   " + 假端点，create+prompt → completed"),
         "observe": (True, OBSERVED,
                     f"{CLAUDE_PACKAGING} §5：首轮拿到原生 session id（checkpoint nativeSessionId，"

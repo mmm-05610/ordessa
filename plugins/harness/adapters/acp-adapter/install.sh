@@ -209,7 +209,7 @@ main() {
     
     echo ""
     info "Usage: ${BINARY_NAME} --adapter codex"
-    info "   or: ${BINARY_NAME} --adapter claude"
+    info "   or: ${BINARY_NAME} --adapter pi"
 }
 
 # Run main function

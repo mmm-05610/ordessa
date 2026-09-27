@@ -82,7 +82,7 @@ go build -o ./bin/acp ./cmd/acp
 ```
 ACP Client (Zed/etc)
        ↕  ACP stdio newline-delimited JSON-RPC
-  acp (--adapter codex|claude)  ← cmd/ 入口委托 pkg/codexacp / pkg/claudeacp
+  acp (--adapter codex|pi)  ← cmd/ 入口委托 pkg/codexacp / pkg/piacp
        ↕  App Server stdio JSONL JSON-RPC
   codex app-server (子进程)
 ```
@@ -90,12 +90,13 @@ ACP Client (Zed/etc)
 - `pkg/codexacp`：独立模式（`RunStdio`）+ 嵌入模式（`EmbeddedRuntime`）
 - `internal/acp`：ACP server、传输层抽象（stdio / inproc）
 - `internal/codex`：App Server 子进程生命周期、supervisor、client
+- `internal/pi`：Pi RPC 子进程与会话生命周期
 - `internal/bridge`：ACP ↔ App Server 协议映射、session 状态机
 - `test/integration/`：端到端回归（fake harness + real codex 开关）
 - `testdata/fake_codex_app_server/`：测试替身（不得用于生产）
 
-## 7. 当前状态（2026-02-28）
+## 7. 当前状态（2026-09-27）
 
-- PR1–PR5 全部完成，验收清单 A1–J2 全部通过
+- Go 桥仅保留 Codex 与 Pi；Claude Code 使用 Harness 插件钉版的官方 `claude-agent-acp`，不再经过本目录的 Go 桥
 - Library Embedding Program：R0–R4 完成，**R5 进行中**，R6 待开始
 - 无阻塞项；已知风险见 `docs/KNOWN_ISSUES.md`

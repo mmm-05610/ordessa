@@ -1,5 +1,7 @@
 # 基于 Codex App Server 的 Go 版 ACP 适配器（acp-adapter）：详细可落地技术方案（全功能）
 
+> 当前边界（2026-09-27）：Go 桥保留 Codex 与 Pi；本文中的 Claude CLI 方案是历史设计，不再是可选运行模式。Claude Code 由 Ordessa Harness 钉版 `@agentclientprotocol/claude-agent-acp` 提供，见 ADR-0058。
+
 > 目标：用 **Go** 实现一个 **ACP（Agent Client Protocol）Agent 进程**，在上游对接 **ACP-compatible 客户端（例如 Zed）**，在下游通过 **Codex App Server（`codex app-server`）** 驱动 Codex 的完整 IDE 级能力（认证/会话历史/审批/流式事件/Review/Slash commands/MCP 等）。  
 > 说明：**App Server 与 ACP 是两套协议**，本项目本质是一个 **协议桥接（bridge）**。Codex App Server 是 Codex 富客户端（如 VS Code 扩展）使用的双向 JSON-RPC 协议，支持 stdio(JSONL) 与 websocket（实验），并提供 approvals、conversation history、streamed agent events 等能力。  
 > ACP stdio 传输同样是 **newline-delimited JSON-RPC**：消息以 `\n` 分隔且不得内嵌换行，stdout 只能输出协议消息，日志走 stderr。

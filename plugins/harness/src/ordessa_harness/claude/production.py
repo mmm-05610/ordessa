@@ -64,7 +64,7 @@ ADAPTER_ARTIFACT_RELATIVE_ENTRY = "node_modules/@agentclientprotocol/claude-agen
 ADAPTER_ARTIFACT_ENTRY = f"{ARTIFACT_TARGET}/{ADAPTER_ARTIFACT_RELATIVE_ENTRY}"
 #: Declared by the pinned builder output; the deployment only records it.
 ADAPTER_PACKAGE = "@agentclientprotocol/claude-agent-acp"
-ADAPTER_VERSION = "0.77.0"
+ADAPTER_VERSION = "0.81.2"
 
 #: Confined config home and the native transcript subtree inside it. Claude
 #: Code's own default is `$HOME/.claude`; the guest `HOME` is the one isolated

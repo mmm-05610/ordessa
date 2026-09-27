@@ -131,7 +131,7 @@ func (m *cancelRaceAppClient) TurnStart(
 	return turnID, events, nil
 }
 
-// TurnInterrupt returns as soon as the interrupt request is delivered, the way the Claude and Codex
+// TurnInterrupt returns as soon as the interrupt request is delivered, the way the Codex
 // clients do: it does not wait for the run to retire, so the retirement wait is the bridge's own.
 func (m *cancelRaceAppClient) TurnInterrupt(ctx context.Context, threadID, turnID string) error {
 	return nil
@@ -517,11 +517,11 @@ func TestCancelDispatchLateRetirementIsAwaitedBeforeTheReply(t *testing.T) {
 
 // cancelRaceBackendFailure is the message the failing shape below hands the bridge, so the test can tell
 // the backend's own failure from any label the bridge might invent for it.
-const cancelRaceBackendFailure = "claude cli error: upstream refused the prompt"
+const cancelRaceBackendFailure = "backend error: upstream refused the prompt"
 
-// TestCancelDispatchBackendErrorOutlivesTheCancelledCompletion drives the frame order a real backend
-// produces for a failed turn — Claude emits an error event and then closes the turn as cancelled
-// (internal/claude/stream.go:136). The cancellation may be taken by either arm of the select, but both
+// TestCancelDispatchBackendErrorOutlivesTheCancelledCompletion drives the frame order a backend
+// can produce for a failed turn — an error event followed by a cancelled completion.
+// The cancellation may be taken by either arm of the select, but both
 // hand the same two frames to the same teardown, so this shape is not arm-selective: what has to hold is
 // that the error the backend reported survives the completion that follows it. A turn that failed must not
 // be answered as a cancellation that succeeded.

@@ -1,5 +1,7 @@
 # KNOWN_ISSUES.md
 
+> 2026-09-27：KI-0028–0032、KI-0035、KI-0041 等 Claude CLI 条目仅为已退休 Go 模式的历史记录，所列 `--adapter claude` 命令不再可执行。当前 Claude Code 路径是 Harness 钉版官方 `claude-agent-acp`；其会话路由接线状态见 `plugins/harness/packaging/claude/PROVIDER-SESSION-PROBE.md`。
+
 > 记录已知问题、限制、坑位与规避方式。  
 > 规则：发现问题必须补充“复现步骤 + 影响范围 + workaround + 后续计划”。
 

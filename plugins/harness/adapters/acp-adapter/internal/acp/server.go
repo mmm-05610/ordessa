@@ -346,11 +346,6 @@ func CodexAvailableCommands() []AvailableCommand {
 	return commands
 }
 
-// ClaudeAvailableCommands returns the slash commands published for the Claude-backed adapter.
-func ClaudeAvailableCommands() []AvailableCommand {
-	return DefaultAvailableCommands()
-}
-
 // PiAvailableCommands returns the slash commands published for the Pi-backed adapter.
 func PiAvailableCommands() []AvailableCommand {
 	return DefaultAvailableCommands()
@@ -1147,7 +1142,7 @@ func waitForCancelTerminal(events <-chan codex.TurnEvent, early ...codex.TurnEve
 			reason := normalizeStopReason(event.StopReason)
 			if terminal.failed {
 				// The backend already said the turn failed, and how it then chose to close that turn —
-				// Claude reports a failed turn as a cancelled completion — is not a terminal state the
+				// A backend may report a failed turn followed by a cancelled completion; that is not a terminal state the
 				// bridge may hand out in place of the error. Only a message is taken from the completion,
 				// and only to describe an error that arrived without one.
 				if terminal.failure == "" {
@@ -3638,8 +3633,6 @@ func authRecoveryHint(mode string) (string, string) {
 		return "set OPENAI_API_KEY then restart the ACP agent process", `export OPENAI_API_KEY="YOUR_OPENAI_API_KEY" && unset CODEX_API_KEY`
 	case "chatgpt_subscription":
 		return "run codex login then restart the ACP agent process", "codex login"
-	case "claude_cli":
-		return "configure Claude CLI authentication, then restart the ACP agent process", "claude auth login"
 	case "pi":
 		return "configure Pi provider credentials or login state, then restart the ACP agent process", "pi --help"
 	default:
@@ -3669,13 +3662,6 @@ func logoutRecoveryInstructions(mode string) string {
 			"Next step (copy/paste):",
 			"codex login",
 			"Complete the browser login/local callback flow, then restart the ACP agent process.",
-		}, "\n")
-	case "claude_cli":
-		return strings.Join([]string{
-			"logout completed; re-authentication required.",
-			"Next step (copy/paste):",
-			"claude auth login",
-			"Then restart the ACP agent process.",
 		}, "\n")
 	case "pi":
 		return strings.Join([]string{

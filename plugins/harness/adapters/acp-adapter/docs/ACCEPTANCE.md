@@ -1,5 +1,7 @@
 # ACCEPTANCE.md
 
+> 当前边界（2026-09-27）：L 节是已退休的 Go Claude 模式历史验收记录，不再属于本目录当前测试门。Claude Code 的当前验收由 `plugins/harness/packaging/claude/` 与 Harness 测试负责；Go 桥当前只验 Codex/Pi。
+
 > 目标：本清单用于“逐条可验证”的验收。实现必须覆盖所有条目（全功能，不是 MVP）。
 
 ## A. 协议合规（ACP）
@@ -146,7 +148,7 @@ K7. **收尾验收（R6）**
 - 操作：按 K1-K6 全量回归并更新文档（PROGRESS/DECISIONS/KNOWN_ISSUES）。
 - 预期：库化改造完成闭环，阻塞项清零或附可执行 workaround。
 
-## L. Claude Mode（Anthropic API 适配器）
+## L. Claude Mode（历史记录；已由官方 ACP 适配器替代）
 
 L1. **协议合规（等同 A1-A5）**
 - 操作：以 `--adapter claude` 启动适配器，执行 initialize/session/new/session/prompt/session/cancel 全流程。
