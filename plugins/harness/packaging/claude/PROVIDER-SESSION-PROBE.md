@@ -23,3 +23,8 @@ offers switching, Harness must pass session-scoped routing values at
 the selected route per session. Do not use the adapter's `providers/set`: that
 operation updates all loaded sessions. Never put provider credentials in
 desktop-visible ACP frames or diagnostic logs.
+
+Verification in this worktree: the two Node probes pass (2/2 lifecycle cases;
+fake-endpoint turn counts A=1, B=2, C=1), the Claude runtime artifact builds
+outside Git at digest `sha256:03324c056754cf7e7a0d117a5abdab02705ef38993d82847b9bb30b2f5d542c5`,
+and `test_claude_production_template.py` passes 12/12 under Python 3.12.
