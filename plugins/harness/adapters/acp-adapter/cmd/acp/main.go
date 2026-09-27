@@ -1,9 +1,9 @@
-// Command acp is a unified ACP adapter entry point supporting multiple backends.
+// Command acp is the Go ACP adapter for Codex and Pi.
 //
 // Usage:
 //
 //	acp --adapter codex [codex flags...]
-//	acp --adapter claude [claude flags...]
+//	acp --adapter pi [pi flags...]
 package main
 
 import (
@@ -17,7 +17,6 @@ import (
 	"syscall"
 
 	"github.com/beyond5959/acp-adapter/internal/config"
-	"github.com/beyond5959/acp-adapter/pkg/claudeacp"
 	"github.com/beyond5959/acp-adapter/pkg/codexacp"
 	"github.com/beyond5959/acp-adapter/pkg/piacp"
 )
@@ -25,10 +24,10 @@ import (
 const usage = `acp — ACP adapter with multiple backend support
 
 Usage:
-  acp [--adapter codex|claude|pi] [flags]
+  acp [--adapter codex|pi] [flags]
 
 Flags (shared):
-  --adapter          Backend adapter: codex (default), claude, or pi
+  --adapter          Backend adapter: codex (default) or pi
   --log-level        Log level: debug|info|warn|error (default: info)
   --trace-json       Enable raw JSON tracing to file
   --trace-json-file  Trace JSONL output file (default: trace-jsonl.log)
@@ -41,15 +40,6 @@ Flags (--adapter codex):
   --app-server-cmd   App server command (default: codex, env: CODEX_APP_SERVER_CMD)
   --app-server-args  App server args, space separated (default: app-server -c model_reasoning_summary="detailed")
   --retry-turn-on-crash  Retry current turn once after crash (default: true)
-
-Flags (--adapter claude):
-  --claude-bin            Path to claude binary (env: CLAUDE_BIN, default: claude)
-  --model                 Default model (env: CLAUDE_MODEL, default: claude-opus-4-6)
-  --models                Comma-separated model list for picker UI (env: CLAUDE_MODELS)
-  --effort                Default reasoning effort (env: CLAUDE_EFFORT, default: medium)
-  --efforts               Comma-separated effort list for picker UI (env: CLAUDE_EFFORTS)
-  --max-turns             Max agentic turns per invocation (default: 10)
-  --skip-perms            Pass --dangerously-skip-permissions to claude (default: true)
 
 Flags (--adapter pi):
   --pi-bin                Path to pi binary (env: PI_BIN, default: pi)
@@ -75,7 +65,7 @@ func run(ctx context.Context, args []string) error {
 	fs.Usage = func() { fmt.Fprint(os.Stderr, usage) }
 
 	// ---- shared flags ----
-	adapter := fs.String("adapter", firstEnv("ACP_ADAPTER", "codex"), "backend adapter: codex|claude|pi")
+	adapter := fs.String("adapter", firstEnv("ACP_ADAPTER", "codex"), "backend adapter: codex|pi")
 	logLevel := fs.String("log-level", firstEnv("LOG_LEVEL", "info"), "log level")
 	traceJSON := fs.Bool("trace-json", false, "enable raw JSON tracing")
 	traceJSONFile := fs.String("trace-json-file", firstEnv("TRACE_JSON_FILE", "trace-jsonl.log"), "trace JSONL output file")
@@ -92,15 +82,6 @@ func run(ctx context.Context, args []string) error {
 		"app server args",
 	)
 	retryOnCrash := fs.Bool("retry-turn-on-crash", parseBoolDefault(os.Getenv("RETRY_TURN_ON_CRASH"), true), "retry turn on crash")
-
-	// ---- claude-specific flags ----
-	claudeBin := fs.String("claude-bin", firstEnv("CLAUDE_BIN", "claude"), "path to claude binary")
-	model := fs.String("model", firstEnv("CLAUDE_MODEL", ""), "Claude default model")
-	models := fs.String("models", os.Getenv("CLAUDE_MODELS"), "Claude model list for picker UI")
-	effort := fs.String("effort", firstEnv("CLAUDE_EFFORT", "medium"), "Claude default reasoning effort")
-	efforts := fs.String("efforts", os.Getenv("CLAUDE_EFFORTS"), "Claude effort list for picker UI")
-	maxTurns := fs.Int("max-turns", 10, "max agentic turns per invocation")
-	skipPerms := fs.Bool("skip-perms", parseBoolDefault(os.Getenv("CLAUDE_SKIP_PERMS"), true), "pass --dangerously-skip-permissions to claude")
 
 	// ---- pi-specific flags ----
 	piBin := fs.String("pi-bin", firstEnv("PI_BIN", "pi"), "path to pi binary")
@@ -131,23 +112,6 @@ func run(ctx context.Context, args []string) error {
 			profilesJSON:   *profilesJSON,
 			defaultProfile: *defaultProfile,
 		})
-	case "claude":
-		return runClaudeAdapter(ctx, runClaudeParams{
-			claudeBin:      *claudeBin,
-			model:          *model,
-			models:         *models,
-			effort:         *effort,
-			efforts:        *efforts,
-			maxTurns:       *maxTurns,
-			skipPerms:      *skipPerms,
-			logLevel:       *logLevel,
-			traceJSON:      *traceJSON,
-			traceJSONFile:  *traceJSONFile,
-			patchApplyMode: *patchApplyMode,
-			profilesFile:   *profilesFile,
-			profilesJSON:   *profilesJSON,
-			defaultProfile: *defaultProfile,
-		})
 	case "pi":
 		return runPiAdapter(ctx, runPiParams{
 			piBin:          *piBin,
@@ -165,7 +129,7 @@ func run(ctx context.Context, args []string) error {
 			defaultProfile: *defaultProfile,
 		})
 	default:
-		return fmt.Errorf("unknown adapter %q; choose codex, claude, or pi", *adapter)
+		return fmt.Errorf("unknown adapter %q; choose codex or pi; Claude Code uses the pinned claude-agent-acp runtime in plugins/harness", *adapter)
 	}
 }
 
@@ -207,25 +171,6 @@ func runCodexAdapter(ctx context.Context, p runCodexParams) error {
 	return codexacp.RunStdio(ctx, cfg, os.Stdin, os.Stdout, os.Stderr)
 }
 
-// ---- claude adapter wiring ----
-
-type runClaudeParams struct {
-	claudeBin      string
-	model          string
-	models         string
-	effort         string
-	efforts        string
-	maxTurns       int
-	skipPerms      bool
-	logLevel       string
-	traceJSON      bool
-	traceJSONFile  string
-	patchApplyMode string
-	profilesFile   string
-	profilesJSON   string
-	defaultProfile string
-}
-
 type runPiParams struct {
 	piBin          string
 	piArgs         []string
@@ -240,29 +185,6 @@ type runPiParams struct {
 	profilesFile   string
 	profilesJSON   string
 	defaultProfile string
-}
-
-func runClaudeAdapter(ctx context.Context, p runClaudeParams) error {
-	profiles := loadProfiles(p.profilesFile, p.profilesJSON)
-	availableModels := collectClaudeModels(p.models, p.model, profiles)
-	availableEfforts := collectClaudeEfforts(p.efforts, p.effort, profiles)
-
-	cfg := claudeacp.RuntimeConfig{
-		ClaudeBin:        p.claudeBin,
-		DefaultModel:     p.model,
-		AvailableModels:  availableModels,
-		DefaultEffort:    p.effort,
-		AvailableEfforts: availableEfforts,
-		MaxTurns:         p.maxTurns,
-		SkipPerms:        p.skipPerms,
-		TraceJSON:        p.traceJSON,
-		TraceJSONFile:    p.traceJSONFile,
-		LogLevel:         p.logLevel,
-		PatchApplyMode:   p.patchApplyMode,
-		Profiles:         mapClaudeProfiles(profiles),
-		DefaultProfile:   p.defaultProfile,
-	}
-	return claudeacp.RunStdio(ctx, cfg, os.Stdin, os.Stdout, os.Stderr)
 }
 
 func runPiAdapter(ctx context.Context, p runPiParams) error {
@@ -367,21 +289,6 @@ func mapCodexProfiles(profiles map[string]profileValues) map[string]codexacp.Pro
 	return out
 }
 
-func mapClaudeProfiles(profiles map[string]profileValues) map[string]claudeacp.ProfileConfig {
-	out := make(map[string]claudeacp.ProfileConfig, len(profiles))
-	for name, p := range profiles {
-		out[name] = claudeacp.ProfileConfig{
-			Model:              p.Model,
-			ThoughtLevel:       p.ThoughtLevel,
-			ApprovalPolicy:     p.ApprovalPolicy,
-			Sandbox:            p.Sandbox,
-			Personality:        p.Personality,
-			SystemInstructions: p.SystemInstructions,
-		}
-	}
-	return out
-}
-
 func mapPiProfiles(profiles map[string]profileValues) map[string]piacp.ProfileConfig {
 	if len(profiles) == 0 {
 		return map[string]piacp.ProfileConfig{}
@@ -422,62 +329,4 @@ func parseBoolDefault(raw string, fallback bool) bool {
 		return false
 	}
 	return fallback
-}
-
-func collectClaudeModels(raw string, defaultModel string, profiles map[string]profileValues) []string {
-	seen := make(map[string]struct{})
-	out := make([]string, 0, len(profiles)+4)
-
-	add := func(value string) {
-		value = strings.TrimSpace(value)
-		if value == "" {
-			return
-		}
-		if _, ok := seen[value]; ok {
-			return
-		}
-		seen[value] = struct{}{}
-		out = append(out, value)
-	}
-
-	for _, token := range strings.FieldsFunc(raw, func(r rune) bool {
-		return r == ',' || r == ';' || r == ' ' || r == '\n' || r == '\t'
-	}) {
-		add(token)
-	}
-	add(defaultModel)
-	for _, profile := range profiles {
-		add(profile.Model)
-	}
-
-	return out
-}
-
-func collectClaudeEfforts(raw string, defaultEffort string, profiles map[string]profileValues) []string {
-	seen := make(map[string]struct{})
-	out := make([]string, 0, len(profiles)+4)
-
-	add := func(value string) {
-		value = strings.TrimSpace(value)
-		if value == "" {
-			return
-		}
-		if _, ok := seen[value]; ok {
-			return
-		}
-		seen[value] = struct{}{}
-		out = append(out, value)
-	}
-
-	for _, token := range strings.FieldsFunc(raw, func(r rune) bool {
-		return r == ',' || r == ';' || r == ' ' || r == '\n' || r == '\t'
-	}) {
-		add(token)
-	}
-	add(defaultEffort)
-	for _, profile := range profiles {
-		add(profile.ThoughtLevel)
-	}
-
-	return out
 }

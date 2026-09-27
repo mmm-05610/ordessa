@@ -4,9 +4,14 @@
 > 更新频率：每合并一个 PR 必须更新一次；每次发现阻塞也要更新。
 
 ## 项目概览
-- 项目：acp-adapter（ACP 适配器，当前支持 Codex App Server、Claude Code CLI、Pi RPC 模式）
+- 项目：acp-adapter（Go ACP 适配器，当前支持 Codex App Server、Pi RPC 模式；Claude Code 在 Harness 的独立官方 ACP 适配器）
 - 当前阶段：Pi Adapter RPC 初版完成，Library Mode 持续收尾（R5 in progress）
-- 最近更新：2026-04-14
+- 最近更新：2026-09-27
+
+## 2026-09-27 Claude 模式退休
+- 删除 Go 桥的 `--adapter claude`、`internal/claude`、`pkg/claudeacp` 与专属 fake/集成测试；Codex/Pi 仍由同一 Go 桥提供。
+- Harness 的 `claude-code` 品牌使用离线钉版 `@agentclientprotocol/claude-agent-acp` 0.81.2，官方适配器的会话隔离由两条无模型探针覆盖。
+- 历史 C-R0–C-R5 / L1–L9 完成记录保留作溯源，不代表当前 Go 模式仍可启动。当前阶段只证明适配器能力；Ordessa 的用户级 provider 选择到会话路由接线仍待独立实施。
 
 ## 2026-04-14 增量修复（Codex turn stream 背压下关键事件保留）
 - 修复点：

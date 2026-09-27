@@ -92,20 +92,20 @@ func TestCancelTerminalSeededFromAFrameAlreadyRead(t *testing.T) {
 	}
 }
 
-// TestCancelTerminalKeepsTheErrorTheCancelledCompletionFollows replays the frame order the Claude stream
-// actually produces when a turn fails: an error event, then a completion that labels the turn cancelled,
+// TestCancelTerminalKeepsTheErrorTheCancelledCompletionFollows replays a possible backend frame order
+// when a turn fails: an error event, then a completion that labels the turn cancelled,
 // then the stream closes. The error is the fact the client must be given; a cancelled completion that
 // follows it describes how the backend tore the turn down, not whether the turn succeeded.
 func TestCancelTerminalKeepsTheErrorTheCancelledCompletionFollows(t *testing.T) {
 	terminal := waitForCancelTerminal(retireAfter(
-		codex.TurnEvent{Type: codex.TurnEventTypeError, Message: "claude cli error: upstream refused the prompt"},
+		codex.TurnEvent{Type: codex.TurnEventTypeError, Message: "backend error: upstream refused the prompt"},
 		codex.TurnEvent{Type: codex.TurnEventTypeCompleted, StopReason: "cancelled"},
 	))
 	reason, failure := cancelTerminalResult(terminal)
 	if reason != "" {
 		t.Fatalf("a turn the backend reported an error for was answered with a stopReason: %q", reason)
 	}
-	if !strings.Contains(failure, "claude cli error") {
+	if !strings.Contains(failure, "backend error") {
 		t.Fatalf("the error the backend reported was replaced by %q", failure)
 	}
 }

@@ -1,4 +1,4 @@
-# ACP adapter for Codex, Claude Code, and Pi
+# ACP adapter for Codex and Pi
 
 [![CI](https://github.com/beyond5959/acp-adapter/actions/workflows/go.yml/badge.svg)](https://github.com/beyond5959/acp-adapter/actions)
 [![License](https://img.shields.io/github/license/beyond5959/acp-adapter)](LICENSE)
@@ -12,8 +12,9 @@
 | Backend | Downstream official channel | Standalone flag | Library package | Notes |
 |------|------|------|------|------|
 | Codex | `codex app-server` over stdio JSON-RPC | `--adapter codex` | [`pkg/codexacp`](./pkg/codexacp) | Most complete backend, including MCP routing. |
-| Claude Code | `claude -p ... --output-format stream-json` | `--adapter claude` | [`pkg/claudeacp`](./pkg/claudeacp) | Machine-readable Claude CLI bridge. |
 | Pi | `pi --mode rpc` over official RPC JSON lines | `--adapter pi` | [`pkg/piacp`](./pkg/piacp) | Official Pi RPC bridge with session load/list and ACP permission gate. |
+
+Claude Code is provided separately by the pinned `@agentclientprotocol/claude-agent-acp` runtime under `plugins/harness/packaging/claude/`; the Go bridge no longer offers a Claude mode.
 
 ## Usage Modes
 
@@ -22,7 +23,7 @@ This component supports two integration models:
 | Mode | Use Case | Entry Point |
 |------|----------|-------------|
 | **Standalone** (process) | Configure a binary in Zed or other ACP clients | [`cmd/acp`](./cmd/acp) |
-| **Library** (embedded) | Host ACP runtime inside your Go service | [`pkg/codexacp`](./pkg/codexacp), [`pkg/claudeacp`](./pkg/claudeacp), [`pkg/piacp`](./pkg/piacp) |
+| **Library** (embedded) | Host ACP runtime inside your Go service | [`pkg/codexacp`](./pkg/codexacp), [`pkg/piacp`](./pkg/piacp) |
 
 ## Standalone Usage
 
@@ -37,9 +38,6 @@ curl -sSL https://raw.githubusercontent.com/beyond5959/acp-adapter/master/instal
 ```bash
 # Codex backend (default)
 acp-adapter --adapter codex
-
-# Claude backend
-acp-adapter --adapter claude
 
 # Pi backend
 acp-adapter --adapter pi --pi-provider openai-codex --pi-model gpt-5.4-mini
@@ -65,11 +63,11 @@ Pi mode expects a working `pi` CLI on `PATH` or `--pi-bin`. Useful Pi-specific f
 }
 ```
 
-Swap `pi` for `codex` or `claude` if you want a different backend.
+Swap `pi` for `codex` to use the other Go backend. For Claude Code, install the pinned Harness runtime instead of selecting a Go adapter mode.
 
 ## Library Usage
 
-The three runtime packages expose aligned entry points: `DefaultRuntimeConfig`, `RunStdio`, and `NewEmbeddedRuntime`.
+The two runtime packages expose aligned entry points: `DefaultRuntimeConfig`, `RunStdio`, and `NewEmbeddedRuntime`.
 
 ```go
 import "github.com/beyond5959/acp-adapter/pkg/piacp"
@@ -87,7 +85,7 @@ defer rt.Close()
 resp, err := rt.ClientRequest(ctx, msg)
 ```
 
-Use [`pkg/codexacp`](./pkg/codexacp) for Codex and [`pkg/claudeacp`](./pkg/claudeacp) for Claude; the runtime shape is the same, while config fields stay backend-specific.
+Use [`pkg/codexacp`](./pkg/codexacp) for Codex; runtime config fields remain backend-specific.
 
 ## Codex ACP Support
 

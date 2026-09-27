@@ -60,6 +60,16 @@
 - ADR-0054：Codex permission 桥接升级为 ACP 标准 `options/toolCall` 并支持 `acceptForSession`
 - ADR-0055：Pi `acceptForSession` 采用 adapter-managed exact-match session cache
 - ADR-0056：Codex turn stream 背压策略（关键事件保留 + 高频事件合并）
+- ADR-0058：退休 Go Claude 模式，Harness 改用钉版官方 Claude ACP 适配器
+
+### ADR-0058：退休 Go Claude 模式，Harness 改用钉版官方 Claude ACP 适配器
+- 日期：2026-09-27
+- 状态：Accepted（supersedes ADR-0033、ADR-0043、Claude 部分的 ADR-0036/0037/0044）
+- 背景：Ordessa Harness 已有独立的官方 `@agentclientprotocol/claude-agent-acp` 生产装配；Go 桥又维护一套基于 `claude -p` 的 Claude 实现，造成双路径和审批/会话能力漂移。受控验证确认官方适配器 0.81.2 在会话级 env/settings 变化时仅重建目标会话，并可用原 sessionId 续接，旁路会话不受影响。
+- 决策：Go `cmd/acp` 只提供 Codex/Pi，删除 Go Claude 包、CLI 选项及专属 fake；`--adapter claude` 明确拒绝并指向 Harness 钉版官方适配器。Claude Code 品牌使用 Harness 的离线绝对 artifact entry，不使用上游 `npx` 运行时安装路径。
+- 备选方案：继续维护两套 Claude 适配器（拒绝，行为漂移）；在 Go 桥包裹官方 Node 适配器（拒绝，多余进程与重复协议层）；将官方适配器单独交由 Harness 管理（采用）。
+- 取舍：Go 桥失去历史 `--adapter claude` 兼容入口，相关旧集成方须迁移；Codex/Pi 共享 ACP 核心保持不变。官方适配器会话隔离能力已经证明，但 Ordessa 用户级 provider 选择到会话 `_meta` 的接线不在此决策内，未完成前不得宣称产品已可按会话切换 provider。
+- 验证：Go `cmd/acp` 的退休模式拒绝反例、`go test ./...`、Harness 生产装配测试、官方适配器真实进程 + loopback 假 Anthropic 端点 A/B/C 两会话探针（零真实模型/凭据）。
 
 ### ADR-0048：Codex `PatchChangeKind` 运行时兼容策略
 - 日期：2026-03-26

@@ -1,7 +1,7 @@
 # Claude ACP per-session provider probe
 
-This branch evaluates `claude-agent-acp` 0.81.2 without changing the product's
-provider-switching contract. The pinned 0.77.0 release fingerprints only the
+This change pins `claude-agent-acp` 0.81.2 and retires the duplicate Go Claude
+mode without changing the product's provider-switching contract. The former 0.77.0 release fingerprints only the
 workspace and MCP servers when resuming a loaded Query. In 0.81.2, the
 fingerprint also covers session-level SDK `options.env` and `options.settings`.
 
@@ -17,7 +17,7 @@ contains A's first turn, while B stays on its original route. Claude's separate
 title-generation requests are excluded from user-turn counts. Neither test
 contacts a real model or uses a real credential.
 
-This is **not** an Ordessa Server/desktop end-to-end test. Before the product
+This is **not** an Ordessa Server/desktop end-to-end test. Retiring the Go Claude mode does not by itself make provider switching available in the product. Before the product
 offers switching, Harness must pass session-scoped routing values at
 `session/new` and `session/resume` through its own channel boundary and retain
 the selected route per session. Do not use the adapter's `providers/set`: that
