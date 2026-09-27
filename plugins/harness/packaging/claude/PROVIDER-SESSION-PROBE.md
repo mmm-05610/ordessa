@@ -5,16 +5,21 @@ provider-switching contract. The pinned 0.77.0 release fingerprints only the
 workspace and MCP servers when resuming a loaded Query. In 0.81.2, the
 fingerprint also covers session-level SDK `options.env` and `options.settings`.
 
-Run `npm ci` in this directory, then `npm run test:session-provider`. The
-controlled test uses no Claude process, credentials, network endpoint, or model
-call. It checks that a route change invalidates the target session's fingerprint,
-that the adapter's actual `getOrCreateSession` path tears down and recreates only
-that session, and that the replacement is resumed under the same session ID.
+Run `npm ci` in this directory, then both `npm run test:session-provider` and
+`npm run test:provider-routing`. The first test mocks Query creation and checks
+the adapter's actual `getOrCreateSession` path: a route change invalidates A's
+fingerprint, replaces only A, and resumes under the same session ID. The second
+test launches the pinned adapter and its Claude child against three loopback
+fake Anthropic APIs, with a temporary Claude config directory and fake token.
+It sends A and B one turn each, resumes only A with route C, then sends another
+turn to each. The observed user-turn requests are A=1, B=2, C=1; C's request
+contains A's first turn, while B stays on its original route. Claude's separate
+title-generation requests are excluded from user-turn counts. Neither test
+contacts a real model or uses a real credential.
 
-This is **not** an end-to-end route or transcript-continuity test. Before the
-product offers switching, Harness still needs to pass session-scoped routing
-values at `session/new` and `session/resume`, verify the effective Claude child
-environment with controlled endpoints, and prove that A's native transcript
-continues while concurrent B stays on its own route. Do not use the adapter's
-`providers/set` for this: that operation updates all loaded sessions. Never put
-provider credentials in desktop-visible ACP frames or diagnostic logs.
+This is **not** an Ordessa Server/desktop end-to-end test. Before the product
+offers switching, Harness must pass session-scoped routing values at
+`session/new` and `session/resume` through its own channel boundary and retain
+the selected route per session. Do not use the adapter's `providers/set`: that
+operation updates all loaded sessions. Never put provider credentials in
+desktop-visible ACP frames or diagnostic logs.
