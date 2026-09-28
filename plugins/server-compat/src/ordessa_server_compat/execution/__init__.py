@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Mapping
 
 from pacthold.execution.contracts import TurnExecutionPort
-from pacthold.resource_contracts.harness_capabilities import (
+from pacthold_runtime_compat.resource_contracts.harness_capabilities import (
     CapabilityDeclaration,
     capability_view as _capability_view,
     merge_capabilities,

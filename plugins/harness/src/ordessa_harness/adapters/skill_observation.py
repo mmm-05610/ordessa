@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from pacthold.extensions.runtime_composition.protocol import content_digest
+from pacthold_runtime_compat.runtime_composition.protocol import content_digest
 
 
 @dataclass(frozen=True)

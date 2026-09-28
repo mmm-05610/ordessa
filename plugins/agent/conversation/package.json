@@ -5,6 +5,9 @@
   "ordessa": {
     "id": "ordessa.agent-conversation"
   },
+  "scripts": {
+    "test": "vitest run --maxWorkers=1"
+  },
   "dependencies": {
     "@assistant-ui/react": "0.15.21"
   }

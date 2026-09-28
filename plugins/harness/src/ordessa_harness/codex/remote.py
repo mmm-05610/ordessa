@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 from typing import Any, Callable, Mapping, Protocol
 
-from pacthold.resource_contracts import (
+from pacthold_runtime_compat.resource_contracts import (
     AgentBoxProfileV1,
     CredentialRefV1,
     PromptFragmentV1,

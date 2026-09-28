@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "harnesses": [
+    {"id": "codex", "registry_version": "2.0", "launch": {"source": "upstream", "profile_id": "codex"}, "aliases": []},
+    {"id": "claude-code", "registry_version": "0.81.2", "launch": {"source": "agentbox", "profile_id": "claude-code"}, "aliases": [{"id": "claude", "launch": {"source": "upstream", "profile_id": "claude"}}]},
+    {"id": "opencode", "registry_version": "2.0", "launch": null, "aliases": [{"id": "omp", "launch": {"source": "upstream", "profile_id": "omp"}}]},
+    {"id": "hermes", "registry_version": "2.0", "launch": {"source": "agentbox", "profile_id": "hermes"}, "aliases": []},
+    {"id": "dsh", "registry_version": "0.1.5-rc.1", "launch": {"source": "agentbox", "profile_id": "dsh"}, "aliases": []},
+    {"id": "qwen", "registry_version": "0.23.4", "launch": {"source": "agentbox", "profile_id": "qwen"}, "aliases": []},
+    {"id": "kilo", "registry_version": "7.7.2", "launch": {"source": "agentbox", "profile_id": "kilo"}, "aliases": []},
+    {"id": "pi", "registry_version": "2.0", "launch": {"source": "upstream", "profile_id": "pi"}, "aliases": []}
+  ]
+}

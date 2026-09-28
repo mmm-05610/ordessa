@@ -14,7 +14,8 @@ Operator 绑定成 `runtimeArtifactMounts` 的 source 路径。
 | --- | --- | --- | --- |
 | `codex/` | `@agentclientprotocol/codex-acp` 1.1.14 | 25 | `build-codex-runtime-artifact.mjs` |
 | `pi/` | `@automatalabs/pi-acp` 0.5.0 | 325 | `build-pi-runtime-artifact.mjs` |
-| `claude/` | `@agentclientprotocol/claude-agent-acp` | 112 | `build-claude-runtime-artifact.mjs` |
+| `claude/` | `@agentclientprotocol/claude-agent-acp` 0.81.2 | 112 | `build-claude-runtime-artifact.mjs` |
+| `claude-legacy/` | `@agentclientprotocol/claude-agent-acp` 0.75.1 | 112 | `build-claude-runtime-artifact.mjs --legacy-alias` |
 | `dsh/` | `@deepseek-ai/dsh` | 584 | `build-dsh-runtime-artifact.mjs` |
 | `kilo/` | `@kilocode/cli` | 5 | `build-kilo-runtime-artifact.mjs` |
 | `qwen/` | `@qwen-code/qwen-code` | 49 | `build-qwen-runtime-artifact.mjs` |
@@ -33,6 +34,14 @@ Operator 绑定成 `runtimeArtifactMounts` 的 source 路径。
 * `build-pi-runtime-artifact.mjs` 原本会从同一个根里算出 Codex 闭包来证明
   "Pi 工件不带 Codex 的包"。拆开后再没有 Codex 闭包可算，该函数改成与 Codex
   构建器对称：闭包缺失即不可能泄漏，按名字排除的断言照旧执行。
+
+`claude-legacy/` 只供旧 `claude` upstream alias 使用，不能替换 `claude-code`
+的 0.81.2 工件。先在该目录 `npm ci`，再执行
+`node packaging/builders/build-claude-runtime-artifact.mjs --legacy-alias --output ABSOLUTE_DIR`。
+构建器验证 lock 与 0.75.1 包闭包，独立 marker 和树摘要；运行时固定挂载目标为
+`/runtime/artifacts/claude-legacy-runtime`。当前统一 `harness-install-set.py` 只组装八个
+canonical 家族，尚未自动安装这个 alias 工件；Operator 须明确提供只读挂载，
+否则 access entry 拒绝连接。
 
 安装器里**家族 id 不等于目录名**（`claude-code` → `claude/`），所以映射只写在
 一处：`harness-install-set.py` 的 `NPM_ROOTS`。`hermes` 与 `opencode` 没有
