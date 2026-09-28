@@ -1,0 +1,145 @@
+{
+  "after_switch": {
+    "adapter": {
+      "args": [
+        "/runtime/artifacts/codex-runtime/node_modules/@agentclientprotocol/codex-acp/dist/index.js"
+      ],
+      "command": "/usr/bin/node",
+      "environment": {
+        "CODEX_HOME": "/runtime/home/.codex",
+        "NO_BROWSER": "1"
+      }
+    },
+    "capabilityClaims": {
+      "attach": true,
+      "finish": true,
+      "native_continuation": true,
+      "observe": true,
+      "permissions": true,
+      "start": true,
+      "steer": false,
+      "stream": true
+    },
+    "controlOptions": {
+      "model": []
+    },
+    "credentialEnvironment": "CODEX_API_KEY",
+    "credentialKind": "api-key",
+    "id": "codex",
+    "modelControlId": "model",
+    "preferredAuthMethod": "beta",
+    "projectionFiles": [
+      {
+        "source": "deploy/codex/config.toml",
+        "target": "/runtime/home/.codex/config.toml"
+      },
+      {
+        "source": "deploy/codex/models.json",
+        "target": "/runtime/home/.codex/models.json"
+      }
+    ],
+    "runtimeArtifactMounts": [
+      {
+        "target": "/runtime/artifacts/codex-runtime",
+        "token": "matrix-token-0001",
+        "treeDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    ],
+    "sessionStore": {
+      "kind": "sessions-subtree"
+    },
+    "stateProjection": {
+      "ephemeralPaths": [
+        ".tmp",
+        "shell_snapshots"
+      ],
+      "target": "/runtime/home/.codex/sessions"
+    },
+    "subscriptionCredential": {
+      "files": [
+        ".codex/auth.json"
+      ]
+    },
+    "timeoutMs": 120000,
+    "usageProbe": {
+      "format": "codex-rollout",
+      "journalSuffix": ".jsonl"
+    },
+    "wireProtocols": {
+      "openai-chat": "chat",
+      "openai-responses": "responses"
+    }
+  },
+  "projection": {
+    "adapter": {
+      "args": [
+        "/runtime/artifacts/codex-runtime/node_modules/@agentclientprotocol/codex-acp/dist/index.js"
+      ],
+      "command": "/usr/bin/node",
+      "environment": {
+        "CODEX_HOME": "/runtime/home/.codex",
+        "NO_BROWSER": "1",
+        "ORDESSA_MATRIX_EXTRA": "override"
+      }
+    },
+    "capabilityClaims": {
+      "attach": true,
+      "finish": true,
+      "native_continuation": true,
+      "observe": true,
+      "permissions": true,
+      "start": true,
+      "steer": false,
+      "stream": true
+    },
+    "controlOptions": {
+      "model": []
+    },
+    "credentialEnvironment": "CODEX_API_KEY",
+    "credentialKind": "api-key",
+    "id": "codex",
+    "modelControlId": "model",
+    "preferredAuthMethod": "alpha",
+    "projectionFiles": [
+      {
+        "source": "deploy/codex/config.toml",
+        "target": "/runtime/home/.codex/config.toml"
+      },
+      {
+        "source": "deploy/codex/models.json",
+        "target": "/runtime/home/.codex/models.json"
+      }
+    ],
+    "runtimeArtifactMounts": [
+      {
+        "target": "/runtime/artifacts/codex-runtime",
+        "token": "matrix-token-0001",
+        "treeDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    ],
+    "sessionStore": {
+      "kind": "sessions-subtree"
+    },
+    "stateProjection": {
+      "ephemeralPaths": [
+        ".tmp",
+        "shell_snapshots"
+      ],
+      "target": "/runtime/home/.codex/sessions"
+    },
+    "subscriptionCredential": {
+      "files": [
+        ".codex/auth.json"
+      ]
+    },
+    "timeoutMs": 120000,
+    "usageProbe": {
+      "format": "codex-rollout",
+      "journalSuffix": ".jsonl"
+    },
+    "wireProtocols": {
+      "openai-chat": "chat",
+      "openai-responses": "responses"
+    }
+  }
+}
