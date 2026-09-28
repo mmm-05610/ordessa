@@ -1,0 +1,17 @@
+{
+  "name": "@ordessa/server-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "C-01/C-02/C-03: the host's seam onto the Server it starts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./data-root": "./src/data-root.ts",
+    "./errors": "./src/errors.ts",
+    "./wire-port": "./src/wire-port.ts",
+    "./lifecycle": "./src/lifecycle.ts"
+  },
+  "scripts": {
+    "test": "vitest run --maxWorkers=1"
+  }
+}

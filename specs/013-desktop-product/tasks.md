@@ -55,24 +55,24 @@
 > 写入面：`apps/server/**`、`packages/server-plugin-api/**`、`packages/desktop-platform/server-bridge/**`（**不含任何 `plugins/**`**）
 
 ### 阶段 1 — 数据根（C-01）
-- [ ] **PB-01** `apps/server/src/ordessa_server/bootstrap/data_root.py`：解析顺序（env → `~/.ordessa`）、创建/复用、0700/0600、拒符号链接、拒不可写、锁语义。FR-020
-- [ ] **PB-02** 类型化错误五件（`DATA_ROOT_SYMLINK/NOT_WRITABLE/LOCKED/INVALID/MIGRATION_REFUSED`）+ `reason`/`remedy`。C-01 §6
-- [ ] **PB-03** `__main__.py`：`--data-root` 改 optional（缺省走规范）、`--port` 支持随机（`0` = 系统分配）并**回读实际 origin**。FR-021/023
-- [ ] **PB-04** 常量文件（布局路径）供 TS/Python 共用；**跨语言一致性测试**（两入口解析结果与布局常量逐字相同）。FR-021
-- [ ] **PB-05** 旧根/升级 preflight 保持：无迁移提供者**拒绝并保留原字节**。C-01 §4
-- [ ] **PB-06** headless CLI 核查：若支持缺省数据根 → 与 Server CLI 共用同一规范 + 一致性测试。FR-021
+- [x] **PB-01** `apps/server/src/ordessa_server/bootstrap/data_root.py`：解析顺序（env → `~/.ordessa`）、创建/复用、0700/0600、拒符号链接、拒不可写、锁语义。FR-020
+- [x] **PB-02** 类型化错误五件（`DATA_ROOT_SYMLINK/NOT_WRITABLE/LOCKED/INVALID/MIGRATION_REFUSED`）+ `reason`/`remedy`。C-01 §6
+- [x] **PB-03** `__main__.py`：`--data-root` 改 optional（缺省走规范）、`--port` 支持随机（`0` = 系统分配）并**回读实际 origin**。FR-021/023
+- [x] **PB-04** 常量文件（布局路径）供 TS/Python 共用；**跨语言一致性测试**（两入口解析结果与布局常量逐字相同）。FR-021
+- [x] **PB-05** 旧根/升级 preflight 保持：无迁移提供者**拒绝并保留原字节**。C-01 §4
+- [x] **PB-06** headless CLI 核查：若支持缺省数据根 → 与 Server CLI 共用同一规范 + 一致性测试。FR-021
 
 ### 阶段 2 — 生命周期与接缝（C-02/C-03）
-- [ ] **PB-07** `packages/desktop-platform/server-bridge`（新包）：spawn / 就绪探针（`GET /live`）/ 状态机 / 退出只杀自己 pid（进程组 + 孤儿防护）。FR-022/024
-- [ ] **PB-08** env 交接：`ORDESSA_SERVER_ORIGIN` / `ORDESSA_SERVER_TOKEN_FILE` / `ORDESSA_DATA_ROOT`，命名**保持既有拼写**。C-02 §2
-- [ ] **PB-09** 运行时捆绑解析（`ORDESSA_BUNDLED_ROOT` → `/opt/ordessa/{python,bin,harnesses}`）；缺失**早期**类型化拒绝 `BUNDLED_RUNTIME_MISSING`。C-02 §6
-- [ ] **PB-10** C-02 五类错误 + 反例七条（端口/缺二进制/早退/超时/只杀自己/二次启动/金丝雀）。C-02 §7-8
-- [ ] **PB-11** WirePort 实现（C-03）：`POST /wire/v1/{method}` + Bearer 注入、三态、`AbsentWirePort`、`ready/scope`。FR-030/032
-- [ ] **PB-12** 凭据边界：令牌只在主进程/Server；插件可见对象、日志、诊断**金丝雀零命中**。FR-031
+- [x] **PB-07** `packages/desktop-platform/server-bridge`（新包）：spawn / 就绪探针（`GET /live`）/ 状态机 / 退出只杀自己 pid（进程组 + 孤儿防护）。FR-022/024
+- [x] **PB-08** env 交接：`ORDESSA_SERVER_ORIGIN` / `ORDESSA_SERVER_TOKEN_FILE` / `ORDESSA_DATA_ROOT`，命名**保持既有拼写**。C-02 §2
+- [x] **PB-09** 运行时捆绑解析（`ORDESSA_BUNDLED_ROOT` → `/opt/ordessa/{python,bin,harnesses}`）；缺失**早期**类型化拒绝 `BUNDLED_RUNTIME_MISSING`。C-02 §6
+- [x] **PB-10** C-02 五类错误 + 反例七条（端口/缺二进制/早退/超时/只杀自己/二次启动/金丝雀）。C-02 §7-8
+- [x] **PB-11** WirePort 实现（C-03）：`POST /wire/v1/{method}` + Bearer 注入、三态、`AbsentWirePort`、`ready/scope`。FR-030/032
+- [x] **PB-12** 凭据边界：令牌只在主进程/Server；插件可见对象、日志、诊断**金丝雀零命中**。FR-031
 
 ### 阶段 3 — 日志 Python 侧
-- [ ] **PB-13** 日志 Python sink（C-04）：与 TS **同构**（字段顺序、脱敏四规则、轮转 10 MiB/5 份）；`server.log` 落点。FR-013
-- [ ] **PB-14** 同构一致性测试：同一条记录 TS/Py 写出，字段集与顺序**一致**。C-04 §8.6
+- [x] **PB-13** 日志 Python sink（C-04）：与 TS **同构**（字段顺序、脱敏四规则、轮转 10 MiB/5 份）；`server.log` 落点。FR-013
+- [x] **PB-14** 同构一致性测试：同一条记录 TS/Py 写出，字段集与顺序**一致**。C-04 §8.6
 
 ---
 
