@@ -19,7 +19,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from pacthold.resource_contracts.runtime_artifacts import runtime_artifact_tree_digest
+from pacthold_runtime_compat.resource_contracts.runtime_artifacts import runtime_artifact_tree_digest
 
 #: One skill's files and bytes are bounded: a skill is instructions plus small
 #: resources, and an unbounded install would be a copy of the whole disk.

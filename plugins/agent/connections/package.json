@@ -1,0 +1,11 @@
+{
+  "name": "@ordessa/plugin-agent-connections",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "vitest run --maxWorkers=1"
+  },
+  "ordessa": {
+    "id": "ordessa.agent-connections"
+  }
+}

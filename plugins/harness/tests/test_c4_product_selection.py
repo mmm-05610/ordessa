@@ -14,7 +14,7 @@ TARGET = ApplicationTarget("controlled-server", "controlled-session", "controlle
 
 
 class Runtime:
-    def __init__(self, root, *, adapter_version=(1, 0, 0), entry="approval_policy"):
+    def __init__(self, root, *, adapter_version=(0, 1, 0), entry="approval_policy"):
         self.root = root
         self.adapter_version = adapter_version
         self.entry = entry
@@ -79,12 +79,15 @@ def test_real_product_joint_q5_facets_fail_closed_without_independent_adapter_ve
             carrier=product.plugin_host,
             runtime=runtime, permits=permit, journal=journal)
         capabilities = service.inspect(TARGET)
-        # Open production gate: Installation has one runtime adapter version,
-        # not an observed version for each published C2 contributor. Neither
-        # version may silently advertise both facets as jointly selectable.
-        expected = ({"permissions.policy-adapters"} if runtime_adapter_version == (1, 0, 0)
-                    else {"sandbox.native-configuration"})
+        # Both contributors are published and C4 selects by facet. An obsolete
+        # 1.0 observation matches neither; the current 0.1 pin names both,
+        # but no untrusted assessment may become a confirmed capability.
+        from ordessa_harness.contributions import CONFIGURATION_POINT
+        assert len(product.plugin_host.contributions(CONFIGURATION_POINT)) == 6
+        expected = (set() if runtime_adapter_version == (1, 0, 0)
+                    else {"permissions.policy-adapters", "sandbox.native-configuration"})
         assert {item.facet_id for item in capabilities.capabilities} == expected
+        assert all(item.status == "unknown" for item in capabilities.capabilities)
         fragments = (
             DesiredFragment("sandbox.native-configuration", "sandbox-choice", "1",
                             "controlled:sandbox", "source-1", "set",

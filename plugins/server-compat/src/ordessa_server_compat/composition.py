@@ -18,9 +18,9 @@ from typing import Any, Mapping
 
 from ordessa_harness.server_acp import AccessEntryTransport
 from ordessa_server.bootstrap import ServerRuntime, build_runtime
-from ordessa_server.errors import ServerError
-from pacthold.extensions import capability
-from pacthold.extensions.runtime_composition.sandbox_port import resolve_sandbox_port
+from server_plugin_api import ServerError
+from pacthold_runtime_compat import capability
+from pacthold_runtime_compat.runtime_composition.sandbox_port import resolve_sandbox_port
 from pacthold.storage import SecretStore
 
 def _home_projection_target(target: Any, *, kind: str) -> str:
@@ -32,7 +32,7 @@ def _home_projection_target(target: Any, *, kind: str) -> str:
     deployment is therefore accepted here if and only if the compiler can mount
     it.
     """
-    from pacthold.resource_contracts.home_projection import (
+    from pacthold_runtime_compat.resource_contracts.home_projection import (
         HomeProjectionRejected, home_projection_target,
     )
 
@@ -46,7 +46,7 @@ def _protected_state_paths(
     projection_targets: tuple[str, ...], state_target: str | None,
 ) -> tuple[str, ...]:
     """Derive the read-only paths inside the writable state subtree."""
-    from pacthold.resource_contracts.home_projection import (
+    from pacthold_runtime_compat.resource_contracts.home_projection import (
         HomeProjectionRejected, protected_state_paths,
     )
 
@@ -93,7 +93,7 @@ def _runtime_artifact_declarations(
     distribution that will read the tree; the Server refuses a declaration that
     could not be verified at all and carries the exact digests across unchanged.
     """
-    from pacthold.resource_contracts.runtime_artifacts import (
+    from pacthold_runtime_compat.resource_contracts.runtime_artifacts import (
         MAX_RUNTIME_ARTIFACT_TREES, RuntimeArtifactRejected,
         validate_runtime_artifact_target,
     )
@@ -409,6 +409,7 @@ def build_runtime_from_native_adapter(
     data_root: Path | str, *, plugin_root: Path | str, harness_id: str,
     adapter_command: str, adapter_args: tuple[str, ...] = (),
     native_continuation: bool = False,
+    controlled_test_peer: bool = False,
 ) -> ServerRuntime:
     """Compose one current-user ACP Agent in an explicitly native Server.
 
@@ -432,6 +433,8 @@ def build_runtime_from_native_adapter(
         raise RuntimeError("NATIVE_HARNESS_INVALID")
     if type(native_continuation) is not bool:
         raise RuntimeError("NATIVE_CONTINUATION_INVALID")
+    if type(controlled_test_peer) is not bool:
+        raise RuntimeError("NATIVE_CONTROLLED_PEER_INVALID")
     if (not Path(adapter_command).is_absolute() or not Path(adapter_command).is_file()
             or not os.access(adapter_command, os.X_OK)
             or any(not isinstance(arg, str) or "\x00" in arg for arg in adapter_args)):
@@ -443,6 +446,15 @@ def build_runtime_from_native_adapter(
     node = shutil.which("node")
     if not access_entry.is_file() or not provenance.is_file() or node is None:
         raise RuntimeError("NATIVE_HARNESS_ARTIFACT_MISSING")
+    if controlled_test_peer:
+        # The opt-in is only for the repository's one fixed, no-model ACP peer.
+        # A caller cannot turn this into a generic command execution escape.
+        fixture = (Path(__file__).resolve().parents[4] / "tests" /
+                   "acp_orchestration" / "fixtures" / "bidirectional_acp_peer.mjs")
+        if (harness_id != "pi" or adapter_command != node or type(adapter_args) is not tuple
+                or adapter_args != (str(fixture),) or not fixture.is_file()
+                or fixture.is_symlink() or fixture.resolve() != fixture):
+            raise RuntimeError("NATIVE_CONTROLLED_PEER_INVALID")
     registry = HarnessRegistry()
     registry.register(HarnessDescriptor(
         harness_id, capability_claims=(
@@ -452,7 +464,8 @@ def build_runtime_from_native_adapter(
     root = Path(data_root).resolve()
     adapter = {"command": adapter_command, "args": list(adapter_args)}
 
-    def factory(records, objects, approvals, notifier, _connectors, _credentials, _secrets):
+    def factory(records, objects, approvals, notifier, _connectors, _credentials,
+                _secrets, _turn_inputs):
         def port_factory(context, on_event):
             if context.get("env_kind") != "local" or context.get("harness_type") != harness_id:
                 raise RuntimeError("NATIVE_PLACEMENT_UNSUPPORTED")
@@ -487,9 +500,14 @@ def build_runtime_from_native_adapter(
         )
 
     def native_identity():
+        # Read from the plugin this composition built (its own surface, resolved
+        # per call: it exists only once that plugin's build has run, and None
+        # again after its disposal). Not an attribute of the host runtime —
+        # T014-S1b removed that bag.
+        service = compat.product_service
         identity = runtime.native_profile_id
         try:
-            profile = runtime.service.profiles.records.get(identity) if identity else None
+            profile = service.profiles.records.get(identity) if identity else None
             stored = (json.loads(runtime.objects.read(profile["config_object_digest"]))
                       if profile is not None else None)
         except Exception:
@@ -498,9 +516,9 @@ def build_runtime_from_native_adapter(
                  and profile["archived_at"] is None and profile["credential_id"] is None
                  and profile["account_id"] is None and not profile["recovery_pending"]
                  and stored.get("configuration") == {}
-                 and runtime.service.sessions.native_profile_identity is not None
+                 and service.sessions.native_profile_identity is not None
                  and profile["config_object_digest"] ==
-                     runtime.service.sessions.native_profile_identity[2])
+                     service.sessions.native_profile_identity[2])
         return {
             "mode": "native", "harness": harness_id,
             "profileId": identity if valid else None,
@@ -517,10 +535,14 @@ def build_runtime_from_native_adapter(
     def launch_channel_transport(*, harness_id: str, cwd: str, on_line, on_exit):
         environment = dict(os.environ)
         environment.pop("AGENTBOX_SIDECAR_ISOLATED", None)
+        environment.pop("AGENTBOX_ACCESS_TEST_MODE", None)
+        if controlled_test_peer:
+            environment["AGENTBOX_ACCESS_TEST_MODE"] = "controlled-peer-v1"
         return AccessEntryTransport(
             node=node, entry=str(access_entry), harness_id=harness_id,
             cwd=cwd, adapter=adapter, on_line=on_line, on_exit=on_exit,
             environment=environment,
+            **({"controlled_test_peer": True} if controlled_test_peer else {}),
         ).start()
 
     compat = ServerCompatPlugin(
@@ -531,7 +553,7 @@ def build_runtime_from_native_adapter(
         launch=launch_channel_transport, native_identity=native_identity,
     )
     runtime = build_runtime(
-        root, harnesses=registry,
+        root,
         local_workspace_provider=LocalEnvironmentProvider(execution_mode="native"),
         server_plugins=(WorkspaceServerPlugin(), compat, acp),
     )
@@ -539,18 +561,26 @@ def build_runtime_from_native_adapter(
     # The start hook reports the profile it created through the composition's
     # channel: the composition owns the runtime, the plugin owns the fact.
     compat.native_profile_sink = lambda pid: setattr(runtime, "native_profile_id", pid)
+    # The compatibility core built the product surface its own build composed;
+    # the native legs below are written against it directly rather than against
+    # a host attribute (T014-S1b).
+    service = compat.product_service
     def validate_native_workspace(workspace_id):
         if not isinstance(workspace_id, str) or not workspace_id:
             raise ServerError("NATIVE_PROJECT_REQUIRED", "a selected project is required", status=422)
-        workspace = runtime.service.workspaces.records.get(workspace_id)
+        workspace = service.workspaces.records.get(workspace_id)
         if workspace["env_kind"] != "local":
             raise ServerError("NATIVE_PLACEMENT_UNSUPPORTED", "native Server requires a local project", status=409)
         selected = workspace["normalized_path"]
-        normalized = runtime.service.workspaces.local.validate(selected)
+        normalized = service.workspaces.local.validate(selected)
         if normalized != selected:
             raise ServerError("NATIVE_PROJECT_CHANGED", "selected project changed", status=409)
-    runtime.service.sessions.bind_native_workspace_validator(validate_native_workspace)
-    runtime.wire.native_execution_provider = native_identity
+    service.sessions.bind_native_workspace_validator(validate_native_workspace)
+    # T014-S3: the native identity reaches `server.hello` through the Harness
+    # plugin's own discovery-facet contribution (constructed above with
+    # `native_identity=`), not through a host attribute the composition has to
+    # remember to fill: the fact is already in that plugin's hands, and the
+    # rule over what makes it a valid identity is harness business knowledge.
     return runtime
 
 
@@ -590,7 +620,7 @@ def build_runtime_from_sidecar_deployment(
     from ordessa_server_compat.execution.sidecar import (
         SidecarHarnessPort, WorkerSidecarLauncher, sidecar_bundle_files,
     )
-    from pacthold.resource_contracts.harness_capabilities import (
+    from pacthold_runtime_compat.resource_contracts.harness_capabilities import (
         CapabilityDeclarationError, validate_claims,
     )
 
@@ -930,7 +960,8 @@ def build_runtime_from_sidecar_deployment(
 
         shared_store_guards[harness_id] = guard
 
-    def factory(records, objects, approvals, notifier, connectors, credentials, secret_store):
+    def factory(records, objects, approvals, notifier, connectors, credentials,
+                secret_store, turn_inputs):
         # No gate here: whether a connector is required depends on the placement
         # the workspace names, and that is resolved per turn.
         def port_factory(context, on_event):
@@ -997,8 +1028,7 @@ def build_runtime_from_sidecar_deployment(
             # A composition whose ledger has never been opened cannot hold a
             # binding: the ownership check is the file itself, not a guess.
             if (profile_id_for_assets
-                    and getattr(runtime, "asset_records", None) is not None
-                    and Path(runtime.database.path).exists()):
+                    and Path(records.database.path).exists()):
                 from ordessa_server_compat.assets.rendering import McpRenderError, render_for_family
                 from ordessa_server_compat.hooks.rendering import (
                     HookRenderError,
@@ -1013,13 +1043,13 @@ def build_runtime_from_sidecar_deployment(
                 json_documents: dict[str, dict[str, dict]] = {}
                 toml_fragments: dict[str, list[str]] = {}
 
-                for binding in runtime.asset_records.bindings(
+                for binding in turn_inputs.assets.bindings(
                         profile_id_for_assets, enabled_only=True):
                     if binding["kind"] != "mcp":
                         continue
-                    definition = runtime.mcp_assets.read(
+                    definition = turn_inputs.mcp_assets.read(
                         asset_id=binding["assetId"], revision=binding["revision"])
-                    if not runtime.mcp_assets.verify(
+                    if not turn_inputs.mcp_assets.verify(
                             asset_id=binding["assetId"], revision=binding["revision"],
                             expected_digest=binding["digest"]):
                         raise RuntimeError(
@@ -1054,26 +1084,24 @@ def build_runtime_from_sidecar_deployment(
 
                 # Order 59: enabled hooks join the same assembly, in the
                 # family's own document shape.
-                hook_rows = getattr(runtime, "hook_records", None)
-                if hook_rows is not None:
-                    enabled = hook_rows.enabled_for_family(context["harness_type"])
-                    if enabled:
-                        target, key = hooks_target_for(profile_spec)
-                        if target is None:
-                            raise RuntimeError(
-                                "HOOK_TARGET_UNSUPPORTED: this family declares "
-                                "no hook document target"
-                            )
-                        fragment = render_hooks_fragment(
-                            context["harness_type"],
-                            [row["model"] for row in enabled],
+                enabled = turn_inputs.hooks.enabled_for_family(context["harness_type"])
+                if enabled:
+                    target, key = hooks_target_for(profile_spec)
+                    if target is None:
+                        raise RuntimeError(
+                            "HOOK_TARGET_UNSUPPORTED: this family declares "
+                            "no hook document target"
                         )
-                        if target.endswith(".json"):
-                            json_documents.setdefault(target, {})[key or "hooks"] = fragment
-                        else:
-                            raise RuntimeError(
-                                "HOOK_TARGET_UNSUPPORTED: hooks need a JSON target"
-                            )
+                    fragment = render_hooks_fragment(
+                        context["harness_type"],
+                        [row["model"] for row in enabled],
+                    )
+                    if target.endswith(".json"):
+                        json_documents.setdefault(target, {})[key or "hooks"] = fragment
+                    else:
+                        raise RuntimeError(
+                            "HOOK_TARGET_UNSUPPORTED: hooks need a JSON target"
+                        )
 
                 # Order 65 C: a Profile that may delegate gets the bridge as a
                 # synthesized MCP server entry, carrying an attempt-scoped
@@ -1084,13 +1112,12 @@ def build_runtime_from_sidecar_deployment(
                         grant_edges, has_delegation,
                     )
 
-                    edges = grant_edges(
-                        runtime.delegation_service.profiles.subagent_grants())
+                    edges = grant_edges(turn_inputs.profiles.subagent_grants())
                     if has_delegation(edges, profile_id_for_assets):
                         import uuid as _uuid
 
                         token = _uuid.uuid4().hex
-                        runtime.delegation_tokens[token] = {
+                        turn_inputs.delegation_tokens[token] = {
                             "turnId": context.get("id"),
                             "profileId": profile_id_for_assets,
                         }
@@ -1174,14 +1201,15 @@ def build_runtime_from_sidecar_deployment(
                         "SUBSCRIPTION_UNSUPPORTED: this Harness declares no "
                         "subscription login-state files"
                     )
-                # The accounts half is attached to the runtime by
-                # build_runtime; the closure reads it per turn.
-                if getattr(runtime, "account_assets", None) is None:
+                # The accounts half is built by the compatibility core's own
+                # plugin and handed to this factory as a declared input; the
+                # closure reads it per turn.
+                if turn_inputs.account_assets is None:
                     raise RuntimeError("ACCOUNT_STORE_UNAVAILABLE")
-                _record = runtime.account_records.get(account_id)
-                locator, digest = runtime.account_records.asset_reference(account_id)
+                _record = turn_inputs.accounts.get(account_id)
+                locator, digest = turn_inputs.accounts.asset_reference(account_id)
                 if locator is not None:
-                    subscription_asset = runtime.account_assets.read_asset(
+                    subscription_asset = turn_inputs.account_assets.read_asset(
                         locator=locator, declared=declared)
                 subscription = {
                     "account_id": account_id,
@@ -1262,7 +1290,7 @@ def build_runtime_from_sidecar_deployment(
                 launcher,
                 subscription=subscription,
                 account_plumbing=(
-                    (runtime.account_records, runtime.account_assets)
+                    (turn_inputs.accounts, turn_inputs.account_assets)
                     if subscription is not None else None
                 ),
                 environment={"AGENTBOX_SIDECAR_ISOLATED": "1"},
@@ -1308,15 +1336,29 @@ def build_runtime_from_sidecar_deployment(
             on_event=notifier.notify,
         )
 
-    runtime = build_runtime(data_root, harnesses=registry, execution_factory=factory,
-                            secret_store=secret_store,
-                            home_concurrency={
-                                harness_id: deployment["_home_concurrency"]
-                                for harness_id, deployment in deployments.items()
-                            },
-                            shared_store_guards=shared_store_guards,
-                            subscription_files_for=lambda harness: (
-                                deployments.get(harness, {}).get("_subscription_files") or ()
-                            ),
-                            declared_credentials=declared_credentials,)
+    # T014-S1d: the deployment composition names its plugins directly, the
+    # same way the native composition above does. These facts used to ride
+    # `build_runtime`'s business-kwarg copy of the product's compat funnel;
+    # the funnel now has exactly one home (this call site and
+    # `products/server`'s `default_plugins`), and the host carries none.
+    from ordessa_harness.server_acp.plugin import AcpChannelServerPlugin
+    from ordessa_server_compat.plugin import ServerCompatPlugin
+    from ordessa_workspace.plugin import WorkspaceServerPlugin
+
+    compat = ServerCompatPlugin(
+        harnesses=registry, execution_factory=factory,
+        home_concurrency={
+            harness_id: deployment["_home_concurrency"]
+            for harness_id, deployment in deployments.items()
+        },
+        shared_store_guards=shared_store_guards,
+        subscription_files_for=lambda harness: (
+            deployments.get(harness, {}).get("_subscription_files") or ()
+        ),
+        declared_credentials=declared_credentials,
+    )
+    runtime = build_runtime(
+        data_root, secret_store=secret_store,
+        server_plugins=(WorkspaceServerPlugin(), compat, AcpChannelServerPlugin()),
+    )
     return runtime

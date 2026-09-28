@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import Mapping, Sequence
 
-from ordessa_server.errors import ServerError
+from server_plugin_api import ServerError
 
 
 #: First-hand per-family reasoning-effort enums for the families whose dialect is

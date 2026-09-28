@@ -21,7 +21,9 @@
 """
 from __future__ import annotations
 
+import base64
 import copy
+import hashlib
 import json
 import shutil
 import subprocess
@@ -216,9 +218,16 @@ FAMILY_MATRIX: dict[str, dict[str, tuple[bool, str, str]]] = {
         "finish": (True, OBSERVED,
                    f"{CLAUDE_PACKAGING} §5：两轮均交付 completed（deltaSeq [4] < completedSeq 7、"
                    "[11] < 14），非超时/中断"),
-        "attach": (False, NOT_OBSERVED,
-                   f"未声明；{CLAUDE_PACKAGING} §2 记录的真实握手播发 promptCapabilities "
-                   "为空（{{}}），比 Pi 的 image 播发还弱，没有任何附件投递证据"),
+        "attach": (True, OBSERVED,
+                   f"P-D 重探针 2026-09-28（{CLAUDE_PACKAGING} §8；"
+                   "packaging/claude/attachment-probe.mjs，转录与哈希见"
+                   " specs/014-plugin-release/reports/P-D-probe-transcript.json）：钉版 0.81.2 "
+                   "真实握手播发 promptCapabilities {image:true, embeddedContext:true}——"
+                   "推翻 0.77 时代『握手 promptCapabilities 为空』的旧负证据（升版未重探的"
+                   "遗留观测，非本次读取位置错误）；image 块端到端往返 base64 内容 sha256 "
+                   "一致；resource_link 按 URI 链接文本下发（https 原文、file:// 为 "
+                   "[@name](uri) markdown 链接）；audio 块被适配器静默丢弃，通路层类型化"
+                   "拒绝、不投递（语义分层如实：图片=真实附件块、非图片=URI 链接）"),
         "stream": (True, OBSERVED,
                    f"{CLAUDE_PACKAGING} §5：delta 先于 completed（deltaSeq [4] < completedSeq 7、"
                    "[11] < 14），deltaAttribution.unattributed=0"),
@@ -567,9 +576,13 @@ def test_the_four_families_matrix_summary_is_the_one_reported():
         # Work Order 43：dsh 的 observed 来自 2026-09-16 假端点全链门（exit 0）。
         "dsh": {"declared": ["finish", "native_continuation", "observe", "start", "stream"],
                 "observed": ["finish", "native_continuation", "observe", "start", "stream"]},
-        # Work Order 43：claude-code 的 observed 来自 2026-09-16 假端点全链门（exit 0）。
-        "claude-code": {"declared": ["finish", "native_continuation", "observe", "start", "stream"],
-                        "observed": ["finish", "native_continuation", "observe", "start", "stream"]},
+        # Work Order 43：claude-code 的 observed 来自 2026-09-16 假端点全链门（exit 0）；
+        # 2026-09-28 P-D 重探针把 attach 的 observed 翻绿（附件往返与 resource_link 语义
+        # 第一手实测，见 P-D-probe-transcript.json）。
+        "claude-code": {"declared": ["attach", "finish", "native_continuation", "observe",
+                                     "start", "stream"],
+                        "observed": ["attach", "finish", "native_continuation", "observe",
+                                     "start", "stream"]},
         # Work Order 43：qwen 的 observed 来自 2026-09-16 假端点全链门（exit 0）。
         "qwen": {"declared": ["finish", "native_continuation", "observe", "start", "stream"],
                  "observed": ["finish", "native_continuation", "observe", "start", "stream"]},
@@ -709,3 +722,126 @@ def test_a_drifted_toml_declaration_is_not_accepted_silently():
     drifted = load_registry(_toml_text_with(["start", "steer", "native_continuation"]))
     assert "steer" in drifted.get("codex").capabilities
     assert FAMILY_MATRIX["codex"]["steer"][0] is False
+
+
+# --------------------------------------------------------------------------- #
+# 8) P-D claude 附件通路：refs → ACP 块的组装、哈希可验证与类型化拒绝
+#
+# 每条语义都以 packaging/claude/attachment-probe.mjs 的第一手实测为锚
+# （转录与哈希：specs/014-plugin-release/reports/P-D-probe-transcript.json）。
+# --------------------------------------------------------------------------- #
+
+from ordessa_harness.claude.attachments import (  # noqa: E402
+    CLAUDE_ATTACH_UNDECLARED,
+    CLAUDE_ATTACHMENT_HASH_MISMATCH,
+    CLAUDE_ATTACHMENT_LIMIT,
+    CLAUDE_ATTACHMENT_REF_INVALID,
+    CLAUDE_ATTACHMENT_UNSUPPORTED,
+    ClaudeAttachmentRefused,
+    ClaudePreparedAttachment,
+    assemble_attachment_blocks,
+    claude_attachment_capabilities,
+)
+from ordessa_harness.claude import production as _claude_production_module  # noqa: E402
+
+
+_PNG_BYTES = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAFElEQVR4nGP8z8DwnwEPYMInOXwUAADtmwT9ZHTcOAAAAABJRU5ErkJggg=="
+)
+
+
+def _attachment_ref(*, prepared_id="prepared-1", name="shot.png", mime_type="image/png",
+                    data=_PNG_BYTES, sha=None):
+    return ClaudePreparedAttachment(
+        prepared_id=prepared_id, name=name,
+        uri="https://ordessa.example/attachments/shot.png", mime_type=mime_type,
+        sha256=sha or hashlib.sha256(data).hexdigest(), byte_length=len(data),
+    )
+
+
+def test_the_claude_pathway_assembles_a_real_image_block_with_verifiable_content():
+    """image ref + 随行字节 → 真实附件块，base64 内容 sha256 与 ref 自洽（往返可验证）。"""
+    ref = _attachment_ref()
+    blocks = assemble_attachment_blocks(
+        {ref.prepared_id: ref}, attach_declared=True, data_by_prepared_id={ref.prepared_id: _PNG_BYTES})
+    assert blocks == (
+        {"type": "image", "data": base64.b64encode(_PNG_BYTES).decode("ascii"),
+         "mimeType": "image/png"},)
+    assert hashlib.sha256(base64.b64decode(blocks[0]["data"])).hexdigest() == ref.sha256
+
+
+def test_the_claude_pathway_sends_non_image_files_as_resource_link_text_only():
+    """非图片 ref → resource_link：只投 URI 链接文本，不携带字节、不宣称上传。"""
+    doc = ClaudePreparedAttachment(
+        prepared_id="prepared-2", name="notes.md",
+        uri="https://ordessa.example/attachments/notes.md", mime_type="text/markdown",
+        sha256="a" * 64, byte_length=11)
+    blocks = assemble_attachment_blocks({doc.prepared_id: doc}, attach_declared=True)
+    assert blocks == ({"type": "resource_link", "uri": doc.uri, "name": "notes.md"},)
+
+
+def test_the_claude_pathway_refuses_audio_instead_of_the_adapters_silent_drop():
+    """audio 必须在通路层类型化拒绝：适配器会静默丢弃 audio 块（探针钉死的事实）。"""
+    audio = ClaudePreparedAttachment(
+        prepared_id="prepared-3", name="clip.wav",
+        uri="https://ordessa.example/attachments/clip.wav", mime_type="audio/wav",
+        sha256="b" * 64, byte_length=4)
+    with pytest.raises(ClaudeAttachmentRefused) as refused:
+        assemble_attachment_blocks({audio.prepared_id: audio}, attach_declared=True)
+    assert refused.value.code == CLAUDE_ATTACHMENT_UNSUPPORTED
+    assert "silently drops" in refused.value.reason
+
+
+def test_the_claude_pathway_refuses_everything_when_attach_is_undeclared():
+    """能力缺席 = 类型化拒绝（缺席即红），包括形状完全合法的 image ref。"""
+    ref = _attachment_ref()
+    with pytest.raises(ClaudeAttachmentRefused) as refused:
+        assemble_attachment_blocks(
+            {ref.prepared_id: ref}, attach_declared=False,
+            data_by_prepared_id={ref.prepared_id: _PNG_BYTES})
+    assert refused.value.code == CLAUDE_ATTACH_UNDECLARED
+    capabilities = claude_attachment_capabilities(attach_declared=False)
+    assert capabilities["kind"] == "absent" and capabilities["reason"]
+    # 通路默认跟着注册表走：toml 翻绿 attach 后，家族派生声明必须是 True。
+    assert _claude_production_module.capability_claims()["attach"] is True
+
+
+def test_the_claude_pathway_refuses_over_limit_and_malformed_input():
+    """超限（数量/大小）与形状非法都类型化拒绝，不静默放行也不静默截断。"""
+    ref = _attachment_ref()
+    oversized = _attachment_ref(prepared_id="prepared-big", name="big.png",
+                                data=b"x" * (5 * 1024 * 1024 + 1))
+    with pytest.raises(ClaudeAttachmentRefused) as count_refused:
+        assemble_attachment_blocks(
+            {f"prepared-{i}": _attachment_ref(prepared_id=f"prepared-{i}")
+             for i in range(9)}, attach_declared=True)
+    assert count_refused.value.code == CLAUDE_ATTACHMENT_LIMIT
+    with pytest.raises(ClaudeAttachmentRefused) as size_refused:
+        assemble_attachment_blocks(
+            {oversized.prepared_id: oversized}, attach_declared=True,
+            data_by_prepared_id={oversized.prepared_id: b"x" * (5 * 1024 * 1024 + 1)})
+    assert size_refused.value.code == CLAUDE_ATTACHMENT_LIMIT
+    with pytest.raises(ClaudeAttachmentRefused) as hash_refused:
+        assemble_attachment_blocks(
+            {ref.prepared_id: ref}, attach_declared=True,
+            data_by_prepared_id={ref.prepared_id: _PNG_BYTES + b"x"})
+    assert hash_refused.value.code == CLAUDE_ATTACHMENT_HASH_MISMATCH
+    with pytest.raises(ClaudeAttachmentRefused) as missing_refused:
+        assemble_attachment_blocks({ref.prepared_id: ref}, attach_declared=True)
+    assert missing_refused.value.code == CLAUDE_ATTACHMENT_REF_INVALID
+    with pytest.raises(ClaudeAttachmentRefused) as invalid_refused:
+        ClaudePreparedAttachment.from_mapping({"name": "x", "uri": "file:///etc/passwd",
+                                               "mimeType": "image/png", "sha256": "z" * 64,
+                                               "byteLength": 1, "preparedId": "p"})
+    assert invalid_refused.value.code == CLAUDE_ATTACHMENT_REF_INVALID
+
+
+def test_the_claude_attachment_capability_statement_does_not_overclaim():
+    """能力语句如实：只 png 过端到端验证；audio 明示拒绝；limit 是通道策略非适配器声明。"""
+    capabilities = claude_attachment_capabilities(attach_declared=True)
+    assert capabilities["kind"] == "available"
+    assert capabilities["mimeTypes"] == ["image/*"]
+    assert "audio" not in capabilities["mimeTypes"]
+    assert capabilities["semantics"]["endToEndVerifiedMime"] == "image/png"
+    assert "refused" in capabilities["semantics"]["audio"]
+    assert capabilities["maxCount"] == 8 and capabilities["maxBytes"] > 0

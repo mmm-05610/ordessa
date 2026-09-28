@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from pacthold.storage.database import Database
+from pacthold_runtime_compat.storage.database import Database
 
 
 class UsageAggregator:
