@@ -7,6 +7,10 @@
 1. worktrees/overnight-2/son-hk-hooks → specs/016-overnight-batch/dispatch/HK-hooks.md
 2. worktrees/overnight-2/son-px-prompts    → dispatch/PX-prompts-ext.md
 
+注：dispatch/方案文档一律用主仓绝对路径传给 qoder（如
+/home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/xxx.md），
+因为部分儿子树内没有 specs/016；执行与提交仍在儿子树内。
+
 ## 执行方式（每个儿子包）
 1. 你可开子代理；优先尝试用 qoder CLI 执行：一包一进程，cwd=儿子工作树，
    把 dispatch 文档路径+「/goal 完成该文档的所有要求」交给它；记录退出码。

@@ -1,4 +1,4 @@
-# 016 · tasks（夜批六包）
+# 016 · tasks（夜批五包；SR 已裁撤——搜索开关/预算归 tool 范畴既有域，自建后端待裁）
 
 勾选=已完成且证据在 report。不因完不成改判三态；卡点如实写。
 
@@ -59,18 +59,6 @@
 - [ ] LSP-5 受控测试：golden 转录（字节稳定）+ 两会话隔离 + 缺席可执行反例。
 - [ ] LSP-6 report.md：五家逐格表+证据+探测结果。
 
-## SR search（plugins/assets/search，新支 codex/plugin-search）
-
-- [ ] SR-1 域骨架 + facet `assets.search` 注册进 C2。
-- [ ] SR-2 原生投影表：八家 × 搜索面三态（claude web search=Desktop 专属
-      **不得推定 CLI/ACP**；hermes 搜索后端；其余逐家核实；无=unsupported）。
-- [ ] SR-3 投影 adapter：有原生面者编译进原生配置（开关/后端引用/预算参数）。
-- [ ] SR-4 可选 SearXNG 绑定（默认关）：置备器骨架（检测 Docker、生成
-      data-root 内部署件、探活 JSON API）；AGPL-3.0 进 THIRD-PARTY-NOTICES
-      与设置页标注「第三方自托管·进程隔离」；默认不装、不触网。
-- [ ] SR-5 受控测试：投影 golden + 缺席反例 + SearXNG 关闭态零副作用；
-      **不实测外网搜索**（无授权）。
-- [ ] SR-6 report.md：逐格表+SearXNG 选装说明（含 AGPL 边界声明）。
 
 ## PX prompts-EXT（plugins/assets/prompts，支 codex/plugin-prompts）
 

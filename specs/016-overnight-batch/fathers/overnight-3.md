@@ -1,11 +1,14 @@
 # 父会话 overnight-3 · 强制策略线（PE1 → PE2）
 
-你是夜批编排者。逐个完成两个儿子包，全程遵守 specs/016-overnight-batch/spec.md
+你是夜批编排者。逐个完成儿子包，全程遵守 specs/016-overnight-batch/spec.md
 的共同红线（先读它）。
 
 儿子与顺序（串行）：
 1. worktrees/overnight-3/son-lsp → specs/016-overnight-batch/dispatch/LSP.md
-2. worktrees/overnight-3/son-sr-search    → dispatch/SR-search.md
+
+注：dispatch/方案文档一律用主仓绝对路径传给 qoder（如
+/home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/xxx.md），
+因为部分儿子树内没有 specs/016；执行与提交仍在儿子树内。
 
 ## 执行方式（每个儿子包）
 1. 你可开子代理；优先尝试用 qoder CLI 执行：一包一进程，cwd=儿子工作树，
