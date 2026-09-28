@@ -11,7 +11,7 @@ from ordessa_server_compat import composition
 
 ROOT = Path(__file__).resolve().parents[3]
 PLUGIN = ROOT / "plugins" / "harness"
-FIXTURE = ROOT / "tests" / "acp_orchestration" / "fixtures" / "bidirectional_acp_peer.mjs"
+FIXTURE = ROOT / "tests" / "integration" / "acp_orchestration" / "fixtures" / "bidirectional_acp_peer.mjs"
 
 
 def _build(tmp_path, *, controlled_test_peer=False, adapter_command=None, adapter_args=None,
