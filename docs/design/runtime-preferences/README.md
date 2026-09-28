@@ -1,6 +1,6 @@
 # 运行偏好域（runtime-preferences）设计草稿
 
-状态：**Draft（待用户审，2026-09-28）**。数据来源：`docs/design/harness-configuration/harnesses.md`（2026-09-27 官网/固定源码盘点，证据等级=文档级，未实测）、mem0 官方仓库与论文（2026-09-28 检索）。本稿只定边界、切法与复用点，实施前仍须逐键完成 sources-and-gaps 的完成标准（版本条件/作用域/合并规则/两隔离反例/失败语义）。
+状态：**裁定完成（2026-09-28 用户确认 §4 全部四条；实施包见 `specs/015-runtime-preferences-memory/`）**。数据来源：`docs/design/harness-configuration/harnesses.md`（2026-09-27 官网/固定源码盘点，证据等级=文档级，未实测）、mem0 官方仓库（2026-09-28 逐仓库核实，见 §3）。实施前仍须逐键完成 sources-and-gaps 的完成标准（版本条件/作用域/合并规则/两隔离反例/失败语义）。
 
 ## 1. 覆盖什么（四组参数）
 
@@ -30,16 +30,18 @@
 | profile facet 形状（prompts 域三 item 模式） | facet item 的"默认值+整项覆盖"语义、`ProfileContributions.forScope().addEditor()` 编辑组件注册 | 本域 facet `assets.runtime-preferences`：四组各一 item（compaction/memory/shell/retry），值=参数对象+后端/模型引用 |
 | C4 应用链（ConfigurationApplicationService + permit） | 应用/回读/重启计划 | 四组里 compaction/memory 多为"下次会话生效或显式 reload"，shell/传输多为"重启进程"——生效方式逐键按 sources-and-gaps R3 核实后填，不猜热更 |
 
-### 外部项目（已调研，v1 不依赖；"记忆补缺"裁定若通过则启用）
+### 外部项目（mem0 已裁定启用，独立立项；compaction 参考仅对照）
 
-| 项目 | 事实 | 复用点与接法 | 边界 |
+**上游事实修正（2026-09-28 逐仓库核实）**：OpenMemory（`mem0ai/openmemory`）已转型为"跨 harness 迁移编码会话的 CLI/TUI"（TypeScript，MIT），不再提供记忆服务；原记忆 MCP server 仓库 `mem0ai/mem0-mcp` 已归档（Public archive）。可落地的记忆引擎是 **mem0 本体自托管 server**。
+
+| 项目 | 事实（来源：mem0ai/mem0 官方仓库 main，2026-09-28） | 复用点与接法 | 边界 |
 | --- | --- | --- | --- |
-| **mem0**（`mem0ai/mem0`，Apache-2.0，约 60k stars） | 两阶段 extraction+update 管线（LLM 抽取事实→去重/合并/冲突解决）；向量存储默认、可选 graph；按 user/agent/session 作用域；Python `mem0ai` / TS `mem0ai` SDK；另有自托管 **OpenMemory**（MCP server） | 若做记忆补缺：**优先经 OpenMemory 以 MCP 服务绑定接入**（服务绑定机制，走 mcp 域的受管连接与双门授权），不嵌入进程；四家无原生记忆的品牌以 MCP memory server 形式获得能力，会话级开关与预算由本域 facet 控制 | 云平台不用（数据出境）；记忆正文不进 Profile（classification 红线）；LLM 抽取消耗真实模型调用——**须单独授权**，未授权前该格 unsupported |
+| **mem0 自托管 server**（`mem0ai/mem0` `server/`，Apache-2.0） | 官方部署仅 docker compose 一条路：FastAPI server（:8888）+ `pgvector/pg17` Postgres（:8432，记忆/认证/向量一体，无替代后端）+ Next.js dashboard（:3000）。REST + OpenAPI（`/docs`），程序访问 `X-API-Key`。LLM 仅 bundled openai/anthropic/gemini（embedder 仅 openai/gemini），server 层无自定义 base_url 官方入口（`POST /configure` 收任意 Dict 是否生效未实测）；默认开匿名遥测（`MEM0_TELEMETRY`） | **记忆补缺独立立项为 `plugins/assets/memory` 叶子插件**（用户选定引擎）：置备 compose 子栈（不起 dashboard，产品内经 REST 管理）；.env 由产品生成（随机密钥、遥测关、端口走产品分配、数据目录在产品 data-root 仓外）；抽取 LLM 从 model-provider 解析 bundled 同名 provider；注入走 instruction 槽命名 facet `ordessa.memory` | 云平台不用（数据出境）；记忆正文不进 Profile；抽取与 embedding 均真实模型调用**须单独授权**（默认关）；Docker 为系统前置，缺失=诚实 unsupported；`POST /configure` 自定义端点仅作 E2 受控实测项，结果如实登记 |
 | OpenCode / dsh 的 compaction 实现（参考点，非代码复用） | OpenCode autoCompact 阈值语义；dsh 分类型裁剪（tool-result-pruner）+spill | 仅作品牌 adapter 编译语义的**对照参考**（各家原生键语义以官方文档/源码为准） | 不搬代码；不把一家语义套到另一家 |
 
-## 4. 待用户裁定（讨论点）
+## 4. 裁定结果（2026-09-28 用户确认）
 
-1. **v1 范围：纯配置域（推荐）**——只做四组参数的 facet+adapter 投影，八家逐格判可用/不支持/未知；记忆补缺（mem0/OpenMemory）作为后续"服务绑定"能力另行立项。理由：八家压缩全原生、补缺涉及真实模型调用授权与数据边界，混进来会拖死纯配置部分。
-2. **一个域还是两个**：推荐**一个域**（`plugins/assets/runtime-preferences`）+ 单 facet 四 item；"上下文与记忆"和"执行环境"若实施中发现 adapter 语义冲突再拆（拆的代价小：四组 item 本就独立）。
-3. **与 model-provider 的边界**：请求级参数（reasoning effort、service tier、provider 请求 retry/stream timeout——Codex"推理与请求"行整行）已裁归 model-provider 域；本域只收**会话/运行级**策略（compaction/memory/shell/传输层 retry）。确认这条划法。
-4. **记忆补缺的立项时机**：若你现在就想排，我按 OpenMemory 接入做独立设计（涉及 MCP 授权链与模型调用授权两道门）；不排则登记为后续。
+1. **本域=纯配置域**：只做四组参数的 facet+adapter 投影，八家逐格判可用/不支持/未知。~~记忆补缺后续另行立项~~ → 同日改判**立即排期**，独立为本批 P-B（见下）。
+2. **一个域一个 facet 四 item**（compaction/memory/shell/retry）；实施中若 adapter 语义冲突再拆。
+3. **与 model-provider 边界**：请求级参数（reasoning effort、service tier、请求 retry/stream timeout）归 model-provider 域；本域只收会话/运行级策略。
+4. **记忆补缺**：独立叶子插件 `plugins/assets/memory`（将来分支 `codex/plugin-memory`），引擎 **mem0 自托管 server**（用户选定；OpenMemory 因上游转型不可用）；产品内标注"记忆引擎 mem0（Apache-2.0）· 本地自托管"；方案包 `specs/015-runtime-preferences-memory/`（P-A=本域、P-B=memory）。
