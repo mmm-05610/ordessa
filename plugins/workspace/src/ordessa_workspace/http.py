@@ -15,7 +15,7 @@ from typing import Any, Callable
 from fastapi import Depends, Response
 from pydantic import BaseModel, ConfigDict, Field
 
-from ordessa_server.errors import ServerError
+from server_plugin_api import ServerError
 from ordessa_server.transport.http.admission import idempotency_key
 
 
