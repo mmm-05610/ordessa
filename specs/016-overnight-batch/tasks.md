@@ -1,4 +1,4 @@
-# 016 · tasks（夜批六包；SR 已裁撤，MPX/EXT 扩容补入）
+# 016 · tasks（夜批十一包；SR 裁撤、MPX/EXT 补入、CMP 存量甄别补完）
 
 勾选=已完成且证据在 report。不因完不成改判三态；卡点如实写。
 
@@ -29,6 +29,9 @@
 - [ ] PE2-5 边界测试：harness 内部改动不越出 plugins/harness；不 import
       permissions/实现。
 - [ ] PE2-6 report.md + api-requests 回填（与 PE1-2 同表，core 一次对齐）。
+- [ ] PE2-8 qwen 摘除：harnesses.toml qwen 段、品牌家族表/测试中的 qwen 断言
+      同步摘除；report 注明"用户裁定除名，数据兼容无存量用户则零迁移"——若有
+      qwen 运行数据目录兼容疑点，登记 known-issues 不擅自删数据。
 
 ## EXT extensions（plugins/assets/extensions，新支 codex/plugin-extensions；原 HK 扩容为可执行扩展全域）
 
@@ -51,9 +54,9 @@
       形制，只仿不 import）。
 - [ ] LSP-2 定义模型：LSP server 定义（名称/命令/参数/语言映射）、formatter
       定义、启用与作用域；引用制（可执行文件本体不入仓）。
-- [ ] LSP-3 五品牌 adapter：pi/hermes/opencode/qwen/kilo 逐家编译进原生配置面
-      （pi LSP/formatter、qwen `.lsp.json`、opencode lsp-stdio 等，语义以官方
-      文档为准）；codex/claude/dsh=unsupported+证据。
+- [ ] LSP-3 品牌收窄（按品牌优先级裁定）：**只实施 pi**（LSP/formatter 原生面）；
+      hermes/opencode/kilo 转阶段二设计；**qwen 除名**（`.lsp.json` 行跳过并登记）；
+      codex/claude/dsh=unsupported+证据。
 - [ ] LSP-4 可用性诚实检查：投影前探测可执行文件在场（which/路径解析），
       缺席=该格 unsupported 并带原因，不产假配置。
 - [ ] LSP-5 受控测试：golden 转录（字节稳定）+ 两会话隔离 + 缺席可执行反例。
@@ -63,10 +66,31 @@
 ## PX prompts-EXT（plugins/assets/prompts，支 codex/plugin-prompts）
 
 - [ ] PX-0 R0：树内实测四件套计数（pytest/vitest×2/tsc），与账本对齐。
-- [ ] PX-1..PX-6：执行 main 上 addendum-eight-brands.md 的 EXT-00..05 逐项
-      （八家 instruction 适配收口、harness-adapters 表回填、facet 合并规则
-      ——015-B 的 AR-4 等这个结果）。
+- [ ] PX-1..PX-6：执行 addendum EXT-00..05，**品牌面只做 pi/codex/claude**；
+      hermes/opencode/dsh/kilo 行转阶段二设计；**qwen 行全部跳过**（含
+      QWEN.md/context.fileName 等，report 逐行登记除名）。
 - [ ] PX-7 R0 补账：36 项未勾账本逐项补勾或注明卡点，报告落
       reports/PX-report.md。
-- [ ] PX-8 内容资源八家覆盖盘点（轻任务，只出报告不改代码）：skills、subagents
-      两域当前品牌覆盖三态表；缺口列后续包建议，不实施。
+（PX-8 已撤：skills/subagents 覆盖盘点升级为 CMP-skills/CMP-subagents 全量甄别包。）
+
+## CMP 存量甄别补完（五包，模式统一）
+
+每包首步 = R0 甄别表：账本逐项三档（已实现已验[附证据指针]/已实现未验/未做），
+再对第二档受控补验、第三档今晚补做或注明卡点（E3、core 依赖、被 012-016 架构
+取代）。甄别表先落 report，再动代码；被取代项勾选时必须写"取代于何处"。
+
+- [ ] CMP-SK-0..n（skills）：q1 23 项甄别补完；八家覆盖缺口在甄别表内列出，
+      实施仅限 E2 可控范围；写入面仅 plugins/assets/skills。
+- [ ] CMP-SA-0..n（subagents）：q3 21 项同模式；写入面仅 plugins/assets/subagents。
+- [ ] CMP-MC-0..n（mcp）：q4 5 项甄别补完；写入面仅 plugins/assets/mcp。
+- [ ] CMP-PF-0..n（profile）：z1 17 项；014-A r2/PA-7 已验项直接归档；写入面仅
+      plugins/profile。
+- [ ] CMP-CH-0..n（chat）：z2 26 项 + workbench-sidebar 设计账 10 项；写入面仅
+      plugins/chat/** 与 plugins/agent/**（不含 conversation 摘除——那归 consolidation）。
+
+## 并入现有包的甄别任务
+
+- [ ] MPX-5：z3 model-provider 账本 5 项甄别补完（与 MPX 同支同树）。
+- [ ] PE1-7：q5 safety 账本 5 项甄别（permissions 侧补做；sandbox 侧若需改
+      plugins/assets/sandbox 登记报回，不越目录写）。
+- [ ] PE2-7：c0 foundation 账本 24 项甄别（harness 侧补做；core 归属项注明转 core）。
