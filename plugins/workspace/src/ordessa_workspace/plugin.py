@@ -11,29 +11,45 @@ Physically extracted from `ordessa_server` (core-cleanup stage 3; batch-1
 retirement facts 1 and 2 closed): the plugin now constructs its own records
 from the host's storage ports and is the single owner of the workspace data.
 
-Port contract:
+Port contract (T014-S2b: the connector builders moved out of the host's
+composition root into `ordessa_workspace.connectors`, so this plugin
+composes them itself and provides the ports instead of consuming them):
 
 - consumes: `database`, `idempotency` (host storage primitives),
-  `workspace.wsl_connector`, `workspace.ssh_connector`,
-  `workspace.local_provider` (optional; defaults to the real local provider)
+  `server.instance_id` (the data-root owner's process identity, the
+  connector's Worker-root namespace), `workspace.local_provider`
+  (optional; defaults to the real local provider)
 - provides: `workspace.service` — the resolution surface every other domain
-  consumes for workspace facts — and `workspace.records`
+  consumes for workspace facts — `workspace.records`, and the deployment's
+  machine connectors: `workspace.wsl_connector`, `workspace.ssh_connector`
+  and the placement-keyed mapping `connectors` that the compatibility core
+  declares this plugin for and reads at build time
 """
 from __future__ import annotations
 
 from typing import Any, Mapping
 
 from server_plugin_api import (
+    WIRE_ERROR_FAMILIES_API_VERSION,
+    WIRE_ERROR_FAMILIES_POINT_ID,
+    Contribution,
+    ContributionBatch,
     ServerMethodDescriptor,
     ServerPluginContext,
     ServerPluginDescriptor,
     ServerPluginRegistration,
 )
 
-from ordessa_server.errors import ServerError
-from ordessa_server.wire.handlers import _bounded, _require, _version
-from ordessa_server.wire.projection import workspace_record
-from ordessa_server.wire.errors import WireError
+from server_plugin_api import ServerError
+from server_plugin_api import (
+    bounded as _bounded,
+    require as _require,
+    version as _version,
+)
+from ordessa_workspace import connectors as _connector_builders
+from ordessa_workspace.wire_projection import workspace_record
+from server_plugin_api import WireError
+from ordessa_workspace.error_families import WORKSPACE_ERROR_FAMILIES
 from ordessa_workspace.records import WorkspaceRecords
 from ordessa_workspace.service import WorkspaceService
 
@@ -48,9 +64,17 @@ _METHOD_IDS = (
 class WorkspaceServerPlugin:
     """Workspace domain: records-backed environment authority."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, connector: Any | None = None,
+                 ssh_connector: Any | None = None) -> None:
         self._service: WorkspaceService | None = None
         self._records: WorkspaceRecords | None = None
+        # T014-S2b: the machine connectors are this plugin's composition.
+        # `None` means "compose them from the deployment's machine-local
+        # bindings" (the env-var builders that used to sit in the host's
+        # composition root); an explicit object is the test/deployment
+        # injection that replaces that build, raised by nothing else.
+        self._connector_override = connector
+        self._ssh_connector_override = ssh_connector
 
     def descriptor(self) -> ServerPluginDescriptor:
         return ServerPluginDescriptor(
@@ -62,10 +86,22 @@ class WorkspaceServerPlugin:
         records = WorkspaceRecords(ports["database"], ports["idempotency"])
         idempotency = ports["idempotency"]
         local = ports.get("workspace.local_provider")
+        # T014-S2b: the host composes nothing here any more. The builders
+        # are resolved as MODULE attributes (not imported symbols) so the
+        # placement tests' monkeypatch surface moved with them; the
+        # instance id is the data-root owner's, the same value the host's
+        # former built-in fallback received.
+        instance_id = str(ports.get("server.instance_id", ""))
+        wsl_connector = self._connector_override
+        if wsl_connector is None:
+            wsl_connector = _connector_builders._builtin_connector(instance_id)
+        ssh_connector = self._ssh_connector_override
+        if ssh_connector is None:
+            ssh_connector = _connector_builders._builtin_ssh_connector(instance_id)
         service = WorkspaceService(
             records, idempotency,
-            connector=ports.get("workspace.wsl_connector"),
-            ssh_connector=ports.get("workspace.ssh_connector"),
+            connector=wsl_connector,
+            ssh_connector=ssh_connector,
             **({"local": local} if local is not None else {}),
         )
         self._service = service
@@ -124,7 +160,7 @@ class WorkspaceServerPlugin:
             _require(params, "requestId", "workspaceId")
             row = records.get(_bounded(params["workspaceId"], "workspaceId"))
             kind = str(row.get("env_kind") or "wsl")
-            connector = ports.get("workspace.wsl_connector")
+            connector = wsl_connector
             if kind == "local":
                 path = row.get("normalized_path") or row.get("remote_path")
                 status = local_git_status(
@@ -200,9 +236,34 @@ class WorkspaceServerPlugin:
             provided_ports={
                 "workspace.service": service,
                 "workspace.records": records,
+                # T014-S2b: the connectors leave the composition through
+                # THIS plugin's ports, keyed by the placement that consumes
+                # them — "which environments can this Server actually reach"
+                # is still one fact stated once, but stated by the domain
+                # that decides it. The compatibility core reads `connectors`
+                # through its declared `requires` on this plugin; anything
+                # outside the round resolves it through
+                # `plugin_host.provided_port(...)` and gets None once this
+                # plugin retires.
+                "workspace.wsl_connector": wsl_connector,
+                "workspace.ssh_connector": ssh_connector,
+                "connectors": {"wsl": wsl_connector, "ssh": ssh_connector},
             },
             start_hooks=(mark_unverified,),
             disposal=self._dispose,
+            # T014-S2a-R: the wire/1 families of the codes THIS plugin raises
+            # are published as an open-point contribution, not carried in the
+            # host's table. The host aggregates per composition; conflicts
+            # (same code, different family) refuse the whole activation round;
+            # a composition without this plugin answers these codes through
+            # the documented fall-through.
+            contributions=ContributionBatch((
+                Contribution(
+                    point_id=WIRE_ERROR_FAMILIES_POINT_ID,
+                    api_version=WIRE_ERROR_FAMILIES_API_VERSION,
+                    payload=WORKSPACE_ERROR_FAMILIES,
+                ),
+            )),
         )
 
     def _dispose(self) -> None:

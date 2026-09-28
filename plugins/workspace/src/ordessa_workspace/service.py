@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from typing import Any, Mapping, Protocol
 
-from ordessa_server.errors import ServerError, unavailable
-from ordessa_server.records import digest
+from server_plugin_api import ServerError, unavailable
+from server_plugin_api import digest
 from ordessa_workspace.local_environment import LocalEnvironmentProvider
 from ordessa_workspace.records import WorkspaceRecords
 
