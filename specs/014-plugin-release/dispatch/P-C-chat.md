@@ -17,7 +17,7 @@
 
 `plugins/chat/**`；`plugins/agent/{contracts,sessions,conversation}/**`；`specs/011-z2-chat/**`（报告增补）；`specs/014-plugin-release/**`（勾选 PC-*、写 `reports/P-C-report.md`、更新 S-01/S-02/S-05/S-07 状态）。
 
-**禁区**: `plugins/connectors/**` 与 `plugins/harness/**`（只读消费——发现 port 缺口 → seams 增条，不改它们；**唯一例外**：PC-9 的 DTO 冻结窄口，只许改 `plugins/connectors/acp` 附件 DTO 本体与其定向测试）；`plugins/commands/**`（它是扩展宿主命令注册表，**不是** Chat 菜单，Q1 api-requests.md:88 已明确）；products/、tooling/、apps/、根锁、兄弟树。`plugins/agent/{connections}` 不动。
+**禁区**: `plugins/connectors/**` 与 `plugins/harness/**`（**全程只读**——port 缺口一律 seams 增条；PC-9 已核实 connectors 侧 `AcpPreparedAttachment` 本就含 `preparedId`（attachments.ts:10-12），缺的字段在 Server ACP DTO，归 core 补，本包零改 connectors）；`plugins/commands/**`（它是扩展宿主命令注册表，**不是** Chat 菜单，Q1 api-requests.md:88 已明确）；products/、tooling/、apps/、根锁、兄弟树。`plugins/agent/{connections}` 不动。**跨插件消费纪律**：引用其他插件的能力一律走公开契约/扩展机制（现有 contracts/connections 通道或 `@extensions/*`），禁止直接跨插件 import 内部模块。
 
 ## 任务（详账 tasks.md PC-1..PC-8）
 
@@ -28,7 +28,7 @@
 chat 侧 add-content 由 `ChatAttachmentCapability.supported` 驱动激活（capability 有真实上游才亮）；prepare(idempotencyKey)→ref→submit 携带 refs（connectors submission attachments+sha256 通道现成）；release/重试/四态 phase（prepare/ready/refused/unknown）；refused 保留附件。生产宿主 prepare owner 缺席（S-05）→ 界面诚实禁用+原因，**受控测试**证明 refs 全链往返 sha256 一致（A06 形状）。
 
 ### PC-4 三态 submit（R-Z2-1）
-`agent.ts:118` 合同升级：`send(): Promise<ChatSubmissionResult 三态>`（兼容迁移：旧消费者语义=resolve→accepted，逐个迁移并记录；contracts 包版本与修订说明按 chat-api r4 规则写）；sessions `model.ts` 映射接 `acp-next-submit`（authorize 已有 server 端）；`BackendAdmissionState` 缺席（S-05）时：请求在 HTTP 前诚实 refused/unknown——**unknown 保留 requestId、禁止自动重发；refused 不清草稿**（chat-page.tsx:122-159 分支已就位，接真上游）。受控三态注入回归逐级保真。
+`agent.ts:118` 合同升级：`send(): Promise<ChatSubmissionResult 三态>`（兼容迁移：旧消费者语义=resolve→accepted，逐个迁移并记录；contracts 包版本与修订说明按 chat-api r4 规则写）；sessions `model.ts` 映射接 `acp-next-submit`（authorize 已有 server 端）；`BackendAdmissionState` 缺席（S-05）时：请求在 HTTP 前诚实 refused/unknown——**unknown 保留 requestId、禁止自动重发；refused 不清草稿**（chat-page.tsx:122-159 分支已就位，接真上游）。受控三态注入回归逐级保真。**护栏**：`plugins/connectors/ordessa` 的 acp-next-submit 协调器本身只读——若接线中发现协调器需要改动 → 停该项登记 S 单（S-05 同族），不直接改 connectors。
 
 ### PC-5 runtimeGeneration 透出
 受控链已有 generation fence（acp-next-submit.ts:37,115-119；acp_admission.py:32,125-138），把它回灌 chat DTO：ChatLocation/快照带已确认 generation（替换纯前端 contextRevision 的对外语义，内部计数可留）；chat-api 修订记录兼容性。Q1 的消费面（SkillsChatSnapshotPort）不在 main——只登记形状，不实现。
@@ -39,8 +39,8 @@ chat 侧 add-content 由 `ChatAttachmentCapability.supported` 驱动激活（cap
 ### PC-7 R-Z2-5 reasoning 状态（时间盒）
 `AgentMessage.reasoning: string` → 状态化（streaming/complete/interrupted/unknown + duration），connectors 半边不动（登记 S-05 同族）；做不完如实 PARTIAL，不阻塞收口。
 
-### PC-9 DTO 冻结（S-05 回执；唯一允许写 connectors 的窄口）
-`plugins/connectors/acp/src/attachments.ts` 的 `AcpPreparedAttachment` 补 `preparedId`（core 需要，用于 Server DTO 对接）；**只改 DTO 字段 + 既有定向测试的期望**，不动 prepare 语义/实现/其他文件；TSD/类型检查全绿；交付 SHA 写回 seams S-05，core 按 SHA 接 Server DTO。此任务与 PC-3 同域，宜先做。
+### PC-9 DTO 对齐核实（S-05 回执修正；零代码改动预期）
+核实 `plugins/connectors/acp/src/attachments.ts:10-12` 的 `AcpPreparedAttachment`（**已含** `preparedId`，注释明言 Server ACP DTO 未携带）即为冻结对接基准；把"形状已就绪、缺的字段在 Server ACP DTO"写回 seams S-05 交 core 对齐。若核实中发现 connectors 形状有其他缺口 → 停该项登记 S 单，不改 connectors。
 
 ### PC-10 claude 命令探针（S-07 命令项）
 在**本包测试目录**写一个受控探针：`npm ci` 安装 `plugins/harness/packaging/claude` 闭包（node_modules 产物，不算改 harness 跟踪文件），以该目录既有 `provider-session.test.mjs` 的架式（fake Anthropic loopback endpoint + 临时 Claude config + fake token，零真实模型/凭据）拉起钉版 adapter，开一个受控会话，观察是否收到 `available_commands_update`。结论两分支都要留第一手证据（转录/日志摘录进 report）：播发 → claude 行命令目录经 NativeCommandReader 接线（正例测试 + 四态）；不播发 → 诚实 absent+原因写回 seams S-07。**不改 plugins/harness 任何跟踪文件**；探针代码与测试放 plugins/chat。

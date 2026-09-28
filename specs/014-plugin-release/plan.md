@@ -61,6 +61,7 @@
 4. 不 kill/restart 用户服务（`docs/known-issues.md` §services）；零真实模型调用（E3）。
 5. 受控 fixture 明确标注；不得以局部测试冒充整线通过；PARTIAL 不写成 DONE。
 6. 子代理（若开）：只做声明的独立单元，不写契约/报告、不执行 git 写操作；深度 ≤1、并发 ≤4，请求数记入报告。
+7. 宪章合规（`.specify/memory/constitution.md`）：各线**只勾本线任务段**、只维护本线报告（共享 tasks.md 按段分治，合并天然无冲突）；本线全部完成后**报待审并停止**，不无限空转；spec-kit 流程中 data-model/contracts 层级本期**跳过**——理由：零新增数据模型、零新增跨包冻结契约（消费的均为已发布 011 apis 与 main 既有类型），若实施中出现需要即停该项并上报主会话。
 
 ## 完成口径
 
