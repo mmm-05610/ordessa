@@ -13,7 +13,11 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_model_provider_adapters import common
+from ordessa_harness_api import ConfigurationAdapterDescriptor, VersionRange
+from ordessa_harness.contributions import HarnessContributionError, HarnessContributionRegistry
+from server_plugin_api import Contribution, ContributionBatch, stage_contributions
+
+from ordessa_model_provider_adapters import bridge, common
 from ordessa_model_provider_adapters.claude import ClaudeAdapter
 from ordessa_model_provider_adapters.codex import CodexAdapter
 from ordessa_model_provider_adapters.pi import PiAdapter
@@ -22,6 +26,15 @@ from ordessa_model_provider_adapters.types import (
 )
 
 ADAPTERS = (PiAdapter, CodexAdapter, ClaudeAdapter)
+
+#: 014 PB-2 declaration surface facts
+CONFIGURATION_POINT = "harness.configuration-adapters"
+OWNER = "ordessa.model-provider.adapters"
+SECOND_CLIENT = "second.client.probe"
+
+
+def common_brands():
+    return ("pi", "codex", "claude-code")
 
 #: pinned upstream versions (t00-freeze.md §5) that must assess `supported`
 SUPPORTED_VERSIONS = {"pi": "0.5.0", "codex": "1.1.14", "claude-code": "0.81.2"}
@@ -61,43 +74,94 @@ def _request(protocol=None, model="m1", endpoint="https://api.acme.test/v1",
 
 
 # -- registration manifests + conflict discipline -----------------------------
+# 014 PB-2: the manifests ARE real harness-api ``ConfigurationAdapterDescriptor``s
+# now; the overlap gates below drive the real C2 registry
+# (``ordessa_harness.contributions``) instead of the 011-era local stand-in, so
+# the refusal semantics are the production ones (adapter_id / range / facet /
+# claim conflicts at stage time, never order-resolved).
 
-def test_manifests_carry_frozen_facet_and_pins():
-    expected_harness = {"assets.model-provider.pi": "pi",
-                        "assets.model-provider.codex": "codex",
-                        "assets.model-provider.claude": "claude-code"}
-    for cls in ADAPTERS:
-        manifest = cls.registration_manifest()
-        assert manifest["adapter_id"] in expected_harness
-        assert manifest["harness_id"] == expected_harness[manifest["adapter_id"]]
-        assert manifest["facet_id"] == "assets.model-provider"
-        assert manifest["api_version"] == "v1"
-        assert set(manifest["entries"]) == {"assess", "compile", "verify"}
-        assert manifest["payload_schema"] == "model-provider.choice.v1"
-        assert manifest["claims"], cls.__name__
-
-
-def test_identical_registration_overlap_is_refused():
-    entries = [PiAdapter.registration_manifest(), PiAdapter.registration_manifest()]
-    with pytest.raises(common.RegistrationConflict):
-        common.check_registration_conflicts(entries)
-
-
-def test_version_range_cannot_be_proven_disjoint_refused():
-    a = PiAdapter.registration_manifest()
-    b = dict(PiAdapter.registration_manifest())
-    b["adapter_id"] = "assets.model-provider.pi-alt"
-    b["supported_native_versions"] = "unknown-range"
-    with pytest.raises(common.RegistrationConflict):
-        common.check_registration_conflicts([a, b])
+def test_manifests_are_real_harness_api_descriptors_with_frozen_facet():
+    expected = {"pi": "assets.model-provider.pi", "codex": "assets.model-provider.codex",
+                "claude-code": "assets.model-provider.claude"}
+    for brand in common_brands():
+        descriptor = bridge.descriptor_for(brand)
+        assert isinstance(descriptor, ConfigurationAdapterDescriptor)
+        assert descriptor.adapter_id == expected[brand]
+        assert descriptor.harness_id == brand
+        assert descriptor.facet_id == "assets.model-provider"
+        assert descriptor.facet_schema_version == "1"
+        assert descriptor.api_version == "v1"
+        assert descriptor.entries == ("acp",)
+        assert descriptor.claims
+        assert descriptor.payload_schema.kind == "object"
 
 
-def test_disjoint_version_ranges_accepted():
-    a = PiAdapter.registration_manifest()
-    b = dict(PiAdapter.registration_manifest())
-    b["adapter_id"] = "assets.model-provider.pi-next"
-    b["supported_native_versions"] = ">=0.6 <0.7"
-    common.check_registration_conflicts([a, b])  # no raise
+def test_descriptor_native_ranges_match_the_pinned_supported_versions():
+    for brand, pinned in SUPPORTED_VERSIONS.items():
+        parsed = tuple(int(part) for part in pinned.split("."))
+        padded = parsed + (0,) * (3 - len(parsed))
+        assert bridge.descriptor_for(brand).native_versions.contains(padded) is True
+        low = common.parse_version(common.SUPPORTED_VERSION_RANGES[brand][0])
+        low_padded = low + (0,) * (3 - len(low))
+        assert bridge.descriptor_for(brand).native_versions.contains(low_padded) is True
+
+
+def _batch():
+    return ContributionBatch(tuple(
+        Contribution(CONFIGURATION_POINT, "v1", bridge.BridgeConfigurationAdapter(brand),
+                     required=True)
+        for brand in common_brands()
+    ), open_points=frozenset({CONFIGURATION_POINT}))
+
+
+def test_three_brands_register_into_the_real_c2_registry():
+    registry = HarnessContributionRegistry()
+    staged = stage_contributions(registry.configuration_handler, OWNER, _batch())
+    staged.commit()
+    assert sorted(d.adapter_id for d in registry.configuration_descriptors()) == [
+        "assets.model-provider.claude", "assets.model-provider.codex",
+        "assets.model-provider.pi"]
+
+
+def test_identical_registration_overlap_is_refused_by_real_registry():
+    registry = HarnessContributionRegistry()
+    stage_contributions(registry.configuration_handler, OWNER, _batch()).commit()
+    second = ContributionBatch((
+        Contribution(CONFIGURATION_POINT, "v1", bridge.BridgeConfigurationAdapter("pi")),
+    ))
+    with pytest.raises(HarnessContributionError, match="adapter_id already registered"):
+        stage_contributions(registry.configuration_handler, SECOND_CLIENT, second)
+
+
+def test_same_harness_overlapping_native_range_refused_by_real_registry():
+    """MP-11 production shape: a second client may claim the same facet only
+    outside the first owner's native version range; an overlapping range with a
+    shared entry is a stage-time refusal."""
+    registry = HarnessContributionRegistry()
+    stage_contributions(registry.configuration_handler, OWNER, _batch()).commit()
+
+    overlap = bridge.descriptor_for("pi")
+    object.__setattr__(overlap, "adapter_id", "assets.model-provider.pi-alt")
+    intruder = bridge.BridgeConfigurationAdapter("pi")
+    intruder.descriptor = overlap
+    second = ContributionBatch((Contribution(CONFIGURATION_POINT, "v1", intruder),))
+    with pytest.raises(HarnessContributionError):
+        stage_contributions(registry.configuration_handler, SECOND_CLIENT, second)
+
+
+def test_disjoint_native_range_accepted_by_real_registry():
+    registry = HarnessContributionRegistry()
+    stage_contributions(registry.configuration_handler, OWNER, _batch()).commit()
+
+    next_range = bridge.descriptor_for("pi")
+    object.__setattr__(next_range, "adapter_id", "assets.model-provider.pi-next")
+    object.__setattr__(next_range, "native_versions", VersionRange((0, 6, 0)))
+    successor = bridge.BridgeConfigurationAdapter("pi")
+    successor.descriptor = next_range
+    second = ContributionBatch((Contribution(CONFIGURATION_POINT, "v1", successor),))
+    stage_contributions(registry.configuration_handler, SECOND_CLIENT, second).commit()
+    assert {d.adapter_id for d in registry.configuration_descriptors()} >= {
+        "assets.model-provider.pi", "assets.model-provider.pi-next"}
 
 
 # -- version gates -------------------------------------------------------------
@@ -295,12 +359,59 @@ _FORBIDDEN = re.compile(
     r"subprocess|Popen|os\.system|path\.write|open\(.*'w'|shutil",
 )
 
+#: 014 PB-2: the bridge/plugin modules may import the two public contract
+#: packages (direction adapters→harness-api) but stay pure otherwise; the
+#: brand modules must not even name them.
+_BRIDGE_ALLOWED_ROOTS = {"__future__", "json", "tomllib", "typing", "hashlib",
+                         "ordessa_harness_api", "server_plugin_api",
+                         "ordessa_model_provider_adapters"}
 
-@pytest.mark.parametrize("cls", ADAPTERS)
-def test_brand_modules_never_touch_home_network_or_spawn(cls):
+
+def _module_source(cls):
     import importlib.util
 
     origin = importlib.util.find_spec(cls.__module__).origin
-    source = Path(origin).read_text()
-    match = _FORBIDDEN.search(source)
+    return Path(origin).read_text()
+
+
+@pytest.mark.parametrize("cls", ADAPTERS)
+def test_brand_modules_never_touch_home_network_or_spawn(cls):
+    match = _FORBIDDEN.search(_module_source(cls))
     assert match is None, f"{cls.__module__} references {match.group(0)!r}"
+
+
+@pytest.mark.parametrize("cls", ADAPTERS)
+def test_brand_modules_do_not_import_the_bridge_or_harness(cls):
+    for module_line in _module_source(cls).splitlines():
+        stripped = module_line.strip()
+        if stripped.startswith(("import ", "from ")):
+            root = stripped.split()[1].split(".")[0]
+            assert root not in {"ordessa_harness_api", "ordessa_harness",
+                                "server_plugin_api"}, module_line
+
+
+def test_bridge_and_plugin_import_only_contract_packages_and_stay_pure():
+    import ast
+
+    for module_name in ("bridge", "plugin"):
+        spec = importlib_spec("ordessa_model_provider_adapters", module_name)
+        tree = ast.parse(spec)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                names = [alias.name for alias in node.names]
+            elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
+                names = [node.module]
+            else:
+                continue
+            for name in names:
+                root = name.split(".")[0]
+                assert root in _BRIDGE_ALLOWED_ROOTS, f"{module_name}: imports {name}"
+        match = _FORBIDDEN.search(spec)
+        assert match is None, f"{module_name} references {match.group(0)!r}"
+
+
+def importlib_spec(package: str, module: str) -> str:
+    import importlib.util
+
+    origin = importlib.util.find_spec(f"{package}.{module}").origin
+    return Path(origin).read_text()
