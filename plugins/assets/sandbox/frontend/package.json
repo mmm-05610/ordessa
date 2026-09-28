@@ -1,0 +1,13 @@
+{
+  "name": "@ordessa/plugin-sandbox-settings",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "ordessa": {
+    "id": "ordessa.sandbox-settings"
+  },
+  "scripts": {
+    "test": "vitest run --maxWorkers=1",
+    "typecheck": "tsc --noEmit"
+  }
+}
