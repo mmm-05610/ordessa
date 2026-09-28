@@ -24,7 +24,7 @@ specs 报告（§3 所列）。
 | --- | --- | --- | --- |
 | R0 | 读完整输入，冻结实际 SHA/包/红 ID/环境，盘点复用 | **A** | q4 report.md 头部冻结账（起点 96fef2db47、五个 checkpoint publication SHA→merge 链、环境与红 ID 账）；checkpoint-consumption.md 逐笔。本批复核：账本文件树内=main（diff 空），报告引用的 commit 均在分支历史可达 |
 | R1 | 独立工作与接口请求完成；消费必需 checkpoint 并留精确 SHA | **A** | report.md 交付 commit 链 14 笔（e00311dbcd→1e7f3733c7）+ integration-request.md/api-requests.md 在树；五个 checkpoint 消费各有 merge SHA。本批复核：`git log` 可达性抽查通过 |
-| R2 | 本线全部原包任务有实现/验收/依赖归属，生产假接口为零 | **B→A'**（受控补验后发现并轨断裂，本批修复） | T00–T14 逐项实现/验收/依赖归属表在 report.md §一（V01–V10、L0–L2 证据格）。受控补验：接手时套件 **4 failed + 2 errors**（520 collected）——断裂源=012 并支整固 `ba891aff05` 半途的 wire 对齐 + 并入 main 带来的 C4 native-receipt 协议演进，合并后无人复跑。**本批补做修复**（§2/§3），修复后 **525 passed / 0 failed**；"生产假接口为零"在修复后的套件上成立 |
+| R2 | 本线全部原包任务有实现/验收/依赖归属，生产假接口为零 | **B→A'**（受控补验后发现并轨断裂，本批修复） | T00–T14 逐项实现/验收/依赖归属表在 report.md §一（V01–V10、L0–L2 证据格）。受控补验：接手时套件 **4 failed + 2 errors（524 collected = 518 passed + 4F + 2E）**——断裂源=012 并支整固 `ba891aff05` 半途的 wire 对齐 + 并入 main 带来的 C4 native-receipt 协议演进，合并后无人复跑。**本批补做修复**（§2/§3），修复后 **526 passed / 0 failed**；"生产假接口为零"在修复后的套件上成立 |
 | R3 | 检查点/接线清单/许可迁移账/报告齐备，定向及相关全链门通过 | **A'**（同上复验口径） | checkpoint-consumption.md、接线清单（t06-wiring/t013）、许可迁移账（t09-migration）齐备；"全链门"按线内口径=定向套件绿+继承红账无新增。本批复验：定向 `pytest plugins/assets/mcp`=525 绿；`apps/server` 全链门受主会话 INT 管辖（lines 口径不扩到跨域） |
 | R4 | Spec Kit analyze/converge 查漏，未完成项如实；发布本线 clean ready commit | **A**（附遗留登记） | `49dfa61522`(converge) 在交付链；report.md §二阻塞 6 项/§三未测边界如实（产品装配 L3、真 CLI 装载、profile facet 组合、compat 迁移执行、SDK 路线、wire principal 注入——均精确到 integration-request 编号）；ready 支 `codex/011-q4-ready` 已布 |
 
@@ -43,8 +43,8 @@ specs 报告（§3 所列）。
    harness_wiring 受控 fake 仍旧形（activate 3 参/无 receipt）→ apply 落
    Unknown 且零物化。**补做**：fake 升级为 receipt 协议（对齐 harness 自家
    受控运行时形制），corrupt 反例透传 receipt。
-3. 补做后：`pytest plugins/assets/mcp` = **525 passed**（接手 4F+2E；
-   契约 17、harness_wiring 55）。
+3. 补做后：`pytest plugins/assets/mcp` = **526 passed**（接手 4F+2E/524
+   collected；契约 18（+WCG-03b）、harness_wiring 56（+异 receipt 反例格））。
 
 ## 3. 写入面清单（本批全部改动）
 
@@ -82,4 +82,20 @@ assignment 视图、preview 无 entries）——阶梯语义映射需裁定；
 
 ## 6. 审阅
 
-（待 run-review.sh 执行后回填）
+**run-review.sh 失败=未审阅（第 1 次尝试）**：exit 126，原因
+`/usr/bin/timeout: 参数列表过长`——`main...HEAD` 全量 diff 超出 argv 上限
+（合并基以来含整个 mcp 插件史）。属脚本级失败，按审阅降级条款裸调。
+
+**第 1 轮后备审阅（pi + mimo-v2.6-pro，对象=本批提交 97509caeea 完整 diff
+45KB；产物 `reports/son-cmp-mcp-review-fallback-20260929-010200.md`）结论：
+有保留。** 三条处置：
+1. "账本真值源缺 contracts.md 对照，调和恐把漂移合法化"——**已补**：对照
+   §1 操作表逐项相符；§1 对应答只作种类级承诺（无 canonical 承诺），字段级
+   真值源=活注册描述符（守护实读）；证据写进 wire-alignment.md §二.0。
+2. "实测账 520 vs 524 矛盾"——**属实，已订正**（524=518+4F+2E）。
+3. "receipt 绑定语义声称未验证"——**已补**：新增
+   `test_readback_with_foreign_receipt_lands_unknown`（异 receipt 回读 →
+   Unknown 不 Confirmed）；注释措辞改为 operation/generation-manifest 绑定。
+   WCG-05 #2 分支真实数据不可达的"弱化"注记如实接受（合成分支保留反空转）。
+
+**第 2 轮后备复审：**（待回填）

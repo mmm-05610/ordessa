@@ -21,6 +21,15 @@
 ## 二、016 CMP 补做范围（本批完成，全部实测）
 
 **做（守护+dto+Python 全链）**：
+0. **契约交叉核对**（回应"调和是否合法化漂移"）：对照 `docs/design/mcp/contracts.md`
+   §1 操作表——注册操作名 `list/get/saveRevision/archive/probe/assign/
+   unassign/resolvePreview/inspectConnection/listTools/planForSubmission` 与
+   对齐面逐一相符；§1 对应答的承诺是"版本摘要"/"probe facts"/"assignment"/
+   "effective snapshot preview"/"lease/catalog facts" 这类**种类级**措辞，
+   未承诺字段级 schema（canonical 文档不在任何应答承诺里——"版本摘要"恰与
+   latestRevision 摘要行吻合）；§1 明文"每项 shape…随原子描述符注册"——字段级
+   真值源=活注册描述符（守护 `RegisteredSurface` 从激活插件实读，非手抄）。
+   结论：对齐账本与契约文档无冲突，"钉现状"实为"钉契约承诺+活注册面"。
 1. `dto.ts` 重写为实测对齐版：以守护 round-trip fixture 的真实 dispatch 应答
    逐字段校形（`McpRevisionView`=latestRevision 行、`McpDefinitionSummary`=
    list 行、`McpAssignmentView`/`McpUnassignView`、`McpSaveRevisionResult`、

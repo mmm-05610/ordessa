@@ -97,8 +97,11 @@ class ControlledMcpRuntime:
 
     def activate_generation(self, operation_id, target, lease, manifest_digest):
         # C4 native-receipt protocol (51c7905108): the activation returns a
-        # receipt binding operation/generation/manifest; observe must hand the
-        # SAME receipt back or the service refuses to confirm.
+        # receipt binding the operation id, the planned target and the leased
+        # generation's manifest digest; observe must hand the SAME receipt
+        # back — a receipt that does not re-bind this operation/generation
+        # makes the service refuse confirmation (pinned by
+        # test_readback_with_foreign_receipt_lands_unknown below).
         self.activate_count += 1
         self.bytes = lease.read_bytes(RESOURCE)
         self.revision = "applied-1"
@@ -237,6 +240,33 @@ def test_readback_mismatch_refuses_confirmation(tmp_path):
     # the journal forbids a replay of a non-confirmed operation
     assert service.apply(planned.plan_id, "op-other",
                          "signed:mcp-permit").kind == "refused"
+
+
+def test_readback_with_foreign_receipt_lands_unknown(tmp_path):
+    """The receipt-binding wall, exercised from THIS chain: a readback whose
+    receipt binds ANOTHER operation must never confirm — the service raises
+    on the identity check and records Unknown, never Confirmed."""
+    adapter = ChainProbeAdapter(claude_mod.CLAUDE, verify_fn=claude_mod.verify_native)
+    host, runtime, permits, service = compose(tmp_path, adapter)
+
+    original_observe = runtime.observe
+
+    def foreign_receipt(target):
+        readback = original_observe(target)
+        stranger = NativeActivationReceipt(
+            "op-of-someone-else", readback.target, "sha256:other-generation",
+            "native-session-1", readback.applied_revision,
+            "native:mcp-chain:op-of-someone-else")
+        return NativeReadback(readback.target, readback.native_session_identity,
+                              readback.applied_revision, readback.observed_value,
+                              readback.files, readback.evidence_ref,
+                              readback.resource_changes, stranger)
+
+    runtime.observe = foreign_receipt
+    planned = service.plan(TARGET, (fragment(),), "base-1")
+    result = service.apply(planned.plan_id, "op-f", "signed:mcp-permit")
+    assert result.kind == "unknown"
+    assert runtime.activate_count == 1
 
 
 def test_revision_drift_refuses_before_effects(tmp_path):
