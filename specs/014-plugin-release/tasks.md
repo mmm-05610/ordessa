@@ -35,3 +35,11 @@
 - [ ] PC-8 报告与交付：`reports/P-C-report.md` + 011-z2 report 增补；终提交 SHA；PARTIAL 项逐条
 - [ ] PC-9 DTO 冻结（S-05 回执，**唯一允许写 connectors 的窄口**）：`plugins/connectors/acp` 的 `AcpAttachmentPreparePort` DTO 补 `preparedId`（`attachments.ts` 的 AcpPreparedAttachment），仅 DTO+定向测试，不动实现语义；交付 SHA 写回 seams S-05，core 按此接 Server DTO
 - [ ] PC-10 claude 命令探针（S-07 命令项）：受控驱动 `plugins/harness/packaging/claude` 钉版 adapter（fake Anthropic endpoint，沿用该目录既有探针架式；不改 plugins/harness 任何跟踪文件），实测是否播发 `available_commands_update`：播发→经 NativeCommandReader 接线并记第一手证据；不播发→诚实 absent+原因写回 S-07
+
+## P-D — claude 附件通路（harness）
+
+- [ ] PD-1 R0 基线冻结：plugins/harness 既有套件计数（含 tests/test_capability_declarations.py）；环境（packaging/claude `npm ci` 已装闭包核对 0.81.2）
+- [ ] PD-2 重探针（第一手，推翻或确认旧负证据）：受控拉起钉版 adapter（fake Anthropic endpoint 架式，零真实模型/凭据），转录 initialize 的 `agentCapabilities.promptCapabilities`（源码预期 image:true+embeddedContext:true，`acp-agent.js:1108`）；实测 image 块端到端往返（prompt→adapter→fake 端点收到 base64 图）与 resource_link 下发语义；给旧负证据定来历结论（0.77 时代遗留 vs 读取位置错误）
+- [ ] PD-3 能力翻绿：`harnesses.toml` claude-code 行恢复 `attach`（附新证据注释与旧证据推翻说明）；`tests/test_capability_declarations.py` FAMILY_MATRIX 同步；`docs/server-round1/fullstack/claude-production-packaging.md` 证据更新
+- [ ] PD-4 通路接线：claude 家族通道接受附件投递——从 connectors 附件 DTO 形状（对齐 P-C PC-9 冻结件）到 session/prompt 的 image 块 / resource_link；语义如实分层：图片=真实附件块、非图片文件=URI 链接、audio 未声明不宣称；受控往返测试（内容哈希一致）
+- [ ] PD-5 报告与交付：`reports/P-D-report.md`（探针转录与哈希、旧证据来历结论、能力变更 diff、语义分层表）；终提交 SHA；S-07 状态回填
