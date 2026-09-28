@@ -36,8 +36,9 @@ def test_native_hello_stable_profile_and_isolated_hello_unchanged(tmp_path):
         assert identity == {
             "mode": "native", "harness": "pi", "profileId": first.native_profile_id,
         }
-        assert first.service.readiness()["capabilities"]["harnesses"]["pi"]["available"] is True
-        assert first.service.profiles.records.get(identity["profileId"])["harness_type"] == "pi"
+        service = first.plugin_host.provided_port("product.service")
+        assert service.readiness()["capabilities"]["harnesses"]["pi"]["available"] is True
+        assert service.profiles.records.get(identity["profileId"])["harness_type"] == "pi"
     finally:
         first.stop()
     second = _native(root)
@@ -81,7 +82,7 @@ def test_native_profile_configuration_change_refuses_hello_and_first_send(tmp_pa
     project.mkdir()
     with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
         headers = {"Authorization": f"Bearer {runtime.token}"}
-        opened = runtime.service.workspaces.open_environment(
+        opened = runtime.plugin_host.provided_port('product.service').workspaces.open_environment(
             environment={
                 "kind": "local", "host": None, "user": None,
             }, path=str(project), expected_version=None,
@@ -104,7 +105,7 @@ def test_native_profile_configuration_change_refuses_hello_and_first_send(tmp_pa
                        "message": {"text": "hello", "attachments": []}, "overrides": []},
         })
         assert refused.json()["error"]["details"]["internalCode"] == "NATIVE_PROFILE_CONFLICT"
-        assert runtime.execution._active == {}
+        assert runtime.plugin_host.provided_port('execution.port')._active == {}
 
 
 def test_native_profile_harness_mismatch_refuses_restart(tmp_path):
@@ -144,7 +145,7 @@ def test_wire_and_rest_refuse_other_profile_before_execution(tmp_path, monkeypat
     monkeypatch.setattr(NativeProcessLauncher, "launch", lambda *_args: pytest.fail("native child started"))
     with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
         headers = {"Authorization": f"Bearer {runtime.token}"}
-        _status, rogue = runtime.service.profiles.create(
+        _status, rogue = runtime.plugin_host.provided_port('product.service').profiles.create(
             "rogue-native-test", {
                 "name": "other pi seat", "harness_type": "pi",
                 "configuration": {}, "credential_id": None,
@@ -170,7 +171,7 @@ def test_wire_and_rest_refuse_other_profile_before_execution(tmp_path, monkeypat
         }, json={"workspace_id": workspace_id, "profile_id": wrong_id})
         assert pure_create.status_code == 409
         assert pure_create.json()["error"]["code"] == "NATIVE_FIRST_SEND_REQUIRED"
-        _status, legacy = runtime.service.sessions.records.create_session(
+        _status, legacy = runtime.plugin_host.provided_port('product.service').sessions.records.create_session(
             key="legacy-wrong", request_digest="legacy-wrong",
             workspace_id=workspace_id, profile_id=wrong_id,
         )
@@ -185,7 +186,7 @@ def test_wire_and_rest_refuse_other_profile_before_execution(tmp_path, monkeypat
                        "message": {"text": "hello", "attachments": []}, "overrides": []},
         })
         assert continued.json()["error"]["details"]["internalCode"] == "NATIVE_PROFILE_CONFLICT"
-        _status, native_session = runtime.service.sessions.records.create_session(
+        _status, native_session = runtime.plugin_host.provided_port('product.service').sessions.records.create_session(
             key="legacy-native", request_digest="legacy-native",
             workspace_id=workspace_id, profile_id=runtime.native_profile_id,
         )
@@ -202,7 +203,7 @@ def test_wire_and_rest_refuse_other_profile_before_execution(tmp_path, monkeypat
         }, json={"text": "hello", "expected_profile_revision": 1})
         assert rest_vanished.status_code == 404
         assert rest_vanished.json()["error"]["code"] == "LOCAL_PATH_MISSING"
-        assert runtime.execution._active == {}
+        assert runtime.plugin_host.provided_port('execution.port')._active == {}
 
 
 def test_native_first_send_completes_with_reviewed_fake_acp_peer(tmp_path, monkeypatch):
@@ -222,7 +223,7 @@ def test_native_first_send_completes_with_reviewed_fake_acp_peer(tmp_path, monke
     })
     with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
         headers = {"Authorization": f"Bearer {runtime.token}"}
-        _created, workspace = runtime.service.workspaces.open_environment(
+        _created, workspace = runtime.plugin_host.provided_port('product.service').workspaces.open_environment(
             environment={"kind": "local", "host": None, "user": None},
             path=str(project), expected_version=None,
         )
@@ -238,8 +239,8 @@ def test_native_first_send_completes_with_reviewed_fake_acp_peer(tmp_path, monke
         assert sent.json()["result"]["outcome"] == "accepted"
         deadline = time.monotonic() + 10
         while time.monotonic() < deadline:
-            session = runtime.service.sessions.records.get_session(session_id)
-            if session["status"] == "ready" and not runtime.execution._active:
+            session = runtime.plugin_host.provided_port('product.service').sessions.records.get_session(session_id)
+            if session["status"] == "ready" and not runtime.plugin_host.provided_port('execution.port')._active:
                 break
             time.sleep(0.05)
         else:

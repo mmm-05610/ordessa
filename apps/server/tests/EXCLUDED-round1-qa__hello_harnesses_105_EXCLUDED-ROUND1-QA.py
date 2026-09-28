@@ -85,7 +85,7 @@ class Client:
 
 def test_hello_lists_exactly_the_registered_families(hello):
     runtime, _api, result = hello
-    assert [entry["id"] for entry in result["harnesses"]] == list(runtime.harnesses.registered())
+    assert [entry["id"] for entry in result["harnesses"]] == list(runtime.plugin_host.provided_port('harness.directory').registered())
     assert [entry["id"] for entry in result["harnesses"]] == ["alpha", "mido", "zeta"]
 
 
@@ -112,7 +112,7 @@ def test_removing_a_family_from_the_registry_removes_it_from_hello(hello):
     runtime, api, _before = hello
     api.call("profiles.create", {"requestId": "harn-profile-1", "displayName": "R",
                                  "harness": "alpha"})
-    del runtime.harnesses._descriptors["mido"]  # noqa: SLF001 - the registry's own state is the subject
+    del runtime.plugin_host.provided_port('harness.directory')._descriptors["mido"]  # noqa: SLF001 - the registry's own state is the subject
     after = api.hello()
     assert [entry["id"] for entry in after["harnesses"]] == ["alpha", "zeta"]
 

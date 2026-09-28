@@ -1,0 +1,25 @@
+# T013 GREEN evidence — Chat input-area per-brand mode entry (refusal path built)
+# date: 2026-09-27T22:40:18Z
+# Outcome: BUILT as the honest refusal path. The entry is contributed through Chat's real
+# composer.toolbar slot and lists ONLY capability-attested per-pin modes; with the data this
+# tree provides (no per-pin mode capability READ surface; permissions backend registers only
+# permissions.approvals.decide/query, brand.py BRAND_NATIVE_MODES is a brand-name-keyed static
+# table) the shipped path renders nothing rather than inventing a menu. A brand name alone
+# never populates options — proven by tests. See src/mode-entry.ts and README.
+
+# command: npx vitest run tests/mode-entry.test.tsx --reporter=verbose
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/frontend[39m
+
+ [32m✓[39m tests/mode-entry.test.tsx[2m > [22mthe entry is capability-driven, never brand-name-driven (US4, ux.md §Chat)[2m > [22mno capability data for a real brand pin => no menu is invented[32m 48[2mms[22m[39m
+ [32m✓[39m tests/mode-entry.test.tsx[2m > [22mthe entry is capability-driven, never brand-name-driven (US4, ux.md §Chat)[2m > [22mattested modes are listed bound to their own pin, and other brands’ vocabularies stay out[32m 15[2mms[22m[39m
+ [32m✓[39m tests/mode-entry.test.tsx[2m > [22mthe entry is capability-driven, never brand-name-driven (US4, ux.md §Chat)[2m > [22ma refused capability read says unavailable with its code — never "not installed"[32m 3[2mms[22m[39m
+ [32m✓[39m tests/mode-entry.test.tsx[2m > [22mthe entry is capability-driven, never brand-name-driven (US4, ux.md §Chat)[2m > [22mselecting an attested mode records a local draft and never claims the mode changed[32m 18[2mms[22m[39m
+ [32m✓[39m tests/mode-entry.test.tsx[2m > [22mthe entry is capability-driven, never brand-name-driven (US4, ux.md §Chat)[2m > [22mthe contribution registers through Chat’s real registry in composer.toolbar[32m 3[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 06:40:19
+[2m   Duration [22m 1.29s[2m (transform 108ms, setup 0ms, import 222ms, tests 90ms, environment 680ms)[22m
+
+VITEST_EXIT=0

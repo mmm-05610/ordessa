@@ -7,6 +7,7 @@
     "apps/*",
     "packages/desktop-platform/*",
     "packages/desktop-platform/contracts/*",
+    "packages/workbench",
     "plugins/**",
     "!plugins/harness/**",
     "products/*"
@@ -19,10 +20,12 @@
     "dev": "npm run --workspace apps/desktop dev",
     "build": "npm run --workspace apps/desktop build",
     "typecheck": "npm run --workspace apps/desktop typecheck",
-    "test": "npm run --workspace apps/desktop test",
+    "test": "node tooling/test-all.mjs",
     "test:electron": "npm run --workspace apps/desktop test:electron",
     "build:examples": "node tooling/build-examples.mjs",
     "test:extensions": "node apps/desktop/scripts/test-extensions.mjs",
+    "test:ui-service": "node apps/desktop/scripts/test-ui-service.mjs",
+    "test:ui-foundations": "node apps/desktop/scripts/test-ui-foundations.mjs",
     "start": "npm run --workspace apps/desktop start"
   },
   "engines": {

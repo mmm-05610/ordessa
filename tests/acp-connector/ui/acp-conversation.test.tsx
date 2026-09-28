@@ -3,7 +3,8 @@ import { act, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { afterEach, expect, it } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
-import { createAgentConnections } from '../../../plugins/connections/service/src/entry'
+import { createConnections } from '../../../packages/desktop-platform/connections/src/index'
+import { createAgentConnections } from '../../../plugins/agent/connections/src/entry'
 import { createAgentSessions } from '../../../plugins/agent/sessions/src/model'
 import { Conversation } from '../../../plugins/agent/conversation/src/view'
 import { HarnessPeer } from '../fixtures/acp-peer'
@@ -61,7 +62,7 @@ async function openAcpChat(options: { capabilities?: any; extraConnector?: (regi
       }
     },
   })
-  const registry = createAgentConnections(scopes.connector)
+  const registry = createAgentConnections(scopes.connector, createConnections(scopes.connector))
   registry.forScope(scopes.connector).add(connector)
   const extra = options.extraConnector ? await options.extraConnector(registry, scopes.connector) : undefined
   const sessions = createAgentSessions(scopes.session, registry)

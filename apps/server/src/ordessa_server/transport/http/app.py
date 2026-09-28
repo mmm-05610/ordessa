@@ -19,6 +19,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
+from ordessa_server.acp_admission import AcpAdmissionRefused
 from ordessa_server.bootstrap import ServerRuntime
 from ordessa_server.errors import ServerError
 from ordessa_server.wire import WireError, decode_request, encode_error, encode_result
@@ -182,8 +183,13 @@ def create_app(runtime: ServerRuntime) -> FastAPI:
             await websocket.close(code=4400, reason="INVALID_REQUEST")
             return
         # The push relay is host transport; the event source is the sessions
-        # domain's port. Absent plugin = fail closed, the typed close below.
-        stream_source = getattr(runtime, "events_stream_source", None)
+        # domain's declared port, resolved from the live activation round
+        # (`FR-006`: the host runtime carries no business attribute). A round
+        # without the plugin resolves to None = fail closed, the typed close
+        # below.
+        plugin_host = getattr(runtime, "plugin_host", None)
+        stream_source = (plugin_host.provided_port("events.stream_source")
+                         if plugin_host is not None else None)
         if stream_source is None:
             await websocket.close(code=4400, reason="UNKNOWN_ROUTE")
             return
@@ -222,10 +228,10 @@ def create_app(runtime: ServerRuntime) -> FastAPI:
 
     @app.websocket("/wire/v1/acp-channel/{connection_id}")
     async def wire_acp_channel(websocket: WebSocket, connection_id: str):
-        """Verbatim bidirectional ACP frame relay for one owned channel.
+        """Bidirectional ACP frame relay with a host-owned effect admission wall.
 
-        The Server never parses a frame on this route: attach, relay bytes,
-        detach. A client disconnecting is not a release - the channel, its
+        Only prompt and reverse-answer identities are inspected. A client
+        disconnecting is not a release - the channel, its
         Agent and its run record stay exactly as they were (seam doc §2).
         """
         import asyncio
@@ -250,10 +256,18 @@ def create_app(runtime: ServerRuntime) -> FastAPI:
         if connection is None:
             await websocket.close(code=4400, reason="UNKNOWN_CONNECTION")
             return
+        gate = runtime.wire.acp_admission_gate
+        if gate is None:
+            await websocket.close(code=4403, reason="ACP_ADMISSION_UNAVAILABLE")
+            return
         await websocket.accept()
         inbox: asyncio.Queue = asyncio.Queue()
 
         def _sink(item):
+            if isinstance(item, str):
+                gate.observe_agent_frame(connection_id, item)
+            elif item is None:
+                gate.forget_channel(connection_id)
             inbox.put_nowait(item)
 
         async def _pump():
@@ -282,7 +296,11 @@ def create_app(runtime: ServerRuntime) -> FastAPI:
                 if transport is None:
                     break
                 try:
+                    gate.admit_client_frame(connection, text)
                     transport.send_line(text)
+                except AcpAdmissionRefused:
+                    await websocket.close(code=4403, reason="ACP_ADMISSION_REFUSED")
+                    break
                 except Exception:  # noqa: BLE001 - the Agent is gone; answer nothing for it
                     break
         except WebSocketDisconnect:

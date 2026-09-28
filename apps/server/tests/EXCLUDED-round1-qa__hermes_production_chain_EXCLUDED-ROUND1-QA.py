@@ -411,7 +411,7 @@ def test_the_production_document_is_accepted_by_the_server(tmp_path, monkeypatch
     )
     try:
         # No Hermes branch anywhere: the registered descriptor is the generic one.
-        descriptor = runtime.harnesses.get("hermes")
+        descriptor = runtime.plugin_host.provided_port('harness.directory').get("hermes")
         assert descriptor.credential_kind == "api-key"
         assert descriptor.credential_environment == "DEEPSEEK_API_KEY"
         assert descriptor.model_control_id is None

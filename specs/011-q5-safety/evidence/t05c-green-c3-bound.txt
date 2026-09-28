@@ -1,0 +1,192 @@
+T05c — sandbox adapters bound to the published harness-api C3/C2 contract
+=========================================================================
+Lane: codex/011-q5-safety (worktree HEAD 953fb915eb237a721f581fbef23441bbc6c76c70)
+Package: plugins/assets/sandbox/adapters (ordessa_sandbox_adapters)
+Consumer checkpoint: specs/011-plugin-rollout/checkpoints/harness-api.json
+  producer c0, status READY, implementationSha
+  61966e31189a911c295faba30a07316c44041f47.
+
+Env note (no-shadow probe): `.venv/bin/python -c "import ordessa_harness_api"`
+resolves to plugins/harness/api/src/ordessa_harness_api/__init__.py (editable
+source install), so the runs below do NOT need PYTHONPATH=plugins/harness/api/src;
+the checkpoint's limitation about an older installed harness API does not apply
+in this venv (verified 2026-09-27).
+
+--- Inherited RED state, re-measured before any edit (this session, first run)
+--- (the previous agent left no t05c-red-c3-bound.txt; this section IS the
+--- preserved red log, freshly measured on the inherited tree, exit proven
+--- without a pipe)
+$ .venv/bin/python -m pytest plugins/assets/sandbox/adapters -q
+3 failed, 91 passed
+  FAILED tests/test_c2_shape.py::test_the_surface_conforms_to_the_published_configuration_adapter
+      AssertionError: assess / assert 'self' == 'context' (test read the first
+      parameter of the UNBOUND class function; the platform protocol declares
+      `def assess(self, context: AdapterContext, request: JsonValue)`,
+      contracts.py ConfigurationAdapter — context is the second declared
+      parameter, first after binding)
+  FAILED tests/test_purity_no_fake_apply.py::test_behaviorally_no_spawn_no_socket_no_file_written
+      NameError: name 'target_handle' is not defined (line 139; the migration
+      replaced the bare-string target with target_handle(CODEX_TARGET) but did
+      not add target_handle/CODEX_TARGET to the helper import list, so the
+      behavioral guard never executed the compile leg)
+  FAILED tests/test_sandbox_adapters_pi_adapter.py::test_loaded_extension_compiles_a_real_platform_invoke_action
+      AttributeError: 'InvokeAction' object has no attribute 'target' (line
+      101; platform intents.py InvokeAction is sealed as
+      (source, action_id, schema_version, typed_payload, expected_observation,
+      kind) — it carries NO target field)
+
+Resolution (no assertion deleted; the platform source is the authority):
+1. test_c2_shape: TEST was wrong about the platform shape. The conformance
+   check now compares the surface method's declared parameters with the
+   protocol's own (self, context, ...) and additionally requires the bound
+   surface call to take `context` as its first parameter — context arrives as
+   a parameter, the adapter holds none (matches surface.py, which subclasses
+   the Protocol and implements assess/compile/verify with the platform
+   arity). The missing ConfigurationAdapterDescriptor import used by the
+   descriptor branch was added.
+2. test_purity_no_fake_apply: TEST helper omission. Added CODEX_TARGET and
+   target_handle to the in-function helper import; the poisoned builtins.open
+   / subprocess.Popen / subprocess.run / socket.socket + tmp_path rglob-empty
+   assertions are untouched, so the behavioral no-spawn/no-socket/no-write
+   proof now really runs assess+compile+verify for all three brands.
+3. test_sandbox_adapters_pi_adapter: TEST misread the platform. Replaced
+   `intent.target == handle` with the real sealed InvokeAction shape:
+   assert NOT hasattr(intent, "target") (drift guard against a second private
+   InvokeAction spelling), source facet id "sandbox.native-configuration",
+   action_id "sandboxExtension", schema_version non-empty, typed_payload
+   "sandbox-ext", and the exact expected_observation
+   "pi-sandbox-extension-loaded:sandbox-ext@<pinned pi version>". The Pi
+   adapter itself already compiled to the platform class; its
+   extension-backed-only proofs (zero intents + SANDBOX_NATIVE_UNSUPPORTED
+   without loaded-extension evidence) are unchanged and still pass. Added the
+   `import pytest` the new ContractError-refusal half of the test needs.
+   The pre-binding record (seam.CompiledFieldIntent) still carries the
+   server-issued TargetHandle; only the platform C3 InvokeAction does not.
+
+No local duplicates: grep over src/ finds no re-declared TargetHandle /
+FieldPath / IntentSource / SetField / ResetField / InvokeAction / IntentSet /
+Assessment / AdapterContext classes; the old protocol/enum copies stay deleted
+(guarded by test_the_local_adapter_protocol_copy_is_gone).
+
+--- Completion GREEN run (exit is the true $? of pytest, no pipe in between)
+$ .venv/bin/python -m pytest plugins/assets/sandbox/adapters -q
+exit code: 0
+94 passed in 0.85s
+
+Per-ID list (-v, all PASSED, 94):
+plugins/assets/sandbox/adapters/tests/test_c2_shape.py::test_each_adapter_exposes_assess_compile_verify PASSED
+plugins/assets/sandbox/adapters/tests/test_c2_shape.py::test_the_local_adapter_protocol_copy_is_gone PASSED
+plugins/assets/sandbox/adapters/tests/test_c2_shape.py::test_compile_takes_the_server_issued_target_handle_not_a_string PASSED
+plugins/assets/sandbox/adapters/tests/test_c2_shape.py::test_the_surface_conforms_to_the_published_configuration_adapter PASSED
+plugins/assets/sandbox/adapters/tests/test_c2_shape.py::test_assess_and_verify_answer_with_platform_objects PASSED
+plugins/assets/sandbox/adapters/tests/test_c2_shape.py::test_adapter_is_keyed_by_harness_and_version_range PASSED
+plugins/assets/sandbox/adapters/tests/test_c2_shape.py::test_assess_returns_the_platform_assessment PASSED
+plugins/assets/sandbox/adapters/tests/test_c2_shape.py::test_compile_takes_intent_target_handle_and_ceiling PASSED
+plugins/assets/sandbox/adapters/tests/test_c2_shape.py::test_registration_carries_the_real_contributions_not_a_private_port PASSED
+plugins/assets/sandbox/adapters/tests/test_c2_shape.py::test_contract_id_still_names_the_facet_for_the_domain_dialect PASSED
+plugins/assets/sandbox/adapters/tests/test_c3_seam.py::test_harness_api_checkpoint_record_is_present_and_ready PASSED
+plugins/assets/sandbox/adapters/tests/test_c3_seam.py::test_harness_api_checkpoint_ref_exists_and_is_an_ancestor_of_head PASSED
+plugins/assets/sandbox/adapters/tests/test_c3_seam.py::test_every_bound_c3_symbol_is_a_recorded_public_export PASSED
+plugins/assets/sandbox/adapters/tests/test_c3_seam.py::test_bound_symbols_are_the_published_module_objects PASSED
+plugins/assets/sandbox/adapters/tests/test_c3_seam.py::test_codex_fields_bind_real_platform_setfield_objects PASSED
+plugins/assets/sandbox/adapters/tests/test_c3_seam.py::test_claude_toggle_binds_a_real_setfield_and_claims_nothing_broader PASSED
+plugins/assets/sandbox/adapters/tests/test_c3_seam.py::test_pi_binds_the_action_form_of_the_c3_vocabulary PASSED
+plugins/assets/sandbox/adapters/tests/test_c3_seam.py::test_reset_field_binds_with_a_platform_baseline_rule PASSED
+plugins/assets/sandbox/adapters/tests/test_c3_seam.py::test_the_kind_vocabulary_is_read_from_the_platform_classes PASSED
+plugins/assets/sandbox/adapters/tests/test_c3_seam.py::test_an_unimplemented_kind_refuses_rather_than_inventing_an_intent PASSED
+plugins/assets/sandbox/adapters/tests/test_c3_seam.py::test_the_package_keeps_no_parallel_apply_or_verdict_types PASSED
+plugins/assets/sandbox/adapters/tests/test_c3_seam.py::test_compile_output_carries_the_platform_handle_it_was_bound_to PASSED
+plugins/assets/sandbox/adapters/tests/test_c3_seam.py::test_a_refusal_never_produces_a_bound_intent_set PASSED
+plugins/assets/sandbox/adapters/tests/test_c3_seam.py::test_verification_types_are_the_platforms_and_a_drift_is_never_confirmed PASSED
+plugins/assets/sandbox/adapters/tests/test_c3_seam.py::test_no_src_module_redefines_the_platform_vocabulary PASSED
+plugins/assets/sandbox/adapters/tests/test_cross_session.py::test_process_scope_undeclared_impact_refused PASSED
+plugins/assets/sandbox/adapters/tests/test_cross_session.py::test_process_scope_with_declared_impact_set_compiles PASSED
+plugins/assets/sandbox/adapters/tests/test_cross_session.py::test_session_scope_ignores_co_residency PASSED
+plugins/assets/sandbox/adapters/tests/test_cross_session.py::test_no_co_resident_sessions_compiles_at_process_scope PASSED
+plugins/assets/sandbox/adapters/tests/test_matrix.py::test_the_twelve_matrix_fields_match_the_domain_contract PASSED
+plugins/assets/sandbox/adapters/tests/test_matrix.py::test_every_cell_carries_the_twelve_fields PASSED
+plugins/assets/sandbox/adapters/tests/test_matrix.py::test_three_brands_are_present PASSED
+plugins/assets/sandbox/adapters/tests/test_matrix.py::test_no_supported_cell_is_green_without_evidence_or_on_unknown PASSED
+plugins/assets/sandbox/adapters/tests/test_matrix.py::test_unknown_cells_never_assert_a_value PASSED
+plugins/assets/sandbox/adapters/tests/test_matrix.py::test_pi_and_effect_rows_are_honestly_not_supported PASSED
+plugins/assets/sandbox/adapters/tests/test_platform_admission.py::test_package_exports_no_second_admission_authority PASSED
+plugins/assets/sandbox/adapters/tests/test_platform_admission.py::test_staged_but_uncommitted_facet_is_not_resolvable PASSED
+plugins/assets/sandbox/adapters/tests/test_platform_admission.py::test_rollback_of_a_staged_batch_publishes_nothing PASSED
+plugins/assets/sandbox/adapters/tests/test_platform_admission.py::test_two_facets_claiming_one_native_field_are_refused_neither_admitted[True] PASSED
+plugins/assets/sandbox/adapters/tests/test_platform_admission.py::test_two_facets_claiming_one_native_field_are_refused_neither_admitted[False] PASSED
+plugins/assets/sandbox/adapters/tests/test_platform_admission.py::test_duplicate_adapter_id_refused_by_the_platform[True] PASSED
+plugins/assets/sandbox/adapters/tests/test_platform_admission.py::test_duplicate_adapter_id_refused_by_the_platform[False] PASSED
+plugins/assets/sandbox/adapters/tests/test_platform_admission.py::test_same_facet_shared_entry_refused_by_the_platform PASSED
+plugins/assets/sandbox/adapters/tests/test_platform_admission.py::test_disjoint_facets_admit_side_by_side PASSED
+plugins/assets/sandbox/adapters/tests/test_product_lifecycle.py::test_real_product_admits_the_three_brand_descriptors PASSED
+plugins/assets/sandbox/adapters/tests/test_product_lifecycle.py::test_failed_round_publishes_nothing PASSED
+plugins/assets/sandbox/adapters/tests/test_product_lifecycle.py::test_unknown_point_id_yields_the_typed_unbound_refusal PASSED
+plugins/assets/sandbox/adapters/tests/test_product_lifecycle.py::test_wrong_api_version_yields_the_typed_version_refusal PASSED
+plugins/assets/sandbox/adapters/tests/test_product_lifecycle.py::test_still_used_adapter_reports_owner_busy PASSED
+plugins/assets/sandbox/adapters/tests/test_purity_no_fake_apply.py::test_every_module_exists_and_is_valid_python PASSED
+plugins/assets/sandbox/adapters/tests/test_purity_no_fake_apply.py::test_no_forbidden_import PASSED
+plugins/assets/sandbox/adapters/tests/test_purity_no_fake_apply.py::test_no_side_effect_call_sites PASSED
+plugins/assets/sandbox/adapters/tests/test_purity_no_fake_apply.py::test_behaviorally_no_spawn_no_socket_no_file_written PASSED
+plugins/assets/sandbox/adapters/tests/test_real_point_binding.py::test_point_id_and_api_version_are_the_foundation_ones PASSED
+plugins/assets/sandbox/adapters/tests/test_real_point_binding.py::test_descriptors_use_the_foundation_class_not_a_private_copy PASSED
+plugins/assets/sandbox/adapters/tests/test_real_point_binding.py::test_pinned_versions_are_measured_from_harnesses_toml PASSED
+plugins/assets/sandbox/adapters/tests/test_real_point_binding.py::test_native_versions_are_the_exact_measured_pins PASSED
+plugins/assets/sandbox/adapters/tests/test_real_point_binding.py::test_facet_identity_is_the_sandbox_native_configuration PASSED
+plugins/assets/sandbox/adapters/tests/test_real_point_binding.py::test_codex_descriptor_owns_its_measured_native_fields PASSED
+plugins/assets/sandbox/adapters/tests/test_real_point_binding.py::test_claude_descriptor_owns_only_the_toggles_it_can_write PASSED
+plugins/assets/sandbox/adapters/tests/test_real_point_binding.py::test_pi_descriptor_claims_nothing_and_states_absence PASSED
+plugins/assets/sandbox/adapters/tests/test_real_point_binding.py::test_payload_schemas_refuse_malformed_payloads PASSED
+plugins/assets/sandbox/adapters/tests/test_real_point_binding.py::test_batch_carries_three_real_contributions_on_the_open_point PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_claude_adapter.py::test_bash_only_required_coverage_compiles PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_claude_adapter.py::test_required_coverage_beyond_bash_refuses_unproven PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_claude_adapter.py::test_adapter_never_claims_coverage_all PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_claude_adapter.py::test_linux_and_macos_supported_windows_unsupported_unknown_os_unknown PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_claude_adapter.py::test_wsl2_supported PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_codex_adapter.py::test_committed_codex_schema_backs_the_mode_vocabulary PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_codex_adapter.py::test_workspace_write_compiles_and_owns_sandbox_mode PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_codex_adapter.py::test_danger_full_access_refused_under_permissive_ceiling_no_bypass PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_codex_adapter.py::test_admin_enforced_sandbox_cannot_be_disabled_by_profile PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_codex_adapter.py::test_inexpressible_coverage_refused_no_approximation PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_codex_adapter.py::test_ceiling_forbidding_network_exposure_refused PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_codex_adapter.py::test_assess_in_range_supported_out_of_range_unknown PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_codex_adapter.py::test_verify_answers_with_the_platform_verification_types PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_dependency_direction.py::test_source_imports_only_the_declared_contracts PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_dependency_direction.py::test_works_end_to_end_without_permissions_or_harness_code_importable PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_dependency_direction.py::test_pyproject_declares_exactly_the_consumed_dependencies PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_pi_adapter.py::test_no_extension_evidence_refuses_and_compiles_nothing PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_pi_adapter.py::test_extension_present_but_not_loaded_refuses PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_pi_adapter.py::test_extension_observed_at_a_different_pin_is_unknown_not_compiled PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_pi_adapter.py::test_loaded_extension_compiles_an_invoke_action PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_pi_adapter.py::test_loaded_extension_compiles_a_real_platform_invoke_action PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_pi_adapter.py::test_assess_without_extension_is_unsupported PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_registry.py::test_default_roster_is_the_three_brands_with_unique_ids PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_registry.py::test_facet_and_plugin_id_keep_their_documented_names PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_registry.py::test_adapters_are_constructible_without_permissions_installed PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_verify.py::test_verified_observation_yields_a_platform_match PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_verify.py::test_unknown_observation_stays_unknown PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_verify.py::test_unsupported_observation_stays_unsupported_not_unknown PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_verify.py::test_a_non_observation_is_unknown_not_an_exception PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_verify.py::test_coverage_the_probe_did_not_observe_is_never_added_to_the_verdict PASSED
+plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_verify.py::test_verify_starts_no_effect PASSED
+
+--- Wider gates (same tree, true $? each)
+$ .venv/bin/python -m pytest plugins/assets/sandbox -q
+exit code: 0 — 269 passed in 1.31s
+$ .venv/bin/python -m pytest plugins/permissions -q            (not my lane; reported only)
+exit code: 0 — 558 passed in 1.27s
+$ .venv/bin/python -m pytest plugins/permissions plugins/assets/sandbox -q
+exit code: 0 — 827 passed in 2.57s (permissions agent's package was green at
+measurement time 2026-09-27T22:20Z; may be mid-edit afterwards)
+
+--- What remains honestly Unknown (checkpoint limitations, not hidden by green)
+- Producing an IntentSet is not applying it: instance generation and an
+  operation-bound native receipt remain absent (harness-api.json limitations
+  3), so every production effect statement stays Unknown; surface.verify is a
+  controlled-fixture comparator only and no Q5 production verifier is
+  installed (limitation 6).
+- The default product's ACP admission port reports ready=False (limitation 2);
+  the Pi InvokeAction reaches no write in this tree — the C4 controlled
+  materializer refuses actions without a separate executor.
+- API_READY is a consumable-contract + controlled-fixture proof, not Harness
+  v2 / C0 production completion (limitation 1); the strongest write proof this
+  package backs is the controlled C4 service fixture (matrix.py).

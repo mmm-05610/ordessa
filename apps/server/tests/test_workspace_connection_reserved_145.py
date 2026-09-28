@@ -38,8 +38,9 @@ REPO = Path(__file__).resolve().parents[3]
 SRC = REPO / "packages" / "pacthold" / "src" / "pacthold"
 
 from ordessa_server.bootstrap import build_runtime
+from ordessa_server_product.composition import create_composition  # T014-S1d funnel
 from ordessa_server.transport.http import create_app
-from ordessa_server.wire import projection as projection_module
+from ordessa_server_compat import wire_projection as projection_module
 
 KIND = "workspace.connection"
 
@@ -76,7 +77,9 @@ def server(tmp_path, monkeypatch):
 
     registry = HarnessRegistry()
     registry.register(HarnessDescriptor("alpha", capability_claims={"stream": True}))
-    runtime = build_runtime(tmp_path / "data", harnesses=registry, execution=_StubExecution())
+    runtime = build_runtime(tmp_path / "data",
+                            server_plugins=create_composition().compatibility_plugins(
+                                harnesses=registry, execution=_StubExecution()))
     with TestClient(create_app(runtime), base_url="http://127.0.0.1",
                     raise_server_exceptions=False) as client:
         yield runtime, client, {"Authorization": f"Bearer {runtime.token}"}, tmp_path
@@ -142,7 +145,7 @@ def test_the_sidecar_event_vocabulary_does_not_name_it():
 # -- 2(b), landed: the reservation is written where the name lives ----------
 
 def test_the_reservation_is_written_next_to_the_name():
-    source = (REPO / "apps/server/src/ordessa_server/wire/projection.py").read_text(encoding="utf-8")
+    source = (REPO / "plugins" / "server-compat" / "src" / "ordessa_server_compat" / "wire_projection.py").read_text(encoding="utf-8")
     declared = source[source.index(KIND):source.index(KIND) + 900]
     assert "145" in declared and "producer" in declared.lower(), declared[:300]
 
@@ -162,7 +165,7 @@ def test_a_real_session_never_shows_the_reserved_kind(server):
     runtime, client, headers, _tmp = server
     runtime, session_id, turn_id = _session_with_turn(server, "role-145")
     for kind, payload in NEIGHBOURS.items():
-        runtime.repository.append_turn_event(turn_id, kind, dict(payload))
+        runtime.plugin_host.provided_port('product.repository').append_turn_event(turn_id, kind, dict(payload))
     frames = _frames(client, headers, session_id)
     kinds = {frame["kind"] for frame in frames}
     assert {"message.delta", "config.changed", "queue.updated"} <= kinds, kinds
@@ -178,7 +181,7 @@ def test_counter_example_a_hand_written_row_does_produce_a_frame(server):
     """
     runtime, client, headers, _tmp = server
     runtime, session_id, turn_id = _session_with_turn(server, "hand-145")
-    runtime.repository.append_turn_event(turn_id, KIND, {
+    runtime.plugin_host.provided_port('product.repository').append_turn_event(turn_id, KIND, {
         "workspace_id": "ws_145", "connection": {"state": "disconnected"}})
     frames = [frame for frame in _frames(client, headers, session_id) if frame["kind"] == KIND]
     assert len(frames) == 1, frames
@@ -192,7 +195,7 @@ def test_the_frame_shape_is_the_one_the_projection_defines(server):
     already writes, and a missing `connection` falls back to `connecting`."""
     runtime, client, headers, _tmp = server
     runtime, session_id, turn_id = _session_with_turn(server, "shape-145")
-    runtime.repository.append_turn_event(turn_id, KIND, {"workspace_id": "ws_shape"})
+    runtime.plugin_host.provided_port('product.repository').append_turn_event(turn_id, KIND, {"workspace_id": "ws_shape"})
     frame = [f for f in _frames(client, headers, session_id) if f["kind"] == KIND][0]
     assert frame["connection"] == {"state": "connecting"}, frame
     assert set(frame) == {"kind", "workspaceId", "connection"}, frame

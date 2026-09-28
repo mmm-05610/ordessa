@@ -10,6 +10,11 @@ for (const [folder, id, entries] of [
   ['service-provider', 'example.provider', { entry: 'entry.ts' }],
   ['service-provider-alt', 'example.provider-alt', { entry: 'entry.ts' }],
   ['service-consumer', 'example.consumer', { entry: 'entry.tsx' }],
+  ['ui-contracts', 'example.ui-contracts', { entry: 'entry.ts', contract: 'contract.ts' }],
+  ['ui-provider', 'example.ui-provider', { entry: 'entry.tsx' }],
+  ['ui-provider-alt', 'example.ui-provider-alt', { entry: 'entry.tsx' }],
+  ['ui-consumer', 'example.ui-consumer', { entry: 'entry.tsx' }],
+  ['ui-foundations-probe', 'example.ui-foundations', { entry: 'entry.tsx' }],
 ]) {
   const output = path.join(root, 'dist', id)
   await mkdir(output, { recursive: true })

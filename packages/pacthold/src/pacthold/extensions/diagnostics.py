@@ -1,7 +1,7 @@
 """Small, side-effect-free diagnostics shared by CLI and plugin conformance."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields as dataclass_fields
 from enum import Enum
 from pathlib import Path
 from typing import Any, Mapping
@@ -86,11 +86,14 @@ def check_registration_conformance(
               "build() must return PluginRegistration", plugin_id)
         return PluginDiagnosticReport(tuple(items))
     fields_are_tuples = True
-    for name in ("contracts", "resource_providers", "execution_providers", "finalization_contributors", "resource_selectors", "host_controls", "harness_managers", "continuation_routes", "credential_materializers"):
-        if not isinstance(getattr(registration, name), tuple):
+    # Every registration slot — kernel-neutral or added by an assembling
+    # product subclass — must be a tuple.  Iterating the dataclass fields
+    # keeps this check business-blind (specs/010 T009).
+    for slot in dataclass_fields(registration):
+        if not isinstance(getattr(registration, slot.name), tuple):
             fields_are_tuples = False
             _diag(items, "registration.tuple", DiagnosticSeverity.ERROR,
-                  f"registration.{name} must be a tuple", plugin_id)
+                  f"registration.{slot.name} must be a tuple", plugin_id)
 
     seen: dict[str, str] = {}
     own_contracts = (

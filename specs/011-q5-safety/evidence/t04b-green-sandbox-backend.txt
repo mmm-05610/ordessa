@@ -1,0 +1,92 @@
+# T04b GREEN run — ordessa-sandbox-backend
+# date: 2026-09-27T19:16:25Z
+# tree: worktree 011-q5-safety, package plugins/assets/sandbox/backend
+
+$ PYTHONPATH=plugins/assets/sandbox/backend/src .venv/bin/python -m pytest plugins/assets/sandbox/backend -q
+
+....................................................................     [100%]
+68 passed in 0.31s
+
+EXIT_CODE=0
+
+# repeat run (stability):
+REPEAT_EXIT_CODE=0
+
+# combined with the consumed API package (no import collisions):
+157 passed in 0.37s
+
+# per-test listing:
+tests/test_catalogue.py::test_known_codex_pin_lists_pinned_modes_with_source_and_platforms
+tests/test_catalogue.py::test_unknown_pin_returns_explicit_unknown_and_invents_no_menu
+tests/test_catalogue.py::test_family_without_closed_schema_is_unknown[opencode]
+tests/test_catalogue.py::test_family_without_closed_schema_is_unknown[hermes]
+tests/test_catalogue.py::test_family_without_closed_schema_is_unknown[dsh]
+tests/test_catalogue.py::test_family_without_closed_schema_is_unknown[qwen]
+tests/test_catalogue.py::test_family_without_closed_schema_is_unknown[kilo]
+tests/test_catalogue.py::test_pi_pin_is_known_with_empty_menu
+tests/test_catalogue.py::test_claude_pin_menu_carries_unproven_status_not_guessed_supported
+tests/test_catalogue.py::test_admin_lock_marks_options_locked_by_administrator
+tests/test_catalogue.py::test_catalogue_pin_matches_repo_harnesses_toml
+tests/test_composition.py::test_same_field_two_facets_refused_at_stage
+tests/test_composition.py::test_conflict_refused_regardless_of_claim_order_is_not_priority[True]
+tests/test_composition.py::test_conflict_refused_regardless_of_claim_order_is_not_priority[False]
+tests/test_composition.py::test_disjoint_fields_stage_cleanly
+tests/test_composition.py::test_busy_counts_active_instances_dependent_on_the_adapter
+tests/test_composition.py::test_unload_refused_while_an_instance_still_uses_the_adapter
+tests/test_composition.py::test_unload_succeeds_once_dependents_are_released
+tests/test_composition.py::test_query_while_busy_is_provider_busy
+tests/test_composition.py::test_uninstalled_facet_hidden_from_describe_but_value_retained
+tests/test_composition.py::test_uninstalled_facet_refuses_a_new_compile_without_forwarding
+tests/test_composition.py::test_installed_facet_reappears_and_retained_value_is_still_valid
+tests/test_composition.py::test_compile_only_emits_an_unbound_plan_for_verified_intents
+tests/test_composition.py::test_compile_refuses_unverified_intent_without_recording_anything
+tests/test_dependency_direction.py::test_source_imports_only_the_declared_contracts
+tests/test_dependency_direction.py::test_works_end_to_end_without_permissions_importable
+tests/test_dependency_direction.py::test_no_pacthold_sandboxv1_names_in_the_package
+tests/test_dependency_direction.py::test_pyproject_declares_exactly_the_two_consumed_dependencies
+tests/test_no_fake_apply.py::test_probe_and_target_are_read_only_protocols
+tests/test_no_fake_apply.py::test_the_package_copies_no_harness_c3_intent_vocabulary
+tests/test_no_fake_apply.py::test_verifier_never_calls_anything_but_read_methods
+tests/test_no_fake_apply.py::test_probe_inconclusiveness_downgrades_verified
+tests/test_no_fake_apply.py::test_a_refusal_path_touches_nothing_at_all
+tests/test_plugin.py::test_descriptor_declares_no_permissions_or_harness_dependency
+tests/test_plugin.py::test_registration_provides_both_ports_and_one_wire_method
+tests/test_plugin.py::test_wire_method_shape_is_exact_and_read_only
+tests/test_plugin.py::test_wire_handler_describes_known_pin_without_mutating_state
+tests/test_plugin.py::test_wire_handler_invents_no_menu_for_unknown_pin
+tests/test_plugin.py::test_wire_handler_hides_uninstalled_facet
+tests/test_plugin.py::test_availability_predicate_reflects_busy_state
+tests/test_repository.py::test_intent_saved_and_queried_by_id_and_revision
+tests/test_repository.py::test_saving_a_stale_revision_is_refused_not_merged
+tests/test_repository.py::test_profile_reference_carries_only_id_and_revision
+tests/test_repository.py::test_evidence_is_keyed_by_target_handle_and_runtime_generation
+tests/test_repository.py::test_native_version_change_invalidates_stored_verified_evidence
+tests/test_repository.py::test_config_digest_change_invalidates
+tests/test_repository.py::test_platform_fact_change_invalidates
+tests/test_repository.py::test_unchanged_facts_do_not_invalidate
+tests/test_repository.py::test_recording_evidence_bound_to_other_facts_is_refused_at_record_time
+tests/test_repository.py::test_explicit_invalidation_returns_count_and_keeps_intents
+tests/test_repository.py::test_records_survive_uninstall_and_are_still_readable
+tests/test_verifier.py::test_verified_positive_requires_bound_verified_evidence
+tests/test_verifier.py::test_missing_evidence_is_unknown_not_verified
+tests/test_verifier.py::test_evidence_invalidated_by_version_change_is_not_verified
+tests/test_verifier.py::test_unknown_outcome_evidence_stays_unknown
+tests/test_verifier.py::test_unsupported_outcome_evidence_stays_unsupported_not_unknown
+tests/test_verifier.py::test_codex_effect_is_unknown_until_the_probe_lands
+tests/test_verifier.py::test_intent_stricter_than_native_can_express_is_refused_at_intake
+tests/test_verifier.py::test_coverage_requirement_native_cannot_express_refuses_never_approximates
+tests/test_verifier.py::test_adapter_absent_refuses_before_anything
+tests/test_verifier.py::test_claude_windows_platform_is_its_own_stable_refusal
+tests/test_verifier.py::test_admin_locked_option_requested_looser_is_refused
+tests/test_verifier.py::test_admin_enforced_sandbox_cannot_be_switched_off
+tests/test_verifier.py::test_cross_session_impact_undeclared_is_refused
+tests/test_verifier.py::test_cross_session_impact_declared_passes_the_gate
+tests/test_verifier.py::test_coverage_gap_with_bound_evidence_refuses_unproven
+tests/test_verifier.py::test_evidence_from_a_different_pin_is_not_replayed
+tests/test_verifier.py::test_unknown_pin_never_verifies
+
+# mutation sanity (guards non-vacuous; each mutation reverted in the same session):
+# - pin gate removed in SandboxVerifier -> test_verifier.py::test_unknown_pin_never_verifies FAILED
+# - uninstall-hide removed from describe -> test_plugin.py::test_wire_handler_hides_uninstalled_facet and composition twin FAILED
+# - invalidation-on-drift disabled -> repository version/config/platform invalidation tests FAILED (3)
+# 68 passed / 0 failed / 0 skipped / 0 xfail after revert

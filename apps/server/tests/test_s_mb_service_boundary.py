@@ -110,6 +110,13 @@ def test_facade_imports_only_declared_vocabulary_edges():
     imports = {name for name in _absolute_imports(_tree(COMPAT_DIR / "facade.py"))
                if name == "ordessa_server" or name.startswith("ordessa_server.")}
     assert imports <= set(VOCABULARY_EDGES), imports - set(VOCABULARY_EDGES)
+    # T014-S2c retired the wire vocabulary from the plugin side; a re-import is
+    # a rule-3 breach, not a re-declaration of this list.
+    retired = {"ordessa_server.errors", "ordessa_server.records"}
+    assert not (imports & retired), f"facade imports S2c-published modules: {imports & retired}"
+    assert "server_plugin_api" in {
+        name for name in _absolute_imports(_tree(COMPAT_DIR / "facade.py"))}, (
+        "the facade must reach the published contract for the shared vocabulary")
 
 
 def test_composition_root_imports_the_final_owner():

@@ -15,10 +15,10 @@ change); this order is only the safe consumer that turns it on when it arrives.
 from __future__ import annotations
 
 from ordessa_server_compat.execution.sidecar_backend import _terminal_reason_from_result
-from ordessa_server.wire.projection import execution_state
+from ordessa_server_compat.wire_projection import execution_state
 from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server_compat.sessions import SessionRecords
-from pacthold.storage import Database
+from pacthold_runtime_compat.storage import Database
 
 
 # ---------------------------------------------------------------- extraction (pure)

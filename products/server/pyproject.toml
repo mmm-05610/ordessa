@@ -6,13 +6,19 @@ build-backend = "setuptools.build_meta"
 name = "ordessa-server-product"
 version = "2.0.0a1"
 description = "Ordessa default Server product: the deployment's plugin selection and composition mapping"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {text = "MIT"}
 dependencies = [
     "ordessa-server==2.0.0a1",
+    "ordessa-server-plugin-api>=0.1.0,<1",
     "ordessa-server-compat==2.0.0a1",
     "ordessa-workspace==2.0.0a1",
     "ordessa-harness==2.0.0a1",
+    "ordessa-harness-api==1.0.0a1",
+    "ordessa-sandbox-backend==0.1.0",
+    "ordessa-sandbox-adapters==0.1.0",
+    "ordessa-permissions-adapters==0.1.0",
+    "pacthold-runtime-compat==0.1.0",
 ]
 
 [project.optional-dependencies]

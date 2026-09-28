@@ -75,7 +75,7 @@ def test_the_memory_wire_face_reads_the_profile_home_or_hides_the_partition(tmp_
 
     runtime = build_runtime(tmp_path / "server")
     runtime.start()
-    profile = runtime.repository.profiles.create(
+    profile = runtime.plugin_host.provided_port('product.repository').profiles.create(
         key="p", request_digest="p", name="role", harness_type="codex",
         config_digest=runtime.objects.publish(
             b'{"schema_version":1,"harness_type":"codex","configuration":{}}').digest,
@@ -113,7 +113,7 @@ def test_the_memory_wire_face_reads_the_profile_home_or_hides_the_partition(tmp_
         assert str(home) not in str(after), "no host path in the answer"
 
         # A family that declares no memory paths hides the partition.
-        pi = runtime.repository.profiles.create(
+        pi = runtime.plugin_host.provided_port('product.repository').profiles.create(
             key="p2", request_digest="p2", name="pi-role", harness_type="pi",
             config_digest=runtime.objects.publish(
                 b'{"schema_version":1,"harness_type":"pi","configuration":{}}').digest,

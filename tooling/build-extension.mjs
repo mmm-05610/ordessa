@@ -2,7 +2,14 @@ import { build } from 'esbuild'
 import { mkdir, copyFile, readFile } from 'node:fs/promises'
 import path from 'node:path'
 const repoRoot = path.resolve(import.meta.dirname, '..')
-export const outputRoot = path.join(repoRoot, 'products/desktop/dist')
+// ORDESSA_PRODUCT_OUTPUT_ROOT is a default-preserving override used by guards that
+// build a VARIANT product (e.g. with one extension disabled) into a temp tree; unset,
+// every artifact lands in the real product output. It lives here, on the single writer
+// of extension artifacts, so a variant build still runs each package's real build.mjs
+// rather than re-implementing this function somewhere else and drifting.
+export const outputRoot = process.env.ORDESSA_PRODUCT_OUTPUT_ROOT
+  ? path.resolve(process.env.ORDESSA_PRODUCT_OUTPUT_ROOT)
+  : path.join(repoRoot, 'products/desktop/dist')
 
 /** Builds one extension package from its declared ordessa segment; artifacts land at <outputRoot>/extensions/<id>. */
 export async function buildExtension(dir, { entries, licenses = [] }) {
@@ -12,7 +19,8 @@ export async function buildExtension(dir, { entries, licenses = [] }) {
   await build({
     entryPoints: Object.fromEntries(Object.entries(entries).map(([name, file]) => [name, path.join(dir, file)])),
     outdir: target, bundle: true, splitting: true, format: 'esm', platform: 'browser', jsx: 'automatic',
-    external: ['react', 'react/*', 'react-dom', 'react-dom/*', '@ordessa/extension-api', '@extensions/*'],
+    external: ['react', 'react/*', 'react-dom', 'react-dom/*', '@ordessa/extension-api',
+      '@ordessa/ui-components/api', '@extensions/*'],
   })
   // Native entries run in Electron main; declared externals resolve from root node_modules.
   if (ordessa.native) await build({

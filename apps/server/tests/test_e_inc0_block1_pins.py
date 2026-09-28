@@ -31,7 +31,7 @@ import threading
 
 import pytest
 
-from pacthold.extensions.runtime_composition.sandbox_port import (
+from pacthold_runtime_compat.runtime_composition.sandbox_port import (
     SandboxPortUnavailable, register_sandbox_port_factory, resolve_sandbox_port,
 )
 from ordessa_server_compat.execution import sidecar_backend as sb
@@ -306,5 +306,5 @@ def test_registered_provider_does_not_answer_for_a_different_name(monkeypatch):
         with pytest.raises(SandboxPortUnavailable):
             resolve_sandbox_port("pin-a-completely-different-name")
     finally:
-        from pacthold.extensions.runtime_composition import sandbox_port
+        from pacthold_runtime_compat.runtime_composition import sandbox_port
         sandbox_port._REGISTERED_FACTORIES.pop("pin_registered_provider", None)

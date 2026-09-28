@@ -1,0 +1,30 @@
+# T03b RED — new real-point behavior, before implementation (baseline tree @ b4b48d7564)
+# command: PYTHONPATH=plugins/permissions/adapters/src .venv/bin/python -m pytest plugins/permissions/adapters -q --tb=short
+# exit code: 1
+# lane baseline (pre-change, out of scope): pytest plugins/permissions -> exit 2, 9 backend collection errors:
+#   plugins/permissions/backend/tests/support.py:19 'cannot import name Database from pacthold.storage' (foundation drift, backend-lane owned)
+
+FAILED plugins/permissions/adapters/tests/test_real_admission_lifecycle.py::test_activation_publishes_all_three_descriptors
+FAILED plugins/permissions/adapters/tests/test_real_admission_lifecycle.py::test_deactivate_retires_every_record_atomically
+FAILED plugins/permissions/adapters/tests/test_real_admission_lifecycle.py::test_staged_but_uncommitted_is_invisible
+FAILED plugins/permissions/adapters/tests/test_real_admission_lifecycle.py::test_overlapping_ranges_between_two_of_my_adapters_refuse_not_last_wins
+FAILED plugins/permissions/adapters/tests/test_real_admission_lifecycle.py::test_duplicate_adapter_id_is_refused_by_the_platform
+FAILED plugins/permissions/adapters/tests/test_real_admission_lifecycle.py::test_field_claim_conflict_across_facets_refuses_at_composition
+FAILED plugins/permissions/adapters/tests/test_real_admission_lifecycle.py::test_parent_claim_path_overlap_refuses_too
+FAILED plugins/permissions/adapters/tests/test_real_admission_lifecycle.py::test_unknown_point_id_is_refused_as_unbound
+FAILED plugins/permissions/adapters/tests/test_real_admission_lifecycle.py::test_wrong_api_version_is_refused_by_the_host
+FAILED plugins/permissions/adapters/tests/test_real_admission_lifecycle.py::test_spoofed_payload_never_reaches_the_registry
+FAILED plugins/permissions/adapters/tests/test_real_admission_lifecycle.py::test_unload_while_held_refuses_owner_busy
+FAILED plugins/permissions/adapters/tests/test_real_point_contribution.py::test_registration_declares_contributions_on_the_real_point
+FAILED plugins/permissions/adapters/tests/test_real_point_contribution.py::test_batch_without_open_points_is_refused_by_the_platform
+FAILED plugins/permissions/adapters/tests/test_real_point_contribution.py::test_descriptor_constants_match_the_public_harness_module
+FAILED plugins/permissions/adapters/tests/test_real_point_contribution.py::test_native_versions_are_the_pins_measured_in_harnesses_toml
+FAILED plugins/permissions/adapters/tests/test_real_point_contribution.py::test_pinned_claims_table_is_consistent_with_descriptors
+FAILED plugins/permissions/adapters/tests/test_real_point_contribution.py::test_claude_descriptor_claims_the_measured_permission_paths
+FAILED plugins/permissions/adapters/tests/test_real_point_contribution.py::test_codex_descriptor_claims_only_the_approval_field
+FAILED plugins/permissions/adapters/tests/test_real_point_contribution.py::test_pi_descriptor_is_extension_backed_and_claims_nothing
+FAILED plugins/permissions/adapters/tests/test_real_point_contribution.py::test_payload_schemas_are_real_value_schemas
+FAILED plugins/permissions/adapters/tests/test_real_point_contribution.py::test_out_of_shape_facet_payload_is_refused_by_the_platform_schema
+FAILED plugins/permissions/adapters/tests/test_real_point_contribution.py::test_package_exposes_no_private_admission_authority
+
+22 failed, 101 passed in 0.32s

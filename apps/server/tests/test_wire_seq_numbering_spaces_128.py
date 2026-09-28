@@ -21,9 +21,10 @@ from fastapi.testclient import TestClient
 import pytest
 
 from ordessa_server.bootstrap import build_runtime
+from ordessa_server_product.composition import create_composition  # T014-S1d funnel
 from ordessa_server_compat.sessions import repository as repo_module
 from ordessa_server.transport.http import create_app
-from ordessa_server.wire import projection as projection_module
+from ordessa_server_compat import wire_projection as projection_module
 
 #: Every kind the wire turns into a frame, with a payload shaped like the one
 #: the real producer writes at its call site.
@@ -79,7 +80,9 @@ def server(tmp_path, monkeypatch):
 
     registry = HarnessRegistry()
     registry.register(HarnessDescriptor("alpha", capability_claims={"stream": True}))
-    runtime = build_runtime(tmp_path / "data", harnesses=registry, execution=_StubExecution())
+    runtime = build_runtime(tmp_path / "data",
+                            server_plugins=create_composition().compatibility_plugins(
+                                harnesses=registry, execution=_StubExecution()))
     with TestClient(create_app(runtime), base_url="http://127.0.0.1",
                     raise_server_exceptions=False) as client:
         yield runtime, client, {"Authorization": f"Bearer {runtime.token}"}, tmp_path
@@ -120,7 +123,7 @@ def _append_alternating(runtime, session_id: str, turn_id: str, kinds) -> None:
     """Two passes over the kinds, interleaved, through the durable write path."""
     for _round in (1, 2):
         for kind in kinds:
-            runtime.repository.append_turn_event(turn_id, kind, dict(FRAME_KINDS[kind]))
+            runtime.plugin_host.provided_port('product.repository').append_turn_event(turn_id, kind, dict(FRAME_KINDS[kind]))
 
 
 def _frames(client, headers, session_id: str) -> list[dict]:
@@ -236,12 +239,19 @@ def test_no_event_kind_or_payload_was_invented(server):
     """128 normalises numbering and nothing else: the kind set, the frame map and
     `server.hello`'s method list are the ones this order inherited."""
     assert set(projection_module._EVENT_KIND_MAP) == set(FRAME_KINDS)  # noqa: SLF001
-    _runtime, client, headers, _tmp = server
+    runtime, client, headers, _tmp = server
     hello = client.post("/wire/v1/server.hello", headers=headers, json={
         "jsonrpc": "2.0", "id": "hello", "method": "server.hello",
         "params": {"clientVersions": ["1.0"], "clientPresentationSupports": []},
     }).json()["result"]
-    assert len(hello["capabilities"]) == 67, len(hello["capabilities"])
+    capabilities = {item["id"]: item for item in hello["capabilities"]}
+    acp_admission_methods = {"acp.submission.authorize", "acp.permission.authorize"}
+    assert len(capabilities) == 67 + len(acp_admission_methods), len(capabilities)
+    for method in acp_admission_methods:
+        descriptor = runtime.wire._registry.lookup(method)
+        assert descriptor is not None and descriptor.owner == "ordessa.harness.acp"
+        assert capabilities[method] == {"id": method, "supported": False,
+                                        "reason": "ACP admission authority is unavailable"}
 
 
 def test_the_gate_reads_frames_over_http_and_not_the_helper(server):

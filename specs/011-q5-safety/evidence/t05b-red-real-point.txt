@@ -1,0 +1,30 @@
+# T05b RED — bind sandbox adapters to the REAL harness.configuration-adapters point
+
+- worktree: /home/maoqh/projects/ordessa/worktrees/011-q5-safety
+- branch: codex/011-q5-safety (foundation checkpoint 8844c475bc merged as 52906b514d)
+- command:
+  `PYTHONPATH=plugins/assets/sandbox/adapters/src .venv/bin/python -m pytest plugins/assets/sandbox/adapters -q --tb=no --continue-on-collection-errors`
+- pytest process exit code: **1** (true `$?` of the pytest process, no pipe)
+- result line: `2 failed, 48 passed, 4 errors in 0.40s`
+- baseline before this change: 61 passed, exit 0 (t05-green-sandbox-adapters.txt)
+
+## Red IDs (new/rewritten behavior failing against the pre-binding package)
+
+Collection errors (module imports of the not-yet-existing foundation-bound API):
+- ERROR plugins/assets/sandbox/adapters/tests/test_c2_shape.py  (ImportError: SANDBOX_FACET_ID / build_configuration_descriptor / SANDBOX_CONFIGURATION_POINT_ID absent)
+- ERROR plugins/assets/sandbox/adapters/tests/test_platform_admission.py  (ImportError: SANDBOX_FACET_ID absent)
+- ERROR plugins/assets/sandbox/adapters/tests/test_product_lifecycle.py  (ImportError: SANDBOX_CONFIGURATION_POINT_ID absent)
+- ERROR plugins/assets/sandbox/adapters/tests/test_real_point_binding.py  (ImportError: SANDBOX_CONFIGURATION_POINT_ID absent)
+
+Failed IDs:
+- FAILED plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_dependency_direction.py::test_works_end_to_end_without_permissions_or_harness_code_importable
+- FAILED plugins/assets/sandbox/adapters/tests/test_sandbox_adapters_dependency_direction.py::test_pyproject_declares_exactly_the_consumed_dependencies
+
+## Honest note on the 48 that stayed green
+
+The updated test_c3_seam.py guards pass already: the C3 apply seam is still
+unbound in the old code and the checkpoint-evidence test verifies real facts
+(`refs/heads/codex/011-harness-api-ready` absent; foundation.json publicExports
+do not list plugins/harness/api). The purity-guard updates pass because the
+old src was already inside the new allowed set. None of these greens is the
+new behavior; the new binding behavior is exactly the red set above.

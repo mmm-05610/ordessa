@@ -1,0 +1,43 @@
+# T014-Q5(backend) GREEN — permissions.policy.describe read surface (lane Q5/permissions-backend)
+# date: 2026-09-27T23:10:47Z  branch: codex/011-q5-safety  head: 877b5020437f0b4e4baf16d817356b66946ccc2b
+# same working tree as the RED file; implementation landed: describe.py + plugin.py registration + policies.py raw-record readers / reviews table + migration.py finding persistence + _intent_record desiredMode name fix
+
+# per-ID results:
+plugins/permissions/backend/tests/test_policy_describe.py::test_policy_describe_record_vocabulary_matches_the_api PASSED [  5%]
+plugins/permissions/backend/tests/test_policy_describe.py::test_describe_method_descriptor_exact_shape_and_owner PASSED [ 11%]
+plugins/permissions/backend/tests/test_policy_describe.py::test_describe_reports_seeded_ceiling_intent_and_needs_review PASSED [ 17%]
+plugins/permissions/backend/tests/test_policy_describe.py::test_desired_mode_is_reported_as_brand_and_name PASSED [ 23%]
+plugins/permissions/backend/tests/test_policy_describe.py::test_ready_mirrors_admission_readiness PASSED [ 29%]
+plugins/permissions/backend/tests/test_policy_describe.py::test_ready_true_when_native_evidence_is_wired PASSED [ 35%]
+plugins/permissions/backend/tests/test_policy_describe.py::test_unwired_repository_answers_not_ready_and_empty_lists PASSED [ 41%]
+plugins/permissions/backend/tests/test_policy_describe.py::test_unverified_ceiling_row_reports_its_source PASSED [ 47%]
+plugins/permissions/backend/tests/test_policy_describe.py::test_unverified_ceiling_is_never_storeable_or_enforceable PASSED [ 52%]
+plugins/permissions/backend/tests/test_policy_describe.py::test_undeclared_stored_fields_cannot_smuggle_keys PASSED [ 58%]
+plugins/permissions/backend/tests/test_policy_describe.py::test_host_refuses_unknown_request_param PASSED [ 64%]
+plugins/permissions/backend/tests/test_policy_describe.py::test_host_dispatch_serves_the_declared_params_only PASSED [ 70%]
+plugins/permissions/backend/tests/test_policy_describe.py::test_describe_mutates_no_rows PASSED [ 76%]
+plugins/permissions/backend/tests/test_policy_describe.py::test_scope_filters_entries_and_principal_is_inert PASSED [ 82%]
+plugins/permissions/backend/tests/test_policy_describe.py::test_availability_reports_unwired_and_unreadable_truthfully PASSED [ 88%]
+plugins/permissions/backend/tests/test_policy_describe.py::test_availability_never_gates_dispatch PASSED [ 94%]
+plugins/permissions/backend/tests/test_wire_plugin_registration.py::test_wire_methods_are_declared_exactly PASSED [100%]
+
+# command: .venv/bin/python -m pytest plugins/permissions/backend/tests/test_policy_describe.py plugins/permissions/backend/tests/test_wire_plugin_registration.py::test_wire_methods_are_declared_exactly -v
+exit=0 (17 passed)
+
+# command: .venv/bin/python -m pytest plugins/permissions/backend -q
+exit=0
+..............................................................           [100%]
+134 passed in 0.99s
+
+# command: .venv/bin/python -m pytest plugins/permissions -q
+exit=0 (baseline was 558; +16 describe tests, 1 updated in place)
+......................................................................   [100%]
+574 passed in 1.57s
+
+# command: .venv/bin/python specs/011-q5-safety/proof/permissions_api_proof.py
+exit=0
+ALL PROOF EXPECTATIONS MET
+
+# consumer meeting point (frontend lane T015, read-only check, not edited here):
+# plugins/permissions/frontend npx vitest run tests/contract-consistency.test.ts tests/describe-contract.test.ts
+exit=0 — 23 passed (23): the TS mirror parses describe.py/plugin.py and the exact param sets + closed response key literals match the backend source

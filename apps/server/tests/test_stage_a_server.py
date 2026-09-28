@@ -9,14 +9,15 @@ from fastapi.testclient import TestClient
 import pytest
 
 from ordessa_server.bootstrap import build_runtime
+from ordessa_server_product.composition import create_composition
 from ordessa_server.credentials import CredentialRecords
 from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server_compat.profiles import ProfileRecords, ProfileService
 from ordessa_server.transport.http import create_app
-from pacthold.storage import Database, FutureSchemaError, ObjectStore
-from pacthold.storage import database as product_db
-from pacthold.work_core import db as core_db
+from pacthold_runtime_compat.storage import Database, FutureSchemaError, ObjectStore
+from pacthold_runtime_compat.storage import database as product_db
+from pacthold_runtime_compat.legacy_migrations import db as core_db
 
 
 def codex_validator(value):
@@ -57,8 +58,9 @@ def server(tmp_path):
     root = tmp_path / "server-data"
     runtime = build_runtime(
         root,
-        harnesses=codex_registry(),
-        connector=WslFixture(),
+        server_plugins=create_composition().compatibility_plugins(
+            harnesses=codex_registry(),
+            connector=WslFixture()),
     )
     with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
         headers = {"Authorization": f"Bearer {runtime.token}"}
@@ -103,7 +105,7 @@ def test_profile_workspace_and_session_records_are_idempotent(server):
     first_workspace = post(client, headers, "/api/v1/workspaces", workspace_body, "workspace-1")
     assert first_workspace.status_code == 201
     assert post(client, headers, "/api/v1/workspaces", workspace_body, "workspace-1").json() == first_workspace.json()
-    assert runtime.service.workspaces.connector.open_calls == 1
+    assert runtime.plugin_host.provided_port('product.service').workspaces.connector.open_calls == 1
 
     profile_body = {
         "name": "Codex role", "harness_type": "codex",
@@ -128,7 +130,8 @@ def test_profile_workspace_and_session_records_are_idempotent(server):
 
 def test_product_records_survive_server_restart(tmp_path):
     root = tmp_path / "restart"
-    first = build_runtime(root, harnesses=codex_registry(), connector=WslFixture())
+    first = build_runtime(root, server_plugins=create_composition().compatibility_plugins(
+        harnesses=codex_registry(), connector=WslFixture()))
     with TestClient(create_app(first), base_url="http://127.0.0.1") as client:
         headers = {"Authorization": f"Bearer {first.token}"}
         workspace = post(client, headers, "/api/v1/workspaces", {"probe_id": "probe_fixture", "path": "/workspace"}, "w")
@@ -138,7 +141,8 @@ def test_product_records_survive_server_restart(tmp_path):
         }, "s")
         session_id = session.json()["session_id"]
         token = first.token
-    second = build_runtime(root, harnesses=codex_registry(), connector=WslFixture())
+    second = build_runtime(root, server_plugins=create_composition().compatibility_plugins(
+        harnesses=codex_registry(), connector=WslFixture()))
     assert second.token == token
     with TestClient(create_app(second), base_url="http://127.0.0.1") as client:
         headers = {"Authorization": f"Bearer {token}"}
@@ -164,7 +168,7 @@ def test_unconfigured_runtime_reports_typed_capability_blockers(tmp_path):
     # host can run the room; this test pins the typed-blocker contract on a
     # host where it cannot, so the blocker names the placement that is missing.
     from ordessa_workspace.local_environment import LocalEnvironmentProvider
-    runtime.service.workspaces.local = LocalEnvironmentProvider(
+    runtime.plugin_host.provided_port('product.service').workspaces.local = LocalEnvironmentProvider(
         sandbox_probe=lambda: {"status": "unavailable", "code": "binary_missing"},
     )
     with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
@@ -265,9 +269,27 @@ def test_object_failure_cannot_leave_a_dangling_profile_reference(tmp_path):
 
 
 def test_core_uses_the_server_owned_database_file(tmp_path):
+    """S1c re-point: "Core" is the composition's instance store, and the
+    server owns its file.
+
+    Before the S1c topology decision this gate resolved the process-global
+    legacy connection via `PRAGMA database_list`; that reach stays visible
+    for the compatibility chain, but the *new* core (T015 `CoreBinding`)
+    is what "Core" names now, and its store is a file the composition root
+    itself decided inside THIS data root — a foreign `AGENT_BOX_HOME` can
+    no longer answer through it. Both halves are asserted: the instance
+    store is server-owned (its own file, never the legacy one), and the
+    legacy chain's server binding is unchanged (same file, same tables).
+    """
     runtime = build_runtime(tmp_path / "core-shared")
     runtime.start()
     try:
+        root = (tmp_path / "core-shared").resolve()
+        core_path = Path(runtime.core_binding.store_path)
+        assert core_path.resolve() == root / "state" / "core.sqlite"
+        assert core_path.resolve() != runtime.database.path
+        runtime.core_binding.snapshot()  # opens the round lazily
+        assert core_path.is_file(), "the instance store did not land in the data root"
         row = core_db.get_conn().execute("PRAGMA database_list").fetchone()
         assert Path(row[2]).resolve() == runtime.database.path
         assert core_db.get_conn().execute(
@@ -392,24 +414,25 @@ def test_structural_comparator_is_not_blind_to_a_column_drift():
 
 def test_restart_seals_unfinished_turn_as_unknown_without_redispatch(tmp_path):
     root = tmp_path / "interrupted"
-    first = build_runtime(root, harnesses=codex_registry(), connector=WslFixture())
+    first = build_runtime(root, server_plugins=create_composition().compatibility_plugins(
+        harnesses=codex_registry(), connector=WslFixture()))
     first.start()
     try:
-        workspace = first.repository.create_workspace(
+        workspace = first.plugin_host.provided_port('product.repository').create_workspace(
             key="w", request_digest="w", distribution="Ubuntu", remote_user="tester",
             remote_path="/workspace", connection_id="connection",
         )[1]
         config = first.objects.publish(b'{"schema_version":1,"harness_type":"codex","configuration":{}}')
-        profile = first.repository.create_profile(
+        profile = first.plugin_host.provided_port('product.repository').create_profile(
             key="p", request_digest="p", name="role", harness_type="codex",
             config_digest=config.digest, credential_id=None,
         )[1]
-        session = first.repository.create_session(
+        session = first.plugin_host.provided_port('product.repository').create_session(
             key="s", request_digest="s", workspace_id=workspace["workspace_id"],
             profile_id=profile["profile_id"],
         )[1]
         prompt = first.objects.publish(b'{"schema_version":1,"text":"pending"}')
-        first.repository.create_turn(
+        first.plugin_host.provided_port('product.repository').create_turn(
             session_id=session["session_id"], key="t", request_digest="t",
             input_object_digest=prompt.digest, expected_profile_revision=1,
             effective_config_object_digest=config.digest,
@@ -417,10 +440,11 @@ def test_restart_seals_unfinished_turn_as_unknown_without_redispatch(tmp_path):
     finally:
         first.stop()
 
-    second = build_runtime(root, harnesses=codex_registry(), connector=WslFixture())
+    second = build_runtime(root, server_plugins=create_composition().compatibility_plugins(
+        harnesses=codex_registry(), connector=WslFixture()))
     second.start()
     try:
-        recovered = second.repository.get_session(session["session_id"])
+        recovered = second.plugin_host.provided_port('product.repository').get_session(session["session_id"])
         assert recovered["status"] == "recovery_required"
         assert recovered["turns"][0]["state"] == "unknown"
         assert recovered["turns"][0]["error_code"] == "SERVER_RESTART_INTERRUPTED"

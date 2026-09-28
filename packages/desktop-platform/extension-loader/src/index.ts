@@ -11,7 +11,9 @@ export async function loadExtensions(catalog: Catalog, importModule: (url: strin
       const plugin = await bounded(async () => {
         const module = await importModule(extension.url)
         if (typeof module.default !== 'function') throw Error('Entry must export a default plugin factory')
-        const plugin = await module.default(api)
+        // The second argument is this extension's opaque product configuration
+        // (absent when the product configured nothing); the host does not read it.
+        const plugin = await module.default(api, extension.config)
         if (!plugin || plugin.id !== id || typeof plugin.activate !== 'function') throw Error('Plugin identity or activate is invalid')
         return plugin
       }, timeoutMs)

@@ -1,0 +1,120 @@
+# T02 RED evidence - plugins/permissions/backend (run before implementation)
+# date: 2026-09-27T19:02:44Z
+# command: PYTHONPATH=plugins/permissions/backend/src .venv/bin/python -m pytest plugins/permissions/backend -q
+# exit code: 2 (9 collection errors: ordessa_permissions_backend exists but exports no surface yet)
+# failing test files (all ImportError on the missing public surface):
+ERROR plugins/permissions/backend/tests/test_approval_facts_legacy_semantics.py
+ERROR plugins/permissions/backend/tests/test_authorizer_decide.py
+ERROR plugins/permissions/backend/tests/test_authorizer_evaluate.py
+ERROR plugins/permissions/backend/tests/test_busy_unload_gate.py
+ERROR plugins/permissions/backend/tests/test_dual_authority.py
+ERROR plugins/permissions/backend/tests/test_grant_single_use.py
+ERROR plugins/permissions/backend/tests/test_native_correlation.py
+ERROR plugins/permissions/backend/tests/test_policy_repository.py
+ERROR plugins/permissions/backend/tests/test_wire_plugin_registration.py
+
+
+==================================== ERRORS ====================================
+________ ERROR collecting tests/test_approval_facts_legacy_semantics.py ________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/tests/test_approval_facts_legacy_semantics.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/backend/tests/test_approval_facts_legacy_semantics.py:19: in <module>
+    from ordessa_permissions_backend import ApprovalFacts
+E   ImportError: cannot import name 'ApprovalFacts' from 'ordessa_permissions_backend' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/src/ordessa_permissions_backend/__init__.py)
+_______________ ERROR collecting tests/test_authorizer_decide.py _______________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/tests/test_authorizer_decide.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/backend/tests/test_authorizer_decide.py:12: in <module>
+    from ordessa_permissions_backend import ApprovalFacts, Authorizer, PolicyRepository
+E   ImportError: cannot import name 'ApprovalFacts' from 'ordessa_permissions_backend' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/src/ordessa_permissions_backend/__init__.py)
+______________ ERROR collecting tests/test_authorizer_evaluate.py ______________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/tests/test_authorizer_evaluate.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/backend/tests/test_authorizer_evaluate.py:20: in <module>
+    from ordessa_permissions_backend import ApprovalFacts, Authorizer, PolicyRepository
+E   ImportError: cannot import name 'ApprovalFacts' from 'ordessa_permissions_backend' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/src/ordessa_permissions_backend/__init__.py)
+_______________ ERROR collecting tests/test_busy_unload_gate.py ________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/tests/test_busy_unload_gate.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/backend/tests/test_busy_unload_gate.py:13: in <module>
+    from ordessa_permissions_backend import ApprovalFacts
+E   ImportError: cannot import name 'ApprovalFacts' from 'ordessa_permissions_backend' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/src/ordessa_permissions_backend/__init__.py)
+________________ ERROR collecting tests/test_dual_authority.py _________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/tests/test_dual_authority.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/backend/tests/test_dual_authority.py:21: in <module>
+    from ordessa_permissions_backend import ApprovalFacts
+E   ImportError: cannot import name 'ApprovalFacts' from 'ordessa_permissions_backend' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/src/ordessa_permissions_backend/__init__.py)
+_______________ ERROR collecting tests/test_grant_single_use.py ________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/tests/test_grant_single_use.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/backend/tests/test_grant_single_use.py:15: in <module>
+    from ordessa_permissions_backend import ApprovalFacts
+E   ImportError: cannot import name 'ApprovalFacts' from 'ordessa_permissions_backend' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/src/ordessa_permissions_backend/__init__.py)
+______________ ERROR collecting tests/test_native_correlation.py _______________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/tests/test_native_correlation.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/backend/tests/test_native_correlation.py:15: in <module>
+    from ordessa_permissions_backend import ApprovalFacts
+E   ImportError: cannot import name 'ApprovalFacts' from 'ordessa_permissions_backend' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/src/ordessa_permissions_backend/__init__.py)
+_______________ ERROR collecting tests/test_policy_repository.py _______________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/tests/test_policy_repository.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/backend/tests/test_policy_repository.py:16: in <module>
+    from ordessa_permissions_backend import PolicyRepository
+E   ImportError: cannot import name 'PolicyRepository' from 'ordessa_permissions_backend' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/src/ordessa_permissions_backend/__init__.py)
+___________ ERROR collecting tests/test_wire_plugin_registration.py ____________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/tests/test_wire_plugin_registration.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/backend/tests/test_wire_plugin_registration.py:18: in <module>
+    from ordessa_permissions_backend import Authorizer, PermissionsBackendPlugin
+E   ImportError: cannot import name 'Authorizer' from 'ordessa_permissions_backend' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/src/ordessa_permissions_backend/__init__.py)
+=========================== short test summary info ============================
+ERROR plugins/permissions/backend/tests/test_approval_facts_legacy_semantics.py
+ERROR plugins/permissions/backend/tests/test_authorizer_decide.py
+ERROR plugins/permissions/backend/tests/test_authorizer_evaluate.py
+ERROR plugins/permissions/backend/tests/test_busy_unload_gate.py
+ERROR plugins/permissions/backend/tests/test_dual_authority.py
+ERROR plugins/permissions/backend/tests/test_grant_single_use.py
+ERROR plugins/permissions/backend/tests/test_native_correlation.py
+ERROR plugins/permissions/backend/tests/test_policy_repository.py
+ERROR plugins/permissions/backend/tests/test_wire_plugin_registration.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 9 errors during collection !!!!!!!!!!!!!!!!!!!!
+9 errors in 0.26s
+EXIT=2

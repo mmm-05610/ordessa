@@ -1,0 +1,250 @@
+# T01 RED run — ordessa-permissions-api, tests written first against no implementation
+# date: 2026-09-27T18:40Z (worktree codex/011-q5-safety, python 3.12.14 ./.venv)
+# Method: the whole `src/ordessa_permissions_api/` tree was moved out of the package
+# (plugins/permissions/api/.red-stash, restored immediately after the capture) so the
+# FINAL test files ran against a pre-implementation state. Bytecode caches were cleared
+# first (`find plugins/permissions/api -name __pycache__ -delete`), because a later
+# mutation probe showed a same-second/same-size stale .pyc can mask a source revert.
+
+$ find plugins/permissions/api -name __pycache__ -type d -exec rm -rf {} +
+$ PYTHONPATH=plugins/permissions/api/src python -m pytest plugins/permissions/api -q --continue-on-collection-errors -rf
+# exit code: 1        result: 5 failed, 7 passed, 9 errors in 0.14s
+
+F.......FFFF                                                             [100%]
+==================================== ERRORS ====================================
+__________________ ERROR collecting tests/test_brand_modes.py __________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/tests/test_brand_modes.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/api/tests/test_brand_modes.py:6: in <module>
+    from ordessa_permissions_api import (
+E   ModuleNotFoundError: No module named 'ordessa_permissions_api'
+___________________ ERROR collecting tests/test_ceilings.py ____________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/tests/test_ceilings.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/api/tests/test_ceilings.py:13: in <module>
+    from ordessa_permissions_api import (
+E   ModuleNotFoundError: No module named 'ordessa_permissions_api'
+_________________ ERROR collecting tests/test_decisions_dto.py _________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/tests/test_decisions_dto.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/api/tests/test_decisions_dto.py:8: in <module>
+    from ordessa_permissions_api import (
+E   ModuleNotFoundError: No module named 'ordessa_permissions_api'
+__________________ ERROR collecting tests/test_error_codes.py __________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/tests/test_error_codes.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/api/tests/test_error_codes.py:6: in <module>
+    from ordessa_permissions_api import (
+E   ModuleNotFoundError: No module named 'ordessa_permissions_api'
+____________________ ERROR collecting tests/test_intents.py ____________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/tests/test_intents.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/api/tests/test_intents.py:6: in <module>
+    from ordessa_permissions_api import (
+E   ModuleNotFoundError: No module named 'ordessa_permissions_api'
+__________________ ERROR collecting tests/test_public_api.py ___________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/tests/test_public_api.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/api/tests/test_public_api.py:9: in <module>
+    import ordessa_permissions_api as api
+E   ModuleNotFoundError: No module named 'ordessa_permissions_api'
+_____________________ ERROR collecting tests/test_rules.py _____________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/tests/test_rules.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/api/tests/test_rules.py:13: in <module>
+    from ordessa_permissions_api import (
+E   ModuleNotFoundError: No module named 'ordessa_permissions_api'
+___________________ ERROR collecting tests/test_snapshots.py ___________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/tests/test_snapshots.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/api/tests/test_snapshots.py:8: in <module>
+    from ordessa_permissions_api import EffectivePolicySnapshot, PolicyRefusal
+E   ModuleNotFoundError: No module named 'ordessa_permissions_api'
+___________________ ERROR collecting tests/test_synthesis.py ___________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/tests/test_synthesis.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/api/tests/test_synthesis.py:14: in <module>
+    from ordessa_permissions_api import (
+E   ModuleNotFoundError: No module named 'ordessa_permissions_api'
+=================================== FAILURES ===================================
+___________________ test_the_package_exists_and_is_not_empty ___________________
+
+    def test_the_package_exists_and_is_not_empty() -> None:
+>       assert SRC_ROOT.is_dir(), SRC_ROOT
+E       AssertionError: PosixPath('/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/src/ordessa_permissions_api')
+E       assert False
+E        +  where False = is_dir()
+E        +    where is_dir = PosixPath('/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/src/ordessa_permissions_api').is_dir
+
+plugins/permissions/api/tests/test_dependency_direction.py:42: AssertionError
+______ test_the_new_engine_refuses_the_same_widening_that_legacy_allowed _______
+
+legacy_permissions = <module 'ordessa_server_compat.profiles.permissions' from '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/server-compat/src/ordessa_server_compat/profiles/permissions.py'>
+
+    def test_the_new_engine_refuses_the_same_widening_that_legacy_allowed(legacy_permissions) -> None:
+>       from ordessa_permissions_api import (
+            PolicyCeiling,
+            PolicySynthesized,
+            RuleAction,
+            synthesize,
+        )
+E       ModuleNotFoundError: No module named 'ordessa_permissions_api'
+
+plugins/permissions/api/tests/test_legacy_last_match_divergence.py:100: ModuleNotFoundError
+_ test_the_new_engine_refuses_a_ceiling_widening_the_legacy_engine_cannot_see __
+
+legacy_permissions = <module 'ordessa_server_compat.profiles.permissions' from '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/server-compat/src/ordessa_server_compat/profiles/permissions.py'>
+
+    def test_the_new_engine_refuses_a_ceiling_widening_the_legacy_engine_cannot_see(
+            legacy_permissions) -> None:
+>       from ordessa_permissions_api import PolicyCeiling, PolicySynthesized, synthesize
+E       ModuleNotFoundError: No module named 'ordessa_permissions_api'
+
+plugins/permissions/api/tests/test_legacy_last_match_divergence.py:119: ModuleNotFoundError
+______ test_a_migrated_rule_list_never_widens_a_require_approval_ceiling _______
+
+legacy_permissions = <module 'ordessa_server_compat.profiles.permissions' from '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/server-compat/src/ordessa_server_compat/profiles/permissions.py'>
+
+    def test_a_migrated_rule_list_never_widens_a_require_approval_ceiling(
+            legacy_permissions) -> None:
+>       from ordessa_permissions_api import (
+            PolicyCeiling,
+            PolicySynthesized,
+            RuleAction,
+            synthesize,
+        )
+E       ModuleNotFoundError: No module named 'ordessa_permissions_api'
+
+plugins/permissions/api/tests/test_legacy_last_match_divergence.py:136: ModuleNotFoundError
+______________ test_a_migrated_preset_is_posture_never_authority _______________
+
+legacy_permissions = <module 'ordessa_server_compat.profiles.permissions' from '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/server-compat/src/ordessa_server_compat/profiles/permissions.py'>
+
+    def test_a_migrated_preset_is_posture_never_authority(legacy_permissions) -> None:
+        # `full-access` in the legacy store is a starting posture, not a widening
+        # an importer may carry across as policy.
+        assert legacy_permissions.PRESET_ACTIONS["full-access"] == "allow"
+>       from ordessa_permissions_api import PermissionIntent, PolicyRefusal, SCHEMA_CODES
+E       ModuleNotFoundError: No module named 'ordessa_permissions_api'
+
+plugins/permissions/api/tests/test_legacy_last_match_divergence.py:160: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED plugins/permissions/api/tests/test_dependency_direction.py::test_the_package_exists_and_is_not_empty
+FAILED plugins/permissions/api/tests/test_legacy_last_match_divergence.py::test_the_new_engine_refuses_the_same_widening_that_legacy_allowed
+FAILED plugins/permissions/api/tests/test_legacy_last_match_divergence.py::test_the_new_engine_refuses_a_ceiling_widening_the_legacy_engine_cannot_see
+FAILED plugins/permissions/api/tests/test_legacy_last_match_divergence.py::test_a_migrated_rule_list_never_widens_a_require_approval_ceiling
+FAILED plugins/permissions/api/tests/test_legacy_last_match_divergence.py::test_a_migrated_preset_is_posture_never_authority
+5 failed, 7 passed, 9 errors in 0.14s
+
+# ---------------------------------------------------------------------------
+# RED against the legacy engine (same capture, listed per ID for the record):
+# the three legacy-behaviour proofs PASSED, so the divergence assertions below
+# failed for the new engine and not for a missing module under test.
+
+PASSED plugins/permissions/api/tests/test_legacy_last_match_divergence.py::test_legacy_tool_key_vocabulary_is_the_one_we_must_migrate_not_reinvent
+PASSED plugins/permissions/api/tests/test_legacy_last_match_divergence.py::test_legacy_last_match_wins_does_let_a_later_allow_reverse_an_earlier_deny
+PASSED plugins/permissions/api/tests/test_legacy_last_match_divergence.py::test_legacy_ordering_alone_flips_the_answer_for_the_same_rule_set
+FAILED plugins/permissions/api/tests/test_legacy_last_match_divergence.py::test_the_new_engine_refuses_the_same_widening_that_legacy_allowed
+FAILED plugins/permissions/api/tests/test_legacy_last_match_divergence.py::test_the_new_engine_refuses_a_ceiling_widening_the_legacy_engine_cannot_see
+FAILED plugins/permissions/api/tests/test_legacy_last_match_divergence.py::test_a_migrated_rule_list_never_widens_a_require_approval_ceiling
+FAILED plugins/permissions/api/tests/test_legacy_last_match_divergence.py::test_a_migrated_preset_is_posture_never_authority
+
+# Failing/erroring test IDs of this red run (exact):
+#    test_the_package_exists_and_is_not_empty
+#    test_the_new_engine_refuses_the_same_widening_that_legacy_allowed
+#    test_the_new_engine_refuses_a_ceiling_widening_the_legacy_engine_cannot_see
+#    test_a_migrated_rule_list_never_widens_a_require_approval_ceiling
+#    test_a_migrated_preset_is_posture_never_authority
+# Collection errors (ModuleNotFoundError: No module named 'ordessa_permissions_api'):
+#    /home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/tests/test_brand_modes.py
+#    /home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/tests/test_ceilings.py
+#    /home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/tests/test_decisions_dto.py
+#    /home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/tests/test_error_codes.py
+#    /home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/tests/test_intents.py
+#    /home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/tests/test_public_api.py
+#    /home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/tests/test_rules.py
+#    /home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/tests/test_snapshots.py
+#    /home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/api/tests/test_synthesis.py
+
+# Cause per group:
+#   test_dependency_direction.py::test_the_package_exists_and_is_not_empty
+#       -> src/ had no modules (the gate asserts the tree, not the imports).
+#   test_legacy_last_match_divergence.py (4 new-engine cases)
+#       -> ModuleNotFoundError: No module named 'ordessa_permissions_api'
+#          (asserted inside the test bodies so the legacy halves still ran).
+#   the 9 collected-error modules import the package at module scope, so pytest
+#      reported them as errors, not as failed test IDs.
+
+# An earlier red capture (before the final test-file edits) is superseded by the
+# one above; it ran the same way with `exit code: 2` and 8 collection errors.
+
+# ===========================================================================
+# T01 GREEN run — same command, implementation complete
+# date: 2026-09-27T18:52Z
+$ find plugins/permissions/api -name __pycache__ -type d -exec rm -rf {} +
+$ PYTHONPATH=plugins/permissions/api/src python -m pytest plugins/permissions/api -q -p no:cacheprovider -ra
+# exit code: 0
+........................................................................ [ 32%]
+........................................................................ [ 64%]
+........................................................................ [ 96%]
+.......                                                                  [100%]
+223 passed in 0.28s
+
+# Per-file counts (223 collected, 0 skipped, 0 xfail):
+#  36 test_rules.py  24 test_ceilings.py  12 test_intents.py   8 test_brand_modes.py
+#  20 test_snapshots.py  37 test_decisions_dto.py  22 test_error_codes.py
+#  43 test_synthesis.py   9 test_public_api.py   5 test_dependency_direction.py
+#   7 test_legacy_last_match_divergence.py
+
+# Mutation probes (each reverted in the same step; they prove the gates bite):
+# 1) `select_intent_action`: strictest-of-ties  ->  `winner = leaders[-1]`
+#    (i.e. legacy last-match widening)           exit 1: 2 failed
+#      test_synthesis.py::test_a_later_allow_does_not_reverse_an_earlier_deny
+#      test_legacy_last_match_divergence.py::test_the_new_engine_refuses_the_same_widening_that_legacy_allowed
+# 2) ceiling `require_approval` downgrade disabled AND intersection min -> max
+#    (ceilings stop intersecting strictly)       exit 1: 13 failed
+#      incl. test_ceilings.py::test_two_ceilings_intersect_and_never_widen,
+#           test_synthesis.py::test_an_unconfirmed_native_result_is_never_reported_as_allowed
+#    restore note: the reverted ceilings.py landed in the same second and the same
+#    byte size as the mutated one, so a stale .pyc kept 2 reds until __pycache__
+#    was cleared; after clearing: 223 passed, exit 0.
+
+# Post-capture follow-up: one cosmetic edit (a redundant function-local import in
+# synthesis.py was dropped, and stray __pycache__/.pytest_cache dirs removed).
+# Re-run after it, same command: 223 passed, exit code 0.

@@ -22,7 +22,7 @@ from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server_compat.model_configs import provider_protocols as pv
 from ordessa_server_compat.model_configs.repository import ProviderModelRecords
 from ordessa_server_compat.model_configs.service import ProviderModelService
-from pacthold.storage import Database, ObjectStore
+from pacthold_runtime_compat.storage import Database, ObjectStore
 
 
 # ---------------------------------------------------------------- module: vocabulary

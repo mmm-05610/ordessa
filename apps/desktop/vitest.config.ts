@@ -1,9 +1,6 @@
 import { defineConfig } from 'vitest/config'
-import { fileURLToPath } from 'node:url'
+import { contractAliases } from '../../tooling/vitest-extensions.mjs'
 export default defineConfig({
-  resolve: { alias: {
-    '@extensions/ordessa.contracts/contract.js': fileURLToPath(new URL('../../packages/desktop-platform/contracts/foundation/src/contract.ts', import.meta.url)),
-    '@extensions/ordessa.agent-contracts/contract.js': fileURLToPath(new URL('../../packages/desktop-platform/contracts/agent-ui/src/contract.ts', import.meta.url)),
-  } },
+  resolve: { alias: contractAliases() },
   test: { include: ['renderer/**/*.test.tsx', 'renderer/**/*.test.ts'] },
 })

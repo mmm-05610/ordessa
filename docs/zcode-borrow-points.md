@@ -51,5 +51,5 @@
 ## E. 许可与复用边界
 
 - Apache-2.0 + `NOTICE.md`：任何代码移植需保留许可与 NOTICE 声明；`THIRD-PARTY-NOTICES.md` 由 `scripts/licenses.mjs` 生成，可借鉴其"锁文件→许可清单"自动化思路。
-- 其中 `ai-elements/*` 派生自 vercel/ai-elements（MIT），移植时双重署名。
+- 许可更正（2026-09-27）：本次核对的 ZCode `29628c9acdb81b703bbd4080c207a0e7ce5e276e` 中，`ai-elements/*` 文件头与 THIRD-PARTY-NOTICES 均标注派生自 Vercel AI Elements、Apache-2.0，并非先前记录的 MIT。移植须保留相关版权、许可与修改说明；具体取材范围见 `docs/design/agent-ui-implementation/research.md`。
 - 本轮结论维持：**只借设计约定与配方，不整文件搬运**；①级项全部可在现有展示层边界内落地。

@@ -10,9 +10,24 @@
     "jsx": "react-jsx",
     "strict": true,
     "paths": {
-      "@extensions/ordessa.contracts/contract.js": ["../../packages/desktop-platform/contracts/foundation/src/contract.ts"],
-      "@extensions/ordessa.agent-contracts/contract.js": ["../../packages/desktop-platform/contracts/agent-ui/src/contract.ts"],
-      "@extensions/example.contracts/contract.js": ["../../examples/service-contract/src/contract.ts"]
+      "@extensions/ordessa.contracts/contract.js": [
+        "../../packages/desktop-platform/contracts/foundation/src/contract.ts"
+      ],
+      "@extensions/ordessa.agent-contracts/contract.js": [
+        "../../plugins/agent/contracts/src/contract.ts"
+      ],
+      "@extensions/example.contracts/contract.js": [
+        "../../examples/service-contract/src/contract.ts"
+      ],
+      "@extensions/example.ui-contracts/contract.js": [
+        "../../examples/ui-contracts/src/contract.ts"
+      ],
+      "@extensions/ordessa.chat-api/contract.js": [
+        "../../plugins/chat/api/src/contract.ts"
+      ],
+      "@ordessa/ui-components/api": [
+        "../../packages/desktop-platform/ui-components/api/ui-components.ts"
+      ]
     },
     "skipLibCheck": true,
     "noEmit": true,
@@ -24,8 +39,17 @@
     "renderer",
     "electron",
     "../../packages/desktop-platform/*/src",
+    "../../packages/desktop-platform/*/api",
+    "../../packages/desktop-platform/ui-components/react",
+    "../../packages/desktop-platform/ui-components/tests",
+    "../../packages/desktop-platform/ui/tests",
     "../../packages/desktop-platform/contracts/*/src",
+    "../../packages/workbench/api",
+    "../../packages/workbench/src",
     "../../plugins/**/src",
+    "../../plugins/*/tests",
+    "../../plugins/*/*/tests",
+    "../../products/desktop/ui-tests",
     "../../examples/*/src"
   ]
 }

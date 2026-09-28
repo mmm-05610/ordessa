@@ -1,0 +1,164 @@
+T010 GREEN — permissions wire-family mapping (plugins/permissions/api)
+date: 2026-09-27T21:32:37Z
+
+== runs (true process exit codes, no pipes) ==
+cmd: PYTHONPATH=plugins/permissions/api/src .venv/bin/python -m pytest plugins/permissions/api -q
+exit=0
+316 passed in 0.26s
+
+cmd: .venv/bin/python -m pytest plugins/permissions -q
+exit=0
+509 passed in 0.86s
+(baseline quoted at 416; the lane aggregate grew with parallel lanes' committed suites; stays exit 0)
+
+cmd: .venv/bin/python -m pytest plugins/permissions plugins/assets/sandbox -q
+exit=1
+1 failed, 763 passed in 1.88s
+
+ATTRIBUTION of the single combined failure: pre-existing, not this package.
+cmd: .venv/bin/python -m pytest plugins/assets/sandbox -q  -> exit=1, identical failure:
+FAILED plugins/assets/sandbox/adapters/tests/test_c3_seam.py::test_harness_api_checkpoint_record_is_absent_and_foundation_does_not_export_it
+FAILED plugins/assets/sandbox/adapters/tests/test_c3_seam.py::test_harness_api_checkpoint_record_is_absent_and_foundation_does_not_export_it
+1 failed, 254 passed in 1.02s
+Cause: its in-tree tripwire asserts refs/heads/codex/011-harness-api-ready is ABSENT;
+the harness lane created it (d3f026904e) after the 653-passed baseline.
+Owned by plugins/assets/sandbox (outside this lane's write scope); re-running that binding
+decision is that lane's work; this lane does not touch another package.
+
+cmd: plugins/permissions/frontend && npx vitest run
+exit=0  (28 passed, incl. tests/contract-consistency.test.ts — the codes.py<->TypeScript
+cross-language exact-equality guard over RefusalCode, kept green by not touching codes.py)
+[2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[32m28 passed[39m[22m[90m (28)[39m
+
+== mapping table (values verified subset of server_plugin_api.FAMILIES before printing) ==
+code                              family                  static_row / family_for answer (derivation source)
+APPROVAL_NOT_ACTIONABLE           APPROVAL_INVALID        family_for=UNAVAILABLE (fall-through refined by contributed row)
+APPROVAL_RESULT_UNKNOWN           OUTCOME_UNKNOWN         family_for=UNAVAILABLE (fall-through refined by contributed row)
+APPROVAL_STALE                    APPROVAL_INVALID        STATIC=APPROVAL_INVALID
+PERMISSION_ACTION_UNSUPPORTED     CAPABILITY_UNSUPPORTED  family_for=UNAVAILABLE (fall-through refined by contributed row)
+PERMISSION_APPROVAL_INVALID       INVALID_REQUEST         family_for=UNAVAILABLE (fall-through refined by contributed row)
+PERMISSION_AUTHORIZATION_INVALID  INVALID_REQUEST         family_for=UNAVAILABLE (fall-through refined by contributed row)
+PERMISSION_BRAND_UNSUPPORTED      CAPABILITY_UNSUPPORTED  family_for=UNAVAILABLE (fall-through refined by contributed row)
+PERMISSION_CEILING_INVALID        INVALID_REQUEST         family_for=UNAVAILABLE (fall-through refined by contributed row)
+PERMISSION_DECISION_INVALID       INVALID_REQUEST         family_for=UNAVAILABLE (fall-through refined by contributed row)
+PERMISSION_DIAGNOSTIC_INVALID     INVALID_REQUEST         family_for=UNAVAILABLE (fall-through refined by contributed row)
+PERMISSION_INTENT_INVALID         INVALID_REQUEST         family_for=UNAVAILABLE (fall-through refined by contributed row)
+PERMISSION_MODE_UNSUPPORTED       CAPABILITY_UNSUPPORTED  family_for=UNAVAILABLE (fall-through refined by contributed row)
+PERMISSION_PATTERN_INVALID        INVALID_REQUEST         family_for=UNAVAILABLE (fall-through refined by contributed row)
+PERMISSION_REQUEST_INVALID        INVALID_REQUEST         family_for=UNAVAILABLE (fall-through refined by contributed row)
+PERMISSION_RULE_INVALID           INVALID_REQUEST         family_for=UNAVAILABLE (fall-through refined by contributed row)
+PERMISSION_SNAPSHOT_INVALID       INVALID_REQUEST         family_for=UNAVAILABLE (fall-through refined by contributed row)
+PERMISSION_UNKNOWN_TOOL           CAPABILITY_UNSUPPORTED  family_for=UNAVAILABLE (fall-through refined by contributed row)
+POLICY_ADAPTER_MISSING            CAPABILITY_UNSUPPORTED  family_for=UNAVAILABLE (fall-through refined by contributed row)
+POLICY_CEILING_VIOLATION          FORBIDDEN               family_for=UNAVAILABLE (fall-through refined by contributed row)
+POLICY_SCOPE_UNVERIFIED           UNAVAILABLE             family_for=UNAVAILABLE (fall-through refined by contributed row)
+policy_deny                       FORBIDDEN               family_for=UNAVAILABLE (fall-through refined by contributed row)
+
+POLICY_SCOPE_UNVERIFIED keeps the platform's own family_for answer (UNAVAILABLE) unchanged;
+APPROVAL_STALE repeats the STATIC_ERROR_FAMILIES row verbatim; every other row is the
+documented fall-through refined by this lane's contributed wire.error-families payload.
+
+== unsupported/unknown disjointness after mapping (guard-tested) ==
+unsupported-kind codes -> CAPABILITY_UNSUPPORTED
+unknown-kind codes     -> UNAVAILABLE (POLICY_SCOPE_UNVERIFIED), OUTCOME_UNKNOWN (APPROVAL_RESULT_UNKNOWN)
+codes themselves unchanged: RefusalCode's 7 members and .values untouched.
+
+== per-ID list of the new guard suite (test_wire_family_mapping.py, 93 tests) ==
+tests/test_wire_family_mapping.py::test_the_mapping_covers_exactly_every_emittable_code_once
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[APPROVAL_NOT_ACTIONABLE]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[APPROVAL_RESULT_UNKNOWN]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[APPROVAL_STALE]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[PERMISSION_ACTION_UNSUPPORTED]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[PERMISSION_APPROVAL_INVALID]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[PERMISSION_AUTHORIZATION_INVALID]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[PERMISSION_BRAND_UNSUPPORTED]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[PERMISSION_CEILING_INVALID]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[PERMISSION_DECISION_INVALID]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[PERMISSION_DIAGNOSTIC_INVALID]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[PERMISSION_INTENT_INVALID]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[PERMISSION_MODE_UNSUPPORTED]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[PERMISSION_PATTERN_INVALID]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[PERMISSION_REQUEST_INVALID]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[PERMISSION_RULE_INVALID]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[PERMISSION_SNAPSHOT_INVALID]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[PERMISSION_UNKNOWN_TOOL]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[POLICY_ADAPTER_MISSING]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[POLICY_CEILING_VIOLATION]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[POLICY_SCOPE_UNVERIFIED]
+tests/test_wire_family_mapping.py::test_no_mapped_family_is_an_invented_name[policy_deny]
+tests/test_wire_family_mapping.py::test_no_code_maps_to_two_families_and_the_core_table_is_not_rewritten
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[APPROVAL_NOT_ACTIONABLE]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[APPROVAL_RESULT_UNKNOWN]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[APPROVAL_STALE]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[PERMISSION_ACTION_UNSUPPORTED]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[PERMISSION_APPROVAL_INVALID]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[PERMISSION_AUTHORIZATION_INVALID]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[PERMISSION_BRAND_UNSUPPORTED]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[PERMISSION_CEILING_INVALID]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[PERMISSION_DECISION_INVALID]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[PERMISSION_DIAGNOSTIC_INVALID]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[PERMISSION_INTENT_INVALID]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[PERMISSION_MODE_UNSUPPORTED]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[PERMISSION_PATTERN_INVALID]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[PERMISSION_REQUEST_INVALID]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[PERMISSION_RULE_INVALID]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[PERMISSION_SNAPSHOT_INVALID]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[PERMISSION_UNKNOWN_TOOL]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[POLICY_ADAPTER_MISSING]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[POLICY_CEILING_VIOLATION]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[POLICY_SCOPE_UNVERIFIED]
+tests/test_wire_family_mapping.py::test_the_static_resolver_never_disagrees_into_a_false_family[policy_deny]
+tests/test_wire_family_mapping.py::test_the_fall_through_rows_that_keep_the_platform_answer
+tests/test_wire_family_mapping.py::test_unsupported_and_unknown_never_collapse_to_the_same_family
+tests/test_wire_family_mapping.py::test_mapping_keeps_the_two_codes_themselves_distinct
+tests/test_wire_family_mapping.py::test_an_injected_composition_resolver_answers_first
+tests/test_wire_family_mapping.py::test_enum_and_plain_string_codes_resolve_alike
+tests/test_wire_family_mapping.py::test_policy_deny_is_mapped_although_the_diagnostic_constructor_refuses_it
+tests/test_wire_family_mapping.py::test_an_unemittable_code_is_refused_not_familied
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[APPROVAL_NOT_ACTIONABLE]
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[APPROVAL_RESULT_UNKNOWN]
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[APPROVAL_STALE]
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[PERMISSION_ACTION_UNSUPPORTED]
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[PERMISSION_APPROVAL_INVALID]
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[PERMISSION_AUTHORIZATION_INVALID]
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[PERMISSION_BRAND_UNSUPPORTED]
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[PERMISSION_CEILING_INVALID]
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[PERMISSION_DECISION_INVALID]
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[PERMISSION_DIAGNOSTIC_INVALID]
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[PERMISSION_INTENT_INVALID]
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[PERMISSION_MODE_UNSUPPORTED]
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[PERMISSION_PATTERN_INVALID]
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[PERMISSION_REQUEST_INVALID]
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[PERMISSION_RULE_INVALID]
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[PERMISSION_SNAPSHOT_INVALID]
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[PERMISSION_UNKNOWN_TOOL]
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[POLICY_ADAPTER_MISSING]
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[POLICY_CEILING_VIOLATION]
+tests/test_wire_family_mapping.py::test_each_mapped_code_still_carries_source_target_and_remedy[POLICY_SCOPE_UNVERIFIED]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[APPROVAL_NOT_ACTIONABLE]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[APPROVAL_RESULT_UNKNOWN]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[APPROVAL_STALE]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[PERMISSION_ACTION_UNSUPPORTED]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[PERMISSION_APPROVAL_INVALID]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[PERMISSION_AUTHORIZATION_INVALID]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[PERMISSION_BRAND_UNSUPPORTED]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[PERMISSION_CEILING_INVALID]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[PERMISSION_DECISION_INVALID]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[PERMISSION_DIAGNOSTIC_INVALID]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[PERMISSION_INTENT_INVALID]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[PERMISSION_MODE_UNSUPPORTED]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[PERMISSION_PATTERN_INVALID]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[PERMISSION_REQUEST_INVALID]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[PERMISSION_RULE_INVALID]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[PERMISSION_SNAPSHOT_INVALID]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[PERMISSION_UNKNOWN_TOOL]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[POLICY_ADAPTER_MISSING]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[POLICY_CEILING_VIOLATION]
+tests/test_wire_family_mapping.py::test_the_projected_body_converges_under_the_platform_wire_error[POLICY_SCOPE_UNVERIFIED]
+tests/test_wire_family_mapping.py::test_tool_arguments_and_secrets_cannot_be_smuggled_through_the_projection
+tests/test_wire_family_mapping.py::test_a_refusal_without_a_target_projects_without_one
+
+NOTE: the guard file was first written as tests/test_wire_family.py; renamed because
+plugins/assets/sandbox/api/tests gained a same-basename module and the rootdir import
+collision broke the combined run (collection ERROR, not a product failure).

@@ -1,0 +1,38 @@
+# T013 RED evidence — Chat input-area per-brand mode entry
+# date: 2026-09-27T22:34:04Z; command: npx vitest run tests/mode-entry.test.tsx
+# RED: src/mode-entry.ts does not exist yet.
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/frontend[39m
+
+ [31m❯[39m tests/mode-entry.test.tsx [2m([22m[2m0 test[22m[2m)[22m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/mode-entry.test.tsx[2m [ tests/mode-entry.test.tsx ][22m
+[31m[1mError[22m: Failed to resolve import "../src/mode-entry" from "tests/mode-entry.test.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36m/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/frontend/tests/mode-entry.test.tsx[39m:15:7
+[33m  11 |  import { OwnedResources } from "@ordessa/extension-api";
+  12 |  import { createChatContributions } from "@extensions/ordessa.chat-api/contract.js";
+  13 |  import { ModeEntryKey, PermissionsModeEntry, createModeEntryContribution, resolveModeEntry } from "../src/mode-entry";
+     |                                                                                                     ^
+  14 |  var _jsxFileName = "/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/frontend/tests/mode-entr...
+  15 |  import { jsxDEV as _jsxDEV } from "react/jsx-dev-runtime";[39m
+[90m [2m❯[22m TransformPluginContext._formatLog ../../../node_modules/vite/dist/node/chunks/node.js:[2m31011:39[22m[39m
+[90m [2m❯[22m TransformPluginContext.error ../../../node_modules/vite/dist/node/chunks/node.js:[2m31008:14[22m[39m
+[90m [2m❯[22m normalizeUrl ../../../node_modules/vite/dist/node/chunks/node.js:[2m27957:18[22m[39m
+[90m [2m❯[22m ../../../node_modules/vite/dist/node/chunks/node.js:[2m28025:30[22m[39m
+[90m [2m❯[22m TransformPluginContext.transform ../../../node_modules/vite/dist/node/chunks/node.js:[2m27993:4[22m[39m
+[90m [2m❯[22m EnvironmentPluginContainer.transform ../../../node_modules/vite/dist/node/chunks/node.js:[2m30796:14[22m[39m
+[90m [2m❯[22m loadAndTransform ../../../node_modules/vite/dist/node/chunks/node.js:[2m20594:26[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [2mno tests[22m
+[2m   Start at [22m 06:34:05
+[2m   Duration [22m 1.04s[2m (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 648ms)[22m
+
+VITEST_EXIT=1

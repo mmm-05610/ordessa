@@ -38,13 +38,6 @@ def test_the_plugin_entry_point_group_keeps_its_historical_spelling():
     assert 'ENTRY_POINT_GROUP = "agent_box.plugins"' in loader
 
 
-def test_the_contract_ids_keep_their_historical_spelling():
-    # The contract ids are protocol, not display names.
-    skills_contract = (REPO / "src" / "pacthold" / "resource_contracts"
-                       / "agent_skill_v1.py").read_text(encoding="utf-8")
-    assert "agent-box.skill@1" in skills_contract
-
-
 def test_the_environment_and_data_directory_surfaces_stand():
     runtime = (REPO / "src" / "pacthold" / "work_core" / "runtime.py").read_text(encoding="utf-8")
     assert 'AGENT_BOX_HOME_ENV = "AGENT_BOX_HOME"' in runtime

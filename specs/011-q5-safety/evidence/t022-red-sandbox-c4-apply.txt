@@ -1,0 +1,90 @@
+T022 RED — sandbox controlled C4 application-path evidence (red-first record)
+
+Lane: plugins/assets/sandbox/adapters (ordessa_sandbox_adapters),
+branch codex/011-q5-safety. Goal: raise the isolation evidence from
+"intents compiled" to "the platform's own C4 application service
+planned/applied my facet against an observed installation", or register
+the honest refusal.
+
+== MEASURED FACTS RELIED ON (file:line, re-verified this turn) ==
+F1. C4 port: ConfigurationService Protocol
+    plugins/harness/api/src/ordessa_harness_api/application.py:211;
+    Plan :109-127, Refused :130-143, Confirmed :146-160, Unknown :163-177,
+    ApplicationResult/PlanResult aliases :180-181, OperationRecord
+    :184-199, DesiredFragment :42-61, ApplicationTarget :29-40.
+F2. REAL platform implementation consumed (never re-implemented):
+    plugins/harness/src/ordessa_harness/application/configuration_service.py
+    — unobserved-native refusal :148-149 (VERSION_UNVERIFIED);
+    joint gate :150-153, with the observed-installation adapter-version
+    check at :153
+    (`descriptor.adapter_versions.contains(installation.adapter_version)`);
+    absent-contribution refusal :212-213 (ADAPTER_MISSING);
+    stale revision :209-210 (STALE_PLAN);
+    claim ceiling :196-197 ("intent exceeds registered claims");
+    permit-once :272-273; reservation-before-effect :289;
+    readback identity/manifest gate :301-302; Match-only confirmation
+    :303-305; post-reservation failure -> Unknown (never Confirmed)
+    :312-320; reconcile read-only :333-337.
+F3. Publication + ledger are the platform's own:
+    materialization/private_generation.py materialize_generation :447-488
+    (one private gen-* dir, lease fd, sha256 manifest),
+    PublishedGeneration.read_bytes :60-79;
+    application/operation_journal.py reserve_new :183-225, query :227-233,
+    one-active-operation index :133-136.
+F4. Observation provenance: the ONLY in-tree
+    RuntimeAdapter.describe_installation() provider is the harness
+    controlled fixture
+    plugins/harness/tests/fixtures/external_adapter/src/ordessa_test_external_adapter/__init__.py:69
+    -> Installation("test-external", (1,0,0), (1,0,0), "fixture:installed").
+    No production observer exists in this tree (t020 evidence, same finding).
+F5. This facet pins adapter_versions EXACTLY (0,1,0):
+    src/ordessa_sandbox_adapters/points.py:72
+    `_ADAPTER_VERSIONS = VersionRange((0, 1, 0), (0, 1, 0))`, backed by
+    plugins/assets/sandbox/adapters/pyproject.toml:7 version="0.1.0"
+    (the Permissions side was narrowed the same way:
+    plugins/permissions/adapters/pyproject.toml:7 version="0.1.0").
+    => the (1,0,0) fixture observation and the (0,1,0) pin DELIBERATELY do
+    not match; this lane proves the platform's refusal instead of widening
+    any range. The positive chain therefore observes (0,1,0) through a
+    locally defined in-test describe_installation provider
+    (tests/test_controlled_c4_l2.py::_ControlledRuntimeAdapter); no
+    harness fixture or harness package file was edited.
+F6. Pre-existing evidence-layer defect (the real RED of this task):
+    matrix.py SUPPORTED cells (`config-write-controlled-fixture-l2`)
+    cited `tests/test_controlled_c4_l2.py` — a file that DID NOT EXIST
+    anywhere in the tree or in any worktree
+    (git log --all --diff-filter=A -- '*test_controlled_c4_l2*' -> empty),
+    and the config-compile cells cited
+    test_c3_seam.py::test_codex_fields_bind_real_platform_intents and
+    ::test_claude_toggle_binds_a_real_setfield — neither function exists
+    (actual: test_codex_fields_bind_real_platform_setfield_objects,
+    test_claude_toggle_binds_a_real_setfield_and_claims_nothing_broader).
+
+== BASELINES (true exit codes, no pipes) ==
+$ .venv/bin/python -m pytest plugins/assets/sandbox/adapters -q   (before any change)
+exit=0 — 99 passed in 0.97s
+
+== NEW EXECUTION-LAYER RUN, FIRST PASS (honest record) ==
+$ .venv/bin/python -m pytest plugins/assets/sandbox/adapters/tests/test_controlled_c4_l2.py -q
+exit=0 — 15 passed in 0.52s
+The platform code already backed the chain; no src of this package needed
+to change for the chain to run. The RED is therefore in the EVIDENCE
+LAYER (F6): the supported cells' "application path"/"observed receipt"
+were backed by nothing that existed.
+
+== GUARD RED (id-level citation guards added to tests/test_matrix.py) ==
+$ .venv/bin/python -m pytest plugins/assets/sandbox/adapters/tests/test_matrix.py -q
+exit=1 — 2 failed, 8 passed in 0.11s
+Failures (excerpt of the real output):
+  FAILED test_every_cited_test_file_and_test_id_exists
+    AssertionError: codex/config-compile.evidence cites missing test id
+    test_c3_seam.py::test_codex_fields_bind_real_platform_intents
+  FAILED test_supported_apply_effect_fields_name_an_existing_test_id
+    AssertionError: codex/config-write-controlled-fixture-l2.application_path
+    must cite a qualified tests/test_*.py::test_* id to back a supported
+    application/receipt/negative claim
+    (value was: 'platform C4 ConfigurationApplicationService.apply ->
+    materialize_generation publishes one private gen-* directory; proven
+    by tests/test_controlled_c4_l2.py' — bare file, file did not exist)
+Both guards stay green only once the cited tests exist AND are named at
+id level (t022-green record).

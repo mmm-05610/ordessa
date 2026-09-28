@@ -1,10 +1,15 @@
 """Canonical, immutable, query-oriented Extension Catalog.
 
 The catalog is the single process-local authority for Host-facing extension
-contributions (selectors, finalization contributors, host controls, harness
-managers, continuation routes, credential materializers).  It is not a Work
-Core entity, never enters a database, never imports Web, and never holds
-transport handlers (Phase 4).  Every contribution carries its plugin
+contributions.  specs/010 T009: the kernel catalog knows only the neutral
+contribution kinds (resource selectors, finalization contributors, host
+controls).  Business kinds — harness managers, continuation routes,
+credential materializers, transport operations — are contributed by the
+compatibility assembly through ``ContributionKindSpec`` injection
+(``pacthold_runtime_compat.catalog``); this module never imports them.
+
+The catalog is not a Work Core entity, never enters a database, and never
+holds transport handlers.  Every contribution carries its plugin
 ownership/provenance; duplicates are fail closed at build time.
 
 Hosts (Web today, ACP/CLI/third-party Hosts tomorrow) consume this catalog
@@ -14,30 +19,69 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Any, Mapping, Protocol, runtime_checkable
+from typing import Callable, Mapping, Protocol, runtime_checkable
 
 from .api import RegistryBindable, SelectorCompatibility
-from .runtime_composition.protocol import TransportOperationHandler
 
-# Canonical contribution kinds; each is an independent namespace, so the same
-# id may legitimately exist in two kinds (e.g. a selector and a contributor
-# both named "git-workspace").
+# Canonical neutral contribution kinds; each is an independent namespace, so
+# the same id may legitimately exist in two kinds (e.g. a selector and a
+# contributor both named "git-workspace").  Business kinds live in the
+# compatibility assembly, which registers them via ContributionKindSpec.
 RESOURCE_SELECTOR = "resource_selector"
 FINALIZATION_CONTRIBUTOR = "finalization_contributor"
 HOST_CONTROL = "host_control"
-HARNESS_MANAGER = "harness_manager"
-CONTINUATION_ROUTE = "continuation_route"
-CREDENTIAL_MATERIALIZER = "credential_materializer"
-TRANSPORT_OPERATION = "transport_operation"
 
-CONTRIBUTION_KINDS = (
+CORE_CONTRIBUTION_KINDS = (
     RESOURCE_SELECTOR,
     FINALIZATION_CONTRIBUTOR,
     HOST_CONTROL,
-    HARNESS_MANAGER,
-    CONTINUATION_ROUTE,
-    CREDENTIAL_MATERIALIZER,
-    TRANSPORT_OPERATION,
+)
+
+#: Back-compatible name for the kernel-neutral kind tuple.
+CONTRIBUTION_KINDS = CORE_CONTRIBUTION_KINDS
+
+
+@dataclass(frozen=True)
+class ValidationContext:
+    """Facts a kind-spec validator may need; never mutates builder state."""
+
+    plugin_id: str
+    known_contracts: frozenset[str]
+
+
+@dataclass(frozen=True)
+class ContributionKindSpec:
+    """How one contribution kind is read from a plugin registration.
+
+    ``id_of`` extracts the component id from a component (raising
+    ``ValueError`` for malformed contributions); ``validate`` runs optional
+    kind-specific fail-closed checks.  The kernel defines only the neutral
+    specs — an assembling product supplies its own business specs, keeping
+    component-id extraction and validation semantics without teaching the
+    kernel any business type.
+    """
+
+    kind: str
+    label: str
+    slot: str
+    id_attr: str
+    id_of: Callable[[object], "str | None"]
+    validate: Callable[[object, ValidationContext], None] | None = None
+
+
+def _direct_id(attr: str) -> Callable[[object], "str | None"]:
+    def extract(item: object) -> "str | None":
+        return getattr(item, attr, None)
+    return extract
+
+
+CORE_CONTRIBUTION_SPECS: tuple[ContributionKindSpec, ...] = (
+    ContributionKindSpec(RESOURCE_SELECTOR, "selector", "resource_selectors",
+                         "id", _direct_id("id")),
+    ContributionKindSpec(FINALIZATION_CONTRIBUTOR, "contributor",
+                         "finalization_contributors", "id", _direct_id("id")),
+    ContributionKindSpec(HOST_CONTROL, "control", "host_controls",
+                         "provider_id", _direct_id("provider_id")),
 )
 
 
@@ -117,55 +161,27 @@ class ExtensionCatalog:
     def get_host_control(self, provider_id: str) -> object:
         return self._get(HOST_CONTROL, provider_id)
 
-    # -- harness managers ---------------------------------------------------
-    def harness_managers(self) -> tuple[object, ...]:
-        return self._values(HARNESS_MANAGER)
-
-    def get_harness_manager(self, harness_id: str) -> object:
-        return self._get(HARNESS_MANAGER, harness_id)
-
-    # -- continuation routes -------------------------------------------------
-    def continuation_routes(self) -> tuple[object, ...]:
-        return self._values(CONTINUATION_ROUTE)
-
-    def routes(self) -> tuple[object, ...]:
-        return self.continuation_routes()
-
-    def get_continuation_route(self, route_id: str) -> object:
-        return self._get(CONTINUATION_ROUTE, route_id)
-
-    # -- credential materializers --------------------------------------------
-    def credential_materializers(self) -> tuple[object, ...]:
-        return self._values(CREDENTIAL_MATERIALIZER)
-
-    def get_credential_materializer(self, provider_id: str) -> object:
-        return self._get(CREDENTIAL_MATERIALIZER, provider_id)
-
-    # -- transport operations --------------------------------------------------
-    def transport_operations(self) -> tuple[object, ...]:
-        return self._values(TRANSPORT_OPERATION)
-
-    def get_transport_operation(self, operation_type: str) -> object:
-        return self._get(TRANSPORT_OPERATION, operation_type)
-
 
 class ExtensionCatalogBuilder:
     """Staged, fail-closed builder used by the plugin loader and by the
     canonical from-report helper.
 
     ``prepare`` validates one full registration (per-kind ids, cross-plugin
-    duplicates, materializer contract knowledge) without mutating state, so a
-    plugin that fails anywhere leaves no orphan contribution; ``commit`` is a
-    pure data append that cannot fail.
+    duplicates) without mutating state, so a plugin that fails anywhere
+    leaves no orphan contribution; ``commit`` is a pure data append that
+    cannot fail.  Kind specs default to the kernel-neutral set; an assembling
+    product passes its own set (or extends the defaults) to describe its
+    business contribution kinds.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, *, kind_specs: tuple[ContributionKindSpec, ...] = CORE_CONTRIBUTION_SPECS) -> None:
+        self._specs = tuple(kind_specs)
         self._seen: dict[tuple[str, str], str] = {}
         self._records: list[ExtensionContribution] = []
 
     def prepare(
         self,
-        registration: Any,
+        registration,
         *,
         plugin_id: str,
         distribution_name: str | None = None,
@@ -174,64 +190,22 @@ class ExtensionCatalogBuilder:
     ) -> tuple[ExtensionContribution, ...]:
         local: dict[tuple[str, str], str] = {}
         records: list[ExtensionContribution] = []
-        specs = (
-            (RESOURCE_SELECTOR, "selector", registration.resource_selectors, "id"),
-            (FINALIZATION_CONTRIBUTOR, "contributor", registration.finalization_contributors, "id"),
-            (HOST_CONTROL, "control", registration.host_controls, "provider_id"),
-            (HARNESS_MANAGER, "harness", registration.harness_managers, "harness_id"),
-            (CONTINUATION_ROUTE, "route", registration.continuation_routes, "descriptor"),
-            (CREDENTIAL_MATERIALIZER, "materializer", registration.credential_materializers, "provider_id"),
-            (TRANSPORT_OPERATION, "transport operation", registration.transport_operations, "descriptor"),
-        )
-        for kind, label, items, attr in specs:
-            for item in items:
-                if kind == CONTINUATION_ROUTE:
-                    descriptor = item.descriptor()
-                    component_id = getattr(descriptor, "id", None)
-                elif kind == TRANSPORT_OPERATION:
-                    # A transport contribution is the typed
-                    # TransportOperationContribution(descriptor, handler) pair.
-                    descriptor = item.descriptor
-                    handler = item.handler
-                    if not isinstance(handler, TransportOperationHandler):
-                        raise ValueError(
-                            "transport operation handler must implement the typed SPI: "
-                            f"{getattr(descriptor, 'operation_type', None)}"
-                        )
-                    if handler.descriptor() != descriptor:
-                        raise ValueError(
-                            f"transport operation handler descriptor mismatch: {descriptor.operation_type}"
-                        )
-                    component_id = descriptor.operation_type
-                else:
-                    component_id = getattr(item, attr, None)
+        context = ValidationContext(plugin_id=plugin_id, known_contracts=known_contracts)
+        for spec in self._specs:
+            for item in getattr(registration, spec.slot, ()):
+                component_id = spec.id_of(item)
                 if not isinstance(component_id, str) or not component_id:
-                    raise ValueError(f"{label} must declare a non-empty {attr}")
-                key = (kind, component_id)
+                    raise ValueError(f"{spec.label} must declare a non-empty {spec.id_attr}")
+                key = (spec.kind, component_id)
                 if key in local or key in self._seen:
-                    raise ValueError(f"duplicate {label} id: {component_id}")
-                if kind == CREDENTIAL_MATERIALIZER:
-                    self._validate_materializer(item, component_id, plugin_id, known_contracts)
+                    raise ValueError(f"duplicate {spec.label} id: {component_id}")
+                if spec.validate is not None:
+                    spec.validate(item, context)
                 local[key] = plugin_id
                 records.append(ExtensionContribution(
-                    kind, component_id, plugin_id, distribution_name, distribution_version, item,
+                    spec.kind, component_id, plugin_id, distribution_name, distribution_version, item,
                 ))
         return tuple(records)
-
-    @staticmethod
-    def _validate_materializer(item: object, provider_id: str, plugin_id: str, known_contracts: frozenset[str]) -> None:
-        supported = getattr(item, "supported_contract_ids", None)
-        if not isinstance(supported, frozenset) or not supported or not all(isinstance(cid, str) and cid for cid in supported):
-            raise ValueError(
-                f"credential materializer {provider_id!r} (plugin {plugin_id!r}) "
-                "must declare a non-empty frozenset of supported contract ids"
-            )
-        unknown = set(supported) - set(known_contracts)
-        if unknown:
-            raise ValueError(
-                f"credential materializer {provider_id!r} (plugin {plugin_id!r}) "
-                f"declares unregistered credential contracts: {', '.join(sorted(unknown))}"
-            )
 
     def commit(self, records: tuple[ExtensionContribution, ...]) -> None:
         for record in records:
@@ -242,15 +216,15 @@ class ExtensionCatalogBuilder:
         return ExtensionCatalog.from_contributions(tuple(self._records))
 
 
-def build_catalog_from_report(report: Any, *, registry: Any = None) -> ExtensionCatalog:
+def build_catalog_from_report(report, *, registry=None, builder: "ExtensionCatalogBuilder | None" = None) -> ExtensionCatalog:
     """Canonical catalog assembly for manually prepared environments.
 
-    Used by the Web compatibility shim and by embedders that assemble a
+    Used by the compatibility assembly and by embedders that assemble a
     Registry/PluginLoadReport themselves.  It applies exactly the same
     fail-closed validation and ownership recording as the plugin loader; it is
     not a second aggregation implementation living inside a Host.
     """
-    builder = ExtensionCatalogBuilder()
+    builder = builder if builder is not None else ExtensionCatalogBuilder()
     base = frozenset(registry.contract_types()) if registry is not None else frozenset()
     for record in report.ready:
         registration = record.registration
@@ -272,13 +246,13 @@ def build_catalog_from_report(report: Any, *, registry: Any = None) -> Extension
     return builder.build()
 
 
-def activate_registry_bindings(catalog: ExtensionCatalog, registry: Any) -> tuple[str, ...]:
+def activate_registry_bindings(catalog: ExtensionCatalog, registry) -> tuple[str, ...]:
     """Activate one environment: bind bindable contributions exactly once.
 
     Walks BOTH extension surfaces — Catalog contributions and Registry
     providers — because a provider can legitimately need the activated
-    Catalog (for example the local RuntimeHost's transport operation
-    resolver).  Only components implementing the explicit
+    Catalog (for example a runtime host's transport operation resolver
+    contributed by the assembly).  Only components implementing the explicit
     :class:`RegistryBindable` / :class:`CatalogBindable` protocols are bound,
     exactly once each, in deterministic order.  A binding failure propagates:
     the environment must never pretend a plugin is READY when its
@@ -313,37 +287,13 @@ class CatalogBindable(Protocol):
     """Explicit opt-in for contributions that need the activated Catalog.
 
     The canonical pattern is a provider that must look up sibling
-    contributions (today: the local RuntimeHost's transport operation
+    contributions (for example the assembly's runtime host transport
     resolver).  Binding happens once per contribution during environment
     activation, after every plugin has committed; implementations must be
     side-effect free and idempotent for the same catalog.
     """
 
     def bind_catalog(self, catalog: "ExtensionCatalog") -> None: ...
-
-
-class TransportOperationResolver:
-    """Immutable operation_type → contribution lookup for one environment."""
-
-    def __init__(self, contributions: Mapping[str, ExtensionContribution]) -> None:
-        self._contributions: Mapping[str, ExtensionContribution] = MappingProxyType(dict(contributions))
-
-    @classmethod
-    def from_catalog(cls, catalog: "ExtensionCatalog") -> "TransportOperationResolver":
-        return cls({
-            record.component_id: record
-            for record in catalog.contributions()
-            if record.kind == TRANSPORT_OPERATION
-        })
-
-    def resolve(self, operation_type: str) -> ExtensionContribution:
-        contribution = self._contributions.get(operation_type)
-        if contribution is None:
-            raise KeyError(f"unknown transport operation: {operation_type}")
-        return contribution
-
-    def operation_types(self) -> tuple[str, ...]:
-        return tuple(sorted(self._contributions))
 
 
 def activate_catalog_bindings(catalog: ExtensionCatalog) -> tuple[str, ...]:

@@ -14,6 +14,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 from ordessa_server.bootstrap import build_runtime
+from ordessa_server_product.composition import create_composition  # T014-S1d funnel
 from ordessa_server.transport.http import create_app
 from ordessa_workspace.local_environment import LocalEnvironmentProvider
 
@@ -59,6 +60,9 @@ MISSING_AT_BASELINE = (
 ADDED_SINCE_BASELINE = (
     "acp.channel.open", "acp.channel.release", "executions.get",
 )
+ACP_ADMISSION_METHODS = (
+    "acp.submission.authorize", "acp.permission.authorize",
+)
 
 
 @pytest.fixture
@@ -69,7 +73,8 @@ def hello(tmp_path, request):
     so a mutated dispatch table cannot leak into the next case.
     """
     runtime = build_runtime(tmp_path / "data",
-                            harnesses=registry() if request.param == "harnessed" else None)
+                            server_plugins=create_composition().compatibility_plugins(
+                                harnesses=registry() if request.param == "harnessed" else None))
     with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
         api = Wire(client, {"Authorization": f"Bearer {runtime.token}"})
         yield runtime, api, api.ok("server.hello", HELLO)
@@ -84,7 +89,7 @@ def _hello_on_composition(root, *, sandbox_status):
     schema and all - is part of what makes the answer reachable.
     """
     runtime = build_runtime(root / "data")
-    runtime.compat_handlers.workspaces.local = LocalEnvironmentProvider(
+    runtime.plugin_host.provided_port('compat.handlers').workspaces.local = LocalEnvironmentProvider(
         sandbox_probe=lambda: {"status": sandbox_status, "code": "binary_missing"})
     with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
         api = Wire(client, {"Authorization": f"Bearer {runtime.token}"})
@@ -129,10 +134,16 @@ def test_the_37_methods_missing_at_baseline_are_all_declared_now(hello):
     _, _, result = hello
     declared = {item["id"] for item in result["capabilities"]}
     assert len(MISSING_AT_BASELINE) == 37, "the baseline measurement is part of this gate"
-    assert sorted(declared - set(DECLARED_AT_BASELINE) - set(ADDED_SINCE_BASELINE)) == sorted(
-        MISSING_AT_BASELINE), "post-baseline growth must be named in ADDED_SINCE_BASELINE"
+    assert sorted(declared - set(DECLARED_AT_BASELINE) - set(ADDED_SINCE_BASELINE)
+                  - set(ACP_ADMISSION_METHODS)) == sorted(
+        MISSING_AT_BASELINE), "post-baseline growth must be named explicitly"
     assert set(DECLARED_AT_BASELINE) <= declared
     assert set(ADDED_SINCE_BASELINE) <= declared
+    assert set(ACP_ADMISSION_METHODS) <= declared
+    entries = {item["id"]: item for item in result["capabilities"]}
+    for method in ACP_ADMISSION_METHODS:
+        assert entries[method]["supported"] is False
+        assert entries[method]["reason"] == "ACP admission authority is unavailable"
 
 
 @pytest.mark.parametrize("hello", ["plain"], indirect=True)

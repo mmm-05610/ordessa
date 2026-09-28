@@ -1,4 +1,10 @@
-"""Thin command-line entry point for Core diagnostics and installed Hosts."""
+"""Thin command-line entry point for the kernel Core and installed plugins.
+
+specs/010 T009: the kernel CLI carries only mechanism subcommands (plugin
+inspection and a provider-neutral readiness doctor).  The Web Workbench
+launcher subcommands and the Web-aware doctor live in the compatibility
+assembly's CLI (``pacthold_runtime_compat.cli``).
+"""
 from __future__ import annotations
 
 import argparse
@@ -16,7 +22,7 @@ PROG = DISPLAY_NAME
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog=PROG,
-        description="Pacthold work core and plugin host launcher.",
+        description="Pacthold work core and plugin host.",
     )
     parser.add_argument(
         "--version", action="version",
@@ -25,18 +31,7 @@ def _build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command")
     parser.set_defaults(func=cmd_help)
 
-    p_web = sub.add_parser("web", help="Start the local Web Workbench Host")
-    p_web.add_argument("--host", default="127.0.0.1")
-    p_web.add_argument("--port", type=int, default=4173)
-    p_web.add_argument("--no-browser", action="store_true")
-    p_web.set_defaults(func=cmd_web)
-
-    p_launch = sub.add_parser("launch", help="Open the Web Workbench Quick Launch")
-    p_launch.add_argument("--host", default="127.0.0.1")
-    p_launch.add_argument("--port", type=int, default=4173)
-    p_launch.set_defaults(func=cmd_launch)
-
-    p_doctor = sub.add_parser("doctor", help="Check local Web Host readiness")
+    p_doctor = sub.add_parser("doctor", help="Check kernel readiness")
     p_doctor.add_argument("--json", action="store_true", dest="as_json")
     p_doctor.set_defaults(func=cmd_doctor)
 
@@ -62,34 +57,8 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def cmd_help(_args: argparse.Namespace) -> int:
-    print(f"{PROG}: use `pacthold web` to start the Local Web Workbench")
+    print(f"{PROG}: use `pacthold plugins list` to inspect installed plugins")
     return 0
-
-
-def cmd_web(args: argparse.Namespace) -> int:
-    try:
-        from agent_box_web.cli import run
-    except ModuleNotFoundError as exc:
-        if exc.name == "agent_box_web" or (exc.name and exc.name.startswith("agent_box_web.")):
-            print(
-                "pacthold web: Web Host is not installed; install with "
-                "the Web Host is a separate distribution: `pip install agent-box-web`.",
-                file=sys.stderr,
-            )
-            return 1
-        raise
-    return run(host=args.host, port=args.port, open_browser=not args.no_browser)
-
-
-def cmd_launch(args: argparse.Namespace) -> int:
-    try:
-        from agent_box_web.cli import run
-    except ModuleNotFoundError as exc:
-        if exc.name == "agent_box_web" or (exc.name and exc.name.startswith("agent_box_web.")):
-            print("pacthold launch: Web Host is not installed; install with the Web Host is a separate distribution: `pip install agent-box-web`.", file=sys.stderr)
-            return 1
-        raise
-    return run(host=args.host, port=args.port, open_browser=True, initial_route="/quick-launch")
 
 
 def cmd_doctor(args: argparse.Namespace) -> int:
@@ -103,25 +72,14 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     except Exception:
         checks["plugin_registry"] = False
         checks["execution_providers"] = False
-    try:
-        from agent_box_web.cli import web_readiness
-    except ModuleNotFoundError as exc:
-        if exc.name == "agent_box_web" or (exc.name and exc.name.startswith("agent_box_web.")):
-            checks.update({"web_plugin": False, "frontend_static_build": False, "frontend_static_dir": None})
-        else:
-            raise
-    else:
-        checks.update(web_readiness())
     if args.as_json:
         print(json.dumps(checks, ensure_ascii=False, sort_keys=True))
     else:
         for key, value in checks.items(): print(f"{key}: {'ok' if value else 'missing'}")
-    # Providers and the Web Host are optional distributions.  They are
-    # reported for diagnostics, but only an installed Web Host with missing
-    # static data is unhealthy; a root-only installation remains valid.
+    # Providers are optional distributions.  They are reported for
+    # diagnostics, but only the registry path decides health; a kernel-only
+    # installation remains valid.
     healthy = checks.get("plugin_registry", False)
-    if checks.get("web_plugin"):
-        healthy = healthy and checks.get("frontend_static_build", False)
     return 0 if healthy else 1
 
 

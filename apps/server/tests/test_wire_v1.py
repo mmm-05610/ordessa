@@ -19,6 +19,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 from ordessa_server.bootstrap import build_runtime
+from ordessa_server_product.composition import create_composition
 from ordessa_server_compat.execution import (
     CancelOutcome, HarnessDescriptor, HarnessRegistry,
 )
@@ -149,12 +150,14 @@ class Wire:
 def wire(tmp_path):
     execution = RecordingExecution(block=True)
     runtime = build_runtime(
-        tmp_path / "data", harnesses=registry(), connector=FakeConnector(), execution=execution,
+        tmp_path / "data",
+        server_plugins=create_composition().compatibility_plugins(
+            harnesses=registry(), connector=FakeConnector(), execution=execution),
     )
     with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
         headers = {"Authorization": f"Bearer {runtime.token}"}
         api = Wire(client, headers)
-        runtime.repository.register_credential("cred-1", None, "locator") if False else None
+        runtime.plugin_host.provided_port('product.repository').register_credential("cred-1", None, "locator") if False else None
         yield runtime, api, execution
 
 
@@ -163,8 +166,10 @@ def wire_directory_model(tmp_path):
     """Same Server, but the harness declares a directory-backed model control."""
     execution = RecordingExecution(block=True)
     runtime = build_runtime(
-        tmp_path / "data", harnesses=directory_model_control_registry(),
-        connector=FakeConnector(), execution=execution,
+        tmp_path / "data",
+        server_plugins=create_composition().compatibility_plugins(
+            harnesses=directory_model_control_registry(),
+            connector=FakeConnector(), execution=execution),
     )
     with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
         headers = {"Authorization": f"Bearer {runtime.token}"}
@@ -221,15 +226,19 @@ def test_hello_reports_capabilities_and_requires_auth(wire):
 
 def test_server_identity_is_stable_across_restart(tmp_path):
     execution = RecordingExecution()
-    first = build_runtime(tmp_path / "stable", harnesses=registry(),
-                          connector=FakeConnector(), execution=execution)
+    first = build_runtime(
+        tmp_path / "stable",
+        server_plugins=create_composition().compatibility_plugins(
+            harnesses=registry(), connector=FakeConnector(), execution=execution))
     with TestClient(create_app(first), base_url="http://127.0.0.1") as client:
         headers = {"Authorization": f"Bearer {first.token}"}
         api = Wire(client, headers)
         server_id = api.ok("server.hello", {"clientVersions": ["wire/1"], "clientPresentationSupports": []})["serverId"]
         token = first.token
-    second = build_runtime(tmp_path / "stable", harnesses=registry(),
-                           connector=FakeConnector(), execution=execution)
+    second = build_runtime(
+        tmp_path / "stable",
+        server_plugins=create_composition().compatibility_plugins(
+            harnesses=registry(), connector=FakeConnector(), execution=execution))
     with TestClient(create_app(second), base_url="http://127.0.0.1") as client:
         assert second.token == token
         api = Wire(client, {"Authorization": f"Bearer {token}"})
@@ -238,7 +247,8 @@ def test_server_identity_is_stable_across_restart(tmp_path):
 
 
 def test_unavailable_capabilities_carry_a_reason(tmp_path):
-    runtime = build_runtime(tmp_path / "bare", harnesses=registry())
+    runtime = build_runtime(tmp_path / "bare",
+                            server_plugins=create_composition().compatibility_plugins(harnesses=registry()))
     with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
         api = Wire(client, {"Authorization": f"Bearer {runtime.token}"})
         result = api.ok("server.hello", {"clientVersions": ["wire/1"], "clientPresentationSupports": []})
@@ -254,8 +264,9 @@ def test_unavailable_capabilities_carry_a_reason(tmp_path):
 
 
 def test_a_workspace_capability_names_what_this_composition_lacks(tmp_path):
-    runtime = build_runtime(tmp_path / "bare", harnesses=registry())
-    runtime.service.workspaces.local = LocalEnvironmentProvider(
+    runtime = build_runtime(tmp_path / "bare",
+                            server_plugins=create_composition().compatibility_plugins(harnesses=registry()))
+    runtime.plugin_host.provided_port('product.service').workspaces.local = LocalEnvironmentProvider(
         sandbox_probe=lambda: {"status": "unavailable", "code": "binary_missing"},
     )
     with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
@@ -641,8 +652,10 @@ def test_attachment_is_worker_authorized_captured_and_recoverable(tmp_path):
     attachment = b"captured-once-by-authorized-worker"
     connector = FakeConnector({"assets/reference.png": attachment})
     runtime = build_runtime(
-        tmp_path / "data", harnesses=registry(), connector=connector,
-        execution=RecordingExecution(block=True),
+        tmp_path / "data",
+        server_plugins=create_composition().compatibility_plugins(
+            harnesses=registry(), connector=connector,
+            execution=RecordingExecution(block=True)),
     )
     with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
         api = Wire(client, {"Authorization": f"Bearer {runtime.token}"})
@@ -659,7 +672,7 @@ def test_attachment_is_worker_authorized_captured_and_recoverable(tmp_path):
 
         assert len(connector.read_calls) == 1
         read_call = connector.read_calls[0]
-        stored_workspace = runtime.repository.workspaces.get(workspace["id"])
+        stored_workspace = runtime.plugin_host.provided_port('product.repository').workspaces.get(workspace["id"])
         assert read_call == {
             "distribution": "Ubuntu", "user": "tester",
             "connection_id": stored_workspace["connection_id"],
@@ -667,7 +680,7 @@ def test_attachment_is_worker_authorized_captured_and_recoverable(tmp_path):
             "relative_path": "assets/reference.png",
         }
         assert read_call["connection_id"] != "conn-/home/tester/attachments"
-        with runtime.repository.database.read() as connection:
+        with runtime.plugin_host.provided_port('product.repository').database.read() as connection:
             row = connection.execute(
                 "SELECT input_object_digest FROM server_turns WHERE id=?",
                 (accepted["executionId"],),
@@ -786,9 +799,9 @@ def test_queue_terminal_events_remove_dispatched_items_without_guessing(wire):
         "message": {"text": "next", "attachments": []}, "overrides": [],
     })
     with runtime.database.transaction() as conn:
-        claimed = runtime.queue.claim_next(conn, session_id)
+        claimed = runtime.plugin_host.provided_port('queue.records').claim_next(conn, session_id)
         assert claimed["itemId"] == second["queueItemId"]
-        runtime.queue.mark_terminal(conn, claimed["itemId"], "completed")
+        runtime.plugin_host.provided_port('queue.records').mark_terminal(conn, claimed["itemId"], "completed")
 
     queue_events = [
         frame["event"] for frame in api.ok("history.snapshot", {"sessionId": session_id})["frames"]
@@ -857,7 +870,7 @@ def test_a_cancel_on_a_finished_execution_never_republishes_it_as_stopping(wire)
     execution_id = accepted["executionId"]
     # The fixture's execution backend has no worker, so the turn is driven to a
     # terminal state the way a Server restart drives it: sealed as `unknown`.
-    assert runtime.repository.recover_interrupted_turns() >= 1
+    assert runtime.plugin_host.provided_port('product.repository').recover_interrupted_turns() >= 1
 
     response = api.client.post(
         f"/api/v1/turns/{execution_id}/cancel",
@@ -1002,7 +1015,7 @@ def test_approval_decisions_are_atomic_and_validate_scope(wire):
 
     runtime = _runtime
     with runtime.database.transaction() as conn:
-        row = runtime.approvals.request_in_transaction(
+        row = runtime.plugin_host.provided_port('approvals.records').request_in_transaction(
             conn, session_id=session_id, execution_id=accepted["executionId"],
             request={"tool": "shell", "command": "ls"},
         )
@@ -1052,18 +1065,18 @@ def test_approval_decisions_are_atomic_and_validate_scope(wire):
     assert bad_scope["code"] == "INVALID_REQUEST"
 
     with runtime.database.transaction() as conn:
-        late = runtime.approvals.request_in_transaction(
+        late = runtime.plugin_host.provided_port('approvals.records').request_in_transaction(
             conn, session_id=session_id, execution_id=accepted["executionId"],
             request={"tool": "shell", "command": "touch too-late"},
         )
-    runtime.repository.finish_cancelled(accepted["executionId"])
+    runtime.plugin_host.provided_port('product.repository').finish_cancelled(accepted["executionId"])
     refused = api.ok("approvals.decide", {
         "requestId": "dec-too-late", "approvalId": late["approvalId"],
         "decision": "allow", "scope": {"kind": "once"},
         "expectedVersion": late["version"],
     })
     assert refused == {"outcome": "invalid", "reason": "execution_not_actionable"}
-    assert runtime.approvals.get(late["approvalId"])["state"] == "invalid"
+    assert runtime.plugin_host.provided_port('approvals.records').get(late["approvalId"])["state"] == "invalid"
     late_settled = api.ok("history.snapshot", {"sessionId": session_id})["frames"][-1]["event"]
     assert late_settled["approvalId"] == late["approvalId"]
     assert late_settled["outcome"] == "invalidated"
@@ -1099,10 +1112,10 @@ def test_history_snapshot_frames_use_cursors_and_resume_without_gaps(wire):
 
     # Internal capture bookkeeping can sit between public frames, but the
     # EventFrame sequence seen by clients remains gap-free.
-    _runtime.repository.append_turn_event(
+    _runtime.plugin_host.provided_port('product.repository').append_turn_event(
         accepted["executionId"], "turn.capture", {"state": "capturing"},
     )
-    _runtime.repository.append_turn_event(
+    _runtime.plugin_host.provided_port('product.repository').append_turn_event(
         accepted["executionId"], "message.delta", {"text": "after-internal"},
     )
     after_internal = api.ok("history.snapshot", {
@@ -1133,7 +1146,7 @@ def test_history_uses_distinct_backward_pages_and_live_resume_cursors(wire):
     })
     session_id = accepted["session"]["id"]
     for index in range(5):
-        runtime.repository.append_turn_event(
+        runtime.plugin_host.provided_port('product.repository').append_turn_event(
             accepted["executionId"], "message.delta", {"text": str(index)},
         )
 
@@ -1187,7 +1200,7 @@ def test_wire_event_stream_resumes_from_snapshot_cursor_without_sse(wire):
     with api.client.websocket_connect(
         path, headers={**api.headers, "Host": "127.0.0.1"},
     ) as socket:
-        runtime.repository.append_turn_event(
+        runtime.plugin_host.provided_port('product.repository').append_turn_event(
             accepted["executionId"], "message.delta", {"text": "persisted before publish"},
         )
         runtime.notifier.notify()
@@ -1294,7 +1307,7 @@ def test_every_projected_frame_matches_the_strict_frontend_event_schema(wire):
     })
     assert queued["queueItemId"]
     with runtime.database.transaction() as conn:
-        approval = runtime.approvals.request_in_transaction(
+        approval = runtime.plugin_host.provided_port('approvals.records').request_in_transaction(
             conn, session_id=session_id, execution_id=execution_id,
             request={"tool": "shell", "command": "ls"},
         )
@@ -1304,7 +1317,7 @@ def test_every_projected_frame_matches_the_strict_frontend_event_schema(wire):
         "expectedVersion": approval["version"],
     })
     for internal, data, _produced in FRAME_COVERAGE:
-        runtime.repository.append_turn_event(execution_id, internal, data)
+        runtime.plugin_host.provided_port('product.repository').append_turn_event(execution_id, internal, data)
 
     # Forward (live) pages and backward pages are separate signing domains, so
     # the whole history is collected by walking `olderCursor` backwards.
@@ -1318,7 +1331,7 @@ def test_every_projected_frame_matches_the_strict_frontend_event_schema(wire):
         page = {"cursor": snapshot["olderCursor"], "limit": 200}
     snapshot_counts = _validate_frames(frames, context="history.snapshot")
 
-    live, _resume = runtime.events_stream_source(session_id, None)
+    live, _resume = runtime.plugin_host.provided_port('events.stream_source')(session_id, None)
     live_counts = _validate_frames(live, context="event-stream batch")
 
     observed = set(snapshot_counts) | set(live_counts)
@@ -1334,7 +1347,7 @@ def test_every_projected_frame_matches_the_strict_frontend_event_schema(wire):
     # The switch is refused while a turn is active, so the turn is sealed the
     # way a Server restart seals it (the same product path). That leaves the
     # Session switchable and its history intact.
-    assert runtime.repository.recover_interrupted_turns() >= 1
+    assert runtime.plugin_host.provided_port('product.repository').recover_interrupted_turns() >= 1
     listed = api.ok("sessions.list", {"includeArchived": False})["items"]
     current = next(item for item in listed if item["id"] == session_id)
     # A *different* role: switching to the one the Session already uses changes

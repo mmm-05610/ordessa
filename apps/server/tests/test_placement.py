@@ -80,6 +80,11 @@ def _channel_for(tmp_path, monkeypatch, env_kind: str, *, ssh_connector: bool = 
     condition order 090 broke under.
     """
     import ordessa_server.bootstrap.runtime as runtime_module
+    # T014-S2b: the built-in connector builders moved to the workspace
+    # plugin; patching them now happens on their owning module, and the
+    # os.name patch below still reaches the same shared os module the
+    # builders read.
+    import ordessa_workspace.connectors as ws_connectors_module
     import ordessa_server_compat.execution.local_channel as local_module
     import ordessa_server_compat.execution.sidecar as sidecar_module
 
@@ -98,8 +103,8 @@ def _channel_for(tmp_path, monkeypatch, env_kind: str, *, ssh_connector: bool = 
 
     wsl = object() if env_kind == "wsl" else None
     ssh = object() if ssh_connector else None
-    monkeypatch.setattr(runtime_module, "_builtin_connector", lambda _id: wsl)
-    monkeypatch.setattr(runtime_module, "_builtin_ssh_connector", lambda _id: ssh)
+    monkeypatch.setattr(ws_connectors_module, "_builtin_connector", lambda _id: wsl)
+    monkeypatch.setattr(ws_connectors_module, "_builtin_ssh_connector", lambda _id: ssh)
     monkeypatch.setattr(
         sidecar_module, "sidecar_bundle_files",
         lambda root, additional_files=None: dict(additional_files or {}),
@@ -115,7 +120,7 @@ def _channel_for(tmp_path, monkeypatch, env_kind: str, *, ssh_connector: bool = 
     frozen = runtime.objects.publish(json.dumps({"execution": {}}).encode())
 
     def call_port_factory():
-        runtime.execution.port_factory({
+        runtime.plugin_host.provided_port('execution.port').port_factory({
             "harness_type": "pi", "distribution": "Ubuntu", "remote_user": "tester",
             "connection_id": "connection", "remote_path": "/workspace",
             "env_kind": env_kind, "env_host": "Ubuntu", "normalized_path": "/workspace",
@@ -147,7 +152,7 @@ def test_the_ssh_placement_runs_on_its_own_connector(tmp_path, monkeypatch):
 
 
 def test_the_ssh_placement_is_refused_without_its_connector(tmp_path, monkeypatch):
-    import ordessa_server.bootstrap.runtime as runtime_module
+    import ordessa_workspace.connectors as runtime_module
 
     monkeypatch.setattr(runtime_module, "_builtin_connector", lambda _id: object())
     monkeypatch.setattr(runtime_module, "_builtin_ssh_connector", lambda _id: None)
@@ -157,7 +162,7 @@ def test_the_ssh_placement_is_refused_without_its_connector(tmp_path, monkeypatc
     try:
         frozen = runtime.objects.publish(json.dumps({"execution": {}}).encode())
         with pytest.raises(PlacementUnsupported) as refused:
-            runtime.execution.port_factory({
+            runtime.plugin_host.provided_port('execution.port').port_factory({
                 "harness_type": "pi", "distribution": "203.0.113.7",
                 "remote_user": "root", "connection_id": "connection",
                 "remote_path": "/workspace", "env_kind": "ssh", "env_host": "203.0.113.7",

@@ -117,14 +117,14 @@ def granted_parent(tmp_path, monkeypatch):
             # model control (see _claude_deployment), so a Profile needs only a
             # credential. The real control and the real model run in stage 2.
             def make(name: str, key: str) -> dict:
-                return runtime.repository.profiles.create(
+                return runtime.plugin_host.provided_port('product.repository').profiles.create(
                     key=key, request_digest=key, name=name, harness_type="claude-code",
                     config_digest=runtime.objects.publish(CONFIG).digest,
                     credential_id=credential_id)[1]
 
             parent = make("alpha", "p")
             child = make("beta", "c")
-            runtime.repository.profiles.grant_subagent(
+            runtime.plugin_host.provided_port('product.repository').profiles.grant_subagent(
                 parent_id=parent["profile_id"], child_id=child["profile_id"])
             yield (runtime, client, parent, child, opened["workspace"]["id"],
                    _runtime_root(tmp_path))
@@ -145,11 +145,11 @@ def _send(client, runtime, workspace_id: str, profile_id: str, request_id: str) 
 def _settled_turn(runtime, session_id: str, timeout: float = 45.0) -> dict:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
-        session = runtime.repository.get_session(session_id)
+        session = runtime.plugin_host.provided_port('product.repository').get_session(session_id)
         if session["turns"] and session["turns"][0]["state"] in {"completed", "failed"}:
             return session["turns"][0]
         time.sleep(0.05)
-    return runtime.repository.get_session(session_id)["turns"][0]
+    return runtime.plugin_host.provided_port('product.repository').get_session(session_id)["turns"][0]
 
 
 def _materialized_documents(root: pathlib.Path, name: str) -> list[dict]:

@@ -1,0 +1,1 @@
+/goal 在 `/home/maoqh/projects/ordessa/worktrees/011-z2-chat` 完成 Z2「Chat 展示、创建与输入扩展」。先读 `specs/011-plugin-rollout/README.md`，再按 `specs/011-z2-chat/spec.md`、`plan.md`、`tasks.md` 执行。主代理只派单包子代理实现、审阅和验收；按文档消费/发布检查点，普通阻塞自行解决并继续独立任务。全部条目须有真实证据，未完成不得报成功。阶段提交后继续，不合并 main、不 push。最终交 clean 检查点和本线 report.md。

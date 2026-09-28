@@ -6,6 +6,16 @@ must only program against `server_plugin_api`.
 """
 from __future__ import annotations
 
+from .contribution_points import (
+    ContributionPoint,
+    ContributionPointRegistry,
+    PublishedRecord,
+    ResolvedContribution,
+)
 from .host import ActivePlugin, MethodRegistry, ServerPluginHost, StreamRouteRegistry
 
-__all__ = ["ActivePlugin", "MethodRegistry", "ServerPluginHost", "StreamRouteRegistry"]
+__all__ = [
+    "ActivePlugin", "MethodRegistry", "ServerPluginHost", "StreamRouteRegistry",
+    "ContributionPoint", "ContributionPointRegistry", "PublishedRecord",
+    "ResolvedContribution",
+]

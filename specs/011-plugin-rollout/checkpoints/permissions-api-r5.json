@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "name": "permissions-api-r5",
+  "producer": "q5",
+  "status": "READY",
+  "planAnchorRef": "refs/heads/codex/011-plugin-plan",
+  "implementationSha": "7904143bfda116b9d5eee986856c3720d82e145d",
+  "dependsOn": {
+    "foundation": "8844c475b (consumed as merge 52906b514d)",
+    "chat-api": "r3 3d8c3fa410 (consumed as merge 7b4de06148)",
+    "ordessa-server-plugin-api": "0.1.0",
+    "pacthold-runtime-compat": "storage provider obtained via ServerProductComposition.database_type()",
+    "harness-api": "refs/heads/codex/011-harness-api-ready @ d3f026904ead6c7ce58df26f2536175ce6179de7"
+  },
+  "publicExports": {
+    "packages": {
+      "ordessa-permissions-api": "plugins/permissions/api (import ordessa_permissions_api)",
+      "ordessa-permissions-backend": "plugins/permissions/backend (import ordessa_permissions_backend)",
+      "ordessa-permissions-adapters": "plugins/permissions/adapters (import ordessa_permissions_adapters)",
+      "@ordessa/plugin-permissions-chat": "plugins/permissions/frontend (TS, ordessa.permissions-chat)",
+      "ordessa-permissions-frontend": "@ordessa/plugin-permissions-chat (plugins/permissions/frontend, TS)"
+    },
+    "apiExports": [
+      "AdminAuthorization",
+      "AllowedOnce",
+      "AlreadyRecorded",
+      "ApprovalDecision",
+      "ApprovalFact",
+      "ApprovalRequest",
+      "ApprovalScope",
+      "ApprovalState",
+      "ApprovalStateKind",
+      "ArgumentDigest",
+      "AuthorizationDecision",
+      "BRAND_NATIVE_MODES",
+      "BoundGrant",
+      "BoundedApprovalScope",
+      "BrandMode",
+      "CeilingEntry",
+      "CeilingSource",
+      "CodeKind",
+      "DECISION_TTL",
+      "DEFAULT_REMEDIES",
+      "DecideResult",
+      "DecisionReason",
+      "Denied",
+      "EffectiveCeiling",
+      "EffectivePolicySnapshot",
+      "ExecutionState",
+      "ExposureLevel",
+      "GRANT_TTL",
+      "InvalidApproval",
+      "MAX_DIAGNOSTIC_TEXT",
+      "MAX_PRIORITY",
+      "MAX_RULES",
+      "MAX_SNAPSHOT_TTL",
+      "NO_INTENT_REVISION",
+      "NativeReceipt",
+      "OnceApprovalScope",
+      "OperationRequest",
+      "POLICY_DENY",
+      "PendingApproval",
+      "PermissionIntent",
+      "PolicyCeiling",
+      "PolicyDenyCode",
+      "PolicyRefusal",
+      "PolicyRefused",
+      "PolicySynthesized",
+      "QueriedApproval",
+      "QueryOutcome",
+      "QueryUnknown",
+      "Recorded",
+      "RefusalCode",
+      "RuleAction",
+      "SCHEMA_CODES",
+      "Scope",
+      "SynthesisResult",
+      "TOOL_EXPOSURE",
+      "TOOL_KEYS",
+      "TargetMatcher",
+      "ToolIdentity",
+      "TypedRule",
+      "UnknownApproval",
+      "approval_id_for",
+      "build_operation_request",
+      "code_kind",
+      "declared_native_modes",
+      "enforcement_codes",
+      "evaluate_authorization",
+      "intersect_ceilings",
+      "is_enforcement_code",
+      "known_tool_keys",
+      "probe",
+      "scope_to_record",
+      "select_intent_action",
+      "synthesize"
+    ],
+    "backendExports": [
+      "AUTHORIZER_PORT",
+      "ApprovalFacts",
+      "ApprovalNotFound",
+      "Authorizer",
+      "CorrelationConflict",
+      "INVALID",
+      "OPEN",
+      "PLUGIN_ID",
+      "PermissionsBackendPlugin",
+      "PolicyRepository",
+      "SETTLED",
+      "VersionConflict"
+    ],
+    "servicePorts": {
+      "permissions.authorizer@1": "provided_ports name 'permissions.authorizer@1'",
+      "wireMethods": [
+        "permissions.approvals.decide",
+        "permissions.approvals.query"
+      ],
+      "acp.admission.gate": "PermissionsAcpAdmission (server_plugin_api.ACP_ADMISSION_PORT, version 1) \u2014 accepted only for a grant bound to this exact operation; ready derived from authority + authoritative native evidence",
+      "permissions.policy.describe": "read-only wire method; closed response {ready,ceilings,intents,needsReview}; unknown params refused by the host; never a grant path",
+      "permissions.authorizer@1 (neutral contract)": "ordessa_permissions_api.PermissionsAuthorizerPort + PERMISSIONS_AUTHORIZER_PORT/_VERSION; signature verified against the concrete backend by inspect.signature, with drift guards",
+      "legacy delegation": "LegacyApprovalDelegate (approval_route='legacy-delegated', default off) routes the old approvals.decide shape into the single authorizer; retiring the compat writer is still C0's step"
+    },
+    "harnessPointWiring": "contributes facet 'permissions.policy-adapters' to harness.configuration-adapters@v1 via ContributionBatch; admission/overlap/claim-conflict raised by the platform (HarnessContributionError, ContributionPointUnboundError, ContributionVersionRefusedError, ContributionOwnerBusyError)",
+    "wireFamilyMapping": "PERMISSION_ERROR_FAMILIES / permissions_wire_family / wire_body_for (guarded subset of server_plugin_api.FAMILIES)"
+  },
+  "commandsAndEvidence": [
+    {
+      "command": ".venv/bin/python -m pytest plugins/permissions plugins/assets/sandbox -q",
+      "exitCode": 0,
+      "result": "885 passed (permissions api 327 / backend 158 / adapters 126; sandbox 107/68/99)"
+    },
+    {
+      "command": ".venv/bin/python specs/011-q5-safety/proof/permissions_api_proof.py",
+      "exitCode": 0,
+      "result": "16/16 stated outcomes"
+    },
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "0 errors"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "29/29 suites green (permissions frontend 93, sandbox frontend 34)"
+    },
+    {
+      "command": ".venv/bin/python -m pytest apps/server -q",
+      "exitCode": 1,
+      "result": "42 failed/1116 passed/10 skipped/25 errors; per-ID FAILED set and per-ID ERROR set identical to the frozen post-harness-api ledger (diff empty)"
+    },
+    {
+      "command": ".venv/bin/python -m pytest plugins/harness -q",
+      "exitCode": 1,
+      "result": "2 failed/433 passed/3 skipped after installing setuptools+wheel in this tree's venv; the same registered Pi ACP SDK lock pair"
+    },
+    {
+      "command": ".venv/bin/python -m pytest packages/pacthold -q",
+      "exitCode": 0,
+      "result": "212 passed"
+    }
+  ],
+  "limitations": [
+    "API_READY only: this is the consumable permissions contract plus its decision/approval service, not the finished production chain.",
+    "No pre-effect execution gate exists in this tree; the authorizer is reachable as the provided port 'permissions.authorizer@1' but nothing in the Harness calls it before a tool side effect. Request G1, owner C0. T03's 'controlled real pre-effect gate' and T07 remain blocked and are NOT claimed green.",
+    "Native request correlation can be recorded and reconciled by this service, but the ACP channel does not yet emit a native receipt, so in production reconcile returns Unknown (fail-closed). Request G2, owner C0.",
+    "Profile and Chat glue (T06) is not registered: plugins/profile and plugins/chat do not exist and no profile-api/chat-api checkpoint is published. Requests G4/G5.",
+    "Legacy retirement (T08): ordessa_server_compat/approvals/records.py is still wired; both authorities were proven to conflict on one row, and the single-owner swap plus compat deletion is C0's job (G6, see integration-request.md).",
+    "Brand permission adapters prove compile/verify refusal semantics only; every cell that needs a pre-effect-gate or L2 observation is recorded UNKNOWN and supports explicit refusal only.",
+    "No real model calls, no user config access, no real OS sandbox effect probes (L3 untested).",
+    "r2 adds the real-point wiring and the Chat approval-region glue; the r1 limitations still hold verbatim.",
+    "The Chat/Settings glue is proven at jsdom level with an injected fake transport; no real desktop composition (products/desktop does not yet enable these extension ids) and no real wire channel.",
+    "Profile facet glue is not consumed: profile-api publication 4943628f47 imports pacthold.resource_contracts, which foundation moved to pacthold_runtime_compat, so this lane reverted that merge (b4b48d7564) and the glue stays blocked pending a compatible revision.",
+    "r3 adds the admission-gate adapter, the wire-family mapping, the legacy-rules migrator and the Permissions Settings region. r1/r2 limitations still hold except that the C3 vocabulary is now consumed (harness-api d3f026904e).",
+    "Installing this lane's port as the host's authority is still C0's step: the published harness-api record itself states ready=False and 'Q5 authorizer, one-use execution permit, native runtime generation and production pre-effect path are not wired'. Controlled fixture acceptance is not production G18/G19.",
+    "No operation-bound native receipt or instance generation source exists yet, so reconcile keeps returning Unknown.",
+    "Permissions Settings region has no read wire method for ceilings/intents (in-process PolicyRepository only); the Chat mode entry therefore renders only from an injected per-pin attestation and refuses to build a menu from a brand name.",
+    "r4 adds only the read surface and its consumer; every r1\u2013r3 limitation still holds, including that the product does not yet install this lane's port as the host authority.",
+    "r5 adds the neutral port, the deactivation binding and the optional legacy delegate; the two facet descriptors now declare the exact (0,1,0) adapter version each backs with its own release fact, and joint PRODUCTION admission remains open because this tree has no production RuntimeAdapter.describe_installation() observer and no C4 per-fragment facet selection \u2014 a test pins that refusal instead of widening ranges."
+  ],
+  "supersedes": {
+    "name": "permissions-api-r4",
+    "publicationSha": "ad8902d5c8e6ae6882057e1ddde400110c837bb0",
+    "compatibility": "additive: \u65b0\u589e\u4e2d\u7acb PermissionsAuthorizerPort \u4e0e port \u5e38\u91cf\u3001stop_hooks \u505c\u7528\u7ed1\u5b9a\u3001\u53ef\u9009 legacy \u59d4\u6258\u8def\u7531\uff1b\u00a7C1 DTO/\u65b9\u6cd5\u62fc\u5199\u4e0e RefusalCode \u5168\u672a\u53d8\uff08\u8de8\u8bed\u8a00\u7b49\u503c\u6d4b\u8bd5\u9501\u5b9a\uff09\u3002\u65e2\u6709 r1\u2013r4 \u6d88\u8d39\u8005\u65e0\u9700\u6539\u52a8\u3002"
+  }
+}

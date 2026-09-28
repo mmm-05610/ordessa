@@ -1,0 +1,30 @@
+T017-Q5 RED-FIRST — neutral public port contract for permissions.authorizer@1 (plugins/permissions/api)
+date: 2026-09-27T23:43:53Z
+
+command: .venv/bin/python -m pytest plugins/permissions/api -q
+measured exit code: 1 (true $? of the pytest run, no pipe)
+
+Baseline before this task: 316 passed, exit 0. All 11 new T017 tests are red;
+no pre-existing test changed state.
+
+Red IDs (11 — every published-contract property is unmet because
+ordessa_permissions_api.ports does not exist yet):
+  -x test_the_port_token_and_version_are_published_from_the_api_package
+  -x test_the_package_re_exports_the_port_contract
+  -x test_the_port_token_equals_the_backend_provided_port_literal
+  -x test_every_port_method_matches_the_backend_authorizer_signature_exactly
+  -x test_evaluate_carries_the_exact_c1_input_surface_in_order
+  -x test_the_port_method_set_is_exactly_the_public_authorizer_surface
+  -x test_c1_query_is_answered_by_reconcile_and_the_backend_gains_no_second_name
+  -x test_the_port_is_deliberately_not_runtime_checkable
+  -x test_the_port_docstring_carries_the_authority_rules
+  -x test_the_port_results_are_the_published_api_unions
+  -x test_the_port_contract_imports_with_only_the_standard_library_available
+
+11 failed, 316 passed in 0.47s
+
+Failure reason sample (first test): ModuleNotFoundError/ImportError for
+'ordessa_permissions_api.ports'; the stdlib-only subprocess probe likewise fails
+at 'from ordessa_permissions_api import ports'. The source-text guards pass their
+backend-side greps (AUTHORIZER_PORT literal, reconcile-not-query) and fail only on
+the missing port module - so they will be true convergence guards, not tautologies.

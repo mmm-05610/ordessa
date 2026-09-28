@@ -5,7 +5,6 @@ from typing import ClassVar
 
 import pytest
 
-from pacthold.resource_contracts import WorkspaceV1
 from pacthold.work_core import ExecutionStartReceipt, ExecutionStartRequest
 from pacthold.work_core.errors import InvalidResourceObservation, WorkCoreError
 from pacthold.work_core.models import Ref, RefType
@@ -22,6 +21,18 @@ from pacthold.work_core.resource_observations import (
 from pacthold.work_core.services import ExecutionService, WorkService
 
 NOW = datetime(2026, 8, 27, 12, 0, tzinfo=timezone.utc)
+
+
+# specs/010 T009: the kernel registry starts empty; this local stand-in keeps
+# the historical contract id (protocol, not display name) so the observation
+# ledger semantics stay pinned unchanged without importing the relocated
+# product contract package (``pacthold_runtime_compat.resource_contracts``).
+@dataclass(frozen=True)
+class WorkspaceV1:
+    contract_id: ClassVar[str] = "agent-box.workspace@1"
+
+    path: str = ""
+    source_digest: str = ""
 
 
 @dataclass(frozen=True)
@@ -91,6 +102,7 @@ def _setup(tmp_agent_box_home, *, inputs=None):
         work.id, "fake-execution", responsibility_intent="observe frozen inputs"
     )
     registry = ExtensionRegistry()
+    registry.register_contract(WorkspaceV1)
     registry.register_contract(FragmentV1)
     registry.register_execution_provider(DispatchExecutionProvider())
     registry.register_resource_provider("fake-resource", FragmentResourceProvider())

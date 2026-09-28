@@ -25,7 +25,7 @@ from ordessa_server_compat.profiles.permissions import resolve_all
 from ordessa_server_compat.sessions import SessionRecords, SessionService
 from ordessa_server_compat.sessions.queue import QueueRecords
 from ordessa_workspace import WorkspaceRecords
-from pacthold.storage import Database, ObjectStore
+from pacthold_runtime_compat.storage import Database, ObjectStore
 
 CONFIG = {"schema_version": 1, "harness_type": "alpha", "configuration": {"model": "one"}}
 EDITED = {"schema_version": 1, "harness_type": "alpha", "configuration": {"model": "two"}}
@@ -258,11 +258,14 @@ def test_p10_runtime_composes_filer_only_for_the_real_sidecar_port(tmp_path):
     """a-3 门控回归钉（C 解锁 06:30Z）：假端口栈＝建档缝恒休眠（批前原形），
     生产真组合路径由 P8 证——两向夹住 isinstance 门，禁再无条件组合。"""
     from ordessa_server.bootstrap import build_runtime
+    from ordessa_server_product.composition import create_composition  # T014-S1d funnel
 
     from test_a3_k2_filing_s import alpha_registry
-    runtime = build_runtime(tmp_path / "root", harnesses=alpha_registry(),
-                            execution=RecordingPort())
-    session_service = runtime.service.sessions
+    runtime = build_runtime(tmp_path / "root",
+                            server_plugins=create_composition().compatibility_plugins(
+                                harnesses=alpha_registry(),
+                                execution=RecordingPort()))
+    session_service = runtime.plugin_host.provided_port('product.service').sessions
     assert session_service.core_filer is None, (
         "stand-in port must NOT compose the filer (wire-fixture dormancy)")
     assert session_service.records.core_filer is None, (

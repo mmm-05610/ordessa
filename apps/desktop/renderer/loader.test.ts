@@ -151,3 +151,45 @@ describe('module validation', () => {
     expect(app.failures.some(f => f.id === 'healthy')).toBe(false)
   })
 })
+
+// C7 assembly接线: the host forwards the product's per-extension configuration to
+// the entry factory without interpreting it, and refuses a malformed map.
+describe('product configuration pass-through', () => {
+  it('forwards only the configuration of the enabled extension and omits an unset one', async () => {
+    const root = await fixture()
+    await mkdir(path.join(root, 'extensions', 'two'), { recursive: true })
+    await writeFile(path.join(root, 'extensions', 'two', 'manifest.json'), JSON.stringify({ ...manifest, id: 'test.two' }))
+    await writeFile(path.join(root, 'extensions', 'two', 'entry.js'), 'export default () => ({})')
+    const selection = [{ componentId: 'example.card', major: 1, providerId: 'provider-a' }]
+    await writeFile(path.join(root, 'extensions.json'), JSON.stringify({
+      enabled: ['test.one', 'test.two'], config: { 'test.one': selection },
+    }))
+    const catalog = (await discover(root)).catalog
+    const one = catalog.extensions.find(entry => entry.manifest.id === 'test.one')
+    const two = catalog.extensions.find(entry => entry.manifest.id === 'test.two')
+    expect(one?.config).toEqual(selection)
+    expect(two === undefined || 'config' in two).toBe(false)
+  })
+  it('fails closed when the configuration map is not an object keyed by valid ids', async () => {
+    for (const bad of [['list'], 'scalar', { 'BAD ID': {} }, 7]) {
+      const root = await fixture()
+      await enable(root)
+      await writeFile(path.join(root, 'extensions.json'), JSON.stringify({ enabled: ['test.one'], config: bad }))
+      const result = await discover(root)
+      expect(result.installed.size).toBe(0)
+      expect(result.catalog.failures.some(failure => failure.id === 'configuration')).toBe(true)
+    }
+  })
+  it('passes the configuration into the entry factory, and undefined when the product set none', async () => {
+    const seen: [string, unknown][] = []
+    const result = await loadExtensions({ failures: [], extensions: [
+      { manifest, url: 'with-config', config: ['selection'] },
+      { manifest: { ...manifest, id: 'test.two' }, url: 'no-config' },
+    ] }, async url => ({ default: (_api: unknown, config: unknown) => {
+      seen.push([url, config])
+      return { id: url === 'with-config' ? 'test.one' : 'test.two', activate() {} }
+    } }))
+    expect(result.plugins.map(plugin => plugin.id)).toEqual(['test.one', 'test.two'])
+    expect(seen).toEqual([['with-config', ['selection']], ['no-config', undefined]])
+  })
+})

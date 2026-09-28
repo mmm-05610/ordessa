@@ -20,6 +20,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 from ordessa_server.bootstrap import build_runtime
+from ordessa_server_product.composition import create_composition  # T014-S1d funnel
 from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server.transport.http import create_app
 
@@ -46,7 +47,8 @@ def _registry(*, credential_kind: str | None = "api_key") -> HarnessRegistry:
 
 @pytest.fixture
 def server(tmp_path):
-    runtime = build_runtime(tmp_path / "data", harnesses=_registry())
+    runtime = build_runtime(tmp_path / "data",
+                            server_plugins=create_composition().compatibility_plugins(harnesses=_registry()))
     with TestClient(create_app(runtime), base_url="http://127.0.0.1",
                     raise_server_exceptions=False) as client:
         yield runtime, client, {"Authorization": f"Bearer {runtime.token}"}
@@ -91,7 +93,7 @@ def block_the_send(item: dict) -> tuple[str, str | None]:
 
 def set_recovery_pending(runtime, profile_id: str, value: int) -> None:
     """Arrange the fact the way the product stores it (the column 409 reads)."""
-    database = runtime.repository.database
+    database = runtime.plugin_host.provided_port('product.repository').database
     with database.transaction() as conn:
         conn.execute("UPDATE server_profiles SET recovery_pending=? WHERE id=?",
                      (value, profile_id))
@@ -139,13 +141,13 @@ def test_an_unreadable_blocker_is_unknown_and_not_ready(server, monkeypatch):
     """
     runtime, client, headers = server
     profile = make_profile(client, headers, name="legacy-row")
-    original = runtime.compat_handlers.profiles.records.list
+    original = runtime.plugin_host.provided_port('compat.handlers').profiles.records.list
 
     def rows_without_the_column(*args, **kwargs):
         return [{key: value for key, value in row.items() if key != "recovery_pending"}
                 for row in original(*args, **kwargs)]
 
-    monkeypatch.setattr(runtime.compat_handlers.profiles.records, "list", rows_without_the_column)
+    monkeypatch.setattr(runtime.plugin_host.provided_port('compat.handlers').profiles.records, "list", rows_without_the_column)
     item = listed(runtime, client, headers, profile["profile_id"])
     assert item["recoveryPending"] is None, item
     recovery = next(check for check in item["sendability"]["checks"] if check["key"] == "recovery")
@@ -172,7 +174,7 @@ def bind_model(runtime, client, headers, *, profile_id: str, credential_id: str 
         # field shape ("the record names a credential this host cannot use") is
         # arranged by naming a row that exists and is of the wrong kind - which
         # is also the case a plain `exists()` check would have called ready.
-        with runtime.repository.database.transaction() as conn:
+        with runtime.plugin_host.provided_port('product.repository').database.transaction() as conn:
             conn.execute("INSERT INTO server_credentials(id,kind,secret_locator,created_at) "
                          "VALUES(?,?,?,?)",
                          (credential_id, credential_kind, "memory:117", "2026-09-19T00:00:00Z"))
@@ -218,7 +220,7 @@ def test_the_projection_names_what_the_freeze_path_would_hit(server):
     provider = bind_model(runtime, client, headers, profile_id=profile["profile_id"],
                           credential_id="cred-117-absent", credential_kind="oauth")
     with pytest.raises(ServerError) as raised:
-        runtime.model_configs.freeze_execution_configuration(
+        runtime.plugin_host.provided_port('provider.models').freeze_execution_configuration(
             "alpha", {"model": {"providerId": provider["id"], "modelId": "model-a"}},
         )
     assert raised.value.code == "CREDENTIAL_NOT_FOUND", raised.value
@@ -287,7 +289,7 @@ def test_counter_example_the_pre_117_projection_fails_the_same_judgement(server)
 def test_counter_example_reporting_unknown_as_ready_fails_the_gate(server, monkeypatch):
     """G2's falsifier: make the unreadable case collapse to `False` and the
     judgement has to stop calling it sendable."""
-    from ordessa_server.wire import projection as projection_module
+    from ordessa_server_compat import wire_projection as projection_module
 
     runtime, client, headers = server
     profile = make_profile(client, headers, name="collapse")

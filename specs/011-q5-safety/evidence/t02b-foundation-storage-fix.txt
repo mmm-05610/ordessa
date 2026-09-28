@@ -1,0 +1,99 @@
+T02b — permissions/backend repair against the foundation storage move
+=====================================================================
+Branch: codex/011-q5-safety. Foundation merge 52906b514d moved the SQLite
+provider out of the kernel: `pacthold.storage.Database` no longer exists;
+the real class is `pacthold_runtime_compat.storage.database.Database`
+(dist `pacthold-runtime-compat`), handed out by
+`ordessa_server_product.composition.ServerProductComposition.database_type()`.
+
+CHANGES
+-------
+- plugins/permissions/backend/tests/support.py
+  * was: `from pacthold.storage import Database`  (line 19, the root of ALL 9
+    collection errors)
+  * now: `Database = ServerProductComposition().database_type()` — the tests
+    obtain the provider through the product's own composition accessor, not
+    a hardcoded module path. `seeded_database()` still calls
+    `Database(tmp_path / "data")` + `.initialize()`; the compat provider's
+    schema (v21) still creates `server_approvals` plus the
+    server_workspaces/server_profiles/server_sessions/server_turns FK chain
+    and server_session_events that seed_session/append_event use. No
+    hand-written CREATE TABLE was added anywhere; no platform gap surfaced.
+- plugins/permissions/backend/tests/test_approval_facts_legacy_semantics.py
+  * docstring truthfulness only: the byte-level test still compares
+    `ApprovalFacts.create_legacy_table` against the REAL schema the seeded
+    product database creates (`PRAGMA table_info(server_approvals)`), wording
+    updated from "pacthold storage schema" to the product storage provider.
+    No assertion changed.
+- plugins/permissions/backend/pyproject.toml
+  * dev extra now declares the test-side providers:
+    dev = ["pytest>=7", "pacthold-runtime-compat>=0.1.0,<1",
+           "ordessa-server-product>=2.0.0a1,<3"]
+    Runtime `dependencies` unchanged: api + server-plugin-api only.
+- specs/011-q5-safety/proof/permissions_api_proof.py
+  * docstring path update only (names the composition accessor); behaviour
+    unchanged — it consumes tests/support.py, so it exercises the fix end to
+    end.
+
+src/ STAYS PROVIDER-FREE (proof)
+--------------------------------
+- grep: no `pacthold`/concrete-Database reference in
+  plugins/permissions/backend/src (the injected object is typed by the local
+  `ApprovalDatabase` Protocol in _store.py).
+- tests/test_backend_dependency_direction.py passes (AST import gate +
+  forbidden-text gate).
+- runtime probe: importing ordessa_permissions_backend with a sys.meta_path
+  blocker on pacthold/pacthold_runtime_compat/ordessa_server/
+  ordessa_server_product/ordessa_harness → exit 0 ("imported clean").
+
+BEFORE (recorded 2026-09, live tree after the foundation merge)
+---------------------------------------------------------------
+$ PYTHONPATH=plugins/permissions/backend/src .venv/bin/python -m pytest plugins/permissions/backend -q
+EXIT=2 — Interrupted: 9 errors during collection. Every error trace ends:
+  plugins/permissions/backend/tests/support.py:19: in <module>
+      from pacthold.storage import Database
+  E ImportError: cannot import name 'Database' from 'pacthold.storage'
+     (.../packages/pacthold/src/pacthold/storage/__init__.py)
+Per-ID collection errors (9):
+  ERROR plugins/permissions/backend/tests/test_approval_facts_legacy_semantics.py
+  ERROR plugins/permissions/backend/tests/test_authorizer_decide.py
+  ERROR plugins/permissions/backend/tests/test_authorizer_evaluate.py
+  ERROR plugins/permissions/backend/tests/test_busy_unload_gate.py
+  ERROR plugins/permissions/backend/tests/test_dual_authority.py
+  ERROR plugins/permissions/backend/tests/test_grant_single_use.py
+  ERROR plugins/permissions/backend/tests/test_native_correlation.py
+  ERROR plugins/permissions/backend/tests/test_policy_repository.py
+  ERROR plugins/permissions/backend/tests/test_wire_plugin_registration.py
+
+AFTER — all exit codes are the pytest process's true $?
+--------------------------------------------------------
+$ .venv/bin/python -m pytest plugins/permissions/backend -q
+  69 passed in 0.54s                                                     EXIT=0
+
+$ .venv/bin/python -m pytest plugins/permissions -q
+  416 passed in 0.71s   (api 223 + backend 69 + adapters 124)            EXIT=0
+
+$ .venv/bin/python -m pytest plugins/permissions plugins/assets/sandbox -q
+  653 passed in 1.98s   (whole lane aggregate green)                      EXIT=0
+
+$ .venv/bin/python -m pytest apps/server -q --tb=no -rfE
+  42 failed, 1092 passed, 10 skipped, 1 warning, 25 errors in 127.30s     EXIT=1
+  Inherited foundation ledger. Per-ID list (42 FAILED + 25 ERROR, sorted)
+  saved to /tmp/q5-ledger-apps-server-foundation.txt.
+  No-new-addition proof: `grep -vE "^(FAILED|ERROR) apps/server/"` on the
+  ledger is empty (every red id lives under apps/server/), and no red id
+  mentions permissions/assets-sandbox lanes.
+
+$ .venv/bin/python -m pytest packages/pacthold -q
+  212 passed in 3.28s                                                     EXIT=0
+
+$ .venv/bin/python -m pytest plugins/harness -q --tb=no
+  2 failed, 347 passed, 3 skipped, 28 subtests passed in 5.88s            EXIT=1
+  (unchanged from foundation record: the two ACP schema-drift install tests;
+  this package touched nothing there)
+
+$ .venv/bin/python specs/011-q5-safety/proof/permissions_api_proof.py
+  ALL PROOF EXPECTATIONS MET (16 checks, real compat Database end to end) EXIT=0
+
+NO test in this package legitimately stays red; no platform gap found —
+the compat provider's schema still contains every table this package needs.

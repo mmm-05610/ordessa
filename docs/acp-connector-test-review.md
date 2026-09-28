@@ -76,7 +76,7 @@ node_modules/.bin/vitest run --config tests/acp-connector/vitest.config.ts
   - `SessionUpdate` 判别式：`user_message_chunk / agent_message_chunk / agent_thought_chunk / tool_call / tool_call_update / session_info_update / plan` 等。
   - `AgentCapabilities{loadSession, sessionCapabilities.list}`；`StopReason = end_turn|max_tokens|max_turn_requests|refusal|cancelled`；`ToolCallStatus = pending|in_progress|completed|failed`；`RequestError(code, message, data)`。
   - 连接对象（`AgentSideConnection`/`ClientSideConnection`）**没有** `.close()`；流由 `ndJsonStream(output, input)` 构造，SDK 连接的结束只由底层字节流的 EOF/error 触发（读循环 break → `close()`）。因此 fixture 的 `channel()` 让 `writable.close()/abort()` 把 EOF/error 传播到对端 readable（真管道正是这个语义），`shutdown()`/`drop()` 则直接模拟编排断链；两条路径都有自测。
-- 现有前端契约来源（只读）：`contracts/agent/src/agent.ts`（`AgentClient/AgentSnapshot/AgentConnector/AgentSessions`）、`plugins/agent/sessions/src/model.ts`（草稿 + 每 Server 项目门 + localStorage 记忆，FC-0021/0030/0031 语义）、`plugins/connectors/ordessa/src/client.ts`（wire/1 映射参考：按 toolCallId 合并工具卡、断线置 unknown、粘性终态）。
+- 现有前端契约来源（只读）：`contracts/agent/src/agent.ts`（`AgentClient/AgentSnapshot/AgentConnector/AgentSessions`）（历史路径：C-T018 后该领域契约位于 `plugins/agent/contracts/src/agent.ts`，carrier id `ordessa.agent-contracts` 不变）、`plugins/agent/sessions/src/model.ts`（草稿 + 每 Server 项目门 + localStorage 记忆，FC-0021/0030/0031 语义）、`plugins/connectors/ordessa/src/client.ts`（wire/1 映射参考：按 toolCallId 合并工具卡、断线置 unknown、粘性终态）。
 - UI 组件来源（只读、真实挂载）：`plugins/agent/conversation` 视图、`SessionBrowser`、`.agent-interaction` 卡片。
 
 ## 6. 提议的接缝（待评审；不是新增公共协议）

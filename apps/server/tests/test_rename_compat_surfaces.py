@@ -18,6 +18,11 @@ def test_the_wire_version_is_unchanged():
 
 
 def test_the_agentbox_variable_prefix_stands():
-    runtime = (TREE / "apps" / "server" / "src" / "ordessa_server"
-               / "bootstrap" / "runtime.py").read_text(encoding="utf-8")
-    assert "AGENTBOX_" in runtime or "AGENT_BOX_" in runtime
+    # T014-S2b: the AGENT_BOX_*SL/SSH_* connector bindings moved with the
+    # connector builders into the workspace plugin; the guard follows the
+    # code that reads the bindings, and the host keeps naming the prefix it
+    # no longer owns out of. Both spellings must still be read somewhere in
+    # the composed tree — a rename may not drop them silently.
+    workspace_connectors = (TREE / "plugins" / "workspace" / "src"
+                            / "ordessa_workspace" / "connectors.py").read_text(encoding="utf-8")
+    assert "AGENT_BOX_" in workspace_connectors

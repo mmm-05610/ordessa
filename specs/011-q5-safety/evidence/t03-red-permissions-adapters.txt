@@ -1,0 +1,35 @@
+# T03 RED — plugins/permissions/adapters (ordessa-permissions-adapters)
+# date: 2026-09-27T19:03:11Z
+# worktree: /home/maoqh/projects/ordessa/worktrees/011-q5-safety  branch: codex/011-q5-safety
+# interpreter: .venv/bin/python 3.12.14, pytest 9.1.1 (no pip install, no network)
+
+$ PYTHONPATH=plugins/permissions/adapters/src .venv/bin/python -m pytest plugins/permissions/adapters/tests -q --no-header -rA
+EXIT=2  (interrupted: 10 collection errors — package src/ empty at RED time)
+
+$ PYTHONPATH=plugins/permissions/adapters/src .venv/bin/python -m pytest plugins/permissions/adapters/tests -q --no-header --continue-on-collection-errors
+EXIT=1
+3 failed, 5 passed, 10 errors in 0.16s
+
+## failing/erroring IDs (red baseline)
+FAILED tests/test_dependency_direction.py::test_sources_exist
+FAILED tests/test_purity.py::test_the_package_modules_all_exist
+FAILED tests/test_purity.py::test_behaviorally_no_subprocess_no_socket_no_file_open
+ERROR tests/test_c1_shape.py
+ERROR tests/test_cells_matrix.py
+ERROR tests/test_claude_adapter.py
+ERROR tests/test_codex_adapter.py
+ERROR tests/test_counterexamples.py
+ERROR tests/test_cross_brand.py
+ERROR tests/test_pi_adapter.py
+ERROR tests/test_pins.py
+ERROR tests/test_registry.py
+ERROR tests/test_verify.py
+
+## notes
+- The 5 "passed" lines in this run are the AST purity/dependency gates that scan src/
+  (vacuously true while src is empty); they become load-bearing at GREEN.
+- Root cause of every red line: ModuleNotFoundError/ImportError for
+  ordessa_permissions_adapters symbols (ClaudeAdapter, CodexAdapter, PiAdapter, registry,
+  cells, matrix, dto, results, ranges) — none implemented yet.
+- RED was produced before any src module was written; tests are in
+  plugins/permissions/adapters/tests/.

@@ -26,6 +26,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 from ordessa_server.bootstrap import build_runtime
+from ordessa_server_product.composition import create_composition  # T014-S1d funnel
 from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server.transport.http import create_app
 from pacthold.storage import MemorySecretStore
@@ -64,7 +65,7 @@ class Env:
 
     @property
     def records(self):
-        return self.runtime.repository.credentials
+        return self.runtime.plugin_host.provided_port('product.repository').credentials
 
     def list_records(self):
         return self.api.ok("providerModels.list", {"includeArchived": False})["items"]
@@ -74,7 +75,9 @@ class Env:
 def env(tmp_path):
     store = MemorySecretStore(values={})
     runtime = build_runtime(
-        tmp_path / "data", harnesses=credential_registry(), secret_store=store,
+        tmp_path / "data", secret_store=store,
+        server_plugins=create_composition().compatibility_plugins(
+            harnesses=credential_registry()),
     )
     with TestClient(create_app(runtime), base_url="http://127.0.0.1",
                     raise_server_exceptions=False) as client:

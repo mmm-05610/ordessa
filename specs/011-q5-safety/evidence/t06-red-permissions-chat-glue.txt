@@ -1,0 +1,21 @@
+T06 RED run — plugins/permissions/frontend (permissions chat approval region, design task T06 / FR-04, FR-08, FR-09, US2)
+date: 2026-09-27T20:55:54Z
+command: npx vitest run (cwd plugins/permissions/frontend)
+true exit code: 1
+
+Failing test files (4/4; src/contract.ts and src/approval-region.ts did not exist yet):
+FAIL  tests/approval-card.test.tsx
+FAIL  tests/approval-view.test.ts
+FAIL  tests/contract-consistency.test.ts
+FAIL  tests/region-registry.test.ts
+
+ Test Files  4 failed (4)
+      Tests  no tests
+
+Representative import errors:
+Error: Failed to resolve import "../src/approval-region" from "tests/approval-card.test.tsx". Does the file exist?
+Error: Failed to resolve import "../src/approval-region" from "tests/region-registry.test.ts". Does the file exist?
+Error: Failed to resolve import "../src/contract" from "tests/approval-view.test.ts". Does the file exist?
+Error: Failed to resolve import "../src/contract" from "tests/contract-consistency.test.ts". Does the file exist?
+
+Tests collected before implementation: 0 — all suites failed at transform/import of the not-yet-written src modules (expected RED).

@@ -100,7 +100,7 @@ def test_the_posture_is_stored_validated_and_frozen_into_the_next_turn(tmp_path)
     from ordessa_server.idempotency import IdempotentRecords
     from ordessa_server_compat.profiles import ProfileRecords
     from ordessa_server_compat.sessions import SessionRecords
-    from pacthold.storage import Database
+    from pacthold_runtime_compat.storage import Database
 
     database = Database(tmp_path / "data")
     database.initialize()
@@ -153,11 +153,13 @@ def test_sessions_belong_to_the_workspace_and_turns_carry_the_profile(tmp_path):
 
     runtime = build_runtime(tmp_path / "server")
     runtime.start()
-    profiles = runtime.repository.profiles
-    workspaces = runtime.repository.workspaces
-    # Alias discipline: stopped-runtime facades read None; the round's record
-    # objects stay usable across client sessions over the same database.
-    sessions_repo = runtime.repository.sessions
+    repository = runtime.plugin_host.provided_port("product.repository")
+    profiles = repository.profiles
+    workspaces = repository.workspaces
+    # Port resolution is round-scoped like the old alias: a stopped round reads
+    # None; the record objects this round built stay usable across client
+    # sessions over the same database.
+    sessions_repo = repository.sessions
     workspace = workspaces.create(
         key="w", request_digest="w", distribution="Ubuntu", remote_user="tester",
         remote_path="/workspace", connection_id="connection")[1]
@@ -175,9 +177,10 @@ def test_sessions_belong_to_the_workspace_and_turns_carry_the_profile(tmp_path):
     from ordessa_server_compat.sessions import SessionService
     from ordessa_server.idempotency import IdempotentRecords
 
-    service = SessionService(runtime.repository.sessions, IdempotentRecords(runtime.database),
-                             runtime.objects, harnesses=runtime.harnesses,
-                             profiles=profiles, credentials=runtime.repository.credentials,
+    service = SessionService(sessions_repo, IdempotentRecords(runtime.database),
+                             runtime.objects,
+                             harnesses=runtime.plugin_host.provided_port('harness.directory'),
+                             profiles=profiles, credentials=repository.credentials,
                              execution=None)
     session_a = service.create_session("s1", {
         "workspace_id": workspace["workspace_id"], "profile_id": first["profile_id"]})[1]
@@ -302,7 +305,7 @@ def test_clone_plans_what_travels_and_never_pretends_about_sessions():
 def test_a_clone_row_records_its_origin_and_carries_only_what_the_plan_allows(tmp_path):
     from ordessa_server.idempotency import IdempotentRecords
     from ordessa_server_compat.profiles import ProfileRecords
-    from pacthold.storage import Database
+    from pacthold_runtime_compat.storage import Database
 
     database = Database(tmp_path / "data")
     database.initialize()
@@ -338,7 +341,7 @@ def test_the_clone_wire_face_returns_the_migration_report(tmp_path):
 
     runtime = build_runtime(tmp_path / "server")
     runtime.start()
-    profile = runtime.repository.profiles.create(
+    profile = runtime.plugin_host.provided_port('product.repository').profiles.create(
         key="p", request_digest="p", name="role", harness_type="claude-code",
         config_digest=runtime.objects.publish(
             b'{"schema_version":1,"harness_type":"claude-code","configuration":{}}').digest,
@@ -384,7 +387,11 @@ def test_a_clone_rebinds_exactly_the_migrated_assets_and_setpermissions_writes(t
 
     runtime = build_runtime(tmp_path / "server")
     runtime.start()
-    source = runtime.repository.profiles.create(
+    repository = runtime.plugin_host.provided_port("product.repository")
+    skill_assets = runtime.plugin_host.provided_port("asset.skills")
+    asset_records = runtime.plugin_host.provided_port("asset.records")
+    plugin_assets = runtime.plugin_host.provided_port("asset.plugins")
+    source = repository.profiles.create(
         key="p", request_digest="p", name="role", harness_type="claude-code",
         config_digest=runtime.objects.publish(
             b'{"schema_version":1,"harness_type":"claude-code","configuration":{}}').digest,
@@ -394,21 +401,21 @@ def test_a_clone_rebinds_exactly_the_migrated_assets_and_setpermissions_writes(t
     skill_dir.mkdir()
     (skill_dir / "SKILL.md").write_text(
         "---\nname: my-skill\ndescription: does a thing\n---\nBody.\n", encoding="utf-8")
-    from pacthold.resource_contracts.runtime_artifacts import runtime_artifact_tree_digest
+    from pacthold_runtime_compat.resource_contracts.runtime_artifacts import runtime_artifact_tree_digest
 
-    runtime.skill_assets.install(skill_dir, asset_id="my-skill", revision=1)
-    runtime.asset_records.publish(
+    skill_assets.install(skill_dir, asset_id="my-skill", revision=1)
+    asset_records.publish(
         key="s", request_digest="s", kind="skill", name="my-skill", revision=1,
-        digest=runtime_artifact_tree_digest(runtime.skill_assets.revision_dir("my-skill", 1)),
+        digest=runtime_artifact_tree_digest(skill_assets.revision_dir("my-skill", 1)),
         asset_id="my-skill")
     plugin = tmp_path / "guard.js"
     plugin.write_text("export const Guard = async () => {}\n", encoding="utf-8")
-    facts = runtime.plugin_assets.install(plugin, asset_id="guard", revision=1)
-    runtime.asset_records.publish(
+    facts = plugin_assets.install(plugin, asset_id="guard", revision=1)
+    asset_records.publish(
         key="pg", request_digest="pg", kind="plugin", name="guard", revision=1,
         digest=facts["digest"], asset_id="guard")
-    runtime.asset_records.bind(profile_id=source["profile_id"], asset_id="my-skill")
-    runtime.asset_records.bind(profile_id=source["profile_id"], asset_id="guard")
+    asset_records.bind(profile_id=source["profile_id"], asset_id="my-skill")
+    asset_records.bind(profile_id=source["profile_id"], asset_id="guard")
 
     with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
         token = runtime.token
@@ -425,7 +432,7 @@ def test_a_clone_rebinds_exactly_the_migrated_assets_and_setpermissions_writes(t
         migrated = sorted(entry["item"] for entry in report["items"]
                           if entry["migrated"] and ":" in entry["item"])
         assert report["reboundAssets"] == migrated
-        bound = runtime.asset_records.bindings(clone_id)
+        bound = runtime.plugin_host.provided_port('asset.records').bindings(clone_id)
         assert sorted(item["assetId"] for item in bound) == [
             item.split(":", 1)[1] for item in migrated]
 

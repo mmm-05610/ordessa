@@ -130,7 +130,7 @@ def test_a_retry_of_one_import_replays_and_writes_the_asset_once(server, monkeyp
     assert second.status_code == 200 and "result" in second.json(), second.text
     assert len(writes) == 1, f"the import executed {len(writes)} times for one requestId"
     assert second.json() == first.json(), "a replay did not answer identically"
-    assert runtime.compat_handlers.accounts.asset_reference(account_id)[0] == writes[0][1], (
+    assert runtime.plugin_host.provided_port('compat.handlers').accounts.asset_reference(account_id)[0] == writes[0][1], (
         "the account's asset reference moved under a retry")
 
 
@@ -144,7 +144,7 @@ def test_a_replayed_import_leaves_exactly_one_idempotency_row_and_one_asset(serv
         call(client, headers, "accounts.importAsset", params)
     locators = {locator for _account, locator in writes}
     assert len(locators) == 1, locators
-    with runtime.compat_handlers.accounts.database.read() as conn:
+    with runtime.plugin_host.provided_port('compat.handlers').accounts.database.read() as conn:
         rows = conn.execute(
             "SELECT key, request_digest FROM server_idempotency WHERE scope=?",
             ("accounts.importAsset",)).fetchall()
@@ -184,7 +184,7 @@ def test_the_same_key_with_a_changed_file_is_a_conflict_request(server, monkeypa
     error = response.json()["error"]
     assert error["code"] == "CONFLICT_REQUEST", error
     assert error["details"]["internalCode"] == "IDEMPOTENCY_CONFLICT", error
-    assert runtime.compat_handlers.accounts.asset_reference(account_id)[0] is not None
+    assert runtime.plugin_host.provided_port('compat.handlers').accounts.asset_reference(account_id)[0] is not None
 
 
 def test_the_conflict_family_matches_the_sibling_that_uses_the_same_layer(server):

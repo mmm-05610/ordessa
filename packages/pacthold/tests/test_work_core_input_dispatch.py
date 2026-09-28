@@ -1,11 +1,9 @@
-from pathlib import Path
+from dataclasses import dataclass
+from pathlib import Path, PurePath
+from typing import ClassVar
 
 import pytest
 
-from pacthold.resource_contracts import (
-    PromptFragmentV1,
-    WorkspaceV1,
-)
 from pacthold.work_core import ExecutionStartReceipt, ExecutionStartRequest
 from pacthold.work_core.errors import (
     ContractViolation,
@@ -21,6 +19,43 @@ from pacthold.work_core.models import Ref, RefType
 from pacthold.work_core.registry import ExtensionRegistry, ProviderDescriptor
 from pacthold.work_core.repository import CoreRepository, RefRelation
 from pacthold.work_core.services import ExecutionService, WorkService
+
+
+# specs/010 T009: the kernel never seeds business contract types.  These are
+# local test fixtures with the same wire shapes and the same historical
+# contract ids as the relocated product contracts — protocol, not display
+# names — so dispatch semantics stay pinned unchanged.  (The canonical types
+# now live in ``pacthold_runtime_compat.resource_contracts``.)
+@dataclass(frozen=True)
+class WorkspaceV1:
+    contract_id: ClassVar[str] = "agent-box.workspace@1"
+
+    path: PurePath
+    source_digest: str
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.path, PurePath) or not self.path.is_absolute():
+            raise ValueError("workspace path must be absolute")
+        if not isinstance(self.source_digest, str) or not self.source_digest.strip():
+            raise ValueError("workspace source_digest is required")
+
+
+@dataclass(frozen=True)
+class PromptFragmentV1:
+    contract_id: ClassVar[str] = "agent-box.prompt-fragment@1"
+
+    title: str
+    content: str
+    digest: str
+
+    def __post_init__(self) -> None:
+        for field_name, value in (
+            ("title", self.title),
+            ("content", self.content),
+            ("digest", self.digest),
+        ):
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"prompt fragment {field_name} is required")
 
 
 class FakeResourceProvider:
@@ -82,6 +117,8 @@ def _setup(tmp_agent_box_home, *, resource=None, execution=None):
     )
     provider = FakeExecutionProvider()
     registry = ExtensionRegistry()
+    registry.register_contract(WorkspaceV1)
+    registry.register_contract(PromptFragmentV1)
     registry.register_execution_provider(provider)
     registry.register_resource_provider("fake-resource", resource or FakeResourceProvider())
     return repo, execution_service, execution, registry, provider
@@ -207,6 +244,8 @@ def test_replay_of_failed_dispatch_raises_recorded_error_without_restarting(tmp_
     repo, service, execution, registry, provider = _setup(tmp_agent_box_home)
     failing = FakeExecutionProvider(fail=True)
     failing_registry = ExtensionRegistry()
+    failing_registry.register_contract(WorkspaceV1)
+    failing_registry.register_contract(PromptFragmentV1)
     failing_registry.register_execution_provider(failing)
     failing_registry.register_resource_provider("fake-resource", FakeResourceProvider())
     with pytest.raises(DispatchFailed):
@@ -350,6 +389,8 @@ def test_pure_preflight_rejects_before_materializing_remaining_inputs(
     repo, service, execution, _, _ = _setup(tmp_agent_box_home, resource=resource)
     provider = PreflightProvider()
     registry = ExtensionRegistry()
+    registry.register_contract(WorkspaceV1)
+    registry.register_contract(PromptFragmentV1)
     registry.register_execution_provider(provider)
     registry.register_resource_provider("fake-resource", resource)
     with pytest.raises(DispatchFailed, match="dynamic incompatibility"):

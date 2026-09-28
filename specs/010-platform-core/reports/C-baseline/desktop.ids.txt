@@ -1,0 +1,146 @@
+P|apps/desktop/renderer/agent-acp-wiring.test.ts|activates through bridge, transport and host: the native pair is offered once, and the reviewed loop runs over the real contract
+P|apps/desktop/renderer/agent-acp-wiring.test.ts|a Server whose hello carries no native-execution identity activates as an honest not-offered and registers nothing
+P|apps/desktop/renderer/agent-acp-wiring.test.ts|refuses bridge frames the transport does not know, and they never reach the wire
+P|apps/desktop/renderer/agent-acp-wiring.test.ts|a refused open launches nothing: an unopened project answers NOT_FOUND and a foreign instance is refused locally
+P|apps/desktop/renderer/agent-acp-wiring.test.ts|a relay death is never a release: it errors the stream, cancels nothing, and the stand-down stays explicit
+P|apps/desktop/renderer/agent-acp-wiring.test.ts|a refused release reaches the host as a typed diagnostic and the explicit retry lands over the same still-open bridge
+P|apps/desktop/renderer/agent-acp-wiring.test.ts|a release answered released:false over a successful RPC is never booked as success, and the retry confirms
+P|apps/desktop/renderer/agent-acp-wiring.test.ts|the real workspace reconnect flow proves the host consumption: an evicted ACP client with a refused release stays visible and retryable through the workspace surface
+P|apps/desktop/renderer/agent-acp-wiring.test.ts|privileged-input refusals register nothing: no origin, and a token file group-readable
+P|apps/desktop/renderer/agent-acp-wiring.test.ts|closing the bridge instance tears every live relay down and nothing flows afterwards
+P|apps/desktop/renderer/agent-connections-status.test.tsx|the status bar shows a late release failure automatically, with no selection or click after it lands
+P|apps/desktop/renderer/agent-connections.test.ts|lets independent adapters register and releases each with its own scope
+P|apps/desktop/renderer/agent-connections.test.ts|gate predicates match run/interaction state only, across every connection
+P|apps/desktop/renderer/agent-connections.test.ts|switching views over live work keeps the previous client, its run and its approvals alive
+P|apps/desktop/renderer/agent-connections.test.ts|gates reconnect with the same authority as switching and restores it once live work clears
+P|apps/desktop/renderer/agent-connections.test.ts|a release that fails after the reconnect completed reaches the subscriber and the snapshot on its own, and the explicit passes settle it
+P|apps/desktop/renderer/agent-connections.test.ts|a cleanup pass started while the first release is in-flight joins that request and keeps the reference for the failure that follows
+P|apps/desktop/renderer/agent-connections.test.ts|a release that failed before the eviction is seeded into the host view the moment the reference is taken over
+P|apps/desktop/renderer/agent-connections.test.ts|a client whose first release confirms while another channel is still acquiring is forgotten only after that later release settles
+P|apps/desktop/renderer/agent-connections.test.ts|evicting a client without the managed-release lifecycle retains nothing to confirm
+P|apps/desktop/renderer/agent-connections.test.ts|re-evaluates the gate once a held handshake lands, so reconnect cannot cancel a run started during it
+P|apps/desktop/renderer/agent-connections.test.ts|leaves the connecting indicator owned by the handshake that is still pending
+P|apps/desktop/renderer/agent-conversation.test.tsx|keeps an unknown run outcome distinct from a failure (gate 1)
+P|apps/desktop/renderer/agent-conversation.test.tsx|renders no model entry in the conversation while other options survive (gate 2)
+P|apps/desktop/renderer/agent-conversation.test.tsx|hides thinking and effort alongside the model while a supported option survives (gate 3)
+P|apps/desktop/renderer/agent-conversation.test.tsx|labels each tool outcome with the state the connector reported (gate 4)
+P|apps/desktop/renderer/agent-conversation.test.tsx|opens a readable draft without touching the client, and blocks send until a project is valid (gate 5)
+P|apps/desktop/renderer/agent-conversation.test.tsx|sends a draft once through createAndSend and clears only on snapshot confirmation (gate 6)
+P|apps/desktop/renderer/agent-conversation.test.tsx|keeps the rejected text verbatim and resends only on an explicit second press (gate 7)
+P|apps/desktop/renderer/agent-conversation.test.tsx|continues an existing session under its own project while the draft gate is closed (gate 8)
+P|apps/desktop/renderer/agent-conversation.test.tsx|keeps Enter as send and Shift+Enter as a line break (gate 9)
+P|apps/desktop/renderer/agent-conversation.test.tsx|keeps the composed text across a lost connection and a send attempted while disconnected (gate 10)
+P|apps/desktop/renderer/agent-conversation.test.tsx|gives every session its own unsent text across switching and sends nothing on a switch (gate 11)
+P|apps/desktop/renderer/agent-conversation.test.tsx|keeps the same session id on two connections apart and sends nothing on a connection switch (gate 12)
+P|apps/desktop/renderer/agent-conversation.test.tsx|keeps a draft across a connection round trip, and empties it on discard and after a confirmed send (gate 13)
+P|apps/desktop/renderer/agent-conversation.test.tsx|blocks a mid-draft invalidation whose stale selection the connector clears, without costing the text (gate 14)
+P|apps/desktop/renderer/agent-conversation.test.tsx|mirrors an invalidation the connector does not report: the send is offered and the typed refusal keeps the text (gate 15)
+P|apps/desktop/renderer/agent-conversation.test.tsx|gives the pane, the key and the session identity to a draft that overlaps a live selection (gate 16)
+P|apps/desktop/renderer/agent-conversation.test.tsx|resumes a stepped-away draft and routes its first send to createAndSend, never the selected session (gate 17)
+P|apps/desktop/renderer/agent-conversation.test.tsx|keeps both unsent buffers when opening the same session that was selected before the draft (gate 18)
+P|apps/desktop/renderer/agent-ordessa-connector.test.ts|proves the authenticated Server instance before one connector is registered
+P|apps/desktop/renderer/agent-ordessa-connector.test.ts|registers nothing and strips the IPC wrapper from the native refusal
+P|apps/desktop/renderer/agent-ordessa-connector.test.ts|refuses to reuse a frozen connection when the Server behind the URL changed
+P|apps/desktop/renderer/agent-ordessa-connector.test.ts|projects an approved first send only from a real session id
+P|apps/desktop/renderer/agent-ordessa-connector.test.ts|keeps an accepted session when the list read has not caught up yet
+P|apps/desktop/renderer/agent-ordessa-connector.test.ts|rejects a first send whose session the Server binds to another project
+P|apps/desktop/renderer/agent-ordessa-connector.test.ts|accepts a first send the Server binds to the same project by path
+P|apps/desktop/renderer/agent-ordessa-connector.test.ts|never reports a first send the Server did not confirm, and keeps the caller request id
+P|apps/desktop/renderer/agent-ordessa-connector.test.ts|keeps an unconfirmed first send out of the session list
+P|apps/desktop/renderer/agent-ordessa-connector.test.ts|answers a real approval through one approvals.decide call only
+P|apps/desktop/renderer/agent-ordessa-connector.test.ts|refuses an answer that is not an allow or deny without touching the wire
+P|apps/desktop/renderer/agent-ordessa-connector.test.ts|never presents an ordinary request as answerable, and keeps approvals answerable (FC-0041)
+P|apps/desktop/renderer/agent-ordessa-connector.test.ts|shows an approval it cannot record as unanswerable instead of a button
+P|apps/desktop/renderer/agent-ordessa-connector.test.ts|makes an open run and a pending approval unknown when the event channel drops
+P|apps/desktop/renderer/agent-ordessa-connector.test.ts|maps the wire run states without inventing a verdict the protocol never carries
+P|apps/desktop/renderer/agent-ordessa-connector.test.ts|keeps the project selection scoped to what the Server actually offers
+P|apps/desktop/renderer/agent-ordessa-connector.test.ts|clears the pick behind a first send the Server refused for a lost project, and only that one
+P|apps/desktop/renderer/agent-ordessa-connector.test.ts|opens a session from its log and refuses the operations this product has no route for
+P|apps/desktop/renderer/agent-ordessa.test.ts|resolves the two explicit host inputs into a same-origin target
+P|apps/desktop/renderer/agent-ordessa.test.ts|refuses when either input is absent instead of guessing a default port
+P|apps/desktop/renderer/agent-ordessa.test.ts|refuses anything that is not a bare loopback http origin with an explicit port
+P|apps/desktop/renderer/agent-ordessa.test.ts|refuses an unusable token locator without echoing the secret or its path
+P|apps/desktop/renderer/agent-ordessa.test.ts|scopes one instance identity per Server however its origin is spelled
+P|apps/desktop/renderer/agent-ordessa.test.ts|accepts only the same data-root secrets token file, at 0600
+P|apps/desktop/renderer/agent-ordessa.test.ts|refuses a locator that is not the Server secrets token file
+P|apps/desktop/renderer/agent-ordessa.test.ts|refuses a symlink and any other non-regular file
+P|apps/desktop/renderer/agent-ordessa.test.ts|refuses a token file that group, other or somebody else can see
+P|apps/desktop/renderer/agent-ordessa.test.ts|refuses where ownership cannot be checked at all
+P|apps/desktop/renderer/agent-ordessa.test.ts|refuses an unusable token body
+P|apps/desktop/renderer/agent-ordessa.test.ts|never writes the token or its full locator into a token-file refusal
+P|apps/desktop/renderer/agent-ordessa.test.ts|sends under the exact profileId the authenticated hello names
+P|apps/desktop/renderer/agent-ordessa.test.ts|refuses a first send whose hello identity the Server does not confirm
+P|apps/desktop/renderer/agent-ordessa.test.ts|stops a first send whose project is already gone, before any send frame exists
+P|apps/desktop/renderer/agent-ordessa.test.ts|registers a picked local folder through the Server and requires it in the returned project list
+P|apps/desktop/renderer/agent-ordessa.test.ts|keeps a typed send-period project loss deterministic instead of asking the Server what it accepted
+P|apps/desktop/renderer/agent-ordessa.test.ts|leaves a settled send refusal exactly as the Server answered it
+P|apps/desktop/renderer/agent-ordessa.test.ts|queries only a genuinely unsettled send, and settles it under the caller’s own request id
+P|apps/desktop/renderer/agent-ordessa.test.ts|takes a real session from the outcome query when the accepted response was lost
+P|apps/desktop/renderer/agent-ordessa.test.ts|never spends an outcome query on a first send the Server answered directly
+P|apps/desktop/renderer/agent-ordessa.test.ts|does not call a lost conversation with the Server a lost project
+P|apps/desktop/renderer/agent-ordessa.test.ts|keeps a server-authored reason out of both the code and the message
+P|apps/desktop/renderer/agent-sessions-draft.test.ts|New session and Discard produce zero backend calls and never a temporary session (FC-0021)
+P|apps/desktop/renderer/agent-sessions-draft.test.ts|first send is blocked without a valid project and reaches no client create (拦截反例)
+P|apps/desktop/renderer/agent-sessions-draft.test.ts|restores the last valid project for the same Server instance and revalidates it on selection
+P|apps/desktop/renderer/agent-sessions-draft.test.ts|an invalid restored project clears the selection and blocks sends until reselect
+P|apps/desktop/renderer/agent-sessions-draft.test.ts|project records are isolated per Server instance, never shared across connections (跨连接不串)
+P|apps/desktop/renderer/agent-sessions-draft.test.ts|an unknown first-send outcome keeps one requestId and never creates a second session id
+P|apps/desktop/renderer/agent-sessions-draft.test.ts|continuing an existing session never consults the draft gate or a new create (续聊沿原项目)
+P|apps/desktop/renderer/agent-sessions-draft.test.ts|the last valid project survives a simulated renderer restart and is revalidated before use (FC-0030)
+P|apps/desktop/renderer/agent-sessions-draft.test.ts|a record never restores across Server identities, and storage loss forces manual selection (不串+缺storage)
+P|apps/desktop/renderer/agent-sessions-draft.test.ts|a stored id no longer listed unarchived blocks sends without opening it, and nothing restores without identity
+P|apps/desktop/renderer/agent-sessions-draft.test.ts|an accepted-but-unverifiable first send never lists a ghost session and keeps the same requestId for the retry (FC-0031)
+P|apps/desktop/renderer/agent-sessions-draft.test.ts|draft first send reaches createAndSend exactly once and never the previously open session (C-0030 拦截反例)
+P|apps/desktop/renderer/agent-sessions-draft.test.ts|discardDraft restores the previously selected session in place and reports endedBy discarded (恢复定义)
+P|apps/desktop/renderer/agent-sessions-draft.test.ts|openSession during an active draft ends it as opened and sends nothing (可区分下游语义)
+P|apps/desktop/renderer/agent-sessions-draft.test.ts|an unknown draft outcome with an old session selected keeps the requestId and never falls back to it (unknown 不降级)
+P|apps/desktop/renderer/agent-sessions-draft.test.ts|switching connections with a live draft sends nothing on either side (切换零发送)
+P|apps/desktop/renderer/agent-sessions.test.ts|keeps separate clients alive on selection changes and disposes them with the connections service scope
+P|apps/desktop/renderer/agent-sessions.test.ts|projects sessions into ordered workspace groups with the standalone group last (P2-3 projection)
+P|apps/desktop/renderer/agent-sessions.test.ts|derives per-session badge state through the shared gate predicates over all items
+P|apps/desktop/renderer/agent-sessions.test.tsx|groups sessions by workspace with the standalone group last and pinned first (P2-3 grouping)
+P|apps/desktop/renderer/agent-sessions.test.tsx|keeps the flat list shape while no session carries a workspace (single standalone group)
+P|apps/desktop/renderer/agent-sessions.test.tsx|badges every session by scanning all its runs and interactions, not only the last run (FC-0015 predicates)
+P|apps/desktop/renderer/agent-sessions.test.tsx|renders the five list states with their existing copy (empty is a count, not a null container)
+P|apps/desktop/renderer/agent-sessions.test.tsx|keeps exactly one selection marker, moved by clicks and restored on a fresh mount (FC-0004 selection)
+P|apps/desktop/renderer/agent-sessions.test.tsx|draft UI: New session opens the picker with zero backend calls, picking clears the block, Discard closes it (FC-0021)
+P|apps/desktop/renderer/agent-sessions.test.tsx|registers view, command and navigation exactly once in the sessions entry and never in the conversation entry (FC-0004 unique registration)
+P|apps/desktop/renderer/agent-ui-probe.test.tsx|renders external history, incremental snapshots and tool results through the real assistant-ui runtime
+P|apps/desktop/renderer/agent-ui-probe.test.tsx|rejects stale generations, late terminal writes and writes after disposal
+P|apps/desktop/renderer/agent-ui-probe.test.tsx|preserves complete, cancelled and error as distinct library statuses
+P|apps/desktop/renderer/foundation.test.tsx|foundation service boundaries rejects duplicate views and refuses late writes
+P|apps/desktop/renderer/foundation.test.tsx|foundation service boundaries owns registrations across services; rejects duplicates and late additions
+P|apps/desktop/renderer/foundation.test.tsx|foundation service boundaries rolls back a consumer across foundation registries on activation failure
+P|apps/desktop/renderer/foundation.test.tsx|workbench UI moves an active component without remounting, and collapse is not close
+P|apps/desktop/renderer/foundation.test.tsx|workbench UI covers all five regions, preserves background state/focus across full-page, cleans removed pages
+P|apps/desktop/renderer/foundation.test.tsx|workbench UI isolates broken full-page rendering and missing commands; order is deterministic
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host owns raw plugin contributions and rejects late writes without exposing the registry
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host rolls back raw plugins without requiring scoped()
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host immediately releases resources arriving after scope closure
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host starts healthy plugins while an unrelated activation is pending
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host starts without business plugins or public raw registry
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host rejects duplicate providers and plugin ids
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host starts unrelated plugins when a required service is missing
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host cleans all resources in reverse order despite throwing cleanup
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host rolls back activation and retains both failure causes
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host registers and removes a root without editing App
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host shows a diagnostic for a broken root instead of a blank window
+P|apps/desktop/renderer/loader.test.ts|bounds a stalled factory, preserves healthy modules, and ignores late results
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement uses bundled defaults only when user approval is absent; malformed or empty override never falls back
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement does not enable discovered code without explicit approval
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement fails closed for malformed approval
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement rejects invalid entry ../entry.js
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement rejects invalid entry /tmp/entry.js
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement rejects invalid entry file:///tmp/a.js
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement rejects invalid entry dist\a.js
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement rejects invalid entry dist/%2e%2e/a.js
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement requires an enabled native entry to exist inside its extension
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement rejects incompatible versions
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement rejects duplicate identities without a directory-order winner
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement rejects file symlinks escaping the installed package
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement does not discover a symlinked package directory
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement protocol rejects disabled packages, foreign hosts and unsupported files
+P|apps/desktop/renderer/loader.test.ts|module validation isolates rejected imports and factory identity failures
+P|apps/desktop/renderer/loader.test.ts|module validation rejects all duplicate providers but keeps unrelated plugins
+P|apps/desktop/renderer/loader.test.ts|module validation missing service does not prevent an unrelated loaded plugin starting
+P|apps/desktop/renderer/loader.test.ts|module validation a dependency cycle is diagnosed without aborting unrelated startup

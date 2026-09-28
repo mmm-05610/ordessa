@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import sqlite3
 
-from pacthold.storage import database as db
+from pacthold_runtime_compat.storage import database as db
 from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server_compat.model_configs.repository import ProviderModelRecords
 from ordessa_server_compat.model_configs.service import ProviderModelService

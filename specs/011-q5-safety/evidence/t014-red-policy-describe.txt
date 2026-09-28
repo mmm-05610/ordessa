@@ -1,0 +1,65 @@
+# T014-Q5(backend) RED — permissions.policy.describe read surface (lane Q5/permissions-backend)
+# date: 2026-09-27T23:04:50Z  branch: codex/011-q5-safety  head: 877b5020437f0b4e4baf16d817356b66946ccc2b
+# command 1: .venv/bin/python -m pytest plugins/permissions/backend/tests/test_policy_describe.py -q
+
+==================================== ERRORS ====================================
+________________ ERROR collecting tests/test_policy_describe.py ________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/tests/test_policy_describe.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/backend/tests/test_policy_describe.py:30: in <module>
+    from ordessa_permissions_backend.describe import (
+E   ModuleNotFoundError: No module named 'ordessa_permissions_backend.describe'
+=========================== short test summary info ============================
+ERROR plugins/permissions/backend/tests/test_policy_describe.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.20s
+
+# command 2: .venv/bin/python -m pytest plugins/permissions/backend/tests/test_wire_plugin_registration.py::test_wire_methods_are_declared_exactly -q
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________________ test_wire_methods_are_declared_exactly ____________________
+
+built = (<pacthold_runtime_compat.storage.database.Database object at 0x72e4736d3200>, <ordessa_permissions_backend.plugin.Per...736f09a0>,), disposal=None, contributions=ContributionBatch(contributions=(), open_points=frozenset()), stop_hooks=()))
+
+    def test_wire_methods_are_declared_exactly(built):
+        database, plugin, registration = built
+        methods = {m.method_id: m for m in registration.methods}
+>       assert set(methods) == {"permissions.approvals.decide", "permissions.approvals.query",
+                                "permissions.policy.describe"}
+E       AssertionError: assert {'permissions...rovals.query'} == {'permissions...icy.describe'}
+E         
+E         Extra items in the right set:
+E         'permissions.policy.describe'
+E         Use -v to get more diff
+
+plugins/permissions/backend/tests/test_wire_plugin_registration.py:52: AssertionError
+=========================== short test summary info ============================
+FAILED plugins/permissions/backend/tests/test_wire_plugin_registration.py::test_wire_methods_are_declared_exactly
+1 failed in 0.15s
+
+# per-ID expectation (all MUST turn green; command 1 cannot even collect until describe.py exists):
+plugins/permissions/backend/tests/test_policy_describe.py::test_describe_method_descriptor_exact_shape_and_owner
+plugins/permissions/backend/tests/test_policy_describe.py::test_describe_reports_seeded_ceiling_intent_and_needs_review
+plugins/permissions/backend/tests/test_policy_describe.py::test_desired_mode_is_reported_as_brand_and_name
+plugins/permissions/backend/tests/test_policy_describe.py::test_ready_mirrors_admission_readiness
+plugins/permissions/backend/tests/test_policy_describe.py::test_ready_true_when_native_evidence_is_wired
+plugins/permissions/backend/tests/test_policy_describe.py::test_unwired_repository_answers_not_ready_and_empty_lists
+plugins/permissions/backend/tests/test_policy_describe.py::test_unverified_ceiling_row_reports_its_source
+plugins/permissions/backend/tests/test_policy_describe.py::test_unverified_ceiling_is_never_storeable_or_enforceable
+plugins/permissions/backend/tests/test_policy_describe.py::test_undeclared_stored_fields_cannot_smuggle_keys
+plugins/permissions/backend/tests/test_policy_describe.py::test_host_refuses_unknown_request_param
+plugins/permissions/backend/tests/test_policy_describe.py::test_host_dispatch_serves_the_declared_params_only
+plugins/permissions/backend/tests/test_policy_describe.py::test_describe_mutates_no_rows
+plugins/permissions/backend/tests/test_policy_describe.py::test_scope_filters_entries_and_principal_is_inert
+plugins/permissions/backend/tests/test_policy_describe.py::test_availability_reports_unwired_and_unreadable_truthfully
+plugins/permissions/backend/tests/test_policy_describe.py::test_availability_never_gates_dispatch
+plugins/permissions/backend/tests/test_wire_plugin_registration.py::test_wire_methods_are_declared_exactly
+exit(command 1)=2 (collection error: No module named 'ordessa_permissions_backend.describe'); exit(command 2)=1
+
+# note: during implementation one further ID was added to the same file —
+# test_policy_describe_record_vocabulary_matches_the_api (pins describe.py's projection vocabularies equal the API's _RECORD_FIELDS/_RULE_FIELDS);
+# it could not exist pre-RED because describe.py's import already errored the whole file; green run records it (17 IDs total).

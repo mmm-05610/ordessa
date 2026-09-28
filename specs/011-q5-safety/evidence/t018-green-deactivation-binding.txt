@@ -1,0 +1,31 @@
+# T018-Q5(backend) GREEN — busy() binds to host deactivation (lane Q5/permissions-backend)
+# date: 2026-09-28T00:20:31Z  branch: codex/011-q5-safety  head: 458add4f1b5ea00723d4b5d1c1e5d0aeca74e5a6
+# same working tree as t018-red-deactivation-binding.txt; implementation landed:
+#   plugin.py   — _RouteLifecycle (closed + in-flight counters), stop_hooks=(refuse_deactivation,), disposal=dispose, guarded decide handlers, admission closed-gate wiring
+#   errors.py   — PermissionsBackendBusyError, ApprovalRouteClosedError, DualAuthorityError
+#   admission.py — closed-lifecycle gate: ready flips False, authorize_* answer a typed refusal after an accepted stop
+#   facts.py    — busy() docstring records the binding
+# platform surface bound to: ServerPluginRegistration.stop_hooks + disposal (server_plugin_api/contract.py); refusal observed as typed raises AND through the real ordessa_server.plugin_host.ServerPluginHost run_stop_hooks→shutdown sequence; an in-flight decision refuses with the platform's own ContributionOwnerBusyError.
+
+# per-ID results (9/9):
+plugins/permissions/backend/tests/test_deactivation_binding.py::test_registration_declares_a_stop_hook_and_disposal PASSED [ 11%]
+plugins/permissions/backend/tests/test_deactivation_binding.py::test_stop_hook_refuses_while_an_approval_is_open PASSED [ 22%]
+plugins/permissions/backend/tests/test_deactivation_binding.py::test_stop_hook_refuses_while_a_settled_allow_is_unreconciled PASSED [ 33%]
+plugins/permissions/backend/tests/test_deactivation_binding.py::test_decide_route_still_works_after_a_refused_stop PASSED [ 44%]
+plugins/permissions/backend/tests/test_deactivation_binding.py::test_deactivation_allowed_after_settle_and_reconcile PASSED [ 55%]
+plugins/permissions/backend/tests/test_deactivation_binding.py::test_stop_hook_refuses_with_the_platform_busy_error_while_a_decision_is_in_flight PASSED [ 66%]
+plugins/permissions/backend/tests/test_deactivation_binding.py::test_disposal_refuses_while_facts_are_unresolved PASSED [ 77%]
+plugins/permissions/backend/tests/test_deactivation_binding.py::test_disposal_allowed_after_settle PASSED [ 88%]
+plugins/permissions/backend/tests/test_deactivation_binding.py::test_the_real_host_refuses_the_stop_phase_then_tears_down_after_reconcile PASSED [100%]
+
+# summary line + true exit code of: .venv/bin/python -m pytest plugins/permissions/backend/tests/test_deactivation_binding.py -v
+
+exit=0
+
+
+# package gate (rerun after the dependency-direction docstring fix): .venv/bin/python -m pytest plugins/permissions/backend -q
+158 passed in 1.11s
+exit=0
+# proof: .venv/bin/python specs/011-q5-safety/proof/permissions_api_proof.py
+ALL PROOF EXPECTATIONS MET
+exit=0

@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "name": "foundation",
+  "producer": "c0",
+  "status": "READY",
+  "planAnchorRef": "refs/heads/codex/011-plugin-plan",
+  "implementationSha": "8229e20824aa7db95ed8615a3d5122c2fbf81305",
+  "dependsOn": {},
+  "publicExports": [
+    "packages/pacthold/src/pacthold/public — Core, CoreStore, resource/execution contracts; no plugin import",
+    "packages/server-plugin-api/src/server_plugin_api — ContributionPointSpec, owned carrier registration and lifecycle contracts",
+    "apps/server/src/ordessa_server/bootstrap — build_runtime and typed product/storage/historical-provider refusals",
+    "products/server/src/ordessa_server_product — selected default composition, public server_contribution_points and database_type",
+    "packages/desktop-platform/* — extension contracts/host/loader/native bridge; C7/C8 integrated",
+    "apps/desktop and plugins/workbench — composed desktop baseline and tested responsive sidebar"
+  ],
+  "commandsAndEvidence": [
+    {
+      "command": ".venv/bin/python -m pytest -q packages/pacthold/tests",
+      "evidence": "exit 0, 212 passed; report records output/JUnit hashes; unknown OWN lease stop counterexamples passed"
+    },
+    {
+      "command": ".venv/bin/python -m pytest apps/server -q --junitxml=/tmp/ordessa-c0-server-wired-junit.xml",
+      "evidence": "exit 1, 42 failed/1092 passed/10 skipped/25 errors; 67/67 inherited red IDs, new [], gone [], same causes after path/volatile-ID normalization; JUnit sha256 92ef39145b25d024ff611376c45a5b9b6dbe5ed86d79fb955bb1eb9699e079b9"
+    },
+    {
+      "command": ".venv/bin/python -m pytest -q apps/server/tests/platform",
+      "evidence": "exit 0, 199 passed; includes host-only storage, historical migration, public point preflight and rollback counterexamples"
+    },
+    {
+      "command": "npm test; npm run typecheck; npm run build",
+      "evidence": "exit 0 for each; root aggregate 25/25 suites; Workbench 52 test IDs and controlled Chrome browser mouse/keyboard/scroll/popover observations recorded in report"
+    },
+    {
+      "command": "python3.12 -m pip wheel --no-deps --no-cache-dir [nine local package dirs]; fresh venv pip install -r apps/server/lockfiles/server-linux-py312.txt; pip install --no-index --find-links /tmp/ordessa-c0-foundation-wheels ordessa-server-product==2.0.0a1; pip check",
+      "evidence": "clean clone at implementationSha; wheel build, pinned closure installation, nine-local-wheel install and pip check all exit 0; wheel-build log sha256 ca27461ed11937431c44424e87e081f413dcaec533fc3c9b489a3ee07d930830"
+    },
+    {
+      "command": "/tmp/ordessa-c0-foundation-venv/bin/python -I /tmp/ordessa-c0-foundation-smoke.py",
+      "evidence": "exit 0; all nine packages import from isolated site-packages; default product starts, both Harness points registered, hello succeeds, wire methods=67, stop succeeds; output sha256 3a33d2bb0a6d46840b03ad320404fdf7a2a7cb281d855a1f0d5c6950bd7b52ce"
+    }
+  ],
+  "limitations": [
+    "Foundation is the public platform baseline only. Harness v2 application, journal, native lifecycle, six brand-by-facet L3 chains, and final business integration are pending and are not exported as completed capabilities by this checkpoint.",
+    "The full Server suite retains exactly 67 inherited red IDs and 25 collection/runtime errors; the ACP orchestration suite retains 18 inherited reds; Harness retains two Pi ACP SDK lock failures. Exact per-ID/cause comparison is in specs/011-c0-foundation-harness/report.md and the original B report.",
+    "The controlled browser proof covers Workbench layout, drag, keyboard, scroll and popover; full business product browser composition is pending final integration.",
+    "No real-model call or user-data migration was performed. The isolated wheel run used synthetic /tmp roots and CPython 3.12.14 on Linux."
+  ]
+}

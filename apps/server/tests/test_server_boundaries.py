@@ -12,6 +12,7 @@ import threading
 from fastapi.testclient import TestClient
 
 from ordessa_server.bootstrap import build_runtime
+from ordessa_server_product.composition import create_composition
 from ordessa_server.credentials import CredentialRecords
 from ordessa_server_compat.execution import (
     CancelOutcome, HarnessDescriptor, HarnessRegistry,
@@ -21,7 +22,7 @@ from ordessa_server_compat.persistence import ProductRepositoryView
 from ordessa_server_compat.profiles import ProfileRecords
 from ordessa_server_compat.sessions import SessionRecords, SessionService
 from ordessa_server.transport.http import create_app
-from pacthold.storage import Database, ObjectStore
+from pacthold_runtime_compat.storage import Database, ObjectStore
 from ordessa_workspace import WorkspaceRecords
 
 
@@ -168,8 +169,10 @@ def test_concurrent_same_key_turn_acceptance_dispatches_once(tmp_path):
 def test_two_neutral_providers_are_selectable_without_server_changes(tmp_path):
     execution = RecordingExecution()
     runtime = build_runtime(
-        tmp_path / "providers", harnesses=alpha_beta_registry(),
-        connector=WslFixture(), execution=execution,
+        tmp_path / "providers",
+        server_plugins=create_composition().compatibility_plugins(
+            harnesses=alpha_beta_registry(),
+            connector=WslFixture(), execution=execution),
     )
     with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
         headers = {"Authorization": f"Bearer {runtime.token}"}
@@ -180,7 +183,7 @@ def test_two_neutral_providers_are_selectable_without_server_changes(tmp_path):
         workspace = post("/api/v1/workspaces", {
             "probe_id": "probe_fixture", "path": "/workspace",
         }, "workspace").json()
-        runtime.repository.register_credential("credential-1", "alpha-key", "locator")
+        runtime.plugin_host.provided_port('product.repository').register_credential("credential-1", "alpha-key", "locator")
         alpha_profile = post("/api/v1/profiles", {
             "name": "alpha role", "harness_type": "alpha",
             "configuration": {}, "credential_id": "credential-1",
@@ -232,8 +235,10 @@ def test_capability_answers_reflect_registration_only(tmp_path):
         assert turn.json()["error"]["code"] == "EXECUTION_CAPABILITY_UNAVAILABLE"
 
     registered = build_runtime(
-        tmp_path / "registered", harnesses=alpha_beta_registry(),
-        connector=WslFixture(),
+        tmp_path / "registered",
+        server_plugins=create_composition().compatibility_plugins(
+            harnesses=alpha_beta_registry(),
+            connector=WslFixture()),
     )
     with TestClient(create_app(registered), base_url="http://127.0.0.1") as client:
         headers = {"Authorization": f"Bearer {registered.token}"}

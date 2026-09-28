@@ -1,0 +1,25 @@
+# T06 RED — sandbox Settings region (plugins/assets/sandbox/frontend)
+# command: (cd plugins/assets/sandbox/frontend && npx vitest run)
+# date: 2026-09-28T04:55:10+08:00
+# TRUE exit code: 1 (captured directly from the vitest process, not from a pipe)
+
+# RED basis: the contributed modules did not exist yet, so every suite
+# failed at collection — 6 test files collected, 0 tests executed.
+
+## failing test files (6/6)
+  FAIL  tests/contract.test.ts [ tests/contract.test.ts ]
+  FAIL  tests/cross-language-codes.test.ts [ tests/cross-language-codes.test.ts ]
+  FAIL  tests/dependency-boundary.test.ts [ tests/dependency-boundary.test.ts ]
+  FAIL  tests/settings-lifecycle.test.ts [ tests/settings-lifecycle.test.ts ]
+  FAIL  tests/settings-region.test.ts [ tests/settings-region.test.ts ]
+  FAIL  tests/settings-view.test.tsx [ tests/settings-view.test.tsx ]
+
+## collection errors
+  Error: Failed to resolve import "../src/contract" from "tests/contract.test.ts". Does the file exist?
+  Error: Failed to resolve import "../src/contract" from "tests/cross-language-codes.test.ts". Does the file exist?
+  Error: Failed to resolve import "../src/settings-region" from "tests/settings-lifecycle.test.ts". Does the file exist?
+  Error: Failed to resolve import "../src/settings-region" from "tests/settings-region.test.ts". Does the file exist?
+  Error: Failed to resolve import "../src/settings-region" from "tests/settings-view.test.tsx". Does the file exist?
+
+   Test Files  6 failed (6)
+        Tests  no tests

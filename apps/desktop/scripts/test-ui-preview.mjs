@@ -28,7 +28,7 @@ try {
   await cp(path.join(repoRoot, 'examples/ui-preview/manifest.json'), path.join(fixtureOut, 'manifest.json'))
   await writeFile(path.join(home, 'extensions.json'), JSON.stringify({ enabled: [
     'ordessa.contracts', 'ordessa.agent-contracts', 'ordessa.commands', 'ordessa.workbench',
-    'ordessa.agent-connections', 'ordessa.agent-sessions', 'ordessa.agent-conversation', 'example.ui-preview',
+    'ordessa.connections', 'ordessa.agent-connections', 'ordessa.agent-sessions', 'ordessa.agent-conversation', 'example.ui-preview',
   ] }))
   await build({
     entryPoints: [path.join(appRoot, 'electron/preview-main.ts')], outfile: path.join(appRoot, 'dist', 'preview-electron.cjs'),

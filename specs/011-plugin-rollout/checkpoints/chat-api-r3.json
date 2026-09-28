@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "name": "chat-api-r3",
+  "producer": "z2",
+  "status": "READY",
+  "planAnchorRef": "refs/heads/codex/011-plugin-plan",
+  "implementationSha": "47459b0acb57242ab9980ecfae63c8b914d092af",
+  "dependsOn": {
+    "chat-api": "refs/heads/codex/011-chat-api-ready @ 54ad26c15d (implementation a3ec20c046)",
+    "foundation": "refs/heads/codex/011-foundation-ready @ 8844c475bc02a185ab194c69eed873122aa48349 (implementation 8229e20824)"
+  },
+  "publicExports": [
+    "同 chat-api v1/r2 全部导出",
+    "修订：ChatComponentKey<P> 现在就是平台 UiComponentKey<P>（type-only 导入平台类型；运行时对象仍为本包构造的冻结 {id, major}，与 defineUiComponent 产物一致）",
+    "ordessa.chat.* 四 key 可直接通过 C7 register/selection 消费，零类型摩擦"
+  ],
+  "commandsAndEvidence": [
+    { "command": "cd plugins/chat/api && npx vitest run && npx tsc --noEmit", "evidence": "15/15 passed, tsc exit 0" },
+    { "command": "cd plugins/chat/frontend && npx vitest run && npx tsc --noEmit", "evidence": "35/35 passed, tsc exit 0" },
+    { "command": "npm run typecheck && npm test && npm run build (repo root, merge 0a05235d0f + r3 47459b0acb)", "evidence": "typecheck exit 0；foundation 聚合 27/27 suites；build 10 enabled extensions；chat 两扩展试构建成功" }
+  ],
+  "limitations": [
+    "运行时构造仍是本包工厂：产品 import map（extension-protocol.ts）尚无 @ordessa/ui-components 条目，且 build-extension externals 不含它——现在直接运行时导入会让平台 Token 拷贝进本 bundle（CN-08）或加载失败。产品级切换（import map 条目 + externals + 构造点换 defineUiComponent）是纯机械三行改动，登记 integration-request §6 归 C0；类型已完全对齐，切换零消费方变更。",
+    "其余限制同 r2。"
+  ]
+}

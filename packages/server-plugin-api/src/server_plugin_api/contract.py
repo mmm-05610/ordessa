@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 import re
 from typing import Any, Callable, Mapping, Protocol, runtime_checkable
 
+from .contributions import ContributionBatch
+
 SERVER_PLUGIN_API_VERSION = 1
 
 #: A wire method id: a lowercase namespace word, then dot-separated wire/1
@@ -160,6 +162,95 @@ class HttpRouteDescriptor:
             raise ValueError("owner must name the registering plugin")
 
 
+#: The two converters the host CLI knows how to build for a contributed
+#: flag (T014-S4). A spec naming any other `type` is a declaration error at
+#: construction, not a broken parser at startup; `action` is restricted the
+#: same way to the three argparse behaviours the wall has reviewed.
+_FLAG_TYPES = frozenset({"path", "int"})
+_FLAG_ACTIONS = frozenset({"store", "store_true", "append"})
+_FLAG_ADD_KEYS = frozenset({"type", "choices", "action", "default", "help", "metavar"})
+
+
+@dataclass(frozen=True)
+class ServerFlagSpec:
+    """One contributed business flag of the Server CLI grammar (`cli.server-flags`).
+
+    The host keeps the transport-level grammar (`--data-root`, `--port`);
+    everything else the Server's `main` accepts is declared through this
+    spec by the installed product. `add` carries exactly the argparse
+    keyword arguments needed to register the flag — `type` by NAME
+    (`_FLAG_TYPES`), so this contract stays dependency-free and the host
+    resolves `Path`/`int` itself — and the parsed value's meaning is
+    declared, not executed here: `feeds` names the composition argument
+    the value is handed to (empty: consumed only by the product's own
+    route planning), `route` names the composition method the flag
+    participates in (empty: shared). Validation of combinations and the
+    choice between `default_runtime` / `native_runtime` / `sidecar_runtime`
+    are the product's `plan_server_cli` answer, so the host names no
+    business mode.
+    """
+
+    flags: tuple[str, ...]
+    dest: str
+    add: Mapping[str, Any] = field(default_factory=dict)
+    feeds: str = ""
+    route: str = ""
+
+    def __post_init__(self) -> None:
+        if (not isinstance(self.flags, tuple) or not self.flags
+                or any(not isinstance(f, str) or not f.startswith("--") or len(f) < 3
+                       for f in self.flags)):
+            raise ValueError(f"invalid flag spellings: {self.flags!r}")
+        if not isinstance(self.dest, str) or not self.dest.isidentifier():
+            raise ValueError(f"invalid dest: {self.dest!r}")
+        if not isinstance(self.add, Mapping):
+            raise ValueError("add must be a mapping of argparse keywords")
+        unknown = set(self.add) - _FLAG_ADD_KEYS
+        if unknown:
+            raise ValueError(f"unknown argparse keywords in flag spec: {sorted(unknown)}")
+        type_name = self.add.get("type")
+        if type_name is not None and type_name not in _FLAG_TYPES:
+            raise ValueError(f"flag type must be one of {sorted(_FLAG_TYPES)}, got {type_name!r}")
+        action = self.add.get("action")
+        if action is not None and action not in _FLAG_ACTIONS:
+            raise ValueError(f"flag action must be one of {sorted(_FLAG_ACTIONS)}, got {action!r}")
+        if not isinstance(self.feeds, str) or (self.feeds and not self.feeds.isidentifier()):
+            raise ValueError(f"invalid feeds argument name: {self.feeds!r}")
+        if not isinstance(self.route, str) or (self.route and not self.route.isidentifier()):
+            raise ValueError(f"invalid route method name: {self.route!r}")
+
+
+@dataclass(frozen=True)
+class ServerCliPlan:
+    """The product's answer to what the parsed CLI values mean (T014-S4).
+
+    `method` names the composition method the host must call with
+    `(data_root, *args, **kwargs)` — the plan never carries the data root
+    or the port, both host-owned; `error` is the exact refusal message the
+    host's parser reports instead of running anything. Exactly one of the
+    two is meaningful: an error plan carries no method the host may call.
+    """
+
+    method: str = ""
+    args: tuple = ()
+    kwargs: Mapping[str, Any] = field(default_factory=dict)
+    error: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.error is not None:
+            if self.method:
+                raise ValueError("an error plan must not name a composition method")
+            if not isinstance(self.error, str) or not self.error:
+                raise ValueError("error must be a non-empty message or None")
+            return
+        if not isinstance(self.method, str) or not self.method.isidentifier():
+            raise ValueError(f"invalid composition method: {self.method!r}")
+        if not isinstance(self.args, tuple):
+            raise ValueError("args must be a positional tuple")
+        if not isinstance(self.kwargs, Mapping):
+            raise ValueError("kwargs must be a mapping")
+
+
 @dataclass(frozen=True)
 class ServerPluginContext:
     """What a plugin may touch while building.
@@ -203,14 +294,33 @@ class ServerPluginRegistration:
     #: the host's own start sequence.
     start_hooks: "tuple[Callable[[], None], ...]" = ()
     disposal: Callable[[], None] | None = None
+    #: The C2 contribution declarations of this plugin. An empty batch is
+    #: the default, so a registration predating contributions keeps
+    #: working unchanged; the host enforces the staging/publish semantics
+    #: and injects the owner — a contribution never carries one.
+    contributions: ContributionBatch = field(default_factory=ContributionBatch)
+    #: The mirror of `start_hooks`: the teardown a plugin owns (closing its own
+    #: transports, draining its own runs, ending its own records with the real
+    #: reason) runs **before** any plugin is disposed, in reverse activation
+    #: order, so the round whose ports this plugin resolved against is still
+    #: alive while it stops. A hook that refuses — a stop that will not settle,
+    #: a transport that will not die — propagates to the caller rather than
+    #: being swallowed into the disposal pass.
+    #: Declared last on purpose: the fields above it keep the positional order
+    #: pre-contribution registrations were built with
+    #: (`test_registration_gains_contributions_backwards_compatible`).
+    stop_hooks: "tuple[Callable[[], None], ...]" = ()
 
     def __post_init__(self) -> None:
-        for name in ("methods", "stream_routes", "http_routes", "start_hooks"):
+        for name in ("methods", "stream_routes", "http_routes", "start_hooks",
+                     "stop_hooks"):
             value = getattr(self, name)
             if not isinstance(value, tuple):
                 raise ValueError(f"ServerPluginRegistration.{name} must be a tuple")
         if not isinstance(self.provided_ports, Mapping):
             raise ValueError("provided_ports must be a mapping")
+        if not isinstance(self.contributions, ContributionBatch):
+            raise ValueError("contributions must be a ContributionBatch")
 
 
 @runtime_checkable

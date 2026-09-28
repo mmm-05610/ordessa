@@ -102,6 +102,33 @@ def call_in_thread(fn, *args, **kwargs):
 _UNSET = object()
 
 
+class _ControlledAcpAuthority:
+    """Test-only permits for the fixed bidirectional peer's exact ACP input."""
+
+    def authorize_submission(self, connection, submission):
+        from ordessa_server.acp_admission import BoundAdmission, _digest, prompt_input
+
+        native_id, blocks = prompt_input(submission)
+        generation = getattr(connection, "runtime_generation", None)
+        return BoundAdmission(
+            principal="controlled-acp-test", connection_id=connection.connection_id,
+            native_session_id=native_id,
+            runtime_generation=generation if type(generation) is int else 0,
+            submission_id=submission["submissionId"],
+            input_digest=_digest({"sessionId": native_id, "prompt": blocks}),
+            configuration_digest=submission["configurationDigest"],
+            expires_at=time.time() + 120,
+        )
+
+    def authorize_permission(self, connection, request, decision):
+        return (
+            bool(getattr(connection, "connection_id", None))
+            and request.get("sessionId") == decision.get("nativeSessionId")
+            and any(isinstance(option, dict) and option.get("optionId") == decision.get("optionId")
+                    for option in request.get("options", ()))
+        )
+
+
 @dataclass
 class ServerHandle:
     client: Any
@@ -194,7 +221,9 @@ def server(tmp_path, monkeypatch) -> ServerHandle:
     runtime = build_runtime_from_native_adapter(
         tmp_path / "data", plugin_root=PLUGIN, harness_id="pi",
         adapter_command=NODE, adapter_args=(str(PEER),), native_continuation=True,
+        controlled_test_peer=True,
     )
+    runtime.wire.acp_admission_gate.authority = _ControlledAcpAuthority()
     client = TestClient(create_app(runtime), base_url="http://127.0.0.1")
     with client:  # runs the real lifespan: runtime.start() / runtime.stop()
         yield ServerHandle(client=client, runtime=runtime, token=runtime.token,

@@ -1,0 +1,13 @@
+P|packages/desktop-platform/native-bridge/src/index.test.ts|restricted caller surface rejects open from a sub frame, another webContents, or a repurposed main frame url
+P|packages/desktop-platform/native-bridge/src/index.test.ts|restricted caller surface window close removes every handler and closes live adapter connections
+P|packages/desktop-platform/native-bridge/src/index.test.ts|adapter confinement only opens installed adapters that declare a native entry
+P|packages/desktop-platform/native-bridge/src/index.test.ts|adapter confinement refuses native entries that escape the extension root
+P|packages/desktop-platform/native-bridge/src/index.test.ts|adapter confinement rejects modules without a valid transport factory
+P|packages/desktop-platform/native-bridge/src/index.test.ts|frame validation and lifecycle rejects renderer->adapter frames above 1MiB or unserializable
+P|packages/desktop-platform/native-bridge/src/index.test.ts|frame validation and lifecycle delivers adapter frames to the main frame with the instance id; oversized pushes surface as error events
+P|packages/desktop-platform/native-bridge/src/index.test.ts|frame validation and lifecycle bounds startup buffering at 256 frames
+P|packages/desktop-platform/native-bridge/src/index.test.ts|frame validation and lifecycle unknown and closed instances never reach a live connection; close is single-shot per instance
+P|packages/desktop-platform/native-bridge/src/index.test.ts|registration-gated identity frames (FC-0034 fixture piece) surfaces a hello ack only after main-side auth ran, preserving adapter frame order
+P|packages/desktop-platform/native-bridge/src/index.test.ts|registration-gated identity frames (FC-0034 fixture piece) a failed main-side auth leaves no registerable ack frame in the event stream
+P|packages/desktop-platform/native-bridge/src/index.test.ts|registration-gated identity frames (FC-0034 fixture piece) keeps per-instance event streams apart across instances of one adapter
+P|packages/desktop-platform/native-bridge/src/index.test.ts|same-instance loopback handoff shape (zero host change evidence) a main-process adapter reads the token file and answers only whitelisted protocol frames

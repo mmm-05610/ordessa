@@ -44,11 +44,31 @@ WORKSPACE_METHODS = {
     "workspaces.browse", "workspaces.open", "workspaces.list",
     "workspaces.archive", "workspaces.gitStatus",
 }
+T002_METHOD_COUNT = 67
+ACP_ADMISSION_METHODS = frozenset({
+    "acp.submission.authorize", "acp.permission.authorize",
+})
+SANDBOX_DESCRIBE_METHOD = "sandbox.describe"
 
 
 def _hello_caps(runtime) -> dict[str, dict]:
     result = runtime.wire.hello(HELLO)
     return {item["id"]: item for item in result["capabilities"]}
+
+
+def _assert_default_composition_caps(runtime, caps=None) -> None:
+    """The historical 67, two ACP rows and Q5's read-only query coexist."""
+    caps = _hello_caps(runtime) if caps is None else caps
+    assert len(caps) == T002_METHOD_COUNT + len(ACP_ADMISSION_METHODS) + 1
+    sandbox = runtime.wire._registry.lookup(SANDBOX_DESCRIBE_METHOD)
+    assert sandbox is not None and sandbox.owner == "ordessa.sandbox"
+    assert caps[SANDBOX_DESCRIBE_METHOD] == {
+        "id": SANDBOX_DESCRIBE_METHOD, "supported": True}
+    for method in ACP_ADMISSION_METHODS:
+        descriptor = runtime.wire._registry.lookup(method)
+        assert descriptor is not None and descriptor.owner == "ordessa.harness.acp"
+        assert caps[method] == {"id": method, "supported": False,
+                                "reason": "ACP admission authority is unavailable"}
 
 
 # -- contract-only fakes (test plugins; never shipped in the product) --------
@@ -212,9 +232,11 @@ def test_default_composition_advertises_the_full_baseline_table(tmp_path):
         with _Started(runtime):
             caps = _hello_caps(runtime)
             assert WORKSPACE_METHODS <= set(caps)
-            assert len(caps) == 67
+            _assert_default_composition_caps(runtime, caps)
             assert runtime.plugin_host.active_ids() == (
-                    WORKSPACE_ID, "ordessa.server-compat", "ordessa.harness.acp")
+                    WORKSPACE_ID, "ordessa.server-compat", "ordessa.harness.acp",
+                    "ordessa.sandbox", "ordessa.sandbox-adapters",
+                    "ordessa.permissions-adapters")
     except BaseException:
         runtime.stop()
         raise
@@ -440,11 +462,11 @@ def test_a_restart_re_activates_the_same_selection(tmp_path):
     a broken restart (the in-process restart cycle is product behaviour)."""
     runtime = build_runtime(tmp_path / "data")
     with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
-        assert len(_hello_caps(runtime)) == 67
+        _assert_default_composition_caps(runtime)
     assert runtime.plugin_host.active_ids() == (), "stop must have disposed everyone"
     with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
         caps = _hello_caps(runtime)
-        assert len(caps) == 67
+        _assert_default_composition_caps(runtime, caps)
         assert WORKSPACE_METHODS <= set(caps)
         assert "profiles.list" in caps
 
@@ -541,7 +563,7 @@ def test_a_failed_composition_with_a_throwing_disposal_releases_the_root(tmp_pat
     runtime = build_runtime(root)
     try:
         with _Started(runtime):
-            assert len(_hello_caps(runtime)) == 67
+            _assert_default_composition_caps(runtime)
     except BaseException:
         runtime.stop()
         raise
@@ -594,7 +616,7 @@ def test_runtime_stop_releases_the_root_even_when_a_disposal_throws(tmp_path):
     retry = build_runtime(tmp_path / "data")
     try:
         with _Started(retry):
-            assert len(_hello_caps(retry)) == 67
+            _assert_default_composition_caps(retry)
     except BaseException:
         retry.stop()
         raise
@@ -728,7 +750,7 @@ def test_activation_failure_releases_the_data_root_lock(tmp_path):
     runtime = build_runtime(root)
     try:
         with _Started(runtime):
-            assert len(_hello_caps(runtime)) == 67
+            _assert_default_composition_caps(runtime)
     except BaseException:
         runtime.stop()
         raise
@@ -859,7 +881,7 @@ def test_a_failed_composition_disposes_activated_plugins_and_releases_the_root(t
     try:
         with _Started(runtime):
             assert "fake.first.method" not in _hello_caps(runtime)
-            assert len(_hello_caps(runtime)) == 67
+            _assert_default_composition_caps(runtime)
     except BaseException:
         runtime.stop()
         raise
@@ -1118,15 +1140,15 @@ def test_runtime_facades_follow_the_live_activation_round(tmp_path):
     runtime = build_runtime(tmp_path / "data", server_plugins=[plugin])
     try:
         runtime.start()
-        first = runtime.approvals
+        first = runtime.plugin_host.provided_port('approvals.records')
         assert first is not None and first is plugin.builds[0], (
             "the facade binds to the active round's port at composition")
         runtime.stop()
         assert runtime.plugin_host.active_ids() == ()
-        assert runtime.approvals is None, (
+        assert runtime.plugin_host.provided_port('approvals.records') is None, (
             "after stop the round's ports are gone; a facade must not keep one")
         runtime.start()
-        second = runtime.approvals
+        second = runtime.plugin_host.provided_port('approvals.records')
         assert second is not None and second is plugin.builds[1], (
             "the re-activated round's facade must be the new port object, "
             "not the disposed first round's")
@@ -1174,7 +1196,7 @@ def test_a_failed_start_hook_disposes_the_round_and_releases_the_root(tmp_path):
     retry = build_runtime(root)
     try:
         with _Started(retry):
-            assert len(_hello_caps(retry)) == 67
+            _assert_default_composition_caps(retry)
     except BaseException:
         retry.stop()
         raise
@@ -1420,7 +1442,7 @@ def test_a_failed_start_keeps_its_error_primary_with_cleanup_errors(tmp_path):
     retry = build_runtime(root)
     try:
         with _Started(retry):
-            assert len(_hello_caps(retry)) == 67
+            _assert_default_composition_caps(retry)
     except BaseException:
         retry.stop()
         raise
@@ -1454,7 +1476,7 @@ def test_a_pre_startup_auth_swap_cannot_double_mount(tmp_path):
     retry = build_runtime(tmp_path / "data")
     try:
         with _Started(retry):
-            assert len(_hello_caps(retry)) == 67
+            _assert_default_composition_caps(retry)
     except BaseException:
         retry.stop()
         raise

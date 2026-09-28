@@ -20,14 +20,22 @@ packages/
     extension-loader/   discovery + loading
     extension-host/     activation, dependency & lifecycle
     native-bridge/      restricted native IPC
-    contracts/          foundation + agent-ui (+ per-domain contracts)
+    connections/        generic Connections platform API (contract C6); the
+                        platform ships no concrete protocol kind
+    contracts/          platform-owned carriers only: commands source + the
+                        `ordessa.contracts` foundation carrier. Domain contract
+                        carriers belong to their owning domain (Agent:
+                        plugins/agent/contracts) — FR-009, guarded by the
+                        platform-purity and no-reverse-re-export tests.
+  workbench/            Workbench public API + implementation (contract C4),
+                        extension id `ordessa.workbench` kept across the move
 plugins/
   harness/        ordessa_harness: harness lifecycle & ACP adaptation.
     adapters/acp-adapter/   Go ACP bridge source + tests (upstream-derived;
                             module path preserved). Harness-internal.
     packaging/     bridge build & dependency prep
     tests/
-  commands/ workbench/ connections/ agent/sessions/ agent/conversation/
+  commands/ agent/contracts/ agent/connections/ agent/sessions/ agent/conversation/
   connectors/ordessa/ connectors/acp/
 products/
   desktop/        enabled-extension manifest (extensions.json + lock) for the

@@ -18,7 +18,7 @@ from ordessa_server_compat.profiles import ProfileRecords
 from ordessa_server_compat.profiles.subagents import DelegationError
 from ordessa_server_compat.sessions import SessionRecords, SessionService
 from ordessa_workspace import WorkspaceRecords
-from pacthold.storage import Database, ObjectStore
+from pacthold_runtime_compat.storage import Database, ObjectStore
 
 
 class FakeExecution:
@@ -259,12 +259,12 @@ def test_the_delegation_endpoint_resolves_only_its_own_token(tmp_path):
         unknown = client.post("/internal/delegation/not-a-token", json={"op": "list"})
         assert unknown.status_code == 404 and unknown.json()["error"] == "DELEGATION_TOKEN_UNKNOWN"
 
-        profile = runtime.repository.profiles.create(
+        profile = runtime.plugin_host.provided_port('product.repository').profiles.create(
             key="p", request_digest="p", name="alpha", harness_type="codex",
             config_digest=runtime.objects.publish(
                 b'{"schema_version":1,"harness_type":"codex","configuration":{}}').digest,
             credential_id=None)[1]
-        runtime.delegation_tokens["token-1"] = {
+        runtime.plugin_host.provided_port('delegation.tokens')["token-1"] = {
             "turnId": "parent-turn", "profileId": profile["profile_id"],
         }
         listed = client.post("/internal/delegation/token-1", json={"op": "list"})
@@ -317,13 +317,13 @@ def test_a_granted_parent_renders_the_bridge_entry_and_zero_grants_does_not(tmp_
             tmp_path / "server", document, plugin_root=PLUGIN,
             secret_store=MemorySecretStore(values={"locator_1": b"fake-key"}))
         runtime.start()
-        runtime.repository.register_credential("credential_1", "api-key", "locator_1")
-        parent = runtime.repository.profiles.create(
+        runtime.plugin_host.provided_port('product.repository').register_credential("credential_1", "api-key", "locator_1")
+        parent = runtime.plugin_host.provided_port('product.repository').profiles.create(
             key="p", request_digest="p", name="alpha", harness_type="claude-code",
             config_digest=runtime.objects.publish(
                 b'{"schema_version":1,"harness_type":"claude-code","configuration":{}}').digest,
             credential_id="credential_1")[1]
-        child = runtime.repository.profiles.create(
+        child = runtime.plugin_host.provided_port('product.repository').profiles.create(
             key="c", request_digest="c", name="beta", harness_type="claude-code",
             config_digest=runtime.objects.publish(
                 b'{"schema_version":1,"harness_type":"claude-code","configuration":{}}').digest,
@@ -352,7 +352,7 @@ def test_a_granted_parent_renders_the_bridge_entry_and_zero_grants_does_not(tmp_
             first = send("bridge-turn-1")
             deadline = time.monotonic() + 60
             while time.monotonic() < deadline:
-                session = runtime.repository.get_session(first["session"]["id"])
+                session = runtime.plugin_host.provided_port('product.repository').get_session(first["session"]["id"])
                 if session["turns"] and session["turns"][0]["state"] in {"completed", "failed"}:
                     break
                 time.sleep(0.05)
@@ -366,12 +366,12 @@ def test_a_granted_parent_renders_the_bridge_entry_and_zero_grants_does_not(tmp_
             assert "agentbox-subagents" not in rendered.get("mcpServers", {}), \
                 "zero grants must not materialise the bridge"
 
-            runtime.repository.profiles.grant_subagent(
+            runtime.plugin_host.provided_port('product.repository').profiles.grant_subagent(
                 parent_id=parent["profile_id"], child_id=child["profile_id"])
             second = send("bridge-turn-2")
             deadline = time.monotonic() + 60
             while time.monotonic() < deadline:
-                session = runtime.repository.get_session(second["session"]["id"])
+                session = runtime.plugin_host.provided_port('product.repository').get_session(second["session"]["id"])
                 if session["turns"] and session["turns"][0]["state"] in {"completed", "failed"}:
                     break
                 time.sleep(0.05)
@@ -393,8 +393,8 @@ def test_a_granted_parent_renders_the_bridge_entry_and_zero_grants_does_not(tmp_
             assert entry["env"]["AGENTBOX_BRIDGE_TOKEN"]
             assert any(
                 grant["profileId"] == parent["profile_id"]
-                for grant in runtime.delegation_tokens.values()
-            ) or runtime.delegation_tokens, "a token is minted for the attempt"
+                for grant in runtime.plugin_host.provided_port('delegation.tokens').values()
+            ) or runtime.plugin_host.provided_port('delegation.tokens'), "a token is minted for the attempt"
     finally:
         runtime_module._sidecar_deployment_file = original_file
         del shutil
@@ -408,7 +408,7 @@ def test_the_grant_wire_face_lists_grants_and_callers(tmp_path):
 
     runtime = build_runtime(tmp_path / "server")
     runtime.start()
-    profiles = runtime.repository.profiles
+    profiles = runtime.plugin_host.provided_port('product.repository').profiles
     parent = profiles.create(key="p", request_digest="p", name="alpha", harness_type="codex",
                              config_digest="sha256:" + "0" * 64, credential_id=None)[1]
     child = profiles.create(key="c", request_digest="c", name="beta", harness_type="codex",
@@ -588,22 +588,26 @@ def test_the_real_bridge_process_runs_a_child_turn_end_to_end(tmp_path, monkeypa
         from ordessa_server.idempotency import IdempotentRecords
         from ordessa_server_compat.sessions import SessionService
 
+        # The live round's domains, resolved through the plugin host's declared
+        # ports (the runtime's business facade fields went away in T014-S1b).
+        repository = runtime.plugin_host.provided_port("product.repository")
         sessions = SessionService(
-            runtime.repository.sessions, IdempotentRecords(runtime.database),
-            runtime.objects, harnesses=runtime.harnesses,
-            profiles=runtime.repository.profiles,
-            credentials=runtime.repository.credentials, execution=runtime.execution)
-        parent = runtime.repository.profiles.create(
+            repository.sessions, IdempotentRecords(runtime.database),
+            runtime.objects, harnesses=runtime.plugin_host.provided_port('harness.directory'),
+            profiles=repository.profiles,
+            credentials=repository.credentials,
+            execution=runtime.plugin_host.provided_port('execution.port'))
+        parent = repository.profiles.create(
             key="p", request_digest="p", name="alpha", harness_type=harness,
             config_digest=runtime.objects.publish(
                 f'{{"schema_version":1,"harness_type":"{harness}","configuration":{{}}}}'.encode()
             ).digest, credential_id=None)[1]
-        child = runtime.repository.profiles.create(
+        child = repository.profiles.create(
             key="c", request_digest="c", name="beta", harness_type=harness,
             config_digest=runtime.objects.publish(
                 f'{{"schema_version":1,"harness_type":"{harness}","configuration":{{}}}}'.encode()
             ).digest, credential_id=None)[1]
-        workspace = runtime.repository.workspaces.create(
+        workspace = repository.workspaces.create(
             key="w", request_digest="w", distribution="Ubuntu", remote_user="tester",
             remote_path=str(tmp_path / "project"), connection_id="conn")[1]
         with runtime.database.transaction() as conn:
@@ -613,7 +617,7 @@ def test_the_real_bridge_process_runs_a_child_turn_end_to_end(tmp_path, monkeypa
             )
         sessions.create_session("child-seed", {
             "workspace_id": workspace["workspace_id"], "profile_id": child["profile_id"]})
-        runtime.repository.profiles.grant_subagent(
+        runtime.plugin_host.provided_port('product.repository').profiles.grant_subagent(
             parent_id=parent["profile_id"], child_id=child["profile_id"])
         # Order 138: the bridge is invoked from a *live parent turn*, and placement is
         # scoped to that turn's workspace. The fabricated token id must therefore name a
@@ -627,7 +631,7 @@ def test_the_real_bridge_process_runs_a_child_turn_end_to_end(tmp_path, monkeypa
                 "created_at,updated_at) VALUES ('parent-turn-e2e',?,?,1,0,'running','pending',"
                 "'pending','x','t','t')",
                 (parent_session["session_id"], parent["profile_id"]))
-        runtime.delegation_tokens["e2e-token"] = {
+        runtime.plugin_host.provided_port('delegation.tokens')["e2e-token"] = {
             "turnId": "parent-turn-e2e", "profileId": parent["profile_id"],
         }
 

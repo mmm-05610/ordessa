@@ -1,0 +1,43 @@
+T06 GREEN run — plugins/permissions/frontend (permissions chat approval region, FR-04/FR-08/FR-09, US2)
+date: 2026-09-27T21:02:49Z
+
+command 1: npx tsc -p tsconfig.json --noEmit (cwd plugins/permissions/frontend) -> true exit code: 0
+command 2: npx vitest run --reporter=verbose (cwd plugins/permissions/frontend) -> true exit code: 0
+
+Cross-language consistency result:
+  codes.py RefusalCode parsed = [POLICY_CEILING_VIOLATION, POLICY_ADAPTER_MISSING, POLICY_SCOPE_UNVERIFIED, PERMISSION_UNKNOWN_TOOL, APPROVAL_STALE, APPROVAL_NOT_ACTIONABLE, APPROVAL_RESULT_UNKNOWN] (7 codes) == TS PERMISSIONS_REFUSAL_CODES: PASS
+  plugin.py DECIDE_METHOD/QUERY_METHOD ids and _DECIDE_REQUIRED/_QUERY_REQUIRED param sets == TS wire constants: PASS
+  Wire decide params sent by the card == exactly {requestId, approvalId, expectedVersion, decision, scope, sessionId}: PASS
+
+Per-test results (28/28 passed):
+ ✓ tests/contract-consistency.test.ts > refusal code list mirrors the Python source (FR-09) > the TS stable-code list equals the parsed RefusalCode members of codes.py 6ms
+ ✓ tests/contract-consistency.test.ts > refusal code list mirrors the Python source (FR-09) > every stable code renders a sentence naming the target/action and the limiting layer 2ms
+ ✓ tests/contract-consistency.test.ts > refusal code list mirrors the Python source (FR-09) > an unknown code yields a bounded generic sentence and echoes no raw payload 1ms
+ ✓ tests/contract-consistency.test.ts > wire vocabulary mirrors the permissions backend plugin (FR-04) > method ids equal the Python plugin registrations 1ms
+ ✓ tests/contract-consistency.test.ts > wire vocabulary mirrors the permissions backend plugin (FR-04) > decide/query parameter names equal the Python required-param sets 1ms
+ ✓ tests/approval-view.test.ts > decodeApprovalPayload (FR-09 masking, C1 view model) > keeps only the whitelisted masked display fields and drops every other key 3ms
+ ✓ tests/approval-view.test.ts > decodeApprovalPayload (FR-09 masking, C1 view model) > a malformed payload decodes to null instead of throwing or executing 0ms
+ ✓ tests/approval-view.test.ts > decodeApprovalPayload (FR-09 masking, C1 view model) > a confirmed receipt without an observation time is never trusted as confirmed 0ms
+ ✓ tests/region-registry.test.ts > approval contributions against Chat's real registry > both contributions register and appear in their slots sorted by (order, id) 3ms
+ ✓ tests/region-registry.test.ts > approval contributions against Chat's real registry > a duplicate id is refused by Chat itself: Error "Duplicate chat contribution: permissions.approval-region" 1ms
+ ✓ tests/region-registry.test.ts > approval contributions against Chat's real registry > a duplicate contentKind is refused by Chat itself: Error "Duplicate chat content kind: …" 0ms
+ ✓ tests/region-registry.test.ts > approval contributions against Chat's real registry > a hand-made registration record is refused: TypeError "Not a chatContribution() record" 0ms
+ ✓ tests/region-registry.test.ts > approval contributions against Chat's real registry > closing the owning scope withdraws the contribution from Chat (FR-08: 卸载不丢数据、不伪造可用) 0ms
+ ✓ tests/approval-card.test.tsx > rule 1: a press only sends decide; 待确认 until backend + native receipt confirm > the press sends exactly permissions.approvals.decide with the backend required params 39ms
+ ✓ tests/approval-card.test.tsx > rule 1: a press only sends decide; 待确认 until backend + native receipt confirm > the card shows 待确认 after the press and only shows 已决定 once the query reports the settled decision AND a confirmed native receipt 9ms
+ ✓ tests/approval-card.test.tsx > rule 1: a press only sends decide; 待确认 until backend + native receipt confirm > a forged local write cannot make the card show 已决定 without backend facts 0ms
+ ✓ tests/approval-card.test.tsx > rule 1: a press only sends decide; 待确认 until backend + native receipt confirm > a pressed allow whose decide never resolves keeps the card at 待确认 and never 已决定/允许生效 4ms
+ ✓ tests/approval-card.test.tsx > rule 2: AlreadyRecorded / InvalidApproval / stale / cross-session > AlreadyRecorded renders the existing decision and never re-activates the controls 8ms
+ ✓ tests/approval-card.test.tsx > rule 2: AlreadyRecorded / InvalidApproval / stale / cross-session > InvalidApproval makes the card non-actionable with a stated reason 6ms
+ ✓ tests/approval-card.test.tsx > rule 2: AlreadyRecorded / InvalidApproval / stale / cross-session > a stale/expired approval view (APPROVAL_STALE) is non-actionable with a reason 4ms
+ ✓ tests/approval-card.test.tsx > rule 2: AlreadyRecorded / InvalidApproval / stale / cross-session > a cross-session approval (ChatLocation mismatch) is non-actionable and its actions never reach the transport 3ms
+ ✓ tests/approval-card.test.tsx > rule 3: transport error / timeout / unknown ⇒ allow disabled, 查询/恢复 remains (fail-closed) > a rejecting decide disables the allow actions while 查询/恢复 stays actionable 6ms
+ ✓ tests/approval-card.test.tsx > rule 3: transport error / timeout / unknown ⇒ allow disabled, 查询/恢复 remains (fail-closed) > an unknown query outcome keeps the allow actions disabled and never reads as allowed 6ms
+ ✓ tests/approval-card.test.tsx > unknown native receipt > a settled decision with an unconfirmed receipt yields 待确认/unknown text, never safe/allowed 0ms
+ ✓ tests/approval-card.test.tsx > rule 4: withdrawal — the card holds no authority of its own > after unmount and re-mount with the same backend facts, nothing carries over: still 待审批/待确认, never 已决定 5ms
+ ✓ tests/approval-card.test.tsx > rule 5: refusal codes render as human sentences (FR-09) > the invalid reason names the operation category, target and limiting layer without leaking arguments 2ms
+ ✓ tests/approval-card.test.tsx > a11y (ux.md 文案和可访问性) > the card is an ARIA group with labelled focusable actions; disabled actions announce a text reason 8ms
+ ✓ tests/approval-card.test.tsx > a11y (ux.md 文案和可访问性) > the bounded action offers only scopes the backend made selectable 3ms
+
+ Test Files  4 passed (4)
+      Tests  28 passed (28)

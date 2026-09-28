@@ -136,7 +136,7 @@ def test_a_controlled_harness_config_needs_no_host_change(tmp_path):
             }).json()["result"]["harnesses"]
             assert all(entry["id"] != "audit-alpha" for entry in before)
 
-            runtime.harnesses.register(HarnessDescriptor(
+            runtime.plugin_host.provided_port('harness.directory').register(HarnessDescriptor(
                 "audit-alpha", credential_kind="audit-key",
                 capability_claims={"stream": True},
             ))

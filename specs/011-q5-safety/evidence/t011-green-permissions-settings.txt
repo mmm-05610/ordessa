@@ -1,0 +1,80 @@
+# T011 GREEN evidence — Permissions 「权限与审批」 Settings region
+# worktree: codex/011-q5-safety, package: plugins/permissions/frontend
+# date: 2026-09-27T22:39:54Z
+# command 1: npx vitest run --reporter=verbose  (package-local; full suite incl. the 28 previously green tests)
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/frontend[39m
+
+ [32m✓[39m tests/contract-consistency.test.ts[2m > [22mrefusal code list mirrors the Python source (FR-09)[2m > [22mthe TS stable-code list equals the parsed RefusalCode members of codes.py[32m 5[2mms[22m[39m
+ [32m✓[39m tests/contract-consistency.test.ts[2m > [22mrefusal code list mirrors the Python source (FR-09)[2m > [22mevery stable code renders a sentence naming the target/action and the limiting layer[32m 2[2mms[22m[39m
+ [32m✓[39m tests/contract-consistency.test.ts[2m > [22mrefusal code list mirrors the Python source (FR-09)[2m > [22man unknown code yields a bounded generic sentence and echoes no raw payload[32m 1[2mms[22m[39m
+ [32m✓[39m tests/contract-consistency.test.ts[2m > [22mwire vocabulary mirrors the permissions backend plugin (FR-04)[2m > [22mmethod ids equal the Python plugin registrations[32m 1[2mms[22m[39m
+ [32m✓[39m tests/contract-consistency.test.ts[2m > [22mwire vocabulary mirrors the permissions backend plugin (FR-04)[2m > [22mdecide/query parameter names equal the Python required-param sets[32m 1[2mms[22m[39m
+ [32m✓[39m tests/contract-consistency.test.ts[2m > [22mceiling/intent record mirrors equal the Python API sources (T011)[2m > [22mexposure levels equal the ExposureLevel members of ceilings.py, in order[32m 1[2mms[22m[39m
+ [32m✓[39m tests/contract-consistency.test.ts[2m > [22mceiling/intent record mirrors equal the Python API sources (T011)[2m > [22mthe ceiling record field set equals _RECORD_FIELDS of ceilings.py[32m 1[2mms[22m[39m
+ [32m✓[39m tests/contract-consistency.test.ts[2m > [22mceiling/intent record mirrors equal the Python API sources (T011)[2m > [22mthe intent record field set equals _RECORD_FIELDS of intents.py[32m 0[2mms[22m[39m
+ [32m✓[39m tests/contract-consistency.test.ts[2m > [22mceiling/intent record mirrors equal the Python API sources (T011)[2m > [22mscope order mirrors rules.py Scope, and rule actions mirror RuleAction[32m 1[2mms[22m[39m
+ [32m✓[39m tests/contract-consistency.test.ts[2m > [22mceiling/intent record mirrors equal the Python API sources (T011)[2m > [22mthe trusted ceiling sources equal exactly the members of _TRUSTED_SOURCES in ceilings.py[32m 1[2mms[22m[39m
+ [32m✓[39m tests/contract-consistency.test.ts[2m > [22mceiling/intent record mirrors equal the Python API sources (T011)[2m > [22mceiling entry actions are exactly the two restriction spellings of ceilings.py[32m 1[2mms[22m[39m
+ [32m✓[39m tests/approval-view.test.ts[2m > [22mdecodeApprovalPayload (FR-09 masking, C1 view model)[2m > [22mkeeps only the whitelisted masked display fields and drops every other key[32m 3[2mms[22m[39m
+ [32m✓[39m tests/approval-view.test.ts[2m > [22mdecodeApprovalPayload (FR-09 masking, C1 view model)[2m > [22ma malformed payload decodes to null instead of throwing or executing[32m 0[2mms[22m[39m
+ [32m✓[39m tests/approval-view.test.ts[2m > [22mdecodeApprovalPayload (FR-09 masking, C1 view model)[2m > [22ma confirmed receipt without an observation time is never trusted as confirmed[32m 0[2mms[22m[39m
+ [32m✓[39m tests/settings-region.test.ts[2m > [22mthe region registers through the real addSettingsSection seam (FR-08)[2m > [22mabsent provider => the section is never registered — no broken placeholder[32m 3[2mms[22m[39m
+ [32m✓[39m tests/settings-region.test.ts[2m > [22mthe region registers through the real addSettingsSection seam (FR-08)[2m > [22mpresent-but-failing provider => a local error registration, never an absence[32m 1[2mms[22m[39m
+ [32m✓[39m tests/settings-region.test.ts[2m > [22mthe region registers through the real addSettingsSection seam (FR-08)[2m > [22mready facts => the 「权限与审批」 section is in the real registry snapshot[32m 1[2mms[22m[39m
+ [32m✓[39m tests/settings-region.test.ts[2m > [22mthe region registers through the real addSettingsSection seam (FR-08)[2m > [22mclosing the owning scope withdraws the contribution (registry-owned lifecycle)[32m 0[2mms[22m[39m
+ [32m✓[39m tests/settings-region.test.ts[2m > [22mthe region registers through the real addSettingsSection seam (FR-08)[2m > [22mhide drops the contribution; show re-reads the provider instead of trusting cached state[32m 1[2mms[22m[39m
+ [32m✓[39m tests/settings-region.test.ts[2m > [22mthe organization ceiling is read-only (ux.md §Settings, FR-08)[2m > [22ma widening attempt is refused with the stable code, whatever the region state[32m 1[2mms[22m[39m
+ [32m✓[39m tests/settings-region.test.ts[2m > [22mthe organization ceiling is read-only (ux.md §Settings, FR-08)[2m > [22mthe region exposes no ceiling-write path at all[32m 1[2mms[22m[39m
+ [32m✓[39m tests/settings-region.test.ts[2m > [22mthe organization ceiling is read-only (ux.md §Settings, FR-08)[2m > [22man untrusted ceiling record is never summarized as a bound, and absence stays modelled[32m 0[2mms[22m[39m
+ [32m✓[39m tests/settings-region.test.ts[2m > [22mapproval history filters backend facts only (FR-08/FR-09)[2m > [22mfilters by status, decision and session without inventing rows[32m 1[2mms[22m[39m
+ [32m✓[39m tests/settings-region.test.ts[2m > [22mapproval history filters backend facts only (FR-08/FR-09)[2m > [22ma malformed or forged history payload is dropped or stripped before the region can render it[32m 1[2mms[22m[39m
+ [32m✓[39m tests/settings-region.test.ts[2m > [22mapproval history filters backend facts only (FR-08/FR-09)[2m > [22mrule sources are derived from the backend facts, not typed in[32m 0[2mms[22m[39m
+ [32m✓[39m tests/settings-region.test.ts[2m > [22mapproval history filters backend facts only (FR-08/FR-09)[2m > [22ma local UI state write cannot make the region claim an authority it was not given[32m 0[2mms[22m[39m
+ [32m✓[39m tests/region-registry.test.ts[2m > [22mapproval contributions against Chat's real registry[2m > [22mboth contributions register and appear in their slots sorted by (order, id)[32m 6[2mms[22m[39m
+ [32m✓[39m tests/region-registry.test.ts[2m > [22mapproval contributions against Chat's real registry[2m > [22ma duplicate id is refused by Chat itself: Error "Duplicate chat contribution: permissions.approval-region"[32m 2[2mms[22m[39m
+ [32m✓[39m tests/region-registry.test.ts[2m > [22mapproval contributions against Chat's real registry[2m > [22ma duplicate contentKind is refused by Chat itself: Error "Duplicate chat content kind: …"[32m 1[2mms[22m[39m
+ [32m✓[39m tests/region-registry.test.ts[2m > [22mapproval contributions against Chat's real registry[2m > [22ma hand-made registration record is refused: TypeError "Not a chatContribution() record"[32m 0[2mms[22m[39m
+ [32m✓[39m tests/region-registry.test.ts[2m > [22mapproval contributions against Chat's real registry[2m > [22mclosing the owning scope withdraws the contribution from Chat (FR-08: 卸载不丢数据、不伪造可用)[32m 1[2mms[22m[39m
+ [32m✓[39m tests/settings-view.test.tsx[2m > [22mprovider states worded honestly (FR-08)[2m > [22ma failing provider announces itself as an error state, never as an uninstallation[32m 52[2mms[22m[39m
+ [32m✓[39m tests/settings-view.test.tsx[2m > [22mprovider states worded honestly (FR-08)[2m > [22mno provider => the component never mounts through the registry (nothing to assert)[32m 5[2mms[22m[39m
+ [32m✓[39m tests/settings-view.test.tsx[2m > [22mprovider states worded honestly (FR-08)[2m > [22man absent ceiling record is modelled as unverified, never as "no limit applies"[32m 24[2mms[22m[39m
+ [32m✓[39m tests/approval-card.test.tsx[2m > [22mrule 1: a press only sends decide; 待确认 until backend + native receipt confirm[2m > [22mthe press sends exactly permissions.approvals.decide with the backend required params[32m 55[2mms[22m[39m
+ [32m✓[39m tests/approval-card.test.tsx[2m > [22mrule 1: a press only sends decide; 待确认 until backend + native receipt confirm[2m > [22mthe card shows 待确认 after the press and only shows 已决定 once the query reports the settled decision AND a confirmed native receipt[32m 8[2mms[22m[39m
+ [32m✓[39m tests/approval-card.test.tsx[2m > [22mrule 1: a press only sends decide; 待确认 until backend + native receipt confirm[2m > [22ma forged local write cannot make the card show 已决定 without backend facts[32m 0[2mms[22m[39m
+ [32m✓[39m tests/approval-card.test.tsx[2m > [22mrule 1: a press only sends decide; 待确认 until backend + native receipt confirm[2m > [22ma pressed allow whose decide never resolves keeps the card at 待确认 and never 已决定/允许生效[32m 5[2mms[22m[39m
+ [32m✓[39m tests/approval-card.test.tsx[2m > [22mrule 2: AlreadyRecorded / InvalidApproval / stale / cross-session[2m > [22mAlreadyRecorded renders the existing decision and never re-activates the controls[32m 11[2mms[22m[39m
+ [32m✓[39m tests/approval-card.test.tsx[2m > [22mrule 2: AlreadyRecorded / InvalidApproval / stale / cross-session[2m > [22mInvalidApproval makes the card non-actionable with a stated reason[32m 9[2mms[22m[39m
+ [32m✓[39m tests/approval-card.test.tsx[2m > [22mrule 2: AlreadyRecorded / InvalidApproval / stale / cross-session[2m > [22ma stale/expired approval view (APPROVAL_STALE) is non-actionable with a reason[32m 5[2mms[22m[39m
+ [32m✓[39m tests/approval-card.test.tsx[2m > [22mrule 2: AlreadyRecorded / InvalidApproval / stale / cross-session[2m > [22ma cross-session approval (ChatLocation mismatch) is non-actionable and its actions never reach the transport[32m 4[2mms[22m[39m
+ [32m✓[39m tests/approval-card.test.tsx[2m > [22mrule 3: transport error / timeout / unknown ⇒ allow disabled, 查询/恢复 remains (fail-closed)[2m > [22ma rejecting decide disables the allow actions while 查询/恢复 stays actionable[32m 9[2mms[22m[39m
+ [32m✓[39m tests/approval-card.test.tsx[2m > [22mrule 3: transport error / timeout / unknown ⇒ allow disabled, 查询/恢复 remains (fail-closed)[2m > [22man unknown query outcome keeps the allow actions disabled and never reads as allowed[32m 8[2mms[22m[39m
+ [32m✓[39m tests/approval-card.test.tsx[2m > [22munknown native receipt[2m > [22ma settled decision with an unconfirmed receipt yields 待确认/unknown text, never safe/allowed[32m 0[2mms[22m[39m
+ [32m✓[39m tests/approval-card.test.tsx[2m > [22mrule 4: withdrawal — the card holds no authority of its own[2m > [22mafter unmount and re-mount with the same backend facts, nothing carries over: still 待审批/待确认, never 已决定[32m 8[2mms[22m[39m
+ [32m✓[39m tests/approval-card.test.tsx[2m > [22mrule 5: refusal codes render as human sentences (FR-09)[2m > [22mthe invalid reason names the operation category, target and limiting layer without leaking arguments[32m 3[2mms[22m[39m
+ [32m✓[39m tests/approval-card.test.tsx[2m > [22ma11y (ux.md 文案和可访问性)[2m > [22mthe card is an ARIA group with labelled focusable actions; disabled actions announce a text reason[32m 10[2mms[22m[39m
+ [32m✓[39m tests/approval-card.test.tsx[2m > [22ma11y (ux.md 文案和可访问性)[2m > [22mthe bounded action offers only scopes the backend made selectable[32m 2[2mms[22m[39m
+ [32m✓[39m tests/settings-view.test.tsx[2m > [22mthe ready region renders the four ux.md §Settings areas[2m > [22mheadings: 规则来源 / 组织上限（只读） / 用户默认意图 / 审批历史[32m 27[2mms[22m[39m
+ [32m✓[39m tests/settings-view.test.tsx[2m > [22mthe ready region renders the four ux.md §Settings areas[2m > [22mceiling rows are read-only, state the disabling reason, and a widening click is refused with the stable code[32m 34[2mms[22m[39m
+ [32m✓[39m tests/settings-view.test.tsx[2m > [22mthe ready region renders the four ux.md §Settings areas[2m > [22mno cross-brand synonym labels are ever presented (FR-09/US4)[32m 10[2mms[22m[39m
+ [32m✓[39m tests/settings-view.test.tsx[2m > [22mthe ready region renders the four ux.md §Settings areas[2m > [22muntrusted ceiling provenance is disclosed instead of summarized as a bound[32m 6[2mms[22m[39m
+ [32m✓[39m tests/settings-view.test.tsx[2m > [22mthe ready region renders the four ux.md §Settings areas[2m > [22mthe user intent summary binds a desiredMode to its own brand and disclaims equivalence[32m 6[2mms[22m[39m
+ [32m✓[39m tests/settings-view.test.tsx[2m > [22mthe ready region renders the four ux.md §Settings areas[2m > [22mlegacy needsReview counts surface as review debt, never as allowances[32m 7[2mms[22m[39m
+ [32m✓[39m tests/settings-view.test.tsx[2m > [22mapproval history filtering, focus and ARIA (jsdom level)[2m > [22mthe filter selects drive the list from backend facts only[32m 17[2mms[22m[39m
+ [32m✓[39m tests/settings-view.test.tsx[2m > [22mapproval history filtering, focus and ARIA (jsdom level)[2m > [22mread-only controls stay keyboard focusable and announce their reason[32m 6[2mms[22m[39m
+ [32m✓[39m tests/mode-entry.test.tsx[2m > [22mthe entry is capability-driven, never brand-name-driven (US4, ux.md §Chat)[2m > [22mno capability data for a real brand pin => no menu is invented[32m 49[2mms[22m[39m
+ [32m✓[39m tests/mode-entry.test.tsx[2m > [22mthe entry is capability-driven, never brand-name-driven (US4, ux.md §Chat)[2m > [22mattested modes are listed bound to their own pin, and other brands’ vocabularies stay out[32m 16[2mms[22m[39m
+ [32m✓[39m tests/mode-entry.test.tsx[2m > [22mthe entry is capability-driven, never brand-name-driven (US4, ux.md §Chat)[2m > [22ma refused capability read says unavailable with its code — never "not installed"[32m 4[2mms[22m[39m
+ [32m✓[39m tests/mode-entry.test.tsx[2m > [22mthe entry is capability-driven, never brand-name-driven (US4, ux.md §Chat)[2m > [22mselecting an attested mode records a local draft and never claims the mode changed[32m 21[2mms[22m[39m
+ [32m✓[39m tests/mode-entry.test.tsx[2m > [22mthe entry is capability-driven, never brand-name-driven (US4, ux.md §Chat)[2m > [22mthe contribution registers through Chat’s real registry in composer.toolbar[32m 3[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m7 passed[39m[22m[90m (7)[39m
+[2m      Tests [22m [1m[32m62 passed[39m[22m[90m (62)[39m
+[2m   Start at [22m 06:39:55
+[2m   Duration [22m 1.47s[2m (transform 446ms, setup 0ms, import 1.01s, tests 479ms, environment 4.76s)[22m
+
+VITEST_EXIT=0
+
+# command 2: npx tsc -p tsconfig.json --noEmit
+TSC_EXIT=0

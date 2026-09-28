@@ -211,7 +211,7 @@ def test_the_two_observed_spellings_render_and_unsupported_families_refuse():
 def test_assets_are_catalogued_bound_and_never_carry_content(tmp_path):
     from ordessa_server_compat.assets.records import AssetRecords, asset_view
     from ordessa_server.idempotency import IdempotentRecords
-    from pacthold.storage import Database
+    from pacthold_runtime_compat.storage import Database
 
     database = Database(tmp_path / "data")
     database.initialize()
@@ -299,29 +299,36 @@ def test_a_bound_mcp_asset_is_rendered_and_materialised_without_writeback(tmp_pa
         runtime = build_runtime_from_sidecar_deployment(
             tmp_path / "server", document, plugin_root=PLUGIN, secret_store=secrets)
         runtime.start()
-        runtime.repository.register_credential("credential_1", "api-key", "locator_1")
-        facts = runtime.mcp_assets.install({
+        # The domains this test seeds are the ones the running round provides:
+        # resolved from the plugin host's declared ports, the same objects the
+        # wire reads (T014-S1b removed the runtime's business facade fields).
+        repository = runtime.plugin_host.provided_port("product.repository")
+        mcp_assets = runtime.plugin_host.provided_port("asset.mcp")
+        asset_records = runtime.plugin_host.provided_port("asset.records")
+        hook_records = runtime.plugin_host.provided_port("hook.records")
+        repository.register_credential("credential_1", "api-key", "locator_1")
+        facts = mcp_assets.install({
             "name": "web-tools",
             "transport": {"stdio": {"command": "/bin/web-tools", "args": ["--stdio"]}},
         }, asset_id="web-tools", revision=1)
-        published = runtime.asset_records.publish(
+        published = asset_records.publish(
             key="a", request_digest="a", kind="mcp", name="web-tools", revision=1,
             digest=facts["digest"], source="local:test", asset_id="web-tools")[1]
         assert published["asset_id"] == "web-tools", published
-        profile = runtime.repository.profiles.create(
+        profile = repository.profiles.create(
             key="p", request_digest="p", name="role", harness_type="claude-code",
             config_digest=runtime.objects.publish(
                 b'{"schema_version":1,"harness_type":"claude-code","configuration":{}}').digest,
             credential_id="credential_1")[1]
-        runtime.asset_records.bind(profile_id=profile["profile_id"],
-                                   asset_id=published["asset_id"])
+        asset_records.bind(profile_id=profile["profile_id"],
+                           asset_id=published["asset_id"])
         # Order 59: an enabled hook joins the same document (claude keeps hooks
         # in settings.json under the `hooks` key).
-        hook = runtime.hook_records.create(
+        hook = hook_records.create(
             key="h", request_digest="h", family="claude-code", name="guard-bash",
             model={"event": "PreToolUse", "matcher": "Bash",
                    "handlers": [{"type": "command", "command": "/bin/guard --check"}]})[1]
-        runtime.hook_records.set_enabled(hook_id=hook["hook_id"], enabled=True)
+        hook_records.set_enabled(hook_id=hook["hook_id"], enabled=True)
 
         with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
             token = runtime.token
@@ -340,7 +347,7 @@ def test_a_bound_mcp_asset_is_rendered_and_materialised_without_writeback(tmp_pa
             }).json()["result"]
             deadline = time.monotonic() + 60
             while time.monotonic() < deadline:
-                session = runtime.repository.get_session(sent["session"]["id"])
+                session = runtime.plugin_host.provided_port('product.repository').get_session(sent["session"]["id"])
                 if session["turns"] and session["turns"][0]["state"] in {"completed", "failed"}:
                     break
                 time.sleep(0.05)
@@ -367,7 +374,7 @@ def test_a_bound_mcp_asset_is_rendered_and_materialised_without_writeback(tmp_pa
         # A server that carries credential references is refused until the
         # family's injection path is pinned: the value must never land in a
         # durable config file (order 58 G5; the audit enforces it too).
-        runtime.mcp_assets.install({
+        runtime.plugin_host.provided_port('asset.mcp').install({
             "name": "needs-key",
             "transport": {"stdio": {
                 "command": "/bin/needs-key",
@@ -376,11 +383,11 @@ def test_a_bound_mcp_asset_is_rendered_and_materialised_without_writeback(tmp_pa
         }, asset_id="needs-key", revision=1)
         from ordessa_server_compat.assets.mcp import definition_digest
 
-        needs_key = runtime.mcp_assets.read(asset_id="needs-key", revision=1)
-        runtime.asset_records.publish(
+        needs_key = runtime.plugin_host.provided_port('asset.mcp').read(asset_id="needs-key", revision=1)
+        runtime.plugin_host.provided_port('asset.records').publish(
             key="b", request_digest="b", kind="mcp", name="needs-key", revision=1,
             digest=definition_digest(needs_key), asset_id="needs-key")
-        runtime.asset_records.bind(profile_id=profile["profile_id"], asset_id="needs-key")
+        runtime.plugin_host.provided_port('asset.records').bind(profile_id=profile["profile_id"], asset_id="needs-key")
         with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
             token = runtime.token
             refused = client.post("/wire/v1/sessions.send", headers={
@@ -393,7 +400,7 @@ def test_a_bound_mcp_asset_is_rendered_and_materialised_without_writeback(tmp_pa
             assert "error" not in refused, refused
             deadline = time.monotonic() + 60
             while time.monotonic() < deadline:
-                session = runtime.repository.get_session(sent["session"]["id"])
+                session = runtime.plugin_host.provided_port('product.repository').get_session(sent["session"]["id"])
                 if (len(session["turns"]) >= 2
                         and session["turns"][1]["state"] in {"completed", "failed"}):
                     break
@@ -454,7 +461,7 @@ def test_the_assets_wire_face_publishes_binds_and_lists(tmp_path):
         (skill_dir / "SKILL.md").write_text(
             "---\nname: my-skill\ndescription: does a thing\n---\n\nBody.\n",
             encoding="utf-8")
-        profile = runtime.repository.profiles.create(
+        profile = runtime.plugin_host.provided_port('product.repository').profiles.create(
             key="p", request_digest="p", name="role", harness_type="codex",
             config_digest=runtime.objects.publish(
                 b'{"schema_version":1,"harness_type":"codex","configuration":{}}').digest,
@@ -598,7 +605,7 @@ def test_the_catalog_snapshots_and_installs_with_pinned_provenance(tmp_path):
     from ordessa_server_compat.assets.records import AssetRecords
     from ordessa_server_compat.assets.skills import SkillAssetStore
     from ordessa_server.idempotency import IdempotentRecords
-    from pacthold.storage import Database
+    from pacthold_runtime_compat.storage import Database
 
     database = Database(tmp_path / "data")
     database.initialize()

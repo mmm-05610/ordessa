@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sqlite3
+import threading
 from uuid import uuid4
 from datetime import datetime
 from enum import Enum
-from typing import Any, Iterable, Mapping, Optional, Sequence
+from typing import Any, Callable, Iterable, Mapping, Optional, Sequence
 
 from . import db
 from .errors import DispatchRejected, FinalizationConflict, InputFrozen, WorkCoreError, WorkNotOpen
@@ -122,11 +124,40 @@ def _parse_time(value: Optional[str]) -> Optional[datetime]:
 
 
 class CoreRepository:
-    """Current-state repository; callers define all native/provider semantics."""
+    """Current-state repository; callers define all native/provider semantics.
+
+    Instance injection (specs/010 T008): the constructor accepts an optional
+    ``store`` — a dedicated ``sqlite3.Connection`` or a zero-argument callable
+    returning one.  With no store injected the repository keeps the historical
+    process-global path byte-for-byte: the connection provider IS
+    ``db.get_conn`` and the write lock IS ``db.write_lock``.  Injecting a
+    store never switches, mutates or closes any global connection; every
+    statement then runs exclusively on the injected instance connection
+    (FR-001, no global connection switching).
+    """
+
+    def __init__(self, store: "sqlite3.Connection | Callable[[], sqlite3.Connection] | None" = None) -> None:
+        if store is None:
+            self._conn_provider = db.get_conn
+            self._write_lock = db.write_lock
+        elif isinstance(store, sqlite3.Connection):
+            self._conn_provider = lambda: store
+            self._write_lock = threading.RLock()
+        elif callable(store):
+            self._conn_provider = store
+            self._write_lock = threading.RLock()
+        else:
+            raise TypeError(
+                "CoreRepository store must be a sqlite3.Connection, a callable "
+                f"returning one, or None (global db default), got {store!r}"
+            )
+
+    def _conn(self) -> sqlite3.Connection:
+        return self._conn_provider()
 
     def create_work(self, work: Work, event: CoreEvent) -> Work:
-        conn = db.get_conn()
-        with db.write_lock, conn:
+        conn = self._conn()
+        with self._write_lock, conn:
             conn.execute(
                 "INSERT INTO core_works (id, objective, lifecycle, closure_reason, metadata_json, created_at, updated_at, version) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -136,11 +167,11 @@ class CoreRepository:
         return self.get_work(work.id)
 
     def list_works(self) -> tuple[Work, ...]:
-        rows = db.get_conn().execute("SELECT * FROM core_works ORDER BY updated_at DESC, id DESC").fetchall()
+        rows = self._conn().execute("SELECT * FROM core_works ORDER BY updated_at DESC, id DESC").fetchall()
         return tuple(Work(r["id"], r["objective"], WorkLifecycle(r["lifecycle"]), _parse_time(r["created_at"]), _parse_time(r["updated_at"]), r["closure_reason"], _load(r["metadata_json"]), r["version"]) for r in rows)
 
     def get_work(self, work_id: str) -> Work:
-        row = db.get_conn().execute("SELECT * FROM core_works WHERE id = ?", (work_id,)).fetchone()
+        row = self._conn().execute("SELECT * FROM core_works WHERE id = ?", (work_id,)).fetchone()
         if row is None:
             raise WorkNotFound(work_id)
         return Work(row["id"], row["objective"], WorkLifecycle(row["lifecycle"]), _parse_time(row["created_at"]), _parse_time(row["updated_at"]), row["closure_reason"], _load(row["metadata_json"]), row["version"])
@@ -153,7 +184,7 @@ class CoreRepository:
         the requested Work has no executions.
         """
         self.get_work(work_id)
-        rows = db.get_conn().execute(
+        rows = self._conn().execute(
             "SELECT * FROM core_executions WHERE work_id = ? ORDER BY created_at, id",
             (work_id,),
         ).fetchall()
@@ -183,8 +214,8 @@ class CoreRepository:
         return tuple(result)
 
     def update_work(self, work: Work, *, expected_version: int, event: CoreEvent) -> Work:
-        conn = db.get_conn()
-        with db.write_lock, conn:
+        conn = self._conn()
+        with self._write_lock, conn:
             cursor = conn.execute(
                 "UPDATE core_works SET lifecycle = ?, closure_reason = ?, metadata_json = ?, updated_at = ?, version = version + 1 WHERE id = ? AND version = ?",
                 (work.lifecycle.value, work.closure_reason, _dump(work.metadata), _time(work.updated_at), work.id, expected_version),
@@ -206,9 +237,9 @@ class CoreRepository:
             raise ValueError("ExecutionCreated responsibility_intent is required")
         if normalize_responsibility_intent(responsibility_intent) != responsibility_intent:
             raise ValueError("ExecutionCreated responsibility_intent must be normalized")
-        conn = db.get_conn()
+        conn = self._conn()
         p = execution.projection
-        with db.write_lock, conn:
+        with self._write_lock, conn:
             cursor = conn.execute(
                 "INSERT INTO core_executions (id, work_id, provider_id, phase, outcome, resumable_now, freshness, observed_at, provenance_json, created_at, dispatched_at, started_at, ended_at, version) "
                 "SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? FROM core_works WHERE id = ? AND lifecycle = ?",
@@ -223,8 +254,8 @@ class CoreRepository:
         return self.get_execution(execution.id)
 
     def get_execution(self, execution_id: str) -> Execution:
-        with db.write_lock:
-            row = db.get_conn().execute("SELECT * FROM core_executions WHERE id = ?", (execution_id,)).fetchone()
+        with self._write_lock:
+            row = self._conn().execute("SELECT * FROM core_executions WHERE id = ?", (execution_id,)).fetchone()
         if row is None:
             raise ExecutionNotFound(execution_id)
         projection = ExecutionProjection(Phase(row["phase"]), Outcome(row["outcome"]) if row["outcome"] else None, None if row["resumable_now"] is None else bool(row["resumable_now"]), Freshness(row["freshness"]), _parse_time(row["observed_at"]))
@@ -233,7 +264,7 @@ class CoreRepository:
     def get_execution_responsibility_intent(self, execution_id: str) -> str | None:
         """Return the immutable creation intent, or None for a legacy Execution."""
         self.get_execution(execution_id)
-        row = db.get_conn().execute(
+        row = self._conn().execute(
             "SELECT data_json FROM core_events WHERE subject_id = ? AND type = ? "
             "ORDER BY occurred_at, id LIMIT 1",
             (execution_id, EventType.EXECUTION_CREATED.value),
@@ -243,8 +274,8 @@ class CoreRepository:
         return _load(row["data_json"]).get(RESPONSIBILITY_INTENT_KEY)
 
     def update_projection(self, execution: Execution, *, expected_version: int, event: CoreEvent) -> Execution:
-        conn = db.get_conn(); p = execution.projection
-        with db.write_lock, conn:
+        conn = self._conn(); p = execution.projection
+        with self._write_lock, conn:
             cursor = conn.execute(
                 "UPDATE core_executions SET phase = ?, outcome = ?, resumable_now = ?, freshness = ?, observed_at = ?, started_at = ?, ended_at = ?, version = version + 1 WHERE id = ? AND version = ?",
                 (p.phase.value, p.outcome.value if p.outcome else None, p.resumable_now, p.freshness.value, _time(p.observed_at), _time(execution.started_at) if execution.started_at else None, _time(execution.ended_at) if execution.ended_at else None, execution.id, expected_version),
@@ -267,8 +298,8 @@ class CoreRepository:
         ended_at: datetime,
     ) -> FinalizationReceipt:
         """Commit the complete terminal bundle under one SQLite transaction."""
-        conn = db.get_conn()
-        with db.write_lock, conn:
+        conn = self._conn()
+        with self._write_lock, conn:
             prior = conn.execute(
                 "SELECT * FROM core_execution_finalizations WHERE execution_id = ?",
                 (execution_id,),
@@ -338,8 +369,8 @@ class CoreRepository:
         event: CoreEvent,
         contract_id: str | None = None,
     ) -> None:
-        conn = db.get_conn()
-        with db.write_lock, conn:
+        conn = self._conn()
+        with self._write_lock, conn:
             if conn.execute(
                 "SELECT 1 FROM core_executions WHERE id = ?", (execution_id,)
             ).fetchone() is None:
@@ -368,14 +399,14 @@ class CoreRepository:
         query = "SELECT * FROM core_execution_refs WHERE execution_id = ?"; params: tuple = (execution_id,)
         if relation:
             query += " AND relation = ?"; params = (execution_id, relation.value)
-        rows = db.get_conn().execute(query, params).fetchall()
+        rows = self._conn().execute(query, params).fetchall()
         return [Ref(RefType(row["type"]), row["provider"], row["native_id"], row["uri"], _load(row["metadata_json"])) for row in rows]
 
     def list_input_refs(self, execution_id: str) -> tuple[tuple[str, Ref], ...]:
         """Return the immutable input association snapshot for an Execution."""
-        with db.write_lock:
+        with self._write_lock:
             self.get_execution(execution_id)
-            rows = db.get_conn().execute(
+            rows = self._conn().execute(
                 "SELECT * FROM core_execution_refs WHERE execution_id = ? AND relation = ? "
                 "ORDER BY created_at, type, provider, native_id",
                 (execution_id, RefRelation.INPUT.value),
@@ -401,7 +432,7 @@ class CoreRepository:
         return tuple(result)
 
     def list_events(self, subject_id: str) -> list[CoreEvent]:
-        rows = db.get_conn().execute("SELECT * FROM core_events WHERE subject_id = ? ORDER BY occurred_at, id", (subject_id,)).fetchall()
+        rows = self._conn().execute("SELECT * FROM core_events WHERE subject_id = ? ORDER BY occurred_at, id", (subject_id,)).fetchall()
         return [CoreEvent(row["id"], EventType(row["type"]), row["subject_id"], _parse_time(row["occurred_at"]), _load(row["data_json"]), row["idempotency_key"]) for row in rows]
 
     def create_dispatch_with_inputs(
@@ -416,9 +447,9 @@ class CoreRepository:
         """Atomically freeze INPUT associations and create requested Dispatch."""
         if not inputs_digest:
             raise ValueError("inputs_digest is required")
-        conn = db.get_conn()
+        conn = self._conn()
         input_values = tuple(inputs)
-        with db.write_lock, conn:
+        with self._write_lock, conn:
             execution = conn.execute(
                 "SELECT id FROM core_executions WHERE id = ?", (execution_id,)
             ).fetchone()
@@ -451,7 +482,7 @@ class CoreRepository:
             self._append_event(conn, event)
 
     def get_dispatch(self, dispatch_id: str):
-        return db.get_conn().execute(
+        return self._conn().execute(
             "SELECT * FROM core_dispatches WHERE id = ?", (dispatch_id,)
         ).fetchone()
 
@@ -500,9 +531,9 @@ class CoreRepository:
         """Record indeterminate start evidence without changing requested state."""
         if not isinstance(error, str) or not error.strip():
             raise ValueError("dispatch ambiguity error is required")
-        conn = db.get_conn()
+        conn = self._conn()
         now = datetime.now().astimezone()
-        with db.write_lock, conn:
+        with self._write_lock, conn:
             row = conn.execute(
                 "SELECT * FROM core_dispatches WHERE id = ?", (dispatch_id,)
             ).fetchone()
@@ -541,9 +572,9 @@ class CoreRepository:
         error: str | None = None,
         extra_data: Mapping[str, str] | None = None,
     ):
-        conn = db.get_conn()
+        conn = self._conn()
         now = datetime.now().astimezone()
-        with db.write_lock, conn:
+        with self._write_lock, conn:
             row = conn.execute(
                 "SELECT * FROM core_dispatches WHERE id = ?", (dispatch_id,)
             ).fetchone()
@@ -627,11 +658,11 @@ class CoreRepository:
             raise ValueError("resource_state exceeds 256 characters")
         if evidence_ref is not None and evidence_ref.type is not RefType.ARTIFACT:
             raise ValueError("resource evidence must be an ArtifactRef")
-        conn = db.get_conn()
+        conn = self._conn()
         observed_at = occurred_at or datetime.now().astimezone()
         identity = (ref.type.value, ref.provider, ref.native_id, ref.uri, _dump(ref.metadata))
         identity_digest = _ref_identity_digest(ref)
-        with db.write_lock, conn:
+        with self._write_lock, conn:
             self.get_execution(execution_id)
             fixed = conn.execute(
                 "SELECT 1 FROM core_execution_refs WHERE execution_id = ? AND relation = ? AND type = ? AND provider = ? AND native_id = ? AND uri IS ? AND metadata_json = ?",
@@ -694,10 +725,10 @@ class CoreRepository:
             return True
 
     def get_dispatch_by_key(self, idempotency_key: str):
-        return db.get_conn().execute("SELECT * FROM core_dispatches WHERE idempotency_key = ?", (idempotency_key,)).fetchone()
+        return self._conn().execute("SELECT * FROM core_dispatches WHERE idempotency_key = ?", (idempotency_key,)).fetchone()
 
     def get_dispatch_for_execution(self, execution_id: str):
-        return db.get_conn().execute(
+        return self._conn().execute(
             "SELECT * FROM core_dispatches WHERE execution_id = ?", (execution_id,)
         ).fetchone()
 
@@ -771,10 +802,10 @@ class CoreRepository:
         values = tuple(observations)
         if not values:
             return ()
-        conn = db.get_conn()
+        conn = self._conn()
         now = recorded_at or datetime.now().astimezone()
         results: list[tuple[int, bool]] = []
-        with db.write_lock, conn:
+        with self._write_lock, conn:
             self.get_execution(execution_id)
             # Batch frozen-INPUT validation precedes every write, so a bad
             # entry rejects the whole batch before the first INSERT runs.
@@ -879,7 +910,7 @@ class CoreRepository:
         SQLite CHECK constraints — unknown values cannot exist here.
         """
         self.get_execution(execution_id)
-        rows = db.get_conn().execute(
+        rows = self._conn().execute(
             "SELECT * FROM core_resource_observations WHERE execution_id = ? "
             "ORDER BY id",
             (execution_id,),
@@ -926,7 +957,7 @@ class CoreRepository:
         frozen = self.list_input_refs(execution_id)
         observed = {
             row["ref_identity_digest"]
-            for row in db.get_conn().execute(
+            for row in self._conn().execute(
                 "SELECT DISTINCT ref_identity_digest FROM "
                 "core_resource_observations WHERE execution_id = ?",
                 (execution_id,),

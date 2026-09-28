@@ -23,9 +23,9 @@ from __future__ import annotations
 import dataclasses
 import inspect
 
-from pacthold.extensions.runtime_composition import protocol as proto
-from pacthold.extensions.runtime_composition import sandbox_port as sport
-from pacthold.extensions.runtime_composition.coordinator import (
+from pacthold_runtime_compat.runtime_composition import protocol as proto
+from pacthold_runtime_compat.runtime_composition import sandbox_port as sport
+from pacthold_runtime_compat.runtime_composition.coordinator import (
     RuntimeCompositionCoordinator,
 )
 

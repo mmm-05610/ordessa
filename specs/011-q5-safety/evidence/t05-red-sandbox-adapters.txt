@@ -1,0 +1,44 @@
+# T05 RED run — ordessa-sandbox-adapters (tests first; implementation not importable)
+# date: 2026-09-28
+# tree: worktree 011-q5-safety, package plugins/assets/sandbox/adapters
+# method: suite + manifest authored; src/ordessa_sandbox_adapters/ left empty so
+#         every test fails before the implementation exists, then the src is added.
+
+$ PYTHONPATH=plugins/assets/sandbox/adapters/src .venv/bin/python -m pytest plugins/assets/sandbox/adapters -q -rE --tb=line --continue-on-collection-errors
+
+9 test modules fail to import `ordessa_sandbox_adapters` (collection ERRORS); the
+AST/dir-presence gates in test_dependency_direction.py and test_purity_no_fake_apply.py
+fail at runtime with "no source files under .../src/ordessa_sandbox_adapters".
+
+ImportError: cannot import name 'CodexSandboxAdapter' from 'ordessa_sandbox_adapters' (unknown location)
+ImportError: cannot import name 'PiSandboxAdapter' ... (same for every brand adapter,
+  NativeVersionRange, CompiledFieldIntent, HarnessContractUnavailable,
+  REQUIRED_HARNESS_API_CHECKPOINT, CompileRefusal, CompiledIntent,
+  SandboxAdapterRegistry, stage_field_claims, ADAPTER_CAPABILITY_CELLS, ...)
+AssertionError: no source files under .../src/ordessa_sandbox_adapters (x5 across the two AST/dir gates)
+
+6 failed, 1 passed, 9 errors
+
+EXIT_CODE=1
+
+# failing / erroring IDs:
+tests/test_c2_shape.py (collection: ImportError ordessa_sandbox_adapters)
+tests/test_c3_seam.py (collection: ImportError ordessa_sandbox_adapters)
+tests/test_claude_adapter.py (collection: ImportError ordessa_sandbox_adapters)
+tests/test_codex_adapter.py (collection: ImportError ordessa_sandbox_adapters)
+tests/test_cross_session.py (collection: ImportError ordessa_sandbox_adapters)
+tests/test_matrix.py (collection: ImportError ordessa_sandbox_adapters)
+tests/test_pi_adapter.py (collection: ImportError ordessa_sandbox_adapters)
+tests/test_registry.py (collection: ImportError ordessa_sandbox_adapters)
+tests/test_verify.py (collection: ImportError ordessa_sandbox_adapters)
+tests/test_dependency_direction.py::test_source_imports_only_the_declared_contracts (AssertionError: no source files)
+tests/test_dependency_direction.py::test_works_end_to_end_without_permissions_or_harness_importable (subprocess ImportError)
+tests/test_purity_no_fake_apply.py::test_every_module_exists_and_is_valid_python (AssertionError: no source files)
+tests/test_purity_no_fake_apply.py::test_no_forbidden_import (AssertionError: no source files)
+tests/test_purity_no_fake_apply.py::test_no_side_effect_call_sites (AssertionError: no source files)
+tests/test_purity_no_fake_apply.py::test_behaviorally_no_spawn_no_socket_no_file_written (AssertionError: no source files)
+
+# the single PASSING test in the red state (registered honestly, not a fake green):
+tests/test_dependency_direction.py::test_pyproject_declares_exactly_the_three_consumed_dependencies
+#   — passes pre-implementation because the dependency manifest is authored up front
+#     and does not depend on the src existing.

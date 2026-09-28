@@ -1,0 +1,111 @@
+# T06 GREEN — sandbox Settings region (plugins/assets/sandbox/frontend)
+# branch: codex/011-q5-safety   date: 2026-09-28T05:10:07+08:00
+#
+# commands (package-local only; root npm test / typecheck / build deliberately NOT run here):
+#   (cd plugins/assets/sandbox/frontend && npx vitest run --reporter=verbose)  -> TRUE exit 0
+#   (cd plugins/assets/sandbox/frontend && npx tsc -p tsconfig.json --noEmit)  -> TRUE exit 0
+#   exit codes captured from the tools themselves ($? immediately after), never from a pipe tail
+#
+# cross-language result: tests/cross-language-codes.test.ts parses the SandboxErrorCode
+# members out of plugins/assets/sandbox/api/src/ordessa_sandbox_api/errors.py and asserts
+# the TS six-code list equals them in BOTH directions (SANDBOX_INTENT_INVALID stays outside
+# the stable six per errors.py's own comment, and is asserted present on the Python side);
+# the same file parses _DESCRIBE_REQUIRED / _DESCRIBE_OPTIONAL out of
+# plugins/assets/sandbox/backend/src/ordessa_sandbox_backend/plugin.py and asserts the
+# TS parameter-name lists match exactly.
+
+## per-test result (34 passed / 6 files passed, exit 0)
+ ✓ tests/dependency-boundary.test.ts > sandbox settings domain boundary > has source files to guard 3ms
+ ✓ tests/dependency-boundary.test.ts > sandbox settings domain boundary > imports nothing from the Permissions domain 3ms
+ ✓ tests/dependency-boundary.test.ts > sandbox settings domain boundary > reaches the platform only through published contract / UI packages 1ms
+ ✓ tests/dependency-boundary.test.ts > sandbox settings domain boundary > never reaches into host or workbench internals 1ms
+ ✓ tests/contract.test.ts > sandbox describe TypeScript mirror (FR-05) > names the api version the backend answers with 3ms
+ ✓ tests/contract.test.ts > sandbox describe TypeScript mirror (FR-05) > carries the six stable sandbox refusal codes, unique and unmutable 1ms
+ ✓ tests/contract.test.ts > sandbox describe TypeScript mirror (FR-05) > an option mirrors source / platform / coverage / status / lockedByAdministrator 1ms
+ ✓ tests/contract.test.ts > the menu comes from describe evidence only (FR-06) > offers only supported options; unsupported and unknown stay out of the menu 1ms
+ ✓ tests/contract.test.ts > the menu comes from describe evidence only (FR-06) > an unknown-pin describe yields an empty menu: no default list is ever invented 0ms
+ ✓ tests/cross-language-codes.test.ts > sandbox describe contract mirrors the Python authority (FR-09) > the TS stable-code list equals the Python SandboxErrorCode members exactly 7ms
+ ✓ tests/cross-language-codes.test.ts > sandbox describe contract mirrors the Python authority (FR-09) > the describe method and parameter names equal the backend handler shape 1ms
+ ✓ tests/settings-lifecycle.test.ts > hide / re-show keeps the draft and re-reads the backend > hiding removes the Settings contribution only; the stored draft survives 3ms
+ ✓ tests/settings-lifecycle.test.ts > hide / re-show keeps the draft and re-reads the backend > re-showing calls describe again and takes the fresh answer, not cached availability 2ms
+ ✓ tests/settings-lifecycle.test.ts > hide / re-show keeps the draft and re-reads the backend > an uninstall answer (visible=false) hides the region while values stay stored 0ms
+ ✓ tests/settings-region.test.ts > the region appears only when the backend contributes it (FR-08) > no sandbox provider installed => the Settings section is never registered 6ms
+ ✓ tests/settings-region.test.ts > the region appears only when the backend contributes it (FR-08) > an uninstalled facet (backend visible=false) leaves no broken placeholder 1ms
+ ✓ tests/settings-region.test.ts > the region appears only when the backend contributes it (FR-08) > a present-but-failing provider registers a local error state, not an absence 2ms
+ ✓ tests/settings-region.test.ts > the region appears only when the backend contributes it (FR-08) > the section carries the domain title the UX names 1ms
+ ✓ tests/settings-region.test.ts > the region appears only when the backend contributes it (FR-08) > describe for an unknown pin contributes no menu at all 1ms
+ ✓ tests/settings-region.test.ts > selection refuses rather than guessing (FR-06/FR-09) > a supported option applies and persists the draft 1ms
+ ✓ tests/settings-region.test.ts > selection refuses rather than guessing (FR-06/FR-09) > an unsupported option cannot be selected 2ms
+ ✓ tests/settings-region.test.ts > selection refuses rather than guessing (FR-06/FR-09) > an unproven (unknown) option refuses with the unknown code, never merged with unsupported 1ms
+ ✓ tests/settings-region.test.ts > selection refuses rather than guessing (FR-06/FR-09) > an option absent from describe is refused instead of being invented 1ms
+ ✓ tests/settings-region.test.ts > selection refuses rather than guessing (FR-06/FR-09) > an administrator-locked option is read-only and widening it is refused with a stable code 1ms
+ ✓ tests/settings-region.test.ts > selection refuses rather than guessing (FR-06/FR-09) > a late click against a superseded describe generation does not land 1ms
+ ✓ tests/settings-view.test.tsx > the region renders describe facts only > offers the measured option vocabulary verbatim, in the contributed order 30ms
+ ✓ tests/settings-view.test.tsx > the region renders describe facts only > an unproven provider error reads as unavailable, never as uninstalled 3ms
+ ✓ tests/settings-view.test.tsx > the region renders describe facts only > an unknown pin shows no invented menu: zero options, not a default list 3ms
+ ✓ tests/settings-view.test.tsx > the region renders describe facts only > Bash-only coverage is shown as measured scope and never claims all tools are isolated 4ms
+ ✓ tests/settings-view.test.tsx > the region renders describe facts only > an option with no coverage evidence is stated as unproven rather than silent 0ms
+ ✓ tests/settings-view.test.tsx > the region renders describe facts only > never labels one brand with another brand vocabulary or a generic bypass word 4ms
+ ✓ tests/settings-view.test.tsx > administrator limits and unproven options are read-only with a reason > a locked option is aria-disabled, still focusable, and announces the organisational reason 3ms
+ ✓ tests/settings-view.test.tsx > administrator limits and unproven options are read-only with a reason > unsupported and unknown options are offered as read-only with their evidence status 5ms
+ ✓ tests/settings-view.test.tsx > administrator limits and unproven options are read-only with a reason > keeps every contributed option in the tab order at its DOM position 13ms
+ Test Files  6 passed (6)
+      Tests  34 passed (34)
+
+## anti-vacuity: combined mutation audit against this exact final source
+# five mutations applied at once:
+#   a) sandboxMenuOptions() stopped filtering to supported  (contract.ts)
+#   b) admin-widening refusal guarded by `if (false && ...)`
+#   c) show() returned the cached state instead of re-describing
+#   d) isSandboxRegionVisible() made constant-true
+#   e) coverage wording changed to claim 全部工具/完全隔离
+# -> TRUE exit 1, and every required behaviour lost exactly one guard:
+ × tests/contract.test.ts > the menu comes from describe evidence only (FR-06) > offers only supported options; unsupported and unknown stay out of the menu 13ms
+ × tests/settings-lifecycle.test.ts > hide / re-show keeps the draft and re-reads the backend > re-showing calls describe again and takes the fresh answer, not cached availability 12ms
+ × tests/settings-lifecycle.test.ts > hide / re-show keeps the draft and re-reads the backend > an uninstall answer (visible=false) hides the region while values stay stored 2ms
+ × tests/settings-region.test.ts > the region appears only when the backend contributes it (FR-08) > no sandbox provider installed => the Settings section is never registered 15ms
+ × tests/settings-region.test.ts > the region appears only when the backend contributes it (FR-08) > an uninstalled facet (backend visible=false) leaves no broken placeholder 2ms
+ × tests/settings-region.test.ts > selection refuses rather than guessing (FR-06/FR-09) > an administrator-locked option is read-only and widening it is refused with a stable code 6ms
+ × tests/settings-view.test.tsx > the region renders describe facts only > Bash-only coverage is shown as measured scope and never claims all tools are isolated 4ms
+ Test Files  4 failed | 2 passed (6)
+      Tests  7 failed | 27 passed (34)
+# all five mutations were then reverted from copies taken before the audit;
+# restored tree re-run: npx vitest run -> TRUE exit 0 (34 passed), npx tsc --noEmit -> 0.
+
+# ---- red baseline for this lane (see t06-red-sandbox-settings.txt) ----
+# 6 test files collected, 0 tests executed, TRUE exit 1: the contributed modules
+# (src/contract.ts, src/settings-region.ts) did not exist yet.
+
+# ---- integration notes for the main agent ----
+# 1. root-aggregate invocation verified (the exact command tooling/test-all.mjs uses):
+#      npm run --workspace plugins/assets/sandbox/frontend test        -> TRUE exit 0
+#      npm run --workspace plugins/assets/sandbox/frontend typecheck   -> TRUE exit 0
+# 2. `npm ls` currently reports this new workspace as an UNMET DEPENDENCY
+#    (@ordessa/plugin-sandbox-settings@file:.../plugins/assets/sandbox/frontend),
+#    because `npm ci` ran before the package existed, so there is no
+#    node_modules/@ordessa/plugin-sandbox-settings link. The package declares no
+#    dependencies, so `npm run --workspace ...` resolves and passes anyway; the
+#    next root `npm install`/`npm ci` adds the link. Root package-lock.json was
+#    not touched by this lane (git status clean for it).
+# 3. root typecheck coverage gap, reported rather than papered over:
+#    apps/desktop/tsconfig.json includes `../../plugins/**/src` (so this package's
+#    src IS typechecked at root, and it has "jsx": "react-jsx"), but its test
+#    patterns are only `plugins/*/tests` and `plugins/*/*/tests`, so this package's
+#    fourth-level `plugins/assets/sandbox/frontend/tests/**` is NOT in the root
+#    typecheck. That config is outside this lane's ownership and was not edited;
+#    `npx tsc -p tsconfig.json --noEmit` here covers src+tests and exits 0.
+# 4. The package is intentionally absent from products/desktop/extensions.json
+#    (no product-config edit allowed), so `npm run build` does not bundle it:
+#    tooling/build-all.mjs admits packages only through that enabled list.
+# 5. Not proven here (see package README §已证明/尚未证明): the Profile facet glue
+#    (blocked — profile-api checkpoint reverted out of this lane, no
+#    FacetDescriptor/addEditor in this tree), the real Server transport wiring
+#    (the describe transport is injected), any L2 native-configuration effect, and
+#    same-page coexistence with the Permissions region in one assembly.
+
+# ---- recorded against the shipped source ----
+# after the audit above, one cosmetic rename (SandboxRegionUnavailableReason ->
+# sandboxRegionUnavailableReason) and one template-literal cleanup were applied to
+# src/settings-region.ts; the shipped tree was then re-measured in this turn:
+#   npx tsc -p tsconfig.json --noEmit   -> TRUE exit 0
+#   npx vitest run                      -> TRUE exit 0, Test Files 6 passed (6), Tests 34 passed (34)

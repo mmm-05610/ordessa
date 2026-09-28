@@ -12,11 +12,11 @@ from typing import Any
 
 from ordessa_server.errors import ServerError
 from ordessa_server.ids import now
-from pacthold.storage import Database
+from ordessa_server.storage_port import DatabasePort
 
 
 class IdempotentRecords:
-    def __init__(self, database: Database) -> None:
+    def __init__(self, database: DatabasePort) -> None:
         self.database = database
 
     @staticmethod

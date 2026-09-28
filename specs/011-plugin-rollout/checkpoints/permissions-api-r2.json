@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "name": "permissions-api-r2",
+  "producer": "q5",
+  "status": "READY",
+  "planAnchorRef": "refs/heads/codex/011-plugin-plan",
+  "implementationSha": "0f03966aaae7dbbb52a31aba5b30eca36b8b76c5",
+  "dependsOn": {
+    "foundation": "8844c475b (consumed as merge 52906b514d)",
+    "chat-api": "r3 3d8c3fa410 (consumed as merge 7b4de06148)",
+    "ordessa-server-plugin-api": "0.1.0",
+    "pacthold-runtime-compat": "storage provider obtained via ServerProductComposition.database_type()"
+  },
+  "publicExports": {
+    "packages": {
+      "ordessa-permissions-api": "plugins/permissions/api (import ordessa_permissions_api)",
+      "ordessa-permissions-backend": "plugins/permissions/backend (import ordessa_permissions_backend)",
+      "ordessa-permissions-adapters": "plugins/permissions/adapters (import ordessa_permissions_adapters)",
+      "@ordessa/plugin-permissions-chat": "plugins/permissions/frontend (TS, ordessa.permissions-chat)"
+    },
+    "apiExports": [
+      "AdminAuthorization",
+      "AllowedOnce",
+      "AlreadyRecorded",
+      "ApprovalDecision",
+      "ApprovalFact",
+      "ApprovalRequest",
+      "ApprovalScope",
+      "ApprovalState",
+      "ApprovalStateKind",
+      "ArgumentDigest",
+      "AuthorizationDecision",
+      "BRAND_NATIVE_MODES",
+      "BoundGrant",
+      "BoundedApprovalScope",
+      "BrandMode",
+      "CeilingEntry",
+      "CeilingSource",
+      "CodeKind",
+      "DECISION_TTL",
+      "DEFAULT_REMEDIES",
+      "DecideResult",
+      "DecisionReason",
+      "Denied",
+      "EffectiveCeiling",
+      "EffectivePolicySnapshot",
+      "ExecutionState",
+      "ExposureLevel",
+      "GRANT_TTL",
+      "InvalidApproval",
+      "MAX_DIAGNOSTIC_TEXT",
+      "MAX_PRIORITY",
+      "MAX_RULES",
+      "MAX_SNAPSHOT_TTL",
+      "NO_INTENT_REVISION",
+      "NativeReceipt",
+      "OnceApprovalScope",
+      "OperationRequest",
+      "POLICY_DENY",
+      "PendingApproval",
+      "PermissionIntent",
+      "PolicyCeiling",
+      "PolicyDenyCode",
+      "PolicyRefusal",
+      "PolicyRefused",
+      "PolicySynthesized",
+      "QueriedApproval",
+      "QueryOutcome",
+      "QueryUnknown",
+      "Recorded",
+      "RefusalCode",
+      "RuleAction",
+      "SCHEMA_CODES",
+      "Scope",
+      "SynthesisResult",
+      "TOOL_EXPOSURE",
+      "TOOL_KEYS",
+      "TargetMatcher",
+      "ToolIdentity",
+      "TypedRule",
+      "UnknownApproval",
+      "approval_id_for",
+      "build_operation_request",
+      "code_kind",
+      "declared_native_modes",
+      "enforcement_codes",
+      "evaluate_authorization",
+      "intersect_ceilings",
+      "is_enforcement_code",
+      "known_tool_keys",
+      "probe",
+      "scope_to_record",
+      "select_intent_action",
+      "synthesize"
+    ],
+    "backendExports": [
+      "AUTHORIZER_PORT",
+      "ApprovalFacts",
+      "ApprovalNotFound",
+      "Authorizer",
+      "CorrelationConflict",
+      "INVALID",
+      "OPEN",
+      "PLUGIN_ID",
+      "PermissionsBackendPlugin",
+      "PolicyRepository",
+      "SETTLED",
+      "VersionConflict"
+    ],
+    "servicePorts": {
+      "permissions.authorizer@1": "provided_ports name 'permissions.authorizer@1'",
+      "wireMethods": [
+        "permissions.approvals.decide",
+        "permissions.approvals.query"
+      ]
+    },
+    "harnessPointWiring": "contributes facet 'permissions.policy-adapters' to harness.configuration-adapters@v1 via ContributionBatch; admission/overlap/claim-conflict raised by the platform (HarnessContributionError, ContributionPointUnboundError, ContributionVersionRefusedError, ContributionOwnerBusyError)"
+  },
+  "commandsAndEvidence": [
+    {
+      "command": ".venv/bin/python -m pytest plugins/permissions plugins/assets/sandbox -q",
+      "exitCode": 0,
+      "result": "653 passed"
+    },
+    {
+      "command": ".venv/bin/python specs/011-q5-safety/proof/permissions_api_proof.py",
+      "exitCode": 0,
+      "result": "16/16 stated outcomes"
+    },
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "0 errors"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "result": "29/29 suites green (baseline 27 + lane 2: 28 and 34 tests)"
+    },
+    {
+      "command": ".venv/bin/python -m pytest apps/server -q",
+      "exitCode": 1,
+      "result": "42 failed/1092 passed/10 skipped/25 errors; FAILED id set identical to the foundation ledger, 25 errors in the same 5 files"
+    },
+    {
+      "command": ".venv/bin/python -m pytest plugins/harness -q",
+      "exitCode": 1,
+      "result": "2 failed/347 passed \u2014 the pair foundation registers"
+    },
+    {
+      "command": ".venv/bin/python -m pytest packages/pacthold -q",
+      "exitCode": 0,
+      "result": "212 passed"
+    }
+  ],
+  "limitations": [
+    "API_READY only: this is the consumable permissions contract plus its decision/approval service, not the finished production chain.",
+    "No pre-effect execution gate exists in this tree; the authorizer is reachable as the provided port 'permissions.authorizer@1' but nothing in the Harness calls it before a tool side effect. Request G1, owner C0. T03's 'controlled real pre-effect gate' and T07 remain blocked and are NOT claimed green.",
+    "Native request correlation can be recorded and reconciled by this service, but the ACP channel does not yet emit a native receipt, so in production reconcile returns Unknown (fail-closed). Request G2, owner C0.",
+    "Profile and Chat glue (T06) is not registered: plugins/profile and plugins/chat do not exist and no profile-api/chat-api checkpoint is published. Requests G4/G5.",
+    "Legacy retirement (T08): ordessa_server_compat/approvals/records.py is still wired; both authorities were proven to conflict on one row, and the single-owner swap plus compat deletion is C0's job (G6, see integration-request.md).",
+    "Brand permission adapters prove compile/verify refusal semantics only; every cell that needs a pre-effect-gate or L2 observation is recorded UNKNOWN and supports explicit refusal only.",
+    "No real model calls, no user config access, no real OS sandbox effect probes (L3 untested).",
+    "r2 adds the real-point wiring and the Chat approval-region glue; the r1 limitations still hold verbatim.",
+    "The Chat/Settings glue is proven at jsdom level with an injected fake transport; no real desktop composition (products/desktop does not yet enable these extension ids) and no real wire channel.",
+    "Profile facet glue is not consumed: profile-api publication 4943628f47 imports pacthold.resource_contracts, which foundation moved to pacthold_runtime_compat, so this lane reverted that merge (b4b48d7564) and the glue stays blocked pending a compatible revision."
+  ],
+  "supersedes": {
+    "name": "permissions-api",
+    "publicationSha": "bcd4387becc3c29b6786efa7bff822f430ea0460",
+    "compatibility": "additive\uff1aDTO/\u670d\u52a1\u7aef\u53e3/\u65b9\u6cd5 ID \u4e0e\u9519\u8bef\u7801\u4e0d\u53d8\uff1b\u53d8\u5316\u662f\u628a adapter \u51c6\u5165\u4ece\u5305\u5185\u81ea\u5efa\u6ce8\u518c\u8868\u8fc1\u5230\u771f\u5b9e harness.configuration-adapters \u70b9\uff0c\u65b0\u589e\u524d\u7aef\u5305\u3002r1 \u6d88\u8d39\u8005\u65e0\u9700\u6539\u4ee3\u7801\u3002"
+  }
+}

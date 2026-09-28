@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "name": "chat-api",
+  "producer": "z2",
+  "status": "READY",
+  "planAnchorRef": "refs/heads/codex/011-plugin-plan",
+  "implementationSha": "a3ec20c04653c7b9a267023751c23d7499f14d4a",
+  "dependsOn": {},
+  "publicExports": [
+    "plugins/chat/api/src/contract.ts — importable as @extensions/ordessa.chat-api/contract.js (shared module ordessa.chat-api)",
+    "ChatComponentKey / defineChatComponentKey — key factory, runtime shape = frozen {id, major} (foundation 前的 Chat 唯一构造点)",
+    "ChatMessageBodyKey / ChatReasoningKey / ChatToolActivityKey / ChatComposerKey — ordessa.chat.* major=1 展示 key",
+    "ChatLocation / ChatContentStatus / ChatToolState / ChatActionResult / ChatScopedAction",
+    "ChatMessageBodyProps / ChatReasoningProps / ChatToolActivityProps / ChatComposerProps",
+    "ChatSlot / ChatContributionContext / ChatContributionRegistration / chatContribution()",
+    "ChatInputSurface / ChatInputQuery / ChatInputEntry / ChatInputEntryAction / ChatInputSource / ChatContentReference",
+    "ChatInputItem / ChatAttachmentPhase / ChatDraftState / ChatSubmissionSnapshot / ChatSubmissionResult",
+    "ChatCommandCatalog / ChatAttachmentCapability / ChatAttachmentService / ChatSessionGateway（消费方接缝，由会话服务所有者实现）",
+    "ChatContributionsService / ChatContributionsToken('ordessa.chat.contributions.v1') / createChatContributions()",
+    "SRC plugins/chat/api/src/registry.ts — 内存注册表实现（重复 ID/contentKind/来源拒绝、(order,id) 稳定排序、scope 撤回、per-source 查询状态、abort 保留旧条目、订阅归零回收视图）"
+  ],
+  "commandsAndEvidence": [
+    { "command": "cd plugins/chat/api && npx vitest run", "evidence": "1 file, 15/15 passed (0 skipped) — 注册/撤回/scope 隔离、重复 ID/contentKind/来源拒绝含 ID、排序稳定、双源并发查询单源故障隔离、abort 保留旧条目、disabled reason 透传、视图回收、双实例零共享、Token 名与冻结 key" },
+    { "command": "cd plugins/chat/api && npx tsc --noEmit", "evidence": "exit 0 — 含 src/contract.typecheck.ts 类型反例（key↔props 不匹配、自填 ownerId、非三态提交分支、disabled 缺 reason、draft 缺 draftId 均编译期拒绝）" },
+    { "command": "npm run typecheck (repo root, commit a3ec20c046)", "evidence": "exit 0 — apps/desktop tsconfig 覆盖 plugins/chat/api/src" },
+    { "command": "npm test (repo root, commit a3ec20c046)", "evidence": "146/146 passed — 基线无回归" }
+  ],
+  "limitations": [
+    "本检查点基于设计快照 96fef2db47（不含 platform-frontend C7/C8）。组件 key 由 Chat 自有 defineChatComponentKey 构造，运行时形状与 C7 UiComponentKey（冻结 {id, major}）一致；foundation 可消费后将出 chat-api 修订版把构造切换到平台工厂（id/major/运行时对象不变，本包是 ordessa.chat.* 键唯一构造点，不产生 UI_KEY_IDENTITY_CONFLICT）。",
+    "ChatActionResult/ChatScopedAction 与平台 UiAction 语义对齐（accepted≠完成、generation guard 由消费方 C7 binding 承担）；foundation 后同样并入平台类型。",
+    "贡献描述符的条件槽位规则（content.renderers 必须带 contentKind+decode；非 renderer 槽禁止 contentKind）为工厂运行时 TypeError，类型签名无法表达条件必填；contract.typecheck.ts 注明，测试真实断言。",
+    "createChatContributions 是纯内存实现（无 React/DOM）；queryInputSources 每次调用生成独立视图（订阅归零自动回收），来源集合在查询时刻快照，之后新注册的来源在下次查询出现。",
+    "ChatSessionGateway/ChatAttachmentService/ChatCommandCatalog 是 Chat 侧期望的消费方接口，真实实现依赖 C0 的会话/传输服务（api-requests R-Z2-1/2/3）；本检查点不含这些服务的实现。",
+    "本检查点是 API_READY，不代表 Chat 插件完成；页面/存储/真实接线按 Z2 后续阶段交付。"
+  ]
+}

@@ -1,0 +1,20 @@
+# T07 RED — ACP admission port adapter (task T07 Q5 half, lane Q5/permissions-backend)
+# date: 2026-09-27T21:48:58Z  branch: codex/011-q5-safety  head: 953fb915eb237a721f581fbef23441bbc6c76c70
+# command: .venv/bin/python -m pytest plugins/permissions/backend/tests/test_admission_port.py -q
+  
+  ==================================== ERRORS ====================================
+  ________________ ERROR collecting tests/test_admission_port.py _________________
+  ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/tests/test_admission_port.py'.
+  Hint: make sure your test modules/packages have valid Python names.
+  Traceback:
+  /home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+      return _bootstrap._gcd_import(name[level:], package, level)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  plugins/permissions/backend/tests/test_admission_port.py:39: in <module>
+      from ordessa_permissions_backend.admission import (
+  E   ModuleNotFoundError: No module named 'ordessa_permissions_backend.admission'
+  =========================== short test summary info ============================
+  ERROR plugins/permissions/backend/tests/test_admission_port.py
+  !!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+  1 error in 0.19s
+  exit=2

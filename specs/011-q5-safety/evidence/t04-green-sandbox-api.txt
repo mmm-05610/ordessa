@@ -1,0 +1,106 @@
+# T04 GREEN run — ordessa-sandbox-api
+# date: 2026-09-27T18:19:13Z
+# tree: worktree 011-q5-safety, package plugins/assets/sandbox/api
+
+$ PYTHONPATH=plugins/assets/sandbox/api/src .venv/bin/python -m pytest plugins/assets/sandbox/api -q
+........................................................................ [ 80%]
+.................                                                        [100%]
+89 passed in 0.06s
+
+EXIT_CODE=0
+
+# repeat run (stability):
+REPEAT_EXIT_CODE=0
+
+# per-test listing:
+tests/test_brand_matrix_cells.py::test_matrix_has_every_brand_by_category_cell
+tests/test_brand_matrix_cells.py::test_every_cell_declares_all_per_cell_fields
+tests/test_brand_matrix_cells.py::test_no_supported_cell_without_observed_receipt
+tests/test_brand_matrix_cells.py::test_pi_cells_are_unsupported_not_unknown
+tests/test_brand_matrix_cells.py::test_codex_config_surface_cells_are_supported_on_repo_measurement
+tests/test_brand_matrix_cells.py::test_codex_mcp_and_network_coverage_is_not_claimed_green
+tests/test_brand_matrix_cells.py::test_claude_windows_bash_cell_is_platform_unsupported
+tests/test_brand_matrix_cells.py::test_unknown_cells_stay_a_separate_status
+tests/test_ceiling.py::test_intent_within_single_ceiling_passes
+tests/test_ceiling.py::test_intent_looser_than_ceiling_refuses
+tests/test_ceiling.py::test_attempt_to_disable_enforced_sandbox_refuses
+tests/test_ceiling.py::test_network_allowed_intent_against_network_forbidden_ceiling_refuses
+tests/test_ceiling.py::test_positive_network_allowed_when_ceiling_allows
+tests/test_ceiling.py::test_multiple_ceilings_intersect_to_strictest
+tests/test_ceiling.py::test_intent_satisfying_one_ceiling_but_not_intersection_refuses
+tests/test_ceiling.py::test_ceilings_from_different_brands_conflict
+tests/test_ceiling.py::test_over_strict_request_refuses_instead_of_approximating
+tests/test_ceiling.py::test_expressible_strictness_accepted
+tests/test_claims.py::test_single_owner_claim_accepted
+tests/test_claims.py::test_same_owner_reclaim_is_idempotent
+tests/test_claims.py::test_two_adapters_claiming_same_native_field_conflict
+tests/test_claims.py::test_distinct_fields_do_not_conflict
+tests/test_coverage.py::test_bash_required_bash_observed_proves
+tests/test_coverage.py::test_bash_only_evidence_cannot_prove_edit_requirement
+tests/test_coverage.py::test_bash_only_evidence_cannot_prove_mcp_requirement
+tests/test_coverage.py::test_bash_only_evidence_cannot_prove_network_requirement
+tests/test_coverage.py::test_wildcard_all_coverage_refused
+tests/test_coverage.py::test_wildcard_star_coverage_refused
+tests/test_coverage.py::test_explicit_categories_accepted
+tests/test_coverage.py::test_unknown_evidence_yields_effect_unknown_not_coverage
+tests/test_coverage.py::test_unsupported_evidence_yields_native_unsupported_not_coverage
+tests/test_coverage.py::test_stale_evidence_against_moved_pin_refused_in_proof
+tests/test_describe.py::test_describe_codex_lists_pinned_mode_options
+tests/test_describe.py::test_describe_records_source_and_status_per_option
+tests/test_describe.py::test_options_for_ui_hides_unknown_and_unsupported
+tests/test_describe.py::test_selecting_unsupported_option_refuses
+tests/test_describe.py::test_selecting_unknown_option_refuses_rather_than_guessing
+tests/test_describe.py::test_brand_without_matrix_rows_gets_no_menu
+tests/test_describe.py::test_admin_lock_is_surfaced
+tests/test_describe.py::test_no_admin_lock_by_default
+tests/test_describe.py::test_busy_provider_refuses_with_provider_busy
+tests/test_describe.py::test_unloaded_provider_refuses_with_provider_busy
+tests/test_describe.py::test_description_carries_platform_assessment
+tests/test_errors_and_boundaries.py::test_six_stable_codes_exist_exactly_and_distinctly
+tests/test_errors_and_boundaries.py::test_unsupported_and_unknown_map_to_different_codes
+tests/test_errors_and_boundaries.py::test_public_exports_complete
+tests/test_errors_and_boundaries.py::test_package_declares_typed_marker
+tests/test_errors_and_boundaries.py::test_neutral_sandboxv1_names_are_not_used
+tests/test_errors_and_boundaries.py::test_src_imports_are_stdlib_or_local_only
+tests/test_errors_and_boundaries.py::test_tests_never_touch_real_user_config
+tests/test_evidence.py::test_evidence_bound_to_matching_instance_is_valid
+tests/test_evidence.py::test_native_version_pin_change_invalidates_evidence
+tests/test_evidence.py::test_config_digest_change_invalidates_evidence
+tests/test_evidence.py::test_platform_change_invalidates_evidence
+tests/test_evidence.py::test_server_instance_change_invalidates_evidence
+tests/test_evidence.py::test_three_outcomes_exist_and_are_distinct
+tests/test_evidence.py::test_evidence_records_reason_and_observed_categories
+tests/test_intent.py::test_valid_intent_constructs
+tests/test_intent.py::test_from_mapping_accepts_known_keys_only
+tests/test_intent.py::test_unknown_top_level_key_refused_at_construction
+tests/test_intent.py::test_unknown_brand_config_field_refused
+tests/test_intent.py::test_codex_mode_outside_pinned_vocabulary_refused
+tests/test_intent.py::test_wildcard_required_coverage_all_refused
+tests/test_intent.py::test_wildcard_path_scope_refused
+tests/test_intent.py::test_pi_without_sandbox_extension_is_native_unsupported
+tests/test_intent.py::test_pi_with_declared_extension_constructs
+tests/test_intent.py::test_claude_cannot_claim_coverage_beyond_subprocess_kinds
+tests/test_intent.py::test_claude_bash_only_coverage_claim_accepted
+tests/test_intent.py::test_unsupported_and_unknown_stay_distinct_results
+tests/test_platform.py::test_claude_linux_family_bash_sandbox_supported[linux]
+tests/test_platform.py::test_claude_linux_family_bash_sandbox_supported[wsl2]
+tests/test_platform.py::test_claude_macos_seatbelt_supported
+tests/test_platform.py::test_claude_native_windows_bash_sandbox_unsupported
+tests/test_platform.py::test_claude_unknown_os_is_unknown_not_unsupported
+tests/test_platform.py::test_codex_platform_variance_unmeasured_is_unknown[linux]
+tests/test_platform.py::test_codex_platform_variance_unmeasured_is_unknown[macos]
+tests/test_platform.py::test_codex_platform_variance_unmeasured_is_unknown[windows]
+tests/test_platform.py::test_unknown_brand_refuses_to_guess
+tests/test_platform.py::test_unsupported_and_unknown_results_never_merge
+tests/test_platform_gate.py::test_claude_intent_passes_gate_on_linux
+tests/test_platform_gate.py::test_claude_intent_macos_gate_passes
+tests/test_platform_gate.py::test_claude_intent_on_native_windows_refuses_platform
+tests/test_platform_gate.py::test_gate_refuses_os_not_declared_even_if_mechanism_supported
+tests/test_platform_gate.py::test_codex_gate_cannot_be_satisfied_until_platform_measured
+tests/test_sessions.py::test_process_scope_change_with_coresident_sessions_refuses_without_impact_set
+tests/test_sessions.py::test_process_scope_change_with_declared_impact_set_passes
+tests/test_sessions.py::test_session_scope_change_needs_no_impact_set
+tests/test_sessions.py::test_process_scope_alone_in_process_passes
+tests/test_sessions.py::test_impact_set_must_cover_every_co_resident_session
+
+89 tests collected in 0.03s

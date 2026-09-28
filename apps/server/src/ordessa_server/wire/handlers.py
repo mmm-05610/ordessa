@@ -4,115 +4,38 @@ The one dispatch table is the plugin host's method registry: every method's
 shape, handler, availability and owner travel as one atomic descriptor
 (`server_plugin_api.ServerMethodDescriptor`), and `dispatch`/`hello` read
 only from this registry — there is no second method table anywhere in the
-Server. The host owns exactly one row's logic: the `server.hello` discovery
-surface, plus the dispatch wall (shape check, requestId check, error
-families). Every business method arrives through a plugin — see
+Server. The host owns exactly one row's logic: the `server.hello` envelope
+(`serverId`, `protocolVersion`, `capabilities`, `auth`) and the aggregation of
+the discovery facets the composed domains publish through the
+`wire.discovery-facets` point — since T014-S3 the host builds no facet entry
+and validates no domain fact, it only decides where they go in the answer —
+plus the dispatch wall (shape check, requestId check, error families). Every
+business method arrives through a plugin — see
 `ordessa_server_compat.core_wire` for the compatibility core's frozen list.
 
-The param-shape helpers below are the wire's shared vocabulary; plugins
-import them rather than re-implementing them.
+The param-shape helpers are the wire's shared vocabulary and they live in the
+contract package (`server_plugin_api.wire_shape`): plugins import them from
+there, and so does this module — one implementation, so a frozen refusal
+string can never drift between the host's wall and a plugin's handler. The
+domain-shape validators that only the compatibility core raises
+(`assignments`/`models`/`overrides`/`positive`/`slug`) left the host in
+T014-S2c for `ordessa_server_compat.wire_validators`.
 """
 from __future__ import annotations
 
 from typing import Any, Callable, Mapping
 
 from ordessa_server.errors import ServerError
-from ordessa_server.records import reject_sensitive_keys
+from ordessa_server.wire.discovery import ALWAYS_PRESENT_EMPTY_LIST
 from ordessa_server.wire.envelope import CursorCodec
 from ordessa_server.wire.errors import WireError
+from server_plugin_api.wire_shape import (
+    bounded as _bounded,
+    request_id as _request_id,
+    require as _require,
+)
 
 WIRE_VERSION = "wire/1"
-
-
-def _require(params: Mapping[str, Any], *names: str) -> None:
-    missing = [name for name in names if name not in params]
-    if missing:
-        raise WireError("INVALID_REQUEST", f"params is missing {', '.join(missing)}")
-
-
-def _slug(value: Any, name: str) -> str:
-    """A lowercase slug: the asset id every store and binding shares."""
-    import re as _re
-
-    if not isinstance(value, str) or _re.match(r"[a-z0-9][a-z0-9._-]{0,63}\Z", value) is None:
-        raise WireError("INVALID_REQUEST", f"{name} must be a lowercase slug")
-    return value
-
-
-def _positive(value: Any, name: str) -> int:
-    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
-        raise WireError("INVALID_REQUEST", f"{name} must be a positive integer")
-    return value
-
-
-def _bounded(value: Any, name: str, limit: int = 4096) -> str:
-    if not isinstance(value, str) or not (0 < len(value) <= limit):
-        raise WireError("INVALID_REQUEST", f"{name} must be a bounded string")
-    return value
-
-
-def _request_id(value: Any) -> str:
-    result = _bounded(value, "requestId")
-    if len(result) < 8:
-        raise WireError("INVALID_REQUEST", "requestId must contain at least 8 characters")
-    return result
-
-
-def _version(value: Any, name: str = "expectedVersion") -> int:
-    if isinstance(value, bool) or not isinstance(value, int) or not (0 <= value <= 2**53 - 1):
-        raise WireError("INVALID_REQUEST", f"{name} must be a non-negative safe integer")
-    return value
-
-
-def _overrides(params: Mapping[str, Any]) -> list[dict[str, Any]] | None:
-    value = params.get("overrides")
-    if value is None:
-        return None
-    if not isinstance(value, list):
-        raise WireError("INVALID_REQUEST", "overrides must be a list of control assignments")
-    for item in value:
-        if (not isinstance(item, Mapping) or set(item) != {"controlId", "value"}
-                or not isinstance(item["controlId"], str)):
-            raise WireError("INVALID_REQUEST", "each override needs controlId and value")
-    reject_sensitive_keys(value)
-    reject_sensitive_keys({item["controlId"]: item["value"] for item in value})
-    return [dict(item) for item in value]
-
-
-def _assignments(value: Any, name: str) -> list[dict[str, Any]]:
-    if not isinstance(value, list):
-        raise WireError("INVALID_REQUEST", f"{name} must be a list of control assignments")
-    result = []
-    for item in value:
-        if (not isinstance(item, Mapping) or set(item) != {"controlId", "value"}
-                or not isinstance(item["controlId"], str) or not item["controlId"]):
-            raise WireError("INVALID_REQUEST", f"each {name} item needs controlId and value")
-        result.append(dict(item))
-    reject_sensitive_keys(result)
-    reject_sensitive_keys({item["controlId"]: item["value"] for item in result})
-    return result
-
-
-def _models(value: Any) -> list[dict[str, Any]]:
-    if not isinstance(value, list):
-        raise WireError("INVALID_REQUEST", "models must be a list")
-    result = []
-    allowed = {"modelId", "displayName", "availability", "unavailableReason"}
-    for item in value:
-        if not isinstance(item, Mapping) or set(item) != allowed:
-            raise WireError("INVALID_REQUEST", "each model has an invalid shape")
-        availability = item["availability"]
-        reason = item["unavailableReason"]
-        if availability not in {"unknown", "available", "unavailable"}:
-            raise WireError("INVALID_REQUEST", "model availability is invalid")
-        if reason is not None and not isinstance(reason, str):
-            raise WireError("INVALID_REQUEST", "unavailableReason must be a string or null")
-        result.append({
-            "modelId": _bounded(item["modelId"], "modelId", 256),
-            "displayName": _bounded(item["displayName"], "displayName", 256),
-            "availability": availability, "unavailableReason": reason,
-        })
-    return result
 
 
 HOST_OWNER_ID = "server.host"
@@ -126,25 +49,40 @@ class WireService:
         method_registry=None,
         stream_routes=None,
         token_required: bool = True,
-        harness_resolver: "Callable[[], Any | None] | None" = None,
+        discovery_facets_resolver: (
+            "Callable[[], Mapping[str, Callable[[], Any]]] | None") = None,
+        error_family_resolver: "Callable[[str], str] | None" = None,
+        acp_admission_gate=None,
     ) -> None:
         self._server_id_provider = server_id_provider
-        #: The native identity facts a native composition publishes through
-        #: `server.hello`; the closure itself stays composition-owned.
-        self.native_execution_provider = None
-        #: The live harness directory (a composition fact hello publishes),
-        #: or None on a bare host — which answers an empty family list.
-        self._harness_resolver = harness_resolver
+        #: The composition's `server.hello` discovery facets (T014-S3): a
+        #: `facet name -> projector` mapping built by the composition root over
+        #: the declaring plugin host's own aggregate, handed over once here —
+        #: the same per-composition accessor shape as
+        #: `_error_family_resolver`, never module state. Which harnesses this
+        #: Server can run, and whose native identity it runs as, are facts the
+        #: domain that owns them projects; this transport only aggregates.
+        #: None = no domain speaks here at all, and hello answers the contract's
+        #: empty defaults.
+        self._discovery_facets_resolver = discovery_facets_resolver
         #: Workspace facts reach the remaining compatibility domains only
         #: through a resolver the composition binds after activation; it reads
         #: the plugin host live, so unloading the Workspace plugin unbinds the
         #: port too. None resolver = the domain can never be present.
         self._workspace_resolver = None
+        #: The composition's wire/1 error-family resolver (S2a-R): a
+        #: `code -> family` callable built by the composition root over the
+        #: declaring plugin host's own aggregate, handed over once here.
+        #: None = the transport answers from the static host table only.
+        self._error_family_resolver = error_family_resolver
         self._registry = method_registry
         #: The host's stream-route registry (ACP today): resolution of owned
         #: endpoints only — origin/bearer checks and close semantics stay in
         #: the host transport, which is where the wire reads it from.
         self.stream_routes = stream_routes
+        # Generic transport safety wall, shared with the selected ACP owner
+        # through a declared host port. No verifier is composed by default.
+        self.acp_admission_gate = acp_admission_gate
         # The host-owned discovery method; every other row arrives through a
         # plugin's registration (order preserved by the product composition).
         from server_plugin_api import ServerMethodDescriptor
@@ -238,13 +176,20 @@ class WireService:
         if "requestId" in params:
             _request_id(params["requestId"])
         try:
-            return descriptor.handler(params)
+            result = descriptor.handler(params)
+            if self.acp_admission_gate is not None and self.stream_routes is not None:
+                self.acp_admission_gate.observe_wire_result(method, params, result, self.stream_routes)
+            return result
         except WireError:
             # A typed refusal is the contract answering, not a crash: the wall
             # below must never re-project it onto `UNAVAILABLE`.
             raise
         except ServerError as exc:
-            raise WireError.from_server_error(exc) from exc
+            # The composition's resolver (bound at construction, never a
+            # process-global table) answers contributed codes for THIS
+            # transport's composition; without one the static host table
+            # and the documented fall-through answer (T014-S2a-R).
+            raise WireError.from_server_error(exc, self._error_family_resolver) from exc
         except Exception as exc:  # noqa: BLE001 - the wire contract, not the caller's convenience
             # The last wall of the error family (order 115): anything else that
             # escapes a handler still leaves this Server as a JSON-RPC error
@@ -282,40 +227,36 @@ class WireService:
                 entry["reason"] = reason
             capabilities.append(entry)
         auth = {"required": True, "schemes": ["session_token"]} if self.token_required else {"required": False}
-        harnesses = []
-        # The family directory is a deployment fact - which harnesses this Server
-        # can run - so it comes from the compatibility core's registry, never
-        # from the records: a fresh deployment has no records, and deriving the
-        # list from them was what left a client with nothing to choose. The
-        # resolver reads the plugin host live; a bare host has no directory and
-        # answers an empty list. `registered()` is already sorted by id, so this
-        # is the registry's own order rather than a second sort that could later
-        # disagree with it. Only what a family *declares* is published, and a
-        # declaration that is absent stays absent.
-        directory = self._harness_resolver() if self._harness_resolver else None
-        for harness_id in (directory.registered() if directory is not None else ()):
-            descriptor = directory.get(harness_id)
-            entry: dict[str, Any] = {"id": harness_id}
-            if descriptor.credential_kind is not None:
-                entry["credentialKind"] = descriptor.credential_kind
-            if descriptor.model_control_id is not None:
-                entry["modelControlId"] = descriptor.model_control_id
-            harnesses.append(entry)
-        result = {
+        result: dict[str, Any] = {
             "serverId": self._server_id_provider(),
             "protocolVersion": WIRE_VERSION,
             "capabilities": capabilities,
             "auth": auth,
-            "harnesses": harnesses,
         }
-        if self.native_execution_provider is not None:
-            native = self.native_execution_provider()
-            if (not isinstance(native, Mapping) or native.get("mode") != "native"
-                    or directory is None
-                    or native.get("harness") not in directory.registered()
-                    or not isinstance(native.get("profileId"), str) or not native["profileId"]):
-                raise WireError("SERVER_NATIVE_IDENTITY_INVALID", "native execution identity is unavailable")
-            result["nativeExecution"] = dict(native)
+        # The discovery facets are what the composed domains have to say about
+        # this Server — which harnesses it can run, whose native identity it
+        # runs as — and the host neither builds nor interprets a single entry
+        # of them. Each facet arrives through the open `wire.discovery-facets`
+        # point (published by the domain that can answer it, read live per
+        # hello because the fact is live), and the host keeps only what a
+        # protocol must keep: the envelope above, this aggregation, and its
+        # deterministic order (publish order, so a client that cached the
+        # answer sees the same bytes it cached).
+        #
+        # A projector that answers `None` published no fact, so the key is
+        # absent rather than empty — `nativeExecution` on a non-native
+        # deployment is typed absence, not a refusal and not a lie. The
+        # always-present members are wire/1's contract, not domain vocabulary:
+        # a composition with no harness plugin answers `harnesses: []` because
+        # the member exists in the schema and has nothing in it.
+        facets = (self._discovery_facets_resolver()
+                  if self._discovery_facets_resolver is not None else {})
+        for facet, project in facets.items():
+            value = project()
+            if value is not None:
+                result[facet] = value
+        for facet in ALWAYS_PRESENT_EMPTY_LIST:
+            result.setdefault(facet, [])
         return result
 
     def _capability(self, capability_id: str) -> tuple[bool, str | None]:

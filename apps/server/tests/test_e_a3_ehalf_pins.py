@@ -44,7 +44,7 @@ from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server_compat.profiles import ProfileRecords
 from ordessa_server_compat.sessions import SessionRecords, SessionService
 from ordessa_workspace import WorkspaceRecords
-from pacthold.storage import Database, ObjectStore
+from pacthold_runtime_compat.storage import Database, ObjectStore
 
 
 class _StopAtPortFactory(RuntimeError):

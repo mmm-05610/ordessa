@@ -126,7 +126,7 @@ def test_the_service_keeps_every_field_its_body_omits(api, tmp_path):
                     raise_server_exceptions=False) as client:
         wired = Wire(client, {"Authorization": f"Bearer {runtime.token}"})
         record = create(wired)
-        kept = runtime.model_configs.update(
+        kept = runtime.plugin_host.provided_port('provider.models').update(
             record["id"], record["version"], "o112-service-0001",
             {"displayName": "Renamed only"},
         )
@@ -300,7 +300,7 @@ def test_the_contract_nullable_column_really_unbinds(tmp_path):
             api, bound, request_id="o112-cred-null", credentialId=None))["providerModel"]
         assert detached["credentialId"] is None
 
-        kept = runtime.model_configs.update(
+        kept = runtime.plugin_host.provided_port('provider.models').update(
             detached["id"], detached["version"], "o112-cred-keep",
             {"displayName": "只改名字，凭据保持"},
         )

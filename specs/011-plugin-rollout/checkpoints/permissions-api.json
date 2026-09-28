@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "name": "permissions-api",
+  "producer": "q5",
+  "status": "READY",
+  "planAnchorRef": "refs/heads/codex/011-plugin-plan",
+  "implementationSha": "a98048216c99e46c37dd94df955c2e296964cb55",
+  "dependsOn": {
+    "ordessa-server-plugin-api": "0.1.0 (packages/server-plugin-api, main baseline 96fef2db47)",
+    "pacthold": "storage.Database 2.0.0a1 (real DB used by the approval authority)"
+  },
+  "publicExports": {
+    "packages": {
+      "ordessa-permissions-api": "plugins/permissions/api (import ordessa_permissions_api)",
+      "ordessa-permissions-backend": "plugins/permissions/backend (import ordessa_permissions_backend)"
+    },
+    "apiExports": [
+      "AdminAuthorization",
+      "AllowedOnce",
+      "AlreadyRecorded",
+      "ApprovalDecision",
+      "ApprovalFact",
+      "ApprovalRequest",
+      "ApprovalScope",
+      "ApprovalState",
+      "ApprovalStateKind",
+      "ArgumentDigest",
+      "AuthorizationDecision",
+      "BRAND_NATIVE_MODES",
+      "BoundGrant",
+      "BoundedApprovalScope",
+      "BrandMode",
+      "CeilingEntry",
+      "CeilingSource",
+      "CodeKind",
+      "DECISION_TTL",
+      "DEFAULT_REMEDIES",
+      "DecideResult",
+      "DecisionReason",
+      "Denied",
+      "EffectiveCeiling",
+      "EffectivePolicySnapshot",
+      "ExecutionState",
+      "ExposureLevel",
+      "GRANT_TTL",
+      "InvalidApproval",
+      "MAX_DIAGNOSTIC_TEXT",
+      "MAX_PRIORITY",
+      "MAX_RULES",
+      "MAX_SNAPSHOT_TTL",
+      "NO_INTENT_REVISION",
+      "NativeReceipt",
+      "OnceApprovalScope",
+      "OperationRequest",
+      "POLICY_DENY",
+      "PendingApproval",
+      "PermissionIntent",
+      "PolicyCeiling",
+      "PolicyDenyCode",
+      "PolicyRefusal",
+      "PolicyRefused",
+      "PolicySynthesized",
+      "QueriedApproval",
+      "QueryOutcome",
+      "QueryUnknown",
+      "Recorded",
+      "RefusalCode",
+      "RuleAction",
+      "SCHEMA_CODES",
+      "Scope",
+      "SynthesisResult",
+      "TOOL_EXPOSURE",
+      "TOOL_KEYS",
+      "TargetMatcher",
+      "ToolIdentity",
+      "TypedRule",
+      "UnknownApproval",
+      "approval_id_for",
+      "build_operation_request",
+      "code_kind",
+      "declared_native_modes",
+      "enforcement_codes",
+      "evaluate_authorization",
+      "intersect_ceilings",
+      "is_enforcement_code",
+      "known_tool_keys",
+      "probe",
+      "scope_to_record",
+      "select_intent_action",
+      "synthesize"
+    ],
+    "backendExports": [
+      "AUTHORIZER_PORT",
+      "ApprovalFacts",
+      "ApprovalNotFound",
+      "Authorizer",
+      "CorrelationConflict",
+      "INVALID",
+      "OPEN",
+      "PLUGIN_ID",
+      "PermissionsBackendPlugin",
+      "PolicyRepository",
+      "SETTLED",
+      "VersionConflict"
+    ],
+    "servicePorts": {
+      "permissions.authorizer@1": "provided_ports name 'permissions.authorizer@1'",
+      "wireMethods": [
+        "permissions.approvals.decide",
+        "permissions.approvals.query"
+      ]
+    }
+  },
+  "commandsAndEvidence": [
+    {
+      "command": ".venv/bin/python -m pytest plugins/permissions/api -q",
+      "exitCode": 0,
+      "result": "223 passed"
+    },
+    {
+      "command": ".venv/bin/python -m pytest plugins/permissions/backend -q",
+      "exitCode": 0,
+      "result": "69 passed"
+    },
+    {
+      "command": ".venv/bin/python -m pytest plugins/permissions/adapters -q",
+      "exitCode": 0,
+      "result": "100 passed"
+    },
+    {
+      "command": ".venv/bin/python -m pytest plugins/permissions plugins/assets/sandbox -q",
+      "exitCode": 0,
+      "result": "610 passed (permissions 392 + sandbox 218)"
+    },
+    {
+      "command": ".venv/bin/python specs/011-q5-safety/proof/permissions_api_proof.py",
+      "exitCode": 0,
+      "result": "16/16 stated outcomes observed; log in specs/011-q5-safety/evidence/permissions-api-proof.txt"
+    },
+    {
+      "command": ".venv/bin/python -m pytest packages/pacthold -q",
+      "exitCode": 0,
+      "result": "238 passed"
+    },
+    {
+      "command": ".venv/bin/python -m pytest plugins/harness -q",
+      "exitCode": 1,
+      "result": "2 failed / 308 passed / 3 skipped \u2014 the same 2 registered npm-closure ids as the pre-Q5 baseline at 96fef2db47"
+    },
+    {
+      "command": ".venv/bin/python -m pytest apps/server -q",
+      "exitCode": 1,
+      "result": "43 failed / 850 passed / 10 skipped / 25 errors \u2014 per-ID set identical to the pre-Q5 inherited ledger (zero unexplained increment)"
+    }
+  ],
+  "limitations": [
+    "API_READY only: this is the consumable permissions contract plus its decision/approval service, not the finished production chain.",
+    "No pre-effect execution gate exists in this tree; the authorizer is reachable as the provided port 'permissions.authorizer@1' but nothing in the Harness calls it before a tool side effect. Request G1, owner C0. T03's 'controlled real pre-effect gate' and T07 remain blocked and are NOT claimed green.",
+    "Native request correlation can be recorded and reconciled by this service, but the ACP channel does not yet emit a native receipt, so in production reconcile returns Unknown (fail-closed). Request G2, owner C0.",
+    "Profile and Chat glue (T06) is not registered: plugins/profile and plugins/chat do not exist and no profile-api/chat-api checkpoint is published. Requests G4/G5.",
+    "Legacy retirement (T08): ordessa_server_compat/approvals/records.py is still wired; both authorities were proven to conflict on one row, and the single-owner swap plus compat deletion is C0's job (G6, see integration-request.md).",
+    "Brand permission adapters prove compile/verify refusal semantics only; every cell that needs a pre-effect-gate or L2 observation is recorded UNKNOWN and supports explicit refusal only.",
+    "No real model calls, no user config access, no real OS sandbox effect probes (L3 untested)."
+  ]
+}

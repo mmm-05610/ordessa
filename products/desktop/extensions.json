@@ -1,1 +1,1 @@
-{"enabled":["ordessa.contracts","ordessa.agent-contracts","ordessa.commands","ordessa.workbench","ordessa.agent-connections","ordessa.agent-sessions","ordessa.agent-server","ordessa.agent-acp","ordessa.agent-conversation"]}
+{"enabled":["ordessa.contracts","ordessa.agent-contracts","ordessa.commands","ordessa.workbench","ordessa.connections","ordessa.agent-connections","ordessa.agent-sessions","ordessa.agent-server","ordessa.agent-acp","ordessa.agent-conversation"]}

@@ -49,15 +49,67 @@ FROZEN_COMPAT_METHODS = frozenset((
     "approvals.decide", "history.snapshot",
 ))
 
+#: What a plugin may still import from the host after T014-S2c: the host's
+#: storage/lifecycle primitives and its admission wall. The wire vocabulary is
+#: NOT in this list any more — `ordessa_server.errors`, `.records`,
+#: `.wire.errors`, `.wire.envelope`, `.wire.handlers`, `.wire.projection` all
+#: left the plugin side in S2c (published to `server_plugin_api`, or moved to
+#: the plugin that owns the behaviour), so re-adding one to a plugin file turns
+#: `test_plugin_host_imports_stay_out_of_the_published_wire_surface` red.
 HOST_GENERIC_EDGES = frozenset((
-    "ordessa_server", "ordessa_server.bootstrap", "ordessa_server.errors",
-    "ordessa_server.records",
+    "ordessa_server", "ordessa_server.bootstrap",
     "ordessa_server.ids", "ordessa_server.idempotency", "ordessa_server.credentials",
     "ordessa_server.events", "ordessa_server.connectors",
-    "ordessa_server.wire", "ordessa_server.wire.errors", "ordessa_server.wire.envelope",
-    "ordessa_server.wire.projection", "ordessa_server.wire.handlers",
     "ordessa_server.transport.http.admission",
 ))
+
+#: The exact host modules S2c removed from plugin reach. Listed so the gate
+#: names what it is guarding, and so a move cannot be "undone" by importing
+#: the same symbol from a sibling host module that re-exports it.
+S2C_PUBLISHED_WIRE_EDGES = frozenset((
+    "ordessa_server.errors", "ordessa_server.records",
+    "ordessa_server.wire", "ordessa_server.wire.errors", "ordessa_server.wire.envelope",
+    "ordessa_server.wire.handlers", "ordessa_server.wire.projection",
+))
+
+
+def _plugin_host_edges() -> "list[tuple[Path, str]]":
+    offenders: "list[tuple[Path, str]]" = []
+    for root in (COMPAT_DIR, WORKSPACE_DIR,
+                 REPO_ROOT / "plugins" / "harness" / "src" / "ordessa_harness"):
+        for path, imports in _walk_sources(root):
+            for name in imports:
+                if name.startswith("ordessa_server.") or name == "ordessa_server":
+                    offenders.append((path, name))
+    return offenders
+
+
+def test_plugin_host_imports_stay_out_of_the_published_wire_surface():
+    """AGENTS rule 3, measured: no plugin reaches into the host's wire layer.
+
+    The published-contract half of the surface (`server_plugin_api`) is what
+    plugins import now, and the host imports the same objects, so the frozen
+    refusal strings have exactly one implementation on both sides. This gate is
+    the absence guard for that move: point any plugin file back at
+    `ordessa_server.wire.*` / `.errors` / `.records` and it names the file.
+    """
+    offenders = [(path.name, name) for path, name in _plugin_host_edges()
+                 if name in S2C_PUBLISHED_WIRE_EDGES
+                 or name.startswith(("ordessa_server.wire.",))]
+    assert offenders == [], (
+        "a plugin imports the host's wire/errors/records surface again "
+        f"(publish it in server_plugin_api instead): {offenders}")
+
+
+def test_plugin_host_edges_are_exactly_the_declared_storage_surface():
+    """The complement of the gate above, so the shrink cannot be faked by
+    deleting the allow-list: every host module a plugin imports must be one
+    this file declares, and the S2c set must be absent."""
+    for path, name in _plugin_host_edges():
+        assert name in HOST_GENERIC_EDGES or name in S2C_PUBLISHED_WIRE_EDGES, (
+            f"{path}: imports undeclared host module {name}")
+        assert name not in S2C_PUBLISHED_WIRE_EDGES, (
+            f"{path}: imports {name}, published to server_plugin_api in T014-S2c")
 
 
 def _tree(path: Path) -> ast.Module:

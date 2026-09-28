@@ -4,6 +4,7 @@ import { writeFile } from 'node:fs/promises'
 import { discover } from '@ordessa/extension-host/main'
 import { protocolHandler } from '@ordessa/extension-host/main'
 import { verifyAgentUI } from './smoke-agent'
+import { probeUiFoundations, tabForwardFrom } from './smoke-ui'
 import { installNativeBridge } from '@ordessa/native-bridge'
 
 app.setName('Ordessa Desktop')
@@ -66,8 +67,21 @@ app.whenReady().then(async () => {
         if (increment) { increment.click(); await new Promise(r => setTimeout(r, 30)); }
         views.push(document.querySelector('[data-region="main"]').textContent);
       }
+      // A single-view region renders without a tab strip; the shell exposes it via data-active-view.
+      for (const region of document.querySelectorAll('[data-region][data-active-view]')) {
+        pages.push(region.getAttribute('data-active-view'));
+        if (region.getAttribute('data-region') === 'main') {
+          await new Promise(r => setTimeout(r, 30));
+          const increment = document.querySelector('[data-testid="increment"]');
+          if (increment) { increment.click(); await new Promise(r => setTimeout(r, 30)); }
+          views.push(region.textContent);
+        }
+      }
       return {
         ready: document.documentElement.dataset.ready === 'true', pages, views,
+        // A root view mounted without any Workbench region is otherwise invisible to this probe.
+        rootText: document.querySelector('#root')?.textContent ?? '',
+        activeElement: document.activeElement ? document.activeElement.tagName + ':' + (document.activeElement.getAttribute('data-testid') ?? '') : 'none',
         rootMounted: !!document.querySelector('[data-testid="workspace"]'),
         emptyHost: !!document.querySelector('[data-testid="empty"]'),
         errors: [...document.querySelectorAll('[role="alert"]')].map(p => p.textContent),
@@ -76,6 +90,28 @@ app.whenReady().then(async () => {
         bridgeKeys: Object.keys(window.extensionCatalog ?? {}),
       };
     })()`)
+    // Real keyboard focus: a Tab keystroke through the browser input stack must move
+    // focus onto an actual focusable control (U15/V04 keyboard acceptance).
+    win.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'Tab' })
+    await new Promise(resolve => setTimeout(resolve, 120))
+    Object.assign(result, { activeElementAfterTab: await win.webContents.executeJavaScript(
+      `document.activeElement ? document.activeElement.tagName + ':' + (document.activeElement.getAttribute('data-testid') ?? '') : 'none'`) })
+    // C8 V03/V04: real layout and computed style at two widths, plus keyboard order.
+    if (process.env.MODULAR_UI_FOUNDATIONS === '1') {
+      const shots = process.env.MODULAR_UI_SHOTS
+      const probe360 = await probeUiFoundations(win, 360)
+      const probe768 = await probeUiFoundations(win, 768)
+      Object.assign(result, { probe360, probe768, tabFromInput: await tabForwardFrom(win, 'ui-input') })
+      if (shots) {
+        // A hidden smoke window captures blank; show it only for the evidence images.
+        win.showInactive()
+        await new Promise(resolve => setTimeout(resolve, 150))
+        await probeUiFoundations(win, 360)
+        await writeFile(path.join(shots, 'viewport-360.png'), (await win.webContents.capturePage()).toPNG())
+        await probeUiFoundations(win, 768)
+        await writeFile(path.join(shots, 'viewport-768.png'), (await win.webContents.capturePage()).toPNG())
+      }
+    }
     if (process.env.MODULAR_AGENT_SMOKE === '1') {
       Object.assign(result, { agent: await verifyAgentUI(win) })
       if (process.env.MODULAR_SCREENSHOT) {

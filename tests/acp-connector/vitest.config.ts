@@ -1,13 +1,12 @@
 import { defineConfig } from 'vitest/config'
 import { fileURLToPath } from 'node:url'
+import { contractAliases } from '../../tooling/vitest-extensions.mjs'
 
-// Mirrors apps/desktop/vitest.config.ts aliases so the tests exercise the very same contract
-// modules the product imports; nothing here is a test-only re-implementation of a contract.
+// Uses the same contract alias map the product configs use (tooling/vitest-extensions.mjs), so
+// the tests exercise the very same contract modules the product imports; nothing here is a
+// test-only re-implementation of a contract.
 export default defineConfig({
-  resolve: { alias: {
-    '@extensions/ordessa.contracts/contract.js': fileURLToPath(new URL('../../packages/desktop-platform/contracts/foundation/src/contract.ts', import.meta.url)),
-    '@extensions/ordessa.agent-contracts/contract.js': fileURLToPath(new URL('../../packages/desktop-platform/contracts/agent-ui/src/contract.ts', import.meta.url)),
-  } },
+  resolve: { alias: contractAliases() },
   test: {
     root: fileURLToPath(new URL('.', import.meta.url)),
     include: ['fixtures/**/*.test.ts', 'protocol/**/*.test.ts', 'ui/**/*.test.tsx'],

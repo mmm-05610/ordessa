@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "name": "chat-api-r2",
+  "producer": "z2",
+  "status": "READY",
+  "planAnchorRef": "refs/heads/codex/011-plugin-plan",
+  "implementationSha": "be672a59a029e22b78683465b3285992beedaa82",
+  "dependsOn": { "chat-api": "refs/heads/codex/011-chat-api-ready @ 54ad26c15d8480823374d85590919ba6bcca60d2 (implementation a3ec20c046)" },
+  "publicExports": [
+    "同 chat-api v1 全部导出（plugins/chat/api/src/contract.ts，@extensions/ordessa.chat-api/contract.js）",
+    "修订：ChatInputEntryAction.add-content.prepare 签名收窄为 (location: ChatLocation) => Promise<ChatPrepareResult>",
+    "修订：ChatInputEntryAction.invoke.execute 签名收窄为 (location: ChatLocation) => Promise<ChatActionResult>",
+    "新增类型：ChatPrepareResult（accepted{reference}/refused/unavailable 三态）"
+  ],
+  "commandsAndEvidence": [
+    { "command": "cd plugins/chat/api && npx vitest run", "evidence": "15/15 passed（含契约类型收紧后的全量回归）" },
+    { "command": "cd plugins/chat/api && npx tsc --noEmit", "evidence": "exit 0" },
+    { "command": "node plugins/chat/api/build.mjs && node plugins/chat/frontend/build.mjs", "evidence": "两扩展产物构建成功（contract.js/entry.js/licenses），产物哈希锁归 C0 集成重建" }
+  ],
+  "limitations": [
+    "兼容关系：v1 发布后、无任何外部消费者消费前，动作成员签名由示意 ChatScopedAction 泛型收窄为显式 location 入参与 ChatPrepareResult 返回。id/major/Token 名称/运行时对象均不变；chat frontend（唯一既有消费者）已随修订更新。v1 历史分支不改写。",
+    "其余限制与 chat-api v1 相同（key 构造点待 foundation 切换平台工厂、条件槽位规则为运行时校验等）。"
+  ]
+}

@@ -21,13 +21,14 @@ from __future__ import annotations
 
 import pytest
 
-from pacthold.resource_contracts import PromptFragmentV1
+from pacthold_runtime_compat.bootstrap import build_product_registry
+from pacthold_runtime_compat.resource_contracts import PromptFragmentV1
 from ordessa_server_compat.execution.sidecar_backend import _safe_code
-from ordessa_server.wire.projection import _event_body
+from ordessa_server_compat.wire_projection import _event_body
 from pacthold.storage.secrets import SecretLocatorUnavailable
 from pacthold.work_core.errors import DispatchAmbiguous
 from pacthold.work_core.models import Ref, RefType
-from pacthold.work_core.registry import ExtensionRegistry, ProviderDescriptor
+from pacthold.work_core.registry import ProviderDescriptor
 from pacthold.work_core.repository import CoreRepository
 from pacthold.work_core.services import ExecutionService, WorkService
 
@@ -72,7 +73,12 @@ def _dispatch_raised(tmp_agent_box_home, error: BaseException) -> BaseException:
     execution = service.create_execution(
         work.id, "fake-execution", responsibility_intent="start fails",
     )
-    registry = ExtensionRegistry()
+    # Post-T009 a bare kernel registry starts EMPTY; the dispatch leg this
+    # gate drives is the product's, so it runs on the product-seeded registry
+    # (A's BOUNDARY-BREAKS-FOR-B prescribes `build_product_registry()` for
+    # every bare `ExtensionRegistry()` construction) — same leg, same
+    # assertions, assembled the way the product assembles.
+    registry = build_product_registry()
     registry.register_execution_provider(_FailingStartProvider(error))
     registry.register_resource_provider("fake-resource", _PromptResource())
     inputs = ((PromptFragmentV1.contract_id, Ref(RefType.ARTIFACT, "fake-resource", "p1")),)

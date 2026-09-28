@@ -136,6 +136,42 @@ class ManagedChannel:
     def send_frame(self, frame: dict) -> None:
         """The client's own ACP frame enters the channel verbatim."""
         self._ensure_open()
+        # This test fixture supplies a permit for the exact frame it is about
+        # to send. Production has no default permit authority; self-test echo
+        # channels have no runtime and keep using the ordinary send path.
+        runtime = getattr(self.server, "runtime", None)
+        gate = getattr(getattr(runtime, "wire", None), "acp_admission_gate", None)
+        if gate is not None and frame.get("method") == "session/prompt":
+            params = frame["params"]
+            blocks = params["prompt"]
+            assert (isinstance(blocks, list) and len(blocks) == 1
+                    and isinstance(blocks[0], dict) and blocks[0].get("type") == "text"
+                    and isinstance(blocks[0].get("text"), str)), blocks
+            connection = runtime.wire.stream_routes.resolve("acp-channel", self.connection_id)
+            assert connection is not None
+            result = gate.authorize_submission(connection, {
+                "submissionId": f"controlled-{self.connection_id}-{frame['id']}",
+                "nativeSessionId": params["sessionId"],
+                "text": blocks[0]["text"], "attachments": [],
+                "configurationDigest": "0" * 64,
+            })
+            assert result["kind"] == "accepted", result
+        elif gate is not None and "method" not in frame and "result" in frame:
+            outcome = frame["result"].get("outcome")
+            if isinstance(outcome, dict) and outcome.get("outcome") == "selected":
+                reverse = [item for item in self._seen
+                           if item.get("method") == "session/request_permission"
+                           and item.get("id") == frame.get("id")]
+                assert reverse, "permission answer needs an observed reverse request"
+                connection = runtime.wire.stream_routes.resolve("acp-channel", self.connection_id)
+                assert connection is not None
+                result = gate.authorize_permission(connection, {
+                    "interactionId": f"controlled-{self.connection_id}-{frame['id']}-{len(reverse)}",
+                    "nativeSessionId": reverse[-1]["params"]["sessionId"],
+                    "runId": "controlled-acp-test",
+                    "optionId": outcome["optionId"],
+                })
+                assert result["kind"] == "accepted", result
         self._ws.send_text(json.dumps(frame, ensure_ascii=False))
 
     def _next(self, timeout: float):
@@ -434,6 +470,22 @@ def test_unbound_project_gets_no_channel_and_starts_nothing(server, tmp_path):
             "project-authorization refusal path cannot be measured")
     assert peer_events(server.log_base) == before, \
         "a refused channel open must not start anything"
+
+
+def test_raw_prompt_without_controlled_permit_is_refused_before_peer(server, project, channels):
+    """Raw traffic cannot borrow the installed fixture authority without a permit."""
+    workspace_id = server.open_workspace(project)
+    channel = channels(server, project_id=workspace_id)
+    session_id = open_session(channel, project)
+    gate = server.runtime.wire.acp_admission_gate
+    assert gate.authority is not None, "the negative must keep test authority installed"
+    # Bypass the test client's permit helper on purpose. The actual Server
+    # websocket gate must close this request before the controlled peer sees it.
+    channel._ws.send_text(json.dumps(prompt_frame(50, session_id, "unpermitted")))
+    with pytest.raises(AssertionError, match="relay ended"):
+        channel.collect(until=lambda frame: frame.get("id") == 50, timeout=10)
+    assert all(not peer_recv_frames(rows, "session/prompt")
+               for rows in peer_rows_by_pid(server.log_base).values())
 
 
 # -- 2/3. 建立通道：显式绑定、不代做 ACP 操作 ---------------------------------
@@ -875,7 +927,7 @@ class _ReleaseStub:
 
 def _install_release_stub(server: ServerHandle, connection_id: str,
                           outcomes: list) -> _ReleaseStub:
-    connection = server.runtime.acp_channels.get(connection_id)
+    connection = server.runtime.plugin_host.provided_port("acp.channels").get(connection_id)
     assert connection is not None and connection.transport is not None, (
         "the live channel's transport must be in place before scripting its answer")
     stub = _ReleaseStub(connection.transport, outcomes)
@@ -924,7 +976,7 @@ def test_a_refused_release_never_becomes_a_success_answer(server, project, chann
     assert in_flight_execution_ids(server) - baseline == {run_id}
 
     # 重试仍可诚实成功：入口真正回执 OS 级回收后，才结账并返回成功。
-    connection = server.runtime.acp_channels.get(channel.connection_id)
+    connection = server.runtime.plugin_host.provided_port("acp.channels").get(channel.connection_id)
     connection.transport = stub._real
     ack = channel.release()
     assert ack["released"] is True, ack
@@ -998,7 +1050,7 @@ def test_concurrent_releases_settle_the_run_record_exactly_once(server, project,
     (run_id,) = sorted(run_ids)
     open_session(channel, project)
 
-    registry = server.runtime.acp_channels
+    registry = server.runtime.plugin_host.provided_port("acp.channels")
     barrier = threading.Barrier(2)
     results: list[Any] = []
     failures: list[BaseException] = []
