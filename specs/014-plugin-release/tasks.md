@@ -38,8 +38,13 @@
 
 ## P-D — claude 附件通路（harness）
 
-- [ ] PD-1 R0 基线冻结：plugins/harness 既有套件计数（含 tests/test_capability_declarations.py）；环境（packaging/claude `npm ci` 已装闭包核对 0.81.2）
-- [ ] PD-2 重探针（第一手，推翻或确认旧负证据）：受控拉起钉版 adapter（fake Anthropic endpoint 架式，零真实模型/凭据），转录 initialize 的 `agentCapabilities.promptCapabilities`（源码预期 image:true+embeddedContext:true，`acp-agent.js:1108`）；实测 image 块端到端往返（prompt→adapter→fake 端点收到 base64 图）与 resource_link 下发语义；给旧负证据定来历结论（0.77 时代遗留 vs 读取位置错误）
-- [ ] PD-3 能力翻绿：`harnesses.toml` claude-code 行恢复 `attach`（附新证据注释与旧证据推翻说明）；`tests/test_capability_declarations.py` FAMILY_MATRIX 同步；`docs/server-round1/fullstack/claude-production-packaging.md` 证据更新
-- [ ] PD-4 通路接线：claude 家族通道接受附件投递——从 connectors 附件 DTO 形状（对齐 P-C PC-9 冻结件）到 session/prompt 的 image 块 / resource_link；语义如实分层：图片=真实附件块、非图片文件=URI 链接、audio 未声明不宣称；受控往返测试（内容哈希一致）
-- [ ] PD-5 报告与交付：`reports/P-D-report.md`（探针转录与哈希、旧证据来历结论、能力变更 diff、语义分层表）；终提交 SHA；S-07 状态回填
+- [x] PD-1 R0 基线冻结：plugins/harness 既有套件计数（含 tests/test_capability_declarations.py）；环境（packaging/claude `npm ci` 已装闭包核对 0.81.2）
+  - 完成：改动前 2 failed（继承红同 ID）/456 passed/3 skipped；环境命令与 products/server 依赖链补录见 report §1；npm 闭包 0.81.2 核对
+- [x] PD-2 重探针（第一手，推翻或确认旧负证据）：受控拉起钉版 adapter（fake Anthropic endpoint 架式，零真实模型/凭据），转录 initialize 的 `agentCapabilities.promptCapabilities`（源码预期 image:true+embeddedContext:true，`acp-agent.js:1108`）；实测 image 块端到端往返（prompt→adapter→fake 端点收到 base64 图）与 resource_link 下发语义；给旧负证据定来历结论（0.77 时代遗留 vs 读取位置错误）
+  - 完成（受控级）：`packaging/claude/attachment-probe.mjs` GREEN；握手实测 `promptCapabilities {image:true,embeddedContext:true}`；image 往返 sha256 一致；resource_link=https 原文/file:// markdown 链接；audio 静默丢弃（探针钉死）；旧负证据=0.77 时代观测+升版未重探（连根说明 report §2）；转录+哈希 `reports/P-D-probe-transcript.json`
+- [x] PD-3 能力翻绿：`harnesses.toml` claude-code 行恢复 `attach`（附新证据注释与旧证据推翻说明）；`tests/test_capability_declarations.py` FAMILY_MATRIX 同步；`docs/server-round1/fullstack/claude-production-packaging.md` 证据更新
+  - 完成：四投影相等（toml/JS 投影/派生 claims/FAMILY_MATRIX）；文档新建入库（历史 §1–7 恢复+§8 证据段）；`test_claude_production_template.py` 派生 golden 一字同步（写入面注记 report §3/§8）
+- [x] PD-4 通路接线：claude 家族通道接受附件投递——从 connectors 附件 DTO 形状（对齐 P-C PC-9 冻结件）到 session/prompt 的 image 块 / resource_link；语义如实分层：图片=真实附件块、非图片文件=URI 链接、audio 未声明不宣称；受控往返测试（内容哈希一致）
+  - 完成（受控级）：`claude/attachments.py` 组装+校验+五类类型化拒绝；测试 6 条（§8）；端到端哈希一致由 PD-2 探针承载；prepare 存储语义未做（归 P-C/S-05）
+- [x] PD-5 报告与交付：`reports/P-D-report.md`（探针转录与哈希、旧证据来历结论、能力变更 diff、语义分层表）；终提交 SHA；S-07 状态回填
+  - 完成：report 落盘；S-07 行已回填 P-D 完成态；交付 SHA=本分支头提交（不 push 不外并）

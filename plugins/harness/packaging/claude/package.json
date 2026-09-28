@@ -7,7 +7,8 @@
   "license": "Apache-2.0",
   "scripts": {
     "test:session-provider": "node --test provider-session.test.mjs",
-    "test:provider-routing": "node provider-routing-smoke.mjs"
+    "test:provider-routing": "node provider-routing-smoke.mjs",
+    "test:attachments": "node attachment-probe.mjs"
   },
   "overrides": {
     "@agentclientprotocol/claude-agent-acp": "0.81.2"
