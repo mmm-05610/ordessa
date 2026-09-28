@@ -28,7 +28,9 @@
    "probe … → probe facts/typed refusal"、"assign/unassign … → assignment"、
    "resolvePreview | target + scope revisions → effective snapshot preview"、
    "inspectConnection/listTools | sessionRef + generation → lease/catalog
-   facts"、"planForSubmission/apply/reconcile"——应答承诺均为**种类级**
+   facts"、"planForSubmission/apply/reconcile"（后三者为契约表行内操作；
+   本插件注册面含 planForSubmission，apply/reconcile 走 Harness C4 闸门，
+   即守护账本的 BACKEND_UNFRONTED 行）——应答承诺均为**种类级**
    措辞，未承诺字段级 schema；canonical 文档不在任何应答承诺里（"版本摘要"
    恰与 latestRevision 摘要行吻合）。§1 逐字："每项 shape/auth/availability
    随原子描述符注册"——**字段级真值源=活注册描述符**。对齐来源的精确表述：
@@ -36,7 +38,10 @@
    面）并经真实 `WireService.dispatch` 采集应答——fixture 应答是注册面行为
    的采样，不是平行真值源；WCG-01/02 直接对着 `RegisteredSurface`（激活插件
    实读的描述符）比对，WCG-03 把 dto 字段钉在该注册面被采样的应答上。两者
-   同源，故"按 fixture 校形"与"真值源=注册面"无矛盾。
+   同源，故"按 fixture 校形"与"真值源=注册面"无矛盾。（复核锚点：
+   `plugins/assets/mcp/tests/contract/contract_helpers.py` 的
+   `RegisteredSurface`/`Stack` 与 `test_wire_contract_guard.py` 的
+   WCG-01/02/03 三格。）
 1. `dto.ts` 重写为实测对齐版：以守护 round-trip fixture 的真实 dispatch 应答
    逐字段校形（`McpRevisionView`=latestRevision 行、`McpDefinitionSummary`=
    list 行、`McpAssignmentView`/`McpUnassignView`、`McpSaveRevisionResult`、

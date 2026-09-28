@@ -112,4 +112,7 @@ assignment 视图、preview 无 entries）——阶梯语义映射需裁定；
    evidence 全同）；若服务门校的不是 operation 绑定该格会变 Confirmed 翻红，
    Unknown 归因唯一。
 
-**第 3 轮后备复审：**（待回填）
+**第 3 轮后备复审（对象=第 2 轮处置 delta，产物
+`reports/son-cmp-mcp-review-fallback-r3-20260929-012900.md`）结论：通过。**
+三个残留点全部闭环；两条可选精修（apply/reconcile 口径限定、复核锚点行）
+已顺手落实，"无 fake green、均为收紧"。**本包审阅闭环。**
