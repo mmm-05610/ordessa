@@ -24,7 +24,7 @@
 旧分支基线缺 main 的 harness-api/chat 内容，**所有旧计数作废重测**：Python（server/adapters/profile-contribution 三组）、desktop vitest、chat vitest（旧分支 alias 不解析的问题在新基线应消失——验证之）、contracts tsc。冻结安装命令（各子包 `-e`，登记 S-10）；回填消费 SHA（foundation/chat-api 经 main 的哪些提交，用 ancestry 实证）。S-11 **已确认**（core 答复 2026-09-28）：`packages/desktop-platform/server-bridge/src/wire-port.ts` 的 `HttpWirePort` 已交付（含测试），宿主接线归 core INT-01——R0 直接消费 `HttpWirePort` 类型，验收口径写「接口与实现已交付、生产绑定在 INT-01」。
 
 ### PB-2 C2 注册落地
-adapters `{pi,codex,claude}.py` 的 `registration_manifest()` 从"本地 typed 面"（types.py 自写）对齐到 harness-api 真实类型（必要时装一个薄适配层，方向：adapters→harness-api，禁止反向）；经产品组合或 manifest 声明把三品牌注册进 `CONFIGURATION_POINT`；复验真实 registry：重叠注册拒（:187-190）、第二 client 必红（MP-11 生产格）。conformance 门（`adapters/tests/test_adapters_conformance.py:80-103`）保持绿。
+adapters `{pi,codex,claude}.py` 的 `registration_manifest()` 从"本地 typed 面"（types.py 自写）对齐到 harness-api 真实类型（必要时装一个薄适配层，方向：adapters→harness-api，禁止反向）；注册**只经本包自己的声明面**（本包插件 entry/贡献 manifest，在 `plugins/assets/model-provider/**` 内）进 `CONFIGURATION_POINT`——**不动 products/server 组合**（装配归 core S-03，且须在 S-08① 退役之后）；复验真实 registry：重叠注册拒（:187-190）、第二 client 必红（MP-11 生产格）。conformance 门（`adapters/tests/test_adapters_conformance.py:80-103`）保持绿。
 
 ### PB-3 C4 绑定与 submit permit（MP-05 真实生产闸门）
 `server/src/ordessa_model_provider/ports.py:76-110` `HarnessConfigPort` 的 apply/read_back 从 `testing.py FakeHarnesses` 换绑 `ConfigurationApplicationService`：plan→apply(plan_id, operation_key, submission_permit)→verify→read_back 全链；一次性 permit 的重放/换目标/过期必红；**无 permit 裸 apply 必红**。admission `ready=False` 未翻转（S-06）前，生产环境路径必须诚实 refused/unknown——在测试里以受控 permit 走通，在报告里区分"受控级全绿 / 生产级待 S-06"。
