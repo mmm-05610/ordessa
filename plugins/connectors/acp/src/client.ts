@@ -4,6 +4,10 @@ import type {
   AgentSessionInfo, AgentSnapshot, AgentToolCall, AgentWorkspaceInfo, InteractionAnswer, RunStatus,
 } from '@extensions/ordessa.agent-contracts/contract.js'
 import type { AcpChannelHandle, AcpChannelSpec } from './channel'
+import { parseNativeCommands, type NativeCommandCatalog } from './commands'
+import { type AcpControlledSubmission, validateControlledSubmission } from './submission'
+import { referenceScheme, samePreparedReference, validPreparedReference, type AcpAttachmentCapabilities, type AcpAttachmentTarget,
+  type AcpPreparedAttachment } from './attachments'
 
 /**
  * The single ACP wire→`AgentSnapshot` mapping for this product (no other module speaks protocol).
@@ -29,6 +33,12 @@ const TOOL_STATUS: Record<acp.ToolCallStatus, AgentToolCall['status']> = {
   pending: 'running', in_progress: 'running', completed: 'completed', failed: 'failed',
 }
 const OPEN_RUN = (status: RunStatus) => status === 'starting' || status === 'running' || status === 'stop-requested'
+const KNOWN_SESSION_UPDATES = new Set([
+  'user_message_chunk', 'agent_message_chunk', 'agent_thought_chunk', 'tool_call',
+  'tool_call_update', 'plan', 'plan_update', 'plan_removed', 'available_commands_update',
+  'current_mode_update', 'config_option_update', 'session_info_update', 'usage_update',
+  'notice', 'compaction_update', 'compaction_summary_chunk',
+])
 
 interface Channel {
   readonly projectId: string
@@ -38,6 +48,10 @@ interface Channel {
   capabilities: acp.AgentCapabilities
   /** Native session id → this client's key, scoped to the channel that owns it. */
   readonly nativeToKey: Map<string, string>
+  commandsDown: boolean
+  unsubscribeDown?: () => void
+  creatingSessions: number
+  readonly pendingCommands: Map<string, readonly import('./commands').NativeCommand[] | null>
 }
 interface Route { channel: Channel; nativeId: string; key: string }
 /** `runId` is the run that was live when the native request arrived ('' when none was): the
@@ -103,6 +117,8 @@ export class AcpClient implements AgentClient {
     this.settleReleases()
   }
   private readonly routes = new Map<string, Route>()
+  private readonly nativeCommands = new Map<string, NativeCommandCatalog>()
+  private readonly activeCommandSession = new Map<string, string>()
   private readonly buckets = new Map<string, AgentMessage[]>()
   /** The one message each session's chunkless stream is currently filling. `ContentChunk.messageId`
    * is optional in the pinned protocol, and a real Harness (Pi) omits it — consecutive chunks then
@@ -119,6 +135,10 @@ export class AcpClient implements AgentClient {
   private readonly runs = new Map<string, { id: string; sessionId: string; status: RunStatus }>()
   private readonly interactions = new Map<string, InteractionRecord>()
   private readonly firstSends = new Map<string, FirstSend>()
+  /** A renderer identity crosses the backend only once per client lifetime, including uncertain
+   * authorization calls. Reusing it after an error could consume the same permit twice. */
+  private readonly usedControlledSubmissionIds = new Set<string>()
+  private readonly pendingControlledSessions = new Set<string>()
   private readonly projects: AgentWorkspaceInfo[] = []
   private selectedWorkspaceId: string | undefined
   private sequence = 0
@@ -159,6 +179,19 @@ export class AcpClient implements AgentClient {
   }
 
   getSnapshot = () => this.state
+  /** The ACP event's own connection and native session scope, never a synthesized brand menu. */
+  getNativeCommands = (sessionKey: string): NativeCommandCatalog => {
+    const route = this.routes.get(sessionKey)
+    if (!route) return Object.freeze({ kind: 'absent' })
+    const channel = route.channel
+    if (this.isDisposed || channel.commandsDown || this.channels.get(channel.projectId) !== channel)
+      return Object.freeze({ kind: 'unknown', reason: 'channel-down' })
+    if (!channel.handle.subscribeDown)
+      return Object.freeze({ kind: 'unknown', reason: 'unobservable' })
+    if (this.activeCommandSession.get(channel.handle.connectionId) !== sessionKey)
+      return Object.freeze({ kind: 'unknown', reason: 'stale-session' })
+    return this.nativeCommands.get(sessionKey) ?? Object.freeze({ kind: 'absent' })
+  }
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener) } }
 
   private publish(patch: Partial<AgentSnapshot> = {}) {
@@ -282,18 +315,33 @@ export class AcpClient implements AgentClient {
     const channel: Channel = {
       projectId: binding.id, binding, handle,
       conn: undefined as unknown as acp.ClientSideConnection,
-      capabilities: {}, nativeToKey: new Map(),
+      capabilities: {}, nativeToKey: new Map(), commandsDown: false,
+      creatingSessions: 0, pendingCommands: new Map(),
+    }
+    if (handle.subscribeDown) channel.unsubscribeDown = handle.subscribeDown(() => {
+      channel.commandsDown = true
+      this.invalidateChannelCommands(channel, 'channel-down')
+    })
+    const observedStream: acp.Stream = {
+      ...handle.stream,
+      readable: handle.stream.readable.pipeThrough(new TransformStream<acp.AnyMessage, acp.AnyMessage>({
+        transform: (frame, controller) => {
+          this.observeCommandFrame(channel, frame)
+          controller.enqueue(frame)
+        },
+      })),
     }
     channel.conn = new acp.ClientSideConnection(() => ({
       sessionUpdate: async params => { this.onSessionUpdate(channel, params) },
       requestPermission: async params => this.onRequestPermission(channel, params),
-    }), handle.stream)
+    }), observedStream)
     try {
       const init = await channel.conn.initialize({ protocolVersion: acp.PROTOCOL_VERSION, clientCapabilities: {} })
       // Registration after a mid-initialize dispose would leave a live channel nobody owns.
       if (this.isDisposed) throw new Error('ACP connection disposed')
       channel.capabilities = init.agentCapabilities ?? {}
     } catch (error) {
+      channel.unsubscribeDown?.()
       // The handshake error is the caller's; a failed release behind it stays recorded and retryable.
       await this.standDownObserved(handle)
       throw error
@@ -333,6 +381,72 @@ export class AcpClient implements AgentClient {
     return route
   }
 
+  private activateCommandSession(channel: Channel, key: string) {
+    const connectionId = channel.handle.connectionId
+    for (const [sessionKey, route] of this.routes) {
+      if (route.channel === channel && sessionKey !== key)
+        this.nativeCommands.set(sessionKey, Object.freeze({ kind: 'unknown', reason: 'stale-session' }))
+    }
+    this.activeCommandSession.set(connectionId, key)
+    this.nativeCommands.delete(key)
+    const nativeId = this.routes.get(key)?.nativeId
+    const pending = nativeId === undefined ? undefined : channel.pendingCommands.get(nativeId)
+    if (nativeId !== undefined && channel.pendingCommands.has(nativeId)) {
+      channel.pendingCommands.delete(nativeId)
+      this.nativeCommands.set(key, pending === null
+        ? Object.freeze({ kind: 'unknown', reason: 'malformed' })
+        : Object.freeze({ kind: 'available', connectionId, nativeSessionId: nativeId,
+          commands: pending! }))
+    }
+  }
+
+  private invalidateChannelCommands(channel: Channel, reason: 'channel-down' | 'malformed') {
+    channel.pendingCommands.clear()
+    for (const [key, route] of this.routes) if (route.channel === channel)
+      this.nativeCommands.set(key, Object.freeze({ kind: 'unknown', reason }))
+    this.publish()
+  }
+
+  /** Inspect the raw same-channel frame before the SDK's skip-invalid-items deserializer. */
+  private observeCommandFrame(channel: Channel, frame: acp.AnyMessage) {
+    const raw = frame && typeof frame === 'object' ? frame as unknown as Record<string, unknown> : null
+    if (!raw) { this.invalidateChannelCommands(channel, 'malformed'); return }
+    if (raw.method !== 'session/update') return
+    const params = raw.params && typeof raw.params === 'object' && !Array.isArray(raw.params)
+      ? raw.params as Record<string, unknown> : null
+    const update = params?.update && typeof params.update === 'object' && !Array.isArray(params.update)
+      ? params.update as Record<string, unknown> : null
+    if (!update || typeof update.sessionUpdate !== 'string'
+        || !KNOWN_SESSION_UPDATES.has(update.sessionUpdate)) {
+      this.invalidateChannelCommands(channel, 'malformed')
+      return
+    }
+    if (update.sessionUpdate !== 'available_commands_update') return
+    const nativeId = params?.sessionId
+    if (typeof nativeId !== 'string' || !nativeId) {
+      this.invalidateChannelCommands(channel, 'malformed')
+      return
+    }
+    const key = channel.nativeToKey.get(nativeId)
+    const commands = parseNativeCommands(update)
+    if (!key) {
+      if (channel.creatingSessions > 0 && !channel.commandsDown) {
+        // A native Agent may publish its catalog before session/new replies. Keep only a bounded
+        // same-channel candidate; it is promoted solely for the native id returned by that reply.
+        if (!channel.pendingCommands.has(nativeId) && channel.pendingCommands.size >= 8)
+          channel.pendingCommands.delete(channel.pendingCommands.keys().next().value!)
+        channel.pendingCommands.set(nativeId, commands)
+      }
+      return
+    }
+    if (this.activeCommandSession.get(channel.handle.connectionId) !== key) return
+    this.nativeCommands.set(key, commands === null
+      ? Object.freeze({ kind: 'unknown', reason: 'malformed' })
+      : Object.freeze({ kind: 'available', connectionId: channel.handle.connectionId,
+        nativeSessionId: nativeId, commands }))
+    this.publish()
+  }
+
   // ——— AgentClient surface ————————————————————————————————————————————————
 
   async openWorkspace(id: string): Promise<AgentWorkspaceInfo> {
@@ -354,6 +468,22 @@ export class AcpClient implements AgentClient {
     return id
   }
 
+  private async createNativeSession(channel: Channel) {
+    channel.creatingSessions += 1
+    let returnedId: string | undefined
+    try {
+      const created = await channel.conn.newSession({ cwd: channel.binding.normalizedPath, mcpServers: [] })
+      returnedId = created.sessionId
+      return created
+    } finally {
+      channel.creatingSessions -= 1
+      if (channel.creatingSessions === 0) {
+        for (const nativeId of channel.pendingCommands.keys())
+          if (nativeId !== returnedId) channel.pendingCommands.delete(nativeId)
+      }
+    }
+  }
+
   /** First send of a draft: lazily create the native session under the channel's authoritative cwd,
    * prompt once, and resolve on acceptance — session created + first send accepted by the Harness,
    * NOT the whole turn (R27). An unknown outcome rejects; the caller keeps its requestId. */
@@ -361,9 +491,10 @@ export class AcpClient implements AgentClient {
     this.assertLive()
     void requestId // the ACP wire carries no client request id; idempotence is held by the caller until acceptance
     const channel = await this.ensureChannel(workspaceId)
-    const created = await channel.conn.newSession({ cwd: channel.binding.normalizedPath, mcpServers: [] })
+    const created = await this.createNativeSession(channel)
     const nativeId = created.sessionId
     const key = this.keyFor(channel, nativeId)
+    this.activateCommandSession(channel, key)
     this.upsertSession({ id: key, title: 'New session', workspaceId: channel.binding.id })
     this.selectedWorkspaceId = workspaceId
     this.appendMessage(key, { id: this.nextId('user'), role: 'user', text })
@@ -377,8 +508,9 @@ export class AcpClient implements AgentClient {
   async newSession(): Promise<string> {
     const projectId = this.selectedChannelId()
     const channel = await this.ensureChannel(projectId)
-    const created = await channel.conn.newSession({ cwd: channel.binding.normalizedPath, mcpServers: [] })
+    const created = await this.createNativeSession(channel)
     const key = this.keyFor(channel, created.sessionId)
+    this.activateCommandSession(channel, key)
     this.upsertSession({ id: key, title: 'New session', workspaceId: projectId })
     this.publish({ selectedSessionId: key })
     return key
@@ -439,6 +571,7 @@ export class AcpClient implements AgentClient {
     const nativeId = known?.nativeId ?? id
     const key = this.keyFor(channel, nativeId)
     await channel.conn.loadSession({ sessionId: nativeId, cwd: channel.binding.normalizedPath, mcpServers: [] })
+    this.activateCommandSession(channel, key)
     this.upsertSession({ id: key, title: this.sessionTitle(key) ?? 'Session', workspaceId: channel.binding.id })
     this.publish({ selectedSessionId: key })
   }
@@ -447,6 +580,155 @@ export class AcpClient implements AgentClient {
     const route = this.routeOf(sessionId)
     this.appendMessage(sessionId, { id: this.nextId('user'), role: 'user', text })
     await this.startTurn(route.channel, route.key, route.nativeId, text)
+  }
+
+  private attachmentTarget(route: Route): AcpAttachmentTarget {
+    return { serverInstanceId: this.spec.serverInstanceId, connectionId: route.channel.handle.connectionId,
+      projectId: route.channel.projectId, nativeSessionId: route.nativeId }
+  }
+
+  private attachmentRouteLive(route: Route, sessionId: string): boolean {
+    return !this.isDisposed && !route.channel.commandsDown
+      && this.channels.get(route.channel.projectId) === route.channel
+      && this.routes.get(sessionId) === route
+      && this.state.selectedSessionId === sessionId
+      && this.activeCommandSession.get(route.channel.handle.connectionId) === sessionId
+  }
+
+  private validAttachmentCapabilities(caps: AcpAttachmentCapabilities): boolean {
+    if (caps?.kind === 'available') return Number.isSafeInteger(caps.maxBytes) && caps.maxBytes > 0
+      && Number.isSafeInteger(caps.maxCount) && caps.maxCount > 0
+      && Array.isArray(caps.mimeTypes) && caps.mimeTypes.length > 0
+      && caps.mimeTypes.every(item => typeof item === 'string' && !!item)
+      && Array.isArray(caps.uriSchemes) && caps.uriSchemes.length > 0
+      && caps.uriSchemes.every(item => typeof item === 'string' && /^[a-z][a-z0-9+.-]*:$/.test(item) && item !== 'file:')
+    return (caps?.kind === 'absent' || caps?.kind === 'unknown') && typeof caps.reason === 'string' && !!caps.reason
+  }
+
+  async attachmentCapabilities(sessionId: string): Promise<AcpAttachmentCapabilities> {
+    const route = this.routeOf(sessionId)
+    const port = route.channel.handle.attachmentPrepare
+    if (!port || route.channel.commandsDown) return { kind: 'absent', reason: 'attachment preparation owner unavailable' }
+    try {
+      const caps = await port.capabilities(this.attachmentTarget(route))
+      if (!this.attachmentRouteLive(route, sessionId) || !this.validAttachmentCapabilities(caps))
+        return { kind: 'unknown', reason: 'attachment capability owner changed or malformed' }
+      return caps
+    }
+    catch { return { kind: 'unknown', reason: 'attachment capability outcome unknown' } }
+  }
+
+  async prepareAttachment(sessionId: string, sourceId: string, idempotencyKey: string): Promise<AcpPreparedAttachment> {
+    const route = this.routeOf(sessionId)
+    const port = route.channel.handle.attachmentPrepare
+    if (!port || route.channel.commandsDown || !sourceId || !idempotencyKey)
+      throw new Error('ACP attachment preparation unavailable')
+    const target = this.attachmentTarget(route)
+    const caps = await this.attachmentCapabilities(sessionId)
+    if (caps.kind !== 'available') throw new Error(`ACP attachment capability ${caps.kind}`)
+    const result = await port.prepare(target, sourceId, idempotencyKey)
+    if (!this.attachmentRouteLive(route, sessionId)) {
+      if (result.kind === 'prepared' && validPreparedReference(result.reference)) {
+        try { await port.release(target, result.reference.preparedId) }
+        catch { throw new Error('ACP attachment preparation cleanup unknown') }
+      }
+      throw new Error('ACP attachment preparation owner changed')
+    }
+    if (result.kind === 'unknown') throw new Error(`ACP attachment preparation unknown: ${result.operationId}`)
+    if (result.kind !== 'prepared' || !validPreparedReference(result.reference)
+      || result.reference.byteLength > caps.maxBytes || !caps.mimeTypes.includes(result.reference.mimeType)
+      || !caps.uriSchemes.includes(referenceScheme(result.reference.uri) ?? ''))
+      throw new Error('ACP attachment preparation refused or malformed')
+    return Object.freeze({ ...result.reference })
+  }
+
+  async releasePreparedAttachment(sessionId: string, preparedId: string): Promise<void> {
+    const route = this.routeOf(sessionId)
+    const port = route.channel.handle.attachmentPrepare
+    if (!port || !preparedId) throw new Error('ACP attachment release unavailable')
+    await port.release(this.attachmentTarget(route), preparedId)
+  }
+
+  /** Next-submit attachment/command path through this channel's existing ACP client.
+   * A backend admission refusal or uncertain result sends zero prompt frames. This is an
+   * explicit controlled surface while legacy AgentClient.send remains available; Server
+   * relay enforcement is required before it can be called a production C5 gate.
+   */
+  async sendControlled(sessionId: string, submission: AcpControlledSubmission): Promise<void> {
+    this.assertLive()
+    const route = this.routeOf(sessionId)
+    validateControlledSubmission(submission)
+    // Caller-owned DTOs are mutable at runtime despite readonly TypeScript fields. Freeze the
+    // values before the first await so authorization and ACP bytes describe one submission.
+    const frozen: AcpControlledSubmission = { ...submission,
+      attachments: submission.attachments.map(item => ({ ...item })) }
+    if (frozen.nativeSessionId !== route.nativeId) throw new Error('ACP submission session changed')
+    if (this.usedControlledSubmissionIds.has(frozen.submissionId))
+      throw new Error('ACP submission identity already used')
+    if (this.pendingControlledSessions.has(route.key))
+      throw new Error('ACP session already pending controlled admission')
+    if (this.openRunOf(route.key)) throw new Error('ACP session is already outputting')
+    const authorize = route.channel.handle.authorizeSubmission
+    if (!authorize) throw new Error('ACP backend submission admission unavailable')
+    if (!route.channel.handle.subscribeDown) throw new Error('ACP channel liveness unobservable')
+    if (route.channel.commandsDown || this.channels.get(route.channel.projectId) !== route.channel)
+      throw new Error('ACP channel owner gone or down')
+    if (this.state.selectedSessionId !== sessionId
+        || this.activeCommandSession.get(route.channel.handle.connectionId) !== sessionId)
+      throw new Error('ACP submission session changed')
+    this.usedControlledSubmissionIds.add(frozen.submissionId)
+    this.pendingControlledSessions.add(route.key)
+    try {
+      if (frozen.attachments.length) {
+        const port = route.channel.handle.attachmentPrepare
+        if (!port) throw new Error('ACP attachment preparation owner unavailable')
+        const target = this.attachmentTarget(route)
+        const caps = await this.attachmentCapabilities(sessionId)
+        if (caps.kind !== 'available' || frozen.attachments.length > caps.maxCount
+          || !Number.isSafeInteger(caps.maxBytes) || caps.maxBytes <= 0)
+          throw new Error('ACP attachment capability unavailable or exceeded')
+        const ids = new Set<string>()
+        for (const item of frozen.attachments) {
+          if (!validPreparedReference(item) || ids.has(item.preparedId)
+            || item.byteLength > caps.maxBytes || !caps.mimeTypes.includes(item.mimeType)
+            || !caps.uriSchemes.includes(referenceScheme(item.uri) ?? ''))
+            throw new Error('ACP attachment reference invalid or unsupported')
+          ids.add(item.preparedId)
+          const verification = await port.verify(target, item)
+          if (verification.kind === 'unknown') throw new Error(`ACP attachment verification unknown: ${verification.operationId}`)
+          if (verification.kind !== 'verified' || !validPreparedReference(verification.reference)
+            || !samePreparedReference(item, verification.reference))
+            throw new Error('ACP attachment ownership or content changed')
+          if (!this.attachmentRouteLive(route, sessionId)) throw new Error('ACP attachment owner changed')
+        }
+      }
+      if (!this.attachmentRouteLive(route, sessionId)) throw new Error('ACP attachment owner changed')
+      const admission = await authorize({ ...frozen, attachments: frozen.attachments.map(item => ({ ...item })) })
+      if (admission.kind === 'refused') throw new Error(`ACP submission refused: ${admission.code}: ${admission.reason}`)
+      if (admission.kind === 'unknown') throw new Error(`ACP submission outcome unknown: ${admission.operationId}`)
+      if (admission.kind !== 'accepted' || admission.submissionId !== frozen.submissionId) {
+        throw new Error('ACP submission admission identity changed')
+      }
+      // An accepted backend decision authorizes only the owner state observed at admission.
+      // Session selection, another run, release and transport death can all change while awaited.
+      if (this.isDisposed || route.channel.commandsDown
+          || this.channels.get(route.channel.projectId) !== route.channel
+          || this.routes.get(sessionId) !== route)
+        throw new Error('ACP channel owner gone or down')
+      if (this.state.selectedSessionId !== sessionId
+          || this.activeCommandSession.get(route.channel.handle.connectionId) !== sessionId)
+        throw new Error('ACP submission session changed')
+      if (this.openRunOf(route.key)) throw new Error('ACP session is already outputting')
+      const blocks: acp.ContentBlock[] = [
+        { type: 'text', text: frozen.text },
+        ...frozen.attachments.map(item => ({ type: 'resource_link' as const, name: item.name,
+          uri: item.uri, ...(item.mimeType ? { mimeType: item.mimeType } : {}) })),
+      ]
+      this.appendMessage(sessionId, { id: this.nextId('user'), role: 'user', text: frozen.text })
+      await this.startTurn(route.channel, route.key, route.nativeId, frozen.text, blocks)
+    } finally {
+      this.pendingControlledSessions.delete(route.key)
+    }
   }
 
   async stop(sessionId: string, runId: string): Promise<void> {
@@ -490,6 +772,33 @@ export class AcpClient implements AgentClient {
     this.publish()
   }
 
+  /** Opt-in execution-time answer path. The native ACP option is sent only after the backend
+   * accepts this exact channel/session/run/interaction/option; missing authority fails closed.
+   * Legacy `respond` remains until the Server relay enforces the same decision for every path.
+   */
+  async respondControlled(interactionId: string, answer: InteractionAnswer): Promise<void> {
+    this.assertLive()
+    const record = this.interactions.get(interactionId)
+    if (!record || record.item.state !== 'pending' || answer.kind !== 'choice') {
+      throw new Error('ACP controlled permission needs a pending native choice')
+    }
+    if (!record.item.choices?.some(choice => choice.id === answer.choiceId)) {
+      throw new Error('ACP answer option is not part of this request')
+    }
+    const route = this.routeOf(record.item.sessionId)
+    const choiceId = answer.choiceId
+    const authorize = route.channel.handle.authorizePermission
+    if (!authorize) throw new Error('ACP backend permission admission unavailable')
+    const admission = await authorize({ nativeSessionId: route.nativeId, interactionId,
+      runId: record.runId, optionId: choiceId })
+    if (admission.kind === 'refused') throw new Error(`ACP permission refused: ${admission.code}: ${admission.reason}`)
+    if (admission.kind === 'unknown') throw new Error(`ACP permission outcome unknown: ${admission.operationId}`)
+    if (admission.kind !== 'accepted' || admission.submissionId !== interactionId) {
+      throw new Error('ACP permission admission identity changed')
+    }
+    await this.respond(interactionId, { kind: 'choice', choiceId }) // rechecks current run
+  }
+
   async setOption(id: string, value: string): Promise<void> {
     void id; void value
     throw new Error('ACP options are managed by the Harness session state, not this client')
@@ -511,6 +820,7 @@ export class AcpClient implements AgentClient {
     // arrival would be a backend channel nobody can ever release.
     for (const handle of this.unownedHandles) void this.standDownObserved(handle)
     this.unownedHandles.clear()
+    for (const channel of this.channels.values()) channel.unsubscribeDown?.()
     this.channels.clear()
     // `opening` is deliberately NOT cleared: an in-flight acquire may still land a handle after
     // this returns, and its stand-down must count as outstanding until the task itself finishes
@@ -533,13 +843,14 @@ export class AcpClient implements AgentClient {
    * run: a new turn supersedes that session's settled verdict, never two live runs per session
    * (ACP allows one in-flight prompt per session), so R17's read of "the session's run" is the
    * turn it just sent, not the previous turn's history. */
-  private startTurn(channel: Channel, key: string, nativeId: string, text: string): Promise<acp.PromptResponse> {
+  private startTurn(channel: Channel, key: string, nativeId: string, text: string,
+                    blocks: acp.ContentBlock[] = [{ type: 'text', text }]): Promise<acp.PromptResponse> {
     const runId = this.nextId('run')
     this.closeStream(key) // a new turn's stream never continues the previous turn's last card
     for (const [id, run] of this.runs) if (run.sessionId === key && !OPEN_RUN(run.status)) this.runs.delete(id)
     this.runs.set(runId, { id: runId, sessionId: key, status: 'running' })
     this.publish({ selectedSessionId: key })
-    const turn = channel.conn.prompt({ sessionId: nativeId, prompt: [{ type: 'text', text }] }).then(
+    const turn = channel.conn.prompt({ sessionId: nativeId, prompt: blocks }).then(
       response => {
         this.accept(channel, nativeId)
         this.finishTurn(runId, key, STOP_REASON[response.stopReason] ?? 'unknown')
@@ -707,6 +1018,10 @@ export class AcpClient implements AgentClient {
 
   private onSessionUpdate(channel: Channel, params: acp.SessionNotification) {
     if (this.isDisposed) return
+    if (params.update.sessionUpdate === 'available_commands_update') {
+      if (channel.nativeToKey.has(params.sessionId)) this.accept(channel, params.sessionId)
+      return // The raw frame tap validates the entire list before SDK filtering.
+    }
     const key = this.keyFor(channel, params.sessionId)
     this.accept(channel, params.sessionId)
     const update = params.update
