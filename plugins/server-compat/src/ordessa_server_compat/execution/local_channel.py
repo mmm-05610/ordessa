@@ -419,7 +419,7 @@ class LocalSidecarLauncher:
         self.sandbox_port = sandbox_port
 
     def launch(self, environment: Mapping[str, str]):
-        from pacthold.extensions.runtime_composition.sandbox_port import (
+        from pacthold_runtime_compat.runtime_composition.sandbox_port import (
             SandboxPortUnavailable, SidecarRoomRequest,
         )
 
