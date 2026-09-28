@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from ordessa_server.records import digest
+from server_plugin_api import digest
 
 
 def open_run(*, session_records, profile_records, connection_id: str,

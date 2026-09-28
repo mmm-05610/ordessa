@@ -1,5 +1,5 @@
 from __future__ import annotations
-from pacthold.extensions.runtime_composition import HarnessCommandSpec, TerminalRunHandle, assemble_runtime_composition, declare_source
+from pacthold_runtime_compat.runtime_composition import HarnessCommandSpec, TerminalRunHandle, assemble_runtime_composition, declare_source
 
 def command_from_plan(plan, *, execution_id: str, io_mode: str) -> HarnessCommandSpec:
     """Declare the Claude Code guest layout; the Root assembler consumes it verbatim."""

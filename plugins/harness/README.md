@@ -129,8 +129,19 @@ send({ id: 3, op: "close" })
 `connect` 只接受 `harness` / `launch{command,args,environment}` / `directory` /
 `credentialEnvironment`。旧信封的 `profile`、`stateDirectory`、`permissionRoundTrip`、
 `permissionTimeoutMs`、`preferredAuthMethod`、`driver`、`sessionId`、`text`、`model` 等
-一律以 `ACP_CONNECT_FIELD_RETIRED` **按名拒绝**（不是忽略）；品牌差异只出现在
-`harnesses/<品牌>/launch.mjs` 与 `launch` 参数里，入口本身不含任何品牌名。
+一律以 `ACP_CONNECT_FIELD_RETIRED` **按名拒绝**（不是忽略）；品牌启动路由由
+共享描述符和 profile 表决定，调用方的具体启动参数仍在 `launch` 中；入口本身
+不含任何品牌名。
+
+`src/ordessa_harness/launch-descriptors.json` 是 Python registry loader 与 JS access
+index 共用的 canonical/alias 路由清单。`registry_identity_version_matches()` /
+`registryIdentityVersionMatches()` 只比较 TOML 声明的 identity version；返回
+`true` 不证明已安装的 native/adapter 版本或运行能力。别名版本没有这份声明的证明，
+返回 unknown (`None`/`null`)。`access-entry-files.json` 列出 sidecar
+入口运行所需的相对路径；仓内 staged-copy 测试按该清单运行真实入口。当前产品接线
+使用传入的 `plugin_root`，没有消费这份清单的发布器，发布时仍须确保整个目录闭包
+随入口部署。
+
 端到端行为由 `tests/access/acp_passthrough_target.test.mjs`（T1–T10）与
 `tests/access/access_entry_behavior.test.mjs`（E1–E13）钉住。
 
