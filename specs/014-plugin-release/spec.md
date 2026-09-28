@@ -1,12 +1,12 @@
 # Feature Specification: Ordessa Plugin 首版收口（三品牌）
 
-**Feature Branch**: `014-plugin-release`（实施树 `codex/014-a-profile` / `codex/014-b-model-provider` / `codex/014-c-chat`）
+**Feature Branch**: `014-plugin-release`（实施树 `codex/014-a-profile` / `codex/014-b-model-provider` / `codex/014-c-chat` / `codex/014-d-harness-claude`）
 
 **Created**: 2026-09-28
 
 **Status**: Draft（随派单一并交用户审）
 
-**Input**: 用户裁定（2026-09-28）：首版按 **Pi / Codex / Claude Code 三品牌全过发行门**；plugin 侧本期开 A/B/C 三棵树；C0 未完成的接缝不预划界，**届时提出与用户讨论**（汇总于 [seams.md](seams.md)）。
+**Input**: 用户裁定（2026-09-28）：首版按 **Pi / Codex / Claude Code 三品牌全过发行门**；plugin 侧本期开 A/B/C 三棵树；C0 未完成的接缝不预划界，**届时提出与用户讨论**（汇总于 [seams.md](seams.md)）；同日追加裁定：**Claude 附件必须解决**（不接受缺席）→ 增 P-D（旧负证据经 0.81.2 源码实证推翻，见 S-07）。
 
 **上游依据**: `docs/release/first-release-handoff.md`（发行门 F1–F5；注意该文件尚未入库）、`specs/011-z1-profile/report.md`、`specs/011-z2-chat/report.md`、`specs/011-z3-model-provider/report.md`、`specs/012-branch-consolidation/README.md`（1+22 分支纪律、以 SHA 交付）、`specs/013-desktop-product/plan.md`（013 登记的插件线缺口：chat 主题 C-05、harness 可用性 C-08——两者等 013 契约实现落地后再排，不在本期）。
 
@@ -66,7 +66,7 @@
 1. **Given** 品牌 ACP 通道有原生命令目录，**When** 打开斜杠面板，**Then** 目录为该品牌真实命令集的 ready/loading/error/absent 四态投影，无伪命令。
 2. **Given** 附件能力就绪，**When** 选择附件并发送，**Then** prepare 产出不透明 ref（含 sha256），submit 携带 refs，对端收到的内容哈希一致。
 3. **Given** prepare 被拒，**When** 提交，**Then** 附件保留在草稿并显示原因，不静默丢弃。
-4. **Given** 通道命令目录未探针（Claude Code，见 S-07/PC-10）或附件有负证据（握手 promptCapabilities 空），**When** 查看命令/附件，**Then** 探针播发即接线、未播发/负证据则诚实缺席 + 原因，不留空也不假绿。
+4. **Given** Claude Code 通道（官方 claude-agent-acp 0.81.2；附件能力由 P-D 重探针翻绿，命令目录由 PC-10 探针定夺），**When** 查看命令/附件，**Then** 有证据即接线、无证据则诚实缺席 + 原因，不留空也不假绿；附件语义分层如实（图片=真实附件块、非图片=URI 链接、audio 不宣称）。
 
 ### User Story 4 - 发送结果三态可知 (Priority: P1，包 C)
 
