@@ -1,4 +1,4 @@
-# 016 · tasks（夜批五包；SR 已裁撤——搜索开关/预算归 tool 范畴既有域，自建后端待裁）
+# 016 · tasks（夜批六包；SR 已裁撤，MPX/EXT 扩容补入）
 
 勾选=已完成且证据在 report。不因完不成改判三态；卡点如实写。
 
@@ -30,20 +30,20 @@
       permissions/实现。
 - [ ] PE2-6 report.md + api-requests 回填（与 PE1-2 同表，core 一次对齐）。
 
-## HK hooks（plugins/assets/hooks，新支 codex/plugin-hooks）
+## EXT extensions（plugins/assets/extensions，新支 codex/plugin-extensions；原 HK 扩容为可执行扩展全域）
 
-- [ ] HK-1 域骨架：包结构/pyproject/manifest；facet `assets.hooks` 注册进 C2。
-- [ ] HK-2 hook 定义模型：事件名/匹配器/命令或 handler/超时/异步；可执行内容
+- [ ] EXT-1 域骨架：包结构/pyproject/manifest；facet `assets.hooks` 注册进 C2。
+- [ ] EXT-2 hook 定义模型：事件名/匹配器/命令或 handler/超时/异步；可执行内容
       =强制批准+来源哈希+版本 pin（机制 D 红线）。
-- [ ] HK-3 批准与安全：未批准定义=不装载；安全字段（shell 注入面）扫描清单；
+- [ ] EXT-3 批准与安全：未批准定义=不装载；安全字段（shell 注入面）扫描清单；
       批准状态可诊断、可撤销。
-- [ ] HK-4 逐品牌投影表：八家 × hook 支持面三态（有原生 slot=投影；无=unsupported）；
+- [ ] EXT-4 逐品牌投影表：八家 × hook 支持面三态（有原生 slot=投影；无=unsupported）；
       依据 harnesses.md+harnesses.toml hooks slot，逐格带证据。
-- [ ] HK-5 投影执行：经已有 slot/C2 通路投影（通路缺失则 AR 登记报回，不越界
+- [ ] EXT-5 投影执行：经已有 slot/C2 通路投影（通路缺失则 AR 登记报回，不越界
       改 harness）。
-- [ ] HK-6 阻断语义如实：观察性 hook 不得承诺强制（Codex MCP hook 失败不阻断
+- [ ] EXT-6 阻断语义如实：观察性 hook 不得承诺强制（Codex MCP hook 失败不阻断
       的反例写进文档与测试断言）。
-- [ ] HK-7 report.md：逐格表+批准流程+测试证据。
+- [ ] EXT-7 report.md：逐格表+批准流程+测试证据。
 
 ## LSP（plugins/assets/lsp，新支 codex/plugin-lsp）
 
@@ -68,3 +68,5 @@
       ——015-B 的 AR-4 等这个结果）。
 - [ ] PX-7 R0 补账：36 项未勾账本逐项补勾或注明卡点，报告落
       reports/PX-report.md。
+- [ ] PX-8 内容资源八家覆盖盘点（轻任务，只出报告不改代码）：skills、subagents
+      两域当前品牌覆盖三态表；缺口列后续包建议，不实施。

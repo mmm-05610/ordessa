@@ -32,6 +32,17 @@
 - F10 prompts 八家 addendum 在 main：`specs/011-q2-prompts-commands/addendum-eight-brands.md`
   （EXT-00..05 + R0 实测补账，36 项未勾账本）。
 
+- F11 原生插件/自定义工具品牌面（harnesses.md 行号）：pi :128（plugin 列表、TS/JS 插件、
+  事件与自定义工具，"执行代码，不是纯声明资源"）；hermes :114（一般插件需启用、项目
+  插件需额外信任、专门 loader；**禁止"把所有 plugins 子目录复制进去"的安装器**）；
+  opencode :81-82（extension command、registerTool/tool events，**扩展运行于进程权限下**）；
+  qwen :178（原生 extension 与 Agent Plugins v1 是两套能力）；kilo :158（bundles/
+  package-manager、Cordis patches、plugin inventory、HMR）。codex/claude/dsh 无原生
+  插件面行 → 盘点核实，无则 unsupported。
+- F12 014 裁定在案：请求级参数（reasoning effort、service tier、请求 retry/stream
+  timeout）归 model-provider 域；MPX 即该裁定的落地，与 runtime-preferences 的
+  会话/运行级边界以 seam 注记互指，不重复收键。
+
 ## 包间关系
 
 PE1/PE2 语义配对（同一闸门的两路事实）但代码零交集；HK/LSP/SR/PX 四包互相

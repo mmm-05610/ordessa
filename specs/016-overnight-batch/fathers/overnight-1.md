@@ -1,17 +1,16 @@
-# 父会话 overnight-1 · 强制策略线（PE1 → PE2）
+# 父会话 overnight-1 · 强制策略+参数配置线（PE1 → PE2 → MPX）
 
-你是夜批编排者。逐个完成两个儿子包，全程遵守 specs/016-overnight-batch/spec.md
-的共同红线（先读它）。
+你是夜批编排者。逐个完成儿子包，串行：
 
-儿子与顺序（串行）：
-1. worktrees/overnight-1/son-pe1-permissions → specs/016-overnight-batch/dispatch/PE1-permissions-authority.md
-2. worktrees/overnight-1/son-pe2-harness    → dispatch/PE2-harness-native-evidence.md
+1. worktrees/overnight-1/son-pe1-permissions → /home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/PE1-permissions-authority.md
+2. worktrees/overnight-1/son-pe2-harness → /home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/PE2-harness-native-evidence.md
+3. worktrees/overnight-1/son-mpx-model-provider → /home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/MPX-model-provider-params.md
 
+## 执行方式（每个儿子包）
 注：dispatch/方案文档一律用主仓绝对路径传给 qoder（如
 /home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/xxx.md），
 因为部分儿子树内没有 specs/016；执行与提交仍在儿子树内。
 
-## 执行方式（每个儿子包）
 1. 你可开子代理；优先尝试用 qoder CLI 执行：一包一进程，cwd=儿子工作树，
    把 dispatch 文档路径+「/goal 完成该文档的所有要求」交给它；记录退出码。
    先探测 qoder 的 CLI 用法（--help），失败两次即放弃 qoder，**你自己顶上做完**，
@@ -24,5 +23,6 @@
 4. 提交留在儿子分支上；**绝不 merge/rebase/动其他分支**。
 
 ## 汇报
-两包完成后写 specs/016-overnight-batch/reports/overnight-1-summary.md：
-每包一段（结果/测试计数/qoder 与审阅记录/卡点），如实，不粉饰。
+全部完成后写 specs/016-overnight-batch/reports/overnight-1-summary.md：
+每包一段（结果/测试计数/qoder 与审阅记录/卡点/复用与自建清单），如实，不粉饰。
+先读 specs/016-overnight-batch/spec.md 的共同红线（特别是第 7 条复用优先）。
