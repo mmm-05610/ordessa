@@ -1,0 +1,17 @@
+{
+  "name": "@ordessa/plugin-chat-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "ordessa": {
+    "id": "ordessa.chat-api"
+  },
+  "scripts": {
+    "test": "vitest run --maxWorkers=1",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ordessa/extension-api": "0.1.0",
+    "@ordessa/ui-components": "0.1.0"
+  }
+}

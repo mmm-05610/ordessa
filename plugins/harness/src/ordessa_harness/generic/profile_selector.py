@@ -1,5 +1,5 @@
 from pacthold.extensions import ResourceSelection, SelectorCompatibility, SelectorField
-from pacthold.resource_contracts import AgentBoxProfileV1
+from pacthold_runtime_compat.resource_contracts import AgentBoxProfileV1
 class GenericProfileSelector:
     contract_id=AgentBoxProfileV1.contract_id; fields=(SelectorField("profile_id","Profile",kind="select"),); recommended=True
     def __init__(self, store, definition):

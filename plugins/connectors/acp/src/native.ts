@@ -291,6 +291,31 @@ export default function createTransport(): NativeTransport {
           } else relay.socket.send(encoded)
           return {}
         }
+        case 'acp/channel/authorizeSubmission': {
+          const connectionId = text(params.connectionId)
+          if (!connectionId || !relays.has(connectionId)) throw new Error('ACP channel admission needs a live owned relay')
+          required('acp.submission.authorize')
+          const submission = record(params.submission)
+          if (!submission || !text(submission.submissionId) || !text(submission.nativeSessionId)
+            || typeof submission.text !== 'string' || !text(submission.configurationDigest)
+            || !Array.isArray(submission.attachments)) {
+            throw new Error('ACP channel admission requires a complete submission')
+          }
+          // The Server derives principal and channel generation from its authenticated ledger;
+          // no renderer supplied identity or permit is forwarded as authority.
+          return await rpc(target, 'acp.submission.authorize', { connectionId, submission })
+        }
+        case 'acp/channel/authorizePermission': {
+          const connectionId = text(params.connectionId)
+          if (!connectionId || !relays.has(connectionId)) throw new Error('ACP permission admission needs a live owned relay')
+          required('acp.permission.authorize')
+          const decision = record(params.decision)
+          if (!decision || !text(decision.nativeSessionId) || !text(decision.interactionId)
+            || !text(decision.runId) || !text(decision.optionId)) {
+            throw new Error('ACP permission decision is incomplete')
+          }
+          return await rpc(target, 'acp.permission.authorize', { connectionId, decision })
+        }
         case 'acp/channel/release': {
           const connectionId = text(params.connectionId)
           if (!connectionId) throw new Error('releasing an ACP channel needs its connection id')

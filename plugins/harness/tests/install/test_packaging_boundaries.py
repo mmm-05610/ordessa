@@ -192,17 +192,30 @@ def _npm_root_directories() -> list[str]:
     return sorted(p.name for p in PACKAGING.iterdir() if (p / "package-lock.json").is_file())
 
 
-def test_every_packaging_npm_root_has_a_family_that_will_install_it():
-    """The round-2 defect: a brand whose lock lives in a directory no family names.
+# The old upstream `claude` alias has its own 0.75.1 closure. It is built with
+# --legacy-alias and provisioned as an explicit read-only mount, not as one of
+# the install set's eight canonical families (whose `claude-code` pin is 0.81.2).
+ALIAS_ONLY_NPM_ROOTS = {"claude-legacy": "build-claude-runtime-artifact.mjs"}
 
-    An unmapped root is silently skipped by `npm ci`, so its closure builder runs
-    against missing dependencies.
+
+def test_every_packaging_npm_root_has_a_canonical_family_or_explicit_alias_builder():
+    """The round-2 defect: a lock with neither a family nor an alias builder.
+
+    A canonical unmapped root is silently skipped by `npm ci`, so its closure
+    builder runs against missing dependencies. The legacy alias has a separate
+    operator-provisioned closure and must retain its explicit builder.
     """
     roots = _install_set_npm_roots()
     mapped = set(roots.values())
     on_disk = _npm_root_directories()
     assert on_disk, "no npm roots found; the check would pass on an empty list"
-    assert set(on_disk) <= mapped, f"packaging roots no installer installs: {sorted(set(on_disk) - mapped)}"
+    assert set(on_disk) <= mapped | set(ALIAS_ONLY_NPM_ROOTS), (
+        f"packaging roots with no canonical or alias builder: {sorted(set(on_disk) - mapped - set(ALIAS_ONLY_NPM_ROOTS))}")
+    for directory, builder_name in ALIAS_ONLY_NPM_ROOTS.items():
+        builder = BUILDERS / builder_name
+        source = builder.read_text(encoding="utf-8")
+        assert (PACKAGING / directory / "package-lock.json").is_file()
+        assert f'"{directory}"' in source and "--legacy-alias" in source
     for family, directory in roots.items():
         root = PACKAGING / directory
         assert (root / "package.json").is_file(), f"{family} -> packaging/{directory} has no package.json"
@@ -440,7 +453,7 @@ def test_only_the_two_expected_roots_override_a_package_they_do_not_depend_on():
     found = {root.name: transitively_overridden_names(root)
              for root in sorted(PACKAGING.iterdir()) if (root / "package.json").is_file()}
     assert found == {
-        "claude": [], "codex": ["@agentclientprotocol/sdk"], "dsh": [], "kilo": [],
+        "claude": [], "claude-legacy": [], "codex": ["@agentclientprotocol/sdk"], "dsh": [], "kilo": [],
         "pi": ["@agentclientprotocol/sdk"], "qwen": [],
     }, json.dumps(found, indent=2)
 

@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 
-from pacthold.extensions.runtime_composition import HarnessCommandSpec
-from pacthold.extensions.runtime_composition import (
+from pacthold_runtime_compat.runtime_composition import HarnessCommandSpec
+from pacthold_runtime_compat.runtime_composition import (
     FakeCompositionCoordinator, FakeHost, FakeSandbox, FakeTerminal,
     RuntimeBinding, RuntimeHostRef, SandboxRef, TargetCreationSentinel,
     TerminalSessionRef,

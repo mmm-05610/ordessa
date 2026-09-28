@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from typing import Any, Iterable, Mapping
 
-from ordessa_server.errors import ServerError
+from server_plugin_api import ServerError
 from ordessa_server_compat.execution.protocols import CANONICAL_PROTOCOLS
 
 #: The canonical display order comes from the single shared vocabulary in the

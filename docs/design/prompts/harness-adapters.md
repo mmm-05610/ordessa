@@ -16,6 +16,10 @@
 | Codex | developer_instructions 追加；model_instructions_file 替换；AGENTS 有独立发现机制 | 固定原生配置/线程入口，业务文本与 before 配置确定性组合 | 当前桥是否传递该字段、线程恢复是否重读、项目指令不受损 |
 | Claude | SDK preset+append 追加，custom system prompt 替换；CLAUDE.md 是另一条项目上下文机制 | session-scoped SDK options，经现有官方 ACP adapter 暴露受限配置入口 | 锁定 adapter 是否暴露/更新/指纹含此选项；不能以 provider env 指纹探针代证 |
 | Hermes | SOUL 基础身份、personality 会话覆盖 | 后续独立 adapter，不把它的 HOME 模型搬进平台 | 当前 Ordessa 运行接入/版本/动态入口，未验证前不启用 |
+| OpenCode | `instructions` 字段 + AGENTS 兼容发现；层叠是合并非整文件替换（2026-09-28 八家扩展新增） | instructions 字段注入，不覆写项目 AGENTS | 相对路径/URL/继承规则；多来源层叠顺序；ACP 变更面未实测 |
+| dsh | `agent-instructions`（文件候选/预算/根发现）；persona prefix/suffix（八家唯一原生 persona）；system-prompt 与 runtime context（同上新增） | persona 对接原生 prefix/suffix；instruction 走 agent-instructions | 候选发现顺序与预算；prefix/suffix 与本域合成规则的组合；runtime context 边界 |
+| Qwen | QWEN.md、context.fileName/import/includeDirectories、规则文件（同上新增） | context 指向受管内容，不覆写项目 QWEN.md | import/includeDirectories 作用域；"memory"≠自动记忆；版本门槛 |
+| Kilo | instructions、agent/default_agent 选择（同上新增） | instructions 字段注入 | kilo.jsonc 层叠；不再隐式读 OpenCode 目录；schema 深度 |
 
 官方来源见 research-and-reuse.md。Pi/Codex/Claude instruction 为本批必须完成项；persona/system-replacement 各格必须完成可用/不支持/未知判定与反例。不为赶进度宣称全部支持。已证原生可用但当前 adapter 少接口：按 Harness 公共配置接缝提出最小 runtime action，并在 Harness 任务内实现；本插件不能绕进 Harness 私有类。
 

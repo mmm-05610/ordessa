@@ -5,8 +5,8 @@ import subprocess
 import secrets
 from pathlib import Path
 from typing import Any
-from pacthold.extensions.credentials import CONTRACT_ID, PreparedSecretMount, ResolvedCredential
-from pacthold.resource_contracts import CredentialRefV1
+from pacthold_runtime_compat.credentials import CONTRACT_ID, PreparedSecretMount, ResolvedCredential
+from pacthold_runtime_compat.resource_contracts import CredentialRefV1
 from pacthold.work_core import Ref, RefType
 from pacthold.work_core.registry import ProviderDescriptor
 from pacthold.extensions import ResourceSelection, SelectorField

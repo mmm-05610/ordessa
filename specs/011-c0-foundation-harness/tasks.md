@@ -27,7 +27,7 @@
 
 ## Phase 1 — API 与注册（US1/US4）
 
-- [x] T03：实现独立 ordessa-harness-api，C1–C4 DTO/schema/errors、能力和 intent 判别联合、类型反例；独立 wheel 安装无宿主/业务 import（G01）。实现 `b5dcf84703`、不变量修复 `0f85c4ca96`；`plugins/harness/api/src/ordessa_harness_api` 的 55 个公开导出、14 个 API 测试/37 个子例、严格 mypy 正向与 14 个预期负向错误均通过。干净 clone `30bcd3eaa6` 独立 wheel SHA-256 `119a5049e8d07e22145f345eeffbe35b08fbc861b20f7c20b1fdd6c7b7d80234`，全新 venv 中 `python -I` 导入 55 项、`py.typed` 和零宿主/业务依赖均退出 0；完整命令/日志哈希见 `report.md`。早期 API 固定发布 `d3f026904ead6c7ce58df26f2536175ce6179de7`，不代表 T04–T18 的生产门通过。
+- [ ] T03：实现独立 ordessa-harness-api，C1–C4 DTO/schema/errors、能力和 intent 判别联合、类型反例；独立 wheel 安装无宿主/业务 import（G01）。
 - [ ] T04：接既有 carrier 注册两个领域点，重复/版本/范围/claims 拒绝，事务发布、卸载 busy 与回滚（G02/G03）。所有者不可伪造。
 - [ ] T05：受控第三方 runtime/config adapter 从包外注册，完成一项配置和卸载（G04）；不靠修改产品内 if/else 演示。
 

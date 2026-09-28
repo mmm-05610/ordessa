@@ -20,7 +20,7 @@ import stat
 from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Mapping
 
-from ordessa_server.errors import ServerError
+from server_plugin_api import ServerError
 
 #: One workspace file, as the Worker channel bounds it too.
 MAX_WORKSPACE_FILE_BYTES = 8 * 1024 * 1024
@@ -246,7 +246,7 @@ def _host_sandbox_probe() -> Mapping[str, Any]:
     The provider is resolved by name (never imported here); an unresolvable
     provider reports unavailable rather than guessing another sandbox.
     """
-    from pacthold.extensions.runtime_composition.sandbox_port import (
+    from pacthold_runtime_compat.runtime_composition.sandbox_port import (
         SandboxPortError, resolve_sandbox_port,
     )
     try:

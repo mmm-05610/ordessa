@@ -1,0 +1,177 @@
+{
+  "probe": "claude-attachments-v1",
+  "dispatch": "specs/014-plugin-release/dispatch/P-D-claude-attachments.md PD-2",
+  "adapter": {
+    "package": "@agentclientprotocol/claude-agent-acp",
+    "version": "0.81.2"
+  },
+  "failures": [],
+  "protocolVersion": 1,
+  "agentCapabilities": {
+    "_meta": {
+      "claudeCode": {
+        "promptQueueing": true
+      },
+      "authStatus": {}
+    },
+    "promptCapabilities": {
+      "image": true,
+      "embeddedContext": true
+    },
+    "mcpCapabilities": {
+      "http": true,
+      "sse": true
+    },
+    "auth": {
+      "logout": {}
+    },
+    "providers": {},
+    "loadSession": true,
+    "sessionCapabilities": {
+      "additionalDirectories": {},
+      "close": {},
+      "delete": {},
+      "fork": {},
+      "list": {},
+      "resume": {},
+      "subagents": {}
+    }
+  },
+  "imageRoundTrip": {
+    "mimeType": "image/png",
+    "sentAs": "ACP prompt image block (data)",
+    "sentSha256": "c54abcd1a08540c7d1c91e0fe81cef8e9cb40cc39c78918006ed9e25cccb30ce",
+    "wireSha256": [
+      "c54abcd1a08540c7d1c91e0fe81cef8e9cb40cc39c78918006ed9e25cccb30ce"
+    ],
+    "wireSourceTypes": [
+      "base64"
+    ],
+    "match": true,
+    "deliveredAs": "anthropic user content image.source.base64"
+  },
+  "resourceLinkHttps": {
+    "uri": "https://example.org/notes.md",
+    "wireText": [
+      "https://example.org/notes.md",
+      "probe-link-https: see the reference"
+    ],
+    "deliveredAs": "text (formatUriAsLink: non-file/zed URI passes through verbatim)",
+    "delivered": true
+  },
+  "resourceLinkFile": {
+    "uri": "file:///workspace/notes.md",
+    "wireText": [
+      "[@notes.md](file:///workspace/notes.md)",
+      "probe-link-file: see the reference"
+    ],
+    "deliveredAs": "text markdown link ([@name](uri))",
+    "delivered": true
+  },
+  "observations": [
+    "prompt output image error: Internal error: [ede_diagnostic] result_type=assistant last_content_type=image stop_reason=end_turn"
+  ],
+  "outputImage": {
+    "endpointSent": {
+      "as": "anthropic content_block image.source.base64 (after a text block)",
+      "sha256": "c54abcd1a08540c7d1c91e0fe81cef8e9cb40cc39c78918006ed9e25cccb30ce"
+    },
+    "acpImageChunkSha256": [
+      "c54abcd1a08540c7d1c91e0fe81cef8e9cb40cc39c78918006ed9e25cccb30ce",
+      "c54abcd1a08540c7d1c91e0fe81cef8e9cb40cc39c78918006ed9e25cccb30ce"
+    ],
+    "delivered": true,
+    "deliveredAs": "session/update agent_message_chunk content.image (source path acp-agent.js:7682)",
+    "note": "measured both ways: an image-only assistant response makes the adapter fail the turn with an internal error ([ede_diagnostic] result_type=assistant last_content_type=image), while a text+image response delivers the image as an agent_message_chunk with sha256-equal content. The output direction is real but only behind a text block on this chain."
+  },
+  "audio": {
+    "declared": false,
+    "promptCapabilities": {
+      "image": true,
+      "embeddedContext": true
+    },
+    "wireDropped": true,
+    "turnStillDelivered": true,
+    "note": "the adapter's default case drops audio blocks silently; the channel must type-refuse audio instead of relaying it"
+  },
+  "wireTurns": [
+    {
+      "marker": "probe-image",
+      "newUserBlocks": [
+        {
+          "type": "text",
+          "text": "<system-reminder>\nAs you answer the user's questions, you can use the following context:\n# gitStatus\nThis is the git status at the start of the conversation. Note that this status is a snapshot in time, and will not update during the conversation.\n\nCurrent branch: HEAD\n\nMain branch (you will usually"
+        },
+        {
+          "type": "text",
+          "text": "<system-reminder>\nAttribution for git commits and pull requests you create from here on (this replaces Claude Code's own earlier attribution guidance, such as a previous copy of this reminder; the user's own instructions about these lines, such as a CLAUDE.md or memory rule, take precedence over thi"
+        },
+        {
+          "type": "image",
+          "sourceType": "base64",
+          "mediaType": "image/png",
+          "dataSha256": "c54abcd1a08540c7d1c91e0fe81cef8e9cb40cc39c78918006ed9e25cccb30ce"
+        },
+        {
+          "type": "text",
+          "text": "probe-image: describe the attached png\n"
+        },
+        {
+          "type": "text",
+          "text": "[Image: source: /tmp/claude-1000/-tmp-ordessa-claude-attach-pbelfX/a53f330c-d836-435e-9a20-3c9c28493e86/images/1.png]"
+        }
+      ]
+    },
+    {
+      "marker": "probe-link-https",
+      "newUserBlocks": [
+        {
+          "type": "text",
+          "text": "https://example.org/notes.md"
+        },
+        {
+          "type": "text",
+          "text": "probe-link-https: see the reference"
+        }
+      ]
+    },
+    {
+      "marker": "probe-link-file",
+      "newUserBlocks": [
+        {
+          "type": "text",
+          "text": "[@notes.md](file:///workspace/notes.md)"
+        },
+        {
+          "type": "text",
+          "text": "probe-link-file: see the reference"
+        }
+      ]
+    },
+    {
+      "marker": "probe-output-image",
+      "newUserBlocks": [
+        {
+          "type": "text",
+          "text": "probe-output-image: send a png back"
+        }
+      ]
+    },
+    {
+      "marker": "probe-audio",
+      "newUserBlocks": [
+        {
+          "type": "text",
+          "text": "probe-audio: this turn carries an audio block"
+        }
+      ]
+    }
+  ],
+  "updatesSeen": {
+    "available_commands_update": 2,
+    "usage_update": 15,
+    "agent_message_chunk": 7,
+    "session_info_update": 1
+  },
+  "result": "GREEN_FAKE_ENDPOINT"
+}

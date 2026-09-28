@@ -1,5 +1,5 @@
 from __future__ import annotations
-from pacthold.extensions.runtime_composition import (
+from pacthold_runtime_compat.runtime_composition import (
     HarnessCommandSpec, assemble_runtime_composition, declare_source,
 )
 
