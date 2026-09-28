@@ -7,7 +7,10 @@
 
 | 提交 | 内容 |
 | --- | --- |
-| (本分支提交) | contracts 0.2.0 三态 send + 目录/附件/admission 成员;sessions 门面接线;chat-api r4;chat 前端四态/附件/三态接通;PC-6 旧链退役;PC-10 探针;测试 +17;报告与接缝回写 |
+| `e9fcb8ae41` | contracts 0.2.0 三态 send + 目录/附件/admission 成员;sessions 门面接线;chat-api r4;chat 前端四态/附件/三态接通;PC-6 旧链退役;PC-10 探针;测试 +17→+29;报告与接缝回写 |
+| (本报告提交) | 终 SHA 回填(交付提交,SHA 见 git log 次条) |
+
+终交付以分支 `codex/014-c-chat` 最新提交为准(以提交 SHA 交付,012 口径)。
 
 未 push、未并主干、未动 products/tooling/apps/packages、`plugins/connectors/**` 与 `plugins/harness/**` 全程零跟踪文件改动(git status 实证,见 §5)。
 
