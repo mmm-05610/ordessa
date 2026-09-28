@@ -1,7 +1,7 @@
 # 派单简报 — P-B Server 运行时与接缝
 
 **worktree**: `worktrees/013-b-server-runtime`　**分支**: `codex/013-b-server-runtime`
-**日期**: 2026-09-28　**主责契约**: C-01 / C-02 / C-03 / C-04(Py) / C-08
+**日期**: 2026-09-28　**主责契约**: C-01 / C-02 / C-03 / C-04(Py)
 
 ---
 
@@ -24,8 +24,8 @@ specs/013-desktop-product/
 │   ├── C-02-launch-handoff.md           ★ 你定义并实现
 │   ├── C-03-wire-port.md                ★ 你定义并实现
 │   ├── C-04-logging.md                  ★ 你实现 Python 侧（TS 侧归 P-A）
-│   └── C-08-harness-availability.md     ★ 你提供契约载体
-└── tasks.md                 PB-01 … PB-16
+│   └── C-08-harness-availability.md     你**只读**（类型已归 P-A，实现留待插件线）
+└── tasks.md                 PB-01 … PB-14
 ```
 
 也读：`docs/architecture.md`、`docs/baseline.md`、`.specify/memory/constitution.md`。
@@ -38,16 +38,13 @@ specs/013-desktop-product/
 ├── apps/server/**
 ├── packages/server-plugin-api/**
 ├── packages/desktop-platform/server-bridge/**    ★ 新包（C-01/02/03 的 TS 实现）
-├── plugins/connectors/ordessa/**
-├── plugins/connectors/acp/**
-├── plugins/harness/api/**
 └── specs/013-desktop-product/dispatch/P-B-report.md   （你的报告）
 
 ❌ 禁写
 ├── specs/013-desktop-product/contracts/**   （冻结）
 ├── apps/desktop/**、packages/workbench/**   （归 P-A）
 ├── packages/desktop-platform/{contracts,ui,ui-components,extension-*,native-bridge}/**（归 P-A）
-├── plugins/**（除上面列明的 connectors 与 harness/api）
+├── plugins/**（**全部只读**，013 零插件改动）
 ├── packaging/**、scripts/**、tooling/**     （归 P-C）
 ├── 根 package.json / package-lock.json      （归 P-C）
 └── 其他 worktree
@@ -57,13 +54,13 @@ specs/013-desktop-product/
 
 ## 4. 任务清单
 
-见 [tasks.md](../tasks.md) **PB-01 … PB-16**，按阶段 1→3 顺序。关键顺序约束：
+见 [tasks.md](../tasks.md) **PB-01 … PB-14**，按阶段 1→3 顺序。关键顺序约束：
 
 ```text
 PB-01..06  数据根（C-01）        ← 最先：其他都建立在数据根规范上
   ├─ PB-07..10  生命周期（C-02）   server-bridge 新包
   ├─ PB-11..12  wire 口（C-03）
-  └─ PB-13..16  日志 Py 侧 + Harness 可用性
+  └─ PB-13..14  日志 Python 侧（同构 + 一致性）
 ```
 
 ## 5. 与其他包的接口（唯一耦合点）

@@ -5,7 +5,7 @@
 
 ## 目的
 
-收敛现有**两套**主题实现（`packages/workbench/src/styles.ts` 与 `plugins/chat/frontend/src/theme.ts`），使宿主与全部插件贡献界面一致生效。不统一则每次切主题必有局部残留旧色。
+收敛主题实现，使宿主与全部贡献界面一致生效。**本期只收敛 core**：`packages/workbench/src/styles.ts` 改为消费 C-05；`plugins/chat/frontend/src/theme.ts` **本期不改**（013 零插件改动），保留本地主题并登记为已知缺口，由后续插件线收敛。不统一则每次切主题必有局部残留旧色。
 
 ## 1. API
 
@@ -45,11 +45,11 @@ interface ThemeTokens {
 
 **禁止**：插件自带 `prefers-color-scheme` 分支、自带硬编码色板、自带暗色开关状态。
 
-## 3. 迁移既有两套
+## 3. 迁移范围（本期只动 core，零插件改动）
 
-- `packages/workbench/src/styles.ts` → 改为**消费** C-05（P-A 负责）。
-- `plugins/chat/frontend/src/theme.ts` → 改为**消费** C-05。**注意**：`plugins/chat/**` 属 Z2 写入面，本期由 P-A 提供契约与迁移指引，实际改动**须申报**（见 plan.md §写入面纪律）。
-- 迁移后必须有**对照测试**：同一页面在两模式下的关键色值来自 tokens，而非插件常量。
+- `packages/workbench/src/styles.ts` → 改为**消费** C-05（core，P-A 负责）。
+- `plugins/chat/frontend/src/theme.ts` → **本期不改**。保留本地主题实现，登记为已知缺口（chat 界面暂不随全局主题切换），由后续插件线收敛。
+- core 侧必须有**对照测试**：宿主与 workbench 界面在两模式下的关键色值来自 tokens，而非常量。
 
 ## 4. 系统模式
 

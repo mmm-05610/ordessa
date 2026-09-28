@@ -5,7 +5,11 @@ const app = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 export async function launchSmoke(home, extraEnv = {}) {
   const child = spawn(path.resolve(app, '../../node_modules/electron/dist/electron'),
     ['--no-sandbox', '--disable-gpu', '--ozone-platform=x11', '.'], {
-      cwd: app, env: { ...process.env, MODULAR_USER_DATA: home, ORDESSA_EXTENSION_HOME: home, ORDESSA_EMPTY_HOST: '1', MODULAR_SMOKE: '1', ELECTRON_DISABLE_SECURITY_WARNINGS: 'true', ...extraEnv },
+      cwd: app, env: { ...process.env, MODULAR_USER_DATA: home, ORDESSA_EXTENSION_HOME: home, ORDESSA_EMPTY_HOST: '1', MODULAR_SMOKE: '1',
+        // PA-11：驱动代码按路径从源码树加载，绝不进入 dist/electron-main.cjs。
+        ORDESSA_SMOKE_DRIVER: path.join(app, 'scripts/smoke-driver.mjs'),
+        ORDESSA_DATA_ROOT: path.join(home, '.ordessa'),
+        ELECTRON_DISABLE_SECURITY_WARNINGS: 'true', ...extraEnv },
       stdio: ['ignore', 'pipe', 'pipe'],
     })
   let output = '', timedOut = false

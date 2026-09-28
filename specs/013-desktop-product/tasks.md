@@ -11,47 +11,48 @@
 ## P-A — Desktop 宿主与平台 UI
 
 > 写入面：`apps/desktop/**`、`packages/desktop-platform/{contracts,ui,ui-components,extension-api,extension-loader,extension-host,native-bridge}/**`、`packages/workbench/**`
-> 申报改动：`plugins/chat/frontend/src/theme.ts`（须逐文件登记）
+> 插件改动：**无**（013 = core 阶段，`plugins/**` 一律只读；确需改须先经用户裁定）
 
 ### 阶段 1 — 契约类型与产品身份
-- [ ] **PA-01** 在 `packages/desktop-platform/contracts` 落 C-03/04/05/06/07/08 的 TS 类型（不可变 + 类型反例 `@ts-expect-error` 全部真实触发）。FR-030/041/042/043/051
-- [ ] **PA-02** 产品元数据：`apps/desktop/package.json` 补 `productName/description/author/license/homepage/repository`；版本号单一来源 + 构建号注入机制。FR-001
-- [ ] **PA-03** 应用图标**接线**：从单一事实位置 `assets/brand/icon.svg` 消费，导出多尺寸（16/32/48/64/128/256）`png` + Linux hicolor 布局 + 窗口图标接入。FR-002　**注**：设计稿由**用户后续提供**；占位期间须可构建可运行（内置占位 + 缺图不阻塞），换图**不**改代码
-- [ ] **PA-04** 关于面板：应用版本、构建号、各插件版本、第三方许可证入口、许可证全文入口。FR-003
+- [x] **PA-01** 在 `packages/desktop-platform/contracts` 落 C-03/04/05/06/07/08 的 TS 类型（不可变 + 类型反例 `@ts-expect-error` 全部真实触发）。FR-030/041/042/043/051
+- [x] **PA-02** 产品元数据：`apps/desktop/package.json` 补 `productName/description/author/license/homepage/repository`；版本号单一来源 + 构建号注入机制。FR-001
+- [x] **PA-03** 应用图标**接线**：从单一事实位置 `assets/brand/icon.svg` 消费，导出多尺寸（16/32/48/64/128/256）`png` + Linux hicolor 布局 + 窗口图标接入。FR-002　**注**：设计稿由**用户后续提供**；占位期间须可构建可运行（内置占位 + 缺图不阻塞），换图**不**改代码
+- [x] **PA-04** 关于面板：应用版本、构建号、各插件版本、第三方许可证入口、许可证全文入口。FR-003
 
 ### 阶段 2 — 日志与可靠性
-- [ ] **PA-05** 日志 TS sink（C-04）：级别/scope/child、JSON Lines、10 MiB 轮转保留 5、**sink 层强制脱敏**（字段名 + 哨兵 + 路径 + basename 四规则）。FR-010/011/012/014
-- [ ] **PA-06** 日志金丝雀：注入已知令牌字节（字段名、换名值、消息正文三路）→ 文件**零命中**。FR-011
-- [ ] **PA-07** 单实例锁 + 二次启动聚焦既有窗口；数据根锁语义接入（C-01 `DATA_ROOT_LOCKED`）。FR-025
-- [ ] **PA-08** `before-quit` 统一清理：停子进程、释放锁、flush 日志；**清理异常不覆盖主因**。FR-026
-- [ ] **PA-09** 窗口状态记忆与恢复；显示器配置变化退化为默认值。FR-027
-- [ ] **PA-10** 崩溃恢复：渲染进程崩溃记录 + 自动重载；主进程崩溃落盘；重启可正常启动。FR-028
-- [ ] **PA-11** **代码卫生**：把 `apps/desktop/electron/main.ts` 内嵌的 smoke 驱动代码（约 200 行 `executeJavaScript`）拆到 `apps/desktop/scripts/`，发行物内**零**测试驱动代码。
+- [x] **PA-05** 日志 TS sink（C-04）：级别/scope/child、JSON Lines、10 MiB 轮转保留 5、**sink 层强制脱敏**（字段名 + 哨兵 + 路径 + basename 四规则）。FR-010/011/012/014
+- [x] **PA-06** 日志金丝雀：注入已知令牌字节（字段名、换名值、消息正文三路）→ 文件**零命中**。FR-011
+- [~] **PA-07** 单实例锁 + 二次启动聚焦既有窗口；数据根锁语义接入（C-01 `DATA_ROOT_LOCKED`）。FR-025
+- [x] **PA-08** `before-quit` 统一清理：停子进程、释放锁、flush 日志；**清理异常不覆盖主因**。FR-026
+- [x] **PA-09** 窗口状态记忆与恢复；显示器配置变化退化为默认值。FR-027
+- [~] **PA-10** 崩溃恢复：渲染进程崩溃记录 + 自动重载；主进程崩溃落盘；重启可正常启动。FR-028
+- [x] **PA-11** **代码卫生**：把 `apps/desktop/electron/main.ts` 内嵌的 smoke 驱动代码（约 200 行 `executeJavaScript`）拆到 `apps/desktop/scripts/`，发行物内**零**测试驱动代码。
 
 ### 阶段 3 — 故障 UI / 设置 / 诊断
-- [ ] **PA-12** 故障 UI（C-06 §C）：`reason + remedy + logRef + 导出诊断`；5 类故障各一条反例，**零**空白窗口。FR-024
-- [ ] **PA-13** 设置页（C-06 §A2）：通用/数据/日志/更新/关于五区；数据根只读展示 + 打开目录；**「更新」分区接线 P-C 的更新客户端入口**（检查更新 / 下载进度 / 失败原因 / 更新后重启；责任划分见 plan.md §跨包集成归属）。FR-040
-- [ ] **PA-14** 设置分区贡献点（C-06 §A1）：注册/注销/排序/卸载隐藏但保留配置/未知片段不下发。FR-041
-- [ ] **PA-15** 诊断导出（C-06 §B）：五段内容 + 插件可选片段 + 超时兜底；**≤ 5 秒**；令牌零命中。FR-060/061/062
+- [x] **PA-12** 故障 UI（C-06 §C）：`reason + remedy + logRef + 导出诊断`；5 类故障各一条反例，**零**空白窗口。FR-024
+- [~] **PA-13** 设置页（C-06 §A2）：通用/数据/日志/更新/关于五区；数据根只读展示 + 打开目录；**「更新」分区接线 P-C 的更新客户端入口**（检查更新 / 下载进度 / 失败原因 / 更新后重启；责任划分见 plan.md §跨包集成归属）。FR-040
+- [x] **PA-14** 设置分区贡献点（C-06 §A1）：注册/注销/排序/卸载隐藏但保留配置/未知片段不下发。FR-041
+- [x] **PA-15** 诊断导出（C-06 §B）：五段内容 + 插件可选片段 + 超时兜底；**≤ 5 秒**；令牌零命中。FR-060/061/062
 
 ### 阶段 4 — 主题 / 命令
-- [ ] **PA-16** 主题服务（C-05）：light/dark/system + tokens + subscribe + CSS 变量；tokens 深层冻结。FR-042
-- [ ] **PA-17** 收敛 `packages/workbench/src/styles.ts` 为 C-05 消费方 + 对照测试。FR-042
-- [ ] **PA-18** 申报改动：`plugins/chat/frontend/src/theme.ts` 迁移为 C-05 消费方（逐文件登记）。FR-042
-- [ ] **PA-19** 命令与快捷键（C-07）：注册/注销/冲突拒绝/非法拒绝/`when` 求值/命令面板/快捷键表。FR-043
-- [ ] **PA-20** 键盘可达全流程（导航/发送/对话框/设置/命令面板/错误关闭）。FR-044
+- [x] **PA-16** 主题服务（C-05）：light/dark/system + tokens + subscribe + CSS 变量；tokens 深层冻结。FR-042
+- [x] **PA-17** 收敛 `packages/workbench/src/styles.ts` 为 C-05 消费方 + 对照测试。FR-042
+- [x] **PA-18** 主题收敛**登记缺口**：`packages/workbench` 收敛为 C-05 消费方；`plugins/chat/frontend/src/theme.ts` **本期不改**，登记为已知缺口（chat 界面暂不随全局主题切换）。FR-042
+- [x] **PA-19** 命令与快捷键（C-07）：注册/注销/冲突拒绝/非法拒绝/`when` 求值/命令面板/快捷键表。FR-043
+- [~] **PA-20** 键盘可达全流程（导航/发送/对话框/设置/命令面板/错误关闭）。FR-044
 
 ### 阶段 5 — 接线与边界
-- [ ] **PA-21** 消费 C-01/C-02/C-03：接入 `@ordessa/server-bridge`（P-B 提供）；P-B 未就绪时用**受控 fixture** 开发与测试，登记切换点。FR-020/022/030
-- [ ] **PA-22** WirePort 宿主侧注入：插件可调、令牌不进渲染进程、三态语义。FR-030/031/032
-- [ ] **PA-23** 安全回归：`sandbox:true / contextIsolation:true / nodeIntegration:false / 权限全拒 / window-open deny / IPC 调用方校验` **不退化**。FR-033
-- [ ] **PA-24** 边界反例：受控第三方 fixture 插件仅凭公开契约完成 6 项接入，宿主内部 import 数 **= 0**。SC-007
+- [~] **PA-21** 消费 C-01/C-02/C-03：接入 `@ordessa/server-bridge`（P-B 提供）；P-B 未就绪时用**受控 fixture** 开发与测试，登记切换点。FR-020/022/030
+- [x] **PA-22** WirePort 宿主侧注入：插件可调、令牌不进渲染进程、三态语义。FR-030/031/032
+- [x] **PA-23** 安全回归：`sandbox:true / contextIsolation:true / nodeIntegration:false / 权限全拒 / window-open deny / IPC 调用方校验` **不退化**。FR-033
+- [x] **PA-24** 边界反例：受控第三方 fixture 插件仅凭公开契约完成 6 项接入，宿主内部 import 数 **= 0**。SC-007
+- [x] **PA-25** C-08 缺席语义与渲染（core，**不改插件**）：无提供者时显示"未提供 Harness 可用性信息"；用**受控 fixture 提供者**验证 6 态渲染与 `state/reason` 不变量、有界探测；**宿主源码出现品牌名即判红**。FR-050/051
 
 ---
 
 ## P-B — Server 运行时与接缝
 
-> 写入面：`apps/server/**`、`packages/server-plugin-api/**`、`packages/desktop-platform/server-bridge/**`、`plugins/connectors/{ordessa,acp}/**`、`plugins/harness/api/**`
+> 写入面：`apps/server/**`、`packages/server-plugin-api/**`、`packages/desktop-platform/server-bridge/**`（**不含任何 `plugins/**`**）
 
 ### 阶段 1 — 数据根（C-01）
 - [ ] **PB-01** `apps/server/src/ordessa_server/bootstrap/data_root.py`：解析顺序（env → `~/.ordessa`）、创建/复用、0700/0600、拒符号链接、拒不可写、锁语义。FR-020
@@ -69,11 +70,9 @@
 - [ ] **PB-11** WirePort 实现（C-03）：`POST /wire/v1/{method}` + Bearer 注入、三态、`AbsentWirePort`、`ready/scope`。FR-030/032
 - [ ] **PB-12** 凭据边界：令牌只在主进程/Server；插件可见对象、日志、诊断**金丝雀零命中**。FR-031
 
-### 阶段 3 — 日志 Python 侧与 Harness 可用性
+### 阶段 3 — 日志 Python 侧
 - [ ] **PB-13** 日志 Python sink（C-04）：与 TS **同构**（字段顺序、脱敏四规则、轮转 10 MiB/5 份）；`server.log` 落点。FR-013
 - [ ] **PB-14** 同构一致性测试：同一条记录 TS/Py 写出，字段集与顺序**一致**。C-04 §8.6
-- [ ] **PB-15** C-08 `HarnessAvailability` 契约载体（`plugins/harness/api`）：6 态枚举 + `state/reason` 不变量 + 有界探测。FR-050/051
-- [ ] **PB-16** C-08 反例六条（未安装/未登录/超时/无插件/不变量/边界）；**宿主源码不得出现品牌名**。C-08 §6
 
 ---
 
