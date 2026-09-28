@@ -60,7 +60,7 @@
 | LSP-1 域骨架 + facet `assets.lsp` 注册进 C2 | ◐ 库级完成 | `adapters/src/ordessa_lsp_adapters/points.py`：真点 `harness.configuration-adapters`(v1) 上贡献批构造+自测；`registry.py` 的 `LspAdaptersServerPlugin`；形制仿 sandbox/model-provider（只仿不 import，`test_dependency_direction.py` 钉死）。**未含**：products/server 装配与 C2 真机 stage 通路（越本包写入面，登记 §5.1/§5.3 待办） |
 | LSP-2 定义模型 | ✅ | `api/src/ordessa_lsp_api/definitions.py`（server/formatter 定义、语言映射、选择与 session/profile 作用域、引用制）；`transcription.py` 字节稳定转录 |
 | LSP-3 品牌收窄 | ✅*（任务前提被证据证伪，按红线 3 落诚实格；**卡点 C-LSP3** 见 §5） | 三家 descriptor（pi/codex/claude-code，全部带证据 unsupported）；hermes/opencode/kilo 投影入口 `PHASE2_DEFERRED`；qwen `BRAND_REMOVED`（`.lsp.json` 行跳过并登记）。**修正 1**：pi 无原生 LSP 面（见 §3）；**修正 2**：dsh 有原生 lsp-stdio（17 键），非 unsupported，归阶段二。口径注："只实施 pi" = 不给任何品牌做原生投影实现（本批无原生面可投）；codex/claude-code 的 descriptor 正是 dispatch 要求的 "unsupported+证据" 格载体，不是对它们的实施。任务-代码不一致是**事实**：任务原文"实施 pi 原生面"的前提被官方证据证伪，本包不改任务文本（main 侧 `dcc4b53c3c` 为任务文本唯一权威），以卡点登记交用户晨裁 |
-| LSP-4 可用性诚实检查 | ✅ | `probe.py` 注入式 PATH 探测（默认 `shutil.which`，不 spawn）；缺席=`absent-executable`+原因，不产假配置（`test_probe.py`、`test_projection_golden.py` 反例）。口径注：`absent-executable` 就是任务文本 "缺席=该格 unsupported 并带原因" 的落地状态名——它是 unsupported 在缺席成因下的精确分类，语义同一 |
+| LSP-4 可用性诚实检查 | ✅ | `probe.py` 注入式 PATH 探测（默认 `shutil.which`，不 spawn）；缺席=该格 `unsupported` + 结构化缺席标志（`executable.present=false`）+ 缺席原因，不产假配置（`test_probe.py`、`test_projection_golden.py` 反例）。状态词按任务原文收敛（第 4 轮审阅采纳项，见 §6） |
 | LSP-5 受控测试 | ✅ | golden 转录字节稳定（`tests/golden/lsp-projection-golden-v1.json` 按字节比较）+ 两会话隔离（`test_sessions.py`）+ 缺席可执行反例；42 passed |
 | LSP-6 report.md | ✅ | 本文件 |
 
@@ -168,4 +168,16 @@ harnesses.md 的存量证据面。**自建**：定义模型与规范转录（域
 3. "LSP-1 勾选高于完成度"——**采纳**：降为 ◐ 库级完成（装配/真机通路
    §5.1/§5.3 待办）。弱断言（type 名比对）已改 isinstance。
 
-**第 4 轮（run-review.sh 复审）：**（待回填）
+**第 4 轮（run-review.sh 复审）结论：有保留。** 三点处置：
+1. "entries `lsp.decision.*` 发明能力面"——**部分采纳**：entry 是平台合同
+   非空要求下的能力面命名，其指称的实现真实存在（callable 三答 +
+   project.py 决策流水线）；已在该处 docstring 写明 entry→实现的映射，
+   杜绝"声明了不存在的能力"的读法。
+2. "LSP-4 状态词偏离任务原文"——**采纳并收敛**：状态统一为任务钦定的
+   `unsupported`，结构化区分移到 `executable.present` 与 reason；
+   golden 按新口径**再生成**（digest `b8926851…`，本次再生成原因=LSP-4
+   口径收敛，此处即登记）；相关测试/文档同步。
+3. "编排文档写入面只靠自述"——维持既有客观证据（§写入面末条两点 diff
+   命令，可直接复核）；此为审阅视角限制下的终局分歧，如实记录不再循环。
+
+**第 5 轮（run-review.sh 复审）：**（待回填）

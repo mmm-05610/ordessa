@@ -4,7 +4,8 @@
 * 默认查找用 ``shutil.which``——只读 PATH，不 spawn、不读网络；
 * ``lookup`` 可注入（测试用受控假 PATH，反例不依赖机器环境）；
 * 缺席返回 ``present=False`` 与原因字符串，调用方必须把缺席落成该格
-  ``absent-executable`` 决策——**不产假配置**（tasks.md LSP-4 红线）。
+  ``unsupported`` 决策（``executable.present=false`` + 原因）——**不产假配
+  置**（tasks.md LSP-4 红线）。
 
 LSP 面全部依赖机器已装可执行程序（harnesses.md 逐格共同注记），所以探测
 先于任何投影：探测缺席的品牌格没有"配置先写上再说"的路径。
@@ -47,4 +48,4 @@ def resolve_executable(command: str,
     return ExecutablePresence(
         command=command, present=False, resolved_path=None,
         reason=f"executable {command!r} not found on PATH; "
-               "the cell stays absent-executable, no config is invented")
+               "the cell stays unsupported, no config is invented")

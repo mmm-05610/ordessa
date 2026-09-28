@@ -179,8 +179,10 @@ def build_configuration_descriptor(
     pin = _semver_tuple(resolved[harness_id])
     from ordessa_harness_api.contracts import VersionRange
     # entries 非空是平台合同（contracts.py 校验）；本域每品牌公开的能力面
-    # 只有一个：该品牌的诚实投影决策面（unsupported-native/absent-executable
-    # + 证据指针）。不是 native field claim——claims 仍为零。
+    # 只有一个：该品牌的诚实投影决策面——由 HarnessLspConfigurationAdapter
+    # 的 assess/compile/verify 与 project.project_selection 实现（决策记录
+    # + 证据指针），entry 即该实现的名字。不是 native field claim——
+    # claims 仍为零。
     entries = (f"lsp.decision.{harness_id}",)
     return ConfigurationAdapterDescriptor(
         adapter_id=adapter_id,

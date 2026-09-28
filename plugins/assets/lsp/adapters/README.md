@@ -23,7 +23,7 @@ sandbox adapters 形制（只仿不 import）：
      转阶段二设计；**qwen 已除名**（用户裁定 2026-09-28，`.lsp.json` 行跳过）。
 3. **可用性诚实检查**（LSP-4）。`probe.resolve_executable` 用注入式 PATH
    查找（默认 `shutil.which`，不 spawn）回答可执行在场性；缺席 = 该格
-   `absent-executable` 并带原因，不产假配置。
+   `unsupported`（`executable.present=false` + 缺席原因），不产假配置。
 
 `project.project_selection` 把 定义模型校验 → 探测 → 品牌评估 → 决策记录
 串成一条流水线，决策记录经 `ordessa_lsp_api.canonical_json_bytes` 得到字节

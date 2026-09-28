@@ -18,7 +18,6 @@ from .points import (
 )
 from .probe import ExecutablePresence, resolve_executable
 from .project import (
-    STATUS_ABSENT_EXECUTABLE,
     STATUS_UNSUPPORTED_NATIVE,
     ProjectionDecision,
     ProjectionRefusal,
@@ -48,7 +47,6 @@ __all__ = [
     "ProjectionDecision",
     "ProjectionRefusal",
     "REMOVED_BRANDS",
-    "STATUS_ABSENT_EXECUTABLE",
     "STATUS_UNSUPPORTED_NATIVE",
     "SessionProjectionStore",
     "build_configuration_batch",

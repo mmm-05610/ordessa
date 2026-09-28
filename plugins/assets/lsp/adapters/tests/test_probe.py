@@ -17,7 +17,7 @@ def test_missing_is_fact_not_error() -> None:
     presence = resolve_executable("nil", lookup=fake_lookup({}))
     assert presence.present is False
     assert presence.resolved_path is None
-    assert "absent-executable" in presence.reason
+    assert "unsupported" in presence.reason
     assert "no config is invented" in presence.reason
 
 

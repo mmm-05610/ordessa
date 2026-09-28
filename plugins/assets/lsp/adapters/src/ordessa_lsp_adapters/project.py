@@ -6,9 +6,11 @@
 
 * 品牌门先于一切：阶段二四家（hermes/opencode/dsh/kilo）与已除名的 qwen
   在入口就拿到类型化 ``ProjectionRefusal``——不产出半截决策。
-* 探测先于评估（LSP-4 "投影前探测"）：可执行缺席的定义直接落
-  ``absent-executable``，不再问品牌；在场而品牌无原生面落
-  ``unsupported-native``，理由与证据指针取自 ``evidence.py``。
+* 探测先于评估（LSP-4 "投影前探测"）：可执行缺席的定义同样落
+  ``unsupported``（LSP-4 任务原文 "缺席=该格 unsupported 并带原因"），
+  ``executable.present=false`` 是结构化缺席标志、``reason`` 带缺席成因；
+  在场而品牌无原生面落 ``unsupported``，理由与证据指针取自
+  ``evidence.py``。
 * 决策记录是不可变 frozen 数据；``SessionProjectionStore`` 按会话键保存，
   写入只替换本会话的元组——两会话隔离靠不可变结构成立，不靠纪律。
 """
@@ -25,7 +27,6 @@ from .probe import ExecutablePresence, PathLookup, resolve_executable
 from .registry import DEFAULT_LSP_BRANDS, LspBrandAdapter
 
 __all__ = [
-    "STATUS_ABSENT_EXECUTABLE",
     "STATUS_UNSUPPORTED_NATIVE",
     "ProjectionDecision",
     "ProjectionRefusal",
@@ -33,8 +34,9 @@ __all__ = [
     "project_selection",
 ]
 
-STATUS_ABSENT_EXECUTABLE = "absent-executable"
-STATUS_UNSUPPORTED_NATIVE = "unsupported-native"
+#: 任务 LSP-4/LSP-3 钦定的状态词：缺席与无原生面统一落 unsupported，
+#: 结构化区分在 executable.present 与 reason。
+STATUS_UNSUPPORTED_NATIVE = "unsupported"
 
 _BRAND_ADAPTERS: dict[str, LspBrandAdapter] = {
     harness_id: LspBrandAdapter(adapter_id=adapter_id, harness_id=harness_id)
@@ -108,7 +110,7 @@ def _decide(adapter: LspBrandAdapter, scope: str,
             brand=adapter.harness_id, scope=scope,
             definition=definition.to_jsonable(),
             executable=presence.to_jsonable(),
-            status=STATUS_ABSENT_EXECUTABLE,
+            status=STATUS_UNSUPPORTED_NATIVE,
             reason=presence.reason,
             evidence_ref="tasks.md LSP-4 可用性诚实检查",
         )

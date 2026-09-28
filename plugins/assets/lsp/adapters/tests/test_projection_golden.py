@@ -11,7 +11,6 @@ from pathlib import Path
 
 from ordessa_lsp_api import LspSelection
 from ordessa_lsp_adapters import (
-    STATUS_ABSENT_EXECUTABLE,
     STATUS_UNSUPPORTED_NATIVE,
     project_selection,
 )
@@ -44,8 +43,8 @@ def test_golden_transcription_byte_stable() -> None:
 def test_golden_digest_pinned() -> None:
     # 期望哈希钉死在断言里：golden 被改动/再生成而未订正此处即红。
     digest = hashlib.sha256(GOLDEN.read_bytes()).hexdigest()
-    assert digest == ("fbbd1a942f2744f4f05ad1914d69af93b"
-                      "682ffaf2c80be7f5e6a6e019633c679")
+    assert digest == ("b8926851050b2baa9509467616fbe70f"
+                      "cc653070ef63c61894c3b45800e13fa4")
 
 
 def test_transcription_deterministic_across_calls() -> None:
@@ -58,15 +57,16 @@ def test_transcription_deterministic_across_calls() -> None:
 
 
 def test_absent_executable_counterexample() -> None:
-    """缺席 = 该格 absent-executable + 原因；不产任何假配置。"""
+    """LSP-4 原文口径：缺席 = 该格 unsupported 并带原因；不产任何假配置。"""
     decisions = {d["definition"]["name"]: d
                  for d in (x.to_jsonable() for x in
                            project_selection("pi", _fixed_selection(),
                                              lookup=LOOKUP))}
     nil = decisions["nil"]
-    assert nil["status"] == STATUS_ABSENT_EXECUTABLE
+    assert nil["status"] == STATUS_UNSUPPORTED_NATIVE
     assert nil["executable"]["present"] is False
     assert nil["executable"]["resolved_path"] is None
+    assert "not found on PATH" in nil["reason"]
     assert "no config is invented" in nil["reason"]
     # 三个决策都只有决策字段：不存在编译出的配置产物
     for record in decisions.values():
