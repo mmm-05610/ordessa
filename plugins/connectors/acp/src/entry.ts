@@ -4,6 +4,8 @@ import type { AgentConnector } from '@extensions/ordessa.agent-contracts/contrac
 import { AcpClient } from './client'
 import type { AcpChannelSpec } from './channel'
 import { hostChannelSpec, requestAcpOrchestration } from './host'
+export { hasNativeCommandReader } from './commands'
+export type { NativeCommand, NativeCommandCatalog, NativeCommandReader } from './commands'
 
 export const ACP_ADAPTER_ID = 'ordessa.agent-acp'
 export const connectorIdFor = (serverInstanceId: string) => `acp:${serverInstanceId}`

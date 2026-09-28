@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from pacthold.work_core import ExecutionStartReceipt, ExecutionStartRequest, ProviderDescriptor, Ref, RefType
-from pacthold.extensions.runtime_composition import assemble_runtime_composition
+from pacthold_runtime_compat.runtime_composition import assemble_runtime_composition
 @dataclass
 class GenericHandle:
     request: object; runtime: object; command: object; submitted: bool=False

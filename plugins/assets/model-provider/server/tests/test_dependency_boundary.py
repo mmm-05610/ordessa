@@ -22,11 +22,16 @@ SRC = Path(__file__).resolve().parents[1] / "src" / "ordessa_model_provider"
 #: param-shape helpers and to `ordessa_server_compat.wire_validators` for the
 #: domain-shape validators — the validator module is shared vocabulary, not
 #: the legacy business line, so the blanket compat ban gains this one leaf.
+#: 014 PB-3 adaptation (dispatch-ordered): `harness_binding.py` binds the
+#: HarnessConfigPort to the real C4 `ConfigurationApplicationService`, so the
+#: public harness-api contract DTOs join `server_plugin_api` as allowed
+#: published-contract vocabulary (direction server→harness-api; the reverse
+#: import never exists).
 ALLOWED_ROOTS = {
-    "__future__", "json", "typing", "dataclasses", "ipaddress", "socket",
-    "time", "types", "urllib", "ordessa_model_provider",
-    "pacthold", "server_plugin_api", "ordessa_server",
-    "ordessa_server_compat",
+    "__future__", "hashlib", "json", "typing", "dataclasses", "ipaddress",
+    "socket", "time", "types", "urllib", "ordessa_model_provider",
+    "pacthold", "server_plugin_api", "ordessa_server", "ordessa_server_compat",
+    "ordessa_harness_api",
 }
 ALLOWED_ORDENSSA_SERVER_LEAVES = {
     "errors", "records", "ids", "idempotency", "storage_port",

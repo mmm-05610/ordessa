@@ -78,15 +78,20 @@ class PiAdapter:
                 reconfiguration="session-local",
             )
         # provider add/remove or an auth change needs a new private generation
-        # and a controlled restart that resumes the SAME native session.
+        # and a controlled restart that resumes the SAME native session. The
+        # provider enters as ONE golden object (provenance:
+        # ordessa_harness.native_materialization.render_pi_provider) — the C4
+        # merge authority owns a declared array subtree as a unit, so the
+        # whole provider object is a single typed field write.
+        _, dialect = common.translate_protocol("pi", desired.protocol)
+        provider_object = {
+            "baseUrl": desired.endpoint,
+            "api": dialect,
+        }
         intents: list[Any] = [
             CompileIntent(
                 context.target_handle,
-                ("providers", desired.provider_name, "baseUrl"), desired.endpoint,
-            ),
-            CompileIntent(
-                context.target_handle,
-                ("providers", desired.provider_name, "api"), "openai-completions",
+                ("providers", desired.provider_name), provider_object,
             ),
         ]
         if desired.credential_ref:

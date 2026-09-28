@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-sandbox-adapters"
+version = "0.1.0"
+description = "Ordessa native-sandbox per-brand configuration adapters: pure assess/compile/verify for Codex, Claude Code and Pi (T05, sandbox.native-configuration@1)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Typing :: Typed",
+]
+# Depends only on the published contracts: the Sandbox domain API and its
+# backend service surface, the Server plugin public types, and the Harness C2
+# descriptive vocabulary (`ordessa-harness-api` — the payload contract of the
+# real `harness.configuration-adapters` point, exactly the closure the
+# platform's own third-party contributor fixture declares). No host, no
+# harness package code, no Permissions, no storage.
+dependencies = [
+    "ordessa-sandbox-api",
+    "ordessa-sandbox-backend",
+    "ordessa-server-plugin-api",
+    "ordessa-harness-api>=1.0.0a1,<2",
+]
+keywords = ["ordessa", "sandbox", "adapter", "native", "codex", "claude", "pi"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ordessa_sandbox_adapters = ["py.typed"]

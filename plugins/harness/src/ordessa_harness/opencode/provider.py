@@ -7,9 +7,9 @@ import json
 from pathlib import Path
 from typing import Any, Mapping
 
-from pacthold.resource_contracts import AgentBoxProfileV1, PromptFragmentV1, WorkspaceV1
+from pacthold_runtime_compat.resource_contracts import AgentBoxProfileV1, PromptFragmentV1, WorkspaceV1
 from pacthold.work_core import ExecutionProjection, ExecutionStartReceipt, ExecutionStartRequest, Freshness, Outcome, Phase, ProviderDescriptor, Ref, RefType
-from pacthold.extensions.runtime_composition import (
+from pacthold_runtime_compat.runtime_composition import (
     HarnessCommandSpec, RuntimeBinding,
     RuntimeHostV1, SandboxV1, TerminalSessionV1, declare_source,
 )
@@ -114,7 +114,7 @@ class OpenCodeExecutionProvider:
         return ref
 
     def _compose(self, request, command, workspace: WorkspaceV1):
-        from pacthold.extensions.runtime_composition import assemble_runtime_composition
+        from pacthold_runtime_compat.runtime_composition import assemble_runtime_composition
         if self.coordinator is not None and self.runtime_binding is not None:
             return self.coordinator.start(self.runtime_binding, command, execution_id=request.execution_id, dispatch_id=request.dispatch_id)
         binding, coordinator = assemble_runtime_composition(request, command)

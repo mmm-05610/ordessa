@@ -28,7 +28,7 @@ from dataclasses import dataclass, field
 from typing import Callable, Mapping
 from uuid import uuid4
 
-from ordessa_server.errors import ServerError
+from server_plugin_api import ServerError
 
 
 @dataclass(frozen=True)

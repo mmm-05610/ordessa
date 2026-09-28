@@ -63,6 +63,8 @@ class RoguePlugin:
 
 @pytest.fixture()
 def host(stack, credentials):
+    # The host itself declares `wire.error-families` at construction
+    # (host.py), so the plugin's PB-4 self-publication stages against it.
     return ServerPluginHost(host_ports={
         "database": stack["database"], "objects": stack["objects"],
         "idempotency": stack["idempotency"], "credentials": credentials,

@@ -12,6 +12,7 @@ dependencies = [
     "pacthold==2.0.0a1",
     "ordessa-server==2.0.0a1",
     "ordessa-server-plugin-api>=0.1.0,<1",
+    "ordessa-harness-api==1.0.0a1",
 ]
 
 [project.optional-dependencies]

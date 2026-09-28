@@ -24,7 +24,7 @@ from uuid import uuid4
 
 from .state_capture import StateCaptureError, audit_snapshot
 
-from pacthold.resource_contracts.harness_capabilities import (
+from pacthold_runtime_compat.resource_contracts.harness_capabilities import (
     CapabilityDeclaration, capability_view, merge_capabilities, validate_claims,
 )
 
@@ -397,7 +397,7 @@ class WorkerSidecarLauncher:
         self.usage_probe = dict(usage_probe) if usage_probe else None
 
     def launch(self, environment: Mapping[str, str]):
-        from pacthold.extensions.runtime_composition.sandbox_port import (
+        from pacthold_runtime_compat.runtime_composition.sandbox_port import (
             SandboxPortUnavailable, SidecarRoomRequest,
         )
 

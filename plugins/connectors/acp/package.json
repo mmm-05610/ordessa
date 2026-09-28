@@ -2,6 +2,9 @@
   "name": "@ordessa/plugin-agent-acp",
   "version": "0.1.0",
   "private": true,
+  "scripts": {
+    "test": "vitest run --maxWorkers=1"
+  },
   "dependencies": {
     "@agentclientprotocol/sdk": "1.5.0"
   },

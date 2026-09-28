@@ -1556,6 +1556,11 @@
   - `TestE2EACPPlanUpdateMappedFromPlanDeltaFallback`
   - `go test ./...`
 
+#### 2026-09-28：plan E2E 断言对齐已接受的快照策略
+- 决策保持：两次 `turn/plan/updated` 若都还在 pending，第二次替换第一次；ACP 客户端必须看到最终完整快照，但不保证看到每个中间版本。
+- 旧 `TestE2EACPPlanUpdateMappedFromTurnPlanUpdated` 要求至少两次 ACP plan 更新，与此策略冲突，并取决于 pump 调度。修订为至少一次且最终三步状态完整；两步初始状态只在实际可见时校验。
+- 另用无 pump 的队列单测固定验证“最新 pending 快照 + completion”，并用只发初始快照的反例保证修订后的 E2E 不会假绿。未改变生产事件合并代码或 ACP wire 形态。
+
 ### ADR-0057：`type="status"` 生命周期更新按 notices 协商处理：广告方收 `notice`，未广告方不发送；错误诊断任何客户端都不静默丢失
 - 日期：2026-09-24
 - 状态：Accepted（同日曾先落地"无条件映射为 notice"版本，被评审批评"未经协商发送 notice"后修订为本方案）

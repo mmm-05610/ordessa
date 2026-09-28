@@ -24,11 +24,18 @@ from server_plugin_api import (
     ServerPluginContext,
     ServerPluginDescriptor,
     ServerPluginRegistration,
+    WIRE_ERROR_FAMILIES_API_VERSION,
+    WIRE_ERROR_FAMILIES_POINT_ID,
+    Contribution,
+    ContributionBatch,
 )
 
 from ordessa_model_provider.catalog import ModelCatalogService
 from ordessa_model_provider.choices import (
-    CONFIG_REVISION_CONFLICT, PROVIDER_ARCHIVED, PROVIDER_NOT_FOUND,
+    ADAPTER_MISSING, CONFIG_REVISION_CONFLICT, CREDENTIAL_UNRESOLVED,
+    MODEL_NOT_FOUND, OPERATION_UNKNOWN, PROVIDER_ARCHIVED, PROVIDER_NOT_FOUND,
+    PROTOCOL_UNSUPPORTED, RESUME_UNAVAILABLE, SELECTION_UNSUPPORTED,
+    TARGET_STALE, VERIFICATION_MISMATCH, VERSION_UNVERIFIED,
     ModelChoiceService,
 )
 from ordessa_model_provider.records import ProviderModelRecords
@@ -45,6 +52,27 @@ from server_plugin_api.wire_shape import request_id as _request_id
 from server_plugin_api.wire_shape import version as _version
 
 PLUGIN_ID = "ordessa.model-provider"
+
+#: 014 PB-4 (REQ-Z3-7): the frozen 13-code → wire-family mapping, self-published
+#: through ``wire.error-families`` (api-requests.md REQ-Z3-7 list, verbatim).
+#: Before this contribution the codes rode ``details.internalCode`` with a
+#: temporary UNAVAILABLE family; after publication the transport resolves them
+#: exactly, with no host-table edit and no UNAVAILABLE masquerade.
+_ERROR_FAMILIES = {
+    PROVIDER_NOT_FOUND: "NOT_FOUND",
+    MODEL_NOT_FOUND: "NOT_FOUND",
+    PROVIDER_ARCHIVED: "CONFLICT_REQUEST",
+    CONFIG_REVISION_CONFLICT: "CONFLICT_VERSION",
+    SELECTION_UNSUPPORTED: "CAPABILITY_UNSUPPORTED",
+    OPERATION_UNKNOWN: "OUTCOME_UNKNOWN",
+    ADAPTER_MISSING: "CAPABILITY_UNSUPPORTED",
+    VERSION_UNVERIFIED: "CAPABILITY_UNSUPPORTED",
+    TARGET_STALE: "CONFLICT_REQUEST",
+    RESUME_UNAVAILABLE: "CAPABILITY_UNSUPPORTED",
+    VERIFICATION_MISMATCH: "OUTCOME_UNKNOWN",
+    CREDENTIAL_UNRESOLVED: "UNAUTHENTICATED",
+    PROTOCOL_UNSUPPORTED: "CAPABILITY_UNSUPPORTED",
+}
 
 
 class ModelProviderPlugin:
@@ -99,6 +127,14 @@ class ModelProviderPlugin:
             methods=methods,
             provided_ports={"model_provider.catalog": catalog,
                             "model_provider.choices": choices},
+            # 014 PB-4 (REQ-Z3-7): the domain's failure codes self-publish
+            # their wire families through the open host point — the mapping
+            # lives with the plugin that raises the codes, never in the host
+            # table. A conflicting row from another owner refuses at stage.
+            contributions=ContributionBatch((
+                Contribution(WIRE_ERROR_FAMILIES_POINT_ID,
+                             WIRE_ERROR_FAMILIES_API_VERSION, dict(_ERROR_FAMILIES)),
+            )),
         )
 
 

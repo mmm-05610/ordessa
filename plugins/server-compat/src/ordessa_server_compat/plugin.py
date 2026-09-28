@@ -26,18 +26,23 @@ Declared edges (pinned by `test_server_compat_boundary.py`):
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, Callable, Mapping
 
 from server_plugin_api import (
+    WIRE_ERROR_FAMILIES_API_VERSION,
+    WIRE_ERROR_FAMILIES_POINT_ID,
+    Contribution,
+    ContributionBatch,
     ServerMethodDescriptor,
     ServerPluginContext,
     ServerPluginDescriptor,
     ServerPluginRegistration,
 )
 
-from ordessa_server.wire.errors import WireError
-from ordessa_server.wire.envelope import CursorCodec
+from server_plugin_api import WireError
 
+from ordessa_server_compat.error_families import COMPAT_ERROR_FAMILIES
 from ordessa_server_compat.core_wire import (
     _COMPAT_METHODS,
     _EXECUTION_GATE_FAMILY,
@@ -46,6 +51,29 @@ from ordessa_server_compat.core_wire import (
 )
 
 PLUGIN_ID = "ordessa.server-compat"
+
+
+@dataclass(frozen=True)
+class TurnInputs:
+    """The domains this plugin built that an injected execution factory reads
+    per turn (T014-S1b).
+
+    One explicit argument on the factory's declared input list, built here from
+    the records this plugin owns: the composition that supplies a factory is
+    handed what it consumes instead of reaching for it on the host's runtime
+    (`runtime.asset_records`, `runtime.delegation_tokens`, ...). The fields are
+    the contract — there is no lookup by name and no default, so a factory
+    cannot quietly grow a second way to fish. They are round-scoped by
+    construction, exactly like the seven positional inputs the factory already
+    receives: the backend that reads them was built in the same activation.
+    """
+    profiles: Any               # ProfileRecords (the delegation grant edges live here)
+    assets: Any                 # AssetRecords (publish/bindings ledger)
+    mcp_assets: Any             # McpAssetStore
+    hooks: Any                  # HookRecords
+    accounts: Any               # AccountRecords
+    account_assets: Any         # AccountAssetStore, None without a SecretStore
+    delegation_tokens: "dict[str, dict[str, str]]"
 
 
 class ServerCompatPlugin:
@@ -81,6 +109,21 @@ class ServerCompatPlugin:
         self._session_records = None
         self._credential_records = None
         self._ports_secret_store = None
+        self._built_service: Any | None = None
+
+    @property
+    def product_service(self) -> Any | None:
+        """The product use-case surface this plugin's build composed, or None.
+
+        For this package's own composition modules (`composition.py`), which
+        construct the plugin and therefore own what it builds: the native-mode
+        identity read and the workspace validator it binds are written against
+        the service, and the honest way to reach it is the plugin that built
+        it — not an attribute the host carries (that was the runtime facade
+        bag T014-S1b deletes). It is None before `build()` has run and again
+        after disposal, so a stopped round cannot be read through it.
+        """
+        return self._built_service
 
     def descriptor(self) -> ServerPluginDescriptor:
         return ServerPluginDescriptor(
@@ -156,11 +199,22 @@ class ServerCompatPlugin:
             database, append_event=session_records._append_session_event,
         )
 
+        # Order 65 C: the per-attempt bridge token registry. Built before the
+        # execution factory runs because that factory's turn closure is one of
+        # its writers (the same dict object the HTTP routes resolve through).
+        delegation_tokens: dict[str, dict[str, str]] = {}
+
         execution = self._execution
         if execution is None and self._execution_factory is not None:
             execution = self._execution_factory(
                 session_records, objects, approval_records, notifier, connectors,
                 credentials, secrets_store,
+                TurnInputs(
+                    profiles=profile_records, assets=asset_records,
+                    mcp_assets=mcp_assets, hooks=hook_records,
+                    accounts=account_records, account_assets=account_assets,
+                    delegation_tokens=delegation_tokens,
+                ),
             )
         if execution is not None and hasattr(execution, "bind_queue"):
             execution.bind_queue(queue_records)
@@ -200,6 +254,8 @@ class ServerCompatPlugin:
             harnesses=registry, credentials=credentials, execution=execution,
             notifier=notifier,
         )
+        # This plugin's own built surface: see `product_service`.
+        self._built_service = service
         from ordessa_server_compat.persistence import ProductRepositoryView
 
         repository = ProductRepositoryView(
@@ -207,8 +263,8 @@ class ServerCompatPlugin:
             workspaces=ports["workspace.records"], profiles=profile_records,
             sessions=session_records,
         )
-        # Order 65 C: the delegation service and the per-attempt token registry
-        # the bridge's loopback calls resolve through.
+        # Order 65 C: the delegation service over the records and the token
+        # registry the bridge's loopback calls resolve through.
         from ordessa_server_compat.execution.delegation import DelegationService
 
         delegation_service = DelegationService(
@@ -216,7 +272,6 @@ class ServerCompatPlugin:
             execution=execution, registry=registry, data_root=context.data_root,
             objects=objects,
         )
-        delegation_tokens: dict[str, dict[str, str]] = {}
 
         handlers = CoreWireHandlers(
             profiles=profile_service, sessions=session_service,
@@ -232,6 +287,11 @@ class ServerCompatPlugin:
             hooks=hook_records, hook_triggers=hook_triggers,
             connectors=connectors, data_root=context.data_root,
             workspaces=workspace_service,
+            # T014-S2c: the composition's error-family resolver, injected as a
+            # callable (the host binds it to its own aggregate) so this
+            # plugin's conversion sites answer the whole composition's table
+            # without ever holding the aggregate object.
+            family_resolver=ports.get("wire.error_family_resolver"),
         )
         self._handlers = handlers
         self._session_records = session_records
@@ -266,8 +326,7 @@ class ServerCompatPlugin:
                 delegation_service=delegation_service,
                 delegation_tokens=delegation_tokens,
             ),
-            provided_ports={
-                "product.service": service,
+            provided_ports={                "product.service": service,
                 "product.repository": repository,
                 "harness.directory": registry,
                 "execution.port": execution,
@@ -291,8 +350,46 @@ class ServerCompatPlugin:
                 "compat.handlers": handlers,
             },
             start_hooks=(self._on_start,),
+            stop_hooks=self._stop_hooks(execution),
             disposal=self._dispose,
+            # T014-S2a: the wire/1 families of the codes this plugin raises
+            # are published as an open-point contribution, not carried in the
+            # host's table. Conflicts (same code, different family) refuse the
+            # whole activation round; absence of this plugin leaves those codes
+            # on the documented fall-through.
+            contributions=ContributionBatch((
+                Contribution(
+                    point_id=WIRE_ERROR_FAMILIES_POINT_ID,
+                    api_version=WIRE_ERROR_FAMILIES_API_VERSION,
+                    payload=COMPAT_ERROR_FAMILIES,
+                ),
+            )),
         )
+
+    # -- teardown work that used to live in the host's stop() ------------------
+
+    @staticmethod
+    def _stop_hooks(execution: Any) -> "tuple[Callable[[], None], ...]":
+        """The execution port's stop, owned by the domain that composed it.
+
+        The host's specialised stop used to reach `runtime.execution.stop()`
+        and raise `SERVER_STOP_TIMEOUT` itself. Both facts live here now: the
+        port answers whether its runs settled, and an unsettled stop refuses
+        the teardown out loud rather than letting the data-root lock go while
+        a Worker thread is still writing through the shared Work Core
+        connection. The refusal aborting the rest of the shutdown is the
+        behaviour the host had before this hook existed — it is registered in
+        `plugin_host.ServerPluginHost.run_stop_hooks`, not quietly improved
+        here.
+        """
+        if execution is None or not hasattr(execution, "stop"):
+            return ()
+
+        def _stop_execution() -> None:
+            if not execution.stop():
+                raise RuntimeError("SERVER_STOP_TIMEOUT")
+
+        return (_stop_execution,)
 
     # -- startup work that used to live in the host's start() ----------------
 
@@ -375,6 +472,7 @@ class ServerCompatPlugin:
 
     def _dispose(self) -> None:
         self._handlers = None
+        self._built_service = None
         self.native_profile_id = None
 
 

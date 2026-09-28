@@ -811,6 +811,7 @@
     - 合并连续的 `update` / `agent_message_delta` / `reasoning_delta` / `command_execution_delta`
     - 对 `token_usage_updated` / `diff_updated` / `plan_updated` 仅保留最新 pending 快照
     - backlog 满时，旧的非关键 pending 事件仍可能被淘汰
+  - 受控回归实例（2026-09-28）：fake app-server 连发两次 `turn/plan/updated`，ACP 可能只收到最终一份；旧 E2E 的“至少两份”断言在 Go 1.24.13 下重复运行时出现调度相关失败。
 - 影响：
   - turn 正确性明显好于旧实现：关键控制语义不再容易丢。
   - 但在极端高频流式场景下，上游看到的非关键 update 粒度会变粗：
@@ -820,6 +821,7 @@
   - 使用会持续产生大量 reasoning summary 或 command output chunk 的 Codex turn，并让 ACP client 消费速度显著低于下游通知速度。
 - Workaround：
   - 对上游 UI 而言，应把这类 update 视为“最终一致的流式近似值”，不要依赖每个 chunk 都逐条出现。
+  - 对受控验收，检查最后一份完整 plan 的内容与状态，并用队列单测验证最新 pending 快照；不要通过给 fake app-server 加 sleep 强迫中间态可见。
   - 如需更细粒度观测，可结合 `--trace-json` 检查下游原始 JSON 流，而不是只依赖桥接后的 ACP update 粒度。
 - 后续计划：
   - 增加 turn stream 队列深度、事件合并次数、非关键淘汰次数等观测指标。
