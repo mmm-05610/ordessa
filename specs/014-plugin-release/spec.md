@@ -66,7 +66,7 @@
 1. **Given** 品牌 ACP 通道有原生命令目录，**When** 打开斜杠面板，**Then** 目录为该品牌真实命令集的 ready/loading/error/absent 四态投影，无伪命令。
 2. **Given** 附件能力就绪，**When** 选择附件并发送，**Then** prepare 产出不透明 ref（含 sha256），submit 携带 refs，对端收到的内容哈希一致。
 3. **Given** prepare 被拒，**When** 提交，**Then** 附件保留在草稿并显示原因，不静默丢弃。
-4. **Given** 通道无命令目录承载（当前 Claude Code，见 S-07），**When** 查看命令/附件，**Then** 诚实缺席 + 原因（裁定前默认形态）。
+4. **Given** 通道命令目录未探针（Claude Code，见 S-07/PC-10）或附件有负证据（握手 promptCapabilities 空），**When** 查看命令/附件，**Then** 探针播发即接线、未播发/负证据则诚实缺席 + 原因，不留空也不假绿。
 
 ### User Story 4 - 发送结果三态可知 (Priority: P1，包 C)
 
