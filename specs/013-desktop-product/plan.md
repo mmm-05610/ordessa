@@ -88,8 +88,8 @@ packages/
 └── workbench/                     ← P-A  设置贡献点（C-06）
 
 plugins/
-├── connectors/{ordessa,acp}/      ← P-B  env 交接 / wire 客户端对齐
-└── harness/api/                   ← P-B  C-08 可用性契约载体
+├── connectors/{ordessa,acp}/      🔒 只读（既有 env 契约已冻结，core 侧适配即可）
+└── harness/…                      🔒 只读（C-08 实现留待后续插件线）
 
 assets/brand/                      ★ 图标单一事实位置（用户设计后放入；P-A/P-C 只读消费）
 └── icon.svg                       矢量源；换图不改代码，占位期间不阻塞
@@ -142,7 +142,7 @@ tests/integration/                 ← 归位（acp-connector / acp_orchestratio
 | --- | --- |
 | **worktree** | `worktrees/013-a-desktop-host`（分支 `codex/013-a-desktop-host`） |
 | **写入面** | `apps/desktop/**`、`packages/desktop-platform/{contracts,ui,ui-components,extension-api,extension-loader,extension-host,native-bridge}/**`、`packages/workbench/**`、本包报告 |
-| **申报改动**（须登记，不擅改） | `plugins/chat/frontend/src/theme.ts`（C-05 迁移） |
+| **插件改动** | **无**（013 零插件改动；`plugins/chat` 的主题收敛留待插件线） |
 | **负责契约** | C-04（TS 实现）、C-05、C-06、C-07 的定义与实现；C-03/08 的类型与消费 |
 | **交付** | 产品身份/图标/关于/版本注入、日志 TS sink、单实例 + before-quit + 窗口状态 + 崩溃恢复、故障 UI、设置页、诊断导出、主题收敛、命令面板 + 快捷键 + 键盘可达、smoke 代码拆出 |
 
@@ -151,8 +151,8 @@ tests/integration/                 ← 归位（acp-connector / acp_orchestratio
 | 项 | 内容 |
 | --- | --- |
 | **worktree** | `worktrees/013-b-server-runtime`（分支 `codex/013-b-server-runtime`） |
-| **写入面** | `apps/server/**`、`packages/server-plugin-api/**`、`packages/desktop-platform/server-bridge/**`、`plugins/connectors/{ordessa,acp}/**`、`plugins/harness/api/**`、本包报告 |
-| **负责契约** | C-01、C-02、C-03 的定义与实现；C-04（Python 实现）；C-08 契约载体 |
+| **写入面** | `apps/server/**`、`packages/server-plugin-api/**`、`packages/desktop-platform/server-bridge/**`、本包报告 |
+| **负责契约** | C-01、C-02、C-03 的定义与实现；C-04（Python 实现） |
 | **交付** | 默认数据根 + CLI 缺省 + 跨语言一致性测试、随机 loopback origin、Server 生命周期模块（spawn/就绪/退出只杀自己）、wire 传输口对插件发布、日志 Python sink、Harness 可用性契约 |
 
 ### P-C — 发行物：deb + 一键更新 + 捆绑
@@ -193,12 +193,25 @@ tests/integration/                 ← 归位（acp-connector / acp_orchestratio
 
 013 完成后应报告 **「core 发行能力就绪」**，**不是**「完整产品首版已发行」。理由：F2/F3（三品牌真实对话、配置与输入经真实接缝）不在本轮范围；三品牌可用性验收与真实模型调用属后续线。
 
+## 插件改动清单（013 = **空**）
+
+**本阶段是 core 阶段，不改任何插件。** 下表列明原方案 3 处插件触点如何由 core 侧替代，以及各自留下的已知缺口（登记，不隐瞒）。
+
+| 原计划的插件改动 | 现处置 | 留下的已知缺口 |
+| --- | --- | --- |
+| `plugins/chat/frontend/src/theme.ts` 迁移到 C-05 | **不改**。core 提供 C-05，`packages/workbench`（core）收敛为消费方 | chat 界面暂不随全局主题切换，保留本地主题；由后续插件线收敛 |
+| `plugins/connectors/{ordessa,acp}/**` env 交接 / wire 对齐 | **不改**。其 env 契约（`ORDESSA_SERVER_ORIGIN` / `ORDESSA_SERVER_TOKEN_FILE`）已冻结且正确，core 侧正确设置即可 | 若实测与新宿主不兼容，**core 侧适配优先**；确需改插件须先经用户裁定 |
+| `plugins/harness/api` 承载 C-08 | **不改**。C-08 **类型**移入 core 的 `packages/desktop-platform/contracts`；实现留待插件线 | UI 显示"未提供 Harness 可用性信息"（诚实缺席，**不**假绿）；真实可用性由后续插件线提供 |
+
+**例外协议**：实施中若发现**确需**改插件才能完成某项 core 能力 → **停止该项**，上报主会话并取得用户裁定；批准后逐文件登记再动。**禁止**静默改插件、禁止以"顺手"为由扩大写入面。
+
+
 ## 写入面纪律（三包共同遵守）
 
 1. **只写自己的写入面**；其他树只读。
 2. **契约冻结**：`contracts/**` 不得修改；确需变更 → 上报主会话并**停受影响任务**。
 3. **根 `package.json` / `package-lock.json` 归 P-C**；P-A/P-B 如需根脚本，在报告中登记由主会话统一合入；**lock 只由 P-C 最后生成**。
-4. **申报改动**（如 P-A 动 `plugins/chat/**`）必须逐文件登记在本包报告，不得静默。
+4. **零插件改动**：`plugins/**` 一律只读。确需改插件 → **必须先上报主会话并取得用户裁定**，经批准后逐文件登记方可进行；**不得静默改**。
 5. **不操作 git**（constitution）：不提交、不合并、不 push、不动其他 worktree；git 检查点由主会话负责。
 6. **不 kill/restart 用户服务**（`docs/known-issues.md` §services）。
 7. **零真实模型调用**；受控 fixture 明确标注。

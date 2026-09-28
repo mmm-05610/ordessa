@@ -20,7 +20,7 @@ from typing import Any
 
 import pytest
 
-REPO = Path(__file__).resolve().parents[2]
+REPO = Path(__file__).resolve().parents[3]
 PLUGIN = REPO / "plugins" / "harness"
 # The old chain's `worker-entry.mjs` is retired by the plugin (see its
 # REMOVALS.md).  The `ports` fixture below still names it, so those

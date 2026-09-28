@@ -11,7 +11,7 @@ import time
 
 import pytest
 
-from tests.acp_orchestration.conftest import HELLO, session_new_events
+from tests.integration.acp_orchestration.conftest import HELLO, session_new_events
 
 
 def ws_close_code(server, url, headers):

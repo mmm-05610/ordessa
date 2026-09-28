@@ -1,0 +1,52 @@
+#!/bin/sh
+# prerm -- C-09 A3: stop a running instance before the files go away.
+#
+# Only instances this package started are signalled, and only those owned by
+# the invoking user or root. We never pkill by bare name: an unrelated process
+# that happens to share the name must survive (same discipline as the host's
+# "only kill the pid you spawned", C-02 §5).
+#
+# A failed stop is reported but does not abort the removal -- refusing to
+# remove a package because a process is busy leaves the user worse off.
+
+set -e
+
+ORDESSA_PIDFILE=/run/ordessa/ordessa.pid
+
+stop_instance() {
+  [ -f "$ORDESSA_PIDFILE" ] || return 0
+  pid=$(cat "$ORDESSA_PIDFILE" 2>/dev/null || true)
+  [ -n "$pid" ] || return 0
+  # A stale pidfile naming a recycled pid must not signal an innocent process:
+  # confirm the process really is ours before sending anything.
+  if [ ! -r "/proc/$pid/cmdline" ]; then
+    rm -f "$ORDESSA_PIDFILE"
+    return 0
+  fi
+  if ! tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null | grep -q '/opt/ordessa/'; then
+    rm -f "$ORDESSA_PIDFILE"
+    return 0
+  fi
+  echo "ordessa: stopping running instance (pid $pid)..." >&2
+  kill -TERM "$pid" 2>/dev/null || true
+  i=0
+  while [ $i -lt 20 ]; do
+    [ -d "/proc/$pid" ] || break
+    sleep 0.5
+    i=$((i + 1))
+  done
+  if [ -d "/proc/$pid" ]; then
+    echo "ordessa: instance did not exit; leaving it alone." >&2
+  fi
+  rm -f "$ORDESSA_PIDFILE"
+}
+
+case "$1" in
+  remove|deconfigure)
+    stop_instance
+    ;;
+esac
+
+#DEBHELPER#
+
+exit 0

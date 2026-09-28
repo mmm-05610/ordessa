@@ -53,7 +53,7 @@ specs/013-desktop-product/
 ├── specs/013-desktop-product/contracts/**   （冻结）
 ├── apps/**                             （归 P-A / P-B）
 ├── packages/**                         （归 P-A / P-B）
-├── plugins/**                          （归 P-B）
+├── plugins/**                          （**全部只读**，013 零插件改动）
 └── 其他 worktree
 ```
 

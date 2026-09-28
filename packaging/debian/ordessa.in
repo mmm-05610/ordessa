@@ -1,0 +1,88 @@
+#!/bin/sh
+# /opt/ordessa/bin/ordessa -- the release launcher (C-09 A2, FR-072).
+#
+# One command starts the product on a clean machine. Everything it needs is
+# already on disk: the fixed-version Python, the verified Server dependency
+# closure, the ACP bridge and the prebuilt Electron application. It builds
+# nothing, downloads nothing, and reads no development tree.
+#
+# FR-072: this script must NEVER pass --no-sandbox. The Chromium sandbox is the
+# renderer isolation boundary; a release that starts with it disabled trades
+# security for a problem that only shows up on developer machines with an
+# unusual kernel. `tests/integration/packaging/release-command.test.mjs` fails
+# the build if this string ever appears in the shipped command path.
+#
+# Environment it sets:
+#   ORDESSA_BUNDLED_ROOT  where P-B's server-bridge looks for {python,bin,harnesses}
+#   ORDESSA_DATA_ROOT     data root, defaulting to ~/.ordessa (C-01)
+#   ELECTRON_USER_DATA_DIR  kept out of $HOME so a root launch cannot squat the
+#                          user's real profile
+
+set -eu
+
+ORDESSA_PREFIX=/opt/ordessa
+ORDESSA_APP="$ORDESSA_PREFIX/app"
+
+# Resolve symlinks so `ordessa` works when /usr/local/bin/ordessa links here.
+SELF=$0
+while [ -L "$SELF" ]; do
+  LINK=$(readlink "$SELF")
+  case $LINK in
+    /*) SELF=$LINK ;;
+    *) SELF=$(dirname "$SELF")/$LINK ;;
+  esac
+done
+# Follow the launcher symlink to find the prefix (lets the deb ship
+# /usr/bin/ordessa -> /opt/ordessa/bin/ordessa).
+HANDLER=$(dirname "$SELF")
+if [ "$HANDLER" = "/usr/bin" ] || [ "$HANDLER" = "/usr/local/bin" ]; then
+  ORDESSA_PREFIX=/opt/ordessa
+  ORDESSA_APP="$ORDESSA_PREFIX/app"
+fi
+
+# Fail early and name the missing piece rather than half-starting (C-02 §6,
+# BUNDLED_RUNTIME_MISSING).
+for required in "$ORDESSA_APP/electron" "$ORDESSA_PREFIX/bin/acp" "$ORDESSA_PREFIX/python/bin/python3.12"; do
+  if [ ! -e "$required" ]; then
+    echo "ordessa: BUNDLED_RUNTIME_MISSING: $required is missing from this installation." >&2
+    echo "ordessa:   remedy: reinstall the package (sudo apt install --reinstall ordessa)." >&2
+    exit 78
+  fi
+done
+
+: "${ORDESSA_DATA_ROOT:=$HOME/.ordessa}"
+export ORDESSA_DATA_ROOT
+export ORDESSA_BUNDLED_ROOT="$ORDESSA_PREFIX"
+export PATH="$ORDESSA_PREFIX/bin:$PATH"
+
+# The single-instance pidfile prerm looks for. /run needs root, so fall
+# back to the data root rather than failing the launch.
+if [ -w /run ] || [ "$(id -u)" = "0" ]; then
+  PIDDIR=/run/ordessa
+else
+  PIDDIR="$ORDESSA_DATA_ROOT/run"
+fi
+mkdir -p "$PIDDIR" 2>/dev/null || PIDDIR="$ORDESSA_DATA_ROOT/run"
+mkdir -p "$ORDESSA_DATA_ROOT" 2>/dev/null || true
+
+# A second launch focuses the existing window instead of starting a rival
+# instance (C-02 §8 case 6). The app itself also takes a lock; this is the
+# cheap path that avoids spawning Electron twice.
+if [ -f "$PIDDIR/ordessa.pid" ]; then
+  oldpid=$(cat "$PIDDIR/ordessa.pid" 2>/dev/null || true)
+  if [ -n "${oldpid:-}" ] && [ -d "/proc/$oldpid" ]; then
+    echo "ordessa: already running (pid $oldpid)." >&2
+    exit 0
+  fi
+  rm -f "$PIDDIR/ordessa.pid"
+fi
+
+echo $$ > "$PIDDIR/ordessa.pid"
+cleanup() { rm -f "$PIDDIR/ordessa.pid"; }
+trap cleanup EXIT INT TERM
+
+# NOTE: no --no-sandbox here, and none may be added. See FR-072 above.
+exec "$ORDESSA_APP/electron" \
+  --ozone-platform=x11 \
+  --app="$ORDESSA_APP/package.json" \
+  "$@"

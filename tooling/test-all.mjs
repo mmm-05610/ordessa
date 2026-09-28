@@ -58,7 +58,7 @@ const PREREQUISITES = [
 // loudly instead of dropping out of the aggregate.
 const EXTRA_ROOTS = [
   { name: 'node-test:products/desktop', probe: 'products/desktop/tests', command: ['node', '--test', 'products/desktop/tests/'] },
-  { name: 'rig:tests/acp-connector', probe: 'tests/acp-connector', command: ['npx', 'vitest', 'run', '--root', 'tests/acp-connector'] },
+  { name: 'rig:tests/integration/acp-connector', probe: 'tests/integration/acp-connector', command: ['npx', 'vitest', 'run', '--root', 'tests/integration/acp-connector'] },
 ]
 
 const ELECTRON_GATES = ['test:electron', 'test:extensions', 'test:agent-ui', 'test:agent-shell', 'test:ui-service', 'test:ui-foundations', 'test:ui-preview']

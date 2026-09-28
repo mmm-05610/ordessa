@@ -1,0 +1,34 @@
+#!/bin/sh
+# postinst -- C-09 A3.
+#
+# Refresh the desktop/icon caches and tell the user where their data root is.
+# It deliberately does NOT create ~/.ordessa: creating a data root on the
+# user's behalf is the host's job at first launch (C-01), and doing it here
+# would produce a root with the wrong owner after a `sudo dpkg -i`.
+
+set -e
+
+case "$1" in
+  configure)
+    if command -v update-desktop-database >/dev/null 2>&1; then
+      update-desktop-database -q /usr/share/applications || true
+    fi
+    if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+      gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || true
+    fi
+    # The chrome-sandbox helper needs the setuid bit for the Chromium sandbox
+    # to work. The release launcher never passes --no-sandbox (FR-072), so if
+    # this is missing the app would start without a sandbox -- warn loudly
+    # rather than fail the install, and never "fix" it by disabling the sandbox.
+    if [ -e /opt/ordessa/app/chrome-sandbox ] && [ ! -u /opt/ordessa/app/chrome-sandbox ]; then
+      echo "ordessa: WARNING: /opt/ordessa/app/chrome-sandbox is not setuid-root;" >&2
+      echo "ordessa:          the application sandbox will be unavailable." >&2
+    fi
+    echo "ordessa: installed. Run 'ordessa' to start; your data lives in ~/.ordessa"
+    echo "ordessa:          (created on first launch, not by this package)."
+    ;;
+esac
+
+#DEBHELPER#
+
+exit 0

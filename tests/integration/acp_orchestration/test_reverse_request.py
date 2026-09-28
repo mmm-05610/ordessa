@@ -9,7 +9,7 @@ own JSON-RPC response.  The peer is the only component that ever decides.
 """
 import time
 
-from tests.acp_orchestration.conftest import peer_events
+from tests.integration.acp_orchestration.conftest import peer_events
 
 
 def open_pending_permission(ports, project, prompt="scenario:permission"):

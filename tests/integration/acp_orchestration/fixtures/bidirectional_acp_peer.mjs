@@ -1,6 +1,6 @@
 /**
  * Controlled bidirectional ACP peer for the acp-orchestration target tests
- * (tests/acp_orchestration).  It speaks the ACP surface the production bridge
+ * (tests/integration/acp_orchestration).  It speaks the ACP surface the production bridge
  * (plugins/agent-box-harness/third_party/harness_remote/bridge) actually uses:
  * initialize / authenticate / session/new / session/load / session/prompt /
  * session/cancel, plus the reverse session/request_permission round-trip.

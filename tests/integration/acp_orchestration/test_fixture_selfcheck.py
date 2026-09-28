@@ -13,7 +13,7 @@ import time
 
 import pytest
 
-from tests.acp_orchestration.conftest import NODE, PEER, peer_events
+from tests.integration.acp_orchestration.conftest import NODE, PEER, peer_events
 
 
 class PeerClient:

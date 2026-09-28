@@ -12,9 +12,9 @@ import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL, URL } from 'node:url'
 import { transformSync } from 'esbuild'
-import { contractAliases } from '../../tooling/vitest-extensions.mjs'
+import { contractAliases } from '../../../tooling/vitest-extensions.mjs'
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')
 const SRC_DIR = path.join(ROOT, 'plugins/connectors/acp/src/')
 // The one contract-alias map the product's vitest configs also use, so this loader can never
 // resolve `@extensions/<id>/contract.js` to a different module than the product does.
