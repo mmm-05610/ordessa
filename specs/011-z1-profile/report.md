@@ -195,3 +195,67 @@ specs/011-z1-profile/**）。
 解释；③ 复核路径零返工保留（dispatch/ 简报 + 本线全部交付物即为基线）。
 据此本线以 PARTIAL 收口；用户事后裁定不可接受时，仅追加独立复核轮次，
 不撤销交付物。
+
+---
+
+# 014 / profile-api r2 段（2026-09-28 增补，014 P-A 线）
+
+树 `/home/maoqh/projects/ordessa/worktrees/014-a-profile`，分支
+`codex/014-a-profile`（基线 = main 491aa92392 + merge `codex/plugin-profile`
+@ 30cb66d601）。本段登记 profile-api 以 r2 形态的正式交付（014 PA-2）与
+解锁复验结果（PA-3），详细账见 `specs/014-plugin-release/reports/P-A-report.md`。
+
+## r2 交付（PA-2）
+
+- **修复在位核对**：`plugins/profile/src/ordessa_profile/plugin.py:21` 的
+  foundation 适配（`from pacthold_runtime_compat.resource_contracts import
+  AgentBoxProfileV1`）随合并线在位，无需恢复提交。
+- **r2 实现提交链**（codex/014-a-profile）：
+  - `51c7905108` — 受控 runtime 替身适配合并后 C4 服务协议
+    （activate_generation 签发 operation 绑定 NativeActivationReceipt、
+    readback 携带一致 receipt；测试断言零改动）——恢复 140 口径全绿；
+  - `887d0700df` — PA-5 受控品牌矩阵（12 条）+ 三品牌金样；
+  - `e6f720d347` — PA-4 桌面三包 manifest/build.mjs/诚实 entry。
+  r2 `implementationSha` = `e6f720d347d3258bfb795c12ee703676c24ca24f`；
+  `dependsOn` = foundation `8844c475bc02a185ab194c69eed873122aa48349`；
+  `planAnchorRef` = `refs/heads/codex/014-a-profile`。
+- **checkpoint**：`specs/011-plugin-rollout/checkpoints/profile-api.json` 已
+  更新为 version r2（按派单指名原位修订；v1 内容由未动的 ready 分支
+  `codex/011-profile-api-ready @ 4943628f47` 与 git 历史保真，旧 ref 零移动）。
+- **退役准备（PA-7，S-08③）**：仲裁裁定 `agent-box.profile@1` 唯一声明者 =
+  profile-api（加载顺序证据：双声明下"先者赢后者 FAIL"），逐文件退役清单
+  R1–R10 与执行顺序 → `specs/011-z1-profile/retirement-request.md`；
+  本包零删除执行。
+
+## r2 验证门（本树复跑，2026-09-28）
+
+| 门 | 结果 |
+| --- | --- |
+| `.venv/bin/python -m pytest plugins/profile/tests -q` | **152 passed**（140 旧账全保真 + 12 条 PA-5 品牌矩阵） |
+| `bash plugins/profile/tests/boundary_check.sh` | 0 violations |
+| `bash plugins/profile/tests/run_counterexamples.sh` | 12/12 注入被门判别 |
+| `tsc -p …/tsconfig.json` ×3（api/frontend/integrations/chat） | 全部 0 错误 |
+| 三包 `vitest run` | **28 passed**（9 + 9 + 10，旧账口径） |
+| PA-4 构建演练（ORDESSA_PRODUCT_OUTPUT_ROOT 重向下） | 三包均出 entry.js+manifest.json（api 另出 contract.js） |
+
+## 四线解锁复验（PA-3，scratch 组合树，不落本分支）
+
+| 线 | merge（组合提交） | 实测 | 旧账口径与漂移 |
+| --- | --- | --- | --- |
+| Q1 skills | `codex/plugin-skills` @ b0d4f2686a → `1163f46d06` | `pytest plugins/assets/skills/tests -q` → **433 passed**；`test_profile_facet_contribution.py` 6 条指名 ID 全绿（registration_uses_published_facet_api_only / provider_compile_declares_zero / real_resolve_round_trip / read_only_no_writes / absent_profile_refuses / harness_port_absence） | 433 = 零漂移 |
+| Q3 subagents | `codex/plugin-subagents` @ 5109f1ea7d → `7cc74652e3` | `test_profile_facet_t10.py` → **28 passed**；整包 → **890 passed** | 671 → 890：漂移 +219，原因 = 合并线为"未完成工作保全"的 consolidation 分支，其 011 后批次新增测试；零新增红 |
+| Q4 mcp | `codex/plugin-mcp` @ ba891aff05 → `ef9e0204f0` | `pytest plugins/assets/mcp -q` → **518 passed / 4 failed / 2 errors**；`import ordessa_profile, backend, ordessa_server_compat.assets.mcp` 链通；T08 Profile facet 未实现（backend 零 `ordessa_profile` import） | 461 → 518P+6 红新增：漂移已定性归 mcp 线（① 自带 registered drift ledger 过期：archiveDefinition→archive 改名已落地账未销；② TS 契约 interface 改名后 fixture 解析失败；③ harness_wiring 受控链替身未适配合并后 C4 协议——与 profile 替身同类，profile 侧已在其写入面内修复，mcp 侧归 mcp 线） |
+| Q5 permissions | 无需 merge（main 已含） | `import ordessa_profile` 成功；`pytest plugins/permissions -q` → **634 passed** | glue（T06 两域）未实现，如实登记不代写 |
+
+三条 scratch 组合树已删（worktree remove），组合提交仅存 SHA 引用。
+
+## r2 诚实边界（未变与新增）
+
+- 真实浏览器几何 / 200% 缩放 / 键盘全路径（G18）仍未执行——014 P-A 已把
+  checklist 列入 report，待产品装配。
+- 三品牌矩阵为**受控面上限**：pi 0.86.1 本机在位（`--version` rc=0）但钉版
+  0.84.2 缺席且 0.86.1 拒收投影面 `--agent-dir/--skill-dir`（011-q1-skills
+  探针第一手记录）；codex/claude CLI 二进制缺席。三品牌"真实 CLI 装载"格
+  如实 unknown，矩阵断言只在真实 harness 品牌面（只读消费）+ 受控端口上成立。
+- 真实模型调用：仍未授权，零调用。
+
