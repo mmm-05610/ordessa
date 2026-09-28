@@ -2,21 +2,11 @@
 
 本线副本，允许勾选并追加查漏任务。共同 plan 的 owner 分配优先；原表范围外步骤登记依赖/C0 集成，不由本线偷改。原包更晚变更须有明确裁定，不自行缩需求。
 
-- [x] R0：读完整输入，冻结实际 SHA/包/红 ID/环境，盘点复用。（inventory.md / evidence/platform-bindings.md；旧基线实测 70 passed @ b77f9f23cb）
-- [x] R1：独立工作与接口请求完成；消费必需 checkpoint 并留精确 SHA。
-  - [x] profile-api 检查点已发布：codex/011-profile-api-ready @ 4943628f47（impl f5435be938）
-  - [x] api-requests.md 登记 foundation/harness-api/chat-api 缺口
-  - [x] 消费 foundation @ 8844c475bc、chat-api @ 54ad26c15d、chat-api-r2 @ 31fb2db46d（api-requests.md 消费记录）
-  - [x] harness-api：已发布并消费（d3f026904e；impl 61966e3118 祖先已核）。等待期累计 ~155 分钟 60+ 次有上限轮询，期间完成 r3 消费与载体适配器。缺口登记 report.md
-- [x] R2：本线全部原包任务有实现/验收/依赖归属，生产假接口为零。
-  - [x] PV-01–PV-06、PV-08–PV-10 组件/服务级完成（见 report.md 对照）
-  - [x] PV-07 Profile 侧完成；真实 Harness 端口半边归属 C0（typed-blocked 边界有反例）
-  - [x] 载体适配器就绪并接真实服务：HarnessApiConfigPort→C0 ConfigurationApplicationService，G09–G12 全链在真实服务类上复跑（test_harness_real_service.py 5 项）
-  - [ ] PV-11 真实浏览器几何验收 + 真实品牌矩阵（依赖产品装配与授权；发布切片自身声明生产 ACP admission 未接线、无真实模型调用——未测清单见 report.md）
-- [x] R3：检查点/接线清单/许可迁移账/报告齐备，定向及相关全链门通过。
-  - [x] 140 py + 28 ts 测试、boundary 0 violations、12/12 反例（harness-api 消费后复跑）
-  - [x] reuse-ledger.md / integration-request.md / report.md 齐备
-- [x] R4：Spec Kit analyze 查漏完成（report.md §查漏），未完成项如实；本线 clean ready commit 发布。
+- [ ] R0：读完整输入，冻结实际 SHA/包/红 ID/环境，盘点复用。
+- [ ] R1：独立工作与接口请求完成；消费必需 checkpoint 并留精确 SHA。
+- [ ] R2：本线全部原包任务有实现/验收/依赖归属，生产假接口为零。
+- [ ] R3：检查点/接线清单/许可迁移账/报告齐备，定向及相关全链门通过。
+- [ ] R4：Spec Kit analyze/converge 查漏，未完成项如实；发布本线 clean ready commit。
 
 ## 原包：profile-v2
 
