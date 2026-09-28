@@ -449,7 +449,7 @@ def build_runtime_from_native_adapter(
     if controlled_test_peer:
         # The opt-in is only for the repository's one fixed, no-model ACP peer.
         # A caller cannot turn this into a generic command execution escape.
-        fixture = (Path(__file__).resolve().parents[4] / "tests" /
+        fixture = (Path(__file__).resolve().parents[4] / "tests" / "integration" /
                    "acp_orchestration" / "fixtures" / "bidirectional_acp_peer.mjs")
         if (harness_id != "pi" or adapter_command != node or type(adapter_args) is not tuple
                 or adapter_args != (str(fixture),) or not fixture.is_file()
