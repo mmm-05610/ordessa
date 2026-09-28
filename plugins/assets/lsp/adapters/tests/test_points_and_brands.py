@@ -22,6 +22,13 @@ from ordessa_lsp_adapters.project import ProjectionRefusal, _resolve_brand
 from _lsp_helpers import toml_pin
 
 
+def _pin_tuple(harness_id: str) -> tuple[int, int, int]:
+    """实测 pin → 三元组（与 descriptors 同解析，不硬编码）。"""
+    parts = [int(x) for x in toml_pin(harness_id).split(".")]
+    parts += [0] * (3 - len(parts))
+    return tuple(parts[:3])
+
+
 def _context(harness_id: str, native_version):
     return AdapterContext(
         targets=(),
@@ -88,7 +95,7 @@ class TestCallablePayload:
 
     def test_assess_unsupported_with_evidence(self, repo_pins) -> None:
         payload = self._payload("pi", repo_pins)
-        assessment = payload.assess(_context("pi", (2, 0, 0)), {})
+        assessment = payload.assess(_context("pi", _pin_tuple("pi")), {})
         assert isinstance(assessment, Assessment)
         assert assessment.status == "unsupported"
         assert assessment.evidence_ref is not None
@@ -97,29 +104,29 @@ class TestCallablePayload:
 
     def test_assess_brand_mismatch(self, repo_pins) -> None:
         payload = self._payload("pi", repo_pins)
-        assert payload.assess(_context("codex", (2, 0, 0)), {}).status == \
+        assert payload.assess(_context("codex", _pin_tuple("codex")), {}).status == \
             "unsupported"
 
     def test_assess_version_outside_pin_is_unknown(self, repo_pins) -> None:
         payload = self._payload("pi", repo_pins)
-        assert payload.assess(_context("pi", (9, 9, 9)), {}).status == "unknown"
+        assert payload.assess(_context("pi", tuple(x + 7 for x in _pin_tuple("pi"))), {}).status == "unknown"
 
     def test_compile_refuses_capability(self, repo_pins) -> None:
         payload = self._payload("codex", repo_pins)
-        refusal = payload.compile(_context("codex", (2, 0, 0)), None, {})
+        refusal = payload.compile(_context("codex", _pin_tuple("codex")), None, {})
         assert refusal.code == ErrorCode.CAPABILITY_UNSUPPORTED
         assert "config-reference" in refusal.reason
 
     def test_compile_rejects_malformed_payload_first(self, repo_pins) -> None:
         payload = self._payload("codex", repo_pins)
-        refusal = payload.compile(_context("codex", (2, 0, 0)), None,
+        refusal = payload.compile(_context("codex", _pin_tuple("codex")), None,
                                   {"sandbox_mode": "x"})
         assert refusal.code == ErrorCode.INVALID_FRAGMENT
 
     def test_verify_unknown_no_native_readback(self, repo_pins) -> None:
         from ordessa_harness_api.contracts import VerificationUnknown
         payload = self._payload("claude-code", repo_pins)
-        verdict = payload.verify(_context("claude-code", (0, 81, 2)), {})
+        verdict = payload.verify(_context("claude-code", _pin_tuple("claude-code")), {})
         assert isinstance(verdict, VerificationUnknown)
 
     def test_every_brand_carries_evidence_record(self, repo_pins) -> None:
