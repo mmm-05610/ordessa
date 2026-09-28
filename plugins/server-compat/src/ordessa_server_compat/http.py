@@ -15,7 +15,7 @@ from fastapi import Depends, Query, Request, Response
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 
-from ordessa_server.errors import ServerError
+from server_plugin_api import ServerError
 from ordessa_server.transport.http.admission import idempotency_key
 
 

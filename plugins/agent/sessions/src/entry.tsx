@@ -12,7 +12,10 @@ export default function createPlugin() {
       const ui = workbench.forScope(context.resources)
       ui.addView({ id: 'agent.sessions', title: 'Sessions', presentation: 'region', region: 'left', component: () => <SessionBrowser service={sessions} /> })
       commands.forScope(context.resources).add({ id: 'agent.open', title: 'Agents', execute: () => {
-        workbench.open('agent.sessions'); workbench.open('agent.conversation')
+        // ordessa.agent-conversation retired (014 P-C PC-6): the Chat page
+        // (ordessa.chat) is the conversation surface now; the old view id
+        // belongs to a retired registration chain and is never opened.
+        workbench.open('agent.sessions')
       } })
       ui.addUI({ id: 'agent.navigation', kind: 'command', slot: 'navigation', command: 'agent.open', label: 'Agents', icon: () => <span aria-hidden="true">◎</span> })
       return sessions

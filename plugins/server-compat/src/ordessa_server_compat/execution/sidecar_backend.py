@@ -18,10 +18,10 @@ from pacthold.execution.contracts import (
 )
 from pacthold.execution.first_run_lock import first_run_gate
 from pacthold.execution.lifecycle import NeutralRun, NeutralRunTracker
-from pacthold.extensions import capability
-from pacthold.extensions.runtime_composition.sandbox_port import SandboxPortUnavailable
-from pacthold.resource_contracts import AgentBoxProfileV1, PromptFragmentV1, WorkspaceV1
-from ordessa_server.errors import ServerError
+from pacthold_runtime_compat import capability
+from pacthold_runtime_compat.runtime_composition.sandbox_port import SandboxPortUnavailable
+from pacthold_runtime_compat.resource_contracts import AgentBoxProfileV1, PromptFragmentV1, WorkspaceV1
+from server_plugin_api import ServerError
 from ordessa_server_compat.execution.placement import PlacementUnsupported
 from ordessa_server_compat.execution.sidecar import (
     NativeHarnessPort, NativeProcessLauncher, SidecarError, SidecarHarnessPort,
@@ -31,7 +31,7 @@ from pacthold.work_core import (
     Freshness, Outcome, Phase, ProviderDescriptor, Ref, RefType,
 )
 from pacthold.work_core.errors import DispatchAmbiguous, ExecutionStartRejected
-from pacthold.work_core.registry import ExtensionRegistry
+from pacthold_runtime_compat.bootstrap import build_product_registry
 from pacthold.work_core.repository import CoreRepository
 from pacthold.work_core.services import ExecutionService, WorkService
 
@@ -203,7 +203,10 @@ class SidecarExecutionBackend:
         self.execution_service = ExecutionService(self.core_repository)
         self.resources = _BoundResources()
         self.provider = _CoreSidecarProvider(self)
-        self.registry = ExtensionRegistry()
+        # Post-T009 the bare kernel registry starts EMPTY; this is the
+        # product seam registered in BOUNDARY-BREAKS-FOR-B (seeded via
+        # pacthold_runtime_compat.bootstrap.build_product_registry()).
+        self.registry = build_product_registry()
         self.registry.register_resource_provider(self.resources.provider_id, self.resources)
         self.registry.register_execution_provider(self.provider)
         self._turn_by_core: dict[str, str] = {}

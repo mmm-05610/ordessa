@@ -26,6 +26,7 @@ answers an ACP frame: relayed lines pass through byte-for-byte.
 from __future__ import annotations
 
 import json
+import os
 import threading
 import uuid
 from typing import Any, Callable, Mapping
@@ -61,6 +62,7 @@ class AccessEntryTransport:
                  adapter: Mapping[str, Any], on_line: Callable[[str], None],
                  on_exit: Callable[[Any], None],
                  environment: dict[str, str] | None = None,
+                 controlled_test_peer: bool = False,
                  connect_timeout: float = 60.0, close_timeout: float = 12.0) -> None:
         self._harness_id = harness_id
         self._cwd = cwd
@@ -70,8 +72,16 @@ class AccessEntryTransport:
         self._on_exit = on_exit
         self._connect_timeout = connect_timeout
         self._close_timeout = close_timeout
+        if type(controlled_test_peer) is not bool:
+            raise TypeError("controlled_test_peer must be bool")
+        entry_argv = [node, entry, "--native"]
+        entry_environment = None if environment is None else dict(environment)
+        if controlled_test_peer:
+            entry_argv.append("--controlled-test-peer")
+            entry_environment = dict(os.environ if environment is None else environment)
+            entry_environment["AGENTBOX_ACCESS_TEST_MODE"] = "controlled-peer-v1"
         self._inner = NDJSONTransport(
-            argv=[node, entry, "--native"], cwd=cwd, environment=environment,
+            argv=entry_argv, cwd=cwd, environment=entry_environment,
             on_line=self._classify, on_exit=self._entry_exit,
         )
         self._control_lock = threading.Lock()

@@ -28,6 +28,7 @@ def main(argv: list[str] | None = None) -> int:
         parser().error("--confirm-source must resolve to the exact --source path")
 
     from ordessa_server.bootstrap import build_runtime
+    from ordessa_server.credentials import CredentialRecords
     from pacthold.storage import WindowsDpapiSecretStore
 
     runtime = build_runtime(args.data_root)
@@ -37,7 +38,11 @@ def main(argv: list[str] | None = None) -> int:
         runtime.start()
         credential_id, locator = store.import_file(source, "codex-login")
         try:
-            result = runtime.repository.register_credential(
+            # The credential table is the host's own storage primitive; this
+            # command writes it through that record layer directly. It used to
+            # reach `runtime.repository`, one of the runtime's business facade
+            # fields (removed by T014-S1b).
+            result = CredentialRecords(runtime.database).register(
                 credential_id, "codex-login", locator,
             )
         except BaseException:

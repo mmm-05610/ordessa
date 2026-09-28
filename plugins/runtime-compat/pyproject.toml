@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pacthold-runtime-compat"
+version = "0.1.0"
+description = "Pacthold runtime-compat: Agent-Box business SDK/contracts/composition assembly for the Pacthold kernel (specs/010 FR-011 relocation)"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+dependencies = ["pacthold"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+pacthold_runtime_compat = ["migrations/*.sql"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"log/slog"
+	"sync"
 	"testing"
 	"time"
 )
@@ -242,6 +243,40 @@ func TestTurnStreamCoalescesHighFrequencyDeltas(t *testing.T) {
 	second := readTurnEventWithTimeout(t, stream.events())
 	if second.Type != TurnEventTypeCompleted {
 		t.Fatalf("second event type=%q, want %q", second.Type, TurnEventTypeCompleted)
+	}
+}
+
+func TestTurnStreamKeepsLatestPendingPlanSnapshot(t *testing.T) {
+	t.Parallel()
+
+	// Build the stream without its pump so both snapshots are guaranteed to
+	// remain pending. A scheduling-dependent E2E cannot prove this contract.
+	stream := &turnStream{
+		logger: slog.New(slog.NewJSONHandler(io.Discard, nil)),
+		turnID: "turn-1",
+	}
+	stream.cond = sync.NewCond(&stream.mu)
+	stream.enqueue(TurnEvent{
+		Type: TurnEventTypePlanUpdated,
+		Plan: []TurnPlanStep{{Step: "capture requirements", Status: "pending"}},
+	}, false)
+	stream.enqueue(TurnEvent{
+		Type: TurnEventTypePlanUpdated,
+		Plan: []TurnPlanStep{{Step: "capture requirements", Status: "completed"},
+			{Step: "implement mapping", Status: "inProgress"}},
+	}, false)
+	stream.enqueue(TurnEvent{Type: TurnEventTypeCompleted, StopReason: "end_turn"}, true)
+
+	if len(stream.pending) != 2 {
+		t.Fatalf("pending events=%d, want latest plan plus completion", len(stream.pending))
+	}
+	plan := stream.pending[0].event
+	if plan.Type != TurnEventTypePlanUpdated || len(plan.Plan) != 2 ||
+		plan.Plan[0].Status != "completed" || plan.Plan[1].Status != "inProgress" {
+		t.Fatalf("latest plan snapshot was lost: %+v", plan)
+	}
+	if stream.pending[1].event.Type != TurnEventTypeCompleted {
+		t.Fatalf("completion missing after plan snapshot: %+v", stream.pending[1].event)
 	}
 }
 

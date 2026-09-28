@@ -90,9 +90,12 @@ describe('send flow (C04/A04/unknown)', () => {
 
   it('an unknown outcome (link dropped while awaiting) keeps the draft and never auto-retries', async () => {
     const facade = new FacadeFixture({ sessions: [{ id: 's1', title: '会话一' }], selectedSessionId: 's1', messages: { s1: [] } })
+    // Facade semantics since contracts 0.2.0: the facade itself decides the
+    // outcome is undecidable (evidenced channel loss) and says so — the UI
+    // never guesses.
     facade.sendBehavior = async () => {
       facade.setConnectionStatus('disconnected')
-      throw new Error('connection lost')
+      return { kind: 'unknown', operationId: 'op-1', reason: 'connection lost' }
     }
     const container = await mount(page(facade))
     await type(container, '结果不明的消息')

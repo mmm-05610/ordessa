@@ -6,7 +6,13 @@
 ## 项目概览
 - 项目：acp-adapter（Go ACP 适配器，当前支持 Codex App Server、Pi RPC 模式；Claude Code 在 Harness 的独立官方 ACP 适配器）
 - 当前阶段：Pi Adapter RPC 初版完成，Library Mode 持续收尾（R5 in progress）
-- 最近更新：2026-09-27
+- 最近更新：2026-09-28
+
+## 2026-09-28 受控 plan 快照回归与背压契约对齐
+- Codex fake app-server 连续发送两份 `turn/plan/updated` 时，现有 turn stream 可将尚未消费的首份快照替换为最终快照；旧 E2E 对“必须看到两份”的断言因此随调度波动。
+- 保留 ADR-0056 的最新 pending 快照语义。E2E 现在要求至少一份且最后一份为完整三步最终状态；仅在两步初始快照实际到达 ACP 时校验它。
+- 新增“仅初始快照不可通过最终状态校验”的反例，以及不启动 pump、确定性验证最新 pending plan 与 completion 顺序的队列单测。
+- 受控命令显式关闭真实模型：`E2E_REAL_CODEX=0 E2E_REAL_PI=0`。定向 E2E `-count=10`、队列单测 `-count=20`、`go test ./...` 均通过（Go 1.24.13，`GOCACHE=/tmp/ordessa-c0-gocache`）。
 
 ## 2026-09-27 Claude 模式退休
 - 删除 Go 桥的 `--adapter claude`、`internal/claude`、`pkg/claudeacp` 与专属 fake/集成测试；Codex/Pi 仍由同一 Go 桥提供。

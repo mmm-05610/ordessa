@@ -8,7 +8,7 @@ class HarnessesPlugin:
         from pacthold.extensions import PluginDescriptor
         return PluginDescriptor("harnesses", "Agent-Box Harnesses", "2.0.0a1", description="Official declarative Harness bundle", config_namespace="harnesses")
     def build(self, context):
-        from pacthold.extensions import PluginRegistration
+        from pacthold_runtime_compat.api import PluginRegistration
         # Brand-specific implementation stays inside the Harness package.
         from ordessa_harness.codex.credentials import CodexCredentialSource
         registration=create_codex().build(context)

@@ -21,7 +21,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Iterable, Mapping, Sequence
 
-from ordessa_server.records import digest as _digest, reject_sensitive_keys
+from server_plugin_api import digest as _digest, reject_sensitive_keys
 
 #: The sync set, in one fixed order. A record kind outside this set is refused
 #: by name rather than silently synced or silently dropped.

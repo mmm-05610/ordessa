@@ -1,4 +1,5 @@
-// Chat domain public contract (chat-api; r3 consumes foundation types).
+// Chat domain public contract (chat-api; r3 consumes foundation types, r4 is
+// the 014 P-C real-seam revision — see the ledger at the bottom of this file).
 //
 // Depends on `@ordessa/extension-api` and the shared platform component API.
 // Component keys are constructed by `defineChatComponentKey` through C7's
@@ -56,9 +57,9 @@ export type ChatScopedAction<I> = (input: I) => Promise<ChatActionResult>
 
 export type ChatLocation =
   | { readonly kind: 'draft'; readonly draftId: string; readonly connectionId?: string; readonly serverInstanceId?: string;
-      readonly projectId?: string; readonly harnessId?: string; readonly contextRevision: number }
+      readonly projectId?: string; readonly harnessId?: string; readonly contextRevision: number; readonly runtimeGeneration?: number }
   | { readonly kind: 'session'; readonly connectionId: string; readonly serverInstanceId?: string; readonly sessionId: string;
-      readonly projectId?: string; readonly harnessId?: string; readonly contextRevision: number }
+      readonly projectId?: string; readonly harnessId?: string; readonly contextRevision: number; readonly runtimeGeneration?: number }
 
 // ---------------------------------------------------------------------------
 // Display DTOs for the four replaceable keys (contracts.md §6)
@@ -207,15 +208,18 @@ export type ChatContentReference = string & { readonly [referenceBrand]: never }
 
 export type ChatInputEntryAction =
   | { readonly kind: 'insert-command'; readonly text: string }
-  | { readonly kind: 'add-content'; readonly prepare: (location: ChatLocation) => Promise<ChatPrepareResult> }
+  | { readonly kind: 'add-content'; readonly prepare: (location: ChatLocation, idempotencyKey: string) => Promise<ChatPrepareResult> }
   | { readonly kind: 'invoke'; readonly execute: (location: ChatLocation) => Promise<ChatActionResult> }
 
 /** Result of an add-content preparation: `accepted` carries the service-owned
- * reference; a refusal is explicit and never interpreted. */
+ * reference; a refusal is explicit and never interpreted; `unknown` means the
+ * preparation outcome is undecidable — the item stays in the draft, nothing is
+ * auto-retried or auto-cleaned (r4). */
 export type ChatPrepareResult =
   | { readonly status: 'accepted'; readonly reference: ChatContentReference }
   | { readonly status: 'refused'; readonly message: string }
   | { readonly status: 'unavailable' }
+  | { readonly status: 'unknown' }
 
 export interface ChatInputEntry {
   /** Unique within its source; routing uses this id, never the display title. */
@@ -252,9 +256,12 @@ export type ChatAttachmentPhase =
   | { readonly state: 'preparing' }
   | { readonly state: 'ready'; readonly reference: ChatContentReference }
   | { readonly state: 'failed'; readonly reason: string }
+  | { readonly state: 'unknown'; readonly operationId?: string }
 // Retry returns to `preparing`; remove terminates the current UI generation and
 // releases only this draft's own resources. Content already handed to a sent
-// record is never released by UI teardown (input-spec A05).
+// record is never released by UI teardown (input-spec A05). `unknown` (r4) is
+// the undecidable preparation outcome: the item stays visible and send-blocking,
+// retry re-uses the SAME idempotency key, and nothing is auto-reclaimed.
 
 export interface ChatInputItem {
   readonly id: string
@@ -288,6 +295,11 @@ export interface ChatSubmissionSnapshot {
   readonly draftRevision: number
   readonly text: string
   readonly attachmentIds: readonly string[]
+  /** r4 (R-Z2-2): the opaque prepared references of the ready items, in item
+   * order. The gateway resolves them through the owning service; ids stay for
+   * draft bookkeeping. Absent in pre-r4 producers — consumers must treat it as
+   * optional forever. */
+  readonly attachmentRefs?: readonly ChatContentReference[]
 }
 
 export type ChatSubmissionResult =
@@ -306,7 +318,8 @@ export type ChatSubmissionResult =
 
 export interface ChatCommandCatalog {
   get(target: ChatLocation):
-    | { readonly status: 'ready'; readonly commands: readonly { readonly id: string; readonly title: string; readonly insertText: string }[] }
+    | { readonly status: 'ready'; readonly commands: readonly { readonly id: string; readonly title: string;
+        readonly insertText: string; readonly description?: string }[] }
     | { readonly status: 'loading' }
     | { readonly status: 'error'; readonly message: string }
     | { readonly status: 'absent' }
@@ -393,3 +406,36 @@ export const ChatContributionsToken = new Token<ChatContributionsService>('ordes
 // The registration factory and the in-memory service implementation live in
 // ./registry (single runtime direction: registry → types here, never back).
 export { chatContribution, createChatContributions } from './registry'
+
+// ---------------------------------------------------------------------------
+// Revision ledger (r4 rules: every semantic change carries its compatibility
+// note here and in the delivering package's report).
+//
+// r1 — domain contract + registry (a3ec20c046).
+// r2 — prepare/execute signatures narrowed to explicit location params +
+//      ChatPrepareResult three-state (be672a59a0); no external consumers at
+//      publication, compatibility recorded in the checkpoint limitations.
+// r3 — ChatComponentKey aligned to the platform UiComponentKey (type-only;
+//      runtime objects unchanged) (47459b0acb).
+// r4 — 014 P-C real-seam revision (all changes additive; pre-r4 consumers keep
+//      compiling and behaving identically):
+//      1. ChatLocation.runtimeGeneration (PC-5): the backend-confirmed runtime
+//         generation when the session service observes one. Compatibility:
+//         contextRevision KEEPS its UI-internal staleness meaning; it never
+//         stands in for a backend generation, and an absent runtimeGeneration
+//         means exactly "no backend generation evidence" — producers must not
+//         synthesize one from UI counters.
+//      2. ChatSubmissionSnapshot.attachmentRefs (PC-3): opaque prepared
+//         references riding the submission; attachmentIds stay the draft
+//         bookkeeping identity. Optional; gateways resolve refs through the
+//         owning service and must refuse unknown refs, never drop them.
+//      3. ChatAttachmentPhase gains `unknown` and ChatPrepareResult gains an
+//         `unknown` status (PC-3): the undecidable preparation outcome keeps
+//         the item in the draft, send-blocking, retry with the SAME
+//         idempotency key, never auto-reclaimed.
+//      4. add-content prepare gains the idempotencyKey parameter (input-spec
+//         A05: the key is the retry identity, not the file name); the caller
+//         mints it once per item and re-uses it on every retry.
+//      5. ready catalog commands gain an optional `description` (the brand's
+//         own command description; absence renders title-only).
+// ---------------------------------------------------------------------------
