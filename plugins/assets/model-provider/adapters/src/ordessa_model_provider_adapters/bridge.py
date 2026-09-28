@@ -69,6 +69,10 @@ HANDLE_IDS = {
 ADAPTER_IDS = {"pi": "assets.model-provider.pi", "codex": "assets.model-provider.codex",
                "claude-code": "assets.model-provider.claude"}
 
+#: The environment target's handle suffix (the host issues one env target per
+#: brand beside the config file target; secrets bind only against it).
+ENV_HANDLE_SUFFIX = ".env"
+
 #: This package's adapter version, as the descriptor's ``adapter_versions``
 #: single point (installed dist is 1.0.0a1).
 ADAPTER_VERSION = (1, 0, 0)
@@ -132,7 +136,8 @@ def _claims(brand: str) -> tuple[FieldClaim, ...]:
         ))
     else:
         claims.append(FieldClaim("file", handle, ("env",)))
-    claims.append(FieldClaim("environment", handle, (SECRET_SLOTS[brand],)))
+    claims.append(FieldClaim("environment", handle + ENV_HANDLE_SUFFIX,
+                             (SECRET_SLOTS[brand],)))
     return tuple(claims)
 
 

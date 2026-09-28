@@ -379,8 +379,12 @@ class ControlledComposition:
             payload["brandFields"] = brand_fields
         return payload
 
+    def reconfiguration_mode(self, payload: dict) -> str:
+        """'session-local' | 'restart-resume' | 'refused' for one choice."""
+        return bridge.reconfiguration_for(self.brand, payload)
+
     def restart_resumed(self, payload: dict) -> bool:
-        return bridge.reconfiguration_for(self.brand, payload) == "restart-resume"
+        return self.reconfiguration_mode(payload) == "restart-resume"
 
     def prompt_route(self, text="hello") -> dict[str, object]:
         return self.instance.prompt(text)
