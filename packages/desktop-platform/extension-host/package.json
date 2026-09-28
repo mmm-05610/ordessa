@@ -5,7 +5,9 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./main": "./src/main/index.ts"
+    "./main": "./src/main/index.ts",
+    "./platform": "./src/platform.ts",
+    "./services": "./src/services/index.ts"
   },
   "scripts": {
     "test": "vitest run --maxWorkers=1",

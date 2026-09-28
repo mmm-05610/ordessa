@@ -1,5 +1,4 @@
-import type { BrowserWindow } from 'electron'
-export async function verifyAgentUI(win: BrowserWindow) {
+export async function verifyAgentUI(win) {
   return win.webContents.executeJavaScript(`(async () => {
     const wait = () => new Promise(r => setTimeout(r, 100));
     const content = () => document.querySelector('.probe-viewport').textContent;

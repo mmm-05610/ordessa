@@ -2,6 +2,15 @@
   "name": "@modular/desktop-app",
   "version": "0.1.0",
   "private": true,
+  "description": "Ordessa Desktop — 本地优先的智能体工作台宿主（Electron）",
+  "productName": "Ordessa Desktop",
+  "author": "Ordessa",
+  "license": "AGPL-3.0-or-later",
+  "homepage": "https://github.com/mmm-05610/agent-box",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mmm-05610/agent-box.git"
+  },
   "type": "module",
   "main": "dist/electron-main.cjs",
   "scripts": {
@@ -10,7 +19,10 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run --maxWorkers=1",
     "test:electron": "node scripts/smoke-electron.mjs",
-    "start": "node scripts/run-dev.mjs"
+    "start": "node scripts/run-dev.mjs",
+    "build:icons": "node scripts/build-icons.mjs",
+    "build:info": "node scripts/build-info.mjs",
+    "test:hygiene": "node scripts/test-release-hygiene.mjs"
   },
   "dependencies": {
     "@ordessa/extension-host": "0.1.0",

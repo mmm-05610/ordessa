@@ -3,34 +3,11 @@
 // viewport widths. Nothing here is asserted from jsdom — the point of this module
 // is that geometry, theme inheritance and stylesheet pollution are measured in the
 // browser the product actually runs in.
-import type { BrowserWindow } from 'electron'
 
-const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
-export interface UiFoundationProbe {
-  viewport: { width: number }
-  pageOverflowX: number
-  rects: Record<string, { x: number; y: number; w: number; h: number }>
-  scrollOwnsOverflow: string
-  panelBodyScrollable: string
-  panelHeaderShrink: string
-  scrollInnerOverflow: number
-  themeFollowsHost: { beforeSurface: string; afterSurface: string }
-  loadedComponent: string | null
-  loadedInsideCard: boolean
-  pollution: {
-    sheetFound: boolean
-    foreignBefore: Record<string, string>
-    foreignWithoutSheet: Record<string, string>
-    foreignAfter: Record<string, string>
-    uiWithSheet: Record<string, string>
-    uiWithoutSheet: Record<string, string>
-  }
-  draftValue: string
-  reducedMotion: boolean
-}
 
-export async function probeUiFoundations(win: BrowserWindow, width: number): Promise<UiFoundationProbe> {
+export async function probeUiFoundations(win, width) {
   // A hidden smoke window can keep stale computed values after a variable change, and
   // this probe measures computed style; show it (without taking focus) for the measurement.
   if (!win.isVisible()) win.showInactive()
@@ -121,7 +98,7 @@ export async function probeUiFoundations(win: BrowserWindow, width: number): Pro
 }
 
 /** Real keyboard order: focus one control, press Tab through the browser input stack. */
-export async function tabForwardFrom(win: BrowserWindow, testId: string) {
+export async function tabForwardFrom(win, testId) {
   const before = await win.webContents.executeJavaScript(
     `(() => { const el = document.querySelector('[data-testid="${testId}"]'); if (!el) return 'missing'; el.focus(); return el.tagName + ':' + (el.getAttribute('data-testid') ?? ''); })()`)
   win.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'Tab' })

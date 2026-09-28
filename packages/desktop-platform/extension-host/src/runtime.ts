@@ -1,9 +1,49 @@
-import { PluginRegistry } from '@lumino/coreutils'
+import { PluginRegistry, type Token } from '@lumino/coreutils'
 import { Contributions, OwnedResources, type Host, type RootView, type Plugin, type PluginContext } from '@ordessa/extension-api'
+import { CommandSourceToken, DiagnosticsContributionToken, HarnessAvailabilityToken, KeybindingServiceToken, LoggerToken, SettingsContributionToken, ThemeServiceToken, WirePortToken } from '../../contracts/foundation/src/product/tokens'
 export { scoped, OwnedResources } from '@ordessa/extension-api'
 export type { Host, RootView, Plugin } from '@ordessa/extension-api'
 export interface PluginState { id: string; phase: 'registered' | 'starting' | 'active' | 'stopped' | 'failed'; error?: string }
-export function runtime(plugins: Plugin<any>[]) {
+
+// 平台服务类型从公开契约模块内联取（相对路径），使 runtime.ts 不依赖任何构建期别名。
+type Logger = import('../../contracts/foundation/src/product/logging').Logger
+type ThemeService = import('../../contracts/foundation/src/product/theme').ThemeService
+type SettingsContribution = import('../../contracts/foundation/src/product/settings-diagnostics').SettingsContribution
+type DiagnosticsContribution = import('../../contracts/foundation/src/product/settings-diagnostics').DiagnosticsContribution
+type CommandSource = import('../../contracts/foundation/src/product/commands-keybindings').CommandSource
+type KeybindingService = import('../../contracts/foundation/src/product/commands-keybindings').KeybindingService
+type WirePort = import('../../contracts/foundation/src/product/wire-port').WirePort
+type HarnessAvailability = import('../../contracts/foundation/src/product/harness-availability').HarnessAvailability
+
+export interface PlatformServiceMap {
+  logger?: Logger; theme?: ThemeService; settings?: SettingsContribution
+  diagnostics?: DiagnosticsContribution; commands?: CommandSource; keybindings?: KeybindingService
+  wire?: WirePort; harness?: HarnessAvailability
+}
+
+/**
+ * 平台服务注册为**宿主自带的提供者插件**：lumino 只认 `provides`（没有 application 兜底），
+ * 因此每个 token 一个内部 provider，插件用 `requires` 拿到对应实例。
+ * 缺席的服务不注册 → 解析失败是显式的 `No provider`，而不是一个 undefined 悄悄流下去。
+ */
+function registerHostServices(registry: PluginRegistry<Host>, services: PlatformServiceMap) {
+  const pairs: [Token<unknown>, unknown][] = [
+    [LoggerToken, services.logger], [ThemeServiceToken, services.theme],
+    [SettingsContributionToken, services.settings], [DiagnosticsContributionToken, services.diagnostics],
+    [CommandSourceToken, services.commands], [KeybindingServiceToken, services.keybindings],
+    [WirePortToken, services.wire], [HarnessAvailabilityToken, services.harness],
+  ]
+  for (const [token, service] of pairs) {
+    if (service === undefined) continue
+    registry.registerPlugin({ id: `ordessa.host.${token.name}`, provides: token, activate: () => service as never })
+  }
+}
+/**
+ * `services` 是宿主注入的平台服务（C-03/04/05/06/07/08）。缺席的服务**不注册**：
+ * 插件若把它列进 `requires` 会得到显式的 `No provider`，列进 `optional` 则拿到 null
+ * （README §3 缺席语义），两者都不会把 undefined 悄悄传下去。
+ */
+export function runtime(plugins: Plugin<any>[], services: PlatformServiceMap = {}) {
   const providers = new Set(), ids = new Set<string>()
   for (const plugin of plugins) {
     if (ids.has(plugin.id)) throw Error('Duplicate plugin: ' + plugin.id)
@@ -11,9 +51,12 @@ export function runtime(plugins: Plugin<any>[]) {
     if (plugin.provides && providers.has(plugin.provides)) throw Error('Duplicate provider: ' + plugin.provides.name)
     if (plugin.provides) providers.add(plugin.provides)
   }
+  // lumino 按 `application[token.name]` 解析服务，故宿主对象带 token 名字键；
+  // 这些键不进入 `Host` 的公开形状（插件看到的公开面仍是 C-0x 契约本身）。
   const host: Host = { roots: new Contributions<RootView>() }
   const registry = new PluginRegistry<Host>()
   registry.application = host
+  registerHostServices(registry, services)
   const failures: { id: string; error: string }[] = []
   const states = new Map<string, PluginState>(), listeners = new Set<() => void>()
   let snapshot: PluginState[] = []

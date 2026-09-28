@@ -30,16 +30,20 @@ try {
     'ordessa.contracts', 'ordessa.agent-contracts', 'ordessa.commands', 'ordessa.workbench',
     'ordessa.connections', 'ordessa.agent-connections', 'ordessa.agent-sessions', 'ordessa.agent-conversation', 'example.ui-preview',
   ] }))
+  // 预览驱动是**测试专用**产物：落在 dist-preview/，绝不进入 dist/（PA-11 代码卫生）。
+  await mkdir(path.join(appRoot, 'dist-preview'), { recursive: true })
   await build({
-    entryPoints: [path.join(appRoot, 'electron/preview-main.ts')], outfile: path.join(appRoot, 'dist', 'preview-electron.cjs'),
+    entryPoints: [path.join(appRoot, 'electron/preview-main.ts')], outfile: path.join(appRoot, 'dist-preview', 'preview-electron.cjs'),
     bundle: true, platform: 'node', format: 'cjs', target: 'node22', external: ['electron'],
   })
 
   const child = spawn(path.resolve(repoRoot, 'node_modules/electron/dist/electron'),
-    ['--no-sandbox', '--disable-gpu', '--ozone-platform=x11', path.join(appRoot, 'dist', 'preview-electron.cjs')], {
+    ['--no-sandbox', '--disable-gpu', '--ozone-platform=x11', path.join(appRoot, 'dist-preview', 'preview-electron.cjs')], {
       cwd: appRoot, stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env, MODULAR_USER_DATA: home, ORDESSA_EXTENSION_HOME: home, ORDESSA_EMPTY_HOST: '0',
-        ELECTRON_DISABLE_SECURITY_WARNINGS: 'true', ORDESSA_PREVIEW_OUT: outDir },
+        ELECTRON_DISABLE_SECURITY_WARNINGS: 'true', ORDESSA_PREVIEW_OUT: outDir,
+        ORDESSA_PREVIEW_RENDERER: path.join(appRoot, 'dist/renderer'),
+        ORDESSA_PREVIEW_PRELOAD: path.join(appRoot, 'dist/preload.cjs') },
     })
   let output = ''
   for (const stream of [child.stdout, child.stderr]) stream.on('data', chunk => { output += chunk })
