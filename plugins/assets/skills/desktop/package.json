@@ -1,0 +1,12 @@
+{
+  "name": "@ordessa/plugin-skills",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Skills settings extension: content library, default and project assignments. Registered into a product by C0 (products/desktop/extensions.json); this package does not register itself.",
+  "ordessa": {
+    "id": "ordessa.skills"
+  },
+  "scripts": {
+    "test": "vitest run --maxWorkers=1"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "id": "ordessa.skills",
+  "version": "0.1.0",
+  "hostApi": "2",
+  "entry": "entry.js",
+  "_note": "Manifest for the Skills settings extension. Admitting this id into a product build is C0's job (products/desktop/extensions.json + extensions.lock.json); presence of this file does not register anything. parseManifest ignores the _note key: only id/version/hostApi/entry/native are read."
+}
