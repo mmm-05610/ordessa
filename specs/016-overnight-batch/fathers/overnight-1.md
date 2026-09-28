@@ -10,15 +10,17 @@
 /home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/xxx.md），
 因为部分儿子树内没有 specs/016；执行与提交仍在儿子树内。
 
-1. 你可开子代理；优先尝试用 qoder CLI 执行：一包一进程，cwd=儿子工作树，
-   把 dispatch 文档路径+「/goal 完成该文档的所有要求」交给它；记录退出码。
-   先探测 qoder 的 CLI 用法（--help），失败两次即放弃 qoder，**你自己顶上做完**，
-   报告标注「qoder 失败、zcode 代打」。
+1. **必须用封装脚本，禁止裸调 CLI**：执行用
+   `/home/maoqh/projects/ordessa/specs/016-overnight-batch/bin/run-qoder.sh
+   <son相对路径> <dispatch绝对路径> [超时秒]`（默认 5400s，目录白名单外会被拒）。
+   退出非零可原样重试一次；再失败**你自己顶上做完**，报告标注「qoder 失败、zcode 代打」。
 2. 完成后你先自检：tasks 勾选与代码一致、测试真的跑过（留命令与计数）、
    写入面没越界（git status 只在己目录+reports）。
-3. 然后调审阅：探测 pi CLI（`pi --help`），用 mimo-v2.6-pro 模型对儿子目录的
-   git diff 做审查（把 diff 或关键文件喂给它），结论记入该包 report「审阅」节。
-   审阅调用失败：记「未审阅+原因」，不阻塞下一包。
+3. 审阅也走封装：
+   `/home/maoqh/projects/ordessa/specs/016-overnight-batch/bin/run-review.sh
+   <son相对路径>`（pi+mimo-v2.6-pro，物理只读 --no-tools，diff 截 180KB）。
+   产物在 reports/<son>-review-*.md，把结论摘要抄进该包 report「审阅」节；
+   脚本失败=记「未审阅+原因」，不阻塞下一包。
 4. 提交留在儿子分支上；**绝不 merge/rebase/动其他分支**。
 
 ## 汇报
