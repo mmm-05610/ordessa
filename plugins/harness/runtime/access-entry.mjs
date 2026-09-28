@@ -267,7 +267,7 @@ async function main() {
       // frames; it cannot turn on this startup mode or choose a different executable through it.
       const fixtures = [
         { file: path.resolve(here, "..", "tests", "access", "controlled_harness.mjs") },
-        { file: path.resolve(here, "..", "..", "..", "tests", "acp_orchestration", "fixtures",
+        { file: path.resolve(here, "..", "..", "..", "tests", "integration", "acp_orchestration", "fixtures",
           "bidirectional_acp_peer.mjs"), harness: "pi", exactPath: true },
       ]
       // The second path exists only in a source checkout. Neither path is a renderer-provided

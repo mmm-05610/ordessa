@@ -8,7 +8,7 @@ import test from "node:test"
 import { controlledHarness, withSidecar } from "./sidecar_harness.mjs"
 import { resolveManagedLaunch } from "../../runtime/access-launch.mjs"
 
-const orchestrationPeer = path.resolve("tests/acp_orchestration/fixtures/bidirectional_acp_peer.mjs")
+const orchestrationPeer = path.resolve("tests/integration/acp_orchestration/fixtures/bidirectional_acp_peer.mjs")
 
 const pins = [
   ["pi", "pi-acp", "0.5.0"],
