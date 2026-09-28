@@ -4,13 +4,20 @@
 
 ## P-A — profile 解锁与产品就绪
 
-- [ ] PA-1 R0 基线冻结：环境安装（含 `-e plugins/profile`、`-e plugins/runtime-compat` 补录）、`pytest plugins/profile/tests -q` 计数（旧账 140）、TS 三包 tsc/vitest 计数、消费 SHA（foundation 经 main）
-- [ ] PA-2 profile-api r2 交付：核对修复在位（plugin.py:19-21）；修 `specs/011-plugin-rollout/checkpoints/profile-api.json` 元数据（dependsOn=foundation 8844c475bc、planAnchorRef）；以提交 SHA 交付并在 011-z1 report 增补 r2 段（不动旧 ready ref 4943628f47）
-- [ ] PA-3 四线解锁复验（scratch 组合树，不落本分支）：Q1 六测试 ID 绿（433 口径）；Q3 test_profile_facet_t10.py 28 条绿（671 口径）；Q4 461 保持 + facet 缺口登记；Q5 import 冒烟 + glue 缺口登记；每线记计数与漂移
-- [ ] PA-4 桌面三包产品就绪：`plugins/profile/{api,frontend,integrations/chat}` 补 manifest.json + build.mjs（对照 plugins/commands 形状）；本地构建演练过；启用耦合（chat-api）写回 S-01
-- [ ] PA-5 品牌矩阵受控版：pi/codex/claude-code × {字段投影, 覆盖/清除, reset, restart-resume}，真实 adapter 接口驱动；CLI 缺席品牌以受控 fake endpoint 为上限并如实登记；G18 浏览器几何 checklist 列出不勾（待装配）
-- [ ] PA-6 报告与交付：`reports/P-A-report.md` + 011-z1 report 增补；终提交 SHA；PARTIAL 项逐条
-- [ ] PA-7 退役准备（S-08③，只出裁定与清单不执行删除）：`agent-box.profile@1` 双声明仲裁裁定（谁唯一声明）；harness `generic/profile_*.py`、`harness-profile-store` entrypoint、`{claude,hermes,opencode}/profile*.py`、server-compat `server_profiles` 的逐文件退役清单+消费者核查；执行归集成波次（见 seams S-08）
+- [x] PA-1 R0 基线冻结：环境安装（含 `-e plugins/profile`、`-e plugins/runtime-compat` 补录）、`pytest plugins/profile/tests -q` 计数（旧账 140）、TS 三包 tsc/vitest 计数、消费 SHA（foundation 经 main）
+  - 140 口径经替身协议适配后全绿（首跑 3 红=合并线 C4 服务协议收紧 vs 检查点时代测试替身；`51c7905108` 适配、断言零改动）；最终 152（+PA-5 矩阵 12）。安装顺序坑（sandbox/permissions 先于 products/server）→ S-10 增补。npm 根 lock 缺 profile 三 workspace → 本地重算未提交 → S-02 增补。详见 reports/P-A-report.md §0/§2
+- [x] PA-2 profile-api r2 交付：核对修复在位（plugin.py:19-21）；修 `specs/011-plugin-rollout/checkpoints/profile-api.json` 元数据（dependsOn=foundation 8844c475bc、planAnchorRef）；以提交 SHA 交付并在 011-z1 report 增补 r2 段（不动旧 ready ref 4943628f47）
+  - 修复在位无需恢复；checkpoint 原位更新 version r2（implementationSha=e6f720d347…，planAnchorRef=codex/014-a-profile）；旧 ref 零移动；011-z1 report 增补「014 / profile-api r2」段
+- [x] PA-3 四线解锁复验（scratch 组合树，不落本分支）：Q1 六测试 ID 绿（433 口径）；Q3 test_profile_facet_t10.py 28 条绿（671 口径）；Q4 461 保持 + facet 缺口登记；Q5 import 冒烟 + glue 缺口登记；每线记计数与漂移
+  - Q1: 433 零漂移 + 6 ID 全绿（merge 1163f46d06）；Q3: t10 28 绿 + 整包 890（漂移 +219=consolidation 分支后续批次，零新增红；merge 7cc74652e3）；Q4: 518P/4F/2E + import 链通 + T08 缺口登记（漂移定性归 mcp 线；merge ef9e0204f0）；Q5: import OK + 634 passed，T06 缺口登记。scratch 树已删
+- [x] PA-4 桌面三包产品就绪：`plugins/profile/{api,frontend,integrations/chat}` 补 manifest.json + build.mjs（对照 plugins/commands 形状）；本地构建演练过；启用耦合（chat-api）写回 S-01
+  - 三包 manifest+build.mjs 补齐（api 双 entry 出 contract.js；frontend 补诚实 entry 桩）；ORDESSA_PRODUCT_OUTPUT_ROOT 演练三包均出 entry 产物（未触 products/）；依赖闭包已写回 S-01（e6f720d347）
+- [x] PA-5 品牌矩阵受控版：pi/codex/claude-code × {字段投影, 覆盖/清除, reset, restart-resume}，真实 adapter 接口驱动；CLI 缺席品牌以受控 fake endpoint 为上限并如实登记；G18 浏览器几何 checklist 列出不勾（待装配）
+  - 12 条全绿 + 三品牌金样钉定；经 PiProjection/harness_deployment/ClaudeProjection 真实品牌面只读驱动（非只调 ProfileDB）；F5 事实第一手（pi 0.86.1 在位但版本偏斜+拒收投影 flags；codex/claude 缺席）→ 真实 CLI 装载格三品牌 unknown；G18 checklist 见 report §6（887d0700df）
+- [x] PA-6 报告与交付：`reports/P-A-report.md` + 011-z1 report 增补；终提交 SHA；PARTIAL 项逐条
+  - report §8 PARTIAL P1-P9 逐条（真实 CLI 装载/G18/T08/T06/漂移账/wire 装配/admission/S-09/生产级复核）；实现终 SHA e6f720d347，交付=分支 tip
+- [x] PA-7 退役准备（S-08③，只出裁定与清单不执行删除）：`agent-box.profile@1` 双声明仲裁裁定（谁唯一声明）；harness `generic/profile_*.py`、`harness-profile-store` entrypoint、`{claude,hermes,opencode}/profile*.py`、server-compat `server_profiles` 的逐文件退役清单+消费者核查；执行归集成波次（见 seams S-08）
+  - 裁定=profile-api 唯一声明者（"先者赢后者 FAIL"加载顺序实证）；清单 R1-R10 含调用方/测试/迁移归属+执行顺序；R10 归 B 侧波次；S-08 已回填；specs/011-z1-profile/retirement-request.md
 
 ## P-B — model-provider 真实应用链
 

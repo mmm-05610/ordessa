@@ -1,0 +1,59 @@
+{
+  "after_switch": {
+    "manifest": {
+      "credential_locator": "vault://controlled-locator",
+      "native_files": [
+        ".claude/settings.json",
+        ".claude/skills/demo/SKILL.md",
+        ".mcp.json",
+        "AGENTS.md"
+      ],
+      "profile_ref": {
+        "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "id": "p1",
+        "revision": 1
+      }
+    },
+    "mcp": {
+      "mcpServers": {
+        "controlled-server": {
+          "command": "/bin/true"
+        }
+      }
+    },
+    "settings": {
+      "model": "beta"
+    }
+  },
+  "projection": {
+    "manifest": {
+      "credential_locator": "vault://controlled-locator",
+      "native_files": [
+        ".claude/settings.json",
+        ".claude/skills/demo/SKILL.md",
+        ".mcp.json",
+        "AGENTS.md"
+      ],
+      "profile_ref": {
+        "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "id": "p1",
+        "revision": 1
+      }
+    },
+    "mcp": {
+      "mcpServers": {
+        "controlled-server": {
+          "command": "/bin/true"
+        }
+      }
+    },
+    "settings": {
+      "model": "alpha",
+      "permissions": {
+        "allow": [
+          "Read"
+        ]
+      }
+    }
+  }
+}
