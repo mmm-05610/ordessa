@@ -1,0 +1,25 @@
+{
+  "result": "PROBE_COMPLETE",
+  "conclusion": {
+    "announced": false,
+    "reason": "no available_commands_update frame on the whole controlled channel"
+  },
+  "fakeApiCalls": 2,
+  "transcript": [
+    "outbound initialize {\"protocolVersion\":1}",
+    "inbound initialize result {\"protocolVersion\":1,\"agentCapabilities\":{\"_meta\":{\"claudeCode\":{\"promptQueueing\":true},\"authStatus\":{}},\"promptCapabilities\":{\"image\":true,\"embeddedContext\":true},\"mcpCapabilities\":{\"http\":true,\"sse\":true},\"auth\":{\"logout\":{}},\"providers\":{},\"loadSession\":true,\"sessionCapabilities\":{\"additionalDirectories\":{},\"close\":{},\"delete\":{},\"fork\":{},\"list\":{},\"resume\":{},\"subagents\":{}}},\"agentInfo\":{\"name\":\"@agentclientprotocol/claude-agent-acp\",\"title\":\"Claude Agent\",\"version\":\"0.81.2\"},\"authMethods\":[],\"_meta\":{\"jetbrains\":{\"air\":{\"version\":1,\"capabilities\":[\"sessionFailure\",\"agentFileChangeReport\",\"nativeSubagentSessions\",\"asyncTasks\",\"recommendedValue\"]}},\"steering\":{\"supported\":true},\"goal\":{\"version\":1,\"controlMethod\":\"_session/goal\",\"actions\":[\"set\",\"clear\"]}}}",
+    "inbound session/new result {\"sessionId\":\"86d80219-b0ef-4229-9e38-b5e5999a5dbc\",\"modes\":{\"currentModeId\":\"default\",\"availableModes\":[{\"id\":\"default\",\"name\":\"Manual\",\"description\":\"Always ask before making changes\",\"_meta\":{\"kind\":\"standard\"}},{\"id\":\"acceptEdits\",\"name\":\"Accept edits\",\"description\":\"Automatically accept all file edits\",\"_meta\":{\"kind\":\"standard\"}},{\"id\":\"plan\",\"name\":\"Plan\",\"description\":\"Create a plan before making changes\",\"_meta\":{\"kind\":\"plan\"}},{\"id\":\"auto\",\"name\":\"Auto\",\"description\":\"Claude handles permission decisions\",\"_meta\":{\"kind\":\"auto_review\"}},{\"id\":\"bypassPermissions\",\"name\":\"Bypass permissions\",\"description\":\"Accepts all permissions\",\"_meta\":{\"kind\":\"full_access\"}}]},\"configOptions\":[{\"id\":\"mode\",\"name\":\"Mode\",\"description\":\"Session permission mode\",\"category\":\"mode\",\"type\":\"select\",\"…(2841B)",
+    "inbound prompt result {\"stopReason\":\"end_turn\",\"usage\":{\"inputTokens\":20,\"outputTokens\":3,\"cachedReadTokens\":0,\"cachedWriteTokens\":0,\"totalTokens\":23},\"_meta\":{\"quota\":{\"token_count\":{\"totalTokens\":23,\"inputTokens\":20,\"cachedInputTokens\":0,\"cachedWriteTokens\":0,\"outputTokens\":3,\"reasoningOutputTokens\":0},\"model_usage\":[{\"model\":\"claude-opus-5-5[1m]\",\"token_count\":{\"totalTokens\":23,\"inputTokens\":20,\"cachedInputTokens\":0,\"cachedWriteTokens\":0,\"outputTokens\":3,\"reasoningOutputTokens\":0}}]}}}"
+  ],
+  "stderrTail": [
+    "[session/create] sessionId=86d80219-b0ef-4229-9e38-b5e5999a5dbc phase=validate-cwd durationMs=1 totalMs=1",
+    "[session/create] sessionId=86d80219-b0ef-4229-9e38-b5e5999a5dbc phase=settings durationMs=5 totalMs=5",
+    "[session/query] sessionId=86d80219-b0ef-4229-9e38-b5e5999a5dbc resume=none apiType=native baseUrl=native",
+    "[session/create] sessionId=86d80219-b0ef-4229-9e38-b5e5999a5dbc phase=prepare-query durationMs=15 totalMs=20",
+    "[session/create] sessionId=86d80219-b0ef-4229-9e38-b5e5999a5dbc phase=sdk-initialize durationMs=261 totalMs=281",
+    "[authStatus] session account carries no identity signal; keeping probe",
+    "[session/create] sessionId=86d80219-b0ef-4229-9e38-b5e5999a5dbc phase=models durationMs=2 totalMs=283",
+    "[session/create] sessionId=86d80219-b0ef-4229-9e38-b5e5999a5dbc phase=modes durationMs=0 totalMs=284",
+    "[session/create] sessionId=86d80219-b0ef-4229-9e38-b5e5999a5dbc phase=register durationMs=3 totalMs=287"
+  ]
+}

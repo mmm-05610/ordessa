@@ -48,7 +48,12 @@ function projectClient(id: string, serverInstanceId: string | undefined, options
     async createAndSend(workspaceId, text, requestId) {
       sends.push({ workspaceId, text, requestId })
       sendAttempt += 1
-      if (options.rejectFirstSend && sendAttempt === 1) throw Error('outcome unknown after disconnect')
+      if (options.rejectFirstSend && sendAttempt === 1) {
+        // The link died before acceptance: the client evidences the drop AND
+        // rejects — exactly the pair the facade's unknown mapping requires.
+        write({ connection: { ...snapshot.connection, status: 'disconnected' } })
+        throw Error('outcome unknown after disconnect')
+      }
       if (options.ghostFirstSend && sendAttempt === 1) return { sessionId: 'ghost' } // "accepted" while the snapshot still lacks it (FC-0031)
       write({
         selectedSessionId: 'R1',
@@ -150,7 +155,10 @@ it('an unknown first-send outcome keeps one requestId and never creates a second
   await sessions.selectConnection('A')
   await sessions.selectWorkspace!('/srv/a')
   sessions.startDraft!()
-  await expect(sessions.send('hi')).rejects.toThrow('outcome unknown')
+  // Contracts 0.2.0: the unknown outcome is a VALUE the facade returns — with
+  // the request id preserved for reconciliation, never a blind second create.
+  const outcome = await sessions.send('hi')
+  expect(outcome).toEqual({ kind: 'unknown', operationId: a.calls.sends[0]!.requestId, reason: 'outcome unknown after disconnect' })
   expect(sessions.getSnapshot().draft?.active).toBe(true) // draft survives the failure; F3 keeps the text
   await sessions.send('hi')
   expect(a.calls.sends).toHaveLength(2)
@@ -264,7 +272,10 @@ it('an accepted-but-unverifiable first send never lists a ghost session and keep
   await sessions.selectConnection('A')
   await sessions.selectWorkspace!('/srv/a')
   sessions.startDraft!()
-  await expect(sessions.send('hi')).rejects.toThrow('first-send session mismatch')
+  // The ghost answer is a REFUSAL (typed, link up): the draft and the same
+  // requestId survive it for the explicit retry.
+  const outcome = await sessions.send('hi')
+  expect(outcome).toEqual({ kind: 'refused', code: 'SUBMISSION_REFUSED', reason: 'Agent first-send session mismatch' })
   expect(a.client.getSnapshot().sessions.map(s => s.id)).not.toContain('ghost') // no fabricated history entry or draft end
   expect(sessions.getSnapshot().draft?.active).toBe(true)
   await sessions.send('hi') // a retry replays the same requestId; only the snapshot-confirmed id ends the draft
@@ -333,7 +344,10 @@ it('an unknown draft outcome with an old session selected keeps the requestId an
   await sessions.openSession('E1')
   await sessions.selectWorkspace!('/srv/a')
   sessions.startDraft!()
-  await expect(sessions.send('hi')).rejects.toThrow('outcome unknown')
+  // Contracts 0.2.0: the unknown outcome is a returned VALUE carrying the held
+  // requestId — the previously selected session is never used as a fallback.
+  const outcome = await sessions.send('hi')
+  expect(outcome).toEqual({ kind: 'unknown', operationId: a.calls.sends[0]!.requestId, reason: 'outcome unknown after disconnect' })
   expect(sessions.getSnapshot().draft?.active).toBe(true)
   await sessions.send('hi')
   expect(a.calls.sends).toHaveLength(2)

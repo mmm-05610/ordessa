@@ -25,16 +25,16 @@
 
 ## P-C — chat 真实接缝
 
-- [ ] PC-1 R0 基线冻结：chat/agent/connectors 各套件计数（chat-api 22 it、frontend 35、connectors 受控套件）；环境冻结；确认 F8（C7 切换已在 main）
-- [ ] PC-2 命令目录接通：connectors `NativeCommandReader`（commands.ts:8-25、client.ts:183-195）→ agent contracts facade 增目录成员 → sessions 供给 → chat `facadeCommandCatalog` 四态（adapters/agent.ts:150-155 恒 absent 处）；反例：stale-session/channel-down/unobservable；Claude=诚实 absent（S-07）
-- [ ] PC-3 附件接通（plugin 半边）：add-content 激活由 capability.supported 驱动（chat-page.tsx:202-220）；prepare→ref→submit refs（submission.ts attachments+sha256）；release/幂等/四态 phase；生产 owner 缺席=诚实禁用 + S-05
-- [ ] PC-4 三态 submit：`agent.ts:118` send 升级三态（兼容迁移记录）；sessions model.ts:115-146 映射；acp-next-submit 接 authorize + BackendAdmissionState 缺席时诚实 refused/unknown；unknown 保 requestId 不重发反例
-- [ ] PC-5 runtimeGeneration 透出：受控链 generation fence（acp-next-submit.ts:37,115-119）回灌 chat DTO（ChatLocation/快照）；chat-api 修订按 -r4 规则带兼容说明；Q1 消费面（SkillsChatSnapshotPort）不在 main，只登记接口形状
-- [ ] PC-6 旧链退役（plugin 半边）：`plugins/agent/conversation/{view,interaction-card,styles,entry}.tsx` 退役（语义已迁 chat approval-panel）；对 `apps/desktop/renderer/agent-conversation.test.tsx` 逐条核对等价覆盖后在 S-01 确认可删（删除本身归 core）；启停与锁 → S-01/S-02
-- [ ] PC-7 R-Z2-5 reasoning 状态升级（时间盒内做，非阻塞；picker=R-Z2-6 归 S-05 同族接缝不扩本包）
-- [ ] PC-8 报告与交付：`reports/P-C-report.md` + 011-z2 report 增补；终提交 SHA；PARTIAL 项逐条
-- [ ] PC-9 DTO 对齐核实（S-05 回执修正）：connectors 侧 `AcpPreparedAttachment` **已含** `preparedId`（`plugins/connectors/acp/src/attachments.ts:10-12`，注释明言 Server ACP DTO 未携带）——核实该形状并作为对接基准写回 S-05；缺的字段在 **Server ACP DTO（core 侧补）**，本包**不改 connectors**
-- [ ] PC-10 claude 命令探针（S-07 命令项）：受控驱动 `plugins/harness/packaging/claude` 钉版 adapter（fake Anthropic endpoint，沿用该目录既有探针架式；不改 plugins/harness 任何跟踪文件），实测是否播发 `available_commands_update`：播发→经 NativeCommandReader 接线并记第一手证据；不播发→诚实 absent+原因写回 S-07
+- [x] PC-1 R0 基线冻结：chat/agent/connectors 各套件计数（chat-api 22 it、frontend 35、connectors 受控套件）；环境冻结；确认 F8（C7 切换已在 main）
+- [x] PC-2 命令目录接通：connectors `NativeCommandReader`（commands.ts:8-25、client.ts:183-195）→ agent contracts facade 增目录成员 → sessions 供给 → chat `facadeCommandCatalog` 四态（adapters/agent.ts:150-155 恒 absent 处）；反例：stale-session/channel-down/unobservable；Claude=诚实 absent（S-07）
+- [x] PC-3 附件接通（plugin 半边）：add-content 激活由 capability.supported 驱动（chat-page.tsx:202-220）；prepare→ref→submit refs（submission.ts attachments+sha256）；release/幂等/四态 phase；生产 owner 缺席=诚实禁用 + S-05
+- [x] PC-4 三态 submit：`agent.ts:118` send 升级三态（兼容迁移记录）；sessions model.ts:115-146 映射；acp-next-submit 接 authorize + BackendAdmissionState 缺席时诚实 refused/unknown；unknown 保 requestId 不重发反例
+- [x] PC-5 runtimeGeneration 透出：受控链 generation fence（acp-next-submit.ts:37,115-119）回灌 chat DTO（ChatLocation/快照）；chat-api 修订按 -r4 规则带兼容说明；Q1 消费面（SkillsChatSnapshotPort）不在 main，只登记接口形状
+- [x] PC-6 旧链退役（plugin 半边）：`plugins/agent/conversation/{view,interaction-card,styles,entry}.tsx` 退役（语义已迁 chat approval-panel）；对 `apps/desktop/renderer/agent-conversation.test.tsx` 逐条核对等价覆盖后在 S-01 确认可删（删除本身归 core）；启停与锁 → S-01/S-02
+- [x] PC-7 R-Z2-5 reasoning 状态升级（时间盒内做，非阻塞；picker=R-Z2-6 归 S-05 同族接缝不扩本包）——contracts reasoningState+展示层消费已交付；connectors 半边登记 S-05 同族（P-C report §8）
+- [x] PC-8 报告与交付：`reports/P-C-report.md` + 011-z2 report 增补；终提交 SHA；PARTIAL 项逐条
+- [x] PC-9 DTO 对齐核实（S-05 回执修正）：connectors 侧 `AcpPreparedAttachment` **已含** `preparedId`（`plugins/connectors/acp/src/attachments.ts:10-12`，注释明言 Server ACP DTO 未携带）——核实该形状并作为对接基准写回 S-05；缺的字段在 **Server ACP DTO（core 侧补）**，本包**不改 connectors**
+- [x] PC-10 claude 命令探针（S-07 命令项）：受控驱动 `plugins/harness/packaging/claude` 钉版 adapter（fake Anthropic endpoint，沿用该目录既有探针架式；不改 plugins/harness 任何跟踪文件），实测是否播发 `available_commands_update`：播发→经 NativeCommandReader 接线并记第一手证据；不播发→诚实 absent+原因写回 S-07
 
 ## P-D — claude 附件通路（harness）
 

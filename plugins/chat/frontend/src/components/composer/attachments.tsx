@@ -5,7 +5,7 @@
 // in state/draft.ts). Directory items are references only — never expanded.
 import type { ChatInputItem } from '@extensions/ordessa.chat-api/contract.js'
 
-const phaseLabels = { selected: '已选择', preparing: '准备中…', ready: '已就绪', failed: '失败' } as const
+const phaseLabels = { selected: '已选择', preparing: '准备中…', ready: '已就绪', failed: '失败', unknown: '结果未知' } as const
 
 export function AttachmentStrip({ items, onRemove, onRetry, onPreview }: {
   items: readonly ChatInputItem[]
@@ -34,7 +34,7 @@ export function AttachmentStrip({ items, onRemove, onRetry, onPreview }: {
               {item.phase.state === 'failed' && <span className="chat-attachment-reason">：{item.phase.reason}</span>}
             </span>
           </span>
-          {item.phase.state === 'failed' && (
+          {(item.phase.state === 'failed' || item.phase.state === 'unknown') && (
             <button type="button" className="chat-ghost-action" data-action="retry-attachment"
               aria-label={`重试 ${item.displayName}`} onClick={() => onRetry(item.id)}>重试</button>
           )}
