@@ -1,0 +1,9 @@
+ordessa (0.1.0) stable; urgency=medium
+
+  * Initial core release packaging: self-contained deb with the bundled
+    CPython 3.12.14 runtime, the verified Server dependency closure, the ACP
+    bridge and the prebuilt Electron application.
+  * Signed one-click update channel (Ed25519 over the manifest's key metadata).
+  * Uninstall keeps ~/.ordessa on both `remove` and `purge`.
+
+ -- Ordessa <ordessa@example.invalid>  Mon, 28 Sep 2026 00:00:00 +0000

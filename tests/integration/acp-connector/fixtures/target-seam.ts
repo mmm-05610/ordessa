@@ -66,7 +66,7 @@ export interface AcpConnectorTarget {
 
 export const TARGET_MODULE = 'plugins/connectors/acp/src/entry'
 /** Absolute file URL: the target lives in the product tree, above this suite's vitest root. */
-const TARGET_URL = new URL('../../../plugins/connectors/acp/src/entry.ts', import.meta.url).href
+const TARGET_URL = new URL('../../../../plugins/connectors/acp/src/entry.ts', import.meta.url).href
 
 const TARGET_MISSING = (detail: string) => new Error(
   `TARGET_MISSING: ${detail} — the ACP connector seam is not implemented yet. ` +

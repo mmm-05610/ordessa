@@ -10,7 +10,7 @@ import os
 
 import pytest
 
-from tests.acp_orchestration.conftest import session_new_events
+from tests.integration.acp_orchestration.conftest import session_new_events
 
 
 def test_project_cwd_reaches_both_launch_boundaries(server, tmp_path):

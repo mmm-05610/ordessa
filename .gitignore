@@ -28,3 +28,10 @@ build/
 
 # server-core-cleanup batch evidence (frozen per-ID red ledger)
 .cleanup-evidence/
+
+# 013/P-C 构建产物与密钥：一律不入库（AGENTS.md 规则 4/7）
+packaging/.cache/
+packaging/.staging/
+packaging/.out/
+packaging/.icon-stage/
+packaging/.keys/

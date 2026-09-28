@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "version": "0.1.0",
+  "build": "20260928-7adf5aeac",
+  "productName": "",
+  "createdAt": "2026-09-28T09:39:47.693Z",
+  "components": [
+    {
+      "kind": "desktop",
+      "source": "apps/desktop/dist + products/desktop/dist",
+      "version": "0.1.0",
+      "sha256": "b6f871d5f4c7a5bc546d4c8a45e4d206fc65a7ca02ef42ba768b0c97f7bee8c7",
+      "dest": "/opt/ordessa/app"
+    },
+    {
+      "kind": "python-runtime",
+      "source": "https://github.com/astral-sh/python-build-standalone/releases/download/20260924/cpython-3.12.14%2B20260924-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz",
+      "version": "3.12.14",
+      "sha256": "a857a61462465dd789d8d76b885fe43dc701f3159035b9601cc363aa347390a0",
+      "dest": "/opt/ordessa/python"
+    },
+    {
+      "kind": "server-deps",
+      "source": "apps/server/lockfiles/server-linux-py312.txt",
+      "version": "pinned",
+      "sha256": "3fcddcf09ac34a9f8bdb838ac61ee030eac763704031c22d8041beaee45d10fb",
+      "dest": "/opt/ordessa/python/lib/python3.12/site-packages"
+    },
+    {
+      "kind": "acp-bridge",
+      "source": "plugins/harness/packaging/acp-adapter (built)",
+      "version": "round-h",
+      "sha256": "714044a5b490a53d5fa89aade993c496e5fa3a5f7c614b4465c4990575185cbd",
+      "dest": "/opt/ordessa/bin/acp"
+    },
+    {
+      "kind": "licenses",
+      "source": "build-time aggregation",
+      "version": "0.1.0",
+      "sha256": "a4d9024e7da8e3066300fbed80b822cee44cfe8866d1f037326d5e11b74829ff",
+      "dest": "/opt/ordessa/licenses",
+      "counts": {
+        "python": 32,
+        "npm": 0
+      }
+    }
+  ]
+}

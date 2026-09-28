@@ -81,25 +81,25 @@
 > 写入面：`packaging/**`、`scripts/**`、`tooling/**`、根 `package.json`、根 `package-lock.json`
 
 ### 阶段 1 — deb 与捆绑
-- [ ] **PC-01** `packaging/debian/`：control（`Depends` 只列 Electron 系统库，**不**含 nodejs/golang/python3）、postinst/prerm/postrm、copyright。FR-070/073
-- [ ] **PC-02** 安装布局落地（C-09 §A2）：`/opt/ordessa/{python,bin,harnesses,app,licenses}` + `.desktop` + hicolor 图标（**构建期从 `assets/brand/icon.svg` 导出**，产出 `packaging/icons/generated/`）+ `/usr/share/doc`。FR-070/071
-- [ ] **PC-03** 运行时捆绑：python-build-standalone 3.12.x（固定 SHA）+ `server-linux-py312.txt` 预装 + ACP 桥 + **仅 core 与默认装配实际需要的 Harness 组件**（品牌制品**不**作为打包前置，Claude 再分发条件未确认）；产出 `packaging/bundle-manifest.json`。FR-071
-- [ ] **PC-04** 发行启动器 `/opt/ordessa/bin/ordessa`：**禁用 `--no-sandbox`**；单条命令启动。FR-072
-- [ ] **PC-05** 版本/构建号注入一致性：`package.json` / 关于面板 / 诊断 `meta.json` / 更新清单四处相等。FR-001（C-09 §A4）
-- [ ] **PC-06** 许可证聚合：`THIRD-PARTY-NOTICES` 从各包声明构建期聚合到 `/opt/ordessa/licenses/`。FR-078
-- [ ] **PC-07** 产物哈希：`SHA256SUMS`（deb、bundle-manifest、app 目录树）；扩展层沿用 `extensions.lock.json`。FR-079
+- [x] **PC-01** `packaging/debian/`：control（`Depends` 只列 Electron 系统库，**不**含 nodejs/golang/python3）、postinst/prerm/postrm、copyright。FR-070/073
+- [x] **PC-02** 安装布局落地（C-09 §A2）：`/opt/ordessa/{python,bin,harnesses,app,licenses}` + `.desktop` + hicolor 图标（**构建期从 `assets/brand/icon.svg` 导出**，产出 `packaging/icons/generated/`）+ `/usr/share/doc`。FR-070/071
+- [x] **PC-03** 运行时捆绑：python-build-standalone 3.12.x（固定 SHA）+ `server-linux-py312.txt` 预装 + ACP 桥 + **仅 core 与默认装配实际需要的 Harness 组件**（品牌制品**不**作为打包前置，Claude 再分发条件未确认）；产出 `packaging/bundle-manifest.json`。FR-071
+- [x] **PC-04** 发行启动器 `/opt/ordessa/bin/ordessa`：**禁用 `--no-sandbox`**；单条命令启动。FR-072
+- [x] **PC-05** 版本/构建号注入一致性：`package.json` / 关于面板 / 诊断 `meta.json` / 更新清单四处相等。FR-001（C-09 §A4）
+- [x] **PC-06** 许可证聚合：`THIRD-PARTY-NOTICES` 从各包声明构建期聚合到 `/opt/ordessa/licenses/`。FR-078
+- [x] **PC-07** 产物哈希：`SHA256SUMS`（deb、bundle-manifest、app 目录树）；扩展层沿用 `extensions.lock.json`。FR-079
 
 ### 阶段 2 — 一键更新
-- [ ] **PC-08** `packaging/update/`：`update-manifest.json` 生成 + **Ed25519 签名**工具 + 公钥随包。C-09 §C1
-- [ ] **PC-09** 更新客户端流程七步（检查→下载→校验→备份→兼容→polkit 安装→重启→自检），任一步失败中止并保留旧版本。FR-074
-- [ ] **PC-10** 失败语义（源不可达**不**静默当最新 / **签名覆盖清单关键元数据**且任一项被改即拒绝 / 哈希不符拒绝 / 取消 polkit / **中断可检测、可修复、数据不丢**（C-09 §C4 故障门）/ 自检失败回退指引 / 数据不兼容保留备份）。FR-075/076/077
-- [ ] **PC-11** 更新前备份（数据根关键内容 + 版本信息 → `backups/<ts>/`）、`minDataSchema` 检查，以及 **`backups/update-state.json` 状态机**（阶段推进 / 未完成更新识别 / 恢复入口 / 数据不丢硬门）。FR-077（C-09 §C4）
+- [x] **PC-08** `packaging/update/`：`update-manifest.json` 生成 + **Ed25519 签名**工具 + 公钥随包。C-09 §C1
+- [x] **PC-09** 更新客户端流程七步（检查→下载→校验→备份→兼容→polkit 安装→重启→自检），任一步失败中止并保留旧版本。FR-074
+- [x] **PC-10** 失败语义（源不可达**不**静默当最新 / **签名覆盖清单关键元数据**且任一项被改即拒绝 / 哈希不符拒绝 / 取消 polkit / **中断可检测、可修复、数据不丢**（C-09 §C4 故障门）/ 自检失败回退指引 / 数据不兼容保留备份）。FR-075/076/077
+- [x] **PC-11** 更新前备份（数据根关键内容 + 版本信息 → `backups/<ts>/`）、`minDataSchema` 检查，以及 **`backups/update-state.json` 状态机**（阶段推进 / 未完成更新识别 / 恢复入口 / 数据不丢硬门）。FR-077（C-09 §C4）
 
 ### 阶段 3 — 验收
-- [ ] **PC-12** 卸载语义：`remove` 移除程序文件**保留** `~/.ordessa`；`purge` 亦**不**删除。FR-080
-- [ ] **PC-13** **干净机器验收**：无 Node/Go/仓库 `.venv`/开发 PATH 的 Ubuntu 环境安装并启动；重装/升级后仍可启动。SC-006
-- [ ] **PC-14** 更新全链验收：**受控更新源**发 `v_new`，走完检查→下载→校验→备份→安装→重启→历史仍在；篡改清单或包 **100%** 被拒；**中断后可检测、可修复、数据不丢**。SC-005
-- [ ] **PC-15** `tests/integration/` 归位：`tests/{acp-connector,acp_orchestration}` 移入并修引用；**逐 ID 与迁移前一致**。plan.md §结构
+- [x] **PC-12** 卸载语义：`remove` 移除程序文件**保留** `~/.ordessa`；`purge` 亦**不**删除。FR-080
+- [x] **PC-13** **干净机器验收**：无 Node/Go/仓库 `.venv`/开发 PATH 的 Ubuntu 环境安装并启动；重装/升级后仍可启动。SC-006
+- [x] **PC-14** 更新全链验收：**受控更新源**发 `v_new`，走完检查→下载→校验→备份→安装→重启→历史仍在；篡改清单或包 **100%** 被拒；**中断后可检测、可修复、数据不丢**。SC-005
+- [x] **PC-15** `tests/integration/` 归位：`tests/{acp-connector,acp_orchestration}` 移入并修引用；**逐 ID 与迁移前一致**。plan.md §结构
 
 ---
 

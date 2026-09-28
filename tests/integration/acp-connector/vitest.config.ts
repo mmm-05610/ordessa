@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config'
 import { fileURLToPath } from 'node:url'
-import { contractAliases } from '../../tooling/vitest-extensions.mjs'
+import { contractAliases } from '../../../tooling/vitest-extensions.mjs'
 
 // Uses the same contract alias map the product configs use (tooling/vitest-extensions.mjs), so
 // the tests exercise the very same contract modules the product imports; nothing here is a

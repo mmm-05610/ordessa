@@ -1,0 +1,41 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Ordessa
+Upstream-Contact: Ordessa
+Source: https://github.com/mmm-05610/agent-box
+
+Files: *
+Copyright: 2026 Ordessa
+License: LicenseRef-Proprietary
+ This product is distributed under the terms recorded in
+ /opt/ordessa/licenses/LICENSE on the installed system. The complete
+ third-party attribution for everything bundled here is in
+ /opt/ordessa/licenses/THIRD-PARTY-NOTICES.
+
+Files: /opt/ordessa/python/*
+Copyright: 2025 The CPython and python-build-standalone authors
+License: Python-2.0 and PSF-2.0
+ CPython is bundled under the Python Software Foundation License. The
+ python-build-standalone distribution used to build it is Apache-2.0 OR
+ PSF-2.0. Full texts are retained in
+ /opt/ordessa/licenses/THIRD-PARTY-NOTICES and in the corresponding
+ site-packages metadata.
+
+Files: /opt/ordessa/app/electron*
+Copyright: 2013-2026 The Electron authors
+License: MIT
+ Electron is bundled under the MIT license. Chromium components bundled
+ inside the Electron distribution retain their own licenses; see
+ /opt/ordessa/app/LICENSES.chromium.html in the installed system.
+
+Files: /opt/ordessa/bin/acp
+Copyright: The ACP adapter authors
+License: MIT
+ The ACP bridge is built at package build time from the source in this
+ repository.
+
+Files: /opt/ordessa/app/dist/*
+Copyright: 2026 Ordessa and contributors
+License: LicenseRef-Proprietary
+
+License: LicenseRef-Proprietary
+ This license is recorded verbatim in /opt/ordessa/licenses/LICENSE.

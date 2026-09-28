@@ -52,7 +52,7 @@ from typing import Any
 
 import pytest
 
-from tests.acp_orchestration.conftest import (
+from tests.integration.acp_orchestration.conftest import (
     HELLO, ServerHandle, peer_events, session_new_events, pid_alive, wait_until,
 )
 
@@ -688,7 +688,7 @@ def test_stopping_to_view_is_not_a_release(server, project, channels):
 def test_channel_ws_admission_requires_authorization(server, project, channels):
     """新 ACP WebSocket 的授权正反例（不复用旧 event-stream 的结论）：
     已存在的连接不能被未授权客户端接入，只有持牌客户端能继续往返。"""
-    from tests.acp_orchestration.test_access_authorization import ws_close_code
+    from tests.integration.acp_orchestration.test_access_authorization import ws_close_code
     workspace_id = server.open_workspace(project)
     channel = channels(server, project_id=workspace_id)
     url = "ws://127.0.0.1" + CHANNEL_WS_PATH.format(

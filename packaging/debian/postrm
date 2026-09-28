@@ -1,0 +1,44 @@
+#!/bin/sh
+# postrm -- C-09 A3, and FR-080: `remove` and `purge` BOTH keep ~/.ordessa.
+#
+# The contract is explicit and easy to get wrong, so the rule is stated once,
+# applies to every branch, and is asserted from the outside by
+# tests/integration/packaging/uninstall.test.mjs (which installs, writes a data
+# root, purges, and checks the data root is still there).
+#
+# Rationale: the data root holds user conversation history, settings and
+# credentials. Deleting it on package removal would destroy user data as a side
+# effect of uninstalling software, and `apt purge` is exactly the command a user
+# reaches for when they think they want a clean slate. Nothing here touches it.
+
+set -e
+
+# FR-080 hard rule. Not a bug if you are reading this trying to make purge
+# clean up: it is deliberate. Cleaning the data root is a separate, explicit
+# user action from inside the application.
+PRESERVE_DATA_ROOT=1
+
+case "$1" in
+  remove|purge)
+    if command -v update-desktop-database >/dev/null 2>&1; then
+      update-desktop-database -q /usr/share/applications || true
+    fi
+    if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+      gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || true
+    fi
+    rm -f /run/ordessa/ordessa.pid || true
+    rmdir /run/ordessa 2>/dev/null || true
+    if [ "$PRESERVE_DATA_ROOT" = "1" ]; then
+      for home in /root /home/*; do
+        [ -d "$home/.ordessa" ] || continue
+        echo "ordessa: your data is kept in $home/.ordessa (not deleted on remove/purge)."
+      done
+    fi
+    ;;
+  upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+    ;;
+esac
+
+#DEBHELPER#
+
+exit 0

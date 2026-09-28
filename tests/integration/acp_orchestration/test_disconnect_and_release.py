@@ -8,7 +8,7 @@ import time
 
 import pytest
 
-from tests.acp_orchestration.conftest import (
+from tests.integration.acp_orchestration.conftest import (
     peer_events, pid_alive, session_new_events, wait_until,
 )
 from ordessa_server_compat.execution.sidecar import SidecarError
