@@ -117,9 +117,10 @@ class TestCallablePayload:
         assert refusal.code == ErrorCode.INVALID_FRAGMENT
 
     def test_verify_unknown_no_native_readback(self, repo_pins) -> None:
+        from ordessa_harness_api.contracts import VerificationUnknown
         payload = self._payload("claude-code", repo_pins)
         verdict = payload.verify(_context("claude-code", (0, 81, 2)), {})
-        assert type(verdict).__name__ == "VerificationUnknown"
+        assert isinstance(verdict, VerificationUnknown)
 
     def test_every_brand_carries_evidence_record(self, repo_pins) -> None:
         for adapter in default_lsp_adapters():

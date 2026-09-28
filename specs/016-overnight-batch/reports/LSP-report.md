@@ -30,6 +30,10 @@
   bin 脚本、CMP dispatch、fathers 均为 main 既有文件。
 - 审阅所见"新增/改写"来自 `git diff main...HEAD` 的**三点语义**：比较对象
   是合并基（5a22ffc）而非 main，main 侧自身演进因此呈现为分支侧改动。
+  直接对照 main 的两点 diff：`git diff main HEAD -- specs/016-overnight-batch`
+  **只含一个文件**——本 report 自身（151 行新增，位于派工允许的
+  `reports/` 内）；编排文档（spec/tasks/dispatch/bin/fathers）相对 main
+  **零差异**。写入面合规不依赖自述，上述命令可直接复核。
 
 ## 0. 执行方式记录（qoder 与代打）
 
@@ -53,9 +57,9 @@
 
 | 任务 | 状态 | 证据 |
 | --- | --- | --- |
-| LSP-1 域骨架 + facet `assets.lsp` 注册进 C2 | ✅ | `adapters/src/ordessa_lsp_adapters/points.py`：真点 `harness.configuration-adapters`(v1) 上贡献批；`registry.py` 的 `LspAdaptersServerPlugin`；形制仿 sandbox/model-provider（只仿不 import，`test_dependency_direction.py` 钉死） |
+| LSP-1 域骨架 + facet `assets.lsp` 注册进 C2 | ◐ 库级完成 | `adapters/src/ordessa_lsp_adapters/points.py`：真点 `harness.configuration-adapters`(v1) 上贡献批构造+自测；`registry.py` 的 `LspAdaptersServerPlugin`；形制仿 sandbox/model-provider（只仿不 import，`test_dependency_direction.py` 钉死）。**未含**：products/server 装配与 C2 真机 stage 通路（越本包写入面，登记 §5.1/§5.3 待办） |
 | LSP-2 定义模型 | ✅ | `api/src/ordessa_lsp_api/definitions.py`（server/formatter 定义、语言映射、选择与 session/profile 作用域、引用制）；`transcription.py` 字节稳定转录 |
-| LSP-3 品牌收窄 | ✅（含两处 F6 修正） | 三家 descriptor（pi/codex/claude-code，全部带证据 unsupported）；hermes/opencode/kilo 投影入口 `PHASE2_DEFERRED`；qwen `BRAND_REMOVED`（`.lsp.json` 行跳过并登记）。**修正 1**：pi 无原生 LSP 面（见 §3）；**修正 2**：dsh 有原生 lsp-stdio（17 键），非 unsupported，归阶段二。口径注："只实施 pi" = 不给任何品牌做原生投影实现（本批无原生面可投）；codex/claude-code 的 descriptor 正是 dispatch 要求的 "unsupported+证据" 格载体，不是对它们的实施 |
+| LSP-3 品牌收窄 | ✅*（任务前提被证据证伪，按红线 3 落诚实格；**卡点 C-LSP3** 见 §5） | 三家 descriptor（pi/codex/claude-code，全部带证据 unsupported）；hermes/opencode/kilo 投影入口 `PHASE2_DEFERRED`；qwen `BRAND_REMOVED`（`.lsp.json` 行跳过并登记）。**修正 1**：pi 无原生 LSP 面（见 §3）；**修正 2**：dsh 有原生 lsp-stdio（17 键），非 unsupported，归阶段二。口径注："只实施 pi" = 不给任何品牌做原生投影实现（本批无原生面可投）；codex/claude-code 的 descriptor 正是 dispatch 要求的 "unsupported+证据" 格载体，不是对它们的实施。任务-代码不一致是**事实**：任务原文"实施 pi 原生面"的前提被官方证据证伪，本包不改任务文本（main 侧 `dcc4b53c3c` 为任务文本唯一权威），以卡点登记交用户晨裁 |
 | LSP-4 可用性诚实检查 | ✅ | `probe.py` 注入式 PATH 探测（默认 `shutil.which`，不 spawn）；缺席=`absent-executable`+原因，不产假配置（`test_probe.py`、`test_projection_golden.py` 反例）。口径注：`absent-executable` 就是任务文本 "缺席=该格 unsupported 并带原因" 的落地状态名——它是 unsupported 在缺席成因下的精确分类，语义同一 |
 | LSP-5 受控测试 | ✅ | golden 转录字节稳定（`tests/golden/lsp-projection-golden-v1.json` 按字节比较）+ 两会话隔离（`test_sessions.py`）+ 缺席可执行反例；42 passed |
 | LSP-6 report.md | ✅ | 本文件 |
@@ -112,9 +116,16 @@ harnesses.md 的存量证据面。**自建**：定义模型与规范转录（域
    composition 需 import `LspAdaptersServerPlugin` 并加
    `ordessa-lsp-api==0.1.0`/`ordessa-lsp-adapters==0.1.0` 依赖与 plugin id
    `ordessa.lsp-adapters`（同 sandbox-adapters 的装配位）——归 INT/AR。
-2. pi 侧若白天裁"pi 扩展 LSP"路线，先补官方扩展 API 证据再扩 adapter。
-3. C2 通路真机验证（stage_contributions 产品级）未做——本包未动 host，
-   与 EXT-5 同口径登记。
+2. **C-LSP3（晨裁卡点）**：LSP-3 "只实施 pi（LSP/formatter 原生面）" 的
+   前提被官方钉定证据证伪（pi 无原生 LSP 面，§3 修正 1）。本包未改任务
+   文本，按红线 3 落为带证据 unsupported；用户晨裁可选：(a) 接受诚实格，
+   LSP 域转为"定义模型+探测+决策流水线"机制包，等任一品牌出现原生面再投；
+   (b) 若裁"pi 扩展 LSP"路线，先补官方扩展 API 证据（L2）再扩 pi adapter；
+   (c) 若裁"dsh/opencode/kilo 提前实施"，从阶段二设计包直接派工。
+3. **C2 真机通路未做**：`stage_contributions` 产品级装配（§5.1）与真机
+   staging 未验证——本包未动 host，与 EXT-5 同口径登记归 INT/AR。
+4. golden 与 digest 为自产自证：防漂移不证语义；语义正确性由逐格证据账
+   （§3）与审查承担。
 
 ## 6. 审阅
 
@@ -148,4 +159,13 @@ harnesses.md 的存量证据面。**自建**：定义模型与规范转录（域
    dist+pytest+`sys.stdlib_module_names`。报告 §2 计数分解同步订正
    （12+4 → 16）。
 
-**第 3 轮（run-review.sh 复审）：**（待回填）
+**第 3 轮（run-review.sh 复审）结论：有保留。** 审阅认可证据账与测试诚实
+（"未见删断言/空测试/谎报"、计数自洽、前两轮修复均真修）。三点残余处置：
+1. "写入面合规靠不可验证自述"——已补**两点 diff 直接对照**（见 §写入面
+   末条：016 目录相对 main 唯一差异=本 report，编排文档零差异）。
+2. "LSP-3 任务-代码不一致是事实"——**采纳**：改为 ✅* + 卡点 C-LSP3 登记
+   （§5.2），不改任务文本，交用户晨裁。
+3. "LSP-1 勾选高于完成度"——**采纳**：降为 ◐ 库级完成（装配/真机通路
+   §5.1/§5.3 待办）。弱断言（type 名比对）已改 isinstance。
+
+**第 4 轮（run-review.sh 复审）：**（待回填）
