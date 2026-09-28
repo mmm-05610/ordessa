@@ -1,5 +1,7 @@
 import type * as acp from '@agentclientprotocol/sdk'
 import type { AgentWorkspaceInfo } from '@extensions/ordessa.agent-contracts/contract.js'
+import type { AcpControlledSubmission, AcpPermissionDecision, AcpSubmissionAdmission } from './submission'
+import type { AcpAttachmentPreparePort } from './attachments'
 
 /**
  * The reviewed injection seam (docs/acp-connector-test-review.md): the backend orchestration owns
@@ -21,6 +23,15 @@ export interface AcpChannelHandle {
    * `session/new` cwd. */
   readonly binding: AgentWorkspaceInfo
   readonly stream: acp.Stream
+  /** Optional transport-owned terminal fact. Command catalogs stay unknown without this fact. */
+  subscribeDown?: (listener: (reason: string) => void) => () => void
+  /** Optional until the Server publishes the authenticated C5 admission method. A controlled
+   * submit refuses when absent; no frontend-created permit is accepted. */
+  authorizeSubmission?: (submission: AcpControlledSubmission) => Promise<AcpSubmissionAdmission>
+  /** Owner-supplied content preparation. Absent in the current production host. */
+  attachmentPrepare?: AcpAttachmentPreparePort
+  /** Backend Q5 authority must verify execution-time permission before the ACP answer is sent. */
+  authorizePermission?: (decision: AcpPermissionDecision) => Promise<AcpSubmissionAdmission>
   /** Explicit backend release. */
   release(): Promise<void>
 }

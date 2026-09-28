@@ -11,7 +11,7 @@ from ordessa_server.credentials import CredentialRecords
 from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server_compat.profiles import ProfileRecords
 from ordessa_server_compat.sessions import SessionRecords
-from pacthold.storage import Database
+from pacthold_runtime_compat.storage import Database
 
 
 class ProductRepositoryView:

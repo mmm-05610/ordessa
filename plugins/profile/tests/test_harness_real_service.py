@@ -88,7 +88,9 @@ def load_external_adapter():
 
 
 class Runtime:
-    """Mirrors C0's controlled runtime: generation files + native readback."""
+    """Mirrors C0's controlled runtime: generation files, an operation-bound
+    native owner receipt and the matching native readback (the service only
+    confirms when the readback carries the activation receipt)."""
 
     def __init__(self, root):
         self.root = root
@@ -100,6 +102,7 @@ class Runtime:
         self.bytes = None
         self.snapshot_files = {}
         self.revision = "base-1"
+        self.receipt = None
 
     def capture(self, target):
         from ordessa_harness_api import AdapterContext, Installation
@@ -119,14 +122,18 @@ class Runtime:
             self.snapshot_files, {}, self.root, {},
             self.revision, "native-version-1", 1, "auth-1", "secret-ref-1")
 
-    def activate_generation(self, target, lease):
+    def activate_generation(self, operation_id, target, lease, manifest_digest):
         from pathlib import Path as _P
+        from ordessa_harness.application.operation_journal import NativeActivationReceipt
         self.activate_count += 1
         resource = ("private", "settings.json")
         self.bytes = lease.read_bytes(resource)
         self.revision = "applied-1"
         if self.fail_after_effect:
             raise OSError("controlled endpoint lost acknowledgement after effect")
+        self.receipt = NativeActivationReceipt(operation_id, target, manifest_digest,
+            "native-session-1", self.revision, f"fixture:native-owner:{operation_id}")
+        return self.receipt
 
     def observe(self, target):
         from ordessa_harness.application.configuration_service import NativeReadback
@@ -137,7 +144,7 @@ class Runtime:
             ((("private", "settings.json"),
               __import__("hashlib").sha256(data).hexdigest()),),
             "fixture:readback:" + __import__("hashlib").sha256(data).hexdigest(),
-            ("private-generation",))
+            ("private-generation",), self.receipt)
 
 
 class Permit:

@@ -1,0 +1,83 @@
+{
+  "source": {
+    "repository": "https://github.com/zai-org/ZCode",
+    "commit": "29628c9acdb81b703bbd4080c207a0e7ce5e276e",
+    "license": "Apache-2.0",
+    "fetchedAt": "2026-09-28",
+    "notes": "内容哈希为 git blob hash（git hash-object）。逐文件读取完整实现后提取；本批未运行上游产品，无像素基准。"
+  },
+  "ports": [
+    {
+      "target": "plugins/chat/frontend/src/components/messages/markdown-body.tsx",
+      "sources": [
+        { "path": "packages/ui/src/components/ai-elements/message.tsx", "hash": "f8088feb77dea0e09854450e183d18d55db8db4b" }
+      ],
+      "kept": ["resolveMessageStreamdownMode 的 streaming/static 两分（→ resolveChatMarkdownMode）", "渲染失败降级为原文的边界（→ MarkdownBoundary）", "render key 携带主题/换行但不含 streaming 标志（→ buildChatMarkdownRenderKey）", "CJK 插件 singleTilde 关闭组合", "自定义 code/a renderer 分流"],
+      "dropped": ["ZCode citation/artifact reader", "工作区路径改写 rehype 插件", "math/mermaid 插件", "editor/browser 服务", "intl/diagnostics/store 依赖"],
+      "adapted": ["链接打开为消费方传入的已验证动作（chat-api）", "组件样式改为 chat 前缀 CSS 变量体系"]
+    },
+    {
+      "target": "plugins/chat/frontend/src/components/messages/code-block.tsx",
+      "sources": [
+        { "path": "packages/ui/src/components/ai-elements/code-block.tsx", "hash": "1fcd886f735a4af648e0c5c85a7e856316bf9701" }
+      ],
+      "kept": ["语言/复制头部结构", "wrap/scroll 两态", "主题取 light/dark"],
+      "dropped": ["CodeViewer（@pierre/diffs、代码评论）", "Mermaid 分支", "@streamdown/code 内建 renderer"],
+      "adapted": ["高亮改为自有薄 wrapper 直接消费 shiki 4.0.2 公开 token API；异步结果仅应用于当前 (code,lang,theme,wrap) 版本；未知语言/失败保留纯文本"]
+    },
+    {
+      "target": "plugins/chat/frontend/src/components/messages/reasoning-block.tsx",
+      "sources": [
+        { "path": "packages/ui/src/components/ai-elements/reasoning.tsx", "hash": "e1fef60e6b6d58b5ab65f29ee7ace4e9fac34b66" }
+      ],
+      "kept": ["默认折叠、用户选择优先（userInteracted）", "autoCollapseKey 边沿重置", "收起后 300ms 再卸载重内容", "触发器流式摘要"],
+      "dropped": ["test-id/intl/diagnostic 依赖", "QueuedSummaryContent 排队动画（明确裁决不移植）", "UI 计时器估算耗时"],
+      "adapted": ["耗时仅用真实 durationMs prop（research-plan：不用 UI timer 冒充后端耗时）"]
+    },
+    {
+      "target": "plugins/chat/frontend/src/components/tools/tool-frame.tsx",
+      "sources": [
+        { "path": "packages/ui/src/ToolCallBlocks/ToolLayout.tsx", "hash": "4116f285980a0c3ce0c30727c603ac75df7e7c80" },
+        { "path": "packages/ui/src/ToolCallBlocks/ToolSummaryRow.tsx", "hash": "99cd0af1ae30de1b2e45696fdace38f4881f97f8" }
+      ],
+      "kept": ["紧凑摘要行信息层次（图标+类型+目标+状态）", "详情惰性挂载 + 300ms 收起延迟", "一次性 autoOpen 与 running→completed 自动收起边沿", "键盘 Enter/Space 触发（结构上用原生 button trigger 保证）"],
+      "dropped": ["模块级 toolLayoutOpenState Map（只增不减，明确禁止移植）→ 视图会话级 ViewExpansionState", "memoryDiagnostics 注册", "hover-only Tooltip（失败原因改为键盘可达的详情文本 + 复制动作）", "QueuedSummary 动画"],
+      "adapted": ["Tailwind 类换 chat-* 样式", "业务布尔项不进公共契约"]
+    },
+    {
+      "target": "plugins/chat/frontend/src/components/tools/execute-output.tsx",
+      "sources": [
+        { "path": "packages/ui/src/ToolCallBlocks/renderers/ExecuteOutput.tsx", "hash": "0e229c7e3adfef8fdafee3269f9432055604a965" },
+        { "path": "packages/ui/src/components/ui/scroll-fade-viewport.tsx", "hash": "9d57b3f6a183711148f5f780a1bad32aa31ad912" }
+      ],
+      "kept": ["约五行预览高度", "程序吸底跟随 + 上滚冻结可见文本 + 回底恢复", "程序滚动位置记录避免尾窗缩短误判"],
+      "dropped": ["logger 依赖"],
+      "adapted": ["补齐：冻结时的显式「恢复跟随」按钮与「有新输出」提示（上游仅有滚动手势）", "渐隐遮罩以普通 CSS 表达（本批未启用遮罩，保留结构）"]
+    },
+    {
+      "target": "plugins/chat/frontend/src/components/composer/text-input.tsx",
+      "sources": [
+        { "path": "packages/ui/src/components/ai-elements/prompt-input-textarea.tsx", "hash": "aa95ded838edc6f2b75e438dd9ee178fb034d448" }
+      ],
+      "kept": ["isComposing + nativeEvent.isComposing 双保险（中文 IME Enter 不发送）", "Shift+Enter 换行", "外部 onKeyDown 先行且 defaultPrevented 跳过内部逻辑（建议面板先消费）", "提交按钮禁用检查", "空输入 Backspace 移除末位附件", "粘贴文件合流"],
+      "dropped": ["upstream controller/附件管理器", "LexicalChatInput"],
+      "adapted": ["受控 value/回调由 chat-api ComposerProps 提供；输入自身不存草稿"]
+    },
+    {
+      "target": "plugins/chat/frontend/src/components/composer/trigger.ts",
+      "sources": [
+        { "path": "packages/ui/src/lib/promptInputTriggers.ts", "hash": "d6e4d54f0aea6cadb1554ba250d168874c353b9c" },
+        { "path": "packages/ui/src/mentions/activePromptInputToken.ts", "hash": "deec638ba6e2defff40ce40d4a5f02e81fe17f7d" }
+      ],
+      "kept": ["token 边界正则语义（行首/空白后触发，跑到光标）", "快照 reconcile：token 文本变→重算；光标离开→关闭；纯光标移动→保持", "替换范围仅在光标仍在原 token 内时有效（陈旧插入拒绝）"],
+      "dropped": ["@/$/#/¥ 触发器（本批仅 /）", "fuzzy 打分", "Lexical nodeKey 概念（改为普通 textarea selection）"]
+    }
+  ],
+  "dependencyPins": {
+    "streamdown": "2.5.0",
+    "@streamdown/cjk": "1.0.3",
+    "shiki": "4.0.2",
+    "use-stick-to-bottom": "1.1.3",
+    "radix-ui": "^1.6.7 (沿用根锁已有版本)"
+  }
+}

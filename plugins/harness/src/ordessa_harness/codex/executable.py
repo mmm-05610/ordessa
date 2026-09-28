@@ -14,7 +14,7 @@ import stat
 import struct
 from typing import Mapping
 
-from pacthold.extensions.runtime_composition import RuntimeSourceDeclaration
+from pacthold_runtime_compat.runtime_composition import RuntimeSourceDeclaration
 
 
 class CodexExecutableResolutionError(ValueError):

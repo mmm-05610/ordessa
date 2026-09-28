@@ -4,10 +4,10 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-from pacthold.resource_contracts import AgentBoxProfileV1, PromptFragmentV1, WorkspaceV1
+from pacthold_runtime_compat.resource_contracts import AgentBoxProfileV1, PromptFragmentV1, WorkspaceV1
 from pacthold.work_core import (ExecutionProjection, ExecutionStartReceipt, ExecutionStartRequest, Freshness, Outcome,
     Phase, ProviderDescriptor, Ref, RefType)
-from pacthold.extensions.runtime_composition import RuntimeBinding, RuntimeHostV1, SandboxV1, TerminalSessionV1, TerminalRunHandle
+from pacthold_runtime_compat.runtime_composition import RuntimeBinding, RuntimeHostV1, SandboxV1, TerminalSessionV1, TerminalRunHandle
 from .contracts import ClaudeContinuationV1
 from .composition import command_from_plan, compose, composition_from_resolved_inputs
 

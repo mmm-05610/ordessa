@@ -1,0 +1,101 @@
+{
+  "after_switch": {
+    "argv": [
+      "/runtime/bin/pi",
+      "--provider",
+      "deepseek",
+      "--model",
+      "beta",
+      "--thinking",
+      "high",
+      "--agent-dir",
+      "/runtime/home",
+      "--session-dir",
+      "/runtime/home/sessions",
+      "--session-id",
+      "exec-1",
+      "--print",
+      "# t\n\nhello"
+    ],
+    "cwd_token": "/workspace",
+    "io_mode": "stdio",
+    "projector_id": "pi",
+    "sources": [
+      [
+        "pi-executable",
+        "/runtime/bin/pi",
+        "ro",
+        "executable",
+        "sha256:b953a123df9d3b4fcd05fbc10e3d26cee265a3db656a08a6bc38d8ed1b22d980"
+      ],
+      [
+        "pi-profile-home",
+        "/runtime/home",
+        "rw",
+        "profile",
+        "sha256:87db84e4db4d7a02b27fc2ed9649c31d1a9ca3b85724b70ba928a78decb85872"
+      ],
+      [
+        "workspace",
+        "/workspace",
+        "rw",
+        "workspace",
+        "sha256:bb30876cf76045dadef80fb1e894c0c33433fbecdb65d5bce66e80c486e637ef"
+      ]
+    ]
+  },
+  "projection": {
+    "argv": [
+      "/runtime/bin/pi",
+      "--provider",
+      "deepseek",
+      "--model",
+      "alpha",
+      "--thinking",
+      "high",
+      "--agent-dir",
+      "/runtime/home",
+      "--session-dir",
+      "/runtime/home/sessions",
+      "--session-id",
+      "exec-1",
+      "--system-prompt",
+      "/runtime/home/instructions.md",
+      "--print",
+      "# t\n\nhello"
+    ],
+    "cwd_token": "/workspace",
+    "io_mode": "stdio",
+    "projector_id": "pi",
+    "sources": [
+      [
+        "pi-executable",
+        "/runtime/bin/pi",
+        "ro",
+        "executable",
+        "sha256:b953a123df9d3b4fcd05fbc10e3d26cee265a3db656a08a6bc38d8ed1b22d980"
+      ],
+      [
+        "pi-instructions",
+        "/runtime/home/instructions.md",
+        "ro",
+        "instructions",
+        "sha256:606700d914e6bb192c33ffe8294ff0adf6d32bae7ffbd7b7f6dce84449d93b97"
+      ],
+      [
+        "pi-profile-home",
+        "/runtime/home",
+        "rw",
+        "profile",
+        "sha256:f14affad7a916ac33dd841fb9e08504050f70ccaecd5a72210971330de92a0e1"
+      ],
+      [
+        "workspace",
+        "/workspace",
+        "rw",
+        "workspace",
+        "sha256:bb30876cf76045dadef80fb1e894c0c33433fbecdb65d5bce66e80c486e637ef"
+      ]
+    ]
+  }
+}
