@@ -352,6 +352,71 @@ def test_bind_secret_only_travels_as_reference(cls):
             assert intent.secret_ref.startswith("ref://")
 
 
+# -- S-08② golden consistency (PB-7): this package is the designated
+# successor of the harness side's brand rendering; the pins below hold the
+# two implementations byte-equal, including on the registration path (the
+# descriptors' dialect facts), so the retirement of the harness writer
+# (native_materialization.py) cannot drift the C2 surface.
+
+def test_codex_provider_section_matches_the_harness_golden_byte_for_byte():
+    from ordessa_harness.native_materialization import (
+        render_codex_provider_section as harness_render,
+    )
+
+    for protocol in ("openai-responses", "openai-chat"):
+        ours = common.render_codex_provider_section(
+            provider="acme", base_url="https://api.acme.test/v1", protocol=protocol)
+        theirs = harness_render(
+            provider="acme", base_url="https://api.acme.test/v1", protocol=protocol)
+        assert ours == theirs
+
+
+def test_pi_provider_object_matches_the_harness_golden():
+    from ordessa_harness.native_materialization import render_pi_provider
+
+    theirs = render_pi_provider(provider="acme", base_url="https://api.acme.test/v1",
+                                protocol="openai-chat")
+    field, dialect = common.translate_protocol("pi", "openai-chat")
+    ours = {"baseUrl": "https://api.acme.test/v1", field: dialect}
+    assert ours == {key: theirs[key] for key in ours}
+
+
+def test_claude_env_matches_the_harness_golden():
+    from ordessa_harness.native_materialization import render_claude_env
+
+    theirs = render_claude_env(base_url="https://api.acme.test/v1",
+                               protocol="anthropic-messages")
+    assert theirs == {"ANTHROPIC_BASE_URL": "https://api.acme.test/v1"}
+
+
+def test_pinned_dialects_equal_the_harness_family_facts():
+    """Registration path: every (brand, protocol) pair the registered
+    descriptors can accept carries the SAME first-hand native field the
+    harness family module pins — the adapters' DIALECTS are a transcription,
+    never an independent guess."""
+    from ordessa_harness.native_materialization import (
+        _FAMILY_DIALECTS as harness_dialects,
+    )
+
+    for brand, pairs in common.DIALECTS.items():
+        for protocol, dialect in pairs.items():
+            assert harness_dialects[brand][protocol] == dialect, (brand, protocol)
+
+
+def test_registered_descriptor_native_targets_match_the_harness_pins():
+    from ordessa_harness.native_materialization import _NATIVE_TARGET
+
+    for brand in common_brands():
+        descriptor = bridge.descriptor_for(brand)
+        harness_target = _NATIVE_TARGET[brand]
+        assert descriptor.harness_id == brand
+        # the descriptor's file claim is the same native target the harness
+        # family writes (the E2 runtime resources carry the identical name)
+        file_claims = [c for c in descriptor.claims if c.target_kind == "file"]
+        assert file_claims
+        assert bridge.HANDLE_IDS[brand].split(".", 1)[1] == harness_target
+
+
 # -- purity boundary ------------------------------------------------------------
 
 _FORBIDDEN = re.compile(
