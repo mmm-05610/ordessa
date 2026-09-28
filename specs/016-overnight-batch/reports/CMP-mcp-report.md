@@ -25,7 +25,7 @@ specs 报告（§3 所列）。
 | R0 | 读完整输入，冻结实际 SHA/包/红 ID/环境，盘点复用 | **A** | q4 report.md 头部冻结账（起点 96fef2db47、五个 checkpoint publication SHA→merge 链、环境与红 ID 账）；checkpoint-consumption.md 逐笔。本批复核：账本文件树内=main（diff 空），报告引用的 commit 均在分支历史可达 |
 | R1 | 独立工作与接口请求完成；消费必需 checkpoint 并留精确 SHA | **A** | report.md 交付 commit 链 14 笔（e00311dbcd→1e7f3733c7）+ integration-request.md/api-requests.md 在树；五个 checkpoint 消费各有 merge SHA。本批复核：`git log` 可达性抽查通过 |
 | R2 | 本线全部原包任务有实现/验收/依赖归属，生产假接口为零 | **B→A'**（受控补验后发现并轨断裂，本批修复） | T00–T14 逐项实现/验收/依赖归属表在 report.md §一（V01–V10、L0–L2 证据格）。受控补验：接手时套件 **4 failed + 2 errors（524 collected = 518 passed + 4F + 2E）**——断裂源=012 并支整固 `ba891aff05` 半途的 wire 对齐 + 并入 main 带来的 C4 native-receipt 协议演进，合并后无人复跑。**本批补做修复**（§2/§3），修复后 **526 passed / 0 failed**；"生产假接口为零"在修复后的套件上成立 |
-| R3 | 检查点/接线清单/许可迁移账/报告齐备，定向及相关全链门通过 | **A'**（同上复验口径） | checkpoint-consumption.md、接线清单（t06-wiring/t013）、许可迁移账（t09-migration）齐备；"全链门"按线内口径=定向套件绿+继承红账无新增。本批复验：定向 `pytest plugins/assets/mcp`=525 绿；`apps/server` 全链门受主会话 INT 管辖（lines 口径不扩到跨域） |
+| R3 | 检查点/接线清单/许可迁移账/报告齐备，定向及相关全链门通过 | **A'**（同上复验口径） | checkpoint-consumption.md、接线清单（t06-wiring/t013）、许可迁移账（t09-migration）齐备；"全链门"按线内口径=定向套件绿+继承红账无新增。本批复验：定向 `pytest plugins/assets/mcp`=526 绿；`apps/server` 全链门受主会话 INT 管辖（lines 口径不扩到跨域） |
 | R4 | Spec Kit analyze/converge 查漏，未完成项如实；发布本线 clean ready commit | **A**（附遗留登记） | `49dfa61522`(converge) 在交付链；report.md §二阻塞 6 项/§三未测边界如实（产品装配 L3、真 CLI 装载、profile facet 组合、compat 迁移执行、SDK 路线、wire principal 注入——均精确到 integration-request 编号）；ready 支 `codex/011-q4-ready` 已布 |
 
 结论：**q4 账本 5 项 = 甄别完成，全部 A（R2/R3 经本批受控补验后恢复 A）**。
@@ -98,4 +98,18 @@ assignment 视图、preview 无 entries）——阶梯语义映射需裁定；
    Unknown 不 Confirmed）；注释措辞改为 operation/generation-manifest 绑定。
    WCG-05 #2 分支真实数据不可达的"弱化"注记如实接受（合成分支保留反空转）。
 
-**第 2 轮后备复审：**（待回填）
+**第 2 轮后备复审（对象=处置 delta，产物
+`reports/son-cmp-mcp-review-fallback-r2-20260929-011500.md`）结论：有保留
+（"修掉这三点即可通过"）。** 三点终处置：
+1. R3 行残留 525——**已订正为 526**（全报告单一口径）。
+2. §二.0"种类级读法不可证伪 + 真值源与对齐来源不一致"——**已重写**：引
+   contracts.md §1 逐字行可复核；并精确消解：fixture 激活的正是真实
+   McpAssetServerPlugin、经真实 WireService.dispatch 采样——fixture 应答是
+   注册面行为的采样，与"真值源=活注册描述符"同源无矛盾（WCG-01/02 直接对
+   RegisteredSurface 实读比对）。
+3. 反例格多变量同变、绑定维度未隔离——**已隔离**：stranger receipt 仅
+   operation_id 一维与真 receipt 不同（target/manifest/identity/revision/
+   evidence 全同）；若服务门校的不是 operation 绑定该格会变 Confirmed 翻红，
+   Unknown 归因唯一。
+
+**第 3 轮后备复审：**（待回填）

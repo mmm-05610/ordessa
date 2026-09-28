@@ -243,26 +243,31 @@ def test_readback_mismatch_refuses_confirmation(tmp_path):
 
 
 def test_readback_with_foreign_receipt_lands_unknown(tmp_path):
-    """The receipt-binding wall, exercised from THIS chain: a readback whose
-    receipt binds ANOTHER operation must never confirm — the service raises
-    on the identity check and records Unknown, never Confirmed."""
+    """The receipt-binding wall, exercised from THIS chain, ONE dimension at a
+    time: the stranger receipt differs ONLY in ``operation_id`` (target,
+    manifest digest, native identity, revision and evidence ref all equal the
+    genuine receipt). If the service's confirmation gate checked anything
+    other than the operation binding, this cell would go Confirmed and fail —
+    so the Unknown it lands on is attributable to the operation binding alone.
+    """
     adapter = ChainProbeAdapter(claude_mod.CLAUDE, verify_fn=claude_mod.verify_native)
     host, runtime, permits, service = compose(tmp_path, adapter)
 
     original_observe = runtime.observe
 
-    def foreign_receipt(target):
+    def foreign_operation_receipt(target):
         readback = original_observe(target)
+        genuine = readback.receipt
         stranger = NativeActivationReceipt(
-            "op-of-someone-else", readback.target, "sha256:other-generation",
-            "native-session-1", readback.applied_revision,
-            "native:mcp-chain:op-of-someone-else")
+            "op-of-someone-else", genuine.target, genuine.manifest_digest,
+            genuine.native_session_identity, genuine.applied_revision,
+            genuine.evidence_ref)
         return NativeReadback(readback.target, readback.native_session_identity,
                               readback.applied_revision, readback.observed_value,
                               readback.files, readback.evidence_ref,
                               readback.resource_changes, stranger)
 
-    runtime.observe = foreign_receipt
+    runtime.observe = foreign_operation_receipt
     planned = service.plan(TARGET, (fragment(),), "base-1")
     result = service.apply(planned.plan_id, "op-f", "signed:mcp-permit")
     assert result.kind == "unknown"
