@@ -88,3 +88,15 @@ ZCode `29628c9a`（Apache-2.0；ai-elements 含 Vercel 派生物）浅取核对�
 
 - 本线消费记录：foundation `8844c475bc`（merge 0a05235d0f，复跑全绿）。harness-api 截至本报告未发布；发布后本线按协议消费并接线 R-Z2-1/2/3，随后执行 CHAT-V08/V09 遗留项并回填本报告。
 - 待办交接：C0 集成按 integration-request §1–§6 执行。
+
+## 8. 014 P-C 增补（2026-09-28，分支 codex/014-c-chat）
+
+原五条 C0 待办中的 R-Z2-1/2/3/5 已在本分支以真实接缝接通（详见 `specs/014-plugin-release/reports/P-C-report.md`）：
+
+- **R-Z2-1 三态**：agent-contracts 0.2.0 `send(): Promise<AgentSubmissionOutcome|void>`（冻结客户端零破坏）；sessions 门面为映射 owner（fail-closed admission 前置、链路断→unknown 保 requestId、typed refused、旧 resolve→accepted）；chat gateway 1:1。本报告 §2「三态真实服务证据」行升级为**受控级已生效**（refused/unknown 注入逐级到 UI，unknown 不重发）。
+- **R-Z2-2 附件 plugin 半边**：capability 驱动入口、prepare(idempotencyKey)→不透明 ref→submit attachmentRefs→connectors sendControlled verify(sha256 全等)链路全通；A06 受控往返一致；refused/unknown 保留+原因；生产 owner/picker 缺席=禁用+原因（S-05/R-Z2-6）。§5 首行升级为受控级。
+- **R-Z2-3 命令目录**：connectors `getNativeCommands` 零消费状态终结——contracts 可选成员→sessions 门面→chat 四态投影+slash 输入源；反例（stale-session/channel-down/unobservable/malformed/无成员）全带原因；claude 行经 PC-10 受控探针实证**不播发** `available_commands_update`→诚实 absent（转录在 P-C 包）。
+- **R-Z2-5 reasoning**：`AgentMessage.reasoningState?` 契约化+展示层消费（有证据用证据，无证据不造耗时）；connectors 半边登记 S-05 同族。
+- **PC-6**：`plugins/agent/conversation` 全包退役（等价覆盖 18 gates 逐条核对留档 P-C report §6）；`agent.conversation` view id 引用清零；S-01 退役条件确认满足。
+- 其余未变项照旧：R-Z2-6 picker、浏览器矩阵/Electron 门、产品启停（S-01）、根锁（S-02）。
+- 契约修订：chat-api r4（全增量，账在 contract.ts 尾部）；本线 §4 的 r3 账不被推翻。
