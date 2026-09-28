@@ -33,7 +33,7 @@
 - [ ] PC-6 旧链退役（plugin 半边）：`plugins/agent/conversation/{view,interaction-card,styles,entry}.tsx` 退役（语义已迁 chat approval-panel）；对 `apps/desktop/renderer/agent-conversation.test.tsx` 逐条核对等价覆盖后在 S-01 确认可删（删除本身归 core）；启停与锁 → S-01/S-02
 - [ ] PC-7 R-Z2-5 reasoning 状态升级（时间盒内做，非阻塞；picker=R-Z2-6 归 S-05 同族接缝不扩本包）
 - [ ] PC-8 报告与交付：`reports/P-C-report.md` + 011-z2 report 增补；终提交 SHA；PARTIAL 项逐条
-- [ ] PC-9 DTO 冻结（S-05 回执，**唯一允许写 connectors 的窄口**）：`plugins/connectors/acp` 的 `AcpAttachmentPreparePort` DTO 补 `preparedId`（`attachments.ts` 的 AcpPreparedAttachment），仅 DTO+定向测试，不动实现语义；交付 SHA 写回 seams S-05，core 按此接 Server DTO
+- [ ] PC-9 DTO 对齐核实（S-05 回执修正）：connectors 侧 `AcpPreparedAttachment` **已含** `preparedId`（`plugins/connectors/acp/src/attachments.ts:10-12`，注释明言 Server ACP DTO 未携带）——核实该形状并作为对接基准写回 S-05；缺的字段在 **Server ACP DTO（core 侧补）**，本包**不改 connectors**
 - [ ] PC-10 claude 命令探针（S-07 命令项）：受控驱动 `plugins/harness/packaging/claude` 钉版 adapter（fake Anthropic endpoint，沿用该目录既有探针架式；不改 plugins/harness 任何跟踪文件），实测是否播发 `available_commands_update`：播发→经 NativeCommandReader 接线并记第一手证据；不播发→诚实 absent+原因写回 S-07
 
 ## P-D — claude 附件通路（harness）
