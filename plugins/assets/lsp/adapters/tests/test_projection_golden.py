@@ -41,10 +41,11 @@ def test_golden_transcription_byte_stable() -> None:
         "regenerate the golden file and record why in LSP-report.md")
 
 
-def test_golden_digest_recorded() -> None:
+def test_golden_digest_pinned() -> None:
+    # 期望哈希钉死在断言里：golden 被改动/再生成而未订正此处即红。
     digest = hashlib.sha256(GOLDEN.read_bytes()).hexdigest()
-    # 64 hex chars：golden 是字节稳定的规范 JSON，哈希恒定可复核
-    assert len(digest) == 64 and all(c in "0123456789abcdef" for c in digest)
+    assert digest == ("fbbd1a942f2744f4f05ad1914d69af93b"
+                      "682ffaf2c80be7f5e6a6e019633c679")
 
 
 def test_transcription_deterministic_across_calls() -> None:

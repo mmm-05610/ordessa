@@ -4,8 +4,9 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-_SRC = Path(__file__).resolve().parents[1] / "src"
-for p in (str(_SRC), str(_SRC.parent.parent.parent / "api" / "src")):
+_PKG = Path(__file__).resolve().parents[1]          # .../plugins/assets/lsp/adapters
+_DOMAIN = _PKG.parent                               # .../plugins/assets/lsp
+for p in (str(_PKG / "src"), str(_DOMAIN / "api" / "src")):
     if p not in sys.path:
         sys.path.insert(0, p)
 

@@ -1,8 +1,23 @@
 # LSP-report · 016 夜批（son-lsp，支 codex/plugin-lsp）
 
 日期：2026-09-28 深夜。执行者：**zcode 代打**（qoder 不可用，见下）。
-写入面自查：本包只写了 `plugins/assets/lsp/**` 与本 report；`git status`
-无域外文件。
+
+## 写入面自查（按分支提交逐一披露，订正版）
+
+本分支相对 main 恰有两个提交，归属如下：
+
+1. `892a74a47e` **夜批基线补同步**（编排者准备动作，先于派工）：把本树
+   `specs/016-overnight-batch/` 对齐 main 现行版（品牌优先级 pi/codex/
+   claude、qwen 除名、CMP 三档口径、无人值守附加），**仅文档、零代码**。
+   动机：本树切基点早于品牌优先级裁定，树内旧 tasks.md 的 LSP-3 仍是
+   "五品牌实施（含 qwen）"——不先同步，派工就会执行已被用户裁定推翻的
+   任务清单。该提交内容 = `git archive main specs/016-overnight-batch`
+   的逐字节快照，非本包改写任何口径。此提交在 LSP 包派工之前完成，
+   属编排文档基线，不在 LSP 写入面内，特此披露。
+2. `d6ef928a9e`（+ 本次订正提交）**LSP 包本体**：只写
+   `plugins/assets/lsp/**` 与 `specs/016-overnight-batch/reports/LSP-report.md`。
+
+除上述两笔外 `git status` 无任何域外文件。
 
 ## 0. 执行方式记录（qoder 与代打）
 
@@ -28,8 +43,8 @@
 | --- | --- | --- |
 | LSP-1 域骨架 + facet `assets.lsp` 注册进 C2 | ✅ | `adapters/src/ordessa_lsp_adapters/points.py`：真点 `harness.configuration-adapters`(v1) 上贡献批；`registry.py` 的 `LspAdaptersServerPlugin`；形制仿 sandbox/model-provider（只仿不 import，`test_dependency_direction.py` 钉死） |
 | LSP-2 定义模型 | ✅ | `api/src/ordessa_lsp_api/definitions.py`（server/formatter 定义、语言映射、选择与 session/profile 作用域、引用制）；`transcription.py` 字节稳定转录 |
-| LSP-3 品牌收窄 | ✅（含两处 F6 修正） | 三家 descriptor（pi/codex/claude-code，全部带证据 unsupported）；hermes/opencode/kilo 投影入口 `PHASE2_DEFERRED`；qwen `BRAND_REMOVED`（`.lsp.json` 行跳过并登记）。**修正 1**：pi 无原生 LSP 面（见 §3）；**修正 2**：dsh 有原生 lsp-stdio（17 键），非 unsupported，归阶段二 |
-| LSP-4 可用性诚实检查 | ✅ | `probe.py` 注入式 PATH 探测（默认 `shutil.which`，不 spawn）；缺席=`absent-executable`+原因，不产假配置（`test_probe.py`、`test_projection_golden.py` 反例） |
+| LSP-3 品牌收窄 | ✅（含两处 F6 修正） | 三家 descriptor（pi/codex/claude-code，全部带证据 unsupported）；hermes/opencode/kilo 投影入口 `PHASE2_DEFERRED`；qwen `BRAND_REMOVED`（`.lsp.json` 行跳过并登记）。**修正 1**：pi 无原生 LSP 面（见 §3）；**修正 2**：dsh 有原生 lsp-stdio（17 键），非 unsupported，归阶段二。口径注："只实施 pi" = 不给任何品牌做原生投影实现（本批无原生面可投）；codex/claude-code 的 descriptor 正是 dispatch 要求的 "unsupported+证据" 格载体，不是对它们的实施 |
+| LSP-4 可用性诚实检查 | ✅ | `probe.py` 注入式 PATH 探测（默认 `shutil.which`，不 spawn）；缺席=`absent-executable`+原因，不产假配置（`test_probe.py`、`test_projection_golden.py` 反例）。口径注：`absent-executable` 就是任务文本 "缺席=该格 unsupported 并带原因" 的落地状态名——它是 unsupported 在缺席成因下的精确分类，语义同一 |
 | LSP-5 受控测试 | ✅ | golden 转录字节稳定（`tests/golden/lsp-projection-golden-v1.json` 按字节比较）+ 两会话隔离（`test_sessions.py`）+ 缺席可执行反例；42 passed |
 | LSP-6 report.md | ✅ | 本文件 |
 
@@ -90,4 +105,19 @@ harnesses.md 的存量证据面。**自建**：定义模型与规范转录（域
 
 ## 6. 审阅
 
-（待 run-review.sh 执行后回填）
+**第 1 轮（run-review.sh，pi + mimo-v2.6-pro）结论：不通过。** 三条问题与
+处置：
+1. "写入面越界 + 自查陈述失实"——审阅对象是 `main...HEAD` 全量 diff，
+   其中编排文档改动来自 `892a74a47e` 基线补同步（派工前的编排者准备动作，
+   非 LSP 包产出），原报告未披露造成失实。**已订正**：§写入面自查改为按
+   提交逐一披露归属；任务/规格文本零改写（sync = main 快照）。
+2. "LSP-3 三家 descriptor 与 '只实施 pi' 文本不一致；LSP-4 状态名新造"
+   ——前者为口径误读（descriptor 即 dispatch 对 codex/claude 要求的
+   "unsupported+证据" 载体），后者为命名更精（absent-executable ⊂
+   unsupported）。**已在 §1 勾选对照表补口径注**。
+3. `conftest.py` api 路径多一级 `.parent`（真 bug，测试绿靠 PYTHONPATH
+   兜底）；`test_golden_digest_recorded` 空转断言。**已修复**：conftest
+   改正解析并在无 PYTHONPATH 下自证（29 passed standalone）；digest 钉死
+   期望哈希。
+
+**第 2 轮（run-review.sh 复审）：**（待回填）
