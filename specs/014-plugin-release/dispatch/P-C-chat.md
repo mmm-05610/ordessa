@@ -10,14 +10,14 @@
 - connectors 侧（已实现有测试，只读消费）：三态 `plugins/connectors/acp/src/submission.ts:13-26`、`client.ts:657`；附件 `attachments.ts:35-41`（prepare→sha256 ref）、`client.ts:608-645`；命令 `commands.ts:8-25`（四态目录）、`client.ts:183-195`（getNativeCommands，**全仓零消费**）、`client.ts:431`；`plugins/connectors/ordessa/src/acp-next-submit.ts:92-141`（wire `acp.submission.authorize`，头注 :3-8 自述缺 backend owner）。
 - server 侧（已在 main，只读）：`plugins/harness/src/ordessa_harness/server_acp/plugin.py:201-227`（acp_submission_authorize）、`apps/server/src/ordessa_server/acp_admission.py`。
 - **中间层（本包的战场）**：`plugins/agent/contracts/src/agent.ts:118`（`send(): Promise<void>` 需升三态）+ 目录成员；`plugins/agent/sessions/src/model.ts:115-146`（facade 供给）；`plugins/chat/frontend/src/adapters/agent.ts:126-141/150-155`（映射，现 command 恒 absent）；`chat-page.tsx:202-220`（附件入口现因 supported=false 禁用）。
-- F4：Claude 无 ACP 桥 backend（Go 桥仅 codex|pi）→ claude 行命令/附件=诚实 absent（S-07 裁定前默认）。
+- F4（2026-09-28 修正）：Claude **有** ACP 桥——钉版官方 `@agentclientprotocol/claude-agent-acp@0.81.2`（`plugins/harness/packaging/claude/`），不走 Go 桥；但 `harnesses.toml:86-89` 诚实移除 `attach`（promptCapabilities 空、无附件证据）、命令目录无 available_commands 证据 → claude 行命令/附件 = 诚实 `unsupported` + 原因（S-07，core 同建议，用户终裁前默认此形态）。
 - F8：integration-request §6 的 C7 import map 切换**已在 main**，勿重做。
 
 ## 写入面（只许这些）
 
 `plugins/chat/**`；`plugins/agent/{contracts,sessions,conversation}/**`；`specs/011-z2-chat/**`（报告增补）；`specs/014-plugin-release/**`（勾选 PC-*、写 `reports/P-C-report.md`、更新 S-01/S-02/S-05/S-07 状态）。
 
-**禁区**: `plugins/connectors/**` 与 `plugins/harness/**`（只读消费——发现 port 缺口 → seams 增条，不改它们）；`plugins/commands/**`（它是扩展宿主命令注册表，**不是** Chat 菜单，Q1 api-requests.md:88 已明确）；products/、tooling/、apps/、根锁、兄弟树。`plugins/agent/{connections}` 不动。
+**禁区**: `plugins/connectors/**` 与 `plugins/harness/**`（只读消费——发现 port 缺口 → seams 增条，不改它们；**唯一例外**：PC-9 的 DTO 冻结窄口，只许改 `plugins/connectors/acp` 附件 DTO 本体与其定向测试）；`plugins/commands/**`（它是扩展宿主命令注册表，**不是** Chat 菜单，Q1 api-requests.md:88 已明确）；products/、tooling/、apps/、根锁、兄弟树。`plugins/agent/{connections}` 不动。
 
 ## 任务（详账 tasks.md PC-1..PC-8）
 
@@ -38,6 +38,9 @@ chat 侧 add-content 由 `ChatAttachmentCapability.supported` 驱动激活（cap
 
 ### PC-7 R-Z2-5 reasoning 状态（时间盒）
 `AgentMessage.reasoning: string` → 状态化（streaming/complete/interrupted/unknown + duration），connectors 半边不动（登记 S-05 同族）；做不完如实 PARTIAL，不阻塞收口。
+
+### PC-9 DTO 冻结（S-05 回执；唯一允许写 connectors 的窄口）
+`plugins/connectors/acp/src/attachments.ts` 的 `AcpPreparedAttachment` 补 `preparedId`（core 需要，用于 Server DTO 对接）；**只改 DTO 字段 + 既有定向测试的期望**，不动 prepare 语义/实现/其他文件；TSD/类型检查全绿；交付 SHA 写回 seams S-05，core 按 SHA 接 Server DTO。此任务与 PC-3 同域，宜先做。
 
 ## 门与反例（终态前必须全过）
 
