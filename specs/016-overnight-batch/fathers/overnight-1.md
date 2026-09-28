@@ -26,3 +26,15 @@
 每包一段（结果/测试计数/qoder 与审阅记录/卡点/复用与自建清单），如实，不粉饰。
 先读 specs/016-overnight-batch/spec.md 的共同红线（特别是第 7 条复用优先与
 CMP 甄别三档口径）。
+
+## 阶段二（全部儿子包完成后才做；只产出设计/侦察文档，不改插件代码）
+
+1. **剩余四家设计**：hermes/opencode/dsh/kilo 的覆盖扩展设计稿——对照
+   specs/016 各包的三态表，把"四家格"写成可派单的方案包草案，落
+   specs/016-overnight-batch/reports/phase2-design-<域>.md（每域一份）。
+2. **新品牌侦察（三份）**：mcode / qoder / zcode TUI——按
+   docs/design/harness-configuration 的盘点模式（固定仓库快照 HEAD、配置入口、
+   扩展面、license、与 ACP/CLI 的通道证据、建议 pin）；zcode TUI 从 ZCode 官方
+   GitHub 仓库取证。落 reports/recon-<品牌>.md。互联网检索遵守
+   docs/design/information-recon-priority.md 的优先级路径。
+3. 阶段二产物同样走审阅与"未审阅如实记"规则。

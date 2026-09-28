@@ -26,7 +26,17 @@
 **同分支单子**：model-provider 的 z3 五项并入 MPX-5；harness 的 c0 廿四项并入 PE2-7；
 permissions/sandbox 的 q5 五项并入 PE1-7——不另开树。
 
-## 共同红线（六包全适用，父文档重申）
+## 品牌优先级与 roster 变更（用户裁定 2026-09-28 深夜）
+
+1. **实施优先级**：所有包的品牌面先做 **pi / codex / claude** 三家；hermes /
+   opencode / dsh / kilo 四家**不实施**，转入阶段二设计产出（见父文档阶段二）。
+2. **qwen 全线移除**：一切任务中的 qwen 行**跳过不做并在 report 登记"qwen 已
+   除名"**；harness 支摘除动作归 PE2-8（toml/家族表/测试同支同树）。
+3. **新增品牌（仅侦察不实施）**：mcode、qoder、zcode TUI 版——阶段二按
+   harness-configuration 盘点模式出侦察文档（官方仓库/配置面/ACP 或 CLI 能力/
+   license/建议 pin）；zcode TUI 的信息从 ZCode 官方 GitHub 仓库找。
+
+## 共同红线（全包适用，父文档重申）
 
 1. 写入面只在各自插件目录 + `specs/016-overnight-batch/reports/`；harness/permissions
    两包同样只动自己目录，需要别域改动登记 api-requests 报回，不越界。
