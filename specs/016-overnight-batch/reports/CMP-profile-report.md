@@ -37,7 +37,7 @@ products/server）与 profile 自身（entry-point 发现测试要求 dist 已�
 | R4 | **A** | `b9dd4896fd` G01–G20/test-scenarios 逐条对照（§查漏提交）；report §未测边界如实；ready 支 `codex/011-z1-ready` 布点、profile-api-ready 检查点支未动（协议遵守） |
 | PV-01/02/03 | **A** | platform-bindings/inventory/reuse-ledger 在树（Hermes 许可未核实→reference-only 零复制）；contracts.py 冻结类型+正反例（套件内） |
 | PV-04/05 | **A** | v1→v2 迁移幂等/碰撞拒绝/legacy settled 永不升 confirmed（test_migration.py 等，复验绿）；plugin.build 真实注册（entry-point 测试本次在装定环境实测通过） |
-| PV-06 | **A'**（本线半边按归属） | facet v2 descriptor/schema/compile/reset 门禁 + 受控第三方 facet 全链（核心零改动断言在套件）；两业务域 glue 归 Z3/Q1（非本线）——**残余义务去向**：Z3 账本（specs/011-z3-model-provider，并入 MPX 包）与 Q1 账本（specs/011-q1-skills，CMP-skills 包）各自持有其 glue 行；本批不代记 |
+| PV-06 | **A'**（本线半边按归属） | facet v2 descriptor/schema/compile/reset 门禁 + 受控第三方 facet 全链（核心零改动断言在套件）；两业务域 glue 归 Z3/Q1（非本线）——**残余义务去向（可点验）**：`specs/011-z3-model-provider/tasks.md` T04「Profile glue（plugins/assets/model-provider/profile-contribution/**，原子 facet/引用保护/字段覆盖/切 Profile 清覆盖）」；`specs/011-q1-skills/tasks.md` T07（Profile 旧固定版本绑定→三态 facet）与 T15（移除旧 Profile glue 重复入口，G20）。本批不代记 |
 | PV-07 | **A'**（Profile 侧完成；真实端口半边已随 harness-api 消费补齐） | journal 幂等/fence/unknown→reconcile/跨 realm 反例（12 反例门）；harness-api 消费后 `test_harness_real_service.py` 5 项真实服务测试**本批复验绿**（confirmed 出证/permit 拒可重试/丢 ack Unknown/corrupt readback 不假证/reset 不支持诚实阻塞）——**残余义务去向**：真实品牌×字段×live/restart 矩阵维持 report §未测登记（需受控真实服务授权），非本批口径可销 |
 | PV-08/09 | **A**（组件级；真实浏览器几何=登记未测） | 设置页 CAS+dry-run+禁用保留数据；管理器两级导航/冲突保留/未保存询问（vitest 9 格）；真实浏览器几何验收需产品装配（report §未测，维持） |
 | PV-10 | **A** | chat 选择器状态机（chat-glue vitest 10 复验绿）：立即显示/无徽标/连续选择最后生效/失败保留草稿/不触端口计数断言 |
