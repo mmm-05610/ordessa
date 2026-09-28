@@ -111,7 +111,9 @@ def choice_payload_schema() -> ValueSchema:
             ("endpoint", ValueSchema("string", nullable=True)),
             ("protocol", ValueSchema("string")),
             ("credentialRef", ValueSchema("string", nullable=True)),
-            ("brandFields", ValueSchema("object", nullable=True)),
+            # Brand-specific hint fields (provider_in_instance, before_provider,
+            # endpoint_changed...) are open-ended by design.
+            ("brandFields", ValueSchema("object", nullable=True, additional_properties=True)),
         ),
         required=("provider", "model", "protocol"),
     )
@@ -259,6 +261,10 @@ class BridgeConfigurationAdapter:
     # -- C2 surface -----------------------------------------------------------
 
     def assess(self, context: Any, request: Mapping[str, Any]) -> Assessment:
+        if not isinstance(request, Mapping) or "protocol" not in request or "model" not in request:
+            # C4 inspect probes with an empty request; a probe carries no
+            # choice facts, so the honest verdict is unknown, never supported.
+            return Assessment("unknown", reason="probe request carries no choice facts")
         verdict = self._impl.assess(_local_context(context), _local_request(request))
         return Assessment(verdict.verdict, reason=verdict.reason,
                           evidence_ref=f"assets.model-provider:{self.brand}:pin"

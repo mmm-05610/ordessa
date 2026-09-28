@@ -80,7 +80,9 @@ class UnsupportPort(ReadyPort):
 @pytest.fixture()
 def host(stack, credentials):
     from ordessa_server.plugin_host.host import ServerPluginHost
-
+    
+    # The host itself declares `wire.error-families` at construction
+    # (host.py), so the plugin's PB-4 self-publication stages against it.
     return ServerPluginHost(host_ports={
         "database": stack["database"], "objects": stack["objects"],
         "idempotency": stack["idempotency"], "credentials": credentials,
