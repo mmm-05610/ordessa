@@ -1,4 +1,8 @@
-// MCP wire DTO shapes (frontend glue, Q4 T08).
+// MCP wire DTO shapes (frontend glue; Q4 T08 originally, aligned to the live
+// registration face by the 016 CMP reconciliation — specs/011-q4-mcp/reports/
+// wire-alignment.md; every interface below is pinned field-by-field against
+// REAL round-trip dispatches by tests/contract/test_wire_contract_guard.py
+// WCG-03).
 //
 // These mirror the backend domain reads/writes of docs/design/mcp/contracts.md §1
 // and the canonical v2 storage model in `plugins/assets/mcp/backend/definition.py`
@@ -10,6 +14,10 @@
 
 /** Exactly the two transports the domain validates (`_TRANSPORTS`). */
 export type McpTransportKind = 'stdio' | 'remote'
+
+/** The scope kinds the backend accepts (`backend/assignment.py SCOPE_KINDS`;
+ * the legacy `'user'` spelling is not dispatchable — WCG-04 pins the pair). */
+export type McpScopeKind = 'user-default' | 'project' | 'profile' | 'session'
 
 /** One canonical env/header value: a readable constant or a credential REFERENCE.
  * A reference is an id only — a plaintext secret never crosses this surface. */
@@ -26,35 +34,35 @@ export interface McpCanonicalDefinition {
 
 export interface McpApproval { readonly actor: string; readonly approvedAt: string }
 
-/** One stored revision of a definition (`McpRevision` read model). */
+/** `mcp.get → latestRevision` (the live revision read row; the canonical
+ * document itself is NOT part of this answer — it travels only on writes). */
 export interface McpRevisionView {
   readonly definitionId: string
   readonly revision: number
-  readonly canonicalDigest: string
-  readonly canonical: McpCanonicalDefinition
-  readonly canonicalShape: 'legacy' | 'v2'
+  readonly digest: string
+  readonly shape: 'legacy' | 'v2'
   readonly source: string | null
   readonly createdAt: string
   readonly approval: McpApproval | null
 }
 
-/** Last probe outcome attached to a definition row. `ok` is a PROBE fact only —
- * rendering it as "connected" is forbidden (ux.md: 探测成功 ≠ 会话已连接). */
-export type McpProbeOutcome =
-  | { readonly result: 'ok'; readonly revision: number; readonly at: string }
- | { readonly result: 'refused'; readonly revision: number; readonly at: string; readonly code: string; readonly message: string }
-
-/** `mcp.listDefinitions` row. */
+/** `mcp.list → definitions[i]` row: the identity face of a stored definition
+ * (probe outcomes are per-session facts and deliberately absent here). */
 export interface McpDefinitionSummary {
   readonly definitionId: string
-  readonly name: string
+  readonly nativeName: string
   readonly transport: McpTransportKind
   readonly latestRevision: number
-  /** The revision currently approved for selection; null means none. */
-  readonly approvedRevision: number | null
-  readonly source: string | null
+  readonly serverScope: string
   readonly archived: boolean
-  readonly lastProbe: McpProbeOutcome | null
+}
+
+/** `mcp.saveRevision` answer: the stored candidate (`replayed` distinguishes a
+ * CAS replay from a fresh store), never an approval. */
+export interface McpSaveRevisionResult {
+  readonly definition: McpDefinitionSummary
+  readonly replayed: boolean
+  readonly revision: McpRevisionView
 }
 
 /** The graded facts a successful probe returns (`_handshake_facts` in
@@ -66,6 +74,7 @@ export interface McpProbeFacts {
   readonly evidence: string
   readonly serverInfo: { readonly name?: string | null; readonly version?: string | null }
   readonly protocolVersion: string
+  readonly negotiation: { readonly requested: string; readonly supported: readonly string[]; readonly negotiated: string }
   readonly credentialScope: 'unproven'
   readonly credentialsExcluded: readonly string[]
   readonly proves: readonly string[]
@@ -76,8 +85,8 @@ export interface McpProbeFacts {
  * (contracts.md §2: pending / connected / catalog-changed / refused). */
 export type McpConnectionObservation = 'pending' | 'connected' | 'catalog-changed' | 'refused' | 'unknown'
 
-/** `mcp.inspectConnection` facts (lease facts only; a definition row is never
- * disguised as a live connection). */
+/** `mcp.inspectConnection → connection` facts (lease facts only; a definition
+ * row is never disguised as a live connection). */
 export interface McpConnectionFacts {
   readonly definitionId: string
   readonly revision: number
@@ -89,13 +98,26 @@ export interface McpConnectionFacts {
   readonly callableNow?: boolean | null
 }
 
-/** `mcp.listTools` catalog facts for one session generation. */
+/** The live catalog view (`backend/service.py catalog_view`) behind
+ * `mcp.listTools`. */
 export interface McpCatalogFacts {
+  readonly leaseId: string
   readonly definitionId: string
-  readonly generation: number | null
-  readonly tools: readonly { readonly name: string }[]
-  /** Backend-stated catalog drift against the selection in force. */
-  readonly catalogChanged?: boolean | null
+  readonly revision: number
+  readonly observedAt: string
+  readonly protocolVersion: string
+  readonly serverInfo: Readonly<Record<string, unknown>>
+  readonly toolNames: readonly string[]
+  readonly toolSchemaDigests: Readonly<Record<string, string>>
+  readonly catalogDigest: string
+  readonly sourceEvidence: Readonly<Record<string, unknown>>
+  readonly status: string
+}
+
+/** `mcp.listTools` answer: the lease serving the read plus its catalog. */
+export interface McpListToolsResult {
+  readonly leaseId: string
+  readonly catalog: McpCatalogFacts
 }
 
 /** The session/draft target the status surface is asked about. Structurally
@@ -109,20 +131,91 @@ export interface McpSessionTarget {
   readonly draftId?: string
 }
 
-/** Assignment view (`mcp.assign`/`mcp.unassign` read shape). */
+/** Assignment view (`mcp.assign → assignment`): one scope decision row. The
+ * approved revision and decision travel here, not on the definition row. */
 export interface McpAssignmentView {
-  readonly scopeKind: 'user' | 'project' | 'profile'
+  readonly scopeKind: McpScopeKind
   readonly scopeId: string
   readonly definitionId: string
-  readonly revision: number
-  readonly enabled: boolean
-  readonly toolSelection: readonly string[] | null
+  readonly decision: 'enable' | 'disable' | 'inherit'
+  readonly rowVersion: number
+  readonly harness: string
+  readonly approvedRevision: number | null
 }
 
-/** Preview of the effective set for one target (`mcp.resolvePreview` shape). */
-export interface McpPreviewEntry {
+/** `mcp.unassign → assignment`: the row after removal (`removed` states the
+ * effect; `rowVersion` is null once the row is gone). */
+export interface McpUnassignView {
+  readonly scopeKind: McpScopeKind
+  readonly scopeId: string
   readonly definitionId: string
-  readonly revision: number
-  readonly enabled: boolean
-  readonly toolSelection: readonly string[] | null
+  readonly decision: 'enable' | 'disable' | 'inherit'
+  readonly rowVersion: number | null
+  readonly harness: string
+  readonly approvedRevision: number | null
+  readonly removed: boolean
+}
+
+/** One definition's bound revision inside the effective snapshot
+ * (`backend/service.py snapshot_view`). */
+export interface McpSnapshotDefinitionRevision {
+  readonly definitionId: string | null
+  readonly revision: number | null
+  readonly canonicalDigest: string | null
+  readonly canonicalShape: string | null
+}
+
+/** One scope assignment row inside the effective snapshot. */
+export interface McpSnapshotAssignmentRevision {
+  readonly definitionId: string | null
+  readonly scopeKind: string | null
+  readonly scopeId: string | null
+  readonly harness: string | null
+  readonly decision: string | null
+  readonly rowVersion: number | null
+}
+
+/** One credential reference binding inside the effective snapshot. */
+export interface McpSnapshotCredentialRef {
+  readonly definitionId: string | null
+  readonly revision: number | null
+  readonly slot: string | null
+  readonly credentialId: string | null
+}
+
+/** The frozen effective set (`mcp.resolvePreview → snapshot`;
+ * `snapshotDigest` is the answer-side binding — there is no client-supplied
+ * scope-revision echo). */
+export interface McpEffectiveSnapshot {
+  readonly targetSession: string | null
+  readonly runtimeGeneration: number | null
+  readonly projectId: string | null
+  readonly profileRevision: string | null
+  readonly definitionRevisions: readonly McpSnapshotDefinitionRevision[]
+  readonly assignmentRevisions: readonly McpSnapshotAssignmentRevision[]
+  readonly credentialRefRevisions: readonly McpSnapshotCredentialRef[]
+  readonly allowedToolNames: readonly string[]
+  readonly laneByDefinition: Readonly<Record<string, Readonly<Record<string, string>>>>
+  readonly needsRevalidation: readonly string[]
+  readonly snapshotDigest: string
+  readonly submissionId: string | null
+}
+
+/** One harness-native posture display row (`backend/permissions.py
+ * posture_view`). `claimsOrdessaAuthority` is pinned to `false` by
+ * construction (FR-09): the row never reads as Ordessa authority. */
+export interface McpNativePermissionPosture {
+  readonly definitionId: string
+  readonly source: string
+  readonly scope: string
+  readonly policyRef: string
+  readonly provenance: string
+  readonly claimsOrdessaAuthority: false
+}
+
+/** `mcp.resolvePreview` answer: the frozen snapshot plus the honest native
+ * posture rows beside it (T012; they label, never authorize). */
+export interface McpPreviewResult {
+  readonly snapshot: McpEffectiveSnapshot
+  readonly nativePermissionPostures: readonly McpNativePermissionPosture[]
 }

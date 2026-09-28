@@ -164,14 +164,36 @@ def parse_binding_table(wire_text: str) -> "dict[str, str]":
     return dict(re.findall(r"(\w+):\s*'([^']+)'", m.group(1)))
 
 
+def parse_identity_injection(wire_text: str) -> "dict[str, frozenset[str]]":
+    """``MCP_WIRE_IDENTITY_INJECTION``: client-key -> the identity fields the
+    factory injects into every request body (read from source, never retyped)."""
+    m = re.search(r"export const MCP_WIRE_IDENTITY_INJECTION = \{(.*?)\} as const",
+                  wire_text, re.S)
+    assert m, "MCP_WIRE_IDENTITY_INJECTION table not found in wire.ts"
+    return {key: frozenset(re.findall(r"'(\w+)'", row))
+            for key, row in re.findall(r"(\w+): \[([^\]]*)\]", m.group(1))}
+
+
+def parse_result_paths(wire_text: str) -> "dict[str, str]":
+    """``MCP_WIRE_RESULT_PATH``: client-key -> the answer unwrap path
+    ('' = the result IS the answer)."""
+    m = re.search(r"export const MCP_WIRE_RESULT_PATH = \{(.*?)\} as const",
+                  wire_text, re.S)
+    assert m, "MCP_WIRE_RESULT_PATH table not found in wire.ts"
+    return dict(re.findall(r"(\w+):\s*'([^']*)'", m.group(1)))
+
+
 def parse_request_bodies(wire_text: str) -> "dict[str, frozenset[str]]":
     """Per client method: the body fields ``createFetchMcpWireClient`` sends.
 
-    ``{ ...params }`` expands to the interface's input fields minus ``signal``
-    (the implementation destructures ``{ signal, ...params }``); a literal
-    ``{ definitionId }`` / ``{}`` is read off the call site directly.
+    The sent body equals the call-site fields ∪ the factory's identity
+    injection (``MCP_WIRE_IDENTITY_INJECTION``): ``{ ...params }`` expands to
+    the interface's input fields minus ``signal``; a literal ``{ definitionId }``
+    / ``{}`` is read off the call site directly; both are unioned with the
+    injected ``serverScope``/``principal`` (G7: no host-level principal).
     """
     client_inputs = _interface_fields(wire_text, "McpWireClient")
+    injection = parse_identity_injection(wire_text)
     bodies: dict[str, frozenset[str]] = {}
     pattern = re.compile(
         r"^    (\w+):\s*\(?[^=]*\)?\s*=>\s*call\(\s*MCP_WIRE_METHODS\.(\w+),\s*\{([^}]*)\}",
@@ -181,15 +203,16 @@ def parse_request_bodies(wire_text: str) -> "dict[str, frozenset[str]]":
         assert key == table_key, f"call site {key} binds {table_key}"
         literal = literal.strip()
         if literal == "":
-            bodies[key] = frozenset()
+            fields: frozenset[str] = frozenset()
         elif literal.replace(" ", "") == "...params":
             req, opt = client_inputs[key]
-            bodies[key] = req | opt
+            fields = req | opt
         else:
             names = frozenset(re.findall(r"\b(\w+)\b", literal))
             req, opt = client_inputs[key]
             assert names <= (req | opt) | {"signal"}, (key, names)
-            bodies[key] = frozenset(n for n in names if n != "signal")
+            fields = frozenset(n for n in names if n != "signal")
+        bodies[key] = fields | injection.get(key, frozenset())
     return bodies
 
 

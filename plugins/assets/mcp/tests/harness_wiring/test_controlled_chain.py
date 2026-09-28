@@ -30,8 +30,8 @@ from dataclasses import replace
 
 import pytest
 from ordessa_harness.application import (
-    ConfigurationApplicationService, NativeReadback, OperationJournal,
-    RuntimeSnapshot,
+    ConfigurationApplicationService, NativeActivationReceipt, NativeReadback,
+    OperationJournal, RuntimeSnapshot,
 )
 from ordessa_harness.contributions import (
     CONFIGURATION_POINT, POINT_API_VERSION, HarnessContributionRegistry,
@@ -75,6 +75,7 @@ class ControlledMcpRuntime:
         self.bytes = None
         self.generation = GENERATION
         self.descriptor_override = None
+        self.receipt = None
 
     def capture(self, target):
         descriptor = self.descriptor_override or _target_descriptor()
@@ -94,18 +95,25 @@ class ControlledMcpRuntime:
                                {}, self.revision, "native-version-1", 1,
                                "auth-1", "secret-ref-1")
 
-    def activate_generation(self, target, lease):
+    def activate_generation(self, operation_id, target, lease, manifest_digest):
+        # C4 native-receipt protocol (51c7905108): the activation returns a
+        # receipt binding operation/generation/manifest; observe must hand the
+        # SAME receipt back or the service refuses to confirm.
         self.activate_count += 1
         self.bytes = lease.read_bytes(RESOURCE)
         self.revision = "applied-1"
+        self.receipt = NativeActivationReceipt(
+            operation_id, target, manifest_digest, "native-session-1",
+            self.revision, f"native:mcp-chain:{operation_id}")
+        return self.receipt
 
     def observe(self, target):
-        assert self.bytes is not None
+        assert self.bytes is not None and self.receipt is not None
         return NativeReadback(target, "native-session-1", self.revision,
                               json.loads(self.bytes),
                               ((RESOURCE, hashlib.sha256(self.bytes).hexdigest()),),
                               "ev:readback:" + hashlib.sha256(self.bytes).hexdigest(),
-                              ("private-generation",))
+                              ("private-generation",), self.receipt)
 
 
 class SignedPermit:
@@ -219,7 +227,7 @@ def test_readback_mismatch_refuses_confirmation(tmp_path):
         return NativeReadback(readback.target, readback.native_session_identity,
                               readback.applied_revision, json.loads(bad),
                               readback.files, readback.evidence_ref,
-                              readback.resource_changes)
+                              readback.resource_changes, readback.receipt)
 
     runtime.observe = corrupt
     planned = service.plan(TARGET, (fragment(),), "base-1")

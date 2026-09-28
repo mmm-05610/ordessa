@@ -18,24 +18,26 @@ Three dimensions, each parsed from SOURCE (AST-lite text scan via
   probe leg samples ``backend.probe._handshake_facts``' own output shape, so
   nothing here transcribes the service keys by hand).
 
-WHY THIS GUARD SHIPS WITH A DRIFT LEDGER (the honest state at writing time):
-T08 wrote the frontend table as a *拟定值* and its report
-(specs/011-q4-mcp/reports/t08-frontend.md §遗留 5) assigned the final check to
-T09; T09 registered `mcp.list/get/archive` per the contracts.md §1 operation
-names and never reconciled. The result is a REAL, complete drift —
-`wire.ts`'s fetch client cannot successfully dispatch a single method against
-this server (renames, undeclared params, missing required `serverScope`/
-`principal`, response wrapper/field mismatches). Both artifacts are frozen
-and tested on their own sides; renaming the registered methods would rewrite
-the live wire surface of every tests/service, tests/harness_wiring and
-tests/integration cell (out of scope, and contracts.md §1 backs the current
-ids), and the frontend source may not be touched by this task. So the guard
-PINS the adjudicated snapshot exactly: the ledger below is the measured
-diff, and ANY future change on either side that is not consciously reflected
-into the ledger turns this file red with the drifting symbols named. The
-fix-forward proposal (align `wire.ts` to the registered surface, or take the
-reconciliation to C0) is registered in
-specs/011-q4-mcp/reports/contract-guard.md.
+WHY THIS GUARD SHIPS WITH A LEDGER, AND WHY THE LEDGER IS NOW THE ALIGNED
+SNAPSHOT: T08 wrote the original frontend table as a *拟定值*; T09 registered
+`mcp.list/get/archive` per contracts.md §1 and never reconciled, so the guard
+originally pinned a measured FULL drift (renames, undeclared params, missing
+identity fields, response wrapper/field mismatches). The 012 branch
+consolidation then started the registered fix-forward
+(contract-guard.md §四) by rewriting `wire.ts` to the registered face —
+method ids, identity injection, unwrap paths, scope kinds — but stopped
+before updating this ledger, `dto.ts` and the UI, which turned every WCG
+cell red exactly as designed ("前端任何一条落地时，本守卫会红并点名符号").
+The 016 CMP reconciliation (specs/011-q4-mcp/reports/wire-alignment.md)
+completed the move on the frontend contract side: `dto.ts` now mirrors the
+live round-trip answers field-by-field, and the ledger below is the ALIGNED
+snapshot — empty gap sets, identity injection parsed from source, unwrap
+paths parsed from source. The protocol is unchanged: any future move on
+either side that is not consciously reflected here turns this file red with
+the drifting symbols named. The remaining UI-layer migration (settings/
+status/chat consumers and their fakes) is registered in
+specs/016-overnight-batch/reports/MCP-report.md — it is NOT silently faked
+here.
 """
 from __future__ import annotations
 
@@ -53,84 +55,54 @@ from contract_helpers import (
     _interface_body,
     parse_backend_tuple,
     parse_binding_table,
+    parse_identity_injection,
     parse_interface_field_names,
     parse_request_bodies,
+    parse_result_paths,
     parse_response_types,
     parse_ts_union,
     seed,
     stdio_definition,
 )
 
-# -- the registered drift snapshot (measured; adjudication in the module docstring)
-# Report: specs/011-q4-mcp/reports/contract-guard.md — update ONLY together
-# with the report when one side consciously moves.
+# -- the registered aligned snapshot (measured; adjudication in the module
+# docstring; update ONLY together with wire-alignment.md / contract-guard.md
+# when one side consciously moves).
 
-TS_RENAMES = {  # ts wire id -> registered descriptor id
-    "mcp.listDefinitions": "mcp.list",
-    "mcp.getDefinition": "mcp.get",
-    "mcp.archiveDefinition": "mcp.archive",
-}
+TS_RENAMES: dict[str, str] = {}  # aligned: binding-table ids ARE the registered ids
 BACKEND_UNFRONTED = frozenset({"mcp.planForSubmission"})
 
-PARAM_EXTRA_GAPS = {  # ts body fields the descriptor does not declare at all
-    "approveRevision": {"expectedVersion", "operationKey"},
-    "archiveDefinition": {"expectedVersion", "operationKey"},
-    "assign": {"revision", "enabled", "expectedRevision"},
-    "unassign": {"expectedRevision"},
-    "resolvePreview": {"target", "scopeRevisions"},
-    "inspectConnection": {"definitionId", "generation", "target"},
-    "listTools": {"generation", "target"},
-}
-PARAM_MISSING_REQUIRED = {  # descriptor-required fields the ts body never sends
-    "listDefinitions": {"serverScope", "principal"},
-    "getDefinition": {"serverScope", "principal"},
-    "saveRevision": {"serverScope", "principal"},
-    "approveRevision": {"serverScope", "principal"},
-    "archiveDefinition": {"serverScope", "principal"},
-    "probe": {"serverScope", "principal"},
-    "assign": {"serverScope", "principal", "decision", "expectedRowVersion"},
-    "unassign": {"serverScope", "principal", "expectedRowVersion"},
-    "resolvePreview": {"serverScope", "principal"},
-    "inspectConnection": {"principal", "sessionRef", "runtimeGeneration", "leaseId"},
-    "listTools": {"principal", "sessionRef", "runtimeGeneration", "serverScope",
-                  "revision"},
-}
+PARAM_EXTRA_GAPS: dict[str, frozenset[str]] = {}  # aligned (body = callsite ∪ injection)
+PARAM_MISSING_REQUIRED: dict[str, frozenset[str]] = {}  # aligned
 
 # ts key -> (answer path in the result ("" = top level), expected top-level
 # keys, ts fields absent from the answer, answer keys the TS contract does not
-# declare). Live-connection rows are NOT_SAMPLED: their answers need a real
+# declare). ALIGNED: every sampled row pins the exact wrapper and ∅ gaps on
+# both sides. Live-connection rows are NOT_SAMPLED: their answers need a real
 # lease (proven in tests/integration T10-INT-01/05), and their drift is pinned
-# at least at the return-interface level.
+# at the return-interface level.
 RESPONSE_LEDGER = {
     "probe": ("probe", {"definitionId", "revision", "probe"}, frozenset(),
-              {"negotiation"}),
+              frozenset()),
     "listDefinitions": ("definitions[0]", {"definitions", "nextCursor"},
-                        {"name", "approvedRevision", "source", "lastProbe"},
-                        {"nativeName", "serverScope"}),
+                        frozenset(), frozenset()),
     "getDefinition": ("latestRevision", {"definition", "latestRevision"},
-                      {"canonical", "canonicalDigest", "canonicalShape"},
-                      {"digest", "shape"}),
-    "saveRevision": ("revision", {"definition", "replayed", "revision"},
-                    {"canonicalDigest"},
-                    {"approval", "createdAt", "digest", "shape", "source"}),
+                      frozenset(), frozenset()),
+    "saveRevision": ("", {"definition", "replayed", "revision"},
+                     frozenset(), frozenset()),
     "approveRevision": ("", {"approval", "definitionId", "revision"},
-                        {"approvedRevision"},
-                        {"approval", "definitionId", "revision"}),
-    "archiveDefinition": ("", {"definition"}, {"archived"}, {"definition"}),
-    "assign": ("assignment", {"assignment", "replayed"},
-              {"revision", "enabled", "toolSelection"},
-              {"harness", "decision", "rowVersion", "approvedRevision"}),
-    "unassign": ("assignment", {"assignment", "replayed"}, frozenset(),
-                 {"approvedRevision", "decision", "definitionId", "harness",
-                  "rowVersion", "scopeId", "scopeKind"}),
-    "resolvePreview": ("", {"nativePermissionPostures", "snapshot"}, {"entries"},
-                       {"nativePermissionPostures", "snapshot"}),
+                        frozenset(), frozenset()),
+    "archiveDefinition": ("definition", {"definition"}, frozenset(), frozenset()),
+    "assign": ("assignment", {"assignment", "replayed"}, frozenset(), frozenset()),
+    "unassign": ("assignment", {"assignment", "replayed"}, frozenset(), frozenset()),
+    "resolvePreview": ("", {"nativePermissionPostures", "snapshot"},
+                       frozenset(), frozenset()),
 }
 NOT_SAMPLED = {"inspectConnection": "McpConnectionFacts",
-               "listTools": "McpCatalogFacts"}
+               "listTools": "McpListToolsResult"}
 
-VALUE_DOMAINS = {  # scopeKind: TS union vs the backend's accepted kinds
-    "ts": {"user", "project", "profile"},
+VALUE_DOMAINS = {  # scopeKind: TS union vs the backend's accepted kinds — aligned
+    "ts": {"user-default", "project", "profile", "session"},
     "backend": {"user-default", "project", "profile", "session"},
 }
 
@@ -361,11 +333,14 @@ def test_wcg03_ts_answer_contract_vs_real_roundtrip_keys(ts_returns, dto_fields,
     assert drift == [], "\n".join(drift)
 
 
-def test_wcg04_scope_kind_value_domains_are_the_registered_drift_pair(wire_text):
-    """WCG-04: TS's scopeKind union vs the backend's accepted kinds (pinned pair).
+def test_wcg04_scope_kind_value_domains_are_the_aligned_pair(wire_text):
+    """WCG-04: TS's scopeKind union equals the backend's accepted kinds.
 
-    The TS union 'user' is not dispatchable: the live refusal is asserted in
-    test_wcg04b so the drift is proven by behaviour, not only by text.
+    The 012 consolidation aligned the TS union to the backend vocabulary and
+    the 016 CMP reconciliation pinned the ALIGNED pair here; any one-sided
+    move re-breaks the equality and turns this cell red (the original drift
+    pair and its live witness live in the git history of this ledger and in
+    test_wcg04b, which keeps pinning the backend wall itself).
     """
     ts_union = parse_ts_union(wire_text, "scopeKind")
     backend_kinds = parse_backend_tuple(
@@ -373,12 +348,14 @@ def test_wcg04_scope_kind_value_domains_are_the_registered_drift_pair(wire_text)
         "SCOPE_KINDS")
     assert ts_union == frozenset(VALUE_DOMAINS["ts"]), sorted(ts_union)
     assert backend_kinds == frozenset(VALUE_DOMAINS["backend"]), sorted(backend_kinds)
-    assert not ts_union <= backend_kinds, \
-        "'user' drift was fixed on one side — re-adjudicate the ledger"
+    assert ts_union == backend_kinds, \
+        "scope kinds drifted apart — re-adjudicate the ledger"
 
 
-def test_wcg04b_ts_scope_kind_user_value_is_a_typed_live_refusal(tmp_path):
-    """WCG-04b: the pinned union drift witnesses itself on the live dispatch."""
+def test_wcg04b_out_of_vocabulary_scope_kind_is_a_typed_live_refusal(tmp_path):
+    """WCG-04b: the backend scope-kind wall, witnessed live. The TS union can
+    no longer even spell `'user'` (type-level), so this cell pins the run-level
+    wall for every non-TS caller that invents a value."""
     stack = Stack(tmp_path)
     seed(stack)
     stack.expect_refusal("mcp.assign", family="INVALID_REQUEST",
@@ -386,6 +363,21 @@ def test_wcg04b_ts_scope_kind_user_value_is_a_typed_live_refusal(tmp_path):
                          serverScope="s1", principal="alice", scopeKind="user",
                          scopeId="u1", definitionId="demo", decision="disable",
                          expectedRowVersion=0, operationKey="op-x")
+
+
+def test_wcg03b_unwrap_path_table_matches_the_sampled_ledger(wire_text):
+    """WCG-03b: the wire.ts ``MCP_WIRE_RESULT_PATH`` table (parsed from source)
+    equals the ledger's answer paths for every sampled row — a moved unwrap
+    path on either side is named, not absorbed. (The ledger's sampling syntax
+    may append an ``[i]`` element index the wire table does not carry; the
+    comparison strips it.)"""
+    paths = parse_result_paths(wire_text)
+    for key, (path, _top, _gaps, _extras) in RESPONSE_LEDGER.items():
+        table_path = re.sub(r"\[\d+\]$", "", path)
+        assert paths.get(key) == table_path, \
+            f"{key}: wire.ts unwraps {paths.get(key)!r}, ledger pins {table_path!r}"
+    for key in NOT_SAMPLED:
+        assert key in paths, f"{key}: no unwrap path pinned for a not-sampled row"
 
 
 def test_wcg05_guard_is_not_vacuous_synthetic_drift_turns_each_layer_red(
@@ -396,23 +388,25 @@ def test_wcg05_guard_is_not_vacuous_synthetic_drift_turns_each_layer_red(
                               {"mcp.list", "mcp.planForSubmission"},
                               TS_RENAMES, BACKEND_UNFRONTED)
     assert any("mcp.movedAway" in line for line in drift), drift
-    # 2. a backend rename makes the registered rename stale
-    drift = check_method_sets(set(TS_RENAMES) | {"mcp.probe"},
-                              {"mcp.listX", "mcp.probe", "mcp.planForSubmission"},
-                              TS_RENAMES, BACKEND_UNFRONTED)
-    assert any("mcp.listDefinitions" in line for line in drift), drift
+    # 2. a registered rename whose ts side has moved away is called stale
+    drift = check_method_sets({"mcp.probe"},
+                              {"mcp.probe", "mcp.planForSubmission"},
+                              {"mcp.gone": "mcp.other"}, BACKEND_UNFRONTED)
+    assert any("mcp.gone" in line and "stale" in line for line in drift), drift
     # 3. an unregistered extra body field and a newly required param
     shapes = {"probe": (frozenset({"serverScope", "principal", "definitionId",
                                    "revision"}), frozenset({"requestId"}))}
     drift = check_param_shapes({"probe": frozenset({"definitionId", "revision",
+                                                    "serverScope", "principal",
                                                     "sneakyNew"})},
                                shapes, {"probe": frozenset()}, {"probe": frozenset()})
     assert any("sneakyNew" in line for line in drift), drift
-    drift = check_param_shapes({"probe": frozenset({"definitionId", "revision"})},
-                               {"probe": (frozenset({"revision", "brandRequired"}),
+    drift = check_param_shapes({"probe": frozenset({"definitionId", "revision",
+                                                    "serverScope", "principal"})},
+                               {"probe": (frozenset({"revision", "brandRequired",
+                                                     "serverScope", "principal"}),
                                           frozenset())},
-                               PARAM_EXTRA_GAPS, {"probe": frozenset({"serverScope",
-                                                                      "principal"})})
+                               PARAM_EXTRA_GAPS, {"probe": frozenset()})
     assert any("brandRequired" in line for line in drift), drift
     # 4. a service-side rename of a sampled answer key moves both gap sides
     ledger = {"probe": ("probe", {"definitionId", "revision", "probe"},
