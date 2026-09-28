@@ -42,13 +42,29 @@ def test_no_forbidden_imports() -> None:
     assert offenders == []
 
 
-def test_only_published_contract_dists_imported() -> None:
-    allowed = {
-        "ordessa_lsp_api", "ordessa_harness_api", "server_plugin_api",
-    }
+_ALLOWED_ROOTS = {"ordessa_lsp_api", "ordessa_harness_api",
+                  "server_plugin_api", "pytest"}
+
+
+def _import_roots(pyfile: Path) -> list[str]:
+    import ast
+    roots: list[str] = []
+    for node in ast.walk(ast.parse(pyfile.read_text(encoding="utf-8"))):
+        if isinstance(node, ast.Import):
+            roots.extend(alias.name.split(".")[0] for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
+            roots.append(node.module.split(".")[0])
+    return roots
+
+
+def test_only_published_contract_dists_and_stdlib_imported() -> None:
+    # 全量 AST 扫描：第三方根只许三个已发布合同 dist（+pytest）；
+    # 其余必须是标准库（sys.stdlib_module_names 是权威清单）。
+    import sys
+    offenders: list[str] = []
     for pyfile in sorted(SRC.rglob("*.py")):
-        for line in pyfile.read_text(encoding="utf-8").splitlines():
-            stripped = line.strip()
-            if stripped.startswith(("from ", "import ")) and "ordessa" in stripped:
-                root = stripped.split()[1].split(".")[0].rstrip(",")
-                assert root in allowed, f"{pyfile.name}: unexpected dist {root!r}"
+        for root in _import_roots(pyfile):
+            if root in _ALLOWED_ROOTS or root in sys.stdlib_module_names:
+                continue
+            offenders.append(f"{pyfile.name}: {root}")
+    assert offenders == []

@@ -19,6 +19,18 @@
 
 除上述两笔外 `git status` 无任何域外文件。
 
+**git 取证（回应"编排文档改动归属"质疑，可复核）**：
+- `git diff main 892a74a47e -- specs/016-overnight-batch` **输出为空**——
+  sync 提交的 016 目录与 main **逐字节一致**（"逐字节快照"由此可证，非本
+  分支改写）；
+- `git show main:specs/016-overnight-batch/tasks.md` 的 LSP-3 即"只实施 pi"
+  新文本——该文本由 **main 侧提交 `dcc4b53c3c`**（用户品牌优先级裁定）写入，
+  本分支零改写；本分支在 sync 前处于合并基 `5a22ffc587` 的旧文本；
+- `git cat-file -e main:specs/016-overnight-batch/bin/run-qoder.sh` 通过——
+  bin 脚本、CMP dispatch、fathers 均为 main 既有文件。
+- 审阅所见"新增/改写"来自 `git diff main...HEAD` 的**三点语义**：比较对象
+  是合并基（5a22ffc）而非 main，main 侧自身演进因此呈现为分支侧改动。
+
 ## 0. 执行方式记录（qoder 与代打）
 
 1. **run-qoder.sh 第 1 次**（23:29:33，log
@@ -57,8 +69,9 @@ $ PYTHONPATH=plugins/assets/lsp/api/src:plugins/assets/lsp/adapters/src:plugins/
 42 passed in 0.12s
 ```
 
-构成：api 13（定义模型正反例/转录字节稳定）+ adapters 29（探测 4、C2 形制与
-品牌门 12、golden/反例 5、两会话 2、依赖方向 2、其余 4）。测试环境说明：
+构成（逐文件计数，`pytest --collect-only` 可复核）：api 13（定义模型正反例/
+转录字节稳定）+ adapters 29（探测 4、C2 形制+callable+品牌门 16、golden/
+反例 5、两会话 2、依赖方向 2）。测试环境说明：
 合同 dist（ordessa_harness_api/server_plugin_api）来自主仓 .venv 的 editable
 安装，与 son 分支携带的同源同内容；harnesses.toml 的 pin 以**本树 file-relative
 路径实测**（`_lsp_helpers.HARNESSES_TOML`），不跨树。
@@ -120,4 +133,19 @@ harnesses.md 的存量证据面。**自建**：定义模型与规范转录（域
    改正解析并在无 PYTHONPATH 下自证（29 passed standalone）；digest 钉死
    期望哈希。
 
-**第 2 轮（run-review.sh 复审）：**（待回填）
+**第 2 轮（run-review.sh 复审）结论：不通过。** 三条问题与处置：
+1. "bin/dispatch/fathers 为新增、spec/tasks 被改写，自查'逐字节快照'与
+   diff 矛盾"——**git 取证反驳**（见 §写入面）：`git diff main 892a74a47e
+   -- specs/016-overnight-batch` 为空、`git cat-file -e main:…/bin/run-qoder.sh`
+   通过、tasks.md 新文本出自 main 侧 `dcc4b53c3c`。审阅的三点 diff 以合并
+   基为比较对象，把 main 侧自身演进呈现为分支改动；报告已补记该语义与
+   可复核命令。
+2. "LSP-3 文本被本分支先改再答"——同上，改题者是 main 侧 `dcc4b53c3c`
+   （用户裁定），本分支只是被 sync 追平；"pi 原生面实施"前提的证伪与
+   诚实落格见 §3 修正登记 1。
+3. `test_only_published_contract_dists_imported` 漏检无 "ordessa" 字样的
+   import（真缺陷）——**已修复**：改为全量 AST 扫描，白名单=三合同
+   dist+pytest+`sys.stdlib_module_names`。报告 §2 计数分解同步订正
+   （12+4 → 16）。
+
+**第 3 轮（run-review.sh 复审）：**（待回填）
