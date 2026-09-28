@@ -34,3 +34,4 @@
 - [ ] PC-7 R-Z2-5 reasoning 状态升级（时间盒内做，非阻塞；picker=R-Z2-6 归 S-05 同族接缝不扩本包）
 - [ ] PC-8 报告与交付：`reports/P-C-report.md` + 011-z2 report 增补；终提交 SHA；PARTIAL 项逐条
 - [ ] PC-9 DTO 冻结（S-05 回执，**唯一允许写 connectors 的窄口**）：`plugins/connectors/acp` 的 `AcpAttachmentPreparePort` DTO 补 `preparedId`（`attachments.ts` 的 AcpPreparedAttachment），仅 DTO+定向测试，不动实现语义；交付 SHA 写回 seams S-05，core 按此接 Server DTO
+- [ ] PC-10 claude 命令探针（S-07 命令项）：受控驱动 `plugins/harness/packaging/claude` 钉版 adapter（fake Anthropic endpoint，沿用该目录既有探针架式；不改 plugins/harness 任何跟踪文件），实测是否播发 `available_commands_update`：播发→经 NativeCommandReader 接线并记第一手证据；不播发→诚实 absent+原因写回 S-07

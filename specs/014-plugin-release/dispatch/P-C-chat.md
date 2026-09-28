@@ -10,7 +10,7 @@
 - connectors 侧（已实现有测试，只读消费）：三态 `plugins/connectors/acp/src/submission.ts:13-26`、`client.ts:657`；附件 `attachments.ts:35-41`（prepare→sha256 ref）、`client.ts:608-645`；命令 `commands.ts:8-25`（四态目录）、`client.ts:183-195`（getNativeCommands，**全仓零消费**）、`client.ts:431`；`plugins/connectors/ordessa/src/acp-next-submit.ts:92-141`（wire `acp.submission.authorize`，头注 :3-8 自述缺 backend owner）。
 - server 侧（已在 main，只读）：`plugins/harness/src/ordessa_harness/server_acp/plugin.py:201-227`（acp_submission_authorize）、`apps/server/src/ordessa_server/acp_admission.py`。
 - **中间层（本包的战场）**：`plugins/agent/contracts/src/agent.ts:118`（`send(): Promise<void>` 需升三态）+ 目录成员；`plugins/agent/sessions/src/model.ts:115-146`（facade 供给）；`plugins/chat/frontend/src/adapters/agent.ts:126-141/150-155`（映射，现 command 恒 absent）；`chat-page.tsx:202-220`（附件入口现因 supported=false 禁用）。
-- F4（2026-09-28 修正）：Claude **有** ACP 桥——钉版官方 `@agentclientprotocol/claude-agent-acp@0.81.2`（`plugins/harness/packaging/claude/`），不走 Go 桥；但 `harnesses.toml:86-89` 诚实移除 `attach`（promptCapabilities 空、无附件证据）、命令目录无 available_commands 证据 → claude 行命令/附件 = 诚实 `unsupported` + 原因（S-07，core 同建议，用户终裁前默认此形态）。
+- F4（2026-09-28 二次修正，拆开两件事）：Claude **有** ACP 桥——钉版官方 `@agentclientprotocol/claude-agent-acp@0.81.2`（`plugins/harness/packaging/claude/`，自带 fake-endpoint 受控探针架式），不走 Go 桥。**命令目录＝未探针（不是 unsupported）**：`parseNativeCommands` 品牌无关，adapter 是否播发 `available_commands_update` 无正反证据 → PC-10 探针定夺。**附件＝负证据**：`harnesses.toml:86-89` 诚实移除 `attach`（真实握手 promptCapabilities 空）→ 诚实缺席，翻绿归 harness 线（S-07 附件项）。
 - F8：integration-request §6 的 C7 import map 切换**已在 main**，勿重做。
 
 ## 写入面（只许这些）
@@ -22,7 +22,7 @@
 ## 任务（详账 tasks.md PC-1..PC-8）
 
 ### PC-2 命令目录接通（R-Z2-3）
-链路：connectors `NativeCommandReader`/`getNativeCommands` → agent contracts 增命令目录成员（四态 DTO，缺席有类型）→ sessions facade 供给 → chat `facadeCommandCatalog` 从恒 absent 变真实四态。反例必测：stale-session、channel-down、unobservable（connectors 已有，穿过中间层仍要红）；目录缺席显示"无命令+原因"，**无伪命令**。brands：Go 桥 server.go:327-352 的 per-brand 命令集为事实源（只读）；claude=absent（S-07）。
+链路：connectors `NativeCommandReader`/`getNativeCommands` → agent contracts 增命令目录成员（四态 DTO，缺席有类型）→ sessions facade 供给 → chat `facadeCommandCatalog` 从恒 absent 变真实四态。反例必测：stale-session、channel-down、unobservable（connectors 已有，穿过中间层仍要红）；目录缺席显示"无命令+原因"，**无伪命令**。brands：Go 桥 server.go:327-352 的 per-brand 命令集为事实源（只读）；claude 行由 PC-10 探针定夺（播发即接线，不播发才诚实 absent）。
 
 ### PC-3 附件接通 plugin 半边（R-Z2-2）
 chat 侧 add-content 由 `ChatAttachmentCapability.supported` 驱动激活（capability 有真实上游才亮）；prepare(idempotencyKey)→ref→submit 携带 refs（connectors submission attachments+sha256 通道现成）；release/重试/四态 phase（prepare/ready/refused/unknown）；refused 保留附件。生产宿主 prepare owner 缺席（S-05）→ 界面诚实禁用+原因，**受控测试**证明 refs 全链往返 sha256 一致（A06 形状）。
@@ -41,6 +41,9 @@ chat 侧 add-content 由 `ChatAttachmentCapability.supported` 驱动激活（cap
 
 ### PC-9 DTO 冻结（S-05 回执；唯一允许写 connectors 的窄口）
 `plugins/connectors/acp/src/attachments.ts` 的 `AcpPreparedAttachment` 补 `preparedId`（core 需要，用于 Server DTO 对接）；**只改 DTO 字段 + 既有定向测试的期望**，不动 prepare 语义/实现/其他文件；TSD/类型检查全绿；交付 SHA 写回 seams S-05，core 按 SHA 接 Server DTO。此任务与 PC-3 同域，宜先做。
+
+### PC-10 claude 命令探针（S-07 命令项）
+在**本包测试目录**写一个受控探针：`npm ci` 安装 `plugins/harness/packaging/claude` 闭包（node_modules 产物，不算改 harness 跟踪文件），以该目录既有 `provider-session.test.mjs` 的架式（fake Anthropic loopback endpoint + 临时 Claude config + fake token，零真实模型/凭据）拉起钉版 adapter，开一个受控会话，观察是否收到 `available_commands_update`。结论两分支都要留第一手证据（转录/日志摘录进 report）：播发 → claude 行命令目录经 NativeCommandReader 接线（正例测试 + 四态）；不播发 → 诚实 absent+原因写回 seams S-07。**不改 plugins/harness 任何跟踪文件**；探针代码与测试放 plugins/chat。
 
 ## 门与反例（终态前必须全过）
 
