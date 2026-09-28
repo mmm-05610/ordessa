@@ -14,7 +14,7 @@ from ordessa_harness.server_acp.registry import AcpChannelRegistry
 
 ROOT = Path(__file__).resolve().parents[3]
 ENTRY = ROOT / "plugins/harness/runtime/access-entry.mjs"
-PEER = ROOT / "tests/acp_orchestration/fixtures/bidirectional_acp_peer.mjs"
+PEER = ROOT / "tests/integration/acp_orchestration/fixtures/bidirectional_acp_peer.mjs"
 
 
 class Records:
