@@ -106,3 +106,12 @@
 | 12 | T03/T10/T14–T15 | G11/G20/G22–G23 |
 
 最后更新 verification 中的实际证据而非仅打勾；没有已授权真实模型测试时，L4 留未测、不阻碍本批受控 L3 完成。
+
+## EXT — 八家品牌面扩展（2026-09-28 用户裁定，详见 [addendum-eight-brands.md](addendum-eight-brands.md)）
+
+- [ ] EXT-00 R0 实测补账：逐任务盘点分支实现与账面差异（以实现+测试实跑计数为准），补勾/回退并附证据 SHA
+- [ ] EXT-01 四家（OpenCode/dsh/Qwen/Kilo）三语义判定表：instruction/persona/systemReplacement × 可用/不支持/未知，逐格证据+反例，并入 `docs/design/prompts/harness-adapters.md` 矩阵
+- [ ] EXT-02 四家 adapter assess/compile/verify 实现；G09–G12 conformance 门扩到八家
+- [ ] EXT-03 dsh 原生 persona prefix/suffix 对接裁定与独立反例（组合顺序、移除恢复 baseline）
+- [ ] EXT-04 G19 真实装载受控证据扩到八家（缺格不报 supported）
+- [ ] EXT-05 八家 × 三语义能力矩阵进最终报告
