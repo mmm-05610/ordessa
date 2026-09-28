@@ -2,10 +2,9 @@
 
 你是夜批编排者。逐个完成儿子包，串行：
 
-1. worktrees/overnight-1/son-pe1-permissions → /home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/PE1-permissions-authority.md
-2. worktrees/overnight-1/son-pe2-harness → /home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/PE2-harness-native-evidence.md
-3. worktrees/overnight-1/son-mpx-model-provider → /home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/MPX-model-provider-params.md
-
+1. /home/maoqh/projects/ordessa/worktrees/overnight-1/son-pe1-permissions → /home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/PE1-permissions-authority.md
+2. /home/maoqh/projects/ordessa/worktrees/overnight-1/son-pe2-harness → /home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/PE2-harness-native-evidence.md
+3. /home/maoqh/projects/ordessa/worktrees/overnight-1/son-mpx-model-provider → /home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/MPX-model-provider-params.md
 ## 执行方式（每个儿子包）
 注：dispatch/方案文档一律用主仓绝对路径传给 qoder（如
 /home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/xxx.md），
@@ -25,4 +24,5 @@
 ## 汇报
 全部完成后写 specs/016-overnight-batch/reports/overnight-1-summary.md：
 每包一段（结果/测试计数/qoder 与审阅记录/卡点/复用与自建清单），如实，不粉饰。
-先读 specs/016-overnight-batch/spec.md 的共同红线（特别是第 7 条复用优先）。
+先读 specs/016-overnight-batch/spec.md 的共同红线（特别是第 7 条复用优先与
+CMP 甄别三档口径）。
