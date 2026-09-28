@@ -2,8 +2,8 @@
 
 本线副本，允许勾选并追加查漏任务。共同 plan 的 owner 分配优先；原表范围外步骤登记依赖/C0 集成，不由本线偷改。原包更晚变更须有明确裁定，不自行缩需求。
 
-- [x] R0：读完整输入，冻结实际 SHA/包/红 ID/环境，盘点复用。（证据：`report.md` R0 节；提交 `354a576b06`/`46846b2c25`/`2c0c8bd209`；逐 ID 红账在 `/home/maoqh/.local/share/qe2-evidence/q2-baseline/`。**范围限定**：此勾指**线级**冻结已完成；两域各自的 `implementation-baseline.md`（prompts T00 / templates T00–T02）由域代理产出，交回前不视为已存在，届时在此处补提交 SHA。）
-- [ ] R1：独立工作与接口请求完成；消费必需 checkpoint 并留精确 SHA。（接口请求已成交：`api-requests.md` AR-Q2-01..05；**消费未发生**——五条检查点分支经 `git for-each-ref` 实测均不存在，故本条不勾。）
+- [ ] R0：读完整输入，冻结实际 SHA/包/红 ID/环境，盘点复用。
+- [ ] R1：独立工作与接口请求完成；消费必需 checkpoint 并留精确 SHA。
 - [ ] R2：本线全部原包任务有实现/验收/依赖归属，生产假接口为零。
 - [ ] R3：检查点/接线清单/许可迁移账/报告齐备，定向及相关全链门通过。
 - [ ] R4：Spec Kit analyze/converge 查漏，未完成项如实；发布本线 clean ready commit。
