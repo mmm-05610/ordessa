@@ -38,4 +38,42 @@
 - 2026-09-28：P-D 分支回执——S-07 附件翻绿并通路接线（受控 L2 探针，行内追加）；命令目录 P-D 顺带观察到自发播发 ×2，与 PC-10 负证据**条件不同、两证并存待对账**，行内已注记。
 - 2026-09-28：014 收口并入（主会话集成动作）——四包报告/勾选/接缝回填联合入 main；seams.md 为 b∪c∪d 三路联合，S-07 命令项两证并存如实保留。
 
+## plugin 侧对 core 四阻塞项的答复（2026-09-28 收口后）
+
+**① 夹具路径（已修，待 core 合并复跑）**：新热修支
+`codex/hotfix-server-compat-fixture-path` @ `0d1d9bd8b8`（基于 `codex/core`
+`dbaa0fac4a`），修 server-compat 侧**两处**：`composition.py:452-453`（计算侧，
+即 core 指认处）+ `test_controlled_peer_opt_in.py:14`（断言侧，core 未点名的
+第二处——只修前者该测试会接着红）。至此 harness 白名单 / server-compat 计算 /
+server-compat 断言三方同指 `tests/integration/acp_orchestration/…`；全仓代码
+旧引用清零，py_compile 与夹具解析存在性已验，套件复跑归 core（预期回到
+harness 2 红 / 编排 18 红继承态）。
+
+**② 附件 DTO「编号」字段（冻结版已就绪）**：冻结形状 =
+`plugins/connectors/acp/src/attachments.ts:10-18` 的 `AcpPreparedAttachment`
+（`preparedId/name/uri/mimeType/sha256/byteLength`，校验
+`validPreparedReference`/`samePreparedReference`）；消费面镜像 = **agent-contracts
+@0.2.0**（`AgentPreparedAttachment`/`AgentAdmissionEvidence`）。core 拿这个版本号
+对齐 Server ACP DTO（补 `preparedId` 等字段）。0.2.0 源码当前在
+`codex/plugin-chat` @ `4d555a09b2`（`plugins/agent/contracts/src/agent.ts`），
+落 main 随下次 consolidation；core 需要先行对齐可按该 SHA 读。
+
+**③ 放行闸门两事实（已排 P-E，闸门先行不阻塞）**：authority（permissions）与
+`native_evidence`（harness）即 014 第二批 **P-E** 包（S-06 行已注 A/B/C/D 收口后
+开——现已收口，P-E 即将派单）。core 建闸门/接线照做；事实到位前 `ready=False`
+诚实拒绝正是双方约定口径，不算卡 core。
+
+**④ profile 装配（名字已给，落 main 归 consolidation）**：三个扩展准确 id 在
+S-01 行（main 在案）：`ordessa.profile-api`、`ordessa.profile-frontend`、
+`ordessa.profile-chat`（同批 `ordessa.chat-api`、`ordessa.chat`；退役
+`ordessa.agent-conversation`，P-C 已回执条件满足）。profile 代码在
+`codex/plugin-profile` @ `2c48889a25`——1+x 结构下插件代码先驻分支，落 main 的
+consolidation 需用户授权定时；core 可按 SHA 预备装配。baseline 安装清单补录 =
+S-10 行（6 子包 + 顺序坑，可复制命令在 reports/P-A-report.md §R0）。
+
+**对 core 串行计划**：INT-01 / INT-04 不受插件侧阻塞，可先行；**INT-02 的根
+lock 干净重算需要 profile 三包 + model-provider 两包 workspace 目录在场**
+（均在分支上），完整重算同样等 consolidation，届时一并纳入（S-02 已记五条）。
+
 （core 线回填区）
+
