@@ -10,7 +10,7 @@
 - connectors 侧（已实现有测试，只读消费）：三态 `plugins/connectors/acp/src/submission.ts:13-26`、`client.ts:657`；附件 `attachments.ts:35-41`（prepare→sha256 ref）、`client.ts:608-645`；命令 `commands.ts:8-25`（四态目录）、`client.ts:183-195`（getNativeCommands，**全仓零消费**）、`client.ts:431`；`plugins/connectors/ordessa/src/acp-next-submit.ts:92-141`（wire `acp.submission.authorize`，头注 :3-8 自述缺 backend owner）。
 - server 侧（已在 main，只读）：`plugins/harness/src/ordessa_harness/server_acp/plugin.py:201-227`（acp_submission_authorize）、`apps/server/src/ordessa_server/acp_admission.py`。
 - **中间层（本包的战场）**：`plugins/agent/contracts/src/agent.ts:118`（`send(): Promise<void>` 需升三态）+ 目录成员；`plugins/agent/sessions/src/model.ts:115-146`（facade 供给）；`plugins/chat/frontend/src/adapters/agent.ts:126-141/150-155`（映射，现 command 恒 absent）；`chat-page.tsx:202-220`（附件入口现因 supported=false 禁用）。
-- F4（2026-09-28 二次修正，拆开两件事）：Claude **有** ACP 桥——钉版官方 `@agentclientprotocol/claude-agent-acp@0.81.2`（`plugins/harness/packaging/claude/`，自带 fake-endpoint 受控探针架式），不走 Go 桥。**命令目录＝未探针（不是 unsupported）**：`parseNativeCommands` 品牌无关，adapter 是否播发 `available_commands_update` 无正反证据 → PC-10 探针定夺。**附件＝负证据**：`harnesses.toml:86-89` 诚实移除 `attach`（真实握手 promptCapabilities 空）→ 诚实缺席，翻绿归 harness 线（S-07 附件项）。
+- F4（2026-09-28 三次修正）：Claude **有** ACP 桥——钉版官方 `@agentclientprotocol/claude-agent-acp@0.81.2`（`plugins/harness/packaging/claude/`），不走 Go 桥。**附件＝旧负证据已被源码实证推翻（0.81.2 initialize 声明 image:true+embeddedContext:true，双向转换在案），修复归 P-D 包**——P-C 的附件 UI/refs 通用件对 claude 行同样适用，等 P-D 翻绿即可亮。**命令目录＝未探针**：`parseNativeCommands` 品牌无关，adapter 是否播发 `available_commands_update` 无正反证据 → PC-10 探针定夺。
 - F8：integration-request §6 的 C7 import map 切换**已在 main**，勿重做。
 
 ## 写入面（只许这些）

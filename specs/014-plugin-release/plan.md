@@ -17,21 +17,23 @@
 | F1 | profile-api r1 断裂 import **已修好**在 `codex/plugin-profile`（`plugins/profile/src/ordessa_profile/plugin.py:19-21`，指向 `pacthold_runtime_compat.resource_contracts`）；A 的工作是 r2 交付登记与解锁复验，不是改代码 | 分支实测 |
 | F2 | REQ-Z3-1/2 的目标面**已在 main**：C2 注册点 `plugins/harness/src/ordessa_harness/contributions.py:21`（重复 adapter_id 拒绝 :187-190）；C4 `ConfigurationApplicationService`（`.../application/configuration_service.py:150`，ctor 强制注入 permits/journal）；permit 机制 `apps/server/src/ordessa_server/acp_admission.py:94-140`。api-requests.md 的冻结文本已过时，**按 main 实际符号对齐** | main 实测 |
 | F3 | Chat 三项的真实断点**在中间层**：connectors（三态/命令/附件 port）与 Server 端 authorize 都已实现且有测试，但 facade（plugins/agent/contracts + sessions）无对应成员、`getNativeCommands` 全仓零消费、chat `facadeCommandCatalog` 恒 absent | main grep 实测 |
-| F4 | Claude Code **不走 Go 桥**（Go 桥仅 codex\|pi，`cmd/acp/main.go:27-30`），走钉版官方 `@agentclientprotocol/claude-agent-acp@0.81.2`（`plugins/harness/packaging/claude/` 离线闭包，Work Order 43 生产化，自带 fake-endpoint 受控探针架式）。**命令目录＝未探针**：connectors `parseNativeCommands` 品牌无关解析 ACP `available_commands_update`，adapter 是否播发无正反证据（capability 表不记命令项）→ PC-10 探针定夺，播发即接线翻绿。**附件＝负证据**：`harnesses.toml:86-89` 诚实移除 `attach`（真实握手 promptCapabilities 空，codex 行有 attach）→ 诚实缺席，翻绿需 harness 线（S-07 附件项裁定） | main 实测 |
+| F4 | Claude Code **不走 Go 桥**（Go 桥仅 codex\|pi，`cmd/acp/main.go:27-30`），走钉版官方 `@agentclientprotocol/claude-agent-acp@0.81.2`（`plugins/harness/packaging/claude/` 离线闭包，Work Order 43 生产化，自带 fake-endpoint 受控探针架式）。**附件＝旧负证据已推翻（源码实证）**：0.81.2 initialize 声明 `promptCapabilities:{image:true,embeddedContext:true}`（`acp-agent.js:1108`），图片双向转换在案（:7364/:7682），`resource_link`→URI 链接文本（:7341）；旧"握手 promptCapabilities 空"是 0.77 时代遗留观测（升版未重探）→ P-D 修复包。**命令目录＝未探针**：`parseNativeCommands` 品牌无关，adapter 是否播发 `available_commands_update` 无正反证据 → PC-10 探针定夺 | main 实测（adapter dist 源码直读） |
 | F5 | codex/claude CLI 二进制本机不存在；Pi 0.86.1 曾离线探针通过 → 三品牌 E2 以 in-repo adapter + 受控 fake endpoint 为上限（Z3 verification.md E2 定义允许），真实 CLI 装载格如实 unknown | Q4/Z3 report |
 | F6 | 各插件分支树内无 `plugins/runtime-compat`；`pacthold_runtime_compat` 靠 venv `-e plugins/runtime-compat` 提供；`docs/baseline.md` 安装清单**缺 `plugins/profile` 与 model-provider 各包**（R0 补录并登记 S-10） | baseline.md:41-43 |
 | F7 | 011 tasks.md 已被主会话重置为未勾选裸表（main 491aa92392，"归并≠验收"）；真实完成态以各线 report.md 为准 | main 实测 |
 | F8 | integration-request §6 的 C7 import map 三处机械切换**已在 main 落地**，勿重复做 | chat research |
 
-## 分包方案：3 个可并行实施包
+## 分包方案：4 个实施包（A/B/C 互不重叠并行；P-D 独立于三包，只与 P-C 在附件 DTO 形状上对齐）
 
-| 项 | P-A profile | P-B model-provider | P-C chat |
-| --- | --- | --- | --- |
-| **worktree** | `worktrees/014-a-profile`（`codex/014-a-profile`） | `worktrees/014-b-model-provider`（`codex/014-b-model-provider`） | `worktrees/014-c-chat`（`codex/014-c-chat`） |
-| **基线** | main 491aa92392 + merge `codex/plugin-profile`（已完成） | main 491aa92392 + merge `codex/plugin-model-provider`（已完成） | main 491aa92392（chat 已在 main，无合并） |
-| **写入面** | `plugins/profile/**`、`specs/011-plugin-rollout/checkpoints/**`（仅 profile-api 条目）、`specs/011-z1-profile/**`（报告增补）、`specs/014-plugin-release/reports/P-A-*.md` | `plugins/assets/model-provider/**`、`specs/011-z3-model-provider/**`（报告增补）、`specs/014-plugin-release/reports/P-B-*.md` | `plugins/chat/**`、`plugins/agent/{contracts,sessions,conversation}/**`、`specs/011-z2-chat/**`（报告增补）、`specs/014-plugin-release/reports/P-C-*.md` |
-| **消费** | foundation（经 main） | harness-api、chat-api（经 main）；**profile-api r2 = P-A 交付 SHA**（弱依赖：未交付前 fixture 先行并登记） | harness-api、chat-api r3、connectors（均在 main） |
-| **禁区** | 其他 plugins/**、products/**、tooling/**、根锁、packages/**、apps/** | 同左 + plugins/harness/**（只读消费） | 同左 + plugins/commands/**（只读；它不是 Chat 菜单） |
+| 项 | P-A profile | P-B model-provider | P-C chat | P-D claude 附件 |
+| --- | --- | --- | --- | --- |
+| **worktree** | `worktrees/014-a-profile`（`codex/014-a-profile`） | `worktrees/014-b-model-provider`（`codex/014-b-model-provider`） | `worktrees/014-c-chat`（`codex/014-c-chat`） | `worktrees/014-d-harness-claude`（`codex/014-d-harness-claude`） |
+| **基线** | main 491aa92392 + merge `codex/plugin-profile`（已完成） | main 491aa92392 + merge `codex/plugin-model-provider`（已完成） | main 491aa92392（chat 已在 main，无合并） | main（plugins/harness 已在 main，无合并） |
+| **写入面** | `plugins/profile/**`、`specs/011-plugin-rollout/checkpoints/**`（仅 profile-api 条目）、`specs/011-z1-profile/**`（报告增补）、`specs/014-plugin-release/reports/P-A-*.md` | `plugins/assets/model-provider/**`、`specs/011-z3-model-provider/**`（报告增补）、`specs/014-plugin-release/reports/P-B-*.md` | `plugins/chat/**`、`plugins/agent/{contracts,sessions,conversation}/**`、`specs/011-z2-chat/**`（报告增补）、`specs/014-plugin-release/reports/P-C-*.md` | `plugins/harness/**`（窄用：packaging/claude 探针、harnesses.toml、src/ordessa_harness/claude/**、tests/test_capability_declarations.py、claude-production-packaging.md）、`specs/014-plugin-release/reports/P-D-*.md` |
+| **消费** | foundation（经 main） | harness-api、chat-api（经 main）；**profile-api r2 = P-A 交付 SHA**（弱依赖：未交付前 fixture 先行并登记） | harness-api、chat-api r3、connectors（均在 main） | connectors 附件 DTO（只读，对齐 PC-9 冻结形状） |
+| **禁区** | 其他 plugins/**、products/**、tooling/**、根锁、packages/**、apps/** | 同左 + plugins/harness/**（只读消费） | 同左 + plugins/commands/**（只读；它不是 Chat 菜单） | connectors/**（只读消费其附件 DTO）、plugins/chat/**（P-C 域）、products/**、tooling/**、根锁 |
+
+**P-D — claude 附件通路（harness）**：worktree `worktrees/014-d-harness-claude`（分支 `codex/014-d-harness-claude`，基线 = main，plugins/harness 已在 main，无需合并）。写入面：`plugins/harness/**`（窄用：`packaging/claude` 探针、`src/ordessa_harness/harnesses.toml`、`src/ordessa_harness/claude/**`、`tests/test_capability_declarations.py`、`docs/server-round1/fullstack/claude-production-packaging.md` 证据）+ 014 报告。目标：用钉版 0.81.2 的第一手探针推翻 0.77 时代的附件负证据，翻绿 `attach`，并把 claude 通路附件投递接通（图片=真实附件块、非图片=resource_link URI 链接，audio 未声明——语义如实呈现）。与 P-C 分工：P-C 管聊天侧通用附件 UI/refs（PC-3/PC-9），P-D 管 harness 侧能力声明与通路。用户已裁定：必须解决（2026-09-28）。
 
 **依赖关系**：P-B 的 PB-6（Profile glue）依赖 P-A 的 PA-2 交付 SHA；其余全并行。P-B 若先行到 PB-6 而 A 未交付，用受控 fixture 推进并登记依赖，**不得**自己改 plugins/profile。
 
