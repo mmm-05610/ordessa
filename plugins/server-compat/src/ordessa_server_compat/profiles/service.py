@@ -4,10 +4,10 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from ordessa_server.errors import ServerError, unavailable
+from server_plugin_api import ServerError, unavailable
 from ordessa_server_compat.execution import HarnessRegistry
 from ordessa_server_compat.profiles.repository import ProfileRecords
-from ordessa_server.records import canonical, digest, reject_sensitive_keys
+from server_plugin_api import canonical, digest, reject_sensitive_keys
 
 
 class ProfileService:

@@ -4,12 +4,12 @@ from __future__ import annotations
 import json
 from typing import Any, Mapping
 
-from ordessa_server.errors import ServerError, unavailable
+from server_plugin_api import ServerError, unavailable
 from ordessa_server_compat.model_configs.provider_protocols import (
     normalize_model_facts, normalize_protocols, validate_endpoints,
 )
 from ordessa_server_compat.model_configs.repository import KEEP
-from ordessa_server.records import canonical, digest, reject_sensitive_keys
+from server_plugin_api import canonical, digest, reject_sensitive_keys
 
 
 class ProviderModelService:

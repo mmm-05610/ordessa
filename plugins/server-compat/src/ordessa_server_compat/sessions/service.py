@@ -5,11 +5,11 @@ import json
 from pathlib import Path
 from typing import Any, Mapping
 
-from ordessa_server.errors import ServerError, unavailable
+from server_plugin_api import ServerError, unavailable
 from ordessa_server_compat.execution import HarnessRegistry
 from pacthold.execution.contracts import CancelOutcome, TurnExecutionPort
 from ordessa_server_compat.profiles.permissions import resolve_all
-from ordessa_server.records import digest, reject_sensitive_keys
+from server_plugin_api import digest, reject_sensitive_keys
 from ordessa_server_compat.sessions.repository import SessionRecords
 
 

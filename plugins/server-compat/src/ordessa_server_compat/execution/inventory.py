@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from pacthold.storage import Database
+from pacthold_runtime_compat.storage import Database
 
 #: Turn states that mean "an execution of ours is in flight", mapped to the
 #: three states the product card shows.
