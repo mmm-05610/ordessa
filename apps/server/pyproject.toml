@@ -40,3 +40,6 @@ testpaths = ["tests"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+ordessa_server = ["bootstrap/*.json"]

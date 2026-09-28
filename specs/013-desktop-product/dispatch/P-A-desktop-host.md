@@ -1,7 +1,7 @@
 # 派单简报 — P-A Desktop 宿主与平台 UI
 
 **worktree**: `worktrees/013-a-desktop-host`　**分支**: `codex/013-a-desktop-host`
-**日期**: 2026-09-28　**主责契约**: C-04(TS) / C-05 / C-06 / C-07
+**日期**: 2026-09-28　**主责契约**: C-04(TS) / C-05 / C-06 / C-07 / C-08（类型与缺席语义）
 
 ---
 
@@ -23,8 +23,8 @@ specs/013-desktop-product/
 │   ├── C-05-theme.md        ★ 你定义并实现
 │   ├── C-06-settings-diagnostics.md  ★ 你定义并实现
 │   ├── C-07-commands-keybindings.md  ★ 你定义并实现
-│   └── C-08-harness-availability.md  你消费（渲染）
-└── tasks.md                 PA-01 … PA-24
+│   └── C-08-harness-availability.md  ★ 你定义类型 + 缺席语义（本期**不改插件**）
+└── tasks.md                 PA-01 … PA-25
 ```
 
 也读：`docs/architecture.md`、`.specify/memory/constitution.md`、`apps/desktop/AGENTS.md`。
@@ -44,14 +44,14 @@ specs/013-desktop-product/
 ├── packages/workbench/**
 └── specs/013-desktop-product/dispatch/P-A-report.md   （你的报告）
 
-⚠️ 申报改动（须逐文件登记在报告，不得静默）
-└── plugins/chat/frontend/src/theme.ts    （C-05 迁移）
+🔒 插件改动：**无**（013 = core 阶段，`plugins/**` 一律只读）
+└── 确需改插件 → **停止该项**，上报主会话并取得用户裁定，批准后逐文件登记再动
 
 ❌ 禁写
 ├── specs/013-desktop-product/contracts/**   （冻结）
 ├── apps/server/**、packages/server-plugin-api/**
 ├── packages/desktop-platform/server-bridge/**   （归 P-B）
-├── plugins/**（除上面唯一申报文件）
+├── plugins/**（**全部只读**，013 零插件改动）
 ├── packaging/**、scripts/**、tooling/**        （归 P-C）
 ├── 根 package.json / package-lock.json         （归 P-C）
 └── 其他 worktree
@@ -59,15 +59,15 @@ specs/013-desktop-product/
 
 ## 4. 任务清单
 
-见 [tasks.md](../tasks.md) **PA-01 … PA-24**，按阶段 1→5 顺序做。关键顺序约束：
+见 [tasks.md](../tasks.md) **PA-01 … PA-25**，按阶段 1→5 顺序做。关键顺序约束：
 
 ```text
 PA-01（契约类型）  ← 必须最先，其余任务都依赖
   ├─ PA-02..04  产品身份（图标只做**接线与占位**，设计稿由用户后续换上 `assets/brand/icon.svg`）
   ├─ PA-05..11  日志 + 可靠性 + 代码卫生
   ├─ PA-12..15  故障 UI / 设置 / 诊断
-  ├─ PA-16..20  主题 / 命令 / 键盘
-  └─ PA-21..24  接线与边界（依赖 P-B 的 server-bridge，见 §5）
+  ├─ PA-16..20  主题 / 命令 / 键盘（`plugins/chat` **不改**，主题收敛只到 workbench）
+  └─ PA-21..25  接线 / 边界 / C-08 缺席渲染（依赖 P-B 的 server-bridge，见 §5）
 ```
 
 ## 5. 与其他包的接口（唯一耦合点）
@@ -115,5 +115,5 @@ PA-01（契约类型）  ← 必须最先，其余任务都依赖
 ## 9. 交付
 
 - 代码 + 测试（正例/反例/金丝雀/边界）
-- `specs/013-desktop-product/dispatch/P-A-report.md`：完成 / 阻塞 / 未测**三类事实**，逐条附证据；申报改动逐文件列明
+- `specs/013-desktop-product/dispatch/P-A-report.md`：完成 / 阻塞 / 未测**三类事实**，逐条附证据；**插件改动应为「无」**，若确有须逐文件列明并附用户裁定记录
 - 完成后**停止**，报待审；不自动合并、不无限空转；本包完成后报告 **「core 发行能力就绪」**，**不是**「完整产品首版已发行」

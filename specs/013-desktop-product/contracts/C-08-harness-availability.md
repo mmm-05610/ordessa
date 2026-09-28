@@ -1,6 +1,6 @@
 # C-08 — Harness 可用性（HarnessAvailability）🔌 插件 API（插件提供）
 
-**面向**：🔌 插件公开契约　**定义方**：P-B（契约）/ Harness 插件（实现）　**消费方**：P-A（渲染）
+**面向**：🔌 插件公开契约　**类型定义**：P-A（`packages/desktop-platform/contracts`，core）　**实现**：Harness 插件（**本期不做**）　**消费方**：P-A（渲染）
 **状态**：冻结
 
 ## 目的
@@ -64,6 +64,8 @@ interface HarnessReport {
 
 - Harness 插件未安装/未加载 → 宿主显示"未提供 Harness 可用性信息"，**不**假定全部可用。
 - 宿主未就绪 → `inspect()` 返回各品牌 `unknown` + `reason: "host-not-ready"`。
+
+> **本期范围（013 = core，零插件改动）**：core 只提供**类型**与**缺席语义**（无提供者时按本节显示"未提供 Harness 可用性信息"）。Harness 插件对 `HarnessAvailability` 的**实现**属后续插件线；本期**不**改 `plugins/harness/**`。
 
 ## 5. 与发行门的关系
 

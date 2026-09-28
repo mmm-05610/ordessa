@@ -11,7 +11,7 @@
 ## P-A — Desktop 宿主与平台 UI
 
 > 写入面：`apps/desktop/**`、`packages/desktop-platform/{contracts,ui,ui-components,extension-api,extension-loader,extension-host,native-bridge}/**`、`packages/workbench/**`
-> 申报改动：`plugins/chat/frontend/src/theme.ts`（须逐文件登记）
+> 插件改动：**无**（013 = core 阶段，`plugins/**` 一律只读；确需改须先经用户裁定）
 
 ### 阶段 1 — 契约类型与产品身份
 - [ ] **PA-01** 在 `packages/desktop-platform/contracts` 落 C-03/04/05/06/07/08 的 TS 类型（不可变 + 类型反例 `@ts-expect-error` 全部真实触发）。FR-030/041/042/043/051
@@ -37,7 +37,7 @@
 ### 阶段 4 — 主题 / 命令
 - [ ] **PA-16** 主题服务（C-05）：light/dark/system + tokens + subscribe + CSS 变量；tokens 深层冻结。FR-042
 - [ ] **PA-17** 收敛 `packages/workbench/src/styles.ts` 为 C-05 消费方 + 对照测试。FR-042
-- [ ] **PA-18** 申报改动：`plugins/chat/frontend/src/theme.ts` 迁移为 C-05 消费方（逐文件登记）。FR-042
+- [ ] **PA-18** 主题收敛**登记缺口**：`packages/workbench` 收敛为 C-05 消费方；`plugins/chat/frontend/src/theme.ts` **本期不改**，登记为已知缺口（chat 界面暂不随全局主题切换）。FR-042
 - [ ] **PA-19** 命令与快捷键（C-07）：注册/注销/冲突拒绝/非法拒绝/`when` 求值/命令面板/快捷键表。FR-043
 - [ ] **PA-20** 键盘可达全流程（导航/发送/对话框/设置/命令面板/错误关闭）。FR-044
 
@@ -46,34 +46,33 @@
 - [ ] **PA-22** WirePort 宿主侧注入：插件可调、令牌不进渲染进程、三态语义。FR-030/031/032
 - [ ] **PA-23** 安全回归：`sandbox:true / contextIsolation:true / nodeIntegration:false / 权限全拒 / window-open deny / IPC 调用方校验` **不退化**。FR-033
 - [ ] **PA-24** 边界反例：受控第三方 fixture 插件仅凭公开契约完成 6 项接入，宿主内部 import 数 **= 0**。SC-007
+- [ ] **PA-25** C-08 缺席语义与渲染（core，**不改插件**）：无提供者时显示"未提供 Harness 可用性信息"；用**受控 fixture 提供者**验证 6 态渲染与 `state/reason` 不变量、有界探测；**宿主源码出现品牌名即判红**。FR-050/051
 
 ---
 
 ## P-B — Server 运行时与接缝
 
-> 写入面：`apps/server/**`、`packages/server-plugin-api/**`、`packages/desktop-platform/server-bridge/**`、`plugins/connectors/{ordessa,acp}/**`、`plugins/harness/api/**`
+> 写入面：`apps/server/**`、`packages/server-plugin-api/**`、`packages/desktop-platform/server-bridge/**`（**不含任何 `plugins/**`**）
 
 ### 阶段 1 — 数据根（C-01）
-- [ ] **PB-01** `apps/server/src/ordessa_server/bootstrap/data_root.py`：解析顺序（env → `~/.ordessa`）、创建/复用、0700/0600、拒符号链接、拒不可写、锁语义。FR-020
-- [ ] **PB-02** 类型化错误五件（`DATA_ROOT_SYMLINK/NOT_WRITABLE/LOCKED/INVALID/MIGRATION_REFUSED`）+ `reason`/`remedy`。C-01 §6
-- [ ] **PB-03** `__main__.py`：`--data-root` 改 optional（缺省走规范）、`--port` 支持随机（`0` = 系统分配）并**回读实际 origin**。FR-021/023
-- [ ] **PB-04** 常量文件（布局路径）供 TS/Python 共用；**跨语言一致性测试**（两入口解析结果与布局常量逐字相同）。FR-021
-- [ ] **PB-05** 旧根/升级 preflight 保持：无迁移提供者**拒绝并保留原字节**。C-01 §4
-- [ ] **PB-06** headless CLI 核查：若支持缺省数据根 → 与 Server CLI 共用同一规范 + 一致性测试。FR-021
+- [x] **PB-01** `apps/server/src/ordessa_server/bootstrap/data_root.py`：解析顺序（env → `~/.ordessa`）、创建/复用、0700/0600、拒符号链接、拒不可写、锁语义。FR-020
+- [x] **PB-02** 类型化错误五件（`DATA_ROOT_SYMLINK/NOT_WRITABLE/LOCKED/INVALID/MIGRATION_REFUSED`）+ `reason`/`remedy`。C-01 §6
+- [x] **PB-03** `__main__.py`：`--data-root` 改 optional（缺省走规范）、`--port` 支持随机（`0` = 系统分配）并**回读实际 origin**。FR-021/023
+- [x] **PB-04** 常量文件（布局路径）供 TS/Python 共用；**跨语言一致性测试**（两入口解析结果与布局常量逐字相同）。FR-021
+- [x] **PB-05** 旧根/升级 preflight 保持：无迁移提供者**拒绝并保留原字节**。C-01 §4
+- [x] **PB-06** headless CLI 核查：若支持缺省数据根 → 与 Server CLI 共用同一规范 + 一致性测试。FR-021
 
 ### 阶段 2 — 生命周期与接缝（C-02/C-03）
-- [ ] **PB-07** `packages/desktop-platform/server-bridge`（新包）：spawn / 就绪探针（`GET /live`）/ 状态机 / 退出只杀自己 pid（进程组 + 孤儿防护）。FR-022/024
-- [ ] **PB-08** env 交接：`ORDESSA_SERVER_ORIGIN` / `ORDESSA_SERVER_TOKEN_FILE` / `ORDESSA_DATA_ROOT`，命名**保持既有拼写**。C-02 §2
-- [ ] **PB-09** 运行时捆绑解析（`ORDESSA_BUNDLED_ROOT` → `/opt/ordessa/{python,bin,harnesses}`）；缺失**早期**类型化拒绝 `BUNDLED_RUNTIME_MISSING`。C-02 §6
-- [ ] **PB-10** C-02 五类错误 + 反例七条（端口/缺二进制/早退/超时/只杀自己/二次启动/金丝雀）。C-02 §7-8
-- [ ] **PB-11** WirePort 实现（C-03）：`POST /wire/v1/{method}` + Bearer 注入、三态、`AbsentWirePort`、`ready/scope`。FR-030/032
-- [ ] **PB-12** 凭据边界：令牌只在主进程/Server；插件可见对象、日志、诊断**金丝雀零命中**。FR-031
+- [x] **PB-07** `packages/desktop-platform/server-bridge`（新包）：spawn / 就绪探针（`GET /live`）/ 状态机 / 退出只杀自己 pid（进程组 + 孤儿防护）。FR-022/024
+- [x] **PB-08** env 交接：`ORDESSA_SERVER_ORIGIN` / `ORDESSA_SERVER_TOKEN_FILE` / `ORDESSA_DATA_ROOT`，命名**保持既有拼写**。C-02 §2
+- [x] **PB-09** 运行时捆绑解析（`ORDESSA_BUNDLED_ROOT` → `/opt/ordessa/{python,bin,harnesses}`）；缺失**早期**类型化拒绝 `BUNDLED_RUNTIME_MISSING`。C-02 §6
+- [x] **PB-10** C-02 五类错误 + 反例七条（端口/缺二进制/早退/超时/只杀自己/二次启动/金丝雀）。C-02 §7-8
+- [x] **PB-11** WirePort 实现（C-03）：`POST /wire/v1/{method}` + Bearer 注入、三态、`AbsentWirePort`、`ready/scope`。FR-030/032
+- [x] **PB-12** 凭据边界：令牌只在主进程/Server；插件可见对象、日志、诊断**金丝雀零命中**。FR-031
 
-### 阶段 3 — 日志 Python 侧与 Harness 可用性
-- [ ] **PB-13** 日志 Python sink（C-04）：与 TS **同构**（字段顺序、脱敏四规则、轮转 10 MiB/5 份）；`server.log` 落点。FR-013
-- [ ] **PB-14** 同构一致性测试：同一条记录 TS/Py 写出，字段集与顺序**一致**。C-04 §8.6
-- [ ] **PB-15** C-08 `HarnessAvailability` 契约载体（`plugins/harness/api`）：6 态枚举 + `state/reason` 不变量 + 有界探测。FR-050/051
-- [ ] **PB-16** C-08 反例六条（未安装/未登录/超时/无插件/不变量/边界）；**宿主源码不得出现品牌名**。C-08 §6
+### 阶段 3 — 日志 Python 侧
+- [x] **PB-13** 日志 Python sink（C-04）：与 TS **同构**（字段顺序、脱敏四规则、轮转 10 MiB/5 份）；`server.log` 落点。FR-013
+- [x] **PB-14** 同构一致性测试：同一条记录 TS/Py 写出，字段集与顺序**一致**。C-04 §8.6
 
 ---
 
