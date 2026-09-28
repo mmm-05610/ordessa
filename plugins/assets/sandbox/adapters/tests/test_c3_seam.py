@@ -112,19 +112,23 @@ def test_harness_api_checkpoint_record_is_present_and_ready():
         f"new SHA (record says {record['implementationSha']!r})")
 
 
-def test_harness_api_checkpoint_ref_exists_and_is_an_ancestor_of_head():
+def test_harness_api_checkpoint_ref_matches_the_bound_api_tree():
     sha = subprocess.run(["git", "rev-parse", "--verify", CHECKPOINT_REF],
                          cwd=REPO_ROOT, capture_output=True, text=True)
     assert sha.returncode == 0, (
         f"{CHECKPOINT_REF} is absent — the C3 binding would be unbacked")
     assert sha.stdout.strip() == CHECKPOINT_PUBLICATION_SHA
-    for candidate in (CHECKPOINT_IMPLEMENTATION_SHA, CHECKPOINT_PUBLICATION_SHA):
-        ancestor = subprocess.run(
-            ["git", "merge-base", "--is-ancestor", candidate, "HEAD"],
+    # Consolidation replayed the checkpoint's files onto a new branch ancestry.
+    # Compare the exact API subtree rather than requiring the old commit to be
+    # an ancestor; a changed contract must still fail this guard.
+    trees = []
+    for candidate in (CHECKPOINT_IMPLEMENTATION_SHA, "HEAD"):
+        tree = subprocess.run(
+            ["git", "rev-parse", f"{candidate}:plugins/harness/api"],
             cwd=REPO_ROOT, capture_output=True, text=True)
-        assert ancestor.returncode == 0, (
-            f"{candidate} is not an ancestor of HEAD: this tree does not really "
-            f"carry the checkpoint it binds ({ancestor.stderr.strip()})")
+        assert tree.returncode == 0, tree.stderr
+        trees.append(tree.stdout.strip())
+    assert trees[0] == trees[1], "the bound Harness API tree changed since the READY checkpoint"
 
 
 def test_every_bound_c3_symbol_is_a_recorded_public_export():

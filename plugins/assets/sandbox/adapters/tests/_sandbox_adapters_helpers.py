@@ -32,6 +32,25 @@ CODEX_SCHEMA = (REPO_ROOT / "plugins/harness/adapters/acp-adapter/internal/"
                 "codex/schema/codex_app_server_protocol.v2.schemas.json")
 
 
+def build_compat_runtime(root: Path):
+    """Use the real product points with only its compatibility plugins.
+
+    Tests that activate a Sandbox/Permissions contributor themselves must not
+    start from the shipping product, which already selects those contributors.
+    The separate product-selection tests cover the shipping composition.
+    """
+    from ordessa_server.bootstrap import build_runtime
+    from ordessa_server_product.composition import create_composition
+
+    product = create_composition()
+    runtime = build_runtime(root, server_plugins=product.compatibility_plugins())
+    for point in product.server_contribution_points():
+        runtime.plugin_host.register_contribution_point(
+            point.point_id, point.api_version, handler=point.handler,
+            exclusive=point.exclusive)
+    return runtime
+
+
 def pinned_versions() -> dict[str, str]:
     """Identity version of record per harness_type, read from the real tree."""
     data = tomllib.loads(HARNESSES_TOML.read_text(encoding="utf-8"))

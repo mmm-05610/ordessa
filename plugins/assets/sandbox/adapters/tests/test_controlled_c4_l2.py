@@ -69,7 +69,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from ordessa_harness.application import (
-    ConfigurationApplicationService, NativeReadback, OperationJournal,
+    ConfigurationApplicationService, NativeActivationReceipt, NativeReadback, OperationJournal,
     RuntimeSnapshot,
 )
 from ordessa_harness.materialization import MergeAuthority, TargetAuthority
@@ -186,6 +186,7 @@ class _ControlledTargetRuntime:
         self.activated: list[str] = []
         self.read_back: bytes | None = None
         self._lease_files: tuple = ()
+        self._receipt: NativeActivationReceipt | None = None
 
     def capture(self, target: ApplicationTarget) -> RuntimeSnapshot:
         context = AdapterContext(
@@ -198,7 +199,8 @@ class _ControlledTargetRuntime:
             {}, {}, self.private_root, {}, "rev-1",
             "q5:t022:native-version", 1, "auth-1", "secret-ref-1")
 
-    def activate_generation(self, target, lease) -> None:
+    def activate_generation(self, operation_id, target, lease,
+                            manifest_digest) -> NativeActivationReceipt:
         data = lease.read_bytes(self.brand["resource"])
         digests = dict(lease.files)
         # the receipt the service will confirm against is the bytes actually
@@ -207,6 +209,10 @@ class _ControlledTargetRuntime:
         self.read_back = data
         self._lease_files = lease.files
         self.activated.append(lease.generation_name)
+        self._receipt = NativeActivationReceipt(
+            operation_id, target, manifest_digest,
+            "q5:t022:native-session-1", "rev-2", "q5:t022:native-receipt")
+        return self._receipt
 
     def observe(self, target) -> NativeReadback:
         text = self.read_back.decode("utf-8")
@@ -220,7 +226,7 @@ class _ControlledTargetRuntime:
                 else {key: False for key in document}
         return NativeReadback(target, "q5:t022:native-session-1", "rev-2",
                               document, files, "q5:t022:readback-evidence",
-                              ("/".join(self.brand["resource"]),))
+                              ("/".join(self.brand["resource"]),), self._receipt)
 
 
 class _GrantingPermits:
@@ -324,8 +330,8 @@ def _host_service(tmp_path: Path, *, surface, brand: dict, observer,
     """Composition through the REAL host: ``build_runtime`` plugin host is
     the carrier, the facet is published on the real point, the service is the
     platform's own ``ConfigurationApplicationService``."""
-    from ordessa_server.bootstrap import build_runtime
-    host_runtime = build_runtime(tmp_path / "host")
+    from _sandbox_adapters_helpers import build_compat_runtime
+    host_runtime = build_compat_runtime(tmp_path / "host")
     try:
         host = host_runtime.plugin_host
         if surface is not None:
@@ -537,14 +543,14 @@ def test_unknown_harness_identity_is_refused_by_the_platform(tmp_path):
         assert result.code is ErrorCode.CAPABILITY_UNSUPPORTED
 
 
-def test_absent_facet_on_the_real_point_refuses_with_adapter_missing(tmp_path):
-    """The platform's unavailable outcome for a non-selectable facet: the
-    REAL ``SandboxAdaptersServerPlugin`` publishes three descriptors on one
-    open point, which the host resolves to an observable absence
-    (contribution_points.py resolve; recorded in t020) -> the service
-    answers ``Refused(adapter-missing)``, never a guessed selection."""
-    from ordessa_server.bootstrap import build_runtime
-    host_runtime = build_runtime(tmp_path / "host")
+def test_real_point_refuses_a_facet_without_supported_assessment(tmp_path):
+    """Exact selection finds Codex, but unsupported assessment still refuses.
+
+    Publishing three brand descriptors must not turn an unsupported native
+    capability into a plan or a write.
+    """
+    from _sandbox_adapters_helpers import build_compat_runtime
+    host_runtime = build_compat_runtime(tmp_path / "host")
     try:
         host = host_runtime.plugin_host
         host.activate(SandboxAdaptersServerPlugin())
@@ -556,7 +562,7 @@ def test_absent_facet_on_the_real_point_refuses_with_adapter_missing(tmp_path):
                                          _CODEX_BRAND["fragment_value"]),),
                               "rev-1")
         assert isinstance(result, Refused)
-        assert result.code is ErrorCode.ADAPTER_MISSING
+        assert result.code is ErrorCode.CAPABILITY_UNSUPPORTED
         assert list(runtime.private_root.iterdir()) == []
     finally:
         host_runtime.stop()
@@ -605,19 +611,25 @@ def test_fragment_whose_claim_was_not_admitted_is_refused(tmp_path):
         def verify(self, context, observed):  # pragma: no cover
             raise AssertionError("the claim ceiling refuses before verify")
 
-    carrier = _SingleViewCarrier(payload=_OverreachingAdapter())
-    service, runtime, _j, _p = _service(
-        tmp_path, brand=_CODEX_BRAND,
-        observer=_observed("codex", (2, 0, 0)), carrier=carrier)
-    result = service.plan(TARGET,
-                          (_fragment("codex", {"sandbox_mode": "read-only"}),),
-                          "rev-1")
-    assert not isinstance(result, Plan)
-    assert isinstance(result, Refused)
-    assert result.code is ErrorCode.INVALID_FRAGMENT
-    assert any("intent exceeds registered claims" in line
-               for line in result.diagnostics)
-    assert list(runtime.private_root.iterdir()) == []
+    from _sandbox_adapters_helpers import build_compat_runtime
+    host_runtime = build_compat_runtime(tmp_path / "host")
+    try:
+        host_runtime.plugin_host.activate(_FacetPlugin(_OverreachingAdapter()))
+        service, runtime, _j, _p = _service(
+            tmp_path, brand=_CODEX_BRAND,
+            observer=_observed("codex", (2, 0, 0)),
+            carrier=host_runtime.plugin_host)
+        result = service.plan(TARGET,
+                              (_fragment("codex", {"sandbox_mode": "read-only"}),),
+                              "rev-1")
+        assert not isinstance(result, Plan)
+        assert isinstance(result, Refused)
+        assert result.code is ErrorCode.INVALID_FRAGMENT
+        assert any("intent exceeds registered claims" in line
+                   for line in result.diagnostics)
+        assert list(runtime.private_root.iterdir()) == []
+    finally:
+        host_runtime.stop()
 
 
 def test_required_coverage_the_observation_cannot_show_never_confirms(tmp_path):
@@ -656,8 +668,8 @@ def test_native_receipt_drift_never_confirms_and_reconciles_unknown(tmp_path):
     journal_path = tmp_path / "journal.sqlite"
     journal = OperationJournal(journal_path)
     surface = _codex_surface()
-    from ordessa_server.bootstrap import build_runtime
-    host_runtime = build_runtime(tmp_path / "host")
+    from _sandbox_adapters_helpers import build_compat_runtime
+    host_runtime = build_compat_runtime(tmp_path / "host")
     try:
         host = host_runtime.plugin_host
         host.activate(_FacetPlugin(surface))
@@ -742,8 +754,8 @@ def test_my_package_performs_no_io_during_the_plan_and_apply_chain(tmp_path,
     brand = _CODEX_BRAND
     surface = _codex_surface()
     observer = _observed(brand["harness"], brand["native"])
-    from ordessa_server.bootstrap import build_runtime
-    host_runtime = build_runtime(tmp_path / "host")
+    from _sandbox_adapters_helpers import build_compat_runtime
+    host_runtime = build_compat_runtime(tmp_path / "host")
     try:
         host = host_runtime.plugin_host
         host.activate(_FacetPlugin(surface))

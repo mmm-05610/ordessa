@@ -25,7 +25,7 @@ from ordessa_harness_api import (
     AdapterContext, AdapterRefusal, ApplicationTarget, Assessment, ErrorCode, Installation,
     TargetDescriptor, TargetHandle, VerificationUnknown,
 )
-from ordessa_server.bootstrap import build_runtime
+from _sandbox_adapters_helpers import build_compat_runtime
 from server_plugin_api import (
     Contribution,
     ContributionBatch,
@@ -81,7 +81,7 @@ class _StubPlugin:
 
 
 def test_real_product_admits_the_three_brand_descriptors(tmp_path):
-    runtime = build_runtime(tmp_path / "data")
+    runtime = build_compat_runtime(tmp_path / "data")
     host = runtime.plugin_host
     try:
         assert host.contributions(CONFIGURATION_POINT) == ()
@@ -102,7 +102,7 @@ def test_real_product_admits_the_three_brand_descriptors(tmp_path):
 
 
 def test_real_product_carrier_exposes_callable_c2_with_honest_unknown_and_refusal(tmp_path):
-    runtime = build_runtime(tmp_path / "data")
+    runtime = build_compat_runtime(tmp_path / "data")
     host = runtime.plugin_host
     try:
         host.activate(SandboxAdaptersServerPlugin(adapters=(CodexSandboxAdapter(),)))
@@ -128,7 +128,7 @@ def test_real_product_carrier_exposes_callable_c2_with_honest_unknown_and_refusa
 
 
 def test_real_product_c4_inspect_keeps_codex_empty_probe_typed_unknown(tmp_path):
-    product = build_runtime(tmp_path / "data")
+    product = build_compat_runtime(tmp_path / "data")
     host = product.plugin_host
     target = ApplicationTarget("controlled-server", "controlled-session", "controlled-channel", 1)
     descriptor = CODEX_DESCRIPTOR
@@ -197,7 +197,7 @@ def test_failed_round_publishes_nothing(tmp_path):
         (Contribution(CONFIGURATION_POINT, "v1", HarnessSandboxConfigurationAdapter(CODEX_DESCRIPTOR, CodexSandboxAdapter())),
          Contribution(CONFIGURATION_POINT, "v1", HarnessSandboxConfigurationAdapter(twin, object()))),
         open_points=frozenset({CONFIGURATION_POINT}))
-    runtime = build_runtime(tmp_path / "data")
+    runtime = build_compat_runtime(tmp_path / "data")
     host = runtime.plugin_host
     try:
         with pytest.raises(HarnessContributionError):
@@ -212,7 +212,7 @@ def test_unknown_point_id_yields_the_typed_unbound_refusal(tmp_path):
     batch = ContributionBatch((
         Contribution("sandbox.not-a-real-point", SANDBOX_POINT_API_VERSION,
                      CODEX_DESCRIPTOR),))
-    runtime = build_runtime(tmp_path / "data")
+    runtime = build_compat_runtime(tmp_path / "data")
     host = runtime.plugin_host
     try:
         with pytest.raises(ContributionPointUnboundError):
@@ -225,7 +225,7 @@ def test_unknown_point_id_yields_the_typed_unbound_refusal(tmp_path):
 def test_wrong_api_version_yields_the_typed_version_refusal(tmp_path):
     batch = ContributionBatch((
         Contribution(CONFIGURATION_POINT, "v2", CODEX_DESCRIPTOR),))
-    runtime = build_runtime(tmp_path / "data")
+    runtime = build_compat_runtime(tmp_path / "data")
     host = runtime.plugin_host
     try:
         with pytest.raises(ContributionVersionRefusedError):
@@ -239,7 +239,7 @@ def test_still_used_adapter_reports_owner_busy(tmp_path):
     `ContributionOwnerBusyError` refuses retirement until the hold is gone
     (contracts.md §C4: 仍使用该 adapter 的实例必须 busy/deferred)."""
     handler = _RecordingHandler()
-    runtime = build_runtime(tmp_path / "data")
+    runtime = build_compat_runtime(tmp_path / "data")
     host = runtime.plugin_host
     busy_point = "sandbox.busy-proof"
     try:

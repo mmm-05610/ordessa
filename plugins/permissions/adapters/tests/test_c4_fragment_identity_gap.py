@@ -44,7 +44,7 @@ def test_c4_plan_preserves_a_real_fragment_item_id(tmp_path) -> None:
     descriptor = TargetDescriptor(handle, "file", "json", "instance",
                                   (("permissions", "ask"), ("permissions", "deny")))
     context = AdapterContext((descriptor,), Installation("claude-code", (0, 81, 2),
-                             (1, 0, 0), "controlled:installation"),
+                             (0, 1, 0), "controlled:installation"),
                              "permissions.ask", "instance", "controlled:capability")
     private_root = tmp_path / "private"
     private_root.mkdir(mode=0o700)

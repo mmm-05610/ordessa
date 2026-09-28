@@ -299,7 +299,7 @@ class _PermissionsShapedStubPlugin:
             ("toolCallGate.extensionId", "toolCallGate.ask", "toolCallGate.deny"),
             ValueSchema("object"), ())
         batch = ContributionBatch(
-            tuple(Contribution(SANDBOX_CONFIGURATION_POINT_ID, SANDBOX_POINT_API_VERSION, d)
+            tuple(Contribution(SANDBOX_CONFIGURATION_POINT_ID, SANDBOX_POINT_API_VERSION, _FacetAdapter(d))
                   for d in (_permissions_codex_descriptor(), claude, pi)),
             open_points=frozenset({SANDBOX_CONFIGURATION_POINT_ID}))
         return ServerPluginRegistration(contributions=batch)
@@ -310,32 +310,27 @@ def test_composition_admits_both_facet_sets_jointly(tmp_path):
     facets published on the real point (same codex native+adapter pin), the
     platform's conflict gate admits them — facets differ and native field
     claims live under distinct target ids (contribution.py:101 vs points.py:149)."""
-    from ordessa_server.bootstrap import build_runtime
-    runtime = build_runtime(tmp_path / "data")
+    from _sandbox_adapters_helpers import build_compat_runtime
+    runtime = build_compat_runtime(tmp_path / "data")
     host = runtime.plugin_host
     try:
         host.activate(SandboxAdaptersServerPlugin())
         host.activate(_PermissionsShapedStubPlugin())
         views = host.contributions(SANDBOX_CONFIGURATION_POINT_ID)
-        assert len(views) == 6, [view.payload.adapter_id for view in views]
+        assert len(views) == 6, [view.payload.descriptor.adapter_id for view in views]
         assert len({view.owner for view in views}) == 2
     finally:
         runtime.stop()
 
 
-def test_real_two_fragment_joint_plan_refuses_pending_trusted_observation(tmp_path):
-    """Honest refusal leg: even with both facet sets published and a
-    version-satisfiable pair, ONE two-fragment plan through the real C4
-    service on the real host is refused by the platform with
-    `ErrorCode.ADAPTER_MISSING` — this tree's `use_contribution` has no
-    per-fragment facet selection (an open multi-owner point resolves to an
-    observable absence, plugin_host/contribution_points.py:150-162), and no
-    production `RuntimeAdapter.describe_installation()` publishes a trusted
-    observed Installation for codex. Missing evidence named: (1) a production
-    installation observer for the harness runtime, (2) C4 per-fragment facet
-    selection (C0 branch commits 6eeba5b284/080396ecaf, not this tree)."""
-    from ordessa_server.bootstrap import build_runtime
-    runtime = build_runtime(tmp_path / "data")
+def test_real_two_fragment_joint_plan_refuses_without_supported_assessment(tmp_path):
+    """Both facets are published and exactly selectable at one version pin.
+
+    The real Sandbox assessment still lacks trusted production facts, so the
+    joint plan must refuse before any effect or permit is spent.
+    """
+    from _sandbox_adapters_helpers import build_compat_runtime
+    runtime = build_compat_runtime(tmp_path / "data")
     host = runtime.plugin_host
     try:
         host.activate(SandboxAdaptersServerPlugin())
@@ -354,6 +349,6 @@ def test_real_two_fragment_joint_plan_refuses_pending_trusted_observation(tmp_pa
             journal=OperationJournal(tmp_path / "journal.sqlite"))
         result = service.plan(TARGET, (SANDBOX_FRAGMENT, PERMISSIONS_FRAGMENT), "rev-1")
         assert isinstance(result, Refused)
-        assert result.code is ErrorCode.ADAPTER_MISSING
+        assert result.code is ErrorCode.CAPABILITY_UNSUPPORTED
     finally:
         runtime.stop()

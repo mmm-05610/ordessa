@@ -668,11 +668,12 @@ def test_harness_acp_owner_admits_this_lanes_port_and_refuses_pre_effect(tmp_pat
     answer = submit.handler({"connectionId": opened["connectionId"], "submission": {
         "submissionId": "sub-1", "nativeSessionId": NATIVE_SESSION, "text": "hello",
         "attachments": [], "configurationDigest": CONFIG_DIGEST, "commandId": "read"}})
-    # ... and refuses before anything is relayed: the owner's own binding
-    # carries no observed native session or generation (registered G5).
+    # ... and refuses before anything is relayed: the ACP owner now requires
+    # an observed native-session binding before it calls the policy port.
+    # The controlled registry above has no such observation (registered G5).
     assert answer["kind"] == "refused"
-    assert answer["code"] == "POLICY_SCOPE_UNVERIFIED"
-    assert "no observed native session" in answer["reason"]
+    assert answer["code"] == "CAPABILITY_UNSUPPORTED"
+    assert "native session or admission authority is unavailable" in answer["reason"]
     assert channel_transport.sent == []
     plugin._dispose()
     assert submit.availability()[0] is False
