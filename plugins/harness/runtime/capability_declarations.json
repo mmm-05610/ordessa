@@ -47,13 +47,6 @@
       "start",
       "stream"
     ],
-    "qwen": [
-      "finish",
-      "native_continuation",
-      "observe",
-      "start",
-      "stream"
-    ],
     "kilo": [
       "finish",
       "native_continuation",

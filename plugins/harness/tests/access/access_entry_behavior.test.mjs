@@ -247,7 +247,7 @@ test("E6: discovery answers without a connection, and a brand that is not regist
     const listed = await sidecar.request({ op: "harnesses" })
     assert.equal(listed.ok, true, JSON.stringify(listed))
     const ids = listed.result.harnesses
-    for (const expected of ["claude", "claude-code", "codex", "dsh", "hermes", "kilo", "omp", "pi", "qwen"]) {
+    for (const expected of ["claude", "claude-code", "codex", "dsh", "hermes", "kilo", "omp", "pi"]) {
       assert(ids.includes(expected), `${expected} must be discoverable`)
     }
     assert.equal(ids.includes("opencode"), false,

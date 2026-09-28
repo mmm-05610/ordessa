@@ -294,51 +294,6 @@ target_provider = "dsh-continuation"
 
 [[harness]]
 schema_version = 1
-driver = "qwen"
-# Work Order 43。静态候选（产品层声明上限），**不是**观测结论：qwen-code 0.23.4 的
-# 官方 ACP 面（`qwen --acp`）在第一手探测里播发了完整会话面，但 observed 只能由
-# 本仓的假端点全链门回填。`attach`/`permissions` 刻意不声明（无运行时证据）。
-capabilities = ["start", "observe", "finish", "stream", "native_continuation"]
-[harness.identity]
-harness_type = "qwen"
-display_name = "Qwen Code"
-description = "Qwen Code CLI (Gemini CLI fork), official ACP mode"
-version = "0.23.4"
-[harness.executable]
-identity = "qwen"
-resolver_kind = "PATH_OR_BUNDLE"
-bundle_members = ["qwen"]
-version_probe = ["--version"]
-[harness.profile]
-native_home = ".qwen"
-guest_home = "/runtime/home"
-config_format = "json"
-payload_schema = "qwen-profile-v1"
-codec = "qwen"
-overlay_policy = "execution-local"
-slots = ["provider", "instruction", "mcp", "skill"]
-# Order 58 stage A (first-hand): `.qwen/skills`, `mcpServers` in settings.json
-# (307 refs) - qwen carries an official OAuth login and its own settings file.
-skill_target = "/runtime/home/.qwen/skills/{skill_id}"
-mcp_target = "/runtime/home/.qwen/settings.json"
-mcp_key = "mcpServers"
-[[harness.launch_modes]]
-name = "acp"
-argv = ["qwen", "--acp"]
-io = "stdio"
-[harness.runtime]
-io = "stdio"
-network = "required"
-terminal = "stdio"
-[harness.continuation]
-# 探测与官方文档：ACP session/load + session/list + session/resume 原生可续接；
-# 门跑完后按实测方法回填（同 dsh 的规矩）。
-kind = "native_session"
-contract_id = "agent-box.qwen-continuation@1"
-target_provider = "qwen-continuation"
-
-[[harness]]
-schema_version = 1
 driver = "kilo"
 # Work Order 43 后续。静态候选（产品层声明上限），**不是**观测结论：kilo 7.7.2
 # （OpenCode fork）的官方 ACP 面（`kilo acp`）在第一手探测里播发了完整会话面
