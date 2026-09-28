@@ -21,14 +21,22 @@
 
 ## P-B — model-provider 真实应用链
 
-- [ ] PB-1 R0 基线重建：合并基线全量复跑（旧口径 137 py + 10 desktop + 21 chat vitest + contracts tsc）；回填消费 SHA（foundation/chat-api 经 main）；安装命令冻结（含各子包 `-e`）；核实 S-11（wire invoke 现状）
-- [ ] PB-2 C2 注册落地：adapters `types.py` ↔ harness-api `contracts.py` 类型对齐；`registration_manifest()` → `CONFIGURATION_POINT` 贡献；真实 registry 重叠拒绝复验（contributions.py:187-190）
-- [ ] PB-3 C4 绑定与 submit permit：`HarnessConfigPort.apply/read_back` 绑 `ConfigurationApplicationService`（configuration_service.py:150）；一次性 permit 全流程；无 permit 裸 apply 必红；admission 未翻转前生产=诚实 refused/unknown（S-06）
-- [ ] PB-4 wire error families：13 码经 `wire.error-families` 贡献点自发布（server_plugin_api/contributions.py:74）；异族冲突反例；UNAVAILABLE 不冒充
-- [ ] PB-5 三品牌 E2 受控矩阵：pi/codex/claude-code × MP-03/06/07/10/11 逐格证据（受控 fake endpoint；MP-06 真进程 restart-resume）；缺格=该品牌不 ready，整体 PARTIAL
-- [ ] PB-6 Profile glue：消费 P-A 的 r2 SHA；`EffectiveChoiceResolver`/视图端口接真实 ProfileContributions；A 未交付前 fixture 先行 + 登记依赖（不碰 plugins/profile）
-- [ ] PB-7 退役准备与金样（S-08①②，只出清单与顺序不执行删除）：adapters common.py golden 渲染 conformance 钉住（承接 S-08②）；server-compat `model_configs` writer（core_wire.py:238-276）逐行退役清单+消费者核查+"先退再装"顺序确认写回 S-08①；执行归集成波次
-- [ ] PB-8 报告与交付：`reports/P-B-report.md` + 011-z3 report 增补；终提交 SHA；PARTIAL 项逐条
+- [x] PB-1 R0 基线重建：合并基线全量复跑（旧口径 137 py + 10 desktop + 21 chat vitest + contracts tsc）；回填消费 SHA（foundation/chat-api 经 main）；安装命令冻结（含各子包 `-e`）；核实 S-11（wire invoke 现状）
+  - R0=137/10/21/tsc 0（合并后动工前实测）；chat 旧 alias 问题在新基线消失（验证）；消费 SHA=内容引入提交 ancestry 实证（910457d04e/4bba5f1c71/ab9cb22bff/edca4049b1）；S-10 安装序列冻结（含顺序坑第一手复现）；S-11 核实=交付在 codex/013-b-server-runtime@742389c2e6（不在 main/本树），口径「接口与实现已交付、生产绑定在 INT-01」，已回填 S-02/S-11 注记
+- [x] PB-2 C2 注册落地：adapters `types.py` ↔ harness-api `contracts.py` 类型对齐；`registration_manifest()` → `CONFIGURATION_POINT` 贡献；真实 registry 重叠拒绝复验（contributions.py:187-190）
+  - bridge.py 薄桥（方向 adapters→harness-api 单向+边界测试钉住）+ 插件声明面（ContributionBatch, open_points, owner 宿主注入）；真实 HarnessContributionRegistry stage/commit 重叠拒/区间拒/不相交受，host 级 MP-11 见 PB-5；不动 products 组合（d1cc14ee60）
+- [x] PB-3 C4 绑定与 submit permit：`HarnessConfigPort.apply/read_back` 绑 `ConfigurationApplicationService`（configuration_service.py:150）；一次性 permit 全流程；无 permit 裸 apply 必红；admission 未翻转前生产=诚实 refused/unknown（S-06）
+  - harness_binding.py 全链 plan→apply(operation_key,permit)→verify→read-back；受控级：permit 全流程+重放回耐久结果/过期拒/跨会话隔离/unknown 阻塞；生产级：无 permit source 零效果诚实拒（S-06/P-E 前不报绿）——受控级/生产级分层陈述在 report §3（ca85ef584d）
+- [x] PB-4 wire error families：13 码经 `wire.error-families` 贡献点自发布（server_plugin_api/contributions.py:74）；异族冲突反例；UNAVAILABLE 不冒充
+  - REQ-Z3-7 清单逐字 13 码 plugin.py 自发布；激活后 family_for 全对；反例=异族冲突拒批且首 owner 存活/静态表矛盾拒/未知码仍 UNAVAILABLE；011 REQ-Z3-7 就此 CLOSED（ca85ef584d）
+- [x] PB-5 三品牌 E2 受控矩阵：pi/codex/claude-code × MP-03/06/07/10/11 逐格证据（受控 fake endpoint；MP-06 真进程 restart-resume）；缺格=该品牌不 ready，整体 PARTIAL
+  - 25/25 格全绿（test_e2_brand_matrix.py）：真实 build_runtime host+本包声明面+C4+FakeEndpoint 实收请求=下游实际路由证据；session/new 冒充必不确认；双会话交错；MP-10 哨兵零命中；host 级 MP-11。真实 CLI 装载格三品牌 unknown（如实）→整体口径=受控级全绿、生产装配格 PARTIAL（b37e846fdb）
+- [x] PB-6 Profile glue：消费 P-A 的 r2 SHA；`EffectiveChoiceResolver`/视图端口接真实 ProfileContributions；A 未交付前 fixture 先行 + 登记依赖（不碰 plugins/profile）
+  - P-A 已交付（r2 implementationSha e6f720d347）→按 012 合并式消费：merge codex/014-a-profile（fcf588b3d4）；profile_glue.py 经真实 FacetRegistry.register(v2=True, owner 注入) 注册（REQ-Z3-3 CLOSED）；8 门含第二 owner FACET_ID_CONFLICT 拒；plugins/profile 零改动（79f4bdf391）
+- [x] PB-7 退役准备与金样（S-08①②，只出清单与顺序不执行删除）：adapters common.py golden 渲染 conformance 钉住（承接 S-08②）；server-compat `model_configs` writer（core_wire.py:238-276）逐行退役清单+消费者核查+"先退再装"顺序确认写回 S-08①；执行归集成波次
+  - retirement-request.md：W1-W15 逐行（行号=现行树实测，派单旧行号漂移已声明）+消费者核查（装配注入/边界断言/回归四件/W5 跨域引用）+顺序确认；金样一致性 +5 门扩到注册路径（DIALECTS≡harness 家族表、native target≡harness pins）；S-08 已回填；不动 server-compat/harness 源文件（4db11759c6）
+- [x] PB-8 报告与交付：`reports/P-B-report.md` + 011-z3 report 增补；终提交 SHA；PARTIAL 项逐条
+  - report §9 PARTIAL 逐条（生产 admission S-06/P-E/E3 真实模型/产品装配/IR 窗口）；197 passed 终账；交付=本分支 tip SHA（本提交）
 
 ## P-C — chat 真实接缝
 
