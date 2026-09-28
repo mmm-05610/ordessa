@@ -1,9 +1,11 @@
-# 父会话 overnight-3 · 服务绑定线（LSP 单包）
+# 父会话 overnight-3 · 服务绑定+存量补完线（LSP → CMP-mcp → CMP-profile → CMP-chat）
 
 你是夜批编排者。逐个完成儿子包，串行：
 
-1. worktrees/overnight-3/son-lsp → /home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/LSP.md
-
+1. /home/maoqh/projects/ordessa/worktrees/overnight-3/son-lsp → /home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/LSP.md
+2. /home/maoqh/projects/ordessa/worktrees/overnight-3/son-cmp-mcp → /home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/CMP-mcp.md
+3. /home/maoqh/projects/ordessa/worktrees/overnight-3/son-cmp-profile → /home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/CMP-profile.md
+4. /home/maoqh/projects/ordessa/worktrees/overnight-3/son-cmp-chat → /home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/CMP-chat.md
 ## 执行方式（每个儿子包）
 注：dispatch/方案文档一律用主仓绝对路径传给 qoder（如
 /home/maoqh/projects/ordessa/specs/016-overnight-batch/dispatch/xxx.md），
@@ -23,4 +25,5 @@
 ## 汇报
 全部完成后写 specs/016-overnight-batch/reports/overnight-3-summary.md：
 每包一段（结果/测试计数/qoder 与审阅记录/卡点/复用与自建清单），如实，不粉饰。
-先读 specs/016-overnight-batch/spec.md 的共同红线（特别是第 7 条复用优先）。
+先读 specs/016-overnight-batch/spec.md 的共同红线（特别是第 7 条复用优先与
+CMP 甄别三档口径）。

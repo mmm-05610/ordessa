@@ -3,3 +3,4 @@
 - 写入面：仅 `plugins/harness/**` 与 reports/。
 - 参考：tasks.md PE2 节、C4 native receipt 口径（P-A 51c7905108）、access-entry/provenance 既有材料。
 - 特别：受控替身驱动，零真实模型；品牌缺席登记 unsupported 不硬凑。
+- 并入：PE2-7（c0 账本 24 项甄别；core 归属项注明转 core 不代做）。

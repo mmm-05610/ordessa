@@ -4,3 +4,4 @@
 - 参考：tasks.md MPX 节、plan.md F12（请求级 vs 运行级边界）、既有 adapter/conformance 门。
 - 红线：复用优先——只扩既有声明面与 adapter，不立新包/新 facet；与 runtime-preferences
   （015-A，在跑）划界不双收，那边目录绝不触碰。
+- 并入：MPX-5（z3 账本 5 项甄别补完，见 tasks.md）。

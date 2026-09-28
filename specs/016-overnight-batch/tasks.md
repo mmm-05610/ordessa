@@ -1,4 +1,4 @@
-# 016 · tasks（夜批六包；SR 已裁撤，MPX/EXT 扩容补入）
+# 016 · tasks（夜批十一包；SR 裁撤、MPX/EXT 补入、CMP 存量甄别补完）
 
 勾选=已完成且证据在 report。不因完不成改判三态；卡点如实写。
 
@@ -68,5 +68,26 @@
       ——015-B 的 AR-4 等这个结果）。
 - [ ] PX-7 R0 补账：36 项未勾账本逐项补勾或注明卡点，报告落
       reports/PX-report.md。
-- [ ] PX-8 内容资源八家覆盖盘点（轻任务，只出报告不改代码）：skills、subagents
-      两域当前品牌覆盖三态表；缺口列后续包建议，不实施。
+（PX-8 已撤：skills/subagents 覆盖盘点升级为 CMP-skills/CMP-subagents 全量甄别包。）
+
+## CMP 存量甄别补完（五包，模式统一）
+
+每包首步 = R0 甄别表：账本逐项三档（已实现已验[附证据指针]/已实现未验/未做），
+再对第二档受控补验、第三档今晚补做或注明卡点（E3、core 依赖、被 012-016 架构
+取代）。甄别表先落 report，再动代码；被取代项勾选时必须写"取代于何处"。
+
+- [ ] CMP-SK-0..n（skills）：q1 23 项甄别补完；八家覆盖缺口在甄别表内列出，
+      实施仅限 E2 可控范围；写入面仅 plugins/assets/skills。
+- [ ] CMP-SA-0..n（subagents）：q3 21 项同模式；写入面仅 plugins/assets/subagents。
+- [ ] CMP-MC-0..n（mcp）：q4 5 项甄别补完；写入面仅 plugins/assets/mcp。
+- [ ] CMP-PF-0..n（profile）：z1 17 项；014-A r2/PA-7 已验项直接归档；写入面仅
+      plugins/profile。
+- [ ] CMP-CH-0..n（chat）：z2 26 项 + workbench-sidebar 设计账 10 项；写入面仅
+      plugins/chat/** 与 plugins/agent/**（不含 conversation 摘除——那归 consolidation）。
+
+## 并入现有包的甄别任务
+
+- [ ] MPX-5：z3 model-provider 账本 5 项甄别补完（与 MPX 同支同树）。
+- [ ] PE1-7：q5 safety 账本 5 项甄别（permissions 侧补做；sandbox 侧若需改
+      plugins/assets/sandbox 登记报回，不越目录写）。
+- [ ] PE2-7：c0 foundation 账本 24 项甄别（harness 侧补做；core 归属项注明转 core）。
