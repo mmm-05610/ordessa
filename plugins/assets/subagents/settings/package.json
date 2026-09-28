@@ -1,0 +1,13 @@
+{
+  "name": "@ordessa/plugin-subagent-settings",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "ordessa": {
+    "id": "ordessa.subagent-settings"
+  },
+  "scripts": {
+    "test": "vitest run --maxWorkers=1",
+    "typecheck": "tsc --noEmit"
+  }
+}
