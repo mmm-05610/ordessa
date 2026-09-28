@@ -11,7 +11,7 @@
 | S-02 | `extensions.lock.json` 与根 lock | core **INT-02 定稿** | extensions.lock 是 `tooling/build-all.mjs` 的**产物**（每次构建重写），非源文件；`@assistant-ui/react` 摘除与 P-B 新增 `server-bridge` workspace 一并在 INT-02 干净构建重算 |
 | S-03 | Server 默认插件集增 profile 入口 | **装配动作归 core**；model-provider 装配须在 S-08① 退役之后 | 同 S-01 清单；顺序约束已双方确认 |
 | S-04 | `tooling/vitest-extensions.mjs` CONTRACT_SOURCES +2 行 | core 补；**路径已给** | `plugins/chat/api/src/contract.ts`、`plugins/profile/api/src/contract.ts`（均实测存在） |
-| S-05 | 附件 prepare 生产 owner + `BackendAdmissionState` 供给 | **拆分裁定**：prepare/verify/release 语义、过期、跨连接规则=**插件业务**（plugin-layout §3）；core 只出「受信字节通道 + 摘要完整性校验」机制；Go 桥收非图片 resource link 归 harness 线。**DTO 冻结归 plugin 线**（P-C 窄口任务：`AcpAttachmentPreparePort` DTO 补 `preparedId`，SHA 交 core 后 core 再接）；`BackendAdmissionState` 生产供给归 plugin 线 harness 部分（P-D，第二批） | 互等解除：我们先冻 DTO |
+| S-05 | 附件 prepare 生产 owner + `BackendAdmissionState` 供给 | **拆分裁定**：prepare/verify/release 语义、过期、跨连接规则=**插件业务**（plugin-layout §3）；core 只出「受信字节通道 + 摘要完整性校验」机制；Go 桥收非图片 resource link 归 harness 线。**DTO 已冻结（2026-09-28 核实修正）**：connectors 侧 `AcpPreparedAttachment` 本就含 `preparedId`（`plugins/connectors/acp/src/attachments.ts:10-12`，注释明言 Server ACP DTO 未携带）——对接基准即此形状；**缺的字段在 Server ACP DTO，归 core 补齐对齐**；`BackendAdmissionState` 生产供给归 plugin 线 harness 部分（P-E，第二批：Q5 authority + harness native_evidence） | 互等解除：形状基准已给（attachments.ts:10-12），core 按 Server DTO 对齐 |
 | S-06 | admission `ready=False` 翻转链 | **机制归 core（在做）**：fail-closed 门 + 从产品组合取 authority + 注入观测事实；**不编码"什么算被许可"**（业务归 Q5）。依赖 plugin 侧两件：Q5 authority、harness `native_evidence` —— **均归 plugin 线，已排 P-D（014 第二批，A/B/C 收口后）**；core 机制侧可先行，互不阻塞 | 顺序答复已给 |
 | S-07 | Claude Code 命令目录/附件承载 | **三次修正（2026-09-28，源码实证）**：Claude 有 ACP 桥——钉版官方 `@agentclientprotocol/claude-agent-acp@0.81.2`（`plugins/harness/packaging/claude/`），不走 Go 桥。**附件＝旧负证据已推翻，修复立项（用户裁定：必须解决）**：0.81.2 源码 initialize 明确声明 `promptCapabilities:{image:true, embeddedContext:true}`（`acp-agent.js:1108`），双向图片转换在案（:7364 用户图片→Claude base64；:7682 输出图片→ACP chunk），`resource_link` 转 URI 链接文本下发（:7341，非丢弃）；旧记录"真实握手 promptCapabilities 为空"系 0.77 时代遗留（随 974e643a10 拆库带入，升 0.81.2 后未重探），FAMILY_MATRIX 只对 toml 不对 adapter 故未抓到 → **立 P-D 包**：重探针→翻绿 attach→接通 claude 通路（语义如实：图片=真实附件块，非图片文件=URI 链接，audio 未声明）。**命令目录＝未探针**：`parseNativeCommands` 品牌无关，adapter 是否播发 `available_commands_update` 无正反证据 → P-C PC-10 探针定夺 | 附件=修复（P-D）；命令=探针（PC-10） |
 | S-08 | compat/旧 writer 退役三件事 | **归 plugin 线（core 确认不碰插件文件，只配合 products 装配）**，**集成波次串行执行**（不在 A/B/C 并行段做，防 A/B 在 server-compat/core_wire.py 互撞与中途破坏 harness）：① server-compat `model_configs` writer（`core_wire.py:238-276`）退役→再装 model-provider；② harness 品牌渲染（`native_materialization.py:114-145`）退役（B 的 adapters 金样承接）；③ profile 旧 writer（harness `generic/profile_*.py`、`harness-profile-store` entrypoint、`{claude,hermes,opencode}/profile*.py`、server-compat `server_profiles`）退役 + `agent-box.profile@1` **双声明仲裁**。A 出 ③ 的裁定与清单（PA-7），B 出 ①② 的清单与装配顺序（PB-7）；执行时机=新 owner 就位 + core 装配排期后 | 已认领 |
@@ -27,8 +27,8 @@
 
 ## plugin 侧待办回执（对 core 三问的答复，2026-09-28）
 
-1. **S-06 顺序**：Q5 authority 与 harness `native_evidence` 均在 plugin 线，已排 **P-D（014 第二批，A/B/C 收口后开）**，同包并行两件；core 机制侧先行不阻塞。
-2. **S-05 DTO**：plugin 线先冻结——P-C 增窄口任务 PC-9（`AcpAttachmentPreparePort` DTO 补 `preparedId`，仅 DTO+测试，不动实现），交付 SHA 后 core 再接 Server DTO。
+1. **S-06 顺序**：Q5 authority 与 harness `native_evidence` 均在 plugin 线，已排 **P-E（014 第二批，A/B/C/D 收口后开）**，同包并行两件；core 机制侧先行不阻塞。
+2. **S-05 DTO（答复修正）**：connectors 侧形状**已就绪**（`AcpPreparedAttachment` 已含 `preparedId`，attachments.ts:10-12），P-C 的 PC-9 改为核实+回写基准；**Server ACP DTO 补字段归 core**，按该基准对齐即可，无需等我们。
 3. **S-01 清单**：见上表 S-01 行（`agent-conversation` 退役以 P-C 覆盖核对确认为条件）。
 
 ## 转交记录
