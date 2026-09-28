@@ -1,6 +1,6 @@
 from __future__ import annotations
 import re
-from pacthold.extensions.runtime_composition import HarnessCommandSpec, declare_source
+from pacthold_runtime_compat.runtime_composition import HarnessCommandSpec, declare_source
 class GenericCliAdapter:
     def __init__(self,key): self.key=key
     def validate_native_payload(self,payload):

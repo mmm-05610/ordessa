@@ -1990,28 +1990,56 @@ func TestE2EACPPlanUpdateMappedFromTurnPlanUpdated(t *testing.T) {
 		gotPromptResp = true
 	}
 
-	if len(plans) < 2 {
-		t.Fatalf("expected >=2 plan updates, got %d", len(plans))
+	if err := validateStructuredPlanSnapshots(plans); err != nil {
+		t.Fatal(err)
 	}
+}
+
+func validateStructuredPlanSnapshots(plans [][]planEntry) error {
+	if len(plans) == 0 {
+		return fmt.Errorf("expected at least one plan update")
+	}
+	// The first pending snapshot may already have been replaced by the final
+	// snapshot in turnStream. Validate it when it actually reached ACP.
 	first := plans[0]
+	if len(first) == 2 && (first[0].Content != "capture requirements" ||
+		first[0].Priority != "medium" || first[0].Status != "pending") {
+		return fmt.Errorf("first plan entry mismatch: %+v", first[0])
+	}
 	last := plans[len(plans)-1]
-	if len(first) != 2 {
-		t.Fatalf("first plan should contain 2 entries, got %+v", first)
-	}
-	if first[0].Content != "capture requirements" || first[0].Priority != "medium" || first[0].Status != "pending" {
-		t.Fatalf("first plan entry mismatch: %+v", first[0])
-	}
 	if len(last) != 3 {
-		t.Fatalf("last plan should fully replace entries with 3 items, got %+v", last)
+		return fmt.Errorf("last plan should fully replace entries with 3 items, got %+v", last)
 	}
-	if last[0].Status != "completed" {
-		t.Fatalf("expected first last-plan entry completed, got %+v", last[0])
+	if last[0].Content != "capture requirements" || last[0].Status != "completed" ||
+		last[1].Content != "implement mapping" || last[1].Status != "in_progress" ||
+		last[2].Content != "run go test ./..." || last[2].Status != "pending" {
+		return fmt.Errorf("last plan entries mismatch: %+v", last)
 	}
-	if last[1].Status != "in_progress" {
-		t.Fatalf("expected second last-plan entry in_progress, got %+v", last[1])
+	for _, entry := range last {
+		if entry.Priority != "medium" {
+			return fmt.Errorf("last plan priority mismatch: %+v", entry)
+		}
 	}
-	if last[2].Content != "run go test ./..." || last[2].Status != "pending" {
-		t.Fatalf("expected final plan entry to be pending test step, got %+v", last[2])
+	return nil
+}
+
+func TestStructuredPlanSnapshotsRequireFinalState(t *testing.T) {
+	initial := []planEntry{
+		{Content: "capture requirements", Priority: "medium", Status: "pending"},
+		{Content: "implement mapping", Priority: "medium", Status: "pending"},
+	}
+	final := []planEntry{
+		{Content: "capture requirements", Priority: "medium", Status: "completed"},
+		{Content: "implement mapping", Priority: "medium", Status: "in_progress"},
+		{Content: "run go test ./...", Priority: "medium", Status: "pending"},
+	}
+	if err := validateStructuredPlanSnapshots([][]planEntry{initial}); err == nil {
+		t.Fatal("an initial-only plan must not satisfy final snapshot validation")
+	}
+	for _, observed := range [][][]planEntry{{final}, {initial, final}} {
+		if err := validateStructuredPlanSnapshots(observed); err != nil {
+			t.Fatalf("complete final plan rejected: %v", err)
+		}
 	}
 }
 

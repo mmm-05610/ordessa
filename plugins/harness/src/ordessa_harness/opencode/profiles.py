@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 from pacthold.extensions import ResourceSelection, SelectorField, SelectorCompatibility
-from pacthold.resource_contracts import AgentBoxProfileV1
+from pacthold_runtime_compat.resource_contracts import AgentBoxProfileV1
 from pacthold.work_core import ProviderDescriptor, Ref, RefType
 from ordessa_harness.generic.profile_store import ProfileStore, PROVIDER_ID
 @dataclass(frozen=True)

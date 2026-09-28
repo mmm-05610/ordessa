@@ -5,12 +5,12 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
-from pacthold.resource_contracts import AgentBoxProfileV1, PromptFragmentV1, WorkspaceV1, CredentialRefV1
+from pacthold_runtime_compat.resource_contracts import AgentBoxProfileV1, PromptFragmentV1, WorkspaceV1, CredentialRefV1
 from pacthold.work_core import ExecutionProjection, ExecutionStartReceipt, ExecutionStartRequest, Freshness, Outcome, Phase, ProviderDescriptor, Ref, RefType
 from ..contracts import CodexContinuationV1
 from ..launch import CodexLaunchAdapter
 from ..composition import command_from_plan, compose, composition_from_resolved_inputs
-from pacthold.extensions.runtime_composition import RuntimeBinding, TerminalRunHandle, RuntimeHostV1, SandboxV1, TerminalSessionV1, RuntimeCompositionCoordinator
+from pacthold_runtime_compat.runtime_composition import RuntimeBinding, TerminalRunHandle, RuntimeHostV1, SandboxV1, TerminalSessionV1, RuntimeCompositionCoordinator
 
 def _now(): return datetime.now(timezone.utc)
 
