@@ -1,0 +1,107 @@
+T021-Q5 RED-FIRST — real host ACP admission fence driven to a pre-effect refusal
+(plugins/permissions/backend, lane: permissions backend + tests only)
+branch codex/011-q5-safety @ HEAD 2998c03505279dc58c042b139441fc7887013f92
+interpreter .venv/bin/python (Python 3.12.14)
+date 2026-09-28
+
+== STEP-1 DETERMINATION: the seam is HALF drivable from a plugin — (a) for the
+tool-execution fence, (b) for the submission fence ==
+
+Decision basis (read of apps/server/src/ordessa_server/acp_admission.py in full,
+then measured against the real classes with an in-process fake channel, before
+any test or module was written):
+
+(a) `AcpPermitAuthority.authorize_permission(connection, request, decision) -> bool`
+    (acp_admission.py:39-42,204) is answered with a plain bool and the fence
+    requires `is True`. No host type is involved, so a plugin CAN be that
+    verifier with only `server_plugin_api` imported. -> implemented in src.
+(b) `authorize_submission` CANNOT be satisfied from a plugin:
+    * acp_admission.py:134 rejects the permit unless
+      `isinstance(bound, BoundAdmission)`, and `BoundAdmission` is declared in
+      the host module itself (acp_admission.py:27-36);
+    * it is NOT published by the public contract:
+      `packages/server-plugin-api/src/server_plugin_api/acp_admission.py` declares
+      only AcpChannelBinding / AcpAttachmentReference / AcpSubmissionRequest /
+      AcpPermissionDecision / AcpAdmissionResult / AcpAdmissionPort, and
+      `__init__.py:26-28,116-117` re-exports just ACP_ADMISSION_PORT(+VERSION)
+      and those DTOs. Measured: hasattr(server_plugin_api,"BoundAdmission")=False,
+      "AcpPermitAuthority"=False, "AcpAdmissionRefused"=False.
+    * importing it is forbidden in this package, not merely discouraged:
+      tests/test_backend_dependency_direction.py ALLOWED_ROOTS =
+      {__future__, ordessa_permissions_api, server_plugin_api} and its
+      FORBIDDEN_ROOTS scan rejects even the literal text in src/.
+    * the permit's `input_digest` must equal the host's private canonicalisation
+      (`_digest`/`prompt_input`, acp_admission.py:63-90, computed at :120); no
+      public recipe exists.
+    * only the host's own `AcpAdmissionRefused` (acp_admission.py:21) is mapped
+      to a typed refusal by the public port adapter (:383-384); a plugin-raised
+      exception collapses to `unknown` (:385-387), losing the stable code FR-09
+      requires. Measured below (O5/O6).
+    -> src refuses that half and takes the permit record as an injected binder.
+
+MEASURED OUTCOMES (probe of the real classes; reproduced by the shipped tests)
+O1 look-alike plugin permit record, every field correct
+   -> AcpAdmissionRefused code=AUTHORIZATION_REFUSED
+      reason="submission permit binding is invalid"; the following
+      session/prompt frame is refused; transport recorded 0 lines.
+O2 host-owned BoundAdmission from the same authority -> {"kind":"accepted"} and
+   the prompt frame is admitted (the recorder shows exactly one line).
+O3 AcpAdmissionGate() with no authority (= bootstrap/runtime.py:607)
+   -> authorize_submission and authorize_permission both raise
+      CAPABILITY_UNSUPPORTED; the real AcpAdmissionPortAdapter answers
+      refused/CAPABILITY_UNSUPPORTED and `ready` is False (:311-319 hardcodes
+      it); the prompt frame is refused ("lacks matching one-use admission");
+      zero recorded effects. The absence is fail-closed, never permissive.
+O4 authority raising AcpAdmissionRefused("POLICY_DENY", ...) through the real
+   adapter -> AcpAdmissionResult(kind="refused", code="POLICY_DENY") — the code
+   survives ONLY because the type is the host's.
+O5 authority raising a plugin-owned ValueError through the real adapter
+   -> AcpAdmissionResult(kind="unknown", code=None, reason="ACP admission
+      outcome needs reconciliation").
+O6 relay shape (transport/http/app.py:297-306): admit_client_frame runs BEFORE
+   transport.send_line; any refusal (typed or generic) means no line reaches
+   the Agent, which makes `transport.sent` a direct effect measurement.
+
+== WHAT THE RED RUN MEASURES ==
+The 17 new L2 tests were written first, against the host's real gate/adapter and
+this lane's real authorizer + facts store, before `host_authority.py` existed.
+The red is the absent module: the test file cannot import
+`ordessa_permissions_backend.host_authority`, and because the package `__init__`
+re-exports it, the whole backend suite fails to collect.
+
+command: .venv/bin/python -m pytest plugins/permissions/backend/tests/test_host_pre_effect_l2.py -q
+measured exit code: 2 (true $? of the pytest process, no pipe)
+
+
+==================================== ERRORS ====================================
+______________ ERROR collecting tests/test_host_pre_effect_l2.py _______________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/tests/test_host_pre_effect_l2.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/backend/tests/test_host_pre_effect_l2.py:61: in <module>
+    from ordessa_permissions_backend.admission import PermissionsAcpAdmission
+plugins/permissions/backend/src/ordessa_permissions_backend/__init__.py:57: in <module>
+    from .host_authority import (PERMIT_SEAM_UNPUBLISHED, PermissionsHostAcpAuthority,
+E   ModuleNotFoundError: No module named 'ordessa_permissions_backend.host_authority'
+=========================== short test summary info ============================
+ERROR plugins/permissions/backend/tests/test_host_pre_effect_l2.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.16s
+
+command: .venv/bin/python -m pytest plugins/permissions/backend -q      (same tree, module absent)
+measured exit code: 2
+ERROR plugins/permissions/backend/tests/test_native_correlation.py
+ERROR plugins/permissions/backend/tests/test_policy_describe.py
+ERROR plugins/permissions/backend/tests/test_policy_repository.py
+ERROR plugins/permissions/backend/tests/test_wire_plugin_registration.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 15 errors during collection !!!!!!!!!!!!!!!!!!!
+15 errors in 0.29s
+
+Baseline immediately before this task: 158 passed, exit 0 (recorded in
+t020-green-joint-facet-version-binding.txt). No pre-existing test was edited,
+skipped or weakened; the only package changes are the new test file, the new
+src module (see the green file), `__init__.py` re-exports, the README seam note
+and two test-side dev-extra declarations.

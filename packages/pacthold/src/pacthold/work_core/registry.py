@@ -5,11 +5,10 @@ from dataclasses import dataclass, field, is_dataclass
 import re
 from enum import Enum
 from types import MappingProxyType
-from typing import Any, Mapping, Protocol
+from typing import Any, Iterable, Mapping, Protocol
 
 from .errors import CapabilityUnsupported, ProviderUnavailable
 from .models import Ref
-from ..resource_contracts import CONTRACT_TYPES
 
 
 _COMPONENT_ID = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
@@ -133,17 +132,27 @@ class ExecutionProvider(Protocol):
 
 
 class ExtensionRegistry:
-    def __init__(self) -> None:
+    """Process-local provider registry.
+
+    A bare kernel registry starts with no contract types.  An assembling
+    product (e.g. ``pacthold_runtime_compat``) injects its own seed catalog
+    through ``seed_contracts``; the kernel itself never imports a contract
+    distribution (specs/010 T009, reports/A.md reverse dependency ①).
+    """
+
+    def __init__(self, *, seed_contracts: Iterable[type] = ()) -> None:
         self._providers: dict[str, ExecutionProvider] = {}
         self._resource_providers: dict[str, ResourceProvider] = {}
         self._resource_descriptors: dict[str, ProviderDescriptor] = {}
-        # Built-ins use the same runtime registry as third-party Contracts.
-        # CONTRACT_TYPES remains an immutable compatibility catalog, not the
-        # dispatch-time source of truth.  Shared runtime contracts
+        # Built-in seed contracts are validated through the same runtime
+        # registry path as third-party Contracts.  Shared runtime contracts
         # (runtime-host/sandbox/terminal-session) are Root-owned and are
-        # registered exactly once by the Root Extension bootstrap; this
-        # module never imports the extension layer.
-        self._contract_types: dict[str, type] = dict(CONTRACT_TYPES)
+        # registered exactly once by the assembling bootstrap; this module
+        # never imports the extension layer.
+        self._contract_types: dict[str, type] = {}
+        for contract in seed_contracts:
+            contract_id, contract_type = self._validate_contract_type(contract)
+            self._contract_types[contract_id] = contract_type
         self._root_shared_contract_ids: frozenset[str] = frozenset()
 
     @staticmethod

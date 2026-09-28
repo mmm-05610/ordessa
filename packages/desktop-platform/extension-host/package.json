@@ -7,6 +7,10 @@
     ".": "./src/index.ts",
     "./main": "./src/main/index.ts"
   },
+  "scripts": {
+    "test": "vitest run --maxWorkers=1",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
   "dependencies": {
     "@lumino/coreutils": "2.2.3",
     "@ordessa/extension-api": "0.1.0",

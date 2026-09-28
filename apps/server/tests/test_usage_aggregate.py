@@ -8,7 +8,7 @@ that look like data.
 from __future__ import annotations
 
 from ordessa_server_compat.usage_aggregate import UsageAggregator
-from pacthold.storage.database import Database
+from pacthold_runtime_compat.storage.database import Database
 
 PROFILE_ID = "profile"
 SESSION_A = "ses-a"

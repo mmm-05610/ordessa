@@ -1,0 +1,173 @@
+# T011/T013 RED evidence — permissions Settings region + Chat mode entry
+# worktree: codex/011-q5-safety, package: plugins/permissions/frontend
+# date: 2026-09-27T22:33:51Z
+# command: npx vitest run  (package-local)
+# RED: src/settings-region.ts, src/mode-entry.ts and the contract mirrors did not exist yet;
+#      new tests fail on missing modules/exports, the previously green suite still runs.
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/frontend[39m
+
+ [31m❯[39m tests/contract-consistency.test.ts [2m([22m[2m11 tests[22m[2m | [22m[31m6 failed[39m[2m)[22m[32m 28[2mms[22m[39m
+     [32m✓[39m the TS stable-code list equals the parsed RefusalCode members of codes.py[32m 6[2mms[22m[39m
+     [32m✓[39m every stable code renders a sentence naming the target/action and the limiting layer[32m 2[2mms[22m[39m
+     [32m✓[39m an unknown code yields a bounded generic sentence and echoes no raw payload[32m 1[2mms[22m[39m
+     [32m✓[39m method ids equal the Python plugin registrations[32m 1[2mms[22m[39m
+     [32m✓[39m decide/query parameter names equal the Python required-param sets[32m 1[2mms[22m[39m
+[31m     [31m×[31m exposure levels equal the ExposureLevel members of ceilings.py, in order[39m[32m 7[2mms[22m[39m
+[31m     [31m×[31m the ceiling record field set equals _RECORD_FIELDS of ceilings.py[39m[32m 2[2mms[22m[39m
+[31m     [31m×[31m the intent record field set equals _RECORD_FIELDS of intents.py[39m[32m 1[2mms[22m[39m
+[31m     [31m×[31m scope order mirrors rules.py Scope, and rule actions mirror RuleAction[39m[32m 2[2mms[22m[39m
+[31m     [31m×[31m the trusted ceiling sources equal exactly the members of _TRUSTED_SOURCES in ceilings.py[39m[32m 2[2mms[22m[39m
+[31m     [31m×[31m ceiling entry actions are exactly the two restriction spellings of ceilings.py[39m[32m 1[2mms[22m[39m
+ [32m✓[39m tests/approval-view.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [31m❯[39m tests/mode-entry.test.tsx [2m([22m[2m0 test[22m[2m)[22m
+ [31m❯[39m tests/settings-view.test.tsx [2m([22m[2m0 test[22m[2m)[22m
+ [32m✓[39m tests/region-registry.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [31m❯[39m tests/settings-region.test.ts [2m([22m[2m0 test[22m[2m)[22m
+ [32m✓[39m tests/approval-card.test.tsx [2m([22m[2m15 tests[22m[2m)[22m[32m 201[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 3 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/mode-entry.test.tsx[2m [ tests/mode-entry.test.tsx ][22m
+[31m[1mError[22m: Failed to resolve import "../src/mode-entry" from "tests/mode-entry.test.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36m/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/frontend/tests/mode-entry.test.tsx[39m:15:7
+[33m  11 |  import { OwnedResources } from "@ordessa/extension-api";
+  12 |  import { createChatContributions } from "@extensions/ordessa.chat-api/contract.js";
+  13 |  import { ModeEntryKey, PermissionsModeEntry, createModeEntryContribution, resolveModeEntry } from "../src/mode-entry";
+     |                                                                                                     ^
+  14 |  var _jsxFileName = "/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/frontend/tests/mode-entr...
+  15 |  import { jsxDEV as _jsxDEV } from "react/jsx-dev-runtime";[39m
+[90m [2m❯[22m TransformPluginContext._formatLog ../../../node_modules/vite/dist/node/chunks/node.js:[2m31011:39[22m[39m
+[90m [2m❯[22m TransformPluginContext.error ../../../node_modules/vite/dist/node/chunks/node.js:[2m31008:14[22m[39m
+[90m [2m❯[22m normalizeUrl ../../../node_modules/vite/dist/node/chunks/node.js:[2m27957:18[22m[39m
+[90m [2m❯[22m ../../../node_modules/vite/dist/node/chunks/node.js:[2m28025:30[22m[39m
+[90m [2m❯[22m TransformPluginContext.transform ../../../node_modules/vite/dist/node/chunks/node.js:[2m27993:4[22m[39m
+[90m [2m❯[22m EnvironmentPluginContainer.transform ../../../node_modules/vite/dist/node/chunks/node.js:[2m30796:14[22m[39m
+[90m [2m❯[22m loadAndTransform ../../../node_modules/vite/dist/node/chunks/node.js:[2m20594:26[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/settings-region.test.ts[2m [ tests/settings-region.test.ts ][22m
+[31m[1mError[22m: Failed to resolve import "../src/settings-region" from "tests/settings-region.test.ts". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36m/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/frontend/tests/settings-region.test.ts[39m:12:7
+[33m  6  |  import { OwnedResources } from "@ordessa/extension-api";
+  7  |  import { createWorkbench } from "../../../../packages/workbench/src/model";
+  8  |  ...rmissionsRuleSources, resolvePermissionsRegionState } from "../src/settings-region";
+     |                                                                 ^
+  9  |  import { answer, approvalPayload, ceilingRecord, noProviderAnswer, providerErrorAnswer, readyAnswer, settledPayload }...
+  10 |  import { decodeApprovalPayload } from "../src/contract";[39m
+[90m [2m❯[22m TransformPluginContext._formatLog ../../../node_modules/vite/dist/node/chunks/node.js:[2m31011:39[22m[39m
+[90m [2m❯[22m TransformPluginContext.error ../../../node_modules/vite/dist/node/chunks/node.js:[2m31008:14[22m[39m
+[90m [2m❯[22m normalizeUrl ../../../node_modules/vite/dist/node/chunks/node.js:[2m27957:18[22m[39m
+[90m [2m❯[22m ../../../node_modules/vite/dist/node/chunks/node.js:[2m28025:30[22m[39m
+[90m [2m❯[22m TransformPluginContext.transform ../../../node_modules/vite/dist/node/chunks/node.js:[2m27993:4[22m[39m
+[90m [2m❯[22m EnvironmentPluginContainer.transform ../../../node_modules/vite/dist/node/chunks/node.js:[2m30796:14[22m[39m
+[90m [2m❯[22m loadAndTransform ../../../node_modules/vite/dist/node/chunks/node.js:[2m20594:26[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/settings-view.test.tsx[2m [ tests/settings-view.test.tsx ][22m
+[31m[1mError[22m: Failed to resolve import "../src/settings-region" from "tests/settings-view.test.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36m/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/frontend/tests/settings-view.test.tsx[39m:11:48
+[33m  9  |  import { OwnedResources } from "@ordessa/extension-api";
+  10 |  import { createWorkbench } from "../../../../packages/workbench/src/model";
+  11 |  import { createPermissionsSettingsRegion } from "../src/settings-region";
+     |                                                   ^
+  12 |  import { answer, ceilingRecord, intentRecord, noProviderAnswer, providerErrorAnswer, readyAnswer } from "./settings-f...
+  13 |  globalThis.IS_REACT_ACT_ENVIRONMENT = true;[39m
+[90m [2m❯[22m TransformPluginContext._formatLog ../../../node_modules/vite/dist/node/chunks/node.js:[2m31011:39[22m[39m
+[90m [2m❯[22m TransformPluginContext.error ../../../node_modules/vite/dist/node/chunks/node.js:[2m31008:14[22m[39m
+[90m [2m❯[22m normalizeUrl ../../../node_modules/vite/dist/node/chunks/node.js:[2m27957:18[22m[39m
+[90m [2m❯[22m ../../../node_modules/vite/dist/node/chunks/node.js:[2m28025:30[22m[39m
+[90m [2m❯[22m TransformPluginContext.transform ../../../node_modules/vite/dist/node/chunks/node.js:[2m27993:4[22m[39m
+[90m [2m❯[22m EnvironmentPluginContainer.transform ../../../node_modules/vite/dist/node/chunks/node.js:[2m30796:14[22m[39m
+[90m [2m❯[22m loadAndTransform ../../../node_modules/vite/dist/node/chunks/node.js:[2m20594:26[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯[22m[39m
+
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 6 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/contract-consistency.test.ts[2m > [22mceiling/intent record mirrors equal the Python API sources (T011)[2m > [22mexposure levels equal the ExposureLevel members of ceilings.py, in order
+[31m[1mTypeError[22m: PERMISSIONS_EXPOSURE_LEVELS is not iterable[39m
+[36m [2m❯[22m tests/contract-consistency.test.ts:[2m106:16[22m[39m
+    [90m104|[39m describe('ceiling/intent record mirrors equal the Python API sources (…
+    [90m105|[39m   it('exposure levels equal the ExposureLevel members of ceilings.py, …
+    [90m106|[39m     expect([...PERMISSIONS_EXPOSURE_LEVELS]).toEqual(pythonEnumValues(…
+    [90m   |[39m                [31m^[39m
+    [90m107|[39m   })
+    [90m108|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/contract-consistency.test.ts[2m > [22mceiling/intent record mirrors equal the Python API sources (T011)[2m > [22mthe ceiling record field set equals _RECORD_FIELDS of ceilings.py
+[31m[1mTypeError[22m: CEILING_RECORD_FIELDS is not iterable[39m
+[36m [2m❯[22m tests/contract-consistency.test.ts:[2m110:16[22m[39m
+    [90m108|[39m
+    [90m109|[39m   it('the ceiling record field set equals _RECORD_FIELDS of ceilings.p…
+    [90m110|[39m     expect([...CEILING_RECORD_FIELDS].sort()).toEqual(pythonFinalFroze…
+    [90m   |[39m                [31m^[39m
+    [90m111|[39m   })
+    [90m112|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/contract-consistency.test.ts[2m > [22mceiling/intent record mirrors equal the Python API sources (T011)[2m > [22mthe intent record field set equals _RECORD_FIELDS of intents.py
+[31m[1mTypeError[22m: INTENT_RECORD_FIELDS is not iterable[39m
+[36m [2m❯[22m tests/contract-consistency.test.ts:[2m114:16[22m[39m
+    [90m112|[39m
+    [90m113|[39m   it('the intent record field set equals _RECORD_FIELDS of intents.py'…
+    [90m114|[39m     expect([...INTENT_RECORD_FIELDS].sort()).toEqual(pythonFinalFrozen…
+    [90m   |[39m                [31m^[39m
+    [90m115|[39m   })
+    [90m116|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/contract-consistency.test.ts[2m > [22mceiling/intent record mirrors equal the Python API sources (T011)[2m > [22mscope order mirrors rules.py Scope, and rule actions mirror RuleAction
+[31m[1mTypeError[22m: PERMISSIONS_SCOPE_ORDER is not iterable[39m
+[36m [2m❯[22m tests/contract-consistency.test.ts:[2m118:16[22m[39m
+    [90m116|[39m
+    [90m117|[39m   it('scope order mirrors rules.py Scope, and rule actions mirror Rule…
+    [90m118|[39m     expect([...PERMISSIONS_SCOPE_ORDER]).toEqual(pythonEnumValues(rule…
+    [90m   |[39m                [31m^[39m
+    [90m119|[39m     expect([...INTENT_RULE_ACTIONS]).toEqual(pythonEnumValues(rulesPy,…
+    [90m120|[39m   })
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/contract-consistency.test.ts[2m > [22mceiling/intent record mirrors equal the Python API sources (T011)[2m > [22mthe trusted ceiling sources equal exactly the members of _TRUSTED_SOURCES in ceilings.py
+[31m[1mTypeError[22m: TRUSTED_CEILING_SOURCES is not iterable[39m
+[36m [2m❯[22m tests/contract-consistency.test.ts:[2m133:16[22m[39m
+    [90m131|[39m       [35mreturn[39m valueOf[33m.[39m[35mget[39m(name) [35mas[39m string
+    [90m132|[39m     })
+    [90m133|[39m     expect([...TRUSTED_CEILING_SOURCES].sort()).toEqual(expected.sort(…
+    [90m   |[39m                [31m^[39m
+    [90m134|[39m   })
+    [90m135|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/contract-consistency.test.ts[2m > [22mceiling/intent record mirrors equal the Python API sources (T011)[2m > [22mceiling entry actions are exactly the two restriction spellings of ceilings.py
+[31m[1mTypeError[22m: CEILING_ENTRY_ACTIONS is not iterable[39m
+[36m [2m❯[22m tests/contract-consistency.test.ts:[2m138:16[22m[39m
+    [90m136|[39m   it('ceiling entry actions are exactly the two restriction spellings …
+    [90m137|[39m     [34mexpect[39m(ceilingsPy)[33m.[39m[34mtoContain[39m([32m'("deny", "require-approval")'[39m)
+    [90m138|[39m     expect([...CEILING_ENTRY_ACTIONS]).toEqual(['deny', 'require-appro…
+    [90m   |[39m                [31m^[39m
+    [90m139|[39m   })
+    [90m140|[39m })
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (7)[39m
+[2m      Tests [22m [1m[31m6 failed[39m[22m[2m | [22m[1m[32m28 passed[39m[22m[90m (34)[39m
+[2m   Start at [22m 06:33:52
+[2m   Duration [22m 1.54s[2m (transform 219ms, setup 0ms, import 472ms, tests 247ms, environment 3.72s)[22m
+
+VITEST_EXIT=1

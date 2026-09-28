@@ -1,0 +1,181 @@
+T021 GREEN — real host ACP admission fence driven to pre-effect refusals, L2
+Branch codex/011-q5-safety @ HEAD 2998c03505279dc58c042b139441fc7887013f92,
+.venv/bin/python 3.12.14, 2026-09-28. Companion of
+t021-red-pre-effect-l2.txt, which carries the identical STEP-1 determination and
+the measured facts O1-O6 recorded BEFORE any code change.
+
+== DETERMINATION CARRIED OVER FROM THE RED FILE ==
+(a) for the tool-execution fence: `AcpPermitAuthority.authorize_permission`
+    answers a plain bool and `apps/server/src/ordessa_server/acp_admission.py:204`
+    admits only `is True` -> a plugin can be that verifier with no host import.
+    DRIVEN FOR REAL below (tests 4-8).
+(b) for the submission fence: `acp_admission.py:134` requires
+    `isinstance(bound, BoundAdmission)` of the host-declared record
+    (`acp_admission.py:27-36`), which `server_plugin_api` does not publish
+    (measured: hasattr == False for BoundAdmission / AcpPermitAuthority /
+    AcpAdmissionRefused), plus the private digest recipe (`:63-90,:120`) and the
+    host-only refusal type (`:21`, caught at `:383`). NOT drivable from a plugin
+    src (tests/test_backend_dependency_direction.py forbids importing or even
+    naming the host). Refused honestly + pinned by test
+    `test_permit_record_and_authority_are_still_host_owned`.
+
+== IMPLEMENTED (plugins/permissions/backend only) ==
+* src/ordessa_permissions_backend/host_authority.py (new):
+  `PermissionsHostAcpAuthority(admission=..., permit_binder=...)` —
+  - authorize_permission(connection, request, decision) -> bool: derives the
+    public AcpChannelBinding from the connection the fence hands over, the
+    AcpPermissionDecision from the camelCase answer members (the observed
+    `request` is deliberately not trusted for identity), answers through
+    `PermissionsAcpAdmission`, and returns True ONLY for a typed
+    `AcpAdmissionResult(kind="accepted")` naming this exact interaction id;
+    refused / unknown / unreadable identity / a raising port => False.
+  - authorize_submission(connection, submission): same translation, and on a
+    policy `accepted` it needs the composition's permit record; with no
+    `permit_binder` injected it raises PluginAdmissionRefused with
+    PERMIT_SEAM_UNPUBLISHED = "CAPABILITY_UNSUPPORTED" (the fence's own
+    absent-capability spelling). A binder that hands back a record for another
+    submission or channel is refused too.
+  `PluginAdmissionRefused(code, reason)` is a ValueError carrying the code, the
+  shape the fence propagates out of authorize_submission un-admitted.
+* __init__.py re-exports the three names + the module list and seam note.
+* pyproject `[project.optional-dependencies].dev` now names
+  `ordessa-server` and `ordessa-harness`: TEST-SIDE ONLY (the L2 file drives the
+  host's own admission classes and the ACP owner's binding). runtime deps
+  unchanged: ordessa-permissions-api + ordessa-server-plugin-api.
+* tests/test_host_pre_effect_l2.py (new, 17 tests): the host's real
+  AcpAdmissionGate + AcpAdmissionPortAdapter, a relay mirror of
+  transport/http/app.py:297-306 (admit_client_frame BEFORE transport.send_line),
+  a reviewed in-process fake channel as the side-effect recorder, and this
+  lane's real PermissionsAcpAdmission -> Authorizer -> ApprovalFacts on the real
+  product database inside a pytest tmp dir. No Server process, no model, no
+  network, no user config or data.
+
+== THE PRE-EFFECT CHAIN THAT WAS DRIVEN ==
+AcpAdmissionPortAdapter -> AcpAdmissionGate -> PermissionsHostAcpAuthority ->
+PermissionsAcpAdmission -> Authorizer.evaluate/decide -> ApprovalFacts
+(approvals + server_approval_grant_usage), under a signed admin ceiling
+(support.ADMIN_CEILING_RECORD, signed=True).
+
+Zero-side-effect measurement: every scenario asserts `channel.transport.sent`,
+i.e. the lines that actually reached the Agent. Refused scenarios show `[]`;
+the two admitted ones show exactly the one line each, and never a second copy.
+
+Outcomes per scenario (all PASS):
+1. absent authority (= bootstrap/runtime.py:607, gate built with none): both
+   fences raise CAPABILITY_UNSUPPORTED, the real adapter answers
+   refused/CAPABILITY_UNSUPPORTED, `ready` is False, the prompt frame is refused
+   and the recorder is empty. Fail-closed, not permissive.
+2. hard deny (signed ceiling `deny read` + a user intent that allows read): the
+   host fence raises PluginAdmissionRefused("POLICY_CEILING_VIOLATION") from
+   this lane's ruling (the port was consulted: calls == ["submission"]), the
+   prompt frame is refused, recorder empty, no approval and no grant written.
+3. the same coded denial measured THROUGH the public port adapter comes back as
+   `unknown` with code None — the G2 consequence, pinned as a test rather than
+   argued.
+4. ask: submission with no approval yet => APPROVAL_RESULT_UNKNOWN, the reason
+   carries the approval id, a real open fact is recorded (exactly one), the
+   prompt is refused and the recorder is empty. Then allow WITHOUT the native
+   receipt => the permission fence answers not-True, the host raises
+   AUTHORIZATION_REFUSED, grant usage rows 0, nothing relayed; after
+   record_native_receipt(confirmed) the same answer is accepted, relayed once,
+   and the second copy of the same frame is refused ("already consumed"),
+   grant usage 1.
+5. forged interaction id (never minted) and cross-run identity ("some-other-
+   native-request") and an option contradicting the recorded verdict ("deny" on
+   a settled allow): each makes the authority answer False so the host raises
+   "permission verifier refused", each leaves grant_fields(...)["consumed"]
+   False and grant usage 0 and the recorder empty. The honest answer still
+   works afterwards.
+6. full chain with the composition's permit record injected: intent-allowed
+   prompt admitted -> relayed once -> the same prompt frame refused (one-use rpc
+   id) -> Agent asks -> user allow + confirmed receipt -> authorize_permission
+   accepted -> a second authorize is answered `unknown` by the host WITHOUT
+   re-consulting the port (call count unchanged, so no second spend) -> the
+   answer frame relayed once, its replay refused -> grant usage exactly 1 ->
+   the store's own replay answer is refused APPROVAL_STALE -> a fresh gate
+   (restart / relay trying to re-ask) is refused by the host and relays nothing:
+   the effect count stays 2 (one prompt + one approved tool answer) forever.
+7. policy accept with NO binder: refused CAPABILITY_UNSUPPORTED, nothing
+   relayed; and the registered hazard measured rather than hidden: because the
+   ruling precedes the binder, an approval-bound allow spends its one-use grant
+   (usage 1, consumed True) while still admitting nothing.
+8. unobserved channel evidence (the ACP owner's own binding shape, harness
+   server_acp/plugin.py:117-125): refused POLICY_SCOPE_UNVERIFIED, never
+   invented. A port with no authority installed refuses POLICY_ADAPTER_MISSING
+   / answers False.
+9. blocker pins: BoundAdmission / AcpPermitAuthority / AcpAdmissionRefused are
+   still absent from server_plugin_api and a structurally complete plugin-owned
+   permit is refused ("submission permit binding is invalid") with an empty
+   recorder; host_authority.py imports only __future__/typing/server_plugin_api
+   (ast-checked); the public port alone grants no authority.
+10. harness consumer path: AcpChannelServerPlugin.build with
+    ports[ACP_ADMISSION_PORT] == this lane's PermissionsAcpAdmission passes its
+    version + ready gate (availability() == (True, None)), the owner's
+    `acp.submission.authorize` reaches this lane's port and returns
+    refused/POLICY_SCOPE_UNVERIFIED ("no observed native session"), the channel
+    transport records nothing, and after `_dispose()` the owner is unavailable
+    again.
+
+== MUTATION AUDIT (reds minus control; control == 17 passed) ==
+* Mutation A: authorize_permission returns True unconditionally => 7 tests red
+  (test_ask_is_not_admitted..., test_forged_interaction_id..., test_cross_run_
+  identity_mismatch..., test_option_that_contradicts..., test_full_chain...,
+  test_channel_without_observed_native_evidence..., test_authority_answers_
+  no_permit_when_the_port_is_unavailable). The permission assertions are load-
+  bearing, not tautologies.
+* Mutation B: submission half returns a look-alike permit instead of refusing
+  without a binder => 2 tests red (test_policy_accept_without_a_permit_record_
+  admits_nothing, test_unmintable_permit_after_an_approval_spends_the_grant...).
+* Both mutations reverted and re-verified in the live import (the permission
+  half again returns `self._accepted(result, ask.interaction_id)`, no mutation
+  text remains anywhere in the package), then the control was re-measured green
+  and every gate below re-run afterwards.
+
+== RUNS (true $? of the pytest process, no pipe) ==
+command: .venv/bin/python -m pytest plugins/permissions/backend/tests/test_host_pre_effect_l2.py -q
+measured exit code: 0
+.................                                                        [100%]
+17 passed in 0.30s
+
+command: .venv/bin/python -m pytest plugins/permissions/backend -q
+measured exit code: 0 (was 158 before this task; 17 added)
+...............................                                          [100%]
+175 passed in 1.21s
+
+command: .venv/bin/python -m pytest plugins/permissions -q
+measured exit code: 0 (api 327 + backend 175 + adapters 126 = 628)
+....................................................                     [100%]
+628 passed in 2.00s
+
+command: .venv/bin/python specs/011-q5-safety/proof/permissions_api_proof.py
+measured exit code: 0
+
+ALL PROOF EXPECTATIONS MET
+
+Repo-wide gates (npm test, root typecheck, apps/server pytest) were NOT run:
+this lane is one package in a shared tree with a concurrent writer. The sandbox
+lane and plugins/permissions/{api,adapters} tests were untouched by these edits
+(their 453 tests pass in the aggregate above).
+
+== NOT PROVEN BY THIS LANE (do not read the green as these) ==
+* Product assembly: no shipped composition installs an authority.
+  bootstrap/runtime.py:607 still builds `AcpAdmissionGate()` with none and
+  AcpAdmissionPortAdapter.ready is hardcoded False (:311-319), so the wire
+  methods stay CAPABILITY_UNSUPPORTED for real clients. `permit_binder` is
+  injected by a test here, not by the product.
+* The relay bypass itself: `observe_agent_frame` / `admit_client_frame` were
+  exercised as classes in-process; the live WebSocket relay
+  (transport/http/app.py) was not started, and the lane did not add any test
+  that reaches it.
+* Real native receipt: the confirmation is written through this lane's own
+  `record_native_receipt` by the test, not observed from a real ACP adapter; the
+  harness channel registry still observes no runtime generation and hands the
+  port a binding with native_session_id/runtime_generation both None (G5), so
+  the positive path on the real owner method remains unreachable.
+* Real models, real Harness processes, real multi-brand behaviour and any L3
+  evidence: out of scope, untested, forbidden without prior user authorisation.
+* Two public-contract requests stay open for the platform: publish a mintable
+  permit record + a public refusal type (or provide a host-side authority
+  delegating to ports[ACP_ADMISSION_PORT]) so the submission fence can be
+  plugin-driven with a stable code; and an authoritative native-session /
+  runtime-generation observation source (C0).

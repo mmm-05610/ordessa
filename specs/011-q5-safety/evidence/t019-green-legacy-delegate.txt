@@ -1,0 +1,39 @@
+# T019-Q5(backend) GREEN — legacy approvals.decide delegated to the ONE Q5 authorizer (lane Q5/permissions-backend)
+# date: 2026-09-28T00:20:31Z  branch: codex/011-q5-safety  head: 458add4f1b5ea00723d4b5d1c1e5d0aeca74e5a6
+# same working tree as t019-red-legacy-delegate.txt; implementation landed:
+#   delegate.py — LegacyApprovalDelegate: the OLD wire shape (params mirrored from the compat core's own table core_wire._PARAM_SHAPES row "approvals.decide": requestId/approvalId/expectedVersion/decision/scope; no optional; NO sessionId) routed into the SAME Authorizer.decide — one store, one event stream, decideRequestId/CAS idempotency, existing IDs, table and approval.requested/approval.settled names preserved; typed unknown refusal when the native operation/session/generation facts a grant needs are absent (nothing written, row stays open)
+#   plugin.py   — gated approval_route: default "q5-only" declares no legacy method; "legacy-delegated" mounts approvals.decide owned by permissions-backend; build-time DualAuthorityError when a live old-writer port (approvals.records/compat.handlers) is visible on the ports
+# dual-authority hazard proof: platform DuplicateMethodError when the old route is still registered at delegated-plugin activation (the round rolls back; retiring the old owner first, then activating the delegate, succeeds) AND the extended test_dual_authority.py data-level tests show two settled outcomes remain impossible even if both handlers share the database.
+
+# per-ID results (19/19; 13 new in test_legacy_delegate.py, 4 pre-existing + 2 new in test_dual_authority.py):
+plugins/permissions/backend/tests/test_legacy_delegate.py::test_default_route_declares_no_legacy_method PASSED [  5%]
+plugins/permissions/backend/tests/test_legacy_delegate.py::test_unknown_approval_route_is_a_declaration_error PASSED [ 10%]
+plugins/permissions/backend/tests/test_legacy_delegate.py::test_delegated_route_declares_the_old_wire_shape_exactly PASSED [ 15%]
+plugins/permissions/backend/tests/test_legacy_delegate.py::test_delegated_decide_records_through_the_q5_authority PASSED [ 21%]
+plugins/permissions/backend/tests/test_legacy_delegate.py::test_delegated_decide_replays_by_request_id_never_deciding_twice PASSED [ 26%]
+plugins/permissions/backend/tests/test_legacy_delegate.py::test_delegated_decide_preserves_ids_table_and_event_names PASSED [ 31%]
+plugins/permissions/backend/tests/test_legacy_delegate.py::test_delegated_version_conflict_is_typed_never_an_overwrite PASSED [ 36%]
+plugins/permissions/backend/tests/test_legacy_delegate.py::test_delegated_shape_checks_mirror_the_old_wire PASSED [ 42%]
+plugins/permissions/backend/tests/test_legacy_delegate.py::test_legacy_written_row_is_refused_for_missing_native_facts PASSED [ 47%]
+plugins/permissions/backend/tests/test_legacy_delegate.py::test_partially_migrated_row_refuses_missing_operation_digest PASSED [ 52%]
+plugins/permissions/backend/tests/test_legacy_delegate.py::test_unknown_approval_id_refuses_never_forges PASSED [ 57%]
+plugins/permissions/backend/tests/test_legacy_delegate.py::test_enabling_the_delegate_beside_a_live_old_writer_refuses_at_activation PASSED [ 63%]
+plugins/permissions/backend/tests/test_legacy_delegate.py::test_build_refuses_when_the_old_writer_is_visible_on_the_ports PASSED [ 68%]
+plugins/permissions/backend/tests/test_dual_authority.py::test_new_authority_wins_then_legacy_writer_observes_the_conflict PASSED [ 73%]
+plugins/permissions/backend/tests/test_dual_authority.py::test_legacy_writer_settles_first_then_we_refuse_and_keep_one_settled_fact PASSED [ 78%]
+plugins/permissions/backend/tests/test_dual_authority.py::test_two_authorities_diverge_on_the_same_row_as_version_conflict PASSED [ 84%]
+plugins/permissions/backend/tests/test_dual_authority.py::test_legacy_table_stays_readable_by_the_new_authority PASSED [ 89%]
+plugins/permissions/backend/tests/test_dual_authority.py::test_delegated_route_settles_first_and_the_legacy_writer_cannot_second PASSED [ 94%]
+plugins/permissions/backend/tests/test_dual_authority.py::test_legacy_writer_settles_first_and_the_delegated_route_refuses PASSED [100%]
+
+# summary line + true exit code of: .venv/bin/python -m pytest plugins/permissions/backend/tests/test_legacy_delegate.py plugins/permissions/backend/tests/test_dual_authority.py -v
+
+exit=0
+
+
+# package gate (rerun after the dependency-direction docstring fix): .venv/bin/python -m pytest plugins/permissions/backend -q
+158 passed in 1.11s
+exit=0
+# proof: .venv/bin/python specs/011-q5-safety/proof/permissions_api_proof.py
+ALL PROOF EXPECTATIONS MET
+exit=0

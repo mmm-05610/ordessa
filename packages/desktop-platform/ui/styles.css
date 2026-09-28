@@ -1,0 +1,358 @@
+/*
+ * @ordessa/ui — explicit style entry (`@ordessa/ui/styles.css`), loaded by the
+ * product assembly, never injected from JS (F05/V01).
+ * Contract (plan "主题、样式与构建", verified by tests/v04-styles.test.tsx):
+ *   - every rule is scoped by a `.ods-ui-*` class this package owns — no bare
+ *     element selectors, no `*`, no `:root`, no global reset, no `!important`;
+ *   - host theme variables (`--ui-surface/ink/line/accent/...`) are consumed
+ *     with a local fallback at each point of use and never redefined here, so
+ *     a bare React root still looks right and the Workbench theme wins;
+ *   - own layout tokens use the `--ods-ui-space-*` hooks with literal fallbacks;
+ *   - motion is opt-out for users who prefer reduced motion.
+ */
+
+/* --- Card ------------------------------------------------------------------ */
+
+.ods-ui-card {
+  --ods-ui-card-pad: var(--ods-ui-space-md, 12px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ods-ui-space-sm, 8px);
+  min-width: 0;
+  max-width: 100%;
+  border: 1px solid var(--ui-line, #e8e8e8);
+  border-radius: 10px;
+  background: var(--ui-surface, #fff);
+  color: var(--ui-ink, #202123);
+}
+.ods-ui-card--subtle {
+  background: var(--ui-sunken, #f0f0f1);
+  border-color: transparent;
+}
+.ods-ui-card--plain {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+.ods-ui-card--pad-none { --ods-ui-card-pad: 0px; }
+.ods-ui-card--pad-xs { --ods-ui-card-pad: var(--ods-ui-space-xs, 4px); }
+.ods-ui-card--pad-sm { --ods-ui-card-pad: var(--ods-ui-space-sm, 8px); }
+.ods-ui-card--pad-md { --ods-ui-card-pad: var(--ods-ui-space-md, 12px); }
+.ods-ui-card--pad-lg { --ods-ui-card-pad: var(--ods-ui-space-lg, 20px); }
+.ods-ui-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--ods-ui-space-sm, 8px);
+  padding: var(--ods-ui-card-pad, 12px);
+  padding-block-end: 0;
+  min-width: 0;
+}
+.ods-ui-card-title {
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.ods-ui-card-description {
+  color: var(--ui-ink-secondary, #6b6e73);
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.ods-ui-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ods-ui-space-xs, 4px);
+  margin-inline-start: auto;
+}
+.ods-ui-card-body {
+  padding: var(--ods-ui-card-pad, 12px);
+  min-width: 0;
+}
+.ods-ui-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ods-ui-space-sm, 8px);
+  padding: var(--ods-ui-card-pad, 12px);
+  padding-block-start: 0;
+  min-width: 0;
+}
+
+/* --- Panel: header/footer keep their size, the body owns scrolling --------- */
+
+.ods-ui-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  border: 1px solid var(--ui-line, #e8e8e8);
+  border-radius: 10px;
+  background: var(--ui-surface, #fff);
+  color: var(--ui-ink, #202123);
+  overflow: hidden;
+}
+.ods-ui-panel-header {
+  display: flex;
+  align-items: center;
+  gap: var(--ods-ui-space-sm, 8px);
+  flex-shrink: 0;
+  min-width: 0;
+  padding: var(--ods-ui-space-sm, 8px) var(--ods-ui-space-md, 12px);
+  border-block-end: 1px solid var(--ui-line, #e8e8e8);
+  background: var(--ui-nav, #f6f6f6);
+}
+.ods-ui-panel-title {
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.ods-ui-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ods-ui-space-xs, 4px);
+  margin-inline-start: auto;
+}
+.ods-ui-panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  overflow: auto;
+  padding: var(--ods-ui-space-md, 12px);
+}
+.ods-ui-panel-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--ods-ui-space-sm, 8px);
+  flex-shrink: 0;
+  min-width: 0;
+  padding: var(--ods-ui-space-sm, 8px) var(--ods-ui-space-md, 12px);
+  border-block-start: 1px solid var(--ui-line, #e8e8e8);
+  background: var(--ui-nav, #f6f6f6);
+}
+
+/* --- Stack / Inline / Toolbar / ScrollArea / Separator ---------------------- */
+
+.ods-ui-stack { display: flex; flex-direction: column; min-width: 0; max-width: 100%; }
+.ods-ui-inline { display: flex; flex-direction: row; align-items: center; min-width: 0; max-width: 100%; }
+.ods-ui-inline--wrap { flex-wrap: wrap; }
+
+.ods-ui-stack--gap-none, .ods-ui-inline--gap-none { gap: 0px; }
+.ods-ui-stack--gap-xs, .ods-ui-inline--gap-xs { gap: var(--ods-ui-space-xs, 4px); }
+.ods-ui-stack--gap-sm, .ods-ui-inline--gap-sm { gap: var(--ods-ui-space-sm, 8px); }
+.ods-ui-stack--gap-md, .ods-ui-inline--gap-md { gap: var(--ods-ui-space-md, 12px); }
+.ods-ui-stack--gap-lg, .ods-ui-inline--gap-lg { gap: var(--ods-ui-space-lg, 20px); }
+
+.ods-ui-stack--align-start, .ods-ui-inline--align-start { align-items: flex-start; }
+.ods-ui-stack--align-center, .ods-ui-inline--align-center { align-items: center; }
+.ods-ui-stack--align-end, .ods-ui-inline--align-end { align-items: flex-end; }
+.ods-ui-stack--align-stretch, .ods-ui-inline--align-stretch { align-items: stretch; }
+
+.ods-ui-stack--justify-start, .ods-ui-inline--justify-start { justify-content: flex-start; }
+.ods-ui-stack--justify-center, .ods-ui-inline--justify-center { justify-content: center; }
+.ods-ui-stack--justify-end, .ods-ui-inline--justify-end { justify-content: flex-end; }
+.ods-ui-stack--justify-between, .ods-ui-inline--justify-between { justify-content: space-between; }
+
+.ods-ui-toolbar {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ods-ui-space-xs, 4px);
+  min-width: 0;
+  max-width: 100%;
+}
+.ods-ui-toolbar--vertical {
+  flex-direction: column;
+  align-items: stretch;
+  flex-wrap: nowrap;
+}
+
+.ods-ui-scroll-area {
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  overscroll-behavior: contain;
+}
+.ods-ui-scroll-area--vertical { overflow-y: auto; overflow-x: hidden; }
+.ods-ui-scroll-area--horizontal { overflow-x: auto; overflow-y: hidden; }
+.ods-ui-scroll-area--both { overflow: auto; }
+
+.ods-ui-separator {
+  flex-shrink: 0;
+  border-radius: 1px;
+  background: var(--ui-line, #e8e8e8);
+}
+.ods-ui-separator--horizontal { width: 100%; height: 1px; }
+.ods-ui-separator--vertical { width: 1px; min-height: 16px; align-self: stretch; }
+
+/* The Workbench host restates bare buttons inside its own shell (`.wb button`,
+   specificity 0,1,1) and injects that sheet at activation time, i.e. after this
+   file, so a single-class rule would lose padding/background/border/focus to it.
+   The narrow fix is to double the base class on the rules that set a competing
+   property: every element here carries `ods-ui-button` plus a variant and a size
+   class, so the doubled selector still matches exactly the same nodes. No
+   !important, no change to the host sheet, nothing outside `.ods-ui-*` affected. */
+/* --- Button / IconButton ---------------------------------------------------- */
+
+.ods-ui-button.ods-ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ods-ui-space-xs, 4px);
+  min-width: 0;
+  max-width: 100%;
+  padding: 6px 12px;
+  font: inherit;
+  color: var(--ui-ink, #202123);
+  background: var(--ui-surface, #fff);
+  border: 1px solid var(--ui-line, #e8e8e8);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+.ods-ui-button.ods-ui-button--sm { padding: 2px 8px; }
+.ods-ui-button.ods-ui-button--lg { padding: 10px 18px; }
+.ods-ui-button.ods-ui-button--primary {
+  background: var(--ui-accent, #3b82f6);
+  border-color: var(--ui-accent, #3b82f6);
+}
+.ods-ui-button.ods-ui-button--secondary { background: var(--ui-hover, #eaeaea); }
+.ods-ui-button.ods-ui-button--ghost { background: transparent; border-color: transparent; }
+.ods-ui-button.ods-ui-button--danger {
+  background: var(--ui-error, #b3261e);
+  border-color: var(--ui-error, #b3261e);
+}
+.ods-ui-button.ods-ui-button:hover:not(:disabled) { background: var(--ui-hover, #eaeaea); }
+.ods-ui-button.ods-ui-button--primary:hover:not(:disabled) { background: var(--ui-selected, #e3e4e6); }
+.ods-ui-button.ods-ui-button--danger:hover:not(:disabled) { background: var(--ui-selected, #e3e4e6); }
+.ods-ui-button.ods-ui-button:disabled, .ods-ui-button.ods-ui-button[data-busy="true"] { opacity: 0.55; cursor: default; }
+.ods-ui-button.ods-ui-button:focus-visible {
+  outline: 2px solid var(--ui-accent, #3b82f6);
+  outline-offset: 2px;
+}
+.ods-ui-icon-button {
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+}
+
+/* --- Input / Textarea / Select / Checkbox ------------------------------------ */
+
+.ods-ui-input, .ods-ui-textarea, .ods-ui-select {
+  min-width: 0;
+  max-width: 100%;
+  padding: 6px 8px;
+  font: inherit;
+  color: var(--ui-ink, #202123);
+  background: var(--ui-surface, #fff);
+  border: 1px solid var(--ui-line, #e8e8e8);
+  border-radius: 8px;
+}
+.ods-ui-textarea { min-height: 64px; resize: vertical; }
+.ods-ui-select { overflow-wrap: anywhere; }
+.ods-ui-checkbox {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--ui-accent, #3b82f6);
+}
+.ods-ui-input:disabled, .ods-ui-textarea:disabled, .ods-ui-select:disabled {
+  background: var(--ui-sunken, #f0f0f1);
+  color: var(--ui-ink-secondary, #6b6e73);
+}
+.ods-ui-input[aria-invalid="true"], .ods-ui-textarea[aria-invalid="true"], .ods-ui-select[aria-invalid="true"] {
+  border-color: var(--ui-error, #b3261e);
+}
+.ods-ui-input:focus-visible, .ods-ui-textarea:focus-visible, .ods-ui-select:focus-visible, .ods-ui-checkbox:focus-visible {
+  outline: 2px solid var(--ui-accent, #3b82f6);
+  outline-offset: 1px;
+}
+
+/* --- Field ------------------------------------------------------------------- */
+
+.ods-ui-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ods-ui-space-xs, 4px);
+  min-width: 0;
+  max-width: 100%;
+  color: var(--ui-ink, #202123);
+}
+.ods-ui-field-label { font-weight: 600; min-width: 0; overflow-wrap: break-word; }
+.ods-ui-field-control { min-width: 0; max-width: 100%; }
+.ods-ui-field-description {
+  color: var(--ui-ink-secondary, #6b6e73);
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.ods-ui-field-error {
+  color: var(--ui-error, #b3261e);
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+/* --- Badge / Notice / EmptyState ---------------------------------------------- */
+
+.ods-ui-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ods-ui-space-xs, 4px);
+  max-width: 100%;
+  padding: 1px 8px;
+  border: 1px solid var(--ui-line, #e8e8e8);
+  border-radius: 999px;
+  background: var(--ui-sunken, #f0f0f1);
+  color: var(--ui-ink-secondary, #6b6e73);
+  overflow-wrap: break-word;
+}
+.ods-ui-badge--info { color: var(--ui-accent, #3b82f6); }
+.ods-ui-badge--success { color: var(--ui-ok, #2e7d46); }
+.ods-ui-badge--warning { color: var(--ui-warn, #b26a00); }
+.ods-ui-badge--danger { color: var(--ui-error, #b3261e); }
+
+.ods-ui-notice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ods-ui-space-xs, 4px);
+  min-width: 0;
+  max-width: 100%;
+  padding: var(--ods-ui-space-sm, 8px) var(--ods-ui-space-md, 12px);
+  border: 1px solid var(--ui-line, #e8e8e8);
+  border-inline-start-width: 3px;
+  border-radius: 8px;
+  background: var(--ui-surface, #fff);
+  color: var(--ui-ink, #202123);
+  transition: border-color 120ms ease;
+}
+.ods-ui-notice--neutral { border-inline-start-color: var(--ui-line, #e8e8e8); }
+.ods-ui-notice--info { border-inline-start-color: var(--ui-accent, #3b82f6); }
+.ods-ui-notice--success { border-inline-start-color: var(--ui-ok, #2e7d46); }
+.ods-ui-notice--warning { border-inline-start-color: var(--ui-warn, #b26a00); }
+.ods-ui-notice--danger { border-inline-start-color: var(--ui-error, #b3261e); }
+.ods-ui-notice-title { font-weight: 600; overflow-wrap: break-word; }
+.ods-ui-notice-body { overflow-wrap: break-word; }
+
+.ods-ui-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ods-ui-space-sm, 8px);
+  min-width: 0;
+  max-width: 100%;
+  padding: var(--ods-ui-space-lg, 20px);
+  color: var(--ui-ink-faint, #9a9da2);
+  text-align: center;
+}
+.ods-ui-empty-state-title {
+  font-weight: 600;
+  color: var(--ui-ink-secondary, #6b6e73);
+  overflow-wrap: break-word;
+}
+.ods-ui-empty-state-description { overflow-wrap: break-word; }
+
+/* --- Motion preference ---------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .ods-ui-button, .ods-ui-notice { transition: none; }
+}

@@ -1,0 +1,127 @@
+T020 RED — joint facet version binding (Permissions adapters + Sandbox adapters)
+Branch codex/011-q5-safety, tree before any fix. Command:
+  .venv/bin/python -m pytest plugins/assets/sandbox/adapters/tests/test_joint_facet_version_binding.py plugins/permissions/adapters/tests/test_adapter_version_evidence.py -q
+Exit code: 1 (true pytest exit, no pipe)
+
+== STEP-1 MEASUREMENT (file:line evidence, recorded before changing code) ==
+O1. Installation DTO with adapter_version:
+    plugins/harness/api/src/ordessa_harness_api/contracts.py:56-68
+    Supplied by RuntimeAdapter.describe_installation():
+    plugins/harness/api/src/ordessa_harness_api/contracts.py:385-388 (Protocol, stub only)
+O2. Single admission consumer of the observed value:
+    plugins/harness/src/ordessa_harness/application/configuration_service.py:145-158
+    line 151: descriptor.harness_id == installation.harness_id required
+    line 153: descriptor.adapter_versions.contains(installation.adapter_version) is True required,
+              else ErrorCode.CAPABILITY_UNSUPPORTED
+O3. Who actually produces an Installation in THIS tree:
+    grep -rn "describe_installation" over the repo yields exactly:
+      plugins/harness/api/src/ordessa_harness_api/contracts.py:388   (protocol stub, `...`)
+      plugins/harness/tests/fixtures/external_adapter/src/ordessa_test_external_adapter/__init__.py:67-69
+        -> Installation("test-external", (1, 0, 0), (1, 0, 0), "fixture:installed")
+    No implementation exists under plugins/harness/src/ordessa_harness/ or apps/server/src/.
+    => This tree publishes NO trusted observed runtime-adapter version for
+       codex/claude-code/pi. The harness dist's own version is
+       plugins/harness/pyproject.toml:6 `version = "2.0.0a1"` (a build fact,
+       never wired into describe_installation here).
+O4. harnesses.toml pins are NATIVE versions, not adapter observations:
+    plugins/harness/src/ordessa_harness/harnesses.toml [harness.identity]
+    codex version = "2.0", claude-code version = "0.81.2", pi version = "2.0"
+    (consumed as native_versions by both facets:
+     plugins/permissions/adapters/src/ordessa_permissions_adapters/contribution.py:76-80,
+     plugins/assets/sandbox/adapters/src/ordessa_sandbox_adapters/points.py:84-104)
+O5. Permissions facet declaration (BEFORE fix):
+    plugins/permissions/adapters/src/ordessa_permissions_adapters/contribution.py:120
+      _ADAPTER_VERSION = VersionRange((1, 0, 0))   # = [1.0.0, +inf), maximum=None
+    applied at contribution.py:156. Unbounded maximum; not backed by any O1-O4
+    observation; does not even equal its own release fact
+    plugins/permissions/adapters/pyproject.toml:7 `version = "0.1.0"`.
+O6. Sandbox facet declaration (BEFORE fix, unchanged by the fix):
+    plugins/assets/sandbox/adapters/src/ordessa_sandbox_adapters/points.py:66
+      _ADAPTER_VERSIONS = VersionRange((0, 1, 0), (0, 1, 0))  # exactly 0.1.0
+    applied at points.py:182; backed by its own release fact
+    plugins/assets/sandbox/adapters/pyproject.toml:7 `version = "0.1.0"`.
+O7. Unsatisfiability: [1.0.0, inf) ∩ {0.1.0} = ∅. For ANY observed
+    installation.adapter_version, configuration_service.py:153 fails for at
+    least one facet => a real-product two-facet joint admission was
+    version-wise impossible (matches C0 finding,
+    specs/011-c0-foundation-harness/api-requests.md, commit 4396338d79).
+O8. Multi-owner selection gap (separate, C0-owned): open point with several
+    owners resolves to AbsentContribution
+    (apps/server/src/ordessa_server/plugin_host/contribution_points.py:150-162),
+    so ConfigurationApplicationService.plan -> Refused(ADAPTER_MISSING)
+    (configuration_service.py:211-213). C0 repairs this on its own branch at
+    6eeba5b284/080396ecaf (harness/server side, NOT this tree).
+
+== RED OUTPUT ==
+F.F..F.                                                                  [100%]
+=================================== FAILURES ===================================
+________ test_the_pair_is_jointly_satisfiable_at_one_observed_candidate ________
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-2030/test_the_pair_is_jointly_satis0')
+
+    def test_the_pair_is_jointly_satisfiable_at_one_observed_candidate(tmp_path):
+        """RED before the fix: `adapter_versions` ranges
+        `[1.0.0, ∞)` (permissions) ∩ `{0.1.0}` (sandbox) = ∅, so every candidate
+        observation fails at least one facet's version gate. GREEN after the fix:
+        both facets declare their own exact release pin and the shared candidate
+        (0, 1, 0) clears both gates — the platform advances past the version gate
+        to the deterministic stub code, for one and the same Installation."""
+        installation_versions_that_pass_both = []
+        for adapter_version in OBSERVED_CANDIDATES:
+            installation = Installation("codex", (2, 0, 0), adapter_version,
+                                        "q5:t020:candidate")
+            sandbox = _plan_one(tmp_path / "sb" / str(adapter_version), SANDBOX_CODEX,
+                                SANDBOX_FRAGMENT, installation)
+            permissions = _plan_one(tmp_path / "pm" / str(adapter_version),
+                                    _permissions_codex_descriptor(),
+                                    PERMISSIONS_FRAGMENT, installation)
+            passed = []
+            for label, result in (("sandbox", sandbox), ("permissions", permissions)):
+                assert isinstance(result, Refused), result
+                if result.code in (ErrorCode.CAPABILITY_UNSUPPORTED,
+                                   ErrorCode.VERSION_UNVERIFIED):
+                    passed.append((label, "version-gate-refused"))
+                else:
+                    passed.append((label, "past-version-gate"))
+            if all(outcome == "past-version-gate" for _, outcome in passed):
+                installation_versions_that_pass_both.append(adapter_version)
+>       assert installation_versions_that_pass_both, (
+            "no version fact this tree publishes satisfies BOTH facets' declared "
+            "adapter_versions — the pair is jointly unsatisfiable (C0 finding, "
+            "specs/011-c0-foundation-harness/api-requests.md); the declarations "
+            "must be pinned to backed facts, not widened")
+E       AssertionError: no version fact this tree publishes satisfies BOTH facets' declared adapter_versions — the pair is jointly unsatisfiable (C0 finding, specs/011-c0-foundation-harness/api-requests.md); the declarations must be pinned to backed facts, not widened
+E       assert []
+
+plugins/assets/sandbox/adapters/tests/test_joint_facet_version_binding.py:244: AssertionError
+______________ test_permissions_declaration_is_parsed_not_copied _______________
+
+    def test_permissions_declaration_is_parsed_not_copied():
+        range_now = _permissions_declared_adapter_versions()
+>       assert range_now.maximum is not None, (
+            "permissions adapter_versions declared an unbounded maximum: "
+            "no observation in this tree backs an open-ended support claim")
+E       AssertionError: permissions adapter_versions declared an unbounded maximum: no observation in this tree backs an open-ended support claim
+E       assert None is not None
+E        +  where None = VersionRange(minimum=(1, 0, 0), maximum=None).maximum
+
+plugins/assets/sandbox/adapters/tests/test_joint_facet_version_binding.py:264: AssertionError
+_______ test_adapter_version_pin_is_exact_and_backed_by_the_release_fact _______
+
+    def test_adapter_version_pin_is_exact_and_backed_by_the_release_fact() -> None:
+        pin = _release_pin()
+>       assert _ADAPTER_VERSION.minimum == pin, (
+            "the declared adapter pin must equal this distribution's release "
+            f"version fact (pyproject.toml, got {pin})")
+E       AssertionError: the declared adapter pin must equal this distribution's release version fact (pyproject.toml, got (0, 1, 0))
+E       assert (1, 0, 0) == (0, 1, 0)
+E         
+E         At index 0 diff: 1 != 0
+E         Use -v to get more diff
+
+plugins/permissions/adapters/tests/test_adapter_version_evidence.py:50: AssertionError
+=========================== short test summary info ============================
+FAILED plugins/assets/sandbox/adapters/tests/test_joint_facet_version_binding.py::test_the_pair_is_jointly_satisfiable_at_one_observed_candidate
+FAILED plugins/assets/sandbox/adapters/tests/test_joint_facet_version_binding.py::test_permissions_declaration_is_parsed_not_copied
+FAILED plugins/assets/sandbox/adapters::test_adapter_version_pin_is_exact_and_backed_by_the_release_fact
+3 failed, 4 passed in 0.55s

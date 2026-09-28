@@ -26,6 +26,7 @@ REPO = Path(__file__).resolve().parents[3]
 ABSOLUTE_PATH = re.compile(r"(^|[\s:'\"])/[A-Za-z0-9._/-]{2,}")
 
 from ordessa_server.bootstrap import build_runtime
+from ordessa_server_product.composition import create_composition  # T014-S1d funnel
 from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server.transport.http import create_app
 from ordessa_server_compat import core_wire as handlers_module
@@ -59,7 +60,8 @@ class Api:
 
 @pytest.fixture
 def server(tmp_path):
-    runtime = build_runtime(tmp_path / "data", harnesses=_registry())
+    runtime = build_runtime(tmp_path / "data",
+                            server_plugins=create_composition().compatibility_plugins(harnesses=_registry()))
     with TestClient(create_app(runtime), base_url="http://127.0.0.1",
                     raise_server_exceptions=False) as client:
         yield runtime, Api(client, {"Authorization": f"Bearer {runtime.token}"})
@@ -95,13 +97,13 @@ def test_an_unwritable_snapshot_dir_is_the_same_shape(server, tmp_path):
     source = source_dir(tmp_path)
     # The store creates its root lazily, so the unwritable directory has to
     # exist before the write is what fails (that is failure ⑥, not ⑤).
-    runtime.compat_handlers.catalogs.root.mkdir(parents=True, exist_ok=True)
-    os.chmod(runtime.compat_handlers.catalogs.root, 0o500)
+    runtime.plugin_host.provided_port('compat.handlers').catalogs.root.mkdir(parents=True, exist_ok=True)
+    os.chmod(runtime.plugin_host.provided_port('compat.handlers').catalogs.root, 0o500)
     try:
         error = api.call("assets.syncCatalog", {
             "requestId": "p147-write", "sourceId": "community", "sourcePath": str(source)})["error"]
     finally:
-        os.chmod(runtime.compat_handlers.catalogs.root, 0o700)
+        os.chmod(runtime.plugin_host.provided_port('compat.handlers').catalogs.root, 0o700)
     assert error["code"] == "UNAVAILABLE", error
     assert error["details"]["internalCode"] in {
         "PermissionError", "OSError", "FileExistsError", "IsADirectoryError"}, error
@@ -115,7 +117,7 @@ def test_counter_example_the_old_fallback_blamed_the_client_and_leaked_the_path(
     source = source_dir(tmp_path)
     os.chmod(source / "index.json", 0o000)
 
-    def old_fallback(exc):
+    def old_fallback(exc, **_injected):
         return handlers_module.WireError(
             "INVALID_REQUEST",
             f"{getattr(exc, 'code', type(exc).__name__)}: {getattr(exc, 'message', exc)}")
@@ -160,21 +162,122 @@ def test_a_malformed_index_keeps_its_domain_code_and_wording(server, tmp_path):
     assert error["details"]["internalCode"] == "CATALOG_INVALID", error
 
 
-def test_the_catalog_codes_are_registered_and_no_family_was_invented():
-    for code in ("CATALOG_INVALID", "CATALOG_SOURCE_MISSING",
-                 "CATALOG_ORIGIN_MISSING", "CATALOG_ENTRY_UNKNOWN"):
-        assert family_for(code) == "INVALID_REQUEST", code
-    assert family_for("SOMETHING_UNREGISTERED") == "UNAVAILABLE"
+def test_the_catalog_codes_are_registered_and_no_family_was_invented(tmp_path):
+    """Same predicates, now answered through the composition (T014-S2a/R).
+
+    The four CATALOG rows live with the plugin that raises them and reach the
+    wire table as a `wire.error-families` contribution, so "registered" means
+    "registered in an active composition": the gate composes the default
+    product and asks the identical question against THAT host's aggregate —
+    S2a-R made the contributed half per-composition state, and the golden
+    answer must be proven where the behaviour lives, not through a process
+    global. Nothing was softened - the unregistered fall-through and the
+    closed twelve-family set are asserted unchanged.
+    """
+    runtime = build_runtime(tmp_path / "data")
+    try:
+        composed = runtime.plugin_host.wire_error_families.family_for
+        # The same codes through the path the compat surface actually uses: the
+        # resolver the composition INJECTED into its handler (T014-S2c), which
+        # replaces the helper that re-derived families from compat's own
+        # payload.
+        injected = runtime.plugin_host.provided_port("compat.handlers")._family_for
+        for code in ("CATALOG_INVALID", "CATALOG_SOURCE_MISSING",
+                     "CATALOG_ORIGIN_MISSING", "CATALOG_ENTRY_UNKNOWN"):
+            assert composed(code) == "INVALID_REQUEST", code
+            assert composed(code) == injected(code), code
+        assert composed("SOMETHING_UNREGISTERED") == "UNAVAILABLE"
+        assert injected("SOMETHING_UNREGISTERED") == "UNAVAILABLE"
+    finally:
+        runtime.stop()
     assert len(FAMILIES) == 12, "147 must not add a family to make its point"
     assert "INTERNAL" not in FAMILIES, (
         "the order's wording offered UNAVAILABLE/INTERNAL; the locked family set has "
         "no INTERNAL, so a Server fault answers UNAVAILABLE - recorded in the report")
 
 
+def test_the_injected_resolver_covers_every_plugin_row(tmp_path):
+    """T014-S2c closes S2a-R's registered residual.
+
+    The compat surface used to resolve families out of its OWN contribution
+    payload, which was legal but left it blind to the ten rows workspace
+    contributes: a workspace code reaching a compat conversion site answered
+    the static fall-through. That helper (`_compat_family`) is deleted, and
+    compat now converts through a callable the composition injected.
+
+    Predicates, all on a real composed product:
+    - every plugin-owned code (compat's rows plus workspace's — the 44 the
+      composition carries since T014-S2b moved the two SSH connector rows
+      to the plugin that composes the connector) answers the composition's
+      own family through the injected path, byte-identical to the aggregate
+      it replaces;
+    - the rows the old helper could NOT answer (workspace's) are named and
+      asserted, so the closure is measured rather than declared;
+    - the injected thing is a callable, not the aggregate: compat holds no
+      table it could read or write.
+    """
+    from ordessa_server_compat.error_families import COMPAT_ERROR_FAMILIES
+    from ordessa_workspace.error_families import WORKSPACE_ERROR_FAMILIES
+
+    runtime = build_runtime(tmp_path / "data")
+    try:
+        aggregate = runtime.plugin_host.wire_error_families
+        handlers = runtime.plugin_host.provided_port("compat.handlers")
+        injected = handlers._family_for
+        assert callable(handlers._family_resolver)
+        assert not isinstance(handlers._family_resolver, type(aggregate)), (
+            "compat was handed the aggregate object; it must receive a callable")
+
+        plugin_owned = sorted(set(COMPAT_ERROR_FAMILIES) | set(WORKSPACE_ERROR_FAMILIES))
+        assert len(plugin_owned) == 44, (
+            f"the composition carries {len(aggregate.contributed_families())} "
+            f"contributed rows; this gate expects the 44 compat+workspace codes")
+        assert len(set(COMPAT_ERROR_FAMILIES)) == 32
+        assert set(WORKSPACE_ERROR_FAMILIES) <= set(aggregate.contributed_families())
+        for code in plugin_owned:
+            assert injected(code) == aggregate.family_for(code), code
+
+        # The rows the old payload-only helper answered UNAVAILABLE: they now
+        # resolve to the family their owning plugin published.
+        assert injected("LOCAL_PATH_MISSING") == "NOT_FOUND"
+        assert injected("ENVIRONMENT_INVALID") == "INVALID_REQUEST"
+        assert injected("LOCAL_SANDBOX_UNAVAILABLE") == "UNAVAILABLE"
+        # Compat's own rows and the host's static rows keep their answers.
+        assert injected("CATALOG_INVALID") == "INVALID_REQUEST"
+        assert injected("SESSION_NOT_FOUND") == "NOT_FOUND"
+        assert injected("REQUEST_INVALID") == "INVALID_REQUEST"
+        assert injected("SOMETHING_UNREGISTERED") == "UNAVAILABLE"
+    finally:
+        runtime.stop()
+
+
+def test_an_uninjected_handler_falls_back_to_its_own_rows(tmp_path):
+    """Counterexample for the gate above: the composition is what closes the gap.
+
+    A handler stood up without the injected resolver is exactly what the S2a-R
+    compromise was — it sees its own published rows and the static table, and
+    nothing of workspace's. If this case ever answered `LOCAL_PATH_MISSING` as
+    `NOT_FOUND`, the two paths would have collapsed into one and the injection
+    would be doing nothing.
+    """
+    from ordessa_server_compat.core_wire import CoreWireHandlers
+
+    bare = CoreWireHandlers(
+        profiles=None, sessions=None, queue=None, approvals=None,
+        harnesses=None, objects=None, execution=None, codec=None)
+    assert bare._family_for("CATALOG_INVALID") == "INVALID_REQUEST"
+    assert bare._family_for("REQUEST_INVALID") == "INVALID_REQUEST"
+    assert bare._family_for("LOCAL_PATH_MISSING") == "UNAVAILABLE"
+    assert bare._family_for("ENVIRONMENT_INVALID") == "UNAVAILABLE"
+
+
 def test_the_five_copies_are_replaced_by_one_path():
     source = (REPO / "plugins/server-compat/src/ordessa_server_compat/core_wire.py").read_text(encoding="utf-8")
     assert source.count("getattr(refusal") == 0
-    assert source.count("raise _asset_refusal(refusal) from refusal") == 5
+    # The one path now takes the composition's resolver as an argument
+    # (T014-S2c); the count is the same predicate with the same five sites.
+    assert source.count(
+        "raise _asset_refusal(refusal, family_lookup=self._family_for) from refusal") == 5
 
 
 # -- G5b: the read path is bounded -----------------------------------------
@@ -214,12 +317,12 @@ def _forty_profiles(api, models=500):
 def _counted_list(server):
     runtime, api = server
     _forty_profiles(api)
-    counter = _CountingObjects(runtime.compat_handlers.objects)
-    runtime.compat_handlers.objects = counter
+    counter = _CountingObjects(runtime.plugin_host.provided_port('compat.handlers').objects)
+    runtime.plugin_host.provided_port('compat.handlers').objects = counter
     try:
         listed = api.ok("profiles.list", {"includeArchived": False})
     finally:
-        runtime.compat_handlers.objects = counter.inner
+        runtime.plugin_host.provided_port('compat.handlers').objects = counter.inner
     assert len(listed["items"]) == 40, len(listed["items"])
     return listed, counter
 
@@ -251,12 +354,12 @@ def test_counter_example_bypassing_the_memo_goes_back_to_eighty_reads(
     monkeypatch.setattr(handlers_module._CallReader, "read", uncached_read)
     monkeypatch.setattr(handlers_module._CallReader, "parsed", uncached_parsed)
     monkeypatch.setattr(handlers_module._CallReader, "index", uncached_index)
-    counter = _CountingObjects(runtime.compat_handlers.objects)
-    runtime.compat_handlers.objects = counter
+    counter = _CountingObjects(runtime.plugin_host.provided_port('compat.handlers').objects)
+    runtime.plugin_host.provided_port('compat.handlers').objects = counter
     try:
         api.ok("profiles.list", {"includeArchived": False})
     finally:
-        runtime.compat_handlers.objects = counter.inner
+        runtime.plugin_host.provided_port('compat.handlers').objects = counter.inner
     assert counter.reads >= 80, counter.reads
 
 
@@ -317,7 +420,7 @@ def _params_for(method, tmp_path, runtime):
 def test_all_five_sites_answer_a_server_fault_the_same_way(
         server, tmp_path, monkeypatch, method, attribute, function):
     runtime, api = server
-    owner = getattr(runtime.compat_handlers, attribute)
+    owner = getattr(runtime.plugin_host.provided_port('compat.handlers'), attribute)
     assert owner is not None, (
         f"{attribute} is not composed in this tree; the gate would be vacuous")
     if method == "assets.installFromCatalog":

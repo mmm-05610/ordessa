@@ -112,7 +112,9 @@ def test_the_families_are_the_twelve_locked_ones():
 
 def test_usage_aggregate_answers_with_real_numbers_once_injected(server):
     runtime, client, headers = server
-    runtime.compat_handlers.usage_aggregator = UsageAggregator(runtime.repository)
+    handlers = runtime.plugin_host.provided_port("compat.handlers")
+    repository = runtime.plugin_host.provided_port("product.repository")
+    handlers.usage_aggregator = UsageAggregator(repository)
     body = post(client, headers, "usage.aggregate", {"sessions": []}).json()
     assert "result" in body, body
     assert body["result"] == {"sessions": []}
@@ -122,7 +124,7 @@ def test_usage_aggregate_answers_with_real_numbers_once_injected(server):
 
 def test_provider_artifacts_list_answers_once_the_store_is_injected(server, tmp_path):
     runtime, client, headers = server
-    runtime.compat_handlers.artifact_store = ArtifactStore(tmp_path / "artifacts")
+    runtime.plugin_host.provided_port('compat.handlers').artifact_store = ArtifactStore(tmp_path / "artifacts")
     body = post(client, headers, "providerArtifacts.list", {"harness": "alpha"}).json()
     assert body["result"] == {"harness": "alpha", "versions": [], "current": None}, body
 
@@ -130,7 +132,7 @@ def test_provider_artifacts_list_answers_once_the_store_is_injected(server, tmp_
 def test_rolling_back_to_an_uninstalled_version_is_not_found(server, tmp_path):
     """A user-correctable fact, measured before this order as a 500."""
     runtime, client, headers = server
-    runtime.compat_handlers.artifact_store = ArtifactStore(tmp_path / "artifacts")
+    runtime.plugin_host.provided_port('compat.handlers').artifact_store = ArtifactStore(tmp_path / "artifacts")
     response = post(client, headers, "providerArtifacts.rollback",
                     PARAMS["providerArtifacts.rollback"])
     assert response.status_code == 200, response.text
@@ -144,7 +146,7 @@ def test_a_digest_that_does_not_match_the_staged_tree_is_an_invalid_request(serv
     source = tmp_path / "artifacts" / "incoming" / "staged-token"
     source.mkdir(parents=True)
     (source / "harness.js").write_text("export default 1;\n", encoding="utf-8")
-    runtime.compat_handlers.artifact_store = ArtifactStore(tmp_path / "artifacts")
+    runtime.plugin_host.provided_port('compat.handlers').artifact_store = ArtifactStore(tmp_path / "artifacts")
     response = post(client, headers, "providerArtifacts.install",
                     PARAMS["providerArtifacts.install"])
     assert response.status_code == 200, response.text

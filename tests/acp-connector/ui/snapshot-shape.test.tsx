@@ -3,11 +3,12 @@ import { act, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { afterEach, expect, it } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
-import { createAgentConnections } from '../../../plugins/connections/service/src/entry'
+import { createConnections } from '../../../packages/desktop-platform/connections/src/index'
+import { createAgentConnections } from '../../../plugins/agent/connections/src/entry'
 import { createAgentSessions } from '../../../plugins/agent/sessions/src/model'
 import { Conversation } from '../../../plugins/agent/conversation/src/view'
 import { SessionBrowser } from '../../../plugins/agent/sessions/src/view'
-import type { AgentClient, AgentSnapshot } from '../../../packages/desktop-platform/contracts/agent-ui/src/contract'
+import type { AgentClient, AgentSnapshot } from '../../../plugins/agent/contracts/src/contract'
 
 /**
  * UI-slot verification (passes today, deliberately): the exact `AgentSnapshot` shape the ACP
@@ -68,7 +69,7 @@ async function openWith(snapshot: AgentSnapshot) {
   }
   const registryScope = new OwnedResources(), sessionScope = new OwnedResources(), connectorScope = new OwnedResources()
   cleanup.push(async () => { sessionScope.dispose(); connectorScope.dispose(); registryScope.dispose() })
-  const registry = createAgentConnections(registryScope)
+  const registry = createAgentConnections(registryScope, createConnections(registryScope))
   registry.forScope(connectorScope).add({ id: 'acp:s1', title: 'Harness', connect: async () => client })
   const sessions = createAgentSessions(sessionScope, registry)
   await sessions.selectConnection('acp:s1')

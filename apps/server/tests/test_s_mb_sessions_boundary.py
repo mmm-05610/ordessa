@@ -35,12 +35,15 @@ LEGACY_ENTRIES = ("ordessa_server.sessions", "ordessa_server.sessions.queue",
                   "ordessa_server.sessions.repository", "ordessa_server.sessions.service")
 
 #: The host's neutral vocabulary — the only ordessa_server.* edges the
-#: session domain may keep.
+#: session domain may keep. T014-S2c shrank this list: `ordessa_server.errors`
+#: and `ordessa_server.records` are no longer importable from a plugin at all
+#: (the shared error type, the record encoding, the wire family table and the
+#: param-shape primitives are published in `server_plugin_api`, which the host
+#: imports too), so an edge reappearing here is a rule-3 breach and this gate
+#: goes red on the exact-set comparison below.
 VOCABULARY_EDGES = frozenset((
-    "ordessa_server.errors",
     "ordessa_server.idempotency",
     "ordessa_server.ids",
-    "ordessa_server.records",
 ))
 
 

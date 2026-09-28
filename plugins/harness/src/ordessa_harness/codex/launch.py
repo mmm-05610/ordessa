@@ -4,7 +4,7 @@ import os
 import re
 import shutil
 from pathlib import Path
-from pacthold.resource_contracts import AgentBoxProfileV1, WorkspaceV1
+from pacthold_runtime_compat.resource_contracts import AgentBoxProfileV1, WorkspaceV1
 from pacthold.work_core import Ref
 from .executable import CodexExecutableBundle, CodexExecutableResolver
 

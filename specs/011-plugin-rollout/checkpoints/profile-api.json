@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "name": "profile-api",
+  "producer": "z1",
+  "status": "READY",
+  "planAnchorRef": "refs/heads/codex/011-z1-profile",
+  "implementationSha": "f5435be938ff3014a024c042dc7eec9fdcaa4d78",
+  "dependsOn": {},
+  "publicExports": [
+    "py: ordessa_profile.contracts — FacetDescriptor/ItemDescriptor/ItemValueSchema/Applicability, UNSET/ValueDisabled/value_state (PF04 四值), ConfigIntent/CompileResult/Violation, SessionRef, AppliedReceipt/JournalEntry, MechanismPolicy, HarnessConfigPort(消费协议)+缺席语义, validate_* 纯函数；从包 __init__ 再导出",
+    "py: ordessa_profile.plugin.ProfilePluginServices — register_v2_facet(宿主注入 owner)/unregister_facet/describe_facets/resolve_preview/get·update_mechanism_policy；resource provider 解析平台契约 agent-box.profile@1",
+    "ts: @ordessa/plugin-profile-api (plugins/profile/api) — contract.ts 全量类型 + ProfileServiceClient(22 操作)+ProfileServiceError(26 稳定码) + InMemoryProfileContributions + ProfileServiceToken('ordessa.profile.service.v1')"
+  ],
+  "commandsAndEvidence": [
+    ".venv/bin/python -m pytest plugins/profile/tests -q → 130 passed, exit 0",
+    "bash plugins/profile/tests/boundary_check.sh → OK 0 violations (只依赖 pacthold)",
+    "bash plugins/profile/tests/run_counterexamples.sh → OK 12/12 注入被门判别",
+    "tsc -p plugins/profile/api/tsconfig.json (strict) → 0 errors, exit 0",
+    "vitest run (plugins/profile/api) → 9 passed, exit 0",
+    "受控第三方 facet 全链 proof: 注册(owner 注入)→describe→存值→resolve_preview→apply(含 reset) 零核心改动 — test_v2_extension.py；受控 fixture 证据标 controlled-fixture，不冒充真实 Harness",
+    "evidence: specs/011-z1-profile/evidence-backend-stage1.md, specs/011-z1-profile/evidence-tsapi-stage1.md"
+  ],
+  "limitations": [
+    "HarnessConfigPort 仅为类型化消费协议：真实实现等 C0 harness-api 检查点；端口缺席时切换应用 typed blocked(APPLICATION_PORT_ABSENT)，受控 fixture 只证 Profile 侧 journal/fence/reconcile 逻辑",
+    "wire registry 的 HTTP 暴露/auth 装配归 C0 集成（integration-request.md）；本检查点不含 wire 事实",
+    "canonical SessionRef 的服务端映射证据等 harness-api；当前 legacy 映射(realm='local', uid='legacy:<id>')只保真迁移不冒充跨服务身份",
+    "前端 settings/management/editors 与 Chat glue 未实施（等 foundation/chat-api），API_READY 不冒充全产品完成"
+  ]
+}

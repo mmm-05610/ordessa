@@ -1,0 +1,104 @@
+# T04b RED run — ordessa-sandbox-backend (tests first; implementation not importable)
+# date: 2026-09-27T19:16:25Z
+# tree: worktree 011-q5-safety, package plugins/assets/sandbox/backend
+# method: suite + skeleton authored; src/ordessa_sandbox_backend temporarily hidden to
+#          prove the tests fail before the implementation exists, then restored
+
+$ PYTHONPATH=plugins/assets/sandbox/backend/src .venv/bin/python -m pytest plugins/assets/sandbox/backend -q -rE --tb=line --continue-on-collection-errors
+
+FF..                                                                     [100%]
+==================================== ERRORS ====================================
+___________________ ERROR collecting tests/test_catalogue.py ___________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/backend/tests/test_catalogue.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/assets/sandbox/backend/tests/test_catalogue.py:13: in <module>
+    from ordessa_sandbox_backend import (
+E   ModuleNotFoundError: No module named 'ordessa_sandbox_backend'
+__________________ ERROR collecting tests/test_composition.py __________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/backend/tests/test_composition.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/assets/sandbox/backend/tests/test_composition.py:20: in <module>
+    from ordessa_sandbox_backend import (
+E   ModuleNotFoundError: No module named 'ordessa_sandbox_backend'
+_________________ ERROR collecting tests/test_no_fake_apply.py _________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/backend/tests/test_no_fake_apply.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/assets/sandbox/backend/tests/test_no_fake_apply.py:17: in <module>
+    import ordessa_sandbox_backend
+E   ModuleNotFoundError: No module named 'ordessa_sandbox_backend'
+____________________ ERROR collecting tests/test_plugin.py _____________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/backend/tests/test_plugin.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/assets/sandbox/backend/tests/test_plugin.py:21: in <module>
+    from ordessa_sandbox_backend import (
+E   ModuleNotFoundError: No module named 'ordessa_sandbox_backend'
+__________________ ERROR collecting tests/test_repository.py ___________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/backend/tests/test_repository.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/assets/sandbox/backend/tests/test_repository.py:14: in <module>
+    from ordessa_sandbox_backend import (
+E   ModuleNotFoundError: No module named 'ordessa_sandbox_backend'
+___________________ ERROR collecting tests/test_verifier.py ____________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/backend/tests/test_verifier.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/assets/sandbox/backend/tests/test_verifier.py:34: in <module>
+    from ordessa_sandbox_backend import (
+E   ModuleNotFoundError: No module named 'ordessa_sandbox_backend'
+=================================== FAILURES ===================================
+E   AssertionError: no source files under /home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/backend/src/ordessa_sandbox_backend
+    assert []
+/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/backend/tests/test_dependency_direction.py:33: AssertionError: no source files under /home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/backend/src/ordessa_sandbox_backend
+E   AssertionError: Traceback (most recent call last):
+        File "<string>", line 16, in <module>
+      ModuleNotFoundError: No module named 'ordessa_sandbox_backend'
+      
+    assert 1 == 0
+     +  where 1 = CompletedProcess(args=['/home/maoqh/projects/ordessa/worktrees/011-q5-safety/.venv/bin/python', '-c', '\nimport sys\n\...l last):\n  File "<string>", line 16, in <module>\nModuleNotFoundError: No module named \'ordessa_sandbox_backend\'\n').returncode
+/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/backend/tests/test_dependency_direction.py:95: AssertionError: Traceback (most recent call last):
+=========================== short test summary info ============================
+ERROR plugins/assets/sandbox/backend/tests/test_catalogue.py
+ERROR plugins/assets/sandbox/backend/tests/test_composition.py
+ERROR plugins/assets/sandbox/backend/tests/test_no_fake_apply.py
+ERROR plugins/assets/sandbox/backend/tests/test_plugin.py
+ERROR plugins/assets/sandbox/backend/tests/test_repository.py
+ERROR plugins/assets/sandbox/backend/tests/test_verifier.py
+2 failed, 2 passed, 6 errors in 0.09s
+
+EXIT_CODE=1
+
+# failing IDs (collection errors per-module; runtime failures per test):
+tests/test_catalogue.py (collection: ModuleNotFoundError: ordessa_sandbox_backend)
+tests/test_composition.py (collection: ModuleNotFoundError: ordessa_sandbox_backend)
+tests/test_no_fake_apply.py (collection: ModuleNotFoundError: ordessa_sandbox_backend)
+tests/test_plugin.py (collection: ModuleNotFoundError: ordessa_sandbox_backend)
+tests/test_repository.py (collection: ModuleNotFoundError: ordessa_sandbox_backend)
+tests/test_verifier.py (collection: ModuleNotFoundError: ordessa_sandbox_backend)
+tests/test_dependency_direction.py::test_source_imports_only_the_declared_contracts (AssertionError: no source files)
+tests/test_dependency_direction.py::test_works_end_to_end_without_permissions_importable (subprocess ModuleNotFoundError)
+# note: test_no_pacthold_sandboxv1_names_in_the_package and
+# test_pyproject_declares_exactly_the_two_consumed_dependencies pass in the red
+# state too (an empty dir contains no SandboxV1 names; pyproject deps are declared up front).

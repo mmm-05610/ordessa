@@ -15,7 +15,7 @@ import shutil
 
 import pytest
 
-from pacthold.resource_contracts import harness_capabilities as caps
+from pacthold_runtime_compat.resource_contracts import harness_capabilities as caps
 from ordessa_server.bootstrap import build_runtime
 from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
 from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
@@ -26,7 +26,7 @@ from ordessa_server_compat.execution.sidecar_backend import (
 from ordessa_server_compat.profiles import ProfileRecords, ProfileService
 from ordessa_server.credentials import CredentialRecords
 from ordessa_server.idempotency import IdempotentRecords
-from pacthold.storage import Database, ObjectStore
+from pacthold_runtime_compat.storage import Database, ObjectStore
 
 
 REPO = Path(__file__).resolve().parents[3]
@@ -239,7 +239,9 @@ def test_deployment_seat_rejects_non_boolean_capability_values(tmp_path, claims)
 def test_deployment_seat_accepts_the_canonical_spelling(tmp_path, monkeypatch):
     if not (PLUGIN / "runtime").is_dir():
         pytest.skip("harness plugin runtime is unavailable")
-    import ordessa_server.bootstrap.runtime as runtime_module
+    # T014-S2b: the built-in connector builder now lives in the workspace
+    # plugin; this stub patches its owning module.
+    import ordessa_workspace.connectors as runtime_module
 
     # 只在 Linux 上跑装配：连接器只是占位，能力声明才是这条断言的证据。
     monkeypatch.setattr(runtime_module, "_builtin_connector", lambda _instance_id: object())
@@ -249,7 +251,7 @@ def test_deployment_seat_accepts_the_canonical_spelling(tmp_path, monkeypatch):
         plugin_root=PLUGIN,
     )
     try:
-        descriptor = runtime.harnesses.get("fixture")
+        descriptor = runtime.plugin_host.provided_port('harness.directory').get("fixture")
         assert dict(descriptor.capability_claims) == {
             "start": True, "stream": False, "native_continuation": True,
         }
@@ -644,7 +646,7 @@ def test_backend_reads_attachment_support_from_the_port_view_not_a_snapshot():
 
 def test_backend_refuses_attachment_dispatch_and_leaves_no_orphan_native_session():
     """后端在派发前读有效 attach；拒绝时关闭刚打开的原生会话。"""
-    from pacthold.resource_contracts import PromptFragmentV1
+    from pacthold_runtime_compat.resource_contracts import PromptFragmentV1
     from ordessa_server_compat.execution.sidecar_backend import SidecarExecutionBackend
 
     class Objects:
@@ -671,7 +673,7 @@ def test_backend_refuses_attachment_dispatch_and_leaves_no_orphan_native_session
     # 阶段 D 起：实际启动前的能力强制门要求装配边界已注入绑定与候选声明；
     # 本用例的面为空（无 launcher），注入一份无声明的最小候选即可过门，
     # 以继续验证附件拒绝语义本身。
-    from pacthold.extensions import capability as capability_api
+    from pacthold_runtime_compat import capability as capability_api
 
     port.capability_binding = "fixture|binding"
     port.capability_authorized_providers = ("fixture",)

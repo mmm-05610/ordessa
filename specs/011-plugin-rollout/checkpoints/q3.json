@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "name": "q3-r6",
+  "producer": "q3",
+  "status": "PARTIAL",
+  "planAnchorRef": "refs/heads/codex/011-plugin-plan",
+  "implementationSha": "bc3a4cc3095654611b8796d0ea404076426f3893",
+  "dependsOn": {
+    "chat-api": "54ad26c15d8480823374d85590919ba6bcca60d2",
+    "chat-api-r3": "3d8c3fa410cd898a44c682b74458cc8f41ef7489",
+    "foundation": "8844c475bc02a185ab194c69eed873122aa48349",
+    "profile-api": "4943628f47ab65dc08c060beff973adfaa4ab58b",
+    "harness-api": "d3f026904ead6c7ce58df26f2536175ce6179de7",
+    "permissions-api": "ad8902d5c8e6ae6882057e1ddde400110c837bb0"
+  },
+  "publicExports": [
+    "py:ordessa_assets_subagents.dto — AgentDefinition, DefinitionRevision, ModelRef/ToolRef/McpRef/SkillRef, SourceApproval (stable opaque definitionId; originScope public|project|profile)",
+    "py:ordessa_assets_subagents.errors — one constant per contracts.md C5 code, ERROR_CODES, DomainError(code, item_id, detail) that never echoes a rejected value",
+    "py:ordessa_assets_subagents.limits — named caps incl. MAX_DESCRIPTION_CHARS=160, MAX_ROLE_BODY_BYTES=32KiB, aggregate description budget",
+    "py:ordessa_assets_subagents.digest — canonical_digest / revision_digest as 'sha256:<64hex>'",
+    "py:ordessa_assets_subagents.decoder — decode_definition / decode_revision, is_compilable (false while any retained native field exists), is_path_shaped",
+    "py:ordessa_assets_subagents.store — DefinitionStore(root): append-only revisions, replace_definition(expected_row_version), archive/restore/clone, operation-key idempotency",
+    "py:ordessa_assets_subagents.service — DefinitionService C1 subset: create / save_revision / get / list / archive / restore / clone / import_preview / approve_import",
+    "py:ordessa_assets_subagents.scopes — ScopeKind + LAYER_ORDER (6 layers), AuthorizationContext.require_project, scoped_read (foreign read == not-found), ANY_HARNESS",
+    "py:ordessa_assets_subagents.assignments — tri-state Assignment (inherit == absence), validate_assignment, disable_effect, pinned_revision, approve_assignment_update, ApprovalAuthority protocol",
+    "py:ordessa_assets_subagents.references — Model/Tool/Mcp/SkillResolver protocols, resolve_references, sanitize_facts, rematch_tool_names",
+    "py:ordessa_assets_subagents.ceiling — Ceiling, admit() refuse-not-narrow",
+    "py:ordessa_assets_subagents.resolution — resolve_preview (single deterministic resolver), EffectiveSet with per-candidate reason, inspect_native (UNKNOWN sentinel vs empty), build_snapshot",
+    "py:ordessa_assets_subagents.adapters.base — Assessment/CellVerdict (verdict requires evidence), observation types, as_state_machine/require_state, ConfigurationAdapter assess/compile/verify",
+    "py:ordessa_assets_subagents.adapters.intents — TargetSlot (private-generation only), MountContent/RemoveOwnedContent/SetRebuildClassOption/InvokeSubagent, compile_all; INTERNAL ONLY, to be mapped onto ordessa_harness_api at SR-1b",
+    "py:ordessa_assets_subagents.adapters.{claude,codex,pi} — per-pin key tables; pi.compile refuses until an audited extension is granted",
+    "ts:plugins/assets/subagents/ui — createSubagentInputSource(reader, deps): ChatInputSource over the consumed chat-api contract; SUBAGENT_INPUT_SOURCE_ID='ordessa.assets.native-subagents'; describeDefinition()",
+    "docs:specs/011-q3-subagents/{implementation-baseline,legacy-inventory-matrix,capability-matrix,pi-extension-audit,regression-ledger,api-requests,integration-request,reuse-decisions,report}.md",
+    "ts:plugins/assets/subagents/ui — createSubagentInputSource now implements chat-api r3 `invoke.execute(location: ChatLocation)`; stale or foreign selection yields `unavailable` with zero port calls",
+    "ts:plugins/assets/subagents/settings — Workbench settings section (contract/model/sanitize/store/view/component/section), G15 empty/error/archive/revision-diff + the three counter-examples",
+    "py:ordessa_assets_subagents.profile_facet — NativeSubagentsFacet (descriptor/validate/migrate/compile), build_submission, apply_outcome_projection, overlay_cleanup_evidence, editor_projection; Z1 vocabulary injected via ProfileV2Api.from_contracts at composition",
+    "py:ordessa_assets_subagents.migration — classify/dry_run/apply_import/rollback_sample with a four-layer structural REJECT over the legacy grant shapes"
+  ],
+  "commandsAndEvidence": [
+    {
+      "command": "clean worktree at 8a484f2aeb: PYTHONPATH=plugins/assets/subagents/src python -m pytest plugins/assets/subagents/tests -q",
+      "evidence": "exit 0 — 386 passed, 0 failed, 0 skipped (tracked content only; proves the published commit is self-consistent without in-flight writer files)"
+    },
+    {
+      "command": "clean worktree at 8a484f2aeb: python -m pytest packages/pacthold -q",
+      "evidence": "exit 0 — 238 passed, VERDICT=GREEN_NO_SKIPS, identical to the frozen before"
+    },
+    {
+      "command": "python -m pytest plugins/harness -q",
+      "evidence": "exit 1 — 2 failed, 308 passed, 3 skipped; same two IDs and same npm-closure cause as docs/baseline.md:38 and docs/known-issues.md:13 => inherited, untouched by Q3"
+    },
+    {
+      "command": "python -m pytest apps/server -q -p no:cacheprovider",
+      "evidence": "before-state 90 failed, 670 passed, 10 skipped, 158 errors; 258 non-pass IDs captured per-ID in the out-of-repo evidence root (before-server.ids). Shape differs from docs/baseline.md's ledger because this tree has no npm closure / built Go bridge / claude tool — registered, not absorbed"
+    },
+    {
+      "command": "npm ci && npm run typecheck && npm test",
+      "evidence": "npm ci exit 0 with package-lock.json unmodified; npm test exit 0 — 13 files / 146 tests, equal to the frozen before; root typecheck currently reports only grammar errors from an in-flight Settings writer file (not part of this commit)"
+    },
+    {
+      "command": "cd plugins/assets/subagents/ui && npx vitest run && npx tsc --noEmit",
+      "evidence": "exit 0 / exit 0 — 26/26 tests, strict typecheck including 8 compile-time counter-examples"
+    },
+    {
+      "command": "cd plugins/chat/api && npx vitest run && npx tsc --noEmit (after merging the consumed checkpoint)",
+      "evidence": "exit 0 / exit 0 — 15/15; re-measured in this tree rather than inheriting Z2's numbers"
+    },
+    {
+      "command": "controlled mutation audit (scratch copies, reds reported as reds minus control)",
+      "evidence": "LIVE guards: LAYER_ORDER inverted -> 3 new reds; ceiling toolRefs refusal removed -> 4 new reds; Claude _REJECTED_BY_NAME emptied -> 3 new reds. Also recorded: relabelling a ClaudeKey classification produced 0 new reds because the mutation was behaviour-preserving, so it proves nothing"
+    },
+    {
+      "command": "fake-green screen over the landed tests",
+      "evidence": "no pytest.skip / xfail / assert True / bare except-pass / pytest.raises(Exception); 146 asserts across the T04 files alone"
+    },
+    {
+      "command": "git boundary check",
+      "evidence": "main still cd7d31f3cfba6a0e1ec65f9a13014c6b9751540b (unmoved); merge-base(main,HEAD)==main; no remote configured in this worktree so nothing was pushed; package.json/package-lock.json never modified by this line"
+    },
+    {
+      "command": "scratch copy, running only tests/test_store_guards_direct.py: control vs mut1(CAS->if False) vs mut2(FileExistsError->pass)",
+      "evidence": "control 5 passed (red set empty); mut1 2 failed/3 passed with 2 new red IDs; mut2 1 failed/4 passed with 1 new red ID"
+    },
+    {
+      "command": "workspace state at publication of this revision (honest, not a gate claim)",
+      "evidence": "the T03 content writer stopped on its own subagent turn limit mid-edit and the prohibition/importer/settings writers were still running: whole-package run reports 43 failed, 587 passed. Those files are UNTRACKED and excluded from implementationSha, which is why the first publication froze a clean-worktree-verified commit (386 passed, 0 failed) instead of the moving tree"
+    },
+    {
+      "command": ".venv/bin/python -m pytest plugins/harness -q (live tree)",
+      "evidence": "2 failed, 308 passed, 3 skipped — same two IDs and same cause as the frozen baseline => 0 new reds; packages/pacthold 238 passed; boundary subset 13 passed"
+    },
+    {
+      "command": "detached worktree at f9dffe5835: PYTHONPATH=plugins/assets/subagents/src pytest plugins/assets/subagents/tests -q",
+      "evidence": "exit 0 — 635 passed, 0 failed, 0 skipped; `git status --porcelain` shows 0 modified tracked files, so the published commit is self-consistent without any in-flight writer file"
+    },
+    {
+      "command": "detached worktree at ca7d239b4a: PYTHONPATH=plugins/assets/subagents/src pytest plugins/assets/subagents/tests -q",
+      "evidence": "exit 0 — 642 passed, 0 failed, 0 skipped; boundary subset 13 passed; live tree additionally measured: settings tsc exit 0 + vitest 36/36, harness 2 inherited reds / 347 passed, pacthold 212 passed with 0 non-pass items"
+    },
+    {
+      "command": "detached worktree at bc3a4cc309: PYTHONPATH=plugins/assets/subagents/src pytest plugins/assets/subagents/tests -q",
+      "evidence": "exit 0 — 671 passed, 0 failed, 0 skipped (tracked content only)"
+    },
+    {
+      "command": "cd plugins/assets/subagents/ui && npx tsc --noEmit; npx vitest run",
+      "evidence": "exit 0 / exit 0 — 31 tests; the r3 signature change was additionally mutation-proved by restoring the old captured-location body, which turns exactly the 5 selection-time tests red"
+    },
+    {
+      "command": "cd plugins/assets/subagents/settings && npx tsc --noEmit; npx vitest run",
+      "evidence": "exit 0 / exit 0 — 95 tests, 0 skipped; the sanitizer fix was a source defect (an `onerror=` shape reached the preview markup), not a test relaxation"
+    },
+    {
+      "command": ".venv/bin/python -m pytest plugins/profile plugins/permissions/api -q",
+      "evidence": "exit 0 — 456 passed: consuming and wiring did not disturb Z1's or Q5's own packages"
+    },
+    {
+      "command": ".venv/bin/python -m pytest apps/server -q (before/after, normalised junit)",
+      "evidence": "67 non-pass IDs identical in both sets, 0 new, 0 disappeared, 0 cause drift after normalising pytest tmp_path counters"
+    }
+  ],
+  "limitations": [
+    "T05 landed and is measured: migration.py plus test_migration_t05.py, 88 passed exit 0 in the live tree, so G10 is closed at L1 with synthetic fixtures only — a real user-data migration and its restore demonstration remain untested and unauthorised.",
+    "CLOSED in this revision: the store-level CAS and revision-immutability guards are now covered by tests/test_store_guards_direct.py (5 passed, exit 0). Controlled mutation kills: CAS check disabled -> 2 new reds; 'never rewritten' refusal stubbed -> 1 new red; disjoint sets, anti-vacuity writes included. G04/G06 are therefore closed at L1 only — no L2/L3 claim is made for them.",
+    "G01-G03 have only their static half: Claude/Codex/Pi cells come from the version-matched artifacts (vendored Codex/Pi tarballs, and for Claude a pinned npm fetch outside the repo because that pin is not vendored — disclosed in reuse-decisions.md §4 and raised to C0 as CA1). No L2-execution probe exists because claude and codex executables are absent from this host; the host pi is 0.86.1 while the product pins 0.84.2.",
+    "G11/G12/G13/G15/G16/G17/G18/G19/G20/G21/G22 have no L3 evidence: the foundation, harness-api, profile-api and permissions-api checkpoints were unpublished for this whole session (verified repeatedly with git branch --list '*ready*'), and harness.configuration-adapters / runtime_generation / submission_permit had zero code hits at freeze time. Q3 did not substitute unit tests for those production gates.",
+    "base.py's 'file existence cannot yield loaded' rung was reviewed by reading, not by a proven-failing mutation, so that structural claim is verified weaker than the other guards.",
+    "G10 is only half delivered: the read-only matrix, the REJECT classification and the structural prohibition against migrating legacy grant edges exist, but the importer's byte/ID-identical dry-run and rollback demonstration are unfinished.",
+    "T10 stays blocked with proof, not assumption: FacetDescriptor / addEditor / profile.facet have zero hits across plugins/, packages/ and products/, and plugins/profile does not exist in this worktree.",
+    "The Chat face has no live reader: no caller in this repository supplies a real SubagentDefinitionReader, so production wiring waits on foundation (SR-7); no manifest.json is shipped deliberately, because build-all.mjs would advertise an assembly that cannot run.",
+    "G17's positive arm is contract-expressible but data-vacuous at today's pins: no brand can honestly carry invokable='yes', so the ready path executes only against test doubles. The negative arm (no pseudo-call) is proven structurally: the module contains no insert-command construction.",
+    "No real user data was migrated and no live data root read; migration tests use synthetic fixtures under tmp_path only. Real model calls (L4) were not authorised and were not made. ~/.claude, ~/.codex and ~/.pi were never read or written (only path existence and a read-only 'pi list' were observed).",
+    "This is a line checkpoint, not a merge: no merge to main and no push was performed or claimed.",
+    "Two more checkpoints were consumed after r4 (foundation 8844c475bc, profile-api 4943628f47), both verified READY and merged by fixed SHA. Q3's own suite is 639 passed / 0 failed in the merged tree, but this line's earlier per-ID baselines for pacthold and plugins/harness are no longer comparable because foundation changed those suites' collected sets; they must be re-frozen before any further regression claim. Consuming profile-api also exposed a cross-lane incompatibility: ordessa_profile imports pacthold.resource_contracts.AgentBoxProfileV1, which foundation no longer provides, so T10 remains open on that named blocker and Q3 has not patched either producer to work around it.",
+    "T09 landed with L1 evidence: tsc exit 0 and vitest 36 passed / 0 failed in this tree, covering G15's three counter-examples; real-browser keyboard/zoom/screen-reader behaviour remains untested.",
+    "Self-correction: an earlier line in this record claimed the Settings package typechecked with exit 0, measured as `npx tsc --noEmit 2>&1 | tail -4; echo $?` — that reads the pipeline tail's status, not tsc's. Re-measured by redirecting to a file: the CURRENT working tree exits 2 on a literal-type mismatch, and vitest there is 93 passed / 2 failed of 95. Those failing edits are UNCOMMITTED and post-date the published implementationSha, so the published state is unaffected; the claim, however, was wrong and is corrected here. T09 is therefore partial, not complete.",
+    "SEAM FACES MEASURED BUT NOT IN THIS SHA: the harness-api intent remap (179 tests), the permissions authorizer seam (91 tests control-green; two mutations each kill 2), the apply orchestrator (28 tests, six guards each killing) and the server-plugin registration (54 tests, eight mutations killing) are all verified in the working tree but still uncommitted, because two guard files in this package pin the deleted pre-contract vocabulary and the migration is in flight (package: 840 passed / 5 failed). They land as a later revision; nothing here claims they are published.",
+    "The package's declared runtime dependencies must change from stdlib-only to ordessa-harness-api, ordessa-permissions-api and ordessa-server-plugin-api; importing Q5's ordessa_permissions_backend from the seam is a defect this line keeps red rather than allow-listing, because the authorizer must arrive by host injection.",
+    "G18/G19/G20 remain open as a composition gap, not a missing component: the admission port is provided by Q5 and consumed by the Harness, and answers ready=False until C0 injects acp.admission.native_evidence, acp.admission.principal and server.instance_id. Four production collaborators (admission ready, one-use permit, native runtime generation, operation-bound receipt) are named by apply.missing_production_collaborators().",
+    "G15's browser-level half (real keyboard traversal, 200% zoom, screen reader) is untested: there is no desktop harness here. Likewise G03/G22 keep only pin-static evidence because claude and codex executables are absent on this host and real model calls were never authorised.",
+    "Two service-face gaps stay this line's own follow-up, not C0's: viewer-scoped reads are not enforceable because service.get_definition/list_definitions take no viewer, and an unknown operation is not re-readable because the idempotency scope is service-internal (requested symbol: DefinitionService.operation_status).",
+    "T14's independent review, real user-data migration and its restore demonstration remain untested; base.py's 'file existence cannot yield loaded' rung is reviewed by reading, not by a mutation kill."
+  ],
+  "revisionOf": "q3-r5",
+  "compatibility": "additive over r5: chat-api r3 invoke signature adopted, Settings face landed (G15), Profile facet face landed, T05 importer finalised, and all five consumptions verified",
+  "recordCommit": "d9a2dcb2ec42f5aabafd76b53faac9be336714b7"
+}

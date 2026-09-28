@@ -1,0 +1,27 @@
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: module registration and navigation counterexample: empty product mounts with an empty state, no module entries — and shows one as soon as a module registers
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: module registration and navigation counterexample: removing a module erases its navigation, sidebar and main view without breaking a peer
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: module registration and navigation counterexample: activation rejects missing or misplaced default views — no fallback, no false success
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: module registration and navigation counterexample: duplicate module id fails with exactly one entry left; closed scopes refuse late writes
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: module registration and navigation counterexample: close/hide/switch/module operations dispose nothing — while real disposal is observable
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: overlays counterexample: overlay owner unload closes the instance and restores focus to a connected target
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: overlays counterexample: a dead or missing popover anchor fails explicitly; a live anchor opens
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: overlays counterexample: a popover whose anchor leaves the DOM closes explicitly and refocuses a safe target
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: overlays closes the stack LIFO with Escape, one overlay at a time, and unsets modality at empty
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: overlays lets the contributor request close through its component prop and restores focus
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: overlays counterexample: workbench errors stay visible above an open overlay
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: overlays counterexample: modal overlay Tab cycling stays inside the surface, off the inert workspace
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: overlays counterexample: the settings page wraps Tab inside its surface too
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: settings and screen structure settings page is Workbench-owned: sections ordered, located, and removed on contributor unload
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: settings and screen structure activates modules to home plus sidebar selection and switches both ways
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: settings and screen structure counterexample: activating a sidebar-less module clears the module sidebar yet keeps user-opened views
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: settings and screen structure counterexample: narrow window keeps navigation usable; single view shows no empty tab strip
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: settings and screen structure counterexample: unregistered regions keep no tab strip — the region label takes their place
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: settings and screen structure a second view in a region brings the tab strip back: pressed states and switching work
+P|plugins/workbench/tests/composition.test.tsx|workbench composition: settings and screen structure v1 UI contributions keep working next to module navigation
+P|plugins/workbench/tests/host-integration.test.tsx|workbench plugin through the extension host exposes composition on the v1 Workbench service and runs addModule → addView → activateModule end to end
+P|plugins/workbench/tests/host-integration.test.tsx|workbench plugin through the extension host a composition consumer rejects a v1-only Workbench (absent capability) instead of falling back
+P|plugins/workbench/tests/popover.test.ts|placePopover (pure clamp, no layout engine needed) places below the anchor when there is room
+P|plugins/workbench/tests/popover.test.ts|placePopover (pure clamp, no layout engine needed) clamps horizontally near the right edge
+P|plugins/workbench/tests/popover.test.ts|placePopover (pure clamp, no layout engine needed) flips above near the bottom edge
+P|plugins/workbench/tests/popover.test.ts|placePopover (pure clamp, no layout engine needed) clamps inside the viewport when it fits neither above nor below
+P|plugins/workbench/tests/popover.test.ts|placePopover (pure clamp, no layout engine needed) never leaves the viewport for any anchor position or overlay size in a swept grid

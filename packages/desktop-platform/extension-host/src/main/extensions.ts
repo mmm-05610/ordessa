@@ -17,6 +17,7 @@ export async function confinedFile(root: string, relative: string): Promise<stri
 export async function discover(dataRoot: string, bundledRoot?: string): Promise<Discovery> {
   const catalog: Catalog = { extensions: [], failures: [] }, installed = new Map<string, Installed>()
   let enabled: string[] = []
+  let productConfig: Record<string, unknown> = {}
   try {
     let source: string
     try { source = await readFile(path.join(dataRoot, 'extensions.json'), 'utf8') }
@@ -28,6 +29,12 @@ export async function discover(dataRoot: string, bundledRoot?: string): Promise<
     if (!Array.isArray(config.enabled) || !config.enabled.every((id: unknown) => typeof id === 'string' && ID.test(id)) ||
         new Set(config.enabled).size !== config.enabled.length) throw Error('enabled must be a unique id list')
     enabled = config.enabled
+    // Optional per-extension configuration, opaque to the host and forwarded to the entry factory.
+    if (config.config !== undefined) {
+      if (typeof config.config !== 'object' || config.config === null || Array.isArray(config.config)) throw Error('config must be an object keyed by extension id')
+      for (const key of Object.keys(config.config as Record<string, unknown>)) if (!ID.test(key)) throw Error('config key is not a valid extension id')
+      productConfig = config.config as Record<string, unknown>
+    }
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') catalog.failures.push({ id: 'configuration', error: String(error) })
     return { catalog, installed } // Missing or malformed approval is fail-closed.
@@ -63,7 +70,11 @@ export async function discover(dataRoot: string, bundledRoot?: string): Promise<
       await confinedFile(extension.root, extension.manifest.entry)
       if (extension.manifest.native) await confinedFile(extension.root, extension.manifest.native)
       installed.set(id, extension)
-      catalog.extensions.push({ manifest: extension.manifest, url: 'ordessa://desktop/extensions/' + id + '/' + extension.manifest.entry })
+      catalog.extensions.push({
+        manifest: extension.manifest,
+        url: 'ordessa://desktop/extensions/' + id + '/' + extension.manifest.entry,
+        ...(Object.hasOwn(productConfig, id) ? { config: productConfig[id] } : {}),
+      })
     } catch (error) { catalog.failures.push({ id, error: String(error) }) }
   }
   return { catalog, installed }

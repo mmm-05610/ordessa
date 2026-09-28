@@ -1,0 +1,127 @@
+T022 GREEN — sandbox controlled C4 application-path evidence
+(companion of t022-red-sandbox-c4-apply.txt; identical F1-F6 measurement
+block was recorded there BEFORE any change)
+
+== MEASURED FACTS RELIED ON ==
+F1-F6 are recorded verbatim in t022-red-sandbox-c4-apply.txt and were
+re-verified in-tree this turn:
+* configuration_service.py:148-149 VERSION_UNVERIFIED gate; :150-153 joint
+  entry/harness/native/ADAPTER-version gate (:153 consumes
+  Installation.adapter_version); :196-197 claim ceiling; :209-213
+  stale-revision and absent-contribution refusals; :301-305 readback
+  manifest gate and Match-only confirmation; :312-320 Unknown path.
+* fixture __init__.py:69 Installation("test-external",(1,0,0),(1,0,0),
+  "fixture:installed") — the only in-tree observed installation.
+* points.py:72 `_ADAPTER_VERSIONS = VersionRange((0,1,0),(0,1,0))` backed by
+  adapters/pyproject.toml:7 version="0.1.0" (unchanged this round).
+
+== WHAT IS NOW PROVEN (all via the platform's own result types) ==
+POSITIVE (controlled L2, real service, real point host, in-test observed
+(0,1,0) installation; injected temp-dir target; every write done BY the
+platform, never by this package):
+* tests/test_controlled_c4_l2.py::test_codex_sandbox_mode_fragment_planned_and_applied_to_confirmed
+  — Plan -> Confirmed (native_session_identity/applied_revision/
+  runtime_generation/verification_evidence_ref asserted), query
+  OperationRecord.result == Confirmed, reconcile == Confirmed, exactly one
+  platform-published gen-* dir, landed TOML bytes == {"sandbox_mode":
+  "workspace-write"}, admitted claim path/value == (("sandbox_mode",), ...),
+  permit spent once with the platform's Plan object.
+* ::test_claude_bash_sandbox_fragment_planned_and_applied_to_confirmed —
+  same chain, JSON codec, {"bashSandbox": true} landed and Matched.
+* ::test_plan_alone_registers_intents_without_writing_anything (plan is
+  effect-free), ::test_inspect_reports_platform_capability_at_observed_pin
+  (set=supported with observed (2,0,0)/(0,1,0) versions; reset=unknown),
+  ::test_resubmit_of_the_same_operation_key_never_repeats_the_effect
+  (journal replay, single publication, single permit spend).
+
+NEGATIVE PAIRS (platform result types, not message strings):
+* (1,0,0) observed installation vs (0,1,0) descriptor pin ->
+  Refused(capability-unsupported), zero writes
+  (::test_observed_adapter_version_mismatch_is_refused_by_the_platform).
+* unobserved native version -> Refused(version-unverified);
+  unknown harness id -> Refused(capability-unsupported);
+  real SandboxAdaptersServerPlugin multi-record point (unselectable view) ->
+  Refused(adapter-missing); stale expected_revision ->
+  Refused(stale-plan).
+* SetField beyond the registered claims -> Refused(invalid-fragment)
+  ("intent exceeds registered claims") (::test_fragment_whose_claim_was_not_admitted_is_refused).
+* claude required_coverage {BASH,READ} (observation shows bash only) ->
+  Refused(capability-unsupported) whose diagnostics carry the stable
+  SANDBOX_COVERAGE_UNPROVEN code (sandbox_code_of round-trip asserted),
+  never Confirmed
+  (::test_required_coverage_the_observation_cannot_show_never_confirms).
+* readback value drift (adapter answers Mismatch) and digest-manifest
+  tamper -> Unknown (phase verifying, allowed_next_action reconcile),
+  NEVER Confirmed; a restarted service reconciles the SAME durable Unknown
+  and refuses the old-plan replay with Refused(stale-plan)
+  (::test_native_receipt_drift_never_confirms_and_reconciles_unknown,
+  ::test_tampered_readback_manifest_is_refused_confirmation).
+
+PURITY (my package wrote/spawned nothing):
+* ::test_my_package_performs_no_io_during_the_plan_and_apply_chain —
+  frame-classified spies over builtins.open/os.open/subprocess.Popen/
+  socket.socket during the whole plan->apply->query->reconcile chain:
+  zero origins inside ordessa_sandbox_adapters, zero spawn/socket calls,
+  src fingerprint unchanged; non-vacuity proven (os.open call count > 0 —
+  the spies sat in the platform's real write path).
+* standing static gates keep green: test_purity_no_fake_apply.py (AST, no
+  write/open call sites outside composition-time points.py).
+
+MATRIX UPGRADES (src/ordessa_sandbox_adapters/matrix.py) — exactly these
+cells, exactly on these IDs:
+* codex/config-write-controlled-fixture-l2: application_path +
+  observed_receipt -> _c4_write/_c4_receipt qualifying
+  tests/test_controlled_c4_l2.py::test_codex_sandbox_mode_fragment_planned_and_applied_to_confirmed
+  (+ ::test_my_package_performs_no_io_during_the_plan_and_apply_chain,
+  ::test_plan_alone_registers_intents_without_writing_anything);
+  negative_probe -> the qualified negative IDs above.
+* claude-code/config-write-controlled-fixture-l2: same fields, qualifying
+  ::test_claude_bash_sandbox_fragment_planned_and_applied_to_confirmed.
+* dangling citations fixed to existing IDs
+  (test_c3_seam.py::test_codex_fields_bind_real_platform_setfield_objects,
+  ::test_claude_toggle_binds_a_real_setfield_and_claims_nothing_broader).
+* guards added (tests/test_matrix.py): every cited test file AND test id
+  must exist; supported application_path/observed_receipt/negative_probe
+  must name a QUALIFIED id; controlled-fixture cells must keep the
+  "CONTROLLED FIXTURE ONLY" marker; native-effect-verify rows must stay
+  UNKNOWN with no evidence claim. (These guards were RED against the
+  committed matrix — t022-red — before the upgrade.)
+
+== STILL UNKNOWN (deliberate, registered) ==
+* PRODUCTION INSTALLATION OBSERVER: no trusted
+  RuntimeAdapter.describe_installation() ships for codex/claude/pi
+  (F4); the positive chain observes (0,1,0) only through an IN-TEST
+  provider, so no cell claims a production admission.
+* REAL NATIVE EFFECT / READBACK: no real Codex/Claude process ever read
+  the generated config; native-effect-verify cells stay CellStatus.UNKNOWN
+  with literal-UNKNOWN remaining fields (reset_default,
+  cross_session_impact, administrator_ceiling on effect rows etc.).
+* CROSS-INSTANCE ATOMICITY: the journal fence is single-instance;
+  concurrent multi-service atomicity is unproven here and not claimed.
+* Pi stays UNSUPPORTED (config-compile) / UNKNOWN (effect) — unchanged.
+
+== COMMANDS / TRUE EXIT CODES (no pipes) ==
+$ .venv/bin/python -m pytest plugins/assets/sandbox/adapters -q
+exit=0 — 118 passed in 1.33s   (baseline before this task: 99 passed;
+  +15 chain tests +4 guard tests)
+$ .venv/bin/python -m pytest plugins/assets/sandbox -q
+exit=0 — 293 passed in 1.61s   (lane aggregate: api+backend+adapters;
+  permissions and harness packages untouched by this lane)
+
+== MUTATION PROBES (anti-vacuity, performed after the runs above; both
+src files byte-restored, verified by md5, and the gates re-run green) ==
+* widen points.py _ADAPTER_VERSIONS from exact (0,1,0) to [0,1,0,∞):
+  test_controlled_c4_l2.py::test_observed_adapter_version_mismatch... and
+  test_joint_facet_version_binding.py::test_sandbox_pin_is_its_own_release_fact...
+  -> exit=1 (the version gate is really bound to the backed pin).
+* make surface.SandboxConfigurationSurface.verify always return Match:
+  ::test_native_receipt_drift_never_confirms_and_reconciles_unknown
+  flipped red (group exit=1 with the positive chain, which still passed —
+  confirmation really requires the readback Match; the Unknown path is
+  not decoration).
+
+== FINAL RE-MEASURE (post-restore, post-evidence) ==
+$ .venv/bin/python -m pytest plugins/assets/sandbox/adapters -q
+exit=0 — 118 passed in 1.27s
+$ .venv/bin/python -m pytest plugins/assets/sandbox -q
+exit=0 — 293 passed in 1.52s

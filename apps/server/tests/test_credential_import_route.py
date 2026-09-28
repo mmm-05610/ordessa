@@ -70,7 +70,7 @@ def test_an_import_returns_the_id_and_stores_the_secret_out_of_the_request(tmp_p
     assert credential_id.startswith("credential_")
     # The secret is in the Server's store, reachable by the record's locator -
     # and the response itself carried no material.
-    record = runtime.repository.credentials.get(credential_id, kind="api-key")
+    record = runtime.plugin_host.provided_port('product.repository').credentials.get(credential_id, kind="api-key")
     assert store.read(record["secret_locator"]) == source.read_bytes()
     assert source.read_bytes().decode() not in json.dumps(response.json())
 
@@ -87,7 +87,7 @@ def test_a_mistyped_source_must_be_confirmed_before_anything_is_read(tmp_path, r
 
     assert response.status_code == 422, response.json()
     assert response.json()["error"]["code"] == "CREDENTIAL_SOURCE_UNCONFIRMED"
-    assert runtime.service.list_credentials() == []
+    assert runtime.plugin_host.provided_port('product.service').list_credentials() == []
 
 
 def test_the_same_key_replays_one_import(tmp_path, running):
@@ -103,7 +103,7 @@ def test_the_same_key_replays_one_import(tmp_path, running):
     assert first.status_code == 201
     assert replay.status_code == 201
     assert replay.json() == first.json()
-    assert len(runtime.service.list_credentials()) == 1
+    assert len(runtime.plugin_host.provided_port('product.service').list_credentials()) == 1
 
 
 def test_an_unreadable_source_is_refused_without_leaving_a_record(tmp_path, running):
@@ -118,7 +118,7 @@ def test_an_unreadable_source_is_refused_without_leaving_a_record(tmp_path, runn
 
     assert response.status_code == 422, response.json()
     assert response.json()["error"]["code"] == "CREDENTIAL_SOURCE_UNREADABLE"
-    assert runtime.service.list_credentials() == []
+    assert runtime.plugin_host.provided_port('product.service').list_credentials() == []
 
 
 def test_a_store_refusal_is_reported_without_leaving_a_record(tmp_path):
@@ -148,7 +148,7 @@ def test_a_store_refusal_is_reported_without_leaving_a_record(tmp_path):
 
             assert response.status_code == 422, response.json()
             assert response.json()["error"]["code"] == "CREDENTIAL_SOURCE_UNREADABLE"
-            assert runtime.service.list_credentials() == []
+            assert runtime.plugin_host.provided_port('product.service').list_credentials() == []
     finally:
         runtime.stop()
 

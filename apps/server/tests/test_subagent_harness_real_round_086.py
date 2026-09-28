@@ -323,7 +323,7 @@ def test_a_real_claude_parent_round_calls_run_subagent_itself(tmp_path):
     gate = _load_gate()
     from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
     from ordessa_server_compat import composition as runtime_module
-    import ordessa_server.bootstrap.runtime as host_module
+    import ordessa_workspace.connectors as host_module  # T014-S2b builder home
     from ordessa_server.credentials import CredentialRecords
     from ordessa_server.transport.http import create_app
     from pacthold.storage import MemorySecretStore
@@ -583,7 +583,7 @@ def _version(base_url: str, token: str, profile_id: str) -> int:
 def _await_state(runtime, session_id: str, index: int, state: str, *, timeout: float) -> dict:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
-        session = runtime.repository.get_session(session_id)
+        session = runtime.plugin_host.provided_port('product.repository').get_session(session_id)
         if len(session["turns"]) > index:
             if session["turns"][index]["state"] == state:
                 return session

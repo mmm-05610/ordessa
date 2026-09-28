@@ -36,6 +36,7 @@ wire_v1 = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(wire_v1)
 
 from ordessa_server.bootstrap import build_runtime
+from ordessa_server_product.composition import create_composition
 from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server.transport.http import create_app
 from ordessa_server_compat.model_configs.service import _model_references
@@ -61,9 +62,11 @@ def _registry():
 
 @pytest.fixture
 def api(tmp_path):
-    runtime = build_runtime(tmp_path / "data", harnesses=_registry(),
-                            connector=wire_v1.FakeConnector(),
-                            execution=wire_v1.RecordingExecution(block=True))
+    runtime = build_runtime(tmp_path / "data",
+                            server_plugins=create_composition().compatibility_plugins(
+                                harnesses=_registry(),
+                                connector=wire_v1.FakeConnector(),
+                                execution=wire_v1.RecordingExecution(block=True)))
     with TestClient(create_app(runtime), base_url="http://127.0.0.1",
                     raise_server_exceptions=False) as client:
         yield runtime, wire_v1.Wire(client, {"Authorization": f"Bearer {runtime.token}"})

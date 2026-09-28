@@ -21,7 +21,7 @@ from ordessa_server_compat.execution.artifact_store import (
 def _digest_of(directory):
     """The tree digest v1 over the directory, via the resource-contracts
     reference implementation — the same value install() re-derives."""
-    from pacthold.resource_contracts.runtime_artifacts import (
+    from pacthold_runtime_compat.resource_contracts.runtime_artifacts import (
         runtime_artifact_tree_digest,
     )
 

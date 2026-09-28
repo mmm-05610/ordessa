@@ -20,7 +20,7 @@ import subprocess
 
 import pytest
 
-from pacthold.resource_contracts import harness_capabilities as caps
+from pacthold_runtime_compat.resource_contracts import harness_capabilities as caps
 from ordessa_harness.registry.loader import load_builtin_registry
 
 
@@ -29,8 +29,13 @@ PLUGIN = REPO / "plugins"  / "harness"
 DEFINITIONS = PLUGIN / "src" / "ordessa_harness" / "harnesses.toml"
 JS_PROJECTION = PLUGIN / "runtime" / "capability_declarations.json"
 #: Files on the capability path of the Server: none of them may name a Harness.
+#: T022b re-point (lane A relocation, specs/010): the canonical capability
+#: module moved from `pacthold/resource_contracts` into the compat assembly
+#: at `pacthold_runtime_compat/resource_contracts` — the SAME file content
+#: at its new location, and this gate still asserts the same property (it
+#: exists and names no Harness brand) there.
 NEUTRAL_FILES = (
-    "packages/pacthold/src/pacthold/resource_contracts/harness_capabilities.py",
+    "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/harness_capabilities.py",
     "plugins/server-compat/src/ordessa_server_compat/execution/__init__.py",
     "plugins/server-compat/src/ordessa_server_compat/execution/sidecar.py",
     "plugins/server-compat/src/ordessa_server_compat/execution/sidecar_backend.py",
@@ -72,7 +77,7 @@ def test_a_deployment_may_only_declare_canonical_boolean_abilities(tmp_path, mon
     """The deployment seat is validated by the same contract, not a free dict."""
     from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
 
-    import ordessa_server.bootstrap.runtime as runtime_module
+    import ordessa_workspace.connectors as runtime_module
 
     monkeypatch.setattr(runtime_module, "_builtin_connector", lambda _instance_id: object())
 

@@ -1,0 +1,26 @@
+# T018-Q5(backend) RED — busy() binds to host deactivation (lane Q5/permissions-backend)
+# date: 2026-09-27T23:59:49Z  branch: codex/011-q5-safety  head: 458add4f1b5ea00723d4b5d1c1e5d0aeca74e5a6
+# command: .venv/bin/python -m pytest plugins/permissions/backend/tests/test_deactivation_binding.py -q --tb=line
+
+==================================== ERRORS ====================================
+_____________ ERROR collecting tests/test_deactivation_binding.py ______________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/tests/test_deactivation_binding.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/permissions/backend/tests/test_deactivation_binding.py:32: in <module>
+    from ordessa_permissions_backend.errors import (ApprovalRouteClosedError,
+E   ImportError: cannot import name 'ApprovalRouteClosedError' from 'ordessa_permissions_backend.errors' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/src/ordessa_permissions_backend/errors.py)
+=========================== short test summary info ============================
+ERROR plugins/permissions/backend/tests/test_deactivation_binding.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.18s
+exit=2
+
+# command 2 (feature absence, pre-implementation probe): .venv/bin/python - <<'PY'
+stop_hooks: ()
+disposal: None
+ImportError: cannot import name 'PermissionsBackendBusyError' from 'ordessa_permissions_backend.errors' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/permissions/backend/src/ordessa_permissions_backend/errors.py)
+exit=0

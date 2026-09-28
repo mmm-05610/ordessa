@@ -19,7 +19,7 @@ from ordessa_server_compat.hooks.model import (
 )
 from ordessa_server_compat.hooks.records import HookRecords
 from ordessa_server.idempotency import IdempotentRecords
-from pacthold.storage import Database
+from pacthold_runtime_compat.storage import Database
 
 
 def _model(**overrides):
@@ -262,7 +262,7 @@ def test_the_hooks_wire_face_creates_edits_enables_and_lists_triggers(tmp_path):
         assert [item["hookId"] for item in listed] == [created["hookId"]]
 
         # A trigger fact ingested into the ledger surfaces with its effect.
-        runtime.hook_triggers.record(
+        runtime.plugin_host.provided_port('hook.triggers').record(
             hook_id=created["hookId"], event="PreToolUse", exit_code=2,
             output="denied\n")
         triggers = call("hooks.triggers", {

@@ -27,7 +27,7 @@ from ordessa_server_compat.accounts.assets import (
 )
 from ordessa_server_compat.accounts.records import AccountRecords, account_view
 from ordessa_server.idempotency import IdempotentRecords
-from pacthold.storage import Database
+from pacthold_runtime_compat.storage import Database
 from pacthold.storage.secrets import MemorySecretStore
 
 DECLARED = [".codex/auth.json"]
@@ -217,8 +217,8 @@ def test_a_bound_account_materialises_reclaims_and_conflicts_typed(tmp_path):
         runtime = build_runtime_from_sidecar_deployment(
             tmp_path / "server", document, plugin_root=PLUGIN, secret_store=secrets)
         runtime.start()  # the schema and the declared credentials come up here
-        accounts = runtime.account_records
-        store = runtime.account_assets
+        accounts = runtime.plugin_host.provided_port('account.records')
+        store = runtime.plugin_host.provided_port('account.assets')
 
         kind, account = accounts.create(
             key="acct", request_digest="acct", harness_type="codex",
@@ -232,15 +232,15 @@ def test_a_bound_account_materialises_reclaims_and_conflicts_typed(tmp_path):
         accounts.record_asset(account["account_id"], locator=locator, digest=digest,
                               state="valid")
 
-        profile = runtime.repository.profiles.create(
+        profile = runtime.plugin_host.provided_port('product.repository').profiles.create(
             key="p", request_digest="p", name="fixture role", harness_type="codex",
             config_digest=runtime.objects.publish(
                 b'{"schema_version":1,"harness_type":"codex","configuration":{}}').digest,
             credential_id=None)[1]
-        runtime.repository.profiles.bind_account(
+        runtime.plugin_host.provided_port('product.repository').profiles.bind_account(
             profile_id=profile["profile_id"], account_id=account["account_id"],
             expected_version=accounts.get(account["account_id"]) and
-            runtime.repository.profiles.get(profile["profile_id"])["version"],
+            runtime.plugin_host.provided_port('product.repository').profiles.get(profile["profile_id"])["version"],
             key="bind", request_digest="bind")
 
         with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
@@ -261,7 +261,7 @@ def test_a_bound_account_materialises_reclaims_and_conflicts_typed(tmp_path):
             session_id = sent["session"]["id"]
             deadline = time.monotonic() + 60
             while time.monotonic() < deadline:
-                session = runtime.repository.get_session(session_id)
+                session = runtime.plugin_host.provided_port('product.repository').get_session(session_id)
                 if session["turns"] and session["turns"][0]["state"] in {"completed", "failed"}:
                     break
                 time.sleep(0.05)
@@ -363,12 +363,12 @@ def test_the_accounts_wire_face_creates_imports_binds_lists(tmp_path):
             assert imported["state"] == "unknown", "an import never asserts validity"
             assert "wire-token" not in json.dumps(imported)
 
-            profile = runtime.repository.profiles.create(
+            profile = runtime.plugin_host.provided_port('product.repository').profiles.create(
                 key="p", request_digest="p", name="role", harness_type="codex",
                 config_digest=runtime.objects.publish(
                     b'{"schema_version":1,"harness_type":"codex","configuration":{}}').digest,
                 credential_id=None)[1]
-            version = runtime.repository.profiles.get(profile["profile_id"])["version"]
+            version = runtime.plugin_host.provided_port('product.repository').profiles.get(profile["profile_id"])["version"]
             bound = call("accounts.bind", {
                 "requestId": "wire-account-bind", "profileId": profile["profile_id"],
                 "expectedVersion": version, "accountId": created["accountId"],

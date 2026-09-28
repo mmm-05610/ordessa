@@ -1,0 +1,22 @@
+# T09-Q5 independent install proof — 2026-09-27T23:31:42Z at lane commit 0666cbc0790bc04e9c23c1283e964d3e95e63e0e
+
+cmd: python -m pip wheel --no-deps --no-build-isolation --wheel-dir $W/wheels packages/server-plugin-api plugins/harness/api <six lane packages>
+WHEEL_BUILD_EXIT=0 (8 wheels)
+cb7b26d98d5bee2d3d3164c7a1ac500513607a6d731bd5f51c9aaad3f0558a54  ordessa_harness_api-1.0.0a1-py3-none-any.whl
+967ed46e380c3e908a8c38e5e9909a837161435e3eaa4b8ab21431fdede7aefb  ordessa_permissions_adapters-0.1.0-py3-none-any.whl
+85ca3469c6a59556b68e09004ce1df5174f1c0e18b4f92e01ef47d36092ddd49  ordessa_permissions_api-0.1.0-py3-none-any.whl
+5ce751318e538399a150a6c7a21ad9dccf21d1cf77e975fd473bc71438ce6702  ordessa_permissions_backend-0.1.0-py3-none-any.whl
+c8f97432d5f9d9c24494bf48ec880ca3ac0e10bf8ec3dce52c71e18e815f44b0  ordessa_sandbox_adapters-0.1.0-py3-none-any.whl
+20ca40ddb35a6660ebfa768ebae1f837e7910626430c4a0d419418b6f8e77f3d  ordessa_sandbox_api-0.1.0-py3-none-any.whl
+4137573b0e97890e7391293f0f10c9e6745b55fbad22450803c47a51e9222024  ordessa_sandbox_backend-0.1.0-py3-none-any.whl
+1c73858e05bc623d266e58d8ab5829fc131dba889279abd15f674cc710d59d68  ordessa_server_plugin_api-0.1.0-py3-none-any.whl
+
+fresh venv A (--no-index --find-links wheels) install permissions api+backend+adapters:
+PERM_INSTALL_EXIT=0  pip check -> No broken requirements found (exit 0)
+import probe: PROBE_PERM=0 — api 76 + backend 21 + adapters 42 + harness-api 55 + server-plugin-api 76 exports; ordessa_sandbox_* / pacthold / ordessa_server / ordessa_harness / ordessa_server_compat / ordessa_server_product all ModuleNotFoundError (asserted, not assumed)
+
+fresh venv B install sandbox api+backend+adapters:
+SANDBOX_INSTALL_EXIT=0  pip check -> No broken requirements found (exit 0)
+import probe: PROBE_SANDBOX=0 — api 42 + backend 24 + adapters 50 exports; ordessa_permissions_* and every product package ModuleNotFoundError
+
+notes: two earlier attempts failed honestly and are recorded — first because the lane wheels did not carry server-plugin-api, second because both adapters declare ordessa-harness-api after the C3/admission binding. Neither failure was hidden; the passing run is the third.

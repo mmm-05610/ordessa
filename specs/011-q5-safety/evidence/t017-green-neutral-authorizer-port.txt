@@ -1,0 +1,55 @@
+T017-Q5 GREEN — neutral public port contract for permissions.authorizer@1 (plugins/permissions/api)
+date: 2026-09-27T23:47:54Z
+
+command: .venv/bin/python -m pytest plugins/permissions/api -q
+measured exit code: 0 (true $? of the pytest run, no pipe)
+
+Package count: 327 passed (316 baseline + 11 new T017 guards; no pre-existing
+test changed state, no skips/xfails added). This is the package-only count;
+the whole-lane aggregate is owned by the integration C0, not this writer.
+
+Per-ID list (tests/test_neutral_authorizer_port.py, all PASSED):
+  + test_neutral_authorizer_port.py::test_the_port_token_and_version_are_published_from_the_api_package PASSED [  9%]
+  + test_neutral_authorizer_port.py::test_the_package_re_exports_the_port_contract PASSED [ 18%]
+  + test_neutral_authorizer_port.py::test_the_port_token_equals_the_backend_provided_port_literal PASSED [ 27%]
+  + test_neutral_authorizer_port.py::test_every_port_method_matches_the_backend_authorizer_signature_exactly PASSED [ 36%]
+  + test_neutral_authorizer_port.py::test_evaluate_carries_the_exact_c1_input_surface_in_order PASSED [ 45%]
+  + test_neutral_authorizer_port.py::test_the_port_method_set_is_exactly_the_public_authorizer_surface PASSED [ 54%]
+  + test_neutral_authorizer_port.py::test_c1_query_is_answered_by_reconcile_and_the_backend_gains_no_second_name PASSED [ 63%]
+  + test_neutral_authorizer_port.py::test_the_port_is_deliberately_not_runtime_checkable PASSED [ 72%]
+  + test_neutral_authorizer_port.py::test_the_port_docstring_carries_the_authority_rules PASSED [ 81%]
+  + test_neutral_authorizer_port.py::test_the_port_results_are_the_published_api_unions PASSED [ 90%]
+  + test_neutral_authorizer_port.py::test_the_port_contract_imports_with_only_the_standard_library_available PASSED [100%]
+
+Published surface (src/ordessa_permissions_api/ports.py, re-exported via __init__):
+  PERMISSIONS_AUTHORIZER_PORT = "permissions.authorizer@1"
+  PERMISSIONS_AUTHORIZER_PORT_VERSION = 1
+  EvaluationOutcome = Denied | AllowedOnce | PendingApproval
+  PermissionsAuthorizerPort(Protocol), not runtime-checkable:
+    evaluate(*, principal, session_ref, execution_ref, native_generation,
+             tool_identity, target_facts, argument_digest, ceiling_revision,
+             policy_revision, native_request_id) -> EvaluationOutcome
+    decide(approval_id, expected_version, decision, scope, operation_key,
+           *, session_id=None) -> DecideResult
+    reconcile(approval_id, native_request_id) -> QueryOutcome
+    busy() -> int
+Signatures verified by inspect.signature member-by-member against the
+installed ordessa_permissions_backend.Authorizer (name, kind, default);
+the port token is pinned to the backend plugin's AUTHORIZER_PORT literal
+read from source text. §C1 'query' is verified to be answered by reconcile
+(backend authorizer.py defines no 'query'; the query wire handler calls
+authorizer.reconcile), and evaluate_with_grant stays off the public port.
+
+Anti-vacuity mutation probes (control = the green run above, all reverted):
+  - rename decide kw-only session_id -> session_key in ports.py:
+    test_every_port_method_matches_the_backend_authorizer_signature_exactly RED
+  - drop '@1' from PERMISSIONS_AUTHORIZER_PORT:
+    token + drift-guard + re-export tests RED (2 failed | 1 passed in subset)
+  - the very first green attempt was made RED by this package's own
+    dependency-direction guard when a docstring contained the substring
+    'requests' — the stdlib purity gate demonstrably bites the new module.
+
+Stdlib-only proof: a subprocess probe imports ordessa_permissions_api +
+ports with a meta_path blocker installed against ordessa_permissions_backend,
+server_plugin_api, pacthold, ordessa_server, ordessa_harness, and first
+asserts the blocker actually blocks the backend; exit 0 + stdout marker.

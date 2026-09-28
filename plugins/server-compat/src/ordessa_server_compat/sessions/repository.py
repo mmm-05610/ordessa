@@ -9,11 +9,11 @@ from __future__ import annotations
 import json
 from typing import Any, Callable, Mapping
 
-from ordessa_server.errors import ServerError
+from server_plugin_api import ServerError
 from ordessa_server_compat.execution.session_store_guard import SessionStoreGuardError
 from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server.ids import now, opaque_id
-from pacthold.storage import Database
+from pacthold_runtime_compat.storage import Database
 
 
 #: A Turn is active while it can still be stopped or dispatched. Terminal states

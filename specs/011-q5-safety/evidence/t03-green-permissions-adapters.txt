@@ -1,0 +1,145 @@
+# T03 GREEN — plugins/permissions/adapters (ordessa-permissions-adapters)
+# date: 2026-09-27T19:13:36Z
+# interpreter: .venv/bin/python 3.12.14, pytest 9.1.1; no pip install, no network, no real CLI execution
+
+$ PYTHONPATH=plugins/permissions/adapters/src .venv/bin/python -m pytest plugins/permissions/adapters/tests -q --no-header -rA
+EXIT=0
+100 passed in 0.17s
+
+## per-file test counts (100 total, 0 skipped, 0 xfail)
+     12 PASSED test_c1_shape.py
+      6 PASSED test_cells_matrix.py
+     14 PASSED test_claude_adapter.py
+      8 PASSED test_codex_adapter.py
+      7 PASSED test_counterexamples.py
+      6 PASSED test_cross_brand.py
+      4 PASSED test_dependency_direction.py
+      8 PASSED test_pi_adapter.py
+      9 PASSED test_pins.py
+      4 PASSED test_purity.py
+     11 PASSED test_registry.py
+     11 PASSED test_verify.py
+
+## per-ID list
+tests/test_c1_shape.py::test_c1_methods_exist_with_the_contracted_names[PiAdapter]
+tests/test_c1_shape.py::test_c1_methods_exist_with_the_contracted_names[CodexAdapter]
+tests/test_c1_shape.py::test_c1_methods_exist_with_the_contracted_names[ClaudeAdapter]
+tests/test_c1_shape.py::test_descriptor_identity_fields[PiAdapter]
+tests/test_c1_shape.py::test_descriptor_identity_fields[CodexAdapter]
+tests/test_c1_shape.py::test_descriptor_identity_fields[ClaudeAdapter]
+tests/test_c1_shape.py::test_supports_answers_from_the_closed_set_never_merged[PiAdapter]
+tests/test_c1_shape.py::test_supports_answers_from_the_closed_set_never_merged[CodexAdapter]
+tests/test_c1_shape.py::test_supports_answers_from_the_closed_set_never_merged[ClaudeAdapter]
+tests/test_c1_shape.py::test_compile_returns_intent_set_or_refusal_not_raise
+tests/test_c1_shape.py::test_successful_compile_is_an_intent_set_with_digest
+tests/test_c1_shape.py::test_verify_returns_a_three_way_result
+tests/test_cells_matrix.py::test_matrix_shape
+tests/test_cells_matrix.py::test_no_supported_cell_is_unproven
+tests/test_cells_matrix.py::test_pre_effect_gate_is_not_claimed_for_any_brand
+tests/test_cells_matrix.py::test_pi_compile_without_extension_evidence_only_refuses
+tests/test_cells_matrix.py::test_every_unsupported_or_unknown_answer_is_named
+tests/test_cells_matrix.py::test_matrix_covers_the_twelve_recorded_fields
+tests/test_claude_adapter.py::test_supported_for_the_pinned_identity_version
+tests/test_claude_adapter.py::test_foreign_harness_is_unsupported
+tests/test_claude_adapter.py::test_version_outside_the_pinned_range_is_unknown_not_supported
+tests/test_claude_adapter.py::test_ask_and_deny_map_to_native_names
+tests/test_claude_adapter.py::test_allow_is_never_written
+tests/test_claude_adapter.py::test_compiled_output_never_contains_a_loosening_field
+tests/test_claude_adapter.py::test_unwritable_mode_request_refuses_typed
+tests/test_claude_adapter.py::test_external_directory_enforcement_is_unexpressible
+tests/test_claude_adapter.py::test_ceiling_deny_beats_intent_allow_with_refusal
+tests/test_claude_adapter.py::test_target_scoped_ceiling_entry_is_unexpressible
+tests/test_claude_adapter.py::test_unverified_ceiling_refuses
+tests/test_claude_adapter.py::test_patterned_intent_rule_refuses
+tests/test_claude_adapter.py::test_foreign_intent_harness_refuses
+tests/test_claude_adapter.py::test_no_silent_downgrade_every_failure_is_a_typed_refusal
+tests/test_codex_adapter.py::test_supported_for_the_pinned_identity_version
+tests/test_codex_adapter.py::test_write_denial_compiles_to_read_only
+tests/test_codex_adapter.py::test_bash_ask_compiles_to_untrusted_otherwise_on_request
+tests/test_codex_adapter.py::test_per_tool_denies_outside_writes_are_unexpressible
+tests/test_codex_adapter.py::test_loosening_modes_refuse
+tests/test_codex_adapter.py::test_managed_danger_full_access_under_ceiling_refuses
+tests/test_codex_adapter.py::test_successes_only_ever_carry_writable_values
+tests/test_codex_adapter.py::test_never_emits_a_missing_generation_identity
+tests/test_counterexamples.py::test_a_user_allow_cannot_widen_an_admin_deny_in_compiled_output
+tests/test_counterexamples.py::test_b_pi_without_extension_evidence_refuses_and_emits_nothing
+tests/test_counterexamples.py::test_c_claude_non_writable_knob_refuses
+tests/test_counterexamples.py::test_d_codex_managed_danger_full_access_under_ceiling_refuses
+tests/test_counterexamples.py::test_e_stale_observation_is_never_confirmed
+tests/test_counterexamples.py::test_f_overlapping_ranges_refuse_at_composition_time
+tests/test_counterexamples.py::test_all_refusals_observable_before_any_effect
+tests/test_cross_brand.py::test_mode_vocabularies_are_pairwise_disjoint
+tests/test_cross_brand.py::test_yolo_is_nobody_s_name
+tests/test_cross_brand.py::test_a_mode_name_is_rejected_on_the_wrong_brand
+tests/test_cross_brand.py::test_no_adapter_compiles_for_another_brand
+tests/test_cross_brand.py::test_successful_outputs_never_carry_another_brand_s_mode_name
+tests/test_cross_brand.py::test_rule_actions_are_the_only_common_vocabulary
+tests/test_dependency_direction.py::test_sources_exist
+tests/test_dependency_direction.py::test_imports_stay_inside_the_allowed_roots
+tests/test_dependency_direction.py::test_no_host_or_sandbox_domain_name_appears_in_source
+tests/test_dependency_direction.py::test_the_package_does_not_claim_an_authorization_gate
+tests/test_pi_adapter.py::test_no_extension_evidence_is_unsupported
+tests/test_pi_adapter.py::test_failed_or_absent_gate_refuses_every_compile
+tests/test_pi_adapter.py::test_extension_must_stay_out_of_the_capability_claim
+tests/test_pi_adapter.py::test_gate_covering_all_keys_compiles_with_evidence
+tests/test_pi_adapter.py::test_uncovered_tool_refuses
+tests/test_pi_adapter.py::test_generation_mismatch_between_gate_and_snapshot_refuses
+tests/test_pi_adapter.py::test_gate_evidence_shape_is_validated
+tests/test_pi_adapter.py::test_pi_declares_no_native_modes_so_mode_requests_refuse
+tests/test_pins.py::test_registry_covers_exactly_the_three_adapted_brands
+tests/test_pins.py::test_pinned_version_ranges_match_the_recorded_pins
+tests/test_pins.py::test_codex_declares_permissions_capability_and_slot
+tests/test_pins.py::test_claude_and_pi_declare_no_runtime_permissions_capability
+tests/test_pins.py::test_dsh_note_names_request_permission_but_declares_no_capability
+tests/test_pins.py::test_expressible_tool_categories_are_declared_per_pinned_family
+tests/test_pins.py::test_claude_native_tool_names_are_the_measured_map
+tests/test_pins.py::test_codex_writable_vocabulary_is_the_measured_strictness_tables
+tests/test_pins.py::test_ranges_parse_the_pinned_version_spellings
+tests/test_purity.py::test_the_package_modules_all_exist
+tests/test_purity.py::test_no_forbidden_module_is_imported
+tests/test_purity.py::test_no_side_effect_call_sites_exist
+tests/test_purity.py::test_behaviorally_no_subprocess_no_socket_no_file_open
+tests/test_registry.py::test_three_default_adapters_with_unique_ids_and_ranges
+tests/test_registry.py::test_registry_refuses_overlapping_ranges_same_harness
+tests/test_registry.py::test_adjacent_ranges_do_not_overlap
+tests/test_registry.py::test_same_range_different_harness_is_fine
+tests/test_registry.py::test_registry_refuses_duplicate_adapter_id
+tests/test_registry.py::test_registry_refuses_identical_range_registration
+tests/test_registry.py::test_select_is_unique_or_none
+tests/test_registry.py::test_contribution_carries_contract_and_descriptors
+tests/test_registry.py::test_contribution_build_refuses_overlaps_composition_time
+tests/test_registry.py::test_plugin_surface_uses_only_public_contracts
+tests/test_registry.py::test_adapters_register_their_own_descriptor
+tests/test_verify.py::test_matching_confirmed_observation_is_confirmed
+tests/test_verify.py::test_generation_drift_is_mismatch_never_confirmed
+tests/test_verify.py::test_version_drift_is_not_confirmed
+tests/test_verify.py::test_value_difference_is_mismatch
+tests/test_verify.py::test_missing_observed_field_is_unknown
+tests/test_verify.py::test_unconfirmed_or_unsourced_receipt_is_unknown
+tests/test_verify.py::test_fields_without_a_measured_oracle_are_unknown
+tests/test_verify.py::test_list_order_never_fakes_a_mismatch_or_a_confirmation
+tests/test_verify.py::test_pi_has_no_pinned_receipt_oracle_so_never_confirms
+tests/test_verify.py::test_absent_bindings_are_unknown_not_guessed
+tests/test_verify.py::test_foreign_harness_observation_is_mismatch
+
+## mutation controls (each run against a scratch copy of src, disjoint red IDs — no contamination)
+1. claude_code.py: allow intent written into permissions.ask anyway
+   -> FAILED tests/test_claude_adapter.py::test_allow_is_never_written  (1 failed, 99 passed)
+2. registry.py: overlap refusal disabled (last-wins simulation)
+   -> FAILED tests/test_registry.py::test_registry_refuses_overlapping_ranges_same_harness,
+      test_registry_refuses_identical_range_registration, test_contribution_build_refuses_overlaps_composition_time,
+      + tests/test_counterexamples.py::test_f_overlapping_ranges_refuse_at_composition_time
+      (4 failed, 96 passed)
+3. base.py: verify generation-drift check disabled
+   -> FAILED tests/test_verify.py::test_generation_drift_is_mismatch_never_confirmed,
+      tests/test_counterexamples.py::test_e_stale_observation_is_never_confirmed (2 failed, 16 passed)
+4. pi.py: bare-Pi fallback allowed (refuse only on version mismatch)
+   -> FAILED tests/test_pi_adapter.py::test_failed_or_absent_gate_refuses_every_compile,
+      tests/test_counterexamples.py::test_b_pi_without_extension_evidence_refuses_and_emits_nothing
+      (2 failed, 13 passed)
+
+## scope honesty
+- Pre-effect authorization gate (G1) and native-receipt plumbing (G2) do NOT exist in
+  this tree; all pre-effect-gate cells are unknown (cells.py) and nothing here claims
+  them. Tests cover the compile/verify surface (L1) only; L2 controlled-path and
+  real-gate verification remain blocked on the C0 seam (specs/011-q5-safety/api-requests.md).

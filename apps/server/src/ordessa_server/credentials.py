@@ -5,11 +5,11 @@ from typing import Any
 
 from ordessa_server.errors import ServerError
 from ordessa_server.ids import now
-from pacthold.storage import Database
+from ordessa_server.storage_port import DatabasePort
 
 
 class CredentialRecords:
-    def __init__(self, database: Database) -> None:
+    def __init__(self, database: DatabasePort) -> None:
         self.database = database
 
     def register(self, credential_id: str, kind: str, secret_locator: str) -> dict[str, Any]:

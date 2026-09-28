@@ -26,6 +26,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 from ordessa_server.bootstrap import build_runtime
+from ordessa_server_product.composition import create_composition  # T014-S1d funnel
 from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server.transport.http import create_app
 from pacthold.storage import MemorySecretStore
@@ -79,7 +80,7 @@ def _bind(env, *, credential_id, locator):
     """Name a credential (149's single entry), create a provider bound to it, then a
     profile selecting that model. The provider/profile writes all succeed - only the
     sendability projection is meant to catch the unopenable credential."""
-    env.runtime.repository.credentials.register_if_missing(credential_id, "api_key", locator)
+    env.runtime.plugin_host.provided_port('product.repository').credentials.register_if_missing(credential_id, "api_key", locator)
     provider = env.api.ok("providerModels.create", {
         "requestId": f"o152-prov-{credential_id}", "displayName": "152 P",
         "harness": "alpha", "provider": "opaque-provider",
@@ -97,7 +98,8 @@ def _bind(env, *, credential_id, locator):
 
 
 def _make_env(tmp_path, *, store):
-    runtime = build_runtime(tmp_path / "data", harnesses=_registry(), secret_store=store)
+    runtime = build_runtime(tmp_path / "data", secret_store=store,
+                            server_plugins=create_composition().compatibility_plugins(harnesses=_registry()))
     client, api, headers = _client_and_api(runtime)
     env = Env(api, runtime, store, tmp_path, headers)
 

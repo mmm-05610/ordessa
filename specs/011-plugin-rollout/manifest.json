@@ -1,0 +1,256 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-28",
+  "baseMain": "cd7d31f3cfba6a0e1ec65f9a13014c6b9751540b",
+  "planAnchorRef": "refs/heads/codex/011-plugin-plan",
+  "status": "PREPARED_NOT_RUNTIME_READY",
+  "sources": [
+    {
+      "name": "platform-plan",
+      "sha": "e406625d9a2c1803bd2d231cba3fbf4b555fd75b",
+      "note": "Spec Kit 工具、宪章、010 规格输入"
+    },
+    {
+      "name": "platform-pacthold",
+      "sha": "9e33a4df5120645de0bb8c492a8b7610adf5a9bb",
+      "note": "已报 REVIEW_READY；stop unknown 释放 OWN lease 有登记缺口"
+    },
+    {
+      "name": "platform-server",
+      "sha": "903a67e9bec8ed55504c16fb6fd62af4e5d1f678",
+      "note": "仍 IN_PROGRESS；只消费提交，未跟踪测试不复制"
+    },
+    {
+      "name": "platform-frontend",
+      "sha": "82b7ef1fc3fc79037b7a6d4749b612d4f54865fd",
+      "note": "C7/C8 已报交付，需集成复验"
+    },
+    {
+      "name": "workbench-sidebar",
+      "sha": "2b22e1608f934d1810f4a09f626f46e9e36b2d1e",
+      "note": "已提交侧栏交付；6 PNG 与生成 lock 脏项保留原树"
+    },
+    {
+      "name": "plugin-profile-impl",
+      "sha": "b77f9f23cba0073f968ade1b613d27c31ad13d0b",
+      "note": "Profile 旧实现，只读择取"
+    },
+    {
+      "name": "plugin-model-provider-impl",
+      "sha": "9305563719d25e04076b9221a7284660bd8f8642",
+      "note": "模型旧实现 PARTIAL，只读择取"
+    },
+    {
+      "name": "plugin-assets-skills-impl",
+      "sha": "752f148b1b01f58c0d090e79728948127173f9fb",
+      "note": "Skills 旧实现，只读择取"
+    },
+    {
+      "name": "desktop-workbench",
+      "sha": "36fefc50d348ec924f840a0118cf78093f51dba7",
+      "note": "历史 Chat 成果，按符号/测试择取，不整支硬并"
+    }
+  ],
+  "roles": [
+    {
+      "id": "c0",
+      "tool": "Codex",
+      "slug": "foundation-harness",
+      "title": "公共基线、Harness 与总集成",
+      "packs": [
+        "harness-v2"
+      ],
+      "write": [
+        "plugins/harness/**",
+        "plugins/connectors/acp/**",
+        "plugins/connectors/ordessa/**",
+        "新增 Harness 领域 API 发行包（按 harness-v2 T03 冻结位置）"
+      ],
+      "depends": [],
+      "notes": "先审核 A/C 平台与侧栏，准备 Harness 独立工作；platform-server 由原会话收尾，等其提交交接后才集成 B 并验收剩余缺口。发布 foundation/harness-api，统一 ACP 配置、附件、命令、执行前授权与提交闸门，最后串行整合业务线。",
+      "branch": "codex/011-c0-foundation-harness",
+      "path": "/home/maoqh/projects/ordessa/worktrees/011-c0-foundation-harness",
+      "feature": "specs/011-c0-foundation-harness"
+    },
+    {
+      "id": "z1",
+      "tool": "ZCode",
+      "slug": "profile",
+      "title": "Profile v2",
+      "packs": [
+        "profile-v2"
+      ],
+      "write": [
+        "plugins/profile/**"
+      ],
+      "depends": [
+        "foundation",
+        "harness-api",
+        "chat-api"
+      ],
+      "notes": "只拥有 Profile 的轻量 API、配置面、存储、覆盖、管理 UI 和 Profile 自己的 Chat glue。复用旧 profile 实现；其他领域的 Profile glue 由该领域写。",
+      "branch": "codex/011-z1-profile",
+      "path": "/home/maoqh/projects/ordessa/worktrees/011-z1-profile",
+      "feature": "specs/011-z1-profile"
+    },
+    {
+      "id": "z2",
+      "tool": "ZCode",
+      "slug": "chat",
+      "title": "Chat 展示、创建与输入扩展",
+      "packs": [
+        "chat-zcode-reuse"
+      ],
+      "write": [
+        "plugins/chat/**",
+        "经迁移表证明属于 Chat 的 plugins/agent/conversation/**",
+        "Chat 领域轻量 API（位置先对齐现有契约）"
+      ],
+      "depends": [
+        "foundation",
+        "harness-api"
+      ],
+      "notes": "复用 ZCode 正文/思考/紧凑工具展示；项目弹窗、项目内草稿、共享 +/斜杠菜单、附件贯通。前端 ACP/Ordessa 会话服务由 C0 写，本线提 DTO 和反例。旧 plugins/agent/sessions 只读盘点，是否迁移由 C0 统一裁决。",
+      "branch": "codex/011-z2-chat",
+      "path": "/home/maoqh/projects/ordessa/worktrees/011-z2-chat",
+      "feature": "specs/011-z2-chat"
+    },
+    {
+      "id": "z3",
+      "tool": "ZCode",
+      "slug": "model-provider",
+      "title": "Model-provider v2",
+      "packs": [
+        "model-provider"
+      ],
+      "write": [
+        "plugins/assets/model-provider/**",
+        "旧 plugins/model-provider/** 的本域保真迁移"
+      ],
+      "depends": [
+        "foundation",
+        "harness-api",
+        "profile-api",
+        "chat-api"
+      ],
+      "notes": "优先复用旧部分实现与反例；Provider/Model 原子选择，下轮应用，双会话隔离，必要时重启并 resume 同一原生会话。拥有本域品牌 adapter 与 Profile/Chat glue。",
+      "branch": "codex/011-z3-model-provider",
+      "path": "/home/maoqh/projects/ordessa/worktrees/011-z3-model-provider",
+      "feature": "specs/011-z3-model-provider"
+    },
+    {
+      "id": "q1",
+      "tool": "Qoder",
+      "slug": "skills",
+      "title": "Skills v2",
+      "packs": [
+        "skills-v2"
+      ],
+      "write": [
+        "plugins/assets/skills/**"
+      ],
+      "depends": [
+        "foundation",
+        "harness-api",
+        "profile-api",
+        "chat-api"
+      ],
+      "notes": "沿用旧 Skills 部分实现；内容版本、用户/项目/Harness/Profile 分配、固定批准版本、品牌装载、独立 Settings 与可选 glue。",
+      "branch": "codex/011-q1-skills",
+      "path": "/home/maoqh/projects/ordessa/worktrees/011-q1-skills",
+      "feature": "specs/011-q1-skills"
+    },
+    {
+      "id": "q2",
+      "tool": "Qoder",
+      "slug": "prompts-commands",
+      "title": "Prompts 与命令模板",
+      "packs": [
+        "prompts",
+        "command-templates"
+      ],
+      "write": [
+        "plugins/assets/prompts/**",
+        "plugins/assets/command-templates/**"
+      ],
+      "depends": [
+        "foundation",
+        "harness-api",
+        "profile-api",
+        "chat-api"
+      ],
+      "notes": "两个独立域可派两个单包子代理。Prompts 默认跟随正文修订、提交时冻结；模板引用固定批准版本，展开到可编辑用户草稿且不自动发送；不要强行统一二者版本语义。",
+      "branch": "codex/011-q2-prompts-commands",
+      "path": "/home/maoqh/projects/ordessa/worktrees/011-q2-prompts-commands",
+      "feature": "specs/011-q2-prompts-commands"
+    },
+    {
+      "id": "q3",
+      "tool": "Qoder",
+      "slug": "subagents",
+      "title": "原生子代理定义",
+      "packs": [
+        "native-subagents"
+      ],
+      "write": [
+        "plugins/assets/subagents/**"
+      ],
+      "depends": [
+        "foundation",
+        "harness-api",
+        "profile-api",
+        "chat-api"
+      ],
+      "notes": "只拥有角色定义、版本、分配和配置 adapter；不迁入外层派工/通信/恢复。Pi 受审 extension-backed 入口由 C0 承载运行，只在有证据后开放。",
+      "branch": "codex/011-q3-subagents",
+      "path": "/home/maoqh/projects/ordessa/worktrees/011-q3-subagents",
+      "feature": "specs/011-q3-subagents"
+    },
+    {
+      "id": "q4",
+      "tool": "Qoder",
+      "slug": "mcp",
+      "title": "MCP 定义与托管",
+      "packs": [
+        "mcp"
+      ],
+      "write": [
+        "plugins/assets/mcp/**"
+      ],
+      "depends": [
+        "foundation",
+        "harness-api",
+        "profile-api",
+        "chat-api",
+        "permissions-api"
+      ],
+      "notes": "native/managed 唯一连接/关闭 owner，工具目录与授权分离。定义/目录可先做；实际工具调用必须等真实 Permissions 授权接线，不默认放行。Pi 桥的本域组件由本线写，runtime 装载由 C0 提供。",
+      "branch": "codex/011-q4-mcp",
+      "path": "/home/maoqh/projects/ordessa/worktrees/011-q4-mcp",
+      "feature": "specs/011-q4-mcp"
+    },
+    {
+      "id": "q5",
+      "tool": "Qoder",
+      "slug": "safety",
+      "title": "Permissions 与原生 Sandbox",
+      "packs": [
+        "safety-controls"
+      ],
+      "write": [
+        "plugins/permissions/**",
+        "plugins/assets/sandbox/**"
+      ],
+      "depends": [
+        "foundation",
+        "harness-api",
+        "profile-api",
+        "chat-api"
+      ],
+      "notes": "两个业务所有者，分别派单包子代理。Permissions 管上限/审批/授权，Sandbox 只管 Harness 原生隔离。先发布 permissions-api；真实工具副作用前接缝由 C0 实现，本线用正反例验证。",
+      "branch": "codex/011-q5-safety",
+      "path": "/home/maoqh/projects/ordessa/worktrees/011-q5-safety",
+      "feature": "specs/011-q5-safety"
+    }
+  ]
+}

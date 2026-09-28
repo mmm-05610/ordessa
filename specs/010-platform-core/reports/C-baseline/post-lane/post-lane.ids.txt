@@ -1,0 +1,304 @@
+P|apps/desktop/renderer/foundation.test.tsx|foundation service boundaries owns registrations across services; rejects duplicates and late additions
+P|apps/desktop/renderer/foundation.test.tsx|foundation service boundaries rejects duplicate views and refuses late writes
+P|apps/desktop/renderer/foundation.test.tsx|foundation service boundaries rolls back a consumer across foundation registries on activation failure
+P|apps/desktop/renderer/foundation.test.tsx|workbench UI covers all five regions, preserves background state/focus across full-page, cleans removed pages
+P|apps/desktop/renderer/foundation.test.tsx|workbench UI isolates broken full-page rendering and missing commands; order is deterministic
+P|apps/desktop/renderer/foundation.test.tsx|workbench UI moves an active component without remounting, and collapse is not close
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host cleans all resources in reverse order despite throwing cleanup
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host immediately releases resources arriving after scope closure
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host owns raw plugin contributions and rejects late writes without exposing the registry
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host registers and removes a root without editing App
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host rejects duplicate providers and plugin ids
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host rolls back activation and retains both failure causes
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host rolls back raw plugins without requiring scoped()
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host shows a diagnostic for a broken root instead of a blank window
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host starts healthy plugins while an unrelated activation is pending
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host starts unrelated plugins when a required service is missing
+P|apps/desktop/renderer/host.test.tsx|Lumino desktop host starts without business plugins or public raw registry
+P|apps/desktop/renderer/loader.test.ts|bounds a stalled factory, preserves healthy modules, and ignores late results
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement does not discover a symlinked package directory
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement does not enable discovered code without explicit approval
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement fails closed for malformed approval
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement protocol rejects disabled packages, foreign hosts and unsupported files
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement rejects duplicate identities without a directory-order winner
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement rejects file symlinks escaping the installed package
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement rejects incompatible versions
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement rejects invalid entry ../entry.js
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement rejects invalid entry /tmp/entry.js
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement rejects invalid entry dist/%2e%2e/a.js
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement rejects invalid entry dist\a.js
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement rejects invalid entry file:///tmp/a.js
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement requires an enabled native entry to exist inside its extension
+P|apps/desktop/renderer/loader.test.ts|extension discovery and confinement uses bundled defaults only when user approval is absent; malformed or empty override never falls back
+P|apps/desktop/renderer/loader.test.ts|module validation a dependency cycle is diagnosed without aborting unrelated startup
+P|apps/desktop/renderer/loader.test.ts|module validation isolates rejected imports and factory identity failures
+P|apps/desktop/renderer/loader.test.ts|module validation missing service does not prevent an unrelated loaded plugin starting
+P|apps/desktop/renderer/loader.test.ts|module validation rejects all duplicate providers but keeps unrelated plugins
+P|packages/desktop-platform/connections/tests/connections.test.ts|CN-01 lifecycle registers, opens, exposes value/snapshot/subscribe, closes, and marks closed
+P|packages/desktop-platform/connections/tests/connections.test.ts|CN-02 rejection gates caller scope already closed rejects before connector.open
+P|packages/desktop-platform/connections/tests/connections.test.ts|CN-02 rejection gates duplicate connector id is rejected at registration with a clear error
+P|packages/desktop-platform/connections/tests/connections.test.ts|CN-02 rejection gates kind mismatch rejects on runtime identity, not on names or casts
+P|packages/desktop-platform/connections/tests/connections.test.ts|CN-02 rejection gates registrant scope closed removes the registration and rejects before connector.open
+P|packages/desktop-platform/connections/tests/connections.test.ts|CN-02 rejection gates unknown connector id rejects with zero connector.open calls
+P|packages/desktop-platform/connections/tests/connections.test.ts|CN-03 late resolve open resolving after the CALLER scope disposed is closed exactly once and never surfaces
+P|packages/desktop-platform/connections/tests/connections.test.ts|CN-03 late resolve open resolving after the REGISTRANT scope unmounted is closed exactly once and never surfaces
+P|packages/desktop-platform/connections/tests/connections.test.ts|CN-04 instance independence two scopes open distinct instances from one connector id; closing one leaves the other fully usable
+P|packages/desktop-platform/connections/tests/connections.test.ts|CN-05 close semantics a rejecting closeLocal yields close_failed without marking closed; an explicit retry can succeed; no auto loop
+P|packages/desktop-platform/connections/tests/connections.test.ts|CN-05 close semantics concurrent and duplicate closes on one handle coalesce into a single pending closeLocal
+P|packages/desktop-platform/connections/tests/connections.test.ts|CN-06 transport ownership the platform reaches the connector-owned transport only through closeLocal, at most once per handle, and triggers no extra actions
+P|packages/desktop-platform/connections/tests/connections.test.ts|§5 cancellation and settlement aborting the caller signal cancels a not-yet-finished open and a later resolve still closes exactly once
+P|packages/desktop-platform/connections/tests/connections.test.ts|§5 cancellation and settlement synchronous scope dispose only starts cleanup; whenSettled reports late-open closures and close failures without swallowing rejections
+P|packages/desktop-platform/connections/tests/lifecycle-details.test.ts|§5.2/§5.3 signal ownership after delivery aborts the connector signal when the caller scope closes on a connected instance
+P|packages/desktop-platform/connections/tests/lifecycle-details.test.ts|§5.2/§5.3 signal ownership after delivery aborts the connector signal when the registrant scope unmounts on a connected instance
+P|packages/desktop-platform/connections/tests/lifecycle-details.test.ts|§5.5 settlement report completeness an explicit handle.close() that fails is returned to the awaiter AND recorded in the cumulative report
+P|packages/desktop-platform/connections/tests/platform-isolation.test.ts|CN-01 gate: the platform sources carry no business coupling imports nothing that escapes the platform package or leaves the allow-list
+P|packages/desktop-platform/connections/tests/platform-isolation.test.ts|CN-01 gate: the platform sources carry no business coupling never references an Agent or Workbench token/kind literal
+P|packages/desktop-platform/connections/tests/platform-isolation.test.ts|CN-01 gate: the platform sources carry no business coupling scans a non-empty set of product sources, or this guard would pass vacuously
+P|packages/desktop-platform/native-bridge/src/index.test.ts|adapter confinement only opens installed adapters that declare a native entry
+P|packages/desktop-platform/native-bridge/src/index.test.ts|adapter confinement refuses native entries that escape the extension root
+P|packages/desktop-platform/native-bridge/src/index.test.ts|adapter confinement rejects modules without a valid transport factory
+P|packages/desktop-platform/native-bridge/src/index.test.ts|frame validation and lifecycle bounds startup buffering at 256 frames
+P|packages/desktop-platform/native-bridge/src/index.test.ts|frame validation and lifecycle delivers adapter frames to the main frame with the instance id; oversized pushes surface as error events
+P|packages/desktop-platform/native-bridge/src/index.test.ts|frame validation and lifecycle rejects renderer->adapter frames above 1MiB or unserializable
+P|packages/desktop-platform/native-bridge/src/index.test.ts|frame validation and lifecycle unknown and closed instances never reach a live connection; close is single-shot per instance
+P|packages/desktop-platform/native-bridge/src/index.test.ts|registration-gated identity frames (FC-0034 fixture piece) a failed main-side auth leaves no registerable ack frame in the event stream
+P|packages/desktop-platform/native-bridge/src/index.test.ts|registration-gated identity frames (FC-0034 fixture piece) keeps per-instance event streams apart across instances of one adapter
+P|packages/desktop-platform/native-bridge/src/index.test.ts|registration-gated identity frames (FC-0034 fixture piece) surfaces a hello ack only after main-side auth ran, preserving adapter frame order
+P|packages/desktop-platform/native-bridge/src/index.test.ts|restricted caller surface rejects open from a sub frame, another webContents, or a repurposed main frame url
+P|packages/desktop-platform/native-bridge/src/index.test.ts|restricted caller surface window close removes every handler and closes live adapter connections
+P|packages/desktop-platform/native-bridge/src/index.test.ts|same-instance loopback handoff shape (zero host change evidence) a main-process adapter reads the token file and answers only whitelisted protocol frames
+P|packages/workbench/tests/composition.test.tsx|workbench composition: module registration and navigation counterexample: activation rejects missing or misplaced default views — no fallback, no false success
+P|packages/workbench/tests/composition.test.tsx|workbench composition: module registration and navigation counterexample: close/hide/switch/module operations dispose nothing — while real disposal is observable
+P|packages/workbench/tests/composition.test.tsx|workbench composition: module registration and navigation counterexample: duplicate module id fails with exactly one entry left; closed scopes refuse late writes
+P|packages/workbench/tests/composition.test.tsx|workbench composition: module registration and navigation counterexample: empty product mounts with an empty state, no module entries — and shows one as soon as a module registers
+P|packages/workbench/tests/composition.test.tsx|workbench composition: module registration and navigation counterexample: removing a module erases its navigation, sidebar and main view without breaking a peer
+P|packages/workbench/tests/composition.test.tsx|workbench composition: overlays closes the stack LIFO with Escape, one overlay at a time, and unsets modality at empty
+P|packages/workbench/tests/composition.test.tsx|workbench composition: overlays counterexample: a dead or missing popover anchor fails explicitly; a live anchor opens
+P|packages/workbench/tests/composition.test.tsx|workbench composition: overlays counterexample: a popover whose anchor leaves the DOM closes explicitly and refocuses a safe target
+P|packages/workbench/tests/composition.test.tsx|workbench composition: overlays counterexample: modal overlay Tab cycling stays inside the surface, off the inert workspace
+P|packages/workbench/tests/composition.test.tsx|workbench composition: overlays counterexample: overlay owner unload closes the instance and restores focus to a connected target
+P|packages/workbench/tests/composition.test.tsx|workbench composition: overlays counterexample: the settings page wraps Tab inside its surface too
+P|packages/workbench/tests/composition.test.tsx|workbench composition: overlays counterexample: workbench errors stay visible above an open overlay
+P|packages/workbench/tests/composition.test.tsx|workbench composition: overlays lets the contributor request close through its component prop and restores focus
+P|packages/workbench/tests/composition.test.tsx|workbench composition: settings and screen structure a second view in a region brings the tab strip back: pressed states and switching work
+P|packages/workbench/tests/composition.test.tsx|workbench composition: settings and screen structure activates modules to home plus sidebar selection and switches both ways
+P|packages/workbench/tests/composition.test.tsx|workbench composition: settings and screen structure counterexample: activating a sidebar-less module clears the module sidebar yet keeps user-opened views
+P|packages/workbench/tests/composition.test.tsx|workbench composition: settings and screen structure counterexample: narrow window keeps navigation usable; single view shows no empty tab strip
+P|packages/workbench/tests/composition.test.tsx|workbench composition: settings and screen structure counterexample: unregistered regions keep no tab strip — the region label takes their place
+P|packages/workbench/tests/composition.test.tsx|workbench composition: settings and screen structure settings page is Workbench-owned: sections ordered, located, and removed on contributor unload
+P|packages/workbench/tests/composition.test.tsx|workbench composition: settings and screen structure v1 UI contributions keep working next to module navigation
+P|packages/workbench/tests/contributor-unload.test.tsx|independent contributor unload through the extension host unloading contributor A erases A everywhere while B keeps its handle, subscription, state and open views intact
+P|packages/workbench/tests/empty-workbench.test.tsx|empty Workbench: shell with zero registered views and modules disables the layout controls for every empty auxiliary region
+P|packages/workbench/tests/empty-workbench.test.tsx|empty Workbench: shell with zero registered views and modules keeps all five region labels present while every region is empty
+P|packages/workbench/tests/empty-workbench.test.tsx|empty Workbench: shell with zero registered views and modules shows the empty state with no tab strips and no region-actions select/close
+P|packages/workbench/tests/host-integration.test.tsx|workbench plugin through the extension host a composition consumer rejects a v1-only Workbench (absent capability) instead of falling back
+P|packages/workbench/tests/host-integration.test.tsx|workbench plugin through the extension host exposes composition on the v1 Workbench service and runs addModule → addView → activateModule end to end
+P|packages/workbench/tests/popover.test.ts|placePopover (pure clamp, no layout engine needed) clamps horizontally near the right edge
+P|packages/workbench/tests/popover.test.ts|placePopover (pure clamp, no layout engine needed) clamps inside the viewport when it fits neither above nor below
+P|packages/workbench/tests/popover.test.ts|placePopover (pure clamp, no layout engine needed) flips above near the bottom edge
+P|packages/workbench/tests/popover.test.ts|placePopover (pure clamp, no layout engine needed) never leaves the viewport for any anchor position or overlay size in a swept grid
+P|packages/workbench/tests/popover.test.ts|placePopover (pure clamp, no layout engine needed) places below the anchor when there is room
+P|packages/workbench/tests/single-view-fallback.test.tsx|single-view bare fallback a second view leaving registration collapses the strip 2→1 and keeps the remaining view active, open and rendered
+P|packages/workbench/tests/single-view-fallback.test.tsx|single-view bare fallback auto-renders a single unclaimed view with no selection, no tab strip, and move/close actions
+P|packages/workbench/tests/single-view-fallback.test.tsx|single-view bare fallback counterexample: a module-claimed single view stays hidden while a sidebar-less module is active
+P|plugins/agent/connections/tests/agent-connections-status.test.tsx|the status bar shows a late release failure automatically, with no selection or click after it lands
+P|plugins/agent/connections/tests/agent-connections.test.ts|a cleanup pass started while the first release is in-flight joins that request and keeps the reference for the failure that follows
+P|plugins/agent/connections/tests/agent-connections.test.ts|a client whose first release confirms while another channel is still acquiring is forgotten only after that later release settles
+P|plugins/agent/connections/tests/agent-connections.test.ts|a release that failed before the eviction is seeded into the host view the moment the reference is taken over
+P|plugins/agent/connections/tests/agent-connections.test.ts|a release that fails after the reconnect completed reaches the subscriber and the snapshot on its own, and the explicit passes settle it
+P|plugins/agent/connections/tests/agent-connections.test.ts|evicting a client without the managed-release lifecycle retains nothing to confirm
+P|plugins/agent/connections/tests/agent-connections.test.ts|gate predicates match run/interaction state only, across every connection
+P|plugins/agent/connections/tests/agent-connections.test.ts|gates reconnect with the same authority as switching and restores it once live work clears
+P|plugins/agent/connections/tests/agent-connections.test.ts|leaves the connecting indicator owned by the handshake that is still pending
+P|plugins/agent/connections/tests/agent-connections.test.ts|lets independent adapters register and releases each with its own scope
+P|plugins/agent/connections/tests/agent-connections.test.ts|re-evaluates the gate once a held handshake lands, so reconnect cannot cancel a run started during it
+P|plugins/agent/connections/tests/agent-connections.test.ts|switching views over live work keeps the previous client, its run and its approvals alive
+P|plugins/agent/conversation/tests/agent-conversation.test.tsx|blocks a mid-draft invalidation whose stale selection the connector clears, without costing the text (gate 14)
+P|plugins/agent/conversation/tests/agent-conversation.test.tsx|continues an existing session under its own project while the draft gate is closed (gate 8)
+P|plugins/agent/conversation/tests/agent-conversation.test.tsx|gives every session its own unsent text across switching and sends nothing on a switch (gate 11)
+P|plugins/agent/conversation/tests/agent-conversation.test.tsx|gives the pane, the key and the session identity to a draft that overlaps a live selection (gate 16)
+P|plugins/agent/conversation/tests/agent-conversation.test.tsx|hides thinking and effort alongside the model while a supported option survives (gate 3)
+P|plugins/agent/conversation/tests/agent-conversation.test.tsx|keeps Enter as send and Shift+Enter as a line break (gate 9)
+P|plugins/agent/conversation/tests/agent-conversation.test.tsx|keeps a draft across a connection round trip, and empties it on discard and after a confirmed send (gate 13)
+P|plugins/agent/conversation/tests/agent-conversation.test.tsx|keeps an unknown run outcome distinct from a failure (gate 1)
+P|plugins/agent/conversation/tests/agent-conversation.test.tsx|keeps both unsent buffers when opening the same session that was selected before the draft (gate 18)
+P|plugins/agent/conversation/tests/agent-conversation.test.tsx|keeps the composed text across a lost connection and a send attempted while disconnected (gate 10)
+P|plugins/agent/conversation/tests/agent-conversation.test.tsx|keeps the rejected text verbatim and resends only on an explicit second press (gate 7)
+P|plugins/agent/conversation/tests/agent-conversation.test.tsx|keeps the same session id on two connections apart and sends nothing on a connection switch (gate 12)
+P|plugins/agent/conversation/tests/agent-conversation.test.tsx|labels each tool outcome with the state the connector reported (gate 4)
+P|plugins/agent/conversation/tests/agent-conversation.test.tsx|mirrors an invalidation the connector does not report: the send is offered and the typed refusal keeps the text (gate 15)
+P|plugins/agent/conversation/tests/agent-conversation.test.tsx|opens a readable draft without touching the client, and blocks send until a project is valid (gate 5)
+P|plugins/agent/conversation/tests/agent-conversation.test.tsx|renders no model entry in the conversation while other options survive (gate 2)
+P|plugins/agent/conversation/tests/agent-conversation.test.tsx|resumes a stepped-away draft and routes its first send to createAndSend, never the selected session (gate 17)
+P|plugins/agent/conversation/tests/agent-conversation.test.tsx|sends a draft once through createAndSend and clears only on snapshot confirmation (gate 6)
+P|plugins/agent/sessions/tests/agent-sessions-draft.test.ts|New session and Discard produce zero backend calls and never a temporary session (FC-0021)
+P|plugins/agent/sessions/tests/agent-sessions-draft.test.ts|a record never restores across Server identities, and storage loss forces manual selection (不串+缺storage)
+P|plugins/agent/sessions/tests/agent-sessions-draft.test.ts|a stored id no longer listed unarchived blocks sends without opening it, and nothing restores without identity
+P|plugins/agent/sessions/tests/agent-sessions-draft.test.ts|an accepted-but-unverifiable first send never lists a ghost session and keeps the same requestId for the retry (FC-0031)
+P|plugins/agent/sessions/tests/agent-sessions-draft.test.ts|an invalid restored project clears the selection and blocks sends until reselect
+P|plugins/agent/sessions/tests/agent-sessions-draft.test.ts|an unknown draft outcome with an old session selected keeps the requestId and never falls back to it (unknown 不降级)
+P|plugins/agent/sessions/tests/agent-sessions-draft.test.ts|an unknown first-send outcome keeps one requestId and never creates a second session id
+P|plugins/agent/sessions/tests/agent-sessions-draft.test.ts|continuing an existing session never consults the draft gate or a new create (续聊沿原项目)
+P|plugins/agent/sessions/tests/agent-sessions-draft.test.ts|discardDraft restores the previously selected session in place and reports endedBy discarded (恢复定义)
+P|plugins/agent/sessions/tests/agent-sessions-draft.test.ts|draft first send reaches createAndSend exactly once and never the previously open session (C-0030 拦截反例)
+P|plugins/agent/sessions/tests/agent-sessions-draft.test.ts|first send is blocked without a valid project and reaches no client create (拦截反例)
+P|plugins/agent/sessions/tests/agent-sessions-draft.test.ts|openSession during an active draft ends it as opened and sends nothing (可区分下游语义)
+P|plugins/agent/sessions/tests/agent-sessions-draft.test.ts|project records are isolated per Server instance, never shared across connections (跨连接不串)
+P|plugins/agent/sessions/tests/agent-sessions-draft.test.ts|restores the last valid project for the same Server instance and revalidates it on selection
+P|plugins/agent/sessions/tests/agent-sessions-draft.test.ts|switching connections with a live draft sends nothing on either side (切换零发送)
+P|plugins/agent/sessions/tests/agent-sessions-draft.test.ts|the last valid project survives a simulated renderer restart and is revalidated before use (FC-0030)
+P|plugins/agent/sessions/tests/agent-sessions.test.tsx|badges every session by scanning all its runs and interactions, not only the last run (FC-0015 predicates)
+P|plugins/agent/sessions/tests/agent-sessions.test.tsx|draft UI: New session opens the picker with zero backend calls, picking clears the block, Discard closes it (FC-0021)
+P|plugins/agent/sessions/tests/agent-sessions.test.tsx|groups sessions by workspace with the standalone group last and pinned first (P2-3 grouping)
+P|plugins/agent/sessions/tests/agent-sessions.test.tsx|keeps exactly one selection marker, moved by clicks and restored on a fresh mount (FC-0004 selection)
+P|plugins/agent/sessions/tests/agent-sessions.test.tsx|keeps the flat list shape while no session carries a workspace (single standalone group)
+P|plugins/agent/sessions/tests/agent-sessions.test.tsx|registers view, command and navigation exactly once in the sessions entry and never in the conversation entry (FC-0004 unique registration)
+P|plugins/agent/sessions/tests/agent-sessions.test.tsx|renders the five list states with their existing copy (empty is a count, not a null container)
+P|plugins/agent/sessions/tests/agent-sessions.test.ts|derives per-session badge state through the shared gate predicates over all items
+P|plugins/agent/sessions/tests/agent-sessions.test.ts|keeps separate clients alive on selection changes and disposes them with the connections service scope
+P|plugins/agent/sessions/tests/agent-sessions.test.ts|projects sessions into ordered workspace groups with the standalone group last (P2-3 projection)
+P|plugins/connectors/acp/tests/agent-acp-wiring.test.ts|a Server whose hello carries no native-execution identity activates as an honest not-offered and registers nothing
+P|plugins/connectors/acp/tests/agent-acp-wiring.test.ts|a refused open launches nothing: an unopened project answers NOT_FOUND and a foreign instance is refused locally
+P|plugins/connectors/acp/tests/agent-acp-wiring.test.ts|a refused release reaches the host as a typed diagnostic and the explicit retry lands over the same still-open bridge
+P|plugins/connectors/acp/tests/agent-acp-wiring.test.ts|a relay death is never a release: it errors the stream, cancels nothing, and the stand-down stays explicit
+P|plugins/connectors/acp/tests/agent-acp-wiring.test.ts|a release answered released:false over a successful RPC is never booked as success, and the retry confirms
+P|plugins/connectors/acp/tests/agent-acp-wiring.test.ts|activates through bridge, transport and host: the native pair is offered once, and the reviewed loop runs over the real contract
+P|plugins/connectors/acp/tests/agent-acp-wiring.test.ts|closing the bridge instance tears every live relay down and nothing flows afterwards
+P|plugins/connectors/acp/tests/agent-acp-wiring.test.ts|privileged-input refusals register nothing: no origin, and a token file group-readable
+P|plugins/connectors/acp/tests/agent-acp-wiring.test.ts|refuses bridge frames the transport does not know, and they never reach the wire
+P|plugins/connectors/acp/tests/agent-acp-wiring.test.ts|the real workspace reconnect flow proves the host consumption: an evicted ACP client with a refused release stays visible and retryable through the workspace surface
+P|plugins/connectors/ordessa/tests/agent-ordessa-connector.test.ts|accepts a first send the Server binds to the same project by path
+P|plugins/connectors/ordessa/tests/agent-ordessa-connector.test.ts|answers a real approval through one approvals.decide call only
+P|plugins/connectors/ordessa/tests/agent-ordessa-connector.test.ts|clears the pick behind a first send the Server refused for a lost project, and only that one
+P|plugins/connectors/ordessa/tests/agent-ordessa-connector.test.ts|keeps an accepted session when the list read has not caught up yet
+P|plugins/connectors/ordessa/tests/agent-ordessa-connector.test.ts|keeps an unconfirmed first send out of the session list
+P|plugins/connectors/ordessa/tests/agent-ordessa-connector.test.ts|keeps the project selection scoped to what the Server actually offers
+P|plugins/connectors/ordessa/tests/agent-ordessa-connector.test.ts|makes an open run and a pending approval unknown when the event channel drops
+P|plugins/connectors/ordessa/tests/agent-ordessa-connector.test.ts|maps the wire run states without inventing a verdict the protocol never carries
+P|plugins/connectors/ordessa/tests/agent-ordessa-connector.test.ts|never presents an ordinary request as answerable, and keeps approvals answerable (FC-0041)
+P|plugins/connectors/ordessa/tests/agent-ordessa-connector.test.ts|never reports a first send the Server did not confirm, and keeps the caller request id
+P|plugins/connectors/ordessa/tests/agent-ordessa-connector.test.ts|opens a session from its log and refuses the operations this product has no route for
+P|plugins/connectors/ordessa/tests/agent-ordessa-connector.test.ts|projects an approved first send only from a real session id
+P|plugins/connectors/ordessa/tests/agent-ordessa-connector.test.ts|proves the authenticated Server instance before one connector is registered
+P|plugins/connectors/ordessa/tests/agent-ordessa-connector.test.ts|refuses an answer that is not an allow or deny without touching the wire
+P|plugins/connectors/ordessa/tests/agent-ordessa-connector.test.ts|refuses to reuse a frozen connection when the Server behind the URL changed
+P|plugins/connectors/ordessa/tests/agent-ordessa-connector.test.ts|registers nothing and strips the IPC wrapper from the native refusal
+P|plugins/connectors/ordessa/tests/agent-ordessa-connector.test.ts|rejects a first send whose session the Server binds to another project
+P|plugins/connectors/ordessa/tests/agent-ordessa-connector.test.ts|shows an approval it cannot record as unanswerable instead of a button
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|accepts only the same data-root secrets token file, at 0600
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|does not call a lost conversation with the Server a lost project
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|keeps a server-authored reason out of both the code and the message
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|keeps a typed send-period project loss deterministic instead of asking the Server what it accepted
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|leaves a settled send refusal exactly as the Server answered it
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|never spends an outcome query on a first send the Server answered directly
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|never writes the token or its full locator into a token-file refusal
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|queries only a genuinely unsettled send, and settles it under the caller’s own request id
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|refuses a first send whose hello identity the Server does not confirm
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|refuses a locator that is not the Server secrets token file
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|refuses a symlink and any other non-regular file
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|refuses a token file that group, other or somebody else can see
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|refuses an unusable token body
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|refuses an unusable token locator without echoing the secret or its path
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|refuses anything that is not a bare loopback http origin with an explicit port
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|refuses when either input is absent instead of guessing a default port
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|refuses where ownership cannot be checked at all
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|registers a picked local folder through the Server and requires it in the returned project list
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|resolves the two explicit host inputs into a same-origin target
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|scopes one instance identity per Server however its origin is spelled
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|sends under the exact profileId the authenticated hello names
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|stops a first send whose project is already gone, before any send frame exists
+P|plugins/connectors/ordessa/tests/agent-ordessa.test.ts|takes a real session from the outcome query when the accepted response was lost
+P|products/desktop/tests/connections-platform-isolation.test.mjs|redirecting the output root perturbs the product build not at all
+P|products/desktop/tests/connections-platform-isolation.test.mjs|the built platform bundle reaches no business extension
+P|products/desktop/tests/connections-platform-isolation.test.mjs|variant build without ordessa.connections succeeds and keeps the platform API importable
+P|products/desktop/tests/connections-platform-isolation.test.mjs|variant builds never touched the real product dist or lock
+P|products/desktop/tests/contract-ownership.test.mjs|no Agent/Chat domain type or token is declared under packages/desktop-platform
+P|products/desktop/tests/contract-ownership.test.mjs|no platform source imports or re-exports a domain carrier path
+P|products/desktop/tests/contract-ownership.test.mjs|the domain carrier lives in plugins/agent/contracts with its persistent ids
+P|products/desktop/tests/contract-ownership.test.mjs|the real build constructs every domain token/kind exactly once, in the domain carrier only
+P|products/desktop/tests/contract-ownership.test.mjs|without the Agent implementations the built domain carrier still exports a usable API
+P|products/desktop/tests/host-shell-suites.test.mjs|apps/desktop/renderer holds exactly the frozen host test suites
+P|products/desktop/tests/product-bundles.test.mjs|each DI token owner bundle is an admitted contract carrier in the product build
+P|products/desktop/tests/product-bundles.test.mjs|every admitted product extension is really built with entry and manifest
+P|products/desktop/ui-tests/agent-ui-probe.test.tsx|preserves complete, cancelled and error as distinct library statuses
+P|products/desktop/ui-tests/agent-ui-probe.test.tsx|rejects stale generations, late terminal writes and writes after disposal
+P|products/desktop/ui-tests/agent-ui-probe.test.tsx|renders external history, incremental snapshots and tool results through the real assistant-ui runtime
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture answers initialize with the negotiated version and declared capabilities, recording the request
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture carries request params through the wire and returns the result to the caller
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture drives a reverse request inside a turn and receives the client answer
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture propagates a client-side stream abort to the peer as a failed channel
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture propagates a client-side stream close to the peer as end-of-stream
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture records the cancel notification and releases the waiting turn with cancelled
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture refuses capability-gated methods the peer does not advertise
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture rejects in-flight work and settles both closed promises when the link drops
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture streams notifications and resolves a prompt with its stop reason
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture turns a thrown RequestError into a JSON-RPC error rejection on the client
+P|tests/acp-connector/protocol/channel-authority.test.ts|a failed release is visible and retryable: the dispose attempt fails, the handshake-path retry confirms and clears the diagnostic
+P|tests/acp-connector/protocol/channel-authority.test.ts|a handle bound to a different project is stood down before any frame, and its confirmed release is never re-attempted
+P|tests/acp-connector/protocol/channel-authority.test.ts|a release already in flight is joined, not doubled: dispose and the landing handshake share one backend call
+P|tests/acp-connector/protocol/channel-authority.test.ts|add-workspace is absent, not faked, when orchestration offers no registration op
+P|tests/acp-connector/protocol/channel-authority.test.ts|add-workspace is offered when orchestration supplies it, and it selects the Server-accepted project
+P|tests/acp-connector/protocol/channel-authority.test.ts|the channel handle binding, not the project query, carries every cwd onto the wire (session/new and session/load)
+P|tests/acp-connector/protocol/channel-authority.test.ts|the client attests silence only after dispose AND every stand-down is confirmed: releasesSettled stays pending across in-flight and failed releases
+P|tests/acp-connector/protocol/channel-authority.test.ts|the ordinary established-channel path is host-visible and host-retryable: dispose-release fails, the host reads the diagnostic and the explicit entry point completes the stand-down
+P|tests/acp-connector/protocol/channel-authority.test.ts|the release lifecycle is announced, not inferred: subscribeReleaseStates carries in-flight → failed → confirmed as each happens
+P|tests/acp-connector/protocol/chat-loop.test.ts|R1 connects with no project-less channel; binding a project acquires one and initializes it exactly once
+P|tests/acp-connector/protocol/chat-loop.test.ts|R2 a Harness that advertises history reads as supported, absent never falls back
+P|tests/acp-connector/protocol/chat-loop.test.ts|R3 the first send creates the real session under the orchestration-bound project path
+P|tests/acp-connector/protocol/chat-loop.test.ts|R33 a settled turn adopts the native session/list title; a late one arrives, an absent one is never invented
+P|tests/acp-connector/protocol/chat-loop.test.ts|R34 a native name survives reload-listing and reopening: no path re-folds it back to a placeholder
+P|tests/acp-connector/protocol/chat-loop.test.ts|R35 same native sessionIds on two channels keep two names: each channel titles only its own session
+P|tests/acp-connector/protocol/chat-loop.test.ts|R38 a stale list response never reverts a newer name: last WRITE WINS by issue order, not arrival
+P|tests/acp-connector/protocol/chat-loop.test.ts|R39 a refresh that answers after a live rename cannot revert the newer name
+P|tests/acp-connector/protocol/chat-loop.test.ts|R4 a project the orchestration does not offer never acquires a channel or reaches the ACP wire
+P|tests/acp-connector/protocol/chat-loop.test.ts|R40 two refreshes answered out of order: the later-issued one wins, the stale one lands nothing
+P|tests/acp-connector/protocol/chat-loop.test.ts|R5 two consecutive turns reuse the one native session
+P|tests/acp-connector/protocol/chat-loop.test.ts|R6 a native title update replaces the session title without inventing one
+P|tests/acp-connector/protocol/chat-loop.test.ts|R7 an unconfirmed first send is never silently re-issued
+P|tests/acp-connector/protocol/chat-loop.test.ts|a failed initialize releases its channel and never pins the retry
+P|tests/acp-connector/protocol/chat-loop.test.ts|dispose while initialize is still landing releases the late handle exactly once and registers no channel
+P|tests/acp-connector/protocol/history-capability.test.ts|R19 without session/list the history list honestly reports it cannot read one
+P|tests/acp-connector/protocol/history-capability.test.ts|R19b with no project bound, asking for history is a quiet no-op — not a falsely reported failure
+P|tests/acp-connector/protocol/history-capability.test.ts|R20 with session/list the native titles and timestamps drive the list, and a known cwd keeps its project
+P|tests/acp-connector/protocol/history-capability.test.ts|R21 opening a session replays exactly what session/load streams, in order
+P|tests/acp-connector/protocol/history-capability.test.ts|R22 a restore the peer refuses on session/load surfaces as refused, never as a fake success
+P|tests/acp-connector/protocol/history-capability.test.ts|R26 with load but no list, restore is still legal: session/load replays without any prior listing
+P|tests/acp-connector/protocol/interactions.test.ts|R14 a permission request opens a live in-thread interaction carrying the native option ids
+P|tests/acp-connector/protocol/interactions.test.ts|R15 rejecting a permission answers the native request with the native reject id
+P|tests/acp-connector/protocol/interactions.test.ts|R16 cancelling a pending interaction sends outcome cancelled, not a fake option
+P|tests/acp-connector/protocol/interactions.test.ts|R17 a stop is confirmed only by the prompt settling with stopReason cancelled
+P|tests/acp-connector/protocol/interactions.test.ts|R18 a settled interaction refuses a second answer without consuming the next pending request
+P|tests/acp-connector/protocol/interactions.test.ts|R28 a stop blocks its run approval at the respond entry — the late answer reaches the agent zero times
+P|tests/acp-connector/protocol/interactions.test.ts|R29 an approval answered BEFORE the stop is delivered, never pretended back — and the stop still cancels the run
+P|tests/acp-connector/protocol/interactions.test.ts|R30 an old approval cannot be submitted after the cancellation is confirmed
+P|tests/acp-connector/protocol/interactions.test.ts|R31 one stop closes only its own run: sibling sessions and the same-named other channel stay fully submittable
+P|tests/acp-connector/protocol/interactions.test.ts|R32 a stop whose wire cannot carry it fails visibly and never reopens the approval it was meant to close
+P|tests/acp-connector/protocol/interactions.test.ts|R36 an ask that lands after the stop never opens in answerable form
+P|tests/acp-connector/protocol/interactions.test.ts|R37 a late ask from turn one is never adopted by the sessions next turn
+P|tests/acp-connector/protocol/streaming-tools.test.ts|R10 tool_call and tool_call_update with one toolCallId drive one card
+P|tests/acp-connector/protocol/streaming-tools.test.ts|R11 a different toolCallId opens a different card (counterexample)
+P|tests/acp-connector/protocol/streaming-tools.test.ts|R12 a late update for another session cannot bleed into the selected one
+P|tests/acp-connector/protocol/streaming-tools.test.ts|R13 events that stop arriving never verdict a run: unknown, not cancelled, and no backend release
+P|tests/acp-connector/protocol/streaming-tools.test.ts|R8 streams text deltas into one assistant message and closes it at the stop reason
+P|tests/acp-connector/protocol/streaming-tools.test.ts|R9 thought chunks extend reasoning without leaking into visible text
+P|tests/acp-connector/protocol/streaming-tools.test.ts|a chunkless stream never stitches across turns or absorbs an id-bearing neighbour (counterexamples)
+P|tests/acp-connector/protocol/streaming-tools.test.ts|a tool event closes the chunkless stream: text before and after a tool call stays independent
+P|tests/acp-connector/protocol/streaming-tools.test.ts|chunkless consecutive text fills one card while the turn is open (the per-chunk-card regression)
+P|tests/acp-connector/protocol/streaming-tools.test.ts|chunkless thought and text accumulate into the same open card, in their own fields
+P|tests/acp-connector/protocol/streaming-tools.test.ts|the sandwich order no-id → id → no-id within one turn yields three cards, not C appended to A
+P|tests/acp-connector/protocol/switch-isolation.test.ts|R23 two ACP clients on one renderer keep strictly separate native sessions
+P|tests/acp-connector/protocol/switch-isolation.test.ts|R24 an EXPLICIT dispose releases the old connection: its backend channel is released and open work settles as unknown
+P|tests/acp-connector/protocol/switch-isolation.test.ts|R25 switching away keeps a pending permission answerable only on its own connection, never the new one
+P|tests/acp-connector/protocol/switch-isolation.test.ts|R27 one AgentClient, two project channels, identical native session ids: messages, runs, approvals and cancels route by channel across a project switch
+P|tests/acp-connector/protocol/switch-isolation.test.ts|stop attributes by run and session: a mismatched pair, a settled run and a disposed client cancel nothing
+P|tests/acp-connector/ui/acp-conversation.test.tsx|U1 first send from a draft is blocked until a project is bound
+P|tests/acp-connector/ui/acp-conversation.test.tsx|U2 the first send into a bound project creates the native session and renders both sides
+P|tests/acp-connector/ui/acp-conversation.test.tsx|U3 a tool card is updated in place by toolCallId, never duplicated
+P|tests/acp-connector/ui/acp-conversation.test.tsx|U4 a permission request renders an in-thread card whose buttons are the native options
+P|tests/acp-connector/ui/acp-conversation.test.tsx|U5 a dropped channel shows the run outcome as unknown, distinct from cancelled
+P|tests/acp-connector/ui/acp-conversation.test.tsx|U5b a link that dies before any output stays an unaccepted draft: the send failed, nothing was ever cancelled
+P|tests/acp-connector/ui/acp-conversation.test.tsx|U6 switching the selection removes the old pending interaction from view without ever answering or releasing it
+P|tests/acp-connector/ui/snapshot-shape.test.tsx|keeps unknown outcomes and cancellations visually distinct (no invented verdict)
+P|tests/acp-connector/ui/snapshot-shape.test.tsx|renders the full ACP-shaped assistant turn with the existing components
+P|tests/acp-connector/ui/snapshot-shape.test.tsx|shows a native permission interaction in the thread with its native option labels
+P|tests/acp-connector/ui/snapshot-shape.test.tsx|the session browser renders a native title without a local rename affordance

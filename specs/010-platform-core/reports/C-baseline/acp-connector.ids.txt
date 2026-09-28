@@ -1,0 +1,79 @@
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture answers initialize with the negotiated version and declared capabilities, recording the request
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture carries request params through the wire and returns the result to the caller
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture streams notifications and resolves a prompt with its stop reason
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture turns a thrown RequestError into a JSON-RPC error rejection on the client
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture drives a reverse request inside a turn and receives the client answer
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture records the cancel notification and releases the waiting turn with cancelled
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture refuses capability-gated methods the peer does not advertise
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture rejects in-flight work and settles both closed promises when the link drops
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture propagates a client-side stream close to the peer as end-of-stream
+P|tests/acp-connector/fixtures/peer-self.test.ts|HarnessPeer fixture propagates a client-side stream abort to the peer as a failed channel
+P|tests/acp-connector/protocol/channel-authority.test.ts|the channel handle binding, not the project query, carries every cwd onto the wire (session/new and session/load)
+P|tests/acp-connector/protocol/channel-authority.test.ts|a handle bound to a different project is stood down before any frame, and its confirmed release is never re-attempted
+P|tests/acp-connector/protocol/channel-authority.test.ts|a failed release is visible and retryable: the dispose attempt fails, the handshake-path retry confirms and clears the diagnostic
+P|tests/acp-connector/protocol/channel-authority.test.ts|the ordinary established-channel path is host-visible and host-retryable: dispose-release fails, the host reads the diagnostic and the explicit entry point completes the stand-down
+P|tests/acp-connector/protocol/channel-authority.test.ts|the release lifecycle is announced, not inferred: subscribeReleaseStates carries in-flight → failed → confirmed as each happens
+P|tests/acp-connector/protocol/channel-authority.test.ts|the client attests silence only after dispose AND every stand-down is confirmed: releasesSettled stays pending across in-flight and failed releases
+P|tests/acp-connector/protocol/channel-authority.test.ts|a release already in flight is joined, not doubled: dispose and the landing handshake share one backend call
+P|tests/acp-connector/protocol/channel-authority.test.ts|add-workspace is offered when orchestration supplies it, and it selects the Server-accepted project
+P|tests/acp-connector/protocol/channel-authority.test.ts|add-workspace is absent, not faked, when orchestration offers no registration op
+P|tests/acp-connector/protocol/chat-loop.test.ts|R1 connects with no project-less channel; binding a project acquires one and initializes it exactly once
+P|tests/acp-connector/protocol/chat-loop.test.ts|R2 a Harness that advertises history reads as supported, absent never falls back
+P|tests/acp-connector/protocol/chat-loop.test.ts|R3 the first send creates the real session under the orchestration-bound project path
+P|tests/acp-connector/protocol/chat-loop.test.ts|R4 a project the orchestration does not offer never acquires a channel or reaches the ACP wire
+P|tests/acp-connector/protocol/chat-loop.test.ts|R5 two consecutive turns reuse the one native session
+P|tests/acp-connector/protocol/chat-loop.test.ts|R6 a native title update replaces the session title without inventing one
+P|tests/acp-connector/protocol/chat-loop.test.ts|R7 an unconfirmed first send is never silently re-issued
+P|tests/acp-connector/protocol/chat-loop.test.ts|R33 a settled turn adopts the native session/list title; a late one arrives, an absent one is never invented
+P|tests/acp-connector/protocol/chat-loop.test.ts|R34 a native name survives reload-listing and reopening: no path re-folds it back to a placeholder
+P|tests/acp-connector/protocol/chat-loop.test.ts|R35 same native sessionIds on two channels keep two names: each channel titles only its own session
+P|tests/acp-connector/protocol/chat-loop.test.ts|R38 a stale list response never reverts a newer name: last WRITE WINS by issue order, not arrival
+P|tests/acp-connector/protocol/chat-loop.test.ts|R39 a refresh that answers after a live rename cannot revert the newer name
+P|tests/acp-connector/protocol/chat-loop.test.ts|R40 two refreshes answered out of order: the later-issued one wins, the stale one lands nothing
+P|tests/acp-connector/protocol/chat-loop.test.ts|a failed initialize releases its channel and never pins the retry
+P|tests/acp-connector/protocol/chat-loop.test.ts|dispose while initialize is still landing releases the late handle exactly once and registers no channel
+P|tests/acp-connector/protocol/history-capability.test.ts|R19 without session/list the history list honestly reports it cannot read one
+P|tests/acp-connector/protocol/history-capability.test.ts|R19b with no project bound, asking for history is a quiet no-op — not a falsely reported failure
+P|tests/acp-connector/protocol/history-capability.test.ts|R20 with session/list the native titles and timestamps drive the list, and a known cwd keeps its project
+P|tests/acp-connector/protocol/history-capability.test.ts|R21 opening a session replays exactly what session/load streams, in order
+P|tests/acp-connector/protocol/history-capability.test.ts|R22 a restore the peer refuses on session/load surfaces as refused, never as a fake success
+P|tests/acp-connector/protocol/history-capability.test.ts|R26 with load but no list, restore is still legal: session/load replays without any prior listing
+P|tests/acp-connector/protocol/interactions.test.ts|R14 a permission request opens a live in-thread interaction carrying the native option ids
+P|tests/acp-connector/protocol/interactions.test.ts|R15 rejecting a permission answers the native request with the native reject id
+P|tests/acp-connector/protocol/interactions.test.ts|R16 cancelling a pending interaction sends outcome cancelled, not a fake option
+P|tests/acp-connector/protocol/interactions.test.ts|R17 a stop is confirmed only by the prompt settling with stopReason cancelled
+P|tests/acp-connector/protocol/interactions.test.ts|R18 a settled interaction refuses a second answer without consuming the next pending request
+P|tests/acp-connector/protocol/interactions.test.ts|R28 a stop blocks its run approval at the respond entry — the late answer reaches the agent zero times
+P|tests/acp-connector/protocol/interactions.test.ts|R29 an approval answered BEFORE the stop is delivered, never pretended back — and the stop still cancels the run
+P|tests/acp-connector/protocol/interactions.test.ts|R30 an old approval cannot be submitted after the cancellation is confirmed
+P|tests/acp-connector/protocol/interactions.test.ts|R31 one stop closes only its own run: sibling sessions and the same-named other channel stay fully submittable
+P|tests/acp-connector/protocol/interactions.test.ts|R32 a stop whose wire cannot carry it fails visibly and never reopens the approval it was meant to close
+P|tests/acp-connector/protocol/interactions.test.ts|R36 an ask that lands after the stop never opens in answerable form
+P|tests/acp-connector/protocol/interactions.test.ts|R37 a late ask from turn one is never adopted by the sessions next turn
+P|tests/acp-connector/protocol/streaming-tools.test.ts|R8 streams text deltas into one assistant message and closes it at the stop reason
+P|tests/acp-connector/protocol/streaming-tools.test.ts|R9 thought chunks extend reasoning without leaking into visible text
+P|tests/acp-connector/protocol/streaming-tools.test.ts|chunkless consecutive text fills one card while the turn is open (the per-chunk-card regression)
+P|tests/acp-connector/protocol/streaming-tools.test.ts|chunkless thought and text accumulate into the same open card, in their own fields
+P|tests/acp-connector/protocol/streaming-tools.test.ts|a chunkless stream never stitches across turns or absorbs an id-bearing neighbour (counterexamples)
+P|tests/acp-connector/protocol/streaming-tools.test.ts|the sandwich order no-id → id → no-id within one turn yields three cards, not C appended to A
+P|tests/acp-connector/protocol/streaming-tools.test.ts|a tool event closes the chunkless stream: text before and after a tool call stays independent
+P|tests/acp-connector/protocol/streaming-tools.test.ts|R10 tool_call and tool_call_update with one toolCallId drive one card
+P|tests/acp-connector/protocol/streaming-tools.test.ts|R11 a different toolCallId opens a different card (counterexample)
+P|tests/acp-connector/protocol/streaming-tools.test.ts|R12 a late update for another session cannot bleed into the selected one
+P|tests/acp-connector/protocol/streaming-tools.test.ts|R13 events that stop arriving never verdict a run: unknown, not cancelled, and no backend release
+P|tests/acp-connector/protocol/switch-isolation.test.ts|R23 two ACP clients on one renderer keep strictly separate native sessions
+P|tests/acp-connector/protocol/switch-isolation.test.ts|R24 an EXPLICIT dispose releases the old connection: its backend channel is released and open work settles as unknown
+P|tests/acp-connector/protocol/switch-isolation.test.ts|R25 switching away keeps a pending permission answerable only on its own connection, never the new one
+P|tests/acp-connector/protocol/switch-isolation.test.ts|R27 one AgentClient, two project channels, identical native session ids: messages, runs, approvals and cancels route by channel across a project switch
+P|tests/acp-connector/protocol/switch-isolation.test.ts|stop attributes by run and session: a mismatched pair, a settled run and a disposed client cancel nothing
+P|tests/acp-connector/ui/acp-conversation.test.tsx|U1 first send from a draft is blocked until a project is bound
+P|tests/acp-connector/ui/acp-conversation.test.tsx|U2 the first send into a bound project creates the native session and renders both sides
+P|tests/acp-connector/ui/acp-conversation.test.tsx|U3 a tool card is updated in place by toolCallId, never duplicated
+P|tests/acp-connector/ui/acp-conversation.test.tsx|U4 a permission request renders an in-thread card whose buttons are the native options
+P|tests/acp-connector/ui/acp-conversation.test.tsx|U5 a dropped channel shows the run outcome as unknown, distinct from cancelled
+P|tests/acp-connector/ui/acp-conversation.test.tsx|U5b a link that dies before any output stays an unaccepted draft: the send failed, nothing was ever cancelled
+P|tests/acp-connector/ui/acp-conversation.test.tsx|U6 switching the selection removes the old pending interaction from view without ever answering or releasing it
+P|tests/acp-connector/ui/snapshot-shape.test.tsx|renders the full ACP-shaped assistant turn with the existing components
+P|tests/acp-connector/ui/snapshot-shape.test.tsx|shows a native permission interaction in the thread with its native option labels
+P|tests/acp-connector/ui/snapshot-shape.test.tsx|keeps unknown outcomes and cancellations visually distinct (no invented verdict)
+P|tests/acp-connector/ui/snapshot-shape.test.tsx|the session browser renders a native title without a local rename affordance

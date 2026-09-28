@@ -1,0 +1,99 @@
+# T05 GREEN run — ordessa-sandbox-adapters
+# date: 2026-09-28
+# tree: worktree 011-q5-safety, package plugins/assets/sandbox/adapters
+
+$ PYTHONPATH=plugins/assets/sandbox/adapters/src .venv/bin/python -m pytest plugins/assets/sandbox/adapters -q
+
+.............................................................            [100%]
+61 passed in 0.22s
+
+EXIT_CODE=0
+# skip/xfail audit: 0 skipped, 0 xfailed, 0 errors (pytest -rsx -> "61 passed")
+
+# repeat run (stability):
+$ PYTHONPATH=plugins/assets/sandbox/adapters/src .venv/bin/python -m pytest plugins/assets/sandbox/adapters -q
+61 passed in 0.22s
+REPEAT_EXIT_CODE=0
+
+# joint-import check (the three Sandbox packages coexist with no symbol collision):
+$ PYTHONPATH=plugins/assets/sandbox/{api,backend,adapters}/src .venv/bin/python -c \
+      "import ordessa_sandbox_api, ordessa_sandbox_backend; import ordessa_sandbox_adapters as ad; \
+       assert len(ad.default_sandbox_registry().descriptors())==3; print('IMPORTS_OK', len(ad.__all__))"
+IMPORTS_OK 39
+# Honest note: a SINGLE cross-package pytest invocation (pytest plugins/assets/sandbox) does
+# not collect — the three packages' test trees reuse basenames (conftest.py, _helpers.py,
+# test_dependency_direction.py) with no package __init__.py, so the prepend import mode
+# errors on duplicate module names. That is a test-harness collection artifact, unrelated to
+# runtime isolation, which the joint import above proves clean. Each package's suite is run
+# standalone (adapters: this file; api: t04-green; backend: t04b-green).
+
+# per-test listing (every test ID delivered green):
+tests/test_c2_shape.py::test_each_adapter_exposes_assess_compile_verify
+tests/test_c2_shape.py::test_adapter_is_keyed_by_harness_and_version_range
+tests/test_c2_shape.py::test_assess_returns_an_assess_report
+tests/test_c2_shape.py::test_compile_takes_intent_target_handle_and_ceiling
+tests/test_c2_shape.py::test_contribution_leaves_owner_and_generation_unset
+tests/test_c2_shape.py::test_plugin_registers_the_facet_on_public_types_only
+tests/test_c3_seam.py::test_the_package_imports_no_harness_c3_module_or_symbol
+tests/test_c3_seam.py::test_to_harness_c3_refuses_as_unbound[sandbox_mode]
+tests/test_c3_seam.py::test_to_harness_c3_refuses_as_unbound[sandbox_workspace_write]
+tests/test_c3_seam.py::test_to_harness_c3_refuses_as_unbound[bashSandbox]
+tests/test_c3_seam.py::test_to_harness_c3_refuses_as_unbound[sandboxExtension]
+tests/test_c3_seam.py::test_harness_contract_unavailable_is_its_own_typed_error
+tests/test_c3_seam.py::test_compiled_field_intent_records_segments_value_and_source_intent
+tests/test_claude_adapter.py::test_bash_only_required_coverage_compiles
+tests/test_claude_adapter.py::test_required_coverage_beyond_bash_refuses_unproven
+tests/test_claude_adapter.py::test_adapter_never_claims_coverage_all
+tests/test_claude_adapter.py::test_linux_and_macos_supported_windows_unsupported_unknown_os_unknown
+tests/test_claude_adapter.py::test_wsl2_supported
+tests/test_codex_adapter.py::test_committed_codex_schema_backs_the_mode_vocabulary
+tests/test_codex_adapter.py::test_workspace_write_compiles_and_owns_sandbox_mode
+tests/test_codex_adapter.py::test_danger_full_access_refused_under_permissive_ceiling_no_bypass
+tests/test_codex_adapter.py::test_admin_enforced_sandbox_cannot_be_disabled_by_profile
+tests/test_codex_adapter.py::test_inexpressible_coverage_refused_no_approximation
+tests/test_codex_adapter.py::test_ceiling_forbidding_network_exposure_refused
+tests/test_codex_adapter.py::test_assess_in_range_supported_out_of_range_unknown
+tests/test_cross_session.py::test_process_scope_undeclared_impact_refused
+tests/test_cross_session.py::test_process_scope_with_declared_impact_set_compiles
+tests/test_cross_session.py::test_session_scope_ignores_co_residency
+tests/test_cross_session.py::test_no_co_resident_sessions_compiles_at_process_scope
+tests/test_dependency_direction.py::test_source_imports_only_the_declared_contracts
+tests/test_dependency_direction.py::test_works_end_to_end_without_permissions_or_harness_importable
+tests/test_dependency_direction.py::test_pyproject_declares_exactly_the_three_consumed_dependencies
+tests/test_matrix.py::test_the_twelve_matrix_fields_match_the_domain_contract
+tests/test_matrix.py::test_every_cell_carries_the_twelve_fields
+tests/test_matrix.py::test_three_brands_are_present
+tests/test_matrix.py::test_no_supported_cell_is_green_without_evidence_or_on_unknown
+tests/test_matrix.py::test_unknown_cells_never_assert_a_value
+tests/test_matrix.py::test_pi_and_effect_rows_are_honestly_not_supported
+tests/test_pi_adapter.py::test_no_extension_evidence_refuses_and_compiles_nothing
+tests/test_pi_adapter.py::test_extension_present_but_not_loaded_refuses
+tests/test_pi_adapter.py::test_extension_observed_at_a_different_pin_is_unknown_not_compiled
+tests/test_pi_adapter.py::test_loaded_extension_compiles_an_invoke_action
+tests/test_pi_adapter.py::test_assess_without_extension_is_unsupported
+tests/test_purity_no_fake_apply.py::test_every_module_exists_and_is_valid_python
+tests/test_purity_no_fake_apply.py::test_no_forbidden_import
+tests/test_purity_no_fake_apply.py::test_no_side_effect_call_sites
+tests/test_purity_no_fake_apply.py::test_behaviorally_no_spawn_no_socket_no_file_written
+tests/test_registry.py::test_three_defaults_unique_ids_and_ranges
+tests/test_registry.py::test_registry_refuses_overlapping_range_both_orders
+tests/test_registry.py::test_adjacent_ranges_do_not_overlap
+tests/test_registry.py::test_duplicate_adapter_id_refused
+tests/test_registry.py::test_select_is_unique_or_none
+tests/test_registry.py::test_build_contribution_refuses_overlap_at_composition
+tests/test_registry.py::test_sandbox_and_permissions_projecting_same_field_refused_both_orders
+tests/test_registry.py::test_two_sandbox_adapters_claiming_one_field_refused_both_orders
+tests/test_registry.py::test_disjoint_fields_stage_cleanly
+tests/test_registry.py::test_registry_stage_claims_records_ownership
+tests/test_verify.py::test_verified_observation_yields_verified
+tests/test_verify.py::test_unknown_observation_stays_unknown
+tests/test_verify.py::test_unsupported_observation_stays_unsupported_not_unknown
+tests/test_verify.py::test_refused_before_side_effect_flag
+
+# mutation sanity (guards non-vacuous; each mutation reverted, final clean run 61 passed):
+# M1 claude coverage check disabled -> test_required_coverage_beyond_bash_refuses_unproven FAILED (1)
+# M2 to_harness_c3 returns a stand-in -> all 4 parametrised test_to_harness_c3_refuses_as_unbound FAILED
+# M3 pi falls back to bare Pi -> test_no_extension_evidence_refuses_and_compiles_nothing + assess twin FAILED (2)
+# M4 registry overlap gate removed -> test_registry_refuses_overlapping_range_both_orders + build_contribution FAILED (2)
+# M5 codex danger-full-access made writable -> test_danger_full_access_refused_under_permissive_ceiling_no_bypass FAILED (1)
+# 61 passed / 0 failed / 0 skipped / 0 xfail after every revert

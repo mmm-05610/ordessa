@@ -24,7 +24,7 @@ from ordessa_server_compat.profiles.subagents import (
     tool_definitions,
     validate_run_arguments,
 )
-from pacthold.storage import Database
+from pacthold_runtime_compat.storage import Database
 
 
 def _profiles(tmp_path):

@@ -1,14 +1,14 @@
 from pathlib import Path
 
 from types import SimpleNamespace
-from pacthold.resource_contracts import (
+from pacthold_runtime_compat.resource_contracts import (
     AgentBoxProfileV1,
     PromptFragmentV1,
     WorkspaceV1,
 )
 from pacthold.work_core import ExecutionStartRequest, Ref, RefType, ResolvedExecutionInput
 from pacthold.work_core.projection import Outcome, Phase
-from pacthold.extensions.runtime_composition import RuntimeBinding, RuntimeHostRef, SandboxRef, TerminalRunHandle, TerminalSessionRef
+from pacthold_runtime_compat.runtime_composition import RuntimeBinding, RuntimeHostRef, SandboxRef, TerminalRunHandle, TerminalSessionRef
 from ordessa_harness.codex.app_server import provider as module
 
 

@@ -7,9 +7,9 @@ import { runtime } from '@ordessa/extension-host'
 import type { Commands, Workbench, Region } from '@extensions/ordessa.contracts/contract.js'
 import { CommandsToken, WorkbenchToken } from '@extensions/ordessa.contracts/contract.js'
 import commandsPlugin, { createCommands } from '../../../plugins/commands/src/entry'
-import workbenchPlugin from '../../../plugins/workbench/src/entry'
-import { createWorkbench } from '../../../plugins/workbench/src/model'
-import { WorkbenchShell } from '../../../plugins/workbench/src/shell'
+import workbenchPlugin from '../../../packages/workbench/src/entry'
+import { createWorkbench } from '../../../packages/workbench/src/model'
+import { WorkbenchShell } from '../../../packages/workbench/src/shell'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 const cleanup: (() => void | Promise<void>)[] = []

@@ -4,9 +4,8 @@
  * It owns the five responsibilities the access layer has and no others:
  *
  *   1. **discovery** — `harnesses` lists the brands this plugin can connect to, and a connect
- *      reports the launch context discovery derived for that brand next to the one actually used,
- *      so a mismatch is visible instead of silently redirected;
- *   2. **connect** — `connect` starts the Harness with the launch context the caller names and
+ *      reports the launch context discovery derived for that brand next to the one actually used;
+ *   2. **connect** — `connect` starts the Harness with a verified brand route for managed ACP brands
  *      transmits **no ACP frame** while doing it; one establishment at a time, reserved before the
  *      launch is awaited, because "one connection per process" has to be enforced rather than hoped
  *      for;
@@ -39,19 +38,21 @@
  * path is redacted out of every diagnostic this process emits.
  */
 import { createHash } from "node:crypto"
-import { readFileSync } from "node:fs"
+import { readFileSync, realpathSync } from "node:fs"
 import { spawn } from "node:child_process"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import readline from "node:readline"
-import { harnessLaunchContext, isKnownHarness, listHarnesses } from "../harnesses/index.mjs"
+import { harnessLaunchContext, isKnownHarness } from "../harnesses/index.mjs"
 import { openAcpConnection, PROCESS_GROUP_OWNERSHIP } from "./access-transport.mjs"
+import { resolveManagedLaunch, resolveLegacyLaunch, allowsPythonPath, launchDiscovery } from "./access-launch.mjs"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const snapshotRoot = path.resolve(here, "..", "third_party", "harness_remote")
 const CREDENTIAL_PATH = "/runtime/secret/credential"
 const ENVIRONMENT_KEY = /^[A-Z][A-Z0-9_]{0,63}$/
 const SENSITIVE_ENVIRONMENT_KEY = /(TOKEN|SECRET|KEY|PASSWORD|CREDENTIAL|AUTH)/i
+const LAUNCH_OVERRIDE_KEY = /^(?:NODE_OPTIONS|NODE_PATH|PATH|LD_PRELOAD|LD_LIBRARY_PATH|DYLD_.*|PYTHONHOME|PYTHONSTARTUP|PYTHONINSPECT)$/
 
 /** The whole control vocabulary. Anything else on stdin is an ACP frame, not a request. */
 const CONTROL_FIELDS = new Set(["op", "id"])
@@ -109,8 +110,10 @@ class Refused extends Error {
 
 async function main() {
   const argv = process.argv.slice(2)
-  const native = argv.length === 1 && argv[0] === "--native"
-  if (argv.length > (native ? 1 : 0)) {
+  const controlledPeer = argv.length === 2 && argv[0] === "--native" && argv[1] === "--controlled-test-peer"
+  const native = argv[0] === "--native"
+  if ((!controlledPeer && argv.length !== (native ? 1 : 0)) ||
+      (controlledPeer && process.env.AGENTBOX_ACCESS_TEST_MODE !== "controlled-peer-v1")) {
     fail({ code: "SIDECAR_MODE_INVALID" })
     return
   }
@@ -251,11 +254,47 @@ async function main() {
       throw new Refused("ADAPTER_ENVIRONMENT_INVALID")
     }
     for (const [key, value] of Object.entries(environment)) {
-      if (!ENVIRONMENT_KEY.test(key) || SENSITIVE_ENVIRONMENT_KEY.test(key)
+      if (!ENVIRONMENT_KEY.test(key) || SENSITIVE_ENVIRONMENT_KEY.test(key) || LAUNCH_OVERRIDE_KEY.test(key)
+          || !allowsPythonPath(harness, key)
           || typeof value !== "string" || value.length > 8192 || /[\0]/.test(value)
           || /^sk-[A-Za-z0-9_-]+$/.test(value)) {
         throw new Refused("ADAPTER_ENVIRONMENT_INVALID", key)
       }
+    }
+    let selectedLaunch
+    if (controlledPeer) {
+      // This fixture is absent from staged production artifacts. A renderer can only send control
+      // frames; it cannot turn on this startup mode or choose a different executable through it.
+      const fixtures = [
+        { file: path.resolve(here, "..", "tests", "access", "controlled_harness.mjs") },
+        { file: path.resolve(here, "..", "..", "..", "tests", "acp_orchestration", "fixtures",
+          "bidirectional_acp_peer.mjs"), harness: "pi", exactPath: true },
+      ]
+      // The second path exists only in a source checkout. Neither path is a renderer-provided
+      // executable, and the production entry cannot enter this mode through a connect frame.
+      let exactFixture = false
+      let fixture = null
+      try {
+        const requested = launch.args?.length === 1 ? realpathSync(launch.args[0]) : null
+        fixture = fixtures.find((candidate) => {
+          try {
+            return (candidate.harness === undefined || harness === candidate.harness)
+              && (!candidate.exactPath || launch.args[0] === candidate.file)
+              && realpathSync(candidate.file) === candidate.file
+              && requested === candidate.file
+          }
+          catch { return false }
+        }) ?? null
+        exactFixture = realpathSync(launch.command) === realpathSync(process.execPath)
+          && fixture !== null
+      } catch { /* an absent or stale path cannot select the controlled peer */ }
+      if (!exactFixture) {
+        throw new Refused("CONTROLLED_PEER_MISMATCH")
+      }
+      selectedLaunch = { command: process.execPath, args: [fixture.file], source: "controlled-test-peer" }
+    } else {
+      selectedLaunch = resolveManagedLaunch(harness, launch)
+        ?? resolveLegacyLaunch(harness, launch, environment)
     }
     const credentialEnvironment = request.credentialEnvironment
     if (credentialEnvironment != null) {
@@ -301,7 +340,7 @@ async function main() {
     try {
       opened = await openAcpConnection({
         harness,
-        launch: { command: launch.command, args: launch.args ?? [] },
+        launch: { command: selectedLaunch.command, args: selectedLaunch.args },
         directory: request.directory ?? process.cwd(),
         spawnProcess,
         redact: safeText,
@@ -327,10 +366,9 @@ async function main() {
         connectionId: opened.connectionId,
         harness,
         transport: opened.transport,
-        // What was actually launched, next to what discovery derived for this brand. A deployment that
-        // pins an offline artifact entry wants to see `source: "npx"` in `discovered` and `explicit`
-        // here — a redirect would hide the difference.
-        launch: { ...opened.launch, source: "explicit" },
+        // What was actually launched, next to what discovery derived for this brand.
+        launch: { ...opened.launch, source: selectedLaunch.source,
+          ...(selectedLaunch.version ? { version: selectedLaunch.version } : {}) },
         discovered: harnessLaunchContext(harness),
         state: opened.status(),
         provenance: { commit: source.commit, ref: source.ref },
@@ -345,7 +383,7 @@ async function main() {
     if (op === "harnesses") {
       return {
         provenance: { commit: source.commit, ref: source.ref },
-        harnesses: listHarnesses(),
+        ...launchDiscovery(),
         transport: connection?.transport ?? null,
       }
     }

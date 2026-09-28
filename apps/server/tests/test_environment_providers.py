@@ -18,6 +18,7 @@ from types import SimpleNamespace
 import pytest
 
 from ordessa_server.bootstrap import build_runtime
+from ordessa_server_product.composition import create_composition  # T014-S1d funnel
 from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server_compat.execution.placement import resolve_placement
 from ordessa_server.connectors import SshConnector, ssh_identity_permissions
@@ -25,7 +26,7 @@ from ordessa_server.transport.http import create_app
 from ordessa_workspace.local_environment import LocalEnvironmentProvider
 from ordessa_workspace.records import WorkspaceRecords
 from ordessa_server.idempotency import IdempotentRecords
-from pacthold.storage import Database
+from pacthold_runtime_compat.storage import Database
 
 from fastapi.testclient import TestClient
 
@@ -131,8 +132,9 @@ def test_a_local_workspace_records_no_host_and_no_remote_user(tmp_path):
 
 
 def test_the_local_open_refusal_travels_through_the_wire(tmp_path):
-    runtime = build_runtime(tmp_path / "server", harnesses=registry())
-    runtime.service.workspaces.local = LocalEnvironmentProvider(
+    runtime = build_runtime(tmp_path / "server",
+                            server_plugins=create_composition().compatibility_plugins(harnesses=registry()))
+    runtime.plugin_host.provided_port('product.service').workspaces.local = LocalEnvironmentProvider(
         sandbox_probe=lambda: {"status": "unavailable", "code": "probe_exit_1"},
     )
     with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:

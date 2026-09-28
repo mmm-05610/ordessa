@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-permissions-backend"
+version = "0.1.0"
+description = "Ordessa Permissions backend: authoritative approval facts store and the §C1 authorizer service"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+# Dependency direction by design: stdlib + the permissions domain contract +
+# the server plugin contract. No host, no compat layer, no pacthold, no harness.
+dependencies = [
+    "ordessa-permissions-api>=0.1.0,<1",
+    "ordessa-server-plugin-api>=0.1.0,<1",
+]
+
+[project.optional-dependencies]
+# Test-side only: the suite runs against the REAL product storage provider,
+# obtained through the product composition (`database_type()`). The runtime
+# package above stays at api + server-plugin-api; nothing in src/ imports
+# these distributions. `ordessa-server` and `ordessa-harness` are here for the
+# T021 L2 proof only: it drives the host's own ACP admission classes and the
+# ACP owner's port binding, from tests, and refuses to move either into src/.
+dev = [
+    "pytest>=7",
+    "pacthold-runtime-compat>=0.1.0,<1",
+    "ordessa-server-product>=2.0.0a1,<3",
+    "ordessa-server>=2.0.0a1,<3",
+    "ordessa-harness>=2.0.0a1,<3",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ordessa_permissions_backend = ["py.typed"]

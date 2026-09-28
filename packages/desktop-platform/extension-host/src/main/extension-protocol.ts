@@ -8,6 +8,7 @@ export function protocolHandler(rendererRoot: string, discovery: Discovery) {
     react: '/shared/react.js', 'react/jsx-runtime': '/shared/jsx-runtime.js',
     'react-dom': '/shared/react-dom.js', 'react-dom/client': '/shared/react-dom-client.js',
     '@ordessa/extension-api': '/shared/api.js',
+    '@ordessa/ui-components/api': '/shared/ui-components-api.js',
   }
   for (const id of discovery.installed.keys()) imports['@extensions/' + id + '/'] = '/extensions/' + id + '/'
   return async (request: { url: string; method: string }): Promise<Response> => {

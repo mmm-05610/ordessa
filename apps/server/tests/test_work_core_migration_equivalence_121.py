@@ -22,14 +22,30 @@ from __future__ import annotations
 import re
 import sqlite3
 
-from pacthold.work_core import db as wc
+from pacthold_runtime_compat.legacy_migrations import MIGRATIONS_DIR
+from pacthold_runtime_compat.legacy_migrations import db as wc
+from pacthold_runtime_compat.legacy_migrations import register_legacy_migrations
+
+# Post-T009 the historical chain is PRODUCT-ASSEMBLED (specs/010 plan §43:
+# 「B 默认产品显式装配旧迁移集」) and SEALED inside the compat distribution:
+# the SQL files this gate walks moved from the kernel tree to
+# `pacthold_runtime_compat.legacy_migrations.MIGRATIONS_DIR` (byte-for-byte
+# unchanged). Re-pointing the walk is an honest adaptation to a moved path:
+# the same invariants (full ledger [1..9], upgrade == greenfield structure,
+# 006 state mapping, idempotence, the 005 no-op) are asserted about the
+# same files, at their new location. The kernel runner applies registered
+# namespaces assembly-first, core-last, so this gate assembles the legacy
+# namespace before every `_run_migrations` — `register_legacy_migrations()`
+# is idempotent. Without it the legacy namespace is simply absent, which is
+# exactly the OperationalError family T022b closes.
+register_legacy_migrations()
 
 _MIG = re.compile(r"^(\d{3})_.*\.sql$")
 
 
 def _files():
     return sorted(
-        (f for f in wc.migrations_dir().iterdir() if _MIG.match(f.name)),
+        (f for f in MIGRATIONS_DIR.iterdir() if _MIG.match(f.name)),
         key=lambda f: f.name)
 
 

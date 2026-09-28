@@ -1,0 +1,187 @@
+# Q5 lane aggregate GREEN — test-module basename de-collision
+# date: 2026-09-28
+# tree: worktree 011-q5-safety, branch codex/011-q5-safety
+# interpreter: .venv/bin/python (Python 3.12.14, pytest 9.1.1)
+# scope touched: plugins/permissions/{api,backend,adapters},
+#                plugins/assets/sandbox/{api,backend,adapters}  (tests + pyproject ini only)
+# exit codes below are $? of the pytest process itself (output redirected to a file first,
+# never read off a pipe).
+
+=====================================================================================
+0. THE RED THIS FIX REMOVES (before state, reproduced in this tree)
+=====================================================================================
+$ .venv/bin/python -m pytest plugins/permissions -q --tb=line -p no:cacheprovider
+exit=2   -> 1 error during collection
+           import file mismatch: imported module 'test_dependency_direction' has this
+           __file__ attribute: plugins/permissions/adapters/tests/test_dependency_direction.py
+           which is not the same as the test file we want to collect:
+           plugins/permissions/api/tests/test_dependency_direction.py
+
+$ .venv/bin/python -m pytest plugins/assets/sandbox -q --tb=line -p no:cacheprovider
+exit=2   -> 3 errors during collection
+           (a) import file mismatch 'test_dependency_direction' (adapters vs backend)
+           (b) plugins/assets/sandbox/api/tests/test_coverage.py:
+               ImportError: cannot import name 'verified_evidence' from '_helpers'
+               (.../sandbox/adapters/tests/_helpers.py)      <- duplicate _helpers.py
+           (c) plugins/assets/sandbox/api/tests/test_evidence.py: same _helpers collision
+
+Per-package runs were already green before this change (392 + 218 = 610), so the abort
+was purely a cross-package module-identity collision, not a test failure.
+
+=====================================================================================
+1. RENAMES (pure rename / import refactor; no assertion, no logic, no skip/xfail)
+=====================================================================================
+plugins/permissions/api/tests/
+  test_dependency_direction.py -> test_permissions_api_dependency_direction.py
+plugins/permissions/adapters/tests/
+  test_claude_adapter.py       -> test_permissions_adapters_claude_adapter.py
+  test_codex_adapter.py        -> test_permissions_adapters_codex_adapter.py
+  test_dependency_direction.py -> test_permissions_adapters_dependency_direction.py
+  test_pi_adapter.py           -> test_permissions_adapters_pi_adapter.py
+  test_registry.py             -> test_permissions_adapters_registry.py
+  test_verify.py               -> test_permissions_adapters_verify.py
+  _helpers split (see §2):     -> _permissions_adapters_helpers.py (new, moved code)
+  conftest.py                  -> kept, now only the two session fixtures
+plugins/permissions/backend/tests/   (no collisions; unchanged)
+plugins/assets/sandbox/api/tests/
+  _helpers.py                  -> _sandbox_api_helpers.py
+plugins/assets/sandbox/backend/tests/
+  test_dependency_direction.py -> test_sandbox_backend_dependency_direction.py
+  _backend_helpers.py          -> _sandbox_backend_helpers.py
+plugins/assets/sandbox/adapters/tests/
+  test_claude_adapter.py       -> test_sandbox_adapters_claude_adapter.py
+  test_codex_adapter.py        -> test_sandbox_adapters_codex_adapter.py
+  test_dependency_direction.py -> test_sandbox_adapters_dependency_direction.py
+  test_pi_adapter.py           -> test_sandbox_adapters_pi_adapter.py
+  test_registry.py             -> test_sandbox_adapters_registry.py
+  test_verify.py               -> test_sandbox_adapters_verify.py
+  _helpers.py                  -> _sandbox_adapters_helpers.py
+
+References updated alongside (all inside the six packages):
+  - 11 `from conftest import ...` -> `from _permissions_adapters_helpers import ...`
+  - 18 `from _helpers import ...` -> the renamed per-package helper modules
+  - 9  `from _backend_helpers import ...` -> `from _sandbox_backend_helpers import ...`
+  - plugins/permissions/api/tests/test_legacy_last_match_divergence.py docstring
+    cross-reference (`test_dependency_direction` -> `test_permissions_api_dependency_direction`)
+  - plugins/assets/sandbox/backend/README.md gate filename reference
+  - __pycache__ / .pyc under the six packages cleared
+  NOT rewritten: every file under specs/011-q5-safety/evidence/ (historical ledgers keep the
+  old IDs/filenames; this rename note stands in for it), and the generated
+  src/*.egg-info/SOURCES.txt + PKG-INFO (git-ignored build artifacts, regenerate on next build).
+
+=====================================================================================
+2. WHY THE conftest-IMPORT SPLIT WAS NECESSARY (found by the lane aggregate, §4b)
+=====================================================================================
+The first post-rename lane aggregate collected all 610 items but reported 4 failures:
+  ImportError: cannot import name 'make_intent' from 'conftest'
+  (.../plugins/assets/sandbox/backend/tests/conftest.py)
+Cause: every package's `conftest.py` is imported by pytest under the single top-level
+module name `conftest` (pytest deletes sys.modules["conftest"] before loading each new one),
+so a `from conftest import X` executed *inside a test body* (run phase, after all
+collection) binds whichever package's conftest was loaded last — not the file next to it.
+Fix: the plain helper factories/constants moved verbatim out of
+plugins/permissions/adapters/tests/conftest.py into the uniquely-named
+_permissions_adapters_helpers.py; conftest.py keeps only the `families` /
+`pinned_versions` fixtures. Verified line-by-line: every non-blank line of the original
+conftest.py appears verbatim in helpers+conftest (no edited or dropped statement), and the
+4 in-body imports stay in-body so the monkeypatch-poisoning window in
+test_purity.py::test_behaviorally_no_subprocess_no_socket_no_file_open is unchanged.
+
+=====================================================================================
+3. pyproject [tool.pytest.ini_options] testpaths (decision: ADDED to permissions only)
+=====================================================================================
+- plugins/assets/sandbox/{api,backend,adapters}: already present, unchanged.
+- plugins/permissions/{api,backend,adapters}: ADDED `[tool.pytest.ini_options]\ntestpaths = ["tests"]`,
+  matching apps/server/pyproject.toml:38 and packages/pacthold/pyproject.toml:39.
+  Behaviour-neutrality measured before adding (bare `pytest` with no args, from each package dir):
+    plugins/permissions/api      -> rootdir <pkg>, configfile pyproject.toml, 223 collected, exit 0
+    plugins/permissions/backend  -> rootdir <pkg>, configfile pyproject.toml,  69 collected, exit 0
+    plugins/permissions/adapters -> rootdir <pkg>, configfile pyproject.toml, 100 collected, exit 0
+  Each package has test files ONLY under tests/ (no test_*.py anywhere else), rootdir/configfile
+  resolution was already the package dir (pytest 9 accepts pyproject.toml without the section),
+  and testpaths is ignored whenever a path argument is passed. After adding it the bare runs and
+  the path-arg runs give the same 223/69/100 (§6). No collection changed.
+- Tests that read pyproject.toml keep passing: test_public_api asserts only
+  name/version/`where = ["src"]`; the two sandbox *_dependency_direction tests assert
+  project.dependencies only. Neither looks at the [tool.*] tables.
+
+=====================================================================================
+4a. AGGREGATE PER PARENT (exit code of pytest, counts vs per-package sums)
+=====================================================================================
+$ .venv/bin/python -m pytest plugins/permissions -q --tb=short -p no:cacheprovider
+exit=0
+392 passed in 0.90s
+  sum of per-package: api 223 + backend 69 + adapters 100 = 392   MATCH
+
+$ .venv/bin/python -m pytest plugins/assets/sandbox -q --tb=short -p no:cacheprovider
+exit=0
+218 passed in 0.57s
+  sum of per-package: api 89 + backend 68 + adapters 61 = 218     MATCH
+
+=====================================================================================
+4b. AGGREGATE OVER THE WHOLE LANE
+=====================================================================================
+$ .venv/bin/python -m pytest plugins/permissions plugins/assets/sandbox -q --tb=short -p no:cacheprovider
+exit=0
+610 passed in 1.54s          (392 + 218 = 610  MATCH)
+
+$ .venv/bin/python -m pytest plugins/assets/sandbox plugins/permissions -q --tb=short -p no:cacheprovider
+exit=0
+610 passed in 1.52s          (argument order reversed: still 610, so the lane is order-independent)
+
+=====================================================================================
+4c. REPO-WIDE BASENAME UNIQUENESS
+=====================================================================================
+$ find packages apps plugins -name 'test_*.py' -not -path '*/node_modules/*' \
+    | xargs -n1 basename | sort | uniq -d
+(no output; 0 bytes. 205 test files, every basename unique)
+
+Before this fix the same command printed: test_claude_adapter.py, test_codex_adapter.py,
+test_dependency_direction.py, test_pi_adapter.py, test_registry.py, test_verify.py
+
+Extra (collection across the whole repo, not just the lane):
+$ .venv/bin/python -m pytest packages apps plugins -q --collect-only -p no:cacheprovider
+exit=0   2089 tests collected   "import file mismatch" occurrences: 0
+
+=====================================================================================
+4d. PER-PACKAGE RUNS STILL GREEN INDIVIDUALLY (after all edits)
+=====================================================================================
+$ .venv/bin/python -m pytest plugins/permissions/api -q --tb=short -p no:cacheprovider            exit=0  223 passed in 0.31s
+$ .venv/bin/python -m pytest plugins/permissions/backend -q --tb=short -p no:cacheprovider         exit=0   69 passed in 0.51s
+$ .venv/bin/python -m pytest plugins/permissions/adapters -q --tb=short -p no:cacheprovider        exit=0  100 passed in 0.15s
+$ .venv/bin/python -m pytest plugins/assets/sandbox/api -q --tb=short -p no:cacheprovider          exit=0   89 passed in 0.10s
+$ .venv/bin/python -m pytest plugins/assets/sandbox/backend -q --tb=short -p no:cacheprovider      exit=0   68 passed in 0.27s
+$ .venv/bin/python -m pytest plugins/assets/sandbox/adapters -q --tb=short -p no:cacheprovider     exit=0   61 passed in 0.21s
+
+=====================================================================================
+4e. INHERITED-RED REGRESSION GATE (unchanged; NOT fixed, only proved identical)
+=====================================================================================
+$ .venv/bin/python -m pytest apps/server -q --tb=no -p no:cacheprovider -rf
+exit=1
+43 failed, 850 passed, 10 skipped, 1 warning, 25 errors in 118.50s (0:01:58)
+  per-ID set (FAILED ids, sorted) vs /tmp/q5-ledger-apps-server-before.txt (43 ids):
+  diff -> PER-ID SET: IDENTICAL        (error count 25 matches docs/known-issues.md §14)
+
+$ .venv/bin/python -m pytest plugins/harness -q --tb=no -p no:cacheprovider -rf
+exit=1
+2 failed, 308 passed, 3 skipped in 5.46s
+  the 2 ids are exactly the registered inherited reds
+  (docs/known-issues.md §13, docs/server-host-baseline.md:48-49):
+    plugins/harness/tests/install/test_acp_schema_drift_target.py::test_the_acp_schema_a_closure_carries_satisfies_the_adapter_that_needs_it
+    plugins/harness/tests/install/test_acp_schema_drift_target.py::test_a_root_override_of_the_schema_does_not_violate_a_declaration_in_the_closure
+
+$ .venv/bin/python -m pytest packages/pacthold -q --tb=no -p no:cacheprovider
+exit=0
+238 passed in 2.13s   VERDICT=GREEN_NO_SKIPS
+
+=====================================================================================
+5. HONEST LIMITS OF THIS PROOF
+=====================================================================================
+- Green here means "these six packages' suites collect and pass together". It does not prove
+  cross-lane product behaviour: the lane's tests still never boot a host, a wire or a real
+  model (unchanged from the per-package ledgers).
+- The de-collision is a module-identity fix, not a semantics fix: no test function name,
+  assertion or fixture body was edited; only file names, import statements, one helper-module
+  split, pyproject [tool.pytest] sections and two doc cross-references.
+- Historical evidence files keep their old node IDs on purpose; a reader of
+  t01/t03/t04b/t05 ledgers must map them through §1 of this file.

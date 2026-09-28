@@ -33,7 +33,7 @@ from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server_compat.profiles import ProfileRecords
 from ordessa_server_compat.sessions import SessionRecords
 from ordessa_workspace import WorkspaceRecords
-from pacthold.storage import Database, ObjectStore
+from pacthold_runtime_compat.storage import Database, ObjectStore
 
 PLUGIN = pathlib.Path(__file__).resolve().parents[3] / "plugins"  / "harness"
 WORKER = PLUGIN / "runtime" / "worker-entry.mjs"
@@ -233,6 +233,7 @@ def test_an_accepted_turn_whose_adapter_cannot_start_reports_that_cause_to_the_c
     from fastapi.testclient import TestClient
 
     from ordessa_server.bootstrap import build_runtime
+    from ordessa_server_product.composition import create_composition
     from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry, SidecarExecutionBackend
     from ordessa_server_compat.execution.sidecar import SidecarHarnessPort
     from ordessa_server.transport.http import create_app
@@ -255,7 +256,7 @@ def test_an_accepted_turn_whose_adapter_cannot_start_reports_that_cause_to_the_c
                     "user": os.environ["USER"], "path": str(tmp_path)}
 
     def execution_factory(records, objects, approvals, notifier, _connector, _credentials,
-                          _secrets):
+                          _secrets, _turn_inputs):
         def port_factory(context, on_event):
             return SidecarHarnessPort(
                 LocalProcessLauncher(["node", str(SIDEcar_ENTRY)], cwd=str(PLUGIN)),
@@ -271,8 +272,10 @@ def test_an_accepted_turn_whose_adapter_cannot_start_reports_that_cause_to_the_c
             records, objects, approvals, port_factory=port_factory, on_event=notifier.notify,
         )
 
-    runtime = build_runtime(tmp_path / "server", harnesses=registry,
-                            execution_factory=execution_factory, connector=Connector())
+    runtime = build_runtime(tmp_path / "server",
+                            server_plugins=create_composition().compatibility_plugins(
+                                harnesses=registry,
+                                execution_factory=execution_factory, connector=Connector()))
     with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
         opened = _wire_post(client, runtime.token, "workspaces.open", {
             "requestId": "cause-open", "path": str(tmp_path),

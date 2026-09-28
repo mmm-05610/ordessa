@@ -1,0 +1,21 @@
+T010 RED — permissions wire-family mapping (plugins/permissions/api)
+date: 2026-09-27T21:28:18Z
+
+cmd: PYTHONPATH=plugins/permissions/api/src .venv/bin/python -m pytest plugins/permissions/api -q
+(collection aborted by the new guard file's missing symbols)
+=========================== short test summary info ============================
+ERROR plugins/permissions/api/tests/test_wire_family.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.18s
+EXIT=2
+
+cmd: ... -q --continue-on-collection-errors  (per-ID red)
+FAILED plugins/permissions/api/tests/test_public_api.py::test_every_declared_module_is_importable_and_declares_its_own_exports
+FAILED plugins/permissions/api/tests/test_public_api.py::test_the_package_re_exports_exactly_the_union_of_its_modules
+ERROR plugins/permissions/api/tests/test_wire_family.py
+=========================== short test summary info ============================
+FAILED plugins/permissions/api/tests/test_public_api.py::test_every_declared_module_is_importable_and_declares_its_own_exports
+FAILED plugins/permissions/api/tests/test_public_api.py::test_the_package_re_exports_exactly_the_union_of_its_modules
+ERROR plugins/permissions/api/tests/test_wire_family.py
+2 failed, 221 passed, 1 error in 0.37s
+EXIT=1

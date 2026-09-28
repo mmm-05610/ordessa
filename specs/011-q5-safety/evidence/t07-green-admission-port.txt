@@ -1,0 +1,48 @@
+# T07 GREEN — ACP admission port adapter (task T07 Q5 half, lane Q5/permissions-backend)
+# date: 2026-09-27T21:55:48Z  branch: codex/011-q5-safety  head: 953fb915eb237a721f581fbef23441bbc6c76c70
+# every 'exit=' below is the true pytest/process status (no pipe measurement)
+
+$ .venv/bin/python -m pytest plugins/permissions/backend/tests/test_admission_port.py -q
+  .............................                                            [100%]
+  29 passed in 0.27s
+exit=0
+
+$ .venv/bin/python -m pytest plugins/permissions/backend -q   # baseline was 69 passed
+  ........................................................................ [ 61%]
+  ..............................................                           [100%]
+  118 passed in 0.74s
+exit=0
+
+$ .venv/bin/python -m pytest plugins/permissions -q   # baseline was 509 passed
+  ........................................................................ [ 12%]
+  ........................................................................ [ 25%]
+  ........................................................................ [ 38%]
+  ........................................................................ [ 51%]
+  ........................................................................ [ 64%]
+  ........................................................................ [ 77%]
+  ........................................................................ [ 90%]
+  ......................................................                   [100%]
+  558 passed in 1.26s
+exit=0
+
+$ .venv/bin/python specs/011-q5-safety/proof/permissions_api_proof.py
+  [PASS] profile allow cannot widen an admin deny: expected 'Denied' got 'Denied'
+  [PASS]   and it carries the stable ceiling code: expected 'POLICY_CEILING_VIOLATION' got 'POLICY_CEILING_VIOLATION'
+  [PASS] an intent allow under a require-approval ceiling is not an allow: expected 'PendingApproval' got 'PendingApproval'
+  [PASS] an unknown tool refuses instead of inheriting: expected 'Denied' got 'Denied'
+  [PASS] a missing ceiling provider is a missing provider, not an open field: expected 'Denied' got 'Denied'
+  [PASS] approval recorded: expected 'open' got 'open'
+  [PASS] first decision recorded: expected 'Recorded' got 'Recorded'
+  [PASS] replay of the same request id is already-recorded, never a second decision: expected 'AlreadyRecorded' got 'AlreadyRecorded'
+  [PASS] an opposite decision after settle is refused: expected 'InvalidApproval' got 'InvalidApproval'
+  [PASS] before any native receipt the outcome is unknown, never allowed: expected 'QueryUnknown' got 'QueryUnknown'
+  [PASS] after the native owner confirmed, reconciliation carries the receipt: expected 'QueriedApproval' got 'QueriedApproval'
+  [PASS] the approved grant is spendable: expected 'True' got True
+  [PASS] and only once: expected 'False' got False
+  [PASS] a grant never rebinds to a different operation digest: expected 'False' got False
+  [PASS] a decision presented under another session cannot settle it: expected 'InvalidApproval' got 'InvalidApproval'
+  [PASS] an open approval keeps the provider busy until settled or reconciled: expected '1' got '1'
+  
+  ALL PROOF EXPECTATIONS MET
+exit=0
+

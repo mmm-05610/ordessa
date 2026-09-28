@@ -34,7 +34,7 @@ def build(document: Path, *, secret_store, data_root: Path | None = None):
     that would use them.
     """
     import ordessa_server_compat.composition as runtime_module
-    import ordessa_server.bootstrap.runtime as host_module
+    import ordessa_workspace.connectors as host_module  # T014-S2b builder home
 
     original = host_module._builtin_connector
     host_module._builtin_connector = lambda _instance_id: object()
@@ -89,7 +89,7 @@ def test_a_declared_credential_is_imported_and_resolves_by_its_declared_id(tmp_p
     runtime = build(document, secret_store=store)
     runtime.start()
     try:
-        record = runtime.repository.credentials.get(CREDENTIAL_ID)
+        record = runtime.plugin_host.provided_port('product.repository').credentials.get(CREDENTIAL_ID)
         assert record["kind"] == "api-key"
         # The declared id resolves to bytes the *store* owns, and the source is
         # not the store: the deployment named where to read, nothing more.
@@ -108,7 +108,7 @@ def test_a_restart_with_the_same_deployment_does_not_duplicate_or_reread(tmp_pat
     root = tmp_path / "data"
     first = build(document, secret_store=store, data_root=root)
     first.start()
-    locator = first.repository.credentials.get(CREDENTIAL_ID)["secret_locator"]
+    locator = first.plugin_host.provided_port('product.repository').credentials.get(CREDENTIAL_ID)["secret_locator"]
     first.stop()
 
     # The source is gone and the id is already registered: a restart must not
@@ -117,7 +117,7 @@ def test_a_restart_with_the_same_deployment_does_not_duplicate_or_reread(tmp_pat
     second = build(document, secret_store=store, data_root=root)
     second.start()
     try:
-        assert second.repository.credentials.get(CREDENTIAL_ID)["secret_locator"] == locator
+        assert second.plugin_host.provided_port('product.repository').credentials.get(CREDENTIAL_ID)["secret_locator"] == locator
     finally:
         second.stop()
 
@@ -204,7 +204,7 @@ def test_a_deployment_without_credentials_still_starts(tmp_path):
     runtime = build(deployment_document(tmp_path, None), secret_store=MemorySecretStore(values={}))
     runtime.start()
     try:
-        assert not runtime.repository.credentials.exists(CREDENTIAL_ID)
+        assert not runtime.plugin_host.provided_port('product.repository').credentials.exists(CREDENTIAL_ID)
         assert runtime.declared_credentials == ()
     finally:
         runtime.stop()

@@ -18,6 +18,7 @@
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "@ordessa/extension-api": "0.1.0",
+    "@ordessa/ui-components": "0.1.0",
     "@ordessa/extension-loader": "0.1.0"
   },
   "devDependencies": {

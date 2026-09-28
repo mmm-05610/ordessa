@@ -10,10 +10,10 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from ordessa_server.errors import ServerError
+from server_plugin_api import ServerError
 from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server.ids import now, opaque_id
-from pacthold.storage import Database
+from pacthold_runtime_compat.storage import Database
 
 
 class AccountRecords:

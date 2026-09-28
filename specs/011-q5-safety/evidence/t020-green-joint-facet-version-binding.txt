@@ -1,0 +1,66 @@
+T020 GREEN / HONEST-REFUSAL PROOF — joint facet version binding
+Branch codex/011-q5-safety, after the fix. Companion of
+t020-red-joint-facet-version-binding.txt (which carries the identical
+STEP-1 measurement block O1-O8 recorded BEFORE any code change).
+
+== MEASUREMENT RECAP (origins O1-O8 verbatim in the red file) ==
+* Observed adapter version origin: RuntimeAdapter.describe_installation()
+  (plugins/harness/api/src/ordessa_harness_api/contracts.py:385-388), consumed
+  at plugins/harness/src/ordessa_harness/application/configuration_service.py:153.
+* THIS TREE PUBLISHES NO TRUSTED OBSERVED RUNTIME-ADAPTER VERSION for
+  codex/claude-code/pi: no production describe_installation implementer exists
+  (grep across plugins/harness/src + apps/server/src finds none; the only
+  in-tree Installation is the controlled fixture
+  plugins/harness/tests/fixtures/external_adapter/src/ordessa_test_external_adapter/__init__.py:69,
+  harness "test-external", adapter_version (1,0,0)). harnesses.toml identity
+  versions are NATIVE pins. G07/G10 joint PRODUCTION admission therefore
+  REMAINS OPEN — this fix aligns the declarations to backed facts and proves
+  the selection machinery; it does not fake a production observation.
+
+== FIX ==
+* Permissions: contribution.py `_ADAPTER_VERSION`
+  VersionRange((1,0,0)) = [1.0.0, ∞)  ->  VersionRange((0,1,0),(0,1,0)).
+  Backing fact: plugins/permissions/adapters/pyproject.toml:7 version="0.1.0"
+  (this distribution's own release pin — the only version fact it can cite).
+  NOT a widening: the unbounded maximum (no backing observation) is removed;
+  drift test plugins/permissions/adapters/tests/test_adapter_version_evidence.py
+  re-pins declaration == release fact.
+* Sandbox: points.py `_ADAPTER_VERSIONS` unchanged — exactly (0,1,0), backed by
+  plugins/assets/sandbox/adapters/pyproject.toml:7 version="0.1.0". Each side
+  pins its OWN pyproject fact (independently both 0.1.0 today; no range was
+  copied — the joint test parses the Permissions literal from source text and
+  each package's evidence test reads its own pyproject).
+* Coupled mirrors (assertions kept, overlap re-anchored to the live pin):
+  tests/test_counterexamples.py twin now uses first.adapter_versions;
+  tests/test_real_admission_lifecycle.py stub mirrors the published claude
+  descriptor's adapter_versions.
+
+== JOINT PROOF OUTCOME (tests/test_joint_facet_version_binding.py) ==
+(a) VERSION LAYER, via the real ConfigurationApplicationService.plan gate
+    (asserts platform result types Refused/ErrorCode only):
+    - candidates are only version facts this tree publishes: (1,0,0) fixture-
+      observed and (0,1,0) release pins.
+    - BEFORE fix: no candidate clears both facets (RED recorded).
+    - AFTER fix: one Installation ("codex",(2,0,0),(0,1,0)) clears BOTH facets'
+      version gates (plan advances past CAPABILITY_UNSUPPORTED to the stub
+      compile code) — the pair is jointly satisfiable at the backed pin.
+    - test_composition_admits_both_facet_sets_jointly: real build_runtime host
+      admits all 6 descriptors from 2 owners (the narrowing introduces no
+      conflict-gate regression).
+(b) PRODUCTION LAYER, honest refusal asserted, not faked:
+    - test_real_two_fragment_joint_plan_refuses_pending_trusted_observation:
+      with both facets published, ONE two-fragment plan returns
+      Refused(ErrorCode.ADAPTER_MISSING) because the multi-owner open point
+      resolves to AbsentContribution
+      (apps/server/src/ordessa_server/plugin_host/contribution_points.py:150-162).
+    - Missing evidence named: (1) a production RuntimeAdapter.describe_installation()
+      observer for the codex harness runtime; (2) C4 per-fragment facet
+      selection (C0 branch commits 6eeba5b284/080396ecaf, not this tree).
+
+== COMMANDS / TRUE EXIT CODES (no pipes) ==
+exit=0
+7 passed in 0.57s
+exit=0
+225 passed in 1.16s
+exit=0
+885 passed in 2.65s

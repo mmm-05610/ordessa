@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from pacthold.resource_contracts import harness_capabilities as caps
+from pacthold_runtime_compat.resource_contracts import harness_capabilities as caps
 from ordessa_server_compat.execution.sidecar_backend import _CoreSidecarProvider
 from pacthold.work_core.registry import CapabilityUnsupported, ExtensionRegistry
 

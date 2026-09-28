@@ -28,7 +28,7 @@
  * them.
  *
  * usage: build-claude-runtime-artifact.mjs --output ABSOLUTE_DIR [--source RUNTIME_DIR]
- *                                       [--replace] [--json]
+ *                                       [--legacy-alias] [--replace] [--json]
  */
 import { createHash } from "node:crypto"
 import { spawnSync } from "node:child_process"
@@ -42,11 +42,15 @@ import { fileURLToPath } from "node:url"
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..")
 const DEFAULT_SOURCE = path.join(REPO, "packaging", "claude")
+const LEGACY_SOURCE = path.join(REPO, "packaging", "claude-legacy")
 
 export const MARKER_NAME = ".agentbox-claude-runtime-artifact"
 export const MARKER_CONTENT = "agentbox-claude-runtime-artifact-r1\n"
 export const ADAPTER_PACKAGE = "@agentclientprotocol/claude-agent-acp"
 export const ADAPTER_VERSION = "0.81.2"
+export const LEGACY_ADAPTER_VERSION = "0.75.1"
+const LEGACY_MARKER_NAME = ".ordessa-claude-legacy-runtime-artifact"
+const LEGACY_MARKER_CONTENT = "ordessa-claude-legacy-runtime-artifact-r1\n"
 export const EXCLUDED_ADAPTERS = [
   "@automatalabs/pi-acp",
   "@agentclientprotocol/codex-acp",
@@ -218,13 +222,13 @@ function assertPlainTree(root) {
 
 function environmentForPython() {
   const existing = process.env.PYTHONPATH ? `:${process.env.PYTHONPATH}` : ""
-  return { ...process.env, PYTHONPATH: `${path.join(REPO, "..", "packages", "pacthold", "src")}${existing}` }
+  return { ...process.env, PYTHONPATH: `${path.join(REPO, "..", "runtime-compat", "src")}${existing}` }
 }
 
 export function treeSummary(directory) {
   const program = [
     "import json, sys",
-    "from pacthold.resource_contracts.runtime_artifacts import runtime_artifact_tree_summary as summary",
+    "from pacthold_runtime_compat.resource_contracts.runtime_artifacts import runtime_artifact_tree_summary as summary",
     "print(json.dumps(summary(sys.argv[1])))",
   ].join("; ")
   const result = spawnSync("python3", ["-c", program, directory], {
@@ -272,9 +276,9 @@ export function assertOutputPolicy(output, { repo = REPO } = {}) {
   return resolved
 }
 
-export function isOwnedArtifact(directory) {
+export function isOwnedArtifact(directory, { markerName = MARKER_NAME, markerContent = MARKER_CONTENT } = {}) {
   try {
-    return readFileSync(path.join(directory, MARKER_NAME), "utf8") === MARKER_CONTENT
+    return readFileSync(path.join(directory, markerName), "utf8") === markerContent
   } catch {
     return false
   }
@@ -309,7 +313,7 @@ function makeReadOnly(root) {
 }
 
 /** Remove an output path only when this builder provably owns it. */
-export function clearTarget(output, { replace }) {
+export function clearTarget(output, { replace, markerName = MARKER_NAME, markerContent = MARKER_CONTENT }) {
   if (!existsSync(output)) return
   const stats = lstatSync(output)
   if (stats.isSymbolicLink()) {
@@ -318,7 +322,7 @@ export function clearTarget(output, { replace }) {
   if (!stats.isDirectory()) {
     throw new BuildError("CLAUDE_OUTPUT_NOT_OWNED", `${output} is not a directory; refusing to touch it`)
   }
-  if (isOwnedArtifact(output)) {
+  if (isOwnedArtifact(output, { markerName, markerContent })) {
     if (!replace) {
       throw new BuildError("CLAUDE_OUTPUT_EXISTS", `${output} is an existing artifact; pass --replace to rebuild it`)
     }
@@ -390,7 +394,15 @@ function assertNoForeignAdapters(sourceRoot) {
   }
 }
 
-export function build({ output, source = DEFAULT_SOURCE, replace = false }) {
+export function build({ output, source, replace = false, variant = "canonical" }) {
+  if (!["canonical", "legacy-alias"].includes(variant)) {
+    throw new BuildError("CLAUDE_VARIANT_INVALID", "unsupported Claude artifact variant")
+  }
+  const legacy = variant === "legacy-alias"
+  source ??= legacy ? LEGACY_SOURCE : DEFAULT_SOURCE
+  const version = legacy ? LEGACY_ADAPTER_VERSION : ADAPTER_VERSION
+  const markerName = legacy ? LEGACY_MARKER_NAME : MARKER_NAME
+  const markerContent = legacy ? LEGACY_MARKER_CONTENT : MARKER_CONTENT
   const resolved = assertOutputPolicy(output)
   const sourceRoot = path.resolve(source)
   if (!existsSync(path.join(sourceRoot, "package-lock.json"))) {
@@ -416,9 +428,9 @@ export function build({ output, source = DEFAULT_SOURCE, replace = false }) {
   }
   packages.sort((left, right) => left.path.localeCompare(right.path))
   const adapter = packages.find((item) => item.name === ADAPTER_PACKAGE)
-  if (!adapter || adapter.version !== ADAPTER_VERSION) {
+  if (!adapter || adapter.version !== version) {
     throw new BuildError("CLAUDE_ADAPTER_VERSION_MISMATCH",
-      `${ADAPTER_PACKAGE} must be ${ADAPTER_VERSION}, found ${adapter ? adapter.version : "nothing"}`)
+      `${ADAPTER_PACKAGE} must be ${version}, found ${adapter ? adapter.version : "nothing"}`)
   }
   const sdk = packages.filter((item) => item.name === "@agentclientprotocol/sdk")
   for (const entry of sdk) {
@@ -436,10 +448,10 @@ export function build({ output, source = DEFAULT_SOURCE, replace = false }) {
     }
   }
 
-  clearTarget(resolved, { replace })
+  clearTarget(resolved, { replace, markerName, markerContent })
   mkdirSync(path.dirname(resolved), { recursive: true })
   const staging = mkdtempSync(path.join(path.dirname(resolved), `${path.basename(resolved)}.building-`))
-  writeFileSync(path.join(staging, MARKER_NAME), MARKER_CONTENT)
+  writeFileSync(path.join(staging, markerName), markerContent)
   const counters = { files: 0, bytes: 0, skippedFiles: 0, skippedDirectories: 0 }
   try {
     copyTree(staging, selected, sourceRoot, counters)
@@ -458,8 +470,8 @@ export function build({ output, source = DEFAULT_SOURCE, replace = false }) {
     makeReadOnly(staging)
     const manifest = {
       schemaVersion: 1,
-      kind: "agentbox-claude-runtime-artifact",
-      adapter: { package: ADAPTER_PACKAGE, version: ADAPTER_VERSION, entry: ENTRY },
+      kind: legacy ? "ordessa-claude-legacy-runtime-artifact" : "agentbox-claude-runtime-artifact",
+      adapter: { package: ADAPTER_PACKAGE, version, entry: ENTRY },
       packages: packages.map((item) => ({
         path: item.path,
         name: item.name,
@@ -508,17 +520,18 @@ function argument(name) {
 
 function main() {
   const output = argument("--output")
-  const source = argument("--source") ?? DEFAULT_SOURCE
+  const source = argument("--source")
+  const variant = process.argv.includes("--legacy-alias") ? "legacy-alias" : "canonical"
   const json = process.argv.includes("--json")
   if (!output) {
     process.stdout.write(JSON.stringify({
       result: "CLAUDE_RUNTIME_BUILD_FAILED", code: "CLAUDE_USAGE",
-      error: "usage: build-claude-runtime-artifact.mjs --output ABSOLUTE_DIR [--source RUNTIME_DIR] [--replace] [--json]",
+      error: "usage: build-claude-runtime-artifact.mjs --output ABSOLUTE_DIR [--source RUNTIME_DIR] [--legacy-alias] [--replace] [--json]",
     }) + "\n")
     return 2
   }
   try {
-    const result = build({ output, source, replace: process.argv.includes("--replace") })
+    const result = build({ output, source, variant, replace: process.argv.includes("--replace") })
     process.stdout.write(JSON.stringify({
       result: "CLAUDE_RUNTIME_ARTIFACT_BUILT",
       output: result.output, treeDigest: result.treeDigest,

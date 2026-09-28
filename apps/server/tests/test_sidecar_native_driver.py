@@ -342,7 +342,7 @@ def test_deployment_carries_a_declared_driver_module_into_the_reviewed_bundle(tm
     )
     captured: dict = {}
     import ordessa_server_compat.composition as runtime_module
-    import ordessa_server.bootstrap.runtime as host_module
+    import ordessa_workspace.connectors as host_module  # T014-S2b builder home
     import ordessa_server_compat.execution.sidecar as sidecar_module
 
     monkeypatch.setattr(host_module, "_builtin_connector", lambda _instance_id: object())
@@ -378,7 +378,7 @@ def test_deployment_carries_a_declared_driver_module_into_the_reviewed_bundle(tm
         bundle_path = "agentbox-sidecar/deployment/fixture-native/driver.mjs"
         assert captured["files"][bundle_path] == source.read_bytes()
         frozen = runtime.objects.publish(json.dumps({"execution": {}}).encode())
-        runtime.execution.port_factory({
+        runtime.plugin_host.provided_port('execution.port').port_factory({
             "harness_type": "fixture-native", "config_object_digest": frozen.digest,
             "distribution": "Ubuntu", "remote_user": os.environ.get("USER", "user"),
             "connection_id": "connection", "remote_path": str(tmp_path),
@@ -405,7 +405,7 @@ def test_deployment_refuses_a_malformed_driver_declaration(tmp_path, monkeypatch
     source = tmp_path / "driver.mjs"
     source.write_text("export async function createDriver() {}\n", encoding="utf-8")
     import ordessa_server_compat.composition as runtime_module
-    import ordessa_server.bootstrap.runtime as host_module
+    import ordessa_workspace.connectors as host_module  # T014-S2b builder home
 
     monkeypatch.setattr(host_module, "_builtin_connector", lambda _instance_id: object())
     deployment = tmp_path / "deployment.json"

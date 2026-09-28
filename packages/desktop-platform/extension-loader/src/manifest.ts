@@ -1,5 +1,11 @@
 export interface Manifest { id: string; version: string; hostApi: string; entry: string; native?: string }
-export interface ExtensionDescriptor { manifest: Manifest; url: string }
+/**
+ * `config` is this extension's slice of the product configuration, passed to the
+ * entry factory verbatim. The host never inspects it, so an extension's options
+ * stay product data instead of host branching (C7 assembly entry). Absent means
+ * the product configured nothing, which is not the same as an empty option.
+ */
+export interface ExtensionDescriptor { manifest: Manifest; url: string; config?: unknown }
 export interface Diagnostic { id: string; error: string }
 export interface Catalog { extensions: ExtensionDescriptor[]; failures: Diagnostic[] }
 export const ID = /^[a-z0-9]+(?:[.-][a-z0-9]+)*$/

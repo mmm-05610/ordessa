@@ -132,7 +132,7 @@ def test_the_workspace_git_status_wire_returns_the_six_fields(tmp_path, repo):
     # Local record aliases, the same discipline as test_profile_permissions:
     # a stopped runtime's facades read None (the ports belong to the active
     # round), but the round's records stay usable across client sessions.
-    workspaces_repo = runtime.repository.workspaces
+    workspaces_repo = runtime.plugin_host.provided_port('product.repository').workspaces
     workspace = workspaces_repo.create(
         key="w", request_digest="w", distribution="Ubuntu", remote_user="tester",
         remote_path=str(repo), connection_id="connection")[1]

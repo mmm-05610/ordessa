@@ -1,34 +1,23 @@
-"""Canonical product-record encoding shared by neutral use cases."""
+"""Canonical product-record encoding — a re-export of the published contract.
+
+The implementation moved to `server_plugin_api.record_encoding` in T014-S2c:
+three plugins encode and digest records with these helpers, and reaching into
+this host module for them was the rule-3 breach that slice closed. The host's
+own neutral use cases keep importing them from here (and the published object
+is the same function object, so a digest computed through either path is
+byte-identical by construction).
+
+The stored-data invariant lives with the implementation: `digest`'s `sha256:`
+prefix and `canonical`'s JSON settings are what existing rows were written
+with, so they are published once and never duplicated here.
+"""
 from __future__ import annotations
 
-import hashlib
-import json
-import re
-from typing import Any, Mapping
+from server_plugin_api.record_encoding import (
+    MAX_CANONICAL_BYTES,
+    canonical,
+    digest,
+    reject_sensitive_keys,
+)
 
-from ordessa_server.errors import ServerError
-
-
-_SENSITIVE = re.compile(r"(secret|token|api[_-]?key|password|private[_-]?key|authorization|cookie|credential_value)", re.I)
-
-
-def canonical(value: Any) -> bytes:
-    encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    if len(encoded) > 262_144:
-        raise ServerError("REQUEST_TOO_LARGE", "Request content exceeds the product record limit", status=422)
-    return encoded
-
-
-def digest(value: Any) -> str:
-    return "sha256:" + hashlib.sha256(canonical(value)).hexdigest()
-
-
-def reject_sensitive_keys(value: Any) -> None:
-    if isinstance(value, Mapping):
-        for key, child in value.items():
-            if _SENSITIVE.search(str(key)):
-                raise ServerError("SECRET_FIELD_FORBIDDEN", "Configuration contains a forbidden secret field", status=422)
-            reject_sensitive_keys(child)
-    elif isinstance(value, list):
-        for child in value:
-            reject_sensitive_keys(child)
+__all__ = ["MAX_CANONICAL_BYTES", "canonical", "digest", "reject_sensitive_keys"]

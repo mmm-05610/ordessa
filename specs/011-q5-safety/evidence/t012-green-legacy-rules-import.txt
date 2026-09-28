@@ -1,0 +1,14 @@
+# T012 GREEN — legacy Profile rules import as user intent (lane Q5/permissions-backend)
+# date: 2026-09-27T21:55:51Z  branch: codex/011-q5-safety  head: 953fb915eb237a721f581fbef23441bbc6c76c70
+# every 'exit=' below is the true pytest status (no pipe measurement)
+
+$ .venv/bin/python -m pytest plugins/permissions/backend/tests/test_legacy_rules_import.py -q
+  ....................                                                     [100%]
+  20 passed in 0.11s
+exit=0
+
+deny-reversal case (old last-match-wins engine would flip deny->allow):
+  analyze -> needs_review index 1 ('reverse an earlier stricter rule'),
+  imported_indices (0,), intent actions ('deny',);
+  live authorizer evaluate under the imported intent -> Denied, never AllowedOnce
+  (test_legacy_rules_import.py::test_deny_reversal_is_needs_review_and_never_resolves_to_allow)

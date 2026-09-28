@@ -85,7 +85,7 @@ def test_a_fault_in_a_plain_rest_route_also_answers_in_json(server, monkeypatch)
     def broken(session_id, **kwargs):
         raise RuntimeError(f"disk unreadable under /home/secret-user {SECRET_MARKERS[2]}")
 
-    monkeypatch.setattr(runtime.repository, "get_session", broken)
+    monkeypatch.setattr(runtime.plugin_host.provided_port('product.repository'), "get_session", broken)
     response = client.get("/api/v1/sessions/whatever", headers=headers)
     assert response.status_code == 500, response.text[:200]
     assert response.headers["content-type"].startswith("application/json"), (

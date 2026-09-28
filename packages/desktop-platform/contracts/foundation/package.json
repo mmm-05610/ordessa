@@ -4,5 +4,8 @@
   "private": true,
   "ordessa": {
     "id": "ordessa.contracts"
+  },
+  "dependencies": {
+    "@ordessa/ui-components": "0.1.0"
   }
 }

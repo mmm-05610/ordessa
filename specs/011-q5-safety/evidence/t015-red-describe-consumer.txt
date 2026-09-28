@@ -1,0 +1,51 @@
+T015-Q5 RED-FIRST — permissions/policy describe consumer (plugins/permissions/frontend)
+command: cd plugins/permissions/frontend && npx vitest run
+measured exit code: 1
+date: 2026-09-27T23:16:36Z
+
+Summary:
+  ⎯⎯⎯⎯⎯⎯ Failed Tests 32 ⎯⎯⎯⎯⎯⎯⎯
+  Test Files  4 failed | 6 passed (10)
+  Tests  32 failed | 62 passed (94)
+
+Failing tests (32 — all new describe-consumer/equality tests; the 62 pre-existing tests stayed passed):
+  -× the TS method id equals the POLICY_DESCRIBE_METHOD the plugin registers
+  -× the required/optional param sets equal the Python frozensets exactly
+  -× every closed response key set of the TS decoder equals a dict literal of describe.py
+  -× no-provider answer ⇒ the section is never registered (no broken placeholder)
+  -× provider error ⇒ local alert state, never the uninstalled branch
+  -× a transport that rejects is a provider error, not a crash and not an absence
+  -× ok payload ⇒ ready facts decoded strictly from the closed describe shape
+  -× a payload violating the closed shape fails to a local alert — partial facts are never rendered
+  -× the describe call carries the exact optional param names through the transport
+  -× refresh() performs a fresh round-trip instead of trusting cached state
+  -× ready:false from the backend renders an unproven state, never an installation claim
+  -× a widening attempt is refused with the stable code and no state changes
+  -× an unverified-source ceiling is modelled as non-enforceable, never trusted
+  -× needsReview items carry their reason into the facts and the region offers no path to allow them
+  -× rule sources are derived from the describe facts, not typed in
+  -× approval-history rows still pass the whitelist decode: forged authority keys are stripped, malformed counted
+  -× exposes the permissions.policy.describe method id on the wire vocabulary
+  -× mirrors the exact describe parameter names: required none, optional principal/scope
+  -× declares the closed response-shape key sets used by the decoder
+  -× accepts the exact closed shape and keeps every fact byte-identical
+  -× refuses unknown extra keys anywhere in the response (chosen rule: refuse, not drop)
+  -× refuses missing keys, wrong types and forged authority fields
+  -× keeps desiredMode brand-scoped: null or {brand,name} only, never a bare string or a merged label
+  -× decodes ready:false as a fact of an unproven policy state, not as an absence
+  -× decodes needsReview rows with their source, index and bounded single-line reason
+  -× 规则来源 / 组织上限只读摘要 / 用户默认意图 / 审批历史 all present and fed from the payload
+  -× ceiling widen stays aria-disabled with the reason and a click is refused with the stable code
+  -× a ready:false answer reads 无法证明生效 — never 未安装 and never 已生效
+  -× an unverified-source ceiling is rendered as non-enforceable, not as an organization limit
+  -× desiredMode renders only as its own brand-scoped pair with the equivalence disclaimer
+  -× needsReview items surface 待复核 with their reason and 不放行 — nothing auto-allows them
+  -× no cross-brand synonym labels are ever presented (FR-09/US4)
+
+Root causes:
+  - src/contract.ts had no permissions.policy.describe mirror/decoder yet (new symbols undefined).
+  - src/settings-region.ts was still provider-driven; transport-driven deps were ignored.
+  - backend describe.py absent: the 3 cross-language equality tests failed by construction
+    ('backend describe.py is absent — the mirror cannot be proven yet (red-first)');
+    they were allowed to go green only once the real backend declared the method (they are
+    green in t015-green-describe-consumer.txt, observed landed); no backend file was stubbed.

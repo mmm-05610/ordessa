@@ -95,7 +95,7 @@ def test_the_import_route_refuses_with_a_typed_code_without_a_store(tmp_path):
             assert response.json()["error"]["code"] == "CREDENTIAL_STORE_UNAVAILABLE"
             assert response.json()["error"]["retryable"] is True
             # Nothing may claim a credential exists that no store can resolve.
-            assert runtime.service.list_credentials() == []
+            assert runtime.plugin_host.provided_port('product.service').list_credentials() == []
     finally:
         runtime.stop()
 
@@ -128,10 +128,10 @@ def test_a_non_secret_credential_record_is_readable_after_a_reopen(tmp_path):
     reopened = build_runtime(root, secret_store=reopened_store)
     reopened.start()
     try:
-        listed = {row["credentialId"]: row for row in reopened.service.list_credentials()}
+        listed = {row["credentialId"]: row for row in reopened.plugin_host.provided_port('product.service').list_credentials()}
         assert credential_id in listed, sorted(listed)
 
-        record = reopened.repository.credentials.get(credential_id, kind="api-key")
+        record = reopened.plugin_host.provided_port('product.repository').credentials.get(credential_id, kind="api-key")
         assert record["kind"] == "api-key"
         # The reference survived the reopen and its locator is intact...
         assert record["secret_locator"], "the record's locator must survive the reopen"

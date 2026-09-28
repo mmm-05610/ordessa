@@ -1,0 +1,153 @@
+# T04 RED run — ordessa-sandbox-api against empty package skeleton
+# date: 2026-09-27T18:13:42Z
+
+$ PYTHONPATH=plugins/assets/sandbox/api/src .venv/bin/python -m pytest plugins/assets/sandbox/api -q -rE --tb=line
+
+==================================== ERRORS ====================================
+______________ ERROR collecting tests/test_brand_matrix_cells.py _______________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/tests/test_brand_matrix_cells.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/assets/sandbox/api/tests/test_brand_matrix_cells.py:6: in <module>
+    from ordessa_sandbox_api import (
+E   ImportError: cannot import name 'BRAND_MATRIX' from 'ordessa_sandbox_api' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/src/ordessa_sandbox_api/__init__.py)
+____________________ ERROR collecting tests/test_ceiling.py ____________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/tests/test_ceiling.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/assets/sandbox/api/tests/test_ceiling.py:5: in <module>
+    from _helpers import claude_config, claude_intent, codex_config, codex_intent
+plugins/assets/sandbox/api/tests/_helpers.py:4: in <module>
+    from ordessa_sandbox_api import (
+E   ImportError: cannot import name 'ClaudeSandboxConfig' from 'ordessa_sandbox_api' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/src/ordessa_sandbox_api/__init__.py)
+____________________ ERROR collecting tests/test_claims.py _____________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/tests/test_claims.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/assets/sandbox/api/tests/test_claims.py:6: in <module>
+    from ordessa_sandbox_api import FieldClaimRegistry, SandboxApiError, SandboxErrorCode
+E   ImportError: cannot import name 'FieldClaimRegistry' from 'ordessa_sandbox_api' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/src/ordessa_sandbox_api/__init__.py)
+___________________ ERROR collecting tests/test_coverage.py ____________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/tests/test_coverage.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/assets/sandbox/api/tests/test_coverage.py:5: in <module>
+    from _helpers import codex_intent, verified_evidence
+plugins/assets/sandbox/api/tests/_helpers.py:4: in <module>
+    from ordessa_sandbox_api import (
+E   ImportError: cannot import name 'ClaudeSandboxConfig' from 'ordessa_sandbox_api' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/src/ordessa_sandbox_api/__init__.py)
+___________________ ERROR collecting tests/test_describe.py ____________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/tests/test_describe.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/assets/sandbox/api/tests/test_describe.py:5: in <module>
+    from _helpers import codex_intent
+plugins/assets/sandbox/api/tests/_helpers.py:4: in <module>
+    from ordessa_sandbox_api import (
+E   ImportError: cannot import name 'ClaudeSandboxConfig' from 'ordessa_sandbox_api' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/src/ordessa_sandbox_api/__init__.py)
+_____________ ERROR collecting tests/test_errors_and_boundaries.py _____________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/tests/test_errors_and_boundaries.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/assets/sandbox/api/tests/test_errors_and_boundaries.py:9: in <module>
+    from ordessa_sandbox_api import SandboxErrorCode
+E   ImportError: cannot import name 'SandboxErrorCode' from 'ordessa_sandbox_api' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/src/ordessa_sandbox_api/__init__.py)
+___________________ ERROR collecting tests/test_evidence.py ____________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/tests/test_evidence.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/assets/sandbox/api/tests/test_evidence.py:5: in <module>
+    from _helpers import platform_facts, verified_evidence
+plugins/assets/sandbox/api/tests/_helpers.py:4: in <module>
+    from ordessa_sandbox_api import (
+E   ImportError: cannot import name 'ClaudeSandboxConfig' from 'ordessa_sandbox_api' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/src/ordessa_sandbox_api/__init__.py)
+____________________ ERROR collecting tests/test_intent.py _____________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/tests/test_intent.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/assets/sandbox/api/tests/test_intent.py:5: in <module>
+    from _helpers import claude_config, claude_intent, codex_config, codex_intent, pi_config
+plugins/assets/sandbox/api/tests/_helpers.py:4: in <module>
+    from ordessa_sandbox_api import (
+E   ImportError: cannot import name 'ClaudeSandboxConfig' from 'ordessa_sandbox_api' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/src/ordessa_sandbox_api/__init__.py)
+___________________ ERROR collecting tests/test_platform.py ____________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/tests/test_platform.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/assets/sandbox/api/tests/test_platform.py:6: in <module>
+    from ordessa_sandbox_api import PlatformResult, SandboxErrorCode, assess_platform
+E   ImportError: cannot import name 'PlatformResult' from 'ordessa_sandbox_api' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/src/ordessa_sandbox_api/__init__.py)
+_________________ ERROR collecting tests/test_platform_gate.py _________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/tests/test_platform_gate.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/assets/sandbox/api/tests/test_platform_gate.py:5: in <module>
+    from _helpers import claude_intent, codex_intent
+plugins/assets/sandbox/api/tests/_helpers.py:4: in <module>
+    from ordessa_sandbox_api import (
+E   ImportError: cannot import name 'ClaudeSandboxConfig' from 'ordessa_sandbox_api' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/src/ordessa_sandbox_api/__init__.py)
+___________________ ERROR collecting tests/test_sessions.py ____________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/tests/test_sessions.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/assets/sandbox/api/tests/test_sessions.py:5: in <module>
+    from _helpers import codex_intent
+plugins/assets/sandbox/api/tests/_helpers.py:4: in <module>
+    from ordessa_sandbox_api import (
+E   ImportError: cannot import name 'ClaudeSandboxConfig' from 'ordessa_sandbox_api' (/home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api/src/ordessa_sandbox_api/__init__.py)
+=========================== short test summary info ============================
+ERROR plugins/assets/sandbox/api/tests/test_brand_matrix_cells.py
+ERROR plugins/assets/sandbox/api/tests/test_ceiling.py
+ERROR plugins/assets/sandbox/api/tests/test_claims.py
+ERROR plugins/assets/sandbox/api/tests/test_coverage.py
+ERROR plugins/assets/sandbox/api/tests/test_describe.py
+ERROR plugins/assets/sandbox/api/tests/test_errors_and_boundaries.py
+ERROR plugins/assets/sandbox/api/tests/test_evidence.py
+ERROR plugins/assets/sandbox/api/tests/test_intent.py
+ERROR plugins/assets/sandbox/api/tests/test_platform.py
+ERROR plugins/assets/sandbox/api/tests/test_platform_gate.py
+ERROR plugins/assets/sandbox/api/tests/test_sessions.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 11 errors during collection !!!!!!!!!!!!!!!!!!!
+11 errors in 0.15s
+
+EXIT_CODE=2
+
+# red ledger summary: 11 test modules failed at import against the empty package
+# (ImportError: cannot import names such as 'ClaudeSandboxConfig' from
+#  ordessa_sandbox_api). collected=0 runnable tests / 11 collection errors.
+# the 89 test IDs the green run reports are exactly the ones this red
+# stage could not even import; per-test IDs are unresolvable pre-collection
+# and are listed in the green ledger (--collect-only tail).

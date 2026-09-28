@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "name": "harness-api",
+  "producer": "c0",
+  "status": "READY",
+  "planAnchorRef": "refs/heads/codex/011-plugin-plan",
+  "implementationSha": "61966e31189a911c295faba30a07316c44041f47",
+  "dependsOn": {
+    "foundation": "refs/heads/codex/011-foundation-ready @ 8844c475bc02a185ab194c69eed873122aa48349",
+    "permissions-api": "refs/heads/codex/011-permissions-api-ready @ bcd4387becc3c29b6786efa7bff822f430ea0460"
+  },
+  "publicExports": {
+    "harnessApiPackage": "plugins/harness/api (ordessa_harness_api, py.typed, standalone wheel)",
+    "harnessApiExports": [
+      "ActionDescriptor",
+      "AdapterContext",
+      "AdapterRefusal",
+      "ApplicationResult",
+      "ApplicationTarget",
+      "Assessment",
+      "BindSecret",
+      "ConfigurationAdapter",
+      "ConfigurationAdapterDescriptor",
+      "ConfigurationCapabilities",
+      "ConfigurationCapability",
+      "ConfigurationService",
+      "Confirmed",
+      "ContentRef",
+      "ContractError",
+      "DesiredFragment",
+      "ErrorCode",
+      "FieldClaim",
+      "FieldPath",
+      "Installation",
+      "Intent",
+      "IntentSet",
+      "IntentSource",
+      "InvokeAction",
+      "JsonValue",
+      "LaunchPlan",
+      "LaunchRequest",
+      "Match",
+      "Mismatch",
+      "MountContent",
+      "NotFound",
+      "OperationRecord",
+      "Plan",
+      "PlanResult",
+      "ReconfigurationDecision",
+      "Refused",
+      "RemoveOwnedContent",
+      "ResetField",
+      "ResumeRequest",
+      "RuntimeAdapter",
+      "RuntimeAdapterDescriptor",
+      "RuntimeConfirmed",
+      "RuntimeRefused",
+      "RuntimeResult",
+      "RuntimeUnknown",
+      "SetField",
+      "TargetDescriptor",
+      "TargetHandle",
+      "Unknown",
+      "ValueSchema",
+      "Verification",
+      "VerificationUnknown",
+      "VersionRange",
+      "closed_object",
+      "validate_json"
+    ],
+    "neutralAcpAdmission": [
+      "ACP_ADMISSION_PORT",
+      "ACP_ADMISSION_PORT_VERSION",
+      "AcpChannelBinding",
+      "AcpAttachmentReference",
+      "AcpSubmissionRequest",
+      "AcpPermissionDecision",
+      "AcpAdmissionResult",
+      "AcpAdmissionPort"
+    ],
+    "acpConnector": [
+      "AcpClient.sendControlled",
+      "AcpClient.getNativeCommands",
+      "AcpClient.attachmentCapabilities",
+      "AcpClient.prepareAttachment",
+      "AcpClient.releasePreparedAttachment",
+      "AcpAttachmentPreparePort",
+      "AcpAttachmentTarget",
+      "AcpAttachmentCapabilities",
+      "AcpPreparedAttachment",
+      "AcpAttachmentPreparation",
+      "AcpAttachmentVerification",
+      "AcpControlledSubmission",
+      "AcpPermissionDecision",
+      "AcpSubmissionAdmission",
+      "NativeCommandCatalog",
+      "NativeCommandReader",
+      "parseNativeCommands"
+    ],
+    "harnessControlledLifecycle": "Two public carrier points; independently installed external adapter fixture; controlled C4 plan/apply/query/reconcile service; live-channel native ACP session observation."
+  },
+  "commandsAndEvidence": [
+    {
+      "command": "PYTHONPATH=plugins/harness/api/src .venv/bin/python -m pytest -q plugins/harness/api/tests plugins/harness/tests/test_external_adapter_product.py plugins/harness/tests/test_server_acp_admission_binding.py plugins/harness/tests/test_server_acp_native_observation.py --junitxml=/tmp/ordessa-c0-harness-api-ready.xml",
+      "exitCode": 0,
+      "result": "30 passed, 37 subtests; JUnit sha256 80d2dd2e571f7f9ac6d78dbffbf8c310d9be20f97b2f4cec4dec6f6326be2041"
+    },
+    {
+      "command": ".venv/bin/python -m pytest -q packages/server-plugin-api/tests --junitxml=/tmp/ordessa-c0-neutral-api-ready.xml",
+      "exitCode": 0,
+      "result": "107 passed; JUnit sha256 63f55b66beb23f0f09b7f9a02feb1f00af7f712be69317254b5cff1015daf5ab"
+    },
+    {
+      "command": "npm test --workspace @ordessa/plugin-agent-acp",
+      "exitCode": 0,
+      "result": "36 passed, independent review after uriSchemes and session-selection race repair; output sha256 3c9156a86996e7a575534423e573e7ac9e32e7f63f59d971f3e3a197735294d9"
+    },
+    {
+      "command": "npm run typecheck; ORDESSA_PRODUCT_OUTPUT_ROOT=/tmp/ordessa-acp-attachment-review-build node plugins/connectors/acp/build.mjs",
+      "exitCode": 0,
+      "result": "both exit 0; independently reviewed typecheck output sha256 49cefabd00abea5149bcc28972abaa70123d7533cd0663dca825568d89953321"
+    },
+    {
+      "command": "python3.12 -m pip wheel --no-deps --no-cache-dir plugins/harness/api; fresh /tmp venv pip install --no-index --no-deps wheel; python -I from /tmp import ordessa_harness_api",
+      "exitCode": 0,
+      "result": "clean-clone source, 55 exports from isolated site-packages, py.typed present, no Requires-Dist; wheel sha256 119a5049e8d07e22145f345eeffbe35b08fbc861b20f7c20b1fdd6c7b7d80234; exact logs in C0 report"
+    },
+    {
+      "command": "PYTHONPATH=plugins/harness/api/src .venv/bin/python -m pytest -q plugins/harness/tests",
+      "exitCode": 1,
+      "result": "419 passed, 3 skipped, 2 inherited Pi ACP SDK lock failures; no new red ID in that run; JUnit sha256 a0373853ce6d151399d2fc8646430a176c15c5df9c076ab44c8f494b7346b39b"
+    }
+  ],
+  "limitations": [
+    "API_READY is an early consumable contract and controlled fixture proof, not Harness v2 or C0 production completion. T04-T18, G04-G24 and the six brand-by-facet L3 cells remain subject to their own gates.",
+    "The default product's ACP admission port reports ready=False: Q5 authorizer, one-use execution permit, native runtime generation and production pre-effect path are not wired. Missing authority refuses; controlled fixture acceptance is not production G18/G19.",
+    "Native ACP session identity is observed on the live channel, but instance generation and an operation-bound native receipt remain absent; restart reconcile must remain Unknown, not infer success from readback.",
+    "Attachment prepare/verify/release is an optional connector port with a real-byte controlled fixture. The production host has no content owner/picker port, the Server DTO does not carry preparedId or prove bytes, and the Go bridge ignores non-image resource links. Real attachment content delivery and cleanup remain open.",
+    "The native command catalog is observed only from the owner ACP channel; Chat UI has not consumed it. Legacy Ordessa continuation lacks a stable caller submission ID, so retry after a lost accepted response can duplicate. A typed Chat-to-owner-to-Server identity/outcome path remains required.",
+    "C4 same-instance replay is controlled. Cross-instance permit/effect atomicity and failure after permit consumption before journal write remain open; no Q5 production verifier is installed.",
+    "The existing .venv has an older installed harness API; source-path test commands explicitly set PYTHONPATH. The isolated wheel proof used a fresh /tmp venv. No real model, user-data migration, service restart, main merge or push occurred."
+  ]
+}

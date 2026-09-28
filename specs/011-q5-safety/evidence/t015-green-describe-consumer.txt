@@ -1,0 +1,120 @@
+T015-Q5 GREEN — permissions/policy describe consumer (plugins/permissions/frontend)
+date: 2026-09-27T23:16:46Z
+
+commands + true exit codes:
+  cd plugins/permissions/frontend && npx vitest run --reporter=verbose   -> exit 0
+  (plain 'npx vitest run' likewise exit 0: Test Files 10 passed (10), Tests 93 passed (93))
+  cd plugins/permissions/frontend && npx tsc -p tsconfig.json --noEmit     -> exit 0
+
+  Test Files  10 passed (10)
+  Tests  93 passed (93)
+  Composition: 62 pre-existing -> 93. The 23 provider-driven T011 settings tests were rewritten
+  onto the transport seam (22) with every guarantee kept (absent => no registration; error =>
+  local alert; aria-disabled ceiling rows with reason; widening => POLICY_CEILING_VIOLATION and
+  byte-identical facts; whitelist approval decode; forbidden strings). +3 describe cross-language
+  equality tests, +29 new describe-consumer tests.
+
+Cross-language equality: the backend method WAS landed before this green run (describe.py +
+plugin.py registration in plugins/permissions/backend). The T015 block of
+tests/contract-consistency.test.ts parses POLICY_DESCRIBE_METHOD, DESCRIBE_REQUIRED_PARAMS
+(=frozenset()), DESCRIBE_OPTIONAL_PARAMS (=frozenset({principal, scope})), the
+ServerMethodDescriptor registration lines, and every response dict-literal key set from the
+backend SOURCE TEXT, asserting the TS mirrors equal them exactly. Same tests were named-red
+in t015-red-describe-consumer.txt while describe.py was absent; no backend file was stubbed.
+Anti-vacuity probe (mutation): renaming mirror key 'needsReview'->'approvals' in
+DESCRIBE_RESPONSE_KEYS flipped the equality test red (1 failed | 13 passed); restored -> green.
+
+Per-test list (verbose):
+✓ tests/contract-consistency.test.ts > refusal code list mirrors the Python source (FR-09) > the TS stable-code list equals the parsed RefusalCode members of codes.py
+✓ tests/contract-consistency.test.ts > refusal code list mirrors the Python source (FR-09) > every stable code renders a sentence naming the target/action and the limiting layer
+✓ tests/contract-consistency.test.ts > refusal code list mirrors the Python source (FR-09) > an unknown code yields a bounded generic sentence and echoes no raw payload
+✓ tests/contract-consistency.test.ts > wire vocabulary mirrors the permissions backend plugin (FR-04) > method ids equal the Python plugin registrations
+✓ tests/contract-consistency.test.ts > wire vocabulary mirrors the permissions backend plugin (FR-04) > decide/query parameter names equal the Python required-param sets
+✓ tests/contract-consistency.test.ts > ceiling/intent record mirrors equal the Python API sources (T011) > exposure levels equal the ExposureLevel members of ceilings.py, in order
+✓ tests/contract-consistency.test.ts > ceiling/intent record mirrors equal the Python API sources (T011) > the ceiling record field set equals _RECORD_FIELDS of ceilings.py
+✓ tests/contract-consistency.test.ts > ceiling/intent record mirrors equal the Python API sources (T011) > the intent record field set equals _RECORD_FIELDS of intents.py
+✓ tests/contract-consistency.test.ts > ceiling/intent record mirrors equal the Python API sources (T011) > scope order mirrors rules.py Scope, and rule actions mirror RuleAction
+✓ tests/contract-consistency.test.ts > ceiling/intent record mirrors equal the Python API sources (T011) > the trusted ceiling sources equal exactly the members of _TRUSTED_SOURCES in ceilings.py
+✓ tests/contract-consistency.test.ts > ceiling/intent record mirrors equal the Python API sources (T011) > ceiling entry actions are exactly the two restriction spellings of ceilings.py
+✓ tests/contract-consistency.test.ts > permissions.policy.describe mirrors equal the backend source (T015) > the TS method id equals the POLICY_DESCRIBE_METHOD the plugin registers
+✓ tests/contract-consistency.test.ts > permissions.policy.describe mirrors equal the backend source (T015) > the required/optional param sets equal the Python frozensets exactly
+✓ tests/contract-consistency.test.ts > permissions.policy.describe mirrors equal the backend source (T015) > every closed response key set of the TS decoder equals a dict literal of describe.py
+✓ tests/describe-contract.test.ts > describe wire mirror (T015) > exposes the permissions.policy.describe method id on the wire vocabulary
+✓ tests/describe-contract.test.ts > describe wire mirror (T015) > mirrors the exact describe parameter names: required none, optional principal/scope
+✓ tests/describe-contract.test.ts > describe wire mirror (T015) > declares the closed response-shape key sets used by the decoder
+✓ tests/describe-contract.test.ts > decodeDescribeResponse: strict closed-shape decode (T015) > accepts the exact closed shape and keeps every fact byte-identical
+✓ tests/describe-contract.test.ts > decodeDescribeResponse: strict closed-shape decode (T015) > refuses unknown extra keys anywhere in the response (chosen rule: refuse, not drop)
+✓ tests/describe-contract.test.ts > decodeDescribeResponse: strict closed-shape decode (T015) > refuses missing keys, wrong types and forged authority fields
+✓ tests/describe-contract.test.ts > decodeDescribeResponse: strict closed-shape decode (T015) > keeps desiredMode brand-scoped: null or {brand,name} only, never a bare string or a merged label
+✓ tests/describe-contract.test.ts > decodeDescribeResponse: strict closed-shape decode (T015) > decodes ready:false as a fact of an unproven policy state, not as an absence
+✓ tests/describe-contract.test.ts > decodeDescribeResponse: strict closed-shape decode (T015) > decodes needsReview rows with their source, index and bounded single-line reason
+✓ tests/approval-view.test.ts > decodeApprovalPayload (FR-09 masking, C1 view model) > keeps only the whitelisted masked display fields and drops every other key
+✓ tests/approval-view.test.ts > decodeApprovalPayload (FR-09 masking, C1 view model) > a malformed payload decodes to null instead of throwing or executing
+✓ tests/approval-view.test.ts > decodeApprovalPayload (FR-09 masking, C1 view model) > a confirmed receipt without an observation time is never trusted as confirmed
+✓ tests/settings-region.test.ts > the region registers through the real addSettingsSection seam (FR-08) > absent provider ⇒ the section is never registered — no broken placeholder
+✓ tests/settings-region.test.ts > the region registers through the real addSettingsSection seam (FR-08) > present-but-failing provider ⇒ a local error registration, never an absence
+✓ tests/settings-region.test.ts > the region registers through the real addSettingsSection seam (FR-08) > ready facts ⇒ the 「权限与审批」 section is in the real registry snapshot
+✓ tests/settings-region.test.ts > the region registers through the real addSettingsSection seam (FR-08) > closing the owning scope withdraws the contribution (registry-owned lifecycle)
+✓ tests/settings-region.test.ts > the region registers through the real addSettingsSection seam (FR-08) > hide drops the contribution; show re-reads the transport instead of trusting cached state
+✓ tests/settings-region.test.ts > the organization ceiling is read-only (ux.md §Settings, FR-08) > a widening attempt is refused with the stable code, whatever the region state
+✓ tests/settings-region.test.ts > the organization ceiling is read-only (ux.md §Settings, FR-08) > the region exposes no ceiling-write path at all
+✓ tests/settings-region.test.ts > the organization ceiling is read-only (ux.md §Settings, FR-08) > an untrusted ceiling record is never summarized as a bound, and absence stays modelled
+✓ tests/settings-region.test.ts > approval history filters backend facts only (FR-08/FR-09) > filters by status, decision and session without inventing rows
+✓ tests/settings-region.test.ts > approval history filters backend facts only (FR-08/FR-09) > a malformed or forged history payload is dropped or stripped before the region can render it
+✓ tests/settings-region.test.ts > approval history filters backend facts only (FR-08/FR-09) > a local UI state write cannot make the region claim an authority it was not given
+✓ tests/region-registry.test.ts > approval contributions against Chat's real registry > both contributions register and appear in their slots sorted by (order, id)
+✓ tests/region-registry.test.ts > approval contributions against Chat's real registry > a duplicate id is refused by Chat itself: Error "Duplicate chat contribution: permissions.approval-region"
+✓ tests/region-registry.test.ts > approval contributions against Chat's real registry > a duplicate contentKind is refused by Chat itself: Error "Duplicate chat content kind: …"
+✓ tests/region-registry.test.ts > approval contributions against Chat's real registry > a hand-made registration record is refused: TypeError "Not a chatContribution() record"
+✓ tests/region-registry.test.ts > approval contributions against Chat's real registry > closing the owning scope withdraws the contribution from Chat (FR-08: 卸载不丢数据、不伪造可用)
+✓ tests/mode-entry.test.tsx > the entry is capability-driven, never brand-name-driven (US4, ux.md §Chat) > no capability data for a real brand pin => no menu is invented
+✓ tests/mode-entry.test.tsx > the entry is capability-driven, never brand-name-driven (US4, ux.md §Chat) > attested modes are listed bound to their own pin, and other brands’ vocabularies stay out
+✓ tests/mode-entry.test.tsx > the entry is capability-driven, never brand-name-driven (US4, ux.md §Chat) > a refused capability read says unavailable with its code — never "not installed"
+✓ tests/mode-entry.test.tsx > the entry is capability-driven, never brand-name-driven (US4, ux.md §Chat) > selecting an attested mode records a local draft and never claims the mode changed
+✓ tests/mode-entry.test.tsx > the entry is capability-driven, never brand-name-driven (US4, ux.md §Chat) > the contribution registers through Chat’s real registry in composer.toolbar
+✓ tests/settings-view.test.tsx > provider states worded honestly (FR-08) > a failing provider announces itself as an error state, never as an uninstallation
+✓ tests/settings-view.test.tsx > provider states worded honestly (FR-08) > no provider => the component never mounts through the registry (nothing to assert)
+✓ tests/settings-view.test.tsx > provider states worded honestly (FR-08) > an absent ceiling record is modelled as unverified, never as "no limit applies"
+✓ tests/settings-view.test.tsx > the ready region renders the four ux.md §Settings areas > headings: 规则来源 / 组织上限（只读） / 用户默认意图 / 审批历史
+✓ tests/settings-view.test.tsx > the ready region renders the four ux.md §Settings areas > ceiling rows are read-only, state the disabling reason, and a widening click is refused with the stable code
+✓ tests/settings-view.test.tsx > the ready region renders the four ux.md §Settings areas > no cross-brand synonym labels are ever presented (FR-09/US4)
+✓ tests/settings-view.test.tsx > the ready region renders the four ux.md §Settings areas > untrusted ceiling provenance is disclosed as non-enforceable instead of summarized as a bound
+✓ tests/settings-view.test.tsx > the ready region renders the four ux.md §Settings areas > the user intent summary binds a desiredMode to its own brand and disclaims equivalence
+✓ tests/settings-view.test.tsx > the ready region renders the four ux.md §Settings areas > legacy needsReview items surface as review debt with their reason, never as allowances
+✓ tests/settings-view.test.tsx > approval history filtering, focus and ARIA (jsdom level) > the filter selects drive the list from backend facts only
+✓ tests/settings-view.test.tsx > approval history filtering, focus and ARIA (jsdom level) > read-only controls stay keyboard focusable and announce their reason
+✓ tests/approval-card.test.tsx > rule 1: a press only sends decide; 待确认 until backend + native receipt confirm > the press sends exactly permissions.approvals.decide with the backend required params
+✓ tests/approval-card.test.tsx > rule 1: a press only sends decide; 待确认 until backend + native receipt confirm > the card shows 待确认 after the press and only shows 已决定 once the query reports the settled decision AND a confirmed native receipt
+✓ tests/approval-card.test.tsx > rule 1: a press only sends decide; 待确认 until backend + native receipt confirm > a forged local write cannot make the card show 已决定 without backend facts
+✓ tests/approval-card.test.tsx > rule 1: a press only sends decide; 待确认 until backend + native receipt confirm > a pressed allow whose decide never resolves keeps the card at 待确认 and never 已决定/允许生效
+✓ tests/approval-card.test.tsx > rule 2: AlreadyRecorded / InvalidApproval / stale / cross-session > AlreadyRecorded renders the existing decision and never re-activates the controls
+✓ tests/approval-card.test.tsx > rule 2: AlreadyRecorded / InvalidApproval / stale / cross-session > InvalidApproval makes the card non-actionable with a stated reason
+✓ tests/approval-card.test.tsx > rule 2: AlreadyRecorded / InvalidApproval / stale / cross-session > a stale/expired approval view (APPROVAL_STALE) is non-actionable with a reason
+✓ tests/approval-card.test.tsx > rule 2: AlreadyRecorded / InvalidApproval / stale / cross-session > a cross-session approval (ChatLocation mismatch) is non-actionable and its actions never reach the transport
+✓ tests/describe-settings-region.test.ts > the region state is a describe round-trip through the injected transport > no-provider answer ⇒ the section is never registered (no broken placeholder)
+✓ tests/describe-settings-region.test.ts > the region state is a describe round-trip through the injected transport > provider error ⇒ local alert state, never the uninstalled branch
+✓ tests/describe-settings-region.test.ts > the region state is a describe round-trip through the injected transport > a transport that rejects is a provider error, not a crash and not an absence
+✓ tests/describe-settings-region.test.ts > the region state is a describe round-trip through the injected transport > ok payload ⇒ ready facts decoded strictly from the closed describe shape
+✓ tests/describe-settings-region.test.ts > the region state is a describe round-trip through the injected transport > a payload violating the closed shape fails to a local alert — partial facts are never rendered
+✓ tests/describe-settings-region.test.ts > the region state is a describe round-trip through the injected transport > the describe call carries the exact optional param names through the transport
+✓ tests/describe-settings-region.test.ts > the region state is a describe round-trip through the injected transport > refresh() performs a fresh round-trip instead of trusting cached state
+✓ tests/describe-settings-region.test.ts > the region state is a describe round-trip through the injected transport > ready:false from the backend renders an unproven state, never an installation claim
+✓ tests/describe-settings-region.test.ts > describe-driven facts keep the T011 guarantees > a widening attempt is refused with the stable code and no state changes
+✓ tests/describe-settings-region.test.ts > describe-driven facts keep the T011 guarantees > an unverified-source ceiling is modelled as non-enforceable, never trusted
+✓ tests/describe-settings-region.test.ts > describe-driven facts keep the T011 guarantees > needsReview items carry their reason into the facts and the region offers no path to allow them
+✓ tests/describe-settings-region.test.ts > describe-driven facts keep the T011 guarantees > rule sources are derived from the describe facts, not typed in
+✓ tests/describe-settings-region.test.ts > describe-driven facts keep the T011 guarantees > approval-history rows still pass the whitelist decode: forged authority keys are stripped, malformed counted
+✓ tests/describe-settings-view.test.tsx > the four ux.md §Settings areas are driven by real describe data > 规则来源 / 组织上限只读摘要 / 用户默认意图 / 审批历史 all present and fed from the payload
+✓ tests/describe-settings-view.test.tsx > the four ux.md §Settings areas are driven by real describe data > ceiling widen stays aria-disabled with the reason and a click is refused with the stable code
+✓ tests/approval-card.test.tsx > rule 3: transport error / timeout / unknown ⇒ allow disabled, 查询/恢复 remains (fail-closed) > a rejecting decide disables the allow actions while 查询/恢复 stays actionable
+✓ tests/approval-card.test.tsx > rule 3: transport error / timeout / unknown ⇒ allow disabled, 查询/恢复 remains (fail-closed) > an unknown query outcome keeps the allow actions disabled and never reads as allowed
+✓ tests/approval-card.test.tsx > unknown native receipt > a settled decision with an unconfirmed receipt yields 待确认/unknown text, never safe/allowed
+✓ tests/approval-card.test.tsx > rule 4: withdrawal — the card holds no authority of its own > after unmount and re-mount with the same backend facts, nothing carries over: still 待审批/待确认, never 已决定
+✓ tests/approval-card.test.tsx > rule 5: refusal codes render as human sentences (FR-09) > the invalid reason names the operation category, target and limiting layer without leaking arguments
+✓ tests/approval-card.test.tsx > a11y (ux.md 文案和可访问性) > the card is an ARIA group with labelled focusable actions; disabled actions announce a text reason
+✓ tests/approval-card.test.tsx > a11y (ux.md 文案和可访问性) > the bounded action offers only scopes the backend made selectable
+✓ tests/describe-settings-view.test.tsx > the four ux.md §Settings areas are driven by real describe data > a ready:false answer reads 无法证明生效 — never 未安装 and never 已生效
+✓ tests/describe-settings-view.test.tsx > the four ux.md §Settings areas are driven by real describe data > an unverified-source ceiling is rendered as non-enforceable, not as an organization limit
+✓ tests/describe-settings-view.test.tsx > the four ux.md §Settings areas are driven by real describe data > desiredMode renders only as its own brand-scoped pair with the equivalence disclaimer
+✓ tests/describe-settings-view.test.tsx > the four ux.md §Settings areas are driven by real describe data > needsReview items surface 待复核 with their reason and 不放行 — nothing auto-allows them
+✓ tests/describe-settings-view.test.tsx > the four ux.md §Settings areas are driven by real describe data > no cross-brand synonym labels are ever presented (FR-09/US4)

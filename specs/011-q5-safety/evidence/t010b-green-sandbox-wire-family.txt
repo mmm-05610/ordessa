@@ -1,0 +1,60 @@
+T010b GREEN — Sandbox wire-family mapping (contracts §C4, FR-09)  2026-09-27T21:27:31Z
+
+Mapping table (code -> existing wire/1 family; platform symbol behind each row):
+SANDBOX CODE                   WIRE FAMILY              PLATFORM SYMBOL BEHIND THE ROW
+PROVIDER_BUSY                  UNAVAILABLE              STATIC_ERROR_FAMILIES['SERVICE_UNAVAILABLE'] -> UNAVAILABLE
+SANDBOX_CONFIG_CONFLICT        CONFLICT_REQUEST         STATIC_ERROR_FAMILIES['ENTERPRISE_STATE_CONFLICT'/'IDEMPOTENCY_CONFLICT'/'SESSION_BUSY'] -> CONFLICT_REQUEST
+SANDBOX_COVERAGE_UNPROVEN      CAPABILITY_UNSUPPORTED   FAMILIES['CAPABILITY_UNSUPPORTED']; STATIC_ERROR_FAMILIES['CAPABILITY_UNSUPPORTED']
+SANDBOX_EFFECT_UNKNOWN         OUTCOME_UNKNOWN          FAMILIES['OUTCOME_UNKNOWN'] (family-name identity via family_for)
+SANDBOX_NATIVE_UNSUPPORTED     CAPABILITY_UNSUPPORTED   FAMILIES['CAPABILITY_UNSUPPORTED'] (family-name identity via family_for)
+SANDBOX_PLATFORM_UNSUPPORTED   CAPABILITY_UNSUPPORTED   FAMILIES['CAPABILITY_UNSUPPORTED'] (family-name identity via family_for)
+
+Guard: mapped set ⊆ FAMILIES: True
+Guard: SANDBOX_INTENT_INVALID stays unmapped (Python-side input validation only): True
+
+$ PYTHONPATH=plugins/assets/sandbox/api/src .venv/bin/python -m pytest plugins/assets/sandbox/api -q
+........................................................................ [ 67%]
+...................................                                      [100%]
+107 passed in 0.12s
+pytest exit code: 0
+
+Per-ID list (new wire-family guard tests):
+============================= test session starts ==============================
+platform linux -- Python 3.12.14, pytest-9.1.1, pluggy-1.6.0 -- /home/maoqh/projects/ordessa/worktrees/011-q5-safety/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /home/maoqh/projects/ordessa/worktrees/011-q5-safety/plugins/assets/sandbox/api
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collecting ... collected 18 items
+
+plugins/assets/sandbox/api/tests/test_wire_family.py::test_sandbox_error_code_enum_literal_set_unchanged PASSED [  5%]
+plugins/assets/sandbox/api/tests/test_wire_family.py::test_name_and_value_of_every_member_are_identical_spellings PASSED [ 11%]
+plugins/assets/sandbox/api/tests/test_wire_family.py::test_mapped_domain_is_exactly_the_six_stable_codes PASSED [ 16%]
+plugins/assets/sandbox/api/tests/test_wire_family.py::test_every_code_maps_to_exactly_one_family PASSED [ 22%]
+plugins/assets/sandbox/api/tests/test_wire_family.py::test_no_new_family_names_mapped_is_subset_of_platform_families PASSED [ 27%]
+plugins/assets/sandbox/api/tests/test_wire_family.py::test_row_agrees_with_platform_resolution[PROVIDER_BUSY-UNAVAILABLE] PASSED [ 33%]
+plugins/assets/sandbox/api/tests/test_wire_family.py::test_row_agrees_with_platform_resolution[SANDBOX_CONFIG_CONFLICT-CONFLICT_REQUEST] PASSED [ 38%]
+plugins/assets/sandbox/api/tests/test_wire_family.py::test_row_agrees_with_platform_resolution[SANDBOX_COVERAGE_UNPROVEN-CAPABILITY_UNSUPPORTED] PASSED [ 44%]
+plugins/assets/sandbox/api/tests/test_wire_family.py::test_row_agrees_with_platform_resolution[SANDBOX_EFFECT_UNKNOWN-OUTCOME_UNKNOWN] PASSED [ 50%]
+plugins/assets/sandbox/api/tests/test_wire_family.py::test_row_agrees_with_platform_resolution[SANDBOX_NATIVE_UNSUPPORTED-CAPABILITY_UNSUPPORTED] PASSED [ 55%]
+plugins/assets/sandbox/api/tests/test_wire_family.py::test_row_agrees_with_platform_resolution[SANDBOX_PLATFORM_UNSUPPORTED-CAPABILITY_UNSUPPORTED] PASSED [ 61%]
+plugins/assets/sandbox/api/tests/test_wire_family.py::test_each_row_names_a_precedent_row_that_exists_on_the_platform_side PASSED [ 66%]
+plugins/assets/sandbox/api/tests/test_wire_family.py::test_unsupported_and_unknown_are_distinct_codes_and_never_merged_aliases PASSED [ 72%]
+plugins/assets/sandbox/api/tests/test_wire_family.py::test_native_unsupported_and_effect_unknown_land_in_different_families PASSED [ 77%]
+plugins/assets/sandbox/api/tests/test_wire_family.py::test_mapped_families_are_a_closed_vocabulary_no_free_text PASSED [ 83%]
+plugins/assets/sandbox/api/tests/test_wire_family.py::test_mapping_module_source_carries_no_paths_or_config_tokens PASSED [ 88%]
+plugins/assets/sandbox/api/tests/test_wire_family.py::test_unmapped_input_refusal_message_leaks_nothing PASSED [ 94%]
+plugins/assets/sandbox/api/tests/test_wire_family.py::test_string_and_enum_inputs_answer_the_same_family PASSED [100%]
+
+============================== 18 passed in 0.06s ==============================
+pytest exit code: 0
+
+$ PYTHONPATH=plugins/assets/sandbox/api/src .venv/bin/python -m pytest plugins/assets/sandbox -q   (full Sandbox domain, baseline was 237 passed / exit 0)
+........................................................................ [ 28%]
+........................................................................ [ 56%]
+........................................................................ [ 84%]
+.......................................                                  [100%]
+255 passed in 1.23s
+pytest exit code: 0
+
+Cross-language enum guard (sandbox frontend, package-local): npx vitest run tests/cross-language-codes.test.ts -> 2 passed, vitest exit code 0 — Python SandboxErrorCode members unchanged, TS list still equals them; vitest exit code: 0
