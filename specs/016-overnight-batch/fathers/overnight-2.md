@@ -12,8 +12,16 @@
 
 ## 执行方式（每个儿子包）
 1. **必须用封装脚本，禁止裸调 CLI**：/home/maoqh/projects/ordessa/specs/016-overnight-batch/bin/run-qoder.sh <son相对路径> <dispatch绝对路径> [超时秒]（默认 5400s）。退出非零可原样重试一次；再失败**你自己顶上做完**，报告标注「qoder 失败、zcode 代打」。
+   **降级条款（仅当脚本自身无法运行**：语法/环境/权限/CLI 缺失——**qoder 执行任务
+   退出非零不算**）：允许裸调 qoder CLI，但必须 `timeout 5400 qoder -p -w <儿子绝对路径>
+   --permission-mode default -m qwen-3.8-flash "<提示词>"` 且 tee 留痕到
+   specs/016-overnight-batch/reports/logs/；模型**只许 qwen-3.8-flash**；
+   report 里记「封装失效原因+裸调已用+模型白名单遵守」。
 2. 完成后你先自检：tasks 勾选与代码一致、测试真的跑过（留命令与计数）、写入面没越界（git -C 儿子 status 只在己目录）。
-3. 审阅也走封装：/home/maoqh/projects/ordessa/specs/016-overnight-batch/bin/run-review.sh <son相对路径>（pi+mimo-v2.6-pro，物理只读）。产物在主仓 specs/016-overnight-batch/reports/ 下（绝对路径去读），把结论摘要抄进该包 report「审阅」节；脚本失败=记「未审阅+原因」，不阻塞下一包。
+3. 审阅也走封装：/home/maoqh/projects/ordessa/specs/016-overnight-batch/bin/run-review.sh <son相对路径>（pi+mimo-v2.6-pro，物理只读）。产物在主仓 specs/016-overnight-batch/reports/ 下（绝对路径去读），把结论摘要抄进该包 report「审阅」节；脚本失败=记「未审阅+原因」，不阻塞下一包。**降级条款（仅当脚本自身无法运行）**：
+   裸调 `timeout 600 pi -p --no-session --no-tools --model mimo-v2.6-pro
+   --append-system-prompt "<审阅指令>" "<diff 内容>"`，模型**只许 mimo-v2.6-pro**，
+   结论落 reports/<son>-review-fallback-*.md，同样如实留痕。
 4. 提交留在儿子分支上（qoder 在儿子树内提交）；**绝不 merge/rebase/动其他分支**。
 
 ## 汇报
