@@ -126,6 +126,8 @@ chat gateway:门面结果 1:1(chat-api ChatSubmissionResult);UI:accepted 才清�
 
 **确认:S-01 的 `ordessa.agent-conversation` 退役条件满足**,回执已写入 seams 行内。`apps/desktop/renderer/agent-conversation.test.tsx` 在 main 已不存在(T019 移包),core 侧无删除动作。
 
+**`plugins/agent/sessions` 去留:本包不裁决,仅登记**(integration-request §4 归 core);本包对 sessions 的改动仅为接缝供给(model.ts/entry.tsx),不预设其合并或退役。
+
 ## 7. PC-9 / PC-10 结论
 
 **PC-9(S-05 核实,零代码改动预期兑现)**:`plugins/connectors/acp/src/attachments.ts:10-18` 复核——`AcpPreparedAttachment` 含 `preparedId`(注释明言 Server ACP DTO 未携带),`validPreparedReference` 逐字段校验、`samePreparedReference` 全等比较;对接基准即此形状,缺的字段在 Server ACP DTO(归 core)。P-C 对 connectors 零改动(git 实证)。回执已写 S-05。
