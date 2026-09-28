@@ -21,7 +21,7 @@
 ## 任务（详账 tasks.md PB-1..PB-8）
 
 ### PB-1 R0 基线重建（合并后第一件事）
-旧分支基线缺 main 的 harness-api/chat 内容，**所有旧计数作废重测**：Python（server/adapters/profile-contribution 三组）、desktop vitest、chat vitest（旧分支 alias 不解析的问题在新基线应消失——验证之）、contracts tsc。冻结安装命令（各子包 `-e`，登记 S-10）；回填消费 SHA（foundation/chat-api 经 main 的哪些提交，用 ancestry 实证）；核实 S-11（desktop wire invoke 是否已由 foundation 提供，写结论进 seams）。
+旧分支基线缺 main 的 harness-api/chat 内容，**所有旧计数作废重测**：Python（server/adapters/profile-contribution 三组）、desktop vitest、chat vitest（旧分支 alias 不解析的问题在新基线应消失——验证之）、contracts tsc。冻结安装命令（各子包 `-e`，登记 S-10）；回填消费 SHA（foundation/chat-api 经 main 的哪些提交，用 ancestry 实证）。S-11 **已确认**（core 答复 2026-09-28）：`packages/desktop-platform/server-bridge/src/wire-port.ts` 的 `HttpWirePort` 已交付（含测试），宿主接线归 core INT-01——R0 直接消费 `HttpWirePort` 类型，验收口径写「接口与实现已交付、生产绑定在 INT-01」。
 
 ### PB-2 C2 注册落地
 adapters `{pi,codex,claude}.py` 的 `registration_manifest()` 从"本地 typed 面"（types.py 自写）对齐到 harness-api 真实类型（必要时装一个薄适配层，方向：adapters→harness-api，禁止反向）；经产品组合或 manifest 声明把三品牌注册进 `CONFIGURATION_POINT`；复验真实 registry：重叠注册拒（:187-190）、第二 client 必红（MP-11 生产格）。conformance 门（`adapters/tests/test_adapters_conformance.py:80-103`）保持绿。
@@ -38,8 +38,9 @@ adapters `{pi,codex,claude}.py` 的 `registration_manifest()` 从"本地 typed �
 ### PB-6 Profile glue（弱依赖 P-A）
 消费 P-A 交付的 profile-api r2 SHA（merge A 分支或按 SHA cherry-pick，记 ancestry）；`profile-contribution/` 的 `EffectiveChoiceResolver`/视图端口接真实 ProfileContributions（REQ-Z3-3）。A 未交付期间：fixture 先行 + report 登记依赖；**不得**写 plugins/profile。
 
-### PB-7 退役配合
-adapters `common.py` golden 渲染与 harness 侧（`native_materialization.py:114-145`）一致性钉死（conformance 已有，保持并扩到注册路径）；S-08① 的装配顺序（先退 compat 再装配）在 seams 里确认状态；本包不改 server-compat/harness。
+### PB-7 退役准备与金样（S-08①②；只出清单与顺序，不执行删除）
+1. adapters `common.py` golden 渲染与 harness 侧（`native_materialization.py:114-145`）一致性钉死（conformance 已有，保持并扩到注册路径）——S-08② 的承接方证据。
+2. server-compat `model_configs` writer（`core_wire.py:238-276`）逐行退役清单 + 消费者核查 + "先退 compat 再装配"顺序确认，写回 seams S-08①；server-compat 文件的实际删除（含 profile 的 `server_profiles`，代 A 执行）归**集成波次**，本包不动 server-compat/harness 源文件。
 
 ## 门与反例（终态前必须全过）
 

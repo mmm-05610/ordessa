@@ -10,6 +10,7 @@
 - [ ] PA-4 桌面三包产品就绪：`plugins/profile/{api,frontend,integrations/chat}` 补 manifest.json + build.mjs（对照 plugins/commands 形状）；本地构建演练过；启用耦合（chat-api）写回 S-01
 - [ ] PA-5 品牌矩阵受控版：pi/codex/claude-code × {字段投影, 覆盖/清除, reset, restart-resume}，真实 adapter 接口驱动；CLI 缺席品牌以受控 fake endpoint 为上限并如实登记；G18 浏览器几何 checklist 列出不勾（待装配）
 - [ ] PA-6 报告与交付：`reports/P-A-report.md` + 011-z1 report 增补；终提交 SHA；PARTIAL 项逐条
+- [ ] PA-7 退役准备（S-08③，只出裁定与清单不执行删除）：`agent-box.profile@1` 双声明仲裁裁定（谁唯一声明）；harness `generic/profile_*.py`、`harness-profile-store` entrypoint、`{claude,hermes,opencode}/profile*.py`、server-compat `server_profiles` 的逐文件退役清单+消费者核查；执行归集成波次（见 seams S-08）
 
 ## P-B — model-provider 真实应用链
 
@@ -19,7 +20,7 @@
 - [ ] PB-4 wire error families：13 码经 `wire.error-families` 贡献点自发布（server_plugin_api/contributions.py:74）；异族冲突反例；UNAVAILABLE 不冒充
 - [ ] PB-5 三品牌 E2 受控矩阵：pi/codex/claude-code × MP-03/06/07/10/11 逐格证据（受控 fake endpoint；MP-06 真进程 restart-resume）；缺格=该品牌不 ready，整体 PARTIAL
 - [ ] PB-6 Profile glue：消费 P-A 的 r2 SHA；`EffectiveChoiceResolver`/视图端口接真实 ProfileContributions；A 未交付前 fixture 先行 + 登记依赖（不碰 plugins/profile）
-- [ ] PB-7 退役配合与金样：adapters common.py golden 渲染 conformance 钉住（承接 S-08②）；compat 退役顺序确认写回 S-08①；本包不动 server-compat/harness
+- [ ] PB-7 退役准备与金样（S-08①②，只出清单与顺序不执行删除）：adapters common.py golden 渲染 conformance 钉住（承接 S-08②）；server-compat `model_configs` writer（core_wire.py:238-276）逐行退役清单+消费者核查+"先退再装"顺序确认写回 S-08①；执行归集成波次
 - [ ] PB-8 报告与交付：`reports/P-B-report.md` + 011-z3 report 增补；终提交 SHA；PARTIAL 项逐条
 
 ## P-C — chat 真实接缝
@@ -32,3 +33,4 @@
 - [ ] PC-6 旧链退役（plugin 半边）：`plugins/agent/conversation/{view,interaction-card,styles,entry}.tsx` 退役（语义已迁 chat approval-panel）；对 `apps/desktop/renderer/agent-conversation.test.tsx` 逐条核对等价覆盖后在 S-01 确认可删（删除本身归 core）；启停与锁 → S-01/S-02
 - [ ] PC-7 R-Z2-5 reasoning 状态升级（时间盒内做，非阻塞；picker=R-Z2-6 归 S-05 同族接缝不扩本包）
 - [ ] PC-8 报告与交付：`reports/P-C-report.md` + 011-z2 report 增补；终提交 SHA；PARTIAL 项逐条
+- [ ] PC-9 DTO 冻结（S-05 回执，**唯一允许写 connectors 的窄口**）：`plugins/connectors/acp` 的 `AcpAttachmentPreparePort` DTO 补 `preparedId`（`attachments.ts` 的 AcpPreparedAttachment），仅 DTO+定向测试，不动实现语义；交付 SHA 写回 seams S-05，core 按此接 Server DTO

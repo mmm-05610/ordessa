@@ -39,6 +39,11 @@
 - 环境事实（F5）：codex/claude CLI 本机缺席 → 这两行以受控 fake endpoint 为上限，"真实 CLI 装载格"如实 unknown；Pi 行若本机可用则跑离线受控。
 - G18（浏览器几何/200% 缩放/键盘）只列 checklist 不执行（待装配），登记进 report。
 
+### PA-7 退役准备（S-08③；只出裁定与清单，不执行删除）
+1. 仲裁裁定：`agent-box.profile@1` 的唯一声明者选谁（预期=profile-api；harness 的 `harness-profile-store` entrypoint 退声明），给出依据与加载顺序证据。
+2. 逐文件退役清单 + 消费者核查：harness `generic/{profile_store,profile_manager,profile_selector,profile_provider}.py`、`harness-profile-store` entrypoint、`{claude,hermes,opencode}/profile*.py`、server-compat `server_profiles` writer——每文件列调用方/测试/迁移归属，写成 integration-request 式记录（放 `specs/011-z1-profile/`）。
+3. 实际删除**不在本包执行**：归集成波次（seams S-08，与 core 装配排期联动）；server-compat 文件的退役执行归 B 侧波次统一做（避免 A/B 同文件互撞）。
+
 ## 门与反例（终态前必须全过）
 
 | 门 | 断言 | 反例 |
