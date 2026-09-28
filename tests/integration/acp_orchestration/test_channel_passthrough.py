@@ -10,7 +10,7 @@ import threading
 
 import pytest
 
-from tests.acp_orchestration.conftest import peer_events, wait_until
+from tests.integration.acp_orchestration.conftest import peer_events, wait_until
 from ordessa_server_compat.execution.sidecar import SidecarError
 
 

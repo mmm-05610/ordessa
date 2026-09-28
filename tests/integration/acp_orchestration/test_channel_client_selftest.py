@@ -17,7 +17,7 @@ from types import SimpleNamespace
 from fastapi import FastAPI, WebSocket
 from fastapi.testclient import TestClient
 
-from tests.acp_orchestration.test_managed_acp_channel import (
+from tests.integration.acp_orchestration.test_managed_acp_channel import (
     CHANNEL_WS_PATH, ManagedChannel, answer_for,
 )
 
@@ -167,7 +167,7 @@ def test_channel_client_carries_the_bearer_and_unsigned_attach_is_refused():
     校验并把收到的请求头原样回显）；缺凭据/错凭据的连接在 accept 前被 4401
     拒绝，客户端清晰失败且不挂起。主线未授权反例由
     test_channel_ws_admission_requires_authorization 独立覆盖。"""
-    from tests.acp_orchestration.test_access_authorization import ws_close_code
+    from tests.integration.acp_orchestration.test_access_authorization import ws_close_code
     # 正例：whoami 回显证明连接头随 websocket 一并送达。
     channel = _channel()
     try:

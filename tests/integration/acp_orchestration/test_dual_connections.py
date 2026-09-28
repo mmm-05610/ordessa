@@ -10,7 +10,7 @@ import time
 
 import pytest
 
-from tests.acp_orchestration.conftest import peer_events, session_new_events
+from tests.integration.acp_orchestration.conftest import peer_events, session_new_events
 
 
 def _pid_for_project(log_base: str, project) -> int:
@@ -19,7 +19,7 @@ def _pid_for_project(log_base: str, project) -> int:
             if row.get("event") == "session-new" and row.get("cwdParam") == str(project):
                 return row["pid"]
         return None
-    from tests.acp_orchestration.conftest import wait_until
+    from tests.integration.acp_orchestration.conftest import wait_until
     return wait_until(produce, timeout=30, message=f"peer for {project}")
 
 
@@ -44,7 +44,7 @@ def test_two_channels_same_jsonrpc_ids_and_same_native_id_do_not_cross(server, t
             matches = [event["approval"] for event in server.frames(h["session"])
                        if event.get("kind") == "approval.requested"]
             return matches[-1] if matches else None
-        from tests.acp_orchestration.conftest import wait_until
+        from tests.integration.acp_orchestration.conftest import wait_until
         approvals[label] = wait_until(produce, timeout=30,
                                       message=f"approval for {label}")
 

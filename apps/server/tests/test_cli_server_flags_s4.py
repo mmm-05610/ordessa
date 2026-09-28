@@ -1,12 +1,12 @@
 """T014-S4: the Server CLI's business grammar arrives through the product's
 `cli.server-flags` contribution; the host keeps only `--data-root`/`--port`.
 
-The pre-move behaviour is the oracle: a reference parser rebuilt verbatim
-from the host's old `parser()` is compared byte-for-byte against the
-contribution-driven one (usage, help, parsed values), the old dispatch's
+The C-01/C-02 grammar is the oracle: a reference parser rebuilt verbatim
+from the host's `parser()` is compared byte-for-byte against the
+contribution-driven one (usage, help, parsed values), the dispatch's
 refusal messages are asserted verbatim against argparse's own error output,
 and a routing-recording composition proves which method the plan selects
-with which arguments. The move fails loudly if reverted: the host source is
+with which arguments. The split fails loudly if reverted: the host source is
 scanned for business flag spellings and the product for their presence.
 """
 from __future__ import annotations
@@ -50,10 +50,15 @@ SIDECAR_ARGV = [
 
 
 def reference_parser() -> argparse.ArgumentParser:
-    """The host parser exactly as it stood before the grammar moved."""
+    """The host's transport grammar under C-01/C-02.
+
+    `--data-root` is optional (C-01 resolves env → `$HOME/.ordessa` when it is
+    omitted) and `--port` defaults to 0, which asks the system for a port
+    (C-02 §3.3). Both are contract changes, not conveniences.
+    """
     value = argparse.ArgumentParser(description="Run the Ordessa loopback Server")
-    value.add_argument("--data-root", type=Path, required=True)
-    value.add_argument("--port", type=int, default=8732)
+    value.add_argument("--data-root", type=Path, default=None)
+    value.add_argument("--port", type=int, default=0)
     value.add_argument("--execution-mode", choices=("isolated", "native"), default="isolated")
     value.add_argument("--native-harness", help="one registered native Agent Harness id")
     value.add_argument("--native-adapter-command", help="absolute executable path of its ACP adapter")
@@ -104,18 +109,53 @@ class _RecordingComposition:
         return _record
 
 
+class _FakeSocket:
+    """Records the port the host asked to bind and reports it back.
+
+    C-02 §3.1 binds before serving: the port handed to uvicorn is the port
+    the socket really holds, never the number that was merely requested.
+    """
+
+    def __init__(self, port):
+        self.port = port
+
+    def getsockname(self):
+        return ("127.0.0.1", self.port)
+
+    def close(self):
+        pass
+
+
 @pytest.fixture
 def routed(monkeypatch):
-    """`main` against a recording composition; uvicorn/create_app faked."""
+    """`main` against a recording composition; the serve path faked.
+
+    C-02 changed the serve shape: the host binds the loopback socket first,
+    reads the real port from it, then hands the bound socket over. The
+    fixture records that hand-over instead of the old `uvicorn.run` kwargs.
+    """
     calls: dict = {}
 
-    def _run(app, **kwargs):
-        calls["run"] = (app, kwargs)
+    class _Server:
+        def __init__(self, config):
+            calls["config"] = config
 
-    monkeypatch.setattr("uvicorn.run", _run)
+        def run(self, **kwargs):
+            calls["serve"] = (calls.get("app"), kwargs)
+
+    def _create_app(runtime, on_bound=None):
+        app = ("app", runtime)
+        calls["app"] = app
+        calls["on_bound"] = on_bound
+        return app
+
+    monkeypatch.setattr("uvicorn.Server", _Server)
+    monkeypatch.setattr("uvicorn.Config", lambda app, **kw: ("config", app, kw))
+    monkeypatch.setattr("ordessa_server.transport.http.create_app", _create_app)
+    monkeypatch.setattr("ordessa_server.__main__.bind_loopback_socket", _FakeSocket)
     monkeypatch.setattr(
-        "ordessa_server.transport.http.create_app",
-        lambda runtime: ("app", runtime))
+        "ordessa_server.__main__.resolved_data_root",
+        lambda explicit: Path(explicit or "/default-root"))
 
     def _install(composition):
         monkeypatch.setattr(
@@ -127,7 +167,7 @@ def routed(monkeypatch):
     return _install
 
 
-# -- 1. the contribution-driven grammar is byte-identical to the old host one
+# -- 1. the contribution-driven grammar is byte-identical to the reference one
 
 
 def test_usage_and_help_render_identically_to_the_moved_grammar():
@@ -163,10 +203,10 @@ def test_native_flags_route_to_native_runtime_with_declared_feeds(routed):
          "adapter_command": "/usr/bin/node", "adapter_args": ("a1", "a2"),
          "native_continuation": True},
     )]
-    app, run_kwargs = routed.calls["run"]
+    app, serve_kwargs = routed.calls["serve"]
     assert app[0] == "app"
-    assert run_kwargs["port"] == 9001 and run_kwargs["workers"] == 1
-    assert run_kwargs["host"] == "127.0.0.1"
+    sock = serve_kwargs["sockets"][0]
+    assert sock.getsockname() == ("127.0.0.1", 9001)  # pinned port reached the bound socket
 
 
 def test_sidecar_flags_route_to_sidecar_runtime_with_bindings(routed):
@@ -184,6 +224,22 @@ def test_bare_transport_flags_route_to_default_runtime(routed):
     composition = routed(_RecordingComposition())
     assert host_cli.main(["--data-root", "/d"]) == 0
     assert composition.calls == [("default_runtime", (Path("/d"),), {})]
+
+def test_the_c01_c02_grammar_accepts_what_it_newly_promises(routed):
+    """The two contract changes are encoded as POSITIVE assertions, so they
+    cannot go green by rolling the grammar back:
+
+    * `--data-root` may be omitted and resolves through C-01;
+    * `--port 0` asks the system for a port (C-02 §3.3) and is accepted.
+    """
+    parser = host_cli.parser(product_cli.SERVER_CLI_FLAGS)
+    assert parser.parse_args([]).data_root is None          # C-01: optional
+    assert parser.parse_args(["--port", "0"]).port == 0     # C-02: system-assigned
+
+    composition = routed(_RecordingComposition())
+    assert host_cli.main([]) == 0                           # no --data-root at all
+    assert composition.calls == [("default_runtime", (Path("/default-root"),), {})]
+    assert routed.calls["serve"][1]["sockets"][0].port == 0  # bound, then handed over
 
 
 def test_plan_arguments_are_exactly_the_declared_feeds_per_route():
@@ -212,8 +268,8 @@ def test_plan_arguments_are_exactly_the_declared_feeds_per_route():
 
 
 @pytest.mark.parametrize("argv,message", [
-    (["--data-root", "/d", "--port", "0"], "--port must be between 1 and 65535"),
-    (["--data-root", "/d", "--port", "70000"], "--port must be between 1 and 65535"),
+    (["--data-root", "/d", "--port", "-1"], "--port must be between 0 and 65535"),
+    (["--data-root", "/d", "--port", "70000"], "--port must be between 0 and 65535"),
     (["--data-root", "/d", "--sidecar-deployment", "/s.json"],
      "--plugin-root is required with --sidecar-deployment"),
     (["--data-root", "/d", "--execution-mode", "native", "--native-harness", "pi"],
@@ -222,12 +278,12 @@ def test_plan_arguments_are_exactly_the_declared_feeds_per_route():
     (["--data-root", "/d", "--native-harness", "pi"],
      "native adapter options require --execution-mode native"),
     (["--data-root", "/d", "--execution-mode", "sideways"], None),
-], ids=["port-zero", "port-high", "sidecar-no-plugin-root", "native-incomplete",
+], ids=["port-negative", "port-high", "sidecar-no-plugin-root", "native-incomplete",
         "native-flags-isolated", "bad-choice"])
 def test_refusals_report_argparse_s_own_error_with_the_moved_messages(
         routed, capsys, argv, message):
     """Byte-identity oracle: the stderr the contribution-driven `main`
-    produces must equal what the pre-move host produced — the reference
+    produces must equal what the reference grammar produces — the reference
     parser reporting the same message (or the same parse-time refusal) in
     the same process."""
     routed(_RecordingComposition())
