@@ -11,7 +11,7 @@ from __future__ import annotations
 from typing import Any
 from pathlib import Path
 
-from pacthold.extensions.runtime_composition import (
+from pacthold_runtime_compat.runtime_composition import (
     CompositionCoordinator,
     HarnessCommandSpec,
     RuntimeBinding,
@@ -21,7 +21,7 @@ from pacthold.extensions.runtime_composition import (
     assemble_runtime_composition,
     declare_source,
 )
-from pacthold.resource_contracts import CredentialRefV1
+from pacthold_runtime_compat.resource_contracts import CredentialRefV1
 
 
 def command_from_plan(plan: Any, *, execution_id: str, io_mode: str,

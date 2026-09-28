@@ -27,7 +27,7 @@ import json
 import time
 from typing import Any, Iterable, Mapping, Sequence
 
-from ordessa_server.errors import ServerError
+from server_plugin_api import ServerError
 # INC1c c-1B/c-2 (E2): the product-domain reach of this module is declared as
 # one top-level block only - hidden function-local imports of the same domain
 # are gone (the `_merged_posture` leg). The roster semantics and the posture

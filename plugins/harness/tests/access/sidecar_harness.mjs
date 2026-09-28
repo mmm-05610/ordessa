@@ -27,9 +27,10 @@ export const controlledHarness = path.join(pluginRoot, "tests", "access", "contr
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export class Sidecar {
-  constructor(extraEnv = {}) {
+  constructor(extraEnv = {}, { controlledPeer = true } = {}) {
     this.record = null
     this.#extraEnv = extraEnv
+    this.controlledPeer = controlledPeer
   }
 
   #extraEnv
@@ -45,8 +46,11 @@ export class Sidecar {
       ...process.env, HOME: home, XDG_CONFIG_HOME: "", XDG_CACHE_HOME: "", XDG_DATA_HOME: "",
       AGENTBOX_FIXTURE_RECORD: this.record, ...this.#extraEnv,
     }
+    if (this.controlledPeer) env.AGENTBOX_ACCESS_TEST_MODE = "controlled-peer-v1"
     delete env.AGENTBOX_SIDECAR_ISOLATED
-    this.process = spawn(process.execPath, [entry, "--native"], { env, cwd, stdio: ["pipe", "pipe", "pipe"] })
+    this.process = spawn(process.execPath,
+      this.controlledPeer ? [entry, "--native", "--controlled-test-peer"] : [entry, "--native"],
+      { env, cwd, stdio: ["pipe", "pipe", "pipe"] })
     this.events = []
     this.responses = []
     // Every line in arrival order, undivided. `events`/`responses` sort by what this
@@ -342,10 +346,10 @@ export async function waitAllGone(pids, limitMs = 5_000) {
   return []
 }
 
-export async function withSidecar(run, extraEnv = {}) {
+export async function withSidecar(run, extraEnv = {}, options = {}) {
   const home = await mkdtemp(path.join(tmpdir(), "agentbox-conv-home-"))
   const project = await mkdtemp(path.join(tmpdir(), "agentbox-conv-project-"))
-  const sidecar = new Sidecar(extraEnv)
+  const sidecar = new Sidecar(extraEnv, options)
   await sidecar.start({ home, cwd: project })
   try {
     return await run({ sidecar, home, project })

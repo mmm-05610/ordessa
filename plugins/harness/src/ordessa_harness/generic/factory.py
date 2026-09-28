@@ -1,6 +1,8 @@
 from __future__ import annotations
-from pacthold.extensions import PluginDescriptor, PluginRegistration, ProviderHostControl, ProfileEnvelopeManager
-from pacthold.resource_contracts import AgentBoxProfileV1
+from pacthold.extensions import PluginDescriptor
+from pacthold_runtime_compat.api import PluginRegistration, ProviderHostControl
+from pacthold_runtime_compat.profile_envelope import ProfileEnvelopeManager
+from pacthold_runtime_compat.resource_contracts import AgentBoxProfileV1
 from ..registry import load_builtin_registry
 # One adapter map, owned inside this distribution.
 from ordessa_harness.adapters import ADAPTERS

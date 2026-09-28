@@ -1,0 +1,6 @@
+-- Version 005 is reserved.
+--
+-- A previously used local Preview database already recorded migration 005
+-- before the Resource Contract input migration was authored.  Reusing that
+-- number made the migration runner skip the new schema on upgrade.  The
+-- actual additive Resource Contract migration therefore lives in 006.

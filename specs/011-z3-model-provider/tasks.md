@@ -2,11 +2,11 @@
 
 本线副本，允许勾选并追加查漏任务。共同 plan 的 owner 分配优先；原表范围外步骤登记依赖/C0 集成，不由本线偷改。原包更晚变更须有明确裁定，不自行缩需求。
 
-- [x] R0：读完整输入，冻结实际 SHA/包/红 ID/环境，盘点复用。（t00-freeze.md，commit 1660f66920）
-- [x] R1：独立工作与接口请求完成；消费必需 checkpoint 并留精确 SHA。（REQ-Z3-4 chat-api@54ad26c15d、REQ-Z3-6 foundation@8844c475bc 已消费；harness-api/profile-api 未发布，缺口 OPEN 记录于 api-requests.md）
-- [x] R2：本线全部原包任务有实现/验收/依赖归属，生产假接口为零。（T01–T05 提交 3fa031c947…2855c768ba；T06/T07 归属记录于 integration-request.md，E2 缺口明标 report.md §2/§3）
-- [x] R3：检查点/接线清单/许可迁移账/报告齐备，定向及相关全链门通过。（api-requests/integration-request/report + server/MIGRATION.md；全量 137+10+21 绿）
-- [x] R4：Spec Kit analyze/converge 查漏，未完成项如实；发布本线 clean ready commit。（PARTIAL 状态如实：E2/生产闸门缺上游，见 report.md §3）
+- [ ] R0：读完整输入，冻结实际 SHA/包/红 ID/环境，盘点复用。
+- [ ] R1：独立工作与接口请求完成；消费必需 checkpoint 并留精确 SHA。
+- [ ] R2：本线全部原包任务有实现/验收/依赖归属，生产假接口为零。
+- [ ] R3：检查点/接线清单/许可迁移账/报告齐备，定向及相关全链门通过。
+- [ ] R4：Spec Kit analyze/converge 查漏，未完成项如实；发布本线 clean ready commit。
 
 ## 原包：model-provider
 

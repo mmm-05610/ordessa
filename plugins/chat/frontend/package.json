@@ -1,0 +1,20 @@
+{
+  "name": "@ordessa/plugin-chat",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "ordessa": {
+    "id": "ordessa.chat"
+  },
+  "scripts": {
+    "test": "vitest run --maxWorkers=1",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "radix-ui": "^1.6.7",
+    "streamdown": "2.5.0",
+    "@streamdown/cjk": "1.0.3",
+    "shiki": "4.0.2",
+    "use-stick-to-bottom": "1.1.3"
+  }
+}
