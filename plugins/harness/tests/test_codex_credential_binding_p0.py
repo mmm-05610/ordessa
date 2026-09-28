@@ -2,7 +2,7 @@ from pathlib import Path
 import pytest
 
 from pacthold.extensions import PluginContext
-from pacthold.resource_contracts import CredentialRefV1
+from pacthold_runtime_compat.resource_contracts import CredentialRefV1
 from pacthold.work_core import Ref, RefType
 from ordessa_harness.codex.credentials import CodexCredentialSource
 

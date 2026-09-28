@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-permissions-adapters"
+version = "0.1.0"
+description = "Ordessa Permissions per-brand policy adapters: pure assess/compile/verify for Pi, Codex and Claude Code (T03, permissions.policy-adapters@1)"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+# Depends only on published contracts: the Permissions domain API, the
+# Server plugin API surface, and the Harness public contract package (the
+# same dependency set the platform's external-adapter exemplar declares).
+# No host, no storage, no harness implementation, no sandbox domain.
+dependencies = ["ordessa-permissions-api", "ordessa-server-plugin-api",
+                "ordessa-harness-api"]
+keywords = ["ordessa", "permissions", "adapter", "policy", "claude", "codex", "pi"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ordessa_permissions_adapters = ["py.typed"]

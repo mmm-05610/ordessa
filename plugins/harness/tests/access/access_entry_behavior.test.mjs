@@ -318,6 +318,9 @@ test("E8: the execution-mode gate and the provenance check fail closed", async (
     for (const directory of ["runtime", "third_party", "harnesses"]) {
       await cp(path.join(pluginRoot, directory), path.join(root, directory), { recursive: true })
     }
+    await mkdir(path.join(root, "src", "ordessa_harness"), { recursive: true })
+    await cp(path.join(pluginRoot, "src", "ordessa_harness", "launch-descriptors.json"),
+      path.join(root, "src", "ordessa_harness", "launch-descriptors.json"))
     const victim = path.join(root, "third_party", "harness_remote", "bridge", "src", "acp-client.js")
     await writeFile(victim, `${await readFile(victim, "utf8")}\n// tampered\n`)
     const output = await runEntry(["--native"], {}, path.join(root, "runtime", "access-entry.mjs"))

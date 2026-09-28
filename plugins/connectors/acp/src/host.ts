@@ -2,6 +2,7 @@ import type * as acp from '@agentclientprotocol/sdk'
 import type { AgentWorkspaceInfo } from '@extensions/ordessa.agent-contracts/contract.js'
 import type { AgentNativeBridge } from '../../../../apps/desktop/renderer/agent-native'
 import type { AcpChannelHandle, AcpChannelSpec } from './channel'
+import type { AcpControlledSubmission, AcpPermissionDecision, AcpSubmissionAdmission } from './submission'
 
 /**
  * The renderer half of the desktop wiring: the ONLY module in this plugin that speaks the
@@ -119,22 +120,62 @@ export function hostChannelSpec(adapterId: string, bridge: AgentNativeBridge, in
       if (!connectionId) throw new Error(`ACP channel open returned no connection id for project ${projectId}`)
       const binding = parseBinding(opened?.binding, projectId)
       let controller!: ReadableStreamDefaultController<acp.AnyMessage>
+      const downListeners = new Set<(reason: string) => void>()
+      let downReason: string | undefined
+      const markDown = (reason: string) => {
+        if (downReason !== undefined) return
+        downReason = reason
+        for (const listener of [...downListeners]) listener(reason)
+        downListeners.clear()
+      }
       const readable = new ReadableStream<acp.AnyMessage>({ start: c => { controller = c } })
       inboxes.set(connectionId, {
         message: message => { controller.enqueue(message) },
-        down: reason => { try { controller.error(new Error(reason)) } catch { /* already ended */ } },
+        down: reason => { markDown(reason); try { controller.error(new Error(reason)) } catch { /* already ended */ } },
       })
       const stream: acp.Stream = {
         readable,
         writable: new WritableStream<acp.AnyMessage>({
           write: async message => { await call('acp/channel/send', { connectionId, frame: message }) },
-          close: () => { inboxes.delete(connectionId) },
+          close: () => { inboxes.delete(connectionId); markDown('channel stream closed') },
         }),
       }
       return {
         connectionId, binding, stream,
+        subscribeDown(listener) {
+          if (downReason !== undefined) listener(downReason)
+          else downListeners.add(listener)
+          return () => { downListeners.delete(listener) }
+        },
+        authorizeSubmission: async (submission: AcpControlledSubmission): Promise<AcpSubmissionAdmission> => {
+          const answer = VALUE(await call('acp/channel/authorizeSubmission', { connectionId, submission }))
+          if (answer?.kind === 'accepted' && answer.submissionId === submission.submissionId) {
+            return { kind: 'accepted', submissionId: submission.submissionId }
+          }
+          if (answer?.kind === 'refused' && STR(answer.code) && STR(answer.reason)) {
+            return { kind: 'refused', code: answer.code as string, reason: answer.reason as string }
+          }
+          if (answer?.kind === 'unknown' && STR(answer.operationId) && STR(answer.reason)) {
+            return { kind: 'unknown', operationId: answer.operationId as string, reason: answer.reason as string }
+          }
+          throw new Error('ACP backend admission answer is malformed')
+        },
+        authorizePermission: async (decision: AcpPermissionDecision): Promise<AcpSubmissionAdmission> => {
+          const answer = VALUE(await call('acp/channel/authorizePermission', { connectionId, decision }))
+          if (answer?.kind === 'accepted' && answer.submissionId === decision.interactionId) {
+            return { kind: 'accepted', submissionId: decision.interactionId }
+          }
+          if (answer?.kind === 'refused' && STR(answer.code) && STR(answer.reason)) {
+            return { kind: 'refused', code: answer.code as string, reason: answer.reason as string }
+          }
+          if (answer?.kind === 'unknown' && STR(answer.operationId) && STR(answer.reason)) {
+            return { kind: 'unknown', operationId: answer.operationId as string, reason: answer.reason as string }
+          }
+          throw new Error('ACP backend permission answer is malformed')
+        },
         async release() {
           inboxes.delete(connectionId)
+          markDown('ACP channel released')
           try { controller.error(new Error('ACP channel released')) } catch { /* already ended */ }
           await call('acp/channel/release', { connectionId })
         },

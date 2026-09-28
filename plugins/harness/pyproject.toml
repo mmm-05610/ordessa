@@ -10,7 +10,7 @@ requires-python = ">=3.10"
 # The historical `agent-box-terminal-session` dependency is dropped in the
 # monorepo baseline: that plugin is not part of main (see MIGRATION-TABLE.md);
 # no active import in this package referenced it.
-dependencies = ["pacthold==2.0.0a1", "ordessa-server==2.0.0a1", "ordessa-server-plugin-api>=0.1.0,<1"]
+dependencies = ["pacthold==2.0.0a1", "ordessa-server==2.0.0a1", "ordessa-server-plugin-api>=0.1.0,<1", "ordessa-harness-api==1.0.0a1", "PyYAML>=6,<7", "tomli-w>=1,<2", "tomli>=2,<3; python_version<'3.11'"]
 [project.entry-points."agent_box.plugins"]
 # The entry-point group keeps its historical `agent_box.plugins` spelling on
 # purpose: it is the plugin-discovery compatibility surface (order 61
@@ -23,9 +23,9 @@ opencode = "ordessa_harness.entrypoints:create_opencode"
 hermes = "ordessa_harness.entrypoints:create_hermes"
 pi = "ordessa_harness.entrypoints:create_pi"
 [project.optional-dependencies]
-dev = ["pytest>=7", "pyyaml>=6"]
+dev = ["pytest>=7"]
 
 [tool.setuptools.package-data]
-ordessa_harness = ["harnesses.toml", "codex/*.json", "codex/*.toml"]
+ordessa_harness = ["harnesses.toml", "launch-descriptors.json", "codex/*.json", "codex/*.toml"]
 [tool.setuptools.packages.find]
 where = ["src"]

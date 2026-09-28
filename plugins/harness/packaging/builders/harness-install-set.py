@@ -99,7 +99,7 @@ def moduleattr(module, *names, default=None):
 
 
 def verify_artifact_tree(path: Path) -> str:
-    from pacthold.resource_contracts.runtime_artifacts import runtime_artifact_tree_digest
+    from pacthold_runtime_compat.resource_contracts.runtime_artifacts import runtime_artifact_tree_digest
 
     return runtime_artifact_tree_digest(path)
 

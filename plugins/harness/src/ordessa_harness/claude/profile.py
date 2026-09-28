@@ -1,7 +1,7 @@
 """Claude native codec façade over the shared ProfileStore."""
 from dataclasses import dataclass
 from pathlib import Path
-from pacthold.resource_contracts import AgentBoxProfileV1
+from pacthold_runtime_compat.resource_contracts import AgentBoxProfileV1
 from pacthold.work_core import Ref, RefType, ProviderDescriptor
 from ordessa_harness.generic.profile_store import ProfileStore, PROVIDER_ID
 from .contracts import ClaudeContinuationV1

@@ -8,7 +8,7 @@ from typing import Mapping
 # harness_capabilities`）是唯一事实来源，注册表只把它当作封闭集合使用。这样
 # TOML、部署声明与 wire 投影不可能各说一套；此处若有第二个手写集合，就等于
 # 又开了一份可以静默漂移的 schema。
-from pacthold.resource_contracts.harness_capabilities import CANONICAL_CAPABILITY_IDS
+from pacthold_runtime_compat.resource_contracts.harness_capabilities import CANONICAL_CAPABILITY_IDS
 
 _KINDS = frozenset({"stdio", "pty"})
 _CAPS = frozenset(CANONICAL_CAPABILITY_IDS)

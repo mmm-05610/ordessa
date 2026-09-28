@@ -93,3 +93,26 @@ PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m pytest plugins/assets/model-provid
 node_modules/.bin/tsc --noEmit --strict --target es2022 --module esnext \
   --moduleResolution bundler --skipLibCheck plugins/assets/model-provider/contracts/*.ts  # exit 0
 ```
+
+---
+
+## 014 增补 — P-B：真实应用链收口（2026-09-28，分支 `codex/014-b-model-provider`）
+
+011 的 PARTIAL 状态在此线被推进到受控级全绿；完整证据见
+`specs/014-plugin-release/reports/P-B-report.md`。与 011 台账的对照：
+
+| 011 阻塞项 | 014 结果 |
+| --- | --- |
+| REQ-Z3-1（C2 注册点不存在） | **CLOSED**：注册点已在 main（harness-api `edca4049b1` 经 consolidation 入线）；三品牌经本包声明面（`adapters/plugin.py`）进真实 `harness.configuration-adapters`，真实 registry 重叠拒复验（`d1cc14ee60`） |
+| REQ-Z3-2（C4 plan/apply/permit 不存在） | **CLOSED（受控级）**：`HarnessConfigPort` 绑真实 `ConfigurationApplicationService`，一次性 permit 全链 + 反例四件；生产级 admission 诚实 refused/unknown 待 S-06/P-E（`ca85ef584d`） |
+| REQ-Z3-7（13 码进 wire family） | **CLOSED**：由本包自己经 `wire.error-families` 自发布（派单裁定路径），冲突/静态表矛盾/未知码三反例在案（`ca85ef584d`） |
+| REQ-Z3-3（profile facet 注册口未发布） | **CLOSED**：P-A r2（`e6f720d347`）落地后本包 glue 消费真实 `FacetRegistry`（`79f4bdf391`，merge `fcf588b3d4`） |
+| E2 三品牌全缺 | **受控级全绿 25 格**：`initialize→session/new→prompt(fake)→换 choice→必要时 resume→下一 prompt`，下游实际路由证据（FakeEndpoint 实收）；`session/new` 冒充 resume、双会话交错、MP-10 哨兵、host 级 MP-11 全在案（`b37e846fdb`）。真实 CLI 装载格如实 unknown（E3 禁跑；codex/claude 二进制缺席） |
+| REQ-Z3-5（桌面 wire 传输口） | S-11 核实：`HttpWirePort` 交付在 core 分支 `codex/013-b-server-runtime @ 742389c2e6`（不在 main/本树），生产绑定归 INT-01 |
+| IR-1（compat 退行） | S-08①② 清单与顺序交付（`specs/011-z3-model-provider/retirement-request.md`，`4db11759c6`），执行归集成波次 |
+
+测试账（R0 重测口径）：137 → **197 passed**（+60 新门，新增红=0）；
+desktop 10 / chat 21 / contracts tsc 0 不回退；profile 152（合并后同树）。
+REQ-Z3-6 消费 SHA 补正：011 记录的 `8844c475bc`/`54ad26c15d` 在重基线上非
+祖先，消费关系以内容引入提交为准并已 ancestry 实证（`910457d04e`/
+`4bba5f1c71`/`ab9cb22bff`/`edca4049b1`，见 P-B 报告 §0）。

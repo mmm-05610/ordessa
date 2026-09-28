@@ -2,28 +2,28 @@
 
 ## 设计与实施前置
 
-- [x] WS01 核对 handoff.md 固定开发 SHA、独立树单一写者；先复跑基线，记录当前 public API、视图注册 fixture、测试 ID与已知红。该 SHA 不等于平台集成已验收；不得写相邻活动树。
-- [x] WS02 固定 ZCode 来源，登记结构提取/纯函数移植/仅参考三类；核对许可证；证明没有带入业务依赖。
+- [ ] WS01 核对 handoff.md 固定开发 SHA、独立树单一写者；先复跑基线，记录当前 public API、视图注册 fixture、测试 ID与已知红。该 SHA 不等于平台集成已验收；不得写相邻活动树。
+- [ ] WS02 固定 ZCode 来源，登记结构提取/纯函数移植/仅参考三类；核对许可证；证明没有带入业务依赖。
 
 ## US1：统一外壳
 
-- [x] WS03 先写空left但有模块/命令、无sidebar模块切换、卸载模块、普通left视图保留的反例；实现 sidebar 四段与 hasLeftContent/hasSidebarChrome 分离。
-- [x] WS04 复用既有贡献与 ViewSurface；原 API fixture 一字不改也能工作。确认未新增 Chat/Git/品牌 ID 条件，未访问插件 DOM。
+- [ ] WS03 先写空left但有模块/命令、无sidebar模块切换、卸载模块、普通left视图保留的反例；实现 sidebar 四段与 hasLeftContent/hasSidebarChrome 分离。
+- [ ] WS04 复用既有贡献与 ViewSurface；原 API fixture 一字不改也能工作。确认未新增 Chat/Git/品牌 ID 条件，未访问插件 DOM。
 
 ## US2：滚动与稳定工具区
 
-- [x] WS05 自滚动插件/非自滚动插件/长导航/长footer/零贡献四组夹具；顶部底部保持可用；收起/展开期间 footer component 不双挂、不误清订阅。
-- [x] WS06 新宽度边界、缩放、键盘调整/恢复；不复制上游 resize 实现，不修改其他包。
+- [ ] WS05 自滚动插件/非自滚动插件/长导航/长footer/零贡献四组夹具；顶部底部保持可用；收起/展开期间 footer component 不双挂、不误清订阅。
+- [ ] WS06 新宽度边界、缩放、键盘调整/恢复；不复制上游 resize 实现，不修改其他包。
 
 ## US3：布局能力保留
 
-- [x] WS07 单视图无标签、多视图可切换、移动/关闭可键盘触达、上下左右区域及reset不退化；现有overlay模态焦点/锚点失效/error层级反例保留。
-- [x] WS08 审阅样式：仅壳层类、无 `.agent-*` 或插件名选择器；深浅/系统字体；真实Workbench环境截图，不能用mock数据量为零掩盖溢出。
+- [ ] WS07 单视图无标签、多视图可切换、移动/关闭可键盘触达、上下左右区域及reset不退化；现有overlay模态焦点/锚点失效/error层级反例保留。
+- [ ] WS08 审阅样式：仅壳层类、无 `.agent-*` 或插件名选择器；深浅/系统字体；真实Workbench环境截图，不能用mock数据量为零掩盖溢出。
 
 ## Final
 
-- [x] WS09 Workbench定向、typecheck、现有根聚合与临时桌面构建门禁按集成基线运行；原ID及原因逐项比较，测试不是固定数量竞赛。
-- [x] WS10 主代理审diff与scope，报告生产变更严格在Workbench；来源→目标→验收映射、截图、未改Chat内容等边界明确；提交检查点待审，不自动合并/push。
+- [ ] WS09 Workbench定向、typecheck、现有根聚合与临时桌面构建门禁按集成基线运行；原ID及原因逐项比较，测试不是固定数量竞赛。
+- [ ] WS10 主代理审diff与scope，报告生产变更严格在Workbench；来源→目标→验收映射、截图、未改Chat内容等边界明确；提交检查点待审，不自动合并/push。
 
 ## 实浏览器必须检查
 

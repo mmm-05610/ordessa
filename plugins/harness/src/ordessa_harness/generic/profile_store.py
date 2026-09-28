@@ -3,9 +3,9 @@ from __future__ import annotations
 import hashlib, json, os, re
 from pathlib import Path
 from typing import Any, Callable
-from pacthold.extensions import ProfileEnvelope
+from pacthold_runtime_compat.api import ProfileEnvelope
 from pacthold.work_core import Ref, RefType, ProviderDescriptor, ResourceResolutionContext
-from pacthold.resource_contracts import AgentBoxProfileV1
+from pacthold_runtime_compat.resource_contracts import AgentBoxProfileV1
 
 PROVIDER_ID = "harness-profile"
 _ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$")

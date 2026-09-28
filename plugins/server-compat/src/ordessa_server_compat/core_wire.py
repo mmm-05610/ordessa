@@ -3,8 +3,12 @@
 Physically moved out of `ordessa_server.wire.handlers` (core-cleanup stage 3):
 every row here is one atomic descriptor the compatibility plugin registers on
 the plugin host's method registry — shape, handler, availability and owner
-together. The wire's own vocabulary (helpers, envelopes, error families,
-projections) stays in the host and is imported, never re-implemented, here.
+together. The wire's shared vocabulary (the family set, the param-shape
+primitives, the record encoding) is the published contract's
+(`server_plugin_api`), which the host imports too; the domain projections and
+the validators only this plugin raises live here
+(`ordessa_server_compat.wire_projection` / `.wire_validators`). Nothing on this
+side imports a host internal any more — T014-S2c, AGENTS rule 3.
 
 The `ordessa.server-compat` method list is frozen by
 `docs/server-core-cleanup-baseline.md`: it may only ever SHRINK — a domain
@@ -23,28 +27,34 @@ import shutil
 from pathlib import PurePosixPath
 from typing import Any, Callable, Mapping
 
-from ordessa_server.errors import ServerError
-from ordessa_server.records import canonical, digest, reject_sensitive_keys
-from ordessa_server.wire.errors import WireError, family_for
-from ordessa_server.wire.handlers import (
-    _assignments,
-    _bounded,
-    _models,
-    _overrides,
-    _positive,
-    _request_id,
-    _require,
-    _slug,
-    _version,
+from server_plugin_api import (
+    ServerError,
+    WireError,
+    bounded as _bounded,
+    canonical,
+    digest,
+    family_for as _static_family,
+    reject_sensitive_keys,
+    request_id as _request_id,
+    require as _require,
+    version as _version,
 )
-from ordessa_server.wire.projection import (
+from ordessa_server_compat.wire_projection import (
     event_frame,
     execution_state,
     profile_record,
     session_record,
 )
+from ordessa_server_compat.wire_validators import (
+    assignments as _assignments,
+    models as _models,
+    overrides as _overrides,
+    positive as _positive,
+    slug as _slug,
+)
 from ordessa_server_compat.accounts.records import account_view
 from ordessa_server_compat.assets.records import asset_view
+from ordessa_server_compat.error_families import COMPAT_ERROR_FAMILIES
 from ordessa_server_compat.execution import CancelOutcome
 from ordessa_server_compat.execution.artifact_store import ArtifactStoreError
 from ordessa_server_compat.hooks.records import hook_view
@@ -74,13 +84,16 @@ _LOG = logging.getLogger(__name__)
 _CODE_SHAPE = re.compile(r"[A-Z][A-Z0-9_]{2,127}")
 
 
-def _asset_refusal(exc: BaseException) -> WireError:
+def _asset_refusal(exc: BaseException,
+                   family_lookup: "Callable[[str], str] | None" = None) -> WireError:
     """One path for the asset surface's refusals - five copies were five truths.
 
     A code that is shaped like a registered domain code keeps its own words: the
-    family `errors.family_for` assigns it, the same `code: message` text the
-    surface has always sent, and `details.internalCode` so the precise code is
-    structured rather than embedded prose (the shape order 115 fixed).
+    family `family_lookup` assigns it (the composition's resolver, injected at
+    handler construction since T014-S2c — see `CoreWireHandlers._family_for`),
+    the same `code: message` text the surface has always sent, and
+    `details.internalCode` so the precise code is structured rather than
+    embedded prose (the shape order 115 fixed).
 
     Anything else is a Server-side fault, not the caller's mistake: it answers
     `UNAVAILABLE` with a machine-readable `internalCode` of the exception *type*
@@ -90,8 +103,9 @@ def _asset_refusal(exc: BaseException) -> WireError:
     code = getattr(exc, "code", None)
     if isinstance(code, str) and _CODE_SHAPE.fullmatch(code):
         message = str(getattr(exc, "message", "the asset surface refused the request"))
-        return WireError(family_for(code), f"{code}: {message}",
-                         {"internalCode": code, "retryable": family_for(code) == "UNAVAILABLE"})
+        family = (family_lookup or _static_family)(code)
+        return WireError(family, f"{code}: {message}",
+                         {"internalCode": code, "retryable": family == "UNAVAILABLE"})
     _LOG.warning("asset surface raised %s: %s", type(exc).__name__, exc)
     return WireError("UNAVAILABLE", "the asset surface could not complete the request",
                      {"internalCode": type(exc).__name__, "retryable": True})
@@ -418,6 +432,7 @@ class CoreWireHandlers:
         connectors=None,
         data_root=None,
         workspaces=None,
+        family_resolver: "Callable[[str], str] | None" = None,
     ) -> None:
         self.profiles = profiles
         self.sessions = sessions
@@ -445,6 +460,26 @@ class CoreWireHandlers:
         self.workspaces = workspaces
         self.acp_channels = None
         self.native_execution_provider = None
+        self._family_resolver = family_resolver
+
+    def _family_for(self, code: str) -> str:
+        """Project one internal code onto a wire family for THIS composition.
+
+        T014-S2c replaced the helper that read this plugin's own contribution
+        payload: compat's twelve conversion sites now resolve through a callable
+        the composition *injects* (`CoreWireHandlers(family_resolver=…)`, bound
+        to the declaring plugin host's aggregate by `bootstrap/runtime.py`), so
+        a code another plugin owns answers its real family instead of the
+        static fall-through, and no plugin ever reads the aggregate object.
+
+        The fallback is for a handler built without a composition — a unit test
+        standing one up directly — and it is the honest one: this plugin's own
+        published rows, then the static table. It is never consulted on a
+        composed request path.
+        """
+        if self._family_resolver is not None:
+            return self._family_resolver(code)
+        return COMPAT_ERROR_FAMILIES.get(code) or _static_family(code)
 
     def _require_workspace_resolution(self):
         """The Workspace plugin's provided port, or a typed refusal.
@@ -722,7 +757,7 @@ class CoreWireHandlers:
                 source=params.get("source"),
             )
         except ServerError as exc:
-            raise WireError.from_server_error(exc) from exc
+            raise WireError.from_server_error(exc, self._family_for) from exc
         return {"hook": hook_view(hooks.get(created["hook_id"]))}
 
     def hooks_update(self, params: Mapping[str, Any]) -> dict[str, Any]:
@@ -734,7 +769,7 @@ class CoreWireHandlers:
             updated = hooks.update(
                 hook_id=_bounded(params["hookId"], "hookId"), model=model)
         except ServerError as exc:
-            raise WireError.from_server_error(exc) from exc
+            raise WireError.from_server_error(exc, self._family_for) from exc
         return {"hook": hook_view(hooks.get(updated["hook_id"]))}
 
     def hooks_set_enabled(self, params: Mapping[str, Any]) -> dict[str, Any]:
@@ -746,7 +781,7 @@ class CoreWireHandlers:
             updated = hooks.set_enabled(
                 hook_id=_bounded(params["hookId"], "hookId"), enabled=enabled)
         except ServerError as exc:
-            raise WireError.from_server_error(exc) from exc
+            raise WireError.from_server_error(exc, self._family_for) from exc
         return {"hook": hook_view(hooks.get(updated["hook_id"]))}
 
     def hooks_delete(self, params: Mapping[str, Any]) -> dict[str, Any]:
@@ -754,7 +789,7 @@ class CoreWireHandlers:
         try:
             removed_triggers = hooks.delete(hook_id=_bounded(params["hookId"], "hookId"))
         except ServerError as exc:
-            raise WireError.from_server_error(exc) from exc
+            raise WireError.from_server_error(exc, self._family_for) from exc
         return {"deleted": True, "triggersRemoved": removed_triggers}
 
     def hooks_triggers(self, params: Mapping[str, Any]) -> dict[str, Any]:
@@ -787,7 +822,7 @@ class CoreWireHandlers:
                 source_path=_Path(_bounded(params["sourcePath"], "sourcePath", 4096)),
             )
         except Exception as refusal:  # noqa: BLE001 - typed by the store
-            raise _asset_refusal(refusal) from refusal
+            raise _asset_refusal(refusal, family_lookup=self._family_for) from refusal
         return {"catalog": self._catalog_view(snapshot)}
 
     def assets_catalog(self, params: Mapping[str, Any]) -> dict[str, Any]:
@@ -824,7 +859,7 @@ class CoreWireHandlers:
                 records=records, skills=skills, mcp=mcp,
             )
         except Exception as refusal:  # noqa: BLE001 - typed by the store
-            raise _asset_refusal(refusal) from refusal
+            raise _asset_refusal(refusal, family_lookup=self._family_for) from refusal
         return {"installed": installed}
 
     def assets_probe(self, params: Mapping[str, Any]) -> dict[str, Any]:
@@ -867,7 +902,7 @@ class CoreWireHandlers:
         try:
             facts = skills.install(source, asset_id=asset_id, revision=revision)
         except Exception as refusal:  # noqa: BLE001 - typed by the store
-            raise _asset_refusal(refusal) from refusal
+            raise _asset_refusal(refusal, family_lookup=self._family_for) from refusal
         published = records.publish(
             key=_request_id(params["requestId"]),
             request_digest=digest({"assetId": asset_id, "revision": revision,
@@ -890,7 +925,7 @@ class CoreWireHandlers:
         try:
             canonical = mcp.install(definition, asset_id=asset_id, revision=revision)
         except Exception as refusal:  # noqa: BLE001 - typed by the store
-            raise _asset_refusal(refusal) from refusal
+            raise _asset_refusal(refusal, family_lookup=self._family_for) from refusal
         published = records.publish(
             key=_request_id(params["requestId"]),
             request_digest=digest({"assetId": asset_id, "revision": revision,
@@ -921,7 +956,7 @@ class CoreWireHandlers:
             facts = self.plugin_assets.install(
                 source, asset_id=asset_id, revision=revision)
         except Exception as refusal:  # noqa: BLE001 - typed by the store
-            raise _asset_refusal(refusal) from refusal
+            raise _asset_refusal(refusal, family_lookup=self._family_for) from refusal
         published = records.publish(
             key=_request_id(params["requestId"]),
             request_digest=digest({"assetId": asset_id, "revision": revision,
@@ -1345,7 +1380,7 @@ class CoreWireHandlers:
         return {"profile": self._profile(row)}
 
     def _profile_error(self, exc: ServerError) -> WireError:
-        error = WireError.from_server_error(exc)
+        error = WireError.from_server_error(exc, self._family_for)
         current = getattr(exc, "current", None)
         if current is not None:
             error.current = self._profile(current)
@@ -1475,7 +1510,7 @@ class CoreWireHandlers:
                 body,
             )
         except ServerError as exc:
-            error = WireError.from_server_error(exc)
+            error = WireError.from_server_error(exc, self._family_for)
             current = getattr(exc, "current", None)
             if current is not None:
                 error.current = self.model_configs.project(current)
@@ -1490,7 +1525,7 @@ class CoreWireHandlers:
                 _version(params["expectedVersion"]), _request_id(params["requestId"]),
             )
         except ServerError as exc:
-            error = WireError.from_server_error(exc)
+            error = WireError.from_server_error(exc, self._family_for)
             references = getattr(exc, "references", None)
             if references is not None:
                 error.details["referenceIds"] = list(references)

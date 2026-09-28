@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import Any
 
 from ordessa_server.credentials import CredentialRecords
-from ordessa_server.errors import unavailable
+from server_plugin_api import unavailable
 from ordessa_server_compat.execution import HarnessRegistry
 from pacthold.execution.contracts import TurnExecutionPort
 from ordessa_server.events import EventNotifier
