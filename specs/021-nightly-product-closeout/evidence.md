@@ -27,3 +27,12 @@ project）；不让验收 Agent 修改 Ordessa 自己的源码仓库。
 | E-P1-2 | RE-1/SC-2 独立复现 P0：`apps/desktop/dist/electron-main.cjs` require 即 `TypeError: Invalid URL`（bundle 内 `var import_meta = {}`，`data-root.ts` 顶层 `new URL(LAYOUT_SOURCE, undefined)`）；复现日志 `/tmp/021-direct-launch.log`。→ ledger B-001。 |
 | E-P1-3 | SC-2 deb 解剖：build-deb 仅装 3 个 Python 包（缺 products/server 闭包→SERVER_PRODUCT_MISSING 风险）；无 `/opt/ordessa/harnesses` staging（→BUNDLED_RUNTIME_MISSING）；`runtime.ts:62` 把 python **目录**当可执行；装机扩展发现解析到 `/opt/products/desktop/dist`（node 算术复现）；clean-machine-accept 需 `packaging/.cache/ubuntu-base.tar.gz` 且不启动 GUI（不能单独当 C2）。环境探针：sudo 不可用、userns `unshare --map-root-user` 可用、python3.12.14 在、无旧安装残留、磁盘 108G。→ B-002/B-003/W-018。 |
 | E-P1-4 | SC-1 W-001 定性：桌面 23 扩展包 vs 14 enabled（8 缺，`ui-components` 故意缺席有测试钉）；`default_plugins()` 仅 8 插件；3 个扩展 entry 形态损坏（激活必抛/必失败）；permissions 后端已组合+admission 已接线但前端三件套未装配、chat 只渲染 composer.toolbar、生产 approve 走未过闸门 `respond()`；skills/mcp 三段链 UI/存储/物化各有断点（详 SC-1 矩阵）。→ B-004 + EA-1 seam 裁决。 |
+
+## Phase 2 · P0 修复与集成（2026-09-30 01:00–02:40）
+
+| ID | 证据 |
+| --- | --- |
+| E-P2-1 | 三个 P0 修复过 RV（RV-1×2 PASS、RV-2 PASS）后 cherry-pick 入 trunk：B-001 `c14d9296ff`、B-003 `f4b8f1e405`、B-002 `11fb13dacd`；组合门：`npm run build`=0、server-bridge 48/48、apps/desktop 全绿。RV-2 独立 AST 复核 16 包闭包逐项相等（含延迟 import）；B-002 树上 deb sha256 `913f1007d10fd81b354a5a3cf7c8f1ad2e257c2e0064dc65355ac6ed1ad8d9f3`，bundled python `entry_points(ordessa.server_product)=['default']`、`/opt/ordessa/harnesses` 在、`test:packaging` 45/45。task worktree/branch 已清理。 |
+| E-P2-2 | B-005（RV-3 PASS）+ I-001 四连（RV-3 对装配唯一阻塞按选项③整改）入 trunk：`dab802d776`、`1053a4b930`、`75c72a3b48`、`5e08cb76df`、`0a1461336f`、`8c27bc0ad8`（17 扩展）。组合门：build=0（17 enabled）、server-bridge **57/57 含 live 真往返**（真 server：JSON-RPC 信封 `workspaces.list` 200；旧平铺体 400 已由 I-001 复现留证）、apps/desktop 全绿、`node --test products/desktop/tests/` 15P/1F（唯一红=预存在 `@assistant-ui/react` examples 依赖）。 |
+| E-P2-3 | 集成显形回归一处：B-001 静态 JSON import 触发 FR-009 平台纯度守卫（I-001 分支自测绿因基于 B-001 前 trunk）。修复 trunk `7b8223d38e`：守卫白名单精确豁免该数据文件（注释写明 C-01 单一事实源+非 API），守卫 5/5 绿。立案 W-027 为架构债。 |
+| E-P2-4 | task worktree/branch 全部清理：b001/b003/b002/b005/i001 五个分支删除，`git worktree list` 仅剩 root/main、NIGHTLY_TRUNK、历史 `worktrees/consolidated-core`。 |
