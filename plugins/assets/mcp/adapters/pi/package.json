@@ -1,0 +1,17 @@
+{
+  "name": "ordessa-mcp-pi-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Ordessa managed-lane Pi bridge extension (Q4 T10). Loaded by Pi via jiti exactly like the acp-adapter permission gate (-e <path>); no compilation step. Registers only Server-validated tool bridges over the loopback control channel implemented by backend/managed/pi_bridge.py; never connects to an MCP server and never holds a secretRef. Executable code: version/license/trust registration live in the manifest emitted by scripts/pack.mjs.",
+  "license": "MIT",
+  "main": "ordessa-mcp-bridge.ts",
+  "piManifest": {
+    "extensionSource": "ordessa-mcp-bridge.ts",
+    "controlChannel": "127.0.0.1 (host literal in source; port+token come from ORDESSA_PI_BRIDGE_* env set by the Ordessa Server launcher)",
+    "pythonPeer": "backend/managed/pi_bridge.py"
+  },
+  "scripts": {
+    "pack": "node scripts/pack.mjs"
+  }
+}
