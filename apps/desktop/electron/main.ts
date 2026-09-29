@@ -23,7 +23,8 @@ import { beginSession, cleanSession, runCleanup, restoreWindowState, startupCras
 import { APP_ORIGIN, SECURE_WEB_PREFERENCES, WINDOW_OPEN_ACTION, isTrustedIpcCaller } from './security'
 import { createSettingsStore } from './settings-store'
 import { createFixtureUpdateClient, type UpdateClient } from './update-client'
-import { createFixtureWirePort, type WirePort } from './wire-fixture'
+import { createAbsentWirePort, type WirePort } from './wire-fixture'
+import { HttpWirePort, ServerBridge, tokenReaderFor } from '@ordessa/server-bridge'
 import type { Fault } from '@extensions/ordessa.contracts/contract.js'
 
 const distDir = __dirname
@@ -106,7 +107,23 @@ app.whenReady().then(async () => {
   const settings = createSettingsStore(path.join(probe.ok ? dataRoot : logsDir, 'settings.json'))
   await settings.load()
   const update: UpdateClient = createFixtureUpdateClient() // P-C 交付后换成真入口（切换点见报告）
-  const wire: WirePort = createFixtureWirePort()             // P-B 交付后换成 server-bridge 实例
+  // INT-01 真实接缝（C-01/C-02/C-03）：服务端由本宿主启动并监管，wire 口打到它身上。
+  // 令牌只在主进程（C-03 §4）：`readToken` 由这里供给，WirePort 不存令牌字段。
+  const bridge = new ServerBridge({})
+  let wire: WirePort
+  try {
+    const instance = await bridge.start()
+    wire = new HttpWirePort({
+      origin: instance.origin,
+      scope: instance.scope,
+      readToken: tokenReaderFor(dataRoot, file => readFile(file, 'utf8')),
+    })
+    log.info('server started', { scope: instance.scope, pid: instance.pid })
+  } catch (error) {
+    // C-02 §7：类型化失败 → 故障 UI；缺席实现保持诚实（不假绿、不空白）。
+    faults.push(launchFault(error))
+    wire = createAbsentWirePort()
+  }
 
   // PA-10 崩溃恢复：上一次会话没干净退出就如实记账。
   const stateDir = path.join(dataRoot, 'state')
@@ -163,6 +180,8 @@ app.whenReady().then(async () => {
   win.on('closed', () => { if (mainWindow === win) mainWindow = undefined })
 
   quitSteps = [
+    // C-02 §5：只终止本宿主 spawn 的进程。
+    { name: 'stop-server', run: async () => { await bridge.stop() } },
     { name: 'stop-children', run: () => log.info('stopping child processes') },
     { name: 'release-data-root-lock', run: async () => { await releaseDataRootLock?.() } },
     { name: 'flush-logs', run: async () => { await logService?.close() } },
@@ -226,6 +245,18 @@ function isProcessAlive(pid: number): boolean {
 
 async function readJson<T>(file: string): Promise<T | null> {
   try { return JSON.parse(await readFile(file, 'utf8')) as T } catch { return null }
+}
+
+/** C-02 §7 的类型化启动失败：原因 + 修复办法 + 日志定位，绝不空白。 */
+function launchFault(error: unknown): Fault {
+  const typed = error as { code?: string; reason?: string; remedy?: string }
+  return {
+    kind: 'server-launch-failed',
+    reason: typed.reason ?? String(error),
+    remedy: typed.remedy ?? '查看日志后重试；若随包运行时缺失，请重新安装应用',
+    logRef: 'server:launch',
+    code: typed.code ?? 'SERVER_START_FAILED',
+  }
 }
 
 function dataRootLockedFault(detail: string): Fault {
