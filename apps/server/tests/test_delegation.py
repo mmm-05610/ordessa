@@ -8,7 +8,11 @@ over-fan-out, and the parent's roll-up/cancel linkage.
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
+
+import _w1_seed
 
 from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server.errors import ServerError
@@ -295,7 +299,7 @@ def test_a_granted_parent_renders_the_bridge_entry_and_zero_grants_does_not(tmp_
     REPO = __import__("pathlib").Path(__file__).resolve().parents[3]
     PLUGIN = REPO / "plugins"  / "harness"
     peer_source = "tests/harness_remote/home_probe_acp_peer.mjs"
-    peer_bytes = REPO / "tests" / "server" / "fixtures" / "home_probe_acp_peer.mjs"
+    peer_bytes = Path(__file__).resolve().parent / "fixtures" / "home_probe_acp_peer.mjs"
     deployment = {"schemaVersion": 1, "harnesses": [{
         "id": "claude-code", "capabilityClaims": {"stream": True},
         "adapter": {"command": "/usr/bin/node", "args": [], "source": peer_source},
@@ -425,9 +429,10 @@ def test_the_grant_wire_face_lists_grants_and_callers(tmp_path):
         empty = call("profiles.subagentGrants", {"profileId": parent["profile_id"]})["result"]
         assert empty == {"subagentGrants": [], "callableBy": []}
 
-        granted = call("profiles.grantSubagent", {
-            "requestId": "grant-req-1", "profileId": parent["profile_id"],
-            "childProfileId": child["profile_id"]})["result"]["grant"]
+        # AR-1/W-1：grantSubagent wire 面已退役，改同链仓库直调。
+        granted = _w1_seed.profiles_grant_subagent(
+            runtime, profile_id=parent["profile_id"],
+            child_profile_id=child["profile_id"])["grant"]
         assert granted["parentProfileId"] == parent["profile_id"]
 
         seen = call("profiles.subagentGrants", {"profileId": parent["profile_id"]})["result"]
@@ -437,14 +442,15 @@ def test_the_grant_wire_face_lists_grants_and_callers(tmp_path):
         assert reverse["callableBy"] == [{"parentProfileId": parent["profile_id"]}]
 
         # A cycle is refused at grant time, with the same code the service uses.
-        cycle = call("profiles.grantSubagent", {
-            "requestId": "grant-req-2", "profileId": child["profile_id"],
-            "childProfileId": parent["profile_id"]})
-        assert cycle["error"]["details"]["internalCode"] == "SUBAGENT_CYCLE"
+        with pytest.raises(ServerError) as caught:
+            _w1_seed.profiles_grant_subagent(
+                runtime, profile_id=child["profile_id"],
+                child_profile_id=parent["profile_id"])
+        assert caught.value.code == "SUBAGENT_CYCLE"
 
-        revoked = call("profiles.revokeSubagent", {
-            "requestId": "grant-req-3", "profileId": parent["profile_id"],
-            "childProfileId": child["profile_id"]})["result"]
+        revoked = _w1_seed.profiles_revoke_subagent(
+            runtime, profile_id=parent["profile_id"],
+            child_profile_id=child["profile_id"])
         assert revoked["revoked"] is True
         assert call("profiles.subagentGrants", {
             "profileId": parent["profile_id"]})["result"]["subagentGrants"] == []
@@ -559,7 +565,7 @@ def test_the_real_bridge_process_runs_a_child_turn_end_to_end(tmp_path, monkeypa
     REPO = __import__("pathlib").Path(__file__).resolve().parents[3]
     PLUGIN = REPO / "plugins"  / "harness"
     peer_source = "tests/harness_remote/home_probe_acp_peer.mjs"
-    peer_bytes = REPO / "tests" / "server" / "fixtures" / "home_probe_acp_peer.mjs"
+    peer_bytes = Path(__file__).resolve().parent / "fixtures" / "home_probe_acp_peer.mjs"
     harness = "claude-code"
     deployment = {"schemaVersion": 1, "harnesses": [{
         "id": harness, "capabilityClaims": {"stream": True},

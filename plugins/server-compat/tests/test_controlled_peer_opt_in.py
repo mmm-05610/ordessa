@@ -82,3 +82,11 @@ def test_only_explicit_opt_in_forwards_fixed_test_mode(tmp_path, monkeypatch, co
         assert arguments.get("controlled_test_peer", False) is controlled
     finally:
         runtime.stop()
+
+
+def test_tampered_peer_content_is_refused(tmp_path):
+    """019 digest discipline: same name, one byte changed -> refused."""
+    tampered = tmp_path / "bidirectional_acp_peer.mjs"
+    tampered.write_bytes(FIXTURE.read_bytes() + b"\n")
+    with pytest.raises(RuntimeError, match="NATIVE_CONTROLLED_PEER_INVALID"):
+        _build(tmp_path, controlled_test_peer=True, adapter_args=(str(tampered),))

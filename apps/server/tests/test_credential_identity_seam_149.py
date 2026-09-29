@@ -25,6 +25,9 @@ import json
 from fastapi.testclient import TestClient
 import pytest
 
+import _w1_seed
+from ordessa_server.errors import ServerError
+
 from ordessa_server.bootstrap import build_runtime
 from ordessa_server_product.composition import create_composition  # T014-S1d funnel
 from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
@@ -68,7 +71,8 @@ class Env:
         return self.runtime.plugin_host.provided_port('product.repository').credentials
 
     def list_records(self):
-        return self.api.ok("providerModels.list", {"includeArchived": False})["items"]
+        # AR-1/W-1：providerModels.* wire 面已退役，读改同链服务直调。
+        return _w1_seed.provider_models_list(self.runtime)["items"]
 
 
 @pytest.fixture
@@ -110,7 +114,8 @@ def test_fresh_assembly_injected_credential_binds_through_real_wire(env):
     result, _locator = inject(env, "cred-inj")
     assert result["created"] is True
 
-    record = env.api.ok("providerModels.create", body("cred-inj", "o149-g1"))["providerModel"]
+    record = _w1_seed.provider_models_create(
+        env.runtime, "o149-g1", body("cred-inj", "o149-g1"))["providerModel"]
     assert record["credentialId"] == "cred-inj"
 
     after = env.list_records()
@@ -124,9 +129,10 @@ def test_fresh_assembly_injected_credential_binds_through_real_wire(env):
 
 def test_binding_a_never_injected_credential_still_refuses_typed(env):
     before = len(env.list_records())
-    error = env.api.err("providerModels.create", body("cred-ghost", "o149-g2"))
-    assert error["code"] == "NOT_FOUND"
-    assert error["details"]["internalCode"] == "CREDENTIAL_NOT_FOUND"
+    with pytest.raises(ServerError) as caught:
+        _w1_seed.provider_models_create(
+            env.runtime, "o149-g2", body("cred-ghost", "o149-g2"))
+    assert caught.value.code == "CREDENTIAL_NOT_FOUND"
     # The seam must not widen the family into "bind anything": no row was added.
     assert len(env.list_records()) == before
 
@@ -156,16 +162,18 @@ def test_injected_but_unregistered_is_visible_never_silent(env):
 
     # The record layer can JUDGE the gap - a secret is present, the identity is not.
     assert env.records.exists("cred-orphan") is False
-    error = env.api.err("providerModels.create", body("cred-orphan", "o149-g4"))
-    assert error["code"] == "NOT_FOUND"
-    assert error["details"]["internalCode"] == "CREDENTIAL_NOT_FOUND"
+    with pytest.raises(ServerError) as caught:
+        _w1_seed.provider_models_create(
+            env.runtime, "o149-g4", body("cred-orphan", "o149-g4"))
+    assert caught.value.code == "CREDENTIAL_NOT_FOUND"
 
     # Naming it through the shared entry closes the gap (the fix the launcher uses),
     # and `created` reported the transition so a caller could fail-fast at startup.
     result = env.records.register_if_missing("cred-orphan", "api-key", locator)
     assert result["created"] is True
     assert env.records.exists("cred-orphan") is True
-    record = env.api.ok("providerModels.create", body("cred-orphan", "o149-g4b"))["providerModel"]
+    record = _w1_seed.provider_models_create(
+        env.runtime, "o149-g4b", body("cred-orphan", "o149-g4b"))["providerModel"]
     assert record["credentialId"] == "cred-orphan"
 
 
@@ -174,14 +182,15 @@ def test_injected_but_unregistered_is_visible_never_silent(env):
 def test_rebind_flows_through_real_wire_update(env):
     inject(env, "cred-a")
     inject(env, "cred-b")
-    record = env.api.ok("providerModels.create", body("cred-a", "o149-g5"))["providerModel"]
+    record = _w1_seed.provider_models_create(
+        env.runtime, "o149-g5", body("cred-a", "o149-g5"))["providerModel"]
     assert record["credentialId"] == "cred-a"
 
-    updated = env.api.ok("providerModels.update", {
-        "requestId": "o149-g5u", "providerModelId": record["id"],
-        "expectedVersion": record["version"], "displayName": record["displayName"],
-        "credentialId": "cred-b", "configuration": [], "models": [MODEL],
-    })["providerModel"]
+    updated = _w1_seed.provider_models_update(
+        env.runtime, "o149-g5u", record["id"], record["version"], {
+            "displayName": record["displayName"],
+            "credentialId": "cred-b", "configuration": [], "models": [MODEL],
+        })["providerModel"]
     assert updated["credentialId"] == "cred-b"
 
     listed = {item["id"]: item for item in env.list_records()}
@@ -199,9 +208,10 @@ def test_counterexample_dropping_the_identity_step_breaks_the_bind(env, monkeypa
             "credential_id": credential_id, "kind": kind, "created": False},
     )
     inject(env, "cred-x")
-    error = env.api.err("providerModels.create", body("cred-x", "o149-counter"))
-    assert error["code"] == "NOT_FOUND"
-    assert error["details"]["internalCode"] == "CREDENTIAL_NOT_FOUND"
+    with pytest.raises(ServerError) as caught:
+        _w1_seed.provider_models_create(
+            env.runtime, "o149-counter", body("cred-x", "o149-counter"))
+    assert caught.value.code == "CREDENTIAL_NOT_FOUND"
 
 
 # -- G6 无凭据外泄：返回/列举只出 id/kind，密钥形状 grep 必须为空 ----------
@@ -209,8 +219,9 @@ def test_counterexample_dropping_the_identity_step_breaks_the_bind(env, monkeypa
 def test_no_credential_material_crosses_the_wire(env):
     secret = b"sk-REAL-LOOKING-BUT-fake-loopback-value"
     inject(env, "cred-leak", content=secret)
-    created = env.api.ok("providerModels.create", body("cred-leak", "o149-g6"))
-    listed = env.api.ok("providerModels.list", {"includeArchived": False})
+    created = _w1_seed.provider_models_create(
+        env.runtime, "o149-g6", body("cred-leak", "o149-g6"))
+    listed = _w1_seed.provider_models_list(env.runtime)
     blob = json.dumps(created) + json.dumps(listed)
 
     assert secret.decode() not in blob

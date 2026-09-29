@@ -44,7 +44,9 @@ WORKSPACE_METHODS = {
     "workspaces.browse", "workspaces.open", "workspaces.list",
     "workspaces.archive", "workspaces.gitStatus",
 }
-T002_METHOD_COUNT = 67
+#: AR-1/W-1 后的方法面基数：67 − providerModels.* 六方法 − profile 写面八方法 = 53。
+#: 断言公式是 T002 + 2(admission) + 1(hello) = 56（总数）。随 W-1 同批落地。
+T002_METHOD_COUNT = 53
 ACP_ADMISSION_METHODS = frozenset({
     "acp.submission.authorize", "acp.permission.authorize",
 })
@@ -57,7 +59,7 @@ def _hello_caps(runtime) -> dict[str, dict]:
 
 
 def _assert_default_composition_caps(runtime, caps=None) -> None:
-    """The historical 67, two ACP rows and Q5's read-only query coexist."""
+    """The post-AR-1 face, two ACP rows and Q5's read-only query coexist."""
     caps = _hello_caps(runtime) if caps is None else caps
     assert len(caps) == T002_METHOD_COUNT + len(ACP_ADMISSION_METHODS) + 1
     sandbox = runtime.wire._registry.lookup(SANDBOX_DESCRIBE_METHOD)

@@ -731,8 +731,9 @@ def test_execution_package_literal_layout_is_frozen_to_the_single_shell():
         elif hits:
             offenders.append((module_file.name, hits))
     assert offenders == [], f"view-layout literals escaped the frozen shell: {offenders}"
-    assert shell_hits == 7, (
-        "the compatibility shell must not grow either (5 runtime paths + 2 "
+    assert shell_hits == 6, (
+        "AR-1/W-1 摘除了已退役的 worker-entry 一路（7→6）；壳仍只许缩不许涨，"
+        "整壳删除仍在 INC1b（5 runtime paths − 1 + 2 "
         "bridge names); it is deleted whole in INC1b, not extended")
 
 

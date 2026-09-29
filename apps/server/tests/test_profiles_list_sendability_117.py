@@ -19,6 +19,8 @@ import sqlite3
 from fastapi.testclient import TestClient
 import pytest
 
+import _w1_seed
+
 from ordessa_server.bootstrap import build_runtime
 from ordessa_server_product.composition import create_composition  # T014-S1d funnel
 from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
@@ -163,12 +165,14 @@ def test_an_unreadable_blocker_is_unknown_and_not_ready(server, monkeypatch):
 
 def bind_model(runtime, client, headers, *, profile_id: str, credential_id: str | None,
                credential_kind: str = "api_key"):
-    provider = wire(client, headers, "providerModels.create", {
-        "requestId": "117-provider", "displayName": "117 Official", "harness": "alpha",
-        "provider": "opaque-provider", "credentialId": None, "configuration": [],
-        "models": [{"modelId": "model-a", "displayName": "Model A",
-                    "availability": "unknown", "unavailableReason": None}],
-    })["providerModel"]
+    # AR-1/W-1：wire 写面已退役，摆桌子改同链服务直调。
+    provider = _w1_seed.provider_models_create(
+        runtime, "117-provider", {
+            "requestId": "117-provider", "displayName": "117 Official", "harness": "alpha",
+            "provider": "opaque-provider", "credentialId": None, "configuration": [],
+            "models": [{"modelId": "model-a", "displayName": "Model A",
+                        "availability": "unknown", "unavailableReason": None}],
+        })["providerModel"]
     if credential_id is not None:
         # `server_provider_models.credential_id` is a real foreign key, so the
         # field shape ("the record names a credential this host cannot use") is
@@ -181,11 +185,10 @@ def bind_model(runtime, client, headers, *, profile_id: str, credential_id: str 
             conn.execute("UPDATE server_provider_models SET credential_id=? WHERE id=?",
                          (credential_id, provider["id"]))
     version = listed(runtime, client, headers, profile_id)["version"]
-    wire(client, headers, "profiles.updateConfig", {
-        "requestId": "117-config", "profileId": profile_id, "expectedVersion": version,
-        "values": [{"controlId": "model", "value": {"providerId": provider["id"],
-                                                    "modelId": "model-a"}}],
-    })
+    _w1_seed.profiles_update_config(
+        runtime, "117-config", profile_id=profile_id, expected_version=version,
+        values=[{"controlId": "model", "value": {"providerId": provider["id"],
+                                                 "modelId": "model-a"}}])
     return provider
 
 

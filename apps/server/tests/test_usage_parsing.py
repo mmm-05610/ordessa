@@ -13,6 +13,8 @@ import tempfile
 
 import pytest
 
+import _w1_seed
+
 from ordessa_server_compat.execution.usage import (
     UsageParseError,
     parse_pi_acp_journal,
@@ -692,27 +694,24 @@ def test_both_probe_methods_answer_through_the_wire_face(tmp_path):
                     "jsonrpc": "2.0", "id": method, "method": method, "params": params})
                 return response.json()
 
-            pulled = wire("providerModels.probeModels", {
-                "requestId": "wire-probe-models", "baseUrl": base})
-            assert pulled["result"]["status"] == "ok", pulled
-            assert pulled["result"]["models"] == ["deepseek-chat"], pulled
+            # AR-1/W-1：探针 wire 面已退役，改同链服务直调（同一真实探测路径）。
+            pulled = _w1_seed.provider_models_probe_models(runtime, base_url=base)
+            assert pulled["status"] == "ok", pulled
+            assert pulled["models"] == ["deepseek-chat"], pulled
 
-            checked = wire("providerModels.probeConnection", {
-                "requestId": "wire-probe-connection", "baseUrl": base})
-            assert checked["result"]["status"] == "reachable", checked
+            checked = _w1_seed._handlers(runtime).model_configs.probe_connection(
+                {"baseUrl": base, "credentialId": None})
+            assert checked["status"] == "reachable", checked
 
             # The published schema allows credentialId to be absent or null
             # (`credentialId?`); the runtime must not be stricter than its own
             # contract (first-hand defect: it demanded the key and refused a
             # legal request).
-            explicit_null = wire("providerModels.probeConnection", {
-                "requestId": "wire-probe-connection-null", "baseUrl": base,
-                "credentialId": None})
-            assert explicit_null["result"]["status"] == "reachable", explicit_null
-            refused = wire("providerModels.probeConnection", {
-                "requestId": "wire-probe-connection-extra", "baseUrl": base,
-                "surprise": 1})
-            assert refused["error"]["code"] == "INVALID_REQUEST", refused
+            explicit_null = _w1_seed._handlers(runtime).model_configs.probe_connection(
+                {"baseUrl": base, "credentialId": None})
+            assert explicit_null["status"] == "reachable", explicit_null
+            # （AR-1/W-1）"未知参数→INVALID_REQUEST" 属 wire 层 schema 校验，
+            # 随 providerModels.* 面退役；新 owner 的 wire 面自测其 schema。
     finally:
         runtime.stop()
         server.shutdown()

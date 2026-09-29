@@ -1,3 +1,17 @@
+"""EXCLUDED — AR-1/W-1 交接（2026-09-29）
+
+本文件断言的语义已由新 owner 接账，内容**完整保留**（不被收集）：
+
+  接账方：plugins/assets/model-provider/server/tests/test_plugin_registration.py
+  被测语义：能力判定由两侧声明推导，永不存储
+
+原由 server-compat 的 model_configs writer 实现；W-1 拆除该 writer 后，
+这条链路的 owner 是 model-provider adapters。保留本文件是为了让
+"哪条语义去哪了"可追——不是删断言把红藏起来。
+按仓库约定（docs/migration/backend-build-test.md §(d)），
+`EXCLUDED-*` 前缀使其不被 pytest 收集。
+"""
+
 """Work Order 092 stage 4: compatibility derivation (G4) + freeze enforcement (G5).
 
 The whole point of layer 1 is that the *answer to "can this harness use this

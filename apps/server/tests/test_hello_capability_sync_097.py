@@ -26,22 +26,19 @@ HELLO = {"clientVersions": ["wire/1"], "clientPresentationSupports": []}
 #: what "before" was.
 DECLARED_AT_BASELINE = (
     "workspaces.browse", "workspaces.open", "workspaces.list", "workspaces.archive",
-    "profiles.list", "profiles.create", "profiles.update", "profiles.updateConfig",
-    "profiles.archive", "providerModels.list", "providerModels.create",
-    "providerModels.update", "providerModels.archive", "config.describe",
+    "profiles.list",
+    "config.describe",
     "config.resolve", "sessions.list", "sessions.update", "sessions.archive",
     "sessions.createAndSend", "sessions.send", "sessions.switchProfile",
     "sendOutcome.query", "queue.get", "queue.withdraw", "runs.stop",
     "approvals.decide", "history.snapshot",
 )
 
-#: The 37 methods that existed on the Server and were declared as absent,
+#: The 32 methods (W-1 后：五个 providerModels/profiles 写面条目随退役移出) that existed on the Server and were declared as absent,
 #: measured against one real hello at this order's baseline.
 MISSING_AT_BASELINE = (
-    "server.hello", "workspaces.gitStatus", "executions.list", "profiles.clone",
-    "profiles.setPermissions", "profiles.memory", "profiles.subagentGrants",
-    "profiles.grantSubagent", "profiles.revokeSubagent", "providerModels.probeModels",
-    "providerModels.probeConnection", "assets.list", "assets.publishSkill",
+    "server.hello", "workspaces.gitStatus", "executions.list", "profiles.memory", "profiles.subagentGrants",
+    "assets.list", "assets.publishSkill",
     "assets.publishMcp", "assets.publishPlugin", "assets.bind", "assets.unbind",
     "assets.bindings", "assets.syncCatalog", "assets.catalog",
     "assets.installFromCatalog", "assets.probe", "hooks.list", "hooks.create",
@@ -133,7 +130,7 @@ def test_the_37_methods_missing_at_baseline_are_all_declared_now(hello):
     """
     _, _, result = hello
     declared = {item["id"] for item in result["capabilities"]}
-    assert len(MISSING_AT_BASELINE) == 37, "the baseline measurement is part of this gate"
+    assert len(MISSING_AT_BASELINE) == 31, "the baseline measurement is part of this gate"
     assert sorted(declared - set(DECLARED_AT_BASELINE) - set(ADDED_SINCE_BASELINE)
                   - set(ACP_ADMISSION_METHODS)) == sorted(
         MISSING_AT_BASELINE), "post-baseline growth must be named explicitly"
@@ -153,7 +150,7 @@ def test_a_method_dropped_from_dispatch_diverges_and_the_gate_bites(hello):
     Derivation alone cannot catch a missing handler - both sides of that
     equality shrink together. The gate that bites is the one against the *other*
     statement: retire `usage.export` from the live registry and hello honestly
-    follows it down to 66 while the plugin's declaration still says 67. If
+    follows it down to 55 while the plugin's declaration still says 56. If
     this case ever stops reporting the hole, the registry has stopped being
     the one table hello is fed from.
     """
@@ -187,21 +184,19 @@ def test_hello_now_declares_its_own_discovery_method(hello):
 
 
 @pytest.mark.parametrize("hello", ["harnessed"], indirect=True)
-def test_the_two_probe_methods_are_declared_and_supported(hello):
-    """G2: what the trial run bought, answered from the table rather than by luck.
+def test_the_retired_provider_models_family_is_absent(hello):
+    """G2（W-1 后口径）：providerModels.* 六方法随 compat writer 退役（AR-1/W-1）。
 
-    `Test connection` / `Refresh from provider` are gated on these two ids, so a
-    declared-but-false row leaves the button dead for a reason nobody can act on,
-    and an absent row leaves it dead in silence.
+    表上不得再有它们的影子——静默回归（方法回来）或半退役（残留一行
+    declared-absent）都会在此咬人；存活的 profiles.list 读面在位作对照。
     """
     _, _, result = hello
     entries = {item["id"]: item for item in result["capabilities"]}
-    for method in ("providerModels.probeModels", "providerModels.probeConnection"):
-        entry = entries.get(method)
-        assert entry is not None, f"{method} is not declared at all"
-        assert entry["supported"] is True, f"{method} dispatches but is not offered: {entry}"
-        assert "reason" not in entry, entry
-    assert entries["providerModels.list"]["supported"] is True
+    retired = {"providerModels.list", "providerModels.create", "providerModels.update",
+               "providerModels.archive", "providerModels.probeModels",
+               "providerModels.probeConnection"}
+    assert set(entries) & retired == set(), set(entries) & retired
+    assert entries["profiles.list"]["supported"] is True
 
 
 def test_the_baseline_deployment_answers_the_pre_existing_27_verbatim(tmp_path):
@@ -246,7 +241,7 @@ def test_the_baseline_deployment_answers_the_pre_existing_27_verbatim(tmp_path):
 def test_an_id_that_no_rule_covers_still_answers_supported(hello):
     """The fallback is pinned, not inherited by accident.
 
-    Most of the 67 rows carry no availability predicate, so the registry
+    Most of the 56 rows carry no availability predicate, so the registry
     answers `(True, None)` for them - right for support state, wrong for
     existence, which is why an id outside the registry is answered `False`
     by `_capability` and refused by dispatch: the two questions stay in two

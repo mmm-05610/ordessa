@@ -185,7 +185,7 @@ def test_a_bound_account_materialises_reclaims_and_conflicts_typed(tmp_path):
     import ordessa_server_compat.composition as runtime_module
 
     peer_source = "tests/harness_remote/home_probe_acp_peer.mjs"
-    peer_bytes = REPO / "tests" / "server" / "fixtures" / "home_probe_acp_peer.mjs"
+    peer_bytes = Path(__file__).resolve().parent / "fixtures" / "home_probe_acp_peer.mjs"
     login_name = ".fixture/native-state.json"
     deployment = {
         "schemaVersion": 1,
@@ -310,7 +310,7 @@ def test_the_accounts_wire_face_creates_imports_binds_lists(tmp_path):
     import ordessa_server_compat.composition as runtime_module
 
     peer_source = "tests/harness_remote/home_probe_acp_peer.mjs"
-    peer_bytes = REPO / "tests" / "server" / "fixtures" / "home_probe_acp_peer.mjs"
+    peer_bytes = Path(__file__).resolve().parent / "fixtures" / "home_probe_acp_peer.mjs"
     deployment = {
         "schemaVersion": 1,
         "harnesses": [{

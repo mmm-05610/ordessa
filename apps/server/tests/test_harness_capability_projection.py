@@ -54,7 +54,8 @@ def bundle(tmp_path):
     sidecar = view / "agentbox-sidecar"
     runtime = sidecar / "runtime"
     runtime.mkdir(parents=True)
-    for name in ("worker-entry.mjs", "native-driver.mjs", "profile_extensions.mjs"):
+    # worker-entry.mjs 随退役旧链移除（该文件全仓不存在、无生成器、官方注释明言已退役）
+    for name in ("native-driver.mjs", "profile_extensions.mjs"):
         shutil.copyfile(PLUGIN / "runtime" / name, runtime / name)
     shutil.copytree(PLUGIN / "third_party" / "harness_remote",
                     sidecar / "third_party" / "harness_remote")

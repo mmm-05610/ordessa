@@ -22,6 +22,8 @@ import re
 from fastapi.testclient import TestClient
 import pytest
 
+import _w1_seed
+
 REPO = Path(__file__).resolve().parents[3]
 ABSOLUTE_PATH = re.compile(r"(^|[\s:'\"])/[A-Za-z0-9._/-]{2,}")
 
@@ -295,28 +297,34 @@ class _CountingObjects:
         return payload
 
 
-def _forty_profiles(api, models=500):
-    created = api.ok("providerModels.create", {
-        "requestId": "p147-provider", "displayName": "One provider", "harness": "alpha",
-        "provider": "opaque", "credentialId": None, "configuration": [],
-        "models": [{"modelId": f"model-{index}", "displayName": f"M{index}",
-                    "availability": "unknown", "unavailableReason": None}
-                   for index in range(models)]})["providerModel"]
+def _forty_profiles(api, runtime, models=500):
+    # AR-1/W-1：providerModels.create wire 面已退役，摆桌子改同链服务直调。
+    created = _w1_seed.provider_models_create(
+        runtime, "p147-provider", {
+            "requestId": "p147-provider", "displayName": "One provider", "harness": "alpha",
+            "provider": "opaque", "credentialId": None, "configuration": [],
+            "models": [{"modelId": f"model-{index}", "displayName": f"M{index}",
+                        "availability": "unknown", "unavailableReason": None}
+                       for index in range(models)]})["providerModel"]
+    # AR-1/W-1：造数是摆桌子，改仓库层 Python 直调（wire 面已退役）。
+    repository = runtime.plugin_host.provided_port("product.repository")
     for index in range(40):
-        profile = api.ok("profiles.create", {
-            "requestId": f"p147-profile-{index}", "displayName": f"role-{index}",
-            "harness": "alpha"})["profile"]
-        api.ok("profiles.updateConfig", {
-            "requestId": f"p147-config-{index}", "profileId": profile["id"],
-            "expectedVersion": profile["version"],
-            "values": [{"controlId": "model", "value": {
-                "providerId": created["id"], "modelId": f"model-{index}"}}]})
+        status, body = repository.profiles.create(
+            key=f"p147-profile-{index}", request_digest=f"p147-profile-{index}",
+            name=f"role-{index}", harness_type="alpha",
+            config_digest=f"p147-profile-{index}", credential_id=None)
+        profile = {"id": body["profile_id"], "version": 1}
+        _w1_seed.profiles_update_config(
+            runtime, f"p147-config-{index}", profile_id=profile["id"],
+            expected_version=profile["version"],
+            values=[{"controlId": "model", "value": {
+                "providerId": created["id"], "modelId": f"model-{index}"}}])
     return created["id"]
 
 
 def _counted_list(server):
     runtime, api = server
-    _forty_profiles(api)
+    _forty_profiles(api, runtime)
     counter = _CountingObjects(runtime.plugin_host.provided_port('compat.handlers').objects)
     runtime.plugin_host.provided_port('compat.handlers').objects = counter
     try:
@@ -340,7 +348,7 @@ def test_counter_example_bypassing_the_memo_goes_back_to_eighty_reads(
         server, monkeypatch):
     """The bound is what is asserted, so deleting the memo must break it."""
     runtime, api = server
-    _forty_profiles(api)
+    _forty_profiles(api, runtime)
     def uncached_read(self, digest):
         return self._objects.read(digest)
 
