@@ -1,8 +1,8 @@
 """Managed bidirectional ACP channel (Server orchestration side).
 
 The seam contract is fixed by `docs/acp-channel-minimal-seam.md` and the
-approved target tests in `tests/integration/acp_orchestration`.  This package owns three
-facts and nothing else:
+approved orchestration target tests at the repository root.  This package owns
+three facts and nothing else:
 
   * the connection registry (who holds a channel, on which project, through
     which transport), keyed by (harnessId, projectId) so a re-acquire returns

@@ -21,6 +21,7 @@ agent-box-harness/
   src/agent_box_harness_{dsh,qwen,kilo}/ # old import names only
   runtime/                      # 接入运行：被 sidecar 执行的桥接代码 + 必要运行资源
     access-entry.mjs            # 唯一生产入口（发现/连接/透明 transport/状态/关闭）
+    controlled-peers.mjs        # 受控对端白名单：内置摘要表 + 装配注入端口（spec 019）
     access-transport.mjs        # 连接句柄：一个连接、一对管道、进程归它所有
     native-driver.mjs, profile_extensions.mjs,
     subagent-bridge.mjs, capability_declarations.json, package.json,
@@ -144,6 +145,40 @@ index 共用的 canonical/alias 路由清单。`registry_identity_version_matche
 
 端到端行为由 `tests/access/acp_passthrough_target.test.mjs`（T1–T10）与
 `tests/access/access_entry_behavior.test.mjs`（E1–E13）钉住。
+
+### 受控对端白名单：锁内容，不锁位置（spec 019）
+
+`--controlled-test-peer` 启动模式只肯拉起两个测试 fixture。判定依据是
+**文件内容的 sha256**（`runtime/controlled-peers.mjs`），不再是文件路径：
+fixture 搬到任何位置仍然放行，内容变一个字节即拒（比路径更强的边界——
+staged 工件里同样成立）。`connect` 的启动命令仍必须等于本入口自己的 node
+解释器，所以该模式能拉起的始终只是"以当前解释器运行某份已钉内容"，白名单
+条目永远是文件描述，不是命令面。生产代码不携带任何指向测试树的路径常量
+（`tests/controlled_peer_allowlist.test.mjs` 用 core 建议的任意书写形态正则
+钉住这条边界），摘要匹配也不需要路径。
+
+**内置摘要表的生成与更新流程**：表以构建期常量钉在
+`runtime/controlled-peers.mjs` 的 `BUILTIN_CONTROLLED_PEERS`。fixture 内容
+变更时：
+
+```sh
+sha256sum plugins/harness/tests/access/controlled_harness.mjs \
+          tests/acp_orchestration/fixtures/bidirectional_acp_peer.mjs
+```
+
+把新摘要写回对应条目（`file` 字段只是拒绝详情里的诊断标签，不参与判定；
+`harness` 字段把条目绑死到单个品牌）。更新前测试必红：
+`tests/controlled_peer_allowlist.test.mjs` 会把内置表与提交的 fixture 内容
+逐一比对——只改 fixture 不改表、或只改表不改 fixture，都过不去。
+
+**装配注入端口**：装配侧可以在拉起入口进程时以
+`AGENTBOX_CONTROLLED_PEER_ALLOWLIST`（JSON 数组，条目 schema 同内置表，
+`sha256` 必填、`file`/`harness` 可选）**整表替换**内置名单，注入优先于
+内置——空数组就是"什么都不允许"，不是回退内置。解析失败或条目非法一律
+fail-closed：放行集为空并以 `CONTROLLED_PEER_ALLOWLIST_INVALID` 拒绝并说明
+原因，绝不静默回退内置表（坏声明不能复活默认名单）。schema 里没有 command/
+args/driver 字段，注入改变不了"这是文件白名单"的性质。core 侧装配接线
+（AR-1）对齐后启用；未注入时行为与内置表完全一致。
 
 
 

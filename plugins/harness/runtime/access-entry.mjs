@@ -45,6 +45,7 @@ import { fileURLToPath } from "node:url"
 import readline from "node:readline"
 import { harnessLaunchContext, isKnownHarness } from "../harnesses/index.mjs"
 import { openAcpConnection, PROCESS_GROUP_OWNERSHIP } from "./access-transport.mjs"
+import { matchControlledPeer, resolveControlledPeerAllowlist } from "./controlled-peers.mjs"
 import { resolveManagedLaunch, resolveLegacyLaunch, allowsPythonPath, launchDiscovery } from "./access-launch.mjs"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
@@ -99,6 +100,52 @@ function verifyProvenance() {
     if (actual !== expected) throw new Error(`PROVENANCE_MISMATCH: ${file.path}`)
   }
   return source
+}
+
+/**
+ * Select the controlled-test-peer launch, or refuse.
+ *
+ * The allowlist is content digests (`controlled-peers.mjs`), so what decides is
+ * what the requested file **is**, not where it sits: a fixture moved anywhere
+ * still matches its pinned digest, and any other content — however plausible
+ * its path — is refused. The command must still be this entry's own node, so
+ * the mode can only ever launch a known file's content with the interpreter
+ * already running here; the allowlist stays a file list, never a command
+ * surface. Every failure below is the same refusal: this mode exists to answer
+ * "is this exactly a controlled peer", and the honest answer to everything
+ * else is no. The matched entry's `file` label exists for diagnostics and
+ * names the peer in the refusal detail when a content match fails only on its
+ * brand binding.
+ */
+function selectControlledPeerLaunch(harness, launch) {
+  const allowlist = resolveControlledPeerAllowlist(process.env)
+  if (allowlist.error) throw new Refused("CONTROLLED_PEER_ALLOWLIST_INVALID", allowlist.error)
+  try {
+    if (launch.args?.length !== 1) {
+      throw new Error("the peer launch carries exactly one path argument")
+    }
+    if (realpathSync(launch.command) !== realpathSync(process.execPath)) {
+      throw new Error("the peer command is not this entry's own node")
+    }
+    const matched = matchControlledPeer(allowlist.peers, harness, launch.args[0])
+    if (matched === null) {
+      throw new Error("no allowlisted peer content matches the requested file")
+    }
+    return { command: process.execPath, args: [matched.requested], source: "controlled-test-peer" }
+  } catch (error) {
+    // A digest that matches only an entry bound to another brand is the one
+    // mismatch worth explaining; everything else refuses bare.
+    let detail
+    try {
+      const digest = createHash("sha256").update(readFileSync(realpathSync(launch.args[0]))).digest("hex")
+      const bound = allowlist.peers.find((candidate) => candidate.sha256 === digest
+        && candidate.harness !== undefined && candidate.harness !== harness)
+      if (bound) {
+        detail = `content of ${bound.file ?? bound.sha256.slice(0, 12)} is allowlisted for harness "${bound.harness}", not "${harness}"`
+      }
+    } catch { /* the plain mismatch is the answer */ }
+    throw new Refused("CONTROLLED_PEER_MISMATCH", detail)
+  }
 }
 
 class Refused extends Error {
@@ -263,35 +310,11 @@ async function main() {
     }
     let selectedLaunch
     if (controlledPeer) {
-      // This fixture is absent from staged production artifacts. A renderer can only send control
-      // frames; it cannot turn on this startup mode or choose a different executable through it.
-      const fixtures = [
-        { file: path.resolve(here, "..", "tests", "access", "controlled_harness.mjs") },
-        { file: path.resolve(here, "..", "..", "..", "tests", "integration", "acp_orchestration", "fixtures",
-          "bidirectional_acp_peer.mjs"), harness: "pi", exactPath: true },
-      ]
-      // The second path exists only in a source checkout. Neither path is a renderer-provided
-      // executable, and the production entry cannot enter this mode through a connect frame.
-      let exactFixture = false
-      let fixture = null
-      try {
-        const requested = launch.args?.length === 1 ? realpathSync(launch.args[0]) : null
-        fixture = fixtures.find((candidate) => {
-          try {
-            return (candidate.harness === undefined || harness === candidate.harness)
-              && (!candidate.exactPath || launch.args[0] === candidate.file)
-              && realpathSync(candidate.file) === candidate.file
-              && requested === candidate.file
-          }
-          catch { return false }
-        }) ?? null
-        exactFixture = realpathSync(launch.command) === realpathSync(process.execPath)
-          && fixture !== null
-      } catch { /* an absent or stale path cannot select the controlled peer */ }
-      if (!exactFixture) {
-        throw new Refused("CONTROLLED_PEER_MISMATCH")
-      }
-      selectedLaunch = { command: process.execPath, args: [fixture.file], source: "controlled-test-peer" }
+      // Content-decided, not path-decided: the allowlist (built-in digests, or
+      // an assembly-injected table) matches the requested file's sha256. A
+      // renderer can only send control frames; it cannot turn on this startup
+      // mode or choose a different executable through it.
+      selectedLaunch = selectControlledPeerLaunch(harness, launch)
     } else {
       selectedLaunch = resolveManagedLaunch(harness, launch)
         ?? resolveLegacyLaunch(harness, launch, environment)
