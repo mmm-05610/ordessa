@@ -30,10 +30,10 @@ PLUGINS = REPO_ROOT / "plugins"
 #: 已登记的待解耦合（插件线认领中）。**必须最终清空。**
 KNOWN_PENDING: frozenset[str] = frozenset({
     # ① 受控对端白名单：用路径当安全边界，待换内容摘要 + 装配注入。
+    #    harness 侧已解（019 摘要制 + 注入端口，2026-09-29 落 main）；
+    #    server-compat 侧尚未跟上。
     "plugins/server-compat/src/ordessa_server_compat/composition.py",
-    "plugins/harness/runtime/access-entry.mjs",
-    # ② 文档/注释里的过时目录名，随耦合重构一并清。
-    "plugins/harness/src/ordessa_harness/server_acp/__init__.py",
+    # ② 文档/注释里的目录名，随耦合重构一并清。
     "plugins/connectors/acp/src/channel.ts",
     "plugins/connectors/acp/src/client.ts",
 })
