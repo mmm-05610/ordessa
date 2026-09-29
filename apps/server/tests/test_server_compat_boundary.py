@@ -32,8 +32,8 @@ FROZEN_COMPAT_METHODS = frozenset((
     "profiles.list", "profiles.create", "profiles.update", "profiles.updateConfig",
     "profiles.archive", "profiles.clone", "profiles.setPermissions", "profiles.memory",
     "profiles.subagentGrants", "profiles.grantSubagent", "profiles.revokeSubagent",
-    "providerModels.list", "providerModels.create", "providerModels.update",
-    "providerModels.archive", "providerModels.probeModels", "providerModels.probeConnection",
+    # providerModels.* 六方法随 AR-1/W-1 离开 compat 面，由 model-provider
+    # adapters 等价承接（13 方法声明见该包自己的测试）。
     "assets.list", "assets.publishSkill", "assets.publishMcp", "assets.publishPlugin",
     "assets.bind", "assets.unbind", "assets.bindings", "assets.syncCatalog",
     "assets.catalog", "assets.installFromCatalog", "assets.probe",
@@ -156,7 +156,7 @@ def test_the_host_core_imports_no_plugin_no_product():
     forbidden_prefixes = (
         "ordessa_server_compat", "ordessa_workspace", "ordessa_harness",
         "ordessa_server_product", "ordessa_server.profiles", "ordessa_server.accounts",
-        "ordessa_server.assets", "ordessa_server.hooks", "ordessa_server.model_configs",
+        "ordessa_server.assets", "ordessa_server.hooks",
         "ordessa_server.execution", "ordessa_server.approvals",
         "ordessa_server.workspaces", "ordessa_server.persistence",
         "ordessa_server.usage_aggregate", "ordessa_server.credential_cli",
@@ -193,7 +193,7 @@ _PLUGIN_FORBIDDEN_PREFIXES = (
     "ordessa_server.bootstrap.", "ordessa_server.transport.http.app",
     "ordessa_server.plugin_host",
     "ordessa_server.profiles", "ordessa_server.accounts", "ordessa_server.assets",
-    "ordessa_server.hooks", "ordessa_server.model_configs", "ordessa_server.execution",
+    "ordessa_server.hooks", "ordessa_server.execution",
     "ordessa_server.approvals", "ordessa_server.workspaces",
     "ordessa_server.persistence", "ordessa_server.usage_aggregate",
     "ordessa_server.credential_cli", "ordessa_server.services",
@@ -220,7 +220,7 @@ def test_the_moved_domain_aliases_are_zero_implementation():
     alias shims: no def/class anywhere in them (M1-P-A① discipline)."""
     # acp_channel has no legacy alias at all: its ownership moved to the
     # harness package outright, so a bare-host install imports cleanly.
-    for legacy in ("profiles", "accounts", "assets", "hooks", "model_configs",
+    for legacy in ("profiles", "accounts", "assets", "hooks",
                    "execution", "approvals", "workspaces"):
         for path in (HOST_DIR / legacy).rglob("*.py"):
             tree = _tree(path)
