@@ -30,6 +30,12 @@ from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server.storage_port import DatabasePort
 from pacthold.storage import ObjectStore, SecretStore
 
+from .data_root import (
+    OWNER_MARKER_CONTENT,
+    OWNER_MARKER_NAME,
+    write_owner_marker,
+)
+
 
 class LegacyMigrationProviderMissingError(RuntimeError):
     """A historical data root cannot be opened without its sealed SQL chain."""
@@ -158,13 +164,15 @@ class DataRootOwner:
         self._stream = None
 
     def acquire(self) -> None:
-        marker = self.root / ".agentbox-server-root"
+        # The marker's name and content live in `.data_root` with the rest of
+        # the data-root contract (one spelling, read by both entry points).
+        marker = self.root / OWNER_MARKER_NAME
         if self.root.exists() and not marker.exists():
             raise RuntimeError("DATA_ROOT_UNOWNED: existing directory has no AgentBox owner marker")
         self.root.mkdir(parents=True, exist_ok=True)
         if not marker.exists():
-            marker.write_text("agentbox-server-r1\n", encoding="utf-8")
-        elif marker.read_text(encoding="utf-8") != "agentbox-server-r1\n":
+            write_owner_marker(self.root)
+        elif marker.read_text(encoding="utf-8") != OWNER_MARKER_CONTENT:
             raise RuntimeError("DATA_ROOT_MARKER_INVALID")
         lock_path = self.root / "server.lock"
         descriptor = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o600)

@@ -11,7 +11,7 @@ import { discover } from '@ordessa/extension-host/main'
 import { buildInfo, assertBuildInfo, writeBuildInfo } from '../scripts/build-info.mjs'
 import { exportIcons, ICON_SIZES, HICOLOR_SIZES } from '../scripts/build-icons.mjs'
 import { findTestDrivers, FORBIDDEN_MARKERS } from '../scripts/release-hygiene.mjs'
-import { acquireDataRootLock, ensureDataRoot, probeDataRoot, resolveDataRoot } from '../electron/data-root'
+import { acquireDataRootLock, ensureDataRoot, probeDataRoot, resolveDataRoot, OWNER_MARKER_NAME, OWNER_MARKER_CONTENT } from '../electron/data-root'
 import { isRenderableFault, sortFaults, faultId } from '../electron/faults'
 import { resolveProductLayout } from '../electron/product-layout'
 import { DEFAULT_WINDOW_STATE, beginSession, cleanSession, restoreWindowState, runCleanup, startupCrashReport } from '../electron/lifecycle'
@@ -103,6 +103,20 @@ describe('PA-07 数据根与锁语义（消费 C-01）', () => {
   it('解析顺序：env 优先，缺省 ~/.ordessa', () => {
     expect(resolveDataRoot({ ORDESSA_DATA_ROOT: '/tmp/custom' }, '/home/u')).toBe('/tmp/custom')
     expect(resolveDataRoot({}, '/home/u')).toBe(path.join('/home/u', '.ordessa'))
+  })
+  it('首启创建的根写 owner marker；既有无 marker 目录不被收养', async () => {
+    // Server 的 DataRootOwner 拒绝"已存在但无 marker"的目录（DATA_ROOT_UNOWNED）。
+    // 宿主首启创建根时必须立契，否则随后 spawn 的 Server 会拒绝宿主自己的根。
+    const dir = await tempDir()
+    const fresh = path.join(dir, 'fresh-root')
+    await ensureDataRoot(fresh)
+    expect(await readFile(path.join(fresh, OWNER_MARKER_NAME), 'utf8')).toBe(OWNER_MARKER_CONTENT)
+
+    // 反例：既有目录（外来根）不由宿主收养——marker 不写，拒绝权留给 Server。
+    const foreign = path.join(dir, 'foreign-root')
+    await mkdir(foreign)
+    await ensureDataRoot(foreign)
+    await expect(readFile(path.join(foreign, OWNER_MARKER_NAME), 'utf8')).rejects.toThrow()
   })
   it('目录缺失 → 故障带 reason/remedy/logRef，不抛异常', async () => {
     const dir = await tempDir()

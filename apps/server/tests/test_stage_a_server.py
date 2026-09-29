@@ -208,6 +208,34 @@ def test_existing_unowned_directory_is_refused_without_modification(tmp_path):
     assert set(path.name for path in root.iterdir()) == {"sentinel.txt"}
 
 
+def test_root_created_by_ensure_data_root_owns_itself(tmp_path):
+    """B-005 / C-01 §3: the creator claims the root it creates.
+
+    The CLI creates the root through `ensure_data_root` before
+    `build_runtime` runs; without the owner marker written at creation time
+    the runtime refuses the fresh root as foreign (DATA_ROOT_UNOWNED) and a
+    first start can never succeed. This is that exact path — the directory is
+    NOT pre-marked by the test.
+    """
+    from ordessa_server.bootstrap.data_root import (
+        OWNER_MARKER_CONTENT,
+        OWNER_MARKER_NAME,
+        ensure_data_root,
+        resolve_data_root,
+    )
+
+    created = ensure_data_root(resolve_data_root({}, home=str(tmp_path)))
+    assert created.created is True
+    marker = created.path / OWNER_MARKER_NAME
+    assert marker.read_text(encoding="utf-8") == OWNER_MARKER_CONTENT
+
+    runtime = build_runtime(created.path)
+    try:
+        assert runtime is not None
+    finally:
+        runtime.stop()
+
+
 def test_data_root_with_a_foreign_owner_marker_is_refused(tmp_path):
     root = tmp_path / "foreign"
     root.mkdir()

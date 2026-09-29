@@ -20,6 +20,15 @@ export type DataRootCode =
 export const DATA_ROOT_ENV = 'ORDESSA_DATA_ROOT'
 export const DEFAULT_DATA_ROOT_DIR = '.ordessa'
 
+/**
+ * 数据根所有权标识。名字与内容是与 Server 侧共享的数据兼容标识（同
+ * `docs/server-host-baseline.md`），权威拼写在
+ * `apps/server/src/ordessa_server/bootstrap/data_root.py` 的 `OWNER_MARKER_*`；
+ * 两处必须同步改动。
+ */
+export const OWNER_MARKER_NAME = '.agentbox-server-root'
+export const OWNER_MARKER_CONTENT = 'agentbox-server-r1\n'
+
 export function resolveDataRoot(env: Readonly<Record<string, string | undefined>>, home: string): string {
   const fromEnv = env[DATA_ROOT_ENV]
   return fromEnv && fromEnv.length > 0 ? path.resolve(fromEnv) : path.join(home, DEFAULT_DATA_ROOT_DIR)
@@ -80,10 +89,18 @@ export async function acquireDataRootLock(dataRoot: string,
 
 /** 首次启动时创建数据根（0700 / 0600，契约要求）。 */
 export async function ensureDataRoot(dataRoot: string) {
+  // C-01 §3：谁创建谁立契。Server 的 DataRootOwner.acquire 拒绝任何"已存在
+  // 但无 owner marker"的目录（DATA_ROOT_UNOWNED），所以宿主首启创建的根必须
+  // 在这里写下 marker，否则随后 spawn 的 Server 会拒绝宿主自己刚创建的根。
+  // 已存在的目录不写：那是"外来根"判定，由 Server 拒绝，宿主不代为收养。
+  const created = await stat(dataRoot).then(() => false, () => true)
   await mkdir(dataRoot, { recursive: true, mode: 0o700 })
   await mkdir(path.join(dataRoot, 'logs'), { recursive: true, mode: 0o700 })
   await mkdir(path.join(dataRoot, 'secrets'), { recursive: true, mode: 0o700 })
   await writeFile(path.join(dataRoot, '.keep'), '', { mode: 0o600 })
+  if (created) {
+    await writeFile(path.join(dataRoot, OWNER_MARKER_NAME), OWNER_MARKER_CONTENT, { mode: 0o600 })
+  }
   return dataRoot
 }
 

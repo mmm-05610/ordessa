@@ -67,6 +67,28 @@ DESKTOP_LOG_FILE: str = f"{LOGS_DIR}/{LAYOUT['logs']['desktopFile']}"
 DATA_ROOT_ERROR_CODES: "tuple[str, ...]" = tuple(LAYOUT["dataRootErrors"])
 LAUNCH_ERROR_CODES: "tuple[str, ...]" = tuple(LAYOUT["launchErrors"])
 
+#: The owner marker: name and content are data-compatibility identifiers
+#: (docs/server-host-baseline.md). A pre-existing directory WITHOUT this
+#: marker is a foreign root — `bootstrap.runtime.DataRootOwner` refuses it
+#: (DATA_ROOT_UNOWNED) rather than adopting it. Whoever CREATES a root must
+#: write the marker in the same breath: `ensure_data_root` here for the
+#: Server/CLI path, and `apps/desktop/electron/data-root.ts` for the root the
+#: desktop host creates before it spawns the Server.
+OWNER_MARKER_NAME = ".agentbox-server-root"
+OWNER_MARKER_CONTENT = "agentbox-server-r1\n"
+
+
+def write_owner_marker(root: Path) -> Path:
+    """Write the owner marker for a root THIS call created (C-01 §3).
+
+    Only a creator may call this. Writing the marker onto a pre-existing
+    unmarked directory is exactly the silent adoption the runtime refuses,
+    so this helper is not a "repair" for foreign roots.
+    """
+    marker = root / OWNER_MARKER_NAME
+    marker.write_text(OWNER_MARKER_CONTENT, encoding="utf-8")
+    return marker
+
 
 # -- typed refusals (C-01 §6) ------------------------------------------------
 
@@ -310,6 +332,11 @@ def ensure_data_root(
     # a root is REFUSED, not corrected.
     if created:
         os.chmod(root, DIR_MODE)
+        # C-01 §3: the creator claims the root it just made. Without this the
+        # Server's own bootstrap (DataRootOwner.acquire) would see a root that
+        # exists without a marker and refuse it as foreign — a fresh CLI/desktop
+        # first start could never succeed (DATA_ROOT_UNOWNED).
+        write_owner_marker(root)
     for name in (SECRETS_DIR, LOGS_DIR, BACKUPS_DIR):
         child = root / name
         if not os.path.lexists(child):

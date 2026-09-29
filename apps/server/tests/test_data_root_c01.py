@@ -25,6 +25,8 @@ from ordessa_server.bootstrap.data_root import (
     DataRootNotWritableError,
     DataRootSymlinkError,
     InstanceLock,
+    OWNER_MARKER_CONTENT,
+    OWNER_MARKER_NAME,
     ensure_data_root,
     instance_lock,
     launch_env,
@@ -53,6 +55,23 @@ def test_an_existing_root_is_reused_not_rebuilt(tmp_path):
     second = ensure_data_root(spec)
     assert second.created is False
     assert marker.read_text(encoding="utf-8") == "keep me"
+
+
+def test_a_created_root_is_claimed_and_reuse_never_rewrites_the_marker(tmp_path):
+    """B-005: creating a root writes the owner marker; reusing one does not
+    "repair" bytes it finds. The runtime refuses a pre-existing unmarked
+    directory as foreign (DATA_ROOT_UNOWNED) — see test_stage_a_server.py."""
+    spec = resolve_data_root({}, home=str(tmp_path))
+    first = ensure_data_root(spec)
+    marker = first.path / OWNER_MARKER_NAME
+    assert marker.read_text(encoding="utf-8") == OWNER_MARKER_CONTENT
+
+    # Reuse must not touch the marker: the bytes a user (or a foreign tool)
+    # left are preserved here and judged by the runtime, not silently fixed.
+    marker.write_text("bytes-a-user-changed\n", encoding="utf-8")
+    second = ensure_data_root(spec)
+    assert second.created is False
+    assert marker.read_text(encoding="utf-8") == "bytes-a-user-changed\n"
 
 
 def test_a_second_start_keeps_the_token_bytes_identical(tmp_path):

@@ -5,6 +5,10 @@
 # the separate 'httpx2' package, which this closure does not include.
 # Install order: pip install -r <this file> first, then the three
 # editable packages. The editable dists themselves are not listed here.
+# 2026-09-30 (B-005): tomli-w added — `ordessa_harness.materialization.
+# private_generation` imports it at module level (harness declares
+# tomli-w>=1,<2), and the bundled Python in the deb installs this file with
+# --no-deps, so the closure must carry it.
 annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.15.1
@@ -29,6 +33,7 @@ pyyaml==6.0.3
 referencing==0.37.0
 rpds-py==2026.6.3
 starlette==1.7.0
+tomli-w==1.2.0
 typing-extensions==4.16.0
 typing-inspection==0.4.4
 uvicorn==0.54.0
