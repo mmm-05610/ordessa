@@ -129,7 +129,12 @@ export class HttpWirePort implements WirePort {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ requestId: id, ...params }),
+        // wire/1 speaks JSON-RPC 2.0 and validates it strictly
+        // (`ordessa_server/wire/envelope.py:decode_request`): the envelope must
+        // carry exactly `jsonrpc`/`id`/`method`/`params`, and the body `method`
+        // must equal the URL path segment. The per-call `id` is the same
+        // correlation id the result reports back as `requestId`.
+        body: JSON.stringify({ jsonrpc: '2.0', id, method, params }),
         signal: AbortSignal.timeout(this.#options.timeoutMs ?? 15000),
       })
     } catch {
@@ -151,16 +156,20 @@ export class HttpWirePort implements WirePort {
 /**
  * Turn one HTTP answer into a typed result.
  *
- * The Server answers 200 for BOTH a result and a business refusal (C-03 §1),
- * so the shape of the body decides — not the status code. Reading the status
- * alone would turn every business refusal into a transport error.
+ * wire/1 answers are JSON-RPC 2.0 envelopes (`encode_result`/`encode_error`):
+ * a success carries exactly one `result` member, a refusal exactly one `error`
+ * member. Business refusals arrive on 200 as well as on 4xx, so the shape of
+ * the body decides — not the status code. Reading the status alone would turn
+ * every business refusal into a transport error.
  */
 export function interpret(
   id: string,
   status: number,
   body: Record<string, unknown>,
 ): WireResult {
-  const requestId = typeof body['requestId'] === 'string' ? body['requestId'] : id
+  // The server echoes the JSON-RPC `id`; envelope rejections (auth, decode)
+  // answer `id: null`, and then the caller's own id is the correlation.
+  const requestId = typeof body['id'] === 'string' ? body['id'] : id
   if (status >= 500) {
     // The Server failed. Whether the call took effect is unknown to us.
     return frozen({ kind: 'Unknown', requestId, reason: 'result-unknown' })
@@ -169,18 +178,31 @@ export function interpret(
   if (error !== undefined && error !== null && typeof error === 'object') {
     const refusal = error as Record<string, unknown>
     const reason = typeof refusal['message'] === 'string' ? refusal['message'] : 'server-refused'
+    // The wire/1 error body carries `retryable` inside `details`
+    // (`WireError.to_body`); a flat member is accepted too, so either shape
+    // lands on the honest retryable fact.
+    const details = refusal['details']
+    const retryable = refusal['retryable'] === true
+      || (details !== null && typeof details === 'object' && (details as Record<string, unknown>)['retryable'] === true)
     return frozen({
       kind: 'Refused',
       requestId,
       reason,
-      retryable: refusal['retryable'] === true,
+      retryable,
     })
   }
   if (status >= 400) {
     return frozen({ kind: 'Refused', requestId, reason: 'server-refused', retryable: false })
   }
-  const { requestId: _ignored, error: _alsoIgnored, ...result } = body
-  return frozen({ kind: 'Accepted', requestId, result: frozen(result) })
+  if ('result' in body) {
+    const result = body['result']
+    // A wire/1 handler answers an object (`handlers.py` dispatch rows); a
+    // null/primitive "result" is an envelope this port refuses to dress up.
+    if (result !== null && typeof result === 'object' && !Array.isArray(result)) {
+      return frozen({ kind: 'Accepted', requestId, result: frozen({ ...result as Record<string, unknown> }) })
+    }
+  }
+  return frozen({ kind: 'Unknown', requestId, reason: 'result-unknown' })
 }
 
 /**

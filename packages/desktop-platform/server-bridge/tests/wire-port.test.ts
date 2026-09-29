@@ -29,6 +29,20 @@ function jsonResponse(status: number, body: unknown): Response {
   })
 }
 
+/** A wire/1 success envelope, as `envelope.py:encode_result` emits it. */
+function resultEnvelope(result: Record<string, unknown>, id: unknown = 'srv-1'): Response {
+  return jsonResponse(200, { jsonrpc: '2.0', id, result })
+}
+
+/** A wire/1 error envelope, as `envelope.py:encode_error` emits it. */
+function errorEnvelope(
+  error: Record<string, unknown>,
+  status = 200,
+  id: unknown = 'srv-1',
+): Response {
+  return jsonResponse(status, { jsonrpc: '2.0', id, error })
+}
+
 function port(overrides: Partial<ConstructorParameters<typeof HttpWirePort>[0]> = {}): HttpWirePort {
   return new HttpWirePort({
     origin: ORIGIN,
@@ -39,22 +53,48 @@ function port(overrides: Partial<ConstructorParameters<typeof HttpWirePort>[0]> 
 }
 
 describe('C-03 §3 — the three states', () => {
+  it('sends the strict wire/1 JSON-RPC envelope the Server validates', async () => {
+    let seenUrl = ''
+    let seenBody: Record<string, unknown> | undefined
+    const fetchImpl = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      seenUrl = String(url)
+      seenBody = JSON.parse(String(init?.body)) as Record<string, unknown>
+      // A real Server echoes the request's JSON-RPC id back (encode_result).
+      return resultEnvelope({ value: 42 }, seenBody?.['id'])
+    })
+    const result = await port({ fetchImpl: fetchImpl as unknown as typeof fetch })
+      .call('some.method', { includeArchived: false })
+    // The envelope is exactly the four JSON-RPC members: the Server refuses
+    // any unknown member, so a flat `{requestId, ...params}` body is a 400.
+    expect(seenBody).toEqual({ jsonrpc: '2.0', id: expect.any(String), method: 'some.method', params: { includeArchived: false } })
+    // The body method must equal the URL path segment (server-side check).
+    expect(seenUrl.endsWith('/wire/v1/some.method')).toBe(true)
+    expect(seenBody?.['method']).toBe(seenUrl.split('/').pop())
+    expect(result.kind).toBe('Accepted')
+    if (result.kind === 'Accepted') {
+      expect(result.result).toEqual({ value: 42 })
+      // The correlation id is the envelope `id` the server echoed back.
+      expect(result.requestId).toBe(seenBody?.['id'])
+    }
+  })
+
   it('reports a normal return as Accepted, without echoing the envelope', async () => {
-    const fetchImpl = vi.fn(async () => jsonResponse(200, { requestId: 'r1', value: 42 }))
+    const fetchImpl = vi.fn(async () => resultEnvelope({ value: 42 }))
     const result = await port({ fetchImpl: fetchImpl as unknown as typeof fetch }).call('some.method', {})
     expect(result.kind).toBe('Accepted')
     if (result.kind === 'Accepted') {
       expect(result.result).toEqual({ value: 42 })
-      // requestId is the envelope, not the payload: it must not appear twice.
+      // The envelope members must not leak into the payload.
+      expect(result.result).not.toHaveProperty('jsonrpc')
+      expect(result.result).not.toHaveProperty('id')
       expect(result.result).not.toHaveProperty('requestId')
     }
   })
 
   it('reports a business refusal as Refused, on HTTP 200 as well as 4xx', async () => {
-    const refused = jsonResponse(200, {
-      requestId: 'r2',
-      error: { code: 'X', message: 'profile is locked', status: 409, retryable: true },
-    })
+    const refused = errorEnvelope(
+      { code: 'LOCKED', message: 'profile is locked', details: { retryable: true } },
+    )
     const result = await port({
       fetchImpl: (async () => refused) as unknown as typeof fetch,
     }).call('some.method', {})
@@ -64,7 +104,7 @@ describe('C-03 §3 — the three states', () => {
   it('marks a non-retryable refusal as such rather than guessing', async () => {
     const result = await port({
       fetchImpl: (async () =>
-        jsonResponse(200, { requestId: 'r3', error: { message: 'bad input', retryable: false } })) as unknown as typeof fetch,
+        errorEnvelope({ code: 'INVALID_REQUEST', message: 'bad input', details: { retryable: false } })) as unknown as typeof fetch,
     }).call('some.method', {})
     expect(result).toMatchObject({ kind: 'Refused', retryable: false })
   })
@@ -80,7 +120,7 @@ describe('C-03 §3 — the three states', () => {
 
   it('treats a 5xx as result-unknown, because the call may still have applied', async () => {
     const result = await port({
-      fetchImpl: (async () => jsonResponse(500, { requestId: 'r4' })) as unknown as typeof fetch,
+      fetchImpl: (async () => jsonResponse(500, { jsonrpc: '2.0', id: null, error: { code: 'UNAVAILABLE', message: 'nope' } })) as unknown as typeof fetch,
     }).call('some.method', {})
     expect(result).toMatchObject({ kind: 'Unknown', reason: 'result-unknown' })
   })
@@ -88,6 +128,13 @@ describe('C-03 §3 — the three states', () => {
   it('treats an unparsable body as result-unknown rather than inventing a result', async () => {
     const result = await port({
       fetchImpl: (async () => new Response('not json', { status: 200 })) as unknown as typeof fetch,
+    }).call('some.method', {})
+    expect(result).toMatchObject({ kind: 'Unknown', reason: 'result-unknown' })
+  })
+
+  it('treats a 200 without a result or error member as result-unknown', async () => {
+    const result = await port({
+      fetchImpl: (async () => jsonResponse(200, { jsonrpc: '2.0', id: 'srv-1' })) as unknown as typeof fetch,
     }).call('some.method', {})
     expect(result).toMatchObject({ kind: 'Unknown', reason: 'result-unknown' })
   })
@@ -174,7 +221,7 @@ describe('C-03 §2 — results are immutable', () => {
   it('freezes every result and its payload', async () => {
     const results: WireResult[] = [
       await port({
-        fetchImpl: (async () => jsonResponse(200, { requestId: 'r', a: 1 })) as unknown as typeof fetch,
+        fetchImpl: (async () => resultEnvelope({ a: 1 })) as unknown as typeof fetch,
       }).call('some.method', {}),
       await port({ readToken: async () => null }).call('some.method', {}),
       await new AbsentWirePort().call(),
@@ -191,7 +238,7 @@ describe('the bearer is read once per call and never retained', () => {
     let seen: string | undefined
     const fetchImpl = vi.fn(async (_url: string, init: RequestInit) => {
       seen = (init.headers as Record<string, string>)['Authorization']
-      return jsonResponse(200, { requestId: 'r', ok: true })
+      return resultEnvelope({ ok: true })
     })
     const subject = port({ fetchImpl: fetchImpl as unknown as typeof fetch })
     await subject.call('some.method', {})
@@ -234,17 +281,43 @@ describe('C-03 §4 — THE CANARY: the token reaches no plugin-visible surface',
   })
 })
 
-describe('interpret — the shape decides, not the status code', () => {
-  it('reads a 200 refusal as Refused', () => {
+describe('interpret — the JSON-RPC shape decides, not the status code', () => {
+  it('reads a 200 error envelope as Refused', () => {
     expect(
-      interpret('id', 200, { requestId: 'id', error: { message: 'nope', retryable: true } }),
-    ).toMatchObject({ kind: 'Refused', reason: 'nope' })
+      interpret('id', 200, { jsonrpc: '2.0', id: 'srv-1', error: { code: 'LOCKED', message: 'nope', details: { retryable: true } } }),
+    ).toMatchObject({ kind: 'Refused', reason: 'nope', retryable: true })
+  })
+
+  it('reads a flat retryable member too, so either wire shape lands honestly', () => {
+    expect(
+      interpret('id', 200, { jsonrpc: '2.0', id: 'srv-1', error: { message: 'nope', retryable: true } }),
+    ).toMatchObject({ kind: 'Refused', reason: 'nope', retryable: true })
   })
 
   it('reads a bare 4xx as Refused with a stable reason', () => {
-    expect(interpret('id', 404, { requestId: 'id' })).toMatchObject({
+    expect(interpret('id', 404, { jsonrpc: '2.0', id: null })).toMatchObject({
       kind: 'Refused',
       reason: 'server-refused',
+      // An envelope rejection echoes `id: null`; the caller's id correlates.
+      requestId: 'id',
+    })
+  })
+
+  it('reads the result member as Accepted and nothing else', () => {
+    expect(interpret('id', 200, { jsonrpc: '2.0', id: 'srv-1', result: { value: 42 } })).toEqual({
+      kind: 'Accepted', requestId: 'srv-1', result: { value: 42 },
+    })
+  })
+
+  it('answers result-unknown for a 200 that carries neither member', () => {
+    expect(interpret('id', 200, { jsonrpc: '2.0', id: 'srv-1' })).toMatchObject({
+      kind: 'Unknown', reason: 'result-unknown',
+    })
+  })
+
+  it('answers result-unknown for a non-object result rather than dressing it up', () => {
+    expect(interpret('id', 200, { jsonrpc: '2.0', id: 'srv-1', result: null })).toMatchObject({
+      kind: 'Unknown', reason: 'result-unknown',
     })
   })
 })
