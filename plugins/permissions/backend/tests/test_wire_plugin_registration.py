@@ -10,6 +10,8 @@ bound to the same operation digest can settle anything.
 """
 from __future__ import annotations
 
+import pathlib
+
 import pytest
 from server_plugin_api import (ServerPluginContext, ServerPluginRegistration)
 from support import (admin_ceiling, approval_record, clock_at, effective_digest,
@@ -50,7 +52,7 @@ def test_wire_methods_are_declared_exactly(built):
     database, plugin, registration = built
     methods = {m.method_id: m for m in registration.methods}
     assert set(methods) == {"permissions.approvals.decide", "permissions.approvals.query",
-                            "permissions.policy.describe"}
+                            "permissions.policy.describe", "permissions.authority.query"}
     decide = methods["permissions.approvals.decide"]
     assert decide.required_params == frozenset(
         {"requestId", "approvalId", "expectedVersion", "decision", "scope", "sessionId"})
@@ -58,7 +60,26 @@ def test_wire_methods_are_declared_exactly(built):
     query = methods["permissions.approvals.query"]
     assert query.required_params == frozenset({"approvalId", "nativeRequestId"})
     assert query.optional_params == frozenset()
+    authority_query = methods["permissions.authority.query"]
+    assert authority_query.required_params == frozenset()
+    assert authority_query.optional_params == frozenset(
+        {"factRef", "tool", "target", "sessionId", "principal", "operationDigest"})
     assert all(m.owner == "permissions-backend" for m in registration.methods)
+
+
+def test_the_authority_fact_port_is_provided_and_bound_to_the_api_literal(built):
+    database, plugin, registration = built
+    port = registration.provided_ports["permissions.authority.query@1"]
+    # the read surface speaks the port contract and nothing ruled here
+    for name in ("effective_for_operation", "effective_for_session",
+                 "effective_for_user", "lookup", "revoke"):
+        assert callable(getattr(port, name)), name
+    # the literal cannot drift from the api twin (same lane as the authorizer)
+    import ordessa_permissions_api as api
+    import ordessa_permissions_backend.plugin as plugin_module
+    assert plugin_module.AUTHORITY_PORT == api.AUTHORITY_QUERY_PORT
+    assert "permissions.authority.query@1" in (
+        pathlib.Path(plugin_module.__file__).read_text(encoding="utf-8"))
 
 
 def test_a_forged_client_allow_cannot_produce_a_settled_execution(built):

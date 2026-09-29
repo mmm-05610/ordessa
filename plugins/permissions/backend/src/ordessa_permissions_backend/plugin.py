@@ -59,6 +59,7 @@ from server_plugin_api import (
 )
 
 from .admission import PermissionsAcpAdmission
+from .authority import AUTHORITY_METHOD, AUTHORITY_OPTIONAL_PARAMS, PermissionsAuthority
 from .authorizer import Authorizer
 from .delegate import (LEGACY_DECIDE_METHOD, LEGACY_DECIDE_OPTIONAL,
                        LEGACY_DECIDE_REQUIRED, LegacyApprovalDelegate)
@@ -68,10 +69,15 @@ from .errors import ApprovalRouteClosedError, DualAuthorityError, PermissionsBac
 from .facts import ApprovalFacts, VersionConflict
 from .policies import PolicyRepository
 
-__all__ = ["AUTHORIZER_PORT", "PLUGIN_ID", "PermissionsBackendPlugin"]
+__all__ = ["AUTHORITY_PORT", "AUTHORIZER_PORT", "PLUGIN_ID", "PermissionsBackendPlugin"]
 
 PLUGIN_ID = "permissions-backend"
 AUTHORIZER_PORT = "permissions.authorizer@1"
+#: The authority FACT query port (PE1, 016; api twin
+#: `ordessa_permissions_api.AUTHORITY_QUERY_PORT` - a guard test binds the
+#: two literals). Read-only facts, never a ruling; the in-process object is
+#: also the `permissions.authority.query@1` provided port.
+AUTHORITY_PORT = "permissions.authority.query@1"
 #: Composition-facing port names for the admission adapter's optional
 #: authority sources. Absent wiring keeps the port honestly unready.
 NATIVE_EVIDENCE_PORT = "acp.admission.native_evidence"
@@ -302,6 +308,11 @@ class PermissionsBackendPlugin:
 
         ensure_schema()
         describe = PolicyDescribe(policies, ready=lambda: admission.ready)
+        # The authority FACT surface (PE1): one read-only query method plus
+        # the provided port. Reads stay served after an accepted stop - the
+        # authority port is deliberately NOT in `held_points`, so an operator
+        # can still see who approved what while the decision routes are down.
+        authority = PermissionsAuthority(facts, policies)
         methods = [
             ServerMethodDescriptor(method_id=DECIDE_METHOD, required_params=_DECIDE_REQUIRED,
                                    optional_params=frozenset(),
@@ -316,6 +327,11 @@ class PermissionsBackendPlugin:
                                    optional_params=DESCRIBE_OPTIONAL_PARAMS,
                                    handler=describe.describe, owner=PLUGIN_ID,
                                    availability=describe.availability),
+            ServerMethodDescriptor(method_id=AUTHORITY_METHOD,
+                                   required_params=frozenset(),
+                                   optional_params=AUTHORITY_OPTIONAL_PARAMS,
+                                   handler=authority.query, owner=PLUGIN_ID,
+                                   availability=authority.availability),
         ]
         held_points = (AUTHORIZER_PORT, ACP_ADMISSION_PORT)
         if self._approval_route == APPROVAL_ROUTE_LEGACY_DELEGATED:
@@ -355,7 +371,8 @@ class PermissionsBackendPlugin:
 
         return ServerPluginRegistration(
             methods=tuple(methods),
-            provided_ports={AUTHORIZER_PORT: authorizer, ACP_ADMISSION_PORT: admission},
+            provided_ports={AUTHORIZER_PORT: authorizer, ACP_ADMISSION_PORT: admission,
+                            AUTHORITY_PORT: authority},
             start_hooks=(ensure_schema,),
             stop_hooks=(refuse_deactivation,),
             disposal=dispose)
