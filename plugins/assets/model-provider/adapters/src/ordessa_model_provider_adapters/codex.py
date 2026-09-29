@@ -36,7 +36,8 @@ def registration_manifest() -> dict[str, Any]:
         "payload_schema": "model-provider.choice.v1",
         "claims": {
             "config.toml (instance scope only)": (
-                "model_provider", "model_providers.*", "model"),
+                "model_provider", "model_providers.*", "model",
+                common.CODEX_EFFORT_FIELD),
         },
     }
 
@@ -81,7 +82,18 @@ class CodexAdapter:
         provider_changed = before_provider is not None and before_provider != desired.provider_name
         session_field = CompileIntent(
             context.target_handle, ("model",), desired.model_id)
-        if not provider_changed:
+        params = desired.params
+        effort_intent: list[Any] = []
+        escalated = provider_changed
+        if params is not None and params.has_any():
+            extra, refusal = _compile_params(context, desired, params)
+            if refusal is not None:
+                return refusal
+            effort_intent = list(extra)
+            # a config.toml top-level write is read at launch: it can never
+            # ride the session-local path alone
+            escalated = True
+        if not provider_changed and not escalated:
             return IntentSet(
                 facet_id="assets.model-provider", contributor_version=CONTRIBUTOR_VERSION,
                 intents=(session_field,),
@@ -89,18 +101,21 @@ class CodexAdapter:
             )
         # A different provider needs the instance-private provider table plus
         # the top-level selector, then a controlled restart that resumes the
-        # SAME thread/session identity.
-        intents: list[Any] = [
-            MountContent(
-                context.target_handle,
-                "model_providers." + desired.provider_name,
-                "codex-provider-section:" + desired.provider_name,
-                common.digest_label(desired),
-                mode="replace-owned",
-            ),
-            CompileIntent(context.target_handle, ("model_provider",), desired.provider_name),
-            session_field,
-        ]
+        # SAME thread/session identity. A request-param intent escalates the
+        # same way (config.toml is read at launch).
+        intents: list[Any] = list(effort_intent)
+        if provider_changed:
+            intents.extend([
+                MountContent(
+                    context.target_handle,
+                    "model_providers." + desired.provider_name,
+                    "codex-provider-section:" + desired.provider_name,
+                    common.digest_label(desired),
+                    mode="replace-owned",
+                ),
+                CompileIntent(context.target_handle, ("model_provider",), desired.provider_name),
+            ])
+        intents.append(session_field)
         if desired.credential_ref:
             intents.append(BindSecret(
                 context.target_handle, "CODEX_API_KEY", desired.credential_ref))
@@ -128,3 +143,43 @@ class CodexAdapter:
             return Verdict("mismatch", "native session identity changed across "
                                        "the reconfiguration")
         return Verdict("match", None, evidence={"applied_layer": "thread-readback"})
+
+def _compile_params(context: AdapterContext, desired: ChoiceRequest,
+                    params: Any) -> tuple[list[Any], Refusal | None]:
+    """The 016 MPX param families for codex, projected from first-hand pins.
+
+    reasoning effort is the ONE family with an in-repo pinned native key
+    (``model_reasoning_effort``, vocabulary per provider family); budget,
+    timeout and retry have no pinned codex key in this tree and refuse with
+    that exact reason - a doc-level mention is a lead, never a projection.
+    """
+    intents: list[Any] = []
+    if params.reasoning_effort is not None:
+        family = dict(desired.brand_fields).get("provider_family", "openai")
+        allowed = common.codex_effort_values(family)
+        if params.reasoning_effort not in allowed:
+            return [], Refusal(
+                "capability-unsupported",
+                f"reasoning effort {params.reasoning_effort!r} is outside the "
+                f"pinned vocabulary {allowed} for the {family!r} provider family",
+                details={"field": common.CODEX_EFFORT_FIELD})
+        intents.append(CompileIntent(
+            context.target_handle, (common.CODEX_EFFORT_FIELD,),
+            params.reasoning_effort))
+    if params.max_tokens is not None:
+        return [], Refusal(
+            "capability-unsupported",
+            "codex has no first-hand budget key in this tree; MAX_PROMPT_BYTES "
+            "is a validation bound, not a projected config key")
+    if params.timeout_ms is not None:
+        return [], Refusal(
+            "capability-unsupported",
+            "codex has no first-hand request-timeout key in this tree; the "
+            "official retry/stream-timeout keys are doc-level leads "
+            "(harnesses.md), not pinned projections")
+    if params.retry is not None:
+        return [], Refusal(
+            "capability-unsupported",
+            "codex has no first-hand retry key in this tree; a pinned source "
+            "must exist before this family projects")
+    return intents, None

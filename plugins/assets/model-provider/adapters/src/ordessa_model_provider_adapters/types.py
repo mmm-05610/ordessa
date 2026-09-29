@@ -35,10 +35,78 @@ class AdapterContext:
 
 
 @dataclass(frozen=True)
+class RequestParams:
+    """The four request-level parameter families of 016 MPX (plan F12: these
+    keys belong to the model-provider domain; session/run-level preferences
+    stay with 015-A runtime-preferences — this type never collects them).
+
+    Every field is ``None`` = untouched (a declared absence, never a default):
+    an adapter projects only the families the caller actually set, and a
+    family a brand has no first-hand pinned native key for is a typed
+    refusal, never a silent drop and never a guessed key.
+
+    ``retry`` is the closed shape the in-repo pinned template declares
+    (``plugins/harness/deploy/pi/settings.json``): ``enabled`` bool,
+    ``maxRetries`` int, ``provider`` object with ``maxRetries`` /
+    ``maxRetryDelayMs`` ints. ``from_record`` enforces exactly that shape.
+    """
+
+    reasoning_effort: str | None = None
+    max_tokens: int | None = None
+    timeout_ms: int | None = None
+    retry: Mapping[str, Any] | None = None
+
+    _FIELDS = frozenset({"reasoningEffort", "maxTokens", "timeoutMs", "retry"})
+    _RETRY_REQUIRED = frozenset({"enabled", "maxRetries", "provider"})
+
+    def has_any(self) -> bool:
+        return any(value is not None for value in
+                   (self.reasoning_effort, self.max_tokens, self.timeout_ms, self.retry))
+
+    @classmethod
+    def from_record(cls, raw: Any) -> "RequestParams":
+        if raw is None:
+            return cls()
+        if not isinstance(raw, Mapping):
+            raise ValueError("requestParams must be an object")
+        unknown = set(raw) - cls._FIELDS
+        if unknown:
+            raise ValueError(f"unknown requestParams keys: {sorted(unknown)}")
+        effort = raw.get("reasoningEffort")
+        if effort is not None and (not isinstance(effort, str) or not effort.strip()):
+            raise ValueError("reasoningEffort must be non-empty text")
+        for name in ("maxTokens", "timeoutMs"):
+            value = raw.get(name)
+            if value is not None and (isinstance(value, bool)
+                                      or not isinstance(value, int) or value < 1):
+                raise ValueError(f"{name} must be a positive integer")
+        retry = raw.get("retry")
+        if retry is not None:
+            if not isinstance(retry, Mapping) or set(retry) - cls._RETRY_REQUIRED                     or cls._RETRY_REQUIRED - set(retry):
+                raise ValueError("retry must carry exactly enabled/maxRetries/provider")
+            if type(retry["enabled"]) is not bool:
+                raise ValueError("retry.enabled must be a boolean")
+            for name in ("maxRetries",):
+                if isinstance(retry[name], bool) or not isinstance(retry[name], int)                         or retry[name] < 0:
+                    raise ValueError("retry.maxRetries must be a non-negative integer")
+            provider = retry["provider"]
+            if not isinstance(provider, Mapping) or set(provider) != {
+                    "maxRetries", "maxRetryDelayMs"}:
+                raise ValueError("retry.provider must carry exactly "
+                                 "maxRetries/maxRetryDelayMs")
+            for name in ("maxRetries", "maxRetryDelayMs"):
+                if isinstance(provider[name], bool) or not isinstance(provider[name], int)                         or provider[name] < 0:
+                    raise ValueError(f"retry.provider.{name} must be a non-negative integer")
+        return cls(reasoning_effort=effort, max_tokens=raw.get("maxTokens"),
+                   timeout_ms=raw.get("timeoutMs"), retry=retry)
+
+
+@dataclass(frozen=True)
 class ChoiceRequest:
     """One Provider/Model selection to assess/compile (facet
-    ``assets.model-provider`` payload schema v1). ``credential_ref`` is a
-    secret *reference*; content never travels here."""
+    ``assets.model-provider`` payload schema v1, extended by 016 MPX with the
+    optional ``requestParams`` object). ``credential_ref`` is a secret
+    *reference*; content never travels here."""
 
     provider_config_id: str
     model_id: str
@@ -47,6 +115,7 @@ class ChoiceRequest:
     credential_ref: str | None
     provider_name: str
     brand_fields: Mapping[str, Any] = field(default_factory=dict)
+    params: "RequestParams | None" = None
 
 
 @dataclass(frozen=True)

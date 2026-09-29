@@ -48,6 +48,41 @@ RANGE_STRINGS: dict[str, str] = {
 }
 
 
+#: ---- MPX (016) request-level param facts, first-hand pinned in THIS tree ----
+#: provenance: ordessa_harness/codex/remote.py (_EFFORTS + the
+#: `-c model_reasoning_effort="..."` request spelling and the config.toml
+#: form) @ this tree; deepseek provider subsets the vocabulary (validate_remote_configuration).
+CODEX_EFFORT_FIELD = "model_reasoning_effort"
+CODEX_EFFORT_VALUES = ("low", "medium", "high", "xhigh", "max")
+CODEX_DEEPSEEK_EFFORT_VALUES = ("low", "high", "max")
+#: provenance: plugins/harness/deploy/pi/settings.json — the checked-in native
+#: settings template carries exactly this retry block (read by
+#: ordessa_harness.pi.production.settings_document).
+PI_SETTINGS_NATIVE_TARGET = "settings.json"
+#: the handle id the host must issue for the pi native settings target (the
+#: models.json handle stays HANDLE_IDS["pi"]; this one carries the retry block)
+PI_SETTINGS_HANDLE_ID = "pi.settings.json"
+#: provenance: plugins/harness/deploy/pi/models.json — every model entry
+#: carries ``maxTokens`` (the production template writes it via
+#: ordessa_harness.pi.production.gate_models_document).
+PI_MAX_TOKENS_KEY = "maxTokens"
+#: The timeout facts that DO exist first-hand live on the harness deployment
+#: descriptor (``timeoutMs`` in ordessa_harness/{pi,codex,claude}/production.py
+#: harness_deployment) — a target this facet is not authorized to claim, so
+#: the timeout family projects as a typed refusal everywhere (MPX matrix).
+
+
+class ParamUnsupported(Exception):
+    """No first-hand pinned native key for this brand/param family."""
+
+
+def codex_effort_values(provider_family: str | None) -> tuple[str, ...]:
+    """The pinned effort vocabulary for one codex provider family."""
+    if provider_family == "deepseek":
+        return CODEX_DEEPSEEK_EFFORT_VALUES
+    return CODEX_EFFORT_VALUES
+
+
 class ProtocolUnsupported(Exception):
     """No first-hand native field for this brand/protocol pair."""
 

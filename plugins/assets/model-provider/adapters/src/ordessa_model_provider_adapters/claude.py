@@ -74,6 +74,22 @@ class ClaudeAdapter:
         assessment = self.assess(context, desired)
         if assessment.verdict != "supported":
             return Refusal("capability-unsupported", assessment.reason or "not supported")
+        params = desired.params
+        if params is not None and params.has_any():
+            # 016 MPX: the claude-code first-hand pin in this tree is the env
+            # routing key + session model only; none of the four request-param
+            # families has a pinned native field here. Refusing is the honest
+            # projection - a settings-key guess would silently no-op.
+            return Refusal(
+                "capability-unsupported",
+                "claude-code has no first-hand request-param key in this tree "
+                "(the settings.json pin carries ANTHROPIC_BASE_URL; effort / "
+                "budget / timeout / retry have no in-repo field)",
+                details={"families": [name for name, value in (
+                    ("reasoningEffort", params.reasoning_effort),
+                    ("maxTokens", params.max_tokens),
+                    ("timeoutMs", params.timeout_ms),
+                    ("retry", params.retry)) if value is not None]})
         brand = dict(desired.brand_fields)
         if not brand.get("endpoint_changed"):
             # model-only: the per-native-session Query-level model config, one

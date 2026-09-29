@@ -41,6 +41,7 @@ from .pi import PiAdapter
 from .types import AdapterContext as LocalAdapterContext
 from .types import BindSecret as LocalBindSecret
 from .types import ChoiceRequest, CompileIntent, IntentSet as LocalIntentSet
+from .types import RequestParams
 from .types import MountContent as LocalMountContent
 from .types import Refusal as LocalRefusal
 from .types import TargetHandle as LocalTargetHandle
@@ -118,6 +119,23 @@ def choice_payload_schema() -> ValueSchema:
             # Brand-specific hint fields (provider_in_instance, before_provider,
             # endpoint_changed...) are open-ended by design.
             ("brandFields", ValueSchema("object", nullable=True, additional_properties=True)),
+            # 016 MPX: the four request-level families (closed shape; the
+            # reasoningEffort enum stays open here - codex pins it per
+            # provider family at compile).
+            ("requestParams", ValueSchema("object", nullable=True, properties=(
+                ("reasoningEffort", ValueSchema("string")),
+                ("maxTokens", ValueSchema("integer")),
+                ("timeoutMs", ValueSchema("integer")),
+                ("retry", ValueSchema("object", properties=(
+                    ("enabled", ValueSchema("boolean")),
+                    ("maxRetries", ValueSchema("integer")),
+                    ("provider", ValueSchema("object", properties=(
+                        ("maxRetries", ValueSchema("integer")),
+                        ("maxRetryDelayMs", ValueSchema("integer")),
+                    ), required=("maxRetries", "maxRetryDelayMs")))),
+                    required=("enabled", "maxRetries", "provider"),
+                ))),
+            )),
         ),
         required=("provider", "model", "protocol"),
     )
@@ -128,11 +146,18 @@ def _claims(brand: str) -> tuple[FieldClaim, ...]:
     claims = [FieldClaim("file", handle, ("session", "model"))]
     if brand == "pi":
         claims.append(FieldClaim("file", handle, ("providers",)))
+        # 016 MPX: the pi native settings target carries the pinned retry
+        # block (deploy/pi/settings.json); the claim is inert until the host
+        # actually issues the target, and compile refuses honestly then.
+        claims.append(FieldClaim("file", common.PI_SETTINGS_HANDLE_ID, ("retry",)))
     elif brand == "codex":
         claims.extend((
             FieldClaim("file", handle, ("model",)),
             FieldClaim("file", handle, ("model_provider",)),
             FieldClaim("file", handle, ("model_providers",)),
+            # 016 MPX: the pinned request-level effort key (codex/remote.py
+            # _EFFORTS, request spelling `-c model_reasoning_effort=...`)
+            FieldClaim("file", handle, (common.CODEX_EFFORT_FIELD,)),
         ))
     else:
         claims.append(FieldClaim("file", handle, ("env",)))
@@ -154,6 +179,10 @@ def descriptor_for(brand: str) -> ConfigurationAdapterDescriptor:
 
 def _local_request(payload: Mapping[str, Any]) -> ChoiceRequest:
     brand_fields = payload.get("brandFields") or {}
+    try:
+        params = RequestParams.from_record(payload.get("requestParams"))
+    except ValueError as error:
+        raise _MalformedRequestParams(str(error)) from error
     return ChoiceRequest(
         provider_config_id=str(payload.get("providerConfigId") or payload["provider"]),
         model_id=payload["model"],
@@ -162,7 +191,13 @@ def _local_request(payload: Mapping[str, Any]) -> ChoiceRequest:
         credential_ref=payload.get("credentialRef"),
         provider_name=payload["provider"],
         brand_fields=dict(brand_fields),
+        params=params,
     )
+
+
+class _MalformedRequestParams(ValueError):
+    """requestParams failed the closed-shape validation; the bridge turns
+    this into the typed refusal both call sites answer with."""
 
 
 def _local_context(context: Any, expected_session_id: str | None = None) -> LocalAdapterContext:
@@ -200,7 +235,17 @@ def _compiled_intents(context: Any, compiled: LocalIntentSet,
             target = _harness_target_of_kind(context, "environment")
             intents.append(HarnessBindSecret(source, target, intent.slot, intent.secret_ref))
             continue
-        target = _harness_target_of_kind(context, "file", intent.target_handle.identity)
+        try:
+            target = _harness_target_of_kind(context, "file", intent.target_handle.identity)
+        except UnauthorizedTargetError:
+            # 016 MPX: an un-issued param target (e.g. pi settings retry)
+            # refuses instead of writing a lookalike handle.
+            return AdapterRefusal(
+                ErrorCode.CAPABILITY_UNSUPPORTED,
+                f"the host composition has not issued the declared target"
+                f" {intent.target_handle.identity!r}; the"
+                f" {intent.field_path[0] if intent.field_path else '?'} param"
+                " cannot be projected here")
         if isinstance(intent, CompileIntent):
             intents.append(SetField(source, target, FieldPath(intent.field_path), intent.typed_value))
         elif isinstance(intent, LocalMountContent):
@@ -222,7 +267,14 @@ def _harness_target_of_kind(context: Any, kind: str,
         if identity is None or target.handle.handle_id == identity:
             return target.handle
     wanted = identity or kind
-    raise ValueError(f"adapter context lacks authorized {kind} target {wanted!r}")
+    raise UnauthorizedTargetError(wanted)
+
+
+class UnauthorizedTargetError(ValueError):
+    """The descriptor declares a claim, but the host composition did not
+    issue the target: the honest answer is a typed refusal, not a write to a
+    lookalike handle."""
+
 
 
 def _codex_provider_table(mount: LocalMountContent, endpoint: str, protocol: str) -> dict[str, Any]:
@@ -270,7 +322,11 @@ class BridgeConfigurationAdapter:
             # C4 inspect probes with an empty request; a probe carries no
             # choice facts, so the honest verdict is unknown, never supported.
             return Assessment("unknown", reason="probe request carries no choice facts")
-        verdict = self._impl.assess(_local_context(context), _local_request(request))
+        try:
+            local_request = _local_request(request)
+        except _MalformedRequestParams as error:
+            return Assessment("unknown", reason=f"malformed requestParams: {error}")
+        verdict = self._impl.assess(_local_context(context), local_request)
         return Assessment(verdict.verdict, reason=verdict.reason,
                           evidence_ref=f"assets.model-provider:{self.brand}:pin"
                           if verdict.verdict == "supported" else None)
@@ -278,8 +334,13 @@ class BridgeConfigurationAdapter:
     def compile(self, context: Any, before: Mapping[str, Any], desired: Mapping[str, Any]
                 ) -> HarnessIntentSet | AdapterRefusal:
         payload = dict(desired)
+        try:
+            local_request = _local_request(payload)
+        except _MalformedRequestParams as error:
+            return AdapterRefusal(ErrorCode.INVALID_FRAGMENT,
+                                  f"malformed requestParams: {error}")
         compiled = self._impl.compile(
-            _local_context(context), before, _local_request(payload))
+            _local_context(context), before, local_request)
         if isinstance(compiled, LocalRefusal):
             return _to_refusal(compiled)
         # Keep the endpoint/protocol facts the local MountContent dropped, for
