@@ -1,3 +1,17 @@
+"""EXCLUDED — AR-1/W-1 交接（2026-09-29）
+
+本文件断言的合并语义已由新 owner 接账，内容**完整保留**（不被收集）：
+
+  接账方：plugins/assets/model-provider/server/tests/test_union_semantics_successor.py
+          （codex/plugin-model-provider @ b14d1ecdfe）
+  被测语义：update 合并五条 —— 缺省保持 / 显式 null 清除 / 方言归一 /
+            未知拒绝零变更 / 仓库级 KEEP 哨兵反例
+
+接账前置条件（2026-09-29 补齐）：此前新 owner 未覆盖该语义，故本文件保留；
+plugin 线已在 model-provider 侧补上 5 条等价测试，实跑 133 passed（128 基线 + 5 新）。
+按仓库约定（docs/migration/backend-build-test.md §(d)），EXCLUDED-* 前缀使其不被收集。
+"""
+
 > ⚠️ **AR-1 交接缺口（2026-09-29）— 本文件暂不退役**
 >
 > W-1 拆掉 server-compat 的 `model_configs` writer 后，本文件的 5 条 union 语义
