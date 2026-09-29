@@ -565,10 +565,16 @@ def build_runtime_from_native_adapter(
     acp = AcpChannelServerPlugin(
         launch=launch_channel_transport, native_identity=native_identity,
     )
+    # S-06/S-03: the permissions backend joins the native composition (Q5-only
+    # approval route — it writes its own store, never the compat approvals
+    # table), giving the admission gate its product authority. The dual-write
+    # guard stays armed for the legacy-delegated route.
+    from ordessa_permissions_backend.plugin import PermissionsBackendPlugin
     runtime = build_runtime(
         root,
         local_workspace_provider=LocalEnvironmentProvider(execution_mode="native"),
-        server_plugins=(WorkspaceServerPlugin(), compat, acp),
+        server_plugins=(WorkspaceServerPlugin(), compat, acp,
+                        PermissionsBackendPlugin()),
     )
     runtime.native_harness_id = harness_id
     # The start hook reports the profile it created through the composition's
