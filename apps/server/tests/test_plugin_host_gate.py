@@ -44,9 +44,9 @@ WORKSPACE_METHODS = {
     "workspaces.browse", "workspaces.open", "workspaces.list",
     "workspaces.archive", "workspaces.gitStatus",
 }
-#: AR-1/W-1 后的方法面：67 − providerModels.* 六方法 − profile 写面八方法 = 56。
-#: 数字由 plugin 线按 W-1 实际拆除范围核定。随 W-1 同批落地。
-T002_METHOD_COUNT = 56
+#: AR-1/W-1 后的方法面基数：67 − providerModels.* 六方法 − profile 写面八方法 = 53。
+#: 断言公式是 T002 + 2(admission) + 1(hello) = 56（总数）。随 W-1 同批落地。
+T002_METHOD_COUNT = 53
 ACP_ADMISSION_METHODS = frozenset({
     "acp.submission.authorize", "acp.permission.authorize",
 })
