@@ -12,7 +12,7 @@ import { referenceScheme, samePreparedReference, validPreparedReference, type Ac
 /**
  * The single ACP wire→`AgentSnapshot` mapping for this product (no other module speaks protocol).
  *
- * Channel model (reviewed seam, tests/acp-connector/fixtures/target-seam.ts): selecting the
+ * Channel model (reviewed seam, tests/integration/acp-connector/fixtures/target-seam.ts): selecting the
  * Server/Harness reads projects only — no channel. `openWorkspace` binds one project, acquires its
  * managed channel and runs exactly one `initialize` on it. A draft stays frontend-only until
  * `createAndSend`, which lazily runs `session/new` + `session/prompt` and resolves once the Harness

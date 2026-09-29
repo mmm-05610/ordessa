@@ -4,7 +4,7 @@ import { AcpClient } from '../src/client'
 import type { AcpChannelHandle, AcpChannelSpec } from '../src/channel'
 import type { AcpSubmissionAdmission } from '../src/submission'
 import type { AcpAttachmentPreparePort, AcpAttachmentTarget, AcpPreparedAttachment } from '../src/attachments'
-import { HarnessPeer } from '../../../../tests/acp-connector/fixtures/acp-peer'
+import { HarnessPeer } from '../../../../tests/integration/acp-connector/fixtures/acp-peer'
 
 const digest = 'a'.repeat(64)
 

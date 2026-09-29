@@ -9,7 +9,7 @@ import type { AcpAttachmentPreparePort } from './attachments'
  * up and down. The connector only consumes the managed handle — identity, authoritative binding,
  * stream, explicit release — and never opens a project-less channel, guesses a path, or infers a
  * backend release from a transport event. These types mirror the frozen fixture seam
- * (tests/acp-connector/fixtures/target-seam.ts); they are a proposed injection surface pending
+ * (tests/integration/acp-connector/fixtures/target-seam.ts); they are a proposed injection surface pending
  * backend alignment, NOT a second public protocol.
  */
 

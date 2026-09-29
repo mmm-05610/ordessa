@@ -2,7 +2,7 @@ import { expect, it } from 'vitest'
 import { AcpClient } from '../src/client'
 import type { AcpChannelHandle } from '../src/channel'
 import type { AcpControlledSubmission, AcpSubmissionAdmission } from '../src/submission'
-import { deferred, HarnessPeer } from '../../../../tests/acp-connector/fixtures/acp-peer'
+import { deferred, HarnessPeer } from '../../../../tests/integration/acp-connector/fixtures/acp-peer'
 
 const digest = 'a'.repeat(64)
 const submission = (id: string, nativeSessionId: string): AcpControlledSubmission => ({
