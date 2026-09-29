@@ -24,23 +24,28 @@
   plugins/agent/sessions 的服务端记录面对界待核；execution/usage 与 pacthold
   work_core 的账目面近缘；accounts/assets/http/persistence/facade 归宿待裁。
 
-## 逐域映射提案（W-3 用，待用户裁定总方向后逐格定死）
+## 逐域映射（裁定已定：微内核 + 业务域插件，2026-09-29 用户确认）
 
-| 域 | 提案归宿 | 依据 |
+总方向：**服务端业务一律毕业为插件域**（011 路线走到底），apps/server 保持
+薄宿主；组装/校验等**宿主设施**归 apps/server（非业务，不插件化）。
+
+| 域 | 归宿 | 依据 |
 | --- | --- | --- |
 | approvals | permissions 域（毕业或并审批面） | 与 authority/审批同族 |
-| sessions | 对界 plugins/agent/sessions 后定（服务端记录并入或独立） | F6 |
-| execution / usage_aggregate | pacthold work_core 账目面方向 | F6 |
-| accounts / assets / http / persistence / facade / credential_cli / error_families / wire_projection | **总方向裁定项**：apps/server 收编 vs 插件化分域 | 需用户裁 |
+| sessions | 对界 plugins/agent/sessions 后定（服务端记录并入或相邻独立） | F6 |
+| execution / usage_aggregate | **账目域插件化**（服务端业务，不进内核；与 sessions/records 对界后定形） | 用户裁定+微内核红线 |
+| accounts | 独立叶子插件（plugins/accounts 方向，命名按目录纪律） | 用户裁定 |
+| assets | 独立或相邻域插件（细化波定） | 用户裁定 |
+| http / persistence / facade / credential_cli / error_families / wire_projection | 设施类逐域判：宿主设施归 apps/server，域内设施随域走（细化波定） | 微内核分工 |
 | model_configs / profiles | 死亡（W-1） | F4 |
-| core_wire / wire_validators / composition | 迁移（W-2；composition 归宿 A=apps/server 或 B=products/server，推荐 A） | F2 |
+| core_wire / wire_validators | 迁 apps/server/wire（宿主协议面） | F2+裁定推论 |
+| composition | 迁 apps/server（宿主组装职责；原选项 B 作废） | 裁定推论 |
 
 ## 待裁（用户）
 
-1. **业务域总方向**：apps/server 收编（server 业务归 server 进程）vs 插件化
-   分域（继续 011 路线，服务端业务也做成插件）。
-2. composition 归宿 A/B。
-3. W-1 执行时窗（建议=consolidation 后与 pi S-03 同窗锁定）。
+1. ~~业务域总方向~~ **已裁（2026-09-29）：插件化，微内核路线。**
+2. ~~composition 归宿~~ **随裁定推出：apps/server。**
+3. W-1 执行时窗（建议=consolidation 后与 pi S-03 同窗锁定，默认执行除非异议）。
 
 ## 时序
 
