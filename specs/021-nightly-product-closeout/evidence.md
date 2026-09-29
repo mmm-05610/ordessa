@@ -16,6 +16,8 @@ project）；不让验收 Agent 修改 Ordessa 自己的源码仓库。
 | E-P0-4 | C0 控制面 commit：`specs/021-nightly-product-closeout/` 10 份文档落入 NIGHTLY_TRUNK；SHA 由 Lead 在提交后回填于此：`58430188716b3350b9cf91657e1ac4a468b2c784`（C0-a 控制面文档；本条回填为 C0-b bookkeeping commit，分支头 SHA 见晨报）。 |
 | E-P0-5 | 现状阅读：`docs/baseline.md`（工具链钉版、npm test 聚合 25 suites、Python 四套件期望、inherited reds）、`docs/architecture.md`（依赖方向、data compatibility、装配以 extension id 为数据）、`docs/known-issues.md`（inherited red 台账、UI debts、live services 不碰）、`docs/naming.md`、`specs/018-consolidation/README.md`（13 支并入 main）、`specs/020-runtime-compat-retirement/inventory.md`（波 1 小刀/波 2 搬家 epic）。 |
 | E-P0-6 | 装配/打包面盘点：`products/desktop/extensions.json` enabled=14（contracts/agent-contracts/commands/workbench/connections/agent-connections/agent-sessions/agent-server/agent-acp/chat-api/chat/profile-api/profile-frontend/profile-chat）；root scripts：`build`、`build:deb`(node packaging/build-deb.mjs)、`test:packaging`、`test:packaging:clean`(clean-machine-accept.sh)、`test:agent-shell`、`test:electron`、`test`(tooling/test-all.mjs)。skills/mcp/prompts/permissions/model-provider/memory/lsp/subagents/runtime-preferences 不在默认桌面装配 → ledger W-001。 |
+| E-P0-7 | E2E key 落位与保护：用户提供 key 置于 nightly worktree 根 `key.txt`（首版 51B OpenCode Go，00:14:03 换为 35B DeepSeek 官方）；初查发现从 nightly worktree 视角**未**被 ignore（`?? key.txt`）→ 共享 `.git/info/exclude` 追加 `/key.txt`，复查 `git check-ignore -v key.txt` 命中、status 干净。内容全程未读入任何上下文。详见 api-key-usage.md。 |
+| E-P0-8 | 零 token 探针（00:14 后）：`curl https://api.deepseek.com/models -H "Authorization: Bearer $(cat key.txt)"` → **HTTP 200**；models=`deepseek-flash`（DeepSeek-V4.1-Flash，1M ctx，393K max out，text+image，effort low/high/max）、`deepseek-v4-pro`（text-only，1M ctx）。key 有效、网络可达、无 token 消耗。 |
 
 ## Phase 1+（待填）
 

@@ -40,6 +40,12 @@ basic project/session。尽快形成：
 真实 Harness：project → session → prompt → streaming → tool call →
 approval（如支持）。形成 C3 first-real-harness。
 
+真实模型资源已就位：用户提供的 DeepSeek 官方 key（不限额度、已验证 HTTP 200，
+处理铁律与逐 harness 接法见 [api-key-usage.md](api-key-usage.md)）。Harness 候选：
+本机已装 pi；opencode（CLI 未装，需安装 + 隔离 config，复用仓库
+`deploy/opencode/opencode.json` 的 deepseek bounded-acceptance 模板）。以现场
+真实可用确定 Harness A/B 顺序，验收条目不变。
+
 ## Phase 4 · Profile / Assets
 
 重点：Profile、Skill、MCP、permission、provider/model、prompts/instructions、

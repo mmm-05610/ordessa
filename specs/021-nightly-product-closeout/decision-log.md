@@ -49,3 +49,20 @@ Deferred Debt。只记真正需要长期记忆的裁决；普通 bugfix 不写�
   完成 runtime-compat 退休/storage 搬迁等 epic。
 - **Immediate Implementation**：W-009 等标 DEFERRED；boundary tests 保持绿色即可。
 - **Deferred Debt**：020 波 2（依赖 pi 两顶裁定）、S1c 组合决策——留给白天主线。
+
+## D-021-5 · 真实 E2E 模型后端：DeepSeek 官方 key
+
+- **Context**：用户分两步提供 E2E key（23:5x OpenCode Go key；00:14 换为
+  **DeepSeek 官方 key**，不限额度，声明可用于所有 harness），置于 nightly worktree
+  根 `key.txt`。该文件首查未被 ignore（nightly 视角 `?? key.txt`）。
+- **Options**：(a) key 直接入上下文人工保管；(b) key 不可读、只许脚本运行期消费，
+  本地排除保证不进 git；(c) 不用 key，E2E 停在外部 blocker。
+- **Decision**：(b)。`/key.txt` 已入共享 `.git/info/exclude`；处理铁律与逐 harness
+  接法见 api-key-usage.md；key 有效性以零 token `/models` 探针验证（HTTP 200）。
+- **Reason**：用户明示"不可读、只可用脚本使用"；DeepSeek 官方与仓库自带
+  bounded-acceptance 模板（deploy/opencode/opencode.json）及 harness 注册表对齐，
+  是最通用的后端选择。
+- **Immediate Implementation**：Phase 3 起真实 Harness E2E 以 DeepSeek 为后端；
+  首选组合按"本机已装 pi + 需安装的 opencode"现场以真实可用重排。
+- **Deferred Debt**：OpenCode Go 端点研究留作 fallback（api-key-usage.md §资源）；
+  逐 harness provider 物化的诚实验证是 Phase 4 任务。

@@ -61,6 +61,10 @@ evidence.md）/ `[~]` 部分通过（附说明与 ledger 引用）/ `N/A` 不适
 - [ ] B. 第二个不同 Harness 至少完成：real executable → real session → real prompt → real streaming。
   - 若第二 Harness 因用户环境（未认证/无额度/外部服务不可用）不能完整跑完，必须证明 Ordessa 已正确走到 external blocker 边界（discovery → launch config → process spawn → protocol init → external refusal）。
   - 环境允许时尽量让两个以上 Harness 完整 E2E PASS。
+  - **资源（2026-09-30）**：用户提供不限额度 DeepSeek 官方 key（见
+    [api-key-usage.md](api-key-usage.md)，已验证可用）——模型配额/认证不再是
+    E2E 的外部 blocker 藉口；逐 harness 的 provider 物化仍须诚实验证，不支持的
+    harness 如实报不支持。
 
 ## Streaming / Conversation UI
 - [ ] 用户消息正常。

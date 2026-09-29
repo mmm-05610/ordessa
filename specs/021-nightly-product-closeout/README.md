@@ -35,7 +35,8 @@ P1 = WorkBench/Pacthold/SDK/Plugin 边界进一步干净。
 | NIGHTLY_TRUNK | `nightly/021-ordessa-product-closeout`（对今晚具有 main 地位） |
 | main baseline SHA | `b4bf7cd90951d0fa9bcf3a3de2e66b7db6a62aa0`（root worktree 今晚不动） |
 | Integration worktree | `/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout` |
-| 排除方式 | `/worktree/` 经 `.git/info/exclude` 本地排除（不修改项目 `.gitignore`） |
+| 排除方式 | `/worktree/`、`/key.txt` 经 `.git/info/exclude` 本地排除（不修改项目 `.gitignore`） |
+| E2E 模型资源 | DeepSeek 官方 API key（用户 2026-09-30 提供，不限额度，key.txt **不可读**只许脚本用；规程见 [api-key-usage.md](api-key-usage.md)） |
 | 真正的 main | 今晚保持不动；一切最终成果只进 NIGHTLY_TRUNK |
 
 ## 3. 最高优先级
@@ -66,6 +67,7 @@ P1 = WorkBench/Pacthold/SDK/Plugin 边界进一步干净。
 | [checkpoints.md](checkpoints.md) | 绿色 checkpoint 台账（回滚锚点） |
 | [evidence.md](evidence.md) | 真实证据登记（命令/退出码/产物/SHA256） |
 | [decision-log.md](decision-log.md) | 只记长期有效裁决 |
+| [api-key-usage.md](api-key-usage.md) | 真实 E2E 模型 key 的处理铁律与逐 harness 用法 |
 | [final-report.md](final-report.md) | 晨报模板（Closeout 时填成） |
 
 ## 6. 当前运行阶段

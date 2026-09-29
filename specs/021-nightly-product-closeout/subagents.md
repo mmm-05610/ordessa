@@ -16,7 +16,7 @@ discovery、final closeout。
 | **General-Worker** | space-bunny-free | 写（task branch） | 局部 UI、plugin 内实现、tests、config、small fixes、文档、边界清晰的 backlog。不接大架构任务。 |
 | **Independent-Reviewer** | mimo-v2.6-pro | 只读 | 独立 review 重要 implementation commit：目标真完成？破坏产品？重造机制？违反 plugin boundary？fake green？测试真覆盖？明显 regression？输出 `VERDICT: PASS` 或 `VERDICT: FAIL`。不自动重写实现。 |
 | **Release-Engineer** | deepseek-v4.1-flash | 默认只验证 NIGHTLY_TRUNK | 真实 release 验证：clean build、deb build、deb inspection、install、installed launch、bundled runtime、clean data-root smoke、restart、final deb、SHA256。**从夜间早期就周期性参与，不等最后**。必须改代码时转独立 release-fix branch。 |
-| **Escalation-Architect** | GLM-5.3 | 只读/裁决 | 只处理真正架构裁决：长期边界不同的两方案、Workbench/Pacthold/Server/plugin ownership 冲突、public contract 是否改、快速修复是否制造坏边界、多 Agent 冲突结论。只给裁决不实施。 |
+| **Escalation-Architect** | GLM-5.3 | 只读/裁决 | 只处理真正架构裁决：长期边界不同的两方案、Workbench/Pacthold/Server/plugin ownership 冲突、public contract 是否改、快速修复是否制造坏边界、多 Agent 冲突结论。只给裁决不实施。**今晚放开使用，不限额度**（见 §派工配额）。 |
 
 ## 分支与 worktree 纪律
 
@@ -56,6 +56,17 @@ Integrator → Independent-Reviewer → Release-Engineer
 ## 并发上限
 
 同时写代码 Agent ≤ 3。Lead 不一次开十个写任务制造 merge conflict。
+
+## 派工配额与升级政策（用户 2026-09-30 追加）
+
+- **每个角色今晚至少真实派工 3 次**（Scout / Blocker-Surgeon / Integrator /
+  General-Worker / Independent-Reviewer / Release-Engineer / Escalation-Architect
+  七个角色都算）。Lead 在 ledger.md 跟踪各角色已派次数。
+- **Escalation-Architect 放开用**：复杂裁决（边界/ownership/contract/方案分歧）
+  不要为省额度憋着——拿不准就问。额度不设上限。
+- 但**禁止凑数**：每次派工必须有真实任务/真实问题、真实产出要求；不为满足
+  "3 次"而制造空转派工。
+- 配额的精神：额度是拿来做更多有效工程的，不是拿来表演工作量的。
 
 ## 环境红线（所有 Agent 适用）
 
