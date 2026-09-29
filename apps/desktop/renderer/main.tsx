@@ -98,7 +98,17 @@ function HostShell({ desktop, about, services, failures, requirements }: {
 }
 async function start() {
   const host = bridge()
-  const services = buildHostServices({ bridge: host })
+  // The wire proxy's two facts are main-process state: resolve them once here
+  // (start is async) instead of letting the port invent them. A failed read is
+  // false/null — the honest absence every requires:[WirePortToken] consumer
+  // is built to refuse on.
+  const wireFacts = host
+    ? {
+        ready: await host.wireReady().catch(() => false),
+        scope: await host.wireScope().catch(() => null),
+      }
+    : undefined
+  const services = buildHostServices({ bridge: host, ...(wireFacts ? { wire: wireFacts } : {}) })
   const about = host ? await host.about().catch(() => null) as AboutInfo | null : null
   const loaded = await installedExtensions()
   const desktop = runtime(loaded.plugins, services)
