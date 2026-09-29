@@ -16,7 +16,6 @@ ROOT = Path(__file__).resolve().parents[3]
 ENTRY = ROOT / "plugins/harness/runtime/access-entry.mjs"
 PEER = ROOT / "tests/acp_orchestration/fixtures/bidirectional_acp_peer.mjs"
 
-
 class Records:
     def __init__(self):
         self.count = 0
@@ -41,6 +40,11 @@ def test_real_controlled_peer_session_new_observation_is_channel_bound(tmp_path)
     node = shutil.which("node")
     assert node is not None
     replies: queue.Queue[str] = queue.Queue()
+    # The allowlist locks content, not location (spec 019): the whole
+    # registry-level channel rides a copy of the peer at a path the production
+    # entry has never pinned, accepted by its content digest alone.
+    peer = tmp_path / "peer-under-test.mjs"
+    shutil.copyfile(PEER, peer)
 
     def launch(*, harness_id, cwd, on_line, on_exit):
         def receive(line):
@@ -49,7 +53,7 @@ def test_real_controlled_peer_session_new_observation_is_channel_bound(tmp_path)
 
         return AccessEntryTransport(
             node=node, entry=str(ENTRY), harness_id=harness_id, cwd=cwd,
-            adapter={"command": node, "args": [str(PEER)]},
+            adapter={"command": node, "args": [str(peer)]},
             on_line=receive, on_exit=on_exit,
             environment={**os.environ, "HD003_LOG": str(tmp_path / "peer")},
             controlled_test_peer=True,
