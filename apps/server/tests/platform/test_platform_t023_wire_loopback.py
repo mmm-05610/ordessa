@@ -29,7 +29,7 @@ from ordessa_server.bootstrap import build_runtime
 from ordessa_server.transport.http import create_app
 from server_plugin_api.wire_errors import FAMILIES
 
-T002_BASELINE_METHOD_COUNT = 67
+T002_BASELINE_METHOD_COUNT = 53  # AR-1/W-1：67 − providerModels.* 六 − profiles 写面八
 ACP_ADMISSION_METHOD_IDS = frozenset({
     "acp.submission.authorize", "acp.permission.authorize",
 })

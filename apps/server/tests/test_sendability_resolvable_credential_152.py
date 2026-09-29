@@ -25,6 +25,8 @@ import json
 from fastapi.testclient import TestClient
 import pytest
 
+import _w1_seed
+
 from ordessa_server.bootstrap import build_runtime
 from ordessa_server_product.composition import create_composition  # T014-S1d funnel
 from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
@@ -81,19 +83,20 @@ def _bind(env, *, credential_id, locator):
     profile selecting that model. The provider/profile writes all succeed - only the
     sendability projection is meant to catch the unopenable credential."""
     env.runtime.plugin_host.provided_port('product.repository').credentials.register_if_missing(credential_id, "api_key", locator)
-    provider = env.api.ok("providerModels.create", {
-        "requestId": f"o152-prov-{credential_id}", "displayName": "152 P",
-        "harness": "alpha", "provider": "opaque-provider",
-        "credentialId": credential_id, "configuration": [], "models": MODELS,
-    })["providerModel"]
+    # AR-1/W-1：providerModels.create wire 面已退役，摆桌子改同链服务直调。
+    provider = _w1_seed.provider_models_create(
+        env.runtime, f"o152-prov-{credential_id}", {
+            "requestId": f"o152-prov-{credential_id}", "displayName": "152 P",
+            "harness": "alpha", "provider": "opaque-provider",
+            "credentialId": credential_id, "configuration": [], "models": MODELS,
+        })["providerModel"]
     created = env.api_ok_profile(credential_id)
     version = env.item(created)["version"]
-    env.api.ok("profiles.updateConfig", {
-        "requestId": f"o152-cfg-{credential_id}", "profileId": created,
-        "expectedVersion": version,
-        "values": [{"controlId": "model",
-                    "value": {"providerId": provider["id"], "modelId": "model-a"}}],
-    })
+    _w1_seed.profiles_update_config(
+        env.runtime, f"o152-cfg-{credential_id}", profile_id=created,
+        expected_version=version,
+        values=[{"controlId": "model",
+                 "value": {"providerId": provider["id"], "modelId": "model-a"}}])
     return created
 
 

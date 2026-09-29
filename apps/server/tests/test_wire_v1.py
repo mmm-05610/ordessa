@@ -18,6 +18,8 @@ import threading
 from fastapi.testclient import TestClient
 import pytest
 
+import _w1_seed
+
 from ordessa_server.bootstrap import build_runtime
 from ordessa_server_product.composition import create_composition
 from ordessa_server_compat.execution import (
@@ -461,15 +463,17 @@ def test_a_directory_backed_model_control_is_a_slot_before_anything_is_chosen(wi
     choose, and a brand-new Profile could not be given a model at all - the
     interface had no way through, while the wire accepted the reference."""
     _runtime, api, _execution = wire_directory_model
-    provider = api.ok("providerModels.create", {
-        "requestId": "provider-directory", "displayName": "Official API",
-        "harness": "alpha", "provider": "opaque-provider", "credentialId": None,
-        "configuration": [],
-        "models": [{
-            "modelId": "model-a", "displayName": "Model A",
-            "availability": "unknown", "unavailableReason": None,
-        }],
-    })["providerModel"]
+    # AR-1/W-1：providerModels.create wire 面已退役，摆桌子改同链服务直调。
+    provider = _w1_seed.provider_models_create(
+        _runtime, "provider-directory", {
+            "requestId": "provider-directory", "displayName": "Official API",
+            "harness": "alpha", "provider": "opaque-provider", "credentialId": None,
+            "configuration": [],
+            "models": [{
+                "modelId": "model-a", "displayName": "Model A",
+                "availability": "unknown", "unavailableReason": None,
+            }],
+        })["providerModel"]
     created = _make_profile_directly(_runtime, "profile-directory", "Builder")
 
     descriptor = api.ok("config.describe", {
@@ -480,13 +484,12 @@ def test_a_directory_backed_model_control_is_a_slot_before_anything_is_chosen(wi
     assert control["editable"] is True
     assert control["slots"] == [{"name": "model", "model": None}]
 
-    configured = api.ok("profiles.updateConfig", {
-        "requestId": "profile-directory-config", "profileId": created["id"],
-        "expectedVersion": created["version"],
-        "values": [{"controlId": "model", "value": {
+    configured = _w1_seed.profiles_update_config(
+        _runtime, "profile-directory-config", profile_id=created["id"],
+        expected_version=created["version"],
+        values=[{"controlId": "model", "value": {
             "providerId": provider["id"], "modelId": "model-a",
-        }}],
-    })
+        }}])
     assert configured["profile"]["version"] == created["version"] + 1
 
     after = api.ok("config.describe", {
@@ -1429,6 +1432,14 @@ def test_every_projected_frame_matches_the_strict_frontend_event_schema(wire):
 
 
 def test_a_role_may_carry_a_credential_for_a_harness_without_a_model_control(wire):
+    """EXCLUDED — AR-1/W-1 交接（2026-09-29）
+
+    本条测的是 profiles.create wire 面的 CAPABILITY_UNSUPPORTED 拒绝语义；
+    该面随 W-1 退役，能力门语义由 profile-api/harness 注册面接账。
+    保留函数名与 skip 让它可见可追，而不是删断言把红藏起来。
+    """
+    import pytest as _pytest
+    _pytest.skip("AR-1/W-1：profiles.create wire 面已退役，能力门语义归 profile-api")
     """A role can name the credential it runs with.
 
     A Harness whose credential cannot ride a model control - Hermes declares no
