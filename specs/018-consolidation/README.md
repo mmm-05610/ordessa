@@ -31,7 +31,12 @@ subagents）；工作区净；六关键域 `compileall` 过。组合级测试未
 3. IR-1 联测（PE1+PE2 双事实 → ready 翻转）。
 4. 新品牌（mcode/qoder/zcode-tui）入 roster 裁定后实测排期。
 
+## 补录（同日）
+
+- `codex/plugin-memory`（015-B，26 文件）经用户授权随即并入 main——
+  plugin 支全零，1+x 归 1+0。
+
 ## 未随本合并
 
-`codex/015-b-memory`（memory 包 session 在跑，收工验收后另并）；
+~~`codex/015-b-memory`~~ 已收口（见上补录）；
 `codex/core`（归 pi）；归档 refs 不动。
