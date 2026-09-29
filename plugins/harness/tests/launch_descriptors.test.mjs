@@ -9,10 +9,10 @@ import {
 const descriptorURL = new URL("../src/ordessa_harness/launch-descriptors.json", import.meta.url)
 const source = JSON.parse(readFileSync(descriptorURL, "utf8"))
 
-test("canonical source has eight brands; aliases remain launchable, not brands", () => {
+test("canonical source has seven brands; aliases remain launchable, not brands", () => {
   assert.deepEqual(listCanonicalHarnesses(),
-    ["claude-code", "codex", "dsh", "hermes", "kilo", "opencode", "pi", "qwen"])
-  assert.equal(listHarnesses().length, 9)
+    ["claude-code", "codex", "dsh", "hermes", "kilo", "opencode", "pi"])
+  assert.equal(listHarnesses().length, 8)
   assert.equal(isKnownHarness("claude"), true)
   assert.equal(isKnownHarness("omp"), true)
   assert.equal(isKnownHarness("opencode"), false) // no JS ACP launch route yet

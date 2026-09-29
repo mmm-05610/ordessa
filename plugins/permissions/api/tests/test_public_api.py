@@ -10,7 +10,8 @@ import ordessa_permissions_api as api
 
 PACKAGE_ROOT = pathlib.Path(__file__).resolve().parents[1]
 MODULE_NAMES = ("codes", "rules", "ceilings", "intents", "brand", "request_facts",
-                "decisions", "snapshots", "synthesis", "wire_family", "ports")
+                "decisions", "snapshots", "synthesis", "wire_family", "ports",
+                "authority")
 
 
 def test_every_declared_module_is_importable_and_declares_its_own_exports() -> None:

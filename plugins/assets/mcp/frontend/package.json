@@ -1,0 +1,13 @@
+{
+  "name": "@ordessa/plugin-asset-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "ordessa": {
+    "id": "ordessa.asset-mcp"
+  },
+  "scripts": {
+    "test": "vitest run --maxWorkers=1",
+    "typecheck": "tsc --noEmit"
+  }
+}

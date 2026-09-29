@@ -1,0 +1,5 @@
+E   ModuleNotFoundError: No module named 'ordessa_profile'
+ERROR plugins/assets/subagents/tests/test_profile_facet_t10.py
+862 passed, 1 error in 8.35s
+cmd: python -m pytest plugins/assets/subagents -q --continue-on-collection-errors (repo root = son-cmp-subagents @ e321a966c2; venv per docs/baseline.md)
+error cause: tests/test_profile_facet_t10.py module-level 'import ordessa_profile' -> ModuleNotFoundError (Profile lives in an external repo, absent in this environment); its 29 tests did not run; note: the q3-line report's '28 tests' figure was that file's count at ITS commit time — the file has since grown to 29

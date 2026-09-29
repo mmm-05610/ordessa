@@ -1,10 +1,11 @@
 // ordessa.chat — Chat domain plugin (v2 implementation line). Provides the
 // ChatContributions service (chat-api), registers the Chat page, the global
-// project dialog overlay through the Workbench's existing composition, and a
-// chat-owned composer.toolbar contribution (the connection badge) that
-// exercises the contribution path end to end. The old
-// ordessa.agent-conversation registration stays active until the integration
-// closes it (CHAT-V08); this plugin never touches the old chain itself.
+// project dialog overlay through the Workbench's existing composition, a
+// chat-owned composer.toolbar contribution (the connection badge), and the
+// real-seam input sources: the brand's native command catalog (R-Z2-3) and
+// the capability-driven attachment entry (R-Z2-2). The old
+// ordessa.agent-conversation chain is retired (014 P-C PC-6); this plugin is
+// the conversation surface now.
 import { useSyncExternalStore } from 'react'
 import type { PluginContext } from '@ordessa/extension-api'
 import { WorkbenchToken, type Workbench } from '@extensions/ordessa.contracts/contract.js'
@@ -14,6 +15,7 @@ import { ChatPage } from './views/chat-page'
 import { ProjectDialog } from './views/project-dialog'
 import { ConnectionBadge } from './views/connection-badge'
 import { connectionBadgeKey } from './state/keys'
+import { createAttachmentSource, createNativeCommandSource } from './adapters/agent'
 
 export default function createPlugin() {
   return { id: 'ordessa.chat', autoStart: true,
@@ -46,6 +48,14 @@ export default function createPlugin() {
         id: 'ordessa.chat.connection-badge', slot: 'composer.toolbar', order: 100, key: connectionBadgeKey,
         project: badgeProjection,
       }))
+
+      // Real-seam input sources (014 P-C PC-2/PC-3): the brand's native
+      // command catalog projects into the slash surface, and the attachment
+      // entry activates only on the facade's real capability (no picker
+      // channel is installed yet, so the entry carries its honest reason —
+      // R-Z2-6/S-05).
+      chat.forScope(context.resources).addInputSource(createNativeCommandSource(sessions))
+      chat.forScope(context.resources).addInputSource(createAttachmentSource(sessions))
       return chat
     },
   }

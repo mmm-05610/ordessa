@@ -4,8 +4,15 @@ from .operation_journal import FenceObservation, NativeActivationReceipt, Operat
 from .configuration_service import (
     ConfigurationApplicationService, NativeReadback, RuntimeSnapshot,
 )
+from .native_evidence import (
+    ControlledNativeStandIn, EVIDENCE_SUPPORTED_BRANDS, EVIDENCE_UNSUPPORTED_BRANDS,
+    NativeEvidenceService, NativeEvidenceUnsupported, supply_brand_evidence,
+)
 
 __all__ = [
-    "ConfigurationApplicationService", "FenceObservation", "JournalError",
-    "NativeActivationReceipt", "NativeReadback", "OperationJournal", "RuntimeSnapshot",
+    "ConfigurationApplicationService", "ControlledNativeStandIn",
+    "EVIDENCE_SUPPORTED_BRANDS", "EVIDENCE_UNSUPPORTED_BRANDS",
+    "FenceObservation", "JournalError",
+    "NativeActivationReceipt", "NativeEvidenceService", "NativeEvidenceUnsupported",
+    "NativeReadback", "OperationJournal", "RuntimeSnapshot", "supply_brand_evidence",
 ]

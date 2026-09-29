@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-assets-subagents"
+version = "2.0.0a1"
+description = "Ordessa native subagent definitions domain: pure definition DTO, strict decoder, immutable revisions, CAS store"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+# SR-13 (amending I-1 "stdlib only"): src imports the published contract
+# vocabulary, so the runtime closure is exactly the published API packages —
+# nothing more. Unpinned, mirroring plugins/assets/sandbox/backend and
+# plugins/workspace; guarded against drift by
+# tests/test_boundaries_t03b.py (declared == imported, both directions).
+# ordessa-permissions-backend is absent from the runtime closure on purpose
+# (SR-13b row 4): `src/**` imports nothing from Q5's provider package — the
+# seam takes the authorizer port name and the conflict types as host-injected
+# wiring inputs (SR-15 option 3) and keeps only the documented port-name default
+# locally. It appears under `dev` below because the suite drives Q5's real
+# `Authorizer`/`ApprovalFacts` as the only faithful test double; that is a
+# test-scope allowance, guarded by tests/test_boundaries_t03b.py, and it goes
+# away when SR-15 re-exports the conflict types from the published API.
+dependencies = [
+    "ordessa-harness-api",
+    "ordessa-permissions-api",
+    "ordessa-server-plugin-api",
+]
+
+[project.optional-dependencies]
+# Test-time only. `pytest` keeps its existing pin; the backend entry is the
+# sibling-plugin test double named above, never a runtime dependency.
+dev = ["pytest>=7", "ordessa-permissions-backend"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

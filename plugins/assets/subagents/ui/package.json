@@ -1,0 +1,13 @@
+{
+  "name": "@ordessa/plugin-assets-subagents-ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "ordessa": {
+    "id": "ordessa.assets-subagents-ui"
+  },
+  "scripts": {
+    "test": "vitest run --maxWorkers=1",
+    "typecheck": "tsc --noEmit"
+  }
+}

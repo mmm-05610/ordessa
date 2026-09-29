@@ -9,8 +9,18 @@ say so) and `unknown` (we cannot tell, so nothing with side effects proceeds).
 """
 from __future__ import annotations
 
-from . import brand, ceilings, codes, decisions, intents, ports, request_facts, rules, \
-    snapshots, synthesis, wire_family
+from . import authority, brand, ceilings, codes, decisions, intents, ports, \
+    request_facts, rules, snapshots, synthesis, wire_family
+from .authority import (
+    AUTHORITY_QUERY_PORT,
+    AUTHORITY_QUERY_PORT_VERSION,
+    AuthorityRecord,
+    AuthorityScope,
+    AuthoritySourceKind,
+    AuthorityStateKind,
+    PermissionsAuthorityQueryPort,
+    authority_id_for,
+)
 from .brand import BRAND_NATIVE_MODES, BrandMode, declared_native_modes
 from .ceilings import (
     TOOL_EXPOSURE,
@@ -103,7 +113,7 @@ from .wire_family import (
 __version__ = "0.1.0"
 
 _MODULES = (codes, rules, ceilings, intents, brand, request_facts, decisions, snapshots,
-            synthesis, wire_family, ports)
+            synthesis, wire_family, ports, authority)
 # The published surface is exactly what the owning modules declare, so an export
 # can never drift away from the module that defines it.
 __all__ = tuple(sorted({name for module in _MODULES for name in module.__all__}))

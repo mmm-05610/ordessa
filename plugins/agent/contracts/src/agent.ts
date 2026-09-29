@@ -1,5 +1,24 @@
 import { Token, type IDisposable } from '@ordessa/extension-api'
 
+// Revision ledger (chat-api r4 rules: every semantic change carries its
+// compatibility note here and in the delivering package's report).
+//
+// 0.2.0 — 014 P-C (R-Z2-1/2/3/5):
+// - `AgentClient.send` upgraded from `Promise<void>` to a decidable three-state
+//   `AgentSubmissionOutcome | void` (see the member's note for the
+//   resolve→accepted compatibility rule and the migrated consumers).
+// - Optional members added: `submitWithAttachments`, `getNativeCommands`,
+//   `attachmentCapabilities`, `prepareAttachment`, `releasePreparedAttachment`,
+//   `admissionEvidence`. Absent members disable the corresponding UI honestly —
+//   never fake it; every one of them is satisfied by the existing ACP
+//   connector implementation without touching the frozen connectors packages.
+// - `AgentMessage.reasoningState` (R-Z2-5): optional evidence; absent = the
+//   legacy string-only shape (status inherits the run status, no fabricated
+//   duration). No current connector produces it (registered S-05 family).
+// - `AgentSessions.send` upgraded to `Promise<AgentSubmissionOutcome>` with an
+//   optional opaque prepared-reference list; `commandCatalog` and
+//   `attachments` added; `AgentWorkspaceSnapshot.runtimeGeneration` added (PC-5).
+
 export type Availability = 'supported' | 'unsupported' | 'unknown' | 'unavailable'
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error'
 export type RunStatus = 'starting' | 'running' | 'stop-requested' | 'completed' | 'cancelled' | 'failed' | 'unknown'
@@ -51,6 +70,10 @@ export interface AgentMessage {
   role: 'user' | 'assistant' | 'tool'
   text: string
   reasoning?: string
+  /** R-Z2-5: reasoning's own evidence, when the connector reports one. Absent
+   * means the string-only legacy shape: the display status then inherits the
+   * message's run status and no duration may be fabricated. */
+  reasoningState?: { readonly status: 'streaming' | 'complete' | 'interrupted' | 'unknown'; readonly durationMs?: number }
   tools?: readonly AgentToolCall[]
   status?: RunStatus
 }
@@ -108,6 +131,78 @@ export interface AgentReleaseState {
   readonly reason?: string
 }
 
+/** R-Z2-1: the three decidable submission outcomes. `accepted` means the send
+ * path took the submission — never that tools or the run succeeded. `refused`
+ * carries the backend's typed code; `unknown` means the outcome is
+ * undecidable (lost answer, channel down) and carries the operation id the
+ * caller must keep: no automatic resend may follow it. */
+export type AgentSubmissionOutcome =
+  | { readonly kind: 'accepted' }
+  | { readonly kind: 'refused'; readonly code: string; readonly reason: string }
+  | { readonly kind: 'unknown'; readonly operationId: string; readonly reason: string }
+
+/** One native (brand) command as the connector observed it. Names are data,
+ * never an instruction to submit. */
+export interface AgentNativeCommand {
+  readonly name: string
+  readonly description: string
+  readonly inputHint?: string
+}
+
+/** Connector-level native command catalog (R-Z2-3). `unknown` reasons are the
+ * connector's own evidence verdicts, never synthesized brand menus. */
+export type AgentNativeCommandCatalog =
+  | Readonly<{ kind: 'absent' }>
+  | Readonly<{ kind: 'unknown'; reason: 'malformed' | 'stale-session' | 'channel-down' | 'unobservable' }>
+  | Readonly<{ kind: 'available'; connectionId: string; nativeSessionId: string; commands: readonly AgentNativeCommand[] }>
+
+/** Facade-level command catalog projection (R-Z2-3): the four states the chat
+ * panel renders. `loading` is declarable by a connector that can observe a
+ * catalog in flight; no current connector produces it (registered in the 014
+ * P-C report), so absence of evidence must never be rendered as loading. */
+export type AgentCommandCatalog =
+  | Readonly<{ kind: 'absent' }>
+  | Readonly<{ kind: 'loading' }>
+  | Readonly<{ kind: 'error'; reason: string }>
+  | Readonly<{ kind: 'available'; connectionId: string; nativeSessionId: string; commands: readonly AgentNativeCommand[] }>
+
+/** Connector-level attachment capability answer (R-Z2-2). */
+export type AgentAttachmentCapabilities =
+  | { readonly kind: 'available'; readonly mimeTypes: readonly string[]; readonly uriSchemes: readonly string[];
+      readonly maxBytes: number; readonly maxCount: number }
+  | { readonly kind: 'absent'; readonly reason: string }
+  | { readonly kind: 'unknown'; readonly reason: string }
+
+/** One owner-prepared attachment. `preparedId` is opaque owner-issued
+ * identity; `sha256` is the content digest the round trip must reproduce. */
+export interface AgentPreparedAttachment {
+  readonly preparedId: string
+  readonly name: string
+  readonly uri: string
+  readonly mimeType: string
+  readonly sha256: string
+  readonly byteLength: number
+}
+
+export type AgentAttachmentPreparation =
+  | { readonly kind: 'prepared'; readonly reference: AgentPreparedAttachment }
+  | { readonly kind: 'refused'; readonly reason: string }
+  | { readonly kind: 'unknown'; readonly operationId: string }
+
+/** Backend-observed admission facts (S-05 producer surface, mirrored from the
+ * Server's controlled next-submit coordinator). Only a backend owner may
+ * supply them; a client that cannot observe them must not implement this
+ * member, and an absent member is itself the fail-closed evidence. */
+export interface AgentAdmissionEvidence {
+  readonly connectionId: string
+  readonly nativeSessionId: string
+  readonly runtimeGeneration: number
+  readonly admissionSupported: boolean
+  readonly q5Ready: boolean
+  readonly chatApiReady: boolean
+  readonly outputInProgress: boolean
+}
+
 /** A live, authoritative adapter instance. Operations never imply a terminal run state. */
 export interface AgentClient extends IDisposable {
   getSnapshot(): AgentSnapshot
@@ -115,7 +210,36 @@ export interface AgentClient extends IDisposable {
   refreshSessions(): Promise<void>
   newSession(): Promise<string>
   openSession(id: string): Promise<void>
-  send(sessionId: string, text: string): Promise<void>
+  /**
+   * Revision 0.2.0 (014 P-C, R-Z2-1): upgraded from `Promise<void>` to a
+   * decidable three-state outcome. Compatibility rule: a client that resolves
+   * with `void` (every connector published before this revision) means exactly
+   * the old send-path acceptance — resolve→accepted, never execution success;
+   * typed refusals and evidenced channel loss map to refused/unknown. Consumers
+   * migrated one by one and recorded in the 014 P-C report: the sessions
+   * facade (the mapping owner), the chat gateway (1:1), and the retired
+   * agent-conversation view (PC-6). Attachments never ride this member: a
+   * client that cannot carry prepared refs end to end must not be handed any —
+   * the carry path is `submitWithAttachments` below.
+   */
+  send(sessionId: string, text: string): Promise<AgentSubmissionOutcome | void>
+  /** R-Z2-2 carry path: text plus already-prepared attachment references,
+   * admitted through the backend's controlled submission. Present exactly when
+   * the client can carry refs end to end (prepare→verify→admit); absent means
+   * the facade must refuse attachments before any call — never drop them. */
+  submitWithAttachments?(sessionId: string, text: string, attachments: readonly AgentPreparedAttachment[]): Promise<AgentSubmissionOutcome>
+  /** R-Z2-3: the native command catalog of one session key (the snapshot's
+   * session id). Absent member = the connector projects no catalog. */
+  getNativeCommands?(sessionKey: string): AgentNativeCommandCatalog
+  /** R-Z2-2 attachment seam. All-or-nothing: a client offering preparation
+   * must offer release too; `submitWithAttachments` is the only carry path. */
+  attachmentCapabilities?(sessionId: string): Promise<AgentAttachmentCapabilities>
+  /** `sourceId` names content the port already owns, never a renderer path. */
+  prepareAttachment?(sessionId: string, sourceId: string, idempotencyKey: string): Promise<AgentPreparedAttachment>
+  releasePreparedAttachment?(sessionId: string, preparedId: string): Promise<void>
+  /** Backend-observed admission facts; absent = fail-closed (the facade refuses
+   * before any wire traffic instead of guessing the backend ready). */
+  admissionEvidence?(): AgentAdmissionEvidence | undefined
   stop(sessionId: string, runId: string): Promise<void>
   respond(interactionId: string, answer: InteractionAnswer): Promise<void>
   setOption(id: string, value: string): Promise<void>
@@ -170,6 +294,11 @@ export interface AgentWorkspaceSnapshot {
    * answer is what removes an entry. */
   pendingReleases?: AgentReleaseState[]
   agent?: AgentSnapshot
+  /** PC-5 (R-Z2 generation fence): the selected client's backend-confirmed
+   * runtime generation, when it can observe one (admission evidence). Absent
+   * means no backend generation evidence exists — the UI-internal revision
+   * counters never stand in for it. */
+  runtimeGeneration?: number
   /** Front-end-only new-session draft; never a backend session until first send is accepted. */
   draft?: {
     active: boolean
@@ -193,7 +322,7 @@ export interface AgentSessions {
   refreshSessions(): Promise<void>
   newSession(): Promise<void>
   openSession(id: string): Promise<void>
-  send(text: string): Promise<void>
+  send(text: string, attachments?: readonly string[]): Promise<AgentSubmissionOutcome>
   stop(runId: string): Promise<void>
   respond(interactionId: string, answer: InteractionAnswer): Promise<void>
   setOption(id: string, value: string): Promise<void>
@@ -203,5 +332,18 @@ export interface AgentSessions {
   selectWorkspace?(id: string): Promise<void>
   addWorkspace?(path: string): Promise<void>
   refreshWorkspaces?(): Promise<void>
+  /** R-Z2-3: the selected connection's native command catalog for one session
+   * key (a snapshot session id). Always present on this facade: a connection
+   * whose client projects no catalog answers `absent`, never a fake menu. */
+  commandCatalog(sessionKey: string): AgentCommandCatalog
+  /** R-Z2-2 plugin-half attachment seam over the selected connection. Present
+   * on the facade, but every answer degrades honestly: a client without the
+   * full prepare→carry chain, a draft with no native session, or an absent
+   * production prepare owner all answer `absent`/`refused` with the reason. */
+  readonly attachments: {
+    capability(sessionId?: string): { readonly kind: 'available' } | { readonly kind: 'absent'; readonly reason: string } | { readonly kind: 'unknown'; readonly reason: string }
+    prepare(request: { readonly sessionId?: string; readonly sourceId: string; readonly idempotencyKey: string }): Promise<AgentAttachmentPreparation>
+    release(preparedId: string, reason: 'draft-removed' | 'draft-cancelled'): Promise<void>
+  }
 }
 export const AgentSessionsToken = new Token<AgentSessions>('ordessa.agent.sessions.v1')

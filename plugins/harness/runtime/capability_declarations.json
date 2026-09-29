@@ -11,6 +11,7 @@
       "stream"
     ],
     "claude-code": [
+      "attach",
       "finish",
       "native_continuation",
       "observe",
@@ -40,13 +41,6 @@
       "stream"
     ],
     "dsh": [
-      "finish",
-      "native_continuation",
-      "observe",
-      "start",
-      "stream"
-    ],
-    "qwen": [
       "finish",
       "native_continuation",
       "observe",

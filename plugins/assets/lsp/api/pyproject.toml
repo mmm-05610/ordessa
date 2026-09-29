@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-lsp-api"
+version = "0.1.0"
+description = "Ordessa LSP asset domain: language-server / formatter definitions, selections and byte-stable projection transcriptions (016 LSP)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Typing :: Typed",
+]
+# Pure domain vocabulary: definitions are by-reference records (executable
+# names/paths, never shipped binaries) plus canonical transcription helpers.
+# No platform, no harness, no host, no I/O.
+dependencies = []
+
+keywords = ["ordessa", "lsp", "formatter", "language-server", "definitions"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ordessa_lsp_api = ["py.typed"]

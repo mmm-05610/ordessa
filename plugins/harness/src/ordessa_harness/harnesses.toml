@@ -83,10 +83,18 @@ schema_version = 1
 driver = "claude"
 # Work Order 43 生产化更新：此前是纯静态预声明；现在有生产封装与官方 ACP 适配器
 # （@agentclientprotocol/claude-agent-acp，Apache-2.0；内嵌 Anthropic 专有 SDK 与
-# 平台二进制，许可边界记录在 claude-production-packaging.md）。`attach` 被移除：
-# 真实握手播发的 promptCapabilities 为空，没有任何附件投递证据（诚实规则）；`stream`
-# 加入：适配器播发并实测 agent_message_chunk 流式更新。逐项证据见 FAMILY_MATRIX。
-capabilities = ["start", "observe", "finish", "stream", "native_continuation"]
+# 平台二进制，许可边界记录在 claude-production-packaging.md）。`stream` 加入：适配器
+# 播发并实测 agent_message_chunk 流式更新。
+# 2026-09-28（P-D 重探针）：`attach` 恢复声明并转为已观测。旧负证据（0.77.0 时代
+# "真实握手 promptCapabilities 为空"）被钉版 0.81.2 的第一手受控探针推翻——实测
+# initialize 播发 promptCapabilities {image:true, embeddedContext:true}，image 块
+# 端到端往返 base64 内容哈希一致，resource_link 按 URI 链接文本下发（file:// 为
+# [@name](uri) markdown 链接），audio 块被适配器静默丢弃（通路层类型化拒绝，不投递）。
+# 语义分层如实：图片=真实附件块；非图片=URI 链接文本；audio=未声明、不宣称、不投递。
+# 证据：packaging/claude/attachment-probe.mjs（npm run test:attachments）与
+# specs/014-plugin-release/reports/P-D-probe-transcript.json（含转录与哈希）、
+# reports/P-D-report.md。逐项证据见 FAMILY_MATRIX。
+capabilities = ["start", "observe", "finish", "attach", "stream", "native_continuation"]
 [harness.identity]
 harness_type = "claude-code"
 display_name = "Claude Code"
@@ -283,51 +291,6 @@ terminal = "stdio"
 kind = "native_session"
 contract_id = "agent-box.dsh-continuation@1"
 target_provider = "dsh-continuation"
-
-[[harness]]
-schema_version = 1
-driver = "qwen"
-# Work Order 43。静态候选（产品层声明上限），**不是**观测结论：qwen-code 0.23.4 的
-# 官方 ACP 面（`qwen --acp`）在第一手探测里播发了完整会话面，但 observed 只能由
-# 本仓的假端点全链门回填。`attach`/`permissions` 刻意不声明（无运行时证据）。
-capabilities = ["start", "observe", "finish", "stream", "native_continuation"]
-[harness.identity]
-harness_type = "qwen"
-display_name = "Qwen Code"
-description = "Qwen Code CLI (Gemini CLI fork), official ACP mode"
-version = "0.23.4"
-[harness.executable]
-identity = "qwen"
-resolver_kind = "PATH_OR_BUNDLE"
-bundle_members = ["qwen"]
-version_probe = ["--version"]
-[harness.profile]
-native_home = ".qwen"
-guest_home = "/runtime/home"
-config_format = "json"
-payload_schema = "qwen-profile-v1"
-codec = "qwen"
-overlay_policy = "execution-local"
-slots = ["provider", "instruction", "mcp", "skill"]
-# Order 58 stage A (first-hand): `.qwen/skills`, `mcpServers` in settings.json
-# (307 refs) - qwen carries an official OAuth login and its own settings file.
-skill_target = "/runtime/home/.qwen/skills/{skill_id}"
-mcp_target = "/runtime/home/.qwen/settings.json"
-mcp_key = "mcpServers"
-[[harness.launch_modes]]
-name = "acp"
-argv = ["qwen", "--acp"]
-io = "stdio"
-[harness.runtime]
-io = "stdio"
-network = "required"
-terminal = "stdio"
-[harness.continuation]
-# 探测与官方文档：ACP session/load + session/list + session/resume 原生可续接；
-# 门跑完后按实测方法回填（同 dsh 的规矩）。
-kind = "native_session"
-contract_id = "agent-box.qwen-continuation@1"
-target_provider = "qwen-continuation"
 
 [[harness]]
 schema_version = 1

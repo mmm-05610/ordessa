@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-mcp"
+version = "0.1.0"
+description = "Ordessa MCP asset domain: definitions, immutable revisions, scope assignments, effective snapshots"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["backend*"]

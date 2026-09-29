@@ -432,3 +432,23 @@ class OperationJournal:
             self._persist_result(db, operation_id, state, result)
             db.commit()
             return OperationRecord(operation_id, row["operation_key"], target, result)
+
+    def read_native_evidence(self, principal: str, target: ApplicationTarget,
+                             operation_id: str) -> dict | None:
+        """Read the durable native facts for one operation without changing them."""
+        with self._connect() as db:
+            row = db.execute("SELECT * FROM operations WHERE operation_id=? AND principal=?",
+                             (operation_id, principal)).fetchone()
+            if row is None or self._record(db, row).target != target:
+                return None
+            evidence = db.execute("SELECT manifest_digest, receipt_json FROM native_evidence WHERE operation_id=?",
+                                  (operation_id,)).fetchone()
+            if evidence is None:
+                return None
+            verification = db.execute("SELECT readback_evidence_ref FROM native_verifications WHERE operation_id=?",
+                                      (operation_id,)).fetchone()
+            return {"manifest_digest": evidence["manifest_digest"],
+                    "receipt_json": evidence["receipt_json"],
+                    "readback_evidence_ref": None if verification is None else verification["readback_evidence_ref"],
+                    "state": row["state"],
+                    "result_json": row["result_json"]}

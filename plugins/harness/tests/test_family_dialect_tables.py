@@ -7,8 +7,8 @@ equivalence:
   * every family table byte-equal to the pre-split literal (change needs a pin
     update in the same batch - frozen on purpose, x20 precedent);
   * the aggregation is the family tables themselves (`is`, not a copy) with the
-    same key sets as before - 8 dialect keys, 6 target keys (dsh/qwen pin None
-    in their own modules and stay absent from `_NATIVE_TARGET`, exactly as the
+    same key sets as before - 7 dialect keys, 6 target keys (dsh pins None in
+    its own module and stays absent from `_NATIVE_TARGET`, exactly as the
     pre-split literals), `qoder` absent from both;
   * kilo/opencode hold distinct objects (equal by value, owned separately - the
     approval names "each family owns its facts, no cross-family import");
@@ -37,7 +37,6 @@ from ordessa_harness.hermes import native as hermes_native
 from ordessa_harness.kilo import native as kilo_native
 from ordessa_harness.opencode import native as opencode_native
 from ordessa_harness.pi import native as pi_native
-from ordessa_harness.qwen import native as qwen_native
 
 # -- frozen pre-split literals (copied from the P-A② source tree, d8a71c4) ----
 
@@ -50,7 +49,6 @@ FROZEN_DIALECTS = {
     "kilo": {"openai-chat": ("npm", "@ai-sdk/openai-compatible")},
     "claude-code": {"anthropic-messages": ("ANTHROPIC_BASE_URL", None)},
     "dsh": {},
-    "qwen": {},
 }
 FROZEN_TARGET = {
     "codex": "config.toml", "opencode": "opencode.json", "kilo": "kilo.json",
@@ -73,7 +71,7 @@ def test_family_dialect_table_is_byte_equal_to_the_pre_split_literal(family):
 
 
 def test_aggregation_key_sets_match_the_pre_split_literals_exactly():
-    assert sorted(nm._FAMILY_DIALECTS) == sorted(FROZEN_DIALECTS)   # 8 keys
+    assert sorted(nm._FAMILY_DIALECTS) == sorted(FROZEN_DIALECTS)   # 7 keys
     assert sorted(nm._NATIVE_TARGET) == sorted(FROZEN_TARGET)       # 6 keys
     assert nm._NATIVE_TARGET == FROZEN_TARGET
 
@@ -82,7 +80,7 @@ def test_aggregation_holds_the_family_tables_themselves_not_copies():
     pairs = {
         "codex": codex_native, "pi": pi_native, "hermes": hermes_native,
         "opencode": opencode_native, "kilo": kilo_native,
-        "claude-code": claude_native, "dsh": dsh_native, "qwen": qwen_native,
+        "claude-code": claude_native, "dsh": dsh_native,
     }
     for key, module in pairs.items():
         assert nm._FAMILY_DIALECTS[key] is module.DIALECTS, key
@@ -93,10 +91,9 @@ def test_aggregation_holds_the_family_tables_themselves_not_copies():
         assert nm._NATIVE_TARGET[key] == module.NATIVE_TARGET, key
 
 
-def test_dsh_and_qwen_pin_nothing_as_explicit_family_rules():
+def test_dsh_pins_nothing_as_explicit_family_rule():
     assert dsh_native.DIALECTS == {} and dsh_native.NATIVE_TARGET is None
-    assert qwen_native.DIALECTS == {} and qwen_native.NATIVE_TARGET is None
-    assert "dsh" not in nm._NATIVE_TARGET and "qwen" not in nm._NATIVE_TARGET
+    assert "dsh" not in nm._NATIVE_TARGET
 
 
 def test_kilo_and_opencode_hold_distinct_objects_equal_by_value():
@@ -136,7 +133,6 @@ def test_behaviour_readings_are_unchanged_after_the_split():
     with pytest.raises(nm.NativeMaterializationError) as refused:
         nm.translate_protocol("claude-code", "openai-chat")
     assert refused.value.code == "PROTOCOL_UNSUPPORTED_BY_HARNESS"
-    assert nm.is_pinnable("qwen", "openai-chat") is False
 
 
 def test_dsh_package_import_needs_no_yaml_and_its_lazysurface_is_frozen():
@@ -152,7 +148,7 @@ def test_dsh_package_import_needs_no_yaml_and_its_lazysurface_is_frozen():
 
 # -- P-B pilot pins, restated for the monorepo baseline (2026-09-25) -----------
 # The historical pins compared the legacy alias distributions
-# (`agent_box_harness_dsh/qwen/kilo`) with the canonical package. Those alias
+# (`agent_box_harness_dsh/kilo`) with the canonical package. Those alias
 # distributions were retired together with the old repository layout; the
 # pins below keep the parts that still carry weight: one implementation, no
 # per-brand entry points, and no second copy of the pilot packages on disk.
@@ -167,7 +163,7 @@ def test_the_distribution_is_ordessa_harness_and_registers_no_pilot_entry_points
     data = tomllib.loads((CANONICAL_PLUGIN_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     assert data["project"]["name"] == "ordessa-harness"
     group = data["project"]["entry-points"]["agent_box.plugins"]
-    for pilot in ("dsh", "qwen", "kilo"):
+    for pilot in ("dsh", "kilo"):
         assert pilot not in group
 
 
@@ -176,7 +172,7 @@ def test_the_pilot_brands_have_exactly_one_implementation_each():
     from pathlib import Path
 
     src_root = CANONICAL_PLUGIN_ROOT / "src"
-    for brand in ("dsh", "qwen", "kilo"):
+    for brand in ("dsh", "kilo"):
         assert (src_root / "ordessa_harness" / brand).is_dir()
         # The retired top-level shim packages (`agent_box_harness_<brand>`)
         # must not come back under any spelling.
@@ -191,7 +187,7 @@ def test_brand_modules_resolve_to_canonical_module_objects():
     """Package + both submodules import to stable, single module objects."""
     import importlib
 
-    for brand in ("dsh", "qwen", "kilo"):
+    for brand in ("dsh", "kilo"):
         pkg = importlib.import_module(f"ordessa_harness.{brand}")
         native = importlib.import_module(f"ordessa_harness.{brand}.native")
         production = importlib.import_module(f"ordessa_harness.{brand}.production")

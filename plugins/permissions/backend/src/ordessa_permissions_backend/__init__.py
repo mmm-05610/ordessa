@@ -46,6 +46,8 @@ C0-owned seams (G1/G2/G4/G5) and are NOT implemented or faked here.
 from __future__ import annotations
 
 from .admission import PermissionsAcpAdmission, submission_argument_digest
+from .authority import (AUTHORITY_METHOD, AUTHORITY_OPTIONAL_PARAMS,
+                        PermissionsAuthority)
 from .authorizer import Authorizer
 from .delegate import (LEGACY_DECIDE_METHOD, LEGACY_DECIDE_OPTIONAL,
                        LEGACY_DECIDE_REQUIRED, LegacyApprovalDelegate)
@@ -58,11 +60,14 @@ from .host_authority import (PERMIT_SEAM_UNPUBLISHED, PermissionsHostAcpAuthorit
                              PluginAdmissionRefused)
 from .migration import LegacyImportIssue, LegacyProfileRulesMigration, LegacyRuleImport
 from .policies import PolicyRepository
-from .plugin import AUTHORIZER_PORT, PLUGIN_ID, PermissionsBackendPlugin
+from .plugin import AUTHORITY_PORT, AUTHORIZER_PORT, PLUGIN_ID, PermissionsBackendPlugin
 
 __version__ = "0.1.0"
 
 __all__ = [
+    "AUTHORITY_METHOD",
+    "AUTHORITY_OPTIONAL_PARAMS",
+    "AUTHORITY_PORT",
     "AUTHORIZER_PORT",
     "ApprovalFacts",
     "ApprovalNotFound",
@@ -84,6 +89,7 @@ __all__ = [
     "PERMIT_SEAM_UNPUBLISHED",
     "POLICY_DESCRIBE_METHOD",
     "PermissionsAcpAdmission",
+    "PermissionsAuthority",
     "PermissionsBackendBusyError",
     "PermissionsBackendPlugin",
     "PermissionsHostAcpAuthority",

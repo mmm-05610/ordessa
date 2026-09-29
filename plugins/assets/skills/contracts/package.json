@@ -1,0 +1,6 @@
+{
+  "name": "@ordessa/skills-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pure TypeScript wire view models for the Skills desktop slice (docs/design/skills-v2/data-model.md). Type-only: no extension id, so the product builder never treats it as an extension package. The desktop extension imports these sources by relative path; the backend slice mirrors the field names in its skills.* views."
+}

@@ -15,7 +15,7 @@ def _texts():
 
 def test_canonical_manifest_matches_toml_and_aliases_are_not_brands():
     registry = load_builtin_registry()
-    assert len(registry) == 8
+    assert len(registry) == 7
     assert set(registry.launch_descriptors) == {definition.harness_type for definition in registry.all()}
     assert "claude" not in registry.launch_descriptors
     assert "omp" not in registry.launch_descriptors

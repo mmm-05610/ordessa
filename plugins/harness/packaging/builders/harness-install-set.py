@@ -35,15 +35,15 @@ PLUGIN = REPO
 SCRIPT = "scripts/server-round1/harness-install-set.py"
 
 #: Every family the install set must cover, in registry order.
-FAMILIES = ("codex", "claude-code", "opencode", "hermes", "dsh", "qwen", "kilo", "pi")
+FAMILIES = ("codex", "claude-code", "opencode", "hermes", "dsh", "kilo", "pi")
 
 #: Families whose runtime artifact is a directory closure built by a builder
 #: script; the remaining ones (opencode) pin a single-file binary instead.
-CLOSURE_FAMILIES = ("codex", "claude-code", "hermes", "dsh", "qwen", "kilo", "pi")
+CLOSURE_FAMILIES = ("codex", "claude-code", "hermes", "dsh", "kilo", "pi")
 
 MODULE_NAMES = {
     "codex": "codex", "claude-code": "claude", "opencode": "opencode",
-    "hermes": "hermes", "dsh": "dsh", "qwen": "qwen", "kilo": "kilo", "pi": "pi",
+    "hermes": "hermes", "dsh": "dsh", "kilo": "kilo", "pi": "pi",
 }
 
 BUILDERS = {
@@ -51,7 +51,6 @@ BUILDERS = {
     "claude-code": "build-claude-runtime-artifact.mjs",
     "hermes": "build-hermes-runtime-artifact.mjs",
     "dsh": "build-dsh-runtime-artifact.mjs",
-    "qwen": "build-qwen-runtime-artifact.mjs",
     "kilo": "build-kilo-runtime-artifact.mjs",
     "pi": "build-pi-runtime-artifact.mjs",
 }
@@ -65,7 +64,7 @@ BUILDERS = {
 NPM_ROOTS = {
     "codex": "codex", "pi": "pi",
     "claude-code": "claude",
-    "dsh": "dsh", "qwen": "qwen", "kilo": "kilo",
+    "dsh": "dsh", "kilo": "kilo",
 }
 
 REPORT: dict = {"script": SCRIPT}

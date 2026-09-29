@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-command-templates"
+version = "0.1.0"
+description = "Ordessa command-templates domain: parameterized one-shot user messages, revisions, assignments, closed expansion"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+# The pure domain depends only on the stdlib. The optional Server plugin seam
+# (`ordessa_command_templates.plugin`) imports `server_plugin_api` behind a
+# documented extra; it is never imported by the pure modules, and importing the
+# package registers nothing (see tests/test_isolation.py).
+dependencies = []
+
+[project.optional-dependencies]
+plugin = ["ordessa-server-plugin-api>=0.1.0,<1"]
+dev = ["pytest>=7"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

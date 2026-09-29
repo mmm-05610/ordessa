@@ -1,5 +1,15 @@
 # Q4/T10 补格 — wire 契约防漂移守卫 + mcp.probe wire 组合格
 
+> **2026-09-29 调和补记（016 CMP-mcp；详见 wire-alignment.md）**：本报告 §四
+> 登记的修复建议已被 012 并支整固（`ba891aff05`）部分执行（wire.ts 重写到
+> 注册面），但停在半路（dto/守护账本/UI 未动，tsc 红）。016 CMP 补做完成了
+> dto.ts 对齐与守护账本调和：`TS_RENAMES={}`、双 PARAM 账本空、
+> `RESPONSE_LEDGER` 对齐（新增 WCG-03b 解包路径互证格）、WCG-04 改钉对齐值
+> 域对、WCG-04b/05 同步。账本语义不变：任何一侧再动而账本未同步更新即红。
+> 遗留：UI 层迁移（卡点 C-mcp-fe，见 specs/016-overnight-batch/reports/
+> MCP-report.md §4）。下方原文保留（历史快照，其中"前端源码本任务禁改"等
+> 边界为原任务口径，不再是 016 CMP 的口径）。
+
 任务：T10 剩余账中「mcp.probe wire 组合格」（specs/011-q4-mcp/reports/t10-integration.md §五.3）
 + 新增 Python 常跑的 wire 契约防漂移守卫。范围：仅新增
 `plugins/assets/mcp/tests/contract/**` 与本文件；**未改任何既有实现/前端源码，无 git 写操作**。
