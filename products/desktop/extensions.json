@@ -13,6 +13,10 @@
   "ordessa.chat",
   "ordessa.profile-api",
   "ordessa.profile-frontend",
-  "ordessa.profile-chat"
+  "ordessa.profile-chat",
+  "ordessa.skills",
+  "ordessa.asset-mcp",
+  "ordessa.model-provider",
+  "ordessa.sandbox-settings"
  ]
 }

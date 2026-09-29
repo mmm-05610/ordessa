@@ -48,9 +48,12 @@ const realExtensionsRoot = path.join(repoRoot, 'products/desktop/dist/extensions
 const lockFile = path.join(repoRoot, 'products/desktop/extensions.lock.json')
 
 const DOMAIN_CARRIER_ID = 'ordessa.agent-contracts'
-// The three Agent IMPLEMENTATION extensions; FR-009's last clause removes them
-// while the domain carrier stays enabled.
-const AGENT_IMPLEMENTATION_IDS = ['ordessa.agent-connections', 'ordessa.agent-sessions', 'ordessa.agent-conversation']
+// The Agent IMPLEMENTATION extensions; FR-009's last clause removes them
+// while the domain carrier stays enabled. W-014 (I-001): the retired
+// 'ordessa.agent-conversation' (S-03) is gone from this list — the guard's
+// intent is "the enabled list admits exactly the current real agent
+// implementations", not a freeze of history.
+const AGENT_IMPLEMENTATION_IDS = ['ordessa.agent-connections', 'ordessa.agent-sessions']
 
 // Frozen Agent/Chat domain declaration names — the exported interface/type/
 // const/function names of the real domain carrier sources
