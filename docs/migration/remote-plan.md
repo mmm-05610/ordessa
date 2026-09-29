@@ -5,7 +5,7 @@ happened. Every action below needs explicit user authorisation.
 
 ## Identity decision (user-confirmed direction)
 
-The monorepo keeps the identity of `https://github.com/mmm-05610/agent-box.git`.
+The monorepo keeps the identity of the original `agent-box` repository (`https://github.com/mmm-05610/agent-box.git`), **renamed to `https://github.com/mmm-05610/ordessa.git` on 2026-09-29** (GitHub redirects the old URL).
 The GitHub repository may later be renamed `ordessa` (GitHub redirects refs
 after a rename); this round only prepares.
 
@@ -36,7 +36,11 @@ existing remote refs; old remote `main` needs no preservation ref (it remains
 an ancestor of the new `main`). Publishing desktop/studio/control archives to
 this remote is possible later via their archive refs if wanted.
 
-## Rename to `ordessa` (later, user-driven)
+## Rename to `ordessa` — executed 2026-09-29
 
-GitHub rename keeps redirects; local remotes should then be updated
-(`git remote set-url`). No action this round.
+The GitHub repository was renamed `agent-box` → `ordessa` (redirects kept). Local
+`origin` updated with `git remote set-url` to
+`https://github.com/mmm-05610/ordessa.git`; `ls-remote` verified at the new URL.
+The CI added the same day (`.github/workflows/ci.yml`, PR #68) now provides the
+`backend`/`frontend` contexts the `main` ruleset requires, so routine changes go
+through a PR merge instead of a temporary ruleset relaxation.

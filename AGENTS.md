@@ -7,10 +7,10 @@ been retired (history and restore paths: `docs/reference-index.md`,
 
 ## What this repo is
 
-- Product/repo name: **Ordessa**. Remote identity: the former `agent-box`
-  repository (`github.com/mmm-05610/agent-box`) — see
-  `docs/migration/remote-plan.md` before any publish work; **no push without
-  explicit user authorisation**.
+- Product/repo name: **Ordessa**. Remote identity: `github.com/mmm-05610/ordessa`
+  (renamed from `mmm-05610/agent-box` on 2026-09-29; GitHub redirects the old
+  URL) — see `docs/migration/remote-plan.md` before any publish work; **no push
+  without explicit user authorisation**.
 - `packages/pacthold` (Python `pacthold`) — governance kernel and plugin SDK.
   Zero product dependencies. Nothing here may import a plugin, app or product.
 - `apps/server` (Python `ordessa_server`) — Ordessa Server. Depends on
