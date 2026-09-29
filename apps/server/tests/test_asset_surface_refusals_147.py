@@ -295,17 +295,21 @@ class _CountingObjects:
         return payload
 
 
-def _forty_profiles(api, models=500):
+def _forty_profiles(api, runtime, models=500):
     created = api.ok("providerModels.create", {
         "requestId": "p147-provider", "displayName": "One provider", "harness": "alpha",
         "provider": "opaque", "credentialId": None, "configuration": [],
         "models": [{"modelId": f"model-{index}", "displayName": f"M{index}",
                     "availability": "unknown", "unavailableReason": None}
                    for index in range(models)]})["providerModel"]
+    # AR-1/W-1：造数是摆桌子，改仓库层 Python 直调（wire 面已退役）。
+    repository = runtime.plugin_host.provided_port("product.repository")
     for index in range(40):
-        profile = api.ok("profiles.create", {
-            "requestId": f"p147-profile-{index}", "displayName": f"role-{index}",
-            "harness": "alpha"})["profile"]
+        status, body = repository.profiles.create(
+            key=f"p147-profile-{index}", request_digest=f"p147-profile-{index}",
+            name=f"role-{index}", harness_type="alpha",
+            config_digest=f"p147-profile-{index}", credential_id=None)
+        profile = {"id": body["profile_id"], "version": 1}
         api.ok("profiles.updateConfig", {
             "requestId": f"p147-config-{index}", "profileId": profile["id"],
             "expectedVersion": profile["version"],
@@ -316,7 +320,7 @@ def _forty_profiles(api, models=500):
 
 def _counted_list(server):
     runtime, api = server
-    _forty_profiles(api)
+    _forty_profiles(api, runtime)
     counter = _CountingObjects(runtime.plugin_host.provided_port('compat.handlers').objects)
     runtime.plugin_host.provided_port('compat.handlers').objects = counter
     try:
@@ -340,7 +344,7 @@ def test_counter_example_bypassing_the_memo_goes_back_to_eighty_reads(
         server, monkeypatch):
     """The bound is what is asserted, so deleting the memo must break it."""
     runtime, api = server
-    _forty_profiles(api)
+    _forty_profiles(api, runtime)
     def uncached_read(self, digest):
         return self._objects.read(digest)
 

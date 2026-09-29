@@ -1,3 +1,17 @@
+"""EXCLUDED — AR-1/W-1 交接（2026-09-29）
+
+本文件断言的语义已由新 owner 接账，内容**完整保留**（不被收集）：
+
+  接账方：plugins/assets/model-provider/server/tests/test_next_choice_wire.py
+  被测语义：多槽位引用：一个控件可持有 Provider/Model 引用列表
+
+原由 server-compat 的 model_configs writer 实现；W-1 拆除该 writer 后，
+这条链路的 owner 是 model-provider adapters。保留本文件是为了让
+"哪条语义去哪了"可追——不是删断言把红藏起来。
+按仓库约定（docs/migration/backend-build-test.md §(d)），
+`EXCLUDED-*` 前缀使其不被 pytest 收集。
+"""
+
 """Order 125: `config.describe` has to show every slot, not the first one.
 
 R-0013's v2 multi-slot criteria (092's G8/G9/G10) reached the wire as: a control

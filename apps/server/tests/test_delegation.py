@@ -8,6 +8,8 @@ over-fan-out, and the parent's roll-up/cancel linkage.
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
@@ -295,7 +297,7 @@ def test_a_granted_parent_renders_the_bridge_entry_and_zero_grants_does_not(tmp_
     REPO = __import__("pathlib").Path(__file__).resolve().parents[3]
     PLUGIN = REPO / "plugins"  / "harness"
     peer_source = "tests/harness_remote/home_probe_acp_peer.mjs"
-    peer_bytes = REPO / "tests" / "server" / "fixtures" / "home_probe_acp_peer.mjs"
+    peer_bytes = Path(__file__).resolve().parent / "fixtures" / "home_probe_acp_peer.mjs"
     deployment = {"schemaVersion": 1, "harnesses": [{
         "id": "claude-code", "capabilityClaims": {"stream": True},
         "adapter": {"command": "/usr/bin/node", "args": [], "source": peer_source},
@@ -559,7 +561,7 @@ def test_the_real_bridge_process_runs_a_child_turn_end_to_end(tmp_path, monkeypa
     REPO = __import__("pathlib").Path(__file__).resolve().parents[3]
     PLUGIN = REPO / "plugins"  / "harness"
     peer_source = "tests/harness_remote/home_probe_acp_peer.mjs"
-    peer_bytes = REPO / "tests" / "server" / "fixtures" / "home_probe_acp_peer.mjs"
+    peer_bytes = Path(__file__).resolve().parent / "fixtures" / "home_probe_acp_peer.mjs"
     harness = "claude-code"
     deployment = {"schemaVersion": 1, "harnesses": [{
         "id": harness, "capabilityClaims": {"stream": True},

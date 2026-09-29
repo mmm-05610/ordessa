@@ -443,6 +443,18 @@ def test_profiles_list_exposes_harness_as_data_only(wire):
     assert listing["nextCursor"] is None
 
 
+def _make_profile_directly(runtime, key, name, harness="alpha"):
+    """AR-1/W-1：wire 面 profiles.create 已退役，摆桌子改仓库层 Python 直调。
+
+    仓库层的 create/get/grant 全部保留（读残留裁定），同库同表同 id；
+    这里只把返回映射回测试原本使用的 wire 形状，断言零改动。
+    """
+    _status, body = runtime.plugin_host.provided_port("product.repository").profiles.create(
+        key=key, request_digest=key, name=name, harness_type=harness,
+        config_digest=key, credential_id=None)
+    return {"id": body["profile_id"], "version": 1, "name": name, "harness": harness}
+
+
 def test_a_directory_backed_model_control_is_a_slot_before_anything_is_chosen(wire_directory_model):
     """A first-time reader must be told this control takes a Provider/Model
     reference. Described as an enum of an empty list it offered nothing to
@@ -458,9 +470,7 @@ def test_a_directory_backed_model_control_is_a_slot_before_anything_is_chosen(wi
             "availability": "unknown", "unavailableReason": None,
         }],
     })["providerModel"]
-    created = api.ok("profiles.create", {
-        "requestId": "profile-directory", "displayName": "Builder", "harness": "alpha",
-    })["profile"]
+    created = _make_profile_directly(_runtime, "profile-directory", "Builder")
 
     descriptor = api.ok("config.describe", {
         "profileId": created["id"], "workspaceId": None,
@@ -492,9 +502,7 @@ def test_a_control_with_declared_values_stays_an_enum(wire):
     model control; a control with a declared value list is an enumeration."""
     _runtime, api, _execution = wire
     make_profile(api)
-    created = api.ok("profiles.create", {
-        "requestId": "profile-enum", "displayName": "Enum role", "harness": "alpha",
-    })["profile"]
+    created = _make_profile_directly(_runtime, "profile-enum", "Enum role")
     descriptor = api.ok("config.describe", {
         "profileId": created["id"], "workspaceId": None,
     })["descriptor"]
@@ -504,6 +512,16 @@ def test_a_control_with_declared_values_stays_an_enum(wire):
 
 
 def test_profile_and_provider_model_maintenance_is_versioned_and_referential(wire):
+    """EXCLUDED — AR-1/W-1 交接（2026-09-29）
+
+    本条测的是 wire 面的 profile / providerModel 维护本身；该 wire 面（8 个写
+    handler + 注册表）随 W-1 退役，语义由 model-provider adapters 接账
+    （`plugins/assets/model-provider/server/tests/test_next_choice_wire.py`）。
+    保留函数名与 skip 让它可见可追，而不是删断言把红藏起来。
+    """
+    import pytest as _pytest
+    _pytest.skip("AR-1/W-1：wire 面 profile/providerModel 维护已退役，"
+                 "语义由 model-provider adapters 接账")
     _runtime, api, _execution = wire
     provider = api.ok("providerModels.create", {
         "requestId": "provider-create", "displayName": "Official API",

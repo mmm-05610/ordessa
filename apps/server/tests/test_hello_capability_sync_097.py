@@ -153,7 +153,7 @@ def test_a_method_dropped_from_dispatch_diverges_and_the_gate_bites(hello):
     Derivation alone cannot catch a missing handler - both sides of that
     equality shrink together. The gate that bites is the one against the *other*
     statement: retire `usage.export` from the live registry and hello honestly
-    follows it down to 66 while the plugin's declaration still says 67. If
+    follows it down to 55 while the plugin's declaration still says 56. If
     this case ever stops reporting the hole, the registry has stopped being
     the one table hello is fed from.
     """
@@ -246,7 +246,7 @@ def test_the_baseline_deployment_answers_the_pre_existing_27_verbatim(tmp_path):
 def test_an_id_that_no_rule_covers_still_answers_supported(hello):
     """The fallback is pinned, not inherited by accident.
 
-    Most of the 67 rows carry no availability predicate, so the registry
+    Most of the 56 rows carry no availability predicate, so the registry
     answers `(True, None)` for them - right for support state, wrong for
     existence, which is why an id outside the registry is answered `False`
     by `_capability` and refused by dispatch: the two questions stay in two
