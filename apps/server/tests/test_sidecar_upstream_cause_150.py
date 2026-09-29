@@ -36,7 +36,7 @@ from ordessa_workspace import WorkspaceRecords
 from pacthold_runtime_compat.storage import Database, ObjectStore
 
 PLUGIN = pathlib.Path(__file__).resolve().parents[3] / "plugins"  / "harness"
-WORKER = PLUGIN / "runtime" / "worker-entry.mjs"
+WORKER = PLUGIN / "runtime" / "native-driver.mjs"  # worker-entry.mjs 随退役旧链移除
 PEER = PLUGIN / "tests" / "harness_remote" / "fake_acp_peer.mjs"
 NODE = shutil.which("node") or "/usr/bin/node"
 
