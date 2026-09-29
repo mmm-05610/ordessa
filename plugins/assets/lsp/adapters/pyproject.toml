@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-lsp-adapters"
+version = "0.1.0"
+description = "Ordessa LSP asset domain: facet assets.lsp on the real harness.configuration-adapters point, executable-presence probe and honest per-brand projection decisions (016 LSP)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Typing :: Typed",
+]
+# Same third-party closure the platform's own contributor fixture declares:
+# the domain api, the Server plugin public types, and the Harness C2
+# descriptive vocabulary (ordessa-harness-api). No host code, no
+# ordessa_harness package import, no model-provider import (只仿不 import).
+dependencies = [
+    "ordessa-lsp-api",
+    "ordessa-server-plugin-api",
+    "ordessa-harness-api>=1.0.0a1,<2",
+]
+keywords = ["ordessa", "lsp", "formatter", "adapter", "facet", "probe"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ordessa_lsp_adapters = ["py.typed"]
