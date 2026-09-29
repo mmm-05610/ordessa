@@ -28,7 +28,7 @@
     "build:deb": "node packaging/build-deb.mjs",
     "package:keygen": "node packaging/update/keygen.mjs packaging/.keys",
     "package:publish-update": "node packaging/update/publish.mjs",
-    "test:packaging": "node --test tests/integration/packaging/",
+    "test:packaging": "node --test \"tests/integration/packaging/**/*.test.mjs\"",
     "typecheck": "npm run --workspace apps/desktop typecheck",
     "test": "node tooling/test-all.mjs",
     "test:electron": "npm run --workspace apps/desktop test:electron",

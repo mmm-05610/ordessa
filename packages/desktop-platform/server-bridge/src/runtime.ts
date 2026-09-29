@@ -18,11 +18,24 @@ import path from 'node:path'
 import { layout } from './data-root.js'
 import { BundledRuntimeMissing } from './errors.js'
 
+/**
+ * The interpreter inside the bundled root. C-09 A2 fixes it below `python/`,
+ * and `packaging/lib/layout.mjs` declares the same path (`pythonBin`) on the
+ * build side, so the two ends of C-02 §6 stay comparable.
+ */
+const PYTHON_BIN_RELATIVE = 'python/bin/python3.12'
+
 export interface BundledRuntime {
   /** The root the three directories were found under. */
   readonly root: string
-  /** The interpreter that runs `python -m ordessa_server`. */
+  /** The directory holding the bundled interpreter. */
   readonly python: string
+  /**
+   * The interpreter executable. This is what `serverCommand` spawns: the
+   * `python/` directory itself is not executable, and a host that passed it
+   * to spawn would report a launch error on a perfectly intact install.
+   */
+  readonly pythonBin: string
   /** The bin directory, holding the ACP bridge. */
   readonly bin: string
   /** Where per-Harness artifacts are read from. */
@@ -60,6 +73,7 @@ export function resolveBundledRuntime(
   const launch = layout().launch
   const root = env[launch.bundledRootEnv] ?? launch.bundledRootDefault
   const python = path.join(root, 'python')
+  const pythonBin = path.join(root, PYTHON_BIN_RELATIVE)
   const bin = path.join(root, 'bin')
   const harnesses = path.join(root, 'harnesses')
   const acpBridge = path.join(root, launch.acpBridgeRelative)
@@ -71,12 +85,12 @@ export function resolveBundledRuntime(
   if (!isDirectory(harnesses)) missing.push('harnesses')
   if (missing.length > 0) throw new BundledRuntimeMissing(missing)
 
-  return { root, python, bin, harnesses, acpBridge }
+  return { root, python, pythonBin, bin, harnesses, acpBridge }
 }
 
 /** The command that starts the Server: the bundled interpreter, this module's package. */
 export function serverCommand(runtime: BundledRuntime): readonly string[] {
-  return [runtime.python, '-m', 'ordessa_server']
+  return [runtime.pythonBin, '-m', 'ordessa_server']
 }
 
 /** Is a bundled root present at all? A cheaper pre-check for the settings page. */

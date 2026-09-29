@@ -16,14 +16,22 @@ import { test, describe, before, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 
-import { readFileSync, existsSync, mkdirSync, rmSync } from 'node:fs'
+import { readFileSync, existsSync, mkdirSync, rmSync, statSync } from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { repoRoot, identity } from '../../../packaging/lib/identity.mjs'
 import { layout } from '../../../packaging/lib/layout.mjs'
 
 const id = identity()
 const OUT = path.join(repoRoot, 'packaging/.out')
 const DEB = path.join(OUT, id.pkgName + '_' + id.version + '_amd64.deb')
+const TEST_DIR = path.dirname(fileURLToPath(import.meta.url))
+// The esbuild output below is written here, not to os.tmpdir(): the server
+// bridge reads `apps/server/.../data_root_layout.json` relative to its own
+// module URL (`../../../../apps/...`, four levels up), so the bundle must live
+// at the same depth as the source it replaces. This directory is four levels
+// below the repository root, exactly like the source directory.
+const BUNDLE_DIR = path.join(TEST_DIR, '.runtime-bundle')
 
 let control = null
 let listing = null
@@ -48,10 +56,38 @@ before(() => {
 
 after(() => {
   if (workDir) rmSync(workDir, { recursive: true, force: true })
+  rmSync(BUNDLE_DIR, { recursive: true, force: true })
 })
 
 const shipped = rel => path.join(workDir, rel.replace(/^\.\//, ''))
 const hasEntry = needle => listing.split('\n').some(line => line.includes(needle))
+
+// Load the real server-bridge runtime module (TypeScript) so the host's
+// resolution is checked by executing it, not by re-stating its paths here.
+// esbuild is the repository's own bundler; a missing module is a real,
+// actionable failure rather than a silently skipped check.
+let bridgeRuntime = null
+async function loadBridgeRuntime() {
+  if (bridgeRuntime) return bridgeRuntime
+  let build
+  try {
+    ({ build } = await import('esbuild'))
+  } catch (error) {
+    throw new Error('esbuild is required to compile the server-bridge runtime for this test: ' + error.message)
+  }
+  mkdirSync(BUNDLE_DIR, { recursive: true })
+  const out = path.join(BUNDLE_DIR, 'runtime.mjs')
+  await build({
+    entryPoints: [path.join(repoRoot, 'packages/desktop-platform/server-bridge/src/runtime.ts')],
+    outfile: out,
+    bundle: true,
+    format: 'esm',
+    platform: 'node',
+    logLevel: 'silent',
+  })
+  bridgeRuntime = await import(pathToFileURL(out).href)
+  return bridgeRuntime
+}
 
 describe('PC-01 deb control', () => {
   test('package identity matches the single source of version', () => {
@@ -112,6 +148,15 @@ describe('PC-02 install layout', () => {
     }
   })
 
+  test('/opt/ordessa/harnesses exists (the Server bundledDirs contract)', () => {
+    // server-bridge refuses a missing `harnesses/` with BUNDLED_RUNTIME_MISSING
+    // before it spawns anything, and data_root_layout.json lists it in
+    // bundledDirs — a package without it installs and then cannot start.
+    const dir = shipped('opt/ordessa/harnesses')
+    assert.ok(existsSync(dir), 'missing /opt/ordessa/harnesses')
+    assert.ok(statSync(dir).isDirectory(), '/opt/ordessa/harnesses must be a directory')
+  })
+
   test('desktop entry and hicolor icons are installed', () => {
     assert.ok(existsSync(shipped('usr/share/applications/ordessa.desktop')))
     for (const size of [16, 32, 48, 64, 128, 256]) {
@@ -161,6 +206,92 @@ describe('PC-03/PC-04 release command', () => {
   test('the ACP bridge is present and executable', () => {
     const st = readFileSync(shipped('opt/ordessa/bin/acp')).subarray(0, 4)
     assert.equal(st.toString('hex'), '7f454c46', 'acp is not an ELF binary')
+  })
+})
+
+describe('PC-02 server product closure', () => {
+  // The installed product is what turns a bare host into Ordessa. Without the
+  // `ordessa.server_product` entry point the Server refuses to start with
+  // SERVER_PRODUCT_MISSING; without the local import closure the refusal is a
+  // ModuleNotFoundError. Both are read out of the bundled interpreter itself,
+  // so the assertions cannot drift from the artefact.
+  // Resolved lazily: describe bodies run at collection time, before the
+  // `before` hook has extracted the package.
+  const bundledPython = () => path.join(workDir, 'opt/ordessa/python/bin/python3.12')
+
+  test('the bundled interpreter resolves the ordessa.server_product entry point', () => {
+    const out = sh(bundledPython(), ['-c',
+      "from importlib.metadata import entry_points; print('\\n'.join(sorted(e.name for e in entry_points(group='ordessa.server_product'))))"])
+    assert.equal(out.trim(), 'default')
+  })
+
+  test('the entry point loads into the composition the host starts with', () => {
+    const out = sh(bundledPython(), ['-c', [
+      'from importlib.metadata import entry_points',
+      "composition = list(entry_points(group='ordessa.server_product'))[0].load()()",
+      'print(type(composition).__name__, callable(composition.default_plugins))',
+    ].join('; ')])
+    assert.equal(out.trim(), 'ServerProductComposition True')
+    // The default selection is the deployment's plugin set, not an empty tuple:
+    // a composition that answers nothing would make the product a bare host.
+    const plugins = sh(bundledPython(), ['-c', [
+      'from importlib.metadata import entry_points',
+      "composition = list(entry_points(group='ordessa.server_product'))[0].load()()",
+      'print(len(composition.default_plugins()))',
+    ].join('; ')])
+    assert.ok(Number(plugins.trim()) >= 8, 'default_plugins returned ' + plugins.trim() + ' plugins')
+  })
+
+  test('the local import closure of the product is installed inside the package', () => {
+    // Derived from products/server composition + apps/server (AST scan,
+    // B-002 report has the derivation). These are the modules the default
+    // runtime imports; a missing distribution fails here with its own name.
+    const modules = [
+      'ordessa_server_product.composition',
+      'ordessa_server.bootstrap',
+      'ordessa_server_compat.plugin',
+      'ordessa_workspace.plugin',
+      'ordessa_harness.server_acp.plugin',
+      'ordessa_harness.contributions',
+      'ordessa_model_provider.plugin',
+      'ordessa_permissions_backend.plugin',
+      'ordessa_permissions_adapters',
+      'ordessa_sandbox_backend',
+      'ordessa_sandbox_adapters',
+      'pacthold_runtime_compat.storage',
+    ]
+    const out = sh(bundledPython(), ['-c', 'import ' + modules.join(', ')])
+    assert.equal(out, '')
+  })
+
+  test('the product packages are real installs, not editable links into a build tree', () => {
+    const out = sh(bundledPython(), ['-c',
+      'import ordessa_server_product, pathlib; print(pathlib.Path(ordessa_server_product.__file__).resolve())'])
+    const inside = path.join(workDir, 'opt/ordessa/python/lib/python3.12/site-packages')
+    assert.ok(out.trim().startsWith(inside + path.sep),
+      'ordessa_server_product must live under ' + inside + ', got ' + out.trim())
+  })
+})
+
+describe('PC-02 bundled interpreter path (C-02 §6)', () => {
+  // The host resolves and checks the bundled runtime before spawning anything.
+  // This executes the real server-bridge source against the extracted package:
+  // the launch command must be the interpreter executable
+  // (`python/bin/python3.12`), never the `python/` directory (the defect this
+  // guards: spawn(python/) fails on an intact install).
+  test('the host launches python/bin/python3.12, not the python/ directory', async () => {
+    const runtime = await loadBridgeRuntime()
+    const root = path.join(workDir, 'opt/ordessa')
+    const resolved = runtime.resolveBundledRuntime({ ORDESSA_BUNDLED_ROOT: root })
+
+    const expected = path.join(workDir, layout.pythonBin)
+    assert.equal(resolved.pythonBin, expected, 'the resolved interpreter must be the deb layout path')
+    assert.equal(path.basename(resolved.pythonBin), 'python3.12')
+    assert.ok(statSync(resolved.pythonBin).isFile(), 'the interpreter must be a regular file')
+    assert.ok((statSync(resolved.pythonBin).mode & 0o111) !== 0, 'the interpreter must be executable')
+    assert.equal(runtime.serverCommand(resolved)[0], expected)
+    // The directory the interpreter lives in is still what the check names.
+    assert.equal(resolved.python, path.join(root, 'python'))
   })
 })
 

@@ -116,29 +116,95 @@ function stageServerDeps(python) {
 }
 
 // -- 3. the product's own Python packages ------------------------------------
+//
+// A bare `ordessa_server` host is not the product: without the
+// `ordessa.server_product` entry point the Server refuses to start with
+// `SERVER_PRODUCT_MISSING` (apps/server .../bootstrap/runtime.py). The deb
+// must therefore carry the product selection package and its whole local
+// runtime closure, non-editable (an editable install points back at the
+// repository, which does not exist on a user machine).
+//
+// The list is the transitive local-import closure of
+// `products/server/src/ordessa_server_product/composition.py`, rooted at the
+// entry point and at `ordessa_server`. `products/server/pyproject.toml`
+// declares the direct dependencies; the composition's module-level imports add
+// the packages it pulls in that the pyproject list does not name
+// (model-provider, permissions-backend, sandbox-api), plus the api packages
+// those import themselves. Derived 2026-09-30 with an AST scan of every
+// package under apps/ packages/ plugins/ products/ — re-derive the same way
+// before trusting this list after an assembly change.
+//
+//   pacthold, server-plugin-api  (kernel + plugin carrier)
+//   harness-api, runtime-compat  (contracts + legacy migration assembly)
+//   sandbox api -> backend -> adapters
+//   permissions api -> backend -> adapters
+//   workspace, harness, apps/server
+//   server-compat                (not-yet-split business domains)
+//   model-provider/server        (ModelProviderPlugin in default_plugins)
+//   products/server              (the composition itself)
+//
+// `--no-deps` is deliberate: the local distributions exist nowhere on PyPI,
+// so pip must never resolve them; each install is a local build. A missing
+// member of the closure is a hard build failure — skipping it would produce a
+// deb that installs and then cannot start.
+const PRODUCT_PACKAGES = [
+  'packages/pacthold',
+  'packages/server-plugin-api',
+  'plugins/harness/api',
+  'plugins/runtime-compat',
+  'plugins/assets/sandbox/api',
+  'plugins/assets/sandbox/backend',
+  'plugins/assets/sandbox/adapters',
+  'plugins/permissions/api',
+  'plugins/permissions/backend',
+  'plugins/permissions/adapters',
+  'plugins/workspace',
+  'plugins/harness',
+  'apps/server',
+  'plugins/server-compat',
+  'plugins/assets/model-provider/server',
+  'products/server',
+]
 
 function stageProductPackages(python) {
-  // Installed non-editable: an editable install points at the repository, which
-  // must not exist on a user machine.
   const pythonBin = path.join(python.dest, 'bin/python3.12')
-  const packages = [
-    'packages/pacthold',
-    'packages/server-plugin-api',
-    'apps/server',
-  ]
   if (flag('skip-pip')) return { installed: [], skipped: true }
-  log('installing the product Python packages (non-editable)…')
-  for (const rel of packages) {
+  log('installing the product Python packages (non-editable, full closure)…')
+  const installed = []
+  for (const rel of PRODUCT_PACKAGES) {
     const dir = path.join(repoRoot, rel)
-    if (!existsSync(dir)) {
-      log('  (skipping absent ' + rel + ')')
-      continue
-    }
+    if (!existsSync(dir)) throw new Error('product Python package missing: ' + rel)
     run(pythonBin, ['-m', 'pip', 'install', '--no-compile', '--no-cache-dir', '--no-deps', dir], {
       env: { ...process.env, PIP_DISABLE_PIP_VERSION_CHECK: '1' },
     })
+    installed.push(rel)
   }
-  return { installed: packages }
+  // The closure identity is the set of package sources and their declared
+  // metadata, recorded in the bundle manifest like every other bundled item
+  // (C-09 §B: version + SHA-256 for each).
+  const fingerprint = installed
+    .map(rel => rel + '  ' + sha256File(path.join(repoRoot, rel, 'pyproject.toml')) + '\n')
+    .join('')
+  return { installed, closureSha256: sha256Bytes(Buffer.from(fingerprint, 'utf8')) }
+}
+
+// -- 3b. the harness landing directory ----------------------------------------
+
+// C-09 §A2 lists /opt/ordessa/harnesses as part of the install layout, and the
+// Server's `bundledDirs` layout (data_root_layout.json) requires it: the
+// host's runtime check refuses a missing directory with
+// `BUNDLED_RUNTIME_MISSING` before anything is spawned (C-02 §6). C-09 §B
+// bounds the *content* to what core and the default assembly actually need
+// and explicitly forbids making unconfirmed-licence brand payloads (Claude) a
+// core packaging prerequisite; the brand runtimes are optional install
+// packages of the harness release line (plugins/harness/packaging/README.md),
+// mounted per deployment by the operator. The directory is therefore staged
+// empty as the landing point — the brand payloads are a later release line,
+// not a silent omission.
+function stageHarnesses() {
+  const dir = path.join(STAGE, layout.harnesses.replace(/^\//, ''))
+  mkdirSync(dir, { recursive: true })
+  return { dir }
 }
 
 // -- 4. the Electron application ---------------------------------------------
@@ -411,6 +477,7 @@ async function main() {
   const python = await step('python-runtime', stagePython)()
   const serverDeps = await step('server-deps', () => stageServerDeps(python))()
   const productPkgs = await step('product-packages', () => stageProductPackages(python))()
+  await step('harnesses', () => stageHarnesses())()
   const app = await step('app', () => stageApp(id))()
   const bridge = await step('acp-bridge', buildBridge)()
   await step('bin', () => stageBin(id, bridge.path))()
@@ -433,6 +500,8 @@ async function main() {
     { kind: 'desktop', source: 'apps/desktop/dist + products/desktop/dist', version: id.version, sha256: treeHash(app.appDir), dest: layout.app },
     { kind: 'python-runtime', source: PYTHON_URL, version: PYTHON_VERSION, sha256: sha256Bytes(python.sha256), dest: layout.python },
     { kind: 'server-deps', source: 'apps/server/lockfiles/server-linux-py312.txt', version: 'pinned', sha256: serverDeps.lockSha256, dest: layout.sitePackages },
+    { kind: 'server-product', source: 'products/server + local closure (' + productPkgs.installed.length + ' local distributions)', version: id.version, sha256: productPkgs.closureSha256 ?? null, dest: layout.sitePackages },
+    { kind: 'harness-landing', source: 'empty landing directory (C-09 §B: brand payloads ship with the harness release line)', version: id.version, sha256: null, dest: layout.harnesses },
     { kind: 'acp-bridge', source: 'plugins/harness/packaging/acp-adapter (built)', version: 'round-h', sha256: bridge.sha256, dest: layout.acp },
     { kind: 'licenses', source: 'build-time aggregation', version: id.version, sha256: null, dest: layout.licenses },
   ]
@@ -469,6 +538,7 @@ async function main() {
     iconPlaceholder: iconReport.placeholder,
     metadataStubs: id.metaStubs,
     pythonSha256: python.sha256,
+    productPackages: productPkgs.installed,
     pipSkipped: Boolean(flag('skip-pip')),
     steps,
   }
