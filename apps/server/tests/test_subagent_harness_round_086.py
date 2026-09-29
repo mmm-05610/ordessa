@@ -7,6 +7,8 @@ is that same path, so the two either merge or the round is impossible.
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import json
 import pathlib
 import time
@@ -16,7 +18,7 @@ import pytest
 REPO = pathlib.Path(__file__).resolve().parents[3]
 PLUGIN = REPO / "plugins"  / "harness"
 PEER_SOURCE = "tests/harness_remote/home_probe_acp_peer.mjs"
-PEER_BYTES = REPO / "tests" / "server" / "fixtures" / "home_probe_acp_peer.mjs"
+PEER_BYTES = Path(__file__).resolve().parent / "fixtures" / "home_probe_acp_peer.mjs"
 
 CONFIG = b'{"schema_version":1,"harness_type":"claude-code","configuration":{}}'
 LOOPBACK_BASE_URL = "http://127.0.0.1:1"

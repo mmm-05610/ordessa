@@ -32,7 +32,7 @@ from ordessa_server.wire import handlers as handlers_module
 from ordessa_server_compat import core_wire as compat_wire
 
 PEER_SOURCE = "tests/harness_remote/home_probe_acp_peer.mjs"
-PEER_BYTES = REPO / "tests" / "server" / "fixtures" / "home_probe_acp_peer.mjs"
+PEER_BYTES = Path(__file__).resolve().parent / "fixtures" / "home_probe_acp_peer.mjs"
 
 DEPLOYMENT = {
     "schemaVersion": 1,
