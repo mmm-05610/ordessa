@@ -81,6 +81,11 @@ const ALLOWED_CHANNELS = ['@ordessa/extension-api', '@ordessa/connections', '@or
 // The documented platform-root escape the foundation carrier re-exports (C4):
 // '../../../../workbench/api/workbench' from contracts/foundation/src.
 const WORKBENCH_API_ROOT = path.join(repoRoot, 'packages/workbench/api')
+// C-01 single-source layout data (nightly B-001): server-bridge/data-root.ts
+// imports the server-owned data_root_layout.json at build time. It is data
+// (not a domain API re-export), stays owned by apps/server, and is kept
+// honest by the cross-language comparison in server-bridge's data-root tests.
+const SERVER_LAYOUT_JSON = path.join(repoRoot, 'apps/server/src/ordessa_server/bootstrap/data_root_layout.json')
 
 /** Every *.ts/*.tsx source under packages/desktop-platform/**, excluding
  * installed/built output and tests/ directories (a wall test must be allowed
@@ -142,10 +147,10 @@ test('no platform source imports or re-exports a domain carrier path', async () 
         violations.push(`${name} references '${specifier}' — reverse re-export of the domain carrier channel`)
       } else if (specifier.startsWith('.')) {
         const resolved = path.resolve(path.dirname(file), specifier)
-        // The foundation carrier's C4 re-export of the platform-owned workbench
-        // API is the single whitelisted escape; every other relative path must
-        // stay inside packages/desktop-platform/.
-        if (!insidePlatform(resolved) && !resolved.startsWith(WORKBENCH_API_ROOT + path.sep)) {
+        // Whitelisted escapes: the C4 workbench API re-export and the C-01
+        // layout data file above; every other relative path must stay inside
+        // packages/desktop-platform/.
+        if (!insidePlatform(resolved) && !resolved.startsWith(WORKBENCH_API_ROOT + path.sep) && resolved !== SERVER_LAYOUT_JSON) {
           violations.push(`${name} references '${specifier}' which resolves outside packages/desktop-platform/ (${path.relative(repoRoot, resolved)})`)
         }
       }
