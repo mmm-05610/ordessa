@@ -19,6 +19,11 @@ project）；不让验收 Agent 修改 Ordessa 自己的源码仓库。
 | E-P0-7 | E2E key 落位与保护：用户提供 key 置于 nightly worktree 根 `key.txt`（首版 51B OpenCode Go，00:14:03 换为 35B DeepSeek 官方）；初查发现从 nightly worktree 视角**未**被 ignore（`?? key.txt`）→ 共享 `.git/info/exclude` 追加 `/key.txt`，复查 `git check-ignore -v key.txt` 命中、status 干净。内容全程未读入任何上下文。详见 api-key-usage.md。 |
 | E-P0-8 | 零 token 探针（00:14 后）：`curl https://api.deepseek.com/models -H "Authorization: Bearer $(cat key.txt)"` → **HTTP 200**；models=`deepseek-flash`（DeepSeek-V4.1-Flash，1M ctx，393K max out，text+image，effort low/high/max）、`deepseek-v4-pro`（text-only，1M ctx）。key 有效、网络可达、无 token 消耗。 |
 
-## Phase 1+（待填）
+## Phase 1 · Establish Reality（2026-09-30 00:20–01:00）
 
-（每条真实构建/安装/启动/E2E 证据按上表格式追加，注明时间与 checkpoint 关联。）
+| ID | 证据 |
+| --- | --- |
+| E-P1-1 | RE-1 全链构建：npm ci 532 包（018 合并后正常增长）；typecheck 31 条预存在 TS 错；`npm test` 24/39 绿、失败全预存在（RE-1 报告 §B/C 逐套件）；桥二跑复现 `714044a5…`；**deb 产出** `packaging/.out/ordessa_0.1.0_amd64.deb` sha256 `d7e4727e2720f1a590fb23d54a0556b096abf27004d34ee1eb069d5b8df55941`，build-id `20260929-aa3918092`。RE-1 另建 nightly worktree `.venv`（baseline 锁文件 + 018 补全 editable 清单）→ server-bridge 跨语言门 48/48 PASS。`git status` 仅流水线产物两处（bundle-manifest.json、ui-preview 截图）。→ **C1 达成**。 |
+| E-P1-2 | RE-1/SC-2 独立复现 P0：`apps/desktop/dist/electron-main.cjs` require 即 `TypeError: Invalid URL`（bundle 内 `var import_meta = {}`，`data-root.ts` 顶层 `new URL(LAYOUT_SOURCE, undefined)`）；复现日志 `/tmp/021-direct-launch.log`。→ ledger B-001。 |
+| E-P1-3 | SC-2 deb 解剖：build-deb 仅装 3 个 Python 包（缺 products/server 闭包→SERVER_PRODUCT_MISSING 风险）；无 `/opt/ordessa/harnesses` staging（→BUNDLED_RUNTIME_MISSING）；`runtime.ts:62` 把 python **目录**当可执行；装机扩展发现解析到 `/opt/products/desktop/dist`（node 算术复现）；clean-machine-accept 需 `packaging/.cache/ubuntu-base.tar.gz` 且不启动 GUI（不能单独当 C2）。环境探针：sudo 不可用、userns `unshare --map-root-user` 可用、python3.12.14 在、无旧安装残留、磁盘 108G。→ B-002/B-003/W-018。 |
+| E-P1-4 | SC-1 W-001 定性：桌面 23 扩展包 vs 14 enabled（8 缺，`ui-components` 故意缺席有测试钉）；`default_plugins()` 仅 8 插件；3 个扩展 entry 形态损坏（激活必抛/必失败）；permissions 后端已组合+admission 已接线但前端三件套未装配、chat 只渲染 composer.toolbar、生产 approve 走未过闸门 `respond()`；skills/mcp 三段链 UI/存储/物化各有断点（详 SC-1 矩阵）。→ B-004 + EA-1 seam 裁决。 |

@@ -66,3 +66,19 @@ Deferred Debt。只记真正需要长期记忆的裁决；普通 bugfix 不写�
   首选组合按"本机已装 pi + 需安装的 opencode"现场以真实可用重排。
 - **Deferred Debt**：OpenCode Go 端点研究留作 fallback（api-key-usage.md §资源）；
   逐 harness provider 物化的诚实验证是 Phase 4 任务。
+
+## D-021-6 · 无 sudo 下的 C2 安装/启动验收策略
+
+- **Context**：本机非交互 sudo 不可用（SC-2 实测），但 `unshare --map-root-user` userns
+  可用；`clean-machine-accept.sh` 能在 chroot 里真实 `dpkg -i`，但从不启动 GUI/服务端。
+- **Options**：(a) 只跑 clean-machine-accept 就宣称安装成功；(b) 三层组合：
+  ①chroot `dpkg -i` 证安装与依赖清洁；②从解包 deb 的树以 `ORDESSA_BUNDLED_ROOT`
+  覆盖 + xvfb 跑真实 GUI/服务端 smoke 作为 installed-launch 证据；③gold：chroot 内
+  apt 装 xvfb 跑 GUI（时间允许）。
+- **Decision**：(b)。三层证据分开记录，不互相冒充；与 `/opt` 真装的差异（路径前缀）
+  在 final-report 如实标注。
+- **Reason**：验收合同要求"真实安装成功"+"installed 启动正常"两件事；环境无 root
+  时用 userns chroot + env 覆盖是最接近真实的可复现组合；脚本绿 ≠ 产品可用（SC-2
+  风险 5 明示测试盲区）。
+- **Immediate Implementation**：Release-Engineer 按 ①②执行 C2，③作为加分项。
+- **Deferred Debt**：若日后获得 sudo，补标准 `/opt` 安装复验。
