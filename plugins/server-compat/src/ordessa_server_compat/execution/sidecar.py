@@ -261,7 +261,8 @@ def sidecar_bundle_files(
     source = json.loads((snapshot / "SOURCE.json").read_text(encoding="utf-8"))
     files = {
         "agentbox-sidecar/package.json": (runtime / "package.json").read_bytes(),
-        "agentbox-sidecar/runtime/worker-entry.mjs": (runtime / "worker-entry.mjs").read_bytes(),
+        # worker-entry.mjs 随旧链退役后不再打进 sidecar 包（fresh checkout 曾因
+        # 此行 FileNotFoundError——旧工作树的未跟踪残留件掩盖了它）。
         "agentbox-sidecar/runtime/native-driver.mjs": (runtime / "native-driver.mjs").read_bytes(),
         # The validated static ceiling, so the sidecar can refuse to project a
         # capability its Harness never declared instead of guessing.
