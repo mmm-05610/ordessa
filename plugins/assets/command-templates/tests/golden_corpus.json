@@ -1,0 +1,125 @@
+{
+  "_readme": "Golden vectors for the closed parameter syntax (T05 / G05-G07). Each case is body + parameters + arguments -> expected rendered text; a case with an 'error' field names the refusal code. Unicode, CRLF/LF, literal braces via escape, non-recursion of $/{{other}}/slash/newline/Markdown, quotes, over-limit and empty/oversized enum values are represented. The renderer and digests are pinned against these so a syntax or normalization change cannot slip through silently.",
+  "cases": [
+    {"name": "simple_substitution",
+     "body": "Review {{focus}} please",
+     "parameters": [{"name": "focus", "kind": "string", "required": true}],
+     "arguments": {"focus": "auth"},
+     "expect": "Review auth please"},
+
+    {"name": "literal_brace_escape",
+     "body": "Use \\{{literal\\}} not a placeholder",
+     "parameters": [],
+     "arguments": {},
+     "expect": "Use {{literal}} not a placeholder"},
+
+    {"name": "no_recursion_double_brace_in_value",
+     "body": "echo {{val}}",
+     "parameters": [{"name": "val", "kind": "string", "required": true}],
+     "arguments": {"val": "{{other}}"},
+     "expect": "echo {{other}}"},
+
+    {"name": "no_command_substitution",
+     "body": "run {{cmd}}",
+     "parameters": [{"name": "cmd", "kind": "string", "required": true}],
+     "arguments": {"cmd": "$(rm -rf /)"},
+     "expect": "run $(rm -rf /)"},
+
+    {"name": "backtick_and_url_literal",
+     "body": "note {{n}}",
+     "parameters": [{"name": "n", "kind": "string", "required": true}],
+     "arguments": {"n": "http://x/`y` #z\nnext"},
+     "expect": "note http://x/`y` #z\nnext"},
+
+    {"name": "markdown_literal_not_rendered",
+     "body": "{{md}}",
+     "parameters": [{"name": "md", "kind": "string", "required": true}],
+     "arguments": {"md": "**bold** [link](http://e) <script>"},
+     "expect": "**bold** [link](http://e) <script>"},
+
+    {"name": "repeated_placeholder_same_value",
+     "body": "{{a}}/{{a}}/{{a}}",
+     "parameters": [{"name": "a", "kind": "string", "required": true}],
+     "arguments": {"a": "x"},
+     "expect": "x/x/x"},
+
+    {"name": "unicode_preserved",
+     "body": "你好 {{who}} 😀",
+     "parameters": [{"name": "who", "kind": "string", "required": true}],
+     "arguments": {"who": "世界"},
+     "expect": "你好 世界 😀"},
+
+    {"name": "integer_in_range",
+     "body": "top {{n}}",
+     "parameters": [{"name": "n", "kind": "integer", "required": true, "minimum": 1, "maximum": 10}],
+     "arguments": {"n": 5},
+     "expect": "top 5"},
+
+    {"name": "enum_valid",
+     "body": "mode={{m}}",
+     "parameters": [{"name": "m", "kind": "enum", "required": true, "choices": ["fast", "slow"]}],
+     "arguments": {"m": "fast"},
+     "expect": "mode=fast"},
+
+    {"name": "empty_string_allowed",
+     "body": "[{{v}}]",
+     "parameters": [{"name": "v", "kind": "string", "required": true}],
+     "arguments": {"v": ""},
+     "expect": "[]"},
+
+    {"name": "optional_default_used",
+     "body": "hi {{who}}",
+     "parameters": [{"name": "who", "kind": "string", "required": true, "default": "there"}],
+     "arguments": {},
+     "expect": "hi there"},
+
+    {"name": "literal_only_no_placeholders",
+     "body": "just text",
+     "parameters": [],
+     "arguments": {},
+     "expect": "just text"},
+
+    {"name": "error_missing_required",
+     "body": "{{a}} {{b}}",
+     "parameters": [{"name": "a", "kind": "string", "required": true},
+                     {"name": "b", "kind": "string", "required": true}],
+     "arguments": {"a": "x"},
+     "error": "PARAMETER_INVALID"},
+
+    {"name": "error_enum_out_of_range",
+     "body": "{{m}}",
+     "parameters": [{"name": "m", "kind": "enum", "required": true, "choices": ["a", "b"]}],
+     "arguments": {"m": "c"},
+     "error": "PARAMETER_INVALID"},
+
+    {"name": "error_integer_out_of_range",
+     "body": "{{n}}",
+     "parameters": [{"name": "n", "kind": "integer", "required": true, "minimum": 1, "maximum": 10}],
+     "arguments": {"n": 999999999999999999999},
+     "error": "PARAMETER_INVALID"},
+
+    {"name": "error_max_length_exceeded",
+     "body": "{{s}}",
+     "parameters": [{"name": "s", "kind": "string", "required": true, "max_length": 3}],
+     "arguments": {"s": "toolongvalue"},
+     "error": "PARAMETER_INVALID"},
+
+    {"name": "error_undeclared_placeholder",
+     "body": "hello {{ghost}}",
+     "parameters": [],
+     "arguments": {},
+     "error": "PARAMETER_UNKNOWN"},
+
+    {"name": "error_type_mismatch_string_as_int",
+     "body": "{{n}}",
+     "parameters": [{"name": "n", "kind": "integer", "required": true}],
+     "arguments": {"n": "5"},
+     "error": "PARAMETER_INVALID"},
+
+    {"name": "error_bool_as_integer",
+     "body": "{{n}}",
+     "parameters": [{"name": "n", "kind": "integer", "required": true}],
+     "arguments": {"n": true},
+     "error": "PARAMETER_INVALID"}
+  ]
+}
