@@ -10,7 +10,13 @@
     "packages/workbench",
     "plugins/**",
     "!plugins/harness/**",
-    "products/*"
+    "products/*",
+    "plugins/chat/api",
+    "plugins/chat/frontend",
+    "plugins/profile/api",
+    "plugins/profile/frontend",
+    "plugins/profile/integrations/chat",
+    "plugins/assets/model-provider/desktop"
   ],
   "scripts": {
     "test:agent-ui": "node apps/desktop/scripts/test-agent-ui.mjs",

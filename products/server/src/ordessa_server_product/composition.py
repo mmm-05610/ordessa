@@ -144,16 +144,43 @@ class ServerProductComposition:
         )
 
     def default_plugins(self, **composition_kwargs: Any) -> "tuple[Any, ...]":
-        """The full default product selection with its bound Harness points."""
+        """The full default product selection with its bound Harness points.
+
+        S-03 (2026-09-29): ModelProviderPlugin joins the default chain —
+        the compat writer retired in W-1 (same batch), so no double-write.
+        """
+        from ordessa_model_provider.plugin import ModelProviderPlugin
         from ordessa_permissions_adapters import PolicyAdaptersPlugin
         from ordessa_sandbox_adapters import SandboxAdaptersServerPlugin
         from ordessa_sandbox_backend import build_sandbox_plugin
 
+        model_provider_kwargs = {
+            name: composition_kwargs[name]
+            for name in ("harnesses", "secret_store")
+            if composition_kwargs.get(name) is not None
+        }
         return (
             *self.compatibility_plugins(**composition_kwargs),
+            ModelProviderPlugin(**model_provider_kwargs),
             build_sandbox_plugin(),
             SandboxAdaptersServerPlugin(),
             PolicyAdaptersPlugin(),
+        )
+
+    def bind_contribution_points(self, host) -> None:
+        """Pre-bind the harness C2 point so C2-contributing plugins admit.
+
+        The handler is the harness's real ``HarnessContributionRegistry``;
+        without this binding the host refuses every C2 batch with
+        ``ContributionPointUnboundError`` (the point is declared but nobody
+        holds the handler — the composition must wire it).
+        """
+        from ordessa_harness.contributions import (
+            CONFIGURATION_POINT, HarnessContributionRegistry,
+        )
+        registry = HarnessContributionRegistry()
+        host.register_contribution_point(
+            CONFIGURATION_POINT, "v1", handler=registry.configuration_handler,
         )
 
     # -- the host CLI's grammar contribution and composition mapping ---------
