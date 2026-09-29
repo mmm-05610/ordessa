@@ -316,12 +316,16 @@ class ServerRuntime:
                 self.core_binding.open()
             # Re-activation after a stop is inside the cleanup: a flaky plugin
             # failing its second build must not keep the data-root lock.
+            # S-03/S-06: schema-first — plugins that ensure schemas (the
+            # permissions backend, the model provider) activate only after the
+            # database file and its migrations exist; the constructor stores
+            # paths and opens nothing. Future-schema refusal stays at start().
+            self.database.initialize()
             if (self.plugin_host is not None and self.plugin_selection
                     and not self.plugin_host.active_ids()):
                 self.plugin_host.activate_all(self.plugin_selection)
                 # Nothing to re-bind: a port read after this point resolves
                 # against THIS round, because it goes through the plugin host.
-            self.database.initialize()
             # Each plugin's own startup recovery runs after the schema is up,
             # in activation order: the workspace domain marks its records
             # unverified, the compatibility core imports the deployment's
@@ -579,6 +583,13 @@ def build_runtime(
     try:
         token, token_path = _ensure_token(root)
         database = database_factory(root)
+        # S-03/S-06: activate_all runs plugin build() which ensures schemas —
+        # the database file and its migrations must exist first (constructor
+        # stores paths, opens nothing). The future-schema refusal moves here,
+        # to composition time, before any plugin code runs. Injected test
+        # databases may manage their own lifecycle.
+        if callable(getattr(database, "initialize", None)):
+            database.initialize()
         objects = ObjectStore(root)
         notifier = EventNotifier()
         # T014-S2b: no connector is built here. The `server.instance_id` port

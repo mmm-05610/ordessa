@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import sqlite3
 from dataclasses import dataclass
 from typing import Any
 
@@ -605,6 +606,13 @@ class ApprovalFacts:
                 reconciled = {row["approval_id"] for row in conn.execute(
                     "SELECT approval_id FROM server_approval_native_receipts"
                     " WHERE confirmed=1").fetchall()}
+            except sqlite3.OperationalError as error:
+                # S-03 接缝：start() 未运行的组合（部分测试/工具路径只 build+stop）
+                # 没跑 ensure_schema——缺表是"没有审批事实"，不是"不知道"；
+                # 真正的读失败（库被锁/损坏）仍保守 busy。
+                if "no such table" in str(error):
+                    return 0
+                raise
             except Exception:
                 return 1  # cannot tell -> busy; an unload-while-unknown is refused
         count = 0

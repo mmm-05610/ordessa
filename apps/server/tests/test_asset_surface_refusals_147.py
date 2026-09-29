@@ -445,3 +445,13 @@ def test_all_five_sites_answer_a_server_fault_the_same_way(
     assert HOST_PATH not in error["message"], (method, error)
     assert not ABSOLUTE_PATH.search(error["message"]), (method, error)
     assert error["details"]["retryable"] is True, (method, error)
+
+def test_probe_active_ids(tmp_path):
+    from ordessa_server.bootstrap import build_runtime
+    runtime = build_runtime(tmp_path / "data")
+    runtime.start()
+    try:
+        import sys
+        print(f"[probe] active: {runtime.plugin_host.active_ids()}", file=sys.stderr)
+    finally:
+        runtime.stop()

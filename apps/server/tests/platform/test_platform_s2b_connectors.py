@@ -148,8 +148,8 @@ def test_the_ssh_connector_rows_answer_only_where_the_connector_is_composed(tmp_
     try:
         assert composed.plugin_host.active_ids() == (
             "ordessa.workspace", "ordessa.server-compat", "ordessa.harness.acp",
-            "ordessa.sandbox", "ordessa.sandbox-adapters",
-            "ordessa.permissions-adapters")
+            "ordessa.model-provider", "ordessa.sandbox", "ordessa.sandbox-adapters",
+            "permissions-backend", "ordessa.permissions-adapters")
         families = composed.plugin_host.wire_error_families
         assert families.family_for("SSH_TARGET_INVALID") == "INVALID_REQUEST"
         assert families.family_for("SSH_IDENTITY_INVALID") == "INVALID_REQUEST"

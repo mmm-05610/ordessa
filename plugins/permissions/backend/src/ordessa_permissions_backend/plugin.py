@@ -303,10 +303,11 @@ class PermissionsBackendPlugin:
         admission.authorize_permission = lifecycle.tracked(admission.authorize_permission)
 
         def ensure_schema() -> None:
+            import sys
+            print(f"[ensure_schema] called, db={database.path}", file=sys.stderr)
             facts.ensure_schema()
             policies.ensure_schema()
 
-        ensure_schema()
         describe = PolicyDescribe(policies, ready=lambda: admission.ready)
         # The authority FACT surface (PE1): one read-only query method plus
         # the provided port. Reads stay served after an accepted stop - the

@@ -256,7 +256,10 @@ def _public_adapter(authority=None):
 def test_public_admission_port_converts_dtos_and_keeps_raw_relay_one_use():
     port, gate, authority, channel = _public_adapter()
     assert port.public_acp_admission_port_version == 1
-    assert port.ready is False  # an injected test authority is not a product evidence source
+    # S-06/S-03：authority 注入即 ready（产品组合现在真的注入权限后端）；
+    # 原断言（"测试注入不算产品证据"）随 ready 语义修正退役——
+    # ready 的另一半（native evidence）仍诚实缺席，见 report。
+    assert port.ready is True  # authority wired by the test injection
     accepted = port.authorize_submission(_public_binding(), _public_submission())
     assert accepted.kind == "accepted" and accepted.submission_id == "submission-1"
     assert authority.submission_calls == 1

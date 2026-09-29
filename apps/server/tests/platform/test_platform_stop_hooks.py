@@ -209,8 +209,8 @@ def test_the_default_product_composition_stops_the_channel_owner_before_the_ledg
     try:
         assert runtime.plugin_host.active_ids() == (
             "ordessa.workspace", "ordessa.server-compat", "ordessa.harness.acp",
-            "ordessa.sandbox", "ordessa.sandbox-adapters",
-            "ordessa.permissions-adapters")
+            "ordessa.model-provider", "ordessa.sandbox", "ordessa.sandbox-adapters",
+            "permissions-backend", "ordessa.permissions-adapters")
     finally:
         runtime.stop()
 

@@ -46,7 +46,7 @@ WORKSPACE_METHODS = {
 }
 #: AR-1/W-1 后的方法面基数：67 − providerModels.* 六方法 − profile 写面八方法 = 53。
 #: 断言公式是 T002 + 2(admission) + 1(hello) = 56（总数）。随 W-1 同批落地。
-T002_METHOD_COUNT = 53
+T002_METHOD_COUNT = 70  # S-03 装配：53 + PermissionsBackendPlugin 17 方法（权限后端进默认链）
 ACP_ADMISSION_METHODS = frozenset({
     "acp.submission.authorize", "acp.permission.authorize",
 })
@@ -237,7 +237,8 @@ def test_default_composition_advertises_the_full_baseline_table(tmp_path):
             _assert_default_composition_caps(runtime, caps)
             assert runtime.plugin_host.active_ids() == (
                     WORKSPACE_ID, "ordessa.server-compat", "ordessa.harness.acp",
-                    "ordessa.sandbox", "ordessa.sandbox-adapters",
+                    "ordessa.model-provider", "ordessa.sandbox",
+                    "ordessa.sandbox-adapters", "permissions-backend",
                     "ordessa.permissions-adapters")
     except BaseException:
         runtime.stop()

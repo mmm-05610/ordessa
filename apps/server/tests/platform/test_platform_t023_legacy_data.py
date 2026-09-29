@@ -263,11 +263,10 @@ def test_a_newer_than_supported_root_is_refused_by_the_real_future_guard(tmp_pat
     ``FutureSchemaError``, not a silent downgrade or a generic crash."""
     root = synthesize_historical_root(
         tmp_path, "future-root", through_version=9, product_stamp=PRODUCT_SCHEMA_VERSION + 1)
-    runtime = build_runtime(root)
-    # No stop() round: start()'s failure path already disposed the plugins
-    # and released the data-root lock (bootstrap/runtime.py, S1c cleanup).
+    # S-03/S-06：schema 拒绝前移到 composition（build_runtime）；此刻尚无插件
+    # 激活、无 stop 清场需求——data-root lock 在 _resolve 阶段尚未获取。
     with pytest.raises(FutureSchemaError, match="newer than supported"):
-        runtime.start()
+        build_runtime(root)
     assert legacy_versions(root) == [1, 2, 3, 4, 5, 6, 7, 8, 9], \
         "the refused root must be untouched"
 

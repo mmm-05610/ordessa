@@ -231,11 +231,13 @@ class ServerProductComposition:
         from ordessa_server_compat.composition import build_runtime_from_native_adapter
 
         self._assemble_legacy_chain()
-        return build_runtime_from_native_adapter(
+        runtime = build_runtime_from_native_adapter(
             data_root, plugin_root=plugin_root, harness_id=harness_id,
             adapter_command=adapter_command, adapter_args=adapter_args,
             native_continuation=native_continuation,
         )
+        self._wire_admission_authority(runtime)
+        return runtime
 
     def sidecar_runtime(
         self, data_root: Any, deployment_path: Any, *, plugin_root: Any,

@@ -171,8 +171,8 @@ def test_every_historical_row_still_answers_its_family_on_the_default_product(tm
     try:
         assert runtime.plugin_host.active_ids() == (
             "ordessa.workspace", "ordessa.server-compat", "ordessa.harness.acp",
-            "ordessa.sandbox", "ordessa.sandbox-adapters",
-            "ordessa.permissions-adapters")
+            "ordessa.model-provider", "ordessa.sandbox", "ordessa.sandbox-adapters",
+            "permissions-backend", "ordessa.permissions-adapters")
         composed = runtime.plugin_host.wire_error_families.family_for
         drifted = {
             code: (expected, composed(code))
@@ -288,8 +288,8 @@ def test_two_live_compositions_answer_each_other_nothing(tmp_path):
     try:
         assert a.plugin_host.active_ids() == (
             "ordessa.workspace", "ordessa.server-compat", "ordessa.harness.acp",
-            "ordessa.sandbox", "ordessa.sandbox-adapters",
-            "ordessa.permissions-adapters")
+            "ordessa.model-provider", "ordessa.sandbox", "ordessa.sandbox-adapters",
+            "permissions-backend", "ordessa.permissions-adapters")
         assert b.plugin_host.active_ids() == ()
         assert b.plugin_host.wire_error_families is not a.plugin_host.wire_error_families
         # A resolves its own rows...

@@ -312,11 +312,14 @@ class AcpAdmissionPortAdapter:
     def ready(self) -> bool:
         """Whether product authority and native/generation evidence are wired.
 
-        The current composition has neither authoritative source. Controlled
-        DTO calls still exercise the boundary, but must not advertise a usable
-        production capability until that source is installed.
+        S-06/S-03 (2026-09-29): authority from the permissions domain
+        (``PermissionsAcpAdmission``) is injected by the product composition
+        (``_wire_admission_authority``); the gate is honest about its
+        presence — an absent authority refuses and reports, a present one
+        permits the capability row to flip. Native evidence wiring is the
+        next increment (recorded, not faked).
         """
-        return False
+        return self._gate.authority is not None
 
     def _connection(self, binding: AcpChannelBinding) -> object:
         if not isinstance(binding, AcpChannelBinding):

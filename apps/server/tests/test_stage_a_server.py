@@ -191,9 +191,8 @@ def test_future_schema_refuses_startup_without_overwrite(tmp_path):
     runtime.stop()
     with sqlite3.connect(root / "state" / "agentbox.sqlite") as conn:
         conn.execute("UPDATE agentbox_product_schema SET version=999 WHERE singleton=1")
-    newer = build_runtime(root)
     with pytest.raises(FutureSchemaError):
-        newer.start()
+        build_runtime(root)
     with sqlite3.connect(root / "state" / "agentbox.sqlite") as conn:
         assert conn.execute("SELECT version FROM agentbox_product_schema").fetchone()[0] == 999
 
