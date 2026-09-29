@@ -36,6 +36,9 @@ Lead 工作队列：NOW / NEXT / REVIEW / VERIFY / BACKLOG（NOW 快空时提前
 | W-016 | P4 | docs | `docs/baseline.md` editable 清单缺 018 并入包；桥 sha 钉值过期（实际复现 `714044a5…` vs 钉 `5fd6a37b…`） | RE-1 E/F | 文档滞后于 018 合并 | Lead | — | NEW | — | 收口时更新 baseline 文档 |
 | W-017 | P2 | profile | `ordessa.profile-chat` 无 default export → 每次启动 alert；`profile-frontend` 空 stub；Profile 桌面 UI 名存实亡（三扩展 enabled 但不干活） | SC-1 §1/§4 | entry 形态/未实现 | Integrator | — | NEW | — | C4 Profile 波次主修；alert 不阻塞启动 |
 | W-018 | P3 | env | 非交互 sudo 不可用；真实安装验证走 userns chroot（clean-machine-accept 需先下载 ubuntu-base.tar.gz）；该脚本不启动 GUI，不能单独当 C2 证据 | SC-2 Q5/Q6 | 环境限制 | Release-Engineer | — | ASSIGNED | — | C2 策略见 decision-log D-021-6 |
+| B-005 | P0 | server-bootstrap | 全新数据根首启必炸 `DATA_ROOT_UNOWNED`：`ensure_data_root` 只建目录不写 owner marker，`DataRootOwner.acquire` 拒绝"存在且无 marker"；桌面 `ensureDataRoot` 同病 → 装机首启死在数据根这步 | B-002 实测：bundled python `--data-root <new>` → RuntimeError；预置 marker 后 2s `/live`+handshake（证明闭包本身端到端可用） | `data_root.py:288-312` + `runtime.py:160-163`（+ `electron/data-root.ts:82-88`） | Blocker-Surgeon（B-002 组） | nightly/021-b005-data-root-marker | ASSIGNED | — | 保留外来根拒绝语义（test_stage_a_server.py:205）；顺带 W-020 |
+| W-020 | P1 | lockfile | `tomli-w` 不在 `apps/server/lockfiles/server-linux-py312.txt`，harness `materialization.private_generation` 模块级 import → B-004 接通后即 ImportError | B-002 解剖 | 018 并入 harness 物化链时未补锁 | 随 B-005 | — | ASSIGNED | — | pip 实装验证闭包 |
+| W-019 | P2 | desktop-test | `test:agent-shell` 期望陈旧：断言已退役 agent/conversation 的 "Conversation" 页（实测产品 pages=["Sessions"]），且 `connected.errors deepEqual []` 被 profile-chat 告警（W-017）打破 | B-001 验证实测 | 014 P-C 退役后测试壳未随产品更新（2026-09-25 graft 自 agent-box-desktop-next） | 待派（B-001/B-003 集成后） | — | NEW | — | 更新断言对齐当前真实产品形态；**不删断言换绿** |
 
 ## Backlog（主动发现池，动态）
 

@@ -82,3 +82,28 @@ Deferred Debt。只记真正需要长期记忆的裁决；普通 bugfix 不写�
   风险 5 明示测试盲区）。
 - **Immediate Implementation**：Release-Engineer 按 ①②执行 C2，③作为加分项。
 - **Deferred Debt**：若日后获得 sudo，补标准 `/opt` 安装复验。
+
+## D-021-7 · EA-1 裁决：wire seam 复用 C-03 WirePort；native harness 启动走桌面 argv
+
+- **Context**：四个资产域桌面扩展（skills/mcp/model-provider/sandbox）激活形态全坏
+  （无 default export / 对象非 factory / factory 期望注入）；SC-1 建议产品侧 provider。
+  EA-1 复核发现 SC-1 选项 (a) **早已存在**：C-03 WirePort（`ordessa.wirePort.v1`）
+  端到端已布线（宿主 service → IPC → 渲染代理），但 `HttpWirePort` 信封是平铺体，
+  server wire/1 是严格 JSON-RPC 2.0 → 每调必 400，且零 live 覆盖所以无人发现。
+- **Decision**：
+  1. **Q1**：不新增任何 seam。修 `wire-port.ts` 信封对齐 JSON-RPC；渲染代理
+     scope/ready 诚实化；四入口改 `requires:[WirePortToken]` + 各自 ≤15 行适配器；
+     `extensions.json` 装配四扩展。禁止新建 capability/owner 扩展/域 carrier；
+     foundation/server-bridge/extension-host 不得出现业务词。
+  2. **Q2**：native harness 启动参数由**桌面主进程**构造、经 `ServerBridgeOptions.args`
+     透明追加（env `ORDESSA_NATIVE_HARNESS` 门控）；server 默认组合维持
+     `launch=None`（诚实缺席是正确行为）；server-bridge/electron 壳不做 flag 语义解析。
+- **Reason**：令牌唯一通道是 C-03 立意（FR-031），第二传输面=第二令牌面；装配料
+  （随机端口/token）只有宿主知道，静态 config 结构性装不下；launch 事实
+  （acpBridge 路径/plugin_root）是桌面安装布局事实，归桌面所有。
+- **Immediate Implementation**：I-001（wire-port+入口+装配）→ I-002（lifecycle args+
+  main.ts 门控+deb stage harness 树与 node PATH 核查）。wire-port 修复是所有资产 UI
+  与 C3 的单点前置，最优先。
+- **Deferred Debt**：server 请求级 principal 注入面；`Refused` 类型化 code；chat
+  resolver 可扩展化；`wireCallerOf` 若第四处出现提升为 contracts 助手；C-03 冻结文本
+  勘误注记；deb 捆绑 node。
