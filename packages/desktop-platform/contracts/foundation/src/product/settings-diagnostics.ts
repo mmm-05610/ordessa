@@ -57,6 +57,7 @@ export type FaultKind =
   | 'runtime-missing'
   | 'data-root-locked'
   | 'update-source-unreachable'
+  | 'update-failed'   // 下载/校验/安装/自检失败：当前版本与数据均未改动（C-09 §C3）
   | 'server-launch-failed'
 
 export interface Fault {

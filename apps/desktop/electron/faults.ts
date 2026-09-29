@@ -11,6 +11,7 @@ export const FAULT_TITLES: Readonly<Record<FaultKind, string>> = {
   'runtime-missing': '无法启动 Ordessa Server',
   'data-root-locked': '数据目录已被占用',
   'update-source-unreachable': '检查更新失败',
+  'update-failed': '更新未完成',
   'server-launch-failed': '无法启动 Ordessa Server',
 }
 

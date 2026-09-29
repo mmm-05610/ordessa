@@ -22,7 +22,8 @@ import { isRenderableFault, sortFaults } from './faults'
 import { beginSession, cleanSession, runCleanup, restoreWindowState, startupCrashReport, type CrashMarker, type QuitStep, type WindowState } from './lifecycle'
 import { APP_ORIGIN, SECURE_WEB_PREFERENCES, WINDOW_OPEN_ACTION, isTrustedIpcCaller } from './security'
 import { createSettingsStore } from './settings-store'
-import { createFixtureUpdateClient, type UpdateClient } from './update-client'
+import type { UpdateClient } from './update-client'
+import { createUpdateClient, defaultPublicKeyPath } from './update-engine'
 import { createAbsentWirePort, type WirePort } from './wire-fixture'
 import { HttpWirePort, ServerBridge, tokenReaderFor } from '@ordessa/server-bridge'
 import type { Fault } from '@extensions/ordessa.contracts/contract.js'
@@ -106,7 +107,16 @@ app.whenReady().then(async () => {
   }
   const settings = createSettingsStore(path.join(probe.ok ? dataRoot : logsDir, 'settings.json'))
   await settings.load()
-  const update: UpdateClient = createFixtureUpdateClient() // P-C 交付后换成真入口（切换点见报告）
+  // INT-01 真实接缝（C-09）：更新引擎是打包包的 client.mjs（清单/签名/下载/校验/
+  // 备份/故障门/安装），本处只做 UI 适配与生命周期接线；私钥不经过主进程。
+  const update: UpdateClient = createUpdateClient({
+    manifestUrl: process.env.ORDESSA_UPDATE_MANIFEST_URL,
+    publicKeyPath: process.env.ORDESSA_UPDATE_PUBKEY
+      ?? defaultPublicKeyPath(process.env.ORDESSA_BUNDLED_ROOT ?? '/opt/ordessa'),
+    dataRoot,
+    currentVersion: info.version,
+    currentBuild: info.build,
+  })
   // INT-01 真实接缝（C-01/C-02/C-03）：服务端由本宿主启动并监管，wire 口打到它身上。
   // 令牌只在主进程（C-03 §4）：`readToken` 由这里供给，WirePort 不存令牌字段。
   const bridge = new ServerBridge({})
