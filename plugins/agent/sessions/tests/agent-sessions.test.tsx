@@ -8,7 +8,6 @@ import { createAgentConnections } from '../../../../plugins/agent/connections/sr
 import { createAgentSessions } from '../../../../plugins/agent/sessions/src/model'
 import { SessionBrowser } from '../../../../plugins/agent/sessions/src/view'
 import createSessionsPlugin from '../../../../plugins/agent/sessions/src/entry'
-import createConversationPlugin from '../../../../plugins/agent/conversation/src/entry'
 import type { Commands, Workbench } from '../../../../packages/desktop-platform/contracts/foundation/src/contract'
 import type { AgentClient, AgentSnapshot } from '../../../../plugins/agent/contracts/src/contract'
 
@@ -238,7 +237,7 @@ function fakeCommands() {
   return { value, added }
 }
 
-it('registers view, command and navigation exactly once in the sessions entry and never in the conversation entry (FC-0004 unique registration)', async () => {
+it('registers view, command and navigation exactly once in the sessions entry and opens only live views (FC-0004 unique registration)', async () => {
   const scope = new OwnedResources(), registryScope = new OwnedResources()
   cleanup.push(async () => { scope.dispose(); registryScope.dispose() })
   const context = { resources: scope } as unknown as PluginContext
@@ -248,13 +247,10 @@ it('registers view, command and navigation exactly once in the sessions entry an
   expect(sessionsWb.views.map(view => view.id)).toEqual(['agent.sessions'])
   expect(sessionsWb.uis.map(ui => ui.id)).toEqual(['agent.navigation'])
   expect(sessionsCmds.added.map(command => command.id)).toEqual(['agent.open'])
-  // The single agent.open command opens both panels; no other entry point duplicates it.
+  // agent.open opens exactly the live sessions view. The retired
+  // ordessa.agent-conversation view (014 P-C PC-6) is never referenced: the
+  // Chat page (ordessa.chat) is the conversation surface now.
   sessionsCmds.added[0].execute()
-  expect(sessionsWb.opened).toEqual(['agent.sessions', 'agent.conversation'])
-  const conversationWb = fakeWorkbench(), conversationCmds = fakeCommands()
-  createConversationPlugin().activate(
-    { resources: scope } as unknown as PluginContext, conversationWb.value, sessions)
-  expect(conversationWb.views.map(view => view.id)).toEqual(['agent.conversation'])
-  expect(conversationWb.uis).toEqual([])
-  expect(conversationCmds.added).toEqual([])
+  expect(sessionsWb.opened).toEqual(['agent.sessions'])
+  void sessions
 })

@@ -16,12 +16,13 @@
 import { createElement, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import type { AgentSessions } from '@extensions/ordessa.agent-contracts/contract.js'
 import type {
-  ChatContributionsService, ChatInputEntry, ChatInputQuery, ChatSubmissionResult, ChatSubmissionSnapshot,
+  ChatContributionsService, ChatInputEntry, ChatInputQuery, ChatLocation, ChatPrepareResult, ChatSubmissionResult,
+  ChatSubmissionSnapshot,
 } from '@extensions/ordessa.chat-api/contract.js'
 import { DraftStore, attachmentBlockReason } from '../state/draft'
 import { useViewState } from '../state/expansion'
 import {
-  createFacadeGateway, facadeAttachmentCapability, interactionsForSession, paneRunState, projectConversation,
+  attachmentCapabilityOf, createFacadeGateway, interactionsForSession, paneRunState, projectConversation,
 } from '../adapters/agent'
 import type { ChatTheme } from '../components/messages/markdown-body'
 import { ThreadBody, makeDefaultResolver, type ErasedComponent } from './thread'
@@ -46,6 +47,7 @@ const draftBlockCopy: Record<string, string> = {
 }
 
 type PanelState = { readonly mode: 'plus'; readonly caret: number } | { readonly mode: 'slash'; readonly token: SlashTokenSnapshot } | null
+type PrepareAction = (location: ChatLocation, idempotencyKey: string) => Promise<ChatPrepareResult>
 
 export function ChatPage({ service, chat, theme: themeProp, openViaOverlay }: {
   service: AgentSessions
@@ -76,6 +78,9 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay }: {
   const [pendingPane, setPendingPane] = useState<string | undefined>(undefined)
   const [plusQuery, setPlusQuery] = useState('')
   const panelKeyRef = useRef<((event: { key: string; preventDefault(): void }) => boolean) | undefined>(undefined)
+  // add-content retry identity: item id → the preparing action that produced it,
+  // so a retry re-runs the SAME preparation with the SAME idempotency key (A05).
+  const prepareActionsRef = useRef(new Map<string, PrepareAction>())
   const caretRef = useRef<number | null>(null)
   const paneRef = useRef(pane)
   paneRef.current = pane
@@ -83,12 +88,21 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay }: {
   useEffect(() => () => { store.dispose() }, [store])
 
   // A discarded draft loses its buffered text (FC-0030 port); an opened
-  // session keeps it so the user can step back to the draft.
+  // session keeps it so the user can step back to the draft. Discard also
+  // releases every prepared attachment the store still owns — handed-off
+  // content belongs to the sent record and is never released here (A05).
   const endedBy = state.draft?.endedBy
   useEffect(() => {
     if (!connectionId || !endedBy) return
-    if (endedBy === 'discarded') store.disposePane(draftPaneOf)
-  }, [connectionId, endedBy, store])
+    if (endedBy === 'discarded') {
+      for (const item of store.releaseCandidates(draftPaneOf)) {
+        if (item.phase.state === 'ready') {
+          void service.attachments.release(item.phase.reference, 'draft-cancelled').catch(() => undefined)
+        }
+      }
+      store.disposePane(draftPaneOf)
+    }
+  }, [connectionId, endedBy, store, service])
 
     // Live subscription: the composer is a controlled input whose value comes
   // from the store through useSyncExternalStore, so a text mutation re-renders.
@@ -104,10 +118,17 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay }: {
 
   const location = useMemo(() => (drafting
     ? { kind: 'draft' as const, draftId: pane, connectionId: connectionId ?? undefined,
-        serverInstanceId: agent?.connection.serverInstanceId, projectId: workspaceId, contextRevision: revision }
+        serverInstanceId: agent?.connection.serverInstanceId, projectId: workspaceId, contextRevision: revision,
+        ...(state.runtimeGeneration !== undefined ? { runtimeGeneration: state.runtimeGeneration } : {}) }
     : { kind: 'session' as const, connectionId: connectionId ?? '', sessionId: sessionId ?? '',
-        serverInstanceId: agent?.connection.serverInstanceId, contextRevision: revision }),
-  [drafting, pane, connectionId, agent?.connection.serverInstanceId, workspaceId, revision, sessionId])
+        serverInstanceId: agent?.connection.serverInstanceId, contextRevision: revision,
+        ...(state.runtimeGeneration !== undefined ? { runtimeGeneration: state.runtimeGeneration } : {}) }),
+  [drafting, pane, connectionId, agent?.connection.serverInstanceId, workspaceId, revision, sessionId, state.runtimeGeneration])
+  // PC-3: the attach entry and its note are driven by the facade's REAL
+  // capability for this location — a missing production prepare owner, a
+  // partial client surface or a draft without a native session all render
+  // their own honest reason (S-05), never a fake activation.
+  const attachmentCapability = useMemo(() => attachmentCapabilityOf(service, location), [service, location])
 
   // Slash token reconciliation: any text/caret change re-derives or closes the
   // panel; the + panel and the slash panel are mutually exclusive.
@@ -124,13 +145,15 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay }: {
     if (pendingPane !== undefined || !canSend) return
     const captured = store.read(capturedPane)
     if (!captured.text.trim()) return
+    const readyItems = captured.items.filter(item => item.phase.state === 'ready')
     const snapshot: ChatSubmissionSnapshot = {
       submissionId: globalThis.crypto.randomUUID(),
       target: { ...location },
       draftId: capturedPane,
       draftRevision: captured.revision,
       text: captured.text,
-      attachmentIds: captured.items.filter(item => item.phase.state === 'ready').map(item => item.id),
+      attachmentIds: readyItems.map(item => item.id),
+      attachmentRefs: captured.items.flatMap(item => item.phase.state === 'ready' ? [item.phase.reference] : []),
     }
     setSendError('')
     setPendingPane(capturedPane)
@@ -152,8 +175,10 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay }: {
       store.write(capturedPane, { ...now, text, revision: now.revision + 1 })
       setPanel(null)
     } else if (result.status === 'refused') {
+      // Refusal keeps the draft AND its prepared attachments (US4-1/US3-3).
       setSendError(result.reason)
     } else {
+      // Unknown keeps everything, never auto-retries (US4-2).
       setSendError('发送结果未知：连接可能已中断。草稿已保留，请核实后手动重发。')
     }
   }, [canSend, gateway, location, pendingPane, store])
@@ -163,6 +188,30 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay }: {
     setSendError('')
     void service.stop(run.runId).catch(cause => setSendError(cause instanceof Error ? cause.message : String(cause)))
   }, [run?.runId, service])
+
+  // Add-content preparation runner (PC-3): the item enters the draft in
+  // `preparing`, then lands in exactly one of the four phases — ready with the
+  // service-owned reference, failed with the refusal reason (kept, removable),
+  // unknown (kept, send-blocking, retry with the SAME idempotency key), or
+  // removed on `unavailable`. The item id IS the idempotency key (input-spec
+  // A05): a retry re-uses it, so the port dedupes instead of double-preparing.
+  const runPrepare = useCallback((targetPane: string, itemId: string, action: PrepareAction) => {
+    const capturedLocation = { ...location }
+    void action(capturedLocation, itemId).then(result => {
+      if (result.status === 'accepted' && result.reference) {
+        store.updateItem(targetPane, itemId, { phase: { state: 'ready', reference: result.reference } })
+      } else if (result.status === 'refused') {
+        // US3-3: a refused preparation stays visible in the draft with its reason.
+        store.updateItem(targetPane, itemId, { phase: { state: 'failed', reason: result.message } })
+      } else if (result.status === 'unknown') {
+        store.updateItem(targetPane, itemId, { phase: { state: 'unknown' } })
+      } else {
+        store.removeItem(targetPane, itemId)
+        setSendError('该来源暂时无法提供此内容。')
+      }
+      setPanel(null)
+    })
+  }, [location, store])
 
   const pickEntry = useCallback((entry: ChatInputEntry) => {
     const current = store.read(paneRef.current)
@@ -199,26 +248,17 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay }: {
       })
       return
     }
-    // add-content: only meaningful with a real attachment transport; the
-    // honest facade capability is unsupported today, so the reference is
-    // never faked into the draft.
-    if (!facadeAttachmentCapability.supported) {
-      setSendError(facadeAttachmentCapability.reason)
-      setPanel(null)
-      return
-    }
-    void entry.action.prepare({ ...location }).then(result => {
-      if (result.status === 'accepted' && result.reference) {
-        store.addItem(paneRef.current, {
-          id: globalThis.crypto.randomUUID(), sourceId: entry.id, kind: 'file',
-          displayName: String(result.reference), phase: { state: 'ready', reference: result.reference! },
-        })
-      } else if (result.status === 'refused') {
-        setSendError(result.message)
-      }
-      setPanel(null)
+    // add-content: the entry's availability already proved the capability is
+    // real (a disabled entry never reaches here); the reference is never
+    // faked into the draft.
+    const itemId = globalThis.crypto.randomUUID()
+    const prepare = entry.action.prepare
+    store.addItem(paneRef.current, {
+      id: itemId, sourceId: entry.id, kind: 'file', displayName: '附件', phase: { state: 'preparing' },
     })
-  }, [location, panel, store])
+    prepareActionsRef.current.set(itemId, prepare)
+    runPrepare(paneRef.current, itemId, prepare)
+  }, [location, panel, runPrepare, store])
 
   const sourcesView = useMemo(() => {
     if (!panel) return undefined
@@ -301,8 +341,21 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay }: {
             {draftBlockCopy[blockReason] ?? '发送被项目门禁阻止。'}
           </p>
         )}
-        <AttachmentStrip items={composition.items} onRemove={itemId => store.removeItem(pane, itemId)}
-          onRetry={itemId => store.updateItem(pane, itemId, { phase: { state: 'preparing' } })} />
+        <AttachmentStrip items={composition.items}
+          onRemove={itemId => {
+            const item = store.read(pane).items.find(candidate => candidate.id === itemId)
+            if (item?.phase.state === 'ready') {
+              void service.attachments.release(item.phase.reference, 'draft-removed')
+                .catch(cause => setSendError(`附件清理失败：${cause instanceof Error ? cause.message : String(cause)}`))
+            }
+            prepareActionsRef.current.delete(itemId)
+            store.removeItem(pane, itemId)
+          }}
+          onRetry={itemId => {
+            const action = prepareActionsRef.current.get(itemId)
+            store.updateItem(pane, itemId, { phase: { state: 'preparing' } })
+            if (action) runPrepare(pane, itemId, action)
+          }} />
         {attachmentBlocked && <p role="status" className="chat-compose-block" data-testid="chat-attachment-block">{attachmentBlocked}</p>}
         {panel && sourcesView && (
           <InputPanel mode={panel.mode} sources={sourcesView} initialPlusQuery={plusQuery}
@@ -356,7 +409,7 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay }: {
         {sendError && <p role="alert" className="chat-error" data-testid="chat-send-error">{sendError}</p>}
         {pendingPane === pane && <p role="status" className="chat-note" data-testid="chat-send-pending">发送中…</p>}
         <p className="chat-compose-meta">
-          <span data-testid="chat-capability-note">{facadeAttachmentCapability.reason}</span>
+          <span data-testid="chat-capability-note">{attachmentCapability.supported ? '附件通道就绪。' : attachmentCapability.reason}</span>
         </p>
       </div>
       {dialogOpen && !openViaOverlay && (

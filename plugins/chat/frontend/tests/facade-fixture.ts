@@ -1,11 +1,12 @@
 // In-memory AgentSessions fixture for Chat UI tests. It reproduces exactly the
 // facade surface Chat consumes (snapshot subscription, draft gate, send
-// semantics incl. deferred resolvable promises) — no real server, no ACP.
-// Scripted failures drive refused/unknown/stale-response counterexamples (X06:
-// fixture data only ever carries fields the real service provides — no
-// invented command/diff metadata).
+// semantics incl. deferred resolvable promises, command catalog, attachment
+// seam) — no real server, no ACP. Scripted failures drive refused/unknown/
+// stale-response counterexamples (X06: fixture data only ever carries fields
+// the real service provides — no invented command/diff metadata).
 import type {
-  AgentInteraction, AgentMessage, AgentSessionInfo, AgentSessions, AgentSnapshot, AgentWorkspaceInfo, AgentWorkspaceSnapshot,
+  AgentAttachmentPreparation, AgentCommandCatalog, AgentInteraction, AgentMessage, AgentSessionInfo, AgentSessions,
+  AgentSnapshot, AgentSubmissionOutcome, AgentWorkspaceInfo, AgentWorkspaceSnapshot,
   InteractionAnswer, RunStatus,
 } from '@extensions/ordessa.agent-contracts/contract.js'
 
@@ -21,14 +22,32 @@ export interface FacadeOptions {
   run?: { id: string; sessionId: string; status: RunStatus }
   canSendSupported?: boolean
   blockReason?: 'unsupported' | 'no-project' | 'project-invalid'
+  /** PC-5: the backend-confirmed runtime generation to project on the snapshot. */
+  runtimeGeneration?: number
 }
 
 export class FacadeFixture implements AgentSessions {
   private listeners = new Set<() => void>()
   private base: AgentWorkspaceSnapshot
+  private readonly generationValue: number | undefined
   draftActive = false
   draftEndedBy: 'discarded' | 'opened' | undefined
-  sendBehavior: (send: { text: string }) => Promise<void> = async () => {}
+  sendBehavior: (send: { text: string; attachments?: readonly import('@extensions/ordessa.agent-contracts/contract.js').AgentPreparedAttachment[] })
+    => Promise<AgentSubmissionOutcome | void> = async () => this.sendOutcome
+  /** Scripted send outcome (facade semantics since contracts 0.2.0): a
+   * behavior returning an outcome is used verbatim; a legacy `undefined`
+   * return means send-path acceptance, exactly like the real facade. */
+  sendOutcome: AgentSubmissionOutcome | undefined
+  /** Scripted native command catalog (R-Z2-3); undefined = no catalog. */
+  commandCatalogAnswer: ((sessionKey: string) => AgentCommandCatalog) | undefined
+  /** Attachment seam script (R-Z2-2): undefined = the honest absent facade;
+   * set `attachmentPrepare` to drive the full prepare→ref→carry chain. */
+  attachmentPrepare: ((request: { sessionId?: string; sourceId: string; idempotencyKey: string })
+    => Promise<AgentAttachmentPreparation>) | undefined
+  releasedRefs: { preparedId: string; reason: 'draft-removed' | 'draft-cancelled' }[] = []
+  /** Opaque token → the full prepared reference the fixture's scripted port
+   * returned (the facade registry the send path expands against). */
+  readonly preparedRegistry = new Map<string, import('@extensions/ordessa.agent-contracts/contract.js').AgentPreparedAttachment>()
   stopped: string[] = []
   respondError: Error | undefined
   responded: { id: string; answer: InteractionAnswer }[] = []
@@ -37,6 +56,7 @@ export class FacadeFixture implements AgentSessions {
   selectedWorkspaces: string[] = []
 
   constructor(options: FacadeOptions = {}) {
+    this.generationValue = options.runtimeGeneration
     const workspaces = options.workspaces ?? []
     this.base = {
       available: [{ id: 'conn-1', title: '本地服务' }],
@@ -73,13 +93,17 @@ export class FacadeFixture implements AgentSessions {
     const supported = this.base.agent?.connection.capabilities.workspaces === 'supported'
     const block = !supported ? 'unsupported' as const
       : !this.base.agent?.workspaces?.selectedWorkspaceId ? 'no-project' as const : undefined
-    const derived: AgentWorkspaceSnapshot = { ...this.base, draft: {
-      active: this.draftActive,
-      workspaceId: this.base.agent?.workspaces?.selectedWorkspaceId,
-      canSend: block === undefined,
-      ...(this.draftActive && block ? { blockReason: block } : {}),
-      ...(!this.draftActive && this.draftEndedBy ? { endedBy: this.draftEndedBy } : {}),
-    } }
+    const derived: AgentWorkspaceSnapshot = {
+      ...this.base,
+      ...(this.generationValue !== undefined ? { runtimeGeneration: this.generationValue } : {}),
+      draft: {
+        active: this.draftActive,
+        workspaceId: this.base.agent?.workspaces?.selectedWorkspaceId,
+        canSend: block === undefined,
+        ...(this.draftActive && block ? { blockReason: block } : {}),
+        ...(!this.draftActive && this.draftEndedBy ? { endedBy: this.draftEndedBy } : {}),
+      },
+    }
     this.cached = { version: this.version, derived }
     return derived
   }
@@ -102,11 +126,40 @@ export class FacadeFixture implements AgentSessions {
   async newSession(): Promise<void> {}
   async openSession(): Promise<void> {}
   sends: string[] = []
-  async send(text: string): Promise<void> {
+  async send(text: string, attachments?: readonly string[]): Promise<AgentSubmissionOutcome> {
     // Deferred control lives in the test: assign sendBehavior with a pending
-    // promise to hold a send open, or reject it to script refusals.
+    // promise to hold a send open, or script an outcome for refusals/unknowns.
     this.sends.push(text)
-    return this.sendBehavior({ text })
+    // Mirror the real facade: the opaque tokens Chat holds expand to the FULL
+    // prepared references (registered at prepare time) before the carry path
+    // sees them — unknown tokens refuse, they are never dropped.
+    const expanded = (attachments ?? []).map(token => {
+      const entry = this.preparedRegistry.get(token)
+      if (!entry) throw new Error('unknown prepared attachment reference')
+      return entry
+    })
+    const outcome = await this.sendBehavior({ text, ...(attachments?.length ? { attachments: expanded } : {}) })
+    return outcome ?? { kind: 'accepted' }
+  }
+  commandCatalog(sessionKey: string): AgentCommandCatalog {
+    return this.commandCatalogAnswer?.(sessionKey) ?? { kind: 'absent' }
+  }
+  readonly attachments = {
+    capability: (sessionId?: string) => this.attachmentPrepare
+      ? (sessionId === undefined
+        ? { kind: 'absent' as const, reason: '新会话还没有原生活动会话，附件在第一条消息发出后可用。' }
+        : { kind: 'available' as const })
+      : { kind: 'absent' as const, reason: '当前连接未提供附件传输通道（生产 prepare owner 缺席，S-05）。' },
+    prepare: async (request: { sessionId?: string; sourceId: string; idempotencyKey: string }): Promise<AgentAttachmentPreparation> => {
+      const scripted = this.attachmentPrepare
+      if (!scripted) return { kind: 'refused', reason: '当前连接未提供附件传输通道（生产 prepare owner 缺席，S-05）。' }
+      const result = await scripted(request)
+      if (result.kind === 'prepared') this.preparedRegistry.set(result.reference.preparedId, result.reference)
+      return result
+    },
+    release: async (preparedId: string, reason: 'draft-removed' | 'draft-cancelled'): Promise<void> => {
+      this.releasedRefs.push({ preparedId, reason })
+    },
   }
   stop(runId: string): Promise<void> { this.stopped.push(runId); return Promise.resolve() }
   async respond(id: string, answer: InteractionAnswer): Promise<void> {

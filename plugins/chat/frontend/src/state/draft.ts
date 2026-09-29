@@ -104,13 +104,22 @@ export class DraftStore {
   itemCountByKind(pane: string, kind: ChatInputItemKind): number {
     return this.read(pane).items.filter(item => item.kind === kind).length
   }
+
+  /** Prepared attachments the store still owns in this pane — ready and never
+   * handed to a sent record. The discard path releases exactly these through
+   * the owning service before tearing the pane down (input-spec A05). */
+  releaseCandidates(pane: string): readonly ChatInputItem[] {
+    return this.read(pane).items.filter(item => item.phase.state === 'ready' && !this.handedOff.has(item.id))
+  }
 }
 
-/** Send gate (input-spec A04): every attachment must be `ready`; one failed or
- * still-preparing item blocks the send and names the reason. */
+/** Send gate (input-spec A04): every attachment must be `ready`; one failed,
+ * undecidable or still-preparing item blocks the send and names the reason. */
 export function attachmentBlockReason(items: readonly ChatInputItem[]): string | null {
   const failed = items.find(item => item.phase.state === 'failed')
   if (failed) return `附件「${failed.displayName}」未就绪：${failed.phase.state === 'failed' ? failed.phase.reason : ''}`
+  const unknown = items.find(item => item.phase.state === 'unknown')
+  if (unknown) return `附件「${unknown.displayName}」准备结果未知，已保留；核实后可重试。`
   const preparing = items.find(item => item.phase.state === 'preparing' || item.phase.state === 'selected')
   if (preparing) return `附件「${preparing.displayName}」仍在准备中`
   return null
