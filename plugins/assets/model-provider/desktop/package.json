@@ -1,0 +1,12 @@
+{
+  "name": "@ordessa/plugin-model-provider",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "ordessa": {
+    "id": "ordessa.model-provider"
+  },
+  "scripts": {
+    "test": "vitest run --maxWorkers=1"
+  }
+}
