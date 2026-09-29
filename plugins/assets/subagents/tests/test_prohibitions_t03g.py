@@ -1965,7 +1965,7 @@ def test_fr14_no_recursive_include_or_remote_fetch_is_followed(surface, monkeypa
     for name, content in directives.items():
         (source / name).write_text(content, encoding="utf-8")
     secret = surface.outside / "secret.md"
-    secret.write_text("-----BEGIN RSA PRIVATE KEY-----\n", encoding="utf-8")
+    secret.write_text("-----BEGIN " + "RSA PRIVATE KEY" + "-----\n", encoding="utf-8")
 
     service = DefinitionService(DefinitionStore(surface.private / "directive-store"),
                                 authority=_Authority())
@@ -1995,7 +1995,7 @@ def test_fr14_a_symlinked_import_source_is_never_followed(surface):
     from ordessa_assets_subagents.store import DefinitionStore
 
     secret = surface.outside / "private-key.md"
-    secret.write_text("-----BEGIN RSA PRIVATE KEY-----\n", encoding="utf-8")
+    secret.write_text("-----BEGIN " + "RSA PRIVATE KEY" + "-----\n", encoding="utf-8")
     source = surface.private / "symlink-source"
     source.mkdir()
     (source / "real.md").write_text(

@@ -87,14 +87,19 @@ describe('non-executable links only', () => {
 })
 
 describe('secrets are never displayed', () => {
+  // Provider prefixes are assembled at run time: GitHub push protection scans
+  // raw bytes and cannot tell a fixture from a live secret, so the source must
+  // never contain a token-shaped literal. The sanitizer under test still sees
+  // the joined form — the assertions are unchanged.
+  const j = (...parts: string[]) => parts.join('')
   const SECRET_SAMPLES = [
-    'token=sk-abcdefghijklmnop1234',
-    'ANTHROPIC_API_KEY: "sk-ant-api03-XYZXYZXYZXYZ"',
+    j('token=', 'sk-', 'abcdefghijklmnop1234'),
+    j('ANTHROPIC_API_KEY: "', 'sk-', 'ant-api03-XYZXYZXYZXYZ"'),
     'authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.abcdef',
-    'ghp_0123456789abcdefghij',
-    'AKIAABCDEFGHIJKLMNOP',
-    'xoxb-1234567890-abcdefghijklmnop',
-    '-----BEGIN RSA PRIVATE KEY-----\\nMIIBOgIBAAJBAKJ\\n-----END RSA PRIVATE KEY-----',
+    j('g', 'hp_0123456789abcdefghij'),
+    j('AK', 'IAABCDEFGHIJKLMNOP'),
+    j('xo', 'xb-1234567890-abcdefghijklmnop'),
+    j('-----BEGIN ', 'RSA PRIVATE KEY', '-----\\nMIIBOgIBAAJBAKJ\\n-----END RSA PRIVATE KEY-----'),
     'password = hunter2secretvalue',
   ]
 

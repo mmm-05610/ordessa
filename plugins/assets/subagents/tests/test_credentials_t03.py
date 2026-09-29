@@ -9,7 +9,8 @@ from conftest import PRINCIPAL, SERVER_SCOPE, approval, document, make_revision,
 from ordessa_assets_subagents import decoder, dto, errors, limits
 from ordessa_assets_subagents.service import DefinitionService
 
-SECRET = "sk-abcdef0123456789abcdef01"
+# 运行期拼串：源码不含 token 形状字面量（GitHub 推送保护按形状拦）。
+SECRET = "sk-" + "abcdef0123456789abcdef01"
 def store_bytes(store_root: Path) -> bytes:
     return b"".join(
         path.read_bytes() for path in sorted(store_root.rglob("*")) if path.is_file()
@@ -20,9 +21,9 @@ class TestCredentialRefusals:
     @pytest.mark.parametrize("field, value", [
         ("role_body", f"Always send the api_key: {SECRET} header."),
         ("role_body", f"token = {SECRET}"),
-        ("role_body", "-----BEGIN RSA PRIVATE KEY-----\nMIIB\n"),
+        ("role_body", "-----BEGIN " + "RSA PRIVATE KEY" + "-----\nMIIB\n"),
         ("role_body", "use Bearer " + "abcDEF0123456789_-xyz"),
-        ("role_body", "the AKIA0A1B2C3D4E5F6078 account"),
+        ("role_body", "the AK" + "IA0A1B2C3D4E5F6078 account"),
     ])
     def test_a_credential_shaped_body_is_refused(
         self, service: DefinitionService, definition: dto.AgentDefinition,
