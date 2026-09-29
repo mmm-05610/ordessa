@@ -36,3 +36,10 @@ project）；不让验收 Agent 修改 Ordessa 自己的源码仓库。
 | E-P2-2 | B-005（RV-3 PASS）+ I-001 四连（RV-3 对装配唯一阻塞按选项③整改）入 trunk：`dab802d776`、`1053a4b930`、`75c72a3b48`、`5e08cb76df`、`0a1461336f`、`8c27bc0ad8`（17 扩展）。组合门：build=0（17 enabled）、server-bridge **57/57 含 live 真往返**（真 server：JSON-RPC 信封 `workspaces.list` 200；旧平铺体 400 已由 I-001 复现留证）、apps/desktop 全绿、`node --test products/desktop/tests/` 15P/1F（唯一红=预存在 `@assistant-ui/react` examples 依赖）。 |
 | E-P2-3 | 集成显形回归一处：B-001 静态 JSON import 触发 FR-009 平台纯度守卫（I-001 分支自测绿因基于 B-001 前 trunk）。修复 trunk `7b8223d38e`：守卫白名单精确豁免该数据文件（注释写明 C-01 单一事实源+非 API），守卫 5/5 绿。立案 W-027 为架构债。 |
 | E-P2-4 | task worktree/branch 全部清理：b001/b003/b002/b005/i001 五个分支删除，`git worktree list` 仅剩 root/main、NIGHTLY_TRUNK、历史 `worktrees/consolidated-core`。 |
+
+## Phase 2 末 · RE-2 抢救证据与冻结（2026-09-30 07:50–08:00）
+
+| ID | 证据 |
+| --- | --- |
+| E-P2-5 | RE-2 会话被取消但大部分工作已完成，产物抢救入档：①trunk `418c5cfbee` fresh deb `ordessa_0.1.0_amd64.deb` 205,709,240B，**sha256 `70be619868f70f495d6cfdd225573bc086a9f48697acd8bacf9ea291e33a3d05`**（build-id `20260929-418c5cfbe`，`/tmp/re2-build.log`）；②Layer① **CLEAN-MACHINE ACCEPTANCE: PASS / EXIT=0**（`/tmp/re2-layer1.log`，userns chroot 真实 dpkg -i）；③Layer② 装机 xvfb 启动（`/tmp/re2-launch2.log` RE2_RESULT）：`ready/settled/rootMounted=true`、bundled server listening、`wireReady:true` scope=`http://127.0.0.1:34323\|server_476bdee988004154812721f9f27d0e24`、**17 扩展发现 failures:[]**、截图 `evidence-assets/re2-launch.png`（1220×800）；④**新 P1（B-006）**：alerts 含 W-028 全类（profile-chat、no-origin×2、wirePort no-provider×3）在装机身仍现——wire 事实已就绪但扩展激活仍拒绝 → 激活时序问题；⑤残留 server 进程 pid 2054577 已由 Lead 清理（仅杀本夜启动物）。 |
+| E-P2-6 | 冻结动作：final-report.md 填成（MORNING_CANDIDATE=NO，best=C2）；W-019 分支保留未收编（RV-4 未及派出）；I-002 未落地（native 通道缺位，C3 未开跑）；DeepSeek key 零消耗（已验证可用）。 |

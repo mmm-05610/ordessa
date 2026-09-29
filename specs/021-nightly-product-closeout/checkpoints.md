@@ -15,6 +15,7 @@ C-FINAL final release。
 | --- | --- | --- | --- | --- | --- | --- |
 | C0 | 2026-09-29 23:53+ | 见 evidence.md E-P0-4（本分支控制面首 commit） | 控制面 only：repo clean @ main `b4bf7cd909`；branch/worktree 建立；无产品改动 | n/a（Bootstrap） | 全部产品验收项未验证 | n/a（= main baseline） |
 | C1 | 2026-09-30 00:5x | `aa3918092c`（NIGHTLY_TRUNK，deb 由该树构建） | `npm ci`✓；`npm run build`✓；`build:deb`✓；`npm test` 24/39（红全预存在，零新增）；桥可复现（`714044a5…` 二跑逐字节同） | deb `ordessa_0.1.0_amd64.deb`（205MB）sha256 `d7e4727e2720f1a590fb23d54a0556b096abf27004d34ee1eb069d5b8df55941`；payload 抽验：bundled python 可导入 ordessa_server/pacthold、`bin/acp` 与 manifest 一致、desktop entry/图标齐全 | 启动即崩（B-001）；deb 缺 server 闭包与 harnesses（B-002）；装机零扩展（B-003）→ C2 未达 | `aa3918092c` |
+| C2 | 2026-09-30 07:5x（冻结） | `418c5cfbee`（产品代码；specs 面至 `6a8d798dc0`+报告） | deb-contract 45/45；server-bridge 57/57（live）；apps/desktop 131/131；pytest data_root 40/40；FR-009 5/5；typecheck 30（预存在） | **Layer① chroot 安装 PASS**（clean-machine-accept EXIT=0）；**Layer② 装机启动 ready**：17 扩展发现零失败、server listening、wireReady 真 scope、截图存档；deb sha256 `70be619868f70f495d6cfdd225573bc086a9f48697acd8bacf9ea291e33a3d05` | B-006（装机资产扩展激活告警）未修；Project/Session/真实 Harness 链未验证（C3+ 未达） | `418c5cfbee` |
 
 ## 待达成
 
