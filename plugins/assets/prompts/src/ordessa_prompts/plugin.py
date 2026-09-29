@@ -31,6 +31,8 @@ from pathlib import Path
 from typing import Any, Callable, Mapping
 
 from server_plugin_api import (
+    Contribution,
+    ContributionBatch,
     ServerMethodDescriptor,
     ServerPluginContext,
     ServerPluginDescriptor,
@@ -41,6 +43,8 @@ from ordessa_prompts.api import InvalidRequestError
 from ordessa_prompts.backend.records import PromptRecords
 from ordessa_prompts.backend.service import PromptsService
 from ordessa_prompts.backend.storage import PromptsStore
+from ordessa_prompts.harness_adapters.contribution import (
+    CONFIGURATION_POINT, POINT_API_VERSION)
 
 PLUGIN_ID = "ordessa.assets.prompts"
 PLUGIN_DISPLAY_NAME = "Prompts: instructions & personas"
@@ -106,13 +110,22 @@ def _offset_or_none(value: Any, name: str) -> int:
 class PromptsServerPlugin:
     """Prompts domain: content library + service, Profile/Harness optional."""
 
-    def __init__(self, *, store_path: "Path | str | None" = None) -> None:
+    def __init__(self, *, store_path: "Path | str | None" = None,
+                 contribute_harness_adapters: bool = True) -> None:
         #: tests and isolated deployments may pass an explicit private
         #: database path; production leaves it None and the data-root
         #: service provides the directory.
         self._forced_store_path = store_path
         self._store: "PromptsStore | None" = None
         self._service: "PromptsService | None" = None
+        #: ON by default. What THIS side controls is the declaration:
+        #: the `assets.prompts` adapter rows ride the published
+        #: `harness.configuration-adapters` point (EXT-02, brand-narrowed
+        #: to pi/codex/claude); the stage-time refusal when a composition
+        #: selects the plugin without binding the point is the HOST's
+        #: published behavior (contracts.md §C2). A bare test host that
+        #: wants no adapter rows passes False.
+        self._contribute_harness_adapters = contribute_harness_adapters
 
     def descriptor(self) -> ServerPluginDescriptor:
         return ServerPluginDescriptor(
@@ -140,10 +153,24 @@ class PromptsServerPlugin:
             profile_authorization=ports.get("profile.prompts_authorization"))
         self._store = store
         self._service = service
+        adapter_rows: "tuple[Contribution, ...]" = ()
+        if self._contribute_harness_adapters:
+            from ordessa_prompts.harness_adapters import prompts_adapters
+            adapter_rows = tuple(
+                Contribution(point_id=CONFIGURATION_POINT,
+                             api_version=POINT_API_VERSION,
+                             payload=adapter)
+                for adapter in prompts_adapters())
         return ServerPluginRegistration(
             methods=self._methods(service),
             provided_ports={"prompts.service": service},
-            disposal=self._dispose)
+            disposal=self._dispose,
+            contributions=ContributionBatch(
+                adapter_rows,
+                # the point is declared open ONLY when rows are actually
+                # contributed (a claim without content would be fiction)
+                open_points=(frozenset({CONFIGURATION_POINT})
+                             if adapter_rows else frozenset())))
 
     @staticmethod
     def _server_scope(ports: Mapping[str, Any], store_path: "Path | str") -> str:

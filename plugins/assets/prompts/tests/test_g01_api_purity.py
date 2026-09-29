@@ -180,12 +180,23 @@ API_ALLOWED_IMPORTS = {"__future__", "base64", "dataclasses", "hashlib", "re",
                        "typing", "unicodedata"}
 
 #: what `ordessa_prompts.plugin` may import: stdlib + the published contract
-#: vocabulary + this package
+#: vocabulary + this package. EXT-02 adds exactly TWO names — the new own
+#: package submodule `ordessa_prompts.harness_adapters` and its
+#: `contribution` module (the C2 adapter registration face). No assertion
+#: was removed; the boundary scan's exact-prefix rule (the SAME
+#: predicate `_boundary_offenders` applies to every real package file —
+#: see test_boundary_scan_covers_the_new_harness_adapters_files)
+#: continues to refuse `ordessa_harness.` internals while the published
+#: `ordessa_harness_api` vocabulary stays admissible — both sides proven
+#: by test_published_harness_api_admissible_but_internals_refused.
+#: The amendment is documented in PX-report.md.
 PLUGIN_ALLOWED_IMPORTS = {"__future__", "base64", "pathlib", "typing",
                           "server_plugin_api", "ordessa_prompts",
                           "ordessa_prompts.api", "ordessa_prompts.backend.records",
                           "ordessa_prompts.backend.service",
-                          "ordessa_prompts.backend.storage"}
+                          "ordessa_prompts.backend.storage",
+                          "ordessa_prompts.harness_adapters",
+                          "ordessa_prompts.harness_adapters.contribution"}
 
 
 def test_api_public_surface_is_exactly_the_documented_set():
@@ -212,6 +223,34 @@ def test_plugin_imports_only_the_published_contract_vocabulary():
         assert name in PLUGIN_ALLOWED_IMPORTS, (
             f"plugin.py imports {name!r}; only server_plugin_api, the stdlib and "
             "this package are allowed (G01/G08 boundary)")
+
+
+def test_boundary_scan_covers_the_new_harness_adapters_files():
+    """Round-2/6: the per-file boundary parametrization must include the
+    new submodule's files. The EXPECTED set is HARDCODED (not derived
+    from the same rglob as the scan — a same-source subset check would
+    be tautological); a file renamed away from this list turns this red
+    and forces a conscious update."""
+    expected = {
+        Path("harness_adapters/__init__.py"),
+        Path("harness_adapters/capabilities.py"),
+        Path("harness_adapters/contribution.py"),
+    }
+    scanned = {p.relative_to(PACKAGE_ROOT)
+               for p in _all_package_files()}
+    assert expected <= scanned, expected - scanned
+
+
+def test_published_harness_api_admissible_but_internals_refused():
+    """The exact-prefix boundary rule, proven on BOTH sides for the new
+    harness_adapters face (EXT-02 review round 1): the PUBLISHED
+    `ordessa_harness_api` vocabulary passes, the harness PLUGIN
+    internals (`ordessa_harness.`) are refused."""
+    assert _boundary_offenders(["ordessa_harness_api"]) == []
+    assert _boundary_offenders(["ordessa_harness_api.contracts"]) == []
+    offenders = _boundary_offenders(["ordessa_harness.registry",
+                                     "ordessa_harness"])
+    assert set(offenders) == {"ordessa_harness.registry", "ordessa_harness"}
 
 
 def test_the_profile_authorisation_port_is_structurally_satisfiable():
