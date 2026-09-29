@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["node"],
+    "paths": {
+      "@ordessa/extension-api": ["../../../../packages/desktop-platform/extension-api/src/index.ts"],
+      "@extensions/ordessa.contracts/contract.js": ["../../../../packages/desktop-platform/contracts/foundation/src/contract.ts"]
+    }
+  },
+  "include": ["src", "tests"]
+}
