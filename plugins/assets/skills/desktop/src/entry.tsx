@@ -11,12 +11,13 @@
  * to live is exactly that case.
  */
 import type { PluginContext } from '@ordessa/extension-api'
-import { WorkbenchToken, type Workbench } from '@extensions/ordessa.contracts/contract.js'
+import { WirePortToken, WorkbenchToken, type Workbench, type WirePort } from '@extensions/ordessa.contracts/contract.js'
 import type { ChatContributionsService } from '@extensions/ordessa.chat-api/contract.js'
-import type { SkillsGateway, WorkspaceListPort } from '../../contracts/src/gateway'
+import type { SkillsGateway, WorkspaceListPort, ProjectEntry } from '../../contracts/src/gateway'
 import type { SkillsChatSnapshotPort } from '../../contracts/src/chat'
 import { attachSkillsChatContribution } from './chatContribution'
 import type { WireCaller } from './gateway'
+import { createSkillsGateway } from './gateway'
 import { createSkillsSnapshotGateway, unloadedSkillsSnapshotPort } from './snapshotGateway'
 import { createSkillsModel } from './model'
 import { SKILLS_DETAIL_OVERLAY_ID, SKILLS_SETTINGS_SECTION_ID, SkillDetailOverlay, SkillsSection } from './view'
@@ -42,7 +43,68 @@ export interface SkillsDependencies {
 
 export const SKILLS_MODULE_ID = 'ordessa.skills'
 
-export default function createSkillsPlugin(injected?: unknown) {
+/** The loadable product entry: the loader's only seam. It ignores whatever the
+ * loader passes (the extension-api namespace carries no transport) and takes
+ * the platform's ONE wire port instead — the C-03 token, whose absence is an
+ * explicit `No provider` resolution failure, never an empty library. */
+export default function createPlugin() {
+  return {
+    id: SKILLS_MODULE_ID,
+    autoStart: true,
+    requires: [WorkbenchToken, WirePortToken],
+    provides: undefined,
+    activate(context: PluginContext, workbench: Workbench, wire: WirePort) {
+      return createSkillsPlugin(wireDependencies(wire)).activate(context, workbench)
+    },
+  }
+}
+
+/** WireResult 三态 → WireCaller 的适配（包内私用）：`Accepted` 交出 result，
+ * `Refused`/`Unknown` 按类型抛出——gateway 的 "empty wire response" 兜底由此
+ * 永不替身。 */
+function wireCallerOf(wire: WirePort): WireCaller {
+  return {
+    async call(method, params) {
+      const result = await wire.call(method, params)
+      if (result.kind === 'Accepted') return result.result
+      throw Error(`skills wire call ${method} ${result.kind}: ${result.reason}`)
+    },
+  }
+}
+
+/** The project picker over the same port: the workspace family's one read.
+ * `includeArchived` is the descriptor's REQUIRED param, spelled here. */
+function workspaceListPortOf(wire: WirePort): WorkspaceListPort {
+  const caller = wireCallerOf(wire)
+  return {
+    async listProjects(): Promise<ProjectEntry[]> {
+      const answer = await caller.call('workspaces.list', { includeArchived: false }) as {
+        items?: ReadonlyArray<{ id?: unknown; displayName?: unknown; accessibility?: { readable?: unknown; reasons?: unknown } }>
+      }
+      return (answer.items ?? []).map(row => ({
+        projectId: String(row.id ?? ''),
+        displayName: String(row.displayName ?? row.id ?? ''),
+        state: row.accessibility?.readable === true
+          ? 'available' as const
+          : JSON.stringify(row.accessibility?.reasons ?? []).includes('unauthor')
+            ? 'unauthorized' as const
+            : 'missing' as const,
+      }))
+    },
+  }
+}
+
+/** The wire-backed dependency set the product entry activates with. */
+function wireDependencies(wire: WirePort) {
+  const caller = wireCallerOf(wire)
+  return {
+    gateway: createSkillsGateway(caller),
+    workspaces: workspaceListPortOf(wire),
+    wire: caller,
+  }
+}
+
+export function createSkillsPlugin(injected?: unknown) {
   return {
     id: SKILLS_MODULE_ID,
     autoStart: true,

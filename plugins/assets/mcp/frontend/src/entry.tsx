@@ -17,20 +17,20 @@
 //   incompatibility, Z1 r2) — registered in the T08 report, nothing here.
 
 import type { PluginContext } from '@ordessa/extension-api'
-import { WorkbenchToken, type Workbench } from '@extensions/ordessa.contracts/contract.js'
+import { WirePortToken, WorkbenchToken, type Workbench, type WirePort } from '@extensions/ordessa.contracts/contract.js'
 import { ChatContributionsToken, type ChatContributionsService } from '@extensions/ordessa.chat-api/contract.js'
-import { createFetchMcpWireClient, type McpWireClient } from './wire'
+import { createWirePortMcpWireClient, type McpWireClient } from './wire'
 import { createMcpStatusService } from './status'
 import { McpSettingsSection } from './settings'
 import { createMcpChatInputSource, mcpStatusChipContribution, McpStatusChip } from './chat'
 
 /** Product configuration slice forwarded verbatim by the host (extension-
- * loader `config`); opaque to the host, and the only thing the assembly may
-*  hand this extension today. The wire CLIENT itself is meant to be provided
- * by the session-service owner; until that seam exists `wire.baseUrl` lets a
- * product point this glue at the server's `/wire/v1` surface. */
+ * loader `config`); opaque to the host. The transport itself is the platform's
+ * ONE wire port (`ordessa.wirePort.v1`, EA-1/D-021-7) — this slice only names
+ * the caller principal the assembly chose, if any. The retired `wire.baseUrl`
+ * route is gone: a locator in static config was the seam EA-1 retired. */
 export interface McpFrontendConfig {
-  readonly wire?: { readonly baseUrl?: string }
+  readonly principal?: string
 }
 
 export const MCP_SETTINGS_SECTION_ID = 'ordessa.asset.mcp.settings'
@@ -59,14 +59,26 @@ export function registerMcpFrontend(
   contributions.addContribution(mcpStatusChipContribution(deps.wireClient ? status : undefined))
 }
 
+/** The wire client the product route binds: the C-03 port plus the caller
+ * identity. `serverScope` is the port's own read-only scope fact — when the
+ * host has none (Server down, bridge absent) the identity is unnameable and
+ * the client is honestly absent, which renders as the unavailable panel, not
+ * an empty success. */
+export function wireClientOf(wire: WirePort | undefined, config?: McpFrontendConfig): McpWireClient | undefined {
+  if (wire === undefined || wire.scope === null || wire.scope === '') return undefined
+  return createWirePortMcpWireClient(wire, {
+    serverScope: wire.scope,
+    principal: config?.principal ?? 'desktop-local',
+  })
+}
+
 export default function createPlugin(_api?: unknown, config?: McpFrontendConfig) {
   return {
     id: 'ordessa.asset-mcp', autoStart: true,
-    requires: [WorkbenchToken, ChatContributionsToken],
-    activate: (context: PluginContext, workbench: Workbench, chat: ChatContributionsService) => {
-      const baseUrl = config?.wire?.baseUrl
-      const wireClient = baseUrl ? createFetchMcpWireClient({ baseUrl }) : undefined
-      registerMcpFrontend(context.resources, workbench, chat, { ...(wireClient ? { wireClient } : {}) })
+    requires: [WorkbenchToken, ChatContributionsToken, WirePortToken],
+    activate: (context: PluginContext, workbench: Workbench, chat: ChatContributionsService, wire?: WirePort) => {
+      const wireClient = wireClientOf(wire, config)
+      registerMcpFrontend(context.resources, workbench, chat, wireClient ? { wireClient } : {})
     },
   }
 }

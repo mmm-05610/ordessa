@@ -16,6 +16,7 @@
 // one of them as a strict-equality guard (a rename, an added/removed field
 // or a moved unwrap path on either side turns that guard red).
 
+import type { WirePort } from '@extensions/ordessa.contracts/contract.js'
 import type {
   McpAssignmentView, McpCanonicalDefinition, McpConnectionFacts, McpDefinitionSummary,
   McpListToolsResult, McpPreviewResult, McpProbeFacts, McpRevisionView, McpSaveRevisionResult,
@@ -221,19 +222,65 @@ function requireMcpWireIdentity(identity: McpWireIdentity | undefined): McpWireI
   return identity
 }
 
-/** The optional fetch-based implementation of {@link McpWireClient}: wire/1
- * envelope, exactly one of `result`/`error` per response
- * (wire/envelope.py `decode_request`/`encode_result`/`encode_error`). */
-export function createFetchMcpWireClient(options: FetchMcpWireOptions): McpWireClient {
-  const identity = requireMcpWireIdentity(options.identity)
-  const fetchImpl = options.fetchImpl ?? ((request, init) => globalThis.fetch(request, init))
-  const base = options.baseUrl.replace(/\/+$/, '')
-  let nextId = 1
+/** The operation binder both transports share: method table lookup, identity
+ * injection and result-path unwrap are ONE implementation so the two routes
+ * cannot drift apart (WCG-02/03 pin the tables, not a transport). */
+function bindMcpCall(
+  rpc: (method: string, params: Record<string, unknown>, signal?: AbortSignal) => Promise<unknown>,
+  identity: McpWireIdentity,
+) {
   const clientKeyOf = (method: string): keyof typeof MCP_WIRE_METHODS => {
     const entry = Object.entries(MCP_WIRE_METHODS).find(([, id]) => id === method)
     if (!entry) throw new McpWireError('WIRE_METHOD_UNBOUND', `${method} has no bound row in MCP_WIRE_METHODS`)
     return entry[0] as keyof typeof MCP_WIRE_METHODS
   }
+  return async <T>(method: string, params: Record<string, unknown>, signal?: AbortSignal): Promise<T> => {
+    const key = clientKeyOf(method)
+    const injected: Record<string, string> = {}
+    for (const name of MCP_WIRE_IDENTITY_INJECTION[key]) injected[name] = identity[name]
+    const result = await rpc(method, { ...injected, ...params }, signal)
+    const path = MCP_WIRE_RESULT_PATH[key]
+    if (path === '') return result as T
+    if (!result || typeof result !== 'object' || !(path in result)) {
+      throw new McpWireError('WIRE_BAD_RESPONSE', `the ${method} answer carries no '${path}' wrapper member`)
+    }
+    const value = (result as Record<string, unknown>)[path]
+    // The backend views put a null under the wrapper only for states the
+    // stores themselves cannot produce (e.g. a definition row without any
+    // revision); treating that as an empty answer object would fake a read.
+    if (value === undefined || value === null) {
+      throw new McpWireError('WIRE_ANSWER_INCOMPLETE', `the ${method} answer's '${path}' member carries no view`)
+    }
+    return value as T
+  }
+}
+
+function bindMcpOperations(call: <T>(method: string, params: Record<string, unknown>, signal?: AbortSignal) => Promise<T>): McpWireClient {
+  return {
+    listDefinitions: signal => call(MCP_WIRE_METHODS.listDefinitions, {}, signal),
+    getDefinition: (definitionId, signal) => call(MCP_WIRE_METHODS.getDefinition, { definitionId }, signal),
+    saveRevision: ({ signal, ...params }) => call(MCP_WIRE_METHODS.saveRevision, { ...params }, signal),
+    approveRevision: ({ signal, ...params }) => call(MCP_WIRE_METHODS.approveRevision, { ...params }, signal),
+    archiveDefinition: ({ signal, ...params }) => call(MCP_WIRE_METHODS.archiveDefinition, { ...params }, signal),
+    probe: ({ signal, ...params }) => call(MCP_WIRE_METHODS.probe, { ...params }, signal),
+    assign: ({ signal, ...params }) => call(MCP_WIRE_METHODS.assign, { ...params }, signal),
+    unassign: ({ signal, ...params }) => call(MCP_WIRE_METHODS.unassign, { ...params }, signal),
+    resolvePreview: ({ signal, ...params }) => call(MCP_WIRE_METHODS.resolvePreview, { ...params }, signal),
+    inspectConnection: ({ signal, ...params }) => call(MCP_WIRE_METHODS.inspectConnection, { ...params }, signal),
+    listTools: ({ signal, ...params }) => call(MCP_WIRE_METHODS.listTools, { ...params }, signal),
+  }
+}
+
+/** The optional fetch-based implementation of {@link McpWireClient}: wire/1
+ * envelope, exactly one of `result`/`error` per response
+ * (wire/envelope.py `decode_request`/`encode_result`/`encode_error`). Kept for
+ * tests and session-service owners that own a locator; the product entry no
+ * longer names it. */
+export function createFetchMcpWireClient(options: FetchMcpWireOptions): McpWireClient {
+  const identity = requireMcpWireIdentity(options.identity)
+  const fetchImpl = options.fetchImpl ?? ((request, init) => globalThis.fetch(request, init))
+  const base = options.baseUrl.replace(/\/+$/, '')
+  let nextId = 1
   const rpc = async (method: string, params: Record<string, unknown>, signal?: AbortSignal): Promise<unknown> => {
     const response = await fetchImpl(`${base}/wire/v1/${method}`, {
       method: 'POST',
@@ -255,36 +302,23 @@ export function createFetchMcpWireClient(options: FetchMcpWireOptions): McpWireC
     if (!('result' in envelope)) throw new McpWireError('WIRE_BAD_RESPONSE', `${method} returned neither result nor error`)
     return envelope.result
   }
-  const call = async <T>(method: string, params: Record<string, unknown>, signal?: AbortSignal): Promise<T> => {
-    const key = clientKeyOf(method)
-    const injected: Record<string, string> = {}
-    for (const name of MCP_WIRE_IDENTITY_INJECTION[key]) injected[name] = identity[name]
-    const result = await rpc(method, { ...injected, ...params }, signal)
-    const path = MCP_WIRE_RESULT_PATH[key]
-    if (path === '') return result as T
-    if (!result || typeof result !== 'object' || !(path in result)) {
-      throw new McpWireError('WIRE_BAD_RESPONSE', `the ${method} answer carries no '${path}' wrapper member`)
-    }
-    const value = (result as Record<string, unknown>)[path]
-    // The backend views put a null under the wrapper only for states the
-    // stores themselves cannot produce (e.g. a definition row without any
-    // revision); treating that as an empty answer object would fake a read.
-    if (value === undefined || value === null) {
-      throw new McpWireError('WIRE_ANSWER_INCOMPLETE', `the ${method} answer's '${path}' member carries no view`)
-    }
-    return value as T
+  return bindMcpOperations(bindMcpCall(rpc, identity))
+}
+
+/** The product route (EA-1, D-021-7): the client rides the C-03 wire port, so
+ * no locator and no token ever reach this bundle. The port's three-state
+ * result is unwrapped here — `Accepted` is the envelope's result;
+ * `Refused`/`Unknown` become the typed {@link McpWireError} carrying the
+ * reason the Server gave (the typed family code does not survive the port
+ * yet — registered C-03 debt). The AbortSignal is accepted and not forwarded:
+ * the port's own per-call timeout governs, and cancelling a UI fetch is not a
+ * transport fact this client may fabricate. */
+export function createWirePortMcpWireClient(port: WirePort, identity: McpWireIdentity): McpWireClient {
+  const bound = requireMcpWireIdentity(identity)
+  const rpc = async (method: string, params: Record<string, unknown>): Promise<unknown> => {
+    const result = await port.call(method, params)
+    if (result.kind === 'Accepted') return result.result
+    throw new McpWireError('WIRE_ERROR', `${method} ${result.kind}: ${result.reason}`)
   }
-  return {
-    listDefinitions: signal => call(MCP_WIRE_METHODS.listDefinitions, {}, signal),
-    getDefinition: (definitionId, signal) => call(MCP_WIRE_METHODS.getDefinition, { definitionId }, signal),
-    saveRevision: ({ signal, ...params }) => call(MCP_WIRE_METHODS.saveRevision, { ...params }, signal),
-    approveRevision: ({ signal, ...params }) => call(MCP_WIRE_METHODS.approveRevision, { ...params }, signal),
-    archiveDefinition: ({ signal, ...params }) => call(MCP_WIRE_METHODS.archiveDefinition, { ...params }, signal),
-    probe: ({ signal, ...params }) => call(MCP_WIRE_METHODS.probe, { ...params }, signal),
-    assign: ({ signal, ...params }) => call(MCP_WIRE_METHODS.assign, { ...params }, signal),
-    unassign: ({ signal, ...params }) => call(MCP_WIRE_METHODS.unassign, { ...params }, signal),
-    resolvePreview: ({ signal, ...params }) => call(MCP_WIRE_METHODS.resolvePreview, { ...params }, signal),
-    inspectConnection: ({ signal, ...params }) => call(MCP_WIRE_METHODS.inspectConnection, { ...params }, signal),
-    listTools: ({ signal, ...params }) => call(MCP_WIRE_METHODS.listTools, { ...params }, signal),
-  }
+  return bindMcpOperations(bindMcpCall(rpc, bound))
 }

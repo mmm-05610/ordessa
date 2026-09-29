@@ -5,9 +5,25 @@
 
 import { describe, expect, it } from 'vitest'
 import { OwnedResources, Token, type PluginContext, type ResourceScope } from '@ordessa/extension-api'
-import { WorkbenchToken, type Workbench, type WorkbenchSettingsSection } from '@extensions/ordessa.contracts/contract.js'
+import { WirePortToken, WorkbenchToken, type WirePort, type Workbench, type WorkbenchSettingsSection } from '@extensions/ordessa.contracts/contract.js'
 import { ChatContributionsToken, createChatContributions } from '@extensions/ordessa.chat-api/contract.js'
 import createPlugin, { MCP_SETTINGS_SECTION_ID, registerMcpFrontend } from '../src/entry'
+import type { WireResult } from '@extensions/ordessa.contracts/contract.js'
+
+/** A C-03 port fake whose scope fact is settable; `call` is never reached by
+ * registration itself, only by the status reads the panel fires later. */
+function fakeWirePort(options: { scope: string | null } = { scope: 'http://127.0.0.1:41207|server_fake' }): WirePort & { calls: { method: string; params: Record<string, unknown> }[] } {
+  const calls: { method: string; params: Record<string, unknown> }[] = []
+  return {
+    calls,
+    ready: options.scope !== null,
+    scope: options.scope,
+    async call(method, params): Promise<WireResult> {
+      calls.push({ method, params })
+      return { kind: 'Unknown', requestId: 'fake', reason: 'result-unknown' }
+    },
+  }
+}
 
 function fakeWorkbench() {
   const sections: WorkbenchSettingsSection[] = []
@@ -46,6 +62,8 @@ describe('ordessa.asset-mcp plugin shape', () => {
     // The exact shared token objects — not lookalikes: same construction sites.
     expect(plugin.requires).toContain(WorkbenchToken)
     expect(plugin.requires).toContain(ChatContributionsToken)
+    // EA-1: the transport is the ONE C-03 wire port, not a second seam.
+    expect(plugin.requires).toContain(WirePortToken)
     expect(Token).toBeDefined()
   })
 
@@ -54,7 +72,7 @@ describe('ordessa.asset-mcp plugin shape', () => {
     const { ctx, scope } = context()
     const { workbench, sections } = fakeWorkbench()
     const chat = createChatContributions()
-    await plugin.activate(ctx, workbench, chat)
+    await plugin.activate(ctx, workbench, chat, fakeWirePort({ scope: null }))
     expect(sections).toHaveLength(0)
     const view = chat.queryInputSources({ location: { kind: 'session', connectionId: 'c', sessionId: 's', contextRevision: 1 }, query: '', surface: 'plus', signal: new AbortController().signal })
     for (let i = 0; i < 50 && view.getSnapshot().some(source => source.state.status === 'loading'); i++) await new Promise(r => setTimeout(r, 0))
@@ -64,13 +82,16 @@ describe('ordessa.asset-mcp plugin shape', () => {
     expect(chat.contributionsBySlot('composer.toolbar').getSnapshot()).toHaveLength(0)
   })
 
-  it('with a configured wire base the Settings section registers under the owner id', async () => {
-    const plugin = createPlugin(undefined, { wire: { baseUrl: 'http://127.0.0.1:41207' } })
+  it('with a scoped wire port the Settings section registers under the owner id, riding the C-03 port', async () => {
+    const plugin = createPlugin(undefined, undefined)
     const { ctx } = context()
     const { workbench, sections } = fakeWorkbench()
-    await plugin.activate(ctx, workbench, createChatContributions())
+    const wire = fakeWirePort()
+    await plugin.activate(ctx, workbench, createChatContributions(), wire)
     expect(sections.map(section => section.id)).toEqual([MCP_SETTINGS_SECTION_ID])
     expect(sections[0].title).toBe('MCP 服务器')
+    // No locator ever reached the bundle: the client rides the port.
+    expect(JSON.stringify(sections)).not.toContain('baseUrl')
   })
 
   it('registerMcpFrontend is the shared seam the session-service owner can drive with its own client', () => {

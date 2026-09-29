@@ -3,8 +3,8 @@ import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { afterEach, describe, expect, it } from 'vitest'
 import { OwnedResources, type PluginContext, type ResourceScope } from '@ordessa/extension-api'
-import type { Workbench, WorkbenchModule, WorkbenchOverlay, WorkbenchSettingsSection, View } from '@extensions/ordessa.contracts/contract.js'
-import createSkillsPlugin, { SKILLS_MODULE_ID } from '../src/entry'
+import { WirePortToken, WorkbenchToken, type Workbench, type WorkbenchModule, type WorkbenchOverlay, type WorkbenchSettingsSection, type View } from '@extensions/ordessa.contracts/contract.js'
+import createProductPlugin, { createSkillsPlugin, SKILLS_MODULE_ID } from '../src/entry'
 import { createChatContributions } from '@extensions/ordessa.chat-api/contract.js'
 import { SKILLS_UNCONFIRMED_NOTICE_ID } from '../src/chatContribution'
 import { SKILLS_CHAT_SOURCE_ID } from '../../contracts/src/chat'
@@ -89,6 +89,41 @@ async function mount(element: React.ReactNode) {
   await act(async () => root.render(element))
   return container
 }
+
+describe('ordessa.skills product entry (EA-1: the loader seam rides the C-03 wire port)', () => {
+  const wirePort = (answer: () => Record<string, unknown>) => ({
+    ready: true,
+    scope: 'http://127.0.0.1:9|server_fake',
+    async call(method: string, params: Readonly<Record<string, unknown>>) {
+      void method; void params
+      return { kind: 'Accepted', requestId: 't', result: answer() }
+    },
+  })
+
+  it('requires the Workbench and the ONE wire port, and contributes the same page over it', async () => {
+    const harness = fakeWorkbench()
+    const plugin = createProductPlugin()
+    expect(plugin.id).toBe(SKILLS_MODULE_ID)
+    expect(plugin.requires).toContain(WorkbenchToken)
+    expect(plugin.requires).toContain(WirePortToken)
+    await act(async () => {
+      plugin.activate(context(harness.scope), harness.workbench, wirePort(() => ({})) as never)
+    })
+    expect(harness.sections.map(section => section.id)).toEqual([SKILLS_SETTINGS_SECTION_ID])
+    expect(harness.modules.map(module => module.id)).toEqual([SKILLS_MODULE_ID])
+  })
+
+  it('ignores whatever the loader injects — the transport is the port, not the argument', async () => {
+    const harness = fakeWorkbench()
+    const plugin = createProductPlugin()
+    await act(async () => {
+      // The loader's extension-api namespace carries no gateway; activation
+      // must still ride the resolved port rather than the ignored argument.
+      plugin.activate(context(harness.scope), harness.workbench, wirePort(() => ({})) as never, { gateway: undefined })
+    })
+    expect(harness.sections).toHaveLength(1)
+  })
+})
 
 describe('ordessa.skills registration', () => {
   it('contributes a settings section, a module with a valid main home view, and a dialog overlay', async () => {
