@@ -88,6 +88,13 @@ _CORRELATION_COLUMNS: dict[str, str] = {
     "ceiling_revision": "TEXT",
     "policy_revision": "TEXT",
     "native_generation": "TEXT",
+    # PE1 authority facts (016): who asked, who decided, and the revocation
+    # annotation. All nullable - legacy rows keep reading exactly as before,
+    # and a missing person stays a declared absence, never a guessed one.
+    "principal": "TEXT",
+    "decided_by": "TEXT",
+    "revoked_at": "TEXT",
+    "revoked_reason": "TEXT",
 }
 _RECEIPTS_DDL = (
     "CREATE TABLE IF NOT EXISTS server_approval_native_receipts ("
@@ -413,6 +420,80 @@ class ApprovalFacts:
             return QueryUnknown(reason="native_receipt_unobserved")
         return QueriedApproval(state=state, receipt=parsed_receipt)
 
+    # -- authority facts (PE1, 016) ------------------------------------------------
+
+    def revoke(self, approval_id: str, *, reason: str,
+               now: dt.datetime | None = None) -> bool:
+        """Annotate one settled-allow grant as revoked; `False` when no
+        settled-allow grant answers to that id (open/deny/invalid rows and
+        unknown ids are not revocable and are refused, never accepted).
+
+        The settled decision itself is never rewritten: the revocation rides
+        in its own nullable columns, the first revocation fact wins (a
+        re-revoke neither overwrites the reason nor moves the timestamp), and
+        the spent-grant gate above turns the fact into refusal immediately.
+        """
+        if not isinstance(reason, str) or not reason.strip() or any(
+                c in reason for c in "\x00\r\n"):
+            raise PolicyRefusal("PERMISSION_AUTHORIZATION_INVALID",
+                                source="facts.revoke (reason)",
+                                target=None if isinstance(reason, str)
+                                else type(reason).__name__)
+        moment = (now or dt.datetime.now(dt.timezone.utc))
+        if moment.tzinfo is None or moment.utcoffset() is None:
+            raise PolicyRefusal("PERMISSION_AUTHORIZATION_INVALID",
+                                source="facts.revoke (now)",
+                                target="naive timestamp")
+        with self.database.transaction() as conn:
+            row = conn.execute("SELECT * FROM server_approvals WHERE id=?",
+                               (approval_id,)).fetchone()
+            if row is None or row["state"] != SETTLED \
+                    or row["decision"] != ApprovalDecision.ALLOW.value:
+                return False
+            if self._column(row, "revoked_at") is not None:
+                return True  # idempotent: the first revocation fact stands
+            conn.execute(
+                "UPDATE server_approvals SET revoked_at=?, revoked_reason=? WHERE id=?",
+                (moment.isoformat(), reason.strip(), approval_id))
+            self._append_event(
+                conn, row["session_id"], row["execution_id"], "approval.revoked",
+                {"approval_id": approval_id, "reason": reason.strip()})
+            return True
+
+    def authority_grant_rows(self) -> list[dict[str, Any]]:
+        """Every settled-allow grant row, projected for the authority query
+        surface (the only writer of this table is this class; the read is a
+        fact report, never a ruling). Legacy rows answer with `None` in the
+        PE1 columns - a declared absence, never a guessed person."""
+        with self.database.read() as conn:
+            rows = conn.execute(
+                "SELECT * FROM server_approvals WHERE state=? AND decision=?",
+                (SETTLED, ApprovalDecision.ALLOW.value)).fetchall()
+            projected: list[dict[str, Any]] = []
+            for row in rows:
+                record = self._request_record(row) or {}
+                usage = conn.execute(
+                    "SELECT consumed_at FROM server_approval_grant_usage"
+                    " WHERE approval_id=?", (row["id"],)).fetchone()
+                projected.append({
+                    "approvalId": row["id"],
+                    "sessionId": row["session_id"],
+                    "executionId": row["execution_id"],
+                    "version": int(row["version"]),
+                    "toolKey": record.get("toolKey"),
+                    "target": record.get("target"),
+                    "operationDigest": self._column(row, "operation_digest"),
+                    "nativeRequestId": self._column(row, "native_request_id"),
+                    "principal": self._column(row, "principal"),
+                    "decidedBy": self._column(row, "decided_by"),
+                    "grantedAt": row["settled_at"],
+                    "expiresAt": record.get("expiresAt"),
+                    "revokedAt": self._column(row, "revoked_at"),
+                    "revokedReason": self._column(row, "revoked_reason"),
+                    "consumedAt": None if usage is None else usage["consumed_at"],
+                })
+        return projected
+
     # -- grants -------------------------------------------------------------------
 
     def grant_fields(self, approval_id: str) -> dict[str, Any] | None:
@@ -440,7 +521,8 @@ class ApprovalFacts:
                       native_request_id: str,
                       moment: dt.datetime | None = None) -> bool:
         """Atomically spend the approval's one-time grant; `False` means it is
-        not spendable (not settled-allow, foreign binding, or already used)."""
+        not spendable (not settled-allow, foreign binding, already used, or
+        revoked - a revoked grant refuses even on its first spend)."""
         when = (moment or dt.datetime.now(dt.timezone.utc)).isoformat()
         with self.database.transaction() as conn:
             row = conn.execute("SELECT * FROM server_approvals WHERE id=?",
@@ -448,6 +530,8 @@ class ApprovalFacts:
             if row is None:
                 return False
             if row["state"] != SETTLED or row["decision"] != ApprovalDecision.ALLOW.value:
+                return False
+            if self._column(row, "revoked_at") is not None:
                 return False
             if self._column(row, "operation_digest") != operation_digest:
                 return False
