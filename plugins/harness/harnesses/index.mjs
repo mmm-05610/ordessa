@@ -70,7 +70,7 @@ function profileFor(route) {
 
 for (const route of ROUTES.values()) profileFor(route)
 
-/** ACP discovery preserves its historical nine launchable IDs. */
+/** ACP discovery preserves its historical eight launchable IDs. */
 export function listHarnesses() {
   return [...ROUTES.keys()].sort()
 }

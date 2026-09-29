@@ -194,8 +194,14 @@ def _npm_root_directories() -> list[str]:
 
 # The old upstream `claude` alias has its own 0.75.1 closure. It is built with
 # --legacy-alias and provisioned as an explicit read-only mount, not as one of
-# the install set's eight canonical families (whose `claude-code` pin is 0.81.2).
+# the install set's mapped canonical families (whose `claude-code` pin is 0.81.2).
 ALIAS_ONLY_NPM_ROOTS = {"claude-legacy": "build-claude-runtime-artifact.mjs"}
+
+#: PE2-8 (016 user ruling): qwen is delisted from the registry, launch routes and
+#: the install set. Its npm root stays on disk untouched — no unilateral data
+#: deletion — and is registered here so the accounting below remains item-for-item
+#: honest instead of quietly skipping it.
+RETIRED_NPM_ROOTS = {"qwen"}
 
 
 def test_every_packaging_npm_root_has_a_canonical_family_or_explicit_alias_builder():
@@ -209,8 +215,11 @@ def test_every_packaging_npm_root_has_a_canonical_family_or_explicit_alias_build
     mapped = set(roots.values())
     on_disk = _npm_root_directories()
     assert on_disk, "no npm roots found; the check would pass on an empty list"
-    assert set(on_disk) <= mapped | set(ALIAS_ONLY_NPM_ROOTS), (
-        f"packaging roots with no canonical or alias builder: {sorted(set(on_disk) - mapped - set(ALIAS_ONLY_NPM_ROOTS))}")
+    assert not RETIRED_NPM_ROOTS & (mapped | set(ALIAS_ONLY_NPM_ROOTS)), (
+        "a retired root must not also be mapped")
+    assert set(on_disk) <= mapped | set(ALIAS_ONLY_NPM_ROOTS) | RETIRED_NPM_ROOTS, (
+        f"packaging roots with no canonical or alias builder: "
+        f"{sorted(set(on_disk) - mapped - set(ALIAS_ONLY_NPM_ROOTS) - RETIRED_NPM_ROOTS)}")
     for directory, builder_name in ALIAS_ONLY_NPM_ROOTS.items():
         builder = BUILDERS / builder_name
         source = builder.read_text(encoding="utf-8")

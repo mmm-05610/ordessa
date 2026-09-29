@@ -27,7 +27,7 @@ from typing import Mapping
 # P-A② (approvals/PA2-dialect-release.md): each family's dialect facts live in
 # that family's own module; this file keeps exactly one brand touch point - the
 # explicit aggregation below - the same position `adapters/__init__.py` holds
-# for ADAPTERS. Eight explicit imports (one per family package).
+# for ADAPTERS. Seven explicit imports (one per family package).
 from .claude import native as _claude_native
 from .codex import native as _codex_native
 from .dsh import native as _dsh_native
@@ -35,7 +35,6 @@ from .hermes import native as _hermes_native
 from .kilo import native as _kilo_native
 from .opencode import native as _opencode_native
 from .pi import native as _pi_native
-from .qwen import native as _qwen_native
 
 #: The canonical protocol vocabulary (092's contract, four values).
 CANONICAL_PROTOCOLS = ("openai-chat", "openai-responses", "anthropic-messages", "gemini-generate")
@@ -57,13 +56,12 @@ _FAMILY_DIALECTS: dict[str, dict[str, tuple[str, str | None]]] = {
     # (naming mismatch kept as-is by the approval).
     "claude-code": _claude_native.DIALECTS,
     "dsh": _dsh_native.DIALECTS,
-    "qwen": _qwen_native.DIALECTS,
 }
 
-#: Aggregated native target paths (P-A②): the six families that pin one. dsh and
-#: qwen pin `None` in their own modules and stay **absent** here - exactly the
+#: Aggregated native target paths (P-A②): the six families that pin one. dsh
+#: pins `None` in its own module and stays **absent** here - exactly the
 #: pre-P-A② shape; `materialize_family` reads this with `.get()`, so absent and
-#: None would resolve identically for them either way.
+#: None would resolve identically for it either way.
 _NATIVE_TARGET = {
     "codex": _codex_native.NATIVE_TARGET,
     "opencode": _opencode_native.NATIVE_TARGET,
@@ -272,7 +270,7 @@ def materialize_family(harness: str, frozen: Mapping[str, object]) -> dict | Non
     elif harness == "hermes":
         content = render_hermes_config(base_url=base_url, protocol=protocol, model=model)
     else:
-        # dsh/qwen have no pinned native protocol field -> not materializable here;
+        # dsh has no pinned native protocol field -> not materializable here;
         # returning None keeps the template rather than guessing a dialect.
         return None
     return {"harness": harness, "target": target, "protocol": protocol,

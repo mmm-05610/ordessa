@@ -123,9 +123,13 @@ def test_product_model_translates_identity():
 
 def test_capability_claims_derive_from_the_registry():
     claims = production.capability_claims()
+    # 2026-09-28 P-D 重探针：attach 由 False 翻 True（0.77 时代"握手 promptCapabilities
+    # 为空"的旧负证据被钉版 0.81.2 第一手探针推翻，见 harnesses.toml claude-code 注释与
+    # specs/014-plugin-release/reports/P-D-report.md）。本测试只断言"派生自注册表"，
+    # golden 随注册表同步。
     assert claims == {
         "start": True, "observe": True, "finish": True,
-        "attach": False, "steer": False, "permissions": False,
+        "attach": True, "steer": False, "permissions": False,
         "stream": True, "native_continuation": True,
     }
 

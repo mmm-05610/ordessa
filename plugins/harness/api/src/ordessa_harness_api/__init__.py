@@ -15,6 +15,10 @@ from .contracts import (
     VerificationUnknown, VersionRange,
 )
 from .errors import ContractError, ErrorCode
+from .native_evidence import (
+    LaunchProvenanceFacts, NativeEvidence, NativeOwnerReceiptFacts,
+    NativeReadbackVerificationFacts, NativeSessionIdentityFacts,
+)
 from .intents import (
     BindSecret, ContentRef, FieldPath, Intent, IntentSet, IntentSource,
     InvokeAction, MountContent, RemoveOwnedContent, ResetField, SetField,
@@ -29,8 +33,10 @@ __all__ = [
     "ConfigurationCapability", "ConfigurationService", "Confirmed", "ContentRef",
     "ContractError", "DesiredFragment", "ErrorCode", "FieldClaim", "FieldPath",
     "Installation", "Intent", "IntentSet", "IntentSource", "InvokeAction",
-    "JsonValue", "LaunchPlan", "LaunchRequest", "Match", "Mismatch",
-    "MountContent", "NotFound", "OperationRecord", "Plan", "PlanResult",
+    "JsonValue", "LaunchPlan", "LaunchProvenanceFacts", "LaunchRequest", "Match", "Mismatch",
+    "MountContent", "NativeEvidence", "NativeOwnerReceiptFacts",
+    "NativeReadbackVerificationFacts", "NativeSessionIdentityFacts",
+    "NotFound", "OperationRecord", "Plan", "PlanResult",
     "ReconfigurationDecision", "Refused", "RemoveOwnedContent", "ResetField",
     "ResumeRequest", "RuntimeAdapter", "RuntimeAdapterDescriptor",
     "RuntimeConfirmed", "RuntimeRefused", "RuntimeResult", "RuntimeUnknown",

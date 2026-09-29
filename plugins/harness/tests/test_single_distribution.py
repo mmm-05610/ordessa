@@ -67,9 +67,9 @@ def test_shared_adapter_exports_are_preserved():
     assert GenericCliAdapter is defining
 
 
-def test_dsh_qwen_kilo_assets_use_the_single_plugin_root():
+def test_dsh_kilo_assets_use_the_single_plugin_root():
     root = Path(__file__).resolve().parents[1]
-    for brand in ("dsh", "qwen", "kilo"):
+    for brand in ("dsh", "kilo"):
         production = importlib.import_module("ordessa_harness." + brand + ".production")
         assert production.PLUGIN_ROOT == root
         assert (root / "deploy" / brand).is_dir()

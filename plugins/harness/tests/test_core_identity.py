@@ -67,7 +67,7 @@ def test_the_registry_object_is_not_duplicated() -> None:
 
     assert registry_a is registry_b
     assert definitions_a is definitions_b
-    assert len(registry_a.all()) == 8
+    assert len(registry_a.all()) == 7
 
 
 def test_the_brand_adapter_map_has_one_source() -> None:
@@ -81,7 +81,7 @@ def test_the_brand_adapter_map_has_one_source() -> None:
 
     assert used_by_the_core is declared_once
     assert sorted(used_by_the_core) == [
-        "claude", "codex", "dsh", "hermes", "kilo", "opencode", "pi", "qwen",
+        "claude", "codex", "dsh", "hermes", "kilo", "opencode", "pi",
     ]
 
 
@@ -108,7 +108,7 @@ def test_the_registry_content_is_the_declaration_file_unchanged() -> None:
     text = resource.read_text(encoding="utf-8")
     registry = load_builtin_registry()
     assert registry.digest == "sha256:" + __import__("hashlib").sha256(text.encode()).hexdigest()
-    assert len(tomllib.loads(text)["harness"]) == len(registry.all()) == 8
+    assert len(tomllib.loads(text)["harness"]) == len(registry.all()) == 7
     assert resource.is_relative_to(CANONICAL_SRC)
 
 
@@ -137,7 +137,7 @@ import {core}.generic.profile_store as store_b
 assert loader_a is loader_b, "loader module duplicated"
 assert definitions_a.REGISTRY is definitions_b.REGISTRY, "registry state duplicated"
 assert store_a.ProfileStore is store_b.ProfileStore, "profile store class duplicated"
-assert len(definitions_a.REGISTRY.all()) == 8
+assert len(definitions_a.REGISTRY.all()) == 7
 print("OK")
 """
 
