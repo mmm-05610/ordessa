@@ -246,7 +246,8 @@ def test_no_event_kind_or_payload_was_invented(server):
     }).json()["result"]
     capabilities = {item["id"]: item for item in hello["capabilities"]}
     acp_admission_methods = {"acp.submission.authorize", "acp.permission.authorize"}
-    assert len(capabilities) == 67 + len(acp_admission_methods), len(capabilities)
+    # AR-1/W-1：方法面 67 → 56（providerModels.* 六方法 + profile 写面八方法离开）。
+    assert len(capabilities) == 56 + len(acp_admission_methods), len(capabilities)
     for method in acp_admission_methods:
         descriptor = runtime.wire._registry.lookup(method)
         assert descriptor is not None and descriptor.owner == "ordessa.harness.acp"
