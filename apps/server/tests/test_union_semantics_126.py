@@ -1,3 +1,14 @@
+> ⚠️ **AR-1 交接缺口（2026-09-29）— 本文件暂不退役**
+>
+> W-1 拆掉 server-compat 的 `model_configs` writer 后，本文件的 5 条 union 语义
+> （缺省保持 / 显式 null 清除 / 方言归一 / 未知拒绝 / 仓库级反例）**在新 owner
+> 侧尚无等价测试**——`plugins/assets/model-provider/server/tests/test_next_choice_wire.py`
+> 的 `is None` 断言是关于 cursor/state 的，不覆盖 update 合并语义。
+>
+> 盲退会悄悄丢覆盖，故**保留本文件**。请 plugin 线在 model-provider 侧补上
+> 等价的 5 条后，再按 `EXCLUDED-ar1-handoff__*` 约定退役本文件。
+> （其余三件 provenance / compatibility / slots 已确认覆盖，已退役。）
+
 """Work Order 126: the 092 x 112 union at the model_configs layer.
 
 QA-014 found that merging the runtime tree (092 protocol normalization) with the
