@@ -1,0 +1,70 @@
+{
+  "probe": "015-P-B · mem0 POST /configure base_url 生效性 E2 实测（E2 受控：假 OpenAI 兼容端点，零真实模型调用）",
+  "date": "2026-09-28",
+  "upstream_pin": {
+    "repo": "https://github.com/mem0ai/mem0",
+    "git_sha": "94c3fe9f238f3dbf29c9ce98643bd71eb13077cd",
+    "note": "main @ 2026-09-28（Python SDK 2.2.1 发布提交）；server/ 目录 sparse checkout 实跑",
+    "server_main_sha256": "320af32a959fcb6bed8b4420757714e8824fb1e98e9869a2475e1a03eddf3158",
+    "python_sdk_installed": "mem0ai 2.2.1"
+  },
+  "environment": {
+    "run_mode": "uvicorn 直跑 pinned server/main.py（非 compose）——本环境无 Docker，见 report 的偏差声明；置备器在产品路径仍强制 Docker/compose v2 且本机实测 unsupported",
+    "server": "127.0.0.1:18973",
+    "fake_openai_endpoint": "127.0.0.1:19111（记录型假端点：/v1/chat/completions + /v1/embeddings）",
+    "postgres": "pgserver 内嵌 Postgres（pgvector 扩展）@ 127.0.0.1:59999",
+    "credentials": "全部受控假值（sk-e2-controlled-fake / e2-probe-admin-key-…），无任何真实凭据",
+    "telemetry": "MEM0_TELEMETRY=false（server 日志零 PostHog 外联）"
+  },
+  "sequence": [
+    {
+      "step": "A1",
+      "call": "POST /memories（configure 前，LLM=默认 api.openai.com）",
+      "observed": "502 provider_unavailable；假端点零请求",
+      "conclusion": "默认端点不是假端点——A/B 对照基线成立"
+    },
+    {
+      "step": "B1",
+      "call": "POST /configure（X-API-Key=admin）llm/embedder 均 openai + openai_base_url=http://127.0.0.1:19111/v1 + 受控假模型名",
+      "observed": "200 {\"message\": \"Configuration set successfully\"}",
+      "conclusion": "任意 Dict 深合并被接受（bundled provider 校验通过）"
+    },
+    {
+      "step": "B2",
+      "call": "GET /configure 回读",
+      "observed": "openai_base_url 出现在 llm.config 与 embedder.config；api_key 字段被 [redacted]",
+      "conclusion": "base_url 持久化且回读可见；敏感键回读脱敏"
+    },
+    {
+      "step": "B3",
+      "call": "POST /memories（messages×2, user_id=ordessa:probe:p1）",
+      "observed": "200；假端点先后收到 POST /v1/chat/completions（model=gpt-fake-controlled，Authorization: Bearer sk-e2-controlled-fake，含 mem0 Memory Extractor 系统提示词）与 POST /v1/embeddings（model=text-embedding-fake）",
+      "conclusion": "configure 下发的 base_url+model 对 LLM 与 embedder 均生效（F6 实测定论：生效）"
+    },
+    {
+      "step": "B4",
+      "call": "POST /memories 返回体",
+      "observed": "{\"results\":[{\"memory\":\"…\",\"event\":\"ADD\"},…]}（抽取→embedding→pgvector 写入全链 200）",
+      "conclusion": "存储链路走通（pgvector）"
+    },
+    {
+      "step": "B5",
+      "call": "POST /search（filters.user_id=ordessa:probe:p1 / p2 各一次，同查询词）",
+      "observed": "p1 只见 p1 的事实（\"我喜…\"），p2 只见 p2 的事实（\"我在…\"）",
+      "conclusion": "user_id 过滤域隔离成立——两 profile 命名空间互不可见（MB-8 上游侧第一手证据）"
+    },
+    {
+      "step": "B6",
+      "call": "GET /configure/providers",
+      "observed": "{\"llm\":[\"openai\",\"anthropic\",\"gemini\"],\"embedder\":[\"openai\",\"gemini\"]}",
+      "conclusion": "与 llm_wiring.BUNDLED_* 常量一致（本批实现的上游事实核验）"
+    }
+  ],
+  "incidental_findings": [
+    "pgvector 连接池在 Memory.from_config 构建时急切连接：无 Postgres 时 initialize_state 仅告警可启动，但 POST /configure（update_config 重建实例）与 /memories 均失败——server 硬依赖活 Postgres，置备器 compose 子栈的 service_healthy 依赖顺序正确且必要",
+    "require_admin 在 admin_api_key 认证路径会查 users 表：未跑 alembic 迁移时 POST /configure 500——部署命令必须先 `alembic upgrade head`（官方 compose 的启动命令已包含；本置备器的 compose 用官方 Dockerfile/启动方式等价覆盖）",
+    "server 请求日志表 request_logs 在每请求后台落库，表缺失仅产生错误日志不阻断业务响应",
+    "GET /configure 回读对 api_key 字段做 [redacted]（main.py _redact_config）"
+  ],
+  "fake_endpoint_log": "同一目录 fake-endpoint-requests.jsonl（逐请求记录：path/model/authorization/body）"
+}
