@@ -77,3 +77,34 @@ lock 干净重算需要 profile 三包 + model-provider 两包 workspace 目录�
 
 （core 线回填区）
 
+## core 线回填（2026-09-29）
+
+| 日期 | 条目 | 结论 | SHA |
+| --- | --- | --- | --- |
+| 09-29 | **core 并 main** | ✅ 完成，`--no-ff` 合并 | `808e3c1c03` |
+| 09-29 | S-00 发行门依据入库 | ✅ `specs/013-desktop-product/`（18 文件）随合并入 main；`docs/release/` 仍在工作区待用户处置 | 同上 |
+| 09-29 | S-01/S-03 装配 | ⏳ 前半可做（`ordessa.chat-api`+`ordessa.chat`）；后半等 profile 三 id 落 main | — |
+| 09-29 | S-02 两份锁 | ✅ 根 lock 纳入 `@ordessa/server-bridge`；`extensions.lock.json` 干净构建定稿，两次构建逐字节一致 | `f24a3acb7d` |
+| 09-29 | S-04 契约源 | ⏳ 只能加 `ordessa.chat-api` 一行（`ordessa.profile-api` 的 `contract.ts` 尚未在 main） | — |
+| 09-29 | S-05 DTO | ⏳ 等 plugin 线 PC-9 交 SHA（`AcpPreparedAttachment` 补 `preparedId`） | — |
+| 09-29 | S-06 admission 闸门 | ⏳ 等 P-D 的 Q5 authority + harness `native_evidence`；core 侧可先行建门 | — |
+| 09-29 | S-09 SessionRef | ✅ 按裁定 core 整条撤回，归 session 域 | — |
+| 09-29 | S-10 安装清单 | ⏳ 待 profile/model-provider 落 main 后补录；已验证缺 6 个子包（`permissions/{api,adapters,backend}`、`sandbox/{api,adapters,backend}`） | — |
+| 09-29 | S-11 wire 生产绑定 | ✅ **landed**：`createFixtureWirePort()` → `ServerBridge` + `HttpWirePort` | `3cb2cd617d` |
+| 09-29 | 更新客户端生产绑定 | ✅ **landed**：`createFixtureUpdateClient()` → 打包包 `packaging/update/client.mjs` 真引擎 | `251c0706eb` |
+| 09-29 | 边界守卫 | ✅ 新增：插件生产代码不得引用 `tests/`；白名单 5→3（harness 侧 019 解耦已清） | `65441f7cbd` / `a8d63afb76` |
+| 09-29 | qwen 族退役 | ✅ 断言按退役口径更新（保留测试意图，非删行） | `c12d2bf286` |
+| 09-29 | 红账本 | ✅ 逐 ID：内核 0 / harness 2 / 服务端 67 / ACP 编排 18，**新增红 0** | — |
+
+### 需 plugin 线给定论/交付的
+
+1. **`plugins/server-compat/.../composition.py` 的受控对端白名单**：harness 侧已换摘要制 + 注入端口，这里还在算路径。跟上后边界守卫可收紧为零容忍。
+2. **`plugins/connectors/acp/src/{channel,client}.ts` 两处注释**：随上述一并清。
+3. **PC-9 的 `AcpPreparedAttachment` DTO SHA**（S-05 我这边才能接）。
+4. **profile 三 id 的代码落 main**（S-01 后半 / S-04 后半 / S-10 全量）。
+
+### 一条我方教训（供后续线参考）
+
+tests/ 归位时的批量替换误伤了**受控对端夹具本体的一行注释**，导致内容哈希偏离 019 钉死值，harness 3 条判红。已还原（`1ec1fc5d02`）。
+**内容摘要制的文件一个字都不能动——注释也不行。**
+
