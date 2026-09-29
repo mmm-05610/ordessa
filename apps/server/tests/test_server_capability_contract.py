@@ -31,7 +31,7 @@ from pacthold_runtime_compat.storage import Database, ObjectStore
 
 REPO = Path(__file__).resolve().parents[3]
 PLUGIN = REPO / "plugins"  / "harness"
-SIDECAR_ENTRY = PLUGIN / "runtime" / "worker-entry.mjs"
+SIDECAR_ENTRY = PLUGIN / "runtime" / "native-driver.mjs"  # worker-entry.mjs 随退役旧链移除
 FAKE_PEER = PLUGIN / "tests" / "harness_remote" / "fake_acp_peer.mjs"
 FIXTURE_DRIVER = Path(__file__).resolve().parent / "fixtures" / "fixture_native_driver.mjs"
 DRIVER_BUNDLE_PATH = "agentbox-sidecar/deployment/fixture-native/driver.mjs"
@@ -740,7 +740,8 @@ def driver_bundle(tmp_path):
     sidecar = view / "agentbox-sidecar"
     runtime = sidecar / "runtime"
     runtime.mkdir(parents=True)
-    for name in ("worker-entry.mjs", "native-driver.mjs", "profile_extensions.mjs"):
+    # worker-entry.mjs 随退役旧链移除（该文件全仓不存在、无生成器、官方注释明言已退役）
+    for name in ("native-driver.mjs", "profile_extensions.mjs"):
         shutil.copyfile(PLUGIN / "runtime" / name, runtime / name)
     shutil.copytree(PLUGIN / "third_party" / "harness_remote",
                     sidecar / "third_party" / "harness_remote")

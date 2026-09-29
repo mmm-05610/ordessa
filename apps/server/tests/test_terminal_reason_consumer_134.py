@@ -169,7 +169,7 @@ from ordessa_server_compat.execution.sidecar import (  # noqa: E402
 
 REPO = pathlib.Path(__file__).resolve().parents[3]
 PLUGIN = REPO / "plugins"  / "harness"
-SIDECAR_ENTRY = PLUGIN / "runtime" / "worker-entry.mjs"
+SIDECAR_ENTRY = PLUGIN / "runtime" / "native-driver.mjs"  # worker-entry.mjs 随退役旧链移除
 FAKE_PEER = PLUGIN / "tests" / "harness_remote" / "fake_acp_peer.mjs"
 
 
