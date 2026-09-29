@@ -12,7 +12,7 @@ import type { AgentNativeBridge } from '../../../../apps/desktop/renderer/agent-
 import type { NativeConnection } from '../../../../packages/desktop-platform/native-bridge/src/index'
 import createPlugin from '../../../../plugins/connectors/acp/src/entry'
 import createTransport from '../../../../plugins/connectors/acp/src/native'
-import { HarnessPeer } from '../../../../tests/acp-connector/fixtures/acp-peer'
+import { HarnessPeer } from '../../../../tests/integration/acp-connector/fixtures/acp-peer'
 
 /**
  * Full-stack wiring of the ACP connector: the real main-side transport (`native.ts`), the real

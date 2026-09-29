@@ -4,7 +4,7 @@ import { AcpClient } from '../src/client'
 import type { AcpChannelHandle, AcpChannelSpec } from '../src/channel'
 import type { AcpAttachmentCapabilities, AcpAttachmentPreparePort, AcpAttachmentTarget,
   AcpPreparedAttachment } from '../src/attachments'
-import { HarnessPeer } from '../../../../tests/acp-connector/fixtures/acp-peer'
+import { HarnessPeer } from '../../../../tests/integration/acp-connector/fixtures/acp-peer'
 
 const image = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg==', 'base64')
 const digest = createHash('sha256').update(image).digest('hex')

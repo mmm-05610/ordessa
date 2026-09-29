@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 import { AcpClient } from '../src/client'
-import { HarnessPeer } from '../../../../tests/acp-connector/fixtures/acp-peer'
+import { HarnessPeer } from '../../../../tests/integration/acp-connector/fixtures/acp-peer'
 import type { AcpChannelHandle } from '../src/channel'
 import type { AcpSubmissionAdmission } from '../src/submission'
 import type { AcpPreparedAttachment } from '../src/attachments'
