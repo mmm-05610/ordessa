@@ -15,8 +15,13 @@
  * check runs before the writability probe, because the probe would
  * otherwise create a file inside the link's target.
  */
-import { readFileSync, lstatSync } from 'node:fs'
+import { lstatSync } from 'node:fs'
 import path from 'node:path'
+// The shared constants file, imported statically so the bundler inlines it as
+// data. A runtime `readFileSync(new URL(..., import.meta.url))` cannot survive
+// the CJS desktop bundle: esbuild empties `import.meta` there and `new URL` on
+// an undefined base throws `Invalid URL` at require time.
+import sharedLayout from '../../../../apps/server/src/ordessa_server/bootstrap/data_root_layout.json'
 
 export interface DataRootLayout {
   readonly schemaVersion: number
@@ -55,20 +60,18 @@ export interface DataRootLayout {
   readonly launchErrors: readonly string[]
 }
 
-/** Where the shared constants file lives, relative to this module. */
-const LAYOUT_SOURCE = '../../../../apps/server/src/ordessa_server/bootstrap/data_root_layout.json'
-
 let cached: DataRootLayout | undefined
 
 /**
- * The shared layout, read once. A missing or malformed file is a build
- * error, not a fallback: a host that invented its own defaults would be
- * the exact "two entry points, two spellings" failure C-01 §5 forbids.
+ * The shared layout, read once. A missing or malformed file is a build error,
+ * not a fallback: a host that invented its own defaults would be the exact
+ * "two entry points, two spellings" failure C-01 §5 forbids. The file is a
+ * static import (above), so "missing" fails the bundle build and "malformed"
+ * fails this schema check — no runtime path resolution is involved.
  */
 export function layout(): DataRootLayout {
   if (!cached) {
-    const raw = readFileSync(new URL(LAYOUT_SOURCE, import.meta.url), 'utf8')
-    const parsed = JSON.parse(raw) as DataRootLayout
+    const parsed: DataRootLayout = sharedLayout
     if (parsed.schemaVersion !== 1) {
       throw new Error(`unsupported data-root layout schema ${String(parsed.schemaVersion)}`)
     }
