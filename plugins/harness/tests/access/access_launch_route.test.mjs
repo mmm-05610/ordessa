@@ -1,14 +1,20 @@
 import assert from "node:assert/strict"
-import { mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises"
+import { createHash } from "node:crypto"
+import { copyFile, mkdtemp, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises"
 import { mkdir } from "node:fs/promises"
 import { spawnSync } from "node:child_process"
 import { tmpdir } from "node:os"
 import path from "node:path"
+import { fileURLToPath } from "node:url"
 import test from "node:test"
 import { controlledHarness, withSidecar } from "./sidecar_harness.mjs"
 import { resolveManagedLaunch } from "../../runtime/access-launch.mjs"
 
-const orchestrationPeer = path.resolve("tests/acp_orchestration/fixtures/bidirectional_acp_peer.mjs")
+// Anchored to this file, not to the process cwd: a batch runner that starts
+// inside `plugins/harness` must reach the same fixture as one from the repo
+// root (the staging test anchors its own copy the same way).
+const orchestrationPeer = fileURLToPath(new URL(
+  "../../../../tests/acp_orchestration/fixtures/bidirectional_acp_peer.mjs", import.meta.url))
 
 const pins = [
   ["pi", "pi-acp", "0.5.0"],
@@ -75,18 +81,87 @@ test("G05: the orchestration fixture needs an explicit controlled entry mode", a
   } finally { await rm(root, { recursive: true, force: true }) }
 })
 
-test("G05: an alias path cannot select the controlled orchestration peer", async () => {
-  const root = await mkdtemp(path.join(tmpdir(), "ordessa-orchestration-alias-"))
+test("G05: the controlled peer is chosen by content, not by location", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "ordessa-orchestration-content-"))
   try {
     const alias = path.join(root, "peer-alias.mjs")
     await symlink(orchestrationPeer, alias)
+    const moved = path.join(root, "peer-moved.mjs")
+    await copyFile(orchestrationPeer, moved)
+    const tampered = path.join(root, "peer-tampered.mjs")
+    await copyFile(orchestrationPeer, tampered)
+    await writeFile(tampered, "\n// one comment line of changed content\n", { flag: "a" })
+    // An alias and a moved copy present the allowlisted content from paths the
+    // production entry has never pinned: accepted, because what decides is the
+    // sha256 of the file (spec 019 — 锁内容不锁位置).
+    await withSidecar(async ({ sidecar }) => {
+      for (const [name, peerPath] of [["alias", alias], ["moved copy", moved]]) {
+        const connected = await sidecar.connect({ harness: "pi", launch: {
+          command: process.execPath, args: [peerPath],
+        } })
+        assert.equal(connected.ok, true, `${name}: ${JSON.stringify(connected)}`)
+        const closed = await sidecar.request({ op: "close" })
+        assert.equal(closed.ok, true)
+        assert.equal(closed.result.released, true)
+      }
+    }, { HD003_LOG: path.join(root, "peer") })
+    // One byte of changed content is refused, wherever it sits.
     await withSidecar(async ({ sidecar }) => {
       const refused = await sidecar.connect({ harness: "pi", launch: {
-        command: process.execPath, args: [alias],
+        command: process.execPath, args: [tampered],
       } })
       assert.equal(refused.ok, false)
       assert.equal(refused.error.code, "CONTROLLED_PEER_MISMATCH")
+      // The peer writes one log file per process under HD003_LOG (`peer.<pid>
+      // .<peerId>`); no such file is the OS-side witness that nothing launched.
+      const logs = (await readdir(root)).filter((name) => /^peer\.\d+\./.test(name))
+      assert.deepEqual(logs, [], "a refused launch reaches no peer")
     }, { HD003_LOG: path.join(root, "peer") })
+  } finally { await rm(root, { recursive: true, force: true }) }
+})
+
+test("G05: an injected allowlist replaces the built-in table and is fail-closed", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "ordessa-peer-injection-"))
+  try {
+    const injectedPeer = path.join(root, "injected-peer.mjs")
+    await writeFile(injectedPeer, "process.stdin.resume()\n", { mode: 0o755 })
+    const digest = createHash("sha256").update(await readFile(injectedPeer)).digest("hex")
+    const launch = { command: process.execPath, args: [injectedPeer] }
+    const table = JSON.stringify([{ sha256: digest, file: "injected-peer.mjs", harness: "pi" }])
+    await withSidecar(async ({ sidecar }) => {
+      // The injected entry is still a file descriptor: the schema carries no
+      // command and no arguments, and the launched command is checked against
+      // this entry's own node as before. Only which *content* may launch.
+      const wrongBrand = await sidecar.connect({ harness: "codex", launch })
+      assert.equal(wrongBrand.ok, false)
+      assert.equal(wrongBrand.error.code, "CONTROLLED_PEER_MISMATCH")
+      const connected = await sidecar.connect({ harness: "pi", launch })
+      assert.equal(connected.ok, true, JSON.stringify(connected))
+      const closed = await sidecar.request({ op: "close" })
+      assert.equal(closed.result.released, true)
+      // Precedence is replacement: the canonical orchestration peer — content
+      // the built-in table knows — is refused while the injection stands.
+      const builtin = await sidecar.connect({ harness: "pi", launch: {
+        command: process.execPath, args: [orchestrationPeer],
+      } })
+      assert.equal(builtin.ok, false)
+      assert.equal(builtin.error.code, "CONTROLLED_PEER_MISMATCH")
+    }, { HD003_LOG: path.join(root, "peer"), AGENTBOX_CONTROLLED_PEER_ALLOWLIST: table })
+    // A broken declaration never resurrects the built-in table: it allows
+    // nothing and says why.
+    await withSidecar(async ({ sidecar }) => {
+      const invalid = await sidecar.connect({ harness: "pi", launch })
+      assert.equal(invalid.ok, false)
+      assert.equal(invalid.error.code, "CONTROLLED_PEER_ALLOWLIST_INVALID")
+    }, { HD003_LOG: path.join(root, "peer"), AGENTBOX_CONTROLLED_PEER_ALLOWLIST: "{not json" })
+    // An explicitly empty table is a valid "allow nothing".
+    await withSidecar(async ({ sidecar }) => {
+      const nothing = await sidecar.connect({ harness: "pi", launch: {
+        command: process.execPath, args: [orchestrationPeer],
+      } })
+      assert.equal(nothing.ok, false)
+      assert.equal(nothing.error.code, "CONTROLLED_PEER_MISMATCH")
+    }, { HD003_LOG: path.join(root, "peer"), AGENTBOX_CONTROLLED_PEER_ALLOWLIST: "[]" })
   } finally { await rm(root, { recursive: true, force: true }) }
 })
 
