@@ -40,7 +40,11 @@ Docker 前置缺失使 compose 全链与 POST /configure 的 compose 路径未�
 
 | 提交 | 内容 |
 | --- | --- |
-| （本提交） | MB-1..MB-9：包全量 + 测试 128 + report + E2 转录 |
+| `773db1eb08` | MB-1..MB-9：包全量（13 源模块 + 10 测试文件，128 测试）+ report + E2 转录/原始请求日志，29 文件 +3896 行 |
+
+**终提交 SHA**：`773db1eb08`（分支 `codex/015-b-memory`；派工单原文写新支名
+`codex/plugin-memory`，实际工作树按派出方建树命名为 `codex/015-b-memory` 并已
+携带基线合并——沿用现分支，不另开新支）。
 
 ## 2. MB-1 域骨架与 facet 注册进 C2
 
