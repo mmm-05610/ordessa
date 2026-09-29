@@ -151,6 +151,7 @@ class ServerProductComposition:
         """
         from ordessa_model_provider.plugin import ModelProviderPlugin
         from ordessa_permissions_adapters import PolicyAdaptersPlugin
+        from ordessa_permissions_backend.plugin import PermissionsBackendPlugin
         from ordessa_sandbox_adapters import SandboxAdaptersServerPlugin
         from ordessa_sandbox_backend import build_sandbox_plugin
 
@@ -164,6 +165,7 @@ class ServerProductComposition:
             ModelProviderPlugin(**model_provider_kwargs),
             build_sandbox_plugin(),
             SandboxAdaptersServerPlugin(),
+            PermissionsBackendPlugin(),
             PolicyAdaptersPlugin(),
         )
 
@@ -200,7 +202,26 @@ class ServerProductComposition:
         from ordessa_server.bootstrap import build_runtime
 
         self._assemble_legacy_chain()
-        return build_runtime(data_root)
+        runtime = build_runtime(data_root)
+        self._wire_admission_authority(runtime)
+        return runtime
+
+    def _wire_admission_authority(self, runtime) -> None:
+        """Connect the permissions ACP admission to the wire gate (S-06后半).
+
+        The gate is created authority-less by the bootstrap (honest refusal);
+        this composition-level wiring injects the permissions domain's
+        ``PermissionsAcpAdmission`` once the plugin host is live. Without
+        this, ``acp.submission.authorize`` stays ``ready=False``.
+        """
+        from ordessa_permissions_backend.admission import PermissionsAcpAdmission
+
+        # 从 plugin_host 的 provided_port 取权限域的 authorizer
+        authorizer = runtime.plugin_host.provided_port("permissions.authorizer@1")
+        if authorizer is None:
+            return  # permissions domain not composed; gate stays honest-refusal
+        runtime.wire.acp_admission_gate.authority = PermissionsAcpAdmission(
+            authorizer=authorizer)
 
     def native_runtime(
         self, data_root: Any, *, plugin_root: Any, harness_id: str,
