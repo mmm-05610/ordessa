@@ -8,6 +8,10 @@ public bootstrap surface; everything below is business assembly.
 """
 from __future__ import annotations
 
+#: The one fixed, no-model ACP peer this composition may launch under the
+#: controlled-test-peer opt-in, pinned by content (019 digest discipline).
+_CONTROLLED_PEER_SHA256 = "45ebf370de499df9cc371875435f7b4269f5d8c864cde1b3b3fa9bfd08a70841"
+
 import json
 import logging
 import os
@@ -449,11 +453,20 @@ def build_runtime_from_native_adapter(
     if controlled_test_peer:
         # The opt-in is only for the repository's one fixed, no-model ACP peer.
         # A caller cannot turn this into a generic command execution escape.
-        fixture = (Path(__file__).resolve().parents[4] / "tests" / "integration" /
-                   "acp_orchestration" / "fixtures" / "bidirectional_acp_peer.mjs")
-        if (harness_id != "pi" or adapter_command != node or type(adapter_args) is not tuple
-                or adapter_args != (str(fixture),) or not fixture.is_file()
-                or fixture.is_symlink() or fixture.resolve() != fixture):
+        # 019 digest discipline: the peer is pinned by CONTENT (sha256), not by
+        # path — the fixture may sit wherever the tree keeps it, but its bytes
+        # may not change by one character. Path independence also means test
+        # relocations never touch production code again.
+        candidate = (adapter_args[0]
+                     if type(adapter_args) is tuple and len(adapter_args) == 1
+                     and isinstance(adapter_args[0], str) else None)
+        fixture = Path(candidate) if candidate is not None else None
+        if (harness_id != "pi" or adapter_command != node or fixture is None):
+            raise RuntimeError("NATIVE_CONTROLLED_PEER_INVALID")
+        if not fixture.is_file() or fixture.is_symlink():
+            raise RuntimeError("NATIVE_CONTROLLED_PEER_INVALID")
+        import hashlib
+        if hashlib.sha256(fixture.read_bytes()).hexdigest() != _CONTROLLED_PEER_SHA256:
             raise RuntimeError("NATIVE_CONTROLLED_PEER_INVALID")
     registry = HarnessRegistry()
     registry.register(HarnessDescriptor(

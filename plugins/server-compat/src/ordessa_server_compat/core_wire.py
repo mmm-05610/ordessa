@@ -238,31 +238,8 @@ _PARAM_SHAPES = {
     "executions.list": ({"requestId"}, {"limit"}),
     "executions.get": ({"requestId", "executionId"}, set()),
     "profiles.list": ({"includeArchived"}, set()),
-    "profiles.create": ({"requestId", "displayName", "harness"}, {"credentialId"}),
-    "profiles.update": ({"requestId", "profileId", "expectedVersion", "displayName"}, set()),
-    "profiles.updateConfig": ({"requestId", "profileId", "expectedVersion", "values"}, set()),
-    "profiles.archive": ({"requestId", "profileId", "expectedVersion"}, set()),
-    "profiles.clone": ({"requestId", "profileId", "displayName"}, {"harness"}),
     "profiles.memory": ({"requestId", "profileId"}, set()),
     "profiles.subagentGrants": ({"profileId"}, set()),
-    "profiles.grantSubagent": ({"requestId", "profileId", "childProfileId"}, set()),
-    "profiles.revokeSubagent": ({"requestId", "profileId", "childProfileId"}, set()),
-    "profiles.setPermissions": (
-        {"requestId", "profileId", "expectedVersion", "preset", "rules"}, set()),
-    "providerModels.list": ({"includeArchived"}, set()),
-    "providerModels.create": (
-        {"requestId", "displayName", "harness", "provider", "credentialId",
-         "configuration", "models"},
-        {"provenance"},
-    ),
-    "providerModels.update": (
-        {"requestId", "providerModelId", "expectedVersion", "displayName", "credentialId",
-         "configuration", "models"},
-        {"provenance"},
-    ),
-    "providerModels.archive": (
-        {"requestId", "providerModelId", "expectedVersion"}, set(),
-    ),
     "assets.list": (set(), set()),
     "assets.publishSkill": ({"requestId", "assetId", "revision", "sourcePath"}, set()),
     "assets.publishMcp": ({"requestId", "assetId", "revision", "definition"}, set()),
@@ -284,12 +261,6 @@ _PARAM_SHAPES = {
     "accounts.create": ({"requestId", "harness", "accountIdentifier"}, set()),
     "accounts.bind": ({"requestId", "profileId", "expectedVersion", "accountId"}, set()),
     "accounts.importAsset": ({"requestId", "accountId", "sourcePath"}, set()),
-    "providerModels.probeModels": (
-        {"requestId", "baseUrl"}, {"credentialId", "provenance"},
-    ),
-    "providerModels.probeConnection": (
-        {"requestId", "baseUrl"}, {"credentialId"},
-    ),
     "providerArtifacts.list": (
         {"harness"}, set(),
     ),
@@ -340,21 +311,8 @@ _COMPAT_METHODS: dict[str, str] = {
     "executions.list": "executions_list",
     "executions.get": "executions_get",
     "profiles.list": "profiles_list",
-    "profiles.create": "profiles_create",
-    "profiles.update": "profiles_update",
-    "profiles.updateConfig": "profiles_update_config",
-    "profiles.archive": "profiles_archive",
-    "profiles.clone": "profiles_clone",
-    "profiles.setPermissions": "profiles_set_permissions",
     "profiles.memory": "profiles_memory",
     "profiles.subagentGrants": "profiles_subagent_grants",
-    "profiles.grantSubagent": "profiles_grant_subagent",
-    "profiles.revokeSubagent": "profiles_revoke_subagent",
-    "providerModels.list": "provider_models_list",
-    "providerModels.create": "provider_models_create",
-    "providerModels.update": "provider_models_update",
-    "providerModels.archive": "provider_models_archive",
-    "providerModels.probeModels": "provider_models_probe_models",
     "assets.list": "assets_list",
     "assets.publishSkill": "assets_publish_skill",
     "assets.publishMcp": "assets_publish_mcp",
@@ -376,7 +334,6 @@ _COMPAT_METHODS: dict[str, str] = {
     "accounts.create": "accounts_create",
     "accounts.bind": "accounts_bind",
     "accounts.importAsset": "accounts_import_asset",
-    "providerModels.probeConnection": "provider_models_probe_connection",
     "providerArtifacts.list": "provider_artifacts_list",
     "providerArtifacts.install": "provider_artifacts_install",
     "providerArtifacts.rollback": "provider_artifacts_rollback",
@@ -1121,21 +1078,6 @@ class CoreWireHandlers:
         """The family's declared subscription files, from the deployment."""
         return tuple(self.subscription_files_for(harness) or ())
 
-    def profiles_create(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        # `credentialId` is optional and nullable: a Harness whose credential
-        # cannot ride a model control (Hermes declares none) needs the role
-        # itself to carry one, and a role without one stays expressible.
-        credential_id = params.get("credentialId")
-        if credential_id is not None:
-            credential_id = _bounded(credential_id, "credentialId")
-        row = self.profiles.create_wire(
-            _request_id(params["requestId"]),
-            display_name=_bounded(params["displayName"], "displayName", 128),
-            harness=_bounded(params["harness"], "harness", 64),
-            credential_id=credential_id,
-        )
-        return {"profile": self._profile(row)}
-
     def profiles_subagent_grants(self, params: Mapping[str, Any]) -> dict[str, Any]:
         """Who this Profile may call, and who may call it (order 65 A).
 
@@ -1157,26 +1099,6 @@ class CoreWireHandlers:
                 ).fetchall()
             ]
         return {"subagentGrants": grants, "callableBy": callers}
-
-    def profiles_grant_subagent(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        try:
-            grant = self.profiles.records.grant_subagent(
-                parent_id=_bounded(params["profileId"], "profileId"),
-                child_id=_bounded(params["childProfileId"], "childProfileId"),
-            )
-        except ServerError as exc:
-            raise self._profile_error(exc) from exc
-        return {"grant": grant}
-
-    def profiles_revoke_subagent(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        try:
-            self.profiles.records.revoke_subagent(
-                parent_id=_bounded(params["profileId"], "profileId"),
-                child_id=_bounded(params["childProfileId"], "childProfileId"),
-            )
-        except ServerError as exc:
-            raise self._profile_error(exc) from exc
-        return {"revoked": True}
 
     def profiles_memory(self, params: Mapping[str, Any]) -> dict[str, Any]:
         """Read the Profile's declared memory files (order 63).
@@ -1221,31 +1143,6 @@ class CoreWireHandlers:
                                "files": []}}
         return {"memory": read_memory(home, declared=declared)}
 
-    def profiles_set_permissions(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        """Write the profile's permission posture (order 60 A/G2).
-
-        The rules are validated by the record layer before storage, so an
-        illegal key or action answers with its own code and nothing is saved.
-        """
-        rules = params["rules"]
-        if not isinstance(rules, list):
-            raise WireError("INVALID_REQUEST", "rules must be a list")
-        try:
-            updated = self.profiles.records.set_permissions(
-                profile_id=_bounded(params["profileId"], "profileId"),
-                preset=_bounded(params["preset"], "preset", 32),
-                rules=rules,
-                expected_version=_version(params["expectedVersion"]),
-                key=_request_id(params["requestId"]),
-                request_digest=digest({
-                    "profileId": params["profileId"], "preset": params["preset"],
-                    "rules": rules,
-                }),
-            )
-        except ServerError as exc:
-            raise self._profile_error(exc) from exc
-        return {"profile": self._profile(updated[1]["profile"])}
-
     def executions_list(self, params: Mapping[str, Any]) -> dict[str, Any]:
         """The in-flight executions of ours, straight from the ledger.
 
@@ -1282,51 +1179,6 @@ class CoreWireHandlers:
             _bounded(params["executionId"], "executionId"))
         return channel_run_view(row)
 
-    def profiles_clone(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        """Clone one Profile into a new one, with the migration report.
-
-        The report is the product surface: what traveled, what did not, and
-        why. Session material never appears as migrated (order 60 D).
-        """
-        from ordessa_server_compat.profiles.clone import plan_migration
-
-        source_id = _bounded(params["profileId"], "profileId")
-        name = _bounded(params["displayName"], "displayName", 128)
-        records = self.profiles.records
-        source = records.get(source_id)
-        harness = params.get("harness") or source["harness_type"]
-        if not isinstance(harness, str):
-            raise WireError("INVALID_REQUEST", "harness must be a string")
-        harness = _bounded(harness, "harness", 64)
-        from ordessa_server_compat.composition import _registry_profile_spec
-
-        profile_spec = _registry_profile_spec(harness)
-        if profile_spec is None:
-            raise WireError("INVALID_REQUEST", f"the {harness!r} family is not registered")
-        bindings = self._asset_bindings_for(source_id)
-        hooks = self.hooks.list() if self.hooks is not None else []
-        try:
-            report = plan_migration(
-                source=source, target_harness=harness, asset_bindings=bindings,
-                hooks=hooks, registry_profile=profile_spec,
-            )
-            clone = records.clone_from(
-                source_id=source_id, name=name, harness_type=harness, report=report)
-        except ServerError as exc:
-            raise self._profile_error(exc) from exc
-        # The plan's migrated asset entries are exactly what gets rebound: the
-        # report and the rows cannot disagree because one is derived from the
-        # other.
-        rebound: list[str] = []
-        if self.asset_records is not None:
-            migrated = [entry["item"] for entry in report["items"]
-                        if entry["migrated"] and ":" in entry["item"]]
-            rebound = self.asset_records.copy_bindings(
-                source_profile_id=source_id, target_profile_id=clone["id"],
-                items=migrated)
-        report["reboundAssets"] = rebound
-        return {"profile": self._profile(clone), "migration": report}
-
     def _asset_bindings_for(self, profile_id: str) -> list[dict[str, Any]]:
         """The (kind, name, revision) triples a clone's plan needs."""
         if self.asset_records is None:
@@ -1341,64 +1193,12 @@ class CoreWireHandlers:
                 ).fetchall()
             ]
 
-    def profiles_update(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        try:
-            row = self.profiles.update_display_name(
-                _request_id(params["requestId"]),
-                profile_id=_bounded(params["profileId"], "profileId"),
-                expected_version=_version(params["expectedVersion"]),
-                display_name=_bounded(params["displayName"], "displayName", 128),
-            )
-        except ServerError as exc:
-            raise self._profile_error(exc) from exc
-        return {"profile": self._profile(row)}
-
-    def profiles_update_config(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        values = _assignments(params.get("values"), "values")
-        try:
-            row = self.profiles.update_configuration(
-                _request_id(params["requestId"]),
-                profile_id=_bounded(params["profileId"], "profileId"),
-                expected_version=_version(params["expectedVersion"]), values=values,
-            )
-        except ServerError as exc:
-            raise self._profile_error(exc) from exc
-        return {
-            "profile": self._profile(row), "configVersion": int(row["config_revision"]),
-            "effectiveFor": "next_send",
-        }
-
-    def profiles_archive(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        try:
-            row = self.profiles.archive(
-                _request_id(params["requestId"]),
-                profile_id=_bounded(params["profileId"], "profileId"),
-                expected_version=_version(params["expectedVersion"]),
-            )
-        except ServerError as exc:
-            raise self._profile_error(exc) from exc
-        return {"profile": self._profile(row)}
-
     def _profile_error(self, exc: ServerError) -> WireError:
         error = WireError.from_server_error(exc, self._family_for)
         current = getattr(exc, "current", None)
         if current is not None:
             error.current = self._profile(current)
         return error
-
-    def provider_models_list(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        self._require_model_configs()
-        include = params["includeArchived"]
-        if not isinstance(include, bool):
-            raise WireError("INVALID_REQUEST", "includeArchived must be a boolean")
-        return {"items": self.model_configs.list(include_archived=include), "nextCursor": None}
-
-    def provider_models_create(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        self._require_model_configs()
-        body = self._provider_model_body(params, creating=True)
-        body.update(self._provenance(params) or {})
-        record = self.model_configs.create(_request_id(params["requestId"]), body)
-        return {"providerModel": record}
 
     # -- Order 57: harness runtime artifact management ---------------------
 
@@ -1481,122 +1281,6 @@ class CoreWireHandlers:
     def usage_export(self, params: Mapping[str, Any]) -> dict[str, Any]:
         """Order 53: export the same aggregate as a JSON document."""
         return self.usage_aggregate(params)
-
-    def provider_models_probe_models(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        self._require_model_configs()
-        self._provenance(params)  # validate the optional provenance, if given
-        return self.model_configs.probe_models({
-            "baseUrl": _bounded(params["baseUrl"], "baseUrl", 512),
-            "credentialId": params.get("credentialId"),
-        })
-
-    def provider_models_probe_connection(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        self._require_model_configs()
-        self._provenance(params)
-        return self.model_configs.probe_connection({
-            "baseUrl": _bounded(params["baseUrl"], "baseUrl", 512),
-            "credentialId": params.get("credentialId"),
-        })
-
-    def provider_models_update(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        self._require_model_configs()
-        record_id = _bounded(params["providerModelId"], "providerModelId")
-        try:
-            body = self._provider_model_body(params, creating=False)
-            body.update(self._provenance(params) or {})
-            record = self.model_configs.update(
-                record_id, _version(params["expectedVersion"]),
-                _request_id(params["requestId"]),
-                body,
-            )
-        except ServerError as exc:
-            error = WireError.from_server_error(exc, self._family_for)
-            current = getattr(exc, "current", None)
-            if current is not None:
-                error.current = self.model_configs.project(current)
-            raise error from exc
-        return {"providerModel": record}
-
-    def provider_models_archive(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        self._require_model_configs()
-        try:
-            record = self.model_configs.archive(
-                _bounded(params["providerModelId"], "providerModelId"),
-                _version(params["expectedVersion"]), _request_id(params["requestId"]),
-            )
-        except ServerError as exc:
-            error = WireError.from_server_error(exc, self._family_for)
-            references = getattr(exc, "references", None)
-            if references is not None:
-                error.details["referenceIds"] = list(references)
-            raise error from exc
-        return {"providerModel": record}
-
-    #: Order 55: where the endpoint facts came from. `fieldsSource` is one of
-    #: the three honest answers (a preset catalogue, a pulled model list, or
-    #: the user's own hand entry); the endpoint fields themselves are optional
-    #: and stay absent when their source does not supply them.
-    #:
-    #: These are wire field names, and they stay wire field names all the way
-    #: into the service body: `service.create/update` reads `body["authStyle"]`
-    #: and hands the SQL column name to the repository, which is the only place
-    #: allowed to know one. A handler that translated to columns here would
-    #: write nothing at all and still answer 200.
-    _PROVENANCE_ENUMS = {
-        "authStyle": {"api_key", "oauth", "none"},
-        "wireApi": {"chat_completions", "responses"},
-        "fieldsSource": {"preset", "pulled", "manual"},
-    }
-    _PROVENANCE_FIELDS = ("baseUrl", "authStyle", "wireApi", "fieldsSource")
-
-    @classmethod
-    def _provenance(cls, params: Mapping[str, Any]) -> dict[str, str | None] | None:
-        """Order 112: a field the request did not name keeps its stored value;
-        a field it named as `null` is a request to *clear* it. Collapsing the
-        two is how a user's edit gets eaten: the row keeps the old fact, the
-        answer is 200, and nothing says the clear was ignored."""
-        raw = params.get("provenance")
-        if raw is None:
-            return None
-        if (not isinstance(raw, Mapping)
-                or not set(raw) <= set(cls._PROVENANCE_FIELDS)):
-            raise WireError("INVALID_REQUEST", "provenance carries unknown fields")
-        provenance: dict[str, str | None] = {}
-        for field in cls._PROVENANCE_FIELDS:
-            if field not in raw:
-                continue
-            value = raw[field]
-            if value is None:
-                provenance[field] = None
-                continue
-            value = _bounded(str(value), f"provenance.{field}", 512)
-            allowed = cls._PROVENANCE_ENUMS.get(field)
-            if allowed is not None and value not in allowed:
-                raise WireError(
-                    "INVALID_REQUEST", f"provenance.{field} is not a known value",
-                )
-            provenance[field] = value
-        return provenance or None
-
-    def _provider_model_body(
-        self, params: Mapping[str, Any], *, creating: bool,
-    ) -> dict[str, Any]:
-        body = {
-            "displayName": _bounded(params["displayName"], "displayName", 128),
-            "credentialId": params["credentialId"],
-            "configuration": _assignments(params["configuration"], "configuration"),
-            "models": _models(params["models"]),
-        }
-        if body["credentialId"] is not None:
-            body["credentialId"] = _bounded(body["credentialId"], "credentialId")
-        if creating:
-            body["harness"] = _bounded(params["harness"], "harness", 64)
-            body["provider"] = _bounded(params["provider"], "provider", 128)
-        return body
-
-    def _require_model_configs(self) -> None:
-        if self.model_configs is None:
-            raise WireError("UNAVAILABLE", "Provider/Model configuration storage is unavailable")
 
     # -- configuration -----------------------------------------------------
 
