@@ -22,7 +22,7 @@ legitimately survives.
 | Old name | Where | Why |
 | --- | --- | --- |
 | `agent-box` / `agent_box` | archive refs `refs/archive/agent-box*`, commit history, bundle filenames | history is immutable |
-| `https://github.com/mmm-05610/agent-box.git` | remote identity notes (`docs/migration/remote-plan.md`) | repo identity retained by user decision |
+| `https://github.com/mmm-05610/agent-box.git` | historical URL; renamed 2026-09-29 to `https://github.com/mmm-05610/ordessa.git` (redirect kept) | old URL remains a history identifier |
 | `beyond5959/acp-adapter` go module path | `plugins/harness/adapters/acp-adapter/go.mod` | upstream identifier |
 | `NousResearch/hermes-agent` | upstream remote of the desktop lineage; LICENSE copyright lines | upstream attribution |
 | `agentbox-*` data roots (`~/.agentbox-trial-chat`, `~/.agentbox-qa-2nd`, `~/.agentbox-all-harnesses`) | live user data locations | user data, unchanged |
