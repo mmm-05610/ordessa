@@ -7,11 +7,13 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
+import { discover } from '@ordessa/extension-host/main'
 import { buildInfo, assertBuildInfo, writeBuildInfo } from '../scripts/build-info.mjs'
 import { exportIcons, ICON_SIZES, HICOLOR_SIZES } from '../scripts/build-icons.mjs'
 import { findTestDrivers, FORBIDDEN_MARKERS } from '../scripts/release-hygiene.mjs'
 import { acquireDataRootLock, ensureDataRoot, probeDataRoot, resolveDataRoot } from '../electron/data-root'
 import { isRenderableFault, sortFaults, faultId } from '../electron/faults'
+import { resolveProductLayout } from '../electron/product-layout'
 import { DEFAULT_WINDOW_STATE, beginSession, cleanSession, restoreWindowState, runCleanup, startupCrashReport } from '../electron/lifecycle'
 import { createSettingsStore, normalizeDocument, projectFragments } from '../electron/settings-store'
 import { createFixtureUpdateClient } from '../electron/update-client'
@@ -319,4 +321,62 @@ describe('PA-23 安全基线不退化', () => {
     expect(isTrustedIpcCaller({ ...trusted, windowDestroyed: true })).toBe(false)
   })
   it('新窗口一律 deny', () => { expect(WINDOW_OPEN_ACTION).toBe('deny') })
+})
+
+describe('B-003 产品产物位置：安装布局与开发树都必须解析得到扩展', () => {
+  /** 造一棵假的开发树：<root>/apps/desktop/dist + <root>/products/desktop/dist。 */
+  async function devTree() {
+    const root = await tempDir()
+    const distDir = path.join(root, 'apps/desktop/dist')
+    await mkdir(path.join(root, 'products/desktop/dist/extensions'), { recursive: true })
+    await writeFile(path.join(root, 'products/desktop/dist/extensions.json'), '{"enabled":[]}\n')
+    await mkdir(distDir, { recursive: true })
+    return { root, distDir }
+  }
+
+  it('安装布局：ORDESSA_BUNDLED_ROOT/app/dist 存在时用它（合并后的产品产物）', async () => {
+    const prefix = await tempDir()
+    const installedDist = path.join(prefix, 'app/dist')
+    await mkdir(path.join(installedDist, 'extensions'), { recursive: true })
+    await writeFile(path.join(installedDist, 'extensions.json'), '{"enabled":[]}\n')
+    const distDir = installedDist // 装机后宿主与产品产物同目录
+    const layout = resolveProductLayout(distDir, { ORDESSA_BUNDLED_ROOT: prefix })
+    expect(layout.dist).toBe(installedDist)
+    // 清单与扩展同在合并目录里，诊断不能再去读开发树。
+    expect(layout.manifestDir).toBe(installedDist)
+    expect(await readFile(path.join(layout.manifestDir, 'extensions.json'), 'utf8')).toBe('{"enabled":[]}\n')
+  })
+
+  it('开发树：没有安装根（或其 app/dist 不存在）时维持既有相对解析，行为零回归', async () => {
+    const { root, distDir } = await devTree()
+    const layout = resolveProductLayout(distDir, {})
+    expect(layout.dist).toBe(path.join(root, 'products/desktop/dist'))
+    expect(layout.manifestDir).toBe(path.join(root, 'products/desktop'))
+    // 显式设了根但那棵安装树不存在时，不得误判成安装布局。
+    expect(resolveProductLayout(distDir, { ORDESSA_BUNDLED_ROOT: path.join(root, 'absent') }).dist)
+      .toBe(path.join(root, 'products/desktop/dist'))
+  })
+
+  it('两棵树都在时，安装布局优先（判定顺序是显式的）', async () => {
+    const { root, distDir } = await devTree()
+    const prefix = await tempDir()
+    const installedDist = path.join(prefix, 'app/dist')
+    await mkdir(installedDist, { recursive: true })
+    expect(resolveProductLayout(distDir, { ORDESSA_BUNDLED_ROOT: prefix }).dist).toBe(installedDist)
+  })
+
+  it('两者都不满足 → 回退到相对路径（不是 undefined）：discover 走 fail-closed 的空目录，不抛异常', async () => {
+    const distDir = path.join(await tempDir(), 'apps/desktop/dist')
+    const layout = resolveProductLayout(distDir, { ORDESSA_BUNDLED_ROOT: path.join(await tempDir(), 'absent') })
+    expect(layout.dist).toBe(path.resolve(distDir, '../../../products/desktop/dist'))
+    expect(layout.dist).toBeTypeOf('string')
+    const discovery = await discover(await tempDir(), layout.dist)
+    expect(discovery.catalog.extensions).toEqual([])
+    expect(discovery.catalog.failures).toEqual([])
+  })
+
+  it('真实仓库树：解析到 products/desktop/dist（开发零回归的硬断言）', () => {
+    expect(resolveProductLayout(path.join(repoRoot, 'apps/desktop/dist'), {}).dist)
+      .toBe(path.join(repoRoot, 'products/desktop/dist'))
+  })
 })

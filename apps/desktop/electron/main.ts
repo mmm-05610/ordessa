@@ -19,6 +19,7 @@ import { collectDiagnostics, createLogService, type LogService } from '@ordessa/
 import { installNativeBridge } from '@ordessa/native-bridge'
 import { acquireDataRootLock, defaultHome, ensureDataRoot, probeDataRoot, resolveDataRoot } from './data-root'
 import { isRenderableFault, sortFaults } from './faults'
+import { resolveProductLayout } from './product-layout'
 import { beginSession, cleanSession, runCleanup, restoreWindowState, startupCrashReport, type CrashMarker, type QuitStep, type WindowState } from './lifecycle'
 import { APP_ORIGIN, SECURE_WEB_PREFERENCES, WINDOW_OPEN_ACTION, isTrustedIpcCaller } from './security'
 import { createSettingsStore } from './settings-store'
@@ -145,7 +146,9 @@ app.whenReady().then(async () => {
   sessionState.marker = beginSession(new Date(), process.pid)
   await writeFile(markerFile, JSON.stringify(sessionState.marker))
 
-  const bundled = process.env.ORDESSA_EMPTY_HOST === '1' ? undefined : path.resolve(distDir, '../../../products/desktop/dist')
+  // B-003：安装布局下产品产物与宿主产物合并在 $ORDESSA_BUNDLED_ROOT/app/dist；
+  // 只认开发树相对路径会让装机后的 discover 静默返回空，界面成为零扩展空壳。
+  const bundled = process.env.ORDESSA_EMPTY_HOST === '1' ? undefined : resolveProductLayout(distDir, process.env).dist
   const discovery = await discover(process.env.ORDESSA_EXTENSION_HOME ?? app.getPath('userData'), bundled)
   protocol.handle('ordessa', protocolHandler(path.join(distDir, 'renderer'), discovery))
   // 权限请求一律拒绝：渲染进程没有理由向用户要任何设备/位置/通知权限。
@@ -394,8 +397,11 @@ function readLicenses(): { name: string; version: string; license: string }[] {
 
 function readProductManifests(): Record<string, string> {
   const out: Record<string, string> = {}
+  // 与扩展发现**同一个**解析点：安装布局下清单随产品产物合并进 <root>/app/dist。
+  // 缺文件照旧跳过（诊断降级，不是启动失败）。
+  const { manifestDir } = resolveProductLayout(distDir, process.env)
   for (const name of ['extensions.json', 'extensions.lock.json']) {
-    const file = path.resolve(distDir, '../../../products/desktop', name)
+    const file = path.join(manifestDir, name)
     if (existsSync(file)) out[name] = readFileSync(file, 'utf8')
   }
   return out
