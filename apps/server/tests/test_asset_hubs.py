@@ -203,8 +203,11 @@ def test_the_two_observed_spellings_render_and_unsupported_families_refuse():
     assert unsupported.value.code == "ASSET_SLOT_UNSUPPORTED"
 
     # A missing credential value refuses before any config text exists.
+    # （原用 qwen；该族已退役——官方转向 qoder，本产品不再使用。改用同样声明
+    #   MCP target 的 codex 族，被测性质不变：凭据未解析必须在写出任何配置文本
+    #   之前拒绝。）
     with pytest.raises(McpRenderError) as unresolved:
-        render_for_family(canonical, profile_spec=spec("qwen"), resolved_env={})
+        render_for_family(canonical, profile_spec=spec("codex"), resolved_env={})
     assert unresolved.value.code == "MCP_CREDENTIAL_UNRESOLVED"
 
 

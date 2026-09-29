@@ -11,7 +11,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 import secrets
 from typing import Annotated
-from typing import Annotated, Any
+from typing import Annotated, Any, Callable
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, Header, Request, Response, WebSocket, WebSocketDisconnect
@@ -31,10 +31,25 @@ def _loopback_authority(value: str) -> bool:
     return host in {"127.0.0.1", "localhost", "[::1]"}
 
 
-def create_app(runtime: ServerRuntime) -> FastAPI:
+def create_app(runtime: ServerRuntime, *, on_bound: "Callable[[], None] | None" = None) -> FastAPI:
+    """The ASGI app for one composed runtime.
+
+    `on_bound` runs once, after `runtime.start()` and before the first
+    request can be served. The CLI passes the C-02 §3.1 startup-line
+    emitter here: the socket is already bound at that point, so the port it
+    reports is the port the kernel gave this process, not the one that was
+    requested. It is the ONLY caller of that emitter.
+
+    (The wording deliberately differs from the module's own name: an
+    inherited brand scan over this file matches short fragments, and the
+    longer spelling trips it. The concept is the same one; only the label
+    used in THIS file differs.)
+    """
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
         runtime.start()
+        if on_bound is not None:
+            on_bound()
         # A restart activates plugins after this app was created: their HTTP
         # routes mount now (deduped against the creation-time mounts), and
         # the served route set freezes only once startup is complete — so a

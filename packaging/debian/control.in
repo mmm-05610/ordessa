@@ -1,0 +1,63 @@
+# debian/control.in -- templated at build time from packaging/lib/identity.mjs.
+#
+# `Depends` lists Electron's *system* shared libraries only. The two rules that
+# matter, both asserted by tests/integration/packaging/deb-contract.test.mjs:
+#   - no `nodejs` / `golang` / `python3` (a clean machine must never need a
+#     toolchain: everything is bundled under /opt/ordessa, FR-071);
+#   - every listed library is one the shipped Electron binary actually links
+#     against, so the package does not demand more than it uses.
+#
+# The `t64` variants are the Ubuntu 24.04+ time_t transition names; the plain
+# names are kept as alternates so the package installs on 22.04/24.04 both.
+
+Package: @PKG@
+Version: @VERSION@
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: @AUTHOR@
+Homepage: @HOMEPAGE@
+Installed-Size: @INSTALLED_SIZE@
+Depends:
+ libc6,
+ libgtk-3-0 | libgtk-3-0t64,
+ libnotify4,
+ libnss3,
+ libnspr4,
+ libasound2 | libasound2t64,
+ libgbm1,
+ libxkbcommon0,
+ libxkbfile1,
+ libdrm2,
+ libatspi2.0-0 | libatspi2.0-0t64,
+ libatk1.0-0 | libatk1.0-0t64,
+ libatk-bridge2.0-0 | libatk-bridge2.0-0t64,
+ libcups2 | libcups2t64,
+ libdbus-1-3,
+ libexpat1,
+ libx11-6,
+ libxcb1,
+ libxcomposite1,
+ libxdamage1,
+ libxext6,
+ libxfixes3,
+ libxrandr2,
+ libpango-1.0-0,
+ libcairo2,
+ xdg-utils,
+ policykit-1 | polkitd | polkitd-pkla
+Recommends:
+ fonts-liberation
+Suggests:
+Description: @DESCRIPTION@
+ Ordessa is the Ordessa desktop product: an Electron shell, the bundled
+ Server runtime and the ACP bridge, installed as one self-contained package.
+ .
+ Everything needed to run is shipped under /opt/ordessa (fixed-version
+ CPython, the verified Server dependency closure, the ACP bridge and the
+ prebuilt Electron application), so installation requires no compiler, no
+ language toolchain and no manual configuration.
+ .
+ Updates are signed (Ed25519) and delivered from a static update channel;
+ the application verifies the signed manifest, the package hash and the data
+ compatibility floor before it installs anything.

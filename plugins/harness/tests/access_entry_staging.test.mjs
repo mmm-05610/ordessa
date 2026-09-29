@@ -34,7 +34,7 @@ test("staged access entry has its descriptor and answers discovery", () => {
     assert(answer.result.harnesses.includes("claude"))
     assert(answer.result.harnesses.includes("claude-code"))
     assert(answer.result.harnesses.includes("omp"))
-    const sourcePeer = path.resolve(pluginRoot, "..", "..", "tests", "acp_orchestration",
+    const sourcePeer = path.resolve(pluginRoot, "..", "..", "tests", "integration", "acp_orchestration",
       "fixtures", "bidirectional_acp_peer.mjs")
     // The staged entry pins the same content digests as the source checkout
     // (spec 019: the allowlist locks content, not location), so the source

@@ -29,11 +29,17 @@ let win: BrowserWindow | undefined
 app.whenReady().then(async () => {
   const bundled = process.env.ORDESSA_EMPTY_HOST === '1' ? undefined : path.resolve(__dirname, '../../../products/desktop/dist')
   const discovery = await discover(process.env.ORDESSA_EXTENSION_HOME ?? app.getPath('userData'), bundled)
-  protocol.handle('ordessa', protocolHandler(path.join(__dirname, 'renderer'), discovery))
+  // 预览驱动编译在 dist-preview/，渲染产物仍在 dist/（PA-11：驱动不进发行目录）。
+  const rendererRoot = process.env.ORDESSA_PREVIEW_RENDERER ?? path.join(__dirname, 'renderer')
+  protocol.handle('ordessa', protocolHandler(rendererRoot, discovery))
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false))
   win = new BrowserWindow({
     width: 1280, height: 860, show: false, frame: false,
-    webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true },
+    // 驱动与 preload 分处两个目录（驱动不进发行目录），preload 路径由脚本显式给出。
+    webPreferences: {
+      preload: process.env.ORDESSA_PREVIEW_PRELOAD ?? path.join(__dirname, 'preload.cjs'),
+      contextIsolation: true, nodeIntegration: false, sandbox: true,
+    },
   })
   win!.setMenuBarVisibility(false)
   ipcMain.handle('extensions:catalog', () => discovery.catalog) // Same catalog the production shell exposes to the preload.

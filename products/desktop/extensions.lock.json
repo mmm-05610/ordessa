@@ -33,10 +33,11 @@
     "extensions/ordessa.commands/manifest.json": "5598761bd6bbe85ae9b208a88333d04e69a7aade49becececdfcb2272dd0e4a6",
     "extensions/ordessa.connections/entry.js": "cc215237d8bb7666066a8676aff917ef81875152178fbaf961cbbc8510eae2cf",
     "extensions/ordessa.connections/manifest.json": "79f002d56f4cfaaa0039df7c789ebd7667d258b9cf7bc25d063206fa3795ee6a",
-    "extensions/ordessa.contracts/contract.js": "dc41c0485ae621dca7484c6a6ca81dac2de38fe99f0714b83474bbb305449a79",
-    "extensions/ordessa.contracts/entry.js": "f36a5b7fd33b2c0149e2a6287264da60f73dda764173f9f9015c56859619d340",
+    "extensions/ordessa.contracts/chunk-TRTQSARU.js": "eb4a8e71a94c3b9ea153fda5aceddf26646c6a12c0c036f6a031b9a46410d2dd",
+    "extensions/ordessa.contracts/contract.js": "ff12d14a2f5a23a33b1fea5a24902c1c8d7fe6d0220256d8697994524f5b8a91",
+    "extensions/ordessa.contracts/entry.js": "191d45ac8214d0863955e26e5b14d134577f718ba7c6b58ee9a603e1392dffcb",
     "extensions/ordessa.contracts/manifest.json": "2560da90e55589ff2b761754bcc09688087e465d30e616d81b9d79bdf41c64a8",
-    "extensions/ordessa.workbench/entry.js": "5e0efdb6f93f9d3d8217f489bb2c9bd6dd27873f99dbe40bf2e967c28a69febb",
+    "extensions/ordessa.workbench/entry.js": "b726a626ff0008453a4932f845c7111f10d7468766e210b434c78a8e74fd2537",
     "extensions/ordessa.workbench/manifest.json": "7e79b54a52cd6b0837ac431d71bb17860c4bbf133e9b5fa00ac6f42849936884",
     "extensions/ordessa.workbench/react-resizable-panels-LICENSE.md": "a8f1e0280bf14adcf5d017547db85eb5c3bac0feb1690ca98650874002eaa8ea"
   }

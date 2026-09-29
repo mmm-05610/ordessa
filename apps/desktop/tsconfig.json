@@ -33,7 +33,9 @@
     "noEmit": true,
     "types": [
       "node"
-    ]
+    ],
+    "allowJs": true,
+    "checkJs": false
   },
   "include": [
     "renderer",
@@ -50,6 +52,8 @@
     "../../plugins/*/tests",
     "../../plugins/*/*/tests",
     "../../products/desktop/ui-tests",
-    "../../examples/*/src"
+    "../../examples/*/src",
+    "tests",
+    "fixtures"
   ]
 }

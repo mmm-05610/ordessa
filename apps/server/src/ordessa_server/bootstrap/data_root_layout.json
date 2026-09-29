@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "note": "Single plain-text source for the C-01 data-root layout, shared verbatim by the Python Server and the TypeScript host. P-A and P-C read this file; they never restate these literals.",
+  "dataRoot": {
+    "envVar": "ORDESSA_DATA_ROOT",
+    "defaultDirname": ".ordessa"
+  },
+  "layout": {
+    "secretsDir": "secrets",
+    "tokenFile": "secrets/http-token",
+    "logsDir": "logs",
+    "backupsDir": "backups",
+    "instanceLock": "instance.lock"
+  },
+  "permissions": {
+    "dirMode": "0700",
+    "secretFileMode": "0600"
+  },
+  "logs": {
+    "desktopFile": "desktop.log",
+    "serverFile": "server.log",
+    "rotateBytes": 10485760,
+    "keep": 5
+  },
+  "launch": {
+    "originEnv": "ORDESSA_SERVER_ORIGIN",
+    "tokenFileEnv": "ORDESSA_SERVER_TOKEN_FILE",
+    "dataRootEnv": "ORDESSA_DATA_ROOT",
+    "bundledRootEnv": "ORDESSA_BUNDLED_ROOT",
+    "bundledRootDefault": "/opt/ordessa",
+    "bundledDirs": ["python", "bin", "harnesses"],
+    "acpBridgeRelative": "bin/acp",
+    "livePath": "/live",
+    "wirePathPrefix": "/wire/v1/",
+    "systemAssignedPort": 0,
+    "defaultPort": 0,
+    "readyTimeoutMs": 15000,
+    "handshakeEvent": "listening",
+    "instanceFile": "instance.json"
+  },
+  "dataRootErrors": [
+    "DATA_ROOT_SYMLINK",
+    "DATA_ROOT_NOT_WRITABLE",
+    "DATA_ROOT_LOCKED",
+    "DATA_ROOT_INVALID",
+    "DATA_ROOT_MIGRATION_REFUSED"
+  ],
+  "launchErrors": [
+    "PORT_ALLOCATION_FAILED",
+    "SERVER_START_TIMEOUT",
+    "SERVER_EXITED_EARLY",
+    "BUNDLED_RUNTIME_MISSING",
+    "SERVER_CRASHED"
+  ]
+}

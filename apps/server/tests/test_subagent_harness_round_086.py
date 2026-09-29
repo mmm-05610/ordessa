@@ -249,5 +249,8 @@ def test_the_other_registered_families_declare_no_mcp_target_at_all():
     for definition in load_builtin_registry().all():
         target = getattr(_profile_spec(definition.harness_type), "mcp_target", None)
         (with_target if target else without_target)[definition.harness_type] = target
-    assert sorted(with_target) == ["claude-code", "codex", "qwen"]
+    # qwen 族已退役（官方转向 qoder，本产品不再使用；注册表亦不再加载它），
+    # 故它不再是"有 MCP target"的族。断言仍从注册表推导——将来某个族获得 target
+    # 时，这里照样会红。
+    assert sorted(with_target) == ["claude-code", "codex"]
     assert set(without_target) == {"dsh", "hermes", "kilo", "opencode", "pi"}

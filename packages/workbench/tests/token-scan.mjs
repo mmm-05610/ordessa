@@ -119,6 +119,16 @@ export const TOKEN_WATCHLIST = [
   { literal: 'ordessa.agent.sessions.v1', ownerBundle: 'ordessa.agent-contracts' },
   { literal: 'ordessa.connections.v1', ownerBundle: 'ordessa.contracts' },
   { literal: 'ordessa.ui-components.v1', ownerBundle: 'shared/ui-components-api.js' },
+  // 013 平台服务（c-03/c-04/c-05/c-06/c-07/c-08 的公开 Token）：同样必须在公开载体里
+  // 只构造一次，否则插件与宿主会拿到不同身份的服务。
+  { literal: 'ordessa.logger.v1', ownerBundle: 'ordessa.contracts' },
+  { literal: 'ordessa.theme.v1', ownerBundle: 'ordessa.contracts' },
+  { literal: 'ordessa.settings.v1', ownerBundle: 'ordessa.contracts' },
+  { literal: 'ordessa.diagnostics.v1', ownerBundle: 'ordessa.contracts' },
+  { literal: 'ordessa.commandSource.v1', ownerBundle: 'ordessa.contracts' },
+  { literal: 'ordessa.keybindings.v1', ownerBundle: 'ordessa.contracts' },
+  { literal: 'ordessa.wirePort.v1', ownerBundle: 'ordessa.contracts' },
+  { literal: 'ordessa.harnessAvailability.v1', ownerBundle: 'ordessa.contracts' },
 ]
 
 // Kept for reuse (T021): the plain literal list derived from the watchlist.
