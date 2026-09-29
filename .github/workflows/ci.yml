@@ -48,13 +48,17 @@ jobs:
         run: pytest -q plugins/server-compat/tests
       - name: model-provider
         run: pytest -q plugins/assets/model-provider/server/tests
-      # tests/install/ is the npm-closure / environment-sensitive area: its two
-      # REGISTERED inherited reds (docs/known-issues.md: `@agentclientprotocol/sdk`
-      # override vs the pi-acp declaration) fail locally and raise setup errors on a
-      # clean runner. The gate excludes the directory; the ledger step runs it in full
-      # so the state stays visible.
-      - name: harness (green set; tests/install excluded, see ledger)
-        run: pytest -q plugins/harness --ignore=plugins/harness/tests/install
+      # Excluded here (all run in the ledger step so the state stays visible):
+      #  - tests/install/: two REGISTERED inherited reds (docs/known-issues.md:
+      #    `@agentclientprotocol/sdk` override vs the pi-acp declaration);
+      #  - test_external_adapter_product.py: builds a fixture distribution through a
+      #    pip subprocess, which resolves differently on a clean runner than in a
+      #    developer venv (registered in known-issues as a CI-env follow-up).
+      - name: harness (green set; subprocess-install suites excluded, see ledger)
+        run: |
+          pytest -q plugins/harness \
+            --ignore=plugins/harness/tests/install \
+            --ignore=plugins/harness/tests/test_external_adapter_product.py
       - name: "Ledger — registered known-red suites stay visible (non-gating)"
         continue-on-error: true
         run: |
@@ -62,7 +66,7 @@ jobs:
           pytest -q apps/server/tests 2>&1 | tail -5
           echo "== tests/integration/acp_orchestration (known ledger: 18 failed)"
           pytest -q tests/integration/acp_orchestration 2>&1 | tail -5
-          echo "== plugins/harness (full, incl. tests/install)"
+          echo "== plugins/harness (full, incl. the excluded suites above)"
           pytest -q plugins/harness 2>&1 | tail -3
 
   frontend:
