@@ -10,7 +10,7 @@ from ordessa_server_product.profile_sessions import ProfileNativeSessions
 
 def test_canonical_registration_is_backend_minted_isolated_and_owner_pinned(tmp_path):
     core = ProfileCore(tmp_path / "profiles.sqlite", harnesses=StaticHarnessCatalog({"pi": frozenset()}))
-    profile = core.profiles.create("profile", harness_id="pi", display_name="Review")
+    profile = core.profiles.create("profile", realm="backend-realm", harness_id="pi", display_name="Review")
     owner_a, owner_b = object(), object()
     actual = {"a": owner_a, "b": owner_b}
     channels = Mock()
@@ -36,5 +36,25 @@ def test_canonical_registration_is_backend_minted_isolated_and_owner_pinned(tmp_
         with core.db.read() as conn:
             assert conn.execute("SELECT COUNT(*) FROM profile_sessions").fetchone()[0] == 2
             assert conn.execute("SELECT COUNT(*) FROM profile_applied_receipts").fetchone()[0] == 0
+    finally:
+        core.db.close()
+
+
+def test_registration_refuses_cross_realm_profile_before_binding(tmp_path):
+    core = ProfileCore(tmp_path / "profiles.sqlite", harnesses=StaticHarnessCatalog({"pi": frozenset()}))
+    profile = core.profiles.create("profile", realm="elsewhere", harness_id="pi", display_name="P")
+    owner = object()
+    channels = Mock()
+    channels.get.return_value = SimpleNamespace(ended=False, harness_id="pi", workspace_id="project")
+    channels.native_session_observation.return_value = owner
+    owners = Mock()
+    sessions = ProfileNativeSessions(core=core, channels=channels, owners=owners, realm="local")
+    try:
+        with pytest.raises(ProfileError, match="realm"):
+            sessions.register(connection_id="channel", native_session_id="native",
+                              profile_id=profile["profile_id"])
+        owners.bind.assert_not_called()
+        with core.db.read() as conn:
+            assert conn.execute("SELECT COUNT(*) FROM profile_sessions").fetchone()[0] == 0
     finally:
         core.db.close()

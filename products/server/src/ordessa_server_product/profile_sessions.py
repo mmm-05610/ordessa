@@ -11,6 +11,22 @@ from ordessa_profile.contracts import SessionRef
 from ordessa_profile.errors import ProfileError
 
 
+def bind_native_profile_sessions(core, runtime):
+    """Product-owned live composition; no client-supplied UID/incarnation.
+
+    Called again for each Profile activation round, resolving the current ACP
+    registry rather than retaining a stopped round's port. Local is the
+    product's existing Profile realm, not a new persistent layout identifier.
+    """
+    from ordessa_harness.server_acp.profile_owner import ProfileSessionOwner
+
+    channels = runtime.plugin_host.provided_port("acp.channels")
+    if channels is None:
+        raise ProfileError("APPLICATION_PORT_ABSENT", "Native channels unavailable", status=409)
+    owners = ProfileSessionOwner(channels, server_id="profile-incarnation-" + uuid4().hex)
+    return ProfileNativeSessions(core=core, channels=channels, owners=owners, realm="local")
+
+
 @dataclass(frozen=True)
 class ProfileNativeBinding:
     session_ref: SessionRef
@@ -33,6 +49,8 @@ class ProfileNativeSessions:
             if channel is None or channel.ended or owner is None:
                 raise ProfileError("SESSION_NOT_FOUND", "Live native session owner unavailable", status=404)
             profile = self.core.profiles.get(profile_id)
+            if profile["realm"] != self.realm:
+                raise ProfileError("REALM_MISMATCH", "Profile belongs to another realm", status=409)
             if profile["harness_id"] != channel.harness_id:
                 raise ProfileError("HARNESS_MISMATCH", "Profile belongs to another Harness", status=409)
             key = (connection_id, native_session_id)
@@ -40,14 +58,14 @@ class ProfileNativeSessions:
             if existing is not None:
                 if existing.snapshot.owner is not owner:
                     raise ProfileError("SWITCH_BLOCKED", "Native owner has been replaced", status=409)
-                snapshot = self.owners.readback(existing.snapshot.target)
+                snapshot = self._observe(lambda: self.owners.readback(existing.snapshot.target))
                 return ProfileNativeBinding(existing.session_ref, snapshot)
             if len(self._bindings) >= 4096:
                 raise ProfileError("SWITCH_BLOCKED", "Session registration capacity exhausted", status=409)
             uid = "profile-session-" + uuid4().hex
-            snapshot = self.owners.bind(canonical_session_id=uid, harness_id=channel.harness_id,
+            snapshot = self._observe(lambda: self.owners.bind(canonical_session_id=uid, harness_id=channel.harness_id,
                 workspace_id=channel.workspace_id, connection_id=connection_id,
-                native_session_id=native_session_id)
+                native_session_id=native_session_id))
             if snapshot.owner is not owner:
                 raise ProfileError("SWITCH_BLOCKED", "Native owner changed during registration", status=409)
             ref = SessionRef(self.realm, channel.harness_id, native_session_id, uid)
@@ -59,3 +77,13 @@ class ProfileNativeSessions:
             if self.channels.native_session_observation(connection_id, native_session_id) is not owner:
                 raise ProfileError("SWITCH_BLOCKED", "Native owner ended during registration", status=409)
             return binding
+
+    @staticmethod
+    def _observe(callback):
+        from ordessa_harness.server_acp.registry import NativeConfigurationUnavailable
+
+        try:
+            return callback()
+        except NativeConfigurationUnavailable as exc:
+            raise ProfileError("SWITCH_BLOCKED", "Native configuration observation unavailable",
+                               status=409) from exc

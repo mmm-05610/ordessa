@@ -98,6 +98,35 @@ def test_native_extra_plugin_failure_releases_product_root(tmp_path, monkeypatch
         retry.stop()
 
 
+def test_native_registration_refuses_unobserved_owner_and_client_uid(tmp_path):
+    from server_plugin_api import WireError
+    root = Path(__file__).resolve().parents[3]
+    runtime = create_composition().native_runtime(
+        tmp_path / "data", plugin_root=root / "plugins/harness", harness_id="pi",
+        adapter_command=shutil.which("node"), installed_artifact_root="/opt/ordessa/artifacts")
+    try:
+        runtime.start()
+        core = runtime.plugin_host.provided_port("profile.core")
+        profile = core.profiles.create("wire-profile", realm="local", harness_id="pi", display_name="P")
+        params = {"connectionId": "unobserved", "nativeSessionId": "unobserved",
+                  "profileId": profile["profile_id"]}
+        with pytest.raises(WireError) as refusal:
+            runtime.wire.dispatch("profiles.v2.registerNativeSession", params)
+        assert refusal.value.details["internalCode"] == "SESSION_NOT_FOUND"
+        with pytest.raises(WireError):
+            runtime.wire.dispatch("profiles.v2.registerNativeSession", {**params, "sessionUid": "forged"})
+        with core.db.read() as conn:
+            assert conn.execute("SELECT COUNT(*) FROM profile_sessions").fetchone()[0] == 0
+        first = runtime.plugin_host.provided_port("profile.native-sessions")
+        runtime.stop()
+        assert runtime.plugin_host.provided_port("profile.native-sessions") is None
+        runtime.start()
+        assert runtime.plugin_host.provided_port("profile.native-sessions") is not first
+        assert runtime.plugin_host.provided_port("profile.native-sessions").core is not core
+    finally:
+        runtime.stop()
+
+
 def test_native_model_choice_profile_value_survives_restart_without_applying(tmp_path):
     from ordessa_profile.errors import ProfileError
 

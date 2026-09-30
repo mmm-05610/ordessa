@@ -7,6 +7,7 @@ replace the legacy ``profiles.*`` execution-record surface.
 from __future__ import annotations
 
 from pathlib import Path
+from dataclasses import asdict
 from typing import Any, Mapping
 
 from server_plugin_api import (ServerMethodDescriptor, ServerPluginContext,
@@ -32,11 +33,13 @@ def project(value: Any) -> Any:
 
 
 class ProfileServerPlugin:
-    def __init__(self, *, harnesses=None, config_port=None, providers=()) -> None:
+    def __init__(self, *, harnesses=None, config_port=None, providers=(),
+                 native_registration_factory=None) -> None:
         self.harnesses = harnesses
         self.config_port = config_port
         self.providers = tuple(providers)
         self.core = None
+        self.native_registration_factory = native_registration_factory
 
     def descriptor(self):
         return ServerPluginDescriptor(id="ordessa.profile", display_name="Profile", version="2",
@@ -66,6 +69,9 @@ class ProfileServerPlugin:
         try:
             for owner, provider in self.providers:
                 core.register_v2_provider(provider, owner)
+            native_registration = (
+                self.native_registration_factory(core)
+                if self.native_registration_factory is not None else None)
         except BaseException:
             core.db.close()
             self.core = None
@@ -131,6 +137,17 @@ class ProfileServerPlugin:
             "profileCatalog": ((), ("realm",), catalog),
         }
 
+        if native_registration is not None:
+            def register_native(p):
+                binding = native_registration.register(
+                    connection_id=p["connectionId"],
+                    native_session_id=p["nativeSessionId"], profile_id=p["profileId"])
+                return {"session_ref": asdict(binding.session_ref),
+                        "target": asdict(binding.snapshot.target)}
+
+            operations["registerNativeSession"] = (
+                ("connectionId", "nativeSessionId", "profileId"), (), register_native)
+
         def wrap(handler):
             def invoke(params: Mapping[str, Any]):
                 for name, value in params.items():
@@ -166,5 +183,8 @@ class ProfileServerPlugin:
             if self.core is core:
                 self.core = None
 
+        ports = {"profile.core": core}
+        if native_registration is not None:
+            ports["profile.native-sessions"] = native_registration
         return ServerPluginRegistration(methods=methods,
-            provided_ports={"profile.core": core}, disposal=dispose)
+            provided_ports=ports, disposal=dispose)

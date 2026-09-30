@@ -9,11 +9,9 @@ from pathlib import Path
 import queue
 import subprocess
 import tempfile
-from uuid import uuid4
 
 from ordessa_server_product.composition import create_composition
-from ordessa_server_product.profile_sessions import ProfileNativeSessions
-from ordessa_harness.server_acp.profile_owner import ProfileSessionOwner
+from ordessa_harness_api import ApplicationTarget
 
 
 def probe():
@@ -52,9 +50,8 @@ def probe():
             registry = runtime.plugin_host.provided_port("acp.channels")
             profile_core = runtime.plugin_host.provided_port("profile.core")
             profile = profile_core.profiles.create("probe-profile", harness_id="pi", display_name="Probe")
-            owners = ProfileSessionOwner(registry, server_id="probe-incarnation-" + uuid4().hex)
-            canonical_sessions = ProfileNativeSessions(core=profile_core, channels=registry,
-                owners=owners, realm="probe-data-realm")
+            canonical_sessions = runtime.plugin_host.provided_port("profile.native-sessions")
+            assert canonical_sessions is not None
             refs = []
             for scope in ("installed-session-a", "installed-session-b"):
                 binding = runtime.wire.dispatch("acp.channel.open", {
@@ -82,14 +79,19 @@ def probe():
                 assert observed.busy is False and observed.config_options
                 observations.append(observed)
                 requests.append(request)
-                registered = canonical_sessions.register(connection_id=binding["connectionId"],
-                    native_session_id=native, profile_id=profile["profile_id"])
-                assert registered.snapshot.owner is observed.owner
-                assert registered.snapshot.target.session_id == registered.session_ref.session_uid
-                refs.append(registered.session_ref)
+                registered = runtime.wire.dispatch("profiles.v2.registerNativeSession", {
+                    "connectionId": binding["connectionId"], "nativeSessionId": native,
+                    "profileId": profile["profile_id"]})["data"]
+                ref, target = registered["sessionRef"], registered["target"]
+                snapshot = canonical_sessions.owners.readback(ApplicationTarget(
+                    target["serverId"], target["sessionId"], target["channelId"],
+                    target["runtimeGeneration"]))
+                assert snapshot.owner is observed.owner
+                assert snapshot.target.session_id == ref["sessionUid"]
+                refs.append(ref)
             assert len({row["connectionId"] for row in opened}) == 2
             assert len({row["executionId"] for row in opened}) == 2
-            assert len({ref.session_uid for ref in refs}) == 2
+            assert len({ref["sessionUid"] for ref in refs}) == 2
             with profile_core.db.read() as conn:
                 assert conn.execute("SELECT COUNT(*) FROM profile_sessions").fetchone()[0] == 2
                 assert conn.execute("SELECT COUNT(*) FROM profile_applied_receipts").fetchone()[0] == 0
@@ -110,7 +112,7 @@ def probe():
             assert registry.query_native_configuration(survivor.connection_id, survivor.native_session_id).busy is False
             return {"trustedInstalledProductRoute": True, "independentInstances": 2,
                     "actualLedgerOwners": 2, "sessionNew": 2, "prompt": 0,
-                    "canonicalRegistrationComponent": True, "productionProfileWire": False,
+                    "canonicalRegistrationComponent": True, "productionProfileWire": True,
                     "siblingConfigurationUnchanged": True, "siblingSurvivesRelease": True,
                     "profileApplicationConfirmed": False}
         finally:

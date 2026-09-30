@@ -111,3 +111,46 @@ def test_product_registers_management_routes_and_unload_removes_them(tmp_path):
             runtime.wire.dispatch("profiles.v2.listProfiles", {})
     finally:
         runtime.stop()
+
+
+def test_native_registration_uses_injected_owner_and_projects_only_identity(tmp_path):
+    from types import SimpleNamespace
+    from ordessa_profile.contracts import SessionRef
+    from ordessa_harness_api import ApplicationTarget
+
+    seen = []
+    def factory(core):
+        def register(**params):
+            seen.append(params)
+            return SimpleNamespace(
+                session_ref=SessionRef("local", "pi", params["native_session_id"], "backend-uid"),
+                snapshot=SimpleNamespace(target=ApplicationTarget("incarnation", "backend-uid", "connection", 1)))
+        return SimpleNamespace(register=register)
+    plugin = ProfileServerPlugin(harnesses=StaticHarnessCatalog({"pi": frozenset()}),
+                                 native_registration_factory=factory)
+    registration = plugin.build(ServerPluginContext("ordessa.profile", tmp_path))
+    try:
+        method = next(m for m in registration.methods if m.method_id == "profiles.v2.registerNativeSession")
+        assert method.required_params == frozenset({"connectionId", "nativeSessionId", "profileId"})
+        assert method.optional_params == frozenset()
+        result = method.handler({"connectionId": "connection", "nativeSessionId": "native", "profileId": "profile"})
+        assert result["data"]["sessionRef"]["sessionUid"] == "backend-uid"
+        assert result["data"]["target"]["sessionId"] == "backend-uid"
+        assert seen == [{"connection_id": "connection", "native_session_id": "native", "profile_id": "profile"}]
+        assert "profile.native-sessions" in registration.provided_ports
+        assert set(result["data"]) == {"sessionRef", "target"}
+    finally:
+        registration.disposal()
+
+
+def test_failed_native_registration_factory_closes_profile_core(tmp_path):
+    def fail(core):
+        raise ValueError("controlled binding construction failed")
+    plugin = ProfileServerPlugin(harnesses=StaticHarnessCatalog({"pi": frozenset()}),
+                                 native_registration_factory=fail)
+    with pytest.raises(ValueError, match="binding construction"):
+        plugin.build(ServerPluginContext("ordessa.profile", tmp_path))
+    assert plugin.core is None
+    # A fresh activation can reuse the same store after failed construction.
+    _, registration, _ = build(tmp_path)
+    registration.disposal()
