@@ -252,6 +252,7 @@ class ProfileCore:
     # -- v2 difference planning (application.md §1 step 3) ---------------
     def compile_switch_diffs(
         self, session: dict[str, Any], pending_profile: str,
+        *, effective_turn: bool = False,
     ) -> tuple[tuple[ConfigIntent, ...], list[dict[str, Any]]]:
         """Plan the complete A→B difference as typed intents.
 
@@ -268,7 +269,9 @@ class ProfileCore:
             current_raw = self._raw_items(
                 conn, session["session_id"], session["current_profile_id"])
             target_profile = self.require_profile(conn, pending_profile)
-            target_raw = self._raw_items(conn, None, pending_profile)
+            target_raw = self._raw_items(conn,
+                session["session_id"] if effective_turn and pending_profile == session["current_profile_id"] else None,
+                pending_profile)
         revision = int(target_profile["current_revision"])
         harness_id = session["harness_id"]
         per_facet: dict[str, dict[str, dict[str, Any]]] = {}
@@ -276,7 +279,7 @@ class ProfileCore:
             facet_id, item_id = key
             cur = current_raw.get(key)
             tgt = target_raw.get(key)
-            if cur is not None and tgt is not None \
+            if not effective_turn and cur is not None and tgt is not None \
                     and cur["value"] == tgt["value"]:
                 continue
             provider = self.provider_lookup(facet_id)

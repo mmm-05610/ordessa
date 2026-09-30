@@ -239,6 +239,8 @@ class ServerProductComposition:
         from .skills import ProductSkillsPlugin
         from ordessa_model_provider_profile.profile_glue import ModelProviderFacetProvider
         from .profile_sessions import bind_native_profile_sessions
+        from ordessa_harness.configuration.model.plugin import ModelProviderAdaptersPlugin
+        from ordessa_harness.configuration.model.catalog import ModelConfigurationCatalog
 
         self._assemble_legacy_chain()
         runtime = build_runtime_from_native_adapter(
@@ -256,10 +258,13 @@ class ServerProductComposition:
             return authority.ceiling_provider()
 
         try:
-            extras = (ProfileServerPlugin(providers=(("ordessa.model-provider-profile",
+            extras = (*((ModelProviderAdaptersPlugin(),) if pi_profile_bridge else ()),
+                      ProfileServerPlugin(providers=(("ordessa.model-provider-profile",
                        ModelProviderFacetProvider()),),
-                       native_registration_factory=lambda core: bind_native_profile_sessions(core, runtime)),
-                      ModelProviderPlugin(),
+                       native_registration_factory=lambda core: bind_native_profile_sessions(core, runtime,
+                           artifact_root=installed_artifact_root if pi_profile_bridge else None)),
+                      ModelProviderPlugin(harnesses=ModelConfigurationCatalog(
+                          runtime.plugin_host.provided_port("harness.directory"))),
                       ProductSkillsPlugin(permissions=current_ceilings))
             # Native composition uses an explicit base selection. The product,
             # not the host or business plugins, declares its additional points.

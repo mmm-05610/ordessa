@@ -58,3 +58,25 @@ def test_registration_refuses_cross_realm_profile_before_binding(tmp_path):
             assert conn.execute("SELECT COUNT(*) FROM profile_sessions").fetchone()[0] == 0
     finally:
         core.db.close()
+
+
+def test_recording_selection_checks_identity_without_querying_busy_agent(tmp_path):
+    core = ProfileCore(tmp_path / "profiles.sqlite", harnesses=StaticHarnessCatalog({"pi": frozenset()}))
+    profile = core.profiles.create("profile", realm="local", harness_id="pi", display_name="P")
+    owner = object()
+    channels = Mock()
+    channels.get.return_value = SimpleNamespace(ended=False, harness_id="pi", workspace_id="project")
+    channels.native_session_observation.return_value = owner
+    owners = Mock()
+    owners.bind.return_value = SimpleNamespace(owner=owner, target="target")
+    sessions = ProfileNativeSessions(core=core, channels=channels, owners=owners, realm="local")
+    try:
+        binding = sessions.register(connection_id="channel", native_session_id="native", profile_id=profile["profile_id"])
+        owners.readback.side_effect = AssertionError("Must not query/interfere with a busy agent")
+        assert sessions.require_registered(binding.session_ref) is binding
+        owners.readback.assert_not_called()
+        channels.native_session_observation.return_value = object()
+        with pytest.raises(ProfileError): sessions.require_registered(binding.session_ref)
+        with pytest.raises(ProfileError): sessions.require_registered(SessionRef("local", "pi", "native", "forged"))
+    finally:
+        core.db.close()

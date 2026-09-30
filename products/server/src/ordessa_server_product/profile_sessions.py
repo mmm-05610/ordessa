@@ -11,7 +11,7 @@ from ordessa_profile.contracts import SessionRef
 from ordessa_profile.errors import ProfileError
 
 
-def bind_native_profile_sessions(core, runtime):
+def bind_native_profile_sessions(core, runtime, *, artifact_root=None):
     """Product-owned live composition; no client-supplied UID/incarnation.
 
     Called again for each Profile activation round, resolving the current ACP
@@ -24,7 +24,28 @@ def bind_native_profile_sessions(core, runtime):
     if channels is None:
         raise ProfileError("APPLICATION_PORT_ABSENT", "Native channels unavailable", status=409)
     owners = ProfileSessionOwner(channels, server_id="profile-incarnation-" + uuid4().hex)
-    return ProfileNativeSessions(core=core, channels=channels, owners=owners, realm="local")
+    sessions = ProfileNativeSessions(core=core, channels=channels, owners=owners, realm="local")
+    if artifact_root is not None:
+        from .profile_configuration import NativeProfileConfigPort
+        from ordessa_harness.pi.configuration.service import create_model_service, verified_installation
+        from ordessa_harness.configuration.model.bridge import choice_payload_schema
+        from ordessa_model_provider.profile_resolution import ProfileModelChoiceResolver
+        installation = None
+        def service_factory(target):
+            nonlocal installation
+            if installation is None:
+                installation = verified_installation(artifact_root)
+            return create_model_service(registry=channels, owners=owners, target=target,
+                carrier=runtime.plugin_host, installation=installation,
+                journal_path=runtime.data_root / "plugins/profile/native-configuration.sqlite")
+        def resolver_factory():
+            catalog = runtime.plugin_host.provided_port("model_provider.catalog")
+            if catalog is None:
+                raise ProfileError("APPLICATION_PORT_ABSENT", "Model catalogue unavailable", status=409)
+            return ProfileModelChoiceResolver(catalog, payload_schema=choice_payload_schema())
+        core.config_port = NativeProfileConfigPort(sessions, service_factory=service_factory,
+                                                  resolver_factory=resolver_factory)
+    return sessions
 
 
 @dataclass(frozen=True)
@@ -40,6 +61,34 @@ class ProfileNativeSessions:
         self.core, self.channels, self.owners, self.realm = core, channels, owners, realm
         self._bindings = {}
         self._lock = RLock()
+
+    def require_registered(self, ref):
+        """Identity-only fence: recording a selection must not query a busy agent."""
+        with self._lock:
+            for (connection_id, native_id), binding in self._bindings.items():
+                if binding.session_ref != ref:
+                    continue
+                channel = self.channels.get(connection_id)
+                owner = self.channels.native_session_observation(connection_id, native_id)
+                if channel is None or channel.ended or owner is not binding.snapshot.owner:
+                    raise ProfileError("SWITCH_BLOCKED", "Native owner no longer active", status=409)
+                return binding
+            raise ProfileError("SESSION_NOT_FOUND", "Backend session registration unavailable", status=404)
+
+    def resolve(self, ref):
+        """Never resolve a guessed UID or silently bind a different native owner."""
+        with self._lock:
+            binding = None
+            for candidate in self._bindings.values():
+                if candidate.session_ref == ref:
+                    binding = candidate
+                    break
+            if binding is None:
+                raise ProfileError("SESSION_NOT_FOUND", "Backend session registration unavailable", status=404)
+            snapshot = self._observe(lambda: self.owners.readback(binding.snapshot.target))
+            if snapshot.owner is not binding.snapshot.owner:
+                raise ProfileError("SWITCH_BLOCKED", "Native owner changed", status=409)
+            return ProfileNativeBinding(ref, snapshot)
 
     def register(self, *, connection_id: str, native_session_id: str, profile_id: str):
         """Register only a session/new owner actually observed by this backend."""

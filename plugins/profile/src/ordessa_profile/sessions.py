@@ -231,6 +231,8 @@ class SessionService:
         if pending_profile is not None:
             return self._begin_turn_switch(
                 key, scope, request, session_id, pending_profile)
+        if getattr(self.core.config_port, "native_turn_application", False) is True:
+            return self._begin_turn_switch(key, scope, request, session_id, session["current_profile_id"])
         with self.core.db.transaction() as conn:
             prior = self._idempotent(conn, scope, key, request)
             if prior:
@@ -264,7 +266,8 @@ class SessionService:
         operation_key = f"{session_ref.session_uid}:{operation_id}"
         policy = self.core.policy.get_public(session_ref.realm)
         intents, blocked_items = self.core.compile_switch_diffs(
-            session, pending_profile)
+            session, pending_profile,
+            effective_turn=getattr(port, "native_turn_application", False) is True)
         if blocked_items:
             raise ProfileError(
                 "SWITCH_BLOCKED",
@@ -455,9 +458,14 @@ class SessionService:
                     native_session_key=session["native_session_key"],
                 )
                 # Successful switch only: clear the old overlays (G07).
-                repo.clear_overlays(conn, session["session_id"])
-                target_resolution = resolve_profile_items(
-                    conn, profile_id=pending_profile,
+                preserve_overlays = (getattr(self.core.config_port, "native_turn_application", False) is True
+                                     and pending_profile == session["current_profile_id"])
+                if not preserve_overlays:
+                    repo.clear_overlays(conn, session["session_id"])
+                resolver = resolve_session_items if preserve_overlays else resolve_profile_items
+                target_resolution = resolver(
+                    conn, **({"session_id": session["session_id"]} if preserve_overlays else {}),
+                    profile_id=pending_profile,
                     harness_id=session["harness_id"],
                     config_revision=receipt.profile_revision,
                     provider_lookup=self.core.provider_lookup,
@@ -465,7 +473,8 @@ class SessionService:
                 result = self._record_turn(
                     conn, session=session, resolution=target_resolution,
                     profile_id=pending_profile,
-                    revision=receipt.profile_revision, applied_switch=True,
+                    revision=receipt.profile_revision,
+                    applied_switch=pending_profile != session["current_profile_id"],
                     pending_seq=receipt.overlay_revision,
                     ticket={
                         "operation_id": operation_id,
@@ -588,7 +597,9 @@ class SessionService:
                     session_uid=session["session_uid"],
                     native_session_key=session["native_session_key"],
                 )
-                repo.clear_overlays(conn, session["session_id"])
+                if not (getattr(port, "native_turn_application", False) is True
+                        and entry["profile_id"] == session["current_profile_id"]):
+                    repo.clear_overlays(conn, session["session_id"])
             return {
                 "operation_id": operation_id,
                 "state": "confirmed-current",

@@ -281,3 +281,15 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 主代理回归：Harness 模型配置 + ModelProvider 后端全套 + Profile 全套 + 产品全套 + C4 action/service/Pi executor/owner 定向 **580/580**，exit 0；Node Pi bridge **56/56**。未重跑 root npm 全量，不改其此前非全绿记录。套件有重叠，不累加成总覆盖量。
 - 实际安装硬门：`sudo -n true` 报 interactive authentication required。脚本 `/tmp/ordessa-install-pi-live-model-verified.sh` 已做 shell 语法检查，拟仅新增 `/opt/ordessa/harnesses/profile-live-model/artifacts/pi-profile-runtime`（保留原 artifacts 全部内容），完整摘要锁定、root 管理、拒绝覆写。当前未安装、未将默认桌面切到新资产；已请用户执行该脚本。
 - 固定 TODO 第 3–7 项仍未全部完成：第 3 项生产 canonical 注册已落地，但默认 Profile config port 尚需接线；第 4–5 项 Chat submit 与全量覆盖语义仍待实现；第 6 项 Codex/Claude 切换仍未完成；第 7 项完整产品/真实对话验收未完成。不得把原生 C4 模型确认当作这五项全部完成。main/host 未动、未 push、未真实模型调用，原截图产物保留不提交。
+
+### 已安装 Pi 的生产 Profile 应用接通（2026-09-30）
+
+- 用户完成 `ordessa-install-pi-live-model-verified.sh`；真实宿主上下文复验 root 管理完整资产，digest 与上节 `6240b9fa…` 一致。未覆写旧资产、未切换默认桌面路径。
+- native 产品现在组合 Harness 自有模型适配器，注入真实 Profile config port。ModelProvider 只解析保存的业务引用与目录 revision，Harness 提供配置品牌协议声明并独立核对 native metadata；产品不造品牌字段。目录不存在、过期、目标/generation 不符均在原生效果前拒绝。
+- 新增模型目录反例区分“已配置品牌的协议声明”与“独立原生可用证据”；不把 `declared` 当实际支持。原目录缺失/旧 registry 无协议声明时真实探针曾诚实失败，随后修正产品组合与 Harness 目录投影，未放宽 native 路由匹配。
+- Profile native port 首发与每次下一轮都应用有效值；同 Profile 保留会话 override，其它全局项跟随最新 Profile，切到不同 Profile 才清除临时项。首次/后续受控反例先红后绿；追加 unknown→confirmed reconcile 反例揭示旧恢复路径误清 override，修复后保留。这里只证明受控恢复语义，未冒充实际 Pi 断线恢复。
+- 后端 wire 新增既有 API 的 `selectForSession`、`inspectSessionConfig`、`beginTurnApplication`。仅 native 注入组合声明；closed SessionRef 必须已后端登记且 owner 仍活跃。选择只做身份核对，不对正在输出的实例 query 或应用；提交应用才独立 query。回执按已有 TS DTO 包含完整 SessionRef，不猜 UI/native ID。受控 wire 反例先因接口缺失红，修复后绿。
+- 最新实际探针由真实产品 composition、wire 注册/选择/提交前应用、已安装 Pi、真实 ledger 与 Profile SQLite 组成：两实例各自 first→second、独立读回及 receipt；A 推理修改不影响 B，释放 A 后 B 存活，最终自行清理。exit 0、session/new=2、prompt=0、仅 synthetic key。输出 `productionProfileWire:true`、`productionConfigPortInspected:true`、`profileApplicationConfirmed:true`。探针脚本支持 `--artifact-root /opt/ordessa/harnesses/profile-live-model/artifacts --apply-profile`；不是 Chat UI 验收。
+- 回归分开执行以避开两个 suite 顶层 `conftest` 同名的收集冲突：最终 Profile 全套 192/192、Harness 模型+产品全套 138/138，均 exit 0，已包含 reconcile 反例。真实 wire 应用+回执 DTO 探针复跑 exit 0。未重跑 root npm，不把旧非全绿门禁下账。
+- 限制仍明确：生产 native config route 当前只接一个 `assets.model-provider/choice` set，并要求实际 Pi 已有精确对应路由；credential/provider endpoint 变化、reset、多 facet、Skills/MCP 等未支持时拒绝，不丢弃请求假装成功。Codex/Claude 同会话切换尚未完成。
+- 固定 TODO：第 3 项已具备 Pi 真实生产模型应用子路径，整体资源范围仍未收口；第 4 Chat 首发/续发实际消费尚未完成。现有 Chat guard 在 gateway 前，而 `createAndSend` 内部把 session/new 与 prompt 连发；需要把登记/应用插在这两个原生动作之间，不能绕过 guard 或先发后应用。第 5 完整 unknown/全局并发语义、第 6 两品牌切换、第 7 完整产品/用户真实对话验收继续未完成。无新增阶段，无真实模型调用；根 main、host、用户服务和他属截图不动。

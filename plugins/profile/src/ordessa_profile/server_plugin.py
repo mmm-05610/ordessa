@@ -16,6 +16,7 @@ from server_plugin_api import (ServerMethodDescriptor, ServerPluginContext,
 
 from .core import ProfileCore
 from .errors import ProfileError
+from .contracts import SessionRef
 
 
 def project(value: Any) -> Any:
@@ -148,10 +149,52 @@ class ProfileServerPlugin:
             operations["registerNativeSession"] = (
                 ("connectionId", "nativeSessionId", "profileId"), (), register_native)
 
+            def session_ref(p):
+                value = p["sessionRef"]
+                ref = SessionRef(value["realm"], value["harnessId"], value["nativeSessionKey"], value["sessionUid"])
+                native_registration.require_registered(ref)
+                return ref
+
+            def select(p):
+                ref = session_ref(p)
+                result = core.sessions.select_profile(p["operationKey"], session_id=ref.session_uid,
+                                                      profile_id=p["profileId"])
+                return {"session_ref": asdict(ref), "pending_profile_id": result["pending_profile_id"],
+                        "pending_seq": result["pending_seq"], "switch_state": "pending"}
+
+            def inspect(p):
+                ref = session_ref(p)
+                result = core.sessions.session_config(ref.session_uid)
+                evidence = dict(result["evidence"])
+                if evidence["receipt"] is not None:
+                    evidence["receipt"] = receipt_dto(evidence["receipt"])
+                return {**{k: result[k] for k in ("switch_state", "current", "pending", "items", "unavailable", "blockers", "evidence")},
+                        "session_ref": asdict(ref), "evidence": evidence}
+
+            def receipt_dto(receipt):
+                identity = {key: receipt[key] for key in ("realm", "harness_id", "native_session_key", "session_uid")}
+                return {**{key: value for key, value in receipt.items() if key not in identity},
+                        "session_ref": identity}
+
+            def begin(p):
+                ref = session_ref(p)
+                result = core.sessions.begin_turn(p["operationKey"], session_id=ref.session_uid)
+                return {"turn_id": result["turn_id"], "applied_switch": result["applied_switch"],
+                        **({"receipt": receipt_dto(result["receipt"])} if "receipt" in result else {})}
+
+            operations.update({
+                "selectForSession": (("operationKey", "sessionRef", "profileId"), (), select),
+                "inspectSessionConfig": (("sessionRef",), (), inspect),
+                "beginTurnApplication": (("operationKey", "sessionRef"), (), begin),
+            })
+
         def wrap(handler):
             def invoke(params: Mapping[str, Any]):
                 for name, value in params.items():
-                    if name == "patches":
+                    if name == "sessionRef":
+                        valid = (isinstance(value, dict) and set(value) == {"realm", "harnessId", "nativeSessionKey", "sessionUid"}
+                                 and all(isinstance(v, str) and bool(v.strip()) for v in value.values()))
+                    elif name == "patches":
                         valid = True  # save validates the complete structured patch before mutation
                     elif name == "includeArchived":
                         valid = isinstance(value, bool)
