@@ -200,6 +200,27 @@ test("native enhanced plan is explicit and may replace only the selected Pi bind
     artifactRoot: f.base, piProfileBridge: true }), /ADAPTER_ARTIFACT_UNVERIFIED/)
 })
 
+test("multi-brand launch preserves each binding's independently verified installation root", (t) => {
+  simulateRootAdministration(t)
+  const pi = profileFixture(t), codex = fixture(t, BRANDS[1])
+  publishManifest(codex)
+  const plan = nativeServerPlan({ harnessIds: ['pi', 'codex'],
+    pluginRoot: '/opt/ordessa/harness-plugin', artifactRoot: codex.base,
+    artifactRoots: { pi: pi.base }, piProfileBridge: true })
+  assert.ok(plan.args.includes(`--native-adapter-arg=${pi.entry}`))
+  assert.equal(plan.args[plan.args.indexOf('--native-installed-artifact-root') + 1], pi.base)
+  assert.deepEqual(JSON.parse(plan.args[plan.args.indexOf('--native-additional-adapters') + 1]),
+    [{ harnessId: 'codex', ...codex.launch, installedArtifactRoot: codex.base }])
+  const reversed = nativeServerPlan({ harnessIds: ['codex', 'pi'],
+    pluginRoot: '/opt/ordessa/harness-plugin', artifactRoot: codex.base,
+    artifactRoots: { pi: pi.base }, piProfileBridge: true })
+  assert.deepEqual(JSON.parse(reversed.args[reversed.args.indexOf('--native-additional-adapters') + 1]),
+    [{ harnessId: 'pi', ...pi.launch, installedArtifactRoot: pi.base }])
+  assert.throws(() => nativeServerPlan({ harnessIds: ['pi', 'codex'],
+    pluginRoot: '/opt/ordessa/harness-plugin', artifactRoot: codex.base,
+    artifactRoots: { pi: pi.base, unknown: codex.base }, piProfileBridge: true }), /NATIVE_ARTIFACT_ROOT_SELECTION_INVALID/)
+})
+
 for (const brand of BRANDS) {
   test(`${brand[0]}: simulated root metadata verifies actual content against Python v1`, (t) => {
     simulateRootAdministration(t)

@@ -310,3 +310,14 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 受控验证：Profile Chat 29/29、ACP 59/59、Agent Sessions 44/44、Chat 前端 61/61；Profile 前端此前 20/20。根 typecheck 和 Profile Chat 独立 typecheck exit 0；build 构建 18 扩展，lock 只由构建生成。新增两个缺陷反例已实跑红→绿，其它新覆盖与实现同批落地，不冒称全部先红后绿。尚未运行此轮 Electron 或真实模型。
 - **默认产品接线缺口仍在**：桌面 launcher 当前默认使用旧 artifacts 且 Pi bridge 默认关闭；新安装增强 Pi 位于另一个 root，不能把三品牌整体指向仅含 Pi 的目录。下一步需在 Harness launch 接缝支持各绑定独立可信资产根，Codex/Claude 仍用原资产。不能将以上受控前端通过记为默认桌面 Profile 已可用。
 - 固定七项待办不增加阶段：第 4 项提交接线有受控证据但默认真实产品尚未验证；第 3/5 全量资源与并发语义、第 6 两品牌切换、第 7 完整产品/用户真实对话仍未完成。main、host、用户服务和截图不动，不 push、不真实模型调用。
+
+### 三品牌可信资产独立落位与全局 revision 修正（2026-09-30）
+
+- 前端 preparation 检查点已提交 `c903cfaa02`。Harness nativeServerPlan 增加每绑定 artifactRoots，先按每品牌原有完整 root 管理策略验证再生成计划；additional binding 可携带 installedArtifactRoot，由既有插件装配逐绑定传给 access-entry，不夹带到 adapter argv。非法/非规范根在数据根建立前拒绝；旧未传参数的计划和受控路径不变。产品 Profile config port 取实际 Pi 绑定根，即使主绑定是 Codex，也不会用错根。
+- 默认开发 launcher 在包含 Pi 时启用增强 bridge、使用用户已安装的 profile-live-model 资产；Codex/Claude 保持原 artifacts。显式 `ORDESSA_PI_PROFILE_BRIDGE=0` 可关闭，缺资产或摘要不符拒绝，不回落旧版。没有覆写安装资产，未改 host/Pacthold/用户登录。
+- Node 安装策略 17/17；产品全套 48/48（含每绑定根保留及五种非法根反例）。新增 launch/root 反例在缺实现时实跑红，再修复。真实系统上下文复核三套完整资产摘要成功，生成计划实际分开两个根。
+- 追加全局 Profile 在 apply 期间更新的反例，钉住旧代码将回执错误标成新版（实测 3 != 2）。修复冻结本次目标 revision：plan 后版本改变时零原生效果拒绝；apply 中更新不冒充已应用，新配置下次提交消费。另钉住 plan 期间更新零 apply/修正后重试；Profile 最终全套 194/194，Harness 模型+产品 144/144，exit 0。
+- 无配置环境 `npm run test:electron` 首次仍因没有默认 /opt bundled python/bin 失败（既有环境缺口，没有隐藏）。指定此前独立开发运行根 `/tmp/ordessa-native-dev-runtime-bNpAO6zy` 并明确当前源码 PYTHONPATH 后空宿主 smoke exit 0、ready=true、errors=[]；不是发行包验收。
+- 新增可复跑 `products/desktop/probe-native-installed.mjs`：完整启用清单、实际三品牌 launch plan、独立临时 HOME/数据根、测试结束清理。exit 0，rootMounted=true、errors=[]、pages=Chat/Skills/Sessions、renderer 无 Node、prompt=0。初版错误地把 smoke 的 `starting` 当插件状态（实为全部 role=status 文案），已校正输出真实业务状态：读取分配…、尚未选择项目；不据此宣称业务加载全部完成，也不记作完整对话/UI Profile 操作已验收。
+- 实际安装 Pi 的 wire Profile 应用双实例探针再次 exit 0：真实 canonical/ledger、模型 first→second、独立 readback、A 不影响 B、释放 A 后 B 存活、prompt=0；自身实例完整清理。
+- 下一核查是已锁定 Codex/Claude 适配器真实 API 与原生应用/readback 的复用，不把品牌纯编译器已存在当作生产 Profile 切换已完成。固定第 3/5/6/7 项仍未收口，第 4 有受控提交+实际完整产品挂载，尚缺端到端界面应用验证。

@@ -51,6 +51,40 @@ def test_multi_native_discovery_profiles_and_launch_routes_restart(tmp_path, mon
         runtime.stop()
 
 
+def test_each_native_binding_keeps_its_own_installation_root(tmp_path, monkeypatch):
+    import ordessa_server_compat.composition as assembly
+    calls = []
+    class Transport:
+        def __init__(self, **kwargs):
+            calls.append(kwargs)
+        def start(self):
+            return self
+    monkeypatch.setattr(assembly, "AccessEntryTransport", Transport)
+    opts = options(tmp_path)
+    opts["additional_adapters"] = ({"harnessId": "codex", "command": shutil.which("node"),
+        "args": ["controlled-codex"], "installedArtifactRoot": "/opt/ordessa/codex-artifacts"},)
+    runtime = create_composition().native_runtime(tmp_path / "data", **opts)
+    try:
+        runtime.start()
+        channels = runtime.plugin_host.provided_port("acp.channels")
+        for brand, expected in [("pi", "/opt/ordessa/artifacts"), ("codex", "/opt/ordessa/codex-artifacts")]:
+            channels._launch(harness_id=brand, cwd=str(tmp_path), on_line=lambda _: None, on_exit=lambda _: None)
+            assert calls[-1]["installed_artifact_root"] == expected
+            assert "installedArtifactRoot" not in calls[-1]["adapter"]
+    finally:
+        runtime.stop()
+
+
+@pytest.mark.parametrize("root", [None, "relative", "/opt/../tmp", "//opt/a", 1])
+def test_bad_binding_installation_root_refuses_before_creating_data(tmp_path, root):
+    opts = options(tmp_path)
+    opts["additional_adapters"] = ({"harnessId": "codex", "command": shutil.which("node"),
+        "args": [], "installedArtifactRoot": root},)
+    with pytest.raises(RuntimeError, match="NATIVE_INSTALLED_ROOT_INVALID"):
+        create_composition().native_runtime(tmp_path / "data", **opts)
+    assert not (tmp_path / "data").exists()
+
+
 def test_unknown_multi_harness_is_refused_before_launch(tmp_path, monkeypatch):
     import ordessa_server_compat.composition as assembly
     calls = []

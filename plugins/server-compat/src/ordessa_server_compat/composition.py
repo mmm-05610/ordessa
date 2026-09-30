@@ -458,11 +458,14 @@ def build_runtime_from_native_adapter(
             or any(not isinstance(arg, str) or "\x00" in arg for arg in adapter_args)):
         raise RuntimeError("NATIVE_ADAPTER_INVALID")
     adapters = {harness_id: {"command": adapter_command, "args": list(adapter_args)}}
+    artifact_roots = {harness_id: installed_artifact_root}
     if (type(additional_adapters) is not tuple or len(additional_adapters) > 31
             or (additional_adapters and controlled_test_peer)):
         raise RuntimeError("NATIVE_ADAPTER_INVALID")
     for binding in additional_adapters:
-        if not isinstance(binding, Mapping) or set(binding) != {"harnessId", "command", "args"}:
+        if (not isinstance(binding, Mapping) or set(binding) not in (
+                {"harnessId", "command", "args"},
+                {"harnessId", "command", "args", "installedArtifactRoot"})):
             raise RuntimeError("NATIVE_ADAPTER_INVALID")
         hid, command, arguments = binding["harnessId"], binding["command"], binding["args"]
         if (not isinstance(hid, str) or not re.fullmatch(r"[a-z][a-z0-9._-]{0,63}", hid)
@@ -474,6 +477,13 @@ def build_runtime_from_native_adapter(
                 or any(not isinstance(arg, str) or "\x00" in arg for arg in arguments)):
             raise RuntimeError("NATIVE_ADAPTER_INVALID")
         adapters[hid] = {"command": command, "args": list(arguments)}
+        artifact_root = binding.get("installedArtifactRoot", installed_artifact_root)
+        if "installedArtifactRoot" in binding and (
+                controlled_test_peer or not isinstance(artifact_root, str)
+                or not os.path.isabs(artifact_root) or artifact_root.startswith("//")
+                or os.path.normpath(artifact_root) != artifact_root or "\x00" in artifact_root):
+            raise RuntimeError("NATIVE_INSTALLED_ROOT_INVALID")
+        artifact_roots[hid] = artifact_root
     plugin = Path(plugin_root).resolve()
     entry = plugin / "runtime" / "worker-entry.mjs"  # retired old chain, launch-fail honest
     if pi_profile_bridge and "pi" not in adapters:
@@ -602,8 +612,8 @@ def build_runtime_from_native_adapter(
             environment=environment,
             **instance_options,
             **({"controlled_test_peer": True} if controlled_test_peer else {}),
-            **({"installed_artifact_root": installed_artifact_root}
-               if installed_artifact_root is not None else {}),
+            **({"installed_artifact_root": artifact_roots[harness_id]}
+               if artifact_roots[harness_id] is not None else {}),
         ).start()
 
     compat = ServerCompatPlugin(

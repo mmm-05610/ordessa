@@ -265,6 +265,7 @@ class SessionService:
         operation_id = self.core.mint_id("op")
         operation_key = f"{session_ref.session_uid}:{operation_id}"
         policy = self.core.policy.get_public(session_ref.realm)
+        target_revision = self._target_revision(pending_profile)
         intents, blocked_items = self.core.compile_switch_diffs(
             session, pending_profile,
             effective_turn=getattr(port, "native_turn_application", False) is True)
@@ -281,7 +282,7 @@ class SessionService:
             target_resolved = resolve_profile_items(
                 conn, profile_id=pending_profile,
                 harness_id=session["harness_id"],
-                config_revision=self._target_revision(pending_profile),
+                config_revision=target_revision,
                 provider_lookup=self.core.provider_lookup,
             )
         check_required(
@@ -293,7 +294,7 @@ class SessionService:
             journal.record(conn, JournalEntry(
                 operation_id=operation_id, session_ref=session_ref,
                 state="planned", profile_id=pending_profile,
-                profile_revision=self._target_revision(pending_profile),
+                profile_revision=target_revision,
                 plan_digest=plan_digest,
                 created_at=self.core.timestamp(),
             ))
@@ -326,6 +327,9 @@ class SessionService:
             ) from exc
         del inspection  # fence facts live in plan.fence; kept for traceability
         self.core.registry.check_current(generation)
+        if self._target_revision(pending_profile) != target_revision:
+            self._journal_transition(operation_id, "rejected", failure="profile-revision-changed")
+            raise ProfileError("SWITCH_BLOCKED", "Profile changed during preparation; submit again", status=409)
         if plan.blocked:
             self._journal_transition(
                 operation_id, "rejected",
@@ -377,12 +381,12 @@ class SessionService:
             key=key, scope=scope, request=request, session=session,
             session_ref=session_ref, pending_profile=pending_profile,
             operation_id=operation_id,
-            plan=plan, outcome=outcome, policy=policy,
+            plan=plan, outcome=outcome, policy=policy, target_revision=target_revision,
         )
 
     def _handle_apply_outcome(self, *, key, scope, request, session,
                               session_ref, pending_profile, operation_id,
-                              plan, outcome, policy) -> dict[str, Any]:
+                              plan, outcome, policy, target_revision) -> dict[str, Any]:
         timestamp = self.core.timestamp()
         if isinstance(outcome, ApplyRejected):
             self._journal_transition(
@@ -423,7 +427,7 @@ class SessionService:
             runtime_generation=outcome.receipt.runtime_generation,
             config_digest=outcome.receipt.config_digest,
             profile_id=pending_profile,
-            profile_revision=self._target_revision(pending_profile),
+            profile_revision=target_revision,
             overlay_revision=int(session["pending_seq"])
             if session["pending_seq"] is not None else None,
             policy_revision=int(policy["revision"]),

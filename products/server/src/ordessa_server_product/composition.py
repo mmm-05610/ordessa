@@ -251,6 +251,9 @@ class ServerProductComposition:
             pi_profile_bridge=pi_profile_bridge,
             additional_adapters=additional_adapters,
         )
+        pi_artifact_root = installed_artifact_root if harness_id == "pi" else next(
+            (binding.get("installedArtifactRoot", installed_artifact_root)
+             for binding in additional_adapters if binding["harnessId"] == "pi"), None)
         def current_ceilings():
             authority = runtime.plugin_host.provided_port("permissions.authorizer@1")
             if authority is None:
@@ -262,7 +265,7 @@ class ServerProductComposition:
                       ProfileServerPlugin(providers=(("ordessa.model-provider-profile",
                        ModelProviderFacetProvider()),),
                        native_registration_factory=lambda core: bind_native_profile_sessions(core, runtime,
-                           artifact_root=installed_artifact_root if pi_profile_bridge else None)),
+                           artifact_root=pi_artifact_root if pi_profile_bridge else None)),
                       ModelProviderPlugin(harnesses=ModelConfigurationCatalog(
                           runtime.plugin_host.provided_port("harness.directory"))),
                       ProductSkillsPlugin(permissions=current_ceilings))

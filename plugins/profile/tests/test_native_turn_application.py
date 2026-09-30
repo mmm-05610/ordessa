@@ -59,3 +59,45 @@ def test_confirmed_reconciliation_of_same_profile_preserves_session_override(tmp
         assert {i.value for i in port.applied[-1]} == {"override", "terse"}
     finally:
         core.db.close()
+
+
+def test_global_edit_during_native_apply_is_not_stamped_as_already_applied(tmp_path):
+    core, profile, port = world(tmp_path)
+    original = port.apply
+    def apply_then_edit(plan, desired):
+        result = original(plan, desired)
+        core.profiles.set_facet_values("during-apply", profile_id=profile["profile_id"],
+            expected_version=profile["version"],
+            values=[{"facet_id": "model", "item_id": "choice", "value": "b"}])
+        return result
+    port.apply = apply_then_edit
+    try:
+        result = core.sessions.begin_turn("first", session_id="s")
+        assert result["receipt"]["profile_revision"] == profile["current_revision"]
+        assert {i.value for i in port.applied[-1]} == {"a", "terse"}
+        port.apply = original
+        core.sessions.begin_turn("next", session_id="s")
+        assert {i.value for i in port.applied[-1]} == {"b", "terse"}
+    finally:
+        core.db.close()
+
+
+def test_global_edit_during_planning_refuses_before_native_effect(tmp_path):
+    core, profile, port = world(tmp_path)
+    original = port.plan
+    def plan_then_edit(target, desired, operation_key):
+        result = original(target, desired, operation_key)
+        core.profiles.set_facet_values("during-plan", profile_id=profile["profile_id"],
+            expected_version=profile["version"],
+            values=[{"facet_id": "model", "item_id": "choice", "value": "b"}])
+        return result
+    port.plan = plan_then_edit
+    try:
+        with pytest.raises(ProfileError, match="changed during preparation"):
+            core.sessions.begin_turn("first", session_id="s")
+        assert port.applied == []
+        port.plan = original
+        core.sessions.begin_turn("retry", session_id="s")
+        assert {i.value for i in port.applied[-1]} == {"b", "terse"}
+    finally:
+        core.db.close()
