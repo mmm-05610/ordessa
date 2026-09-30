@@ -293,3 +293,10 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 回归分开执行以避开两个 suite 顶层 `conftest` 同名的收集冲突：最终 Profile 全套 192/192、Harness 模型+产品全套 138/138，均 exit 0，已包含 reconcile 反例。真实 wire 应用+回执 DTO 探针复跑 exit 0。未重跑 root npm，不把旧非全绿门禁下账。
 - 限制仍明确：生产 native config route 当前只接一个 `assets.model-provider/choice` set，并要求实际 Pi 已有精确对应路由；credential/provider endpoint 变化、reset、多 facet、Skills/MCP 等未支持时拒绝，不丢弃请求假装成功。Codex/Claude 同会话切换尚未完成。
 - 固定 TODO：第 3 项已具备 Pi 真实生产模型应用子路径，整体资源范围仍未收口；第 4 Chat 首发/续发实际消费尚未完成。现有 Chat guard 在 gateway 前，而 `createAndSend` 内部把 session/new 与 prompt 连发；需要把登记/应用插在这两个原生动作之间，不能绕过 guard 或先发后应用。第 5 完整 unknown/全局并发语义、第 6 两品牌切换、第 7 完整产品/用户真实对话验收继续未完成。无新增阶段，无真实模型调用；根 main、host、用户服务和他属截图不动。
+
+### 会话覆盖 wire 收尾与首发失败语义待裁定
+
+- 检查点 `fbc4572feb` 固化上述真实 Pi 生产 Profile 应用；不是整个 Desktop 完成。追加既有 API `setSessionOverride` / `clearSessionOverride` / `reconcile`，仍只消费已登记且活跃的 SessionRef。临时覆盖不写全局，清除恢复跟随 Profile；未知恢复只查询 journal/runtime，不发送 prompt。session config 的 items/source/state 与 receipt 投影跟已有 TS DTO 对齐，不改 SQLite 身份或落盘格式。
+- 受控 wire 反例已覆盖全局值不变、临时覆盖/清除、forged ref 拒绝、Unknown→确认恢复且应用恰一次。首次测试误用 register_provider 的位置参数，校正为现有接口后才钉住 source 字符串不符合 DTO 的红因；实现修正投影而非放宽消费者断言。
+- **待用户裁定的中等规模接缝**：原生 session/new 已成功而 Profile 应用失败时，现有 `createAndSend` 把请求身份锁住，不能安全重试又不重复建会话。建议保留“已创建、尚未发送”的实例和原草稿，明确拒绝后修正配置再复用；未知时只 reconcile、不重发。备选是仅明确未应用时释放后重建，未知仍保留。已通过用户输入卡提出两选一；尚未修改 AgentClient/AgentSessions/Chat 公共契约，不以 ad-hoc callback 穿透私有对象绕过。
+- 该决定会确定下一步插件层提交前 preparation 生命周期（agent 契约、ACP、会话门面、Profile glue），不需要更改 apps/server、Pacthold 或 desktop host。其它已验证的后端成果保持有效；不先发旧配置 prompt，不把选择成功当应用成功。

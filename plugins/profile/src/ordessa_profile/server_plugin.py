@@ -168,8 +168,14 @@ class ProfileServerPlugin:
                 evidence = dict(result["evidence"])
                 if evidence["receipt"] is not None:
                     evidence["receipt"] = receipt_dto(evidence["receipt"])
+                items = [{"facet_id": item["facet_id"], "item_id": item["item_id"],
+                          "value": item["value"],
+                          "state": "disabled" if isinstance(item["value"], dict) and item["value"].get("disabled") is True else "explicit",
+                          "source": {"kind": "session-overlay" if item["source"] == "session_only" else "profile",
+                                     "revision": item["revision"]}}
+                         for item in result["items"]]
                 return {**{k: result[k] for k in ("switch_state", "current", "pending", "items", "unavailable", "blockers", "evidence")},
-                        "session_ref": asdict(ref), "evidence": evidence}
+                        "session_ref": asdict(ref), "evidence": evidence, "items": items}
 
             def receipt_dto(receipt):
                 identity = {key: receipt[key] for key in ("realm", "harness_id", "native_session_key", "session_uid")}
@@ -182,10 +188,29 @@ class ProfileServerPlugin:
                 return {"turn_id": result["turn_id"], "applied_switch": result["applied_switch"],
                         **({"receipt": receipt_dto(result["receipt"])} if "receipt" in result else {})}
 
+            def override(p, *, clear=False):
+                ref = session_ref(p)
+                kwargs = {"session_id": ref.session_uid, "facet_id": p["facetId"], "item_id": p["itemId"]}
+                if clear:
+                    core.sessions.clear_overlay(p["operationKey"], **kwargs)
+                else:
+                    core.sessions.set_overlay(p["operationKey"], **kwargs, value=p["value"])
+                return inspect(p)
+
+            def reconcile(p):
+                ref = session_ref(p)
+                result = core.sessions.reconcile(p["operationKey"], session_id=ref.session_uid)
+                return {"operation_id": result["operation_id"], "state": result["state"],
+                        **({"receipt": receipt_dto(result["receipt"])} if result.get("receipt") is not None else {}),
+                        **({"reason": result["reason"]} if "reason" in result else {})}
+
             operations.update({
                 "selectForSession": (("operationKey", "sessionRef", "profileId"), (), select),
                 "inspectSessionConfig": (("sessionRef",), (), inspect),
                 "beginTurnApplication": (("operationKey", "sessionRef"), (), begin),
+                "setSessionOverride": (("operationKey", "sessionRef", "facetId", "itemId", "value"), (), override),
+                "clearSessionOverride": (("operationKey", "sessionRef", "facetId", "itemId"), (), lambda p: override(p, clear=True)),
+                "reconcile": (("operationKey", "sessionRef"), (), reconcile),
             })
 
         def wrap(handler):
@@ -194,6 +219,8 @@ class ProfileServerPlugin:
                     if name == "sessionRef":
                         valid = (isinstance(value, dict) and set(value) == {"realm", "harnessId", "nativeSessionKey", "sessionUid"}
                                  and all(isinstance(v, str) and bool(v.strip()) for v in value.values()))
+                    elif name == "value":
+                        valid = True  # the registered facet validates values before mutation
                     elif name == "patches":
                         valid = True  # save validates the complete structured patch before mutation
                     elif name == "includeArchived":
