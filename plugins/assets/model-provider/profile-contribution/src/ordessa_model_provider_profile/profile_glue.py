@@ -33,7 +33,7 @@ from ordessa_profile.facets import FacetRegistry
 
 from .facet_registration import (
     API_MAJOR, CHOICE_ITEM_ID, FACET_ID, SCHEMA_VERSION,
-    validate_choice_value,
+    validate_choice_value, FacetValueError,
 )
 
 #: The brands the facet serves (the C2 adapters' harness ids, frozen).
@@ -75,7 +75,7 @@ class ModelProviderFacetProvider:
         return self._descriptor
 
     def applicability(self, capability_facts: Mapping[str, Any]) -> Applicability:
-        harness = capability_facts.get("harnessId")
+        harness = _harness_fact(capability_facts)
         if harness in BRANDS:
             return Applicability.SUPPORTED
         if harness is None:
@@ -84,7 +84,7 @@ class ModelProviderFacetProvider:
 
     def validate(self, items: Mapping[str, Any],
                  reference_facts: Mapping[str, Any]) -> tuple[Violation, ...]:
-        harness = reference_facts.get("harnessId")
+        harness = _harness_fact(reference_facts)
         if not isinstance(harness, str) or not harness:
             return (_violation(CHOICE_ITEM_ID, "HARNESS_FACT_MISSING",
                                "reference facts carry no harness id"),)
@@ -100,6 +100,19 @@ class ModelProviderFacetProvider:
 
     def migrate(self, old_schema_version: str,
                 stored_items: Mapping[str, Any]) -> MigratedItems | MigrationUnsupported:
+        if old_schema_version == str(SCHEMA_VERSION):
+            value = stored_items.get(CHOICE_ITEM_ID)
+            try:
+                if set(stored_items) != {CHOICE_ITEM_ID} or not isinstance(value, Mapping):
+                    raise ValueError("invalid stored ModelChoice")
+                validate_choice_value(value, harness_id=value.get("harnessId"))
+            except (ValueError, FacetValueError) as error:
+                return MigrationUnsupported(reason=str(error),
+                    from_schema_version=old_schema_version,
+                    to_schema_version=str(SCHEMA_VERSION))
+            return MigratedItems(items=((CHOICE_ITEM_ID, dict(value)),),
+                from_schema_version=old_schema_version,
+                to_schema_version=str(SCHEMA_VERSION))
         return MigrationUnsupported(
             reason=f"facet {FACET_ID} has no migration path from {old_schema_version!r}",
             from_schema_version=old_schema_version,
@@ -107,7 +120,7 @@ class ModelProviderFacetProvider:
 
     def compile(self, resolved_items: Mapping[str, Any],
                 target_facts: Mapping[str, Any]) -> CompileResult:
-        harness = target_facts.get("harnessId")
+        harness = _harness_fact(target_facts)
         value = resolved_items.get(CHOICE_ITEM_ID)
         if not isinstance(harness, str) or not harness:
             return CompileResult(violations=(
@@ -128,6 +141,18 @@ class ModelProviderFacetProvider:
             facet_id=FACET_ID, item_id=CHOICE_ITEM_ID, op="set",
             native_key=_CHOICE_NATIVE_KEY, source=source, value=dict(value),
         ),))
+
+
+def _harness_fact(facts: Mapping[str, Any]) -> Any:
+    """Profile Python uses snake_case; older public callers use camelCase.
+
+    Neither shape may override a contradictory identity from the other.
+    """
+    canonical = facts.get("harness_id")
+    public = facts.get("harnessId")
+    if canonical is not None and public is not None and canonical != public:
+        return None
+    return canonical if canonical is not None else public
 
 
 def _violation(item_id: str, code: str, message: str) -> Violation:

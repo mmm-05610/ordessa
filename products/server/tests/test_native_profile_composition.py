@@ -43,6 +43,7 @@ def test_native_product_owns_profile_management_without_claiming_application(tmp
         assert runtime.wire.dispatch("profiles.v2.listProfiles", {}) == {"data": [profile]}
         assert runtime.wire.dispatch("skills.list", {"requestId": "skills-native-list"})["items"] == []
         assert "assets.skills" in str(runtime.wire.dispatch("profiles.v2.describeFacets", {}))
+        assert "assets.model-provider" in str(runtime.wire.dispatch("profiles.v2.describeFacets", {}))
         with pytest.raises(WireError):
             runtime.wire.dispatch("profiles.v2.beginTurnApplication", {})
     finally:
@@ -64,6 +65,7 @@ def test_native_product_skills_edges_follow_restart_round(tmp_path):
         assert runtime.plugin_host.provided_port("skills.service") is not skills
         assert runtime.wire.dispatch("skills.list", {"requestId": "skills-restart-list"})["items"] == []
         assert "assets.skills" in str(runtime.wire.dispatch("profiles.v2.describeFacets", {}))
+        assert "assets.model-provider" in str(runtime.wire.dispatch("profiles.v2.describeFacets", {}))
         resolved = runtime.wire.dispatch("skills.resolve", {
             "requestId": "skills-restart-resolve", "harnessId": "pi"})
         assert not any(d["kind"] == "mandatory_policy_unavailable" for d in resolved["diagnostics"])
@@ -94,6 +96,38 @@ def test_native_extra_plugin_failure_releases_product_root(tmp_path, monkeypatch
         assert retry.wire.dispatch("skills.list", {"requestId": "skills-retry-list"})["items"] == []
     finally:
         retry.stop()
+
+
+def test_native_model_choice_profile_value_survives_restart_without_applying(tmp_path):
+    from ordessa_profile.errors import ProfileError
+
+    root = Path(__file__).resolve().parents[3]
+    runtime = create_composition().native_runtime(
+        tmp_path / "data", plugin_root=root / "plugins/harness", harness_id="pi",
+        adapter_command=shutil.which("node"), installed_artifact_root="/opt/ordessa/artifacts")
+    choice = {"harnessId": "pi", "providerConfigId": "controlled-provider", "modelId": "m1"}
+    try:
+        runtime.start()
+        core = runtime.plugin_host.provided_port("profile.core")
+        profile = core.profiles.create("model-profile-create", realm="local", harness_id="pi", display_name="Model")
+        pid = profile["profile_id"]
+        core.profiles.set_facet_values("model-profile-save", profile_id=pid, expected_version=1,
+            values=[{"facet_id": "assets.model-provider", "item_id": "choice", "value": choice}])
+        with pytest.raises(ProfileError):
+            core.profiles.set_facet_values("model-profile-wrong-harness", profile_id=pid,
+                expected_version=core.profiles.get(pid)["version"],
+                values=[{"facet_id": "assets.model-provider", "item_id": "choice",
+                         "value": {**choice, "harnessId": "codex"}}])
+        runtime.stop()
+        runtime.start()
+        current = runtime.plugin_host.provided_port("profile.core")
+        assert current is not core
+        stored = current.profiles.facet_values(pid)
+        assert [(v["facet_id"], v["item_id"], v["value"], v["quarantined"]) for v in stored] == [
+            ("assets.model-provider", "choice", choice, False)]
+        assert current.config_port is None  # persistence is not a runtime application receipt
+    finally:
+        runtime.stop()
 
 
 def test_native_product_passes_installed_root_to_harness_startup_only(tmp_path, monkeypatch):

@@ -11,7 +11,7 @@ real resolution inputs.
 from __future__ import annotations
 
 import pytest
-from ordessa_profile.contracts import Applicability
+from ordessa_profile.contracts import Applicability, MigratedItems, MigrationUnsupported
 from ordessa_profile.errors import ProfileError
 from ordessa_profile.facets import FacetRegistry
 
@@ -25,6 +25,26 @@ from ordessa_model_provider_profile.reference_port import (
 )
 
 CHOICE = {"harnessId": "pi", "providerConfigId": "p-1", "modelId": "m1"}
+
+
+def test_profile_python_identity_facts_are_consumed_without_conflicting_aliases():
+    provider = ModelProviderFacetProvider()
+    facts = {"harness_id": "pi"}
+    assert provider.applicability(facts) is Applicability.SUPPORTED
+    assert provider.validate({"choice": CHOICE}, facts) == ()
+    assert provider.compile({"choice": CHOICE}, facts).ok
+    conflicting = {**facts, "harnessId": "codex"}
+    assert provider.validate({"choice": CHOICE}, conflicting)
+    assert not provider.compile({"choice": CHOICE}, conflicting).ok
+
+
+def test_same_schema_reload_preserves_valid_choice_but_refuses_corruption():
+    provider = ModelProviderFacetProvider()
+    ruling = provider.migrate("1", {"choice": CHOICE})
+    assert isinstance(ruling, MigratedItems)
+    assert dict(ruling.items) == {"choice": CHOICE}
+    assert isinstance(provider.migrate("1", {"choice": {"modelId": "m1"}}), MigrationUnsupported)
+    assert isinstance(provider.migrate("0", {"choice": CHOICE}), MigrationUnsupported)
 
 
 def _registry_with_provider():

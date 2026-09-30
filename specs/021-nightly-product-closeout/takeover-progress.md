@@ -125,3 +125,11 @@ Profile Chat 有限入口接线已由主代理复跑 23/23：合法 default fact
 - Skills 133/133、根 typecheck、18 扩展 build、产品 node 边界 16/16 均通过。旧会话 guard 测试改为分别持有两个真实 query record，原新会话结果与陈旧结果不得覆盖断言保持不变；另有全测试文件 TS 检查的既有参数错误，不将该独立口径记作全绿。
 - 真实 native Server + 完整 Electron 清单探针通过：Chat、Skills、Sessions 挂载，rootMounted=true、errors=[]、renderer 无 Node。临时用户目录与开发运行根；未登录、未发送模型请求。产品边界测试会构建共享 dist，探针与其必须串行，最终 build 后复测成功。lock 仅由 build 刷新 Skills entry 摘要。
 - 此结果证明启动与基本读取，不证明 Profile 原生配置应用、会话内配置切换或同一产品同时多 Harness。上述三项仍继续接线，main 未合并、未发布。
+
+### ModelProvider 的 Profile 贡献收口
+
+- native 产品显式组合既有 ModelProviderFacetProvider，声明 profile-contribution 发行依赖与打包闭包。首次装配与 stop/start 后均保留 assets.model-provider 贡献；不是自行实现另一套 Profile 注册表。
+- 保存反例暴露接口错位：Profile 保存/会话覆盖校验原先传空 reference_facts，模型贡献只认识 camelCase Harness。现传 Profile 持有的 harness_id；贡献消费 Python snake_case 与既有 camelCase，冲突身份拒绝，不从用户配置推断归属。
+- 同版本重新加载原先被模型贡献判为 MigrationUnsupported，导致合法配置重启后被隔离。现同版本完整合法 ModelChoice 保持，损坏或未知版本仍拒绝。实际 Profile 存储→重启→新 core 读取，完整 choice 非隔离；跨 Harness 写入拒绝。尚无配置应用回执，测试显式断言 config_port 仍未组合。
+- 产品＋模型 Profile 贡献＋Profile 后端 216/216，Skills 后端另进程 433/433。将两套测试同进程聚合会发生既有 conftest 裸导入碰撞并收集中断；本轮独立进程复跑，未删除测试或假报聚合通过。未重建 deb，未调用真实模型。
+- 下一项仍是原生 session/new 后 prompt 前的真实配置应用：canonical 身份、实例隔离、配置授权与独立 readback 缺一不可。目前 ACP 产品单 Harness identity 也仍限制同一产品多品牌，不能把三品牌 initialize 通过写成该能力完成。

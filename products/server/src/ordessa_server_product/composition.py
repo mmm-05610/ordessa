@@ -235,6 +235,7 @@ class ServerProductComposition:
         from ordessa_profile.server_plugin import ProfileServerPlugin
         from ordessa_model_provider.plugin import ModelProviderPlugin
         from .skills import ProductSkillsPlugin
+        from ordessa_model_provider_profile.profile_glue import ModelProviderFacetProvider
 
         self._assemble_legacy_chain()
         runtime = build_runtime_from_native_adapter(
@@ -250,7 +251,8 @@ class ServerProductComposition:
             return authority.ceiling_provider()
 
         try:
-            extras = (ProfileServerPlugin(), ModelProviderPlugin(),
+            extras = (ProfileServerPlugin(providers=(("ordessa.model-provider-profile",
+                       ModelProviderFacetProvider()),)), ModelProviderPlugin(),
                       ProductSkillsPlugin(permissions=current_ceilings))
             # Native composition uses an explicit base selection. The product,
             # not the host or business plugins, declares its additional points.

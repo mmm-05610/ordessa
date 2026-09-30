@@ -762,7 +762,7 @@ class SessionService:
             raise ProfileError(
                 "FACET_VALUE_INVALID", str(exc), status=422,
             ).with_item(f"{facet_id}/{item_id}") from exc
-        violations = provider.validate({item_id: value}, {})
+        violations = provider.validate({item_id: value}, {"harness_id": session["harness_id"]})
         if violations:
             raise ProfileError(
                 "FACET_VALUE_INVALID", violations[0].message, status=422,

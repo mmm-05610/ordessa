@@ -255,6 +255,7 @@ describe('PC-02 server product closure', () => {
       'ordessa_harness.contributions',
       'ordessa_model_provider.plugin',
       'ordessa_profile.server_plugin',
+      'ordessa_model_provider_profile.profile_glue',
       'ordessa_skills.plugin',
       'ordessa_server_product.skills',
       'ordessa_permissions_backend.plugin',
