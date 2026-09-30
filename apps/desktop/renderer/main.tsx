@@ -6,7 +6,7 @@ import type { CommandOutcome, Fault } from '@extensions/ordessa.contracts/contra
 import { App } from './app'
 import { WindowChrome } from './window-chrome'
 import { installedExtensions } from './extensions'
-import { buildHostServices, listPalette, type DesktopHostBridge } from './host-services'
+import { buildHostServices, listPalette, type BridgeWireFacts, type DesktopHostBridge } from './host-services'
 import { AboutPanel, CommandPalette, FaultScreen, SettingsPage, type AboutInfo } from './desktop-ui'
 import './host.css'
 // Foundations styles are loaded explicitly by the assembly (C8 F05): importing the
@@ -98,17 +98,18 @@ function HostShell({ desktop, about, services, failures, requirements }: {
 }
 async function start() {
   const host = bridge()
-  // The wire proxy's two facts are main-process state: resolve them once here
-  // (start is async) instead of letting the port invent them. A failed read is
-  // false/null — the honest absence every requires:[WirePortToken] consumer
-  // is built to refuse on.
-  const wireFacts = host
-    ? {
-        ready: await host.wireReady().catch(() => false),
-        scope: await host.wireScope().catch(() => null),
-      }
-    : undefined
-  const services = buildHostServices({ bridge: host, ...(wireFacts ? { wire: wireFacts } : {}) })
+  // The wire proxy's two facts are main-process state, held in a live cell the
+  // shell owns (host-services reads through it at access time). The first read
+  // happens before assembly; the refresh after activation covers a transient
+  // read failure at startup (B-006): a late settle becomes visible to already
+  // activated extensions, and a vanished server flips ready honestly.
+  const wireFacts: BridgeWireFacts = { ready: false, scope: null }
+  const readWireFacts = host === undefined ? undefined : async () => {
+    wireFacts.ready = await host.wireReady().catch(() => false)
+    wireFacts.scope = await host.wireScope().catch(() => null)
+  }
+  await readWireFacts?.()
+  const services = buildHostServices({ bridge: host, ...(host ? { wire: wireFacts } : {}) })
   const about = host ? await host.about().catch(() => null) as AboutInfo | null : null
   const loaded = await installedExtensions()
   const desktop = runtime(loaded.plugins, services)
@@ -117,6 +118,7 @@ async function start() {
   root.render(shell([]))
   document.documentElement.dataset.ready = 'true'
   await desktop.start().catch(() => undefined)
+  void readWireFacts?.()
   // Required-component reporting runs after activation, once (contract C7 §3).
   root.render(shell(requirementsOf(loaded.plugins)))
   document.documentElement.dataset.settled = 'true'

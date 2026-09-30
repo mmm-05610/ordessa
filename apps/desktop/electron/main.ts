@@ -124,6 +124,12 @@ app.whenReady().then(async () => {
   let wire: WirePort
   try {
     const instance = await bridge.start()
+    // C-02 §2：握手已读，把 origin/token 定位符交给本进程的扩展宿主（native 适配器
+    // 从 process.env 读，lifecycle.ts 的既定交接点）。launcher 显式给过的非空值不
+    // 覆盖：那是操作者输入；host 只补缺，绝不用空值顶掉已有事实。
+    for (const [name, value] of Object.entries(bridge.launchEnvironment())) {
+      if (!process.env[name]) process.env[name] = value
+    }
     wire = new HttpWirePort({
       origin: instance.origin,
       scope: instance.scope,

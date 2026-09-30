@@ -25,17 +25,39 @@ export interface PlatformServiceMap {
  * 平台服务注册为**宿主自带的提供者插件**：lumino 只认 `provides`（没有 application 兜底），
  * 因此每个 token 一个内部 provider，插件用 `requires` 拿到对应实例。
  * 缺席的服务不注册 → 解析失败是显式的 `No provider`，而不是一个 undefined 悄悄流下去。
+ *
+ * 打包现实（B-006）：同一份契约载体可能存在两个模块实例——宿主 bundle 把 Token 定义
+ * 内联一份，扩展经产品协议通道再取一份。lumino 按 Token **对象同一性**解析服务，只按
+ * 宿主实例注册会让携带载体重份的插件得到显式 `No provider`。这里把**已到场**的宿主
+ * 服务同时注册到加载插件实际携带的同名 Token 实例上；Token 名是契约的持久身份，同名
+ * 即同契约。缺席的服务没有实例可别名，显式失败语义不变。
  */
-function registerHostServices(registry: PluginRegistry<Host>, services: PlatformServiceMap) {
+function registerHostServices(registry: PluginRegistry<Host>, plugins: Plugin<any>[], services: PlatformServiceMap) {
   const pairs: [Token<unknown>, unknown][] = [
     [LoggerToken, services.logger], [ThemeServiceToken, services.theme],
     [SettingsContributionToken, services.settings], [DiagnosticsContributionToken, services.diagnostics],
     [CommandSourceToken, services.commands], [KeybindingServiceToken, services.keybindings],
     [WirePortToken, services.wire], [HarnessAvailabilityToken, services.harness],
   ]
+  const present = new Map<string, Token<unknown>>()
+  for (const [token, service] of pairs) if (service !== undefined) present.set(token.name, token)
+  const aliases = new Set<Token<unknown>>()
+  for (const plugin of plugins) {
+    const carried = [...(plugin.requires ?? []), ...(plugin.optional ?? []), ...(plugin.provides ? [plugin.provides] : [])] as Token<unknown>[]
+    for (const token of carried) {
+      const canonical = present.get(token.name)
+      if (canonical !== undefined && canonical !== token) aliases.add(token)
+    }
+  }
+  let aliasSequence = 0
   for (const [token, service] of pairs) {
     if (service === undefined) continue
     registry.registerPlugin({ id: `ordessa.host.${token.name}`, provides: token, activate: () => service as never })
+    for (const alias of aliases) {
+      if (present.get(alias.name) !== token) continue
+      // 注册顺序在产品插件之前：插件自带 provides 仍按 lumino 语义覆盖别名。
+      registry.registerPlugin({ id: `ordessa.host.alias.${alias.name}.${aliasSequence++}`, provides: alias, activate: () => service as never })
+    }
   }
 }
 /**
@@ -56,7 +78,7 @@ export function runtime(plugins: Plugin<any>[], services: PlatformServiceMap = {
   const host: Host = { roots: new Contributions<RootView>() }
   const registry = new PluginRegistry<Host>()
   registry.application = host
-  registerHostServices(registry, services)
+  registerHostServices(registry, plugins, services)
   const failures: { id: string; error: string }[] = []
   const states = new Map<string, PluginState>(), listeners = new Set<() => void>()
   let snapshot: PluginState[] = []

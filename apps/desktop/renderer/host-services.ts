@@ -51,22 +51,26 @@ export function createBridgeLogger(sink: (level: 'debug' | 'info' | 'warn' | 'er
   return make(scope)
 }
 
-/** The two facts the IPC proxy cannot know by itself, resolved once by the
- * async shell start from the main process (`wireReady`/`wireScope`). An
- * unresolved fact stays `false`/`null`: honesty here is what lets an asset
- * extension refuse activation instead of rendering a page that cannot work. */
+/** The two facts the IPC proxy cannot know by itself (main-process `wireReady`/
+ * `wireScope`). The assembler owns a **live cell** of these and passes it in:
+ * the port reads through the cell at access time, so facts that settle after
+ * startup (B-006) become visible to already-activated extensions instead of
+ * being frozen at construction. An unresolved fact stays `false`/`null`:
+ * honesty here is what lets an asset extension refuse a call instead of
+ * rendering a page that cannot work. */
 export interface BridgeWireFacts {
-  readonly ready: boolean
-  readonly scope: string | null
+  ready: boolean
+  scope: string | null
 }
 
 /** C-03 §4：渲染侧只做代理，任何异常都降级为 `Unknown`，不冒泡到界面。 */
 export function createBridgeWirePort(host: DesktopHostBridge | undefined, facts?: Partial<BridgeWireFacts>): WirePort {
   if (!host) return { ready: false, scope: null, call: async () => ({ kind: 'Unknown', requestId: 'absent', reason: 'port-absent' }) as WireResult }
   return {
-    // 主进程的事实，一次取回；缺测得即 false/null，绝不乐观默认。
-    ready: facts?.ready ?? false,
-    scope: facts?.scope ?? null,
+    // 主进程的事实是活值：读的是装配层 cell 的当下内容，不在构造时抄快照；
+    // 未就绪即 false/null，绝不乐观默认。
+    get ready() { return facts?.ready ?? false },
+    get scope() { return facts?.scope ?? null },
     async call(method, params) {
       try { return await host.wireCall(method, params) as WireResult }
       catch { return { kind: 'Unknown', requestId: 'local', reason: 'transport-unreachable' } }
@@ -88,8 +92,8 @@ export interface HostServices {
 
 export interface BuildHostServicesOptions {
   bridge?: DesktopHostBridge
-  /** `wireReady()`/`wireScope()` resolved once by the async start (host-services
-   * 无法自己得到这两个事实)；缺省即 false/null，不假成就绪。 */
+  /** `wireReady()`/`wireScope()` 的**活值 cell**，由异步 start 持有并在事实落定后
+   * 更新（host-services 无法自己得到这两个事实）；缺省即 false/null，不假成就绪。 */
   wire?: Partial<BridgeWireFacts>
   mode?: 'light' | 'dark' | 'system'
   prefersDark?: () => boolean
