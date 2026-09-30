@@ -174,7 +174,7 @@ Profile Chat 有限入口接线已由主代理复跑 23/23：合法 default fact
 ### 固定待办（部分实现不勾为完成）
 
 - [x] 核对当前产品三品牌与已注册 facet 的支持矩阵。
-- [ ] 增强 Pi 系统资产安装、显式启动及实例目录管理的真实产品验收。
+- [x] 增强 Pi 系统资产安装、显式启动及实例目录管理的真实产品验收（不等于 Profile 应用确认）。
 - [ ] 后端 canonical Profile 会话注册与真实 owner/generation 完整生产绑定。
 - [ ] Chat 首次/后续发送前应用接线，不打断正在输出的 Agent。
 - [ ] 实际应用链验证全局预设/逐项临时覆盖/失败草稿/未知结果语义。
@@ -230,3 +230,12 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 全仓 `npm test` 本轮实测 **30/39 suite green**，不是全绿：Server bridge 默认解释器缺 `ordessa_profile`；产品 Node 精确清单遗漏已经提交的 ModelProvider Profile editor；七项 Electron 门禁涉及 bundled python/bin 缺失及 preview 退休 fixture/IPC。前两类环境与 Electron 缺口仍记录，不据此下账。产品清单断言补上真实 editor 选择，继续保持完整精确比较，不删断言；定向重跑结果另记下方。完整日志 `/tmp/ordessa-closeout-current-npm-test.log`。
 - 全仓测试产生 `docs/ui-preview/01-empty.png` 输出变化，仅验证副产物，不纳入本轮源码检查点，不删除。main 不切换、不合并、不 push；未改 Server/Pacthold/前端 host。
 - 清单反例修正后产品 UI Node 单文件门禁 3/3、root typecheck exit 0、diff 检查通过。此前完整 build 18 扩展通过、lock 由 build 刷新；没有据定向结果把完整 39 套件改写为全绿。
+
+### 系统安装后实测与待讨论决策（2026-09-30）
+
+- 用户已成功执行增强 Pi 安装脚本。主代理在真实宿主上下文复验系统资产：owner RPC、完整 target/manifest 原生操作记录、幂等查询与独立读回均通过；session/new=1、prompt=0，仅 synthetic fixture key，无真实登录或凭据。此单资产探针的 ledger 仍为夹具，不能作为完整产品应用证明。
+- 新增可复跑 `products/server/scripts/probe-installed-pi-profile.py`：由真实 `nativeServerPlan` 校验系统资产，经实际产品 composition、wire 项目/通道建立与真实 access-entry 启动两个同项目 Pi 实例。真实 ledger owners/execution 各两个、实例目录各自私有；A 通过原生 setter 修改推理选项后，独立 query 确认 A 已改变且 B 全部配置不变；释放 A 后 B 仍正常。最终全部通道 OS 确认释放、runtime.stop，临时根清理。session/new=2、prompt=0、Profile application confirmed=false，exit 0。探针只处理自己建立的实例，不触碰用户服务。首次基本路线与补强隔离路线均通过。
+- 固定待办第 2 项现可勾选；其余 5 项不变。没有把隔离/原生 setter 通过登记成生产 Profile receipt、Skills 应用或 Codex/Claude 切换通过。
+- 确认中等规模接缝缺失，已按用户要求提出讨论而非默认授权：Profile wire 目前只声明管理/目录/preview，没有生产 session 注册、select/apply；C4 的 PermitVerifier 仅协议/受控测试，现有 Permissions ACP authorizer 面向消息/工具，不能直接充当配置计划授权。模型 session-local 编译还产生 SetField，需正确变成该原生 action，不能拿文件物化伪装 live 应用。
+- 建议裁定：配置计划授权归 Permissions 插件，产品模块只组合真实 canonical owner、Profile 配置端口、模型解析器、C4 与权限提供者；不在 product 私造第二套 default-allow 权限。普通 provider/model 配置以已认证用户的显式选择和提交为意图，不新增审批弹窗；涉及权限扩张仍受平台上限约束，绝不由 Profile 选择自动赋权。这个新配置授权接缝尚未实现，待用户确认；无需改 Server/Pacthold/前端 host。
+- 若按建议执行，后续有序切片为配置授权→canonical 注册/生命周期→模型 action 映射及独立观察→Chat 首发 session/new 后、prompt 前和后续 submit 应用；凭据/provider restart-resume/Skills 保持各自独立验收，未知或不支持仍明确拒绝，不降低总验收标准。当前暂停在这个设计裁定处，不声称整批完成。
