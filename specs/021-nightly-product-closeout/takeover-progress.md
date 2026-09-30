@@ -166,3 +166,40 @@ Profile Chat 有限入口接线已由主代理复跑 23/23：合法 default fact
 - 新只读接缝 15 条反例及既有 C4/managed channel 定向回归共 60/60（单条 Starlette 弃用告警）。真实增强 Pi 的 probe 加 `--owner-rpc` 再次通过，使用真实后端 query/response 分流代码；ledger 字段为夹具，不冒充完整产品 canonical Profile 绑定。零 prompt、仅 synthetic fixture key，实例设置写入/模拟全局配置不变/关闭后拒绝/进程退出均再次确认。
 - 旧路径 `plugins/connectors/acp/sessions` 已不是 workspace；一次按旧路径的 npm 命令未运行测试，不记作回归结果。改用实际 `plugins/connectors/acp` 后 43/43；仅 Vite 的未来 configLoader 兼容告警。没有修改 Server/Pacthold/前端 host 或全局安装资产。
 - C4 `InvokeAction` 仍保持默认拒绝：当前 generation materializer 也明确拒绝 action/secret，不会为了接 Pi 就放宽这两个保护。下一段需要专门的 action-only 授权与执行接缝（owner/facet/item/action/schema 精确绑定、计划/permit/operation journal、独立读回），以及 opaque native generation 到 C4 整数 generation 的宿主-owned fence；不能把本段查询成功替代这些证据。
+
+## Profile 真实应用：固定待办与本轮检查点
+
+用户授权有界子代理并行，沿用本树；不新建工作树、Goal 或工单，不动 main、不发布、不调用真实模型。使用协作技能的文件所有权/反例/主代理复跑要求，继续豁免另一套调度账初始化。三名子代理分别只读支持矩阵、实现可信入口、实现 owner fence；主代理负责产品接线、测试、文档及最终检查。精确子代理费用不可读取，不伪造预算统计。
+
+### 固定待办（部分实现不勾为完成）
+
+- [x] 核对当前产品三品牌与已注册 facet 的支持矩阵。
+- [ ] 增强 Pi 系统资产安装、显式启动及实例目录管理的真实产品验收。
+- [ ] 后端 canonical Profile 会话注册与真实 owner/generation 完整生产绑定。
+- [ ] Chat 首次/后续发送前应用接线，不打断正在输出的 Agent。
+- [ ] 实际应用链验证全局预设/逐项临时覆盖/失败草稿/未知结果语义。
+- [ ] Codex、Claude 实际切换与跨 provider restart/resume、多会话隔离。
+- [ ] 产品完整回归及用户授权的真实聊天、配置切换验收。
+
+### 支持矩阵实测（源码审计，不冒充原生应用证据）
+
+native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`assets.skills`。模型有 Pi/Codex/Claude 编译器，但没有 production config_port。Skills 的 Profile contribution 当前编译零 intents；原生内容投影不能用“已选择”替代。其他资产存在包内实现不代表已注册到此产品的 Profile。
+
+模型 Profile 保存 `{harnessId,providerConfigId,modelId}`，C2 需要解析后的 `{provider,model,protocol,...}`；应用前必须由模型域解析当前目录/secret 引用与真实实例事实。现 C2 的 session-local 结果仍转为 SetField，未执行 live ACP action；不能用 generation 文件生成假 applied receipt。
+
+### 本轮已实现（不是 Profile 已可用）
+
+- 独立 `pi-profile-runtime` 可信变体，精确入口 `ordessa-profile.mjs` 与增强 manifest 标记、root 来源、完整树摘要全部校验；默认 index.js 不变。仅显式 `--native-pi-profile-bridge` 经过产品→compat→Harness startup argv 生效，connect 不能选择变体或覆盖实例目录环境。
+- 每次 Pi 进程 launch 分配随机的私有实例目录，配置不按 Profile 分目录，不复制全局登录。目录退出后保留、不删除恢复内容。新增数据根在 runtime 取得所有权后收紧权限；既有用户根不静默 chmod，不安全根拒绝。
+- 新 `ProfileSessionOwner` 接受后端明确注册的 canonical UID，对 registry 确认 owner 与独立 readback 绑定；opaque generation 只作 equality token，使用本地单调 fence，ABA/失活/忙碌/跨身份拒绝。此组件尚未组合到 production Profile wire；跨 Server 重启需 incarnation 或持久 fence authority。
+- owner 生命周期采用观察对象身份，不仅比较标识字段；同 ID 的新 session/new 在查询期间替换旧 owner 时拒绝。新增反例先红后绿。未改变公共契约或放宽 C4 action/secret 默认拒绝。
+
+### 主代理验证
+
+- Python 产品装配/实例目录/owner/readback/C4 定向：105/105，exit 0。首次直接用 worktree venv 跑产品测试缺 Profile 发行包而失败；改用明确本树 PYTHONPATH 后复跑，没有删除或跳过测试。最后两条用真实 registry/channel observer 配受控传输钉住同 native ID 替换与两个会话 generation 交错；独立审阅未发现本轮新增阻断，仍不冒充完整运行验收。
+- Node 安装策略/启动路线/Pi builder/增强入口：37/37，exit 0；root 正例仅模拟元数据，实际 user-owned 来源仍拒绝。
+- 真实开发 Pi 资产 `probe-nomodel.py --owner-rpc`：session/new=1、prompt=0、配置独立读回/隔离 settings 写入/全局 sentinel 未变/关闭后拒绝/process exit 0。ledger 仍是夹具；不是系统安装路线或完整产品会话应用证据。
+
+### 仍须完成，不能隐藏
+
+增强资产尚未安装 `/opt`，产品默认不启用增强路线。registry 当前按 harness+project 复用进程，尚不具备同项目不同会话的实例隔离；分配“每进程目录”不能证明“每会话隔离”。接下来须解决会话 launch scope，再接 canonical 注册、模型引用解析、action permit/journal/readback、Skills 内容应用及 Chat prompt 前/next-submit 时序。Host/Pacthold 本轮零改动。

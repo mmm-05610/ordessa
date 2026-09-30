@@ -230,6 +230,7 @@ class ServerProductComposition:
         adapter_command: str, adapter_args: "tuple[str, ...]" = (),
         native_continuation: bool = False,
         installed_artifact_root: str | None = None,
+        pi_profile_bridge: bool = False,
         additional_adapters: tuple = (),
     ) -> Any:
         from ordessa_server_compat.composition import build_runtime_from_native_adapter
@@ -244,6 +245,7 @@ class ServerProductComposition:
             adapter_command=adapter_command, adapter_args=adapter_args,
             native_continuation=native_continuation,
             installed_artifact_root=installed_artifact_root,
+            pi_profile_bridge=pi_profile_bridge,
             additional_adapters=additional_adapters,
         )
         def current_ceilings():

@@ -5,8 +5,8 @@ import { tmpdir } from "node:os"
 import { spawnSync } from "node:child_process"
 import { fileURLToPath } from "node:url"
 import test from "node:test"
-import { installedArtifactSummary } from "../../runtime/native-artifact-policy.mjs"
-import { resolveInstalledLaunch, resolveManagedLaunch } from "../../runtime/access-launch.mjs"
+import { installedArtifactSummary, verifyInstalledArtifact } from "../../runtime/native-artifact-policy.mjs"
+import { installedLaunchReference, resolveInstalledLaunch, resolveManagedLaunch } from "../../runtime/access-launch.mjs"
 import { nativeServerPlan } from "../../packaging/native-server-plan.mjs"
 
 const REPO = fileURLToPath(new URL("../../../../", import.meta.url))
@@ -56,6 +56,149 @@ function manifestFor(f) {
 function publishManifest(f, manifest = manifestFor(f)) {
   fs.writeFileSync(f.manifestPath, JSON.stringify(manifest))
 }
+
+function profileFixture(t, sharedBase) {
+  const f = fixture(t, ["pi", "pi-profile-runtime", BRANDS[0][2], BRANDS[0][3]], sharedBase)
+  // Include the actual audited extension modules, retaining the upstream entry.
+  const directory = path.dirname(f.entry)
+  for (const [source, target] of [["entry.mjs", "ordessa-profile.mjs"],
+    ["server.mjs", "ordessa-profile-server.mjs"], ["configuration-query.mjs", "ordessa-configuration-query.mjs"]]) {
+    fs.copyFileSync(fileURLToPath(new URL(`../../packaging/pi-profile/${source}`, import.meta.url)),
+      path.join(directory, target))
+  }
+  f.entry = path.join(directory, "ordessa-profile.mjs")
+  f.launch.args = [f.entry]
+  f.options = { artifactBase: f.base, variant: "pi-profile" }
+  const manifest = manifestFor(f)
+  manifest.kind = "agentbox-pi-runtime-artifact"
+  manifest.adapter.entry = `node_modules/${f.packageName}/dist/ordessa-profile.mjs`
+  manifest.ordessaExtension = { id: "pi-profile", version: 1,
+    configurationQuery: "_ordessa/session/configuration", instanceDirectoryRequired: true }
+  f.manifest = manifest
+  publishManifest(f, manifest)
+  return f
+}
+
+test("Pi enhanced entry requires explicit variant; default and read-only routes do not adopt it", (t) => {
+  simulateRootAdministration(t)
+  const f = profileFixture(t)
+  assert.deepEqual(installedLaunchReference("pi", f.base, { variant: "pi-profile" }),
+    { ...f.launch, source: "installed-artifact", version: "0.5.0" })
+  assert.throws(() => resolveInstalledLaunch("pi", f.launch, { artifactBase: f.base }), /ADAPTER_LAUNCH_MISMATCH/)
+  assert.throws(() => resolveManagedLaunch("pi", f.launch, { artifactBase: f.base,
+    mountInfoText: "1 0 0:1 / / ro - ext4 /dev/test ro\n" }), /ADAPTER_LAUNCH_MISMATCH/)
+  assert.throws(() => installedLaunchReference("pi", f.base), /ADAPTER_ARTIFACT_UNVERIFIED/,
+    "absence of default asset must not fall back to enhanced")
+  const original = fixture(t, BRANDS[0], f.base)
+  publishManifest(original)
+  assert.deepEqual(installedLaunchReference("pi", f.base).args, [original.entry])
+  assert.throws(() => resolveInstalledLaunch("pi", original.launch, f.options), /ADAPTER_LAUNCH_MISMATCH/)
+  assert.throws(() => resolveInstalledLaunch("pi", { ...f.launch,
+    args: [path.join(path.dirname(f.entry), "index.js")] }, f.options), /ADAPTER_LAUNCH_MISMATCH/)
+})
+
+test("enhanced manifest identity, extension metadata and entire tree remain authoritative", (t) => {
+  simulateRootAdministration(t)
+  const f = profileFixture(t)
+  const resolve = () => resolveInstalledLaunch("pi", f.launch, f.options)
+  for (const change of [
+    { kind: "agentbox-pi-profile-runtime-artifact" },
+    { adapter: { ...f.manifest.adapter, entry: `node_modules/${f.packageName}/dist/index.js` } },
+    { adapter: { ...f.manifest.adapter, entry: "../ordessa-profile.mjs" } },
+    { adapter: { ...f.manifest.adapter, version: "9.9.9" } },
+    { adapter: { ...f.manifest.adapter, package: BRANDS[1][2] } },
+    { ordessaExtension: undefined }, { ordessaExtension: {} },
+    ...[{ id: "other" }, { version: 2 }, { configurationQuery: "session/set_config_option" },
+      { instanceDirectoryRequired: false }, { extra: true }].map(delta => (
+      { ordessaExtension: { ...f.manifest.ordessaExtension, ...delta } })),
+    { treeDigest: `sha256:${"0".repeat(64)}` }, { sourceLockDigest: "invalid" },
+    { entries: f.manifest.entries + 1 }, { bytes: f.manifest.bytes + 1 },
+  ]) {
+    publishManifest(f, { ...f.manifest, ...change })
+    assert.throws(resolve, /ADAPTER_ARTIFACT_UNVERIFIED/, JSON.stringify(change))
+  }
+  publishManifest(f, f.manifest)
+  for (const name of ["index.js", "ordessa-profile.mjs", "ordessa-profile-server.mjs", "ordessa-configuration-query.mjs"]) {
+    const file = path.join(path.dirname(f.entry), name)
+    const original = fs.readFileSync(file)
+    fs.appendFileSync(file, "\n// changed module\n")
+    assert.throws(resolve, /ADAPTER_ARTIFACT_UNVERIFIED/, name)
+    fs.writeFileSync(file, original)
+  }
+  assert.equal(resolve().version, "0.5.0")
+})
+
+test("enhanced route rejects unsupported brands, unexpected argv and unknown variants", (t) => {
+  simulateRootAdministration(t)
+  const f = profileFixture(t)
+  for (const harness of ["codex", "claude-code", "claude", "unknown"]) {
+    assert.throws(() => resolveInstalledLaunch(harness, f.launch, f.options), /ADAPTER_ROUTE_UNBOUND/)
+    assert.throws(() => installedLaunchReference(harness, f.base, { variant: "pi-profile" }), /ADAPTER_ROUTE_UNBOUND/)
+  }
+  for (const variant of [null, true, "enhanced", "../pi-profile"]) {
+    assert.throws(() => resolveInstalledLaunch("pi", f.launch, { ...f.options, variant }), /ADAPTER_ROUTE_UNBOUND/)
+  }
+  for (const launch of [{ ...f.launch, command: "/another/node" },
+    { ...f.launch, args: [f.entry, "--anything"] }, { ...f.launch, args: [path.join(f.root, "arbitrary.mjs")] }]) {
+    assert.throws(() => resolveInstalledLaunch("pi", launch, f.options), /ADAPTER_LAUNCH_MISMATCH/)
+  }
+  assert.throws(() => verifyInstalledArtifact({ artifactBase: f.base, artifact: "codex-runtime",
+    packageName: BRANDS[1][2], version: BRANDS[1][3], variant: "pi-profile" }), /variant invalid/)
+})
+
+test("enhanced installed source retains every root ownership and mode guard", (t) => {
+  const overrides = new Map()
+  simulateRootAdministration(t, overrides)
+  const f = profileFixture(t)
+  for (const file of ["/", "/tmp", f.base, f.root, path.dirname(f.entry), f.entry, f.manifestPath,
+    path.join(path.dirname(f.entry), "ordessa-configuration-query.mjs")]) {
+    for (const change of [{ uid: 1000 }, { mode: fs.lstatSync(file).mode | 0o022 }]) {
+      overrides.set(file, change)
+      assert.throws(() => resolveInstalledLaunch("pi", f.launch, f.options), /ADAPTER_ARTIFACT_UNVERIFIED/, file)
+      overrides.delete(file)
+    }
+  }
+  for (const artifactBase of ["relative", `${f.base}/`, `${f.base}/../${path.basename(f.base)}`, `${f.base}\0`]) {
+    assert.throws(() => installedLaunchReference("pi", artifactBase, { variant: "pi-profile" }), /ADAPTER_ARTIFACT_UNVERIFIED/)
+  }
+  const saved = `${f.entry}.real`
+  fs.renameSync(f.entry, saved)
+  fs.symlinkSync(saved, f.entry)
+  assert.throws(() => resolveInstalledLaunch("pi", f.launch, f.options), /ADAPTER_ARTIFACT_UNVERIFIED/)
+})
+
+test("actual user-owned enhanced tree is refused even with matching manifest and protected modes", (t) => {
+  simulateRootAdministration(t)
+  const f = profileFixture(t)
+  t.mock.restoreAll()
+  fs.chmodSync(f.root, 0o555)
+  try {
+    assert.notEqual(fs.lstatSync(f.root).uid, 0)
+    assert.throws(() => resolveInstalledLaunch("pi", f.launch, f.options), /ADAPTER_ARTIFACT_UNVERIFIED/)
+  } finally { fs.chmodSync(f.root, 0o755) }
+})
+
+test("native enhanced plan is explicit and may replace only the selected Pi binding", (t) => {
+  simulateRootAdministration(t)
+  const f = profileFixture(t)
+  const codex = fixture(t, BRANDS[1], f.base)
+  publishManifest(codex)
+  const plan = nativeServerPlan({ harnessIds: ["codex", "pi"], pluginRoot: "/opt/ordessa/harness-plugin",
+    artifactRoot: f.base, piProfileBridge: true })
+  assert.equal(plan.args.filter(arg => arg === "--native-pi-profile-bridge").length, 1)
+  assert.ok(plan.args.includes(`--native-adapter-arg=${codex.entry}`))
+  const index = plan.args.indexOf("--native-additional-adapters")
+  assert.deepEqual(JSON.parse(plan.args[index + 1]), [{ harnessId: "pi", ...f.launch }])
+  for (const piProfileBridge of ["true", null, 1, {}]) {
+    assert.throws(() => nativeServerPlan({ harnessId: "pi", pluginRoot: "/opt/ordessa/harness-plugin",
+      artifactRoot: f.base, piProfileBridge }), /NATIVE_PI_PROFILE_SELECTION_INVALID/)
+  }
+  assert.throws(() => nativeServerPlan({ harnessId: "codex", pluginRoot: "/opt/ordessa/harness-plugin",
+    artifactRoot: f.base, piProfileBridge: true }), /NATIVE_PI_PROFILE_SELECTION_INVALID/)
+  fs.appendFileSync(f.entry, "\n// changed\n")
+  assert.throws(() => nativeServerPlan({ harnessId: "pi", pluginRoot: "/opt/ordessa/harness-plugin",
+    artifactRoot: f.base, piProfileBridge: true }), /ADAPTER_ARTIFACT_UNVERIFIED/)
+})
 
 for (const brand of BRANDS) {
   test(`${brand[0]}: simulated root metadata verifies actual content against Python v1`, (t) => {
@@ -189,6 +332,22 @@ function entryRun(args, message, environment = {}) {
   assert.equal(result.error, undefined)
   return result.stdout.trim().split("\n").filter(Boolean).map((line) => JSON.parse(line))
 }
+
+test("enhanced startup selects exact route and refuses client instance overrides", (t) => {
+  simulateRootAdministration(t) // Fixture manifest only; child process sees real user ownership.
+  const f = profileFixture(t)
+  const argv = ["--native", "--installed-artifact-root", f.base, "--pi-profile-bridge"]
+  const connect = { op: "connect", id: 1, harness: "pi", launch: f.launch }
+  // Actual user-owned asset: startup selector is accepted, origin still refuses.
+  assert.equal(entryRun(argv, connect).find(row => row.id === 1)?.error.code, "ADAPTER_ARTIFACT_UNVERIFIED")
+  for (const name of ["ORDESSA_PI_INSTANCE_DIR", "PI_CODING_AGENT_DIR", "PI_CODING_AGENT_SESSION_DIR"]) {
+    const result = entryRun(argv, { ...connect, launch: { ...f.launch, environment: { [name]: "/tmp/foreign" } } })
+    assert.equal(result.find(row => row.id === 1)?.error.code, "ADAPTER_ENVIRONMENT_INVALID")
+  }
+  assert.equal(entryRun(["--native", "--pi-profile-bridge"], null)[0].error.code, "SIDECAR_MODE_INVALID")
+  assert.equal(entryRun(argv, { ...connect, harness: "codex" }).find(row => row.id === 1)?.error.code,
+    "ADAPTER_ROUTE_UNBOUND")
+})
 
 test("startup root is native-only, immutable from connect and never falls back", (t) => {
   const f = fixture(t)

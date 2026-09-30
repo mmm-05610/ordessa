@@ -159,7 +159,8 @@ async function main() {
   const argv = process.argv.slice(2)
   const controlledPeer = argv.length === 2 && argv[0] === "--native" && argv[1] === "--controlled-test-peer"
   const native = argv[0] === "--native"
-  const installed = native && argv.length === 3 && argv[1] === "--installed-artifact-root"
+  const piProfileBridge = argv.length === 4 && argv[3] === "--pi-profile-bridge"
+  const installed = native && (argv.length === 3 || piProfileBridge) && argv[1] === "--installed-artifact-root"
     && path.isAbsolute(argv[2]) && path.resolve(argv[2]) === argv[2] && !argv[2].includes("\0")
   const installedArtifactRoot = installed ? argv[2] : null
   if ((!controlledPeer && !installed && argv.length !== (native ? 1 : 0)) ||
@@ -304,6 +305,9 @@ async function main() {
       throw new Refused("ADAPTER_ENVIRONMENT_INVALID")
     }
     for (const [key, value] of Object.entries(environment)) {
+      if (piProfileBridge && ["ORDESSA_PI_INSTANCE_DIR", "PI_CODING_AGENT_DIR", "PI_CODING_AGENT_SESSION_DIR"].includes(key)) {
+        throw new Refused("ADAPTER_ENVIRONMENT_INVALID", key)
+      }
       if (!ENVIRONMENT_KEY.test(key) || SENSITIVE_ENVIRONMENT_KEY.test(key) || LAUNCH_OVERRIDE_KEY.test(key)
           || !allowsPythonPath(harness, key)
           || typeof value !== "string" || value.length > 8192 || /[\0]/.test(value)
@@ -319,7 +323,8 @@ async function main() {
       // mode or choose a different executable through it.
       selectedLaunch = selectControlledPeerLaunch(harness, launch)
     } else if (installedArtifactRoot !== null) {
-      selectedLaunch = resolveInstalledLaunch(harness, launch, { artifactBase: installedArtifactRoot })
+      selectedLaunch = resolveInstalledLaunch(harness, launch, { artifactBase: installedArtifactRoot,
+        variant: piProfileBridge ? "pi-profile" : "default" })
     } else {
       selectedLaunch = resolveManagedLaunch(harness, launch)
         ?? resolveLegacyLaunch(harness, launch, environment)

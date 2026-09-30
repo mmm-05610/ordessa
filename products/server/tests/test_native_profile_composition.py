@@ -166,3 +166,42 @@ def test_invalid_installed_root_refuses_before_creating_data(tmp_path, invalid):
         create_composition().native_runtime(tmp_path / "data", plugin_root=tmp_path,
             harness_id="pi", adapter_command="/usr/bin/node", installed_artifact_root=invalid)
     assert not (tmp_path / "data").exists()
+
+
+def test_enhanced_pi_flag_routes_to_native_product_only():
+    native = values(execution_mode="native", plugin_root=Path("/opt/ordessa/harness"),
+                    native_harness="pi", native_adapter_command="/usr/bin/node",
+                    native_adapter_arg=[], native_pi_profile_bridge=True,
+                    native_installed_artifact_root="/opt/ordessa/artifacts")
+    assert plan_server_cli(native).kwargs["pi_profile_bridge"] is True
+    assert plan_server_cli(values(native_pi_profile_bridge=True)).error
+
+
+def test_enhanced_pi_launch_allocates_per_process_not_per_profile(tmp_path, monkeypatch):
+    import ordessa_server_compat.composition as composition
+    captured = []
+
+    class ControlledTransport:
+        def __init__(self, **kwargs):
+            captured.append(kwargs)
+
+        def start(self):
+            return self
+
+    monkeypatch.setattr(composition, "AccessEntryTransport", ControlledTransport)
+    root = Path(__file__).resolve().parents[3]
+    runtime = create_composition().native_runtime(tmp_path / "data",
+        plugin_root=root / "plugins/harness", harness_id="pi", adapter_command=shutil.which("node"),
+        installed_artifact_root="/opt/ordessa/artifacts", pi_profile_bridge=True)
+    try:
+        launch = runtime.plugin_host.provided_port("acp.channels")._launch
+        for _ in range(2):
+            launch(harness_id="pi", cwd=str(tmp_path), on_line=lambda _: None, on_exit=lambda _: None)
+        paths = [Path(row["instance_directory"]) for row in captured]
+        assert paths[0] != paths[1]
+        assert all(row["pi_profile_bridge"] is True for row in captured)
+        assert all(item.exists() and item.stat().st_mode & 0o077 == 0 for item in paths)
+        assert all("instance_directory" not in row["adapter"] for row in captured)
+    finally:
+        runtime.stop()
+    assert all(item.exists() for item in paths), "recovery state must not be deleted on stop"

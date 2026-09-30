@@ -2,7 +2,7 @@
 import path from 'node:path'
 import { installedLaunchReference } from '../runtime/access-launch.mjs'
 
-export function nativeServerPlan({ harnessId, harnessIds, pluginRoot, artifactRoot }) {
+export function nativeServerPlan({ harnessId, harnessIds, pluginRoot, artifactRoot, piProfileBridge = false }) {
   if (typeof pluginRoot !== 'string' || !path.isAbsolute(pluginRoot)
       || path.resolve(pluginRoot) !== pluginRoot || pluginRoot.includes('\0')) {
     throw new Error('NATIVE_PLUGIN_ROOT_INVALID')
@@ -12,12 +12,17 @@ export function nativeServerPlan({ harnessId, harnessIds, pluginRoot, artifactRo
       || selected.some(id => typeof id !== 'string' || !id)
       || new Set(selected).size !== selected.length
       || (harnessIds && harnessId !== undefined)) throw new Error('NATIVE_HARNESS_SELECTION_INVALID')
-  const bindings = selected.map(id => ({ harnessId: id, ...installedLaunchReference(id, artifactRoot) }))
+  if (typeof piProfileBridge !== 'boolean' || (piProfileBridge && !selected.includes('pi'))) {
+    throw new Error('NATIVE_PI_PROFILE_SELECTION_INVALID')
+  }
+  const bindings = selected.map(id => ({ harnessId: id, ...installedLaunchReference(id, artifactRoot,
+    { variant: piProfileBridge && id === 'pi' ? 'pi-profile' : 'default' }) }))
   const launch = bindings[0]
   return Object.freeze({ args: Object.freeze([
     '--execution-mode', 'native', '--plugin-root', pluginRoot, '--native-harness', launch.harnessId,
     '--native-adapter-command', launch.command, `--native-adapter-arg=${launch.args[0]}`,
     '--native-installed-artifact-root', artifactRoot,
+    ...(piProfileBridge ? ['--native-pi-profile-bridge'] : []),
     ...(bindings.length > 1 ? ['--native-additional-adapters', JSON.stringify(bindings.slice(1).map(
       ({ harnessId, command, args }) => ({ harnessId, command, args })))] : []),
   ]) })

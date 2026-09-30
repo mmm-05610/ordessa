@@ -69,6 +69,19 @@ def test_unknown_session_sends_zero_frames():
     assert len(sent) == 1
 
 
+def test_query_rejects_equal_id_replacement_while_waiting():
+    def replace_owner(channel, frame):
+        previous = channel.native_session_observation('native')
+        channel.transport.send_line(json.dumps({'jsonrpc': '2.0', 'id': 'new-owner',
+                                               'method': 'session/new', 'params': {}}))
+        assert channel.native_session_observation('native') == previous
+        assert channel.native_session_observation('native') is not previous
+        answer(channel, frame)
+    channel, _, _ = rig(replace_owner)
+    with pytest.raises(NativeConfigurationUnavailable, match='owner changed'):
+        channel.query_native_configuration('native')
+
+
 @pytest.mark.parametrize('replacement', [
     {'sessionId': 'another-session'}, {'generation': ''}, {'busy': 'false'},
     {'configOptions': [{'id': 'model'}]}, {'configOptions': {}},

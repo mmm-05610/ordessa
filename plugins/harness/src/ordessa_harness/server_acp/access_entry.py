@@ -64,6 +64,8 @@ class AccessEntryTransport:
                  environment: dict[str, str] | None = None,
                  controlled_test_peer: bool = False,
                  installed_artifact_root: str | None = None,
+                 pi_profile_bridge: bool = False,
+                 instance_directory: str | None = None,
                  connect_timeout: float = 60.0, close_timeout: float = 12.0) -> None:
         self._harness_id = harness_id
         self._cwd = cwd
@@ -85,6 +87,29 @@ class AccessEntryTransport:
                 raise ValueError("installed_artifact_root must be a canonical absolute path without controlled peer mode")
             entry_argv.extend(("--installed-artifact-root", installed_artifact_root))
         entry_environment = None if environment is None else dict(environment)
+        if type(pi_profile_bridge) is not bool:
+            raise TypeError("pi_profile_bridge must be bool")
+        if pi_profile_bridge:
+            if harness_id != "pi" or installed_artifact_root is None or controlled_test_peer:
+                raise ValueError("Pi profile bridge requires the installed Pi route")
+            if (not isinstance(instance_directory, str) or not os.path.isabs(instance_directory)
+                    or instance_directory.startswith("//")
+                    or os.path.normpath(instance_directory) != instance_directory
+                    or "\x00" in instance_directory):
+                raise ValueError("private instance directory must be canonical and absolute")
+            try:
+                info = os.lstat(instance_directory)
+                if (not os.path.isdir(instance_directory) or os.path.islink(instance_directory)
+                        or os.path.realpath(instance_directory) != instance_directory
+                        or info.st_uid != os.getuid() or info.st_mode & 0o077):
+                    raise ValueError("instance directory must be private, user-owned and symlink-free")
+            except OSError as error:
+                raise ValueError("private instance directory is unavailable") from error
+            entry_argv.append("--pi-profile-bridge")
+            entry_environment = dict(os.environ if environment is None else environment)
+            entry_environment["ORDESSA_PI_INSTANCE_DIR"] = instance_directory
+        elif instance_directory is not None:
+            raise ValueError("instance directory requires explicit Pi profile bridge")
         if controlled_test_peer:
             entry_argv.append("--controlled-test-peer")
             entry_environment = dict(os.environ if environment is None else environment)

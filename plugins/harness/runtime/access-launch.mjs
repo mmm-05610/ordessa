@@ -92,26 +92,33 @@ export function resolveManagedLaunch(harness, launch,
 }
 
 /** Explicit native installation route; refusal never falls back to another source. */
-export function installedLaunchReference(harness, artifactBase) {
+function installedSpec(harness, variant) {
   if (!["pi", "codex", "claude-code"].includes(harness)) throw new LaunchRefusal("ADAPTER_ROUTE_UNBOUND")
-  if (typeof artifactBase !== "string") throw new LaunchRefusal("ADAPTER_ARTIFACT_UNVERIFIED")
-  const spec = MANAGED[harness]
-  return resolveInstalledLaunch(harness, { command: process.execPath,
-    args: [path.join(artifactBase, spec.artifact, "node_modules", spec.package, "dist/index.js")] },
-    { artifactBase })
+  if (variant === "default") return { ...MANAGED[harness], entry: "dist/index.js" }
+  if (variant === "pi-profile" && harness === "pi") {
+    return { ...MANAGED.pi, artifact: "pi-profile-runtime", entry: "dist/ordessa-profile.mjs" }
+  }
+  throw new LaunchRefusal("ADAPTER_ROUTE_UNBOUND")
 }
 
-export function resolveInstalledLaunch(harness, launch, { artifactBase } = {}) {
-  if (!["pi", "codex", "claude-code"].includes(harness)) throw new LaunchRefusal("ADAPTER_ROUTE_UNBOUND")
-  const spec = MANAGED[harness]
+export function installedLaunchReference(harness, artifactBase, { variant = "default" } = {}) {
+  const spec = installedSpec(harness, variant)
+  if (typeof artifactBase !== "string") throw new LaunchRefusal("ADAPTER_ARTIFACT_UNVERIFIED")
+  return resolveInstalledLaunch(harness, { command: process.execPath,
+    args: [path.join(artifactBase, spec.artifact, "node_modules", spec.package, spec.entry)] },
+    { artifactBase, variant })
+}
+
+export function resolveInstalledLaunch(harness, launch, { artifactBase, variant = "default" } = {}) {
+  const spec = installedSpec(harness, variant)
   const version = pinFor(harness, harnessLaunchContext(harness, { find: () => null }))
   const expectedEntry = typeof artifactBase === "string"
-    ? path.join(artifactBase, spec.artifact, "node_modules", spec.package, "dist/index.js") : null
+    ? path.join(artifactBase, spec.artifact, "node_modules", spec.package, spec.entry) : null
   if (launch.command !== process.execPath || launch.args?.length !== 1 || launch.args[0] !== expectedEntry) {
     throw new LaunchRefusal("ADAPTER_LAUNCH_MISMATCH")
   }
   try {
-    const entry = verifyInstalledArtifact({ artifactBase, artifact: spec.artifact, packageName: spec.package, version })
+    const entry = verifyInstalledArtifact({ artifactBase, artifact: spec.artifact, packageName: spec.package, version, variant })
     return { command: process.execPath, args: [entry], source: "installed-artifact", version }
   } catch { throw new LaunchRefusal("ADAPTER_ARTIFACT_UNVERIFIED") }
 }

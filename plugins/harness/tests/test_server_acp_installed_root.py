@@ -27,3 +27,38 @@ def test_installed_root_rejects_invalid_binding(root):
 def test_installed_root_cannot_enable_controlled_peer():
     with pytest.raises(ValueError):
         transport(installed_artifact_root="/opt/ordessa", controlled_test_peer=True)
+
+
+def test_pi_profile_variant_is_startup_only_and_requires_private_instance(tmp_path):
+    instance = tmp_path / "instance"
+    instance.mkdir(mode=0o700)
+    selected = transport(installed_artifact_root="/opt/ordessa", pi_profile_bridge=True,
+                         instance_directory=str(instance), environment={"SAFE": "yes"})
+    assert selected._inner._argv[-1] == "--pi-profile-bridge"
+    assert selected._inner._environment["ORDESSA_PI_INSTANCE_DIR"] == str(instance)
+    assert selected._inner._environment["SAFE"] == "yes"
+    assert "instance_directory" not in selected._adapter
+
+
+@pytest.mark.parametrize("kwargs", [
+    {"pi_profile_bridge": True},
+    {"installed_artifact_root": "/opt/ordessa", "pi_profile_bridge": True},
+    {"installed_artifact_root": "/opt/ordessa", "pi_profile_bridge": "yes"},
+    {"instance_directory": "/tmp"},
+])
+def test_profile_startup_rejects_incomplete_or_implicit_route(kwargs):
+    with pytest.raises((ValueError, TypeError)):
+        transport(**kwargs)
+
+
+def test_profile_startup_rejects_shared_or_symlinked_instance(tmp_path):
+    instance = tmp_path / "instance"
+    instance.mkdir(mode=0o755)
+    kwargs = {"installed_artifact_root": "/opt/ordessa", "pi_profile_bridge": True}
+    with pytest.raises(ValueError):
+        transport(instance_directory=str(instance), **kwargs)
+    instance.chmod(0o700)
+    link = tmp_path / "link"
+    link.symlink_to(instance, target_is_directory=True)
+    with pytest.raises(ValueError):
+        transport(instance_directory=str(link), **kwargs)

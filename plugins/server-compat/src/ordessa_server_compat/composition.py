@@ -415,6 +415,7 @@ def build_runtime_from_native_adapter(
     native_continuation: bool = False,
     controlled_test_peer: bool = False,
     installed_artifact_root: str | None = None,
+    pi_profile_bridge: bool = False,
     extra_server_plugins: tuple = (),
     additional_adapters: tuple = (),
 ) -> ServerRuntime:
@@ -442,6 +443,9 @@ def build_runtime_from_native_adapter(
         raise RuntimeError("NATIVE_CONTINUATION_INVALID")
     if type(controlled_test_peer) is not bool:
         raise RuntimeError("NATIVE_CONTROLLED_PEER_INVALID")
+    if type(pi_profile_bridge) is not bool or (pi_profile_bridge and (
+            installed_artifact_root is None or controlled_test_peer)):
+        raise RuntimeError("NATIVE_PI_PROFILE_SELECTION_INVALID")
     if installed_artifact_root is not None and (
             controlled_test_peer or not isinstance(installed_artifact_root, str)
             or not os.path.isabs(installed_artifact_root)
@@ -472,6 +476,8 @@ def build_runtime_from_native_adapter(
         adapters[hid] = {"command": command, "args": list(arguments)}
     plugin = Path(plugin_root).resolve()
     entry = plugin / "runtime" / "worker-entry.mjs"  # retired old chain, launch-fail honest
+    if pi_profile_bridge and "pi" not in adapters:
+        raise RuntimeError("NATIVE_PI_PROFILE_SELECTION_INVALID")
     access_entry = plugin / "runtime" / "access-entry.mjs"
     provenance = plugin / "third_party" / "harness_remote" / "SOURCE.json"
     node = shutil.which("node")
@@ -505,6 +511,8 @@ def build_runtime_from_native_adapter(
         if hid != harness_id:
             registry.register(HarnessDescriptor(hid))
     root = Path(data_root).resolve()
+
+    new_profile_root = pi_profile_bridge and not root.exists()
 
     def factory(records, objects, approvals, notifier, _connectors, _credentials,
                 _secrets, _turn_inputs):
@@ -583,10 +591,16 @@ def build_runtime_from_native_adapter(
         environment.pop("AGENTBOX_ACCESS_TEST_MODE", None)
         if controlled_test_peer:
             environment["AGENTBOX_ACCESS_TEST_MODE"] = "controlled-peer-v1"
+        instance_options = {}
+        if pi_profile_bridge and harness_id == "pi":
+            from ordessa_harness.server_acp.instance_directory import allocate_instance_directory
+            instance_options = {"pi_profile_bridge": True,
+                                "instance_directory": str(allocate_instance_directory(root))}
         return AccessEntryTransport(
             node=node, entry=str(access_entry), harness_id=harness_id,
             cwd=cwd, adapter=adapters[harness_id], on_line=on_line, on_exit=on_exit,
             environment=environment,
+            **instance_options,
             **({"controlled_test_peer": True} if controlled_test_peer else {}),
             **({"installed_artifact_root": installed_artifact_root}
                if installed_artifact_root is not None else {}),
@@ -612,6 +626,19 @@ def build_runtime_from_native_adapter(
         server_plugins=(WorkspaceServerPlugin(), compat, acp,
                         PermissionsBackendPlugin(), *extra_server_plugins),
     )
+    if new_profile_root:
+        try:
+            # The runtime has now claimed and created this new root. Existing
+            # user roots are never silently chmodded, nor on later launches.
+            if root.is_symlink() or root.resolve() != root or root.stat().st_uid != os.getuid():
+                raise RuntimeError("NATIVE_INSTANCE_ROOT_INVALID")
+            root.chmod(0o700)
+        except BaseException as failure:
+            try:
+                runtime.stop()
+            except BaseException as cleanup:
+                failure.cleanup_errors = (*getattr(failure, "cleanup_errors", ()), cleanup)
+            raise
     runtime.native_harness_id = harness_id
     # The start hook reports the profile it created through the composition's
     # channel: the composition owns the runtime, the plugin owns the fact.

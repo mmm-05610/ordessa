@@ -293,7 +293,7 @@ class _Channel:
             if not pending.ready.wait(timeout):
                 raise NativeConfigurationUnavailable('configuration query timed out')
             with self._lock:
-                if self._ended or self._native_sessions.get(native_id) != owner:
+                if self._ended or self._native_sessions.get(native_id) is not owner:
                     raise NativeConfigurationUnavailable('native session owner changed')
                 response = pending.response
             if response is None or 'error' in response:
@@ -480,7 +480,8 @@ class AcpChannelRegistry:
         if channel is None:
             raise NativeConfigurationUnavailable('channel owner unavailable')
         observation = channel.query_native_configuration(native_session_id, timeout=timeout)
-        if self.get(connection_id) is not channel or channel.ended:
+        if (self.get(connection_id) is not channel or channel.ended
+                or channel.native_session_observation(native_session_id) is not observation.owner):
             raise NativeConfigurationUnavailable('channel owner changed')
         return observation
 

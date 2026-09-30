@@ -102,7 +102,13 @@ export function installedArtifactSummary(root) {
   return { digest: `sha256:${hash.digest("hex")}`, entries: entries.length, bytes }
 }
 
-export function verifyInstalledArtifact({ artifactBase, artifact, packageName, version }) {
+export function verifyInstalledArtifact({ artifactBase, artifact, packageName, version, variant = "default" }) {
+  // This is a bounded variant, not a caller-supplied entry override.
+  const profileBridge = variant === "pi-profile"
+  if ((variant !== "default" && !profileBridge)
+      || (profileBridge && (artifact !== "pi-profile-runtime" || packageName !== "@automatalabs/pi-acp"))) {
+    throw new Error("installed artifact variant invalid")
+  }
   if (typeof artifactBase !== "string" || !path.isAbsolute(artifactBase)
       || path.resolve(artifactBase) !== artifactBase || artifactBase.includes("\0")) {
     throw new Error("installed artifact base invalid")
@@ -111,14 +117,20 @@ export function verifyInstalledArtifact({ artifactBase, artifact, packageName, v
   const root = path.join(artifactBase, artifact)
   trustedStat(root, true)
   const manifest = trustedJson(`${root}.manifest.json`)
-  const relativeEntry = `node_modules/${packageName}/dist/index.js`
+  const relativeEntry = `node_modules/${packageName}/dist/${profileBridge ? "ordessa-profile.mjs" : "index.js"}`
   // sourceLockDigest records builder provenance; no source lock is bound here,
   // so validate its format without claiming to compare the original lock bytes.
-  if (manifest.schemaVersion !== 1 || manifest.kind !== `agentbox-${artifact}-artifact`
+  if (manifest.schemaVersion !== 1 || manifest.kind !== `agentbox-${profileBridge ? "pi-runtime" : artifact}-artifact`
       || manifest.adapter?.package !== packageName || manifest.adapter?.version !== version
       || manifest.adapter?.entry !== relativeEntry || !DIGEST.test(manifest.treeDigest)
       || !DIGEST.test(manifest.sourceLockDigest) || !Number.isSafeInteger(manifest.entries)
       || !Number.isSafeInteger(manifest.bytes)) throw new Error("installed manifest invalid")
+  if (profileBridge) {
+    const extension = manifest.ordessaExtension
+    if (!extension || Object.keys(extension).length !== 4 || extension.id !== "pi-profile"
+        || extension.version !== 1 || extension.configurationQuery !== "_ordessa/session/configuration"
+        || extension.instanceDirectoryRequired !== true) throw new Error("installed extension invalid")
+  }
   const summary = installedArtifactSummary(root)
   if (summary.digest !== manifest.treeDigest || summary.entries !== manifest.entries
       || summary.bytes !== manifest.bytes) throw new Error("installed artifact digest mismatch")
