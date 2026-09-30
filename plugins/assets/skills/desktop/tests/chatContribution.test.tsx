@@ -275,11 +275,15 @@ describe('skills chat input source: stale results never reach the menu (G17)', (
     chat.forScope(newScope()).addInputSource(createSkillsChatInputSource({ snapshot: port }))
 
     // Panel opens on session s1 (slow read), the user switches to s2 (fast read).
-    const view = chat.queryInputSources(panelQuery(loc('s1')))
-    chat.queryInputSources(panelQuery(loc('s2')))
+    const previousView = chat.queryInputSources(panelQuery(loc('s1')))
+    // Chat API returns an independent view per query; the panel adopts the
+    // new query's view when switching sessions.
+    const view = chat.queryInputSources(panelQuery(loc('s2')))
     gates[1]!.resolve(snap({ targetSession: OTHER_KEY, skills: [choice({ assetId: 's2-row', nativeName: 's2-row' })] }))
     await flush()
     expect(viewIds(view)).toEqual(['ordessa.skills:s2-row:public'])
+    // The still-pending s1 view does not adopt the s2 query's result.
+    expect(viewIds(previousView)).toEqual([])
 
     // The s1 reply now arrives late: it must not repaint s2's menu.
     gates[0]!.resolve(snap({ targetSession: SESSION_KEY, skills: [choice({ assetId: 's1-row', nativeName: 's1-row' })] }))

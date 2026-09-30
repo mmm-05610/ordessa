@@ -95,7 +95,8 @@ describe('ordessa.skills product entry (EA-1: the loader seam rides the C-03 wir
     ready: true,
     scope: 'http://127.0.0.1:9|server_fake',
     async call(method: string, params: Readonly<Record<string, unknown>>) {
-      void method; void params
+      if (method.startsWith('skills.')) expect(params.requestId).toEqual(expect.any(String))
+      if (method === 'workspaces.list') expect(params).toEqual({ includeArchived: false })
       return { kind: 'Accepted', requestId: 't', result: answer() }
     },
   })

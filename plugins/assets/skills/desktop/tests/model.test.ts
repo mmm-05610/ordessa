@@ -90,6 +90,40 @@ describe('skills model: reads', () => {
 })
 
 describe('skills model: draft, CAS and the project gate', () => {
+  it('preserves declared file order when the picker returns unsorted paths', async () => {
+    const { gateway, calls } = fakeSkillsGateway()
+    const model = createSkillsModel(gateway, fakeWorkspaces([]).port)
+    const second = { path: 'z.md', bytes: new TextEncoder().encode('z') }
+    await model.importPicked([second, ONE_FILE], 'desktop:test', { originScope: 'public', originOwner: null })
+    const declared = calls.find(call => call.method === 'importBegin')?.params[0] as { path: string; sha256: string }[]
+    const chunks = calls.filter(call => call.method === 'importChunk')
+    expect(declared.map(file => file.path)).toEqual(['SKILL.md', 'z.md'])
+    expect(chunks.map(call => call.params[3])).toEqual(declared.map(file => file.sha256))
+  })
+
+  it('uses each asset rowVersion rather than the layer maximum or the previous write token', async () => {
+    const { gateway, calls } = gatewayWithRows({
+      catalogue: [demoRecord(), demoRecord({ assetId: 'other', nativeName: 'other' })],
+      rows: [demoRow('demo', { rowVersion: 2 }), demoRow('other', { rowVersion: 9 })],
+    })
+    const model = createSkillsModel(gateway, fakeWorkspaces([AVAILABLE_PROJECT]).port)
+    await model.refresh()
+    model.edit('global', 'demo', 'disable')
+    model.edit('global', 'other', 'disable')
+    await model.save('global')
+    expect(calls.filter(call => call.method === 'assignmentsUpsert')
+      .map(call => (call.params[1] as { expectedVersion: number }).expectedVersion)).toEqual([2, 9])
+  })
+
+  it('uses creation CAS zero when another asset has a stored row', async () => {
+    const { gateway, calls } = gatewayWithRows({ catalogue: [demoRecord(), demoRecord({ assetId: 'other', nativeName: 'other' })] })
+    const model = createSkillsModel(gateway, fakeWorkspaces([AVAILABLE_PROJECT]).port)
+    await model.refresh()
+    model.edit('global', 'other', 'disable')
+    await model.save('global')
+    expect((calls.find(call => call.method === 'assignmentsUpsert')?.params[1] as { expectedVersion: number }).expectedVersion).toBe(0)
+  })
+
   it('enable pins the approved revision, disable pins none, inherit removes the row', async () => {
     const { gateway, calls } = gatewayWithRows()
     const model = createSkillsModel(gateway, fakeWorkspaces([AVAILABLE_PROJECT]).port)

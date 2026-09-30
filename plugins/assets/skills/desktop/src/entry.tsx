@@ -65,7 +65,9 @@ export default function createPlugin() {
 function wireCallerOf(wire: WirePort): WireCaller {
   return {
     async call(method, params) {
-      const result = await wire.call(method, params)
+      const result = await wire.call(method, method.startsWith('skills.')
+        ? { ...params, requestId: params.requestId ?? globalThis.crypto.randomUUID() }
+        : params)
       if (result.kind === 'Accepted') return result.result
       throw Error(`skills wire call ${method} ${result.kind}: ${result.reason}`)
     },

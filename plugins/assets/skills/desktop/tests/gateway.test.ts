@@ -1,142 +1,150 @@
 import { describe, expect, it } from 'vitest'
 import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath, URL as NodeURL } from 'node:url'
 import { createSkillsGateway, SKILLS_WIRE_METHODS, type WireCaller } from '../src/gateway'
 import { sha256Hex } from '../src/sha256'
 import { fakeSkillsGateway } from './fakes'
 
-/** Records every wire call and answers with a shaped envelope per method. */
-function spyWire(responder: (method: string, params: Record<string, unknown>) => unknown = () => ({})) {
+const asset = { assetId: 'demo', name: 'demo', description: 'description', latestRevision: 2, digest: 'sha256:x', source: 'local:import' }
+const row = { serverScope: 'server', principal: 'user', scopeKind: 'user_global', scopeId: '', harnessId: null, assetId: 'demo', decision: 'enable', revision: 1, rowVersion: 3 }
+const target = { projectId: null, harnessId: null, profileId: null }
+const layer = { kind: 'user-global' as const, scopeId: null, harnessId: null }
+const options = { assetId: null, originScope: 'public' as const, originOwner: null, operationKey: 'op', expectedVersion: 0 }
+const preview = { name: 'new-skill', description: 'd', metadata: {}, files: [{ path: 'SKILL.md', bytes: 2 }], scripts: [], treeDigest: 'sha256:x' }
+function spyWire(responder: (method: string, params: Record<string, unknown>) => unknown = envelope) {
   const sent: { method: string; params: Record<string, unknown> }[] = []
-  const wire: WireCaller = {
-    async call(method, params) {
-      sent.push({ method, params })
-      const value = responder(method, params)
-      if (value === undefined) throw Error(`unanswered method: ${method}`)
-      return value
-    },
-  }
+  const wire: WireCaller = { async call(method, params) {
+    // Every real descriptor requires requestId. Test it on each send, then
+    // inspect the domain params independently of a nondeterministic UUID.
+    expect(params.requestId).toEqual(expect.any(String))
+    const { requestId: _requestId, ...domainParams } = params
+    sent.push({ method, params: domainParams })
+    return responder(method, params)
+  } }
   return { wire, sent }
 }
+function envelope(method: string): unknown {
+  switch (method) {
+    case 'skills.list': return { items: [asset], nextCursor: null }
+    case 'skills.get': return asset
+    case 'skills.revisions': return { assetId: 'demo', items: [
+      { revision: 1, treeDigest: 'sha256:old', approvalRecord: { approvedAt: 'now', approvedBy: 'user' } },
+      { revision: 2, treeDigest: 'sha256:x', approvalRecord: null },
+    ] }
+    case 'skills.preview': return { path: 'scripts/run.sh', text: 'secret script body', script: true, bytes: 18 }
+    case 'skills.diff': return { assetId: 'demo', fromRevision: 1, toRevision: 2, added: ['new.md'], removed: [], changed: ['SKILL.md'] }
+    case 'skills.importBegin': return { importId: 'import_1', effect: 'stored' }
+    case 'skills.importChunk': return { importId: 'import_1', receivedBytes: 2 }
+    case 'skills.importPreview': return preview
+    case 'skills.importCommit': return { asset: { ...asset, assetId: 'new-skill', latestRevision: 1 }, effect: 'stored' }
+    case 'skills.importCancel': return { importId: 'import_1', cancelled: true }
+    case 'skills.approveRevision': return { approval: { revision: 2 }, effect: 'stored' }
+    case 'skills.assignmentsList': return { items: [row, { ...row, harnessId: 'pi' }] }
+    case 'skills.assignmentsUpsert': return { assignment: { ...row, rowVersion: 4 }, effect: 'stored' }
+    case 'skills.assignmentsRemove': return { removed: { removed: true, previousRowVersion: 3 }, effect: 'stored' }
+    case 'skills.resolve': case 'skills.previewEffective': return {
+      target, serverScope: 'server', assignmentRevisions: { row: 3 }, diagnostics: [{ kind: 'policy_unknown', note: 'policy unavailable' }],
+      resolvedSkills: [{ assetId: 'demo', nativeName: 'demo', revision: 1, treeDigest: 'sha256:old', originScope: 'public', selectedBy: { layer: 'user_global_any' }, capabilityEvidence: { effect: 'selected' } }],
+      excludedSkills: [{ assetId: 'disabled', excludedBy: { layer: 'project_any', scopeId: 'project' } }, { assetId: 'inherited', excludedBy: null }],
+    }
+    case 'skills.invokeDescriptor': return { invocation: 'unknown', browseOnly: true }
+    case 'skills.discoverNative': throw Error('NATIVE_TARGET_ROOT_UNAVAILABLE')
+    default: throw Error(`unpublished method: ${method}`)
+  }
+}
 
-describe('skills wire gateway', () => {
-  it('calls exactly the published skills.* family, one method per gateway call', async () => {
-    const { wire, sent } = spyWire(method => envelope(method))
+describe('skills wire gateway: actual backend contract', () => {
+  it('matches the backend method descriptor table, rather than a second invented list', () => {
+    const backend = readFileSync(fileURLToPath(new NodeURL('../../src/ordessa_skills/wire.py', import.meta.url)), 'utf8')
+    const table = [...backend.matchAll(/row\("(skills\.[^"]+)"/g)].map(match => match[1])
+    expect([...SKILLS_WIRE_METHODS]).toEqual(table)
+  })
+  it('normalizes bare asset/revision DTOs and derives approval only from approval records', async () => {
+    const { wire, sent } = spyWire()
     const gateway = createSkillsGateway(wire)
-    await gateway.catalogue()
-    await gateway.list({ projectId: null, harnessId: 'pi' })
-    await gateway.get('demo')
-    await gateway.revisions('demo')
-    await gateway.preview('demo', 1, 'SKILL.md')
-    await gateway.diff('demo', 1, 2)
-    const opened = await gateway.importBegin([{ path: 'SKILL.md', bytes: 2, sha256: 'sha256:x' }], 2)
-    await gateway.importChunk(opened.importId, 0, new Uint8Array([1, 2]), 'sha256:x')
-    await gateway.importPreview(opened.importId, { type: 'local-transfer', origin: 'desktop:picker' })
-    await gateway.importCommit(opened.importId, {
-      assetId: null, originScope: 'public', originOwner: null, operationKey: 'op', expectedVersion: 0,
-    })
-    await gateway.importCancel(opened.importId)
-    await gateway.sources()
-    await gateway.checkUpdate('demo')
-    await gateway.approveRevision('demo', 2, 'op')
-    await gateway.assignmentsList({ layer: { kind: 'user-global', scopeId: null, harnessId: null } })
-    await gateway.assignmentsUpsert(
-      { assetId: 'demo', layer: { kind: 'user-global', scopeId: null, harnessId: null }, decision: 'enable', revision: 1 },
-      { expectedVersion: 7, operationKey: 'op' },
-    )
-    await gateway.assignmentsRemove('demo', { kind: 'user-global', scopeId: null, harnessId: null }, { expectedVersion: 7, operationKey: 'op' })
-    await gateway.resolve({ projectId: null, harnessId: null })
-    await gateway.previewEffective({ projectId: null, harnessId: null }, [])
-    await gateway.discoverNative({ harnessId: 'pi', runtimeVersion: '1', projectId: null })
-    await gateway.invokeDescriptor({ projectId: null, harnessId: null }, 'demo')
-
-    expect(sent.map(call => call.method)).toEqual([...SKILLS_WIRE_METHODS])
-    // The closed set is the contract: no call left the family, and every family
-    // member is reachable from the gateway.
-    expect(sent.every(call => (SKILLS_WIRE_METHODS as readonly string[]).includes(call.method))).toBe(true)
+    expect((await gateway.catalogue())[0]).toMatchObject({ nativeName: 'demo', latestInstalledRevision: 2, approvedRevision: 1, updateCandidateRevision: 2 })
+    expect((await gateway.get('demo')).nativeName).toBe('demo')
+    expect((await gateway.revisions('demo')).map(item => item.approved)).toEqual([true, false])
+    expect(sent[0]).toEqual({ method: 'skills.list', params: {} })
+    expect(await gateway.diff('demo', 1, 2)).toMatchObject({ changed: ['SKILL.md'], hunks: [] })
   })
-
-  it('never speaks the legacy assets.* vocabulary, including the unwired facet call', async () => {
-    const { wire, sent } = spyWire(method => envelope(method))
+  it('uses source ownership for target selection without sending nonexistent target params to skills.list', async () => {
+    const { wire, sent } = spyWire(method => method === 'skills.list'
+      ? { items: [asset, { ...asset, assetId: 'private', source: 'project:other|local:import' }] } : envelope(method))
+    expect((await createSkillsGateway(wire).list({ projectId: 'project', harnessId: 'pi' })).map(item => item.assetId)).toEqual(['demo'])
+    expect(sent[0].params).toEqual({})
+  })
+  it('sends flat assignment params and retains each row CAS token; any-harness reads exclude brand rows', async () => {
+    const { wire, sent } = spyWire()
     const gateway = createSkillsGateway(wire)
-    await gateway.catalogue()
-    await gateway.assignmentsList({ layer: { kind: 'project', scopeId: 'ordessa', harnessId: 'pi' } })
-    await gateway.resolve({ projectId: 'ordessa', harnessId: 'pi' })
-    expect(sent.map(call => call.method).filter(method => method.startsWith('assets.'))).toEqual([])
-    // The defect this replaces: the legacy adapter called `assets.profileFacets`,
-    // which no backend published, and rendered a profile surface from nothing.
-    expect(sent.map(call => call.method)).not.toContain('assets.profileFacets')
-    // Project identity travels as the authoritative Workspace id only.
-    expect(sent[1].params).toEqual({ layer: { kind: 'project', scopeId: 'ordessa', harnessId: 'pi' } })
+    expect((await gateway.assignmentsList({ layer })).rows).toHaveLength(1)
+    const draft = { assetId: 'demo', layer, decision: 'enable' as const, revision: 1 }
+    expect(await gateway.assignmentsUpsert(draft, { expectedVersion: 3, operationKey: 'op' })).toMatchObject({ kind: 'applied', assignmentRevision: 4 })
+    expect(sent[1]).toEqual({ method: 'skills.assignmentsUpsert', params: { scopeKind: 'user_global', scopeId: null, harnessId: null, assetId: 'demo', decision: 'enable', revision: 1, expectedVersion: 3, operationKey: 'op' } })
+    await gateway.assignmentsRemove('demo', layer, { expectedVersion: 3, operationKey: 'remove' })
+    expect(sent[2].params).toMatchObject({ assetId: 'demo', scopeKind: 'user_global', expectedVersion: 3 })
   })
-
-  it('an empty wire answer is a refusal, not an empty list', async () => {
-    const { wire } = spyWire(() => null)
-    await expect(createSkillsGateway(wire).catalogue()).rejects.toThrow('empty wire response')
-  })
-
-  it('ships bytes as base64 and only ever reads back a bounded preview', async () => {
-    const { wire, sent } = spyWire(method => method === 'skills.preview'
-      ? { preview: { path: 'scripts/run.sh', text: null, script: true, truncated: false } }
-      : {})
+  it('carries selected, excluded and absent resolution facts and diagnostics with flat targets', async () => {
+    const { wire, sent } = spyWire()
     const gateway = createSkillsGateway(wire)
-    await gateway.importChunk('import_1', 0, new Uint8Array([0x61, 0x62, 0x63]), 'sha256:y')
-    expect(sent[0].params.payload).toBe('YWJj')
-    const preview = await gateway.preview('demo', 1, 'scripts/run.sh')
-    // A script body never crosses the wire, so no view can render it.
-    expect(preview).toEqual({ path: 'scripts/run.sh', text: null, script: true, truncated: false })
+    const view = await gateway.resolve(target)
+    expect(view.resolved[0]).toMatchObject({ evidence: 'selected', proofs: ['assignment_decision'], diagnostics: [{ code: 'policy_unknown', message: 'policy unavailable', assetId: null }] })
+    expect(view.resolved[1].excludedBy?.layer).toBe('project')
+    expect(view.resolved[2].excludedBy).toBeNull()
+    expect(sent[0].params).toEqual(target)
+    await gateway.previewEffective(target, [])
+    expect(sent[1].method).toBe('skills.previewEffective')
   })
-
-  it('a missing invoke descriptor is browse-only, not an error and not a fake route', async () => {
-    const { wire } = spyWire(() => ({}))
-    expect(await createSkillsGateway(wire).invokeDescriptor({ projectId: null, harnessId: null }, 'demo')).toBeNull()
+  it('aligns the bounded transfer and commit DTOs and never exposes received script bodies', async () => {
+    const { wire, sent } = spyWire()
+    const gateway = createSkillsGateway(wire)
+    expect(await gateway.importBegin([{ path: 'SKILL.md', bytes: 2, sha256: 'sha256:x' }], 2)).toMatchObject({ importId: 'import_1' })
+    await gateway.importChunk('import_1', 0, new Uint8Array([97, 98]), 'sha256:x')
+    expect(sent[1].params).toEqual({ importId: 'import_1', chunkIndex: 0, payloadBase64: 'YWI=', sha256: 'sha256:x' })
+    await gateway.importPreview('import_1', { type: 'local-transfer', origin: 'desktop:picker' })
+    expect(sent[2].params).toEqual({ importId: 'import_1', source: { kind: 'local' } })
+    expect(await gateway.importCommit('import_1', options)).toEqual({ assetId: 'new-skill', revision: 1, effect: 'stored', treeDigest: 'sha256:x' })
+    expect(sent[3].params).toEqual({ importId: 'import_1', assetId: 'new-skill', revision: 1 })
+    await gateway.importCancel('import_1')
+    expect(await gateway.preview('demo', 1, 'scripts/run.sh')).toEqual({ path: 'scripts/run.sh', text: null, script: true, truncated: false })
+    expect(await gateway.approveRevision('demo', 2, 'op')).toMatchObject({ approvedRevision: 2, kind: 'applied' })
+    expect(sent.at(-1)?.params).toEqual({ assetId: 'demo', revision: 2 })
+  })
+  it('refuses unsupported source mapping, guarded update, private import and layer draft preview without sending fake methods', async () => {
+    const { wire, sent } = spyWire()
+    const gateway = createSkillsGateway(wire)
+    await expect(gateway.sources()).rejects.toThrow('SOURCES_UNAVAILABLE')
+    await expect(gateway.checkUpdate('demo')).rejects.toThrow('SOURCE_ID_UNAVAILABLE')
+    await expect(gateway.importCommit('import_1', { ...options, originScope: 'project', originOwner: 'project' })).rejects.toThrow('IMPORT_OWNERSHIP_UNAVAILABLE')
+    await expect(gateway.importCommit('import_1', { ...options, assetId: 'demo', expectedVersion: 2 })).rejects.toThrow('IMPORT_CAS_UNAVAILABLE')
+    await expect(gateway.previewEffective(target, [{ assetId: 'demo', layer, decision: 'inherit', revision: null }])).rejects.toThrow('DRAFT_PREVIEW_UNAVAILABLE')
+    expect(sent).toEqual([])
+  })
+  it('propagates typed failures unchanged and only treats explicit browse-only evidence as no invocation route', async () => {
+    const error = { code: 'ASSIGNMENT_VERSION_CONFLICT', message: 'version stale' }
+    const failure: WireCaller = { async call() { throw error } }
+    await expect(createSkillsGateway(failure).assignmentsUpsert({ assetId: 'demo', layer, decision: 'disable', revision: null }, { expectedVersion: 3, operationKey: 'op' })).rejects.toBe(error)
+    const { wire, sent } = spyWire()
+    const gateway = createSkillsGateway(wire)
+    await expect(gateway.discoverNative({ harnessId: 'pi', runtimeVersion: '1', projectId: null })).rejects.toThrow('NATIVE_TARGET_ROOT_UNAVAILABLE')
+    expect(await gateway.invokeDescriptor({ projectId: null, harnessId: 'pi' }, 'demo')).toBeNull()
+    expect(sent.at(-1)?.params).toEqual({ harnessId: 'pi' })
+    await expect(createSkillsGateway(spyWire(() => ({})).wire).invokeDescriptor({ projectId: null, harnessId: 'pi' }, 'demo')).rejects.toThrow('INVOKE_DESCRIPTOR_UNKNOWN')
+    await expect(createSkillsGateway(spyWire(() => null).wire).catalogue()).rejects.toThrow('empty wire response')
+    await expect(createSkillsGateway(spyWire(() => ({})).wire).catalogue()).rejects.toThrow('INVALID_WIRE_RESPONSE')
   })
 })
 
 describe('import digest declaration', () => {
-  it('matches the platform hash for the vectors a drift check compares', () => {
-    const encode = (text: string) => new TextEncoder().encode(text)
-    expect(sha256Hex(encode(''))).toBe('sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
-    expect(sha256Hex(encode('abc'))).toBe('sha256:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad')
-    // A 55-byte message ends exactly at the length field boundary; 64 needs a
-    // whole extra block. Both are where an off-by-one padding shows up.
-    expect(sha256Hex(encode('a'.repeat(55)))).toBe('sha256:' + platformDigest('a'.repeat(55)))
-    expect(sha256Hex(encode('b'.repeat(64)))).toBe('sha256:' + platformDigest('b'.repeat(64)))
+  it('matches the platform hash across empty, short and padding-boundary vectors', () => {
+    for (const input of ['', 'abc', 'a'.repeat(55), 'b'.repeat(64)]) {
+      expect(sha256Hex(new TextEncoder().encode(input))).toBe('sha256:' + createHash('sha256').update(input).digest('hex'))
+    }
   })
 })
-
-function platformDigest(text: string): string {
-  return createHash('sha256').update(text).digest('hex')
-}
-
-/** The envelope each published method answers with. */
-function envelope(method: string): unknown {
-  switch (method) {
-    case 'skills.catalogue': case 'skills.list': return { skills: [] }
-    case 'skills.get': return { skill: {} }
-    case 'skills.revisions': return { revisions: [] }
-    case 'skills.preview': return { preview: { path: 'SKILL.md', text: '', script: false, truncated: false } }
-    case 'skills.diff': return { diff: { assetId: 'demo', fromRevision: 1, toRevision: 2, added: [], removed: [], changed: [], hunks: [] } }
-    case 'skills.import.begin': return { import: { importId: 'import_1' } }
-    case 'skills.import.chunk': case 'skills.import.cancel': return {}
-    case 'skills.import.preview': return { preview: { name: 'demo', description: '', metadata: {}, files: [], scripts: [], treeDigest: 'sha256:x', warnings: [] } }
-    case 'skills.import.commit': return { commit: { effect: 'stored', assetId: 'demo', revision: 2, treeDigest: 'sha256:x' } }
-    case 'skills.sources': return { sources: [] }
-    case 'skills.checkUpdate': return { source: { assetId: 'demo', kind: 'git', reference: 'x', lastChecked: null, candidateRevision: null, archived: false } }
-    case 'skills.approveRevision': return { kind: 'applied', rows: [], assignmentRevision: 8, approvedRevision: 2 }
-    case 'skills.assignments.list': return { assignments: { layer: { kind: 'user-global', scopeId: null, harnessId: null }, rows: [], assignmentRevision: 7 } }
-    case 'skills.assignments.upsert': case 'skills.assignments.remove': return { write: { kind: 'applied', rows: [], assignmentRevision: 8 } }
-    case 'skills.resolve': case 'skills.previewEffective': return { effective: { target: {}, assignmentRevision: 7, resolved: [], refusals: [] } }
-    case 'skills.discoverNative': return { discovered: [] }
-    case 'skills.invokeDescriptor': return { descriptor: { kind: 'invoke', revision: 1 } }
-    default: return undefined
-  }
-}
-
-/** The fake used by every other test must satisfy the same shape the real
- * gateway does: no method may be missing, so an unwired call can never be
- * mistaken for an empty answer. */
 describe('fake gateway completeness', () => {
-  it('implements every member of the family the views call', () => {
+  it('implements every member of the view gateway', () => {
     const { gateway } = fakeSkillsGateway()
     expect(Object.keys(gateway).sort()).toEqual([
       'approveRevision', 'assignmentsList', 'assignmentsRemove', 'assignmentsUpsert', 'catalogue', 'checkUpdate',

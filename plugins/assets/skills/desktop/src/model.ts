@@ -334,7 +334,9 @@ export function createSkillsModel(gateway: SkillsGateway, workspaces: WorkspaceL
     },
 
     async importPicked(files, origin, owner) {
-      const declared = await Promise.all([...files].map(async file =>
+      // Chunk indices refer to declaration order, not an independent sort.
+      const ordered = [...files].sort((a, b) => a.path.localeCompare(b.path))
+      const declared = await Promise.all(ordered.map(async file =>
         ({ path: file.path, bytes: file.bytes.byteLength, sha256: sha256Hex(file.bytes) })))
       const total = declared.reduce((sum, file) => sum + file.bytes, 0)
       const byPath = new Map(declared.map(entry => [entry.path, entry]))
@@ -347,7 +349,6 @@ export function createSkillsModel(gateway: SkillsGateway, workspaces: WorkspaceL
       }
       const importId = opened.importId
       patch({ importPhase: { kind: 'transferring', importId, sent: 0, total: declared.length } })
-      const ordered = [...files].sort((a, b) => a.path < b.path ? -1 : 1)
       try {
         for (let index = 0; index < ordered.length; index++) {
           await gateway.importChunk(importId, index, ordered[index].bytes, byPath.get(ordered[index].path)!.sha256)
@@ -444,9 +445,11 @@ export function createSkillsModel(gateway: SkillsGateway, workspaces: WorkspaceL
         return
       }
       patchLayer(key, { saving: true, conflict: null, error: null })
-      let expectedVersion = state.assignmentRevision
+      let expectedVersion = 0
       try {
         for (const entry of entries) {
+          // Backend CAS tokens belong to individual stored rows, not layers.
+          expectedVersion = state.storedRows.find(row => row.assetId === entry.draft.assetId)?.rowVersion ?? 0
           const write: WriteResult = entry.draft.decision === 'inherit'
             ? await gateway.assignmentsRemove(entry.draft.assetId, layerOf(state), { expectedVersion, operationKey: entry.operationKey })
             : await gateway.assignmentsUpsert(entry.draft, { expectedVersion, operationKey: entry.operationKey })
@@ -456,7 +459,6 @@ export function createSkillsModel(gateway: SkillsGateway, workspaces: WorkspaceL
             patchLayer(key, { saving: false, conflict: { message: write.message, serverRevision: write.serverRevision } })
             return
           }
-          expectedVersion = write.assignmentRevision
         }
         patchLayer(key, { saving: false, draft: {}, conflict: null })
         await refreshLayer(key)
