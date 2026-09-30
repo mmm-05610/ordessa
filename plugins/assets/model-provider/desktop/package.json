@@ -8,5 +8,9 @@
   },
   "scripts": {
     "test": "vitest run --maxWorkers=1"
+  },
+  "dependencies": {
+    "@ordessa/plugin-profile-api": "*",
+    "@ordessa/ui-components": "*"
   }
 }

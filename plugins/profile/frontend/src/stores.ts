@@ -128,6 +128,10 @@ export class ProfileDraftStore {
     this.dirty = true
   }
 
+  discard(): void {
+    this.patches = []; this.dirty = false; this.saveError = null; this.lastConflictRemote = null
+  }
+
   async save(operationKey: string): Promise<SaveOutcome> {
     if (!this.dirty) return { ok: true, revision: this.profile.currentRevision }
     try {

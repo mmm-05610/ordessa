@@ -21,7 +21,8 @@
  ],
  "config": {
   "ordessa.ui-components": [
-   {"componentId": "ordessa.profile.picker", "major": 1, "providerId": "ordessa.profile-chat"}
+   {"componentId": "ordessa.profile.picker", "major": 1, "providerId": "ordessa.profile-chat"},
+   {"componentId": "ordessa.profile.editor:assets.model-provider", "major": 1, "providerId": "ordessa.model-provider"}
   ]
  }
 }

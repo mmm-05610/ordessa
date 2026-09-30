@@ -2,4 +2,5 @@
 export * from './contract'
 export * from './service'
 export * from './contributions'
+export * from './facet-editor-key'
 export { ProfileServiceToken } from './token'
