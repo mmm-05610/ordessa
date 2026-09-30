@@ -10,6 +10,8 @@ against a carrier whose ``__module__`` layout it was not compiled against
 (see :func:`carrier_is_available`).
 
 Honest boundaries kept intact:
+- Explicit backend-composed owner-plan mode consumes Harness's prepared plan
+  directly, without a Permissions plugin or external approval provider.
 - A missing host submission permit is a *retriable refusal before apply*
   (journal ``rejected``), never a fake success and never an ``unknown``
   that would misreport a port crash.
@@ -84,6 +86,7 @@ class HarnessApiConfigPort(HarnessConfigPort):
         revision_provider: Callable[[SessionRef], str] | None = None,
         target_resolver: Callable[[SessionRef], ApplicationTarget] | None = None,
         evidence_kind: str = "harness-api-confirmed",
+        owner_application: bool = False,
     ) -> None:
         if not _CARRIER_IMPORT_OK:
             raise ProfileError(
@@ -91,7 +94,10 @@ class HarnessApiConfigPort(HarnessConfigPort):
                 "the ordessa_harness_api carrier package is not installed",
                 status=409,
             )
+        if type(owner_application) is not bool or (owner_application and permit_provider is not None):
+            raise ValueError("owner-plan application does not consume an external permit provider")
         self._service = service
+        self._owner_application = owner_application
         self._permit_provider = permit_provider
         self._schema_version_of = schema_version_of or (lambda facet_id: "1")
         # The before-revision is server-owned: the host reads it from its own
@@ -216,13 +222,20 @@ class HarnessApiConfigPort(HarnessConfigPort):
                 "the carrier refused the plan; nothing to apply",
                 status=409,
             )
-        if self._permit_provider is None:
-            raise PermitUnavailable(
-                "no host submission-permit provider is wired into the port")
-        permit = self._permit_provider(plan.session_ref, plan_id)
-        if not permit:
-            raise PermitUnavailable("the host refused to mint a submission permit")
-        outcome: ApplicationResult = self._service.apply(plan_id, plan.operation_key, permit)
+        if self._owner_application:
+            apply_prepared = getattr(self._service, "apply_prepared", None)
+            if not callable(apply_prepared):
+                raise ProfileError("APPLICATION_PORT_ABSENT",
+                                   "Harness owner-plan application is not available", status=409)
+            outcome: ApplicationResult = apply_prepared(plan_id, plan.operation_key)
+        else:
+            if self._permit_provider is None:
+                raise PermitUnavailable(
+                    "no host submission-permit provider is wired into the port")
+            permit = self._permit_provider(plan.session_ref, plan_id)
+            if not permit:
+                raise PermitUnavailable("the host refused to mint a submission permit")
+            outcome = self._service.apply(plan_id, plan.operation_key, permit)
         if isinstance(outcome, Confirmed):
             self._revision[plan.session_ref.session_uid] = outcome.applied_revision
             receipt = AppliedReceipt(

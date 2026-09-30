@@ -237,5 +237,18 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 新增可复跑 `products/server/scripts/probe-installed-pi-profile.py`：由真实 `nativeServerPlan` 校验系统资产，经实际产品 composition、wire 项目/通道建立与真实 access-entry 启动两个同项目 Pi 实例。真实 ledger owners/execution 各两个、实例目录各自私有；A 通过原生 setter 修改推理选项后，独立 query 确认 A 已改变且 B 全部配置不变；释放 A 后 B 仍正常。最终全部通道 OS 确认释放、runtime.stop，临时根清理。session/new=2、prompt=0、Profile application confirmed=false，exit 0。探针只处理自己建立的实例，不触碰用户服务。首次基本路线与补强隔离路线均通过。
 - 固定待办第 2 项现可勾选；其余 5 项不变。没有把隔离/原生 setter 通过登记成生产 Profile receipt、Skills 应用或 Codex/Claude 切换通过。
 - 确认中等规模接缝缺失，已按用户要求提出讨论而非默认授权：Profile wire 目前只声明管理/目录/preview，没有生产 session 注册、select/apply；C4 的 PermitVerifier 仅协议/受控测试，现有 Permissions ACP authorizer 面向消息/工具，不能直接充当配置计划授权。模型 session-local 编译还产生 SetField，需正确变成该原生 action，不能拿文件物化伪装 live 应用。
-- 建议裁定：配置计划授权归 Permissions 插件，产品模块只组合真实 canonical owner、Profile 配置端口、模型解析器、C4 与权限提供者；不在 product 私造第二套 default-allow 权限。普通 provider/model 配置以已认证用户的显式选择和提交为意图，不新增审批弹窗；涉及权限扩张仍受平台上限约束，绝不由 Profile 选择自动赋权。这个新配置授权接缝尚未实现，待用户确认；无需改 Server/Pacthold/前端 host。
-- 若按建议执行，后续有序切片为配置授权→canonical 注册/生命周期→模型 action 映射及独立观察→Chat 首发 session/new 后、prompt 前和后续 submit 应用；凭据/provider restart-resume/Skills 保持各自独立验收，未知或不支持仍明确拒绝，不降低总验收标准。当前暂停在这个设计裁定处，不声称整批完成。
+- 上轮提出将配置计划授权交给 Permissions 的建议已撤回：用户明确普通配置应用只涉及 Profile 与 Harness。权限配置项才消费对应权限规则，不能把普通模型应用等同工具审批；这个误判不是用户设计缺口。
+- 后续顺序按最新裁定改为 Harness 自有计划应用→canonical 注册/生命周期→模型 action 映射及独立观察→Chat 首发 session/new 后、prompt 前和后续 submit 应用；凭据/provider restart-resume/Skills 保持各自独立验收，未知或不支持仍明确拒绝，不降低总验收标准。需要影响产品语义/安全边界的真正决策仍及时问，不以怕询问为由继续错误实现。
+
+### 纠正多余审批依赖，继续 Profile→Harness（2026-09-30）
+
+- 已实现显式的 Harness owner-plan 应用路径，生产组合可选，不从 wire 接收模式开关；直接应用该服务自己生成的计划，不依赖 Permissions 或产品层签发凭证。原外部 permit 接口保留原拒绝行为与既有调用兼容，不自动切换模式，也不允许通过新入口绕过已有外部模式。
+- 新路径仍保留全部 adapter 身份/字段范围、会话 target/generation、版本/摘要、expiry、journal 先落账、幂等 replay、native receipt、独立 readback/Match 检查；“无外部凭证”不等于任意原生动作默认放行。配置能力范围由 Harness 的已注册适配器和精确 action grant 确定，不授予模型工具权限。
+- 先补七条 Harness 反例，现状全部红，修复后 action 全文件 45/45；Profile 对真实 Harness service 的额外消费反例先红后绿，连同原 carrier/真实服务门禁 28/28。证明 Profile 配置应用可在没有外部 permit provider 的情况下获得真实服务的确认结果；这里的 native runtime 仍受控，未冒充产品 canonical 绑定或真实 Pi Profile 应用已完成。
+- 当前继续 canonical/产品组合与模型 live-action 接线，固定待办第 3–7 项仍未完成；main 不动、不发布、不调用真实模型。
+- 主代理追加复跑：Profile 全套 186/186、Harness service/action/journal/owner/native readback/executor 定向 134/134、产品 canonical 组件与原装配回归 24/24，均 exit 0。Profile 存储新增独立 native_session_key（旧调用及旧请求幂等形状保留），拒绝新 UID 覆盖既有存储地址；三个身份反例先红后绿，不迁移或重写用户历史数据。
+- 产品 `ProfileNativeSessions` 组件从已确认 registry owner 生成 UUID canonical UID，Profile 用该 UID 存储，native ID 只作原生路由；相同 native ID 的两个通道互不覆盖。旧 owner 替换/结束拒绝，重复注册原 owner 返回原 UID；不是 resume API，不猜测历史会话身份，也不生成 applied receipt。尚未作为默认产品 wire 注册。
+- 增强真实 Pi 产品探针再次 exit 0：两实例真实 ledger、canonical 组件注册到真实 Profile SQLite、UID 与原生 owner/target 一致、修改 A 不改 B、释放 A 后 B 存活；Profile receipt 表保持 0。输出明确 productionProfileWire=false、profileApplicationConfirmed=false。临时 realm/本次随机 server incarnation 为探针组合事实，不冒充最终生产身份管理。
+- 一个有界子代理只处理 ModelProvider adapters 的 Pi live-action 映射与包内反例；若现有 AdapterContext 不支持真实动作/模型选项事实，须报告接口缺口，不猜 provider/model 字符串、不擅扩公共契约。主代理继续产品接线，子代理不做 Git、不改账本、不再分派。
+- 子代理已按要求停在确证的接口缺口，零代码/测试/Git 写入：公共 AdapterContext 只有 targets/installation/entry/scope/capability_evidence_ref；已声明动作存在于 RuntimeSnapshot.authority.actions，独立原生选项存在于 ProfileSessionOwner.config_options，但两者未通过合法 C2 配置上下文交给业务适配器。不能直接把模型存储中的 ID 猜成原生 option value，不能靠旁路访问 Harness 实现私有对象。
+- 待讨论的新设计项（与撤回的 Permissions 建议不同）：建议补 Harness 插件族自身 `plugins/harness/api` 的配置运行证据接口，由 Harness 在独立查询后提供已声明动作与精确原生选项/业务标识映射给注册的配置适配器，绑定当前 owner/generation；不是 UI 提供事实、不把业务判断搬到 host，不扩 Server/Pacthold/desktop-platform。缺证据/过期/不支持均拒绝；旧上下文仍保留既有文件配置路径，不自动升成 live。需要先确定此公共接口再补三品牌适配与生产 C4 runtime，当前不擅改该契约、不用 ad-hoc 字典夹带或猜测字符串绕过缺口。

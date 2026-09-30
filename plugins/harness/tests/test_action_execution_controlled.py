@@ -170,6 +170,54 @@ def test_action_confirmed_only_after_reserved_manifest_receipt_independent_readb
     assert executor.effects == 1
 
 
+def test_owner_plan_application_needs_no_external_permit_but_keeps_receipt_and_replay(rig):
+    _, _, runtime, executor, permit, _, args = rig
+    service = ConfigurationApplicationService(**{**args, "permits": None, "owner_application": True})
+    plan = service.plan(TARGET, (FRAGMENT,), "before-1")
+    result = service.apply_prepared(plan.plan_id, "owner-operation")
+    assert result.kind == "confirmed" and executor.effects == 1 and runtime.reads == 1
+    assert permit.calls == 0
+    assert service.apply_prepared(plan.plan_id, "owner-operation") == result
+    assert executor.effects == 1
+
+
+def test_legacy_external_permit_mode_cannot_be_bypassed_via_owner_entry(rig):
+    service, _, _, executor, permit, _, _ = rig
+    plan = service.plan(TARGET, (FRAGMENT,), "before-1")
+    permit.allowed = False
+    result = service.apply_prepared(plan.plan_id, "owner-operation")
+    assert result.kind == "refused" and executor.effects == 0
+    assert service.apply(plan.plan_id, "legacy-operation", "fixture-permit").kind == "refused"
+
+
+@pytest.mark.parametrize("change", ["missing", "expired", "revision", "owner"])
+def test_owner_plan_application_still_refuses_stale_or_unowned_plans(rig, change):
+    from datetime import timedelta
+    service, _, runtime, executor, permit, _, args = rig
+    service = ConfigurationApplicationService(**{**args, "permits": None, "owner_application": True})
+    plan = service.plan(TARGET, (FRAGMENT,), "before-1")
+    plan_id = plan.plan_id
+    if change == "missing":
+        plan_id = "unissued-plan"
+    elif change == "expired":
+        now = service.clock()
+        service.clock = lambda: now + timedelta(minutes=6)
+    elif change == "revision":
+        capture = runtime.capture
+        runtime.capture = lambda target: replace(capture(target), before_revision="changed")
+    else:
+        service = ConfigurationApplicationService(**{**args, "principal": "other-owner",
+            "permits": None, "owner_application": True})
+    assert service.apply_prepared(plan_id, "owner-operation").kind == "refused"
+    assert executor.effects == 0 and permit.calls == 0
+
+
+def test_owner_application_cannot_be_combined_with_an_external_approval_authority(rig):
+    *_, args = rig
+    with pytest.raises(ValueError):
+        ConfigurationApplicationService(**{**args, "owner_application": True})
+
+
 @pytest.mark.parametrize("change", ["executor", "grants", "target", "owner", "token", "facet", "item", "contribution", "action", "schema"])
 def test_no_default_action_or_nonexact_grant_cannot_plan(rig, change):
     service, adapter, runtime, executor, permit, grant, args = rig

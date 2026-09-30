@@ -9,8 +9,11 @@ from pathlib import Path
 import queue
 import subprocess
 import tempfile
+from uuid import uuid4
 
 from ordessa_server_product.composition import create_composition
+from ordessa_server_product.profile_sessions import ProfileNativeSessions
+from ordessa_harness.server_acp.profile_owner import ProfileSessionOwner
 
 
 def probe():
@@ -47,6 +50,12 @@ def probe():
                 "environment": {"kind": "local", "host": None, "user": None},
                 "path": str(private / "project")})["workspace"]["id"]
             registry = runtime.plugin_host.provided_port("acp.channels")
+            profile_core = runtime.plugin_host.provided_port("profile.core")
+            profile = profile_core.profiles.create("probe-profile", harness_id="pi", display_name="Probe")
+            owners = ProfileSessionOwner(registry, server_id="probe-incarnation-" + uuid4().hex)
+            canonical_sessions = ProfileNativeSessions(core=profile_core, channels=registry,
+                owners=owners, realm="probe-data-realm")
+            refs = []
             for scope in ("installed-session-a", "installed-session-b"):
                 binding = runtime.wire.dispatch("acp.channel.open", {
                     "harnessId": "pi", "projectId": workspace, "sessionScopeId": scope})
@@ -73,8 +82,17 @@ def probe():
                 assert observed.busy is False and observed.config_options
                 observations.append(observed)
                 requests.append(request)
+                registered = canonical_sessions.register(connection_id=binding["connectionId"],
+                    native_session_id=native, profile_id=profile["profile_id"])
+                assert registered.snapshot.owner is observed.owner
+                assert registered.snapshot.target.session_id == registered.session_ref.session_uid
+                refs.append(registered.session_ref)
             assert len({row["connectionId"] for row in opened}) == 2
             assert len({row["executionId"] for row in opened}) == 2
+            assert len({ref.session_uid for ref in refs}) == 2
+            with profile_core.db.read() as conn:
+                assert conn.execute("SELECT COUNT(*) FROM profile_sessions").fetchone()[0] == 2
+                assert conn.execute("SELECT COUNT(*) FROM profile_applied_receipts").fetchone()[0] == 0
             instances = list((private / "data/harness-instances").iterdir())
             assert len(instances) == 2 and all(item.stat().st_mode & 0o077 == 0 for item in instances)
             thinking = next(option for option in observations[0].config_options if option["id"] == "thinkingLevel")
@@ -92,6 +110,7 @@ def probe():
             assert registry.query_native_configuration(survivor.connection_id, survivor.native_session_id).busy is False
             return {"trustedInstalledProductRoute": True, "independentInstances": 2,
                     "actualLedgerOwners": 2, "sessionNew": 2, "prompt": 0,
+                    "canonicalRegistrationComponent": True, "productionProfileWire": False,
                     "siblingConfigurationUnchanged": True, "siblingSurvivesRelease": True,
                     "profileApplicationConfirmed": False}
         finally:

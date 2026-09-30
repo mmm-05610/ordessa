@@ -1,7 +1,8 @@
 """Controlled C4 configuration service slice over public Harness/Server DTOs.
 
-The carrier, authenticated principal, permit verifier and runtime observer are
-injected. No business implementation or Server host internal is imported.
+The carrier, authenticated principal and runtime observer are injected. The
+owner-plan path needs no external approval provider; the existing explicit
+permit path remains separate. No business or Server host internal is imported.
 Only an operation-bound native owner receipt, verified readback and adapter
 Match can produce Confirmed.
 """
@@ -155,21 +156,28 @@ class ConfigurationApplicationService:
     The host supplies ``carrier.use_contribution``. This first slice supports
     one unambiguous configuration contribution, JSON/content materialization,
     and a runtime whose readback can report exact generation file digests.
-    There is no default permit or native executor.
+    There is no default permit or native executor. Explicit owner-plan mode
+    applies only plans prepared by this exact principal/target-bound service.
     """
 
     def __init__(self, *, principal: str, target: ApplicationTarget, carrier: object, runtime: ControlledRuntime,
-                 permits: PermitVerifier, journal: OperationJournal,
+                 permits: PermitVerifier | None, journal: OperationJournal,
                  clock: Callable[[], datetime] | None = None,
                  action_executor: ActionExecutor | None = None,
-                 action_grants: tuple[ActionGrant, ...] = ()):
-        if not principal or not isinstance(target, ApplicationTarget) or carrier is None or runtime is None or permits is None:
+                 action_grants: tuple[ActionGrant, ...] = (),
+                 owner_application: bool = False):
+        if type(owner_application) is not bool or (owner_application and permits is not None):
+            raise ValueError("owner-plan application and external approval are distinct modes")
+        if not principal or not isinstance(target, ApplicationTarget) or carrier is None or runtime is None or (permits is None and not owner_application):
             raise ValueError("authenticated composition dependencies required")
         self.principal = principal
         self.target = target
         self.carrier = carrier
         self.runtime = runtime
         self.permits = permits
+        # Selected by trusted backend composition, never by a wire parameter.
+        # This is a session-bound configuration owner, not a permissions grant.
+        self._owner_application = owner_application
         self.journal = journal
         self.clock = clock or (lambda: datetime.now(timezone.utc))
         if not isinstance(action_grants, tuple) or any(not isinstance(grant, ActionGrant) for grant in action_grants):
@@ -425,13 +433,28 @@ class ConfigurationApplicationService:
             return _refused(ErrorCode.VERSION_UNVERIFIED, f"runtime capture unavailable: {exc}")
 
     def apply(self, plan_id: str, operation_key: str, submission_permit: str) -> Confirmed | Refused | Unknown:
+        if self._owner_application:
+            return _refused(ErrorCode.AUTHORIZATION_REFUSED, "use the owner-plan application entry")
         # A concurrent retry through this service must observe the first durable
         # result before asking a one-use verifier to spend the same grant again.
         with self._apply_lock:
             return self._apply_locked(plan_id, operation_key, submission_permit)
 
+    def apply_prepared(self, plan_id: str, operation_key: str) -> Confirmed | Refused | Unknown:
+        """In-process owner entry over plans issued by this exact service.
+
+        Authenticated composition binds the principal/target and admitted
+        contributions; callers cannot supply another target or arbitrary
+        actions. All stale-plan checks, journal reservation, native receipt
+        and independent observation remain shared with the legacy entry.
+        """
+        if not self._owner_application:
+            return _refused(ErrorCode.AUTHORIZATION_REFUSED, "owner-plan application is not composed")
+        with self._apply_lock:
+            return self._apply_locked(plan_id, operation_key, None)
+
     def _apply_locked(self, plan_id: str, operation_key: str,
-                      submission_permit: str) -> Confirmed | Refused | Unknown:
+                      submission_permit: str | None) -> Confirmed | Refused | Unknown:
         prepared = self._prepared.get(plan_id)
         if prepared is None:
             return _refused(ErrorCode.STALE_PLAN, "plan unavailable after service restart")
@@ -461,7 +484,7 @@ class ConfigurationApplicationService:
                 # Deterministic failures do not spend an otherwise usable one-use
                 # permit. The durable reservation still precedes every effect.
                 try:
-                    permitted = bool(submission_permit and self.permits.verify(
+                    permitted = self._owner_application or bool(submission_permit and self.permits is not None and self.permits.verify(
                         self.principal, planned.target, planned, operation_key, submission_permit))
                 except Exception:
                     permitted = False

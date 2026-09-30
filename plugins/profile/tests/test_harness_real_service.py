@@ -157,7 +157,7 @@ class Permit:
         return self.allowed and principal == "alice" and permit == "signed:fixture"
 
 
-def make_world(tmp_path, *, permit_allowed=True):
+def make_world(tmp_path, *, permit_allowed=True, owner_application=False):
     """Product carrier + real ConfigurationApplicationService + Profile core."""
     from ordessa_server.bootstrap import build_runtime
     from ordessa_harness.application import (
@@ -175,7 +175,8 @@ def make_world(tmp_path, *, permit_allowed=True):
     target = ApplicationTarget("local", "S", "S", 0)
     service = ConfigurationApplicationService(
         principal="alice", target=target, carrier=host, runtime=runtime,
-        permits=permit, journal=journal)
+        permits=None if owner_application else permit, journal=journal,
+        owner_application=owner_application)
 
     core = make_core(
         tmp_path, providers=(),
@@ -183,7 +184,8 @@ def make_world(tmp_path, *, permit_allowed=True):
         config_port=HarnessApiConfigPort(
             service,
             target_resolver=lambda ref: target,
-            permit_provider=lambda ref, plan_id: "signed:fixture",
+            permit_provider=None if owner_application else lambda ref, plan_id: "signed:fixture",
+            owner_application=owner_application,
             schema_version_of=lambda facet_id: "v1",
             revision_provider=lambda ref: runtime.revision,
         ),
@@ -203,6 +205,19 @@ def make_world(tmp_path, *, permit_allowed=True):
     core.sessions.open_session("ks", session_id="S", harness_id="pi",
                                profile_id=a["profile_id"])
     return core, a, b, runtime, permit, service, product
+
+
+def test_profile_applies_its_harness_plan_without_an_external_permission_provider(tmp_path):
+    core, a, b, runtime, permit, service, product = make_world(tmp_path, owner_application=True)
+    try:
+        core.sessions.select_profile("select-owned", session_id="S", profile_id=b["profile_id"])
+        result = core.sessions.begin_turn("submit-owned", session_id="S")
+        assert result["applied_switch"] is True
+        assert result["receipt"]["evidence_kind"] == "harness-api-confirmed"
+        assert runtime.activate_count == 1
+        assert core.sessions.session_config("S")["evidence"]["journal"]["state"] == "confirmed"
+    finally:
+        product.stop()
 
 
 def test_real_service_confirmed_switch_receipt_and_overlay_clear(tmp_path):

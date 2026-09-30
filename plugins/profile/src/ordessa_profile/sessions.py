@@ -114,7 +114,8 @@ class SessionService:
     # -- US2: selection --------------------------------------------------
     def open_session(self, key: str, *, session_id: str, harness_id: str,
                      profile_id: str, realm: str = "local",
-                     session_uid: str | None = None) -> dict[str, Any]:
+                     session_uid: str | None = None,
+                     native_session_key: str | None = None) -> dict[str, Any]:
         """Register a session binding.
 
         v2 callers pass ``session_uid`` (the canonical stable identity);
@@ -127,6 +128,9 @@ class SessionService:
                 status=404,
             )
         uid = session_uid or session_id
+        if native_session_key is not None and (not isinstance(native_session_key, str)
+                or not native_session_key.strip() or len(native_session_key) > 512):
+            raise ProfileError("PROFILE_VALUE_INVALID", "Invalid native session key", status=422)
         if uid.startswith("legacy:") and uid != session_id:
             raise ProfileError(
                 "PROFILE_VALUE_INVALID",
@@ -135,12 +139,14 @@ class SessionService:
             )
         request = {"session_id": session_id, "harness_id": harness_id,
                    "profile_id": profile_id, "realm": realm, "uid": uid}
+        if native_session_key is not None:
+            request["native_session_key"] = native_session_key
         with self.core.db.transaction() as conn:
             prior = self._idempotent(conn, "sessions.open", key, request)
             if prior:
                 return prior["response"]
             existing = repo.get_session_by_uid(conn, uid)
-            if existing is not None:
+            if existing is not None or repo.get_session(conn, session_id) is not None:
                 raise ProfileError(
                     "PROFILE_VALUE_INVALID",
                     "session already exists", status=422,
@@ -155,7 +161,7 @@ class SessionService:
                 switch_state="settled", pending_profile_id=None,
                 pending_seq=None, blockers=None, timestamp=timestamp,
                 realm=realm, session_uid=uid,
-                native_session_key=session_id,
+                native_session_key=session_id if native_session_key is None else native_session_key,
             )
             session = self._require_session(conn, uid)
             response = self.session_view(session)
