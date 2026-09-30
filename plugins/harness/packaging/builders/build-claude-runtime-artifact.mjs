@@ -39,6 +39,7 @@ import {
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+import { enhanceStaging } from '../native-profile/enhance.mjs'
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..")
 const DEFAULT_SOURCE = path.join(REPO, "packaging", "claude")
@@ -398,7 +399,9 @@ function assertNoForeignAdapters(sourceRoot) {
   }
 }
 
-export function build({ output, source, replace = false, variant = "canonical" }) {
+export function build({ output, source, replace = false, variant = "canonical", profileBridge = false }) {
+  if (typeof profileBridge !== 'boolean' || (profileBridge && variant !== 'canonical'))
+    throw new BuildError('CLAUDE_VARIANT_INVALID', 'Profile enhancement requires canonical Claude')
   if (!["canonical", "legacy-alias"].includes(variant)) {
     throw new BuildError("CLAUDE_VARIANT_INVALID", "unsupported Claude artifact variant")
   }
@@ -459,6 +462,7 @@ export function build({ output, source, replace = false, variant = "canonical" }
   const counters = { files: 0, bytes: 0, skippedFiles: 0, skippedDirectories: 0 }
   try {
     copyTree(staging, selected, sourceRoot, counters)
+    const extension = profileBridge ? enhanceStaging(path.join(staging, path.dirname(ENTRY)), 'claude-code') : undefined
     assertPlainTree(staging)
     const seen = new Set(packages.map((item) => item.path))
     for (const relative of unrelated) {
@@ -476,6 +480,7 @@ export function build({ output, source, replace = false, variant = "canonical" }
       schemaVersion: 1,
       kind: legacy ? "ordessa-claude-legacy-runtime-artifact" : "agentbox-claude-runtime-artifact",
       adapter: { package: ADAPTER_PACKAGE, version, entry: ENTRY },
+      ...(extension ? { extension } : {}),
       packages: packages.map((item) => ({
         path: item.path,
         name: item.name,

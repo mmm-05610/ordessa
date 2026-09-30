@@ -63,6 +63,13 @@ for (const brand of BRANDS) {
       mkdirSync(relocated, { recursive: true })
       const missingDependencyBuilder = path.join(relocated, path.basename(builder))
       copyFileSync(builder, missingDependencyBuilder)
+      // Relocate the builder's JS module closure, but deliberately no Python
+      // source package: this counterexample must reach the digest boundary.
+      if (['codex', 'claude'].includes(brand)) {
+        const support = path.join(relocated, '../native-profile')
+        mkdirSync(support)
+        copyFileSync(path.join(HERE, '../native-profile/enhance.mjs'), path.join(support, 'enhance.mjs'))
+      }
       assert.throws(() => summarize(missingDependencyBuilder, directory, bin), (error) => {
         assert.match(error.stderr.toString(), new RegExp(`${brand.toUpperCase()}_ARTIFACT_DIGEST_UNAVAILABLE`))
         assert.match(error.stderr.toString(), /No module named 'pacthold_runtime_compat'/)

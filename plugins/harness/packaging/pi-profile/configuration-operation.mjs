@@ -22,7 +22,20 @@ function exact(value, keys) {
 
 /** Bounded native evidence only: authorization and C4 confirmation are external. */
 export function configurationOperations({ agent, read, invalidParams,
-  maxOperations = MAX_OPERATIONS, maxLocks = MAX_LOCKS }) {
+  maxOperations = MAX_OPERATIONS, maxLocks = MAX_LOCKS,
+  configIds = ['model', 'thinkingLevel'], evidencePrefix = 'pi-native-operation',
+  assertIdle = sessionId => {
+    const session = agent.live.get(sessionId)
+    if (!session || agent.disposed || session.disposed || session.closing)
+      throw invalidParams('Session is not live')
+    if (session.busy) throw invalidParams('Session operation busy')
+  },
+  setOption = params => agent.setConfigOption({ params }) }) {
+  if (!Array.isArray(configIds) || configIds.length < 1 || configIds.length > 16
+      || configIds.some(id => !text(id, 128)) || new Set(configIds).size !== configIds.length
+      || !/^[a-z][a-z0-9-]{0,63}$/u.test(evidencePrefix)
+      || typeof assertIdle !== 'function' || typeof setOption !== 'function')
+    throw new TypeError('Invalid native operation strategy')
   if (!Number.isInteger(maxOperations) || maxOperations < 1 || maxOperations > MAX_OPERATIONS
       || !Number.isInteger(maxLocks) || maxLocks < 1 || maxLocks > MAX_LOCKS)
     throw new TypeError('Invalid operation capacity')
@@ -64,7 +77,7 @@ export function configurationOperations({ agent, read, invalidParams,
     if ((!exact(input, INPUT_KEYS) && !exact(input, [...INPUT_KEYS, 'actionManifest'])) || !text(input.sessionId, 4096)
         || !text(input.operationId, 128) || !text(input.expectedGeneration, 4096)
         || typeof input.expectedConfigDigest !== 'string' || !/^[0-9a-f]{64}$/u.test(input.expectedConfigDigest)
-        || !['model', 'thinkingLevel'].includes(input.configId) || !text(input.value, 4096))
+        || !configIds.includes(input.configId) || !text(input.value, 4096))
       fail('Expected bounded session model/thinking operation only')
     if (Object.hasOwn(input, 'actionManifest')) validateManifest(input.actionManifest, input)
     return structuredClone(input)
@@ -78,9 +91,7 @@ export function configurationOperations({ agent, read, invalidParams,
     if (!text(sessionId, 4096)) fail('Expected bounded sessionId')
     if (locks.has(sessionId)) fail('Session operation busy')
     if (locks.size >= maxLocks) fail('Session operation capacity exhausted')
-    const session = agent.live.get(sessionId)
-    if (!session || agent.disposed || session.disposed || session.closing) fail('Session is not live')
-    if (session.busy) fail('Session operation busy')
+    assertIdle(sessionId)
     // Acquisition precedes every await; competing requests fail, never queue.
     locks.add(sessionId)
     try { return await work() } finally { locks.delete(sessionId) }
@@ -117,7 +128,7 @@ export function configurationOperations({ agent, read, invalidParams,
       operations.set(input.operationId, operation)
       let upstreamFailed = false
       try {
-        await agent.setConfigOption({ params: { sessionId: input.sessionId, configId: input.configId, value: input.value } })
+        await setOption({ sessionId: input.sessionId, configId: input.configId, value: input.value })
       } catch { upstreamFailed = true }
       try {
         const after = snapshot(input.sessionId)
@@ -129,7 +140,7 @@ export function configurationOperations({ agent, read, invalidParams,
             && observed.length === 1 && operation.observedValue === input.value) {
           operation.state = 'observed'
           operation.phase = 'read-back'
-          operation.evidenceRef = `pi-native-operation:${randomUUID()}`
+          operation.evidenceRef = `${evidencePrefix}:${randomUUID()}`
         } else operation.phase = upstreamFailed ? 'upstream-outcome-unknown' : 'read-back-mismatch'
       } catch { operation.phase = 'read-back-unavailable' }
       return structuredClone(operation)

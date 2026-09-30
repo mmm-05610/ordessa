@@ -328,3 +328,14 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 但这些资产没有 Pi 增强层目前用于 C4 的 `_ordessa/session/configuration` / application operation 回执契约，产品真实 Profile service 仍只组合 Pi。不能因 `providers/set` 返回成功就伪造 Profile confirmed；特别是 Claude `enqueueProviderUpdate` 会捕获个别会话 resume 失败、报告 session lost 后继续，让 provider 调用正常返回。
 - 要完成相同验收标准，需为 Codex/Claude 在 Harness 内增补最小只读会话证据/操作结果层，直接复用已锁 upstream 的 provider/model 操作；会话 lost/readback 不符必须 Unknown/阻断 prompt。增强属于新的第三方适配器资产版本，不就地修改已安装原目录，需新目录 root 安装和完整摘要再验。
 - 这是下一步中等规模变化，按用户“无法快速解决应讨论”的要求提出该路线确认；不以普通 ACK 降低标准，不把上一轮原资产安装授权擅自扩为覆写或新增强资产安装授权。已验证成果已提交 `a6138a494f`，待确认期间不动原系统资产。根 main 未切换，工作树剩余他属截图保留。
+
+### Codex/Claude 配置证据层第一检查点（2026-09-30）
+
+- 用户认可上述路线并要求继续。修改限定 Harness packaging：复用 Pi 的有界操作记录、幂等键、generation/digest fence、锁与独立读回逻辑；仅把 live lookup、原生 setter、选项 ID 和证据前缀参数化，Pi 默认行为保持不变。Codex 读取 upstream sessions Map/createSessionConfigOptions/activePrompts；Claude 读取真实 sessions/configOptions/turnQueue/queryClosed/providerUpdate。generation 随实际对象变更，不从用户请求制造。
+- 新读回投影只包含公共 ACP selector 字段，丢弃任意 `_meta`/header 等附加信息，限制深度、条目与大小；重复 selector 拒绝。ACK 未改变实际状态、实例消失或替换后，操作仍 Unknown，query 不重执行。原生 prompt/config 和 provider/lifecycle 加锁互斥；并不因此声称已经实现 Profile 的 provider 切换。
+- 构建增强采用已安装锁定 upstream 文件的精确 SHA256 + 每个源码锚点恰好一次，保留标准处理器委托，仅加证据请求及边界守卫；源码漂移拒绝。两 builder 的默认构建不启用增强，legacy Claude 禁止增强。增强在新 staging 树内、完整 digest 计算之前完成，不修改 source 或已安装资产。初次构建因 staging 复制的 index.js 本来只读而 EACCES，已仅对新 staging 拷贝暂时开放写位，再由 builder 封只读。
+- 新候选资产 `/tmp/ordessa-native-profile-assets-RZnZZq`：Codex treeDigest `sha256:a41531bbdd64ca7db5fae705305fe28685a6ff100406414442b369640c253fa3`；Claude `sha256:be0eedd365fcf09b5fe265e2380649a5d39a38808141cf842588195dea4b51ee`。只是开发候选，不属于 installed allowlist，不能直接作为可信生产 Profile 资产使用。当前 manifest extension 的实例目录要求尚需接 launch enforcement，未安装、未默认采用。
+- 主代理实跑 Node 定向 **90/90**（native evidence/互斥/漂移 + Pi query/operation/entry + Codex builder + 七品牌 Python digest 边界），exit 0。新增测试与实现同批落地，不冒称全部先红后绿。首次 relocated-builder 反例因缺少新 JS support module 提前失败，已补全 fixture 的 JS closure，但继续故意缺 Python kernel，以保持原门禁两项断言逐字不变；最终该门禁全绿。
+- 真实增强 upstream 进程的无模型注册探针（`native-profile/probe-registration.mjs`）两品牌 initialize 成功，证据请求到达 live reader 并拒绝未创建 session；session/new=0、prompt=0。独立临时 HOME，未读取用户登录，结束清理自身进程组。这是 **registration-only**，不是模型实际切换、Provider resume、Profile receipt 或完整产品验收。候选语法检查通过。
+- 新核查发现：Codex 1.1.14 的 providers/set 仅存 gateway 配置，现有 thread 的 provider 不随 setter ACK 自动变化；新建/resume 才传入 modelProvider/config。Claude 会重建 query，但 resume 丢失仍可能 ACK 成功。下一步必须实现/验证现有会话的明确恢复与实际绑定读回，不能仅靠 providers/list 或 setter 返回值确认。这个恢复边界仍在 Harness 内，不需要 host 或资源业务插件替品牌编排。
+- 固定七项 TODO 不变：第 6 项仍未完成；第 3/5 全资源与全量语义、第 7 完整验收仍未完成。未重跑 Python 全量，此检查点不更新其计数。main、已安装资产、用户服务、截图均不动，不 push、不真实模型调用。
