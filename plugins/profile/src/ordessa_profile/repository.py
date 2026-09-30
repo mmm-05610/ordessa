@@ -148,6 +148,13 @@ def upsert_facet_value(conn: sqlite3.Connection, *, profile_id: str,
     )
 
 
+def delete_facet_value(conn: sqlite3.Connection, *, profile_id: str,
+                       config_revision: int, facet_id: str, item_id: str) -> None:
+    """Clear only the new revision; historical revisions remain immutable."""
+    conn.execute("DELETE FROM profile_facet_values WHERE profile_id=? AND config_revision=? "
+                 "AND facet_id=? AND item_id=?", (profile_id, config_revision, facet_id, item_id))
+
+
 def latest_turn_seq(conn: sqlite3.Connection, session_id: str) -> int:
     row = conn.execute(
         "SELECT MAX(turn_seq) AS s FROM profile_turns WHERE session_id=?",

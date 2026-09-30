@@ -82,6 +82,34 @@ class ProfileServerPlugin:
                                           "displayName": row["display_name"], "archived": False})
             return list(groups.values())
 
+        def save(p):
+            values, unsets = [], []
+            seen = set()
+            patches = p["patches"]
+            if not isinstance(patches, list) or not 1 <= len(patches) <= 256:
+                raise WireError("INVALID_REQUEST", "Profile patches must be a nonempty bounded array")
+            for patch in patches:
+                if not isinstance(patch, dict):
+                    raise WireError("INVALID_REQUEST", "Invalid Profile patch")
+                op = patch.get("op")
+                expected = {"facetId", "itemId", "op"} | ({"value"} if op == "set" else set())
+                if (not isinstance(op, str) or op not in {"set", "unset"} or set(patch) != expected
+                        or any(not isinstance(patch.get(k), str) or not patch[k].strip()
+                               for k in ("facetId", "itemId"))):
+                    raise WireError("INVALID_REQUEST", "Invalid Profile patch")
+                identity = (patch["facetId"], patch["itemId"])
+                if identity in seen:
+                    raise WireError("INVALID_REQUEST", "Duplicate Profile patch")
+                seen.add(identity)
+                item = {"facet_id": identity[0], "item_id": identity[1]}
+                if op == "set":
+                    values.append({**item, "value": patch["value"]})
+                else:
+                    unsets.append(item)
+            return {"profile": core.profiles.set_facet_values(p["operationKey"],
+                profile_id=p["profileId"], expected_version=p["expectedVersion"],
+                values=values, unsets=unsets)}
+
         operations = {
             "configuredHarnesses": ((), (), lambda p: list(getattr(harnesses, "registered", lambda: ())())),
             "listProfiles": ((), ("realm", "includeArchived"), lambda p: core.profiles.list(
@@ -93,6 +121,7 @@ class ProfileServerPlugin:
             "renameProfile": (("operationKey", "profileId", "expectedVersion", "displayName"), (),
                 lambda p: core.profiles.rename(p["operationKey"], profile_id=p["profileId"],
                     expected_version=p["expectedVersion"], display_name=p["displayName"])),
+            "saveProfile": (("operationKey", "profileId", "expectedVersion", "patches"), (), save),
             "archiveProfile": (("operationKey", "profileId", "expectedVersion"), (),
                 lambda p: core.profiles.archive(p["operationKey"], profile_id=p["profileId"], expected_version=p["expectedVersion"])),
             "restoreProfile": (("operationKey", "profileId", "expectedVersion"), (),
@@ -105,7 +134,9 @@ class ProfileServerPlugin:
         def wrap(handler):
             def invoke(params: Mapping[str, Any]):
                 for name, value in params.items():
-                    if name == "includeArchived":
+                    if name == "patches":
+                        valid = True  # save validates the complete structured patch before mutation
+                    elif name == "includeArchived":
                         valid = isinstance(value, bool)
                     elif name == "expectedVersion":
                         valid = type(value) is int and value > 0

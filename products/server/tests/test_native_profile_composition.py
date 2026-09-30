@@ -111,8 +111,10 @@ def test_native_model_choice_profile_value_survives_restart_without_applying(tmp
         core = runtime.plugin_host.provided_port("profile.core")
         profile = core.profiles.create("model-profile-create", realm="local", harness_id="pi", display_name="Model")
         pid = profile["profile_id"]
-        core.profiles.set_facet_values("model-profile-save", profile_id=pid, expected_version=1,
-            values=[{"facet_id": "assets.model-provider", "item_id": "choice", "value": choice}])
+        saved = runtime.wire.dispatch("profiles.v2.saveProfile", {
+            "operationKey": "model-profile-save", "profileId": pid, "expectedVersion": 1,
+            "patches": [{"facetId": "assets.model-provider", "itemId": "choice", "op": "set", "value": choice}]})
+        assert saved["data"]["profile"]["version"] == 2
         with pytest.raises(ProfileError):
             core.profiles.set_facet_values("model-profile-wrong-harness", profile_id=pid,
                 expected_version=core.profiles.get(pid)["version"],

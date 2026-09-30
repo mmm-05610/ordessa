@@ -237,7 +237,8 @@ class ProfileService:
     # -- facet values on a profile (US4 storage side) -----------------
     def set_facet_values(self, key: str, *, profile_id: str,
                          expected_version: int,
-                         values: Sequence[dict[str, Any]]) -> dict[str, Any]:
+                         values: Sequence[dict[str, Any]],
+                         unsets: Sequence[dict[str, str]] = ()) -> dict[str, Any]:
         request = {
             "profile_id": profile_id, "expected_version": expected_version,
             "values": [
@@ -245,6 +246,11 @@ class ProfileService:
                  "value": v["value"]} for v in values
             ],
         }
+        if unsets:
+            request["unsets"] = [dict(item) for item in unsets]
+        identities = [(v["facet_id"], v["item_id"]) for v in (*values, *unsets)]
+        if len(set(identities)) != len(identities):
+            raise ProfileError("FACET_VALUE_INVALID", "Duplicate configuration item", status=422)
         with self.core.db.transaction() as conn:
             prior = self._idempotent(
                 conn, f"profiles.set_facet_values:{profile_id}", key, request,
@@ -297,6 +303,20 @@ class ProfileService:
                     facet_version = provider.facet_version
                 json_dumps(value)  # refuse non-serialisable values early
                 prepared.append((facet_id, item_id, value, facet_version))
+            for item in unsets:
+                facet_id, item_id = item["facet_id"], item["item_id"]
+                provider = self.core.registry.require(facet_id)
+                if self.core._is_v2_provider(provider):
+                    from .contracts import Applicability
+                    known = provider.descriptor().item(item_id) is not None
+                    applicable = provider.applicability({"harness_id": row["harness_id"]}) is not Applicability.UNSUPPORTED
+                else:
+                    known = item_id in provider.item_ids
+                    applicable = provider.applies_to(row["harness_id"])
+                if not known:
+                    raise ProfileError("FACET_VALUE_INVALID", "Unknown configuration item", status=422)
+                if not applicable:
+                    raise ProfileError("FACET_NOT_APPLICABLE", "Configuration item does not apply", status=409)
             new_revision = int(row["current_revision"]) + 1
             timestamp = self.core.timestamp()
             repo.insert_revision(
@@ -315,6 +335,9 @@ class ProfileService:
                     value_json=json_dumps(value), facet_version=facet_version,
                     timestamp=timestamp,
                 )
+            for item in unsets:
+                repo.delete_facet_value(conn, profile_id=profile_id, config_revision=new_revision,
+                    facet_id=item["facet_id"], item_id=item["item_id"])
             updated = self._mutate(
                 conn, profile_id=profile_id, expected_version=expected_version,
                 assignments={}, bump_revision_to=new_revision,

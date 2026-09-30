@@ -141,3 +141,9 @@ Profile Chat 有限入口接线已由主代理复跑 23/23：合法 default fact
 - 相关 native 后端回归 37P/1F；唯一失败 test_native_first_send_completes_with_reviewed_fake_acp_peer 在 a6ba4c4cd3 只读源码快照中独立重跑同因失败（退役 worker-entry 执行链），不登记为全绿、不更改其断言。
 - 真实安装资产＋同一产品 Server＋同一项目同时开出三品牌通道，各自 initialize 成功（Pi ACP 0.5.0、Codex ACP 1.1.14、Claude ACP 0.81.2），connection/execution 标识独立，三者释放均确认。探针 /tmp/ordessa-real-multi-initialize.py，独立 HOME 与品牌配置目录；session/new=0、prompt=0，无登录或模型费用。
 - 最终 build 后完整 Electron 原生产品冒烟 ready=true、Chat/Skills/Sessions 挂载、errors=[]、renderer 无 Node。此项只证明启动与读取，不能替代真实对话、Profile 应用/切换或发行 deb 验收。
+
+### Profile 配置保存接口接通（编辑 UI 与应用仍未完成）
+
+- profiles.v2.saveProfile 接入既有 ProfileServiceClient 的 ItemPatch 契约，不新造业务格式。set/unset 同事务，校验所有条目后写新修订；unset 只清新修订中的值，不删除历史数据。保留既有 set_facet_values 的调用及无清除时的幂等请求形状。
+- 反例先得到 8 红（接口缺席），随后新增非字符串 op 反例；Profile 后端 182/182，产品＋模型 Profile 贡献 51/51。覆盖 malformed/重复 patch、CAS、重复请求、混合有效/非法 patch 全部不落账、清除后历史保留；产品测试用真实 wire 保存模型 choice，stop/start 后验证完整保留。
+- 此接口不改变任何原生 Agent，也不宣告 beginTurnApplication。ConnectedProfileManager 尚未接配置编辑器。原生应用的关键缺口仍为真实 owner/generation、实例配置隔离、action grant 与独立 readback；不能用 set_config_option 的应答伪造已生效证明。

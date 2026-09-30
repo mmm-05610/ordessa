@@ -48,6 +48,47 @@ def test_projection_does_not_rewrite_user_values_or_schema_properties():
         "profileId": "p", "valueSchema": {"some_key": {}}, "value": {"model_id": "unchanged"}}
 
 
+def test_configuration_save_is_atomic_idempotent_and_clear_preserves_history(tmp_path):
+    from conftest import ScriptedProvider
+    plugin, registration, calls = build(tmp_path)
+    plugin.core.register_provider(ScriptedProvider("test.config", ("model", "style")))
+    profile = calls["createProfile"](dict(operationKey="new", realm="local", harnessId="pi", displayName="P"))
+    params = dict(operationKey="save", profileId=profile["profileId"], expectedVersion=1, patches=[
+        dict(facetId="test.config", itemId="model", op="set", value="m1"),
+        dict(facetId="test.config", itemId="style", op="set", value="terse"),
+    ])
+    saved = calls["saveProfile"](params)
+    assert saved["profile"]["version"] == 2
+    assert calls["saveProfile"](params) == saved
+    with pytest.raises(WireError):
+        calls["saveProfile"]({**params, "operationKey": "stale"})
+    calls["saveProfile"](dict(operationKey="clear", profileId=profile["profileId"], expectedVersion=2,
+        patches=[dict(facetId="test.config", itemId="model", op="unset")]))
+    values = plugin.core.profiles.facet_values(profile["profileId"])
+    assert [(v["item_id"], v["value"]) for v in values] == [("style", "terse")]
+    assert len(plugin.core.profiles.facet_values(profile["profileId"], config_revision=2)) == 2
+    with pytest.raises(WireError):
+        calls["saveProfile"](dict(operationKey="invalid", profileId=profile["profileId"], expectedVersion=3,
+            patches=[dict(facetId="test.config", itemId="style", op="set", value="verbose"),
+                     dict(facetId="test.config", itemId="missing", op="unset")]))
+    assert plugin.core.profiles.get(profile["profileId"])["version"] == 3
+    assert plugin.core.profiles.facet_values(profile["profileId"])[0]["value"] == "terse"
+    registration.disposal()
+
+
+@pytest.mark.parametrize("patches", [None, [], [{}],
+    [dict(facetId="test.config", itemId="model", op={})],
+    [dict(facetId="test.config", itemId="model", op="unset", value=None)],
+    [dict(facetId="test.config", itemId="model", op="set")],
+    [dict(facetId="test.config", itemId="model", op="set", value="m1", extra=True)],
+    [dict(facetId="test.config", itemId="model", op="unset")] * 2])
+def test_configuration_save_refuses_malformed_or_duplicate_patches(tmp_path, patches):
+    plugin, registration, calls = build(tmp_path)
+    with pytest.raises(WireError):
+        calls["saveProfile"](dict(operationKey="bad", profileId="missing", expectedVersion=1, patches=patches))
+    registration.disposal()
+
+
 def test_product_registers_management_routes_and_unload_removes_them(tmp_path):
     from ordessa_server.bootstrap import build_runtime
     from ordessa_server.transport.http import create_app
