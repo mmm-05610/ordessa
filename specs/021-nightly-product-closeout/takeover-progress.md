@@ -147,3 +147,14 @@ Profile Chat 有限入口接线已由主代理复跑 23/23：合法 default fact
 - profiles.v2.saveProfile 接入既有 ProfileServiceClient 的 ItemPatch 契约，不新造业务格式。set/unset 同事务，校验所有条目后写新修订；unset 只清新修订中的值，不删除历史数据。保留既有 set_facet_values 的调用及无清除时的幂等请求形状。
 - 反例先得到 8 红（接口缺席），随后新增非字符串 op 反例；Profile 后端 182/182，产品＋模型 Profile 贡献 51/51。覆盖 malformed/重复 patch、CAS、重复请求、混合有效/非法 patch 全部不落账、清除后历史保留；产品测试用真实 wire 保存模型 choice，stop/start 后验证完整保留。
 - 此接口不改变任何原生 Agent，也不宣告 beginTurnApplication。ConnectedProfileManager 尚未接配置编辑器。原生应用的关键缺口仍为真实 owner/generation、实例配置隔离、action grant 与独立 readback；不能用 set_config_option 的应答伪造已生效证明。
+
+### Profile 编辑页与 Pi 独立配置读回（2026-09-30）
+
+- Profile 管理页通过公开 C7 装载配置编辑器，不 import ModelProvider UI。Profile API 提供共享身份 `profileFacetEditorKey(facetId)`，组件 props 包含真实后端描述符、schemaVersion、Profile target/revision、draftGeneration、resolved items 和有界 ItemPatch 回调。消费者与实现者均从产品 API carrier 导入同一 key。旧 ProfileContributions 参考注册表未冒充已接入本路径。
+- ModelProvider 注册 `assets.model-provider` 编辑器，读取自己的本地供应商目录，按 Harness 过滤，provider/model 作为一个完整 choice 原子修改。尚未支持的 schema 只读；保存的失效引用不自动替换。清除/放弃只处理草稿，显式保存才调用 saveProfile；丢回执不自动重试。移除 UI 提供者只隐藏控件、不删除数据。
+- Profile wire DTO 适配实际 Python `items` 描述符与 profile-only resolved item source/revision；不递归改用户配置值，也未声称 session preview 已规范化。Profile 前端 20/20、API 10/10、ModelProvider desktop 10/10、产品 UI 3/3；包内及根 typecheck 通过，18 扩展构建通过。新增反例包括保存同事件双击、异步旧请求返回、加载重试、提供者卸载、未知 schema 只读、丢回执保留草稿。
+- 用户授权先实现与验证 Pi 增强资产，保留现有安装/登录/全局配置。新增 `packaging/pi-profile` 复用锁定 upstream 标准 ACP handlers，仅增加 `_ordessa/session/configuration`。返回 live session 的独立配置读回及对象 generation，拒绝未知/关闭会话与额外输入。启动要求预先分配的私有实例目录，设置 Pi 的配置/会话目录；不复制全局登录。实例隔离不是 sandbox，也不宣称一个实例内多个 session 默认设置互不影响。
+- builder 默认路径/上游入口保持原样，`--profile-bridge` 才加三个审计模块并纳入全树摘要。builder＋query＋入口边界 15/15。真实增强 Pi 无模型探针创建 session、修改推理配置、重新查询、验证独立 settings 写入和模拟全局 sentinel 未变、close 后查询拒绝及进程退出 0。使用明确 synthetic fixture key，零真实凭据、零 prompt；不冒充模型/provider切换验收。
+- 验证资产 `/tmp/ordessa-canonical-assets-ucPlfB/pi-profile-runtime-verified`：15461 entries、64915208 bytes、digest `sha256:f990065957b6920b9a7bfd5f61d7a8c19dd7e230b0f5542c81f35a3f855d5272`，source lock `sha256:8e6a4962ee2befc1a5ed1a8533c0ae7a749cce5e81030f68ca7a643a9daae95d`。仍是 developer asset，未安装系统、未替换旧资产；现有 installed 默认入口不会隐式接受增强入口。
+- 当前沙箱 UID map 为 `1000 0 1`，root 资产显示 nobody，信任校验正确拒绝。改在真实宿主环境复跑既有无模型完整桌面冒烟成功：ready=true、rootMounted=true、Chat/Skills/Sessions、errors=[]、renderer无Node。未放宽 root 信任策略，未修改 `/opt` 权限。
+- 尚未完成：增强资产的显式可信启动路线、ACP canonical owner＋generation 生产绑定、受限 configuration action grant/receipt/readback、Profile next-submit 应用、Codex/Claude provider restart/resume。保存 UI 和 standalone Pi 查询不等于这些生产链路完成，根全量聚合旧红也未据此下账。main 保持原分支且干净，不合并、不 push。
