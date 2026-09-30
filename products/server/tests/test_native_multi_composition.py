@@ -113,6 +113,89 @@ def test_multi_channels_do_not_share_ownership_or_accept_changed_identity(tmp_pa
     assert all(value.terminated == 1 for value in calls)
 
 
+def test_same_project_scopes_have_independent_owners_and_never_revive(tmp_path, monkeypatch):
+    import ordessa_server_compat.composition as assembly
+    calls = []
+
+    class Transport:
+        def __init__(self, **kwargs):
+            self.terminated = 0
+            calls.append(self)
+
+        def start(self):
+            return self
+
+        def terminate(self):
+            self.terminated += 1
+
+    monkeypatch.setattr(assembly, "AccessEntryTransport", Transport)
+    runtime = create_composition().native_runtime(tmp_path / "data", **options(tmp_path))
+    try:
+        runtime.start()
+        project = runtime.wire.dispatch("workspaces.open", {"requestId": "scoped-project-open",
+            "environment": {"kind": "local", "host": None, "user": None},
+            "path": str(tmp_path)})["workspace"]["id"]
+        def acquire(scope):
+            return runtime.wire.dispatch("acp.channel.open", {"harnessId": "pi",
+                "projectId": project, "sessionScopeId": scope})
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            concurrent = list(pool.map(lambda _: acquire("session-a"), range(4)))
+        assert all(item == concurrent[0] for item in concurrent)
+        a, b = concurrent[0], acquire("session-b")
+        assert a["connectionId"] != b["connectionId"]
+        assert a["executionId"] != b["executionId"]
+        assert acquire("session-a") == a
+        assert len(calls) == 2
+        runtime.wire.dispatch("acp.channel.release", {"connectionId": a["connectionId"]})
+        with pytest.raises(WireError, match="terminal"):
+            acquire("session-a")
+        assert acquire("session-b") == b
+        assert calls[0].terminated == 1 and calls[1].terminated == 0
+        for invalid in (" spaced", "bad\nnonce", "x" * 129, 12):
+            with pytest.raises(WireError):
+                acquire(invalid)
+        assert len(calls) == 2
+    finally:
+        runtime.stop()
+    assert all(item.terminated == 1 for item in calls)
+
+
+@pytest.mark.parametrize('exit_phase', ['launch', 'registered'])
+def test_a_scoped_agent_exit_removes_dead_owner_and_refuses_nonce_replay(tmp_path, monkeypatch, exit_phase):
+    import ordessa_server_compat.composition as assembly
+    calls = []
+    class Transport:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+            calls.append(self)
+        def start(self):
+            if exit_phase == 'launch':
+                self.kwargs['on_exit'](7)
+            return self
+        def terminate(self):
+            pass
+    monkeypatch.setattr(assembly, 'AccessEntryTransport', Transport)
+    runtime = create_composition().native_runtime(tmp_path / 'data', **options(tmp_path))
+    try:
+        runtime.start()
+        project = runtime.wire.dispatch('workspaces.open', {'requestId': 'dead-owner-project',
+            'environment': {'kind': 'local', 'host': None, 'user': None},
+            'path': str(tmp_path)})['workspace']['id']
+        request = {'harnessId': 'pi', 'projectId': project, 'sessionScopeId': 'scoped-exit'}
+        first = runtime.wire.dispatch('acp.channel.open', request)
+        if exit_phase == 'registered':
+            calls[0].kwargs['on_exit'](7)
+        registry = runtime.plugin_host.provided_port('acp.channels')
+        assert registry.get(first['connectionId']) is None
+        assert registry._by_pair == {}
+        with pytest.raises(WireError, match='terminal'):
+            runtime.wire.dispatch('acp.channel.open', request)
+        assert len(calls) == 1
+    finally:
+        runtime.stop()
+
+
 @pytest.mark.parametrize("row", [
     {"harnessId": "pi", "command": "/usr/bin/node", "args": []},
     {"harnessId": "codex", "command": "relative", "args": []},

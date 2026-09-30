@@ -464,6 +464,7 @@ export function build({ output, source = DEFAULT_SOURCE, replace = false, profil
         ['entry.mjs', 'ordessa-profile.mjs'],
         ['server.mjs', 'ordessa-profile-server.mjs'],
         ['configuration-query.mjs', 'ordessa-configuration-query.mjs'],
+        ['configuration-operation.mjs', 'ordessa-configuration-operation.mjs'],
       ]) copyFileSync(path.join(extensionRoot, sourceName), path.join(destination, targetName))
     }
     assertPlainTree(staging)

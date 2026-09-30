@@ -25,6 +25,12 @@ from ordessa_harness.server_acp.runs import (
 )
 from ordessa_server.ids import opaque_id
 
+_OWNER_CONFIGURATION_METHODS = frozenset({
+    '_ordessa/session/configuration',
+    '_ordessa/session/configuration/apply',
+    '_ordessa/session/configuration/operation',
+})
+
 
 @dataclass(frozen=True)
 class NativeSessionObservation:
@@ -89,12 +95,14 @@ class _Channel:
     """One live connection: its transport, its run identity, its subscribers."""
 
     def __init__(self, *, connection_id: str, harness_id: str,
-                 workspace_id: str, profile_id: str, cwd: str) -> None:
+                 workspace_id: str, profile_id: str, cwd: str,
+                 session_scope_id: str | None = None) -> None:
         self.connection_id = connection_id
         self.harness_id = harness_id
         self.workspace_id = workspace_id
         self.profile_id = profile_id
         self.cwd = cwd
+        self.session_scope_id = session_scope_id
         self.session_id: str | None = None
         self.execution_id: str | None = None
         self.binding: dict[str, Any] | None = None
@@ -110,8 +118,9 @@ class _Channel:
         self._owner_query_ids: set[str] = set()
 
     @property
-    def pair(self) -> tuple[str, str]:
-        return (self.harness_id, self.workspace_id)
+    def pair(self) -> tuple[str, ...]:
+        base = (self.harness_id, self.workspace_id)
+        return base if self.session_scope_id is None else (*base, self.session_scope_id)
 
     def public_result(self) -> dict[str, Any]:
         return {
@@ -181,6 +190,8 @@ class _Channel:
             return
         if not isinstance(frame, dict) or frame.get("jsonrpc") != "2.0":
             return
+        if frame.get('method') in _OWNER_CONFIGURATION_METHODS:
+            raise NativeConfigurationUnavailable('configuration RPC is reserved for the native owner')
         request_id = self._request_id(frame)
         if request_id is None or not isinstance(frame.get("method"), str):
             return
@@ -263,8 +274,21 @@ class _Channel:
             pending.ready.set()
         return True
 
-    def query_native_configuration(self, native_id: str, *, timeout: float = 10) -> NativeConfigurationObservation:
-        """Read-only owner RPC. No arbitrary method/action or identity inference."""
+    def _configuration_rpc(self, native_id: str, method: str, params: Mapping[str, Any],
+                           *, timeout: float = 10) -> tuple[NativeSessionObservation, dict]:
+        """Internal bounded RPC. Admission/operation authority is a caller obligation.
+
+        Only these native configuration methods exist; client relay cannot call
+        them. A reply is native data, not a C4 permit or applied receipt.
+        """
+        if method not in _OWNER_CONFIGURATION_METHODS or params.get('sessionId') != native_id:
+            raise ValueError('unsupported owner configuration RPC')
+        try:
+            payload = json.dumps(dict(params), allow_nan=False)
+        except (TypeError, ValueError) as exc:
+            raise ValueError('invalid owner configuration payload') from exc
+        if len(payload.encode('utf-8')) > 65536:
+            raise ValueError('owner configuration payload outside bounds')
         if type(native_id) is not str or not native_id or len(native_id) > 4096:
             raise ValueError('native session identity required')
         if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not 0 < timeout <= 30:
@@ -287,7 +311,7 @@ class _Channel:
         try:
             try:
                 self.transport._send_owner_query(json.dumps({'jsonrpc': '2.0', 'id': request_id,
-                    'method': '_ordessa/session/configuration', 'params': {'sessionId': native_id}}))
+                    'method': method, 'params': json.loads(payload)}))
             except Exception as exc:
                 raise NativeConfigurationUnavailable('native configuration query transport failed') from exc
             if not pending.ready.wait(timeout):
@@ -299,23 +323,32 @@ class _Channel:
             if response is None or 'error' in response:
                 raise NativeConfigurationUnavailable('native configuration query refused or unavailable')
             result = response['result']
-            if (not isinstance(result, dict) or result.get('sessionId') != native_id
+            if not isinstance(result, dict) or result.get('sessionId') != native_id:
+                raise NativeConfigurationUnavailable('malformed native configuration evidence')
+            try:
+                json.dumps(result, allow_nan=False)
+            except (TypeError, ValueError) as exc:
+                raise NativeConfigurationUnavailable('invalid native configuration JSON') from exc
+            return owner, result
+        finally:
+            with self._lock:
+                self._configuration_queries.pop(request_id, None)
+
+    def query_native_configuration(self, native_id: str, *, timeout: float = 10) -> NativeConfigurationObservation:
+        """Independent live configuration read; never a native effect."""
+        owner, result = self._configuration_rpc(native_id, '_ordessa/session/configuration',
+                                               {'sessionId': native_id}, timeout=timeout)
+        if (result.get('sessionId') != native_id
                     or type(result.get('generation')) is not str or not result['generation']
                     or result['generation'].strip() != result['generation'] or len(result['generation']) > 4096
                     or type(result.get('busy')) is not bool or not isinstance(result.get('configOptions'), list)
                     or any(not isinstance(option, dict) or type(option.get('id')) is not str
                            or not option['id'] or 'currentValue' not in option for option in result['configOptions'])):
-                raise NativeConfigurationUnavailable('malformed native configuration evidence')
-            try:
-                options_json = json.dumps(result['configOptions'], allow_nan=False)
-            except (TypeError, ValueError) as exc:
-                raise NativeConfigurationUnavailable('invalid native configuration JSON') from exc
-            if len({option['id'] for option in result['configOptions']}) != len(result['configOptions']):
-                raise NativeConfigurationUnavailable('duplicate native configuration options')
-            return NativeConfigurationObservation(owner, result['generation'], result['busy'], options_json)
-        finally:
-            with self._lock:
-                self._configuration_queries.pop(request_id, None)
+            raise NativeConfigurationUnavailable('malformed native configuration evidence')
+        options_json = json.dumps(result['configOptions'], allow_nan=False)
+        if len({option['id'] for option in result['configOptions']}) != len(result['configOptions']):
+            raise NativeConfigurationUnavailable('duplicate native configuration options')
+        return NativeConfigurationObservation(owner, result['generation'], result['busy'], options_json)
 
     @staticmethod
     def _schedule(loop: Any, sink: Callable[[Any], None], item: Any) -> None:
@@ -323,6 +356,10 @@ class _Channel:
             loop.call_soon_threadsafe(sink, item)
         except RuntimeError:
             pass  # the socket's own loop is gone; its detach is moot
+
+
+class SessionAcquisitionRefused(ValueError):
+    """An invalid, exhausted or already terminal session acquisition nonce."""
 
 
 class AcpChannelRegistry:
@@ -340,20 +377,50 @@ class AcpChannelRegistry:
         self._profiles = profile_records
         self._launch = launch
         self._lock = threading.RLock()
-        self._by_pair: dict[tuple[str, str], _Channel] = {}
+        self._by_pair: dict[tuple[str, ...], _Channel] = {}
+        self._scope_locks: dict[tuple[str, ...], threading.RLock] = {}
+        self._spent_scopes: set[tuple[str, ...]] = set()
         self._by_id: dict[str, _Channel] = {}
 
     # -- lifecycle ---------------------------------------------------------
 
     def acquire(self, *, harness_id: str, workspace_id: str,
-                profile_id: str, cwd: str) -> dict[str, Any]:
+                profile_id: str, cwd: str, session_scope_id: str | None = None) -> dict[str, Any]:
+        if session_scope_id is not None:
+            if (type(session_scope_id) is not str or not session_scope_id
+                    or len(session_scope_id) > 128 or session_scope_id.strip() != session_scope_id
+                    or any(ord(char) < 32 for char in session_scope_id)):
+                raise SessionAcquisitionRefused("invalid session acquisition scope")
+            pair = (harness_id, workspace_id, session_scope_id)
+            with self._lock:
+                if pair not in self._scope_locks:
+                    if len(self._scope_locks) >= 4096:
+                        raise SessionAcquisitionRefused("session acquisition scope capacity exhausted")
+                    self._scope_locks[pair] = threading.RLock()
+                scope_lock = self._scope_locks[pair]
+            # One scope is an acquisition identity, not a Profile/native UID.
+            # Serialize its establishment to avoid speculative duplicate Agents.
+            with scope_lock:
+                with self._lock:
+                    if pair in self._spent_scopes and pair not in self._by_pair:
+                        raise SessionAcquisitionRefused("session acquisition scope is terminal")
+                return self._acquire(harness_id=harness_id, workspace_id=workspace_id,
+                                     profile_id=profile_id, cwd=cwd, session_scope_id=session_scope_id)
+        return self._acquire(harness_id=harness_id, workspace_id=workspace_id,
+                             profile_id=profile_id, cwd=cwd)
+
+    def _acquire(self, *, harness_id: str, workspace_id: str, profile_id: str,
+                 cwd: str, session_scope_id: str | None = None) -> dict[str, Any]:
+        pair = ((harness_id, workspace_id) if session_scope_id is None
+                else (harness_id, workspace_id, session_scope_id))
         with self._lock:
-            existing = self._by_pair.get((harness_id, workspace_id))
+            existing = self._by_pair.get(pair)
             if existing is not None:
                 return existing.public_result()
             connection = _Channel(
                 connection_id=opaque_id("conn"), harness_id=harness_id,
                 workspace_id=workspace_id, profile_id=profile_id, cwd=cwd,
+                session_scope_id=session_scope_id,
             )
         # Launch first: a provider that refuses starts no process and records
         # no run.  The ledger row appears only for a channel that is up.
@@ -362,6 +429,11 @@ class AcpChannelRegistry:
             on_line=connection.deliver,
             on_exit=lambda code: self._handle_exit(connection, code),
         )
+        # A launched scope never creates a second execution, including after
+        # failed ledger establishment. Reuse is only for its existing owner.
+        if session_scope_id is not None:
+            with self._lock:
+                self._spent_scopes.add(pair)
         try:
             connection.session_id, connection.execution_id, connection.binding = open_run(
                 session_records=self._records, profile_records=self._profiles,
@@ -390,7 +462,7 @@ class AcpChannelRegistry:
         if connection.exit_code is not None:
             # The Agent died in the launch window; the same claim that would
             # have run on exit applies retroactively before anything attached.
-            self._end_exit(connection)
+            self._handle_exit(connection, connection.exit_code)
         return connection.public_result()
 
     def release(self, connection_id: str, *, reason: str = "released") -> dict[str, Any] | None:

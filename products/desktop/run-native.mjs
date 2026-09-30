@@ -5,11 +5,15 @@ import { fileURLToPath } from 'node:url'
 import { nativeServerPlan } from '../../plugins/harness/packaging/native-server-plan.mjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
+const profileBridge = process.env.ORDESSA_PI_PROFILE_BRIDGE
+if (profileBridge !== undefined && profileBridge !== '0' && profileBridge !== '1')
+  throw new Error('ORDESSA_PI_PROFILE_BRIDGE must be 0 or 1')
 const plan = nativeServerPlan({ ...(process.env.ORDESSA_NATIVE_HARNESS
     ? { harnessId: process.env.ORDESSA_NATIVE_HARNESS }
     : { harnessIds: ['pi', 'codex', 'claude-code'] }),
   pluginRoot: process.env.ORDESSA_HARNESS_PLUGIN_ROOT ?? path.join(root, 'plugins/harness'),
-  artifactRoot: process.env.ORDESSA_INSTALLED_ARTIFACT_ROOT ?? '/opt/ordessa/harnesses/artifacts' })
+  artifactRoot: process.env.ORDESSA_INSTALLED_ARTIFACT_ROOT ?? '/opt/ordessa/harnesses/artifacts',
+  piProfileBridge: profileBridge === '1' })
 const child = spawn(path.join(root, 'node_modules/electron/dist/electron'), ['.'], {
   cwd: path.join(root, 'apps/desktop'), stdio: 'inherit',
   env: { ...process.env, ORDESSA_SERVER_ARGS_JSON: JSON.stringify(plan.args) },

@@ -34,15 +34,18 @@ function fixture() {
   const peers = new Map<string, HarnessPeer>()
   const handles = new Map<string, AcpChannelHandle>()
   const down = new Map<string, (reason: string) => void>()
+  const counts = new Map<string, number>()
   const binding = (id: string) => ({ id, normalizedPath: `/private/${id}` })
   const spec: AcpChannelSpec = {
     serverInstanceId: 'server-commands', harness: { id: 'pi', title: 'Pi' },
     listProjects: async () => [binding('one'), binding('two')],
     openProject: async id => binding(id),
     acquireChannel: async projectId => {
+      const count = (counts.get(projectId) ?? 0) + 1
+      counts.set(projectId, count)
       const peer = new HarnessPeer()
       const handle: AcpChannelHandle = {
-        connectionId: `connection-${projectId}`, binding: binding(projectId), stream: peer.stream,
+        connectionId: `connection-${projectId}${count === 1 ? '' : `-${count}`}`, binding: binding(projectId), stream: peer.stream,
         subscribeDown: listener => { down.set(projectId, listener); return () => { down.delete(projectId) } },
         release: async () => { down.get(projectId)?.('released'); peer.close() },
       }
@@ -111,7 +114,7 @@ it('projects native command refreshes as immutable same-channel, same-session da
   expect(client.getNativeCommands('acp-session-1')).toEqual({ kind: 'unknown', reason: 'channel-down' })
 })
 
-it('isolates identical native ids by connection and retires the old session', async () => {
+it('isolates identical native ids by connection and keeps the old session catalog live', async () => {
   const { spec, peers } = fixture()
   const client = await AcpClient.connect(spec, 'acp:commands')
   try {
@@ -126,12 +129,14 @@ it('isolates identical native ids by connection and retires the old session', as
       && client.getNativeCommands(two).kind === 'available')
     expect(available(client, one).commands).toEqual([{ name: 'alpha', description: 'One' }])
     expect(available(client, two).commands).toEqual([{ name: 'beta', description: 'Two' }])
+    const oldPeer = peers.get('one')!
     await client.openWorkspace('one')
     const next = await client.newSession()
-    expect(client.getNativeCommands(one)).toEqual({ kind: 'unknown', reason: 'stale-session' })
-    await peers.get('one')!.update('acp-session-1', { sessionUpdate: 'available_commands_update',
+    expect(available(client, one).commands).toEqual([{ name: 'alpha', description: 'One' }])
+    await oldPeer.update('acp-session-1', { sessionUpdate: 'available_commands_update',
       availableCommands: [{ name: 'late', description: 'Old session' }] })
-    expect(client.getNativeCommands(one)).toEqual({ kind: 'unknown', reason: 'stale-session' })
+    await until(() => available(client, one).commands[0]?.name === 'late')
+    expect(available(client, one).commands).toEqual([{ name: 'late', description: 'Old session' }])
     expect(client.getNativeCommands(next)).toEqual({ kind: 'absent' })
     expect(client.getNativeCommands(two).kind).toBe('available')
   } finally { client.dispose() }

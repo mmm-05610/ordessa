@@ -8,7 +8,7 @@ Match can produce Confirmed.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, replace
-from contextlib import ExitStack
+from contextlib import ExitStack, nullcontext
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
@@ -33,6 +33,7 @@ from ..materialization import (
     materialize_generation, merge_intents, preflight_generation,
 )
 from .operation_journal import FenceObservation, NativeActivationReceipt, OperationJournal
+from .action_execution import ActionBatch, ActionExecutor, ActionGrant, ActionInvocation
 
 
 @dataclass(frozen=True)
@@ -81,6 +82,7 @@ class _Prepared:
     fragments: tuple[DesiredFragment, ...]
     selections: tuple[_Selection, ...]
     merged: object
+    actions: ActionBatch | None = None
 
 
 @dataclass(frozen=True)
@@ -158,7 +160,9 @@ class ConfigurationApplicationService:
 
     def __init__(self, *, principal: str, target: ApplicationTarget, carrier: object, runtime: ControlledRuntime,
                  permits: PermitVerifier, journal: OperationJournal,
-                 clock: Callable[[], datetime] | None = None):
+                 clock: Callable[[], datetime] | None = None,
+                 action_executor: ActionExecutor | None = None,
+                 action_grants: tuple[ActionGrant, ...] = ()):
         if not principal or not isinstance(target, ApplicationTarget) or carrier is None or runtime is None or permits is None:
             raise ValueError("authenticated composition dependencies required")
         self.principal = principal
@@ -168,6 +172,10 @@ class ConfigurationApplicationService:
         self.permits = permits
         self.journal = journal
         self.clock = clock or (lambda: datetime.now(timezone.utc))
+        if not isinstance(action_grants, tuple) or any(not isinstance(grant, ActionGrant) for grant in action_grants):
+            raise ValueError("immutable explicit action grants required")
+        self.action_executor = action_executor
+        self.action_grants = action_grants
         self._prepared: dict[str, _Prepared] = {}
         self._apply_lock = RLock()
 
@@ -320,12 +328,13 @@ class ConfigurationApplicationService:
 
     def _compile_bound(self, snapshot: RuntimeSnapshot,
                        fragments: tuple[DesiredFragment, ...],
-                       bindings: tuple[tuple[object, str, object], ...]):
+                       bindings: tuple[tuple[object, str, object], ...],
+                       selections: tuple[_Selection, ...] = ()):
         if len(bindings) != len(fragments):
             raise ValueError("every fragment needs one exact adapter binding")
         submissions: list[AuthorizedIntents] = []
         batch_item_ids = frozenset(fragment.item_id for fragment in fragments)
-        for fragment, (adapter, owner, descriptor) in zip(fragments, bindings):
+        for index, (fragment, (adapter, owner, descriptor)) in enumerate(zip(fragments, bindings)):
             if fragment.facet_id != descriptor.facet_id or fragment.schema_version != descriptor.facet_schema_version:
                 raise ValueError("fragment facet/schema not covered by adapter")
             request = fragment.value if fragment.operation == "set" else None
@@ -340,11 +349,43 @@ class ConfigurationApplicationService:
             if not isinstance(compiled, IntentSet):
                 raise ValueError("adapter returned no typed IntentSet")
             compiled = _bind_fragment_source(compiled, fragment, batch_item_ids)
-            if any(not _has_claim(descriptor, intent) for intent in compiled.intents):
-                raise ValueError("intent exceeds registered claims")
+            for intent in compiled.intents:
+                if isinstance(intent, InvokeAction):
+                    action = next((item for item in snapshot.authority.actions
+                                   if (item.action_id, item.schema_version) ==
+                                      (intent.action_id, intent.schema_version)), None)
+                    if (self.action_executor is None or index >= len(selections)
+                        or snapshot.context.scope != "session" or snapshot.authority.scope != "session"
+                        or action is None or action.scope != "session" or action.confirmation != "read-back"
+                        or not any(grant.allows(snapshot.target, owner, selections[index].publication_token,
+                                                intent, snapshot.context.scope) for grant in self.action_grants)):
+                        raise ValueError("action lacks explicit exact publication/session grant")
+                elif not _has_claim(descriptor, intent):
+                    raise ValueError("intent exceeds registered claims")
             submissions.append(AuthorizedIntents(owner, fragment.facet_id, fragment.item_id,
                                                  fragment.schema_version, compiled))
         return tuple(submissions), merge_intents(snapshot.authority, tuple(submissions))
+
+    def _preflight(self, snapshot, submissions, selections) -> ActionBatch | None:
+        intents = tuple(intent for submission in submissions for intent in submission.intents.intents)
+        if any(isinstance(intent, InvokeAction) for intent in intents):
+            if not intents or any(not isinstance(intent, InvokeAction) for intent in intents):
+                raise ValueError("mixed action/file/secret batches refused")
+            if self.action_executor is None:
+                raise ValueError("action executor absent")
+            batch = ActionBatch(snapshot.target, tuple(
+                ActionInvocation(submission.owner, selection.publication_token, intent)
+                for submission, selection in zip(submissions, selections)
+                for intent in submission.intents.intents))
+            batch.manifest_digest  # Validate complete, finite canonical manifest before reservation.
+            try:
+                self.action_executor.preflight(batch)
+            except Exception as exc:
+                raise ValueError("action executor preflight refused") from exc
+            return batch
+        preflight_generation(snapshot.private_root, snapshot.authority, submissions,
+                             snapshot=snapshot.files, content=snapshot.content)
+        return None
 
     def plan(self, target: ApplicationTarget, desired_fragments: tuple[DesiredFragment, ...],
              expected_revision: str) -> Plan | Refused:
@@ -362,9 +403,8 @@ class ConfigurationApplicationService:
                     return _refused(ErrorCode.ADAPTER_MISSING, "configuration selection changed")
                 bindings = tuple((view.payload, view.owner, item.descriptor)
                                  for view, item in zip(views, selections))
-                submissions, merged = self._compile_bound(snapshot, desired_fragments, bindings)
-                preflight_generation(snapshot.private_root, snapshot.authority, submissions,
-                                     snapshot=snapshot.files, content=snapshot.content)
+                submissions, merged = self._compile_bound(snapshot, desired_fragments, bindings, selections)
+                actions = self._preflight(snapshot, submissions, selections)
                 now = self.clock()
                 planned = Plan(f"plan-{uuid4().hex}", target, _digest(desired_fragments),
                                snapshot.before_revision, snapshot.native_version_ref,
@@ -373,7 +413,7 @@ class ConfigurationApplicationService:
                                (now + timedelta(minutes=5)).astimezone(timezone.utc).isoformat())
                 self.journal.register_plan(self.principal, planned)
                 self._prepared[planned.plan_id] = _Prepared(planned, desired_fragments,
-                                                            selections, merged)
+                                                            selections, merged, actions)
                 return planned
         except _CompileRefusal as exc:
             return _refused(exc.code, str(exc))
@@ -412,11 +452,12 @@ class ConfigurationApplicationService:
                     return _refused(ErrorCode.ADAPTER_MISSING, "adapter selection changed under lease")
                 bindings = tuple((view.payload, view.owner, item.descriptor)
                                  for view, item in zip(views, selections))
-                submissions, merged = self._compile_bound(snapshot, prepared.fragments, bindings)
+                submissions, merged = self._compile_bound(snapshot, prepared.fragments, bindings, selections)
                 if merged != prepared.merged:
                     return _refused(ErrorCode.STALE_PLAN, "compiled intent plan changed")
-                preflight_generation(snapshot.private_root, snapshot.authority, submissions,
-                                     snapshot=snapshot.files, content=snapshot.content)
+                actions = self._preflight(snapshot, submissions, selections)
+                if actions != prepared.actions:
+                    return _refused(ErrorCode.STALE_PLAN, "action manifest changed")
                 # Deterministic failures do not spend an otherwise usable one-use
                 # permit. The durable reservation still precedes every effect.
                 try:
@@ -446,14 +487,17 @@ class ConfigurationApplicationService:
                 receipt: NativeActivationReceipt | None = None
                 receipt_persisted = False
                 try:
-                    with materialize_generation(snapshot.private_root, snapshot.authority,
-                                                submissions, snapshot=snapshot.files,
-                                                content=snapshot.content) as lease:
-                        manifest_digest = _manifest_digest(lease.files)
+                    context = (nullcontext(None) if actions is not None else
+                               materialize_generation(snapshot.private_root, snapshot.authority,
+                                                      submissions, snapshot=snapshot.files,
+                                                      content=snapshot.content))
+                    with context as lease:
+                        manifest_digest = actions.manifest_digest if actions is not None else _manifest_digest(lease.files)
                         self.journal.bind_native_manifest(self.principal, planned.target,
                                                           reservation.operation_id, manifest_digest)
-                        receipt = self.runtime.activate_generation(reservation.operation_id,
-                            planned.target, lease, manifest_digest)
+                        receipt = (self.action_executor.execute(reservation.operation_id, actions)
+                                   if actions is not None else self.runtime.activate_generation(
+                                       reservation.operation_id, planned.target, lease, manifest_digest))
                         if (not isinstance(receipt, NativeActivationReceipt) or
                                 receipt.operation_id != reservation.operation_id or
                                 receipt.target != planned.target or
@@ -462,15 +506,22 @@ class ConfigurationApplicationService:
                         self.journal.record_native_receipt(self.principal, planned.target, receipt)
                         receipt_persisted = True
                         readback = self.runtime.observe(planned.target)
-                        if (readback.target != planned.target or readback.files != lease.files or
+                        if (readback.target != planned.target or readback.files != (() if actions is not None else lease.files) or
                                 not readback.native_session_identity or readback.receipt != receipt or
                                 readback.native_session_identity != receipt.native_session_identity or
-                                readback.applied_revision != receipt.applied_revision or not readback.evidence_ref):
+                                readback.applied_revision != receipt.applied_revision or not readback.evidence_ref
+                                or (actions is not None and readback.evidence_ref == receipt.evidence_ref)):
                             raise ValueError("native readback identity or generation files mismatch")
                         for view in views:
                             verification = view.payload.verify(snapshot.context, readback.observed_value)
                             if not isinstance(verification, Match):
                                 raise ValueError("adapter did not confirm native readback")
+                        if actions is not None:
+                            for invocation in actions.invocations:
+                                action = next(item for item in snapshot.authority.actions
+                                              if (item.action_id, item.schema_version) ==
+                                              (invocation.intent.action_id, invocation.intent.schema_version))
+                                action.result_schema.validate(readback.observed_value)
                         self.journal.record_native_verification(self.principal, planned.target,
                                                                 reservation.operation_id, readback.evidence_ref)
                         confirmed = Confirmed(reservation.operation_id, readback.applied_revision,

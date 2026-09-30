@@ -6,7 +6,10 @@ import { contractAliases } from '../../../tooling/vitest-extensions.mjs'
 // the tests exercise the very same contract modules the product imports; nothing here is a
 // test-only re-implementation of a contract.
 export default defineConfig({
-  resolve: { alias: contractAliases() },
+  resolve: { alias: {
+    ...contractAliases(),
+    '@extensions/ordessa.chat-api/contract.js': fileURLToPath(new URL('../../../plugins/chat/api/src/contract.ts', import.meta.url)),
+  } },
   test: {
     root: fileURLToPath(new URL('.', import.meta.url)),
     include: ['fixtures/**/*.test.ts', 'protocol/**/*.test.ts', 'ui/**/*.test.tsx'],

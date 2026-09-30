@@ -203,3 +203,30 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 ### 仍须完成，不能隐藏
 
 增强资产尚未安装 `/opt`，产品默认不启用增强路线。registry 当前按 harness+project 复用进程，尚不具备同项目不同会话的实例隔离；分配“每进程目录”不能证明“每会话隔离”。接下来须解决会话 launch scope，再接 canonical 注册、模型引用解析、action permit/journal/readback、Skills 内容应用及 Chat prompt 前/next-submit 时序。Host/Pacthold 本轮零改动。
+
+### 继续推进中：会话隔离与模型引用解析
+
+- 两名限定所有权子代理已交付客户端隔离和模型目录解析；主代理正在审阅并补后端/桥接反例，尚未提交或宣布集成通过。
+- 客户端改为项目选择只读，每次新会话分配独立 acquisition scope；同项目旧会话仍保留自身路由。后端正在接收该可选 scope，兼容旧的不带 scope 请求。正在核对释放、重放和并发获取语义。
+- 模型解析器消费真实供应商目录及注入的 C2 schema，拒绝失效/歧义引用，只传凭据引用、不读取秘密；子代理定向验证 36/36，尚待主代理复跑和生产接线。
+- 固定待办不变：这些组件通过不等于 Profile 已在真实产品发送前生效。无需用户协助的接线与受控验证继续推进。
+
+### 集成复跑与原生操作（继续进行，不是完成声明）
+
+- 主代理实跑：同项目 scope 装配 9/9、owner/独立读回 45/45、模型解析与边界 25/25、会话门面 42/42、ACP 独立集成 81/81；root typecheck exit 0。子代理 ACP 全包 57/57 尚待主代理复跑。均受控，零真实模型。
+- 发现并修正真实 unknown 分类：单通道断流不把其他会话标 disconnected；显式提交 unknown 标记穿过 facade，草稿不借用已选会话的运行状态。原 U5b 断言保持，完整集成转绿。
+- Pi 新增有界操作记录：仅 live 暴露的 model/thinkingLevel，先检验原生 generation/配置摘要/idle，再执行上游，再独立读回；同操作标识不重复作用，不明确结果保留 unknown。标准 prompt/setter 共用非等待锁，owner-only RPC 不允许 client relay调用。
+- Node 资产 builder/Pi 操作/查询/入口共 40/40。正在重建开发资产做真实 Pi 无模型探针；本轮原生记录尚未绑定 C4 target/manifest，不能叫 Profile applied receipt。
+- C4 显式 action-only grant/executor 分支正在独立子代理实现，默认 action/secret 拒绝与文件物化保护不变。完整生产 permit、canonical 注册与 Chat 发送前应用仍未完成。
+
+### 本轮检查点与需要用户协助的安装（2026-09-30）
+
+- 会话 acquisition scope 已完成受控集成：项目选择零启动，新会话独立通道，同 scope 并发只启动一次；终态 scope 不允许重新启动。独立审阅发现 launch/注册窗口退出可遗留死连接，主代理已统一清除映射并补两条反例，产品多绑定测试 11/11。独立审阅对配置 RPC 与 Pi executor 未发现其他阻断。
+- 主代理复跑：ACP workspace 57/57、独立集成 81/81、会话门面 42/42、模型解析及边界 25/25、owner/readback 45/45、C4/action/file/journal/owner/executor 187/187、Pi 原生操作与安装策略 Node 门禁 69/69。不同集合有重叠，不将它们加总为全仓测试数。
+- C4 仅通过显式 action grant/executor 分支支持精确授权的 session action；默认无授权仍拒绝，混合 file/secret/action 拒绝。原生操作记录绑定完整 target/manifest，普通 ACK 无法成为回执，Confirmed 仍要求独立 runtime.observe。生产 permit、canonical 会话注册及 Chat next-submit 尚未组合，固定待办不勾为完成。
+- 重建真实开发增强 Pi 后，owner-only 操作、原生 target/manifest 绑定记录、幂等 replay 与独立查询全部无模型通过；session/new=1、prompt=0、仅 synthetic fixture key、独立 settings 写入、模拟全局 sentinel 未变、关闭后拒绝、进程退出 0。此探针 ledger/身份注册仍受控，不冒充完整产品 Profile 应用。
+- 待安装资产：`/tmp/ordessa-pi-operations-AEq2eiKX/pi-profile-runtime-bound`，15462 entries、64925886 bytes、tree digest `sha256:968135e988c1507358764deaf9825c005177829fd9b9044c0970572eb61a6cad`。source lock 与上一构建相同。安装目标仅新增 `/opt/ordessa/harnesses/artifacts/pi-profile-runtime`，不覆盖三套旧资产、不改登录/全局配置、不调用模型。
+- 用户协助点：在真实宿主终端执行 `bash /tmp/ordessa-install-pi-profile-verified.sh` 完成 sudo。脚本已语法检查，复制后先钉住上述摘要、完整校验 root 可信来源，再无覆盖落位并复验；尚未执行。安装后继续真实可信启动路线，再推进 canonical/permit/Chat 接线，不需要重新裁定架构。
+- 全仓 `npm test` 本轮实测 **30/39 suite green**，不是全绿：Server bridge 默认解释器缺 `ordessa_profile`；产品 Node 精确清单遗漏已经提交的 ModelProvider Profile editor；七项 Electron 门禁涉及 bundled python/bin 缺失及 preview 退休 fixture/IPC。前两类环境与 Electron 缺口仍记录，不据此下账。产品清单断言补上真实 editor 选择，继续保持完整精确比较，不删断言；定向重跑结果另记下方。完整日志 `/tmp/ordessa-closeout-current-npm-test.log`。
+- 全仓测试产生 `docs/ui-preview/01-empty.png` 输出变化，仅验证副产物，不纳入本轮源码检查点，不删除。main 不切换、不合并、不 push；未改 Server/Pacthold/前端 host。
+- 清单反例修正后产品 UI Node 单文件门禁 3/3、root typecheck exit 0、diff 检查通过。此前完整 build 18 扩展通过、lock 由 build 刷新；没有据定向结果把完整 39 套件改写为全绿。

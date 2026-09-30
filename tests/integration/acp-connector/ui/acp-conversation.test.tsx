@@ -6,20 +6,21 @@ import { OwnedResources } from '@ordessa/extension-api'
 import { createConnections } from '../../../../packages/desktop-platform/connections/src/index'
 import { createAgentConnections } from '../../../../plugins/agent/connections/src/entry'
 import { createAgentSessions } from '../../../../plugins/agent/sessions/src/model'
-import { Conversation } from '../../../../plugins/agent/conversation/src/view'
+import { ChatPage } from '../../../../plugins/chat/frontend/src/views/chat-page'
+import { createChatContributions } from '@extensions/ordessa.chat-api/contract.js'
 import { HarnessPeer } from '../fixtures/acp-peer'
 import { loadAcpTarget } from '../fixtures/target-seam'
 
 /**
- * UI consumption layer targets U1–U6. These mount the real chat UI (Conversation view over the
+ * UI consumption layer targets U1–U6. These mount the real chat UI (ChatPage over the
  * real AgentSessions facade and AgentConnections workspace) with the real ACP connector behind it
  * and one controllable Harness peer on the wire — no hand-written AgentClient stand-in, so a pass
- * here proves the ACP semantics survive into the existing interface unchanged. Red today: the
- * connector seam is missing (TARGET_MISSING); that is the honest state, not an accepted one.
+ * here proves the ACP semantics survive into the current interface and typed submission outcomes.
  */
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 window.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} }
+window.matchMedia = (query: string) => ({ matches: false, media: query, onchange: null, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {}, dispatchEvent: () => true })
 Element.prototype.scrollTo = () => {}
 Element.prototype.scrollIntoView = () => {}
 
@@ -67,19 +68,19 @@ async function openAcpChat(options: { capabilities?: any; extraConnector?: (regi
   const extra = options.extraConnector ? await options.extraConnector(registry, scopes.connector) : undefined
   const sessions = createAgentSessions(scopes.session, registry)
   await act(async () => { await sessions.selectConnection(connector.id) })
-  const container = await mount(<Conversation service={sessions} />)
+  const container = await mount(<ChatPage service={sessions} chat={createChatContributions()} theme="light" />)
   return { container, peer, sessions, connector, target, registry, scopes, extra, released }
 }
 
-const textOf = (container: HTMLElement) => container.querySelector('section.agent-conversation')?.textContent ?? ''
+const textOf = (container: HTMLElement) => container.querySelector('section.chat-page')?.textContent ?? ''
 const sendButton = (container: HTMLElement) =>
-  [...container.querySelectorAll('button')].find(b => /^(Send|Start session)$/.test(b.textContent ?? ''))
+  container.querySelector<HTMLButtonElement>('[data-testid="chat-send"]')
 
 it('U1 first send from a draft is blocked until a project is bound', async () => {
   const { peer, sessions, container } = await openAcpChat()
   act(() => { sessions.startDraft!() })
   // The existing composer already carries the draft/project gate — no new UI slot needed.
-  expect(sendButton(container)?.textContent).toBe('Start session')
+  expect(sendButton(container)?.textContent).toBe('发送')
   expect(sendButton(container)?.disabled).toBe(true)
   const blocked = await sessions.send('hello').then(() => undefined, error => error)
   expect(String(blocked ?? '')).toMatch(/project gate|no-project/)
@@ -115,8 +116,8 @@ it('U3 a tool card is updated in place by toolCallId, never duplicated', async (
     return 'end_turn'
   })
   await act(async () => { await sessions.send('run the gate') })
-  expect([...container.querySelectorAll('.agent-tool')]).toHaveLength(1)
-  expect(container.querySelector('.agent-tool')?.textContent).toContain('Run tests')
+  expect([...container.querySelectorAll('.chat-tool')]).toHaveLength(1)
+  expect(container.querySelector('.chat-tool')?.textContent).toContain('Run tests')
   const sessionId = peer.recorded('session/prompt')[0].params.sessionId
   peer.queueTurn(async api => {
     await api.update({ sessionUpdate: 'tool_call_update', toolCallId: 'c1', status: 'completed',
@@ -125,8 +126,8 @@ it('U3 a tool card is updated in place by toolCallId, never duplicated', async (
   })
   await act(async () => { await sessions.send('and now?') })
   // Same id, still one card — now carrying the terminal state.
-  expect([...container.querySelectorAll('.agent-tool')]).toHaveLength(1)
-  expect(container.querySelector('.agent-tool')?.getAttribute('data-tool-state')).toBe('completed')
+  expect([...container.querySelectorAll('.chat-tool')]).toHaveLength(1)
+  expect(container.querySelector('.chat-tool')?.textContent).toContain('完成')
   void sessionId
   peer.close()
 })
@@ -146,8 +147,8 @@ it('U4 a permission request renders an in-thread card whose buttons are the nati
     return 'end_turn'
   })
   const sending = act(async () => { await sessions.send('clean the cache') })
-  await peer.waitFor('the interaction card', () => !!container.querySelector('.agent-interaction'))
-  const card = container.querySelector('.agent-interaction')!
+  await peer.waitFor('the interaction card', () => !!container.querySelector('.chat-approval'))
+  const card = container.querySelector('.chat-approval')!
   expect(card.textContent).toContain('Delete build cache')
   const buttons = [...card.querySelectorAll('button')].map(b => b.textContent)
   expect(buttons).toContain('Allow for this once')
@@ -176,7 +177,7 @@ it('U5 a dropped channel shows the run outcome as unknown, distinct from cancell
   await peer.waitFor('the running turn', () => peer.recorded('session/prompt').length === 1)
   peer.drop(new Error('link reset'))
   await sending
-  const badge = container.querySelector('.agent-run-state')
+  const badge = container.querySelector('.chat-run-state')
   expect(badge?.getAttribute('data-status')).toBe('unknown')
   expect(container.textContent).toContain('unknown')
   expect(container.textContent).not.toMatch(/cancelled/i)
@@ -194,20 +195,20 @@ it('U5b a link that dies before any output stays an unaccepted draft: the send f
   act(() => { sessions.startDraft!() })
   peer.queueTurn(async api => { await api.cancelled(); return 'cancelled' })
   let failure: unknown
-  const sending = act(async () => { await sessions.send('long task').catch(error => { failure = error }) })
+  const sending = act(async () => { failure = await sessions.send('long task') })
   await peer.waitFor('the first prompt to leave', () => peer.recorded('session/prompt').length === 1)
   peer.drop(new Error('link reset before any output'))
   await sending
-  expect(failure).toBeInstanceOf(Error)
-  // The draft survived the failed send: input and request id are held for an idempotent retry,
-  // and no session was accepted (session list still empty of real native ids).
+  expect(failure).toMatchObject({ kind: 'unknown' })
+  // The draft survives the unknown send. Its request identity stays held for reconciliation;
+  // session/new is evidenced, but the first prompt was never confirmed accepted.
   expect(sessions.getSnapshot().draft?.active).toBe(true)
   // The authoritative run verdict is unknown — never a fake cancelled — and the draft pane
   // honestly shows no live run rather than inventing one.
   const agent = sessions.getSnapshot().agent
   expect(agent && Object.values(agent.runs).some(r => r.status === 'unknown')).toBe(true)
   expect(agent && Object.values(agent.runs).every(r => r.status !== 'cancelled')).toBe(true)
-  expect(container.querySelector('.agent-run-state')?.getAttribute('data-status')).toBe('idle')
+  expect(container.querySelector('.chat-run-state')?.getAttribute('data-status')).toBe('idle')
   expect(container.textContent).not.toMatch(/cancelled/i)
   peer.close()
 })
@@ -239,12 +240,12 @@ it('U6 switching the selection removes the old pending interaction from view wit
     return 'end_turn'
   })
   const sending = act(async () => { await sessions.send('clean it').catch(() => undefined) })
-  await peer.waitFor('the interaction card', () => !!container.querySelector('.agent-interaction'))
+  await peer.waitFor('the interaction card', () => !!container.querySelector('.chat-approval'))
   // Switching to the other Harness is a view/selection move, not a dispose: the thread may not keep
   // offering an answer for a request that belongs to the other connection, and switching may not
   // implicitly cancel or answer it — A's request simply remains A's, un-answered.
   await act(async () => { await sessions.selectConnection(connectorB.id) })
-  expect(container.querySelector('.agent-interaction button')).toBeNull()
+  expect(container.querySelector('.chat-approval button')).toBeNull()
   expect(textOf(container)).not.toContain('Delete build cache')
   expect(peerB.recorded('session/prompt')).toHaveLength(0)
   // And the move is view-only: A's backend channel was NOT released by switching away from it.

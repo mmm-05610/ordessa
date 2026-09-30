@@ -69,6 +69,35 @@ def test_unknown_session_sends_zero_frames():
     assert len(sent) == 1
 
 
+@pytest.mark.parametrize('method', [
+    '_ordessa/session/configuration', '_ordessa/session/configuration/apply',
+    '_ordessa/session/configuration/operation',
+])
+def test_client_relay_cannot_issue_native_owner_configuration_methods(method):
+    channel, sent, _ = rig()
+    with pytest.raises(NativeConfigurationUnavailable, match='reserved'):
+        channel.transport.send_line(json.dumps({'jsonrpc': '2.0', 'id': 'client-action',
+            'method': method, 'params': {'sessionId': 'native'}}))
+    assert len(sent) == 1
+
+
+def test_internal_operation_reply_is_correlated_data_not_a_receipt():
+    def operation(channel, frame):
+        assert frame['method'] == '_ordessa/session/configuration/operation'
+        assert frame['params'] == {'sessionId': 'native', 'operationId': 'operation'}
+        channel.deliver(json.dumps({'jsonrpc': '2.0', 'id': frame['id'], 'result': {
+            'sessionId': 'native', 'operationId': 'operation', 'state': 'unknown'}}))
+    channel, _, received = rig(operation)
+    owner, result = channel._configuration_rpc('native',
+        '_ordessa/session/configuration/operation',
+        {'sessionId': 'native', 'operationId': 'operation'})
+    assert owner is channel.native_session_observation('native')
+    assert result['state'] == 'unknown'
+    assert received == []
+    with pytest.raises(ValueError, match='unsupported'):
+        channel._configuration_rpc('native', 'session/prompt', {'sessionId': 'native'})
+
+
 def test_query_rejects_equal_id_replacement_while_waiting():
     def replace_owner(channel, frame):
         previous = channel.native_session_observation('native')

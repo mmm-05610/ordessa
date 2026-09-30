@@ -35,7 +35,7 @@ const PARAM_SHAPES: Record<string, [readonly string[], readonly string[]]> = {
   'server.hello': [['clientVersions', 'clientPresentationSupports'], []],
   'workspaces.list': [['includeArchived'], []],
   'workspaces.open': [['requestId', 'environment', 'path'], ['expectedVersion']],
-  'acp.channel.open': [['harnessId', 'projectId'], ['requestId']],
+  'acp.channel.open': [['harnessId', 'projectId'], ['requestId', 'sessionScopeId']],
   'acp.channel.release': [['connectionId'], ['requestId']],
 }
 
@@ -43,7 +43,7 @@ class ServerRefusal extends Error {
   constructor(readonly code: string, message: string) { super(message) }
 }
 
-interface ChannelRecord { id: string; projectId: string; executionId: string; peer: HarnessPeer; socket: FakeSocket | undefined }
+interface ChannelRecord { id: string; projectId: string; acquisitionKey: string; executionId: string; peer: HarnessPeer; socket: FakeSocket | undefined }
 /** Module-level because the fake WebSocket constructor must reach these before `startServer` returns. */
 const channels = new Map<string, ChannelRecord>()
 const attaches = new Map<string, number>()
@@ -167,7 +167,7 @@ function startServer(options: { offerAcp: boolean; channelHarnesses?: unknown; r
         const projectId = String(params.projectId)
         const workspace = WORKSPACES.find(row => row.id === projectId)
         if (!workspace) throw new ServerRefusal('NOT_FOUND', `no workspace record ${projectId}`)
-        const pair = `${String(params.harnessId)}|${projectId}`
+        const pair = JSON.stringify([params.harnessId, projectId, params.sessionScopeId ?? null])
         const existing = liveByPair.get(pair)
         if (existing) {
           return { connectionId: existing.id, executionId: existing.executionId,
@@ -175,7 +175,7 @@ function startServer(options: { offerAcp: boolean; channelHarnesses?: unknown; r
         }
         const id = `conn_${++sequence}`
         const peer = new HarnessPeer({ capabilities: { promptCapabilities: {} } })
-        const record: ChannelRecord = { id, projectId, executionId: `turn_${id}`, peer, socket: undefined }
+        const record: ChannelRecord = { id, projectId, acquisitionKey: pair, executionId: `turn_${id}`, peer, socket: undefined }
         channels.set(id, record)
         liveByPair.set(pair, record)
         return { connectionId: id, executionId: record.executionId,
@@ -199,7 +199,7 @@ function startServer(options: { offerAcp: boolean; channelHarnesses?: unknown; r
             sessionId: `sess_${id}`, reason: 'release-unconfirmed' }
         }
         releases.push(id)
-        liveByPair.delete(`pi|${record.projectId}`)
+        liveByPair.delete(record.acquisitionKey)
         record.peer.close()
         channels.delete(id)
         return { released: true, connectionId: id, executionId: record.executionId, sessionId: `sess_${id}`, endReason: 'released' }
@@ -306,12 +306,16 @@ it('activates through bridge, transport and host: the native pair is offered onc
   // The project list rides the existing workspaces surface, exactly as the backend requires it.
   expect(wire.find(call => call.method === 'workspaces.list')?.params).toEqual({ includeArchived: false })
   await client.openWorkspace!('ws_app')
+  expect(channels.size).toBe(0)
+  const sessionId = await client.newSession()
   const [record] = [...channels.values()]
   expect(record.projectId).toBe('ws_app')
   expect(record.peer.recorded('initialize')).toHaveLength(1)
-  // The open names only {harnessId, projectId} — no invented instance/harness envelope reaches the wire,
+  // The new-session open names its acquisition scope alongside harness/project; no frontend
+  // native-session identity or invented instance envelope reaches the wire,
   // and the project was re-opened through workspaces.open with the record's own environment and path.
-  expect(wire.find(call => call.method === 'acp.channel.open')?.params).toEqual({ harnessId: 'pi', projectId: 'ws_app' })
+  const acquisition = wire.find(call => call.method === 'acp.channel.open')!.params
+  expect(acquisition).toEqual({ harnessId: 'pi', projectId: 'ws_app', sessionScopeId: expect.any(String) })
   const opened = wire.find(call => call.method === 'workspaces.open')?.params
   expect(opened).toMatchObject({ environment: { kind: 'local' }, path: '/repo/app' })
   expect(String(opened?.requestId)).toMatch(/^workspace_/)
@@ -319,8 +323,9 @@ it('activates through bridge, transport and host: the native pair is offered onc
   expect(record.socket?.url).toBe(`ws://127.0.0.1:41233/wire/v1/acp-channel/${record.id}`)
   expect(record.socket?.options.headers.authorization).toBe(`Bearer ${TOKEN}`)
   for (const call of wire) expect(call.authorization).toBe(`Bearer ${TOKEN}`)
-  // The open is idempotent per live pair: same connection, same run, and the relay is attached once.
-  const again = await bridge.send(INSTANCE_ID, { method: 'acp/channel/open', params: { instanceId: PAIR, projectId: 'ws_app' } }) as Record<string, unknown>
+  // A repeated acquisition scope returns the same connection/run and attaches the relay once.
+  const again = await bridge.send(INSTANCE_ID, { method: 'acp/channel/open', params: {
+    instanceId: PAIR, projectId: 'ws_app', sessionScopeId: acquisition.sessionScopeId } }) as Record<string, unknown>
   expect(again).toEqual({ connectionId: record.id, executionId: record.executionId, binding: { id: 'ws_app', normalizedPath: '/repo/app' } })
   await until('the second attach attempt to settle', () => (attaches.get(record.id) ?? 0) >= 1)
   await new Promise(resolve => setTimeout(resolve, 20))
@@ -330,14 +335,15 @@ it('activates through bridge, transport and host: the native pair is offered onc
     await api.update({ sessionUpdate: 'agent_message_chunk', content: { type: 'text', text: 'pong over the bridge' } })
     return 'end_turn'
   })
-  const { sessionId } = await client.createAndSend!('ws_app', 'ping', 'req_1')
+  await client.send(sessionId, 'ping')
   // The authoritative cwd comes from the Server's binding, not from anything this side assumed.
   expect(record.peer.recorded('session/new')[0].params).toMatchObject({ cwd: '/repo/app' })
   await until('the turn settles', () => Object.values(client.getSnapshot().runs).some(run => run.sessionId === sessionId && run.status === 'completed'))
   expect((client.getSnapshot().messages[sessionId] ?? []).map(message => message.text).join('')).toContain('pong over the bridge')
 
   // Nothing but the seam's own methods was ever called, in exactly this order.
-  expect(calls).toEqual(['server.hello', 'workspaces.list', 'workspaces.list', 'workspaces.open', 'acp.channel.open', 'acp.channel.open'])
+  expect(calls).toEqual(['server.hello', 'workspaces.list', 'workspaces.list', 'workspaces.open',
+    'workspaces.list', 'workspaces.open', 'acp.channel.open', 'acp.channel.open'])
   client.dispose()
   await until('the explicit backend release lands', () => releases.length === 1)
   expect(releases).toEqual([record.id])
@@ -461,6 +467,47 @@ it('a refused open launches nothing: an unopened project answers NOT_FOUND and a
   expect(calls).toEqual(['server.hello', 'acp.channel.open'])
 })
 
+it('two same-project first sends acquire independent native relays, retain old routes, and release independently', async () => {
+  tempRoot = serverEnv()
+  startServer({ offerAcp: true })
+  const bridge = new MainBridge()
+  vi.stubGlobal('window', { agentNative: bridge })
+  const added: AgentConnector[] = []
+  await activationOf(added, [])()
+  const client = await added[0].connect!() as AgentClient
+  try {
+    await client.openWorkspace!('ws_app')
+    expect(channels.size).toBe(0)
+    const first = await client.createAndSend!('ws_app', 'first', 'request-first')
+    const second = await client.createAndSend!('ws_app', 'second', 'request-second')
+    expect(first.sessionId).not.toBe(second.sessionId)
+    const [one, two] = [...channels.values()]
+    expect(channels.size).toBe(2)
+    expect(one.projectId).toBe('ws_app'); expect(two.projectId).toBe('ws_app')
+    expect(one.id).not.toBe(two.id)
+    const scopes = wire.filter(call => call.method === 'acp.channel.open').map(call => call.params.sessionScopeId)
+    expect(scopes).toEqual([expect.any(String), expect.any(String)])
+    expect(scopes[0]).not.toBe(scopes[1])
+    expect([one, two].map(record => record.peer.recorded('initialize').length)).toEqual([1, 1])
+    expect([one, two].map(record => record.peer.recorded('session/new').length)).toEqual([1, 1])
+    expect(one.peer.recorded('session/prompt')[0].params.sessionId)
+      .toBe(two.peer.recorded('session/prompt')[0].params.sessionId)
+    await until('both first turns to finish', () => Object.values(client.getSnapshot().runs).every(run => run.status === 'completed'))
+    await client.send(first.sessionId, 'old still sends')
+    expect(one.peer.recorded('session/prompt').map(frame => frame.params.prompt[0].text)).toEqual(['first', 'old still sends'])
+    expect(two.peer.recorded('session/prompt').map(frame => frame.params.prompt[0].text)).toEqual(['second'])
+    await bridge.send(INSTANCE_ID, { method: 'acp/channel/release', params: { connectionId: one.id } })
+    expect(releases).toEqual([one.id])
+    expect(channels.has(two.id)).toBe(true)
+    expect(two.socket?.closed).toBe(false)
+    await client.send(second.sessionId, 'survives sibling release')
+    expect(two.peer.recorded('session/prompt').map(frame => frame.params.prompt[0].text)).toEqual(['second', 'survives sibling release'])
+    client.dispose()
+    await until('remaining owned relay to release', () => releases.length === 2)
+    expect(releases).toEqual([one.id, two.id])
+  } finally { client.dispose(); await bridge.close(INSTANCE_ID) }
+})
+
 it('a relay death is never a release: it errors the stream, cancels nothing, and the stand-down stays explicit', async () => {
   tempRoot = serverEnv()
   startServer({ offerAcp: true })
@@ -470,6 +517,7 @@ it('a relay death is never a release: it errors the stream, cancels nothing, and
   await activationOf(added, [])()
   const client = await added[0].connect!() as AgentClient
   await client.openWorkspace!('ws_app')
+  const sessionId = await client.newSession()
   const [record] = [...channels.values()]
   // The leading chunk is the acceptance proof the reviewed loop requires; the turn then parks, so
   // the link genuinely dies mid-turn here.
@@ -478,13 +526,15 @@ it('a relay death is never a release: it errors the stream, cancels nothing, and
     await api.cancelled()
     return 'cancelled'
   })
-  await client.createAndSend!('ws_app', 'parked', 'req_1')
+  const parked = client.send(sessionId, 'parked')
+  void parked.catch(() => undefined)
   await until('the prompt to leave', () => record.peer.recorded('session/prompt').length === 1)
   record.peer.drop(new Error('link reset'))
   record.socket?.fire('close', { code: 1006, reason: 'link reset' })
   // The death arrives in the renderer as a stream error and the open turn is held as unknown —
   // never dressed up as a cancellation this side did not ask for.
   await until('the dropped run to land as unknown', () => Object.values(client.getSnapshot().runs).some(run => run.status === 'unknown'))
+  await expect(parked).rejects.toBeInstanceOf(Error)
   expect(Object.values(client.getSnapshot().runs).every(run => run.status !== 'cancelled')).toBe(true)
   // Dropping the relay tore no backend channel down on its own.
   expect(releases).toEqual([])
@@ -507,6 +557,7 @@ it('a refused release reaches the host as a typed diagnostic and the explicit re
   await activationOf(added, disposables)()
   const client = await added[0].connect!() as AgentClient
   await client.openWorkspace!('ws_app')
+  await client.newSession()
   const [record] = [...channels.values()]
   refuseNextRelease = true
   client.dispose()
@@ -542,6 +593,7 @@ it('a release answered released:false over a successful RPC is never booked as s
   await activationOf(added, [])()
   const client = await added[0].connect!() as AgentClient
   await client.openWorkspace!('ws_app')
+  await client.newSession()
   const [record] = [...channels.values()]
   unconfirmedNextRelease = true
   client.dispose()
@@ -573,6 +625,7 @@ it('the real workspace reconnect flow proves the host consumption: an evicted AC
   await workspace.selectConnection(added[0].id)
   const old = workspace.selected()
   await old.openWorkspace!('ws_app')
+  await old.newSession()
   const [record] = [...channels.values()]
   refuseNextRelease = true
   await workspace.reconnect(added[0].id)
@@ -624,6 +677,7 @@ it('closing the bridge instance tears every live relay down and nothing flows af
   await activationOf(added, [])()
   const client = await added[0].connect!() as AgentClient
   await client.openWorkspace!('ws_app')
+  await client.newSession()
   const [record] = [...channels.values()]
   expect(record.socket).toBeDefined()
   await bridge.close(INSTANCE_ID)

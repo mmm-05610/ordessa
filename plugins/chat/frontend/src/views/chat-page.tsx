@@ -115,7 +115,7 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
   const composition = useSyncExternalStore(store.subscribe, () => store.read(pane), () => store.read(pane))
   const workspaceId = state.draft?.workspaceId
   const projectName = agent?.workspaces?.items.find(item => item.id === workspaceId)?.normalizedPath
-  const run = agent && sessionId ? paneRunState(agent, sessionId) : undefined
+  const run = agent && !drafting && sessionId ? paneRunState(agent, sessionId) : undefined
   const running = run?.status === 'starting' || run?.status === 'running' || run?.status === 'stop-requested'
   const canSend = !running && (!drafting || state.draft?.canSend === true)
   const blockReason = drafting ? state.draft?.blockReason : undefined

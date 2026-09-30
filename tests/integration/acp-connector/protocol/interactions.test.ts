@@ -244,18 +244,19 @@ it('R31 one stop closes only its own run: sibling sessions and the same-named ot
     await api.cancelled()
     return 'cancelled'
   })
-  app.queueTurn(async api => {
-    deliveredSibling.push(await api.permission({ toolCallId: 'sib', title: 'ask on a sibling run', status: 'pending' },
-      [{ optionId: 'proceed_sibling', name: 'Allow sibling', kind: 'allow_once' }]))
-    return 'end_turn'
-  })
   docs.queueTurn(async api => {
     deliveredOtherChannel.push(await api.permission({ toolCallId: 'other', title: 'ask on the other channel', status: 'pending' },
       [{ optionId: 'proceed_other', name: 'Allow other', kind: 'allow_once' }]))
     return 'end_turn'
   })
   const { sessionId: stoppedId } = await client.createAndSend!('ws_app', 'go', 'req_1')
-  const siblingId = await client.newSession() // same channel, second session
+  const siblingId = await client.newSession() // same project, independent channel
+  const sibling = peerFor('ws_app', 1)
+  sibling.queueTurn(async api => {
+    deliveredSibling.push(await api.permission({ toolCallId: 'sib', title: 'ask on a sibling run', status: 'pending' },
+      [{ optionId: 'proceed_sibling', name: 'Allow sibling', kind: 'allow_once' }]))
+    return 'end_turn'
+  })
   const siblingPrompt = client.send(siblingId, 'go')
   const { sessionId: otherId } = await client.createAndSend!('ws_docs', 'go', 'req_2') // same NATIVE id as stoppedId
   const askOf = (sessionKey: string) =>
@@ -277,6 +278,7 @@ it('R31 one stop closes only its own run: sibling sessions and the same-named ot
     await app.waitFor('the stopped run settling', () => client.getSnapshot().runs[stoppedRun.id]?.status === 'cancelled')
     // Only the stopped session's channel saw a cancel, and only for the stopped session's native id.
     expect(app.recorded('session/cancel').map(c => c.params.sessionId)).toEqual(['acp-session-1'])
+    expect(sibling.recorded('session/cancel')).toHaveLength(0)
     expect(docs.recorded('session/cancel')).toHaveLength(0)
   } finally {
     client.dispose()

@@ -69,6 +69,22 @@ function projectClient(id: string, serverInstanceId: string | undefined, options
 const cleanup: (() => Promise<void>)[] = []
 afterEach(async () => { for (const fn of cleanup.splice(0).reverse()) await fn() })
 
+it.each([
+  ['SUBMISSION_OUTCOME_UNKNOWN', 'unknown'],
+  ['SUBMISSION_REFUSED', 'refused'],
+])('a connected sibling does not hide the explicit %s first-send verdict', async (code, kind) => {
+  const a = projectClient('A', 'https://s1')
+  a.client.createAndSend = async () => { throw Object.assign(new Error('same diagnostic'), { code }) }
+  const sessions = await harness({ id: 'A', build: () => a.client })
+  await sessions.selectConnection('A')
+  await sessions.selectWorkspace!('/srv/a')
+  sessions.startDraft!()
+  const outcome = await sessions.send('keep this draft')
+  expect(outcome.kind).toBe(kind)
+  expect(a.client.getSnapshot().connection.status).toBe('connected')
+  expect(sessions.getSnapshot().draft?.active).toBe(true)
+})
+
 async function harness(...connectors: { id: string; build: () => AgentClient }[]) {
   const scopes = { registry: new OwnedResources(), sessions: new OwnedResources(), connectors: new OwnedResources() }
   cleanup.push(async () => { scopes.sessions.dispose(); scopes.connectors.dispose(); scopes.registry.dispose() })

@@ -18,9 +18,15 @@ async function setup(authorize: (input: AcpControlledSubmission) => Promise<AcpS
     subscribeDown: listener => { down = listener; return () => { down = () => undefined } },
     release: async () => { peer.close() },
   }
+  let acquisitions = 0
   const client = await AcpClient.connect({ serverInstanceId: 'server-race',
     harness: { id: 'pi', title: 'Pi' }, listProjects: async () => [handle.binding],
-    openProject: async () => handle.binding, acquireChannel: async () => handle }, 'acp:server-race')
+    openProject: async () => handle.binding, acquireChannel: async () => {
+      if (++acquisitions === 1) return handle
+      const nextPeer = new HarnessPeer()
+      return { ...handle, connectionId: `connection-race-${acquisitions}`, stream: nextPeer.stream,
+        subscribeDown: () => () => undefined, release: async () => { nextPeer.close() } }
+    } }, 'acp:server-race')
   await client.openWorkspace('project')
   const nativeSessionId = await client.newSession()
   return { client, peer, down: (reason: string) => down(reason), nativeSessionId }

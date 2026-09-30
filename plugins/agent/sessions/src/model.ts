@@ -31,6 +31,12 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
     const status = client.getSnapshot().connection.status
     return status === 'disconnected' || status === 'error'
   }
+  // A single managed channel may die while sibling channels stay connected.
+  // Consume the connector's explicit submission verdict, not message matching
+  // or an unrelated session's run state.
+  const outcomeUnknown = (cause: unknown, client: AgentClient) =>
+    linkDownOf(client) || (cause !== null && typeof cause === 'object'
+      && 'code' in cause && cause.code === 'SUBMISSION_OUTCOME_UNKNOWN')
   const storageKey = (identity: string) => `ordessa.agent.project.${identity}`
   const rememberProject = (identity: string, id: string) => {
     lastProject.set(identity, id)
@@ -169,7 +175,7 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
           try {
             return await client.submitWithAttachments(sessionId, text, refs)
           } catch (cause) {
-            if (linkDownOf(client)) return { kind: 'unknown', operationId: globalThis.crypto.randomUUID(),
+            if (outcomeUnknown(cause, client)) return { kind: 'unknown', operationId: globalThis.crypto.randomUUID(),
               reason: cause instanceof Error ? cause.message : String(cause) }
             return { kind: 'refused', code: 'SUBMISSION_REFUSED', reason: cause instanceof Error ? cause.message : String(cause) }
           }
@@ -178,7 +184,7 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
           // Typed mapping of the legacy path (contracts 0.2.0): evidenced
           // channel loss is unknown — never a fake acceptance; anything else
           // the client refuses arrives as a typed refusal with its reason.
-          if (linkDownOf(client)) return { kind: 'unknown' as const, operationId: globalThis.crypto.randomUUID(),
+          if (outcomeUnknown(cause, client)) return { kind: 'unknown' as const, operationId: globalThis.crypto.randomUUID(),
             reason: cause instanceof Error ? cause.message : String(cause) }
           return { kind: 'refused' as const, code: 'SUBMISSION_REFUSED',
             reason: cause instanceof Error ? cause.message : String(cause) }
@@ -215,7 +221,7 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
         // The requestId stays held on anything but acceptance: an unknown
         // outcome keeps it for reconciliation, a refusal keeps it so the user's
         // explicit retry re-uses the same idempotency identity (C-0030/R-Z2-1).
-        if (linkDownOf(client)) return { kind: 'unknown', operationId: requestId,
+        if (outcomeUnknown(cause, client)) return { kind: 'unknown', operationId: requestId,
           reason: cause instanceof Error ? cause.message : String(cause) }
         return { kind: 'refused', code: 'SUBMISSION_REFUSED', reason: cause instanceof Error ? cause.message : String(cause) }
       }

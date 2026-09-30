@@ -280,9 +280,15 @@ export default function createTransport(): NativeTransport {
           const projectId = text(params.projectId)
           if (!projectId) throw new Error('opening an ACP channel needs the project identity')
           required('acp.channel.open')
+          const scope = params.sessionScopeId
+          if (scope !== undefined && (typeof scope !== 'string' || !scope || scope.length > 128
+              || scope.trim() !== scope || /[\x00-\x1f]/.test(scope))) {
+            throw new Error('opening an ACP channel needs a valid session acquisition scope')
+          }
           // Resolve only a Server-offered pair; the Server rechecks its live
           // identity again before launching anything.
-          const opened = record(await rpc(target, 'acp.channel.open', { harnessId: pair.harnessId, projectId }))
+          const opened = record(await rpc(target, 'acp.channel.open', { harnessId: pair.harnessId, projectId,
+            ...(scope === undefined ? {} : { sessionScopeId: scope }) }))
           const connectionId = text(opened?.connectionId), executionId = text(opened?.executionId)
           const binding = record(opened?.binding)
           const cwd = text(binding?.cwd)

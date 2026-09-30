@@ -6,7 +6,8 @@ import { OwnedResources } from '@ordessa/extension-api'
 import { createConnections } from '../../../../packages/desktop-platform/connections/src/index'
 import { createAgentConnections } from '../../../../plugins/agent/connections/src/entry'
 import { createAgentSessions } from '../../../../plugins/agent/sessions/src/model'
-import { Conversation } from '../../../../plugins/agent/conversation/src/view'
+import { ChatPage } from '../../../../plugins/chat/frontend/src/views/chat-page'
+import { createChatContributions } from '@extensions/ordessa.chat-api/contract.js'
 import { SessionBrowser } from '../../../../plugins/agent/sessions/src/view'
 import type { AgentClient, AgentSnapshot } from '../../../../plugins/agent/contracts/src/contract'
 
@@ -20,6 +21,7 @@ import type { AgentClient, AgentSnapshot } from '../../../../plugins/agent/contr
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 window.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} }
+window.matchMedia = (query: string) => ({ matches: false, media: query, onchange: null, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {}, dispatchEvent: () => true })
 Element.prototype.scrollTo = () => {}
 Element.prototype.scrollIntoView = () => {}
 
@@ -78,17 +80,19 @@ async function openWith(snapshot: AgentSnapshot) {
 
 it('renders the full ACP-shaped assistant turn with the existing components', async () => {
   const { sessions } = await openWith(acpShaped({}))
-  const container = await mount(<Conversation service={sessions} />)
-  const thread = container.querySelector('section.agent-conversation')!
+  const container = await mount(<ChatPage service={sessions} chat={createChatContributions()} theme="light" />)
+  const thread = container.querySelector('section.chat-page')!
   expect(thread.textContent).toContain('run the gate')
   expect(thread.textContent).toContain('done now')
-  const tool = thread.querySelector('.agent-tool')!
+  const tool = thread.querySelector('.chat-tool')!
   expect(tool.textContent).toContain('Run tests')
-  expect(tool.getAttribute('data-tool-state')).toBe('completed')
+  expect(tool.textContent).toContain('完成')
+  await act(async () => { tool.querySelector<HTMLButtonElement>('[data-testid="chat-tool-summary"]')!.click() })
   expect(tool.textContent).toContain('green')
   // Reasoning arrives as its own collapsible part, matching `agent_thought_chunk` semantics.
-  const reasoning = thread.querySelector('.agent-reasoning')!
-  expect(reasoning.textContent).toContain('Thinking')
+  const reasoning = thread.querySelector('.chat-reasoning')!
+  expect(reasoning.textContent).toContain('思考')
+  await act(async () => { reasoning.querySelector<HTMLButtonElement>('[data-testid="chat-reasoning-trigger"]')!.click() })
   expect(reasoning.textContent).toContain('checking specs first')
 })
 
@@ -98,8 +102,8 @@ it('shows a native permission interaction in the thread with its native option l
       detail: 'rm -rf .build', choices: [{ id: 'allow_once', label: 'Allow for this once' }, { id: 'reject_once', label: 'Reject' }],
       state: 'pending' }],
   }))
-  const container = await mount(<Conversation service={sessions} />)
-  const card = container.querySelector('.agent-interaction')!
+  const container = await mount(<ChatPage service={sessions} chat={createChatContributions()} theme="light" />)
+  const card = container.querySelector('.chat-approval')!
   expect(card.textContent).toContain('Delete build cache')
   expect([...card.querySelectorAll('button')].map(b => b.textContent)).toContain('Allow for this once')
 })
@@ -109,8 +113,8 @@ it('keeps unknown outcomes and cancellations visually distinct (no invented verd
     runs: { turn_1: { id: 'turn_1', sessionId: 'acp-session-1', status: 'unknown' } },
     messages: {},
   }))
-  const container = await mount(<Conversation service={sessions} />)
-  const badge = container.querySelector('.agent-run-state')!
+  const container = await mount(<ChatPage service={sessions} chat={createChatContributions()} theme="light" />)
+  const badge = container.querySelector('.chat-run-state')!
   expect(badge.getAttribute('data-status')).toBe('unknown')
   expect(container.textContent).not.toMatch(/cancelled/i)
 })

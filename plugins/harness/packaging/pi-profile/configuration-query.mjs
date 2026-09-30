@@ -1,6 +1,36 @@
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 
 export const CONFIGURATION_QUERY = '_ordessa/session/configuration'
+
+/** JSON-only canonical encoding: object keys sort, array order remains native. */
+export function stableJSON(value) {
+  const visit = (item, seen) => {
+    if (item === null || typeof item === 'string' || typeof item === 'boolean') return JSON.stringify(item)
+    if (typeof item === 'number' && Number.isFinite(item)) return JSON.stringify(item)
+    if (typeof item !== 'object' || seen.has(item)) throw new TypeError('Expected finite acyclic JSON')
+    seen.add(item)
+    let encoded
+    if (Array.isArray(item)) {
+      if (Object.keys(item).length !== item.length) throw new TypeError('Expected dense JSON array')
+      encoded = '[' + item.map(entry => visit(entry, seen)).join(',') + ']'
+    } else {
+      if (Object.getPrototypeOf(item) !== Object.prototype && Object.getPrototypeOf(item) !== null)
+        throw new TypeError('Expected plain JSON object')
+      encoded = '{' + Object.keys(item).sort().map(key => JSON.stringify(key) + ':' + visit(item[key], seen)).join(',') + '}'
+    }
+    seen.delete(item)
+    return encoded
+  }
+  return visit(value, new Set())
+}
+
+export function configurationDigest(observation) {
+  return createHash('sha256').update(stableJSON(observation.configOptions)).digest('hex')
+}
+
+export function jsonDigest(value) {
+  return createHash('sha256').update(stableJSON(value)).digest('hex')
+}
 
 /** Read the adapter's live session, never a request's desired configuration. */
 export function configurationReader(agent, invalidParams) {

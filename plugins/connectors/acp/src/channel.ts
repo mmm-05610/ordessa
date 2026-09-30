@@ -50,7 +50,8 @@ export interface AcpChannelSpec {
    * its authoritative record. Optional on purpose: where orchestration does not supply it, the
    * client exposes no `addWorkspace` and the UI must disable that entry, never fake it. */
   addProject?: (path: string) => Promise<AgentWorkspaceInfo>
-  /** Acquire the managed channel for the selected project. No channel exists until a project is
-   * bound; `initialize` runs on the handle's stream. */
-  acquireChannel: (projectId: string) => Promise<AcpChannelHandle>
+  /** Acquire the managed channel for the selected project. A new session supplies a unique
+   * acquisition scope, kept stable by its attempt; this is not a native or canonical session id.
+   * History/load may omit the scope. `initialize` runs on the handle's stream. */
+  acquireChannel: (projectId: string, sessionScopeId?: string) => Promise<AcpChannelHandle>
 }

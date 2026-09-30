@@ -164,6 +164,11 @@ class AcpChannelServerPlugin:
             connection - the binding never moves underneath a client.
             """
             _require(params, "harnessId", "projectId")
+            session_scope = (_bounded(params["sessionScopeId"], "sessionScopeId", 128)
+                             if "sessionScopeId" in params else None)
+            if session_scope is not None and (session_scope.strip() != session_scope
+                    or any(ord(char) < 32 for char in session_scope)):
+                raise WireError("INVALID_REQUEST", "invalid sessionScopeId")
             if self._registry is None:
                 raise WireError("CAPABILITY_UNSUPPORTED", "this Server composes no managed ACP channel")
             harness_id = _bounded(params["harnessId"], "harnessId", 64)
@@ -185,10 +190,15 @@ class AcpChannelServerPlugin:
             normalized = workspaces.local.validate(selected)
             if normalized != selected:
                 raise ServerError("NATIVE_PROJECT_CHANGED", "selected project changed", status=409)
-            return self._registry.acquire(
-                harness_id=harness_id, workspace_id=workspace_id,
-                profile_id=str(identity["profileId"]), cwd=selected,
-            )
+            from ordessa_harness.server_acp.registry import SessionAcquisitionRefused
+            try:
+                return self._registry.acquire(
+                    harness_id=harness_id, workspace_id=workspace_id,
+                    profile_id=str(identity["profileId"]), cwd=selected,
+                    **({"session_scope_id": session_scope} if session_scope is not None else {}),
+                )
+            except SessionAcquisitionRefused as exc:
+                raise WireError("INVALID_REQUEST", str(exc)) from exc
 
         def acp_channel_release(params: Mapping[str, Any]) -> dict[str, Any]:
             """Release one channel by ownership: its transport stops, its run
@@ -338,7 +348,7 @@ class AcpChannelServerPlugin:
             ServerMethodDescriptor(
                 method_id="acp.channel.open",
                 required_params=frozenset({"harnessId", "projectId"}),
-                optional_params=frozenset({"requestId"}),
+                optional_params=frozenset({"requestId", "sessionScopeId"}),
                 handler=acp_channel_open, owner=PLUGIN_ID,
             ),
             ServerMethodDescriptor(

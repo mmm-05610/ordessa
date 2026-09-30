@@ -39,9 +39,15 @@ async function fixture(withPort = true, connectionId = 'connection-1', injectedP
     ...(withPort ? { attachmentPrepare: injectedPort ?? port } : {}),
     authorizeSubmission: async submission => { admissionCalls++; return { kind: 'accepted', submissionId: submission.submissionId } },
     release: async () => { peer.close() } }
+  let acquisitions = 0
   const spec: AcpChannelSpec = { serverInstanceId: 'server-1', harness: { id: 'pi', title: 'Pi' },
     listProjects: async () => [handle.binding], openProject: async () => handle.binding,
-    acquireChannel: async () => handle }
+    acquireChannel: async () => {
+      if (++acquisitions === 1) return handle
+      const nextPeer = new HarnessPeer()
+      return { ...handle, connectionId: `${connectionId}-${acquisitions}`, stream: nextPeer.stream,
+        release: async () => { nextPeer.close() } }
+    } }
   const client = await AcpClient.connect(spec, 'acp:server-1')
   await client.openWorkspace('project-1')
   const sessionId = await client.newSession()

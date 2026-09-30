@@ -12,7 +12,7 @@ import { HarnessPeer } from './acp-peer'
  *
  * Channel model (reviewed): selecting a Server/Harness lets the connector read the project list,
  * but it must NOT open a project-less ACP channel eagerly. Before the first send the connector
- * acquires the channel for the bound project (`acquireChannel(projectId)`), performs exactly one
+ * acquires an independently scoped channel for the bound project (`acquireChannel(projectId, scope)`), performs exactly one
  * `initialize` on it, then `session/new`/`session/prompt`; a draft creates no native session, and
  * later turns reuse that session and its channel. `acquireChannel`'s exact function name is a
  * proposed injection surface pending backend alignment — it is NOT a second public protocol.
@@ -54,7 +54,7 @@ export interface AcpChannelSpec {
   addProject?: (path: string) => Promise<AgentWorkspaceInfo>
   /** Acquire the managed channel for the selected project (name pending backend alignment).
    * No channel exists until a project is bound; `initialize` runs on the handle's stream. */
-  acquireChannel: (projectId: string) => Promise<AcpChannelHandle>
+  acquireChannel: (projectId: string, sessionScopeId?: string) => Promise<AcpChannelHandle>
 }
 
 export interface AcpConnectorTarget {
@@ -91,8 +91,8 @@ export async function loadAcpTarget(): Promise<AcpConnectorTarget> {
 
 /**
  * Peer + spec bound together: every target test drives one controllable Harness through it.
- * Each offered project gets its OWN peer and its own managed handle — a connector that leaked
- * a channel across projects would talk to the wrong peer.
+ * Each acquisition gets its OWN peer and managed handle. The first peer for each project is
+ * available before acquisition so tests can arrange native facts without opening a channel.
  */
 export async function connectTargetFor(options: {
   capabilities?: acp.AgentCapabilities
@@ -101,15 +101,19 @@ export async function connectTargetFor(options: {
   const target = await loadAcpTarget()
   const projectIds = Object.keys(options.projects)
   const peers = new Map<string, HarnessPeer>()
+  const allPeers = new Map<string, HarnessPeer[]>()
   for (const id of projectIds) peers.set(id, new HarnessPeer({ capabilities: options.capabilities }))
+  for (const [id, peer] of peers) allPeers.set(id, [peer])
   const projects: AgentWorkspaceInfo[] = projectIds.map(id => ({ id, normalizedPath: options.projects[id] }))
   // Records every project a channel was acquired for, and every explicit backend release.
   // A connector that opens a project-less or unoffered-project channel is caught by `acquired`
   // staying empty; one that treats a transport close or a view switch as a release is caught
   // by `released`.
   const acquired: string[] = []
+  const scopes: (string | undefined)[] = []
   const released: string[] = []
   const handles = new Map<string, AcpChannelHandle>()
+  const scopedHandles = new Map<string, AcpChannelHandle>()
   const spec: AcpChannelSpec = {
     serverInstanceId: 'https://harness.test|server_1',
     harness: { id: 'pi', title: 'PI Harness' },
@@ -119,33 +123,44 @@ export async function connectTargetFor(options: {
       if (!found) throw new Error(`project-invalid: ${id} is not offered by this Server`)
       return found
     },
-    acquireChannel: async projectId => {
+    acquireChannel: async (projectId, scope) => {
+      const scopeKey = JSON.stringify([projectId, scope ?? null])
+      const existing = scopedHandles.get(scopeKey)
+      if (existing) return existing
       const binding = projects.find(item => item.id === projectId)
-      const peer = peers.get(projectId)
+      let peer = peers.get(projectId)
       if (!binding || !peer) throw new Error(`project-invalid: ${projectId} is not offered by this Server`)
+      const count = acquired.filter(id => id === projectId).length
+      if (count > 0) {
+        peer = new HarnessPeer({ capabilities: options.capabilities })
+        allPeers.get(projectId)!.push(peer)
+      }
       acquired.push(projectId)
+      scopes.push(scope)
+      const acquiredPeer = peer
       const handle: AcpChannelHandle = {
-        connectionId: `chan_${projectId}`,
+        connectionId: `chan_${projectId}${count === 0 ? '' : `_${count + 1}`}`,
         binding,
         stream: peer.stream,
-        release: async () => { released.push(projectId); peer.close() },
+        release: async () => { released.push(projectId); acquiredPeer.close() },
       }
       handles.set(projectId, handle)
+      scopedHandles.set(scopeKey, handle)
       return handle
     },
   }
   const connector = target.createConnector(spec)
   const client = await connector.connect()
-  const peerFor = (projectId: string) => {
-    const peer = peers.get(projectId)
+  const peerFor = (projectId: string, acquisitionIndex = 0) => {
+    const peer = allPeers.get(projectId)?.[acquisitionIndex]
     if (!peer) throw new Error(`no fixture peer for project ${projectId}`)
     return peer
   }
-  const closeAll = async () => { for (const peer of peers.values()) peer.close() }
+  const closeAll = async () => { for (const projectPeers of allPeers.values()) for (const peer of projectPeers) peer.close() }
   // The single-project convenience is lazy: only tests that bind ws_app ever touch it
   // (R27 offers ws_a/ws_b and reads its peers through `peerFor`; an eager `peerFor('ws_app')`
   // in this return object crashed the fixture before the connector was even constructed).
-  return { target, spec, connector, client, projects, acquired, released, handles, peerFor, closeAll,
+  return { target, spec, connector, client, projects, acquired, scopes, released, handles, peerFor, closeAll,
     get peer(): HarnessPeer {
       const appPeer = peers.get('ws_app')
       if (!appPeer) throw new Error('no fixture peer for project ws_app')

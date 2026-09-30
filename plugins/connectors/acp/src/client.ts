@@ -13,8 +13,8 @@ import { referenceScheme, samePreparedReference, validPreparedReference, type Ac
  * The single ACP wire→`AgentSnapshot` mapping for this product (no other module speaks protocol).
  *
  * Channel model (reviewed seam, tests/integration/acp-connector/fixtures/target-seam.ts): selecting the
- * Server/Harness reads projects only — no channel. `openWorkspace` binds one project, acquires its
- * managed channel and runs exactly one `initialize` on it. A draft stays frontend-only until
+ * Server/Harness and `openWorkspace` read and bind projects only — no channel. Every new session
+ * acquires its own managed channel and runs exactly one `initialize`. A draft stays frontend-only until
  * `createAndSend`, which lazily runs `session/new` + `session/prompt` and resolves once the Harness
  * has ACCEPTED the first send (any inbound event referencing the native session: a `session/update`,
  * a reverse request, or the prompt response) — never waiting for the whole turn, and rejecting (not
@@ -42,6 +42,7 @@ const KNOWN_SESSION_UPDATES = new Set([
 
 interface Channel {
   readonly projectId: string
+  readonly sessionScopeId?: string
   readonly binding: AgentWorkspaceInfo
   readonly handle: AcpChannelHandle
   conn: acp.ClientSideConnection
@@ -59,6 +60,13 @@ interface Route { channel: Channel; nativeId: string; key: string }
 interface InteractionRecord { item: AgentInteraction; settle: (response: acp.RequestPermissionResponse) => void; runId: string }
 interface FirstSend { settle: () => void; fail: (error: unknown) => void }
 
+/** A structural submission fact the shared facade can consume without importing this connector.
+ * Only an issued native operation with no authoritative refusal gets this marker. */
+class SubmissionOutcomeUnknownError extends Error {
+  readonly code = 'SUBMISSION_OUTCOME_UNKNOWN'
+  constructor(cause: unknown) { super(cause instanceof Error ? cause.message : String(cause)) }
+}
+
 export class AcpClient implements AgentClient {
   isDisposed = false
   private readonly spec: AcpChannelSpec
@@ -66,6 +74,8 @@ export class AcpClient implements AgentClient {
   private readonly listeners = new Set<() => void>()
   private readonly channels = new Map<string, Channel>()
   private readonly opening = new Map<string, Promise<Channel>>()
+  private readonly firstSendRequests = new Set<string>()
+  private readonly historyScopes = new Map<string, string>()
   /** Handles acquired but not yet registered as channels: between `acquireChannel` returning and
    * the channel landing in `channels`, this set — not `channels` — is what makes dispose() able to
    * reach the handle, so a late arrival can never be orphaned unreleased. */
@@ -184,7 +194,7 @@ export class AcpClient implements AgentClient {
     const route = this.routes.get(sessionKey)
     if (!route) return Object.freeze({ kind: 'absent' })
     const channel = route.channel
-    if (this.isDisposed || channel.commandsDown || this.channels.get(channel.projectId) !== channel)
+    if (this.isDisposed || channel.commandsDown || this.channels.get(channel.handle.connectionId) !== channel)
       return Object.freeze({ kind: 'unknown', reason: 'channel-down' })
     if (!channel.handle.subscribeDown)
       return Object.freeze({ kind: 'unknown', reason: 'unobservable' })
@@ -216,22 +226,26 @@ export class AcpClient implements AgentClient {
 
   // ——— channel lifecycle ————————————————————————————————————————————————
 
-  private async ensureChannel(projectId: string): Promise<Channel> {
+  private async ensureChannel(projectId: string, sessionScopeId?: string): Promise<Channel> {
     this.assertLive()
-    const live = this.channels.get(projectId)
+    // Only history/load may explicitly reuse a project's existing channel. New sessions always
+    // supply a fresh scope; connection identity, never project identity, owns their live routes.
+    const live = [...this.channels.values()].find(channel => channel.projectId === projectId
+      && !channel.commandsDown && (sessionScopeId === undefined || channel.sessionScopeId === sessionScopeId))
     if (live) return live
-    const pending = this.opening.get(projectId)
+    const openingKey = JSON.stringify([projectId, sessionScopeId ?? null])
+    const pending = this.opening.get(openingKey)
     if (pending) return await pending
     // The opening entry is cleared on success AND failure: a failed task left in the map would pin
     // the project to the old error forever, so a retry could never recover a dropped handshake.
-    const task = this.acquireAndInitialize(projectId)
+    const task = this.acquireAndInitialize(projectId, sessionScopeId)
       // The entry stays until the task itself settles — after dispose() it is the drain
       // attestation's witness that this attempt can still stand a late handle down.
       .finally(() => {
-        if (this.opening.get(projectId) === task) this.opening.delete(projectId)
+        if (this.opening.get(openingKey) === task) this.opening.delete(openingKey)
         this.maybeDrainReleases()
       })
-    this.opening.set(projectId, task)
+    this.opening.set(openingKey, task)
     return task
   }
 
@@ -293,10 +307,15 @@ export class AcpClient implements AgentClient {
    * every cwd this client sends (reviewed seam: `handle.binding.normalizedPath` is the
    * `session/new` cwd). `openProject` runs first (an unoffered project throws `project-invalid`
    * before any channel or wire traffic), then exactly one `initialize`. */
-  private async acquireAndInitialize(projectId: string): Promise<Channel> {
+  private async acquireAndInitialize(projectId: string, sessionScopeId?: string): Promise<Channel> {
     const opened = await this.spec.openProject(projectId)
+    if (opened.id !== projectId) throw new Error('ACP project binding changed')
     if (!this.projects.some(item => item.id === opened.id)) this.projects.push(opened)
-    const handle = await this.spec.acquireChannel(opened.id)
+    this.assertLive()
+    const handle = await this.spec.acquireChannel(opened.id, sessionScopeId)
+    if (this.channels.has(handle.connectionId)
+        || [...this.unownedHandles].some(item => item.connectionId === handle.connectionId))
+      throw new Error('ACP channel acquisition reused a live connection identity')
     // From here on, this attempt owns the handle: dispose() mid-handshake reaches it through
     // unownedHandles (it is not in `channels` yet), and whoever gets there first releases it once.
     this.unownedHandles.add(handle)
@@ -313,7 +332,7 @@ export class AcpClient implements AgentClient {
       throw new Error('ACP connection disposed')
     }
     const channel: Channel = {
-      projectId: binding.id, binding, handle,
+      projectId: binding.id, sessionScopeId, binding, handle,
       conn: undefined as unknown as acp.ClientSideConnection,
       capabilities: {}, nativeToKey: new Map(), commandsDown: false,
       creatingSessions: 0, pendingCommands: new Map(),
@@ -348,7 +367,7 @@ export class AcpClient implements AgentClient {
     } finally {
       this.unownedHandles.delete(handle)
     }
-    this.channels.set(binding.id, channel)
+    this.channels.set(handle.connectionId, channel)
     this.publishHistory()
     return channel
   }
@@ -450,10 +469,14 @@ export class AcpClient implements AgentClient {
   // ——— AgentClient surface ————————————————————————————————————————————————
 
   async openWorkspace(id: string): Promise<AgentWorkspaceInfo> {
-    const channel = await this.ensureChannel(id)
+    this.assertLive()
+    const binding = await this.spec.openProject(id)
+    this.assertLive()
+    if (binding.id !== id) throw new Error('ACP project binding changed')
+    if (!this.projects.some(item => item.id === id)) this.projects.push(binding)
     this.selectedWorkspaceId = id
     this.publish()
-    return channel.binding
+    return binding
   }
 
   async refreshWorkspaces(): Promise<void> {
@@ -469,12 +492,17 @@ export class AcpClient implements AgentClient {
   }
 
   private async createNativeSession(channel: Channel) {
+    this.assertLive()
     channel.creatingSessions += 1
     let returnedId: string | undefined
     try {
       const created = await channel.conn.newSession({ cwd: channel.binding.normalizedPath, mcpServers: [] })
+      if (this.isDisposed) throw new SubmissionOutcomeUnknownError('ACP connection disposed')
       returnedId = created.sessionId
       return created
+    } catch (error) {
+      if (error instanceof acp.RequestError) throw error
+      throw new SubmissionOutcomeUnknownError(error)
     } finally {
       channel.creatingSessions -= 1
       if (channel.creatingSessions === 0) {
@@ -489,8 +517,11 @@ export class AcpClient implements AgentClient {
    * NOT the whole turn (R27). An unknown outcome rejects; the caller keeps its requestId. */
   async createAndSend(workspaceId: string, text: string, requestId: string): Promise<{ sessionId: string }> {
     this.assertLive()
-    void requestId // the ACP wire carries no client request id; idempotence is held by the caller until acceptance
-    const channel = await this.ensureChannel(workspaceId)
+    // A failed/uncertain first send cannot be blindly repeated as another native session.
+    if (this.firstSendRequests.has(requestId))
+      throw new SubmissionOutcomeUnknownError('ACP first send outcome unknown: request identity already used')
+    this.firstSendRequests.add(requestId)
+    const channel = await this.ensureChannel(workspaceId, globalThis.crypto.randomUUID())
     const created = await this.createNativeSession(channel)
     const nativeId = created.sessionId
     const key = this.keyFor(channel, nativeId)
@@ -507,7 +538,7 @@ export class AcpClient implements AgentClient {
 
   async newSession(): Promise<string> {
     const projectId = this.selectedChannelId()
-    const channel = await this.ensureChannel(projectId)
+    const channel = await this.ensureChannel(projectId, globalThis.crypto.randomUUID())
     const created = await this.createNativeSession(channel)
     const key = this.keyFor(channel, created.sessionId)
     this.activateCommandSession(channel, key)
@@ -518,7 +549,14 @@ export class AcpClient implements AgentClient {
 
   async refreshSessions(): Promise<void> {
     this.assertLive()
-    const listable = [...this.channels.values()].filter(channel => channel.capabilities.sessionCapabilities?.list != null)
+    let listable = [...this.channels.values()].filter(channel => channel.capabilities.sessionCapabilities?.list != null)
+    if (!listable.length && this.selectedWorkspaceId) {
+      const projectId = this.selectedWorkspaceId
+      let scope = this.historyScopes.get(projectId)
+      if (!scope) { scope = globalThis.crypto.randomUUID(); this.historyScopes.set(projectId, scope) }
+      await this.ensureChannel(projectId, scope)
+      listable = [...this.channels.values()].filter(channel => channel.capabilities.sessionCapabilities?.list != null)
+    }
     if (!listable.length) {
       // Two different facts share this branch. NO channel bound is not a history failure — there is
       // simply no Harness to ask yet (the project gate blocks sends meanwhile), so the honest answer
@@ -589,7 +627,7 @@ export class AcpClient implements AgentClient {
 
   private attachmentRouteLive(route: Route, sessionId: string): boolean {
     return !this.isDisposed && !route.channel.commandsDown
-      && this.channels.get(route.channel.projectId) === route.channel
+      && this.channels.get(route.channel.handle.connectionId) === route.channel
       && this.routes.get(sessionId) === route
       && this.state.selectedSessionId === sessionId
       && this.activeCommandSession.get(route.channel.handle.connectionId) === sessionId
@@ -671,7 +709,7 @@ export class AcpClient implements AgentClient {
     const authorize = route.channel.handle.authorizeSubmission
     if (!authorize) throw new Error('ACP backend submission admission unavailable')
     if (!route.channel.handle.subscribeDown) throw new Error('ACP channel liveness unobservable')
-    if (route.channel.commandsDown || this.channels.get(route.channel.projectId) !== route.channel)
+    if (route.channel.commandsDown || this.channels.get(route.channel.handle.connectionId) !== route.channel)
       throw new Error('ACP channel owner gone or down')
     if (this.state.selectedSessionId !== sessionId
         || this.activeCommandSession.get(route.channel.handle.connectionId) !== sessionId)
@@ -712,7 +750,7 @@ export class AcpClient implements AgentClient {
       // An accepted backend decision authorizes only the owner state observed at admission.
       // Session selection, another run, release and transport death can all change while awaited.
       if (this.isDisposed || route.channel.commandsDown
-          || this.channels.get(route.channel.projectId) !== route.channel
+          || this.channels.get(route.channel.handle.connectionId) !== route.channel
           || this.routes.get(sessionId) !== route)
         throw new Error('ACP channel owner gone or down')
       if (this.state.selectedSessionId !== sessionId
@@ -808,7 +846,8 @@ export class AcpClient implements AgentClient {
   dispose(): void {
     if (this.isDisposed) return
     this.isDisposed = true
-    for (const acceptance of this.firstSends.values()) acceptance.fail(new Error('ACP connection disposed'))
+    for (const acceptance of this.firstSends.values())
+      acceptance.fail(new SubmissionOutcomeUnknownError('ACP connection disposed'))
     this.firstSends.clear()
     for (const run of this.runs.values()) if (OPEN_RUN(run.status)) run.status = 'unknown'
     for (const record of this.interactions.values()) if (record.item.state === 'pending') record.item.state = 'unknown'
@@ -857,9 +896,10 @@ export class AcpClient implements AgentClient {
         return response
       },
       error => {
-        this.accept(channel, nativeId, error)
-        this.finishTurn(runId, key, 'unknown')
-        throw error
+        const failure = error instanceof acp.RequestError ? error : new SubmissionOutcomeUnknownError(error)
+        this.accept(channel, nativeId, failure)
+        this.finishTurn(runId, key, error instanceof acp.RequestError ? 'failed' : 'unknown')
+        throw failure
       },
     )
     void turn.catch(() => undefined) // the caller's copy carries the rejection; the internal one must not go unhandled
@@ -928,7 +968,7 @@ export class AcpClient implements AgentClient {
   // ——— first-send acceptance ———————————————————————————————————————————————
 
   private holdAcceptance(channel: Channel, nativeId: string): FirstSend & { promise: Promise<void> } {
-    const slot = `${channel.projectId}|${nativeId}`
+    const slot = JSON.stringify([channel.handle.connectionId, nativeId])
     let settle!: () => void
     let fail!: (error: unknown) => void
     const promise = new Promise<void>((resolve, reject) => { settle = resolve; fail = reject })
@@ -943,7 +983,7 @@ export class AcpClient implements AgentClient {
   /** Any inbound event naming the native session — an update, a reverse request, or the response —
    * is the proof the Harness accepted the first send. */
   private accept(channel: Channel, nativeId: string, failure?: unknown) {
-    const acceptance = this.firstSends.get(`${channel.projectId}|${nativeId}`)
+    const acceptance = this.firstSends.get(JSON.stringify([channel.handle.connectionId, nativeId]))
     if (!acceptance) return
     if (failure === undefined) acceptance.settle()
     else acceptance.fail(failure)
