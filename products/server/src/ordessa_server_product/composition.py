@@ -233,6 +233,8 @@ class ServerProductComposition:
     ) -> Any:
         from ordessa_server_compat.composition import build_runtime_from_native_adapter
         from ordessa_profile.server_plugin import ProfileServerPlugin
+        from ordessa_model_provider.plugin import ModelProviderPlugin
+        from .skills import ProductSkillsPlugin
 
         self._assemble_legacy_chain()
         runtime = build_runtime_from_native_adapter(
@@ -240,9 +242,32 @@ class ServerProductComposition:
             adapter_command=adapter_command, adapter_args=adapter_args,
             native_continuation=native_continuation,
             installed_artifact_root=installed_artifact_root,
-            extra_server_plugins=(ProfileServerPlugin(),),
         )
-        self._wire_admission_authority(runtime)
+        def current_ceilings():
+            authority = runtime.plugin_host.provided_port("permissions.authorizer@1")
+            if authority is None:
+                raise RuntimeError("permissions authority is not active")
+            return authority.ceiling_provider()
+
+        try:
+            extras = (ProfileServerPlugin(), ModelProviderPlugin(),
+                      ProductSkillsPlugin(permissions=current_ceilings))
+            # Native composition uses an explicit base selection. The product,
+            # not the host or business plugins, declares its additional points.
+            for point in self.server_contribution_points():
+                runtime.plugin_host.register_contribution_point(
+                    point.point_id, point.api_version, handler=point.handler,
+                    exclusive=point.exclusive)
+            runtime.plugin_host.activate_all(extras)
+            runtime.plugin_selection = (*runtime.plugin_selection, *extras)
+            self._wire_admission_authority(runtime)
+        except BaseException as activation_failure:
+            try:
+                runtime.stop()
+            except BaseException as cleanup_failure:
+                activation_failure.cleanup_errors = (
+                    *getattr(activation_failure, "cleanup_errors", ()), cleanup_failure)
+            raise
         return runtime
 
     def sidecar_runtime(

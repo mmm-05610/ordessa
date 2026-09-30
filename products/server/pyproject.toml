@@ -15,6 +15,7 @@ dependencies = [
     "ordessa-workspace==2.0.0a1",
     "ordessa-harness==2.0.0a1",
     "ordessa-profile==2.0.0a1",
+    "ordessa-skills==2.0.0a1",
     "ordessa-model-provider==2.0.0a1",
     "ordessa-harness-api==1.0.0a1",
     "ordessa-sandbox-backend==0.1.0",

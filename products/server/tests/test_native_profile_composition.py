@@ -41,10 +41,59 @@ def test_native_product_owns_profile_management_without_claiming_application(tmp
             "operationKey": "native-profile-create", "realm": "local", "harnessId": "pi",
             "displayName": "Native"})["data"]
         assert runtime.wire.dispatch("profiles.v2.listProfiles", {}) == {"data": [profile]}
+        assert runtime.wire.dispatch("skills.list", {"requestId": "skills-native-list"})["items"] == []
+        assert "assets.skills" in str(runtime.wire.dispatch("profiles.v2.describeFacets", {}))
         with pytest.raises(WireError):
             runtime.wire.dispatch("profiles.v2.beginTurnApplication", {})
     finally:
         runtime.stop()
+
+
+def test_native_product_skills_edges_follow_restart_round(tmp_path):
+    root = Path(__file__).resolve().parents[3]
+    runtime = create_composition().native_runtime(
+        tmp_path / "data", plugin_root=root / "plugins/harness", harness_id="pi",
+        adapter_command=shutil.which("node"), installed_artifact_root="/opt/ordessa/artifacts")
+    try:
+        runtime.start()
+        original = runtime.plugin_host.provided_port("profile.core")
+        skills = runtime.plugin_host.provided_port("skills.service")
+        runtime.stop()
+        runtime.start()
+        assert runtime.plugin_host.provided_port("profile.core") is not original
+        assert runtime.plugin_host.provided_port("skills.service") is not skills
+        assert runtime.wire.dispatch("skills.list", {"requestId": "skills-restart-list"})["items"] == []
+        assert "assets.skills" in str(runtime.wire.dispatch("profiles.v2.describeFacets", {}))
+        resolved = runtime.wire.dispatch("skills.resolve", {
+            "requestId": "skills-restart-resolve", "harnessId": "pi"})
+        assert not any(d["kind"] == "mandatory_policy_unavailable" for d in resolved["diagnostics"])
+        current_skills = runtime.plugin_host.provided_port("skills.service")
+        assert current_skills.mandatory_policy.layer_status()["status"] == "consulted"
+    finally:
+        runtime.stop()
+
+
+def test_native_extra_plugin_failure_releases_product_root(tmp_path, monkeypatch):
+    import ordessa_server_product.skills as assembly
+    real = assembly.ProductSkillsPlugin
+
+    class FailedSkills(real):
+        def build(self, context):
+            raise ValueError("controlled Skills activation failure")
+
+    root = Path(__file__).resolve().parents[3]
+    kwargs = dict(plugin_root=root / "plugins/harness", harness_id="pi",
+                  adapter_command=shutil.which("node"), installed_artifact_root="/opt/ordessa/artifacts")
+    monkeypatch.setattr(assembly, "ProductSkillsPlugin", FailedSkills)
+    with pytest.raises(ValueError, match="controlled Skills activation failure"):
+        create_composition().native_runtime(tmp_path / "data", **kwargs)
+    monkeypatch.setattr(assembly, "ProductSkillsPlugin", real)
+    retry = create_composition().native_runtime(tmp_path / "data", **kwargs)
+    try:
+        retry.start()
+        assert retry.wire.dispatch("skills.list", {"requestId": "skills-retry-list"})["items"] == []
+    finally:
+        retry.stop()
 
 
 def test_native_product_passes_installed_root_to_harness_startup_only(tmp_path, monkeypatch):

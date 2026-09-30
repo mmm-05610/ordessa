@@ -164,6 +164,7 @@ const PRODUCT_PACKAGES = [
   'plugins/server-compat',
   'plugins/assets/model-provider/server',
   'plugins/profile',
+  'plugins/assets/skills',
   'products/server',
 ]
 

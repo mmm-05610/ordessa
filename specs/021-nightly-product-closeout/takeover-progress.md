@@ -110,3 +110,11 @@ Profile Chat 有限入口接线已由主代理复跑 23/23：合法 default fact
 - Profile carrier 必须消费后端 owner 显式解析的 ApplicationTarget，不再从 realm/nativeSessionKey 猜 server/channel，也不以确认缓存猜 runtime generation。计划记录完整 target fence；应用前重新解析，server/channel/generation 任一变化均在申请 permit 与 effect 前拒绝。三个新增反例修复前全红、修复后全绿；carrier + real-service 定向 27/27。生产 owner 与原生配置应用仍未接通，不冒充完成。
 - 已构建临时真实开发运行根 /tmp/ordessa-native-dev-runtime-bNpAO6zy：独立集成 Python venv 加当前仓 Go 桥（Go 1.24.13，CGO=0，digest 714044a5b490a53d5fa89aade993c496e5fa3a5f7c614b4465c4990575185cbd）。这是开发验证环境，不是发行安装包或历史基线桥摘要。
 - 追加 Profile 后端全套 173/173（Starlette 弃用告警一条）。真实开发运行根下空宿主 Electron smoke 通过；完整启用清单 + 真实 native Server 探针根界面挂载成功，但因 Skills 前端调用 skills.catalogue 而 native 产品未组合 Skills 后端报错，故产品探针退出 1。native_runtime 当前仅追加 Profile；default_plugins 也未组合 Skills。这是已确认装配缺口，不作完整产品可用声明；后续须连同贡献点、Profile/权限端口正确组合，不通过隐藏错误或伪造能力解决。
+
+### 原生产品领域装配（继续推进，完整产品待重验）
+
+- native_runtime 追加真实 ModelProvider/Skills（保留 Profile），产品显式声明 Harness C2 贡献点，使用公开注册/激活面，不修改 Server/Pacthold 核心。插件选择包含追加项，停机重启会重新激活全量选择。
+- ProductSkillsPlugin 仅在产品内补 Profile 依赖与当轮 ProfilePluginServices。Skills 的权限可选边通过现有 callable 注入，从当前活跃 authorizer 读取 ceiling；不缓存被处置轮次的对象、不将读取失败当无约束。不可直接依赖 permissions 全部端口：其 acp.admission.gate 与宿主同名，会被既有冲突门正确拒绝。没有放宽冲突门。
+- 原生装配 9/9：真实库 wire、Profile assets.skills 配置贡献、重启换服务实例、重启后权限 consulted、追加激活失败后同数据根重试，均通过。整个 Skills 后端＋产品测试＋Profile 后端 625/625，1 条 Starlette 弃用告警。Skills 引用证据中的 Claude 行号因源码调整过时，已改到实际版本行，未改版本主张或断言。
+- 产品发行依赖与打包本地闭包补 ordessa-skills；deb 合同检查追加 Profile/Skills/product skills 模块。尚未重建 deb，不能把源码闭包更新记为安装包验证通过。
+- Skills 管理页 gateway 还使用另一套历史方法名/DTO，仅补装配不足；有界子代理仅处理 plugins/assets/skills/desktop 下协议映射。完整 Electron 产品探针须等待这段实现后重跑。普通 default_plugins 的领域选择本轮不变，追加能力限定 native 产品路径。

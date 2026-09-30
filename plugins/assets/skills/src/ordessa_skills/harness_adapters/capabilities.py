@@ -218,7 +218,7 @@ BRAND_STATEMENTS: Mapping[str, CapabilityStatement] = MappingProxyType({
               f"{BM}:24,52 — CLI 2.1.274 is a comment-only first-hand"
               " observation, not a machine pin; §6 does not list it as proven"),
         _fact("adapter_version", SUPPORTED,
-              f"{BM}:22,52 (plugins/harness/packaging/claude/package.json:13;"
+              f"{BM}:22,52 (plugins/harness/packaging/claude/package.json:14;"
               " plugins/harness/src/ordessa_harness/claude/production.py:66-67)"),
         _fact("discovery_mechanism", UNKNOWN,
               f"{BM}:52 — every skill cell (roots actually scanned, reload,"
@@ -302,8 +302,8 @@ BRAND_PINS: Mapping[str, VersionPin] = MappingProxyType({
         harness_id="claude-code",
         native_version="2.1.274",
         adapter_version="0.81.2",
-        native_evidence=f"{BM}:24,52 (plugins/harness/src/ordessa_harness/harnesses.toml:111-113)",
-        adapter_evidence=f"{BM}:22 (plugins/harness/packaging/claude/package.json:13)",
+        native_evidence=f"{BM}:24,52 (plugins/harness/src/ordessa_harness/harnesses.toml:119)",
+        adapter_evidence=f"{BM}:22 (plugins/harness/packaging/claude/package.json:14)",
         native_pin_is_machine_enforced=False,
     ),
 })
