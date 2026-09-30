@@ -63,6 +63,11 @@ SERVER_CLI_FLAGS: "tuple[ServerFlagSpec, ...]" = (
         feeds="native_continuation", route="native_runtime",
     ),
     ServerFlagSpec(
+        flags=("--native-installed-artifact-root",), dest="native_installed_artifact_root",
+        add={"help": "root-managed installed ACP artifact directory"},
+        feeds="installed_artifact_root", route="native_runtime",
+    ),
+    ServerFlagSpec(
         flags=("--sidecar-deployment",), dest="sidecar_deployment",
         add={"type": "path", "help": "non-secret Harness sidecar deployment JSON"},
         feeds="deployment_path", route="sidecar_runtime",
@@ -168,11 +173,14 @@ def plan_server_cli(values: Mapping[str, Any]) -> ServerCliPlan:
                 **_fed("native_adapter_command", values),
                 **_fed("native_adapter_arg", values, tuple),
                 **_fed("native_continuation", values),
+                **(_fed("native_installed_artifact_root", values)
+                   if _value(values, "native_installed_artifact_root") is not None else {}),
             },
         )
     if (_value(values, "native_harness") or _value(values, "native_adapter_command")
             or _value(values, "native_adapter_arg")
-            or _value(values, "native_continuation")):
+            or _value(values, "native_continuation")
+            or _value(values, "native_installed_artifact_root")):
         return ServerCliPlan(
             error="native adapter options require --execution-mode native")
     if sidecar:

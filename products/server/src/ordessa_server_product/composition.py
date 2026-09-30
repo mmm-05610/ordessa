@@ -229,14 +229,18 @@ class ServerProductComposition:
         self, data_root: Any, *, plugin_root: Any, harness_id: str,
         adapter_command: str, adapter_args: "tuple[str, ...]" = (),
         native_continuation: bool = False,
+        installed_artifact_root: str | None = None,
     ) -> Any:
         from ordessa_server_compat.composition import build_runtime_from_native_adapter
+        from ordessa_profile.server_plugin import ProfileServerPlugin
 
         self._assemble_legacy_chain()
         runtime = build_runtime_from_native_adapter(
             data_root, plugin_root=plugin_root, harness_id=harness_id,
             adapter_command=adapter_command, adapter_args=adapter_args,
             native_continuation=native_continuation,
+            installed_artifact_root=installed_artifact_root,
+            extra_server_plugins=(ProfileServerPlugin(),),
         )
         self._wire_admission_authority(runtime)
         return runtime

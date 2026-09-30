@@ -26,7 +26,7 @@ import { createSettingsStore } from './settings-store'
 import type { UpdateClient } from './update-client'
 import { createUpdateClient, defaultPublicKeyPath } from './update-engine'
 import { createAbsentWirePort, type WirePort } from './wire-fixture'
-import { HttpWirePort, ServerBridge, tokenReaderFor } from '@ordessa/server-bridge'
+import { HttpWirePort, ServerBridge, tokenReaderFor, productServerArgs } from '@ordessa/server-bridge'
 import type { Fault } from '@extensions/ordessa.contracts/contract.js'
 
 const distDir = __dirname
@@ -120,9 +120,10 @@ app.whenReady().then(async () => {
   })
   // INT-01 真实接缝（C-01/C-02/C-03）：服务端由本宿主启动并监管，wire 口打到它身上。
   // 令牌只在主进程（C-03 §4）：`readToken` 由这里供给，WirePort 不存令牌字段。
-  const bridge = new ServerBridge({})
+  let bridge: ServerBridge | undefined
   let wire: WirePort
   try {
+    bridge = new ServerBridge({ args: productServerArgs() })
     const instance = await bridge.start()
     // C-02 §2：握手已读，把 origin/token 定位符交给本进程的扩展宿主（native 适配器
     // 从 process.env 读，lifecycle.ts 的既定交接点）。launcher 显式给过的非空值不
@@ -200,7 +201,7 @@ app.whenReady().then(async () => {
 
   quitSteps = [
     // C-02 §5：只终止本宿主 spawn 的进程。
-    { name: 'stop-server', run: async () => { await bridge.stop() } },
+    { name: 'stop-server', run: async () => { await bridge?.stop() } },
     { name: 'stop-children', run: () => log.info('stopping child processes') },
     { name: 'release-data-root-lock', run: async () => { await releaseDataRootLock?.() } },
     { name: 'flush-logs', run: async () => { await logService?.close() } },

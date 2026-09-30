@@ -414,6 +414,8 @@ def build_runtime_from_native_adapter(
     adapter_command: str, adapter_args: tuple[str, ...] = (),
     native_continuation: bool = False,
     controlled_test_peer: bool = False,
+    installed_artifact_root: str | None = None,
+    extra_server_plugins: tuple = (),
 ) -> ServerRuntime:
     """Compose one current-user ACP Agent in an explicitly native Server.
 
@@ -439,6 +441,13 @@ def build_runtime_from_native_adapter(
         raise RuntimeError("NATIVE_CONTINUATION_INVALID")
     if type(controlled_test_peer) is not bool:
         raise RuntimeError("NATIVE_CONTROLLED_PEER_INVALID")
+    if installed_artifact_root is not None and (
+            controlled_test_peer or not isinstance(installed_artifact_root, str)
+            or not os.path.isabs(installed_artifact_root)
+            or installed_artifact_root.startswith("//")
+            or os.path.normpath(installed_artifact_root) != installed_artifact_root
+            or "\x00" in installed_artifact_root):
+        raise RuntimeError("NATIVE_INSTALLED_ROOT_INVALID")
     if (not Path(adapter_command).is_absolute() or not Path(adapter_command).is_file()
             or not os.access(adapter_command, os.X_OK)
             or any(not isinstance(arg, str) or "\x00" in arg for arg in adapter_args)):
@@ -556,6 +565,8 @@ def build_runtime_from_native_adapter(
             cwd=cwd, adapter=adapter, on_line=on_line, on_exit=on_exit,
             environment=environment,
             **({"controlled_test_peer": True} if controlled_test_peer else {}),
+            **({"installed_artifact_root": installed_artifact_root}
+               if installed_artifact_root is not None else {}),
         ).start()
 
     compat = ServerCompatPlugin(
@@ -574,7 +585,7 @@ def build_runtime_from_native_adapter(
         root,
         local_workspace_provider=LocalEnvironmentProvider(execution_mode="native"),
         server_plugins=(WorkspaceServerPlugin(), compat, acp,
-                        PermissionsBackendPlugin()),
+                        PermissionsBackendPlugin(), *extra_server_plugins),
     )
     runtime.native_harness_id = harness_id
     # The start hook reports the profile it created through the composition's

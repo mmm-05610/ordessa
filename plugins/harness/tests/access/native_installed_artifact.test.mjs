@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url"
 import test from "node:test"
 import { installedArtifactSummary } from "../../runtime/native-artifact-policy.mjs"
 import { resolveInstalledLaunch, resolveManagedLaunch } from "../../runtime/access-launch.mjs"
+import { nativeServerPlan } from "../../packaging/native-server-plan.mjs"
 
 const REPO = fileURLToPath(new URL("../../../../", import.meta.url))
 const ENTRY = fileURLToPath(new URL("../../runtime/access-entry.mjs", import.meta.url))
@@ -69,8 +70,15 @@ for (const brand of BRANDS) {
     assert.equal(python.status, 0, python.stderr)
     assert.deepEqual(installedArtifactSummary(f.root), JSON.parse(python.stdout))
     assert.equal(resolveInstalledLaunch(f.harness, f.launch, { artifactBase: f.base }).source, "installed-artifact")
+    const plan = nativeServerPlan({ harnessId: f.harness, pluginRoot: "/opt/ordessa/harness-plugin", artifactRoot: f.base })
+    assert.equal(Object.isFrozen(plan.args), true)
+    assert.deepEqual(plan.args, ["--execution-mode", "native", "--plugin-root", "/opt/ordessa/harness-plugin",
+      "--native-harness", f.harness, "--native-adapter-command", process.execPath,
+      `--native-adapter-arg=${f.entry}`, "--native-installed-artifact-root", f.base])
     fs.appendFileSync(f.entry, "// tampered\n")
     assert.throws(() => resolveInstalledLaunch(f.harness, f.launch, { artifactBase: f.base }), /ADAPTER_ARTIFACT_UNVERIFIED/)
+    assert.throws(() => nativeServerPlan({ harnessId: f.harness,
+      pluginRoot: "/opt/ordessa/harness-plugin", artifactRoot: f.base }), /ADAPTER_ARTIFACT_UNVERIFIED/)
   })
 }
 

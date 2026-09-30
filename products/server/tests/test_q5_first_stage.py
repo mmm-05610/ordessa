@@ -1,4 +1,4 @@
-"""Q5 first-stage product selection, without a second approval writer.
+"""Current product selection preserves the Q5 contribution and writer boundary.
 
 All host evidence uses a temporary data root and never starts a Server service
 or a native model. These adapters remain fail-closed until trusted facts and
@@ -29,7 +29,8 @@ from server_plugin_api import (
 
 EXPECTED_PLUGIN_IDS = (
     "ordessa.workspace", "ordessa.server-compat", "ordessa.harness.acp",
-    "ordessa.sandbox", "ordessa.sandbox-adapters", "ordessa.permissions-adapters",
+    "ordessa.model-provider", "ordessa.profile", "ordessa.sandbox",
+    "ordessa.sandbox-adapters", "permissions-backend", "ordessa.permissions-adapters",
 )
 
 
@@ -38,10 +39,11 @@ def test_product_dist_declares_the_three_selected_q5_dependencies():
     dependencies = set(project["project"]["dependencies"])
     assert {"ordessa-sandbox-backend==0.1.0", "ordessa-sandbox-adapters==0.1.0",
             "ordessa-permissions-adapters==0.1.0"} <= dependencies
-    assert not any(name.startswith("ordessa-permissions-backend") for name in dependencies)
+    assert {"ordessa-permissions-backend==0.1.0", "ordessa-model-provider==2.0.0a1",
+            "ordessa-profile==2.0.0a1"} <= dependencies
 
 
-def test_default_product_selects_three_q5_plugins_without_permissions_writer():
+def test_default_product_selects_current_domains_and_q5_plugins():
     plugins = create_composition().default_plugins()
     assert tuple(plugin.descriptor().id for plugin in plugins) == EXPECTED_PLUGIN_IDS
 
@@ -79,17 +81,18 @@ def test_explicit_plugin_selection_does_not_silently_gain_product_points(tmp_pat
         retry.stop()
 
 
-def test_real_product_registers_q5_ports_contributions_and_only_legacy_decide(tmp_path):
+def test_real_product_registers_q5_ports_and_distinct_approval_routes(tmp_path):
     runtime = build_runtime(tmp_path / "data")  # constructs only; no service start
     try:
         host = runtime.plugin_host
         assert host.active_ids() == EXPECTED_PLUGIN_IDS
         assert host.provided_port("sandbox.native-configuration@1") is not None
         assert host.provided_port("sandbox.describe@1") is not None
-        assert host.provided_port("permissions.authorizer@1") is None
+        assert host.provided_port("permissions.authorizer@1") is not None
         owners = {method.method_id: method.owner for method in host.methods.descriptors()
                   if method.method_id.endswith("approvals.decide")}
-        assert owners == {"approvals.decide": "ordessa.server-compat"}
+        assert owners == {"approvals.decide": "ordessa.server-compat",
+                          "permissions.approvals.decide": "permissions-backend"}
         assert {view.owner for view in host.contributions(CONFIGURATION_POINT)} == {
             "ordessa.sandbox-adapters", "ordessa.permissions-adapters"}
         assert len(host.contributions(CONFIGURATION_POINT)) == 6

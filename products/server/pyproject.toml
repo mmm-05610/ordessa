@@ -15,10 +15,12 @@ dependencies = [
     "ordessa-workspace==2.0.0a1",
     "ordessa-harness==2.0.0a1",
     "ordessa-profile==2.0.0a1",
+    "ordessa-model-provider==2.0.0a1",
     "ordessa-harness-api==1.0.0a1",
     "ordessa-sandbox-backend==0.1.0",
     "ordessa-sandbox-adapters==0.1.0",
     "ordessa-permissions-adapters==0.1.0",
+    "ordessa-permissions-backend==0.1.0",
     "pacthold-runtime-compat==0.1.0",
 ]
 

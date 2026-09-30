@@ -92,6 +92,15 @@ export function resolveManagedLaunch(harness, launch,
 }
 
 /** Explicit native installation route; refusal never falls back to another source. */
+export function installedLaunchReference(harness, artifactBase) {
+  if (!["pi", "codex", "claude-code"].includes(harness)) throw new LaunchRefusal("ADAPTER_ROUTE_UNBOUND")
+  if (typeof artifactBase !== "string") throw new LaunchRefusal("ADAPTER_ARTIFACT_UNVERIFIED")
+  const spec = MANAGED[harness]
+  return resolveInstalledLaunch(harness, { command: process.execPath,
+    args: [path.join(artifactBase, spec.artifact, "node_modules", spec.package, "dist/index.js")] },
+    { artifactBase })
+}
+
 export function resolveInstalledLaunch(harness, launch, { artifactBase } = {}) {
   if (!["pi", "codex", "claude-code"].includes(harness)) throw new LaunchRefusal("ADAPTER_ROUTE_UNBOUND")
   const spec = MANAGED[harness]

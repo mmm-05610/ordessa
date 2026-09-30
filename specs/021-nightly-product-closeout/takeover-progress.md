@@ -63,3 +63,24 @@
 native 校验主代理复跑：新增安装来源测试 7/7（正例明确模拟 root 元数据，实际文件内容与 Python v1 摘要交叉验证；真实 user-owned chmod555 树拒绝）；builder 路径迁移 + access route 15/15，Python startup argv 6/6。尚未安装系统资产、未证明真实品牌启动，产品 argv 仍待绑定。
 
 最终补充：Python startup argv 增加非规范双斜线根路径反例，主代理复跑 7/7；`npm run build` 17 扩展通过，lock 由 build 刷新。原生来源策略、插件契约消费微修复与产品测试依赖作为独立检查点收编，不合并 main、不发布、不执行真实模型。`sourceLockDigest` 目前仅验证格式；未绑定可信源锁文件，故不声明做过锁内容对比。
+
+## 下一检查点：原生产品装配与透明启动计划
+
+- 产品 CLI 增加 `--native-installed-artifact-root`，只允许 native 路径；规范绝对路径在创建数据根前验证。通过产品→compat composition→Harness transport 的 startup argv，不进入 connect 消息。
+- 原生产品显式注入 ProfileServerPlugin，Harness 目录来自实际 native 注册项；受控装配证明配置预设可创建/读取，未宣告会话应用方法。
+- compat 仅提供可追加插件实例的装配参数，不导入 Profile 实现。
+- 产品补齐已使用的 model-provider / permissions-backend 发行依赖；Q5 历史测试按当前 9 插件精确组合更新，保持两个审批路由分别归原 owner，未放宽成子集断言。
+- Harness 的 `packaging/native-server-plan.mjs` 复用唯一 managed descriptor 与校验策略，拥有品牌/包/入口路径；产品只传 harnessId/pluginRoot/artifactRoot。
+- 桌面主进程经通用 `productServerArgs` 解析 `ORDESSA_SERVER_ARGS_JSON` 后转交 ServerBridge。拒绝非数组、非字符串、NUL、超限输入，不作 shell 分词，不解析业务 flag；错误仍走既有故障 UI，不回落成另一个组合。
+- 开发产品入口 `products/desktop/run-native.mjs` 默认选 pi，可显式设 `ORDESSA_NATIVE_HARNESS`。需要真实 root 管理的安装资产和既有 bundled Python；没有资产会在启动前拒绝。该入口不安装资产、不关闭 Electron sandbox。
+- 本检查点仍为单 Harness 产品装配，不能宣称同时多 Harness 或真实对话已验收。
+
+主代理验证：产品/宿主/Profile/startup 定向 76/76，后加的 transport startup-only 装配反例单文件 7/7；server-bridge 参数与生命周期 25/25；native 策略＋三品牌启动计划 7/7（root metadata 正例为模拟）；全仓 typecheck 通过、17 扩展 build 通过。无模型、无装机、无发布。
+
+### Profile 实际应用的下一段（避免仅修入口假绿）
+
+1. Chat toolbar 当前 resolver 仅识别自己的 connection badge，必须消费现有通用 UI binding/outlet，而非 import Profile 组件。产品需要启用 UI service 并指定组件实现选择。
+2. Profile Chat 当前 entry 非 default factory；激活后应通过上述公开面注册与装载 picker，目录更新须能刷新，不能靠启动时一次 catalog 缓存。
+3. Chat 公共 API 目前无 scoped 提交前钩子；需要一条保持提交快照与草稿版本、异步拒绝不发送、不打断输出、无重复提交的接缝。
+4. Harness ConfigurationApplicationService 当前明确拒绝 InvokeAction，没有生产 live owner。须先由 ACP 的实际会话观察绑定 canonical SessionRef，再实现受控配置 action 的授权、执行、应答/readback；不能伪造 receipt 或把 session/new 观察当配置确认。
+5. Profile 服务只有管理 wire 方法；会话方法必须等配置应用与上述钩子接通后再宣告。跨 provider 重启恢复、多会话隔离要单独验收，不能根据同品牌 model 切换通过推断。

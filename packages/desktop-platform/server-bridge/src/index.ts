@@ -61,6 +61,8 @@ export {
   type ServerState,
 } from './lifecycle.js'
 
+export { productServerArgs } from './product-args.js'
+
 export {
   AbsentWirePort,
   HttpWirePort,
