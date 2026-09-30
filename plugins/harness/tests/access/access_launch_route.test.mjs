@@ -14,7 +14,7 @@ import { resolveManagedLaunch } from "../../runtime/access-launch.mjs"
 // inside `plugins/harness` must reach the same fixture as one from the repo
 // root (the staging test anchors its own copy the same way).
 const orchestrationPeer = fileURLToPath(new URL(
-  "../../../../tests/acp_orchestration/fixtures/bidirectional_acp_peer.mjs", import.meta.url))
+  "../../../../tests/integration/acp_orchestration/fixtures/bidirectional_acp_peer.mjs", import.meta.url))
 
 const pins = [
   ["pi", "pi-acp", "0.5.0"],

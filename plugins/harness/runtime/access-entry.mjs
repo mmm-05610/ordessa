@@ -46,7 +46,7 @@ import readline from "node:readline"
 import { harnessLaunchContext, isKnownHarness } from "../harnesses/index.mjs"
 import { openAcpConnection, PROCESS_GROUP_OWNERSHIP } from "./access-transport.mjs"
 import { matchControlledPeer, resolveControlledPeerAllowlist } from "./controlled-peers.mjs"
-import { resolveManagedLaunch, resolveLegacyLaunch, allowsPythonPath, launchDiscovery } from "./access-launch.mjs"
+import { resolveManagedLaunch, resolveInstalledLaunch, resolveLegacyLaunch, allowsPythonPath, launchDiscovery } from "./access-launch.mjs"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const snapshotRoot = path.resolve(here, "..", "third_party", "harness_remote")
@@ -159,7 +159,10 @@ async function main() {
   const argv = process.argv.slice(2)
   const controlledPeer = argv.length === 2 && argv[0] === "--native" && argv[1] === "--controlled-test-peer"
   const native = argv[0] === "--native"
-  if ((!controlledPeer && argv.length !== (native ? 1 : 0)) ||
+  const installed = native && argv.length === 3 && argv[1] === "--installed-artifact-root"
+    && path.isAbsolute(argv[2]) && path.resolve(argv[2]) === argv[2] && !argv[2].includes("\0")
+  const installedArtifactRoot = installed ? argv[2] : null
+  if ((!controlledPeer && !installed && argv.length !== (native ? 1 : 0)) ||
       (controlledPeer && process.env.AGENTBOX_ACCESS_TEST_MODE !== "controlled-peer-v1")) {
     fail({ code: "SIDECAR_MODE_INVALID" })
     return
@@ -315,6 +318,8 @@ async function main() {
       // renderer can only send control frames; it cannot turn on this startup
       // mode or choose a different executable through it.
       selectedLaunch = selectControlledPeerLaunch(harness, launch)
+    } else if (installedArtifactRoot !== null) {
+      selectedLaunch = resolveInstalledLaunch(harness, launch, { artifactBase: installedArtifactRoot })
     } else {
       selectedLaunch = resolveManagedLaunch(harness, launch)
         ?? resolveLegacyLaunch(harness, launch, environment)

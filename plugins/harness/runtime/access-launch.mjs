@@ -1,6 +1,7 @@
 import { realpathSync, readFileSync } from "node:fs"
 import path from "node:path"
 import { harnessLaunchContext, listHarnesses, registryIdentityVersionMatches } from "../harnesses/index.mjs"
+import { verifyInstalledArtifact } from "./native-artifact-policy.mjs"
 
 /** Launch authority for the three managed ACP brands. No network fallback is permitted. */
 
@@ -88,6 +89,22 @@ export function resolveManagedLaunch(harness, launch,
     return { command: process.execPath, args: [artifactEntry], source: "managed-artifact", version }
   }
   throw new LaunchRefusal("ADAPTER_LAUNCH_MISMATCH")
+}
+
+/** Explicit native installation route; refusal never falls back to another source. */
+export function resolveInstalledLaunch(harness, launch, { artifactBase } = {}) {
+  if (!["pi", "codex", "claude-code"].includes(harness)) throw new LaunchRefusal("ADAPTER_ROUTE_UNBOUND")
+  const spec = MANAGED[harness]
+  const version = pinFor(harness, harnessLaunchContext(harness, { find: () => null }))
+  const expectedEntry = typeof artifactBase === "string"
+    ? path.join(artifactBase, spec.artifact, "node_modules", spec.package, "dist/index.js") : null
+  if (launch.command !== process.execPath || launch.args?.length !== 1 || launch.args[0] !== expectedEntry) {
+    throw new LaunchRefusal("ADAPTER_LAUNCH_MISMATCH")
+  }
+  try {
+    const entry = verifyInstalledArtifact({ artifactBase, artifact: spec.artifact, packageName: spec.package, version })
+    return { command: process.execPath, args: [entry], source: "installed-artifact", version }
+  } catch { throw new LaunchRefusal("ADAPTER_ARTIFACT_UNVERIFIED") }
 }
 
 const LEGACY_ARTIFACTS = {

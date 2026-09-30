@@ -663,14 +663,18 @@ export function distributionFiles(distribution) {
 // -- Python digest (the reviewed implementation) -----------------------------
 
 function environmentForPython() {
-  const existing = process.env.PYTHONPATH ? `:${process.env.PYTHONPATH}` : ""
-  return { ...process.env, PYTHONPATH: `${path.join(REPO, "..", "packages", "pacthold", "src")}${existing}` }
+  const pythonPaths = [
+    path.resolve(REPO, "..", "..", "packages", "pacthold", "src"),
+    path.resolve(REPO, "..", "runtime-compat", "src"),
+    ...(process.env.PYTHONPATH ? [process.env.PYTHONPATH] : []),
+  ]
+  return { ...process.env, PYTHONPATH: pythonPaths.join(path.delimiter) }
 }
 
 export function treeSummary(directory) {
   const program = [
     "import json, sys",
-    "from pacthold.resource_contracts.runtime_artifacts import runtime_artifact_tree_summary as summary",
+    "from pacthold_runtime_compat.resource_contracts.runtime_artifacts import runtime_artifact_tree_summary as summary",
     "print(json.dumps(summary(sys.argv[1])))",
   ].join("; ")
   const result = spawnSync("python3", ["-c", program, directory], {

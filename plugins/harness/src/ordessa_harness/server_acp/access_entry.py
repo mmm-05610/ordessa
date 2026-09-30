@@ -63,6 +63,7 @@ class AccessEntryTransport:
                  on_exit: Callable[[Any], None],
                  environment: dict[str, str] | None = None,
                  controlled_test_peer: bool = False,
+                 installed_artifact_root: str | None = None,
                  connect_timeout: float = 60.0, close_timeout: float = 12.0) -> None:
         self._harness_id = harness_id
         self._cwd = cwd
@@ -75,6 +76,14 @@ class AccessEntryTransport:
         if type(controlled_test_peer) is not bool:
             raise TypeError("controlled_test_peer must be bool")
         entry_argv = [node, entry, "--native"]
+        if installed_artifact_root is not None:
+            if (controlled_test_peer or not isinstance(installed_artifact_root, str)
+                    or not os.path.isabs(installed_artifact_root)
+                    or installed_artifact_root.startswith("//")
+                    or os.path.normpath(installed_artifact_root) != installed_artifact_root
+                    or "\x00" in installed_artifact_root):
+                raise ValueError("installed_artifact_root must be a canonical absolute path without controlled peer mode")
+            entry_argv.extend(("--installed-artifact-root", installed_artifact_root))
         entry_environment = None if environment is None else dict(environment)
         if controlled_test_peer:
             entry_argv.append("--controlled-test-peer")

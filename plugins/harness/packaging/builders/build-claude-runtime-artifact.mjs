@@ -221,8 +221,12 @@ function assertPlainTree(root) {
 // -- Python digest (the reviewed implementation) -----------------------------
 
 function environmentForPython() {
-  const existing = process.env.PYTHONPATH ? `:${process.env.PYTHONPATH}` : ""
-  return { ...process.env, PYTHONPATH: `${path.join(REPO, "..", "runtime-compat", "src")}${existing}` }
+  const pythonPaths = [
+    path.resolve(REPO, "..", "..", "packages", "pacthold", "src"),
+    path.resolve(REPO, "..", "runtime-compat", "src"),
+    ...(process.env.PYTHONPATH ? [process.env.PYTHONPATH] : []),
+  ]
+  return { ...process.env, PYTHONPATH: pythonPaths.join(path.delimiter) }
 }
 
 export function treeSummary(directory) {
