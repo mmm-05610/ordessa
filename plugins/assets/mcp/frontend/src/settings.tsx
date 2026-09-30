@@ -71,6 +71,7 @@ export const nextOperationKey = () => `settings-op-${Date.now()}-${++operationSe
 
 export function McpSettingsSection({ client, credentials }: McpSettingsProps) {
   const [rows, setRows] = useState<readonly McpDefinitionSummary[] | null>(null)
+  const [revisions, setRevisions] = useState<Record<string, McpRevisionView>>({})
   const [listError, setListError] = useState<string | null>(null)
   const [editor, setEditor] = useState<EditorState | null>(null)
   const [candidate, setCandidate] = useState<{ definitionId: string; revision: number; hasSecretRef: boolean } | null>(null)
@@ -80,7 +81,14 @@ export function McpSettingsSection({ client, credentials }: McpSettingsProps) {
   const [credentialsList, setCredentialsList] = useState<readonly CredentialReference[] | null>(null)
 
   const reload = useCallback(async () => {
-    try { setRows(await client.listDefinitions()); setListError(null) }
+    try {
+      const definitions = await client.listDefinitions()
+      const metadata = await Promise.all(definitions.map(async row => {
+        try { return await client.getDefinition(row.definitionId) } catch { return null }
+      }))
+      setRevisions(Object.fromEntries(metadata.filter((row): row is McpRevisionView => row !== null).map(row => [row.definitionId, row])))
+      setRows(definitions); setListError(null)
+    }
     catch (error) { setRows(null); setListError(describe(error)) }
   }, [client])
   useEffect(() => { void reload() }, [reload])
@@ -95,14 +103,8 @@ export function McpSettingsSection({ client, credentials }: McpSettingsProps) {
     setProbe(null); setRefusal(null); setMessage(null); setCandidate(null)
     try {
       const revision: McpRevisionView = await client.getDefinition(row.definitionId)
-      const transport = revision.canonical.transport
-      setEditor('stdio' in transport
-        ? { mode: 'edit', definitionId: row.definitionId, name: revision.canonical.name, transport: 'stdio',
-            command: transport.stdio.command, args: transport.stdio.args.join('\n'), url: '',
-            values: wireMapToRows(transport.stdio.env), expectedVersion: revision.revision }
-        : { mode: 'edit', definitionId: row.definitionId, name: revision.canonical.name, transport: 'remote',
-            command: '', args: '', url: transport.remote.url,
-            values: wireMapToRows(transport.remote.headers), expectedVersion: revision.revision })
+      setEditor(null)
+      setMessage(`r${revision.revision} 元数据已载入；当前接口不返回配置正文，无法编辑已有定义。`)
     } catch (error) { setRefusal(`无法载入修订：${describe(error)}`) }
   }
 
@@ -113,18 +115,18 @@ export function McpSettingsSection({ client, credentials }: McpSettingsProps) {
 
   const save = async () => {
     if (!editor) return
-    setRefusal(null); setMessage(null); setProbe(null)
+    setRefusal(null); setMessage(null); setProbe(null); setCandidate(null)
     try {
       const saved = await client.saveRevision({
-        definitionId: editor.mode === 'edit' ? editor.definitionId : undefined,
+        definitionId: editor.definitionId ?? editor.name,
         definition: buildDefinition(editor),
         expectedVersion: editor.expectedVersion,
         operationKey: nextOperationKey(),
       })
-      setCandidate({ definitionId: saved.definitionId, revision: saved.revision, hasSecretRef: definitionHasSecretRef(buildDefinition(editor)) })
-      setEditor({ ...editor, mode: 'edit', definitionId: saved.definitionId, expectedVersion: saved.revision })
+      setCandidate({ definitionId: saved.definition.definitionId, revision: saved.revision.revision, hasSecretRef: definitionHasSecretRef(buildDefinition(editor)) })
+      setEditor({ ...editor, mode: 'edit', definitionId: saved.definition.definitionId, expectedVersion: saved.revision.revision })
       // Save alone proves nothing beyond storage: the copy stays 候选/未批准.
-      setMessage(`已保存候选修订 r${saved.revision}（尚未批准，不参与选择；保存不探测、不启动）`)
+      setMessage(`已保存候选修订 r${saved.revision.revision}（尚未批准，不参与选择；保存不探测、不启动）`)
       void reload()
     } catch (error) { setRefusal(`保存被拒：${describe(error)}`) }
   }
@@ -135,7 +137,6 @@ export function McpSettingsSection({ client, credentials }: McpSettingsProps) {
     try {
       await client.approveRevision({
         definitionId: candidate.definitionId, revision: candidate.revision,
-        expectedVersion: editor.expectedVersion, operationKey: nextOperationKey(),
       })
       setMessage(`r${candidate.revision} 已批准：可用于选择（批准只改变可选择性，不证明可连接）`)
       setCandidate(null)
@@ -175,15 +176,19 @@ export function McpSettingsSection({ client, credentials }: McpSettingsProps) {
     {listError && <p role="alert" className="mcp-error">定义服务不可用：{listError}（不会显示猜测数据）</p>}
     {!listError && rows && rows.length === 0 && !editor && <p className="mcp-empty">尚无 MCP 定义。</p>}
     {rows && rows.length > 0 && <table className="mcp-def-list">
-      <thead><tr><th>定义名</th><th>Transport</th><th>批准修订</th><th>来源</th><th>上次探测</th><th aria-label="操作"/></tr></thead>
+      <thead><tr><th>定义名</th><th>Transport</th><th>最新修订审批</th><th>来源</th><th>探测</th><th aria-label="操作"/></tr></thead>
       <tbody>
         {rows.map(row => <tr key={row.definitionId} data-definition-id={row.definitionId}>
-          <td>{row.name}{row.archived && '（已归档）'}</td>
+          <td>{row.nativeName}{row.archived && '（已归档）'}</td>
           <td>{row.transport}</td>
-          <td>{row.approvedRevision === null ? '未批准' : `r${row.approvedRevision} 已批准`}</td>
-          <td>{row.source ?? '本地'}</td>
-          <td>{probeColumn(row)}</td>
-          <td><button type="button" onClick={() => void openEditor(row)}>编辑</button></td>
+          <td>{revisions[row.definitionId] ? `r${revisions[row.definitionId].revision} ${revisions[row.definitionId].approval ? '已批准' : '未批准（旧修订审批未知）'}` : '审批未知'}</td>
+          <td>{revisions[row.definitionId]?.source ?? '来源未知'}</td>
+          <td><span data-testid={`probe-cell-${row.definitionId}`}>探测记录不可读</span></td>
+          <td><button type="button" onClick={() => void openEditor(row)}>查看修订</button>
+            <button type="button" onClick={() => void client.probe({ definitionId: row.definitionId, revision: row.latestRevision }).then(
+              facts => { setRefusal(null); setProbe({ label: `${row.definitionId} · r${row.latestRevision}`, facts }) },
+              error => { setProbe(null); setRefusal(`探测被拒：${describe(error)}`) },
+            )}>有限探测（无凭据）</button></td>
         </tr>)}
       </tbody>
     </table>}
@@ -217,14 +222,6 @@ export function McpSettingsSection({ client, credentials }: McpSettingsProps) {
     {refusal && <p role="alert" className="mcp-error" data-testid="mcp-refusal">{refusal}</p>}
     {probe && <ProbeFactsView label={probe.label} facts={probe.facts}/>}
   </div>
-}
-
-/** Strictly probe wording — the column never says 连接 for a probe fact. */
-function probeColumn(row: McpDefinitionSummary) {
-  const last = row.lastProbe
-  if (!last) return <span data-testid={`probe-cell-${row.definitionId}`}>未探测</span>
-  if (last.result === 'refused') return <span data-testid={`probe-cell-${row.definitionId}`}>探测被拒（{last.code}）· r{last.revision}</span>
-  return <span data-testid={`probe-cell-${row.definitionId}`}>探测成功（无凭据，r{last.revision} · {last.at}）— 非会话连接</span>
 }
 
 function ProbeFactsView({ label, facts }: { label: string; facts: McpProbeFacts }) {

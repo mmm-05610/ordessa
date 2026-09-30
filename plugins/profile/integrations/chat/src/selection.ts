@@ -18,6 +18,7 @@ import type {
   ProfileCatalogGroup,
   ProfileSelection,
   ProfileServiceClient,
+  SessionRef,
 } from '@ordessa/plugin-profile-api'
 
 export interface SelectionCounters {
@@ -74,8 +75,8 @@ export class ProfileSelectionStore {
    */
   async applyOnSubmit(
     key: string,
-    sessionRef: { readonly realm: string; readonly harnessId: string; readonly nativeSessionKey: string; readonly sessionUid: string },
-    profiles: Pick<ProfileServiceClient, 'beginTurnApplication'>,
+    sessionRef: SessionRef,
+    profiles: Pick<ProfileServiceClient, 'beginTurnApplication'> & Partial<Pick<ProfileServiceClient, 'selectForSession' | 'inspectSessionConfig'>>,
   ): Promise<ApplyOutcome> {
     const selection = this.selections.get(key)
     if (!selection) {
@@ -83,16 +84,35 @@ export class ProfileSelectionStore {
     }
     this.counters.applyAttempts += 1
     try {
+      if (typeof profiles.selectForSession !== 'function') {
+        throw new Error('Profile selection registration is unavailable')
+      }
+      const operationKey = `profile-chat.apply:${sessionRef.sessionUid}:${selection.profileId}:${this.sequence += 1}`
+      await profiles.selectForSession(`${operationKey}:select`, { sessionRef, profileId: selection.profileId })
       const result = await profiles.beginTurnApplication(
-        `profile-chat.apply:${sessionRef.sessionUid}:${selection.profileId}:${this.sequence += 1}`,
+        operationKey,
         sessionRef,
       )
       if (!result.appliedSwitch) {
-        // Not a switch (same profile re-selected): nothing was applied and
-        // nothing needed to be; the pick is simply consumed.
+        if (typeof profiles.inspectSessionConfig !== 'function') {
+          throw new Error('Profile current configuration verification is unavailable')
+        }
+        const config = await profiles.inspectSessionConfig(sessionRef)
+        const receipt = config.evidence?.receipt
+        if (!sameSession(config.sessionRef, sessionRef) || config.current?.profileId !== selection.profileId
+          || config.switchState !== 'settled' || config.pending !== null
+          || !receipt || receipt.profileId !== selection.profileId
+          || receipt.profileRevision !== config.current.revision || !sameSession(receipt.sessionRef, sessionRef)
+          || !receipt.operationId || !receipt.configDigest || !receipt.confirmedAt
+          || !receipt.evidenceKind || receipt.evidenceKind === 'legacy-unverified'
+          || config.evidence.evidenceKind !== receipt.evidenceKind
+          || config.evidence.journal?.state !== 'confirmed'
+          || config.evidence.journal.operationId !== receipt.operationId) {
+          throw new Error('Profile current configuration is not confirmed for this selection')
+        }
         this.selections.delete(key)
         this.lastConfirmed.set(key, selection)
-        return { ok: true, applied: selection }
+        return { ok: true, applied: selection, receipt }
       }
       this.counters.applyConfirmed += 1
       this.selections.delete(key)
@@ -106,6 +126,11 @@ export class ProfileSelectionStore {
       return { ok: false, reason, selection }
     }
   }
+}
+
+function sameSession(actual: SessionRef | undefined, expected: SessionRef): boolean {
+  return !!actual && actual.realm === expected.realm && actual.harnessId === expected.harnessId
+    && actual.nativeSessionKey === expected.nativeSessionKey && actual.sessionUid === expected.sessionUid
 }
 
 /**

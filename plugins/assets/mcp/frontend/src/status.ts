@@ -4,10 +4,10 @@
 // from evidence the wire client returned for THAT tier:
 //
 //   defined   ← the definition row exists (mcp.listDefinitions)
-//   approved  ← the row carries an approved revision
+//   approved  ← latest revision approval or an approved effective snapshot
 //   enabled   ← the resolve preview includes it enabled for this target
 //   connected ← inspectConnection reported an evidenced connection
-//   catalog   ← listTools returned a discovered tool set
+//   catalog   ← listTools returned an identity-matched toolNames catalog
 //   callable  ← ONLY when the backend states it (tri-state; absence stays
 //               `unknown`, it is never inferred from the previous tiers)
 //
@@ -18,7 +18,7 @@
 // is manufactured locally).
 
 import type {
-  McpCatalogFacts, McpConnectionFacts, McpConnectionObservation, McpDefinitionSummary, McpSessionTarget,
+  McpCatalogFacts, McpConnectionFacts, McpConnectionObservation, McpDefinitionSummary, McpSessionTarget, McpRevisionView,
 } from './dto'
 import type { McpWireClient } from './wire'
 
@@ -94,6 +94,9 @@ const EMPTY: McpSessionFacts = { status: 'absent', servers: [] }
  * it the panel disables the affordance with a reason (never a local toggle). */
 export function createMcpStatusService(client?: McpWireClient, options?: {
   select?: (target: McpSessionTarget, definitionId: string, enabled: boolean) => Promise<McpSelectResult>
+  /** Only the session owner can bind these runtime identities. Chat location
+   * ids alone do not establish a backend sessionRef or generation. */
+  context?: (target: McpSessionTarget) => { sessionRef: string; runtimeGeneration: number } | undefined
 }): McpStatusService {
   if (!client) {
     return {
@@ -107,7 +110,6 @@ export function createMcpStatusService(client?: McpWireClient, options?: {
     `${target.kind}:${target.connectionId ?? ''}:${target.serverInstanceId ?? ''}:${target.sessionId ?? target.draftId ?? ''}`
   let cacheKey = ''
   let cache: McpSessionFacts = { status: 'loading', servers: [] }
-  const notes = new Map<string, string>()
 
   const refresh = async (target: McpSessionTarget, signal?: AbortSignal): Promise<McpSessionFacts> => {
     if (target.kind !== 'session' || !target.connectionId || !target.sessionId) {
@@ -120,29 +122,52 @@ export function createMcpStatusService(client?: McpWireClient, options?: {
     try {
       definitions = await client.listDefinitions(signal)
     } catch (error) {
-      cache = { status: 'error', error: messageOf(error), servers: cache.servers }
+      cache = { status: 'error', error: messageOf(error), servers: keyOf(target) === cacheKey ? cache.servers : [] }
       cacheKey = keyOf(target)
       return cache
     }
-    let preview: McpPreviewShape | undefined
-    try { preview = (await client.resolvePreview({ target, signal })).entries } catch { preview = undefined }
-    const servers: McpServerFacts[] = []
-    for (const row of definitions) {
-      if (row.archived) continue
-      const previewEntry = preview?.find(entry => entry.definitionId === row.definitionId && entry.enabled)
+    const context = options?.context?.(target)
+    const bound = context && context.sessionRef.trim() && Number.isInteger(context.runtimeGeneration) && context.runtimeGeneration >= 0 ? context : undefined
+    let preview: Awaited<ReturnType<McpWireClient['resolvePreview']>> | undefined
+    let contextNote = '会话运行上下文缺席：启用、连接和工具目录未确认'
+    if (bound) {
+      try {
+        preview = await client.resolvePreview({ ...bound, targetSession: bound.sessionRef, signal })
+        if (preview.snapshot.targetSession !== bound.sessionRef || preview.snapshot.runtimeGeneration !== bound.runtimeGeneration) {
+          preview = undefined
+          contextNote = '运行快照与会话或 generation 不匹配'
+        }
+      } catch (error) { contextNote = messageOf(error) }
+    }
+    const servers = await Promise.all(definitions.filter(row => !row.archived).map(async row => {
+      let revision: McpRevisionView | undefined
+      let note = preview ? undefined : contextNote
+      try { revision = await client.getDefinition(row.definitionId, signal) } catch (error) { note = messageOf(error) }
+      if (revision && (revision.definitionId !== row.definitionId || revision.revision !== row.latestRevision)) {
+        revision = undefined
+        note = '修订元数据与定义不匹配：审批未确认'
+      }
+      const previewEntry = preview?.snapshot.definitionRevisions.find(entry => entry.definitionId === row.definitionId && entry.revision !== null)
       let connection: McpConnectionFacts | undefined
       let catalog: McpCatalogFacts | undefined
-      notes.delete(row.definitionId)
-      if (previewEntry) {
-        try { connection = await client.inspectConnection({ target, definitionId: row.definitionId, signal }) }
-        catch (error) { notes.set(row.definitionId, messageOf(error)) }
-        if (connection && (connection.observation === 'connected' || connection.observation === 'catalog-changed')) {
-          try { catalog = await client.listTools({ target, definitionId: row.definitionId, generation: connection.generation, signal }) }
-          catch (error) { notes.set(row.definitionId, messageOf(error)) }
-        }
+      if (bound && previewEntry?.revision !== null && previewEntry?.revision !== undefined) {
+        try {
+          const listed = await client.listTools({ ...bound, definitionId: row.definitionId, revision: previewEntry.revision, signal })
+          if (listed.catalog.leaseId !== listed.leaseId || listed.catalog.definitionId !== row.definitionId || listed.catalog.revision !== previewEntry.revision) {
+            throw new Error('工具目录身份与请求不匹配')
+          }
+          const inspected = await client.inspectConnection({ ...bound, leaseId: listed.leaseId, signal })
+          if (inspected.definitionId !== row.definitionId || inspected.revision !== previewEntry.revision || inspected.generation !== bound.runtimeGeneration) {
+            throw new Error('连接身份或 generation 与请求不匹配')
+          }
+          connection = inspected
+          if (inspected.observation === 'connected' || inspected.observation === 'catalog-changed') catalog = listed.catalog
+        } catch (error) { note = messageOf(error) }
       }
-      servers.push(grade(row, previewEntry !== undefined, connection, catalog, notes.get(row.definitionId)))
-    }
+      const approvedRevision = previewEntry?.revision ?? (revision?.approval ? revision.revision : null)
+      if (approvedRevision === null) note = note ? `${note}；审批未确认（历史修订不可读）` : '审批未确认（历史修订不可读）'
+      return grade(row, approvedRevision, previewEntry !== undefined, connection, catalog, note)
+    }))
     cache = { status: 'ready', servers }
     cacheKey = keyOf(target)
     return cache
@@ -154,18 +179,17 @@ export function createMcpStatusService(client?: McpWireClient, options?: {
   }
 }
 
-type McpPreviewShape = readonly { definitionId: string; revision: number; enabled: boolean }[]
-
 function grade(
   row: McpDefinitionSummary,
+  approvedRevision: number | null,
   enabled: boolean,
   connection: McpConnectionFacts | undefined,
   catalog: McpCatalogFacts | undefined,
   note: string | undefined,
 ): McpServerFacts {
   let reachedLevel: McpFactLevel | null = 'defined'
-  if (row.approvedRevision !== null) reachedLevel = 'approved'
-  if (enabled && row.approvedRevision !== null) reachedLevel = 'enabled'
+  if (approvedRevision !== null) reachedLevel = 'approved'
+  if (enabled && approvedRevision !== null) reachedLevel = 'enabled'
   const observation: McpConnectionObservation | 'none' = connection?.observation ?? 'none'
   if (connection && (connection.observation === 'connected' || connection.observation === 'catalog-changed')) reachedLevel = 'connected'
   if (catalog && connection && (connection.observation === 'connected' || connection.observation === 'catalog-changed')) reachedLevel = 'catalog'
@@ -174,14 +198,14 @@ function grade(
   if (callableNow === true && catalog) reachedLevel = 'callable'
   return {
     definitionId: row.definitionId,
-    name: row.name,
+    name: row.nativeName,
     transport: row.transport,
     // Enabling is only evidenced on top of an approval; an enabled row whose
     // approval vanished (dangling reference) stops at `defined`.
-    reachedLevel: row.approvedRevision === null ? 'defined' : reachedLevel,
-    observation: catalog?.catalogChanged === true ? 'catalog-changed' : observation,
-    approvedRevision: row.approvedRevision,
-    toolsDiscovered: catalog ? catalog.tools.length : null,
+    reachedLevel: approvedRevision === null ? 'defined' : reachedLevel,
+    observation,
+    approvedRevision,
+    toolsDiscovered: catalog ? catalog.toolNames.length : null,
     callableNow,
     ...(note ? { note } : {}),
   }

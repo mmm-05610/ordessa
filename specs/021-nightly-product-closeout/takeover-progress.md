@@ -36,3 +36,30 @@
 5. 修资产 frontend 的契约错位，收编/核对 w019 外壳；再交用户启动开发版，人工验证真实模型和 Profile 切换。不要先花时间重做 deb。
 
 这几项是当前源码里确认的生产接线缺口，不能以“构建成功”或“组件测试全绿”替代。
+
+## 追加：并行边界与 native 来源裁定
+
+用户授权本会话内子代理并行，沿用此树与 Spec Kit 计划，不开新工作树/长期任务、不初始化另一套工单。借用协作 skill 的文件所有权、反例和主代理复跑要求；按用户偏好豁免默认的工单/清单初始化。子代理不得提交、改公开契约、扩大写权或继续分派。
+
+- Harness 子代理：先修 builder 的旧摘要导入/PYTHONPATH，限 `plugins/harness/packaging/builders/**` 与包内测试；native 策略后续单独交底。
+- Profile 子代理：限 `plugins/profile/integrations/chat/**`，修真实 sessionId、选定 Profile 的 backend registration 与无切换结果确认，不能编造 runtime evidence。
+- MCP 子代理：限 `plugins/assets/mcp/frontend/**`，按现有 API 修 DTO 消费；canonical/运行上下文缺席则明确禁用相应操作，不覆盖已有定义、不伪造已应用。
+- 主代理：装配与接缝集成、共享文档、统一测试/提交；其他子代理均不触碰这些文件。
+- 不运行真实模型或改用户全局凭据；运行期验证仍交用户。
+
+用户本轮选择：native 桌面接受 root 管理、普通用户不可写的安装树与完整内容校验。此来源策略与原 `/runtime/artifacts` 真实只读策略分离；后者不放宽。普通用户拥有的开发树，即便 chmod 555 或旁置摘要一致，也不能冒充这种系统安装来源。需要开发场景时另建清晰来源方案，不能静默降级。
+
+本轮子代理费用/精确 token 消耗不可读取，不伪造花费数字；并发最多三名子代理，主代理只做轻量检查，重型构建/最终测试串行。
+
+### 本轮已复跑的插件微修复（尚待统一提交）
+
+- Profile Chat：20/20、包内 typecheck 通过。使用真实 `ChatLocation.sessionId`，提交时注册最终选择，未切换结果必须核对后端确认记录；生产 Chat submit hook 与 ACP 配置应用仍未接通。
+- MCP frontend：39/39、包内 typecheck 通过。按既有 DTO 消费；API 不返回 canonical 时禁止编辑覆盖，未绑定运行上下文时不查询运行状态。未宣告真实 MCP 可用。
+- model-provider Chat contribution：显式 props 泛型修复，21/21；全仓类型检查中该错误已消失。
+- 全仓 typecheck 此时仅剩 `examples/agent-ui-probe` 所用的 `@assistant-ui/react` 缺失。该示例被产品 UI 测试消费，故由 `products/desktop` 声明已记录版本 0.15.21 的 devDependency；不向 desktop host 添加业务依赖、不移除测试。安装及最终复跑尚在进行。
+
+复跑更新：依赖安装后，全仓 `npm run typecheck` 通过；产品 UI 测试 3/3（真实 assistant-ui runtime）。安装审计返回 4 项报告（Vitest/mocker、Electron/extract-zip 链），未盲目 `audit fix`，本检查点不宣告发行依赖安全审计完成。
+
+native 校验主代理复跑：新增安装来源测试 7/7（正例明确模拟 root 元数据，实际文件内容与 Python v1 摘要交叉验证；真实 user-owned chmod555 树拒绝）；builder 路径迁移 + access route 15/15，Python startup argv 6/6。尚未安装系统资产、未证明真实品牌启动，产品 argv 仍待绑定。
+
+最终补充：Python startup argv 增加非规范双斜线根路径反例，主代理复跑 7/7；`npm run build` 17 扩展通过，lock 由 build 刷新。原生来源策略、插件契约消费微修复与产品测试依赖作为独立检查点收编，不合并 main、不发布、不执行真实模型。`sourceLockDigest` 目前仅验证格式；未绑定可信源锁文件，故不声明做过锁内容对比。

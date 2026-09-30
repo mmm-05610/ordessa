@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { createMcpStatusService, MCP_LEVEL_LABELS } from '../src/status'
-import { createFakeWireClient } from './fakes'
+import { createFakeWireClient, catalogFacts, runtimeContext } from './fakes'
 
 const target = { kind: 'session', connectionId: 'conn-1', sessionId: 'sess-1' } as const
 
@@ -17,9 +17,42 @@ describe('createMcpStatusService without a wire client', () => {
 })
 
 describe('createMcpStatusService grading', () => {
+  it('missing runtime context is visible and makes zero runtime queries', async () => {
+    const client = createFakeWireClient()
+    const server = (await createMcpStatusService(client).refresh(target)).servers[0]
+    expect(server.note).toContain('上下文缺席')
+    expect(server.reachedLevel).toBe('approved')
+    expect(client.calls.map(call => call.method)).toEqual(['listDefinitions', 'getDefinition'])
+  })
+
+  it('rejects a catalog from another definition before inspecting any lease', async () => {
+    const client = createFakeWireClient({
+      previewEntries: [{ definitionId: 'srv-a', revision: 1, enabled: true, toolSelection: null }],
+      catalogs: { 'srv-a': { ...catalogFacts(), definitionId: 'other' } },
+    })
+    const server = (await createMcpStatusService(client, runtimeContext).refresh(target)).servers[0]
+    expect(server.reachedLevel).toBe('enabled')
+    expect(server.note).toContain('工具目录身份')
+    expect(server.toolsDiscovered).toBeNull()
+    expect(client.calls.some(call => call.method === 'inspectConnection')).toBe(false)
+  })
+
+  it('rejects a stale generation instead of advertising connection or callability', async () => {
+    const client = createFakeWireClient({
+      previewEntries: [{ definitionId: 'srv-a', revision: 1, enabled: true, toolSelection: null }],
+      catalogs: { 'srv-a': catalogFacts() },
+      connections: { 'lease-a': { definitionId: 'srv-a', revision: 1, generation: 6, observation: 'connected', callableNow: true } },
+    })
+    const server = (await createMcpStatusService(client, runtimeContext).refresh(target)).servers[0]
+    expect(server.reachedLevel).toBe('enabled')
+    expect(server.callableNow).toBeNull()
+    expect(server.toolsDiscovered).toBeNull()
+    expect(server.note).toContain('generation')
+    expect(client.calls.find(call => call.method === 'inspectConnection')?.params).toEqual({ sessionRef: 'sess-1', runtimeGeneration: 7, leaseId: 'lease-a', signal: undefined })
+  })
   it('stops at `approved` when nothing is enabled for the session', async () => {
     const client = createFakeWireClient()
-    const facts = await createMcpStatusService(client).refresh(target)
+    const facts = await createMcpStatusService(client, runtimeContext).refresh(target)
     expect(facts.status).toBe('ready')
     expect(facts.servers).toHaveLength(1)
     expect(facts.servers[0].reachedLevel).toBe('approved')
@@ -32,10 +65,10 @@ describe('createMcpStatusService grading', () => {
   it('walks enabled → connected → catalog and keeps `callable` unconfirmed unless the backend states it', async () => {
     const client = createFakeWireClient({
       previewEntries: [{ definitionId: 'srv-a', revision: 1, enabled: true, toolSelection: null }],
-      connections: { 'srv-a': { definitionId: 'srv-a', revision: 1, generation: 7, observation: 'connected', callableNow: null } },
-      catalogs: { 'srv-a': { definitionId: 'srv-a', generation: 7, tools: [{ name: 'echo' }, { name: 'add' }], catalogChanged: false } },
+      connections: { 'lease-a': { definitionId: 'srv-a', revision: 1, generation: 7, observation: 'connected', callableNow: null } },
+      catalogs: { 'srv-a': { ...catalogFacts(['echo', 'add']) } },
     })
-    const server = (await createMcpStatusService(client).refresh(target)).servers[0]
+    const server = (await createMcpStatusService(client, runtimeContext).refresh(target)).servers[0]
     expect(server.reachedLevel).toBe('catalog')
     expect(server.observation).toBe('connected')
     expect(server.toolsDiscovered).toBe(2)
@@ -45,26 +78,28 @@ describe('createMcpStatusService grading', () => {
   it('pending is not connected, refused carries its reason, catalog-changed stays distinct', async () => {
     const pendingClient = createFakeWireClient({
       previewEntries: [{ definitionId: 'srv-a', revision: 1, enabled: true, toolSelection: null }],
-      connections: { 'srv-a': { definitionId: 'srv-a', revision: 1, generation: null, observation: 'pending', callableNow: null } },
+      connections: { 'lease-a': { definitionId: 'srv-a', revision: 1, generation: 7, observation: 'pending', callableNow: null } },
+      catalogs: { 'srv-a': catalogFacts() },
     })
-    const pending = (await createMcpStatusService(pendingClient).refresh(target)).servers[0]
+    const pending = (await createMcpStatusService(pendingClient, runtimeContext).refresh(target)).servers[0]
     expect(pending.reachedLevel).toBe('enabled')
     expect(pending.observation).toBe('pending')
 
     const refusedClient = createFakeWireClient({
       previewEntries: [{ definitionId: 'srv-a', revision: 1, enabled: true, toolSelection: null }],
-      connections: { 'srv-a': { definitionId: 'srv-a', revision: 1, generation: null, observation: 'refused', refusalReason: 'approval revoked', callableNow: false } },
+      connections: { 'lease-a': { definitionId: 'srv-a', revision: 1, generation: 7, observation: 'refused', refusalReason: 'approval revoked', callableNow: false } },
+      catalogs: { 'srv-a': catalogFacts() },
     })
-    const refused = (await createMcpStatusService(refusedClient).refresh(target)).servers[0]
+    const refused = (await createMcpStatusService(refusedClient, runtimeContext).refresh(target)).servers[0]
     expect(refused.reachedLevel).toBe('enabled')
     expect(refused.observation).toBe('refused')
 
     const changedClient = createFakeWireClient({
       previewEntries: [{ definitionId: 'srv-a', revision: 1, enabled: true, toolSelection: null }],
-      connections: { 'srv-a': { definitionId: 'srv-a', revision: 1, generation: 2, observation: 'connected', callableNow: null } },
-      catalogs: { 'srv-a': { definitionId: 'srv-a', generation: 2, tools: [], catalogChanged: true } },
+      connections: { 'lease-a': { definitionId: 'srv-a', revision: 1, generation: 7, observation: 'catalog-changed', callableNow: null } },
+      catalogs: { 'srv-a': catalogFacts([]) },
     })
-    const changed = (await createMcpStatusService(changedClient).refresh(target)).servers[0]
+    const changed = (await createMcpStatusService(changedClient, runtimeContext).refresh(target)).servers[0]
     expect(changed.observation).toBe('catalog-changed')
   })
 
@@ -72,8 +107,9 @@ describe('createMcpStatusService grading', () => {
     const client = createFakeWireClient({
       previewEntries: [{ definitionId: 'srv-a', revision: 1, enabled: true, toolSelection: null }],
     })
+    client.state.catalogs['srv-a'] = catalogFacts()
     client.state.failOn.inspectConnection = 'connection registry unavailable'
-    const facts = await createMcpStatusService(client).refresh(target)
+    const facts = await createMcpStatusService(client, runtimeContext).refresh(target)
     expect(facts.status).toBe('ready')
     expect(facts.servers[0].reachedLevel).toBe('enabled')
     expect(facts.servers[0].note).toContain('connection registry unavailable')
@@ -82,7 +118,7 @@ describe('createMcpStatusService grading', () => {
   it('a failing definition listing surfaces as an error status, not as an empty success', async () => {
     const client = createFakeWireClient()
     client.state.failOn.listDefinitions = 'mcp service down'
-    const facts = await createMcpStatusService(client).refresh(target)
+    const facts = await createMcpStatusService(client, runtimeContext).refresh(target)
     expect(facts.status).toBe('error')
     expect(facts.error).toContain('mcp service down')
   })
@@ -90,17 +126,17 @@ describe('createMcpStatusService grading', () => {
   it('callable lights only when the backend states it AND the catalog exists', async () => {
     const client = createFakeWireClient({
       previewEntries: [{ definitionId: 'srv-a', revision: 1, enabled: true, toolSelection: null }],
-      connections: { 'srv-a': { definitionId: 'srv-a', revision: 1, generation: 3, observation: 'connected', callableNow: true } },
-      catalogs: { 'srv-a': { definitionId: 'srv-a', generation: 3, tools: [{ name: 'echo' }], catalogChanged: null } },
+      connections: { 'lease-a': { definitionId: 'srv-a', revision: 1, generation: 7, observation: 'connected', callableNow: true } },
+      catalogs: { 'srv-a': { ...catalogFacts(['echo']) } },
     })
-    const server = (await createMcpStatusService(client).refresh(target)).servers[0]
+    const server = (await createMcpStatusService(client, runtimeContext).refresh(target)).servers[0]
     expect(server.reachedLevel).toBe('callable')
     expect(server.reachedLevel && MCP_LEVEL_LABELS[server.reachedLevel]).toBe('本次可调用')
   })
 
   it('a draft target has no session facts and never calls connection methods', async () => {
     const client = createFakeWireClient()
-    const facts = await createMcpStatusService(client).refresh({ kind: 'draft', draftId: 'd1' })
+    const facts = await createMcpStatusService(client, runtimeContext).refresh({ kind: 'draft', draftId: 'd1' })
     expect(facts.servers).toEqual([])
     expect(client.calls.map(call => call.method)).toEqual([])
   })

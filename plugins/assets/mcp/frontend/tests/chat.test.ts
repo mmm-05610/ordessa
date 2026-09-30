@@ -8,7 +8,7 @@ import { OwnedResources } from '@ordessa/extension-api'
 import { createChatContributions, type ChatInputQuery, type ChatLocation } from '@extensions/ordessa.chat-api/contract.js'
 import { createMcpChatInputSource, mcpStatusChipContribution, serverFactLine, summarizeMcpFacts, MCP_CHAT_SOURCE_ID } from '../src/chat'
 import { createMcpStatusService, type McpStatusService } from '../src/status'
-import { createFakeWireClient } from './fakes'
+import { createFakeWireClient, catalogFacts, runtimeContext } from './fakes'
 
 const cleanup: OwnedResources[] = []
 const newScope = () => { const scope = new OwnedResources(); cleanup.push(scope); return scope }
@@ -55,10 +55,10 @@ describe('MCP chat input source with live facts', () => {
   const enabledStatus = (): { source: ReturnType<typeof createMcpChatInputSource>; status: McpStatusService } => {
     const client = createFakeWireClient({
       previewEntries: [{ definitionId: 'srv-a', revision: 1, enabled: true, toolSelection: null }],
-      connections: { 'srv-a': { definitionId: 'srv-a', revision: 1, generation: 4, observation: 'connected', callableNow: null } },
-      catalogs: { 'srv-a': { definitionId: 'srv-a', generation: 4, tools: [{ name: 'echo' }], catalogChanged: null } },
+      connections: { 'lease-a': { definitionId: 'srv-a', revision: 1, generation: 7, observation: 'connected', callableNow: null } },
+      catalogs: { 'srv-a': { ...catalogFacts(['echo']) } },
     })
-    const status = createMcpStatusService(client)
+    const status = createMcpStatusService(client, runtimeContext)
     return { source: createMcpChatInputSource(status), status }
   }
 
@@ -79,9 +79,10 @@ describe('MCP chat input source with live facts', () => {
   it('pending never renders as connected', async () => {
     const client = createFakeWireClient({
       previewEntries: [{ definitionId: 'srv-a', revision: 1, enabled: true, toolSelection: null }],
-      connections: { 'srv-a': { definitionId: 'srv-a', revision: 1, generation: null, observation: 'pending', callableNow: null } },
+      connections: { 'lease-a': { definitionId: 'srv-a', revision: 1, generation: 7, observation: 'pending', callableNow: null } },
+      catalogs: { 'srv-a': catalogFacts() },
     })
-    const line = serverFactLine((await createMcpStatusService(client).refresh({ kind: 'session', connectionId: 'c', sessionId: 's' })).servers[0])
+    const line = serverFactLine((await createMcpStatusService(client, runtimeContext).refresh({ kind: 'session', connectionId: 'c', sessionId: 's' })).servers[0])
     expect(line).toContain('连接确认中（pending，非已连接）')
     expect(line).not.toContain('连接成功')
   })

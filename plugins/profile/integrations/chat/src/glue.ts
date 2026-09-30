@@ -37,7 +37,7 @@ export const ProfilePickerKey =
 export interface ChatLocationLike {
   readonly kind?: string
   readonly draftId?: string
-  readonly sessionUid?: string
+  readonly sessionId?: string
 }
 
 /** Extract the picker's store key + catalog scope from the chat location. */
@@ -45,24 +45,18 @@ export function pickerKeyFor(location: ChatLocation): {
   key: string
   scope: { readonly kind: 'draft' } | { readonly kind: 'session'; readonly harnessId: string }
 } {
-  const raw = location as unknown as {
-    kind?: string
-    draftId?: string
-    sessionUid?: string
-    harnessId?: string
-  }
-  if (raw.kind === 'session' && raw.sessionUid) {
+  if (location.kind === 'session') {
     return {
-      key: `session:${raw.sessionUid}`,
-      scope: { kind: 'session', harnessId: raw.harnessId ?? '' },
+      key: `session:${location.sessionId}`,
+      scope: { kind: 'session', harnessId: location.harnessId ?? '' },
     }
   }
-  return { key: `draft:${raw.draftId ?? 'unknown'}`, scope: { kind: 'draft' } }
+  return { key: `draft:${location.draftId}`, scope: { kind: 'draft' } }
 }
 
 export interface ProfileChatGlueInput {
   readonly store?: ProfileSelectionStore
-  readonly profiles: Pick<ProfileServiceClient, 'beginTurnApplication'>
+  readonly profiles: Pick<ProfileServiceClient, 'beginTurnApplication'> & Partial<Pick<ProfileServiceClient, 'selectForSession' | 'inspectSessionConfig'>>
   readonly catalog: () => readonly ProfileCatalogGroup[]
   readonly onOpenManager?: () => void
 }

@@ -76,7 +76,7 @@ function adaptLocation(location: ChatLocation) {
 export function registerModelSelector(
   chat: ChatContributionsService, scope: ResourceScope, wiring: SelectorWiring,
 ): IDisposable {
-  const registration = chatContribution({
+  const registration = chatContribution<{ location: ChatLocation }>({
     id: MODEL_SELECTOR_ID,
     slot: 'composer.toolbar',
     order: 100,
