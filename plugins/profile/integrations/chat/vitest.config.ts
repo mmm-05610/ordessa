@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 export default defineConfig({
   resolve: {
     alias: {
+      '@extensions/ordessa.agent-contracts/contract.js': fileURLToPath(new URL('../../../agent/contracts/src/contract.ts', import.meta.url)),
       // chat-api is consumed through its carrier specifier; the alias mirrors
       // plugins/chat/api/vitest.config.ts (shared registration in C0's
       // tooling/vitest-extensions.mjs is an integration request).

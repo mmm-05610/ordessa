@@ -1,7 +1,7 @@
 import * as acp from '@agentclientprotocol/sdk'
 import type {
   AgentCapabilities, AgentClient, AgentInteraction, AgentMessage, AgentReleaseState, AgentReleaseStatus,
-  AgentSessionInfo, AgentSnapshot, AgentToolCall, AgentWorkspaceInfo, InteractionAnswer, RunStatus,
+  AgentSessionInfo, AgentSnapshot, AgentToolCall, AgentWorkspaceInfo, AgentNativeSessionOwner, InteractionAnswer, RunStatus,
 } from '@extensions/ordessa.agent-contracts/contract.js'
 import type { AcpChannelHandle, AcpChannelSpec } from './channel'
 import { parseNativeCommands, type NativeCommandCatalog } from './commands'
@@ -75,6 +75,8 @@ export class AcpClient implements AgentClient {
   private readonly channels = new Map<string, Channel>()
   private readonly opening = new Map<string, Promise<Channel>>()
   private readonly firstSendRequests = new Set<string>()
+  private readonly preparedSessions = new Map<string, { workspaceId: string; promise: Promise<AgentNativeSessionOwner> }>()
+  private readonly abandonedPreparations = new Set<string>()
   private readonly historyScopes = new Map<string, string>()
   /** Handles acquired but not yet registered as channels: between `acquireChannel` returning and
    * the channel landing in `channels`, this set — not `channels` — is what makes dispose() able to
@@ -175,7 +177,7 @@ export class AcpClient implements AgentClient {
         id: connectorId, title: `ACP · ${spec.harness.title}`, status: 'connected',
         capabilities: { history: 'unsupported', reasoning: 'supported', tools: 'supported', stop: 'supported',
           interactions: 'supported', models: 'unsupported', modes: 'unsupported', workspaces: 'supported' },
-        serverInstanceId: spec.serverInstanceId,
+        serverInstanceId: spec.serverInstanceId, harnessId: spec.harness.id,
       },
       sessions: [], sessionList: 'unknown', messages: {}, runs: {}, interactions: [], options: [],
       workspaces: { state: 'ready', items: [...projects] },
@@ -534,6 +536,84 @@ export class AcpClient implements AgentClient {
     try { await acceptance.promise }
     catch (error) { void turn.catch(() => undefined); throw error }
     return { sessionId: key }
+  }
+
+  nativeSessionOwner(sessionId: string): AgentNativeSessionOwner {
+    this.assertLive()
+    const route = this.routeOf(sessionId)
+    if (route.channel.commandsDown) throw new SubmissionOutcomeUnknownError('ACP prepared channel unavailable')
+    return Object.freeze({ sessionId, serverInstanceId: this.spec.serverInstanceId,
+      connectionId: route.channel.handle.connectionId, nativeSessionId: route.nativeId,
+      harnessId: this.spec.harness.id, workspaceId: route.channel.projectId })
+  }
+
+  prepareSession(workspaceId: string, attemptId: string): Promise<AgentNativeSessionOwner> {
+    this.assertLive()
+    if (this.abandonedPreparations.has(attemptId)) throw new Error('ACP preparation abandoned')
+    if (!attemptId || !workspaceId) throw new Error('ACP preparation identity required')
+    const existing = this.preparedSessions.get(attemptId)
+    if (existing) {
+      if (existing.workspaceId !== workspaceId) throw new Error('ACP preparation project changed')
+      return existing.promise.then(owner => {
+        if (this.abandonedPreparations.has(attemptId)) throw new Error('ACP preparation abandoned')
+        return this.nativeSessionOwner(owner.sessionId)
+      })
+    }
+    if (this.preparedSessions.size >= 4096) throw new Error('ACP preparation capacity exhausted')
+    const promise = (async () => {
+      const channel = await this.ensureChannel(workspaceId, attemptId)
+      let created: acp.NewSessionResponse
+      try { created = await this.createNativeSession(channel) }
+      catch (cause) { throw new SubmissionOutcomeUnknownError(cause) }
+      const key = this.keyFor(channel, created.sessionId)
+      // Keep the public draft/selection unchanged until its first prompt is accepted.
+      return this.nativeSessionOwner(key)
+    })()
+    // Cache failure too: uncertain session/new must never mint a second session.
+    this.preparedSessions.set(attemptId, { workspaceId, promise })
+    return promise
+  }
+
+  async sendPreparedSession(attemptId: string, text: string): Promise<{ sessionId: string }> {
+    this.assertLive()
+    if (this.abandonedPreparations.has(attemptId)) throw new Error('ACP preparation abandoned')
+    const prepared = this.preparedSessions.get(attemptId)
+    if (!prepared) throw new Error('ACP session was not prepared')
+    if (this.firstSendRequests.has(attemptId)) throw new SubmissionOutcomeUnknownError('ACP prepared first prompt already attempted')
+    const owner = await prepared.promise
+    if (this.abandonedPreparations.has(attemptId)) throw new Error('ACP preparation abandoned')
+    const current = this.nativeSessionOwner(owner.sessionId)
+    if (current.connectionId !== owner.connectionId || current.nativeSessionId !== owner.nativeSessionId)
+      throw new Error('ACP prepared owner changed')
+    const route = this.routeOf(owner.sessionId)
+    this.firstSendRequests.add(attemptId)
+    this.activateCommandSession(route.channel, route.key)
+    this.upsertSession({ id: route.key, title: 'New session', workspaceId: owner.workspaceId })
+    this.appendMessage(route.key, { id: this.nextId('user'), role: 'user', text })
+    const acceptance = this.holdAcceptance(route.channel, route.nativeId)
+    const turn = this.startTurn(route.channel, route.key, route.nativeId, text)
+    try { await acceptance.promise }
+    catch (error) { void turn.catch(() => undefined); throw error }
+    return { sessionId: route.key }
+  }
+
+  async abandonPreparedSession(attemptId: string): Promise<void> {
+    const prepared = this.preparedSessions.get(attemptId)
+    if (!prepared) return
+    if (this.firstSendRequests.has(attemptId)) throw new SubmissionOutcomeUnknownError('Cannot abandon an attempted first prompt')
+    this.abandonedPreparations.add(attemptId)
+    // Join even an uncertain session/new: the dedicated scope owns the channel,
+    // so cancellation can release it without inventing a native session ID.
+    await prepared.promise.catch(() => undefined)
+    for (const channel of [...this.channels.values()]) {
+      if (channel.sessionScopeId !== attemptId) continue
+      channel.commandsDown = true
+      channel.unsubscribeDown?.()
+      this.channels.delete(channel.handle.connectionId)
+      for (const [key, route] of this.routes) if (route.channel === channel) this.routes.delete(key)
+      await this.releaseHandle(channel.handle)
+    }
+    this.publishHistory()
   }
 
   async newSession(): Promise<string> {

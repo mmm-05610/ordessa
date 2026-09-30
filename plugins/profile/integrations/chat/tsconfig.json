@@ -14,6 +14,7 @@
     "forceConsistentCasingInFileNames": true,
     "noUncheckedIndexedAccess": true,
     "paths": {
+      "@extensions/ordessa.agent-contracts/contract.js": ["../../../agent/contracts/src/contract.ts"],
       "@extensions/ordessa.profile-api/contract.js": ["../../api/src/index.ts"],
       "@extensions/ordessa.contracts/contract.js": ["../../../../packages/desktop-platform/contracts/foundation/src/contract.ts"],
       "@ordessa/ui-components/api": ["../../../../packages/desktop-platform/ui-components/api/ui-components.ts"],

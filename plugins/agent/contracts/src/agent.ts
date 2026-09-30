@@ -42,6 +42,8 @@ export interface AgentConnectionInfo {
   capabilities: AgentCapabilities
   /** Real Server instance identity behind this connection; project selections are scoped by it, never by plugin id alone. */
   serverInstanceId?: string
+  /** Backend-offered Harness identity, never inferred from the connector title. */
+  harnessId?: string
 }
 /** One Server-authoritative project workspace record (FE never invents or reuses paths across servers). */
 export interface AgentWorkspaceInfo {
@@ -209,6 +211,13 @@ export interface AgentClient extends IDisposable {
   subscribe(listener: () => void): () => void
   refreshSessions(): Promise<void>
   newSession(): Promise<string>
+  /** 021: prepare without sending. Same attempt reuses the confirmed owner;
+   * an uncertain creation is never repeated. Optional means unsupported. */
+  prepareSession?(workspaceId: string, attemptId: string): Promise<AgentNativeSessionOwner>
+  sendPreparedSession?(attemptId: string, text: string): Promise<{ sessionId: string }>
+  /** Explicit draft cancellation only; never cancel an already attempted prompt. */
+  abandonPreparedSession?(attemptId: string): Promise<void>
+  nativeSessionOwner?(sessionId: string): AgentNativeSessionOwner
   openSession(id: string): Promise<void>
   /**
    * Revision 0.2.0 (014 P-C, R-Z2-1): upgraded from `Promise<void>` to a
@@ -277,6 +286,15 @@ export interface AgentClient extends IDisposable {
    * snapshot and selected (FC-0031); an unknown outcome rejects and the caller keeps the requestId. */
   createAndSend?(workspaceId: string, text: string, requestId: string): Promise<{ sessionId: string }>
 }
+/** Connector-observed routing identity, NOT a Profile canonical SessionRef. */
+export interface AgentNativeSessionOwner {
+  readonly sessionId: string
+  readonly serverInstanceId: string
+  readonly connectionId: string
+  readonly nativeSessionId: string
+  readonly harnessId: string
+  readonly workspaceId: string
+}
 export interface AgentConnector {
   id: string
   title: string
@@ -284,6 +302,8 @@ export interface AgentConnector {
 }
 
 export interface AgentWorkspaceSnapshot {
+  /** User navigation fence; native progress notifications do not change it. */
+  selectionRevision?: number
   available: readonly Pick<AgentConnector, 'id' | 'title'>[]
   selectedConnectionId?: string
   connectingId?: string
@@ -323,6 +343,9 @@ export interface AgentSessions {
   newSession(): Promise<void>
   openSession(id: string): Promise<void>
   send(text: string, attachments?: readonly string[]): Promise<AgentSubmissionOutcome>
+  /** Prepare a draft's native owner or inspect the selected session. No prompt.
+   * A failed configuration keeps the prepared owner for explicit retry. */
+  prepareSubmission?(): Promise<AgentNativeSessionOwner>
   stop(runId: string): Promise<void>
   respond(interactionId: string, answer: InteractionAnswer): Promise<void>
   setOption(id: string, value: string): Promise<void>

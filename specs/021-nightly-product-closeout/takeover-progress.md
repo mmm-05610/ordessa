@@ -300,3 +300,13 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 受控 wire 反例已覆盖全局值不变、临时覆盖/清除、forged ref 拒绝、Unknown→确认恢复且应用恰一次。首次测试误用 register_provider 的位置参数，校正为现有接口后才钉住 source 字符串不符合 DTO 的红因；实现修正投影而非放宽消费者断言。
 - **待用户裁定的中等规模接缝**：原生 session/new 已成功而 Profile 应用失败时，现有 `createAndSend` 把请求身份锁住，不能安全重试又不重复建会话。建议保留“已创建、尚未发送”的实例和原草稿，明确拒绝后修正配置再复用；未知时只 reconcile、不重发。备选是仅明确未应用时释放后重建，未知仍保留。已通过用户输入卡提出两选一；尚未修改 AgentClient/AgentSessions/Chat 公共契约，不以 ad-hoc callback 穿透私有对象绕过。
 - 该决定会确定下一步插件层提交前 preparation 生命周期（agent 契约、ACP、会话门面、Profile glue），不需要更改 apps/server、Pacthold 或 desktop host。其它已验证的后端成果保持有效；不先发旧配置 prompt，不把选择成功当应用成功。
+
+### 用户认可首发保留语义，前端 preparation 接线（2026-09-30）
+
+- 用户认可保留已创建但未发送的 native session：明确配置拒绝后保留草稿、Profile 选择及同一创建 attempt；修正后复用。Unknown 下一次显式点击只 reconcile，不自动二次应用或发送；核实后再由用户点击发送。
+- Agent 插件契约新增可选 prepareSession/sendPreparedSession/abandonPreparedSession/nativeSessionOwner、门面 prepareSubmission 与显式用户导航 selectionRevision。旧消费者不必实现；旧路径继续严格 snapshot 身份守卫。ACP 返回的是连接器已观察到的路由事实，Profile canonical UID 仍由后端 registerNativeSession 铸造，前端不自造 UID。
+- Profile Chat guard 位于 session/new 与 prompt 之间：登记、选择、应用、精确会话回执校验后才允许发送；下一轮继续应用当前有效 Profile。输出中换选择只更新 UI，不调用原生接口。应用等待期间的新选择保留到下次提交，不被旧结果删除。未支持的另一 Harness 选择在 preparation 前拒绝，当前不自动替用户切换连接。
+- 独立新增反例暴露并修掉“其它会话已有绑定会导致无 Profile 草稿也提前创建”的缺陷。显式取消草稿可以加入在途 preparation 后释放其独立 channel；失败释放保留既有可观察 ledger/重试入口，不静默重试。导航离开不是释放，仍保留可恢复草稿，但导航 epoch 阻止晚到 guard 发送；取消的晚到 owner 不重新写回草稿。
+- 受控验证：Profile Chat 29/29、ACP 59/59、Agent Sessions 44/44、Chat 前端 61/61；Profile 前端此前 20/20。根 typecheck 和 Profile Chat 独立 typecheck exit 0；build 构建 18 扩展，lock 只由构建生成。新增两个缺陷反例已实跑红→绿，其它新覆盖与实现同批落地，不冒称全部先红后绿。尚未运行此轮 Electron 或真实模型。
+- **默认产品接线缺口仍在**：桌面 launcher 当前默认使用旧 artifacts 且 Pi bridge 默认关闭；新安装增强 Pi 位于另一个 root，不能把三品牌整体指向仅含 Pi 的目录。下一步需在 Harness launch 接缝支持各绑定独立可信资产根，Codex/Claude 仍用原资产。不能将以上受控前端通过记为默认桌面 Profile 已可用。
+- 固定七项待办不增加阶段：第 4 项提交接线有受控证据但默认真实产品尚未验证；第 3/5 全量资源与并发语义、第 6 两品牌切换、第 7 完整产品/用户真实对话仍未完成。main、host、用户服务和截图不动，不 push、不真实模型调用。

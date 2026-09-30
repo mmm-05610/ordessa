@@ -1,13 +1,17 @@
 import type { WirePort } from '@extensions/ordessa.contracts/contract.js'
 import { DelegatingProfileServiceClient, valueState } from '@extensions/ordessa.profile-api/contract.js'
 
+export class ProfileWireError extends Error {
+  constructor(readonly kind: string, reason: string) { super(`Profile ${kind}: ${reason}`) }
+}
+
 /** Preserve uncertainty: a lost reply is not a safe-to-retry refusal. */
 export async function profileCall(wire: WirePort, operation: string, payload: unknown): Promise<unknown> {
   const params = Object.fromEntries(Object.entries(payload as Record<string, unknown>)
     .filter(([, value]) => value !== undefined))
   const result = await wire.call(`profiles.v2.${operation}`, params)
   if (result.kind === 'Accepted') {
-    if (!Object.hasOwn(result.result, 'data')) throw new Error('Profile Unknown: malformed response')
+    if (!Object.hasOwn(result.result, 'data')) throw new ProfileWireError('Unknown', 'malformed response')
     const data = result.result['data']
     if (operation === 'describeFacets') {
       if (!Array.isArray(data)) throw new Error('Profile Unknown: malformed facet catalog')
@@ -30,7 +34,7 @@ export async function profileCall(wire: WirePort, operation: string, payload: un
     }
     return data
   }
-  throw new Error(`Profile ${result.kind}: ${result.reason}`)
+  throw new ProfileWireError(result.kind, result.reason)
 }
 
 export function createWireClient(wire: WirePort) {

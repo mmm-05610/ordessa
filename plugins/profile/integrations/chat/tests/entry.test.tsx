@@ -12,6 +12,7 @@ import { ProfilePickerKey } from '../src/glue'
 import { ProfilePicker } from '../src/picker'
 import type { ProfilePickerProps } from '../src/picker-model'
 import { ProfileCatalog } from '../src/catalog'
+import { AgentSessionsToken } from '@extensions/ordessa.agent-contracts/contract.js'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 const cleanups: (() => void | Promise<void>)[] = []
@@ -44,7 +45,7 @@ function setup(profileCatalog = vi.fn(async (_realm: string) => groups)) {
 
 it('activates the default factory with shared tokens and the original key; scope revokes provider and guard', async () => {
   const state = setup()
-  expect(state.plugin.requires).toEqual([ProfileServiceToken, ChatContributionsToken, UiComponentsToken])
+  expect(state.plugin.requires).toEqual([ProfileServiceToken, ChatContributionsToken, UiComponentsToken, AgentSessionsToken])
   expect(state.plugin.id).toBe('ordessa.profile-chat')
   const consumer = new OwnedResources()
   cleanups.push(() => consumer.dispose())

@@ -30,7 +30,7 @@ export interface SelectionCounters {
 
 export type ApplyOutcome =
   | { readonly ok: true; readonly applied: ProfileSelection; readonly receipt?: AppliedReceiptDto }
-  | { readonly ok: false; readonly reason: string; readonly selection: ProfileSelection }
+  | { readonly ok: false; readonly reason: string; readonly selection: ProfileSelection; readonly unknown?: boolean }
 
 export class ProfileSelectionStore {
   private readonly selections = new Map<string, ProfileSelection>()
@@ -117,20 +117,27 @@ export class ProfileSelectionStore {
           || config.evidence.journal.operationId !== receipt.operationId) {
           throw new Error('Profile current configuration is not confirmed for this selection')
         }
-        this.selections.delete(key)
+        if (this.selections.get(key) === selection) this.selections.delete(key)
         this.lastConfirmed.set(key, selection)
         return { ok: true, applied: selection, receipt }
       }
+      const receipt = result.receipt
+      if (!receipt || receipt.profileId !== selection.profileId || !sameSession(receipt.sessionRef, sessionRef)
+          || !receipt.operationId || !receipt.configDigest || !receipt.confirmedAt
+          || !receipt.evidenceKind || receipt.evidenceKind === 'legacy-unverified') {
+        throw Object.assign(new Error('Profile application receipt is unproven for this selection'), { kind: 'Unknown' })
+      }
       this.counters.applyConfirmed += 1
-      this.selections.delete(key)
+      if (this.selections.get(key) === selection) this.selections.delete(key)
       this.lastConfirmed.set(key, selection)
-      return { ok: true, applied: selection, receipt: result.receipt ?? undefined }
+      return { ok: true, applied: selection, receipt }
     } catch (error) {
       this.counters.applyFailed += 1
       // Keep the selection so the composer can offer retry/re-pick; never
       // report success and never fall back to the old configuration.
       const reason = error instanceof Error ? error.message : String(error)
-      return { ok: false, reason, selection }
+      return { ok: false, reason, selection,
+        ...(error && typeof error === 'object' && 'kind' in error && error.kind === 'Unknown' ? { unknown: true } : {}) }
     }
   }
 }

@@ -27,6 +27,7 @@ export interface FacadeOptions {
 }
 
 export class FacadeFixture implements AgentSessions {
+  selectionRevision: number | undefined
   private listeners = new Set<() => void>()
   private base: AgentWorkspaceSnapshot
   private readonly generationValue: number | undefined
@@ -80,6 +81,7 @@ export class FacadeFixture implements AgentSessions {
   }
 
   selectSession(id: string): void {
+    if (this.selectionRevision !== undefined) this.selectionRevision += 1
     this.base = { ...this.base, agent: this.base.agent && { ...this.base.agent, selectedSessionId: id } }
     this.emit()
   }
@@ -95,6 +97,7 @@ export class FacadeFixture implements AgentSessions {
       : !this.base.agent?.workspaces?.selectedWorkspaceId ? 'no-project' as const : undefined
     const derived: AgentWorkspaceSnapshot = {
       ...this.base,
+      ...(this.selectionRevision !== undefined ? { selectionRevision: this.selectionRevision } : {}),
       ...(this.generationValue !== undefined ? { runtimeGeneration: this.generationValue } : {}),
       draft: {
         active: this.draftActive,

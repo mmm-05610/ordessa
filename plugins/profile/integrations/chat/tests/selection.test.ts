@@ -53,6 +53,31 @@ function makeClient(applied: boolean, failFirst = false) {
 }
 
 describe('selection store (PV-10)', () => {
+  it('a newer pick made while application awaits is retained for the next submit', async () => {
+    const store = new ProfileSelectionStore(), client = makeClient(true)
+    let finish!: () => void
+    const begin = client.beginTurnApplication.bind(client)
+    client.beginTurnApplication = async (key, ref) => {
+      await new Promise<void>(resolve => { finish = resolve })
+      return begin(key, ref)
+    }
+    store.select('session:S1', C)
+    const applying = store.applyOnSubmit('session:S1', REF, client)
+    await Promise.resolve()
+    store.select('session:S1', B)
+    finish()
+    expect(await applying).toMatchObject({ ok: true, applied: C })
+    expect(store.peek('session:S1')).toEqual(B)
+  })
+
+  it('a claimed switch without a matching receipt remains unknown and keeps the choice', async () => {
+    const store = new ProfileSelectionStore(), client = makeClient(true)
+    client.beginTurnApplication = async () => ({ turnId: 't', appliedSwitch: true, receipt: undefined })
+    store.select('session:S1', C)
+    expect(await store.applyOnSubmit('session:S1', REF, client)).toMatchObject({ ok: false, unknown: true })
+    expect(store.peek('session:S1')).toEqual(C)
+  })
+
   it('selecting never calls the service and updates the label immediately', () => {
     const store = new ProfileSelectionStore()
     const client = makeClient(true)

@@ -79,6 +79,37 @@ describe('composer input (US3/C04)', () => {
 })
 
 describe('send flow (C04/A04/unknown)', () => {
+  it('native preparation notifications preserve admission with an unchanged explicit navigation epoch', async () => {
+    const facade = new FacadeFixture({ sessions: [{ id: 's1', title: '会话一' }], selectedSessionId: 's1', messages: { s1: [] } })
+    facade.selectionRevision = 1
+    const chat = createChatContributions(), scope = new OwnedResources()
+    cleanup.push(async () => scope.dispose())
+    chat.forScope(scope).addSubmissionGuard({ id: 'native.progress', order: 1, prepare: async () => {
+      facade.emit()
+      return { status: 'ready' }
+    } })
+    const container = await mount(<ChatPage service={facade} chat={chat} theme="light" />)
+    await type(container, 'prepared text')
+    await clickSend(container)
+    expect(facade.sends).toEqual(['prepared text'])
+  })
+
+  it('an explicit navigation epoch prevents sending after moving away and back during preparation', async () => {
+    const facade = new FacadeFixture({ sessions: [{ id: 's1', title: '一' }, { id: 's2', title: '二' }], selectedSessionId: 's1', messages: { s1: [], s2: [] } })
+    facade.selectionRevision = 1
+    const chat = createChatContributions(), scope = new OwnedResources()
+    cleanup.push(async () => scope.dispose())
+    let release!: () => void
+    chat.forScope(scope).addSubmissionGuard({ id: 'native.held', order: 1,
+      prepare: () => new Promise(resolve => { release = () => resolve({ status: 'ready' }) }) })
+    const container = await mount(<ChatPage service={facade} chat={chat} theme="light" />)
+    await type(container, 'keep text')
+    await clickSend(container)
+    await act(async () => { facade.selectSession('s2'); facade.selectSession('s1'); release() })
+    expect(facade.sends).toEqual([])
+    expect(input(container).value).toBe('keep text')
+  })
+
   it('submission guards refuse before the real facade send and preserve the draft', async () => {
     const facade = new FacadeFixture({ sessions: [{ id: 's1', title: '会话一' }], selectedSessionId: 's1', messages: { s1: [] } })
     const chat = createChatContributions()

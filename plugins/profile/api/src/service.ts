@@ -163,6 +163,8 @@ export interface ProfileServiceClient {
     sessionRef: SessionRef
     profileId: string
   }): Promise<SelectionOutcomeDto>
+  /** Native routing facts are checked by the backend; canonical UID is minted there. */
+  registerNativeSession?(input: { connectionId: string; nativeSessionId: string; profileId: string }): Promise<{ sessionRef: SessionRef }>
   setSessionOverride(operationKey: string, input: {
     sessionRef: SessionRef
     facetId: string
@@ -253,6 +255,9 @@ export class DelegatingProfileServiceClient implements ProfileServiceClient {
   }
   selectForSession(operationKey: string, input: { sessionRef: SessionRef; profileId: string }) {
     return this.call<SelectionOutcomeDto>('selectForSession', { operationKey, ...input })
+  }
+  registerNativeSession(input: { connectionId: string; nativeSessionId: string; profileId: string }) {
+    return this.call<{ sessionRef: SessionRef }>('registerNativeSession', input)
   }
   setSessionOverride(operationKey: string, input: {
     sessionRef: SessionRef; facetId: string; itemId: string; value: unknown

@@ -1,7 +1,7 @@
 import type { ResourceScope } from '@ordessa/extension-api'
 import type {
   AgentAttachmentPreparation, AgentClient, AgentCommandCatalog, AgentConnections, AgentPreparedAttachment,
-  AgentSessions, AgentSnapshot, AgentSubmissionOutcome, AgentWorkspaceSnapshot,
+  AgentSessions, AgentSnapshot, AgentSubmissionOutcome, AgentWorkspaceSnapshot, AgentNativeSessionOwner,
 } from '@extensions/ordessa.agent-contracts/contract.js'
 
 /** Thin delegate facade: client holding, selection, and reconnection live in the connections
@@ -12,8 +12,10 @@ import type {
 export function createAgentSessions(lifetime: ResourceScope, connections: AgentConnections): AgentSessions {
   void lifetime // workspace ownership moved to the connections service scope (P2-1)
   const workspace = connections.workspace
-  interface ConnState { draftActive: boolean; draftEndedBy?: 'discarded' | 'opened'; requestId?: string; restoreFailed: boolean }
+  interface ConnState { draftActive: boolean; draftEndedBy?: 'discarded' | 'opened'; requestId?: string; restoreFailed: boolean;
+    prepared?: { client: AgentClient; owner: AgentNativeSessionOwner } }
   const states = new Map<string, ConnState>()
+  let selectionRevision = 0
   const stateFor = (id: string) => { let s = states.get(id); if (!s) states.set(id, s = { draftActive: false, restoreFailed: false }); return s }
   // Non-secret UI selection: last valid project per authenticated Server instance (origin+serverId),
   // mirrored to renderer localStorage so the choice survives a desktop restart (FC-0030). Never keyed
@@ -89,7 +91,7 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
   let cached: { base: AgentWorkspaceSnapshot; signature: string; derived: AgentWorkspaceSnapshot } | null = null
   const signature = (base: AgentWorkspaceSnapshot) => {
     const state = base.selectedConnectionId ? stateFor(base.selectedConnectionId) : undefined
-    return `${base.selectedConnectionId ?? '-'}|${state?.draftActive}|${state?.draftEndedBy}|${state?.restoreFailed}|${base.agent?.connection.capabilities.workspaces}|${base.agent?.workspaces?.selectedWorkspaceId}|${observedGeneration() ?? '-'}`
+    return `${selectionRevision}|${base.selectedConnectionId ?? '-'}|${state?.draftActive}|${state?.draftEndedBy}|${state?.restoreFailed}|${base.agent?.connection.capabilities.workspaces}|${base.agent?.workspaces?.selectedWorkspaceId}|${observedGeneration() ?? '-'}`
   }
   /** PC-5: the selected client's backend-confirmed runtime generation, when it
    * can observe one. An absent client member or no selection is itself the
@@ -104,7 +106,7 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
       : state.restoreFailed ? 'project-invalid' as const
       : !base.agent?.workspaces?.selectedWorkspaceId ? 'no-project' as const : undefined
     const generation = observedGeneration()
-    return { ...base, ...(generation === undefined ? {} : { runtimeGeneration: generation }), draft: {
+    return { ...base, selectionRevision, ...(generation === undefined ? {} : { runtimeGeneration: generation }), draft: {
       active: state.draftActive,
       workspaceId: base.agent?.workspaces?.selectedWorkspaceId,
       canSend: block === undefined,
@@ -127,12 +129,38 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
       return cached.derived
     },
     subscribe: listener => { listeners.add(listener); return () => { listeners.delete(listener) } },
-    selectConnection: async id => { await workspace.selectConnection(id); await revalidate(id) },
-    reconnect: async id => { await workspace.reconnect(id); await revalidate(id) },
+    selectConnection: async id => { selectionRevision += 1; await workspace.selectConnection(id); await revalidate(id) },
+    reconnect: async id => { selectionRevision += 1; await workspace.reconnect(id); await revalidate(id) },
     refreshSessions: () => workspace.selected().refreshSessions(),
+    prepareSubmission: async () => {
+      const client = workspace.selected()
+      const connectionId = workspace.getSnapshot().selectedConnectionId ?? '-'
+      const state = stateFor(connectionId)
+      if (!state.draftActive) {
+        const id = client.getSnapshot().selectedSessionId
+        if (!id || !client.nativeSessionOwner) throw Error('Native submission preparation unavailable')
+        return client.nativeSessionOwner(id)
+      }
+      gate()
+      if (!client.prepareSession || !client.sendPreparedSession) throw Error('Native draft preparation unavailable')
+      const projectId = client.getSnapshot().workspaces?.selectedWorkspaceId!
+      const capturedRevision = selectionRevision
+      if (state.prepared && (state.prepared.client !== client || state.prepared.owner.workspaceId !== projectId))
+        throw Error('Prepared draft owner changed; cannot silently create another session')
+      state.requestId ??= globalThis.crypto.randomUUID()
+      const attemptId = state.requestId
+      const owner = await client.prepareSession(projectId, attemptId)
+      // A view switch retains this prepared owner for the resumable draft.
+      // Explicit discard clears the attempt and separately releases it.
+      if (state.requestId === attemptId) state.prepared = { client, owner }
+      if (workspace.selected() !== client || !state.draftActive
+          || selectionRevision !== capturedRevision || client.getSnapshot().workspaces?.selectedWorkspaceId !== projectId) throw Error('Draft context changed during preparation')
+      return owner
+    },
     // Legacy passthrough kept type-compatible for the direct prototypes; the CP UI never calls it (FC-0021).
     newSession: () => workspace.selected().newSession().then(() => undefined),
     openSession: id => {
+      selectionRevision += 1
       const connId = workspace.getSnapshot().selectedConnectionId
       const state = connId ? stateFor(connId) : undefined
       // Opening a session ends an active draft as a step-away (C-0030): the draft may be
@@ -201,7 +229,11 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
       state.requestId ??= globalThis.crypto.randomUUID() // one requestId held across unknown outcomes; no blind second create
       const requestId = state.requestId
       try {
-        const accepted = await client.createAndSend(workspaceId, text, requestId)
+        if (state.prepared && (state.prepared.client !== client || state.prepared.owner.workspaceId !== workspaceId))
+          throw Error('Prepared draft owner changed')
+        const accepted = state.prepared
+          ? await client.sendPreparedSession!(requestId, text)
+          : await client.createAndSend(workspaceId, text, requestId)
         // The draft ends only when the accepted real session id is in the snapshot, selected, and bound
         // to the chosen project (FC-0031); otherwise input and requestId stay held for an idempotent retry.
         const after = client.getSnapshot()
@@ -212,6 +244,7 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
         if (!accepted?.sessionId || !bound || after.selectedSessionId !== accepted.sessionId)
           throw Error('Agent first-send session mismatch')
         state.requestId = undefined
+        state.prepared = undefined
         state.draftActive = false
         state.draftEndedBy = undefined // an accepted send ends the draft by selecting the new real session
         notify()
@@ -294,9 +327,23 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
     // startDraft deliberately leaves the client-side selection untouched: discarding must
     // restore the previously selected session (C-0030), and safety comes from send() never
     // routing to a selection while a draft is active.
-    startDraft: () => { const id = workspace.getSnapshot().selectedConnectionId; if (id) { const state = stateFor(id); state.draftActive = true; state.draftEndedBy = undefined; notify() } },
-    discardDraft: () => { const id = workspace.getSnapshot().selectedConnectionId; if (id) { const state = stateFor(id); const wasActive = state.draftActive; state.draftActive = false; state.requestId = undefined; if (wasActive) state.draftEndedBy = 'discarded'; notify() } },
+    startDraft: () => { selectionRevision += 1; const id = workspace.getSnapshot().selectedConnectionId; if (id) { const state = stateFor(id); state.draftActive = true; state.draftEndedBy = undefined; notify() } },
+    discardDraft: () => {
+      selectionRevision += 1
+      const id = workspace.getSnapshot().selectedConnectionId
+      if (!id) return
+      const state = stateFor(id), wasActive = state.draftActive, attempt = state.requestId
+      const client = workspace.selected()
+      state.draftActive = false; state.requestId = undefined; state.prepared = undefined
+      if (wasActive) state.draftEndedBy = 'discarded'
+      if (attempt && client.abandonPreparedSession) void client.abandonPreparedSession(attempt).catch(() => {
+        // Connector retains failed release in its observable retry ledger.
+        state.restoreFailed = true; notify()
+      })
+      notify()
+    },
     selectWorkspace: async id => {
+      selectionRevision += 1
       const client = workspace.selected()
       if (!client.openWorkspace) throw Error('Agent project gate: unsupported')
       const info = await client.openWorkspace(id)
@@ -306,6 +353,7 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
       if (connectionId) stateFor(connectionId).restoreFailed = false
     },
     addWorkspace: async path => {
+      selectionRevision += 1
       const client = workspace.selected()
       if (!client.addWorkspace) throw Error('Agent project registration: unsupported')
       const info = await client.addWorkspace(path)

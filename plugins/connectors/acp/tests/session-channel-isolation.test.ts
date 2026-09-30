@@ -53,6 +53,46 @@ it('selects a project without acquiring a channel, then isolates new sessions an
   expect(f.releases.sort()).toEqual(['connection-1', 'connection-2'])
 })
 
+it('prepares once without a prompt or changing the public selection, and reuses the owner after config refusal', async () => {
+  const f = await fixture()
+  try {
+    await f.client.openWorkspace('project')
+    const before = f.client.getSnapshot().selectedSessionId
+    const [a, b] = await Promise.all([f.client.prepareSession('project', 'attempt'), f.client.prepareSession('project', 'attempt')])
+    expect(a).toEqual(b)
+    expect(a).toMatchObject({ connectionId: 'connection-1', harnessId: 'pi', workspaceId: 'project' })
+    expect(f.peers).toHaveLength(1)
+    expect(f.peers[0].recorded('session/new')).toHaveLength(1)
+    expect(f.peers[0].recorded('session/prompt')).toHaveLength(0)
+    expect(f.client.getSnapshot().selectedSessionId).toBe(before)
+    expect(await f.client.prepareSession('project', 'attempt')).toEqual(a)
+    expect(() => f.client.prepareSession('different', 'attempt')).toThrow('project changed')
+    expect(await f.client.sendPreparedSession('attempt', 'after correction')).toEqual({ sessionId: a.sessionId })
+    expect(f.peers[0].recorded('session/prompt')).toHaveLength(1)
+    expect(f.peers[0].recorded('session/new')).toHaveLength(1)
+    await expect(f.client.sendPreparedSession('attempt', 'must not duplicate')).rejects.toThrow('already attempted')
+    expect(f.peers[0].recorded('session/prompt')).toHaveLength(1)
+  } finally { f.client.dispose() }
+  await f.client.releasesSettled
+})
+
+it('explicitly abandoning a pending preparation releases only its own channel and prevents later sending', async () => {
+  const f = await fixture()
+  try {
+    await f.client.openWorkspace('project')
+    const sibling = await f.client.newSession()
+    const pending = f.client.prepareSession('project', 'abandoned')
+    await f.client.abandonPreparedSession('abandoned')
+    await pending.catch(() => undefined)
+    expect(f.releases).toEqual(['connection-2'])
+    await expect(f.client.sendPreparedSession('abandoned', 'never')).rejects.toThrow('abandoned')
+    await f.client.send(sibling, 'still alive')
+    expect(f.peers[0].recorded('session/prompt')).toHaveLength(1)
+    expect(f.peers[1].recorded('session/prompt')).toHaveLength(0)
+  } finally { f.client.dispose() }
+  await f.client.releasesSettled
+})
+
 it('keeps concurrent first-send acceptance separate even when both native ids match', async () => {
   const f = await fixture()
   const gates = [deferred(), deferred()]

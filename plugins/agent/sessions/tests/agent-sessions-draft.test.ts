@@ -69,6 +69,48 @@ function projectClient(id: string, serverInstanceId: string | undefined, options
 const cleanup: (() => Promise<void>)[] = []
 afterEach(async () => { for (const fn of cleanup.splice(0).reverse()) await fn() })
 
+it('prepares without sending, retains the same owner after configuration refusal, then sends that prepared session', async () => {
+  const a = projectClient('A', 'server')
+  let prepares = 0, preparedSends = 0
+  const owner = { sessionId: 'R1', serverInstanceId: 'server', connectionId: 'channel', nativeSessionId: 'native', harnessId: 'pi', workspaceId: '/srv/a' }
+  a.client.prepareSession = async () => { prepares += 1; return owner }
+  a.client.sendPreparedSession = async (attempt, text) => { preparedSends += 1; return a.client.createAndSend!('/srv/a', text, attempt) }
+  const sessions = await harness({ id: 'A', build: () => a.client })
+  await sessions.selectConnection('A')
+  await sessions.selectWorkspace!('/srv/a')
+  sessions.startDraft!()
+  const revision = sessions.getSnapshot().selectionRevision
+  expect(await sessions.prepareSubmission!()).toEqual(owner)
+  expect(sessions.getSnapshot().draft?.active).toBe(true)
+  expect(a.calls.sends).toHaveLength(0)
+  expect(await sessions.prepareSubmission!()).toEqual(owner)
+  expect(sessions.getSnapshot().selectionRevision).toBe(revision)
+  expect(await sessions.send('corrected config')).toEqual({ kind: 'accepted' })
+  expect(preparedSends).toBe(1)
+  expect(prepares).toBe(2) // client owns once-only creation, facade rechecks live ownership
+  expect(sessions.getSnapshot().draft?.active).toBe(false)
+})
+
+it('discard during preparation releases the held attempt and never sends the late owner', async () => {
+  const a = projectClient('A', 'server')
+  let resolve!: (owner: import('@extensions/ordessa.agent-contracts/contract.js').AgentNativeSessionOwner) => void
+  const abandoned: string[] = []
+  a.client.prepareSession = () => new Promise(done => { resolve = done })
+  a.client.sendPreparedSession = async () => { throw Error('must not send') }
+  a.client.abandonPreparedSession = async id => { abandoned.push(id) }
+  const sessions = await harness({ id: 'A', build: () => a.client })
+  await sessions.selectConnection('A')
+  await sessions.selectWorkspace!('/srv/a')
+  sessions.startDraft!()
+  const preparing = sessions.prepareSubmission!().catch(error => error)
+  sessions.discardDraft!()
+  resolve({ sessionId: 'R1', serverInstanceId: 'server', connectionId: 'channel', nativeSessionId: 'native', harnessId: 'pi', workspaceId: '/srv/a' })
+  expect((await preparing).message).toContain('context changed')
+  expect(abandoned).toHaveLength(1)
+  expect(sessions.getSnapshot().draft?.active).toBe(false)
+  expect(a.calls.sends).toEqual([])
+})
+
 it.each([
   ['SUBMISSION_OUTCOME_UNKNOWN', 'unknown'],
   ['SUBMISSION_REFUSED', 'refused'],

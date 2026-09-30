@@ -167,9 +167,20 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
     setPendingPane(capturedPane)
     let result: ChatSubmissionResult
     try {
-      result = await chat.submit(snapshot, gateway, () =>
-        mountedRef.current && paneRef.current === capturedPane && locationRef.current === location
-        && service.getSnapshot() === state)
+      result = await chat.submit(snapshot, gateway, () => {
+        const current = service.getSnapshot()
+        // Native preparation legitimately publishes progress. Preserve strict
+        // legacy fencing where no explicit user-navigation epoch is offered.
+        const contextCurrent = state.selectionRevision === undefined
+          ? current === state && locationRef.current === location
+          : current.selectionRevision === state.selectionRevision
+            && current.selectedConnectionId === state.selectedConnectionId
+            && current.draft?.active === state.draft?.active
+            && current.draft?.workspaceId === state.draft?.workspaceId
+            && current.agent?.connection.status === state.agent?.connection.status
+            && (state.runtimeGeneration === undefined || current.runtimeGeneration === state.runtimeGeneration)
+        return mountedRef.current && paneRef.current === capturedPane && contextCurrent
+      })
     } catch {
       result = { status: 'unknown' }
     } finally {
