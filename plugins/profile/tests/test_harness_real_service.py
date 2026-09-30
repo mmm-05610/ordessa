@@ -182,6 +182,7 @@ def make_world(tmp_path, *, permit_allowed=True):
         v2_providers=((FixtureProvider(), "carrier-test-domain"),),
         config_port=HarnessApiConfigPort(
             service,
+            target_resolver=lambda ref: target,
             permit_provider=lambda ref, plan_id: "signed:fixture",
             schema_version_of=lambda facet_id: "v1",
             revision_provider=lambda ref: runtime.revision,

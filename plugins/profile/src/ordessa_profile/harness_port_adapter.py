@@ -19,6 +19,7 @@ Honest boundaries kept intact:
 """
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any, Callable, Mapping
 
 from .contracts import (
@@ -81,6 +82,7 @@ class HarnessApiConfigPort(HarnessConfigPort):
         permit_provider: Callable[[SessionRef, str], str] | None = None,
         schema_version_of: Callable[[str], str] | None = None,
         revision_provider: Callable[[SessionRef], str] | None = None,
+        target_resolver: Callable[[SessionRef], ApplicationTarget] | None = None,
         evidence_kind: str = "harness-api-confirmed",
     ) -> None:
         if not _CARRIER_IMPORT_OK:
@@ -95,18 +97,26 @@ class HarnessApiConfigPort(HarnessConfigPort):
         # The before-revision is server-owned: the host reads it from its own
         # runtime observation; Profile tracks the last carrier answer.
         self._revision_provider = revision_provider
+        self._target_resolver = target_resolver
         self._revision: dict[str, str] = {}
-        self._generation: dict[str, int] = {}
         self._evidence_kind = evidence_kind
 
     # -- identity mapping ------------------------------------------------
-    def _target(self, ref: SessionRef) -> Any:
-        return ApplicationTarget(
-            server_id=ref.realm,
-            session_id=ref.session_uid,
-            channel_id=ref.native_session_key,
-            runtime_generation=self._generation.get(ref.session_uid, 0),
-        )
+    def _target(self, ref: SessionRef) -> ApplicationTarget:
+        if self._target_resolver is None:
+            raise ProfileError("APPLICATION_PORT_ABSENT",
+                               "no backend owner target resolver is registered", status=409)
+        try:
+            target = self._target_resolver(ref)
+        except ProfileError:
+            raise
+        except Exception as exc:
+            raise ProfileError("SWITCH_BLOCKED",
+                               "backend owner target resolution failed", status=409) from exc
+        if not isinstance(target, ApplicationTarget) or target.session_id != ref.session_uid:
+            raise ProfileError("SWITCH_BLOCKED",
+                               "backend owner target does not bind this canonical session", status=409)
+        return target
 
     def _fragments(self, intents) -> tuple:
         fragments = []
@@ -133,8 +143,9 @@ class HarnessApiConfigPort(HarnessConfigPort):
 
     # -- port surface ------------------------------------------------------
     def inspect(self, target: SessionRef) -> InspectResult:
-        capabilities = self._service.inspect(self._target(target))
-        generation = self._generation.get(target.session_uid, 0)
+        resolved = self._target(target)
+        capabilities = self._service.inspect(resolved)
+        generation = resolved.runtime_generation
         return InspectResult(
             target=HarnessTargetFacts(
                 session_ref=target,
@@ -146,6 +157,7 @@ class HarnessApiConfigPort(HarnessConfigPort):
         )
 
     def plan(self, target: SessionRef, desired, operation_key: str) -> PlanResult:
+        resolved = self._target(target)
         expected_revision = self._revision.get(target.session_uid)
         if expected_revision is None and self._revision_provider is not None:
             expected_revision = self._revision_provider(target)
@@ -157,7 +169,7 @@ class HarnessApiConfigPort(HarnessConfigPort):
                 status=409,
             )
         result = self._service.plan(
-            self._target(target), self._fragments(desired), expected_revision)
+            resolved, self._fragments(desired), expected_revision)
         if isinstance(result, Refused):
             diagnostics = "; ".join(result.diagnostics)
             return PlanResult(
@@ -171,6 +183,9 @@ class HarnessApiConfigPort(HarnessConfigPort):
                        "original_state_preserved": result.original_state_preserved},
             )
         assert isinstance(result, CarrierPlan)
+        if result.target != resolved:
+            raise ProfileError("SWITCH_BLOCKED",
+                               "carrier plan does not bind the resolved owner target", status=409)
         return PlanResult(
             session_ref=target, operation_key=operation_key,
             overall="live-update",
@@ -184,10 +199,16 @@ class HarnessApiConfigPort(HarnessConfigPort):
                 "native_version_ref": result.native_version_ref,
                 "expires_at_utc": result.expires_at_utc,
                 "runtime_generation": result.provider_generation,
+                "application_target": asdict(resolved),
             },
         )
 
     def apply(self, plan: PlanResult, desired):
+        resolved = self._target(plan.session_ref)
+        if plan.fence.get("application_target") != asdict(resolved):
+            raise ProfileError("SWITCH_BLOCKED",
+                               "owner target changed or the plan has no target fence; replan required",
+                               status=409)
         plan_id = plan.fence.get("plan_id")
         if not plan_id:
             raise ProfileError(
@@ -203,7 +224,6 @@ class HarnessApiConfigPort(HarnessConfigPort):
             raise PermitUnavailable("the host refused to mint a submission permit")
         outcome: ApplicationResult = self._service.apply(plan_id, plan.operation_key, permit)
         if isinstance(outcome, Confirmed):
-            self._generation[plan.session_ref.session_uid] = outcome.runtime_generation
             self._revision[plan.session_ref.session_uid] = outcome.applied_revision
             receipt = AppliedReceipt(
                 operation_id=outcome.operation_id,
@@ -234,9 +254,9 @@ class HarnessApiConfigPort(HarnessConfigPort):
         )
 
     def reconcile(self, operation_key: str, target: SessionRef) -> ReconcileOutcome:
+        self._target(target)
         outcome = self._service.reconcile(operation_key)
         if isinstance(outcome, Confirmed):
-            self._generation[target.session_uid] = outcome.runtime_generation
             self._revision[target.session_uid] = outcome.applied_revision
             receipt = AppliedReceipt(
                 operation_id=outcome.operation_id,

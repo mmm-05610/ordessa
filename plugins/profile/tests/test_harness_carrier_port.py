@@ -29,6 +29,8 @@ class CarrierServiceDouble:
     carrier DTOs on every call and scripts the verdict."""
 
     def __init__(self, *, apply_outcome="confirmed", reconcile_outcome="confirmed"):
+        from ordessa_harness_api import ApplicationTarget
+        self.target = ApplicationTarget("fixture-server", "S", "fixture-channel", 7)
         self.apply_outcome = apply_outcome
         self.reconcile_outcome = reconcile_outcome
         self.calls: list[tuple[str, int]] = []
@@ -112,6 +114,7 @@ def carrier_world(tmp_path, *, service, permit_provider=_DEFAULT_PERMIT):
         tmp_path, providers=(MODEL,),
         config_port=HarnessApiConfigPort(
             service,
+            target_resolver=lambda ref: service.target,
             permit_provider=(lambda ref, plan_id: "permit-1")
             if permit_provider is _DEFAULT_PERMIT else permit_provider,
             schema_version_of=lambda facet_id: "1.0.0",
@@ -163,8 +166,10 @@ def test_carrier_refusal_is_retriable_and_preserves_state_g08(tmp_path):
     assert config["current"]["profile_id"] == a["profile_id"]
     assert config["evidence"]["journal"]["state"] == "rejected"
     # a healthy retry on a fresh carrier applies cleanly
+    retry_service = CarrierServiceDouble()
     core.config_port = HarnessApiConfigPort(
-        CarrierServiceDouble(),
+        retry_service,
+        target_resolver=lambda ref: retry_service.target,
         permit_provider=lambda ref, plan_id: "permit-1",
         schema_version_of=lambda facet_id: "1.0.0",
         revision_provider=lambda ref: "base-1",
@@ -221,3 +226,87 @@ def test_missing_host_permit_is_retriable_refusal_not_unknown(tmp_path):
     assert config["switch_state"] == "pending"
     assert config["evidence"]["journal"]["state"] == "rejected"
     assert core.sessions.turns("S") == []
+
+
+@pytest.mark.parametrize("operation", ["inspect", "plan", "apply", "reconcile"])
+@pytest.mark.parametrize("resolution", ["absent", "wrong-type", "wrong-session"])
+def test_owner_resolution_refuses_before_any_service_call(operation, resolution):
+    from ordessa_harness_api import ApplicationTarget
+    from ordessa_profile.contracts import PlanResult, SessionRef
+    service = CarrierServiceDouble()
+    ref = SessionRef("profile-realm", "pi", "native-session", "S")
+    resolver = None if resolution == "absent" else (
+        lambda _: object() if resolution == "wrong-type" else
+        ApplicationTarget("owner-server", "other-session", "owner-channel", 19))
+    port = HarnessApiConfigPort(service, target_resolver=resolver,
+                               revision_provider=lambda _: "before-r1")
+    plan = PlanResult(ref, "operation-1", "live-update", fence={"plan_id": "plan-1"})
+    with pytest.raises(ProfileError) as exc:
+        if operation == "inspect":
+            port.inspect(ref)
+        elif operation == "plan":
+            port.plan(ref, (), "operation-1")
+        elif operation == "apply":
+            port.apply(plan, ())
+        else:
+            port.reconcile("operation-1", ref)
+    assert exc.value.code == ("APPLICATION_PORT_ABSENT" if resolution == "absent" else "SWITCH_BLOCKED")
+    assert service.calls == []
+
+
+def test_inspect_preserves_owner_channel_server_and_nonzero_generation():
+    from ordessa_harness_api import ApplicationTarget, ConfigurationCapabilities
+    from ordessa_profile.contracts import SessionRef
+    ref = SessionRef("profile-realm", "pi", "native-session", "canonical-uid")
+    target = ApplicationTarget("server-instance", ref.session_uid, "canonical-channel", 23)
+    seen = []
+
+    class Service:
+        def inspect(self, actual):
+            seen.append(actual)
+            return ConfigurationCapabilities(actual, ())
+
+    port = HarnessApiConfigPort(Service(), target_resolver=lambda actual: target)
+    result = port.inspect(ref)
+    assert seen == [target]
+    assert seen[0] is target
+    assert seen[0].channel_id != ref.native_session_key
+    assert seen[0].server_id != ref.realm
+    assert result.target.runtime_generation == "gen-23"
+
+
+def test_inspect_reads_updated_owner_generation_without_confirmation_cache():
+    from ordessa_harness_api import ApplicationTarget
+    from ordessa_profile.contracts import SessionRef
+    ref = SessionRef("realm", "pi", "native", "S")
+    service = CarrierServiceDouble()
+    port = HarnessApiConfigPort(service, target_resolver=lambda _: service.target)
+    assert port.inspect(ref).target.runtime_generation == "gen-7"
+    service.target = ApplicationTarget("fixture-server", "S", "next-channel", 31)
+    assert port.inspect(ref).target.runtime_generation == "gen-31"
+    assert service.calls == [("inspect", 7), ("inspect", 31)]
+
+
+@pytest.mark.parametrize("changed", ["server", "channel", "generation"])
+def test_apply_refuses_changed_owner_target_before_permit_or_effect(changed):
+    from types import SimpleNamespace
+    from ordessa_harness_api import ApplicationTarget
+    from ordessa_profile.contracts import SessionRef
+    service = CarrierServiceDouble()
+    permits = []
+    port = HarnessApiConfigPort(
+        service, target_resolver=lambda _: service.target,
+        revision_provider=lambda _: "before-r1",
+        permit_provider=lambda *args: permits.append(args) or "permit-1")
+    desired = (SimpleNamespace(op="set", value="m2", facet_id="model_selection",
+                               item_id="model", source="profile@2"),)
+    plan = port.plan(SessionRef("realm", "pi", "native", "S"), desired, "op-1")
+    service.target = ApplicationTarget(
+        "new-server" if changed == "server" else "fixture-server", "S",
+        "new-channel" if changed == "channel" else "fixture-channel",
+        8 if changed == "generation" else 7)
+    with pytest.raises(ProfileError) as exc:
+        port.apply(plan, desired)
+    assert exc.value.code == "SWITCH_BLOCKED"
+    assert permits == []
+    assert service.calls == [("plan", 7)]

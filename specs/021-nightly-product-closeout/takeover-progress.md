@@ -102,3 +102,11 @@ Pi 系统安装已获得用户授权，但本机 sudo 需要交互认证；提�
 Profile Chat 有限入口接线已由主代理复跑 23/23：合法 default factory、共享 token、公开 UI provider、真实目录首次/显式刷新、同步失败后可再次刷新、选择仅记录临时意图、无生产会话身份/应用端口时明确拒送。用户显式清除选择后可回原发送，不自动清除失败选择。此入口仍不能称为 Profile 实际应用；真实服务端配置 admission/C4 owner 未落地。
 
 收尾验证：根 typecheck 与 18 扩展 build 通过；产品 node 边界门禁全量 16/16（新版显式选择断言已纳入）。全仓 preview 测试改写的一张跟踪截图已仅还原本次生成变化，不纳入源码提交。根 main 保持原分支且干净；本检查点只留 integration 分支，不合并、不 push、无真实模型调用。
+
+### 系统资产与 Profile owner fence 追加验证
+
+- 用户已执行 Pi 安装。主代理独立重验真实 root 管理资产、锁与完整摘要；通过真实 AccessEntryTransport 对安装的 pi-acp 0.5.0 发 initialize，protocolVersion=1，随后确认进程释放。配置与会话目录均独立，session/new=0、模型 prompt=0；这是安装/协议握手证据，不是 Profile 应用或真实对话验收。
+- Codex ACP 1.1.14 与 Claude ACP 0.81.2 已按锁构建，主代理复算全树摘要分别为 9051b844a8feeb241667dd0cc03e80d082e140e88e49ecb3f195385e209f2ca1、03324c056754cf7e7a0d117a5abdab02705ef38993d82847b9bb30b2f5d542c5。用户已执行安装脚本；主代理独立复验三品牌系统资产与 nativeServerPlan 全通过，Codex/Claude 经真实 AccessEntryTransport initialize 全通过、进程释放确认。独立 HOME/品牌配置目录，session/new=0、模型 prompt=0，不涉及登录。
+- Profile carrier 必须消费后端 owner 显式解析的 ApplicationTarget，不再从 realm/nativeSessionKey 猜 server/channel，也不以确认缓存猜 runtime generation。计划记录完整 target fence；应用前重新解析，server/channel/generation 任一变化均在申请 permit 与 effect 前拒绝。三个新增反例修复前全红、修复后全绿；carrier + real-service 定向 27/27。生产 owner 与原生配置应用仍未接通，不冒充完成。
+- 已构建临时真实开发运行根 /tmp/ordessa-native-dev-runtime-bNpAO6zy：独立集成 Python venv 加当前仓 Go 桥（Go 1.24.13，CGO=0，digest 714044a5b490a53d5fa89aade993c496e5fa3a5f7c614b4465c4990575185cbd）。这是开发验证环境，不是发行安装包或历史基线桥摘要。
+- 追加 Profile 后端全套 173/173（Starlette 弃用告警一条）。真实开发运行根下空宿主 Electron smoke 通过；完整启用清单 + 真实 native Server 探针根界面挂载成功，但因 Skills 前端调用 skills.catalogue 而 native 产品未组合 Skills 后端报错，故产品探针退出 1。native_runtime 当前仅追加 Profile；default_plugins 也未组合 Skills。这是已确认装配缺口，不作完整产品可用声明；后续须连同贡献点、Profile/权限端口正确组合，不通过隐藏错误或伪造能力解决。
