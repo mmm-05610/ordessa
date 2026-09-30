@@ -78,6 +78,8 @@ interface ExitRecord {
 }
 
 export interface ServerBridgeOptions {
+  /** Product-owned argv, forwarded without interpreting domain flags. */
+  readonly args?: readonly string[]
   readonly env?: Readonly<Record<string, string | undefined>>
   /** Overrides the resolved data root; otherwise C-01's order applies. */
   readonly dataRoot?: string
@@ -147,9 +149,14 @@ export class ServerBridge {
   #stopping = false
   #lastCrash: ServerCrashed | null = null
   readonly #options: ServerBridgeOptions
+  readonly #args: readonly string[]
 
   constructor(options: ServerBridgeOptions = {}) {
+    if (options.args?.some(arg => typeof arg !== 'string' || arg.includes('\0'))) {
+      throw new TypeError('Server arguments must be NUL-free strings')
+    }
     this.#options = options
+    this.#args = [...(options.args ?? [])]
   }
 
   get state(): ServerState {
@@ -211,7 +218,7 @@ export class ServerBridge {
 
     let child: ServerChild
     try {
-      child = spawnFn(executable, args, {
+      child = spawnFn(executable, [...args, ...this.#args], {
         env: {
           ...(process.env as Record<string, string>),
           ...(env as Record<string, string>),

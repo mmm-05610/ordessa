@@ -153,6 +153,28 @@ function fakeServer(behaviour: 'ready' | 'exit-early' | 'silent' | 'garbage'): C
 }
 
 describe('C-02 §5 — the state machine over real processes', () => {
+  it('forwards product arguments verbatim and snapshots the provided array', async () => {
+    const args = ['--product-option', 'value with spaces']
+    let received: readonly string[] = []
+    const bridge = new ServerBridge({
+      env: envFor(bundledRoot()), dataRoot: path.join(scratch, 'data-root'),
+      args, readyTimeoutMs: 5000, probe: async () => true,
+      spawnProcess: ((_command: string, argv: readonly string[]) => {
+        received = argv
+        return fakeServer('ready')
+      }) as unknown as typeof spawn,
+    })
+    args.push('--late-mutation')
+    try {
+      await bridge.start()
+      expect(received).toEqual(['-m', 'ordessa_server', '--product-option', 'value with spaces'])
+    } finally { await bridge.stop(200) }
+  })
+
+  it('rejects malformed arguments before a process can be spawned', () => {
+    expect(() => new ServerBridge({ args: ['bad\0arg'] })).toThrow(TypeError)
+  })
+
   async function withBridge(child: ChildProcess, timeoutMs: number): Promise<ServerBridge> {
     // The bridge owns the child it spawns, so the test hands the bridge a
     // spawn function that returns THIS process and lets the bridge drive it.
