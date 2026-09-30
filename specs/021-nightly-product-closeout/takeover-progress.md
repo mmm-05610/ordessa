@@ -268,3 +268,16 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 品牌注册反例在缺失实现时跑红；新增边界检查无资源业务实现依赖与旧源码入口。开发环境旧 egg-info/bytecode 可存在，不把其当源实现，也不删除其它环境；新 -S 解释器验证旧包不可发现。反例初版曾误把 descriptor 属性当方法、把忽略产物目录的存在当源码残留，已校正为真实接口/源码语义，未改生产代码迎合错误测试。
 - 主代理实跑：迁移原测试+ModelProvider 后端+Profile 全套 412/412（随后增加一条新解释器反例）；新解释器反例在内的迁移测试+产品全套 106/106；Harness 应用/journal/Pi executor/owner 定向 69/69，均 exit 0。套件有重叠，不加总。活动源码旧包名引用为零，diff 检查通过；测试产物截图不提交。
 - 此检查点只是原生适配所有权迁移，不代表 Pi live model action、其它资源迁移或 Profile 生产 wire 已完成。用户要求无需逐检查点确认，后续直接推进直到实际硬性阻塞；固定 TODO 第 3–7 项保持未完成，main 不动、不发布、不真实模型调用。
+
+### 生产 canonical 注册与 Pi live 模型应用（2026-09-30）
+
+- 原生产品现在注入 `profile.native-sessions` 并声明 `profiles.v2.registerNativeSession`；后端依据真实 ACP owner 创建 canonical UID 和当前 incarnation target，客户端不能传 UID。Profile 域只消费注入接口，不导入 Harness 实现；未注入的管理组合不声明此能力。跨 realm、未知 owner、伪造 UID 在写 session 记录前拒绝，重启 Profile 后使用新 owner/fence，不持有上一轮端口。
+- 实际系统安装 Pi 的双实例产品探针 exit 0，现输出 `productionProfileWire:true`：两个真实 ledger owner 分别注册到 Profile SQLite、UID 不重叠，A 改推理选项不影响 B，释放 A 后 B 存活；prompt=0，全部探针实例退出。`profileApplicationConfirmed:false`、receipt 表仍为 0，不能把注册记作配置已生效。
+- Harness 内部新增 Pi owner context（不扩公共 API，也不让资源插件传原生事实）与 live 模型编译/执行模块，复用 C2/C4/原生 action executor/journal。业务 ModelChoice 只解析当前目录、协议、endpoint 和 credential reference；新的默认解析不要求业务层声称 provider 已在实例中。已有明确传入事实的受控兼容路径保持拒绝缺失事实，未弱化旧反例。
+- Pi 独立 query 只投影唯一真实 native model 的 provider/model/api/baseUrl，不投影密钥/header；带凭据 URL、歧义与残留 reserved metadata 不成为证据。完整业务 payload 必须与实际原生路由完全一致；非空 credentialRef、协议/endpoint 改变、品牌 hints、非空 requestParams 当前明确拒绝，不丢弃这些请求假装切换成功。
+- C4 受控 live-runtime 7/7：native receipt + 独立查询才能 Confirmed，重放无第二次效果、无文件物化；请求未支持能力零效果；读回不同为 Unknown；计划后外部更改/贡献卸载拒绝。额外反例钉住 preflight 不得重新抓一个新 digest 从而掩盖 C4 capture 之后的变化。初版测试误取 Sandbox 的 Pi contribution，已按精确 model adapter ID 校正；没有扩大 action grant。
+- 增强开发资产构建完成：`/tmp/ordessa-pi-live-model-runtime-20260930`，treeDigest `sha256:6240b9fa6996fe139dd4a75bb2e461d936b07f43d8eefc9b42ba52a6a0a6c67b`，15462 entries / 64927584 bytes，原 source lock digest 不变。最初 source 参数指向开发产品根而非含 npm lock 的源根，builder 诚实拒绝；使用已锁定的 pi-source 后成功，无资产覆写。
+- 对这个开发资产运行真实 Pi owner RPC + C2/C4 model probe，exit 0：同一实例 first→second，C4 native model Confirmed、幂等 replay、原生 target/manifest 绑定、全局 sentinel 不变、实例进程 exit 0；session/new=1，prompt=0，仅 synthetic key。这里 Server ledger 是夹具、Profile receipt=false，不能记为生产 Profile 应用。
+- 主代理回归：Harness 模型配置 + ModelProvider 后端全套 + Profile 全套 + 产品全套 + C4 action/service/Pi executor/owner 定向 **580/580**，exit 0；Node Pi bridge **56/56**。未重跑 root npm 全量，不改其此前非全绿记录。套件有重叠，不累加成总覆盖量。
+- 实际安装硬门：`sudo -n true` 报 interactive authentication required。脚本 `/tmp/ordessa-install-pi-live-model-verified.sh` 已做 shell 语法检查，拟仅新增 `/opt/ordessa/harnesses/profile-live-model/artifacts/pi-profile-runtime`（保留原 artifacts 全部内容），完整摘要锁定、root 管理、拒绝覆写。当前未安装、未将默认桌面切到新资产；已请用户执行该脚本。
+- 固定 TODO 第 3–7 项仍未全部完成：第 3 项生产 canonical 注册已落地，但默认 Profile config port 尚需接线；第 4–5 项 Chat submit 与全量覆盖语义仍待实现；第 6 项 Codex/Claude 切换仍未完成；第 7 项完整产品/真实对话验收未完成。不得把原生 C4 模型确认当作这五项全部完成。main/host 未动、未 push、未真实模型调用，原截图产物保留不提交。

@@ -33,6 +33,20 @@ object and changes if the object is replaced; it is not a configuration
 revision or an authorization grant. Unknown/closed/disposed sessions refuse.
 The query does not load sessions, change configuration or invoke a model.
 
+Model options additionally carry `_meta.ordessaModel` only when a unique
+upstream `availableModels` entry establishes exact provider, model, native API
+and base URL. This closed projection contains no credential/header material;
+credential-bearing URLs and ambiguous/missing facts are omitted. Previously
+carried reserved metadata is removed before fresh observation. It permits
+selection of an already available matching model, not installation of a new
+provider, credential application or arbitrary parameters.
+
+`--owner-rpc --owner-operations --owner-live-model` additionally exercises the
+real C2 carrier, C4 journal and Pi executor with two synthetic local models.
+It checks receipt, independent query, idempotent replay and no materialized
+files, sending zero prompts. Its channel ledger remains a fixture and the
+asset is developer-built; it is NOT a production Profile application receipt.
+
 Verification: `node --test packaging/pi-profile/*.test.mjs` and
 `python packaging/pi-profile/probe-nomodel.py /absolute/enhanced-artifact`.
 The latter runs real Pi with an isolated HOME and explicitly synthetic API

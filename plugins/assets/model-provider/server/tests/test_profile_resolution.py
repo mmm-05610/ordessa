@@ -43,6 +43,16 @@ def test_real_catalogue_projects_valid_c2_payload_and_separate_fence(catalog):
     assert "configVersion" not in result.payload
 
 
+def test_business_resolution_needs_no_native_availability_hints(catalog):
+    choice = saved(catalog)
+    result = ProfileModelChoiceResolver(catalog, payload_schema=choice_payload_schema()).resolve(
+        choice, harness_id="pi")
+    assert result.payload == {"provider": "acme", "model": "m1", "protocol": "openai-chat",
+                             "endpoint": "http://127.0.0.1:8765/v1", "credentialRef": None}
+    assert "brandFields" not in result.payload
+    assert result.revisions["providerConfigId"] == choice["providerConfigId"]
+
+
 def test_reference_only_never_reads_secret_store(catalog, stack, harnesses):
     seed_credential_row(stack["database"])
     harnesses._descriptors["pi"] = harness_descriptor(credential_kind="api_key")

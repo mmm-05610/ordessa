@@ -46,12 +46,14 @@ class ProfileModelChoiceResolver:
 
     def resolve(
         self, choice: Mapping[str, Any], *, harness_id: str,
-        brand_fields: Mapping[str, Any], protocol: str | None = None,
+        brand_fields: Mapping[str, Any] | None = None, protocol: str | None = None,
         required_capabilities: Mapping[str, Any] | None = None,
     ) -> ResolvedProfileModelChoice:
         """Resolve exactly {harnessId, providerConfigId, modelId}.
 
-        ``brand_fields`` contains server-observed instance facts. In particular
+        Native application facts belong to Harness, not catalogue resolution.
+        Omitting ``brand_fields`` produces no native availability claim.
+        The explicit legacy controlled path still accepts observed facts. Its
         provider_in_instance and credential_changed must be explicit booleans.
         No default can imply those observations. More than one common protocol
         requires an explicit selection. Revisions fence preparation; they do
@@ -67,13 +69,13 @@ class ProfileModelChoiceResolver:
         catalog = self._catalog
         if harness_id not in catalog.harnesses:
             raise ServerError("HARNESS_UNAVAILABLE", "Harness is not registered", status=422)
-        if not isinstance(brand_fields, Mapping) or any(
+        if brand_fields is not None and (not isinstance(brand_fields, Mapping) or any(
             not isinstance(brand_fields.get(key), bool)
             for key in ("provider_in_instance", "credential_changed")
-        ):
+        )):
             raise ServerError("RUNTIME_FACTS_UNVERIFIED", "explicit observed instance facts required", status=422)
         try:
-            fields = validate_json(brand_fields)
+            fields = validate_json(brand_fields) if brand_fields is not None else None
         except ContractError as error:
             raise ServerError("PROFILE_CONFIGURATION_INVALID", "invalid non-secret brand facts", status=422) from error
         try:
@@ -129,8 +131,9 @@ class ProfileModelChoiceResolver:
             raise ServerError("PROFILE_CONFIGURATION_INVALID", "Provider identity is invalid", status=422)
         payload = {"provider": provider, "model": choice["modelId"],
                    "protocol": selected, "endpoint": endpoints.get(selected),
-                   "credentialRef": f"ref://{credential_ref}" if credential_ref is not None else None,
-                   "brandFields": fields}
+                   "credentialRef": f"ref://{credential_ref}" if credential_ref is not None else None}
+        if fields is not None:
+            payload["brandFields"] = fields
         try:
             payload = self._schema.validate(payload)
         except ContractError as error:

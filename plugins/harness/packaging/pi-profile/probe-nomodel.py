@@ -14,9 +14,11 @@ import tempfile
 import threading
 
 
-def probe(artifact: Path, *, owner_rpc=False, owner_operations=False) -> dict:
+def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live_model=False) -> dict:
     if owner_operations and not owner_rpc:
         raise ValueError('owner operations require owner RPC mode')
+    if owner_live_model and not owner_operations:
+        raise ValueError('live model C4 probe requires owner operations')
     entry = artifact / "node_modules/@automatalabs/pi-acp/dist/ordessa-profile.mjs"
     with tempfile.TemporaryDirectory(prefix="ordessa-pi-profile-probe-") as temporary:
         home = Path(temporary)
@@ -27,6 +29,18 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False) -> dict:
         (instance / "settings.json").write_text(json.dumps({
             "defaultProvider": "anthropic", "defaultModel": "claude-opus-4-6",
             "defaultThinkingLevel": "off"}))
+        if owner_live_model:
+            # Entirely local synthetic provider: no real credentials or API
+            # requests. The two models make the native setter observable.
+            (instance / "models.json").write_text(json.dumps({"providers": {"ordessa-fixture": {
+                "api": "openai-completions", "baseUrl": "http://127.0.0.1:9/v1",
+                "apiKey": "ordessa-nomodel-fixture-not-a-real-credential",
+                "models": [{"id": name, "name": name, "reasoning": True, "input": ["text"],
+                    "contextWindow": 8192, "maxTokens": 1024,
+                    "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0}}
+                    for name in ("first", "second")]}}}))
+            (instance / "settings.json").write_text(json.dumps({"defaultProvider": "ordessa-fixture",
+                "defaultModel": "first", "defaultThinkingLevel": "off"}))
         project = home / "project"
         project.mkdir(mode=0o700)
         global_dir = home / ".pi/agent"
@@ -156,6 +170,46 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False) -> dict:
                         '_ordessa/session/configuration/operation',
                         {'sessionId': native, 'operationId': payload['operationId']})
                     assert retained == operation
+                    if owner_live_model:
+                        from ordessa_harness_api import DesiredFragment, Installation
+                        from ordessa_harness.configuration.model.plugin import ModelProviderAdaptersPlugin
+                        from ordessa_harness.pi.configuration.runtime import PiLiveModelRuntime
+                        from ordessa_harness.application.configuration_service import ConfigurationApplicationService
+                        from ordessa_harness.application.operation_journal import OperationJournal
+                        from ordessa_harness.application.action_execution import ActionGrant
+                        from ordessa_server.bootstrap import build_runtime
+                        carrier_runtime = build_runtime(home / "controlled-carrier")
+                        try:
+                            carrier_runtime.plugin_host.activate(ModelProviderAdaptersPlugin())
+                            view = next(view for view in carrier_runtime.plugin_host.contributions(
+                                'harness.configuration-adapters')
+                                if view.payload.descriptor.adapter_id == 'assets.model-provider.pi')
+                            native_runtime = PiLiveModelRuntime(registry, owners, target=bound.target,
+                                installation=Installation('pi', (0, 5, 0), (1, 0, 0),
+                                    'development-pinned-pi:0.5.0'),
+                                private_root=home / 'never-materialized',
+                                publication_revision=view.publication_token)
+                            grant = ActionGrant(bound.target, view.owner, view.publication_token,
+                                'assets.model-provider', 'choice', '1', 'acp.session.set-config-option', '1')
+                            service = ConfigurationApplicationService(principal='probe', target=bound.target,
+                                carrier=carrier_runtime.plugin_host, runtime=native_runtime, permits=None,
+                                owner_application=True, journal=OperationJournal(home / 'c4.sqlite'),
+                                action_executor=native_runtime, action_grants=(grant,))
+                            desired = DesiredFragment('assets.model-provider', 'choice', '1',
+                                'fixture:provider', 'fixture:revision', 'set', {'provider': 'ordessa-fixture',
+                                'model': 'second', 'protocol': 'openai-chat',
+                                'endpoint': 'http://127.0.0.1:9/v1', 'credentialRef': None})
+                            plan = service.plan(bound.target, (desired,),
+                                native_runtime.capture(bound.target).before_revision)
+                            assert plan.kind == 'plan', plan
+                            confirmed = service.apply_prepared(plan.plan_id, 'native-model-switch')
+                            assert confirmed.kind == 'confirmed', confirmed
+                            assert service.apply_prepared(plan.plan_id, 'native-model-switch') == confirmed
+                            assert not native_runtime.private_root.exists()
+                            model = next(item for item in configuration(native)['configOptions'] if item['id'] == 'model')
+                            assert model['currentValue'] == 'ordessa-fixture/second'
+                        finally:
+                            carrier_runtime.stop()
                 else:
                     request("session/set_config_option", {"sessionId": native,
                         "configId": "thinkingLevel", "value": different})
@@ -195,6 +249,7 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False) -> dict:
                     "sessionNew": 1, "modelPrompts": 0, "credentialAccess": "synthetic fixture only",
                     "productionOwnerRpc": owner_rpc, 'nativeOperationRecord': owner_operations,
                     'nativeTargetManifestBound': owner_operations,
+                    'c4NativeModelConfirmed': owner_live_model,
                     'serverLedger': 'fixture only', 'profileApplicationReceipt': False}
             finally:
                 if process.poll() is None:
@@ -209,4 +264,5 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False) -> dict:
 
 if __name__ == "__main__":
     print(json.dumps(probe(Path(sys.argv[1]).resolve(), owner_rpc='--owner-rpc' in sys.argv[2:],
-        owner_operations='--owner-operations' in sys.argv[2:])))
+                           owner_operations='--owner-operations' in sys.argv[2:],
+                           owner_live_model='--owner-live-model' in sys.argv[2:])))
