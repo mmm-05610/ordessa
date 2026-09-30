@@ -64,6 +64,9 @@ class StaticHarnessCatalog:
     def exists(self, harness_id: str) -> bool:
         return harness_id in self._harnesses
 
+    def registered(self) -> tuple[str, ...]:
+        return tuple(sorted(self._harnesses))
+
     def required_item_ids(self, harness_id: str) -> frozenset[str]:
         return self._harnesses.get(harness_id, frozenset())
 

@@ -10,6 +10,9 @@
     "jsx": "react-jsx",
     "strict": true,
     "paths": {
+      "@extensions/ordessa.profile-api/contract.js": [
+        "../../plugins/profile/api/src/index.ts"
+      ],
       "@extensions/ordessa.contracts/contract.js": [
         "../../packages/desktop-platform/contracts/foundation/src/contract.ts"
       ],

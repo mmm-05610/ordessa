@@ -8,9 +8,8 @@ version = "2.0.0a1"
 description = "Ordessa Profile plugin family: per-Harness profiles, contributed facets, session overlays and same-session switching"
 requires-python = ">=3.10"
 license = {text = "MIT"}
-# The kernel/plugin SDK is the only dependency; host internals and sibling
-# plugins are unreachable by construction (specs/001-profile/plan.md §1).
-dependencies = ["pacthold==2.0.0a1"]
+# Public plugin contracts only; no host implementation dependency.
+dependencies = ["pacthold==2.0.0a1", "ordessa-server-plugin-api>=0.1.0,<1"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7"]

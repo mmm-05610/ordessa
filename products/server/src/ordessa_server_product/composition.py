@@ -150,6 +150,7 @@ class ServerProductComposition:
         the compat writer retired in W-1 (same batch), so no double-write.
         """
         from ordessa_model_provider.plugin import ModelProviderPlugin
+        from ordessa_profile.server_plugin import ProfileServerPlugin
         from ordessa_permissions_adapters import PolicyAdaptersPlugin
         from ordessa_permissions_backend.plugin import PermissionsBackendPlugin
         from ordessa_sandbox_adapters import SandboxAdaptersServerPlugin
@@ -163,6 +164,7 @@ class ServerProductComposition:
         return (
             *self.compatibility_plugins(**composition_kwargs),
             ModelProviderPlugin(**model_provider_kwargs),
+            ProfileServerPlugin(),
             build_sandbox_plugin(),
             SandboxAdaptersServerPlugin(),
             PermissionsBackendPlugin(),

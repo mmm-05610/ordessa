@@ -9,7 +9,11 @@
     "noEmit": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "noUncheckedIndexedAccess": true
+    "noUncheckedIndexedAccess": true,
+    "paths": {
+      "@extensions/ordessa.contracts/contract.js": ["../../../packages/desktop-platform/contracts/foundation/src/contract.ts"],
+      "@extensions/ordessa.profile-api/contract.js": ["../api/src/index.ts"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx"]
 }

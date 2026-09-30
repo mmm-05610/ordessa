@@ -1,2 +1,2 @@
 import { buildExtension } from '../../../tooling/build-extension.mjs'
-await buildExtension(import.meta.dirname, {"entries":{"entry":"src/entry.ts","contract":"src/contract.ts"}})
+await buildExtension(import.meta.dirname, {"entries":{"entry":"src/entry.ts","contract":"src/index.ts"}})

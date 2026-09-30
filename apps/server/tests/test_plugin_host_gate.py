@@ -47,6 +47,11 @@ WORKSPACE_METHODS = {
 #: AR-1/W-1 后的方法面基数：67 − providerModels.* 六方法 − profile 写面八方法 = 53。
 #: 断言公式是 T002 + 2(admission) + 1(hello) = 56（总数）。随 W-1 同批落地。
 T002_METHOD_COUNT = 70  # S-03 装配：53 + PermissionsBackendPlugin 17 方法（权限后端进默认链）
+PROFILE_MANAGEMENT_METHODS = frozenset("profiles.v2." + name for name in (
+    "configuredHarnesses", "listProfiles", "getProfile", "createProfile",
+    "renameProfile", "archiveProfile", "restoreProfile", "describeFacets",
+    "resolvePreview", "profileCatalog",
+))
 ACP_ADMISSION_METHODS = frozenset({
     "acp.submission.authorize", "acp.permission.authorize",
 })
@@ -61,7 +66,12 @@ def _hello_caps(runtime) -> dict[str, dict]:
 def _assert_default_composition_caps(runtime, caps=None) -> None:
     """The post-AR-1 face, two ACP rows and Q5's read-only query coexist."""
     caps = _hello_caps(runtime) if caps is None else caps
-    assert len(caps) == T002_METHOD_COUNT + len(ACP_ADMISSION_METHODS) + 1
+    assert len(caps) == T002_METHOD_COUNT + len(ACP_ADMISSION_METHODS) + len(PROFILE_MANAGEMENT_METHODS) + 1
+    assert PROFILE_MANAGEMENT_METHODS <= caps.keys()
+    for method in PROFILE_MANAGEMENT_METHODS:
+        descriptor = runtime.wire._registry.lookup(method)
+        assert descriptor is not None and descriptor.owner == "ordessa.profile"
+        assert caps[method] == {"id": method, "supported": True}
     sandbox = runtime.wire._registry.lookup(SANDBOX_DESCRIBE_METHOD)
     assert sandbox is not None and sandbox.owner == "ordessa.sandbox"
     assert caps[SANDBOX_DESCRIBE_METHOD] == {
@@ -237,7 +247,7 @@ def test_default_composition_advertises_the_full_baseline_table(tmp_path):
             _assert_default_composition_caps(runtime, caps)
             assert runtime.plugin_host.active_ids() == (
                     WORKSPACE_ID, "ordessa.server-compat", "ordessa.harness.acp",
-                    "ordessa.model-provider", "ordessa.sandbox",
+                    "ordessa.model-provider", "ordessa.profile", "ordessa.sandbox",
                     "ordessa.sandbox-adapters", "permissions-backend",
                     "ordessa.permissions-adapters")
     except BaseException:
