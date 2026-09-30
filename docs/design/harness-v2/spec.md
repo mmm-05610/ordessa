@@ -4,7 +4,7 @@
 
 ### US1 / P1：配置能力可以独立接入
 
-Skills 开发者添加某品牌格式适配，不修改 Harness 主流程或核心包；没有 Profile 时仍可管理 Skill。Given 一个受控品牌与配置提供者，When 注册/卸载，Then 对应能力出现/消失，历史配置保留，未注册项不能下发。
+Skills 开发者添加资源业务；品牌格式适配在 Harness 对应品牌模块注册，不修改通用应用主流程或核心包；没有 Profile 时仍可管理 Skill。Given 一个受控品牌与配置提供者，When 注册/卸载，Then 对应能力出现/消失，历史配置保留，未注册项不能下发。
 
 ### US2 / P1：同一会话安全切换配置
 
@@ -27,7 +27,7 @@ Given 崩溃、超时、插件卸载、文件冲突、恢复失败，When 重试
 | ID | 必须实现 |
 | --- | --- |
 | FR01 | 两个领域注册点：runtime adapters、configuration adapters；所有权由宿主注入，原子注册，版本和重复拒绝 |
-| FR02 | 业务配置 schema/存储/UI/品牌映射归业务插件；Harness 不导入这些实现 |
+| FR02 | 业务配置 schema/存储/UI 归业务插件；品牌映射归 Harness 品牌模块；Harness 不导入业务存储/UI 实现 |
 | FR03 | brand identity、安装版本、adapter 版本、能力证据分开；别名只能规范化为已有身份 |
 | FR04 | 配置支持度按品牌×版本×入口×作用域×操作报告；发现品牌不等于能力可用 |
 | FR05 | Profile 先解析有效配置；Harness 只接收已验证的业务片段与来源修订，不认识 Profile 内部结构 |

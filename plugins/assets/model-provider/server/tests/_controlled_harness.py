@@ -16,7 +16,7 @@ Three pieces:
 - :class:`ControlledBrandRuntime` — the C4 ``ControlledRuntime`` behind one
   brand: capture/activate_generation/observe over a real harness
   ``ConfigurationApplicationService`` composition (build_runtime product host
-  + the adapters plugin declared in ``ordessa_model_provider_adapters.plugin``).
+  + the adapters plugin declared in ``ordessa_harness.configuration.model.plugin``).
 
 Zero real-model calls, zero credentials: the fake endpoint never leaves
 loopback and secrets travel as ``ref://`` references only (E3 stays forbidden).
@@ -39,8 +39,8 @@ from ordessa_harness.application import (
 )
 from ordessa_harness.materialization import MergeAuthority, TargetAuthority
 
-from ordessa_model_provider_adapters import bridge
-from ordessa_model_provider_adapters.plugin import ModelProviderAdaptersPlugin
+from ordessa_harness.configuration.model import bridge
+from ordessa_harness.configuration.model.plugin import ModelProviderAdaptersPlugin
 
 try:
     import tomllib

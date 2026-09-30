@@ -252,3 +252,19 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 一个有界子代理只处理 ModelProvider adapters 的 Pi live-action 映射与包内反例；若现有 AdapterContext 不支持真实动作/模型选项事实，须报告接口缺口，不猜 provider/model 字符串、不擅扩公共契约。主代理继续产品接线，子代理不做 Git、不改账本、不再分派。
 - 子代理已按要求停在确证的接口缺口，零代码/测试/Git 写入：公共 AdapterContext 只有 targets/installation/entry/scope/capability_evidence_ref；已声明动作存在于 RuntimeSnapshot.authority.actions，独立原生选项存在于 ProfileSessionOwner.config_options，但两者未通过合法 C2 配置上下文交给业务适配器。不能直接把模型存储中的 ID 猜成原生 option value，不能靠旁路访问 Harness 实现私有对象。
 - 待讨论的新设计项（与撤回的 Permissions 建议不同）：建议补 Harness 插件族自身 `plugins/harness/api` 的配置运行证据接口，由 Harness 在独立查询后提供已声明动作与精确原生选项/业务标识映射给注册的配置适配器，绑定当前 owner/generation；不是 UI 提供事实、不把业务判断搬到 host，不扩 Server/Pacthold/desktop-platform。缺证据/过期/不支持均拒绝；旧上下文仍保留既有文件配置路径，不自动升成 live。需要先确定此公共接口再补三品牌适配与生产 C4 runtime，当前不擅改该契约、不用 ad-hoc 字典夹带或猜测字符串绕过缺口。
+
+### 品牌差异归 Harness 的裁定与源码研究（2026-09-30）
+
+- 用户已裁定资源业务与原生适配分离：ModelProvider/Skills/MCP 等拥有数据、UI、Profile 贡献；Harness 暴露统一资源能力并内部负责各品牌的支持判定和应用。此前让资源业务适配器消费更多原生事实的提议不再作为默认实施路线，先把已有品牌实现收归 Harness，复用现有注册/应用机制，不新建平行接口。
+- 用户要求先研究多 Harness 产品的实际内部组织。本轮读取最新公开 HEAD 的 Codeg、Orca、T3 Code 与 ZCode 源码，固定 SHA 与具体入口见 `docs/design/harness-v2/multi-harness-organization-research.md`；没有运行上游产品或真实模型。当前未搬迁代码、未改 host/main，原测试产物截图仍未动。
+- 建议复用当前 Harness 的 pi/codex/claude 目录，在品牌内按配置能力拆模块；共享 application/registry/transport，品牌注册工厂/能力，运行实例保存独立状态，不使用全局可变单例。不为 brands 中间层搬迁全部正常运行代码，不为每个资源建独立进程管理器，也不强迫未支持能力出现空实现。
+- 固定待办第 3–7 项仍未完成；本轮源码研究不能记作 Profile 产品接线或真实应用通过。下一实现步需同步修正旧 C2 所有权文档及迁移清单，再保留原实现和 golden tests 迁移品牌模型适配；不删测试、不修改已有注册/账本身份、不留旧 import shim。
+
+### Harness 原生模型适配归位检查点（2026-09-30）
+
+- Pi/Codex/Claude 的模型编译实现移到各品牌 configuration/model.py；共有类型、golden 词汇和 C2 转换移到 Harness configuration/model/。直接复用旧实现，common.py 与原 HEAD 字节一致；品牌仅调整合法内部导入，未顺带改变配置能力语义。
+- 每品牌 registration.py 显式提供新适配对象，由 Harness 自有入口汇聚并注册现有 C2 点。旧 Python 源包/pyproject 删除，三个受控调用者同批迁移；保留既有 facet/adapter/贡献 owner 标识，不影响操作账本。没有新注册框架、host 修改或默认产品能力扩张。
+- 文档已修正 README/contracts/spec/plan/tasks/migration 并新增 resource-boundary-amendment.md；历史研究保持来源和授权日期，不以旧文档反向覆盖最新用户裁定。
+- 品牌注册反例在缺失实现时跑红；新增边界检查无资源业务实现依赖与旧源码入口。开发环境旧 egg-info/bytecode 可存在，不把其当源实现，也不删除其它环境；新 -S 解释器验证旧包不可发现。反例初版曾误把 descriptor 属性当方法、把忽略产物目录的存在当源码残留，已校正为真实接口/源码语义，未改生产代码迎合错误测试。
+- 主代理实跑：迁移原测试+ModelProvider 后端+Profile 全套 412/412（随后增加一条新解释器反例）；新解释器反例在内的迁移测试+产品全套 106/106；Harness 应用/journal/Pi executor/owner 定向 69/69，均 exit 0。套件有重叠，不加总。活动源码旧包名引用为零，diff 检查通过；测试产物截图不提交。
+- 此检查点只是原生适配所有权迁移，不代表 Pi live model action、其它资源迁移或 Profile 生产 wire 已完成。用户要求无需逐检查点确认，后续直接推进直到实际硬性阻塞；固定 TODO 第 3–7 项保持未完成，main 不动、不发布、不真实模型调用。

@@ -4,9 +4,9 @@
 
 | 现有位置/职责 | 目标 | 本批处理 |
 | --- | --- | --- |
-| Harness `native_materialization.py` 模型协议/供应商 renderer | Model-provider 的 harness_adapters | 迁纯函数与原 golden tests，调用者同批改；旧聚合品牌表删除 |
-| 各品牌 `native.py` | 按函数分属 runtime 与业务 adapter | 启动/路径能力留 Harness；model/provider 字段映射归 Model-provider，不整文件盲搬 |
-| `adapters/skill_observation.py` 与品牌 Skill 专属规则 | Skills 的 harness_adapters | 业务解析/解释外移，原生读取通路留受控 runtime action |
+| Harness `native_materialization.py` 模型协议/供应商 renderer | Harness 对应品牌 configuration/model | 迁纯函数与原 golden tests，调用者同批改；旧聚合品牌表删除 |
+| 各品牌 `native.py` | 按函数分属 runtime 与业务 adapter | 启动/路径能力留 Harness；model/provider 原生字段映射归 Harness 品牌配置模块，不整文件盲搬 |
+| `adapters/skill_observation.py` 与品牌 Skill 专属规则 | Harness 对应品牌 configuration/skills | 资源内容与选择归 Skills；品牌格式/发现/原生启停归 Harness，原生读取留受控 runtime action |
 | `generic/profile_store/selector/provider/manager`、`resources/profile_codec.py` | 用户预存归 Profile；启动快照归 Harness | 首先分清两种 profile 含义；不把启动资源 schema 当用户 Profile，也不删后以旧名 facade 回接 |
 | `importers/models.py`、qoder/native_config 中供应商解释 | Model-provider | 仅迁业务部分，导入来源说明/标识保留；不把 Qoder 导入识别冒充可运行品牌 |
 | `plugin.py`/entrypoints 的旧治理注册 | Harness integration | 消费 pacthold.public + server-plugin-api，随平台迁移后的真实接口适配，无 core alias |

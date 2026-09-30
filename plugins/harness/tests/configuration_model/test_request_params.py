@@ -8,11 +8,11 @@ the pre-MPX compile behavior byte-for-byte (regression-pinned here).
 from __future__ import annotations
 
 import pytest
-from ordessa_model_provider_adapters import common
-from ordessa_model_provider_adapters.codex import CodexAdapter
-from ordessa_model_provider_adapters.claude import ClaudeAdapter
-from ordessa_model_provider_adapters.pi import PiAdapter
-from ordessa_model_provider_adapters.types import (
+from ordessa_harness.configuration.model import common
+from ordessa_harness.codex.configuration.model import CodexAdapter
+from ordessa_harness.claude.configuration.model import ClaudeAdapter
+from ordessa_harness.pi.configuration.model import PiAdapter
+from ordessa_harness.configuration.model.types import (
     AdapterContext, ChoiceRequest, IntentSet, Refusal, RequestParams,
     TargetHandle,
 )
@@ -214,7 +214,7 @@ def test_claude_refuses_every_family_with_the_inventory_reason():
 
 
 def test_payload_schema_carries_the_closed_request_params_object():
-    from ordessa_model_provider_adapters import bridge
+    from ordessa_harness.configuration.model import bridge
     schema = bridge.choice_payload_schema()
     properties = dict(schema.properties)
     assert "requestParams" in properties
@@ -225,7 +225,7 @@ def test_payload_schema_carries_the_closed_request_params_object():
 
 
 def test_malformed_request_params_answer_typed_results_not_raw_valueerror():
-    from ordessa_model_provider_adapters import bridge
+    from ordessa_harness.configuration.model import bridge
     from ordessa_harness_api import ErrorCode, TargetHandle as HarnessTargetHandle
 
     class _Target:
@@ -249,7 +249,7 @@ def test_malformed_request_params_answer_typed_results_not_raw_valueerror():
 
 
 def test_the_retry_schema_and_the_dto_demand_the_same_keys():
-    from ordessa_model_provider_adapters import bridge
+    from ordessa_harness.configuration.model import bridge
     request_params = dict(bridge.choice_payload_schema().properties)["requestParams"]
     retry = dict(request_params.properties)["retry"]
     assert set(retry.required) == {"enabled", "maxRetries", "provider"}
@@ -278,7 +278,7 @@ def test_an_endpoint_change_is_never_dropped_by_the_budget_rewrite():
 
 
 def test_the_pi_descriptor_claims_the_settings_target_and_the_codex_effort_field():
-    from ordessa_model_provider_adapters import bridge
+    from ordessa_harness.configuration.model import bridge
     pi_claims = [claim for claim in bridge.descriptor_for("pi").claims
                  if claim.target_kind == "file"]
     assert any(claim.target_id == common.PI_SETTINGS_HANDLE_ID
@@ -292,8 +292,8 @@ def test_the_pi_descriptor_claims_the_settings_target_and_the_codex_effort_field
 def test_an_unissued_param_target_compiles_to_a_typed_refusal_not_a_lookalike():
     """The pi settings claim is inert until the host issues the target: the
     bridge refuses with CAPABILITY_UNSUPPORTED instead of writing anywhere."""
-    from ordessa_model_provider_adapters import bridge
-    from ordessa_model_provider_adapters.types import (
+    from ordessa_harness.configuration.model import bridge
+    from ordessa_harness.configuration.model.types import (
         AdapterContext as Local, TargetHandle as LocalHandle)
 
     from ordessa_harness_api import TargetHandle as HarnessTargetHandle

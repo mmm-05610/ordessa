@@ -25,7 +25,7 @@
 
 ## C2 Configuration adapter 注册
 
-点：`harness.configuration-adapters`，版本 `v1`，多贡献者。配置 adapter 归业务插件，例如 `assets.model-provider.codex`、`assets.skills.claude`。
+点：`harness.configuration-adapters`，版本 `v1`，多贡献者。配置 adapter 归 Harness 内部品牌模块；历史外部标识保留，例如 `assets.model-provider.codex`、`assets.skills.claude`。
 
 每项包含 adapter_id、facet_id、facet_schema_version、harness_id、受支持 native/adapter 版本范围、入口集合、业务 payload schema、claims、方法：
 
@@ -54,7 +54,7 @@ context 仅包含授权的目标句柄、非秘密能力事实和版本；compil
 
 每项携带 facet/item 来源和贡献版本，owner 由注册上下文补齐。target 不暴露任意写路径；field_path 使用结构化 segment，不用字符串拼接路径。祖先/后代路径写入、set/reset、文件/目录重叠都是冲突。相同值也不默许两个所有者争用同字段。
 
-多项 intent 先合成完整快照，校验引用/容量/编码/未知字段，再写候选 generation。不能每个 adapter 单独写同一个 settings.json。JSON/TOML/YAML codec 只负责结构，不负责品牌含义；现有手写品牌 renderer 的语义测试迁到对应业务插件。
+多项 intent 先合成完整快照，校验引用/容量/编码/未知字段，再写候选 generation。不能每个 adapter 单独写同一个 settings.json。JSON/TOML/YAML codec 只负责结构，不负责品牌含义；现有品牌 renderer 与语义测试迁到 Harness；资源插件不持有原生 renderer。
 
 路径必须位于实例所有的配置根内；拒绝穿越、symlink 逃逸及根替换竞争；权限按最小需求。内容大小/数量有硬上限，配置与日志不保存秘密明文。临时产物也有清理所有权。多文件发布不得声称操作系统提供跨文件事务：未运行实例可从完整 generation 启动；热读多文件须有原生原子切换机制，否则升级为受控重启。
 

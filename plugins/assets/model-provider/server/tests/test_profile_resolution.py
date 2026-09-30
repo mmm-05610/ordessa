@@ -5,7 +5,7 @@ import pytest
 
 from ordessa_model_provider.profile_resolution import ProfileModelChoiceResolver
 from ordessa_model_provider.testing import RecordingSecretStore, harness_descriptor, seed_credential_row, wire_body
-from ordessa_model_provider_adapters.bridge import choice_payload_schema
+from ordessa_harness.configuration.model.bridge import choice_payload_schema
 from ordessa_server.errors import ServerError
 
 

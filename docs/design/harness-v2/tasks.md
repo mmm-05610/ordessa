@@ -23,8 +23,8 @@
 
 ## Phase 3 — 两个真实消费者（US1/US2）
 
-- [ ] T10 [P]：迁 Model-provider 的三品牌映射，保留业务存储/校验；移除 Harness 中对应转换，原测试保真迁移，供应商/模型读回证据（G15）。依赖 T03/T04/T07。
-- [ ] T11 [P]：迁 Skills 的三品牌格式/发现/启停/reset，接现有内容仓，删除旧直接写入链（G16）。依赖同 T10。
+- [ ] T10 [P]：把 Model-provider 的三品牌原生映射迁入 Harness 品牌 configuration 模块，保留业务存储/校验；调用者同批迁移、旧源包删除，原测试保真迁移，供应商/模型读回证据（G15）。依赖 T03/T04/T07。
+- [ ] T11 [P]：把 Skills 的三品牌原生格式/发现/启停/reset 迁入 Harness，接现有内容仓，删除旧直接写入链（G16）。依赖同 T10。
 - [ ] T12：Profile glue 产出已解析 fragments/显式 reset，Confirmed 才绑定/清覆盖；不支持/缺席拒绝、UI 隐藏但数据保留（G17）。
 - [ ] T13：真实 ACP 提交闸门与后端受限控制接缝，同一 owner；补 next-submit、输出中不打断、重启恢复再发原消息、秘密不出后端（G18/G19）。依赖 T08–T12；不能以 fake HarnessConfigPort 算完成。
 

@@ -13,8 +13,8 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from . import common
-from .types import (
+from ...configuration.model import common
+from ...configuration.model.types import (
     AdapterContext, Assessment, BindSecret, ChoiceRequest, CompileIntent,
     IntentSet, MountContent, Refusal, TargetHandle, Verdict,
 )

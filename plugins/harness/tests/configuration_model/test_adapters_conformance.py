@@ -17,11 +17,11 @@ from ordessa_harness_api import ConfigurationAdapterDescriptor, VersionRange
 from ordessa_harness.contributions import HarnessContributionError, HarnessContributionRegistry
 from server_plugin_api import Contribution, ContributionBatch, stage_contributions
 
-from ordessa_model_provider_adapters import bridge, common
-from ordessa_model_provider_adapters.claude import ClaudeAdapter
-from ordessa_model_provider_adapters.codex import CodexAdapter
-from ordessa_model_provider_adapters.pi import PiAdapter
-from ordessa_model_provider_adapters.types import (
+from ordessa_harness.configuration.model import bridge, common
+from ordessa_harness.claude.configuration.model import ClaudeAdapter
+from ordessa_harness.codex.configuration.model import CodexAdapter
+from ordessa_harness.pi.configuration.model import PiAdapter
+from ordessa_harness.configuration.model.types import (
     AdapterContext, ChoiceRequest, CompileIntent, Refusal, TargetHandle,
 )
 
@@ -428,8 +428,11 @@ _FORBIDDEN = re.compile(
 #: packages (direction adapters→harness-api) but stay pure otherwise; the
 #: brand modules must not even name them.
 _BRIDGE_ALLOWED_ROOTS = {"__future__", "json", "tomllib", "typing", "hashlib",
-                         "ordessa_harness_api", "server_plugin_api",
-                         "ordessa_model_provider_adapters"}
+                         "ordessa_harness_api", "server_plugin_api"}
+_BRIDGE_ALLOWED_NATIVE_MODULES = {
+    f"ordessa_harness.{brand}.configuration.model"
+    for brand in ("pi", "codex", "claude")
+}
 
 
 def _module_source(cls):
@@ -459,7 +462,7 @@ def test_bridge_and_plugin_import_only_contract_packages_and_stay_pure():
     import ast
 
     for module_name in ("bridge", "plugin"):
-        spec = importlib_spec("ordessa_model_provider_adapters", module_name)
+        spec = importlib_spec("ordessa_harness.configuration.model", module_name)
         tree = ast.parse(spec)
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
@@ -470,7 +473,8 @@ def test_bridge_and_plugin_import_only_contract_packages_and_stay_pure():
                 continue
             for name in names:
                 root = name.split(".")[0]
-                assert root in _BRIDGE_ALLOWED_ROOTS, f"{module_name}: imports {name}"
+                assert (root in _BRIDGE_ALLOWED_ROOTS or
+                        name in _BRIDGE_ALLOWED_NATIVE_MODULES), f"{module_name}: imports {name}"
         match = _FORBIDDEN.search(spec)
         assert match is None, f"{module_name} references {match.group(0)!r}"
 

@@ -35,9 +35,9 @@ from ordessa_harness_api import (
 )
 
 from . import common
-from .claude import ClaudeAdapter
-from .codex import CodexAdapter
-from .pi import PiAdapter
+from ...claude.configuration.model import ClaudeAdapter
+from ...codex.configuration.model import CodexAdapter
+from ...pi.configuration.model import PiAdapter
 from .types import AdapterContext as LocalAdapterContext
 from .types import BindSecret as LocalBindSecret
 from .types import ChoiceRequest, CompileIntent, IntentSet as LocalIntentSet
