@@ -14,10 +14,12 @@ three facts and nothing else:
   * `channel_run_view`, the single adaptation point where the ledger's real
     terminal facts are read as the client-facing run vocabulary.
 
-It never parses an ACP frame: the relay is a byte-line pipe.  The Server does
-not speak on the client's behalf during setup or teardown, and in-flight
-requests are answered by nobody when a channel ends — that is the honest
-outcome the contract pins.
+The client relay remains a byte-line pipe, except that native session/new
+responses are observed to bind real session ownership. A separate owner-only
+read-only configuration query consumes its own correlated replies without
+leaking them into the client relay. This yields an observation, not an applied
+configuration receipt. The Server does not answer or replay the client's
+in-flight requests when a channel ends.
 
 The transport itself comes from a composition-injected `launch` callback.
 The native composition plugs the Harness plugin's production access entry in

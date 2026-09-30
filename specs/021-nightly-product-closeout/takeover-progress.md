@@ -158,3 +158,11 @@ Profile Chat 有限入口接线已由主代理复跑 23/23：合法 default fact
 - 验证资产 `/tmp/ordessa-canonical-assets-ucPlfB/pi-profile-runtime-verified`：15461 entries、64915208 bytes、digest `sha256:f990065957b6920b9a7bfd5f61d7a8c19dd7e230b0f5542c81f35a3f855d5272`，source lock `sha256:8e6a4962ee2befc1a5ed1a8533c0ae7a749cce5e81030f68ca7a643a9daae95d`。仍是 developer asset，未安装系统、未替换旧资产；现有 installed 默认入口不会隐式接受增强入口。
 - 当前沙箱 UID map 为 `1000 0 1`，root 资产显示 nobody，信任校验正确拒绝。改在真实宿主环境复跑既有无模型完整桌面冒烟成功：ready=true、rootMounted=true、Chat/Skills/Sessions、errors=[]、renderer无Node。未放宽 root 信任策略，未修改 `/opt` 权限。
 - 尚未完成：增强资产的显式可信启动路线、ACP canonical owner＋generation 生产绑定、受限 configuration action grant/receipt/readback、Profile next-submit 应用、Codex/Claude provider restart/resume。保存 UI 和 standalone Pi 查询不等于这些生产链路完成，根全量聚合旧红也未据此下账。main 保持原分支且干净，不合并、不 push。
+
+### ACP 后端独立读回接缝（后续应用进行中）
+
+- Harness 的 live channel/registry 提供只读 `query_native_configuration`，仅接受该通道真实 session/new 应答确认的 native session；不接受任意 RPC method/action，不从 UI key 猜身份。它返回真实 channel/execution/ledger session/native session owner、opaque native generation、busy 与不可变配置快照，不返回 applied receipt。
+- 后端自有请求使用保留 ID；只拦截对应的 Agent response，正常聊天通知与双向 Agent request 仍进入 relay。客户端复用保留 ID 在发送前拒绝；超时不重试，迟到应答不进入聊天；断连唤醒等待者，读回后再验 registry 所有权，容量耗尽零帧拒绝。畸形、跨会话、重复选项与非有限 JSON 不产生证据。
+- 新只读接缝 15 条反例及既有 C4/managed channel 定向回归共 60/60（单条 Starlette 弃用告警）。真实增强 Pi 的 probe 加 `--owner-rpc` 再次通过，使用真实后端 query/response 分流代码；ledger 字段为夹具，不冒充完整产品 canonical Profile 绑定。零 prompt、仅 synthetic fixture key，实例设置写入/模拟全局配置不变/关闭后拒绝/进程退出均再次确认。
+- 旧路径 `plugins/connectors/acp/sessions` 已不是 workspace；一次按旧路径的 npm 命令未运行测试，不记作回归结果。改用实际 `plugins/connectors/acp` 后 43/43；仅 Vite 的未来 configLoader 兼容告警。没有修改 Server/Pacthold/前端 host 或全局安装资产。
+- C4 `InvokeAction` 仍保持默认拒绝：当前 generation materializer 也明确拒绝 action/secret，不会为了接 Pi 就放宽这两个保护。下一段需要专门的 action-only 授权与执行接缝（owner/facet/item/action/schema 精确绑定、计划/permit/operation journal、独立读回），以及 opaque native generation 到 C4 整数 generation 的宿主-owned fence；不能把本段查询成功替代这些证据。

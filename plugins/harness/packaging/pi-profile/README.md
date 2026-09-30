@@ -45,3 +45,12 @@ variant, canonical ACP owner binding, explicit configuration-action grants,
 activation receipt/readback, and Profile's submit boundary. These are not
 proved by this standalone probe. Codex/Claude restart/resume/provider changes
 are also outside its evidence.
+
+For the backend readback seam, use the integration interpreter and add
+`--owner-rpc` to the probe. It runs the real `_Channel` observation/query
+implementation against real Pi, checks that owner replies do not reach the
+client relay, and refuses evidence after native close. The channel's ledger
+fields are fixtures: this proves the control read, not the full Server product
+composition or canonical Profile session registration. The opaque native
+generation must not be passed as the integer C4 `ApplicationTarget` generation
+without a separately owned mapping/fence.

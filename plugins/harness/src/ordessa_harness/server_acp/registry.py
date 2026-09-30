@@ -6,16 +6,18 @@ same connection and never a second Agent, a second run, or a silently moved
 binding.  Release and abnormal exit race through one lock-protected claim -
 exactly one of them ends the run record, and each owns its ledger transition.
 
-The registry never reads a frame.  It hands transport lines to whatever
-sockets are currently attached (attaching and detaching is not a lifecycle
-event: a client that goes quiet keeps its channel), and a finished connection
-tells its sockets the channel ended - without answering anything for them.
+Ordinary ACP traffic remains a line relay. The registry observes correlated
+native session creation and owns a separate, explicit read-only configuration
+query. Only replies to its reserved queries are intercepted; client requests
+are never answered or replayed on their behalf. Attaching/detaching sockets
+is not a lifecycle event, and ending a connection never fabricates a reply.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 import json
 import threading
+from uuid import uuid4
 from typing import Any, Callable, Mapping
 
 from ordessa_harness.server_acp.runs import (
@@ -37,6 +39,29 @@ class NativeSessionObservation:
     native_session_id: str
 
 
+class NativeConfigurationUnavailable(RuntimeError):
+    """No independent live configuration evidence; never an applied receipt."""
+
+
+@dataclass(frozen=True)
+class NativeConfigurationObservation:
+    owner: NativeSessionObservation
+    native_generation: str
+    busy: bool
+    config_options_json: str
+
+    @property
+    def config_options(self) -> list:
+        # Keep the observation immutable even if a consumer edits its DTO.
+        return json.loads(self.config_options_json)
+
+
+@dataclass
+class _ConfigurationQuery:
+    ready: threading.Event
+    response: dict | None = None
+
+
 class _ObservedTransport:
     """Observe outgoing client requests without changing their wire bytes."""
 
@@ -54,6 +79,10 @@ class _ObservedTransport:
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self._inner, name)
+
+    def _send_owner_query(self, text: str) -> None:
+        # Already reserved by the channel; not a client-selected request ID.
+        self._inner.send_line(text)
 
 
 class _Channel:
@@ -77,6 +106,8 @@ class _Channel:
         self._seen_request_ids: set[tuple[type, str | int]] = set()
         self._pending_new: set[tuple[type, str | int]] = set()
         self._native_sessions: dict[str, NativeSessionObservation] = {}
+        self._configuration_queries: dict[str, _ConfigurationQuery] = {}
+        self._owner_query_ids: set[str] = set()
 
     @property
     def pair(self) -> tuple[str, str]:
@@ -108,6 +139,9 @@ class _Channel:
         with self._lock:
             if self._ended:
                 return
+            # Owner-only replies never reach attached chat relay sockets.
+            if self._observe_configuration_reply(line):
+                return
             self._observe_agent_line(line)
             subscribers = list(self._subscribers)
         for loop, sink in subscribers:
@@ -121,6 +155,8 @@ class _Channel:
             self._ended = True
             self._pending_new.clear()
             self._native_sessions.clear()
+            for pending in self._configuration_queries.values():
+                pending.ready.set()
             subscribers = list(self._subscribers)
             self._subscribers.clear()
         for loop, sink in subscribers:
@@ -151,6 +187,8 @@ class _Channel:
         with self._lock:
             if self._ended:
                 return
+            if frame.get('id') in self._owner_query_ids:
+                raise NativeConfigurationUnavailable('client request conflicts with owner query')
             if request_id in self._seen_request_ids:
                 # A reused ID makes even the first outstanding reply
                 # ambiguous. Keep the ID spent and refuse that observation.
@@ -202,6 +240,82 @@ class _Channel:
     def native_session_observation(self, native_id: str) -> NativeSessionObservation | None:
         with self._lock:
             return None if self._ended else self._native_sessions.get(native_id)
+
+    def _observe_configuration_reply(self, line: str) -> bool:
+        """Called under the channel lock. Keep spent IDs to swallow late replies."""
+        if not self._owner_query_ids:
+            return False
+        try:
+            frame = json.loads(line)
+        except (TypeError, ValueError):
+            return False
+        # JSON-RPC is bidirectional: an Agent request can legally use the same
+        # ID as our outstanding request. Only responses belong to our waiter.
+        if not isinstance(frame, dict) or 'method' in frame or type(frame.get('id')) is not str:
+            return False
+        if frame['id'] not in self._owner_query_ids:
+            return False
+        pending = self._configuration_queries.get(frame['id'])
+        if pending is not None and not pending.ready.is_set():
+            if (len(line.encode('utf-8')) <= 262144 and frame.get('jsonrpc') == '2.0'
+                    and 'method' not in frame and ('result' in frame) != ('error' in frame)):
+                pending.response = frame
+            pending.ready.set()
+        return True
+
+    def query_native_configuration(self, native_id: str, *, timeout: float = 10) -> NativeConfigurationObservation:
+        """Read-only owner RPC. No arbitrary method/action or identity inference."""
+        if type(native_id) is not str or not native_id or len(native_id) > 4096:
+            raise ValueError('native session identity required')
+        if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not 0 < timeout <= 30:
+            raise ValueError('configuration query timeout outside bounds')
+        with self._lock:
+            owner = self._native_sessions.get(native_id)
+            if self._ended or owner is None or not isinstance(self.transport, _ObservedTransport):
+                raise NativeConfigurationUnavailable('native session owner unavailable')
+            if len(self._owner_query_ids) >= 4096 or len(self._configuration_queries) >= 16:
+                raise NativeConfigurationUnavailable('configuration query capacity exhausted')
+            for _ in range(8):
+                request_id = f'ordessa-config-{uuid4().hex}'
+                if (str, request_id) not in self._seen_request_ids and request_id not in self._owner_query_ids:
+                    break
+            else:
+                raise NativeConfigurationUnavailable('configuration query identity collision')
+            pending = _ConfigurationQuery(threading.Event())
+            self._owner_query_ids.add(request_id)
+            self._configuration_queries[request_id] = pending
+        try:
+            try:
+                self.transport._send_owner_query(json.dumps({'jsonrpc': '2.0', 'id': request_id,
+                    'method': '_ordessa/session/configuration', 'params': {'sessionId': native_id}}))
+            except Exception as exc:
+                raise NativeConfigurationUnavailable('native configuration query transport failed') from exc
+            if not pending.ready.wait(timeout):
+                raise NativeConfigurationUnavailable('configuration query timed out')
+            with self._lock:
+                if self._ended or self._native_sessions.get(native_id) != owner:
+                    raise NativeConfigurationUnavailable('native session owner changed')
+                response = pending.response
+            if response is None or 'error' in response:
+                raise NativeConfigurationUnavailable('native configuration query refused or unavailable')
+            result = response['result']
+            if (not isinstance(result, dict) or result.get('sessionId') != native_id
+                    or type(result.get('generation')) is not str or not result['generation']
+                    or result['generation'].strip() != result['generation'] or len(result['generation']) > 4096
+                    or type(result.get('busy')) is not bool or not isinstance(result.get('configOptions'), list)
+                    or any(not isinstance(option, dict) or type(option.get('id')) is not str
+                           or not option['id'] or 'currentValue' not in option for option in result['configOptions'])):
+                raise NativeConfigurationUnavailable('malformed native configuration evidence')
+            try:
+                options_json = json.dumps(result['configOptions'], allow_nan=False)
+            except (TypeError, ValueError) as exc:
+                raise NativeConfigurationUnavailable('invalid native configuration JSON') from exc
+            if len({option['id'] for option in result['configOptions']}) != len(result['configOptions']):
+                raise NativeConfigurationUnavailable('duplicate native configuration options')
+            return NativeConfigurationObservation(owner, result['generation'], result['busy'], options_json)
+        finally:
+            with self._lock:
+                self._configuration_queries.pop(request_id, None)
 
     @staticmethod
     def _schedule(loop: Any, sink: Callable[[Any], None], item: Any) -> None:
@@ -358,6 +472,17 @@ class AcpChannelRegistry:
         """Read only an Agent-confirmed native session on this live connection."""
         channel = self.get(connection_id)
         return None if channel is None else channel.native_session_observation(native_session_id)
+
+    def query_native_configuration(self, connection_id: str, native_session_id: str,
+                                   *, timeout: float = 10) -> NativeConfigurationObservation:
+        """Plugin-internal control read; not a client wire method or a receipt."""
+        channel = self.get(connection_id)
+        if channel is None:
+            raise NativeConfigurationUnavailable('channel owner unavailable')
+        observation = channel.query_native_configuration(native_session_id, timeout=timeout)
+        if self.get(connection_id) is not channel or channel.ended:
+            raise NativeConfigurationUnavailable('channel owner changed')
+        return observation
 
     def recovery_view(self, *, connection_id: str, execution_id: str) -> dict[str, Any]:
         """Read a durable run and its exact live association without reviving it.
