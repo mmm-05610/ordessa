@@ -76,6 +76,7 @@ class FakeSocket {
     // The real route takes the connectionId as a path segment, not a query.
     const connectionId = decodeURIComponent(new URL(url).pathname.split('/').pop() ?? '')
     setTimeout(() => {
+      if (this.closed) return // a cancelled pending attach cannot bind the next test's channel
       const channel = channels.get(connectionId)
       if (!channel) {
         this.fire('error', {})
@@ -123,7 +124,7 @@ async function hostRetry(client: AgentClient) {
 }
 
 /** The implemented managed-ACP-channel seam, answered the way the backend answers it. */
-function startServer(options: { offerAcp: boolean }) {
+function startServer(options: { offerAcp: boolean; channelHarnesses?: unknown; registeredHarnesses?: string[] }) {
   channels.clear()
   attaches.clear()
   wire = []
@@ -148,7 +149,8 @@ function startServer(options: { offerAcp: boolean }) {
         serverId: 'server_1', protocolVersion: 'wire/1',
         capabilities: (options.offerAcp ? WIRE_CAPABILITIES : ['server.hello', 'workspaces.list']).map(id => ({ id, supported: true })),
         auth: { required: true, schemes: ['session_token'] },
-        harnesses: [{ id: 'pi' }],
+        harnesses: (options.registeredHarnesses ?? ['pi']).map(id => ({ id })),
+        ...(Object.hasOwn(options, 'channelHarnesses') ? { acpChannelHarnesses: options.channelHarnesses } : {}),
         ...(options.offerAcp ? { nativeExecution: { mode: 'native', harness: 'pi', profileId: 'profile_fake' } } : {}),
       }
       case 'workspaces.list': return { items: WORKSPACES.map(workspaceRecord), nextCursor: null }
@@ -159,17 +161,17 @@ function startServer(options: { offerAcp: boolean }) {
       }
       case 'acp.channel.open': {
         // Identity first, project second, launch last — a refusal starts nothing (handlers.py).
-        if (params.harnessId !== 'pi') {
+        if (!(options.registeredHarnesses ?? ['pi']).includes(String(params.harnessId))) {
           throw new ServerRefusal('CAPABILITY_UNSUPPORTED', `${String(params.harnessId)} is not the native Harness this Server answers channels for`)
         }
         const projectId = String(params.projectId)
         const workspace = WORKSPACES.find(row => row.id === projectId)
         if (!workspace) throw new ServerRefusal('NOT_FOUND', `no workspace record ${projectId}`)
-        const pair = `pi|${projectId}`
+        const pair = `${String(params.harnessId)}|${projectId}`
         const existing = liveByPair.get(pair)
         if (existing) {
           return { connectionId: existing.id, executionId: existing.executionId,
-            binding: { harnessId: 'pi', projectId: existing.projectId, cwd: workspace.normalizedPath } }
+            binding: { harnessId: params.harnessId, projectId: existing.projectId, cwd: workspace.normalizedPath } }
         }
         const id = `conn_${++sequence}`
         const peer = new HarnessPeer({ capabilities: { promptCapabilities: {} } })
@@ -177,7 +179,7 @@ function startServer(options: { offerAcp: boolean }) {
         channels.set(id, record)
         liveByPair.set(pair, record)
         return { connectionId: id, executionId: record.executionId,
-          binding: { harnessId: 'pi', projectId, cwd: workspace.normalizedPath } }
+          binding: { harnessId: params.harnessId, projectId, cwd: workspace.normalizedPath } }
       }
       case 'acp.channel.release': {
         const id = String(params.connectionId)
@@ -346,6 +348,50 @@ it('activates through bridge, transport and host: the native pair is offered onc
   await bridge.close(INSTANCE_ID)
   expect(disposables.length).toBeGreaterThan(0)
 })
+
+it('routes multiple Server-offered brands independently through the same native transport', async () => {
+  tempRoot = serverEnv()
+  const ids = ['pi', 'codex', 'claude-code']
+  startServer({ offerAcp: true, registeredHarnesses: ids,
+    channelHarnesses: ids.map(id => ({ id, title: `Title ${id}` })) })
+  const transport = await createTransport().open(() => {})
+  try {
+    const roster = await transport.send({ method: 'acp/identity' }) as { entries: { serverInstanceId: string; harness: { id: string; title: string } }[] }
+    expect(roster.entries.map(row => row.harness)).toEqual(ids.map(id => ({ id, title: `Title ${id}` })))
+    const connections: string[] = []
+    for (const row of roster.entries) {
+      const channel = await transport.send({ method: 'acp/channel/open', params: {
+        instanceId: row.serverInstanceId, projectId: 'ws_app',
+      } }) as { connectionId: string }
+      connections.push(channel.connectionId)
+    }
+    expect(new Set(connections).size).toBe(3)
+    await until('all multi-brand relays attach', () => connections.every(id => attaches.get(id) === 1))
+    expect(wire.filter(call => call.method === 'acp.channel.open').map(call => call.params.harnessId)).toEqual(ids)
+    const before = wire.length
+    await expect(transport.send({ method: 'acp/channel/open', params: {
+      instanceId: 'never-offered', projectId: 'ws_app',
+    } })).rejects.toThrow(/offered instance/)
+    expect(wire).toHaveLength(before)
+  } finally { await transport.close() }
+})
+
+it('an explicit empty channel roster never falls back to nativeExecution', async () => {
+  tempRoot = serverEnv()
+  startServer({ offerAcp: true, channelHarnesses: [] })
+  const transport = await createTransport().open(() => {})
+  try { expect(await transport.send({ method: 'acp/identity' })).toEqual({ offered: false, entries: [] }) }
+  finally { await transport.close() }
+})
+
+it.each([null, {}, [{ id: 'unknown', title: 'unknown' }],
+  [{ id: 'pi', title: 'pi' }, { id: 'pi', title: 'pi' }], [{ id: 'pi' }]])(
+  'malformed authoritative channel roster refuses rather than guessing: %j', async channelHarnesses => {
+    tempRoot = serverEnv()
+    startServer({ offerAcp: true, channelHarnesses })
+    await expect(createTransport().open(() => {})).rejects.toThrow(/roster is malformed/)
+    expect(calls).toEqual(['server.hello'])
+  })
 
 it('a Server whose hello carries no native-execution identity activates as an honest not-offered and registers nothing', async () => {
   tempRoot = serverEnv()

@@ -72,9 +72,11 @@ class AcpChannelServerPlugin:
     """Managed ACP channels: harness-owned, host-admitted."""
 
     def __init__(self, *, launch: Callable | None = None,
-                 native_identity: Callable[[], Mapping[str, Any]] | None = None) -> None:
+                 native_identity: Callable[[], Mapping[str, Any]] | None = None,
+                 native_identity_for: Callable[[str], Mapping[str, Any]] | None = None) -> None:
         self._launch = launch
         self._native_identity = native_identity
+        self._native_identity_for = native_identity_for
         self._registry: Any = None
 
     def descriptor(self) -> ServerPluginDescriptor:
@@ -95,6 +97,7 @@ class AcpChannelServerPlugin:
                 launch=self._launch,
             )
         native_identity = self._native_identity
+        native_identity_for = self._native_identity_for
         admission_port = ports.get(ACP_ADMISSION_PORT)
 
         def admission_available() -> tuple[bool, str | None]:
@@ -164,7 +167,8 @@ class AcpChannelServerPlugin:
             if self._registry is None:
                 raise WireError("CAPABILITY_UNSUPPORTED", "this Server composes no managed ACP channel")
             harness_id = _bounded(params["harnessId"], "harnessId", 64)
-            identity = native_identity() if native_identity else None
+            identity = (native_identity_for(harness_id) if native_identity_for
+                        else native_identity() if native_identity else None)
             if (not isinstance(identity, Mapping) or identity.get("mode") != "native"
                     or identity.get("harness") != harness_id or not identity.get("profileId")):
                 raise WireError(
@@ -318,6 +322,18 @@ class AcpChannelServerPlugin:
                 )
             return dict(native)
 
+        def project_channel_harnesses() -> "list[dict[str, str]] | None":
+            if self._registry is None or directory is None or native_identity_for is None:
+                return None  # old single-identity or non-native composition
+            offered = []
+            for hid in directory.registered():
+                identity = native_identity_for(hid)
+                if (isinstance(identity, Mapping) and identity.get("mode") == "native"
+                        and identity.get("harness") == hid
+                        and isinstance(identity.get("profileId"), str) and identity["profileId"]):
+                    offered.append({"id": hid, "title": hid})
+            return offered
+
         methods = (
             ServerMethodDescriptor(
                 method_id="acp.channel.open",
@@ -380,6 +396,7 @@ class AcpChannelServerPlugin:
                     payload={
                         "harnesses": project_harnesses,
                         "nativeExecution": project_native_execution,
+                        "acpChannelHarnesses": project_channel_harnesses,
                     },
                 ),
             )),

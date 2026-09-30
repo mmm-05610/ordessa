@@ -89,6 +89,7 @@ class ServerCompatPlugin:
         subscription_files_for: Callable | None = None,
         declared_credentials: "tuple[dict[str, str], ...]" = (),
         native_harness_id: str | None = None,
+        native_additional_harness_ids: tuple[str, ...] = (),
         native_profile_sink: "Callable[[str], None] | None" = None,
     ) -> None:
         self._harnesses = harnesses
@@ -99,6 +100,8 @@ class ServerCompatPlugin:
         self._subscription_files_for = subscription_files_for
         self._declared_credentials = tuple(declared_credentials)
         self._native_harness_id = native_harness_id
+        self._native_additional_harness_ids = tuple(native_additional_harness_ids)
+        self.native_profile_ids: dict[str, str] = {}
         #: Composition-injected write-back channel (set after build_runtime
         #: returns, before start runs): the composition owns the runtime, the
         #: plugin owns the fact its start hook records.
@@ -410,10 +413,14 @@ class ServerCompatPlugin:
         self._session_records.seal_interrupted_turns()
 
     def _bootstrap_native_profile(self) -> None:
+        self.native_profile_ids.clear()
+        for hid in (self._native_harness_id, *self._native_additional_harness_ids):
+            self._bootstrap_native_profile_for(hid)
+
+    def _bootstrap_native_profile_for(self, harness_id: str) -> None:
         import json
 
         handlers = self._handlers
-        harness_id = self._native_harness_id
         profile = handlers.profiles.create_wire(
             f"native-agent-profile:{harness_id}",
             display_name=f"Native {harness_id}",
@@ -427,14 +434,18 @@ class ServerCompatPlugin:
                 or profile["recovery_pending"]
                 or stored.get("configuration") != {}):
             raise RuntimeError("NATIVE_PROFILE_CONFLICT")
-        handlers.sessions._assert_profile_executable(profile["id"])
-        self.native_profile_id = str(profile["id"])
-        if self.native_profile_sink is not None:
-            self.native_profile_sink(self.native_profile_id)
+        identity = str(profile["id"])
+        self.native_profile_ids[harness_id] = identity
+        if harness_id == self._native_harness_id:
+            self.native_profile_id = identity
+            if self.native_profile_sink is not None:
+                self.native_profile_sink(identity)
         handlers.sessions.bind_native_profile(
-            self.native_profile_id, harness_id,
+            identity, harness_id,
             profile["config_object_digest"],
+            allow_additional=harness_id != self._native_harness_id,
         )
+        handlers.sessions._assert_profile_executable(profile["id"])
 
     @staticmethod
     def _import_declared_credentials(records, store, declarations) -> None:
@@ -474,6 +485,7 @@ class ServerCompatPlugin:
         self._handlers = None
         self._built_service = None
         self.native_profile_id = None
+        self.native_profile_ids.clear()
 
 
 def _core_filer(port):

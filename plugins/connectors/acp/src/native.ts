@@ -8,12 +8,11 @@ import type { NativeConnection, NativeTransport } from '../../../../packages/des
  * bearer, and it only ever relays: agent-authored ACP frames cross the bridge nested and unmodified,
  * and every refusal here is phrased without a token or a private path.
  *
- * It speaks the Server's implemented managed-ACP-channel seam (bc-native `docs/acp-channel-minimal-seam.md`
- * and `src/agent_box/server/{wire/handlers,acp_channel,transport/http/app}.py`):
- *  - identity: `server.hello.nativeExecution` {mode:"native", harness, profileId}; this Server answers
- *    channels for exactly that one harness, so the offered state is one Server|Harness pair. A hello
- *    without the pair — or without declared `acp.channel.open`/`acp.channel.release` capabilities —
- *    is an honest not-offered, never a fallback pick.
+ * It speaks the Harness-owned managed-ACP-channel seam:
+ *  - identity: `server.hello.acpChannelHarnesses` publishes authoritative Server|Harness pairs.
+ *    Older Servers may instead publish one `nativeExecution` identity. An explicit empty roster
+ *    never falls back to that identity. Without the channel open/release capabilities this
+ *    is an honest not-offered, never a locally inferred brand list.
  *  - projects: the existing `workspaces.list` / `workspaces.open` surface (same as the Ordessa connector);
  *    no project method is invented for this frontend.
  *  - `acp.channel.open {harnessId, projectId}` answers {connectionId, executionId,
@@ -146,17 +145,32 @@ export default function createTransport(): NativeTransport {
       if (!supported(id)) throw new WireError('CAPABILITY_UNSUPPORTED', `${id} is not available on this Server`)
     }
 
-    // The native-execution identity is the only harness this Server answers channels for, and hello
-    // re-verifies the same facts server-side — an incomplete or unregistered identity is not-offered,
-    // never a fallback pick (the Ordessa connector's `nativeExecutionProfile` reads it the same way).
+    // The Server owns the channel roster. An explicitly present roster never
+    // falls back to the older single-native identity, including an empty list.
     const native = record(hello?.nativeExecution)
     const harnessId = native?.mode === 'native' ? text(native.harness) : undefined
     const registered = Array.isArray(hello?.harnesses)
       && hello.harnesses.some(item => record(item)?.id === harnessId)
     const supportedChannel = supported('acp.channel.open') && supported('acp.channel.release')
     const instance = `${target.origin}|${serverId}`
-    const pair = harnessId && text(native?.profileId) && registered && supportedChannel
-      ? { serverInstanceId: `${instance}|${harnessId}`, harnessId } : undefined
+    const pairs = new Map<string, { serverInstanceId: string; harnessId: string; title: string }>()
+    if (hello && Object.hasOwn(hello, 'acpChannelHarnesses')) {
+      if (!Array.isArray(hello.acpChannelHarnesses)) throw new Error('Server ACP Harness roster is malformed')
+      const seen = new Set<string>()
+      for (const raw of hello.acpChannelHarnesses) {
+        const row = record(raw), id = text(row?.id), title = text(row?.title)
+        const key = id ? `${instance}|${id}` : ''
+        if (!id || !title || seen.has(key)
+          || !Array.isArray(hello.harnesses) || !hello.harnesses.some(item => record(item)?.id === id)) {
+          throw new Error('Server ACP Harness roster is malformed')
+        }
+        seen.add(key)
+        if (supportedChannel) pairs.set(key, { serverInstanceId: key, harnessId: id, title })
+      }
+    } else if (harnessId && text(native?.profileId) && registered && supportedChannel) {
+      const key = `${instance}|${harnessId}`
+      pairs.set(key, { serverInstanceId: key, harnessId, title: harnessId })
+    }
 
     // Raw environments stay here; the renderer never learns a path it could replay against another Server.
     const projects = new Map<string, ProjectRecord>()
@@ -210,11 +224,12 @@ export default function createTransport(): NativeTransport {
 
     const dispatch = async (frame: Frame): Promise<unknown> => {
       const params = frame.params ?? {}
+      const pair = pairs.get(String(params.instanceId ?? ''))
       switch (frame.method) {
         case 'acp/identity':
-          return pair
-            ? { offered: true, entries: [{ serverInstanceId: pair.serverInstanceId, harness: { id: pair.harnessId, title: pair.harnessId } }] }
-            : { offered: false, entries: [] }
+          return { offered: pairs.size > 0, entries: [...pairs.values()].map(row => ({
+            serverInstanceId: row.serverInstanceId, harness: { id: row.harnessId, title: row.title },
+          })) }
         case 'acp/projects': {
           if (!pair || params.instanceId !== pair.serverInstanceId) throw new Error('ACP projects were asked for an instance this Server never offered')
           return { items: await loadProjects() }
@@ -265,8 +280,8 @@ export default function createTransport(): NativeTransport {
           const projectId = text(params.projectId)
           if (!projectId) throw new Error('opening an ACP channel needs the project identity')
           required('acp.channel.open')
-          // The harness is never a client choice: it is this Server's native identity, checked again
-          // by the Server itself, which starts nothing on any mismatch.
+          // Resolve only a Server-offered pair; the Server rechecks its live
+          // identity again before launching anything.
           const opened = record(await rpc(target, 'acp.channel.open', { harnessId: pair.harnessId, projectId }))
           const connectionId = text(opened?.connectionId), executionId = text(opened?.executionId)
           const binding = record(opened?.binding)

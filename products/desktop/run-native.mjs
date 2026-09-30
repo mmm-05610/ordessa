@@ -5,7 +5,9 @@ import { fileURLToPath } from 'node:url'
 import { nativeServerPlan } from '../../plugins/harness/packaging/native-server-plan.mjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
-const plan = nativeServerPlan({ harnessId: process.env.ORDESSA_NATIVE_HARNESS ?? 'pi',
+const plan = nativeServerPlan({ ...(process.env.ORDESSA_NATIVE_HARNESS
+    ? { harnessId: process.env.ORDESSA_NATIVE_HARNESS }
+    : { harnessIds: ['pi', 'codex', 'claude-code'] }),
   pluginRoot: process.env.ORDESSA_HARNESS_PLUGIN_ROOT ?? path.join(root, 'plugins/harness'),
   artifactRoot: process.env.ORDESSA_INSTALLED_ARTIFACT_ROOT ?? '/opt/ordessa/harnesses/artifacts' })
 const child = spawn(path.join(root, 'node_modules/electron/dist/electron'), ['.'], {

@@ -416,8 +416,9 @@ def build_runtime_from_native_adapter(
     controlled_test_peer: bool = False,
     installed_artifact_root: str | None = None,
     extra_server_plugins: tuple = (),
+    additional_adapters: tuple = (),
 ) -> ServerRuntime:
-    """Compose one current-user ACP Agent in an explicitly native Server.
+    """Compose current-user ACP Agents in an explicitly native Server.
 
     The adapter is a launch reference, never a credential or projected home.
     The plugin entry verifies its bundled bridge provenance at launch.
@@ -452,6 +453,23 @@ def build_runtime_from_native_adapter(
             or not os.access(adapter_command, os.X_OK)
             or any(not isinstance(arg, str) or "\x00" in arg for arg in adapter_args)):
         raise RuntimeError("NATIVE_ADAPTER_INVALID")
+    adapters = {harness_id: {"command": adapter_command, "args": list(adapter_args)}}
+    if (type(additional_adapters) is not tuple or len(additional_adapters) > 31
+            or (additional_adapters and controlled_test_peer)):
+        raise RuntimeError("NATIVE_ADAPTER_INVALID")
+    for binding in additional_adapters:
+        if not isinstance(binding, Mapping) or set(binding) != {"harnessId", "command", "args"}:
+            raise RuntimeError("NATIVE_ADAPTER_INVALID")
+        hid, command, arguments = binding["harnessId"], binding["command"], binding["args"]
+        if (not isinstance(hid, str) or not re.fullmatch(r"[a-z][a-z0-9._-]{0,63}", hid)
+                or hid in adapters):
+            raise RuntimeError("NATIVE_HARNESS_INVALID")
+        if (not isinstance(command, str) or "\x00" in command or not Path(command).is_absolute()
+                or not Path(command).is_file() or not os.access(command, os.X_OK)
+                or type(arguments) is not list
+                or any(not isinstance(arg, str) or "\x00" in arg for arg in arguments)):
+            raise RuntimeError("NATIVE_ADAPTER_INVALID")
+        adapters[hid] = {"command": command, "args": list(arguments)}
     plugin = Path(plugin_root).resolve()
     entry = plugin / "runtime" / "worker-entry.mjs"  # retired old chain, launch-fail honest
     access_entry = plugin / "runtime" / "access-entry.mjs"
@@ -483,13 +501,16 @@ def build_runtime_from_native_adapter(
             {"native_continuation": True} if native_continuation else {}
         ),
     ))
+    for hid in adapters:
+        if hid != harness_id:
+            registry.register(HarnessDescriptor(hid))
     root = Path(data_root).resolve()
-    adapter = {"command": adapter_command, "args": list(adapter_args)}
 
     def factory(records, objects, approvals, notifier, _connectors, _credentials,
                 _secrets, _turn_inputs):
         def port_factory(context, on_event):
-            if context.get("env_kind") != "local" or context.get("harness_type") != harness_id:
+            selected_harness = context.get("harness_type")
+            if context.get("env_kind") != "local" or selected_harness not in adapters:
                 raise RuntimeError("NATIVE_PLACEMENT_UNSUPPORTED")
             project = context.get("normalized_path")
             if not isinstance(project, str) or not project:
@@ -504,15 +525,15 @@ def build_runtime_from_native_adapter(
                 except Exception:
                     checkpoint = None
                 if (isinstance(checkpoint, dict) and checkpoint.get("resumable") is True
-                        and checkpoint.get("harnessType") == harness_id
+                        and checkpoint.get("harnessType") == selected_harness
                         and checkpoint.get("nativeSessionId") == context["checkpoint_native_id"]):
                     resume_native_id = context["checkpoint_native_id"]
             return NativeHarnessPort(
                 NativeProcessLauncher((node, str(entry), "--native"), cwd=project),
-                environment=environment, profile=harness_id, adapter=adapter,
-                directory=project, state_directory=str(root / "native-bridge" / harness_id),
+                environment=environment, profile=selected_harness, adapter=adapters[selected_harness],
+                directory=project, state_directory=str(root / "native-bridge" / selected_harness),
                 resume_native_id=resume_native_id,
-                declared_capabilities=registry.canonical_claims(harness_id),
+                declared_capabilities=registry.canonical_claims(selected_harness),
                 on_event=on_event,
             )
 
@@ -521,28 +542,28 @@ def build_runtime_from_native_adapter(
             on_event=notifier.notify,
         )
 
-    def native_identity():
+    def native_identity(selected_harness=harness_id):
         # Read from the plugin this composition built (its own surface, resolved
         # per call: it exists only once that plugin's build has run, and None
         # again after its disposal). Not an attribute of the host runtime —
         # T014-S1b removed that bag.
         service = compat.product_service
-        identity = runtime.native_profile_id
+        identity = compat.native_profile_ids.get(selected_harness)
         try:
             profile = service.profiles.records.get(identity) if identity else None
             stored = (json.loads(runtime.objects.read(profile["config_object_digest"]))
                       if profile is not None else None)
         except Exception:
             profile = None
-        valid = (profile is not None and profile["harness_type"] == harness_id
+        valid = (profile is not None and profile["harness_type"] == selected_harness
                  and profile["archived_at"] is None and profile["credential_id"] is None
                  and profile["account_id"] is None and not profile["recovery_pending"]
-                 and stored.get("configuration") == {}
-                 and service.sessions.native_profile_identity is not None
+                 and isinstance(stored, Mapping) and stored.get("configuration") == {}
+                 and selected_harness in service.sessions.native_profile_identities
                  and profile["config_object_digest"] ==
-                     service.sessions.native_profile_identity[2])
+                     service.sessions.native_profile_identities[selected_harness][2])
         return {
-            "mode": "native", "harness": harness_id,
+            "mode": "native", "harness": selected_harness,
             "profileId": identity if valid else None,
         }
 
@@ -555,6 +576,8 @@ def build_runtime_from_native_adapter(
     # directly. The registry, its wire methods and the stream route belong to
     # the Harness server facet; this composition only supplies the launch.
     def launch_channel_transport(*, harness_id: str, cwd: str, on_line, on_exit):
+        if harness_id not in adapters:
+            raise RuntimeError("NATIVE_HARNESS_INVALID")
         environment = dict(os.environ)
         environment.pop("AGENTBOX_SIDECAR_ISOLATED", None)
         environment.pop("AGENTBOX_ACCESS_TEST_MODE", None)
@@ -562,7 +585,7 @@ def build_runtime_from_native_adapter(
             environment["AGENTBOX_ACCESS_TEST_MODE"] = "controlled-peer-v1"
         return AccessEntryTransport(
             node=node, entry=str(access_entry), harness_id=harness_id,
-            cwd=cwd, adapter=adapter, on_line=on_line, on_exit=on_exit,
+            cwd=cwd, adapter=adapters[harness_id], on_line=on_line, on_exit=on_exit,
             environment=environment,
             **({"controlled_test_peer": True} if controlled_test_peer else {}),
             **({"installed_artifact_root": installed_artifact_root}
@@ -572,9 +595,11 @@ def build_runtime_from_native_adapter(
     compat = ServerCompatPlugin(
         harnesses=registry, execution_factory=factory,
         native_harness_id=harness_id,
+        native_additional_harness_ids=tuple(hid for hid in adapters if hid != harness_id),
     )
     acp = AcpChannelServerPlugin(
         launch=launch_channel_transport, native_identity=native_identity,
+        native_identity_for=native_identity,
     )
     # S-06/S-03: the permissions backend joins the native composition (Q5-only
     # approval route — it writes its own store, never the compat approvals

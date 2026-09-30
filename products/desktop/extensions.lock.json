@@ -22,7 +22,7 @@
   "files": {
     "extensions/ordessa.agent-acp/entry.js": "a87d17b47693c98484660c14d7991a43dce7caebfc8413e284c8c8dcb5940025",
     "extensions/ordessa.agent-acp/manifest.json": "fe48dee1e39840187916c71ce70f3315c248f7cd0f26e3d8c7e59ac095e12c1d",
-    "extensions/ordessa.agent-acp/native.js": "a20279b7b08aa6b304aa03de363d49887c32fcf0f2d5fdbe733f902e1a10d9bb",
+    "extensions/ordessa.agent-acp/native.js": "3b4041c313a86571d60370393a7a537d63abf73fcddedfd774951e97e2b13681",
     "extensions/ordessa.agent-connections/entry.js": "52d5942ac002bafc893e44e724bbab328b04b3b5020ef074154914f9269e6c59",
     "extensions/ordessa.agent-connections/manifest.json": "ff47baf6c3e151e16ecdd0784b104036cb4023ece4892ec143ff84b45d248a86",
     "extensions/ordessa.agent-contracts/contract.js": "bfc27fba8456c372f2d2b4667e2e6f1bb6605a801e5a401e4a4be69e2093192a",

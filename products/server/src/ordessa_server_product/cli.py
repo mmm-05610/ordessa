@@ -68,6 +68,11 @@ SERVER_CLI_FLAGS: "tuple[ServerFlagSpec, ...]" = (
         feeds="installed_artifact_root", route="native_runtime",
     ),
     ServerFlagSpec(
+        flags=("--native-additional-adapters",), dest="native_additional_adapters",
+        add={"help": "non-secret JSON array of additional native adapter launch references"},
+        feeds="additional_adapters", route="native_runtime",
+    ),
+    ServerFlagSpec(
         flags=("--sidecar-deployment",), dest="sidecar_deployment",
         add={"type": "path", "help": "non-secret Harness sidecar deployment JSON"},
         feeds="deployment_path", route="sidecar_runtime",
@@ -175,11 +180,14 @@ def plan_server_cli(values: Mapping[str, Any]) -> ServerCliPlan:
                 **_fed("native_continuation", values),
                 **(_fed("native_installed_artifact_root", values)
                    if _value(values, "native_installed_artifact_root") is not None else {}),
+                **(_fed("native_additional_adapters", values, parse_additional_adapters)
+                   if _value(values, "native_additional_adapters") is not None else {}),
             },
         )
     if (_value(values, "native_harness") or _value(values, "native_adapter_command")
             or _value(values, "native_adapter_arg")
             or _value(values, "native_continuation")
+            or _value(values, "native_additional_adapters")
             or _value(values, "native_installed_artifact_root")):
         return ServerCliPlan(
             error="native adapter options require --execution-mode native")
@@ -192,3 +200,15 @@ def plan_server_cli(values: Mapping[str, Any]) -> ServerCliPlan:
             },
         )
     return ServerCliPlan(method="default_runtime")
+
+
+def parse_additional_adapters(value: str) -> tuple:
+    import json
+
+    try:
+        bindings = json.loads(value)
+    except (TypeError, ValueError) as error:
+        raise SystemExit("--native-additional-adapters expects a JSON array") from error
+    if type(bindings) is not list or len(bindings) > 31:
+        raise SystemExit("--native-additional-adapters expects a bounded JSON array")
+    return tuple(bindings)  # shape and executable checks happen before data-root creation

@@ -133,3 +133,11 @@ Profile Chat 有限入口接线已由主代理复跑 23/23：合法 default fact
 - 同版本重新加载原先被模型贡献判为 MigrationUnsupported，导致合法配置重启后被隔离。现同版本完整合法 ModelChoice 保持，损坏或未知版本仍拒绝。实际 Profile 存储→重启→新 core 读取，完整 choice 非隔离；跨 Harness 写入拒绝。尚无配置应用回执，测试显式断言 config_port 仍未组合。
 - 产品＋模型 Profile 贡献＋Profile 后端 216/216，Skills 后端另进程 433/433。将两套测试同进程聚合会发生既有 conftest 裸导入碰撞并收集中断；本轮独立进程复跑，未删除测试或假报聚合通过。未重建 deb，未调用真实模型。
 - 下一项仍是原生 session/new 后 prompt 前的真实配置应用：canonical 身份、实例隔离、配置授权与独立 readback 缺一不可。目前 ACP 产品单 Harness identity 也仍限制同一产品多品牌，不能把三品牌 initialize 通过写成该能力完成。
+
+### 同一原生产品多 Harness 装配收口
+
+- 产品默认组合 Pi、Codex、Claude Code，显式 ORDESSA_NATIVE_HARNESS 保留单品牌启动。Harness 启动计划逐资产复核，额外绑定由产品 CLI 转交插件组合；Server/Pacthold 内核无改动。每个品牌拥有独立 native profile identity，hello 的 acpChannelHarnesses 为后端权威目录，前端只消费并校验，不自行发现品牌。
+- 产品受控多绑定测试 8/8；安装资产与启动计划 9/9；ACP workspace 43/43；Profile 后端独立进程 173/173；产品及模型 Profile 贡献 51/51。根 typecheck 与 18 扩展 build 通过，lock 由 build 生成。
+- 相关 native 后端回归 37P/1F；唯一失败 test_native_first_send_completes_with_reviewed_fake_acp_peer 在 a6ba4c4cd3 只读源码快照中独立重跑同因失败（退役 worker-entry 执行链），不登记为全绿、不更改其断言。
+- 真实安装资产＋同一产品 Server＋同一项目同时开出三品牌通道，各自 initialize 成功（Pi ACP 0.5.0、Codex ACP 1.1.14、Claude ACP 0.81.2），connection/execution 标识独立，三者释放均确认。探针 /tmp/ordessa-real-multi-initialize.py，独立 HOME 与品牌配置目录；session/new=0、prompt=0，无登录或模型费用。
+- 最终 build 后完整 Electron 原生产品冒烟 ready=true、Chat/Skills/Sessions 挂载、errors=[]、renderer 无 Node。此项只证明启动与读取，不能替代真实对话、Profile 应用/切换或发行 deb 验收。

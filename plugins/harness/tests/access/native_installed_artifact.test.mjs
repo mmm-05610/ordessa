@@ -31,9 +31,9 @@ function simulateRootAdministration(t, overrides = new Map()) {
   }
 }
 
-function fixture(t, brand = BRANDS[0]) {
-  const base = fs.mkdtempSync(path.join(tmpdir(), "ordessa-installed-policy-"))
-  t.after(() => fs.rmSync(base, { recursive: true, force: true }))
+function fixture(t, brand = BRANDS[0], sharedBase) {
+  const base = sharedBase ?? fs.mkdtempSync(path.join(tmpdir(), "ordessa-installed-policy-"))
+  if (!sharedBase) t.after(() => fs.rmSync(base, { recursive: true, force: true }))
   const [harness, artifact, packageName, version] = brand
   const root = path.join(base, artifact)
   const packageRoot = path.join(root, "node_modules", packageName)
@@ -81,6 +81,33 @@ for (const brand of BRANDS) {
       pluginRoot: "/opt/ordessa/harness-plugin", artifactRoot: f.base }), /ADAPTER_ARTIFACT_UNVERIFIED/)
   })
 }
+
+test("multi-brand plan uses individually verified launch references", (t) => {
+  simulateRootAdministration(t)
+  const first = fixture(t, BRANDS[0])
+  const members = [first, ...BRANDS.slice(1).map(brand => fixture(t, brand, first.base))]
+  for (const item of members) publishManifest(item)
+  const plan = nativeServerPlan({ harnessIds: members.map(item => item.harness),
+    pluginRoot: "/opt/ordessa/harness-plugin", artifactRoot: first.base })
+  const index = plan.args.indexOf("--native-additional-adapters")
+  assert.ok(index > 0)
+  assert.deepEqual(JSON.parse(plan.args[index + 1]), members.slice(1).map(item => ({
+    harnessId: item.harness, command: process.execPath, args: [item.entry],
+  })))
+  fs.appendFileSync(members[1].entry, "// tamper one brand\n")
+  assert.throws(() => nativeServerPlan({ harnessIds: members.map(item => item.harness),
+    pluginRoot: "/opt/ordessa/harness-plugin", artifactRoot: first.base }), /ADAPTER_ARTIFACT_UNVERIFIED/)
+})
+
+test("multi-brand selection never accepts ambiguous or duplicate identities", () => {
+  for (const harnessIds of [[], ['pi', 'pi'], [null]]) {
+    assert.throws(() => nativeServerPlan({ harnessIds, pluginRoot: "/opt/ordessa/harness-plugin",
+      artifactRoot: "/opt/ordessa/artifacts" }), /NATIVE_HARNESS_SELECTION_INVALID/)
+  }
+  assert.throws(() => nativeServerPlan({ harnessIds: ['pi'], harnessId: 'pi',
+    pluginRoot: "/opt/ordessa/harness-plugin", artifactRoot: "/opt/ordessa/artifacts" }),
+  /NATIVE_HARNESS_SELECTION_INVALID/)
+})
 
 test("installed manifest/brand/argv remain authoritative", (t) => {
   simulateRootAdministration(t)

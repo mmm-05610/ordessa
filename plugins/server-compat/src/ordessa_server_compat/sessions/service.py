@@ -32,6 +32,7 @@ class SessionService:
         self.model_configs = None
         self.core_filer = core_filer
         self.native_profile_identity: tuple[str, str, str] | None = None
+        self.native_profile_identities: dict[str, tuple[str, str, str]] = {}
         self.native_workspace_validator = None
         if core_filer is not None:
             # a-3 K2-S': the single filing implementation lives on the records
@@ -50,12 +51,16 @@ class SessionService:
     def bind_model_configs(self, model_configs) -> None:
         self.model_configs = model_configs
 
-    def bind_native_profile(self, profile_id: str, harness: str, config_digest: str) -> None:
+    def bind_native_profile(self, profile_id: str, harness: str, config_digest: str,
+                            *, allow_additional: bool = False) -> None:
         """Fix the one internal execution identity for a native Server."""
         identity = (profile_id, harness, config_digest)
-        if self.native_profile_identity not in (None, identity):
+        if (self.native_profile_identities.get(harness) not in (None, identity)
+                or (not allow_additional and self.native_profile_identity not in (None, identity))):
             raise RuntimeError("NATIVE_PROFILE_ALREADY_BOUND")
-        self.native_profile_identity = identity
+        self.native_profile_identities[harness] = identity
+        if not allow_additional:
+            self.native_profile_identity = identity
 
     def bind_native_workspace_validator(self, validate) -> None:
         if self.native_workspace_validator not in (None, validate):
@@ -168,9 +173,12 @@ class SessionService:
 
     def _assert_native_profile(self, profile_id: str, profile=None) -> None:
         if self.native_profile_identity is not None:
-            expected_id, expected_harness, expected_config = self.native_profile_identity
             if profile is None:
                 profile = self.profiles.get(profile_id)
+            identity = self.native_profile_identities.get(profile["harness_type"])
+            if identity is None:
+                raise ServerError("NATIVE_PROFILE_CONFLICT", "native execution identity changed", status=409)
+            expected_id, expected_harness, expected_config = identity
             if (profile_id != expected_id or profile["harness_type"] != expected_harness
                     or profile["archived_at"] is not None
                     or profile["config_object_digest"] != expected_config
