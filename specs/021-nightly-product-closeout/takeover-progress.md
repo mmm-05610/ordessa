@@ -321,3 +321,10 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 新增可复跑 `products/desktop/probe-native-installed.mjs`：完整启用清单、实际三品牌 launch plan、独立临时 HOME/数据根、测试结束清理。exit 0，rootMounted=true、errors=[]、pages=Chat/Skills/Sessions、renderer 无 Node、prompt=0。初版错误地把 smoke 的 `starting` 当插件状态（实为全部 role=status 文案），已校正输出真实业务状态：读取分配…、尚未选择项目；不据此宣称业务加载全部完成，也不记作完整对话/UI Profile 操作已验收。
 - 实际安装 Pi 的 wire Profile 应用双实例探针再次 exit 0：真实 canonical/ledger、模型 first→second、独立 readback、A 不影响 B、释放 A 后 B 存活、prompt=0；自身实例完整清理。
 - 下一核查是已锁定 Codex/Claude 适配器真实 API 与原生应用/readback 的复用，不把品牌纯编译器已存在当作生产 Profile 切换已完成。固定第 3/5/6/7 项仍未收口，第 4 有受控提交+实际完整产品挂载，尚缺端到端界面应用验证。
+
+### 两品牌适配器增强的实施边界
+
+- 独立检查实际安装的锁定源码（Claude 0.81.2、Codex 1.1.14），两者已有 provider/model ACP 操作，可以复用，不需要回到旧 Go Claude 桥或自己重写 SDK。
+- 但这些资产没有 Pi 增强层目前用于 C4 的 `_ordessa/session/configuration` / application operation 回执契约，产品真实 Profile service 仍只组合 Pi。不能因 `providers/set` 返回成功就伪造 Profile confirmed；特别是 Claude `enqueueProviderUpdate` 会捕获个别会话 resume 失败、报告 session lost 后继续，让 provider 调用正常返回。
+- 要完成相同验收标准，需为 Codex/Claude 在 Harness 内增补最小只读会话证据/操作结果层，直接复用已锁 upstream 的 provider/model 操作；会话 lost/readback 不符必须 Unknown/阻断 prompt。增强属于新的第三方适配器资产版本，不就地修改已安装原目录，需新目录 root 安装和完整摘要再验。
+- 这是下一步中等规模变化，按用户“无法快速解决应讨论”的要求提出该路线确认；不以普通 ACK 降低标准，不把上一轮原资产安装授权擅自扩为覆写或新增强资产安装授权。已验证成果已提交 `a6138a494f`，待确认期间不动原系统资产。根 main 未切换，工作树剩余他属截图保留。
