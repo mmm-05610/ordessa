@@ -350,6 +350,17 @@ export interface ChatSessionGateway {
   submit(snapshot: ChatSubmissionSnapshot): Promise<ChatSubmissionResult>
 }
 
+/** A business-owned next-submit preparation, not a model authorization permit.
+ * Selecting a configuration never invokes this; only an explicit send does.
+ * A refusal/unknown prevents the gateway call and preserves the draft. */
+export interface ChatSubmissionGuard {
+  readonly id: string
+  readonly order: number
+  prepare(snapshot: ChatSubmissionSnapshot): Promise<
+    { readonly status: 'ready' } | { readonly status: 'refused'; readonly reason: string }
+    | { readonly status: 'unknown' }>
+}
+
 // ---------------------------------------------------------------------------
 // The scoped service (contracts.md §4 + input-contracts §1: one scoped API,
 // `addInputSource` is not a seventh slot)
@@ -365,6 +376,9 @@ export interface ChatContributionView {
   readonly order: number
   readonly keyId: string
   readonly keyMajor: number
+  /** Preserve the original platform key identity for binding. Optional only
+   * for older producers; absence cannot be repaired by inventing a new key. */
+  readonly key?: ChatComponentKey<unknown>
   readonly contentKind?: string
   readonly project?: (context: ChatContributionContext) => { readonly hidden: true } | { readonly hidden: false; readonly props: unknown }
   readonly decode?: (payload: unknown) => unknown | null
@@ -394,7 +408,13 @@ export interface ChatContributionsService {
   forScope(scope: ResourceScope): {
     addContribution(registration: ChatContributionRegistration): IDisposable
     addInputSource(source: ChatInputSource): IDisposable
+    addSubmissionGuard(guard: ChatSubmissionGuard): IDisposable
   }
+  /** Runs the captured scoped guards in (order,id) order and calls the gateway
+   * only if their registrations and the consumer's target are still current.
+   * No retries; accepted remains gateway acceptance, never run completion. */
+  submit(snapshot: ChatSubmissionSnapshot, gateway: ChatSessionGateway,
+         isCurrent?: () => boolean): Promise<ChatSubmissionResult>
   contributionsBySlot(slot: ChatSlot): ObservableValues<ChatContributionView>
   /** Aggregated live query state; drives the shared panel's per-source
    * loading/error/ready presentation (input-spec P04). */

@@ -28,8 +28,9 @@
       "@extensions/ordessa.agent-contracts/contract.js": [
         "../../../plugins/agent/contracts/src/contract.ts"
       ],
+      "@ordessa/ui-components/react": ["../../../packages/desktop-platform/ui-components/react/index.ts"],
       "@ordessa/ui-components/api": [
-        "../../../../packages/desktop-platform/ui-components/api/ui-components.ts"
+        "../../../packages/desktop-platform/ui-components/api/ui-components.ts"
       ]
     }
   },

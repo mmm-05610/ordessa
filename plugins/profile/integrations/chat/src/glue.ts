@@ -23,6 +23,7 @@ import type {
 import { ProfilePicker } from './picker'
 import type { ProfilePickerProps } from './picker-model'
 import { catalogForLocation, ProfileSelectionStore } from './selection'
+import type { ProfileCatalog } from './catalog'
 
 export { ProfileSelectionStore, catalogForLocation } from './selection'
 export type { ApplyOutcome, SelectionCounters } from './selection'
@@ -58,6 +59,7 @@ export interface ProfileChatGlueInput {
   readonly store?: ProfileSelectionStore
   readonly profiles: Pick<ProfileServiceClient, 'beginTurnApplication'> & Partial<Pick<ProfileServiceClient, 'selectForSession' | 'inspectSessionConfig'>>
   readonly catalog: () => readonly ProfileCatalogGroup[]
+  readonly catalogState?: Pick<ProfileCatalog, 'message' | 'subscribe' | 'getSnapshot' | 'refresh'>
   readonly onOpenManager?: () => void
 }
 
@@ -67,6 +69,21 @@ export function createProfileChatGlue(
   input: ProfileChatGlueInput,
 ) {
   const store = input.store ?? new ProfileSelectionStore()
+  const subscribe = (listener: () => void) => {
+    const stopStore = store.subscribe(listener)
+    const stopCatalog = input.catalogState?.subscribe(listener)
+    return () => { stopStore(); stopCatalog?.() }
+  }
+  const getSnapshot = () => store.getSnapshot() + (input.catalogState?.getSnapshot() ?? 0)
+  const scoped = contributions.forScope(scope)
+  const guard = scoped.addSubmissionGuard({ id: 'ordessa.profile-chat.application', order: 10,
+    async prepare(snapshot) {
+      const { key } = pickerKeyFor(snapshot.target)
+      return store.peek(key)
+        ? { status: 'refused', reason: 'Profile 会话应用尚未接入：缺少后端会话身份与生产应用端口。所选预设和草稿已保留。' }
+        : { status: 'ready' }
+    },
+  })
   const registration = chatContribution<ProfilePickerProps>({
     id: 'ordessa.profile-chat.picker',
     slot: 'composer.toolbar',
@@ -75,25 +92,33 @@ export function createProfileChatGlue(
     project: (context: ChatContributionContext) => {
       if (context.slot !== 'composer.toolbar') return { hidden: true }
       const { key, scope: pickerScope } = pickerKeyFor(context.location)
-      const groups = catalogForLocation(input.catalog(), pickerScope)
-      if (groups.length === 0) return { hidden: true }
+      const liveProps = (): ProfilePickerProps => {
+        const groups = catalogForLocation(input.catalog(), pickerScope)
+        return {
+          label: store.currentLabel(key), groups,
+          statusMessage: input.catalogState?.message || (groups.length ? undefined : '当前 Harness 没有可用预设。'),
+          onRefresh: input.catalogState ? () => { void input.catalogState!.refresh() } : undefined,
+          onOpenSelector: input.catalogState ? () => { void input.catalogState!.refresh() } : undefined,
+          onOpenManager: input.onOpenManager,
+          onSelect: (selection: ProfileSelection) => store.select(key, selection),
+          onClearSelection: () => store.forget(key),
+        }
+      }
       return {
         hidden: false,
         props: {
-          label: store.currentLabel(key),
-          groups,
-          onOpenManager: input.onOpenManager,
-          onSelect: (selection: ProfileSelection) => store.select(key, selection),
+          ...liveProps(), subscribe, getSnapshot, getLiveProps: liveProps,
         },
       }
     },
   })
   const disposeRegistration =
-    contributions.forScope(scope).addContribution(registration)
+    scoped.addContribution(registration)
   return {
     store,
     dispose() {
       disposeRegistration.dispose()
+      guard.dispose()
     },
   }
 }

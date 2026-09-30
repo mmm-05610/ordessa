@@ -10,8 +10,15 @@ export interface ProfilePickerProps {
   readonly label: string | null
   readonly groups: readonly ProfileCatalogGroup[]
   readonly disabledReason?: string
+  readonly statusMessage?: string
+  readonly onRefresh?: () => void
+  readonly onOpenSelector?: () => void
+  readonly subscribe?: (listener: () => void) => () => void
+  readonly getSnapshot?: () => number
+  readonly getLiveProps?: () => ProfilePickerProps
   readonly onOpenManager?: () => void
   readonly onSelect: (selection: ProfileSelection) => void
+  readonly onClearSelection?: () => void
 }
 
 export function selectedOptionValue(groups: readonly ProfileCatalogGroup[],

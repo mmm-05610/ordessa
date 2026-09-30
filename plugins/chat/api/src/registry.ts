@@ -14,6 +14,7 @@ import type { ResourceScope } from '@ordessa/extension-api'
 import type {
   ChatComponentKey, ChatContributionContext, ChatContributionRegistration, ChatContributionView, ChatContributionsService,
   ChatInputEntry, ChatInputQuery, ChatInputSource, ChatInputSourceView, ChatProjection, ChatSlot, ObservableValues,
+  ChatSubmissionGuard, ChatSubmissionSnapshot, ChatSessionGateway, ChatSubmissionResult,
 } from './contract'
 
 /** Observable view whose `getSnapshot()` identity is stable until the next
@@ -182,6 +183,7 @@ const viewOfContribution = (descriptor: ContributionDescriptor): ChatContributio
   order: descriptor.order,
   keyId: descriptor.key.id,
   keyMajor: descriptor.key.major,
+  key: descriptor.key,
   ...(descriptor.contentKind !== undefined ? { contentKind: descriptor.contentKind } : {}),
   ...(descriptor.project
     ? { project: descriptor.project as unknown as (context: ChatContributionContext) => { readonly hidden: true } | { readonly hidden: false; readonly props: unknown } }
@@ -194,6 +196,8 @@ export function createChatContributions(): ChatContributionsService {
   const sources = new Map<string, { readonly record: SourceRecord; readonly scope: ResourceScope }>()
   const slotViews = new Map<ChatSlot, Values<ChatContributionView>>()
   const queryViews = new Set<Values<ChatInputSourceView>>()
+  const guards = new Map<string, { readonly guard: ChatSubmissionGuard; readonly scope: ResourceScope }>()
+  let guardRevision = 0
 
   const publishContributions = () => { for (const view of slotViews.values()) view.invalidate() }
   const publishSources = () => { for (const view of queryViews) view.invalidate() }
@@ -202,6 +206,22 @@ export function createChatContributions(): ChatContributionsService {
     forScope(scope: ResourceScope) {
       if (scope.isDisposed) throw new Error('Chat contribution scope is closed')
       return {
+        addSubmissionGuard(guard: ChatSubmissionGuard): IDisposable {
+          if (scope.isDisposed) throw new Error('Chat contribution scope is closed')
+          if (!guard.id?.includes('.') || !Number.isInteger(guard.order) || typeof guard.prepare !== 'function') {
+            throw new TypeError('Invalid Chat submission guard')
+          }
+          if (guards.has(guard.id)) throw new Error(`Duplicate Chat submission guard: ${guard.id}`)
+          const prepare = guard.prepare
+          const snapshot = Object.freeze({ id: guard.id, order: guard.order,
+            prepare: (submission: ChatSubmissionSnapshot) => prepare.call(guard, submission) })
+          const record = { guard: snapshot, scope }
+          guards.set(snapshot.id, record)
+          guardRevision += 1
+          return registerScoped(scope, () => {
+            if (guards.get(snapshot.id) === record) { guards.delete(snapshot.id); guardRevision += 1 }
+          })
+        },
         addContribution(registration: ChatContributionRegistration): IDisposable {
           const descriptor = unwrap(registration)
           if (contributions.has(descriptor.id)) throw new Error(`Duplicate chat contribution: ${descriptor.id}`)
@@ -243,6 +263,32 @@ export function createChatContributions(): ChatContributionsService {
             }
           })
         },
+      }
+    },
+    async submit(snapshot: ChatSubmissionSnapshot, gateway: ChatSessionGateway,
+                 isCurrent = () => true): Promise<ChatSubmissionResult> {
+      const revision = guardRevision
+      const captured = byOrderThenId([...guards.values()].map(record => record.guard))
+      const submission = Object.freeze({ ...snapshot, target: Object.freeze({ ...snapshot.target }),
+        attachmentIds: Object.freeze([...snapshot.attachmentIds]),
+        ...(snapshot.attachmentRefs ? { attachmentRefs: Object.freeze([...snapshot.attachmentRefs]) } : {}) })
+      const stale = () => guardRevision !== revision || !isCurrent()
+      try {
+        for (const guard of captured) {
+          if (stale()) return { status: 'refused', reason: 'Submission context changed; prepare again' }
+          const result = await guard.prepare(submission)
+          if (stale()) return { status: 'refused', reason: 'Submission context changed; prepare again' }
+          if (result.status === 'unknown') return { status: 'unknown' }
+          if (result.status === 'refused') return result
+          if (result.status !== 'ready') return { status: 'refused', reason: 'Invalid submission preparation result' }
+        }
+        if (stale()) return { status: 'refused', reason: 'Submission context changed; prepare again' }
+        return await gateway.submit(submission)
+      } catch {
+        // A rejected promise may be a lost acknowledgement after an effect.
+        // Only the owner can positively classify a refusal; never fabricate
+        // that certainty for preparation or the final send.
+        return { status: 'unknown' }
       }
     },
     contributionsBySlot(slot: ChatSlot): ObservableValues<ChatContributionView> {

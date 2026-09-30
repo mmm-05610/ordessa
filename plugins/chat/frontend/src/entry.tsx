@@ -8,7 +8,7 @@
 // the conversation surface now.
 import { useSyncExternalStore } from 'react'
 import type { PluginContext } from '@ordessa/extension-api'
-import { WorkbenchToken, type Workbench } from '@extensions/ordessa.contracts/contract.js'
+import { WorkbenchToken, UiComponentsToken, type Workbench, type UiComponents } from '@extensions/ordessa.contracts/contract.js'
 import { AgentSessionsToken, type AgentSessions } from '@extensions/ordessa.agent-contracts/contract.js'
 import { ChatContributionsToken, createChatContributions, chatContribution, type ChatContributionsService, type ChatProjection } from '@extensions/ordessa.chat-api/contract.js'
 import { ChatPage } from './views/chat-page'
@@ -19,13 +19,14 @@ import { createAttachmentSource, createNativeCommandSource } from './adapters/ag
 
 export default function createPlugin() {
   return { id: 'ordessa.chat', autoStart: true,
-    requires: [WorkbenchToken, AgentSessionsToken], provides: ChatContributionsToken,
-    activate: (context: PluginContext, workbench: Workbench, sessions: AgentSessions): ChatContributionsService => {
+    requires: [WorkbenchToken, AgentSessionsToken, UiComponentsToken], provides: ChatContributionsToken,
+    activate: (context: PluginContext, workbench: Workbench, sessions: AgentSessions, components: UiComponents): ChatContributionsService => {
       const chat = createChatContributions()
       const ui = workbench.forScope(context.resources)
+      const uiComponents = components.forScope(context.resources)
 
       ui.addView({ id: 'chat.page', title: 'Chat', presentation: 'region', region: 'main',
-        component: () => <ChatPage service={sessions} chat={chat} /> })
+        component: () => <ChatPage service={sessions} chat={chat} uiComponents={uiComponents} /> })
 
       // Global project dialog + product nav entry via the Workbench
       // composition (N06): Chat owns the content, the Workbench owns

@@ -13,7 +13,8 @@
 // exact sent version — user typing after the send survives; a result arriving
 // after a pane switch updates NOTHING in the new pane (X05); unknown keeps the
 // draft and never auto-retries.
-import { createElement, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import type { UiScope } from '@ordessa/ui-components/api'
 import type { AgentSessions } from '@extensions/ordessa.agent-contracts/contract.js'
 import type {
   ChatContributionsService, ChatInputEntry, ChatInputQuery, ChatLocation, ChatPrepareResult, ChatSubmissionResult,
@@ -25,14 +26,13 @@ import {
   attachmentCapabilityOf, createFacadeGateway, interactionsForSession, paneRunState, projectConversation,
 } from '../adapters/agent'
 import type { ChatTheme } from '../components/messages/markdown-body'
-import { ThreadBody, makeDefaultResolver, type ErasedComponent } from './thread'
+import { ThreadBody } from './thread'
 import { ChatTextInput } from '../components/composer/text-input'
 import { InputPanel } from '../components/composer/input-panel'
 import { AttachmentStrip } from '../components/composer/attachments'
 import { ApprovalPanel } from '../components/interactions/approval-panel'
 import { ProjectDialog } from './project-dialog'
-import { ConnectionBadge } from './connection-badge'
-import { connectionBadgeKey } from '../state/keys'
+import { ToolbarContribution } from './toolbar-contribution'
 import { chatStyles } from '../styles'
 import { usePreferredTheme } from '../theme'
 import { reconcileSlashSnapshot, slashReplacementRange, type SlashTokenSnapshot } from '../components/composer/trigger'
@@ -49,13 +49,15 @@ const draftBlockCopy: Record<string, string> = {
 type PanelState = { readonly mode: 'plus'; readonly caret: number } | { readonly mode: 'slash'; readonly token: SlashTokenSnapshot } | null
 type PrepareAction = (location: ChatLocation, idempotencyKey: string) => Promise<ChatPrepareResult>
 
-export function ChatPage({ service, chat, theme: themeProp, openViaOverlay }: {
+export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiComponents }: {
   service: AgentSessions
   chat: ChatContributionsService
   /** Explicit theme from the host; defaults to the OS preference. */
   theme?: ChatTheme
   /** Workbench overlay opener for the global dialog (absent → in-page render). */
   openViaOverlay?: () => void
+  /** Consumer scope supplied by the host; bare views can omit it. */
+  uiComponents?: UiScope
 }) {
   const theme = themeProp ?? usePreferredTheme()
   const state = useSyncExternalStore(service.subscribe, service.getSnapshot, service.getSnapshot)
@@ -70,7 +72,6 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay }: {
   useEffect(() => service.subscribe(() => setRevision(value => value + 1)), [service])
   const store = useMemo(() => new DraftStore(), [])
   const expansion = useViewState()
-  const resolver = useMemo(() => makeDefaultResolver({ [connectionBadgeKey.id]: ConnectionBadge as unknown as ErasedComponent }), [])
   const gateway = useMemo(() => createFacadeGateway(service), [service])
   const [dialogOpen, setDialogOpen] = useState(false)
   const [panel, setPanel] = useState<PanelState>(null)
@@ -84,6 +85,11 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay }: {
   const caretRef = useRef<number | null>(null)
   const paneRef = useRef(pane)
   paneRef.current = pane
+  const mountedRef = useRef(true)
+  useEffect(() => {
+    mountedRef.current = true
+    return () => { mountedRef.current = false }
+  }, [])
 
   useEffect(() => () => { store.dispose() }, [store])
 
@@ -111,7 +117,7 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay }: {
   const projectName = agent?.workspaces?.items.find(item => item.id === workspaceId)?.normalizedPath
   const run = agent && sessionId ? paneRunState(agent, sessionId) : undefined
   const running = run?.status === 'starting' || run?.status === 'running' || run?.status === 'stop-requested'
-  const canSend = !drafting || state.draft?.canSend === true
+  const canSend = !running && (!drafting || state.draft?.canSend === true)
   const blockReason = drafting ? state.draft?.blockReason : undefined
   const attachmentBlocked = attachmentBlockReason(composition.items)
   const sendDisabled = !composition.text.trim() || !canSend || (pendingPane !== undefined && pendingPane === pane) || attachmentBlocked !== null
@@ -124,6 +130,8 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay }: {
         serverInstanceId: agent?.connection.serverInstanceId, contextRevision: revision,
         ...(state.runtimeGeneration !== undefined ? { runtimeGeneration: state.runtimeGeneration } : {}) }),
   [drafting, pane, connectionId, agent?.connection.serverInstanceId, workspaceId, revision, sessionId, state.runtimeGeneration])
+  const locationRef = useRef(location)
+  locationRef.current = location
   // PC-3: the attach entry and its note are driven by the facade's REAL
   // capability for this location — a missing production prepare owner, a
   // partial client surface or a draft without a native session all render
@@ -159,9 +167,11 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay }: {
     setPendingPane(capturedPane)
     let result: ChatSubmissionResult
     try {
-      result = await gateway.submit(snapshot)
-    } catch (cause) {
-      result = { status: 'refused', reason: cause instanceof Error ? cause.message : String(cause) }
+      result = await chat.submit(snapshot, gateway, () =>
+        mountedRef.current && paneRef.current === capturedPane && locationRef.current === location
+        && service.getSnapshot() === state)
+    } catch {
+      result = { status: 'unknown' }
     } finally {
       setPendingPane(current => (current === capturedPane ? undefined : current))
     }
@@ -181,7 +191,7 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay }: {
       // Unknown keeps everything, never auto-retries (US4-2).
       setSendError('发送结果未知：连接可能已中断。草稿已保留，请核实后手动重发。')
     }
-  }, [canSend, gateway, location, pendingPane, store])
+  }, [canSend, chat, gateway, location, pendingPane, service, state, store])
 
   const stop = useCallback(() => {
     if (!run?.runId) return
@@ -366,19 +376,10 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay }: {
             onClose={() => setPanel(null)} />
         )}
         <div className="chat-compose-toolbar" data-testid="chat-compose-toolbar">
-          {toolbarViews.map(view => {
-            if (!view.project) return null
-            const projected = view.project({
+          {toolbarViews.map(view => <ToolbarContribution key={view.id} view={view} ui={uiComponents} context={{
               slot: 'composer.toolbar', location: { ...location },
               connection: { status: agent.connection.status, runStatus: run?.status },
-            })
-            if (projected.hidden) return null
-            const Component = resolver(view.keyId)
-            if (!Component) return null // provider absent pre-foundation: position stays empty
-            // The erased read side hands untyped props; the pairing was
-            // enforced at registration by chatContribution's generic.
-            return createElement(Component, { ...(projected.props as Record<string, unknown>), key: view.id })
-          })}
+            }} />)}
         </div>
         <div className="chat-input-row">
           <button type="button" className="chat-icon-action" aria-label="打开添加与操作面板" data-testid="chat-plus-button"

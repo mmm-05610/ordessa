@@ -15,9 +15,11 @@ import { OwnedResources } from '@ordessa/extension-api'
 import { ApprovalPanel } from '../src/components/interactions/approval-panel'
 import { ProjectDialog } from '../src/views/project-dialog'
 import { FacadeFixture } from './facade-fixture'
+import { createUiComponentsService } from '../../../../packages/desktop-platform/ui-components/src/index'
 import createPlugin from '../src/entry'
 import { ChatContributionsToken, chatContribution, ChatMessageBodyKey } from '@extensions/ordessa.chat-api/contract.js'
 import type { AgentInteraction } from '@extensions/ordessa.agent-contracts/contract.js'
+import { UiComponentsToken } from '@extensions/ordessa.contracts/contract.js'
 
 const roots = new Map<HTMLElement, ReturnType<typeof createRoot>>()
 const cleanup: (() => Promise<void>)[] = []
@@ -128,7 +130,8 @@ describe('plugin entry (CHAT-V05/V08 seam)', () => {
     const plugin = createPlugin()
     expect(plugin.id).toBe('ordessa.chat')
     expect(plugin.provides).toBe(ChatContributionsToken)
-    const provided = await plugin.activate({ resources: scope } as never, workbench.service, facade)
+    expect(plugin.requires.at(-1)).toBe(UiComponentsToken)
+    const provided = await plugin.activate({ resources: scope } as never, workbench.service, facade, createUiComponentsService([]).uiComponents)
     expect(provided).toBeTruthy()
     // The chat-owned contribution is registered and readable in the toolbar slot.
     const slot = provided.contributionsBySlot('composer.toolbar')
@@ -150,7 +153,7 @@ describe('plugin entry (CHAT-V05/V08 seam)', () => {
     cleanup.push(async () => scope.dispose())
     const workbench = createWorkbench(scope)
     const plugin = createPlugin()
-    const provided = await plugin.activate({ resources: scope } as never, workbench.service, new FacadeFixture())
+    const provided = await plugin.activate({ resources: scope } as never, workbench.service, new FacadeFixture(), createUiComponentsService([]).uiComponents)
     expect(() => provided.forScope(scope).addContribution(chatContribution({
       id: 'ordessa.chat.connection-badge', slot: 'composer.toolbar', order: 1, key: ChatMessageBodyKey,
     }))).toThrowError(/ordessa\.chat\.connection-badge/)

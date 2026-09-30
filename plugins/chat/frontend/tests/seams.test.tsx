@@ -6,7 +6,8 @@
 // riding the ChatLocation, and reasoningState evidence. Every counterexample
 // renders its reason — never a fake command, never a receive-then-drop.
 // @vitest-environment jsdom
-import { act } from 'react'
+import { act, useState } from 'react'
+import { renderToString } from 'react-dom/server'
 import { createRoot } from 'react-dom/client'
 import { createHash } from 'node:crypto'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -26,9 +27,13 @@ import {
 } from '../src/adapters/agent'
 import { ChatPage } from '../src/views/chat-page'
 import { connectionBadgeKey } from '../src/state/keys'
-import { createChatContributions, chatContribution, type ChatContributionContext } from '@extensions/ordessa.chat-api/contract.js'
+import { createChatContributions, chatContribution, defineChatComponentKey, type ChatContributionContext } from '@extensions/ordessa.chat-api/contract.js'
+import { OwnedResources } from '@ordessa/extension-api'
+import type { UiBinding, UiScope } from '@ordessa/ui-components/api'
+import { createUiComponentsService } from '../../../../packages/desktop-platform/ui-components/src/index'
+import { ToolbarContribution } from '../src/views/toolbar-contribution'
 import type { AgentCommandCatalog, AgentMessage } from '@extensions/ordessa.agent-contracts/contract.js'
-import type { ChatContentReference } from '@extensions/ordessa.chat-api/contract.js'
+import type { ChatContentReference, ChatSubmissionGuard } from '@extensions/ordessa.chat-api/contract.js'
 
 const roots = new Map<HTMLElement, ReturnType<typeof createRoot>>()
 const cleanup: (() => Promise<void>)[] = []
@@ -221,13 +226,37 @@ describe('PC-3 page flow: entries, phases and the A06 chain through the real com
     }
     return { facade, carried }
   }
-  const page = (facade: FacadeFixture) => {
+  const page = (facade: FacadeFixture, guard?: ChatSubmissionGuard) => {
     const chat = createChatContributions()
     const ui = chat.forScope({ isDisposed: false, add: (d: { dispose(): void }) => d } as never)
     ui.addInputSource(createNativeCommandSource(facade))
     ui.addInputSource(createAttachmentSource(facade, { pick: async () => ({ sourceId: 'content-1', name: 'a.txt' }) }))
+    if (guard) ui.addSubmissionGuard(guard)
     return <ChatPage service={facade} chat={chat} theme="light" />
   }
+
+  it.each(['refused', 'unknown', 'rejected'] as const)('a %s submission preparation keeps text and ready attachments with zero gateway calls', async status => {
+    const { facade, carried } = pageFacade()
+    const prepare = vi.fn(async () => {
+      if (status === 'rejected') throw new Error('preparation receipt lost')
+      return status === 'refused' ? { status: 'refused' as const, reason: '准备拒绝' } : { status: 'unknown' as const }
+    })
+    const container = await mount(page(facade, { id: 'controlled.guard', order: 1, prepare }))
+    await act(async () => { container.querySelector<HTMLButtonElement>('[data-testid="chat-plus-button"]')!.click() })
+    await act(async () => { await tick() })
+    await act(async () => { container.querySelector<HTMLButtonElement>('[data-entry-id="attachments:add"]')!.click() })
+    await act(async () => { await tick(); await tick() })
+    await type(container, '保留附件草稿')
+    await clickSend(container)
+    await act(async () => { await tick() })
+    expect(prepare).toHaveBeenCalledTimes(1)
+    expect(facade.sends).toEqual([])
+    expect(carried).toEqual([])
+    expect(facade.releasedRefs).toEqual([])
+    expect(input(container).value).toBe('保留附件草稿')
+    expect(container.querySelector('[data-testid="chat-attachments"] [data-phase="ready"]')).not.toBeNull()
+    expect(text(container, '[data-testid="chat-send-error"]')).toContain(status === 'refused' ? '准备拒绝' : '未知')
+  })
 
   it('accepted prepare → ready item → send carries the digest to the transport; accepted clears the item', async () => {
     const { facade, carried } = pageFacade()
@@ -332,6 +361,99 @@ describe('PC-5 runtimeGeneration rides the ChatLocation', () => {
       await act(async () => { await tick() })
       expect(seen.at(-1)).toBe(generation)
     }
+  })
+})
+
+describe('toolbar public UI binding lifecycle', () => {
+  function resources() {
+    const scope = new OwnedResources()
+    cleanup.push(async () => scope.dispose())
+    return scope
+  }
+
+  it('binds only after mount with the original key, follows provider generations, and releases on unmount', async () => {
+    const key = defineChatComponentKey<{ label: string }>('test.toolbar.widget', 1)
+    const core = createUiComponentsService([{ componentId: key.id, major: key.major, providerId: 'controlled' }])
+    cleanup.push(async () => core.dispose())
+    const consumer = core.uiComponents.forScope(resources())
+    const bindings: UiBinding<unknown>[] = []
+    const ui: UiScope = {
+      ...consumer,
+      bind: (componentKey, options) => {
+        const binding = consumer.bind(componentKey, options)
+        bindings.push(binding as UiBinding<unknown>)
+        return binding
+      },
+    }
+    let mounts = 0
+    function Widget({ label }: { label: string }) {
+      const [generation] = useState(() => ++mounts)
+      return <span data-testid="controlled-widget">{label} generation {generation}</span>
+    }
+    const provider = core.uiComponents.forScope(resources())
+    const registration = provider.register({ key, providerId: 'controlled', component: Widget })
+    const chat = createChatContributions()
+    chat.forScope(resources()).addContribution(chatContribution({ id: 'controlled.widget', slot: 'composer.toolbar', order: 1, key,
+      project: () => ({ hidden: false, props: { label: '业务状态' } }) }))
+    chat.forScope(resources()).addContribution(chatContribution<{ readonly status: string }>({ id: 'controlled.badge', slot: 'composer.toolbar', order: 2, key: connectionBadgeKey,
+      project: context => context.slot === 'composer.toolbar' ? { hidden: false, props: { status: context.connection.status } } : { hidden: true } }))
+    const view = chat.contributionsBySlot('composer.toolbar').getSnapshot()[0]
+    const context = { slot: 'composer.toolbar' as const, location: { kind: 'session' as const, connectionId: 'conn-1', sessionId: 's1', contextRevision: 1 }, connection: { status: 'connected' as const } }
+    renderToString(<ToolbarContribution view={view} ui={ui} context={context}/>)
+    expect(bindings).toEqual([]) // an uncommitted render owns no binding
+    const container = await mount(<ChatPage service={sessionFacade()} chat={chat} uiComponents={ui} theme="light" />)
+    expect(bindings).toHaveLength(1)
+    expect(bindings[0].key).toBe(key)
+    expect(text(container, '[data-testid="controlled-widget"]')).toBe('业务状态 generation 1')
+    expect(text(container, '[data-testid="chat-connection-badge"]')).toBe('connected')
+    await type(container, '保持输入')
+    await act(async () => { registration.dispose() })
+    expect(container.querySelector('[data-testid="controlled-widget"]')).toBeNull()
+    expect(text(container, '[data-testid="chat-compose-toolbar"]')).not.toContain('失败')
+    await act(async () => { provider.register({ key, providerId: 'controlled', component: Widget }) })
+    expect(text(container, '[data-testid="controlled-widget"]')).toBe('业务状态 generation 2')
+    expect(input(container).value).toBe('保持输入')
+    expect(bindings).toHaveLength(1) // provider changes update the same mounted binding
+    await act(async () => { roots.get(container)!.render(null) })
+    expect(bindings[0].getSnapshot()).toEqual({ status: 'disposed' })
+  })
+
+  it('isolates throwing providers and projections, and a fresh provider generation recovers its outlet', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const badKey = defineChatComponentKey<{ label: string }>('test.toolbar.bad', 1)
+    const goodKey = defineChatComponentKey<{ label: string }>('test.toolbar.good', 1)
+    const projectionKey = defineChatComponentKey<{ label: string }>('test.toolbar.projection', 1)
+    const core = createUiComponentsService([badKey, goodKey].map(key => ({ componentId: key.id, major: key.major, providerId: 'controlled' })))
+    cleanup.push(async () => core.dispose())
+    const provider = core.uiComponents.forScope(resources())
+    const good = ({ label }: { label: string }) => <span>{label}</span>
+    const registration = provider.register({ key: badKey, providerId: 'controlled', component: () => { throw new Error('controlled render failure') } })
+    provider.register({ key: goodKey, providerId: 'controlled', component: good })
+    const chat = createChatContributions()
+    for (const [id, key] of [['bad', badKey], ['good', goodKey]] as const) chat.forScope(resources()).addContribution(chatContribution({
+      id: `controlled.${id}`, slot: 'composer.toolbar', order: 1, key, project: () => ({ hidden: false, props: { label: id } }),
+    }))
+    chat.forScope(resources()).addContribution(chatContribution({ id: 'controlled.projection-failure', slot: 'composer.toolbar', order: 2, key: projectionKey,
+      project: () => { throw new Error('controlled projection failure') } }))
+    const container = await mount(<ChatPage service={sessionFacade()} chat={chat} uiComponents={core.uiComponents.forScope(resources())} theme="light" />)
+    expect(container.querySelector('[data-ui-outlet-error="true"]')).not.toBeNull()
+    expect(text(container, '[data-testid="chat-compose-toolbar"]')).toContain('good')
+    expect(text(container, '[data-testid="chat-compose-toolbar"]')).toContain('此工具栏贡献渲染失败')
+    await type(container, '还可以输入')
+    await act(async () => { registration.dispose(); provider.register({ key: badKey, providerId: 'controlled', component: good }) })
+    expect(container.querySelector('[data-ui-outlet-error="true"]')).toBeNull()
+    expect(text(container, '[data-testid="chat-compose-toolbar"]')).toContain('bad')
+    expect(input(container).value).toBe('还可以输入')
+  })
+
+  it('legacy views without an original key stay empty and never bind a fabricated key', async () => {
+    const bind = vi.fn()
+    const ui = { bind } as unknown as UiScope
+    const container = await mount(<ToolbarContribution ui={ui}
+      view={{ id: 'legacy', slot: 'composer.toolbar', order: 1, keyId: 'legacy.widget', keyMajor: 1, project: () => ({ hidden: false, props: {} }) }}
+      context={{ slot: 'composer.toolbar', location: { kind: 'session', connectionId: 'conn-1', sessionId: 's1', contextRevision: 1 }, connection: { status: 'connected' } }}/>)
+    expect(bind).not.toHaveBeenCalled()
+    expect(container.textContent).toBe('')
   })
 })
 

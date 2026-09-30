@@ -36,6 +36,11 @@ export class ProfileSelectionStore {
   private readonly selections = new Map<string, ProfileSelection>()
   private readonly lastConfirmed = new Map<string, ProfileSelection>()
   private sequence = 0
+  private revision = 0
+  private readonly listeners = new Set<() => void>()
+  getSnapshot = () => this.revision
+  subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener) } }
+  private publish() { this.revision += 1; for (const listener of this.listeners) listener() }
 
   readonly counters: SelectionCounters = {
     selections: 0,
@@ -49,6 +54,7 @@ export class ProfileSelectionStore {
   select(key: string, selection: ProfileSelection): void {
     this.counters.selections += 1
     this.selections.set(key, selection)
+    this.publish()
   }
 
   /** What the button shows right now: the user's selection, falling back to
@@ -66,6 +72,7 @@ export class ProfileSelectionStore {
    * aborts a run. */
   forget(key: string): void {
     this.selections.delete(key)
+    this.publish()
   }
 
   /**

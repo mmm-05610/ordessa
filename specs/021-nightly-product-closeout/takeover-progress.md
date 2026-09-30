@@ -84,3 +84,21 @@ native 校验主代理复跑：新增安装来源测试 7/7（正例明确模拟
 3. Chat 公共 API 目前无 scoped 提交前钩子；需要一条保持提交快照与草稿版本、异步拒绝不发送、不打断输出、无重复提交的接缝。
 4. Harness ConfigurationApplicationService 当前明确拒绝 InvokeAction，没有生产 live owner。须先由 ACP 的实际会话观察绑定 canonical SessionRef，再实现受控配置 action 的授权、执行、应答/readback；不能伪造 receipt 或把 session/new 观察当配置确认。
 5. Profile 服务只有管理 wire 方法；会话方法必须等配置应用与上述钩子接通后再宣告。跨 provider 重启恢复、多会话隔离要单独验收，不能根据同品牌 model 切换通过推断。
+
+## Chat 配置准备与资产检查（后续接线进行中）
+
+- Chat API 增加 scoped submission guard：只在显式提交时运行，按 order/id 稳定排序；异步准备期间贡献卸载、增加 guard 或消费者上下文变化，均不继续发送。明确拒绝、未知结果分别保留；抛异常也归 unknown，不能把丢回执冒充未执行。没有 guard 时仍走原 gateway。
+- ChatContributionView 保留注册者原始 key（兼容旧贡献为可选字段），不可按字符串重新构建 UiComponents key，否则触发真实组件身份冲突。Chat 前端正在接通公开 binding/outlet；产品启用通用 UI 服务，不向 host 注入 Profile 组件。
+- 主代理复跑 Chat API 31/31，包括准备拒绝/未知/异常、scope 卸载、变更上下文、gateway 丢回执零自动重发等反例。前端验证待子代理完成后独立复跑；这些不等于 Profile 原生配置已经应用。
+- Pi 资产在独立临时源树按既有锁构建，主代理复算 Python v1 全树摘要：15458 entries、64909674 bytes、sha256:afe238d3439df45af77581f7bc969897aa445a1c7b9a686c36c9a31dafa8420f，与旁置 manifest 一致。路径 /tmp/ordessa-canonical-assets-ucPlfB/pi-runtime；仍为 uid1000，不能通过 root 安装来源要求。安装 /opt 的权限另询用户，不修改全局 Pi 配置或登录，不启动模型。
+- 原生 Pi 配置审计发现 setModel/setThinkingLevel 会通过 SettingsManager 写默认值。生产应用必须隔离实例配置目录，不能只看到 session/set_config_option 有响应就声称多会话互不影响。首发需要 session/new 成功后、prompt 前应用；当前 draft 没有可确认的原生 SessionRef，不得猜身份或跳过应用。
+
+主代理追加验证：Chat frontend 59/59（含真实 UI service 注册、卸载/重激活、局部错误隔离、输出中 Enter 不绕过）；全仓 typecheck 通过，18 扩展 build 通过。产品 UI 平台测试由“尚未启用”的历史断言更新为显式 Profile provider 选择，仍保留 foundations 不组合 UI 实现、API-only carrier 和共享 token 严格身份断言，定向 3/3。
+
+根 `npm test` 实际为 39 suite 聚合，本次未经配置的运行 28/39：wire live test 默认共享解释器缺 ordessa_profile，显式指定独立集成 venv 后该 workspace 68/68；Skill session guard 一项红（126P/1F），其 runQuery 路径本轮未改，未做完整基线归因，待后续收口；产品 UI 历史未启用断言已如上修正；ACP 独立 rig 仍红、未分类；多项 Electron gate 无 bundled python/bin，未达到启动链；preview 另含退休 ordessa.agent-conversation fixture。不要把这次根聚合登记成全绿，不跳过这些门禁。补齐真实运行环境与更新退休 fixture 仍是产品接线工作。
+
+Pi 系统安装已获得用户授权，但本机 sudo 需要交互认证；提供 /tmp/ordessa-install-pi-verified.sh，由用户终端运行。脚本只创建缺席安装目标，在 root-owned staging 验证真实完整摘要后无覆盖落位，最后再验证；失败 staging 保留，不递归删除。安装完成前仍不得登记系统可信资产已具备。
+
+Profile Chat 有限入口接线已由主代理复跑 23/23：合法 default factory、共享 token、公开 UI provider、真实目录首次/显式刷新、同步失败后可再次刷新、选择仅记录临时意图、无生产会话身份/应用端口时明确拒送。用户显式清除选择后可回原发送，不自动清除失败选择。此入口仍不能称为 Profile 实际应用；真实服务端配置 admission/C4 owner 未落地。
+
+收尾验证：根 typecheck 与 18 扩展 build 通过；产品 node 边界门禁全量 16/16（新版显式选择断言已纳入）。全仓 preview 测试改写的一张跟踪截图已仅还原本次生成变化，不纳入源码提交。根 main 保持原分支且干净；本检查点只留 integration 分支，不合并、不 push、无真实模型调用。

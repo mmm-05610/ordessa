@@ -4,6 +4,7 @@
   "ordessa.agent-contracts",
   "ordessa.commands",
   "ordessa.workbench",
+  "ordessa.ui-components",
   "ordessa.connections",
   "ordessa.agent-connections",
   "ordessa.agent-sessions",
@@ -17,5 +18,10 @@
   "ordessa.skills",
   "ordessa.asset-mcp",
   "ordessa.model-provider"
- ]
+ ],
+ "config": {
+  "ordessa.ui-components": [
+   {"componentId": "ordessa.profile.picker", "major": 1, "providerId": "ordessa.profile-chat"}
+  ]
+ }
 }

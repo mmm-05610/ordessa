@@ -41,6 +41,7 @@ describe('chat-api contribution registration', () => {
     expect(slot.getSnapshot().map(view => view.id)).toEqual(['a.first', 'm.middle', 'z.last'])
     // revoke only the first-scope entry; the other scope's registration survives
     expect(slot.getSnapshot().map(view => view.keyId)).toEqual([ChatMessageBodyKey.id, ChatMessageBodyKey.id, ChatMessageBodyKey.id])
+    expect(slot.getSnapshot().every(view => view.key === ChatMessageBodyKey)).toBe(true)
     scopeA.dispose()
     expect(slot.getSnapshot().map(view => view.id)).toEqual(['a.first'])
     scopeB.dispose()

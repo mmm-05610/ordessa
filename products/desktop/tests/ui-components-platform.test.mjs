@@ -103,11 +103,14 @@ test('the controlled key is constructed exactly once in the real build and React
 
 // --- 3. API without implementation; product keeps the service opt-in ---------
 const carrierDir = path.join(repoRoot, 'products/desktop/dist/extensions/ordessa.contracts')
-test('the shipping product does not enable the UI service, yet its API imports without any implementation', async () => {
+test('the product explicitly selects the Profile UI provider while the carrier stays API-only', async () => {
   const product = JSON.parse(await readFile(path.join(repoRoot, 'products/desktop/extensions.json'), 'utf8'))
-  assert.ok(!product.enabled.includes('ordessa.ui-components'),
-    'the default product must not gain the UI service behind the user’s back (V08)')
-  assert.equal(product.config, undefined, 'the default product configures no provider (V08)')
+  assert.ok(product.enabled.includes('ordessa.ui-components'), 'Chat requires the explicitly assembled UI service')
+  assert.deepEqual(product.config['ordessa.ui-components'], [
+    { componentId: 'ordessa.profile.picker', major: 1, providerId: 'ordessa.profile-chat' },
+  ], 'the product selects its implementation explicitly, never inside the platform')
+  const foundations = JSON.parse(await readFile(path.join(repoRoot, 'products/desktop/extensions.foundations.json'), 'utf8'))
+  assert.ok(!foundations.enabled.includes('ordessa.ui-components'), 'the API-only foundations stay selection-free')
   assert.ok(existsSync(path.join(carrierDir, 'contract.js')), 'the real product carrier must be built (run npm run build:foundations)')
 
   // Node has no browser import map: resolve the carrier's public channels to

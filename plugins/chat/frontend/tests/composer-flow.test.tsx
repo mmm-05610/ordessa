@@ -17,6 +17,7 @@ window.matchMedia = (query: string) => ({ matches: false, media: query, onchange
 import { FacadeFixture } from './facade-fixture'
 import { ChatPage } from '../src/views/chat-page'
 import { createChatContributions } from '@extensions/ordessa.chat-api/contract.js'
+import { OwnedResources } from '@ordessa/extension-api'
 
 const roots = new Map<HTMLElement, ReturnType<typeof createRoot>>()
 const cleanup: (() => Promise<void>)[] = []
@@ -78,6 +79,62 @@ describe('composer input (US3/C04)', () => {
 })
 
 describe('send flow (C04/A04/unknown)', () => {
+  it('submission guards refuse before the real facade send and preserve the draft', async () => {
+    const facade = new FacadeFixture({ sessions: [{ id: 's1', title: '会话一' }], selectedSessionId: 's1', messages: { s1: [] } })
+    const chat = createChatContributions()
+    const scope = new OwnedResources()
+    cleanup.push(async () => scope.dispose())
+    const prepare = vi.fn(async () => ({ status: 'refused' as const, reason: '配置准备被拒' }))
+    chat.forScope(scope).addSubmissionGuard({ id: 'controlled.guard', order: 1, prepare })
+    const container = await mount(<ChatPage service={facade} chat={chat} theme="light" />)
+    await type(container, '需要准备的草稿')
+    await clickSend(container)
+    expect(prepare).toHaveBeenCalledTimes(1)
+    expect(facade.sends).toEqual([])
+    expect(input(container).value).toBe('需要准备的草稿')
+    expect(text(container, '[data-testid="chat-send-error"]')).toContain('配置准备被拒')
+  })
+
+  it('switching panes while preparation awaits prevents any gateway send, including switching back', async () => {
+    const facade = new FacadeFixture({ sessions: [{ id: 's1', title: '会话一' }, { id: 's2', title: '会话二' }], selectedSessionId: 's1', messages: { s1: [], s2: [] } })
+    const chat = createChatContributions()
+    const scope = new OwnedResources()
+    cleanup.push(async () => scope.dispose())
+    let release!: () => void
+    chat.forScope(scope).addSubmissionGuard({ id: 'controlled.guard', order: 1,
+      prepare: () => new Promise(resolve => { release = () => resolve({ status: 'ready' }) }) })
+    const container = await mount(<ChatPage service={facade} chat={chat} theme="light" />)
+    await type(container, 'A草稿')
+    await clickSend(container)
+    await act(async () => { facade.selectSession('s2') })
+    await type(container, 'B草稿')
+    await act(async () => { release() })
+    expect(facade.sends).toEqual([])
+    expect(input(container).value).toBe('B草稿')
+    await act(async () => { facade.selectSession('s1') })
+    expect(input(container).value).toBe('A草稿')
+    // Even returning to the original pane before prepare settles is stale.
+    await clickSend(container)
+    await act(async () => { facade.selectSession('s2'); facade.selectSession('s1'); release() })
+    expect(facade.sends).toEqual([])
+    expect(input(container).value).toBe('A草稿')
+  })
+
+  it('Enter while output is running invokes neither preparation nor the send gateway', async () => {
+    const facade = new FacadeFixture({ sessions: [{ id: 's1', title: '会话一' }], selectedSessionId: 's1', messages: { s1: [] }, run: { id: 'run-1', sessionId: 's1', status: 'running' } })
+    const chat = createChatContributions()
+    const scope = new OwnedResources()
+    cleanup.push(async () => scope.dispose())
+    const prepare = vi.fn(async () => ({ status: 'ready' as const }))
+    chat.forScope(scope).addSubmissionGuard({ id: 'controlled.guard', order: 1, prepare })
+    const container = await mount(<ChatPage service={facade} chat={chat} theme="light" />)
+    await type(container, '下轮草稿')
+    await pressEnter(container)
+    expect(prepare).not.toHaveBeenCalled()
+    expect(facade.sends).toEqual([])
+    expect(input(container).value).toBe('下轮草稿')
+    expect(container.querySelector('[data-testid="chat-stop"]')).not.toBeNull()
+  })
   it('a refused send keeps the draft and shows the reason', async () => {
     const facade = new FacadeFixture({ sessions: [{ id: 's1', title: '会话一' }], selectedSessionId: 's1', messages: { s1: [] } })
     facade.sendBehavior = async () => { throw new Error('项目门禁拒绝') }

@@ -5,12 +5,17 @@
  * model-picker structure without pretending to be a two-level tree widget
  * (reuse-map: "现有 Select 是基础 select").
  */
-import type { ReactNode } from 'react'
+import { useSyncExternalStore, type ReactNode } from 'react'
 import { Select } from '@ordessa/ui'
 import type { ProfilePickerProps } from './picker-model'
 import { pickerOptionGroups, selectedOptionValue } from './picker-model'
 
-export function ProfilePicker(props: ProfilePickerProps): ReactNode {
+const idleSubscribe = () => () => {}
+const idleSnapshot = () => 0
+
+export function ProfilePicker(input: ProfilePickerProps): ReactNode {
+  useSyncExternalStore(input.subscribe ?? idleSubscribe, input.getSnapshot ?? idleSnapshot, input.getSnapshot ?? idleSnapshot)
+  const props = input.getLiveProps?.() ?? input
   const groups = pickerOptionGroups(props.groups)
   const value = selectedOptionValue(props.groups, props.label)
   return (
@@ -23,8 +28,14 @@ export function ProfilePicker(props: ProfilePickerProps): ReactNode {
         disabled={props.disabledReason !== undefined}
         title={props.disabledReason}
         value={value}
+        onPointerDown={props.onOpenSelector}
+        onKeyDown={(event) => { if (['Enter', ' ', 'ArrowDown', 'ArrowUp'].includes(event.key)) props.onOpenSelector?.() }}
         onChange={(event) => {
           const raw = event.target.value
+          if (raw === '') {
+            props.onClearSelection?.()
+            return
+          }
           for (const group of groups) {
             for (const option of group.options) {
               if (option.value === raw) {
@@ -35,7 +46,7 @@ export function ProfilePicker(props: ProfilePickerProps): ReactNode {
           }
         }}
       >
-        <option value="">{props.label ?? '选择预设'}</option>
+        <option value="">{props.label ? `${props.label}（清除选择）` : '选择预设'}</option>
         {groups.map((group) => (
           <optgroup key={group.harnessId} label={group.harnessTitle}>
             {group.options.map((option) => (
@@ -50,6 +61,8 @@ export function ProfilePicker(props: ProfilePickerProps): ReactNode {
           </optgroup>
         ))}
       </Select>
+      {props.onRefresh && <button type="button" data-profile-refresh="" onClick={props.onRefresh}>刷新预设</button>}
+      {props.statusMessage && <span role="status">{props.statusMessage}</span>}
       {props.onOpenManager && (
         <button
           type="button"
