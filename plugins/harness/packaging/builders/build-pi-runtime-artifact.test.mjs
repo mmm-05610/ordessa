@@ -14,7 +14,7 @@ import path from "node:path"
 import test from "node:test"
 import assert from "node:assert/strict"
 
-import { build } from "./build-pi-runtime-artifact.mjs"
+import { build, ENTRY, PROFILE_ENTRY } from "./build-pi-runtime-artifact.mjs"
 
 const REPO = path.resolve(import.meta.dirname, "..", "..")
 
@@ -128,6 +128,23 @@ test("a missing required dependency fails loudly", () => {
   const source = fixtureRuntime({ name: "missing" })
   rmSync(path.join(source, "node_modules/@earendil-works/pi-ai"), { recursive: true })
   expectBuildError(() => build({ output: outputFor("missing"), source }), "PI_CLOSURE_DEPENDENCY_MISSING")
+})
+
+test('Profile bridge is an explicit reproducible variant, not an upstream-entry replacement', () => {
+  const source = fixtureRuntime({ name: 'profile' })
+  const normal = build({ source, output: outputFor('normal') })
+  const enhanced = build({ source, output: outputFor('profile') , profileBridge: true })
+  const again = build({ source, output: outputFor('profile-again'), profileBridge: true })
+  assert.equal(normal.adapter.entry, ENTRY)
+  assert.equal(normal.ordessaExtension, undefined)
+  assert.equal(enhanced.adapter.entry, PROFILE_ENTRY)
+  assert.equal(enhanced.ordessaExtension.instanceDirectoryRequired, true)
+  assert.notEqual(normal.treeDigest, enhanced.treeDigest)
+  assert.equal(enhanced.treeDigest, again.treeDigest)
+  assert.equal(readFileSync(path.join(enhanced.output, 'node_modules/@automatalabs/pi-acp/index.js'), 'utf8'),
+    readFileSync(path.join(normal.output, 'node_modules/@automatalabs/pi-acp/index.js'), 'utf8'))
+  for (const name of ['ordessa-profile.mjs', 'ordessa-profile-server.mjs', 'ordessa-configuration-query.mjs'])
+    assert.equal(statSync(path.join(enhanced.output, 'node_modules/@automatalabs/pi-acp/dist', name)).mode & 0o777, 0o444)
 })
 
 test("a package version that disagrees with the lock fails loudly", () => {

@@ -75,6 +75,7 @@ export const PINNED_PI_PACKAGES = [
   "@earendil-works/pi-agent-core",
 ]
 export const ENTRY = "node_modules/@automatalabs/pi-acp/dist/index.js"
+export const PROFILE_ENTRY = "node_modules/@automatalabs/pi-acp/dist/ordessa-profile.mjs"
 export const EXCLUDED_PACKAGES = ["@openai/codex", "@agentclientprotocol/codex-acp", "opencode"]
 //: Entries (directories included) and bytes the runtime artifact contract allows.
 export const MAX_ENTRIES = 32768
@@ -396,7 +397,7 @@ function codexOnlyPackages(sourceRoot, piDirectories) {
   return { unrelated, available: true }
 }
 
-export function build({ output, source = DEFAULT_SOURCE, replace = false }) {
+export function build({ output, source = DEFAULT_SOURCE, replace = false, profileBridge = false }) {
   const resolved = assertOutputPolicy(output)
   const sourceRoot = path.resolve(source)
   if (!existsSync(path.join(sourceRoot, "package-lock.json"))) {
@@ -454,6 +455,17 @@ export function build({ output, source = DEFAULT_SOURCE, replace = false }) {
   const counters = { files: 0, bytes: 0, skippedFiles: 0, skippedDirectories: 0 }
   try {
     copyTree(staging, selected, sourceRoot, counters)
+    if (profileBridge) {
+      // Additive, explicitly selected variant: the upstream entry is preserved.
+      const extensionRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../pi-profile')
+      const destination = path.join(staging, 'node_modules/@automatalabs/pi-acp/dist')
+      mkdirSync(destination, { recursive: true })
+      for (const [sourceName, targetName] of [
+        ['entry.mjs', 'ordessa-profile.mjs'],
+        ['server.mjs', 'ordessa-profile-server.mjs'],
+        ['configuration-query.mjs', 'ordessa-configuration-query.mjs'],
+      ]) copyFileSync(path.join(extensionRoot, sourceName), path.join(destination, targetName))
+    }
     assertPlainTree(staging)
     const seen = new Set(packages.map((item) => item.path))
     for (const relative of unrelated) {
@@ -470,7 +482,9 @@ export function build({ output, source = DEFAULT_SOURCE, replace = false }) {
     const manifest = {
       schemaVersion: 1,
       kind: "agentbox-pi-runtime-artifact",
-      adapter: { package: ADAPTER_PACKAGE, version: ADAPTER_VERSION, entry: ENTRY },
+      adapter: { package: ADAPTER_PACKAGE, version: ADAPTER_VERSION, entry: profileBridge ? PROFILE_ENTRY : ENTRY },
+      ...(profileBridge ? { ordessaExtension: { id: 'pi-profile', version: 1,
+        configurationQuery: '_ordessa/session/configuration', instanceDirectoryRequired: true } } : {}),
       packages: packages.map((item) => ({
         path: item.path,
         name: item.name,
@@ -529,7 +543,8 @@ function main() {
     return 2
   }
   try {
-    const result = build({ output, source, replace: process.argv.includes("--replace") })
+    const result = build({ output, source, replace: process.argv.includes("--replace"),
+      profileBridge: process.argv.includes("--profile-bridge") })
     process.stdout.write(JSON.stringify({
       result: "PI_RUNTIME_ARTIFACT_BUILT",
       output: result.output, treeDigest: result.treeDigest,
