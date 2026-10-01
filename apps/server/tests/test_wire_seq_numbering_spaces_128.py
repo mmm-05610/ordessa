@@ -246,8 +246,13 @@ def test_no_event_kind_or_payload_was_invented(server):
     }).json()["result"]
     capabilities = {item["id"]: item for item in hello["capabilities"]}
     acp_admission_methods = {"acp.submission.authorize", "acp.permission.authorize"}
-    # AR-1/W-1：方法面 67 → 56（providerModels.* 六方法 + profile 写面八方法离开）。
-    assert len(capabilities) == 56 + len(acp_admission_methods), len(capabilities)
+    # AR-1/W-1：方法面 67 → 56 → 53。第二步是 W-1 写入链退役
+    # （`8e0064b3e2`：providerModels 写面 + profiles 写面）。本行曾停在 56，
+    # 而同批的 `test_hello_capability_sync_097.py` 已按逐名清单更新为
+    # 19 declared + 31 missing + 3 added = 53，两处计数从此不一致，本门一直判红。
+    # 53 这个基数取自那份**逐名**清单，不是重新测出来的总数；逐名的那道门才是
+    # 真正抓漂移的地方，本门只守"面没有无声地伸缩"。
+    assert len(capabilities) == 53 + len(acp_admission_methods), len(capabilities)
     for method in acp_admission_methods:
         descriptor = runtime.wire._registry.lookup(method)
         assert descriptor is not None and descriptor.owner == "ordessa.harness.acp"

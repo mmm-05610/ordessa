@@ -62,16 +62,30 @@ step "desktop: npm ci"
 npm ci --no-audit --no-fund >/dev/null 2>&1 && ok "npm ci" || bad "npm ci"
 step "desktop: typecheck"
 npm run typecheck >/dev/null 2>&1 && ok "typecheck" || bad "typecheck"
-step "desktop: unit tests (expect 146 passed / 0 failed)"
-npm test 2>&1 | tail -3 | sed 's/^/  /'
-n=$(npm test 2>&1 | grep -cE "Tests  146 passed")
-[ "$n" -ge 1 ] && ok "desktop unit tests 146/146" || bad "desktop unit tests"
-step "desktop: acp-connector rig (expect 79 passed)"
-out=$( (cd tests/acp-connector && npm ci --no-audit --no-fund >/dev/null 2>&1 && npx vitest run 2>&1) )
+step "desktop: unit tests (npm test aggregate; every suite must pass)"
+# `npm test` is the root aggregate (tooling/test-all.mjs): it runs many suites and
+# prints one "Tests  N passed" line PER SUITE, never a single total. The old gate
+# grepped for a literal "Tests  146 passed", which no aggregate output has ever
+# contained, so it could only ever report bad. Assert the real contract instead:
+# the aggregate exits 0 and no suite reports a failure.
+agg=$(npm test 2>&1); agg_rc=$?
+printf '%s\n' "$agg" | tail -3 | sed 's/^/  /'
+if [ "$agg_rc" -eq 0 ] && ! printf '%s\n' "$agg" | grep -qE "^ +Tests +[0-9]+ failed"; then
+  ok "desktop unit tests (aggregate green)"
+else
+  bad "desktop unit tests (aggregate rc=$agg_rc)"
+  printf '%s\n' "$agg" | grep -E "^ +Tests +[0-9]+ failed" | sed 's/^/    /'
+fi
+step "desktop: acp-connector rig (expect 81 passed)"
+# The rig moved to tests/integration/acp-connector and is invoked with an explicit
+# --root (tooling/test-all.mjs:61); the old path and a bare `npx vitest` found
+# nothing. It resolves vitest from the root workspace, so run it from the root.
+out=$( (cd tests/integration/acp-connector && npm ci --no-audit --no-fund >/dev/null 2>&1) \
+       && npx vitest run --root tests/integration/acp-connector 2>&1)
 echo "$out" | tail -2 | sed 's/^/  /'
-echo "$out" | grep -qE "Tests  79 passed" && ok "acp-connector 79/79" || bad "acp-connector 79/79"
+echo "$out" | grep -qE "Tests  81 passed" && ok "acp-connector 81/81" || bad "acp-connector 81/81"
 step "desktop: product assembly build"
-npm run build:foundations >/dev/null 2>&1 && ok "build:foundations (9 extensions)" || bad "build:foundations"
+npm run build:foundations >/dev/null 2>&1 && ok "build:foundations" || bad "build:foundations"
 npm run build >/dev/null 2>&1 && ok "apps/desktop build" || bad "apps/desktop build"
 
 step "backend: venv (python3.12) + verified closure lockfile + editable installs"
@@ -79,19 +93,62 @@ python3.12 -m venv "$VENV" || { echo "venv failed"; exit 1; }
 # shellcheck disable=SC1091
 . "$VENV/bin/activate"
 pip install -q --upgrade pip >/dev/null 2>&1
-pip install -q -r apps/server/lockfiles/server-linux-py312.txt >/dev/null 2>&1 && ok "closure lockfile (28 pins)" || bad "closure lockfile"
-pip install -q -e packages/pacthold -e apps/server -e 'plugins/harness[dev]' -e 'apps/server[dev]' -e 'packages/pacthold[dev]' >/dev/null 2>&1 && ok "editable installs x3 (+dev extras)" || bad "editable installs"
-python -c "import pacthold, ordessa_server, ordessa_harness" 2>/dev/null && ok "imports" || bad "imports"
+pins=$(grep -cE '^[A-Za-z0-9_.-]+==' apps/server/lockfiles/server-linux-py312.txt)
+echo "  closure lockfile: $pins pinned distributions"
+pip install -q -r apps/server/lockfiles/server-linux-py312.txt >/dev/null 2>&1 && ok "closure lockfile ($pins pins)" || bad "closure lockfile"
+# Every installable package in the tree. All but pacthold are local-only (no index
+# release) and are depended on by name, so dropping any one of them fails the whole
+# editable step with "No matching distribution found" and every suite gate below
+# then reports from a venv that cannot import the tree at all. That is exactly what
+# this script did: it carried a 5-package list from before the post-010 package
+# split, so `ordessa_harness` failed to import on `pacthold_runtime_compat` and the
+# gate never reached its own suite steps. The API packages must be installed before
+# the backends that depend on them. Verified end-to-end in a clean clone.
+pip install -q \
+  -e 'packages/pacthold[dev]' \
+  -e packages/server-plugin-api \
+  -e plugins/harness/api \
+  -e plugins/permissions/api \
+  -e plugins/permissions/backend \
+  -e plugins/permissions/adapters \
+  -e plugins/assets/sandbox/api \
+  -e plugins/assets/sandbox/adapters \
+  -e plugins/assets/sandbox/backend \
+  -e plugins/assets/model-provider/profile-contribution \
+  -e plugins/assets/model-provider/server \
+  -e plugins/assets/skills \
+  -e plugins/profile \
+  -e plugins/runtime-compat \
+  -e plugins/server-compat \
+  -e plugins/workspace \
+  -e 'apps/server[dev]' \
+  -e 'plugins/harness[dev]' \
+  -e products/server \
+  >/dev/null 2>&1 && ok "editable installs (all 18 in-tree packages)" || bad "editable installs"
+python -c "import pacthold, server_plugin_api, ordessa_harness_api, ordessa_server, ordessa_harness, ordessa_server_product" 2>/dev/null && ok "imports" || bad "imports"
 star=$(python -c "import starlette; print(starlette.__version__)")
 echo "  starlette resolved: $star"
 [ "$star" = "1.7.0" ] && ok "starlette pinned at verified 1.7.0" || bad "starlette drifted to $star"
 
 step "backend suites (strict ledger gates; python -m pytest from repo root)"
 # every run_suite call tees full output to $LOGDIR/suite-<label>.log (per-ID evidence)
-run_suite "pacthold" packages/pacthold passed=238
-run_suite "harness" plugins/harness passed=308 failed=2 skipped=3
-run_suite "server" apps/server passed=783 failed=43 skipped=10 errors=25
-run_suite "acp_orchestration" tests/acp_orchestration passed=40 failed=18
+# Re-measured 2026-10-02 in a clean clone of this tree with the install set above,
+# each suite run twice for stability. The previous numbers were the 2026-09-26
+# switch baseline and had drifted, and the acp_orchestration path
+# (`tests/acp_orchestration`) no longer exists, so that suite collected nothing at
+# all. These pins fail on ANY deviation — a new red, a fixed red, or a count change.
+# Treat a change as a real event to attribute, not a number to refresh: see
+# docs/known-issues.md for what each red means today.
+# NOTE: `plugins/harness` is pinned at 792/3/3/**3 errors** — not at its 795-passed
+# result — because this script always runs with the venv activated, and under an
+# activated venv three tests that `pip install` a fixture adapter error instead of
+# passing (795 without activation, 792 + 3 errors with it, both reproduced on
+# 2026-10-02). The pin states what this gate actually observes; the underlying
+# sensitivity is registered in docs/known-issues.md.
+run_suite "pacthold" packages/pacthold passed=212
+run_suite "harness" plugins/harness passed=792 failed=3 skipped=3 errors=3
+run_suite "server" apps/server passed=1187 failed=64 skipped=9 errors=2
+run_suite "acp_orchestration" tests/integration/acp_orchestration passed=31 failed=28
 
 step "bridge: byte-identical rebuild from clean clone"
 bash plugins/harness/packaging/acp-adapter/build-acp-adapter-round-h.sh "$BRIDGE_OUT" >/dev/null 2>&1

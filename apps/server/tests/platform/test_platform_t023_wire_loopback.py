@@ -34,7 +34,26 @@ ACP_ADMISSION_METHOD_IDS = frozenset({
     "acp.submission.authorize", "acp.permission.authorize",
 })
 SANDBOX_DESCRIBE_METHOD_ID = "sandbox.describe"
-C0_METHOD_COUNT = T002_BASELINE_METHOD_COUNT + len(ACP_ADMISSION_METHOD_IDS) + 1
+#: The default composition also carries the `ordessa.profile` management face and
+#: the `ordessa.model-provider` key-import pair. Both grew the default surface
+#: after `T002_BASELINE_METHOD_COUNT` was written, and this gate was the second
+#: copy of the count that nobody revisited (the first was
+#: `apps/server/tests/test_plugin_host_gate.py`, fixed under spec 021). Named
+#: rather than folded into the bare total so a later addition fails here as a
+#: missing id instead of silently re-balancing the arithmetic.
+PROFILE_MANAGEMENT_METHOD_IDS = frozenset(
+    "profiles.v2." + name for name in (
+        "configuredHarnesses", "listProfiles", "getProfile", "createProfile",
+        "renameProfile", "archiveProfile", "restoreProfile", "describeFacets",
+        "resolvePreview", "profileCatalog", "saveProfile",
+    )
+)
+MODEL_PROVIDER_IMPORT_METHOD_IDS = frozenset({
+    "modelProvider.importApiKey", "modelProvider.queryApiKeyImport",
+})
+C0_METHOD_COUNT = (T002_BASELINE_METHOD_COUNT + len(ACP_ADMISSION_METHOD_IDS) + 1
+                   + len(PROFILE_MANAGEMENT_METHOD_IDS)
+                   + len(MODEL_PROVIDER_IMPORT_METHOD_IDS))
 
 
 def _collect_live_method_ids() -> tuple[str, ...]:
@@ -81,10 +100,15 @@ def test_the_live_registry_holds_t002_baseline_acp_and_sandbox_describe_ids():
     registry drift must fail HERE loudly, not silently shrink parametrization."""
     assert len(LIVE_METHOD_IDS) == C0_METHOD_COUNT, (
         f"live registry collected {len(LIVE_METHOD_IDS)} method ids this run; "
-        f"T002 baseline plus ACP admission and sandbox.describe is {C0_METHOD_COUNT}")
+        f"T002 baseline plus ACP admission, sandbox.describe, the Profile "
+        f"management face and the ModelProvider import pair is {C0_METHOD_COUNT}")
     assert len(set(LIVE_METHOD_IDS)) == len(LIVE_METHOD_IDS)
     assert ACP_ADMISSION_METHOD_IDS <= set(LIVE_METHOD_IDS)
     assert SANDBOX_DESCRIBE_METHOD_ID in LIVE_METHOD_IDS
+    # The count alone would still balance if a pinned id were dropped and an
+    # unpinned one added in its place, so the added faces are asserted by name.
+    assert PROFILE_MANAGEMENT_METHOD_IDS <= set(LIVE_METHOD_IDS)
+    assert MODEL_PROVIDER_IMPORT_METHOD_IDS <= set(LIVE_METHOD_IDS)
 
 
 def test_sandbox_describe_is_owned_by_the_selected_backend(loopback):

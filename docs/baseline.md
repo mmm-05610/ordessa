@@ -38,9 +38,16 @@ npm run test:agent-shell && npm run test:electron      # headless smokes (xvfb)
 ```sh
 python3.12 -m venv .venv && . .venv/bin/activate
 pip install -r apps/server/lockfiles/server-linux-py312.txt   # verified closure (starlette pinned 1.7.0)
+# All 18 installable in-tree packages. Every one except pacthold is local-only (no
+# index release) and is depended on by name, so an incomplete list fails the whole
+# editable step rather than degrading quietly — API packages before their backends.
 pip install -e 'packages/pacthold[dev]' -e packages/server-plugin-api -e plugins/harness/api \
-  -e 'apps/server[dev]' -e 'plugins/harness[dev]' -e plugins/workspace \
-  -e plugins/server-compat -e plugins/runtime-compat -e products/server
+  -e plugins/permissions/api -e plugins/permissions/backend -e plugins/permissions/adapters \
+  -e plugins/assets/sandbox/api -e plugins/assets/sandbox/adapters -e plugins/assets/sandbox/backend \
+  -e plugins/assets/model-provider/profile-contribution -e plugins/assets/model-provider/server \
+  -e plugins/assets/skills -e plugins/profile -e plugins/runtime-compat \
+  -e plugins/server-compat -e plugins/workspace -e 'apps/server[dev]' -e 'plugins/harness[dev]' \
+  -e products/server
 python -c "import pacthold, server_plugin_api, ordessa_harness_api, ordessa_server, ordessa_harness, ordessa_server_product"
 python -m pytest packages/pacthold              # 238 passed (run from repo root: cwd must be on sys.path)
 python -m pytest plugins/harness                # 308 passed / 3 skipped / 2 failed (inherited)
@@ -69,7 +76,12 @@ per-ID comparison and current frontend aggregate are in
 
 - Real-model end-to-end chain: not exercised in this migration (no API calls
   authorized). Version-matched controlled evidence: Round H acceptance
-  2026-09-25, 11/11 gates — details in `docs/known-issues.md`.
+  2026-09-25, 11/11 gates — details in `docs/known-issues.md`. **That run is not
+  same-source with the current tree**: it exercised the pre-retirement bridge
+  binary `5fd6a37b…`, and no production caller uses the adapter mode that commit
+  `e30f5ff6df` removed. Registered as an open evidence-provenance row in
+  `docs/known-issues.md` (2026-10-02); re-running it against `714044a5…` is a C0
+  acceptance decision, not a code fix.
 - Full GUI acceptance incl. the two registered UI debts.
 - Windows-side flows (the WSL/Windows split legs of old rounds).
 
