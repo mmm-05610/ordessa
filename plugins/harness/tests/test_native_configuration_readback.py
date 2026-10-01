@@ -72,6 +72,8 @@ def test_unknown_session_sends_zero_frames():
 @pytest.mark.parametrize('method', [
     '_ordessa/session/configuration', '_ordessa/session/configuration/apply',
     '_ordessa/session/configuration/operation',
+    '_ordessa/session/configuration/provider-register',
+    '_ordessa/session/configuration/provider-capability',
 ])
 def test_client_relay_cannot_issue_native_owner_configuration_methods(method):
     channel, sent, _ = rig()

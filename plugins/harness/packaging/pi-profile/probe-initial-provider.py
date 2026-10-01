@@ -4,6 +4,7 @@ Usage: python probe-initial-provider.py /absolute/pi-profile-runtime
 This proves the real adapter, not root installation or product C4 wiring.
 """
 import json
+import hashlib
 import os
 from pathlib import Path
 import queue
@@ -15,7 +16,7 @@ from time import monotonic
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 
-def probe(artifact):
+def probe(artifact, *, register_live=False):
     calls = []
     class Deny(BaseHTTPRequestHandler):
         def do_GET(self):
@@ -72,6 +73,30 @@ def probe(artifact):
                 selected.append(model['currentValue'])
                 facts = next(o['_meta']['ordessaModel'] for o in model['options'] if o['value'] == model['currentValue'])
                 assert facts['baseUrl'] == endpoint
+                if register_live and slot == 1:
+                    capability = request('_ordessa/session/configuration/provider-capability', dict(sessionId=native))
+                    assert capability == dict(supported=True, strategy='live-registration', version=1)
+                    digest = lambda value: hashlib.sha256(json.dumps(value, sort_keys=True,
+                        ensure_ascii=False, separators=(',', ':')).encode()).hexdigest()
+                    payload = dict(sessionId=native, operationId='provider:live-probe',
+                        expectedGeneration=state['generation'], expectedConfigDigest=digest(state['configOptions']),
+                        target=dict(server_id='fixture-server', session_id='fixture-canonical', channel_id='fixture-channel', runtime_generation=1),
+                        model='third', models=['third'], provider=dict(providerId='ordessa-next',
+                            apiType='openai-completions', baseUrl=endpoint + '/next', apiKey='!different-synthetic-private-key'))
+                    admitted = request('_ordessa/session/configuration/provider-register', payload)
+                    assert admitted['state'] == 'observed' and admitted['kind'] == 'provider-registration'
+                    assert admitted['after']['generation'] == state['generation']
+                    assert next(o for o in admitted['after']['configOptions'] if o['id'] == 'model')['currentValue'] == model['currentValue']
+                    assert '!different-synthetic-private-key' not in json.dumps(admitted)
+                    assert request('_ordessa/session/configuration/provider-register', payload) == admitted
+                    assert request('_ordessa/session/configuration/operation', dict(sessionId=native, operationId=payload['operationId'])) == admitted
+                    applied = request('_ordessa/session/configuration/apply', dict(sessionId=native,
+                        operationId='live-probe-select', expectedGeneration=state['generation'],
+                        expectedConfigDigest=digest(admitted['after']['configOptions']), configId='model', value='ordessa-next/third'))
+                    assert applied['state'] == 'observed' and applied['after']['generation'] == state['generation']
+                    assert next(o for o in applied['after']['configOptions'] if o['id'] == 'model')['currentValue'] == 'ordessa-next/third'
+                    # The original provider remains usable, with no restart or new.
+                    request('session/set_config_option', dict(sessionId=native, configId='model', value='ordessa-probe/second'))
                 routes.append(endpoint)
                 auth = instance / 'auth.json'
                 # The upstream file-lock storage creates an empty auth.json
@@ -82,7 +107,8 @@ def probe(artifact):
             assert selected == ['ordessa-probe/second', 'ordessa-probe/first'] and routes[0] != routes[1]
             assert calls == [], 'No provider network permitted in this probe'
             return dict(scope='real-developer-pi-initial-provider', instances=2, selected=selected,
-                independentRoutes=True, persistedCredentials=0, modelFiles=0, prompt=0, http=0)
+                independentRoutes=True, liveRegistration=register_live, sameNativeGeneration=register_live,
+                persistedCredentials=0, modelFiles=0, prompt=0, http=0)
     finally:
         for process in processes:
             if process.stdin: process.stdin.close()
@@ -95,4 +121,4 @@ def probe(artifact):
 
 
 if __name__ == '__main__':
-    print(json.dumps(probe(Path(sys.argv[1]).resolve())))
+    print(json.dumps(probe(Path(sys.argv[1]).resolve(), register_live='--register-live' in sys.argv[2:])))

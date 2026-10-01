@@ -73,6 +73,22 @@ class NativeProfileConfigPort:
         self._ports[ref.session_uid] = (binding.snapshot.target, port)
         return port
 
+    def _complete_transition(self, ref, result, native_plan):
+        if getattr(native_plan, 'mode', 'restart-resume') != 'live-update':
+            return self.complete_restoration(ref, result.ticket)
+        current = self.sessions.resolve(ref).snapshot
+        observed = result.restored.snapshot
+        if (result.ticket is not None or current.target != native_plan.before.target
+            or observed.target != current.target or observed.owner is not current.owner
+            or current.owner is not native_plan.before.owner
+            or observed.native_generation != current.native_generation
+            or current.native_generation != native_plan.expected_generation):
+            raise ProfileError('SWITCH_BLOCKED', 'Live transition changed the session owner', status=409)
+        self._ports.pop(ref.session_uid, None)
+        for key, saved in tuple(self._plans.items()):
+            if saved[0] == ref:
+                self._plans.pop(key)
+
     def inspect(self, ref):
         with self._lock:
             return self._port(ref).inspect(ref)
@@ -109,8 +125,11 @@ class NativeProfileConfigPort:
                         credential=self.credential_resolver(ref, mapped[0].value))
                 except Exception:
                     return plan  # typed blocked, zero restoration effect
-                plan = PlanResult(ref, operation_key, 'restart-resume',
-                    items=(PlannedItem(mapped[0].facet_id, mapped[0].item_id, mapped[0].op, 'restart-resume'),),
+                mode = getattr(native_plan, 'mode', 'restart-resume')
+                if mode not in ('live-update', 'restart-resume'):
+                    return plan
+                plan = PlanResult(ref, operation_key, mode,
+                    items=(PlannedItem(mapped[0].facet_id, mapped[0].item_id, mapped[0].op, mode),),
                     plan_digest=native_plan.input_digest,
                     fence={'restoration_operation': native_plan.operation_id})
                 if len(self._transitions) >= 4096:
@@ -157,12 +176,12 @@ class NativeProfileConfigPort:
                 credential=self.credential_resolver(plan.session_ref, mapped[0].value))
             if result.state != 'observed':
                 return ApplyUnknown('unknown', 'Native provider restoration is unproven')
-            self.complete_restoration(plan.session_ref, result.ticket)
+            self._complete_transition(plan.session_ref, result, saved['native_plan'])
             current, current_revisions = self._resolve(plan.session_ref, desired)
             if current != mapped or current_revisions != revisions:
                 return ApplyUnknown('unknown', 'Model catalogue changed during restoration')
-            # Never recycle the old generation's C4 plan or receipt. A real
-            # configuration application is prepared against the renewed owner.
+            # Never recycle the old C4 plan or receipt. Re-plan against the
+            # observed owner/catalogue, including same-generation live updates.
             fresh_port = self._port(plan.session_ref)
             fresh_plan = fresh_port.plan(plan.session_ref, current, plan.operation_key)
             saved['fresh_port'], saved['fresh_plan'] = fresh_port, fresh_plan
@@ -194,7 +213,7 @@ class NativeProfileConfigPort:
                         try:
                             restored = self.restoration_service.query(transition['native_plan'])
                             if restored.state == 'observed':
-                                self.complete_restoration(ref, restored.ticket)
+                                self._complete_transition(ref, restored, transition['native_plan'])
                         except Exception:
                             pass
                     return ReconcileOutcome('unknown', reason='Configuration application is not confirmed; no effects replayed')

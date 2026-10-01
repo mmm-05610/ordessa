@@ -4,7 +4,16 @@
 所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
 未合并、未 push、未启停既有用户服务、未重建 deb。三品牌后端真实聊天已通过；Codex Desktop 已通过 Profile 首发与同会话下一轮切换，两条真实回复。完整三品牌 UI/发行验收仍未完成。
 
-## 最新验证（2026-10-01，Claude 完整后端产品跨真实供应商恢复通过）
+## 最新验证（2026-10-01，Pi 存活会话供应商注册接线，待安装后产品验收）
+
+- Pi 原生动态注册已在 Harness 内实施：只增加内存中的 provider/model 目录与 runtime API Key，注册本身不选择模型、不 new/close/resume、不更换原生或 canonical 运行代次。已有目录不被隐式覆盖；本模块已证明并注册的同路由可以追加模型且保留之前的模型，不允许借追加操作修改该路由凭据。未由本模块注册的既有 provider 身份重写仍诚实拒绝，不能泛称支持任意凭据/endpoint 热编辑。
+- Harness 的中性 ProviderTransitionService 内部选择 live-update 或 restart-resume。Pi 的规划先做只读原生能力查询，旧资产缺失该方法即拒绝；保留安装校验/贡献租约、owner 与配置摘要围栏、效果恰好一次及独立读回。查询不重复注册。产品只消费策略结果：live-update 必须证明同 owner/target/generation，废弃旧配置端口并重新执行真实 C4；不创建恢复票据、不把注册证明当作 Profile 应用回执。Profile/model-provider/host 未加入品牌差异。
+- 发送、配置操作和注册共享会话锁；注册中的 lifecycle/steering 拒绝；注册结果 Unknown 时禁止竞争效果，仅允许证据查询。注册与能力方法加入 ACP owner-only 白名单，客户端 relay 不能伪造调用。操作记录只保留秘密摘要，不输出秘密或原始上游错误。
+- 定向验证：Pi Node 67/67；模型配置 + NativeModelServices + products/server 298P；注册/恢复/owner-only + products/server 214P（两组重叠，不求和）。实际构建出的锁定 Pi 0.5.0 / SDK 0.84.2 两实例无模型探针 exit 0：实例一新 provider 注册及配置应用成功、原生 generation 不变、原供应商仍可使用；实例二选择不变；无 Key/models 文件落盘、prompt=0、HTTP=0。此为真实开发适配器验证，**不是已安装资产或完整产品切换验收**。
+- 最终待安装候选 `.cleanup-evidence/pi-live-registration-final`：treeDigest `sha256:2ccf85fd29930207944f7fcd231930cd19eef2b3aa41b2bf10315a7adcdb3625`，15464 entries / 64944081 bytes；沿用 sourceLockDigest `sha256:8e6a4962ee2befc1a5ed1a8533c0ae7a749cce5e81030f68ca7a643a9daae95d`。验证脚本 `.cleanup-evidence/install-pi-registration-verified.sh` 仅新增 root 管理的 `/opt/ordessa/harnesses/profile-pi-live-registration`，不覆盖既有资产、全局配置或登录，bash 语法检查通过。`sudo -n true` 显式报需交互认证，现等待用户执行脚本。
+- 安装后下一步仍在原范围：Pi 完整后端产品 DeepSeek→Go 两轮真实历史及回执验证；Codex 官方/API 已有历史切换；完整三品牌 UI/覆盖/Unknown 与发行回归。没有新增顶层阶段，固定 TODO 不因上述开发探针提前勾选。根 main 仍 `b4bf7cd909`；他属截图保留。
+
+## 前一检查点（2026-10-01，Claude 完整后端产品跨真实供应商恢复通过）
 
 - 用户已安装 profile-claude-provider-restoration。以新增真实产品探针复验成功（exit 0）：DeepSeek 第一轮 ACK，切换 Go / MiniMax M2.7 后第二轮准确返回第一轮随机标记；两份凭据分别从指定行导入、按固定上游检查、未由代理替换模型或补认证头。四次实际上游请求均 200，两个用户 prompt；原生辅助模型验证也计入四次请求，没有宣称只调用了两次模型 API。
 - 完整链路走产品 wire/model-provider/Profile/Harness：首次和下一轮均有配置应用回执，canonical SessionRef 相同、native owner 相同，原生 generation 更新；provider restore RPC **恰一次**，查询多次但零第二次恢复效果。原生恢复 retained record observed/restored-readback；新绑定经过新 C4 计划和独立读回确认后才放行第二条消息。

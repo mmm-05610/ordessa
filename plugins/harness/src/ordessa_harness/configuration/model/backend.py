@@ -58,8 +58,8 @@ class NativeModelServices:
         self.channels, self.owners, self.carrier = channels, owners, carrier
         self.journal_path = journal_path
         self._installations, self._accounts = {}, {}
-        from .restoration import ProviderRestorationService
-        self.restoration = ProviderRestorationService(channels, owners,
+        from .provider_registration import ProviderTransitionService
+        self.restoration = ProviderTransitionService(channels, owners,
             verify=self._restoration_publication, lease=self._restoration_lease)
 
     def _restoration_publication(self, harness_id):

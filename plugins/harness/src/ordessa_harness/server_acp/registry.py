@@ -26,6 +26,8 @@ from ordessa_harness.server_acp.runs import (
 from ordessa_server.ids import opaque_id
 
 _OWNER_CONFIGURATION_METHODS = frozenset({
+    "_ordessa/session/configuration/provider-register",
+    "_ordessa/session/configuration/provider-capability",
     '_ordessa/channel/configuration/prepare',
     '_ordessa/channel/configuration/operation',
     '_ordessa/session/configuration',

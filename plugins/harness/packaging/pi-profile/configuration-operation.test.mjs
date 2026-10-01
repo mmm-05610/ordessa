@@ -341,6 +341,8 @@ test('actual server registration wraps prompt/setConfigOption/apply with one ses
   const loaded = data("export const LOADED_TURN_QUERY_METHOD = 'loaded'; export const loadedTurnQueryParser = {}")
   const creation = data((await readFile(new URL('./creation.mjs', import.meta.url), 'utf8'))
     .replace("'./ordessa-configuration-query.mjs'", JSON.stringify(new URL('./configuration-query.mjs', import.meta.url).href)))
+  const registration = data((await readFile(new URL('./provider-registration.mjs', import.meta.url), 'utf8'))
+    .replace("'./ordessa-configuration-query.mjs'", JSON.stringify(new URL('./configuration-query.mjs', import.meta.url).href)))
   let server = await readFile(new URL('./server.mjs', import.meta.url), 'utf8')
   for (const [from, to] of [
     ['@agentclientprotocol/sdk', sdk], ['./agent.js', agent], ['./deps.js', deps],
@@ -348,6 +350,7 @@ test('actual server registration wraps prompt/setConfigOption/apply with one ses
     ['./ordessa-configuration-query.mjs', new URL('./configuration-query.mjs', import.meta.url).href],
     ['./ordessa-configuration-operation.mjs', moduleURL],
     ['./ordessa-creation.mjs', creation],
+    ['./ordessa-provider-registration.mjs', registration],
   ]) server = server.replace(`'${from}'`, JSON.stringify(to))
   try {
     const { runAcp } = await import(data(server))
@@ -361,6 +364,8 @@ test('actual server registration wraps prompt/setConfigOption/apply with one ses
     await assert.rejects(handlers.get('session/set_config_option')({ params: {
       sessionId: 'native', configId: 'model', value: 'p/m2' } }), /busy/)
     await assert.rejects(handlers.get(CONFIGURATION_APPLY)({ params }), /busy/)
+    await assert.rejects(handlers.get('_ordessa/session/configuration/provider-register')({ params: { sessionId: 'native' } }), /busy/)
+    assert.throws(() => handlers.get('close')({ params: { sessionId: 'native' } }), /busy/)
     assert.equal(f.calls(), 0)
     assert.equal(promptCalls, 1)
     release(); await prompt

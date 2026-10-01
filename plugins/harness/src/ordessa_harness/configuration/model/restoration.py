@@ -25,6 +25,7 @@ class ProviderRestorationPlan:
     harness_id: str
     publication: object
     authentication_digest: str
+    mode: str = 'restart-resume'
 
 
 @dataclass(frozen=True)
@@ -35,6 +36,8 @@ class ProviderRestorationOutcome:
 
 
 class ProviderRestorationService:
+    operation_prefix = 'restore:'
+    mode = 'restart-resume'
     def __init__(self, channels, owners, *, verify, lease=None):
         self.channels, self.owners, self.verify = channels, owners, verify
         self.lease = lease or (lambda brand, publication: nullcontext())
@@ -97,10 +100,10 @@ class ProviderRestorationService:
                     == (target.server_id, target.session_id, target.channel_id)
                     and outcome.state == 'unknown'):
                     raise ValueError('Native restoration already pending; query only')
-            operation_id = 'restore:' + self.digest([asdict(target), operation_key])
+            operation_id = self.operation_prefix + self.digest([asdict(target), operation_key])
             plan = ProviderRestorationPlan(operation_id, before, before.native_generation,
                 configuration_digest(before.config_options), '', channel.harness_id, publication,
-                self._authentication_digest(desired, credential))
+                self._authentication_digest(desired, credential), self.mode)
             previous_channel = self._channels.get(operation_id)
             if previous_channel is not None and previous_channel is not channel:
                 raise ValueError('Restoration operation owner changed')
@@ -111,7 +114,7 @@ class ProviderRestorationService:
                     raise ValueError('Restoration input exceeds native bounds')
                 plan = ProviderRestorationPlan(operation_id, before, before.native_generation,
                     plan.expected_config_digest, self.digest(request), channel.harness_id,
-                    publication, plan.authentication_digest)
+                    publication, plan.authentication_digest, self.mode)
                 previous = self._plans.get(operation_id)
                 if previous is not None:
                     if (previous.input_digest != plan.input_digest or previous.before.owner is not before.owner

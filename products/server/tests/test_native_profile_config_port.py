@@ -223,6 +223,29 @@ def test_restoration_handoff_uses_a_fresh_owner_plan_not_a_restore_receipt(trans
     f.restoration.execute.assert_called_once()
 
 
+def test_live_provider_handoff_refreshes_c4_without_a_new_owner_or_restoration_ticket(transition_rig):
+    from unittest.mock import Mock
+    f = transition_rig
+    owner = object()
+    snapshot = SimpleNamespace(target=f.old_target, owner=owner, native_generation='same')
+    f.sessions.resolve = lambda _: SimpleNamespace(snapshot=snapshot)
+    f.sessions.complete_restoration = Mock(side_effect=AssertionError('live registration cannot renew owner'))
+    f.native_plan.mode = 'live-update'
+    f.native_plan.before = snapshot
+    f.native_plan.expected_generation = 'same'
+    def execute(*args, **kwargs):
+        f.restoration.attempted.return_value = True
+        return SimpleNamespace(state='observed', ticket=None, restored=SimpleNamespace(snapshot=snapshot))
+    f.restoration.execute.side_effect = execute
+    plan = f.port.plan(f.ref, (f.intent,), 'live-switch')
+    assert plan.overall == 'live-update'
+    assert f.port.apply(plan, (f.intent,)) == 'controlled application callback'
+    assert f.port._ports[f.ref.session_uid][0] == f.old_target
+    assert f.port._ports[f.ref.session_uid][1] is not f.original
+    f.sessions.complete_restoration.assert_not_called()
+    assert [entry[0] for entry in f.calls] == ['plan', 'apply']
+
+
 def test_unknown_restore_never_starts_configuration_application_or_repeats_restore(transition_rig):
     f = transition_rig
     f.restoration.execute.side_effect = lambda *a, **kw: SimpleNamespace(state='unknown')
