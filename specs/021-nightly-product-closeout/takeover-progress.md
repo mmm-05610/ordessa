@@ -2,9 +2,18 @@
 
 状态：部分实现，**不是完整 Harness Desktop 验收通过**。
 所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
-未合并、未 push、未启停用户服务、未调用真实模型、未重建 deb。
+未合并、未 push、未启停既有用户服务、未重建 deb。用户授权的 Pi/Claude 后端真实聊天已通过；Codex 官方聊天尚未验证。
 
-## 最新验证（2026-10-01，Pi provider 安装完成）
+## 最新验证（2026-10-01，Codex 原生账号接缝）
+
+- Ordessa 专用浏览器登录成功，独立 CLI 状态及原生 app-server account/read 均确认已登录，使用系统密钥环，不读取/复制用户原有全局登录。
+- 新增 Harness 内 CodexManagedAccount：仅 initialize/account/read，原生负责续期；不导出 token、不实现 OAuth、不复制凭据、不自动弹浏览器。13 个新测试；连同 Codex 既有定向与产品 Server 测试 **168/168**，入口隔离 Node **4/4**。实际专用账号经新封装 refresh=True 查询 exit 0，modelCalls=0。该封装尚未加入默认产品工厂，不报会话认证已接入。
+- 版本阻塞：已安装 Codex 0.147.0 自行生成的 LoginAccountParams schema 将 chatgptAuthTokens 标记为“FOR OPENAI INTERNAL USE ONLY - DO NOT USE”，与最新网页仅称实验性的描述不同。先前推荐外部 token 代理的方案不作为可执行接线，未读取/导出密钥环 token，未调用该接口。
+- 已验证原生替代路线的有限事实：两个自有 app-server 同时使用 Ordessa 账号 CODEX_HOME，分别以 -c 设置 low/high reasoning；account/read 均 authenticated=true，config/read 均匹配各自覆盖，modelCalls=0。未创建 thread、未测试资源文件/Skills/MCP 隔离、未测试 token 过期并发，不证明完整多会话隔离。探针均退出。
+- **下一决策**：是否允许官方订阅路线使用共享账号级原生 CODEX_HOME、独立进程与独立资源/配置输入，而不导出 token。此变化影响现有“CODEX_HOME 必须等于 instance 目录”守卫，须先明确后再改；当前守卫保留。若仍要求每会话独立 CODEX_HOME，则当前锁定版本尚无已验证、可采用的原生账号共享接缝，不能偷偷复制登录文件。
+- 固定 TODO 第 6 项仍未完成；其余未验收项不变。下文为按时间保留的历史记录，不以历史未开始/旧资产/旧门禁读数覆盖本节状态。
+
+## 前次验证（2026-10-01，Pi provider 安装完成，历史状态）
 
 - 用户已授权真实聊天与配置切换验收。实际调用尚未开始：默认 `~/.ordessa` 只有 backups/logs/secrets，没有业务数据库或已登记模型供应商；运行环境未提供 OpenAI/Anthropic/Pi/Ordessa API 配置变量。三品牌全局登录文件存在（仅检查文件存在，未读取、复制或验证登录有效性）。下一步须确定使用现有官方登录还是指定 API 供应商，以及测试费用范围；授权不等于接入信息已具备，不可擅自将全局凭据复制进独立实例。
 
@@ -471,3 +480,16 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 用户选择独立登录后，已启动可信已安装 Codex CLI 0.147.0 的 `login --device-auth`，CODEX_HOME 明确为用户级 `~/.ordessa/accounts/codex`（0700），配置强制 `cli_auth_credentials_store="keyring"`，清除 API Key/访问 token 环境变量；不读取/复制现有 `.codex` 登录，不调用模型。
 - 登录进程已给出官方设备登录 URL 与 15 分钟一次性码，等待用户在浏览器确认；码只向用户显示，不写文档或证据。**目前尚未登录成功**，密钥环落地、专属账号状态、独立实例认证及官方 Profile 模型路线仍待验证。不能把这个 CLI 登录操作记作产品已具备登录按钮或 Profile 官方认证能力。
 - 本轮额外 typecheck exit 0；一次 Node 定向命令误指不存在的 native-server-plan.test.mjs，未执行，不记门禁通过。完整 Desktop 挂载为前节实际探针证据，不用缺席测试代替验证。
+
+### Codex 独立浏览器登录已确认（2026-10-01）
+
+- 用户选择浏览器登录替代设备码；结束自身设备码进程，使用同一 Ordessa 专用 CODEX_HOME 与强制 keyring 配置调用可信 Codex CLI 的普通 login。用户要求重新打开后，取消自身上一条登录，再启动新授权；未修改用户原有全局登录。
+- 用户完成授权后，登录进程退出码 0，输出 Successfully logged in；独立的新进程 login status 退出码 0，输出 Logged in using ChatGPT。凭据内容未读取或输出，未调用模型。认证由强制系统密钥环配置管理。
+- 这只确认 Ordessa 专用账号登录及跨进程读取成功；尚不证明每会话独立适配器已接入该账号、自动刷新/登出已完成，或 Codex 官方 Profile 路线与真实聊天已通过。固定 TODO 第 6 项继续未完成；下一接缝为专用账号认证向独立运行实例的受控接入，不复制全局 .codex、不把账户目录用作会话配置目录。
+
+### Codex 专用原生账号读取通过，独立实例认证接缝待裁定（2026-10-01）
+
+- 使用可信已安装 CLI 0.147.0 在 Ordessa 专用账户目录启动自有 app-server，initialize 后请求 account/read(refreshToken=true)。探针 exit 0：authenticated=true、requiresOpenaiAuth=true、modelCalls=0；退出自有进程。仅输出布尔值，未输出 email、账号 ID 或凭据；requiresOpenaiAuth 表示原生提供者需要官方认证，不是未登录。
+- 核对最新官方文档 https://developers.openai.com/codex/app-server/ 与锁定原生 schema：chatgptAuthTokens 接口为实验性外部认证，明确由 host 提供 accessToken/chatgptAccountId 并响应 account/chatgptAuthTokens/refresh；在外部模式 account/read(refreshToken=true) 不负责刷新。当前增强实例的 CODEX_HOME 为独立运行目录，首次准备仅 custom-gateway，不可将专用账户登录成功当作这些实例已有认证。
+- 建议 Harness 内增加集中账号认证服务：原生管理进程使用专用账号与 keyring 维护登录/刷新；只有此服务私下读取自身专用密钥环认证并向独立会话的原生外部认证接口交付短期 token，刷新请求串行处理。禁止复制全局登录、复制 refresh token 到会话目录、把账号目录作为会话 HOME、把凭据放入 Profile/公开 wire/UI/证据。认证失效拒绝新发送并请求重新登录，不自动重放 Unknown。
+- 这是认证生命周期的中等规模接缝，遵照用户要求先报告设计决策再实施。尚未读取 token 或调用外部 token 登录接口，未实现账号代理/刷新协议；固定 TODO 第 6 项仍未完成。Profile 官方模型路由及三品牌产品验收仍须后续实证，不改变顶层 TODO 数量。

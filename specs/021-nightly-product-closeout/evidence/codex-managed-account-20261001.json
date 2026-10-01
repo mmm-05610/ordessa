@@ -1,0 +1,35 @@
+{
+  "scope": "native-managed-account-and-process-config-only",
+  "nativeVersion": "0.147.0",
+  "account": {
+    "browserLoginConfirmed": true,
+    "freshCliStatusConfirmed": true,
+    "managedAccountReadWithRefreshRequested": true,
+    "credentialStore": "keyring",
+    "tokenExported": false
+  },
+  "twoProcessProbe": {
+    "sharedOrdessaAccountScope": true,
+    "authenticated": [true, true],
+    "independentReasoningConfigReadback": [true, true],
+    "modelCalls": 0,
+    "nativeThreadsCreated": 0
+  },
+  "externalTokenSchema": {
+    "source": "generated-by-installed-native-binary",
+    "internalUseOnlyDoNotUse": true,
+    "enabledByOrdessa": false
+  },
+  "tests": {
+    "managedAccountNew": 13,
+    "pythonTargetedIncludingProductsServer": 168,
+    "nativeIsolatedEntryNode": 4
+  },
+  "notVerified": [
+    "official-subscription-profile-creation",
+    "official-subscription-real-chat",
+    "shared-account-resource-file-isolation",
+    "expired-token-concurrent-native-refresh",
+    "desktop-ui-full-chain"
+  ]
+}
