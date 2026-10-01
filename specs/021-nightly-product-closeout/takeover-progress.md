@@ -173,9 +173,13 @@ manifest 自报值三项全等（否则 `refuse("candidate manifest disagrees wi
 
 ### C. Profile 与 ModelProvider 会话配置语义（22 条）
 
-合同 §C 明写 C02/C03/C08/C10/C16 **还须在实际产品链 L3 或 L4 观察**。C02/C03/C08/C10 四条
-L1 绿、L3/L4 **零**，因此不能判 PASS；**C16 本轮已在真实产品链上补齐 L3**（见下方专段，
-其中"锁定"一条是对**真实**锁定集合实测，不是 stub）。
+合同 §C 明写 C02/C03/C08/C10/C16 **还须在实际产品链 L3 或 L4 观察**。本轮进展分层如下，
+**不合并成一句"已补齐"**：
+- **C16**：已在真实产品链上补齐 L3（见下方专段，其中"锁定"一条是对**真实**锁定集合实测）。
+- **C08/C10**：本轮补齐 **L3**（真实 `native_runtime` + 已安装原生适配器 + 真实 wire + 真实 sqlite，
+  零模型调用），但各有一条合同子句在 L3 **不可观测**，故仍是 PARTIAL 而非 PASS（见 C08/C10 专段）。
+- **C02/C03**：**仍然只有 L1**。它们的装置需要 `modelProvider.importApiKey`，而真实密钥环
+  `read` / 写 / `check_available` 三者**实测**均返回 `SECRET_STORE_LOCKED` ⇒ **等用户解锁**。
 
 | ID | 判定 | 等级 | 依据 / 缺口 |
 | --- | --- | --- | --- |
@@ -186,9 +190,9 @@ L1 绿、L3/L4 **零**，因此不能判 PASS；**C16 本轮已在真实产品�
 | C05 | PASS | L1 | 同 Harness 切 Profile 清空旧临时覆盖、无弹窗、不回写全局 |
 | C06 | PASS | L1 | 输出中变更零原生 set/restore、零 cancel、不立即发送 |
 | C07 | PASS | L1 | P1→P2→P3 只应用最终意图；revision/fence 有校验 |
-| C08 | **PARTIAL** | L1 | 全局 revision 在 prepare/execute 间变化的拒绝与 query 语义合同要求更高等级观察 |
+| C08 | **PARTIAL** | L1 + **L3（真实产品链，双品牌）** | 见下方 C08/C10 专段：真实 `native_runtime` + 已安装原生适配器下，prepare@rev2 → 全局改到 rev3 → **旧 plan 被真实拒绝**（`CONFLICT_REQUEST` / `SWITCH_BLOCKED`），零原生 RPC 到达适配器；随后的显式执行**重读**到 rev3 并由原生回读确认新 model。**未覆盖**：真正的"效果已 Unknown"态在无凭据真实链上不可达（需故障注入，那就不是产品链观察了） |
 | C09 | PASS | L1 | 贡献者卸载后设置项消失、数据保留、重载恢复 |
-| C10 | **PARTIAL** | L1 | 首次准备失败不建假会话、草稿逐字保留；L3/L4 缺席 |
+| C10 | **PARTIAL** | L1 + **L3（真实产品链，双品牌）** | 见下方专段：首次 prepare 因 `PROVIDER_NOT_FOUND` 被真实拒绝，**真实 `profile_sessions` 表 0 行**、`session/new` 增量 0；修配置后显式再发**恰好 1 次** `session/new`，四个原生 session id 互不相同 ⇒ 零重复。**未覆盖**："草稿逐字保留"是 UI 属性，L3 不可观测 |
 | C11 | PASS | L1 | Unknown 不清草稿、不标成功、不自动重发；效果恰一次 |
 | C12 | PASS | L1 | failed/refused 不产生 C4 receipt；操作 ID 不复用不同输入 |
 | C13 | PASS | L1 | runtime 换代后旧 reference 执行前拒绝 |
@@ -200,7 +204,7 @@ L1 绿、L3/L4 **零**，因此不能判 PASS；**C16 本轮已在真实产品�
 | C19 | PASS | L1 | Profile CRUD/命名/Harness 归属/持久化不退化；已绑定会话不静默换品牌 |
 | C20 | PASS | L1 | 编辑面走公有 facet/contribution；**以 AST/边界反例证明**，非 grep 零命中 |
 | C21 | PASS | L1 | ModelProvider 只拥有 provider/model/credentialRef 与 UI 业务，不做 process/session 协调 |
-| C22 | **FAIL（已执行独立复审）** | 四组全覆盖，判定 FAIL：两条阻塞 = C02/C03/C08/C10 缺合同要求的 L3/L4；`run_counterexamples.sh` 假绿（**本轮已修**，见专段）。另有三条非阻塞欠账如实登记 |
+| C22 | **FAIL（已执行独立复审）** | 四组全覆盖，判定 FAIL：两条阻塞 = C02/C03/C08/C10 缺合同要求的 L3/L4；`run_counterexamples.sh` 假绿（**本轮已修**，见专段）。**本轮进展**：C08/C10 已取得真实 L3（仍因各一条子句不可观测而 PARTIAL），C16 已 PASS；**剩余阻塞收窄为 C02/C03 两条**，其装置被真实密钥环锁定硬阻塞。另有三条非阻塞欠账如实登记 |
 
 ### D. Desktop UI → 生产发送路径（24 条）
 
@@ -309,6 +313,46 @@ UI 自然只能停在草稿——早先把这个现象读成了"生产发送路�
 > 诚实边界：以上是**选择腿**的 L4，不是发送腿的 L4。不用 UI-preview、内存 Server 或
 > "插件挂载成功"冒充实际生产发送。另注意本轮用的是**已安装的（sudo 修正前）资产**
 > `profile-codex-managed`，资产刷新属另一条被 sudo 阻塞的线。
+
+### C08/C10 专段：在被锁死的密钥环之外，仍取得真实产品链 L3
+
+C22 的两条阻塞之一是 C02/C03/C08/C10 缺合同要求的 L3/L4。本轮先**实测**了 C02/C03 的阻塞是否
+真的在密钥环上——结论是**是**，且已钉死，不是推断：
+
+| 对真实 `product_secret_store` 的操作 | 结果 |
+| --- | --- |
+| `read(locator)` | `SecretServiceUnavailable(SECRET_STORE_LOCKED)` |
+| `import_bytes(...)`（写） | 同上 |
+| `check_available()` | 同上 |
+
+因此需要 `modelProvider.importApiKey` 的既有 C02/C03 装置
+（`products/server/scripts/probe-installed-profile.py`）**确实跑不动**——实跑在
+`assert imported['state'] == 'imported'` 处失败，与锁一致。**这两条仍等用户解锁**。
+
+但 C08/C10 **不需要凭据**：`records.py:52` 的 `credential_id: str | None` 允许无凭据 provider，
+而 `profile_preparation.py:74` 只在有 `credentialRef` 时才解析凭据。于是新建
+`products/server/scripts/probe-profile-revision-fencing.py`（真实 `native_runtime` + 已安装原生
+适配器 + 真实 wire + 真实 sqlite，**全程 `importApiKey` 零调用、零密钥环条目**）。
+**Lead 亲自复跑**（非采信子代理汇报）：exit 0，与子代理独立运行读数逐字一致。
+
+| ID | 合同要的 | 实测到的（codex 与 claude-code **双品牌一致**） | 判定 |
+| --- | --- | --- | --- |
+| C08 | 旧 plan 拒绝/重读 | prepare@rev2 → `saveProfile` 2→3 → 重提旧 plan：**真实拒绝** `CONFLICT_REQUEST` / `SWITCH_BLOCKED` / "Native Profile preparation unavailable or changed"，`stalePlanNativeCalls` 为**空**（零原生 RPC 到达适配器）；随后的显式执行**重读**到 rev3，C4 receipt `evidenceKind=harness-api-confirmed`，原生回读是**新** model（`gpt-5.6-sol` / `haiku`）⇒ 旧 plan 的 model 从未被应用 | PARTIAL |
+| C08 | 效果已 Unknown 则仅 query | 对同一 operationId 重提 prepare，原生只发出 `_ordessa/channel/configuration/operation`（查询），**不发第二次 prepare 副作用** | PARTIAL（见下） |
+| C10 | 首次失败不建假会话 | profile 指向不存在的 providerConfigId（**保存本身成功**，坏配置真的落库）→ 首次 prepare 被拒 `PROVIDER_NOT_FOUND`；真实 `profile_sessions` 表 **0 行**，`session/new` **增量 0** | PARTIAL |
+| C10 | 修配置后显式再发、零重复 | `saveProfile` 修正 → 同 operationId 显式重 prepare 成功 → **恰好 1 次** `session/new`；全程 `new=4`（=2 品牌×2），四个原生 session id **互不相同** | PARTIAL（见下） |
+
+**为什么两条仍是 PARTIAL 而不是 PASS**（不拿"跑通了"顶替"跑全了"）：
+- **C08 未覆盖**：真正的 `state='unknown'` 在这条无凭据真实链上**不可达**——要么成功，要么在产生
+  任何效果前就被拒；要到达 Unknown 必须注入故障，而故障注入后就不再是产品链观察了。
+  实测到的是它指向的**兄弟规则**（保留操作 ⇒ 仅查询、绝不盲重做），以原生 RPC 粒度确认。
+- **C10 未覆盖**："草稿逐字保留"是 UI/渲染层属性，L3 无从观测。本轮只覆盖后端那一半。
+
+**计数器要读增量，不能读累计**：输出里的 `countersAtRefusal` 是**每个品牌内累计**的
+（codex 品牌序在前，claude-code 继承 codex 的计数）。逐段核对增量才是结论：
+codex 在 C08 执行后 `new=1`，到 C10 首次拒绝仍是 `1`（增量 0），重试后 `2`；
+claude 到 C08 拒绝时 `new=2`（全部来自 codex，该拒绝增量 0），C10 拒绝时 `3`（增量 0），最终 `4`。
+`prompt` 与 `http` 全程为 0 ⇒ **无任何推理被发起**。
 
 ### D01 专段：发行默认链实跑，并由此把裁定 5 从"读代码的担心"变成"实测到的产品行为"
 
@@ -925,6 +969,9 @@ bash /home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout/.cleanup
 - `packages/desktop-platform/server-bridge` 的 lifecycle 测试：16/16。
 - `plugins/profile/frontend`：11/11；包内 typecheck 通过。
 - 独立 venv 的 `apps/server/tests/test_plugin_host_gate.py` + `plugins/profile/tests`：205/205（49 + 156），无跳过。包括真实 TestClient 鉴权 wire 请求、持久化/重启/卸载反例。
+  - **事后更正（2026-10-02，独立复审查出）：这一行是本检查点的历史快照，当时为真；此后本分支自己的
+    `ff6257ca66` / `daf7f01d81` 新增 3 个 wire 方法却没同步钉死计数，`test_plugin_host_gate.py` 变成 9 红，
+    且未被登记。现已把三个方法纳入钉死面并各自断言 owner，现 49/49 零跳过（变异验证：少钉一个即回到 9 红）。**
 - `npm run build`：17 个启用扩展；lock 由构建生成。
 - 根 `npm run typecheck` **仍失败**：错误位于未修改的 MCP frontend/status、model-provider chat contribution，以及缺依赖的 agent-ui-probe 示例。不能把本检查点称为全仓绿。
 - 以上为受控验证；尚未实际 Electron 操作、真实 Harness 对话或装机验证。

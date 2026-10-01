@@ -50,8 +50,15 @@ T002_METHOD_COUNT = 70  # S-03 装配：53 + PermissionsBackendPlugin 17 方法�
 PROFILE_MANAGEMENT_METHODS = frozenset("profiles.v2." + name for name in (
     "configuredHarnesses", "listProfiles", "getProfile", "createProfile",
     "renameProfile", "archiveProfile", "restoreProfile", "describeFacets",
-    "resolvePreview", "profileCatalog",
+    "resolvePreview", "profileCatalog", "saveProfile",
 ))
+#: ModelProvider 的密钥导入面：写入与查询成对，`queryApiKeyImport` 是唯一能报告
+#: 一次导入结果的腿（`queryApiKeyImport` exists so an import whose reply was
+#: lost can be resolved without a second write）。两者都由
+#: `ordessa.model-provider` 拥有，故与 Profile 面分开断言 owner。
+MODEL_PROVIDER_IMPORT_METHODS = frozenset({
+    "modelProvider.importApiKey", "modelProvider.queryApiKeyImport",
+})
 ACP_ADMISSION_METHODS = frozenset({
     "acp.submission.authorize", "acp.permission.authorize",
 })
@@ -66,11 +73,18 @@ def _hello_caps(runtime) -> dict[str, dict]:
 def _assert_default_composition_caps(runtime, caps=None) -> None:
     """The post-AR-1 face, two ACP rows and Q5's read-only query coexist."""
     caps = _hello_caps(runtime) if caps is None else caps
-    assert len(caps) == T002_METHOD_COUNT + len(ACP_ADMISSION_METHODS) + len(PROFILE_MANAGEMENT_METHODS) + 1
+    assert len(caps) == (T002_METHOD_COUNT + len(ACP_ADMISSION_METHODS)
+                         + len(PROFILE_MANAGEMENT_METHODS)
+                         + len(MODEL_PROVIDER_IMPORT_METHODS) + 1)
     assert PROFILE_MANAGEMENT_METHODS <= caps.keys()
     for method in PROFILE_MANAGEMENT_METHODS:
         descriptor = runtime.wire._registry.lookup(method)
         assert descriptor is not None and descriptor.owner == "ordessa.profile"
+        assert caps[method] == {"id": method, "supported": True}
+    assert MODEL_PROVIDER_IMPORT_METHODS <= caps.keys()
+    for method in MODEL_PROVIDER_IMPORT_METHODS:
+        descriptor = runtime.wire._registry.lookup(method)
+        assert descriptor is not None and descriptor.owner == "ordessa.model-provider"
         assert caps[method] == {"id": method, "supported": True}
     sandbox = runtime.wire._registry.lookup(SANDBOX_DESCRIBE_METHOD)
     assert sandbox is not None and sandbox.owner == "ordessa.sandbox"

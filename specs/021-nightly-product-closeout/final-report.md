@@ -26,8 +26,18 @@ deb `70be6198…` 已作废，其"Phase 3 未展开"的结论也已被后续多�
 - Branch: `nightly/021-harness-rollout-opencode-hermes-dsh-kilo`
 - 冻结点: **`9979c651c8`**（F11 修掉 P1、P2 后顺延，复审要求收紧 `assertUsableRollout` 后二次顺延，
   再修"缺席 pid 被误判为复用"后三次顺延）
-  - 该冻结点上**全部记录在案的门已重跑为绿**：native-profile **83/83**、`plugins/profile`+`model-provider` **473**、
+  - 该冻结点上**记录在案并重跑的门为绿**：native-profile **83/83**、`plugins/profile`+`model-provider` **473**、
     `plugins/assets/skills` **433**、harness 配置/恢复三路径 **166**、`npm run test:packaging` **45/45 / 12 suites**。
+  - **该"全绿"说法曾漏掉一个门，现已更正**（独立复审查出，Lead 复现确认）：
+    `apps/server/tests/test_plugin_host_gate.py` 在冻结点 `9979c651c8` 上**本就是红的**
+    ——9 条 ID 失败（`assert 86 == (((70 + 2) + 10) + 1)`）。原因是**本分支自己的两个提交**
+    `ff6257ca66`（`profiles.v2.saveProfile`）与 `daf7f01d81`
+    （`modelProvider.importApiKey` / `queryApiKeyImport`）新增了 3 个方法却没有同步钉死的
+    计数公式，`EXPECTED_PLUGIN_IDS` 式的断言因此失效。两者都是 `9979c651c8` 的祖先，
+    用 `git merge-base --is-ancestor` 验证过 —— 红在冻结点上就已存在，不是之后引入的。
+    **已修**（把三个方法纳入钉死面并各自断言 owner，非放宽断言），现 **49/49、零跳过**，
+    并做过变异验证：少钉一个方法即回到 9 红。修前它未登记在 `docs/known-issues.md`，
+    违反规则 10；现修正于提交 `见 git log`。
 - Main baseline: `b4bf7cd90951`（**全程未动、零 push**）
 - Deb: `packaging/.out/ordessa_0.1.0_amd64.deb`，209,583,328 B
 - SHA256: `e31e270c0e20021c5868a5aad1461654c91a8f37d9b626abe137f9efe4acbac5`
