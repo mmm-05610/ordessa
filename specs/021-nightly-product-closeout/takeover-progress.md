@@ -266,6 +266,30 @@ UI-preview 或'14 插件挂载成功'代替实际生产发送"。因此除 D04 �
 | S04 | PARTIAL | prompts/instructions/runtime-preferences 的 compile/projection 门有 L1；全面逐资源 L3 本轮不新增要求（合同已豁免） |
 | S05 | PASS | 阻塞与既有产品目标影响已列：P07a/P07b 两个装配缺口、dsh/kilo 过不了钉死 verifier（信任根形状问题）、P08 空 runtime。按合同**没有**把大型新资源方案塞进夜间任务 |
 
+### F11 独立复审查出的 P1/P2（本轮已修，双向验证）
+
+**P1 — rollout 窗口把合法历史判为不可用（打断旗舰路径）。**
+`plugins/harness/packaging/native-profile/codex-process.mjs::assertUsableRollout` 读固定 64 KB 窗口，
+原判定 `if (read < buffer.length) lines.pop()` 想丢掉"被截断的尾行"，但**普通文件的 `readSync` 恒等于
+`buffer.length`**，该分支是**死代码**。后果：只要 rollout 超过 64 KB，窗口最后一行必然是被切断的残行，
+`JSON.parse` 失败 ⇒ 抛 `Native history rollout is not usable`；而真实会话正在写入时文件也常常不以换行结尾，
+同样被拒。`ordessaReplaceCodexProcess`（`enhance.mjs:72`）走这条路径 ⇒ **同会话 Profile/model 替换在任何
+稍长的会话上直接死掉**。既有夹具全是单行小文件，所以一直没暴露。
+**复现（修前）：** 600 条合法 JSONL ≈130 KB ⇒ 抛；`'{"type":"session_meta"}\n{"type":"resp'` ⇒ 抛。
+**修法：** 改为 `if (size > buffer.length || !text.endsWith('\n')) lines.pop()` —— 同时覆盖"文件比窗口大"
+与"仍在写入"两种截断。**修后双向验证：** 3 行合法 / 130 KB 合法 / 恰好 64 KB / 截断尾 **全部 PASS**；
+空文件 / 纯垃圾 / **完整行但内容损坏** 仍 **THROW**（没有借"容忍截断"放宽"容忍损坏"）。
+**变异验证：** 把判定改回原样 ⇒ 新增用例 **fail 1**；改回修复版 ⇒ **83/83**。
+
+**P2 — pid 复用时误收外国子树。**
+`ownedProcessSet` 原先只在最后 `filter` 掉复用 pid **本身**，但 pgid 扫描与 fixpoint 闭包早已把它的
+**子孙**收进 `members`（被复用的 pid 若仍是组长，其子进程就在同一 pgid 内）⇒ `stopNativeProcess`
+会 SIGTERM/SIGKILL **本进程从未拥有的进程**，且 `confirmed()` 永远等不到该进程组退出。
+**复现（修前）：** `byPid` 含 pid100(startTime 不符)/200(ppid=100,pgid=100)/300(ppid=200) ⇒ 返回 `[200,300]`。
+**修法：** 先算出复用 pid，再沿 ppid 求出**整棵外国子树**并从 `members` 中整体减去。
+**修后：** 同输入返回 `[]`；对照（startTime 匹配、树确属本进程）仍返回 `[100,200,300]`。**变异验证：**
+只减 leader ⇒ **fail 1**。
+
 ### F. 最终验证、证据与交回（12 条）
 
 | ID | 判定 | 依据 / 缺口 |
@@ -275,12 +299,12 @@ UI-preview 或'14 插件挂载成功'代替实际生产发送"。因此除 D04 �
 | F03 | PASS | 受影响 Python 回归实际运行；**零回归用差分证明**：`plugins/harness/tests` 的 109 条 FAILED/ERROR 行与 stash 基线 **diff 为空**；`model-validation-42d.test.mjs` 失败 ID `{1,2,4}` 前后完全一致 |
 | F04 | PASS | 逐 ID + 原因对比，零新增未解释红，原红不删不 xfail。**环境差异如实登记**：`.venv` 量得 37F/675P/72E，`.cleanup-evidence/product-integration-venv` 量得 3F/781P —— 同代码不同闭包，两个数都记，不挑一个充证明 |
 | F05 | **PASS（修掉一处假绿后才成立）** | A03/A04 缺陷均有缺席反例 + 注入命中并做过变异验证；Profile 的 12 条注入现在**逐条给出真实断言失败数**（例：`overlay_writes_profile` → 10 failed / 1 passed）。**两处如实降级**：(1) `assertProcessGone` 的复用/存活重排测试**并不判别**（还原实现后 28 pass / 0 fail），重排保留但不单独钉住；(2) C10 的"零重复 session/new"在 L1 **从未被计数**，只断言了 Profile 侧事实 |
-| F06 | **PASS（本轮达成冻结）** | 候选冻结于提交 **`24bd6fb683`**（分支 `nightly/021-harness-rollout-opencode-hermes-dsh-kilo`）。冻结后**未再改任何源码或资产**，只写文档与台账。冻结后在最终候选上**重跑全部受影响门，全绿**：native-profile **82/82**、`plugins/profile`+`model-provider` **473 passed**、harness configuration/restoration/pi **247 passed**、`plugins/assets/skills` **433 passed**、`npm run test:packaging` **45 pass / 0 fail / 12 suites**。deb 候选仍是 `e31e270c…`（其源码输入在上一次提交 `79fa94b107` 后未变，故无需重建） |
+| F06 | **PASS（冻结点见下；本轮因修 P1 缺陷已顺延）** | 候选冻结于 **`24bd6fb683`**（分支 `nightly/021-harness-rollout-opencode-hermes-dsh-kilo`）。F11 独立复审查出 **P1 真实缺陷**（`codex-process.mjs` 的 rollout 窗口，见下专段）并已修，故按合同"若修一个文件重跑受影响门并更新全部候选指针"，冻结点顺延到修缺陷的提交。**门禁数一律连命令一起记**（此前只写数字、没写命令，导致 166/247 两个数对不上，现已补全）：`node --test plugins/harness/packaging/native-profile/*.test.mjs` → **83 pass / 0 fail**（含本轮新增 2 条回归）；`pytest plugins/profile plugins/assets/model-provider` → **473 passed**；`pytest plugins/assets/skills` → **433 passed**；`npm run test:packaging` → **45 pass / 0 fail / 12 suites**；harness 恢复/配置两组**分列**——按路径 `pytest plugins/harness/tests/configuration_model plugins/harness/tests/test_provider_restoration_service.py plugins/harness/tests/test_pi_provider_registration_service.py` → **166 passed**，按 `-k "configuration or restoration or pi_registration or profile_registration"` → **247 passed, 540 deselected**（两者都是真实数，**不是**同一个门） |
 | F07 | PASS | 58 个待提交文件扫凭据模式 → `False`；本轮 A 组探针证据另做自检 → 无 home 路径、无 account/token 字样 |
 | F08 | PASS | 本轮自建的进程、临时 CODEX_HOME、探针脚本全部清理；**未删任何用户账户/历史**。`.cleanup-evidence/` 保留为证据（未跟踪） |
 | F09 | PASS | 他属 `docs/ui-preview/01-empty.png`、根 `main`、相邻 worktree、旧已安装资产全程未动，提交用显式 pathspec |
 | F10 | PASS（本节即交付物） | 每项都链到合同 ID 与当前证据等级，部分实现未勾整项，旧失败未被覆盖 |
-| F11 | PARTIAL | A 组与 C 组独立复审已把发现整理成 严重度/复现/原因/修法/验证；C22 查出 2 阻塞（1 是证据等级、1 是假绿执行器，已修）。**整条 diff 的独立审阅仍未做** |
+| F11 | **FAIL → 已修 P1 后复审待重跑** | 整条 diff（384 文件）独立复审已执行，判定 **FAIL**，三条发现：**P1** `codex-process.mjs` 的 `assertUsableRollout` 把 >64 KB 的**合法** rollout 和"仍在写入"的 rollout 一律判为不可用（`if (read < buffer.length)` 对普通文件恒不成立 ⇒ `lines.pop()` 是死代码），**这条直接打断本分支的旗舰路径 —— 同会话 Profile/model 替换**；**P2** pid 复用时只排除 leader 本身，其**子树**仍被 pgid 扫描收进 owned 集，会误杀非本进程并永不确认退出；**P2** F06 行只写数字不写命令，166/247 对不上。**P1/P2 已修并双向验证**（见下专段），复审重跑待下次 |
 | F12 | **PASS（本轮重写交回报告）** | `final-report.md` 原是 2026-09-30 那版，描述的候选 `418c5cfbee` / deb `70be6198…` **已作废**，本轮已整体重写为当前候选：冻结点 `24bd6fb683`、deb `e31e270c…`、七组 PASS/总数表、实跑门禁表、L4 对照表、本轮修掉的 4 个真实缺陷与 3 处自我更正、**一条 sudo 命令 + 五项裁定**、以及"未做而非做不完"清单。**结论只能是 `PARTIAL`**，不是 `COMPLETE_VERIFIED` |
 
 ### C22 独立复审：已执行，判定 **FAIL**，两条阻塞

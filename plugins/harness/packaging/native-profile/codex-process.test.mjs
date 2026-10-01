@@ -263,6 +263,20 @@ test('the owned set closes over descendants in any procfs enumeration order', ()
   // zombie descendant still cannot act, so it is not a survivor.
   assert.equal(owned(entries).includes(500), false)
   assert.equal(owned(entries).includes(600), false)
+  // Excluding a reused pid has to take its whole subtree with it. The recycled
+  // pid is still a group leader, so its children sit in the same pgid and are
+  // admitted by the pgid scan; leaving them owned would have stopNativeProcess
+  // signal processes this run never owned, and then wait forever for a group
+  // exit that includes a stranger.
+  const reuser = [
+    { pid: 100, pgid: 100, ppid: 1, state: 'S', startTime: '999', executable: '/other/adapter' },
+    { pid: 200, pgid: 100, ppid: 100, state: 'S', startTime: '998', executable: '/other/adapter' },
+    { pid: 300, pgid: 100, ppid: 200, state: 'S', startTime: '997', executable: '/other/adapter' },
+  ]
+  assert.deepEqual(owned(reuser), [])
+  // ...and with a matching startTime the same tree is entirely ours again.
+  assert.deepEqual(ownedProcessSet(snapshot(reuser), { pid: 100, pgid: 100, startTime: '999' })
+    .map(entry => entry.pid).sort((a, b) => a - b), [100, 200, 300])
 })
 
 test('a pid reused inside the stop window is never signalled, and its exit is confirmed', async () => {
@@ -473,6 +487,37 @@ test('an empty or damaged rollout is refused; a real persisted rollout binds', a
     // A07: a directory is never a usable history file.
     const directory = path.join(elsewhere, 'sessions')
     assert.throws(() => ownedRolloutPath({ id: 's', path: directory }, 's', home, directory), /ownership/)
+  } finally { rmSync(root, { recursive: true, force: true }) }
+})
+
+// The rollout window is bounded, so a realistic long session is larger than
+// one read. Every fixture above is a single short record, which is exactly why
+// the window-cut and still-being-written cases went unnoticed: both used to be
+// rejected as "not usable" and that broke the same-session Profile/model
+// replacement on any session over 64 KB.
+test('a rollout larger than the read window and one still being written both bind', async () => {
+  const root = mkdtempSync(path.join(tmpdir(), 'ordessa-rollout-window-test-'))
+  try {
+    const home = path.join(root, 'home')
+    mkdirSync(path.join(home, 'sessions'), { recursive: true })
+    const rollout = path.join(home, 'sessions', 'rollout.jsonl')
+    const client = { codexClient: { threadRead: async () => ({ thread: { id: 's', path: rollout } }) } }
+    const capture = () => captureCodexHistory({ client, sessionId: 's', home })
+
+    // Far past the 64 KB window, and every record valid.
+    const long = Array.from({ length: 600 },
+      (_, i) => JSON.stringify({ type: 'response_item', payload: 'x'.repeat(200), i })).join('\n') + '\n'
+    assert.ok(long.length > 65536, 'fixture must exceed the read window')
+    writeFileSync(rollout, long)
+    assert.equal(await capture(), rollout)
+
+    // A live rollout that has not flushed its final record yet.
+    writeFileSync(rollout, '{"type":"session_meta"}\n{"type":"resp')
+    assert.equal(await capture(), rollout)
+
+    // Tolerating a truncated tail must not tolerate a damaged complete record.
+    writeFileSync(rollout, '{"type":"a"}\n{oops\n{"type":"c"}\n')
+    await assert.rejects(capture(), /usable/)
   } finally { rmSync(root, { recursive: true, force: true }) }
 })
 

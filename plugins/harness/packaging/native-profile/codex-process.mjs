@@ -132,9 +132,26 @@ export function ownedProcessSet(snapshot, { pid, pgid, startTime = null }) {
     }
   }
   members.delete(process.pid)
+  // A reused pid is not ours -- and neither is anything below it. Excluding only
+  // the leader was not enough: the pgid scan and the closure above both admit a
+  // foreign reuser's children (a recycled pid that is still a group leader puts
+  // them in the same pgid), and stopNativeProcess would then signal processes it
+  // does not own and never see the group exit. Subtract the whole foreign
+  // subtree, whichever rule pulled those pids in.
   const reused = startTime && snapshot.byPid.get(pid)?.startTime !== startTime ? pid : null
+  if (reused !== null) {
+    const foreign = new Set([reused])
+    for (let grew = true; grew;) {
+      grew = false
+      for (const entry of snapshot.byPid.values()) {
+        if (foreign.has(entry.pid) || !foreign.has(entry.ppid)) continue
+        foreign.add(entry.pid); grew = true
+      }
+    }
+    for (const foreignPid of foreign) members.delete(foreignPid)
+  }
   return [...members].map(entry => snapshot.byPid.get(entry))
-    .filter(entry => entry && entry.state !== 'Z' && entry.pid !== reused)
+    .filter(entry => entry && entry.state !== 'Z')
 }
 
 export function assertNativeProcess(pid, nativeBinary, snapshot = readProcessSnapshot()) {
@@ -303,9 +320,17 @@ function assertUsableRollout(filename) {
     const buffer = Buffer.alloc(Math.min(size, 65536))
     const read = readSync(handle, buffer, 0, buffer.length, 0)
     if (read <= 0) unusable()
-    const lines = buffer.toString('utf8', 0, read).split('\n')
-    // Only a truncated tail is tolerated, never a damaged record.
-    if (read < buffer.length) lines.pop()
+    const text = buffer.toString('utf8', 0, read)
+    const lines = text.split('\n')
+    // Only a truncated tail is tolerated, never a damaged record. The tail is
+    // truncated in TWO ways, and both must be handled: the file can be larger
+    // than the read window (so the window ends mid-record), or a live rollout
+    // can still be mid-write (so it need not end on a newline). Testing
+    // `read < buffer.length` only ever fires for a short read, which a regular
+    // file never produces -- that left every rollout over 64 KB and every
+    // still-being-written rollout rejected as "not usable", which broke the
+    // same-session Profile/model replacement on any realistic long session.
+    if (size > buffer.length || !text.endsWith('\n')) lines.pop()
     for (const line of lines) {
       if (!line.trim()) continue
       try { JSON.parse(line) } catch { unusable() }
