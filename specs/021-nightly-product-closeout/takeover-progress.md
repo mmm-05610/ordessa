@@ -1798,3 +1798,62 @@ Lead 实跑 `node --test "plugins/harness/packaging/**/*.test.mjs"`（真实退�
 里新增一个 profile 身份；把公开品牌改名成 `omp` 属于 on-disk 标识变更，按 AGENTS.md 规则 5/6
 需要 `docs/migration/` 说明加用户确认；而自动把别名折叠成规范 id 会让 `listHarnesses()` 变成 9 个，
 与该文件自己写死的"historical eight launchable IDs"不变式冲突。三条路都是裁决，不是修复。已登记并上报。
+
+---
+
+## OpenCode 运行时产物：构建侧完成并实测（2026-10-02 夜间，接续上一节）
+
+信任根裁决仍然待用户定，但**构建侧不受它阻塞**：dsh/kilo 的构建器本来就在产出那个
+manifest 形态并且工作正常，被拒的只有校验器。所以先把 opencode 的构建侧做完。
+
+### 事实修正（此前写错，已改 `docs/known-issues.md`）
+
+之前记的是"`opencode-ai` 是个 4 文件 shim，真正的可执行文件在可选依赖里"。**实测是错的**：
+装上钉死的闭包后，`opencode-ai/bin/opencode.exe` **本身就是那个原生 ELF**——
+184 498 304 字节，`st_nlink=2`，与 `opencode-linux-x64/bin/opencode` 是同一个 ELF
+BuildID `c30f169b1bef81fa57467cd091ba53aab5235468`，由该包自己的 `postinstall.mjs`
+**硬链接**过去（不是复制）。所以入口不是"再拉起别的东西的壳"。此前那句
+"184 498 442 字节 / 2 个文件"是**两个包的合计**，不是二进制本身。
+
+结论里仍然成立、也正是裁决还开着的部分：发出去的入口是**平台原生二进制**，
+现有任何 variant 都不覆盖；而且平台包一共**十二个**，其中**四个共用
+`os: linux` / `cpu: x64`**，只差 libc 或 CPU baseline——所以 `process.platform`/`process.arch`
+**挑不出**对的那个，钉的必须是**目标**平台。
+
+### 交付
+
+- `plugins/harness/packaging/opencode/{package.json,package-lock.json}`：钉死闭包
+  （`overrides` 把 `opencode-ai` 与 `opencode-linux-x64` 都锁到 `1.18.21`）。
+- `plugins/harness/packaging/builders/build-opencode-runtime-artifact.mjs` + 15 条测试。
+- `TARGET_PLATFORM` 显式钉住，**从不推断**；四个 linux/x64 兄弟包记为
+  `not-the-pinned-platform`，其余记 `not-installed`——都进 manifest，不是静默丢弃。
+- 平台包缺失直接失败（`OPENCODE_PLATFORM_PACKAGE_MISSING`），不做兜底。
+- 二进制**校验而不生成**：`postinstall.mjs` 绝不在构建期执行；校验存在性、
+  是否常规文件、以及钉死的字节数，再记 sha256。
+- **封存不能拆掉入口的执行位**：opencode 的入口是要被 `env` 直接 exec 的原生 ELF
+  （`drivers/opencode-native.mjs` 用 `/usr/bin/env VAR=… <command>` 起它），
+  0o444 会让产物根本跑不起来。`EXECUTABLE_FILES` 让入口 0o555、其余 0o444。
+
+### 实测证据
+
+```
+npm run test:harness-packaging  →  282 tests / 281 pass / 0 fail / 1 skipped
+```
+（此前 267/266/0/1，新增 15 条全绿；0 fail，无删断言、无加 skip。）
+
+真实闭包产物：11 entries / 368 998 674 bytes / 2 packages，两次构建 manifest 逐字节一致；
+封存后 `node_modules/opencode-ai/bin/opencode.exe` 为 `-r-xr-xr-x`，**直接执行输出 `1.18.21`**。
+
+### 一处自我纠正：我怀疑的 dsh 执行位 bug 不成立
+
+我一度以为 dsh 的 `makeReadOnly` 无条件 0o644 会让它的入口不可执行。**查了启动路径，
+不成立**：`access-launch.mjs` 里 dsh 是 `command: "/usr/bin/node"` +
+`args: ["…/lib/bin.js", "--profile", "acp"]`，由 node 读脚本，**不需要执行位**；
+而 kilo 是把 `bin/kilo` 当 `command` 直接 exec，kilo 的构建器**本来就**有
+`EXECUTABLE_FILES`。所以只有 opencode/kilo 需要执行位，dsh 不需要——**没有登记这条不存在的问题**。
+
+### 仍然阻塞（未变）
+
+`verifyInstalledArtifact` 依旧在 `manifest.adapter.entry` 上拒 opencode（既不是
+`dist/index.js` 也不是 `dist/ordessa-profile.mjs`）。**构建完成 ≠ 可安装**；
+四个 harness 的安装仍然全卡在同一个信任根裁决上。

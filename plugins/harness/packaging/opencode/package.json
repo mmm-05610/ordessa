@@ -1,0 +1,18 @@
+{
+  "name": "agent-box-harness-runtime-opencode",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline-locked runtime closure for the OpenCode ACP adapter (Work Order 43 family convention). Separate root per the family convention, because opencode-ai pins its own platform-binary optional packages and one lock cannot hold it alongside the families that pin @agentclientprotocol/sdk 1.3.0.",
+  "license": "MIT",
+  "overrides": {
+    "opencode-ai": "1.18.21",
+    "opencode-linux-x64": "1.18.21"
+  },
+  "dependencies": {
+    "opencode-ai": "1.18.21"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
