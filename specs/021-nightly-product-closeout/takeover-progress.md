@@ -241,7 +241,7 @@ UI-preview 或'14 插件挂载成功'代替实际生产发送"。因此除 D04 �
 | P01 | **PARTIAL** | L2 | Codex/Claude 候选由钉死源摘要构建、treeDigest 覆盖全部增强 closure（差量逐文件算术闭合：+1 文件 19711B + 4 文件 5888B = +25599B，与 manifest 增量一字不差）。**但 Python 闭包锁文件零 `--hash`**，实时解析 ⇒ "lock 漂移"反例对 Python 侧不成立。**且 7 个 harness 里有 2 个（dsh/kilo）过不了钉死 verifier** |
 | P02 | PASS | L2 | 新候选实际 initialize + 官方首次准备/创建通过，`modelCalls=0`；**未伪称恢复聊天通过** |
 | P03 | PASS | L2 | `refuse("destination already exists; refusing to overwrite")`；本轮复核已安装资产摘要未变（`sha256:1ee5358b…`/536/320854754），未覆盖 |
-| P04 | **PASS（本轮补齐）** | L2 代码 + 语法 | 此前只有 stage→verify→publish，回执回显候选自述值。已加发布前 manifest 与实测三项全等比对 + 发布后对落地树复验同一钉死 verifier，回执带 `verifiedBefore/AfterPublish`。未部署（等同那一次 sudo） |
+| P04 | **PASS（本轮补齐）** | L2 代码 + 语法 | 此前只有 stage→verify→publish，回执回显候选自述值。已加发布前 manifest 与实测三项全等比对 + 发布后对落地树复验同一钉死 verifier，回执带 `verifiedBefore/AfterPublish`。未部署（等同那一次 sudo）。**已实测：现装增强资产早于整个 codex-process 集成（缺 `ordessa-codex-process.mjs`），故本次 P1/P2 修复须随该资产重建发布才生效，并入同一条 sudo，不另计** |
 | P05 | **BLOCKED_USER** | — | root 管理且普通用户不可修改 + 完整策略校验：**需用户执行那一次 sudo**。未降低校验强度 |
 | P06 | PASS | L1 | 产品资产根由显式环境变量覆盖，默认仍是已验证路径；新增 `trusted_asset_root()` 在**读 Key 与启动产品之前**拒绝相对/缺失/符号链接根（`test_codex_managed_probe.py` 7 passed）；无静默全局 CLI fallback |
 | P07 | **FAIL（真实装配缺口，本轮由 L4 判实）** | **L4** | (a) **MCP**：`ordessa.asset-mcp` 在 `products/desktop/extensions.json:19` 已启用、`McpAssetServerPlugin` 在 `plugins/assets/mcp/backend/plugin.py:252` 存在，但整个 `products/server/src/` **MCP 零命中** —— 没有任何组合实例化它。(b) **Skills**：`ProductSkillsPlugin` 只在 `native_runtime`（`composition.py:272`），`default_plugins`（`:146-171`）**不含**它。**本轮追到根**：安装后的 `packaging/debian/ordessa.in` 启动器**不设** `ORDESSA_SERVER_ARGS_JSON`，`productServerArgs()` 因此返回空数组 ⇒ `plan_server_cli` 走 `default_runtime`（`cli.py:219`）⇒ `default_plugins()`；而 `products/desktop/run-native.mjs` **总是**注入 `--execution-mode native`，所以**开发启动器掩盖了这个缺口**。L4 对照实测：native 路径 `errors:[]`，default 路径 `skills.list is not a wire/1 method`。⇒ 启动门不失败，只**成功空壳** |
@@ -289,6 +289,25 @@ UI-preview 或'14 插件挂载成功'代替实际生产发送"。因此除 D04 �
 **修法：** 先算出复用 pid，再沿 ppid 求出**整棵外国子树**并从 `members` 中整体减去。
 **修后：** 同输入返回 `[]`；对照（startTime 匹配、树确属本进程）仍返回 `[100,200,300]`。**变异验证：**
 只减 leader ⇒ **fail 1**。
+
+**这两个修复对"已发布/已安装产物"的影响（本轮实测定案，不推断）。**
+`enhanceStaging`（`enhance.mjs:183`）把 `codex-process.mjs` 原样写进增强资产
+`ordessa-codex-process.mjs`，`enhanceSource`（`:169`）同时向增强后的 `index.js` 注入它的 import；
+**即该修复只有随增强资产一起发布才会生效**。实测两条落地路径：
+
+- **deb 不受影响、无需重建。** P08 已实测新构建的 deb 里 `opt/ordessa/harnesses` **零条目**
+  （`find -mindepth 1 | wc -l` = 0），`strings ordessa_0.1.0_amd64.deb | grep -c "Native history rollout is not usable"`
+  = **0** ⇒ 发行包里根本没有这份代码。
+- **已安装的增强资产早于整个 codex-process 集成，不只是早于本次修复。**
+  `/opt/ordessa/harnesses/profile-codex-managed/artifacts/codex-runtime/.../codex-acp/dist/`
+  下有 7 个 `ordessa-*.mjs`，**唯独没有 `ordessa-codex-process.mjs`**，且其 `index.js`
+  对 `ordessa-codex-process` 的引用数为 **0**（仍有 9 处其它增强标记 ⇒ 它确实经过增强，
+  只是由 `8c3f9a2f61`（引入 codex-process 接线）**之前**的 `enhance.mjs` 生成）。
+  `/opt/ordessa` 全树下 `find -name 'ordessa-codex-process.mjs'` **无命中**。
+
+**结论：** 本轮修复**不使任何已发布产物过期**，只是**尚未生效**——它随下一次增强资产重建+发布落地，
+而那条发布路径**正是已记录的那一次 sudo**（P04/P05 的同一条）。因此**不新增 sudo 阻塞**，只把
+"资产需重建"并入既有清单；报告中不把它单列为新缺陷。
 
 ### F. 最终验证、证据与交回（12 条）
 
