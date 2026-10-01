@@ -21,6 +21,70 @@ from starlette.websockets import WebSocketDisconnect
 
 
 CONNECTION = SimpleNamespace(connection_id="connection-1")
+
+
+def native_connection():
+    return SimpleNamespace(connection_id="connection-1", native_session_observation=lambda identity:
+        SimpleNamespace(connection_id="connection-1", native_session_id=identity) if identity == "session-1" else None)
+
+
+def test_native_relay_forwards_owned_prompt_without_external_permission():
+    gate = AcpAdmissionGate(native_permissions=True)
+    gate.admit_client_frame(native_connection(), prompt())
+    with pytest.raises(AcpAdmissionRefused, match="already used"):
+        gate.admit_client_frame(native_connection(), prompt())
+    with pytest.raises(AcpAdmissionRefused, match="session owner"):
+        gate.admit_client_frame(native_connection(), prompt({**SUBMISSION, 'nativeSessionId': 'foreign'}, request_id=8))
+
+
+def test_native_permission_answers_follow_harness_options_not_external_grants():
+    gate = AcpAdmissionGate(native_permissions=True)
+    channel = native_connection()
+    gate.observe_agent_frame(channel.connection_id, json.dumps({'jsonrpc':'2.0','id':19,
+        'method':'session/request_permission','params':{'sessionId':'session-1','options':[{'optionId':'allow-once'}]}}))
+    response = {'jsonrpc':'2.0','id':19,'result':{'outcome':{'outcome':'selected','optionId':'foreign'}}}
+    with pytest.raises(AcpAdmissionRefused, match="offered"):
+        gate.admit_client_frame(channel, json.dumps(response))
+    response['result']['outcome']['optionId'] = 'allow-once'
+    gate.admit_client_frame(channel, json.dumps(response))
+    with pytest.raises(AcpAdmissionRefused, match="already consumed"):
+        gate.admit_client_frame(channel, json.dumps(response))
+
+
+def test_native_permission_cancellation_is_forwarded_without_auto_approval():
+    gate = AcpAdmissionGate(native_permissions=True)
+    channel = native_connection()
+    gate.observe_agent_frame(channel.connection_id, json.dumps({'jsonrpc':'2.0','id':20,
+        'method':'session/request_permission','params':{'sessionId':'session-1','options':[{'optionId':'allow-once'}]}}))
+    gate.admit_client_frame(channel, json.dumps({'jsonrpc':'2.0','id':20,'result':{'outcome':{'outcome':'cancelled'}}}))
+
+
+def test_native_permission_rejects_foreign_owner_and_unoffered_missing_option():
+    gate = AcpAdmissionGate(native_permissions=True)
+    channel = native_connection()
+    gate.observe_agent_frame(channel.connection_id, json.dumps({'jsonrpc': '2.0', 'id': 21,
+        'method': 'session/request_permission', 'params': {'sessionId': 'foreign', 'options': [{'optionId': 'allow'}]}}))
+    with pytest.raises(AcpAdmissionRefused, match='session owner'):
+        gate.admit_client_frame(channel, json.dumps({'jsonrpc': '2.0', 'id': 21,
+            'result': {'outcome': {'outcome': 'selected', 'optionId': 'allow'}}}))
+    gate.observe_agent_frame(channel.connection_id, json.dumps({'jsonrpc': '2.0', 'id': 22,
+        'method': 'session/request_permission', 'params': {'sessionId': 'session-1', 'options': [{}]}}))
+    with pytest.raises(AcpAdmissionRefused, match='not offered'):
+        gate.admit_client_frame(channel, json.dumps({'jsonrpc': '2.0', 'id': 22,
+            'result': {'outcome': {'outcome': 'selected'}}}))
+
+
+def test_native_mode_cannot_be_made_external_by_late_authority_injection():
+    gate = AcpAdmissionGate(native_permissions=True)
+    gate.authority = Authority()
+    port = AcpAdmissionPortAdapter(gate, SimpleNamespace())
+    assert port.ready is False
+    with pytest.raises(AcpAdmissionRefused, match='authority is absent'):
+        gate.authorize_submission(native_connection(), SUBMISSION)
+    with pytest.raises(AttributeError):
+        gate.native_permissions = False
+
+
 SUBMISSION = {
     "submissionId": "submission-1", "nativeSessionId": "session-1",
     "text": "hello", "attachments": [{"name": "brief", "uri": "file:///brief", "sha256": "a" * 64}],
@@ -141,6 +205,46 @@ def test_websocket_raw_prompt_and_permission_answer_cannot_bypass_absent_authori
         assert channel.sent == []
 
 
+def test_native_websocket_keeps_authentication_and_ownership_without_external_permits(tmp_path, monkeypatch):
+    class NativeChannel(FakeChannel):
+        connection_id = "connection-1"
+        native_session_observation = staticmethod(native_connection().native_session_observation)
+
+        def attach(self, loop, sink):
+            self.sink = sink
+
+        def __init__(self):
+            super().__init__()
+            def send(line):
+                self.sent.append(line)
+                self.sink(json.dumps({"jsonrpc": "2.0", "id": json.loads(line)["id"],
+                                      "result": {"stopReason": "end_turn"}}))
+            self.transport = SimpleNamespace(send_line=send)
+
+    channel = NativeChannel()
+    runtime = build_runtime(tmp_path / "native-data")
+    assert runtime.wire.acp_admission_gate.native_permissions is True
+    monkeypatch.setattr(runtime.wire.stream_routes, "resolve",
+        lambda route, identity: channel if route == "acp-channel" and identity == "connection-1" else None)
+    with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
+        headers = {"Authorization": f"Bearer {runtime.token}"}
+        for path, auth in (("connection-1", {}), ("unknown", headers)):
+            with pytest.raises(WebSocketDisconnect):
+                with client.websocket_connect(f"/wire/v1/acp-channel/{path}", headers=auth):
+                    pytest.fail("Unauthenticated or unknown channel accepted")
+        assert channel.sent == []
+        with client.websocket_connect("/wire/v1/acp-channel/connection-1", headers=headers) as ws:
+            ws.send_text(prompt())
+            assert json.loads(ws.receive_text())["result"]["stopReason"] == "end_turn"
+        assert channel.sent == [prompt()]
+        with pytest.raises(WebSocketDisconnect) as refused:
+            with client.websocket_connect("/wire/v1/acp-channel/connection-1", headers=headers) as ws:
+                ws.send_text(prompt({**SUBMISSION, "nativeSessionId": "foreign"}, request_id=9))
+                ws.receive_text()
+        assert refused.value.code == 4403
+        assert channel.sent == [prompt()]
+
+
 def test_correlated_prompt_terminal_allows_next_key_but_unanswered_effect_stays_unknown():
     authority = Authority()
     gate = AcpAdmissionGate(authority, clock=lambda: 100)
@@ -256,9 +360,7 @@ def _public_adapter(authority=None):
 def test_public_admission_port_converts_dtos_and_keeps_raw_relay_one_use():
     port, gate, authority, channel = _public_adapter()
     assert port.public_acp_admission_port_version == 1
-    # S-06/S-03：authority 注入即 ready（产品组合现在真的注入权限后端）；
-    # 原断言（"测试注入不算产品证据"）随 ready 语义修正退役——
-    # ready 的另一半（native evidence）仍诚实缺席，见 report。
+    # Explicit external-mode authority injection enables this optional port.
     assert port.ready is True  # authority wired by the test injection
     accepted = port.authorize_submission(_public_binding(), _public_submission())
     assert accepted.kind == "accepted" and accepted.submission_id == "submission-1"

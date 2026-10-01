@@ -1,0 +1,29 @@
+{
+  "status": "PASS_SCOPED_NOT_PRODUCT_COMPLETE",
+  "date": "2026-10-01",
+  "command": "ORDESSA_BUNDLED_ROOT=.cleanup-evidence/product-dev-runtime-URGO6TDv node products/desktop/probe-profile-ui.mjs --allow-model-calls --during-output --native-tool",
+  "surface": "Actual Electron DOM, production extension manifest, real WebSocket relay",
+  "harness": "codex",
+  "authentication": "Ordessa native managed account; no token copy",
+  "models": ["gpt-5.5", "gpt-5.6-sol"],
+  "markers": {
+    "PROFILE_UI_CHAT_CONFIRMED": {"profileSelected": true, "realText": true, "prompt": 1, "run": "completed"},
+    "PROFILE_UI_SWITCH_CONFIRMED": {"sameSession": true, "changedConfig": true, "prompts": 2, "run": "completed"},
+    "PROFILE_UI_ACTIVE_SELECTION_CONFIRMED": {"currentTurnCompleted": true, "applicationsBeforeNextSend": 1},
+    "PROFILE_UI_NATIVE_TOOL_CONFIRMED": {"nativeToolVisible": true, "currentTurnCompleted": true, "externalPermitRequired": false}
+  },
+  "applicationEvidence": {
+    "kind": "harness-api-confirmed",
+    "sameSessionRef": true,
+    "changedConfigurationDigest": true
+  },
+  "cleanup": "Own Electron exited with app.quit; own successful test root removed; user data and installed assets untouched",
+  "regression": {"serverRelayAndProduct": 165, "acp": 63, "profileChat": 45},
+  "limits": [
+    "Selection occurred while run=running; not a timing proof of selection during a particular streamed token",
+    "Not cross-provider restart/resume",
+    "Not Pi or Claude Desktop UI acceptance",
+    "Not a rebuilt release package",
+    "Earlier two-turn run failed its evidence collector; corrected collector passed in a fresh run"
+  ]
+}

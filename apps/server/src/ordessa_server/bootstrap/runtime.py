@@ -623,7 +623,7 @@ def build_runtime(
 
         method_registry = MethodRegistry()
         stream_route_registry = StreamRouteRegistry()
-        acp_admission_gate = AcpAdmissionGate()
+        acp_admission_gate = AcpAdmissionGate(native_permissions=True)
         acp_admission_port = AcpAdmissionPortAdapter(acp_admission_gate, stream_route_registry)
         # T015/S1c: ONE CoreBinding per composition (never a module global), owning
         # the C1 instance store at its own file inside the data root (topology

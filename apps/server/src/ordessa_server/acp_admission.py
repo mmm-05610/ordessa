@@ -1,8 +1,8 @@
 """Server-side admission and one-use relay fence for managed ACP channels.
 
-The authority is injected from a selected product. There is deliberately no
-default permit verifier. A missing authority refuses admission and the raw
-relay refuses prompts/answers that would consume it.
+External policy mode requires an explicitly injected authority. Native mode
+only fences channel ownership and reply correlation; tool policy belongs to
+the Harness. It never manufactures an external permit or approval.
 """
 from __future__ import annotations
 
@@ -93,8 +93,12 @@ def prompt_input(submission: Mapping[str, object]) -> tuple[str, list[dict[str, 
 class AcpAdmissionGate:
     """One runtime's volatile fence. Restart loses permits and therefore denies replay."""
 
-    def __init__(self, authority: AcpPermitAuthority | None = None, *, clock=None):
+    def __init__(self, authority: AcpPermitAuthority | None = None, *, clock=None,
+                 native_permissions: bool = False):
         import time
+        if type(native_permissions) is not bool or (native_permissions and authority is not None):
+            raise ValueError('Select native or external permissions, not both')
+        self._native_permissions = native_permissions
         self.authority = authority
         self.clock = clock or time.time
         self._lock = RLock()
@@ -109,9 +113,13 @@ class AcpAdmissionGate:
         self._seen_reverse_ids: set[tuple[str, str]] = set()
         self._blocked_reverse_ids: set[tuple[str, str]] = set()
 
+    @property
+    def native_permissions(self) -> bool:
+        return self._native_permissions
+
     def authorize_submission(self, connection: object, submission: Mapping[str, object],
                              *, expected_generation: int | None = None) -> dict[str, str]:
-        if self.authority is None:
+        if self.native_permissions or self.authority is None:
             raise AcpAdmissionRefused("CAPABILITY_UNSUPPORTED", "ACP submission authority is absent")
         connection_id = _name(getattr(connection, "connection_id", None))
         submission_id = _name(submission.get("submissionId"))
@@ -178,7 +186,7 @@ class AcpAdmissionGate:
 
     def authorize_permission(self, connection: object, decision: Mapping[str, object],
                              *, expected_generation: int | None = None) -> dict[str, str]:
-        if self.authority is None:
+        if self.native_permissions or self.authority is None:
             raise AcpAdmissionRefused("CAPABILITY_UNSUPPORTED", "ACP permission authority is absent")
         connection_id = _name(getattr(connection, "connection_id", None))
         interaction_id = _name(decision.get("interactionId"))
@@ -222,6 +230,14 @@ class AcpAdmissionGate:
                 rpc_key = (connection_id, request_id)
                 if rpc_key in self._used_prompt_ids:
                     raise AcpAdmissionRefused("AUTHORIZATION_REFUSED", "ACP prompt request id was already used")
+                if self.native_permissions:
+                    observe = getattr(connection, 'native_session_observation', None)
+                    owner = observe(native_id) if callable(observe) else None
+                    if (owner is None or getattr(owner, 'connection_id', None) != connection_id
+                            or getattr(owner, 'native_session_id', None) != native_id):
+                        raise AcpAdmissionRefused('AUTHORIZATION_REFUSED', 'ACP session owner is absent or foreign')
+                    self._used_prompt_ids.add(rpc_key)
+                    return
                 matching = [(key, bound, expected) for key, (bound, state, expected) in self._submissions.items()
                             if key[0] == connection_id and state == "ready" and bound.native_session_id == native_id]
                 if len(matching) != 1 or matching[0][1].expires_at <= self.clock() or matching[0][1].input_digest != actual:
@@ -244,6 +260,30 @@ class AcpAdmissionGate:
                     return
                 if key not in self._permission_requests:
                     raise AcpAdmissionRefused("AUTHORIZATION_REFUSED", "ACP reverse answer has no observed request")
+                if self.native_permissions:
+                    request = self._permission_requests[key]
+                    native_id = _name(request.get('sessionId'))
+                    observe = getattr(connection, 'native_session_observation', None)
+                    owner = observe(native_id) if callable(observe) else None
+                    if (owner is None or getattr(owner, 'connection_id', None) != connection_id
+                            or getattr(owner, 'native_session_id', None) != native_id):
+                        raise AcpAdmissionRefused('AUTHORIZATION_REFUSED', 'ACP permission session owner is absent or foreign')
+                    if 'error' not in frame:
+                        outcome = _record(_record(frame.get('result')).get('outcome'))
+                        options = request.get('options')
+                        if (outcome.get('outcome') != 'cancelled' and not (
+                                outcome.get('outcome') == 'selected' and isinstance(options, list)
+                                and isinstance(outcome.get('optionId'), str) and outcome['optionId']
+                                and any(isinstance(option, dict) and option.get('optionId') == outcome.get('optionId')
+                                        for option in options))):
+                            raise AcpAdmissionRefused('AUTHORIZATION_REFUSED', 'ACP permission option is not offered')
+                    else:
+                        error = _record(frame['error'])
+                        if type(error.get('code')) is not int or not isinstance(error.get('message'), str):
+                            raise AcpAdmissionRefused('INVALID_REQUEST', 'ACP permission error is malformed')
+                    del self._permission_requests[key]
+                    self._answered_permissions.add(key)
+                    return
                 option = self._permissions.get(key)
                 result = frame.get("result")
                 outcome = _record(_record(result).get("outcome")) if result is not None else None
@@ -310,16 +350,11 @@ class AcpAdmissionPortAdapter:
 
     @property
     def ready(self) -> bool:
-        """Whether product authority and native/generation evidence are wired.
+        """External admission is advertised only when explicitly selected and wired.
 
-        S-06/S-03 (2026-09-29): authority from the permissions domain
-        (``PermissionsAcpAdmission``) is injected by the product composition
-        (``_wire_admission_authority``); the gate is honest about its
-        presence — an absent authority refuses and reports, a present one
-        permits the capability row to flip. Native evidence wiring is the
-        next increment (recorded, not faked).
+        Ordinary native relay does not imply an external policy authority.
         """
-        return self._gate.authority is not None
+        return not self._gate.native_permissions and self._gate.authority is not None
 
     def _connection(self, binding: AcpChannelBinding) -> object:
         if not isinstance(binding, AcpChannelBinding):

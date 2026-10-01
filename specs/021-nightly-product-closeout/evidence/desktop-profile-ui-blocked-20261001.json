@@ -1,0 +1,20 @@
+{
+  "scope": "actual-installed-Electron-DOM-Profile-selection-to-submit",
+  "status": "BLOCKED_NOT_DESKTOP_ACCEPTED",
+  "fixtureServiceInjected": false,
+  "isolatedDataRoot": true,
+  "nativeAccountCopied": false,
+  "projectSelected": true,
+  "profileSelected": true,
+  "canonicalProfileRegistered": true,
+  "profileJournalState": "confirmed",
+  "profileReceiptKind": "harness-api-confirmed",
+  "profileGuardReady": true,
+  "chatGatewayReached": true,
+  "actualUiOutcome": "unknown-draft-retained",
+  "realUiChatConfirmed": false,
+  "uncertainSubmissionReplayed": false,
+  "diagnosis": "ordinary and prepared sends omit authenticated relay submission admission; existing permission admission also requires commandId and rejects ordinary messages as unknown tools",
+  "decisionRequired": "separate ordinary message admission from native tool/permission evaluation while retaining channel/configuration/input/generation and single-use fences",
+  "backendProbeLimitation": "direct transport inference does not validate the WS relay/UI admission path"
+}

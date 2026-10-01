@@ -2,7 +2,26 @@
 
 状态：部分实现，**不是完整 Harness Desktop 验收通过**。
 所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
-未合并、未 push、未启停既有用户服务、未重建 deb。用户授权的 Pi/Claude 后端真实聊天已通过；Codex 官方聊天尚未验证。
+未合并、未 push、未启停既有用户服务、未重建 deb。三品牌后端真实聊天已通过；Codex Desktop 已通过 Profile 首发与同会话下一轮切换，两条真实回复。完整三品牌 UI/发行验收仍未完成。
+
+## 最新验证（2026-10-01，原生权限边界与真实 Desktop Profile 发送）
+
+- 用户明确裁定：Harness 自己决定原生工具权限；Ordessa 默认只维护认证、通道归属与生命周期。外部 permission/sandbox 插件不得成为普通聊天必备许可。默认 ACP relay 选择原生模式，产品不再自动注入 PermissionsAcpAdmission；显式外部模式仍保留原有单次许可反例。原生模式不宣告外部授权端口 ready，也不自动批准原生权限请求。
+- 真实 Electron DOM + 实际 WS relay：连接 Codex、选择项目和 Profile、首条发送、真实非空回复 completed；同一会话选另一 Profile（gpt-5.5 → gpt-5.6-sol），第二条发送 completed。两轮均有 harness-api-confirmed 回执，configDigest 改变、SessionRef 相同、可见会话相同。另跑 --during-output：第一轮 run=running 时选择，当前轮正常完成，第二次发送前应用次数仍为 1，第二轮才应用；不宣称点击瞬间恰有流式 token。每次最多两条短消息；无未知结果自动重试。
+- 探针第一次双轮检查漏收 beginTurnApplication 直接返回的回执，故报失败；修正收集路径后在新独立测试数据根复跑通过。此前失败记录保留，不伪造成功。成功根在 Electron 正常退出后精确清理，不碰用户数据/登录/系统资产。
+- 定向回归：Server relay + products/server **165P**（新增同 App WS 原生发送/未认证/未知通道/外来会话拒绝、原生选项与模式防误注入）；ACP **63P**；Profile Chat **45P**；typecheck exit 0。未跳过/删掉外部模式反例。首次三个契约测试的红来自构造器未提供原生模式，不冒称完整生产行为先红后绿。
+- 尚待：实际全局预设/逐项覆盖/失败草稿/未知结果场景、已有历史跨 provider restart/resume、多品牌完整 UI 与全仓回归/发行包。固定 TODO 不扩张、不把 model-only 切换当跨 provider 已完成。
+- --native-tool 另验：实际 Codex 在自有测试项目执行只读 pwd，原生工具卡片出现在 Chat，当前轮 completed；没有外部 permit 请求、没有自动批准原生权限请求、没有读写用户文件。仍是两条短消息的同会话切换探针，四个必需成功标记均出现。
+- 完整 npm test 实跑 **31/39 suites green**，不能记全绿：server-bridge 使用旧 .venv 缺 Profile 包；六组 Electron 使用未指定 bundled runtime 的环境而失败；旧 UI preview 是退役插件/DOM/IPC 的真实夹具破损。指定独立集成 Python 后 server-bridge **68P**；指定已验证开发 bundled runtime 后 Electron **6/7** 通过，仍只有旧 UI preview 失败。构建 18 扩展、typecheck 与所有其他发现的 workspace/产品/ACP rig suites 通过。没有修改断言或 skip。旧预览截图已有脏改动，不纳入提交；后续应使用独立输出路径。
+
+## 已解决阻塞（2026-10-01，实际 Desktop Profile 选择→发送，以下为修复前记录）
+
+- 新增产品所有的可重跑 Electron DOM 探针 `products/desktop/probe-profile-ui.mjs`、driver，以及无模型种子脚本。独立项目/数据根与实际安装资产；保留真实 HOME 让 Harness 读取 Ordessa 自有原生账号，不复制登录。使用现有 smoke seam，不改 host。普通浏览器不能代替 Electron 原生 bridge，故 webapp-testing 的实际页面检查在 Electron DOM 上执行。
+- 实际页面完成连接 ACP Codex、项目选择、Profile 选择及点击发送。创建前准备、canonical 注册、selectForSession、beginTurnApplication、inspectSessionConfig 均返回成功；真实账本 settled，应用 journal confirmed，receipt=harness-api-confirmed。最后一轮相关应用请求约 44–129ms，非 15s wire 超时。
+- **发送失败，未报成功**：实际 UI 留在 draft，显示发送结果未知。隔离定位表明 Profile guard 返回 ready、Chat gateway 已调用，失败发生在 ACP prepared-send 的 prompt promise；没有自动重发任何未知 attempt。固定 TODO 的 UI 项保持未完成。
+- 源码接缝：`apps/server/.../acp_admission.py:admit_client_frame` 要求每个 session/prompt 先有匹配的 C5 submission permit；现有 Chat 普通/首条发送走 `startTurn`，未走 `authorizeSubmission`。另外当前 `PermissionsAcpAdmission` 对无 commandId 的普通消息以 PERMISSION_UNKNOWN_TOOL 拒绝。后端探针直接走 transport，不能证明 WS relay + UI 准入，因此之前的后端聊天证据不升级为 Desktop 证据。
+- 此时曾提出普通消息准入方案；用户随后明确拒绝默认外部许可前置，按上方原生权限边界实施。未凭空补 commandId/configurationDigest，认证和通道归属围栏保留。
+- 所有临时生产诊断已移除并重建；未改登录/系统资产/主树/既有服务。失败测试数据仅在 ignored `.cleanup-evidence/ordessa-profile-ui-*`（另有一次跨设备保留失败的自有 `/tmp/ordessa-profile-ui-gkdwiW`），作为诊断证据，不纳入 git。已退出自有 Electron，未做用户服务恢复。
 
 ## 最新验证（2026-10-01，已安装官方 Codex Profile/C4 与真实对话）
 

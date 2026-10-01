@@ -206,25 +206,7 @@ class ServerProductComposition:
         self._assemble_legacy_chain()
         from .platform_secrets import product_secret_store
         runtime = build_runtime(data_root, secret_store=product_secret_store(data_root))
-        self._wire_admission_authority(runtime)
         return runtime
-
-    def _wire_admission_authority(self, runtime) -> None:
-        """Connect the permissions ACP admission to the wire gate (S-06后半).
-
-        The gate is created authority-less by the bootstrap (honest refusal);
-        this composition-level wiring injects the permissions domain's
-        ``PermissionsAcpAdmission`` once the plugin host is live. Without
-        this, ``acp.submission.authorize`` stays ``ready=False``.
-        """
-        from ordessa_permissions_backend.admission import PermissionsAcpAdmission
-
-        # 从 plugin_host 的 provided_port 取权限域的 authorizer
-        authorizer = runtime.plugin_host.provided_port("permissions.authorizer@1")
-        if authorizer is None:
-            return  # permissions domain not composed; gate stays honest-refusal
-        runtime.wire.acp_admission_gate.authority = PermissionsAcpAdmission(
-            authorizer=authorizer)
 
     def native_runtime(
         self, data_root: Any, *, plugin_root: Any, harness_id: str,
@@ -296,7 +278,6 @@ class ServerProductComposition:
                     exclusive=point.exclusive)
             runtime.plugin_host.activate_all(extras)
             runtime.plugin_selection = (*runtime.plugin_selection, *extras)
-            self._wire_admission_authority(runtime)
         except BaseException as activation_failure:
             try:
                 runtime.stop()
