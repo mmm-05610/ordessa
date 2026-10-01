@@ -1,0 +1,28 @@
+{
+  "scope": "real-product-profile-chat-not-desktop-ui",
+  "origin": "direct execution of probe-authorized-chat.py with installed fixed assets",
+  "exitCode": 0,
+  "viaLocalRelay": true,
+  "directPublicEndpointAcceptance": false,
+  "relayRequests": 5,
+  "httpStatuses": [200, 200, 200, 200, 200],
+  "credentialMatched": true,
+  "evidence": [
+    {
+      "harness": "pi", "actualTurns": 2,
+      "initialProfileConfirmed": true, "nextProfileConfirmed": true,
+      "historyPreserved": true,
+      "models": ["deepseek-flash", "deepseek-v4-pro"]
+    },
+    {
+      "harness": "claude-code", "actualTurns": 2,
+      "initialProfileConfirmed": true, "nextProfileConfirmed": true,
+      "historyPreserved": true,
+      "nativeModelAliases": ["haiku", "sonnet"],
+      "distinctUpstreamModelsProved": false
+    }
+  ],
+  "ownedResourcesCleaned": true,
+  "codexOfficialLoginTested": false,
+  "crossProviderResumeTested": false
+}

@@ -16,9 +16,13 @@ const nativeProfileRoot = process.env.ORDESSA_NATIVE_PROFILE_ARTIFACT_ROOT
 if (nativeProfileRoot !== undefined && !nativeProfileRoot)
   throw new Error('ORDESSA_NATIVE_PROFILE_ARTIFACT_ROOT must not be empty')
 const nativeProfileHarnesses = nativeProfileRoot ? selected.filter(id => ['codex', 'claude-code'].includes(id)) : []
+const claudeProfileRoot = process.env.ORDESSA_CLAUDE_PROFILE_ARTIFACT_ROOT
+  ?? process.env.ORDESSA_NATIVE_PROFILE_ARTIFACT_ROOT
+  ?? '/opt/ordessa/harnesses/profile-chat-fixes/artifacts'
+if (!claudeProfileRoot) throw new Error('Claude Profile asset root must not be empty')
 const profileRoots = { ...(profileBridge === '1' ? { pi: process.env.ORDESSA_PI_PROFILE_ARTIFACT_ROOT
-    ?? '/opt/ordessa/harnesses/profile-pi-provider/artifacts' } : {}),
-  ...Object.fromEntries(nativeProfileHarnesses.map(id => [id, nativeProfileRoot])) }
+    ?? '/opt/ordessa/harnesses/profile-chat-fixes/artifacts' } : {}),
+  ...Object.fromEntries(nativeProfileHarnesses.map(id => [id, id === 'claude-code' ? claudeProfileRoot : nativeProfileRoot])) }
 const plan = nativeServerPlan({ ...(process.env.ORDESSA_NATIVE_HARNESS
     ? { harnessId: process.env.ORDESSA_NATIVE_HARNESS }
     : { harnessIds: ['pi', 'codex', 'claude-code'] }),

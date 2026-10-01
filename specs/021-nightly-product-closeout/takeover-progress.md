@@ -457,3 +457,11 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 新增有界、必须 `--allow-model-calls` 的后端产品探针 `products/server/scripts/probe-authorized-chat.py`，两次短消息检验同会话上下文及 Profile 下轮 model 应用；认证拒绝后立即终止并清理，不自动重放 Unknown。`--fixed-assets` 仅采用即将安装的新可信资产。它不是 Desktop UI 验收。
 - **当前仍未完成真实聊天**：Pi 修正候选待 root 安装后验证；Claude 修正候选同样待安装，之前超时/401 不作通过证据。Codex 官方登录还需核对独立实例的认证接入：增强首次创建当前只支持 custom gateway，不能静默复制全局 auth/config 或冒称官方 Profile 路线可用。跨 provider 已有历史恢复、完整 UI 验收仍未完成。
 - 用户下一动作：`bash /tmp/ordessa-install-chat-fixes-verified.sh`，新增 `/opt/ordessa/harnesses/profile-chat-fixes`，预先锁定完整摘要并验证 root 所有权，拒绝覆盖。之后继续真实聊天与 Codex 官方认证路线。未 push、未合并，根仍 main，他属截图保持不动。
+
+### 修复资产安装后真实产品聊天通过（2026-10-01）
+
+- 用户已执行安装脚本并提交两品牌完整校验输出。使用 `--fixed-assets --local-relay` 的实际产品探针 exit 0：Pi 两轮 HTTP 200、第一轮有文本回复，第二轮准确回忆随机标记；生产 Profile 初始/下轮 C4 receipt 均确认，模型 `deepseek-flash` → `deepseek-v4-pro`。Claude 两轮有文本及准确上下文回忆，Profile C4 与原生 `haiku` → `sonnet` 读回确认。Claude 上游另有一次并行请求，总共 5 次 HTTP 200。凭据匹配=true、placeholder=false；自有通道、测试密钥环条目与 runtime 已清理。
+- 证据摘要保存为 `evidence/real-profile-chat-20261001.json`。**限制**：这是后端真实 wire/Profile/适配器链，不是 Desktop UI 操作；经临时固定上游 relay，不证明真实公共 endpoint 在 Fake-IP 环境可直接配置。Claude 原生两个别名可能同映射 DeepSeek Flash，未证明不同实际 DeepSeek 模型。未重复运行来补日志，不保存 Key、提示文本或会话凭据。
+- 默认 Desktop launcher 与 mount 探针改用已安装的新 Pi/Claude 资产，Codex 仍用旧可信增强资产；保留显式环境覆盖。实际完整 Desktop 挂载复跑 exit 0：ready=true、rootMounted=true、errors=[]、Chat/Skills/Sessions、renderer 无 Node、prompt=0；仍只记 mount-only。
+- Codex 认证核查依据官方 `https://learn.chatgpt.com/docs/app-server`：外部 ChatGPT tokens 接口存在，但实验性且要求 host 管理认证生命周期。当前增强独立实例未继承全局登录，首次 Profile 配置只接受 custom gateway，不能用 API-Key 路线冒充官方订阅。用户已裁定 **Ordessa 自己独立登录一次**，不采用只读复用现有全局登录。下一步的账号认证属 Harness 的 Ordessa 专用账号，不属 Profile；会话配置目录继续每实例独立，账号持久凭据须与目录分开，不做每个 Profile 一个完整 HOME、不复制用户现有登录、不引入假 gateway 模式。官方登录、刷新/登出、原生 provider 路由与 Profile 模型接线仍待实施验证，不能仅启动浏览器就记完成。
+- 固定 TODO：第 7 项真实聊天部分现在有 Pi/Claude 的生产证据；第 4 UI→生产完整链、第 5 实际覆盖/Unknown/失败草稿场景、第 6 Codex 官方及已有历史跨 provider 恢复、全仓回归与用户验收仍未完成。不新增顶层阶段、不把两品牌后台验收当完整产品已完成。根 main 不动、未 push，保留他属截图。
