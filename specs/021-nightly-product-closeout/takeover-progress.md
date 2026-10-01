@@ -819,3 +819,35 @@ kilo 的 AVX2 变体按设计记为 `excluded-variant` 且未打包。
 - dsh/kilo builder 测试未注册进任何聚合入口（同上）。
 - `npm ci` 期间 kilo 跑了 `postinstall.mjs`，与 builder 注释声称的 `npm --ignore-scripts` 不一致；未改脚本。
 - 非 linux-x64 / 非 glibc 主机的构建路径（含 kilo `BUILD_LIBC=unknown` 时的降级）未测。
+
+### 发现的硬阻塞：信任根无法验证 dsh / kilo（已上报，未自行裁决）
+
+顺着"四个 harness 要能装进产品"往下追，撞到的不是权限而是**信任根本身**。
+
+`plugins/harness/runtime/native-artifact-policy.mjs::verifyInstalledArtifact` 把适配器入口
+写死成两个名字之一：
+
+    node_modules/<pkg>/dist/index.js              (variant: default)
+    node_modules/<pkg>/dist/ordessa-profile.mjs   (variant: pi-profile / native-profile)
+
+然后要求 `manifest.adapter.entry` 与之**逐字相等**，不等即抛 `installed manifest invalid`，
+且这一步在比对 treeDigest **之前**。用本分支真实构建出的 manifest 代入该判定：
+
+| | kind | 期望 entry | 真实 entry | 结果 |
+| --- | --- | --- | --- | --- |
+| dsh | `agentbox-dsh-runtime-artifact` ✅ | `.../@deepseek-ai/dsh/dist/index.js` | `.../@deepseek-ai/dsh/lib/bin.js` | **拒绝** |
+| kilo | `agentbox-kilo-runtime-artifact` ✅ | `.../@kilocode/cli/dist/index.js` | `.../@kilocode/cli/bin/kilo` | **拒绝** |
+| codex | `agentbox-codex-runtime-artifact` ✅ | （`native-profile` 变体）`.../codex-acp/dist/ordessa-profile.mjs` | 同左 | 通过 |
+
+`NATIVE_PROFILE` 只登记了 `codex-runtime` 与 `claude-runtime`，所以也没有任何变体能收下 dsh/kilo。
+
+**为什么这条卡住整条链**：该文件正是有界 root 发布器 `.cleanup-evidence/ordessa-asset-op.py`
+用 `verifier-pin.json` 按 sha256 钉死的信任根。因此 **dsh / kilo 的资产目前一个都装不进
+`/opt/ordessa/harnesses`**，与 sudo 无关——就算 sudo 立刻可用，校验器也会先拒。
+
+**为什么不自行修**：这要决定"入口文件名是继续由校验器钉死，还是改为信任 manifest 自报、
+校验器只做形状校验"。前者安全边界更紧但要求 dsh/kilo 的 builder 改产出；后者要承认
+manifest 自报入口，并在 `node_modules/<pkg>/` 之外开口子。两者都是安全裁决，按用户既定
+约束（安全决策立即上报）已登记待裁，本轮不动该文件、未放宽任何检查、未跳过任何校验。
+
+已写入 `docs/known-issues.md` Cross-component 表，标记 **Blocks rollout**。
