@@ -95,6 +95,22 @@ test('initialization failure disposes the new process without retrying', async (
   assert.equal(starts, 1); assert.equal(next.signalCode, 'SIGTERM')
 })
 
+test('a start() that throws has nothing to clean up and keeps the primary error', async () => {
+  const old = peer(); old.exitCode = 0
+  const stopped = []
+  await assert.rejects(replaceNativeProcess(old, () => {
+    throw new Error('native spawn was refused')
+  }, { graceMs: 1, terminateMs: 1, killMs: 1,
+    stopNative: async child => { stopped.push(child) } }), error => {
+    assert.match(error.message, /native spawn was refused/)
+    // No owner was ever produced, so a cleanup failure must not be invented.
+    assert.equal(error.nativeCleanupFailed, undefined)
+    assert.equal(error.nativeCleanupReason, undefined)
+    return true
+  })
+  assert.deepEqual(stopped, [old], 'cleanup must not run for a process that was never started')
+})
+
 test('actual native-style child exits before replacement and sibling stays live', async () => {
   const old = spawn(process.execPath, ['-e', 'process.stdin.resume(); process.stdin.on("end", () => process.exit(0))'])
   const sibling = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'])
@@ -151,8 +167,10 @@ test('a managed process must really be the native executable, never a Node launc
   // A live Node launcher is never accepted as the native owner.
   assert.throws(() => assertNativeProcess(launcher.pid, f.binary), /not the verified native Codex binary/)
   assert.throws(() => assertNativeProcess(nativeChild.pid + 999999, f.binary), /not present/)
-  // Same pid, different start time is pid reuse, not survival.
-  assert.throws(() => assertProcessGone({ ...identity, startTime: '0' }), /still present/)
+  // Same pid, different start time is pid reuse, not survival, and must say so.
+  assert.throws(() => assertProcessGone({ ...identity, startTime: '0' }), /pid was reused/)
+  // The genuinely surviving pid keeps its own distinct report.
+  assert.throws(() => assertProcessGone(identity), /still present/)
 })
 
 test('a launcher exit is never accepted as native exit; the owned group must be gone first', async () => {
@@ -217,6 +235,75 @@ test('an unkillable surviving native descendant still refuses the replacement', 
   assert.deepEqual([...new Set(signals.map(entry => entry[1]))], ['SIGTERM', 'SIGKILL'])
   assert.ok(signals.some(([pid]) => pid === 4243), 'the surviving descendant must be signalled, not just the launcher pid')
   assert.equal(signals.some(([pid]) => pid === process.pid), false, 'never signal this instance')
+})
+
+test('the owned set closes over descendants in any procfs enumeration order', () => {
+  // procfs enumerates unordered, so a grandchild can be read before its own
+  // parent. A single propagation pass would drop that branch, leaving the
+  // deepest native descendant unsignalled and alive beside its replacement.
+  const entries = [
+    { pid: 300, pgid: 300, ppid: 200, state: 'S', startTime: '3', executable: '/verified/native/codex' },
+    { pid: 200, pgid: 200, ppid: 100, state: 'S', startTime: '2', executable: '/verified/native/codex' },
+    { pid: 100, pgid: 100, ppid: 1, state: 'S', startTime: '1', executable: '/verified/native/codex' },
+    { pid: 400, pgid: 400, ppid: 300, state: 'S', startTime: '4', executable: '/verified/native/codex' },
+    { pid: 600, pgid: 600, ppid: 300, state: 'Z', startTime: '6', executable: '/verified/native/codex' },
+    { pid: 500, pgid: 500, ppid: 1, state: 'S', startTime: '5', executable: '/other/adapter' },
+  ]
+  const snapshot = entries => ({ supported: true, byPid: new Map(entries.map(entry => [entry.pid, entry])) })
+  const owned = pids => ownedProcessSet(snapshot(pids), { pid: 100, pgid: 100, startTime: '1' })
+    .map(entry => entry.pid).sort((a, b) => a - b)
+  // Child-before-parent order is the case a single pass gets wrong; 400 proves the
+  // closure is a fixpoint rather than a second single level.
+  assert.deepEqual(owned(entries), [100, 200, 300, 400])
+  // Enumeration order is not allowed to change the answer.
+  assert.deepEqual(owned([...entries].reverse()), [100, 200, 300, 400])
+  assert.deepEqual(owned([entries[2], entries[4], entries[0], entries[5], entries[3], entries[1]]),
+    [100, 200, 300, 400])
+  // Closure follows ppid only: a foreign adapter tree is never pulled in, and a
+  // zombie descendant still cannot act, so it is not a survivor.
+  assert.equal(owned(entries).includes(500), false)
+  assert.equal(owned(entries).includes(600), false)
+})
+
+test('a pid reused inside the stop window is never signalled, and its exit is confirmed', async () => {
+  const identity = { pid: 4242, pgid: 4242, leader: true,
+    executable: '/verified/native/codex', startTime: '1' }
+  const old = peer()
+  old.exitCode = 0; old.pid = identity.pid
+  old.ordessaNativeIdentity = Promise.resolve(identity)
+  // The OS handed the dead child's pid to an unrelated live process inside the
+  // stop window. It is not ours, so no signal may ever reach it.
+  const reused = { supported: true, byPid: new Map([
+    [4242, { pid: 4242, pgid: 4242, ppid: 1, state: 'S', executable: '/other/adapter', startTime: '999' }],
+    [process.pid, { pid: process.pid, pgid: process.pid, ppid: 1, state: 'S',
+      executable: '/other/adapter', startTime: String(process.pid) }]]) }
+  const signals = []
+  await stopNativeProcess(old, { graceMs: 1, terminateMs: 1, killMs: 1,
+    readSnapshot: () => reused, signal: (pid, signal) => { signals.push([pid, signal]); return true } })
+  assert.deepEqual(signals, [], 'a reused pid belongs to another process and must never be signalled')
+  assert.deepEqual(old.ordessaSignals, undefined)
+  // It is not a survivor of ours, but the reuse is still reported, not masked.
+  assert.throws(() => assertProcessGone(identity, reused), /pid was reused/)
+  // A reused pid beside a descendant that really is ours still refuses: the
+  // verdict may name either fault, but it must never report the old owner gone.
+  const mixed = { supported: true, byPid: new Map([
+    [4242, { pid: 4242, pgid: 4242, ppid: 1, state: 'S', executable: '/other/adapter', startTime: '999' }],
+    [4243, { pid: 4243, pgid: 4242, ppid: 1, state: 'S', executable: '/verified/native/codex',
+      startTime: '3' }]]) }
+  assert.throws(() => assertProcessGone(identity, mixed), Error,
+    'the surviving descendant must never be accepted as gone')
+  // Control: the same live pid with our own start time is still a survivor, is
+  // still escalated, and still reports survival rather than reuse.
+  const survivor = { supported: true, byPid: new Map([
+    [4242, { pid: 4242, pgid: 4242, ppid: 1, state: 'S', executable: '/verified/native/codex',
+      startTime: '1' }]]) }
+  assert.throws(() => assertProcessGone(identity, survivor), /still present/)
+  const escalations = []
+  await assert.rejects(stopNativeProcess(old, { graceMs: 1, terminateMs: 1, killMs: 1,
+    readSnapshot: () => survivor, signal: (pid, signal) => { escalations.push([pid, signal]); return true } }),
+  /exit was not confirmed/)
+  assert.deepEqual(escalations, [[4242, 'SIGTERM'], [4242, 'SIGKILL']],
+    'the leader is signalled when its identity still matches')
 })
 
 test('grace, terminate and kill stay bounded and only the OS exit event confirms', async t => {
@@ -462,6 +549,36 @@ test('initialization failure disposes the new native process exactly once, witho
   assert.deepEqual(order, ['capture', 'stop', 'start', 'initialize', 'cleanup'])
   assert.equal(instance.sessions.has('s'), false)
   assert.equal(instance.codexAcpClient.ordessaDisconnected, true)
+})
+
+test('a start() that throws invalidates the dead binding and cleans up nothing', async () => {
+  const order = []
+  const previousClient = { codexClient: {} }
+  const refused = () => { throw new Error('native spawn was refused') }
+  const instance = { sessions: new Map([['s', {}]]), codexAcpClient: previousClient }
+  // The default cleanup path would dereference a process that was never created.
+  await assert.rejects(orchestrateCodexReplacement({ instance, sessionId: 's', order,
+    capture: () => { order.push('capture'); return '/private/rollout.jsonl' },
+    stop: () => { order.push('stop') },
+    start: () => { order.push('start'); return refused() } }), error => {
+    assert.match(error.message, /native spawn was refused/)
+    assert.equal(error.nativeCleanupFailed, undefined)
+    assert.equal(error.nativeCleanupReason, undefined)
+    return true
+  })
+  assert.deepEqual(order, ['capture', 'stop', 'start'])
+  assert.equal(instance.sessions.has('s'), false)
+  assert.equal(previousClient.ordessaDisconnected, true)
+  assert.deepEqual([...instance.ordessaInvalidSessions], ['s'])
+  // An injected cleanup must not be handed an owner that never existed either.
+  let cleanups = 0
+  await assert.rejects(orchestrateCodexReplacement({ instance, sessionId: 's', order,
+    capture: () => { order.push('capture'); return '/private/rollout.jsonl' },
+    stop: () => { order.push('stop') },
+    start: () => { order.push('start'); return refused() },
+    cleanup: next => { cleanups++; return next } }), /native spawn was refused/)
+  assert.equal(cleanups, 0, 'nothing was started, so there is nothing to dispose of')
+  assert.equal(instance.ordessaInvalidSessions.has('s'), true)
 })
 
 test('a cleanup failure is surfaced separately and never replaces the primary error', async () => {

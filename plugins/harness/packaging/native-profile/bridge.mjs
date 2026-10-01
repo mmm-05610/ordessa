@@ -89,17 +89,19 @@ export function nativeProfileBridge(agent, brand, invalidParams) {
       if (brand === 'claude-code' && (input.provider.providerId !== 'main' || input.provider.apiType !== 'anthropic'))
         throw invalidParams('Supported Claude provider required')
     }, async restore(input) {
+      const stepFailure = (phase, detail) => {
+        const failure = new Error('Native restoration step failed')
+        failure.restorationPhase = phase
+        // Classify locally; never retain upstream text or headers.
+        failure.restorationReason = /rollout|not found|no saved|not persisted/iu.test(detail)
+          ? 'native-history-unavailable' : /auth|credential/iu.test(detail)
+            ? 'native-authentication-rejected' : /model/iu.test(detail)
+              ? 'native-model-rejected' : 'native-request-rejected'
+        return failure
+      }
       const step = async (phase, work) => {
         try { return await work() } catch (error) {
-          const failure = new Error('Native restoration step failed')
-          failure.restorationPhase = phase
-          // Classify locally; never retain upstream text or headers.
-          const detail = String(error?.message ?? '')
-          failure.restorationReason = /rollout|not found|no saved|not persisted/iu.test(detail)
-            ? 'native-history-unavailable' : /auth|credential/iu.test(detail)
-              ? 'native-authentication-rejected' : /model/iu.test(detail)
-                ? 'native-model-rejected' : 'native-request-rejected'
-          throw failure
+          throw stepFailure(phase, String(error?.message ?? ''))
         }
       }
       if (brand === 'codex') {
@@ -115,8 +117,16 @@ export function nativeProfileBridge(agent, brand, invalidParams) {
           delete agent.codexAcpClient.ordessaResumeRolloutPath
         }
         await step('model', () => agent.setSessionConfigOption({ sessionId: input.sessionId, configId: 'model', value: input.model }))
-        for (const item of preserved)
+        for (const item of preserved) {
           await step('preferences', () => agent.setSessionConfigOption({ sessionId: input.sessionId, configId: item.id, value: item.currentValue }))
+          // A restarted process answers with a native default when it silently
+          // ignores the request. Re-offering is not preservation: read the value
+          // back and refuse rather than report a default as the user's choice.
+          const applied = read({ sessionId: input.sessionId }).configOptions
+            .find(option => option.id === item.id)
+          if (!applied || applied.currentValue !== item.currentValue)
+            throw stepFailure('preferences', `preserved preference ${item.id} readback differs`)
+        }
         const session = agent.sessions.get(input.sessionId)
         const route = agent.codexAcpClient?.codexClient?.ordessaThreadRoutes?.get(input.sessionId)
         if (managed) return session && session.authProvider === 'openai' && route?.provider === 'openai'

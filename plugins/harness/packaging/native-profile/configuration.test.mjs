@@ -32,10 +32,20 @@ test('managed Codex rejects external provider effects without blocking internal 
   }
 })
 
+// The supported non-model preference each brand exposes. Stated here rather than
+// read from bridge.mjs so the gate contract is asserted independently.
+const PREFERENCE = { 'codex': 'reasoning_effort', 'claude-code': 'effort' }
+const PREFERENCE_VALUES = ['low', 'medium', 'high']
+
 function fixture(brand, effect) {
+  // A session whose only selector is `model` cannot show whether other supported
+  // preferences survive a model-only change, so every fixture carries one.
+  const preference = PREFERENCE[brand]
   const session = { configOptions: [{ id: 'model', type: 'select', currentValue: 'm1',
     options: [{ value: 'm1' }, { value: 'm2', _meta: { secret: 'do-not-project' } }],
-    _meta: { headers: { authorization: 'do-not-project' } } }], turnQueue: [] }
+    _meta: { headers: { authorization: 'do-not-project' } } },
+    { id: preference, type: 'select', currentValue: 'high',
+      options: PREFERENCE_VALUES.map(value => ({ value })) }], turnQueue: [] }
   let calls = 0
   const agent = { sessions: brand === 'codex' ? new Map([['s', session]]) : { s: session },
     activePrompts: new Map(), pendingTurnStarts: new Map(), sessionIsClosing: () => false,
@@ -43,13 +53,16 @@ function fixture(brand, effect) {
     async setSessionConfigOption(input) {
       calls++
       if (effect) await effect({ agent, session, input })
-      else session.configOptions[0].currentValue = input.value
-      return { configOptions: [{ id: 'model', currentValue: input.value }] }
+      else {
+        const option = session.configOptions.find(item => item.id === input.configId)
+        if (option) option.currentValue = input.value
+      }
+      return { configOptions: session.configOptions.map(item => ({ id: item.id, currentValue: item.currentValue })) }
     } }
   const invalidParams = message => new Error(message)
   const { read, assertIdle } = nativeConfigurationReader({ agent, brand, invalidParams })
   const operation = configurationOperations({ agent, read, assertIdle, invalidParams,
-    configIds: ['model'], evidencePrefix: brand + '-native-operation',
+    configIds: ['model', preference], evidencePrefix: brand + '-native-operation',
     setOption: input => agent.setSessionConfigOption(input) })
   const before = read({ sessionId: 's' })
   const input = { sessionId: 's', operationId: 'op', expectedGeneration: before.generation,
@@ -432,3 +445,149 @@ for (const brand of ['codex', 'claude-code']) {
     release(); await config
   })
 }
+
+// --- B09: a model-only change must not cost the user's other supported preferences ---
+
+const RESTORE_BASE_URL = 'https://controlled.invalid'
+const GATEWAY = { providerId: 'custom-gateway', apiType: 'openai', baseUrl: RESTORE_BASE_URL }
+
+function fence(before, operationId, configId, value) {
+  return { sessionId: before.sessionId, operationId, expectedGeneration: before.generation,
+    expectedConfigDigest: configurationDigest(before), configId, value }
+}
+function restorationInput(before, operationId, provider = GATEWAY) {
+  return { sessionId: 's', operationId, expectedGeneration: before.generation,
+    expectedConfigDigest: configurationDigest(before), model: 'm2',
+    target: { server_id: 'server', session_id: 'canonical', channel_id: 'channel', runtime_generation: 1 },
+    provider }
+}
+
+/** Codex restoration replaces the process, so the resumed session comes back on native
+ *  defaults: the user's reasoning preference only survives if the bridge re-applies it. */
+async function restartingCodex(f, apply = ({ option, input }) => { option.currentValue = input.value }) {
+  const bridge = nativeProfileBridge(f.agent, 'codex', message => new Error(message))
+  const writes = []
+  f.agent.setSessionConfigOption = async input => {
+    writes.push({ configId: input.configId, value: input.value })
+    const live = f.agent.sessions.get(input.sessionId)
+    const option = live?.configOptions.find(item => item.id === input.configId)
+    if (option) await apply({ option, input })
+  }
+  f.agent.codexAcpClient = { config: {}, codexClient: { ordessaThreadRoutes: new Map() } }
+  f.agent.setProvider = () => {}
+  f.agent.closeSession = async ({ sessionId }) => { f.agent.sessions.delete(sessionId) }
+  f.agent.ordessaReplaceCodexProcess = async () => {
+    await f.agent.closeSession({ sessionId: 's' })
+    f.agent.codexAcpClient = { config: { model: 'm1' }, codexClient: { ordessaThreadRoutes: new Map() } }
+  }
+  f.agent.resumeSession = async () => {
+    const replacement = structuredClone(f.session)
+    replacement.configOptions[0].currentValue = 'm1'
+    replacement.configOptions[1].currentValue = 'medium' // the user's 'high' did not survive
+    replacement.authProvider = 'custom-gateway'
+    f.agent.sessions.set('s', replacement)
+    f.agent.codexAcpClient.codexClient.ordessaThreadRoutes.set('s', {
+      provider: 'custom-gateway', api: 'responses', baseUrl: RESTORE_BASE_URL })
+  }
+  await bridge.withCreation({ cwd: '/controlled-project' }, async () => ({ sessionId: 's' }))
+  return { bridge, writes }
+}
+
+for (const brand of ['codex', 'claude-code']) {
+  test(`${brand}: the supported non-model preference is admitted by the model-only gate, unknown ids and unexposed values are not`, async () => {
+    const f = fixture(brand)
+    const bridge = nativeProfileBridge(f.agent, brand, message => new Error(message))
+    const preference = PREFERENCE[brand]
+    const before = bridge.read({ sessionId: 's' })
+    assert.deepEqual(before.configOptions.map(option => option.id).sort(), ['model', preference].sort())
+    assert.equal(before.configOptions.find(option => option.id === preference).currentValue, 'high')
+
+    const applied = await bridge.operation.apply(fence(before, 'op:preference', preference, 'low'))
+    assert.equal(applied.state, 'observed')
+    assert.equal(applied.observedValue, 'low')
+    assert.equal(f.calls(), 1)
+    assert.equal(f.session.configOptions[0].currentValue, 'm1') // the model was not touched
+    assert.equal(bridge.read({ sessionId: 's' }).configOptions.find(o => o.id === preference).currentValue, 'low')
+    assert.deepEqual(await bridge.operation.apply(fence(before, 'op:preference', preference, 'low')), applied)
+    assert.equal(f.calls(), 1)
+
+    await assert.rejects(bridge.operation.apply(fence(bridge.read({ sessionId: 's' }),
+      'op:unknown', 'sandbox_mode', 'low')), /bounded session model/)
+    await assert.rejects(bridge.operation.apply(fence(bridge.read({ sessionId: 's' }),
+      'op:unexposed', preference, 'unsupported-level')), /not exposed by the live session/)
+    assert.equal(f.calls(), 1) // both refusals happened before any upstream effect
+  })
+}
+
+test('codex restoration re-applies the preserved reasoning preference instead of the restarted default', async () => {
+  const f = fixture('codex')
+  const { bridge, writes } = await restartingCodex(f)
+  const before = bridge.read({ sessionId: 's' })
+  assert.equal(before.configOptions.find(option => option.id === 'reasoning_effort').currentValue, 'high')
+
+  const result = await bridge.restoration.apply(restorationInput(before, 'restore:preserved'))
+  assert.equal(result.state, 'observed')
+  // Model first, then the preserved preference, carrying the user's own value.
+  assert.deepEqual(writes, [{ configId: 'model', value: 'm2' },
+    { configId: 'reasoning_effort', value: 'high' }])
+  const after = bridge.read({ sessionId: 's' })
+  assert.equal(after.configOptions.find(option => option.id === 'reasoning_effort').currentValue, 'high')
+  assert.equal(after.configOptions.find(option => option.id === 'model').currentValue, 'm2')
+})
+
+test('codex restoration records an explicit refusal when the target rejects the preserved preference', async () => {
+  const f = fixture('codex')
+  const { bridge, writes } = await restartingCodex(f, ({ option, input }) => {
+    if (input.configId !== 'model') throw new Error('option value not accepted by this build')
+  })
+  const before = bridge.read({ sessionId: 's' })
+  const result = await bridge.restoration.apply(restorationInput(before, 'restore:refused'))
+  assert.equal(result.state, 'unknown')
+  assert.equal(result.failureStep, 'preferences')
+  assert.equal(result.failureReason, 'native-request-rejected')
+  assert.equal(result.evidenceRef, null) // never reported as a successful restoration
+  assert.deepEqual(writes, [{ configId: 'model', value: 'm2' },
+    { configId: 'reasoning_effort', value: 'high' }])
+  assert.deepEqual(await bridge.restoration.apply(restorationInput(before, 'restore:refused')), result)
+  assert.equal(writes.length, 2) // a replay never re-offers the refused preference
+})
+
+test('codex restoration never reports success when the target silently keeps a native default', async () => {
+  const f = fixture('codex')
+  // The setter acknowledges every request but only the model ever lands.
+  const { bridge } = await restartingCodex(f, ({ option, input }) => {
+    if (input.configId === 'model') option.currentValue = input.value
+  })
+  const before = bridge.read({ sessionId: 's' })
+  const result = await bridge.restoration.apply(restorationInput(before, 'restore:silent'))
+  assert.equal(result.state, 'unknown')
+  assert.equal(result.failureStep, 'preferences')
+  assert.equal(result.evidenceRef, null)
+  assert.equal(bridge.read({ sessionId: 's' }).configOptions
+    .find(option => option.id === 'reasoning_effort').currentValue, 'medium')
+})
+
+test('claude-code restoration keeps the supported effort preference at the user value', async () => {
+  const f = fixture('claude-code')
+  const bridge = nativeProfileBridge(f.agent, 'claude-code', message => new Error(message))
+  const writes = []
+  f.agent.unstable_setProvider = async provider => {
+    const replacement = structuredClone(f.session)
+    replacement.ordessaProviderRoute = { apiType: provider.apiType, baseUrl: provider.baseUrl }
+    f.agent.sessions.s = replacement
+  }
+  f.agent.setSessionConfigOption = async input => {
+    writes.push({ configId: input.configId, value: input.value })
+    const option = f.agent.sessions[input.sessionId].configOptions.find(item => item.id === input.configId)
+    if (option) option.currentValue = input.value
+  }
+  const before = bridge.read({ sessionId: 's' })
+  assert.equal(before.configOptions.find(option => option.id === 'effort').currentValue, 'high')
+  const result = await bridge.restoration.apply(restorationInput(before, 'restore:effort',
+    { providerId: 'main', apiType: 'anthropic', baseUrl: RESTORE_BASE_URL }))
+  assert.equal(result.state, 'observed')
+  assert.deepEqual(writes, [{ configId: 'model', value: 'm2' }]) // no process restart, so nothing to re-apply
+  const after = bridge.read({ sessionId: 's' })
+  assert.equal(after.configOptions.find(option => option.id === 'effort').currentValue, 'high')
+  assert.equal(after.configOptions.find(option => option.id === 'model').currentValue, 'm2')
+})

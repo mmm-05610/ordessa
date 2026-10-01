@@ -111,20 +111,30 @@ export function readProcessSnapshot() {
 /**
  * Live processes this instance owns: the managed pid, its own process group and
  * its descendants. A zombie has released its executable and cannot act, so it
- * never counts as a surviving native process.
+ * never counts as a surviving native process. `startTime` is the start time
+ * recorded with our identity: a pid now held by a process that started later is
+ * a reused pid, not ours, so it is neither a survivor nor a signal target.
  */
-export function ownedProcessSet(snapshot, { pid, pgid }) {
+export function ownedProcessSet(snapshot, { pid, pgid, startTime = null }) {
   if (!snapshot?.supported) return []
   const members = new Set()
   if (Number.isSafeInteger(pid) && pid > 0) members.add(pid)
   if (Number.isSafeInteger(pgid) && pgid > 0) for (const entry of snapshot.byPid.values())
     if (entry.pgid === pgid && entry.state !== 'Z') members.add(entry.pid)
-  for (const entry of snapshot.byPid.values()) {
-    if (entry.state === 'Z' || !members.has(entry.ppid)) continue
-    members.add(entry.pid)
+  // Closure to a fixpoint: procfs enumerates unordered, so a grandchild can be
+  // read before its own parent has joined the set and a single pass would drop
+  // it — leaving a live native descendant outside every escalation round.
+  for (let grew = true; grew;) {
+    grew = false
+    for (const entry of snapshot.byPid.values()) {
+      if (entry.state === 'Z' || members.has(entry.pid) || !members.has(entry.ppid)) continue
+      members.add(entry.pid); grew = true
+    }
   }
   members.delete(process.pid)
-  return [...members].map(entry => snapshot.byPid.get(entry)).filter(entry => entry && entry.state !== 'Z')
+  const reused = startTime && snapshot.byPid.get(pid)?.startTime !== startTime ? pid : null
+  return [...members].map(entry => snapshot.byPid.get(entry))
+    .filter(entry => entry && entry.state !== 'Z' && entry.pid !== reused)
 }
 
 export function assertNativeProcess(pid, nativeBinary, snapshot = readProcessSnapshot()) {
@@ -147,11 +157,14 @@ export function processIdentity(pid, snapshot = readProcessSnapshot()) {
 /** The retired native owner must be gone, and its pid must not have been reused. */
 export function assertProcessGone(identity, snapshot = readProcessSnapshot()) {
   if (!snapshot.supported) throw new Error('Native process identity requires procfs')
-  if (ownedProcessSet(snapshot, { pid: identity.pid, pgid: identity.pgid }).length)
-    throw new Error('The previous native process is still present')
-  const reused = snapshot.byPid.get(identity.pid)
+  // Reuse is decided before survival: a live pid with a later start time is a
+  // different process, and reporting it as a survivor of ours hides the reuse.
+  const reused = identity.startTime ? snapshot.byPid.get(identity.pid) : null
   if (reused && reused.startTime !== identity.startTime)
     throw new Error('The previous native process pid was reused')
+  if (ownedProcessSet(snapshot, { pid: identity.pid, pgid: identity.pgid,
+    startTime: identity.startTime }).length)
+    throw new Error('The previous native process is still present')
   return { gone: true, pid: identity.pid }
 }
 
@@ -189,7 +202,8 @@ export async function stopNativeProcess(child, { graceMs = 2000, terminateMs = 2
   try { identity = await (child.ordessaNativeIdentity ?? null) } catch { identity = null }
   if (!identity && Number.isSafeInteger(child.pid) && child.pid > 0)
     identity = { pid: child.pid, pgid: child.pid, leader: false }
-  const owned = () => identity ? ownedProcessSet(readSnapshot(), { pid: identity.pid, pgid: identity.pgid }) : []
+  const owned = () => identity ? ownedProcessSet(readSnapshot(), { pid: identity.pid,
+    pgid: identity.pgid, startTime: identity.startTime }) : []
   const confirmed = () => (identity ? exited(child) && owned().length === 0 : exited(child))
   if (confirmed()) return
   let onExit, timer, didExit = false
@@ -229,11 +243,14 @@ export async function replaceNativeProcess(previous, start, options = {}) {
     if (options.initialize) await options.initialize(next)
     return next
   } catch (failure) {
-    // The primary failure is the thrown one; cleanup is reported alongside it.
-    try { await stop(next.process, options) }
-    catch (cleanupError) {
-      failure.nativeCleanupFailed = true
-      failure.nativeCleanupReason = String(cleanupError?.message ?? cleanupError)
+    // A start() that threw produced no owner, so there is nothing to clean up and
+    // the primary failure stands alone rather than beside a bogus cleanup error.
+    if (next?.process) {
+      try { await stop(next.process, options) }
+      catch (cleanupError) {
+        failure.nativeCleanupFailed = true
+        failure.nativeCleanupReason = String(cleanupError?.message ?? cleanupError)
+      }
     }
     throw failure
   }
@@ -355,10 +372,14 @@ export async function orchestrateCodexReplacement({ instance, sessionId, capture
     next = await start()
     if (initialize) await initialize(next)
   } catch (failure) {
-    try { await (cleanup ? cleanup(next) : stopNativeProcess(next.process)) }
-    catch (cleanupError) {
-      failure.nativeCleanupFailed = true
-      failure.nativeCleanupReason = String(cleanupError?.message ?? cleanupError)
+    // A start() that threw produced no owner, so there is nothing to clean up and
+    // the primary failure stands alone rather than beside a bogus cleanup error.
+    if (next) {
+      try { await (cleanup ? cleanup(next) : stopNativeProcess(next.process)) }
+      catch (cleanupError) {
+        failure.nativeCleanupFailed = true
+        failure.nativeCleanupReason = String(cleanupError?.message ?? cleanupError)
+      }
     }
     invalidateCodexSession(instance, sessionId, 'native-replacement-failed')
     throw failure
