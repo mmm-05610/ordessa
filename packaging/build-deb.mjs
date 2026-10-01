@@ -36,8 +36,11 @@ export const PYTHON_VERSION = '3.12.14'
 export const PYTHON_RELEASE_TAG = '20260924'
 
 // docs/baseline.md records this as the reproducible bridge hash. It is checked,
-// not assumed -- see the note in the report about the observed mismatch.
-export const BRIDGE_SHA256_EXPECTED = '5fd6a37b127274eef5c2f27fe731a720e32e9bd64efd6df23e61fe739bbc61ea'
+// not assumed. Re-pinned 2026-10-02 (spec 021 P16): the previous value
+// 5fd6a37b... belonged to the pre-retirement source `e30f5ff6df^`, and
+// e30f5ff6df removed the duplicate Go Claude adapter, so a build from current
+// source has legitimately produced a different digest since 2026-09-27.
+export const BRIDGE_SHA256_EXPECTED = '714044a5b490a53d5fa89aade993c496e5fa3a5f7c614b4465c4990575185cbd'
 
 const args = process.argv.slice(2)
 const flag = name => args.includes('--' + name)

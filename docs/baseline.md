@@ -14,7 +14,7 @@ Known issues are registered, not blocking: `docs/known-issues.md`.
 | Python | 3.12.14 (suite-verified; Server/Pacthold floor 3.9, Harness API/default product floor 3.10) |
 | Go | 1.24.13 linux-amd64 (`/home/maoqh/ordessa-builds/go1.24.13`, tarball sha256 `1fc94b57…` — build record in `plugins/harness/adapters/` docs) |
 | Node / npm | 22.22.1 / 9.2.0 (frozen `package-lock.json`; npm-free-resolution has a known arborist crash — always install from the lock) |
-| Bridge build | `CGO_ENABLED=0 go build -buildvcs=false -trimpath -ldflags "-buildid=" ./cmd/acp` — reproduces sha256 `5fd6a37b127274eef5c2f27fe731a720e32e9bd64efd6df23e61fe739bbc61ea` byte-for-byte |
+| Bridge build | `CGO_ENABLED=0 go build -buildvcs=false -trimpath -ldflags "-buildid=" ./cmd/acp` — reproduces sha256 `714044a5b490a53d5fa89aade993c496e5fa3a5f7c614b4465c4990575185cbd` byte-for-byte (re-pinned 2026-10-02; the earlier `5fd6a37b…` is the pre-retirement source `e30f5ff6df^`, which still contained the duplicate Go Claude adapter — see `plugins/harness/adapters/acp-adapter/docs/BUILD-RECORD-ROUND-H.md`) |
 
 ## Desktop
 

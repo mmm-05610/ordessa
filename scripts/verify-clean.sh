@@ -10,7 +10,10 @@ CAND=${ORDESSA_CANDIDATE:-/home/maoqh/projects/ordessa}
 CLEAN=/home/maoqh/projects/ordessa-verify-clean
 VENV=/tmp/ordessa-verify-venv
 BRIDGE_OUT=/tmp/ordessa-verify-bridge
-WANT_SHA=5fd6a37b127274eef5c2f27fe731a720e32e9bd64efd6df23e61fe739bbc61ea
+# Current-tree bridge digest. Was 5fd6a37b..., which is the pre-retirement
+# source `e30f5ff6df^`; e30f5ff6df removed the duplicate Go Claude adapter and
+# the digest legitimately changed. Re-pinned 2026-10-02 (spec 021 P16).
+WANT_SHA=714044a5b490a53d5fa89aade993c496e5fa3a5f7c614b4465c4990575185cbd
 PASS=0; FAIL=0
 step() { echo; echo "=== $1"; }
 ok()   { echo "PASS: $1"; PASS=$((PASS+1)); }

@@ -3,7 +3,23 @@
 The Round H acceptance chain runs the binary `acp-adapter-round-h` (repo root).
 This record pins how it is reproduced byte-for-byte from this tree.
 
-## Artifact
+> **Superseded 2026-10-02.** The Round H digest below is **not reproducible from
+> current source, by design**. Commit `e30f5ff6df` ("Retire duplicate Go Claude
+> adapter in favor of pinned official ACP runtime", 2026-09-27) deleted
+> `internal/claude/*` and `pkg/claudeacp/*`; today's `./cmd/acp` accepts
+> `--adapter codex|pi` where the Round H tree accepted `codex|claude|pi`.
+> Building current source yields sha256 `714044a5…` (7 477 986 → 7 371 366 B,
+> the size delta consistent with that deletion), so `scripts/build-round-h.sh`
+> now pins `714044a5…`; the flag rationale below still holds for it, all four
+> flags remaining load-bearing. The Round H artifact is preserved verbatim as
+> history and is cited by the pre-retirement evidence files
+> (`packaging/acp-adapter/evidence/handshake-migrated-20260925.json`,
+> `packaging/acp-adapter/README.md`); those records state what was observed on
+> 2026-09-25 and were deliberately **not** rewritten. This record previously
+> claimed reproducibility "from this tree", which stopped being true on
+> 2026-09-27 and went unflagged until spec 021 P16.
+
+## Artifact (pre-retirement source `e30f5ff6df^`)
 
 | Item | Value |
 | --- | --- |
