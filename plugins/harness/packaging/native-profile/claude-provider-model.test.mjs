@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
+import { nativeConfigurationReader } from './configuration-query.mjs'
 
 const source = (await readFile(new URL('./claude-provider-model.mjs', import.meta.url), 'utf8'))
   .replace("'./ordessa-native-routing.mjs'", JSON.stringify(new URL('./routing.mjs', import.meta.url).href))
@@ -38,8 +39,24 @@ test('accepted exact identifier is retained without fabricating model capabiliti
   const session = fixture()
   retainAcceptedProviderModel(session, 'minimax-m2.7')
   retainAcceptedProviderModel(session, 'minimax-m2.7')
-  assert.deepEqual(session.models.availableModels[1], { modelId: 'minimax-m2.7', name: 'minimax-m2.7' })
+  assert.deepEqual(session.models.availableModels[1], { modelId: 'minimax-m2.7', name: 'minimax-m2.7', description: '' })
   assert.equal(session.models.availableModels.length, 2)
   assert.deepEqual(session.modelInfos, [])
   assert.equal(session.models.currentModelId, 'sonnet')  // native applyConfigOptionValue owns current state
+})
+
+test('an accepted off-picker model survives the upstream selector rebuild and strict restoration readback', () => {
+  const session = fixture()
+  session.models.availableModels[0].description = ''
+  retainAcceptedProviderModel(session, 'minimax-m2.7')
+  // Pinned buildModelConfigOption unconditionally includes description.
+  session.configOptions = [{ id: 'model', type: 'select', currentValue: 'minimax-m2.7',
+    options: session.models.availableModels.map(model => ({
+      value: model.modelId, name: model.name, description: model.description })) }]
+  const { read } = nativeConfigurationReader({ agent: { sessions: { s: session } },
+    brand: 'claude-code', invalidParams: message => new Error(message) })
+  const result = read({ sessionId: 's' })
+  assert.equal(result.configOptions[0].currentValue, 'minimax-m2.7')
+  assert.equal(result.configOptions[0].options[1]._meta.ordessaModel.baseUrl, provider.baseUrl)
+  assert.deepEqual(session.modelInfos, [])
 })

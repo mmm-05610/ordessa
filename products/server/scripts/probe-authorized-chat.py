@@ -29,16 +29,32 @@ class ImmediateLoop:
         callback(argument)
 
 
+def bounded_key(lines, line):
+    key = lines[line - 1].strip() if type(line) is int and 1 <= line <= len(lines) else ''
+    if not key or len(key) > 8000 or any(ord(c) < 32 or ord(c) == 127 for c in key):
+        raise ValueError('Invalid bounded key file')
+    return key
+
+
+def relay_upstreams(switch_go=False):
+    return {'/pi/': 'https://api.deepseek.com/',
+            '/claude/': 'https://api.deepseek.com/anthropic/',
+            '/claude-next/': 'https://opencode.ai/zen/go/' if switch_go
+                else 'https://api.deepseek.com/anthropic/'}
+
+
 def run(args):
     if not args.allow_model_calls:
         raise ValueError('Explicit model-call opt-in required')
     lines = args.key_file.read_text().splitlines()
-    key = lines[args.key_line - 1].strip() if 1 <= args.key_line <= len(lines) else ''
-    if not key or len(key) > 8000 or any(ord(c) < 32 for c in key):
-        raise ValueError('Invalid bounded key file')
+    key = bounded_key(lines, args.key_line)
+    switch_go = getattr(args, 'switch_go', False)
     brands = args.brand or ['pi', 'claude-code']
+    if switch_go and not args.switch_provider:
+        raise ValueError('Go destination requires explicit provider restoration mode')
     if args.switch_provider and (brands != ['claude-code'] or not args.local_relay or not args.fixed_assets):
         raise ValueError('Provider restoration probe requires Claude, fixed assets and isolated local relay')
+    destination_key = bounded_key(lines, args.destination_key_line) if switch_go else key
     native_brands = [brand for brand in brands if brand != 'pi']
     pi_bridge = 'pi' in brands
     environment = dict(os.environ)
@@ -50,8 +66,7 @@ def run(args):
     if args.local_relay:
         class Relay(BaseHTTPRequestHandler):
             def do_POST(self):
-                mapping = {'/pi/': 'https://api.deepseek.com/', '/claude/': 'https://api.deepseek.com/anthropic/',
-                           '/claude-next/': 'https://api.deepseek.com/anthropic/'}
+                mapping = relay_upstreams(switch_go)
                 prefix = next((p for p in mapping if self.path.startswith(p)), None)
                 length = int(self.headers.get('Content-Length', '0'))
                 if prefix is None or not 0 <= length <= 1024 * 1024 or '..' in self.path:
@@ -66,8 +81,12 @@ def run(args):
                 headers = {k: v for k, v in self.headers.items()
                            if k.lower() not in ('host', 'connection', 'content-length', 'accept-encoding')}
                 auth = self.headers.get('Authorization', '')
+                expected_key = destination_key if prefix == '/claude-next/' else key
+                if auth != 'Bearer ' + expected_key or (switch_go and prefix == '/claude-next/'
+                        and self.headers.get('x-api-key') != expected_key):
+                    relay_rejected.set(); self.send_error(401); return
                 print(json.dumps(dict(stage='relay-request', inference=inference, counts=dict(relay_counts),
-                    credentialMatches=(auth == 'Bearer ' + key or self.headers.get('x-api-key') == key),
+                    credentialMatches=True, upstream='go' if switch_go and prefix == '/claude-next/' else 'deepseek',
                     placeholderAuth=(auth == 'Bearer acp-proxy'))), flush=True)
                 request = Request(mapping[prefix] + self.path[len(prefix):],
                     data=self.rfile.read(length), headers=headers, method='POST')
@@ -107,6 +126,8 @@ def run(args):
                      'claude-code': '/opt/ordessa/harnesses/profile-native/artifacts'}
             if args.fixed_assets:
                 roots = {brand: '/opt/ordessa/harnesses/profile-chat-fixes/artifacts' for brand in brands}
+            if switch_go:
+                roots['claude-code'] = '/opt/ordessa/harnesses/profile-claude-provider-restoration/artifacts'
             plan = json.loads(subprocess.check_output(['node', '--input-type=module', '-e',
                 f"import {{nativeServerPlan}} from {json.dumps(module)}; console.log(JSON.stringify(nativeServerPlan({{harnessIds:{json.dumps(brands)},nativeProfileHarnesses:{json.dumps(native_brands)},piProfileBridge:{json.dumps(pi_bridge)},artifactRoots:{json.dumps({brand: roots[brand] for brand in brands})},pluginRoot:{json.dumps(str(ROOT / 'plugins/harness'))},artifactRoot:'/opt/ordessa/harnesses/artifacts'}}).args))"], text=True))
             value = lambda flag: plan[plan.index(flag) + 1]
@@ -155,7 +176,13 @@ def run(args):
                     original_configuration_rpc = channel._configuration_rpc
                     def counted_configuration_rpc(*args, **kwargs):
                         configuration_calls.append(args[1])  # method only; never retain secret-bearing params
-                        return original_configuration_rpc(*args, **kwargs)
+                        result = original_configuration_rpc(*args, **kwargs)
+                        if args[1] in ('_ordessa/session/configuration/restore', '_ordessa/session/configuration/operation'):
+                            record = result[1]
+                            print(json.dumps(dict(stage='native-operation-evidence',
+                                state=record.get('state'), phase=record.get('phase'),
+                                failureStep=record.get('failureStep'), failureReason=record.get('failureReason'))), flush=True)
+                        return result
                     channel._configuration_rpc = counted_configuration_rpc
                     inbox = queue.Queue()
                     channel.attach(ImmediateLoop(), inbox.put)
@@ -221,9 +248,18 @@ def run(args):
                     before_owner = registry.native_session_observation(channel.connection_id, native)
                     _, before_config = channel._configuration_rpc(native, '_ordessa/session/configuration', dict(sessionId=native))
                     if args.switch_provider:
+                        destination_credential = imported['credentialId']
+                        if switch_go:
+                            destination_import = wire('modelProvider.importApiKey', dict(requestId='live-go-key-' + uuid4().hex,
+                                harnessId=brand, apiKey=destination_key))
+                            if destination_import['state'] != 'imported':
+                                raise RuntimeError('Destination key import refused')
+                            destination_credential = destination_import['credentialId']
+                            locators.append(CredentialRecords(runtime.database).get(destination_credential, kind='api-key')['secret_locator'])
+                            models = (models[0], 'minimax-m2.7')
                         provider = wire('providerModels.create', dict(requestId='live-destination-' + uuid4().hex,
-                            harness=brand, provider='deepseek-destination', displayName='Authorized restoration destination',
-                            credentialId=imported['credentialId'], configuration=[], protocols=[protocol],
+                            harness=brand, provider='go-destination' if switch_go else 'deepseek-destination', displayName='Authorized restoration destination',
+                            credentialId=destination_credential, configuration=[], protocols=[protocol],
                             endpoints={protocol: f'http://127.0.0.1:{relay.server_port}/claude-next'},
                             models=[dict(modelId=m, displayName=m, availability='available', unavailableReason=None)
                                     for m in models]))['providerModel']
@@ -250,7 +286,7 @@ def run(args):
                         providerRouteRestoration=args.switch_provider,
                         restorationEffects=configuration_calls.count('_ordessa/session/configuration/restore'),
                         nativeGenerationRenewed=before_config['generation'] != after_config['generation'],
-                        distinctUpstreamVendors=False if args.switch_provider else None))
+                        distinctUpstreamVendors=switch_go if args.switch_provider else None))
                     print(json.dumps(evidence[-1]), flush=True)
                 print(json.dumps(dict(scope='real-product-profile-chat-not-desktop-ui', evidence=evidence,
                     viaLocalRelay=relay is not None, relayCounts=relay_counts)), flush=True)
@@ -285,6 +321,9 @@ if __name__ == '__main__':
     parser.add_argument('--fixed-assets', action='store_true', help='Use separately installed chat-fix assets')
     parser.add_argument('--switch-provider', action='store_true',
                         help='Claude: two distinct provider configurations/endpoints forwarding to same authorized upstream')
+    parser.add_argument('--switch-go', action='store_true',
+                        help='Explicit Claude DeepSeek-to-Go restoration; requires switch-provider/local-relay/fixed-assets')
+    parser.add_argument('--destination-key-line', type=int, default=2)
     parser.add_argument('--brand', choices=['pi', 'claude-code'], action='append')
     parser.add_argument('--local-relay', action='store_true', help='Explicit isolated TLS forwarding, not direct endpoint acceptance')
     run(parser.parse_args())

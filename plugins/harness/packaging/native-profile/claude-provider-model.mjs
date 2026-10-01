@@ -20,5 +20,5 @@ export function retainAcceptedProviderModel(session, value) {
   const models = session.models.availableModels
   if (!models.some(model => model.modelId === value))
     session.models = { ...session.models,
-      availableModels: [...models, { modelId: value, name: value }] }
+      availableModels: [...models, { modelId: value, name: value, description: '' }] }
 }

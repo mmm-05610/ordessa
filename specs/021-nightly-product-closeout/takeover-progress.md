@@ -4,7 +4,16 @@
 所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
 未合并、未 push、未启停既有用户服务、未重建 deb。三品牌后端真实聊天已通过；Codex Desktop 已通过 Profile 首发与同会话下一轮切换，两条真实回复。完整三品牌 UI/发行验收仍未完成。
 
-## 最新验证（2026-10-01，Go 原生 Claude / Codex 接入）
+## 最新验证（2026-10-01，Claude 跨真实供应商恢复，仍待修正版安装）
+
+- 用户已完成 profile-claude-provider 的 root 安装。本会话在真实宿主权限下独立复核完整树摘要及安装信任，exit 0；沙箱权限投影下的首次验证报 untrusted installed asset，不作为真实安装失败。
+- 产品探针增加显式 --switch-go：仅 Claude/fixed-assets/local-relay/switch-provider 组合允许，两份 Key 分行分别导入系统密钥环，目的地固定为 Go 的真实独立上游，代理不修改模型或认证头，逐上游检查凭据、保留原生头，原 16 请求/8 推理上限不变。结束清理本次通道、两条密钥环记录及 runtime。未动用户服务、官方账号、Profile/model-provider 业务归属或 host。
+- 两次新的临时产品测试均诚实失败：DeepSeek 首轮有真实回复，随后 Go 原生模型验证 HTTP 200，但恢复 record 为 unknown/restoration-outcome-unknown，无完整应用回执，故未发送第二轮。第二次仅增加闭合原生诊断，不重放第一次未知操作。**跨真实上游历史恢复尚未通过**；此证据不能取代前次同上游成功或此次单品牌 Go 直连成功。
+- 找到一项与失败阶段一致的确定性读回缺陷：新加入的原生目录外模型缺少 description，上游 buildModelConfigOption 无条件生成 description:undefined，strict reader 拒绝。补两条反例，修前分别红在缺少描述与 Invalid option text，修为 description:'' 后全绿。又直接调用锁定 upstream 的实际 buildModelConfigOption + strict reader，受控已接受模型读回通过。不放宽 reader、不伪造模型能力；真实修复效果仍须新版安装后由完整产品验证。
+- 新候选 claude-go-restoration-candidate 已从锁定源构建：tree 279b6e50f341ab9882da794d326cf4a2ff9cda89adf5e39bda6325b7cc8cdd86，3444 entries / 251167729 bytes，源锁不变。新增安装脚本 `.cleanup-evidence/install-claude-restoration-verified.sh` 发布到全新 /opt/ordessa/harnesses/profile-claude-provider-restoration，前版保留不覆盖；脚本 bash -n 通过，尚未执行，需要用户 sudo 认证。Go 产品探针明确指向该新版目录，未静默回退旧版。
+- 本轮定向回归 Python **289P**（products/server + Harness configuration_model）、Node **45P**（native-profile），exit 0，只有既有 Starlette warning；日志 claude-restoration-selector-python.log / node.log。未重跑全仓、Desktop UI 或发行包。main、他属截图及所有旧安装资产保持原样。
+
+## 前一检查点（2026-10-01，Go 原生 Claude / Codex 接入）
 
 - 已完成两个真实适配器的 Go 直连验证：Claude 候选 ACP 0.81.2 + MiniMax M2.7，Codex 既有增强 ACP 1.1.14 + GPT-5.6 Luna。每品牌 session/new=1、用户 prompt=1、真实非空回复、C4 confirmed、独立 owner 读回、相同原生身份/generation、重复 apply 零第二次原生效果。不是完整 Server/Profile/Desktop 验收；该探针使用 ledger fixture，没有证明跨上游历史恢复。
 - Claude 差异仍集中 Harness：受精确 provider 构建路由保护的自定义模型候选，SDK 接受后才保留模型选项，不伪造能力；配置查询只补已生效的当前模型。Python 的 Anthropic 原生参数同时提供私有 Bearer 与标准 x-api-key，Codex 原参数不变。Profile/model-provider/host 未添加品牌逻辑。
