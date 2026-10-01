@@ -40,6 +40,18 @@ test('registers privately, opaque key via runtime API, observes native creation 
   assert.equal(f.calls.filter(c => c[0] === 'register').length, 1)
 })
 
+test('extension model definitions contain the pinned Pi request fields', async () => {
+  const f = fixture()
+  await f.bridge.prepare(f.input)
+  for (const model of f.calls.find(c => c[0] === 'register')[2].models) {
+    assert.deepEqual(model.input, ['text'])
+    assert.equal(model.reasoning, false)
+    assert.ok(Number.isFinite(model.contextWindow) && model.contextWindow > 0)
+    assert.ok(Number.isFinite(model.maxTokens) && model.maxTokens > 0)
+    assert.deepEqual(Object.keys(model.cost).sort(), ['cacheRead', 'cacheWrite', 'input', 'output'])
+  }
+})
+
 test('unknown preparation is query-only and never exposes upstream key', async () => {
   const f = fixture()
   f.agent.deps.modelRuntime.setRuntimeApiKey = async () => { throw Error(f.input.provider.apiKey) }

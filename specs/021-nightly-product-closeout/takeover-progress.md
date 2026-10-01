@@ -6,6 +6,8 @@
 
 ## 最新验证（2026-10-01，Pi provider 安装完成）
 
+- 用户已授权真实聊天与配置切换验收。实际调用尚未开始：默认 `~/.ordessa` 只有 backups/logs/secrets，没有业务数据库或已登记模型供应商；运行环境未提供 OpenAI/Anthropic/Pi/Ordessa API 配置变量。三品牌全局登录文件存在（仅检查文件存在，未读取、复制或验证登录有效性）。下一步须确定使用现有官方登录还是指定 API 供应商，以及测试费用范围；授权不等于接入信息已具备，不可擅自将全局凭据复制进独立实例。
+
 - 用户完成新增 Pi provider 系统资产安装，路径 `/opt/ordessa/harnesses/profile-pi-provider/artifacts/pi-profile-runtime`；旧资产和全局配置未覆写。
 - 主代理通过真实已安装三品牌产品探针：真实产品装配、wire、SQLite 账本、Profile、canonical owner/generation、C4、系统密钥环。每品牌两条独立会话，首次配置确认后更新全局模型、只在 A 下一轮应用，B 仍保留原模型；Codex `gpt-5.6-sol/gpt-5.5`、Claude `haiku/sonnet`、Pi `synthetic-provider/second/first`，native IDs 分离。`new=6/prompt=0/HTTP=0`，exit 0。通道、精确合成密钥、自有产品均已清理。不是 UI 发送、真实推理或已有历史跨供应商恢复证据。
 - 产品原生启动器与安装探针的默认增强资产根改为上述 Pi 根和 `/opt/ordessa/harnesses/profile-native/artifacts`，仍完整验证来源与实例隔离、保留环境变量覆盖及显式普通 Pi 路线。未改 host；根 `npm dev` 仍是原隔离预览，完整产品入口是 `node products/desktop/run-native.mjs`，两者不能混称。
@@ -444,3 +446,14 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 最终重跑 **Python 417/417**（configuration_model + products/server + Profile 全套 + owner + action executor），**Node 112/112**（native/Pi/安装边界），exit 0；只有既有 Starlette deprecation warning。日志 `.cleanup-evidence/native-routing-python.log`、`native-routing-all-node.log`。一次 Python 命令误指 tests/server_acp 子目录，未运行测试，不计作门禁证据；随后按实际路径完整重跑。
 - 新候选 `.cleanup-evidence/native-routing-verified-RYfWBb` 重新从锁定源构建；两品牌实际无模型首次创建均通过：provider-before-new、model-before-return、独立读回、nativeConstructionRouteBound=true、session/new=1、resume=0、prompt=0、inferenceRequests=0。日志 `.cleanup-evidence/native-routing-real.log`。仍是 native-adapter-initial-model-not-server-profile，不是 Profile receipt 或 Desktop UI 全链验收；候选尚未系统安装。
 - 下一项具体缺口：首次提交准备接缝目前不携带后端 Profile 配置意图；须在独立 channel 的 session/new 之前由后端解析 Profile/provider/credential，并调用 Harness owner-only prepare。现有后置 register/apply 无法代替这一前置动作。后续凭据引用还须与可信后端注入事实绑定，不能直接删除 credentialRef 通过 model-only 校验。已有历史跨 provider 恢复、最终可信安装及完整产品验收也仍未完成。没有新增顶层阶段；main、host、旧系统资产、用户服务与他属截图不动，未 push、未真实模型调用。
+
+### 授权真实聊天诊断与两项适配修复（2026-10-01）
+
+- 用户授权 Codex 使用现有官方登录，Pi/Claude 使用其指定的本地 DeepSeek Key。Key 文件保持 ignored、不进提交、不输出内容；仅在内存读取并为探针导入专用系统密钥环条目，结束删除该条目。授权不等于聊天成功。
+- 已验证真实 DeepSeek `/models` 返回 `deepseek-flash`、`deepseek-v4-pro`。本机代理将域名解析为 198.18.0.4，产品 endpoint SSRF 门禁拒绝；未放宽门禁或改变系统代理。诊断使用显式、临时、固定上游 HTTPS 的 loopback relay；此证据不证明直接 endpoint 的产品可用性。
+- Pi 旧资产在 first prompt 前拒绝，relay HTTP=0。合成无真实凭据的请求探针定位到 extension 模型定义缺 input 等请求字段；Pi 0.84.2 的 extension 注册不使用 models.json 的默认值。新增反例先红后绿；调用方补其 generic text-model 默认字段，不宣称供应商价格/多模态/推理能力。Pi Node 测试 61/61，修正候选真实双实例创建探针通过（prompt=0、HTTP=0、凭据持久化=0）。合成请求由 undefined.includes 变成预期不可连接的 loopback 错误。
+- Claude 旧资产真实请求返回 401，诊断仅输出凭据是否匹配和占位 token 布尔值；实际发出的 Authorization 是 acp-proxy，非授权 Key。一次大小写修正无效，已完整撤销，不留下试验补丁。增强构建中修正原生 provider 环境的私有 auth token 注入，固定源摘要校验不变；合成本地 `/v1/messages` 请求实证收到正确测试凭据，外网调用=0。Native Node 测试 37/37。此测试曾误把 /api/hello HEAD 当模型请求，校准后只检查 messages 请求；不把首版失败当生产缺陷。
+- 两候选从原锁定源重建，旧系统资产完全不动：Pi digest `865ebdfc807f65c91bc8f674fddd57354da523cc0e6aab69f948b69f51a58ec3`（15463 entries / 64936226 bytes）；Claude digest `3ac86b9b17cbf062c7d2b7ff1e71106d7e6dd104da6f1d1f203d25b5ca3f36fb`（3443 entries / 251161770 bytes）。/tmp 构建两次遇配额错误，改用本树 gitignored `.cleanup-evidence/` 后成功，未删除用户数据。
+- 新增有界、必须 `--allow-model-calls` 的后端产品探针 `products/server/scripts/probe-authorized-chat.py`，两次短消息检验同会话上下文及 Profile 下轮 model 应用；认证拒绝后立即终止并清理，不自动重放 Unknown。`--fixed-assets` 仅采用即将安装的新可信资产。它不是 Desktop UI 验收。
+- **当前仍未完成真实聊天**：Pi 修正候选待 root 安装后验证；Claude 修正候选同样待安装，之前超时/401 不作通过证据。Codex 官方登录还需核对独立实例的认证接入：增强首次创建当前只支持 custom gateway，不能静默复制全局 auth/config 或冒称官方 Profile 路线可用。跨 provider 已有历史恢复、完整 UI 验收仍未完成。
+- 用户下一动作：`bash /tmp/ordessa-install-chat-fixes-verified.sh`，新增 `/opt/ordessa/harnesses/profile-chat-fixes`，预先锁定完整摘要并验证 root 所有权，拒绝覆盖。之后继续真实聊天与 Codex 官方认证路线。未 push、未合并，根仍 main，他属截图保持不动。

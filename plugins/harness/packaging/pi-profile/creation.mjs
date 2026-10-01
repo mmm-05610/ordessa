@@ -52,7 +52,13 @@ export function piCreation({ agent, read, invalidParams }) {
         phase: 'preparing', after: null } }
     try {
       runtime.registerProvider(input.provider.providerId, { api: input.provider.apiType,
-        baseUrl: input.provider.baseUrl, models: input.models.map(id => ({ id, name: id })) })
+        // Extension registration (unlike models.json) does not fill these in
+        // Pi 0.84.2. Use its generic text-model defaults, not claimed vendor
+        // pricing/vision/reasoning capabilities, until catalog metadata exists.
+        baseUrl: input.provider.baseUrl, models: input.models.map(id => ({ id, name: id,
+          reasoning: false, input: ['text'],
+          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+          contextWindow: 128000, maxTokens: 16384 })) })
       // Unlike provider config.apiKey, this API treats bytes as opaque, never as
       // a command/env configuration expression. It does not persist auth.json.
       if (Object.hasOwn(input.provider, 'apiKey'))

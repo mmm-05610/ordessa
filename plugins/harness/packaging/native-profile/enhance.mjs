@@ -45,8 +45,12 @@ export function enhanceSource(source, brand) {
     .onRequest('_ordessa/session/configuration/operation', { parse: input => ordessaProfile(${get}).operation.parseQuery(input) }, ctx => ordessaProfile(${get}).queryOperation(ctx.params))
     `
   source = once(source, '.onRequest(methods.agent.session.setMode,', registration + '.onRequest(methods.agent.session.setMode,')
-  if (brand === 'claude-code') source = once(source, '                providerCacheKey,',
-    '                providerCacheKey,\n                ordessaProviderRoute: { apiType: resolvedProvider?.apiType ?? null, baseUrl: resolvedProvider?.baseUrl ?? null },')
+  if (brand === 'claude-code') {
+    source = once(source, '                providerCacheKey,',
+      '                providerCacheKey,\n                ordessaProviderRoute: { apiType: resolvedProvider?.apiType ?? null, baseUrl: resolvedProvider?.baseUrl ?? null },')
+    source = once(source, 'ANTHROPIC_AUTH_TOKEN: "acp-proxy", // Bypass local Claude login checks',
+      'ANTHROPIC_AUTH_TOKEN: claudeProviderAuthToken(config.headers), // Private provider credential, not login placeholder')
+  }
   if (brand === 'codex') {
     for (const [name, method] of [['threadStart', 'thread/start'], ['threadResume', 'thread/resume']]) {
       source = once(source,
@@ -56,7 +60,8 @@ export function enhanceSource(source, brand) {
   }
   // Preserve a CLI shebang as the first line.
   const imported = "import { nativeProfileBridge } from './ordessa-native-profile.mjs';\n"
-    + (brand === 'codex' ? "import { captureCodexThreadRoute } from './ordessa-native-routing.mjs';\n" : '')
+    + (brand === 'codex' ? "import { captureCodexThreadRoute } from './ordessa-native-routing.mjs';\n"
+      : "import { claudeProviderAuthToken } from './ordessa-claude-auth.mjs';\n")
   source = source.startsWith('#!') ? source.replace('\n', '\n' + imported) : imported + source
   return source
 }
@@ -68,6 +73,7 @@ export function enhanceStaging(dist, brand) {
   const target = path.join(dist, pin.file)
   const enhanced = enhanceSource(readFileSync(target, 'utf8'), brand)
   const files = {
+    ...(brand === 'claude-code' ? {'ordessa-claude-auth.mjs': readFileSync(path.join(HERE, 'claude-auth.mjs'), 'utf8')} : {}),
     'ordessa-profile.mjs': readFileSync(path.join(HERE, 'entry.mjs'), 'utf8'),
     'ordessa-native-profile.mjs': readFileSync(path.join(HERE, 'bridge.mjs'), 'utf8'),
     'ordessa-native-configuration-query.mjs': readFileSync(path.join(HERE, 'configuration-query.mjs'), 'utf8')
