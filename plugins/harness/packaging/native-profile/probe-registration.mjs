@@ -16,8 +16,8 @@ const selectedBrand = process.argv.find(arg => arg.startsWith('--brand='))?.slic
 if (selectedBrand && !['codex', 'claude-code'].includes(selectedBrand)) throw new Error('Unknown probe brand')
 if (!root || !path.isAbsolute(root)) throw new Error('Expected absolute candidate asset root')
 for (const [brand, relative] of [
-  ['codex', 'codex-runtime/node_modules/@agentclientprotocol/codex-acp/dist/index.js'],
-  ['claude-code', 'claude-runtime/node_modules/@agentclientprotocol/claude-agent-acp/dist/index.js'],
+  ['codex', 'codex-runtime/node_modules/@agentclientprotocol/codex-acp/dist/ordessa-profile.mjs'],
+  ['claude-code', 'claude-runtime/node_modules/@agentclientprotocol/claude-agent-acp/dist/ordessa-profile.mjs'],
 ]) {
   if (selectedBrand && brand !== selectedBrand) continue
   const home = mkdtempSync(path.join(tmpdir(), 'ordessa-native-registration-'))
@@ -34,7 +34,8 @@ for (const [brand, relative] of [
   }
   const child = spawn(process.execPath, [path.join(root, relative)], {
     env: { PATH: process.env.PATH, HOME: home, CODEX_HOME: instance,
-      CLAUDE_CONFIG_DIR: instance, XDG_CONFIG_HOME: instance, NO_COLOR: '1' },
+      CLAUDE_CONFIG_DIR: instance, XDG_CONFIG_HOME: instance, NO_COLOR: '1',
+      ORDESSA_NATIVE_INSTANCE_DIR: instance },
     stdio: ['pipe', 'pipe', 'pipe'], detached: true,
   })
   let next = 0

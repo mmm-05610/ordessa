@@ -98,6 +98,9 @@ function installedSpec(harness, variant) {
   if (variant === "pi-profile" && harness === "pi") {
     return { ...MANAGED.pi, artifact: "pi-profile-runtime", entry: "dist/ordessa-profile.mjs" }
   }
+  if (variant === 'native-profile' && ['codex', 'claude-code'].includes(harness)) {
+    return { ...MANAGED[harness], entry: 'dist/ordessa-profile.mjs' }
+  }
   throw new LaunchRefusal("ADAPTER_ROUTE_UNBOUND")
 }
 

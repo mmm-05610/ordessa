@@ -528,7 +528,8 @@ export function build({ output, source = DEFAULT_SOURCE, replace = false, profil
     const manifest = {
       schemaVersion: 1,
       kind: "agentbox-codex-runtime-artifact",
-      adapter: { package: ADAPTER_PACKAGE, version: ADAPTER_VERSION, entry: ENTRY },
+      adapter: { package: ADAPTER_PACKAGE, version: ADAPTER_VERSION,
+        entry: profileBridge ? path.join(path.dirname(ENTRY), 'ordessa-profile.mjs') : ENTRY },
       ...(extension ? { extension } : {}),
       native: {
         package: PLATFORM_PACKAGE, version: platform.version, target: NATIVE_TARGET,

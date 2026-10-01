@@ -60,6 +60,7 @@ export function enhanceStaging(dist, brand) {
   const target = path.join(dist, pin.file)
   const enhanced = enhanceSource(readFileSync(target, 'utf8'), brand)
   const files = {
+    'ordessa-profile.mjs': readFileSync(path.join(HERE, 'entry.mjs'), 'utf8'),
     'ordessa-native-profile.mjs': readFileSync(path.join(HERE, 'bridge.mjs'), 'utf8'),
     'ordessa-native-configuration-query.mjs': readFileSync(path.join(HERE, 'configuration-query.mjs'), 'utf8')
       .replace("'../pi-profile/configuration-query.mjs'", "'./ordessa-configuration-query.mjs'"),

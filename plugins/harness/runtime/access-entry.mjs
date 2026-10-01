@@ -160,7 +160,8 @@ async function main() {
   const controlledPeer = argv.length === 2 && argv[0] === "--native" && argv[1] === "--controlled-test-peer"
   const native = argv[0] === "--native"
   const piProfileBridge = argv.length === 4 && argv[3] === "--pi-profile-bridge"
-  const installed = native && (argv.length === 3 || piProfileBridge) && argv[1] === "--installed-artifact-root"
+  const nativeProfileBridge = argv.length === 4 && argv[3] === '--native-profile-bridge'
+  const installed = native && (argv.length === 3 || piProfileBridge || nativeProfileBridge) && argv[1] === "--installed-artifact-root"
     && path.isAbsolute(argv[2]) && path.resolve(argv[2]) === argv[2] && !argv[2].includes("\0")
   const installedArtifactRoot = installed ? argv[2] : null
   if ((!controlledPeer && !installed && argv.length !== (native ? 1 : 0)) ||
@@ -308,6 +309,10 @@ async function main() {
       if (piProfileBridge && ["ORDESSA_PI_INSTANCE_DIR", "PI_CODING_AGENT_DIR", "PI_CODING_AGENT_SESSION_DIR"].includes(key)) {
         throw new Refused("ADAPTER_ENVIRONMENT_INVALID", key)
       }
+      if (nativeProfileBridge && ['ORDESSA_NATIVE_INSTANCE_DIR', 'HOME', 'CODEX_HOME',
+          'CLAUDE_CONFIG_DIR', 'XDG_CONFIG_HOME'].includes(key)) {
+        throw new Refused('ADAPTER_ENVIRONMENT_INVALID', key)
+      }
       if (!ENVIRONMENT_KEY.test(key) || SENSITIVE_ENVIRONMENT_KEY.test(key) || LAUNCH_OVERRIDE_KEY.test(key)
           || !allowsPythonPath(harness, key)
           || typeof value !== "string" || value.length > 8192 || /[\0]/.test(value)
@@ -324,7 +329,7 @@ async function main() {
       selectedLaunch = selectControlledPeerLaunch(harness, launch)
     } else if (installedArtifactRoot !== null) {
       selectedLaunch = resolveInstalledLaunch(harness, launch, { artifactBase: installedArtifactRoot,
-        variant: piProfileBridge ? "pi-profile" : "default" })
+        variant: piProfileBridge ? "pi-profile" : nativeProfileBridge ? 'native-profile' : "default" })
     } else {
       selectedLaunch = resolveManagedLaunch(harness, launch)
         ?? resolveLegacyLaunch(harness, launch, environment)

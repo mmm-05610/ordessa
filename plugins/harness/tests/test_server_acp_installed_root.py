@@ -4,9 +4,9 @@ import pytest
 from ordessa_harness.server_acp.access_entry import AccessEntryTransport
 
 
-def transport(**kwargs):
+def transport(harness_id="pi", **kwargs):
     return AccessEntryTransport(node="/usr/bin/node", entry="/opt/ordessa/access-entry.mjs",
-                               harness_id="pi", cwd="/tmp", adapter={"command": "/usr/bin/node", "args": []},
+                               harness_id=harness_id, cwd="/tmp", adapter={"command": "/usr/bin/node", "args": []},
                                on_line=lambda _: None, on_exit=lambda _: None, **kwargs)
 
 
@@ -38,6 +38,26 @@ def test_pi_profile_variant_is_startup_only_and_requires_private_instance(tmp_pa
     assert selected._inner._environment["ORDESSA_PI_INSTANCE_DIR"] == str(instance)
     assert selected._inner._environment["SAFE"] == "yes"
     assert "instance_directory" not in selected._adapter
+
+
+@pytest.mark.parametrize("brand", ["codex", "claude-code"])
+def test_native_profile_variant_pins_private_instance_at_startup(tmp_path, brand):
+    instance = tmp_path / "instance"
+    instance.mkdir(mode=0o700)
+    selected = transport(harness_id=brand, installed_artifact_root="/opt/ordessa",
+                         native_profile_bridge=True, instance_directory=str(instance), environment={"SAFE": "yes"})
+    assert selected._inner._argv[-1] == "--native-profile-bridge"
+    assert selected._inner._environment["ORDESSA_NATIVE_INSTANCE_DIR"] == str(instance)
+    assert selected._inner._environment["SAFE"] == "yes"
+    assert "instance_directory" not in selected._adapter
+    for delta in [{"pi_profile_bridge": True}, {"controlled_test_peer": True},
+                  {"harness_id": "pi"}, {"installed_artifact_root": None},
+                  {"native_profile_bridge": "yes"}, {"instance_directory": None}]:
+        options = dict(harness_id=brand, installed_artifact_root="/opt/ordessa",
+                       native_profile_bridge=True, instance_directory=str(instance))
+        options.update(delta)
+        with pytest.raises((ValueError, TypeError)):
+            transport(**options)
 
 
 @pytest.mark.parametrize("kwargs", [

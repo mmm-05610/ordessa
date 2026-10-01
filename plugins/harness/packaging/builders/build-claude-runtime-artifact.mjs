@@ -479,7 +479,8 @@ export function build({ output, source, replace = false, variant = "canonical", 
     const manifest = {
       schemaVersion: 1,
       kind: legacy ? "ordessa-claude-legacy-runtime-artifact" : "agentbox-claude-runtime-artifact",
-      adapter: { package: ADAPTER_PACKAGE, version, entry: ENTRY },
+      adapter: { package: ADAPTER_PACKAGE, version,
+        entry: profileBridge ? path.join(path.dirname(ENTRY), 'ordessa-profile.mjs') : ENTRY },
       ...(extension ? { extension } : {}),
       packages: packages.map((item) => ({
         path: item.path,

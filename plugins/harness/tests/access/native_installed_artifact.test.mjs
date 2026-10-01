@@ -79,6 +79,42 @@ function profileFixture(t, sharedBase) {
   return f
 }
 
+for (const brand of BRANDS.slice(1)) {
+  test(`${brand[0]}: native Profile assets require explicit selection and exact extension provenance`, t => {
+    simulateRootAdministration(t)
+    const f = fixture(t, brand)
+    const manifest = manifestFor(f)
+    const original = f.entry
+    f.entry = path.join(path.dirname(original), 'ordessa-profile.mjs')
+    fs.copyFileSync(new URL('../../packaging/native-profile/entry.mjs', import.meta.url), f.entry)
+    f.launch.args = [f.entry]
+    manifest.adapter.entry = `node_modules/${f.packageName}/dist/ordessa-profile.mjs`
+    Object.assign(manifest, installedArtifactSummary(f.root))
+    manifest.treeDigest = manifest.digest; delete manifest.digest
+    manifest.extension = { id: `${f.harness}-profile`, version: 1,
+      configurationQuery: '_ordessa/session/configuration', instanceDirectoryRequired: true,
+      upstreamSourceDigest: 'sha256:' + (f.harness === 'codex'
+        ? '9634b5457e44d55471d0969bcc5a2a1d4cbb83ba637eaf023d34d2e975fd7db8'
+        : '36a33a984624541ea013c085f5bd1d982294cfe70beb42826752f62bdc538d64') }
+    publishManifest(f, manifest)
+    assert.throws(() => installedLaunchReference(f.harness, f.base), /ADAPTER_ARTIFACT_UNVERIFIED/)
+    const options = { artifactBase: f.base, variant: 'native-profile' }
+    assert.deepEqual(resolveInstalledLaunch(f.harness, f.launch, options),
+      { ...f.launch, source: 'installed-artifact', version: f.version })
+    for (const delta of [{ id: 'pi-profile' }, { version: 2 },
+      { instanceDirectoryRequired: false }, { upstreamSourceDigest: 'invalid' },
+      { upstreamSourceDigest: `sha256:${'b'.repeat(64)}` }, { extra: true }]) {
+      publishManifest(f, { ...manifest, extension: { ...manifest.extension, ...delta } })
+      assert.throws(() => resolveInstalledLaunch(f.harness, f.launch, options), /ADAPTER_ARTIFACT_UNVERIFIED/)
+    }
+    publishManifest(f, { ...manifest, extension: undefined })
+    assert.throws(() => resolveInstalledLaunch(f.harness, f.launch, options), /ADAPTER_ARTIFACT_UNVERIFIED/)
+    publishManifest(f, { ...manifest, extension: undefined,
+      adapter: { ...manifest.adapter, entry: `node_modules/${f.packageName}/dist/index.js` } })
+    assert.deepEqual(installedLaunchReference(f.harness, f.base).args, [original])
+  })
+}
+
 test("Pi enhanced entry requires explicit variant; default and read-only routes do not adopt it", (t) => {
   simulateRootAdministration(t)
   const f = profileFixture(t)
@@ -352,6 +388,24 @@ function entryRun(args, message, environment = {}) {
     input: message ? `${JSON.stringify(message)}\n` : "", env: { ...process.env, AGENTBOX_SIDECAR_ISOLATED: "", ...environment } })
   assert.equal(result.error, undefined)
   return result.stdout.trim().split("\n").filter(Boolean).map((line) => JSON.parse(line))
+}
+
+for (const brand of BRANDS.slice(1)) {
+  test(`${brand[0]}: enhanced access startup never accepts client-owned instance scope`, t => {
+    const f = fixture(t, brand)
+    const argv = ['--native', '--installed-artifact-root', f.base, '--native-profile-bridge']
+    const connect = { op: 'connect', id: 1, harness: f.harness, launch: f.launch }
+    for (const key of ['ORDESSA_NATIVE_INSTANCE_DIR', 'HOME', 'CODEX_HOME',
+      'CLAUDE_CONFIG_DIR', 'XDG_CONFIG_HOME']) {
+      const result = entryRun(argv, { ...connect,
+        launch: { ...f.launch, environment: { [key]: '/tmp/foreign' } } })
+      assert.equal(result.find(row => row.id === 1)?.error.code, 'ADAPTER_ENVIRONMENT_INVALID')
+    }
+    assert.equal(entryRun(argv, connect).find(row => row.id === 1)?.error.code, 'ADAPTER_LAUNCH_MISMATCH')
+    assert.equal(entryRun(['--native', '--native-profile-bridge'], null)[0].error.code, 'SIDECAR_MODE_INVALID')
+    assert.equal(entryRun(argv, { ...connect, harness: 'pi' }).find(row => row.id === 1)?.error.code,
+      'ADAPTER_ROUTE_UNBOUND')
+  })
 }
 
 test("enhanced startup selects exact route and refuses client instance overrides", (t) => {

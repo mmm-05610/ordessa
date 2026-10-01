@@ -8,6 +8,12 @@ import { createHash } from "node:crypto"
 const MAX_ENTRIES = 32768
 const MAX_BYTES = 1024 * 1024 * 1024
 const DIGEST = /^sha256:[0-9a-f]{64}$/
+const NATIVE_PROFILE = {
+  'codex-runtime': { packageName: '@agentclientprotocol/codex-acp', version: '1.1.14',
+    id: 'codex-profile', source: '9634b5457e44d55471d0969bcc5a2a1d4cbb83ba637eaf023d34d2e975fd7db8' },
+  'claude-runtime': { packageName: '@agentclientprotocol/claude-agent-acp', version: '0.81.2',
+    id: 'claude-code-profile', source: '36a33a984624541ea013c085f5bd1d982294cfe70beb42826752f62bdc538d64' },
+}
 
 function trustedStat(file, directory = false) {
   const stat = fs.lstatSync(file)
@@ -105,7 +111,9 @@ export function installedArtifactSummary(root) {
 export function verifyInstalledArtifact({ artifactBase, artifact, packageName, version, variant = "default" }) {
   // This is a bounded variant, not a caller-supplied entry override.
   const profileBridge = variant === "pi-profile"
-  if ((variant !== "default" && !profileBridge)
+  const nativeProfile = variant === 'native-profile' ? NATIVE_PROFILE[artifact] : null
+  if ((variant !== "default" && !profileBridge && !nativeProfile)
+      || (nativeProfile && (packageName !== nativeProfile.packageName || version !== nativeProfile.version))
       || (profileBridge && (artifact !== "pi-profile-runtime" || packageName !== "@automatalabs/pi-acp"))) {
     throw new Error("installed artifact variant invalid")
   }
@@ -117,7 +125,7 @@ export function verifyInstalledArtifact({ artifactBase, artifact, packageName, v
   const root = path.join(artifactBase, artifact)
   trustedStat(root, true)
   const manifest = trustedJson(`${root}.manifest.json`)
-  const relativeEntry = `node_modules/${packageName}/dist/${profileBridge ? "ordessa-profile.mjs" : "index.js"}`
+  const relativeEntry = `node_modules/${packageName}/dist/${profileBridge || nativeProfile ? "ordessa-profile.mjs" : "index.js"}`
   // sourceLockDigest records builder provenance; no source lock is bound here,
   // so validate its format without claiming to compare the original lock bytes.
   if (manifest.schemaVersion !== 1 || manifest.kind !== `agentbox-${profileBridge ? "pi-runtime" : artifact}-artifact`
@@ -130,6 +138,19 @@ export function verifyInstalledArtifact({ artifactBase, artifact, packageName, v
     if (!extension || Object.keys(extension).length !== 4 || extension.id !== "pi-profile"
         || extension.version !== 1 || extension.configurationQuery !== "_ordessa/session/configuration"
         || extension.instanceDirectoryRequired !== true) throw new Error("installed extension invalid")
+  }
+  if (nativeProfile) {
+    const extension = manifest.extension
+    if (!extension || Object.keys(extension).length !== 5 || extension.id !== nativeProfile.id
+        || extension.version !== 1 || extension.configurationQuery !== '_ordessa/session/configuration'
+        || extension.instanceDirectoryRequired !== true
+        || extension.upstreamSourceDigest !== `sha256:${nativeProfile.source}`
+        || Object.hasOwn(manifest, 'ordessaExtension')) throw new Error('installed extension invalid')
+  } else if (Object.hasOwn(manifest, 'extension')
+      || (!profileBridge && Object.hasOwn(manifest, 'ordessaExtension'))) {
+    // Never silently adopt enhanced behaviour on the ordinary route, even
+    // if a manifest is altered to select the upstream entry filename.
+    throw new Error('installed extension requires explicit variant')
   }
   const summary = installedArtifactSummary(root)
   if (summary.digest !== manifest.treeDigest || summary.entries !== manifest.entries

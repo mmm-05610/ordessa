@@ -356,3 +356,13 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 当前重跑：Harness owner+action+产品测试 **102/102**、Profile 全套 **194/194**（一个既有 Starlette deprecation warning）、Node native/Pi/安装边界 **99/99**，exit 0。补了两个先红后绿守卫：拒绝 Python `True == 1` 对代次字段的类型混淆；缓存 owner 不符时在产品绑定更新前拒绝，避免半更新。root npm/全量 Server 未在本节重跑，不引用旧数字作本轮证明。日志 `.cleanup-evidence/native-initial-node.log`；两品牌实际首次创建探针日志 `.cleanup-evidence/native-initial-real.log`。
 - 环境：复制候选到 `/tmp` 遇 EDQUOT（-122），改在已忽略的 `.cleanup-evidence/` 构建；未删他属文件或旧安装资产。root 仍 main，截图 `docs/ui-preview/01-empty.png` 他属修改保留。
 - **固定 TODO 第 6 项仍未完成**：以上完成首次 native 配置子路径和受控换代边界；生产 Profile→准备通道→首次创建接线、Codex/Claude 的真实 C4 factory、增强资产实例隔离启动强制与可信安装、已有历史恢复验证仍待收口。第 3/5 全资源与第 7 完整产品验收也未完成，不新增“最后阶段”或冒称产品可交付。
+
+### 首次提交语义校准与两品牌隔离入口（2026-10-01，实施中）
+
+- 用户校准：草稿与配置选择不创建原生对话；首次提交中的 ACP `session/new` 准备运行状态，不生成用户消息。锁定源码 Codex 调用 `thread/start`；Claude 分配 ID、建立输入队列并启动 SDK/CLI，`prompt()` 才入队用户内容。不得把实例初始化等同于已有可恢复历史；不新增“空会话恢复”产品功能。前节旧探针的失败仍保留，但不作为产品需恢复空会话的依据。
+- 新发现并修复的真实边界：安装验证忽略 Codex/Claude 增强 manifest 的 `extension`，可能经普通路线误采用增强资产。两个反例在旧实现上均红。新增显式 `native-profile` 路线，只接受各自锁定包/版本、精确 extension 身份、上游源摘要与完整树摘要；普通路线拒绝增强声明，不回退。
+- 增强构建现在发布独立 `ordessa-profile.mjs` 入口。入口在动态加载任何上游模块前，强制后端分配的 canonical、当前用户拥有、0700、无符号链接实例目录；设置 HOME/CODEX_HOME/CLAUDE_CONFIG_DIR/XDG_CONFIG_HOME 到该运行实例，不复制用户登录或全局配置，不按 Profile 分配目录。新增四条启动测试（初始红因为入口尚不存在，不能冒称抓住旧运行时缺陷），验证不安全目录拒绝且未执行上游、合法目录在导入前生效。
+- Harness 的 AccessEntryTransport 增加显式 native_profile_bridge 启动绑定，只允许 Codex/Claude 已安装路线；独立目录不进入 connect 数据，client 不能覆盖实例目录/品牌 HOME。两个 Python 反例先红（接口未提供）后绿，原 Pi 路线保持。尚未在默认产品启用这条路线。
+- 新候选 `.cleanup-evidence/native-isolated-8DULMM` 从锁文件重新构建，两品牌均从隔离入口完成实际 provider-before-new/model-before-return/独立读回探针：session/new=1、resume=0、prompt=0、inferenceRequests=0，scope 仍是 native-adapter-initial-model-not-server-profile。未安装候选、未修改旧系统资产/登录、未启动真实模型调用。
+- 本轮实测：Node native/Pi/安装边界 **107/107**，Harness owner/action/安装入口/实例目录/产品测试 **120/120**，exit 0；日志 `.cleanup-evidence/native-isolated-node.log` 与 `.cleanup-evidence/native-isolated-real.log`。未重跑 Profile 全套/root npm/全量 Server，不引用历史数字作本轮证明。
+- **固定 TODO 第 6 项继续未完成**：增强资产隔离入口与显式可信验证已完成源码/受控验证；仍缺生产 Profile 首次准备接线、Codex/Claude C4 factory、系统资产安装及真实已有历史恢复验证。未变更 host 核心，root 仍 main，保留他属截图修改。

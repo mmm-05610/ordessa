@@ -65,6 +65,7 @@ class AccessEntryTransport:
                  controlled_test_peer: bool = False,
                  installed_artifact_root: str | None = None,
                  pi_profile_bridge: bool = False,
+                 native_profile_bridge: bool = False,
                  instance_directory: str | None = None,
                  connect_timeout: float = 60.0, close_timeout: float = 12.0) -> None:
         self._harness_id = harness_id
@@ -89,9 +90,15 @@ class AccessEntryTransport:
         entry_environment = None if environment is None else dict(environment)
         if type(pi_profile_bridge) is not bool:
             raise TypeError("pi_profile_bridge must be bool")
+        if type(native_profile_bridge) is not bool:
+            raise TypeError("native_profile_bridge must be bool")
+        if native_profile_bridge and (pi_profile_bridge or harness_id not in ("codex", "claude-code")
+                                      or installed_artifact_root is None or controlled_test_peer):
+            raise ValueError("Native profile bridge requires its explicit installed brand route")
         if pi_profile_bridge:
             if harness_id != "pi" or installed_artifact_root is None or controlled_test_peer:
                 raise ValueError("Pi profile bridge requires the installed Pi route")
+        if pi_profile_bridge or native_profile_bridge:
             if (not isinstance(instance_directory, str) or not os.path.isabs(instance_directory)
                     or instance_directory.startswith("//")
                     or os.path.normpath(instance_directory) != instance_directory
@@ -105,11 +112,12 @@ class AccessEntryTransport:
                     raise ValueError("instance directory must be private, user-owned and symlink-free")
             except OSError as error:
                 raise ValueError("private instance directory is unavailable") from error
-            entry_argv.append("--pi-profile-bridge")
+            entry_argv.append("--pi-profile-bridge" if pi_profile_bridge else "--native-profile-bridge")
             entry_environment = dict(os.environ if environment is None else environment)
-            entry_environment["ORDESSA_PI_INSTANCE_DIR"] = instance_directory
+            entry_environment["ORDESSA_PI_INSTANCE_DIR" if pi_profile_bridge
+                              else "ORDESSA_NATIVE_INSTANCE_DIR"] = instance_directory
         elif instance_directory is not None:
-            raise ValueError("instance directory requires explicit Pi profile bridge")
+            raise ValueError("instance directory requires explicit profile bridge")
         if controlled_test_peer:
             entry_argv.append("--controlled-test-peer")
             entry_environment = dict(os.environ if environment is None else environment)
