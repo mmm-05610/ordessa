@@ -17,12 +17,12 @@ deb `70be6198…` 已作废，其"Phase 3 未展开"的结论也已被后续多�
 | D UI 验收 | 16 | 24 | L4 已由 Xvfb 跑出，但绑定装机候选的仍缺（D24 FAIL） |
 | P 发行/装配 | 9 | 16 | **P07/P08 是真实装配缺口**，非仅证据缺口 |
 | S 既有资源 | 1 | 5 | **S03 FAIL（结构性）**；S01 FAIL；S02 PARTIAL |
-| F 最终验证 | 10 | 12 | F11/F12 本轮收口 |
+| F 最终验证 | 10 | 12 | F11 复审判 FAIL，查出 P1/P2 已修；复审重跑待下次 |
 
 ## Candidate
 
 - Branch: `nightly/021-harness-rollout-opencode-hermes-dsh-kilo`
-- 冻结点: **`24bd6fb683`**（冻结后未再改源码/资产）；台账最新提交 `40d6d33fc5`
+- 冻结点: **`120d099405`**（F11 复审修掉 P1 后顺延；冻结后未再改源码/资产）
 - Main baseline: `b4bf7cd90951`（**全程未动、零 push**）
 - Deb: `packaging/.out/ordessa_0.1.0_amd64.deb`，209,583,328 B
 - SHA256: `e31e270c0e20021c5868a5aad1461654c91a8f37d9b626abe137f9efe4acbac5`
@@ -32,9 +32,9 @@ deb `70be6198…` 已作废，其"Phase 3 未展开"的结论也已被后续多�
 
 | 门 | 结果 |
 | --- | --- |
-| `node --test plugins/harness/packaging/native-profile/*.test.mjs` | **82/82** |
+| `node --test plugins/harness/packaging/native-profile/*.test.mjs` | **83/83** |
 | `pytest plugins/profile plugins/assets/model-provider` | **473 passed** |
-| `pytest plugins/harness/tests -k configuration/restoration/pi` | **247 passed** |
+| `pytest plugins/harness/tests/configuration_model + test_provider_restoration_service + test_pi_provider_registration_service` | **166 passed** |
 | `pytest plugins/assets/skills` | **433 passed** |
 | `npm run test:packaging` | **45 pass / 0 fail / 12 suites** |
 | 根 `npm test`（补齐环境前提） | **38/39 green**；唯一红 `ui-preview` 与 main 逐字节相同、预存在 |
@@ -42,6 +42,7 @@ deb `70be6198…` 已作废，其"Phase 3 未展开"的结论也已被后续多�
 两次根聚合的差异**全部归因环境前提**：`.venv` 不能 `import ordessa_profile`
 （补 `ORDESSA_WIRE_LIVE_PYTHON` 后 server-bridge **68/68**）；7 个 Electron 门缺
 `ORDESSA_BUNDLED_ROOT` 全红（补后 **6 个 exit 0**）。两个环境的数都留档，不挑好看的那个。
+**每个数都连命令一起记** —— 复审指出 F06 曾只写数字不写命令，导致 166/247 对不上。
 
 ## L4 实测（本轮新增）
 
@@ -54,14 +55,17 @@ deb `70be6198…` 已作废，其"Phase 3 未展开"的结论也已被后续多�
 
 | # | 缺陷 | 严重度 | 验证 |
 | --- | --- | --- | --- |
-| 1 | `build-deb.mjs` `cpSync` 缺 `verbatimSymlinks`，1049 条解释器符号链接被改写成绝对构建机路径，**装出不能用的 Python** | 发行阻断 | 重建后 worktree 链接 1049 → **0**；解包解释器 `3.12.14` 实跑并导入 `pydantic`/`starlette`/`cryptography` |
-| 2 | `run_counterexamples.sh` 把 `ModuleNotFoundError` 算作"判别成功"，**12/12 假绿** | 验收诚信 | 敌意环境 exit 1 并 `REFUSING`；真实环境 12/12 且每条带真实失败数 |
-| 3 | 发行默认链**不含 Skills、不含 MCP**，而 dev 启动器总注入 native 模式，**掩盖了该缺口** | 真实产品缺陷 | L4 对照实测（见上表）；已登记 known-issues |
-| 4 | `ordessa-asset-op.py` 回执回显候选自述值，发布后不复验 | 验收诚信 | 已加发布前三项全等比对 + 发布后对落地树复验同一钉死 verifier |
+| 1 | `codex-process.mjs::assertUsableRollout` 的 `if (read < buffer.length)` 对普通文件恒不成立 ⇒ **>64 KB 的合法 rollout 与"仍在写入"的 rollout 一律被拒**，打断**同会话 Profile/model 替换**这条旗舰路径 | **P1（复审查出）** | 修前 130 KB 合法记录、截断尾 **均抛**；修后二者 PASS，空/垃圾/**完整但损坏** 仍抛；变异回退 ⇒ 新用例 fail |
+| 2 | `ownedProcessSet` 只排除被复用的 pid **本身**，其**子树**仍被 pgid 扫描收进 owned 集 ⇒ 误杀非本进程进程且永不确认退出 | P2（复审查出） | 修前返回 `[200,300]`；修后 `[]`，对照（确属本进程）仍 `[100,200,300]`；变异回退 ⇒ fail |
+| 3 | `build-deb.mjs` `cpSync` 缺 `verbatimSymlinks`，1049 条解释器符号链接被改写成绝对构建机路径，**装出不能用的 Python** | 发行阻断 | 重建后 worktree 链接 1049 → **0**；解包解释器 `3.12.14` 实跑并导入 `pydantic`/`starlette`/`cryptography` |
+| 4 | `run_counterexamples.sh` 把 `ModuleNotFoundError` 算作"判别成功"，**12/12 假绿** | 验收诚信 | 敌意环境 exit 1 并 `REFUSING`；真实环境 12/12 且每条带真实失败数 |
+| 5 | 发行默认链**不含 Skills、不含 MCP**，而 dev 启动器总注入 native 模式，**掩盖了该缺口** | 真实产品缺陷 | L4 对照实测（见上表）；已登记 known-issues |
+| 6 | `ordessa-asset-op.py` 回执回显候选自述值，发布后不复验 | 验收诚信 | 已加发布前三项全等比对 + 发布后对落地树复验同一钉死 verifier |
 
-**两处自我更正已如实记录：** ①P09 的"陈旧产物"结论曾判错，真因是 `cpSync` 缺 `verbatimSymlinks`，
+**三处自我更正已如实记录：** ①P09 的"陈旧产物"结论曾判错，真因是 `cpSync` 缺 `verbatimSymlinks`，
 是**真构建 deb 才复现**的；②台账曾把 T8 记为"本机条件不具备"，实为把 `LockedHint=yes`
-（会话状态）误当能力缺失，Xvfb 一直在。另更正台账自身算术：曾写"130 个 ID"，实为 **117**。
+（会话状态）误当能力缺失，Xvfb 一直在；③台账曾写"130 个 ID"，实为 **117**；
+④F06 曾只写门禁数字不写命令，致 166/247 对不上。
 
 ## 阻塞与待裁定（**全部需用户动作，我一律未自行决定**）
 
