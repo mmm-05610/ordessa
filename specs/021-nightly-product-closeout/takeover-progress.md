@@ -4,7 +4,15 @@
 所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
 未合并、未 push、未启停既有用户服务、未重建 deb。三品牌后端真实聊天已通过；Codex Desktop 已通过 Profile 首发与同会话下一轮切换，两条真实回复。完整三品牌 UI/发行验收仍未完成。
 
-## 最新验证（2026-10-01，Claude 真实历史与供应商配置路由恢复）
+## 最新验证（2026-10-01，第二供应商 OpenCode Go 协议兼容）
+
+- 用户提供既有 key.txt 第二行作为 Go Key，允许作第二供应商验收。密钥仅内存读指定行，不打印、不写明文副本；原聊天探针新增 key-line 参数，默认第一行，不再把两个 Key 拼成一条。
+- 官方最新 [Go 文档](https://opencode.ai/docs/go/)（页面更新时间 Oct 1, 2026）和 [公开 models](https://opencode.ai/zen/go/v1/models) 已核查。不同模型必须用对应协议；Go 不等同于 Zen 普通额度入口或 Console inference。文档明确识别 Claude/Codex 原生会话头，Pi 需要具备 session 信息的版本；代理必须保留这些头，客户端使用真实 User-Agent。尚未证明本机所有适配器已满足此要求。
+- 新增有显式授权开关的最小上游探针，每种协议恰一次、最多 256 输出 token；实际三次均 HTTP 200 + 非空文本：glm-5.3-flash / chat/completions / stop；minimax-m2.7 / messages / end_turn；gpt-5.6-luna / responses / completed。Key 不出现在日志，输出仅有限状态，不暴露回复或上游错误文本。这证明凭据及三种直接上游协议可用，**不等于 Harness/Profile/Desktop 接入通过**。
+- 兼容性待办：当前已安装 Claude ACP 的 setSessionConfigOption 校验原生模型目录，Go 自定义模型需要在 Harness 内适配/如实回读，不允许在转发代理偷偷将 sonnet/haiku 换成 MiniMax。Codex Responses/Pi Chat 也须逐个确认模型目录和会话头。没有修改 Profile/model-provider 的品牌归属或 host。
+- 探针受控边界测试 3P：选行不串 Key、协议模型不能混用、未授权零网络、HTTP 错误不泄漏秘密、稳定 session 头和调用上限。当前尚无新 Go Harness 实际聊天证据；上一节 Claude 两配置同上游证据仍保留。
+
+## 前一检查点（2026-10-01，Claude 真实历史与供应商配置路由恢复）
 
 - 本轮复用产品已有授权聊天探针，增加显式 `--switch-provider` 模式：仅 Claude + fixed-assets + 独立 local-relay 可启用。创建两个不同 provider 配置和 endpoint 路由，均明确转发同一个获授权的 DeepSeek 上游。不把这个证据冒称两家不同供应商验收，也不把临时 relay 当直接公网 endpoint 产品能力。
 - 最终独立复跑 exit 0：首条真实回复 completed，随后 Profile 全局预设改为第二个 provider 配置及模型，下一次发送前完整应用返回确认回执；原生 generation 更新、原生 owner 不变、两轮 canonical SessionRef 相同，恢复 RPC **恰一次**。第二条真实回复准确回忆首条随机标记，证明实际历史跨路由恢复保留。模型 haiku→sonnet，两个入口 credentialMatches=true/placeholderAuth=false，上游三次 HTTP 200（原生可能额外并行调用），用户提示恰两条。

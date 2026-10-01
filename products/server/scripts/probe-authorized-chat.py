@@ -32,7 +32,8 @@ class ImmediateLoop:
 def run(args):
     if not args.allow_model_calls:
         raise ValueError('Explicit model-call opt-in required')
-    key = args.key_file.read_text().strip()
+    lines = args.key_file.read_text().splitlines()
+    key = lines[args.key_line - 1].strip() if 1 <= args.key_line <= len(lines) else ''
     if not key or len(key) > 8000 or any(ord(c) < 32 for c in key):
         raise ValueError('Invalid bounded key file')
     brands = args.brand or ['pi', 'claude-code']
@@ -280,6 +281,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--allow-model-calls', action='store_true')
     parser.add_argument('--key-file', type=Path, required=True)
+    parser.add_argument('--key-line', type=int, default=1)
     parser.add_argument('--fixed-assets', action='store_true', help='Use separately installed chat-fix assets')
     parser.add_argument('--switch-provider', action='store_true',
                         help='Claude: two distinct provider configurations/endpoints forwarding to same authorized upstream')
