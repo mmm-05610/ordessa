@@ -25,8 +25,11 @@
  *      it. Every other extra is excluded, and the exclusion is enforced: a
  *      distribution that Hermes declares *only* under an extra this artifact
  *      does not provide may not appear in the tree.
- *   3. Sources are read-only. The primary root is the per-user site directory
- *      that holds Hermes itself; a requirement the primary root cannot satisfy
+ *   3. Sources are read-only. The primary root is the site directory that holds
+ *      Hermes itself, and it is *declared*, never guessed: `--source` or the
+ *      `ORDESSA_HERMES_SOURCE` environment variable, and an unset variable is a
+ *      refusal rather than a fallback to some other machine's path or to a
+ *      `hermes` binary on `PATH`. A requirement the primary root cannot satisfy
  *      falls back to the declared platform root (`/usr/lib/python3/dist-packages`)
  *      and the fallback is recorded per package. Nothing here writes to a source.
  *   4. Every selected distribution must be installed, must satisfy the
@@ -57,26 +60,33 @@
  *
  * usage: build-hermes-runtime-artifact.mjs --output ABSOLUTE_DIR [--source DIR]
  *                                        [--fallback-source DIR] [--replace] [--json]
+ *
+ * With no `--source`, `ORDESSA_HERMES_SOURCE` must name the site directory;
+ * this build carries no machine-local default source.
  */
 import { createHash } from "node:crypto"
 import { spawnSync } from "node:child_process"
 import {
   chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync,
-  readFileSync, readdirSync, renameSync, rmdirSync, rmSync, statSync, writeFileSync,
+  readFileSync, readdirSync, renameSync, rmdirSync, rmSync, writeFileSync,
 } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..")
-//: The site directory that holds Hermes itself (measured; `python3 -c
-//: "import sys; print(sys.path)"`). It is the primary, and the only root the
-//: build is allowed to *prefer*.
-export const DEFAULT_SOURCE = "/home/maoqh/.local/lib/python3.12/site-packages"
+//: The environment variable that declares the site directory holding Hermes.
+//: There is deliberately no default value here: this builder must not carry one
+//: developer's home directory, and it must not go looking for a `hermes` binary
+//: on `PATH` either - an unverified global binary is not an installed-package
+//: directory. Unset is a typed refusal, not a guess.
+export const SOURCE_ENVIRONMENT_VARIABLE = "ORDESSA_HERMES_SOURCE"
 //: Declared platform root, used only for requirements the primary root cannot
 //: satisfy. Hermes pins `rich` (needs `markdown-it-py`), `jinja2` (needs
 //: `MarkupSafe`), `openai` (hard-imports `distro`) and `croniter` (needs `pytz`),
-//: none of which are installed in the per-user directory on this machine.
+//: none of which the primary per-user directory provides. This is a platform
+//: path, not a machine-local one, and it stays overridable via
+//: `--fallback-source`.
 export const DEFAULT_FALLBACK_SOURCES = ["/usr/lib/python3/dist-packages"]
 const OVERLAY_DIRECTORY = path.join(REPO, "deploy", "hermes")
 
@@ -126,28 +136,35 @@ export const MAX_BYTES = 1024 * 1024 * 1024
  * A declared deviation is not a relaxed check: every other requirement in the
  * closure still has to be satisfied exactly, the deviation is reported in the
  * manifest and in the build output, and adding one requires an explicit edit
- * here plus the reason a reviewer reads. There is exactly one on this machine:
- * Hermes 0.19.0 declares `rich==14.3.3`, while the per-user site directory that
- * Hermes itself is installed in - and that the measured 42-D handshake ran in -
- * holds `rich 15.0.0`; no installed root provides 14.3.3.
+ * here plus the reason a reviewer reads.
+ *
+ * `root: null` means the primary source this build was told to use
+ * (`--source` / `ORDESSA_HERMES_SOURCE`), never "any root": the deviation
+ * applies to the site directory the operator declared, and nowhere else.
  */
 export const DECLARED_PIN_DEVIATIONS = [
   {
     project: "rich",
     declared: "==14.3.3",
     installed: "15.0.0",
-    root: DEFAULT_SOURCE,
+    root: null,
     reason:
-      "hermes-agent 0.19.0 declares rich==14.3.3; this machine installs rich 15.0.0 in the " +
-      "per-user site directory Hermes itself runs from, and no installed root has 14.3.3. The " +
+      "hermes-agent 0.19.0 declares rich==14.3.3; the declared source directory " +
+      "installs rich 15.0.0, and no declared fallback root has 14.3.3. The " +
       "artifact carries what is installed and the production chain gate exercises Hermes on it.",
   },
 ]
 
-function declaredDeviation(project, specifier, distribution) {
-  return DECLARED_PIN_DEVIATIONS.find((item) => canonicalize(item.project) === canonicalize(project)
-    && item.declared === specifier && item.installed === distribution.version
-    && path.resolve(item.root) === path.resolve(distribution.root)) ?? null
+function declaredDeviation(project, specifier, distribution, primaryRoot = undefined) {
+  return DECLARED_PIN_DEVIATIONS.find((item) => {
+    if (canonicalize(item.project) !== canonicalize(project)) return false
+    if (item.declared !== specifier || item.installed !== distribution.version) return false
+    const expected = item.root ?? primaryRoot
+    // No declared root means no match: a deviation never applies to a root this
+    // build was not told about.
+    if (expected === undefined) return false
+    return path.resolve(expected) === path.resolve(distribution.root)
+  }) ?? null
 }
 
 class BuildError extends Error {
@@ -458,7 +475,7 @@ export function indexDistributions(roots) {
 }
 
 /** Resolve one requirement against the index, or refuse with a typed code. */
-export function resolveRequirement(index, requirement, requiredBy) {
+export function resolveRequirement(index, requirement, requiredBy, primaryRoot = undefined) {
   const key = canonicalize(requirement.name)
   if (requirement.direct) {
     throw new BuildError("HERMES_CLOSURE_DIRECT_REFERENCE_UNSUPPORTED",
@@ -472,7 +489,7 @@ export function resolveRequirement(index, requirement, requiredBy) {
   const selected = candidates[0]
   const verdict = satisfies(selected.version, requirement.specifier)
   if (!verdict.ok) {
-    const deviation = declaredDeviation(requirement.name, requirement.specifier, selected)
+    const deviation = declaredDeviation(requirement.name, requirement.specifier, selected, primaryRoot)
     if (deviation) return { selected, requirement, deviation }
     throw new BuildError("HERMES_CLOSURE_VERSION_MISMATCH",
       `${requiredBy} requires ${requirement.name}${requirement.specifier}, but ${selected.version} is installed in ${selected.root}`)
@@ -490,7 +507,7 @@ export function resolveRequirement(index, requirement, requiredBy) {
  * exactly, a range records what it resolved to.
  */
 export function resolveClosure({
-  index, entry = ENTRY_DISTRIBUTION, extras = ENTRY_EXTRAS, seeds = null,
+  index, entry = ENTRY_DISTRIBUTION, extras = ENTRY_EXTRAS, seeds = null, primaryRoot = undefined,
 }) {
   const selected = new Map()
   const reasons = new Map()
@@ -512,7 +529,7 @@ export function resolveClosure({
     if (specifier) {
       const verdict = satisfies(distribution.version, specifier)
       if (!verdict.ok) {
-        const deviation = declaredDeviation(name, specifier, distribution)
+        const deviation = declaredDeviation(name, specifier, distribution, primaryRoot)
         if (!deviation) {
           throw new BuildError("HERMES_CLOSURE_VERSION_MISMATCH",
             `${requiredBy} requires ${name}${specifier}, but ${distribution.version} is installed in ${distribution.root}`)
@@ -520,7 +537,7 @@ export function resolveClosure({
         if (!deviations.some((item) => item.project === deviation.project)) {
           deviations.push({
             project: deviation.project, declared: deviation.declared,
-            installed: deviation.installed, root: deviation.root, reason: deviation.reason,
+            installed: deviation.installed, root: distribution.root, reason: deviation.reason,
           })
         }
       }
@@ -554,7 +571,7 @@ export function resolveClosure({
       if (!applies) continue
       // Resolve eagerly so a version that does not satisfy its pin is refused
       // here, with the requirement that asked for it - not later at dequeue.
-      const resolved = resolveRequirement(index, requirement, distribution.name)
+      const resolved = resolveRequirement(index, requirement, distribution.name, primaryRoot)
       queue.push([resolved.selected.name, new Set(requirement.extras), distribution.name, requirement.specifier])
     }
   }
@@ -689,6 +706,71 @@ export function treeSummary(directory) {
       `the reviewed digest implementation refused the tree: ${diagnostic.slice(-400)}`)
   }
   return JSON.parse(result.stdout)
+}
+
+// -- source resolution -------------------------------------------------------
+
+/**
+ * The site directory this build reads, from an explicit argument or the
+ * environment.
+ *
+ * An explicit source always wins. Without one, `ORDESSA_HERMES_SOURCE` must
+ * name the directory: unset or blank is a typed refusal whose message names the
+ * variable. There is no fallback default and no `PATH` lookup, so the builder
+ * cannot silently build from another machine's site directory, from `$HOME`,
+ * from a guessed prefix, or from whatever `hermes` happens to be on `PATH`.
+ */
+export function resolveSource(explicit = undefined, { env = process.env } = {}) {
+  const given = explicit === undefined || explicit === null ? "" : String(explicit).trim()
+  if (given) return given
+  const declared = String(env[SOURCE_ENVIRONMENT_VARIABLE] ?? "").trim()
+  if (declared) return declared
+  throw new BuildError("HERMES_SOURCE_UNSET",
+    `no source directory: set ${SOURCE_ENVIRONMENT_VARIABLE} to the installed-package directory that holds ` +
+    `${ENTRY_DISTRIBUTION}, or pass --source DIR. This build has no machine-local default source and ` +
+    "never falls back to a guessed path or to a hermes binary on PATH")
+}
+
+/**
+ * Refuse a source root this build cannot vouch for, and return it resolved.
+ *
+ * The root must be an absolute, traversal-free, non-root, non-home, real
+ * directory: a symlinked root could be repointed between the check and the
+ * read, a `..` segment states an escape, and `/` or `$HOME` would sweep a whole
+ * filesystem or a user's private tree into the closure index. A root that is
+ * simply absent stays the `HERMES_SOURCE_INVALID` refusal the build already had.
+ */
+export function assertSourcePolicy(source, { env = process.env, role = "--source" } = {}) {
+  if (!path.isAbsolute(source)) {
+    throw new BuildError("HERMES_SOURCE_NOT_ABSOLUTE", `${role} must be an absolute path`)
+  }
+  if (source.split(path.sep).includes("..")) {
+    throw new BuildError("HERMES_SOURCE_ESCAPES_ROOT",
+      `${role} must not contain a ".." segment: ${source}`)
+  }
+  const resolved = path.resolve(source)
+  if (resolved === path.parse(resolved).root) {
+    throw new BuildError("HERMES_SOURCE_UNSAFE", `${role} must not be a filesystem root`)
+  }
+  const home = env.HOME
+  if (home && resolved === path.resolve(home)) {
+    throw new BuildError("HERMES_SOURCE_UNSAFE", `${role} must not be the home directory itself`)
+  }
+  const stats = lstatSync(resolved, { throwIfNoEntry: false })
+  if (stats === undefined) {
+    throw new BuildError("HERMES_SOURCE_INVALID",
+      `the ${role} root ${resolved} is not a readable installed-package directory`)
+  }
+  if (stats.isSymbolicLink()) {
+    throw new BuildError("HERMES_SOURCE_SYMLINK",
+      `the ${role} root ${resolved} is a symlink; declare the real installed-package directory it points at, `
+      + "because a symlink can be repointed between this check and the read")
+  }
+  if (!stats.isDirectory()) {
+    throw new BuildError("HERMES_SOURCE_INVALID",
+      `the ${role} root ${resolved} is not a readable installed-package directory`)
+  }
+  return resolved
 }
 
 // -- output policy -----------------------------------------------------------
@@ -879,15 +961,14 @@ function win32OnlyDistributions(index) {
 }
 
 export function build({
-  output, source = DEFAULT_SOURCE, fallbackSources = DEFAULT_FALLBACK_SOURCES, replace = false,
+  output, source = undefined, fallbackSources = DEFAULT_FALLBACK_SOURCES, replace = false,
+  env = process.env,
 }) {
   const resolved = assertOutputPolicy(output)
-  const roots = [path.resolve(source), ...fallbackSources.map((item) => path.resolve(item))]
-  for (const root of roots) {
-    if (!existsSync(root) || !statSync(root).isDirectory()) {
-      throw new BuildError("HERMES_SOURCE_INVALID", `${root} is not a readable installed-package directory`)
-    }
-  }
+  const roots = [
+    assertSourcePolicy(resolveSource(source, { env }), { env }),
+    ...fallbackSources.map((item) => assertSourcePolicy(item, { env, role: "--fallback-source" })),
+  ]
   const index = indexDistributions(roots)
   const entryKey = canonicalize(ENTRY_DISTRIBUTION)
   const entryCandidates = index.get(entryKey)
@@ -908,8 +989,10 @@ export function build({
         `${ENTRY_DISTRIBUTION} declares no extra ${extra}`)
     }
   }
-  const { selected, reasons, requirements, deviations } = resolveClosure({ index, extras: ENTRY_EXTRAS })
-  const baseClosure = resolveClosure({ index, extras: [] })
+  const { selected, reasons, requirements, deviations } = resolveClosure({
+    index, extras: ENTRY_EXTRAS, primaryRoot: roots[0],
+  })
+  const baseClosure = resolveClosure({ index, extras: [], primaryRoot: roots[0] })
   const entryModuleFiles = distributionFiles(entry).files.map((item) => item.relative)
   if (!entryModuleFiles.includes(ENTRY_RELATIVE)) {
     throw new BuildError("HERMES_CLOSURE_ENTRY_MISSING",
@@ -947,7 +1030,7 @@ export function build({
     throw new BuildError("HERMES_CLOSURE_EXTRA_UNUSED",
       `the ${ENTRY_EXTRAS.join(",")} extra requires nothing in ${ENTRY_DISTRIBUTION}'s metadata`)
   }
-  const extraClosure = resolveClosure({ index, seeds: extraSeeds })
+  const extraClosure = resolveClosure({ index, seeds: extraSeeds, primaryRoot: roots[0] })
   const extrasDelta = [...selected.keys()].filter((key) => !baseClosure.selected.has(key)).sort()
   const extrasDeltaExpected = [...extraClosure.selected.keys()]
     .filter((key) => !baseClosure.selected.has(key)).sort()
@@ -967,7 +1050,9 @@ export function build({
     throw new BuildError("HERMES_ARTIFACT_UNRELATED_DISTRIBUTION",
       `win32-only distributions entered the closure: ${win32Only.join(", ")}`)
   }
-  const unrelatedClosure = resolveClosure({ index, entry: UNRELATED_REFERENCE, extras: [] })
+  const unrelatedClosure = resolveClosure({
+    index, entry: UNRELATED_REFERENCE, extras: [], primaryRoot: roots[0],
+  })
   const unrelatedOnly = [...unrelatedClosure.selected.keys()]
     .filter((key) => !selected.has(key)).sort()
   if (unrelatedOnly.length === 0) {
@@ -1162,13 +1247,16 @@ function argument(name) {
 
 function main() {
   const output = argument("--output")
-  const source = argument("--source") ?? DEFAULT_SOURCE
+  // Left undefined when --source is absent, so build() resolves the declared
+  // environment variable and refuses when that is unset too.
+  const source = argument("--source")
   const fallback = argument("--fallback-source")
   const json = process.argv.includes("--json")
   if (!output) {
     process.stdout.write(JSON.stringify({
       result: "HERMES_RUNTIME_BUILD_FAILED", code: "HERMES_USAGE",
-      error: "usage: build-hermes-runtime-artifact.mjs --output ABSOLUTE_DIR [--source DIR] [--fallback-source DIR] [--replace] [--json]",
+      error: "usage: build-hermes-runtime-artifact.mjs --output ABSOLUTE_DIR [--source DIR] "
+        + `[--fallback-source DIR] [--replace] [--json]; with no --source, ${SOURCE_ENVIRONMENT_VARIABLE} must name the source directory`,
     }) + "\n")
     return 2
   }

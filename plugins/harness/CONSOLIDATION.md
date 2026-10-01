@@ -286,3 +286,20 @@ Codex 构建器早已有的对称处理：闭包缺失即不可能泄漏，返�
 `--artifact` 复用路径）与六个 `*-production-chain-gate.py` 仍未执行——
 本树没有那些工件，也无需真实模型调用。`npm ci` 走的是锁里记录的
 `registry.npmmirror.com` URL；拆锁没有改动任何 `resolved`/`integrity`。
+
+## 补记（2026-10-01，specs/021）— 上文的两处常量已变
+
+上文「表与 6 个 builder 的 `DEFAULT_SOURCE` 逐条对齐」与「
+`build-codex-runtime-artifact.mjs`/`build-pi-runtime-artifact.mjs` 的
+`DEFAULT_SOURCE`」记录的是 **2026-09-24 当时**的状态，正文按历史保留不改。
+截至 2026-10-01 的实际状态，两处需要更正，避免后来者去找已不存在的常量：
+
+- `build-hermes-runtime-artifact.mjs` 的 `DEFAULT_SOURCE` **已删除**。它当时
+  指向 `/home/maoqh/.local/lib/python3.12/site-packages`，即把某台机器的家目录
+  写进了仓库。现在改为 `SOURCE_ENVIRONMENT_VARIABLE`（`ORDESSA_HERMES_SOURCE`），
+  未声明时是 `HERMES_SOURCE_UNSET` 拒绝，不做任何路径或 `PATH` 猜测。
+- `model-validation-42d.mjs` 与 `build-opencode-authorization.mjs` 里同类的
+  `/home/maoqh/...` 硬编码同样已改为按 family 声明、缺失即拒绝。
+
+其余 builder（codex / pi / claude / dsh / kilo / qwen）的 `DEFAULT_SOURCE`
+是 `path.join(REPO, "packaging", "<family>")`，仓库相对路径，本来就正确，未改。

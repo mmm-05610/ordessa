@@ -56,6 +56,7 @@ refusal or error. None is masked by a skip; none may be greened by fakes.
 | Full GUI acceptance (the two UI debts above) | Untested scope | controlled smoke (electron boot, agent-shell, extension discovery) is green |
 | `tests/acp-connector` is a standalone rig with its own lockfile (not a root workspace) | By design | pins `@agentclientprotocol/sdk` 1.5.0 |
 | Desktop-repo history tags `v2026.9.11/14/21` + upstream refs not locally recoverable (shallow clone) | History gap | see `docs/reference-index.md`; remote unshallow pending user decision |
+| `plugins/harness/packaging/builders/*.test.mjs` (the runtime-artifact builder suites) run in **no** aggregate | Untested scope | The only `node --test` entry points are `npm run test:packaging` (`tests/integration/packaging/**`) and the `node --test` calls in `plugins/harness/tests/install/test_*_production_template.py`, which spawn individual builders. No npm script, `tooling/test-all.mjs` or `.github/workflows/ci.yml` job discovers the `builders/` directory, so builder regressions do not gate anything and are only caught when someone runs them by hand. Registered 2026-10-01 while adding the dsh/kilo builder tests; closing it means adding an aggregate entry (a judgement about what the packaging gate must include, not a mechanical fix). No test was deleted or skipped to hide this. |
 
 ## Services (environment registry — do not kill/restart)
 

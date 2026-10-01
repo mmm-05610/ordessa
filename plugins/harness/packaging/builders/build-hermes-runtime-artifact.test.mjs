@@ -9,7 +9,7 @@
  * without touching the reviewed one; one test additionally builds the real
  * installed closure and proves the artifact is self-contained.
  */
-import { execFileSync } from "node:child_process"
+import { execFileSync, spawnSync } from "node:child_process"
 import {
   chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync,
 } from "node:fs"
@@ -19,7 +19,9 @@ import test from "node:test"
 import assert from "node:assert/strict"
 
 import {
-  DEFAULT_FALLBACK_SOURCES, DEFAULT_SOURCE, ENTRY_DISTRIBUTION, build, selfCheck,
+  DEFAULT_FALLBACK_SOURCES, ENTRY_DISTRIBUTION, ENTRY_EXTRAS, SOURCE_ENVIRONMENT_VARIABLE,
+  assertOutputPolicy, assertSourcePolicy, build, indexDistributions, resolveClosure, resolveSource,
+  selfCheck,
 } from "./build-hermes-runtime-artifact.mjs"
 
 const REPO = path.resolve(import.meta.dirname, "..", "..")
@@ -408,10 +410,264 @@ test("a source root that is not an installed-package directory fails loudly", ()
   }), "HERMES_SOURCE_INVALID")
 })
 
-test("the reviewed installed closure builds and is self-contained", { skip: !existsSync(DEFAULT_SOURCE) }, () => {
+// -- where the source comes from ---------------------------------------------
+
+/** The builder's CLI, run as a real process with a controlled environment. */
+function runCli(args, { env = {}, inherit = true } = {}) {
+  const childEnv = { ...(inherit ? process.env : {}) , ...env }
+  for (const [key, value] of Object.entries(env)) {
+    if (value === undefined) delete childEnv[key]
+  }
+  const result = spawnSync(process.execPath, [
+    path.join(import.meta.dirname, "build-hermes-runtime-artifact.mjs"), ...args,
+  ], { encoding: "utf8", env: childEnv })
+  assert.equal(result.error, undefined, `the builder did not run: ${result.error}`)
+  return { status: result.status, report: JSON.parse(result.stdout.trim().split("\n").at(-1)) }
+}
+
+test("with no source at all the build refuses and names the variable", () => {
+  const { root, fallback } = fixtureSource({ name: "unset" })
+  const output = outputFor("unset")
+  let message = ""
+  try {
+    build({ output, fallbackSources: [fallback], env: {} })
+    assert.fail("expected a refusal without a declared source")
+  } catch (error) {
+    assert.equal(error.code, "HERMES_SOURCE_UNSET")
+    message = error.message
+  }
+  // The message must tell the operator exactly what to set, and must not point
+  // at some other machine's path or a binary as if either were a source.
+  assert.match(message, new RegExp(SOURCE_ENVIRONMENT_VARIABLE))
+  assert.match(message, /--source/)
+  assert.doesNotMatch(message, /\/(home|root|usr|opt|tmp|mnt)\//, "the refusal must not name a path to fall back to")
+  // Fail-closed: the refusal happens before any output is touched.
+  assert.equal(existsSync(output), false)
+  // Non-vacuity: the same fixture builds the moment the variable is declared.
+  const declared = build({ output, fallbackSources: [fallback], env: { [SOURCE_ENVIRONMENT_VARIABLE]: root } })
+  assert.deepEqual(declared.entry.sourceRoots, [root, fallback])
+})
+
+test("resolveSource prefers an explicit source and otherwise only the variable", () => {
+  const env = { [SOURCE_ENVIRONMENT_VARIABLE]: "/declared/site-packages" }
+  assert.equal(resolveSource("/explicit/site-packages", { env }), "/explicit/site-packages")
+  assert.equal(resolveSource(undefined, { env }), "/declared/site-packages")
+  assert.equal(resolveSource("   ", { env }), "/declared/site-packages")
+  // Unset and blank are the same refusal; neither yields a guessed path.
+  for (const declared of [undefined, "", "   "]) {
+    assert.throws(() => resolveSource(undefined, { env: { [SOURCE_ENVIRONMENT_VARIABLE]: declared } }),
+      (error) => error.code === "HERMES_SOURCE_UNSET"
+        && error.message.includes(SOURCE_ENVIRONMENT_VARIABLE))
+  }
+})
+
+test("an explicit source is honoured even when the variable points elsewhere", () => {
+  const { root, fallback } = fixtureSource({ name: "explicit" })
+  // The variable names the fallback root, which holds no hermes-agent at all.
+  const env = { [SOURCE_ENVIRONMENT_VARIABLE]: fallback }
+  // Control: with only the variable, the build refuses - so a later success
+  // cannot be explained by the variable happening to be usable.
+  expectBuildError(() => build({
+    output: outputFor("explicit-env"), fallbackSources: [fallback], env,
+  }), "HERMES_CLOSURE_ENTRY_MISSING")
+  const built = build({ output: outputFor("explicit-source"), source: root, fallbackSources: [fallback], env })
+  assert.deepEqual(built.entry.sourceRoots, [root, fallback])
+  assert.equal(built.entry.package, ENTRY_DISTRIBUTION)
+})
+
+test("the CLI refuses without --source or the variable, and builds with either", () => {
+  const { root, fallback } = fixtureSource({ name: "cli" })
+  const refused = runCli(["--output", outputFor("cli-unset"), "--fallback-source", fallback, "--json"],
+    { env: { [SOURCE_ENVIRONMENT_VARIABLE]: undefined } })
+  assert.equal(refused.status, 1)
+  assert.equal(refused.report.code, "HERMES_SOURCE_UNSET")
+  assert.ok(refused.report.error.includes(SOURCE_ENVIRONMENT_VARIABLE), refused.report.error)
+
+  const declared = outputFor("cli-env")
+  const fromVariable = runCli(["--output", declared, "--fallback-source", fallback, "--no-self-check", "--json"],
+    { env: { [SOURCE_ENVIRONMENT_VARIABLE]: root } })
+  assert.equal(fromVariable.status, 0, fromVariable.report.error ?? "")
+  assert.equal(fromVariable.report.result, "HERMES_RUNTIME_ARTIFACT_BUILT")
+  assert.match(fromVariable.report.treeDigest, /^sha256:[0-9a-f]{64}$/)
+
+  // --source still works on its own, and takes precedence over the variable.
+  const explicit = outputFor("cli-source")
+  const fromArgument = runCli(["--output", explicit, "--source", root, "--fallback-source", fallback,
+    "--no-self-check", "--json"], { env: { [SOURCE_ENVIRONMENT_VARIABLE]: fallback } })
+  assert.equal(fromArgument.status, 0, fromArgument.report.error ?? "")
+  assert.equal(fromArgument.report.treeDigest, fromVariable.report.treeDigest)
+})
+
+test("an unset variable is never filled in from PATH or from the home directory", () => {
+  const { root, fallback } = fixtureSource({ name: "no-guess" })
+  const bin = mkdtempSync(path.join(tmpdir(), "hermes-bin-"))
+  const sentinel = path.join(bin, "ran")
+  // A `hermes` binary first on PATH that records that it was executed, plus HOME
+  // pointing at a directory that holds a complete installed-package set. The
+  // real PATH follows, because the reviewed digest itself runs `python3`.
+  writeFileSync(path.join(bin, "hermes"), `#!/bin/sh\ntouch ${JSON.stringify(sentinel)}\nexit 0\n`, { mode: 0o755 })
+  const pathWithBinary = `${bin}${path.delimiter}${process.env.PATH ?? ""}`
+  const output = outputFor("no-guess")
+  const refused = runCli(["--output", output, "--fallback-source", fallback, "--json"],
+    { env: { [SOURCE_ENVIRONMENT_VARIABLE]: undefined, PATH: pathWithBinary, HOME: root } })
+  assert.equal(refused.status, 1)
+  assert.equal(refused.report.code, "HERMES_SOURCE_UNSET")
+  // Neither the executable nor the home directory was used as the source.
+  assert.equal(existsSync(sentinel), false, "the builder must not run a hermes binary from PATH")
+  assert.equal(existsSync(output), false, "a refused build must not create its output")
+  // Non-vacuity: the same environment builds once the variable is declared.
+  // HOME is a directory without any installed packages here, so the success
+  // comes from the declared variable and from nowhere else.
+  const declared = runCli(["--output", outputFor("no-guess-ok"), "--fallback-source", fallback, "--no-self-check", "--json"],
+    { env: { PATH: pathWithBinary, HOME: mkdtempSync(path.join(tmpdir(), "hermes-home-")), [SOURCE_ENVIRONMENT_VARIABLE]: root } })
+  assert.equal(declared.status, 0, declared.report.error ?? "")
+  assert.equal(existsSync(sentinel), false)
+})
+
+test("the builder carries no machine-local default source", () => {
+  const source = readFileSync(new URL("./build-hermes-runtime-artifact.mjs", import.meta.url), "utf8")
+  // The defect under repair: one developer's home directory baked in as a
+  // default, which made the builder build from a path that exists on one
+  // machine only. No literal per-user path may appear at all.
+  assert.doesNotMatch(source, /["'`]\/home\/[^"'`\s]*["'`]/, "no machine-local home path may be hardcoded")
+  assert.doesNotMatch(source, /\/Users\/[^"'`\s]*/, "no macOS per-user path may be hardcoded")
+  assert.doesNotMatch(source, /DEFAULT_SOURCE/, "the hardcoded default source constant must be gone")
+  assert.match(source, /ORDESSA_HERMES_SOURCE/)
+})
+
+// -- what the source root itself may be --------------------------------------
+
+test("a symlinked source root is refused", () => {
+  const { root, fallback } = fixtureSource({ name: "symlink-root" })
+  const link = path.join(mkdtempSync(path.join(tmpdir(), "hermes-link-")), "site-packages")
+  symlinkSync(root, link)
+  expectBuildError(() => build({ output: outputFor("symlink-root"), source: link, fallbackSources: [fallback] }),
+    "HERMES_SOURCE_SYMLINK")
+  // Non-vacuity: the directory the link points at is a perfectly good source.
+  const built = build({ output: outputFor("symlink-target"), source: root, fallbackSources: [fallback] })
+  assert.deepEqual(built.entry.sourceRoots, [root, fallback])
+  // A symlinked fallback root is refused the same way, and says which one.
+  const linkFallback = path.join(mkdtempSync(path.join(tmpdir(), "hermes-link-fb-")), "dist-packages")
+  symlinkSync(fallback, linkFallback)
+  try {
+    build({ output: outputFor("symlink-fallback"), source: root, fallbackSources: [linkFallback] })
+    assert.fail("expected a symlinked fallback root to be refused")
+  } catch (error) {
+    assert.equal(error.code, "HERMES_SOURCE_SYMLINK")
+    assert.match(error.message, /--fallback-source/)
+  }
+})
+
+test("a source path that escapes its declared root is refused", () => {
+  const { root, fallback } = fixtureSource({ name: "escape" })
+  // A traversal that resolves back into the fixture root is still an escape
+  // attempt: it names a path the operator did not declare.
+  const traversal = `${fallback}${path.sep}..${path.sep}${path.basename(root)}`
+  assert.equal(path.resolve(traversal), root, "the fixture must actually resolve to the source root")
+  expectBuildError(() => build({
+    output: outputFor("escape"), source: traversal, fallbackSources: [fallback],
+  }), "HERMES_SOURCE_ESCAPES_ROOT")
+  // Non-vacuity: the same directory, declared plainly, builds.
+  assert.deepEqual(build({ output: outputFor("escape-ok"), source: root, fallbackSources: [fallback] })
+    .entry.sourceRoots, [root, fallback])
+  // Whole-filesystem and whole-home roots are refused outright.
+  expectBuildError(() => build({ output: outputFor("escape-root"), source: "/", fallbackSources: [fallback] }),
+    "HERMES_SOURCE_UNSAFE")
+  expectBuildError(() => build({
+    output: outputFor("escape-home"), source: root, fallbackSources: [fallback], env: { HOME: root },
+  }), "HERMES_SOURCE_UNSAFE")
+  expectBuildError(() => build({
+    output: outputFor("escape-relative"), source: "site-packages", fallbackSources: [fallback],
+  }), "HERMES_SOURCE_NOT_ABSOLUTE")
+  // The guard itself is exported and behaves the same way on its own.
+  assert.equal(assertSourcePolicy(`${root}${path.sep}.`), root)
+  assert.throws(() => assertSourcePolicy(path.join(root, "no-such-root")),
+    (error) => error.code === "HERMES_SOURCE_INVALID")
+})
+
+// -- output policy, checked at its own guard and through build() -------------
+
+test("output policy is enforced before a source is read", () => {
+  const { fallback } = fixtureSource({ name: "policy-order" })
+  // The guard is the one the builder already had; nothing is added beside it.
+  assert.equal(assertOutputPolicy(path.join(tmpdir(), "hermes-policy-ok")), path.join(tmpdir(), "hermes-policy-ok"))
+  assert.throws(() => assertOutputPolicy("relative/artifact"),
+    (error) => error.code === "HERMES_OUTPUT_NOT_ABSOLUTE")
+  assert.throws(() => assertOutputPolicy(path.join(REPO, "artifact")),
+    (error) => error.code === "HERMES_OUTPUT_INSIDE_REPOSITORY")
+  assert.throws(() => assertOutputPolicy("/"),
+    (error) => error.code === "HERMES_OUTPUT_UNSAFE")
+  assert.throws(() => assertOutputPolicy(path.join(process.env.HOME, ".local", "artifact")),
+    (error) => error.code === "HERMES_OUTPUT_RESERVED")
+  // build() runs the output guard first: with no declared source at all, an
+  // unusable output is still reported as an output failure, not as a source one.
+  for (const [output, code] of [
+    ["relative/artifact", "HERMES_OUTPUT_NOT_ABSOLUTE"],
+    [path.join(REPO, "artifact"), "HERMES_OUTPUT_INSIDE_REPOSITORY"],
+    ["/", "HERMES_OUTPUT_UNSAFE"],
+  ]) {
+    expectBuildError(() => build({ output, fallbackSources: [fallback], env: {} }), code)
+  }
+})
+
+/** A fixture whose entry pins rich==14.3.3 and whose roots carry rich 15.0.0. */
+function fixtureWithRichDeviation(name, where) {
+  const { root, fallback } = fixtureSource({ name })
+  // `rich==14.3.3` is the one entry in DECLARED_PIN_DEVIATIONS.
+  writeFileSync(path.join(root, "hermes_agent-0.19.0.dist-info", "METADATA"),
+    metadataText(ENTRY_DISTRIBUTION, "0.19.0", {
+      requires: ["openai==2.24.0", "rich==14.3.3", 'agent-client-protocol==0.9.0; extra == "acp"'],
+      extras: ["acp"],
+    }))
+  addDistribution(where === "fallback" ? fallback : root, {
+    project: "rich", version: "15.0.0",
+    modules: { "rich/__init__.py": "VERSION = '15.0.0'\n" }, topLevel: ["rich"],
+  })
+  return { root, fallback }
+}
+
+/**
+ * A declared pin deviation is anchored to the source this build was told to
+ * read, never to a path baked into the builder.
+ */
+test("a declared pin deviation applies only to the declared source root", () => {
+  const { root, fallback } = fixtureWithRichDeviation("deviation", "primary")
+  // The build declares `root` as its primary source, so the deviation is
+  // recorded - against the root the package actually came from.
+  const built = build({ output: outputFor("deviation"), source: root, fallbackSources: [fallback] })
+  assert.deepEqual(built.pinDeviations.map((item) => [item.project, item.installed, item.root]),
+    [["rich", "15.0.0", root]])
+  const index = indexDistributions([root, fallback])
+  assert.deepEqual(resolveClosure({ index, extras: ENTRY_EXTRAS, primaryRoot: root }).deviations
+    .map((item) => [item.project, item.root]), [["rich", root]])
+  // The same tree under a different declared source, or under none at all, is
+  // an unsatisfied pin - a deviation never travels to a root nobody declared.
+  for (const primaryRoot of [path.join(tmpdir(), "hermes-other-root-"), undefined]) {
+    assert.throws(
+      () => resolveClosure({ index, extras: ENTRY_EXTRAS, primaryRoot }),
+      (error) => error.code === "HERMES_CLOSURE_VERSION_MISMATCH",
+      `a declared deviation must not apply to ${primaryRoot}`,
+    )
+  }
+  // And a rich installed only in a fallback root is refused outright, even
+  // though the declared primary source is the same one as above.
+  const elsewhere = fixtureWithRichDeviation("deviation-fallback", "fallback")
+  expectBuildError(() => build({
+    output: outputFor("deviation-fallback"), source: elsewhere.root, fallbackSources: [elsewhere.fallback],
+  }), "HERMES_CLOSURE_VERSION_MISMATCH")
+})
+
+/**
+ * The reviewed installed closure, when an operator has declared where Hermes is
+ * installed. Skipped otherwise: this build refuses to guess that location, so
+ * there is nothing to build without `ORDESSA_HERMES_SOURCE` (or `--source`).
+ */
+const REVIEWED_SOURCE = process.env[SOURCE_ENVIRONMENT_VARIABLE]
+
+test("the reviewed installed closure builds and is self-contained", { skip: !REVIEWED_SOURCE }, () => {
   const output = outputFor("real")
   chmodSync(path.dirname(output), 0o755)
-  const built = build({ output, source: DEFAULT_SOURCE, fallbackSources: DEFAULT_FALLBACK_SOURCES })
+  const built = build({ output, fallbackSources: DEFAULT_FALLBACK_SOURCES })
   assert.equal(built.entry.package, ENTRY_DISTRIBUTION)
   assert.match(built.treeDigest, /^sha256:[0-9a-f]{64}$/)
   assert.ok(built.packages.some((item) => item.name === "agent-client-protocol"),

@@ -747,3 +747,75 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 方法白名单禁止 prompt/turn 与任何账号登录、登出；modelCalls=0、providerHttpRequests=0。官方 thread 使用 ephemeral，结束仅 unsubscribe 自己创建的 thread；API session/close，两个自有进程组与本次临时目录清理。不会退出或修改用户既有会话。结果摘要 `evidence/codex-mixed-auth-20261001.json`。
 - **边界**：这验证原生官方认证 + 已安装 ACP gateway 的混合可行性，不是两个完整 Desktop/Profile 会话的生产证明；第三方对端为合成服务，未证明供应商 Responses API 实际兼容或真实聊天，未测试 token 过期并发或全部 Skills/MCP/资源文件隔离。故固定 TODO 第 6 项仍未勾选。
 - 新发现并明确的接线要求：缺省 Codex login status（未指定 credentials store）报 Not logged in，而显式 keyring 的原生账号查询成功，属于存储配置不一致，非登录丢失。官方 ACP 启动必须显式使用 keyring；当前安装的 startCodexConnection 未注入该启动参数，增强入口也强制实例 CODEX_HOME。生产接线需在 Harness 内新增官方账号作用域与显式 keyring 启动分支，API 分支原隔离不变；不使用内部 token 接口、不修改 host、不复制登录、不在共享账号目录调用 API 登录或登出。
+
+## CP-N0 第三轮：其余四个 Harness 的分支收口（2026-10-01）
+
+按用户指示在 `nightly/021-harness-rollout-opencode-hermes-dsh-kilo` 上继续
+opencode / hermes / dsh / kilo。派三名子代理（文件集互不重叠），集成、验收与提交由 Lead 独占。
+
+### 先决事实：四个运行时本机一个都没有
+
+`/opt/ordessa/harnesses/artifacts/` 只有 `claude-runtime`、`codex-runtime`、
+`pi-profile-runtime`、`pi-runtime`。hermes / dsh / kilo / opencode **均未安装**
+（site-packages 无 hermes，PATH 上也找不到 opencode/hermes）。因此本轮
+**能推到"构建器正确 + 可测"，不能推到"真实资产 + 产品验收"**，后者缺的是运行时本身，不是代码。
+
+### 修掉的缺陷：仓库里写死的机器路径
+
+| 文件 | 原值 | 处置 |
+| --- | --- | --- |
+| `build-hermes-runtime-artifact.mjs:75` | `DEFAULT_SOURCE = "/home/maoqh/.local/lib/python3.12/site-packages"` | 删除；改 `ORDESSA_HERMES_SOURCE` 声明，未声明即 `HERMES_SOURCE_UNSET` 拒绝 |
+| `build-opencode-authorization.mjs:42` | `DEFAULT_ENTRY = "/home/maoqh/.npm-global/bin/opencode"` | 删除；按 family 声明，缺失即 `OPENCODE_INSTALL_NOT_CONFIGURED` 拒绝 |
+| `model-validation-42d.mjs:24,25,26,51` | hermes / openCode / pythonSite / PATH 四处 | 改为 `TOOL_REQUIREMENTS` 声明；PATH 由 `SYSTEM_BIN_DIRS` + 已解析可执行文件目录拼出 |
+| `harness-install-set.py:207`（Lead 补做） | `--output` 默认 `/home/maoqh/.agentbox-all-harnesses` | 改 `required=True`，无默认 |
+
+`hermes` 的改动比原来更严：旧的 `existsSync + statSync` 循环会**静默跟随符号链接**，
+新的 `assertSourcePolicy` 用 `lstatSync` 明确拒绝，并对主源与 fallback 源都生效；
+另拒绝 `..` 段、`/`、`$HOME` 本身。pin 偏差的锚定从"某个固定路径"改为"本次声明的主源"，**未放松**（`root: null` 且无主源时不匹配）。
+
+`DEFAULT_ENTRY` / `DEFAULT_PACKAGE_ROOT` 全仓库零消费者，移除安全；其余 builder
+（codex/pi/claude/dsh/kilo/qwen）的 `DEFAULT_SOURCE` 本就是 `path.join(REPO, "packaging", …)` 仓库相对路径，未动。
+
+### 真实 manifest 身份（dsh / kilo，本分支首次得到）
+
+`npm ci` 后各构建两次，manifest 除 `output`/`source` 外逐字节相同：
+
+| | dsh | kilo |
+| --- | --- | --- |
+| adapter | `@deepseek-ai/dsh@0.1.5-rc.1` | `@kilocode/cli@7.7.2` |
+| `treeDigest` | `sha256:3297c3eded4e7e2bcd22ca2d7b1ee736d09783555e072538319604efb7089fef` | `sha256:f46f1b4a11aa1186102f0a88b8e698c3c36e98ee04a8abe8b98caf1d75ad6589` |
+| entries / bytes | 14368 / 151294388 | 857 / 472416062 |
+| `sourceLockDigest` | `sha256:11a37afe3732b2f85a4e0d4c1e33f14ba789dd654b9e800157876eb38e5af0d4` | `sha256:20beb76b78a0d83d9b39a9ab1ad5427470e95e46a5a3a089b93c8fc41d94f231` |
+
+kilo 的 AVX2 变体按设计记为 `excluded-variant` 且未打包。
+
+### Lead 亲自复核的证据
+
+- `node --test plugins/harness/packaging/builders/*.test.mjs` → **115 tests / 111 pass / 3 fail / 1 skip**。
+  3 个失败是 `model-validation-42d.test.mjs` 的**先存红**：`8192 !== 64`（脚本声明上限 8192、测试要求 64）
+  与一条 pre-monorepo 旧路径 `plugins/agent-box-harness/third_party/…`。已用 stash 前后对拍证明
+  **失败 test id 集合逐行相同**（`not ok 1/2/4` 前后一致），未弱化、未删除任何断言。
+- 完整 Python 套件 `pytest plugins/harness/tests` → **37 failed / 675 passed / 3 skipped / 72 errors**。
+  同样 stash 前后对拍：109 条 FAILED/ERROR **diff 完全为空**，零新增红。
+- `test_packaging_boundaries.py` 唯一失败 `test_the_run_chain_declares_no_byte_ceiling_of_its_own`
+  是上一轮已登记的继承红；撤掉本轮全部改动后仍在同一行（604）以同一 test id 失败。
+- 全仓库 `grep "/home/maoqh" plugins/harness/packaging/` 现只剩 0 处（改动前 5 处）。
+- 三个被删/改的导出（`DEFAULT_ENTRY`、`DEFAULT_PACKAGE_ROOT`、hermes `DEFAULT_SOURCE`）
+  全仓库无消费者；`node:fs` 导入无残留未用名。
+
+### 连带影响与已登记项
+
+- `harness-install-set.py:148` 的 `subprocess.run` 未传 `env=`，操作者的 `ORDESSA_HERMES_SOURCE`
+  会被 builder 子进程继承，因此该流程**无需改代码**；只是要求操作者显式声明源，未声明即 fail-closed。
+- **新登记**：`plugins/harness/packaging/builders/*.test.mjs` 在任何聚合入口里都不存在
+  （`npm run test:packaging` 只覆盖 `tests/integration/packaging/**`，CI 的 node job 只跑白名单 workspace），
+  builder 回归不 gate 任何东西。已写入 `docs/known-issues.md` Cross-component 表。
+- `CONSOLIDATION.md` 是 2026-09-24 的历史记录，正文按历史保留不改，**追加**带日期的补记说明两处常量已变。
+
+### 本轮未做（不得当作已完成）
+
+- hermes / opencode **无真实资产、无真实 42-D 校验**，本机没有运行时，未模拟。
+- 四个 Harness 的 **L3 已安装产品层级验收全部 NOT_RUN**，缺的是运行时与 root 安装，不是代码。
+- dsh/kilo builder 测试未注册进任何聚合入口（同上）。
+- `npm ci` 期间 kilo 跑了 `postinstall.mjs`，与 builder 注释声称的 `npm --ignore-scripts` 不一致；未改脚本。
+- 非 linux-x64 / 非 glibc 主机的构建路径（含 kilo `BUILD_LIBC=unknown` 时的降级）未测。

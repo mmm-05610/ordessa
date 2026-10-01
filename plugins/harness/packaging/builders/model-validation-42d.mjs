@@ -7,6 +7,13 @@
  * environment, is never included in argv/output, and is overwritten in the
  * in-memory environment after the child exits. Every model request has a
  * 64-token output ceiling and a hard process/request deadline.
+ *
+ * The native tool locations are configuration, not constants: each family
+ * declares which environment variables it needs (`HERMES_BIN`,
+ * `HERMES_PYTHON_SITE`, `OPENCODE_BIN`) and the run fails closed, before any
+ * child process is started, when a required one is absent. The child PATH is
+ * then built from the resolved tool directories plus the system directories,
+ * so no machine's personal bin directory is ever committed or inherited.
  */
 import { spawn } from "node:child_process"
 import { randomUUID } from "node:crypto"
@@ -21,10 +28,80 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", ".
 const npmRoot = path.join(root, "packaging", "pi")
 const bridge = path.join(root, "third_party", "harness_remote", "bridge", "src")
 const piAdapter = path.join(npmRoot, "node_modules", "@automatalabs", "pi-acp", "dist", "index.js")
-const hermes = "/home/maoqh/.local/bin/hermes"
-const openCode = "/home/maoqh/.npm-global/bin/opencode"
-const pythonSite = "/home/maoqh/.local/lib/python3.12/site-packages"
 const allowed = new Set(["pi", "hermes", "opencode"])
+
+// -- native tool locations ---------------------------------------------------
+
+/** Environment variables each family needs before it may start anything. */
+export const TOOL_REQUIREMENTS = {
+  pi: [],
+  hermes: [
+    { name: "HERMES_BIN", what: "the Hermes executable this family drives", onPath: true },
+    { name: "HERMES_PYTHON_SITE", what: "the site-packages directory that holds the Hermes Python package", onPath: false },
+  ],
+  opencode: [
+    { name: "OPENCODE_BIN", what: "the OpenCode executable this family drives", onPath: true },
+  ],
+}
+
+//: The only directories every child may inherit unconditionally.
+export const SYSTEM_BIN_DIRS = ["/usr/bin", "/bin"]
+
+function environmentValue(env, name) {
+  const raw = env?.[name]
+  return typeof raw === "string" && raw.trim() ? raw.trim() : null
+}
+
+/**
+ * Resolve every location a family needs, or refuse naming exactly what is
+ * absent. Nothing is defaulted: a missing variable is a refusal, because a
+ * guessed absolute path would silently validate a different installation.
+ */
+export function resolveToolchain(family, env = process.env) {
+  const requirements = TOOL_REQUIREMENTS[family] ?? []
+  const resolved = {}
+  const missing = []
+  for (const requirement of requirements) {
+    const value = environmentValue(env, requirement.name)
+    if (value === null) {
+      missing.push(`${requirement.name} (${requirement.what})`)
+      continue
+    }
+    if (!value.startsWith("/")) {
+      missing.push(`${requirement.name}=${value} (${requirement.what}) must be an absolute path`)
+      continue
+    }
+    resolved[requirement.name] = value
+  }
+  if (missing.length > 0) {
+    throw new Error(
+      `TOOLCHAIN_NOT_CONFIGURED: ${family} cannot start without ${missing.join(" and ")}.`
+      + " Set the variable(s); this tool never guesses an absolute path under one machine's home directory.")
+  }
+  return {
+    ...resolved,
+    // Only executable locations contribute a directory to the child PATH; a
+    // site-packages directory is a library root, not a bin directory.
+    binDirectories: requirements.filter(({ onPath }) => onPath).map(({ name }) => path.dirname(resolved[name])),
+  }
+}
+
+/**
+ * The child PATH: the system directories plus the directories the resolved
+ * tools actually live in. No personal bin directory is ever embedded here.
+ */
+export function buildIsolatedPath(binDirectories = [], systemDirectories = SYSTEM_BIN_DIRS) {
+  const seen = new Set()
+  const parts = []
+  for (const directory of [...systemDirectories, ...binDirectories]) {
+    const value = typeof directory === "string" ? directory.trim() : ""
+    if (!value || seen.has(value)) continue
+    seen.add(value)
+    parts.push(value)
+  }
+  if (parts.length === 0) throw new Error("TOOLCHAIN_NOT_CONFIGURED: no executable directory to build a PATH from")
+  return parts.join(path.delimiter)
+}
 
 function argument(name) {
   const index = process.argv.indexOf(name)
@@ -34,8 +111,9 @@ function argument(name) {
 const family = argument("--family")
 const secretPath = argument("--secret-file")
 const dryRun = process.argv.includes("--dry-run")
+const checkToolchain = process.argv.includes("--check-toolchain")
 if (!allowed.has(family) || !secretPath) {
-  throw new Error("usage: model-validation-42d.mjs --family <pi|hermes|opencode> --secret-file <authorized-file>")
+  throw new Error("usage: model-validation-42d.mjs --family <pi|hermes|opencode> --secret-file <authorized-file> [--dry-run] [--check-toolchain]")
 }
 const mode = statSync(secretPath).mode & 0o777
 if (mode & 0o077) throw new Error("AUTHORIZED_SECRET_PERMISSIONS_TOO_BROAD")
@@ -46,9 +124,9 @@ const scratch = mkdtempSync(path.join(tmpdir(), `agentbox-42d-${family}-`))
 const workspace = path.join(scratch, "workspace")
 mkdirSync(workspace, { recursive: true })
 
-function isolatedEnvironment() {
+function isolatedEnvironment({ binDirectories = [] } = {}) {
   return {
-    PATH: `/usr/bin:/bin:/home/maoqh/.local/bin:/home/maoqh/.npm-global/bin`,
+    PATH: buildIsolatedPath(binDirectories),
     HOME: scratch,
     TMPDIR: tmpdir(),
     XDG_CONFIG_HOME: path.join(scratch, "xdg-config"),
@@ -248,11 +326,14 @@ async function runPi() {
 }
 
 async function runHermes() {
+  // Refuse before any child exists: a missing location must not become a
+  // spawned process that fails somewhere less legible.
+  const toolchain = resolveToolchain("hermes")
   const hermesHome = path.join(scratch, "hermes")
   mkdirSync(hermesHome, { recursive: true })
   const env = {
-    ...isolatedEnvironment(),
-    PYTHONPATH: pythonSite,
+    ...isolatedEnvironment({ binDirectories: toolchain.binDirectories }),
+    PYTHONPATH: toolchain.HERMES_PYTHON_SITE,
     PYTHONUNBUFFERED: "1",
     HERMES_HOME: hermesHome,
     HERMES_IGNORE_USER_CONFIG: "1",
@@ -266,7 +347,7 @@ async function runHermes() {
     HERMES_MAX_ITERATIONS: "1",
   }
   writeFileSync(path.join(hermesHome, "config.yaml"), hermesConfigYaml())
-  return acpRoundTrip(hermes, ["acp"], env, null, "hermes")
+  return acpRoundTrip(toolchain.HERMES_BIN, ["acp"], env, null, "hermes")
 }
 
 function runChild(command, args, environment, deadlineMs) {
@@ -304,8 +385,9 @@ export function parseOpenCode(output) {
 }
 
 async function runOpenCode() {
+  const toolchain = resolveToolchain("opencode")
   const env = {
-    ...isolatedEnvironment(),
+    ...isolatedEnvironment({ binDirectories: toolchain.binDirectories }),
     OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX: "64",
     OPENCODE_DISABLE_AUTOUPDATE: "1",
     OPENCODE_DISABLE_LSP_DOWNLOAD: "1",
@@ -316,14 +398,14 @@ async function runOpenCode() {
   mkdirSync(configDir, { recursive: true })
   writeFileSync(path.join(configDir, "opencode.json"), JSON.stringify(config))
   const started = Date.now()
-  const first = await runChild(openCode, [
+  const first = await runChild(toolchain.OPENCODE_BIN, [
     "run", "--pure", "--model", "deepseek/deepseek-flash", "--format", "json",
     "--title", `agentbox-42d-${randomUUID()}`, "--dir", workspace,
     "Reply with exactly OK. Do not use tools.",
   ], env, 90_000)
   const parsedFirst = parseOpenCode(first.stdout)
   if (!parsedFirst.sessionId || !/\bOK\b/i.test(parsedFirst.text)) throw new Error("OPENCODE_FIRST_OUTPUT_MISSING")
-  const second = await runChild(openCode, [
+  const second = await runChild(toolchain.OPENCODE_BIN, [
     "run", "--pure", "--session", parsedFirst.sessionId, "--model", "deepseek/deepseek-flash",
     "--format", "json", "--dir", workspace,
     "Reply with exactly TWO. Do not use tools.",
@@ -361,6 +443,15 @@ try {
             outputLimitTokens: 64, promptRequests: 2, maxProviderAttempts: 12,
             continuation: true, config: openCodeModelConfig() }
     process.stdout.write(`${JSON.stringify({ outcome: "PREPARED", ...prepared })}\n`)
+  } else if (checkToolchain) {
+    // Resolve and report only: no child process and no model request, so an
+    // operator can see which location is missing before spending anything.
+    const toolchain = resolveToolchain(family)
+    process.stdout.write(`${JSON.stringify({
+      family, outcome: "TOOLCHAIN_READY", ...toolchain,
+      // The exact PATH a real run would hand the child.
+      isolatedPath: isolatedEnvironment({ binDirectories: toolchain.binDirectories }).PATH,
+    })}\n`)
   } else {
     const result = family === "pi" ? await runPi() : family === "hermes" ? await runHermes() : await runOpenCode()
     process.stdout.write(`${JSON.stringify(result)}\n`)

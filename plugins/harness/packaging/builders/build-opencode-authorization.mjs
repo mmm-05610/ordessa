@@ -25,9 +25,19 @@
  *   4. The binary is asked for its own version, and that answer must be the
  *      pinned one, so the authorization describes the binary that will run.
  *
+ * Which installation to authorize is configuration, never a guess: the
+ * launcher directory and the installed package directory come from
+ * `OPENCODE_BIN_DIR` / `OPENCODE_PACKAGE_ROOT` or from `--entry` /
+ * `--install-root`. When neither is supplied the tool refuses with a message
+ * naming what is missing; it never falls back to one machine's home directory.
+ *
  * usage: build-opencode-authorization.mjs [--entry PATH] [--source PATH]
  *          [--install-root PATH] [--expect-digest sha256:...] [--expect-size N]
  *          [--expect-version V] [--deployment-out PATH] [--json]
+ *
+ * environment: OPENCODE_BIN_DIR         absolute directory holding the opencode launcher
+ *             OPENCODE_PACKAGE_ROOT    absolute installed opencode-ai package directory
+ *                                      (a package directory inside a node_modules tree)
  */
 import { createHash } from "node:crypto"
 import { lstatSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs"
@@ -38,10 +48,12 @@ import { fileURLToPath } from "node:url"
 
 //: The pinned OpenCode release this deployment was prepared against.
 export const OPENCODE_VERSION = "1.18.21"
-//: Where the npm-global installation puts the launcher and the real binary.
-export const DEFAULT_ENTRY = "/home/maoqh/.npm-global/bin/opencode"
-export const DEFAULT_PACKAGE_ROOT = "/home/maoqh/.npm-global/lib/node_modules/opencode-ai"
-export const DEFAULT_SOURCE = `${DEFAULT_PACKAGE_ROOT}/bin/opencode.exe`
+//: Where the installation that is being authorized is configured. A committed
+//: tool must not carry one machine's home directory, so these are inputs.
+export const OPENCODE_BIN_DIR_ENV = "OPENCODE_BIN_DIR"
+export const OPENCODE_PACKAGE_ROOT_ENV = "OPENCODE_PACKAGE_ROOT"
+//: The file the launcher resolves to inside the installed package.
+export const OPENCODE_BINARY_RELATIVE = "bin/opencode.exe"
 //: The fixed guest path the Worker mounts the verified binary at.
 export const EXECUTABLE_TARGET = "/runtime/bin/opencode"
 //: Directories a mount source must never come from: user-managed state.
@@ -58,6 +70,54 @@ export class AuthorizationError extends Error {
 
 function fail(code, message) {
   throw new AuthorizationError(code, message)
+}
+
+// -- installation configuration ---------------------------------------------
+
+function configured(value) {
+  return typeof value === "string" && value.trim() ? value.trim() : null
+}
+
+/**
+ * Derive the installation locations from the environment.
+ *
+ * Missing input resolves to `null`; it is never replaced by a default path,
+ * so `requireInstall` can refuse and name what the operator has to supply.
+ */
+export function resolveInstall(env = process.env) {
+  const binDir = configured(env[OPENCODE_BIN_DIR_ENV])
+  const packageRoot = configured(env[OPENCODE_PACKAGE_ROOT_ENV])
+  return {
+    entry: binDir === null ? null : path.join(binDir, "opencode"),
+    packageRoot,
+    source: packageRoot === null ? null : path.join(packageRoot, ...OPENCODE_BINARY_RELATIVE.split("/")),
+  }
+}
+
+/**
+ * Combine explicit arguments with the environment, refusing anything the
+ * caller left unconfigured. A caller that passes everything explicitly is
+ * honoured and never needs the environment.
+ */
+export function requireInstall({ entry = null, packageRoot = null, env = process.env } = {}) {
+  const fromEnvironment = resolveInstall(env)
+  const entryPath = configured(entry) ?? fromEnvironment.entry
+  const packageRootPath = configured(packageRoot) ?? fromEnvironment.packageRoot
+  const missing = []
+  if (entryPath === null) {
+    missing.push(`${OPENCODE_BIN_DIR_ENV} (the absolute directory holding the opencode launcher)`
+      + ` or --entry (an explicit absolute launcher path)`)
+  }
+  if (packageRootPath === null) {
+    missing.push(`${OPENCODE_PACKAGE_ROOT_ENV} (the absolute installed opencode-ai package directory)`
+      + ` or --install-root (an explicit absolute package root)`)
+  }
+  if (missing.length > 0) {
+    fail("OPENCODE_INSTALL_NOT_CONFIGURED",
+      `the OpenCode installation to authorize is not configured: supply ${missing.join(", and ")}`
+      + ". This tool never guesses an absolute path under one machine's home directory.")
+  }
+  return { entry: entryPath, packageRoot: packageRootPath }
 }
 
 // -- path and shape checks ---------------------------------------------------
@@ -184,10 +244,13 @@ function defaultVersionRun(resolved) {
  * against it; a disagreement is a typed refusal, never a warning.
  */
 export function authorizeBinary({
-  entry = DEFAULT_ENTRY, source = null, packageRoot = DEFAULT_PACKAGE_ROOT,
+  entry = null, source = null, packageRoot = null,
   expectDigest = null, expectSize = null, expectVersion = OPENCODE_VERSION,
-  runVersion = defaultVersionRun, home = process.env.HOME,
+  runVersion = defaultVersionRun, home = process.env.HOME, env = process.env,
 } = {}) {
+  const install = requireInstall({ entry, packageRoot, env })
+  entry = install.entry
+  packageRoot = install.packageRoot
   assertCanonical(entry, { code: "OPENCODE_ENTRY_NOT_ABSOLUTE", what: "the CLI entry" })
   let entryLink
   try {
@@ -270,14 +333,20 @@ function main() {
     process.stdout.write(
       "usage: build-opencode-authorization.mjs [--entry PATH] [--source PATH]\n"
       + "         [--install-root PATH] [--expect-digest sha256:...] [--expect-size N]\n"
-      + "         [--expect-version V] [--deployment-out PATH] [--json]\n")
+      + "         [--expect-version V] [--deployment-out PATH] [--json]\n"
+      + "\n"
+      + `environment: ${OPENCODE_BIN_DIR_ENV}      absolute directory holding the opencode launcher\n`
+      + `            ${OPENCODE_PACKAGE_ROOT_ENV} absolute installed opencode-ai package directory\n`
+      + "\n"
+      + "--entry / --install-root are required unless the matching environment\n"
+      + "variable is set; with neither, this tool refuses instead of guessing.\n")
     return 2
   }
   try {
     const declaration = authorizeBinary({
-      entry: argument("--entry") ?? DEFAULT_ENTRY,
+      entry: argument("--entry") ?? null,
       source: argument("--source") ?? null,
-      packageRoot: argument("--install-root") ?? DEFAULT_PACKAGE_ROOT,
+      packageRoot: argument("--install-root") ?? null,
       expectDigest: argument("--expect-digest") ?? null,
       expectSize: argument("--expect-size") ?? null,
       expectVersion: argument("--expect-version") ?? OPENCODE_VERSION,

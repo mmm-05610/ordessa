@@ -204,7 +204,11 @@ def adapter_summary(module):
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=Path("/home/maoqh/.agentbox-all-harnesses"))
+    # No default: the output directory is where this lands on *this* machine,
+    # and a committed default would put one developer's home directory in the
+    # tree. Unset is a refusal, not a guess - same rule the family builders use.
+    parser.add_argument("--output", type=Path, required=True,
+                        help="directory to receive deployment.json, install-set.json and models/")
     parser.add_argument("--artifact", action="append", default=[],
                         metavar="FAMILY=PATH",
                         help="reuse an existing verified artifact for one family")
