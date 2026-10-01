@@ -298,3 +298,31 @@ def test_transition_plan_replay_cannot_replace_a_started_operation(transition_ri
     assert isinstance(f.port.apply(plan, (f.intent,)), ApplyUnknown)
     f.restoration.execute.assert_called_once()
     f.restoration.prepare.assert_called_once()
+
+
+def test_late_restore_proof_does_not_claim_the_unapplied_profile_or_repeat_effects(transition_rig):
+    f = transition_rig
+    observed = f.restoration.execute.side_effect()
+    f.restoration.execute.side_effect = lambda *a, **kw: SimpleNamespace(state='unknown')
+    f.restoration.query.return_value = observed
+    plan = f.port.plan(f.ref, (f.intent,), 'late-proof')
+    assert isinstance(f.port.apply(plan, (f.intent,)), ApplyUnknown)
+    assert f.port.reconcile(plan.operation_key, f.ref).state == 'unknown'
+    assert f.sessions.resolve(f.ref).snapshot.target != f.old_target
+    assert isinstance(f.port.apply(plan, (f.intent,)), ApplyUnknown)
+    f.restoration.execute.assert_called_once()
+    assert not f.calls  # readonly confirmation is not a new configuration action
+
+
+def test_complete_application_proof_can_be_reconciled_without_reexecuting(transition_rig):
+    from ordessa_profile.contracts import ApplyConfirmed
+    f = transition_rig
+    plan = f.port.plan(f.ref, (f.intent,), 'confirmed-proof')
+    f.port.apply(plan, (f.intent,))
+    fresh = f.port._ports[f.ref.session_uid][1]
+    receipt = object()
+    fresh.reconcile = lambda *a: ReconcileOutcome('confirmed-current', receipt=receipt)
+    replay = f.port.apply(plan, (f.intent,))
+    assert isinstance(replay, ApplyConfirmed) and replay.receipt is receipt
+    f.restoration.execute.assert_called_once()
+    assert [entry[0] for entry in f.calls] == ['plan', 'apply']

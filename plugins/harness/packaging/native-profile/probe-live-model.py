@@ -24,7 +24,7 @@ def flatten(options):
         yield from flatten(option.get('options', []))
 
 
-def probe(assets, brand):
+def probe(assets, brand, *, restore_provider=False):
     from ordessa_harness.server_acp.registry import _Channel, _ObservedTransport, AcpChannelRegistry
     from ordessa_harness.server_acp.profile_owner import ProfileSessionOwner
     from ordessa_harness.configuration.model.live_service import create_model_service
@@ -108,7 +108,14 @@ def probe(assets, brand):
                         frame = replies.get(timeout=25)
                         assert 'invalid_stdout' not in frame, 'non-JSON ACP stdout'
                         if frame.get('id') == serial:
-                            assert 'error' not in frame, (method, frame.get('error', {}).get('code'))
+                            if 'error' in frame:
+                                error_text = json.dumps(frame['error']).lower()
+                                categories = [name for name, needle in (
+                                    ('credentials', 'auth'), ('history', 'resume'), ('connection', 'connect'),
+                                    ('client-filesystem', 'read_text_file'), ('permission', 'permission'),
+                                    ('provider', 'provider'), ('native-exit', 'exited'), ('model', 'model'))
+                                    if needle in error_text]
+                                raise AssertionError((method, frame['error'].get('code'), categories))
                             return frame['result']
                 try:
                     initialized = request('initialize', {'protocolVersion': 1, 'clientCapabilities': {},
@@ -184,6 +191,52 @@ def probe(assets, brand):
                     actual = [item for item in flatten(current['options']) if item['value'] == chosen['value']]
                     assert len(actual) == 1 and exact_route(actual[0])
                     assert not runtime.private_root.exists()
+                    restoration_report = None
+                    if restore_provider:
+                        from ordessa_harness.configuration.model.restoration import ProviderRestorationService
+                        restoration = ProviderRestorationService(registry, owners,
+                            verify=lambda _: 'DEVELOPMENT-pinned:' + brand)
+                        destination = dict(provider='synthetic-destination', model=chosen['value'],
+                            protocol=protocol, endpoint=endpoint + '/destination', credentialRef='probe-synthetic-key')
+                        restoration_plan = restoration.prepare(after.target, destination,
+                            operation_key='probe-provider-restoration', credential='synthetic-destination-key')
+                        restored = restoration.execute(restoration_plan, destination,
+                            credential='synthetic-destination-key')
+                        if restored.state != 'observed':
+                            _, proof = registry.query_native_operation(channel.connection_id, native,
+                                restoration_plan.operation_id)
+                            # Closed native vocabulary only; never emit credentials/headers or upstream messages.
+                            print(json.dumps({'restorationUnconfirmed': {key: proof.get(key) for key in
+                                ('state', 'phase', 'failureStep', 'failureReason')}}), flush=True)
+                            raise AssertionError('native provider restoration unconfirmed')
+                        renewed = restored.restored.snapshot
+                        assert renewed.owner is before.owner
+                        assert renewed.target.session_id == before.target.session_id
+                        assert renewed.target.runtime_generation > before.target.runtime_generation
+                        assert renewed.native_generation != before.native_generation
+                        assert restoration.credential_binding(renewed, destination,
+                            credential='synthetic-destination-key')
+                        assert restoration.query(restoration_plan).state == 'observed'
+                        assert restoration.execute(restoration_plan, destination,
+                            credential='synthetic-destination-key').state == 'observed'
+                        assert sum(frame.get('method') == '_ordessa/session/configuration/restore'
+                                   for frame in sent) == 1
+                        new_service, new_runtime = create_model_service(registry=registry, owners=owners,
+                            target=renewed.target, carrier=carrier.plugin_host,
+                            installation=Installation(brand, pin, (1, 0, 0), 'DEVELOPMENT-pinned:' + brand),
+                            journal_path=home / 'restored-c4.sqlite',
+                            credential_binding=lambda snapshot, wanted: restoration.credential_binding(
+                                snapshot, wanted, credential='synthetic-destination-key'))
+                        fragment = DesiredFragment('assets.model-provider', 'choice', '1', 'probe-destination',
+                            'probe-revision', 'set', destination)
+                        new_plan = new_service.plan(renewed.target, (fragment,),
+                            new_runtime.capture(renewed.target).before_revision)
+                        assert new_plan.kind == 'plan', 'renewed owner configuration plan refused'
+                        new_confirmed = new_service.apply_prepared(new_plan.plan_id, 'probe-restored-c4')
+                        assert new_confirmed.kind == 'confirmed', 'renewed owner configuration unconfirmed'
+                        restoration_report = dict(observed=True, sameNativeSession=True, newGeneration=True,
+                            restoreEffects=1, renewedOwnerC4Confirmed=True, historyWithMessagesVerified=False,
+                            sourceHistoryTurnCompleted=False)
                     while not replies.empty():
                         relayed = replies.get_nowait()
                         assert not str(relayed.get('id', '')).startswith('ordessa-config-'), 'owner RPC leaked into client relay'
@@ -203,8 +256,9 @@ def probe(assets, brand):
                         'independentOwnerReadback': True, 'sameNativeIdentityAndGeneration': True,
                         'wrongEndpointRefused': True, 'exactRoute': actual[0]['_meta']['ordessaModel'],
                         'receipt': asdict(receipt), 'retainedOperationState': retained['state'],
-                        'sessionNew': 1, 'prompt': 0, 'inferenceRequests': counts['inference'],
-                        'syntheticProviderRequests': counts['http']}
+                        'sessionNew': 1, 'prompt': 0, 'realModelCalls': 0,
+                        'inferenceRequests': counts['inference'],
+                        'syntheticProviderRequests': counts['http'], 'providerRestoration': restoration_report}
                 finally:
                     if carrier is not None:
                         carrier.stop()
@@ -225,7 +279,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('assets', type=Path)
     parser.add_argument('--brand', choices=('codex', 'claude-code'))
+    parser.add_argument('--restore-provider', action='store_true',
+                        help='Also verify provider restoration/new-owner C4; no prompt or inference')
     args = parser.parse_args()
     assert args.assets.is_absolute(), 'absolute candidate assets required'
     for selected_brand in ([args.brand] if args.brand else ['codex', 'claude-code']):
-        print(json.dumps(probe(args.assets, selected_brand), sort_keys=True), flush=True)
+        print(json.dumps(probe(args.assets, selected_brand, restore_provider=args.restore_provider), sort_keys=True), flush=True)
