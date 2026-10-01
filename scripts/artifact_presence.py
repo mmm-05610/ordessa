@@ -32,7 +32,15 @@ import re
 import shutil
 import sys
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
+# This file is `<repo>/scripts/artifact_presence.py`, so parents[0] is `scripts`
+# and parents[1] is the repo root. It used to say parents[2], which resolved to
+# the repo's *parent* — so every path in ARTIFACT_PATHS was probed one level too
+# high and none could ever be found. That made `render()`'s
+# `WORKER_ARTIFACT=...` line unconditionally ABSENT and the whole presence report
+# incapable of reporting a present artifact. Fail-safe rather than falsely green,
+# but a gate that measures nothing. The paths themselves are stale in their own
+# right; that is registered in docs/known-issues.md and not decided here.
+ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 ARTIFACT = "ARTIFACT"
 TOOL = "TOOL"
