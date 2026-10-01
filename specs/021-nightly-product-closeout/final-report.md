@@ -88,6 +88,15 @@ bash /home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout/.cleanup
 > 演练（helper 自身前置函数 5/5、树摘要与 manifest 三方一致、verifier 全部非属主断言）才发布。
 > **演练不过就在花掉口令之前退出。**
 
+**需要用户动手的一项（本轮造成，如实登记）：**
+
+> **GNOME 密钥环默认集合目前处于锁定状态，需要你用登录口令解锁一次。**
+> 为取得 C16"锁定时明确拒绝"这条 L3 证据，本轮对**真实**默认集合
+> （`/org/freedesktop/secrets/collection/login`）调用了 `Lock()`。`Unlock` 必须走交互式
+> 提权，无头环境无法完成（试过 `unlock_objects` 与直接 D-Bus `Unlock`，均返回成功但集合仍锁定）。
+> **数据未损坏**：daemon 存活、锁定态下仍能应答元数据调用、探针写入的条目与 data-root 已全部清理干净。
+> 按规则 8 未重启 `gnome-keyring-daemon`。解锁后一切如常。
+
 **五项裁定：**
 
 1. **dsh/kilo 信任根入口形状** —— 钉死的 `native-artifact-policy.mjs` 只认
