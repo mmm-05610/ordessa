@@ -416,6 +416,8 @@ def build_runtime_from_native_adapter(
     controlled_test_peer: bool = False,
     installed_artifact_root: str | None = None,
     pi_profile_bridge: bool = False,
+    native_profile_harnesses: tuple[str, ...] = (),
+    secret_store: SecretStore | None = None,
     extra_server_plugins: tuple = (),
     additional_adapters: tuple = (),
 ) -> ServerRuntime:
@@ -488,6 +490,14 @@ def build_runtime_from_native_adapter(
     entry = plugin / "runtime" / "worker-entry.mjs"  # retired old chain, launch-fail honest
     if pi_profile_bridge and "pi" not in adapters:
         raise RuntimeError("NATIVE_PI_PROFILE_SELECTION_INVALID")
+    if (type(native_profile_harnesses) is not tuple
+            or any(type(hid) is not str for hid in native_profile_harnesses)
+            or len(set(native_profile_harnesses)) != len(native_profile_harnesses)
+            or any(type(hid) is not str or hid not in ('codex', 'claude-code')
+                   or hid not in adapters or artifact_roots[hid] is None
+                   for hid in native_profile_harnesses)
+            or (native_profile_harnesses and controlled_test_peer)):
+        raise RuntimeError('NATIVE_PROFILE_SELECTION_INVALID')
     access_entry = plugin / "runtime" / "access-entry.mjs"
     provenance = plugin / "third_party" / "harness_remote" / "SOURCE.json"
     node = shutil.which("node")
@@ -522,7 +532,7 @@ def build_runtime_from_native_adapter(
             registry.register(HarnessDescriptor(hid))
     root = Path(data_root).resolve()
 
-    new_profile_root = pi_profile_bridge and not root.exists()
+    new_profile_root = (pi_profile_bridge or bool(native_profile_harnesses)) and not root.exists()
 
     def factory(records, objects, approvals, notifier, _connectors, _credentials,
                 _secrets, _turn_inputs):
@@ -606,6 +616,10 @@ def build_runtime_from_native_adapter(
             from ordessa_harness.server_acp.instance_directory import allocate_instance_directory
             instance_options = {"pi_profile_bridge": True,
                                 "instance_directory": str(allocate_instance_directory(root))}
+        elif harness_id in native_profile_harnesses:
+            from ordessa_harness.server_acp.instance_directory import allocate_instance_directory
+            instance_options = {"native_profile_bridge": True,
+                                "instance_directory": str(allocate_instance_directory(root))}
         return AccessEntryTransport(
             node=node, entry=str(access_entry), harness_id=harness_id,
             cwd=cwd, adapter=adapters[harness_id], on_line=on_line, on_exit=on_exit,
@@ -632,6 +646,7 @@ def build_runtime_from_native_adapter(
     from ordessa_permissions_backend.plugin import PermissionsBackendPlugin
     runtime = build_runtime(
         root,
+        secret_store=secret_store,
         local_workspace_provider=LocalEnvironmentProvider(execution_mode="native"),
         server_plugins=(WorkspaceServerPlugin(), compat, acp,
                         PermissionsBackendPlugin(), *extra_server_plugins),

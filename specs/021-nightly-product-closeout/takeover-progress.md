@@ -4,6 +4,29 @@
 所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
 未合并、未 push、未启停用户服务、未调用真实模型、未重建 deb。
 
+## 当前读数（2026-10-01，首次准备并行集成）
+
+- 继续收口 API Key 输入链：已冻结 model-provider 自有 import/query 入口，操作预留先于密钥库效果，未知结果只查询；前后端仍在各自目录完成测试，尚不记为交付。主代理复跑当前 products/server 与 native credential catalogue：**140P**。Linux store 新增内存字节导入，无明文临时文件；真实系统内存导入、独立进程读取、删除合成条目已通过。
+- 发现并补齐两个此前受控夹具未暴露的生产缺口：原生 Harness 目录未声明 api-key 凭据类型；provider wire 保存未传协议/端点给既有解析器。目录声明已补且不改变原始目录，wire/UI 正在同批对齐。前端操作身份必须匹配后端 `key-import:<requestId>`，不能以夹具中的不同格式冒充真实成功。这些不改 host，也不代表 Pi 新 provider 启动已完成。
+- 主代理实际系统验证：真实 GNOME store + model-provider wire import/query + providerModels.create + ProfileModelChoiceResolver + 后端凭据读取全链通过；合成 Key、临时数据根、loopback 未监听端点，零模型调用，精确删除本次密钥环条目。首次探针暴露手工模型缺必填 displayName，已交前端补齐；另一次不可解析 synthetic.invalid 端点被既有校验诚实拒绝，最终使用 loopback 地址成功，未放宽校验。探针 `/tmp/ordessa-key-entry-product-probe.py`；不是完整 Electron 操作或原生 Agent 应用确认。
+- 两条执行线现已停止写入：后端最终 **194P**、前端 **35P**（均主代理独立复跑）；新增畸形 store 返回只清本次可证 locator、操作 ID 前缀、模型四字段、协议/端点保留和保存不升级会话 ready 反例。扩大 Product/Harness/owner 回归首次发现精简目录描述符兼容错误，修复后 **300P**；Profile **195P**、安装来源 Node **22P**。Sessions/ACP/Profile Chat **45/62/45P**。未据此声称全仓通过。
+- 真实宿主身份下完整旧安装资产 Desktop mount-only 探针通过：ready/rootMounted=true、errors=[]、Chat/Skills/Sessions、renderer 无 Node，prompt=0。root 管理资产在隔离 UID 视图被诚实拒绝，没有削弱信任；增强 Codex/Claude 候选仍待用户 sudo 安装。根 npm test 当前已是全 JS 聚合，不再只测 desktop；终版聚合运行中，后续记录所有失败，不将 18 扩展构建代替全量回归。
+- 根无环境修正的 JS 聚合终版 **31/39 suites green，exit 1**：ServerBridge live 旧共享 .venv 缺 Profile（改用本轮独立 interpreter 后同套 **68P**）；6 个 Electron 入口缺默认 bundled Python/bin，agent-shell 另有 Conversation 页面断言；ui-preview 仍启用已退役 ordessa.agent-conversation，history 阶段失败。未删除断言或称作新旧红集合相同。正在以显式开发 runtime 与临时截图输出重跑 Electron 门禁，不动用户服务；原聚合的预览测试会生成 docs/ui-preview/01-empty.png，该文件不纳入本检查点。
+- 首次提交的公开准备钩子已接通：独立通道 initialize 后、session/new 前，后端解析 Profile/model/provider/credential，保留操作身份并核实原生结果；Unknown 只查询，不重新创建。前端清空选择不能绕过已开始的准备或 C4 检查，显式丢弃才能结束该草稿 attempt。
+- Codex/Claude 产品显式增强资产选择和逐实例目录已接线；默认仍使用原安装资产，增强候选未安装。后续同一认证路由可切 model 或更新 Profile；凭据移除/轮换、endpoint 漂移或 owner/generation 变化拒绝，不通过删除 credentialRef 假装匿名成功。
+- 主代理本轮独立复跑：products/server + Harness configuration_model/owner **250P**；Profile **195P**；model-provider server **162P**；Agent Sessions **45P**、ACP **62P**、Profile Chat **45P**；native 安装/启动 Node **22P**。根 typecheck、18 扩展 build exit 0。Python 套件分进程，避免既有 conftest 同名导入冲突；这些不是全仓 Server 回归数字。
+- **明确未完成**：Ubuntu 生产凭据存储及导入体验；Pi 新 provider/credential 初始配置；已有历史的跨 provider restart/resume；增强资产可信安装；完整 Desktop UI 应用和用户真实聊天验收。固定顶层待办不扩张，也不把独立适配器或受控证据算成整项完成。
+- Ubuntu 只读核查：系统 Secret Service 有会话总线 owner，GNOME keyring/libsecret 已安装；当前产品 Python 环境没有安全存储实现。现缺省 secret_store=None，声明 credentialRef 会在原生效果前拒绝 CREDENTIAL_UNRESOLVED。已询问用户是否接系统密钥环及使用专用测试条目；未读取现有密钥，不落明文，不用 MemorySecretStore 冒充生产。
+- 用户认可系统密钥环方向后，新增产品层 LinuxSecretServiceStore，复用 SecretStorage 3.5.0 与既有 SecretStore 协议；产品 default/native/sidecar 注入，裸宿主行为不变。固定 Python 闭包增加 SecretStorage/Jeepney/cryptography 及依赖，deb 推荐标准 keyring/PAM 包。当前仍在验证，未宣告凭据 UI 已可用。
+- 实际 GNOME 探针首次保存后的核验失败：系统添加 `xdg:schema=org.freedesktop.Secret.Generic`，旧严格属性集拒绝。已只按本次创建时刻/自有格式/唯一条目删除该合成测试条目，未读取现有秘密；正在加精确兼容及保存后失败清理反例。不因系统测试失败改为跳过验证。
+- 该缺陷现已修复，只允许上述精确系统属性，其他额外属性/错误 schema 仍拒绝。存储 **39 条**反例通过；主代理产品/Harness 定向和既有 Linux 裸宿主测试合计 **294P**（零 skip）。实际系统合成值两次 roundtrip 成功，其中一次在**另一个 Python 进程**读取成功，测试条目均已删除；没有读取已有秘密。
+- 保护范围：默认 persistent alias、加密 Secret Service session、每次调用/整轮超时、禁止后台 Prompt/Unlock/创建集合/明文回落、自有应用+数据根+随机 locator 精确搜索。返回 create 对象后的校验失败只清理该对象；若 create 超时且对象尚未返回，不能确认 daemon 是否留有条目，明确报失败、不报成功，保留此不确定性限制。
+- 产品输入体验仍有缺口：model-provider 设置目前仅输入 credentialId，没有直接输入 API Key 的 wire/UI。下一步应在 model-provider 自有入口中以内存字节导入，复用 CredentialRecords 和可选 store.import_bytes，不绕账户资产、不生成明文临时文件，不扩张 Pacthold 的强制协议。
+- Electron 默认命令再次暴露开发环境没有完整 `/opt` bundled Python/bin（未隐藏）；指定既有独立开发运行根的空宿主 smoke exit 0、ready=true/errors=[]，只记空宿主，不记完整产品 UI。两品牌实际 C4 无模型探针再次通过（Codex gpt-5.5→gpt-5.6-sol、Claude sonnet→haiku），ledger 仍为夹具、候选仍未安装。
+- 打包契约测试本轮 **24P/1F**：现有旧 deb 提取后缺 `ordessa_profile`；本轮没有重建 deb，不能将旧包检查记为新包已验收。日志 `keyring-deb-contract.log`。
+- 下一步 UI 同批必须处理三项真实缺口：直接输入 Key 的 domain-owned import/Unknown 处理；provider create/update 缺 required requestId；新供应商配置发送空 models 被后端拒绝。模型获取须显式操作，不自动发外部请求。本轮只完成安全存储，未据此宣告设置页完整。
+- 本轮并行继续沿用同树文件所有权：后端准备、前端消费、真实适配器/只读环境审计三条线；主代理契约/产品装配/集成门禁/文档，子代理无 git 写入。不更改 main、host、原系统资产、用户服务或他属截图。
+
 ## 已落地
 
 - i003 `61a41b264d` 经审阅收编为 `7f5e1aaa68`：启动事实刷新、平台令牌同名载体接线。
@@ -179,7 +202,8 @@ Profile Chat 有限入口接线已由主代理复跑 23/23：合法 default fact
   - [x] Pi 真实产品 wire 路径登记 canonical 身份并绑定真实 owner/generation；双实例无模型配置应用已验证。
   - [x] 两品牌原生证据读取、显式运行换代票据与旧 target 失效守卫已实现/受控验证。
   - [x] 三品牌共用 C4 live-model runtime/factory 已接入；Codex/Claude 的同 provider model 应用有受控确认、幂等及独立读回反例。
-  - [ ] Codex/Claude 完整生产配置 port/factory 接线及原生应用确认。
+  - [x] Codex/Claude 配置 port/factory 和首次创建前准备源码已接线；受控完整身份/凭据守卫与真实适配器 C4 分别验证。
+  - [ ] 最终可信资产安装后的完整产品应用确认（不能用独立适配器探针代替）。
 - [ ] Chat 首次/后续发送前应用接线，不打断正在输出的 Agent。
   - [x] 提交 guard/preparation/登记/应用/发送链已实现并受控验证；输出中选择不调用配置接口。
   - [x] 完整启用清单的实际 Desktop 挂载通过无模型探针。

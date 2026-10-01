@@ -12,7 +12,7 @@ import type {
 export function createAgentSessions(lifetime: ResourceScope, connections: AgentConnections): AgentSessions {
   void lifetime // workspace ownership moved to the connections service scope (P2-1)
   const workspace = connections.workspace
-  interface ConnState { draftActive: boolean; draftEndedBy?: 'discarded' | 'opened'; requestId?: string; restoreFailed: boolean;
+  interface ConnState { draftActive: boolean; draftEndedBy?: 'discarded' | 'opened'; requestId?: string; restoreFailed: boolean; preparationRequested?: boolean;
     prepared?: { client: AgentClient; owner: AgentNativeSessionOwner } }
   const states = new Map<string, ConnState>()
   let selectionRevision = 0
@@ -132,7 +132,7 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
     selectConnection: async id => { selectionRevision += 1; await workspace.selectConnection(id); await revalidate(id) },
     reconnect: async id => { selectionRevision += 1; await workspace.reconnect(id); await revalidate(id) },
     refreshSessions: () => workspace.selected().refreshSessions(),
-    prepareSubmission: async () => {
+    prepareSubmission: async preparation => {
       const client = workspace.selected()
       const connectionId = workspace.getSnapshot().selectedConnectionId ?? '-'
       const state = stateFor(connectionId)
@@ -149,7 +149,8 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
         throw Error('Prepared draft owner changed; cannot silently create another session')
       state.requestId ??= globalThis.crypto.randomUUID()
       const attemptId = state.requestId
-      const owner = await client.prepareSession(projectId, attemptId)
+      state.preparationRequested = true
+      const owner = await client.prepareSession(projectId, attemptId, state.prepared ? undefined : preparation)
       // A view switch retains this prepared owner for the resumable draft.
       // Explicit discard clears the attempt and separately releases it.
       if (state.requestId === attemptId) state.prepared = { client, owner }
@@ -229,6 +230,8 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
       state.requestId ??= globalThis.crypto.randomUUID() // one requestId held across unknown outcomes; no blind second create
       const requestId = state.requestId
       try {
+        if (state.preparationRequested && !state.prepared)
+          throw Error('Draft preparation must succeed before sending; retry preparation or discard the draft')
         if (state.prepared && (state.prepared.client !== client || state.prepared.owner.workspaceId !== workspaceId))
           throw Error('Prepared draft owner changed')
         const accepted = state.prepared
@@ -245,6 +248,7 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
           throw Error('Agent first-send session mismatch')
         state.requestId = undefined
         state.prepared = undefined
+        state.preparationRequested = false
         state.draftActive = false
         state.draftEndedBy = undefined // an accepted send ends the draft by selecting the new real session
         notify()
@@ -334,7 +338,7 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
       if (!id) return
       const state = stateFor(id), wasActive = state.draftActive, attempt = state.requestId
       const client = workspace.selected()
-      state.draftActive = false; state.requestId = undefined; state.prepared = undefined
+      state.draftActive = false; state.requestId = undefined; state.prepared = undefined; state.preparationRequested = false
       if (wasActive) state.draftEndedBy = 'discarded'
       if (attempt && client.abandonPreparedSession) void client.abandonPreparedSession(attempt).catch(() => {
         // Connector retains failed release in its observable retry ledger.

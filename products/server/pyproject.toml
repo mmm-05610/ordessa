@@ -9,6 +9,7 @@ description = "Ordessa default Server product: the deployment's plugin selection
 requires-python = ">=3.10"
 license = {text = "MIT"}
 dependencies = [
+    "SecretStorage==3.5.0; sys_platform == 'linux'",
     "ordessa-server==2.0.0a1",
     "ordessa-server-plugin-api>=0.1.0,<1",
     "ordessa-server-compat==2.0.0a1",

@@ -154,3 +154,22 @@ def test_failed_native_registration_factory_closes_profile_core(tmp_path):
     # A fresh activation can reuse the same store after failed construction.
     _, registration, _ = build(tmp_path)
     registration.disposal()
+
+
+def test_preparation_wire_is_exact_and_projects_only_preparation(tmp_path):
+    from types import SimpleNamespace
+    from unittest.mock import Mock
+    prepare = Mock(return_value=dict(state='prepared', operation_id='create:a', connection_id='c',
+        profile_id='p', harness_id='codex', profile_revision=2))
+    plugin = ProfileServerPlugin(harnesses=StaticHarnessCatalog({'codex': frozenset()}),
+        native_registration_factory=lambda core: SimpleNamespace(prepare_native_creation=prepare))
+    registration = plugin.build(ServerPluginContext('ordessa.profile', tmp_path))
+    try:
+        method = next(m for m in registration.methods if m.method_id == 'profiles.v2.prepareNativeCreation')
+        assert method.required_params == frozenset({'connectionId', 'profileId', 'operationId'})
+        assert method.optional_params == frozenset()
+        result = method.handler(dict(connectionId='c', profileId='p', operationId='create:a'))['data']
+        assert result == dict(state='prepared', operationId='create:a', connectionId='c', profileId='p', harnessId='codex', profileRevision=2)
+        prepare.assert_called_once_with(connection_id='c', profile_id='p', operation_id='create:a')
+    finally:
+        registration.disposal()

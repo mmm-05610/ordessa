@@ -58,11 +58,11 @@ export function pickerKeyFor(location: ChatLocation): {
 
 export interface ProfileChatGlueInput {
   readonly store?: ProfileSelectionStore
-  readonly profiles: Pick<ProfileServiceClient, 'beginTurnApplication'> & Partial<Pick<ProfileServiceClient, 'selectForSession' | 'inspectSessionConfig' | 'registerNativeSession' | 'reconcile'>>
+  readonly profiles: Pick<ProfileServiceClient, 'beginTurnApplication'> & Partial<Pick<ProfileServiceClient, 'selectForSession' | 'inspectSessionConfig' | 'registerNativeSession' | 'reconcile' | 'prepareNativeCreation'>>
   readonly catalog: () => readonly ProfileCatalogGroup[]
   readonly catalogState?: Pick<ProfileCatalog, 'message' | 'subscribe' | 'getSnapshot' | 'refresh'>
   readonly onOpenManager?: () => void
-  readonly nativeSessions?: Pick<AgentSessions, 'prepareSubmission'> & Partial<Pick<AgentSessions, 'getSnapshot'>>
+  readonly nativeSessions?: Pick<AgentSessions, 'prepareSubmission'> & Partial<Pick<AgentSessions, 'getSnapshot' | 'subscribe'>>
 }
 
 export function createProfileChatGlue(
@@ -79,11 +79,25 @@ export function createProfileChatGlue(
   const getSnapshot = () => store.getSnapshot() + (input.catalogState?.getSnapshot() ?? 0)
   const scoped = contributions.forScope(scope)
   const bindings = new Map<string, { ref: import('@ordessa/plugin-profile-api').SessionRef; selection: ProfileSelection; uiSessionId: string; serverId: string }>()
+  const retainedSelections = new Map<string, { selection: ProfileSelection; connectionId?: string }>()
+  const stopNative = input.nativeSessions?.subscribe?.(() => {
+    const native = input.nativeSessions?.getSnapshot?.()
+    if (native?.draft?.endedBy !== 'discarded') return
+    for (const [key, retained] of retainedSelections)
+      if (retained.connectionId === native.selectedConnectionId) retainedSelections.delete(key)
+  })
+  const nativeLifetime = scope.add({ isDisposed: false as boolean, dispose() {
+    if (this.isDisposed) return
+    this.isDisposed = true
+    stopNative?.(); retainedSelections.clear()
+  } })
   const guard = scoped.addSubmissionGuard({ id: 'ordessa.profile-chat.application', order: 10,
     async prepare(snapshot) {
       const { key } = pickerKeyFor(snapshot.target)
-      const selected = store.peek(key)
       const target = snapshot.target
+      const native = input.nativeSessions?.getSnapshot?.()
+      const retainedKey = JSON.stringify([target.serverInstanceId, native?.selectedConnectionId ?? null, key])
+      const selected = store.peek(key) ?? (target.kind === 'draft' ? retainedSelections.get(retainedKey)?.selection : undefined)
       const currentBinding = target.kind === 'session' ? [...bindings.values()].find(binding =>
         binding.uiSessionId === target.sessionId && binding.serverId === target.serverInstanceId) : undefined
       if (!selected && !currentBinding) return { status: 'ready' }
@@ -92,8 +106,25 @@ export function createProfileChatGlue(
       const offeredHarness = input.nativeSessions.getSnapshot?.().agent?.connection.harnessId
       if (selected && offeredHarness && offeredHarness !== selected.harnessId)
         return { status: 'refused', reason: '所选 Profile 属于另一 Harness，请先选择对应连接；没有创建会话。' }
+      if (selected && target.kind === 'draft' && selected.harnessId !== 'pi' && !input.profiles.prepareNativeCreation)
+        return { status: 'refused', reason: '所选 Harness 缺少 Profile 创建前准备服务；草稿和选择已保留。' }
       try {
-        const owner = await input.nativeSessions.prepareSubmission()
+        if (selected && target.kind === 'draft') retainedSelections.set(retainedKey, { selection: selected, connectionId: native?.selectedConnectionId })
+        const owner = await input.nativeSessions.prepareSubmission(selected && input.profiles.prepareNativeCreation ? {
+          beforeCreate: async context => {
+            if (context.serverInstanceId !== target.serverInstanceId || context.harnessId !== selected.harnessId)
+              throw new Error('Profile preparation context changed')
+            const operationId = `create:${context.attemptId}`
+            const result = await input.profiles.prepareNativeCreation!({ connectionId: context.connectionId,
+              profileId: selected.profileId, operationId })
+            if (!result || !['prepared', 'not-required'].includes(result.state)
+                || result.operationId !== operationId || result.connectionId !== context.connectionId
+                || result.profileId !== selected.profileId || result.harnessId !== context.harnessId
+                || !Number.isSafeInteger(result.profileRevision) || result.profileRevision < 1
+                || Object.keys(result).sort().join(',') !== 'connectionId,harnessId,operationId,profileId,profileRevision,state')
+              throw new Error('Profile native preparation is unknown or malformed')
+          },
+        } : undefined)
         if (snapshot.target.serverInstanceId !== owner.serverInstanceId)
           return { status: 'refused', reason: 'Profile Server identity changed' }
         const identity = JSON.stringify([owner.serverInstanceId, owner.connectionId, owner.nativeSessionId])
@@ -119,8 +150,11 @@ export function createProfileChatGlue(
           }
           return { status: 'refused', reason: 'Profile 已核实为未应用，请再次点击发送重试；未自动重发。' }
         }
-        if (!selected) store.select(key, selection)
-        const outcome = await store.applyOnSubmit(key, binding.ref, input.profiles)
+        if (!selected && !store.peek(key)) store.select(key, selection)
+        // Selection changes while preparation waits belong to the next submit.
+        const applyStore = store.peek(key) === selection ? store : new ProfileSelectionStore()
+        if (applyStore !== store) applyStore.select(key, selection)
+        const outcome = await applyStore.applyOnSubmit(key, binding.ref, input.profiles)
         if (!outcome.ok) {
           if (outcome.unknown) return { status: 'unknown' }
           // Wire/1 currently hides business error details. Query the domain's
@@ -130,6 +164,7 @@ export function createProfileChatGlue(
             : { status: 'refused', reason: outcome.reason }
         }
         binding.selection = selection
+        retainedSelections.delete(retainedKey)
         return { status: 'ready' }
       } catch (error) {
         // Transport loss cannot be turned into a safe retry or fallback send.
@@ -177,6 +212,7 @@ export function createProfileChatGlue(
       disposeRegistration.dispose()
       guard.dispose()
       bindings.clear()
+      nativeLifetime.dispose()
     },
   }
 }

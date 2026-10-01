@@ -352,7 +352,8 @@ class BridgeConfigurationAdapter:
             else:
                 from .live_model import compile_native_model
                 result = compile_native_model(context.native_snapshot, desired,
-                                              IntentSource(FACET_ID, "choice", "1"), self.brand)
+                                              IntentSource(FACET_ID, "choice", "1"), self.brand,
+                                              credential_binding=context.credential_binding)
             return result if isinstance(result, AdapterRefusal) else HarnessIntentSet((result,))
         payload = dict(desired)
         try:

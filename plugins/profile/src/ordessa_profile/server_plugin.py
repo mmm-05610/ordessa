@@ -139,6 +139,15 @@ class ProfileServerPlugin:
         }
 
         if native_registration is not None:
+            def prepare_native(p):
+                prepare = getattr(native_registration, 'prepare_native_creation', None)
+                if prepare is None:
+                    raise ProfileError('APPLICATION_PORT_ABSENT', 'Native preparation unavailable', status=409)
+                return prepare(connection_id=p['connectionId'], profile_id=p['profileId'], operation_id=p['operationId'])
+
+            operations['prepareNativeCreation'] = (
+                ('connectionId', 'profileId', 'operationId'), (), prepare_native)
+
             def register_native(p):
                 binding = native_registration.register(
                     connection_id=p["connectionId"],

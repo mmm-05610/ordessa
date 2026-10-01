@@ -206,6 +206,22 @@ export interface AgentAdmissionEvidence {
 }
 
 /** A live, authoritative adapter instance. Operations never imply a terminal run state. */
+/** Public plugin preparation seam, after channel initialization but BEFORE
+ * the first native session/new. No native/canonical session identity exists
+ * here. Hooks cannot choose the channel or access its private transport. */
+export interface AgentNativeCreationContext {
+  readonly attemptId: string
+  readonly serverInstanceId: string
+  readonly connectionId: string
+  readonly harnessId: string
+  readonly workspaceId: string
+}
+export interface AgentNativePreparation {
+  /** Rejection prevents session/new and prompt. Retries retain the same
+   * attempt/channel; the backend must query/idempotently reuse its operation. */
+  readonly beforeCreate: (context: AgentNativeCreationContext) => Promise<void>
+}
+
 export interface AgentClient extends IDisposable {
   getSnapshot(): AgentSnapshot
   subscribe(listener: () => void): () => void
@@ -213,7 +229,7 @@ export interface AgentClient extends IDisposable {
   newSession(): Promise<string>
   /** 021: prepare without sending. Same attempt reuses the confirmed owner;
    * an uncertain creation is never repeated. Optional means unsupported. */
-  prepareSession?(workspaceId: string, attemptId: string): Promise<AgentNativeSessionOwner>
+  prepareSession?(workspaceId: string, attemptId: string, preparation?: AgentNativePreparation): Promise<AgentNativeSessionOwner>
   sendPreparedSession?(attemptId: string, text: string): Promise<{ sessionId: string }>
   /** Explicit draft cancellation only; never cancel an already attempted prompt. */
   abandonPreparedSession?(attemptId: string): Promise<void>
@@ -345,7 +361,7 @@ export interface AgentSessions {
   send(text: string, attachments?: readonly string[]): Promise<AgentSubmissionOutcome>
   /** Prepare a draft's native owner or inspect the selected session. No prompt.
    * A failed configuration keeps the prepared owner for explicit retry. */
-  prepareSubmission?(): Promise<AgentNativeSessionOwner>
+  prepareSubmission?(preparation?: AgentNativePreparation): Promise<AgentNativeSessionOwner>
   stop(runId: string): Promise<void>
   respond(interactionId: string, answer: InteractionAnswer): Promise<void>
   setOption(id: string, value: string): Promise<void>

@@ -101,6 +101,14 @@ for (const brand of BRANDS.slice(1)) {
     const options = { artifactBase: f.base, variant: 'native-profile' }
     assert.deepEqual(resolveInstalledLaunch(f.harness, f.launch, options),
       { ...f.launch, source: 'installed-artifact', version: f.version })
+    const enhancedPlan = nativeServerPlan({ harnessId: f.harness,
+      pluginRoot: '/opt/ordessa/harness-plugin', artifactRoot: f.base,
+      nativeProfileHarnesses: [f.harness] })
+    const flag = enhancedPlan.args.indexOf('--native-profile-harness')
+    assert.equal(enhancedPlan.args[flag + 1], f.harness)
+    assert.ok(enhancedPlan.args.includes(`--native-adapter-arg=${f.entry}`))
+    assert.throws(() => nativeServerPlan({ harnessId: f.harness,
+      pluginRoot: '/opt/ordessa/harness-plugin', artifactRoot: f.base }), /ADAPTER_ARTIFACT_UNVERIFIED/)
     for (const delta of [{ id: 'pi-profile' }, { version: 2 },
       { instanceDirectoryRequired: false }, { upstreamSourceDigest: 'invalid' },
       { upstreamSourceDigest: `sha256:${'b'.repeat(64)}` }, { extra: true }]) {
@@ -114,6 +122,13 @@ for (const brand of BRANDS.slice(1)) {
     assert.deepEqual(installedLaunchReference(f.harness, f.base).args, [original])
   })
 }
+
+test('native Profile selection cannot select a different, duplicated or invalid brand', () => {
+  for (const nativeProfileHarnesses of [true, ['pi'], ['claude-code'], ['codex', 'codex'], [{}]]) {
+    assert.throws(() => nativeServerPlan({ harnessId: 'codex', pluginRoot: '/opt/ordessa/harness-plugin',
+      artifactRoot: '/opt/ordessa/artifacts', nativeProfileHarnesses }), /NATIVE_PROFILE_SELECTION_INVALID/)
+  }
+})
 
 test("Pi enhanced entry requires explicit variant; default and read-only routes do not adopt it", (t) => {
   simulateRootAdministration(t)

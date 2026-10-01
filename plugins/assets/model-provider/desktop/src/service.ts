@@ -9,14 +9,18 @@ export function createModelProviderService(invoke: Parameters<typeof wireThrough
     (...args: A) => { probeCalls += 1; return run(...args) }
   return {
     wire,
+    importApiKey: (requestId, harnessId, apiKey) => wire.importApiKey(requestId, harnessId, apiKey),
+    queryApiKeyImport: (requestId, harnessId) => wire.queryApiKeyImport(requestId, harnessId),
     get probeCalls() { return probeCalls },
     list: (includeArchived = false) => wire.list(includeArchived).then((page) => page.items),
     testConnection: countProbe((baseUrl, credentialId) => wire.probeConnection(baseUrl, credentialId)),
     fetchModels: countProbe((baseUrl, credentialId) => wire.probeModels(baseUrl, credentialId)),
     async save(body, edit) {
+      const requestId = body.requestId ?? `save_${globalThis.crypto.randomUUID()}`
+      const { harness: _harness, provider: _provider, providerModelId: _id, expectedVersion: _version, ...mutable } = body
       const answer = edit === undefined
-        ? await wire.create(body)
-        : await wire.update({ ...body, providerModelId: edit.id, expectedVersion: edit.version })
+        ? await wire.create({ ...body, requestId })
+        : await wire.update({ ...mutable, requestId, providerModelId: edit.id, expectedVersion: edit.version })
       return answer.providerModel
     },
   }

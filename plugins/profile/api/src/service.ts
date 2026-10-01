@@ -84,6 +84,17 @@ export interface SaveOutcomeDto {
   readonly profile: ProfileIdentityDto
 }
 
+/** Initial preparation only, never a Profile applied receipt. Secrets remain
+ * backend-owned; no native or canonical session is created by this call. */
+export interface NativeCreationPreparationDto {
+  readonly state: 'prepared' | 'not-required' | 'unknown'
+  readonly operationId: string
+  readonly connectionId: string
+  readonly profileId: string
+  readonly harnessId: string
+  readonly profileRevision: number
+}
+
 export interface SelectionOutcomeDto {
   readonly sessionRef: SessionRef
   readonly pendingProfileId: string
@@ -165,6 +176,7 @@ export interface ProfileServiceClient {
   }): Promise<SelectionOutcomeDto>
   /** Native routing facts are checked by the backend; canonical UID is minted there. */
   registerNativeSession?(input: { connectionId: string; nativeSessionId: string; profileId: string }): Promise<{ sessionRef: SessionRef }>
+  prepareNativeCreation?(input: { connectionId: string; profileId: string; operationId: string }): Promise<NativeCreationPreparationDto>
   setSessionOverride(operationKey: string, input: {
     sessionRef: SessionRef
     facetId: string
@@ -258,6 +270,9 @@ export class DelegatingProfileServiceClient implements ProfileServiceClient {
   }
   registerNativeSession(input: { connectionId: string; nativeSessionId: string; profileId: string }) {
     return this.call<{ sessionRef: SessionRef }>('registerNativeSession', input)
+  }
+  prepareNativeCreation(input: { connectionId: string; profileId: string; operationId: string }) {
+    return this.call<NativeCreationPreparationDto>('prepareNativeCreation', input)
   }
   setSessionOverride(operationKey: string, input: {
     sessionRef: SessionRef; facetId: string; itemId: string; value: unknown

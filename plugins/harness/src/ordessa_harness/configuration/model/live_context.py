@@ -7,3 +7,4 @@ from ...server_acp.profile_owner import ProfileConfigurationSnapshot
 @dataclass(frozen=True)
 class NativeLiveModelContext(AdapterContext):
     native_snapshot: ProfileConfigurationSnapshot
+    credential_binding: object = None

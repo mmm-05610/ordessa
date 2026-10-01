@@ -129,12 +129,14 @@ def test_initial_configuration_precedes_any_native_owner(actual_registry_control
             'method': '_ordessa/channel/configuration/prepare', 'params': params}))
 
 
-@pytest.mark.parametrize('reason', ['shared', 'already-created', 'ended'])
+@pytest.mark.parametrize('reason', ['shared', 'already-created', 'creating', 'ended'])
 def test_initial_configuration_rejects_nonempty_or_unowned_channels(actual_registry_controlled_transport, reason):
     registry, channel, transport, create = actual_registry_controlled_transport
     channel.session_scope_id = None if reason == 'shared' else 'dedicated-first'
     if reason == 'already-created':
         create('native-a')
+    if reason == 'creating':
+        channel._pending_new.add((str, 'pending-new'))
     if reason == 'ended':
         channel._ended = True
     before = len(transport.sent)

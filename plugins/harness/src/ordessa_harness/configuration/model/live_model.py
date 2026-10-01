@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from ordessa_harness_api import AdapterRefusal, ErrorCode, InvokeAction
 
 
-def compile_native_model(snapshot, desired, source, brand):
+def compile_native_model(snapshot, desired, source, brand, *, credential_binding=None):
     def refuse():
         return AdapterRefusal(ErrorCode.CAPABILITY_UNSUPPORTED,
                               'Model choice does not match verified native construction routing')
@@ -16,13 +16,19 @@ def compile_native_model(snapshot, desired, source, brand):
         or not snapshot.native_generation or not isinstance(desired, Mapping)
         or not {'provider', 'model', 'protocol', 'endpoint'} <= set(desired)
         or set(desired) - {'provider', 'model', 'protocol', 'endpoint', 'credentialRef', 'brandFields', 'requestParams'}
-        or desired.get('credentialRef') is not None or desired.get('brandFields') not in (None, {})
+        or desired.get('brandFields') not in (None, {})
         or desired.get('requestParams') not in (None, {})
         or any(type(desired[key]) is not str or not desired[key]
                or desired[key].strip() != desired[key] or len(desired[key]) > 4096
                or any(ord(char) < 32 for char in desired[key])
                for key in ('provider', 'model', 'protocol', 'endpoint'))):
         return refuse()
+    if desired.get('credentialRef') is not None or callable(credential_binding):
+        try:
+            if not callable(credential_binding) or credential_binding(snapshot, desired) is not True:
+                return refuse()
+        except Exception:
+            return refuse()
     selectors = [item for item in snapshot.config_options if item.get('id') == 'model']
     if len(selectors) != 1 or selectors[0].get('type') != 'select':
         return refuse()

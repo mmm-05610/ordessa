@@ -101,7 +101,7 @@ def test_seven_new_methods_registered_with_frozen_shapes(host, harnesses):
         assert descriptor.owner == PLUGIN_ID
         assert descriptor.required_params == frozenset(required), method_id
         assert descriptor.optional_params == frozenset(optional), method_id
-    assert len(host.methods) == 6 + 7
+    assert len(host.methods) == 6 + 7 + 2
 
 
 def test_new_methods_are_single_owner_too(host, harnesses):

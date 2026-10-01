@@ -5,6 +5,7 @@ no global state is used. Installation evidence is injected by trusted launch
 composition; a request cannot choose its version or publication authority.
 """
 from pathlib import Path
+from copy import deepcopy
 from uuid import uuid4
 
 from ordessa_harness_api import ActionDescriptor, Installation, ValueSchema
@@ -28,7 +29,7 @@ class NativeLiveModelRuntime:
     context_class = NativeLiveModelContext
 
     def __init__(self, registry, owners, *, target, installation: Installation,
-                 private_root: Path, publication_revision: str):
+                 private_root: Path, publication_revision: str, credential_binding=None):
         if (not isinstance(installation, Installation) or installation.harness_id != self.harness_id
             or installation.native_version != self.native_version
             or not isinstance(publication_revision, str) or not publication_revision):
@@ -36,6 +37,8 @@ class NativeLiveModelRuntime:
         self.registry, self.owners, self.target = registry, owners, target
         self.installation, self.private_root = installation, Path(private_root)
         self.publication_revision = publication_revision
+        self.credential_binding = credential_binding
+        self._credential_desired = None
         self._executor = None
         self._expected_value = None
         self._captured_digest = None
@@ -49,8 +52,15 @@ class NativeLiveModelRuntime:
             raise ValueError("Matching native owner unavailable")
         digest = configuration_digest(native.config_options)
         self._captured_digest = digest
+        self._credential_desired = None
+        def bind_credential(snapshot, desired):
+            if not callable(self.credential_binding) or self.credential_binding(snapshot, desired) is not True:
+                return False
+            self._credential_desired = deepcopy(desired)
+            return True
         context = self.context_class((), self.installation, "acp", "session",
-            self.harness_id + "-native-catalog:" + digest, native)
+            self.harness_id + "-native-catalog:" + digest, native,
+            bind_credential if callable(self.credential_binding) else None)
         return RuntimeSnapshot(target, context, MergeAuthority((), (ACTION,), "session"),
             {}, {}, self.private_root, {}, digest, self.installation.evidence_ref,
             target.runtime_generation, self.publication_revision, "native-auth-unchanged")
@@ -58,6 +68,7 @@ class NativeLiveModelRuntime:
     def preflight(self, batch):
         if batch.target != self.target or len(batch.invocations) != 1 or self._captured_digest is None:
             raise ValueError("One captured exact native model action required")
+        self._check_credential_binding()
         # Both stage-time and immediately-before-effects validation use the
         # same live owner and before digest; C4 separately fences plan capture.
         executor = NativeSessionActionExecutor(self.registry, self.owners, target=self.target,
@@ -69,10 +80,17 @@ class NativeLiveModelRuntime:
     def execute(self, operation_id, batch):
         if self._executor is None or batch.target != self.target or len(batch.invocations) != 1:
             raise ValueError("Native action was not preflighted")
+        self._check_credential_binding()
         ACTION.input_schema.validate(batch.invocations[0].intent.typed_payload)
         receipt = self._executor.execute(operation_id, batch)
         self._expected_value = batch.invocations[0].intent.typed_payload["value"]
         return receipt
+
+    def _check_credential_binding(self):
+        if self._credential_desired is not None:
+            native = self.owners.readback(self.target)
+            if self.credential_binding(native, self._credential_desired) is not True:
+                raise ValueError('Initial credential binding changed before native action')
 
     def activate_generation(self, *args):
         raise ValueError("Live model application never materializes files")

@@ -206,6 +206,55 @@ def test_enhanced_pi_flag_routes_to_native_product_only():
     assert plan_server_cli(values(native_pi_profile_bridge=True)).error
 
 
+def test_native_profile_flags_route_to_explicit_native_product_only():
+    native = values(execution_mode='native', plugin_root=Path('/opt/ordessa/harness'),
+                    native_harness='codex', native_adapter_command='/usr/bin/node',
+                    native_profile_harness=['codex', 'claude-code'])
+    assert plan_server_cli(native).kwargs['native_profile_harnesses'] == ('codex', 'claude-code')
+    assert plan_server_cli(values(native_profile_harness=['codex'])).error
+
+
+@pytest.mark.parametrize('brands', [['codex'], ('pi',), ('codex', 'codex'), ({},), ('claude-code',)])
+def test_native_profile_selection_refuses_before_data_creation(tmp_path, brands):
+    root = Path(__file__).resolve().parents[3]
+    with pytest.raises(RuntimeError, match='NATIVE_PROFILE_SELECTION_INVALID'):
+        create_composition().native_runtime(tmp_path / 'data', plugin_root=root / 'plugins/harness',
+            harness_id='codex', adapter_command=shutil.which('node'),
+            installed_artifact_root='/opt/ordessa/artifacts', native_profile_harnesses=brands)
+    assert not (tmp_path / 'data').exists()
+
+
+@pytest.mark.parametrize('brand', ['codex', 'claude-code'])
+def test_native_profile_launch_and_factory_are_explicit_and_instance_scoped(tmp_path, monkeypatch, brand):
+    import ordessa_server_compat.composition as composition
+    captured = []
+    class ControlledTransport:
+        def __init__(self, **kwargs):
+            captured.append(kwargs)
+        def start(self):
+            return self
+    monkeypatch.setattr(composition, 'AccessEntryTransport', ControlledTransport)
+    root = Path(__file__).resolve().parents[3]
+    runtime = create_composition().native_runtime(tmp_path / 'data',
+        plugin_root=root / 'plugins/harness', harness_id=brand,
+        adapter_command=shutil.which('node'), installed_artifact_root='/opt/ordessa/enhanced',
+        native_profile_harnesses=(brand,))
+    try:
+        port = runtime.plugin_host.provided_port('profile.core').config_port
+        assert port.supported_harnesses == {brand}
+        launch = runtime.plugin_host.provided_port('acp.channels')._launch
+        for _ in range(2):
+            launch(harness_id=brand, cwd=str(tmp_path), on_line=lambda _: None, on_exit=lambda _: None)
+        paths = [Path(row['instance_directory']) for row in captured]
+        assert paths[0] != paths[1]
+        assert all(row['native_profile_bridge'] is True and row['harness_id'] == brand for row in captured)
+        assert all('pi_profile_bridge' not in row for row in captured)
+        assert all(path.exists() and path.stat().st_mode & 0o077 == 0 for path in paths)
+        assert all('instance_directory' not in row['adapter'] for row in captured)
+    finally:
+        runtime.stop()
+
+
 def test_enhanced_pi_launch_allocates_per_process_not_per_profile(tmp_path, monkeypatch):
     import ordessa_server_compat.composition as composition
     captured = []

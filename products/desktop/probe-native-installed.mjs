@@ -11,11 +11,16 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const home = await mkdtemp(path.join(tmpdir(), 'ordessa-product-installed-probe-'))
 try {
   await copyFile(path.join(root, 'products/desktop/extensions.json'), path.join(home, 'extensions.json'))
+  const nativeProfileRoot = process.env.ORDESSA_NATIVE_PROFILE_ARTIFACT_ROOT
+  if (nativeProfileRoot !== undefined && !nativeProfileRoot) throw new Error('Native Profile asset root must not be empty')
+  const nativeProfileHarnesses = nativeProfileRoot ? ['codex', 'claude-code'] : []
   const plan = nativeServerPlan({ harnessIds: ['pi', 'codex', 'claude-code'],
     pluginRoot: path.join(root, 'plugins/harness'),
     artifactRoot: process.env.ORDESSA_INSTALLED_ARTIFACT_ROOT ?? '/opt/ordessa/harnesses/artifacts',
     artifactRoots: { pi: process.env.ORDESSA_PI_PROFILE_ARTIFACT_ROOT
-      ?? '/opt/ordessa/harnesses/profile-live-model/artifacts' }, piProfileBridge: true })
+      ?? '/opt/ordessa/harnesses/profile-live-model/artifacts',
+      ...Object.fromEntries(nativeProfileHarnesses.map(id => [id, nativeProfileRoot])) },
+    nativeProfileHarnesses, piProfileBridge: true })
   const result = await launchSmoke(home, { ORDESSA_EMPTY_HOST: '0', HOME: home,
     XDG_CONFIG_HOME: path.join(home, 'config'), XDG_DATA_HOME: path.join(home, 'data'),
     ORDESSA_SERVER_ARGS_JSON: JSON.stringify(plan.args) })

@@ -1,7 +1,7 @@
 import * as acp from '@agentclientprotocol/sdk'
 import type {
   AgentCapabilities, AgentClient, AgentInteraction, AgentMessage, AgentReleaseState, AgentReleaseStatus,
-  AgentSessionInfo, AgentSnapshot, AgentToolCall, AgentWorkspaceInfo, AgentNativeSessionOwner, InteractionAnswer, RunStatus,
+  AgentSessionInfo, AgentSnapshot, AgentToolCall, AgentWorkspaceInfo, AgentNativeSessionOwner, AgentNativePreparation, InteractionAnswer, RunStatus,
 } from '@extensions/ordessa.agent-contracts/contract.js'
 import type { AcpChannelHandle, AcpChannelSpec } from './channel'
 import { parseNativeCommands, type NativeCommandCatalog } from './commands'
@@ -75,7 +75,7 @@ export class AcpClient implements AgentClient {
   private readonly channels = new Map<string, Channel>()
   private readonly opening = new Map<string, Promise<Channel>>()
   private readonly firstSendRequests = new Set<string>()
-  private readonly preparedSessions = new Map<string, { workspaceId: string; promise: Promise<AgentNativeSessionOwner> }>()
+  private readonly preparedSessions = new Map<string, { workspaceId: string; promise: Promise<AgentNativeSessionOwner>; channel?: Channel; retryable?: boolean; preparationRequired: boolean }>()
   private readonly abandonedPreparations = new Set<string>()
   private readonly historyScopes = new Map<string, string>()
   /** Handles acquired but not yet registered as channels: between `acquireChannel` returning and
@@ -519,6 +519,8 @@ export class AcpClient implements AgentClient {
    * NOT the whole turn (R27). An unknown outcome rejects; the caller keeps its requestId. */
   async createAndSend(workspaceId: string, text: string, requestId: string): Promise<{ sessionId: string }> {
     this.assertLive()
+    if (this.preparedSessions.has(requestId) || this.abandonedPreparations.has(requestId))
+      throw new Error('ACP retained preparation cannot use legacy createAndSend')
     // A failed/uncertain first send cannot be blindly repeated as another native session.
     if (this.firstSendRequests.has(requestId))
       throw new SubmissionOutcomeUnknownError('ACP first send outcome unknown: request identity already used')
@@ -547,21 +549,38 @@ export class AcpClient implements AgentClient {
       harnessId: this.spec.harness.id, workspaceId: route.channel.projectId })
   }
 
-  prepareSession(workspaceId: string, attemptId: string): Promise<AgentNativeSessionOwner> {
+  prepareSession(workspaceId: string, attemptId: string, preparation?: AgentNativePreparation): Promise<AgentNativeSessionOwner> {
     this.assertLive()
     if (this.abandonedPreparations.has(attemptId)) throw new Error('ACP preparation abandoned')
     if (!attemptId || !workspaceId) throw new Error('ACP preparation identity required')
     const existing = this.preparedSessions.get(attemptId)
     if (existing) {
       if (existing.workspaceId !== workspaceId) throw new Error('ACP preparation project changed')
-      return existing.promise.then(owner => {
+      if (!existing.retryable) return existing.promise.then(owner => {
         if (this.abandonedPreparations.has(attemptId)) throw new Error('ACP preparation abandoned')
         return this.nativeSessionOwner(owner.sessionId)
       })
+      if (existing.preparationRequired && !preparation) throw new Error('ACP preparation hook required for retained attempt')
     }
-    if (this.preparedSessions.size >= 4096) throw new Error('ACP preparation capacity exhausted')
+    if (!existing && this.preparedSessions.size >= 4096) throw new Error('ACP preparation capacity exhausted')
+    const record = existing ?? { workspaceId, promise: undefined! as Promise<AgentNativeSessionOwner>, channel: undefined as Channel | undefined, retryable: false, preparationRequired: false }
+    record.preparationRequired ||= preparation !== undefined
+    record.retryable = false
     const promise = (async () => {
-      const channel = await this.ensureChannel(workspaceId, attemptId)
+      let channel: Channel
+      try {
+        channel = record.channel ?? await this.ensureChannel(workspaceId, attemptId)
+        record.channel = channel
+        this.assertLive()
+        if (channel.commandsDown || this.abandonedPreparations.has(attemptId)) throw new Error('ACP preparation channel unavailable')
+        await preparation?.beforeCreate(Object.freeze({ attemptId, serverInstanceId: this.spec.serverInstanceId,
+          connectionId: channel.handle.connectionId, harnessId: this.spec.harness.id, workspaceId: channel.projectId }))
+        this.assertLive()
+        if (channel.commandsDown || this.abandonedPreparations.has(attemptId)) throw new Error('ACP preparation channel unavailable')
+      } catch (cause) {
+        record.retryable = true
+        throw cause
+      }
       let created: acp.NewSessionResponse
       try { created = await this.createNativeSession(channel) }
       catch (cause) { throw new SubmissionOutcomeUnknownError(cause) }
@@ -569,8 +588,9 @@ export class AcpClient implements AgentClient {
       // Keep the public draft/selection unchanged until its first prompt is accepted.
       return this.nativeSessionOwner(key)
     })()
-    // Cache failure too: uncertain session/new must never mint a second session.
-    this.preparedSessions.set(attemptId, { workspaceId, promise })
+    // Only a pre-creation failure can retry. Any attempted session/new stays cached.
+    record.promise = promise
+    this.preparedSessions.set(attemptId, record)
     return promise
   }
 

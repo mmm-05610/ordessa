@@ -31,6 +31,7 @@ from server_plugin_api import (
 )
 
 from ordessa_model_provider.catalog import ModelCatalogService
+from ordessa_model_provider.credential_import import ApiKeyImportService
 from ordessa_model_provider.choices import (
     ADAPTER_MISSING, CONFIG_REVISION_CONFLICT, CREDENTIAL_UNRESOLVED,
     MODEL_NOT_FOUND, OPERATION_UNKNOWN, PROVIDER_ARCHIVED, PROVIDER_NOT_FOUND,
@@ -106,7 +107,8 @@ class ModelProviderPlugin:
         catalog = ModelCatalogService(
             ProviderModelRecords(database, idempotency), objects,
             harnesses=self._harnesses, credentials=credentials,
-            reference_port=self._reference_port, secret_store=self._secret_store,
+            reference_port=self._reference_port, secret_store=(self._secret_store
+                if self._secret_store is not None else ports.get("secret_store")),
         )
         choices = ModelChoiceService(
             catalog, harness_config_port=self._harness_config_port,
@@ -114,7 +116,9 @@ class ModelProviderPlugin:
         )
         self.catalog = catalog
         self.choices = choices
-        handlers = _Handlers(catalog, choices)
+        self.credential_imports = ApiKeyImportService(data_root=getattr(context, 'data_root', None),
+            harnesses=self._harnesses, credentials=credentials, secret_store=catalog.secret_store)
+        handlers = _Handlers(catalog, choices, self.credential_imports)
         methods = tuple(
             ServerMethodDescriptor(
                 method_id=method_id, required_params=frozenset(required),
@@ -145,11 +149,11 @@ _METHODS = (
     ("providerModels.create",
      {"requestId", "displayName", "harness", "provider", "credentialId",
       "configuration", "models"},
-     {"provenance"}, "provider_models_create"),
+     {"provenance", "protocols", "endpoints"}, "provider_models_create"),
     ("providerModels.update",
      {"requestId", "providerModelId", "expectedVersion", "displayName", "credentialId",
       "configuration", "models"},
-     {"provenance"}, "provider_models_update"),
+     {"provenance", "protocols", "endpoints"}, "provider_models_update"),
     ("providerModels.archive",
      {"requestId", "providerModelId", "expectedVersion"},
      set(), "provider_models_archive"),
@@ -177,6 +181,8 @@ _METHODS = (
      "model_provider_query_choice"),
     ("modelProvider.reconcileChoice", {"target", "operationId"}, set(),
      "model_provider_reconcile_choice"),
+    ('modelProvider.importApiKey', {'requestId', 'harnessId', 'apiKey'}, set(), 'import_api_key'),
+    ('modelProvider.queryApiKeyImport', {'requestId', 'harnessId'}, set(), 'query_api_key_import'),
 )
 
 #: Order 112: a provenance field the request did not name keeps its stored
@@ -196,9 +202,16 @@ class _Handlers:
     """The wire handler bodies: the six legacy ones behavior-frozen from the
     legacy core wire, plus the Z3 ``modelProvider.*`` surface."""
 
-    def __init__(self, catalog: ModelCatalogService, choices) -> None:
+    def __init__(self, catalog: ModelCatalogService, choices, credential_imports=None) -> None:
         self._catalog = catalog
         self._choices = choices
+        self._credential_imports = credential_imports
+
+    def import_api_key(self, params):
+        return self._credential_imports.import_key(request_id=params['requestId'], harness_id=params['harnessId'], api_key=params['apiKey'])
+
+    def query_api_key_import(self, params):
+        return self._credential_imports.query(request_id=params['requestId'], harness_id=params['harnessId'])
 
     def provider_models_list(self, params: Mapping[str, Any]) -> dict[str, Any]:
         include = params["includeArchived"]
@@ -398,6 +411,9 @@ class _Handlers:
         if creating:
             body["harness"] = _bounded(params["harness"], "harness", 64)
             body["provider"] = _bounded(params["provider"], "provider", 128)
+        for field in ('protocols', 'endpoints'):
+            if field in params:
+                body[field] = params[field]  # domain validators normalize declared facts
         return body
 
     @staticmethod

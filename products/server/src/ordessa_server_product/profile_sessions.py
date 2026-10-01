@@ -38,17 +38,21 @@ def bind_native_profile_sessions(core, runtime, *, artifact_root=None, artifact_
         from ordessa_harness.configuration.model.bridge import choice_payload_schema
         from ordessa_model_provider.profile_resolution import ProfileModelChoiceResolver
         installations = {}
+        def verify(brand):
+            if brand not in installations:
+                installations[brand] = verified_installation(brand, roots[brand])
+            return installations[brand]
         def service_factory(target):
             native = owners.readback(target)
             channel = channels.get(native.owner.connection_id)
             if channel is None or channel.harness_id not in roots:
                 raise ProfileError('APPLICATION_PORT_ABSENT', 'Trusted native installation route unavailable', status=409)
             brand = channel.harness_id
-            if brand not in installations:
-                installations[brand] = verified_installation(brand, roots[brand])
+            verify(brand)
             return create_model_service(registry=channels, owners=owners, target=target,
                 carrier=runtime.plugin_host, installation=installations[brand],
-                journal_path=runtime.data_root / "plugins/profile/native-configuration.sqlite")
+                journal_path=runtime.data_root / "plugins/profile/native-configuration.sqlite",
+                credential_binding=sessions.preparation.credential_binding)
         def resolver_factory():
             catalog = runtime.plugin_host.provided_port("model_provider.catalog")
             if catalog is None:
@@ -56,6 +60,19 @@ def bind_native_profile_sessions(core, runtime, *, artifact_root=None, artifact_
             return ProfileModelChoiceResolver(catalog, payload_schema=choice_payload_schema())
         core.config_port = NativeProfileConfigPort(sessions, service_factory=service_factory,
             resolver_factory=resolver_factory, supported_harnesses=tuple(roots))
+    from .profile_preparation import NativeProfilePreparation
+    def preparation_catalog():
+        catalog = runtime.plugin_host.provided_port('model_provider.catalog')
+        if catalog is None:
+            raise ProfileError('APPLICATION_PORT_ABSENT', 'Model catalogue unavailable', status=409)
+        return catalog
+    def preparation_resolver():
+        from ordessa_model_provider.profile_resolution import ProfileModelChoiceResolver
+        from ordessa_harness.configuration.model.bridge import choice_payload_schema
+        return ProfileModelChoiceResolver(preparation_catalog(), payload_schema=choice_payload_schema())
+    sessions.preparation = NativeProfilePreparation(core, channels, roots=roots,
+        verify=verify if roots else lambda brand: None,
+        resolver_factory=preparation_resolver, catalog_factory=preparation_catalog)
     return sessions
 
 
@@ -72,6 +89,12 @@ class ProfileNativeSessions:
         self.core, self.channels, self.owners, self.realm = core, channels, owners, realm
         self._bindings = {}
         self._lock = RLock()
+
+    def prepare_native_creation(self, *, connection_id, profile_id, operation_id):
+        preparation = getattr(self, 'preparation', None)
+        if preparation is None:
+            raise ProfileError('APPLICATION_PORT_ABSENT', 'Native preparation unavailable', status=409)
+        return preparation.prepare(connection_id=connection_id, profile_id=profile_id, operation_id=operation_id)
 
     def require_registered(self, ref):
         """Identity-only fence: recording a selection must not query a busy agent."""

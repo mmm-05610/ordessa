@@ -78,6 +78,12 @@ SERVER_CLI_FLAGS: "tuple[ServerFlagSpec, ...]" = (
         feeds="pi_profile_bridge", route="native_runtime",
     ),
     ServerFlagSpec(
+        flags=("--native-profile-harness",), dest="native_profile_harness",
+        add={"action": "append", "default": [], "choices": ("codex", "claude-code"),
+             "help": "explicit enhanced installed native Profile route (repeatable)"},
+        feeds="native_profile_harnesses", route="native_runtime",
+    ),
+    ServerFlagSpec(
         flags=("--sidecar-deployment",), dest="sidecar_deployment",
         add={"type": "path", "help": "non-secret Harness sidecar deployment JSON"},
         feeds="deployment_path", route="sidecar_runtime",
@@ -185,6 +191,8 @@ def plan_server_cli(values: Mapping[str, Any]) -> ServerCliPlan:
                 **_fed("native_continuation", values),
                 **(_fed("native_pi_profile_bridge", values)
                    if _value(values, "native_pi_profile_bridge") else {}),
+                **(_fed("native_profile_harness", values, tuple)
+                   if _value(values, "native_profile_harness") else {}),
                 **(_fed("native_installed_artifact_root", values)
                    if _value(values, "native_installed_artifact_root") is not None else {}),
                 **(_fed("native_additional_adapters", values, parse_additional_adapters)
@@ -195,6 +203,7 @@ def plan_server_cli(values: Mapping[str, Any]) -> ServerCliPlan:
             or _value(values, "native_adapter_arg")
             or _value(values, "native_continuation")
             or _value(values, "native_pi_profile_bridge")
+            or _value(values, "native_profile_harness")
             or _value(values, "native_additional_adapters")
             or _value(values, "native_installed_artifact_root")):
         return ServerCliPlan(

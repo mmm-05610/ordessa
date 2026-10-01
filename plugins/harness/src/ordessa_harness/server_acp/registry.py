@@ -305,7 +305,7 @@ class _Channel:
                     or not isinstance(self.transport, _ObservedTransport)):
                 raise NativeConfigurationUnavailable('native session owner unavailable')
             if initial_method and (not self.session_scope_id or
-                    (method.endswith('/prepare') and self._native_sessions)):
+                    (method.endswith('/prepare') and (self._native_sessions or self._pending_new))):
                 raise NativeConfigurationUnavailable('initial configuration requires a dedicated empty channel')
             if len(self._owner_query_ids) >= 4096 or len(self._configuration_queries) >= 16:
                 raise NativeConfigurationUnavailable('configuration query capacity exhausted')

@@ -45,6 +45,30 @@ class ModelCatalogService:
         row = self.credentials.get(credential_id)
         return self.secret_store.read(row["secret_locator"]).decode("utf-8").strip()
 
+    def application_credential(self, credential_ref: str | None, *, harness_id: str) -> str | None:
+        """Trusted in-memory application only; never a wire/catalog projection.
+
+        Unlike optional probes, a declared credential cannot become anonymous
+        application when the store or referenced value is unavailable.
+        """
+        if credential_ref is None:
+            return None
+        try:
+            if (not isinstance(credential_ref, str) or not credential_ref.startswith('ref://')
+                    or not credential_ref[6:] or self.secret_store is None):
+                raise ValueError('credential unavailable')
+            kind = self.harnesses.get(harness_id).credential_kind
+            if kind is None:
+                raise ValueError('credential kind unavailable')
+            row = self.credentials.get(credential_ref[6:], kind=kind)
+            value = self.secret_store.read(row['secret_locator']).decode('utf-8').strip()
+            if not value or len(value) > 8000 or any(ord(c) < 32 or ord(c) == 127 for c in value):
+                raise ValueError('credential value invalid')
+            return value
+        except Exception:
+            # Neither store exceptions nor secret values cross the public error.
+            raise ServerError('CREDENTIAL_UNRESOLVED', 'Application credential unavailable', status=422) from None
+
     def probe_models(self, params: Mapping[str, Any]) -> dict[str, Any]:
         """Order 55: one bounded outbound GET of the declared /models."""
         from ordessa_model_provider.probe import ProbeError, pull_models

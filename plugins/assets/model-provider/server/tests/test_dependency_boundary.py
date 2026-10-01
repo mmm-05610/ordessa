@@ -30,6 +30,9 @@ SRC = Path(__file__).resolve().parents[1] / "src" / "ordessa_model_provider"
 ALLOWED_ROOTS = {
     "__future__", "hashlib", "json", "typing", "dataclasses", "ipaddress",
     "socket", "time", "types", "urllib", "ordessa_model_provider",
+    # API-key import owns a durable SQLite journal and bounded UTF-8 validation;
+    # these are standard-library utilities, not additional product dependencies.
+    "contextlib", "pathlib", "re", "sqlite3", "unicodedata",
     "pacthold", "server_plugin_api", "ordessa_server", "ordessa_server_compat",
     "ordessa_harness_api",
 }

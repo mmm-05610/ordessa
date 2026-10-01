@@ -28,6 +28,15 @@ function button(container: HTMLElement, testId: string): HTMLButtonElement {
   return found!
 }
 
+async function setField(container: HTMLElement, label: string, value: string) {
+  const input = container.querySelector<HTMLInputElement | HTMLSelectElement>(`[aria-label="${label}"]`)!
+  await act(async () => {
+    const prototype = input.tagName === 'SELECT' ? HTMLSelectElement.prototype : HTMLInputElement.prototype
+    Object.getOwnPropertyDescriptor(prototype, 'value')!.set!.call(input, value)
+    input.dispatchEvent(new Event(input.tagName === 'SELECT' ? 'change' : 'input', { bubbles: true }))
+  })
+}
+
 function configFixture(over: Partial<ProviderConfigView> = {}): ProviderConfigView {
   return {
     id: 'provider-1', version: 1, displayName: '我的 API', harness: 'pi',
@@ -105,6 +114,10 @@ describe('G6: render never probes', () => {
     const { container } = await renderSettings()
     await act(async () => {})
     await act(async () => { button(container, 'add-config').click() })
+    await setField(container, '供应商', 'acme')
+    await setField(container, '模型 ID', 'm1')
+    await setField(container, '协议', 'openai-chat')
+    await setField(container, 'Base URL', 'https://api.example.test/v1')
     await act(async () => { button(container, 'save-config').click() })
     await act(async () => {})
     const feedback = container.querySelector('[data-testid="feedback"]')!

@@ -191,6 +191,52 @@ def test_two_brand_c4_confirmed_requires_bound_action_and_independent_native_obs
     assert service.apply_prepared(plan.plan_id, 'native-model') == result and len(calls) == 1
 
 
+def test_two_brand_private_credential_binding_preserves_ref_and_requires_c4_receipt(native_rig):
+    service, runtime, target, desired, fragment, calls, options, _ = native_rig
+    desired = {**desired, 'credentialRef': 'ref://startup-credential'}
+    seen = []
+    def binding(snapshot, value):
+        seen.append((snapshot.owner.native_session_id, copy.deepcopy(value)))
+        return (all(value.get(key) == desired.get(key) for key in ('provider', 'protocol', 'endpoint', 'credentialRef'))
+                and snapshot.native_generation == 'native-generation')
+    runtime.credential_binding = binding
+    plan = service.plan(target, (fragment(desired),), runtime.capture(target).before_revision)
+    assert plan.kind == 'plan' and not calls
+    result = service.apply_prepared(plan.plan_id, 'credential-bound-model')
+    assert result.kind == 'confirmed', result
+    assert len(calls) == 1 and options[0]['currentValue'] == 'new'
+    assert len(seen) >= 4
+    assert all(value['credentialRef'] == 'ref://startup-credential' for _, value in seen)
+    second = copy.deepcopy(options[0]['options'][0])
+    second['value'] = 'second-model'
+    second['_meta']['ordessaModel']['model'] = 'second-model'
+    options[0]['options'].append(second)
+    second_desired = {**desired, 'model': 'second-model'}
+    second_plan = service.plan(target, (fragment(second_desired),), runtime.capture(target).before_revision)
+    assert second_plan.kind == 'plan', second_plan
+    second_result = service.apply_prepared(second_plan.plan_id, 'credential-bound-second-model')
+    assert second_result.kind == 'confirmed', second_result
+    assert len(calls) == 2 and options[0]['currentValue'] == 'second-model'
+
+
+def test_two_brand_credential_binding_changed_after_plan_refuses_without_effect(native_rig):
+    service, runtime, target, desired, fragment, calls, _, _ = native_rig
+    desired = {**desired, 'credentialRef': 'ref://startup-credential'}
+    runtime.credential_binding = lambda snapshot, value: True
+    plan = service.plan(target, (fragment(desired),), runtime.capture(target).before_revision)
+    assert plan.kind == 'plan' and not calls
+    runtime.credential_binding = lambda snapshot, value: False
+    assert service.apply_prepared(plan.plan_id, 'credential-changed').kind == 'refused'
+    assert not calls
+
+
+def test_two_brand_private_binding_also_fences_dropped_credential_reference(native_rig):
+    service, runtime, target, desired, fragment, calls, _, _ = native_rig
+    runtime.credential_binding = lambda snapshot, value: value.get('credentialRef') == 'ref://startup-credential'
+    plan = service.plan(target, (fragment(desired),), runtime.capture(target).before_revision)
+    assert plan.kind == 'refused' and not calls
+
+
 @pytest.mark.parametrize('patch', [{'endpoint': 'https://changed.test'}, {'credentialRef': 'ref://changed'},
                                  {'protocol': 'gemini-generate'}, {'requestParams': {'maxTokens': 10}}])
 def test_two_brand_model_action_never_discards_provider_or_other_configuration_changes(native_rig, patch):

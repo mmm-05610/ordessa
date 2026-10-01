@@ -23,6 +23,8 @@ export interface ProviderConfigView {
   provider: string
   credentialId: string | null
   models: ModelOfferingView[]
+  protocols?: readonly string[] | null
+  endpoints?: Readonly<Record<string, string>> | null
   archivedAt: string | null
   /** 'harness' = read from the harness's own configuration; 'ordessa' = a named preset saved here. */
   managedBy: 'harness' | 'ordessa'
@@ -42,7 +44,22 @@ export interface ProbeAnswer {
 
 export type WireInvoke = (method: string, params: object) => Promise<unknown>
 
+/** Key bytes are transient authenticated request data, never configuration. */
+export interface ApiKeyImportResult {
+  readonly operationId: string
+  readonly state: 'imported' | 'unknown' | 'not-found' | 'refused'
+  readonly credentialId?: string
+  readonly kind?: 'api-key'
+}
+export class ModelProviderWireError extends Error {
+  constructor(readonly outcome: 'Refused' | 'Unknown', readonly method: string) {
+    super(`model-provider ${method}: ${outcome}`)
+  }
+}
+
 export interface ModelProviderWire {
+  importApiKey(requestId: string, harnessId: string, apiKey: string): Promise<ApiKeyImportResult>
+  queryApiKeyImport(requestId: string, harnessId: string): Promise<ApiKeyImportResult>
   list(includeArchived: boolean): Promise<{ items: ProviderConfigView[]; nextCursor: null }>
   create(body: Record<string, unknown>): Promise<{ providerModel: ProviderConfigView }>
   update(body: Record<string, unknown>): Promise<{ providerModel: ProviderConfigView }>
@@ -54,6 +71,8 @@ export interface ModelProviderWire {
 /** The one transport seam; production wires the extension host, tests fake it. */
 export function wireThrough(invoke: WireInvoke): ModelProviderWire {
   return {
+    importApiKey: (requestId, harnessId, apiKey) => invoke('modelProvider.importApiKey', { requestId, harnessId, apiKey }) as never,
+    queryApiKeyImport: (requestId, harnessId) => invoke('modelProvider.queryApiKeyImport', { requestId, harnessId }) as never,
     list: (includeArchived) => invoke('providerModels.list', { includeArchived }) as never,
     create: (body) => invoke('providerModels.create', body) as never,
     update: (body) => invoke('providerModels.update', body) as never,
@@ -67,6 +86,8 @@ export function wireThrough(invoke: WireInvoke): ModelProviderWire {
 }
 
 export interface ModelProviderService {
+  importApiKey(requestId: string, harnessId: string, apiKey: string): Promise<ApiKeyImportResult>
+  queryApiKeyImport(requestId: string, harnessId: string): Promise<ApiKeyImportResult>
   readonly wire: ModelProviderWire
   /** Outbound *probe* requests only - the counterexample behind
    * FR-STATE-3 (settings render must not auto-probe). */

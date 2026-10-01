@@ -204,7 +204,8 @@ class ServerProductComposition:
         from ordessa_server.bootstrap import build_runtime
 
         self._assemble_legacy_chain()
-        runtime = build_runtime(data_root)
+        from .platform_secrets import product_secret_store
+        runtime = build_runtime(data_root, secret_store=product_secret_store(data_root))
         self._wire_admission_authority(runtime)
         return runtime
 
@@ -231,6 +232,7 @@ class ServerProductComposition:
         native_continuation: bool = False,
         installed_artifact_root: str | None = None,
         pi_profile_bridge: bool = False,
+        native_profile_harnesses: tuple[str, ...] = (),
         additional_adapters: tuple = (),
     ) -> Any:
         from ordessa_server_compat.composition import build_runtime_from_native_adapter
@@ -249,11 +251,19 @@ class ServerProductComposition:
             native_continuation=native_continuation,
             installed_artifact_root=installed_artifact_root,
             pi_profile_bridge=pi_profile_bridge,
+            native_profile_harnesses=native_profile_harnesses,
             additional_adapters=additional_adapters,
+            secret_store=self._native_secret_store(data_root),
         )
         pi_artifact_root = installed_artifact_root if harness_id == "pi" else next(
             (binding.get("installedArtifactRoot", installed_artifact_root)
              for binding in additional_adapters if binding["harnessId"] == "pi"), None)
+        profile_roots = {hid: (installed_artifact_root if hid == harness_id else next(
+            binding.get('installedArtifactRoot', installed_artifact_root)
+            for binding in additional_adapters if binding['harnessId'] == hid))
+            for hid in native_profile_harnesses}
+        if pi_profile_bridge:
+            profile_roots['pi'] = pi_artifact_root
         def current_ceilings():
             authority = runtime.plugin_host.provided_port("permissions.authorizer@1")
             if authority is None:
@@ -261,13 +271,14 @@ class ServerProductComposition:
             return authority.ceiling_provider()
 
         try:
-            extras = (*((ModelProviderAdaptersPlugin(),) if pi_profile_bridge else ()),
+            extras = (*((ModelProviderAdaptersPlugin(),) if profile_roots else ()),
                       ProfileServerPlugin(providers=(("ordessa.model-provider-profile",
                        ModelProviderFacetProvider()),),
                        native_registration_factory=lambda core: bind_native_profile_sessions(core, runtime,
-                           artifact_root=pi_artifact_root if pi_profile_bridge else None)),
+                           artifact_roots=profile_roots)),
                       ModelProviderPlugin(harnesses=ModelConfigurationCatalog(
-                          runtime.plugin_host.provided_port("harness.directory"))),
+                          runtime.plugin_host.provided_port("harness.directory")),
+                          secret_store=runtime.secret_store),
                       ProductSkillsPlugin(permissions=current_ceilings))
             # Native composition uses an explicit base selection. The product,
             # not the host or business plugins, declares its additional points.
@@ -287,6 +298,11 @@ class ServerProductComposition:
             raise
         return runtime
 
+    @staticmethod
+    def _native_secret_store(data_root):
+        from .platform_secrets import product_secret_store
+        return product_secret_store(data_root)
+
     def sidecar_runtime(
         self, data_root: Any, deployment_path: Any, *, plugin_root: Any,
         mount_bindings: "dict[str, str] | None" = None,
@@ -295,6 +311,9 @@ class ServerProductComposition:
         from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
 
         self._assemble_legacy_chain()
+        if secret_store is None:
+            from .platform_secrets import product_secret_store
+            secret_store = product_secret_store(data_root)
         return build_runtime_from_sidecar_deployment(
             data_root, deployment_path, secret_store=secret_store,
             plugin_root=plugin_root, mount_bindings=mount_bindings,

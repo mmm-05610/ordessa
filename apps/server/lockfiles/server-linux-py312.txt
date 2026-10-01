@@ -10,6 +10,12 @@
 # tomli-w>=1,<2), and the bundled Python in the deb installs this file with
 # --no-deps, so the closure must carry it.
 annotated-doc==0.0.5
+# Product Linux credential adapter. Core-only installs do not depend on it.
+SecretStorage==3.5.0
+jeepney==0.9.0
+cryptography==50.0.2
+cffi==2.1.1
+pycparser==3.0
 annotated-types==0.8.0
 anyio==4.15.1
 attrs==26.1.0

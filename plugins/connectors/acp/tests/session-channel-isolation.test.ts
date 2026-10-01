@@ -31,6 +31,75 @@ async function fixture() {
   return { client, spec, peers, handles, scopes, releases }
 }
 
+it('runs a frozen public preparation after initialize, joins concurrent attempts, and bypasses it for an existing owner', async () => {
+  const f = await fixture(), hold = deferred(), entered = deferred()
+  let calls = 0
+  const preparation = { beforeCreate: async (context: unknown) => {
+    calls += 1
+    expect(context).toEqual({ attemptId: 'attempt', serverInstanceId: 'server', connectionId: 'connection-1', harnessId: 'pi', workspaceId: 'project' })
+    expect(Object.isFrozen(context)).toBe(true)
+    expect(f.peers[0].recorded('initialize')).toHaveLength(1)
+    expect(f.peers[0].recorded('session/new')).toHaveLength(0)
+    entered.resolve(); await hold.promise
+  } }
+  try {
+    const first = f.client.prepareSession('project', 'attempt', preparation)
+    const second = f.client.prepareSession('project', 'attempt', preparation)
+    await entered.promise
+    expect(calls).toBe(1)
+    hold.resolve()
+    const [a, b] = await Promise.all([first, second])
+    expect(a).toEqual(b)
+    await f.client.prepareSession('project', 'attempt', { beforeCreate: async () => { throw Error('must bypass') } })
+    expect(f.peers[0].recorded('session/new')).toHaveLength(1)
+    expect(f.peers[0].recorded('session/prompt')).toHaveLength(0)
+  } finally { hold.resolve(); f.client.dispose() }
+})
+
+it('retries a refused pre-creation hook explicitly on the retained channel and attempt', async () => {
+  const f = await fixture()
+  const contexts: unknown[] = []
+  try {
+    await expect(f.client.prepareSession('project', 'attempt', { beforeCreate: async context => {
+      contexts.push(context); throw Error('provider unknown')
+    } })).rejects.toThrow('provider unknown')
+    expect(f.peers[0].recorded('session/new')).toHaveLength(0)
+    expect(f.peers[0].recorded('session/prompt')).toHaveLength(0)
+    expect(() => f.client.prepareSession('project', 'attempt')).toThrow('hook required')
+    await expect(f.client.createAndSend('project', 'bypass hook', 'attempt')).rejects.toThrow('retained preparation')
+    expect(f.peers[0].recorded('session/new')).toHaveLength(0)
+    expect(f.peers[0].recorded('session/prompt')).toHaveLength(0)
+    await f.client.prepareSession('project', 'attempt', { beforeCreate: async context => { contexts.push(context) } })
+    expect(contexts[0]).toEqual(contexts[1])
+    expect(f.scopes).toEqual(['attempt'])
+    expect(f.peers[0].recorded('initialize')).toHaveLength(1)
+    expect(f.peers[0].recorded('session/new')).toHaveLength(1)
+    await expect(f.client.createAndSend('project', 'bypass C4', 'attempt')).rejects.toThrow('retained preparation')
+    expect(f.peers[0].recorded('session/new')).toHaveLength(1)
+    expect(f.peers[0].recorded('session/prompt')).toHaveLength(0)
+  } finally { f.client.dispose() }
+})
+
+it('never replays preparation or session/new after an attempted native creation fails', async () => {
+  const f = await fixture()
+  const original = f.spec.acquireChannel
+  f.spec.acquireChannel = async (project, scope) => {
+    const handle = await original(project, scope)
+    f.peers[0].armFailure('session/new', new RequestError(-32603, 'native failure'))
+    return handle
+  }
+  let calls = 0
+  const preparation = { beforeCreate: async () => { calls += 1 } }
+  try {
+    await expect(f.client.prepareSession('project', 'attempt', preparation)).rejects.toMatchObject({ code: 'SUBMISSION_OUTCOME_UNKNOWN' })
+    await expect(f.client.prepareSession('project', 'attempt', preparation)).rejects.toMatchObject({ code: 'SUBMISSION_OUTCOME_UNKNOWN' })
+    expect(calls).toBe(1)
+    expect(f.scopes).toEqual(['attempt'])
+    expect(f.peers[0].recorded('session/new')).toHaveLength(1)
+    expect(f.peers[0].recorded('session/prompt')).toHaveLength(0)
+  } finally { f.client.dispose() }
+})
+
 it('selects a project without acquiring a channel, then isolates new sessions and old sends', async () => {
   const f = await fixture()
   try {

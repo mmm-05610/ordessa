@@ -3,7 +3,7 @@ import type { PluginContext } from '@ordessa/extension-api'
 import { WirePortToken, WorkbenchToken, UiComponentsToken, type UiComponents, type Workbench, type WirePort } from '@extensions/ordessa.contracts/contract.js'
 import { profileFacetEditorKey, type ProfileFacetEditorProps } from '@extensions/ordessa.profile-api/contract.js'
 import { ModelProfileEditor } from './profile-editor'
-import { ModelProviderToken, type ModelProviderService, type WireInvoke } from '../../contracts/index'
+import { ModelProviderToken, ModelProviderWireError, type ModelProviderService, type WireInvoke } from '../../contracts/index'
 import { createModelProviderService } from './service'
 import { ModelProviderSettings } from './settings'
 
@@ -81,6 +81,6 @@ function wireInvokeOf(wire: WirePort): WireInvoke {
   return async (method, params) => {
     const result = await wire.call(method, params as Readonly<Record<string, unknown>>)
     if (result.kind === 'Accepted') return result.result
-    throw new Error(`model-provider wire call ${method} ${result.kind}: ${result.reason}`)
+    throw new ModelProviderWireError(result.kind, method)
   }
 }

@@ -69,21 +69,45 @@ function projectClient(id: string, serverInstanceId: string | undefined, options
 const cleanup: (() => Promise<void>)[] = []
 afterEach(async () => { for (const fn of cleanup.splice(0).reverse()) await fn() })
 
+it('refuses legacy creation after preparation fails until successful preparation or explicit discard', async () => {
+  const a = projectClient('A', 'server')
+  a.client.prepareSession = async () => { throw Error('provider unknown') }
+  a.client.sendPreparedSession = async () => { throw Error('must not prompt') }
+  const sessions = await harness({ id: 'A', build: () => a.client })
+  await sessions.selectConnection('A')
+  await sessions.selectWorkspace!('/srv/a')
+  sessions.startDraft!()
+  await expect(sessions.prepareSubmission!({ beforeCreate: async () => undefined })).rejects.toThrow('provider unknown')
+  expect(await sessions.send('selection cleared')).toMatchObject({ kind: 'refused', reason: expect.stringContaining('preparation must succeed') })
+  expect(a.calls.sends).toEqual([])
+  expect(a.calls.continuations).toEqual([])
+  sessions.startDraft!() // Resuming does not forget the required preparation.
+  expect(await sessions.send('still blocked')).toMatchObject({ kind: 'refused' })
+  expect(a.calls.sends).toEqual([])
+  sessions.discardDraft!()
+  sessions.startDraft!()
+  expect(await sessions.send('new unconfigured draft')).toEqual({ kind: 'accepted' })
+  expect(a.calls.sends).toHaveLength(1)
+})
+
 it('prepares without sending, retains the same owner after configuration refusal, then sends that prepared session', async () => {
   const a = projectClient('A', 'server')
   let prepares = 0, preparedSends = 0
+  const preparation = { beforeCreate: async () => undefined }
+  const hooks: unknown[] = []
   const owner = { sessionId: 'R1', serverInstanceId: 'server', connectionId: 'channel', nativeSessionId: 'native', harnessId: 'pi', workspaceId: '/srv/a' }
-  a.client.prepareSession = async () => { prepares += 1; return owner }
+  a.client.prepareSession = async (_project, _attempt, hook) => { hooks.push(hook); prepares += 1; return owner }
   a.client.sendPreparedSession = async (attempt, text) => { preparedSends += 1; return a.client.createAndSend!('/srv/a', text, attempt) }
   const sessions = await harness({ id: 'A', build: () => a.client })
   await sessions.selectConnection('A')
   await sessions.selectWorkspace!('/srv/a')
   sessions.startDraft!()
   const revision = sessions.getSnapshot().selectionRevision
-  expect(await sessions.prepareSubmission!()).toEqual(owner)
+  expect(await sessions.prepareSubmission!(preparation)).toEqual(owner)
   expect(sessions.getSnapshot().draft?.active).toBe(true)
   expect(a.calls.sends).toHaveLength(0)
-  expect(await sessions.prepareSubmission!()).toEqual(owner)
+  expect(await sessions.prepareSubmission!(preparation)).toEqual(owner)
+  expect(hooks).toEqual([preparation, undefined])
   expect(sessions.getSnapshot().selectionRevision).toBe(revision)
   expect(await sessions.send('corrected config')).toEqual({ kind: 'accepted' })
   expect(preparedSends).toBe(1)

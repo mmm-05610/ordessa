@@ -295,6 +295,15 @@ class SessionService:
                               "This Server was composed without a secret store")
         try:
             credential_id, locator = self.secret_store.import_file(Path(source), kind)
+        except RuntimeError as exc:
+            # Storage implementations expose only neutral, bounded error codes;
+            # never project DBus/backend exception text or credential contents.
+            code = getattr(exc, "code", None)
+            if code in {"SECRET_STORE_UNAVAILABLE", "SECRET_STORE_LOCKED",
+                        "SECRET_STORE_TIMEOUT", "SECRET_STORE_INTEGRITY"}:
+                raise ServerError(code, "Secure credential storage is unavailable; unlock your system keyring and retry",
+                                  status=503) from None
+            raise
         except (OSError, ValueError) as exc:
             raise ServerError(
                 "CREDENTIAL_SOURCE_UNREADABLE",

@@ -29,12 +29,12 @@ EXPECTED_SHAPES = {
     "providerModels.create": (
         {"requestId", "displayName", "harness", "provider", "credentialId",
          "configuration", "models"},
-        {"provenance"},
+        {"provenance", "protocols", "endpoints"},
     ),
     "providerModels.update": (
         {"requestId", "providerModelId", "expectedVersion", "displayName", "credentialId",
          "configuration", "models"},
-        {"provenance"},
+        {"provenance", "protocols", "endpoints"},
     ),
     "providerModels.archive": ({"requestId", "providerModelId", "expectedVersion"}, set()),
     "providerModels.probeModels": ({"requestId", "baseUrl"}, {"credentialId", "provenance"}),
@@ -86,7 +86,7 @@ def test_six_methods_registered_with_frozen_shapes(host, harnesses):
         assert descriptor.optional_params == frozenset(optional), method_id
     # exactly the frozen six legacy rows; the Z3 ``modelProvider.*`` additions
     # are pinned by tests/test_next_choice_wire.py (t00-freeze.md §8).
-    assert len(host.methods) == 6 + 7
+    assert len(host.methods) == 6 + 7 + 2
 
 
 def test_catalog_port_is_exported(host, harnesses):
