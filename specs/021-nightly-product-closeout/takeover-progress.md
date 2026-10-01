@@ -465,3 +465,9 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 默认 Desktop launcher 与 mount 探针改用已安装的新 Pi/Claude 资产，Codex 仍用旧可信增强资产；保留显式环境覆盖。实际完整 Desktop 挂载复跑 exit 0：ready=true、rootMounted=true、errors=[]、Chat/Skills/Sessions、renderer 无 Node、prompt=0；仍只记 mount-only。
 - Codex 认证核查依据官方 `https://learn.chatgpt.com/docs/app-server`：外部 ChatGPT tokens 接口存在，但实验性且要求 host 管理认证生命周期。当前增强独立实例未继承全局登录，首次 Profile 配置只接受 custom gateway，不能用 API-Key 路线冒充官方订阅。用户已裁定 **Ordessa 自己独立登录一次**，不采用只读复用现有全局登录。下一步的账号认证属 Harness 的 Ordessa 专用账号，不属 Profile；会话配置目录继续每实例独立，账号持久凭据须与目录分开，不做每个 Profile 一个完整 HOME、不复制用户现有登录、不引入假 gateway 模式。官方登录、刷新/登出、原生 provider 路由与 Profile 模型接线仍待实施验证，不能仅启动浏览器就记完成。
 - 固定 TODO：第 7 项真实聊天部分现在有 Pi/Claude 的生产证据；第 4 UI→生产完整链、第 5 实际覆盖/Unknown/失败草稿场景、第 6 Codex 官方及已有历史跨 provider 恢复、全仓回归与用户验收仍未完成。不新增顶层阶段、不把两品牌后台验收当完整产品已完成。根 main 不动、未 push，保留他属截图。
+
+### Codex 独立登录等待用户浏览器授权（2026-10-01）
+
+- 用户选择独立登录后，已启动可信已安装 Codex CLI 0.147.0 的 `login --device-auth`，CODEX_HOME 明确为用户级 `~/.ordessa/accounts/codex`（0700），配置强制 `cli_auth_credentials_store="keyring"`，清除 API Key/访问 token 环境变量；不读取/复制现有 `.codex` 登录，不调用模型。
+- 登录进程已给出官方设备登录 URL 与 15 分钟一次性码，等待用户在浏览器确认；码只向用户显示，不写文档或证据。**目前尚未登录成功**，密钥环落地、专属账号状态、独立实例认证及官方 Profile 模型路线仍待验证。不能把这个 CLI 登录操作记作产品已具备登录按钮或 Profile 官方认证能力。
+- 本轮额外 typecheck exit 0；一次 Node 定向命令误指不存在的 native-server-plan.test.mjs，未执行，不记门禁通过。完整 Desktop 挂载为前节实际探针证据，不用缺席测试代替验证。
