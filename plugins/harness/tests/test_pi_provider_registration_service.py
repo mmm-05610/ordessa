@@ -23,7 +23,7 @@ def rig():
     def rpc(native, method, params):
         assert native == 'native'
         if method.endswith('provider-capability'):
-            return owner, {'supported': True, 'strategy': 'live-registration', 'version': 1}
+            return owner, {'sessionId': native, 'supported': True, 'strategy': 'live-registration', 'version': 1}
         assert method.endswith('provider-register')
         route = dict(provider='next', model='new', api='openai-completions', baseUrl='https://next.invalid/v1')
         snapshot.config_options = [dict(id='model', currentValue='old/model', options=[

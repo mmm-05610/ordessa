@@ -75,7 +75,7 @@ def probe(artifact, *, register_live=False):
                 assert facts['baseUrl'] == endpoint
                 if register_live and slot == 1:
                     capability = request('_ordessa/session/configuration/provider-capability', dict(sessionId=native))
-                    assert capability == dict(supported=True, strategy='live-registration', version=1)
+                    assert capability == dict(sessionId=native, supported=True, strategy='live-registration', version=1)
                     digest = lambda value: hashlib.sha256(json.dumps(value, sort_keys=True,
                         ensure_ascii=False, separators=(',', ':')).encode()).hexdigest()
                     payload = dict(sessionId=native, operationId='provider:live-probe',

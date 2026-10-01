@@ -38,6 +38,7 @@ def bounded_key(lines, line):
 
 def relay_upstreams(switch_go=False):
     return {'/pi/': 'https://api.deepseek.com/',
+            '/pi-next/': 'https://opencode.ai/zen/go/v1/' if switch_go else 'https://api.deepseek.com/',
             '/claude/': 'https://api.deepseek.com/anthropic/',
             '/claude-next/': 'https://opencode.ai/zen/go/' if switch_go
                 else 'https://api.deepseek.com/anthropic/'}
@@ -52,8 +53,9 @@ def run(args):
     brands = args.brand or ['pi', 'claude-code']
     if switch_go and not args.switch_provider:
         raise ValueError('Go destination requires explicit provider restoration mode')
-    if args.switch_provider and (brands != ['claude-code'] or not args.local_relay or not args.fixed_assets):
-        raise ValueError('Provider restoration probe requires Claude, fixed assets and isolated local relay')
+    if args.switch_provider and (len(brands) != 1 or brands[0] not in ('pi', 'claude-code')
+            or not args.local_relay or not args.fixed_assets):
+        raise ValueError('Provider transition probe requires one supported brand, fixed assets and isolated local relay')
     destination_key = bounded_key(lines, args.destination_key_line) if switch_go else key
     native_brands = [brand for brand in brands if brand != 'pi']
     pi_bridge = 'pi' in brands
@@ -81,12 +83,13 @@ def run(args):
                 headers = {k: v for k, v in self.headers.items()
                            if k.lower() not in ('host', 'connection', 'content-length', 'accept-encoding')}
                 auth = self.headers.get('Authorization', '')
-                expected_key = destination_key if prefix == '/claude-next/' else key
+                destination = prefix in ('/claude-next/', '/pi-next/')
+                expected_key = destination_key if destination else key
                 if auth != 'Bearer ' + expected_key or (switch_go and prefix == '/claude-next/'
                         and self.headers.get('x-api-key') != expected_key):
                     relay_rejected.set(); self.send_error(401); return
                 print(json.dumps(dict(stage='relay-request', inference=inference, counts=dict(relay_counts),
-                    credentialMatches=True, upstream='go' if switch_go and prefix == '/claude-next/' else 'deepseek',
+                    credentialMatches=True, upstream='go' if switch_go and destination else 'deepseek',
                     placeholderAuth=(auth == 'Bearer acp-proxy'))), flush=True)
                 request = Request(mapping[prefix] + self.path[len(prefix):],
                     data=self.rfile.read(length), headers=headers, method='POST')
@@ -127,7 +130,10 @@ def run(args):
             if args.fixed_assets:
                 roots = {brand: '/opt/ordessa/harnesses/profile-chat-fixes/artifacts' for brand in brands}
             if switch_go:
-                roots['claude-code'] = '/opt/ordessa/harnesses/profile-claude-provider-restoration/artifacts'
+                roots[brands[0]] = ('/opt/ordessa/harnesses/profile-pi-registration-owner-bound/artifacts' if brands[0] == 'pi'
+                    else '/opt/ordessa/harnesses/profile-claude-provider-restoration/artifacts')
+            elif args.switch_provider and brands == ['pi']:
+                roots['pi'] = '/opt/ordessa/harnesses/profile-pi-registration-owner-bound/artifacts'
             plan = json.loads(subprocess.check_output(['node', '--input-type=module', '-e',
                 f"import {{nativeServerPlan}} from {json.dumps(module)}; console.log(JSON.stringify(nativeServerPlan({{harnessIds:{json.dumps(brands)},nativeProfileHarnesses:{json.dumps(native_brands)},piProfileBridge:{json.dumps(pi_bridge)},artifactRoots:{json.dumps({brand: roots[brand] for brand in brands})},pluginRoot:{json.dumps(str(ROOT / 'plugins/harness'))},artifactRoot:'/opt/ordessa/harnesses/artifacts'}}).args))"], text=True))
             value = lambda flag: plan[plan.index(flag) + 1]
@@ -177,7 +183,8 @@ def run(args):
                     def counted_configuration_rpc(*args, **kwargs):
                         configuration_calls.append(args[1])  # method only; never retain secret-bearing params
                         result = original_configuration_rpc(*args, **kwargs)
-                        if args[1] in ('_ordessa/session/configuration/restore', '_ordessa/session/configuration/operation'):
+                        if args[1] in ('_ordessa/session/configuration/restore', '_ordessa/session/configuration/operation',
+                                       '_ordessa/session/configuration/provider-register'):
                             record = result[1]
                             print(json.dumps(dict(stage='native-operation-evidence',
                                 state=record.get('state'), phase=record.get('phase'),
@@ -256,11 +263,11 @@ def run(args):
                                 raise RuntimeError('Destination key import refused')
                             destination_credential = destination_import['credentialId']
                             locators.append(CredentialRecords(runtime.database).get(destination_credential, kind='api-key')['secret_locator'])
-                            models = (models[0], 'minimax-m2.7')
+                            models = (models[0], 'glm-5.3-flash' if brand == 'pi' else 'minimax-m2.7')
                         provider = wire('providerModels.create', dict(requestId='live-destination-' + uuid4().hex,
                             harness=brand, provider='go-destination' if switch_go else 'deepseek-destination', displayName='Authorized restoration destination',
                             credentialId=destination_credential, configuration=[], protocols=[protocol],
-                            endpoints={protocol: f'http://127.0.0.1:{relay.server_port}/claude-next'},
+                            endpoints={protocol: f'http://127.0.0.1:{relay.server_port}/' + ('pi-next' if brand == 'pi' else 'claude-next')},
                             models=[dict(modelId=m, displayName=m, availability='available', unavailableReason=None)
                                     for m in models]))['providerModel']
                     save(models[1], 2)
@@ -269,12 +276,18 @@ def run(args):
                         raise RuntimeError('Next Profile model application not confirmed')
                     _, after_config = channel._configuration_rpc(native, '_ordessa/session/configuration', dict(sessionId=native))
                     if args.switch_provider:
-                        if before_config['generation'] == after_config['generation']:
+                        if brand == 'pi' and before_config['generation'] != after_config['generation']:
+                            raise RuntimeError('Pi live registration unexpectedly renewed native generation')
+                        if brand != 'pi' and before_config['generation'] == after_config['generation']:
                             raise RuntimeError('Provider restoration did not renew native generation')
                         if registry.native_session_observation(channel.connection_id, native) is not before_owner:
                             raise RuntimeError('Provider restoration changed native conversation owner')
-                        if configuration_calls.count('_ordessa/session/configuration/restore') != 1:
-                            raise RuntimeError('Provider restoration was not effect-once')
+                        effects = ('_ordessa/session/configuration/provider-register' if brand == 'pi'
+                                   else '_ordessa/session/configuration/restore')
+                        if configuration_calls.count(effects) != 1:
+                            raise RuntimeError('Provider transition was not effect-once')
+                        if brand == 'pi' and configuration_calls.count('_ordessa/session/configuration/restore') != 0:
+                            raise RuntimeError('Pi live transition issued restoration')
                         if first['receipt']['sessionRef'] != second['receipt']['sessionRef']:
                             raise RuntimeError('Provider restoration changed canonical conversation')
                     reply, text = request('session/prompt', dict(sessionId=native, prompt=[dict(type='text',
@@ -284,6 +297,7 @@ def run(args):
                     evidence.append(dict(harness=brand, actualTurns=2, initialProfileConfirmed=True,
                         nextProfileConfirmed=True, historyPreserved=True, models=list(models),
                         providerRouteRestoration=args.switch_provider,
+                        providerRegistrationEffects=configuration_calls.count('_ordessa/session/configuration/provider-register'),
                         restorationEffects=configuration_calls.count('_ordessa/session/configuration/restore'),
                         nativeGenerationRenewed=before_config['generation'] != after_config['generation'],
                         distinctUpstreamVendors=switch_go if args.switch_provider else None))
@@ -320,9 +334,9 @@ if __name__ == '__main__':
     parser.add_argument('--key-line', type=int, default=1)
     parser.add_argument('--fixed-assets', action='store_true', help='Use separately installed chat-fix assets')
     parser.add_argument('--switch-provider', action='store_true',
-                        help='Claude: two distinct provider configurations/endpoints forwarding to same authorized upstream')
+                        help='Pi/Claude: two distinct provider configurations/endpoints; explicit transition acceptance')
     parser.add_argument('--switch-go', action='store_true',
-                        help='Explicit Claude DeepSeek-to-Go restoration; requires switch-provider/local-relay/fixed-assets')
+                        help='Explicit Pi/Claude DeepSeek-to-Go transition; requires switch-provider/local-relay/fixed-assets')
     parser.add_argument('--destination-key-line', type=int, default=2)
     parser.add_argument('--brand', choices=['pi', 'claude-code'], action='append')
     parser.add_argument('--local-relay', action='store_true', help='Explicit isolated TLS forwarding, not direct endpoint acceptance')

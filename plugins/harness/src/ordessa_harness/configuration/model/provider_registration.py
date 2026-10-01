@@ -28,7 +28,8 @@ class PiProviderRegistrationService(ProviderRestorationService):
         self.verify('pi')
         owner, capability = channel._configuration_rpc(before.owner.native_session_id,
             '_ordessa/session/configuration/provider-capability', {'sessionId': before.owner.native_session_id})
-        if owner is not before.owner or capability != {'supported': True, 'strategy': 'live-registration', 'version': 1}:
+        if owner is not before.owner or capability != {'sessionId': before.owner.native_session_id,
+            'supported': True, 'strategy': 'live-registration', 'version': 1}:
             raise ValueError('Verified Pi live registration unavailable')
         return super().prepare(target, desired, operation_key=operation_key, credential=credential)
 

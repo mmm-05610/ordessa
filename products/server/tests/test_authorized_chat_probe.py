@@ -29,3 +29,5 @@ def test_go_destination_is_a_distinct_fixed_upstream_not_a_model_alias(probe):
     assert mapping['/claude/'] == 'https://api.deepseek.com/anthropic/'
     assert mapping['/claude-next/'] == 'https://opencode.ai/zen/go/'
     assert probe.relay_upstreams(False)['/claude-next/'] == mapping['/claude/']
+    assert mapping['/pi-next/'] == 'https://opencode.ai/zen/go/v1/'
+    assert probe.relay_upstreams(False)['/pi-next/'] == mapping['/pi/']

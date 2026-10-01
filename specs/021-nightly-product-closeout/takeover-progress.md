@@ -4,7 +4,16 @@
 所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
 未合并、未 push、未启停既有用户服务、未重建 deb。三品牌后端真实聊天已通过；Codex Desktop 已通过 Profile 首发与同会话下一轮切换，两条真实回复。完整三品牌 UI/发行验收仍未完成。
 
-## 最新验证（2026-10-01，Pi 存活会话供应商注册接线，待安装后产品验收）
+## 最新验证（2026-10-01，Pi 真实产品暴露能力查询绑定遗漏，已修待修正版安装）
+
+- 用户已成功安装 profile-pi-live-registration，真实宿主权限独立复核完整资产信任 exit 0，安装本身无问题。扩展产品探针覆盖 Pi 的两家供应商：固定 DeepSeek/Go Chat 上游、分行选 Key、保持原生模型与认证头、原 16 请求/8 推理上限；不引入新的模型授权范围。
+- 第一次完整产品运行 **失败，不能记作跨供应商通过**：DeepSeek 首轮真实回复完成，上游 HTTP 200，随后第二轮规划被拒，未执行 provider-register、未发送第二个 prompt。原因是本轮新增 provider-capability 回复缺少 `sessionId`，Registry 现有 owner-only RPC 规则拒绝该结果；受控 service mock 和直连适配器探针之前都漏掉这一协议约束。自有通道、两条导入的密钥环记录和 runtime 已清理。日志 `.cleanup-evidence/pi-live-provider-product.log` 保留。
+- 修复返回 `sessionId` 并严格核对，**不放宽 Registry 规则**；新增两条真实 Registry 测试钉住缺失 sessionId 必拒/正确 owner 才收。服务 mock、直连查询和实际 server 注册测试同步使用完整返回形状，原安全/互斥断言不变。
+- 补足更深真实无模型验证：新增 `probe-nomodel.py --owner-rpc --owner-operations --owner-live-model --owner-registration`，用实际 Pi + 真实 Registry + ProfileSessionOwner + PiProviderRegistrationService + C4 计划/执行，exit 0；注册 observed、ticket=None、同 target/owner/native generation，注册后的新模型得到真实 C4 confirmed，sessionNew=1、modelPrompts=0，全局 sentinel 与模型文件不变。**Server ledger 和贡献载体仍为测试组合，Profile application receipt=false；不是完整产品/真实聊天通过。**
+- 修正版定向回归：Node 67/67；Harness 模型配置/Backend/Registry/注册/恢复 + products/server **354P**，退出码 0。修正版候选 `.cleanup-evidence/pi-registration-owner-bound`：treeDigest `sha256:c79d5cbfbf329bde7ebba674b312fae25dd7c6346473abd8c68674404eb1b2e2`，15464 entries / 64944112 bytes，source lock 不变。新脚本 `.cleanup-evidence/install-pi-registration-owner-bound-verified.sh` 仅新增 `/opt/ordessa/harnesses/profile-pi-registration-owner-bound`，旧资产保留，bash 语法校验通过。
+- `sudo -n true` 仍要求用户交互认证，等待修正版安装后复跑完整产品两轮/历史/回执。之前跨供应商成功只适用于 Claude；Pi 仍未完成，固定 TODO 不提前勾选，main 不动。
+
+## 前一检查点（2026-10-01，Pi 存活会话供应商注册接线，待安装后产品验收）
 
 - Pi 原生动态注册已在 Harness 内实施：只增加内存中的 provider/model 目录与 runtime API Key，注册本身不选择模型、不 new/close/resume、不更换原生或 canonical 运行代次。已有目录不被隐式覆盖；本模块已证明并注册的同路由可以追加模型且保留之前的模型，不允许借追加操作修改该路由凭据。未由本模块注册的既有 provider 身份重写仍诚实拒绝，不能泛称支持任意凭据/endpoint 热编辑。
 - Harness 的中性 ProviderTransitionService 内部选择 live-update 或 restart-resume。Pi 的规划先做只读原生能力查询，旧资产缺失该方法即拒绝；保留安装校验/贡献租约、owner 与配置摘要围栏、效果恰好一次及独立读回。查询不重复注册。产品只消费策略结果：live-update 必须证明同 owner/target/generation，废弃旧配置端口并重新执行真实 C4；不创建恢复票据、不把注册证明当作 Profile 应用回执。Profile/model-provider/host 未加入品牌差异。

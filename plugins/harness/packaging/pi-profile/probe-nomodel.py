@@ -14,11 +14,13 @@ import tempfile
 import threading
 
 
-def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live_model=False) -> dict:
+def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live_model=False, owner_registration=False) -> dict:
     if owner_operations and not owner_rpc:
         raise ValueError('owner operations require owner RPC mode')
     if owner_live_model and not owner_operations:
         raise ValueError('live model C4 probe requires owner operations')
+    if owner_registration and not owner_live_model:
+        raise ValueError('provider registration probe requires live model C4 mode')
     entry = artifact / "node_modules/@automatalabs/pi-acp/dist/ordessa-profile.mjs"
     with tempfile.TemporaryDirectory(prefix="ordessa-pi-profile-probe-") as temporary:
         home = Path(temporary)
@@ -208,6 +210,38 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live
                             assert not native_runtime.private_root.exists()
                             model = next(item for item in configuration(native)['configOptions'] if item['id'] == 'model')
                             assert model['currentValue'] == 'ordessa-fixture/second'
+                            if owner_registration:
+                                from ordessa_harness.configuration.model.provider_registration import PiProviderRegistrationService
+                                original_model_file = (instance / 'models.json').read_bytes()
+                                registration = PiProviderRegistrationService(registry, owners,
+                                    verify=lambda _: 'DEVELOPMENT-pinned-provider-probe')
+                                payload = dict(provider='ordessa-next', model='third', protocol='openai-chat',
+                                    endpoint='http://127.0.0.1:9/next', credentialRef='fixture:opaque-ref')
+                                admission = registration.prepare(bound.target, payload, operation_key='probe-registration',
+                                    credential='synthetic-private-key-not-for-inference')
+                                assert admission.mode == 'live-update'
+                                admitted = registration.execute(admission, payload,
+                                    credential='synthetic-private-key-not-for-inference')
+                                assert admitted.state == 'observed' and admitted.ticket is None
+                                assert admitted.restored.snapshot.target == bound.target
+                                assert admitted.restored.snapshot.native_generation == initial['generation']
+                                native_runtime.credential_binding = lambda snapshot, desired: registration.credential_binding(
+                                    snapshot, desired, credential='synthetic-private-key-not-for-inference')
+                                live_desired = DesiredFragment('assets.model-provider', 'choice', '1',
+                                    'fixture:next-provider', 'fixture:next-revision', 'set', payload)
+                                live_plan = service.plan(bound.target, (live_desired,),
+                                    native_runtime.capture(bound.target).before_revision)
+                                assert live_plan.kind == 'plan', live_plan
+                                live_confirmed = service.apply_prepared(live_plan.plan_id, 'registered-provider-model')
+                                assert live_confirmed.kind == 'confirmed', live_confirmed
+                                selected = next(item for item in configuration(native)['configOptions'] if item['id'] == 'model')
+                                assert selected['currentValue'] == 'ordessa-next/third'
+                                assert (instance / 'models.json').read_bytes() == original_model_file
+                                assert replies.empty(), 'owner reply leaked to client relay'
+                                # Return to the prior fixture choice so the independent
+                                # thinking-setting checks below retain their original meaning.
+                                request('session/set_config_option', dict(sessionId=native, configId='model', value='ordessa-fixture/second'))
+                                request('session/set_config_option', dict(sessionId=native, configId='thinkingLevel', value=different))
                         finally:
                             carrier_runtime.stop()
                 else:
@@ -250,6 +284,7 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live
                     "productionOwnerRpc": owner_rpc, 'nativeOperationRecord': owner_operations,
                     'nativeTargetManifestBound': owner_operations,
                     'c4NativeModelConfirmed': owner_live_model,
+                    'realOwnerProviderRegistrationConfirmed': owner_registration,
                     'serverLedger': 'fixture only', 'profileApplicationReceipt': False}
             finally:
                 if process.poll() is None:
@@ -265,4 +300,5 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live
 if __name__ == "__main__":
     print(json.dumps(probe(Path(sys.argv[1]).resolve(), owner_rpc='--owner-rpc' in sys.argv[2:],
                            owner_operations='--owner-operations' in sys.argv[2:],
-                           owner_live_model='--owner-live-model' in sys.argv[2:])))
+                           owner_live_model='--owner-live-model' in sys.argv[2:],
+                           owner_registration='--owner-registration' in sys.argv[2:])))

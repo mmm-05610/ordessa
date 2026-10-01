@@ -357,6 +357,8 @@ test('actual server registration wraps prompt/setConfigOption/apply with one ses
     await runAcp({ stream: {} })
     const read = handlers.get('_ordessa/session/configuration')
     const observed = read({ params: { sessionId: 'native' } })
+    assert.deepEqual(handlers.get('_ordessa/session/configuration/provider-capability')({ params: { sessionId: 'native' } }),
+      { sessionId: 'native', supported: true, strategy: 'live-registration', version: 1 })
     const params = { ...f.input, expectedGeneration: observed.generation,
       expectedConfigDigest: configurationDigest(observed) }
     const prompt = handlers.get('session/prompt')({ params: { sessionId: 'native' } })

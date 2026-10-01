@@ -100,6 +100,23 @@ def test_internal_operation_reply_is_correlated_data_not_a_receipt():
         channel._configuration_rpc('native', 'session/prompt', {'sessionId': 'native'})
 
 
+@pytest.mark.parametrize('bound', [False, True])
+def test_provider_capability_reply_must_echo_the_exact_native_owner(bound):
+    def respond(channel, frame):
+        result = dict(supported=True, strategy='live-registration', version=1)
+        if bound:
+            result['sessionId'] = 'native'
+        channel.deliver(json.dumps(dict(jsonrpc='2.0', id=frame['id'], result=result)))
+    channel, _, received = rig(respond)
+    if bound:
+        owner, result = channel._configuration_rpc('native', '_ordessa/session/configuration/provider-capability', {'sessionId': 'native'})
+        assert owner is channel.native_session_observation('native') and result['sessionId'] == 'native'
+    else:
+        with pytest.raises(NativeConfigurationUnavailable, match='malformed native configuration evidence'):
+            channel._configuration_rpc('native', '_ordessa/session/configuration/provider-capability', {'sessionId': 'native'})
+    assert received == []
+
+
 def test_query_rejects_equal_id_replacement_while_waiting():
     def replace_owner(channel, frame):
         previous = channel.native_session_observation('native')

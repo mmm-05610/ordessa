@@ -67,7 +67,7 @@ export async function runAcp(options = {}) {
       operation.withSession(c.params.sessionId, () => registration.apply(c.params)))
     .onRequest('_ordessa/session/configuration/provider-capability', parser, c => {
       read(c.params)
-      return { supported: impl.live.size === 1, strategy: 'live-registration', version: 1 }
+      return { sessionId: c.params.sessionId, supported: impl.live.size === 1, strategy: 'live-registration', version: 1 }
     })
     .onRequest(CONFIGURATION_APPLY, { parse: operation.parseApply }, c => operation.apply(c.params))
     .onRequest(CONFIGURATION_OPERATION, { parse: operation.parseQuery }, c =>
