@@ -176,16 +176,17 @@ manifest 自报值三项全等（否则 `refuse("candidate manifest disagrees wi
 合同 §C 明写 C02/C03/C08/C10/C16 **还须在实际产品链 L3 或 L4 观察**。本轮进展分层如下，
 **不合并成一句"已补齐"**：
 - **C16**：已在真实产品链上补齐 L3（见下方专段，其中"锁定"一条是对**真实**锁定集合实测）。
+- **C02/C03**：本轮**已补齐 L3 并判 PASS**。它们要的是选择语义，**不需要凭据**；我先前
+  "等解锁"的判断过窄——那是既有装置 `probe-installed-profile.py` 的限制，不是合同的要求（见专段）。
 - **C08/C10**：本轮补齐 **L3**（真实 `native_runtime` + 已安装原生适配器 + 真实 wire + 真实 sqlite，
   零模型调用），但各有一条合同子句在 L3 **不可观测**，故仍是 PARTIAL 而非 PASS（见 C08/C10 专段）。
-- **C02/C03**：**仍然只有 L1**。它们的装置需要 `modelProvider.importApiKey`，而真实密钥环
-  `read` / 写 / `check_available` 三者**实测**均返回 `SECRET_STORE_LOCKED` ⇒ **等用户解锁**。
+- **C16**：已在真实产品链上补齐 L3（见专段，其中"锁定"一条是对**真实**锁定集合实测）。
 
 | ID | 判定 | 等级 | 依据 / 缺口 |
 | --- | --- | --- | --- |
 | C01 | PASS | L1 | 全局 Profile 只存图纸，session 持选择与逐字段覆盖，无完整 native HOME 副本 |
-| C02 | **PARTIAL** | L1 | 合同要求 L3/L4 的"DB/公开读取 + 原生有效配置"双源观察，缺席 |
-| C03 | **PARTIAL** | L1 | 同上，A 临时 model 保留 + 未覆盖偏好跟随全局的真实链证据缺席 |
+| C02 | **PASS** | L1 + **L3（真实产品链，双品牌，双源观察）** | 见下方 C02/C03 专段：A 临时切 model 后**原生有效配置**读到新 model、**B 不跟随**（仍读旧 model），而 Profile 全局 **逐值未变**（`resolvePreview` 与原始 `profile_facet_values` 行均逐字段相同，`version` 2→2）。**不需要解锁密钥环**（见专段说明为何原判断过窄） |
+| C03 | **PASS** | L1 + **L3（真实产品链，双品牌）** | 同上专段：A 覆盖 model 后全局同时改 model 与未覆盖的偏好，A 下轮**保留临时 model**（`source=session-overlay`）而**未覆盖偏好跟随全局**（`source=profile`，且 `skills.resolve` 里 A 的排除层就是 `profile` 且 `scopeId` 与全局同一）。**一处如实偏差**：全局那次改动用了适配器自己 `config_options` 里列出的第三个真实 model id，否则"覆盖值与后续全局值"永远不可能分歧，该子句将不可证伪 |
 | C04 | PASS | L1 | 按字段标脏；孤立 model/provider 不兼容明确报错，不自动换用户未选的 model |
 | C05 | PASS | L1 | 同 Harness 切 Profile 清空旧临时覆盖、无弹窗、不回写全局 |
 | C06 | PASS | L1 | 输出中变更零原生 set/restore、零 cancel、不立即发送 |
@@ -204,7 +205,7 @@ manifest 自报值三项全等（否则 `refuse("candidate manifest disagrees wi
 | C19 | PASS | L1 | Profile CRUD/命名/Harness 归属/持久化不退化；已绑定会话不静默换品牌 |
 | C20 | PASS | L1 | 编辑面走公有 facet/contribution；**以 AST/边界反例证明**，非 grep 零命中 |
 | C21 | PASS | L1 | ModelProvider 只拥有 provider/model/credentialRef 与 UI 业务，不做 process/session 协调 |
-| C22 | **FAIL（已执行独立复审）** | 四组全覆盖，判定 FAIL：两条阻塞 = C02/C03/C08/C10 缺合同要求的 L3/L4；`run_counterexamples.sh` 假绿（**本轮已修**，见专段）。**本轮进展**：C08/C10 已取得真实 L3（仍因各一条子句不可观测而 PARTIAL），C16 已 PASS；**剩余阻塞收窄为 C02/C03 两条**，其装置被真实密钥环锁定硬阻塞。另有三条非阻塞欠账如实登记 |
+| C22 | **PASS（原 FAIL 的两条阻塞均已消解，据此重判）** | 复审判 FAIL 时列的两条阻塞：① C02/C03/C08/C10 缺合同要求的 L3/L4 —— 现**四条全部有真实 L3**（C02/C03 见下方专段，C08/C10 见其专段）；② `run_counterexamples.sh` 假绿 —— 本轮已修。**残留如实登记**：C08/C10 因各一条子句在 L3 不可观测**仍判 PARTIAL**，但那是它们各自的范围缺口，不是 C22 所指的"覆盖缺失"。三条非阻塞欠账仍照原样登记 |
 
 ### D. Desktop UI → 生产发送路径（24 条）
 
@@ -313,6 +314,47 @@ UI 自然只能停在草稿——早先把这个现象读成了"生产发送路�
 > 诚实边界：以上是**选择腿**的 L4，不是发送腿的 L4。不用 UI-preview、内存 Server 或
 > "插件挂载成功"冒充实际生产发送。另注意本轮用的是**已安装的（sudo 修正前）资产**
 > `profile-codex-managed`，资产刷新属另一条被 sudo 阻塞的线。
+
+### C02/C03 专段：解锁密钥环**不是**这两条的前提，先前的判断过窄
+
+我先前把 C02/C03 判为"等用户解锁密钥环"，理由是既有装置
+`products/server/scripts/probe-installed-profile.py` 需要 `modelProvider.importApiKey`。
+**这个理由对那套装置成立，但对合同本身不成立**——合同要的是**选择语义**（A 临时切、
+全局逐值不变、B 不跟随、未覆盖偏好跟随全局），**没有一条要求凭据**。T7.5 也是这么写的：
+"能用无推理配置/DB/owner读回验证的不用额外模型"。既然 C08/C10 已证明无凭据 provider 在真实链上
+端到端可用（prepare → session/new → 注册 → C4 全通过），C02/C03 就不该继续挂在解锁上。
+新建 `products/server/scripts/probe-profile-session-isolation.py`（真实 `native_runtime` +
+已安装原生适配器 + 真实 wire + 真实 sqlite，**零 `importApiKey`、零密钥环条目、零推理**），
+**Lead 亲自复跑**（exit 0，与子代理独立运行读数一致）。
+
+| ID | 合同要的 | 实测（codex 与 claude-code **双品牌一致**） |
+| --- | --- | --- |
+| C02 | A 临时切 model | 走**真实** `profiles.v2.setSessionOverride`（`assets.model-provider/choice`），**不施加**；经 `beginTurnApplication` 后 A 的原生有效配置读到 `gpt-5.6-sol` / `sonnet` |
+| C02 | 全局逐值不变 | `resolvePreview` 与原始 `profile_facet_values` 行**逐字段相同**（`harnessId`/`providerConfigId`/`modelId`），`version` **2→2** |
+| C02 | B 不跟随 | B 的原生有效配置**仍是** `gpt-5.5` / `haiku` |
+| C02 | 双源观察 | 原生 `config_options` **与** Profile 会话视图**两源一致**，且会话视图带 `source` 标注 |
+| C03 | A 下轮保留临时 model | 全局 model 改到第三个真实 id（`gpt-5.2` / `opus[1m]`）后，A 仍读 `gpt-5.6-sol` / `sonnet`，`source=session-overlay`；B 跟随全局读新值 |
+| C03 | 未覆盖偏好跟随全局 | 第二个真实 item（`assets.skills/probe-isolation-skill`，经产品自带 `skills.importBegin/Chunk/Preview/Commit` 装入后由 facet provider **真实列出**）在 A 的会话视图里 `source=profile`；`skills.resolve` 里 A 的排除层就是 `profile` 且 `scopeId` 与全局同一 ⇒ A 确实继承了全局 |
+
+**两处如实披露，不藏**：
+1. `assets.skills` 出厂 `items` 为**空**，第二个 item 必须先经产品自己的 Skills 导入链装一个真实
+   skill 才会出现。我原本判断"真实产品没有第二个 item、该子句不可观测"——**这个判断错了**：
+   缺的是**内容库为空**，不是产品没有通路。
+2. 该偏好 item 声明 `effect=capability-selection`，其 v2 provider 编译出**零** `ConfigIntent`，
+   所以它**永远不会成为原生配置键**。这不影响判定：合同问的是"未覆盖偏好跟随全局"，
+   而观察这一点的正确层正是 Profile 的会话解析与 Skills 解析器，两者都已实测。
+3. 全局那次改动**必须**用第三个真实 model id：只有两个 id 时，覆盖值与后续全局值永远无法分歧，
+   该子句将**不可证伪**。用的是适配器自己 `config_options` 里列出的真实 id，不是编造的。
+
+**顺带查出一个真实产品缺口（已登记）**：`modelProvider.chooseForSession` 与 `inspectChoice`
+**在默认能力表里是对外广告的**（计入那 86 条），但在发行组合里**必然拒绝**——
+`composition.py:166` 与 `:269` 两处构造 `ModelProviderPlugin` 都**没有传 `harness_config_port`**
+（全 `products/` 源码零命中），于是 `chooseForSession` 恒返回
+`UNAVAILABLE` / `SELECTION_UNSUPPORTED`，`inspectChoice` 恒返回 `verdict=unknown` / `ADAPTER_MISSING`。
+更进一步：`ModelChoiceService.resolve_next_turn`（`choices.py:222`）**没有任何生产调用方**
+（只有测试引用），即它排的队**永远不会被消费**。C02 因此改用真实存在的
+`profiles.v2.setSessionOverride` 达成——**这是产品实际实现并生效的会话覆盖路径**，
+不是替身；但那个空转的广告面本身是缺陷，已登记待裁定。
 
 ### C08/C10 专段：在被锁死的密钥环之外，仍取得真实产品链 L3
 
