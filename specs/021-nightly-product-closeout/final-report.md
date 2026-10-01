@@ -75,6 +75,13 @@ deb `70be6198…` 已作废，其"Phase 3 未展开"的结论也已被后续多�
 bash /home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout/.cleanup-evidence/publish-fixed-codex-managed.sh
 ```
 
+> **这条命令本轮已修好并做过非 root 全量演练，此前那版备件是会失败的。** 原先备好的请求指向
+> 00:17 构建的资产，实测其中 `assertUsableRollout` 仍是修前的 `read < buffer.length`（P1 原样）、
+> P2 标记为 0，**且候选目录形状不符合 helper 约定**（缺 `codex-runtime/` 与内层 manifest），会在
+> `checked_manifest` 被拒——即使装成功，装进去的也是打断旗舰路径的那份代码。现已重建为
+> `codex-publishable-1790884232`，并在脚本开头先跑三段演练（helper 自身前置函数 5/5、
+> 树摘要与 manifest 三方一致、verifier 全部非属主断言）才发布。**演练不过就在花掉口令之前退出。**
+
 **五项裁定：**
 
 1. **dsh/kilo 信任根入口形状** —— 钉死的 `native-artifact-policy.mjs` 只认

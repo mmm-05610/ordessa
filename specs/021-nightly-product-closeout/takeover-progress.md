@@ -242,7 +242,7 @@ UI-preview 或'14 插件挂载成功'代替实际生产发送"。因此除 D04 �
 | P02 | PASS | L2 | 新候选实际 initialize + 官方首次准备/创建通过，`modelCalls=0`；**未伪称恢复聊天通过** |
 | P03 | PASS | L2 | `refuse("destination already exists; refusing to overwrite")`；本轮复核已安装资产摘要未变（`sha256:1ee5358b…`/536/320854754），未覆盖 |
 | P04 | **PASS（本轮补齐）** | L2 代码 + 语法 | 此前只有 stage→verify→publish，回执回显候选自述值。已加发布前 manifest 与实测三项全等比对 + 发布后对落地树复验同一钉死 verifier，回执带 `verifiedBefore/AfterPublish`。未部署（等同那一次 sudo）。**已实测：现装增强资产早于整个 codex-process 集成（缺 `ordessa-codex-process.mjs`），故本次 P1/P2 修复须随该资产重建发布才生效，并入同一条 sudo，不另计** |
-| P05 | **BLOCKED_USER** | — | root 管理且普通用户不可修改 + 完整策略校验：**需用户执行那一次 sudo**。未降低校验强度 |
+| P05 | **BLOCKED_USER** | — | root 管理且普通用户不可修改 + 完整策略校验：**需用户执行那一次 sudo**。未降低校验强度。**候选已重建为修复版并完成非 root 全量演练（见专段），脚本开头先演练后发布；口令未消耗** |
 | P06 | PASS | L1 | 产品资产根由显式环境变量覆盖，默认仍是已验证路径；新增 `trusted_asset_root()` 在**读 Key 与启动产品之前**拒绝相对/缺失/符号链接根（`test_codex_managed_probe.py` 7 passed）；无静默全局 CLI fallback |
 | P07 | **FAIL（真实装配缺口，本轮由 L4 判实）** | **L4** | (a) **MCP**：`ordessa.asset-mcp` 在 `products/desktop/extensions.json:19` 已启用、`McpAssetServerPlugin` 在 `plugins/assets/mcp/backend/plugin.py:252` 存在，但整个 `products/server/src/` **MCP 零命中** —— 没有任何组合实例化它。(b) **Skills**：`ProductSkillsPlugin` 只在 `native_runtime`（`composition.py:272`），`default_plugins`（`:146-171`）**不含**它。**本轮追到根**：安装后的 `packaging/debian/ordessa.in` 启动器**不设** `ORDESSA_SERVER_ARGS_JSON`，`productServerArgs()` 因此返回空数组 ⇒ `plan_server_cli` 走 `default_runtime`（`cli.py:219`）⇒ `default_plugins()`；而 `products/desktop/run-native.mjs` **总是**注入 `--execution-mode native`，所以**开发启动器掩盖了这个缺口**。L4 对照实测：native 路径 `errors:[]`，default 路径 `skills.list is not a wire/1 method`。⇒ 启动门不失败，只**成功空壳** |
 | P08 | **FAIL**（已对新构建复核，非仅代码推断） | L5 判据 | 新构建的 deb 里 `opt/ordessa/harnesses` **一个条目都没有**（`find -mindepth 1 \| wc -l` = **0**），`bundle-manifest.json` 仍记为 `harness-landing`。`deb-contract.test.mjs:151-159` **只断言该目录存在且是目录** ⇒ **零品牌 runtime 的 deb 能通过自己的发行契约测试**，故障晚发到用户选品牌时才炸。**与 P07 耦合（本轮追到的组合事实）：** 当前 deb 同时命中两条 —— 启动器走 `default_plugins`（**无 harness 目录绑定、无 native profile 注册、无 Skills/MCP**），而包内又**零品牌 runtime**。`native_runtime`（`composition.py:258-272`）才会把 `ModelProviderPlugin` 绑到 `harness.directory`、装 `bind_native_profile_sessions` 与 `ProductSkillsPlugin`。⇒ 全新装机的候选**既没有品牌可跑，也没有 Skills/MCP 可用**，且两条都表现为"成功空壳"而非报错。**因此第 4、5 两项裁定必须一起做**：只补 runtime 不改默认链，仍是无 Skills/MCP 的空壳 |
@@ -308,6 +308,44 @@ UI-preview 或'14 插件挂载成功'代替实际生产发送"。因此除 D04 �
 **结论：** 本轮修复**不使任何已发布产物过期**，只是**尚未生效**——它随下一次增强资产重建+发布落地，
 而那条发布路径**正是已记录的那一次 sudo**（P04/P05 的同一条）。因此**不新增 sudo 阻塞**，只把
 "资产需重建"并入既有清单；报告中不把它单列为新缺陷。
+
+### 那一次 sudo 的准备件本身有缺陷（本轮自查发现并修复，尚未消耗口令）
+
+在把上述资产重建并入 sudo 清单时，逐行核对准备件，发现**原先备好的那条命令一定会被自己的
+helper 拒绝**，且**即使不拒绝也会装进带 P1 缺陷的资产**。两处都是实测定位，不是推断：
+
+1. **装的是有缺陷的资产。** `install-request.json` 原先指向 `codex-managed-final-1790871429`
+   （构建于 00:17，早于 `120d099405`）。实测其 `ordessa-codex-process.mjs:291` 仍是
+   `if (read < buffer.length) lines.pop()`，且 P2 标记 `foreign` 计数为 **0** ⇒ **装上去的就是打断旗舰
+   路径的那个 P1**。回执仍会打印 `INSTALLED / verifiedBeforePublish / verifiedAfterPublish`——
+   **校验证明的是树未被篡改，不证明树里的代码是对的。**
+2. **候选目录形状不符合 helper 约定。** helper 读 `<candidate>/codex-runtime.manifest.json`，
+   却在 `<candidate>/artifacts` 下校验 `<artifactBase>/codex-runtime`；而 builder 的输出布局是
+   `<output>/node_modules/...` 且 manifest 刻意写在树**外**（`build-codex-runtime-artifact.mjs:50-57`）。
+   实测原候选 `codex-managed-final-1790871429` **既没有 `codex-runtime/` 子目录，也没有内层
+   manifest** ⇒ helper 会在 `checked_manifest` 直接 refuse，sudo 白花。
+
+**修复：** 重建并按 helper 约定重新包裹候选
+`codex-publishable-1790884232/`（`codex-runtime/` + 同名 manifest），内层 asset 的 sha256
+`9302cffa…f825` **与仓库源码逐字节相同**（即修复确实内联进去了），重建的 treeDigest
+`755bf3d2…c457` 与上一次独立构建**完全一致**（构建可复现）。`install-request.json` 已改指新候选，
+旧请求留痕为 `install-request.json.pre-fix-backup`。
+
+**在没有 root 的前提下把 sudo 尽可能演练到边界**（三个演练件，随 sudo 脚本自动先跑）：
+
+| 演练件 | 覆盖 helper 的哪一步 | 结果 |
+| --- | --- | --- |
+| `dry-run-asset-op.py` | 直接 import helper 调它**自己的** `canonical_source` / `checked_name` / `checked_manifest` / `verifier_source`，加目标名未占用 | **5/5 OK** |
+| `recompute-tree-digest.mjs` | 复刻信任根 `installedArtifactSummary` 的**逐字节同一套**条目/边界/排序/哈希算法（**只跳过 root 属主检查**），比对 helper 在拷贝后做的那次三方一致 | `digest/entries/bytes` **全部一致**，`helperWouldRefuse: false` |
+| `rehearse-native-verifier.mjs` | 逐条转写 `verifyInstalledArtifact` 的**非属主**断言（variant / kind / adapter 三元组 / extension 键数与逐字段 / `ordessaExtension` 缺席 / package pin / entry 存在） | **全部通过**；`extensionKeys` = 6 且含 `managedAccountScope` |
+
+**仍然无法演练、但可由构造保证的唯一一步**：`trustedStat` 要求 `uid===0 && (mode & 0o022)===0
+&& !isSymbolicLink()`。helper 的 `freeze()` 对拷贝树逐项 `chown 0:0` + `chmod 0555/0444`
+（两组 mode 与 `0o022` 的按位与均为 0），`copytree(..., symlinks=False)` 把符号链接解析成真实
+文件、不留链接。**即失败风险已被压到"只有 freeze/copytree 行为与预期不符"这一种。**
+
+> 这三条演练件现在写进 `publish-fixed-codex-managed.sh` 的开头，sudo 一旦执行会**先跑演练再发布**；
+> 演练不过就在消耗口令之前失败退出。**本轮没有执行该脚本，没有消耗任何口令。**
 
 ### F. 最终验证、证据与交回（12 条）
 
