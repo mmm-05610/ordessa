@@ -6,6 +6,8 @@
 
 ## 最新验证（2026-10-01，Profile 启动前认证选择，候选待安装）
 
+- **安装失败已定位并修复**：执行者漏同步安装校验器的 extension 精确字段集，新增 managedAccountScope 被旧五字段规则拒绝。旧脚本没有完成发布，正式目录仍不存在，失败 staging 为 `/opt/ordessa/harnesses/.codex-managed-install-HqTKQimG`。新增反例先红后绿；修复只允许 Codex 的显式 true，false/string/null、其他品牌及未知字段均拒绝；安装边界 **22P**。用修正校验器对该实际 root staging 全树只读校验已通过，资产摘要不变。请勿重用旧 /tmp 安装脚本，改用工作树 `.cleanup-evidence/install-codex-managed-profile-repair.sh`：仅更新该 staging 的校验器，完整核验后原子发布，不再次复制资产、不动旧版本/登录。校验器新 pin `e13db8892e49445dde88356182618a2344c33cb571bfdcaade5ddad4d1b86e67`。尚待用户 sudo 完成发布。
+
 - Chat 将已保存 Profile 引用传到 prepareSession，再进入 `acp.channel.open`；后端产品装配解析当前 Profile/model-provider 配置，由 Harness 选择官方账号或私有 API 实例。客户端不传账号目录、token 或应用证明。启动与首次创建之间 Profile/供应商记录变化会拒绝；同一保留 attempt 不得更换 Profile。
 - model-provider 增加中性的显式 `authentication: managed-account` 配置选择；它不解释品牌差异。Harness 当前只允许 Codex/openai/responses、无 endpoint/credential 的官方路线。官方账号查询与刷新仍全部交给原生 Codex，未实现 OAuth/token 复制。
 - 增强 ACP 新增官方初始模型准备及真实 thread 路由回读；官方实例拒绝会话客户端的认证、供应商改写和注销入口，API 实例不使用官方账号目录。安装清单显式声明 managedAccountScope，旧资产不得冒充该能力。

@@ -101,6 +101,12 @@ for (const brand of BRANDS.slice(1)) {
     const options = { artifactBase: f.base, variant: 'native-profile' }
     assert.deepEqual(resolveInstalledLaunch(f.harness, f.launch, options),
       { ...f.launch, source: 'installed-artifact', version: f.version })
+    if (f.harness === 'codex') {
+      publishManifest(f, {...manifest, extension: {...manifest.extension, managedAccountScope: true}})
+      assert.deepEqual(resolveInstalledLaunch(f.harness, f.launch, options),
+        {...f.launch, source: 'installed-artifact', version: f.version})
+      publishManifest(f, manifest)
+    }
     const enhancedPlan = nativeServerPlan({ harnessId: f.harness,
       pluginRoot: '/opt/ordessa/harness-plugin', artifactRoot: f.base,
       nativeProfileHarnesses: [f.harness] })
@@ -111,7 +117,9 @@ for (const brand of BRANDS.slice(1)) {
       pluginRoot: '/opt/ordessa/harness-plugin', artifactRoot: f.base }), /ADAPTER_ARTIFACT_UNVERIFIED/)
     for (const delta of [{ id: 'pi-profile' }, { version: 2 },
       { instanceDirectoryRequired: false }, { upstreamSourceDigest: 'invalid' },
-      { upstreamSourceDigest: `sha256:${'b'.repeat(64)}` }, { extra: true }]) {
+      { upstreamSourceDigest: `sha256:${'b'.repeat(64)}` }, { extra: true },
+      {managedAccountScope: false}, {managedAccountScope: 'true'}, {managedAccountScope: null},
+      ...(f.harness === 'claude-code' ? [{managedAccountScope: true}] : [])]) {
       publishManifest(f, { ...manifest, extension: { ...manifest.extension, ...delta } })
       assert.throws(() => resolveInstalledLaunch(f.harness, f.launch, options), /ADAPTER_ARTIFACT_UNVERIFIED/)
     }

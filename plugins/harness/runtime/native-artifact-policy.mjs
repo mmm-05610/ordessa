@@ -141,7 +141,10 @@ export function verifyInstalledArtifact({ artifactBase, artifact, packageName, v
   }
   if (nativeProfile) {
     const extension = manifest.extension
-    if (!extension || Object.keys(extension).length !== 5 || extension.id !== nativeProfile.id
+    const managedScope = extension && Object.hasOwn(extension, 'managedAccountScope')
+    if (!extension || Object.keys(extension).length !== (managedScope ? 6 : 5)
+        || (managedScope && (artifact !== 'codex-runtime' || extension.managedAccountScope !== true))
+        || extension.id !== nativeProfile.id
         || extension.version !== 1 || extension.configurationQuery !== '_ordessa/session/configuration'
         || extension.instanceDirectoryRequired !== true
         || extension.upstreamSourceDigest !== `sha256:${nativeProfile.source}`
