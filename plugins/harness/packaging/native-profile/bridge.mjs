@@ -106,10 +106,9 @@ export function nativeProfileBridge(agent, brand, invalidParams) {
         for (const item of preserved)
           await step('preferences', () => agent.setSessionConfigOption({ sessionId: input.sessionId, configId: item.id, value: item.currentValue }))
         const session = agent.sessions.get(input.sessionId)
-        const providers = agent.listProviders({}).providers
-        const route = providers.find(item => item.providerId === 'custom-gateway')?.current
+        const route = agent.codexAcpClient?.codexClient?.ordessaThreadRoutes?.get(input.sessionId)
         if (!session || session.authProvider !== 'custom-gateway') return null
-        return { sessionId: input.sessionId, apiType: route?.apiType, baseUrl: route?.baseUrl }
+        return { sessionId: input.sessionId, apiType: route?.api === 'responses' ? 'openai' : null, baseUrl: route?.baseUrl }
       }
       await step('provider', () => agent.unstable_setProvider(input.provider))
       const session = agent.sessions[input.sessionId]
@@ -188,6 +187,15 @@ export function nativeProfileBridge(agent, brand, invalidParams) {
           if (after.busy || selected.length !== 1 || selected[0].currentValue !== initial.input.model) {
             initial.record.phase = 'initial-readback-mismatch'
             throw invalidParams('Initial model readback differs')
+          }
+          const flatten = options => options.flatMap(option => [option, ...flatten(option.options ?? [])])
+          const models = flatten(selected[0].options).filter(option => option.value === initial.input.model)
+          const route = models.length === 1 ? models[0]._meta?.ordessaModel : null
+          if (!route || route.provider !== initial.input.provider.providerId
+              || route.api !== (initial.input.provider.apiType === 'openai' ? 'responses' : 'anthropic')
+              || route.baseUrl !== initial.input.provider.baseUrl || route.model !== initial.input.model) {
+            initial.record.phase = 'initial-route-readback-mismatch'
+            throw invalidParams('Initial native construction routing differs')
           }
           initial.record.state = 'observed'; initial.record.phase = 'initial-model-readback'
           // This is creation evidence, never a Profile C4 receipt or proof of every resource.

@@ -42,13 +42,45 @@ function fixture(brand, effect) {
   return { agent, session, read, operation, input, calls: () => calls }
 }
 
+test('Codex model routing evidence comes from its accepted thread snapshot, not mutable provider state', () => {
+  const f = fixture('codex')
+  f.session.authProvider = 'custom-gateway'
+  f.agent.codexAcpClient = { codexClient: { ordessaThreadRoutes: new Map([['s', {
+    provider: 'custom-gateway', api: 'responses', baseUrl: 'https://thread.invalid/v1',
+    headers: { authorization: 'never-export' }
+  }]]) } }
+  f.agent.listProviders = () => ({ current: { baseUrl: 'https://different.invalid' } })
+  f.session.configOptions[0].options[0]._meta = { ordessaModel: { baseUrl: 'https://forged.invalid' } }
+  const option = f.read({ sessionId: 's' }).configOptions[0].options[0]
+  assert.deepEqual(option._meta.ordessaModel, {
+    provider: 'custom-gateway', api: 'responses', baseUrl: 'https://thread.invalid/v1', model: 'm1'
+  })
+  assert.equal(JSON.stringify(option).includes('never-export'), false)
+  f.session.authProvider = 'different'
+  assert.equal(f.read({ sessionId: 's' }).configOptions[0].options[0]._meta, undefined)
+  f.session.authProvider = 'custom-gateway'
+  f.agent.codexAcpClient.codexClient.ordessaThreadRoutes.clear()
+  assert.equal(f.read({ sessionId: 's' }).configOptions[0].options[0]._meta, undefined)
+})
+
+test('Claude routing evidence uses captured query configuration and rejects secret-bearing endpoints', () => {
+  const f = fixture('claude-code')
+  f.session.ordessaProviderRoute = { apiType: 'anthropic', baseUrl: 'https://query.invalid' }
+  assert.equal(f.read({ sessionId: 's' }).configOptions[0].options[0]._meta.ordessaModel.baseUrl,
+    'https://query.invalid')
+  for (const baseUrl of ['https://user:secret@query.invalid', 'https://query.invalid?key=secret']) {
+    f.session.ordessaProviderRoute.baseUrl = baseUrl
+    assert.equal(f.read({ sessionId: 's' }).configOptions[0].options[0]._meta, undefined)
+  }
+})
+
 for (const brand of ['codex', 'claude-code']) {
   test(`${brand}: initial provider precedes new, native model is applied before returning, and never resumes`, async () => {
     const f = fixture(brand)
     if (brand === 'codex') f.agent.sessions.clear()
     else f.agent.sessions = {}
     const order = []
-    f.agent.codexAcpClient = { config: {} }
+    f.agent.codexAcpClient = { config: {}, codexClient: { ordessaThreadRoutes: new Map() } }
     f.agent.setProvider = input => { order.push('provider'); f.agent.route = input }
     f.agent.unstable_setProvider = f.agent.setProvider
     f.agent.setSessionConfigOption = async input => {
@@ -70,8 +102,15 @@ for (const brand of ['codex', 'claude-code']) {
       if (brand === 'claude-code') assert.equal(params._meta.claudeCode.options.model, 'm2')
       const session = structuredClone(f.session)
       session.configOptions[0].currentValue = 'm1'
-      if (brand === 'codex') f.agent.sessions.set('s', session)
-      else f.agent.sessions.s = session
+      if (brand === 'codex') {
+        session.authProvider = 'custom-gateway'
+        f.agent.codexAcpClient.codexClient.ordessaThreadRoutes.set('s', {
+          provider: 'custom-gateway', api: 'responses', baseUrl: input.provider.baseUrl })
+        f.agent.sessions.set('s', session)
+      } else {
+        session.ordessaProviderRoute = { apiType: 'anthropic', baseUrl: input.provider.baseUrl }
+        f.agent.sessions.s = session
+      }
       return { sessionId: 's' }
     })
     assert.deepEqual(order, ['provider', 'new', 'model'])
@@ -101,6 +140,27 @@ test('first configuration refuses live siblings and cannot report native ACK as 
   await assert.rejects(bridge.withCreation({ cwd: '/controlled', mcpServers: [] }, async () => {
     throw Error('must not execute a second creation')
   }), /already attempted/)
+})
+
+test('initial model readback alone cannot confirm a different or missing provider route', async () => {
+  for (const baseUrl of [undefined, 'https://other.invalid']) {
+    const f = fixture('claude-code')
+    f.agent.sessions = {}
+    f.agent.unstable_setProvider = async () => ({})
+    f.agent.setSessionConfigOption = async input => {
+      f.agent.sessions[input.sessionId].configOptions[0].currentValue = input.value
+      return {}
+    }
+    const bridge = nativeProfileBridge(f.agent, 'claude-code', message => new Error(message))
+    await bridge.prepareCreation({ operationId: 'create:route', model: 'm2', provider: {
+      providerId: 'main', apiType: 'anthropic', baseUrl: 'https://controlled.invalid' } })
+    await assert.rejects(bridge.withCreation({ cwd: '/controlled', mcpServers: [] }, async () => {
+      f.agent.sessions.s = structuredClone(f.session)
+      f.agent.sessions.s.ordessaProviderRoute = { apiType: 'anthropic', baseUrl }
+      return { sessionId: 's' }
+    }), /Initial native construction routing differs/)
+    assert.equal(bridge.queryCreation({ operationId: 'create:route' }).state, 'unknown')
+  }
 })
 
 for (const brand of ['codex', 'claude-code']) {
@@ -168,7 +228,7 @@ for (const brand of ['codex', 'claude-code']) {
       session.configOptions.find(item => item.id === input.configId).currentValue = input.value
     }
     if (brand === 'codex') {
-      f.agent.codexAcpClient = { config: {} }
+      f.agent.codexAcpClient = { config: {}, codexClient: { ordessaThreadRoutes: new Map() } }
       f.agent.setProvider = input => { providerCalls++; f.agent.route = input }
       f.agent.closeSession = async ({ sessionId }) => { f.agent.sessions.delete(sessionId) }
       f.agent.resumeSession = async params => {
@@ -180,6 +240,8 @@ for (const brand of ['codex', 'claude-code']) {
         replacement.configOptions[0].currentValue = f.agent.codexAcpClient.config.model
         replacement.authProvider = 'custom-gateway'
         f.agent.sessions.set('s', replacement)
+        f.agent.codexAcpClient.codexClient.ordessaThreadRoutes.set('s', {
+          provider: 'custom-gateway', api: 'responses', baseUrl: f.agent.route.baseUrl })
       }
       f.agent.listProviders = () => ({ providers: [{ providerId: 'custom-gateway', current: f.agent.route }] })
       await bridge.withCreation({ cwd: '/controlled-project', mcpServers: [{ name: 'test', command: 'controlled-peer', args: [] }] },

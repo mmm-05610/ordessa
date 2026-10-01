@@ -318,10 +318,10 @@ class BridgeConfigurationAdapter:
     # -- C2 surface -----------------------------------------------------------
 
     def assess(self, context: Any, request: Mapping[str, Any]) -> Assessment:
-        from ...pi.configuration.context import PiLiveModelContext
-        if isinstance(context, PiLiveModelContext):
-            if self.brand != "pi":
-                return Assessment("unsupported", reason="Pi owner context requires Pi adapter")
+        from .live_context import NativeLiveModelContext
+        if isinstance(context, NativeLiveModelContext):
+            if self.brand != context.installation.harness_id:
+                return Assessment("unsupported", reason="Native owner context requires matching brand adapter")
             result = self.compile(context, {}, request)
             return (Assessment("supported", evidence_ref=context.capability_evidence_ref)
                     if isinstance(result, HarnessIntentSet) else
@@ -341,13 +341,18 @@ class BridgeConfigurationAdapter:
 
     def compile(self, context: Any, before: Mapping[str, Any], desired: Mapping[str, Any]
                 ) -> HarnessIntentSet | AdapterRefusal:
-        from ...pi.configuration.context import PiLiveModelContext
-        if isinstance(context, PiLiveModelContext):
-            from ...pi.configuration.live_model import compile_live_model
-            if self.brand != "pi" or not isinstance(desired, Mapping) or "protocol" not in desired:
-                return AdapterRefusal(ErrorCode.CAPABILITY_UNSUPPORTED, "Full Pi model choice required")
-            result = compile_live_model(context.native_snapshot, context.native_snapshot.target,
-                                        desired, IntentSource(FACET_ID, "choice", "1"))
+        from .live_context import NativeLiveModelContext
+        if isinstance(context, NativeLiveModelContext):
+            if self.brand != context.installation.harness_id or not isinstance(desired, Mapping) or "protocol" not in desired:
+                return AdapterRefusal(ErrorCode.CAPABILITY_UNSUPPORTED, "Full matching native model choice required")
+            if self.brand == 'pi':
+                from ...pi.configuration.live_model import compile_live_model
+                result = compile_live_model(context.native_snapshot, context.native_snapshot.target,
+                                            desired, IntentSource(FACET_ID, "choice", "1"))
+            else:
+                from .live_model import compile_native_model
+                result = compile_native_model(context.native_snapshot, desired,
+                                              IntentSource(FACET_ID, "choice", "1"), self.brand)
             return result if isinstance(result, AdapterRefusal) else HarnessIntentSet((result,))
         payload = dict(desired)
         try:
@@ -368,20 +373,25 @@ class BridgeConfigurationAdapter:
         return _compiled_intents(context, compiled, mounted_facts)
 
     def verify(self, context: Any, observed: Mapping[str, Any]) -> Match | Mismatch | VerificationUnknown:
-        from ...pi.configuration.context import PiLiveModelContext
-        if isinstance(context, PiLiveModelContext):
-            if (self.brand != "pi" or not isinstance(observed, dict)
+        from .live_context import NativeLiveModelContext
+        if isinstance(context, NativeLiveModelContext):
+            if (self.brand != context.installation.harness_id or not isinstance(observed, dict)
                 or set(observed) != {"currentValue", "expectedValue"}
                 or not isinstance(observed["expectedValue"], str)
                 or observed["expectedValue"] != observed["currentValue"]):
                 return Mismatch("Native model selection differs from operation-bound expectation")
+            def flatten(options):
+                for item in options:
+                    if 'value' in item:
+                        yield item
+                    yield from flatten(item.get('options', []))
             values = [item for selector in context.native_snapshot.config_options
-                      if selector.get("id") == "model" for item in selector.get("options", [])
+                      if selector.get("id") == "model" for item in flatten(selector.get("options", []))
                       if item.get("value") == observed["currentValue"]]
             if len(values) != 1:
                 return VerificationUnknown("Model was not independently observed in this owner catalog")
             digest = hashlib.sha256(json.dumps(observed, sort_keys=True).encode()).hexdigest()
-            return Match("pi-native-model-readback:" + digest)
+            return Match(self.brand + "-native-model-readback:" + digest)
         expected_session = observed.get("expected_native_session_id")
         local_ctx = _local_context(context, expected_session_id=expected_session
                                    if isinstance(expected_session, str) else None)

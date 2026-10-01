@@ -112,10 +112,20 @@ for (const [brand, relative] of [
         if (retained.error || retained.result.state !== 'observed' || model !== initialModel
             || retained.result.after.generation !== observed.result.generation)
           throw new Error(`${brand} independent initial model differs`)
+        const flatten = options => options.flatMap(option => [...('value' in option ? [option] : []),
+          ...flatten(option.options ?? [])])
+        const selected = flatten(observed.result.configOptions.find(item => item.id === 'model').options)
+          .filter(item => item.value === initialModel)
+        const route = selected[0]?._meta?.ordessaModel
+        if (selected.length !== 1 || route?.model !== initialModel || route.baseUrl !== providerEndpoint
+            || route.provider !== (brand === 'codex' ? 'custom-gateway' : 'main')
+            || route.api !== (brand === 'codex' ? 'responses' : 'anthropic'))
+          throw new Error(`${brand} native construction routing unavailable or different`)
         if (attemptedModelRequests !== 0) throw new Error(`${brand} attempted an inference request`)
         await request('session/close', { sessionId })
         console.log(JSON.stringify({ brand, providerConfiguredBeforeCreation: true, modelConfiguredBeforeReturn: true,
-          independentModelReadback: true, sessionNew: 1, resume: 0, prompt: 0, inferenceRequests: 0,
+          independentModelReadback: true, nativeConstructionRouteBound: true,
+          sessionNew: 1, resume: 0, prompt: 0, inferenceRequests: 0,
           scope: 'native-adapter-initial-model-not-server-profile' }))
         continue
       }

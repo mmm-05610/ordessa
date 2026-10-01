@@ -178,6 +178,7 @@ Profile Chat 有限入口接线已由主代理复跑 23/23：合法 default fact
 - [ ] 后端 canonical Profile 会话注册与真实 owner/generation 完整生产绑定。
   - [x] Pi 真实产品 wire 路径登记 canonical 身份并绑定真实 owner/generation；双实例无模型配置应用已验证。
   - [x] 两品牌原生证据读取、显式运行换代票据与旧 target 失效守卫已实现/受控验证。
+  - [x] 三品牌共用 C4 live-model runtime/factory 已接入；Codex/Claude 的同 provider model 应用有受控确认、幂等及独立读回反例。
   - [ ] Codex/Claude 完整生产配置 port/factory 接线及原生应用确认。
 - [ ] Chat 首次/后续发送前应用接线，不打断正在输出的 Agent。
   - [x] 提交 guard/preparation/登记/应用/发送链已实现并受控验证；输出中选择不调用配置接口。
@@ -387,3 +388,13 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 将原 Pi 操作绑定校验迁入 Harness 内的 NativeSessionActionExecutor；Pi 保留薄的品牌策略类，现有生产行为不变。Codex/Claude 仅允许 model action，必须匹配当前 channel 品牌和各自原生证据前缀；before digest、target、manifest、operation、generation、原生 owner 与独立读回校验全部保留。
 - 新增两个品牌反例，初始红因为公共执行器尚不存在；实现后验证 preflight 零效果、正确品牌操作记录生成 receipt、Pi/外品牌证据拒绝、错误 channel 品牌在效果前拒绝。不能将此视为 C4 factory 或 production Profile 全链已经实现；当前产品 port 仍 Pi-only，不移除其安全拒绝。
 - 本轮 Harness owner/action/安装入口/实例目录/产品测试 **122/122**、Profile 全套 **194/194**，exit 0（既有 Starlette deprecation warning 一条）；未重跑 Node/全量 Server/root npm，不冒称完整产品绿。以上是第 6 项生产接线的子步骤，不增加新的顶层阶段。
+
+### 两品牌 C4 配置服务与原生创建路由证据（2026-10-01）
+
+- 将 Pi 的 live runtime/context 抽为 Harness 内的公共实现；Pi、Codex、Claude 保留品牌版本/策略薄层。新增三品牌 factory，核对当前 C2 publication、真实 owner/target、精确 action grant 与安装版本，不增加 permission 放行凭证。产品 port 仅在显式可信品牌资产映射存在时提供对应 factory；默认装配仍只放行 Pi，未提前启用未安装的候选。
+- Codex/Claude 同 provider 的 model-only C4 路径已具备受控证据：确认依赖绑定的 native operation receipt 与独立查询，重复 apply 无第二次效果，贡献/owner/配置漂移拒绝，读回不符保持 Unknown。provider endpoint、协议、凭据引用及额外请求参数改变仍拒绝，不能丢弃字段假装成功。目录不按 Profile 分配，live model action 不物化配置文件。
+- Codex providers/list 是可变进程配置，不足以证明某个 thread 的实际创建路由。锁定增强代码现在在 thread/start/resume 提交前捕获非秘密配置，并与原生响应接受的 provider 身份绑定到该 thread；Claude 使用 SDK query 创建处捕获的路由。只投影安全 provider/api/endpoint/model，禁止 header、带凭据 URL、任意上游 metadata 成为公开证据。它证明原生构建接受的路由，不冒充实际模型 HTTP 请求已路由成功。
+- 首次创建确认同步收紧：model 读回正确但路由缺失或不同，结果保持 Unknown；不得依据 setter ACK 或 mutable provider-list 记 observed。补 provenance、伪造 metadata、非法 endpoint、缺失/错误路由、嵌套模型目录和畸形目录反例。新测试多数与实现同批落地；不统一冒称抓住旧缺陷的先红后绿。调试时两条纯编译测试遗漏 IntentSource，及一条 route 夹具 setter 写到旧 session 对象，已修夹具使其钉住正确分支，未放宽目标断言。
+- 最终重跑 **Python 417/417**（configuration_model + products/server + Profile 全套 + owner + action executor），**Node 112/112**（native/Pi/安装边界），exit 0；只有既有 Starlette deprecation warning。日志 `.cleanup-evidence/native-routing-python.log`、`native-routing-all-node.log`。一次 Python 命令误指 tests/server_acp 子目录，未运行测试，不计作门禁证据；随后按实际路径完整重跑。
+- 新候选 `.cleanup-evidence/native-routing-verified-RYfWBb` 重新从锁定源构建；两品牌实际无模型首次创建均通过：provider-before-new、model-before-return、独立读回、nativeConstructionRouteBound=true、session/new=1、resume=0、prompt=0、inferenceRequests=0。日志 `.cleanup-evidence/native-routing-real.log`。仍是 native-adapter-initial-model-not-server-profile，不是 Profile receipt 或 Desktop UI 全链验收；候选尚未系统安装。
+- 下一项具体缺口：首次提交准备接缝目前不携带后端 Profile 配置意图；须在独立 channel 的 session/new 之前由后端解析 Profile/provider/credential，并调用 Harness owner-only prepare。现有后置 register/apply 无法代替这一前置动作。后续凭据引用还须与可信后端注入事实绑定，不能直接删除 credentialRef 通过 model-only 校验。已有历史跨 provider 恢复、最终可信安装及完整产品验收也仍未完成。没有新增顶层阶段；main、host、旧系统资产、用户服务与他属截图不动，未 push、未真实模型调用。

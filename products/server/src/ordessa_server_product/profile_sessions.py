@@ -11,7 +11,7 @@ from ordessa_profile.contracts import SessionRef
 from ordessa_profile.errors import ProfileError
 
 
-def bind_native_profile_sessions(core, runtime, *, artifact_root=None):
+def bind_native_profile_sessions(core, runtime, *, artifact_root=None, artifact_roots=None):
     """Product-owned live composition; no client-supplied UID/incarnation.
 
     Called again for each Profile activation round, resolving the current ACP
@@ -25,18 +25,29 @@ def bind_native_profile_sessions(core, runtime, *, artifact_root=None):
         raise ProfileError("APPLICATION_PORT_ABSENT", "Native channels unavailable", status=409)
     owners = ProfileSessionOwner(channels, server_id="profile-incarnation-" + uuid4().hex)
     sessions = ProfileNativeSessions(core=core, channels=channels, owners=owners, realm="local")
+    roots = {} if artifact_roots is None else dict(artifact_roots)
+    if any(brand not in ('pi', 'codex', 'claude-code') for brand in roots):
+        raise ValueError('Unknown Profile installation route')
     if artifact_root is not None:
+        if 'pi' in roots and roots['pi'] != artifact_root:
+            raise ValueError('Conflicting Pi installation route')
+        roots['pi'] = artifact_root
+    if roots:
         from .profile_configuration import NativeProfileConfigPort
-        from ordessa_harness.pi.configuration.service import create_model_service, verified_installation
+        from ordessa_harness.configuration.model.live_service import create_model_service, verified_installation
         from ordessa_harness.configuration.model.bridge import choice_payload_schema
         from ordessa_model_provider.profile_resolution import ProfileModelChoiceResolver
-        installation = None
+        installations = {}
         def service_factory(target):
-            nonlocal installation
-            if installation is None:
-                installation = verified_installation(artifact_root)
+            native = owners.readback(target)
+            channel = channels.get(native.owner.connection_id)
+            if channel is None or channel.harness_id not in roots:
+                raise ProfileError('APPLICATION_PORT_ABSENT', 'Trusted native installation route unavailable', status=409)
+            brand = channel.harness_id
+            if brand not in installations:
+                installations[brand] = verified_installation(brand, roots[brand])
             return create_model_service(registry=channels, owners=owners, target=target,
-                carrier=runtime.plugin_host, installation=installation,
+                carrier=runtime.plugin_host, installation=installations[brand],
                 journal_path=runtime.data_root / "plugins/profile/native-configuration.sqlite")
         def resolver_factory():
             catalog = runtime.plugin_host.provided_port("model_provider.catalog")
@@ -44,7 +55,7 @@ def bind_native_profile_sessions(core, runtime, *, artifact_root=None):
                 raise ProfileError("APPLICATION_PORT_ABSENT", "Model catalogue unavailable", status=409)
             return ProfileModelChoiceResolver(catalog, payload_schema=choice_payload_schema())
         core.config_port = NativeProfileConfigPort(sessions, service_factory=service_factory,
-                                                  resolver_factory=resolver_factory)
+            resolver_factory=resolver_factory, supported_harnesses=tuple(roots))
     return sessions
 
 

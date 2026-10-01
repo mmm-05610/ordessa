@@ -47,8 +47,16 @@ export function enhanceSource(source, brand) {
   source = once(source, '.onRequest(methods.agent.session.setMode,', registration + '.onRequest(methods.agent.session.setMode,')
   if (brand === 'claude-code') source = once(source, '                providerCacheKey,',
     '                providerCacheKey,\n                ordessaProviderRoute: { apiType: resolvedProvider?.apiType ?? null, baseUrl: resolvedProvider?.baseUrl ?? null },')
+  if (brand === 'codex') {
+    for (const [name, method] of [['threadStart', 'thread/start'], ['threadResume', 'thread/resume']]) {
+      source = once(source,
+        `  async ${name}(params) {\n    return await this.sendRequest({ method: "${method}", params });\n  }`,
+        `  async ${name}(params) {\n    this.ordessaThreadRoutes ??= new Map();\n    if (this.ordessaThreadRoutes.size >= 256 && !this.ordessaThreadRoutes.has(params.threadId)) throw new Error('Native route capacity exhausted');\n    const route = captureCodexThreadRoute(params, { modelProvider: params.modelProvider });\n    const response = await this.sendRequest({ method: "${method}", params });\n    if (route && response.modelProvider === route.provider) this.ordessaThreadRoutes.set(response.thread.id, route);\n    else this.ordessaThreadRoutes.delete(response.thread.id);\n    return response;\n  }`)
+    }
+  }
   // Preserve a CLI shebang as the first line.
   const imported = "import { nativeProfileBridge } from './ordessa-native-profile.mjs';\n"
+    + (brand === 'codex' ? "import { captureCodexThreadRoute } from './ordessa-native-routing.mjs';\n" : '')
   source = source.startsWith('#!') ? source.replace('\n', '\n' + imported) : imported + source
   return source
 }
@@ -63,7 +71,9 @@ export function enhanceStaging(dist, brand) {
     'ordessa-profile.mjs': readFileSync(path.join(HERE, 'entry.mjs'), 'utf8'),
     'ordessa-native-profile.mjs': readFileSync(path.join(HERE, 'bridge.mjs'), 'utf8'),
     'ordessa-native-configuration-query.mjs': readFileSync(path.join(HERE, 'configuration-query.mjs'), 'utf8')
-      .replace("'../pi-profile/configuration-query.mjs'", "'./ordessa-configuration-query.mjs'"),
+      .replace("'../pi-profile/configuration-query.mjs'", "'./ordessa-configuration-query.mjs'")
+      .replace("'./routing.mjs'", "'./ordessa-native-routing.mjs'"),
+    'ordessa-native-routing.mjs': readFileSync(path.join(HERE, 'routing.mjs'), 'utf8'),
     'ordessa-configuration-query.mjs': readFileSync(path.join(HERE, '../pi-profile/configuration-query.mjs'), 'utf8'),
     'ordessa-configuration-operation.mjs': readFileSync(path.join(HERE, '../pi-profile/configuration-operation.mjs'), 'utf8'),
     'ordessa-restoration.mjs': readFileSync(path.join(HERE, 'restoration.mjs'), 'utf8'),

@@ -53,6 +53,31 @@ def test_current_business_reference_maps_without_native_hints(rig):
     assert "providerConfigId" in intent.value and "brandFields" not in calls[0][1][0].value
 
 
+@pytest.mark.parametrize('brand', ['codex', 'claude-code'])
+def test_explicit_brand_factory_selection_is_required_before_native_port_construction(rig, brand):
+    _, ref, _, _, _, sessions = rig
+    ref = replace(ref, harness_id=brand)
+    calls = []
+    factory = lambda target: (calls.append(target) or object(), object())
+    default = NativeProfileConfigPort(sessions, service_factory=factory, resolver_factory=lambda: None)
+    with pytest.raises(ProfileError, match='not yet available'):
+        default.inspect(ref)
+    assert not calls
+    explicit = NativeProfileConfigPort(sessions, service_factory=factory, resolver_factory=lambda: None,
+                                       supported_harnesses=(brand,))
+    assert explicit.inspect(ref) == ref
+    assert calls == [sessions.resolve(ref).snapshot.target]
+    assert explicit.inspect(ref) == ref and len(calls) == 1
+
+
+@pytest.mark.parametrize('brands', [(), ['pi'], ('pi', 'pi'), ('unknown',), (True,)])
+def test_application_route_declarations_are_closed_and_cannot_be_guessed(rig, brands):
+    _, _, _, _, _, sessions = rig
+    with pytest.raises(ValueError, match='Explicit supported'):
+        NativeProfileConfigPort(sessions, service_factory=lambda _: None,
+                                resolver_factory=lambda: None, supported_harnesses=brands)
+
+
 def test_catalogue_change_after_plan_blocks_before_application(rig):
     port, ref, intent, revisions, calls, _ = rig
     plan = port.plan(ref, (intent,), "op")

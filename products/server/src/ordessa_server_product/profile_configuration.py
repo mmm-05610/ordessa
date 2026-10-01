@@ -14,7 +14,12 @@ from ordessa_profile.harness_port_adapter import HarnessApiConfigPort
 class NativeProfileConfigPort:
     native_turn_application = True
 
-    def __init__(self, sessions, *, service_factory, resolver_factory):
+    def __init__(self, sessions, *, service_factory, resolver_factory, supported_harnesses=('pi',)):
+        if (not isinstance(supported_harnesses, tuple) or not supported_harnesses
+            or any(type(brand) is not str or brand not in ('pi', 'codex', 'claude-code')
+                   for brand in supported_harnesses) or len(set(supported_harnesses)) != len(supported_harnesses)):
+            raise ValueError('Explicit supported production Harness routes required')
+        self.supported_harnesses = frozenset(supported_harnesses)
         self.sessions = sessions
         self.service_factory, self.resolver_factory = service_factory, resolver_factory
         self._ports, self._plans = {}, {}
@@ -43,7 +48,7 @@ class NativeProfileConfigPort:
 
     def _port(self, ref):
         binding = self.sessions.resolve(ref)
-        if ref.harness_id != "pi":
+        if ref.harness_id not in self.supported_harnesses:
             raise ProfileError("SWITCH_BLOCKED", "Native application not yet available for this Harness", status=409)
         cached = self._ports.get(ref.session_uid)
         if cached is not None:

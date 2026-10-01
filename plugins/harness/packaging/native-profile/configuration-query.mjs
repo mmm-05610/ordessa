@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { stableJSON } from '../pi-profile/configuration-query.mjs'
+import { safeNativeRoute } from './routing.mjs'
 
 // Only public ACP selector vocabulary leaves the adapter. In particular,
 // arbitrary _meta, credentials and provider headers never become evidence.
@@ -59,6 +60,18 @@ export function nativeConfigurationReader({ agent, brand, invalidParams }) {
         || (session.turnQueue ?? []).some(turn => !turn.settled)
     const configOptions = selectors(brand === 'codex'
       ? agent.createSessionConfigOptions(session) : session.configOptions)
+    const captured = brand === 'codex'
+      ? agent.codexAcpClient?.codexClient?.ordessaThreadRoutes?.get(sessionId)
+      : { provider: 'main', api: session.ordessaProviderRoute?.apiType, baseUrl: session.ordessaProviderRoute?.baseUrl }
+    const route = safeNativeRoute(captured)
+    if (route && (brand !== 'codex' || session.authProvider === route.provider)) {
+      const attach = option => {
+        if (typeof option.value === 'string') option._meta = { ordessaModel: { ...route, model: option.value } }
+        for (const child of option.options ?? []) attach(child)
+      }
+      for (const selector of configOptions.filter(item => item.id === 'model'))
+        for (const option of selector.options) attach(option)
+    }
     const result = { sessionId, generation, busy, configOptions }
     if (Buffer.byteLength(stableJSON(result)) > 64 * 1024) throw invalidParams('Live configuration exceeds capacity')
     return result
