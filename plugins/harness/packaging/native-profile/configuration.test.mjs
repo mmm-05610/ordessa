@@ -17,6 +17,21 @@ const bridgeSource = (await readFile(new URL('./bridge.mjs', import.meta.url), '
       "'./ordessa-configuration-query.mjs'", JSON.stringify(new URL('../pi-profile/configuration-query.mjs', import.meta.url).href))).toString('base64')))
 const { nativeProfileBridge } = await import('data:text/javascript;base64,' + Buffer.from(bridgeSource).toString('base64'))
 
+test('managed Codex rejects external provider effects without blocking internal read-only preparation', async () => {
+  const previous = process.env.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR
+  process.env.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR = '/synthetic/private-account'
+  try {
+    const bridge = nativeProfileBridge({sessions: new Map()}, 'codex', message => new Error(message))
+    let effects = 0
+    assert.throws(() => bridge.withExternalProvider(() => effects++), /cannot be changed/)
+    assert.equal(effects, 0)
+    assert.equal(await bridge.withProvider(() => 'internal'), 'internal')
+  } finally {
+    if (previous === undefined) delete process.env.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR
+    else process.env.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR = previous
+  }
+})
+
 function fixture(brand, effect) {
   const session = { configOptions: [{ id: 'model', type: 'select', currentValue: 'm1',
     options: [{ value: 'm1' }, { value: 'm2', _meta: { secret: 'do-not-project' } }],

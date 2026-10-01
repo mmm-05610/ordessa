@@ -35,7 +35,7 @@ export function enhanceSource(source, brand) {
   for (const method of ['set', 'disable']) {
     const impl = brand === 'codex' ? `${method}Provider` : `unstable_${method}Provider`
     source = once(source, `.onRequest(methods.agent.providers.${method}, (ctx) => ${get}.${impl}(ctx.params))`,
-      `.onRequest(methods.agent.providers.${method}, (ctx) => ordessaProfile(${get}).withProvider(() => ${get}.${impl}(ctx.params)))`)
+      `.onRequest(methods.agent.providers.${method}, (ctx) => ordessaProfile(${get}).withExternalProvider(() => ${get}.${impl}(ctx.params)))`)
   }
   const registration = `.onRequest('_ordessa/session/configuration', { parse: input => ordessaProfile(${get}).parser.parse(input) }, ctx => ordessaProfile(${get}).read(ctx.params))
     .onRequest('_ordessa/channel/configuration/prepare', { parse: input => ordessaProfile(${get}).creationParser.parse(input) }, ctx => ordessaProfile(${get}).prepareCreation(ctx.params))
@@ -52,6 +52,9 @@ export function enhanceSource(source, brand) {
       'ANTHROPIC_AUTH_TOKEN: claudeProviderAuthToken(config.headers), // Private provider credential, not login placeholder')
   }
   if (brand === 'codex') {
+    source = once(source,
+      '.onRequest(methods.agent.authenticate, (ctx) => getAgent().authenticate(ctx.params, ctx.requestId))',
+      '.onRequest(methods.agent.authenticate, (ctx) => ordessaProfile(getAgent()).withExternalProvider(() => getAgent().authenticate(ctx.params, ctx.requestId)))')
     // Only the explicit managed route may read native account state. ACP
     // session clients cannot replace/cancel/logout that shared account.
     for (const name of ['accountLogin(params)', 'accountLoginCancel(params)', 'accountLogout()']) {
@@ -70,7 +73,7 @@ export function enhanceSource(source, brand) {
     for (const [name, method] of [['threadStart', 'thread/start'], ['threadResume', 'thread/resume']]) {
       source = once(source,
         `  async ${name}(params) {\n    return await this.sendRequest({ method: "${method}", params });\n  }`,
-        `  async ${name}(params) {\n    this.ordessaThreadRoutes ??= new Map();\n    if (this.ordessaThreadRoutes.size >= 256 && !this.ordessaThreadRoutes.has(params.threadId)) throw new Error('Native route capacity exhausted');\n    const route = captureCodexThreadRoute(params, { modelProvider: params.modelProvider });\n    const response = await this.sendRequest({ method: "${method}", params });\n    if (route && response.modelProvider === route.provider) this.ordessaThreadRoutes.set(response.thread.id, route);\n    else this.ordessaThreadRoutes.delete(response.thread.id);\n    return response;\n  }`)
+        `  async ${name}(params) {\n    this.ordessaThreadRoutes ??= new Map();\n    if (this.ordessaThreadRoutes.size >= 256 && !this.ordessaThreadRoutes.has(params.threadId)) throw new Error('Native route capacity exhausted');\n    let managedAccountVerified = false;\n    if (process.env.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR && [undefined, null, 'openai'].includes(params.modelProvider)) {\n      const account = await this.accountRead({refreshToken: true});\n      if (account.account?.type !== 'chatgpt') throw new Error('Managed account login required');\n      managedAccountVerified = true;\n    }\n    const submittedRoute = captureCodexThreadRoute(params, { modelProvider: params.modelProvider });\n    const response = await this.sendRequest({ method: "${method}", params });\n    const route = submittedRoute ?? captureCodexThreadRoute(params, response, {managedAccountVerified});\n    if (route && response.modelProvider === route.provider) this.ordessaThreadRoutes.set(response.thread.id, route);\n    else this.ordessaThreadRoutes.delete(response.thread.id);\n    return response;\n  }`)
     }
   }
   // Preserve a CLI shebang as the first line.
@@ -106,5 +109,6 @@ export function enhanceStaging(dist, brand) {
   for (const [name, content] of Object.entries(files)) writeFileSync(path.join(dist, name), content)
   return { id: brand + '-profile', version: 1,
     configurationQuery: '_ordessa/session/configuration', instanceDirectoryRequired: true,
+    ...(brand === 'codex' ? {managedAccountScope: true} : {}),
     upstreamSourceDigest: 'sha256:' + pin.digest }
 }

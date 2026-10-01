@@ -111,6 +111,7 @@ export function createProfileChatGlue(
       try {
         if (selected && target.kind === 'draft') retainedSelections.set(retainedKey, { selection: selected, connectionId: native?.selectedConnectionId })
         const owner = await input.nativeSessions.prepareSubmission(selected && input.profiles.prepareNativeCreation ? {
+          configurationProfileId: selected.profileId,
           beforeCreate: async context => {
             if (context.serverInstanceId !== target.serverInstanceId || context.harnessId !== selected.harnessId)
               throw new Error('Profile preparation context changed')

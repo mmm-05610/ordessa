@@ -22,6 +22,29 @@ class ManagedAccountUnavailable(RuntimeError):
 
 
 class CodexManagedAccount:
+    @classmethod
+    def for_installation(cls, artifact_base, account_directory):
+        """Resolve brand-internal binary only after full installed verification."""
+        try:
+            from ..configuration.model.live_service import verified_installation
+            verified_installation('codex', artifact_base)
+            root = Path(artifact_base)
+            manifest = json.loads((root / 'codex-runtime.manifest.json').read_text())
+            if manifest.get('extension', {}).get('managedAccountScope') is not True:
+                raise ManagedAccountUnavailable()
+            command = root / 'codex-runtime/node_modules/@openai/codex-linux-x64/vendor/x86_64-unknown-linux-musl/bin/codex'
+            return cls(command=(str(command),), account_directory=Path(account_directory))
+        except Exception:
+            raise ManagedAccountUnavailable() from None
+
+    @property
+    def account_directory(self):
+        try:
+            self._validate_directory()
+        except Exception:
+            raise ManagedAccountUnavailable() from None
+        return str(self._directory)
+
     def __init__(self, *, command: Sequence[str], account_directory: Path, timeout=20):
         if (isinstance(command, (str, bytes)) or not command
                 or any(type(part) is not str or not part or '\0' in part for part in command)

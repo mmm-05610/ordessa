@@ -22,3 +22,14 @@ test('routing never invents default endpoint/protocol or exposes URL credentials
     { modelProvider: 'custom-gateway' }), null)
   assert.equal(safeNativeRoute({ provider: 'main', api: 'guessed', baseUrl: 'https://fixture.invalid' }), null)
 })
+
+test('official routing requires actual managed account verification and accepted openai thread', () => {
+  const params = {modelProvider: null, config: {}}
+  const response = {modelProvider: 'openai'}
+  assert.equal(captureCodexThreadRoute(params, response), null)
+  assert.deepEqual(captureCodexThreadRoute(params, response, {managedAccountVerified: true}),
+    {provider: 'openai', api: 'responses', baseUrl: null, authentication: 'managed-account'})
+  assert.equal(captureCodexThreadRoute(params, {modelProvider: 'custom-gateway'}, {managedAccountVerified: true}), null)
+  assert.equal(captureCodexThreadRoute({...params, config: {model_providers: {openai: {base_url: 'https://override.invalid'}}}},
+    response, {managedAccountVerified: true}), null)
+})

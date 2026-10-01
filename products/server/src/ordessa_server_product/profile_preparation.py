@@ -15,11 +15,42 @@ def _digest(value):
 
 
 class NativeProfilePreparation:
-    def __init__(self, core, channels, *, roots, verify, resolver_factory, catalog_factory, realm='local'):
+    def __init__(self, core, channels, *, roots, verify, resolver_factory, catalog_factory, realm='local', managed_account_factory=None):
         self.core, self.channels, self.roots = core, channels, dict(roots)
         self.verify, self.resolver_factory, self.catalog_factory, self.realm = verify, resolver_factory, catalog_factory, realm
         self._operations, self._connections = {}, {}
         self._lock = RLock()
+        self.managed_account_factory = managed_account_factory
+
+    def resolve_launch_selection(self, *, profile_id, harness_id):
+        """Read-only selection before launch, without exporting credential bytes."""
+        profile = self.core.profiles.get(profile_id)
+        if (profile['realm'] != self.realm or profile['harness_id'] != harness_id
+                or profile['archived_at'] is not None or harness_id not in self.roots):
+            raise ProfileError('APPLICATION_PORT_ABSENT', 'Matching active Profile and installed Harness required', status=409)
+        self.verify(harness_id)
+        rows = self.core.profiles.facet_values(profile_id, config_revision=profile['current_revision'])
+        choices = [r for r in rows if (r['facet_id'], r['item_id']) == ('assets.model-provider', 'choice')]
+        if len(choices) != 1 or choices[0]['quarantined']:
+            raise ProfileError('PROFILE_CONFIGURATION_INVALID', 'One current model choice required', status=422)
+        resolved = self.resolver_factory().resolve(choices[0]['value'], harness_id=harness_id)
+        transport_options = {}
+        if resolved.payload.get('authentication') == 'managed-account':
+            # Harness validates the dialect; the resource record contains no
+            # token, account directory or invented native endpoint.
+            initial_model_params(harness_id, resolved.payload, 'create:launch-check')
+            if not callable(self.managed_account_factory):
+                raise ProfileError('APPLICATION_PORT_ABSENT', 'Managed account launch unavailable', status=409)
+            account = self.managed_account_factory(harness_id)
+            if account.read(refresh=True) != {'authenticated': True, 'method': 'chatgpt-managed'}:
+                raise ProfileError('AUTHENTICATION_REQUIRED', 'Ordessa Codex login required', status=409)
+            transport_options['codex_account_directory'] = account.account_directory
+        if self.core.profiles.get(profile_id) != profile:
+            raise ProfileError('SWITCH_BLOCKED', 'Profile changed during launch selection', status=409)
+        return {'snapshot': {'profileId': profile_id, 'profileVersion': profile['version'],
+                            'profileRevision': profile['current_revision'], 'payloadDigest': _digest(resolved.payload),
+                            'catalogDigest': _digest(resolved.revisions)},
+                'transportOptions': transport_options}
 
     def _resolve(self, connection_id, profile_id):
         channel = initial_channel(self.channels, connection_id, empty=False)
@@ -35,6 +66,13 @@ class NativeProfilePreparation:
         if len(choices) != 1 or choices[0]['quarantined']:
             raise ValueError('One current nonquarantined model choice required')
         resolved = self.resolver_factory().resolve(choices[0]['value'], harness_id=channel.harness_id)
+        if getattr(channel, 'configuration_profile_id', None) is not None:
+            expected = {'profileId': profile_id, 'profileVersion': profile['version'],
+                        'profileRevision': profile['current_revision'], 'payloadDigest': _digest(resolved.payload),
+                        'catalogDigest': _digest(resolved.revisions)}
+            if (channel.configuration_profile_id != profile_id
+                    or getattr(channel, 'configuration_profile_snapshot', None) != expected):
+                raise ValueError('Profile launch selection changed before native creation')
         catalog = self.catalog_factory()
         credential = catalog.application_credential(resolved.payload.get('credentialRef'), harness_id=channel.harness_id)
         model_ids = None
@@ -128,7 +166,7 @@ class NativeProfilePreparation:
                     # Preserve the existing model-only C4 route; new credential
                     # references always need startup evidence. A channel with a
                     # reservation can never use this absence rule.
-                    return desired.get('credentialRef') is None
+                    return desired.get('credentialRef') is None and desired.get('authentication') is None
                 operation_id = self._connections[cid]
                 saved = self._operations[operation_id]
                 channel = initial_channel(self.channels, cid, empty=False)
@@ -138,7 +176,7 @@ class NativeProfilePreparation:
                 # C4 independently resolves the current selected Profile/model
                 # and fences its revisions. This proof covers unchanged auth,
                 # allowing another model or Profile on the same native route.
-                auth_keys = ('provider', 'protocol', 'endpoint', 'credentialRef')
+                auth_keys = ('provider', 'protocol', 'endpoint', 'credentialRef', 'authentication')
                 if any(desired.get(key) != saved['payload'].get(key) for key in auth_keys):
                     return False
                 credential = self.catalog_factory().application_credential(desired.get('credentialRef'), harness_id=channel.harness_id)

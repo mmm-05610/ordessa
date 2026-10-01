@@ -53,5 +53,5 @@ export interface AcpChannelSpec {
   /** Acquire the managed channel for the selected project. A new session supplies a unique
    * acquisition scope, kept stable by its attempt; this is not a native or canonical session id.
    * History/load may omit the scope. `initialize` runs on the handle's stream. */
-  acquireChannel: (projectId: string, sessionScopeId?: string) => Promise<AcpChannelHandle>
+  acquireChannel: (projectId: string, sessionScopeId?: string, configurationProfileId?: string) => Promise<AcpChannelHandle>
 }

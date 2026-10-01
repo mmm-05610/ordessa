@@ -64,7 +64,8 @@ export function nativeConfigurationReader({ agent, brand, invalidParams }) {
       ? agent.codexAcpClient?.codexClient?.ordessaThreadRoutes?.get(sessionId)
       : { provider: 'main', api: session.ordessaProviderRoute?.apiType, baseUrl: session.ordessaProviderRoute?.baseUrl }
     const route = safeNativeRoute(captured)
-    if (route && (brand !== 'codex' || session.authProvider === route.provider)) {
+    if (route && (brand !== 'codex' || session.authProvider === route.provider
+        || route.authentication === 'managed-account' && session.authProvider == null)) {
       const attach = option => {
         if (typeof option.value === 'string') option._meta = { ordessaModel: { ...route, model: option.value } }
         for (const child of option.options ?? []) attach(child)

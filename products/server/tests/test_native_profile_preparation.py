@@ -41,6 +41,43 @@ def setup(brand='codex', secret=None):
         profile=profile, payload=payload, resolved=resolved, catalog=catalog, record=record, verify=verify)
 
 
+def test_launch_selection_is_read_only_and_creation_rechecks_its_snapshot():
+    f = setup(secret='synthetic-secret')
+    selection = f.service.resolve_launch_selection(profile_id='p', harness_id='codex')
+    assert selection['transportOptions'] == {}
+    assert 'synthetic-secret' not in repr(selection)
+    f.catalog.application_credential.assert_not_called()
+    f.channels.prepare_native_creation.assert_not_called()
+    f.channel.configuration_profile_id = 'p'
+    f.channel.configuration_profile_snapshot = selection['snapshot']
+    f.profile['version'] += 1
+    with pytest.raises(ProfileError):
+        f.service.prepare(**f.args)
+    f.channels.prepare_native_creation.assert_not_called()
+
+
+def test_managed_launch_requires_account_owner_and_never_imports_api_credentials():
+    f = setup()
+    f.payload.update(provider='openai', endpoint=None, authentication='managed-account')
+    account = Mock()
+    account.account_directory = '/private/ordessa-account'
+    account.read.return_value = {'authenticated': True, 'method': 'chatgpt-managed'}
+    f.service.managed_account_factory = Mock(return_value=account)
+    selected = f.service.resolve_launch_selection(profile_id='p', harness_id='codex')
+    assert selected['transportOptions'] == {'codex_account_directory': '/private/ordessa-account'}
+    account.read.assert_called_once_with(refresh=True)
+    f.catalog.application_credential.assert_not_called()
+    f.channels.prepare_native_creation.assert_not_called()
+    f.channel.configuration_profile_id = 'p'
+    f.channel.configuration_profile_snapshot = selected['snapshot']
+    f.service.prepare(**f.args)
+    assert f.channels.prepare_native_creation.call_args.args[1]['provider'] == {
+        'providerId': 'openai', 'authentication': 'managed-account'}
+    account.read.return_value = {'authenticated': False, 'method': 'chatgpt-managed'}
+    with pytest.raises(ProfileError, match='login required'):
+        f.service.resolve_launch_selection(profile_id='p', harness_id='codex')
+
+
 @pytest.mark.parametrize('brand', ['codex', 'claude-code'])
 def test_prepare_reserved_once_and_query_only_with_sanitized_projection(brand):
     fixture = setup(brand, 'synthetic-private-key')

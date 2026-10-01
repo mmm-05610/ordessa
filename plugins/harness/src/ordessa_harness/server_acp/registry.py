@@ -99,13 +99,14 @@ class _Channel:
 
     def __init__(self, *, connection_id: str, harness_id: str,
                  workspace_id: str, profile_id: str, cwd: str,
-                 session_scope_id: str | None = None) -> None:
+                 session_scope_id: str | None = None, configuration_profile_id: str | None = None) -> None:
         self.connection_id = connection_id
         self.harness_id = harness_id
         self.workspace_id = workspace_id
         self.profile_id = profile_id
         self.cwd = cwd
         self.session_scope_id = session_scope_id
+        self.configuration_profile_id = configuration_profile_id
         self.session_id: str | None = None
         self.execution_id: str | None = None
         self.binding: dict[str, Any] | None = None
@@ -395,7 +396,13 @@ class AcpChannelRegistry:
     # -- lifecycle ---------------------------------------------------------
 
     def acquire(self, *, harness_id: str, workspace_id: str,
-                profile_id: str, cwd: str, session_scope_id: str | None = None) -> dict[str, Any]:
+                profile_id: str, cwd: str, session_scope_id: str | None = None,
+                configuration_profile_id: str | None = None) -> dict[str, Any]:
+        if configuration_profile_id is not None and (session_scope_id is None
+                or type(configuration_profile_id) is not str or not configuration_profile_id
+                or configuration_profile_id.strip() != configuration_profile_id or len(configuration_profile_id) > 128
+                or any(ord(c) < 32 or ord(c) == 127 for c in configuration_profile_id)):
+            raise SessionAcquisitionRefused('invalid configuration Profile acquisition')
         if session_scope_id is not None:
             if (type(session_scope_id) is not str or not session_scope_id
                     or len(session_scope_id) > 128 or session_scope_id.strip() != session_scope_id
@@ -415,27 +422,33 @@ class AcpChannelRegistry:
                     if pair in self._spent_scopes and pair not in self._by_pair:
                         raise SessionAcquisitionRefused("session acquisition scope is terminal")
                 return self._acquire(harness_id=harness_id, workspace_id=workspace_id,
-                                     profile_id=profile_id, cwd=cwd, session_scope_id=session_scope_id)
+                                     profile_id=profile_id, cwd=cwd, session_scope_id=session_scope_id,
+                                     configuration_profile_id=configuration_profile_id)
         return self._acquire(harness_id=harness_id, workspace_id=workspace_id,
                              profile_id=profile_id, cwd=cwd)
 
     def _acquire(self, *, harness_id: str, workspace_id: str, profile_id: str,
-                 cwd: str, session_scope_id: str | None = None) -> dict[str, Any]:
+                 cwd: str, session_scope_id: str | None = None,
+                 configuration_profile_id: str | None = None) -> dict[str, Any]:
         pair = ((harness_id, workspace_id) if session_scope_id is None
                 else (harness_id, workspace_id, session_scope_id))
         with self._lock:
             existing = self._by_pair.get(pair)
             if existing is not None:
+                if existing.configuration_profile_id != configuration_profile_id:
+                    raise SessionAcquisitionRefused('configuration Profile changed for acquisition scope')
                 return existing.public_result()
             connection = _Channel(
                 connection_id=opaque_id("conn"), harness_id=harness_id,
                 workspace_id=workspace_id, profile_id=profile_id, cwd=cwd,
                 session_scope_id=session_scope_id,
+                configuration_profile_id=configuration_profile_id,
             )
         # Launch first: a provider that refuses starts no process and records
         # no run.  The ledger row appears only for a channel that is up.
         transport = self._launch(
             harness_id=harness_id, cwd=cwd,
+            **({'configuration_profile_id': configuration_profile_id} if configuration_profile_id is not None else {}),
             on_line=connection.deliver,
             on_exit=lambda code: self._handle_exit(connection, code),
         )
@@ -454,6 +467,7 @@ class AcpChannelRegistry:
             transport.terminate()
             raise
         connection.transport = _ObservedTransport(connection, transport)
+        connection.configuration_profile_snapshot = getattr(transport, 'configuration_profile_snapshot', None)
         with self._lock:
             racer = self._by_pair.get(connection.pair)
             if racer is not None:

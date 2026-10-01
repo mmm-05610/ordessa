@@ -116,6 +116,12 @@ class ProfileModelChoiceResolver:
             code = "PROTOCOL_AMBIGUOUS" if common else PROTOCOL_UNSUPPORTED
             raise ServerError(code, "A single confirmed protocol selection is required", status=422)
         endpoints = validate_endpoints(projection.get("endpoints"), provider_protocols)
+        configuration = {item['controlId']: item['value'] for item in projection.get('configuration', [])}
+        authentication = configuration.get('authentication')
+        if authentication not in (None, 'managed-account'):
+            raise ServerError('PROFILE_CONFIGURATION_INVALID', 'Unsupported explicit authentication mode', status=422)
+        if authentication == 'managed-account' and (row['credential_id'] is not None or endpoints):
+            raise ServerError('PROFILE_CONFIGURATION_INVALID', 'Managed account cannot carry an API credential or endpoint', status=422)
         credential_ref = row["credential_id"]
         if credential_ref is not None:
             descriptor = catalog.harnesses.get(harness_id)
@@ -132,6 +138,8 @@ class ProfileModelChoiceResolver:
         payload = {"provider": provider, "model": choice["modelId"],
                    "protocol": selected, "endpoint": endpoints.get(selected),
                    "credentialRef": f"ref://{credential_ref}" if credential_ref is not None else None}
+        if authentication is not None:
+            payload['authentication'] = authentication
         if fields is not None:
             payload["brandFields"] = fields
         try:

@@ -9,13 +9,15 @@ async function fixture() {
   const peers: HarnessPeer[] = []
   const handles: AcpChannelHandle[] = []
   const scopes: (string | undefined)[] = []
+  const configurationProfiles: (string | undefined)[] = []
   const releases: string[] = []
   const spec: AcpChannelSpec = {
     serverInstanceId: 'server', harness: { id: 'pi', title: 'Pi' },
     listProjects: async () => [binding],
     openProject: async id => { if (id !== binding.id) throw new Error('project-invalid'); return binding },
-    acquireChannel: async (_projectId, scope) => {
+    acquireChannel: async (_projectId, scope, configurationProfileId) => {
       scopes.push(scope)
+      configurationProfiles.push(configurationProfileId)
       const peer = new HarnessPeer()
       let down: ((reason: string) => void) | undefined
       const handle: AcpChannelHandle = {
@@ -28,8 +30,20 @@ async function fixture() {
     },
   }
   const client = await AcpClient.connect(spec, 'acp:server')
-  return { client, spec, peers, handles, scopes, releases }
+  return { client, spec, peers, handles, scopes, releases, configurationProfiles }
 }
+
+it('launch selection is forwarded before creation and a retained attempt cannot change Profile', async () => {
+  const f = await fixture()
+  try {
+    const beforeCreate = async () => { throw Error('controlled preparation refusal') }
+    await expect(f.client.prepareSession('project', 'attempt', {configurationProfileId: 'profile-a', beforeCreate})).rejects.toThrow('controlled preparation refusal')
+    expect(f.configurationProfiles).toEqual(['profile-a'])
+    expect(f.peers[0].recorded('session/new')).toHaveLength(0)
+    expect(() => f.client.prepareSession('project', 'attempt', {configurationProfileId: 'profile-b', beforeCreate})).toThrow('configuration Profile changed')
+    expect(f.configurationProfiles).toEqual(['profile-a'])
+  } finally { f.client.dispose() }
+})
 
 it('runs a frozen public preparation after initialize, joins concurrent attempts, and bypasses it for an existing owner', async () => {
   const f = await fixture(), hold = deferred(), entered = deferred()

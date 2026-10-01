@@ -14,6 +14,11 @@ export function nativeProfileBridge(agent, brand, invalidParams) {
       && Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value, key))
     const text = (value, max = 4096) => typeof value === 'string' && value.length > 0
       && value.length <= max && value === value.trim() && !/[\u0000-\u001f\u007f]/u.test(value)
+    if (brand === 'codex' && exact(input, ['operationId', 'provider', 'model'])
+        && text(input.operationId, 128) && input.operationId.startsWith('create:') && text(input.model)
+        && exact(input.provider, ['providerId', 'authentication'])
+        && input.provider.providerId === 'openai' && input.provider.authentication === 'managed-account')
+      return structuredClone(input)
     if (!exact(input, ['operationId', 'provider', 'model']) || !text(input.operationId, 128)
         || !input.operationId.startsWith('create:') || !text(input.model)
         || (!exact(input.provider, ['providerId', 'apiType', 'baseUrl'])
@@ -136,7 +141,17 @@ export function nativeProfileBridge(agent, brand, invalidParams) {
         initial = { input, record, attempted: false }
         try {
           if (brand === 'codex') {
-            await agent.setProvider(input.provider)
+            if (input.provider.authentication === 'managed-account') {
+              if (!process.env.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR
+                  || agent.codexAcpClient.getModelProvider() !== null)
+                throw invalidParams('Explicit managed account launch required')
+              const account = await agent.codexAcpClient.codexClient.accountRead({ refreshToken: true })
+              if (account.account?.type !== 'chatgpt') throw invalidParams('Managed account login required')
+            } else {
+              if (process.env.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR)
+                throw invalidParams('API provider requires a separate private instance')
+              await agent.setProvider(input.provider)
+            }
           } else await agent.unstable_setProvider(input.provider)
           record.state = 'prepared'; record.phase = 'awaiting-native-creation'
         } catch { record.phase = 'preparation-outcome-unknown' }
@@ -191,9 +206,11 @@ export function nativeProfileBridge(agent, brand, invalidParams) {
           const flatten = options => options.flatMap(option => [option, ...flatten(option.options ?? [])])
           const models = flatten(selected[0].options).filter(option => option.value === initial.input.model)
           const route = models.length === 1 ? models[0]._meta?.ordessaModel : null
+          const managed = initial.input.provider.authentication === 'managed-account'
           if (!route || route.provider !== initial.input.provider.providerId
-              || route.api !== (initial.input.provider.apiType === 'openai' ? 'responses' : 'anthropic')
-              || route.baseUrl !== initial.input.provider.baseUrl || route.model !== initial.input.model) {
+              || route.api !== (managed || initial.input.provider.apiType === 'openai' ? 'responses' : 'anthropic')
+              || route.baseUrl !== (managed ? null : initial.input.provider.baseUrl)
+              || managed && route.authentication !== 'managed-account' || route.model !== initial.input.model) {
             initial.record.phase = 'initial-route-readback-mismatch'
             throw invalidParams('Initial native construction routing differs')
           }
@@ -205,5 +222,10 @@ export function nativeProfileBridge(agent, brand, invalidParams) {
     }, read(input) {
     const observed = read(input)
     return { ...observed, busy: observed.busy || providerBusy || operation.isBusy(input.sessionId) }
-  }, withLifecycle, withProvider }
+  }, withLifecycle, withProvider,
+    withExternalProvider(work) {
+      if (brand === 'codex' && process.env.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR)
+        throw invalidParams('Managed account route cannot be changed by session clients')
+      return withProvider(work)
+    } }
 }

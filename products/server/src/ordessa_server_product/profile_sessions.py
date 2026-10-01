@@ -61,6 +61,16 @@ def bind_native_profile_sessions(core, runtime, *, artifact_root=None, artifact_
         core.config_port = NativeProfileConfigPort(sessions, service_factory=service_factory,
             resolver_factory=resolver_factory, supported_harnesses=tuple(roots))
     from .profile_preparation import NativeProfilePreparation
+    managed_accounts = {}
+    def managed_account_factory(brand):
+        if brand != 'codex' or brand not in roots:
+            raise ProfileError('APPLICATION_PORT_ABSENT', 'Managed account Harness unavailable', status=409)
+        if brand not in managed_accounts:
+            from pathlib import Path
+            from ordessa_harness.codex.managed_account import CodexManagedAccount
+            managed_accounts[brand] = CodexManagedAccount.for_installation(
+                roots[brand], Path.home() / '.ordessa/accounts/codex')
+        return managed_accounts[brand]
     def preparation_catalog():
         catalog = runtime.plugin_host.provided_port('model_provider.catalog')
         if catalog is None:
@@ -72,7 +82,8 @@ def bind_native_profile_sessions(core, runtime, *, artifact_root=None, artifact_
         return ProfileModelChoiceResolver(preparation_catalog(), payload_schema=choice_payload_schema())
     sessions.preparation = NativeProfilePreparation(core, channels, roots=roots,
         verify=verify if roots else lambda brand: None,
-        resolver_factory=preparation_resolver, catalog_factory=preparation_catalog)
+        resolver_factory=preparation_resolver, catalog_factory=preparation_catalog,
+        managed_account_factory=managed_account_factory)
     return sessions
 
 
@@ -95,6 +106,12 @@ class ProfileNativeSessions:
         if preparation is None:
             raise ProfileError('APPLICATION_PORT_ABSENT', 'Native preparation unavailable', status=409)
         return preparation.prepare(connection_id=connection_id, profile_id=profile_id, operation_id=operation_id)
+
+    def resolve_launch_selection(self, *, profile_id, harness_id):
+        preparation = getattr(self, 'preparation', None)
+        if preparation is None:
+            raise ProfileError('APPLICATION_PORT_ABSENT', 'Profile launch preparation unavailable', status=409)
+        return preparation.resolve_launch_selection(profile_id=profile_id, harness_id=harness_id)
 
     def require_registered(self, ref):
         """Identity-only fence: recording a selection must not query a busy agent."""

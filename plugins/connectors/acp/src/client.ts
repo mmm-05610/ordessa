@@ -43,6 +43,7 @@ const KNOWN_SESSION_UPDATES = new Set([
 interface Channel {
   readonly projectId: string
   readonly sessionScopeId?: string
+  readonly configurationProfileId?: string
   readonly binding: AgentWorkspaceInfo
   readonly handle: AcpChannelHandle
   conn: acp.ClientSideConnection
@@ -75,7 +76,7 @@ export class AcpClient implements AgentClient {
   private readonly channels = new Map<string, Channel>()
   private readonly opening = new Map<string, Promise<Channel>>()
   private readonly firstSendRequests = new Set<string>()
-  private readonly preparedSessions = new Map<string, { workspaceId: string; promise: Promise<AgentNativeSessionOwner>; channel?: Channel; retryable?: boolean; preparationRequired: boolean }>()
+  private readonly preparedSessions = new Map<string, { workspaceId: string; configurationProfileId?: string; promise: Promise<AgentNativeSessionOwner>; channel?: Channel; retryable?: boolean; preparationRequired: boolean }>()
   private readonly abandonedPreparations = new Set<string>()
   private readonly historyScopes = new Map<string, string>()
   /** Handles acquired but not yet registered as channels: between `acquireChannel` returning and
@@ -228,19 +229,23 @@ export class AcpClient implements AgentClient {
 
   // ——— channel lifecycle ————————————————————————————————————————————————
 
-  private async ensureChannel(projectId: string, sessionScopeId?: string): Promise<Channel> {
+  private async ensureChannel(projectId: string, sessionScopeId?: string, configurationProfileId?: string): Promise<Channel> {
     this.assertLive()
     // Only history/load may explicitly reuse a project's existing channel. New sessions always
     // supply a fresh scope; connection identity, never project identity, owns their live routes.
     const live = [...this.channels.values()].find(channel => channel.projectId === projectId
       && !channel.commandsDown && (sessionScopeId === undefined || channel.sessionScopeId === sessionScopeId))
-    if (live) return live
+    if (live) {
+      if (configurationProfileId !== undefined && live.configurationProfileId !== configurationProfileId)
+        throw new Error('ACP acquisition configuration Profile changed')
+      return live
+    }
     const openingKey = JSON.stringify([projectId, sessionScopeId ?? null])
     const pending = this.opening.get(openingKey)
     if (pending) return await pending
     // The opening entry is cleared on success AND failure: a failed task left in the map would pin
     // the project to the old error forever, so a retry could never recover a dropped handshake.
-    const task = this.acquireAndInitialize(projectId, sessionScopeId)
+    const task = this.acquireAndInitialize(projectId, sessionScopeId, configurationProfileId)
       // The entry stays until the task itself settles — after dispose() it is the drain
       // attestation's witness that this attempt can still stand a late handle down.
       .finally(() => {
@@ -309,12 +314,12 @@ export class AcpClient implements AgentClient {
    * every cwd this client sends (reviewed seam: `handle.binding.normalizedPath` is the
    * `session/new` cwd). `openProject` runs first (an unoffered project throws `project-invalid`
    * before any channel or wire traffic), then exactly one `initialize`. */
-  private async acquireAndInitialize(projectId: string, sessionScopeId?: string): Promise<Channel> {
+  private async acquireAndInitialize(projectId: string, sessionScopeId?: string, configurationProfileId?: string): Promise<Channel> {
     const opened = await this.spec.openProject(projectId)
     if (opened.id !== projectId) throw new Error('ACP project binding changed')
     if (!this.projects.some(item => item.id === opened.id)) this.projects.push(opened)
     this.assertLive()
-    const handle = await this.spec.acquireChannel(opened.id, sessionScopeId)
+    const handle = await this.spec.acquireChannel(opened.id, sessionScopeId, configurationProfileId)
     if (this.channels.has(handle.connectionId)
         || [...this.unownedHandles].some(item => item.connectionId === handle.connectionId))
       throw new Error('ACP channel acquisition reused a live connection identity')
@@ -334,7 +339,7 @@ export class AcpClient implements AgentClient {
       throw new Error('ACP connection disposed')
     }
     const channel: Channel = {
-      projectId: binding.id, sessionScopeId, binding, handle,
+      projectId: binding.id, sessionScopeId, configurationProfileId, binding, handle,
       conn: undefined as unknown as acp.ClientSideConnection,
       capabilities: {}, nativeToKey: new Map(), commandsDown: false,
       creatingSessions: 0, pendingCommands: new Map(),
@@ -553,9 +558,16 @@ export class AcpClient implements AgentClient {
     this.assertLive()
     if (this.abandonedPreparations.has(attemptId)) throw new Error('ACP preparation abandoned')
     if (!attemptId || !workspaceId) throw new Error('ACP preparation identity required')
+    const configurationProfileId = preparation?.configurationProfileId
+    if (configurationProfileId !== undefined && (typeof configurationProfileId !== 'string'
+        || !configurationProfileId || configurationProfileId.trim() !== configurationProfileId
+        || configurationProfileId.length > 128 || /[\u0000-\u001f\u007f]/u.test(configurationProfileId)))
+      throw new Error('ACP preparation configuration Profile invalid')
     const existing = this.preparedSessions.get(attemptId)
     if (existing) {
       if (existing.workspaceId !== workspaceId) throw new Error('ACP preparation project changed')
+      if (existing.configurationProfileId !== configurationProfileId)
+        throw new Error('ACP preparation configuration Profile changed')
       if (!existing.retryable) return existing.promise.then(owner => {
         if (this.abandonedPreparations.has(attemptId)) throw new Error('ACP preparation abandoned')
         return this.nativeSessionOwner(owner.sessionId)
@@ -563,13 +575,13 @@ export class AcpClient implements AgentClient {
       if (existing.preparationRequired && !preparation) throw new Error('ACP preparation hook required for retained attempt')
     }
     if (!existing && this.preparedSessions.size >= 4096) throw new Error('ACP preparation capacity exhausted')
-    const record = existing ?? { workspaceId, promise: undefined! as Promise<AgentNativeSessionOwner>, channel: undefined as Channel | undefined, retryable: false, preparationRequired: false }
+    const record = existing ?? { workspaceId, configurationProfileId, promise: undefined! as Promise<AgentNativeSessionOwner>, channel: undefined as Channel | undefined, retryable: false, preparationRequired: false }
     record.preparationRequired ||= preparation !== undefined
     record.retryable = false
     const promise = (async () => {
       let channel: Channel
       try {
-        channel = record.channel ?? await this.ensureChannel(workspaceId, attemptId)
+        channel = record.channel ?? await this.ensureChannel(workspaceId, attemptId, configurationProfileId)
         record.channel = channel
         this.assertLive()
         if (channel.commandsDown || this.abandonedPreparations.has(attemptId)) throw new Error('ACP preparation channel unavailable')

@@ -420,6 +420,7 @@ def build_runtime_from_native_adapter(
     secret_store: SecretStore | None = None,
     extra_server_plugins: tuple = (),
     additional_adapters: tuple = (),
+    channel_selection_resolver=None,
 ) -> ServerRuntime:
     """Compose current-user ACP Agents in an explicitly native Server.
 
@@ -603,9 +604,18 @@ def build_runtime_from_native_adapter(
     # own close-with-OS-confirmation contract.  Nothing here spawns an Agent
     # directly. The registry, its wire methods and the stream route belong to
     # the Harness server facet; this composition only supplies the launch.
-    def launch_channel_transport(*, harness_id: str, cwd: str, on_line, on_exit):
+    def launch_channel_transport(*, harness_id: str, cwd: str, on_line, on_exit, configuration_profile_id=None):
         if harness_id not in adapters:
             raise RuntimeError("NATIVE_HARNESS_INVALID")
+        selection = None
+        if configuration_profile_id is not None:
+            if not callable(channel_selection_resolver):
+                raise RuntimeError('NATIVE_CONFIGURATION_SELECTION_UNAVAILABLE')
+            selection = channel_selection_resolver(profile_id=configuration_profile_id, harness_id=harness_id)
+            if (not isinstance(selection, dict) or set(selection) != {'snapshot', 'transportOptions'}
+                    or not isinstance(selection['snapshot'], dict) or not isinstance(selection['transportOptions'], dict)
+                    or set(selection['transportOptions']) - {'codex_account_directory'}):
+                raise RuntimeError('NATIVE_CONFIGURATION_SELECTION_INVALID')
         environment = dict(os.environ)
         environment.pop("AGENTBOX_SIDECAR_ISOLATED", None)
         environment.pop("AGENTBOX_ACCESS_TEST_MODE", None)
@@ -620,15 +630,19 @@ def build_runtime_from_native_adapter(
             from ordessa_harness.server_acp.instance_directory import allocate_instance_directory
             instance_options = {"native_profile_bridge": True,
                                 "instance_directory": str(allocate_instance_directory(root))}
-        return AccessEntryTransport(
+        transport = AccessEntryTransport(
             node=node, entry=str(access_entry), harness_id=harness_id,
             cwd=cwd, adapter=adapters[harness_id], on_line=on_line, on_exit=on_exit,
             environment=environment,
+            **(selection['transportOptions'] if selection is not None else {}),
             **instance_options,
             **({"controlled_test_peer": True} if controlled_test_peer else {}),
             **({"installed_artifact_root": artifact_roots[harness_id]}
                if artifact_roots[harness_id] is not None else {}),
         ).start()
+        if selection is not None:
+            transport.configuration_profile_snapshot = dict(selection['snapshot'])
+        return transport
 
     compat = ServerCompatPlugin(
         harnesses=registry, execution_factory=factory,

@@ -114,9 +114,10 @@ export function hostChannelSpec(adapterId: string, bridge: AgentNativeBridge, in
     // validates the path); a Server without the capability refuses the frame honestly, and the UI
     // keeps the entry disabled.
     addProject: async path => parseBinding(await call('acp/addProject', { instanceId: entry.serverInstanceId, path }), 'added'),
-    async acquireChannel(projectId, sessionScopeId) {
+    async acquireChannel(projectId, sessionScopeId, configurationProfileId) {
       const opened = VALUE(await call('acp/channel/open', { instanceId: entry.serverInstanceId, projectId,
-        ...(sessionScopeId === undefined ? {} : { sessionScopeId }) }))
+        ...(sessionScopeId === undefined ? {} : { sessionScopeId }),
+        ...(configurationProfileId === undefined ? {} : { configurationProfileId }) }))
       const connectionId = STR(opened?.connectionId)
       if (!connectionId) throw new Error(`ACP channel open returned no connection id for project ${projectId}`)
       const binding = parseBinding(opened?.binding, projectId)

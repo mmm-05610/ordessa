@@ -25,6 +25,17 @@ def initial_model_params(brand, payload, operation_id, *, credential=None, model
     if (not isinstance(payload, Mapping) or payload.get('protocol') != protocol
             or payload.get('brandFields') not in (None, {}) or payload.get('requestParams') not in (None, {})):
         raise ValueError('Unsupported initial model dialect')
+    if payload.get('authentication') == 'managed-account':
+        model = payload.get('model')
+        if (brand != 'codex' or payload.get('provider') != 'openai'
+                or payload.get('credentialRef') is not None or credential is not None
+                or payload.get('endpoint') is not None or type(model) is not str or not model
+                or model.strip() != model or len(model) > 4096 or any(ord(c) < 32 or ord(c) == 127 for c in model)):
+            raise ValueError('Unsupported managed account initial model')
+        return {'operationId': operation_id, 'model': model, 'provider': {
+            'providerId': 'openai', 'authentication': 'managed-account'}}
+    if payload.get('authentication') is not None:
+        raise ValueError('Unsupported initial authentication mode')
     for key in ('model', 'provider', 'endpoint'):
         value = payload.get(key)
         if (type(value) is not str or not value or value.strip() != value or len(value) > 4096

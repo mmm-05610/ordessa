@@ -1,0 +1,39 @@
+{
+  "status": "CANDIDATE_VERIFIED_NOT_INSTALLED",
+  "scope": "Actual Codex ACP authentication and initial model readback; not Desktop or Profile C4 end-to-end",
+  "asset": {
+    "treeDigest": "sha256:1ee5358b82e4727051158eaf61ebe5ae12ec1a4e55105e8acb5ffd5682837dd5",
+    "sourceLockDigest": "sha256:a59ef37f56d037a4a7cf73ae9927f2957b56a728b71101b193e5bcab73364081",
+    "entries": 536,
+    "bytes": 320854754
+  },
+  "actualProbe": {
+    "officialAcpLoggedIn": true,
+    "apiAcpHasNoAccount": true,
+    "sessionAccountMutationRejected": true,
+    "accountUnchanged": true,
+    "initialConfigurationObserved": true,
+    "model": "gpt-5.5",
+    "modelCalls": 0,
+    "sessionCreations": 1,
+    "ownProcessesClosed": true
+  },
+  "controlledVerification": {
+    "productsServer": 140,
+    "harnessFilesInSeparateProcesses": 148,
+    "profilePreparationAndResolverAndChannelSelection": 60,
+    "acpClient": 63,
+    "nativeProfileNode": 40,
+    "typecheckExit": 0,
+    "buildExit": 0,
+    "enabledExtensions": 18,
+    "notDisjointCounts": true,
+    "combinedPythonRun": "Not green: mixed suite reported database initialization and tmp fixture errors; separate-file executions passed. Not asserted as pre-existing without baseline reproduction."
+  },
+  "remaining": [
+    "root-managed installation and product selection",
+    "actual managed Profile canonical binding and C4",
+    "Desktop official authentication selection and real chat",
+    "cross-provider restart/resume and full regression"
+  ]
+}

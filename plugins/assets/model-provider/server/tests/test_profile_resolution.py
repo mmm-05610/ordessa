@@ -43,6 +43,18 @@ def test_real_catalogue_projects_valid_c2_payload_and_separate_fence(catalog):
     assert "configVersion" not in result.payload
 
 
+def test_explicit_managed_account_choice_has_no_api_endpoint_or_credential(catalog):
+    choice = saved(catalog, provider='openai', configuration=[{'controlId': 'authentication', 'value': 'managed-account'}], endpoints={})
+    result = ProfileModelChoiceResolver(catalog, payload_schema=choice_payload_schema()).resolve(choice, harness_id='pi')
+    # Resource resolution is neutral. Harness, not this catalogue, decides
+    # whether a particular brand can actually apply this mode.
+    assert result.payload['authentication'] == 'managed-account'
+    assert result.payload['endpoint'] is None and result.payload['credentialRef'] is None
+def test_managed_account_never_accepts_an_api_endpoint(catalog):
+    bad = saved(catalog, configuration=[{'controlId': 'authentication', 'value': 'managed-account'}])
+    refused('PROFILE_CONFIGURATION_INVALID', lambda: resolve(catalog, bad))
+
+
 def test_business_resolution_needs_no_native_availability_hints(catalog):
     choice = saved(catalog)
     result = ProfileModelChoiceResolver(catalog, payload_schema=choice_payload_schema()).resolve(

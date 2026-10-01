@@ -4,7 +4,17 @@
 所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
 未合并、未 push、未启停既有用户服务、未重建 deb。用户授权的 Pi/Claude 后端真实聊天已通过；Codex 官方聊天尚未验证。
 
-## 最新验证（2026-10-01，Codex 原生账号接缝）
+## 最新验证（2026-10-01，Profile 启动前认证选择，候选待安装）
+
+- Chat 将已保存 Profile 引用传到 prepareSession，再进入 `acp.channel.open`；后端产品装配解析当前 Profile/model-provider 配置，由 Harness 选择官方账号或私有 API 实例。客户端不传账号目录、token 或应用证明。启动与首次创建之间 Profile/供应商记录变化会拒绝；同一保留 attempt 不得更换 Profile。
+- model-provider 增加中性的显式 `authentication: managed-account` 配置选择；它不解释品牌差异。Harness 当前只允许 Codex/openai/responses、无 endpoint/credential 的官方路线。官方账号查询与刷新仍全部交给原生 Codex，未实现 OAuth/token 复制。
+- 增强 ACP 新增官方初始模型准备及真实 thread 路由回读；官方实例拒绝会话客户端的认证、供应商改写和注销入口，API 实例不使用官方账号目录。安装清单显式声明 managedAccountScope，旧资产不得冒充该能力。
+- 最新完整摘要 `sha256:1ee5358b82e4727051158eaf61ebe5ae12ec1a4e55105e8acb5ffd5682837dd5`。实际候选 ACP 同时验证官方已登录/API 未登录，官方 gpt-5.5 原生创建与配置回读成功，session/new=1、prompt/modelCalls=0；自有进程已关闭。**这是适配器实际证据，尚不是生产 Profile/C4 或 Desktop 实际发送验收。**
+- 定向验证：products/server **140P**；Harness 相关文件逐文件独立 Python 进程合计 **148P**；Profile preparation/model resolver/channel selection **60P**（与前述有重叠，不累加）；ACP **63P**；native-profile Node **40P**；typecheck/build exit 0，18 扩展。组合 Python 跑法曾报 DB 初始化/临时夹具错误，拆分后通过；未复现旧基线前不擅称继承红或全套通过。沙箱偶发 /tmp 挂载配额错误，只读诊断显示磁盘尚有空间，未删除用户临时文件。
+- 锁定候选仍在开发树，旧 /opt 资产未变。已生成加法式安装脚本 `/tmp/ordessa-install-codex-managed-profile-verified.sh`，目的地 `/opt/ordessa/harnesses/profile-codex-managed`，不覆盖旧资产或登录。需用户执行 sudo 后继续已安装资产与实际产品链验证。当前还没有把默认产品切到不存在的新安装根。
+- 证据：`evidence/codex-managed-profile-20261001.json`。固定 TODO 第 6 项继续推进但未完成，第 7 项未完成；不新增阶段，不更改 main/host，不动他属截图。
+
+## 前次验证（2026-10-01，Codex 原生账号接缝）
 
 - Ordessa 专用浏览器登录成功，独立 CLI 状态及原生 app-server account/read 均确认已登录，使用系统密钥环，不读取/复制用户原有全局登录。
 - 新增 Harness 内 CodexManagedAccount：仅 initialize/account/read，原生负责续期；不导出 token、不实现 OAuth、不复制凭据、不自动弹浏览器。13 个新测试；连同 Codex 既有定向与产品 Server 测试 **168/168**，入口隔离 Node **4/4**。实际专用账号经新封装 refresh=True 查询 exit 0，modelCalls=0。该封装尚未加入默认产品工厂，不报会话认证已接入。

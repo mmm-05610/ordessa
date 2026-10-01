@@ -245,6 +245,13 @@ class ServerProductComposition:
         from ordessa_harness.configuration.model.catalog import ModelConfigurationCatalog
 
         self._assemble_legacy_chain()
+        def channel_selection_resolver(*, profile_id, harness_id):
+            # Resolve the current activation round; never retain a stopped port.
+            sessions = runtime.plugin_host.provided_port('profile.native-sessions')
+            if sessions is None:
+                from ordessa_profile.errors import ProfileError
+                raise ProfileError('APPLICATION_PORT_ABSENT', 'Profile launch service unavailable', status=409)
+            return sessions.resolve_launch_selection(profile_id=profile_id, harness_id=harness_id)
         runtime = build_runtime_from_native_adapter(
             data_root, plugin_root=plugin_root, harness_id=harness_id,
             adapter_command=adapter_command, adapter_args=adapter_args,
@@ -254,6 +261,7 @@ class ServerProductComposition:
             native_profile_harnesses=native_profile_harnesses,
             additional_adapters=additional_adapters,
             secret_store=self._native_secret_store(data_root),
+            channel_selection_resolver=channel_selection_resolver,
         )
         pi_artifact_root = installed_artifact_root if harness_id == "pi" else next(
             (binding.get("installedArtifactRoot", installed_artifact_root)

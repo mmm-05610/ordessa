@@ -1,4 +1,4 @@
-// Candidate ACP authentication boundary only; no session/new or inference.
+// Candidate ACP boundary; optional empty native creation, never inference.
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { mkdtempSync, mkdirSync, rmSync } from 'node:fs'
@@ -6,7 +6,9 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { createInterface } from 'node:readline'
 
-const allowed = new Set(['initialize', 'authentication/status', 'authenticate', 'logout', 'authentication/logout'])
+const allowed = new Set(['initialize', 'authentication/status', 'authenticate', 'logout', 'authentication/logout',
+  'providers/set', 'providers/disable', '_ordessa/channel/configuration/prepare',
+  '_ordessa/channel/configuration/operation', 'session/new', 'session/close'])
 class Peer {
   constructor(entry, env) {
     this.child = spawn(process.execPath, [entry], { env, detached: true, stdio: ['pipe', 'pipe', 'ignore'] })
@@ -50,7 +52,8 @@ class Peer {
   }
 }
 
-const [entry, account] = process.argv.slice(2)
+const [entry, account, mode] = process.argv.slice(2)
+if (mode !== undefined && mode !== '--initial-no-model') throw new Error('Unknown probe mode')
 if (!entry || !account || !path.isAbsolute(entry) || !path.isAbsolute(account)) throw new Error('Explicit paths required')
 const root = mkdtempSync(path.join(tmpdir(), 'ordessa-managed-acp-'))
 let official, api
@@ -76,10 +79,30 @@ try {
     _meta: { 'api-key': { apiKey: 'synthetic-never-applied' } } })).error)
   assert.ok((await official.request('logout', {})).error)
   assert.ok((await official.request('authentication/logout', {})).error)
+  assert.ok((await official.request('providers/set', {providerId: 'custom-gateway', apiType: 'openai',
+    baseUrl: 'http://127.0.0.1:1'})).error)
+  assert.ok((await official.request('providers/disable', {providerId: 'custom-gateway'})).error)
+  let initialConfigurationObserved = false
+  if (mode === '--initial-no-model') {
+    const operationId = 'create:managed-boundary-probe'
+    const prepared = await official.request('_ordessa/channel/configuration/prepare', {
+      operationId, provider: {providerId: 'openai', authentication: 'managed-account'}, model: 'gpt-5.5'})
+    assert.equal(prepared.result?.state, 'prepared', 'Official preparation failed')
+    const project = path.join(root, 'project'); mkdirSync(project, {mode: 0o700})
+    const created = await official.request('session/new', {cwd: project, mcpServers: []})
+    assert.ok(!created.error && created.result?.sessionId, 'Official native creation failed')
+    const observed = await official.request('_ordessa/channel/configuration/operation', {operationId})
+    assert.equal(observed.result?.state, 'observed', 'Official configuration readback failed')
+    const selected = observed.result.after.configOptions.find(option => option.id === 'model')
+    assert.equal(selected.currentValue, 'gpt-5.5')
+    assert.ok(!(await official.request('session/close', {sessionId: created.result.sessionId})).error)
+    initialConfigurationObserved = true
+  }
   const after = await official.request('authentication/status', {})
   assert.deepEqual(after.result, before.result)
   process.stdout.write(JSON.stringify({ officialAcpLoggedIn: true, apiAcpHasNoAccount: true,
-    sessionAccountMutationRejected: true, accountUnchanged: true, modelCalls: 0, sessionCreations: 0 }) + '\n')
+    sessionAccountMutationRejected: true, accountUnchanged: true, initialConfigurationObserved,
+    modelCalls: 0, sessionCreations: initialConfigurationObserved ? 1 : 0 }) + '\n')
 } finally {
   await Promise.all([official?.close(), api?.close()])
   rmSync(root, { recursive: true, force: true })

@@ -116,6 +116,7 @@ def choice_payload_schema() -> ValueSchema:
             ("endpoint", ValueSchema("string", nullable=True)),
             ("protocol", ValueSchema("string")),
             ("credentialRef", ValueSchema("string", nullable=True)),
+            ("authentication", ValueSchema("string")),
             # Brand-specific hint fields (provider_in_instance, before_provider,
             # endpoint_changed...) are open-ended by design.
             ("brandFields", ValueSchema("object", nullable=True, additional_properties=True)),

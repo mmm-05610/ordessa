@@ -217,6 +217,9 @@ export interface AgentNativeCreationContext {
   readonly workspaceId: string
 }
 export interface AgentNativePreparation {
+  /** Saved configuration reference, resolved by the backend BEFORE launch.
+   * Never an account path, credential, native config or authentication claim. */
+  readonly configurationProfileId?: string
   /** Rejection prevents session/new and prompt. Retries retain the same
    * attempt/channel; the backend must query/idempotently reuse its operation. */
   readonly beforeCreate: (context: AgentNativeCreationContext) => Promise<void>
