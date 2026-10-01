@@ -272,7 +272,7 @@ UI-preview 或'14 插件挂载成功'代替实际生产发送"。因此除 D04 �
 | F03 | PASS | 受影响 Python 回归实际运行；**零回归用差分证明**：`plugins/harness/tests` 的 109 条 FAILED/ERROR 行与 stash 基线 **diff 为空**；`model-validation-42d.test.mjs` 失败 ID `{1,2,4}` 前后完全一致 |
 | F04 | PASS | 逐 ID + 原因对比，零新增未解释红，原红不删不 xfail。**环境差异如实登记**：`.venv` 量得 37F/675P/72E，`.cleanup-evidence/product-integration-venv` 量得 3F/781P —— 同代码不同闭包，两个数都记，不挑一个充证明 |
 | F05 | **PASS（修掉一处假绿后才成立）** | A03/A04 缺陷均有缺席反例 + 注入命中并做过变异验证；Profile 的 12 条注入现在**逐条给出真实断言失败数**（例：`overlay_writes_profile` → 10 failed / 1 passed）。**两处如实降级**：(1) `assertProcessGone` 的复用/存活重排测试**并不判别**（还原实现后 28 pass / 0 fail），重排保留但不单独钉住；(2) C10 的"零重复 session/new"在 L1 **从未被计数**，只断言了 Profile 侧事实 |
-| F06 | **FAIL** | 候选**未冻结**：本轮仍改了 `codex-process.mjs`、`bridge.mjs`、builder 与根 helper。deb 重建因此对着移动靶。改一个文件重跑受影响门已做，但"冻结后不动"这条本轮不成立 |
+| F06 | **PASS（本轮达成冻结）** | 候选冻结于提交 **`24bd6fb683`**（分支 `nightly/021-harness-rollout-opencode-hermes-dsh-kilo`）。冻结后**未再改任何源码或资产**，只写文档与台账。冻结后在最终候选上**重跑全部受影响门，全绿**：native-profile **82/82**、`plugins/profile`+`model-provider` **473 passed**、harness configuration/restoration/pi **247 passed**、`plugins/assets/skills` **433 passed**、`npm run test:packaging` **45 pass / 0 fail / 12 suites**。deb 候选仍是 `e31e270c…`（其源码输入在上一次提交 `79fa94b107` 后未变，故无需重建） |
 | F07 | PASS | 58 个待提交文件扫凭据模式 → `False`；本轮 A 组探针证据另做自检 → 无 home 路径、无 account/token 字样 |
 | F08 | PASS | 本轮自建的进程、临时 CODEX_HOME、探针脚本全部清理；**未删任何用户账户/历史**。`.cleanup-evidence/` 保留为证据（未跟踪） |
 | F09 | PASS | 他属 `docs/ui-preview/01-empty.png`、根 `main`、相邻 worktree、旧已安装资产全程未动，提交用显式 pathspec |
@@ -377,8 +377,8 @@ bash /home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout/.cleanup
 
 **未做而非做不完：** A22 仓内 `execution` 零命中、无接缝可验，按合同只登记不设计；C22 已做但判 FAIL
 （阻塞是 L3/L4 缺席，不是判断没做）；**D 组的 L4 UI 证据本轮已由 Xvfb 跑出（见上表）**，但合同要求的
-"绑定实际产品版本/asset/session"仍需装机候选，故 D24 仍 FAIL；S02/S03 未跑；F06 候选未冻结；
-F11 未覆盖整条 diff。
+"绑定实际产品版本/asset/session"仍需装机候选，故 D24 仍 FAIL；S02 记 PARTIAL、S03 记 FAIL（理由见各行）；
+**F06 候选已冻结于 `24bd6fb683` 并重跑全门全绿**；F11 未覆盖整条 diff。
 
 **本轮修掉的真实缺陷（全部有复现与复验）：**
 
