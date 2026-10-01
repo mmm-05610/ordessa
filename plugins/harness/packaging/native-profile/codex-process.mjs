@@ -331,10 +331,19 @@ function assertUsableRollout(filename) {
     // still-being-written rollout rejected as "not usable", which broke the
     // same-session Profile/model replacement on any realistic long session.
     if (size > buffer.length || !text.endsWith('\n')) lines.pop()
+    // Tolerating a truncated tail must not degrade into tolerating a file that
+    // holds no usable record at all. Popping the tail can empty the window -- a
+    // >64 KB file with no newline anywhere inside it yields zero lines to check,
+    // and the loop below would then pass it as "usable" while having validated
+    // nothing. The product caller resumes an existing thread, so a real rollout
+    // always has at least one complete record in the window; demand one.
+    let records = 0
     for (const line of lines) {
       if (!line.trim()) continue
       try { JSON.parse(line) } catch { unusable() }
+      records += 1
     }
+    if (records === 0) unusable()
   } catch (error) {
     if (String(error?.message) === 'Native history rollout is not usable') throw error
     unusable()

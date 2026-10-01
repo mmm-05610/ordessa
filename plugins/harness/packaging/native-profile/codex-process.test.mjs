@@ -518,6 +518,12 @@ test('a rollout larger than the read window and one still being written both bin
     // Tolerating a truncated tail must not tolerate a damaged complete record.
     writeFileSync(rollout, '{"type":"a"}\n{oops\n{"type":"c"}\n')
     await assert.rejects(capture(), /usable/)
+
+    // ...and it must not tolerate a file that holds no complete record at all.
+    // Popping the tail can empty the window, so without an explicit "at least
+    // one record" floor this passes having validated nothing.
+    writeFileSync(rollout, 'x'.repeat(70000))
+    await assert.rejects(capture(), /usable/)
   } finally { rmSync(root, { recursive: true, force: true }) }
 })
 
