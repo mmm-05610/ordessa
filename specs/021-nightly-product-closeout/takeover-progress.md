@@ -4,7 +4,16 @@
 所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
 未合并、未 push、未启停既有用户服务、未重建 deb。三品牌后端真实聊天已通过；Codex Desktop 已通过 Profile 首发与同会话下一轮切换，两条真实回复。完整三品牌 UI/发行验收仍未完成。
 
-## 最新验证（2026-10-01，Pi 真实跨供应商通过；配置 DNS 职责收口）
+## 最新阻塞（2026-10-01，Codex 官方 → API 历史验收失败；原生生命周期需收口）
+
+- 按既定范围扩展现有 managed-profile 探针：同一产品运行三条自有会话（官方 A、官方 B、合成 API 隔离对照）；官方 A 首轮记住随机标记，再在同 canonical/native session 上应用 Go API Profile 并要求第二轮回忆。检查独立 B 配置不变、恢复效果恰一次、原生 generation 换代、两次 C4 与最终清理。仅两个用户 prompt，不读取/打印全局登录或 Key。
+- 第一轮直接公网真实测试 **失败**：官方首轮和第二轮均完成文本回复、下一轮 Profile 回执存在，但第二轮未包含第一轮随机标记。第二轮实际目的地尚未证明，不能称 Go 聊天成功，更不能把可回复记作历史保留。自有通道、导入 Key 条目及 runtime 已清理。日志 `.cleanup-evidence/codex-official-go-history.log`。
+- 一次受限观测也 **失败**：固定 Go 上游透明 relay，只记录出站请求是否包含首轮测试标记、是否带 previous_response_id、input 数量；不改请求体/模型/认证头，不存正文。日志没有观察到固定 Go 转发，第二轮再次未包含标记；不是 Unknown 自动重放，而是独立新测试。探针随后强化为第二轮前检查代次/另一官方实例/恰一次恢复，以及成功时必须证明实际 Go 请求携带历史。缺席/授权/Key 范围 5 条反例通过，products/server 回归 166P，exit 0。尚未证明失败的唯一根因，不伪称已经定位了全部原因。
+- 确认一项原生生命周期缺陷：锁定 ACP closeSession 仅 thread/unsubscribe；原生 Codex 0.147.0 的官方文档明确最后一个订阅移除后默认 30 分钟才卸载。其 thread_processor.rs 对已运行 thread/resume 忽略 config overrides。因此当前 close→resume 不是可靠的进程重启，也不能以请求参数捕获替代实际新路由证据。源码依据：https://raw.githubusercontent.com/openai/codex/rust-v0.147.0/codex-rs/app-server/README.md 与同标签 src/request_processors/thread_processor.rs。
+- 建议的收口路线（待中等规模接缝讨论）：Harness 内真正替换专属于该会话的原生 app-server 子进程，保留 ACP 通道和同 native/canonical 会话身份，使用持久历史显式 resume，并独立确认路由/配置后放行消息。API → managed-account 当前在 restoration.py 明确拒绝，反向路线也需补齐。不能靠等待 30 分钟、改用户全局配置、复制账号 HOME、重放 Unknown 或降低历史断言解决。
+- 本轮继续既有 solo 工作树/Spec Kit 进度账，不为比例化验收另建派单体系；使用 incremental-work-order 的反例、缺席失败与证据分级要求。没有新代理、新工作树或主树改动。
+
+## 前一检查点（2026-10-01，Pi 真实跨供应商通过；配置 DNS 职责收口）
 
 - 用户已安装 owner-bound 修正版。完整后端产品经固定上游透明 relay 验收 exit 0：DeepSeek → Go，两个真实用户 prompt、两次上游 HTTP 200，第二轮准确回忆第一轮随机标记；两轮 Profile 应用回执确认，模型 deepseek-flash → glm-5.3-flash。同 canonical/native owner，provider-register 效果恰一次，restore=0，原生 generation 不变。Pi 自己产生 Go 会话头，中继没有补头或修改请求体。日志 `.cleanup-evidence/pi-native-go-product.log`。这是完整后端产品，不是 Desktop UI 验收。
 - 过程失败保留：修正版首次 relay 运行在 Go 第二轮收到 400；改用真实原生 provider ID opencode-go 后上述完整链通过。Pi 的原生兼容与会话 attribution 根据 provider ID/URL 选择，不能把自定义别名 + localhost 转发等同于原生公网配置。另一次直接公网尝试在保存配置时遭 DNS 地址检查拒绝，零 prompt；不改写为成功。
