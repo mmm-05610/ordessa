@@ -1,100 +1,92 @@
 # Ordessa Nightly Final Report
 
-（2026-09-30 07:5x 冻结。夜间中段会话暂停约 4.5h，wall clock 损失导致 Phase 3+ 未展开；本报告如实记录已达/未达。）
+**2026-10-01，ZCode 主会话收口。** 本报告取代 2026-09-30 那版（那版描述的候选 `418c5cfbee` /
+deb `70be6198…` 已作废，其"Phase 3 未展开"的结论也已被后续多轮推翻）。
+逐 ID 判定见 `takeover-progress.md` 的 **CP-N1** 节；本文件是交回摘要，不重复逐条依据。
+
+## 总判定：PARTIAL —— 不是 COMPLETE_VERIFIED
+
+合同 `overnight-acceptance.md` 共 **117** 个 ID（A24+B14+C22+D24+P16+S5+F12）。
+台账 ID 集合与合同**完全一致、无缺无余**（`comm` 双向差集均为空）。
+
+| 组 | PASS | 总数 | 说明 |
+| --- | --- | --- | --- |
+| A 原生进程/接管 | 21 | 24 | L1+L2 立住；A22 仓内零接缝、A23 等 sudo |
+| B 供应商切换 | 10 | 14 | B10 真实失败、B11 未跑，均卡同一 sudo |
+| C Profile/凭据 | 16 | 22 | C02/C03/C08/C10 缺合同要求的 L3/L4；C22 判 FAIL |
+| D UI 验收 | 16 | 24 | L4 已由 Xvfb 跑出，但绑定装机候选的仍缺（D24 FAIL） |
+| P 发行/装配 | 9 | 16 | **P07/P08 是真实装配缺口**，非仅证据缺口 |
+| S 既有资源 | 1 | 5 | **S03 FAIL（结构性）**；S01 FAIL；S02 PARTIAL |
+| F 最终验证 | 10 | 12 | F11/F12 本轮收口 |
 
 ## Candidate
 
-- Branch: `nightly/021-ordessa-product-closeout`（NIGHTLY_TRUNK）
-- Commit: `418c5cfbee`（产品代码冻结点；其后仅 specs 控制面提交 `6a8d798dc0` + 本报告）
-- Main baseline: `b4bf7cd90951d0fa9bcf3a3de2e66b7db6a62aa0`（main 全程未动、零 push）
-- Deb: `packaging/.out/ordessa_0.1.0_amd64.deb`（205,709,240 B，build-id `20260929-418c5cfbe`，由 trunk `418c5cfbee` 构建）
-- SHA256: `70be619868f70f495d6cfdd225573bc086a9f48697acd8bacf9ea291e33a3d05`
+- Branch: `nightly/021-harness-rollout-opencode-hermes-dsh-kilo`
+- 冻结点: **`24bd6fb683`**（冻结后未再改源码/资产）；台账最新提交 `40d6d33fc5`
+- Main baseline: `b4bf7cd90951`（**全程未动、零 push**）
+- Deb: `packaging/.out/ordessa_0.1.0_amd64.deb`，209,583,328 B
+- SHA256: `e31e270c0e20021c5868a5aad1461654c91a8f37d9b626abe137f9efe4acbac5`
+- Build identity: `0.1.0 20261001-16bf0a204`
 
-## Release
+## 门禁（全部在冻结候选上实跑）
 
-- Build: PASS —— npm ci→build（17 扩展）→build:deb 全绿；桥可复现（`714044a5…`，与 baseline 钉值差异为已登记漂移）
-- Deb: PASS —— deb-contract 45/45；打包完整性抽验过（bundled python 导入闭包、`bin/acp`、desktop entry、图标、update-pubkey）
-- Install: PASS —— Layer① clean-machine-accept（userns chroot 真实 `dpkg -i`）：**CLEAN-MACHINE ACCEPTANCE: PASS / EXIT=0**（`/tmp/re2-layer1.log`）
-- Launch: PASS(带登记债务) —— Layer② 解包树 xvfb 真实启动：`ready:true/settled:true/rootMounted:true`、bundled server `event:listening`、`wireReady:true` + 真 scope（`http://127.0.0.1:34323|server_476b…`）、**17 扩展全部发现、failures:[]**、截图 `evidence-assets/re2-launch.png`（RE2_RESULT JSON 全文见 `/tmp/re2-launch2.log`）
-- Restart: PASS(弱证据) —— 第二次启动用独立 data-root（`/tmp/re2-data2`）成功 listening；同根重启周期未及系统化取证（RE-2 会话被取消）
+| 门 | 结果 |
+| --- | --- |
+| `node --test plugins/harness/packaging/native-profile/*.test.mjs` | **82/82** |
+| `pytest plugins/profile plugins/assets/model-provider` | **473 passed** |
+| `pytest plugins/harness/tests -k configuration/restoration/pi` | **247 passed** |
+| `pytest plugins/assets/skills` | **433 passed** |
+| `npm run test:packaging` | **45 pass / 0 fail / 12 suites** |
+| 根 `npm test`（补齐环境前提） | **38/39 green**；唯一红 `ui-preview` 与 main 逐字节相同、预存在 |
 
-## Core Product
+两次根聚合的差异**全部归因环境前提**：`.venv` 不能 `import ordessa_profile`
+（补 `ORDESSA_WIRE_LIVE_PYTHON` 后 server-bridge **68/68**）；7 个 Electron 门缺
+`ORDESSA_BUNDLED_ROOT` 全红（补后 **6 个 exit 0**）。两个环境的数都留档，不挑好看的那个。
 
-- Project: 未验证（Phase 3 未达）
-- Session: 未验证（Phase 3 未达）
-- Harness A/B: 未验证。已备而未战：pi（本机已装）、opencode（未装）；I-002 native argv 通道被取消未落地
-- Streaming: 未验证
-- Tool Calls: 未验证
-- Permission: 未验证（后端组合+admission 已接线为 SC-1 确认；前端三件套装配未做）
-- Profile: 未验证（W-017：profile-chat 无 default export，启动 alert 已登记）
-- Skill: 部分 —— `ordessa.skills` 已装配并随产品分发；装机激活报 `No provider for: ordessa.wirePort.v1`（B-006）
-- MCP: 部分 —— `ordessa.asset-mcp` 同上；server 侧 `SkillsServerPlugin/McpServerPlugin` 未进默认组合（B-004 未做）
-- Persistence: 部分 —— 装机两根启动成功；应用内 Project/Session 持久化未验证
+## L4 实测（本轮新增）
 
-## Additional Existing Capabilities
+| 探针 | 服务端组合 | 结果 |
+| --- | --- | --- |
+| `probe-native-installed.mjs` | `native_runtime`（开发启动器强制注入） | `ready:true rootMounted:true errors:[]` pages `[Chat, Skills, Sessions]` |
+| `probe-default-installed.mjs`（新增） | `default_plugins`（**安装后 deb 的真实组合**） | `ready:true` 但 `skills.list`/`skills.resolve` **`is not a wire/1 method`** |
 
-- Prompts / Memory / Subagents / Runtime-preferences：server 插件在树、未进默认组合（B-004 待做）
-- Model Provider：桌面扩展已装配（I-001），同 B-006 激活告警
-- Hooks / LSP / Command-templates：未动（020 波 2 / 缺 seam，按计划不属今晚）
-- agent-shell 测试对齐现实（W-019 在分支未收编，见 Cleanup）
+## 本轮定位/修掉的真实缺陷
 
-## Automated Gates
+| # | 缺陷 | 严重度 | 验证 |
+| --- | --- | --- | --- |
+| 1 | `build-deb.mjs` `cpSync` 缺 `verbatimSymlinks`，1049 条解释器符号链接被改写成绝对构建机路径，**装出不能用的 Python** | 发行阻断 | 重建后 worktree 链接 1049 → **0**；解包解释器 `3.12.14` 实跑并导入 `pydantic`/`starlette`/`cryptography` |
+| 2 | `run_counterexamples.sh` 把 `ModuleNotFoundError` 算作"判别成功"，**12/12 假绿** | 验收诚信 | 敌意环境 exit 1 并 `REFUSING`；真实环境 12/12 且每条带真实失败数 |
+| 3 | 发行默认链**不含 Skills、不含 MCP**，而 dev 启动器总注入 native 模式，**掩盖了该缺口** | 真实产品缺陷 | L4 对照实测（见上表）；已登记 known-issues |
+| 4 | `ordessa-asset-op.py` 回执回显候选自述值，发布后不复验 | 验收诚信 | 已加发布前三项全等比对 + 发布后对落地树复验同一钉死 verifier |
 
-- `npm test` 聚合：24/39 绿（RE-1 基线）；失败全部预存在（mcp C-mcp-fe、examples @assistant-ui/react、electron 系=主进程崩溃已修后的陈旧断言、rig 退役 import），零新增未解释
-- server-bridge：**57/57 含 live 真往返**（JSON-RPC 信封修复后真 server 200/400/超时三态）
-- apps/desktop vitest：131/131（含 B-003 三布局、B-005 marker 断言）
-- test:packaging：45/45（含 6 条新 deb-contract 断言）
-- pytest：`-k data_root` 40/40；harness/边界套件守卫绿（pytest 9 passed）
-- typecheck：30 条（较基线 31 净 -1，全部预存在登记）
-- FR-009 平台纯度：5/5（含白名单豁免 `7b8223d38e`，W-027 登记债）
+**两处自我更正已如实记录：** ①P09 的"陈旧产物"结论曾判错，真因是 `cpSync` 缺 `verbatimSymlinks`，
+是**真构建 deb 才复现**的；②台账曾把 T8 记为"本机条件不具备"，实为把 `LockedHint=yes`
+（会话状态）误当能力缺失，Xvfb 一直在。另更正台账自身算术：曾写"130 个 ID"，实为 **117**。
 
-## Checkpoints
+## 阻塞与待裁定（**全部需用户动作，我一律未自行决定**）
 
-C0 ✓（控制面）→ **C1 ✓**（deb builds，`aa3918092c`）→ **C2 ✓(带债)**（install PASS + installed launch ready，deb `70be6198…`，产品冻结点 `418c5cfbee`）→ C3–C6 未达 → C-MC1 ✗ → C-FINAL（本报告 + 本 deb）
+**一条命令、一次口令**（解锁 T5.3/T5.4/T7/P05/P13/A23 + 部署修好的发布器 + 装机做 L5）：
 
-## P0 Remaining
+```
+bash /home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout/.cleanup-evidence/publish-fixed-codex-managed.sh
+```
 
-无（B-001/002/003/005 全部关闭，均有 RV PASS + 组合门证据）
+**五项裁定：**
 
-## P1 Remaining
+1. **dsh/kilo 信任根入口形状** —— 钉死的 `native-artifact-policy.mjs` 只认
+   `node_modules/<pkg>/dist/{index.js|ordessa-profile.mjs}`，而 dsh/kilo 是 bin-only CLI 包。
+   建议 (a) 增加镜像 codex `native{entrypoint}` 的**钉死可执行路径变体**；(b) 改为 manifest 声明 + 只校验形状。
+   **当前后果：这两个品牌的资产无法安装，阻塞 rollout。**
+2. **kilo 产物内含 `bin/bwrap`**（112664 B，static-pie stripped ELF），`bin/kilo` 并不引用它 —— 发行安全面裁定。
+3. **Python 闭包锁文件零 `--hash`** —— P01/P04 的"锁漂移"反例对 Python 侧是否必须真正成立。
+4. **P08（deb 零品牌 runtime）/ D04（model selector 不在冻结的 chat-api 合同内、该包缺 `manifest.json`/`build.mjs`、不在 `extensions.json`）** —— 处置方式。
+5. **发行默认链是否装配 Skills/MCP** —— 把 `ProductSkillsPlugin` 加进 `default_plugins` 会撞上
+   `products/server/tests/test_q5_first_stage.py:30-34` 钉死的 `EXPECTED_PLUGIN_IDS`，属架构裁定。
+   **该断言未被放宽。**
 
-- **B-006（新，P1）**：装机模式资产扩展激活告警仍在（profile-chat W-017 + agent-server/acp no-origin ×2 + skills/asset-mcp/model-provider `No provider for: ordessa.wirePort.v1` ×3）。事实：`wireReady:true` 且 scope 已就位，告警仍现 → 判定为"扩展激活时序早于 wire 事实/无重试"的宿主装配时序问题。证据：RE2_RESULT alerts（装机、非 dev 特有）
-- I-002（native harness argv 通道）：agent 被取消未落地 → C3 真实 Harness E2E 无启动通道
-- B-004（server 组合增补 skills/mcp/prompts/memory/subagents/runtime-preferences）：未开工
-- permissions 前端三件套装配 + chat 渲染出口（SC-1 §2）：未开工
+## 未做而非做不完
 
-## P2/P3 Remaining
-
-W-012/013/014(已修)/015/017/021/022-026/028/029 详见 ledger；多数为 backlog/收口批量
-
-## External Blockers
-
-- 会话暂停 ~4.5h（wall clock 03:10→07:50），Phase 3+（真实 Harness E2E/Profile/Skill/MCP 运行时验证）时间窗口被吞
-- sudo 不可用（已按 D-021-6 三层策略绕过，Layer①② 均取证）
-- DeepSeek E2E key 已验证可用（HTTP 200）但未消耗——真实模型链路未进入
-
-## Architecture Improvements Landed
-
-- HttpWirePort 对齐 server JSON-RPC wire/1（修掉"每调必 400"的隐性断链）+ live 覆盖
-- 数据根"创建即立契"所有权模型（python+宿主双侧）
-- deb server 产品闭包 16 包（AST 推导 + 独立复核）+ `/opt/ordessa/harnesses` landing + pythonBin 修复
-- 装机/dev 双布局统一解析（`resolveProductLayout`）
-- EA-1 裁决入档 D-021-7（wire seam 复用 C-03；native 启动桌面 argv 原则）
-
-## Architecture Debt Deferred
-
-W-027（FR-009 白名单）、sandbox 拒绝码 server 侧丢失、`Accepted` 非对象结果语义、C-03 冻结文本勘误、server 请求级 principal 注入、多 harness launch 描述符终态、020 波 2 搬家 epic
-
-## Temporary Branch/Worktree Cleanup
-
-- 已删：b001/b003/b002/b005/i001 五个 task branch+worktree（成果均已 cherry-pick 入 trunk）
-- **保留 1 个例外**：`nightly/021-w019-agent-shell` @ worktree `worktree/tasks/w019-agent-shell`，commit `2b050e2467`（agent-shell 断言对齐，worker 自证 0/0×2+破坏性自检红）——RV-4 未及派出即冻结；按"不删未审成果"原则保留待白天 review，未收编进 candidate
-- I-002 / RE-2 两个 agent 在会话恢复时被取消；RE-2 部分证据已抢救入档（E-P2-5）
-
-## Final Verdict
-
-MORNING_CANDIDATE = NO
-
-- Best Green Checkpoint: **C2**（trunk `418c5cfbee`，deb `70be619868f70f495d6cfdd225573bc086a9f48697acd8bacf9ea291e33a3d05`）：可构建、可打包、可真实安装（chroot dpkg -i PASS）、可启动（17 扩展发现、bundled server listening、wire live）
-- Missing Requirements: C3–C6 全链（真实 Harness E2E/streaming/tool call/approval/Profile/Skill/MCP 运行时验证）未进入；B-006（装机资产扩展激活时序）未修；B-004 server 组合缺口未接
-- Recommended Next Step: ①修 B-006（宿主 wire 事实就绪前延迟/重试资产扩展激活）②收编 W-019 ③I-002 native 通道 ④B-004 组合增补 ⑤以 DeepSeek key 跑 pi/opencode 双 Harness E2E 冲 C3–C6 → Morning Candidate
+- **A22**：仓内 `execution` 零命中、无接缝可验。合同 §A22 要求"报告阻塞，不擅自设计 pacthold 模型"，故只登记。
+- **S03**：不是"未跑"而是**当前架构下不可能过** —— MCP 在任何组合里都没有实例化，没有承载体。
+- **D19 / C02 / C03 / C08 / C10 / D24**：需要**装机候选**上的真实 L3/L4 会话，在那次 sudo 之后。
+- 未合并、未 push、未启停任何既有用户服务、未在无授权情况下消耗真实模型调用。

@@ -281,7 +281,7 @@ UI-preview 或'14 插件挂载成功'代替实际生产发送"。因此除 D04 �
 | F09 | PASS | 他属 `docs/ui-preview/01-empty.png`、根 `main`、相邻 worktree、旧已安装资产全程未动，提交用显式 pathspec |
 | F10 | PASS（本节即交付物） | 每项都链到合同 ID 与当前证据等级，部分实现未勾整项，旧失败未被覆盖 |
 | F11 | PARTIAL | A 组与 C 组独立复审已把发现整理成 严重度/复现/原因/修法/验证；C22 查出 2 阻塞（1 是证据等级、1 是假绿执行器，已修）。**整条 diff 的独立审阅仍未做** |
-| F12 | PARTIAL | 本节列确切 PASS/FAIL/BLOCKED/NOT_RUN 与用户动作。**结论只能是 `PARTIAL`**，不是 `COMPLETE_VERIFIED` |
+| F12 | **PASS（本轮重写交回报告）** | `final-report.md` 原是 2026-09-30 那版，描述的候选 `418c5cfbee` / deb `70be6198…` **已作废**，本轮已整体重写为当前候选：冻结点 `24bd6fb683`、deb `e31e270c…`、七组 PASS/总数表、实跑门禁表、L4 对照表、本轮修掉的 4 个真实缺陷与 3 处自我更正、**一条 sudo 命令 + 五项裁定**、以及"未做而非做不完"清单。**结论只能是 `PARTIAL`**，不是 `COMPLETE_VERIFIED` |
 
 ### C22 独立复审：已执行，判定 **FAIL**，两条阻塞
 
