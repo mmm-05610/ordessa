@@ -82,7 +82,7 @@ class ModelCatalogService:
 
     def probe_connection(self, params: Mapping[str, Any]) -> dict[str, Any]:
         """Order 55: one bounded reachability check of the declared endpoint."""
-        from ordessa_model_provider.probe import probe_connection
+        from ordessa_model_provider.probe import ProbeError, probe_connection
 
         try:
             api_key = self._probe_credential(params.get("credentialId"))

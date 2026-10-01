@@ -1,6 +1,6 @@
 """Canonical storage addresses must not be confused with native routing IDs."""
 import pytest
-from conftest import make_core
+from profile_harness_doubles import make_core
 from ordessa_profile import ProfileError
 
 

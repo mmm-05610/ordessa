@@ -21,7 +21,16 @@ from urllib.error import HTTPError
 from ordessa_server_product.composition import create_composition
 
 ROOT = Path(__file__).resolve().parents[3]
-ASSET = '/opt/ordessa/harnesses/profile-codex-managed/artifacts'
+ASSET_DEFAULT = '/opt/ordessa/harnesses/profile-codex-managed/artifacts'
+
+
+def trusted_asset_root(value):
+    """Explicit asset selection. Harness still applies full installed
+    verification (root-owned, non-writable tree digest); this never relaxes it."""
+    root = Path(value)
+    if not root.is_absolute() or root.resolve() != root or not root.is_dir():
+        raise ValueError('Asset root must be an existing canonical directory')
+    return str(root)
 
 
 class ImmediateLoop:
@@ -34,8 +43,10 @@ def validate_transition_scope(allow_model_calls, switch_go, key_file, key_line):
         raise ValueError('Provider history acceptance requires model opt-in and an explicit key file/line')
 
 
-def run(*, allow_model_calls=False, switch_go=False, key_file=None, key_line=2, observe_go_relay=False):
+def run(*, allow_model_calls=False, switch_go=False, key_file=None, key_line=2,
+        observe_go_relay=False, asset_root=None):
     validate_transition_scope(allow_model_calls, switch_go, key_file, key_line)
+    asset = trusted_asset_root(asset_root or ASSET_DEFAULT)
     if observe_go_relay and not switch_go:
         raise ValueError('Go observation requires explicit provider transition')
     api_key = None
@@ -92,14 +103,14 @@ def run(*, allow_model_calls=False, switch_go=False, key_file=None, key_line=2, 
             project.mkdir(mode=0o700)
             module = (ROOT / 'plugins/harness/packaging/native-server-plan.mjs').as_uri()
             options = dict(harnessId='codex', nativeProfileHarnesses=['codex'],
-                           pluginRoot=str(ROOT / 'plugins/harness'), artifactRoot=ASSET)
+                           pluginRoot=str(ROOT / 'plugins/harness'), artifactRoot=asset)
             plan = json.loads(subprocess.check_output(['node', '--input-type=module', '-e',
                 f'import {{nativeServerPlan}} from {json.dumps(module)}; console.log(JSON.stringify(nativeServerPlan({json.dumps(options)}).args))'], text=True))
             flag = lambda name: plan[plan.index(name) + 1]
             runtime = create_composition().native_runtime(private / 'data', plugin_root=ROOT / 'plugins/harness',
                 harness_id='codex', adapter_command=flag('--native-adapter-command'),
                 adapter_args=tuple(arg.split('=', 1)[1] for arg in plan if arg.startswith('--native-adapter-arg=')),
-                installed_artifact_root=ASSET, native_profile_harnesses=('codex',))
+                installed_artifact_root=asset, native_profile_harnesses=('codex',))
             opened, locators = [], []
             wire = runtime.wire.dispatch
             def profile(method, **params):
@@ -280,4 +291,6 @@ if __name__ == '__main__':
     parser.add_argument('--key-file', type=Path)
     parser.add_argument('--key-line', type=int, default=2)
     parser.add_argument('--observe-go-relay', action='store_true')
+    parser.add_argument('--asset-root', default=ASSET_DEFAULT,
+                        help='Explicit verified asset root; Harness re-verifies it in full.')
     run(**vars(parser.parse_args()))

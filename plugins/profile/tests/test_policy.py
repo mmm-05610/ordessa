@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from conftest import make_core
+from profile_harness_doubles import make_core
 from ordessa_profile import ProfileError
 
 MODEL = None  # providers defined per-test where needed
@@ -52,7 +52,7 @@ def test_same_key_different_payload_refused(tmp_path):
 
 
 def test_forbidden_override_write_blocks_but_reads_and_clears_survive(tmp_path):
-    from conftest import ScriptedProvider
+    from profile_harness_doubles import ScriptedProvider
     model = ScriptedProvider("model_selection", ("model",))
     core = make_core(tmp_path, providers=(model,))
     a = core.profiles.create("ka", harness_id="pi", display_name="A")
@@ -85,7 +85,7 @@ def test_forbidden_override_write_blocks_but_reads_and_clears_survive(tmp_path):
 
 
 def test_disabled_facet_blocks_overlay_writes_and_keeps_data(tmp_path):
-    from conftest import ScriptedProvider
+    from profile_harness_doubles import ScriptedProvider
     model = ScriptedProvider("model_selection", ("model",))
     core = make_core(tmp_path, providers=(model,))
     a = core.profiles.create("ka", harness_id="pi", display_name="A")
@@ -127,7 +127,7 @@ def test_disabled_facet_blocks_overlay_writes_and_keeps_data(tmp_path):
 
 
 def test_impact_preview_counts_affected_profiles(tmp_path):
-    from conftest import ScriptedProvider
+    from profile_harness_doubles import ScriptedProvider
     model = ScriptedProvider("model_selection", ("model",))
     core = make_core(tmp_path, providers=(model,))
     a = core.profiles.create("ka", harness_id="pi", display_name="A")

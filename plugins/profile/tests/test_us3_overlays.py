@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from conftest import ScriptedProvider, make_core
+from profile_harness_doubles import ScriptedProvider, make_core
 from ordessa_profile import ProfileError
 
 MODEL = ScriptedProvider(

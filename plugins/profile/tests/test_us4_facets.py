@@ -11,7 +11,7 @@ import pathlib
 
 import pytest
 
-from conftest import ScriptedProvider, make_core
+from profile_harness_doubles import ScriptedProvider, make_core
 from ordessa_profile import ProfileError
 
 MODEL = ScriptedProvider(
@@ -157,7 +157,7 @@ def test_us4_5_reload_compatible_restores_incompatible_quarantines(tmp_path):
 
 
 def test_us4_6_required_item_with_absent_provider_refuses_turn(tmp_path):
-    from conftest import StaticHarnessCatalog
+    from profile_harness_doubles import StaticHarnessCatalog
     catalog = StaticHarnessCatalog({
         "pi": frozenset({"model_selection/model"}),
         "codex": frozenset(),

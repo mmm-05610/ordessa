@@ -81,8 +81,10 @@ export function nativeProfileBridge(agent, brand, invalidParams) {
       const ids = brand === 'codex' ? [...agent.sessions.keys()] : Object.keys(agent.sessions)
       if (ids.length !== 1 || ids[0] !== input.sessionId)
         throw invalidParams('Provider restoration requires one dedicated live session')
-      if (brand === 'codex' && (input.provider.providerId !== 'custom-gateway'
-          || input.provider.apiType !== 'openai' || !creations.has(input.sessionId)))
+      const managed = input.provider.providerId === 'openai' && input.provider.authentication === 'managed-account'
+      if (brand === 'codex' && ((!managed && (input.provider.providerId !== 'custom-gateway'
+          || input.provider.apiType !== 'openai')) || !creations.has(input.sessionId)
+          || typeof agent.ordessaReplaceCodexProcess !== 'function'))
         throw invalidParams('Captured Codex session and supported gateway required')
       if (brand === 'claude-code' && (input.provider.providerId !== 'main' || input.provider.apiType !== 'anthropic'))
         throw invalidParams('Supported Claude provider required')
@@ -104,14 +106,22 @@ export function nativeProfileBridge(agent, brand, invalidParams) {
         const params = structuredClone(creations.get(input.sessionId))
         const preserved = read({ sessionId: input.sessionId }).configOptions
           .filter(item => item.id !== 'model')
-        await step('provider', () => agent.setProvider(input.provider))
-        await step('close', () => agent.closeSession({ sessionId: input.sessionId }))
-        await step('resume', () => agent.resumeSession({ ...params, sessionId: input.sessionId }))
+        await step('restart', () => agent.ordessaReplaceCodexProcess(input))
+        const managed = input.provider.authentication === 'managed-account'
+        if (!managed) await step('provider', () => agent.setProvider(input.provider))
+        try {
+          await step('resume', () => agent.resumeSession({ ...params, sessionId: input.sessionId }))
+        } finally {
+          delete agent.codexAcpClient.ordessaResumeRolloutPath
+        }
         await step('model', () => agent.setSessionConfigOption({ sessionId: input.sessionId, configId: 'model', value: input.model }))
         for (const item of preserved)
           await step('preferences', () => agent.setSessionConfigOption({ sessionId: input.sessionId, configId: item.id, value: item.currentValue }))
         const session = agent.sessions.get(input.sessionId)
         const route = agent.codexAcpClient?.codexClient?.ordessaThreadRoutes?.get(input.sessionId)
+        if (managed) return session && session.authProvider === 'openai' && route?.provider === 'openai'
+          && route?.authentication === 'managed-account'
+          ? {sessionId: input.sessionId, providerId: 'openai', authentication: 'managed-account'} : null
         if (!session || session.authProvider !== 'custom-gateway') return null
         return { sessionId: input.sessionId, apiType: route?.api === 'responses' ? 'openai' : null, baseUrl: route?.baseUrl }
       }

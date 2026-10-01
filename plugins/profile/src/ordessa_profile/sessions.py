@@ -266,9 +266,15 @@ class SessionService:
         operation_key = f"{session_ref.session_uid}:{operation_id}"
         policy = self.core.policy.get_public(session_ref.realm)
         target_revision = self._target_revision(pending_profile)
+        # A pending selection means the user asked for this Profile's own
+        # intent, so the plan is compiled against the blueprint.  With no
+        # selection the native application port re-applies the *effective*
+        # configuration, which includes the live temporary overrides (C04).
         intents, blocked_items = self.core.compile_switch_diffs(
             session, pending_profile,
-            effective_turn=getattr(port, "native_turn_application", False) is True)
+            effective_turn=(
+                session["pending_profile_id"] is None
+                and getattr(port, "native_turn_application", False) is True))
         if blocked_items:
             raise ProfileError(
                 "SWITCH_BLOCKED",
@@ -462,8 +468,15 @@ class SessionService:
                     native_session_key=session["native_session_key"],
                 )
                 # Successful switch only: clear the old overlays (G07).
-                preserve_overlays = (getattr(self.core.config_port, "native_turn_application", False) is True
-                                     and pending_profile == session["current_profile_id"])
+                #
+                # An explicit selection is a pending selection: the user asked
+                # for this Profile's complete intent, so the temporary override
+                # layer goes away even when the Profile is the one the session
+                # is already bound to (C05).  The ordinary every-submit
+                # re-application in ``native_turn_application`` mode carries no
+                # selection and must keep the live overrides instead (C04).
+                preserve_overlays = _keeps_overlays(
+                    self.core.config_port, session, pending_profile)
                 if not preserve_overlays:
                     repo.clear_overlays(conn, session["session_id"])
                 resolver = resolve_session_items if preserve_overlays else resolve_profile_items
@@ -601,8 +614,7 @@ class SessionService:
                     session_uid=session["session_uid"],
                     native_session_key=session["native_session_key"],
                 )
-                if not (getattr(port, "native_turn_application", False) is True
-                        and entry["profile_id"] == session["current_profile_id"]):
+                if not _keeps_overlays(port, session, entry["profile_id"]):
                     repo.clear_overlays(conn, session["session_id"])
             return {
                 "operation_id": operation_id,
@@ -953,6 +965,30 @@ class SessionService:
                 digest(request), 200, response, self.core.timestamp(),
             )
             return response
+
+
+def _keeps_overlays(port: Any, session: dict[str, Any],
+                    applied_profile: str) -> bool:
+    """Does this operation leave the session's temporary override layer alone?
+
+    Two very different operations reach the same "applied the Profile the
+    session is already bound to" state, and they must not be conflated:
+
+    * an **explicit selection** of that same Profile. The user restated the
+      Profile's intent, so the temporary overrides are cleared silently and
+      without a confirmation step (C05). It is recognisable because the
+      selection was pending at admission time.
+    * the **ordinary every-submit re-application** a native application port
+      performs on each send, carrying no selection at all. That one must keep
+      the live overrides, because they are the current effective intent (C04).
+
+    Outside native-turn application mode a switch is always a switch, so the
+    overrides always go.
+    """
+    if getattr(port, "native_turn_application", False) is not True:
+        return False
+    return (applied_profile == session["current_profile_id"]
+            and session["pending_profile_id"] is None)
 
 
 def _intent_facts(intent: ConfigIntent) -> dict[str, Any]:

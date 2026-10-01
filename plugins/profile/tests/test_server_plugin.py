@@ -49,7 +49,7 @@ def test_projection_does_not_rewrite_user_values_or_schema_properties():
 
 
 def test_configuration_save_is_atomic_idempotent_and_clear_preserves_history(tmp_path):
-    from conftest import ScriptedProvider
+    from profile_harness_doubles import ScriptedProvider
     plugin, registration, calls = build(tmp_path)
     plugin.core.register_provider(ScriptedProvider("test.config", ("model", "style")))
     profile = calls["createProfile"](dict(operationKey="new", realm="local", harnessId="pi", displayName="P"))

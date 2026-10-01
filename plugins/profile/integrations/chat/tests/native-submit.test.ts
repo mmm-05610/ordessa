@@ -13,13 +13,16 @@ const snapshot: ChatSubmissionSnapshot = { submissionId: 'send', draftId: 'draft
   target: { kind: 'draft', draftId: 'draft', serverInstanceId: 'server', contextRevision: 1 },
   text: 'keep text', attachmentIds: [] }
 
-function setup(nativePreparation?: { response?: Record<string, unknown>; wait?: Promise<void>; harnessId?: string }) {
+/** The production Profile client always exposes `prepareNativeCreation`; the
+ * per-harness verdict (`prepared` vs `not-required`) belongs to the backend, so
+ * the default fixture answers `not-required` and the harness id is data. */
+function setup(nativePreparation: { response?: Record<string, unknown>; wait?: Promise<void>; harnessId?: string } = {}) {
   const scope = new OwnedResources(), chat = createChatContributions(), order: string[] = []
   let state = 'settled', fail = false, unknown = false
   let nativePrepared = false, discarded = false
   const nativeListeners = new Set<() => void>()
   const applied: string[] = []
-  const harnessId = nativePreparation?.harnessId ?? 'pi'
+  const harnessId = nativePreparation.harnessId ?? 'pi'
   const sessionRef = { ...ref, harnessId }
   const profiles = {
     async registerNativeSession() { order.push('register'); return { sessionRef } },
@@ -38,7 +41,7 @@ function setup(nativePreparation?: { response?: Record<string, unknown>; wait?: 
     order.push('prepare-provider')
     expect(input).toEqual({ connectionId: 'channel', profileId: 'profile', operationId: 'create:attempt' })
     await nativePreparation.wait
-    return { state: 'prepared', operationId: input.operationId, connectionId: input.connectionId,
+    return { state: 'not-required', operationId: input.operationId, connectionId: input.connectionId,
       profileId: input.profileId, harnessId, profileRevision: 1, ...nativePreparation.response } as NativeCreationPreparationDto
   }
   const glue = createProfileChatGlue(scope, chat, { profiles, catalog: () => [], nativeSessions: {
@@ -47,7 +50,7 @@ function setup(nativePreparation?: { response?: Record<string, unknown>; wait?: 
     subscribe(listener) { nativeListeners.add(listener); return () => { nativeListeners.delete(listener) } },
     async prepareSubmission(preparation) {
       order.push('prepare')
-      if (nativePreparation && !nativePrepared) {
+      if (!nativePrepared) {
         await preparation?.beforeCreate(Object.freeze({ attemptId: 'attempt', serverInstanceId: 'server', connectionId: 'channel', harnessId, workspaceId: 'project' }))
         order.push('session/new')
         nativePrepared = true
@@ -137,14 +140,25 @@ it.each([
   } finally { f.scope.dispose() }
 })
 
-it.each(['codex', 'claude'])('refuses %s before creation if the provider preparation service is missing', async harnessId => {
-  const f = setup()
-  try {
-    f.glue.store.select('draft:draft', { ...selection, harnessId })
-    expect(await f.chat.submit(snapshot, f.gateway)).toMatchObject({ status: 'refused' })
-    expect(f.order).toEqual([])
-  } finally { f.scope.dispose() }
-})
+it.each(['pi', 'codex', 'claude'])(
+  'refuses before creation for ANY harness when the provider preparation service is missing: %s',
+  async harnessId => {
+    // A deployment without the native-registration owner: the port is absent
+    // for every Harness equally, and the frontend must not name one.
+    const scope = new OwnedResources(), chat = createChatContributions()
+    const profiles = { async registerNativeSession() { throw new Error('never reached') } } as unknown as ProfileServiceClient
+    const glue = createProfileChatGlue(scope, chat, { profiles, catalog: () => [], nativeSessions: {
+      getSnapshot: () => ({ available: [], selectedConnectionId: 'client', draft: { active: true, canSend: true } }),
+      subscribe: () => () => undefined,
+      async prepareSubmission() { throw new Error('no native creation may be attempted') },
+    } })
+    try {
+      glue.store.select('draft:draft', { ...selection, harnessId })
+      expect(await chat.submit(snapshot, { async submit() { throw new Error('never reached') } }))
+        .toMatchObject({ status: 'refused' })
+      expect(glue.store.peek('draft:draft')).toEqual({ ...selection, harnessId })
+    } finally { glue.dispose() }
+  })
 
 it('keeps a changed selection during preparation for the next explicit submission', async () => {
   let release!: () => void
@@ -167,7 +181,7 @@ it('applies between native preparation and first prompt, then reapplies at the n
   try {
     f.glue.store.select('draft:draft', selection)
     expect(await f.chat.submit(snapshot, f.gateway)).toEqual({ status: 'accepted' })
-    expect(f.order).toEqual(['prepare', 'register', 'select', 'apply', 'prompt'])
+    expect(f.order).toEqual(['prepare', 'prepare-provider', 'session/new', 'register', 'select', 'apply', 'prompt'])
     const next = { ...snapshot, submissionId: 'next', target: { kind: 'session' as const, sessionId: 'native', connectionId: 'client', harnessId: 'pi', serverInstanceId: 'server', contextRevision: 2 } }
     expect(await f.chat.submit(next, f.gateway)).toEqual({ status: 'accepted' })
     expect(f.order.filter(item => item === 'register')).toHaveLength(1)

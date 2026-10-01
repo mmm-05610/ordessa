@@ -4,6 +4,103 @@
 所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
 未合并、未 push、未启停既有用户服务、未重建 deb。三品牌后端真实聊天已通过；Codex Desktop 已通过 Profile 首发与同会话下一轮切换，两条真实回复。完整三品牌 UI/发行验收仍未完成。
 
+## CP-N0 现场认领（2026-10-01，ZCode 主会话第二轮收口）
+
+- **T0.1 起点核对**（实测，非抄写）：cwd 为本 worktree，分支 `nightly/021-ordessa-product-closeout`，HEAD `7d9d6a0dec33521c2d057f0e4cbbd13b91fe3e83`，与交接一致；未 reset/stash/clean。根工作树 `/home/maoqh/projects/ordessa` 仍在 `main`，其上只有两个无关未跟踪目录（`specs/022-*`、`specs/023-*`），本轮未触碰。相邻 worktree 未动。
+- **T0.2 未提交草稿认领**（sha256 已记录，交接稿未被当作已验收）：
+  - 新增：`codex-process.mjs` `e4011d98…`、`codex-process.test.mjs` `470c1af7…`
+  - 修改：`enhance.mjs` `8729fa4b…`、`bridge.mjs` `5e4b6e91…`、`restoration.mjs` `85fe60b9…`、`configuration.test.mjs` `01c32e38…`、`backend.py` `844bc346…`、`restoration.py` `747e77f6…`、`test_provider_restoration_service.py` `0147151d…`
+  - 他属改动保留不提交、不还原：`docs/ui-preview/01-empty.png`。
+- **T0.3 本树实测基线**（纠正交接记忆，未把旧计数当现状）：Node `node --test plugins/harness/packaging/native-profile/*.test.mjs` → **51 pass / 0 fail**，exit 0（交接写的 50 是新增路径所有权测试之前的数，已复跑）。Python `pytest plugins/harness/tests/configuration_model plugins/harness/tests/test_provider_restoration_service.py plugins/harness/tests/test_pi_provider_registration_service.py products/server -q` → **330 passed**，exit 0。
+- **T0.4 资源盘点（分项，不一锅当网络问题）**：sudo → **不可用**（`sudo -n` 返回 interactive authentication required，用户在 sudo 组但需交互口令）；用户凭据 `key.txt` 在本树 ignored，两行齐全；官方账号 `~/.ordessa/accounts/codex` 存在（0700）；端点网络可用性未判定（本轮尚未真实调用）。
+
+### CP-N0 新发现：两个硬阻塞（均需用户动作，非实现缺陷）
+
+1. **sudo 不可用 ⇒ 一切"已安装产品"层级证据阻塞**。实测 `verifyInstalledArtifact` 对本树候选资产返回 `installed artifact base invalid`，`installedArtifactSummary` 返回 `untrusted installed asset`——校验器硬性要求 root 属主且普通用户不可写。按 handoff §6 与 T6.4，**不得为图省事把 trust 降到用户可写目录**。因此阻塞：T5.3–T5.5 安装、T7 真实 L3 后端（官方→Go→官方双向历史）、P05、P13，以及 A23 的真实 rollout 持久化门。**未改动任何校验器强度**。
+2. **P08 结构性缺口：deb 不含任何品牌运行时**。实测 `packaging/build-deb.mjs` 的 `stageHarnesses()` 只把 `/opt/ordessa/harnesses` 建成**空落地目录**（`packaging/bundle-manifest.json` 记为 `harness-landing`，source 字面为 "empty landing directory (C-09 §B: brand payloads ship with the harness release line)"）。而本机已安装资产合计约 2.2GB（`profile-codex-managed` 308M、`profile-chat-fixes` 359M、`profile-native` 558M 等）。P08 明文要求"deb 包含必需 runtime 或明确产品内 bootstrap 路径，**不能要求新用户另跑本次 sudo 脚本**"，当前形态不满足。这是发行架构决策，按 handoff §6 上报用户，不由执行者自行扩范围。
+   - **加强证据（P08 判 FAIL 的可复现依据）**：`tests/integration/packaging/deb-contract.test.mjs:151-159` 只断言 `opt/ordessa/harnesses` **存在且是目录**，从不断言其中含任何品牌 runtime。也就是说**该 deb 能通过自己的发行契约测试，同时交付零个品牌运行时**；故障不会在启动门暴露，而是等到用户选中某品牌、走 `verifyInstalledArtifact` 时才晚发失败。P12 的 fail-closed 只覆盖"目录缺失"，不覆盖"目录为空"。
+   - 可选修法（需用户裁定，本轮不擅自实施）：(a) 把三品牌已验证 runtime 打进 deb（体积与 Claude 未确认许可，见 C-09 §B）；(b) 产品内 bootstrap 首次启动下载并完整校验（新增分发通道与网络策略，属新架构）；(c) 维持 operator 装配，但把启动门从"目录存在"提升为"逐品牌已验证"，并把 P08 明确标为未满足而非伪装通过。
+
+### CP-N0 已完成的 Lead 修复（T6.2/T6.3，产品装配硬编码路径）
+
+- `products/server/scripts/probe-installed-codex-managed-profile.py`：资产根由模块常量 `ASSET` 改为显式 `--asset-root`（默认仍是原已验证路径），并新增 `trusted_asset_root()` 拒绝相对路径/不存在/符号链接根；校验发生在**读 Key 与启动产品之前**。Harness 侧完整 installed 校验不变，未放宽。
+- `products/server/scripts/seed-profile-ui-probe.py`、`products/desktop/probe-profile-ui.mjs`：品牌资产根改为 `ORDESSA_*_ARTIFACT_ROOT` 显式覆盖，默认值保持原已验证路径。
+- 新增反例测试 `products/server/tests/test_codex_managed_probe.py`：相对/缺失/符号链接根一律拒绝，且无效根在读 Key 前失败。实测 **7 passed，exit 0**。
+
+### CP-N0 Lead 第一手实测：A01/A03 在真实原生二进制上定案（L2）
+
+用本树候选资产的**真实** 258MB 原生二进制（非 mock、非 fixture）实跑，结论如下——这替换了交接里的"疑似"表述，改为已证事实：
+
+- **A01 PASS（L2）**：启动 `@openai/codex/bin/codex.js`（ACP 默认实际管理的进程）后，`/proc/<child>/exe` 解析为
+  `.../@openai/codex-linux-x64/vendor/x86_64-unknown-linux-musl/bin/codex`，launcher PID 160886 → 原生子进程 PID 160894。
+  即：**ACP 直接管理的是 Node launcher，真正的 Codex 是它的后代**。两处入口 `--version` 均报 `codex-cli 0.147.0`（与交接 §2.2 锁定版本一致）。
+- **A03 反例成立（L2，已证红）**：对 launcher PID 160886 单发 `SIGKILL`，launcher 立即消失，而**原生 PID 160894 仍存活**并被重新挂到父 PID 4635（状态 `Sl`），`/proc/160894/exe` 仍是上面那个 codex 二进制。
+  ⇒ 草稿 `stopNativeProcess(codexConnection.process, …)` 会在 launcher 消失时判定"退出已确认"，随后**并排 spawn 第二个原生进程**，正是 A03 明令必须拒绝的失败模式。
+- 清理：本次探针自有的 2 个进程与临时目录已全部删除，复查无残留。**未触碰用户其它进程**（用户正在运行的 ChatGPT 桌面进程未受影响）。
+- 该证据不依赖 sudo，故 A 线可以在无 root 资产的情况下继续做真实进程级验证；**但它不能替代** T7/P05/P13 的已安装产品层级证据。
+
+### CP-N0 第二轮收口：A 线成果验收、候选资产重建与新的 root 阻塞（2026-10-02）
+
+**A 线（Codex 原生进程归属）已验收。** 主代理独立复跑，未转述子代理结论：
+
+- `node --test plugins/harness/packaging/native-profile/*.test.mjs` → **72 pass / 0 fail**，exit 0（开工基线 51）。
+- 加上 builder 门 → **81 pass / 0 fail**，exit 0。
+- 四个文件 sha256 与子代理自报**逐字节一致**（`codex-process.mjs 7e098d90…`、`codex-process.test.mjs 190ea324…`、`enhance.mjs 6da3deae…`、`enhance.test.mjs e3faa0ee…`）。
+- 修法经复核是**结构性**的而非补洞：不再经过 Node launcher，直接 spawn 已验证的原生二进制（`detached:true`），并要求 procfs 确认 `executable === nativeBinary && pgid === pid`；`stopNativeProcess` 判据是"直接子进程已退出 **且** owned 进程集为空"，二者缺一不算退出确认。A03 的两层链条因此不再存在。
+- 子代理报告的 draft 假设错误已复核为真：上游 launcher 是 `stdio: "inherit"` 且只转发 SIGINT/SIGTERM/SIGHUP（故 SIGKILL launcher 留下活着的原生后代），且 win32 的 `shell:true` 是活路径而非死代码。
+
+**T5.1 候选资产已重建（T5.3/T5.4 阻塞，见下）。**
+
+| | 已安装 | 新候选 | 差 |
+| --- | --- | --- | --- |
+| treeDigest | `sha256:1ee5358b…` | **`sha256:a31df1a77d19ed2ebbd94be3bcd36b5d2895420c01f84a42c16274a699fa1385`** | 变 |
+| entries | 536 | **537** | +1 |
+| bytes | 320854754 | **320880353** | +25599 |
+| sourceLockDigest | `sha256:a59ef37f…` | `sha256:a59ef37f…` | **未变** |
+| 上游锚点 | `sha256:9634b545…` | `sha256:9634b545…` | **未变** |
+
+- 差量已逐文件核实并**算术闭合**：新增 1 个文件 `ordessa-codex-process.mjs`（19711 B），修改 4 个增强文件（`index.js` +3746、`ordessa-native-configuration-query.mjs` +848、`ordessa-native-profile.mjs` +657、`ordessa-restoration.mjs` +637，合计 5888 B）。19711 + 5888 = **25599**，与 manifest 报告的字节增量一字不差。无文件被删除。
+- 上游原生二进制、`codex.js` 启动器、`codex-acp/package.json` **逐字节一致**，`sourceLockDigest` 未变 ⇒ 换掉的只是我们自己的 profile bridge，上游锚点未被污染。
+- 构建器 CLI 没有 `--profile-bridge`（pi/claude 的构建器都有），managed 变体只能程序化调 `build()`；这是一处构建入口不一致，未在本轮扩范围修。
+
+**新的硬阻塞：root helper 自身有缺陷，资产无法发布。**
+
+- 受限 helper `/usr/local/sbin/ordessa-asset-op` 的属主检查写成 `info.st_uid != os.getuid()`。该 helper **永远以 root 运行**，`getuid()` 恒为 0，于是它**拒绝每一个合法候选**（正常用户拥有的树），却恰好放行最不该放行的 root 拥有的树——与文档写的本意相反。
+- 第一手红证据：`sudo -n /usr/local/sbin/ordessa-asset-op` → `asset-op refused: source is not owned by the invoking user`，exit 1。
+- 修复已写好并本地验证（`.cleanup-evidence/ordessa-asset-op.py`）：属主改为比对**固定检出根 `/home/maoqh/projects/ordessa` 的属主**，并显式拒绝该属主为 root。以 root 语义实测：合法候选**接受**；root 拥有的树、`/tmp` 越界、根检出**全部拒绝**。这是按本意修正，不是放宽。
+- **未部署**：sudoers 只对白名单里那一个 helper 免密，`/opt/ordessa/harnesses` 是 root 拥有不可写，覆盖 helper 需要一次用户口令。⇒ **T5.3 / T5.4 / T7 本轮无法无人值守推进**。
+- 用户动作（一条命令，只提示一次口令）：
+  `bash /home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout/.cleanup-evidence/publish-fixed-codex-managed.sh`
+  目标名 `profile-codex-managed-v2` 未被占用，helper 拒绝覆盖既有目标 ⇒ 旧的 `profile-codex-managed` 原封不动，本步可回滚。
+
+**门禁实跑（F01/F03/F04）。**
+
+| 门 | 结果 | 与开工基线比较 |
+| --- | --- | --- |
+| 根 `npm test` | **31/39 suites green，exit 1** | **完全一致**（T0.3 同为 31/39，成因逐条相同） |
+| `node --test` native-profile + builder | 81/81，exit 0 | 基线 51 → 81 |
+| `pytest plugins/profile plugins/assets/model-provider`（合并执行） | **473 passed，exit 0** | 修 conftest 冲突前为 11 failed / 416 passed |
+| `pytest plugins/harness` | 795 passed / 3 skipped / **3 failed** | 3 红均为既有，见下 |
+| `pytest packages/pacthold` | 212 passed，exit 0，零 skip | — |
+| `pytest products/server` | 167 passed / **1 failed** | `jeepney` 未装进 venv，环境缺口 |
+| `pytest apps/server` | 1176 passed / **75 failed / 2 errors** | 见下 |
+| chat-contribution vitest | 30/30 | — |
+| profile/integrations/chat vitest | 50/50 | — |
+
+- **conftest 同名冲突**已由 C 线修复并经主代理复核：HEAD 版 `plugins/profile/tests/conftest.py` 把 `ScriptedProvider / SequenceClock / ScriptedConfigPort / ScriptedV2Provider` 定义在 conftest 内，而 11 个测试文件直接 `from conftest import`；prepend 导入模式下两个同名 conftest 抢同一模块名。抽出唯一命名的 `profile_harness_doubles.py` 后合并执行为 473 passed。
+- `plugins/harness` 的 3 红：`test_acp_schema_drift_target.py` 2 条已在 `docs/known-issues.md:13` 登记；第 3 条 `test_the_run_chain_declares_no_byte_ceiling_of_its_own` **此前未登记，本轮已补登**。它由 `088f3a43c1`(10-01)加入的 `native-artifact-policy.mjs:9` `MAX_BYTES` 与 `63b3aaa84d`(09-29)那条"运行链不得自带字节上限"的断言冲突而成；两个文件都与 HEAD 逐字节一致、不含本轮改动。属**上一次收口提交带红未登记**，不是本轮引入。是否允许显式声明的安装期上限属运行链策略裁定，未擅自改代码。
+- `apps/server` 的 75 红按文件归类后**无一落在本轮改动面内**（我们只动了 `plugins/harness`、`plugins/profile`、`plugins/assets/model-provider`、`products/*`）。抽查名字上最相关的 4 条（`test_harness_capability_projection`、`test_capability_truth_table`）失败原因均为 `SIDECAR_CLOSED: sidecar exited before answering`，属账本已登记的退役 sidecar/worker 链。**但 T0.3 未对完整 `apps/server` 取过基线**，本次 75F/2E 与账本的 44F/25E 数量不同（venv 现已装全包 + conftest 修复），此差异**尚未完成同基线归因**，如实记为未闭合项。
+- F07：58 个待提交文件扫描凭据模式 → `False`。F09：无任何越界绝对路径；`docs/ui-preview/01-empty.png` 为他属脏改动，**已用显式 pathspec 排除**。F08：本轮自建的临时进程与临时目录已清理；`/tmp/ordessa-bridge-*` 等 26 个历史遗留非本轮产生，未动；用户 ChatGPT 桌面进程全程未触碰。
+
+## 夜间接管入口（2026-10-01，用户要求转交 ZCode）
+
+- 本轮停止进一步实现，整理完整分段验收与依赖，不启动代理或新工作树。
+- 执行入口：[overnight-handoff.md](overnight-handoff.md)；逐条验收：[overnight-acceptance.md](overnight-acceptance.md)；依赖/任务：[overnight-tasks.md](overnight-tasks.md)。沿用既有Spec Kit，不另建派工控制面。
+- 当前HEAD `7d9d6a0dec`，Codex进程替换与反向managed-account接线草稿未提交；他属 `docs/ui-preview/01-empty.png` 保留。草稿需要ZCode明确认领和复审，不是已完成修复。
+- 本轮草稿实测Node native-profile 50/50（之后新增路径所有权反例尚未复跑）；Python configuration_model/restoration/Pi registration/products/server 330P；候选实际官方/API初始化+官方首次准备与创建通过，modelCalls=0。没有真实历史恢复成功证据。
+- 新发现必须验收的细节：默认ACP管理Node launcher，强杀launcher可能留下原生后代；当前helper退出证据不足，夜间A01–A03单列阻塞门，需确认真实native退出后才替换。
+- sudo新asset安装、真实双向历史与当前三品牌UI/发行仍未验收。依赖阻塞只影响相关路径；主会话继续独立任务但不能报整体验收完成。前下节Codex历史失败仍有效。
+
 ## 最新阻塞（2026-10-01，Codex 官方 → API 历史验收失败；原生生命周期需收口）
 
 - 按既定范围扩展现有 managed-profile 探针：同一产品运行三条自有会话（官方 A、官方 B、合成 API 隔离对照）；官方 A 首轮记住随机标记，再在同 canonical/native session 上应用 Go API Profile 并要求第二轮回忆。检查独立 B 配置不变、恢复效果恰一次、原生 generation 换代、两次 C4 与最终清理。仅两个用户 prompt，不读取/打印全局登录或 Key。

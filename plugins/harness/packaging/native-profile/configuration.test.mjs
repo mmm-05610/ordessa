@@ -258,6 +258,10 @@ for (const brand of ['codex', 'claude-code']) {
       f.agent.codexAcpClient = { config: {}, codexClient: { ordessaThreadRoutes: new Map() } }
       f.agent.setProvider = input => { providerCalls++; f.agent.route = input }
       f.agent.closeSession = async ({ sessionId }) => { f.agent.sessions.delete(sessionId) }
+      f.agent.ordessaReplaceCodexProcess = async ({sessionId}) => {
+        await f.agent.closeSession({sessionId})
+        f.agent.codexAcpClient = {config: {model: 'm2'}, codexClient: {ordessaThreadRoutes: new Map()}}
+      }
       f.agent.resumeSession = async params => {
         resumeCalls++
         assert.equal(params.sessionId, 's')
@@ -315,6 +319,41 @@ test('Claude swallowed resume failure is Unknown, query/replay never attempts an
   assert.deepEqual(await bridge.restoration.apply(input), result)
   bridge.queryOperation({ sessionId: 's', operationId: input.operationId })
   assert.equal(calls, 1)
+})
+
+test('Codex return to managed account uses replacement, never a gateway setter or account login', async () => {
+  const f = fixture('codex')
+  const bridge = nativeProfileBridge(f.agent, 'codex', message => new Error(message))
+  let restarts = 0, resumes = 0
+  f.agent.ordessaReplaceCodexProcess = async input => {
+    assert.equal(input.provider.authentication, 'managed-account')
+    restarts++; f.agent.sessions.delete('s')
+    f.agent.codexAcpClient = {codexClient: {ordessaThreadRoutes: new Map()}}
+  }
+  f.agent.setProvider = () => assert.fail('managed route must not use gateway setter')
+  f.agent.resumeSession = async () => {
+    resumes++
+    const session = structuredClone(f.session); session.authProvider = 'openai'
+    f.agent.sessions.set('s', session)
+    f.agent.codexAcpClient.codexClient.ordessaThreadRoutes.set('s',
+      {provider: 'openai', authentication: 'managed-account'})
+  }
+  f.agent.setSessionConfigOption = async input => {
+    f.agent.sessions.get('s').configOptions.find(item => item.id === input.configId).currentValue = input.value
+  }
+  await bridge.withCreation({cwd: '/controlled-project'}, async () => ({sessionId: 's'}))
+  const before = bridge.read({sessionId: 's'})
+  const input = {sessionId: 's', operationId: 'restore:official', expectedGeneration: before.generation,
+    expectedConfigDigest: configurationDigest(before), model: 'm2',
+    target: {server_id: 'server', session_id: 'canonical', channel_id: 'channel', runtime_generation: 1},
+    provider: {providerId: 'openai', authentication: 'managed-account', accountDirectory: '/private/account'}}
+  const result = await bridge.restoration.apply(input)
+  assert.equal(result.state, 'observed'); assert.notEqual(result.before.generation, result.after.generation)
+  assert.deepEqual(await bridge.restoration.apply(input), result)
+  assert.deepEqual(bridge.queryOperation({sessionId: 's', operationId: input.operationId}), result)
+  assert.equal(restarts, 1); assert.equal(resumes, 1)
+  assert.equal(JSON.stringify(result).includes('/private/account'), false)
+  await assert.rejects(bridge.restoration.apply({...input, extra: true}), /exact/)
 })
 
 test('provider resume refuses adapter siblings and unsupported protocols before effect', async () => {

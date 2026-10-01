@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from conftest import ScriptedConfigPort, ScriptedV2Provider, make_core
+from profile_harness_doubles import ScriptedConfigPort, ScriptedV2Provider, make_core
 from ordessa_profile import ProfileError
 
 TEST_FACET = "acme_widget"

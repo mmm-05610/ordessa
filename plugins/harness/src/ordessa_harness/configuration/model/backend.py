@@ -60,7 +60,8 @@ class NativeModelServices:
         self._installations, self._accounts = {}, {}
         from .provider_registration import ProviderTransitionService
         self.restoration = ProviderTransitionService(channels, owners,
-            verify=self._restoration_publication, lease=self._restoration_lease)
+            verify=self._restoration_publication, lease=self._restoration_lease,
+            managed_account_factory=self.managed_account)
 
     def _restoration_publication(self, harness_id):
         from .bridge import ADAPTER_IDS

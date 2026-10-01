@@ -38,7 +38,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from conftest import ScriptedConfigPort, ScriptedV2Provider, make_core
+from profile_harness_doubles import ScriptedConfigPort, ScriptedV2Provider, make_core
 
 BRANDS = ("pi", "codex", "claude-code")
 GOLDEN_DIR = Path(__file__).resolve().parent / "goldens" / "brand_matrix"

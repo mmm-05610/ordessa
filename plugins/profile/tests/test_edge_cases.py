@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from conftest import ScriptedProvider, make_core
+from profile_harness_doubles import ScriptedProvider, make_core
 from ordessa_profile import ProfileError
 
 MODEL = ScriptedProvider(
@@ -61,7 +61,7 @@ def test_edge1_unverifiable_after_restart_blocks_sending(tmp_path):
     # v2: the proof comes from the application port; a port answering
     # "unknown" blocks sending, and recovery goes through reconcile — never
     # a database read (PV-04/PV-07, controlled fixture port).
-    from conftest import ScriptedConfigPort
+    from profile_harness_doubles import ScriptedConfigPort
     core, a, b = ab_world(tmp_path)
     core.sessions.select_profile(
         "sel1", session_id="S", profile_id=b["profile_id"])

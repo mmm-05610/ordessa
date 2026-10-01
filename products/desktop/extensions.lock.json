@@ -409,7 +409,7 @@
     "extensions/ordessa.profile-api/contract.js": "f67ba5928653531c73cd5549d782205c6205138bf9cf81ba11988cf526ea0912",
     "extensions/ordessa.profile-api/entry.js": "23f5931a65199994d01d236c0ca9021b30c9a5c507117da68fe521ad62b48018",
     "extensions/ordessa.profile-api/manifest.json": "2aaa67904f84f13b194b7aee704f3178c3f7214bd0f7098b438d483a9f5168c8",
-    "extensions/ordessa.profile-chat/entry.js": "dff0ff715b005b350e8d7461195636a813dc91377a547fd8429e57d26fecc017",
+    "extensions/ordessa.profile-chat/entry.js": "7a40726f6101b9c82492e860ed9dea98741ade257391a206782c12923714f1ae",
     "extensions/ordessa.profile-chat/manifest.json": "fc89a7a68ffbdcdebcb21b6c95579317eb350c40a8e453bd05abf4652d0f86e2",
     "extensions/ordessa.profile-frontend/entry.js": "efb1f08f2e2d70ba081fed0bd4fdad55014f4a23fa2543879253ae476fb9de95",
     "extensions/ordessa.profile-frontend/manifest.json": "c79846c822d958f1194ec0bb2671dc0e3b1fa47981742bc0cb969f79cfe4ece2",

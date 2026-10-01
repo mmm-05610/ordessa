@@ -1,5 +1,5 @@
 """Opt-in native port applies effective configuration at every submit boundary."""
-from conftest import ScriptedConfigPort, ScriptedProvider, make_core
+from profile_harness_doubles import ScriptedConfigPort, ScriptedProvider, make_core
 import pytest
 from ordessa_profile.errors import ProfileError
 

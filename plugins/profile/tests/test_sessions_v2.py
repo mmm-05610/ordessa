@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from conftest import ScriptedConfigPort, ScriptedProvider, ScriptedV2Provider, make_core
+from profile_harness_doubles import ScriptedConfigPort, ScriptedProvider, ScriptedV2Provider, make_core
 from ordessa_profile import ProfileError, UNSET
 
 MODEL = ScriptedProvider(

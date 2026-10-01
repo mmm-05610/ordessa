@@ -64,6 +64,81 @@ def test_prepare_has_no_native_effect_and_carries_no_secret(rig):
     assert 'synthetic-secret' not in repr(plan) + repr(rig.service._plans)
 
 
+def test_managed_destination_is_resolved_by_harness_account_owner_not_profile(rig):
+    account = Mock(account_directory='/synthetic/owned-account')
+    account.read.return_value = {'authenticated': True, 'method': 'chatgpt-managed'}
+    rig.service.managed_account_factory = Mock(return_value=account)
+    desired = dict(provider='openai', model='new-model', protocol='openai-responses',
+                   endpoint=None, credentialRef=None, authentication='managed-account')
+    plan = rig.service.prepare(rig.target, desired, operation_key='return-to-official')
+    rig.channel._configuration_rpc.assert_not_called()
+    assert '/synthetic/owned-account' not in repr(plan)
+    result = rig.service.execute(plan, desired)
+    assert result.state == 'observed'
+    request = rig.channel._configuration_rpc.call_args.args[2]
+    assert request['provider'] == dict(providerId='openai', authentication='managed-account',
+                                     accountDirectory='/synthetic/owned-account')
+    assert 'accountDirectory' not in desired
+    rig.channel._configuration_rpc.assert_called_once()
+
+
+def test_unavailable_managed_login_refuses_before_restoration_effect(rig):
+    account = Mock(account_directory='/synthetic/owned-account')
+    account.read.return_value = {'authenticated': False, 'method': None}
+    rig.service.managed_account_factory = Mock(return_value=account)
+    desired = dict(provider='openai', model='new-model', protocol='openai-responses',
+                   endpoint=None, credentialRef=None, authentication='managed-account')
+    with pytest.raises(ValueError, match='login required'):
+        rig.service.prepare(rig.target, desired, operation_key='return-to-official')
+    rig.channel._configuration_rpc.assert_not_called()
+    rig.owners.begin_restoration.assert_not_called()
+
+
+def test_managed_destination_refuses_without_an_owned_account_owner(rig):
+    """B02: no factory, foreign brand and wrong-scope login each refuse first.
+
+    The managed destination exists only when the Harness account owner resolves
+    it. A Profile can neither name a native path nor substitute an API key for
+    the subscription, and none of these refusals may reach a native effect.
+    """
+    desired = dict(provider='openai', model='new-model', protocol='openai-responses',
+                   endpoint=None, credentialRef=None, authentication='managed-account')
+
+    # No account factory at all: the brand cannot resolve an owned destination.
+    rig.service.managed_account_factory = None
+    with pytest.raises(ValueError, match='authentication destination unavailable'):
+        rig.service.prepare(rig.target, desired, operation_key='no-factory')
+
+    # A factory that raises (no managed account owned by this Harness).
+    rig.service.managed_account_factory = Mock(side_effect=RuntimeError('absent'))
+    with pytest.raises(RuntimeError):
+        rig.service.prepare(rig.target, desired, operation_key='factory-absent')
+
+    # Right owner, wrong scope: an API-key account is not a managed subscription.
+    account = Mock(account_directory='/synthetic/owned-account')
+    account.read.return_value = {'authenticated': True, 'method': 'api-key'}
+    rig.service.managed_account_factory = Mock(return_value=account)
+    with pytest.raises(ValueError, match='login required'):
+        rig.service.prepare(rig.target, desired, operation_key='wrong-scope')
+
+    rig.channel._configuration_rpc.assert_not_called()
+    rig.owners.begin_restoration.assert_not_called()
+
+
+def test_managed_destination_is_never_written_back_into_the_profile_intent(rig):
+    """B01: the resolved account path stays Harness-private, never a Profile field."""
+    account = Mock(account_directory='/synthetic/owned-account')
+    account.read.return_value = {'authenticated': True, 'method': 'chatgpt-managed'}
+    rig.service.managed_account_factory = Mock(return_value=account)
+    desired = dict(provider='openai', model='new-model', protocol='openai-responses',
+                   endpoint=None, credentialRef=None, authentication='managed-account')
+    plan = rig.service.prepare(rig.target, desired, operation_key='private-destination')
+    assert 'accountDirectory' not in desired
+    assert '/synthetic/owned-account' not in repr(plan)
+    assert '/synthetic/owned-account' not in repr(rig.service._plans)
+    assert 'accountDirectory' not in json.dumps(rig.service.digest(desired))
+
+
 def test_effect_once_retains_conversation_and_requires_independent_completion(rig):
     plan = prepare(rig)
     result = rig.service.execute(plan, rig.desired, credential='synthetic-secret')

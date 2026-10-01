@@ -1,5 +1,6 @@
 """Seed only an explicitly supplied disposable product root; no channel/model calls."""
 import json
+import os
 from pathlib import Path
 import sys
 import subprocess
@@ -14,7 +15,9 @@ project.mkdir(mode=0o700)
 root = Path(__file__).resolve().parents[3]
 module = (root / 'plugins/harness/packaging/native-server-plan.mjs').as_uri()
 options = dict(harnessId='codex', nativeProfileHarnesses=['codex'],
-    pluginRoot=str(root / 'plugins/harness'), artifactRoot='/opt/ordessa/harnesses/profile-codex-managed/artifacts')
+    pluginRoot=str(root / 'plugins/harness'),
+    artifactRoot=os.environ.get('ORDESSA_NATIVE_PROFILE_ARTIFACT_ROOT')
+        or '/opt/ordessa/harnesses/profile-codex-managed/artifacts')
 plan = json.loads(subprocess.check_output(['node', '--input-type=module', '-e',
     f'import {{nativeServerPlan}} from {json.dumps(module)}; console.log(JSON.stringify(nativeServerPlan({json.dumps(options)}).args))'], text=True))
 runtime = create_composition().native_runtime(private / 'data', plugin_root=root / 'plugins/harness',

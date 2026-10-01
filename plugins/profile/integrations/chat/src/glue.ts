@@ -106,7 +106,13 @@ export function createProfileChatGlue(
       const offeredHarness = input.nativeSessions.getSnapshot?.().agent?.connection.harnessId
       if (selected && offeredHarness && offeredHarness !== selected.harnessId)
         return { status: 'refused', reason: '所选 Profile 属于另一 Harness，请先选择对应连接；没有创建会话。' }
-      if (selected && target.kind === 'draft' && selected.harnessId !== 'pi' && !input.profiles.prepareNativeCreation)
+      // Brand differences belong to the Harness, not to this frontend: whether a
+      // given Harness needs pre-creation native parameters is the backend's own
+      // per-harness verdict (`prepareNativeCreation` answers `not-required` for
+      // the ones that apply live). The renderer therefore demands the port for
+      // EVERY draft selection and forwards the call unchanged; it never encodes
+      // which Harness may skip it.
+      if (selected && target.kind === 'draft' && !input.profiles.prepareNativeCreation)
         return { status: 'refused', reason: '所选 Harness 缺少 Profile 创建前准备服务；草稿和选择已保留。' }
       try {
         if (selected && target.kind === 'draft') retainedSelections.set(retainedKey, { selection: selected, connectionId: native?.selectedConnectionId })

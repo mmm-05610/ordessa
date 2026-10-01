@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import sqlite3
 
-from conftest import make_core, write_legacy_db
+from profile_harness_doubles import make_core, write_legacy_db
 from ordessa_profile import import_legacy
 
 

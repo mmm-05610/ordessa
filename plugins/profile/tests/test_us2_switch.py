@@ -11,7 +11,7 @@ import inspect
 
 import pytest
 
-from conftest import ScriptedProvider, make_core
+from profile_harness_doubles import ScriptedProvider, make_core
 from ordessa_profile import ProfileError
 
 MODEL = ScriptedProvider(
@@ -127,7 +127,7 @@ def test_us2_4_unprovable_application_marks_needs_recovery(tmp_path):
     # v2 (specs/011-z1-profile): the proof comes from the application port.
     # A port answering "unknown" blocks sending and marks the session; the
     # DB alone can never upgrade the outcome (PV-04/PV-07).
-    from conftest import ScriptedConfigPort
+    from profile_harness_doubles import ScriptedConfigPort
     core, a, b = ab_world(
         tmp_path, config_port=ScriptedConfigPort(apply_verdict="unknown"))
     core.sessions.select_profile(
@@ -323,7 +323,7 @@ def test_sc003_zero_false_success_and_zero_partial_turns(tmp_path):
     assert core1.sessions.session_config("S")["switch_state"] == "pending"
 
     # counterexample 2: absent provider for a required item
-    from conftest import StaticHarnessCatalog
+    from profile_harness_doubles import StaticHarnessCatalog
     catalog = StaticHarnessCatalog({"pi": frozenset({"output_style/style"})})
     ce2 = tmp_path / "ce2"; ce2.mkdir()
     core2 = make_core(ce2, harnesses=catalog,
@@ -349,7 +349,7 @@ def test_sc003_zero_false_success_and_zero_partial_turns(tmp_path):
 
     # counterexample 3: application cannot be proven (port answers unknown;
     # controlled fixture — the real Harness port is consumed via harness-api)
-    from conftest import ScriptedConfigPort
+    from profile_harness_doubles import ScriptedConfigPort
     ce3 = tmp_path / "ce3"; ce3.mkdir()
     core3, a3, b3 = ab_world(
         ce3, config_port=ScriptedConfigPort(apply_verdict="unknown"))

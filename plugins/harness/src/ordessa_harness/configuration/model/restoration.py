@@ -38,9 +38,10 @@ class ProviderRestorationOutcome:
 class ProviderRestorationService:
     operation_prefix = 'restore:'
     mode = 'restart-resume'
-    def __init__(self, channels, owners, *, verify, lease=None):
+    def __init__(self, channels, owners, *, verify, lease=None, managed_account_factory=None):
         self.channels, self.owners, self.verify = channels, owners, verify
         self.lease = lease or (lambda brand, publication: nullcontext())
+        self.managed_account_factory = managed_account_factory
         self._plans, self._attempts, self._channels = {}, {}, {}
         self._lock = RLock()
 
@@ -76,7 +77,13 @@ class ProviderRestorationService:
         params = initial_model_params(plan.harness_id, desired, plan.operation_id,
                                       credential=credential)
         if params['provider'].get('authentication') is not None:
-            raise ValueError('Native restoration authentication destination unavailable')
+            if plan.harness_id != 'codex' or self.managed_account_factory is None:
+                raise ValueError('Native restoration authentication destination unavailable')
+            account = self.managed_account_factory(plan.harness_id)
+            if account.read(refresh=True) != {'authenticated': True, 'method': 'chatgpt-managed'}:
+                raise ValueError('Managed account login required')
+            # Owned backend path, never a Profile field or a public receipt.
+            params['provider']['accountDirectory'] = str(account.account_directory)
         return dict(params, sessionId=plan.before.owner.native_session_id,
                     expectedGeneration=plan.expected_generation,
                     expectedConfigDigest=plan.expected_config_digest,

@@ -4,9 +4,12 @@ import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { OwnedResources, type ResourceScope } from '@ordessa/extension-api'
+import { createChatContributions } from '@extensions/ordessa.chat-api/contract.js'
+import { createUiComponentsService } from '../../../../../packages/desktop-platform/ui-components/src/index'
 import { ModelSelector, type SessionEligibilitySource } from '../src/selector'
 import { createChatContributionsStub } from '../src/stub-chat-contract'
 import createPlugin from '../src/entry'
+import { MODEL_SELECTOR_ID, ModelSelectorKey } from '../src/chat-api-entry'
 import type { ProviderConfigView } from '../../contracts/index'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -157,15 +160,26 @@ describe('contribution registration semantics (contract stub)', () => {
   })
 
   it('the plugin wires the selector through Chat\'s public contract only', () => {
-    const registry = createChatContributionsStub()
+    // T4.1 (2026-10-01): this assertion used to run against the LOCAL stub and
+    // passed because `src/entry.tsx` registered into it. The declared entry now
+    // consumes the real chat-api contract (see tests/production-entry.test.tsx
+    // for the full proof), so the same intent is re-asserted there: the plugin
+    // reaches Chat only through `ChatContributionsToken` + `addContribution`.
     const resources = new OwnedResources()
     cleanup.push(() => resources.dispose())
-    const context = { root: { mount: () => ({ dispose() {} }) }, resources }
-    const plugin = createPlugin()
-    plugin.activate(context as never, registry.stub, fakeService())
-    const contributions = registry.contributions(resources)
-    expect(contributions).toHaveLength(1)
-    expect(contributions[0].slot).toBe('composer.footer')
-    expect(contributions[0].id).toBe('model-provider.composer.footer')
+    const chat = createChatContributions()
+    const { port } = { port: { ready: true, scope: 's', call: async () =>
+      ({ kind: 'Accepted', requestId: 'r', result: {} }) } }
+    const ui = createUiComponentsService([
+      { componentId: ModelSelectorKey.id, major: 1, providerId: 'ordessa.model-provider-chat' },
+    ])
+    cleanup.push(() => ui.dispose())
+    createPlugin().activate(
+      { root: { mount: () => ({ dispose() {} }) }, resources } as never,
+      chat, ui.uiComponents, port as never, fakeService())
+    const [view] = chat.contributionsBySlot('composer.toolbar').getSnapshot()
+    expect(view).toBeDefined()
+    expect(view.id).toBe(MODEL_SELECTOR_ID)
+    expect(view.keyId).toBe(ModelSelectorKey.id)
   })
 })

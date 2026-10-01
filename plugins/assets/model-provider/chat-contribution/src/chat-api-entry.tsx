@@ -4,12 +4,12 @@
 // (implementationSha a3ec20c046, token 'ordessa.chat.contributions.v1').
 //
 // SLOT MAPPING (recorded, not silently substituted): the model-provider design
-// wording says "composer.footer", but the frozen chat-api contract has no such
+// wording names a composer footer, but the frozen chat-api contract has no such
 // slot — its six slots are frozen and the composer-attached one is
 // `composer.toolbar` (Chat renders the composer's contribution area from it).
 // This module therefore registers on the owner's published slot; if Z2 later
 // freezes a footer slot the switch is mechanical (one slot string + order).
-import { useMemo } from 'react'
+import { useMemo, type ComponentType } from 'react'
 import {
   chatContribution,
   defineChatComponentKey,
@@ -51,6 +51,17 @@ export function ChatModelSelector({ wiring, location }: {
                         onQueue={(choice) => { void client.queue(choice) }} />
 }
 
+/** The component bound to {@link ModelSelectorKey}. Chat resolves a
+ * contribution by binding its key through `ui.bind(key, { required: false })`,
+ * so the contribution registration alone renders nothing: the provider for
+ * this key must be registered too. The service and the wire port are closed
+ * over here, never passed through Chat's props. */
+export function modelSelectorComponent(wiring: SelectorWiring): ComponentType<{ location: ChatLocation }> {
+  return function ModelSelectorForLocation(props: { location: ChatLocation }) {
+    return <ChatModelSelector wiring={wiring} location={props.location} />
+  }
+}
+
 function adaptLocation(location: ChatLocation) {
   // ChatLocation → the selector's session reference; a draft has no native
   // session id, so the selector shows its honest "pick a harness/session
@@ -89,6 +100,10 @@ export function registerModelSelector(
       }
     },
   })
+  // The wiring travels through the KEY-BOUND COMPONENT (see
+  // `modelSelectorComponent`), not through these projection props: Chat's
+  // contribution context is a read-only display context and must not be handed
+  // a service instance.
   void wiring
   return chat.forScope(scope).addContribution(registration)
 }

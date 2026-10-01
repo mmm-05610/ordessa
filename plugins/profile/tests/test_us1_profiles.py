@@ -107,7 +107,7 @@ def test_facet_edits_refused_on_archived(core):
 # --- FR-003 / US1.4: absent-plugin comparison (zero facet providers) -----
 
 def test_fr003_base_management_without_any_facet_plugin(tmp_path):
-    from conftest import make_core
+    from profile_harness_doubles import make_core
     core = make_core(tmp_path)  # no providers registered at all
     created = core.profiles.create("k1", harness_id="codex", display_name="Bare")
     # no facet can be written while its provider is absent

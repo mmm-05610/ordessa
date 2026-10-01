@@ -56,6 +56,66 @@ export function enhanceSource(source, brand) {
       'ANTHROPIC_AUTH_TOKEN: claudeProviderAuthToken(config.headers), // Private provider credential, not login placeholder')
   }
   if (brand === 'codex') {
+    source = once(source, '  const codexConnection = startCodexConnection(codexPath);\n  const maxStderrTailChars',
+      '  let codexConnection = startCodexConnection(codexPath);\n  const maxStderrTailChars')
+    // ACP stdin close must release the whole owned native group, not one pid.
+    source = once(source,
+      '  process.stdin.on("close", () => {\n    codexConnection.process.stdin.end();\n    setTimeout(() => {\n      if (!codexConnection.process.killed) {\n        logger.log("Codex still running 2s after stdin closed; terminating process");\n        codexConnection.process.kill();\n      }\n    }, 2e3);\n  });',
+      '  process.stdin.on("close", () => {\n    codexConnection.process.stdin.end();\n    setTimeout(() => {\n      void stopNativeCodexConnection(codexConnection).catch(() => {});\n    }, 2e3);\n  });')
+    source = once(source,
+      '    return new CodexAcpServer(connection, codexClient, defaultAuthRequest, () => codexConnection.process.exitCode, () => stderr);',
+      `    const instance = new CodexAcpServer(connection, codexClient, defaultAuthRequest, () => codexConnection.process.exitCode, () => stderr);
+    instance.ordessaReplaceCodexProcess = async ({sessionId, model, provider}) => {
+      const current = instance.codexAcpClient;
+      // Read this owner's live thread before any native effect. A sibling thread,
+      // an unpersisted thread or a damaged rollout refuses with zero effects.
+      const rollout = await captureCodexHistory({client: current, sessionId,
+        home: current.getHomePath(), previouslyOwnedPath: current.ordessaOwnedRolloutPath});
+      const env = {...process.env, CODEX_HOME: process.env.ORDESSA_NATIVE_INSTANCE_DIR};
+      delete env.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR;
+      const managed = provider.authentication === 'managed-account';
+      if (managed) {
+        env.CODEX_HOME = managedAccountDirectory(provider.accountDirectory, env.ORDESSA_NATIVE_INSTANCE_DIR);
+        env.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR = env.CODEX_HOME;
+      }
+      await instance.closeSession({sessionId});
+      const previous = codexConnection;
+      // Publish the new child immediately so ACP shutdown always owns it, and
+      // never spawn before the old native owner's exit is authoritatively
+      // confirmed. Any failure leaves the old binding invalid.
+      await orchestrateCodexReplacement({instance, sessionId,
+        capture: async () => rollout,
+        stop: () => stopNativeProcess(previous.process),
+        start: () => {
+          codexConnection = startCodexConnection(codexPath, env);
+          stderr = '';
+          codexConnection.process.stderr.addListener('data', data => {
+            stderr = (stderr + data.toString()).slice(-maxStderrTailChars);
+          });
+          return codexConnection;
+        },
+        initialize: async () => {
+          await assertNativeCodexChild(codexConnection);
+          rebindCodexConnection(instance, {connection: codexConnection.connection,
+            AppServerClass: CodexAppServerClient, ClientClass: CodexAcpClient, CommandsClass: CodexCommands,
+            config: config2, model, rolloutPath: rollout, acpConnection: connection,
+            runWithProcessCheck: operation => instance.runWithProcessCheck(operation),
+            onAuthStateRefresh: () => instance.refreshSessionsAuthState(null)});
+          const fresh = instance.codexAcpClient;
+          await fresh.initialize({clientInfo: instance.clientInfo});
+          if (managed) {
+            const account = await fresh.codexClient.accountRead({refreshToken: true});
+            if (account.account?.type !== 'chatgpt') throw new Error('Managed account login required');
+          }
+        }});
+      process.env.CODEX_HOME = env.CODEX_HOME;
+      if (managed) process.env.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR = env.CODEX_HOME;
+      else delete process.env.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR;
+      return {sessionId, rolloutPath: rollout};
+    };
+    return instance;`)
+    source = once(source, '      threadId: request.sessionId\n    });\n    onSubscribed?.();\n    const codexModels',
+      '      threadId: request.sessionId,\n      ...(this.ordessaResumeRolloutPath ? {path: this.ordessaResumeRolloutPath} : {})\n    });\n    assertResumedThread(response, request.sessionId, this.ordessaResumeRolloutPath);\n    onSubscribed?.();\n    const codexModels')
     source = once(source,
       '.onRequest(methods.agent.authenticate, (ctx) => getAgent().authenticate(ctx.params, ctx.requestId))',
       '.onRequest(methods.agent.authenticate, (ctx) => ordessaProfile(getAgent()).withExternalProvider(() => getAgent().authenticate(ctx.params, ctx.requestId)))')
@@ -65,12 +125,36 @@ export function enhanceSource(source, brand) {
       source = once(source, `  async ${name} {`,
         `  async ${name} {\n    if (process.env.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR) throw new Error('Managed account changes require the account owner');`)
     }
+    // Launch the verified native binary directly from inside the enhanced
+    // artifact. The Node launcher spawns that binary with stdio: "inherit" and
+    // forwards only SIGINT/SIGTERM/SIGHUP, so a launcher pid is never proof of
+    // native exit; resolution and platform selection stay Harness-internal.
     source = once(source, '  const spawnEnv = env ?? process.env;',
-      `  const spawnEnv = env ?? process.env;\n  const ordessaArgs = spawnEnv.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR ? ['-c', 'cli_auth_credentials_store="keyring"', 'app-server'] : ['app-server'];\n  if (spawnEnv.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR && process.platform === 'win32') throw new Error('Managed account launch is not supported on this platform');`)
-    source = once(source, 'spawn(codexPath, ["app-server"], { env: spawnEnv })',
-      'spawn(codexPath, ordessaArgs, { env: spawnEnv })')
-    source = once(source, 'spawn(process.execPath, [bundledCodexPath, "app-server"], { env: spawnEnv })',
-      'spawn(process.execPath, [bundledCodexPath, ...ordessaArgs], { env: spawnEnv })')
+      `  const spawnEnv = env ?? process.env;
+  const ordessaArgs = spawnEnv.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR ? ['-c', 'cli_auth_credentials_store="keyring"', 'app-server'] : ['app-server'];
+  if (spawnEnv.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR && process.platform === 'win32') throw new Error('Managed account launch is not supported on this platform');
+  const ordessaNativeCodex = resolveNativeCodexBinary();`)
+    source = once(source,
+      'codex = process.platform === "win32" ? spawn(`"${codexPath}" app-server`, { shell: true, env: spawnEnv }) : spawn(codexPath, ["app-server"], { env: spawnEnv });',
+      'codex = spawnNativeCodex({nativeBinary: codexPath ? assertNativeCodexSpecifier(codexPath, ordessaNativeCodex) : ordessaNativeCodex, args: ordessaArgs, env: spawnEnv});')
+    source = once(source, 'codex = spawn(process.execPath, [bundledCodexPath, "app-server"], { env: spawnEnv });',
+      'codex = spawnNativeCodex({nativeBinary: ordessaNativeCodex, args: ordessaArgs, env: spawnEnv});')
+    source = once(source, '  return { connection, process: codex };',
+      '  codex.ordessaNativeCodex = ordessaNativeCodex;\n  return { connection, process: codex };')
+    // Module scope, not inside startCodexConnection: the ACP shutdown handler and
+    // the replacement owner below both close a native child from elsewhere.
+    source = once(source, 'function startCodexConnection(codexPath, env) {',
+      `// Bound: only the OS exit event plus an empty owned process set proves exit.
+function stopNativeCodexConnection(connection) {
+  return stopNativeProcess(connection.process, {graceMs: 2e3, terminateMs: 2e3, killMs: 2e3});
+}
+async function assertNativeCodexChild(connection) {
+  const child = connection.process;
+  const identity = await child.ordessaNativeIdentity;
+  assertNativeProcess(identity.pid, child.ordessaNativeCodex);
+  return identity;
+}
+function startCodexConnection(codexPath, env) {`)
     // Upstream raw RPC tracing can include login tokens and provider headers.
     // The enhanced artifact never installs that trace hook on its child.
     source = once(source, '  attachLogs(codex);', '  // Raw native RPC tracing disabled by Ordessa.')
@@ -82,7 +166,7 @@ export function enhanceSource(source, brand) {
   }
   // Preserve a CLI shebang as the first line.
   const imported = "import { nativeProfileBridge } from './ordessa-native-profile.mjs';\n"
-    + (brand === 'codex' ? "import { captureCodexThreadRoute } from './ordessa-native-routing.mjs';\n"
+    + (brand === 'codex' ? "import { captureCodexThreadRoute } from './ordessa-native-routing.mjs';\nimport { assertNativeCodexSpecifier, assertNativeProcess, assertResumedThread, captureCodexHistory, managedAccountDirectory, orchestrateCodexReplacement, rebindCodexConnection, resolveNativeCodexBinary, spawnNativeCodex, stopNativeProcess } from './ordessa-codex-process.mjs';\n"
       : "import { claudeProviderAuthToken } from './ordessa-claude-auth.mjs';\nimport { providerModelCandidate, retainAcceptedProviderModel } from './ordessa-claude-provider-model.mjs';\n")
   source = source.startsWith('#!') ? source.replace('\n', '\n' + imported) : imported + source
   return source
@@ -95,6 +179,9 @@ export function enhanceStaging(dist, brand) {
   const target = path.join(dist, pin.file)
   const enhanced = enhanceSource(readFileSync(target, 'utf8'), brand)
   const files = {
+    ...(brand === 'codex' ? {
+      'ordessa-codex-process.mjs': readFileSync(path.join(HERE, 'codex-process.mjs'), 'utf8'),
+    } : {}),
     ...(brand === 'claude-code' ? {
       'ordessa-claude-auth.mjs': readFileSync(path.join(HERE, 'claude-auth.mjs'), 'utf8'),
       'ordessa-claude-provider-model.mjs': readFileSync(path.join(HERE, 'claude-provider-model.mjs'), 'utf8'),

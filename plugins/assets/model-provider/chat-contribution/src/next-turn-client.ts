@@ -3,8 +3,7 @@
 // REQ-Z3-2/REQ-Z3-4); until it lands, this module is the contribution's
 // honest consumer: it queues through the frozen ``modelProvider.*`` wire and
 // applies ONLY results whose identity matches its own session and operation.
-import type { ComposerLocation } from './stub-chat-contract'
-import type { QueuedChoice } from './selector'
+import type { ComposerLocation, QueuedChoice } from './selector'
 
 export const TRANSPORT_MISSING = 'MODEL_PROVIDER_CHAT_TRANSPORT_MISSING'
 export const TARGET_UNAVAILABLE = 'CHAT_TARGET_UNAVAILABLE'

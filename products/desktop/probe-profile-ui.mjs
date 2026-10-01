@@ -12,9 +12,11 @@ try {
   execFileSync(path.join(root,'.cleanup-evidence/product-integration-venv/bin/python'),
     [path.join(root,'products/server/scripts/seed-profile-ui-probe.py'),home],{stdio:['ignore','pipe','pipe']})
   const plan = nativeServerPlan({harnessIds:['pi','codex','claude-code'], pluginRoot:path.join(root,'plugins/harness'),
-    artifactRoot:'/opt/ordessa/harnesses/artifacts', nativeProfileHarnesses:['codex','claude-code'], piProfileBridge:true,
-    artifactRoots:{codex:'/opt/ordessa/harnesses/profile-codex-managed/artifacts',
-      pi:'/opt/ordessa/harnesses/profile-chat-fixes/artifacts', 'claude-code':'/opt/ordessa/harnesses/profile-chat-fixes/artifacts'}})
+    artifactRoot:process.env.ORDESSA_INSTALLED_ARTIFACT_ROOT ?? '/opt/ordessa/harnesses/artifacts',
+    nativeProfileHarnesses:['codex','claude-code'], piProfileBridge:true,
+    artifactRoots:{codex:process.env.ORDESSA_NATIVE_PROFILE_ARTIFACT_ROOT ?? '/opt/ordessa/harnesses/profile-codex-managed/artifacts',
+      pi:process.env.ORDESSA_PI_PROFILE_ARTIFACT_ROOT ?? '/opt/ordessa/harnesses/profile-chat-fixes/artifacts',
+      'claude-code':process.env.ORDESSA_CLAUDE_PROFILE_ARTIFACT_ROOT ?? '/opt/ordessa/harnesses/profile-chat-fixes/artifacts'}})
   const child = spawn(path.join(root,'node_modules/electron/dist/electron'),
     ['--no-sandbox','--disable-gpu','--ozone-platform=x11','.'], {cwd:path.join(root,'apps/desktop'),
     env:{...process.env, MODULAR_USER_DATA:home, ORDESSA_EXTENSION_HOME:home, ORDESSA_DATA_ROOT:path.join(home,'data'),

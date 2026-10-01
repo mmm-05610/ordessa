@@ -11,6 +11,12 @@ export function restorationOperations({ read, withProvider, restore, invalidPara
   const records = new Map()
   const fail = message => { throw invalidParams(message) }
   const parse = input => {
+    const managed = exact(input?.provider, ['providerId', 'authentication', 'accountDirectory'])
+      && input.provider.providerId === 'openai' && input.provider.authentication === 'managed-account'
+      && text(input.provider.accountDirectory)
+    const gateway = (exact(input?.provider, ['providerId', 'apiType', 'baseUrl'])
+      || exact(input?.provider, ['providerId', 'apiType', 'baseUrl', 'headers']))
+      && ['providerId', 'apiType', 'baseUrl'].every(key => text(input.provider[key]))
     if (!exact(input, ['sessionId', 'operationId', 'expectedGeneration', 'expectedConfigDigest', 'target', 'provider', 'model'])
         || !text(input.sessionId) || !text(input.operationId, 128) || !input.operationId.startsWith('restore:')
         || !text(input.expectedGeneration) || typeof input.expectedConfigDigest !== 'string'
@@ -18,10 +24,12 @@ export function restorationOperations({ read, withProvider, restore, invalidPara
         || !text(input.model) || !exact(input.target, ['server_id', 'session_id', 'channel_id', 'runtime_generation'])
         || !['server_id', 'session_id', 'channel_id'].every(key => text(input.target[key]))
         || !Number.isSafeInteger(input.target.runtime_generation) || input.target.runtime_generation < 0
-        || (!exact(input.provider, ['providerId', 'apiType', 'baseUrl'])
-          && !exact(input.provider, ['providerId', 'apiType', 'baseUrl', 'headers']))
-        || !['providerId', 'apiType', 'baseUrl'].every(key => text(input.provider[key])))
+        || !managed && !gateway)
       fail('Expected bounded exact provider restoration')
+    if (managed) {
+      if (Buffer.byteLength(stableJSON(input)) > 65536) fail('Restoration input exceeds capacity')
+      return structuredClone(input)
+    }
     let url
     try { url = new URL(input.provider.baseUrl) } catch { fail('Invalid provider endpoint') }
     if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash)
@@ -58,8 +66,10 @@ export function restorationOperations({ read, withProvider, restore, invalidPara
         const after = read({ sessionId: input.sessionId })
         record.after = after
         const model = after.configOptions.filter(option => option.id === 'model')
-        if (proof?.sessionId !== input.sessionId || proof?.apiType !== input.provider.apiType
-            || proof?.baseUrl !== input.provider.baseUrl || after.busy
+        const routeMatches = input.provider.authentication === 'managed-account'
+          ? proof?.authentication === 'managed-account' && proof?.providerId === 'openai'
+          : proof?.apiType === input.provider.apiType && proof?.baseUrl === input.provider.baseUrl
+        if (proof?.sessionId !== input.sessionId || !routeMatches || after.busy
             || after.generation === before.generation || model.length !== 1
             || model[0].currentValue !== input.model) {
           record.phase = 'restored-readback-mismatch'
@@ -70,7 +80,7 @@ export function restorationOperations({ read, withProvider, restore, invalidPara
       } catch (error) {
         record.phase = 'restoration-outcome-unknown'
         // Closed vocabulary only: upstream error text can contain credentials.
-        if (['provider', 'close', 'resume', 'preferences', 'model'].includes(error?.restorationPhase))
+        if (['provider', 'close', 'restart', 'resume', 'preferences', 'model'].includes(error?.restorationPhase))
           record.failureStep = error.restorationPhase
         if (['native-history-unavailable', 'native-authentication-rejected', 'native-model-rejected', 'native-request-rejected'].includes(error?.restorationReason))
           record.failureReason = error.restorationReason

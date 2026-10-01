@@ -11,7 +11,7 @@ import sqlite3
 
 import pytest
 
-from conftest import ScriptedProvider, make_core
+from profile_harness_doubles import ScriptedProvider, make_core
 from ordessa_profile import ProfileCore, ProfileError, StaticHarnessCatalog
 from ordessa_profile.storage import ProfileDatabase, _SCHEMA_V1
 
@@ -144,7 +144,7 @@ def test_v2_fresh_database_reaches_version_two(tmp_path):
 
 def test_legacy_import_still_works_on_v2_store(tmp_path):
     """The v21 ``server_profiles`` import path keeps its semantics."""
-    from conftest import write_legacy_db
+    from profile_harness_doubles import write_legacy_db
     legacy = tmp_path / "legacy.sqlite"
     write_legacy_db(legacy, [{
         "id": "profile_from_v21", "version": 2, "name": "imported",

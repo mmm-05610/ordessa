@@ -7,7 +7,7 @@ from ordessa_profile.core import StaticHarnessCatalog
 from ordessa_profile.errors import ProfileError
 from ordessa_profile.server_plugin import ProfileServerPlugin, project
 from server_plugin_api import ServerPluginContext, WireError
-from conftest import ScriptedProvider, ScriptedConfigPort
+from profile_harness_doubles import ScriptedProvider, ScriptedConfigPort
 
 
 def test_pending_selection_uses_registered_reference_without_application(tmp_path):

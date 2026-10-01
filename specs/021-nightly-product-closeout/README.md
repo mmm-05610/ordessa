@@ -1,5 +1,10 @@
 # 021 · Nightly Product Closeout — 控制面入口
 
+> **2026-10-01 夜间接管**：当前执行入口是 [overnight-handoff.md](overnight-handoff.md)，
+> 逐条门在 [overnight-acceptance.md](overnight-acceptance.md)，依赖任务在
+> [overnight-tasks.md](overnight-tasks.md)。下文2026-09-30 deadline为历史记录，不据此空转。
+> 原产品验收合同不删除；当前事实读 [takeover-progress.md](takeover-progress.md)。
+
 > **MORNING_CANDIDATE = YES 不是任务停止条件。**
 > 它只是最低可交付产品基线（floor，不是 ceiling）。只要尚未进入最终
 > Closeout，Lead 必须继续推进更高完成度。

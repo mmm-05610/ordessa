@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from conftest import ScriptedProvider, ScriptedV2Provider, make_core
+from profile_harness_doubles import ScriptedProvider, ScriptedV2Provider, make_core
 from ordessa_profile import ProfileError
 from ordessa_profile.harness_port_adapter import HarnessApiConfigPort
 

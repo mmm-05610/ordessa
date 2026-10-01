@@ -11,7 +11,7 @@ import sqlite3
 
 import pytest
 
-from conftest import ScriptedProvider, make_core
+from profile_harness_doubles import ScriptedProvider, make_core
 from ordessa_profile import ProfileError
 
 MODEL = ScriptedProvider(
@@ -120,7 +120,7 @@ def test_us5_4_session_only_values_are_labelled_and_restorable(tmp_path):
 def test_us5_2_needs_recovery_state_is_visible_not_faked(tmp_path):
     # v2: an unknown application outcome is visible as needs_recovery with
     # an honest blocker; the journal carries the unproven operation.
-    from conftest import ScriptedConfigPort
+    from profile_harness_doubles import ScriptedConfigPort
     core, a, b = world(
         tmp_path, config_port=ScriptedConfigPort(apply_verdict="unknown"))
     core.sessions.select_profile(
