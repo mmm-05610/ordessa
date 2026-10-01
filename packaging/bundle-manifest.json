@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
   "version": "0.1.0",
-  "build": "20260929-418c5cfbe",
+  "build": "20261001-16bf0a204",
   "productName": "Ordessa Desktop",
-  "createdAt": "2026-09-29T18:53:41.087Z",
+  "createdAt": "2026-10-01T18:40:54.400Z",
   "components": [
     {
       "kind": "desktop",
       "source": "apps/desktop/dist + products/desktop/dist",
       "version": "0.1.0",
-      "sha256": "cc6ade313e26f2da6266ce24ce0440ba805b8d220f11edc016605398b29d46fc",
+      "sha256": "fa4486243146490f79050642e75ca13fc1b82ff5840c3ecb93e112a0a072f224",
       "dest": "/opt/ordessa/app"
     },
     {
@@ -23,14 +23,14 @@
       "kind": "server-deps",
       "source": "apps/server/lockfiles/server-linux-py312.txt",
       "version": "pinned",
-      "sha256": "b529bcd92a3480d05c034941aa2d0d0afb595ebb4c66f098d10c0c22a6579705",
+      "sha256": "c3327e6b1a70b50492379201dd2669b299fa68c638f2bbe1ca2fe43a2b762072",
       "dest": "/opt/ordessa/python/lib/python3.12/site-packages"
     },
     {
       "kind": "server-product",
-      "source": "products/server + local closure (16 local distributions)",
+      "source": "products/server + local closure (19 local distributions)",
       "version": "0.1.0",
-      "sha256": "5e2e961ce43e7cd97b5317cbdfd081b7d305a852eab2d9a40b8ba74c2858a883",
+      "sha256": "1829c0755d97a839d7d468362b9a12337ebd8100c62529207778da47ef11da92",
       "dest": "/opt/ordessa/python/lib/python3.12/site-packages"
     },
     {
@@ -51,10 +51,10 @@
       "kind": "licenses",
       "source": "build-time aggregation",
       "version": "0.1.0",
-      "sha256": "dc63877aeee8320623726d7aaf4ba823a3958e483df057c49793e17eaee8bf0e",
+      "sha256": "9d23447627d0059e43ef20d8b6528109da954241745198b0558f0b19847959e5",
       "dest": "/opt/ordessa/licenses",
       "counts": {
-        "python": 46,
+        "python": 54,
         "npm": 0
       }
     }

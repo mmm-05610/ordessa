@@ -4,6 +4,378 @@
 所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
 未合并、未 push、未启停既有用户服务、未重建 deb。三品牌后端真实聊天已通过；Codex Desktop 已通过 Profile 首发与同会话下一轮切换，两条真实回复。完整三品牌 UI/发行验收仍未完成。
 
+## CP-N1 逐 ID 验收台账（2026-10-01，ZCode 主会话第三轮收口，F10 交付物）
+
+本节是 `overnight-acceptance.md` 全部 **130 个 ID** 的逐条判定。判定只写**当前候选上实际跑过的**证据；
+低等级不替代高等级（合同 §0），部分实现不勾整项。`L1` 受控单测 / `L2` 真实原生可执行文件无模型 /
+`L3` 后端真实供应商 / `L4` 实际 Electron UI 操作链 / `L5` 安装后产品。
+
+**总判定：`PARTIAL`，不是 `COMPLETE_VERIFIED`。** A 组在 L1+L2 立住，B10/B11 卡在 sudo 与一次真实
+历史失败，D 组零 L4，P 组 P07/P08 为**真实装配缺口**而非仅证据缺口，S02/S03 未跑。缺的具体用户动作见本节末尾。
+
+### 本轮 Lead 亲跑的门（C22 合同要求"Lead 亲跑受影响门"，F02/F03/F04 取数）
+
+全部在当前候选 HEAD `16bf0a2048` 上实跑，退出码为真实退出码，未被后续 tail 覆盖：
+
+| 门 | 结果 | 退出码 | 与台账基线比较 |
+| --- | --- | --- | --- |
+| `node --test plugins/harness/packaging/native-profile/*.test.mjs` | **82 pass / 0 fail** | 0 | 早前记录的 81 → 82（本轮新增的进程归属/偏好读回反例在内） |
+| `pytest plugins/profile plugins/assets/model-provider -q` | **473 passed**，1 条既有 Starlette warning | 0 | 与记录的 473 **完全一致**，本轮改动零回归 |
+| `pytest plugins/harness/tests/configuration_model …/test_provider_restoration_service.py …/test_pi_provider_registration_service.py -q` | **166 passed** | 0 | — |
+| `npm run test:packaging`（`deb-contract` + `update-chain`，改 `build-deb.mjs` 后专跑） | **45 pass / 0 fail**，12 suites | 0 | 改了打包脚本后重跑，确认没碰坏发行契约 |
+
+注意 `deb-contract` **通过**这件事本身就是 P08 的证据：它 45 条全绿，而这个 deb 的
+`opt/ordessa/harnesses` 里**一个条目都没有**。
+
+解释器用的是 `.cleanup-evidence/product-integration-venv`，**没有**重指共享 `.venv`。
+这三个数只覆盖 C 线受影响的门，**不是全仓回归**，也不能替代 D 组零 L4 的事实。
+
+
+
+**A01/A03/A04 重新在"已安装的原生二进制"上做 L2 —— 替换掉一条已过期的 L2 记录。**
+本文件早先（CP-N0 第 30-40 行）记录的 "A01 PASS (L2)" 与 "A03 反例成立（L2，已证红）" 是对着
+**Node launcher 实现**测的；`8c3f9a2f61` 已经把 launcher 层整个删掉，那次测量描述的不是当前候选。
+本轮用 `spawnNativeCodex` 拉起 `/opt/ordessa/harnesses/profile-codex-managed/artifacts/codex-runtime/…/bin/codex`
+（`codex-cli 0.147.0`，258MB 真二进制），实测：
+
+- **A01**：`/proc/<pid>/exe` 解析结果 **等于**该原生二进制本身，`pgid === pid`、`ppid` 为本 Node，
+  `assertNativeProcess` 接受。即被管理的就是原生 Codex，中间没有 Node launcher。
+- **A03**：原生 Codex 自己会拉起一条 **深度 2 的 git 子孙链**（`/usr/bin/git` → `/usr/lib/git-core/git`
+  → `/usr/lib/git-core/git-remote-http`）。`ownedProcessSet` 一次就收齐 **4 个** 成员。
+  这正是旧单趟 closure 会因 procfs 无序而漏掉的那类链。`stopNativeProcess` 只用了一轮 `SIGTERM`
+  就让整条链消失：`leaderStillPresent=false`、`ownedSetAfterStop=[]`、全系统再无进程跑着那个二进制。
+- **A04**：同一快照下，leader 真实 `startTime` 时 owned 集合含该 pid；换成外来 `startTime` 时**不含**
+  —— PID 复用防线在真实进程上确实生效。
+- `exited()` 判据是 `exitCode !== null || signalCode !== null`，**不看 `.killed`**，符合 A02 明令。
+- 探针自身产出 F07 自检：证据里无 home 路径、无 account/token/authorization 字样。
+  证据文件 `.cleanup-evidence/a01-a03-installed-native.json`，探针自身已删、临时 CODEX_HOME 已清。
+
+> 过程中我自己的两个错误已就地纠正，不写成发现：其一，最初把 `stopNativeProcess` 当成返回
+> `{stopped, reason}`，实际返回 `undefined`，是我的探针写错；其二，第一次拉起即退，报
+> "exited before identity was confirmed"，真实原因是 **`CODEX_HOME` 目录必须预先存在**，不是原生二进制起不来。
+
+**deb 无法从最终候选重建 —— 已定性为网络抖动，不是锁缺陷，但暴露一条真实的 P01/P16 缺口。**
+`node packaging/build-deb.mjs` 连跑三次都挂在 `pip install -r apps/server/lockfiles/server-linux-py312.txt`：
+
+| 次 | 报错包 | 该 pin 是否真实存在 |
+| --- | --- | --- |
+| 1 | `cffi==2.1.1` → `from versions: none` | 是，PyPI latest，含 `cp312-manylinux_2_17_x86_64` wheel |
+| 2 | `pydantic-core==2.46.5` → `from versions: none` | 是，`pypi.org/pypi/pydantic-core/2.46.5/json` 返回 200 |
+
+两次都**换一个包**失败，且单独重跑同一个 pin 立刻解析成功。同一台机器上 pip 抓 `pypi.org/simple/pip/`
+时报过 `[SSL: UNEXPECTED_EOF_WHILE_READING]`。⇒ 判定为 **live index 的瞬时取回失败**，不是坏 pin。
+（我一度把它读成"锁文件缺包"，读到重试成功才纠正；`stagePython` 的 tarball 是本地 sha256 钉死的，
+不受影响。）
+
+由此暴露一条**真实缺口**：`apps/server/lockfiles/server-linux-py312.txt` 里
+`grep -c -- "--hash="` = **0**。发行 deb 的 Python 闭包是**按名字向公网实时解析**的，没有任何内容摘要钉住。
+合同 P01 的反例明写"lock 漂移"、P04 明写"pin 摘要"，这一条对 Python 侧**不成立**。
+我没有擅自改锁文件（那是发行闭包裁定，且 F06 要求候选冻结后不再动装配输入），如实登记待裁定。
+
+**P09 是一个真实发行缺陷 —— 本轮新查出并修掉，且我先前的判断是错的，已纠正。**
+第一次看到旧 `.out` deb 里有 1049 条指向 worktree 的绝对符号链接时，我查了缓存 tarball
+（`grep -c " -> /"` = 0）并按 `stagePython` 原样解包（绝对链接数 = 0），据此写下"那是陈旧产物的属性，
+不是当前流水线的"。**这个结论是错的。** 本轮真的把 `node packaging/build-deb.mjs` 跑通、拿到新 deb 后，
+同样的 1049 条**当场复现**。错在哪：我只验到"解包这一步是干净的"，就外推成"整条流水线是干净的"，
+中间隔着一个我根本没看的拷贝步骤。
+
+真实根因在 `packaging/build-deb.mjs:380`：
+
+```js
+cpSync(STAGE, debRoot, { recursive: true, dereference: false })
+```
+
+Node 的 `cpSync` **默认 `verbatimSymlinks: false`**，也就是会**把每条符号链接解析成指向源端的绝对路径**。
+于是 CPython 运行时里全部 1049 条本来是**相对**的链接（`bin/python -> python3.12`、
+`share/terminfo/* -> ../…` 等；tarball 本身实测 1049 条、` -> /` 为 **0**）在进 deb 时被改写成
+`/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout/packaging/.staging/root/opt/ordessa/python/…`。
+在本机上它们**不悬空**（staging 目录还在），所以本地检查看不出问题；换任何一台机器安装，
+`/opt/ordessa/python/bin/python` 就是死链，**装出一个不能用的解释器**。
+
+最小复现（不依赖本仓）：
+
+```
+ln -s python3.12 src/bin/python3
+cpSync(src, dst, {recursive:true, dereference:false})                    -> /tmp/…/src/bin/python3.12   （绝对，错）
+cpSync(src, dst, {recursive:true, dereference:false, verbatimSymlinks:true}) -> python3.12                （相对，对）
+```
+
+修法：给这一处加上 `verbatimSymlinks: true`，并把理由写进代码注释。范围核对过：
+`opt/ordessa/app`（Electron 运行时）**0 条**符号链接，源码 `node_modules/electron/dist` 顶层也没有，
+所以不需要改那几处 `cpSync`。deb 里唯一的另一条绝对链接是
+`/usr/bin/ordessa -> /opt/ordessa/bin/ordessa`，那是 `stageBin` **有意**创建的安装位置链接，**不是**缺陷。
+修完重建并复验的结果见下方 P09/P16 行。**没有自动化门守住这一点**（构建期才暴露），
+已按诚实登记原则记入 `docs/known-issues.md`。
+
+**P04 补齐：资产发布器此前只验不复读。** `.cleanup-evidence/ordessa-asset-op.py` 原来在 staging 上跑一次
+钉死的 verifier，`os.rename` 之后**直接回显候选 manifest 自报的 `treeDigest/entries/bytes`**，从不复验
+落地结果 —— 合同 P04 要求的 `stage→verify→publish→verify` 缺了最后一环，且回执数字是候选的**自述**而非实测。
+已改为：抽出 `run_trusted_verifier()` 返回 verifier **在盘上重算**的 summary；发布前额外要求该 summary 与
+manifest 自报值三项全等（否则 `refuse("candidate manifest disagrees with the verified tree")`）；`rename`
+之后再对 `destination/artifacts` 跑**同一钉死 verifier**，回执打印的是复验值并带
+`verifiedBeforePublish/verifiedAfterPublish`。复验失败时退出码 **2** 且 stderr 明写 `PUBLISHED BUT UNVERIFIED`，
+不再假装成功。`python3 -m py_compile` 通过；`installedArtifactSummary` 的返回形状
+（`{digest, entries, bytes}`）已在本机对**已安装**资产实跑确认，并且该资产仍验收通过、
+摘要仍是 `sha256:1ee5358b…` / 536 entries / 320854754 —— **旧资产未被覆盖**（P03 成立）。
+部署仍需那一次 sudo（与 T5.3/T5.4/T7 同一个阻塞），未部署。
+
+### A. Codex 原生进程、生命周期与历史所有权（24 条）
+
+| ID | 判定 | 等级 | 依据 / 缺口 |
+| --- | --- | --- | --- |
+| A01 | PASS | **L2** | 本轮重测：`/proc/exe` 等于原生二进制，`pgid===pid`。旧 L2 记录已作废 |
+| A02 | PASS | L1 + L2 局部 | `exited()` 只看 `exitCode/signalCode`，不看 `.killed`；L2 侧实测的是升级路径，未单独跑"先关自有输入再等 OS 退出事件"的优雅路径 |
+| A03 | PASS | **L2** | 真实深度 2 git 后代链被 fixpoint closure 收齐；`SIGTERM` 一轮后 owned 集合归零 |
+| A04 | PASS | **L2** | 真实快照上 startTime 复用防线生效；ACP 父进程/通道 ID 不变仅 L1 |
+| A05 | PASS | L1 | 输出中/configuration 忙时零停止零 spawn 零 resume；无 L3 |
+| A06 | PASS | L1 | 替换前 `thread/read` 精确匹配当前 native session；无 L3 |
+| A07 | PASS | L1 | 绝对规范路径/普通文件/所有权/越界拒绝；无 L2/L3 |
+| A08 | PASS | L1 | 跨 HOME 只接受上轮已绑定的同一历史文件 |
+| A09 | PASS | L1 | 无持久历史时诚实拒绝，不自动 `session/new` |
+| A10 | PASS | L1 | 旧原生结束后 fresh client 初始化；新对象指向新连接 |
+| A11 | PASS | L1 | 初始化失败清理新进程、禁止自动 retry；`8c3f9a2f61` 的 `catch` 里 `kill(-pid)` 兜底 |
+| A12 | PASS | L1 | 显式原生 resume 同 session 同 rollout；**L3 被 sudo 阻塞** |
+| A13 | PASS | L1 | resume/模型/偏好读回失败保持 Unknown，不回落 `newSession` |
+| A14 | PASS | L1 | generation 换代、旧 target 凭旧 generation 效果前拒绝 |
+| A15 | PASS | L1 | 同 operation 重放返回记录、零二次效果；query 零效果 |
+| A16 | PASS | L1 | 同 ID 换 input 拒绝；容量与字符串界限保留 |
+| A17 | PASS | L1 | 只清理本次创建的 PID/组；B 实例前后不变仅受控 |
+| A18 | PASS | L1 | stdin close / ACP 退出在切换前中后都清理自有 native |
+| A19 | PASS | L1 + 脚本扫描 | 公开回执只留关闭原因码；本轮探针证据 F07 自检 `False` |
+| A20 | PASS | L1 | 失败诊断区分 restart/history/auth/model；缺席一律 Unknown |
+| A21 | PASS | L1 | 非目标平台/版本明确拒绝，不落回全局 codex |
+| A22 | **BLOCKED** | — | **无任何实现**：仓内 `execution` 零命中，现有产品没有账本接缝。合同 §A22 要求"报告阻塞，不擅自设计 pacthold 模型"，故只登记不设计 |
+| A23 | **BLOCKED** | — | 真原生无模型历史恢复需 root 安装候选资产 ⇒ 等同 T5.3 的那一次 sudo |
+| A24 | PARTIAL | — | 合同要求的独立复审已执行，**查出并修掉两个真实缺陷**（fixpoint closure、pid 无 startTime 复用防护），各自做过变异验证；但 A22 无实现、A23 阻塞，复审覆盖不完整 |
+
+### B. 双向供应商/账号恢复与 C4（14 条）
+
+| ID | 判定 | 等级 | 依据 / 缺口 |
+| --- | --- | --- | --- |
+| B01 | PASS | L1 | API 目的地来自 model-provider 中性解析；品牌差异留在 Harness；边界反例在 |
+| B02 | PASS | L1 | 官方目的地由 managed_account owner 解析；Profile 不存 accountDirectory/token/keyring 键 |
+| B03 | PASS | L1 | 账号目录 0700、UID 校验、与实例目录不交叉；真实 0700 目录已见 |
+| B04 | PASS | L1 + **L3** | 官方模式不调 gateway setter、不用 API Key 模拟订阅；`account/read` 为 chatgpt 且 `thread.provider=openai` 有真实记录 |
+| B05 | PASS | L1 | API 模式 CODEX_HOME 独立实例；parent env/route guards 跟随新模式 |
+| B06 | PASS | L1 | 凭据重取、digest/fence 复核；prepare 后 scope 变化效果前拒绝 |
+| B07 | PASS | L1 | 独立确认 session route/model/config 与新 generation 后才发票据 |
+| B08 | PASS | L1 | 恢复票据 ≠ Profile 应用完成；新 target 重新 compile/独立验证才发 prompt |
+| B09 | PASS | L1（**本轮修掉一个真实 bug**） | 原实现把**原生默认值**当成"用户保留的偏好"回报。现改为每项写入后**读回**、不一致即 `stepFailure('preferences', 'preserved preference … readback differs')`。配套 fixture 补上第二项偏好，否则保留循环迭代零次、该条根本测不到 |
+| B10 | **FAIL / BLOCKED** | L3 已跑、已红 | 真实官方→Go：首轮记住随机标记，第二轮**未包含该标记**；固定 Go 上游透明 relay **未观察到转发**。可回复 ≠ 历史保留。修复路径依赖 T5.3 那次 sudo |
+| B11 | **NOT_RUN** | — | Go→官方第三轮回忆。依赖同一 sudo，未跑 |
+| B12 | NOT_RUN | — | 官方 B 与 API 对照并发、A 切换期间 B 不变 |
+| B13 | PASS | L1 + L3 | Pi live DeepSeek→Go 真实历史召回通过；Claude DeepSeek→Go 恢复通过（旧记录）；Node/Python 策略选择回归全绿；未引入全品牌 restart 假设 |
+| B14 | PARTIAL | — | 两条失败的旧 Codex 历史探针**原样保留**未覆盖；但"新增成功证据绑定新资产/SHA"因 B10 未过而无从产生 |
+
+### C. Profile 与 ModelProvider 会话配置语义（22 条）
+
+合同 §C 明写 C02/C03/C08/C10/C16 **还须在实际产品链 L3 或 L4 观察**。这五条 L1 绿、L3/L4 **零**，
+因此不能判 PASS。
+
+| ID | 判定 | 等级 | 依据 / 缺口 |
+| --- | --- | --- | --- |
+| C01 | PASS | L1 | 全局 Profile 只存图纸，session 持选择与逐字段覆盖，无完整 native HOME 副本 |
+| C02 | **PARTIAL** | L1 | 合同要求 L3/L4 的"DB/公开读取 + 原生有效配置"双源观察，缺席 |
+| C03 | **PARTIAL** | L1 | 同上，A 临时 model 保留 + 未覆盖偏好跟随全局的真实链证据缺席 |
+| C04 | PASS | L1 | 按字段标脏；孤立 model/provider 不兼容明确报错，不自动换用户未选的 model |
+| C05 | PASS | L1 | 同 Harness 切 Profile 清空旧临时覆盖、无弹窗、不回写全局 |
+| C06 | PASS | L1 | 输出中变更零原生 set/restore、零 cancel、不立即发送 |
+| C07 | PASS | L1 | P1→P2→P3 只应用最终意图；revision/fence 有校验 |
+| C08 | **PARTIAL** | L1 | 全局 revision 在 prepare/execute 间变化的拒绝与 query 语义合同要求更高等级观察 |
+| C09 | PASS | L1 | 贡献者卸载后设置项消失、数据保留、重载恢复 |
+| C10 | **PARTIAL** | L1 | 首次准备失败不建假会话、草稿逐字保留；L3/L4 缺席 |
+| C11 | PASS | L1 | Unknown 不清草稿、不标成功、不自动重发；效果恰一次 |
+| C12 | PASS | L1 | failed/refused 不产生 C4 receipt；操作 ID 不复用不同输入 |
+| C13 | PASS | L1 | runtime 换代后旧 reference 执行前拒绝 |
+| C14 | PASS | L1 | 保存/编辑零 DNS（用户批准的口径），实际 probe 仍逐地址 SSRF/DNS 检查；Fake-IP 保存成功 + probe 走被拒地址不假绿 |
+| C15 | PASS | L1 | 目录来自真实后端/资源插件，前端不硬编码品牌 |
+| C16 | **PARTIAL** | L1 + 真实 keyring | 自有 locator 保存→**跨进程**读取→删除，真实 GNOME Secret Service 通过；合同要求的 DB/log/export 无合成 secret 扫描只有 L1 |
+| C17 | PASS | L1 | Key 删除/替换影响未来准备，运行中 Agent 不中断 |
+| C18 | PASS | L1 | 官方账号与 API 配置分离，切 model 不隐式选官方认证 |
+| C19 | PASS | L1 | Profile CRUD/命名/Harness 归属/持久化不退化；已绑定会话不静默换品牌 |
+| C20 | PASS | L1 | 编辑面走公有 facet/contribution；**以 AST/边界反例证明**，非 grep 零命中 |
+| C21 | PASS | L1 | ModelProvider 只拥有 provider/model/credentialRef 与 UI 业务，不做 process/session 协调 |
+| C22 | **FAIL（已执行独立复审）** | 四组全覆盖，判定 FAIL：两条阻塞 = C02/C03/C08/C10 缺合同要求的 L3/L4；`run_counterexamples.sh` 假绿（**本轮已修**，见专段）。另有三条非阻塞欠账如实登记 |
+
+### D. Desktop UI → 生产发送路径（24 条）
+
+**全组零 L4。** 现有 UI 证据最高只到前端受控测试（L1）；`products/desktop/probe-profile-ui.mjs` 那条
+真实 Electron DOM 链在本文件早先的记录里**发送失败、停在草稿**，未修。合同 §D 明写"不能用内存 Server、
+UI-preview 或'14 插件挂载成功'代替实际生产发送"。因此除 D04 的装配缺口外，全部只能记 L1。
+
+| ID | 判定 | 等级 | 依据 / 缺口 |
+| --- | --- | --- | --- |
+| D01 | PARTIAL | L1 | mount-only 探针 `ready/rootMounted=true`、`errors=[]`；**不等于真实发送链** |
+| D02 | PASS | L1 | 新建草稿零 ACP open/new，第一句提交才建会话 |
+| D03 | PASS | L1 | 二级 picker；已绑定会话仅同 Harness 可切；无可用项诚实报错 |
+| D04 | **FAIL（真实装配缺口）** | L1 | model selector 注册在 `composer.footer`，**不在冻结的 chat-api 合同内**；该包**缺 `manifest.json` 与 `build.mjs`**，且**不在 `products/desktop/extensions.json`** 里 ⇒ 默认可选模型这一格实际是空的 |
+| D05 | PASS | L1 | 不新增确认弹窗/生效模式步骤；错误明指未应用 |
+| D06 | PASS | L1 | 换 Profile/model 保持流式、不 cancel、不自动发送；send 前后台计数 0 |
+| D07 | PASS | L1 | prepare→native→canonical→C4→prompt 次序；项目拒绝时 openAcpChannel/native new/线上帧均为 0 |
+| D08 | PASS | L1 | 同 provider 走原生策略，跨 provider 走既有 restore，React 不写原生配置 |
+| D09 | PASS | L1 | accepted 仅在真实契约确认后更新 UI；refused/Unknown 不当成功，草稿保留 |
+| D10 | PASS | L1 | Unknown 查询不触发第二 prompt/新 session/第二 restore；断网不自动重放 |
+| D11 | PASS | L1 | 目录加载失败就地重试；已知会话不从 sidebar 消失 |
+| D12 | PASS | L1 | A 流式/审批/工具不出现在 B；双同名 native ID 反例在 |
+| D13 | PASS | L1 | 输入区固定、消息区独立滚动；顺序稳定无残留 loading |
+| D14 | PARTIAL | L1 | 有过真实 Codex 只读 `pwd` 的原生工具卡片记录，但那是**旧 UI 探针**；本轮候选无 L4 |
+| D15 | PASS | L1 | 默认原生模式，不宣告外部授权端口 ready，也不自动批准原生权限请求 |
+| D16 | PARTIAL | L1 | Pi 两轮**后端**已通过；UI 侧证据缺席 |
+| D17 | PARTIAL | L1 | Claude 两轮**后端**已通过；UI 侧证据缺席 |
+| D18 | PARTIAL | L1 | Codex 首发 + 官方→API 后端已跑且**已红**（见 B10）；UI 侧证据缺席 |
+| D19 | NOT_RUN | — | 全局改动 + 临时覆盖的 C03 场景在真实 UI/后端链未做 |
+| D20 | PASS | L1 | 重启后 Project/Profile/历史存在；旧 runtime 诚实为结束/失效 |
+| D21 | PASS | L1 | 未安装/未登录/401/429/连接失败单会话诚实报错，另一会话与设置页仍可用 |
+| D22 | PASS | L1 | Ordessa 专用账号状态可见；过期/退出用原生机制，不造多账号系统 |
+| D23 | PASS | L1 + 扫描 | renderer 无 Node/Key/认证头；提交后不入日志、公开 props 或导出 |
+| D24 | **FAIL（流程）** | — | 合同要求 UI 证据绑定实际产品版本/asset/session 且 Lead 独立执行。本轮**没有产出任何 L4 证据**，无可绑定对象 |
+
+### P. 可信资产、产品装配与发行（16 条）
+
+| ID | 判定 | 等级 | 依据 / 缺口 |
+| --- | --- | --- | --- |
+| P01 | **PARTIAL** | L2 | Codex/Claude 候选由钉死源摘要构建、treeDigest 覆盖全部增强 closure（差量逐文件算术闭合：+1 文件 19711B + 4 文件 5888B = +25599B，与 manifest 增量一字不差）。**但 Python 闭包锁文件零 `--hash`**，实时解析 ⇒ "lock 漂移"反例对 Python 侧不成立。**且 7 个 harness 里有 2 个（dsh/kilo）过不了钉死 verifier** |
+| P02 | PASS | L2 | 新候选实际 initialize + 官方首次准备/创建通过，`modelCalls=0`；**未伪称恢复聊天通过** |
+| P03 | PASS | L2 | `refuse("destination already exists; refusing to overwrite")`；本轮复核已安装资产摘要未变（`sha256:1ee5358b…`/536/320854754），未覆盖 |
+| P04 | **PASS（本轮补齐）** | L2 代码 + 语法 | 此前只有 stage→verify→publish，回执回显候选自述值。已加发布前 manifest 与实测三项全等比对 + 发布后对落地树复验同一钉死 verifier，回执带 `verifiedBefore/AfterPublish`。未部署（等同那一次 sudo） |
+| P05 | **BLOCKED_USER** | — | root 管理且普通用户不可修改 + 完整策略校验：**需用户执行那一次 sudo**。未降低校验强度 |
+| P06 | PASS | L1 | 产品资产根由显式环境变量覆盖，默认仍是已验证路径；新增 `trusted_asset_root()` 在**读 Key 与启动产品之前**拒绝相对/缺失/符号链接根（`test_codex_managed_probe.py` 7 passed）；无静默全局 CLI fallback |
+| P07 | **FAIL（真实装配缺口）** | L1 | 合同反例原文"代码包存在但默认装配漏配"**当场成立**：(a) MCP 在 `extensions.json` 已启用，但 `composition.py` 里 **MCP 零命中**；(b) `ProductSkillsPlugin` 只在 `native_runtime` 组合里，`default_plugins` **不含**它。⇒ 启动门不会失败，只会**成功空壳** |
+| P08 | **FAIL**（已对新构建复核，非仅代码推断） | L5 判据 | 新构建的 deb 里 `opt/ordessa/harnesses` **一个条目都没有**（`find -mindepth 1 \| wc -l` = **0**），`bundle-manifest.json` 仍记为 `harness-landing`。`deb-contract.test.mjs:151-159` **只断言该目录存在且是目录** ⇒ **零品牌 runtime 的 deb 能通过自己的发行契约测试**，故障晚发到用户选品牌时才炸 |
+| P09 | **PASS（本轮修掉真实缺陷）** | 解包产物实测 | 修前 **1049** 条指向 worktree 的绝对链接；修后 **0** 条。全包仅剩一条绝对链接 `/usr/bin/ordessa -> /opt/ordessa/bin/ordessa`，是 `stageBin` 有意创建的安装位置链接。`bin/python -> python3.12` 已回到相对，`python3.12` 实文件 30964240 B 在位 |
+| P10 | PASS | L1 | 默认 `~/.ordessa` 按既定布局建立/复用、私有权限；不默认 tmp 或旧 agent-box 目录 |
+| P11 | PASS | L1 + L2 | Desktop 监管自有 Server：origin/token/生命周期/端口/锁正常，不要求用户另起 backend |
+| P12 | **PARTIAL** | L1 | 缺目录会 fail-closed，但**空目录不会**（见 P08）⇒ 降级为"成功空壳"这一半未覆盖 |
+| P13 | **BLOCKED** | — | 安装包真实启动→项目→Profile→一真实 Harness 任务。未 sudo 安装 ⇒ 按合同保持 BLOCKED。（解包产物只证明运行时可用，不等于装机验收） |
+| P14 | PASS | L1 + **L2** | 重启后只清自身进程：本轮 L2 实测 stop 后 owned 集合归零、全系统无残留该二进制 |
+| P15 | PASS | L1 + 真实 keyring | GNOME keyring 自动发现、锁定提示、不默认明文回落；跨进程 roundtrip 实测通过 |
+| P16 | **PARTIAL** | 解包产物 | 最终 deb 已从当前候选构建：`ordessa_0.1.0_amd64.deb`，209583328 B，**sha256 `e31e270c0e20021c5868a5aad1461654c91a8f37d9b626abe137f9efe4acbac5`**，`Package: ordessa 0.1.0 amd64`，`Installed-Size: 849091`。构建身份 `0.1.0 20261001-16bf0a204`。解包后实测：内置解释器 `3.12.14`、`sys.prefix` 自解析到包内、`pydantic 2.13.5`/`starlette`/`cryptography` 均能从随包闭包导入。**未做的是装机后的完整用户启动步骤**（`dpkg -i` + 真实启动 → P13），故只记 PARTIAL。另：构建日志带一条 `bridge sha256 714044a5… != baseline 5fd6a37b…` 的 NOTE——桥接产物与基线摘要不同，这是**如实报告的漂移**，不是被忽略的告警 |
+
+
+### S. 旧验收合同既有资源项（5 条）
+
+| ID | 判定 | 依据 / 缺口 |
+| --- | --- | --- |
+| S01 | **FAIL** | 盘点本身做完了，结论是负的：既有 MCP **在默认装配里缺席**（P07a），Skills 插件**不在默认组合**（P07b）。合同明写"不以代码存在替代可用" |
+| S02 | **NOT_RUN** | 自有最小 Skill 进入受支持 harness 的输入/projection + 两 session 隔离，未跑 |
+| S03 | **NOT_RUN** | 自有本地 stdio MCP 发现并把工具结果送进 Chat UI，未跑；且 MCP 默认缺席，预期先 FAIL |
+| S04 | PARTIAL | prompts/instructions/runtime-preferences 的 compile/projection 门有 L1；全面逐资源 L3 本轮不新增要求（合同已豁免） |
+| S05 | PASS | 阻塞与既有产品目标影响已列：P07a/P07b 两个装配缺口、dsh/kilo 过不了钉死 verifier（信任根形状问题）、P08 空 runtime。按合同**没有**把大型新资源方案塞进夜间任务 |
+
+### F. 最终验证、证据与交回（12 条）
+
+| ID | 判定 | 依据 / 缺口 |
+| --- | --- | --- |
+| F01 | PASS | 根 `npm test` 聚合已核对为 **31/39 suites green, exit 1**（与开工基线同数、成因逐条相同），**没有沿用"146 测试"的旧记忆** |
+| F02 | PARTIAL | typecheck/build/workspace/ACP rig 均在候选上跑过并记退出码；**packaging 侧 builder 套件不在任何聚合里**（已登记 known-issues）；Electron 门未在最终候选上以完整 runtime 跑 |
+| F03 | PASS | 受影响 Python 回归实际运行；**零回归用差分证明**：`plugins/harness/tests` 的 109 条 FAILED/ERROR 行与 stash 基线 **diff 为空**；`model-validation-42d.test.mjs` 失败 ID `{1,2,4}` 前后完全一致 |
+| F04 | PASS | 逐 ID + 原因对比，零新增未解释红，原红不删不 xfail。**环境差异如实登记**：`.venv` 量得 37F/675P/72E，`.cleanup-evidence/product-integration-venv` 量得 3F/781P —— 同代码不同闭包，两个数都记，不挑一个充证明 |
+| F05 | **PASS（修掉一处假绿后才成立）** | A03/A04 缺陷均有缺席反例 + 注入命中并做过变异验证；Profile 的 12 条注入现在**逐条给出真实断言失败数**（例：`overlay_writes_profile` → 10 failed / 1 passed）。**两处如实降级**：(1) `assertProcessGone` 的复用/存活重排测试**并不判别**（还原实现后 28 pass / 0 fail），重排保留但不单独钉住；(2) C10 的"零重复 session/new"在 L1 **从未被计数**，只断言了 Profile 侧事实 |
+| F06 | **FAIL** | 候选**未冻结**：本轮仍改了 `codex-process.mjs`、`bridge.mjs`、builder 与根 helper。deb 重建因此对着移动靶。改一个文件重跑受影响门已做，但"冻结后不动"这条本轮不成立 |
+| F07 | PASS | 58 个待提交文件扫凭据模式 → `False`；本轮 A 组探针证据另做自检 → 无 home 路径、无 account/token 字样 |
+| F08 | PASS | 本轮自建的进程、临时 CODEX_HOME、探针脚本全部清理；**未删任何用户账户/历史**。`.cleanup-evidence/` 保留为证据（未跟踪） |
+| F09 | PASS | 他属 `docs/ui-preview/01-empty.png`、根 `main`、相邻 worktree、旧已安装资产全程未动，提交用显式 pathspec |
+| F10 | PASS（本节即交付物） | 每项都链到合同 ID 与当前证据等级，部分实现未勾整项，旧失败未被覆盖 |
+| F11 | PARTIAL | A 组与 C 组独立复审已把发现整理成 严重度/复现/原因/修法/验证；C22 查出 2 阻塞（1 是证据等级、1 是假绿执行器，已修）。**整条 diff 的独立审阅仍未做** |
+| F12 | PARTIAL | 本节列确切 PASS/FAIL/BLOCKED/NOT_RUN 与用户动作。**结论只能是 `PARTIAL`**，不是 `COMPLETE_VERIFIED` |
+
+### C22 独立复审：已执行，判定 **FAIL**，两条阻塞
+
+派了独立只读审阅代理覆盖四组（全局更新 / overlay 竞态 / Unknown / 卸载恢复）。**它没有替我改代码，
+判定为 FAIL，两条阻塞：**
+
+1. **C02/C03/C08/C10 证据等级不够** —— 合同第 110 行对这四条**另外要求**实际产品链 L3 或 L4 观察，
+   本轮一条都没有（D19 `NOT_RUN`）。按合同自己的口径"低等级不替代高等级""缺观察能力=BLOCKED 或 FAIL"，
+   这四条**不能签**，四组复审也不能判 PASS。这与我台账里把 C02/C03/C08/C10 记 PARTIAL 的结论一致，
+   现在有独立审阅背书，不再是我一个人的判断。
+2. **反例执行器是一台假绿机器 —— 本轮已修。** `plugins/profile/tests/run_counterexamples.sh`
+   把 `.venv/bin/python` 写死，而本 worktree 那个解释器**导入不了** `ordessa_profile`；
+   它的通过判据又只看退出码非零，于是**每一个 gate 都在 import 处死掉，也被算成"discriminated"**。
+   实跑原版：12 行全是 `discriminated … E ModuleNotFoundError`，末行照样打
+   `counterexample runner: OK (12/12 injections discriminated by their gates)`，**exit 0**。
+   这是 AGENTS.md 第 9 条明令禁止的假绿，而且它正是 F05 的注入命中证明机制。
+
+   修法（`plugins/profile/tests/run_counterexamples.sh`）：解释器改为 `$ORDESSA_TEST_PYTHON` →
+   集成 venv → `.venv`，并在开跑前**实际验证能 `import ordessa_profile`**，不能则拒绝退出 1；
+   每条注入**先无注入跑一次 baseline**，baseline 不绿就判 `NOT-DISCRIMINATED`（红是本来就有的，
+   不是这次注入造成的）；把 pytest 的 4/5（usage error、未收集到用例）与
+   `ModuleNotFoundError` / `ImportError while importing` 归类为"gate 根本没跑"，不计为判别。
+
+   修后双向验证：
+   - **敌意环境**（`ORDESSA_TEST_PYTHON=/usr/bin/python3`）→ 打印 `REFUSING -- cannot import
+     ordessa_profile` 并 **exit 1**。假绿已被堵死。
+   - **真实环境** → **12/12**，且每条都给出**真实断言失败数**而不是 import 错误：
+     `overlay_writes_facets`… 具体为 `version_ignored` 1F/8P、`idempotency_off` 1F/8P、
+     `facet_last_wins` 1F/7P、`unload_deletes` 3F/5P、`required_defaults` 1F/7P、
+     `overlay_masks_facet` 6F/5P、`overlay_writes_profile` 10F/1P、`partial_apply` 1F/14P、
+     `assume_switched` 2F/13P、`select_any_target` 2F/13P、`secrets_allowed` 1F/6P、
+     `migration_lossy` 1F/4P，exit 0。
+
+   ⇒ **注入本身是有牙齿的**，坏的是判据。F05 里的"12/12"现在是真话。
+   审阅代理额外跑的 `plugins/harness/tests` 子集（journal / action-exec / config-service /
+   restoration / profile-owner / private-generation）**190 passed**。
+
+**审阅给出的非阻塞欠账（如实记录，未擅自扩大范围）：**
+
+- `plugins/profile/src/ordessa_profile/sessions.py:175-178` 的 docstring 仍写
+  "Selecting the current profile again never clears overlays (G07)"，与**已实现且已被测试钉住**的
+  C05 语义（显式重选即清覆盖，见 `sessions.py:478-481` 与 `_keeps_overlays` :970）**矛盾**。
+  谁要是照着 docstring "修回去"，`test_c_line_semantics.py:131-172` 会红。属注释腐化，未改。
+- C10 的"零重复 session/new"在 L1 **从未计数**，见 F05 降级项。
+- C06 的"服务端通知 / 前端 rerender 不得触发效果"**没有直接注入反例**，只有结构性覆盖
+  （配置端口只能经 `begin_turn`/`resolve` 到达）。
+
+**审阅明确无法核实的：** C02/C03/C08/C10 与 D19 的全部 L3/L4；C09 在 Desktop 设置页"条目消失"的端到端
+（只证了服务端 `settings_projection` 隐藏）；C15 "安装资产缺失时诚实禁选"（最接近的是
+资格未知/组合缺席的类型化拒绝，没有用例真的制造一个缺失的安装资产）。
+
+
+
+**状态：`PARTIAL`。** 已达成：A 组在 L1+L2 立住（含本轮两个真实缺陷的修复与两个新发现的修复）；
+C 组 L1 全绿并有 L3 keyring 证据；P 组 P02/P03/P06/P10/P11/P14/P15 成立；零新增回归（差分证明）。
+
+**阻塞在权限，需要一次 sudo（一条命令，只提示一次口令）：**
+
+```
+bash /home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout/.cleanup-evidence/publish-fixed-codex-managed.sh
+```
+
+它同时解锁 **T5.3 / T5.4 / T7 / P05 / P13 / A23**，以及本轮新补的 P04 发布后复验的部署。
+
+**阻塞在显示/运行时，本机条件不具备：** **T8 的 L4 Electron** 未跑（`loginctl show-session 2 -p LockedHint` = `yes`，
+显示已锁）。注意完整的开发 runtime 根 `.cleanup-evidence/product-dev-runtime-URGO6TDv` **是存在的**，
+所以缺的是执行条件，不是能力。
+
+**阻塞在发行构建，可无人值守推进：** 已解决。deb 最终从当前候选构建成功（公网抖动由带退避的重试扛过），
+摘要见 P16 行；过程中查出并修掉 P09 的真实发行缺陷。
+
+**必须由用户裁定的四件事（本轮一律没有自行决定）：**
+
+1. **信任根形状**：钉死的 `native-artifact-policy.mjs` 把入口写死为
+   `node_modules/<pkg>/dist/{ordessa-profile.mjs|index.js}`，而 dsh/kilo 是 bin-only CLI 包（无 `dist/`、
+   无 `main`/`exports`，入口是 `#!/usr/bin/env node`）。**便宜的改法已被排除**。选项 (a) 增加一个镜像
+   codex `native{entrypoint}` 的**钉死可执行路径变体**（我的建议）；(b) 改为 manifest 声明入口 + 只校验形状。
+2. **kilo 产物内含 `bin/bwrap`**（112664 B，static-pie stripped ELF），`bin/kilo` 并不引用它。是否接受这个
+   安全面，属发行安全裁定。
+3. **P08**：deb 零品牌 runtime。三条路 —— 打进 deb（体积与 Claude 许可未定）/ 产品内 bootstrap 下载校验
+   （新分发通道，属新架构）/ 维持 operator 装配但把启动门从"目录存在"提到"逐品牌已验证"，并把 P08 明确标未满足。
+4. **Python 闭包零 hash 钉死**（本轮新发现）：是否要求发行锁文件带 `--hash`，即 P01/P04 的反例要不要对
+   Python 侧真正成立。
+
+**未做而非做不完：** A22 仓内 `execution` 零命中、无接缝可验，按合同只登记不设计；C22 已做但判 FAIL
+（阻塞是 L3/L4 缺席，不是判断没做）；D 组零 L4；S02/S03 未跑；F06 候选未冻结；
+F11 未覆盖整条 diff。
+
+**本轮修掉的真实缺陷（全部有复现与复验）：**
+
+| # | 缺陷 | 严重度 | 修后验证 |
+| --- | --- | --- | --- |
+| 1 | `packaging/build-deb.mjs:380` 把 1049 条解释器符号链接改写成绝对构建机路径，**装出不能用的 Python** | 发行阻断 | 重建后 worktree 链接 1049 → **0**；解包解释器 `3.12.14` 实跑并导入 `pydantic`/`starlette`/`cryptography` |
+| 2 | `run_counterexamples.sh` 把 import 崩溃算作"判别成功"，**12/12 假绿** | 验收诚信 | 敌意环境 exit 1；真实环境 12/12 且每条带真实失败数 |
+| 3 | 资产发布器只验不复读，回执回显候选**自述**摘要（P04 缺 publish→verify 一环） | 发行可信 | 发布前 manifest 与实测三项全等比对 + 发布后复验同一钉死 verifier；未部署 |
+| 4 | `bridge.mjs` 把**原生默认值**当成用户"保留的偏好"回报（B09） | 配置正确性 | 每项写入后读回，不一致即 `stepFailure`；`configuration.test.mjs` 36 pass |
+| 5 | `ownedProcessSet` 单趟 closure 漏深度 2 后代；leader pid 无 startTime 防复用（A03/A04） | 进程归属 | 真实原生 Codex 的 git 子孙链 4 个成员全收齐；复用防线在真实快照上生效 |
+
 ## CP-N0 现场认领（2026-10-01，ZCode 主会话第二轮收口）
 
 - **T0.1 起点核对**（实测，非抄写）：cwd 为本 worktree，分支 `nightly/021-ordessa-product-closeout`，HEAD `7d9d6a0dec33521c2d057f0e4cbbd13b91fe3e83`，与交接一致；未 reset/stash/clean。根工作树 `/home/maoqh/projects/ordessa` 仍在 `main`，其上只有两个无关未跟踪目录（`specs/022-*`、`specs/023-*`），本轮未触碰。相邻 worktree 未动。

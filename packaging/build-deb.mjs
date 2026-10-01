@@ -377,7 +377,13 @@ function buildDeb(id) {
   // The staged tree IS the package payload: /opt/ordessa, /usr/share/... .
   // It must be copied in before dpkg-deb runs, or the result is a valid-looking
   // 4 KB package that installs nothing.
-  cpSync(STAGE, debRoot, { recursive: true, dereference: false })
+  //
+  // verbatimSymlinks is load-bearing, not a preference. Without it Node's cpSync
+  // resolves every symlink to an ABSOLUTE path back into this machine's staging
+  // directory, so the shipped interpreter's 1049 links (bin/python, bin/python3,
+  // lib/libpython3.12.so, share/terminfo/*, ...) dangle on every other host and
+  // the package installs a dead runtime.
+  cpSync(STAGE, debRoot, { recursive: true, dereference: false, verbatimSymlinks: true })
   // cpSync drops the setuid bit (it creates files with the source's permission
   // bits minus set-user-ID), so the sandbox helper's mode is re-applied AFTER
   // the copy into the deb root. Without this the package ships chrome-sandbox
