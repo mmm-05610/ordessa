@@ -23,6 +23,8 @@ deb `70be6198…` 已作废，其"Phase 3 未展开"的结论也已被后续多�
 
 - Branch: `nightly/021-harness-rollout-opencode-hermes-dsh-kilo`
 - 冻结点: **`120d099405`**（F11 复审修掉 P1 后顺延；冻结后未再改源码/资产）
+  - 其后仅 `e9e57c0d33` / `8cb247407c` 两次**纯文档**提交（`git diff --name-only` 非 specs/docs 命中为空），
+    故本报告所有门禁结果对当前 HEAD 仍然成立。
 - Main baseline: `b4bf7cd90951`（**全程未动、零 push**）
 - Deb: `packaging/.out/ordessa_0.1.0_amd64.deb`，209,583,328 B
 - SHA256: `e31e270c0e20021c5868a5aad1461654c91a8f37d9b626abe137f9efe4acbac5`
