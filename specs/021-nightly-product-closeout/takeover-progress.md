@@ -1675,3 +1675,78 @@ manifest 自报入口，并在 `node_modules/<pkg>/` 之外开口子。两者都
 `node_modules/@kilocode/cli/bin/bwrap`，为 `ELF 64-bit LSB pie executable, x86-64,
 static-pie linked, stripped`（112664 B）；对 `bin/kilo` 文本 grep `bwrap` 命中 0 次。
 一个静态链接的沙箱可执行文件随产物进入 `/opt` 属于安全面变化，是否可接受需一并裁决。
+
+---
+
+## 2026-10-02 其余 harness 收口：把 23 个从未跑过的测试接进门
+
+承接"今晚这三个 harness 之外的其他 harness 自己开分支做完"。先核对范围，再动手：
+
+`plugins/harness/src/ordessa_harness/harnesses.toml` 的权威清单是 **7 个** harness
+——`codex` / `claude-code`（alias `claude`）/ `opencode`（alias `omp`）/ `hermes` /
+`dsh` / `kilo` / `pi`。本轮之前已做的是 codex、claude-code、pi 三个，因此剩余就是
+**opencode / hermes / dsh / kilo** 四个，也正是本分支名的来由。这四个的 builder 与
+授权构造已经落在分支上（`git diff --stat main...HEAD` 显示 9 个文件、+1572 行），
+但**它们的测试从来没有被执行过一次**。
+
+### 发现：整个 `plugins/harness/packaging/**` 不在任何聚合里
+
+`docs/known-issues.md` 原有一行只登记了 `builders/` 未被覆盖；实跑发现范围大得多——
+`builders/`(10) + `native-profile/`(7) + `pi-profile/`(5) + `claude/`(1) = **23 个文件**，
+全部没有任何 npm script、`tooling/test-all.mjs` 条目或 CI job 会跑它们。其中
+`native-profile/` 正是 A 组 L1/L2 门依赖的那 82 条。
+
+Lead 实跑 `node --test "plugins/harness/packaging/**/*.test.mjs"`（真实退出码，不经 tail 掩盖）：
+**267 tests / 6 fail**，此前无人知晓。
+
+### 六个红的根因，逐个定性
+
+| # | 失败 | 定性 |
+| --- | --- | --- |
+| 1, 3 | `the real locked dsh / kilo closure builds…` → `Unknown system error -122` (`copyFileSync`) | **环境**，非缺陷。errno 122 = `EDQUOT` |
+| 2 | hermes `a tree beyond the artifact byte bound fails loudly` → 同样 -122 | **环境**，同一根因 |
+| 4, 5 | pi / hermes `max_tokens` 期望 64 实得 8192 | **测试写错**，源一直是对的 |
+| 6 | `ACP continuation and reopen use only a local fake peer` → `ERR_MODULE_NOT_FOUND` | **测试指向已退役的多仓路径** |
+
+**1–3（EDQUOT）**：`node --test` 默认**并行跑文件**，而 dsh/kilo/hermes 三个 builder 测试各自
+`truncate` 出 1 GiB+1 的稀疏文件到 `tmpdir()`；本机 `/tmp` 是 7.5G tmpfs，同时铺开就超额。
+已实测确认**只加 `--test-concurrency=1` 就足够**——在默认 tmpfs、不设任何 `TMPDIR` 的条件下
+重跑：267 tests / 266 pass / 0 fail / 1 skipped，真实退出码 0，日志中 `EDQUOT` 命中 **0** 次。
+脚本里那层 `TMPDIR` 默认值因此只是双保险，**不是**必需项，known-issues 里已按实测改正归属，
+没有把它写成"根因"。
+
+**4–5（64 vs 8192）**：`model-validation-42d.test.mjs` 在 `main` 上**不存在**，是本分支
+`92d9b09289` 新加的；而 `model-validation-42d.mjs` 自 `974e643a10`（合仓拆分）起就一直是 8192。
+即：**这个测试从出生起就是错的，且从未被执行过**，所以错误一直"绿"在纸面上。
+这里有两个不同的数，被测试混为一谈了：
+- `outputLimitTokens: 64` 是协调器经 `HERMES_MAX_TOKENS` / `OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX`
+  传给子进程的**运行期上限**，也是它回报的值——这条断言本来就过；
+- config 里声明的是模型**自身的能力上限**，pi `maxTokens` / hermes `max_tokens` 都是 8192，
+  且 pi 那一处旁边就挂着 DeepSeek Flash 的官方费率表。
+
+把"声明的能力"压到 64，等于对外声明一个答不出问题的模型；成本边界由环境变量兜，不该靠低报模型。
+已按此改正断言，两处都加了说明。**未改任何产品代码。**
+
+顺带如实记录一处**未处置**的不对称：opencode 声明的是 `limit.output: 64`，与 pi/hermes 的 8192
+不一致。这属于真实模型探针的语义，且改动会影响真实花费，而真实模型调用尚未获授权
+（rule 9），故**不在本轮擅自改动**，仅记录待裁。
+
+**6（退役路径）**：该测试写的是
+`path.resolve(here, "../../plugins/agent-box-harness/…")`。从 `plugins/harness/packaging/builders`
+出发，这解析到 `plugins/harness/plugins/agent-box-harness/…` ——**在本仓从未存在过**，
+是合仓前的多仓布局残留。真实位置已核实存在：
+`plugins/harness/third_party/harness_remote/bridge/src/acp-client.js`（确有 `export class AcpClient`）
+与 `plugins/harness/tests/harness_remote/fake_acp_peer.mjs`。已改正，并说明为何此前一直"静默红着"。
+
+### 门禁接线
+
+新增 `npm run test:harness-packaging`（`node --test --test-concurrency=1`），并在
+`tooling/test-all.mjs` 的 `EXTRA_ROOTS` 加一条 `node-test:plugins/harness/packaging`，
+`probe` 用真实存在的 `plugins/harness/packaging`，沿用"套件被搬走就启动即报错、不许悄悄掉出聚合"的既有约定。
+
+实测：`npm run test:harness-packaging` → **267 tests / 266 pass / 0 fail / 1 skipped，真实退出码 0**；
+`node tooling/test-all.mjs --list` 出现该条目，套件数 39 → 40。
+
+**残留（已在 known-issues 写明，不假称已关）**：`.github/workflows/ci.yml` 跑的是
+枚举出来的 21 个 workspace 的 `npm test --workspace`，**从不调用根聚合**，所以这套测试
+现在被 `npm test` 门住，但**仍然门不住 PR**。是否扩 CI 覆盖是 CI 策略判断，不在本次机械修复内。

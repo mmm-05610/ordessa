@@ -8,8 +8,13 @@ import { fileURLToPath } from "node:url"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const script = path.join(here, "model-validation-42d.mjs")
-const fakePeer = path.resolve(here, "../../plugins/agent-box-harness/tests/harness_remote/fake_acp_peer.mjs")
-const bridge = path.resolve(here, "../../plugins/agent-box-harness/third_party/harness_remote/bridge/src/acp-client.js")
+// Both targets are inside this Harness package. These two lines carried the pre-monorepo
+// workspace layout (`../../plugins/agent-box-harness/...` from here resolved to
+// `plugins/harness/plugins/agent-box-harness/...`, which never existed here), so the
+// continuation test below could only ever fail on a missing import — and it did, silently,
+// for as long as no aggregate ran these files.
+const fakePeer = path.resolve(here, "../../tests/harness_remote/fake_acp_peer.mjs")
+const bridge = path.resolve(here, "../../third_party/harness_remote/bridge/src/acp-client.js")
 
 function dryRun(family) {
   const dir = mkdtempSync(path.join(tmpdir(), "agentbox-42d-test-"))
@@ -36,9 +41,16 @@ for (const family of ["pi", "hermes", "opencode"]) {
     assert.equal(result.outputLimitTokens, 64)
     assert.equal(result.continuation, true)
     assert.equal(JSON.stringify(result).includes("fake-token"), false)
+    // Two different numbers, and conflating them is what made this file red from birth.
+    // `outputLimitTokens` above is the probe's RUNTIME ceiling — the value the coordinator
+    // passes to the child as HERMES_MAX_TOKENS / OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX and
+    // what it reports back. The value in the native config is the model's own DECLARED cap,
+    // which is what DeepSeek Flash actually publishes. Asserting the declared cap down to the
+    // runtime ceiling would declare a model that cannot emit a real answer; the cost bound is
+    // enforced by the environment, not by under-declaring the model.
     if (family === "pi") {
       assert.equal(result.model, "deepseek/deepseek-flash")
-      assert.equal(result.config.providers.deepseek.models[0].maxTokens, 64)
+      assert.equal(result.config.providers.deepseek.models[0].maxTokens, 8192)
       assert.deepEqual(result.config.providers.deepseek.models[0].samplingParams,
         { thinking: { type: "disabled" } })
       assert.deepEqual(result.settings.retry, { enabled: false, maxRetries: 0,
@@ -48,7 +60,7 @@ for (const family of ["pi", "hermes", "opencode"]) {
       // `custom` is the user-defined-provider kind that resolves the providers.custom block and
       // leaves the model id unchanged; the built-in `deepseek` provider would fold
       // `deepseek-flash` to `deepseek-chat` before the provider request.
-      provider: "custom", default: "deepseek-flash", max_tokens: 64, base_url: "https://api.deepseek.com",
+      provider: "custom", default: "deepseek-flash", max_tokens: 8192, base_url: "https://api.deepseek.com",
     })
     if (family === "hermes") {
       assert.equal(result.config.agent.api_max_retries, 1)

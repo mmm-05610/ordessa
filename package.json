@@ -29,6 +29,7 @@
     "package:keygen": "node packaging/update/keygen.mjs packaging/.keys",
     "package:publish-update": "node packaging/update/publish.mjs",
     "test:packaging": "node --test \"tests/integration/packaging/**/*.test.mjs\"",
+    "test:harness-packaging": "mkdir -p packaging/.cache/test-tmp && TMPDIR=\"${TMPDIR:-$PWD/packaging/.cache/test-tmp}\" node --test --test-concurrency=1 \"plugins/harness/packaging/**/*.test.mjs\"",
     "typecheck": "npm run --workspace apps/desktop typecheck",
     "test": "node tooling/test-all.mjs",
     "test:electron": "npm run --workspace apps/desktop test:electron",

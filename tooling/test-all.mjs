@@ -58,6 +58,7 @@ const PREREQUISITES = [
 // loudly instead of dropping out of the aggregate.
 const EXTRA_ROOTS = [
   { name: 'node-test:products/desktop', probe: 'products/desktop/tests', command: ['node', '--test', 'products/desktop/tests/'] },
+  { name: 'node-test:plugins/harness/packaging', probe: 'plugins/harness/packaging', command: ['npm', 'run', 'test:harness-packaging'] },
   { name: 'rig:tests/integration/acp-connector', probe: 'tests/integration/acp-connector', command: ['npx', 'vitest', 'run', '--root', 'tests/integration/acp-connector'] },
 ]
 
