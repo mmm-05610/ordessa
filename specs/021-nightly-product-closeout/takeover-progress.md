@@ -4,7 +4,14 @@
 所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
 未合并、未 push、未启停既有用户服务、未重建 deb。三品牌后端真实聊天已通过；Codex Desktop 已通过 Profile 首发与同会话下一轮切换，两条真实回复。完整三品牌 UI/发行验收仍未完成。
 
-## 最新验证（2026-10-01，Claude 跨真实供应商恢复，仍待修正版安装）
+## 最新验证（2026-10-01，Claude 完整后端产品跨真实供应商恢复通过）
+
+- 用户已安装 profile-claude-provider-restoration。以新增真实产品探针复验成功（exit 0）：DeepSeek 第一轮 ACK，切换 Go / MiniMax M2.7 后第二轮准确返回第一轮随机标记；两份凭据分别从指定行导入、按固定上游检查、未由代理替换模型或补认证头。四次实际上游请求均 200，两个用户 prompt；原生辅助模型验证也计入四次请求，没有宣称只调用了两次模型 API。
+- 完整链路走产品 wire/model-provider/Profile/Harness：首次和下一轮均有配置应用回执，canonical SessionRef 相同、native owner 相同，原生 generation 更新；provider restore RPC **恰一次**，查询多次但零第二次恢复效果。原生恢复 retained record observed/restored-readback；新绑定经过新 C4 计划和独立读回确认后才放行第二条消息。
+- 这是 **真实后端产品 + 两家不同上游 + 已有历史** 的验收，不是 Desktop UI 跨供应商验收。使用独立本地透明 TLS relay 来限额与观察，故也不泛称产品直接公网 endpoint 已通过。先前 Claude/Codex 独立 Go 直连证据仍单独保留。本次自有通道、导入的两条密钥环记录及 runtime 已正常清理，不改变全局登录/配置或已有服务。
+- 已验证读回修复确实解决这条完整链路的阻塞。前两次失败记录保留在下一节，不改写为成功。尚未完成的原范围：Pi 新 provider 的存活会话内注册；Codex 官方/API 跨认证路线及已有历史恢复；三品牌完整 UI、临时覆盖/失败/未知路径与发行回归。没有新增顶层阶段。
+
+## 前一检查点（2026-10-01，Claude 跨真实供应商恢复，修正版安装前）
 
 - 用户已完成 profile-claude-provider 的 root 安装。本会话在真实宿主权限下独立复核完整树摘要及安装信任，exit 0；沙箱权限投影下的首次验证报 untrusted installed asset，不作为真实安装失败。
 - 产品探针增加显式 --switch-go：仅 Claude/fixed-assets/local-relay/switch-provider 组合允许，两份 Key 分行分别导入系统密钥环，目的地固定为 Go 的真实独立上游，代理不修改模型或认证头，逐上游检查凭据、保留原生头，原 16 请求/8 推理上限不变。结束清理本次通道、两条密钥环记录及 runtime。未动用户服务、官方账号、Profile/model-provider 业务归属或 host。
