@@ -17,14 +17,15 @@ deb `70be6198…` 已作废，其"Phase 3 未展开"的结论也已被后续多�
 | D UI 验收 | 16 | 24 | L4 已由 Xvfb 跑出，但绑定装机候选的仍缺（D24 FAIL） |
 | P 发行/装配 | 9 | 16 | **P07/P08 是真实装配缺口**，非仅证据缺口 |
 | S 既有资源 | 1 | 5 | **S03 FAIL（结构性）**；S01 FAIL；S02 PARTIAL |
-| F 最终验证 | 12 | 12 | F11 **复审判 PASS**（零阻塞）；复审另查出的一处由 P1 修复自身引入的严格性回退已收紧 |
+| F 最终验证 | 12 | 12 | F11 **两次独立复审均判 PASS**（零阻塞）；复审查出的两处（一处由 P1 修复自身引入的严格性回退、一处"缺席 pid 误判为复用"）均已修并变异验证 |
 
 合计 **85 / 117 PASS**（逐行取自台账实际状态，非人工誊抄；由脚本按 `| <ID> | <STATUS>` 重算）。
 
 ## Candidate
 
 - Branch: `nightly/021-harness-rollout-opencode-hermes-dsh-kilo`
-- 冻结点: **`de69438c5c`**（F11 修掉 P1、P2 后顺延，再因复审要求收紧 `assertUsableRollout` 二次顺延）
+- 冻结点: **`9979c651c8`**（F11 修掉 P1、P2 后顺延，复审要求收紧 `assertUsableRollout` 后二次顺延，
+  再修"缺席 pid 被误判为复用"后三次顺延）
   - 该冻结点上**全部记录在案的门已重跑为绿**：native-profile **83/83**、`plugins/profile`+`model-provider` **473**、
     `plugins/assets/skills` **433**、harness 配置/恢复三路径 **166**、`npm run test:packaging` **45/45 / 12 suites**。
 - Main baseline: `b4bf7cd90951`（**全程未动、零 push**）
@@ -83,7 +84,7 @@ bash /home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout/.cleanup
 > 00:17 构建的资产，实测其中 `assertUsableRollout` 仍是修前的 `read < buffer.length`（P1 原样）、
 > P2 标记为 0，**且候选目录形状不符合 helper 约定**（缺 `codex-runtime/` 与内层 manifest），会在
 > `checked_manifest` 被拒——即使装成功，装进去的也是打断旗舰路径的那份代码。现已重建为
-> `codex-publishable-1790885041`（含复审后收紧的 `assertUsableRollout`），并在脚本开头先跑三段
+> `codex-publishable-1790885666`（含复审后的两处修正），并在脚本开头先跑三段
 > 演练（helper 自身前置函数 5/5、树摘要与 manifest 三方一致、verifier 全部非属主断言）才发布。
 > **演练不过就在花掉口令之前退出。**
 

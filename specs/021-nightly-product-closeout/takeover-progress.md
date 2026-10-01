@@ -294,6 +294,14 @@ UI-preview 或'14 插件挂载成功'代替实际生产发送"。因此除 D04 �
 **修法：** 先算出复用 pid，再沿 ppid 求出**整棵外国子树**并从 `members` 中整体减去。
 **修后：** 同输入返回 `[]`；对照（startTime 匹配、树确属本进程）仍返回 `[100,200,300]`。**变异验证：**
 只减 leader ⇒ **fail 1**。
+**复审后补的第二处修正（`9979c651c8`）：** 复审判定 PASS，但指出上法把**"缺席"当成了"复用"**——
+`snapshot.byPid.get(pid)?.startTime !== startTime` 在 pid 不在快照里时读到 `undefined`，同样判不等。
+**procfs 撕裂扫描**（leader 在退出前读到、快照在 reap 之后取）下这不是复用而是**已经退出**，其 ppid/pgid 下
+仍在跑的是**本进程自己的存活者**；误减之后 `stopNativeProcess` 无进程可发信号，也就永远确认不了退出。
+**先复现后修：** 只含子进程 200、leader 缺席的快照返回 `[]`（应为 `[200]`），而 startTime 匹配与真实复用
+两个对照本来就正确。改为**先确认条目存在再比较 startTime**。**变异验证：** 去掉该守卫 ⇒ **28/29**。
+残余的"结构上无法区分"形态（被 reparent 出 ppid 链的外国后代、subreaper 收养的本进程存活者）已登记
+`docs/known-issues.md`，并注明其**失败方向是 fail-closed**，最坏只是多报一次"退出未确认"。
 
 **这两个修复对"已发布/已安装产物"的影响（本轮实测定案，不推断）。**
 `enhanceStaging`（`enhance.mjs:183`）把 `codex-process.mjs` 原样写进增强资产
@@ -331,15 +339,16 @@ helper 拒绝**，且**即使不拒绝也会装进带 P1 缺陷的资产**。两
    manifest** ⇒ helper 会在 `checked_manifest` 直接 refuse，sudo 白花。
 
 **修复：** 重建并按 helper 约定重新包裹候选
-`codex-publishable-1790885041/`（`codex-runtime/` + 同名 manifest），内层 asset 的 sha256
-`0f2a1032…ef2c` **与仓库源码逐字节相同**（即修复确实内联进去了），treeDigest
-`42d1c1fb…035b` / 537 entries / 320 884 144 B。`install-request.json` 已改指新候选，
+`codex-publishable-1790885666/`（`codex-runtime/` + 同名 manifest），内层 asset 的 sha256
+`8817663c…59e1` **与仓库源码逐字节相同**（即修复确实内联进去了），treeDigest
+`4dc0ee1c…c1ef` / 537 entries / 320 884 626 B。`install-request.json` 已改指新候选，
 旧请求留痕为 `install-request.json.pre-fix-backup`。
 
 > **候选随源码改动而重建（不是一次性的）：** 先前按 `120d099405` 重建过一次（treeDigest
 > `755bf3d2…c457`），当时复跑同一构建得到**完全相同**的摘要，**证明构建可复现**；之后
-> `de69438c5c` 收紧了 `assertUsableRollout`，源码一变摘要随之变为 `42d1c1fb…035b`，
-> **候选已再次重建并重跑全部三段演练**。任何后续源码改动都必须同样重建候选，否则又会装上过期代码。
+> `de69438c5c` 收紧了 `assertUsableRollout`（摘要变 `42d1c1fb…035b`）、
+> `9979c651c8` 修了"缺席 pid 被误判为复用"（摘要变 `4dc0ee1c…c1ef`），
+> **候选每次都已重建并重跑全部三段演练**。任何后续源码改动都必须同样重建候选，否则又会装上过期代码。
 
 **在没有 root 的前提下把 sudo 尽可能演练到边界**（三个演练件，随 sudo 脚本自动先跑）：
 
@@ -366,7 +375,7 @@ helper 拒绝**，且**即使不拒绝也会装进带 P1 缺陷的资产**。两
 | F03 | PASS | 受影响 Python 回归实际运行；**零回归用差分证明**：`plugins/harness/tests` 的 109 条 FAILED/ERROR 行与 stash 基线 **diff 为空**；`model-validation-42d.test.mjs` 失败 ID `{1,2,4}` 前后完全一致 |
 | F04 | PASS | 逐 ID + 原因对比，零新增未解释红，原红不删不 xfail。**环境差异如实登记**：`.venv` 量得 37F/675P/72E，`.cleanup-evidence/product-integration-venv` 量得 3F/781P —— 同代码不同闭包，两个数都记，不挑一个充证明 |
 | F05 | **PASS（修掉一处假绿后才成立）** | A03/A04 缺陷均有缺席反例 + 注入命中并做过变异验证；Profile 的 12 条注入现在**逐条给出真实断言失败数**（例：`overlay_writes_profile` → 10 failed / 1 passed）。**两处如实降级**：(1) `assertProcessGone` 的复用/存活重排测试**并不判别**（还原实现后 28 pass / 0 fail），重排保留但不单独钉住；(2) C10 的"零重复 session/new"在 L1 **从未被计数**，只断言了 Profile 侧事实 |
-| F06 | **PASS（冻结点见下；本轮因修 P1 缺陷已顺延）** | 候选冻结于 **`de69438c5c`**（分支 `nightly/021-harness-rollout-opencode-hermes-dsh-kilo`）。F11 独立复审查出 **P1 真实缺陷**（`codex-process.mjs` 的 rollout 窗口，见下专段）并已修，故按合同"若修一个文件重跑受影响门并更新全部候选指针"，冻结点顺延到修缺陷的提交。**门禁数一律连命令一起记**（此前只写数字、没写命令，导致 166/247 两个数对不上，现已补全）：`node --test plugins/harness/packaging/native-profile/*.test.mjs` → **83 pass / 0 fail**（含本轮新增 2 条回归）；`pytest plugins/profile plugins/assets/model-provider` → **473 passed**；`pytest plugins/assets/skills` → **433 passed**；`npm run test:packaging` → **45 pass / 0 fail / 12 suites**；harness 恢复/配置两组**分列**——按路径 `pytest plugins/harness/tests/configuration_model plugins/harness/tests/test_provider_restoration_service.py plugins/harness/tests/test_pi_provider_registration_service.py` → **166 passed**，按 `-k "configuration or restoration or pi_registration or profile_registration"` → **247 passed, 540 deselected**（两者都是真实数，**不是**同一个门） |
+| F06 | **PASS（冻结点见下；本轮因修 P1 缺陷已顺延）** | 候选冻结于 **`9979c651c8`**（分支 `nightly/021-harness-rollout-opencode-hermes-dsh-kilo`）。F11 独立复审查出 **P1 真实缺陷**（`codex-process.mjs` 的 rollout 窗口，见下专段）并已修，故按合同"若修一个文件重跑受影响门并更新全部候选指针"，冻结点顺延到修缺陷的提交。**门禁数一律连命令一起记**（此前只写数字、没写命令，导致 166/247 两个数对不上，现已补全）：`node --test plugins/harness/packaging/native-profile/*.test.mjs` → **83 pass / 0 fail**（含本轮新增 2 条回归）；`pytest plugins/profile plugins/assets/model-provider` → **473 passed**；`pytest plugins/assets/skills` → **433 passed**；`npm run test:packaging` → **45 pass / 0 fail / 12 suites**；harness 恢复/配置两组**分列**——按路径 `pytest plugins/harness/tests/configuration_model plugins/harness/tests/test_provider_restoration_service.py plugins/harness/tests/test_pi_provider_registration_service.py` → **166 passed**，按 `-k "configuration or restoration or pi_registration or profile_registration"` → **247 passed, 540 deselected**（两者都是真实数，**不是**同一个门） |
 | F07 | PASS | 58 个待提交文件扫凭据模式 → `False`；本轮 A 组探针证据另做自检 → 无 home 路径、无 account/token 字样 |
 | F08 | PASS | 本轮自建的进程、临时 CODEX_HOME、探针脚本全部清理；**未删任何用户账户/历史**。`.cleanup-evidence/` 保留为证据（未跟踪） |
 | F09 | PASS | 他属 `docs/ui-preview/01-empty.png`、根 `main`、相邻 worktree、旧已安装资产全程未动，提交用显式 pathspec |
