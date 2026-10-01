@@ -1,8 +1,10 @@
-"""Real enhanced native adapters + Python owner/C2/C4, without inference.
+"""Real enhanced native adapters + Python owner/C2/C4.
 
 Usage: .venv/bin/python plugins/harness/packaging/native-profile/probe-live-model.py
        /absolute/candidate-assets [--brand codex|claude-code]
 Pinned DEVELOPMENT artifacts and ledger fixtures, not installed/product proof.
+Default mode rejects inference. Explicit external opt-in sends one short prompt;
+native model validation may also make auxiliary upstream requests.
 """
 import argparse
 from dataclasses import asdict
@@ -24,7 +26,8 @@ def flatten(options):
         yield from flatten(option.get('options', []))
 
 
-def probe(assets, brand, *, restore_provider=False):
+def probe(assets, brand, *, restore_provider=False, candidate_entry=None, initial_model_override=None,
+          external_endpoint=None, credential=None):
     from ordessa_harness.server_acp.registry import _Channel, _ObservedTransport, AcpChannelRegistry
     from ordessa_harness.server_acp.profile_owner import ProfileSessionOwner
     from ordessa_harness.configuration.model.live_service import create_model_service
@@ -36,7 +39,9 @@ def probe(assets, brand, *, restore_provider=False):
             'claude-code': ('claude-runtime', 'claude-agent-acp', (0, 81, 2), 'sonnet',
                             'main', 'anthropic', 'anthropic', 'anthropic-messages')}
     artifact, package, pin, initial_model, provider_id, api_type, api, protocol = pins[brand]
-    entry = assets / artifact / 'node_modules/@agentclientprotocol' / package / 'dist/ordessa-profile.mjs'
+    initial_model = initial_model_override or initial_model
+    entry = candidate_entry or assets / artifact / 'node_modules/@agentclientprotocol' / package / 'dist/ordessa-profile.mjs'
+    assert entry.is_absolute(), 'absolute candidate entry required'
     assert entry.is_file(), 'enhanced candidate entry missing'
     counts = {'http': 0, 'inference': 0}
     class RejectInference(BaseHTTPRequestHandler):
@@ -56,7 +61,8 @@ def probe(assets, brand, *, restore_provider=False):
     server = ThreadingHTTPServer(('127.0.0.1', 0), RejectInference)
     worker = threading.Thread(target=server.serve_forever, daemon=True)
     worker.start()
-    endpoint = 'http://127.0.0.1:' + str(server.server_port)
+    endpoint = external_endpoint or 'http://127.0.0.1:' + str(server.server_port)
+    reply_chunks = []
     try:
         with tempfile.TemporaryDirectory(prefix='ordessa-native-c4-') as temporary:
             home = Path(temporary)
@@ -65,6 +71,9 @@ def probe(assets, brand, *, restore_provider=False):
             environment = {'PATH': os.defpath, 'HOME': str(home), 'CODEX_HOME': str(instance),
                 'CLAUDE_CONFIG_DIR': str(instance), 'XDG_CONFIG_HOME': str(instance),
                 'ORDESSA_NATIVE_INSTANCE_DIR': str(instance), 'NO_COLOR': '1'}
+            for key in ('HTTPS_PROXY', 'HTTP_PROXY', 'ALL_PROXY', 'NO_PROXY',
+                        'https_proxy', 'http_proxy', 'all_proxy', 'no_proxy'):
+                if key in os.environ: environment[key] = os.environ[key]
             replies = queue.Queue()
             sent = []
             with tempfile.TemporaryFile(mode='w+') as stderr:
@@ -113,10 +122,26 @@ def probe(assets, brand, *, restore_provider=False):
                                 categories = [name for name, needle in (
                                     ('credentials', 'auth'), ('history', 'resume'), ('connection', 'connect'),
                                     ('client-filesystem', 'read_text_file'), ('permission', 'permission'),
-                                    ('provider', 'provider'), ('native-exit', 'exited'), ('model', 'model'))
+                                    ('provider', 'provider'), ('native-exit', 'exited'), ('model', 'model'),
+                                    ('selector-rejected', 'invalid value for config option'),
+                                    ('initial-model-mismatch', 'initial model readback differs'),
+                                    ('initial-route-mismatch', 'initial native construction routing differs'),
+                                    ('native-field-missing', 'cannot read properties'),
+                                    ('current-model', 'current model'), ('catalogue', 'available models'),
+                                    ('unknown-model', 'unknown model'), ('reference-error', 'is not defined'),
+                                    ('type-error', 'is not a function'), ('unsupported-model', 'not supported'),
+                                    ('http-400', '400'), ('http-401', '401'), ('http-403', '403'),
+                                    ('http-404', '404'), ('http-429', '429'), ('http-500', '500'),
+                                    ('coding-agent-required', 'coding agent'), ('user-agent', 'user-agent'),
+                                    ('token-count', 'count_tokens'), ('model-not-found', 'model not found'),
+                                    ('invalid-request', 'invalid_request'))
                                     if needle in error_text]
                                 raise AssertionError((method, frame['error'].get('code'), categories))
                             return frame['result']
+                        update = frame.get('params', {}).get('update', {})
+                        if update.get('sessionUpdate') == 'agent_message_chunk':
+                            content = update.get('content', {})
+                            if content.get('type') == 'text': reply_chunks.append(content.get('text', ''))
                 try:
                     initialized = request('initialize', {'protocolVersion': 1, 'clientCapabilities': {},
                         'clientInfo': {'name': 'ordessa-native-c4-no-model', 'version': '1'}})
@@ -128,9 +153,14 @@ def probe(assets, brand, *, restore_provider=False):
                     prepared = registry.prepare_native_creation(channel.connection_id,
                         {'operationId': 'create:probe', 'model': initial_model,
                          'provider': {'providerId': provider_id, 'apiType': api_type, 'baseUrl': endpoint,
-                                      'headers': {'authorization': 'Bearer ordessa-synthetic-no-model-key'}}})
+                                      'headers': {'authorization': 'Bearer ' + (credential or 'ordessa-synthetic-no-model-key'),
+                                          **({'x-api-key': credential} if brand == 'claude-code' and credential else {})}}})
                     assert prepared['state'] == 'prepared'
-                    native = request('session/new', {'cwd': str(project), 'mcpServers': []})['sessionId']
+                    try:
+                        native = request('session/new', {'cwd': str(project), 'mcpServers': []})['sessionId']
+                    except AssertionError as failure:
+                        evidence = registry.query_native_creation(channel.connection_id, 'create:probe')
+                        raise AssertionError(('creation-failed', evidence.get('phase'), failure.args)) from None
                     startup = registry.query_native_creation(channel.connection_id, 'create:probe')
                     assert startup['state'] == 'observed'
                     assert 'ordessa-synthetic-no-model-key' not in json.dumps(startup), 'startup evidence leaked credential'
@@ -148,8 +178,10 @@ def probe(assets, brand, *, restore_provider=False):
                     assert selectable, 'actual catalogue lacks exact native construction route'
                     alternatives = [item for item in selectable if item['value'] != initial_model]
                     preferred = next((item for item in alternatives if item['value'] == 'haiku'), None)
-                    chosen = preferred or (alternatives[0] if alternatives else next(item for item in selectable
+                    chosen = (next(item for item in selectable if item['value'] == initial_model) if external_endpoint
+                              else preferred or (alternatives[0] if alternatives else next(item for item in selectable
                                                                                    if item['value'] == initial_model))
+                              )
                     from pacthold_runtime_compat.storage import Database
                     from ordessa_harness.contributions import CONFIGURATION_POINT, HarnessContributionRegistry
                     carrier = build_runtime(home / 'controlled-carrier', server_plugins=(), database_factory=Database)
@@ -242,7 +274,12 @@ def probe(assets, brand, *, restore_provider=False):
                         assert not str(relayed.get('id', '')).startswith('ordessa-config-'), 'owner RPC leaked into client relay'
                         assert 'invalid_stdout' not in relayed
                     assert sum(frame.get('method') == 'session/new' for frame in sent) == 1
-                    assert not any(frame.get('method') in ('session/prompt', 'session/load') for frame in sent)
+                    if external_endpoint:
+                        reply = request('session/prompt', {'sessionId': native,
+                            'prompt': [dict(type='text', text='Reply only OK. Do not use tools or read files.')]})
+                        assert reply.get('stopReason') == 'end_turn' and ''.join(reply_chunks).strip(), 'real prompt not confirmed'
+                    assert sum(frame.get('method') == 'session/prompt' for frame in sent) == int(bool(external_endpoint))
+                    assert not any(frame.get('method') == 'session/load' for frame in sent)
                     assert counts['inference'] == 0
                     request('session/close', {'sessionId': native})
                     return {'brand': brand, 'scope': 'real-adapter-owner-C2-C4-ledger-fixture',
@@ -256,8 +293,10 @@ def probe(assets, brand, *, restore_provider=False):
                         'independentOwnerReadback': True, 'sameNativeIdentityAndGeneration': True,
                         'wrongEndpointRefused': True, 'exactRoute': actual[0]['_meta']['ordessaModel'],
                         'receipt': asdict(receipt), 'retainedOperationState': retained['state'],
-                        'sessionNew': 1, 'prompt': 0, 'realModelCalls': 0,
-                        'inferenceRequests': counts['inference'],
+                        'sessionNew': 1, 'prompt': int(bool(external_endpoint)),
+                        'realTextConfirmed': bool(external_endpoint),
+                        'realModelCalls': 'native auxiliary calls not counted' if external_endpoint else 0,
+                        'inferenceRequests': None if external_endpoint else counts['inference'],
                         'syntheticProviderRequests': counts['http'], 'providerRestoration': restoration_report}
                 finally:
                     if carrier is not None:
@@ -281,7 +320,22 @@ if __name__ == '__main__':
     parser.add_argument('--brand', choices=('codex', 'claude-code'))
     parser.add_argument('--restore-provider', action='store_true',
                         help='Also verify provider restoration/new-owner C4; no prompt or inference')
+    parser.add_argument('--candidate-entry', type=Path, help='Explicit DEVELOPMENT candidate, never installed proof')
+    parser.add_argument('--initial-model', help='Exact native model for DEVELOPMENT compatibility validation')
+    parser.add_argument('--endpoint', help='Explicit external provider base URL; requires model-call authorization')
+    parser.add_argument('--key-file', type=Path)
+    parser.add_argument('--key-line', type=int, default=2)
+    parser.add_argument('--allow-model-calls', action='store_true')
     args = parser.parse_args()
     assert args.assets.is_absolute(), 'absolute candidate assets required'
+    credential = None
+    if args.endpoint:
+        assert args.allow_model_calls and args.key_file and not args.restore_provider, 'explicit bounded external prompt opt-in required'
+        lines = args.key_file.read_text().splitlines()
+        assert 1 <= args.key_line <= len(lines), 'key line absent'
+        credential = lines[args.key_line - 1].strip()
+        assert credential and len(credential) <= 8000 and not any(ord(c) < 32 or ord(c) == 127 for c in credential), 'invalid bounded key'
     for selected_brand in ([args.brand] if args.brand else ['codex', 'claude-code']):
-        print(json.dumps(probe(args.assets, selected_brand, restore_provider=args.restore_provider), sort_keys=True), flush=True)
+        print(json.dumps(probe(args.assets, selected_brand, restore_provider=args.restore_provider,
+            candidate_entry=args.candidate_entry, initial_model_override=args.initial_model,
+            external_endpoint=args.endpoint, credential=credential), sort_keys=True), flush=True)

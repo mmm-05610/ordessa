@@ -66,6 +66,19 @@ export function nativeConfigurationReader({ agent, brand, invalidParams }) {
     const route = safeNativeRoute(captured)
     if (route && (brand !== 'codex' || session.authProvider === route.provider
         || route.authentication === 'managed-account' && session.authProvider == null)) {
+      // A custom-provider model can be live but absent from the SDK's standard
+      // picker. Expose only that independently read current model, not a list
+      // of hypothetical provider capabilities supplied by a request.
+      if (brand === 'claude-code') {
+        const hasValue = (options, value) => options.some(option => option.value === value
+          || Array.isArray(option.options) && hasValue(option.options, value))
+        for (const selector of configOptions.filter(item => item.id === 'model')) {
+          if (selector.currentValue && !hasValue(selector.options, selector.currentValue)) {
+            if (selector.options.length >= 512) throw invalidParams('Live model selector exceeds capacity')
+            selector.options.push({ value: selector.currentValue, name: selector.currentValue })
+          }
+        }
+      }
       const attach = option => {
         if (typeof option.value === 'string') option._meta = { ordessaModel: { ...route, model: option.value } }
         for (const child of option.options ?? []) attach(child)

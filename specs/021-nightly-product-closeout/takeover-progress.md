@@ -4,7 +4,17 @@
 所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
 未合并、未 push、未启停既有用户服务、未重建 deb。三品牌后端真实聊天已通过；Codex Desktop 已通过 Profile 首发与同会话下一轮切换，两条真实回复。完整三品牌 UI/发行验收仍未完成。
 
-## 最新验证（2026-10-01，第二供应商 OpenCode Go 协议兼容）
+## 最新验证（2026-10-01，Go 原生 Claude / Codex 接入）
+
+- 已完成两个真实适配器的 Go 直连验证：Claude 候选 ACP 0.81.2 + MiniMax M2.7，Codex 既有增强 ACP 1.1.14 + GPT-5.6 Luna。每品牌 session/new=1、用户 prompt=1、真实非空回复、C4 confirmed、独立 owner 读回、相同原生身份/generation、重复 apply 零第二次原生效果。不是完整 Server/Profile/Desktop 验收；该探针使用 ledger fixture，没有证明跨上游历史恢复。
+- Claude 差异仍集中 Harness：受精确 provider 构建路由保护的自定义模型候选，SDK 接受后才保留模型选项，不伪造能力；配置查询只补已生效的当前模型。Python 的 Anthropic 原生参数同时提供私有 Bearer 与标准 x-api-key，Codex 原参数不变。Profile/model-provider/host 未添加品牌逻辑。
+- 真正定位的兼容条件：Claude SDK 自动追加 /v1/messages，Go 的 Claude base 使用 https://opencode.ai/zen/go；Codex Responses base 使用 https://opencode.ai/zen/go/v1。仅 Bearer 的 Go Anthropic 请求实测 401，补标准 x-api-key 后 200；错误 base 曾表现为 model not found。本地拒绝推理探针的自定义模型 setter 会触发原生验证请求并被本地 403 拒绝，不能把它误判为模型目录不支持，也不能称该验证无网络效果。
+- 过程证据保留：多次初始失败均在 initial-model-application；本地观察代理补头后的成功是诊断证据，随后两品牌分别以无补头代理的真实直连成功。原生模型验证可能产生辅助推理请求，直连未计数，输出 inferenceRequests=null，不宣称全部请求数为一。未输出 Key/真实回复正文，不改全局登录或配置。
+- 定向回归 Python **287P**（Harness configuration_model + products/server）、Node **44P**（native-profile），exit 0，既有 Starlette warning 一条。新增标准认证头测试先红后绿；其余自定义模型单测与实现同批，不泛称全部先红后绿。生产头变化使旧严格头断言红一次，等价更新为 Claude 两标准头/Codex 原单头后复跑全绿。未重跑全仓、npm/发行包，不引用历史绿作新证明。
+- Claude 增量资产候选完整摘要 b02945bb655c89dfcc0e95c588737b42370ab8c580508b5ff49bfb862fefce72，源锁 ea82cc51fff73c468cf1f5c3bf26482967b46eee1960bbbd86342a754e5871fe，3444 entries / 251167712 bytes。准备 `.cleanup-evidence/install-claude-provider-verified.sh`，新目录 /opt/ordessa/harnesses/profile-claude-provider；复制后 root 所有权/不可写/完整树校验，原资产不覆盖。**尚未执行安装**；需要用户 sudo 认证。首次误用 builder CLI 未识别的 profile flag 得到普通开发资产，未用于成功验证、未安装；正确候选由 builder API 的 profileBridge:true 构建。
+- 下一步仍是既定收尾：安装后走完整产品的 DeepSeek→Go 已有历史恢复；Pi 新 provider 注册、Codex API/官方跨路线、三品牌完整 UI 与发行门继续未完成。没有新增顶层阶段，保留他属截图、main 与用户服务不动。
+
+## 前一检查点（2026-10-01，第二供应商 OpenCode Go 协议兼容）
 
 - 用户提供既有 key.txt 第二行作为 Go Key，允许作第二供应商验收。密钥仅内存读指定行，不打印、不写明文副本；原聊天探针新增 key-line 参数，默认第一行，不再把两个 Key 拼成一条。
 - 官方最新 [Go 文档](https://opencode.ai/docs/go/)（页面更新时间 Oct 1, 2026）和 [公开 models](https://opencode.ai/zen/go/v1/models) 已核查。不同模型必须用对应协议；Go 不等同于 Zen 普通额度入口或 Console inference。文档明确识别 Claude/Codex 原生会话头，Pi 需要具备 session 信息的版本；代理必须保留这些头，客户端使用真实 User-Agent。尚未证明本机所有适配器已满足此要求。

@@ -60,6 +60,11 @@ def initial_model_params(brand, payload, operation_id, *, credential=None, model
             native['apiKey'] = credential
         else:
             native['headers'] = {'authorization': 'Bearer ' + credential}
+            if brand == 'claude-code':
+                # Anthropic's standard API-key header is required by some
+                # compatible endpoints. Keep bearer compatibility too; both
+                # are private launch facts and never configuration evidence.
+                native['headers']['x-api-key'] = credential
     if brand == 'pi':
         return {'operationId': operation_id, 'model': payload['model'], 'provider': native, 'models': list(models)}
     return {'operationId': operation_id, 'model': payload['model'], 'provider': native}

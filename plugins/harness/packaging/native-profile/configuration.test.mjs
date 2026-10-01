@@ -89,6 +89,18 @@ test('Claude routing evidence uses captured query configuration and rejects secr
   }
 })
 
+test('Claude exposes an off-picker effective model only with captured native routing', () => {
+  const f = fixture('claude-code')
+  f.session.configOptions[0].currentValue = 'minimax-m2.7'
+  assert.equal(f.read({sessionId: 's'}).configOptions[0].options.some(o => o.value === 'minimax-m2.7'), false)
+  f.session.ordessaProviderRoute = {apiType: 'anthropic', baseUrl: 'https://native-query.invalid'}
+  const selector = f.read({sessionId: 's'}).configOptions[0]
+  const current = selector.options.find(o => o.value === 'minimax-m2.7')
+  assert.equal(current._meta.ordessaModel.model, 'minimax-m2.7')
+  assert.equal(current._meta.ordessaModel.baseUrl, 'https://native-query.invalid')
+  assert.equal(f.session.configOptions[0].options.length, 2) // projection never changes native state
+})
+
 for (const brand of ['codex', 'claude-code']) {
   test(`${brand}: initial provider precedes new, native model is applied before returning, and never resumes`, async () => {
     const f = fixture(brand)

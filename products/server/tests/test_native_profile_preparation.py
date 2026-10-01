@@ -90,7 +90,9 @@ def test_prepare_reserved_once_and_query_only_with_sanitized_projection(brand):
     fixture.channels.prepare_native_creation.assert_called_once()
     fixture.channels.query_native_creation.assert_called_once_with('c', 'create:attempt')
     params = fixture.channels.prepare_native_creation.call_args.args[1]
-    assert params['provider']['headers'] == {'authorization': 'Bearer synthetic-private-key'}
+    assert params['provider']['headers'] == {
+        'authorization': 'Bearer synthetic-private-key',
+        **({'x-api-key': 'synthetic-private-key'} if brand == 'claude-code' else {})}
     assert params['provider']['providerId'] == ('custom-gateway' if brand == 'codex' else 'main')
 
 
