@@ -176,10 +176,25 @@ Profile Chat 有限入口接线已由主代理复跑 23/23：合法 default fact
 - [x] 核对当前产品三品牌与已注册 facet 的支持矩阵。
 - [x] 增强 Pi 系统资产安装、显式启动及实例目录管理的真实产品验收（不等于 Profile 应用确认）。
 - [ ] 后端 canonical Profile 会话注册与真实 owner/generation 完整生产绑定。
+  - [x] Pi 真实产品 wire 路径登记 canonical 身份并绑定真实 owner/generation；双实例无模型配置应用已验证。
+  - [x] 两品牌原生证据读取、显式运行换代票据与旧 target 失效守卫已实现/受控验证。
+  - [ ] Codex/Claude 完整生产配置 port/factory 接线及原生应用确认。
 - [ ] Chat 首次/后续发送前应用接线，不打断正在输出的 Agent。
+  - [x] 提交 guard/preparation/登记/应用/发送链已实现并受控验证；输出中选择不调用配置接口。
+  - [x] 完整启用清单的实际 Desktop 挂载通过无模型探针。
+  - [ ] Desktop UI→生产 Profile→原生配置→prompt 的完整端到端验收。
 - [ ] 实际应用链验证全局预设/逐项临时覆盖/失败草稿/未知结果语义。
+  - [x] 全局预设与逐项临时覆盖隔离、清除、失败草稿、Unknown 只查询，以及 revision 竞争已有受控反例。
+  - [ ] 在实际产品链上完整执行这些场景。
 - [ ] Codex、Claude 实际切换与跨 provider restart/resume、多会话隔离。
+  - [x] 两品牌增强候选首次 provider/model 配置与独立读回通过实际无模型探针。
+  - [x] 独立实例入口、品牌锁定和显式增强来源校验已实现/验证，未安装新候选。
+  - [ ] 生产接线、最终资产安装、已有历史跨 provider 恢复及产品多会话验证。
 - [ ] 产品完整回归及用户授权的真实聊天、配置切换验收。
+  - [x] 多次定向回归、构建/类型检查及完整产品挂载已有证据（各次范围见下文，非本轮全仓绿）。
+  - [ ] 全量回归收口与用户实际操作验收。
+
+口径校准（2026-10-01）：未勾选顶层表示仍缺整项验收，不表示尚未实现。当前收尾目标是多 Harness＋Profile 基础配置 Desktop；不以未来所有资源 facet 应用能力作为该目标的额外完成门。
 
 ### 支持矩阵实测（源码审计，不冒充原生应用证据）
 
@@ -366,3 +381,9 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 新候选 `.cleanup-evidence/native-isolated-8DULMM` 从锁文件重新构建，两品牌均从隔离入口完成实际 provider-before-new/model-before-return/独立读回探针：session/new=1、resume=0、prompt=0、inferenceRequests=0，scope 仍是 native-adapter-initial-model-not-server-profile。未安装候选、未修改旧系统资产/登录、未启动真实模型调用。
 - 本轮实测：Node native/Pi/安装边界 **107/107**，Harness owner/action/安装入口/实例目录/产品测试 **120/120**，exit 0；日志 `.cleanup-evidence/native-isolated-node.log` 与 `.cleanup-evidence/native-isolated-real.log`。未重跑 Profile 全套/root npm/全量 Server，不引用历史数字作本轮证明。
 - **固定 TODO 第 6 项继续未完成**：增强资产隔离入口与显式可信验证已完成源码/受控验证；仍缺生产 Profile 首次准备接线、Codex/Claude C4 factory、系统资产安装及真实已有历史恢复验证。未变更 host 核心，root 仍 main，保留他属截图修改。
+
+### 配置执行器品牌解耦（2026-10-01，实施中）
+
+- 将原 Pi 操作绑定校验迁入 Harness 内的 NativeSessionActionExecutor；Pi 保留薄的品牌策略类，现有生产行为不变。Codex/Claude 仅允许 model action，必须匹配当前 channel 品牌和各自原生证据前缀；before digest、target、manifest、operation、generation、原生 owner 与独立读回校验全部保留。
+- 新增两个品牌反例，初始红因为公共执行器尚不存在；实现后验证 preflight 零效果、正确品牌操作记录生成 receipt、Pi/外品牌证据拒绝、错误 channel 品牌在效果前拒绝。不能将此视为 C4 factory 或 production Profile 全链已经实现；当前产品 port 仍 Pi-only，不移除其安全拒绝。
+- 本轮 Harness owner/action/安装入口/实例目录/产品测试 **122/122**、Profile 全套 **194/194**，exit 0（既有 Starlette deprecation warning 一条）；未重跑 Node/全量 Server/root npm，不冒称完整产品绿。以上是第 6 项生产接线的子步骤，不增加新的顶层阶段。

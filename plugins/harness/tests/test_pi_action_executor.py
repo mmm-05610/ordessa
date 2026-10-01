@@ -7,7 +7,7 @@ import json
 import pytest
 from ordessa_harness_api import ApplicationTarget, InvokeAction, IntentSource
 from ordessa_harness.application.action_execution import ActionBatch, ActionInvocation
-from ordessa_harness.server_acp.pi_action_executor import PiSessionActionExecutor, configuration_digest
+from ordessa_harness.server_acp.pi_action_executor import ACTION_ID, PiSessionActionExecutor, configuration_digest
 from ordessa_harness.server_acp.registry import NativeSessionObservation, NativeConfigurationUnavailable
 
 
@@ -84,3 +84,47 @@ def test_plain_ack_or_unbound_native_record_cannot_make_receipt(changed):
     with pytest.raises(NativeConfigurationUnavailable):
         executor.execute('operation', batch)
     assert executor.last_receipt is None
+
+
+@pytest.mark.parametrize('brand', ['codex', 'claude-code'])
+def test_native_model_action_reuses_owner_fences_but_requires_its_own_brand_evidence(brand):
+    from ordessa_harness.server_acp.native_action_executor import NativeSessionActionExecutor
+    old, _, calls, snapshot = rig()
+    snapshot.config_options[0]['id'] = 'model'
+    channel = old.registry.get('channel')
+    channel.harness_id = brand
+    batch = ActionBatch(old.target, (ActionInvocation('provider', 'publication', InvokeAction(
+        IntentSource('assets.model-provider', 'choice', '1'), ACTION_ID, '1',
+        {'configId': 'model', 'value': 'low'}, 'native-model-low')),))
+    def respond(native_id, method, request):
+        calls.append((method, copy.deepcopy(request)))
+        after = copy.deepcopy(snapshot.config_options)
+        after[0]['currentValue'] = request['value']
+        return snapshot.owner, {'sessionId': native_id, 'operationId': request['operationId'],
+            'state': 'observed', 'generation': snapshot.native_generation,
+            'target': asdict(old.target), 'manifestDigest': batch.manifest_digest,
+            'beforeConfigDigest': configuration_digest(snapshot.config_options),
+            'configId': 'model', 'requestedValue': 'low', 'observedValue': 'low',
+            'afterConfigDigest': configuration_digest(after),
+            'after': {'sessionId': native_id, 'generation': snapshot.native_generation,
+                      'busy': False, 'configOptions': after},
+            'evidenceRef': brand + '-native-operation:controlled'}
+    channel._configuration_rpc = respond
+    executor = NativeSessionActionExecutor(old.registry, old.owners, target=old.target,
+        expected_configuration_digest=configuration_digest(snapshot.config_options), harness_id=brand)
+    executor.preflight(batch)
+    assert calls == []
+    assert executor.execute('operation', batch).evidence_ref.startswith(brand + '-native-operation:')
+    executor.last_receipt = None
+    def foreign(*args):
+        owner, record = respond(*args)
+        return owner, {**record, 'evidenceRef': 'pi-native-operation:foreign'}
+    channel._configuration_rpc = foreign
+    with pytest.raises(NativeConfigurationUnavailable):
+        executor.execute('foreign', batch)
+    assert executor.last_receipt is None
+    channel.harness_id = 'pi'
+    count = len(calls)
+    with pytest.raises(ValueError, match='owner'):
+        executor.preflight(batch)
+    assert len(calls) == count
