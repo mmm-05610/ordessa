@@ -1750,3 +1750,51 @@ Lead 实跑 `node --test "plugins/harness/packaging/**/*.test.mjs"`（真实退�
 **残留（已在 known-issues 写明，不假称已关）**：`.github/workflows/ci.yml` 跑的是
 枚举出来的 21 个 workspace 的 `npm test --workspace`，**从不调用根聚合**，所以这套测试
 现在被 `npm test` 门住，但**仍然门不住 PR**。是否扩 CI 覆盖是 CI 策略判断，不在本次机械修复内。
+
+### 四个 harness 的真实进度（按实测，不是按提交信息）
+
+上面把"其余 harness"的范围核准为 opencode / hermes / dsh / kilo 之后，逐个实测了它们到底走到哪。
+**结论：四个都停在"产物（artifact）"这一步，还没有进入产品装配。** 已有的只是注册表条目、
+启动路由、能力声明、builder 与（现在才接上的）测试。
+
+| harness | 产物 builder | 产物 manifest 形态 | `verifyInstalledArtifact` 能否接受 |
+| --- | --- | --- | --- |
+| codex | 有 | `adapter` + `extension` | ✓ `native-profile` |
+| claude-code | 有 | `adapter` + `extension` | ✓ `native-profile` |
+| pi | 有 | `adapter` + `ordessaExtension` | ✓ `pi-profile` |
+| **hermes** | 有 | `entry.relative: site-packages/…` + `packages`/`overlays` | ✗ **schema 完全不同** |
+| **dsh** | 有 | `adapter`，entry 为 `lib/bin.js` | ✗ 入口名谓词 |
+| **kilo** | 有 | `adapter`，entry 为 `bin/kilo` | ✗ 入口名谓词 |
+| **opencode** | **没有** | — | ✗ **根本没有产物** |
+
+三点必须如实说清楚：
+
+1. **opencode 连产物 builder 都没有。** `packaging/builders/` 下只有
+   `build-opencode-authorization.mjs`，没有 `build-opencode-runtime-artifact.mjs`。
+   这是本轮 rollout 最大的单点缺口。
+2. **hermes 的产物是 Python 发行物，校验器整个读不懂。** 校验器的契约是 npm 形状的
+   （`manifest.adapter.{package,version,entry}` + 顶层 `treeDigest` + `node_modules/...` 入口），
+   而 hermes 发的是 `kind: agentbox-hermes-runtime-artifact`、`entry.relative: "site-packages/…"`、
+   `packages`/`overlays`/`excluded`/`resolutionDigest`。它在 `manifest.adapter?.package` 这一步就断，
+   比 dsh/kilo 的"入口名不对"更早、更深。
+3. **此前 known-issues 那行只写了 dsh/kilo，低估了范围。** 已按实测改写为"四个都过不了"，
+   并把三种不同的失败原因分开写清，不是笼统一句"校验器不接受"。这是我自己写的登记行的更正，
+   不是新发现。
+
+### 另一处独立缺口：opencode 的规范 id 根本起不来
+
+实测（直接执行 `plugins/harness/harnesses/index.mjs`，不是读代码推断）：
+`listHarnesses()` = `claude, claude-code, codex, dsh, hermes, kilo, omp, pi`；
+`isKnownHarness("opencode")` = **false**；`harnessLaunchContext("opencode")` 抛
+**`HARNESS_UNDISCOVERED: opencode`**。其余六个规范 id 全部可启动，opencode 是唯一例外。
+
+原因是 `launch-descriptors.json` 给 opencode 的 `launch` 是 `null`，而
+`parseLaunchDescriptors` 只在 `if (entry.launch)` 时登记路由——于是**规范 id 不可启动，
+别名 `omp` 可启动**。而产品侧对 `omp` 的引用是 **0 处**（`products/server/src`、
+`products/desktop/extensions.json`、所有前端 picker 全都没有），`opencode` 只出现在探针脚本
+和两个产品测试里。也就是说：**注册表用的 id 客户起不来，客户能起的 id 产品里没人提。**
+
+这不能顺手改：给规范 id 补路由要在 `profile_extensions.mjs` / 上游 `harness-profiles.js`
+里新增一个 profile 身份；把公开品牌改名成 `omp` 属于 on-disk 标识变更，按 AGENTS.md 规则 5/6
+需要 `docs/migration/` 说明加用户确认；而自动把别名折叠成规范 id 会让 `listHarnesses()` 变成 9 个，
+与该文件自己写死的"historical eight launchable IDs"不变式冲突。三条路都是裁决，不是修复。已登记并上报。
