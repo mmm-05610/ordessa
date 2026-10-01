@@ -173,8 +173,9 @@ manifest 自报值三项全等（否则 `refuse("candidate manifest disagrees wi
 
 ### C. Profile 与 ModelProvider 会话配置语义（22 条）
 
-合同 §C 明写 C02/C03/C08/C10/C16 **还须在实际产品链 L3 或 L4 观察**。这五条 L1 绿、L3/L4 **零**，
-因此不能判 PASS。
+合同 §C 明写 C02/C03/C08/C10/C16 **还须在实际产品链 L3 或 L4 观察**。C02/C03/C08/C10 四条
+L1 绿、L3/L4 **零**，因此不能判 PASS；**C16 本轮已在真实产品链上补齐 L3**（见下方专段，
+其中"锁定"一条是对**真实**锁定集合实测，不是 stub）。
 
 | ID | 判定 | 等级 | 依据 / 缺口 |
 | --- | --- | --- | --- |
@@ -193,7 +194,7 @@ manifest 自报值三项全等（否则 `refuse("candidate manifest disagrees wi
 | C13 | PASS | L1 | runtime 换代后旧 reference 执行前拒绝 |
 | C14 | PASS | L1 | 保存/编辑零 DNS（用户批准的口径），实际 probe 仍逐地址 SSRF/DNS 检查；Fake-IP 保存成功 + probe 走被拒地址不假绿 |
 | C15 | PASS | L1 | 目录来自真实后端/资源插件，前端不硬编码品牌 |
-| C16 | **PASS** | **L3（真实产品链 + 真实 keyring）** | 见下方 C16 专段：真实 `product_secret_store` + 真实 `ApiKeyImportService` + 真实 sqlite 账本跑通 import→**跨进程**读取→删除；缺席/锁定各自独立拒绝码；DB 与唯一真实日志点均无合成 secret 字节 |
+| C16 | **PASS** | **L3（真实产品链 + 真实 keyring），重启一条为跨进程而非整机重启** | 见下方 C16 专段：真实 `product_secret_store` + 真实 `ApiKeyImportService` + 真实 sqlite 账本跑通 import→**另起进程**读取→删除；缺席与锁定**各自**独立拒绝码（锁定为对真实锁定集合实测）；DB/日志字节扫描无合成 secret |
 | C17 | PASS | L1 | Key 删除/替换影响未来准备，运行中 Agent 不中断 |
 | C18 | PASS | L1 | 官方账号与 API 配置分离，切 model 不隐式选官方认证 |
 | C19 | PASS | L1 | Profile CRUD/命名/Harness 归属/持久化不退化；已绑定会话不静默换品牌 |
@@ -375,13 +376,24 @@ helper 拒绝**，且**即使不拒绝也会装进带 P1 缺陷的资产**。两
 | --- | --- | --- |
 | 真实 store | `product_secret_store(data_root)`（`platform_secrets`），Linux 下即 `LinuxSecretServiceStore`，经真实 GNOME Secret Service | 非文件回退：模块 docstring 即"no file/plaintext fallback"，非 Linux 直接返回 `None` |
 | 真实导入链 | 真实 `ApiKeyImportService` + 真实 `key-import.sqlite` 账本（`modelProvider.importApiKey` 的实现体） | `state='imported'`，返回 `credential_<32hex>` |
-| 重启可读 | **另起进程**，仅凭 locator 读回 | 一致；跨进程持久化成立 |
+| 跨进程可读 | **另起进程**，仅凭 locator 读回 | 一致。**注意这不是整机/服务重启**：真实产品重启还要从 `server_credentials` 库恢复 locator，那一段本轮是打桩的（见下方"未覆盖"） |
+| 拒绝·缺席 | 真实 keyring，正确 namespace + 不存在的 item id | `CREDENTIAL_NOT_AVAILABLE`（修复后），与锁定**分开** |
+| 拒绝·锁定 | 对**真实**默认集合调 `Lock()` 后读 | `SECRET_STORE_LOCKED`，`check_available()` 同样拒绝 |
 | 账本不含密钥 | 逐行 dump `imports` 表 | 只有 request/harness/state/credential_id/kind/cleanup_state |
-| DB 字节扫描 | 对 data-root 全部文件扫 `sk-c16-…` 及 4 个特征片段 | 全部 absent；无 WAL/journal 残留 |
-| 日志字节扫描 | **唯一真实日志点** `composition.py:1103`（读路径 `log.warning(...: %s, exc)`）实际触发 | 写出 locator 与 credential id，**0 字节密钥** |
+| DB 字节扫描 | 对 data-root 下全部文件扫 `sk-c16-…` 及 4 个特征片段 | 全部 absent；无 WAL/journal 残留 |
+| 日志字节扫描 | 读路径唯一的 `log.warning(...: %s, exc)`（`composition.py:1111-1113`，读在 `:1103`）**按其格式复现** | 写出 locator 与 credential id，**0 字节密钥** |
 | 失败路径 | 密钥入 store 后 `register` 抛错 | 账本记 `state='unknown', cleanup_state='removed'`（回滚生效），且无泄漏 |
 
-**顺带查出并修掉一个真实缺陷（`33955fa984`）**：`read()` 对缺席条目抛
+**未覆盖 / 不声称（本轮边界）**：
+- **日志那条是复现，不是驱动**：`l3_readlog.py` 自己按 `composition.py` 的格式串调了一次
+  `log.warning`，传入的 `exc` 是真实异常，但 `composition.py` 的 `port_factory` 未在 L3 上跑起来。
+  结论方向可信，**不等于"该日志点已被真实触发"**。
+- **未扫描**：真实 `server_log_file(data_root)` 产品日志（本轮没起真实服务）、`core_wire.py:109`
+  等其它 `%s, exc` 日志点、探针自身 stdout（`store_probe.py` 会打印密钥明文）、keyring 守护进程
+  自身的存储。故只能声称"data-root 内无密钥字节"，**不能声称"机器上任何地方都没有副本"**。
+- `credential_import.py` **全程不打日志**，所以该模块"日志干净"是结构性成立，不是扫描结论。
+
+**顺带查出并修掉一个真实缺陷（`33955fa984`，独立复审 PASS）**：`read()` 对缺席条目抛
 `SecretLocatorUnavailable`，但 `contextlib` 会把调用方的异常抛回生成器的 `yield`，
 而 `_default_collection` 的裸 `except Exception` 会把它改写成 `SECRET_STORE_UNAVAILABLE`
 ——**密钥仅仅缺席，却被报成密钥环不可用**，把 absent / locked / 服务不可用三种原因压成一种，
@@ -391,9 +403,13 @@ helper 拒绝**，且**即使不拒绝也会装进带 P1 缺陷的资产**。两
 
 > 为什么 L1 没抓到：**既有测试全部注入假的 `_backend_factory`**，真实生成器的异常阶梯从未被执行过。
 > 新测试直接驱动真实生成器（stub 掉 `secretstorage` 模块），断言缺席与锁定保持各自独立的码。
-> 已做变异验证：还原源码改动则新测试失败。
-> 另外 `credential_import.py` **全程不打日志**，所以"日志干净"在本模块属结构性成立；
-> 上表因此单独把真实日志点拉出来实测，而不是拿空日志充数。
+> 已做变异验证：还原源码改动则新测试失败；复审独立复现了同一变异。
+
+> **对用户机器的副作用（如实登记）**：为取得"锁定"这条 L3 证据，本轮**锁上了用户真实的
+> GNOME 默认集合**（`/org/freedesktop/secrets/collection/login`）。`Unlock` 需要交互式
+> 提权，无头环境无法完成，**该集合目前仍处于锁定状态，需要用户用登录口令解锁一次**。
+> 已按规则 8 不重启 `gnome-keyring-daemon`。锁定前后均已确认密钥环本身完好（daemon 存活、
+> 会话可开），**数据未损坏，仅是锁定态**。
 
 | ID | 判定 | 依据 / 缺口 |
 | --- | --- | --- |
