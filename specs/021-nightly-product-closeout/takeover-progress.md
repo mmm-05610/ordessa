@@ -204,9 +204,15 @@ L1 绿、L3/L4 **零**，因此不能判 PASS；**C16 本轮已在真实产品�
 
 ### D. Desktop UI → 生产发送路径（24 条）
 
-**全组零 L4。** 现有 UI 证据最高只到前端受控测试（L1）；`products/desktop/probe-profile-ui.mjs` 那条
-真实 Electron DOM 链在本文件早先的记录里**发送失败、停在草稿**，未修。合同 §D 明写"不能用内存 Server、
-UI-preview 或'14 插件挂载成功'代替实际生产发送"。因此除 D04 的装配缺口外，全部只能记 L1。
+**本轮已取得真实 L4（选择腿），发送腿仍缺。** 早先记"全组零 L4"，依据是
+`products/desktop/probe-profile-ui.mjs` 那条真实 Electron DOM 链"发送失败、停在草稿"。
+本轮查明那**不是链本身坏了，而是缺 `ORDESSA_BUNDLED_ROOT` 这个环境前提**：Server 因
+`the bundled runtime is incomplete: python, bin` 根本没起来，UI 自然停在草稿。补上 dev runtime
+根后同一条链连跑三次全绿（见下方 D16–D18 专段）。
+
+仍未覆盖、因此 D16/D17/D18 **保持 PARTIAL**：合同 §D 要求"实际生产发送"，而实际发送需要
+`--allow-model-calls`（真实模型调用，**未获授权**，本轮不跑）。所以现在有的是**选择腿的 L4**，
+不是发送腿的 L4——不拿 UI-preview、内存 Server 或"插件挂载成功"冒充。
 
 | ID | 判定 | 等级 | 依据 / 缺口 |
 | --- | --- | --- | --- |
@@ -225,9 +231,9 @@ UI-preview 或'14 插件挂载成功'代替实际生产发送"。因此除 D04 �
 | D13 | PASS | L1 | 输入区固定、消息区独立滚动；顺序稳定无残留 loading |
 | D14 | PARTIAL | L1 | 有过真实 Codex 只读 `pwd` 的原生工具卡片记录，但那是**旧 UI 探针**；本轮候选无 L4 |
 | D15 | PASS | L1 | 默认原生模式，不宣告外部授权端口 ready，也不自动批准原生权限请求 |
-| D16 | PARTIAL | L1 | Pi 两轮**后端**已通过；UI 侧证据缺席 |
-| D17 | PARTIAL | L1 | Claude 两轮**后端**已通过；UI 侧证据缺席 |
-| D18 | PARTIAL | L1 | Codex 首发 + 官方→API 后端已跑且**已红**（见 B10）；UI 侧证据缺席 |
+| D16 | **PARTIAL** | L1 + **L4（选择腿）** | Pi 两轮**后端**已通过；**本轮补真实 L4 选择腿**（下方专段）：Electron 真实 DOM 中 `ACP · pi` 连接器与预设选择器均实装、零告警。**发送腿仍缺**（需 `--allow-model-calls`，未授权） |
+| D17 | **PARTIAL** | L1 + **L4（选择腿）** | Claude 两轮**后端**已通过；**本轮补真实 L4 选择腿**：`ACP · claude-code` 连接器实装并可选。**发送腿与跨 provider 后台 B 类关联仍缺**（需 `--allow-model-calls`，未授权） |
+| D18 | **PARTIAL** | L1 + **L4（选择腿）** | Codex 首发 + 官方→API 后端已跑且**已红**（见 B10）；**本轮补真实 L4 选择腿**：`ACP · codex` 连接器 connected，UI 预设选择器列出真实播种的两个 Profile。**首发实际发送与官方→API 切换仍缺**（需 `--allow-model-calls`，未授权） |
 | D19 | NOT_RUN | — | 全局改动 + 临时覆盖的 C03 场景在真实 UI/后端链未做 |
 | D20 | PASS | L1 | 重启后 Project/Profile/历史存在；旧 runtime 诚实为结束/失效 |
 | D21 | PASS | L1 | 未安装/未登录/401/429/连接失败单会话诚实报错，另一会话与设置页仍可用 |
@@ -266,6 +272,43 @@ UI-preview 或'14 插件挂载成功'代替实际生产发送"。因此除 D04 �
 | S03 | **FAIL（结构性，先于执行即已注定）** | 本轮把 P07a 追到底后，S03 不再是"未跑"而是**当前架构下不可能过**：MCP 在**任何**组合里都没有实例化（`products/server/src/` 全树 MCP 零命中），所以"自有本地 stdio MCP 能发现、工具结果进 Chat UI"没有承载体。合同 §S 明写 S02/S03 不过则原 18 条产品 floor 不过——这一格**不能省**，如实登记为 FAIL |
 | S04 | PARTIAL | prompts/instructions/runtime-preferences 的 compile/projection 门有 L1；全面逐资源 L3 本轮不新增要求（合同已豁免） |
 | S05 | PASS | 阻塞与既有产品目标影响已列：P07a/P07b 两个装配缺口、dsh/kilo 过不了钉死 verifier（信任根形状问题）、P08 空 runtime。按合同**没有**把大型新资源方案塞进夜间任务 |
+
+### D16–D18 专段：真实 Electron L4（选择腿），以及先前"发送失败"的真实归因
+
+早先把 D 组整组记为"零 L4"，理由是 `products/desktop/probe-profile-ui.mjs` **发送失败、停在草稿**。
+本轮实跑查明**归因是错的**：那条链没有坏，缺的是一个环境前提。裸跑时 Server 直接启动失败：
+
+```
+Server 启动失败原因：the bundled runtime is incomplete: python, bin
+```
+
+`resolveBundledRuntime`（`packages/desktop-platform/server-bridge/src/runtime.ts:74-86`）要求
+`ORDESSA_BUNDLED_ROOT` 下同时有 `python/`、`bin/`+`bin/acp`、`harnesses/`。Server 没起来，
+UI 自然只能停在草稿——早先把这个现象读成了"生产发送路径不通"。
+
+补 `ORDESSA_BUNDLED_ROOT=.cleanup-evidence/product-dev-runtime-URGO6TDv`（dev runtime 根，
+内含 `bin/acp` 与各 profile 资产）后，**同一条链原样连跑三次全绿**，无需改任何产品代码：
+
+| 观察项 | 三次实测 |
+| --- | --- |
+| `ready` / `nodeAbsent` | `true` / `true`（渲染进程无 node 集成） |
+| `alerts` | **`[]`**（此前有 3 条 Server/ACP 告警） |
+| 连接器 | `ACP · claude-code`、`ACP · codex`（**connected**）、`ACP · pi` 三条品牌连接器均实装 |
+| 项目 | 播种的 `probe-project` 被列出并打开，进入会话草稿 |
+| **Profile 预设选择器** | `配置预设` 下拉真实列出两个播种 Profile（`UI official probe` / `UI next-turn probe`，`codex::profile_<32hex>`），每次运行 ID 全新 |
+| wire 轨迹 | `server.hello` / `profiles.v2.profileCatalog` / `workspaces.list`×3 / `workspaces.open`，**`error` 全为 null** |
+
+证据：`.cleanup-evidence/l4/d16-d18-ui-probe-20261002.log`（exit 0，`"alerts":[]`）。
+播种脚本 `products/server/scripts/seed-profile-ui-probe.py` 自报 `modelCalls: 0`。
+
+**因此 D16/D17/D18 仍判 PARTIAL，而不是 PASS**：
+- **已补**：选择腿的真实 L4（连接器实装、项目/会话就位、Profile 选择器列出真实播种 Profile、零告警）。
+- **仍缺**：合同 §D 的**实际生产发送**腿——原生 model/route 相关性、C4/回忆关联、官方→API 切换。
+  这些要 `--allow-model-calls`，属**真实模型调用**，按规则 9 需用户先授权（范围+成本），本轮不跑。
+
+> 诚实边界：以上是**选择腿**的 L4，不是发送腿的 L4。不用 UI-preview、内存 Server 或
+> "插件挂载成功"冒充实际生产发送。另注意本轮用的是**已安装的（sudo 修正前）资产**
+> `profile-codex-managed`，资产刷新属另一条被 sudo 阻塞的线。
 
 ### F11 独立复审查出的 P1/P2（本轮已修，双向验证）
 
