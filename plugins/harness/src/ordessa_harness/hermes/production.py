@@ -34,7 +34,7 @@ production chain gate rather than assumed:
   second configuration, and the projection is therefore a **protected state
   path** - it is excluded from every checkpoint and a checkpoint that tries to
   restore it is refused (see
-  `plugins/agent-box-harnesses/deploy/hermes/bootstrap.py`, which now verifies
+  `plugins/harness/deploy/hermes/bootstrap.py`, which now verifies
   rather than copies it).
 * **Hermes 0.19's ACP surface has no model control this bridge can address.**
   Its adapter advertises the ACP `models` session state and implements
