@@ -277,6 +277,12 @@ test('the owned set closes over descendants in any procfs enumeration order', ()
   // ...and with a matching startTime the same tree is entirely ours again.
   assert.deepEqual(ownedProcessSet(snapshot(reuser), { pid: 100, pgid: 100, startTime: '999' })
     .map(entry => entry.pid).sort((a, b) => a - b), [100, 200, 300])
+  // An ABSENT leader is not a reused one. A torn procfs scan reads the leader
+  // before it exits and the snapshot after the reap, so the pid is simply gone;
+  // its still-running child is our own survivor and must stay owned, or
+  // stopNativeProcess leaves it unsignalled and can never confirm the exit.
+  assert.deepEqual(ownedProcessSet(snapshot([reuser[1], reuser[2]]), { pid: 100, pgid: 100, startTime: '999' })
+    .map(entry => entry.pid).sort((a, b) => a - b), [200, 300])
 })
 
 test('a pid reused inside the stop window is never signalled, and its exit is confirmed', async () => {

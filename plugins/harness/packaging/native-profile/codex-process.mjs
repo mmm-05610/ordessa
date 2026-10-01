@@ -138,7 +138,15 @@ export function ownedProcessSet(snapshot, { pid, pgid, startTime = null }) {
   // them in the same pgid), and stopNativeProcess would then signal processes it
   // does not own and never see the group exit. Subtract the whole foreign
   // subtree, whichever rule pulled those pids in.
-  const reused = startTime && snapshot.byPid.get(pid)?.startTime !== startTime ? pid : null
+  //
+  // An ABSENT pid is not a reused one: it means the process already exited, so
+  // anything still running under its ppid or pgid is our own survivor and must
+  // keep being signalled. `?.startTime !== startTime` reads `undefined` for a
+  // missing entry and so reported "reused", which on a torn procfs scan (leader
+  // read before its exit, snapshot taken after the reap) silently dropped our
+  // own survivors and made the exit unverifiable.
+  const seen = snapshot.byPid.get(pid)
+  const reused = startTime && seen && seen.startTime !== startTime ? pid : null
   if (reused !== null) {
     const foreign = new Set([reused])
     for (let grew = true; grew;) {
