@@ -35,14 +35,26 @@ def bind_native_profile_sessions(core, runtime, *, artifact_root=None, artifact_
         from ordessa_model_provider.profile_resolution import ProfileModelChoiceResolver
         def service_factory(target):
             return native_services.create_service(target,
-                credential_binding=sessions.preparation.credential_binding)
+                credential_binding=credential_binding)
+        def credential_resolver(ref, desired):
+            return preparation_catalog().application_credential(desired.get('credentialRef'), harness_id=ref.harness_id)
+        def credential_binding(snapshot, desired):
+            channel = channels.get(snapshot.owner.connection_id)
+            if channel is None:
+                return False
+            credential = preparation_catalog().application_credential(
+                desired.get('credentialRef'), harness_id=channel.harness_id)
+            if native_services.restoration.credential_binding(snapshot, desired, credential=credential):
+                return True
+            return sessions.preparation.credential_binding(snapshot, desired)
         def resolver_factory():
             catalog = runtime.plugin_host.provided_port("model_provider.catalog")
             if catalog is None:
                 raise ProfileError("APPLICATION_PORT_ABSENT", "Model catalogue unavailable", status=409)
             return ProfileModelChoiceResolver(catalog, payload_schema=choice_payload_schema())
         core.config_port = NativeProfileConfigPort(sessions, service_factory=service_factory,
-            resolver_factory=resolver_factory, supported_harnesses=tuple(roots))
+            resolver_factory=resolver_factory, supported_harnesses=tuple(roots),
+            restoration_service=native_services.restoration, credential_resolver=credential_resolver)
     from .profile_preparation import NativeProfilePreparation
     def preparation_catalog():
         catalog = runtime.plugin_host.provided_port('model_provider.catalog')

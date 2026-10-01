@@ -4,7 +4,18 @@
 所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
 未合并、未 push、未启停既有用户服务、未重建 deb。三品牌后端真实聊天已通过；Codex Desktop 已通过 Profile 首发与同会话下一轮切换，两条真实回复。完整三品牌 UI/发行验收仍未完成。
 
-## 最新验证（2026-10-01，Harness 差异归属收口）
+## 最新验证（2026-10-01，串行供应商恢复与新绑定应用接线）
+
+- 用户已批准串行路线：关闭旧运行状态、恢复同一个原生会话的历史和身份；失败保留草稿、阻止发送，不静默回退、不自动重发。品牌差异只在 Harness。沿用本 worktree 的 Spec Kit 进度与门禁，单会话实施，没有新增派工树或另起长期调度器。
+- Harness 新增 ProviderRestorationService：无效果规划、精确贡献发布租约、独立原生操作证据、owner/generation 校验、恢复恰好一次；未知结果只能查询。凭据不存入规划对象，只保留摘要。当前原生恢复目的地仅为 Codex/Claude API 路由；Pi 新 provider 与 Codex 官方登录目的地尚未实现，诚实拒绝。
+- 产品中性接线已连通：仅已声明的能力不支持分支可委托恢复；恢复确认后更新 canonical 绑定，废弃旧配置计划，重新规划并实际应用完整配置。恢复证据不充当 Profile 应用回执。model-provider 仍负责资源解析和凭据，Profile 仍负责预设/覆盖及应用日志，未加入品牌分支。
+- 受控验证包括真实 Registry/Profile owner 配合内存原生对端：原生 session ID、可见会话与通道不变，运行绑定 generation 更新；旧计划失效、恢复只执行一次。新测试文件最初红在缺少实现的收集阶段，不能宣称每个行为反例都先红后绿。
+- 定向独立复跑：products/server + Harness 恢复/原生后端 **183P**；Profile **195P**；model-provider server **198P**，各 exit 0。`git diff --check` 通过。不是全仓回归或新发行包验收。
+- 真实 Electron Codex 回归 `--during-output --native-tool` exit 0：首发有真实非空回复及原生工具卡片；输出期间选择不提前应用；下一轮同 SessionRef、配置摘要改变、completed。四个成功标记齐备。最多两条短消息，没有改登录、系统资产或用户服务。**这是同 provider 模型切换回归，不是已有历史跨 provider 已验收。**
+- 异常路径未收口：如果恢复首次返回未知、后来只读查询才确认恢复，新绑定会被确认但完整配置应用尚未开始，整体仍为 unknown 并禁止发送；查询不自动启动未执行动作。需明确显式继续应用的恢复入口，不能靠后台自动重试掩盖。
+- 本轮未改 installed assets；真实跨 provider 历史恢复、多品牌完整 UI、旧 UI preview 与发行门禁仍未完成。根工作树保持 main，他属预览截图未纳入。
+
+## 前一检查点（2026-10-01，Harness 差异归属收口）
 
 - 按用户裁定：Profile 保存/合并配置，model-provider 管理和解析供应商资源，所有原生品牌差异归 Harness。已把产品接线中的 Pi 目录需求、Codex 登录启动参数/账号创建与三品牌安装路由校验迁入 `ordessa_harness.configuration.model.backend`。它不导入 Profile 或 model-provider；产品仍负责连接服务、资源版本校验与会话操作身份，不负责原生策略。
 - Profile 生产配置端口删除隐含 Pi 默认值和内置品牌枚举，未显式声明路由时拒绝；受控新品牌可消费相同中性端口。model-provider 的配置端口删除三品牌默认名单，按当前 Harness 的实际 facet 声明发现能力；可选组合名单只能收窄，不能制造未注册能力。

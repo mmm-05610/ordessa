@@ -4,6 +4,7 @@ Profile stores desired values; ModelProvider resolves resources. Neither needs
 to know native launch options, account directories or per-brand preparation.
 """
 from pathlib import Path
+from contextlib import contextmanager
 
 from .bridge import BRANDS
 from .initial import initial_model_params
@@ -57,6 +58,33 @@ class NativeModelServices:
         self.channels, self.owners, self.carrier = channels, owners, carrier
         self.journal_path = journal_path
         self._installations, self._accounts = {}, {}
+        from .restoration import ProviderRestorationService
+        self.restoration = ProviderRestorationService(channels, owners,
+            verify=self._restoration_publication, lease=self._restoration_lease)
+
+    def _restoration_publication(self, harness_id):
+        from .bridge import ADAPTER_IDS
+        installation = self.verify(harness_id)
+        views = [view for view in self.carrier.contributions('harness.configuration-adapters')
+                 if view.payload.descriptor.adapter_id == ADAPTER_IDS[harness_id]]
+        if len(views) != 1:
+            raise ValueError('One current model configuration publication required')
+        view = views[0]
+        return installation.evidence_ref, view.owner, view.publication_token
+
+    @contextmanager
+    def _restoration_lease(self, harness_id, publication):
+        from .bridge import ADAPTER_IDS
+        evidence, owner, token = publication
+        with self.carrier.use_contribution_exact('harness.configuration-adapters',
+                owner=owner, publication_token=token, consumer=None) as view:
+            if (getattr(view, 'owner', None) != owner
+                or getattr(view, 'publication_token', None) != token
+                or not hasattr(view, 'payload')
+                or view.payload.descriptor.adapter_id != ADAPTER_IDS[harness_id]
+                or self.verify(harness_id).evidence_ref != evidence):
+                raise ValueError('Restoration publication lease unavailable or changed')
+            yield
 
     def verify(self, harness_id):
         from .live_service import verified_installation

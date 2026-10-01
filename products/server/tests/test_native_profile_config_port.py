@@ -2,7 +2,8 @@
 from types import SimpleNamespace
 from dataclasses import replace
 import pytest
-from ordessa_profile.contracts import ConfigIntent, PlanResult, SessionRef, UNSET
+from ordessa_profile.contracts import (ConfigIntent, PlanResult, SessionRef, UNSET,
+    PlannedItem, ApplyUnknown, ApplyRejected, ReconcileOutcome)
 from ordessa_profile.errors import ProfileError
 from ordessa_harness_api import ApplicationTarget
 from ordessa_server_product.profile_configuration import NativeProfileConfigPort
@@ -176,3 +177,124 @@ def test_restoration_cache_mismatch_refuses_before_mutating_product_binding(rig)
         port.complete_restoration(ref, object())
     assert completions == []
     assert 'old-plan' in port._plans
+
+
+@pytest.fixture
+def transition_rig(rig):
+    from unittest.mock import Mock
+    port, ref, intent, revisions, calls, sessions = rig
+    original = port._port(ref)
+    original.plan = lambda ref, desired, key: PlanResult(ref, key, 'blocked', items=(
+        PlannedItem('assets.model-provider', 'choice', 'set', 'blocked',
+                    'capability-unsupported: native construction route differs'),))
+    native_plan = SimpleNamespace(operation_id='restore:controlled', input_digest='controlled-digest')
+    restoration = Mock()
+    restoration.prepare.return_value = native_plan
+    restoration.attempted.return_value = False
+    old_target = sessions.resolve(ref).snapshot.target
+    result = SimpleNamespace(previous_target=old_target, snapshot=SimpleNamespace(
+        target=replace(old_target, runtime_generation=2)))
+    ticket = object()
+    def execute(*args, **kwargs):
+        restoration.attempted.return_value = True
+        return SimpleNamespace(state='observed', ticket=ticket, restored=result)
+    restoration.execute.side_effect = execute
+    def complete(supplied_ref, supplied_ticket):
+        assert supplied_ref == ref and supplied_ticket is ticket
+        sessions.resolve = lambda _: result
+        return result
+    sessions.complete_restoration = complete
+    port.restoration_service = restoration
+    port.credential_resolver = lambda ref, desired: 'synthetic-secret'
+    return SimpleNamespace(port=port, ref=ref, intent=intent, calls=calls, sessions=sessions,
+        restoration=restoration, native_plan=native_plan, old_target=old_target,
+        revisions=revisions, original=original)
+
+
+def test_restoration_handoff_uses_a_fresh_owner_plan_not_a_restore_receipt(transition_rig):
+    f = transition_rig
+    plan = f.port.plan(f.ref, (f.intent,), 'switch')
+    assert plan.overall == 'restart-resume'
+    f.restoration.execute.assert_not_called()
+    assert f.port.apply(plan, (f.intent,)) == 'controlled application callback'
+    assert f.port._ports[f.ref.session_uid][0] != f.old_target
+    assert f.port._ports[f.ref.session_uid][1] is not f.original
+    assert [entry[0] for entry in f.calls] == ['plan', 'apply']
+    f.restoration.execute.assert_called_once()
+
+
+def test_unknown_restore_never_starts_configuration_application_or_repeats_restore(transition_rig):
+    f = transition_rig
+    f.restoration.execute.side_effect = lambda *a, **kw: SimpleNamespace(state='unknown')
+    plan = f.port.plan(f.ref, (f.intent,), 'unknown-switch')
+    assert isinstance(f.port.apply(plan, (f.intent,)), ApplyUnknown)
+    assert isinstance(f.port.apply(plan, (f.intent,)), ApplyUnknown)
+    assert f.port.reconcile(plan.operation_key, f.ref).state == 'unknown'
+    f.restoration.execute.assert_called_once()
+    assert not f.calls
+    assert f.port._ports[f.ref.session_uid][1] is f.original
+
+
+def test_changed_resources_block_before_restore(transition_rig):
+    f = transition_rig
+    plan = f.port.plan(f.ref, (f.intent,), 'resource-switch')
+    f.revisions['configVersion'] += 1
+    with pytest.raises(ProfileError, match='catalogue changed'):
+        f.port.apply(plan, (f.intent,))
+    f.restoration.execute.assert_not_called()
+    assert not f.calls
+
+
+def test_new_application_refusal_after_restore_is_not_old_configuration_preserved(transition_rig, monkeypatch):
+    f = transition_rig
+    plan = f.port.plan(f.ref, (f.intent,), 'refused-switch')
+    original_complete = f.sessions.complete_restoration
+    def complete(ref, ticket):
+        result = original_complete(ref, ticket)
+        original_port = f.port._port
+        def get_port(ref):
+            native = original_port(ref)
+            native.apply = lambda *a: ApplyRejected('rejected-unchanged', 'C4 refused new state')
+            return native
+        monkeypatch.setattr(f.port, '_port', get_port)
+        return result
+    f.sessions.complete_restoration = complete
+    assert isinstance(f.port.apply(plan, (f.intent,)), ApplyUnknown)
+    assert f.port.reconcile(plan.operation_key, f.ref).state == 'unknown'
+    f.restoration.execute.assert_called_once()
+
+
+def test_missing_or_unusable_restoration_preserves_the_original_blocked_plan(transition_rig):
+    f = transition_rig
+    f.restoration.prepare.side_effect = ValueError('unavailable route')
+    assert f.port.plan(f.ref, (f.intent,), 'unsupported').blocked
+    f.restoration.execute.assert_not_called()
+    f.original.plan = lambda ref, desired, key: PlanResult(ref, key, 'blocked', items=(
+        PlannedItem('*', '*', '*', 'blocked', 'adapter-missing: publication absent'),))
+    f.restoration.prepare.reset_mock()
+    assert f.port.plan(f.ref, (f.intent,), 'missing-publication').blocked
+    f.restoration.prepare.assert_not_called()
+
+
+def test_native_preflight_refusal_reports_no_effect_and_is_not_retried(transition_rig):
+    f = transition_rig
+    f.restoration.execute.side_effect = ValueError('stale source')
+    plan = f.port.plan(f.ref, (f.intent,), 'preflight-refused')
+    first = f.port.apply(plan, (f.intent,))
+    assert isinstance(first, ApplyRejected)
+    assert f.port.apply(plan, (f.intent,)) == first
+    f.restoration.execute.assert_called_once()
+    assert not f.calls
+
+
+def test_transition_plan_replay_cannot_replace_a_started_operation(transition_rig):
+    f = transition_rig
+    plan = f.port.plan(f.ref, (f.intent,), 'retained-switch')
+    f.restoration.execute.side_effect = lambda *a, **kw: SimpleNamespace(state='unknown')
+    f.port.apply(plan, (f.intent,))
+    assert f.port.plan(f.ref, (f.intent,), 'retained-switch') is plan
+    with pytest.raises(ProfileError, match='already bound'):
+        f.port.plan(f.ref, (replace(f.intent, source='different'),), 'retained-switch')
+    assert isinstance(f.port.apply(plan, (f.intent,)), ApplyUnknown)
+    f.restoration.execute.assert_called_once()
+    f.restoration.prepare.assert_called_once()
