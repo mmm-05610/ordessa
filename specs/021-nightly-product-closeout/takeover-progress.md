@@ -11,7 +11,8 @@
 `L3` 后端真实供应商 / `L4` 实际 Electron UI 操作链 / `L5` 安装后产品。
 
 **总判定：`PARTIAL`，不是 `COMPLETE_VERIFIED`。** A 组在 L1+L2 立住，B10/B11 卡在 sudo 与一次真实
-历史失败，D 组零 L4，P 组 P07/P08 为**真实装配缺口**而非仅证据缺口，S02/S03 未跑。缺的具体用户动作见本节末尾。
+历史失败，D 组 L4 已由 Xvfb 跑出对照证据但装机绑定仍缺，P 组 P07/P08 为**真实装配缺口**而非仅证据缺口，
+S02/S03 未跑。缺的具体用户动作见本节末尾。
 
 ### 本轮 Lead 亲跑的门（C22 合同要求"Lead 亲跑受影响门"，F02/F03/F04 取数）
 
@@ -240,7 +241,7 @@ UI-preview 或'14 插件挂载成功'代替实际生产发送"。因此除 D04 �
 | P04 | **PASS（本轮补齐）** | L2 代码 + 语法 | 此前只有 stage→verify→publish，回执回显候选自述值。已加发布前 manifest 与实测三项全等比对 + 发布后对落地树复验同一钉死 verifier，回执带 `verifiedBefore/AfterPublish`。未部署（等同那一次 sudo） |
 | P05 | **BLOCKED_USER** | — | root 管理且普通用户不可修改 + 完整策略校验：**需用户执行那一次 sudo**。未降低校验强度 |
 | P06 | PASS | L1 | 产品资产根由显式环境变量覆盖，默认仍是已验证路径；新增 `trusted_asset_root()` 在**读 Key 与启动产品之前**拒绝相对/缺失/符号链接根（`test_codex_managed_probe.py` 7 passed）；无静默全局 CLI fallback |
-| P07 | **FAIL（真实装配缺口）** | L1 | 合同反例原文"代码包存在但默认装配漏配"**当场成立**：(a) MCP 在 `extensions.json` 已启用，但 `composition.py` 里 **MCP 零命中**；(b) `ProductSkillsPlugin` 只在 `native_runtime` 组合里，`default_plugins` **不含**它。⇒ 启动门不会失败，只会**成功空壳** |
+| P07 | **FAIL（真实装配缺口，本轮由 L4 判实）** | **L4** | (a) **MCP**：`ordessa.asset-mcp` 在 `products/desktop/extensions.json:19` 已启用、`McpAssetServerPlugin` 在 `plugins/assets/mcp/backend/plugin.py:252` 存在，但整个 `products/server/src/` **MCP 零命中** —— 没有任何组合实例化它。(b) **Skills**：`ProductSkillsPlugin` 只在 `native_runtime`（`composition.py:272`），`default_plugins`（`:146-171`）**不含**它。**本轮追到根**：安装后的 `packaging/debian/ordessa.in` 启动器**不设** `ORDESSA_SERVER_ARGS_JSON`，`productServerArgs()` 因此返回空数组 ⇒ `plan_server_cli` 走 `default_runtime`（`cli.py:219`）⇒ `default_plugins()`；而 `products/desktop/run-native.mjs` **总是**注入 `--execution-mode native`，所以**开发启动器掩盖了这个缺口**。L4 对照实测：native 路径 `errors:[]`，default 路径 `skills.list is not a wire/1 method`。⇒ 启动门不失败，只**成功空壳** |
 | P08 | **FAIL**（已对新构建复核，非仅代码推断） | L5 判据 | 新构建的 deb 里 `opt/ordessa/harnesses` **一个条目都没有**（`find -mindepth 1 \| wc -l` = **0**），`bundle-manifest.json` 仍记为 `harness-landing`。`deb-contract.test.mjs:151-159` **只断言该目录存在且是目录** ⇒ **零品牌 runtime 的 deb 能通过自己的发行契约测试**，故障晚发到用户选品牌时才炸 |
 | P09 | **PASS（本轮修掉真实缺陷）** | 解包产物实测 | 修前 **1049** 条指向 worktree 的绝对链接；修后 **0** 条。全包仅剩一条绝对链接 `/usr/bin/ordessa -> /opt/ordessa/bin/ordessa`，是 `stageBin` 有意创建的安装位置链接。`bin/python -> python3.12` 已回到相对，`python3.12` 实文件 30964240 B 在位 |
 | P10 | PASS | L1 | 默认 `~/.ordessa` 按既定布局建立/复用、私有权限；不默认 tmp 或旧 agent-box 目录 |
@@ -257,8 +258,8 @@ UI-preview 或'14 插件挂载成功'代替实际生产发送"。因此除 D04 �
 | ID | 判定 | 依据 / 缺口 |
 | --- | --- | --- |
 | S01 | **FAIL** | 盘点本身做完了，结论是负的：既有 MCP **在默认装配里缺席**（P07a），Skills 插件**不在默认组合**（P07b）。合同明写"不以代码存在替代可用" |
-| S02 | **NOT_RUN** | 自有最小 Skill 进入受支持 harness 的输入/projection + 两 session 隔离，未跑 |
-| S03 | **NOT_RUN** | 自有本地 stdio MCP 发现并把工具结果送进 Chat UI，未跑；且 MCP 默认缺席，预期先 FAIL |
+| S02 | **PARTIAL（L1 齐、L3/L4 缺）** | `plugins/assets/skills` **433 passed**，含 `test_harness_intent_boundaries.py`（intents 只带坐标与边界、不带主机绝对路径）、`test_harness_api_registration.py`（三品牌 adapter 注册、重复 id 拒绝、未绑定点 fail-closed）与 `test_apply_chain_t13.py::test_two_sessions_plan_and_apply_without_cross_contamination`（**两 session 隔离**）。**但合同要求的另一半 —— 一份自有最小 Skill 真正进入受支持 Harness 的输入/projection —— 需要真实 harness 会话**，而 codex 修复资产的发布与装机都在那一次 sudo 之后，故未取得 L3/L4。按合同 §0，L1 不替代 L3/L4，故记 PARTIAL 而非 PASS |
+| S03 | **FAIL（结构性，先于执行即已注定）** | 本轮把 P07a 追到底后，S03 不再是"未跑"而是**当前架构下不可能过**：MCP 在**任何**组合里都没有实例化（`products/server/src/` 全树 MCP 零命中），所以"自有本地 stdio MCP 能发现、工具结果进 Chat UI"没有承载体。合同 §S 明写 S02/S03 不过则原 18 条产品 floor 不过——这一格**不能省**，如实登记为 FAIL |
 | S04 | PARTIAL | prompts/instructions/runtime-preferences 的 compile/projection 门有 L1；全面逐资源 L3 本轮不新增要求（合同已豁免） |
 | S05 | PASS | 阻塞与既有产品目标影响已列：P07a/P07b 两个装配缺口、dsh/kilo 过不了钉死 verifier（信任根形状问题）、P08 空 runtime。按合同**没有**把大型新资源方案塞进夜间任务 |
 
@@ -342,14 +343,22 @@ bash /home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout/.cleanup
 
 它同时解锁 **T5.3 / T5.4 / T7 / P05 / P13 / A23**，以及本轮新补的 P04 发布后复验的部署。
 
-**阻塞在显示/运行时，本机条件不具备：** **T8 的 L4 Electron** 未跑（`loginctl show-session 2 -p LockedHint` = `yes`，
-显示已锁）。注意完整的开发 runtime 根 `.cleanup-evidence/product-dev-runtime-URGO6TDv` **是存在的**，
-所以缺的是执行条件，不是能力。
+**T8 的 L4 Electron 本轮已跑通 —— 此前记为"本机条件不具备"是错的，现校正。**
+`loginctl show-session 2 -p LockedHint` = `yes` 只是**会话状态**，不是能力缺失：
+`/usr/bin/Xvfb` 与 `/usr/bin/xvfb-run` 都在，`xvfb-run -a --server-args="-screen 0 1400x1000x24"`
+即可起真实 Electron 并驱动真实 UI。证据 `.cleanup-evidence/l4/l4-electron-20261001.log`：
+
+| 探针 | 服务端组合 | 结果 |
+| --- | --- | --- |
+| `products/desktop/probe-native-installed.mjs` | `native_runtime`（开发启动器强制注入） | `ready:true rootMounted:true errors:[]` pages `[Chat, Skills, Sessions]` |
+| `.cleanup-evidence/l4/probe-default-installed.mjs`（本轮新增） | `default_plugins`（**安装后 deb 的真实组合**） | `ready:true rootMounted:true` 但 `errors` 含 `skills.list`/`skills.resolve` **`is not a wire/1 method`** |
+
+即 L4 从"零证据"变为**有对照的真实证据**，并且它直接判定了 P07b（见下）。
 
 **阻塞在发行构建，可无人值守推进：** 已解决。deb 最终从当前候选构建成功（公网抖动由带退避的重试扛过），
 摘要见 P16 行；过程中查出并修掉 P09 的真实发行缺陷。
 
-**必须由用户裁定的四件事（本轮一律没有自行决定）：**
+**必须由用户裁定的五件事（本轮一律没有自行决定）：**
 
 1. **信任根形状**：钉死的 `native-artifact-policy.mjs` 把入口写死为
    `node_modules/<pkg>/dist/{ordessa-profile.mjs|index.js}`，而 dsh/kilo 是 bin-only CLI 包（无 `dist/`、
@@ -361,9 +370,14 @@ bash /home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout/.cleanup
    （新分发通道，属新架构）/ 维持 operator 装配但把启动门从"目录存在"提到"逐品牌已验证"，并把 P08 明确标未满足。
 4. **Python 闭包零 hash 钉死**（本轮新发现）：是否要求发行锁文件带 `--hash`，即 P01/P04 的反例要不要对
    Python 侧真正成立。
+5. **P07b 怎么修**（本轮 L4 新增）：把 `ProductSkillsPlugin` 加进 `default_plugins` 会直接撞上
+   `products/server/tests/test_q5_first_stage.py:30-34` 里**钉死的** `EXPECTED_PLUGIN_IDS`（9 项，
+   不含 skills）。这属于**产品组合边界的架构裁定**（默认发行链到底带不带 Skills），不是夜间可自行
+   决定的小修；且需同时裁定 MCP 是否同样进入默认链。**未自行改动，未放宽该断言。**
 
 **未做而非做不完：** A22 仓内 `execution` 零命中、无接缝可验，按合同只登记不设计；C22 已做但判 FAIL
-（阻塞是 L3/L4 缺席，不是判断没做）；D 组零 L4；S02/S03 未跑；F06 候选未冻结；
+（阻塞是 L3/L4 缺席，不是判断没做）；**D 组的 L4 UI 证据本轮已由 Xvfb 跑出（见上表）**，但合同要求的
+"绑定实际产品版本/asset/session"仍需装机候选，故 D24 仍 FAIL；S02/S03 未跑；F06 候选未冻结；
 F11 未覆盖整条 diff。
 
 **本轮修掉的真实缺陷（全部有复现与复验）：**
