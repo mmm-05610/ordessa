@@ -339,3 +339,20 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 真实增强 upstream 进程的无模型注册探针（`native-profile/probe-registration.mjs`）两品牌 initialize 成功，证据请求到达 live reader 并拒绝未创建 session；session/new=0、prompt=0。独立临时 HOME，未读取用户登录，结束清理自身进程组。这是 **registration-only**，不是模型实际切换、Provider resume、Profile receipt 或完整产品验收。候选语法检查通过。
 - 新核查发现：Codex 1.1.14 的 providers/set 仅存 gateway 配置，现有 thread 的 provider 不随 setter ACK 自动变化；新建/resume 才传入 modelProvider/config。Claude 会重建 query，但 resume 丢失仍可能 ACK 成功。下一步必须实现/验证现有会话的明确恢复与实际绑定读回，不能仅靠 providers/list 或 setter 返回值确认。这个恢复边界仍在 Harness 内，不需要 host 或资源业务插件替品牌编排。
 - 固定七项 TODO 不变：第 6 项仍未完成；第 3/5 全资源与全量语义、第 7 完整验收仍未完成。未重跑 Python 全量，此检查点不更新其计数。main、已安装资产、用户服务、截图均不动，不 push、不真实模型调用。
+
+### 恢复边界待裁定（2026-10-01）
+
+- 上述证据层已提交 `cacdffc676`。继续核查发现一个不能静默绕过的真实接缝：ProfileSessionOwner 在独立查询检测到 native generation 改变时递增应用 target 的 runtime_generation 并拒绝旧 target；NativeProfileConfigPort 缓存的端口也拒绝代次变化；C4 apply 的 native receipt/readback 明确要求仍绑定原 planned.target。当前的同代次模型 action 可以正常确认，原生 query 重建的 provider switch 则不能沿用同一个目标假装通过。
+- 建议保持用户可见对话、历史、草稿与 Profile 蓝图不变；仅在后端验证同 native session 的显式 resume 成功后，走受控绑定换代，把本次旧目标操作与新运行代次的证据明确关联。旧 target 永久失效、恢复失败保留 Unknown/阻断 prompt，禁止把后台重建伪装成同代次原子 model action。这需要 Harness 应用/owner 与 Profile port 的显式接缝设计，不能偷偷弱化现有代次拒绝测试。
+- 按用户对中大规模复杂决策需及时讨论的要求，停在这一接缝请用户认可后实施；不为通过测试而固定 generation、接受 setter ACK、复活旧目标或要求用户新建会话。新的系统安装尚未申请，先不让用户安装未完成生产恢复链的候选资产。固定 TODO 第 6 项仍未完成。
+
+### 恢复边界获批与首次创建纠偏（2026-10-01，实施中）
+
+- 用户认可同一可见对话的显式运行换代；随后指出空会话不需要恢复。前节“待裁定”状态已结束。首次创建与历史恢复分开：先准备独立适配器的 provider，再创建 native session，利用原生 model setter 与独立读回完成模型选择后才交付准备结果；不先创建默认 provider 会话再 close/resume。模型设置需要 live session，不能把创建参数或 setter ACK 视为已应用。
+- Harness 新增受控恢复票据：效果前钉住旧 owner/target；完成只查询保留的 provider-resume 记录并独立读回新 generation，保持 canonical UID 和 ledger owner，永久拒绝旧 target；Unknown 不重执行。产品绑定换代清除旧 plan/port，但恢复证据不是 C4 Profile receipt，之后必须新建配置应用计划。新增 11 个 owner 反例先红后绿；原漂移拒绝与 C4 同代次规则未放宽。
+- 首次创建新增 owner-only prepare/query，独立空 adapter 才能准备，保留有界幂等记录，不把凭据写入公开证据；标准 session/new 仍由原调用者发送并由后端关联应答观察。新建后原生模型设置/读回失败保留 Unknown，不再次创建。三条 JS 反例先红后绿；注册表四条初始准备反例先红后绿，拒绝共享/已有 native owner/已结束通道以及 client 直调保留方法。
+- 真实增强候选 `.cleanup-evidence/native-initial-l3KElR`：Codex 1.1.14 指定其实际目录提供的 `gpt-5.5`、Claude 0.81.2 指定 `sonnet`，两品牌独立探针 exit 0。均 provider-before-new、model-before-return、独立模型读回、session/new=1、resume=0、prompt=0、inferenceRequests=0；仅本地 synthetic provider，独立 HOME/品牌配置目录，清理自身进程。这是 **native-adapter-initial-model-not-server-profile**，不是默认产品/Profile receipt/Chat UI 验收。先前写死探针模型不匹配实际目录时被原生拒绝，未把拒绝改成成功。
+- 失败证据仍保留：旧空会话恢复探针 Codex 在 resume 报 native-history-unavailable，Claude 重建空 query 未确认；空会话不再作为恢复验收样本。已有真实历史的两品牌 provider 切换恢复尚未验证，不能由受控恢复单测替代。错误诊断只使用闭集阶段/原因，不打印 upstream 凭据内容。
+- 当前重跑：Harness owner+action+产品测试 **102/102**、Profile 全套 **194/194**（一个既有 Starlette deprecation warning）、Node native/Pi/安装边界 **99/99**，exit 0。补了两个先红后绿守卫：拒绝 Python `True == 1` 对代次字段的类型混淆；缓存 owner 不符时在产品绑定更新前拒绝，避免半更新。root npm/全量 Server 未在本节重跑，不引用旧数字作本轮证明。日志 `.cleanup-evidence/native-initial-node.log`；两品牌实际首次创建探针日志 `.cleanup-evidence/native-initial-real.log`。
+- 环境：复制候选到 `/tmp` 遇 EDQUOT（-122），改在已忽略的 `.cleanup-evidence/` 构建；未删他属文件或旧安装资产。root 仍 main，截图 `docs/ui-preview/01-empty.png` 他属修改保留。
+- **固定 TODO 第 6 项仍未完成**：以上完成首次 native 配置子路径和受控换代边界；生产 Profile→准备通道→首次创建接线、Codex/Claude 的真实 C4 factory、增强资产实例隔离启动强制与可信安装、已有历史恢复验证仍待收口。第 3/5 全资源与第 7 完整产品验收也未完成，不新增“最后阶段”或冒称产品可交付。

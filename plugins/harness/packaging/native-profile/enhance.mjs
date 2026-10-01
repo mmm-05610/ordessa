@@ -28,7 +28,7 @@ export function enhanceSource(source, brand) {
   for (const [method, impl] of [['new', 'newSession'], ['load', 'loadSession'],
     ['resume', 'resumeSession'], ['close', 'closeSession'], ['delete', 'deleteSession']])
     source = once(source, `.onRequest(methods.agent.session.${method}, (ctx) => ${get}.${impl}(ctx.params))`,
-      `.onRequest(methods.agent.session.${method}, (ctx) => ordessaProfile(${get}).withLifecycle(() => ${get}.${impl}(ctx.params)))`)
+      `.onRequest(methods.agent.session.${method}, (ctx) => ordessaProfile(${get}).${['new', 'load', 'resume'].includes(method) ? `withCreation(ctx.params, params => ${get}.${impl}(params)` : `withLifecycle(() => ${get}.${impl}(ctx.params)`}))`)
   const prompt = brand === 'codex' ? `${get}.prompt(ctx.params, ctx.signal)` : 'runPromptWithCancellation(agent, ctx.params, ctx.signal)'
   source = once(source, `.onRequest(methods.agent.session.prompt, (ctx) => ${prompt})`,
     `.onRequest(methods.agent.session.prompt, (ctx) => ordessaProfile(${get}).operation.withSession(ctx.params.sessionId, () => ${prompt}))`)
@@ -38,10 +38,15 @@ export function enhanceSource(source, brand) {
       `.onRequest(methods.agent.providers.${method}, (ctx) => ordessaProfile(${get}).withProvider(() => ${get}.${impl}(ctx.params)))`)
   }
   const registration = `.onRequest('_ordessa/session/configuration', { parse: input => ordessaProfile(${get}).parser.parse(input) }, ctx => ordessaProfile(${get}).read(ctx.params))
-    .onRequest('_ordessa/session/configuration/apply', { parse: input => ordessaProfile(${get}).operation.parseApply(input) }, ctx => ordessaProfile(${get}).operation.apply(ctx.params))
-    .onRequest('_ordessa/session/configuration/operation', { parse: input => ordessaProfile(${get}).operation.parseQuery(input) }, ctx => ordessaProfile(${get}).operation.query(ctx.params))
+    .onRequest('_ordessa/channel/configuration/prepare', { parse: input => ordessaProfile(${get}).creationParser.parse(input) }, ctx => ordessaProfile(${get}).prepareCreation(ctx.params))
+    .onRequest('_ordessa/channel/configuration/operation', { parse: input => ordessaProfile(${get}).creationQueryParser.parse(input) }, ctx => ordessaProfile(${get}).queryCreation(ctx.params))
+    .onRequest('_ordessa/session/configuration/apply', { parse: input => ordessaProfile(${get}).operation.parseApply(input) }, ctx => ordessaProfile(${get}).apply(ctx.params))
+    .onRequest('_ordessa/session/configuration/restore', { parse: input => ordessaProfile(${get}).restoration.parse(input) }, ctx => ordessaProfile(${get}).restoration.apply(ctx.params))
+    .onRequest('_ordessa/session/configuration/operation', { parse: input => ordessaProfile(${get}).operation.parseQuery(input) }, ctx => ordessaProfile(${get}).queryOperation(ctx.params))
     `
   source = once(source, '.onRequest(methods.agent.session.setMode,', registration + '.onRequest(methods.agent.session.setMode,')
+  if (brand === 'claude-code') source = once(source, '                providerCacheKey,',
+    '                providerCacheKey,\n                ordessaProviderRoute: { apiType: resolvedProvider?.apiType ?? null, baseUrl: resolvedProvider?.baseUrl ?? null },')
   // Preserve a CLI shebang as the first line.
   const imported = "import { nativeProfileBridge } from './ordessa-native-profile.mjs';\n"
   source = source.startsWith('#!') ? source.replace('\n', '\n' + imported) : imported + source
@@ -60,6 +65,7 @@ export function enhanceStaging(dist, brand) {
       .replace("'../pi-profile/configuration-query.mjs'", "'./ordessa-configuration-query.mjs'"),
     'ordessa-configuration-query.mjs': readFileSync(path.join(HERE, '../pi-profile/configuration-query.mjs'), 'utf8'),
     'ordessa-configuration-operation.mjs': readFileSync(path.join(HERE, '../pi-profile/configuration-operation.mjs'), 'utf8'),
+    'ordessa-restoration.mjs': readFileSync(path.join(HERE, 'restoration.mjs'), 'utf8'),
   }
   // copyTree preserves read-only source modes. This is the newly created
   // private staging copy; the builder re-seals it before publication.

@@ -20,6 +20,27 @@ class NativeProfileConfigPort:
         self._ports, self._plans = {}, {}
         self._lock = RLock()
 
+    def complete_restoration(self, ref, ticket):
+        """Explicit trusted renewal, never automatic repair of arbitrary drift.
+
+        Restore evidence is separate from a C4 application receipt. A fresh
+        application must be planned against the new instance before prompting.
+        """
+        with self._lock:
+            cached = self._ports.get(ref.session_uid)
+            binding = self.sessions.require_registered(ref)
+            if cached is not None and cached[0] != binding.snapshot.target:
+                raise ProfileError('SWITCH_BLOCKED', 'Restoration does not match cached owner', status=409)
+            result = self.sessions.complete_restoration(ref, ticket)
+            if cached is not None and cached[0] not in (result.previous_target, result.snapshot.target):
+                raise ProfileError('SWITCH_BLOCKED', 'Restoration does not match cached owner', status=409)
+            if cached is not None and cached[0] == result.previous_target:
+                self._ports.pop(ref.session_uid)
+            for key, saved in tuple(self._plans.items()):
+                if saved[0] == ref:
+                    self._plans.pop(key)
+            return result
+
     def _port(self, ref):
         binding = self.sessions.resolve(ref)
         if ref.harness_id != "pi":

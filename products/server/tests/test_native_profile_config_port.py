@@ -35,6 +35,7 @@ def rig(monkeypatch):
             return "controlled query"
     monkeypatch.setattr("ordessa_server_product.profile_configuration.HarnessApiConfigPort", Port)
     sessions = SimpleNamespace(resolve=lambda supplied: SimpleNamespace(snapshot=SimpleNamespace(target=target)))
+    sessions.require_registered = lambda supplied: sessions.resolve(supplied)
     port = NativeProfileConfigPort(sessions, service_factory=lambda _: (object(), object()),
                                  resolver_factory=Resolver)
     intent = ConfigIntent("assets.model-provider", "choice", "set", "model-provider/choice",
@@ -89,3 +90,54 @@ def test_replaced_owner_generation_does_not_reuse_cached_service(rig):
     with pytest.raises(ProfileError, match="generation changed"):
         port.inspect(ref)
     assert len(calls) == 1
+
+
+def test_explicit_restoration_discards_old_plan_and_prepares_fresh_instance(rig):
+    port, ref, intent, _, calls, sessions = rig
+    old_plan = port.plan(ref, (intent,), 'old-plan')
+    old_target = sessions.resolve(ref).snapshot.target
+    new_target = replace(old_target, runtime_generation=2)
+    result = SimpleNamespace(previous_target=old_target, snapshot=SimpleNamespace(target=new_target))
+    ticket = object()
+    def complete(supplied_ref, supplied_ticket):
+        assert supplied_ref == ref and supplied_ticket is ticket
+        sessions.resolve = lambda _: SimpleNamespace(snapshot=SimpleNamespace(target=new_target))
+        return result
+    sessions.complete_restoration = complete
+    assert port.complete_restoration(ref, ticket) is result
+    with pytest.raises(ProfileError, match='Unknown or changed'):
+        port.apply(old_plan, (intent,))
+    assert port.inspect(ref) == ref
+    new_plan = port.plan(ref, (intent,), 'new-plan')
+    assert port.apply(new_plan, (intent,)) == 'controlled application callback'
+    assert [call[0] for call in calls] == ['plan', 'plan', 'apply']
+
+
+def test_unknown_restoration_keeps_old_plan_and_never_applies_to_new_instance(rig):
+    port, ref, intent, _, calls, sessions = rig
+    port.plan(ref, (intent,), 'old-plan')
+    old_port = port._ports[ref.session_uid]
+    def complete(*args):
+        raise ProfileError('SWITCH_BLOCKED', 'Restoration unknown', status=409)
+    sessions.complete_restoration = complete
+    with pytest.raises(ProfileError, match='unknown'):
+        port.complete_restoration(ref, object())
+    assert port._ports[ref.session_uid] is old_port
+    assert 'old-plan' in port._plans
+    assert len(calls) == 1
+
+
+def test_restoration_cache_mismatch_refuses_before_mutating_product_binding(rig):
+    port, ref, intent, _, _, sessions = rig
+    port.plan(ref, (intent,), 'old-plan')
+    cached_target, cached_port = port._ports[ref.session_uid]
+    port._ports[ref.session_uid] = (replace(cached_target, runtime_generation=99), cached_port)
+    completions = []
+    def complete(*args):
+        completions.append(args)
+        pytest.fail('Mismatched cache must not mutate product session binding')
+    sessions.complete_restoration = complete
+    with pytest.raises(ProfileError, match='cached owner'):
+        port.complete_restoration(ref, object())
+    assert completions == []
+    assert 'old-plan' in port._plans

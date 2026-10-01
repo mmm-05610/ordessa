@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import json
 import threading
+from uuid import uuid4
 
 from ordessa_harness_api import ApplicationTarget
 from .registry import (
@@ -45,6 +46,22 @@ class _Binding:
     invalidated: bool = False
 
 
+@dataclass(frozen=True)
+class RestorationTicket:
+    """Process-local backend capability; cannot be reconstructed from a DTO."""
+    ticket_id: str
+    operation_id: str
+    before: ProfileConfigurationSnapshot
+
+
+@dataclass(frozen=True)
+class RestoredConfiguration:
+    previous_target: ApplicationTarget
+    snapshot: ProfileConfigurationSnapshot
+    operation_id: str
+    evidence_ref: str
+
+
 class ProfileSessionOwner:
     """Read-only binding service. Fences are process-local, never restored.
 
@@ -65,6 +82,88 @@ class ProfileSessionOwner:
         self._native_bindings: dict[NativeSessionObservation, str] = {}
         self._fence = 0
         self._lock = threading.RLock()
+        self._restorations: dict[str, RestorationTicket] = {}
+        self._restoration_results: dict[str, RestoredConfiguration] = {}
+
+    def begin_restoration(self, target: ApplicationTarget, *, operation_id: str,
+                          timeout: float = 10) -> RestorationTicket:
+        """Reserve before a backend-owned resume, not after discovering drift.
+
+        This does not authorize native effects or make an application receipt.
+        It pins the old instance so completion must prove this exact transition.
+        """
+        if (type(operation_id) is not str or not operation_id or len(operation_id) > 128
+                or operation_id != operation_id.strip()):
+            raise ProfileOwnerUnavailable('bounded restoration operation required')
+        with self._lock:
+            previous = self._restorations.get(operation_id)
+            if previous is not None:
+                if previous.before.target != target:
+                    raise ProfileOwnerUnavailable('restoration operation already bound')
+                return previous
+            if len(self._restorations) >= 256:
+                raise ProfileOwnerUnavailable('restoration capacity exhausted')
+            if any(saved.before.target.session_id == target.session_id
+                   and saved.operation_id not in self._restoration_results
+                   for saved in self._restorations.values()):
+                raise ProfileOwnerUnavailable('session restoration already pending')
+            snapshot = self.readback(target, timeout=timeout)
+            ticket = RestorationTicket(uuid4().hex, operation_id, snapshot)
+            self._restorations[operation_id] = ticket
+            return ticket
+
+    def complete_restoration(self, ticket: RestorationTicket, *, timeout: float = 10) -> RestoredConfiguration:
+        """Explicitly renew only from retained resume evidence + independent read.
+
+        Ordinary readback still refuses a stale target. No new execution,
+        replacement ledger owner or different native conversation is accepted.
+        Failed/unknown completion performs no second resume.
+        """
+        with self._lock:
+            if (not isinstance(ticket, RestorationTicket)
+                    or self._restorations.get(ticket.operation_id) is not ticket):
+                raise ProfileOwnerUnavailable('unknown restoration ticket')
+            first = ticket.before
+            binding = self._bindings.get(first.target.session_id)
+            if binding is None or binding.owner is not first.owner:
+                raise ProfileOwnerUnavailable('restoration owner changed')
+            self._check_owner(binding)
+            owner, record = self._registry.query_native_operation(first.owner.connection_id,
+                first.owner.native_session_id, ticket.operation_id, timeout=timeout)
+            expected_target = dict(server_id=first.target.server_id, session_id=first.target.session_id,
+                channel_id=first.target.channel_id, runtime_generation=first.target.runtime_generation)
+            if (owner is not first.owner or not isinstance(record, dict)
+                    or record.get('operationId') != ticket.operation_id
+                    or record.get('sessionId') != first.owner.native_session_id
+                    or record.get('kind') != 'provider-resume' or record.get('state') != 'observed'
+                    or not isinstance(record.get('target'), dict)
+                    or set(record['target']) != set(expected_target)
+                    or any(type(record['target'][key]) is not type(expected_target[key]) for key in expected_target)
+                    or record.get('target') != expected_target
+                    or type(record.get('evidenceRef')) is not str or not record['evidenceRef']
+                    or len(record['evidenceRef']) > 4096):
+                raise ProfileOwnerUnavailable('verified restoration record unavailable')
+            before, after = record.get('before'), record.get('after')
+            if (not isinstance(before, dict) or not isinstance(after, dict)
+                    or before.get('sessionId') != first.owner.native_session_id
+                    or before.get('generation') != first.native_generation or before.get('busy') is not False
+                    or before.get('configOptions') != first.config_options
+                    or after.get('sessionId') != first.owner.native_session_id or after.get('busy') is not False
+                    or type(after.get('generation')) is not str or not after['generation']
+                    or after['generation'] == first.native_generation):
+                raise ProfileOwnerUnavailable('restoration instance evidence mismatch')
+            snapshot = self._observe(first.target.session_id, binding, timeout=timeout)
+            if (snapshot.native_generation != after['generation']
+                    or snapshot.config_options != after.get('configOptions')):
+                raise ProfileOwnerUnavailable('independent restored configuration differs')
+            cached = self._restoration_results.get(ticket.operation_id)
+            if cached is not None:
+                if snapshot.target != cached.snapshot.target:
+                    raise ProfileOwnerUnavailable('restored instance has changed again')
+                return cached
+            result = RestoredConfiguration(first.target, snapshot, ticket.operation_id, record['evidenceRef'])
+            self._restoration_results[ticket.operation_id] = result
+            return result
 
     def bind(self, *, canonical_session_id: str, harness_id: str,
              workspace_id: str, connection_id: str, native_session_id: str,

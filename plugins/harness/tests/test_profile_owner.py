@@ -107,6 +107,42 @@ def test_real_registry_interleaved_sessions_keep_their_own_current_fence(actual_
         service.readback(b1.target)
 
 
+def test_initial_configuration_precedes_any_native_owner(actual_registry_controlled_transport):
+    registry, channel, transport, create = actual_registry_controlled_transport
+    channel.session_scope_id = 'dedicated-first'
+    def respond(line):
+        frame = json.loads(line)
+        transport.sent.append(frame)
+        assert frame['method'] == '_ordessa/channel/configuration/prepare'
+        channel.deliver(json.dumps({'jsonrpc': '2.0', 'id': frame['id'], 'result': {
+            'operationId': frame['params']['operationId'], 'state': 'prepared'}}))
+    transport.send_line = respond
+    params = {'operationId': 'create:first', 'model': 'controlled-model', 'provider': {
+        'providerId': 'main', 'apiType': 'anthropic', 'baseUrl': 'https://controlled.invalid'}}
+    result = registry.prepare_native_creation('channel', params)
+    assert result['state'] == 'prepared'
+    assert channel._native_sessions == {}
+    assert len(transport.sent) == 1
+    assert transport.sent[0]['method'] != 'session/new'
+    with pytest.raises(NativeConfigurationUnavailable, match='reserved'):
+        channel.transport.send_line(json.dumps({'jsonrpc': '2.0', 'id': 'forged-client',
+            'method': '_ordessa/channel/configuration/prepare', 'params': params}))
+
+
+@pytest.mark.parametrize('reason', ['shared', 'already-created', 'ended'])
+def test_initial_configuration_rejects_nonempty_or_unowned_channels(actual_registry_controlled_transport, reason):
+    registry, channel, transport, create = actual_registry_controlled_transport
+    channel.session_scope_id = None if reason == 'shared' else 'dedicated-first'
+    if reason == 'already-created':
+        create('native-a')
+    if reason == 'ended':
+        channel._ended = True
+    before = len(transport.sent)
+    with pytest.raises(NativeConfigurationUnavailable):
+        registry.prepare_native_creation('channel', {'operationId': 'create:first', 'model': 'm', 'provider': {}})
+    assert len(transport.sent) == before
+
+
 class ControlledRegistry:
     def __init__(self):
         self.owner = NativeSessionObservation("channel", "execution", "ledger", "native")
@@ -117,6 +153,7 @@ class ControlledRegistry:
         self.after_query = lambda: None
         self.result_owner = None
         self.unavailable = False
+        self.operation = None
 
     def get(self, connection_id):
         return self.channel if connection_id == "channel" else None
@@ -134,6 +171,10 @@ class ControlledRegistry:
             self.busy, '[{"id":"thinking","currentValue":{"level":"low"}}]')
         self.after_query()
         return result
+
+    def query_native_operation(self, connection_id, native_session_id, operation_id, *, timeout):
+        assert operation_id == 'restore-op'
+        return self.owner, self.operation
 
 
 @pytest.fixture
@@ -157,6 +198,75 @@ def test_confirmed_owner_and_independent_query_bind_canonical_uid(setup):
     assert snapshot.config_options[0]["currentValue"] == {"level": "low"}
     assert service.readback(snapshot.target).target == snapshot.target
     assert registry.queries == 2
+
+
+def restoration_record(before, *, generation='restored-generation', state='observed'):
+    return {'operationId': 'restore-op', 'sessionId': before.owner.native_session_id,
+        'kind': 'provider-resume', 'state': state, 'target': {
+            'server_id': before.target.server_id, 'session_id': before.target.session_id,
+            'channel_id': before.target.channel_id, 'runtime_generation': before.target.runtime_generation},
+        'evidenceRef': 'native-restoration:controlled-proof',
+        'before': {'sessionId': before.owner.native_session_id, 'generation': before.native_generation,
+                   'busy': False, 'configOptions': before.config_options},
+        'after': {'sessionId': before.owner.native_session_id, 'generation': generation,
+                  'busy': False, 'configOptions': before.config_options}}
+
+
+def test_explicit_verified_restoration_keeps_conversation_and_retires_old_target(setup):
+    registry, service, args = setup
+    first = service.bind(**args)
+    ticket = service.begin_restoration(first.target, operation_id='restore-op')
+    registry.operation = restoration_record(first)
+    registry.generation = 'restored-generation'
+    result = service.complete_restoration(ticket)
+    assert result.previous_target == first.target
+    assert result.snapshot.target.session_id == first.target.session_id
+    assert result.snapshot.target.runtime_generation > first.target.runtime_generation
+    assert result.snapshot.owner is first.owner
+    assert result.operation_id == 'restore-op'
+    assert service.complete_restoration(ticket).snapshot.target == result.snapshot.target
+    with pytest.raises(ProfileOwnerUnavailable, match='stale'):
+        service.readback(first.target)
+
+
+@pytest.mark.parametrize('defect', ['ack-only', 'unknown', 'foreign-target', 'boolean-target-generation', 'wrong-before',
+    'wrong-after', 'mismatch-options', 'busy', 'foreign-owner', 'unchanged-generation'])
+def test_restoration_never_renews_from_ack_or_mismatched_evidence(setup, defect):
+    registry, service, args = setup
+    first = service.bind(**args)
+    ticket = service.begin_restoration(first.target, operation_id='restore-op')
+    registry.operation = restoration_record(first)
+    registry.generation = 'restored-generation'
+    if defect == 'ack-only': registry.operation = {'sessionId': 'native'}
+    elif defect == 'unknown': registry.operation['state'] = 'unknown'
+    elif defect == 'foreign-target': registry.operation['target']['session_id'] = 'another-conversation'
+    elif defect == 'boolean-target-generation': registry.operation['target']['runtime_generation'] = True
+    elif defect == 'wrong-before': registry.operation['before']['generation'] = 'foreign-generation'
+    elif defect == 'wrong-after': registry.operation['after']['generation'] = 'different-restoration'
+    elif defect == 'mismatch-options': registry.operation['after']['configOptions'] = []
+    elif defect == 'busy': registry.busy = True
+    elif defect == 'foreign-owner': registry.owner = replace(registry.owner)
+    elif defect == 'unchanged-generation':
+        registry.generation = first.native_generation
+        registry.operation['after']['generation'] = first.native_generation
+    with pytest.raises(ProfileOwnerUnavailable):
+        service.complete_restoration(ticket)
+
+
+def test_restoration_ticket_is_not_forgeable_and_unknown_can_only_be_reconciled(setup):
+    registry, service, args = setup
+    first = service.bind(**args)
+    ticket = service.begin_restoration(first.target, operation_id='restore-op')
+    with pytest.raises(ProfileOwnerUnavailable):
+        service.complete_restoration(replace(ticket))
+    with pytest.raises(ProfileOwnerUnavailable, match='pending'):
+        service.begin_restoration(first.target, operation_id='competing-operation')
+    registry.operation = restoration_record(first, state='unknown')
+    registry.generation = 'restored-generation'
+    with pytest.raises(ProfileOwnerUnavailable): service.complete_restoration(ticket)
+    registry.operation['state'] = 'observed'
+    result = service.complete_restoration(ticket)
+    assert result.snapshot.target.session_id == first.target.session_id
 
 
 @pytest.mark.parametrize("field,value", [("connection_id", "other"), ("native_session_id", "guessed"),

@@ -1,10 +1,47 @@
 import { nativeConfigurationReader } from './ordessa-native-configuration-query.mjs'
 import { configurationOperations } from './ordessa-configuration-operation.mjs'
+import { restorationOperations } from './ordessa-restoration.mjs'
+import { stableJSON, jsonDigest } from './ordessa-configuration-query.mjs'
 
 export function nativeProfileBridge(agent, brand, invalidParams) {
   const { read, assertIdle } = nativeConfigurationReader({ agent, brand, invalidParams })
   let providerBusy = false
   let lifecycleBusy = 0
+  const creations = new Map()
+  let initial = null
+  const creationParser = { parse(input) {
+    const exact = (value, keys) => value && typeof value === 'object' && !Array.isArray(value)
+      && Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value, key))
+    const text = (value, max = 4096) => typeof value === 'string' && value.length > 0
+      && value.length <= max && value === value.trim() && !/[\u0000-\u001f\u007f]/u.test(value)
+    if (!exact(input, ['operationId', 'provider', 'model']) || !text(input.operationId, 128)
+        || !input.operationId.startsWith('create:') || !text(input.model)
+        || (!exact(input.provider, ['providerId', 'apiType', 'baseUrl'])
+          && !exact(input.provider, ['providerId', 'apiType', 'baseUrl', 'headers']))
+        || !['providerId', 'apiType', 'baseUrl'].every(key => text(input.provider[key])))
+      throw invalidParams('Expected exact initial provider/model configuration')
+    let url
+    try { url = new URL(input.provider.baseUrl) } catch { throw invalidParams('Invalid initial endpoint') }
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash)
+      throw invalidParams('Unsafe initial endpoint')
+    const headers = input.provider.headers
+    if (headers !== undefined && (!headers || typeof headers !== 'object' || Array.isArray(headers)
+        || Object.keys(headers).length > 32 || Object.entries(headers).some(([key, value]) =>
+          !/^[a-zA-Z0-9-]{1,128}$/u.test(key) || !text(value, 8192))))
+      throw invalidParams('Invalid initial headers')
+    if (Buffer.byteLength(stableJSON(input)) > 65536) throw invalidParams('Initial configuration exceeds bounds')
+    if (input.provider.providerId !== (brand === 'codex' ? 'custom-gateway' : 'main')
+        || input.provider.apiType !== (brand === 'codex' ? 'openai' : 'anthropic'))
+      throw invalidParams('Unsupported initial provider protocol')
+    return structuredClone(input)
+  } }
+  const creationQueryParser = { parse(input) {
+    if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).length !== 1
+        || typeof input.operationId !== 'string' || !input.operationId.startsWith('create:')
+        || input.operationId.length > 128 || /[\u0000-\u001f\u007f]/u.test(input.operationId))
+      throw invalidParams('Expected exact initial operation query')
+    return input
+  } }
   const operation = configurationOperations({ agent, read, invalidParams,
     configIds: brand === 'codex' ? ['model', 'reasoning_effort'] : ['model', 'effort'],
     evidencePrefix: brand + '-native-operation',
@@ -19,14 +56,12 @@ export function nativeProfileBridge(agent, brand, invalidParams) {
       throw invalidParams('Expected sessionId only')
     return input
   } }
-  return { operation, parser, read(input) {
-    const observed = read(input)
-    return { ...observed, busy: observed.busy || providerBusy || operation.isBusy(input.sessionId) }
-  }, async withLifecycle(work) {
+  const withLifecycle = async work => {
     if (providerBusy) throw invalidParams('Provider operation busy')
     lifecycleBusy++
     try { return await work() } finally { lifecycleBusy-- }
-  }, async withProvider(work) {
+  }
+  const withProvider = async work => {
     if (providerBusy || lifecycleBusy) throw invalidParams('Provider/lifecycle operation busy')
     const ids = brand === 'codex' ? [...agent.sessions.keys()] : Object.keys(agent.sessions)
     for (const sessionId of ids) {
@@ -35,5 +70,132 @@ export function nativeProfileBridge(agent, brand, invalidParams) {
     }
     providerBusy = true
     try { return await work() } finally { providerBusy = false }
-  } }
+  }
+  const restoration = restorationOperations({ read, withProvider, invalidParams,
+    preflight(input) {
+      const ids = brand === 'codex' ? [...agent.sessions.keys()] : Object.keys(agent.sessions)
+      if (ids.length !== 1 || ids[0] !== input.sessionId)
+        throw invalidParams('Provider restoration requires one dedicated live session')
+      if (brand === 'codex' && (input.provider.providerId !== 'custom-gateway'
+          || input.provider.apiType !== 'openai' || !creations.has(input.sessionId)))
+        throw invalidParams('Captured Codex session and supported gateway required')
+      if (brand === 'claude-code' && (input.provider.providerId !== 'main' || input.provider.apiType !== 'anthropic'))
+        throw invalidParams('Supported Claude provider required')
+    }, async restore(input) {
+      const step = async (phase, work) => {
+        try { return await work() } catch (error) {
+          const failure = new Error('Native restoration step failed')
+          failure.restorationPhase = phase
+          // Classify locally; never retain upstream text or headers.
+          const detail = String(error?.message ?? '')
+          failure.restorationReason = /rollout|not found|no saved|not persisted/iu.test(detail)
+            ? 'native-history-unavailable' : /auth|credential/iu.test(detail)
+              ? 'native-authentication-rejected' : /model/iu.test(detail)
+                ? 'native-model-rejected' : 'native-request-rejected'
+          throw failure
+        }
+      }
+      if (brand === 'codex') {
+        const params = structuredClone(creations.get(input.sessionId))
+        const preserved = read({ sessionId: input.sessionId }).configOptions
+          .filter(item => item.id !== 'model')
+        await step('provider', () => agent.setProvider(input.provider))
+        await step('close', () => agent.closeSession({ sessionId: input.sessionId }))
+        await step('resume', () => agent.resumeSession({ ...params, sessionId: input.sessionId }))
+        await step('model', () => agent.setSessionConfigOption({ sessionId: input.sessionId, configId: 'model', value: input.model }))
+        for (const item of preserved)
+          await step('preferences', () => agent.setSessionConfigOption({ sessionId: input.sessionId, configId: item.id, value: item.currentValue }))
+        const session = agent.sessions.get(input.sessionId)
+        const providers = agent.listProviders({}).providers
+        const route = providers.find(item => item.providerId === 'custom-gateway')?.current
+        if (!session || session.authProvider !== 'custom-gateway') return null
+        return { sessionId: input.sessionId, apiType: route?.apiType, baseUrl: route?.baseUrl }
+      }
+      await step('provider', () => agent.unstable_setProvider(input.provider))
+      const session = agent.sessions[input.sessionId]
+      if (!session || session.queryClosed) return null
+      await step('model', () => agent.setSessionConfigOption({ sessionId: input.sessionId, configId: 'model', value: input.model }))
+      // This field is injected at the pinned upstream SDK-query construction,
+      // not copied from providers/list or from this restore request.
+      return { sessionId: input.sessionId, ...session.ordessaProviderRoute }
+    } })
+  return { operation, restoration, parser, creationParser, creationQueryParser,
+    async prepareCreation(input) {
+      input = creationParser.parse(input)
+      const digest = jsonDigest(input)
+      if (initial) {
+        if (initial.record.operationId !== input.operationId || initial.record.inputDigest !== digest)
+          throw invalidParams('Initial configuration already reserved')
+        return structuredClone(initial.record)
+      }
+      return withProvider(async () => {
+        const count = brand === 'codex' ? agent.sessions.size : Object.keys(agent.sessions).length
+        if (count !== 0) throw invalidParams('Initial configuration requires a dedicated empty adapter')
+        const record = { operationId: input.operationId, inputDigest: digest, state: 'unknown',
+          kind: 'initial-provider-model', phase: 'preparing', after: null }
+        // Reserve before any provider effect. Failure/replay never runs it twice.
+        initial = { input, record, attempted: false }
+        try {
+          if (brand === 'codex') {
+            await agent.setProvider(input.provider)
+          } else await agent.unstable_setProvider(input.provider)
+          record.state = 'prepared'; record.phase = 'awaiting-native-creation'
+        } catch { record.phase = 'preparation-outcome-unknown' }
+        return structuredClone(record)
+      })
+    }, queryCreation(input) {
+      input = creationQueryParser.parse(input)
+      if (!initial || input.operationId !== initial.record.operationId)
+        throw invalidParams('Unknown initial configuration operation')
+      return structuredClone(initial.record)
+    },
+    apply(input) {
+      if (input.operationId?.startsWith('restore:')) throw invalidParams('Reserved restoration operation namespace')
+      return operation.apply(input)
+    }, queryOperation(input) {
+      return input.operationId?.startsWith('restore:') ? restoration.query(input) : operation.query(input)
+    }, async withCreation(params, work) {
+      if (creations.size >= 128 && !creations.has(params.sessionId))
+        throw invalidParams('Session creation evidence capacity exhausted')
+      if (Buffer.byteLength(stableJSON(params)) > 65536) throw invalidParams('Session creation evidence exceeds bounds')
+      const captured = structuredClone(params)
+      return withLifecycle(async () => {
+        const configuringInitial = initial && !Object.hasOwn(captured, 'sessionId')
+        if (configuringInitial) {
+          if (initial.attempted) throw invalidParams('Initial creation already attempted')
+          if (initial.record.state !== 'prepared' || captured.sessionId
+              || captured._meta?.claudeCode?.options?.resume)
+            throw invalidParams('Initial configuration requires a fresh native creation')
+          initial.attempted = true
+          initial.record.state = 'unknown'; initial.record.phase = 'creating'
+          if (brand === 'claude-code') captured._meta = { ...captured._meta,
+            claudeCode: { ...captured._meta?.claudeCode,
+              options: { ...captured._meta?.claudeCode?.options, model: initial.input.model } } }
+        }
+        const result = await work(captured)
+        const sessionId = params.sessionId ?? result.sessionId
+        if (brand === 'codex' && agent.sessions.has(sessionId)) creations.set(sessionId, captured)
+        if (configuringInitial) {
+          initial.record.after = read({ sessionId })
+          initial.record.phase = 'initial-model-application'
+          // Standard ACP model selection requires a live session. Apply it
+          // immediately after creation, before returning the prepared session
+          // to its caller; no prompt, close or resume occurs here.
+          await agent.setSessionConfigOption({ sessionId, configId: 'model', value: initial.input.model })
+          const after = read({ sessionId })
+          initial.record.after = after
+          const selected = after.configOptions.filter(item => item.id === 'model')
+          if (after.busy || selected.length !== 1 || selected[0].currentValue !== initial.input.model) {
+            initial.record.phase = 'initial-readback-mismatch'
+            throw invalidParams('Initial model readback differs')
+          }
+          initial.record.state = 'observed'; initial.record.phase = 'initial-model-readback'
+          // This is creation evidence, never a Profile C4 receipt or proof of every resource.
+        }
+        return result
+      })
+    }, read(input) {
+    const observed = read(input)
+    return { ...observed, busy: observed.busy || providerBusy || operation.isBusy(input.sessionId) }
+  }, withLifecycle, withProvider }
 }

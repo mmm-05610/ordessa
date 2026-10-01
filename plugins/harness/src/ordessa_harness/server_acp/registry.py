@@ -26,9 +26,12 @@ from ordessa_harness.server_acp.runs import (
 from ordessa_server.ids import opaque_id
 
 _OWNER_CONFIGURATION_METHODS = frozenset({
+    '_ordessa/channel/configuration/prepare',
+    '_ordessa/channel/configuration/operation',
     '_ordessa/session/configuration',
     '_ordessa/session/configuration/apply',
     '_ordessa/session/configuration/operation',
+    '_ordessa/session/configuration/restore',
 })
 
 
@@ -274,14 +277,17 @@ class _Channel:
             pending.ready.set()
         return True
 
-    def _configuration_rpc(self, native_id: str, method: str, params: Mapping[str, Any],
-                           *, timeout: float = 10) -> tuple[NativeSessionObservation, dict]:
+    def _configuration_rpc(self, native_id: str | None, method: str, params: Mapping[str, Any],
+                           *, timeout: float = 10) -> tuple[NativeSessionObservation | None, dict]:
         """Internal bounded RPC. Admission/operation authority is a caller obligation.
 
         Only these native configuration methods exist; client relay cannot call
         them. A reply is native data, not a C4 permit or applied receipt.
         """
-        if method not in _OWNER_CONFIGURATION_METHODS or params.get('sessionId') != native_id:
+        initial_method = method in {'_ordessa/channel/configuration/prepare', '_ordessa/channel/configuration/operation'}
+        if (method not in _OWNER_CONFIGURATION_METHODS
+                or (initial_method and (native_id is not None or 'sessionId' in params))
+                or (not initial_method and params.get('sessionId') != native_id)):
             raise ValueError('unsupported owner configuration RPC')
         try:
             payload = json.dumps(dict(params), allow_nan=False)
@@ -289,14 +295,18 @@ class _Channel:
             raise ValueError('invalid owner configuration payload') from exc
         if len(payload.encode('utf-8')) > 65536:
             raise ValueError('owner configuration payload outside bounds')
-        if type(native_id) is not str or not native_id or len(native_id) > 4096:
+        if not initial_method and (type(native_id) is not str or not native_id or len(native_id) > 4096):
             raise ValueError('native session identity required')
         if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not 0 < timeout <= 30:
             raise ValueError('configuration query timeout outside bounds')
         with self._lock:
             owner = self._native_sessions.get(native_id)
-            if self._ended or owner is None or not isinstance(self.transport, _ObservedTransport):
+            if (self._ended or (not initial_method and owner is None)
+                    or not isinstance(self.transport, _ObservedTransport)):
                 raise NativeConfigurationUnavailable('native session owner unavailable')
+            if initial_method and (not self.session_scope_id or
+                    (method.endswith('/prepare') and self._native_sessions)):
+                raise NativeConfigurationUnavailable('initial configuration requires a dedicated empty channel')
             if len(self._owner_query_ids) >= 4096 or len(self._configuration_queries) >= 16:
                 raise NativeConfigurationUnavailable('configuration query capacity exhausted')
             for _ in range(8):
@@ -317,13 +327,13 @@ class _Channel:
             if not pending.ready.wait(timeout):
                 raise NativeConfigurationUnavailable('configuration query timed out')
             with self._lock:
-                if self._ended or self._native_sessions.get(native_id) is not owner:
+                if self._ended or (not initial_method and self._native_sessions.get(native_id) is not owner):
                     raise NativeConfigurationUnavailable('native session owner changed')
                 response = pending.response
             if response is None or 'error' in response:
                 raise NativeConfigurationUnavailable('native configuration query refused or unavailable')
             result = response['result']
-            if not isinstance(result, dict) or result.get('sessionId') != native_id:
+            if not isinstance(result, dict) or (not initial_method and result.get('sessionId') != native_id):
                 raise NativeConfigurationUnavailable('malformed native configuration evidence')
             try:
                 json.dumps(result, allow_nan=False)
@@ -556,6 +566,50 @@ class AcpChannelRegistry:
                 or channel.native_session_observation(native_session_id) is not observation.owner):
             raise NativeConfigurationUnavailable('channel owner changed')
         return observation
+
+    def query_native_operation(self, connection_id: str, native_session_id: str,
+                               operation_id: str, *, timeout: float = 10):
+        """Read retained native operation evidence; never retry its effects."""
+        if (type(operation_id) is not str or not operation_id or len(operation_id) > 128
+                or operation_id != operation_id.strip()):
+            raise ValueError('bounded native operation identity required')
+        channel = self.get(connection_id)
+        if channel is None:
+            raise NativeConfigurationUnavailable('channel owner unavailable')
+        owner, record = channel._configuration_rpc(native_session_id,
+            '_ordessa/session/configuration/operation',
+            {'sessionId': native_session_id, 'operationId': operation_id}, timeout=timeout)
+        if (self.get(connection_id) is not channel or channel.ended
+                or channel.native_session_observation(native_session_id) is not owner):
+            raise NativeConfigurationUnavailable('operation owner changed')
+        return owner, record
+
+    def prepare_native_creation(self, connection_id: str, params: Mapping[str, Any], *, timeout: float = 10):
+        """Trusted plugin-only initial preparation; no native session exists yet.
+
+        This is not an application receipt. The client must still perform its
+        ordinary, correlated session/new and the owner must read it independently.
+        """
+        channel = self.get(connection_id)
+        if channel is None:
+            raise NativeConfigurationUnavailable('initial channel unavailable')
+        _, result = channel._configuration_rpc(None, '_ordessa/channel/configuration/prepare', params, timeout=timeout)
+        if self.get(connection_id) is not channel or channel.ended:
+            raise NativeConfigurationUnavailable('initial channel owner changed')
+        if result.get('operationId') != params.get('operationId') or result.get('state') not in {'prepared', 'observed', 'unknown'}:
+            raise NativeConfigurationUnavailable('malformed initial preparation evidence')
+        return result
+
+    def query_native_creation(self, connection_id: str, operation_id: str, *, timeout: float = 10):
+        """Read retained startup evidence without applying or creating again."""
+        channel = self.get(connection_id)
+        if channel is None:
+            raise NativeConfigurationUnavailable('initial channel unavailable')
+        _, result = channel._configuration_rpc(None, '_ordessa/channel/configuration/operation',
+            {'operationId': operation_id}, timeout=timeout)
+        if self.get(connection_id) is not channel or channel.ended or result.get('operationId') != operation_id:
+            raise NativeConfigurationUnavailable('initial channel owner or operation changed')
+        return result
 
     def recovery_view(self, *, connection_id: str, execution_id: str) -> dict[str, Any]:
         """Read a durable run and its exact live association without reviving it.

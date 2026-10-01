@@ -90,6 +90,32 @@ class ProfileNativeSessions:
                 raise ProfileError("SWITCH_BLOCKED", "Native owner changed", status=409)
             return ProfileNativeBinding(ref, snapshot)
 
+    def begin_restoration(self, ref, *, operation_id):
+        """Backend-only reservation before a Harness-owned provider resume."""
+        with self._lock:
+            binding = self.require_registered(ref)
+            return self._observe(lambda: self.owners.begin_restoration(
+                binding.snapshot.target, operation_id=operation_id))
+
+    def complete_restoration(self, ref, ticket):
+        """Keep the saved conversation identity; replace only its runtime fence.
+
+        The owner performs both native operation query and fresh readback.
+        This is not Profile application confirmation and writes no receipt.
+        """
+        with self._lock:
+            binding = self.require_registered(ref)
+            if (ticket.before.owner is not binding.snapshot.owner
+                    or ticket.before.target.session_id != ref.session_uid):
+                raise ProfileError('SWITCH_BLOCKED', 'Restoration belongs to another session', status=409)
+            result = self._observe(lambda: self.owners.complete_restoration(ticket))
+            if (result.snapshot.owner is not binding.snapshot.owner
+                    or result.snapshot.target.session_id != ref.session_uid):
+                raise ProfileError('SWITCH_BLOCKED', 'Restoration changed conversation owner', status=409)
+            key = (binding.snapshot.owner.connection_id, ref.native_session_key)
+            self._bindings[key] = ProfileNativeBinding(ref, result.snapshot)
+            return result
+
     def register(self, *, connection_id: str, native_session_id: str, profile_id: str):
         """Register only a session/new owner actually observed by this backend."""
         with self._lock:
