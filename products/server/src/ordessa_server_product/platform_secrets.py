@@ -109,7 +109,13 @@ def _default_collection():
             raise SecretServiceUnavailable('SECRET_SERVICE_ENCRYPTION_REQUIRED')
         collection.session = session
         yield collection
-    except SecretServiceUnavailable:
+    # `contextlib` throws whatever the caller raised at its `yield` back into
+    # this generator, so the ladder below also sees exceptions raised by the
+    # operation itself -- `read` raises SecretLocatorUnavailable for an absent
+    # item. Without naming it here the bare `except Exception` would report a
+    # missing credential as an unusable keyring, which is both a wrong reason
+    # and a lost distinction the caller needs (absent vs locked vs down).
+    except (SecretServiceUnavailable, SecretLocatorUnavailable):
         raise
     except TimeoutError:
         raise SecretServiceUnavailable('SECRET_SERVICE_TIMEOUT') from None

@@ -297,3 +297,35 @@ def test_real_jeepney_constructor_hello_and_reply_calls_have_timeouts(monkeypatc
     finally:
         conn.close()
         right.close()
+
+
+def test_real_backend_generator_does_not_relabel_a_missing_credential(monkeypatch, tmp_path):
+    """The real ladder, not an injected fake: `contextlib` throws the caller's
+    exception back into the generator at its `yield`, so an absent item must
+    still surface as SecretLocatorUnavailable rather than an unusable keyring."""
+    import sys, types
+    collection = Collection()
+    # A durable default collection; the session alias is rejected upstream.
+    collection.collection_path = '/org/freedesktop/secrets/collection/login'
+    for name in ('secretstorage', 'secretstorage.collection', 'secretstorage.util'):
+        monkeypatch.setitem(sys.modules, name, types.ModuleType(name))
+    secretstorage = sys.modules['secretstorage']
+    secretstorage.get_collection_by_alias = lambda connection, alias: collection
+    sys.modules['secretstorage.collection'].SESSION_COLLECTION = '/org/freedesktop/secrets/aliases/default'
+    sys.modules['secretstorage.util'].open_session = lambda connection: SimpleNamespace(
+        encrypted=True, aes_key=b'0123456789abcdef',
+        object_path='/org/freedesktop/secrets/session/s1')
+    monkeypatch.setattr(module, '_bounded_connection', lambda: SimpleNamespace(close=lambda: None))
+
+    store = LinuxSecretServiceStore(tmp_path / 'data')
+    missing = f"secret-service:v1:{store._namespace()}:00000000000000000000000000000000"
+    with pytest.raises(SecretLocatorUnavailable) as absent:
+        store.read(missing)
+    assert absent.value.code == 'CREDENTIAL_NOT_AVAILABLE'
+
+    # The complementary case must keep its own distinct reason, not collapse
+    # into the absent one.
+    collection.locked = True
+    with pytest.raises(SecretServiceUnavailable) as locked:
+        store.read(missing)
+    assert locked.value.code == 'SECRET_STORE_LOCKED'
