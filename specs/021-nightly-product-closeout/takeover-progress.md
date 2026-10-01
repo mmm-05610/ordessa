@@ -4,7 +4,16 @@
 所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
 未合并、未 push、未启停既有用户服务、未重建 deb。三品牌后端真实聊天已通过；Codex Desktop 已通过 Profile 首发与同会话下一轮切换，两条真实回复。完整三品牌 UI/发行验收仍未完成。
 
-## 最新验证（2026-10-01，串行供应商恢复与新绑定应用接线）
+## 最新验证（2026-10-01，Claude 真实历史与供应商配置路由恢复）
+
+- 本轮复用产品已有授权聊天探针，增加显式 `--switch-provider` 模式：仅 Claude + fixed-assets + 独立 local-relay 可启用。创建两个不同 provider 配置和 endpoint 路由，均明确转发同一个获授权的 DeepSeek 上游。不把这个证据冒称两家不同供应商验收，也不把临时 relay 当直接公网 endpoint 产品能力。
+- 最终独立复跑 exit 0：首条真实回复 completed，随后 Profile 全局预设改为第二个 provider 配置及模型，下一次发送前完整应用返回确认回执；原生 generation 更新、原生 owner 不变、两轮 canonical SessionRef 相同，恢复 RPC **恰一次**。第二条真实回复准确回忆首条随机标记，证明实际历史跨路由恢复保留。模型 haiku→sonnet，两个入口 credentialMatches=true/placeholderAuth=false，上游三次 HTTP 200（原生可能额外并行调用），用户提示恰两条。
+- 实际链路：产品 wire → model-provider 解析 → Profile 应用日志 → Harness 串行恢复 → canonical 新绑定 → 新 C4 配置计划/确认 → 原生第二轮。不是仅适配器或内存替身通过；仍属于**后端产品验收，不是 Desktop UI 跨 provider 验收**。
+- 首次运行在第一轮及第二次配置应用后，因探针将 `_configuration_rpc` 的 `(owner, config)` 二元组当 dict 读取而失败，尚未发送第二轮；修正探针后在新的临时数据根成功，再加强一次恢复计数/同 SessionRef 断言后终跑成功。未自动重复原未知操作，未削弱断言。三次运行各自自有通道、密钥环条目和 runtime 均清理完成。
+- 本轮 products/server **154P**、`git diff --check` exit 0；没有修改 host、全局登录/配置或 installed assets。main 未动，他属截图未纳入。
+- 尚未完成：Pi 新 provider 的原生动态注册应用；Codex 已有历史跨 API/官方认证路由；不同上游供应商与完整 Desktop UI 跨 provider 验收；旧 UI preview/完整发行回归。前次无消息 Claude 恢复探针失败仍保留，不能抹成全绿，但实际有历史路径已取得上面证据。
+
+## 前一检查点（2026-10-01，串行供应商恢复与新绑定应用接线）
 
 - 用户已批准串行路线：关闭旧运行状态、恢复同一个原生会话的历史和身份；失败保留草稿、阻止发送，不静默回退、不自动重发。品牌差异只在 Harness。沿用本 worktree 的 Spec Kit 进度与门禁，单会话实施，没有新增派工树或另起长期调度器。
 - Harness 新增 ProviderRestorationService：无效果规划、精确贡献发布租约、独立原生操作证据、owner/generation 校验、恢复恰好一次；未知结果只能查询。凭据不存入规划对象，只保留摘要。当前原生恢复目的地仅为 Codex/Claude API 路由；Pi 新 provider 与 Codex 官方登录目的地尚未实现，诚实拒绝。

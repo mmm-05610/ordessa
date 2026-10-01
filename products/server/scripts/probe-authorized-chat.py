@@ -36,6 +36,8 @@ def run(args):
     if not key or len(key) > 8000 or any(ord(c) < 32 for c in key):
         raise ValueError('Invalid bounded key file')
     brands = args.brand or ['pi', 'claude-code']
+    if args.switch_provider and (brands != ['claude-code'] or not args.local_relay or not args.fixed_assets):
+        raise ValueError('Provider restoration probe requires Claude, fixed assets and isolated local relay')
     native_brands = [brand for brand in brands if brand != 'pi']
     pi_bridge = 'pi' in brands
     environment = dict(os.environ)
@@ -47,7 +49,8 @@ def run(args):
     if args.local_relay:
         class Relay(BaseHTTPRequestHandler):
             def do_POST(self):
-                mapping = {'/pi/': 'https://api.deepseek.com/', '/claude/': 'https://api.deepseek.com/anthropic/'}
+                mapping = {'/pi/': 'https://api.deepseek.com/', '/claude/': 'https://api.deepseek.com/anthropic/',
+                           '/claude-next/': 'https://api.deepseek.com/anthropic/'}
                 prefix = next((p for p in mapping if self.path.startswith(p)), None)
                 length = int(self.headers.get('Content-Length', '0'))
                 if prefix is None or not 0 <= length <= 1024 * 1024 or '..' in self.path:
@@ -147,6 +150,12 @@ def run(args):
                     connection = wire('acp.channel.open', dict(harnessId=brand, projectId=workspace['id'], sessionScopeId=scope))
                     opened.append(connection['connectionId'])
                     channel = registry.get(connection['connectionId'])
+                    configuration_calls = []
+                    original_configuration_rpc = channel._configuration_rpc
+                    def counted_configuration_rpc(*args, **kwargs):
+                        configuration_calls.append(args[1])  # method only; never retain secret-bearing params
+                        return original_configuration_rpc(*args, **kwargs)
+                    channel._configuration_rpc = counted_configuration_rpc
                     inbox = queue.Queue()
                     channel.attach(ImmediateLoop(), inbox.put)
                     def request(method, params):
@@ -208,16 +217,39 @@ def run(args):
                     if reply.get('stopReason') != 'end_turn' or not text.strip():
                         raise RuntimeError('First real turn did not complete with text')
                     print(json.dumps(dict(harness=brand, stage='first-real-turn', completed=True, replyChars=len(text))), flush=True)
+                    before_owner = registry.native_session_observation(channel.connection_id, native)
+                    _, before_config = channel._configuration_rpc(native, '_ordessa/session/configuration', dict(sessionId=native))
+                    if args.switch_provider:
+                        provider = wire('providerModels.create', dict(requestId='live-destination-' + uuid4().hex,
+                            harness=brand, provider='deepseek-destination', displayName='Authorized restoration destination',
+                            credentialId=imported['credentialId'], configuration=[], protocols=[protocol],
+                            endpoints={protocol: f'http://127.0.0.1:{relay.server_port}/claude-next'},
+                            models=[dict(modelId=m, displayName=m, availability='available', unavailableReason=None)
+                                    for m in models]))['providerModel']
                     save(models[1], 2)
                     second = profile('beginTurnApplication', operationKey='live-next-' + uuid4().hex, sessionRef=ref)
                     if 'receipt' not in second:
                         raise RuntimeError('Next Profile model application not confirmed')
+                    _, after_config = channel._configuration_rpc(native, '_ordessa/session/configuration', dict(sessionId=native))
+                    if args.switch_provider:
+                        if before_config['generation'] == after_config['generation']:
+                            raise RuntimeError('Provider restoration did not renew native generation')
+                        if registry.native_session_observation(channel.connection_id, native) is not before_owner:
+                            raise RuntimeError('Provider restoration changed native conversation owner')
+                        if configuration_calls.count('_ordessa/session/configuration/restore') != 1:
+                            raise RuntimeError('Provider restoration was not effect-once')
+                        if first['receipt']['sessionRef'] != second['receipt']['sessionRef']:
+                            raise RuntimeError('Provider restoration changed canonical conversation')
                     reply, text = request('session/prompt', dict(sessionId=native, prompt=[dict(type='text',
                         text='What token did I ask you to remember? Reply only that token. Do not use tools or read files.')]))
                     if reply.get('stopReason') != 'end_turn' or token not in text:
                         raise RuntimeError('History was not preserved across the actual model switch')
                     evidence.append(dict(harness=brand, actualTurns=2, initialProfileConfirmed=True,
-                        nextProfileConfirmed=True, historyPreserved=True, models=list(models)))
+                        nextProfileConfirmed=True, historyPreserved=True, models=list(models),
+                        providerRouteRestoration=args.switch_provider,
+                        restorationEffects=configuration_calls.count('_ordessa/session/configuration/restore'),
+                        nativeGenerationRenewed=before_config['generation'] != after_config['generation'],
+                        distinctUpstreamVendors=False if args.switch_provider else None))
                     print(json.dumps(evidence[-1]), flush=True)
                 print(json.dumps(dict(scope='real-product-profile-chat-not-desktop-ui', evidence=evidence,
                     viaLocalRelay=relay is not None, relayCounts=relay_counts)), flush=True)
@@ -249,6 +281,8 @@ if __name__ == '__main__':
     parser.add_argument('--allow-model-calls', action='store_true')
     parser.add_argument('--key-file', type=Path, required=True)
     parser.add_argument('--fixed-assets', action='store_true', help='Use separately installed chat-fix assets')
+    parser.add_argument('--switch-provider', action='store_true',
+                        help='Claude: two distinct provider configurations/endpoints forwarding to same authorized upstream')
     parser.add_argument('--brand', choices=['pi', 'claude-code'], action='append')
     parser.add_argument('--local-relay', action='store_true', help='Explicit isolated TLS forwarding, not direct endpoint acceptance')
     run(parser.parse_args())
