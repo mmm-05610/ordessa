@@ -75,9 +75,9 @@ export async function runSmoke({ win, app }) {
   if (process.env.MODULAR_AGENT_SHELL_SMOKE === '1') {
     Object.assign(result, { agentShell: await win.webContents.executeJavaScript(`(async () => {
       const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
-      const entry = [...document.querySelectorAll('nav button')].find(button => button.getAttribute('aria-label') === 'Agents');
+      const entry = [...document.querySelectorAll('nav button')].find(button => button.getAttribute('aria-label') === 'Chat');
       entry?.click(); await wait(100);
-      const emptyConversation = !!document.querySelector('.agent-placeholder')?.textContent.includes('Choose a connection');
+      const emptyConversation = !!document.querySelector('.chat-placeholder')?.textContent.includes('选择一个连接');
       const toggle = document.querySelector('.conn-status-toggle');
       toggle?.click(); await wait(100);
       const popover = document.querySelector('[role="group"][aria-label="Agent connections"]');
@@ -92,6 +92,7 @@ export async function runSmoke({ win, app }) {
         piVisible: connectorButtons.some(button => button.textContent.includes('Pi')),
         serverVisible: connectorButtons.some(button => button.textContent.includes('Ordessa Server')),
         emptyConversation,
+        chatMounted: !!document.querySelector('[data-region="main"] .chat-page'),
         newSessionEntry: panelButtons.some(button => button.textContent === 'New session'),
         panelOwnConnectionUi: !!panel?.querySelector('.conn-status') || panelButtons.some(button => ['Reconnect', 'Connect'].includes(button.textContent)),
         projectPicker: !!document.querySelector('.agent-project-picker'),
@@ -200,9 +201,8 @@ export async function runSmoke({ win, app }) {
     })()`) })
   }
   console.log('MODULAR_LOADER_READY', JSON.stringify(result))
-  // C-0074 paired diagnostic needs the command-line default NetLog to flush on normal quit.
-  if ((process.env.MODULAR_PAIR_NETWORK_DIAG === '1' && process.env.MODULAR_NATIVE_PAIR_SMOKE === '1') ||
-      process.env.MODULAR_FE_TWO_TURN_SMOKE === '1') app.quit()
-  else app.exit(result.ready && result.nodeAbsent ? 0 : 1)
+  // Exercise the host's real cleanup: app.exit bypasses before-quit, leaving
+  // its Server/data-root ownership behind and poisoning same-root restarts.
+  // The caller verifies the structured result; shutdown must always run.
+  app.quit()
 }
-

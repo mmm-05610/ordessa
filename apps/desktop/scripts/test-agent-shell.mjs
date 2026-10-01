@@ -9,21 +9,32 @@ import { launchSmoke } from './launch-smoke.mjs'
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')
 const home = await mkdtemp(path.join(tmpdir(), 'ordessa-agent-shell-'))
 try {
-  await writeFile(path.join(home, 'extensions.json'), await readFile(path.join(root, 'products/desktop/extensions.json')))
-  // No host handoff: the only product connector must fail visibly and register no fake connection.
+  // Focused shell/connector fixture, not full-product acceptance: a hello-only
+  // peer cannot truthfully serve Skills/Profile/ModelProvider business methods.
+  // Full shipping assembly is separately verified by probe-native-installed.
+  const shipping = JSON.parse(await readFile(path.join(root, 'products/desktop/extensions.json'), 'utf8'))
+  const shellIds = ['ordessa.contracts', 'ordessa.agent-contracts', 'ordessa.commands', 'ordessa.workbench',
+    'ordessa.ui-components', 'ordessa.connections', 'ordessa.agent-connections', 'ordessa.agent-sessions',
+    'ordessa.agent-server', 'ordessa.agent-acp', 'ordessa.chat-api', 'ordessa.chat']
+  for (const id of shellIds) assert.ok(shipping.enabled.includes(id), `${id} must be in the shipping product`)
+  await writeFile(path.join(home, 'extensions.json'), JSON.stringify({ enabled: shellIds }))
+  // Deliberately absent runtime: the host cannot produce a handoff. Empty
+  // origin alone no longer simulates absence, since the host now fills it.
   const result = await launchSmoke(home, { ORDESSA_EMPTY_HOST: '0', MODULAR_AGENT_SHELL_SMOKE: '1',
+    ORDESSA_BUNDLED_ROOT: path.join(home, 'deliberately-missing-runtime'),
     ORDESSA_SERVER_ORIGIN: '', ORDESSA_SERVER_TOKEN_FILE: '' })
   assert.equal(result.ready, true)
   assert.equal(result.rootMounted, true)
   assert.equal(result.nodeAbsent, true)
   assert.ok(result.errors.some(error => error.includes('ordessa.agent-server') && error.includes('ORDESSA_SERVER_ORIGIN is not set')))
-  assert.ok(result.pages.includes('Conversation'))
+  // A sole main view has no tab strip: assert the actual current Chat body.
+  assert.equal(result.agentShell.chatMounted, true)
   assert.ok(result.pages.includes('Sessions'))
   assert.ok(!result.pages.includes('Requests'))
   assert.deepEqual(result.agentShell, {
     navigation: true, statusbarToggle: true, popover: true,
     codexVisible: false, piVisible: false, serverVisible: false,
-    emptyConversation: true,
+    emptyConversation: true, chatMounted: true,
     newSessionEntry: true, panelOwnConnectionUi: false,
     projectPicker: false,
     rightRequests: false, rightTab: false,

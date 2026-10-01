@@ -9,14 +9,15 @@ const selected = process.env.ORDESSA_NATIVE_HARNESS ? [process.env.ORDESSA_NATIV
 const profileBridge = process.env.ORDESSA_PI_PROFILE_BRIDGE ?? (selected.includes('pi') ? '1' : '0')
 if (profileBridge !== undefined && profileBridge !== '0' && profileBridge !== '1')
   throw new Error('ORDESSA_PI_PROFILE_BRIDGE must be 0 or 1')
-// Enhanced native assets are explicit until the verified installation is
-// delivered. Ordinary installed assets never silently gain Profile support.
+// Delivered and independently verified additive assets. Ordinary assets are
+// unchanged; exact enhanced variants still pass Harness provenance checks.
 const nativeProfileRoot = process.env.ORDESSA_NATIVE_PROFILE_ARTIFACT_ROOT
+  ?? '/opt/ordessa/harnesses/profile-native/artifacts'
 if (nativeProfileRoot !== undefined && !nativeProfileRoot)
   throw new Error('ORDESSA_NATIVE_PROFILE_ARTIFACT_ROOT must not be empty')
 const nativeProfileHarnesses = nativeProfileRoot ? selected.filter(id => ['codex', 'claude-code'].includes(id)) : []
 const profileRoots = { ...(profileBridge === '1' ? { pi: process.env.ORDESSA_PI_PROFILE_ARTIFACT_ROOT
-    ?? '/opt/ordessa/harnesses/profile-live-model/artifacts' } : {}),
+    ?? '/opt/ordessa/harnesses/profile-pi-provider/artifacts' } : {}),
   ...Object.fromEntries(nativeProfileHarnesses.map(id => [id, nativeProfileRoot])) }
 const plan = nativeServerPlan({ ...(process.env.ORDESSA_NATIVE_HARNESS
     ? { harnessId: process.env.ORDESSA_NATIVE_HARNESS }

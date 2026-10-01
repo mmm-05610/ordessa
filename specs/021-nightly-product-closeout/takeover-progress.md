@@ -4,7 +4,17 @@
 所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
 未合并、未 push、未启停用户服务、未调用真实模型、未重建 deb。
 
-## 当前读数（2026-10-01，首次准备并行集成）
+## 最新验证（2026-10-01，Pi provider 安装完成）
+
+- 用户完成新增 Pi provider 系统资产安装，路径 `/opt/ordessa/harnesses/profile-pi-provider/artifacts/pi-profile-runtime`；旧资产和全局配置未覆写。
+- 主代理通过真实已安装三品牌产品探针：真实产品装配、wire、SQLite 账本、Profile、canonical owner/generation、C4、系统密钥环。每品牌两条独立会话，首次配置确认后更新全局模型、只在 A 下一轮应用，B 仍保留原模型；Codex `gpt-5.6-sol/gpt-5.5`、Claude `haiku/sonnet`、Pi `synthetic-provider/second/first`，native IDs 分离。`new=6/prompt=0/HTTP=0`，exit 0。通道、精确合成密钥、自有产品均已清理。不是 UI 发送、真实推理或已有历史跨供应商恢复证据。
+- 产品原生启动器与安装探针的默认增强资产根改为上述 Pi 根和 `/opt/ordessa/harnesses/profile-native/artifacts`，仍完整验证来源与实例隔离、保留环境变量覆盖及显式普通 Pi 路线。未改 host；根 `npm dev` 仍是原隔离预览，完整产品入口是 `node products/desktop/run-native.mjs`，两者不能混称。
+- 无资产环境变量覆盖的完整 Desktop 挂载探针 exit 0：`ready=true/rootMounted=true/errors=[]`、Chat/Skills/Sessions、`prompt=0`。这是 mount-only，不保证全部异步业务/UI 提交完成。
+- Product native preparation 回归 **27/27**、typecheck exit 0。扩展 Electron 同根重启失败已复现并修复：测试驱动 `app.exit()` 绕开 before-quit，改用 `app.quit()` 执行宿主清理；调用者仍强制检查 ready/nodeAbsent，不丢掉旧失败判定。修复前双启动第二次 Server 退出 1、clean=false；修复后两次 errors=[]、clean=true。扩展九场景与 UI 服务五场景均 exit 0，host digest 未变，额外钉住每次 clean 标记。
+- Shell 测试迁到真实 Chat DOM/导航，不要求单视图出现标签条。缺少 handoff 用刻意缺失的 runtime 复现（空 origin 现在会被宿主自动补齐，不再等于缺席）；仍断言连接器拒绝、无伪造连接、无内嵌连接 UI。hello-only 对端使用从 shipping 清单核对的 shell 组合，不启用需要业务 API 的 Skills/Profile 等插件，严格保留两次认证 hello、零其它请求；全产品装配另由 installed probe 验证。该定向回归 exit 0，不冒称原 full manifest 测试全绿。
+- 旧 visual-preview 仍引用已退役 `ordessa.agent-conversation`、旧 DOM 和缺失 IPC；尚未迁移，完整根回归未收口。已有历史跨 provider 恢复、用户授权真实聊天仍未完成。
+
+## 前次读数（2026-10-01，首次准备并行集成；以下保留历史状态）
 
 - Pi 新 provider/API Key 准备链已接入 Harness 和产品装配，host/Pacthold 未改。私有实例使用锁定上游 ModelRuntime 的内存注册/runtime-key 接口（避免普通配置字符串的命令解释），只做 offline refresh。初始模型目录按资源修订围栏取值；C4 仍要求真实 owner/generation 与启动后的独立读回。已有无凭据 model-only 路径保持原样。
 - 主代理当前定向回归：Product/Harness/model/owner **303P**，Profile **195P**，Pi Node **60P**；新增准备、未知查询、竞态、模型路由、凭据守卫反例。真实 ACP 首次启动抓出自定义查询缺 parser，已补且强化注册夹具；不是用夹具结果代替真实启动。
@@ -227,7 +237,7 @@ Profile Chat 有限入口接线已由主代理复跑 23/23：合法 default fact
   - [ ] 已有历史跨 provider 恢复。
 - [ ] 产品完整回归及用户授权的真实聊天、配置切换验收。
   - [x] Pi 新供应商/API Key 私有准备源码、受控回归、真实候选适配器双实例无模型验证。
-  - [ ] 增强 Pi 供应商资产安装后，实际产品 wire/Profile/C4 完整确认。
+  - [x] 增强 Pi 供应商资产安装后，实际产品 wire/Profile/C4 完整确认（三品牌实际探针，零 prompt/HTTP）。
   - [x] 多次定向回归、构建/类型检查及完整产品挂载已有证据（各次范围见下文，非本轮全仓绿）。
   - [ ] 全量回归收口与用户实际操作验收。
 

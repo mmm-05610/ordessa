@@ -28,6 +28,8 @@ async function enable(ids) { await writeFile(path.join(home, 'extensions.json'),
 async function install(id, folder = id) { await cp(path.join(root, 'examples/dist', id), path.join(extensions, folder), { recursive: true }) }
 async function check(name, expected, verify = () => {}) {
   const result = await launchSmoke(home)
+  const exitMarker = JSON.parse(await readFile(path.join(home, '.ordessa/state/session.json'), 'utf8'))
+  assert.equal(exitMarker.clean, true, 'Smoke must run host cleanup before a same-root restart')
   assert.equal(result.ready, true); assert.equal(result.nodeAbsent, true)
   assert.deepEqual(result.bridgeKeys, ['read'])
   assert.deepEqual(result.pages.sort(), expected.sort())

@@ -22,6 +22,8 @@ export async function launchSmoke(home, extraEnv = {}) {
     })
     const line = output.split('\n').find(line => line.startsWith('MODULAR_LOADER_READY '))
     if (timedOut || code !== 0 || !line) throw Error('Electron smoke failed: ' + output)
-    return JSON.parse(line.slice('MODULAR_LOADER_READY '.length))
+    const result = JSON.parse(line.slice('MODULAR_LOADER_READY '.length))
+    if (!result.ready || !result.nodeAbsent) throw Error('Electron smoke failed its readiness/isolation checks: ' + output)
+    return result
   } finally { clearTimeout(timer); if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL') }
 }
