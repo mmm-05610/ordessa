@@ -12,7 +12,7 @@ const home = await mkdtemp(path.join(tmpdir(), 'ordessa-product-installed-probe-
 try {
   await copyFile(path.join(root, 'products/desktop/extensions.json'), path.join(home, 'extensions.json'))
   const nativeProfileRoot = process.env.ORDESSA_NATIVE_PROFILE_ARTIFACT_ROOT
-    ?? '/opt/ordessa/harnesses/profile-native/artifacts'
+    ?? '/opt/ordessa/harnesses/profile-codex-managed/artifacts'
   if (nativeProfileRoot !== undefined && !nativeProfileRoot) throw new Error('Native Profile asset root must not be empty')
   const nativeProfileHarnesses = nativeProfileRoot ? ['codex', 'claude-code'] : []
   const claudeProfileRoot = process.env.ORDESSA_CLAUDE_PROFILE_ARTIFACT_ROOT

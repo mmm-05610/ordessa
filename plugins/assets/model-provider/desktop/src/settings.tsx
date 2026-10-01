@@ -9,13 +9,16 @@ interface Draft {
   harness: string
   provider: string
   credentialId: string
+  authentication: 'api' | 'managed-account'
   baseUrl: string
   modelIds: string
   protocol: string
   protocolExplicit: boolean
 }
 
-const EMPTY_DRAFT: Draft = { displayName: '', harness: 'pi', provider: '', credentialId: '', baseUrl: '', modelIds: '', protocol: '', protocolExplicit: false }
+const EMPTY_DRAFT: Draft = { displayName: '', harness: 'pi', provider: '', credentialId: '', authentication: 'api', baseUrl: '', modelIds: '', protocol: '', protocolExplicit: false }
+const managedAccount = (config: ProviderConfigView) => config.configuration?.some(
+  control => control.controlId === 'authentication' && control.value === 'managed-account') === true
 const PROTOCOLS = ['openai-chat', 'openai-responses', 'anthropic-messages', 'gemini-generate']
 type KeyAttempt = { requestId: string; harnessId: string; generation: number; state: ApiKeyImportResult['state'] | 'pending' }
 function validImport(result: ApiKeyImportResult, operationId: string): boolean {
@@ -81,13 +84,16 @@ export function ModelProviderSettings({ service }: { service: ModelProviderServi
   }
   const changeDraft = (field: Exclude<keyof Draft, 'protocolExplicit'>, value: string) => {
     generation.current += 1
-    if ((field === 'harness' || field === 'provider') && keyInput.current) keyInput.current.value = ''
+    if ((field === 'harness' || field === 'provider' || field === 'authentication') && keyInput.current) keyInput.current.value = ''
     const next = { ...draftRef.current, [field]: value,
+      authentication: field === 'authentication' ? (value === 'managed-account' ? 'managed-account' as const : 'api' as const) : draftRef.current.authentication,
+      ...(field === 'authentication' && value === 'managed-account' ? {credentialId: '', baseUrl: ''} : {}),
       protocolExplicit: draftRef.current.protocolExplicit || field === 'protocol' || field === 'baseUrl' }
     draftRef.current = next; setDraft(next)
   }
   const importKey = async (query = false) => {
     if (keyBusyRef.current) return
+    if (draftRef.current.authentication !== 'api') return
     const previous = keyAttemptRef.current
     if (query ? !previous || previous.state !== 'unknown' : previous?.state === 'unknown' || previous?.state === 'pending') return
     const apiKey = query ? '' : keyInput.current?.value ?? ''
@@ -168,13 +174,14 @@ export function ModelProviderSettings({ service }: { service: ModelProviderServi
       setFeedback({ kind: 'error', text: '请先查询并确认 API Key 导入结果，再保存配置。' }); return
     }
     const capture = draftRef.current
-    const writeProtocol = !!capture.protocol && (!selected || capture.protocolExplicit)
+    const managed = capture.authentication === 'managed-account'
+    const writeProtocol = !!capture.protocol && (managed || !selected || capture.protocolExplicit)
     const modelIds = [...new Set(capture.modelIds.split(/[\s,，]+/).filter(Boolean))]
     if (!modelIds.length || modelIds.some(id => id.length > 256 || /[\x00-\x1f\x7f]/.test(id))
         || !capture.harness.trim() || !capture.provider.trim() || (!selected && !PROTOCOLS.includes(capture.protocol))) {
       setFeedback({ kind: 'error', text: '请填写供应商、Harness 和至少一个模型 ID，并为新配置明确选择协议。' }); return
     }
-    if (writeProtocol && (!PROTOCOLS.includes(capture.protocol) || !capture.baseUrl.trim())) {
+    if (writeProtocol && (!PROTOCOLS.includes(capture.protocol) || !managed && !capture.baseUrl.trim())) {
       setFeedback({ kind: 'error', text: '请选择有效协议并填写对应 Base URL。' }); return
     }
     const capturedGeneration = generation.current
@@ -183,16 +190,17 @@ export function ModelProviderSettings({ service }: { service: ModelProviderServi
       const body = {
         displayName: capture.displayName || '未命名配置',
         ...(!selected ? { harness: capture.harness, provider: capture.provider } : {}),
-        credentialId: capture.credentialId || null,
-        configuration: [{ controlId: 'baseUrl', value: capture.baseUrl }],
+        credentialId: managed ? null : capture.credentialId || null,
+        configuration: [...(selected?.configuration ?? []).filter(control => !['baseUrl', 'authentication'].includes(control.controlId)),
+          ...(managed ? [{controlId: 'authentication', value: 'managed-account'}] : [{ controlId: 'baseUrl', value: capture.baseUrl }])],
         models: modelIds.map(modelId => {
           const existing = selected?.models.find(model => model.modelId === modelId)
           return { modelId, displayName: existing?.displayName ?? modelId,
             availability: existing?.availability ?? (existing ? 'unknown' as const : 'available' as const),
             unavailableReason: existing?.unavailableReason ?? null }
         }),
-        ...(capture.baseUrl ? { provenance: { baseUrl: capture.baseUrl, fieldsSource: 'manual' } } : {}),
-        ...(writeProtocol ? { protocols: [capture.protocol], endpoints: { [capture.protocol]: capture.baseUrl } } : {}),
+        ...(managed ? {provenance: null} : capture.baseUrl ? { provenance: { baseUrl: capture.baseUrl, fieldsSource: 'manual' } } : {}),
+        ...(writeProtocol ? { protocols: [capture.protocol], endpoints: managed ? {} : { [capture.protocol]: capture.baseUrl } } : {}),
       }
       const edit = selected ? { id: selected.id, version: selected.version } : undefined
       const fingerprint = JSON.stringify([body, edit])
@@ -274,7 +282,7 @@ export function ModelProviderSettings({ service }: { service: ModelProviderServi
                   <span style={styles.mutedText}>（已保存 ≠ 可用；探测通过 ≠ 会话可使用）</span>
                 </p>
                 <p style={styles.mutedText}>
-                  认证：{selected.credentialId ? `凭据引用 ${selected.credentialId}` : '使用已有登录'}
+                  认证：{managedAccount(selected) ? 'Ordessa 原生账号（应用前核验）' : selected.credentialId ? `凭据引用 ${selected.credentialId}` : '未绑定 API 凭据'}
                   {' · '}归属：{selected.managedBy === 'harness' ? '由 Harness 管理' : '由 Ordessa 管理'}
                 </p>
                 <div>
@@ -297,6 +305,7 @@ export function ModelProviderSettings({ service }: { service: ModelProviderServi
                       resetDraft({
                         displayName: selected.displayName, harness: selected.harness ?? 'pi',
                         provider: selected.provider, credentialId: selected.credentialId ?? '',
+                        authentication: managedAccount(selected) ? 'managed-account' : 'api',
                         baseUrl: (selected.protocols?.length === 1 ? selected.endpoints?.[selected.protocols[0]] : undefined) ?? selected.provenance?.baseUrl ?? '',
                         modelIds: selected.models.map(model => model.modelId).join(', '),
                         protocol: selected.protocols?.length === 1 ? selected.protocols[0] : '',
@@ -315,6 +324,12 @@ export function ModelProviderSettings({ service }: { service: ModelProviderServi
                   onChange={(e) => changeDraft('harness', e.target.value)} /></label>
                 <label>供应商 <input value={draft.provider} aria-label="供应商" disabled={selected !== null}
                   onChange={(e) => changeDraft('provider', e.target.value)} /></label>
+                <label>认证方式 <select value={draft.authentication} aria-label="认证方式" disabled={keyBusy || keyAttempt?.state === 'unknown'}
+                  onChange={event => changeDraft('authentication', event.target.value)}>
+                  <option value="api">API 配置</option>
+                  <option value="managed-account">Ordessa 原生账号（由 Harness 核验）</option>
+                </select></label>
+                {draft.authentication === 'api' ? <>
                 <label>凭据引用 <input value={draft.credentialId} aria-label="凭据引用"
                   onChange={(e) => changeDraft('credentialId', e.target.value)} /></label>
                 <label>API Key <input type="password" autoComplete="off" aria-label="API Key" ref={bindKeyInput} /></label>
@@ -325,6 +340,7 @@ export function ModelProviderSettings({ service }: { service: ModelProviderServi
                 {keyAttempt?.state === 'unknown' && <p>导入操作：key-import:{keyAttempt.requestId}</p>}
                 <label>Base URL <input value={draft.baseUrl} aria-label="Base URL"
                   onChange={(e) => changeDraft('baseUrl', e.target.value)} /></label>
+                </> : <p style={styles.mutedText}>使用 Ordessa 独立登录，不保存 API Key 或端点。此处只保存选择，不会触发登录；实际支持与登录状态由 Harness 在应用前核验。</p>}
                 <label>协议 <select value={draft.protocol} aria-label="协议" onChange={e => changeDraft('protocol', e.target.value)}>
                   <option value="">明确选择协议</option>
                   {PROTOCOLS.map(protocol => <option key={protocol} value={protocol}>{protocol}</option>)}

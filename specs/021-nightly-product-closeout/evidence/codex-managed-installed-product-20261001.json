@@ -1,0 +1,38 @@
+{
+  "status": "BACKEND_PRODUCT_VERIFIED_NOT_FULL_DESKTOP_ACCEPTANCE",
+  "assetRoot": "/opt/ordessa/harnesses/profile-codex-managed/artifacts",
+  "assetDigest": "sha256:1ee5358b82e4727051158eaf61ebe5ae12ec1a4e55105e8acb5ffd5682837dd5",
+  "scope": "Actual installed product wire/Profile/canonical identity/C4 with authorized official chat",
+  "noModelRun": {
+    "officialAndApiIndependent": true,
+    "initialC4Confirmed": true,
+    "nextC4Confirmed": true,
+    "nativeIdsDistinct": true,
+    "selectedModels": ["gpt-5.6-sol", "gpt-5.5", "gpt-5.5"],
+    "counts": {"new": 3, "prompt": 0, "http": 0}
+  },
+  "authorizedChatRun": {
+    "officialAndApiIndependent": true,
+    "initialC4Confirmed": true,
+    "nextC4Confirmed": true,
+    "nativeIdsDistinct": true,
+    "selectedModels": ["gpt-5.6-sol", "gpt-5.5", "gpt-5.5"],
+    "counts": {"new": 3, "prompt": 2, "http": 0},
+    "httpMeans": "Local API gateway requests only; official inference uses native Codex network",
+    "realChatConfirmed": true,
+    "bothTurnsEndTurnWithNonemptyText": true
+  },
+  "cleanup": "Own channels released and isolated product stopped; no login/global configuration changes",
+  "desktopMount": {
+    "ready": true,
+    "rootMounted": true,
+    "errors": [],
+    "nodeAbsent": true,
+    "prompt": 0,
+    "scope": "mount-only with explicitly rebuilt development runtime, not installed deb"
+  },
+  "regression": {"productsServer": 140, "settings": 37, "acp": 63, "profileChat": 45,
+    "nativeProfilePreparation": 29, "profileResolution": 25, "managedSelectionCompiler": 25,
+    "countsOverlap": true, "typecheckExit": 0, "buildExit": 0, "enabledExtensions": 18},
+  "notVerified": ["Desktop UI real submit", "existing history cross-provider restart/resume", "full repository regression", "release package"]
+}

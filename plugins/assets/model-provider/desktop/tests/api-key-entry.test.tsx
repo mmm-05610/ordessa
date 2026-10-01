@@ -59,6 +59,35 @@ async function fixture(handler?: (method: string, params: Record<string, unknown
   return { container, calls, click, fill, field, add, service, unmount }
 }
 
+it('managed account choice saves no endpoint or credential and invokes no login/import/probe', async () => {
+  const f = await fixture(); await f.add()
+  await f.fill('Harness', 'codex'); await f.fill('供应商', 'openai'); await f.fill('协议', 'openai-responses')
+  await f.fill('凭据引用', 'old-key'); await f.fill('API Key', KEY)
+  await f.fill('认证方式', 'managed-account')
+  expect(f.container.querySelector('[aria-label="API Key"]')).toBeNull()
+  expect(f.container.querySelector('[aria-label="Base URL"]')).toBeNull()
+  await f.click('save-config')
+  const saved = f.calls.find(call => call.method === 'providerModels.create')!
+  expect(saved.params).toMatchObject({credentialId: null, endpoints: {},
+    configuration: [{controlId: 'authentication', value: 'managed-account'}]})
+  expect(JSON.stringify(saved)).not.toContain(KEY)
+  expect(JSON.stringify(saved)).not.toContain('old-key')
+  expect(f.calls.map(call => call.method)).toEqual(['providerModels.list', 'providerModels.create'])
+})
+
+it('editing a managed account record preserves its mode and unrelated neutral controls', async () => {
+  const managed = {...row, harness: 'codex', provider: 'openai', credentialId: null,
+    protocols: ['openai-responses'], endpoints: {}, provenance: null,
+    configuration: [{controlId: 'authentication', value: 'managed-account'}, {controlId: 'timeout', value: 30}]}
+  const f = await fixture(undefined, [managed]); await f.click('config-provider'); await f.click('edit-config')
+  expect(f.field('认证方式').value).toBe('managed-account')
+  expect(f.container.querySelector('[aria-label="Base URL"]')).toBeNull()
+  await f.click('save-config')
+  expect(f.calls.find(call => call.method === 'providerModels.update')!.params).toMatchObject({
+    credentialId: null, endpoints: {}, protocols: ['openai-responses'], configuration: [
+      {controlId: 'timeout', value: 30}, {controlId: 'authentication', value: 'managed-account'}]})
+})
+
 it('imports only on click, clears password, and saves reference-only provider facts with nonempty manual models', async () => {
   const f = await fixture(); await f.add(); await f.fill('API Key', KEY)
   expect(f.field('API Key').type).toBe('password')

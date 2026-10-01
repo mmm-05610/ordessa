@@ -12,7 +12,7 @@ if (profileBridge !== undefined && profileBridge !== '0' && profileBridge !== '1
 // Delivered and independently verified additive assets. Ordinary assets are
 // unchanged; exact enhanced variants still pass Harness provenance checks.
 const nativeProfileRoot = process.env.ORDESSA_NATIVE_PROFILE_ARTIFACT_ROOT
-  ?? '/opt/ordessa/harnesses/profile-native/artifacts'
+  ?? '/opt/ordessa/harnesses/profile-codex-managed/artifacts'
 if (nativeProfileRoot !== undefined && !nativeProfileRoot)
   throw new Error('ORDESSA_NATIVE_PROFILE_ARTIFACT_ROOT must not be empty')
 const nativeProfileHarnesses = nativeProfileRoot ? selected.filter(id => ['codex', 'claude-code'].includes(id)) : []

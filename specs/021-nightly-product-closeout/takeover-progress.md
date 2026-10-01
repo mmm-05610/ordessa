@@ -4,7 +4,16 @@
 所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
 未合并、未 push、未启停既有用户服务、未重建 deb。用户授权的 Pi/Claude 后端真实聊天已通过；Codex 官方聊天尚未验证。
 
-## 最新验证（2026-10-01，Profile 启动前认证选择，候选待安装）
+## 最新验证（2026-10-01，已安装官方 Codex Profile/C4 与真实对话）
+
+- 用户成功执行 repair，正式发布 `/opt/ordessa/harnesses/profile-codex-managed/artifacts`；资产摘要不变。已安装版 ACP 无模型复验通过。产品开发启动器及 mount 探针默认 Codex 根已切到此正式资产；Pi/Claude/普通资产不变。
+- 新增 `products/server/scripts/probe-installed-codex-managed-profile.py`，真实产品装配/wire/SQLite/Profile/canonical owner/generation/C4，两个官方会话与一个无官方登录 API 会话。首次应用均有 C4 receipt；全局官方 Profile 改为 gpt-5.6-sol，仅 A 在下轮应用，B 和 API 保留 gpt-5.5，三个 native IDs 独立。无模型模式 `new=3/prompt=0/本地API HTTP=0` 通过。
+- 已按用户授权另跑官方真实聊天模式：A 首轮 gpt-5.5、更新 Profile 后下轮 gpt-5.6-sol，恰两条短 prompt，均 end_turn 且非空文本；B/API 配置未变化；本地 API 网关零请求（不代表官方推理零网络）。两次探针均释放自有通道和停止临时产品，未改登录。**这是后端实际产品聊天，不冒称 Desktop UI 发送验收。**
+- model-provider 设置页提供中性原生账号选择，官方路线保存时无 credential/endpoint；编辑保留该模式和其他控制字段，API Key 不进 React state、不自动登录/探测。两条 UI 反例先红后绿，设置页 37P。React skill 约束用于事件内显式操作与 ref 请求身份保留，未新增自动副作用。
+- 本轮产品 Server 140P，ACP 63P，Profile Chat 45P，准备 29P，资源解析 25P，Harness 账号/选择/编译 25P（重叠范围不累加）；typecheck/build exit 0，18 扩展。完整 Desktop mount-only ready/rootMounted/nodeAbsent=true、errors=[]、prompt=0。开发运行根为 `.cleanup-evidence/product-dev-runtime-URGO6TDv`，真实 Go 1.24.13 重建桥摘要 `714044a5b490a53d5fa89aade993c496e5fa3a5f7c614b4465c4990575185cbd`；不是 deb 发行验收。
+- 旧 /tmp 测试环境已不存在，重建独立 `.cleanup-evidence/product-integration-venv`，未重指共享 .venv。该开发环境按各包 pyproject 安装，不替代发行闭包锁定。证据 `evidence/codex-managed-installed-product-20261001.json`。尚未完成项：已有历史跨 provider restart/resume、完整 UI 发送与操作场景、全仓回归/发行包；固定 TODO 不扩张。
+
+## 前次验证（2026-10-01，Profile 启动前认证选择，候选待安装）
 
 - **安装失败已定位并修复**：执行者漏同步安装校验器的 extension 精确字段集，新增 managedAccountScope 被旧五字段规则拒绝。旧脚本没有完成发布，正式目录仍不存在，失败 staging 为 `/opt/ordessa/harnesses/.codex-managed-install-HqTKQimG`。新增反例先红后绿；修复只允许 Codex 的显式 true，false/string/null、其他品牌及未知字段均拒绝；安装边界 **22P**。用修正校验器对该实际 root staging 全树只读校验已通过，资产摘要不变。请勿重用旧 /tmp 安装脚本，改用工作树 `.cleanup-evidence/install-codex-managed-profile-repair.sh`：仅更新该 staging 的校验器，完整核验后原子发布，不再次复制资产、不动旧版本/登录。校验器新 pin `e13db8892e49445dde88356182618a2344c33cb571bfdcaade5ddad4d1b86e67`。尚待用户 sudo 完成发布。
 

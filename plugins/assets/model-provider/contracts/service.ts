@@ -22,6 +22,8 @@ export interface ProviderConfigView {
   harness: string | null
   provider: string
   credentialId: string | null
+  /** Neutral saved controls; not native authentication or application proof. */
+  configuration?: readonly {controlId: string; value: unknown}[]
   models: ModelOfferingView[]
   protocols?: readonly string[] | null
   endpoints?: Readonly<Record<string, string>> | null
