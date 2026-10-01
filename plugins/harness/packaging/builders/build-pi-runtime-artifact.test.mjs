@@ -143,7 +143,8 @@ test('Profile bridge is an explicit reproducible variant, not an upstream-entry 
   assert.equal(enhanced.treeDigest, again.treeDigest)
   assert.equal(readFileSync(path.join(enhanced.output, 'node_modules/@automatalabs/pi-acp/index.js'), 'utf8'),
     readFileSync(path.join(normal.output, 'node_modules/@automatalabs/pi-acp/index.js'), 'utf8'))
-  for (const name of ['ordessa-profile.mjs', 'ordessa-profile-server.mjs', 'ordessa-configuration-query.mjs'])
+  for (const name of ['ordessa-profile.mjs', 'ordessa-profile-server.mjs', 'ordessa-configuration-query.mjs',
+    'ordessa-configuration-operation.mjs', 'ordessa-creation.mjs'])
     assert.equal(statSync(path.join(enhanced.output, 'node_modules/@automatalabs/pi-acp/dist', name)).mode & 0o777, 0o444)
 })
 

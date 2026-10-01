@@ -26,7 +26,7 @@ def verified_installation(artifact_base):
     return Installation("pi", (0, 5, 0), (1, 0, 0), "installed-pi:" + observed["digest"])
 
 
-def create_model_service(*, registry, owners, target, carrier, installation, journal_path):
+def create_model_service(*, registry, owners, target, carrier, installation, journal_path, credential_binding=None):
     views = [view for view in carrier.contributions("harness.configuration-adapters")
              if view.payload.descriptor.adapter_id == "assets.model-provider.pi"]
     if len(views) != 1:
@@ -34,7 +34,7 @@ def create_model_service(*, registry, owners, target, carrier, installation, jou
     view = views[0]
     runtime = PiLiveModelRuntime(registry, owners, target=target, installation=installation,
         private_root=Path(journal_path).parent / "unused-live-generations",
-        publication_revision=view.publication_token)
+        publication_revision=view.publication_token, credential_binding=credential_binding)
     grant = ActionGrant(target, view.owner, view.publication_token, "assets.model-provider", "choice",
                         "1", "acp.session.set-config-option", "1")
     service = ConfigurationApplicationService(principal="profile-owner", target=target,

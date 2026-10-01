@@ -123,6 +123,37 @@ def test_pi_reports_not_required_without_preparation_rpc():
     assert f.core.profiles.mock_calls  # Profile/model validation still happens
 
 
+def test_pi_new_api_key_provider_uses_reserved_private_runtime_dialect():
+    f = setup('pi', '!opaque-key-not-a-command')
+    f.payload['protocol'] = 'openai-chat'
+    f.resolved.revisions.update(providerConfigId='catalog', configVersion=1, modelsObjectDigest='models-digest')
+    row = dict(id='catalog', version=1, models_object_digest='models-digest')
+    f.catalog.records.get.return_value = row
+    f.catalog.project.return_value = dict(models=[dict(modelId='m', availability='available'),
+        dict(modelId='next', availability='available', protocols=['openai-chat']),
+        dict(modelId='unsupported', availability='available', protocols=['anthropic-messages']),
+        dict(modelId='unknown', availability='unknown')])
+    result = f.service.prepare(**f.args)
+    assert result['state'] == 'prepared'
+    params = f.channels.prepare_native_creation.call_args.args[1]
+    assert params['models'] == ['m', 'next']
+    assert params['provider'] == dict(providerId='business-label', apiType='openai-completions',
+        baseUrl='https://controlled.invalid', apiKey='!opaque-key-not-a-command')
+    assert '!opaque-key-not-a-command' not in repr(f.service._operations) + repr(result)
+    assert f.service.prepare(**f.args)['state'] == 'prepared'
+    f.channels.prepare_native_creation.assert_called_once()
+
+
+def test_pi_changed_catalogue_is_refused_before_native_effect():
+    f = setup('pi', 'synthetic')
+    f.payload['protocol'] = 'openai-chat'
+    f.resolved.revisions.update(providerConfigId='catalog', configVersion=1, modelsObjectDigest='expected')
+    f.catalog.records.get.return_value = dict(id='catalog', version=2, models_object_digest='changed')
+    f.catalog.project.return_value = dict(models=[dict(modelId='m', availability='available')])
+    with pytest.raises(ProfileError): f.service.prepare(**f.args)
+    f.channels.prepare_native_creation.assert_not_called()
+
+
 def test_credential_binding_requires_observed_native_owner_generation_and_current_secret():
     f = setup(secret='synthetic')
     f.service.prepare(**f.args)

@@ -8,7 +8,7 @@ to upstream implementations, not reimplemented.
 
 Build with the existing locked source and `--profile-bridge`. The default
 builder output and upstream `dist/index.js` stay unchanged. The enhanced
-entry is `dist/ordessa-profile.mjs`; all three added modules are included in
+entry is `dist/ordessa-profile.mjs`; all added modules are included in
 the full-tree digest. Do not launch this variant as the default installed
 adapter or loosen installed-source verification to accept it implicitly.
 
@@ -19,6 +19,22 @@ and session files use that instance directory. No login/configuration files
 are copied from global Pi state. This is instance isolation, not a sandbox;
 project-local configuration is still upstream Pi behavior. Separate sessions
 requiring independent defaults must use separate instances/directories.
+
+The additive provider variant accepts `_ordessa/channel/configuration/prepare`
+before a dedicated instance's first `session/new`. The model-provider resource
+catalogue supplies bounded model IDs; Harness registers them via Pi's locked
+`ModelRuntime.registerProvider` and imports the key with `setRuntimeApiKey`.
+Keys are opaque runtime values, never Pi's executable configuration strings.
+Registration refresh is explicitly offline. No model definition file or key is
+persisted (upstream may create an empty `auth.json` while locking its storage).
+Prepare reserves once, retains Unknown on failure, and queries never repeat an
+effect. After native creation, selected model and route are independently read
+back. This is creation evidence, not a Profile receipt. Profile C4 additionally
+requires exact live owner/generation and unchanged credential binding.
+
+`probe-initial-provider.py` checks two real private adapter processes with
+synthetic keys and a loopback provider that refuses inference. It proves the
+adapter only; root-installed product Profile/wire verification is separate.
 
 `initialize._meta.ordessaConfiguration` advertises version 1.
 `_ordessa/session/configuration` accepts only `{sessionId}` and returns:

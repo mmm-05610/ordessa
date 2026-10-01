@@ -69,6 +69,18 @@ def test_full_business_choice_requires_independently_observed_native_routing():
     assert isinstance(compile_choice(snapshot(), full_choice()), AdapterRefusal)
 
 
+def test_pi_key_reference_requires_exact_native_owner_binding_and_route():
+    from ordessa_harness.pi.configuration.live_model import compile_live_model
+    value = observed_snapshot()
+    desired = {**full_choice(), 'credentialRef': 'ref://synthetic'}
+    source = IntentSource('assets.model-provider', 'choice', '1')
+    for binding in (None, lambda *_: False):
+        assert isinstance(compile_live_model(value, value.target, desired, source, credential_binding=binding), AdapterRefusal)
+    assert isinstance(compile_live_model(value, value.target, desired, source, credential_binding=lambda *_: True), InvokeAction)
+    changed = {**desired, 'endpoint': 'https://changed.invalid'}
+    assert isinstance(compile_live_model(value, value.target, changed, source, credential_binding=lambda *_: True), AdapterRefusal)
+
+
 @pytest.mark.parametrize("patch", [
     {"endpoint": "https://changed.test/v1"}, {"protocol": "openai-responses"},
     {"credentialRef": "ref://new-secret"}, {"requestParams": {"maxTokens": 10}},

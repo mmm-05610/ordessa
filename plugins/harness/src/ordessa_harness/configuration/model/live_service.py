@@ -41,7 +41,7 @@ def create_model_service(*, registry, owners, target, carrier, installation, jou
     if installation.harness_id == 'pi':
         from ...pi.configuration.service import create_model_service as create_pi
         return create_pi(registry=registry, owners=owners, target=target, carrier=carrier,
-                         installation=installation, journal_path=journal_path)
+                         installation=installation, journal_path=journal_path, credential_binding=credential_binding)
     from ...codex.configuration.runtime import CodexLiveModelRuntime
     from ...claude.configuration.runtime import ClaudeLiveModelRuntime
     runtimes = {'codex': CodexLiveModelRuntime, 'claude-code': ClaudeLiveModelRuntime}

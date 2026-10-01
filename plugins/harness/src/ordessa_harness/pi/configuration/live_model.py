@@ -11,7 +11,7 @@ from collections.abc import Mapping
 from ordessa_harness_api import AdapterRefusal, ApplicationTarget, ErrorCode, IntentSource, InvokeAction
 
 
-def compile_live_model(snapshot, target: ApplicationTarget, desired, source: IntentSource):
+def compile_live_model(snapshot, target: ApplicationTarget, desired, source: IntentSource, *, credential_binding=None):
     """No I/O or effects; runtime owns the snapshot and executor revalidates it."""
     def refuse(message):
         return AdapterRefusal(ErrorCode.CAPABILITY_UNSUPPORTED, message)
@@ -28,11 +28,16 @@ def compile_live_model(snapshot, target: ApplicationTarget, desired, source: Int
     if full_choice and (
         not {"provider", "model", "protocol", "endpoint"} <= set(desired)
         or set(desired) - {"provider", "model", "protocol", "endpoint", "credentialRef", "brandFields", "requestParams"}
-        or desired.get("credentialRef") is not None
         or desired.get("brandFields") not in (None, {})
         or desired.get("requestParams") not in (None, {})
     ):
         return refuse("Native selection cannot apply credentials, hints or request parameters")
+    if desired.get('credentialRef') is not None:
+        try:
+            if not callable(credential_binding) or credential_binding(snapshot, desired) is not True:
+                return refuse('Observed initial native credential binding required')
+        except Exception:
+            return refuse('Observed initial native credential binding unavailable')
     provider, model = desired["provider"], desired["model"]
     if any(type(value) is not str or not value or value != value.strip()
            or len(value) > 4096 or any(ord(char) < 32 for char in value)

@@ -35,13 +35,28 @@ class NativeProfilePreparation:
         if len(choices) != 1 or choices[0]['quarantined']:
             raise ValueError('One current nonquarantined model choice required')
         resolved = self.resolver_factory().resolve(choices[0]['value'], harness_id=channel.harness_id)
-        credential = self.catalog_factory().application_credential(resolved.payload.get('credentialRef'), harness_id=channel.harness_id)
+        catalog = self.catalog_factory()
+        credential = catalog.application_credential(resolved.payload.get('credentialRef'), harness_id=channel.harness_id)
+        model_ids = None
+        if channel.harness_id == 'pi' and credential is not None:
+            # The current resource catalogue supplies neutral identities. Only
+            # Harness translates these into Pi's in-memory provider dialect.
+            row = catalog.records.get(resolved.revisions['providerConfigId'])
+            projection = catalog.project(row)
+            model_ids = [m['modelId'] for m in projection['models']
+                if m.get('availability') == 'available'
+                and (m.get('protocols') is None or resolved.payload['protocol'] in m['protocols'])]
+            if (row['version'] != resolved.revisions['configVersion']
+                    or row['models_object_digest'] != resolved.revisions['modelsObjectDigest']
+                    or catalog.records.get(row['id']) != row):
+                raise ValueError('Pi model catalogue changed during preparation')
         signature = (profile_id, profile['version'], profile['current_revision'],
                      _digest(resolved.payload), _digest(resolved.revisions),
+                     _digest(model_ids),
                      hashlib.sha256(credential.encode()).hexdigest() if credential is not None else None)
         if self.core.profiles.get(profile_id) != profile or self.channels.get(connection_id) is not channel:
             raise ValueError('Profile or channel changed during preparation')
-        return channel, profile, resolved, credential, signature
+        return channel, profile, resolved, credential, signature, model_ids
 
     def prepare(self, *, connection_id, profile_id, operation_id):
         with self._lock:
@@ -50,7 +65,7 @@ class NativeProfilePreparation:
                         or len(operation_id) <= 7 or len(operation_id) > 128
                         or operation_id.strip() != operation_id or any(ord(c) < 32 or ord(c) == 127 for c in operation_id)):
                     raise ValueError('Bounded creation operation required')
-                channel, profile, resolved, credential, signature = self._resolve(connection_id, profile_id)
+                channel, profile, resolved, credential, signature, model_ids = self._resolve(connection_id, profile_id)
                 if operation_id != 'create:' + channel.session_scope_id:
                     raise ValueError('Operation does not match initial channel scope')
                 saved = self._operations.get(operation_id)
@@ -61,8 +76,8 @@ class NativeProfilePreparation:
                     raise ValueError('Initial channel already reserved or capacity exhausted')
                 else:
                     initial_channel(self.channels, connection_id)
-                    params = None if channel.harness_id == 'pi' else initial_model_params(
-                        channel.harness_id, resolved.payload, operation_id, credential=credential)
+                    params = None if channel.harness_id == 'pi' and credential is None else initial_model_params(
+                        channel.harness_id, resolved.payload, operation_id, credential=credential, models=model_ids)
                     saved = {'channel': channel, 'signature': signature, 'payload': deepcopy(resolved.payload),
                              'input_digest': _digest(params) if params is not None else None,
                              'state': 'not-required' if params is None else 'unknown'}

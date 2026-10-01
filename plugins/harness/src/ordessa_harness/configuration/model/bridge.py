@@ -348,7 +348,8 @@ class BridgeConfigurationAdapter:
             if self.brand == 'pi':
                 from ...pi.configuration.live_model import compile_live_model
                 result = compile_live_model(context.native_snapshot, context.native_snapshot.target,
-                                            desired, IntentSource(FACET_ID, "choice", "1"))
+                                            desired, IntentSource(FACET_ID, "choice", "1"),
+                                            credential_binding=context.credential_binding)
             else:
                 from .live_model import compile_native_model
                 result = compile_native_model(context.native_snapshot, desired,

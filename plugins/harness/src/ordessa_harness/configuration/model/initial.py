@@ -17,9 +17,10 @@ def initial_channel(registry, connection_id, *, empty=True):
     return channel
 
 
-def initial_model_params(brand, payload, operation_id, *, credential=None):
+def initial_model_params(brand, payload, operation_id, *, credential=None, models=None):
     """Never retain this secret-bearing return value as evidence."""
-    protocol, provider, api = {'codex': ('openai-responses', 'custom-gateway', 'openai'),
+    protocol, provider, api = {'pi': ('openai-chat', payload.get('provider'), 'openai-completions'),
+                              'codex': ('openai-responses', 'custom-gateway', 'openai'),
                               'claude-code': ('anthropic-messages', 'main', 'anthropic')}[brand]
     if (not isinstance(payload, Mapping) or payload.get('protocol') != protocol
             or payload.get('brandFields') not in (None, {}) or payload.get('requestParams') not in (None, {})):
@@ -35,8 +36,19 @@ def initial_model_params(brand, payload, operation_id, *, credential=None):
     if (payload.get('credentialRef') is None) != (credential is None):
         raise ValueError('Initial credential binding unavailable')
     native = {'providerId': provider, 'apiType': api, 'baseUrl': payload['endpoint']}
+    if brand == 'pi':
+        if ('/' in provider or not isinstance(models, list) or not 1 <= len(models) <= 256
+                or any(type(m) is not str or not m or m != m.strip() or len(m) > 4096
+                       or any(ord(c) < 32 or ord(c) == 127 for c in m) for m in models)
+                or len(set(models)) != len(models) or payload['model'] not in models):
+            raise ValueError('Invalid bounded Pi model catalogue')
     if credential is not None:
         if type(credential) is not str or not credential or len(credential) > 8000 or any(ord(c) < 32 or ord(c) == 127 for c in credential):
             raise ValueError('Invalid initial credential')
-        native['headers'] = {'authorization': 'Bearer ' + credential}
+        if brand == 'pi':
+            native['apiKey'] = credential
+        else:
+            native['headers'] = {'authorization': 'Bearer ' + credential}
+    if brand == 'pi':
+        return {'operationId': operation_id, 'model': payload['model'], 'provider': native, 'models': list(models)}
     return {'operationId': operation_id, 'model': payload['model'], 'provider': native}

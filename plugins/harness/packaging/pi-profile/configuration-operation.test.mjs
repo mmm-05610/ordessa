@@ -328,7 +328,10 @@ test('actual server registration wraps prompt/setConfigOption/apply with one ses
       new:'new',load:'load',resume:'resume',fork:'fork',list:'list',close:'close',
       setConfigOption:'session/set_config_option',prompt:'session/prompt',cancel:'cancel'}}};
     export function agent() { return {
-      onRequest(name, parser, handler) { globalThis.${key}.handlers.set(name, handler ?? parser); return this },
+      onRequest(name, parser, handler) {
+        if (name.startsWith('_ordessa/') && typeof parser?.parse !== 'function') throw new Error('Custom method requires parser');
+        globalThis.${key}.handlers.set(name, handler ?? parser); return this
+      },
       onNotification() { return this }, connect() { return {} }
     } }
   `)
@@ -336,12 +339,15 @@ test('actual server registration wraps prompt/setConfigOption/apply with one ses
   const deps = data('export const resolveDeps = async () => ({})')
   const steering = data("export const SESSION_STEERING_METHOD = 'steer'; export const steeringRequestParser = {}")
   const loaded = data("export const LOADED_TURN_QUERY_METHOD = 'loaded'; export const loadedTurnQueryParser = {}")
+  const creation = data((await readFile(new URL('./creation.mjs', import.meta.url), 'utf8'))
+    .replace("'./ordessa-configuration-query.mjs'", JSON.stringify(new URL('./configuration-query.mjs', import.meta.url).href)))
   let server = await readFile(new URL('./server.mjs', import.meta.url), 'utf8')
   for (const [from, to] of [
     ['@agentclientprotocol/sdk', sdk], ['./agent.js', agent], ['./deps.js', deps],
     ['./steering.js', steering], ['./loaded-turn.js', loaded],
     ['./ordessa-configuration-query.mjs', new URL('./configuration-query.mjs', import.meta.url).href],
     ['./ordessa-configuration-operation.mjs', moduleURL],
+    ['./ordessa-creation.mjs', creation],
   ]) server = server.replace(`'${from}'`, JSON.stringify(to))
   try {
     const { runAcp } = await import(data(server))

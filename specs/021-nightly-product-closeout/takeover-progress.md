@@ -6,6 +6,13 @@
 
 ## 当前读数（2026-10-01，首次准备并行集成）
 
+- Pi 新 provider/API Key 准备链已接入 Harness 和产品装配，host/Pacthold 未改。私有实例使用锁定上游 ModelRuntime 的内存注册/runtime-key 接口（避免普通配置字符串的命令解释），只做 offline refresh。初始模型目录按资源修订围栏取值；C4 仍要求真实 owner/generation 与启动后的独立读回。已有无凭据 model-only 路径保持原样。
+- 主代理当前定向回归：Product/Harness/model/owner **303P**，Profile **195P**，Pi Node **60P**；新增准备、未知查询、竞态、模型路由、凭据守卫反例。真实 ACP 首次启动抓出自定义查询缺 parser，已补且强化注册夹具；不是用夹具结果代替真实启动。
+- 最终构建/来源门分别复跑 **12P / 22P**。最初 /tmp 大文件反例被 -122 提前截断；之后混跑并设置 NVMe TMPDIR 又破坏了来源测试对 /tmp 的夹具假设（32P/2F），没有改断言，改为仅 builder 使用 NVMe TMPDIR、来源套件保留原环境后两者全绿。Codex/Claude 已安装真实产品探针在 Pi 源码修改后又复跑成功（4 次 new、0 prompt、0 HTTP，精确清理）。这些定向绿不覆盖此前登记的 4 项 Electron 集成失败或真实聊天验收。
+- Pi 真实开发候选探针通过：两个独立进程，供应商名相同、端点不同；模型读回 `ordessa-probe/second` / `ordessa-probe/first`，零持久化凭据、零 models.json、prompt=0、HTTP=0。上游可以创建空 auth.json，这不等于保存凭据。候选 `/home/maoqh/ordessa-builds/pi-initial-provider-runtime-20261001-r2`，treeDigest `sha256:48ca796468d254d2e13b3bc135b9b7609232fcb415c47b08d201801cc19df0ae`，15463 entries / 64935823 bytes。**尚未安装/尚未 Pi 完整产品确认**。安装脚本 `/tmp/ordessa-install-pi-provider-verified.sh`，仅新建 `/opt/ordessa/harnesses/profile-pi-provider`，原资产和默认启动路径不变。
+- 构建环境记录：/tmp 两次复制返回 -122，仓内输出被既有策略拒绝；没有放宽构建策略，换到仓外 NVMe 路径后成功。首次候选保留用于失败复现，r2 是拟安装候选。
+- 用户已安装增强 Codex/Claude 到 `/opt/ordessa/harnesses/profile-native/artifacts`，前后完整校验均通过。主代理真实宿主身份复核完整 Desktop 增强清单：ready/rootMounted=true、errors=[]、Chat/Skills/Sessions，prompt=0。不是用户真实聊天验收。
+- 新的实际产品验证不再使用 ledger/installation 夹具：同一原生产品、真实 wire/账本/Profile/C4/已安装资产/系统密钥环；Codex 与 Claude 每品牌两条独立会话，首次准备→session/new→canonical 登记→C4 确认，全局 Profile 更新后只应用会话 A，B 配置保持。实际读回分别 `gpt-5.6-sol/gpt-5.5`、`haiku/sonnet`，native ID 不同；session/new=4、prompt=0、供应商 HTTP=0。所有本次通道已释放、合成 keyring 条目精确删除、临时产品停止。探针已固化到 `products/server/scripts/probe-installed-profile.py` 并复跑成功；可在 Pi 候选安装后显式设置 `ORDESSA_PROBE_PI_ARTIFACT_ROOT` 验证三品牌。仍不证明历史跨 provider resume 或 UI 提交。
 - 继续收口 API Key 输入链：已冻结 model-provider 自有 import/query 入口，操作预留先于密钥库效果，未知结果只查询；前后端仍在各自目录完成测试，尚不记为交付。主代理复跑当前 products/server 与 native credential catalogue：**140P**。Linux store 新增内存字节导入，无明文临时文件；真实系统内存导入、独立进程读取、删除合成条目已通过。
 - 发现并补齐两个此前受控夹具未暴露的生产缺口：原生 Harness 目录未声明 api-key 凭据类型；provider wire 保存未传协议/端点给既有解析器。目录声明已补且不改变原始目录，wire/UI 正在同批对齐。前端操作身份必须匹配后端 `key-import:<requestId>`，不能以夹具中的不同格式冒充真实成功。这些不改 host，也不代表 Pi 新 provider 启动已完成。
 - 主代理实际系统验证：真实 GNOME store + model-provider wire import/query + providerModels.create + ProfileModelChoiceResolver + 后端凭据读取全链通过；合成 Key、临时数据根、loopback 未监听端点，零模型调用，精确删除本次密钥环条目。首次探针暴露手工模型缺必填 displayName，已交前端补齐；另一次不可解析 synthetic.invalid 端点被既有校验诚实拒绝，最终使用 loopback 地址成功，未放宽校验。探针 `/tmp/ordessa-key-entry-product-probe.py`；不是完整 Electron 操作或原生 Agent 应用确认。
@@ -200,12 +207,12 @@ Profile Chat 有限入口接线已由主代理复跑 23/23：合法 default fact
 
 - [x] 核对当前产品三品牌与已注册 facet 的支持矩阵。
 - [x] 增强 Pi 系统资产安装、显式启动及实例目录管理的真实产品验收（不等于 Profile 应用确认）。
-- [ ] 后端 canonical Profile 会话注册与真实 owner/generation 完整生产绑定。
+- [x] 后端 canonical Profile 会话注册与真实 owner/generation 完整生产绑定。
   - [x] Pi 真实产品 wire 路径登记 canonical 身份并绑定真实 owner/generation；双实例无模型配置应用已验证。
   - [x] 两品牌原生证据读取、显式运行换代票据与旧 target 失效守卫已实现/受控验证。
   - [x] 三品牌共用 C4 live-model runtime/factory 已接入；Codex/Claude 的同 provider model 应用有受控确认、幂等及独立读回反例。
   - [x] Codex/Claude 配置 port/factory 和首次创建前准备源码已接线；受控完整身份/凭据守卫与真实适配器 C4 分别验证。
-  - [ ] 最终可信资产安装后的完整产品应用确认（不能用独立适配器探针代替）。
+  - [x] 最终可信资产安装后的真实产品 wire/Profile/C4 应用确认（Pi 前轮，Codex/Claude 本轮；不含 UI/prompt）。
 - [ ] Chat 首次/后续发送前应用接线，不打断正在输出的 Agent。
   - [x] 提交 guard/preparation/登记/应用/发送链已实现并受控验证；输出中选择不调用配置接口。
   - [x] 完整启用清单的实际 Desktop 挂载通过无模型探针。
@@ -215,15 +222,18 @@ Profile Chat 有限入口接线已由主代理复跑 23/23：合法 default fact
   - [ ] 在实际产品链上完整执行这些场景。
 - [ ] Codex、Claude 实际切换与跨 provider restart/resume、多会话隔离。
   - [x] 两品牌增强候选首次 provider/model 配置与独立读回通过实际无模型探针。
-  - [x] 独立实例入口、品牌锁定和显式增强来源校验已实现/验证，未安装新候选。
-  - [ ] 生产接线、最终资产安装、已有历史跨 provider 恢复及产品多会话验证。
+  - [x] 独立实例入口、品牌锁定和显式增强来源校验及最终增强资产安装已完成。
+  - [x] Codex/Claude 真实产品首次准备、同 provider model 切换及每品牌双会话隔离通过。
+  - [ ] 已有历史跨 provider 恢复。
 - [ ] 产品完整回归及用户授权的真实聊天、配置切换验收。
+  - [x] Pi 新供应商/API Key 私有准备源码、受控回归、真实候选适配器双实例无模型验证。
+  - [ ] 增强 Pi 供应商资产安装后，实际产品 wire/Profile/C4 完整确认。
   - [x] 多次定向回归、构建/类型检查及完整产品挂载已有证据（各次范围见下文，非本轮全仓绿）。
   - [ ] 全量回归收口与用户实际操作验收。
 
 口径校准（2026-10-01）：未勾选顶层表示仍缺整项验收，不表示尚未实现。当前收尾目标是多 Harness＋Profile 基础配置 Desktop；不以未来所有资源 facet 应用能力作为该目标的额外完成门。
 
-### 支持矩阵实测（源码审计，不冒充原生应用证据）
+### 支持矩阵初次实测（历史源码审计，后续 config_port/应用进展以上文为准）
 
 native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`assets.skills`。模型有 Pi/Codex/Claude 编译器，但没有 production config_port。Skills 的 Profile contribution 当前编译零 intents；原生内容投影不能用“已选择”替代。其他资产存在包内实现不代表已注册到此产品的 Profile。
 
