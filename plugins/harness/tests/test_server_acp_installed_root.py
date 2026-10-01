@@ -14,6 +14,25 @@ def test_installed_root_only_enters_startup_argv():
     selected = transport(installed_artifact_root="/opt/ordessa/harness-artifacts")
     assert selected._inner._argv == ["/usr/bin/node", "/opt/ordessa/access-entry.mjs", "--native",
                                      "--installed-artifact-root", "/opt/ordessa/harness-artifacts"]
+
+
+def test_managed_account_requires_backend_selection_and_separate_private_scope(tmp_path):
+    account = tmp_path / 'account'; account.mkdir(mode=0o700)
+    instance = tmp_path / 'instance'; instance.mkdir(mode=0o700)
+    options = dict(harness_id='codex', installed_artifact_root='/opt/ordessa',
+                   native_profile_bridge=True, instance_directory=str(instance))
+    selected = transport(**options, codex_account_directory=str(account))
+    assert selected._inner._environment['ORDESSA_CODEX_MANAGED_ACCOUNT_DIR'] == str(account)
+    implicit = transport(**options, environment={'ORDESSA_CODEX_MANAGED_ACCOUNT_DIR': str(account)})
+    assert 'ORDESSA_CODEX_MANAGED_ACCOUNT_DIR' not in implicit._inner._environment
+    for extra in [dict(harness_id='claude-code'), dict(native_profile_bridge=False),
+                  dict(controlled_test_peer=True), dict(codex_account_directory=str(instance))]:
+        invalid = {**options, 'codex_account_directory': str(account), **extra}
+        with pytest.raises(ValueError):
+            transport(**invalid)
+    account.chmod(0o755)
+    with pytest.raises(ValueError):
+        transport(**options, codex_account_directory=str(account))
     assert "installed_artifact_root" not in selected._adapter
     assert transport()._inner._argv == ["/usr/bin/node", "/opt/ordessa/access-entry.mjs", "--native"]
 

@@ -67,6 +67,7 @@ class AccessEntryTransport:
                  pi_profile_bridge: bool = False,
                  native_profile_bridge: bool = False,
                  instance_directory: str | None = None,
+                 codex_account_directory: str | None = None,
                  connect_timeout: float = 60.0, close_timeout: float = 12.0) -> None:
         self._harness_id = harness_id
         self._cwd = cwd
@@ -87,7 +88,10 @@ class AccessEntryTransport:
                     or "\x00" in installed_artifact_root):
                 raise ValueError("installed_artifact_root must be a canonical absolute path without controlled peer mode")
             entry_argv.extend(("--installed-artifact-root", installed_artifact_root))
-        entry_environment = None if environment is None else dict(environment)
+        entry_environment = dict(os.environ if environment is None else environment)
+        # The launch owner selects this scope. Inherited shell state never
+        # grants a channel access to the managed account.
+        entry_environment.pop("ORDESSA_CODEX_MANAGED_ACCOUNT_DIR", None)
         if type(pi_profile_bridge) is not bool:
             raise TypeError("pi_profile_bridge must be bool")
         if type(native_profile_bridge) is not bool:
@@ -113,14 +117,32 @@ class AccessEntryTransport:
             except OSError as error:
                 raise ValueError("private instance directory is unavailable") from error
             entry_argv.append("--pi-profile-bridge" if pi_profile_bridge else "--native-profile-bridge")
-            entry_environment = dict(os.environ if environment is None else environment)
             entry_environment["ORDESSA_PI_INSTANCE_DIR" if pi_profile_bridge
                               else "ORDESSA_NATIVE_INSTANCE_DIR"] = instance_directory
         elif instance_directory is not None:
             raise ValueError("instance directory requires explicit profile bridge")
+        if codex_account_directory is not None:
+            if (harness_id != "codex" or not native_profile_bridge or controlled_test_peer
+                    or not isinstance(codex_account_directory, str)
+                    or not os.path.isabs(codex_account_directory)
+                    or os.path.normpath(codex_account_directory) != codex_account_directory
+                    or codex_account_directory.startswith("//")
+                    or codex_account_directory.endswith(os.sep)
+                    or "\x00" in codex_account_directory):
+                raise ValueError("managed account requires explicit installed Codex route")
+            try:
+                info = os.lstat(codex_account_directory)
+                if (not os.path.isdir(codex_account_directory) or os.path.islink(codex_account_directory)
+                        or os.path.realpath(codex_account_directory) != codex_account_directory
+                        or info.st_uid != os.getuid() or info.st_mode & 0o077
+                        or os.path.commonpath((instance_directory, codex_account_directory))
+                           in (instance_directory, codex_account_directory)):
+                    raise ValueError("managed account must be separate, private and canonical")
+            except OSError as error:
+                raise ValueError("managed account directory unavailable") from error
+            entry_environment["ORDESSA_CODEX_MANAGED_ACCOUNT_DIR"] = codex_account_directory
         if controlled_test_peer:
             entry_argv.append("--controlled-test-peer")
-            entry_environment = dict(os.environ if environment is None else environment)
             entry_environment["AGENTBOX_ACCESS_TEST_MODE"] = "controlled-peer-v1"
         self._inner = NDJSONTransport(
             argv=entry_argv, cwd=cwd, environment=entry_environment,

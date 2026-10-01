@@ -52,6 +52,21 @@ export function enhanceSource(source, brand) {
       'ANTHROPIC_AUTH_TOKEN: claudeProviderAuthToken(config.headers), // Private provider credential, not login placeholder')
   }
   if (brand === 'codex') {
+    // Only the explicit managed route may read native account state. ACP
+    // session clients cannot replace/cancel/logout that shared account.
+    for (const name of ['accountLogin(params)', 'accountLoginCancel(params)', 'accountLogout()']) {
+      source = once(source, `  async ${name} {`,
+        `  async ${name} {\n    if (process.env.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR) throw new Error('Managed account changes require the account owner');`)
+    }
+    source = once(source, '  const spawnEnv = env ?? process.env;',
+      `  const spawnEnv = env ?? process.env;\n  const ordessaArgs = spawnEnv.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR ? ['-c', 'cli_auth_credentials_store="keyring"', 'app-server'] : ['app-server'];\n  if (spawnEnv.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR && process.platform === 'win32') throw new Error('Managed account launch is not supported on this platform');`)
+    source = once(source, 'spawn(codexPath, ["app-server"], { env: spawnEnv })',
+      'spawn(codexPath, ordessaArgs, { env: spawnEnv })')
+    source = once(source, 'spawn(process.execPath, [bundledCodexPath, "app-server"], { env: spawnEnv })',
+      'spawn(process.execPath, [bundledCodexPath, ...ordessaArgs], { env: spawnEnv })')
+    // Upstream raw RPC tracing can include login tokens and provider headers.
+    // The enhanced artifact never installs that trace hook on its child.
+    source = once(source, '  attachLogs(codex);', '  // Raw native RPC tracing disabled by Ordessa.')
     for (const [name, method] of [['threadStart', 'thread/start'], ['threadResume', 'thread/resume']]) {
       source = once(source,
         `  async ${name}(params) {\n    return await this.sendRequest({ method: "${method}", params });\n  }`,
@@ -74,7 +89,7 @@ export function enhanceStaging(dist, brand) {
   const enhanced = enhanceSource(readFileSync(target, 'utf8'), brand)
   const files = {
     ...(brand === 'claude-code' ? {'ordessa-claude-auth.mjs': readFileSync(path.join(HERE, 'claude-auth.mjs'), 'utf8')} : {}),
-    'ordessa-profile.mjs': readFileSync(path.join(HERE, 'entry.mjs'), 'utf8'),
+    'ordessa-profile.mjs': readFileSync(path.join(HERE, 'entry.mjs'), 'utf8').replace('__ORDESSA_NATIVE_BRAND__', brand),
     'ordessa-native-profile.mjs': readFileSync(path.join(HERE, 'bridge.mjs'), 'utf8'),
     'ordessa-native-configuration-query.mjs': readFileSync(path.join(HERE, 'configuration-query.mjs'), 'utf8')
       .replace("'../pi-profile/configuration-query.mjs'", "'./ordessa-configuration-query.mjs'")

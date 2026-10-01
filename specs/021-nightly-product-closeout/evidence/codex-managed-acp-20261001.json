@@ -1,0 +1,19 @@
+{
+  "scope": "built-candidate-acp-authentication-boundary-not-installed-product",
+  "candidateTreeDigest": "sha256:8dbe3e60ae5e57bb054706271ad25e92ce1be343fa25fa46ebaf7fe8a20b6d8f",
+  "sourceLockDigest": "sha256:a59ef37f56d037a4a7cf73ae9927f2957b56a728b71101b193e5bcab73364081",
+  "probe": "plugins/harness/packaging/native-profile/probe-codex-managed-acp.mjs",
+  "officialAcpLoggedIn": true,
+  "apiAcpHasNoAccount": true,
+  "validApiKeyLoginRejectedByManagedAccount": true,
+  "bothLogoutRoutesRejected": true,
+  "accountUnchanged": true,
+  "mixedConfigurationProbePassed": true,
+  "modelCalls": 0,
+  "sessionCreationsInAuthProbe": 0,
+  "pythonTargetedPassed": 213,
+  "nativeProfileNodePassed": 38,
+  "installedRouteNodePassed": 22,
+  "desktopProfileIntegrationVerified": false,
+  "installed": false
+}

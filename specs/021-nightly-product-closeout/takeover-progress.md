@@ -11,7 +11,10 @@
 - 版本阻塞：已安装 Codex 0.147.0 自行生成的 LoginAccountParams schema 将 chatgptAuthTokens 标记为“FOR OPENAI INTERNAL USE ONLY - DO NOT USE”，与最新网页仅称实验性的描述不同。先前推荐外部 token 代理的方案不作为可执行接线，未读取/导出密钥环 token，未调用该接口。
 - 已验证原生替代路线的有限事实：两个自有 app-server 同时使用 Ordessa 账号 CODEX_HOME，分别以 -c 设置 low/high reasoning；account/read 均 authenticated=true，config/read 均匹配各自覆盖，modelCalls=0。未创建 thread、未测试资源文件/Skills/MCP 隔离、未测试 token 过期并发，不证明完整多会话隔离。探针均退出。
 - **决策已收口**：用户要求测试后可行即通过，暂只维护一个官方账号；每个 Codex 进程配置独立，允许官方登录和第三方 API 进程并存。混合实测已通过，详见文末最新记录。官方账号目录只供官方认证路线，API 路线保持实例 CODEX_HOME。现有入口尚未接入官方分支，守卫仍保留；决策通过不等于生产接线完成。
-- 固定 TODO 第 6 项仍未完成；其余未验收项不变。下文为按时间保留的历史记录，不以历史未开始/旧资产/旧门禁读数覆盖本节状态。
+- 本轮继续：Harness transport 新增后端显式 `codex_account_directory`，不接受继承环境或客户端 launch environment 选择账号；增强资产烘入品牌、严格校验独立私有账号目录。官方 native 子进程强制 keyring，HOME/XDG 仍为实例目录；API 的 CODEX_HOME 仍为实例目录。移除继承认证变量及原始 RPC trace，官方 ACP 禁止改写/取消登录/注销共享账号。
+- 锁定源码候选已构建、完整摘要 `sha256:8dbe3e60ae5e57bb054706271ad25e92ce1be343fa25fa46ebaf7fe8a20b6d8f`。真实候选 ACP 官方/无账号 API 同时 initialize/status，通过有效 API-key 登录拒绝与两条注销拒绝并复查账号不变；modelCalls=0、sessionCreations=0。混合配置探针也通过。**候选未安装、默认产品尚未选择官方分支、Profile/Chat 真实链仍未验收**；不把开发候选视为 root 管理生产资产。
+- 本轮反例先红后绿：入口账号隔离/认证环境继承、transport 显式选择。Python Harness+products/server 定向 **213P**，native-profile Node **38P**，安装入口 **22P**，diff-check 通过。只改 Harness 与证据文档，未改 host/main、未动他属截图/已安装资产/用户服务。沿用现有 Spec Kit 和增量验收纪律，单会话实施，不新建派工单/工作树。
+- 固定 TODO 第 6 项仍未完成；其余未验收项不变。下一接缝是把 Profile 的认证路线选择提前到通道创建前，而非先启动 API 子进程再借 token 切换；不得把所有 Codex 通道默认指向账号目录。下文为按时间保留的历史记录，不以历史未开始/旧资产/旧门禁读数覆盖本节状态。
 
 ## 前次验证（2026-10-01，Pi provider 安装完成，历史状态）
 

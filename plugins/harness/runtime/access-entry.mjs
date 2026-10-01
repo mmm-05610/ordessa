@@ -306,6 +306,9 @@ async function main() {
       throw new Refused("ADAPTER_ENVIRONMENT_INVALID")
     }
     for (const [key, value] of Object.entries(environment)) {
+      if (key === 'ORDESSA_CODEX_MANAGED_ACCOUNT_DIR') {
+        throw new Refused('ADAPTER_ENVIRONMENT_INVALID', key)
+      }
       if (piProfileBridge && ["ORDESSA_PI_INSTANCE_DIR", "PI_CODING_AGENT_DIR", "PI_CODING_AGENT_SESSION_DIR"].includes(key)) {
         throw new Refused("ADAPTER_ENVIRONMENT_INVALID", key)
       }

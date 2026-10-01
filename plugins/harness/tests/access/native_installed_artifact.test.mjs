@@ -410,7 +410,7 @@ for (const brand of BRANDS.slice(1)) {
     const f = fixture(t, brand)
     const argv = ['--native', '--installed-artifact-root', f.base, '--native-profile-bridge']
     const connect = { op: 'connect', id: 1, harness: f.harness, launch: f.launch }
-    for (const key of ['ORDESSA_NATIVE_INSTANCE_DIR', 'HOME', 'CODEX_HOME',
+    for (const key of ['ORDESSA_NATIVE_INSTANCE_DIR', 'ORDESSA_CODEX_MANAGED_ACCOUNT_DIR', 'HOME', 'CODEX_HOME',
       'CLAUDE_CONFIG_DIR', 'XDG_CONFIG_HOME']) {
       const result = entryRun(argv, { ...connect,
         launch: { ...f.launch, environment: { [key]: '/tmp/foreign' } } })
