@@ -10,7 +10,7 @@
 - 新增 Harness 内 CodexManagedAccount：仅 initialize/account/read，原生负责续期；不导出 token、不实现 OAuth、不复制凭据、不自动弹浏览器。13 个新测试；连同 Codex 既有定向与产品 Server 测试 **168/168**，入口隔离 Node **4/4**。实际专用账号经新封装 refresh=True 查询 exit 0，modelCalls=0。该封装尚未加入默认产品工厂，不报会话认证已接入。
 - 版本阻塞：已安装 Codex 0.147.0 自行生成的 LoginAccountParams schema 将 chatgptAuthTokens 标记为“FOR OPENAI INTERNAL USE ONLY - DO NOT USE”，与最新网页仅称实验性的描述不同。先前推荐外部 token 代理的方案不作为可执行接线，未读取/导出密钥环 token，未调用该接口。
 - 已验证原生替代路线的有限事实：两个自有 app-server 同时使用 Ordessa 账号 CODEX_HOME，分别以 -c 设置 low/high reasoning；account/read 均 authenticated=true，config/read 均匹配各自覆盖，modelCalls=0。未创建 thread、未测试资源文件/Skills/MCP 隔离、未测试 token 过期并发，不证明完整多会话隔离。探针均退出。
-- **下一决策**：是否允许官方订阅路线使用共享账号级原生 CODEX_HOME、独立进程与独立资源/配置输入，而不导出 token。此变化影响现有“CODEX_HOME 必须等于 instance 目录”守卫，须先明确后再改；当前守卫保留。若仍要求每会话独立 CODEX_HOME，则当前锁定版本尚无已验证、可采用的原生账号共享接缝，不能偷偷复制登录文件。
+- **决策已收口**：用户要求测试后可行即通过，暂只维护一个官方账号；每个 Codex 进程配置独立，允许官方登录和第三方 API 进程并存。混合实测已通过，详见文末最新记录。官方账号目录只供官方认证路线，API 路线保持实例 CODEX_HOME。现有入口尚未接入官方分支，守卫仍保留；决策通过不等于生产接线完成。
 - 固定 TODO 第 6 项仍未完成；其余未验收项不变。下文为按时间保留的历史记录，不以历史未开始/旧资产/旧门禁读数覆盖本节状态。
 
 ## 前次验证（2026-10-01，Pi provider 安装完成，历史状态）
@@ -493,3 +493,12 @@ native 产品真实注册的 Profile facet 只有 `assets.model-provider`、`ass
 - 核对最新官方文档 https://developers.openai.com/codex/app-server/ 与锁定原生 schema：chatgptAuthTokens 接口为实验性外部认证，明确由 host 提供 accessToken/chatgptAccountId 并响应 account/chatgptAuthTokens/refresh；在外部模式 account/read(refreshToken=true) 不负责刷新。当前增强实例的 CODEX_HOME 为独立运行目录，首次准备仅 custom-gateway，不可将专用账户登录成功当作这些实例已有认证。
 - 建议 Harness 内增加集中账号认证服务：原生管理进程使用专用账号与 keyring 维护登录/刷新；只有此服务私下读取自身专用密钥环认证并向独立会话的原生外部认证接口交付短期 token，刷新请求串行处理。禁止复制全局登录、复制 refresh token 到会话目录、把账号目录作为会话 HOME、把凭据放入 Profile/公开 wire/UI/证据。认证失效拒绝新发送并请求重新登录，不自动重放 Unknown。
 - 这是认证生命周期的中等规模接缝，遵照用户要求先报告设计决策再实施。尚未读取 token 或调用外部 token 登录接口，未实现账号代理/刷新协议；固定 TODO 第 6 项仍未完成。Profile 官方模型路由及三品牌产品验收仍须后续实证，不改变顶层 TODO 数量。
+
+### 单官方账号 + 独立 API 进程混合实测通过（2026-10-01）
+
+- 用户裁定：暂不支持多官方账号，同时维护一个官方账号即可；每进程配置独立，且允许另一个进程不用登录而采用第三方 API。请求“测试可行即通过”，本节据真实结果收口该架构决策，不再重复索取相同审批。
+- 新增可重跑探针 `plugins/harness/packaging/native-profile/probe-codex-mixed-auth.mjs`。实际安装的 Codex 0.147.0 原生 app-server（官方账号）与 Codex ACP 1.1.14 增强入口（API 实例）同时运行；原生进程显式 keyring 配置，API 实例在独立 HOME/CODEX_HOME 中以合成凭据配置拒绝推理的本地服务。不输出账号身份或凭据，不读全局登录。
+- 混合探针 exit 0：官方 account/read 为 chatgpt；API 设置前为 unauthenticated，设置后为 gateway。创建两个探针原生 thread，官方 thread/start/read provider=openai，API 独立配置读回的 construction provider=custom-gateway、endpoint 与合成对端精确匹配。官方 reasoning=low、API=high；API 改为 medium 后同 generation 读回确认，官方 config/read 仍 low，官方 thread provider 仍 openai；最终官方账号元数据逐值不变。API 私有目录扫描无合成凭据落盘。
+- 方法白名单禁止 prompt/turn 与任何账号登录、登出；modelCalls=0、providerHttpRequests=0。官方 thread 使用 ephemeral，结束仅 unsubscribe 自己创建的 thread；API session/close，两个自有进程组与本次临时目录清理。不会退出或修改用户既有会话。结果摘要 `evidence/codex-mixed-auth-20261001.json`。
+- **边界**：这验证原生官方认证 + 已安装 ACP gateway 的混合可行性，不是两个完整 Desktop/Profile 会话的生产证明；第三方对端为合成服务，未证明供应商 Responses API 实际兼容或真实聊天，未测试 token 过期并发或全部 Skills/MCP/资源文件隔离。故固定 TODO 第 6 项仍未勾选。
+- 新发现并明确的接线要求：缺省 Codex login status（未指定 credentials store）报 Not logged in，而显式 keyring 的原生账号查询成功，属于存储配置不一致，非登录丢失。官方 ACP 启动必须显式使用 keyring；当前安装的 startCodexConnection 未注入该启动参数，增强入口也强制实例 CODEX_HOME。生产接线需在 Harness 内新增官方账号作用域与显式 keyring 启动分支，API 分支原隔离不变；不使用内部 token 接口、不修改 host、不复制登录、不在共享账号目录调用 API 登录或登出。

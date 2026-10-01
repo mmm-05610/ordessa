@@ -1,0 +1,22 @@
+{
+  "scope": "installed-native-official-and-installed-acp-api-no-model",
+  "nativeVersion": "0.147.0",
+  "adapterVersion": "1.1.14",
+  "officialAccountUnchanged": true,
+  "apiUnauthenticatedBeforeInjection": true,
+  "apiGatewayWithoutOfficialLogin": true,
+  "officialNativeProvider": "openai",
+  "apiNativeProvider": "custom-gateway",
+  "nativeThreadsCreated": 2,
+  "nativeConfigurationIndependent": true,
+  "apiConfigurationChangeDidNotChangeOfficial": true,
+  "apiCredentialPersisted": false,
+  "modelCalls": 0,
+  "providerHttpRequests": 0,
+  "syntheticApiProvider": true,
+  "officialProcessUsesNativeAppServerDirectly": true,
+  "apiProcessUsesInstalledEnhancedAcpEntry": true,
+  "desktopProfileIntegrationVerified": false,
+  "ownedProcessesAndTemporaryDirectoriesCleaned": true,
+  "exitCode": 0
+}
