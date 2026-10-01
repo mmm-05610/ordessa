@@ -12,6 +12,7 @@
 - 独立复跑：model-provider server **198P**；Harness 新边界/服务测试 + products/server **153P**（其中产品 **145P**、Harness **8P**），exit 0。`git diff --check` 通过。这些是定向回归，不是全仓发行门禁。
 - 迁移后再次使用真实 Electron、已验证独立开发 runtime 与 Codex 原生账号跑 `--during-output --native-tool`：四个成功标记齐备，首发 completed、只读原生工具可见、输出期间选择未提前应用、第二轮同 SessionRef 且配置摘要改变并 completed；最多两条短提示。没有改全局配置/登录/系统资产，没有启停用户服务。
 - **仍未完成**：生产已有历史跨 provider 切换。当前凭据绑定仍只允许原准备认证路由，原生恢复接口尚未连接到 Profile 发送应用链；不能把本次职责迁移或同 provider 模型切换记作完成此项。旧 UI preview 夹具与完整三品牌 UI/发行包门禁也仍待收口。
+- 该收口已提交 `0e88ef8f26`。下一块的具体实现取舍待用户讨论：现有 Codex 原生恢复实现是 setProvider → closeSession → resumeSession → 回读，先关闭旧原生会话运行状态，不能提供“新实例确认前旧实例始终可用”的保证；这只是当前实现限制，不断言上游无法实现双实例。直接接通串行恢复可以保留原会话历史/身份，失败保草稿并阻止发送，不自动回退或重试；要实现保留旧实例的候选实例切换，则需要另外设计原生历史访问、并发写入、通道归属与最终切换。两条路线都把品牌策略留在 Harness 内，不改变既定 Profile/model-provider 分工。
 
 ## 前一检查点（2026-10-01，原生权限边界与真实 Desktop Profile 发送）
 
