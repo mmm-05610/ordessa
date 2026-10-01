@@ -244,7 +244,7 @@ manifest 自报值三项全等（否则 `refuse("candidate manifest disagrees wi
 | D21 | PASS | L1 | 未安装/未登录/401/429/连接失败单会话诚实报错，另一会话与设置页仍可用 |
 | D22 | PASS | L1 | Ordessa 专用账号状态可见；过期/退出用原生机制，不造多账号系统 |
 | D23 | PASS | L1 + 扫描 | renderer 无 Node/Key/认证头；提交后不入日志、公开 props 或导出 |
-| D24 | **FAIL（流程）** | — | 合同要求 UI 证据绑定实际产品版本/asset/session 且 Lead 独立执行。本轮**没有产出任何 L4 证据**，无可绑定对象 |
+| D24 | **PARTIAL（原 FAIL「无可绑定对象」已消解；session 腿仍未绑上）** | L4 | 合同："UI证据绑定实际产品版本/asset/session，Lead独立执行，不沿用worker'截图看起来没问题'"。此前判 FAIL 的唯一理由是"本轮没有产出任何 L4 证据"，该理由**已不成立**——`.cleanup-evidence/l4/d16-d18-ui-probe-20261002.log` 是 Lead 亲自跑的 Electron 真实 DOM 清单（`alerts:[]`，wire 轨迹 7 项全 `error:null`，页面 `Chat`/`Skills`/`Sessions`，项目 `probe-project`，预设选择器列出两个真实 profile id），**不是** worker 的"看起来没问题"。**已绑定**：产品/资产版本与摘要见下方 D24 绑定专段。**仍未绑定**：**真实 UI 会话 id**——按 D02「第一句提交才建会话」，建会话必然要发消息 ⇒ 真实模型调用 ⇒ 未授权 |
 
 ### P. 可信资产、产品装配与发行（16 条）
 
@@ -314,6 +314,33 @@ UI 自然只能停在草稿——早先把这个现象读成了"生产发送路�
 > 诚实边界：以上是**选择腿**的 L4，不是发送腿的 L4。不用 UI-preview、内存 Server 或
 > "插件挂载成功"冒充实际生产发送。另注意本轮用的是**已安装的（sudo 修正前）资产**
 > `profile-codex-managed`，资产刷新属另一条被 sudo 阻塞的线。
+
+### D24 专段：把 L4 证据钉到实际产品版本与资产上（session 腿仍未绑定，如实留白）
+
+D24 要求 UI 证据**绑定**到实际产品版本/asset/session，且由 Lead 独立执行。此前判 FAIL 的理由
+"本轮没有产出任何 L4 证据"已不成立。现在把已产出的那份证据**显式钉住**：
+
+| 绑定项 | 实测值 | 来源 |
+| --- | --- | --- |
+| 证据文件 | `.cleanup-evidence/l4/d16-d18-ui-probe-20261002.log`（4412 B） | Lead 亲跑，`xvfb-run` + 真实 Electron |
+| 执行者 | **Lead 主会话本人**，非子代理、非 worker 复述 | 该轮无委派 |
+| 资产根 | `/opt/ordessa/harnesses/profile-native/artifacts`（root 管理，只读） | `nativeServerPlan` 的 `artifactRoot` |
+| codex 资产 | `codex-runtime`：`treeDigest sha256:ccee6f62…48d10`、`sourceLockDigest sha256:a59ef37f…64081`、`native.version 0.147.0-linux-x64`、CLI `0.147.0`、`adapter 1.1.14`、入口 `…/dist/ordessa-profile.mjs` | `codex-runtime.manifest.json` |
+| claude 资产 | `claude-runtime`：`treeDigest sha256:27ffca7b…a3375b`、`sourceLockDigest sha256:ea82cc51…5871fe`、adapter `0.81.2` | `claude-runtime.manifest.json` |
+| 运行时读数 | `alerts: []`；wire 轨迹 `server.hello`×2 / `profileCatalog` / `workspaces.list`×3 / `workspaces.open` **全 `error:null`** | 同上日志 |
+| 真实项目 | `probe-project`（`.cleanup-evidence/ordessa-profile-ui-UzOdGU/probe-project`） | 同上日志 |
+| 真实 Profile | `profile_c323e643631f40a698279c0dbf3412da`「UI official probe」、`profile_f1a480676e944af98d07a1dd43e63c34`「UI next-turn probe」，由 `seed-profile-ui-probe.py` 播种且自报 `modelCalls: 0` | 同上日志 + 播种脚本 |
+| 执行者身份核对 | `profile-c323e…`/`f1a480…` 是**播种脚本真实产物**，不是编造的 id | 同上 |
+
+**仍未绑上的一条，如实留白**：**真实 UI 会话 id**。按 D02 已钉死的语义，
+「新建草稿不建会话，**第一句提交才建会话**」，所以在 UI 里拿到真实会话必然伴随一次真实发送
+⇒ 真实模型调用 ⇒ 按规则 9 **未获授权，本轮不跑**。该次 L4 运行的 Sessions 区因此是
+`No sessions yet.`，这不是缺陷，是尚未授权的直接后果。
+
+> 注意一处**不一致，如实记录**：同一份日志里 UI 列出 `ACP · pi` 连接器，但
+> `/opt/ordessa/harnesses/profile-native/artifacts` 下只有 `codex-runtime` 与 `claude-runtime`
+> 两份 manifest，**没有 pi 的**（pi 的资产根由 `ORDESSA_PROBE_PI_ARTIFACT_ROOT` 另行提供）。
+> 这与 P08「deb 零品牌 runtime」同源，**未自行处置**，等发行裁定。
 
 ### C02/C03 专段：解锁密钥环**不是**这两条的前提，先前的判断过窄
 
