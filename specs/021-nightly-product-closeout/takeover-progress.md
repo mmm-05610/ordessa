@@ -193,7 +193,7 @@ manifest 自报值三项全等（否则 `refuse("candidate manifest disagrees wi
 | C13 | PASS | L1 | runtime 换代后旧 reference 执行前拒绝 |
 | C14 | PASS | L1 | 保存/编辑零 DNS（用户批准的口径），实际 probe 仍逐地址 SSRF/DNS 检查；Fake-IP 保存成功 + probe 走被拒地址不假绿 |
 | C15 | PASS | L1 | 目录来自真实后端/资源插件，前端不硬编码品牌 |
-| C16 | **PARTIAL** | L1 + 真实 keyring | 自有 locator 保存→**跨进程**读取→删除，真实 GNOME Secret Service 通过；合同要求的 DB/log/export 无合成 secret 扫描只有 L1 |
+| C16 | **PASS** | **L3（真实产品链 + 真实 keyring）** | 见下方 C16 专段：真实 `product_secret_store` + 真实 `ApiKeyImportService` + 真实 sqlite 账本跑通 import→**跨进程**读取→删除；缺席/锁定各自独立拒绝码；DB 与唯一真实日志点均无合成 secret 字节 |
 | C17 | PASS | L1 | Key 删除/替换影响未来准备，运行中 Agent 不中断 |
 | C18 | PASS | L1 | 官方账号与 API 配置分离，切 model 不隐式选官方认证 |
 | C19 | PASS | L1 | Profile CRUD/命名/Harness 归属/持久化不退化；已绑定会话不静默换品牌 |
@@ -366,7 +366,34 @@ helper 拒绝**，且**即使不拒绝也会装进带 P1 缺陷的资产**。两
 > 这三条演练件现在写进 `publish-fixed-codex-managed.sh` 的开头，sudo 一旦执行会**先跑演练再发布**；
 > 演练不过就在消耗口令之前失败退出。**本轮没有执行该脚本，没有消耗任何口令。**
 
-### F. 最终验证、证据与交回（12 条）
+### C16 收口：真实产品链 L3 证据（合同要求的 DB/log/export 扫描此前只有 L1）
+
+合同 §C 明写 C16 **还须在实际产品链 L3 或 L4 观察**。此前只有"真实 keyring 的保存→跨进程读取→删除"，
+合同点名的 **DB/log/export 无合成 secret 扫描** 确实只有 L1。本轮把这一段在真实产品组件上跑通：
+
+| 腿 | 怎么跑的 | 结果 |
+| --- | --- | --- |
+| 真实 store | `product_secret_store(data_root)`（`platform_secrets`），Linux 下即 `LinuxSecretServiceStore`，经真实 GNOME Secret Service | 非文件回退：模块 docstring 即"no file/plaintext fallback"，非 Linux 直接返回 `None` |
+| 真实导入链 | 真实 `ApiKeyImportService` + 真实 `key-import.sqlite` 账本（`modelProvider.importApiKey` 的实现体） | `state='imported'`，返回 `credential_<32hex>` |
+| 重启可读 | **另起进程**，仅凭 locator 读回 | 一致；跨进程持久化成立 |
+| 账本不含密钥 | 逐行 dump `imports` 表 | 只有 request/harness/state/credential_id/kind/cleanup_state |
+| DB 字节扫描 | 对 data-root 全部文件扫 `sk-c16-…` 及 4 个特征片段 | 全部 absent；无 WAL/journal 残留 |
+| 日志字节扫描 | **唯一真实日志点** `composition.py:1103`（读路径 `log.warning(...: %s, exc)`）实际触发 | 写出 locator 与 credential id，**0 字节密钥** |
+| 失败路径 | 密钥入 store 后 `register` 抛错 | 账本记 `state='unknown', cleanup_state='removed'`（回滚生效），且无泄漏 |
+
+**顺带查出并修掉一个真实缺陷（`33955fa984`）**：`read()` 对缺席条目抛
+`SecretLocatorUnavailable`，但 `contextlib` 会把调用方的异常抛回生成器的 `yield`，
+而 `_default_collection` 的裸 `except Exception` 会把它改写成 `SECRET_STORE_UNAVAILABLE`
+——**密钥仅仅缺席，却被报成密钥环不可用**，把 absent / locked / 服务不可用三种原因压成一种，
+把用户指向错误的修复方向。修法是在重抛白名单里补上 `SecretLocatorUnavailable`
+（与同文件 `_collection` 已有写法一致）。**拒绝方向未变**：修复只恢复原因，不打开通路。
+真实 keyring 上实测：缺席现返回 `CREDENTIAL_NOT_AVAILABLE`，在场条目仍正常读出。
+
+> 为什么 L1 没抓到：**既有测试全部注入假的 `_backend_factory`**，真实生成器的异常阶梯从未被执行过。
+> 新测试直接驱动真实生成器（stub 掉 `secretstorage` 模块），断言缺席与锁定保持各自独立的码。
+> 已做变异验证：还原源码改动则新测试失败。
+> 另外 `credential_import.py` **全程不打日志**，所以"日志干净"在本模块属结构性成立；
+> 上表因此单独把真实日志点拉出来实测，而不是拿空日志充数。
 
 | ID | 判定 | 依据 / 缺口 |
 | --- | --- | --- |
