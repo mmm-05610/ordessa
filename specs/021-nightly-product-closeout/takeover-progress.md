@@ -15,7 +15,7 @@
 
 **总判定：`PARTIAL`，不是 `COMPLETE_VERIFIED`。** A 组在 L1+L2 立住，B10/B11 卡在 sudo 与一次真实
 历史失败，D 组 L4 已由 Xvfb 跑出对照证据但装机绑定仍缺，P 组 P07/P08 为**真实装配缺口**而非仅证据缺口，
-S02/S03 未跑。缺的具体用户动作见本节末尾。
+S02/S03 均已由真实产品链实测判 **FAIL（结构性）**——不是"未跑"。缺的具体用户动作见本节末尾。
 
 ### 本轮 Lead 亲跑的门（C22 合同要求"Lead 亲跑受影响门"，F02/F03/F04 取数）
 
@@ -239,7 +239,7 @@ manifest 自报值三项全等（否则 `refuse("candidate manifest disagrees wi
 | D16 | **PARTIAL** | L1 + **L4（选择腿）** | Pi 两轮**后端**已通过；**本轮补真实 L4 选择腿**（下方专段）：Electron 真实 DOM 中 `ACP · pi` 连接器与预设选择器均实装、零告警。**发送腿仍缺**（需 `--allow-model-calls`，未授权） |
 | D17 | **PARTIAL** | L1 + **L4（选择腿）** | Claude 两轮**后端**已通过；**本轮补真实 L4 选择腿**：`ACP · claude-code` 连接器实装并可选。**发送腿与跨 provider 后台 B 类关联仍缺**（需 `--allow-model-calls`，未授权） |
 | D18 | **PARTIAL** | L1 + **L4（选择腿）** | Codex 首发 + 官方→API 后端已跑且**已红**（见 B10）；**本轮补真实 L4 选择腿**：`ACP · codex` 连接器 connected，UI 预设选择器列出真实播种的两个 Profile。**首发实际发送与官方→API 切换仍缺**（需 `--allow-model-calls`，未授权） |
-| D19 | NOT_RUN | — | 全局改动 + 临时覆盖的 C03 场景在真实 UI/后端链未做 |
+| D19 | **PARTIAL（原 NOT_RUN；后端腿已做，UI 源未做）** | L3 | 合同："全局Profile改动+本会话临时覆盖，在实际UI/后端链完成C03场景；DB/route/界面三源至少两源对齐"。**原先判 NOT_RUN 是因为这条场景未在真实链上跑过；现已跑过**——`probe-profile-session-isolation.py` 在真实 `native_runtime` 上做的正是 C03 场景（全局改 model 与未覆盖偏好 + A 的临时覆盖），**三源里对齐两源**：`DB`（`profile_facet_values` 原始行）与 `route`（`profiles.v2.*` wire + `resolvePreview`），两者逐字段一致。**第三源「界面」未做**：本轮无 Electron UI 的 C03 场景运行（要建 UI 会话必须真发消息 ⇒ 真实模型调用 ⇒ 未授权）。故按"至少两源"这一半判 **PARTIAL 而非 PASS**——若裁定认为 UI 源不可省，则仍需那次发送授权 |
 | D20 | PASS | L1 | 重启后 Project/Profile/历史存在；旧 runtime 诚实为结束/失效 |
 | D21 | PASS | L1 | 未安装/未登录/401/429/连接失败单会话诚实报错，另一会话与设置页仍可用 |
 | D22 | PASS | L1 | Ordessa 专用账号状态可见；过期/退出用原生机制，不造多账号系统 |
@@ -273,10 +273,78 @@ manifest 自报值三项全等（否则 `refuse("candidate manifest disagrees wi
 | ID | 判定 | 依据 / 缺口 |
 | --- | --- | --- |
 | S01 | **FAIL** | 盘点本身做完了，结论是负的：既有 MCP **在默认装配里缺席**（P07a），Skills 插件**不在默认组合**（P07b）。合同明写"不以代码存在替代可用" |
-| S02 | **PARTIAL（L1 齐、L3/L4 缺）** | `plugins/assets/skills` **433 passed**，含 `test_harness_intent_boundaries.py`（intents 只带坐标与边界、不带主机绝对路径）、`test_harness_api_registration.py`（三品牌 adapter 注册、重复 id 拒绝、未绑定点 fail-closed）与 `test_apply_chain_t13.py::test_two_sessions_plan_and_apply_without_cross_contamination`（**两 session 隔离**）。**但合同要求的另一半 —— 一份自有最小 Skill 真正进入受支持 Harness 的输入/projection —— 需要真实 harness 会话**，而 codex 修复资产的发布与装机都在那一次 sudo 之后，故未取得 L3/L4。按合同 §0，L1 不替代 L3/L4，故记 PARTIAL 而非 PASS |
+| S02 | **FAIL（projection 腿：结构性，真实产品链实测；隔离腿：PASS）** | 前一版记 `PARTIAL（L1 齐、L3/L4 缺）`，把缺口归给"codex 修复资产的发布与装机在 sudo 之后"—— **这个归因是错的**，现已由真实产品链 L3 实测推翻，见下方专段。用真实 `skills.importBegin/Chunk/Preview/Commit` 导入一份最小 Skill、真实 Profile patch 启用、真实项目级 `assignmentsUpsert` 启用、真实创建 4 个原生会话（codex ×2 / claude-code ×2）：解析层**全成**（`selectedByLayer: "profile"` 与 `"project_harness"`）、会话**真实建起并应用成功**（`evidenceKind: "harness-api-confirmed"`、零 HTTP/零 prompt），而 **native home 里 `importedSkillReachesNativeHome: {"codex": false, "claude-code": false}`**、实例目录树内 skill 命名路径 `[]`、提及该 asset id 的文件 `[]`。合同"一份自有最小Skill正确进入支持Harness输入/projection"这半**判 FAIL**；"两session隔离"那半**判 PASS**（每品牌两个不相交私有实例目录），但如实标注这是**空 skill 集的隔离**。注意 codex 实例目录里的 `.system/{imagegen,openai-docs,…}` 是**品牌二进制自己写的**，非产品投影，不冒充证据 |
 | S03 | **FAIL（结构性，先于执行即已注定）** | 本轮把 P07a 追到底后，S03 不再是"未跑"而是**当前架构下不可能过**：MCP 在**任何**组合里都没有实例化（`products/server/src/` 全树 MCP 零命中），所以"自有本地 stdio MCP 能发现、工具结果进 Chat UI"没有承载体。合同 §S 明写 S02/S03 不过则原 18 条产品 floor 不过——这一格**不能省**，如实登记为 FAIL |
 | S04 | PARTIAL | prompts/instructions/runtime-preferences 的 compile/projection 门有 L1；全面逐资源 L3 本轮不新增要求（合同已豁免） |
 | S05 | PASS | 阻塞与既有产品目标影响已列：P07a/P07b 两个装配缺口、dsh/kilo 过不了钉死 verifier（信任根形状问题）、P08 空 runtime。按合同**没有**把大型新资源方案塞进夜间任务 |
+
+### S02 专段：projection 腿结构性 FAIL —— 真实 Skill 到不了真实 native home
+
+**先纠正我自己上一轮的归因。** S02 此前记 `PARTIAL`，缺口写成"需要真实 harness 会话，而
+codex 修复资产的发布与装机都在那一次 sudo 之后"。这是**把资产发布的阻塞错记成产品能力的
+阻塞**。真实产品链一跑就证明与资产发布无关：skill 导入、Profile 启用、项目级 assignment
+启用、会话创建与会话应用**全部成功**，只有最后一跳落不了地。这与 S03 是同一类结论
+（结构性），但 S03 是"承载体不存在"，S02 是**每一段都接好了、中间接缝没合**。
+
+探针：`products/server/scripts/probe-skill-harness-projection.py`
+（exit 0，`.cleanup-evidence/product-integration-venv/bin/python` 跑的完整产品组合
+`create_composition().native_runtime(...)`，无提示、无真实模型调用）。
+
+**链上真实通过的每一段**（都不是 L1 单元替身）：
+
+| 段 | 证据 |
+| --- | --- |
+| 导入真实 Skill | `skills.importBegin/Chunk/Preview/Commit` → `assetId: probe-harness-skill`、`revision: 1`、`treeDigest: sha256:1e726a…`、`effect: "stored"` |
+| facet 发布真实 item | `describeFacets` → `assets.skills` 下 `{itemId: "probe-harness-skill", overrideSupported: true, effect: "capability-selection"}`（**修掉了我先前"没有第二个可覆盖 item"的错误论断**——是内容库空的，不是路径缺失） |
+| Profile 面启用 | `profiles.v2.saveProfile` patch → `resolverAfter.includedSkills = [{selectedByLayer: "profile"}]` |
+| 项目 assignment 面启用 | `skills.assignmentsUpsert(scopeKind=project)` + `approveRevision` → `resolverAfter.includedSkills = [{selectedByLayer: "project_harness"}]` |
+| 真实原生会话 | 4 个真实 native session id（codex ×2、claude-code ×2），`applyReceipt.evidenceKind = "harness-api-confirmed"`，`counts = {http: 0, prompt: 0, new: 4}` |
+| apply 真的打过 apply RPC | codex 会话 A 的 `configurationRpcAfterApply` 里出现 `_ordessa/session/configuration/apply` 与 `/channel/configuration/operation` |
+| 两 session 隔离 | 每品牌两个不相交私有实例目录（产品自己的 `allocate_instance_directory`） |
+
+**断掉的那一跳**，产品自己的读数就是最硬的证据：
+
+- `skills.discoverNative` 对两个品牌都**拒绝**，`internalCode: "NATIVE_TARGET_ROOT_UNAVAILABLE"`，
+  message 原文：*"native discovery needs the harness-owned authorized instance root;
+  **that seam is api-requests.md §G2 and not composed yet**"* —— 产品自己承认这条接缝没装配。
+- `importedSkillReachesNativeHome = {"codex": false, "claude-code": false}`；
+  `skillMaterialization.importedSkillPathsInNativeHome = []`；
+  实例目录树内提及该 asset id 的文件 `[]`；临时根与已安装 artifact 根的 skill 命名路径扫描同样为空。
+
+**三处切断点（Lead 逐条复核，非采信单一来源）**：
+
+1. **`build_skill_delivery` 在产品里没有生产调用者。**
+   `plugins/assets/skills/src/ordessa_skills/service.py:393 delivery_set` → `:407/:413 build_skill_delivery`
+   是唯一入口，而 `delivery_set` 全树无非测试调用者。投影器造得出来，没人叫它。
+2. **Profile 原生路由在入口就拒掉非 model 的 patch。**
+   `products/server/src/ordessa_server_product/profile_configuration.py:96-99`：要求恰好一条
+   `assets.model-provider/choice` 的 `set`，否则 `ProfileError("SWITCH_BLOCKED", …, status=409)`。
+   skills 的 patch 在这条路上必然被拒。
+3. **`ClaudeLaunchAdapter` 没有 importer。**
+   `plugins/harness/src/ordessa_harness/claude/launch.py:11` 定义，全树零导入（只有
+   `HermesLaunchAdapter` 被 `hermes/provider.py:10` 导入）。claude 侧没有启动投影腿。
+
+**为什么 facet 的 `compile` 返回零 intent 是设计而非缺陷**（这点要说清，否则会被读成实现 bug）：
+`plugins/assets/skills/src/ordessa_skills/profile_contribution/provider.py:205-223` 的 docstring
+明写这是**声明出来的**：skill 绑定不是 Harness 配置键，它的投影走 Skills harness adapters
+与 §G2 Harness 接缝，resolver 证据阶梯封顶在 `selected`；在这里吐 `ConfigIntent` 会让 Profile
+的 journal 声称一次本域只能在别处完成的应用。**这个判断本身是对的**——问题在于那条"别处"
+（§G2）至今没装配，于是诚实的设计落成了诚实的失败。
+
+**为什么我没有停在"结构性 FAIL"就交差**：`harness_adapters/contribution.py:424-434` 确实贡献了
+三个 `SkillsConfigurationAdapter`（pi/codex/claude，经 `plugin.py:172-180` 注册到
+`CONFIGURATION_POINT`），`configuration_service.py:219-333` 也确实会枚举 `CONFIGURATION_POINT`。
+所以"零 ConfigIntent"单独**不足以**支撑结构性结论——必须实测。正因为实测了，才拿到 apply RPC
+已发生、而 native home 仍为空的这一组读数，结论才站得住。
+
+**降级说明（不掩盖）**：pi 本轮无法实测——`/opt/ordessa/harnesses/profile-native/artifacts/pi-runtime`
+不存在且 `nativeServerPlan` 不产 pi 绑定；`skills.assignmentsUpsert` 只声明
+`user_global`/`project` 两种 scope kind，**没有 session scope**，所以 assignment 面本身也提供不了
+逐会话隔离证据。三条都记在探针输出的 `notCovered` 里，不当作已覆盖。
+
+**登记**：`docs/known-issues.md` 新增一行（native target root 接缝未装配 + `delivery_set` 无生产
+调用者 + claude launch adapter 无 importer）。**不属于本轮夜间范围**，按合同 §S 如实留为 FAIL，
+不靠"再写个计划"把它算成进度。
 
 ### D16–D18 专段：真实 Electron L4（选择腿），以及先前"发送失败"的真实归因
 
@@ -713,7 +781,8 @@ bash /home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout/.cleanup
 
 **未做而非做不完：** A22 仓内 `execution` 零命中、无接缝可验，按合同只登记不设计；C22 已做但判 FAIL
 （阻塞是 L3/L4 缺席，不是判断没做）；**D 组的 L4 UI 证据本轮已由 Xvfb 跑出（见上表）**，但合同要求的
-"绑定实际产品版本/asset/session"仍需装机候选，故 D24 仍 FAIL；S02 记 PARTIAL、S03 记 FAIL（理由见各行）；
+"绑定实际产品版本/asset/session"仍需装机候选，故 D24 判 PARTIAL；S02、S03 均记 FAIL（均为真实产品链
+实测出的结构性缺口，理由见各行与 S02 专段；S02 先前"缺 L3/L4"的归因已在本轮推翻并纠正）；
 **F06 候选已冻结于 `24bd6fb683` 并重跑全门全绿**；F11 未覆盖整条 diff。
 
 **本轮修掉的真实缺陷（全部有复现与复验）：**

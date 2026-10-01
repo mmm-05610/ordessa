@@ -16,7 +16,7 @@ deb `70be6198…` 已作废，其"Phase 3 未展开"的结论也已被后续多�
 | C Profile/凭据 | 20 | 22 | **C02/C03 本轮补齐真实产品链 L3 并判 PASS**——A 临时切 model 后原生有效配置读到新值、**全局逐值未变**（`version` 2→2）、**B 不跟随**；C03 的未覆盖偏好在 Profile 会话解析与 `skills.resolve` 两处实测跟随全局。**解锁密钥环并不是这两条的前提**（那是既有装置的限制，非合同要求）。**C08/C10 亦有真实 L3**，但各一条子句 L3 不可观测故仍 PARTIAL；C22 的两条阻塞均消解、重判 **PASS**；C16 早前已 PASS |
 | D UI 验收 | 16 | 24 | **D16/D17/D18 本轮补真实 L4 选择腿**（三品牌连接器实装 + Profile 预设选择器列出真实播种 Profile + 零告警，连跑三次）；**发送腿仍缺**（需 `--allow-model-calls` 真实模型调用，未授权）。**D24 由 FAIL 改判 PARTIAL**：原判"无可绑定 L4 证据"已不成立，证据现已钉到实际资产（`codex-runtime` / `claude-runtime` 的 `treeDigest`、`sourceLockDigest`、native 版本与适配器版本）与真实项目/Profile id；**唯一未绑的是真实 UI 会话 id**——按 D02 会话在第一句提交时才建，必然要真实发送 |
 | P 发行/装配 | 9 | 16 | **P07/P08 是真实装配缺口**，非仅证据缺口 |
-| S 既有资源 | 1 | 5 | **S03 FAIL（结构性）**；S01 FAIL；S02 PARTIAL |
+| S 既有资源 | 1 | 5 | **S02 由 PARTIAL 改判 FAIL**（projection 腿结构性，真实产品链实测）；S03 FAIL（结构性）；S01 FAIL |
 | F 最终验证 | 12 | 12 | F11 **两次独立复审均判 PASS**（零阻塞）；复审查出的两处（一处由 P1 修复自身引入的严格性回退、一处"缺席 pid 误判为复用"）均已修并变异验证 |
 
 合计 **89 / 117 PASS**（逐行取自台账实际状态，非人工誊抄；由脚本按 `| <ID> | <STATUS>` 重算）。
@@ -137,5 +137,6 @@ bash /home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout/.cleanup
 
 - **A22**：仓内 `execution` 零命中、无接缝可验。合同 §A22 要求"报告阻塞，不擅自设计 pacthold 模型"，故只登记。
 - **S03**：不是"未跑"而是**当前架构下不可能过** —— MCP 在任何组合里都没有实例化，没有承载体。
-- **D19 / C02 / C03 / C08 / C10 / D24**：需要**装机候选**上的真实 L3/L4 会话，在那次 sudo 之后。
+- **S02**：真实 Skill **到不了**真实 harness native home —— 与 S03 同类的结构性缺口，但形态相反：S03 缺承载体，S02 是每段都接好、中间接缝没合。导入、Profile 启用、项目 assignment 启用、4 个原生会话创建与应用**全部成功**（`evidenceKind: "harness-api-confirmed"`，apply RPC 也确实打过），而 native home 里 skill 路径为空、asset id 零命中。产品自己给出答案：`skills.discoverNative` 拒绝于 `NATIVE_TARGET_ROOT_UNAVAILABLE`，原文"that seam is api-requests.md §G2 and **not composed yet**"。"两session隔离"那半判 **PASS**，但如实标注那是**空 skill 集的隔离**。**本条同时纠正了上一版"缺口归因于 sudo 阻塞的资产发布"的错误记法**——真实链一跑即证明与资产发布无关。
+- **D19 / C08 / C10 / D24**：还有一条腿需要**装机候选**上的真实 L3/L4 会话，在那次 sudo 之后（C02/C03 本轮已在未装机链上补齐并判 PASS）。
 - 未合并、未 push、未启停任何既有用户服务、未在无授权情况下消耗真实模型调用。
