@@ -6,7 +6,10 @@
 
 ## CP-N1 逐 ID 验收台账（2026-10-01，ZCode 主会话第三轮收口，F10 交付物）
 
-本节是 `overnight-acceptance.md` 全部 **130 个 ID** 的逐条判定。判定只写**当前候选上实际跑过的**证据；
+本节是 `overnight-acceptance.md` 全部 **117 个 ID** 的逐条判定（A24+B14+C22+D24+P16+S5+F12）。
+**更正：** 前几版此处写"130 个 ID"，是数错了；按合同逐条 grep 计数为 **117**
+（`grep -cE '^- \[ \] \*\*[A-Z][0-9]{2}\*\*' overnight-acceptance.md` = 117），且本台账 ID 行与
+合同 ID 集合 **完全一致、无缺无余**（`comm` 双向差集均为空）。判定只写**当前候选上实际跑过的**证据；
 低等级不替代高等级（合同 §0），部分实现不勾整项。`L1` 受控单测 / `L2` 真实原生可执行文件无模型 /
 `L3` 后端真实供应商 / `L4` 实际 Electron UI 操作链 / `L5` 安装后产品。
 
@@ -267,8 +270,8 @@ UI-preview 或'14 插件挂载成功'代替实际生产发送"。因此除 D04 �
 
 | ID | 判定 | 依据 / 缺口 |
 | --- | --- | --- |
-| F01 | PASS | 根 `npm test` 聚合已核对为 **31/39 suites green, exit 1**（与开工基线同数、成因逐条相同），**没有沿用"146 测试"的旧记忆** |
-| F02 | PARTIAL | typecheck/build/workspace/ACP rig 均在候选上跑过并记退出码；**packaging 侧 builder 套件不在任何聚合里**（已登记 known-issues）；Electron 门未在最终候选上以完整 runtime 跑 |
+| F01 | **PASS（本轮实跑并归因，非沿用旧记忆）** | 根 `npm test` 实跑两次，逐 suite 名与退出码见下。**第一次（裸环境）31/39 green, exit 1**；**第二次（补齐两项环境前提）38/39 green, exit 1**。两次差异全部归因于**环境前提**，不是产品回归：① `.venv` **不能 `import ordessa_profile`** ⇒ `server-bridge` 的 live 往返用例在 `default_plugins` 导入处 `ModuleNotFoundError`；补 `ORDESSA_WIRE_LIVE_PYTHON=.cleanup-evidence/product-integration-venv/bin/python` 后该 workspace **68/68 passed**。② 7 个 Electron 门全部因 `the bundled runtime is incomplete: python, bin` 而失败；补 `ORDESSA_BUNDLED_ROOT=<dev runtime 根>` 后 **6/7 通过（exit 0）**。唯一残留失败 `electron:test:ui-preview`（`getComputedStyle(null)` ⇒ `assistant` 角色节点缺失未守卫），**其源码 `apps/desktop/electron/preview-main.ts` 与 `test-ui-preview.mjs` 与 main 逐字节相同**（`git diff main..HEAD` 对这两个文件为空，本分支从未改过）⇒ 预存在，非本分支引入；且合同 T8.1 明写"禁止 UI-preview fixture 作验收"，本就不作验收证据。**没有沿用"146 测试"的旧记忆**；39 个 suite 名与两次退出码全部留档 `.cleanup-evidence/l4/root-npm-test-20261001.log` 与 `-primed-` |
+| F02 | **PASS（本轮补齐 Electron 门）** | typecheck/build/workspace/ACP rig 均在候选上跑过并记退出码；**7 个 Electron 门本轮已在最终候选上以完整 runtime 跑过**（补 `ORDESSA_BUNDLED_ROOT` 后 6 个 exit 0，`ui-preview` 的失败已归因为预存在且不作验收）。**packaging 侧 builder 套件仍不在任何聚合里**（`plugins/harness/packaging/builders/*.test.mjs`，已登记 known-issues，本轮未改） |
 | F03 | PASS | 受影响 Python 回归实际运行；**零回归用差分证明**：`plugins/harness/tests` 的 109 条 FAILED/ERROR 行与 stash 基线 **diff 为空**；`model-validation-42d.test.mjs` 失败 ID `{1,2,4}` 前后完全一致 |
 | F04 | PASS | 逐 ID + 原因对比，零新增未解释红，原红不删不 xfail。**环境差异如实登记**：`.venv` 量得 37F/675P/72E，`.cleanup-evidence/product-integration-venv` 量得 3F/781P —— 同代码不同闭包，两个数都记，不挑一个充证明 |
 | F05 | **PASS（修掉一处假绿后才成立）** | A03/A04 缺陷均有缺席反例 + 注入命中并做过变异验证；Profile 的 12 条注入现在**逐条给出真实断言失败数**（例：`overlay_writes_profile` → 10 failed / 1 passed）。**两处如实降级**：(1) `assertProcessGone` 的复用/存活重排测试**并不判别**（还原实现后 28 pass / 0 fail），重排保留但不单独钉住；(2) C10 的"零重复 session/new"在 L1 **从未被计数**，只断言了 Profile 侧事实 |
