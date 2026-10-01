@@ -37,7 +37,7 @@ def rig(monkeypatch):
     sessions = SimpleNamespace(resolve=lambda supplied: SimpleNamespace(snapshot=SimpleNamespace(target=target)))
     sessions.require_registered = lambda supplied: sessions.resolve(supplied)
     port = NativeProfileConfigPort(sessions, service_factory=lambda _: (object(), object()),
-                                 resolver_factory=Resolver)
+                                 resolver_factory=Resolver, supported_harnesses=('pi',))
     intent = ConfigIntent("assets.model-provider", "choice", "set", "model-provider/choice",
         "profile@1", {"harnessId": "pi", "providerConfigId": "config", "modelId": "new"})
     return port, ref, intent, revisions, calls, sessions
@@ -70,12 +70,22 @@ def test_explicit_brand_factory_selection_is_required_before_native_port_constru
     assert explicit.inspect(ref) == ref and len(calls) == 1
 
 
-@pytest.mark.parametrize('brands', [(), ['pi'], ('pi', 'pi'), ('unknown',), (True,)])
+@pytest.mark.parametrize('brands', [(), ['pi'], ('pi', 'pi'), ('',), (' route ',), (True,)])
 def test_application_route_declarations_are_closed_and_cannot_be_guessed(rig, brands):
     _, _, _, _, _, sessions = rig
     with pytest.raises(ValueError, match='Explicit supported'):
         NativeProfileConfigPort(sessions, service_factory=lambda _: None,
                                 resolver_factory=lambda: None, supported_harnesses=brands)
+
+
+def test_neutral_integration_accepts_an_explicit_new_harness_without_implementing_it(rig):
+    _, ref, _, _, _, sessions = rig
+    ref = replace(ref, harness_id='extension-owned-harness')
+    calls = []
+    port = NativeProfileConfigPort(sessions,
+        service_factory=lambda target: (calls.append(target) or object(), object()),
+        resolver_factory=lambda: None, supported_harnesses=(ref.harness_id,))
+    assert port.inspect(ref) == ref and len(calls) == 1
 
 
 def test_catalogue_change_after_plan_blocks_before_application(rig):

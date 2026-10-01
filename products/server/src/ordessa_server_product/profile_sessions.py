@@ -25,33 +25,16 @@ def bind_native_profile_sessions(core, runtime, *, artifact_root=None, artifact_
         raise ProfileError("APPLICATION_PORT_ABSENT", "Native channels unavailable", status=409)
     owners = ProfileSessionOwner(channels, server_id="profile-incarnation-" + uuid4().hex)
     sessions = ProfileNativeSessions(core=core, channels=channels, owners=owners, realm="local")
-    roots = {} if artifact_roots is None else dict(artifact_roots)
-    if any(brand not in ('pi', 'codex', 'claude-code') for brand in roots):
-        raise ValueError('Unknown Profile installation route')
-    if artifact_root is not None:
-        if 'pi' in roots and roots['pi'] != artifact_root:
-            raise ValueError('Conflicting Pi installation route')
-        roots['pi'] = artifact_root
+    from ordessa_harness.configuration.model.backend import NativeModelServices, installation_routes
+    roots = installation_routes(artifact_root=artifact_root, artifact_roots=artifact_roots)
+    native_services = NativeModelServices(roots=roots, channels=channels, owners=owners,
+        carrier=runtime.plugin_host, journal_path=runtime.data_root / 'plugins/profile/native-configuration.sqlite')
     if roots:
         from .profile_configuration import NativeProfileConfigPort
-        from ordessa_harness.configuration.model.live_service import create_model_service, verified_installation
         from ordessa_harness.configuration.model.bridge import choice_payload_schema
         from ordessa_model_provider.profile_resolution import ProfileModelChoiceResolver
-        installations = {}
-        def verify(brand):
-            if brand not in installations:
-                installations[brand] = verified_installation(brand, roots[brand])
-            return installations[brand]
         def service_factory(target):
-            native = owners.readback(target)
-            channel = channels.get(native.owner.connection_id)
-            if channel is None or channel.harness_id not in roots:
-                raise ProfileError('APPLICATION_PORT_ABSENT', 'Trusted native installation route unavailable', status=409)
-            brand = channel.harness_id
-            verify(brand)
-            return create_model_service(registry=channels, owners=owners, target=target,
-                carrier=runtime.plugin_host, installation=installations[brand],
-                journal_path=runtime.data_root / "plugins/profile/native-configuration.sqlite",
+            return native_services.create_service(target,
                 credential_binding=sessions.preparation.credential_binding)
         def resolver_factory():
             catalog = runtime.plugin_host.provided_port("model_provider.catalog")
@@ -61,16 +44,6 @@ def bind_native_profile_sessions(core, runtime, *, artifact_root=None, artifact_
         core.config_port = NativeProfileConfigPort(sessions, service_factory=service_factory,
             resolver_factory=resolver_factory, supported_harnesses=tuple(roots))
     from .profile_preparation import NativeProfilePreparation
-    managed_accounts = {}
-    def managed_account_factory(brand):
-        if brand != 'codex' or brand not in roots:
-            raise ProfileError('APPLICATION_PORT_ABSENT', 'Managed account Harness unavailable', status=409)
-        if brand not in managed_accounts:
-            from pathlib import Path
-            from ordessa_harness.codex.managed_account import CodexManagedAccount
-            managed_accounts[brand] = CodexManagedAccount.for_installation(
-                roots[brand], Path.home() / '.ordessa/accounts/codex')
-        return managed_accounts[brand]
     def preparation_catalog():
         catalog = runtime.plugin_host.provided_port('model_provider.catalog')
         if catalog is None:
@@ -81,9 +54,9 @@ def bind_native_profile_sessions(core, runtime, *, artifact_root=None, artifact_
         from ordessa_harness.configuration.model.bridge import choice_payload_schema
         return ProfileModelChoiceResolver(preparation_catalog(), payload_schema=choice_payload_schema())
     sessions.preparation = NativeProfilePreparation(core, channels, roots=roots,
-        verify=verify if roots else lambda brand: None,
+        verify=native_services.verify,
         resolver_factory=preparation_resolver, catalog_factory=preparation_catalog,
-        managed_account_factory=managed_account_factory)
+        managed_account_factory=native_services.managed_account)
     return sessions
 
 

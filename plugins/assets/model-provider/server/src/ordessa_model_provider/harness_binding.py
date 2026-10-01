@@ -66,12 +66,13 @@ class ConfigurationServiceHarnessPort:
 
     def __init__(self, service, *, target, permit_source: Callable[[str], str | None] | None,
                  revision_source: Callable[[Mapping[str, Any]], str],
-                 harnesses: tuple[str, ...] = ("pi", "codex", "claude-code")) -> None:
+                 harnesses: tuple[str, ...] | None = None) -> None:
         self._service = service
         self.target = target
         self._permit_source = permit_source
         self._revision_source = revision_source
-        self._harnesses = tuple(harnesses)
+        # Optional composition filter, never a declaration of native support.
+        self._harnesses = None if harnesses is None else tuple(harnesses)
         self._last_readback: dict[tuple[str, ...], Mapping[str, Any]] = {}
         #: The C4 journal binds one operation key to ONE plan forever; a
         #: replay must therefore come through the same plan id (the service
@@ -80,8 +81,14 @@ class ConfigurationServiceHarnessPort:
 
     # -- HarnessConfigPort protocol -------------------------------------------
 
+    def _matching_capabilities(self, harness_id: str):
+        if self._harnesses is not None and harness_id not in self._harnesses:
+            return ()
+        return tuple(item for item in self._service.inspect(self.target).capabilities
+                     if item.facet_id == FACET_ID and item.harness_id == harness_id)
+
     def describe(self, harness_id: str) -> Mapping[str, Any] | None:
-        if harness_id not in self._harnesses:
+        if not self._matching_capabilities(harness_id):
             return None
         return {
             "harnessId": harness_id,
@@ -99,11 +106,7 @@ class ConfigurationServiceHarnessPort:
         C4 plan/apply gates (version fence, adapter assessment, permit).
         Absent facet → ``unknown``, version-range refusal → ``unsupported`` —
         never a guess."""
-        if harness_id not in self._harnesses:
-            return ELIGIBILITY_UNKNOWN
-        capabilities = self._service.inspect(self.target)
-        matching = [item for item in capabilities.capabilities
-                    if item.facet_id == FACET_ID and item.harness_id == harness_id]
+        matching = self._matching_capabilities(harness_id)
         if not matching:
             return ELIGIBILITY_UNKNOWN
         if any(item.status == "unsupported" for item in matching):

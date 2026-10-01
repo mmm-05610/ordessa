@@ -6,7 +6,10 @@ from threading import RLock
 
 from ordessa_profile.errors import ProfileError
 from ordessa_server.errors import ServerError
-from ordessa_harness.configuration.model.initial import initial_channel, initial_model_params
+from ordessa_harness.configuration.model.initial import initial_channel
+from ordessa_harness.configuration.model.backend import (
+    NativeModelLaunchRefused, launch_options, preparation_params, requires_model_catalog,
+)
 
 
 def _digest(value):
@@ -34,17 +37,11 @@ class NativeProfilePreparation:
         if len(choices) != 1 or choices[0]['quarantined']:
             raise ProfileError('PROFILE_CONFIGURATION_INVALID', 'One current model choice required', status=422)
         resolved = self.resolver_factory().resolve(choices[0]['value'], harness_id=harness_id)
-        transport_options = {}
-        if resolved.payload.get('authentication') == 'managed-account':
-            # Harness validates the dialect; the resource record contains no
-            # token, account directory or invented native endpoint.
-            initial_model_params(harness_id, resolved.payload, 'create:launch-check')
-            if not callable(self.managed_account_factory):
-                raise ProfileError('APPLICATION_PORT_ABSENT', 'Managed account launch unavailable', status=409)
-            account = self.managed_account_factory(harness_id)
-            if account.read(refresh=True) != {'authenticated': True, 'method': 'chatgpt-managed'}:
-                raise ProfileError('AUTHENTICATION_REQUIRED', 'Ordessa Codex login required', status=409)
-            transport_options['codex_account_directory'] = account.account_directory
+        try:
+            transport_options = launch_options(harness_id, resolved.payload,
+                managed_account_factory=self.managed_account_factory)
+        except NativeModelLaunchRefused as exc:
+            raise ProfileError(exc.code, str(exc), status=409) from None
         if self.core.profiles.get(profile_id) != profile:
             raise ProfileError('SWITCH_BLOCKED', 'Profile changed during launch selection', status=409)
         return {'snapshot': {'profileId': profile_id, 'profileVersion': profile['version'],
@@ -76,7 +73,7 @@ class NativeProfilePreparation:
         catalog = self.catalog_factory()
         credential = catalog.application_credential(resolved.payload.get('credentialRef'), harness_id=channel.harness_id)
         model_ids = None
-        if channel.harness_id == 'pi' and credential is not None:
+        if requires_model_catalog(channel.harness_id, credential):
             # The current resource catalogue supplies neutral identities. Only
             # Harness translates these into Pi's in-memory provider dialect.
             row = catalog.records.get(resolved.revisions['providerConfigId'])
@@ -87,7 +84,7 @@ class NativeProfilePreparation:
             if (row['version'] != resolved.revisions['configVersion']
                     or row['models_object_digest'] != resolved.revisions['modelsObjectDigest']
                     or catalog.records.get(row['id']) != row):
-                raise ValueError('Pi model catalogue changed during preparation')
+                raise ValueError('Model catalogue changed during preparation')
         signature = (profile_id, profile['version'], profile['current_revision'],
                      _digest(resolved.payload), _digest(resolved.revisions),
                      _digest(model_ids),
@@ -114,7 +111,7 @@ class NativeProfilePreparation:
                     raise ValueError('Initial channel already reserved or capacity exhausted')
                 else:
                     initial_channel(self.channels, connection_id)
-                    params = None if channel.harness_id == 'pi' and credential is None else initial_model_params(
+                    params = preparation_params(
                         channel.harness_id, resolved.payload, operation_id, credential=credential, models=model_ids)
                     saved = {'channel': channel, 'signature': signature, 'payload': deepcopy(resolved.payload),
                              'input_digest': _digest(params) if params is not None else None,

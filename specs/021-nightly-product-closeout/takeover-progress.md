@@ -4,7 +4,16 @@
 所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
 未合并、未 push、未启停既有用户服务、未重建 deb。三品牌后端真实聊天已通过；Codex Desktop 已通过 Profile 首发与同会话下一轮切换，两条真实回复。完整三品牌 UI/发行验收仍未完成。
 
-## 最新验证（2026-10-01，原生权限边界与真实 Desktop Profile 发送）
+## 最新验证（2026-10-01，Harness 差异归属收口）
+
+- 按用户裁定：Profile 保存/合并配置，model-provider 管理和解析供应商资源，所有原生品牌差异归 Harness。已把产品接线中的 Pi 目录需求、Codex 登录启动参数/账号创建与三品牌安装路由校验迁入 `ordessa_harness.configuration.model.backend`。它不导入 Profile 或 model-provider；产品仍负责连接服务、资源版本校验与会话操作身份，不负责原生策略。
+- Profile 生产配置端口删除隐含 Pi 默认值和内置品牌枚举，未显式声明路由时拒绝；受控新品牌可消费相同中性端口。model-provider 的配置端口删除三品牌默认名单，按当前 Harness 的实际 facet 声明发现能力；可选组合名单只能收窄，不能制造未注册能力。
+- 先红后绿：三个产品 AST 边界测试原先各自发现真实品牌泄漏；model-provider 三个反例复现未注册 Codex 被宣告、新品牌被遗漏、显式过滤表误当能力声明。没有跳过、删除受保护断言或靠返回固定成功修复。
+- 独立复跑：model-provider server **198P**；Harness 新边界/服务测试 + products/server **153P**（其中产品 **145P**、Harness **8P**），exit 0。`git diff --check` 通过。这些是定向回归，不是全仓发行门禁。
+- 迁移后再次使用真实 Electron、已验证独立开发 runtime 与 Codex 原生账号跑 `--during-output --native-tool`：四个成功标记齐备，首发 completed、只读原生工具可见、输出期间选择未提前应用、第二轮同 SessionRef 且配置摘要改变并 completed；最多两条短提示。没有改全局配置/登录/系统资产，没有启停用户服务。
+- **仍未完成**：生产已有历史跨 provider 切换。当前凭据绑定仍只允许原准备认证路由，原生恢复接口尚未连接到 Profile 发送应用链；不能把本次职责迁移或同 provider 模型切换记作完成此项。旧 UI preview 夹具与完整三品牌 UI/发行包门禁也仍待收口。
+
+## 前一检查点（2026-10-01，原生权限边界与真实 Desktop Profile 发送）
 
 - 用户明确裁定：Harness 自己决定原生工具权限；Ordessa 默认只维护认证、通道归属与生命周期。外部 permission/sandbox 插件不得成为普通聊天必备许可。默认 ACP relay 选择原生模式，产品不再自动注入 PermissionsAcpAdmission；显式外部模式仍保留原有单次许可反例。原生模式不宣告外部授权端口 ready，也不自动批准原生权限请求。
 - 真实 Electron DOM + 实际 WS relay：连接 Codex、选择项目和 Profile、首条发送、真实非空回复 completed；同一会话选另一 Profile（gpt-5.5 → gpt-5.6-sol），第二条发送 completed。两轮均有 harness-api-confirmed 回执，configDigest 改变、SessionRef 相同、可见会话相同。另跑 --during-output：第一轮 run=running 时选择，当前轮正常完成，第二次发送前应用次数仍为 1，第二轮才应用；不宣称点击瞬间恰有流式 token。每次最多两条短消息；无未知结果自动重试。

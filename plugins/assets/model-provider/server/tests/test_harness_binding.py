@@ -163,11 +163,36 @@ def test_unsupported_harness_and_unknown_facet_are_typed(tmp_path):
     comp = ControlledComposition("pi", tmp_path)
     try:
         port = _port(comp)
-        assert port.describe("codex") is not None
+        assert port.describe("pi") is not None
+        assert port.describe("codex") is None  # no declaration in this composition
         assert port.describe("not-a-harness") is None
         assert port.eligibility("not-a-harness", {}, SESSION_A) == "unknown"
     finally:
         comp.stop()
+
+
+def test_describe_follows_live_facet_declarations_without_brand_defaults():
+    from types import SimpleNamespace
+
+    declarations = [SimpleNamespace(harness_id="new-harness", facet_id="assets.model-provider")]
+    service = SimpleNamespace(inspect=lambda target: SimpleNamespace(capabilities=tuple(declarations)))
+    port = ConfigurationServiceHarnessPort(service, target=object(), permit_source=None,
+                                          revision_source=lambda ref: "r1")
+    assert port.describe("new-harness")["harnessId"] == "new-harness"
+    assert port.describe("pi") is None
+    declarations[:] = [SimpleNamespace(harness_id="new-harness", facet_id="assets.skills")]
+    assert port.describe("new-harness") is None
+    assert port.eligibility("new-harness", {}, None) == "unknown"
+
+
+def test_explicit_route_filter_cannot_advertise_an_undeclared_harness():
+    from types import SimpleNamespace
+
+    service = SimpleNamespace(inspect=lambda target: SimpleNamespace(capabilities=()))
+    port = ConfigurationServiceHarnessPort(service, target=object(), permit_source=None,
+        revision_source=lambda ref: "r1", harnesses=("extension-owned-harness",))
+    assert port.describe("extension-owned-harness") is None
+    assert port.eligibility("extension-owned-harness", {}, None) == "unknown"
 
 
 def test_secret_bearing_choice_is_refused_before_materialization(tmp_path):
