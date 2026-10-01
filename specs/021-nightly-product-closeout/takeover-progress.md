@@ -216,7 +216,7 @@ L1 绿、L3/L4 **零**，因此不能判 PASS；**C16 本轮已在真实产品�
 
 | ID | 判定 | 等级 | 依据 / 缺口 |
 | --- | --- | --- | --- |
-| D01 | PARTIAL | L1 | mount-only 探针 `ready/rootMounted=true`、`errors=[]`；**不等于真实发送链** |
+| D01 | **PARTIAL** | L1 + **L4（默认启动路径）** | **本轮跑了真正的默认启动**（不注入 `ORDESSA_SERVER_ARGS_JSON`，即发行默认链）：真实 Server 起、`rootMounted=true`、三品牌 + Profile 目录可达，**且合同点名的两个失败模式都不出现**——无 origin 未设置报错、无无限 loading（页面停在 `尚未选择项目`）。**但同一运行暴露 `skills.list`/`skills.resolve` 被拒**，因此"完整插件"这一条被自身证据反驳（详见下方 D01 专段），**不能判 PASS** |
 | D02 | PASS | L1 | 新建草稿零 ACP open/new，第一句提交才建会话 |
 | D03 | PASS | L1 | 二级 picker；已绑定会话仅同 Harness 可切；无可用项诚实报错 |
 | D04 | **FAIL（真实装配缺口）** | L1 | model selector 注册在 `composer.footer`，**不在冻结的 chat-api 合同内**；该包**缺 `manifest.json` 与 `build.mjs`**，且**不在 `products/desktop/extensions.json`** 里 ⇒ 默认可选模型这一格实际是空的 |
@@ -309,6 +309,39 @@ UI 自然只能停在草稿——早先把这个现象读成了"生产发送路�
 > 诚实边界：以上是**选择腿**的 L4，不是发送腿的 L4。不用 UI-preview、内存 Server 或
 > "插件挂载成功"冒充实际生产发送。另注意本轮用的是**已安装的（sudo 修正前）资产**
 > `profile-codex-managed`，资产刷新属另一条被 sudo 阻塞的线。
+
+### D01 专段：发行默认链实跑，并由此把裁定 5 从"读代码的担心"变成"实测到的产品行为"
+
+D01 合同要求"默认启动真实 Server 与完整插件"，此前只有 mount-only 的 L1。本轮跑的是**真正的默认
+启动路径**——`products/desktop/probe-profile-ui.mjs` 的姊妹脚本
+`.cleanup-evidence/l4/probe-default-installed.mjs`，**不注入** `ORDESSA_SERVER_ARGS_JSON`：
+
+| 读数 | 值 | 对 D01 的含义 |
+| --- | --- | --- |
+| `ready` / `rootMounted` | `true` / `true` | 真实 Server 起来了，不是内存替身 |
+| `pages` | `Chat` `Skills` `Sessions` | 桌面扩展面挂上了 |
+| `statuses` | `尚未选择项目` | **不是无限 loading** |
+| `errors` | 无 origin 未设置类报错 | 合同点名的两个失败模式都不出现 |
+| `errors` | `内容库读取失败…skills.list Refused: skills.list is not a wire/1 method`、`skills.resolve` 同 | **"完整插件"被自身证据反驳** |
+
+**根因（逐跳钉死，不是推测）**：
+`product-args.ts:3-4` —— `ORDESSA_SERVER_ARGS_JSON` 缺席即返回空 argv ⇒ 平台层不解释领域开关；
+`apps/server/src/ordessa_server/bootstrap/runtime.py:538` —— `server_plugins is None` 走
+`composition.default_plugins()`；而 `products/server/.../composition.py:164-172` 的
+`default_plugins()` 只返回 compat 三件套 + ModelProvider/Profile/Sandbox/Permissions，
+**没有 `ProductSkillsPlugin`** —— 它只被接进 `native_runtime()`（`composition.py:272`）。
+同时 `plugins/assets/skills/desktop/src/gateway.ts` 等确实在调 `skills.list`/`skills.resolve`，
+`plugins/assets/skills/src/ordessa_skills/wire.py:378,407` 也确实定义了这个方法。
+⇒ **UI 挂载了 Skills 扩展，后端默认链没有对应插件**，方法被 wire 层拒绝。
+
+**预存在，非本分支引入**：`内容库读取失败` 与 `skills.list is not a wire/1 method` 在
+`.cleanup-evidence/l4/l4-electron-20261001.log`（10-01，本分支之外的运行）中同样各出现一次。
+
+**因此 D01 判 PARTIAL，不判 PASS**：合同两个显式失败模式已清零是真实进展，但"完整插件"
+这一条被实测反驳。**修复属于架构裁定**——把 `ProductSkillsPlugin` 加进 `default_plugins()`
+会直接撞上 `products/server/tests/test_q5_first_stage.py:30-34` 钉死的
+`EXPECTED_PLUGIN_IDS`（8 项，无 skills）。**该断言未被放宽，本轮也未改产品装配**，
+按目标约束（架构决策立即上报）列入待裁定第 5 项，本轮只把它从"读代码推断"升级为"实测证据"。
 
 ### F11 独立复审查出的 P1/P2（本轮已修，双向验证）
 

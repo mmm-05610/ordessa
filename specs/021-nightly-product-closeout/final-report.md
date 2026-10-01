@@ -109,6 +109,14 @@ bash /home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout/.cleanup
 5. **发行默认链是否装配 Skills/MCP** —— 把 `ProductSkillsPlugin` 加进 `default_plugins` 会撞上
    `products/server/tests/test_q5_first_stage.py:30-34` 钉死的 `EXPECTED_PLUGIN_IDS`，属架构裁定。
    **该断言未被放宽。**
+   **本轮已从"读代码的推断"升级为实测**：跑真正的默认启动路径（不注入
+   `ORDESSA_SERVER_ARGS_JSON`）得到 `ready:true`、`rootMounted:true`、页面 `Chat`/`Skills`/`Sessions`、
+   停在 `尚未选择项目`（**无 origin 未设置报错、无无限 loading** —— D01 合同点名的两个失败模式已清零），
+   同时 `skills.list` / `skills.resolve` 被拒（`is not a wire/1 method`）。
+   根因逐跳钉死：`product-args.ts:3-4`（argv 为空）→ `runtime.py:538`（走 `default_plugins()`）
+   → `composition.py:164-172`（`ProductSkillsPlugin` 只存在于 `native_runtime()` 的 `composition.py:272`）。
+   **因此 D01 判 PARTIAL 不判 PASS**："完整插件"这一条被自身证据反驳。缺陷已登记于
+   `docs/known-issues.md`（并注明开发启动器恒注入 `--execution-mode native`，把缺口藏住）。
 
 ## 未做而非做不完
 
