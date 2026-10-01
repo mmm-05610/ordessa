@@ -59,6 +59,30 @@ class ProbeResult:
     models: tuple[str, ...] = ()
 
 
+def _normalize_endpoint_url(base_url: str) -> tuple[str, str]:
+    """Validate URL syntax without DNS or network I/O.
+
+    Stored configuration is not a network probe. Keep the HTTPS/explicit
+    loopback HTTP rule, but leave resolved-address admission to the probe.
+    """
+    try:
+        parsed = urlsplit(base_url if "://" in base_url else f"https://{base_url}")
+        scheme = parsed.scheme.lower()
+        host = (parsed.hostname or "").lower()
+        port = parsed.port
+    except ValueError:
+        raise ProbeError("PROBE_ENDPOINT_BLOCKED", "the endpoint URL is malformed") from None
+    if scheme not in {"https", "http"} or not host:
+        raise ProbeError("PROBE_ENDPOINT_BLOCKED", "the endpoint must be an http(s) URL with a host")
+    if parsed.username is not None or parsed.password is not None or parsed.query or parsed.fragment:
+        raise ProbeError("PROBE_ENDPOINT_BLOCKED", "the endpoint must not contain credentials, query or fragment")
+    if port == 0:
+        raise ProbeError("PROBE_ENDPOINT_BLOCKED", "the endpoint port is invalid")
+    if scheme == "http" and host not in _LOOPBACK_HOSTS:
+        raise ProbeError("PROBE_ENDPOINT_BLOCKED", "plain http is allowed only to a loopback host")
+    return f"{scheme}://{parsed.netloc}{parsed.path.rstrip('/')}", host
+
+
 def _validate_endpoint(base_url: str) -> tuple[str, str]:
     """Return (normalized base, host), refusing anything the order forbids.
 
@@ -68,13 +92,9 @@ def _validate_endpoint(base_url: str) -> tuple[str, str]:
     the addresses a host resolves to rather than the spelling of the host,
     because a name and the number behind it are the same endpoint to a scanner.
     """
-    parsed = urlsplit(base_url if "://" in base_url else f"https://{base_url}")
-    scheme = parsed.scheme.lower()
-    host = (parsed.hostname or "").lower()
-    if scheme not in {"https", "http"} or not host:
-        raise ProbeError("PROBE_ENDPOINT_BLOCKED", "the endpoint must be an http(s) URL with a host")
-    if scheme == "http" and host not in _LOOPBACK_HOSTS:
-        raise ProbeError("PROBE_ENDPOINT_BLOCKED", "plain http is allowed only to a loopback host")
+    base, host = _normalize_endpoint_url(base_url)
+    parsed = urlsplit(base)
+    scheme = parsed.scheme
     try:
         port = parsed.port or (443 if scheme == "https" else 80)
         resolved = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
@@ -95,7 +115,6 @@ def _validate_endpoint(base_url: str) -> tuple[str, str]:
                 "PROBE_ENDPOINT_BLOCKED",
                 "private network addresses are not probeable endpoints",
             )
-    base = f"{parsed.scheme}://{parsed.netloc}{parsed.path.rstrip('/')}"
     return base, host
 
 

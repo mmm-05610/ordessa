@@ -1,0 +1,28 @@
+{
+  "scope": "real-product-profile-chat-not-desktop-ui",
+  "harness": "pi",
+  "installedAsset": "profile-pi-registration-owner-bound",
+  "upstreams": ["deepseek", "opencode-go"],
+  "models": ["deepseek-flash", "glm-5.3-flash"],
+  "actualTurns": 2,
+  "initialProfileConfirmed": true,
+  "nextProfileConfirmed": true,
+  "historyPreserved": true,
+  "providerTransitionStrategy": "live-registration",
+  "providerRegistrationEffects": 1,
+  "restorationEffects": 0,
+  "nativeGenerationRenewed": false,
+  "transparentRelayAcceptance": {
+    "exitCode": 0,
+    "requests": 2,
+    "inferenceRequests": 2,
+    "nativeSessionHeaderObserved": true
+  },
+  "directEndpointAcceptance": {
+    "exitCode": 0,
+    "viaLocalRelay": false,
+    "upstreamRequestCount": null
+  },
+  "ownedResourcesCleaned": true,
+  "desktopUiAcceptance": false
+}

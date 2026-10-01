@@ -43,6 +43,20 @@ def test_real_catalogue_projects_valid_c2_payload_and_separate_fence(catalog):
     assert "configVersion" not in result.payload
 
 
+def test_public_endpoint_create_update_and_profile_resolution_need_no_dns(catalog, monkeypatch):
+    import socket
+
+    def forbidden_dns(*args, **kwargs):
+        raise AssertionError("saving or resolving configuration must not query DNS")
+    monkeypatch.setattr(socket, "getaddrinfo", forbidden_dns)
+    choice = saved(catalog, endpoints={"openai-chat": "https://api.deepseek.com/v1/"})
+    assert resolve(catalog, choice).payload["endpoint"] == "https://api.deepseek.com/v1"
+    catalog.update(choice["providerConfigId"], 1, "update-offline", {
+        "endpoints": {"openai-chat": "https://opencode.ai/zen/go/v1/"},
+    })
+    assert resolve(catalog, choice).payload["endpoint"] == "https://opencode.ai/zen/go/v1"
+
+
 def test_explicit_managed_account_choice_has_no_api_endpoint_or_credential(catalog):
     choice = saved(catalog, provider='openai', configuration=[{'controlId': 'authentication', 'value': 'managed-account'}], endpoints={})
     result = ProfileModelChoiceResolver(catalog, payload_schema=choice_payload_schema()).resolve(choice, harness_id='pi')

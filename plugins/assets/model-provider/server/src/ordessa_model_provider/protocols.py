@@ -108,9 +108,10 @@ def validate_endpoints(endpoints: Any, declared_protocols: Iterable[str]) -> dic
     """Validate the per-protocol ``endpoints`` map.
 
     Keys must be a subset of the record's declared ``protocols`` (canonical),
-    and each URL follows the probe's discipline (https, loopback exception,
-    non-loopback private refused) - so an endpoint can never smuggle in a
-    target the probe would refuse. Returns a stable, canonically-keyed map.
+    and each URL is syntax-validated (https, explicit loopback HTTP exception)
+    without DNS. Saving/resolving configuration does not initiate a probe.
+    Test-connection/model-pull retain their separate resolved-address policy.
+    Returns a stable, canonically-keyed map.
     """
     if endpoints is None:
         return {}
@@ -118,7 +119,7 @@ def validate_endpoints(endpoints: Any, declared_protocols: Iterable[str]) -> dic
         raise ServerError(
             "PROFILE_CONFIGURATION_INVALID", "endpoints must be an object", status=422,
         )
-    from ordessa_model_provider.probe import ProbeError, _validate_endpoint
+    from ordessa_model_provider.probe import ProbeError, _normalize_endpoint_url
 
     allowed = set(declared_protocols)
     normalized: dict[str, str] = {}
@@ -134,7 +135,7 @@ def validate_endpoints(endpoints: Any, declared_protocols: Iterable[str]) -> dic
                 "PROFILE_CONFIGURATION_INVALID", "endpoint URLs must be non-empty strings", status=422,
             )
         try:
-            base, _host = _validate_endpoint(url)
+            base, _host = _normalize_endpoint_url(url)
         except ProbeError as error:
             raise ServerError(
                 "PROFILE_CONFIGURATION_INVALID", f"endpoint {key!r}: {error}", status=422,

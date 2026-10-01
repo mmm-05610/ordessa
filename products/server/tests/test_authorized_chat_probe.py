@@ -31,3 +31,17 @@ def test_go_destination_is_a_distinct_fixed_upstream_not_a_model_alias(probe):
     assert probe.relay_upstreams(False)['/claude-next/'] == mapping['/claude/']
     assert mapping['/pi-next/'] == 'https://opencode.ai/zen/go/v1/'
     assert probe.relay_upstreams(False)['/pi-next/'] == mapping['/pi/']
+
+
+def test_direct_provider_mode_rejects_wrong_scope_before_process_or_network(probe, tmp_path):
+    from types import SimpleNamespace
+    key = tmp_path / 'synthetic-keys.txt'
+    key.write_text('synthetic-first\nsynthetic-second\n')
+    for patch in [dict(brand=['claude-code']), dict(switch_go=False), dict(switch_provider=False),
+                  dict(local_relay=True), dict(fixed_assets=False)]:
+        args = dict(allow_model_calls=True, key_file=key, key_line=1, destination_key_line=2,
+                    brand=['pi'], switch_go=True, switch_provider=True, local_relay=False,
+                    direct_provider=True, fixed_assets=True)
+        args.update(patch)
+        with pytest.raises(ValueError, match='Direct provider acceptance'):
+            probe.run(SimpleNamespace(**args))

@@ -50,11 +50,15 @@ def run(args):
     lines = args.key_file.read_text().splitlines()
     key = bounded_key(lines, args.key_line)
     switch_go = getattr(args, 'switch_go', False)
+    direct_provider = getattr(args, 'direct_provider', False)
     brands = args.brand or ['pi', 'claude-code']
+    if direct_provider and (brands != ['pi'] or not switch_go or not args.switch_provider
+                           or args.local_relay or not args.fixed_assets):
+        raise ValueError('Direct provider acceptance requires Pi/fixed-assets/switch-provider/switch-go without relay')
     if switch_go and not args.switch_provider:
         raise ValueError('Go destination requires explicit provider restoration mode')
     if args.switch_provider and (len(brands) != 1 or brands[0] not in ('pi', 'claude-code')
-            or not args.local_relay or not args.fixed_assets):
+            or (not args.local_relay and not direct_provider) or not args.fixed_assets):
         raise ValueError('Provider transition probe requires one supported brand, fixed assets and isolated local relay')
     destination_key = bounded_key(lines, args.destination_key_line) if switch_go else key
     native_brands = [brand for brand in brands if brand != 'pi']
@@ -90,6 +94,7 @@ def run(args):
                     relay_rejected.set(); self.send_error(401); return
                 print(json.dumps(dict(stage='relay-request', inference=inference, counts=dict(relay_counts),
                     credentialMatches=True, upstream='go' if switch_go and destination else 'deepseek',
+                    nativeSessionHeaderPresent=bool(self.headers.get('x-opencode-session')),
                     placeholderAuth=(auth == 'Bearer acp-proxy'))), flush=True)
                 request = Request(mapping[prefix] + self.path[len(prefix):],
                     data=self.rfile.read(length), headers=headers, method='POST')
@@ -265,9 +270,11 @@ def run(args):
                             locators.append(CredentialRecords(runtime.database).get(destination_credential, kind='api-key')['secret_locator'])
                             models = (models[0], 'glm-5.3-flash' if brand == 'pi' else 'minimax-m2.7')
                         provider = wire('providerModels.create', dict(requestId='live-destination-' + uuid4().hex,
-                            harness=brand, provider='go-destination' if switch_go else 'deepseek-destination', displayName='Authorized restoration destination',
+                            harness=brand, provider=('opencode-go' if brand == 'pi' else 'go-destination')
+                                if switch_go else 'deepseek-destination', displayName='Authorized restoration destination',
                             credentialId=destination_credential, configuration=[], protocols=[protocol],
-                            endpoints={protocol: f'http://127.0.0.1:{relay.server_port}/' + ('pi-next' if brand == 'pi' else 'claude-next')},
+                            endpoints={protocol: ('https://opencode.ai/zen/go/v1' if direct_provider else
+                                f'http://127.0.0.1:{relay.server_port}/' + ('pi-next' if brand == 'pi' else 'claude-next'))},
                             models=[dict(modelId=m, displayName=m, availability='available', unavailableReason=None)
                                     for m in models]))['providerModel']
                     save(models[1], 2)
@@ -296,14 +303,17 @@ def run(args):
                         raise RuntimeError('History was not preserved across the actual model switch')
                     evidence.append(dict(harness=brand, actualTurns=2, initialProfileConfirmed=True,
                         nextProfileConfirmed=True, historyPreserved=True, models=list(models),
-                        providerRouteRestoration=args.switch_provider,
+                        providerRouteRestoration=args.switch_provider and brand != 'pi',
+                        providerTransitionStrategy=('live-registration' if brand == 'pi' else 'restart-resume') if args.switch_provider else None,
                         providerRegistrationEffects=configuration_calls.count('_ordessa/session/configuration/provider-register'),
                         restorationEffects=configuration_calls.count('_ordessa/session/configuration/restore'),
                         nativeGenerationRenewed=before_config['generation'] != after_config['generation'],
                         distinctUpstreamVendors=switch_go if args.switch_provider else None))
                     print(json.dumps(evidence[-1]), flush=True)
                 print(json.dumps(dict(scope='real-product-profile-chat-not-desktop-ui', evidence=evidence,
-                    viaLocalRelay=relay is not None, relayCounts=relay_counts)), flush=True)
+                    viaLocalRelay=relay is not None,
+                    relayCounts=relay_counts if relay is not None else None,
+                    directEndpointAcceptance=direct_provider)), flush=True)
             finally:
                 primary = sys.exc_info()[1]
                 failures = []
@@ -338,6 +348,8 @@ if __name__ == '__main__':
     parser.add_argument('--switch-go', action='store_true',
                         help='Explicit Pi/Claude DeepSeek-to-Go transition; requires switch-provider/local-relay/fixed-assets')
     parser.add_argument('--destination-key-line', type=int, default=2)
+    parser.add_argument('--direct-provider', action='store_true',
+                        help='Pi only: preserve real provider hostname for native compatibility/session attribution; no relay')
     parser.add_argument('--brand', choices=['pi', 'claude-code'], action='append')
     parser.add_argument('--local-relay', action='store_true', help='Explicit isolated TLS forwarding, not direct endpoint acceptance')
     run(parser.parse_args())

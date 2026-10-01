@@ -4,7 +4,16 @@
 所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
 未合并、未 push、未启停既有用户服务、未重建 deb。三品牌后端真实聊天已通过；Codex Desktop 已通过 Profile 首发与同会话下一轮切换，两条真实回复。完整三品牌 UI/发行验收仍未完成。
 
-## 最新验证（2026-10-01，Pi 真实产品暴露能力查询绑定遗漏，已修待修正版安装）
+## 最新验证（2026-10-01，Pi 真实跨供应商通过；配置 DNS 职责收口）
+
+- 用户已安装 owner-bound 修正版。完整后端产品经固定上游透明 relay 验收 exit 0：DeepSeek → Go，两个真实用户 prompt、两次上游 HTTP 200，第二轮准确回忆第一轮随机标记；两轮 Profile 应用回执确认，模型 deepseek-flash → glm-5.3-flash。同 canonical/native owner，provider-register 效果恰一次，restore=0，原生 generation 不变。Pi 自己产生 Go 会话头，中继没有补头或修改请求体。日志 `.cleanup-evidence/pi-native-go-product.log`。这是完整后端产品，不是 Desktop UI 验收。
+- 过程失败保留：修正版首次 relay 运行在 Go 第二轮收到 400；改用真实原生 provider ID opencode-go 后上述完整链通过。Pi 的原生兼容与会话 attribution 根据 provider ID/URL 选择，不能把自定义别名 + localhost 转发等同于原生公网配置。另一次直接公网尝试在保存配置时遭 DNS 地址检查拒绝，零 prompt；不改写为成功。
+- 实际系统 DNS 将 DeepSeek/Go 解析为 Fake-IP 保留地址。用户明确批准：保存/更新配置与 Profile 解析只做 URL 检查，不查 DNS；真正测试连接/拉取模型仍执行原有逐地址 DNS/SSRF 检查，实际 Harness 请求使用原生网络路径。修改只在 model-provider 插件，不动 host、Profile 或网络代理。HTTPS/显式 loopback HTTP 规则保留，非法端口、内嵌凭据、query/fragment 拒绝。
+- 两个端点边界反例修前红、修后绿；另补真实 catalogue 创建/更新/Profile 解析零 DNS 反例及畸形 URL 反例。model-provider + products/server 回归 **370P**，exit 0（一个既有 Starlette warning）；catalogue 更新加强后定向解析测试 **26P**。
+- 修后直接公网产品验收 **exit 0**：不经本会话 relay，DeepSeek → Go 两条真实回复、历史保留、两次 Profile 回执确认、注册恰一次/恢复零次/generation 不变；directEndpointAcceptance=true。日志 `.cleanup-evidence/pi-provider-direct-postfix.log`，摘要 `evidence/pi-provider-product-20261001.json`。未计量直连上游辅助请求，relayCounts=null，不伪称所有模型 API 请求只有两次。自有通道、测试 keyring 条目及 runtime 已清理。仍不是 Desktop UI 操作证据。
+- Pi 新供应商的存活会话切换已完成（后端产品范围）；Codex 官方/API 已有历史切换、三品牌完整 UI/覆盖/Unknown 与发行回归仍未收口，不增加顶层阶段。旧资产、全局配置/登录、根 main 与他属截图保持不动，未 push/合并。成功 relay 探针自有通道、测试 keyring 条目、runtime 均已清理。
+
+## 前一检查点（2026-10-01，Pi 真实产品暴露能力查询绑定遗漏，已修待修正版安装）
 
 - 用户已成功安装 profile-pi-live-registration，真实宿主权限独立复核完整资产信任 exit 0，安装本身无问题。扩展产品探针覆盖 Pi 的两家供应商：固定 DeepSeek/Go Chat 上游、分行选 Key、保持原生模型与认证头、原 16 请求/8 推理上限；不引入新的模型授权范围。
 - 第一次完整产品运行 **失败，不能记作跨供应商通过**：DeepSeek 首轮真实回复完成，上游 HTTP 200，随后第二轮规划被拒，未执行 provider-register、未发送第二个 prompt。原因是本轮新增 provider-capability 回复缺少 `sessionId`，Registry 现有 owner-only RPC 规则拒绝该结果；受控 service mock 和直连适配器探针之前都漏掉这一协议约束。自有通道、两条导入的密钥环记录和 runtime 已清理。日志 `.cleanup-evidence/pi-live-provider-product.log` 保留。
@@ -373,6 +382,9 @@ Profile Chat 有限入口接线已由主代理复跑 23/23：合法 default fact
   - [x] 独立实例入口、品牌锁定和显式增强来源校验及最终增强资产安装已完成。
   - [x] Codex/Claude 真实产品首次准备、同 provider model 切换及每品牌双会话隔离通过。
   - [ ] 已有历史跨 provider 恢复。
+    - [x] Claude 完整后端产品 DeepSeek → Go restart/resume，历史与两次 Profile 回执确认。
+    - [x] Pi 完整后端产品 DeepSeek → Go live-registration（无 restart/resume），透明 relay 与直接公网两条路径均通过。
+    - [ ] Codex 官方/API 已有历史切换。
 - [ ] 产品完整回归及用户授权的真实聊天、配置切换验收。
   - [x] Pi 新供应商/API Key 私有准备源码、受控回归、真实候选适配器双实例无模型验证。
   - [x] 增强 Pi 供应商资产安装后，实际产品 wire/Profile/C4 完整确认（三品牌实际探针，零 prompt/HTTP）。

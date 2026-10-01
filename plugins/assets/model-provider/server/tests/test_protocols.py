@@ -78,11 +78,12 @@ def test_endpoint_keys_must_be_declared():
     assert excinfo.value.code == "PROFILE_CONFIGURATION_INVALID"
 
 
-def test_endpoint_urls_follow_the_probe_discipline():
+def test_endpoint_urls_follow_storage_syntax_not_probe_dns_policy():
     with pytest.raises(ServerError):
         validate_endpoints({"chat": "http://10.0.0.5/v1"}, ["openai-chat"])
-    with pytest.raises(ServerError):
-        validate_endpoints({"chat": "https://10.0.0.5/v1"}, ["openai-chat"])
+    assert validate_endpoints({"chat": "https://10.0.0.5/v1"}, ["openai-chat"]) == {
+        "openai-chat": "https://10.0.0.5/v1",
+    }
     normalized = validate_endpoints(
         {"chat": "http://127.0.0.1:8080/v1", "responses": "https://127.0.0.1:9443/v1"},
         ["openai-chat", "openai-responses"],
@@ -93,10 +94,39 @@ def test_endpoint_urls_follow_the_probe_discipline():
     }
 
 
+def test_storing_endpoint_never_resolves_dns_but_probe_still_blocks_fake_ip(monkeypatch):
+    import socket
+    from ordessa_model_provider.probe import ProbeError, _validate_endpoint
+
+    calls = []
+    def fake_dns(*args, **kwargs):
+        calls.append(args)
+        return [(socket.AF_INET, None, None, "", ("198.18.0.53", 443))]
+    monkeypatch.setattr(socket, "getaddrinfo", fake_dns)
+    assert validate_endpoints({"chat": "https://opencode.ai/zen/go/v1/"}, ["openai-chat"]) == {
+        "openai-chat": "https://opencode.ai/zen/go/v1",
+    }
+    assert calls == []
+    with pytest.raises(ProbeError) as excinfo:
+        _validate_endpoint("https://opencode.ai/zen/go/v1/")
+    assert excinfo.value.code == "PROBE_ENDPOINT_BLOCKED"
+    assert len(calls) == 1
+
+
 def test_capabilities_refuse_undocumented_keys():
     with pytest.raises(ServerError) as excinfo:
         validate_capabilities({"toolCall": True, "mystery": 1})
     assert excinfo.value.code == "PROVIDER_MODEL_INVALID"
+
+
+@pytest.mark.parametrize("url", ["ftp://example.com/v1", "https://", "https://x.test:bad/v1",
+                                 "https://x.test:70000/v1", "https://x.test:0/v1",
+                                 "https://user:secret@x.test/v1", "https://x.test/v1?key=secret",
+                                 "https://x.test/v1#fragment", "https://[broken/v1"])
+def test_stored_endpoint_still_refuses_invalid_or_secret_bearing_urls(url):
+    with pytest.raises(ServerError) as caught:
+        validate_endpoints({"chat": url}, ["openai-chat"])
+    assert caught.value.code == "PROFILE_CONFIGURATION_INVALID"
 
 
 def test_model_facts_preserve_absence():
