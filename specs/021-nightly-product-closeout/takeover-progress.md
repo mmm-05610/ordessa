@@ -851,3 +851,33 @@ manifest 自报入口，并在 `node_modules/<pkg>/` 之外开口子。两者都
 约束（安全决策立即上报）已登记待裁，本轮不动该文件、未放宽任何检查、未跳过任何校验。
 
 已写入 `docs/known-issues.md` Cross-component 表，标记 **Blocks rollout**。
+
+#### 决策所需的事实：便宜的那条路已被排除
+
+在提出选项前先把包形态测实了，结论直接收窄了可选方案：
+
+| | dsh | kilo |
+| --- | --- | --- |
+| 是否有 `dist/` | **无** | **无** |
+| `package.json` `main` / `exports` | 均无 | 均无 |
+| 仅有 | `bin: {"dsh": "lib/bin.js"}` | `bin: {"kilo": "./bin/kilo", ...}` |
+| 入口真实形态 | `#!/usr/bin/env node` 的 JS 脚本 | `#!/usr/bin/env node` 的 JS 脚本 |
+| 是否原生二进制 | 否 | 否 |
+
+即：**dsh 与 kilo 是纯 CLI 包（只有 bin、无库入口），而校验器的契约是照 codex / claude
+那种库式包（`dist/index.js`）写死的**。因此"让 builder 产出一个符合 `dist/index.js` 的入口"
+这条路**不可行**——那需要凭空捏造上游不存在的库入口。
+
+真正需要裁决的是二选一（均属信任根变更，本轮不实施）：
+
+1. **为可执行形态新增一种变体**：仿照 codex 的 `native{entrypoint}`，声明 `bin` 目标，
+   由校验器校验它是包内真实存在、可执行、且落在 `node_modules/<pkg>/` 下的路径。
+   边界更贴合"CLI 型 harness"，但要新增一条受信任的路径类别。
+2. **入口改为 manifest 自报、校验器只做形状校验**：不再钉死文件名，改为校验
+   "在 `node_modules/<pkg>/` 内、无 `..`、真实存在"，由 treeDigest 覆盖其字节。
+   实现更省，但等于承认 manifest 可以自选被信任的入口。
+
+附带发现（**如实记录，未定性，未处置**）：kilo 产物内含
+`node_modules/@kilocode/cli/bin/bwrap`，为 `ELF 64-bit LSB pie executable, x86-64,
+static-pie linked, stripped`（112664 B）；对 `bin/kilo` 文本 grep `bwrap` 命中 0 次。
+一个静态链接的沙箱可执行文件随产物进入 `/opt` 属于安全面变化，是否可接受需一并裁决。
