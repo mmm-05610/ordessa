@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { placePopover } from '../src/popover'
+import { placePopover } from '../src/overlays/popover'
 
 const rect = (left: number, top: number, width = 100, height = 50) => ({ left, top, right: left + width, bottom: top + height, width, height })
 

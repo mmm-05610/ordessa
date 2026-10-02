@@ -4,11 +4,11 @@ import { Group, Panel, Separator, type PanelImperativeHandle } from 'react-resiz
 import type { Commands, Region, UIContribution, View, WorkbenchSettingsSection } from '@extensions/ordessa.contracts/contract.js'
 import { ordered } from '../shared/registry'
 import { Boundary } from '../shared/boundary'
-import { placePopover } from './popover'
+import { placePopover } from './overlays/popover'
 import { SETTINGS_OVERLAY_ID, type OverlayInstance, type WorkbenchModel } from './model'
-import { labels, RegionActions, regions, ViewTabs } from './region-header'
-import { FooterSurface, Sidebar, SidebarRestoreButton } from './sidebar'
-import { SIDEBAR_INITIAL_WIDTH_PX, clampSidebarWidth, sidebarWidthBounds } from './sidebar-width'
+import { labels, RegionActions, regions, ViewTabs } from './layout/region-header'
+import { FooterSurface, Sidebar, SidebarRestoreButton } from './navigation/sidebar'
+import { SIDEBAR_INITIAL_WIDTH_PX, clampSidebarWidth, sidebarWidthBounds } from './navigation/sidebar-width'
 import { styles } from './styles'
 
 const auxiliary = ['left', 'right', 'bottom', 'top'] as const

@@ -2,7 +2,7 @@ import { useLayoutEffect, useState, type ReactNode, type RefObject } from 'react
 import { createPortal } from 'react-dom'
 import type { DragEvent } from 'react'
 import type { Region, View } from '@extensions/ordessa.contracts/contract.js'
-import { labels, RegionActions, ViewTabs } from './region-header'
+import { labels, RegionActions, ViewTabs } from '../layout/region-header'
 
 /** Workspace identity shown in the sidebar header. The Workbench owns no
  * workspace/project data (W07): with no registered source the fixed, honest

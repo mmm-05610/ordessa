@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   SIDEBAR_INITIAL_WIDTH_PX, SIDEBAR_MAX_WIDTH_PX, SIDEBAR_MIN_WIDTH_PX,
   clampSidebarWidth, sidebarDefaultWidthPx, sidebarWidthBounds,
-} from '../src/sidebar-width'
+} from '../src/navigation/sidebar-width'
 
 // Pure unit tests for the ported clamp (see PROVENANCE.md). jsdom has no
 // geometry, so the container-dependent rules live here; the browser-side
