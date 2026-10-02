@@ -54,6 +54,19 @@ class NativeConfigurationUnavailable(RuntimeError):
     """No independent live configuration evidence; never an applied receipt."""
 
 
+class NativeConfigurationRefused(NativeConfigurationUnavailable):
+    """The native answered this owner query with a JSON-RPC error object.
+
+    Distinct only for callers that ask for the distinction; every existing
+    consumer keeps catching the base class. Carries the reply's numeric code,
+    never its message text.
+    """
+
+    def __init__(self, error_code):
+        super().__init__('native configuration query refused by the native side')
+        self.error_code = error_code
+
+
 @dataclass(frozen=True)
 class NativeConfigurationObservation:
     owner: NativeSessionObservation
@@ -281,11 +294,15 @@ class _Channel:
         return True
 
     def _configuration_rpc(self, native_id: str | None, method: str, params: Mapping[str, Any],
-                           *, timeout: float = 10) -> tuple[NativeSessionObservation | None, dict]:
+                           *, timeout: float = 10,
+                           fold_errors: bool = True) -> tuple[NativeSessionObservation | None, dict]:
         """Internal bounded RPC. Admission/operation authority is a caller obligation.
 
         Only these native configuration methods exist; client relay cannot call
         them. A reply is native data, not a C4 permit or applied receipt.
+        With ``fold_errors`` (default) a JSON-RPC error reply is folded into
+        :class:`NativeConfigurationUnavailable` exactly as before; callers that
+        must distinguish a native refusal opt in explicitly.
         """
         initial_method = method in {'_ordessa/channel/configuration/prepare', '_ordessa/channel/configuration/operation'}
         if (method not in _OWNER_CONFIGURATION_METHODS
@@ -333,8 +350,14 @@ class _Channel:
                 if self._ended or (not initial_method and self._native_sessions.get(native_id) is not owner):
                     raise NativeConfigurationUnavailable('native session owner changed')
                 response = pending.response
-            if response is None or 'error' in response:
-                raise NativeConfigurationUnavailable('native configuration query refused or unavailable')
+            if response is None:
+                raise NativeConfigurationUnavailable('native configuration query lost')
+            if 'error' in response:
+                if fold_errors:
+                    raise NativeConfigurationUnavailable('native configuration query refused or unavailable')
+                error = response['error']
+                code = error.get('code') if isinstance(error, dict) else None
+                raise NativeConfigurationRefused(code)
             result = response['result']
             if not isinstance(result, dict) or (not initial_method and result.get('sessionId') != native_id):
                 raise NativeConfigurationUnavailable('malformed native configuration evidence')
@@ -599,6 +622,37 @@ class AcpChannelRegistry:
                 or channel.native_session_observation(native_session_id) is not owner):
             raise NativeConfigurationUnavailable('operation owner changed')
         return owner, record
+
+    def query_native_operation_state(self, connection_id: str, native_session_id: str,
+                                     operation_id: str, *, timeout: float = 10):
+        """Read-only operation presence with refusal kept distinct.
+
+        ``'refused'`` only when the pinned native itself answered this exact
+        operation query with an invalid-params error: the operation was
+        declined before any record or native effect existed. ``'present'``
+        when the native holds a record. Anything unproven — lost reply,
+        timeout, foreign error class, changed owner — raises, exactly as
+        :meth:`query_native_operation` does. Never retries effects.
+        """
+        if (type(operation_id) is not str or not operation_id or len(operation_id) > 128
+                or operation_id != operation_id.strip()):
+            raise ValueError('bounded native operation identity required')
+        channel = self.get(connection_id)
+        if channel is None:
+            raise NativeConfigurationUnavailable('channel owner unavailable')
+        try:
+            owner, record = channel._configuration_rpc(native_session_id,
+                '_ordessa/session/configuration/operation',
+                {'sessionId': native_session_id, 'operationId': operation_id},
+                timeout=timeout, fold_errors=False)
+        except NativeConfigurationRefused as exc:
+            if exc.error_code != -32602:
+                raise
+            return 'refused'
+        if (self.get(connection_id) is not channel or channel.ended
+                or channel.native_session_observation(native_session_id) is not owner):
+            raise NativeConfigurationUnavailable('operation owner changed')
+        return 'present'
 
     def prepare_native_creation(self, connection_id: str, params: Mapping[str, Any], *, timeout: float = 10):
         """Trusted plugin-only initial preparation; no native session exists yet.

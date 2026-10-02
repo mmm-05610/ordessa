@@ -28,11 +28,17 @@ class ProviderRestorationPlan:
     mode: str = 'restart-resume'
 
 
+class _EvidenceCode(Exception):
+    """Nominal whitelisted diagnosis code; carries no digests, ids or values."""
+
+
 @dataclass(frozen=True)
 class ProviderRestorationOutcome:
     state: str
     ticket: object
     restored: object = None
+    #: Whitelisted nominal condition code only; never a digest, id or value.
+    reason: str = None
 
 
 class ProviderRestorationService:
@@ -221,33 +227,48 @@ class ProviderRestorationService:
             outcome = self._attempts.get(plan.operation_id)
             if outcome is None:
                 raise ValueError('Native restoration has not been attempted')
+            code = 'RESTORE_EVIDENCE_UNAVAILABLE'
             try:
                 channel = self._channel(plan.before)
                 if channel is not self._channels[plan.operation_id]:
-                    raise ValueError('Restoration channel replaced')
+                    raise _EvidenceCode('RESTORE_CHANNEL_REPLACED')
                 owner, record = self.channels.query_native_operation(
                     plan.before.owner.connection_id, plan.before.owner.native_session_id, plan.operation_id)
-                if (owner is not plan.before.owner or not isinstance(record, dict)
-                    or record.get('operationId') != plan.operation_id
+                if owner is not plan.before.owner:
+                    raise _EvidenceCode('RESTORE_OWNER_CHANGED')
+                if not isinstance(record, dict):
+                    raise _EvidenceCode('RESTORE_OPERATION_RECORD_MISSING')
+                if (record.get('operationId') != plan.operation_id
                     or record.get('sessionId') != owner.native_session_id
-                    or record.get('inputDigest') != plan.input_digest or record.get('state') != 'observed'):
-                    raise ValueError('Operation-bound restoration evidence unavailable')
+                    or record.get('inputDigest') != plan.input_digest):
+                    raise _EvidenceCode('RESTORE_OPERATION_IDENTITY_MISMATCH')
+                if record.get('state') != 'observed':
+                    raise _EvidenceCode('RESTORE_OPERATION_NOT_OBSERVED')
                 if outcome.state == 'observed' and outcome.restored is not None:
                     restored = outcome.restored
                     current = self.owners.readback(restored.snapshot.target)
                     if current.owner is not owner or current.native_generation != restored.snapshot.native_generation:
-                        raise ValueError('Restored owner has changed again')
+                        raise _EvidenceCode('RESTORE_RENEWED_OWNER_CHANGED_AGAIN')
                 else:
                     restored = self.owners.complete_restoration(outcome.ticket)
-                if (restored.previous_target != plan.before.target or restored.snapshot.owner is not owner
-                    or restored.snapshot.target.session_id != plan.before.target.session_id
+                if restored.previous_target != plan.before.target:
+                    raise _EvidenceCode('RESTORE_RENEWED_WRONG_CONVERSATION')
+                if restored.snapshot.owner is not owner:
+                    raise _EvidenceCode('RESTORE_RENEWED_OWNER_MISMATCH')
+                if (restored.snapshot.target.session_id != plan.before.target.session_id
                     or restored.snapshot.target.server_id != plan.before.target.server_id
-                    or restored.snapshot.target.channel_id != plan.before.target.channel_id
-                    or restored.snapshot.native_generation == plan.expected_generation
+                    or restored.snapshot.target.channel_id != plan.before.target.channel_id):
+                    raise _EvidenceCode('RESTORE_RENEWED_WRONG_CONVERSATION')
+                if (restored.snapshot.native_generation == plan.expected_generation
                     or restored.snapshot.target.runtime_generation <= plan.before.target.runtime_generation):
-                    raise ValueError('Restoration does not renew this exact conversation')
+                    raise _EvidenceCode('RESTORE_RENEWAL_NOT_EVIDENCED')
                 outcome = ProviderRestorationOutcome('observed', outcome.ticket, restored)
+                code = None
+            except _EvidenceCode as exc:
+                code = str(exc)
             except Exception:
-                outcome = ProviderRestorationOutcome('unknown', outcome.ticket)
+                code = 'RESTORE_EVIDENCE_UNAVAILABLE'
+            if code is not None:
+                outcome = ProviderRestorationOutcome('unknown', outcome.ticket, reason=code)
             self._attempts[plan.operation_id] = outcome
             return outcome

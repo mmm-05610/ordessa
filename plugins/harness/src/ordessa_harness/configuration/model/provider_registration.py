@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 from ...server_acp.native_action_executor import configuration_digest
 from .initial import initial_model_params
-from .restoration import ProviderRestorationService, ProviderRestorationOutcome
+from .restoration import _EvidenceCode, ProviderRestorationService, ProviderRestorationOutcome
 
 
 class PiProviderRegistrationService(ProviderRestorationService):
@@ -55,36 +55,85 @@ class PiProviderRegistrationService(ProviderRestorationService):
             channel._configuration_rpc(current.owner.native_session_id,
                 '_ordessa/session/configuration/provider-register', request)
         except Exception:
-            pass  # Only independent queries can settle a lost reply.
+            # A lost reply is not permission to send a second effect; only
+            # independent queries settle it. A typed native refusal over the
+            # same pinned owner proves no effect exists and is terminal.
+            refused = self._proven_refusal(plan)
+            if refused is not None:
+                self._attempts[plan.operation_id] = refused
+                return refused
         return self.query(plan)
+
+    def _proven_refusal(self, plan):
+        """Terminal refused outcome only on pinned, typed native evidence."""
+        try:
+            live = self.owners.readback(plan.before.target)
+            channel = self._channel(live)
+            if (channel is not self._channels[plan.operation_id]
+                or live.owner is not plan.before.owner
+                or live.target != plan.before.target):
+                return None
+            if self.channels.query_native_operation_state(
+                    live.owner.connection_id, live.owner.native_session_id,
+                    plan.operation_id) == 'refused':
+                return ProviderRestorationOutcome('refused', None,
+                    reason='PI_REGISTRATION_REFUSED')
+        except Exception:
+            return None
+        return None
 
     def query(self, plan):
         with self._lock:
             self._require_plan(plan)
             if plan.operation_id not in self._attempts:
                 raise ValueError('Pi provider registration not attempted')
+            if self._attempts[plan.operation_id].state == 'refused':
+                return self._attempts[plan.operation_id]
+            # Checks stay in the original evaluation order so the reported code
+            # names the first mismatched condition. Codes are nominal only.
+            code = 'PI_EVIDENCE_UNAVAILABLE'
             outcome = ProviderRestorationOutcome('unknown', None)
             try:
                 current = self.owners.readback(plan.before.target)
                 channel = self._channel(current)
                 owner, record = self.channels.query_native_operation(
                     current.owner.connection_id, current.owner.native_session_id, plan.operation_id)
-                if (channel is not self._channels[plan.operation_id] or owner is not plan.before.owner
-                    or current.owner is not owner or current.target != plan.before.target
-                    or current.native_generation != plan.expected_generation or current.busy is not False
-                    or not isinstance(record, dict) or record.get('state') != 'observed'
-                    or record.get('kind') != 'provider-registration'
-                    or record.get('operationId') != plan.operation_id
+                if channel is not self._channels[plan.operation_id]:
+                    raise _EvidenceCode('PI_CHANNEL_REPLACED')
+                if owner is not plan.before.owner:
+                    raise _EvidenceCode('PI_OWNER_CHANGED')
+                if current.owner is not owner:
+                    raise _EvidenceCode('PI_OWNER_READBACK_MISMATCH')
+                if current.target != plan.before.target:
+                    raise _EvidenceCode('PI_TARGET_CHANGED')
+                if current.native_generation != plan.expected_generation:
+                    raise _EvidenceCode('PI_GENERATION_ADVANCED')
+                if current.busy is not False:
+                    raise _EvidenceCode('PI_SESSION_BUSY')
+                if not isinstance(record, dict):
+                    raise _EvidenceCode('PI_OPERATION_RECORD_MISSING')
+                if record.get('state') != 'observed':
+                    raise _EvidenceCode('PI_OPERATION_NOT_OBSERVED')
+                if record.get('kind') != 'provider-registration':
+                    raise _EvidenceCode('PI_OPERATION_KIND_MISMATCH')
+                if (record.get('operationId') != plan.operation_id
                     or record.get('sessionId') != owner.native_session_id
                     or record.get('target') != asdict(plan.before.target)
-                    or record.get('inputDigest') != plan.input_digest
-                    or record.get('after', {}).get('generation') != current.native_generation
-                    or configuration_digest(record['after']['configOptions']) != configuration_digest(current.config_options)):
-                    raise ValueError('Pi operation-bound live registration unproven')
+                    or record.get('inputDigest') != plan.input_digest):
+                    raise _EvidenceCode('PI_OPERATION_IDENTITY_MISMATCH')
+                if record.get('after', {}).get('generation') != current.native_generation:
+                    raise _EvidenceCode('PI_AFTER_GENERATION_MISMATCH')
+                if configuration_digest(record['after']['configOptions']) != configuration_digest(current.config_options):
+                    raise _EvidenceCode('PI_AFTER_CONFIG_DIGEST_MISMATCH')
                 outcome = ProviderRestorationOutcome('observed', None,
                     SimpleNamespace(previous_target=plan.before.target, snapshot=current))
+                code = None
+            except _EvidenceCode as exc:
+                code = str(exc)
             except Exception:
-                pass
+                code = 'PI_EVIDENCE_UNAVAILABLE'
+            if code is not None:
+                outcome = ProviderRestorationOutcome('unknown', None, reason=code)
             self._attempts[plan.operation_id] = outcome
             return outcome
 

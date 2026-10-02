@@ -174,8 +174,18 @@ class NativeProfileConfigPort:
         try:
             result = self.restoration_service.execute(saved['native_plan'], mapped[0].value,
                 credential=self.credential_resolver(plan.session_ref, mapped[0].value))
+            if result.state == 'refused':
+                # The native refused before any effect existed (typed evidence
+                # over the pinned owner). Terminal honest rejection, not a
+                # sticky unknown: nothing was applied and nothing is replayed.
+                saved['result'] = ApplyRejected('rejected-unchanged',
+                    getattr(result, 'reason', None) or 'Native provider restoration was refused')
+                return saved['result']
             if result.state != 'observed':
-                return ApplyUnknown('unknown', 'Native provider restoration is unproven')
+                # Whitelisted nominal condition code from the Harness service;
+                # never a raw RPC payload, digest or credential value.
+                return ApplyUnknown('unknown', getattr(result, 'reason', None)
+                    or 'Native provider restoration is unproven')
             self._complete_transition(plan.session_ref, result, saved['native_plan'])
             current, current_revisions = self._resolve(plan.session_ref, desired)
             if current != mapped or current_revisions != revisions:

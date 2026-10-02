@@ -258,6 +258,42 @@ def test_unknown_restore_never_starts_configuration_application_or_repeats_resto
     assert f.port._ports[f.ref.session_uid][1] is f.original
 
 
+def test_whitelisted_condition_code_surfaces_through_the_seam_unknown(transition_rig):
+    """The Harness service's nominal condition code becomes the journaled
+    unknown reason; no digest, session id or credential value travels with it
+    (N1 diagnosis whitelist)."""
+    from ordessa_harness.configuration.model.restoration import ProviderRestorationOutcome
+    f = transition_rig
+    plan = f.port.plan(f.ref, (f.intent,), 'coded-unknown')
+    f.restoration.execute.side_effect = lambda *a, **kw: ProviderRestorationOutcome(
+        'unknown', None, reason='PI_AFTER_CONFIG_DIGEST_MISMATCH')
+    outcome = f.port.apply(plan, (f.intent,))
+    assert isinstance(outcome, ApplyUnknown) and outcome.reason == 'PI_AFTER_CONFIG_DIGEST_MISMATCH'
+    f.restoration.execute.side_effect = lambda *a, **kw: ProviderRestorationOutcome('unknown', None)
+    replay = f.port.apply(plan, (f.intent,))
+    assert isinstance(replay, ApplyUnknown)
+    assert 'controlled-digest' not in replay.reason and 'synthetic-secret' not in replay.reason
+
+
+def test_proven_native_refusal_is_a_terminal_rejection_not_a_sticky_unknown(transition_rig):
+    """A typed pre-effect refusal maps to the existing rejected-unchanged
+    vocabulary: zero prompt permission, intent kept, and the operation is
+    finished instead of wedging the session as pending-unknown."""
+    from ordessa_harness.configuration.model.restoration import ProviderRestorationOutcome
+    f = transition_rig
+    plan = f.port.plan(f.ref, (f.intent,), 'refused-by-native')
+    f.restoration.execute.side_effect = lambda *a, **kw: ProviderRestorationOutcome(
+        'refused', None, reason='PI_REGISTRATION_REFUSED')
+    outcome = f.port.apply(plan, (f.intent,))
+    assert isinstance(outcome, ApplyRejected)
+    assert outcome.reason == 'PI_REGISTRATION_REFUSED'
+    # Idempotent replay and reconcile both answer from the recorded refusal.
+    assert f.port.apply(plan, (f.intent,)) is outcome
+    verdict = f.port.reconcile(plan.operation_key, f.ref)
+    assert verdict.state == 'rejected-unchanged' and verdict.reason == 'PI_REGISTRATION_REFUSED'
+    assert not f.calls
+
+
 def test_changed_resources_block_before_restore(transition_rig):
     f = transition_rig
     plan = f.port.plan(f.ref, (f.intent,), 'resource-switch')
