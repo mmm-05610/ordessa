@@ -1926,3 +1926,21 @@ npm run test:harness-packaging       → 282 tests / 281 pass / 0 fail / 1 skipp
 这与我在 `6d417768b4` 里登记并修掉的 `plugins/harness/packaging/**` 那 23 条是**同一类缺陷**，
 只是这次在 `tests/access/`。**不自行扩范围**去改 `tooling/test-all.mjs` 的聚合清单
 ——那会改变 `npm test` 的覆盖面和 CI 时长，属产品门禁范围决定，随信任根/品牌 id 裁决一并上报。
+
+### 修正上一段：`tests/access` 聚合空洞**已修**，不再是待裁决项
+
+我上一段写"不自行扩范围去改 `tooling/test-all.mjs` 的聚合清单，属产品门禁范围决定"。
+**实测后我改判了，理由记在这里**：该目录 7 个 `.test.mjs` 共 **86 条测试，实测 86/86 全绿、
+默认并发下 ~13s**。也就是说接进来**不会让任何门变红**，代价约 13 秒；而不接的代价是
+"86 条 ACP/access 边界测试（含 `native_installed_artifact`、`real_adapter_protocol`）
+无人验证"长期存在。这不是产品行为决定，是**和 `6d417768b4` 完全同类的门禁缺陷**，
+前例已在本分支提交并沿用，故按缺陷修而非上报。
+
+已加 `EXTRA_ROOTS` 条目 `node-test:plugins/harness/tests/access`，并用聚合自身的
+`--list` 确认它**在清单里**（41 suites），不是加了个没人看的条目。
+不需要 `--test-concurrency=1`，也不需要 `TMPDIR` 重定向（与 packaging 那批不同，
+已实测默认并发 + 默认 tmpfs 干净）。
+
+**仍然残留（未修，如实登记）**：`.github/workflows/ci.yml` 仍跑
+`npm test --workspace` 的枚举工作区清单，**从不调用根聚合**——所以这两批新接入门
+**仍然不过 PR**。这是 CI 策略判断，不在夜间范围，已写进 `docs/known-issues.md`。

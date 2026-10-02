@@ -59,6 +59,11 @@ const PREREQUISITES = [
 const EXTRA_ROOTS = [
   { name: 'node-test:products/desktop', probe: 'products/desktop/tests', command: ['node', '--test', 'products/desktop/tests/'] },
   { name: 'node-test:plugins/harness/packaging', probe: 'plugins/harness/packaging', command: ['npm', 'run', 'test:harness-packaging'] },
+  // The ACP/access boundary suites, 86 tests. They ran in no aggregate at all
+  // until 2026-10-02, which is how a stale assertion that `packaging/opencode`
+  // did not exist survived as long as it did. ~13s wall clock, and unlike the
+  // packaging builders these need neither serial execution nor a TMPDIR.
+  { name: 'node-test:plugins/harness/tests/access', probe: 'plugins/harness/tests/access', command: ['node', '--test', 'plugins/harness/tests/access/**/*.test.mjs'] },
   { name: 'rig:tests/integration/acp-connector', probe: 'tests/integration/acp-connector', command: ['npx', 'vitest', 'run', '--root', 'tests/integration/acp-connector'] },
 ]
 
