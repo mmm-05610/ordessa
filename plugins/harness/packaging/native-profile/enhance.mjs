@@ -65,7 +65,32 @@ export function enhanceSource(source, brand) {
     source = once(source,
       '    return new CodexAcpServer(connection, codexClient, defaultAuthRequest, () => codexConnection.process.exitCode, () => stderr);',
       `    const instance = new CodexAcpServer(connection, codexClient, defaultAuthRequest, () => codexConnection.process.exitCode, () => stderr);
-    instance.ordessaReplaceCodexProcess = async ({sessionId, model, provider}) => {
+    instance.ordessaPrepareCodexCatalog = async ({model, modelCapabilities}) => {
+      if (instance.sessions.size !== 0 || process.env.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR)
+        throw new Error('Model catalogue preparation requires a private empty native owner');
+      const env = {...process.env, CODEX_HOME: process.env.ORDESSA_NATIVE_INSTANCE_DIR};
+      const catalog = writeCodexModelCatalog(env.CODEX_HOME, model, modelCapabilities);
+      const previous = codexConnection;
+      await stopNativeProcess(previous.process);
+      instance.codexAcpClient.ordessaDisconnected = true;
+      try {
+        codexConnection = startCodexConnection(codexPath, env, catalog);
+        await assertNativeCodexChild(codexConnection);
+        rebindCodexConnection(instance, {connection: codexConnection.connection,
+          AppServerClass: CodexAppServerClient, ClientClass: CodexAcpClient, CommandsClass: CodexCommands,
+          config: config2, model, acpConnection: connection,
+          runWithProcessCheck: operation => instance.runWithProcessCheck(operation),
+          onAuthStateRefresh: () => instance.refreshSessionsAuthState(null)});
+        await instance.codexAcpClient.initialize({clientInfo: instance.clientInfo});
+      } catch (failure) {
+        instance.codexAcpClient.ordessaDisconnected = true;
+        if (codexConnection !== previous) {
+          try {await stopNativeProcess(codexConnection.process)} catch {failure.nativeCleanupFailed = true}
+        }
+        throw failure;
+      }
+    };
+    instance.ordessaReplaceCodexProcess = async ({sessionId, model, provider, modelCapabilities}) => {
       const current = instance.codexAcpClient;
       // Read this owner's live thread before any native effect. A sibling thread,
       // an unpersisted thread or a damaged rollout refuses with zero effects.
@@ -78,6 +103,8 @@ export function enhanceSource(source, brand) {
         env.CODEX_HOME = managedAccountDirectory(provider.accountDirectory, env.ORDESSA_NATIVE_INSTANCE_DIR);
         env.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR = env.CODEX_HOME;
       }
+      const catalog = modelCapabilities === undefined ? undefined
+        : writeCodexModelCatalog(env.CODEX_HOME, model, modelCapabilities);
       await instance.closeSession({sessionId});
       const previous = codexConnection;
       // Publish the new child immediately so ACP shutdown always owns it, and
@@ -87,7 +114,7 @@ export function enhanceSource(source, brand) {
         capture: async () => rollout,
         stop: () => stopNativeProcess(previous.process),
         start: () => {
-          codexConnection = startCodexConnection(codexPath, env);
+          codexConnection = startCodexConnection(codexPath, env, catalog);
           stderr = '';
           codexConnection.process.stderr.addListener('data', data => {
             stderr = (stderr + data.toString()).slice(-maxStderrTailChars);
@@ -132,6 +159,7 @@ export function enhanceSource(source, brand) {
     source = once(source, '  const spawnEnv = env ?? process.env;',
       `  const spawnEnv = env ?? process.env;
   const ordessaArgs = spawnEnv.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR ? ['-c', 'cli_auth_credentials_store="keyring"', 'app-server'] : ['app-server'];
+  if (modelCatalogPath !== undefined) ordessaArgs.unshift('-c', 'model_catalog_json=' + JSON.stringify(modelCatalogPath));
   if (spawnEnv.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR && process.platform === 'win32') throw new Error('Managed account launch is not supported on this platform');
   const ordessaNativeCodex = resolveNativeCodexBinary();`)
     source = once(source,
@@ -154,7 +182,7 @@ async function assertNativeCodexChild(connection) {
   assertNativeProcess(identity.pid, child.ordessaNativeCodex);
   return identity;
 }
-function startCodexConnection(codexPath, env) {`)
+function startCodexConnection(codexPath, env, modelCatalogPath) {`)
     // Upstream raw RPC tracing can include login tokens and provider headers.
     // The enhanced artifact never installs that trace hook on its child.
     source = once(source, '  attachLogs(codex);', '  // Raw native RPC tracing disabled by Ordessa.')
@@ -166,7 +194,7 @@ function startCodexConnection(codexPath, env) {`)
   }
   // Preserve a CLI shebang as the first line.
   const imported = "import { nativeProfileBridge } from './ordessa-native-profile.mjs';\n"
-    + (brand === 'codex' ? "import { captureCodexThreadRoute } from './ordessa-native-routing.mjs';\nimport { assertNativeCodexSpecifier, assertNativeProcess, assertResumedThread, captureCodexHistory, managedAccountDirectory, orchestrateCodexReplacement, rebindCodexConnection, resolveNativeCodexBinary, spawnNativeCodex, stopNativeProcess } from './ordessa-codex-process.mjs';\n"
+    + (brand === 'codex' ? "import { captureCodexThreadRoute } from './ordessa-native-routing.mjs';\nimport { writeCodexModelCatalog } from './ordessa-codex-model-catalog.mjs';\nimport { assertNativeCodexSpecifier, assertNativeProcess, assertResumedThread, captureCodexHistory, managedAccountDirectory, orchestrateCodexReplacement, rebindCodexConnection, resolveNativeCodexBinary, spawnNativeCodex, stopNativeProcess } from './ordessa-codex-process.mjs';\n"
       : "import { claudeProviderAuthToken } from './ordessa-claude-auth.mjs';\nimport { providerModelCandidate, retainAcceptedProviderModel } from './ordessa-claude-provider-model.mjs';\n")
   source = source.startsWith('#!') ? source.replace('\n', '\n' + imported) : imported + source
   return source
@@ -181,6 +209,10 @@ export function enhanceStaging(dist, brand) {
   const files = {
     ...(brand === 'codex' ? {
       'ordessa-codex-process.mjs': readFileSync(path.join(HERE, 'codex-process.mjs'), 'utf8'),
+      'ordessa-codex-model-catalog.mjs': readFileSync(path.join(HERE, 'codex-model-catalog.mjs'), 'utf8'),
+      'codex-generic-prompt.md': readFileSync(path.join(HERE, 'codex-generic-prompt.md'), 'utf8'),
+      'codex-generic-prompt.LICENSE': readFileSync(path.join(HERE, 'codex-generic-prompt.LICENSE'), 'utf8'),
+      'codex-generic-prompt.NOTICE': readFileSync(path.join(HERE, 'codex-generic-prompt.NOTICE'), 'utf8'),
     } : {}),
     ...(brand === 'claude-code' ? {
       'ordessa-claude-auth.mjs': readFileSync(path.join(HERE, 'claude-auth.mjs'), 'utf8'),

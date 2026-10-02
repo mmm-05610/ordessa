@@ -6,7 +6,7 @@
 // whole surface). One unique operation surface per pending interaction;
 // responding/resolved/expired disable actions; a resolved approval never
 // renders as tool success.
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { AgentInteraction, InteractionAnswer } from '@extensions/ordessa.agent-contracts/contract.js'
 
 /** A connector's negative verdict on its interaction channel must not become
@@ -24,6 +24,7 @@ export function ApprovalPanel({ interactions, interactionsCapability, respond }:
   const [values, setValues] = useState<Record<string, Record<string, string>>>({})
   const [error, setError] = useState('')
   const [busyId, setBusyId] = useState<string | undefined>(undefined)
+  const submitting = useRef(false)
   const respondable = canAnswer(interactionsCapability)
   const actionable = interactions.filter(item => item.state === 'pending' || item.state === 'responding')
   const hiddenCount = Math.max(0, actionable.length - 3)
@@ -31,12 +32,18 @@ export function ApprovalPanel({ interactions, interactionsCapability, respond }:
   const change = (interactionId: string, fieldId: string, value: string) =>
     setValues(current => ({ ...current, [interactionId]: { ...current[interactionId], [fieldId]: value } }))
   const submit = async (interactionId: string, answer: InteractionAnswer) => {
-    if (busyId !== undefined) return
+    // React batches state updates: a second click in the same task must be
+    // rejected before the disabled state is committed to the DOM.
+    if (submitting.current) return
+    submitting.current = true
     setBusyId(interactionId)
     setError('')
     try { await respond(interactionId, answer) } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause))
-    } finally { setBusyId(undefined) }
+    } finally {
+      submitting.current = false
+      setBusyId(undefined)
+    }
   }
   if (actionable.length === 0) return null
   return (

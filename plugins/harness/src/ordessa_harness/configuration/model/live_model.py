@@ -16,7 +16,7 @@ def compile_native_model(snapshot, desired, source, brand, *, credential_binding
     if (brand not in ('codex', 'claude-code') or snapshot.busy is not False
         or not snapshot.native_generation or not isinstance(desired, Mapping)
         or not {'provider', 'model', 'protocol', 'endpoint'} <= set(desired)
-        or set(desired) - {'provider', 'model', 'protocol', 'endpoint', 'credentialRef', 'brandFields', 'requestParams', 'authentication'}
+        or set(desired) - {'provider', 'model', 'protocol', 'endpoint', 'credentialRef', 'brandFields', 'requestParams', 'authentication', 'modelCapabilities'}
         or desired.get('brandFields') not in (None, {})
         or desired.get('requestParams') not in (None, {})
         or any(type(desired[key]) is not str or not desired[key]

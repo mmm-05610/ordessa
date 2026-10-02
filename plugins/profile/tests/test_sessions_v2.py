@@ -179,7 +179,11 @@ def test_apply_rejection_reports_and_keeps_everything_g07_g08(tmp_path):
     assert port.counters["apply"] == 1
 
 
-def test_v2_reset_difference_reaches_the_port_g08(tmp_path):
+def test_v2_declared_reset_reaches_the_port_g08(tmp_path):
+    """G08 with the sparse ruling (FR-02/FR-03): B omitting the v2 item
+    produces **no** intent for it — the retained effective base keeps it —
+    while an explicitly declared removal of the same item still reaches the
+    port as a real reset."""
     v2 = ScriptedV2Provider(
         "v2_model", V2_ITEMS, capability_rule="yes")
     core = make_core(tmp_path, providers=(MODEL,),
@@ -202,11 +206,22 @@ def test_v2_reset_difference_reaches_the_port_g08(tmp_path):
     port = ScriptedConfigPort()
     core.config_port = port
     core.sessions.begin_turn("t1", session_id="S")
-    applied = port.applied[0]
-    ops = {(i.facet_id, i.item_id): i.op for i in applied}
-    # A→B removal of the v2 item must appear as an explicit reset (G08)
-    assert ops[("v2_model", "model")] == "reset"
+    ops = {(i.facet_id, i.item_id): i.op for i in port.applied[0]}
+    # omission is not a removal — neither reset nor set
+    assert ("v2_model", "model") not in ops
     assert ops[("model_selection", "model")] == "set"
+    # the omitted item keeps its confirmed effective value, labelled base
+    items = {(i["facet_id"], i["item_id"]): i
+             for i in core.sessions.session_config("S")["items"]}
+    assert items[("v2_model", "model")]["value"] == "m1"
+    assert items[("v2_model", "model")]["source"] == "retained_base"
+
+    # declared removal: a real reset reaches the port (G08)
+    core.sessions.begin_turn(
+        "t2", session_id="S",
+        declared_removals=frozenset({("v2_model", "model")}))
+    ops = {(i.facet_id, i.item_id): i.op for i in port.applied[-1]}
+    assert ops[("v2_model", "model")] == "reset"
 
 
 def test_missing_provider_on_either_side_blocks_never_filters_g08_g13(tmp_path):

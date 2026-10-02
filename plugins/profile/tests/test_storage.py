@@ -11,8 +11,9 @@ from ordessa_profile import repository as repo
 
 
 def test_schema_steps_applied_once(tmp_path):
-    # v2 (specs/011-z1-profile): migration is stepwise — a fresh database
-    # records exactly one row per applied version; reopening adds none.
+    # v2 (specs/011-z1-profile) / v3 (specs/021): migration is stepwise — a
+    # fresh database records exactly one row per applied version; reopening
+    # adds none.
     path = tmp_path / "store.sqlite"
     db = ProfileDatabase(path)
     with db.read() as conn:
@@ -24,19 +25,26 @@ def test_schema_steps_applied_once(tmp_path):
             r["name"] for r in conn.execute(
                 "SELECT name FROM sqlite_master WHERE type='table'").fetchall()
         }
-    assert int(version) == 2
-    assert [int(r["version"]) for r in rows] == [1, 2]
+        session_cols = {r["name"] for r in conn.execute(
+            "PRAGMA table_info(profile_sessions)").fetchall()}
+        overlay_cols = {r["name"] for r in conn.execute(
+            "PRAGMA table_info(profile_session_overlays)").fetchall()}
+    assert int(version) == 3
+    assert [int(r["version"]) for r in rows] == [1, 2, 3]
     assert {
         "profile_profiles", "profile_revisions", "profile_facet_values",
         "profile_sessions", "profile_session_overlays", "profile_turns",
         "profile_idempotency", "profile_mechanism_policy",
         "profile_application_journal", "profile_applied_receipts",
     } <= tables
+    # v3 additions (appendix §4)
+    assert {"action_seq", "admission_facts_json"} <= session_cols
+    assert {"action_seq", "revision"} <= overlay_cols
     db.close()
     db2 = ProfileDatabase(path)  # reopen: no additional migration row
     with db2.read() as conn:
         rows = conn.execute("SELECT * FROM profile_schema").fetchall()
-    assert len(rows) == 2
+    assert len(rows) == 3
     db2.close()
 
 

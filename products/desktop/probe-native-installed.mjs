@@ -12,18 +12,18 @@ const home = await mkdtemp(path.join(tmpdir(), 'ordessa-product-installed-probe-
 try {
   await copyFile(path.join(root, 'products/desktop/extensions.json'), path.join(home, 'extensions.json'))
   const nativeProfileRoot = process.env.ORDESSA_NATIVE_PROFILE_ARTIFACT_ROOT
-    ?? '/opt/ordessa/harnesses/profile-codex-managed/artifacts'
+    ?? '/opt/ordessa/harnesses/profile-codex-catalog-fast-off-v6/artifacts'
   if (nativeProfileRoot !== undefined && !nativeProfileRoot) throw new Error('Native Profile asset root must not be empty')
   const nativeProfileHarnesses = nativeProfileRoot ? ['codex', 'claude-code'] : []
   const claudeProfileRoot = process.env.ORDESSA_CLAUDE_PROFILE_ARTIFACT_ROOT
     ?? process.env.ORDESSA_NATIVE_PROFILE_ARTIFACT_ROOT
-    ?? '/opt/ordessa/harnesses/profile-chat-fixes/artifacts'
+    ?? '/opt/ordessa/harnesses/profile-claude-provider-restoration/artifacts'
   if (!claudeProfileRoot) throw new Error('Claude Profile asset root must not be empty')
   const plan = nativeServerPlan({ harnessIds: ['pi', 'codex', 'claude-code'],
     pluginRoot: path.join(root, 'plugins/harness'),
     artifactRoot: process.env.ORDESSA_INSTALLED_ARTIFACT_ROOT ?? '/opt/ordessa/harnesses/artifacts',
     artifactRoots: { pi: process.env.ORDESSA_PI_PROFILE_ARTIFACT_ROOT
-      ?? '/opt/ordessa/harnesses/profile-chat-fixes/artifacts',
+      ?? '/opt/ordessa/harnesses/profile-pi-registration-owner-bound/artifacts',
       ...Object.fromEntries(nativeProfileHarnesses.map(id => [id, id === 'claude-code' ? claudeProfileRoot : nativeProfileRoot])) },
     nativeProfileHarnesses, piProfileBridge: true })
   const result = await launchSmoke(home, { ORDESSA_EMPTY_HOST: '0', HOME: home,

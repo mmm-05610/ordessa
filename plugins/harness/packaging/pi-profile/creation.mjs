@@ -48,6 +48,7 @@ export function piCreation({ agent, read, invalidParams }) {
     // Only the digest binds the key. Retained route/model evidence never stores it.
     initial = { model: input.model, route: { provider: input.provider.providerId,
       api: input.provider.apiType, baseUrl: input.provider.baseUrl }, attempted: false,
+      admission: { digest: jsonDigest(input.provider), models: [...input.models] },
       record: { operationId: input.operationId, inputDigest: digest, state: 'unknown',
         phase: 'preparing', after: null } }
     try {
@@ -118,5 +119,8 @@ export function piCreation({ agent, read, invalidParams }) {
       return result
     } finally { busy = false }
   }
-  return { prepare, query, parse, parseQuery, create, lifecycle: withLifecycle, isBusy: () => busy }
+  // Internal evidence shared with live admission, not an RPC and never a key.
+  const admission = provider => initial?.record.state === 'observed' && initial.route.provider === provider
+    ? structuredClone(initial.admission) : null
+  return { prepare, query, parse, parseQuery, create, admission, lifecycle: withLifecycle, isBusy: () => busy }
 }

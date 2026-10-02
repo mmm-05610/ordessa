@@ -9,7 +9,7 @@
 // paste-into-attachments conflation. Dropped: the upstream controller and
 // attachment store — Chat hands in its own callbacks (chat-api ComposerProps);
 // the input stores no draft of its own.
-import { useCallback, useState, type ClipboardEvent, type KeyboardEvent } from 'react'
+import { useCallback, useState, type ClipboardEvent, type KeyboardEvent, type Ref } from 'react'
 
 export interface ChatTextInputProps {
   readonly value: string
@@ -24,6 +24,8 @@ export interface ChatTextInputProps {
   readonly removeLastAttachment?: () => void
   readonly addPastedFiles?: (files: readonly File[]) => void
   readonly testid?: string
+  /** Page-owned focus destination when its add/command menu closes. */
+  readonly inputRef?: Ref<HTMLTextAreaElement>
 }
 
 export function ChatTextInput(props: ChatTextInputProps) {
@@ -37,7 +39,10 @@ export function ChatTextInput(props: ChatTextInputProps) {
     if (event.defaultPrevented) return
 
     if (event.key === 'Enter') {
-      if (isComposing || event.nativeEvent.isComposing) return
+      // Some desktop IMEs end composition before dispatching the confirming
+      // Enter. Chromium still marks that key with the IME sentinel 229.
+      // Confirming a candidate is never permission to send the draft.
+      if (isComposing || event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return
       if (event.shiftKey) return
       event.preventDefault()
       if (props.submitDisabled) return
@@ -68,6 +73,7 @@ export function ChatTextInput(props: ChatTextInputProps) {
 
   return (
     <textarea
+      ref={props.inputRef}
       className="chat-input-text"
       data-testid={props.testid}
       aria-label={props.placeholder}

@@ -11,6 +11,9 @@ function selectors(options) {
     const result = {}
     for (const key of ['value', 'name', 'description']) {
       if (Object.hasOwn(item, key)) {
+        // Locked Codex emits description:null for a live model absent from
+        // model/list. It means no description, not malformed model evidence.
+        if (key === 'description' && item[key] === null) continue
         if (typeof item[key] !== 'string' || item[key].length > 4096) throw new TypeError('Invalid option text')
         result[key] = item[key]
       }

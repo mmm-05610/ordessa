@@ -7,6 +7,7 @@
 import type { ReactNode } from 'react'
 import { Button, Checkbox, Notice, Select } from '@ordessa/ui'
 import type { MechanismPolicyStore } from './stores'
+import { profileSettingsCss } from './styles'
 
 export interface ProfileSettingsSectionProps {
   readonly id: string
@@ -25,12 +26,14 @@ export interface ProfileSettingsViewProps {
   readonly onReload: () => void
   /** Provider-owned settings sections (id/title/render), already scoped. */
   readonly sections: readonly ProfileSettingsSectionProps[]
+  readonly onOpenManager?: () => void
 }
 
 export function ProfileSettingsView(props: ProfileSettingsViewProps): ReactNode {
   const { policy } = props.store.state
   return (
-    <div data-profile-settings="">
+    <div className="profile-settings-surface" data-profile-settings="">
+      <style>{profileSettingsCss}</style>
       <div data-profile-settings-realm="">
         <span>服务：</span>
         <Select
@@ -101,11 +104,11 @@ export function ProfileSettingsView(props: ProfileSettingsViewProps): ReactNode 
       )}
       <p>说明：关闭后仍可查看和清除既有覆盖，也不绕过运行权限。</p>
 
-      <Button data-profile-open-manager="" onClick={() => { /* wired by host */ }}>
+      {props.onOpenManager && <Button data-profile-open-manager="" onClick={props.onOpenManager}>
         管理配置预设
-      </Button>
+      </Button>}
 
-      <h3>提供者设置区</h3>
+      {props.sections.length > 0 && <h3>提供者设置区</h3>}
       {props.sections.length === 0 ? null : (
         props.sections.map((section) => (
           <section key={section.id} data-profile-section={section.id}>

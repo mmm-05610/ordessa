@@ -47,7 +47,7 @@ from ordessa_server.wire.errors import WireError
 # package (host handlers.py docstring, T014-S2c) - the frozen refusal strings
 # cannot drift between the host wall and this handler.
 from ordessa_server_compat.wire_validators import assignments as _assignments
-from ordessa_server_compat.wire_validators import models as _models
+from ordessa_model_provider.wire_models import models as _models
 from server_plugin_api.wire_shape import bounded as _bounded
 from server_plugin_api.wire_shape import request_id as _request_id
 from server_plugin_api.wire_shape import version as _version
@@ -81,7 +81,9 @@ class ModelProviderPlugin:
 
     def __init__(self, *, harnesses: Any | None = None, reference_port: Any | None = None,
                  secret_store: Any | None = None,
-                 harness_config_port: Any | None = None) -> None:
+                 harness_config_port: Any | None = None,
+                 turn_application_port: Any | None = None,
+                 turn_intent_sink: Any | None = None) -> None:
         self._harnesses = harnesses
         self._reference_port = reference_port
         self._secret_store = secret_store
@@ -90,6 +92,18 @@ class ModelProviderPlugin:
         #: choice verdict is ``unknown`` and reconcile answers
         #: ``unknown-outcome`` - never ``ready``/``confirmed`` (REQ-Z3-2).
         self._harness_config_port = harness_config_port
+        #: The ONE real-application entry behind
+        #: ``modelProvider.beginTurnApplication`` (021 appendix §3.3),
+        #: implemented by the product composition over the neutral
+        #: ``native.configuration`` C4 owner-plan entry. Absent -> the submit
+        #: gate refuses typed and applies nothing; it never falls back to
+        #: ``harness_config_port`` (whose read-back is synthesized from the
+        #: request, B.2/M13).
+        self._turn_application_port = turn_application_port
+        #: 021 appendix §6b.4(a): the optional bound-mode intent bridge. The
+        #: composition injects it when Profile is assembled; absent -> every
+        #: session is unbound and the queue keeps the authority unchanged.
+        self._turn_intent_sink = turn_intent_sink
         self.catalog: ModelCatalogService | None = None
 
     def descriptor(self) -> ServerPluginDescriptor:
@@ -113,6 +127,8 @@ class ModelProviderPlugin:
         choices = ModelChoiceService(
             catalog, harness_config_port=self._harness_config_port,
             idempotency=idempotency,
+            turn_application_port=self._turn_application_port,
+            intent_sink=self._turn_intent_sink,
         )
         self.catalog = catalog
         self.choices = choices
@@ -181,6 +197,11 @@ _METHODS = (
      "model_provider_query_choice"),
     ("modelProvider.reconcileChoice", {"target", "operationId"}, set(),
      "model_provider_reconcile_choice"),
+    # 021 appendix §2: the thin submit gate. It consumes the frozen intent and
+    # delegates the one real application to the injected TurnApplicationPort;
+    # it applies nothing itself and refuses typed when that port is absent.
+    ("modelProvider.beginTurnApplication", {"target", "operationKey"},
+     {"expectedSequence"}, "model_provider_begin_turn_application"),
     ('modelProvider.importApiKey', {'requestId', 'harnessId', 'apiKey'}, set(), 'import_api_key'),
     ('modelProvider.queryApiKeyImport', {'requestId', 'harnessId'}, set(), 'query_api_key_import'),
 )
@@ -394,6 +415,24 @@ class _Handlers:
             raise WireError("INVALID_REQUEST", "operationId must be the queued sequence number")
         try:
             return self._choices.reconcile(params["target"], operation_id)
+        except ServerError as exc:
+            raise WireError.from_server_error(exc) from exc
+
+    def model_provider_begin_turn_application(
+            self, params: Mapping[str, Any]) -> dict[str, Any]:
+        """The frozen appendix §2 submit gate. Field validation is fail-closed:
+        a target that is not exactly the three native reference keys, a key that
+        is not a bounded string, or an ``expectedSequence`` that is not a
+        non-negative integer is refused before anything is queued, blocked or
+        applied. A boolean is never an integer here."""
+        operation_key = _request_id(params.get("operationKey"))
+        expected_sequence = params.get("expectedSequence")
+        if expected_sequence is not None:
+            expected_sequence = _version(expected_sequence, "expectedSequence")
+        try:
+            return self._choices.begin_turn_application(
+                params.get("target"), operation_key,
+                expected_sequence=expected_sequence)
         except ServerError as exc:
             raise WireError.from_server_error(exc) from exc
 

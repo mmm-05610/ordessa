@@ -85,14 +85,35 @@ def test_six_methods_registered_with_frozen_shapes(host, harnesses):
         assert descriptor.required_params == frozenset(required), method_id
         assert descriptor.optional_params == frozenset(optional), method_id
     # exactly the frozen six legacy rows; the Z3 ``modelProvider.*`` additions
-    # are pinned by tests/test_next_choice_wire.py (t00-freeze.md §8).
-    assert len(host.methods) == 6 + 7 + 2
+    # are pinned by tests/test_next_choice_wire.py (t00-freeze.md §8), which now
+    # also carries the 021 appendix §2 submit gate (6 + 8 + 2).
+    assert len(host.methods) == 6 + 8 + 2
 
 
 def test_catalog_port_is_exported(host, harnesses):
     _activated_host(host, harnesses)
     active = host.active(PLUGIN_ID)
     assert active.registration.provided_ports["model_provider.catalog"] is not None
+
+
+def test_public_save_round_trips_model_capabilities(host, harnesses):
+    _activated_host(host, harnesses)
+    facts = {'toolCall': True, 'reasoning': True,
+             'reasoningOptions': [{'type': 'effort', 'values': ['medium', 'high']}],
+             'limits': {'context': 64000}}
+    body = wire_body(models=[{'modelId': 'm1', 'displayName': 'm1',
+                             'availability': 'available', 'unavailableReason': None,
+                             'capabilities': facts, 'protocols': ['openai-chat']}])
+    create = host.methods.lookup('providerModels.create').handler
+    saved = create({'requestId': 'save-model-facts', **body})['providerModel']
+    assert saved['models'][0]['capabilities'] == facts
+    assert saved['models'][0]['protocols'] == ['openai-chat']
+    updated = host.methods.lookup('providerModels.update').handler({
+        'requestId': 'update-model-facts', 'providerModelId': saved['id'],
+        'expectedVersion': saved['version'], 'displayName': saved['displayName'],
+        'credentialId': None, 'configuration': body['configuration'],
+        'models': [{**body['models'][0], 'capabilities': {'reasoning': False}}]})['providerModel']
+    assert updated['models'][0]['capabilities'] == {'reasoning': False}
 
 
 def test_g2_second_owner_refuses_activation(host, harnesses):

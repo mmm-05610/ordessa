@@ -91,6 +91,18 @@ test('Codex model routing evidence comes from its accepted thread snapshot, not 
   assert.equal(f.read({ sessionId: 's' }).configOptions[0].options[0]._meta, undefined)
 })
 
+test('Codex accepts the native nullable description for an active custom model', () => {
+  const f = fixture('codex')
+  const option = f.session.configOptions[0]
+  option.currentValue = 'gpt-6-luna'
+  option.options.unshift({value: 'gpt-6-luna', name: 'gpt-6-luna', description: null})
+  const observed = f.read({sessionId: 's'}).configOptions[0]
+  assert.equal(observed.currentValue, 'gpt-6-luna')
+  assert.deepEqual(observed.options[0], {value: 'gpt-6-luna', name: 'gpt-6-luna'})
+  option.options[0].description = {secret: 'never-project'}
+  assert.throws(() => f.read({sessionId: 's'}), /Invalid option text/)
+})
+
 test('Claude routing evidence uses captured query configuration and rejects secret-bearing endpoints', () => {
   const f = fixture('claude-code')
   f.session.ordessaProviderRoute = { apiType: 'anthropic', baseUrl: 'https://query.invalid' }
@@ -534,6 +546,30 @@ test('codex restoration re-applies the preserved reasoning preference instead of
   assert.equal(after.configOptions.find(option => option.id === 'reasoning_effort').currentValue, 'high')
   assert.equal(after.configOptions.find(option => option.id === 'model').currentValue, 'm2')
 })
+
+for (const [value, nativeDisabled, expected] of [['off', true, 'observed'], [false, true, 'observed'],
+    ['off', false, 'unknown'], ['on', true, 'unknown']]) {
+  test(`codex absent fast selector preserves only proven disabled state: ${value}/${nativeDisabled}`, async () => {
+    const f = fixture('codex')
+    f.session.configOptions.push(typeof value === 'boolean'
+      ? {id: 'fast-mode', type: 'boolean', currentValue: value}
+      : {id: 'fast-mode', type: 'select', currentValue: value,
+          options: [{value: 'off', name: 'Off'}, {value: 'on', name: 'On'}]})
+    const {bridge} = await restartingCodex(f)
+    const resume = f.agent.resumeSession
+    f.agent.resumeSession = async (...args) => {
+      await resume(...args)
+      const replacement = f.agent.sessions.get('s')
+      replacement.configOptions = replacement.configOptions.filter(x => x.id !== 'fast-mode')
+      replacement.currentModelSupportsFast = false
+      if (nativeDisabled) replacement.fastModeEnabled = false
+    }
+    const before = bridge.read({sessionId: 's'})
+    const result = await bridge.restoration.apply(restorationInput(before, 'restore:fast-proof'))
+    assert.equal(result.state, expected)
+    assert.equal(bridge.read({sessionId: 's'}).configOptions.some(x => x.id === 'fast-mode'), false)
+  })
+}
 
 test('codex restoration records an explicit refusal when the target rejects the preserved preference', async () => {
   const f = fixture('codex')

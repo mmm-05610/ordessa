@@ -6,6 +6,7 @@ import { ProfileConfigurationPane } from './configuration-pane'
 import { profileCall } from './wire-client'
 import { ProfileManagementView } from './management-view'
 import { ProfileDraftStore } from './stores'
+import { profileSettingsCss } from './styles'
 
 /** Connected management surface. No picker/application until a real runtime
  * application port is bound: persisting a preset is not applying it. */
@@ -67,11 +68,12 @@ export function ConnectedProfileManager({ client, wire, ui }: { client: ProfileS
     else { setError(result.conflict ? '预设已被修改；本地输入已保留，请放弃后刷新再编辑。' : result.reason); setBusy(false) }
     setDraftGeneration(n => n + 1)
   }
-  return <section aria-label="Profile 管理" style={{ padding: 16 }}>
-    <h2>Profile</h2>
-    <button disabled={busy} onClick={() => { if (mayLeave()) void refresh() }}>刷新</button>
+  return <section aria-label="Profile 管理" className="profile-settings-surface">
+    <style>{profileSettingsCss}</style>
+    <div className="profile-manager-heading"><h2>配置预设</h2>
+    <button disabled={busy} onClick={() => { if (mayLeave()) void refresh() }}>刷新</button></div>
     {error && <p role="alert">{error}</p>}
-    <div>
+    <div className="profile-create-form">
         <label>名称 <input value={name} onChange={e => setName(e.target.value)} /></label>
         <label>Harness <select value={harness} onChange={e => setHarness(e.target.value)}>
           <option value="">请选择</option>{harnesses.map(id => <option key={id}>{id}</option>)}

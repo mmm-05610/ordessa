@@ -60,7 +60,7 @@ export function piProviderRegistration({ agent, read, creation, invalidParams })
       fail('Provider registration live fence changed or busy')
     // Replacing an existing provider could silently drop models or reroute the
     // current selection. Admission adds a new identity; C4 selects it later.
-    const admitted = admittedProviders.get(input.provider.providerId)
+    const admitted = admittedProviders.get(input.provider.providerId) ?? creation.admission?.(input.provider.providerId)
     const providerDigest = jsonDigest(input.provider)
     if (before.configOptions.some(item => item.id === 'model' && item.options?.some(option =>
       option._meta?.ordessaModel?.provider === input.provider.providerId))

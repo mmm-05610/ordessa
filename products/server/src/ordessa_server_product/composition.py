@@ -216,15 +216,16 @@ class ServerProductComposition:
         pi_profile_bridge: bool = False,
         native_profile_harnesses: tuple[str, ...] = (),
         additional_adapters: tuple = (),
+        include_profile: bool = True,
     ) -> Any:
         from ordessa_server_compat.composition import build_runtime_from_native_adapter
-        from ordessa_profile.server_plugin import ProfileServerPlugin
         from ordessa_model_provider.plugin import ModelProviderPlugin
-        from .skills import ProductSkillsPlugin
-        from ordessa_model_provider_profile.profile_glue import ModelProviderFacetProvider
-        from .profile_sessions import bind_native_profile_sessions
+        from .native_configuration import NativeConfigurationPlugin, PLUGIN_ID as NATIVE_CONFIGURATION_ID
         from ordessa_harness.configuration.model.plugin import ModelProviderAdaptersPlugin
         from ordessa_harness.configuration.model.catalog import ModelConfigurationCatalog
+
+        if type(include_profile) is not bool:
+            raise ValueError('include_profile must be boolean')
 
         self._assemble_legacy_chain()
         def channel_selection_resolver(*, profile_id, harness_id):
@@ -254,6 +255,17 @@ class ServerProductComposition:
             for hid in native_profile_harnesses}
         if pi_profile_bridge:
             profile_roots['pi'] = pi_artifact_root
+        # The independent model application route (021 FR-01) needs the same
+        # verified installation routes the Profile route uses; a harness with
+        # an artifact root gets its C2 model adapters published even when no
+        # Profile route is assembled (include_profile=False, M01).
+        model_roots = dict(profile_roots)
+        if installed_artifact_root:
+            model_roots.setdefault(harness_id, installed_artifact_root)
+        for binding in additional_adapters:
+            root = binding.get("installedArtifactRoot")
+            if root:
+                model_roots.setdefault(binding["harnessId"], root)
         def current_ceilings():
             authority = runtime.plugin_host.provided_port("permissions.authorizer@1")
             if authority is None:
@@ -261,15 +273,60 @@ class ServerProductComposition:
             return authority.ceiling_provider()
 
         try:
-            extras = (*((ModelProviderAdaptersPlugin(),) if profile_roots else ()),
-                      ProfileServerPlugin(providers=(("ordessa.model-provider-profile",
-                       ModelProviderFacetProvider()),),
-                       native_registration_factory=lambda core: bind_native_profile_sessions(core, runtime,
-                           artifact_roots=profile_roots)),
+            profile_plugins = ()
+            if include_profile:
+                from dataclasses import replace
+                from ordessa_profile.server_plugin import ProfileServerPlugin
+                from ordessa_model_provider_profile.profile_glue import ModelProviderFacetProvider
+                from .skills import ProductSkillsPlugin
+                from .profile_sessions import bind_native_profile_sessions
+
+                class NativeProfilePlugin(ProfileServerPlugin):
+                    def descriptor(self):
+                        original = super().descriptor()
+                        return replace(original, requires=(*original.requires, NATIVE_CONFIGURATION_ID))
+
+                profile_plugins = (NativeProfilePlugin(providers=(("ordessa.model-provider-profile",
+                    ModelProviderFacetProvider()),),
+                    native_registration_factory=lambda core: bind_native_profile_sessions(
+                        core, runtime, profile_roots=profile_roots)),
+                    # This Skills assembly currently requires Profile. Omitting
+                    # it here does not claim Skills has already been decoupled.
+                    ProductSkillsPlugin(permissions=current_ceilings))
+
+            def provided_port(port_id):
+                return runtime.plugin_host.provided_port(port_id)
+
+            # The one real application seam of the independent model route
+            # (021 appendix §3.3) and its queue-time verdict port; both
+            # resolve the neutral authority lazily, so injection is identical
+            # with and without Profile (FR-01).
+            from .turn_application import (
+                NativeModelEligibilityPort, ProductTurnApplication,
+            )
+            turn_application = ProductTurnApplication(
+                authority_of=lambda: provided_port("native.configuration"),
+                catalog_of=lambda: provided_port("model_provider.catalog"))
+            model_eligibility = NativeModelEligibilityPort(
+                authority_of=turn_application._authority_of)
+            # Bound-mode intent bridge: only a Profile assembly can answer
+            # "this native session is a registered Profile session"; without
+            # Profile the sink is absent and every session is unbound (FR-01).
+            intent_sink = None
+            if include_profile:
+                from .turn_application import ProfileTurnIntentSink
+                intent_sink = ProfileTurnIntentSink(
+                    core_of=lambda: provided_port("profile.core"),
+                    sessions_of=lambda: provided_port("profile.native-sessions"))
+            extras = (*((ModelProviderAdaptersPlugin(),) if model_roots else ()),
+                      NativeConfigurationPlugin(carrier=runtime.plugin_host, roots=model_roots),
                       ModelProviderPlugin(harnesses=ModelConfigurationCatalog(
                           runtime.plugin_host.provided_port("harness.directory")),
-                          secret_store=runtime.secret_store),
-                      ProductSkillsPlugin(permissions=current_ceilings))
+                          secret_store=runtime.secret_store,
+                          harness_config_port=model_eligibility,
+                          turn_application_port=turn_application,
+                          turn_intent_sink=intent_sink),
+                      *profile_plugins)
             # Native composition uses an explicit base selection. The product,
             # not the host or business plugins, declares its additional points.
             for point in self.server_contribution_points():

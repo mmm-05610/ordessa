@@ -2,7 +2,7 @@
  * 宿主主进程侧的门（PA-02/03/04/07/08/09/10/11/13/14/21/22/23）。
  * 每条断言都对应契约里的一条反例或硬门；node 环境，不起 Electron。
  */
-import { mkdtemp, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { mkdtemp, mkdir, readFile, rm, stat, writeFile, symlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -11,7 +11,7 @@ import { discover } from '@ordessa/extension-host/main'
 import { buildInfo, assertBuildInfo, writeBuildInfo } from '../scripts/build-info.mjs'
 import { exportIcons, ICON_SIZES, HICOLOR_SIZES } from '../scripts/build-icons.mjs'
 import { findTestDrivers, FORBIDDEN_MARKERS } from '../scripts/release-hygiene.mjs'
-import { acquireDataRootLock, ensureDataRoot, probeDataRoot, resolveDataRoot, OWNER_MARKER_NAME, OWNER_MARKER_CONTENT } from '../electron/data-root'
+import { acquireDataRootLock, ensureDataRoot, initializeExistingDataRoot, probeDataRoot, resolveDataRoot, OWNER_MARKER_NAME, OWNER_MARKER_CONTENT } from '../electron/data-root'
 import { isRenderableFault, sortFaults, faultId } from '../electron/faults'
 import { resolveProductLayout } from '../electron/product-layout'
 import { DEFAULT_WINDOW_STATE, beginSession, cleanSession, restoreWindowState, runCleanup, startupCrashReport } from '../electron/lifecycle'
@@ -100,6 +100,45 @@ describe('PA-11 代码卫生：发行物零测试驱动代码', () => {
 })
 
 describe('PA-07 数据根与锁语义（消费 C-01）', () => {
+  it('显式初始化既有根保留账号与配置，随后可重用同一所有权标记', async () => {
+    const root = await tempDir()
+    await mkdir(path.join(root, 'accounts'))
+    await writeFile(path.join(root, 'accounts', 'sentinel'), 'unchanged')
+    await expect(initializeExistingDataRoot(root, { confirmed: false })).rejects.toThrow(/confirmation/)
+    await expect(readFile(path.join(root, OWNER_MARKER_NAME))).rejects.toThrow()
+    await initializeExistingDataRoot(root, { confirmed: true })
+    await initializeExistingDataRoot(root, { confirmed: true })
+    expect(await readFile(path.join(root, OWNER_MARKER_NAME), 'utf8')).toBe(OWNER_MARKER_CONTENT)
+    expect(await readFile(path.join(root, 'accounts', 'sentinel'), 'utf8')).toBe('unchanged')
+    expect((await stat(path.join(root, OWNER_MARKER_NAME))).mode & 0o777).toBe(0o600)
+  })
+  it('显式初始化也拒绝活锁、符号链接与错误标记，不覆盖任何内容', async () => {
+    const root = await tempDir()
+    await writeFile(path.join(root, '.lock'), JSON.stringify({ pid: process.pid }))
+    await expect(initializeExistingDataRoot(root, { confirmed: true })).rejects.toThrow(/locked/)
+    await rm(path.join(root, '.lock'))
+    const parent = await tempDir()
+    const link = path.join(parent, 'link')
+    await symlink(root, link)
+    await expect(initializeExistingDataRoot(link, { confirmed: true })).rejects.toThrow(/symbolic/)
+    await writeFile(path.join(root, OWNER_MARKER_NAME), 'foreign')
+    await expect(initializeExistingDataRoot(root, { confirmed: true })).rejects.toThrow(/marker/)
+    expect(await readFile(path.join(root, OWNER_MARKER_NAME), 'utf8')).toBe('foreign')
+  })
+  it('初始化拒绝损坏的 Desktop 锁、Server 锁及标记符号链接', async () => {
+    const root = await tempDir()
+    await writeFile(path.join(root, '.lock'), '{broken')
+    await expect(initializeExistingDataRoot(root, { confirmed: true })).rejects.toThrow()
+    await rm(path.join(root, '.lock'))
+    await writeFile(path.join(root, 'server.lock'), 'server_unknown')
+    await expect(initializeExistingDataRoot(root, { confirmed: true })).rejects.toThrow(/Server lock/)
+    await rm(path.join(root, 'server.lock'))
+    const target = path.join(await tempDir(), 'marker')
+    await writeFile(target, 'untouched')
+    await symlink(target, path.join(root, OWNER_MARKER_NAME))
+    await expect(initializeExistingDataRoot(root, { confirmed: true })).rejects.toThrow(/Unsafe/)
+    expect(await readFile(target, 'utf8')).toBe('untouched')
+  })
   it('解析顺序：env 优先，缺省 ~/.ordessa', () => {
     expect(resolveDataRoot({ ORDESSA_DATA_ROOT: '/tmp/custom' }, '/home/u')).toBe('/tmp/custom')
     expect(resolveDataRoot({}, '/home/u')).toBe(path.join('/home/u', '.ordessa'))

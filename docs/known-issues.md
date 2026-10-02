@@ -48,6 +48,7 @@ refusal or error. None is masked by a skip; none may be greened by fakes.
 
 | Issue | Class | Evidence / disposition |
 | --- | --- | --- |
+| Current `test:ui-preview` still enables the retired conversation extension | Resolved, measured 2026-10-02 | Migrated the controlled preview to current Chat and wire IPC, without reviving the retired chain or deleting substantive interaction assertions. A new same-task double-click counterexample found a real approval UI reentrancy defect; a synchronous ref guard fixes it. Main independently ran the actual Electron fixture: responseCount=1, all remaining interactions passed, consoleErrors=[], exit 0. Evidence: `/tmp/ordessa-preview-closeout-main/result.json`. This controlled result is not real Harness chat or installed-deb evidence. Future preview must use `ORDESSA_PREVIEW_OUT` outside the tracked screenshot directory. |
 | Approval card has no timeout display | Inherited, accepted at Round H closeout | UI debt |
 | Input box scrolls out of view (pending confirmation) | Inherited, pending | UI debt |
 | `apps/desktop` package name still `@modular/desktop-app` | New (kept deliberately) | internal npm name; rename is cosmetic, deferred (registered in `docs/naming.md`) |
@@ -55,6 +56,27 @@ refusal or error. None is masked by a skip; none may be greened by fakes.
 | `test:ui-preview` screenshots are not byte-stable | New (C-T029 finding), accepted | Two consecutive runs of identical code changed `02-history.png`, `03-tool-expanded.png`, `06-narrow.png` (and once captured `02-history.png` mid-connector-switch: empty session list + open popover). The gate's DOM assertions (`history.toolCards === 3`, `thinkingCards === 1`, …) passed in both runs, so this is preview-driver capture timing, not a product regression; the committed PNGs are illustrative evidence, the assertions are the authority. Fix = settle-wait before each `shot()` in `apps/desktop/electron/preview-main.ts` |
 
 ## Cross-component / environment
+
+### Spec 021 Codex 跨 provider 返回官方：加密历史兼容缺口（2026-10-02）
+
+已真实验证官方登录→OpenCode Go API 同会话切换：推理偏好保留、兄弟实例
+隔离、Go HTTP 200 且正确复述前轮标记。返回官方的配置恢复 observed，
+但第三轮 prompt 返回加密历史相关错误，未复述标记；完整往返探针 exit 1。
+后续闭集诊断准确捕获 `invalid_encrypted_content` / `invalid_request_error`，
+`decryptionRejected:true`；跨 provider 的 opaque encrypted state 不兼容仍是
+原因推断，未确定具体记录或加密主体，不宣称用户可见历史丢失。资产为
+`profile-codex-catalog-fast-off-v6`，未设为默认产品路径。
+用户已否决自建历史投影：只封装原生能力，不过滤/重写 rollout。
+核对 adapter 的原生 thread/resume 路径，无自编 history；尚无已验证原生解法。
+adapter 把部分原生非重试错误发成 Agent 正文且 ACP end_turn，不能计为成功。
+上游调查：openai/codex #17541 与 #46379 仍 open（2026-10-02 实读 issue /
+评论 / 关联记录）；前者在原生 app-server 报告相同的主动切换密文拒绝。
+未找到可用的已合并原生修复；评论中的非官方 fork / cleaner 未复验、未接入。
+用户裁定：Ordessa 只编排 Harness，不自行修复该原生内部问题；这条特定
+往返限制不阻塞其他产品收尾，仍保留 FAIL，不计完整跨 provider 通过。
+另一次返回应用在第三轮之前 SESSION_NEEDS_RECOVERY，尚未定位，保留独立失败。
+详细证据与验收状态见
+`specs/021-nightly-product-closeout/takeover-progress.md` 第 4 步实测更新。
 
 | Issue | Class | Notes |
 | --- | --- | --- |

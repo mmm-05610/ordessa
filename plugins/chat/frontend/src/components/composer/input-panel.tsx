@@ -48,6 +48,20 @@ export function InputPanel(props: InputPanelProps) {
   const [plusQuery, setPlusQuery] = useState(props.initialPlusQuery ?? '')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const listRef = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  // The menu is anchored above the composer, rather than covering its text.
+  // An outside pointer dismisses it without adding another full-screen layer.
+  useEffect(() => {
+    const dismiss = (event: PointerEvent) => {
+      const target = event.target
+      if (!(target instanceof Node) || panelRef.current?.contains(target)) return
+      if (target instanceof Element && target.closest('[data-testid="chat-plus-button"]')) return
+      props.onClose()
+    }
+    document.addEventListener('pointerdown', dismiss)
+    return () => document.removeEventListener('pointerdown', dismiss)
+  }, [props.onClose])
 
   const rows = useMemo(() => {
     const all = flatten(view).filter(row => row.entry.surfaces.includes(props.mode === 'plus' ? 'plus' : 'slash'))
@@ -107,7 +121,7 @@ export function InputPanel(props: InputPanelProps) {
 
   const searchId = 'chat-panel-search'
   return (
-    <div className="chat-panel-backdrop" data-testid="chat-input-panel" data-mode={props.mode}
+    <div ref={panelRef} className="chat-panel-backdrop" data-testid="chat-input-panel" data-mode={props.mode}
       onMouseDown={() => props.onClose()}>
       <div className="chat-panel" role="listbox" aria-label={props.mode === 'plus' ? '添加与操作面板' : '命令建议'}
         onMouseDown={event => event.stopPropagation()} onKeyDown={handleKeyDown}>
@@ -128,7 +142,7 @@ export function InputPanel(props: InputPanelProps) {
             if (source.state.status === 'error') {
               return (
                 <div key={source.source.id} className="chat-panel-source-error" data-state="error">
-                  <span>来源「{source.source.title}」加载失败：{source.state.error}</span>
+                  <span title={source.state.error}>「{source.source.title}」加载失败。<span className="chat-sr-only">{source.state.error}</span></span>
                   <button type="button" className="chat-ghost-action" data-action="retry-source"
                     onClick={() => props.onRetry()}>重试</button>
                 </div>
@@ -150,7 +164,8 @@ export function InputPanel(props: InputPanelProps) {
                     aria-selected={index === selectedIndex} aria-disabled={!enabled}
                     data-entry-id={row.entry.id} data-source-id={source.source.id}
                     data-selected={index === selectedIndex ? 'true' : 'false'}
-                    title={row.entry.title}
+                    title={!enabled && row.entry.availability.kind === 'disabled' ? `${row.entry.title}：${row.entry.availability.reason}` : row.entry.title}
+                    aria-description={!enabled && row.entry.availability.kind === 'disabled' ? row.entry.availability.reason : undefined}
                     onClick={() => pickRow(row)}
                     onMouseMove={() => { if (enabled) setSelectedIndex(index) }}>
                     <span className="chat-panel-row-main">
@@ -159,7 +174,10 @@ export function InputPanel(props: InputPanelProps) {
                     </span>
                     <span className="chat-panel-row-source">{source.source.title}</span>
                     {!enabled && row.entry.availability.kind === 'disabled' && (
-                      <span className="chat-panel-row-disabled" data-testid="chat-panel-disabled-reason">{row.entry.availability.reason}</span>
+                      <span className="chat-panel-row-disabled" data-testid="chat-panel-disabled-reason">
+                        <span data-disabled-summary="true">暂不可用</span>
+                        <span className="chat-sr-only">{row.entry.availability.reason}</span>
+                      </span>
                     )}
                   </button>
                 </div>

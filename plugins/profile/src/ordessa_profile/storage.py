@@ -14,7 +14,7 @@ from typing import Iterator
 
 from .ids import now
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 _SCHEMA_V1 = """
 CREATE TABLE IF NOT EXISTS profile_profiles (
@@ -169,6 +169,68 @@ def _migrate_to_v2(conn: sqlite3.Connection, timestamp: str) -> None:
     conn.executescript(_SCHEMA_V2)
 
 
+def _migrate_to_v3(conn: sqlite3.Connection, timestamp: str) -> None:
+    """v3: sparse-composition recovery facts (contract appendix §4).
+
+    Pure additive migration in the ``_migrate_to_v2`` style — table names,
+    primary keys and every existing column keep their meaning; only the
+    ordering/recovery facts the sparse item mask needs are added and
+    backfilled from derivable data.  No row is dropped or rewritten in a
+    way that loses stored values.
+
+    * ``profile_session_overlays.action_seq`` — the session-level action
+      index of the write (selects and overlay writes share one counter),
+      so "which user action came last" is decidable per item.
+    * ``profile_session_overlays.revision`` — the row's write version; it
+      increments on *every* upsert, including a same-value rewrite, because
+      a same-value rewrite is a new intent (P09).
+    * ``profile_sessions.action_seq`` — the session's monotone action
+      counter.
+    * ``profile_sessions.admission_facts_json`` — the non-secret facts one
+      admission froze (source revision, item mask, overlay revisions,
+      pending sequence, base identity, operation id).
+    """
+    existing_overlays = {
+        row["name"] for row in
+        conn.execute("PRAGMA table_info(profile_session_overlays)")
+    }
+    if "action_seq" not in existing_overlays:
+        conn.execute(
+            "ALTER TABLE profile_session_overlays ADD COLUMN action_seq"
+            " INTEGER NOT NULL DEFAULT 0"
+        )
+    if "revision" not in existing_overlays:
+        conn.execute(
+            "ALTER TABLE profile_session_overlays ADD COLUMN revision"
+            " INTEGER NOT NULL DEFAULT 0"
+        )
+        # Pre-v3 overlay rows already existed once: give them a real write
+        # version so "revision 0" keeps meaning "never written".
+        conn.execute(
+            "UPDATE profile_session_overlays SET revision = 1"
+            " WHERE revision = 0"
+        )
+    existing_sessions = {
+        row["name"] for row in
+        conn.execute("PRAGMA table_info(profile_sessions)")
+    }
+    if "action_seq" not in existing_sessions:
+        conn.execute(
+            "ALTER TABLE profile_sessions ADD COLUMN action_seq"
+            " INTEGER NOT NULL DEFAULT 0"
+        )
+        # The pre-v3 counter was ``pending_seq``; adopting it keeps the
+        # frozen pending selection ordered against later overlay writes.
+        conn.execute(
+            "UPDATE profile_sessions SET action_seq = COALESCE(pending_seq, 0)"
+            " WHERE action_seq = 0"
+        )
+    if "admission_facts_json" not in existing_sessions:
+        conn.execute(
+            "ALTER TABLE profile_sessions ADD COLUMN admission_facts_json TEXT"
+        )
+
+
 class ProfileDatabase:
     """One process-local connection guarded by an RLock; write transactions
     are ``BEGIN IMMEDIATE`` so the switch application is atomic (FR-008)."""
@@ -203,6 +265,7 @@ class ProfileDatabase:
                 steps: dict[int, object] = {
                     1: lambda: self._conn.executescript(_SCHEMA_V1),
                     2: lambda: _migrate_to_v2(self._conn, now()),
+                    3: lambda: _migrate_to_v3(self._conn, now()),
                 }
                 for version in sorted(steps):
                     if current >= version:

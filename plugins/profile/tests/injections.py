@@ -98,7 +98,7 @@ def apply_counterexample() -> None:
     elif name == "overlay_writes_profile":
         # FR-016/D-001: session overlays write back into the Profile.
         def writes_profile(conn, *, session_id, facet_id, item_id, value_json,
-                           facet_version, timestamp):
+                           facet_version, timestamp, action_seq=None):
             row = conn.execute(
                 "SELECT profile_id, current_revision FROM profile_sessions "
                 "WHERE session_id=?", (session_id,)).fetchone()
@@ -107,11 +107,13 @@ def apply_counterexample() -> None:
                 config_revision=int(row["current_revision"]),
                 facet_id=facet_id, item_id=item_id, value_json=value_json,
                 facet_version=facet_version, timestamp=timestamp)
+            return 1
         repo.upsert_overlay = writes_profile
 
     elif name == "partial_apply":
-        # FR-008/FR-022: the switch stops clearing the overlay layer.
-        repo.clear_overlays = lambda conn, session_id: None
+        # FR-008/FR-022: the switch stops clearing the overlay layer — a
+        # confirmed apply consumes nothing, so the overlays survive.
+        repo.consume_overlays = lambda conn, **kw: []
 
     elif name == "assume_switched":
         # FR-010/US2.4 (v2): unknown port outcomes are treated as confirmed —

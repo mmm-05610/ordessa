@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ELIGIBILITY_GLYPHS, ELIGIBILITY_LABELS, STATE_GLYPHS, STATE_LABELS, ModelProviderWireError } from '../../contracts/index'
 import type { ApiKeyImportResult, Eligibility, ModelOfferingView, ModelProviderService, ProviderConfigView, ProbeAnswer } from '../../contracts/index'
-import { styles, tokens } from './styles'
+import { settingsCss, styles, tokens } from './styles'
 
 interface Draft {
   displayName: string
@@ -246,7 +246,8 @@ export function ModelProviderSettings({ service }: { service: ModelProviderServi
   }, [configs, selectedId])
 
   return (
-    <div style={styles.root(narrow)} data-testid="model-provider-settings" onKeyDown={onKeyDown}>
+    <div className="mp-settings" style={styles.root(narrow)} data-testid="model-provider-settings" onKeyDown={onKeyDown}>
+      <style>{settingsCss}</style>
       <div style={styles.listPane} ref={listRef} role="listbox" aria-label="Provider 配置列表">
         {configs.map((config) => (
           <div key={config.id} role="option" aria-selected={config.id === selectedId} tabIndex={0}
@@ -256,6 +257,9 @@ export function ModelProviderSettings({ service }: { service: ModelProviderServi
               if (config.id === selectedId) detailReturnFocus.current = el
             }}
             onClick={() => { resetDraft(); setSelectedId(config.id); setAdding(false) }}
+            onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault(); resetDraft(); setSelectedId(config.id); setAdding(false)
+            } }}
             onFocus={() => detailReturnFocus.current = null}>
             <span aria-hidden="true">{STATE_GLYPHS[config.state]}</span>
             <span>{config.displayName}</span>
@@ -282,13 +286,16 @@ export function ModelProviderSettings({ service }: { service: ModelProviderServi
                   <span style={styles.mutedText}>（已保存 ≠ 可用；探测通过 ≠ 会话可使用）</span>
                 </p>
                 <p style={styles.mutedText}>
-                  认证：{managedAccount(selected) ? 'Ordessa 原生账号（应用前核验）' : selected.credentialId ? `凭据引用 ${selected.credentialId}` : '未绑定 API 凭据'}
+                  认证：{managedAccount(selected) ? 'Ordessa 原生账号（应用前核验）' : selected.credentialId ? '已绑定 API 凭据' : '未绑定 API 凭据'}
                   {' · '}归属：{selected.managedBy === 'harness' ? '由 Harness 管理' : '由 Ordessa 管理'}
                 </p>
+                {!managedAccount(selected) && selected.credentialId && <p style={styles.mutedText}>
+                  凭据引用：<code style={styles.modelId}>{selected.credentialId}</code>
+                </p>}
                 <div>
                   {selected.models.map((model) => (
                     <div key={model.modelId} style={styles.modelRow}>
-                      <span style={styles.modelId}>{model.modelId}</span>
+                      <span>{model.displayName || model.modelId}</span>
                       <span style={styles.warningText}>
                         <span aria-hidden="true">{ELIGIBILITY_GLYPHS[catalogueEligibility(model)]}</span>{' '}
                         {ELIGIBILITY_LABELS[catalogueEligibility(model)]}
@@ -317,7 +324,7 @@ export function ModelProviderSettings({ service }: { service: ModelProviderServi
               </>
             )}
             {adding && (
-              <div>
+              <div className="mp-settings-form">
                 <label>名称 <input value={draft.displayName} aria-label="名称"
                   onChange={(e) => changeDraft('displayName', e.target.value)} /></label>
                 <label>Harness <input value={draft.harness} aria-label="Harness" disabled={selected !== null}

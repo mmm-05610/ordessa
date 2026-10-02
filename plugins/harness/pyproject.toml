@@ -26,6 +26,6 @@ pi = "ordessa_harness.entrypoints:create_pi"
 dev = ["pytest>=7"]
 
 [tool.setuptools.package-data]
-ordessa_harness = ["harnesses.toml", "launch-descriptors.json", "codex/*.json", "codex/*.toml"]
+ordessa_harness = ["harnesses.toml", "launch-descriptors.json", "codex/*.json", "codex/*.toml", "_deployment/*.mjs"]
 [tool.setuptools.packages.find]
 where = ["src"]

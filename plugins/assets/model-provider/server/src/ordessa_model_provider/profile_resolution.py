@@ -140,6 +140,8 @@ class ProfileModelChoiceResolver:
                    "credentialRef": f"ref://{credential_ref}" if credential_ref is not None else None}
         if authentication is not None:
             payload['authentication'] = authentication
+        if model.get('capabilities') is not None:
+            payload['modelCapabilities'] = model['capabilities']
         if fields is not None:
             payload["brandFields"] = fields
         try:

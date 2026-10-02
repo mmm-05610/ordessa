@@ -71,6 +71,19 @@ class StaticHarnessCatalog:
         return self._harnesses.get(harness_id, frozenset())
 
 
+def _unchanged_from_base(intent: ConfigIntent,
+                         base: dict[tuple[str, str], dict[str, Any]]) -> bool:
+    """Does this intent merely restate what the session already runs?
+
+    Only true for a ``set`` whose target value equals the retained base
+    value.  A reset is never "unchanged" — it is a declared removal.
+    """
+    if intent.op != "set":
+        return False
+    fact = base.get((intent.facet_id, intent.item_id))
+    return fact is not None and fact["value"] == intent.value
+
+
 class ProfileCore:
     def __init__(
         self,
@@ -252,77 +265,104 @@ class ProfileCore:
     # -- v2 difference planning (application.md §1 step 3) ---------------
     def compile_switch_diffs(
         self, session: dict[str, Any], pending_profile: str,
-        *, effective_turn: bool = False,
+        *, effective_turn: bool = False, complete_target: bool = False,
+        declared_removals: frozenset[tuple[str, str]] | tuple = (),
     ) -> tuple[tuple[ConfigIntent, ...], list[dict[str, Any]]]:
-        """Plan the complete A→B difference as typed intents.
+        """Plan the difference between the *effective base* and the target.
 
-        Removals become ``reset`` intents — a field present in A and absent
-        in B may never quietly vanish from the plan (G08).  A difference
-        whose facet is absent, not applicable or quarantined blocks the
-        whole switch; filtering fields is never a pass.  Two facets claiming
-        the same native key raise ``NATIVE_KEY_CONFLICT`` before any plan
-        leaves the process (G16).
+        A Profile is a sparse preset list, not a replacement document
+        (FR-02/FR-03, appendix §4).  The target's **item mask** is exactly
+        what the frozen Profile revision declares; anything the Profile
+        omits produces **no intent at all** — neither ``set`` nor ``reset``
+        — and its effective value is retained from the last confirmed
+        effective native configuration of this session (never inferred from
+        the latest Profile revision or from the overlay layer).
+
+        Removal is a separate, explicit intent.  ``declared_removals`` is
+        the only way to ask for a ``reset``: an omitted item is never
+        inferred to be a removal, so ``reset_missing``/``reset_unsupported``
+        blocking still applies to *declared* removals only (G08/G13).
+
+        ``complete_target`` includes unchanged desired items when the native
+        application still needs its own confirmation (P11).  It does not
+        change which values are desired: only an effective turn (no pending
+        selection) merges the live temporary overrides on top.
         """
         blockers: list[dict[str, Any]] = []
         intents: list[ConfigIntent] = []
+        removals = frozenset(declared_removals)
         with self.db.read() as conn:
-            current_raw = self._raw_items(
-                conn, session["session_id"], session["current_profile_id"])
+            base = self.effective_base(conn, session)
             target_profile = self.require_profile(conn, pending_profile)
-            target_raw = self._raw_items(conn,
-                session["session_id"] if effective_turn and pending_profile == session["current_profile_id"] else None,
-                pending_profile)
-        revision = int(target_profile["current_revision"])
-        harness_id = session["harness_id"]
+            target_revision = int(target_profile["current_revision"])
+            target_raw = self._profile_items(
+                conn, pending_profile, target_revision)
+            overlays = repo.session_overlays(conn, session["session_id"])
+        session_id = session["session_id"]
+        pending_seq = (
+            int(session["pending_seq"])
+            if session["pending_seq"] is not None else None)
+        # An explicit pending selection is the *only* operation allowed to
+        # consume the temporary override layer, and only for items it
+        # declares.  An ordinary every-submit re-application carries no
+        # selection and keeps every live override (FR-03).
+        selection = pending_profile != session["current_profile_id"] or \
+            session["pending_profile_id"] is not None
+        desired: dict[tuple[str, str], dict[str, Any]] = {}
+        for key, fact in base.items():
+            desired[key] = dict(fact)
+        for key, fact in target_raw.items():
+            desired[key] = dict(fact)
+        for row in overlays:
+            key = (row["facet_id"], row["item_id"])
+            if selection and key in target_raw and pending_seq is not None \
+                    and int(row["action_seq"]) < pending_seq:
+                # an older temporary value the Profile now restates
+                continue
+            desired[key] = {
+                "value": json_loads(row["value_json"]),
+                "quarantined": False,
+                "source": "session_only",
+                "action_seq": int(row["action_seq"]),
+                "revision": int(row["revision"]),
+            }
+        for key in removals:
+            desired.pop(key, None)
         per_facet: dict[str, dict[str, dict[str, Any]]] = {}
-        for key in sorted(set(current_raw) | set(target_raw)):
+        for key in sorted(desired):
             facet_id, item_id = key
-            cur = current_raw.get(key)
-            tgt = target_raw.get(key)
-            if not effective_turn and cur is not None and tgt is not None \
-                    and cur["value"] == tgt["value"]:
-                continue
-            provider = self.provider_lookup(facet_id)
-            if provider is None:
+            tgt = desired[key]
+            cur = base.get(key)
+            # Availability is judged over the whole effective result — the
+            # retained base included.  Filtering a field away because its
+            # value happens to be unchanged would hide an unusable provider
+            # (G08/G13).
+            reason = self._item_blocker(facet_id, session["harness_id"], tgt)
+            if reason is not None:
                 blockers.append({
                     "facet_id": facet_id, "item_id": item_id,
-                    "reason": "provider_absent",
-                })
-                continue
-            if tgt is not None and tgt["quarantined"]:
-                blockers.append({
-                    "facet_id": facet_id, "item_id": item_id,
-                    "reason": "value_quarantined",
-                })
-                continue
-            if self._is_v2_provider(provider):
-                applicability = provider.applicability(
-                    {"harness_id": harness_id})
-                if applicability is Applicability.UNSUPPORTED:
-                    blockers.append({
-                        "facet_id": facet_id, "item_id": item_id,
-                        "reason": "facet_not_applicable",
-                    })
-                    continue
-                if applicability is Applicability.UNKNOWN:
-                    # contracts.md §1: unknown capability honestly blocks —
-                    # it is never promoted to supported (G08/G13).
-                    blockers.append({
-                        "facet_id": facet_id, "item_id": item_id,
-                        "reason": "facet_applicability_unknown",
-                    })
-                    continue
-            elif not provider.applies_to(harness_id):
-                blockers.append({
-                    "facet_id": facet_id, "item_id": item_id,
-                    "reason": "facet_not_applicable",
+                    "reason": reason,
                 })
                 continue
             per_facet.setdefault(facet_id, {})[item_id] = {
                 "current": cur["value"] if cur else UNSET,
-                "desired": tgt["value"] if tgt else UNSET,
+                "desired": tgt["value"],
             }
-        target_facts = {"harness_id": harness_id, "source_revision": revision}
+        # A removal only ever reaches the port when it was declared.
+        for facet_id, item_id in sorted(removals):
+            reason = self._item_blocker(facet_id, session["harness_id"], None)
+            if reason is not None:
+                blockers.append({
+                    "facet_id": facet_id, "item_id": item_id,
+                    "reason": reason,
+                })
+                continue
+            per_facet.setdefault(facet_id, {})[item_id] = {
+                "current": base[key]["value"] if key in base else UNSET,
+                "desired": UNSET,
+            }
+        target_facts = {"harness_id": session["harness_id"],
+                        "source_revision": target_revision}
         for facet_id, entries in sorted(per_facet.items()):
             provider = self.provider_lookup(facet_id)
             if self._is_v2_provider(provider):
@@ -330,7 +370,8 @@ class ProfileCore:
                     provider, entries, target_facts, intents, blockers)
             else:
                 self._compile_v1(
-                    provider, facet_id, entries, revision, intents, blockers)
+                    provider, facet_id, entries, target_revision, intents,
+                    blockers)
         by_native_key: dict[str, list[ConfigIntent]] = {}
         for intent in intents:
             by_native_key.setdefault(intent.native_key, []).append(intent)
@@ -347,7 +388,37 @@ class ProfileCore:
                      "reason": "native_key_conflict", "detail": native_key}
                     for i in group
                 ])
+        if not (effective_turn or complete_target):
+            # Only the difference travels to the port here.  The conflict
+            # check above still ran over the *whole* effective target, so a
+            # retained item that collides with a declared one is refused
+            # even though it emits no intent of its own (G16).
+            intents = tuple(
+                intent for intent in intents
+                if not _unchanged_from_base(intent, base)
+            )
         return tuple(intents), blockers
+
+    def _item_blocker(self, facet_id: str, harness_id: str,
+                      target: dict[str, Any] | None) -> str | None:
+        """Honest per-item availability check for one desired item."""
+        provider = self.provider_lookup(facet_id)
+        if provider is None:
+            return "provider_absent"
+        if target is not None and target.get("quarantined"):
+            return "value_quarantined"
+        if self._is_v2_provider(provider):
+            applicability = provider.applicability({"harness_id": harness_id})
+            if applicability is Applicability.UNSUPPORTED:
+                return "facet_not_applicable"
+            if applicability is Applicability.UNKNOWN:
+                # contracts.md §1: unknown capability honestly blocks —
+                # it is never promoted to supported (G08/G13).
+                return "facet_applicability_unknown"
+            return None
+        if not provider.applies_to(harness_id):
+            return "facet_not_applicable"
+        return None
 
     @staticmethod
     def _is_v2_provider(provider: Any) -> bool:
@@ -365,8 +436,19 @@ class ProfileCore:
             if entry["desired"] is not UNSET
         }
         facts = dict(target_facts)
+        # ``current_items`` carries only the items this operation may reset —
+        # that is, the *declared* removals.  A retained base item is not a
+        # removal candidate: a Profile that omits it must never make the
+        # provider reset it (FR-02).  The full retained base travels
+        # separately as ``base_items`` for providers that need the current
+        # value for their own diffing.
         facts["current_items"] = {
             item_id: entry["current"] for item_id, entry in entries.items()
+            if entry["desired"] is UNSET
+        }
+        facts["base_items"] = {
+            item_id: entry["current"] for item_id, entry in entries.items()
+            if entry["desired"] is not UNSET
         }
         result = provider.compile(desired, facts)
         for violation in result.violations:
@@ -377,13 +459,14 @@ class ProfileCore:
                 "detail": violation.message,
             })
         intents.extend(result.intents)
-        # Safety net: every removal must be covered by a reset the provider
-        # declared — an uncovered removal cannot silently disappear (G08).
+        # Safety net: every *declared* removal must be covered by a reset the
+        # provider declared — an uncovered removal cannot silently disappear
+        # (G08).  Omission is not a removal and never reaches this check.
         declared_items = {
             i.item_id for i in provider.descriptor().item_descriptors
         }
         for item_id, entry in entries.items():
-            if entry["desired"] is not UNSET:
+            if entry["desired"] is not UNSET or entry["current"] is UNSET:
                 continue
             if item_id not in declared_items:
                 blockers.append({
@@ -401,6 +484,7 @@ class ProfileCore:
                     "detail": "provider did not declare a reset for the "
                               "removed item",
                 })
+
 
     def _compile_v1(self, provider: Any, facet_id: str,
                     entries: dict[str, dict[str, Any]], revision: int,
@@ -425,26 +509,71 @@ class ProfileCore:
                 value=UNSET if removing else desired,
             ))
 
-    def _raw_items(self, conn: sqlite3.Connection, session_id: str | None,
-                   profile_id: str) -> dict[tuple[str, str], dict[str, Any]]:
-        """Stored facts of one side: profile values at the latest revision,
-        plus the session's overlays (session side only)."""
-        profile = self.require_profile(conn, profile_id)
-        raw: dict[tuple[str, str], dict[str, Any]] = {}
-        for row in repo.facet_values_at(
-            conn, profile_id, int(profile["current_revision"]),
-        ):
-            raw[(row["facet_id"], row["item_id"])] = {
+    def _profile_items(self, conn: sqlite3.Connection, profile_id: str,
+                       config_revision: int
+                       ) -> dict[tuple[str, str], dict[str, Any]]:
+        """One Profile's declared items at one immutable revision.
+
+        The returned keys *are* the item mask: a Profile declares exactly
+        these items and stays silent about everything else.
+        """
+        items: dict[tuple[str, str], dict[str, Any]] = {}
+        for row in repo.facet_values_at(conn, profile_id, config_revision):
+            items[(row["facet_id"], row["item_id"])] = {
                 "value": json_loads(row["value_json"]),
                 "quarantined": bool(row["quarantined"]),
+                "source": "profile",
+                "revision": config_revision,
             }
-        if session_id is not None:
-            for row in repo.session_overlays(conn, session_id):
-                raw[(row["facet_id"], row["item_id"])] = {
-                    "value": json_loads(row["value_json"]),
-                    "quarantined": False,
-                }
-        return raw
+        return items
+
+    def effective_base(self, conn: sqlite3.Connection,
+                       session: dict[str, Any]
+                       ) -> dict[tuple[str, str], dict[str, Any]]:
+        """The session's last confirmed effective native configuration.
+
+        Sourced from the recorded turn history (journal/readback backed),
+        never from the newest Profile revision and never from the overlay
+        layer.  A session that has not recorded a turn yet has never been
+        switched, so its base is the Profile revision it was bound to at
+        ``open_session`` — the same derivation, one step earlier, rather
+        than a guess about the newest Profile revision (appendix §4).
+        """
+        turn = repo.last_confirmed_turn(conn, session["session_id"])
+        if turn is None:
+            return {
+                key: {"value": fact["value"], "quarantined": False,
+                      "source": "retained_base"}
+                for key, fact in self._profile_items(
+                    conn, session["current_profile_id"],
+                    int(session["current_revision"]),
+                ).items()
+            }
+        items = repo.turn_effective_items(conn, turn["turn_id"]) or []
+        base: dict[tuple[str, str], dict[str, Any]] = {}
+        for item in items:
+            base[(item["facet_id"], item["item_id"])] = {
+                "value": item["value"],
+                "quarantined": False,
+                "source": "retained_base",
+            }
+        return base
+
+    def base_identity(self, conn: sqlite3.Connection,
+                      session: dict[str, Any]) -> dict[str, Any]:
+        """Non-secret identity of the retained base (admission facts, §4)."""
+        turn = repo.last_confirmed_turn(conn, session["session_id"])
+        if turn is None:
+            return {"turn_id": None, "turn_seq": None,
+                    "profile_id": session["current_profile_id"],
+                    "config_revision": int(session["current_revision"]),
+                    "source": "session_binding"}
+        return {
+            "turn_id": turn["turn_id"],
+            "turn_seq": int(turn["turn_seq"]),
+            "profile_id": turn["profile_id"],
+            "config_revision": int(turn["config_revision"]),
+        }
 
     # -- v2 read-only catalog / preview ----------------------------------
     def describe_facets(self, harness_id: str | None = None) -> list[dict[str, Any]]:
@@ -533,12 +662,19 @@ class ProfileCore:
             profile = self.require_profile(conn, profile_id)
             if session_id is not None:
                 session = self.sessions._require_session(conn, session_id)
+                base_items = [
+                    {"facet_id": facet_id, "item_id": item_id,
+                     "value": fact["value"]}
+                    for (facet_id, item_id), fact in
+                    self.effective_base(conn, session).items()
+                ]
                 resolution = resolve_session_items(
                     conn, session_id=session["session_id"],
                     profile_id=profile["profile_id"],
                     harness_id=session["harness_id"],
                     config_revision=int(profile["current_revision"]),
                     provider_lookup=self.provider_lookup,
+                    base_items=base_items,
                 )
                 harness_id = session["harness_id"]
             else:

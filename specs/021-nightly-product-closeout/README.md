@@ -1,5 +1,10 @@
 # 021 · Nightly Product Closeout — 控制面入口
 
+> **2026-10-02 本轮 ZCode 有界接管**：执行
+> [zcode-profile-model-closeout.md](zcode-profile-model-closeout.md)。仅处理
+> Profile 稀疏项覆盖、独立模型应用与共享提交验收；完成即停写待验收，
+> 不执行下文历史“无限继续推进”规则，不扩大到打包/新 Harness。
+
 > **2026-10-01 夜间接管**：当前执行入口是 [overnight-handoff.md](overnight-handoff.md)，
 > 逐条门在 [overnight-acceptance.md](overnight-acceptance.md)，依赖任务在
 > [overnight-tasks.md](overnight-tasks.md)。下文2026-09-30 deadline为历史记录，不据此空转。

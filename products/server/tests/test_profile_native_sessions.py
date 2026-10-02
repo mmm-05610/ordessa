@@ -6,6 +6,7 @@ from ordessa_profile.core import ProfileCore, StaticHarnessCatalog
 from ordessa_profile.errors import ProfileError
 from ordessa_profile.contracts import SessionRef
 from ordessa_server_product.profile_sessions import ProfileNativeSessions
+from ordessa_server_product.native_configuration import NativeConfigurationAuthority
 
 
 def test_canonical_registration_is_backend_minted_isolated_and_owner_pinned(tmp_path):
@@ -17,9 +18,10 @@ def test_canonical_registration_is_backend_minted_isolated_and_owner_pinned(tmp_
     channels.get.return_value = SimpleNamespace(ended=False, harness_id="pi", workspace_id="project")
     channels.native_session_observation.side_effect = lambda connection, native: actual.get(connection)
     owners = Mock()
-    owners.bind.side_effect = lambda **kw: SimpleNamespace(owner=actual[kw["connection_id"]], target=kw["canonical_session_id"])
+    owners.bind.side_effect = lambda **kw: SimpleNamespace(owner=actual[kw["connection_id"]], target=SimpleNamespace(session_id=kw["canonical_session_id"]))
     owners.readback.side_effect = lambda target: SimpleNamespace(owner=owner_a, target=target)
-    sessions = ProfileNativeSessions(core=core, channels=channels, owners=owners, realm="backend-realm")
+    configuration = NativeConfigurationAuthority(channels=channels, owners=owners, services=Mock())
+    sessions = ProfileNativeSessions(core=core, configuration=configuration, realm="backend-realm")
     try:
         a = sessions.register(connection_id="a", native_session_id="same", profile_id=profile["profile_id"])
         b = sessions.register(connection_id="b", native_session_id="same", profile_id=profile["profile_id"])
@@ -48,7 +50,8 @@ def test_registration_refuses_cross_realm_profile_before_binding(tmp_path):
     channels.get.return_value = SimpleNamespace(ended=False, harness_id="pi", workspace_id="project")
     channels.native_session_observation.return_value = owner
     owners = Mock()
-    sessions = ProfileNativeSessions(core=core, channels=channels, owners=owners, realm="local")
+    configuration = NativeConfigurationAuthority(channels=channels, owners=owners, services=Mock())
+    sessions = ProfileNativeSessions(core=core, configuration=configuration, realm="local")
     try:
         with pytest.raises(ProfileError, match="realm"):
             sessions.register(connection_id="channel", native_session_id="native",
@@ -68,8 +71,9 @@ def test_recording_selection_checks_identity_without_querying_busy_agent(tmp_pat
     channels.get.return_value = SimpleNamespace(ended=False, harness_id="pi", workspace_id="project")
     channels.native_session_observation.return_value = owner
     owners = Mock()
-    owners.bind.return_value = SimpleNamespace(owner=owner, target="target")
-    sessions = ProfileNativeSessions(core=core, channels=channels, owners=owners, realm="local")
+    owners.bind.side_effect = lambda **kw: SimpleNamespace(owner=owner, target=SimpleNamespace(session_id=kw["canonical_session_id"]))
+    configuration = NativeConfigurationAuthority(channels=channels, owners=owners, services=Mock())
+    sessions = ProfileNativeSessions(core=core, configuration=configuration, realm="local")
     try:
         binding = sessions.register(connection_id="channel", native_session_id="native", profile_id=profile["profile_id"])
         owners.readback.side_effect = AssertionError("Must not query/interfere with a busy agent")

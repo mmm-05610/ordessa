@@ -96,12 +96,32 @@ it('the status bar shows a late release failure automatically, with no selection
   const toggle = container.querySelector('.conn-status-toggle') as HTMLButtonElement
   await act(async () => { toggle.click() })
   await act(async () => { await workspace.reconnect('acp') })
-  expect(container.textContent).toContain('in-flight')
+  expect(document.querySelector('.conn-popover')?.textContent).toContain('in-flight')
   // The refusal arrives after the reconnect completed, with no further user action at all:
   // the client's announcement re-publishes the workspace, and the store notification renders it.
   await act(async () => { evicted.answerOne() })
-  expect(container.textContent).toContain('chan_acp: backend unreachable')
-  expect(container.querySelector('[role="alert"]')).not.toBeNull()
-  expect(container.textContent).toContain('Retry backend release')
+  expect(document.querySelector('.conn-popover')?.textContent).toContain('chan_acp: backend unreachable')
+  expect(document.querySelector('.conn-popover [role="alert"]')).not.toBeNull()
+  expect(document.querySelector('.conn-popover')?.textContent).toContain('Retry backend release')
   registryScope.dispose(); connectorScope.dispose()
+})
+
+it('mounts the menu outside clipping chrome, closes on Escape/outside pointer and removes it on unmount', async () => {
+  const resources = new OwnedResources()
+  const registry = createAgentConnections(resources, createConnections(resources))
+  const container = await mount(<ConnectionStatus workspace={registry.workspace} />)
+  const toggle = container.querySelector('button')!
+  await act(async () => toggle.click())
+  expect(document.querySelector('.conn-popover')?.parentElement).toBe(document.body)
+  expect(container.querySelector('.conn-popover')).toBeNull()
+  await act(async () => document.dispatchEvent(new KeyboardEvent('keydown', {key:'Escape',bubbles:true})))
+  expect(document.querySelector('.conn-popover')).toBeNull()
+  expect(document.activeElement).toBe(toggle)
+  await act(async () => toggle.click())
+  await act(async () => document.body.dispatchEvent(new Event('pointerdown', {bubbles:true})))
+  expect(document.querySelector('.conn-popover')).toBeNull()
+  await act(async () => toggle.click())
+  for (const fn of cleanup.splice(0).reverse()) await fn()
+  expect(document.querySelector('.conn-popover')).toBeNull()
+  resources.dispose()
 })

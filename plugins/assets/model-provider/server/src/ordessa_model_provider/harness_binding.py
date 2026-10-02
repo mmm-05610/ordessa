@@ -25,6 +25,20 @@ mint/verify pairs in the tests; the production-level statement stays
 
 This module consumes harness-api/ordessa_harness read-only; it never imports
 Server host internals beyond the port vocabulary it implements.
+
+TEST DOUBLE ONLY - PRODUCTION MUST NOT INJECT THIS PORT
+========================================================
+``ConfigurationServiceHarnessPort`` is no longer a production submit gate. It
+binds ONE target at construction, synthesizes its read-back from the request's
+own model id and derives a version-less operation key - exactly the pseudo
+read-back the current contract forbids (spec 021 closeout B.2, gate M13). The
+production send path is ``modelProvider.beginTurnApplication`` delegating to
+``ordessa_model_provider.turn_application.TurnApplicationPort``, whose product
+implementation resolves the *current* native owner/canonical UID/generation and
+runs the shared C4 owner-plan entry with a fresh read-back. This class stays as
+the controlled test double its suite drives (the real C4 chain at controlled
+evidence level); injecting it in production would make a request-synthesized
+read-back look like confirmation.
 """
 from __future__ import annotations
 
@@ -164,10 +178,23 @@ def _session_key(session_ref: Mapping[str, Any]) -> tuple[str, ...]:
 
 
 def _operation_key(session_ref: Mapping[str, Any], choice: Mapping[str, Any]) -> str:
+    """This double's C4 operation key.
+
+    The provider-config version and - when the caller observed one - the
+    native generation are part of the basis, so an intent frozen at version N
+    can never address an operation planned for version N+1 (M10). The next-turn
+    pipeline always passes the resolved ``version``; a caller that cannot
+    observe one (``None``) is namespaced as ``unversioned`` rather than
+    silently colliding with a versioned key. The production send path does not
+    use this function at all - it derives its version-bearing key through
+    ``turn_application.submission_operation_key``.
+    """
     basis = "|".join((
         *_session_key(session_ref),
         str(choice.get("providerConfigId") or choice.get("provider")),
         str(choice.get("modelId") or choice.get("model")),
+        f"v{choice.get('version')}" if choice.get("version") is not None else "unversioned",
+        f"g{choice['generation']}" if choice.get("generation") is not None else "",
     ))
     return f"mp-{hashlib.sha256(basis.encode('utf-8')).hexdigest()[:32]}"
 

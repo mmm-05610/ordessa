@@ -21,8 +21,9 @@ export function ProfilePicker(input: ProfilePickerProps): ReactNode {
   return (
     <span
       data-profile-picker=""
-      style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, minWidth: 0, maxWidth: '100%', fontSize: 12 }}
     >
+      <style>{`[data-profile-picker] select{height:28px!important;max-width:180px;padding:0 20px 0 7px!important;border:0!important;border-radius:7px!important;background-color:transparent!important;color:inherit;font:inherit!important;cursor:pointer}[data-profile-picker] button{height:26px;padding:0 6px;border:0;border-radius:6px;background:transparent;color:#77777e;font:inherit;cursor:pointer}[data-profile-picker] select:hover,[data-profile-picker] button:hover{background-color:#88888812!important}[data-profile-picker] :focus-visible{outline:2px solid #548fe5;outline-offset:2px}[data-profile-picker] [role=status],[data-profile-picker] [role=alert]{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#77777e}`}</style>
       <Select
         aria-label="配置预设"
         disabled={props.disabledReason !== undefined}
@@ -61,8 +62,15 @@ export function ProfilePicker(input: ProfilePickerProps): ReactNode {
           </optgroup>
         ))}
       </Select>
-      {props.onRefresh && <button type="button" data-profile-refresh="" onClick={props.onRefresh}>刷新预设</button>}
-      {props.statusMessage && <span role="status">{props.statusMessage}</span>}
+      {props.onRefresh && <button type="button" aria-label="刷新预设" title="刷新预设" data-profile-refresh="" onClick={props.onRefresh}><span aria-hidden="true">↻</span></button>}
+      {props.statusMessage && <span role="status" style={{ minWidth: 0 }} title={props.statusMessage}>{props.statusMessage}</span>}
+      {/* 021 §6c F1.1: a click registration that failed is a visible fact, so
+        * the user knows the pick is NOT yet registered and can retry. */}
+      {props.registrationError && (
+        <span role="alert" title={`预设登记失败：${props.registrationError}；选择已保留，重新发送时将重试。`} data-profile-registration-error="">
+          预设登记失败：{props.registrationError}；选择已保留，重新发送时将重试。
+        </span>
+      )}
       {props.onOpenManager && (
         <button
           type="button"
@@ -72,6 +80,7 @@ export function ProfilePicker(input: ProfilePickerProps): ReactNode {
           管理
         </button>
       )}
+      <style>{`[data-profile-picker] select{min-width:0;flex:0 1 auto}[data-profile-picker] [role=status],[data-profile-picker] [role=alert]{min-width:0;flex:0 1 auto}[data-profile-picker] [role=alert]{min-width:64px}[data-profile-picker] button{flex-shrink:0}`}</style>
     </span>
   )
 }

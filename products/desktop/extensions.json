@@ -8,7 +8,6 @@
   "ordessa.connections",
   "ordessa.agent-connections",
   "ordessa.agent-sessions",
-  "ordessa.agent-server",
   "ordessa.agent-acp",
   "ordessa.chat-api",
   "ordessa.chat",
@@ -17,12 +16,14 @@
   "ordessa.profile-chat",
   "ordessa.skills",
   "ordessa.asset-mcp",
-  "ordessa.model-provider"
+  "ordessa.model-provider",
+  "ordessa.model-provider-chat"
  ],
  "config": {
   "ordessa.ui-components": [
    {"componentId": "ordessa.profile.picker", "major": 1, "providerId": "ordessa.profile-chat"},
-   {"componentId": "ordessa.profile.editor:assets.model-provider", "major": 1, "providerId": "ordessa.model-provider"}
+   {"componentId": "ordessa.profile.editor:assets.model-provider", "major": 1, "providerId": "ordessa.model-provider"},
+   {"componentId": "ordessa.chat.model-selector", "major": 1, "providerId": "ordessa.model-provider-chat"}
   ]
  }
 }

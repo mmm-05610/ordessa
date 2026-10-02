@@ -17,7 +17,13 @@ export function restorationOperations({ read, withProvider, restore, invalidPara
     const gateway = (exact(input?.provider, ['providerId', 'apiType', 'baseUrl'])
       || exact(input?.provider, ['providerId', 'apiType', 'baseUrl', 'headers']))
       && ['providerId', 'apiType', 'baseUrl'].every(key => text(input.provider[key]))
-    if (!exact(input, ['sessionId', 'operationId', 'expectedGeneration', 'expectedConfigDigest', 'target', 'provider', 'model'])
+    const keys = ['sessionId', 'operationId', 'expectedGeneration', 'expectedConfigDigest', 'target', 'provider', 'model']
+    if (Object.hasOwn(input ?? {}, 'modelCapabilities')) {
+      if (managed || input?.provider?.providerId !== 'custom-gateway' || input?.provider?.apiType !== 'openai')
+        fail('Model catalogue belongs only to the Codex gateway dialect')
+      keys.push('modelCapabilities')
+    }
+    if (!exact(input, keys)
         || !text(input.sessionId) || !text(input.operationId, 128) || !input.operationId.startsWith('restore:')
         || !text(input.expectedGeneration) || typeof input.expectedConfigDigest !== 'string'
         || !/^[a-f0-9]{64}$/u.test(input.expectedConfigDigest)
@@ -79,11 +85,14 @@ export function restorationOperations({ read, withProvider, restore, invalidPara
         }
       } catch (error) {
         record.phase = 'restoration-outcome-unknown'
+        try {record.after = read({sessionId: input.sessionId})} catch {}
         // Closed vocabulary only: upstream error text can contain credentials.
         if (['provider', 'close', 'restart', 'resume', 'preferences', 'model'].includes(error?.restorationPhase))
           record.failureStep = error.restorationPhase
         if (['native-history-unavailable', 'native-authentication-rejected', 'native-model-rejected', 'native-request-rejected'].includes(error?.restorationReason))
           record.failureReason = error.restorationReason
+        if (['mode', 'collaboration_mode', 'reasoning_effort', 'fast-mode'].includes(error?.restorationPreference))
+          record.failurePreference = error.restorationPreference
       }
       return structuredClone(record)
     })

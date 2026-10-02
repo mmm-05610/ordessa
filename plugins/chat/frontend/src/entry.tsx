@@ -57,6 +57,9 @@ export default function createPlugin() {
       // R-Z2-6/S-05).
       chat.forScope(context.resources).addInputSource(createNativeCommandSource(sessions))
       chat.forScope(context.resources).addInputSource(createAttachmentSource(sessions))
+      // The Chat plugin owns its landing view; registering a view alone does
+      // not activate it. No connection or native session is created here.
+      workbench.open('chat.page')
       return chat
     },
   }

@@ -175,7 +175,13 @@ class SessionService:
                        profile_id: str) -> dict[str, Any]:
         """Register the user's selection as pending; nothing is applied here
         (PA01: the choice is recorded and takes effect on the next submit).
-        Selecting the current profile again never clears overlays (G07)."""
+
+        The selection draws a session-level action index from the same
+        counter overlay writes use, so "which user action came last" stays
+        decidable per (facet_id, item_id) — never by arrival order or by a
+        wall clock (appendix §3.2).  Selecting the current profile again is
+        a real restatement of its mask: it consumes only the older
+        temporary values inside that mask, never the whole layer."""
         request = {"session_id": session_id, "profile_id": profile_id}
         with self.core.db.transaction() as conn:
             prior = self._idempotent(
@@ -185,19 +191,19 @@ class SessionService:
                 return prior["response"]
             session = self._require_session(conn, session_id)
             self._validate_target(conn, session, profile_id)
-            next_seq = (int(session["pending_seq"]) if session["pending_seq"]
-                        is not None else 0) + 1
+            action_seq = repo.next_action_seq(conn, session["session_id"])
             repo.upsert_session(
                 conn, session_id=session["session_id"],
                 harness_id=session["harness_id"],
                 current_profile_id=session["current_profile_id"],
                 current_revision=int(session["current_revision"]),
                 switch_state="pending", pending_profile_id=profile_id,
-                pending_seq=next_seq, blockers=None,
+                pending_seq=action_seq, blockers=None,
                 timestamp=self.core.timestamp(),
                 realm=session["realm"],
                 session_uid=session["session_uid"],
                 native_session_key=session["native_session_key"],
+                action_seq=action_seq,
             )
             updated = self._require_session(conn, session_id)
             response = self.session_view(updated)
@@ -208,14 +214,22 @@ class SessionService:
             return response
 
     # -- US2: begin-turn validation + atomic application -----------------
-    def begin_turn(self, key: str, *, session_id: str) -> dict[str, Any]:
+    def begin_turn(self, key: str, *, session_id: str,
+                   declared_removals: frozenset[tuple[str, str]] | tuple = (),
+                   ) -> dict[str, Any]:
         """Next-turn admission boundary.
 
         Without a pending selection this resolves the current configuration
         and records the turn (no application claim).  With a pending
         selection the full difference is planned and applied through the
         Harness port before the message may go out; anything unproven blocks
-        the send (G09/G10)."""
+        the send (G09/G10).
+
+        ``declared_removals`` is the explicit removal intent.  It is never
+        inferred from a Profile's missing item (FR-02); this batch adds no
+        reset UI, so it exists only for callers that genuinely declare one
+        — a declared removal whose provider cannot compile a reset blocks
+        honestly (G08/G13)."""
         request = {"session_id": session_id}
         scope = f"sessions.begin_turn:{session_id}"
         with self.core.db.read() as conn:
@@ -230,9 +244,18 @@ class SessionService:
             )
         if pending_profile is not None:
             return self._begin_turn_switch(
-                key, scope, request, session_id, pending_profile)
-        if getattr(self.core.config_port, "native_turn_application", False) is True:
-            return self._begin_turn_switch(key, scope, request, session_id, session["current_profile_id"])
+                key, scope, request, session_id, pending_profile,
+                declared_removals)
+        if declared_removals or getattr(
+                self.core.config_port, "native_turn_application", False
+        ) is True:
+            # A declared removal is a real application intent: it takes the
+            # same proven path as a selection so its reset reaches the port
+            # instead of being silently dropped by the projection-only turn
+            # (G08).
+            return self._begin_turn_switch(
+                key, scope, request, session_id, session["current_profile_id"],
+                declared_removals)
         with self.core.db.transaction() as conn:
             prior = self._idempotent(conn, scope, key, request)
             if prior:
@@ -246,7 +269,8 @@ class SessionService:
             return result
 
     def _begin_turn_switch(self, key: str, scope: str, request: dict[str, Any],
-                           session_id: str, pending_profile: str) -> dict[str, Any]:
+                           session_id: str, pending_profile: str,
+                           declared_removals=()) -> dict[str, Any]:
         port = self.core.config_port
         with self.core.db.read() as conn:
             prior = self._idempotent(conn, scope, key, request)
@@ -267,14 +291,21 @@ class SessionService:
         policy = self.core.policy.get_public(session_ref.realm)
         target_revision = self._target_revision(pending_profile)
         # A pending selection means the user asked for this Profile's own
-        # intent, so the plan is compiled against the blueprint.  With no
-        # selection the native application port re-applies the *effective*
-        # configuration, which includes the live temporary overrides (C04).
+        # intent, so the plan is compiled against its frozen item mask.  With
+        # no selection the native application port re-applies the *effective*
+        # configuration, which includes the retained base and the live
+        # temporary overrides (C04).
         intents, blocked_items = self.core.compile_switch_diffs(
             session, pending_profile,
+            # Registered desired equality is not a native application receipt.
+            # Every native submission needs the full chosen target, including
+            # when an explicit selection names the just-registered Profile.
+            complete_target=getattr(port, "native_turn_application", False) is True,
             effective_turn=(
                 session["pending_profile_id"] is None
-                and getattr(port, "native_turn_application", False) is True))
+                and getattr(port, "native_turn_application", False) is True),
+            declared_removals=declared_removals,
+        )
         if blocked_items:
             raise ProfileError(
                 "SWITCH_BLOCKED",
@@ -283,18 +314,21 @@ class SessionService:
                 status=409,
             ).with_blockers(blocked_items)
         # US4.6: every harness-required item must resolve usable on the
-        # target — a required-but-absent item refuses the switch (G13).
+        # effective result — the *current base plus this patch*, never the
+        # sparse target alone (G13).
         with self.core.db.read() as conn:
-            target_resolved = resolve_profile_items(
-                conn, profile_id=pending_profile,
-                harness_id=session["harness_id"],
-                config_revision=target_revision,
-                provider_lookup=self.core.provider_lookup,
+            effective = self._effective_resolution(
+                conn, session, pending_profile, target_revision,
+                selection=session["pending_profile_id"] is not None,
             )
+        conflict_free(effective, self.core.provider_lookup)
         check_required(
-            target_resolved,
+            effective,
             self.core.harnesses.required_item_ids(session["harness_id"]),
         )
+        facts = self._admission_facts(
+            session, operation_id, target_revision,
+            selection=session["pending_profile_id"] is not None)
         plan_digest = digest([_intent_facts(i) for i in intents])
         with self.core.db.transaction() as conn:
             journal.record(conn, JournalEntry(
@@ -304,6 +338,14 @@ class SessionService:
                 plan_digest=plan_digest,
                 created_at=self.core.timestamp(),
             ))
+            # Freeze the non-secret recovery facts of THIS admission; every
+            # later consumer (commit, recovery, reconcile) judges against
+            # them instead of whatever the Profile looks like afterwards.
+            repo.set_admission_facts(
+                conn, session["session_id"],
+                json_dumps(_admission_public(facts)),
+            )
+
         if port is None:
             # Typed absence: nothing was applied, nothing was cleared; the
             # attempt is journalled as planned and the pending selection
@@ -386,13 +428,14 @@ class SessionService:
         return self._handle_apply_outcome(
             key=key, scope=scope, request=request, session=session,
             session_ref=session_ref, pending_profile=pending_profile,
-            operation_id=operation_id,
+            operation_id=operation_id, facts=facts,
             plan=plan, outcome=outcome, policy=policy, target_revision=target_revision,
         )
 
     def _handle_apply_outcome(self, *, key, scope, request, session,
                               session_ref, pending_profile, operation_id,
-                              plan, outcome, policy, target_revision) -> dict[str, Any]:
+                              facts, plan, outcome, policy,
+                              target_revision) -> dict[str, Any]:
         timestamp = self.core.timestamp()
         if isinstance(outcome, ApplyRejected):
             self._journal_transition(
@@ -434,8 +477,7 @@ class SessionService:
             config_digest=outcome.receipt.config_digest,
             profile_id=pending_profile,
             profile_revision=target_revision,
-            overlay_revision=int(session["pending_seq"])
-            if session["pending_seq"] is not None else None,
+            overlay_revision=facts["pending_seq"],
             policy_revision=int(policy["revision"]),
             provider_generations={
                 "registry": self.core.registry.generation,
@@ -456,43 +498,53 @@ class SessionService:
                     timestamp=timestamp,
                 )
                 journal.record_receipt(conn, receipt, timestamp)
-                repo.upsert_session(
+                # Re-read the session row inside the transaction: between the
+                # admission and this commit the user may have made a newer
+                # pick.  The frozen pending sequence decides whether *this*
+                # operation may settle the row or must leave the newer intent
+                # alone (P08).
+                fresh = self._require_session(conn, session["session_id"])
+                still_ours = _admission_owns_pending(fresh, facts)
+                # Successful switch only: the temporary values this Profile
+                # restates inside its frozen mask go away; everything outside
+                # the mask — and everything written *during* the application —
+                # stays for the next turn (FR-03, P09).
+                consume_mask = facts["consume_mask"]
+                repo.consume_overlays(
                     conn, session_id=session["session_id"],
-                    harness_id=session["harness_id"],
+                    revisions={
+                        (facet_id, item_id): revision
+                        for (facet_id, item_id), revision
+                        in facts["overlay_revisions"].items()
+                        if (facet_id, item_id) in consume_mask
+                    },
+                )
+                target_resolution = self._effective_resolution(
+                    conn, fresh, pending_profile, receipt.profile_revision,
+                    selection=facts["selection"],
+                )
+                repo.upsert_session(
+                    conn, session_id=fresh["session_id"],
+                    harness_id=fresh["harness_id"],
                     current_profile_id=pending_profile,
                     current_revision=receipt.profile_revision,
-                    switch_state="settled", pending_profile_id=None,
-                    pending_seq=None, blockers=None, timestamp=timestamp,
-                    realm=session["realm"],
-                    session_uid=session["session_uid"],
-                    native_session_key=session["native_session_key"],
-                )
-                # Successful switch only: clear the old overlays (G07).
-                #
-                # An explicit selection is a pending selection: the user asked
-                # for this Profile's complete intent, so the temporary override
-                # layer goes away even when the Profile is the one the session
-                # is already bound to (C05).  The ordinary every-submit
-                # re-application in ``native_turn_application`` mode carries no
-                # selection and must keep the live overrides instead (C04).
-                preserve_overlays = _keeps_overlays(
-                    self.core.config_port, session, pending_profile)
-                if not preserve_overlays:
-                    repo.clear_overlays(conn, session["session_id"])
-                resolver = resolve_session_items if preserve_overlays else resolve_profile_items
-                target_resolution = resolver(
-                    conn, **({"session_id": session["session_id"]} if preserve_overlays else {}),
-                    profile_id=pending_profile,
-                    harness_id=session["harness_id"],
-                    config_revision=receipt.profile_revision,
-                    provider_lookup=self.core.provider_lookup,
+                    switch_state="settled" if still_ours
+                    else fresh["switch_state"],
+                    pending_profile_id=fresh["pending_profile_id"]
+                    if not still_ours else None,
+                    pending_seq=fresh["pending_seq"] if not still_ours else None,
+                    blockers=None if still_ours else fresh["blockers_json"],
+                    timestamp=timestamp,
+                    realm=fresh["realm"],
+                    session_uid=fresh["session_uid"],
+                    native_session_key=fresh["native_session_key"],
                 )
                 result = self._record_turn(
-                    conn, session=session, resolution=target_resolution,
+                    conn, session=fresh, resolution=target_resolution,
                     profile_id=pending_profile,
                     revision=receipt.profile_revision,
                     applied_switch=pending_profile != session["current_profile_id"],
-                    pending_seq=receipt.overlay_revision,
+                    pending_seq=None if still_ours else fresh["pending_seq"],
                     ticket={
                         "operation_id": operation_id,
                         "applied": True,
@@ -502,6 +554,7 @@ class SessionService:
                 repo.idempotency_insert(
                     conn, scope, key, digest(request), 200, result, timestamp,
                 )
+
         except ProfileError:
             raise
         except Exception as exc:
@@ -533,28 +586,153 @@ class SessionService:
 
     def _mark_needs_recovery(self, session: dict[str, Any]) -> None:
         """PA05: an unprovable application enters needs-recovery and blocks
-        the send.  Bindings and overlays are untouched — only the visible
-        safety state changes (recovery never guesses, see verify_recovery)."""
+        the send.
+
+        Only the *safety state* is written.  The binding, the pending
+        selection and the overlay layer are read back from the current row
+        inside the transaction and written back unchanged — recovery never
+        replays a stale snapshot, so a pick made during the application
+        survives verbatim (P08)."""
         with self.core.db.transaction() as conn:
+            fresh = self._require_session(conn, session["session_id"])
             repo.upsert_session(
-                conn, session_id=session["session_id"],
-                harness_id=session["harness_id"],
-                current_profile_id=session["current_profile_id"],
-                current_revision=int(session["current_revision"]),
+                conn, session_id=fresh["session_id"],
+                harness_id=fresh["harness_id"],
+                current_profile_id=fresh["current_profile_id"],
+                current_revision=int(fresh["current_revision"]),
                 switch_state="needs_recovery",
-                pending_profile_id=session["pending_profile_id"],
-                pending_seq=session["pending_seq"],
+                pending_profile_id=fresh["pending_profile_id"],
+                pending_seq=fresh["pending_seq"],
                 blockers=[{"reason": "application_unproven"}],
                 timestamp=self.core.timestamp(),
-                realm=session["realm"],
-                session_uid=session["session_uid"],
-                native_session_key=session["native_session_key"],
+                realm=fresh["realm"],
+                session_uid=fresh["session_uid"],
+                native_session_key=fresh["native_session_key"],
             )
+
+
+    # -- admission facts (appendix §4) ----------------------------------
+    def _admission_facts(self, session: dict[str, Any], operation_id: str,
+                         target_revision: int, *,
+                         selection: bool) -> dict[str, Any]:
+        """Freeze the non-secret facts this admission is judged against.
+
+        Recorded before anything is handed to the port, so the later commit,
+        the recovery path and a reconcile all see exactly what was frozen —
+        not whatever the Profile or the overlay layer look like afterwards.
+        Values never enter these facts; ``detail_refs`` stays a reference
+        field and is not used as a state pocket.
+        """
+        with self.core.db.read() as conn:
+            target_profile_id = self._pending_target(conn, session) \
+                if selection else session["current_profile_id"]
+            mask = sorted(self.core._profile_items(
+                conn, target_profile_id, int(target_revision)))
+            overlay_revisions = {
+                (row["facet_id"], row["item_id"]): int(row["revision"])
+                for row in repo.session_overlays(conn, session["session_id"])
+            }
+            base = self.core.base_identity(conn, session)
+        return {
+            "source_profile_revision": int(target_revision),
+            "item_mask": mask,
+            # Only an explicit Profile selection may consume the temporary
+            # override layer, and only for the items it declares.
+            "consume_mask": mask if selection else [],
+            "selection": bool(selection),
+            "overlay_revisions": overlay_revisions,
+            "pending_seq": (
+                int(session["pending_seq"])
+                if session["pending_seq"] is not None else None),
+            "base_identity": base,
+            "operation_id": operation_id,
+        }
+
+    @staticmethod
+    def _pending_target(conn: sqlite3.Connection,
+                        session: dict[str, Any]) -> str:
+        return session["pending_profile_id"] or session["current_profile_id"]
+
+    def _effective_resolution(self, conn: sqlite3.Connection,
+                              session: dict[str, Any], profile_id: str,
+                              config_revision: int, *,
+                              selection: bool) -> Resolution:
+        """The effective configuration this operation makes true.
+
+        ``config_revision`` is the *frozen* source revision of this
+        operation; the retained base supplies everything the Profile does not
+        declare, and the overlay layer wins on top — except for older
+        temporary values the declared mask restates when this was an
+        explicit selection.
+        """
+        base_items = [
+            {"facet_id": facet_id, "item_id": item_id, "value": fact["value"]}
+            for (facet_id, item_id), fact in
+            self.core.effective_base(conn, session).items()
+        ]
+        resolution = resolve_session_items(
+            conn, session_id=session["session_id"],
+            profile_id=profile_id,
+            harness_id=session["harness_id"],
+            config_revision=config_revision,
+            provider_lookup=self.core.provider_lookup,
+            base_items=base_items,
+        )
+        if not selection:
+            return resolution
+        mask = set(self.core._profile_items(conn, profile_id, config_revision))
+        pending_seq = (
+            int(session["pending_seq"])
+            if session["pending_seq"] is not None else None)
+        if pending_seq is None:
+            return resolution
+        # Re-state the mask's Profile value over older temporary ones, exactly
+        # like the compiled plan did, so projection and plan agree.
+        dropped = [
+            item for item in resolution.items
+            if (item["facet_id"], item["item_id"]) in mask
+            and item["source"] == "session_only"
+        ]
+        if not dropped:
+            return resolution
+        for row in repo.session_overlays(conn, session["session_id"]):
+            key = (row["facet_id"], row["item_id"])
+            if key not in mask or int(row["action_seq"]) >= pending_seq:
+                continue
+            profile_row = None
+            for stored in repo.facet_values_at(
+                    conn, profile_id, config_revision):
+                if (stored["facet_id"], stored["item_id"]) == key:
+                    profile_row = stored
+                    break
+            if profile_row is None:
+                continue
+            resolution.items = [
+                i for i in resolution.items
+                if (i["facet_id"], i["item_id"]) != key
+            ] + [{
+                "facet_id": key[0], "item_id": key[1],
+                "value": json_loads(profile_row["value_json"]),
+                "source": "profile", "revision": config_revision,
+            }]
+        resolution.items = sorted(
+            resolution.items,
+            key=lambda i: (i["facet_id"], i["item_id"]),
+        )
+        return resolution
 
     def reconcile(self, key: str, *, session_id: str) -> dict[str, Any]:
         """Resolve an ``unknown`` journal through the port (G11).  Never
         replays user messages; a port-confirmed reconciliation is recorded
-        and the session settles with the reconciled configuration."""
+        and the session settles with the reconciled configuration.
+
+        Reconciliation is judged against the facts the *original admission*
+        froze: its item mask, its source revision and its pending sequence.
+        A Profile edited (or an overlay written) after the operation started
+        is not what this operation proved, so it can neither justify a
+        cleanup nor be clobbered by one (P07/P08).  Repeating the call with
+        the same key replays the recorded result with zero new effect (P10).
+        """
         port = self.core.config_port
         if port is None:
             raise ProfileError(
@@ -563,7 +741,12 @@ class SessionService:
                 "application cannot be reconciled",
                 status=409,
             )
+        request = {"session_id": session_id}
+        scope = f"sessions.reconcile:{session_id}"
         with self.core.db.read() as conn:
+            prior = self._idempotent(conn, scope, key, request)
+            if prior:
+                return prior["response"]
             session = self._require_session(conn, session_id)
             entry = journal.latest_for_session(conn, session["session_uid"])
         if entry is None or entry["state"] != "unknown":
@@ -574,6 +757,7 @@ class SessionService:
             )
         operation_id = entry["operation_id"]
         operation_key = f"{session['session_uid']}:{operation_id}"
+        facts = self._frozen_facts(session, operation_id)
         outcome = port.reconcile(operation_key, self.session_ref_of(session))
         timestamp = self.core.timestamp()
         if outcome.state == "confirmed-current" and outcome.receipt is not None:
@@ -584,7 +768,7 @@ class SessionService:
                 config_digest=outcome.receipt.config_digest,
                 profile_id=entry["profile_id"],
                 profile_revision=int(entry["profile_revision"]),
-                overlay_revision=None,
+                overlay_revision=facts["pending_seq"],
                 policy_revision=int(
                     self.core.policy.get_public(session["realm"])["revision"]),
                 provider_generations={
@@ -603,25 +787,53 @@ class SessionService:
                     detail_refs=("reconciled",),
                 )
                 journal.record_receipt(conn, receipt, timestamp)
+                # Re-read, then settle only what this admission still owns.
+                fresh = self._require_session(conn, session["session_id"])
+                still_ours = _admission_owns_pending(fresh, facts)
+                repo.consume_overlays(
+                    conn, session_id=fresh["session_id"],
+                    revisions={
+                        (facet_id, item_id): revision
+                        for (facet_id, item_id), revision
+                        in facts["overlay_revisions"].items()
+                        if (facet_id, item_id) in set(facts["consume_mask"])
+                    },
+                )
                 repo.upsert_session(
-                    conn, session_id=session["session_id"],
-                    harness_id=session["harness_id"],
+                    conn, session_id=fresh["session_id"],
+                    harness_id=fresh["harness_id"],
                     current_profile_id=entry["profile_id"],
                     current_revision=receipt.profile_revision,
-                    switch_state="settled", pending_profile_id=None,
-                    pending_seq=None, blockers=None, timestamp=timestamp,
-                    realm=session["realm"],
-                    session_uid=session["session_uid"],
-                    native_session_key=session["native_session_key"],
+                    # A confirmed-current port answer resolves the unproven
+                    # application: the session is sendable again.  A pick
+                    # made while the operation ran is newer than this
+                    # admission, so it is kept and stays *pending* instead of
+                    # being settled here (P08) — but it is no longer a
+                    # recovery blocker.
+                    switch_state=(
+                        "settled" if still_ours
+                        or fresh["pending_profile_id"] is None
+                        else "pending"),
+                    pending_profile_id=None if still_ours
+                    else fresh["pending_profile_id"],
+                    pending_seq=None if still_ours else fresh["pending_seq"],
+                    blockers=None,
+                    timestamp=timestamp,
+                    realm=fresh["realm"],
+                    session_uid=fresh["session_uid"],
+                    native_session_key=fresh["native_session_key"],
                 )
-                if not _keeps_overlays(port, session, entry["profile_id"]):
-                    repo.clear_overlays(conn, session["session_id"])
-            return {
-                "operation_id": operation_id,
-                "state": "confirmed-current",
-                "receipt": receipt.as_public_dict(),
-                "session": self._session_view_safe(session["session_uid"]),
-            }
+                response = {
+                    "operation_id": operation_id,
+                    "state": "confirmed-current",
+                    "receipt": receipt.as_public_dict(),
+                    "session": self.session_view(
+                        self._require_session(conn, session["session_uid"])),
+                }
+                repo.idempotency_insert(
+                    conn, scope, key, digest(request), 200, response, timestamp,
+                )
+            return response
         if outcome.state == "rejected-unchanged":
             self._journal_transition(
                 operation_id, "rejected",
@@ -631,33 +843,77 @@ class SessionService:
             # The pending switch did not take effect; restore the settled
             # state on the previous binding without clearing anything.
             with self.core.db.transaction() as conn:
+                fresh = self._require_session(conn, session["session_id"])
+                still_ours = _admission_owns_pending(fresh, facts)
                 repo.upsert_session(
-                    conn, session_id=session["session_id"],
-                    harness_id=session["harness_id"],
-                    current_profile_id=session["current_profile_id"],
-                    current_revision=int(session["current_revision"]),
-                    switch_state="settled", pending_profile_id=None,
-                    pending_seq=None,
+                    conn, session_id=fresh["session_id"],
+                    harness_id=fresh["harness_id"],
+                    current_profile_id=fresh["current_profile_id"],
+                    current_revision=int(fresh["current_revision"]),
+                    switch_state=(
+                        "settled" if still_ours
+                        or fresh["pending_profile_id"] is None
+                        else "pending"),
+                    pending_profile_id=None if still_ours
+                    else fresh["pending_profile_id"],
+                    pending_seq=None if still_ours else fresh["pending_seq"],
                     blockers=[{"reason": "switch_rejected_after_unknown"}],
                     timestamp=timestamp,
-                    realm=session["realm"],
-                    session_uid=session["session_uid"],
-                    native_session_key=session["native_session_key"],
+                    realm=fresh["realm"],
+                    session_uid=fresh["session_uid"],
+                    native_session_key=fresh["native_session_key"],
                 )
-            return {
-                "operation_id": operation_id,
-                "state": "rejected-unchanged",
-                "session": self._session_view_safe(session["session_uid"]),
-            }
+                response = {
+                    "operation_id": operation_id,
+                    "state": "rejected-unchanged",
+                    "session": self.session_view(
+                        self._require_session(conn, session["session_uid"])),
+                }
+                repo.idempotency_insert(
+                    conn, scope, key, digest(request), 200, response, timestamp,
+                )
+            return response
         return {
             "operation_id": operation_id,
             "state": "unknown",
             "reason": outcome.reason or "still unverifiable",
         }
 
-    def _session_view_safe(self, session_addr: str) -> dict[str, Any]:
+    def _frozen_facts(self, session: dict[str, Any],
+                      operation_id: str) -> dict[str, Any]:
+        """The admission facts of ``operation_id``, or an empty conservative
+        freeze when they are missing or belong to another operation.
+
+        Without usable facts the reconcile may still settle the binding, but
+        it consumes **nothing**: an unverifiable mask never authorises a
+        cleanup."""
         with self.core.db.read() as conn:
-            return self.session_view(self._require_session(conn, session_addr))
+            row = self._require_session(conn, session["session_id"])
+            raw = row["admission_facts_json"] \
+                if "admission_facts_json" in row.keys() else None
+        if not raw:
+            return _empty_facts(operation_id)
+        try:
+            facts = json_loads(raw)
+        except ValueError:
+            return _empty_facts(operation_id)
+        if facts.get("operation_id") != operation_id:
+            return _empty_facts(operation_id)
+        mask = {tuple(pair) for pair in facts.get("item_mask") or []}
+        consume = {tuple(pair) for pair in facts.get("consume_mask") or []} \
+            if facts.get("selection") else set()
+        return {
+            "selection": bool(facts.get("selection")),
+            "item_mask": mask,
+            "consume_mask": consume,
+            "pending_seq": facts.get("pending_seq"),
+            "overlay_revisions": {
+                tuple(key.split("\x00", 1)): int(revision)
+                for key, revision in
+                (facts.get("overlay_revisions") or {}).items()
+                if "\x00" in key
+            },
+        }
 
     def _target_revision(self, profile_id: str) -> int:
         with self.core.db.read() as conn:
@@ -667,13 +923,12 @@ class SessionService:
     def _turn_on_current(self, conn: sqlite3.Connection,
                          session: dict[str, Any]) -> dict[str, Any]:
         profile = self.core.require_profile(conn, session["current_profile_id"])
-        resolution = resolve_session_items(
-            conn, session_id=session["session_id"],
-            profile_id=profile["profile_id"],
-            harness_id=session["harness_id"],
-            config_revision=int(profile["current_revision"]),
-            provider_lookup=self.core.provider_lookup,
-        )
+        # No application port here: the effective configuration of the
+        # session — retained base plus its frozen Profile revision plus the
+        # live temporary overrides — is what this turn records.
+        resolution = self._effective_resolution(
+            conn, session, profile["profile_id"],
+            int(profile["current_revision"]), selection=False)
         conflict_free(resolution, self.core.provider_lookup)
         check_required(
             resolution,
@@ -748,12 +1003,15 @@ class SessionService:
                     provider, session, facet_id, item_id, value)
             reject_sensitive_keys(value)
             json_dumps(value)
+            action_seq = repo.next_action_seq(conn, session["session_id"])
             repo.upsert_overlay(
                 conn, session_id=session_id, facet_id=facet_id,
                 item_id=item_id, value_json=json_dumps(value),
                 facet_version=facet_version,
                 timestamp=self.core.timestamp(),
+                action_seq=action_seq,
             )
+            repo.bump_action_seq(conn, session_id, action_seq)
             session = self._require_session(conn, session_id)
             response = {"session": self.session_view(session)}
             repo.idempotency_insert(
@@ -862,13 +1120,14 @@ class SessionService:
             profile = self.core.require_profile(
                 conn, session["current_profile_id"],
             )
-            resolution = resolve_session_items(
-                conn, session_id=session_id,
-                profile_id=profile["profile_id"],
-                harness_id=session["harness_id"],
-                config_revision=int(profile["current_revision"]),
-                provider_lookup=self.core.provider_lookup,
-            )
+            # Live effective projection (US5): what the next send would run —
+            # the Profile's newest revision, with the retained base filling
+            # everything it omits and the overlay layer winning on top.  The
+            # *frozen* revision an operation applied against lives in the
+            # journal/receipt, never here.
+            resolution = self._effective_resolution(
+                conn, session, profile["profile_id"],
+                int(profile["current_revision"]), selection=False)
             pending = None
             if session["pending_profile_id"] is not None:
                 pending_row = conn.execute(
@@ -967,28 +1226,48 @@ class SessionService:
             return response
 
 
-def _keeps_overlays(port: Any, session: dict[str, Any],
-                    applied_profile: str) -> bool:
-    """Does this operation leave the session's temporary override layer alone?
+def _admission_public(facts: dict[str, Any]) -> dict[str, Any]:
+    """JSON-safe, non-secret projection of the frozen admission facts.
 
-    Two very different operations reach the same "applied the Profile the
-    session is already bound to" state, and they must not be conflated:
-
-    * an **explicit selection** of that same Profile. The user restated the
-      Profile's intent, so the temporary overrides are cleared silently and
-      without a confirmation step (C05). It is recognisable because the
-      selection was pending at admission time.
-    * the **ordinary every-submit re-application** a native application port
-      performs on each send, carrying no selection at all. That one must keep
-      the live overrides, because they are the current effective intent (C04).
-
-    Outside native-turn application mode a switch is always a switch, so the
-    overrides always go.
+    ``overlay_revisions`` keys use ``\\x00`` so the pair survives JSON without
+    a nested structure and without carrying a single configuration *value*.
     """
-    if getattr(port, "native_turn_application", False) is not True:
-        return False
-    return (applied_profile == session["current_profile_id"]
-            and session["pending_profile_id"] is None)
+    return {
+        "source_profile_revision": facts["source_profile_revision"],
+        "item_mask": [list(pair) for pair in facts["item_mask"]],
+        "consume_mask": [list(pair) for pair in facts["consume_mask"]],
+        "selection": facts["selection"],
+        "overlay_revisions": {
+            f"{facet_id}\x00{item_id}": revision
+            for (facet_id, item_id), revision in
+            facts["overlay_revisions"].items()
+        },
+        "pending_seq": facts["pending_seq"],
+        "base_identity": facts["base_identity"],
+        "operation_id": facts["operation_id"],
+    }
+
+
+def _empty_facts(operation_id: str) -> dict[str, Any]:
+    return {
+        "selection": False, "item_mask": set(), "consume_mask": set(),
+        "pending_seq": None, "overlay_revisions": {},
+    }
+
+
+def _admission_owns_pending(fresh: dict[str, Any],
+                             facts: dict[str, Any]) -> bool:
+    """May this operation settle the session's pending selection?
+
+    Only when the row still carries exactly the sequence this admission
+    froze.  A pick made while the application was running has a larger
+    sequence, so the older operation must leave it intact for the next turn
+    instead of replaying its snapshot over it (P08)."""
+    current = (
+        int(fresh["pending_seq"])
+        if fresh["pending_seq"] is not None else None
+    )
+    return current == facts["pending_seq"]
 
 
 def _intent_facts(intent: ConfigIntent) -> dict[str, Any]:

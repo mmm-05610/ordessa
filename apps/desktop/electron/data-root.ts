@@ -4,7 +4,7 @@
  * P-B 交付 `server-bridge` 之前，这里的目录事实由本模块直接探针（不 spawn 任何服务）。
  */
 import { constants } from 'node:fs'
-import { access, mkdir, open, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { access, lstat, mkdir, open, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import type { Fault } from '@extensions/ordessa.contracts/contract.js'
@@ -101,6 +101,63 @@ export async function ensureDataRoot(dataRoot: string) {
   if (created) {
     await writeFile(path.join(dataRoot, OWNER_MARKER_NAME), OWNER_MARKER_CONTENT, { mode: 0o600 })
   }
+  return dataRoot
+}
+
+/** Explicit maintenance operation, never called by ordinary startup.
+ * The user authorizes claiming a known existing Ordessa directory, for example
+ * one first created by account login. No existing file or permission is changed.
+ */
+export async function initializeExistingDataRoot(dataRoot: string,
+  { confirmed }: { confirmed: boolean }) {
+  if (confirmed !== true) throw Error('Existing data root requires explicit confirmation')
+  if (!path.isAbsolute(dataRoot) || path.resolve(dataRoot) !== dataRoot)
+    throw Error('Existing data root must be an absolute normalized path')
+  // Reject symlinked ancestors too, before reading a marker or lock.
+  for (let candidate = dataRoot; ; candidate = path.dirname(candidate)) {
+    if ((await lstat(candidate)).isSymbolicLink()) throw Error('Data root contains a symbolic link')
+    if (path.dirname(candidate) === candidate) break
+  }
+  const info = await lstat(dataRoot)
+  if (!info.isDirectory() || (process.getuid && info.uid !== process.getuid())
+      || (info.mode & 0o022) !== 0) throw Error('Existing data root must be owned by this user and not writable by others')
+  for (const name of ['.lock', 'server.lock', OWNER_MARKER_NAME]) {
+    const entry = await lstat(path.join(dataRoot, name)).catch(error => {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined
+      throw error
+    })
+    if (entry && (!entry.isFile() || entry.isSymbolicLink())) throw Error('Unsafe data root marker or lock')
+    if (name === '.lock' && entry) {
+      const record = JSON.parse(await readFile(path.join(dataRoot, name), 'utf8'))
+      if (!Number.isSafeInteger(record?.pid) || record.pid <= 0)
+        throw Error('Malformed existing Desktop lock requires review')
+    }
+    // A Server lock requires an OS-level lock probe; do not guess from its contents.
+    if (name === 'server.lock' && entry) throw Error('Existing Server lock requires separate ownership review')
+  }
+  const held = await readLock(dataRoot)
+  if (held) {
+    try { process.kill(held.pid, 0); throw Error(`Data root locked by pid ${held.pid}`) }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error
+    }
+  }
+  const marker = path.join(dataRoot, OWNER_MARKER_NAME)
+  let handle
+  try { handle = await open(marker, constants.O_RDONLY | constants.O_NOFOLLOW) }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+  }
+  if (handle) {
+    try {
+      if (await handle.readFile('utf8') !== OWNER_MARKER_CONTENT) throw Error('Invalid existing owner marker')
+    } finally { await handle.close() }
+    return dataRoot
+  }
+  // Exclusive create: a concurrent claimant can never have its marker overwritten.
+  const created = await open(marker, 'wx', 0o600)
+  try { await created.writeFile(OWNER_MARKER_CONTENT); await created.sync() }
+  finally { await created.close() }
   return dataRoot
 }
 

@@ -8,6 +8,7 @@ import { Button, Checkbox, Input, Notice } from '@ordessa/ui'
 import type { ProfileDraftStore } from './stores'
 import { groupByHarness } from './stores'
 import type { ProfileIdentityDto } from '@ordessa/plugin-profile-api'
+import { profileSettingsCss } from './styles'
 
 export interface ManagementViewProps {
   readonly profiles: readonly Pick<ProfileIdentityDto, 'profileId' | 'displayName' | 'harnessId' | 'archivedAt'>[]
@@ -47,7 +48,8 @@ export function ProfileManagementView(props: ManagementViewProps): ReactNode {
   const groups = groupByHarness(visible)
   const categories = Object.entries(props.categoryContent).filter(([, node]) => node !== null)
   return (
-    <div data-profile-manager="" style={{ display: 'flex', gap: 12 }}>
+    <div className="profile-settings-surface" data-profile-manager="">
+      <style>{profileSettingsCss}</style>
       <nav data-profile-nav="" style={{ minWidth: 180 }}>
         <Input
           aria-label="搜索预设"

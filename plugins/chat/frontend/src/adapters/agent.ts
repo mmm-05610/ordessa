@@ -145,7 +145,7 @@ export function createFacadeGateway(service: AgentSessions): ChatSessionGateway 
       switch (outcome.kind) {
         case 'accepted': return { status: 'accepted' }
         case 'refused': return { status: 'refused', reason: outcome.code ? `${outcome.code}: ${outcome.reason}` : outcome.reason }
-        case 'unknown': return { status: 'unknown' }
+        case 'unknown': return { status: 'unknown', reason: outcome.reason }
       }
     },
   }

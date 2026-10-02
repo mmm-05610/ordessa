@@ -117,6 +117,22 @@ def choice_payload_schema() -> ValueSchema:
             ("protocol", ValueSchema("string")),
             ("credentialRef", ValueSchema("string", nullable=True)),
             ("authentication", ValueSchema("string")),
+            # Neutral catalogue facts. Native translation belongs to Harness;
+            # missing facts remain missing, never inferred from a model name.
+            ("modelCapabilities", ValueSchema("object", properties=(
+                ("toolCall", ValueSchema("boolean")),
+                ("reasoning", ValueSchema("boolean")),
+                ("reasoningOptions", ValueSchema("array", items=ValueSchema("object", properties=(
+                    ("type", ValueSchema("string")),
+                    ("values", ValueSchema("array", items=ValueSchema("string"))),
+                ), required=("type",)))),
+                ("modalities", ValueSchema("object", properties=tuple(
+                    (key, ValueSchema("array", items=ValueSchema("string"))) for key in ("input", "output")))),
+                ("limits", ValueSchema("object", properties=tuple(
+                    (key, ValueSchema("integer")) for key in ("context", "output")))),
+                ("cost", ValueSchema("object", properties=tuple(
+                    (key, ValueSchema("number")) for key in ("input", "output", "cacheRead")))),
+            ))),
             # Brand-specific hint fields (provider_in_instance, before_provider,
             # endpoint_changed...) are open-ended by design.
             ("brandFields", ValueSchema("object", nullable=True, additional_properties=True)),

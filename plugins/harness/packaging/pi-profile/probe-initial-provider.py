@@ -38,7 +38,7 @@ def probe(artifact, *, register_live=False):
                 env = dict(PATH=os.defpath, HOME=str(home), PI_OFFLINE='1', ORDESSA_PI_INSTANCE_DIR=str(instance))
                 process = subprocess.Popen(['/usr/bin/node', str(artifact / 'node_modules/@automatalabs/pi-acp/dist/ordessa-profile.mjs')],
                     cwd=project, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                    stderr=subprocess.DEVNULL, text=True)
+                    stderr=subprocess.PIPE, text=True)
                 processes.append(process)
                 inbox = queue.Queue()
                 def collect(proc=process, messages=inbox):
@@ -52,7 +52,7 @@ def probe(artifact, *, register_live=False):
                     deadline = monotonic() + 20
                     while True:
                         answer = messages.get(timeout=max(0, deadline - monotonic()))
-                        assert answer is not None, 'Adapter exited before reply'
+                        assert answer is not None, 'Adapter exited before reply: ' + proc.stderr.read()[-2000:]
                         if answer.get('id') == rid:
                             assert 'error' not in answer, 'Adapter rejected ' + method
                             return answer['result']
@@ -78,6 +78,17 @@ def probe(artifact, *, register_live=False):
                     assert capability == dict(sessionId=native, supported=True, strategy='live-registration', version=1)
                     digest = lambda value: hashlib.sha256(json.dumps(value, sort_keys=True,
                         ensure_ascii=False, separators=(',', ':')).encode()).hexdigest()
+                    startup_add = dict(sessionId=native, operationId='provider:startup-add',
+                        expectedGeneration=state['generation'], expectedConfigDigest=digest(state['configOptions']),
+                        target=dict(server_id='fixture-server', session_id='fixture-canonical', channel_id='fixture-channel', runtime_generation=1),
+                        model='extra', models=['extra'], provider=dict(providerId='ordessa-probe',
+                            apiType='openai-completions', baseUrl=endpoint, apiKey='!opaque-synthetic-not-a-command'))
+                    startup_record = request('_ordessa/session/configuration/provider-register', startup_add)
+                    assert startup_record['state'] == 'observed'
+                    startup_model = next(o for o in startup_record['after']['configOptions'] if o['id'] == 'model')
+                    assert startup_model['currentValue'] == model['currentValue']
+                    assert {'ordessa-probe/first', 'ordessa-probe/second', 'ordessa-probe/extra'} <= {o['value'] for o in startup_model['options']}
+                    state = request('_ordessa/session/configuration', dict(sessionId=native))
                     payload = dict(sessionId=native, operationId='provider:live-probe',
                         expectedGeneration=state['generation'], expectedConfigDigest=digest(state['configOptions']),
                         target=dict(server_id='fixture-server', session_id='fixture-canonical', channel_id='fixture-channel', runtime_generation=1),
@@ -95,6 +106,14 @@ def probe(artifact, *, register_live=False):
                         expectedConfigDigest=digest(admitted['after']['configOptions']), configId='model', value='ordessa-next/third'))
                     assert applied['state'] == 'observed' and applied['after']['generation'] == state['generation']
                     assert next(o for o in applied['after']['configOptions'] if o['id'] == 'model')['currentValue'] == 'ordessa-next/third'
+                    # Returning to a Profile may re-admit its original provider
+                    # before selecting the model; exercise that exact sequence.
+                    state = request('_ordessa/session/configuration', dict(sessionId=native))
+                    returned = request('_ordessa/session/configuration/provider-register', dict(startup_add,
+                        operationId='provider:return-startup', model='first', models=['first'],
+                        expectedConfigDigest=digest(state['configOptions'])))
+                    assert returned['state'] == 'observed', returned['phase']
+                    assert next(o for o in returned['after']['configOptions'] if o['id'] == 'model')['currentValue'] == 'ordessa-next/third'
                     # The original provider remains usable, with no restart or new.
                     request('session/set_config_option', dict(sessionId=native, configId='model', value='ordessa-probe/second'))
                 routes.append(endpoint)

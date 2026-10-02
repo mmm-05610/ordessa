@@ -28,7 +28,8 @@ try {
   await cp(path.join(repoRoot, 'examples/ui-preview/manifest.json'), path.join(fixtureOut, 'manifest.json'))
   await writeFile(path.join(home, 'extensions.json'), JSON.stringify({ enabled: [
     'ordessa.contracts', 'ordessa.agent-contracts', 'ordessa.commands', 'ordessa.workbench',
-    'ordessa.connections', 'ordessa.agent-connections', 'ordessa.agent-sessions', 'ordessa.agent-conversation', 'example.ui-preview',
+    'ordessa.ui-components', 'ordessa.connections', 'ordessa.agent-connections', 'ordessa.agent-sessions',
+    'ordessa.chat-api', 'ordessa.chat', 'example.ui-preview',
   ] }))
   // 预览驱动是**测试专用**产物：落在 dist-preview/，绝不进入 dist/（PA-11 代码卫生）。
   await mkdir(path.join(appRoot, 'dist-preview'), { recursive: true })
@@ -54,20 +55,28 @@ try {
   const line = output.split('\n').find(entry => entry.startsWith('PREVIEW_RESULT '))
   if (timedOut || !line) { console.error(output); throw Error('UI preview failed: ' + (output.match(/PREVIEW_FAILED[\s\S]*/)?.[0] ?? 'no result')) }
   const result = JSON.parse(line.slice('PREVIEW_RESULT '.length))
+  await mkdir(outDir, { recursive: true })
+  await writeFile(path.join(outDir, 'result.json'), JSON.stringify(result, null, 2) + '\n')
   console.log(JSON.stringify(result, null, 2))
   assert.equal(result.boot.nav, true); assert.equal(result.boot.connectors, 4)
   assert.equal(result.empty.placeholder, true); assert.equal(result.empty.emptyList, true)
   assert.equal(result.empty.rightInert, true); assert.equal(result.empty.bottomInert, true)
-  assert.equal(result.history.opened, true); assert.equal(result.history.userRole, true)
+  assert.equal(result.history.opened, true); assert.equal(result.history.userRole, true); assert.equal(result.history.assistantRole, true)
   assert.equal(result.history.userRight, true); assert.equal(result.history.composer, true)
+  assert.equal(result.history.composerRadius, '22px', 'composer uses the actual rounded card')
   assert.equal(result.history.toolCards, 3); assert.equal(result.history.thinkingCards, 1)
   assert.equal(result.sessionSwitch.switched, true); assert.equal(result.sessionSwitch.restored, true)
   assert.equal(result.send.enabled, true); assert.equal(result.send.replied, true)
   assert.equal(result.send.total, 6); assert.equal(result.send.userBubbles, 3)
   assert.equal(result.toolExpand.expanded, true); assert.equal(result.toolExpand.thinkingOpen, true)
-  assert.equal(result.approval.card, true); assert.equal(result.approval.inThread, true)
+  assert.equal(result.approval.card, true); assert.equal(result.approval.inComposer, true)
+  assert.equal(result.approval.count, 1)
   assert.deepEqual(result.approval.choices, ['Allow once', 'Always allow', 'Reject'])
   assert.equal(result.approvalRespond.resolved, true)
+  assert.equal(result.approvalRespond.runDone, true)
+  assert.deepEqual(result.approvalRespond.response, { interactionId: 'I1', answer: { kind: 'choice', choiceId: 'allow' } })
+  assert.equal(result.approvalRespond.responseCount, 1)
+  assert.equal(result.approvalRespond.actionable, 0)
   assert.equal(result.running.chipRunning, true); assert.equal(result.running.stopVisible, true)
   assert.equal(result.running.stopEnabled, true); assert.equal(result.running.runningTool, true)
   assert.equal(result.stop.requested, true); assert.equal(result.stop.notice, true); assert.equal(result.stop.cancelled, true)
@@ -79,6 +88,11 @@ try {
   assert.equal(result.scroll.scrolled, true)
   assert.ok(result.narrow.overflowX <= 2, 'narrow window horizontal overflow: ' + result.narrow.overflowX)
   assert.equal(result.narrow.composerVisible, true)
+  assert.equal(result.inputMenu.bounded, true)
+  assert.equal(result.inputMenu.hitTestable, true)
+  assert.equal(result.inputMenu.heightStable, true)
+  assert.equal(result.inputMenu.closed, true)
+  assert.equal(result.inputMenu.focusReturned, true)
   assert.deepEqual(result.consoleErrors, [])
   console.log('UI_PREVIEW_OK screenshots=' + outDir)
 } finally { await rm(home, { recursive: true, force: true }) }

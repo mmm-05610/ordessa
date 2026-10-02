@@ -1,5 +1,7 @@
 """Inference probe opt-in must fail before process, secret-store or network effects."""
 import importlib.util
+import ast
+import inspect
 from pathlib import Path
 
 import pytest
@@ -19,6 +21,35 @@ def probe():
 def test_provider_transition_refuses_absent_authorization_or_key_scope(probe, allow, key, line):
     with pytest.raises(ValueError, match='Provider history acceptance'):
         probe.run(allow_model_calls=allow, switch_go=True, key_file=key, key_line=line)
+
+
+@pytest.mark.parametrize('allow,switch', [(False, False), (True, False), (False, True)])
+def test_return_requires_authorized_provider_transition_before_effects(probe, allow, switch):
+    with pytest.raises(ValueError, match='Official return requires'):
+        probe.run(return_official=True, allow_model_calls=allow, switch_go=switch,
+                  asset_root='/missing', key_file='/missing')
+
+
+def test_api_real_turn_precedes_official_return(probe):
+    """Do not claim API inference from two official turns around a config flip."""
+    tree = ast.parse(inspect.getsource(probe.run))
+    second_turn = next(node.lineno for node in ast.walk(tree)
+                       if isinstance(node, ast.Constant) and node.value == 'second-real-turn')
+    return_gate = next(node.lineno for node in ast.walk(tree)
+                       if isinstance(node, ast.If) and isinstance(node.test, ast.Name)
+                       and node.test.id == 'return_official')
+    assert second_turn < return_gate
+
+
+def test_native_error_diagnostics_do_not_expose_secret_bearing_text(probe):
+    text = ('invalid_encrypted_content: encrypted content SECRET_CIPHERTEXT could not be decrypted; '
+            'organization ID did not match. Bearer SECRET_KEY')
+    diagnostic = probe.native_error_classification(text)
+    assert diagnostic == dict(codes=['invalid_encrypted_content'],
+                              decryptionRejected=True, organizationMismatch=True)
+    assert 'SECRET' not in repr(diagnostic)
+    assert probe.native_error_classification('encrypted mentioned in an ordinary answer') == dict(
+        codes=[], decryptionRejected=False, organizationMismatch=False)
 
 
 def test_absent_key_fails_before_starting_product(probe, tmp_path):

@@ -39,7 +39,7 @@ EXPECTED_COLUMNS = {
         "session_id", "harness_id", "current_profile_id", "current_revision",
         "pending_profile_id", "pending_seq", "switch_state", "blockers_json",
         "created_at", "updated_at", "realm", "native_session_key",
-        "session_uid"},
+        "session_uid", "action_seq", "admission_facts_json"},
     "profile_mechanism_policy": {
         "realm", "revision", "facet_enabled_json", "allow_override_global",
         "allow_per_facet_json", "updated_at"},
@@ -51,7 +51,7 @@ EXPECTED_COLUMNS = {
         "operation_id", "session_uid", "receipt_json", "confirmed_at"},
     "profile_session_overlays": {
         "session_id", "facet_id", "item_id", "value_json", "facet_version",
-        "created_at", "updated_at"},
+        "created_at", "updated_at", "action_seq", "revision"},
     "profile_turns": {
         "turn_id", "session_id", "turn_seq", "profile_id", "config_revision",
         "effective_digest", "sources_json", "created_at"},

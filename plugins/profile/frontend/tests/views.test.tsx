@@ -58,6 +58,7 @@ it('settings view lists only real providers and never a fake autoswitch switch',
   // no phantom provider entries and no fake agent-autoswitch control
   expect(text).not.toContain('Agent 自动切换')
   expect(container.querySelector('[data-profile-section]')).toBeNull() // no sections → no empty card
+  expect(container.querySelector('[data-profile-open-manager]')).toBeNull() // no unbound navigation button
   const disabledRow = container.querySelector('[data-facet-row="model_selection"] input')
   expect((disabledRow as HTMLInputElement | null)?.checked).toBe(false)
 })
@@ -100,4 +101,16 @@ it('management view groups by harness, filters archives, and shows the unsaved b
   expect(text).toContain('模型字段')
   expect(container.querySelector('[data-category="能力"]')).toBeNull() // empty bucket hidden
   expect(container.querySelector('[data-profile-manager]')?.textContent).toContain('离线')
+  expect(container.querySelector('[data-profile-item="p1"]')?.getAttribute('aria-current')).toBe('true')
+  expect(container.querySelector('[data-profile-item="p1"]')?.textContent).toBe('开发助手')
+})
+
+it('settings manager navigation appears only with a real callback', async () => {
+  const store = new MechanismPolicyStore(fakePolicyClient())
+  let opens = 0
+  const container = await mount(<ProfileSettingsView realms={['local']} realm="local"
+    onRealmChange={() => {}} store={store} facetLabels={{}} onReload={() => {}} sections={[]}
+    onOpenManager={() => { opens += 1 }} />)
+  await act(async () => container.querySelector<HTMLButtonElement>('[data-profile-open-manager]')!.click())
+  expect(opens).toBe(1)
 })

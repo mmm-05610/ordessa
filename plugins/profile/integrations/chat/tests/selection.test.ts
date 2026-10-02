@@ -53,6 +53,58 @@ function makeClient(applied: boolean, failFirst = false) {
 }
 
 describe('selection store (PV-10)', () => {
+  it.each([true, false])('retains the confirmed draft label after application (%s), independent of prompt acceptance', async switched => {
+    const store = new ProfileSelectionStore(), client = makeClient(switched)
+    const key = 'draft:workspace-1'
+    store.select(key, C)
+    store.markRegistered(key, C)
+    let notifications = 0
+    const unsubscribe = store.subscribe(() => { notifications += 1 })
+    expect(await store.applyOnSubmit(key, REF, client)).toMatchObject({ ok: true, applied: C })
+    // Application clears the pending pick, not the visible applied identity.
+    // A later unknown prompt result must not make the applied Profile disappear.
+    expect(store.peek(key)).toBeNull()
+    expect(store.currentLabel(key)).toBe(C.displayName)
+    expect(notifications).toBeGreaterThan(0)
+    expect(store.currentLabel('draft:workspace-2')).toBeNull()
+    store.select(key, B)
+    expect(store.currentLabel(key)).toBe(B.displayName)
+    store.forget(key)
+    expect(store.currentLabel(key)).toBe(C.displayName)
+    store.clearDraftConfirmations()
+    expect(store.currentLabel(key)).toBeNull()
+    unsubscribe()
+  })
+
+  it('ordinary continuation needs no selection registration but still applies and verifies backend evidence', async () => {
+    const store = new ProfileSelectionStore(), client = makeClient(false)
+    const outcome = await store.applyOnSubmit('session:S1', REF, {
+      beginTurnApplication: client.beginTurnApplication, inspectSessionConfig: client.inspectSessionConfig,
+    }, C)
+    expect(outcome).toMatchObject({ ok: true, applied: C, receipt: { profileId: C.profileId } })
+    expect(client.order).toEqual(['begin', 'inspect'])
+    expect(client.selections).toEqual([])
+    expect(store.counters.selections).toBe(0)
+  })
+
+  it.each(['missing-receipt', 'wrong-session', 'unconfirmed-readback'] as const)(
+    'ordinary continuation refuses unproven application (%s), preserving even an identical explicit pick', async reason => {
+      const store = new ProfileSelectionStore(), client = makeClient(reason !== 'unconfirmed-readback')
+      if (reason !== 'unconfirmed-readback') {
+        client.beginTurnApplication = async () => ({ turnId: 't', appliedSwitch: true,
+          receipt: reason === 'missing-receipt' ? undefined : {
+            ...confirmedConfig().evidence.receipt!, sessionRef: { ...REF, nativeSessionKey: 'other' },
+          } })
+      } else {
+        client.inspectSessionConfig = async () => ({ ...confirmedConfig(), switchState: 'needs_recovery' })
+      }
+      store.select('session:S1', C)
+      expect(await store.applyOnSubmit('session:S1', REF, client, C)).toMatchObject({ ok: false })
+      expect(client.selections).toEqual([])
+      expect(store.peek('session:S1')).toBe(C)
+    },
+  )
+
   it('a newer pick made while application awaits is retained for the next submit', async () => {
     const store = new ProfileSelectionStore(), client = makeClient(true)
     let finish!: () => void
@@ -62,9 +114,10 @@ describe('selection store (PV-10)', () => {
       return begin(key, ref)
     }
     store.select('session:S1', C)
+    store.markRegistered('session:S1', C)
     const applying = store.applyOnSubmit('session:S1', REF, client)
     await Promise.resolve()
-    store.select('session:S1', B)
+    store.select('session:S1', B) // a NEW click: unregistered, next submit's job
     finish()
     expect(await applying).toMatchObject({ ok: true, applied: C })
     expect(store.peek('session:S1')).toEqual(B)
@@ -74,6 +127,7 @@ describe('selection store (PV-10)', () => {
     const store = new ProfileSelectionStore(), client = makeClient(true)
     client.beginTurnApplication = async () => ({ turnId: 't', appliedSwitch: true, receipt: undefined })
     store.select('session:S1', C)
+    store.markRegistered('session:S1', C)
     expect(await store.applyOnSubmit('session:S1', REF, client)).toMatchObject({ ok: false, unknown: true })
     expect(store.peek('session:S1')).toEqual(C)
   })
@@ -89,25 +143,42 @@ describe('selection store (PV-10)', () => {
     expect(store.counters).toMatchObject({ selections: 2, applyAttempts: 0 })
   })
 
-  it('B then C applies only C, once, at submit', async () => {
+  it('B then C applies only the last registered pick, once, at submit (no registration call left here)', async () => {
     const store = new ProfileSelectionStore()
     const client = makeClient(true)
     store.select('session:S1', B)
     store.select('session:S1', C)
+    // §6c F1.1: registration happened at CLICK time (glue tests pin it); the
+    // store only applies the pick the backend already holds
+    store.markRegistered('session:S1', C)
     const outcome = await store.applyOnSubmit('session:S1',
       { realm: 'r', harnessId: 'pi', nativeSessionKey: 'n', sessionUid: 'S1' }, client)
     expect(outcome).toMatchObject({ ok: true, applied: C })
     expect(client.calls).toHaveLength(1)
-    expect(client.selections).toEqual([C.profileId])
-    expect(client.order).toEqual(['select', 'begin'])
+    expect(client.selections).toEqual([]) // applyOnSubmit never registers
+    expect(client.order).toEqual(['begin'])
     expect(store.counters).toMatchObject({ applyAttempts: 1, applyConfirmed: 1 })
     expect(store.peek('session:S1')).toBeNull() // consumed after success
+  })
+
+  it('a newer UNREGISTERED pick is never applied behind the registration (fail-closed, review F1)', async () => {
+    const store = new ProfileSelectionStore()
+    const client = makeClient(true)
+    store.markRegistered('session:S1', B)
+    store.select('session:S1', C) // a fresh click: not yet registered
+    const outcome = await store.applyOnSubmit('session:S1',
+      { realm: 'r', harnessId: 'pi', nativeSessionKey: 'n', sessionUid: 'S1' }, client)
+    expect(outcome).toMatchObject({ ok: false })
+    if (!outcome.ok) expect(outcome.reason).toContain('尚未登记')
+    expect(client.calls).toHaveLength(0) // nothing applied unregistered
+    expect(store.peek('session:S1')).toBe(C) // kept for registration/retry
   })
 
   it('a failed application keeps the selection and reports the reason', async () => {
     const store = new ProfileSelectionStore()
     const client = makeClient(true, true)
     store.select('session:S1', C)
+    store.markRegistered('session:S1', C)
     const first = await store.applyOnSubmit('session:S1',
       { realm: 'r', harnessId: 'pi', nativeSessionKey: 'n', sessionUid: 'S1' }, client)
     expect(first.ok).toBe(false)
@@ -136,12 +207,13 @@ describe('selection store (PV-10)', () => {
     expect(store.counters.applyAttempts).toBe(0)
   })
 
-  it('refuses missing selection registration before beginning a turn', async () => {
+  it('refuses to apply an unregistered pick: registration belongs to the click, never to applyOnSubmit', async () => {
     const store = new ProfileSelectionStore()
     const client = makeClient(true)
-    store.select('session:S1', C)
+    store.select('session:S1', C) // no markRegistered: the click registration never landed
     const outcome = await store.applyOnSubmit('session:S1', REF, { beginTurnApplication: client.beginTurnApplication })
-    expect(outcome).toMatchObject({ ok: false, reason: 'Profile selection registration is unavailable' })
+    expect(outcome).toMatchObject({ ok: false })
+    if (!outcome.ok) expect(outcome.reason).toContain('尚未登记')
     expect(client.calls).toHaveLength(0)
     expect(store.peek('session:S1')).toEqual(C)
   })
@@ -150,9 +222,10 @@ describe('selection store (PV-10)', () => {
     const store = new ProfileSelectionStore()
     const client = makeClient(false)
     store.select('session:S1', C)
+    store.markRegistered('session:S1', C)
     const outcome = await store.applyOnSubmit('session:S1', REF, client)
     expect(outcome).toMatchObject({ ok: true, applied: C, receipt: { profileId: C.profileId } })
-    expect(client.order).toEqual(['select', 'begin', 'inspect'])
+    expect(client.order).toEqual(['begin', 'inspect'])
     expect(store.peek('session:S1')).toBeNull()
   })
 
@@ -160,8 +233,9 @@ describe('selection store (PV-10)', () => {
     const store = new ProfileSelectionStore()
     const client = makeClient(false)
     store.select('session:S1', C)
+    store.markRegistered('session:S1', C)
     const outcome = await store.applyOnSubmit('session:S1', REF, {
-      selectForSession: client.selectForSession, beginTurnApplication: client.beginTurnApplication,
+      beginTurnApplication: client.beginTurnApplication,
     })
     expect(outcome).toMatchObject({ ok: false, reason: 'Profile current configuration verification is unavailable' })
     expect(store.peek('session:S1')).toEqual(C)
@@ -181,6 +255,7 @@ describe('selection store (PV-10)', () => {
         : { ...config, pending: { profileId: C.profileId, revision: 1, seq: 1 } }
       client.inspectSessionConfig = async () => inspected
       store.select('session:S1', C)
+      store.markRegistered('session:S1', C)
       expect(await store.applyOnSubmit('session:S1', REF, client)).toMatchObject({ ok: false })
       expect(store.peek('session:S1')).toEqual(C)
       expect(store.counters.applyConfirmed).toBe(0)

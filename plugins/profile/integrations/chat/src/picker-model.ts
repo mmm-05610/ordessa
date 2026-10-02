@@ -11,6 +11,10 @@ export interface ProfilePickerProps {
   readonly groups: readonly ProfileCatalogGroup[]
   readonly disabledReason?: string
   readonly statusMessage?: string
+  /** 021 §6c F1.1: the current pick's click-time registration failed (or has
+   * not been retried). Surfaced, never swallowed; the pick stays unregistered
+   * and a retry happens at the next submit. */
+  readonly registrationError?: string | null
   readonly onRefresh?: () => void
   readonly onOpenSelector?: () => void
   readonly subscribe?: (listener: () => void) => () => void
@@ -19,6 +23,22 @@ export interface ProfilePickerProps {
   readonly onOpenManager?: () => void
   readonly onSelect: (selection: ProfileSelection) => void
   readonly onClearSelection?: () => void
+  /** 021 T04 bound-fact seam: when this chat session has a Profile glue
+   * binding registered (a backend fact learned at registerNativeSession),
+   * its chat identity travels here so the model route's submission guard can
+   * dispatch bound (apply nothing) vs unbound (apply the queued intent).
+   * Absent — no Profile extension, no binding — reads as unbound. */
+  readonly boundNativeSession?: {
+    readonly serverInstanceId: string
+    readonly sessionId: string
+  } | null
+  /** 021 §6c F1.2 click-order seam: when a binding exists, the model side's
+   * `chooseForSession` click call must run through this per-session
+   * serializer so both contributions' registration calls reach the Server in
+   * click order (the backend action_seq stamps click order). Null — no
+   * binding — means the model side calls directly, unchanged. Same read-side
+   * projection channel as `boundNativeSession`; it never applies anything. */
+  readonly serializeRegistration?: ((task: () => Promise<void>) => Promise<void>) | null
 }
 
 export function selectedOptionValue(groups: readonly ProfileCatalogGroup[],

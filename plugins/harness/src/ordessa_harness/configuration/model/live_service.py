@@ -7,6 +7,7 @@ from ordessa_harness_api import Installation
 from ...application.action_execution import ActionGrant
 from ...application.configuration_service import ConfigurationApplicationService
 from ...application.operation_journal import OperationJournal
+from ...verifier_deployment import installed_verifier
 from .bridge import ADAPTER_IDS
 
 
@@ -21,7 +22,6 @@ def verified_installation(brand, artifact_base):
     if brand not in PINS:
         raise ValueError('Pinned native Profile brand required')
     artifact, package, version = PINS[brand]
-    policy = Path(__file__).resolve().parents[4] / 'runtime/native-artifact-policy.mjs'
     script = """import fs from 'node:fs'; import path from 'node:path';
       import {pathToFileURL} from 'node:url';
       const {verifyInstalledArtifact}=await import(pathToFileURL(process.argv[1]).href);
@@ -29,9 +29,10 @@ def verified_installation(brand, artifact_base):
         packageName:process.argv[4],version:process.argv[5],variant:'native-profile'});
       const m=JSON.parse(fs.readFileSync(path.join(process.argv[2],process.argv[3]+'.manifest.json'),'utf8'));
       console.log(JSON.stringify({digest:m.treeDigest}));"""
-    result = subprocess.run(['/usr/bin/node', '--input-type=module', '-e', script,
-        str(policy), str(artifact_base), artifact, package, version], capture_output=True, text=True,
-        timeout=30, check=True)
+    with installed_verifier() as (node, policy):
+        result = subprocess.run([node, '--input-type=module', '-e', script,
+            str(policy), str(artifact_base), artifact, package, version], capture_output=True, text=True,
+            timeout=30, check=True)
     observed = json.loads(result.stdout)
     return Installation(brand, tuple(map(int, version.split('.'))), (1, 0, 0),
                         'installed-' + brand + ':' + observed['digest'])

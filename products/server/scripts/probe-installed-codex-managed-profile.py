@@ -2,6 +2,7 @@
 
 Uses Ordessa's existing native login only. No credential export or global
 configuration changes. Default mode has no inference; opt-in allows exactly two
+short prompts, or three with --return-official for the complete round trip.
 short prompts (official then Go when explicitly selected). Creates three own native threads and releases
 their channels; canonical ledger is in a temporary product data root.
 """
@@ -21,7 +22,7 @@ from urllib.error import HTTPError
 from ordessa_server_product.composition import create_composition
 
 ROOT = Path(__file__).resolve().parents[3]
-ASSET_DEFAULT = '/opt/ordessa/harnesses/profile-codex-managed/artifacts'
+ASSET_DEFAULT = '/opt/ordessa/harnesses/profile-codex-catalog-fast-off-v6/artifacts'
 
 
 def trusted_asset_root(value):
@@ -43,8 +44,22 @@ def validate_transition_scope(allow_model_calls, switch_go, key_file, key_line):
         raise ValueError('Provider history acceptance requires model opt-in and an explicit key file/line')
 
 
+def native_error_classification(text):
+    """Closed diagnostics only: never print provider text, ciphertext or keys."""
+    lower = text.lower()
+    return dict(
+        codes=[code for code in ('invalid_encrypted_content', 'invalid_request_error',
+                                'model_not_found', 'authentication_error') if code in lower],
+        decryptionRejected='could not be decrypted' in lower or 'unable to decrypt' in lower,
+        organizationMismatch=('organization' in lower and
+                              ('did not match' in lower or 'mismatch' in lower)),
+    )
+
+
 def run(*, allow_model_calls=False, switch_go=False, key_file=None, key_line=2,
-        observe_go_relay=False, asset_root=None):
+        observe_go_relay=False, asset_root=None, return_official=False, go_model='gpt-5.6-luna'):
+    if return_official and not (allow_model_calls and switch_go):
+        raise ValueError('Official return requires an opted-in provider transition')
     validate_transition_scope(allow_model_calls, switch_go, key_file, key_line)
     asset = trusted_asset_root(asset_root or ASSET_DEFAULT)
     if observe_go_relay and not switch_go:
@@ -57,6 +72,7 @@ def run(*, allow_model_calls=False, switch_go=False, key_file=None, key_line=2,
         api_key = lines[key_line - 1].strip()
     counts = dict(new=0, prompt=0, http=0)
     token = 'ORDESSA_' + uuid4().hex[:12]
+    go_session_id = 'ordessa-probe-' + uuid4().hex
     upstream_counts = dict(requests=0, historyRequests=0)
     class RejectProvider(BaseHTTPRequestHandler):
         def do_POST(self):
@@ -75,17 +91,39 @@ def run(*, allow_model_calls=False, switch_go=False, key_file=None, key_line=2,
                     inputItems=len(data.get('input', [])), requestCount=upstream_counts['requests'])), flush=True)
                 headers = {key: value for key, value in self.headers.items()
                            if key.lower() not in {'host', 'content-length', 'connection'}}
+                # This observer is the outbound HTTP client. Python urllib's
+                # default User-Agent is rejected by the provider edge (403).
+                headers = {key: value for key, value in headers.items() if key.lower() != 'user-agent'}
+                headers['User-Agent'] = 'Ordessa/0.1'
+                # This observer becomes an Ordessa HTTP client, so use Go's
+                # documented stable conversation header for that client. It is
+                # constant across this one conversation, never a credential.
+                headers['x-opencode-session'] = go_session_id
                 request = Request('https://opencode.ai/zen/go/v1/' + self.path[len('/go/v1/'):],
                                   data=body, headers=headers, method='POST')
                 try:
                     with urlopen(request, timeout=180) as response:
+                        print(json.dumps(dict(stage='go-upstream-status', status=response.status)), flush=True)
                         self.send_response(response.status)
                         self.send_header('Content-Type', response.headers.get('Content-Type', 'text/event-stream'))
                         self.end_headers()
                         while chunk := response.read(8192):
                             self.wfile.write(chunk); self.wfile.flush()
                 except HTTPError as error:
-                    self.send_error(error.code)
+                    error_body = error.read(16384)
+                    detail = ''
+                    try:
+                        payload = json.loads(error_body)
+                        detail = str(payload.get('error', {}).get('message', ''))
+                    except (ValueError, AttributeError):
+                        pass
+                    detail = detail.replace(api_key, '[redacted]').replace(token, '[history-token]')[:400]
+                    print(json.dumps(dict(stage='go-upstream-status', status=error.code,
+                                          message=detail)), flush=True)
+                    self.send_response(error.code)
+                    self.send_header('Content-Type', error.headers.get('Content-Type', 'application/json'))
+                    self.end_headers()
+                    self.wfile.write(error_body)
                 return
             counts['http'] += 1
             self.send_response(403)
@@ -153,14 +191,41 @@ def run(*, allow_model_calls=False, switch_go=False, key_file=None, key_line=2,
                         configuration_rpc = channel._configuration_rpc
                         def counted_rpc(*args, **kwargs):
                             operations.append(args[1])  # Method only, never secret-bearing parameters.
-                            return configuration_rpc(*args, **kwargs)
+                            try:
+                                result = configuration_rpc(*args, **kwargs)
+                            except Exception as exc:
+                                print(json.dumps(dict(stage='native-rpc-failure', method=args[1],
+                                    exception=type(exc).__name__,
+                                    nativeError=native_error_classification(str(exc)))), flush=True)
+                                raise
+                            payload = result[1] if isinstance(result, tuple) and len(result) == 2 else result
+                            if args[1] in ('_ordessa/session/configuration/restore',
+                                           '_ordessa/session/configuration/operation') and isinstance(payload, dict):
+                                # Closed classification emitted by Harness; no
+                                # upstream error text, parameters or headers.
+                                print(json.dumps(dict(stage='native-restoration-diagnostic',
+                                    **{key: payload[key] for key in ('state', 'phase', 'failureStep', 'failureReason', 'failurePreference')
+                                       if key in payload})), flush=True)
+                                known = {'none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max', 'ultra'}
+                                def preference(snapshot):
+                                    items = [item for item in (snapshot or {}).get('configOptions', [])
+                                             if item.get('id') == 'reasoning_effort']
+                                    if len(items) != 1:
+                                        return {'present': False}
+                                    return {'present': True,
+                                        'current': items[0].get('currentValue') if items[0].get('currentValue') in known else '[unrecognized]',
+                                        'options': [item['value'] for item in items[0].get('options', []) if item.get('value') in known]}
+                                print(json.dumps(dict(stage='restoration-reasoning-readback',
+                                    catalogSupplied='modelCapabilities' in args[2],
+                                    before=preference(payload.get('before')), after=preference(payload.get('after')))), flush=True)
+                            return result
                         channel._configuration_rpc = counted_rpc
                     inbox = queue.Queue()
                     channel.attach(ImmediateLoop(), inbox.put)
                     def request(method, params, *, channel=channel, inbox=inbox):
                         rid = 'probe-' + uuid4().hex
                         output = ''
-                        if method == 'session/prompt' and (not allow_model_calls or counts['prompt'] >= 2):
+                        if method == 'session/prompt' and (not allow_model_calls or counts['prompt'] >= (3 if return_official else 2)):
                             raise ValueError('Bounded inference opt-in required')
                         counts['new'] += method == 'session/new'
                         counts['prompt'] += method == 'session/prompt'
@@ -213,9 +278,19 @@ def run(*, allow_model_calls=False, switch_go=False, key_file=None, key_line=2,
                         credentialId=imported['credentialId'], configuration=[], protocols=['openai-responses'],
                         endpoints={'openai-responses': (f'http://127.0.0.1:{server.server_port}/go/v1'
                             if observe_go_relay else 'https://opencode.ai/zen/go/v1')},
-                        models=[dict(modelId='gpt-5.6-luna', displayName='gpt-5.6-luna',
-                                     availability='available', unavailableReason=None)]))['providerModel']
-                    save(presets['managed'], destination, 'gpt-5.6-luna', 2)
+                        # Manufacturer-declared GPT-6 Luna capabilities, not a
+                        # copied Codex model entry. The real turn below separately
+                        # verifies this gateway accepts the preserved effort.
+                        # https://developers.openai.com/api/docs/models/gpt-6-luna
+                        models=[dict(modelId=go_model, displayName=go_model,
+                                     availability='available', unavailableReason=None,
+                                     **({'capabilities': {'toolCall': True, 'reasoning': True,
+                                         'reasoningOptions': [{'type': 'effort',
+                                             'values': ['none', 'low', 'medium', 'high', 'xhigh', 'max']}],
+                                         'modalities': {'input': ['text', 'image']},
+                                         'limits': {'context': 1050000, 'output': 128000}}}
+                                        if go_model == 'gpt-6-luna' else {}))]))['providerModel']
+                    save(presets['managed'], destination, go_model, 2)
                 else:
                     save(presets['managed'], providers['managed'], models[1], 2)
                 next_apply = profile('beginTurnApplication', operationKey='probe-next-' + uuid4().hex,
@@ -232,7 +307,6 @@ def run(*, allow_model_calls=False, switch_go=False, key_file=None, key_line=2,
                     print(json.dumps(dict(stage='restoration-confirmed-before-next-prompt',
                         generationRenewed=True, otherOfficialUnchanged=True, canonicalUnchanged=True,
                         restorationEffects=1)), flush=True)
-                selected = []
                 if allow_model_calls:
                     _, text = sessions[0][3]('session/prompt', dict(sessionId=sessions[0][1],
                         prompt=[dict(type='text', text=(
@@ -246,16 +320,47 @@ def run(*, allow_model_calls=False, switch_go=False, key_file=None, key_line=2,
                         if observe_go_relay:
                             assert upstream_counts['requests'] > 0, 'No request reached the declared Go upstream'
                             assert upstream_counts['historyRequests'] > 0, 'Go request did not carry the first-turn token'
+                if return_official:
+                    api_observation = registry.query_native_configuration(sessions[0][0], sessions[0][1])
+                    save(presets['managed'], providers['managed'], models[0], 3)
+                    returned = profile('beginTurnApplication', operationKey='probe-return-' + uuid4().hex,
+                                       sessionRef=sessions[0][2])
+                    assert 'receipt' in returned, 'Return C4 missing'
+                    final_observation = registry.query_native_configuration(sessions[0][0], sessions[0][1])
+                    assert final_observation.native_generation != api_observation.native_generation, 'Return generation did not renew'
+                    assert returned['receipt']['sessionRef'] == sessions[0][2], 'Return changed canonical conversation'
+                    assert registry.native_session_observation(sessions[0][0], sessions[0][1]) is owner, 'Return changed native owner'
+                    assert registry.query_native_configuration(sessions[1][0], sessions[1][1]) == before_b, 'Return changed sibling'
+                    assert operations.count('_ordessa/session/configuration/restore') == 2, 'Return restoration was not effect-once'
+                    final_result, final_text = sessions[0][3]('session/prompt', dict(sessionId=sessions[0][1], prompt=[dict(
+                        type='text', text='What token did I ask you to remember? Reply only that token. Do not use tools or access files.')]))
+                    print(json.dumps(dict(stage='official-return-prompt-diagnostic',
+                        replyChars=len(final_text), historyTokenPresent=token in final_text,
+                        nativeError=native_error_classification(final_text),
+                        stopReason=final_result.get('stopReason') if final_result.get('stopReason')
+                            in {'end_turn', 'max_tokens', 'max_turn_requests', 'refusal', 'cancelled'} else '[unrecognized]',
+                        errorHints=[name for name, words in {
+                            'encrypted-history': ('encrypted', 'decrypt'),
+                            'previous-response': ('previous_response', 'response_id'),
+                            'authentication': ('unauthorized', 'authentication'),
+                            'quota': ('quota', 'rate limit'),
+                            'missing-history': ('no context', 'do not have', "don't have", 'no token'),
+                        }.items() if any(word in final_text.lower() for word in words)])), flush=True)
+                    assert token in final_text, 'History was not preserved on return to official'
+                    print(json.dumps(dict(stage='official-return-real-turn', historyTokenPresent=True,
+                        canonicalUnchanged=True, generationRenewed=True, otherOfficialUnchanged=True)), flush=True)
+                selected = []
                 for cid, native, _, _ in sessions:
                     observed = registry.query_native_configuration(cid, native)
                     selected.append(next(option['currentValue'] for option in observed.config_options if option['id'] == 'model'))
-                assert selected == ['gpt-5.6-luna' if switch_go else models[1], models[0], models[0]], 'Independent configurations diverged'
+                assert selected == [models[0] if return_official else go_model if switch_go else models[1], models[0], models[0]], 'Independent configurations diverged'
                 assert len({native for _, native, _, _ in sessions}) == 3, 'Native identities not distinct'
-                assert counts == dict(new=3, prompt=2 if allow_model_calls else 0, http=0), 'Probe exceeded authorized effects'
+                assert counts == dict(new=3, prompt=(3 if return_official else 2) if allow_model_calls else 0, http=0), 'Probe exceeded authorized effects'
                 print(json.dumps(dict(scope='installed-product-managed-profile-canonical-c4',
                     officialAndApiIndependent=True, initialC4Confirmed=True, nextC4Confirmed=True,
                     nativeIdsDistinct=True, selectedModels=selected, counts=counts,
                     realChatConfirmed=allow_model_calls, officialToApiHistoryPreserved=switch_go,
+                    officialApiOfficialHistoryPreserved=return_official,
                     providerRestorationEffects=operations.count('_ordessa/session/configuration/restore'),
                     directApiEndpoint=switch_go and not observe_go_relay,
                     upstreamRequestCount=upstream_counts['requests'] if observe_go_relay else None if switch_go else 0)), flush=True)
@@ -288,6 +393,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--allow-model-calls', action='store_true')
     parser.add_argument('--switch-go', action='store_true')
+    parser.add_argument('--return-official', action='store_true')
+    parser.add_argument('--go-model', default='gpt-5.6-luna')
     parser.add_argument('--key-file', type=Path)
     parser.add_argument('--key-line', type=int, default=2)
     parser.add_argument('--observe-go-relay', action='store_true')

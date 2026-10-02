@@ -2,7 +2,7 @@ import type { PluginContext, ResourceScope } from '@ordessa/extension-api'
 import { AgentConnectionsToken, type AgentClient, type AgentConnections, type AgentMessage, type AgentSnapshot } from '@extensions/ordessa.agent-contracts/contract.js'
 
 // Test-only controlled preview fixtures (UI optimization round): anonymous, deterministic data that
-// drives the real workbench, sessions and conversation surfaces through the public connector API.
+// drives the real workbench, sessions and Chat surfaces through the public connector API.
 const capabilities = { history: 'supported', reasoning: 'supported', tools: 'supported', stop: 'supported',
   interactions: 'supported', models: 'unsupported', modes: 'unsupported' } as const
 
@@ -72,6 +72,7 @@ function makeClient(key: string): AgentClient {
     for (const listener of [...listeners]) listener()
   }
   const forSession = (sessionId: string) => (snapshot.messages[sessionId] ?? [])
+  let responseCount = 0
   return {
     get isDisposed() { return false },
     dispose() { listeners.clear() },
@@ -94,8 +95,11 @@ function makeClient(key: string): AgentClient {
           message.status === 'running' ? { ...message, status: 'cancelled' as const } : message) },
       }), 600)
     },
-    async respond(interactionId) {
+    async respond(interactionId, answer) {
+      document.documentElement.dataset.previewResponse = JSON.stringify({ interactionId, answer })
+      document.documentElement.dataset.previewResponseCount = String(++responseCount)
       write({ interactions: snapshot.interactions.map(item => item.id === interactionId ? { ...item, state: 'resolved' as const } : item) })
+      document.documentElement.dataset.previewInteractionState = snapshot.interactions.find(item => item.id === interactionId)?.state ?? ''
       // The approved command finishes right away so the switch gate releases for the next scenario.
       setTimeout(() => write({
         runs: {},

@@ -29,14 +29,35 @@ function fixture() {
       options: session.availableModels.map(model => ({ value: model.provider + '/' + model.id,
         _meta: { ordessaModel: { provider: model.provider, model: model.id, api: model.api, baseUrl: model.baseUrl } } })) }] })
   const invalidParams = message => new Error(message)
-  const registration = piProviderRegistration({ agent, read, creation: piCreation({ agent, read, invalidParams }), invalidParams })
+  const creation = piCreation({ agent, read, invalidParams })
+  const registration = piProviderRegistration({ agent, read, creation, invalidParams })
   const input = { sessionId: 'native', operationId: 'provider:one', expectedGeneration: 'same-generation',
     expectedConfigDigest: configurationDigest(read({ sessionId: 'native' })),
     target: { server_id: 'server', session_id: 'canonical', channel_id: 'channel', runtime_generation: 3 },
     model: 'new', models: ['new'], provider: { providerId: 'next', apiType: 'openai-completions',
       baseUrl: 'https://new.example/v1', apiKey: 'opaque-private-key' } }
-  return { calls, session, runtime, agent, registration, input }
+  return { calls, session, runtime, agent, registration, creation, read, input }
 }
+
+test('a startup-admitted provider can add a model after the first turn without replacing credentials or losing models', async () => {
+  const f = fixture()
+  f.agent.live.clear()
+  f.agent.setConfigOption = async ({params}) => { f.session.value = params.value }
+  await f.creation.prepare({operationId:'create:first',provider:f.input.provider,model:'new',models:['new']})
+  await f.creation.create({}, async () => {
+    f.session.availableModels = await f.runtime.getAvailable()
+    f.agent.live.set('native',f.session)
+    return {sessionId:'native'}
+  })
+  const after = await f.registration.apply({...f.input,model:'extra',models:['extra'],
+    expectedConfigDigest:configurationDigest(f.read({sessionId:'native'}))})
+  assert.equal(after.state,'observed')
+  assert.equal(f.session.value,'next/new')
+  assert.ok(after.after.configOptions[0].options.some(o=>o.value==='next/new'))
+  assert.ok(after.after.configOptions[0].options.some(o=>o.value==='next/extra'))
+  await assert.rejects(f.registration.apply({...f.input,operationId:'provider:rotate',
+    expectedConfigDigest:configurationDigest(after.after),provider:{...f.input.provider,apiKey:'different'}}),/already exists/)
+})
 
 test('new provider admission preserves session, generation, selection and prior catalogue', async () => {
   const f = fixture()

@@ -163,6 +163,35 @@ def latest_turn_seq(conn: sqlite3.Connection, session_id: str) -> int:
     return int(row["s"] or 0)
 
 
+def last_confirmed_turn(conn: sqlite3.Connection,
+                        session_id: str) -> dict[str, Any] | None:
+    """The newest recorded turn of a session — the identity of the last
+    effective configuration this session actually recorded.
+
+    This is the *base* the sparse composition retains items from: a Profile
+    that omits an item does not erase the value the native side still runs
+    with (FR-02/FR-03, appendix §4).  It is read, never inferred from the
+    latest Profile revision or from the overlay layer.
+    """
+    row = conn.execute(
+        "SELECT turn_id, session_id, turn_seq, profile_id, config_revision"
+        " FROM profile_turns WHERE session_id=? ORDER BY turn_seq DESC LIMIT 1",
+        (session_id,),
+    ).fetchone()
+    return None if row is None else dict(row)
+
+
+def turn_effective_items(conn: sqlite3.Connection,
+                         turn_id: str) -> list[dict[str, Any]] | None:
+    row = conn.execute(
+        "SELECT sources_json FROM profile_turns WHERE turn_id=?",
+        (turn_id,),
+    ).fetchone()
+    if row is None:
+        return None
+    return json.loads(row["sources_json"])
+
+
 def insert_turn(conn: sqlite3.Connection, *, turn_id: str, session_id: str,
                 turn_seq: int, profile_id: str, config_revision: int,
                 effective_digest: str, sources: list[dict[str, Any]],
@@ -199,12 +228,22 @@ def upsert_session(conn: sqlite3.Connection, *, session_id: str,
                    pending_profile_id: str | None, pending_seq: int | None,
                    blockers: list[dict[str, Any]] | None, timestamp: str,
                    realm: str | None = None, session_uid: str | None = None,
-                   native_session_key: str | None = None) -> None:
+                   native_session_key: str | None = None,
+                   action_seq: int | None = None,
+                   admission_facts_json: str | None = None) -> None:
+    """Insert or update the session binding.
+
+    ``action_seq`` and ``admission_facts_json`` are v3 recovery facts.  Both
+    default to ``None``, which means *leave the stored value alone* on
+    conflict — so a writer that only moves the safety state can never
+    rewind the session's action counter or replay stale admission facts.
+    """
     conn.execute(
         "INSERT INTO profile_sessions(session_id, harness_id, current_profile_id,"
         " current_revision, pending_profile_id, pending_seq, switch_state,"
         " blockers_json, created_at, updated_at, realm, native_session_key,"
-        " session_uid) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"
+        " session_uid, action_seq, admission_facts_json)"
+        " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,COALESCE(?, 0),?)"
         " ON CONFLICT(session_id) DO UPDATE SET"
         " current_profile_id=excluded.current_profile_id,"
         " current_revision=excluded.current_revision,"
@@ -214,35 +253,110 @@ def upsert_session(conn: sqlite3.Connection, *, session_id: str,
         " blockers_json=excluded.blockers_json, updated_at=excluded.updated_at,"
         " realm=excluded.realm,"
         " native_session_key=excluded.native_session_key,"
-        " session_uid=excluded.session_uid",
+        " session_uid=excluded.session_uid,"
+        # A writer that omits action_seq must leave the stored counter alone.
+        # The bare parameter (not `excluded.action_seq`) is what makes that
+        # hold: excluded carries the INSERT-side COALESCE(?, 0), so routing it
+        # through `excluded` rewound the counter to 0 on every ordinary
+        # session write and broke last-action-wins (021 appendix §3.2, M04).
+        " action_seq=COALESCE(?, profile_sessions.action_seq),"
+        " admission_facts_json=COALESCE(excluded.admission_facts_json,"
+        " profile_sessions.admission_facts_json)",
         (session_id, harness_id, current_profile_id, current_revision,
          pending_profile_id, pending_seq, switch_state,
          json.dumps(blockers, ensure_ascii=False) if blockers else None,
-         timestamp, timestamp, realm, native_session_key, session_uid),
+         timestamp, timestamp, realm, native_session_key, session_uid,
+         action_seq, admission_facts_json, action_seq),
+    )
+
+
+def next_action_seq(conn: sqlite3.Connection, session_id: str) -> int:
+    """Next session-level action index.  Selects and overlay writes both draw
+    from this one counter so "which user action is later" is decidable per
+    (facet_id, item_id) without a wall clock (appendix §3.2)."""
+    row = conn.execute(
+        "SELECT action_seq FROM profile_sessions WHERE session_id=?",
+        (session_id,),
+    ).fetchone()
+    return (int(row["action_seq"]) if row is not None else 0) + 1
+
+
+def bump_action_seq(conn: sqlite3.Connection, session_id: str,
+                    action_seq: int) -> None:
+    conn.execute(
+        "UPDATE profile_sessions SET action_seq=? WHERE session_id=?",
+        (action_seq, session_id),
+    )
+
+
+def set_admission_facts(conn: sqlite3.Connection, session_id: str,
+                        facts_json: str) -> None:
+    conn.execute(
+        "UPDATE profile_sessions SET admission_facts_json=?"
+        " WHERE session_id=?", (facts_json, session_id),
     )
 
 
 def session_overlays(conn: sqlite3.Connection, session_id: str) -> list[dict[str, Any]]:
     return [dict(row) for row in conn.execute(
         "SELECT facet_id, item_id, value_json, facet_version, created_at,"
-        " updated_at FROM profile_session_overlays WHERE session_id=?"
-        " ORDER BY facet_id, item_id", (session_id,),
+        " updated_at, action_seq, revision FROM profile_session_overlays"
+        " WHERE session_id=? ORDER BY facet_id, item_id", (session_id,),
     ).fetchall()]
 
 
 def upsert_overlay(conn: sqlite3.Connection, *, session_id: str, facet_id: str,
                    item_id: str, value_json: str, facet_version: str,
-                   timestamp: str) -> None:
+                   timestamp: str, action_seq: int) -> int:
+    """Write one overlay row and return its new write revision.
+
+    The revision increments on *every* upsert, including a rewrite of the
+    identical value: a same-value rewrite is a fresh user intent and must
+    survive an earlier admission's consumption (P09).  Comparing values or
+    timestamps can never prove that.
+    """
     conn.execute(
         "INSERT INTO profile_session_overlays(session_id, facet_id, item_id,"
-        " value_json, facet_version, created_at, updated_at)"
-        " VALUES (?,?,?,?,?,?,?)"
+        " value_json, facet_version, created_at, updated_at, action_seq,"
+        " revision) VALUES (?,?,?,?,?,?,?,?,1)"
         " ON CONFLICT(session_id, facet_id, item_id) DO UPDATE SET"
         " value_json=excluded.value_json, facet_version=excluded.facet_version,"
-        " updated_at=excluded.updated_at",
+        " updated_at=excluded.updated_at,"
+        " action_seq=excluded.action_seq,"
+        " revision=profile_session_overlays.revision + 1",
         (session_id, facet_id, item_id, value_json, facet_version, timestamp,
-         timestamp),
+         timestamp, action_seq),
     )
+    row = conn.execute(
+        "SELECT revision FROM profile_session_overlays WHERE session_id=?"
+        " AND facet_id=? AND item_id=?",
+        (session_id, facet_id, item_id),
+    ).fetchone()
+    return int(row["revision"])
+
+
+def consume_overlays(conn: sqlite3.Connection, *, session_id: str,
+                     revisions: dict[tuple[str, str], int]) -> list[tuple[str, str]]:
+    """CAS consumption of the overlay layer (appendix §4).
+
+    Only rows inside the frozen admission mask whose current ``revision``
+    still equals the frozen snapshot are removed.  A row written *during*
+    the application — including one rewritten with the identical value —
+    carries a higher revision and is deliberately left for the next turn.
+
+    Returns the items actually consumed (useful for evidence/tests).
+    """
+    consumed: list[tuple[str, str]] = []
+    for (facet_id, item_id), revision in sorted(revisions.items()):
+        cur = conn.execute(
+            "DELETE FROM profile_session_overlays WHERE session_id=? AND"
+            " facet_id=? AND item_id=? AND revision=?",
+            (session_id, facet_id, item_id, revision),
+        )
+        if cur.rowcount:
+            consumed.append((facet_id, item_id))
+    return consumed
+
 
 
 def delete_overlay(conn: sqlite3.Connection, *, session_id: str, facet_id: str,
@@ -252,8 +366,3 @@ def delete_overlay(conn: sqlite3.Connection, *, session_id: str, facet_id: str,
         " AND item_id=?", (session_id, facet_id, item_id),
     )
     return cur.rowcount
-
-
-def clear_overlays(conn: sqlite3.Connection, session_id: str) -> None:
-    conn.execute(
-        "DELETE FROM profile_session_overlays WHERE session_id=?", (session_id,))

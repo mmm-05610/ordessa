@@ -1,17 +1,25 @@
 /**
  * Profile selection state machine for the Chat composer (PV-10, PA01/PA03,
- * ux.md §3).
+ * ux.md §3; click-time registration per 021 appendix §6c F1.1).
  *
  * Semantics locked here, and nowhere else:
- * - `select` only records the user's choice; the button label updates
- *   immediately and NO port/service call happens (apply/abort/restart stay 0).
- * - `applyOnSubmit` runs at the next user submit and applies the LAST
- *   selection only — B then C applies just C, once.
- * - A failed application keeps the selection and reports the reason at the
- *   send operation; the draft text belongs to Chat and is never touched here,
- *   and the send is NOT silently allowed through with the old configuration.
- * - Selecting the profile that is already current is a no-op selection, never
- *   an overlay clear (G07 lives in the backend, not in the selector).
+ * - `select` records the user's choice and updates the label immediately; it
+ *   performs NO port call itself (apply/abort/restart stay 0). The backend
+ *   REGISTRATION (`selectForSession`, which stamps the session's action_seq)
+ *   happens at click time for bound sessions — via the glue's per-session
+ *   serializer — and the store tracks that state per pick.
+ * - `applyOnSubmit` only ever runs `beginTurnApplication`, and only for a pick
+ *   the backend already holds (or one the caller explicitly vouches for via
+ *   `continuation`). It NEVER registers a selection at submit time: a
+ *   submit-time registration would stamp a later action_seq than an earlier
+ *   click and let a stale profile win over the user's last pick (review F1).
+ * - An UNREGISTERED pick is never applied behind the guard's back: the store
+ *   refuses with a reason, keeping the pick for (re-)registration.
+ * - A failed application/registration keeps the selection and reports the
+ *   reason; the draft text belongs to Chat and is never touched here, and the
+ *   send is NOT silently allowed through with the old configuration.
+ * - Ordinary bound-session submissions apply the effective configuration
+ *   without reselecting.
  */
 import type {
   AppliedReceiptDto,
@@ -32,8 +40,16 @@ export type ApplyOutcome =
   | { readonly ok: true; readonly applied: ProfileSelection; readonly receipt?: AppliedReceiptDto }
   | { readonly ok: false; readonly reason: string; readonly selection: ProfileSelection; readonly unknown?: boolean }
 
+interface StoreEntry {
+  selection: ProfileSelection
+  /** Whether the backend currently holds THIS pick (click-time registration
+   * acknowledged). A new click resets it: the newest pick is the intent. */
+  registered: boolean
+  registrationError?: string
+}
+
 export class ProfileSelectionStore {
-  private readonly selections = new Map<string, ProfileSelection>()
+  private readonly entries = new Map<string, StoreEntry>()
   private readonly lastConfirmed = new Map<string, ProfileSelection>()
   private sequence = 0
   private revision = 0
@@ -49,53 +65,119 @@ export class ProfileSelectionStore {
     applyFailed: 0,
   }
 
-  /** Register the user's pick for one draft/session key.  Pure bookkeeping:
-   * no port call, no run interruption, no status label (PA01). */
+  /** Record the user's pick for one draft/session key (PA01). Bookkeeping
+   * only: no port call, no run interruption. The pick starts UNREGISTERED;
+   * the glue registers it (at click for bound sessions, at submit otherwise)
+   * and acknowledges with {@link markRegistered}. */
   select(key: string, selection: ProfileSelection): void {
     this.counters.selections += 1
-    this.selections.set(key, selection)
+    this.entries.set(key, { selection, registered: false })
     this.publish()
+  }
+
+  /** The click-time registration reached the backend: this exact pick is now
+   * the session's pending intent (its action_seq is the click's). */
+  markRegistered(key: string, selection: ProfileSelection): void {
+    const entry = this.entries.get(key)
+    if (!entry || entry.selection !== selection) return // a newer pick owns the key
+    this.entries.set(key, { selection, registered: true })
+    this.publish()
+  }
+
+  /** The click-time registration failed: the pick is kept UNREGISTERED and
+   * the reason is surfaced in the picker (never a silent drop). */
+  markRegistrationFailed(key: string, selection: ProfileSelection, reason: string): void {
+    const entry = this.entries.get(key)
+    if (!entry || entry.selection !== selection) return
+    this.entries.set(key, { selection, registered: false, registrationError: reason })
+    this.publish()
+  }
+
+  /** Whether the store's current pick for this key is the given one AND is
+   * backend-registered. */
+  isRegistered(key: string, selection: ProfileSelection): boolean {
+    const entry = this.entries.get(key)
+    return !!entry && entry.selection === selection && entry.registered
+  }
+
+  /** The registered pending pick (the only one `applyOnSubmit` may consume
+   * without an explicit caller vouch), or null. */
+  registeredPending(key: string): ProfileSelection | null {
+    const entry = this.entries.get(key)
+    return entry && entry.registered ? entry.selection : null
+  }
+
+  /** The last registration failure reason for the current pick, if any. */
+  registrationError(key: string): string | null {
+    return this.entries.get(key)?.registrationError ?? null
   }
 
   /** What the button shows right now: the user's selection, falling back to
    * the last confirmed profile of this session. */
   currentLabel(key: string, fallbackName?: string): string | null {
-    return this.selections.get(key)?.displayName ?? fallbackName ?? null
+    return this.entries.get(key)?.selection.displayName ?? this.lastConfirmed.get(key)?.displayName ?? fallbackName ?? null
   }
 
   peek(key: string): ProfileSelection | null {
-    return this.selections.get(key) ?? null
+    return this.entries.get(key)?.selection ?? null
   }
 
   /** Clear only what the UI subscription owns (scope teardown); stored
    * selections for live sessions are not business data and nothing here
    * aborts a run. */
   forget(key: string): void {
-    this.selections.delete(key)
+    this.entries.delete(key)
     this.publish()
   }
 
+  /** A reusable composer draft is not a native session. Once accepted or
+   * discarded, its confirmed label must not leak into the next empty draft.
+   * Pending user picks and bound-session confirmations remain untouched. */
+  clearDraftConfirmations(): void {
+    let changed = false
+    for (const key of this.lastConfirmed.keys()) {
+      if (key.startsWith('draft:')) { this.lastConfirmed.delete(key); changed = true }
+    }
+    if (changed) this.publish()
+  }
+
   /**
-   * Next-submit admission: apply the last selection through the Profile
-   * service, then let the caller send.  Consecutive picks collapse here —
-   * only the final one reaches the service.
+   * Next-submit application: run `beginTurnApplication` for the REGISTERED
+   * pending pick (or the caller-vouched `continuation`) and let the caller
+   * send. Registration never happens here — a pick that is not registered is
+   * refused fail-closed with its reason, never applied with a submit-time
+   * action_seq (review F1).
    */
   async applyOnSubmit(
     key: string,
     sessionRef: SessionRef,
-    profiles: Pick<ProfileServiceClient, 'beginTurnApplication'> & Partial<Pick<ProfileServiceClient, 'selectForSession' | 'inspectSessionConfig'>>,
+    profiles: Pick<ProfileServiceClient, 'beginTurnApplication'> & Partial<Pick<ProfileServiceClient, 'inspectSessionConfig'>>,
+    continuation?: ProfileSelection,
   ): Promise<ApplyOutcome> {
-    const selection = this.selections.get(key)
+    // A captured binding is not a new user pick. In particular, a pick made
+    // while native preparation/application waits belongs to the next turn.
+    const entry = this.entries.get(key)
+    const selection = continuation ?? (entry && entry.registered ? entry.selection : null)
     if (!selection) {
+      if (entry && !entry.registered) {
+        // fail-closed: the user's newest pick was never registered — passing
+        // this off as an "ordinary turn" would send on the OLD configuration
+        // while the pick looks pending. Registration is the click's (bound
+        // sessions) or the guard's (drafts) job; until then: no apply, no send.
+        return { ok: false, reason: '所选预设尚未登记到会话，已阻止本次应用；请重新选择或重试。', selection: entry.selection }
+      }
       return { ok: true, applied: this.lastConfirmed.get(key) ?? { harnessId: sessionRef.harnessId, profileId: '', displayName: '' } }
+    }
+    if (!continuation && !this.isRegistered(key, selection)) {
+      // fail-closed: an unregistered pick must be registered first — applying
+      // it here would stamp the backend action_seq at SUBMIT time and let an
+      // earlier-registered intent (or a later model pick) misorder against the
+      // user's clicks.
+      return { ok: false, reason: '所选预设尚未登记到会话，已阻止本次应用；请重新选择或重试。', selection }
     }
     this.counters.applyAttempts += 1
     try {
-      if (typeof profiles.selectForSession !== 'function') {
-        throw new Error('Profile selection registration is unavailable')
-      }
       const operationKey = `profile-chat.apply:${sessionRef.sessionUid}:${selection.profileId}:${this.sequence += 1}`
-      await profiles.selectForSession(`${operationKey}:select`, { sessionRef, profileId: selection.profileId })
       const result = await profiles.beginTurnApplication(
         operationKey,
         sessionRef,
@@ -117,8 +199,9 @@ export class ProfileSelectionStore {
           || config.evidence.journal.operationId !== receipt.operationId) {
           throw new Error('Profile current configuration is not confirmed for this selection')
         }
-        if (this.selections.get(key) === selection) this.selections.delete(key)
+        if (this.entries.get(key)?.selection === selection) this.entries.delete(key)
         this.lastConfirmed.set(key, selection)
+        this.publish()
         return { ok: true, applied: selection, receipt }
       }
       const receipt = result.receipt
@@ -128,8 +211,9 @@ export class ProfileSelectionStore {
         throw Object.assign(new Error('Profile application receipt is unproven for this selection'), { kind: 'Unknown' })
       }
       this.counters.applyConfirmed += 1
-      if (this.selections.get(key) === selection) this.selections.delete(key)
+      if (this.entries.get(key)?.selection === selection) this.entries.delete(key)
       this.lastConfirmed.set(key, selection)
+      this.publish()
       return { ok: true, applied: selection, receipt }
     } catch (error) {
       this.counters.applyFailed += 1

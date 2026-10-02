@@ -67,4 +67,8 @@ def initial_model_params(brand, payload, operation_id, *, credential=None, model
                 native['headers']['x-api-key'] = credential
     if brand == 'pi':
         return {'operationId': operation_id, 'model': payload['model'], 'provider': native, 'models': list(models)}
-    return {'operationId': operation_id, 'model': payload['model'], 'provider': native}
+    result = {'operationId': operation_id, 'model': payload['model'], 'provider': native}
+    if brand == 'codex' and 'modelCapabilities' in payload:
+        from .bridge import choice_payload_schema
+        result['modelCapabilities'] = choice_payload_schema().validate(dict(payload))['modelCapabilities']
+    return result

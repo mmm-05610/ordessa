@@ -109,6 +109,7 @@ test('the product explicitly selects the Profile UI provider while the carrier s
   assert.deepEqual(product.config['ordessa.ui-components'], [
     { componentId: 'ordessa.profile.picker', major: 1, providerId: 'ordessa.profile-chat' },
     { componentId: 'ordessa.profile.editor:assets.model-provider', major: 1, providerId: 'ordessa.model-provider' },
+    { componentId: 'ordessa.chat.model-selector', major: 1, providerId: 'ordessa.model-provider-chat' },
   ], 'the product selects its implementation explicitly, never inside the platform')
   const foundations = JSON.parse(await readFile(path.join(repoRoot, 'products/desktop/extensions.foundations.json'), 'utf8'))
   assert.ok(!foundations.enabled.includes('ordessa.ui-components'), 'the API-only foundations stay selection-free')

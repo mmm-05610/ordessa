@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { createRoot } from 'react-dom/client'
-import { runtime } from '@ordessa/extension-host'
+import { runtime, applyThemeToDocument } from '@ordessa/extension-host'
 import type { UiRequirementDiagnostic } from '@ordessa/ui-components/api'
 import type { CommandOutcome, Fault } from '@extensions/ordessa.contracts/contract.js'
 import { App } from './app'
@@ -50,6 +50,7 @@ function HostShell({ desktop, about, services, failures, requirements }: {
   failures: { id: string; error: string }[]
   requirements: readonly UiRequirementDiagnostic[]
 }) {
+  const rootViews = useSyncExternalStore(desktop.host.roots.subscribe, desktop.host.roots.getSnapshot)
   const [faults, setFaults] = useState<readonly Fault[]>([])
   const [overlay, setOverlay] = useState<'palette' | 'settings' | 'about' | null>(null)
   const [outcome, setOutcome] = useState<CommandOutcome | null>(null)
@@ -76,7 +77,7 @@ function HostShell({ desktop, about, services, failures, requirements }: {
   return <>
     <Desktop desktop={desktop} failures={failures} requirements={requirements} />
     <FaultScreen faults={faults} onExportDiagnostics={() => void bridge()?.exportDiagnostics()} onOpenLogs={() => void bridge()?.openLogs()} />
-    <nav className="od-host-chrome" aria-label="宿主入口">
+    <nav className="od-host-chrome" aria-label="宿主入口" hidden={rootViews.length > 0}>
       <button type="button" data-testid="open-palette" onClick={() => setOverlay('palette')}>命令面板</button>
       <button type="button" data-testid="open-settings" onClick={() => setOverlay('settings')}>设置</button>
       <button type="button" data-testid="open-about" onClick={() => setOverlay('about')}>关于</button>
@@ -110,6 +111,8 @@ async function start() {
   }
   await readWireFacts?.()
   const services = buildHostServices({ bridge: host, ...(host ? { wire: wireFacts } : {}) })
+  const releaseTheme = applyThemeToDocument(services.theme, document.documentElement)
+  window.addEventListener('beforeunload', releaseTheme, { once: true })
   const about = host ? await host.about().catch(() => null) as AboutInfo | null : null
   const loaded = await installedExtensions()
   const desktop = runtime(loaded.plugins, services)

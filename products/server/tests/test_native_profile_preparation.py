@@ -246,6 +246,7 @@ def test_controlled_product_wire_preparation_registration_and_authenticated_c4(t
     from ordessa_harness.server_acp.profile_owner import ProfileSessionOwner
     from ordessa_harness.server_acp.native_action_executor import configuration_digest
     from ordessa_server_product.profile_sessions import ProfileNativeSessions
+    from ordessa_server_product.native_configuration import NativeConfigurationAuthority
     from ordessa_server_product.profile_configuration import NativeProfileConfigPort
 
     product = build_runtime(tmp_path / 'product')
@@ -321,7 +322,8 @@ def test_controlled_product_wire_preparation_registration_and_authenticated_c4(t
     resolver = lambda: ProfileModelChoiceResolver(catalog, payload_schema=choice_payload_schema())
     sessions_holder = {}
     def native_factory(core):
-        sessions = ProfileNativeSessions(core=core, channels=registry, owners=owner_service, realm='local')
+        configuration = NativeConfigurationAuthority(channels=registry, owners=owner_service, services=Mock())
+        sessions = ProfileNativeSessions(core=core, configuration=configuration, realm='local')
         sessions.preparation = NativeProfilePreparation(core, registry, roots={'codex': '/controlled-installation'},
             verify=lambda brand: installation if brand == installation.harness_id else pytest.fail('Wrong installation brand'),
             resolver_factory=resolver, catalog_factory=lambda: catalog)

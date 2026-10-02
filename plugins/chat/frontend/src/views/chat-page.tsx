@@ -13,7 +13,7 @@
 // exact sent version — user typing after the send survives; a result arriving
 // after a pane switch updates NOTHING in the new pane (X05); unknown keeps the
 // draft and never auto-retries.
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import type { UiScope } from '@ordessa/ui-components/api'
 import type { AgentSessions } from '@extensions/ordessa.agent-contracts/contract.js'
 import type {
@@ -78,6 +78,23 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
   const [sendError, setSendError] = useState('')
   const [pendingPane, setPendingPane] = useState<string | undefined>(undefined)
   const [plusQuery, setPlusQuery] = useState('')
+  const composerInputRef = useRef<HTMLTextAreaElement>(null)
+  const menuFocusOwnerRef = useRef<{ open: boolean; pane: string; connectionId: string | undefined }>({ open: false, pane, connectionId })
+  // Restore only after React has removed the menu/search input. Focusing in
+  // its close callback races the menu's autofocus/unmount; scheduling a frame
+  // can race a pane switch. This layout effect has a live DOM ref and fences
+  // focus restoration to the pane/connection that originally opened the menu.
+  useLayoutEffect(() => {
+    const previous = menuFocusOwnerRef.current
+    if (panel && !previous.open) {
+      menuFocusOwnerRef.current = { open: true, pane, connectionId }
+    } else if (!panel && previous.open) {
+      menuFocusOwnerRef.current = { ...previous, open: false }
+      if (previous.pane === pane && previous.connectionId === connectionId) {
+        composerInputRef.current?.focus({ preventScroll: true })
+      }
+    }
+  }, [panel, pane, connectionId])
   const panelKeyRef = useRef<((event: { key: string; preventDefault(): void }) => boolean) | undefined>(undefined)
   // add-content retry identity: item id → the preparing action that produced it,
   // so a retry re-runs the SAME preparation with the SAME idempotency key (A05).
@@ -124,12 +141,12 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
 
   const location = useMemo(() => (drafting
     ? { kind: 'draft' as const, draftId: pane, connectionId: connectionId ?? undefined,
-        serverInstanceId: agent?.connection.serverInstanceId, projectId: workspaceId, contextRevision: revision,
+        serverInstanceId: agent?.connection.serverInstanceId, harnessId: agent?.connection.harnessId, projectId: workspaceId, contextRevision: revision,
         ...(state.runtimeGeneration !== undefined ? { runtimeGeneration: state.runtimeGeneration } : {}) }
     : { kind: 'session' as const, connectionId: connectionId ?? '', sessionId: sessionId ?? '',
-        serverInstanceId: agent?.connection.serverInstanceId, contextRevision: revision,
+        serverInstanceId: agent?.connection.serverInstanceId, harnessId: agent?.connection.harnessId, contextRevision: revision,
         ...(state.runtimeGeneration !== undefined ? { runtimeGeneration: state.runtimeGeneration } : {}) }),
-  [drafting, pane, connectionId, agent?.connection.serverInstanceId, workspaceId, revision, sessionId, state.runtimeGeneration])
+  [drafting, pane, connectionId, agent?.connection.serverInstanceId, agent?.connection.harnessId, workspaceId, revision, sessionId, state.runtimeGeneration])
   const locationRef = useRef(location)
   locationRef.current = location
   // PC-3: the attach entry and its note are driven by the facade's REAL
@@ -200,7 +217,7 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
       setSendError(result.reason)
     } else {
       // Unknown keeps everything, never auto-retries (US4-2).
-      setSendError('发送结果未知：连接可能已中断。草稿已保留，请核实后手动重发。')
+      setSendError(`发送结果未知。草稿已保留，请核实状态后再决定是否重发。${result.reason ? ` 原因：${result.reason}` : ''}`)
     }
   }, [canSend, chat, gateway, location, pendingPane, service, state, store])
 
@@ -314,15 +331,29 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
   const toolbarViews = useSyncExternalStore(toolbarSlot.subscribe, toolbarSlot.getSnapshot, toolbarSlot.getSnapshot)
 
   if (!connectionId) {
-    return <div className="chat-page chat-placeholder"><h2>选择一个连接</h2><p>从连接面板选择一个已启用的代理。</p></div>
+    return <div className="chat-page chat-placeholder" data-chat-theme={theme}><style>{chatStyles}</style>
+      <h2>选择 Harness，开始对话</h2><p>选择后再选项目；发送第一句话时才创建会话。</p>
+      <div className="chat-connection-choices" role="group" aria-label="可用 Harness">
+        {state.available.map(connection => <button key={connection.id} type="button"
+          className="chat-connector-choice" data-chat-connector={connection.id} disabled={!!state.connectingId}
+          onClick={() => { setSendError(''); void service.selectConnection(connection.id).catch(error => setSendError(String(error instanceof Error ? error.message : error))) }}>
+          {connection.title}
+        </button>)}
+      </div>
+      {state.available.length === 0 && <p role="status">暂无可用连接，请检查 Server 与已启用的 Harness。</p>}
+      {(sendError || state.error) && <p role="alert">{sendError || state.error}</p>}
+    </div>
   }
   if (!agent) {
     return <div className="chat-page chat-placeholder"><h2>连接中</h2><p>{state.error ?? '正在等待代理连接。'}</p></div>
   }
   if (!drafting && !sessionId) {
-    return <div className="chat-page chat-placeholder"><h2>选择一个会话</h2>
+    return <div className="chat-page chat-placeholder" data-chat-theme={theme}><style>{chatStyles}</style><h2>开始新会话</h2>
       <p><button type="button" className="chat-primary-action" data-testid="chat-new-session-empty"
-        onClick={() => (openViaOverlay ? openViaOverlay() : setDialogOpen(true))}>新会话</button></p></div>
+        onClick={() => (openViaOverlay ? openViaOverlay() : setDialogOpen(true))}>选择项目</button></p>
+      {dialogOpen && !openViaOverlay && <ProjectDialog service={service} snapshot={state}
+        close={() => setDialogOpen(false)} onProjectSelected={() => { setDialogOpen(false); service.startDraft?.() }} />}
+    </div>
   }
 
   const conversation = drafting ? { conversationKey: `${connectionId}:draft`, parts: [] } : projectConversation(agent, sessionId ?? '')
@@ -333,9 +364,8 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
       <style>{chatStyles}</style>
       <header className="chat-page-head">
         <div>
-          <small>{drafting ? '新会话' : '会话'}</small>
           <h2>{drafting
-            ? (projectName ? `你想在 ${projectName.split('/').filter(Boolean).at(-1)} 中做什么？` : '选择项目后开始')
+            ? (projectName ? projectName.split('/').filter(Boolean).at(-1) : '新会话')
             : agent.sessions.find(item => item.id === sessionId)?.title ?? sessionId}</h2>
         </div>
         <div className="chat-page-head-actions">
@@ -353,7 +383,15 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
       {!drafting && conversation.parts.length === 0 && (
         <p className="chat-note" data-testid="chat-thread-empty">这个会话还没有消息。</p>
       )}
-      <ThreadBody display={conversation} expansion={expansion} theme={theme} />
+      <div className="chat-thread-stage">
+        {drafting && <div className="chat-draft-welcome" data-testid="chat-draft-welcome">
+          <span className="chat-welcome-mark" aria-hidden="true">✳</span>
+          <h1>{projectName ? `你想在 ${projectName.split('/').filter(Boolean).at(-1)} 中做什么？` : '从一个想法开始'}</h1>
+          {!projectName && <button type="button" className="chat-ghost-action"
+            onClick={() => (openViaOverlay ? openViaOverlay() : setDialogOpen(true))}>选择项目</button>}
+        </div>}
+        <ThreadBody display={conversation} expansion={expansion} theme={theme} />
+      </div>
       <div className="chat-compose" data-testid="chat-compose">
         <ApprovalPanel interactions={interactions} interactionsCapability={agent.connection.capabilities.interactions}
           respond={(id, answer) => service.respond(id, answer)} />
@@ -386,20 +424,10 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
             onRetry={() => setPlusQuery(query => `${query}`)}
             onClose={() => setPanel(null)} />
         )}
-        <div className="chat-compose-toolbar" data-testid="chat-compose-toolbar">
-          {toolbarViews.map(view => <ToolbarContribution key={view.id} view={view} ui={uiComponents} context={{
-              slot: 'composer.toolbar', location: { ...location },
-              connection: { status: agent.connection.status, runStatus: run?.status },
-            }} />)}
-        </div>
-        <div className="chat-input-row">
-          <button type="button" className="chat-icon-action" aria-label="打开添加与操作面板" data-testid="chat-plus-button"
-            aria-expanded={panel?.mode === 'plus' ? 'true' : 'false'}
-            onClick={() => {
-              caretRef.current = null
-              setPanel(current => (current?.mode === 'plus' ? null : { mode: 'plus', caret: caretRef.current ?? composition.text.length }))
-            }}>＋</button>
+        <div className="chat-composer-card">
+          <div className="chat-input-row">
           <ChatTextInput
+            inputRef={composerInputRef}
             value={composition.text}
             editable={pendingPane === undefined || pendingPane === pane}
             placeholder={drafting ? '向新会话发送第一条消息' : '向这个代理发送消息'}
@@ -410,18 +438,33 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
             onSubmit={() => void submit()}
             testid="chat-input"
           />
+          </div>
+          <div className="chat-composer-bottom">
+            <button type="button" className="chat-icon-action" aria-label="打开添加与操作面板" data-testid="chat-plus-button"
+              aria-expanded={panel?.mode === 'plus' ? 'true' : 'false'}
+              onClick={() => {
+                caretRef.current = null
+                setPanel(current => (current?.mode === 'plus' ? null : { mode: 'plus', caret: caretRef.current ?? composition.text.length }))
+              }}>＋</button>
+            <div className="chat-compose-toolbar" data-testid="chat-compose-toolbar">
+              {toolbarViews.map(view => <div className="chat-toolbar-item" key={view.id}><ToolbarContribution view={view} ui={uiComponents} context={{
+                  slot: 'composer.toolbar', location: { ...location },
+                  connection: { status: agent.connection.status, runStatus: run?.status },
+                }} /></div>)}
+            </div>
           {running
-            ? <button type="button" className="chat-primary-action" data-testid="chat-stop"
+            ? <button type="button" className="chat-primary-action chat-send-action" data-testid="chat-stop" aria-label="请求停止"
                 disabled={run?.status === 'stop-requested' || run?.status === 'starting'} onClick={stop}>
                 {run?.status === 'stop-requested' ? '停止中…' : '请求停止'}
               </button>
-            : <button type="button" className="chat-primary-action" data-testid="chat-send"
-                disabled={sendDisabled} onClick={() => void submit()}>发送</button>}
+            : <button type="button" className="chat-primary-action chat-send-action" data-testid="chat-send" aria-label="发送"
+                disabled={sendDisabled} onClick={() => void submit()}><span aria-hidden="true">↑</span><span className="chat-sr-only">发送</span></button>}
+          </div>
         </div>
         {sendError && <p role="alert" className="chat-error" data-testid="chat-send-error">{sendError}</p>}
         {pendingPane === pane && <p role="status" className="chat-note" data-testid="chat-send-pending">发送中…</p>}
         <p className="chat-compose-meta">
-          <span data-testid="chat-capability-note">{attachmentCapability.supported ? '附件通道就绪。' : attachmentCapability.reason}</span>
+          <span data-testid="chat-capability-note" title={attachmentCapability.reason}>{attachmentCapability.supported ? 'Enter 发送 · Shift + Enter 换行' : '附件暂不可用 · Enter 发送 · Shift + Enter 换行'}</span>
         </p>
       </div>
       {dialogOpen && !openViaOverlay && (

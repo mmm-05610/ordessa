@@ -1,10 +1,10 @@
-"""Z3 T01 increments: the seven versioned ``modelProvider.*`` methods.
+"""Z3 T01 increments: the versioned ``modelProvider.*`` methods.
 
 Authored in this line (not migrated): the names are frozen in
 ``specs/011-z3-model-provider/t00-freeze.md`` §8; the semantics are the design
-contracts' Port signatures (``docs/design/model-provider/contracts.md``). The
-legacy six ``providerModels.*`` rows are pinned by ``test_plugin_registration``
-and are not touched here.
+contracts' Port signatures (``docs/design/model-provider/contracts.md``), plus
+the 021 appendix §2 submit gate. The legacy six ``providerModels.*`` rows are
+pinned by ``test_plugin_registration`` and are not touched here.
 
 Gates driven here, all red before the implementation lands:
 - catalogue failure is a typed error, never an empty page (MP-03);
@@ -27,7 +27,8 @@ import pytest
 
 from ordessa_model_provider.testing import wire_body
 
-#: The seven new shapes, frozen in t00-freeze.md §8.
+#: The eight new shapes, frozen in t00-freeze.md §8 plus the 021 appendix §2
+#: submit gate ``modelProvider.beginTurnApplication``.
 NEW_SHAPES = {
     "modelProvider.catalogue": (set(), {"includeArchived", "cursor"}),
     "modelProvider.saveProviderConfig": ({"operationKey", "patch"}, {"expectedVersion"}),
@@ -38,6 +39,8 @@ NEW_SHAPES = {
         {"target", "choice", "operationKey"}, {"expectedOverlayRevision"}),
     "modelProvider.queryChoice": ({"target"}, set()),
     "modelProvider.reconcileChoice": ({"target", "operationId"}, set()),
+    "modelProvider.beginTurnApplication": (
+        {"target", "operationKey"}, {"expectedSequence"}),
 }
 
 
@@ -101,7 +104,7 @@ def test_seven_new_methods_registered_with_frozen_shapes(host, harnesses):
         assert descriptor.owner == PLUGIN_ID
         assert descriptor.required_params == frozenset(required), method_id
         assert descriptor.optional_params == frozenset(optional), method_id
-    assert len(host.methods) == 6 + 7 + 2
+    assert len(host.methods) == 6 + 8 + 2
 
 
 def test_new_methods_are_single_owner_too(host, harnesses):
@@ -323,6 +326,21 @@ def test_choose_for_session_queues_pending_zero_apply(stack, harnesses, credenti
     assert state["lastConfirmed"] is None
 
 
+def test_query_reads_native_model_without_a_model_choice_history(stack, harnesses, credentials):
+    port = ReadyPort(model="profile-model")
+    port.read_back = lambda target: {"model": "profile-model", "provider": "native-provider"}
+    handlers = ModelProviderPluginShim(harnesses, harness_config_port=port).activate_locally(stack, credentials)
+    result = handlers["modelProvider.queryChoice"]({"target": _target()})
+    assert result["current"] == {"modelId": "profile-model", "provider": "native-provider"}
+    assert result["lastConfirmed"] is None
+    assert result["desired"] is None
+    assert port.applies == 0
+    def unavailable(target):
+        raise RuntimeError("owner unavailable")
+    port.read_back = unavailable
+    assert handlers["modelProvider.queryChoice"]({"target": _target()})["current"] is None
+
+
 def test_choose_for_session_unsupported_selection_refused(stack, harnesses, credentials):
     from ordessa_server.wire.errors import WireError
 
@@ -421,12 +439,14 @@ class ModelProviderPluginShim:
     """Activates the real plugin against the fixture stack without a host,
     exposing the handler table directly (the same shape the host would bind)."""
 
-    def __init__(self, harnesses, harness_config_port=None, reference_port=None):
+    def __init__(self, harnesses, harness_config_port=None, reference_port=None,
+                 turn_application_port=None):
         from ordessa_model_provider.plugin import ModelProviderPlugin
 
         self._plugin = ModelProviderPlugin(
             harnesses=harnesses, harness_config_port=harness_config_port,
-            reference_port=reference_port)
+            reference_port=reference_port,
+            turn_application_port=turn_application_port)
         self.catalog = None
 
     def activate_locally(self, stack, credentials):

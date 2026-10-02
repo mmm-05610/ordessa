@@ -19,7 +19,9 @@ export function nativeProfileBridge(agent, brand, invalidParams) {
         && exact(input.provider, ['providerId', 'authentication'])
         && input.provider.providerId === 'openai' && input.provider.authentication === 'managed-account')
       return structuredClone(input)
-    if (!exact(input, ['operationId', 'provider', 'model']) || !text(input.operationId, 128)
+    const keys = ['operationId', 'provider', 'model']
+    if (brand === 'codex' && Object.hasOwn(input ?? {}, 'modelCapabilities')) keys.push('modelCapabilities')
+    if (!exact(input, keys) || !text(input.operationId, 128)
         || !input.operationId.startsWith('create:') || !text(input.model)
         || (!exact(input.provider, ['providerId', 'apiType', 'baseUrl'])
           && !exact(input.provider, ['providerId', 'apiType', 'baseUrl', 'headers']))
@@ -118,14 +120,26 @@ export function nativeProfileBridge(agent, brand, invalidParams) {
         }
         await step('model', () => agent.setSessionConfigOption({ sessionId: input.sessionId, configId: 'model', value: input.model }))
         for (const item of preserved) {
-          await step('preferences', () => agent.setSessionConfigOption({ sessionId: input.sessionId, configId: item.id, value: item.currentValue }))
-          // A restarted process answers with a native default when it silently
-          // ignores the request. Re-offering is not preservation: read the value
-          // back and refuse rather than report a default as the user's choice.
-          const applied = read({ sessionId: input.sessionId }).configOptions
-            .find(option => option.id === item.id)
-          if (!applied || applied.currentValue !== item.currentValue)
-            throw stepFailure('preferences', `preserved preference ${item.id} readback differs`)
+          try {
+            await step('preferences', () => agent.setSessionConfigOption({ sessionId: input.sessionId, configId: item.id, value: item.currentValue }))
+            // Re-offering is not preservation: read the independently live value
+            // back, never report a restarted default as the user's choice.
+            const applied = read({ sessionId: input.sessionId }).configOptions
+              .find(option => option.id === item.id)
+            const native = agent.sessions.get(input.sessionId)
+            // Upstream hides the fast selector when the selected model has no
+            // fast tier. Off remains off only with explicit native proof; an
+            // enabled or unknown state cannot pass this exception.
+            const disabledFast = !applied && item.id === 'fast-mode'
+              && (item.currentValue === 'off' || item.currentValue === false)
+              && native?.currentModelSupportsFast === false && native?.fastModeEnabled === false
+            if (!disabledFast && (!applied || applied.currentValue !== item.currentValue))
+              throw stepFailure('preferences', `preserved preference ${item.id} readback differs`)
+          } catch (failure) {
+            if (['mode', 'collaboration_mode', 'reasoning_effort', 'fast-mode'].includes(item.id))
+              failure.restorationPreference = item.id
+            throw failure
+          }
         }
         const session = agent.sessions.get(input.sessionId)
         const route = agent.codexAcpClient?.codexClient?.ordessaThreadRoutes?.get(input.sessionId)
@@ -170,6 +184,11 @@ export function nativeProfileBridge(agent, brand, invalidParams) {
             } else {
               if (process.env.ORDESSA_CODEX_MANAGED_ACCOUNT_DIR)
                 throw invalidParams('API provider requires a separate private instance')
+              if (Object.hasOwn(input, 'modelCapabilities')) {
+                if (typeof agent.ordessaPrepareCodexCatalog !== 'function')
+                  throw invalidParams('Native model catalogue launch unavailable')
+                await agent.ordessaPrepareCodexCatalog(input)
+              }
               await agent.setProvider(input.provider)
             }
           } else await agent.unstable_setProvider(input.provider)

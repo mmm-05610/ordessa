@@ -14,14 +14,15 @@ import type { ProviderConfigView } from '../../contracts/index'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 const cleanup: (() => void | Promise<void>)[] = []
-afterEach(async () => { for (const fn of cleanup.splice(0).reverse()) await fn(); vi.restoreAllMocks() })
+afterEach(async () => { for (const fn of cleanup.splice(0).reverse()) await fn(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
 
 async function mount(element: React.ReactNode) {
   const container = document.createElement('div'); document.body.append(container)
   const root = createRoot(container)
   cleanup.push(async () => { await act(async () => root.unmount()); container.remove() })
   await act(async () => root.render(element))
-  return container
+  // The menu is deliberately portalled outside the composer clipping boundary.
+  return document.body
 }
 
 const CONFIGS: ProviderConfigView[] = [
@@ -78,11 +79,34 @@ async function openSelector(props: Partial<Parameters<typeof ModelSelector>[0]> 
 const READY_SOURCE: SessionEligibilitySource = { eligibility: () => 'ready' }
 
 describe('composer.footer model selector (R2 gate)', () => {
+  it('rechecks live eligibility when reopening the same session menu', async () => {
+    let ready = false
+    const inspectChoice = vi.fn(async () => ({
+      eligibility: ready ? 'ready' as const : 'unknown' as const,
+      reason: ready ? undefined : 'unknown',
+    }))
+    const onQueue = vi.fn()
+    const container = await mount(<ModelSelector service={fakeService()}
+      location={SESSION_LOCATION} inspectChoice={inspectChoice} onQueue={onQueue} />)
+    const trigger = container.querySelector<HTMLElement>('[data-testid="model-selector-trigger"]')!
+    await act(async () => trigger.click())
+    expect(container.querySelector('[role="option"]')!.getAttribute('aria-disabled')).toBe('true')
+    await act(async () => trigger.click())
+    const calls = inspectChoice.mock.calls.length
+    ready = true
+    await act(async () => trigger.click())
+    expect(inspectChoice.mock.calls.length).toBeGreaterThan(calls)
+    const option = container.querySelector<HTMLElement>('[data-testid="model-option-provider-1-gpt-5.4"]')!
+    expect(option.getAttribute('aria-disabled')).toBe('false')
+    await act(async () => option.click())
+    expect(onQueue).toHaveBeenCalledWith({ harnessId: 'codex', providerConfigId: 'provider-1', modelId: 'gpt-5.4', configVersion: 1 })
+  })
+
   it('lists only this harness\'s configs, grouped Provider › Model, no harness switcher', async () => {
     const { container } = await openSelector({ eligibilitySource: READY_SOURCE })
     const list = container.querySelector('[data-testid="model-selector-list"]')!
     expect(list.textContent).toContain('已登录账号')
-    expect(list.textContent).toContain('gpt-5.4')
+    expect(list.textContent).toContain('GPT')
     expect(list.textContent).not.toContain('claude-x')       // other harness never listed
     expect(list.textContent).not.toContain('Harness 选择')    // no switcher, only the two levels
     expect(container.querySelectorAll('[role="option"]')).toHaveLength(2)
@@ -127,9 +151,78 @@ describe('composer.footer model selector (R2 gate)', () => {
     const queuedChoice = { harnessId: 'codex', providerConfigId: 'provider-1', modelId: 'o4-mini' }
     const { container } = await openSelector({ eligibilitySource: READY_SOURCE, queued: queuedChoice })
     expect(container.querySelector('[data-testid="model-selector-trigger"]')!.textContent)
-      .toContain('provider-1 › o4-mini')
+      .toContain('已登录账号 › Mini')
     expect(container.querySelector('[data-testid="model-selector-trigger"]')!.textContent)
       .toContain('下轮使用')
+  })
+
+  it('portals an anchored, viewport-bounded menu and restores focus on Escape', async () => {
+    const { container } = await openSelector({ eligibilitySource: READY_SOURCE })
+    const list = container.querySelector<HTMLElement>('[data-testid="model-selector-list"]')!
+    expect(list.parentElement).toBe(document.body)
+    expect(list.style.position).toBe('fixed')
+    expect(Number.parseFloat(list.style.width)).toBeLessThanOrEqual(window.innerWidth - 16)
+    const options = Array.from(list.querySelectorAll<HTMLElement>('[role="option"]'))
+    expect(document.activeElement).toBe(options[0])
+    await act(async () => options[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })))
+    expect(document.activeElement).toBe(options[1])
+    await act(async () => options[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
+    expect(container.querySelector('[data-testid="model-selector-list"]')).toBeNull()
+    const trigger = container.querySelector('[data-testid="model-selector-trigger"]')!
+    expect(document.activeElement).toBe(trigger)
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('closes on outside interaction without selecting a model', async () => {
+    const { container, queued } = await openSelector({ eligibilitySource: READY_SOURCE })
+    await act(async () => document.body.dispatchEvent(new Event('pointerdown', { bubbles: true })))
+    expect(container.querySelector('[data-testid="model-selector-list"]')).toBeNull()
+    expect(queued.value).toBeNull()
+  })
+
+  it('remeasures wrapping changes locally without resetting keyboard focus', async () => {
+    const observers: { callback: () => void; disconnect: ReturnType<typeof vi.fn> }[] = []
+    vi.stubGlobal('ResizeObserver', class {
+      disconnect = vi.fn()
+      constructor(callback: () => void) { observers.push({ callback, disconnect: this.disconnect }) }
+      observe() {}
+    })
+    const container = await mount(<ModelSelector service={fakeService()} location={SESSION_LOCATION} eligibilitySource={READY_SOURCE} />)
+    const trigger = container.querySelector<HTMLButtonElement>('[data-testid="model-selector-trigger"]')!
+    vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({ top: 650, bottom: 678, left: 100, right: 240, width: 140, height: 28 } as DOMRect)
+    await act(async () => trigger.click())
+    const list = container.querySelector<HTMLElement>('[data-testid="model-selector-list"]')!
+    const option = list.querySelector<HTMLElement>('[role="option"]')!
+    let height = 160
+    Object.defineProperty(list, 'scrollHeight', { configurable: true, get: () => height })
+    await act(async () => observers[0].callback())
+    expect(Number.parseFloat(list.style.top)).toBe(482)
+    height = 280
+    await act(async () => observers[0].callback())
+    expect(Number.parseFloat(list.style.top)).toBe(362)
+    expect(document.activeElement).toBe(option)
+    await act(async () => option.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
+    expect(observers[0].disconnect).toHaveBeenCalledOnce()
+  })
+
+  it('closes when a scrolling container moves the anchor outside the viewport', async () => {
+    const { container, queued } = await openSelector({ eligibilitySource: READY_SOURCE })
+    const trigger = container.querySelector<HTMLButtonElement>('[data-testid="model-selector-trigger"]')!
+    vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({ top: -40, bottom: -12, left: 20, right: 100, width: 80, height: 28 } as DOMRect)
+    const focus = vi.spyOn(trigger, 'focus')
+    await act(async () => window.dispatchEvent(new Event('scroll')))
+    expect(container.querySelector('[data-testid="model-selector-list"]')).toBeNull()
+    expect(focus).toHaveBeenCalledWith({ preventScroll: true })
+    expect(queued.value).toBeNull()
+  })
+
+  it('shows a draft explanation instead of perpetual session checking', async () => {
+    const container = await mount(<ModelSelector service={fakeService()} disabled inspectChoice={vi.fn()}
+      location={{ kind: 'draft', target: { serverInstanceId: 'srv-1', harnessId: 'codex', projectId: 'p' } }} />)
+    await act(async () => container.querySelector<HTMLElement>('[data-testid="model-selector-trigger"]')!.click())
+    expect(container.querySelector('[data-testid="model-selector-list"]')!.textContent).toContain('创建会话后才能核实模型')
+    expect(container.querySelector('[data-testid="model-selector-list"]')!.textContent).not.toContain('正在核实')
+    expect(container.querySelector('[role="option"]')!.getAttribute('aria-disabled')).toBe('true')
   })
 })
 

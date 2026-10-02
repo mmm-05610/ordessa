@@ -82,7 +82,13 @@ test("E1: connecting uses the explicit entry and the directory the caller named,
     assert.equal(execution.cwd, project, "the adapter runs in the directory the caller named")
     assert.equal(execution.home, home, "the adapter keeps the environment the user already configured")
     assert.deepEqual(execution.homeEntries, [], "no native config may be manufactured for it")
-    assert.deepEqual(execution.npmConfigKeys, [], "no installer context may be injected")
+    // The fixture deliberately inherits the caller's environment. `npm test`
+    // already supplies npm_config_* metadata; that is not evidence that the
+    // entry invoked an installer. Require the exact inherited key set instead:
+    // an extra installer/npx context still fails, and a direct Node run still
+    // expects the empty set. Do not sanitize the child to manufacture a pass.
+    const inheritedNpmKeys = Object.keys(process.env).filter(key => /^npm_config/i.test(key)).sort()
+    assert.deepEqual(execution.npmConfigKeys, inheritedNpmKeys, "no additional installer context may be injected")
     assert.equal(execution.nodeOptions, null, "the launch must not rewrite how the Agent process runs")
     assert.equal(execution.isolationMarker, null, "native access must not require the sandbox marker")
     assert.deepEqual(await readdir(home), [], "the Agent home is still empty after a whole connection")

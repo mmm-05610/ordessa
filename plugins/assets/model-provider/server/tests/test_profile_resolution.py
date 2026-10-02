@@ -12,6 +12,23 @@ from ordessa_server.errors import ServerError
 FACTS = {"provider_in_instance": False, "credential_changed": False}
 
 
+def test_selected_model_capabilities_reach_harness_without_native_fields(catalog):
+    capabilities = {"toolCall": True, "reasoning": True,
+                    "reasoningOptions": [{"type": "effort", "values": ["low", "medium", "high"]}],
+                    "modalities": {"input": ["text"]}, "limits": {"context": 64000}}
+    choice = saved(catalog, models=[{"modelId": "m1", "availability": "available",
+                                    "capabilities": capabilities}])
+    result = resolve(catalog, choice)
+    assert result.payload["modelCapabilities"] == capabilities
+    result.payload["modelCapabilities"]["reasoningOptions"][0]["values"].clear()
+    assert resolve(catalog, choice).payload["modelCapabilities"] == capabilities
+    assert "model_catalog_json" not in repr(result.payload)
+
+
+def test_missing_model_capabilities_remain_absent(catalog):
+    assert "modelCapabilities" not in resolve(catalog, saved(catalog)).payload
+
+
 def saved(catalog, **overrides):
     body = wire_body(configuration=[], protocols=["openai-chat"],
                      endpoints={"openai-chat": "http://127.0.0.1:8765/v1"})

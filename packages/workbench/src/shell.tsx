@@ -25,12 +25,52 @@ function RegionIcon({ region }: { region: Region }) {
     {region === 'left' ? <path d="M7 3v14" /> : region === 'right' ? <path d="M13 3v14" /> : region === 'bottom' ? <path d="M2 12h16" /> : <path d="M2 8h16" />}</svg>
 }
 
+/** Layout is an occasional action, not permanent application navigation.
+ * Keep its controls mounted so existing view ownership and handlers remain
+ * unchanged; a viewport-positioned surface avoids clipping in region headers. */
+function LayoutMenu({ children }: { children: ReactNode }) {
+  const [open, setOpen] = useState(false)
+  const [position, setPosition] = useState({ left: 8, top: 44 })
+  const root = useRef<HTMLDivElement>(null), trigger = useRef<HTMLButtonElement>(null), panel = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    if (!open) return
+    const place = () => {
+      if (!trigger.current || !panel.current) return
+      const rect = trigger.current.getBoundingClientRect(), size = panel.current.getBoundingClientRect()
+      const next = placePopover(rect, { width: window.innerWidth, height: window.innerHeight }, size)
+      setPosition(current => current.left === next.left && current.top === next.top ? current : next)
+    }
+    place()
+    panel.current?.querySelector<HTMLElement>('select,button:not(:disabled)')?.focus()
+    const outside = (event: PointerEvent) => {
+      if (event.target instanceof Node && !root.current?.contains(event.target)) setOpen(false)
+    }
+    window.addEventListener('resize', place)
+    document.addEventListener('pointerdown', outside)
+    return () => { window.removeEventListener('resize', place); document.removeEventListener('pointerdown', outside) }
+  }, [open])
+  return <div ref={root} className="wb-layout-menu" onKeyDown={event => {
+    if (event.key !== 'Escape' || !open) return
+    event.preventDefault(); event.stopPropagation(); setOpen(false); trigger.current?.focus()
+  }} onBlur={event => {
+    if (event.relatedTarget instanceof Node && !root.current?.contains(event.relatedTarget)) setOpen(false)
+  }}>
+    <button ref={trigger} aria-label="布局与视图" title="布局与视图" aria-haspopup="dialog" aria-expanded={open}
+      onClick={() => setOpen(value => !value)}><span aria-hidden="true">⋯</span></button>
+    <div ref={panel} hidden={!open} className="wb-layout-menu-panel" role="dialog" aria-label="布局与视图选项"
+      style={{ position: 'fixed', ...position }}>
+      <strong className="wb-layout-menu-heading">布局与视图</strong>
+      {children}
+    </div>
+  </div>
+}
+
 // Modal surfaces wrap Tab at their edges: focus cycles inside the surface and
 // never reaches the inert background behind the overlay.
 const trapTab = (surface: RefObject<HTMLElement | null>) => (event: { key: string; shiftKey: boolean; preventDefault(): void }) => {
   if (event.key !== 'Tab' || !surface.current) return
   const node = surface.current
-  const items = [...node.querySelectorAll<HTMLElement>('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+  const items = [...node.querySelectorAll<HTMLElement>('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')].filter(item => !item.closest('[hidden], [inert]'))
   if (!items.length) return
   const edge = event.shiftKey ? items[0] : items[items.length - 1], wrap = event.shiftKey ? items[items.length - 1] : items[0]
   if (document.activeElement !== edge && node.contains(document.activeElement)) return
@@ -99,6 +139,9 @@ function SettingsOverlay({ entry, sections, inert, close, workspace }: {
   close(): void; workspace: RefObject<HTMLDivElement | null>
 }) {
   const surface = useRef<HTMLDivElement>(null)
+  const [selectedSection, setSelectedSection] = useState(entry.sectionId ?? '')
+  const activeSection = sections.some(section => section.id === selectedSection) ? selectedSection : ordered(sections)[0]?.id
+  useEffect(() => { if (entry.sectionId) setSelectedSection(entry.sectionId) }, [entry.sectionId])
   useOverlayFocus(surface, workspace)
   useLayoutEffect(() => {
     if (!entry.sectionId || !surface.current) return
@@ -108,14 +151,24 @@ function SettingsOverlay({ entry, sections, inert, close, workspace }: {
   return <div className="wb-overlay wb-overlay-page" data-overlay-id={SETTINGS_OVERLAY_ID} data-presentation="page" inert={inert}>
     <div ref={surface} tabIndex={-1} className="wb-overlay-surface wb-settings" role="dialog" aria-label="设置" aria-modal="true" onKeyDown={trapTab(surface)}>
       <header className="wb-overlay-bar"><strong>设置</strong><button aria-label="关闭设置" onClick={close}>×</button></header>
+      <div className="wb-settings-body">
+        <nav className="wb-settings-nav" aria-label="设置分区">
+          <p className="wb-settings-nav-label">工作区配置</p>
+          {ordered(sections).map(section => <button key={section.id} aria-current={section.id === activeSection ? 'page' : undefined}
+            onClick={() => setSelectedSection(section.id)}>
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="3" /><path d="M6 7h8M6 10h8M6 13h5" /></svg>
+            <span>{section.title}</span>
+          </button>)}
+        </nav>
       <div className="wb-overlay-content">
         {ordered(sections).map(section => {
           const Content = section.component
-          return <section key={section.id} className="wb-settings-section" data-section-id={section.id} data-active-section={entry.sectionId === section.id || undefined}>
-            <h2>{section.title}</h2><Boundary><Content /></Boundary>
+          return <section key={section.id} hidden={section.id !== activeSection} className="wb-settings-section" data-section-id={section.id} data-active-section={section.id === activeSection || undefined}>
+            <h2>{section.title}</h2><div className="wb-settings-section-content"><Boundary><Content /></Boundary></div>
           </section>
         })}
         {!sections.length && <p className="wb-settings-empty">没有已注册的设置分区。</p>}
+      </div>
       </div>
     </div>
   </div>
@@ -250,17 +303,29 @@ export function WorkbenchShell({ model, commands }: { model: WorkbenchModel; com
   const tabDragEnd = () => { dragSession.current = null; setDragged(null) }
   const region = (name: Exclude<Region, 'left'>) => {
     const list = entries(name), active = activeOf(name)
+    // Module navigation has one home: the sidebar. Unclaimed tool views keep
+    // normal multi-view tabs; all views remain selectable in the layout menu.
+    const tabList = name === 'main' ? list.filter(view => !modules.some(module => module.homeViewId === view.id)) : list
+    const activeModule = name === 'main' && modules.some(module => module.homeViewId === active?.id)
     // A tab strip is worth showing only for two or more views; a single view
     // renders bare and keeps its move/close controls in wb-region-actions.
     return <section className={`wb-region wb-${name}`} data-region={name} data-active-view={list.length === 1 ? active?.title : undefined} aria-label={labels[name]} inert={name !== 'main' && (!has[name] || !!layout.collapsed[name])}>
-      <header>{list.length >= 2 && <ViewTabs name={name} list={list} active={active} open={id => model.service.open(id)} onDragStart={tabDragStart} onDragEnd={tabDragEnd} />}
+      <header>{tabList.length >= 2 && <ViewTabs name={name} list={tabList} active={active} open={id => model.service.open(id)} onDragStart={tabDragStart} onDragEnd={tabDragEnd} />}
         {!list.length && <span className="wb-region-label">{labels[name]}</span>}
-        {name === 'main' && list.length === 1 && active && <strong className="wb-region-title">{active.title}</strong>}
+        {name === 'main' && tabList.length < 2 && active && !activeModule && <strong className="wb-region-title">{active.title}</strong>}
         {name === 'main' && has.left && !!layout.collapsed.left && <SidebarRestoreButton expand={() => model.collapse('left', false)} />}
-        <RegionActions name={name} active={active} showCollapse={name !== 'main'} move={move} close={id => model.service.close(id)} collapse={region => model.collapse(region, true)} />
+        {name !== 'main' && <RegionActions name={name} active={active} showCollapse move={move} close={id => model.service.close(id)} collapse={region => model.collapse(region, true)} />}
         {name === 'main' && <><div className="wb-actions">{slot('toolbar')}</div><div className="wb-layout-actions">
-          {auxiliary.map(r => <button key={r} disabled={!has[r]} aria-label={`${layout.collapsed[r] ? '展开' : '收起'}${labels[r]}`} title={`${labels[r]}${has[r] ? '' : '（无视图）'}`} aria-pressed={has[r] && !layout.collapsed[r]} onClick={() => model.collapse(r, !layout.collapsed[r])}><RegionIcon region={r} /></button>)}
-          <button title="恢复默认位置和尺寸" aria-label="重置布局" onClick={reset}>↺</button>
+          <LayoutMenu>
+            {list.length > 0 && <label className="wb-layout-view-picker">当前视图<select aria-label="选择主区视图" value={active?.id ?? ''} onChange={event => {
+              const module = modules.find(item => item.homeViewId === event.target.value)
+              if (module) activate(module.id); else model.service.open(event.target.value)
+            }}><option value="" disabled>选择视图</option>{list.map(view => <option key={view.id} value={view.id}>{view.title}</option>)}</select></label>}
+            <RegionActions name={name} active={active} showCollapse={false} move={move} close={id => model.service.close(id)} collapse={region => model.collapse(region, true)} />
+            <div className="wb-layout-menu-divider" />
+            {auxiliary.map(r => <button key={r} disabled={!has[r]} aria-label={`${layout.collapsed[r] ? '展开' : '收起'}${labels[r]}`} title={`${labels[r]}${has[r] ? '' : '（无视图）'}`} aria-pressed={has[r] && !layout.collapsed[r]} onClick={() => model.collapse(r, !layout.collapsed[r])}><RegionIcon region={r} /><span>{`${layout.collapsed[r] ? '展开' : '收起'}${labels[r]}`}</span></button>)}
+            <button title="恢复默认位置和尺寸" aria-label="重置布局" onClick={reset}>重置布局</button>
+          </LayoutMenu>
         </div></>}
       </header>
       <div className="wb-content" ref={node => { hosts.current[name] = node }} />

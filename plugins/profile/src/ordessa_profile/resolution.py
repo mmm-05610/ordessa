@@ -87,16 +87,64 @@ def resolve_session_items(
     conn: sqlite3.Connection, *, session_id: str, profile_id: str,
     harness_id: str, config_revision: int,
     provider_lookup: Callable[[str], Any | None],
+    base_items: list[dict[str, Any]] | None = None,
 ) -> Resolution:
-    """Latest profile revision + this session's overlays, per item (D-001)."""
-    resolution = resolve_profile_items(
-        conn, profile_id=profile_id, harness_id=harness_id,
-        config_revision=config_revision, provider_lookup=provider_lookup,
-    )
+    """Effective configuration of one session.
+
+    Three layers, highest last:
+
+    1. the retained **base** — the last effective configuration this session
+       actually recorded.  Items the Profile does not declare keep their
+       base value; they are never invented from the latest Profile revision
+       and never silently dropped (FR-02/FR-03, appendix §4).
+    2. the Profile's **frozen revision** items (source ``profile``).
+    3. the session's **overlays** (source ``session_only``).
+
+    ``base_items`` omitted means "no confirmed base yet", which resolves to
+    the Profile revision alone — the pre-application state, never a guess.
+    """
+    resolution = Resolution(profile_id=profile_id, revision=config_revision)
+    merged: dict[tuple[str, str], dict[str, Any]] = {}
+    for item in base_items or ():
+        key = (item["facet_id"], item["item_id"])
+        provider = provider_lookup(item["facet_id"])
+        reason = _provider_state(provider, harness_id, quarantined=False)
+        if reason is not None:
+            resolution.unavailable.append({
+                "facet_id": item["facet_id"], "item_id": item["item_id"],
+                "reason": reason, "source": "retained_base",
+            })
+            continue
+        merged[key] = {
+            "facet_id": item["facet_id"], "item_id": item["item_id"],
+            "value": item["value"], "source": "retained_base",
+            "revision": config_revision,
+        }
+    for row in repo.facet_values_at(conn, profile_id, config_revision):
+        provider = provider_lookup(row["facet_id"])
+        reason = _provider_state(provider, harness_id, bool(row["quarantined"]))
+        if reason is not None:
+            resolution.unavailable.append({
+                "facet_id": row["facet_id"], "item_id": row["item_id"],
+                "reason": reason,
+            })
+            continue
+        key = (row["facet_id"], row["item_id"])
+        resolution.unavailable = [
+            u for u in resolution.unavailable
+            if (u["facet_id"], u["item_id"]) != key
+        ]
+        merged[key] = {
+            "facet_id": row["facet_id"], "item_id": row["item_id"],
+            "value": _loads(row["value_json"]), "source": "profile",
+            "revision": config_revision,
+        }
+    resolution.items = [merged[key] for key in sorted(merged)]
     return apply_overlays(
         conn, session_id=session_id, harness_id=harness_id,
         resolution=resolution, provider_lookup=provider_lookup,
     )
+
 
 
 def overlay_lookup(conn: sqlite3.Connection, session_id: str) -> dict[tuple[str, str], dict[str, Any]]:
@@ -111,7 +159,8 @@ def apply_overlays(
     resolution: Resolution, provider_lookup: Callable[[str], Any | None],
 ) -> Resolution:
     """Overlay application is strictly per (facet_id, item_id): one overlaid
-    item never masks its facet siblings (FR-017, edge case 4)."""
+    item never masks its facet siblings (FR-017, edge case 4), and it wins
+    over both the Profile item and the retained base it replaces."""
     for (facet_id, item_id), row in overlay_lookup(conn, session_id).items():
         provider = provider_lookup(facet_id)
         reason = _provider_state(provider, harness_id, quarantined=False)

@@ -81,7 +81,7 @@ describe('the declared plugin entry is the real Chat wiring', () => {
     const resources = new OwnedResources()
     cleanup.push(() => resources.dispose())
     const ui = uiComponents()
-    const { port } = wirePort({ outcome: 'pending-next-turn', sequence: 4 })
+    const { port } = wirePort({ outcome: 'pending-next-turn', sequence: 4, intentRoute: 'independent' })
     createPlugin().activate(activationContext(resources), chat, ui, port as never, service([config()]))
 
     const [view] = chat.contributionsBySlot('composer.toolbar').getSnapshot()
@@ -107,7 +107,7 @@ describe('the declared plugin entry is the real Chat wiring', () => {
     expect(container.querySelector('[data-testid="model-selector"]')).not.toBeNull()
 
     await act(async () => { container.querySelector<HTMLElement>('[data-testid="model-selector-trigger"]')!.click() })
-    expect(container.querySelector('[data-testid="model-option-p1-gpt-5.4"]')).not.toBeNull()
+    expect(document.body.querySelector('[data-testid="model-option-p1-gpt-5.4"]')).not.toBeNull()
   })
 
   it('a queued choice travels over the declared wire port, through the frozen method', async () => {
@@ -115,7 +115,7 @@ describe('the declared plugin entry is the real Chat wiring', () => {
     const resources = new OwnedResources()
     cleanup.push(() => resources.dispose())
     const ui = uiComponents()
-    const { port, calls } = wirePort({ outcome: 'pending-next-turn', sequence: 4 })
+    const { port, calls } = wirePort({ outcome: 'pending-next-turn', sequence: 4, intentRoute: 'independent' })
     createPlugin().activate(activationContext(resources), chat, ui, port as never, service([config()]))
     const [view] = chat.contributionsBySlot('composer.toolbar').getSnapshot()
     const projection = view.project?.({
@@ -130,13 +130,13 @@ describe('the declared plugin entry is the real Chat wiring', () => {
     const container = await mount(
       <ComponentOutlet binding={binding} value={(projection as { props: unknown }).props} missing={null} />)
     await act(async () => { container.querySelector<HTMLElement>('[data-testid="model-selector-trigger"]')!.click() })
-    await act(async () => { container.querySelector<HTMLElement>('[data-testid="model-option-p1-gpt-5.4"]')!.click() })
+    await act(async () => { document.body.querySelector<HTMLElement>('[data-testid="model-option-p1-gpt-5.4"]')!.click() })
     await act(async () => {})
 
     // The production selector answers `unknown` for eligibility (the ACP
     // seam is not wired), so nothing is queued — and nothing is invented.
     expect(calls).toEqual([])
-    const options = container.querySelectorAll('[role="option"]')
+    const options = document.body.querySelectorAll('[role="option"]')
     expect(options).toHaveLength(1)
   })
 
@@ -198,12 +198,12 @@ describe('model load failure is an explicit, retryable state (D04)', () => {
     const svc = service([], () => { attempt += 1; return Promise.reject(new Error('backend said no')) })
     const container = await openSelector(svc)
     expect(attempt).toBe(1)
-    const error = container.querySelector('[data-testid="model-load-error"]')!
+    const error = document.body.querySelector('[data-testid="model-load-error"]')!
     expect(error.textContent).toContain('backend said no')
-    expect(container.querySelector('[data-testid="no-selectable"]')).toBeNull()
-    expect(container.querySelectorAll('[role="option"]')).toHaveLength(0)
+    expect(document.body.querySelector('[data-testid="no-selectable"]')).toBeNull()
+    expect(document.body.querySelectorAll('[role="option"]')).toHaveLength(0)
 
-    await act(async () => { container.querySelector<HTMLElement>('[data-testid="model-load-retry"]')!.click() })
+    await act(async () => { document.body.querySelector<HTMLElement>('[data-testid="model-load-retry"]')!.click() })
     await act(async () => {})
     expect(attempt).toBe(2)
   })
@@ -216,20 +216,20 @@ describe('model load failure is an explicit, retryable state (D04)', () => {
       return [config()]
     })
     const container = await openSelector(svc)
-    await act(async () => { container.querySelector<HTMLElement>('[data-testid="model-load-retry"]')!.click() })
+    await act(async () => { document.body.querySelector<HTMLElement>('[data-testid="model-load-retry"]')!.click() })
     await act(async () => {})
-    expect(container.querySelector('[data-testid="model-load-error"]')).toBeNull()
-    expect(container.querySelector('[data-testid="model-option-p1-gpt-5.4"]')).not.toBeNull()
+    expect(document.body.querySelector('[data-testid="model-load-error"]')).toBeNull()
+    expect(document.body.querySelector('[data-testid="model-option-p1-gpt-5.4"]')).not.toBeNull()
   })
 
   it('a still-failing retry stays failed and is not silently swallowed', async () => {
     let attempt = 0
     const svc = service([], () => { attempt += 1; return Promise.reject(new Error('still down')) })
     const container = await openSelector(svc)
-    await act(async () => { container.querySelector<HTMLElement>('[data-testid="model-load-retry"]')!.click() })
+    await act(async () => { document.body.querySelector<HTMLElement>('[data-testid="model-load-retry"]')!.click() })
     await act(async () => {})
     expect(attempt).toBe(2)
-    expect(container.querySelector('[data-testid="model-load-error"]')!.textContent).toContain('still down')
+    expect(document.body.querySelector('[data-testid="model-load-error"]')!.textContent).toContain('still down')
   })
 
   it('a model the backend reports unavailable is listed but not selectable, with its reason', async () => {
@@ -238,10 +238,10 @@ describe('model load failure is an explicit, retryable state (D04)', () => {
       { modelId: 'gone', displayName: 'Gone', availability: 'unavailable', unavailableReason: '供应商已下架该模型' },
     ] })])
     const container = await openSelector(svc)
-    const option = container.querySelector('[data-testid="model-option-p1-gone"]')!
+    const option = document.body.querySelector('[data-testid="model-option-p1-gone"]')!
     expect(option.getAttribute('aria-disabled')).toBe('true')
     expect(option.textContent).toContain('供应商已下架该模型')
     // Readiness from the eligibility source alone must not re-enable it.
-    expect(container.querySelector('[data-testid="model-option-p1-gpt-5.4"]')!.getAttribute('aria-disabled')).toBe('false')
+    expect(document.body.querySelector('[data-testid="model-option-p1-gpt-5.4"]')!.getAttribute('aria-disabled')).toBe('false')
   })
 })

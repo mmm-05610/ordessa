@@ -42,7 +42,14 @@ export function SessionBrowser({ service }: { service: AgentSessions }) {
       {projectCapable && <button className="agent-add-project" disabled={!agent || agent.connection.status !== 'connected'}
         onClick={addProject}><span aria-hidden="true">＋</span> Add project</button>}
     </div>
-    {state.draft?.active && <div className="agent-draft">
+    {state.draft?.active && <details className="agent-draft">
+      <summary className="agent-draft-summary" title="修改当前草稿的项目，不会创建会话">
+        <span aria-hidden="true">▱</span>
+        <span>{state.draft.workspaceId
+          ? workspaceLabel(projects.find(project => project.id === state.draft?.workspaceId)?.normalizedPath ?? state.draft.workspaceId)
+          : '选择项目'}</span>
+        <span className="agent-draft-edit">修改</span>
+      </summary>
       <div className="agent-actions"><button disabled={!agent || agent.connection.status !== 'connected'}
         onClick={() => perform(() => Promise.resolve(service.refreshWorkspaces?.()))}>Refresh projects</button>
         <button onClick={() => service.discardDraft?.()}>Discard draft</button></div>
@@ -53,7 +60,7 @@ export function SessionBrowser({ service }: { service: AgentSessions }) {
         onClick={() => perform(async () => { await service.selectWorkspace?.(project.id) })}>
         <span>{project.normalizedPath}</span></button>)}</div>}
       {state.draft.blockReason && <p className="agent-notice">Send is blocked until a valid project is selected.</p>}
-    </div>}
+    </details>}
     {state.selectedConnectionId && <div className="agent-actions agent-refresh"><button disabled={!agent || agent.connection.status !== 'connected'}
       onClick={() => perform(() => service.refreshSessions())}>Refresh</button></div>}
     {agent?.sessionList === 'loading' && <p role="status" className="agent-empty">Loading sessions…</p>}

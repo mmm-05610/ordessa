@@ -40,6 +40,21 @@ const pendingInteraction: AgentInteraction = {
 }
 
 describe('approval panel (C02/C03)', () => {
+  it('submits only once for two synchronous clicks before React commits', async () => {
+    let finish!: () => void
+    const pending = new Promise<void>(resolve => { finish = resolve })
+    const respond = vi.fn(() => pending)
+    const container = await mount(<ApprovalPanel interactions={[pendingInteraction]} respond={respond} />)
+    await act(async () => {
+      const button = container.querySelector('[data-action="confirm"]') as HTMLButtonElement
+      button.click()
+      button.click()
+    })
+    expect(respond).toHaveBeenCalledTimes(1)
+    await act(async () => { finish(); await pending })
+    expect((container.querySelector('[data-action="confirm"]') as HTMLButtonElement).disabled).toBe(false)
+  })
+
   it('one unique operation surface per pending item; confirm offers explicit allow/deny from the service kind', async () => {
     const answered: { id: string; answer: unknown }[] = []
     const container = await mount(<ApprovalPanel interactions={[pendingInteraction]}
@@ -133,6 +148,7 @@ describe('plugin entry (CHAT-V05/V08 seam)', () => {
     expect(plugin.requires.at(-1)).toBe(UiComponentsToken)
     const provided = await plugin.activate({ resources: scope } as never, workbench.service, facade, createUiComponentsService([]).uiComponents)
     expect(provided).toBeTruthy()
+    expect(workbench.getSelection().main).toBe('chat.page')
     // The chat-owned contribution is registered and readable in the toolbar slot.
     const slot = provided.contributionsBySlot('composer.toolbar')
     const views = slot.getSnapshot()

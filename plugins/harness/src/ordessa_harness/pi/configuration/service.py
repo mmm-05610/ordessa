@@ -7,11 +7,11 @@ from ordessa_harness_api import Installation
 from ...application.action_execution import ActionGrant
 from ...application.configuration_service import ConfigurationApplicationService
 from ...application.operation_journal import OperationJournal
+from ...verifier_deployment import installed_verifier
 from .runtime import PiLiveModelRuntime
 
 
 def verified_installation(artifact_base):
-    policy = Path(__file__).resolve().parents[4] / "runtime/native-artifact-policy.mjs"
     script = """import fs from 'node:fs'; import path from 'node:path';
       import {pathToFileURL} from 'node:url';
       const {verifyInstalledArtifact}=await import(pathToFileURL(process.argv[1]).href);
@@ -19,9 +19,10 @@ def verified_installation(artifact_base):
         packageName:'@automatalabs/pi-acp',version:'0.5.0',variant:'pi-profile'});
       const m=JSON.parse(fs.readFileSync(path.join(process.argv[2],'pi-profile-runtime.manifest.json'),'utf8'));
       console.log(JSON.stringify({digest:m.treeDigest}));"""
-    result = subprocess.run(["/usr/bin/node", "--input-type=module", "-e", script,
-                             str(policy), str(artifact_base)], capture_output=True, text=True,
-                            timeout=30, check=True)
+    with installed_verifier() as (node, policy):
+        result = subprocess.run([node, "--input-type=module", "-e", script,
+                                 str(policy), str(artifact_base)], capture_output=True, text=True,
+                                timeout=30, check=True)
     observed = json.loads(result.stdout)
     return Installation("pi", (0, 5, 0), (1, 0, 0), "installed-pi:" + observed["digest"])
 

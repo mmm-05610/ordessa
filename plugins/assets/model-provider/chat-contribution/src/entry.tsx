@@ -23,11 +23,13 @@ import type { PluginContext } from '@ordessa/extension-api'
 import type { ResourceScope } from '@ordessa/extension-api'
 import {
   ChatContributionsToken, type ChatContributionsService,
+  type ChatLocation,
 } from '@extensions/ordessa.chat-api/contract.js'
 import { UiComponentsToken, WirePortToken, type UiComponents } from '@extensions/ordessa.contracts/contract.js'
 import type { WirePort, WireResult } from '@extensions/ordessa.contracts/contract.js'
-import { ModelProviderToken, type ModelProviderService } from '../../contracts/index'
-import { MODEL_SELECTOR_ID, ModelSelectorKey, modelSelectorComponent, registerModelSelector } from './chat-api-entry'
+import { ModelProviderToken, type ModelProviderService } from '@extensions/ordessa.model-provider/contract.js'
+import { AgentSessionsToken, type AgentSessions } from '@extensions/ordessa.agent-contracts/contract.js'
+import { MODEL_SELECTOR_ID, ModelSelectorKey, boundFactOf, modelSelectorComponent, profileRegistrationSeamOf, registerModelSelector } from './chat-api-entry'
 
 /** The provider id this domain registers its component under; the ui-components
  * config binds `ModelSelectorKey` to it the same way it binds the Profile
@@ -45,6 +47,7 @@ function wireInvokeOf(wire: WirePort) {
     if (result.kind === 'Accepted') return result.result
     const error = new Error(`model-provider ${method}: ${result.kind}`) as Error & { details?: { internalCode?: string } }
     error.details = { internalCode: result.reason }
+    Object.assign(error, { outcome: result.kind })
     throw error
   }
 }
@@ -53,15 +56,22 @@ export default function createPlugin() {
   return {
     id: 'ordessa.model-provider-chat',
     autoStart: true,
-    requires: [ChatContributionsToken, UiComponentsToken, WirePortToken, ModelProviderToken],
+    requires: [ChatContributionsToken, UiComponentsToken, WirePortToken, ModelProviderToken, AgentSessionsToken],
     activate(context: PluginContext, chat: ChatContributionsService, ui: UiComponents,
-            wire: WirePort, service: ModelProviderService) {
+            wire: WirePort, service: ModelProviderService, sessions?: AgentSessions) {
       if (wire === undefined || wire === null) {
         throw new Error(
           `${TRANSPORT_MISSING}: no Server wire port was provided for the composer model selector; ` +
           'the host must resolve ordessa.wirePort.v1 - refusing a selector that cannot reach the Server')
       }
-      const wiring = { service, invoke: wireInvokeOf(wire) }
+      const wiring = { service, invoke: wireInvokeOf(wire), sessions,
+        // the bound/unbound dispatch fact (021 appendix §3.3), read through
+        // the Profile glue's published read-side contribution projection
+        boundProbe: (location: ChatLocation) => boundFactOf(chat, location),
+        // the §6c F1.2 click-order seam: this contribution's chooseForSession
+        // click call joins the Profile glue's per-session serializer, so the
+        // two contributions' registrations reach the Server in click order
+        registrationSeam: (location: ChatLocation) => profileRegistrationSeamOf(chat, location) }
       const registration = registerModelSelector(chat, context.resources, wiring)
       const provider = ui.forScope(context.resources).register({
         key: ModelSelectorKey,

@@ -5,36 +5,54 @@ Resuming a historical conversation is a separate, explicit binding operation.
 """
 from dataclasses import dataclass
 from threading import RLock
-from uuid import uuid4
 
 from ordessa_profile.contracts import SessionRef
 from ordessa_profile.errors import ProfileError
 
 
-def bind_native_profile_sessions(core, runtime, *, artifact_root=None, artifact_roots=None):
+def bind_native_profile_sessions(core, runtime, *, profile_roots=None):
     """Product-owned live composition; no client-supplied UID/incarnation.
 
     Called again for each Profile activation round, resolving the current ACP
     registry rather than retaining a stopped round's port. Local is the
     product's existing Profile realm, not a new persistent layout identifier.
-    """
-    from ordessa_harness.server_acp.profile_owner import ProfileSessionOwner
 
-    channels = runtime.plugin_host.provided_port("acp.channels")
-    if channels is None:
-        raise ProfileError("APPLICATION_PORT_ABSENT", "Native channels unavailable", status=409)
-    owners = ProfileSessionOwner(channels, server_id="profile-incarnation-" + uuid4().hex)
-    sessions = ProfileNativeSessions(core=core, channels=channels, owners=owners, realm="local")
-    from ordessa_harness.configuration.model.backend import NativeModelServices, installation_routes
-    roots = installation_routes(artifact_root=artifact_root, artifact_roots=artifact_roots)
-    native_services = NativeModelServices(roots=roots, channels=channels, owners=owners,
-        carrier=runtime.plugin_host, journal_path=runtime.data_root / 'plugins/profile/native-configuration.sqlite')
+    ``profile_roots`` names the harnesses whose native application route THIS
+    Profile assembly owns. The shared authority may verify more installation
+    routes (the independent model route of 021 FR-01), so the Profile config
+    port is scoped by the explicit Profile selection, never by whatever the
+    shared services happen to cover.
+    """
+    configuration = runtime.plugin_host.provided_port('native.configuration')
+    if configuration is None:
+        raise ProfileError("APPLICATION_PORT_ABSENT", "Native configuration authority unavailable", status=409)
+    channels = configuration.channels
+    def handover(ref):
+        choices = runtime.plugin_host.provided_port('model_provider.choices')
+        if choices is None:
+            return
+        def accept(sequence, choice):
+            core.sessions.set_overlay(f"first-binding-model:{ref.session_uid}:{sequence}",
+                session_id=ref.session_uid, facet_id="assets.model-provider", item_id="choice",
+                value={"harnessId": ref.harness_id,
+                       "providerConfigId": choice["providerConfigId"], "modelId": choice["modelId"]})
+        try:
+            choices.handover_for_native(harness_id=ref.harness_id,
+                native_session_id=ref.native_session_key, accept=accept)
+        except Exception as error:
+            raise ProfileError("SWITCH_BLOCKED", "Model intent handover unresolved", status=409) from error
+    sessions = ProfileNativeSessions(core=core, configuration=configuration, realm="local",
+                                    handover=handover)
+    native_services = configuration.services
+    roots = dict(native_services.roots) if profile_roots is None else {
+        harness: native_services.roots[harness]
+        for harness in profile_roots if harness in native_services.roots}
     if roots:
         from .profile_configuration import NativeProfileConfigPort
         from ordessa_harness.configuration.model.bridge import choice_payload_schema
         from ordessa_model_provider.profile_resolution import ProfileModelChoiceResolver
         def service_factory(target):
-            return native_services.create_service(target,
+            return configuration.create_service(target,
                 credential_binding=credential_binding)
         def credential_resolver(ref, desired):
             return preparation_catalog().application_credential(desired.get('credentialRef'), harness_id=ref.harness_id)
@@ -79,12 +97,14 @@ class ProfileNativeBinding:
 
 
 class ProfileNativeSessions:
-    def __init__(self, *, core, channels, owners, realm: str):
+    def __init__(self, *, core, configuration, realm: str, handover=None):
         if not isinstance(realm, str) or not realm.strip():
             raise ValueError("backend-owned realm required")
-        self.core, self.channels, self.owners, self.realm = core, channels, owners, realm
+        self.core, self.configuration, self.realm = core, configuration, realm
+        self.channels, self.owners = configuration.channels, configuration.owners
         self._bindings = {}
         self._lock = RLock()
+        self._handover = handover
 
     def prepare_native_creation(self, *, connection_id, profile_id, operation_id):
         preparation = getattr(self, 'preparation', None)
@@ -101,6 +121,7 @@ class ProfileNativeSessions:
     def require_registered(self, ref):
         """Identity-only fence: recording a selection must not query a busy agent."""
         with self._lock:
+            self._observe(self.configuration.require_active)
             for (connection_id, native_id), binding in self._bindings.items():
                 if binding.session_ref != ref:
                     continue
@@ -110,6 +131,29 @@ class ProfileNativeSessions:
                     raise ProfileError("SWITCH_BLOCKED", "Native owner no longer active", status=409)
                 return binding
             raise ProfileError("SESSION_NOT_FOUND", "Backend session registration unavailable", status=404)
+
+    def registered_ref_for_native(self, *, harness_id: str, native_session_id: str):
+        """The SessionRef registered for THIS live native session, or None.
+
+        Read-side identity fact for the product's bound-mode intent bridge:
+        a match requires the observed live owner of that (harness, native
+        session) pair to still be the registered one. Absence - including a
+        dead owner - is ``None`` (unbound), never a guess; this never
+        registers, mutates, or queries the agent.
+        """
+        with self._lock:
+            self._observe(self.configuration.require_active)
+            for (connection_id, native_id), binding in self._bindings.items():
+                if native_id != native_session_id:
+                    continue
+                channel = self.channels.get(connection_id)
+                owner = self.channels.native_session_observation(connection_id, native_id)
+                if (channel is None or channel.ended or owner is None
+                        or channel.harness_id != harness_id
+                        or binding.snapshot.owner is not owner):
+                    continue
+                return binding.session_ref
+            return None
 
     def resolve(self, ref):
         """Never resolve a guessed UID or silently bind a different native owner."""
@@ -121,7 +165,7 @@ class ProfileNativeSessions:
                     break
             if binding is None:
                 raise ProfileError("SESSION_NOT_FOUND", "Backend session registration unavailable", status=404)
-            snapshot = self._observe(lambda: self.owners.readback(binding.snapshot.target))
+            snapshot = self._observe(lambda: self.configuration.resolve(binding.snapshot.target))
             if snapshot.owner is not binding.snapshot.owner:
                 raise ProfileError("SWITCH_BLOCKED", "Native owner changed", status=409)
             return ProfileNativeBinding(ref, snapshot)
@@ -130,7 +174,7 @@ class ProfileNativeSessions:
         """Backend-only reservation before a Harness-owned provider resume."""
         with self._lock:
             binding = self.require_registered(ref)
-            return self._observe(lambda: self.owners.begin_restoration(
+            return self._observe(lambda: self.configuration.begin_restoration(
                 binding.snapshot.target, operation_id=operation_id))
 
     def complete_restoration(self, ref, ticket):
@@ -144,7 +188,7 @@ class ProfileNativeSessions:
             if (ticket.before.owner is not binding.snapshot.owner
                     or ticket.before.target.session_id != ref.session_uid):
                 raise ProfileError('SWITCH_BLOCKED', 'Restoration belongs to another session', status=409)
-            result = self._observe(lambda: self.owners.complete_restoration(ticket))
+            result = self._observe(lambda: self.configuration.complete_restoration(ticket))
             if (result.snapshot.owner is not binding.snapshot.owner
                     or result.snapshot.target.session_id != ref.session_uid):
                 raise ProfileError('SWITCH_BLOCKED', 'Restoration changed conversation owner', status=409)
@@ -169,21 +213,29 @@ class ProfileNativeSessions:
             if existing is not None:
                 if existing.snapshot.owner is not owner:
                     raise ProfileError("SWITCH_BLOCKED", "Native owner has been replaced", status=409)
-                snapshot = self._observe(lambda: self.owners.readback(existing.snapshot.target))
+                snapshot = self._observe(lambda: self.configuration.resolve(existing.snapshot.target))
                 return ProfileNativeBinding(existing.session_ref, snapshot)
             if len(self._bindings) >= 4096:
                 raise ProfileError("SWITCH_BLOCKED", "Session registration capacity exhausted", status=409)
-            uid = "profile-session-" + uuid4().hex
-            snapshot = self._observe(lambda: self.owners.bind(canonical_session_id=uid, harness_id=channel.harness_id,
-                workspace_id=channel.workspace_id, connection_id=connection_id,
-                native_session_id=native_session_id))
+            snapshot = self._observe(lambda: self.configuration.register_native(
+                connection_id=connection_id, native_session_id=native_session_id))
+            uid = snapshot.target.session_id
             if snapshot.owner is not owner:
                 raise ProfileError("SWITCH_BLOCKED", "Native owner changed during registration", status=409)
             ref = SessionRef(self.realm, channel.harness_id, native_session_id, uid)
-            self.core.sessions.open_session("register:" + uid, session_id=uid, session_uid=uid,
-                native_session_key=native_session_id, harness_id=channel.harness_id,
-                profile_id=profile_id, realm=self.realm)
+            from ordessa_profile import repository
+            with self.core.db.read() as conn:
+                stored = repository.get_session_by_uid(conn, uid)
+            if stored is None:
+                self.core.sessions.open_session("register:" + uid, session_id=uid, session_uid=uid,
+                    native_session_key=native_session_id, harness_id=channel.harness_id,
+                    profile_id=profile_id, realm=self.realm)
+            elif (stored['harness_id'] != channel.harness_id or stored['realm'] != self.realm
+                    or stored['native_session_key'] != native_session_id):
+                raise ProfileError('SWITCH_BLOCKED', 'Stored Profile binding belongs to another native session', status=409)
             binding = ProfileNativeBinding(ref, snapshot)
+            if self._handover is not None:
+                self._handover(ref)
             self._bindings[key] = binding
             if self.channels.native_session_observation(connection_id, native_session_id) is not owner:
                 raise ProfileError("SWITCH_BLOCKED", "Native owner ended during registration", status=409)

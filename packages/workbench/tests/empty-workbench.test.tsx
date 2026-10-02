@@ -78,8 +78,10 @@ describe('empty Workbench: shell with zero registered views and modules', () => 
     const lifetime = new OwnedResources()
     const model = createWorkbench(lifetime), commands = createCommands(lifetime)
     const container = await mount(<WorkbenchShell model={model} commands={commands} />)
-    const layoutButtons = [...container.querySelectorAll('.wb-layout-actions button')]
-    // four auxiliary toggles plus the reset button
+    expect(container.querySelectorAll('.wb-layout-actions>.wb-layout-menu>button')).toHaveLength(1)
+    expect(container.querySelector('[aria-label="布局与视图"]')?.getAttribute('aria-expanded')).toBe('false')
+    const layoutButtons = [...container.querySelectorAll('.wb-layout-menu-panel>button')]
+    // The closed menu preserves four auxiliary toggles plus the reset button.
     expect(layoutButtons).toHaveLength(5)
     for (const region of ['left', 'right', 'top', 'bottom'] as const) {
       const toggle = layoutButtons.find(b => b.getAttribute('aria-label')?.endsWith(labels[region]))

@@ -70,15 +70,17 @@ export const ReasoningBlock = memo(function ReasoningBlock({ props }: { props: C
   return (
     <Collapsible.Root className="chat-reasoning" data-streaming={streaming ? 'true' : 'false'} open={isOpen}
       onOpenChange={handleToggle} data-part-id={props.partId}>
-      <Collapsible.Trigger className="chat-reasoning-trigger" data-testid="chat-reasoning-trigger"
+      <div className="chat-reasoning-head">
+        <Collapsible.Trigger className="chat-reasoning-trigger" data-testid="chat-reasoning-trigger"
         aria-label={`${streamingLabel} ${durationLabel}，${isOpen ? '收起' : '展开'}`}>
         <span className="chat-reasoning-chevron" aria-hidden="true">▸</span>
         <span className="chat-reasoning-label">{streamingLabel}{durationLabel}</span>
+        </Collapsible.Trigger>
         {props.copy && (
           <button type="button" className="chat-ghost-action" data-action="copy-reasoning"
             aria-label="复制思考内容" onClick={event => { event.stopPropagation(); void props.copy?.() }}>复制</button>
         )}
-      </Collapsible.Trigger>
+      </div>
       {shouldRenderContent && (
         <Collapsible.Content className="chat-reasoning-content">
           <pre className="chat-reasoning-text">{props.text}</pre>

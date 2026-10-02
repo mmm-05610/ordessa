@@ -1,5 +1,5 @@
 // Test-only controlled visual preview for the UI optimization round. Boots the real product UI
-// (workbench + sessions + conversation + connections statusbar) driven by the anonymous
+// (workbench + sessions + Chat + connections statusbar) driven by the anonymous
 // example.ui-preview fixture connectors, captures the five required screenshot states and runs
 // interaction regression checks. It does not touch the production main process or the bridge.
 import { app, BrowserWindow, ipcMain, protocol, session } from 'electron'
@@ -43,6 +43,13 @@ app.whenReady().then(async () => {
   })
   win!.setMenuBarVisibility(false)
   ipcMain.handle('extensions:catalog', () => discovery.catalog) // Same catalog the production shell exposes to the preload.
+  // Controlled host state: no server or native agent process is started by this preview.
+  ipcMain.handle('wire:ready', () => false)
+  ipcMain.handle('wire:scope', () => null)
+  ipcMain.handle('desktop:about', () => ({ app: { name: 'Ordessa Desktop Preview', version: 'fixture' },
+    plugins: discovery.catalog.extensions.map(extension => ({ id: extension.manifest.id, version: extension.manifest.version })),
+    licenses: [], licenseText: '' }))
+  ipcMain.handle('desktop:faults', () => [])
   // Mirror the production frameless window-control IPC so screenshots are faithful.
   ipcMain.handle('window:minimize', () => win?.minimize())
   ipcMain.handle('window:toggle-maximize', () => { if (!win) return false; if (win.isMaximized()) win.unmaximize(); else win.maximize(); return win.isMaximized() })
@@ -63,6 +70,7 @@ app.whenReady().then(async () => {
   result.boot = await run('boot', `
     await waitFor(() => document.documentElement.dataset.ready === 'true', 400);
     [...document.querySelectorAll('nav button')].find(b => b.getAttribute('aria-label') === 'Agents')?.click();
+    [...document.querySelectorAll('nav button')].find(b => b.getAttribute('aria-label') === 'Chat')?.click();
     const nav = await waitFor(() => !!toggle());
     await openPopover();
     const connectors = popover().querySelectorAll('[data-connection-id]').length;
@@ -70,9 +78,9 @@ app.whenReady().then(async () => {
     return { nav, connectors };`)
   result.empty = await run('empty', `
     await pick('ui-preview.empty');
-    await waitFor(() => !!document.querySelector('.agent-placeholder'));
+    await waitFor(() => !!document.querySelector('.chat-placeholder'));
     return {
-      placeholder: !!document.querySelector('.agent-placeholder'),
+      placeholder: !!document.querySelector('.chat-placeholder'),
       emptyList: !!document.querySelector('.agent-sessions .agent-empty'),
       rightInert: document.querySelector('[data-region="right"]')?.hasAttribute('inert') ?? false,
       bottomInert: document.querySelector('[data-region="bottom"]')?.hasAttribute('inert') ?? false,
@@ -80,74 +88,82 @@ app.whenReady().then(async () => {
   await shot('01-empty.png')
   result.history = await run('history', `
     await pick('ui-preview.history');
-    const opened = await waitFor(() => document.querySelectorAll('.agent-message').length >= 4);
-    const user = document.querySelector('.agent-message[data-role="user"]');
-    const assistant = document.querySelector('.agent-message[data-role="assistant"]');
+    const opened = await waitFor(() => document.querySelectorAll('.chat-message').length >= 4);
+    if (!opened) throw Error('Chat history did not open');
+    const user = document.querySelector('.chat-message[data-role="user"]');
+    const userBubble = user?.querySelector('.chat-user-text');
+    const assistant = document.querySelector('.chat-message[data-role="assistant"]');
     return { opened,
       userRole: !!user, assistantRole: !!assistant,
-      userRight: !!user && user.getBoundingClientRect().left > assistant.getBoundingClientRect().left,
+      userRight: !!userBubble && userBubble.getBoundingClientRect().left > assistant.getBoundingClientRect().left,
       assistantFont: getComputedStyle(assistant).fontSize,
-      userRadius: getComputedStyle(user).borderTopRightRadius,
-      composer: !!document.querySelector('.agent-compose textarea'),
-      composerRadius: getComputedStyle(document.querySelector('.agent-compose')).borderRadius,
-      toolCards: document.querySelectorAll('.agent-tool').length,
-      thinkingCards: document.querySelectorAll('.agent-reasoning').length };`)
+      userRadius: getComputedStyle(userBubble).borderTopRightRadius,
+      composer: !!document.querySelector('.chat-compose textarea'),
+      composerRadius: getComputedStyle(document.querySelector('.chat-composer-card')).borderRadius,
+      toolCards: document.querySelectorAll('.chat-tool').length,
+      thinkingCards: document.querySelectorAll('.chat-reasoning').length };`)
+  await win!.webContents.executeJavaScript('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))')
+  await sleep(200)
   await shot('02-history.png')
   result.sessionSwitch = await run('sessionSwitch', `
     const row = [...document.querySelectorAll('.agent-session-list button')].find(b => b.textContent.includes('Weekly status draft'));
     row.click();
-    const switched = await waitFor(() => document.querySelectorAll('.agent-message').length === 2 && document.querySelector('.agent-conversation-head h2')?.textContent === 'Weekly status draft');
+    const switched = await waitFor(() => document.querySelectorAll('.chat-message').length === 2 && document.querySelector('.chat-page-head h2')?.textContent === 'Weekly status draft');
     const back = [...document.querySelectorAll('.agent-session-list button')].find(b => b.textContent.includes('Fixture module review'));
     back.click();
-    const restored = await waitFor(() => document.querySelectorAll('.agent-message').length === 4);
+    const restored = await waitFor(() => document.querySelectorAll('.chat-message').length === 4);
     return { switched, restored };`)
   result.send = await run('send', `
-    const field = document.querySelector('.agent-compose textarea');
+    const field = document.querySelector('.chat-compose textarea');
     Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(field, 'Fixture send check');
     field.dispatchEvent(new Event('input', { bubbles: true }));
-    const btn = () => [...document.querySelectorAll('.agent-compose button')].find(b => b.textContent === 'Send');
+    const btn = () => document.querySelector('[data-testid="chat-send"]');
     const enabled = await waitFor(() => !!btn() && !btn().disabled, 60);
     btn().click();
-    const replied = await waitFor(() => [...document.querySelectorAll('.agent-message')].at(-1)?.textContent.includes('Echo (fixture)'));
-    return { enabled, replied, total: document.querySelectorAll('.agent-message').length,
-      userBubbles: document.querySelectorAll('.agent-message[data-role="user"]').length };`)
+    const replied = await waitFor(() => [...document.querySelectorAll('.chat-message')].at(-1)?.textContent.includes('Echo (fixture)'));
+    return { enabled, replied, total: document.querySelectorAll('.chat-message').length,
+      userBubbles: document.querySelectorAll('.chat-message[data-role="user"]').length };`)
   result.toolExpand = await run('toolExpand', `
-    const tool = document.querySelector('.agent-tool');
-    tool.querySelector('summary').click();
+    const tool = document.querySelector('.chat-tool');
+    tool.querySelector('.chat-tool-summary').click();
     const expanded = await waitFor(() => (tool.querySelector('pre')?.getBoundingClientRect().height ?? 0) > 0);
-    const thinking = document.querySelector('.agent-reasoning');
-    thinking.querySelector('summary').click();
-    const thinkingOpen = await waitFor(() => thinking.open);
+    const thinking = document.querySelector('.chat-reasoning');
+    thinking.querySelector('.chat-reasoning-trigger').click();
+    const thinkingOpen = await waitFor(() => thinking.dataset.state === 'open' && (thinking.querySelector('pre')?.getBoundingClientRect().height ?? 0) > 0);
     return { expanded, thinkingOpen };`)
   await shot('03-tool-expanded.png')
   result.approval = await run('approval', `
     await pick('ui-preview.approval');
-    const card = await waitFor(() => !!document.querySelector('.agent-interaction'));
-    return { card, inThread: !!document.querySelector('.agent-interactions-in-thread'),
-      choices: [...document.querySelectorAll('.agent-interaction button')].map(b => b.textContent),
-      runChip: document.querySelector('.agent-run-state')?.dataset.status };`)
+    const card = await waitFor(() => !!document.querySelector('.chat-approval'));
+    return { card, inComposer: !!document.querySelector('.chat-compose .chat-approval'),
+      count: document.querySelectorAll('.chat-approval').length,
+      choices: [...document.querySelectorAll('.chat-approval button')].map(b => b.textContent),
+      runChip: document.querySelector('.chat-run-state')?.dataset.status };`)
   await shot('04-approval.png')
   result.approvalRespond = await run('approvalRespond', `
-    [...document.querySelectorAll('.agent-interaction button')].find(b => b.textContent === 'Allow once').click();
-    const resolved = await waitFor(() => document.querySelector('.agent-interaction header small')?.textContent === 'resolved');
-    const runDone = await waitFor(() => ['completed', 'idle'].includes(document.querySelector('.agent-run-state')?.dataset.status ?? 'idle'));
-    return { resolved, runDone };`)
+    const choice = [...document.querySelectorAll('.chat-approval button')].find(b => b.textContent === 'Allow once');
+    choice.click(); choice.click();
+    const resolved = await waitFor(() => document.documentElement.dataset.previewInteractionState === 'resolved' && !document.querySelector('.chat-approval'));
+    const runDone = await waitFor(() => ['completed', 'idle'].includes(document.querySelector('.chat-run-state')?.dataset.status ?? 'idle'));
+    await sleep(100);
+    return { resolved, runDone, response: JSON.parse(document.documentElement.dataset.previewResponse),
+      responseCount: Number(document.documentElement.dataset.previewResponseCount), actionable: document.querySelectorAll('.chat-approval button').length };`)
   result.running = await run('running', `
     await pick('ui-preview.running');
-    const chipRunning = await waitFor(() => document.querySelector('.agent-run-state')?.dataset.status === 'running');
-    const stop = [...document.querySelectorAll('.agent-compose button')].find(b => b.textContent === 'Request stop');
+    const chipRunning = await waitFor(() => document.querySelector('.chat-run-state')?.dataset.status === 'running');
+    const stop = document.querySelector('[data-testid="chat-stop"]');
     return { chipRunning, stopVisible: !!stop, stopEnabled: !!stop && !stop.disabled,
-      runningTool: !!document.querySelector('.agent-tool[data-tool-state="running"]') };`)
+      runningTool: !!document.querySelector('.chat-tool-state[data-state="running"]') };`)
   await shot('05-running.png')
   result.stop = await run('stop', `
-    [...document.querySelectorAll('.agent-compose button')].find(b => b.textContent === 'Request stop').click();
-    const requested = await waitFor(() => document.querySelector('.agent-run-state')?.dataset.status === 'stop-requested');
-    const notice = [...document.querySelectorAll('.agent-notice')].some(p => p.textContent.includes('Stop requested'));
-    const cancelled = await waitFor(() => document.querySelector('.agent-run-state')?.dataset.status === 'cancelled');
+    document.querySelector('[data-testid="chat-stop"]').click();
+    const requested = await waitFor(() => document.querySelector('.chat-run-state')?.dataset.status === 'stop-requested');
+    const notice = [...document.querySelectorAll('.chat-note')].some(p => p.textContent.includes('已请求停止'));
+    const cancelled = await waitFor(() => document.querySelector('.chat-run-state')?.dataset.status === 'cancelled');
     return { requested, notice, cancelled };`)
   result.gateRelease = await run('gateRelease', `
     await pick('ui-preview.history');
-    return { backInHistory: document.querySelectorAll('.agent-message').length === 6 };`)
+    return { backInHistory: await waitFor(() => document.querySelectorAll('.chat-message').length === 6) };`)
   result.layout = await run('layout', `
     const left = () => document.querySelector('[data-region="left"]');
     document.querySelector('button[aria-label="收起左侧栏"]').click();
@@ -203,7 +219,7 @@ app.whenReady().then(async () => {
     keyboard[tag] = await run(`widthKey${tag}`, `return Math.round(document.getElementById('wb-left').getBoundingClientRect().width);`) as number
   }
   result.resize = { widthBefore, widthAfter, dragged: widthAfter > widthBefore + 8, pointerCounts, dragProbe,
-    keyboard, keyboardResized: (keyboard.right ?? widthAfter) > widthBefore + 4 || (keyboard.arrowRight ?? widthAfter) > widthBefore + 4 }
+    keyboard, keyboardResized: (keyboard.right ?? widthAfter) > widthAfter + 4 || (keyboard.arrowRight ?? widthAfter) > widthAfter + 4 }
   await win!.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'Tab' })
   await win!.webContents.sendInputEvent({ type: 'keyUp', keyCode: 'Tab' })
   await win!.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'Tab' })
@@ -217,17 +233,17 @@ app.whenReady().then(async () => {
   result.scroll = await run('scroll', `
     // Grow the transcript first: at this window height six fixture messages still fit the viewport.
     for (let i = 0; i < 5; i++) {
-      const field = document.querySelector('.agent-compose textarea');
+      const field = document.querySelector('.chat-compose textarea');
       Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(field, 'Filler scroll probe ' + i);
       field.dispatchEvent(new Event('input', { bubbles: true }));
       await sleep(30);
-      [...document.querySelectorAll('.agent-compose button')].find(b => b.textContent === 'Send').click();
+      document.querySelector('[data-testid="chat-send"]').click();
       await sleep(260);
     }
-    await waitFor(() => document.querySelectorAll('.agent-message').length >= 16, 60);
-    const info = { innerHeight: window.innerHeight, messages: document.querySelectorAll('.agent-message').length, chain: [] };
+    await waitFor(() => document.querySelectorAll('.chat-message').length >= 16, 60);
+    const info = { innerHeight: window.innerHeight, messages: document.querySelectorAll('.chat-message').length, chain: [] };
     let scroller = null;
-    for (let n = document.querySelector('.agent-viewport'); n; n = n.parentElement) {
+    for (let n = document.querySelector('.chat-scroll-viewport'); n; n = n.parentElement) {
       const style = getComputedStyle(n);
       info.chain.push({ el: String(n.className).slice(0, 40), scrollH: n.scrollHeight, clientH: n.clientHeight, overflowY: style.overflowY });
       if (!scroller && n.scrollHeight > n.clientHeight + 4 && /auto|scroll/.test(style.overflowY)) scroller = n;
@@ -240,8 +256,22 @@ app.whenReady().then(async () => {
   result.narrow = await run('narrow', `
     const wb = document.querySelector('.wb');
     return { overflowX: wb.scrollWidth - wb.clientWidth,
-      composerVisible: !!document.querySelector('.agent-compose textarea')?.getBoundingClientRect().width };`)
+      composerVisible: !!document.querySelector('.chat-compose textarea')?.getBoundingClientRect().width };`)
   await shot('06-narrow.png')
+  result.inputMenu = await run('inputMenu', `
+    const card=document.querySelector('.chat-composer-card');
+    const before=card.getBoundingClientRect().height;
+    document.querySelector('[data-testid="chat-plus-button"]').click();
+    if(!await waitFor(()=>document.querySelector('.chat-panel')))throw Error('plus panel did not open');
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    const panel=document.querySelector('.chat-panel'),r=panel.getBoundingClientRect();
+    const hit=document.elementFromPoint(r.left+r.width/2,r.top+20);
+    const field=document.querySelector('[data-testid="chat-panel-search"]');
+    field.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    await waitFor(()=>!document.querySelector('.chat-panel'));
+    return {bounded:r.top>=0&&r.bottom<=innerHeight&&r.left>=0&&r.right<=innerWidth,
+      hitTestable:!!hit&&panel.contains(hit),heightStable:Math.abs(card.getBoundingClientRect().height-before)<1,
+      closed:!document.querySelector('.chat-panel'),focusReturned:document.activeElement===document.querySelector('[data-testid="chat-input"]')};`)
   win!.setBounds({ width: 1280, height: 860 })
   await sleep(200)
   result.consoleErrors = consoleErrors
@@ -255,6 +285,7 @@ app.whenReady().then(async () => {
       ready: document.documentElement?.dataset?.ready, settled: document.documentElement?.dataset?.settled,
       nav: [...document.querySelectorAll('nav button')].map(b => b.getAttribute('aria-label')),
       toggle: !!document.querySelector('.conn-status-toggle'),
+      chat: document.querySelector('.chat-page')?.textContent,
       alerts: [...document.querySelectorAll('[role="alert"]')].map(p => p.textContent),
       regions: [...document.querySelectorAll('[data-region]')].map(s => s.getAttribute('data-region') + ':' + s.childElementCount),
     }))()`)))

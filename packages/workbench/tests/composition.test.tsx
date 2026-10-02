@@ -397,6 +397,64 @@ describe('workbench composition: overlays', () => {
 })
 
 describe('workbench composition: settings and screen structure', () => {
+  it('uses sidebar-only module navigation and keeps view/layout controls in a keyboard-accessible menu', async () => {
+    const lifetime = new OwnedResources(), scope = new OwnedResources()
+    const model = createWorkbench(lifetime), commands = createCommands(lifetime)
+    moduleBundle('chat', 'Chat', scope, model)
+    moduleBundle('skills', 'Skills', scope, model)
+    model.composition.activateModule('chat')
+    const container = await mount(<WorkbenchShell model={model} commands={commands} />)
+    const main = container.querySelector('[data-region="main"]')!
+    expect(main.querySelector('header>[role="group"]')).toBeNull()
+    expect(main.querySelector('header>.wb-region-title')).toBeNull()
+    expect(container.querySelectorAll('[data-module-nav]')).toHaveLength(2)
+    const panel = main.querySelector('.wb-layout-menu-panel') as HTMLElement
+    expect(panel.hidden).toBe(true)
+    const trigger = await click(container, '布局与视图')
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+    expect(panel.hidden).toBe(false)
+    const choice = panel.querySelector('[aria-label="选择主区视图"]') as HTMLSelectElement
+    expect(document.activeElement).toBe(choice)
+    await act(async () => { choice.value = 'skills.main'; choice.dispatchEvent(new Event('change', { bubbles: true })) })
+    expect(model.getSelection()).toEqual({ main: 'skills.main', left: 'skills.side' })
+    expect(panel.querySelector('[aria-label="移动 Skills主区 到"]')).not.toBeNull()
+    expect(panel.querySelector('[aria-label="关闭Skills主区"]')).not.toBeNull()
+    expect(panel.querySelector('[aria-label="重置布局"]')).not.toBeNull()
+    await act(async () => choice.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
+    expect(panel.hidden).toBe(true)
+    expect(document.activeElement).toBe(trigger)
+    await click(container, '布局与视图')
+    await act(async () => document.body.dispatchEvent(new Event('pointerdown', { bubbles: true })))
+    expect(panel.hidden).toBe(true)
+    await act(async () => scope.dispose())
+  })
+
+  it('keeps section drafts mounted while switching settings navigation', async () => {
+    const lifetime = new OwnedResources(), scope = new OwnedResources()
+    const model = createWorkbench(lifetime), commands = createCommands(lifetime)
+    let mounts = 0
+    function Draft() {
+      const [value, setValue] = useState(() => { mounts += 1; return 'unsaved draft' })
+      return <><input aria-label="配置草稿" value={value} onChange={event => setValue(event.target.value)} /><button onClick={() => setValue('edited draft')}>编辑草稿</button></>
+    }
+    model.composition.forScope(scope).addSettingsSection({ id: 'draft', title: 'Draft', order: 1, component: Draft })
+    model.composition.forScope(scope).addSettingsSection({ id: 'peer', title: 'Peer', order: 2, component: () => <p>peer controls</p> })
+    const container = await mount(<WorkbenchShell model={model} commands={commands} />)
+    await click(container, '打开设置')
+    await click(container, '编辑草稿')
+    const draft = container.querySelector('[aria-label="配置草稿"]') as HTMLInputElement
+    expect(draft.closest('.wb-settings-section-content')).not.toBeNull()
+    await click(container, 'Peer')
+    expect(draft.closest('[data-section-id]')?.hasAttribute('hidden')).toBe(true)
+    await click(container, 'Draft')
+    expect(container.querySelector('[aria-label="配置草稿"]')).toBe(draft)
+    expect(draft.value).toBe('edited draft')
+    expect(mounts).toBe(1)
+    await click(container, '关闭设置')
+    expect(container.querySelector('.wb-settings')).toBeNull()
+    await act(async () => scope.dispose())
+  })
+
   it('settings page is Workbench-owned: sections ordered, located, and removed on contributor unload', async () => {
     const lifetime = new OwnedResources(), alpha = new OwnedResources(), zeta = new OwnedResources()
     const model = createWorkbench(lifetime), commands = createCommands(lifetime)
@@ -410,6 +468,11 @@ describe('workbench composition: settings and screen structure', () => {
     expect([...page()!.querySelectorAll('[data-section-id]')].map(n => n.getAttribute('data-section-id'))).toEqual(['alpha', 'zeta'])
     expect(page()!.textContent).toContain('alpha controls')
     expect(page()!.textContent).toContain('zeta controls')
+    expect(page()!.querySelector('[data-section-id="alpha"]')?.hasAttribute('hidden')).toBe(false)
+    expect(page()!.querySelector('[data-section-id="zeta"]')?.hasAttribute('hidden')).toBe(true)
+    await act(async () => (page()!.querySelector('.wb-settings-nav button:last-child') as HTMLButtonElement).click())
+    expect(page()!.querySelector('[data-section-id="alpha"]')?.hasAttribute('hidden')).toBe(true)
+    expect(page()!.querySelector('[data-section-id="zeta"]')?.hasAttribute('hidden')).toBe(false)
     // locating a section marks it
     await act(async () => model.composition.openSettings('zeta'))
     expect(page()!.querySelector('[data-section-id="zeta"]')?.hasAttribute('data-active-section')).toBe(true)

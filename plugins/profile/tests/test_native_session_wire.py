@@ -7,7 +7,74 @@ from ordessa_profile.core import StaticHarnessCatalog
 from ordessa_profile.errors import ProfileError
 from ordessa_profile.server_plugin import ProfileServerPlugin, project
 from server_plugin_api import ServerPluginContext, WireError
-from profile_harness_doubles import ScriptedProvider, ScriptedConfigPort
+from profile_harness_doubles import ScriptedProvider, ScriptedV2Provider, ScriptedConfigPort
+
+
+@pytest.mark.parametrize('override_model', [None, 'a', 'b'])
+def test_first_native_submit_same_selected_profile_applies_complete_choice(tmp_path, override_model):
+    """Desired registration is not a native receipt; explicit reselect uses the blueprint."""
+    from ordessa_harness_api import ApplicationTarget
+
+    ref = SessionRef('local', 'pi', 'native-first', 'backend-first')
+    choice = {'harnessId': 'pi', 'providerConfigId': 'provider', 'modelId': 'a'}
+
+    class RequiredChoicePort(ScriptedConfigPort):
+        native_turn_application = True
+
+        def plan(self, target, desired, operation_key):
+            if len(desired) != 1 or desired[0].facet_id != 'assets.model-provider':
+                raise ProfileError('SWITCH_BLOCKED', 'One complete model choice required', status=409)
+            return super().plan(target, desired, operation_key)
+
+    port = RequiredChoicePort()
+
+    def factory(core):
+        core.config_port = port
+
+        def register(*, connection_id, native_session_id, profile_id):
+            assert connection_id == 'channel' and native_session_id == ref.native_session_key
+            core.sessions.open_session('registered', session_id=ref.session_uid, session_uid=ref.session_uid,
+                native_session_key=ref.native_session_key, realm=ref.realm,
+                harness_id=ref.harness_id, profile_id=profile_id)
+            return SimpleNamespace(session_ref=ref,
+                snapshot=SimpleNamespace(target=ApplicationTarget('server', ref.session_uid, connection_id, 1)))
+
+        def require_registered(value):
+            assert value == ref
+
+        return SimpleNamespace(register=register, require_registered=require_registered)
+
+    plugin = ProfileServerPlugin(harnesses=StaticHarnessCatalog({'pi': frozenset()}),
+                                 native_registration_factory=factory)
+    registration = plugin.build(ServerPluginContext('ordessa.profile', tmp_path))
+    calls = {m.method_id.split('.')[-1]: m.handler for m in registration.methods}
+    try:
+        plugin.core.register_v2_provider(ScriptedV2Provider('assets.model-provider',
+            (('choice', {'type': 'object'}),), capability_rule='yes'), owner_plugin_id='controlled-model-provider')
+        profile = calls['createProfile']({'operationKey': 'profile', 'realm': 'local',
+            'harnessId': 'pi', 'displayName': 'First'})['data']['profileId']
+        calls['saveProfile']({'operationKey': 'save', 'profileId': profile, 'expectedVersion': 1,
+            'patches': [{'facetId': 'assets.model-provider', 'itemId': 'choice', 'op': 'set', 'value': choice}]})
+        registered = calls['registerNativeSession']({'connectionId': 'channel',
+            'nativeSessionId': ref.native_session_key, 'profileId': profile})['data']
+        params = {'sessionRef': registered['sessionRef']}
+        assert calls['inspectSessionConfig'](params)['data']['evidence']['receipt'] is None
+        if override_model is not None:
+            calls['setSessionOverride']({**params, 'operationKey': 'override',
+                'facetId': 'assets.model-provider', 'itemId': 'choice',
+                'value': {**choice, 'modelId': override_model}})
+        calls['selectForSession']({**params, 'operationKey': 'select', 'profileId': profile})
+        assert port.counters['apply'] == port.counters['plan'] == 0
+        result = calls['beginTurnApplication']({**params, 'operationKey': 'first-send'})['data']
+        assert result['receipt']['profileId'] == profile
+        assert len(port.applied) == 1 and len(port.applied[0]) == 1
+        assert port.applied[0][0].value == choice
+        config = calls['inspectSessionConfig'](params)['data']
+        assert config['switchState'] == 'settled' and config['pending'] is None
+        assert config['items'][0]['source']['kind'] == 'profile'
+        assert config['items'][0]['value'] == choice
+    finally:
+        registration.disposal()
 
 
 def test_pending_selection_uses_registered_reference_without_application(tmp_path):

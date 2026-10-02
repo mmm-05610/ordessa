@@ -1,7 +1,14 @@
 # 2026-09-30 接手检查点：启动接缝与 Profile 管理
 
 状态：部分实现，**不是完整 Harness Desktop 验收通过**。
-所有改动在 `nightly/021-ordessa-product-closeout`，根工作树保持 main。
+最新核验（2026-10-02）：本树三品牌默认资产已对齐已安装增强版本；
+build/typecheck、Python 619 条、native-profile JS/默认装配 94 条通过；
+实际 Electron 无模型挂载与 Profile 目录 UI 通过。全量 JS 聚合进行中。
+当前分支为 `nightly/021-harness-rollout-opencode-hermes-dsh-kilo`。
+用户已裁定不修 Harness 内部问题；Codex 跨 provider 密文兼容失败
+保留 FAIL，但不阻塞其他产品收尾。以下各历史检查点按其日期阅读，
+不能把旧 sudo/资产等待记录当作当前阻塞，也不能将开发冒烟当作 deb 验收。
+接手时分支为 `nightly/021-ordessa-product-closeout`，当前分支见上方；根工作树保持 main。
 未合并、未 push、未启停既有用户服务、未重建 deb。三品牌后端真实聊天已通过；Codex Desktop 已通过 Profile 首发与同会话下一轮切换，两条真实回复。完整三品牌 UI/发行验收仍未完成。
 
 ## CP-N1 逐 ID 验收台账（2026-10-01，ZCode 主会话第三轮收口，F10 交付物）
@@ -1944,3 +1951,675 @@ npm run test:harness-packaging       → 282 tests / 281 pass / 0 fail / 1 skipp
 **仍然残留（未修，如实登记）**：`.github/workflows/ci.yml` 仍跑
 `npm test --workspace` 的枚举工作区清单，**从不调用根聚合**——所以这两批新接入门
 **仍然不过 PR**。这是 CI 策略判断，不在夜间范围，已写进 `docs/known-issues.md`。
+
+## 2026-10-02 白天接管：第 1 步，Codex 修复资产安装前检查
+
+范围只含 Pi/Codex/Claude + Profile；新增品牌保留现状，不占本轮收口。
+沿用现有 Spec Kit 方案和本进度文档，采用单执行者的小步反例验证，
+不新建派工系统、工作树或常驻调度会话。
+
+- [x] 复核安装候选、root verifier pin、目标目录不存在及源代码一致性。
+- [x] 修复临时安装 helper 的 freeze：原来所有文件变 0444，直接执行的
+  Codex 二进制失去执行权限。反例先红（0444 != 0555），修后 1/1 通过；
+  仅模拟 chown，真实执行 chmod，不冒充 root 所有权验证。
+- [x] 候选内容摘要实测匹配，537 entries / 320884626 bytes；摘要不包含
+  执行权限，故补独立的安装后 executable 检查及 `codex --version`。
+- [x] 非 root verifier 演练通过；候选 native binary 可执行，版本 0.147.0；
+  候选 codex-process 与当前源码 SHA256 相同。
+- [x] 亲跑 codex-process 定向测试：29/29，exit 0，无 skip。
+- [x] 用户执行修正后的 sudo 安装脚本，新目录 profile-codex-managed-v2；
+  发布前后摘要验证均通过，native Codex 0.147.0 可执行。
+- [ ] 对已安装资产做 root 完整校验和真实会话恢复验证。
+
+现有 probe 只覆盖 official→API 的两轮，**尚未覆盖 API→official 返回**；
+完整往返仍属待完成，不以已有 probe 的 success 冒充三段通过。
+安装脚本及反例保存在 gitignored `.cleanup-evidence/`，属于本机安装材料，
+不是已进入源码发行包的功能。根 main、旧资产、登录及其他会话文件均未改。
+
+### 第 2 步真实验证：部分通过，完整往返尚未通过
+
+- [x] 新资产在真实主机视图通过完整信任检查并启动默认产品组合。
+  沙箱把 root 映射为 nobody，初次沙箱内拒绝不能当作安装失败；
+  在真实主机视图重测后成功，不放宽 root 检查。
+- [x] 无模型官方/API 三实例隔离实测通过：三个 native ID 独立，
+  首次/下一轮 C4 确认，零 prompt、零合成 API 请求，全部清理。
+- [x] 真实官方第一轮成功；跨 provider 重启生成新 generation，
+  canonical ref 与 owner 不变，另一官方会话配置不变。
+- [x] Go 中间请求包含第一轮历史标记（5 个 input items），
+  未复用旧 provider 的 previous_response_id。
+- [ ] 官方→Go API→官方三段真实聊天完整通过。
+
+失败分类及诚实证据：
+1. 本会话初版 return-official 探针把返回官方放在 API prompt 前，
+   因此第一次成功输出无效，不计入完整往返验收。已纠正并补顺序门禁。
+2. 观测 HTTP 客户端默认标识在 Go 模型目录返回 403；改为自身
+   `Ordessa/0.1` 后目录返回 200。只改变观测器，不宣称产品直连已验证。
+3. Go 目录列出 gpt-5.6-luna，但实际 Responses 返回 400：
+   `Upstream request failed: Model is unavailable.`，不能归因为历史丢失。
+4. 同 Key 的 gpt-6-luna 单独 Responses 探针（最多32输出token）返回
+   200/completed；官方规则要求稳定会话标识，补自有
+   x-opencode-session 后通过。参考 https://opencode.ai/docs/go/ 。
+5. 改用 gpt-6-luna 的完整产品测试在 Profile 下一轮应用阶段拒绝：
+   SESSION_NEEDS_RECOVERY，零 Go 请求。源码检查发现锁定 Codex ACP
+   的 unstable_setSessionModel 只接受 fetchAvailableModels 中的模型，
+   未枚举模型直接 Unknown model；这是下一步 Harness 适配排查点，
+   具体本次 restoration 的失败 phase 仍需独立观测，不冒充已证实。
+
+所有完整 probe 均释放自己的通道、停止隔离 runtime、删除专用密钥条目；
+无旧服务启停，无登录和全局配置修改。探针定向测试 11/11，exit 0。
+完整产品测试失败保持红，不把目录可见或单独 API 200 当作产品完成。
+
+### 第 3 步：自定义模型读取缺陷已修，推理偏好需明确口径
+
+- [x] 原生 Codex createModelConfigOption 会为不在标准目录中的当前模型
+  生成 `description:null`；现有读取器拒绝这个合法原生值。
+  新反例先红（Invalid option text），修复仅将 nullable 描述投影为缺省；
+  对象类型描述等非法值仍拒绝，不添加假模型或能力列表。
+- [x] configuration / codex-process / enhance 三文件定向测试 70/70，
+  exit 0，无 skip。变更只在 Harness；未修改 Profile 业务或核心。
+- [x] 同锁文件离线重建并经既有获批有界 root helper 发布
+  `/opt/ordessa/harnesses/profile-codex-nullable-v3`，旧目录不覆盖；
+  发布前后完整校验通过，537 entries / 320884846 bytes，
+  digest sha256:a0d9f8b84bbf9dda0716a4eaed0c11da87db1b4b936c56918852bc5827cefadd。
+- [x] 新资产真实复测获得准确失败分类：
+  state unknown / phase restoration-outcome-unknown /
+  failureStep preferences / failureReason native-request-rejected。
+  原生恢复与模型阶段已走过，未向 Go 发送 prompt；不能报完整切换成功。
+
+明确待讨论：标准模型目录未枚举该第三方模型，原生 ACP 因而没有其
+supportedReasoningEfforts。未知能力不等于模型不支持，也不允许照搬旧模型能力。
+建议由 Harness 捕获原生 resume 的实际 model/reasoningEffort 响应作为读回依据：
+实际值与应保留值一致则不重复 setter；缺能力范围不猜可选项；
+实际值不同且无法合法设置/确认，则保持失败，不静默清除用户配置。
+此建议未实施；用户随后裁定采用 Codex 原生 model_catalog_json 路线，
+上述绕过 setter 建议撤回，不放宽已有偏好保留门禁。
+
+本轮两次准确诊断 probe 均只产生一次官方短 prompt，API prompt 为零；
+专用密钥条目、自己的通道及隔离 runtime 均清理，无用户服务改动。
+
+### 第 4 步：Codex 原生模型目录（实施中，未报真实切换完成）
+
+- [x] 锁定 0.147.0 ModelsResponse/ModelInfo 格式；官方文档确认目录启动时读取。
+- [x] model-provider 的已验证能力透传给 Harness；不出现 Codex 配置字段，
+  无能力时仍缺省。新增反例先红后绿，相关 Python 159/159。
+- [x] Harness 生成独立实例内内容摘要命名的只读目录文件，不改全局
+  config.toml；拒绝损坏能力、目录 symlink、同摘要内容变更。
+- [x] 模型能力不复制官方模型条目；仅复用同版本通用 Agent 指令，
+  来源、Apache-2.0 LICENSE/NOTICE 随资产保留。
+- [x] 真实锁定 Codex 二进制 `debug models`，零模型调用：返回唯一指定
+  third-party-test，low/medium/high 与 64000 context 均和输入一致。
+- [x] 初次私有实例及 provider restart/resume 在 spawn 时传入目录路径；
+  官方登录返回路线不加载第三方目录。JS 定向 74/74，Python 159/159。
+- [x] 新增强资产构建及安装校验（追加发布，旧资产不覆盖）。
+- [x] 安装资产实际 API 目录加载和初次准备验证（零 prompt）。
+- [ ] 官方→Go→官方三轮真实聊天及历史/偏好/兄弟实例隔离验证。
+
+Go 探针的 gpt-6-luna 能力以厂商文档为声明来源；实际网关兼容性仍待
+下面真实转场验证，模型名可枚举及原生目录读回都不冒充推理成功。
+
+### 第 4 步实测更新：官方→Go 通过，返回官方仍有硬缺口
+
+- [x] model-provider 公共保存接口保留 capabilities / protocols；新增反例
+  先红后绿。修复位于资源插件，不修改核心或放宽边界门禁。
+- [x] JS 目录/配置/进程/增强测试 78/78；Python resolver、Harness model
+  配置与产品探针测试 378/378，exit 0。补充边界/注册/资产拒绝组 40/40。
+- [x] 已安装 v6：`/opt/ordessa/harnesses/profile-codex-catalog-fast-off-v6/artifacts`，
+  541 entries / 320925773 bytes，完整摘要
+  `sha256:8c5e3855841ef3041f716d3c2120c9a5185f8ae7cf6ee0ff9e6afaa6508be432`；
+  root 管理，发布前后验证一致。默认产品资产路径尚未改到此版本。
+- [x] 安装资产无模型准备：唯一指定模型、声明的推理选项读回一致；
+  mode / collaboration_mode / reasoning_effort 原生 setter 接受。
+- [x] 两次真实官方→Go 切换通过：canonical/native session ID 与 owner
+  不变，generation 更新，另一官方实例不受影响，原 low 推理偏好保留。
+  Go 请求含第一轮记忆标记、没有旧 previous_response_id，HTTP 200；
+  第二轮 Agent 正确复述标记。观测通过专用 relay，自带稳定会话头，
+  不冒充无 relay 的产品直连验证。
+- [ ] Go→官方第三轮成功：配置恢复已 observed，官方目录与 low 偏好
+  读回正常，但 prompt 返回 340 字符、end_turn、无记忆标记；闭集诊断
+  命中 encrypted-history。探针保持 exit 1，不把配置恢复当聊天恢复成功。
+
+当前阻塞：跨供应商重放不兼容的加密内部思考状态。此归因是根据真实
+错误与 Responses 加密 reasoning 机制的推断，尚未取得原生精确错误码，
+不能宣称已证明是哪条密文记录导致。用户可见历史丢失亦未获证明。
+
+曾提议跨供应商采用历史投影；用户已否决此方向：Ordessa 封装原生能力，
+不在 Profile、Chat、核心或适配层自建历史过滤/迁移机制。此方案撤回，
+未实施；原始 rollout 未修改。
+
+本轮真实探针均清理自己的通道、隔离 runtime 与专用密钥条目；未修改
+全局登录/配置、未启停用户服务。根目录仍为 main；未提交、合并或 push。
+
+### 第 4 步原生诊断收口（仍未通过完整往返）
+
+- [x] 补闭集错误分类及反例：只输出已知错误码与解密/组织不匹配布尔值，
+  不输出原始错误、密文、密钥或聊天内容；探针测试 12/12，exit 0。
+- [x] 再次真实三轮复现：官方→Go 返回正确标记；返回官方配置恢复
+  observed，第三轮原生错误准确分类为 `invalid_encrypted_content` /
+  `invalid_request_error`，`decryptionRejected:true`，
+  `organizationMismatch:false`。后者仅表示错误文本未命中该特定措辞，
+  不足以推断两路属于同组织。完整探针 exit 1，自己的资源全部清理。
+- [x] 核对锁定 adapter：resumeSession 调用原生 `thread/resume`，
+  传目标 modelProvider、配置与原 rollout 路径；没有传自编 history。
+  原生恢复允许配置覆盖；此错误发生在后续真实推理，而非 resume ACK。
+- [x] 找到 adapter 的误导性表达：其 createErrorEvent 对部分非重试错误
+  发 agent_message_chunk，未设置 failure，所以 ACP end_turn 不代表成功。
+  本轮仅核对和诊断，不更改上游原生历史机制或错误处理策略。
+- [ ] 完整往返：已定位为原生请求的加密内容兼容拒绝；尚未找到已验证的
+  原生解决方式。核对 0.147.0 turn 请求循环未见专门的解密恢复分支，
+  不能据此声称所有上游版本均无解；不得用自建投影冒充原生支持。
+
+另外一次诊断复测在返回 Profile 应用时 `SESSION_NEEDS_RECOVERY`，
+只产生两轮 prompt，未到第三轮；保留为独立未定位失败，不和密文错误混同。
+之后补 RPC 异常/operation 查询的安全诊断并复跑，得到上面的精确密文错误。
+尚未对这个偶发应用失败报修复成功。当前不再重复真实调用碰运气。
+
+### 上游调查收口：原生兼容缺口，不用 Ordessa 上层绕行
+
+2026-10-02 通过 GitHub API 实读 openai/codex 的 issue、评论和关联记录：
+
+- #17541 `Model switch mid-conversation fails: encrypted content could not be decrypted`
+  仍 open。报告在原生 app-server 的同会话切换中复现相同错误，讨论区
+  明确区分恢复 provider 路由与主动跨 provider 的加密状态兼容问题。
+- #46379 `Side chat doesn't restore the parent thread's model_provider...`
+  仍 open。原生 Desktop 跨 provider 的 side chat 也报告相同错误；
+  场景不同，只作为上游兼容问题的旁证，不当作我们探针的直接复现。
+- #13724 仍 open，涉及旧线程/组织不匹配，亦非本次已证明的精确原因。
+- #17541 关联记录中未发现 openai/codex 的修复 PR；按 encrypted_content
+  与 portability 检索 PR，也未找到可用的合并方案。检索不是所有分支的
+  穷举证明，不能声称上游永远没有解决方案。
+- 评论中有第三方 rollout cleaner 和非官方 Codex core 改动；其声称的
+  测试未由我们复验，不计为已验证修复，未下载/接入/安装这些实现。
+
+结论：继续使用当前官方原生版本且禁止自建历史处理时，不能报完整
+跨 provider 往返通过。这一项有明确外部兼容阻塞，不再无限研究或反复
+真实调用。若要推进此项，需用户明确允许评审/采用 Harness 内的原生
+Codex 修复版本（不在 Profile/Chat/内核增加历史策略）；否则保持未通过。
+
+本轮只更新调查证据，无生产实现变更、无真实模型调用、无资产安装。
+
+## 用户裁定：只编排 Harness，继续产品收尾（2026-10-02）
+
+Ordessa 不修复 Harness 内部历史、密文、推理或工具执行机制；上游内部
+问题如实登记，不接入 fork、rollout cleaner 或自建历史投影。正常配置
+切换与聊天仍需验证，不能用此裁定掩盖 Ordessa 的接线缺陷。
+Codex 官方→Go→官方特定密文失败保留为已知限制，不再作为本轮其他
+产品收尾的前置阻塞；不将其改记为完整往返 PASS。
+
+### 下一步：三品牌桌面默认资产装配
+
+- [x] 发现默认启动器及 UI/挂载探针还指向早期资产；新增两条反例先红。
+- [x] 同步默认启动器、挂载/UI 探针与 Codex 播种/验收默认入口：
+  Pi 使用 `profile-pi-registration-owner-bound`，Claude 使用
+  `profile-claude-provider-restoration`，Codex 使用
+  `profile-codex-catalog-fast-off-v6`；显式环境覆盖仍保留。两反例转绿。
+- [x] 三品牌默认计划通过真实主机 root 所有权及完整摘要验证：
+  `verified:true`、18 个启动参数、零 prompt，exit 0。
+- [x] 当前源码 build / typecheck 均 exit 0，18 扩展构建成功。首跑失败
+  为本工作树 npm 依赖缺失；随后按锁文件 `npm ci` 恢复 549 包。
+  默认 npm 缓存不可写，使用专用 /tmp 缓存，未改锁文件或包版本。
+- [x] 更新后的实际 Electron 无模型装配/UI 检查均 exit 0：
+  挂载 `ready:true/rootMounted:true/errors:[]`；UI 三品牌连接可见、
+  项目可选、两个 Profile 预设可见、alerts 为空。零 prompt。
+  GPU/DBus 环境警告保留，不冒充产品业务错误；没有修改用户服务。
+- [x] 当前 Profile/model-provider/Harness model 相关 Python 回归：
+  619 passed、1 条既有 Starlette warning，exit 0。
+- [x] native-profile JS + 默认装配反例：94/94，exit 0。
+- [ ] 全量 root JS 聚合全绿：首跑 32/41，exit 1。逐门定向复验后
+  唯一尚未通过的是旧 `test:ui-preview`，因此本项仍不勾。
+  live-wire 默认共享 `.venv` 缺 Profile，改用既有解释器覆盖指向
+  本树 integration venv 后 68/68；没有重装/重指共享 venv。
+  完整独立开发运行根下 Electron 6/7 套件通过，旧预览仍失败。
+- [x] access 聚合入口兼容 npm 调用环境：原 E1 夹具明确继承
+  `process.env`，却断言 npm_config 键恒为空。校正为恰等于调用者
+  继承键集合，额外安装器键仍拒绝；不清洗子进程制造绿色。直接
+  Node 和实际 `npm test -- node-test:plugins/harness/tests/access`
+  两条入口均 86/86、exit 0；未修改生产 access/原生代码。
+- [x] 发行契约/更新链 45/45，exit 0。它核验现有测试产物，不代表
+  本轮源码已重建并安装最终 deb。
+
+旧预览夹具仍启用已退役的 `ordessa.agent-conversation`，且缺当前 wire
+IPC handler；history DOM 缺席导致 getComputedStyle 错误。已登记 known
+issues，不复活旧链、不删断言。实际产品无模型检查与旧夹具分开记账。
+
+本轮操作失误：首轮及复验预览未指定 `ORDESSA_PREVIEW_OUT`，其默认
+截图步骤覆写了原本已有未提交修改的 `docs/ui-preview/01-empty.png`。
+不能再声称该他属文件逐字未动；未擅自用 Git 基线覆盖它。后续所有
+预览必须指定独立输出目录。本轮无真实模型调用、无安装/登录变更。
+
+范围：产品资产选择与验收入口接线，不改 apps/server、pacthold 或
+Harness 原生历史/推理。开发 runtime 冒烟不替代发行包验收。
+
+## 并行收尾（2026-10-02，用户授权可并行快速推进）
+
+沿用 Spec Kit 合同与本进度账，不增加新工作树/长期会话或另一套派工体系。
+主代理独占进度/known-issues/git/产品集成；子代理不提交、不再委派。
+
+| 单元 | 文件所有权 | 本轮完成条件 | 状态 |
+| --- | --- | --- | --- |
+| Pi/Claude 实际 UI | 产品 UI probe/driver、UI seeder、新局部测试 | 参数化真实 UI，提供可亲跑的首发/下一轮命令；真实调用由主代理执行 | 执行中 |
+| 旧 preview 夹具 | test-ui-preview、preview-main、example.ui-preview | 使用当前公共契约，保留实质交互断言；独立截图输出 | 执行中 |
+| 发行装配审计 | 只读 | 默认启动/资产交付最小方案，逐项列需裁决与可直接修的接线 | 执行中 |
+
+当前不准修改 Harness 内部历史/推理/工具策略。Codex 密文兼容失败维持
+已知限制。本轮只复用自有临时数据根，不触碰用户服务/全局配置/登录。
+
+### 本轮已验事实与剩余接线（持续更新）
+
+- [x] 旧 preview 使用当前 Chat/公共 wire 夹具，未复活旧链。
+  新增同步双击审批反例捕获 responseCount=2；生产同步 ref 防重入后，
+  主代理实际 Electron 复验 responseCount=1，其余交互通过、consoleErrors=[]、
+  exit 0。独立截图/结果在 `/tmp/ordessa-preview-closeout-main`。
+- [x] Chat frontend 62/62，包含新增同任务双击防重入单元反例。
+- [x] 子代理 Pi/Claude 实际 Electron 零模型检查通过，三品牌、项目、
+  两个 Profile 可见；该证据不等于真实聊天通过。
+- [x] 主代理 Pi 真实 UI：最初库存 alertCount=1 的失败已定位为产物不一致，
+  保留失败证据；后续一致产物库存与真实首发复验见下文。
+- [x] Harness wheel 部署定位修复：不再依赖源码相邻 runtime 或
+  `/usr/bin/node`；单一 canonical policy 原字节进入 wheel，按产品 PATH
+  选择 Node。执行者报告部署 9 PASS、相关合计 148 PASS，真实三品牌
+  trust 校验通过；主代理已独立复跑部署 9/9，构建解释器限制见下文。
+- [ ] 模型切换器：现成插件已补产品启用/唯一公开 Token/组件绑定，
+  局部装配 2/2、原测试 30/30（执行者）；正在连接既有 inspectChoice
+  与 session-override，不生成前端支持矩阵；不能把 Profile 作为必要前置。
+- [x] 开发/发行共用产品 native plan 已提取并验证 14/14；完整 deb
+  尚未接入该 plan、重建或验收，这部分仍未完成。
+- [ ] Claude 公开再分发仍为 NOT_VERIFIED_PUBLIC_REDISTRIBUTION。
+  官方允许有条件预装，不等于当前闭包自动合规；当前资产缺 SDK README/
+  原生 LICENSE，认证与第三方推理条款需核实。不能以本机调用成功推导。
+
+本轮改动都是 Ordessa 自身夹具/UI/部署与接线；没有修 Harness 原生
+历史、密文、推理、工具策略。未提交、未合并、未 push。
+
+### 用户校准：Profile 必须可选（2026-10-02）
+
+Profile 只是预先保存的一套配置清单，不是普通会话或模型切换的前置条件。
+撤销“让模型选择统一依赖 Profile 链”的建议：正确方向是 Harness 独立
+提供会话配置应用，model-provider 和 Profile 平级消费它。普通会话以
+当前原生配置为基底，临时选择不自动创建全局 Profile。
+
+只读现场发现：Harness C4 ConfigurationApplicationService 本身无 Profile
+依赖；当前产品 profile_sessions 创建 owner/services 并要求 profile_id，
+造成实际装配耦合。modelProvider.inspectChoice 对端当前没注入生产
+harness_config_port；旧独立 NextTurnSelector 没有进入实际 prompt 前应用。
+模型控件已真实注册，但在该事实下必须禁用，不得记实际切换 PASS。
+
+后续最小接线必须共用同一 native owner、UID、generation、锁与 C4 应用
+证据；不能注入旧cached-readback adapter制造绿色，也不能增加第二套
+应用账本。必补反例：无 Profile 和卸载 Profile 后聊天/模型仍可用；
+两消费方不重复绑定 owner；显式换 Profile 清除临时覆盖；晚到结果不串路。
+
+### 主代理集成复验（本轮）
+
+- [x] `npm test` 41/41 套件、exit 0：全部工作区、真实构建、产品
+  装配、Harness packaging/access、ACP rig、7项受控Electron门禁。
+  使用明确的 `ORDESSA_WIRE_LIVE_PYTHON` 指向本树独立integration venv、
+  既有完整development runtime，preview独立输出；未重指共享venv。
+  此结果不是安装deb或真实聊天通过。packaging套件有既有1个skip，未新增。
+- [x] 主代理部署测试9/9、共享产品plan/defaults14/14、Profile/
+  model-provider/configuration_model/managed_probe回归596P、1既有warning。
+  wheel测试使用明确构建解释器 `/usr/bin/python3`（本机离线setuptools），
+  首次因integration venv缺setuptools为8P/1F，后按测试支持的
+  ORDESSA_HARNESS_BUILD_PYTHON重跑；没有skip或弱化断言。
+- [x] Pi inventory真实凭据播种复验：一致19扩展产物下alerts=0、
+  composer/profile可用、零prompt。之前other alert对应新增插件清单
+  与18扩展旧产物不一致，不能归因为Pi/API问题。
+- [x] Pi真实首发缺陷已修并真实复验；原 beginTurnApplication 的
+  CONFLICT_REQUEST、零prompt 失败证据保留。
+  执行者只读失败DB确认应用journal plan_digest为digest([])；首选Profile
+  注册后同Profile再选，使“desired相等”产生空diff；native目标配置端口
+  不接受空model choice。已补反例与后端完整目标应用修复；登记选择
+  不等于原生已应用。不前端跳过select，不修上游Harness内部。
+
+本轮测试不更改最终交付结论：独立模型应用还需解耦生产装配，
+完整发行仍未通过，不得因41/41而勾产品完成。
+
+### Profile 可选性与真实 UI 更新（2026-10-02）
+
+- [x] 首发空差分已修：native 应用需要完整目标，不以保存值相等推断已应用。
+  Profile 局部反例先红后绿，主代理独立全 Profile 223P；已审 core/sessions
+  diff，普通轮次覆盖与显式重选清覆盖仍分开。
+- [x] 主代理实际 Pi UI：首次发送与同会话下一轮 Profile 切换均收到真实
+  回复，2 次 prompt 均 completed，应用 journal confirmed，回执
+  harness-api-confirmed，alerts=0，自有凭据精确清理成功。
+- [x] 主代理实际 Claude UI：同样 2 次真实回复、同会话配置变化、确认回执、
+  alerts=0，自有凭据精确清理成功。两品牌测试均未证明上游使用两个不同
+  模型（distinctUpstreamModelsProved=false），不得扩写为该项通过。
+- [x] 产品 shared native owner/services 已从 Profile 激活中抽离：无 Profile
+  的中性注册不创建 Profile 记录，卸载 Profile 不关闭共享 authority；
+  停机/重启换新 authority，旧引用拒绝。新增 5 个受控反例覆盖，原始
+  4 条先红后绿。共用工厂/owner/journal（不是单个 C4 实例）；
+  model-provider 尚需生产消费接线，不能记成实际模型切换已完成。
+  当前 ProductSkills 依赖 Profile，无 Profile 验证组合省略 Skills；
+  此事实不等于 Skills 已经解耦。
+- [x] Profile Chat 后续普通发送不再重新 selectForSession 清掉临时覆盖；
+  反例先红后绿，主代理独立 59/59。普通续轮仍走实际 application 与
+  完整 receipt/readback 验证；显式同 Profile 重选仍清覆盖，等待期间新
+  选择留到下一轮，失败/unknown 不消费选择。
+- [ ] model-provider 独立生产应用仍缺接线。当前控件在端口缺失时正确禁用，
+  不因此记作普通会话模型切换通过。
+
+本次真实调用使用独立开发 runtime 与临时数据根，不是已安装 deb 验收；
+没有改上游 Harness 内部机制、全局配置或用户服务。未提交/合并/push。
+
+### 独立模型应用接线的已确认缺口
+
+不能直接把旧模型端口接到生产：它固定 target、以请求值缓存代替实际
+readback，操作键缺配置版本/generation；旧 NextTurnSelector 在应用前
+pop 意图，unknown 后可能误判无待办而放行。不能在 Profile guard 后
+再加一个直接 apply 的 model guard（同轮双应用且下轮可能覆回旧模型）。
+
+接线应共用 C4 权威，model-provider 保存模型意图，不依赖 Profile；
+产品桥将可选 Profile 目标与临时模型选择归约后一次应用。现有 wire
+只有选择/查询/对账，没有提交消费接口，需补薄的 beginTurnApplication
+接缝或接入既有后端 prompt 边界，不能把 query/reconcile 变成写入。
+同次发送前 Profile/model 连续操作的规则用户已裁定如下；共享 authority
+生命周期抽离可独立推进。
+
+### 最新用户裁定：Profile 是按字段覆盖的配置清单
+
+后切换的操作只覆盖自己声明的配置项：模型选择只改模型；Profile 只
+改它包含的 facet/item，未包含 model 就不改变当前模型。相同项以最后
+操作为准，其他项保留。此裁定取代此前“切 Profile 清所有临时覆盖”
+及“从 A 到 B 为省略项自动 reset”的实现口径。
+
+现有生产代码尚未完全满足：compile_switch_diffs 遍历当前与目标并集会
+对省略项生成 reset；确认/对账路径会 clear_overlays 全清。需要改成
+按目标声明字段的覆盖范围处理，并用实际同字段顺序/不同字段保留/
+拒绝与未知不消费等反例验收；不能只改文案或前端隐藏。此项未完成。
+
+### 抽离后的主代理复验
+
+指定本树独立 integration venv 执行 products/server/tests + Profile tests
++ model-provider server tests + Harness configuration_model tests：769P、
+1 个既有 Starlette warning、exit 0。Profile Chat 独立 59/59；根
+typecheck/build exit 0，19 个扩展完整构建，git diff --check 干净。
+子代理曾误用本树 .venv 跑产品套件遇到缺 jeepney 的 2 个环境红；
+改回指定独立环境后 179P，主代理上述全集复验亦通过，未安装/skip。
+
+本轮没有修改 host，未提交/合并/push。真实 UI 的两品牌证据发生在
+这次中性装配抽离前；抽离后目前是受控回归证据，勿混记成再一次实际 UI。
+
+### 新语义反例账本（待实现，不得记全绿）
+
+新增独立 test_sparse_profile_precedence.py 共 13 例，执行者 8 红/5 绿；
+尚未修改生产实现。这些新反例是在上面 769P 回归之后添加，所以当前
+不能声称全 Profile 测试仍全绿。红点包括省略项 reset、mask 外覆盖
+丢失、对账使用后来全局新增字段、晚 pick 被旧成功/unknown/commitfail
+覆盖，以及应用期间新设 overlay 被旧操作清除。
+
+正式实现要整体校准：目标字段 mask、当前原生配置作为基底、与一次
+应用绑定的恢复事实、成功/失败/对账的序列围栏；不能简单把全清换为
+当前 Profile 字段子集。Profile 本身不应因此成为所有会话配置的必需
+状态仓库。普通聊天/独立模型消费者仍须共用中性 Harness 应用权威。
+
+### ZCode 接管窗口（2026-10-02）
+
+用户决定由 ZCode 执行，Codex 与用户回来共同验收。执行权威改为
+`zcode-profile-model-closeout.md`（有界 A/B/C），不再跑旧无限夜间目标。
+Codex 三个实现子代理均已结束，本会话停止写实现；不自动开新会话/树。
+交接 HEAD 仍为 e560f7a19b9e1b1d0e876bdfde5fe43bb4b14873；**当前未提交
+实现就是交接基线**，不能从 HEAD 丢弃重建。主控本轮重新复跑新反例
+确认 8F/5P，exit 1。无模型/安装权限扩展，真实验收留到用户回来。
+
+### ZCode 窗口完成（2026-10-02，IMPLEMENTATION_REVIEW_READY）
+
+T00–T06 全部完成，P01–P11/M01–M13/C01–C05 受控门全 PASS。执行权威
+zcode-profile-model-closeout.md；契约与裁定见 zcode-profile-model-appendix.md；
+逐门台账、净修改面（37 文件，与他属初始改动精确区分）、新旧测试语义变更、
+真实分账与 5 步验收见 **zcode-profile-model-report.md**。要点：
+
+- T00：基线快照+无竞争写者确认+13 例红账本复现（8F/5P，exit 1）。
+- T02（A）：稀疏合成（省略≠reset，declared_removals 才 reset）+ schema v3
+  （action_seq/revision/admission_facts）+ CAS 消费围栏；13/13 转绿，Profile
+  251P。T03（B）：modelProvider.beginTurnApplication + 队列围栏（不提前 pop、
+  unknown 持久阻塞、版本化提交键）；282P。T04：产品双模式接线（bound=Profile
+  overlay 桥/single apply，unbound=共享 C4 直应用）+ 前端 guard dispatch；
+  合并门 868P。T05：三品牌真实注册端口证据（含真 trust 校验 verified×3、
+  读回偏离=unknown 反例）；合并门 883P。
+- T06 主会话复跑：sparse 13、合并门 883P/1 既有 warning、前端 60P+67P、
+  typecheck、git diff --check、root npm test（隔离 preview 输出）全部 exit 0
+  （.cleanup-evidence/zcode-profile-model/）。
+- 未提交/合并/push；无模型调用、无安装、未改 host/用户服务。真实 UI/安装
+  验收 NOT_RUN 留用户与 Codex 联合验收。本段后停止写入。
+
+### Codex 复审修复轮完成（2026-10-02 晚）
+
+复审 codex-zcode-review.md（REQUEST_CHANGES）三项已全部处置，修复契约
+冻结于附录 §6c，详见 zcode-profile-model-report.md §8：
+
+- F1（点击顺序失效）已修：Profile 显式选择点击时立即 selectForSession，
+  applyOnSubmit 只 beginTurnApplication；跨插件点击经共享 serializeRegistration
+  seam 串行（到达序=点击序）。产品组合反例 8 例 + 真实双 glue 前端组合
+  （旧码红点已捕获）覆盖复审全部验收象限。
+- F2（转交失败仍放行）已修：sink 三态（TurnIntentHandoverError），
+  chooseForSession/queryChoice 加 intentRoute，前端 bound 分支核对意图命运，
+  服务端 HANDOVER_UNRESOLVED 后盾；失败/未知零 prompt 留草稿。
+- F3（三品牌真实进程）已补：pi/claude-code 裸跑真实进程五步全过；codex
+  裸 session/new 被资产拒绝（已记录），经无模型 provider 注册前置后真实
+  完成。主会话裁定 codex 前置计入无模型证据，T05=PASS（裸跑阻塞透明
+  披露，可推翻）。证据 f3-real-process-*.json。
+- 修复轮复跑（主会话亲跑）：合并门 891P/1 既有 warning exit 0；前端
+  68P+84P exit 0；typecheck/build(19 扩展)/git diff --check exit 0；
+  root npm test（隔离 preview）exit 0。
+- 新登记边界：routed 标记+Profile 卸载的服务端复核探针（已知限制，最小
+  后续）；独立意图+后出现绑定的诚实投影语义（追认）。未提交/合并/push，
+  无模型调用/安装/host 改动。本段后停止写入，等待第二轮联合验收。
+
+### Codex 直接修复首次绑定意图交接（2026-10-02）
+
+本段取代上段“独立意图+后出现绑定的诚实投影语义（追认）”：该路径不是
+正确产品行为；用户要求不含模型的 Profile 保留已选模型。
+
+- [x] 三条后端反例先红（3F/8P）后绿：首次绑定无模型 Profile 接住 M2；
+  含模型 M1 的后选 Profile 得 M1；routed 后卸载 Profile 服务端明确拒绝。
+- [x] model-provider 将既有独立意图 idempotent 转交 Profile 配置层，校验
+  provider 版本与唯一目标，保留原队列/序号；标记只更新匹配序号，不应用模型。
+- [x] 产品首次登记在公开 binding 前完成交接，随后正常 Profile 选择按
+  mask/action_seq 覆盖；没有创建第二个应用账本，也没有全局 Profile 写回。
+- [x] 既有原生会话首次点击 Profile 立即登记，和模型选择共用 FIFO；草稿
+  仍不创建空会话。前端组合反例证明首次登记→Profile 选择→模型选择顺序。
+- [x] bound 模型 guard 查询已有独立意图的交接状态；交接未完成/结果未知
+  阻止发送。前端重挂没有 client 缓存时也查询后端，不能静默放行。
+- [x] routed 后端提交重新检查绑定存活：卸载/旧 owner 时 refused，保留意图。
+- [x] Python 相关全集在真实资产所有权环境：894P、1 既有 warning、exit 0。
+- [x] Profile Chat 68P；model-provider Chat 87P；typecheck exit 0；build
+  19 扩展 exit 0。既有 React act 警告未掩盖失败。
+- [x] 本次 root npm test（独立 `/tmp/ordessa-codex-handover-preview`）
+  41/41 套件通过、exit 0，包含受控 Electron 与 UI 预览验证。
+  真实三品牌聊天/切换与安装验收本轮未执行，不能据此记为产品验收完成。
+- 最终构建后再次 typecheck/diff-check 通过；Electron 空宿主 smoke 使用
+  与根聚合相同的显式 ORDESSA_BUNDLED_ROOT 后 exit 0、errors=[]。
+  首次单独执行漏设该变量，因 bundled runtime 缺 python/bin 而 exit 1；
+  未修改产品代码或放宽检查。此 smoke 不代表完整产品启动验收。
+
+未改 host、未安装资产、未读 key、未调用模型、未动用户服务，未提交/合并/push。
+
+### 完整 Desktop 用户验收启动（2026-10-02 17:44）
+
+- 使用默认持久数据根 `~/.ordessa`、默认三品牌产品计划、可信已安装资产，
+  显式设置开发 bundled runtime；未关闭 Electron sandbox，未调用模型。
+- Desktop 已打开（本轮自有 Electron PID 625906），Server 启动失败，
+  因此当前窗口不可聊天；origin 缺失是次生症状，非适配器故障。
+- 独立复现同产品 Server 启动得到 `DATA_ROOT_UNOWNED: existing directory
+  has no AgentBox owner marker`（exit 1）。Desktop 已初始化目录，但 Server
+  的数据根 ownership 检查不接受该已有目录。不能通过临时数据根、伪造标记
+  或放宽 ownership 检查掩盖，需先收口 Desktop/Server 默认数据目录接缝。
+- 本轮未删除现有数据，未终止任何用户既有服务；未派非阻塞问题给 ZCode，
+  因当前发现的是验收阻塞。真实聊天清单仍未执行。
+
+### 默认持久根启动阻塞收口（2026-10-02 17:58）
+
+- 精确原因：新建根的 `ensureDataRoot` 已会写兼容 owner marker；但这份
+  `~/.ordessa` 更早被独立 Codex 登录创建，未初始化为 Server 数据根。
+  不改变默认目录、marker 标识或 Server 的 `DATA_ROOT_UNOWNED` 拒绝规则。
+- 用户授权“do it”后新增显式维护入口
+  `products/desktop/initialize-existing-data-root.mjs`，普通启动不调用。
+  对已确认的 `/home/maoqh/.ordessa` 只新增缺失 marker（0600、exclusive
+  create/fsync）；现有账号、文件、权限不变。迁移说明见
+  `docs/migration/desktop-existing-account-root.md`。
+- 两条新测试实现前红（API 尚不存在，不冒称捕获旧实现）；实现后绿。
+  另补损坏锁/Server 锁/marker symlink 反例。Desktop 全集 139P、exit 0；
+  Python `test_data_root_c01.py` 31P、exit 0；typecheck/diff-check exit 0。
+  本批构建 19 扩展通过；没有重跑上批 41 套件全聚合，数字不沿用为本批结果。
+- 关闭的仅为本轮自有失败窗口 PID 625906，正常释放 `.lock`。重启后
+  Desktop PID 629336、受其监管 Server PID 629414，持久根仍为 `~/.ordessa`，
+  Chromium sandbox 未关闭。`/live` 200、认证 hello 200 / wire/1，
+  `acpChannelHarnesses=[claude-code,codex,pi]`，Profile v2 方法 supported=true。
+- 真实 `modelProvider.catalogue` 读取 200，items=0：该持久根尚无供应商
+  配置；不是失败，也没有把其他测试数据根的配置/凭据复制进来。
+  用户下一步在设置中配置并进行实际 UI 验收；真实聊天/切换仍 NOT_RUN。
+- 未提交/合并/push，未读 key.txt，未调用模型。当前验收窗口保持运行，
+  未经用户确认不重启、替换运行版本；非阻塞问题另列给 ZCode，不扰验收。
+
+### Desktop 首屏与项目入口修复（2026-10-02）
+
+- 实际完整产品首屏反例：主题变量为空、整窗 overflow=30px、footer
+  height=330px、Chat 未默认打开、无直接 Harness 选择入口。
+- 修复主题变量装载、侧栏 footer flex、根视图存在时隐藏重复宿主导航；
+  Chat 默认打开并展示实际可用连接，未连接状态改为“选择 Harness”。
+  默认产品仅停用旧 execution connector `ordessa.agent-server`，不删除
+  其实现；三品牌 ACP 连接继续由现有服务提供。
+- 新增空会话项目入口反例先红：提前返回分支漏渲染 ProjectDialog。
+  修复后点击“选择项目”显示弹窗，不创建会话、不发送消息。
+- 完整产品受控探针通过：theme=#ffffff、overflow=0、footerHeight=30、
+  footerGap=0、Chat 默认可见、三个真实连接 claude-code/codex/pi、
+  errors=[]；点击 Pi 连接成功，点击项目按钮弹窗可见。
+  探针使用独立测试根，不能冒充用户持久根中的真实聊天验收。
+- Chat 64P、connections 12P、Workbench 60 Vitest+7 NodeP、Desktop
+  139P；typecheck、18 扩展 build、diff-check 均通过。未沿用此前根聚合
+  数字作为本批全量结果。未读取 key、未调用模型、未更改系统资产。
+- 当前持久根用户窗口 PID 629336 尚为旧版；尝试关闭本次自有窗口被
+  安全检查拒绝，未绕过，等待用户明确重启授权或手动关闭后再启动。
+  修复截图：`.cleanup-evidence/startup-ui-fixed-final.png`。
+  本轮未提交/合并/push，视觉细节及英文文案未冒称已全面重设计。
+- 用户手动关闭旧窗口并明确授权启动后，已启动修复版完整 Desktop：
+  Electron PID 639608、受监管 Server PID 639658；持久根仍为
+  `~/.ordessa`，三品牌可信资产启动参数保持不变，未发送消息或调用模型。
+  窗口保持运行，实际交互验收交由用户；启动输出只有 Chromium 的
+  systemd scope/VAAPI 环境警告，不据此声称真实聊天已通过。
+
+### 外框弹层与设置交互收口（2026-10-02）
+
+- 用户批准限定范围：Workbench、连接状态 UI、Desktop renderer 和设置
+  展示布局；未修改后端、配置语义、登录或用户数据。
+- 真实 Electron 反例先红：底部菜单存在，但 elementFromPoint 命中背景，
+  `menuVisible=false`。菜单移到 body portal，视口定位、尺寸更新、外部点击
+  与 Esc 收起、卸载清理；不通过放开整个侧栏 overflow 掩盖问题。
+- 设置改为左侧分区导航＋右侧当前分区，隐藏分区保留组件实例；表单标签
+  与输入控件分行。模型配置列采用 minmax(0,1fr)，不改变字段或保存逻辑。
+  设置页给原生窗口控制保留 34px 顶部区域，弹层禁止 native drag；关闭
+  按钮点击面积至少 32px。Tab 排除 hidden/inert 分区控件。
+- 完整默认产品隔离探针真实鼠标验证：菜单展开与命中、Esc、外部点击、
+  设置导航仅一个分区显示、关闭与 Esc、连续三次开关无残留、760x640
+  窗口和折叠侧栏底部栏中的菜单正常；设置打开时实际最小化、最大化、
+  还原与关闭测试窗口均通过。继续验证 Pi 连接＋项目弹窗成功。
+  `shellInteractions=true, nativeWindowControls=true, errors=[]`；没有发送消息。
+- connections 13P、Workbench 60 Vitest＋7 NodeP、model-provider desktop
+  37P、Profile frontend 20P、Desktop 139P；typecheck、18 扩展 build、
+  diff-check 全绿。仅报告本轮相关套件，不冒称后端或真实聊天全集验收。
+  新菜单卸载/Esc/外部点击单测通过；原后端 release 通知断言保留，DOM
+  查询目标随 portal 迁到实际菜单；jsdom 无 ResizeObserver 的错误已修。
+- 截图 `.cleanup-evidence/shell-interaction-fixed-settings.png`；未提交、
+  合并或 push，未读取 key、未更改资产。用户旧窗口 PID 639608 已关闭，
+  已启动新版本进行用户实际 UI 验收：Electron PID 648520、受监管
+  Server PID 648587，持久数据根仍为 `~/.ordessa`，sandbox 保持启用。
+
+### 用户持久根测试配置与输入区盘点（2026-10-02）
+
+- 用户要求提前配置。经当前公开 wire API 在 `~/.ordessa` 新增三项
+  测试供应商配置：Codex 官方 managed-account（gpt-5.5/gpt-5.6-sol）、
+  Pi DeepSeek（deepseek-flash/deepseek-v4-pro）、Claude Go（minimax-m2.7）。
+  以此前测试脚本的已知配置为参考，非本次重新探测远端目录。
+- 新增五个同名模型测试 Profile（名称前缀“测试 · ”）；通过
+  listProfiles/resolvePreview 回读五项均成功。重复执行新增数量为零。
+  首行/次行既有授权 API key 只经 importApiKey 存到系统密钥环；没有输出
+  密钥、没有明文配置文件、没有覆盖现有记录，没有模型请求。
+- 输入工具栏补换行与每个贡献的独立布局边界，控件保持单行；ChatLocation
+  补传实际 connection.harnessId，修复草稿错误显示“先选 Harness”。
+  Chat 64P、model-provider Chat 87P、typecheck、18 扩展 build 全绿。
+- 尚未解决：现有 ModelSelector/next-turn client 明确拒绝 draft target。
+  草稿阶段独立模型选择缺少首次提交前应用接线；本轮没有通过提前创建空
+  会话或隐式全局 Profile 绕过，也没有把它伪称为 UI 布局问题已解决。
+  当前可用测试路径：刷新预设→选同品牌测试 Profile 指定首轮模型→首次
+  发送创建会话→在已有会话中测试模型切换。真实 UI 发送仍由用户验收。
+  供应商/预设新增即时可读；布局源码构建完成，但未擅自重载用户窗口。
+
+### 存活 Pi 会话模型 unknown 刷新缺口（2026-10-02）
+
+- 只读检查用户实际存活的 Pi 原生会话：既有 DeepSeek 与新增测试 Pi
+  配置的 inspectChoice 均返回 supported；隔离产品核对三品牌安装验证
+  成功，每品牌恰好一个配置适配器。未发送模型消息或改变会话配置。
+- 前端存在可复现的缓存缺口：可选性只在加载/依赖变化时核查，打开菜单
+  不刷新。补同组件 unknown→ready 后重新打开的反例，修复前红在查询
+  次数未增加；修复后绿。打开菜单清掉旧证据并重新读取，仍只允许 ready，
+  保留上一轮异步查询取消保护；不轮询，不绕过后端验收。
+- model-provider Chat 88/88、typecheck 通过。用户窗口尚未重载，因此
+  不记作实际模型切换通过；草稿首次发送独立模型选择仍是前节登记缺口。
+
+### 用户真实第二次发送阻塞（2026-10-02）
+
+- 新版 Electron 657212 / Server 657260，持久根 ~/.ordessa，/live 200。
+  用户截图证明首轮已收到回复，后续发送保留草稿并显示 unknown。
+- 只读 SQLite 核查：当前 Pi Profile 会话 switch_state=needs_recovery；
+  最新 application journal state=unknown，failure 为
+  `Native provider restoration is unproven`。此前操作为 confirmed。
+  当前 overlay 与 Profile 的 providerConfigId/modelId 一致（deepseek-flash）。
+- 故障位于发送前配置应用，不可据 UI 通用文案归因为网络断开，也不能
+  擅自把 needs_recovery 清为 settled。Pi 的所谓 restoration 实际走
+  Harness 内 live-registration（不是 restart/resume），本轮尚未确认
+  原生注册为何未被证实。仍为真实阻塞，未报告修复或模型切换通过。
+- 本轮未重发消息、未调用模型、未重启当前窗口、未改用户数据库。
+  下一步需复现相同配置的第二次应用与选择路径，并定位被包装为 unknown
+  的原生拒绝/读回条件；证据不足时不得放行 prompt。
+
+### Codex 视觉标准的 UI 并行改版（2026-10-02）
+
+- 用户授权三条子代理并行：Workbench 外框/设置，Chat/会话侧栏，模型/Profile 选择器与表单。全部在既有 021 工作树内分文件推进，不改后端配置语义与鉴权，不新增外部框架。
+- 主体实现：浅灰侧栏/白色主区、居中 760px 消息列、独立滚动与底部 22px 圆角输入卡、紧凑模型/Profile 入口；模型菜单 body portal；设置单分区导航与双列表单，不再把所有插件设置堆在一个长页面。
+- 相关 539 项测试、typecheck、默认产品 18 扩展构建通过。隔离真实产品的菜单/设置/窗口控件与三品牌入口通过；受控聊天截图有宽/窄窗。
+- 新真实加号菜单门禁抓到 Escape 关闭后的焦点回归，已修复：菜单视口约束/命中/输入卡高度不变/关闭/焦点回归均通过。设置分区切换保留实际表单草稿，760px 内容区响应式单列也通过。
+- 暗色系统探针仍为固定浅色主题，未冒称暗色端到端通过。模型新浮层尚未在用户真实会话重载验收，组件门禁不记作真实模型切换完成。
+- 验收逐项与证据路径见 `ui-refresh-acceptance.md`。Pi 真实第二次发送阻塞仍按上一节登记，未通过 CSS、文案或清空 recovery 状态放行。
+- 本轮最终受控 UI 重跑 exit 0：输入卡圆角 22px，760px 横向溢出 0，加号菜单视口/命中/高度不变/关闭/焦点五项全真，consoleErrors=[]；最终 typecheck/build/diff-check 均通过。独立截图/源码交叉复审未发现新增阻塞性 UI 缺口。
+- 未自动重启用户窗口；新模型/Profile 联合控件尚待真实会话重载后验收。未知发送提示已去掉未经证实的“连接可能中断”猜测，仍保留草稿且绝不自动重发。
+
+### 新 UI 用户验收启动（2026-10-02 20:53）
+
+- 用户明确授权启动服务并给出操作/截图步骤。启动完整默认产品，数据根沿用 `/home/maoqh/.ordessa`，不使用临时演示数据、不禁用 Electron sandbox。
+- Electron PID 687273，Server PID 687331，loopback `http://127.0.0.1:35581`，`/live` 返回 alive；exec session 93094 保持服务。三品牌安装资产沿用此前已核验版本。
+- 未自动发送模型消息或修改模型/Profile 配置。先验侧栏/设置/真实菜单/小窗口布局，再单独验新会话最小聊天；旧 Pi recovery 阻塞不清除、不自动重发。
+
+### 用户反馈后二次 UI 收口与真实自动操作（2026-10-02 21:35）
+
+- 顶栏去掉与侧栏重复的模块 tabs，布局、区域切换、视图移动/关闭保留在单一“布局与视图”菜单。真实隔离窗口命中检查、Escape 关闭和焦点回归通过，窗口关闭/设置/项目弹窗回归通过。
+- 模型 owner 长说明改短状态提示，完整原因保留可访问描述；禁用附件/MCP 条目不再铺满内部故障码。未知发送仍保留草稿、不重发、不误报网络断开，session transport 的 unknown 原因不再被 gateway 丢弃。
+- Profile 确认应用后清除了 pending pick，却没用 lastConfirmed 显示名称，导致失败草稿看起来失去预设；现保留已确认名称并发布更新。草稿接受/丢弃后清掉仅属于草稿的确认缓存，防止下一个草稿假装继承旧原生会话配置。新用户选择仍优先，bound session 配置和应用策略未改变。
+- 只读核对用户新截图对应记录：最新 Profile journal 在 12:58:16 UTC 为 confirmed，session settled；不同于旧 11:41:47 UTC 的 restoration unknown，不能继续把新发送失败归因为旧 recovery。
+- 用户明确允许重启和一条新消息的自动操作。Electron 驱动实际选择 Pi/项目/“测试 · pi · deepseek-flash”，点击发送“Ordessa UI 自动验收：请只回复 UI_OK，不调用工具。”；观察 draftRetained=false、alerts=[]、横向溢出 0、预设名称保留。实际截图可见回复 UI_OK 与 completed，非 fixture。未重发旧未知草稿。
+- 证据目录 `.cleanup-evidence/ui-live-followup/`：`live-before-send.png`、`live-after-send.png` 和隔离产品设置/窗口截图。相关测试最终 336 项通过（Chat 71、Workbench 62+7、Model contribution 94、Profile contribution 71、Chat API 31），root/profile typecheck、18 扩展 build 和 diff-check 通过。
+- 真实测试驱动初版两次失败均发生于发送之前（脚本引号、异步连接等待），修正后只发出上述一条消息。驱动现在默认只读导航，发送须显式 ORDESSA_LIVE_UI_SEND=1 与新的用户授权。
+- 再发一条消息做真实新草稿/模型菜单联合验证被授权审查拒绝（已成功用完明确的一条消息范围），没有绕过或继续发送。相关边界已有受控回归，真实模型切换未据此报通过。现恢复正常 launcher，不启用测试驱动、不禁用 sandbox，仍用用户既有数据根。
+- 旧未知发送未复现，根因仍未确认；本轮不能宣称它已经根治。后续需针对旧会话的发送上下文和 transport unknown 原因取证，不得清数据库 safety 状态或盲目重发。
+
+### 单一实际模型状态与 Pi 启动供应商修复（2026-10-02）
+
+- 用户新截图对应 journal：13:34:17 UTC confirmed，13:34:26 UTC unknown，原生原因仍为 `Native provider restoration is unproven`。未清 recovery、未重发草稿。
+- Model query 现在从现有 Harness read-back 端口投影 current provider/model；Profile 或原生操作改变模型也可读到，无 model-provider 历史仍可显示。desired 仅表示排队操作，lastConfirmed 仅为历史；读取失败 current=null，不拿历史伪装实际状态。前端展示实际 current，排队选择独立标注“下轮使用”，读回不触发配置写入或创建会话。
+- 精确复现 Harness Pi 扩展缺陷：启动供应商已经验证并进入原生 catalogue，但后续 live-registration 的 admission map 未包含它，给该供应商补模型时误拒绝身份冲突。现只共享已 observed 的启动 admission（完整供应商摘要与模型列表），仍拒绝凭证轮换；不修改 Pi 上游内部机制。
+- 验证：Python 323 项、模型前端 95 项、Pi creation/registration 12 项均通过；root typecheck、18 扩展 build、diff-check、安装脚本语法检查通过。真实新 Pi 适配器无推理探针：两个独立实例、启动供应商补模型及另一供应商注册通过，session/generation 不变，prompt=0、http=0、持久凭证=0。
+- 首次 npm 网络安装不完整，真实适配器启动探针抓到缺模块；该候选保存在 `.cleanup-evidence/pi-startup-admission-v2-failed-partial`，未安装。最终使用已验证系统资产的完整依赖与当前锁文件离线重建，真实探针通过。有效候选 `.cleanup-evidence/pi-startup-admission-v2`：treeDigest `sha256:444515c3a622ff642a46ac64f97b4a3068406a68f627c3cc72b22a216152c1eb`，15464 entries、64944493 bytes。
+- 当前硬性待办：用户运行 `.cleanup-evidence/install-pi-startup-admission-v2-verified.sh` 安装至 `/opt/ordessa/harnesses/profile-pi-startup-admission-v2`（root 管理、前后完整校验、旧资产与全局配置不动）。sudo 需要交互密码，未绕过。安装核验后才能切换产品资产路径并重载；当前用户窗口仍是旧运行资产。
+- 未完成证据：重载后的真实 Profile→模型→后续发送、现有 recovery 会话处置；本轮无模型调用，不据离线测试宣称实际切换或未知发送已全部修复。
+- 用户完成安装后，重新用 Harness 完整 verifier 核验已安装 Pi 资产成功；产品选择切到 `profile-pi-startup-admission-v2`，共享发布/开发计划 12 项测试通过。按本次安装续接范围重启完整默认产品，旧 launcher/Electron/Server 已退出；新 launcher 709929、Electron 709996、Server 710054，exec session 93015，loopback 34683 `/live` alive。沿用 ~/.ordessa 和正常 sandbox；Codex/Claude 资产不变。新 Server 命令行确认使用新 Pi 入口。未发模型消息、未重发旧草稿、未清 recovery；真实 Profile→模型后续发送仍待验收。
+
+### 用户切换验收与输入告警闪烁（2026-10-02）
+
+- 用户截图和直接反馈：Pi 首轮 Profile 模型显示正确；单独模型切换及后续消息成功（用户报告）。反向切回 Profile 后截图有 unknown，因此反向覆盖不记通过。最新后台 journal 14:37:03 UTC unknown，原因为 `Native provider restoration is unproven`，前两项 14:34:48/14:35:18 confirmed；不是据截图猜测网络断开。
+- 输入框已有 composition 状态/isComposing 双保护，但漏了 Chromium 输入法候选确认 Enter 的 keyCode=229（compositionend 可能先发生）。补该守卫，候选确认不发送；新增结束组合后的 229 测试及 unknown 警告在普通编辑/229 确认中保持同一 DOM、只发送一次的反例。Chat 73 项测试、typecheck、18 扩展 build、diff-check 通过。该边界可解释重复提交导致的告警切换，但尚无用户窗口事件证据证明是唯一闪烁原因，不冒称实际验证完成。
+- 真实已安装 Pi 无模型探针新增“另一供应商选中→重新注册启动供应商→切回原模型”顺序，通过，prompt/http 均为零。单独适配器逆向注册可用，不足以证明产品 Python 生产应用链或真实会话已恢复；仍继续定位产品侧 unknown，未更换系统资产、未清 recovery 或重发。
+- UI 修复已构建但当前用户窗口未重载；重载需确认用户可中断窗口，未知草稿继续保留，不自动发送。
+- 用户明确要求重启后完成正常重载：旧三进程已退出，新 launcher 714095、Electron 714162、Server 714220，exec session 22029；loopback 46481 `/live` alive。加载已构建输入法修复，沿用用户数据及三品牌系统资产，sandbox 未禁用，无自动模型调用或旧草稿重发。输入实际闪烁及 Profile 逆向切换失败仍分别待验证/定位，不记作已解决。
+- 用户进一步复现：Profile 首轮完成后输入不闪，选择 model 后中英文输入都闪。纠正前述输入法根因猜测；229 保护是独立边界修复，不能解释本次现象。按 React effect primitive-dependency 规范定位：Chat 每次文本编辑都传入新的 location projection，模型选择器 idle effect 依赖该对象身份，pending 时反复 reconcile 并 refresh，导致短暂未知告警又清除。新增未发送队列+四次相同会话重投影的反例，修复前实际触发 4 次 reconcile（预期 0），修复后 0；真实 running→completed 仍触发一次核对。改为依赖派生的 profileBound 而非 location 对象，不放宽原生 owner/generation 或发送门禁。
+- 此项修复 model contribution 96 项、Chat 73 项、typecheck、18 扩展 build、diff-check 通过；无系统资产变更、无模型调用。当前窗口仍未重载本次模型 effect 修复，待用户同意重启验证。此项仅解决可复现的输入触发核对/告警闪烁，Profile 逆向发送 unknown 仍未判定修复。
+- 用户要求重启后确认旧 launcher/Electron/Server 已自行退出，未杀其他服务。已启动加载模型 effect 修复的完整应用：launcher 716827、Electron 716895、Server 716943，exec session 91483，loopback 35261 `/live` alive。沿用真实用户数据与原生 sandbox，未自动发送/重发；实际输入闪烁待用户复核。
+- 用户随后确认“一切正常”，输入告警闪烁记为用户真实验收通过；不据此标记逆向 Profile 或 Codex/Claude 全链通过。按用户要求保存部分源码检查点；口径见 checkpoint-20261002-desktop.md。夜间仅提出 N1–N3 有限范围（night-proposal-20261002.md），未启动执行者或自动化，明天仍需用户实际验收。

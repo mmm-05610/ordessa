@@ -101,3 +101,57 @@ def test_global_edit_during_planning_refuses_before_native_effect(tmp_path):
         assert {i.value for i in port.applied[-1]} == {"b", "terse"}
     finally:
         core.db.close()
+
+
+def test_native_full_target_keeps_omitted_items_as_retained_base(tmp_path):
+    """FR-02/FR-03: the target Profile's item mask decides the plan.  An
+    item the target omits produces **no** intent at all — the retained
+    effective native base keeps it — while an explicitly declared removal
+    of the same item still compiles a reset (G08)."""
+    core, _, port = world(tmp_path)
+    try:
+        target = core.profiles.create('target', harness_id='pi', display_name='Target')
+        core.profiles.set_facet_values('target-values', profile_id=target['profile_id'], expected_version=1,
+            values=[{'facet_id': 'model', 'item_id': 'choice', 'value': 'a'}])
+        core.sessions.select_profile('select-target', session_id='s', profile_id=target['profile_id'])
+        core.sessions.begin_turn('switch', session_id='s')
+        intents = {(i.facet_id, i.item_id): i for i in port.applied[-1]}
+        assert intents[('model', 'choice')].op == 'set'
+        assert intents[('model', 'choice')].value == 'a'
+        # Omission is not a removal.  This port re-applies the *whole*
+        # chosen target (P11), so the omitted item travels with its
+        # retained effective value — never as a reset.
+        assert intents[('style', 'choice')].op == 'set'
+        assert intents[('style', 'choice')].value == 'terse'
+        # and the omitted item keeps its confirmed effective value
+        config = core.sessions.session_config('s')
+        items = {(i['facet_id'], i['item_id']): i for i in config['items']}
+        assert items[('style', 'choice')]['value'] == 'terse'
+        assert items[('style', 'choice')]['source'] == 'retained_base'
+
+        # the same item, removed on purpose: a real reset reaches the port
+        core.sessions.begin_turn('declared', session_id='s',
+                                 declared_removals=frozenset({('style', 'choice')}))
+        intents = {(i.facet_id, i.item_id): i for i in port.applied[-1]}
+        assert intents[('style', 'choice')].op == 'reset'
+    finally:
+        core.db.close()
+
+
+@pytest.mark.parametrize('verdict,state', [('rejected', 'pending'), ('unknown', 'needs_recovery')])
+def test_native_same_profile_failed_application_retains_overlay_and_records_no_turn(tmp_path, verdict, state):
+    core, profile, port = world(tmp_path)
+    try:
+        core.sessions.set_overlay('overlay', session_id='s', facet_id='model', item_id='choice', value='override')
+        core.sessions.select_profile('select-current', session_id='s', profile_id=profile['profile_id'])
+        port.apply_verdict = verdict
+        with pytest.raises(ProfileError):
+            core.sessions.begin_turn('refused', session_id='s')
+        assert {i.value for i in port.applied[-1]} == {'a', 'terse'}
+        config = core.sessions.session_config('s')
+        assert config['switch_state'] == state
+        assert {i['value'] for i in config['items']} == {'override', 'terse'}
+        assert core.sessions.turns('s') == []
+        assert config['evidence']['receipt'] is None
+    finally:
+        core.db.close()

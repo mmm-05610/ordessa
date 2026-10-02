@@ -305,7 +305,7 @@ export interface ChatSubmissionSnapshot {
 export type ChatSubmissionResult =
   | { readonly status: 'accepted' }
   | { readonly status: 'refused'; readonly reason: string }
-  | { readonly status: 'unknown' }
+  | { readonly status: 'unknown'; readonly reason?: string }
 // `accepted` means the send path took the submission — never that tools or the
 // run succeeded. `unknown` keeps the draft and its ids: no automatic resend, no
 // draft clearing, no session re-creation (input-contracts §2).

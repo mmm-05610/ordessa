@@ -68,6 +68,17 @@ const sessionFacade = (extra: Partial<ConstructorParameters<typeof FacadeFixture
 
 const sha256 = (content: string) => createHash('sha256').update(content).digest('hex')
 
+it('preserves the transport unknown reason without retrying or promoting acceptance', async () => {
+  const facade = sessionFacade()
+  facade.sendBehavior = async () => ({ kind: 'unknown', operationId: 'attempt-1', reason: 'ACP connection disposed' })
+  const result = await createFacadeGateway(facade).submit({
+    submissionId: 'sub-1', target: { kind: 'session', connectionId: 'c', sessionId: 's1', contextRevision: 1 },
+    draftId: 'd', draftRevision: 1, text: 'test', attachmentIds: [],
+  })
+  expect(result).toEqual({ status: 'unknown', reason: 'ACP connection disposed' })
+  expect(facade.sends).toEqual(['test'])
+})
+
 describe('PC-2 command catalog four-state projection', () => {
   it('ready maps the brand commands to insert entries; loading maps 1:1 (controlled injection)', () => {
     const facade = sessionFacade()
@@ -305,16 +316,35 @@ describe('PC-3 page flow: entries, phases and the A06 chain through the real com
     expect(container.querySelector('[data-action="retry-attachment"]')).not.toBeNull()
   })
 
-  it('the capability note renders the real facade reason (S-05) and never a fake readiness', async () => {
+  it('the capability note uses plain copy, retains the real facade reason, and never fakes readiness', async () => {
     const { facade } = pageFacade()
     facade.attachmentPrepare = undefined // the production facade answer
     const container = await mount(page(facade))
     expect(text(container, '[data-testid="chat-capability-note"]'))
+      .toBe('附件暂不可用 · Enter 发送 · Shift + Enter 换行')
+    expect(container.querySelector('[data-testid="chat-capability-note"]')?.getAttribute('title'))
       .toBe('当前连接未提供附件传输通道（生产 prepare owner 缺席，S-05）。')
   })
 })
 
 describe('PC-2 page flow: the brand catalog is visible in the slash panel', () => {
+  it('keeps unavailable add actions disabled with compact copy and accessible full diagnostics', async () => {
+    const facade = sessionFacade(), chat = createChatContributions(), scope = new OwnedResources()
+    cleanup.push(async () => scope.dispose())
+    chat.forScope(scope).addInputSource(createAttachmentSource(facade))
+    const container = await mount(<ChatPage service={facade} chat={chat} theme="light" />)
+    await act(async () => { container.querySelector<HTMLButtonElement>('[data-testid="chat-plus-button"]')!.click(); await tick() })
+    const row = container.querySelector<HTMLButtonElement>('[data-entry-id="attachments:add"]')!
+    expect(row.getAttribute('aria-disabled')).toBe('true')
+    expect(row.querySelector('[data-disabled-summary="true"]')?.textContent).toBe('暂不可用')
+    expect(row.getAttribute('title')).toContain('R-Z2-6')
+    expect(row.getAttribute('aria-description')).toContain('文件选择通道未接通')
+    expect(row.querySelector('.chat-sr-only')?.textContent).toContain('R-Z2-6')
+    await act(async () => row.click())
+    expect(container.querySelector('[data-testid="chat-input-panel"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="chat-attachments"] [data-phase="ready"]')).toBeNull()
+    expect(facade.sends).toEqual([])
+  })
   it('ready commands render as rows and an absent catalog renders the honest reason row', async () => {
     const facade = sessionFacade()
     facade.commandCatalogAnswer = (): AgentCommandCatalog => ({

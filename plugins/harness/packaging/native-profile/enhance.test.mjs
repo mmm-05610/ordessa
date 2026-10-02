@@ -27,7 +27,7 @@ test('every symbol the enhanced artifact imports is really exported by the stage
   // Staged file name -> the module this repository actually owns, exactly as
   // enhanceStaging copies it.
   const staged = new Map()
-  for (const match of enhanceSourceText.matchAll(/'(ordessa-[a-z-]+\.mjs)': readFileSync\(path\.join\(HERE, ([^)]*)\)/gu)) {
+  for (const match of enhanceSourceText.matchAll(/'((?:ordessa-[a-z-]+\.mjs|codex-generic-prompt\.[A-Za-z]+))': readFileSync\(path\.join\(HERE, ([^)]*)\)/gu)) {
     const parts = [...match[2].matchAll(/'([^']*)'/gu)].map(part => part[1])
     assert.ok(parts.length > 0, `${match[1]} is staged from an unreadable path`)
     staged.set(match[1], path.resolve(HERE, ...parts))
@@ -68,6 +68,9 @@ test('every symbol the enhanced artifact imports is really exported by the stage
     'resolveNativeCodexBinary', 'assertNativeCodexSpecifier', 'captureCodexHistory',
     'orchestrateCodexReplacement', 'rebindCodexConnection'])
     assert.equal(typeof process[name], 'function', `codex-process.mjs must export ${name}`)
+  const catalogue = await load('ordessa-codex-model-catalog.mjs')
+  assert.ok(catalogue.compileCodexModelCatalog('synthetic', {toolCall: true, reasoning: false})
+    .models[0].base_instructions.startsWith('You are a coding agent'))
 })
 
 // A18: ACP shutdown must release the whole owned native group. The only

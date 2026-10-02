@@ -73,7 +73,7 @@ def test_v1_store_upgrades_in_place_with_ids_preserved(tmp_path):
             "SELECT value_json FROM profile_facet_values WHERE"
             " profile_id='profile_old1' AND config_revision=2"
         ).fetchone()
-    assert versions == [1, 2]  # only the missing step ran
+    assert versions == [1, 2, 3]  # only the missing steps ran
     assert profile["version"] == 3 and profile["current_revision"] == 2
     assert profile["realm"] == "local"
     assert session["session_uid"] == "legacy:S-old"
@@ -91,7 +91,7 @@ def test_upgrade_is_idempotent_when_run_twice(tmp_path):
     with db2.read() as conn:
         rows = conn.execute(
             "SELECT version FROM profile_schema ORDER BY version").fetchall()
-        assert [int(r["version"]) for r in rows] == [1, 2]
+        assert [int(r["version"]) for r in rows] == [1, 2, 3]
     db2.close()
 
 
@@ -133,12 +133,12 @@ def test_collision_on_uid_refuses_instead_of_merging(tmp_path):
         "legacy:S-old"
 
 
-def test_v2_fresh_database_reaches_version_two(tmp_path):
+def test_fresh_database_reaches_current_schema_version(tmp_path):
     db = ProfileDatabase(tmp_path / "fresh.sqlite")
     with db.read() as conn:
         rows = conn.execute(
             "SELECT version FROM profile_schema ORDER BY version").fetchall()
-    assert [int(r["version"]) for r in rows] == [1, 2]
+    assert [int(r["version"]) for r in rows] == [1, 2, 3]
     db.close()
 
 

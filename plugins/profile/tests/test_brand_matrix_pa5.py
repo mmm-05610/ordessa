@@ -9,12 +9,13 @@ profile-api public surface — never directly against the profile store:
   ``tests/goldens/brand_matrix/<brand>.json``.
 - 会话覆盖/切 Profile 清除: a session-only overlay is present, a switch is
   confirmed through the port, and the overlay clears while a second
-  session on the same harness keeps its own state; the brand face renders
-  the post-switch effective fields with no residue.
-- reset 到品牌面: A→B where B lacks the ``extra`` item compiles an
-  explicit reset intent that reaches the port (G08); the brand face
-  re-rendered from B equals the clean-B golden, so the removed field is
-  gone from the brand projection — never filtered, never faked.
+  session on the same harness keeps its own state; an item the new
+  Profile omits keeps its retained effective value instead of being
+  removed (FR-02/FR-03).
+- 省略不 reset / 显式声明才 reset: A→B where B omits the ``extra`` item
+  produces **no** intent for it — omission is not a removal (FR-02);
+  only an explicitly declared removal of that same item compiles a reset
+  that reaches the port (G08), and the brand face renders it gone.
 - restart-resume 保活: a controlled restart (fresh ProfileCore over the
   same store) keeps the settled binding and its receipt; a pending
   selection survives the restart and applies exactly once afterwards.
@@ -249,9 +250,14 @@ def test_brand_switch_clears_overlay_and_keeps_other_sessions(tmp_path, brand):
     values = {i["item_id"]: i["value"] for i in s_config["items"]}
     sources = {i["item_id"]: i["source"] for i in s_config["items"]}
     assert values[CHOICE] == B_CHOICE and sources[CHOICE] == "profile"
-    # B lacks the extra item entirely: the switch removed it from the
-    # effective projection (no overlay residue, no stale profile value)
-    assert EXTRA not in values
+    # Sparse ruling (FR-02/FR-03): the overlay inside the declared mask is
+    # consumed, while the item B omits keeps its retained effective value
+    # and is labelled ``retained_base`` so it can never be mistaken for a
+    # stored value of B (P06).
+    assert values[EXTRA] == EXTRA_VALUE
+    assert sources[EXTRA] == "retained_base"
+    assert EXTRA not in {v["item_id"] for v in
+                         core.profiles.facet_values(b["profile_id"])}
 
     t_config = core.sessions.session_config("T")
     t_values = {i["item_id"]: i["value"] for i in t_config["items"]}
@@ -259,16 +265,17 @@ def test_brand_switch_clears_overlay_and_keeps_other_sessions(tmp_path, brand):
     assert t_config["current"]["profile_id"] == a["profile_id"]
     assert t_values[CHOICE] == "tau" and t_sources[CHOICE] == "session_only"
 
-    # the post-switch face renders B's fields with no A residue
+    # the brand renderer over B's declared field is pinned by the golden
     assert _face(brand, tmp_path, value=B_CHOICE, extra=False) == \
         _golden(brand)["after_switch"]
 
 
 @pytest.mark.parametrize("brand", BRANDS)
-def test_brand_reset_reaches_port_and_brand_face(tmp_path, brand):
-    """Cell 3 — reset 到品牌面: A→B removes the extra item; an explicit
-    reset intent reaches the port (G08) and the re-rendered brand face
-    equals the clean-B golden — the removal is real, never filtered."""
+def test_brand_omission_never_resets_and_declared_removal_does(tmp_path, brand):
+    """Cell 3 — 省略不 reset，显式声明才 reset: A→B where B omits the
+    ``extra`` item produces **no** intent for it — neither ``set`` nor
+    ``reset`` (FR-02, P02) — while an explicitly declared removal of the
+    same item still reaches the port as a reset (G08)."""
     ce = tmp_path / "ce"
     port = ScriptedConfigPort()
     core, a, b = _world(ce, brand, port=port)
@@ -284,14 +291,35 @@ def test_brand_reset_reaches_port_and_brand_face(tmp_path, brand):
     applied = port.applied[0]
     ops = {(i.facet_id, i.item_id): i.op for i in applied}
     values = {(i.facet_id, i.item_id): i.value for i in applied}
-    assert ops[(FACET, EXTRA)] == "reset"          # explicit, not filtered
+    # omission is not a removal: the item never reaches the plan at all
+    assert (FACET, EXTRA) not in ops
     assert ops[(FACET, CHOICE)] == "set"
     assert values[(FACET, CHOICE)] == B_CHOICE
 
     s_config = core.sessions.session_config("S")
     assert s_config["switch_state"] == "settled"
-    assert _face(brand, tmp_path, value=B_CHOICE, extra=False) == \
-        _golden(brand)["after_switch"]
+    retained = {i["item_id"]: (i["value"], i["source"])
+                for i in s_config["items"]}
+    assert retained[EXTRA] == (EXTRA_VALUE, "retained_base")
+
+    # the same item, this time removed on purpose: a real reset reaches the
+    # port and the effective projection drops it for good
+    core.sessions.select_profile("sel2", session_id="S",
+                                 profile_id=a["profile_id"])
+    core.sessions.begin_turn("t2", session_id="S")
+    core.sessions.begin_turn(
+        "t3", session_id="S", declared_removals=frozenset({(FACET, EXTRA)}))
+    ops = {(i.facet_id, i.item_id): i.op for i in port.applied[-1]}
+    assert ops[(FACET, EXTRA)] == "reset"
+    # the declared removal really cleared the retained value: the item is
+    # no longer carried as retained base.  It is declared by A again, so A's
+    # own mask restates it — an omission that was never removed, versus a
+    # removal that was.
+    after = {i["item_id"]: i for i in core.sessions.session_config("S")["items"]}
+    assert after[EXTRA]["source"] == "profile"
+    assert after[CHOICE]["value"] == A_CHOICE
+    assert _face(brand, tmp_path, value=A_CHOICE, extra=False) != \
+        _face(brand, tmp_path, value=A_CHOICE, extra=True)
 
 
 @pytest.mark.parametrize("brand", BRANDS)

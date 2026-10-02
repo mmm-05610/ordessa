@@ -23,6 +23,7 @@ import type {
 import { ProfilePicker } from './picker'
 import type { ProfilePickerProps } from './picker-model'
 import { catalogForLocation, ProfileSelectionStore } from './selection'
+import type { ApplyOutcome } from './selection'
 import type { ProfileCatalog } from './catalog'
 import type { AgentSessions } from '@extensions/ordessa.agent-contracts/contract.js'
 
@@ -80,8 +81,47 @@ export function createProfileChatGlue(
   const scoped = contributions.forScope(scope)
   const bindings = new Map<string, { ref: import('@ordessa/plugin-profile-api').SessionRef; selection: ProfileSelection; uiSessionId: string; serverId: string }>()
   const retainedSelections = new Map<string, { selection: ProfileSelection; connectionId?: string }>()
+
+  // -- click-order seam (021 appendix §6c F1.2): registration wire calls for
+  //    one picker key (selectForSession here, chooseForSession on the model
+  //    side via the projected `serializeRegistration` hook) run strictly one
+  //    after another, so the backend's action_seq stamps CLICK order, never
+  //    network race order. One failed task never poisons the queue.
+  const clickQueues = new Map<string, Promise<unknown>>()
+  const enqueueClick = <T>(key: string, task: () => Promise<T>): Promise<T> => {
+    const tail = clickQueues.get(key) ?? Promise.resolve()
+    const run = tail.then(task, task)
+    const settled: Promise<unknown> = run.then(() => undefined, () => undefined)
+    clickQueues.set(key, settled)
+    void settled.then(() => {
+      if (clickQueues.get(key) === settled) clickQueues.delete(key)
+    })
+    return run
+  }
+
+  /** Raw backend registration of one pick (click handler task and the submit
+   * guard both use it — NEVER enqueue it from inside another queued task). */
+  const registrationTask = async (key: string, ref: import('@ordessa/plugin-profile-api').SessionRef, selection: ProfileSelection): Promise<void> => {
+    try {
+      if (typeof input.profiles.selectForSession !== 'function')
+        throw new Error('Profile selection registration is unavailable')
+      if (selection.harnessId !== ref.harnessId)
+        throw new Error(`所选预设属于另一 Harness（${selection.harnessId}），不能登记到此会话`)
+      await input.profiles.selectForSession(
+        `profile-chat.register:${ref.sessionUid}:${selection.profileId}:${++registrationSequence}`,
+        { sessionRef: ref, profileId: selection.profileId })
+      store.markRegistered(key, selection)
+    } catch (error) {
+      // surfaced in the picker (registrationError), pick kept for retry
+      store.markRegistrationFailed(key, selection,
+        error instanceof Error ? error.message : String(error))
+    }
+  }
+  let registrationSequence = 0
+
   const stopNative = input.nativeSessions?.subscribe?.(() => {
     const native = input.nativeSessions?.getSnapshot?.()
+    if (native?.draft?.active === false && native.draft.endedBy !== 'opened') store.clearDraftConfirmations()
     if (native?.draft?.endedBy !== 'discarded') return
     for (const [key, retained] of retainedSelections)
       if (retained.connectionId === native.selectedConnectionId) retainedSelections.delete(key)
@@ -157,22 +197,47 @@ export function createProfileChatGlue(
           }
           return { status: 'refused', reason: 'Profile 已核实为未应用，请再次点击发送重试；未自动重发。' }
         }
-        if (!selected && !store.peek(key)) store.select(key, selection)
-        // Selection changes while preparation waits belong to the next submit.
-        const applyStore = store.peek(key) === selection ? store : new ProfileSelectionStore()
-        if (applyStore !== store) applyStore.select(key, selection)
-        const outcome = await applyStore.applyOnSubmit(key, binding.ref, input.profiles)
-        if (!outcome.ok) {
-          if (outcome.unknown) return { status: 'unknown' }
-          // Wire/1 currently hides business error details. Query the domain's
-          // explicit safety state instead of guessing uncertainty from text.
-          const failed = await input.profiles.inspectSessionConfig?.(binding.ref)
-          return failed?.switchState === 'needs_recovery' ? { status: 'unknown' }
-            : { status: 'refused', reason: outcome.reason }
-        }
-        binding.selection = selection
-        retainedSelections.delete(retainedKey)
-        return { status: 'ready' }
+        // Registration + application run as ONE serialized task per session
+        // key (§6c F1.2): clicks queued around it keep their wire order, and
+        // the apply never races a click registration.
+        const capturedRegistered = !!selected && store.isRegistered(key, selected)
+        return await enqueueClick(key, async (): Promise<
+          { readonly status: 'ready' } | { readonly status: 'refused'; readonly reason: string }
+          | { readonly status: 'unknown' }
+        > => {
+          const live = store.peek(key)
+          let outcome: ApplyOutcome
+          if (live && store.isRegistered(key, live)) {
+            // the backend already holds the newest click's intent: apply it
+            outcome = await store.applyOnSubmit(key, binding.ref, input.profiles)
+          } else if (selected && capturedRegistered) {
+            // the click-registered pick is the backend's pending even though a
+            // store-level re-pick arrived meanwhile (it stays for next submit)
+            outcome = await store.applyOnSubmit(key, binding.ref, input.profiles, selected)
+          } else if (selected) {
+            // never registered at click (draft flow / failed click): register
+            // now, inside this serialized task, then apply the vouched pick
+            await registrationTask(key, binding.ref, selected)
+            if (store.peek(key) === selected && !store.isRegistered(key, selected))
+              return { status: 'refused',
+                reason: `所选预设未能登记到会话：${store.registrationError(key) ?? '未知原因'}；草稿与选择已保留，可重试。` }
+            outcome = await store.applyOnSubmit(key, binding.ref, input.profiles, selected)
+          } else {
+            // ordinary bound turn: apply the effective configuration, no reselect
+            outcome = await store.applyOnSubmit(key, binding.ref, input.profiles, binding.selection)
+          }
+          if (!outcome.ok) {
+            if (outcome.unknown) return { status: 'unknown' }
+            // Wire/1 currently hides business error details. Query the domain's
+            // explicit safety state instead of guessing uncertainty from text.
+            const failed = await input.profiles.inspectSessionConfig?.(binding.ref)
+            return failed?.switchState === 'needs_recovery' ? { status: 'unknown' }
+              : { status: 'refused', reason: outcome.reason }
+          }
+          binding.selection = outcome.applied
+          retainedSelections.delete(retainedKey)
+          return { status: 'ready' }
+        })
       } catch (error) {
         // Transport loss cannot be turned into a safe retry or fallback send.
         return { status: 'unknown' }
@@ -196,11 +261,57 @@ export function createProfileChatGlue(
         return {
           label: store.currentLabel(key, bound?.selection.displayName), groups,
           statusMessage: input.catalogState?.message || (groups.length ? undefined : '当前 Harness 没有可用预设。'),
+          // §6c F1.1: a click registration that failed is surfaced here, never
+          // swallowed — the pick stays unregistered and the user can retry.
+          registrationError: store.registrationError(key),
           onRefresh: input.catalogState ? () => { void input.catalogState!.refresh() } : undefined,
           onOpenSelector: input.catalogState ? () => { void input.catalogState!.refresh() } : undefined,
           onOpenManager: input.onOpenManager,
-          onSelect: (selection: ProfileSelection) => store.select(key, selection),
+          // §6c F1.1: the explicit selection REGISTERS at click time for a
+          // bound session (the backend stamps the click's action_seq); it
+          // never applies or restarts anything (FR-04). A draft keeps its
+          // pick in the store; registration happens at submit.
+          onSelect: (selection: ProfileSelection) => {
+            store.select(key, selection)
+            if (location.kind !== 'session') return
+            void enqueueClick(key, async () => {
+              try {
+                let registered = [...bindings.values()].find(binding =>
+                  binding.uiSessionId === location.sessionId && binding.serverId === location.serverInstanceId)
+                if (!registered) {
+                  if (!input.nativeSessions?.prepareSubmission || !input.profiles.registerNativeSession)
+                    throw new Error('原生会话登记端口不可用')
+                  const owner = await input.nativeSessions.prepareSubmission()
+                  if (owner.sessionId !== location.sessionId || owner.serverInstanceId !== location.serverInstanceId
+                    || owner.harnessId !== selection.harnessId) throw new Error('原生会话身份已变化')
+                  const result = await input.profiles.registerNativeSession({ connectionId: owner.connectionId,
+                    nativeSessionId: owner.nativeSessionId, profileId: selection.profileId })
+                  if (result.sessionRef.harnessId !== owner.harnessId
+                    || result.sessionRef.nativeSessionKey !== owner.nativeSessionId
+                    || !result.sessionRef.sessionUid || !result.sessionRef.realm) throw new Error('会话登记未确认')
+                  registered = { ref: result.sessionRef, selection, uiSessionId: owner.sessionId, serverId: owner.serverInstanceId }
+                  bindings.set(JSON.stringify([owner.serverInstanceId, owner.connectionId, owner.nativeSessionId]), registered)
+                }
+                await registrationTask(key, registered.ref, selection)
+              } catch (error) {
+                store.markRegistrationFailed(key, selection, error instanceof Error ? error.message : String(error))
+              }
+            })
+          },
           onClearSelection: () => store.forget(key),
+          // 021 T04: the registered binding fact of THIS chat session, for the
+          // model route's bound/unbound dispatch (appendix §3.3). Purely a
+          // read-side projection; the model guard never applies through it.
+          boundNativeSession: bound
+            ? { serverInstanceId: bound.serverId, sessionId: bound.uiSessionId }
+            : null,
+          // §6c F1.2: the per-session click-order seam. The model side runs its
+          // chooseForSession call through this hook (absent → unbound → the
+          // model side calls directly, semantics unchanged). Read-only
+          // projection, same channel as `boundNativeSession`.
+          serializeRegistration: location.kind === 'session'
+            ? (task: () => Promise<void>) => enqueueClick(key, task)
+            : null,
         }
       }
       return {
