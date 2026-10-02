@@ -19,7 +19,11 @@ packages/
     extension-api/      registration/services/release contracts
     extension-loader/   discovery + loading
     extension-host/     activation, dependency & lifecycle
-    native-bridge/      restricted native IPC
+    native-bridge/      restricted native IPC (Electron main)
+    server-bridge/      host's seam onto the Server it starts (data root,
+                        wire port, lifecycle)
+    ui/                 base controls (Card/Panel/forms) + styles.css
+    ui-components/      generic component provision/consumption (contract C7)
     connections/        generic Connections platform API (contract C6); the
                         platform ships no concrete protocol kind
     contracts/          platform-owned carriers only: commands source + the
@@ -27,6 +31,10 @@ packages/
                         carriers belong to their owning domain (Agent:
                         plugins/agent/contracts) — FR-009, guarded by the
                         platform-purity and no-reverse-re-export tests.
+                        Note: contracts/foundation/src/product/harness-availability.ts
+                        still carries a Harness-domain contract on the platform
+                        side (registered 2026-10-02, spec 021 N4-R1 B-03;
+                        currently zero product consumers).
   workbench/            Workbench public API + implementation (contract C4),
                         extension id `ordessa.workbench` kept across the move
 plugins/
@@ -35,11 +43,23 @@ plugins/
                             module path preserved). Harness-internal.
     packaging/     bridge build & dependency prep
     tests/
-  commands/ agent/contracts/ agent/connections/ agent/sessions/ agent/conversation/
-  connectors/ordessa/ connectors/acp/
+  commands/       ordessa.commands
+  agent/          contracts/ connections/ sessions/  (ordessa.agent-contracts /
+                  ordessa.agent-connections / ordessa.agent-sessions)
+  chat/           api/ frontend/  (ordessa.chat-api / ordessa.chat)
+  connectors/     ordessa/ acp/  (ordessa.agent-server / ordessa.agent-acp)
+  profile/        api/ frontend/ integrations/chat/
+  permissions/    frontend/
+  assets/         skills, mcp, model-provider, prompts, sandbox, subagents,
+                  memory, lsp, extensions, command-templates,
+                  runtime-preferences
+  workspace/  runtime-compat/ (pacthold_runtime_compat)  server-compat/
 products/
   desktop/        enabled-extension manifest (extensions.json + lock) for the
                   default product build. Extension ids are data, not paths.
+  server/         ordessa_server_product: `create_composition()` — the thin
+                  product assembly root the Server resolves; it registers
+                  plugins, it does not own business rules.
 scripts/          build / start / verify entry points
 tests/            cross-component tests (acp-connector seam rig)
 docs/
@@ -61,6 +81,21 @@ product (products/desktop) ── enables plugins by id; never imports internals
 
 - `pacthold` is the bottom of the backend stack: it defines the plugin
   contract that `ordessa_harness` implements and `ordessa_server` composes.
+  `apps/server` → `pacthold` is **normal use, not an ownership breach**
+  (`core_binding.py` imports `pacthold.public`; `bootstrap/runtime.py` imports
+  `pacthold.storage`); the load-bearing rule is the reverse direction.
+- Two cross-layer edges inside `desktop-platform` are deliberate and are
+  listed as accepted exceptions in the core inventory
+  (`specs/021-nightly-product-closeout/core-inventory-20261002.md`, B-01/B-04):
+  the `ordessa.contracts` carrier re-exports the Workbench and Connections
+  public APIs so the product has one shared copy of each Token, and
+  `server-bridge/src/data-root.ts` imports the Server-owned
+  `data_root_layout.json` (data, not API). The "contracts only" arrow above
+  describes the intent, not these two documented carriers.
+- The Workbench (`packages/workbench`) is an application UI framework, not a
+  business plugin: it owns navigation, regions/views/pages, overlays, the
+  settings page container and UI-contribution registration — not model/Profile
+  state, configuration storage or business components.
 - The desktop product consumes the harness only through the server connector
   (`plugins/connectors/ordessa`) and ACP connector (`plugins/connectors/acp`).
   Bridge binary paths, Pi CLI flags and tool locations are harness-internal
@@ -86,4 +121,16 @@ confirmation.
   dependency on them is registered in `docs/known-issues.md`, not hidden.
 - Legacy Studio, the retired scheduling trees, the old trial-server stacks —
   archive refs only (`docs/reference-index.md`).
-- Profile / Provider / Workboard: independent repos outside the monorepo.
+- The archived independent plugin repositories `harness-profile`,
+  `harness-provider` and `harness-workboard` continue **outside** this
+  monorepo; their history is kept here as `refs/archive/*`
+  (`docs/reference-index.md`, `docs/migration/source-destination.md`). Those
+  three archived repos are **not** the current product's Profile and
+  model-provider plugin families: those live in-tree at `plugins/profile/` and
+  `plugins/assets/model-provider/` and are enabled in
+  `products/desktop/extensions.json` (`ordessa.profile-api`,
+  `ordessa.profile-frontend`, `ordessa.profile-chat`, `ordessa.model-provider`,
+  `ordessa.model-provider-chat`). No in-tree Workboard code exists.
+  *(Corrected 2026-10-02 under spec 021 N4-R1. `AGENTS.md` §"What this repo
+  is" still uses the old shorthand "Profile / Provider / Workboard" for the
+  archived repos; flagged for Lead/user confirmation.)*
