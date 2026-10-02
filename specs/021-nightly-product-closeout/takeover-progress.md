@@ -2623,3 +2623,37 @@ zcode-profile-model-closeout.md；契约与裁定见 zcode-profile-model-appendi
 - 此项修复 model contribution 96 项、Chat 73 项、typecheck、18 扩展 build、diff-check 通过；无系统资产变更、无模型调用。当前窗口仍未重载本次模型 effect 修复，待用户同意重启验证。此项仅解决可复现的输入触发核对/告警闪烁，Profile 逆向发送 unknown 仍未判定修复。
 - 用户要求重启后确认旧 launcher/Electron/Server 已自行退出，未杀其他服务。已启动加载模型 effect 修复的完整应用：launcher 716827、Electron 716895、Server 716943，exec session 91483，loopback 35261 `/live` alive。沿用真实用户数据与原生 sandbox，未自动发送/重发；实际输入闪烁待用户复核。
 - 用户随后确认“一切正常”，输入告警闪烁记为用户真实验收通过；不据此标记逆向 Profile 或 Codex/Claude 全链通过。按用户要求保存部分源码检查点；口径见 checkpoint-20261002-desktop.md。夜间仅提出 N1–N3 有限范围（night-proposal-20261002.md），未启动执行者或自动化，明天仍需用户实际验收。
+
+### N1 Profile 逆向切换定位与修复（2026-10-02 夜间，检查点 ebfecf9e1c）
+
+- 白名单条件码先行：Pi 注册服务 query 的折叠检查按原求值顺序拆为逐项
+  PI_* 条件码（fail-closed 不变，公开 observed/unknown 词表不动）；产品接缝
+  把 unknown reason 透传进 journal，不再只有一句笼统消息。
+- 真实适配器零推理探针 plugins/harness/packaging/pi-profile/probe-reverse-switch.py
+  （合成凭证、私有 HOME、创建走生产 prepare_native_creation admission 路径）：
+  规范三步序列（启动 admission 选 A→live-registration B 并选 B→重注册 A→
+  选回 A）在已安装 v2 资产上【全绿】：reverseRegistrationState=observed、
+  reverseSwitchConfirmed=ordessa-start/first、modelPrompts=0、进程退出 0。
+  即设计的接缝本身可以完成逆向切换。
+- 生产故障形状复现：资源漂移变体（创建后 endpoint/凭证字节变化）在真实
+  适配器上得到与 journal 一致的 unknown（旧码 PI_EVIDENCE_UNAVAILABLE）。
+  首个失配条件：适配器在创建任何 operation record 之前拒绝（live catalogue
+  已有该 provider 且 admission 摘要与漂移后 provider 对象不一致，
+  provider-registration.mjs 拒绝点全部先于 records.set——源码核实）。
+- 修复（全部包装层，零信任放松，Escalation-Architect 第 2 轮裁决通过）：
+  ① registry 加性只读 query_native_operation_state，仅当原生以 JSON-RPC
+  -32602 应答该 operation 查询时返回 refused（fold_errors 默认关闭，既有
+  方法行为逐字节不变）；② Pi _execute_once 拒绝分类：同 channel+owner
+  钉死下得到 refused 证据 → 终态 outcome 'refused'（PI_REGISTRATION_REFUSED），
+  效果一次性保持、绝不重发；③ query() 对 refused 终态早退；④ 产品接缝把
+  refused 映射为既有 ApplyRejected('rejected-unchanged', 码)——不再产生
+  卡死会话的 sticky unknown；pending 门零改动，refused 后新 key 可重新准备。
+- 验证：drift-endpoint 与 drift-credential 两变体修复前 unknown+卡死、修复后
+  refused+retryAfterRefusalPrepared=true+零副作用；规范形状保持全绿。
+  plugins/harness/tests/ 50 项（Pi 注册 21 + registry 状态 5 新增 +
+  产品接缝 24）全绿；registry 5 项新测试对基线代码红、新代码绿。
+  受影响面失败集合与基线逐字相同（43 项既有 inherited-red，测试 ID 已对比，
+  无新增失败）。codex/claude 的 restore 同形状 except: pass 本轮不改
+  （无等价"拒绝先于效果"证据，盲改违反零信任；登记后续项）。
+- 诚实边界：生产当次漂移的确切来源（资源行改版 vs 凭证轮换 vs 其他）在
+  零推理约束下无法定谳，登记为开放观察项；真实聊天验收仍留待用户。
