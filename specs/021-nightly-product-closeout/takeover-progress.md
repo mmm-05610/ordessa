@@ -2685,3 +2685,29 @@ zcode-profile-model-closeout.md；契约与裁定见 zcode-profile-model-appendi
   （node --test，0 失败）与 products/desktop contract-ownership（5/5）。
 - apps/server 全量：74 失败/1178 通过/9 跳过/2 错误，与基线逐字一致
   （inherited-red ledger 状态），本轮零新增失败。
+
+### N2/N3/N4-R2 收口（2026-10-03 凌晨，检查点 276c77092d/db36f13887/f92d8bcab1）
+
+- N2 CONTROLLED_UI_VERIFIED：子代理 A 交付 6 个新测试文件（chat
+  contribution 18、Profile Chat integration 6、Chat 前端 2），零生产改动；
+  红→绿为真实变异（M06 绑定守卫、running 早退+effect 依赖合取、
+  markRegistered 身份护栏、unknown 清草稿——均已回滚并记录）。回归
+  114/77/78/37 全绿，主执行者独立复验。边界如实：受控组件级证据，后端
+  action_seq 裁决属 N1 接缝（已有测试），真实 Electron 端到端列入未测范围。
+  sendError 页面级告警观察项登记 known-issues（f92d8bcab1），本轮不改码。
+- N4-R2：Escalation-Architect 第 3 轮裁决只做纯文件归组（model.ts/shell.tsx
+  闭包共享状态不拆）。5 个纯重命名+3 导入行修改；公共面 sha256 前后一致；
+  workbench 70+7 守卫、extension-host 103 全绿；18 扩展重建 lock 仅
+  workbench entry.js 摘要更新。两条 JS 守卫补端到端变异证据（真实违规变
+  红→回滚复绿，零提交）。
+- N3：三品牌资产 verifier 只读核验全 OK（pi 摘要与安装记录一致）；18 扩展
+  build、root typecheck、diff-check exit 0。完整 venv 环境下 Python 全量按
+  测试 ID 对比零新增失败（harness 4 项既有 install/部署失败、apps/server
+  74 项 ledger、platform-secrets 2 项偶发 flaky）；JS 受影响套件全绿。
+  Profile 缺席装配直证 4 套件通过（无自动建全局 Profile 旁路）。
+- 环境备注：.venv 曾缺多个 editable 包（model-provider/profile/
+  profile-contribution/skills 等），已按 docs/baseline.md 闭包补齐；此前
+  记录的"43 项既有失败"系环境不完整所致，完整环境下 harness 真实既有
+  失败为 4 项。
+- N5 门控：Escalation-Architect 第 4 轮裁决剩余窗口满足门槛，N3 汇总交付
+  后启动 Skills 单资源闭环（五步、逐步检查点，不碰打包/安装/wire）。
