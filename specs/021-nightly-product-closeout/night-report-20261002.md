@@ -16,7 +16,7 @@
 | N3 三品牌装配回归与汇总 | 完成（汇总见 §N3） | 本文件 |
 | N4-R1 核心职责盘点 | 完成（盘点+守卫+架构事实） | `cfe7612c0f`/`24b97f91ba` |
 | N4-R2 Workbench 内部整理 | 完成（纯文件归组） | `db36f13887`+`f92d8bcab1` |
-| N5 资源插件接线 | 见 §N5 门控结论 | — |
+| N5 资源插件接线（Skills） | CONTROLLED_WIRING_VERIFIED | `6ffdd34c45` |
 
 ## N1：Profile 逆向切换 unknown — IMPLEMENTATION_REVIEW_READY
 
@@ -153,10 +153,19 @@ entry.js 摘要更新（合法产物，随 f92d8bcab1 提交）。
 
 真实模型调用 unavailable（本轮为零）；无任何 API key 读取。
 
+## 待安装项
+
+本夜新增待安装项：**无**（无新系统资产构建；Pi 使用的仍是上一班已安装并
+verifier 核验的 `profile-pi-startup-admission-v2`）。既有未装/验证器缺口
+（opencode/hermes/dsh/kilo）见 `docs/known-issues.md` 对应行——非本夜
+产生、状态未变。
+
 ## 明早用户最短操作清单
 
 1. **真实聊天验收**（唯一必须由你完成的验收）：启动/重载产品（系统资产与
-   `~/.ordessa` 不变），走一次 Pi 首轮 Profile → 单独模型 → 逆向切回
+   `~/.ordessa` 不变；当前安装的 Pi 资产为上一班的
+   `profile-pi-startup-admission-v2`，`sha256:444515c3…`，见 §N3——本次
+   验收即在该资产上进行），走一次 Pi 首轮 Profile → 单独模型 → 逆向切回
    Profile → 发送。若逆向再失败：journal 现在会记录白名单条件码
    （unknown 携带 `PI_*` 码）或诚实的 `rejected-unchanged +
    PI_REGISTRATION_REFUSED`——把码转给执行者即可精确定位，无需截图猜测。
@@ -164,10 +173,46 @@ entry.js 摘要更新（合法产物，随 f92d8bcab1 提交）。
    产品消费者、默认产品不可达，冻结即可，无需迁移/转发）。
 3. **AGENTS.md 措辞**（一句话确认）：是否按 architecture.md 的修正表述
    更新 §"What this repo is" 的"Profile / Provider / Workboard"段。
-4. **N5 放行决定**（一句话）：是否放行 Skills 单资源闭环（估时 2–3 小时，
-   五步见 §N5；不放行则维持就绪说明）。
+4. **资源插件后续批次决定**（一句话）：Skills 已闭环验证
+   （CONTROLLED_WIRING_VERIFIED，§N5）；是否放行 MCP / Prompts 按同形态
+   推进（先读 spec→链路盘点→单闭环，各约 2–3 小时）。
 5. 可选：model.ts / shell.tsx 拆分与 harness-availability 迁移（R4）已在
    盘点中列明证据标准，留待白天批次。
+
+## N5：资源插件接线（Skills）— CONTROLLED_WIRING_VERIFIED
+
+门控历程：第 3 轮裁决设定严格门槛（剩余时间 ≥ 闭环估时 1.5 倍、N3 已交付、
+无 INSTALL_REQUIRED）；第 4 轮裁决在 01:10 实际窗口下批准启动，且至多
+Skills 一个资源、不碰打包/安装/wire 面。N3 汇总交付后执行。
+
+**Skills 单资源闭环（已验证，检查点 6ffdd34c45）**：
+
+- 链路盘点（只读）：`ordessa.skills` 在 18 扩展启用清单中；
+  `plugins/assets/skills/` 已具备 profile_facet/profile_contribution/
+  harness_adapters（三品牌 + apply_chain/producer）；组合级测试已走
+  `skills.list`/`skills.resolve` wire 派发；各段（六层解析 g05、
+  apply_chain t13、producer t14、facet contribution）各有密测试——缺的
+  是把它们串成一条闭环。
+- **闭环测试（新增 `test_n5_single_resource_closed_loop.py`，5 项）**：
+  用生产装配路径（`SkillsService(profile_services=…)` 派生
+  `ProfileApiLayerPort`）在隔离数据根上走真实全链：合成技能安装+批准 →
+  Profile 稀疏选择（经公开 facet API 写、`resolve_preview` 读）→ 共享
+  解析器（`selectedBy.layer == "profile"`）→ Harness 侧
+  `agent-box.skill@1` 交付集（契约名、treeDigest、修订源目录逐项核对）。
+  边：项目级禁用只影响本项目（层序：Profile 层高于 project 层，按解析器
+  钉定顺序如实断言）、系统级 user-global 选择、A/B 会话覆盖交替不串、
+  无 Profile 时原生选择照常交付、未安装修订拒绝交付且零对象。
+- **红→绿（真实变异，已回滚）**：facet 读取清空 → 3 红 → 回滚 → 5 绿。
+- 完整 skills 套件 438 通过；diff-check exit 0。
+- **如实边界**：交付等级按 spec 钉在 `projected`（原生会话内加载证据不在
+  本轮范围）；默认发布装配是否携带 Skills 是已登记的升级裁决
+  （docs/known-issues.md，2026-10-01），本轮未动；零模型调用。
+
+**MCP / Prompts（未启动，保留下一个批次）**：按第 4 轮裁决本轮至多
+Skills 一个资源。`ordessa.asset-mcp` 的服务器组合缺位同样在
+known-issues 登记（default composition 缺 McpAssetServerPlugin）；Prompts
+未盘点。两者可按 Skills 同形态（先读 spec→链路盘点→单闭环）在下一批次
+推进。
 
 ## 登记项（本轮新增）
 
@@ -183,33 +228,5 @@ entry.js 摘要更新（合法产物，随 f92d8bcab1 提交）。
   补齐；此前记录的部分"既有失败"计数系环境不完整所致，完整环境下
   plugins/harness 真实既有失败为 4 项（install 漂移 3 + verifier 部署 1；
   platform-secrets 2 项为偶发 flaky）。
-
-
-## N5：门控结论与就绪说明
-
-按 Escalation-Architect 第 3 轮裁决执行严格门控：N5 仅在 R2 落地全绿、
-N3 汇总交付、剩余时间 ≥ 一个完整闭环估时 1.5 倍、且无 INSTALL_REQUIRED
-时才启动，至多 Skills 一个资源；不满条件则零开工，交本就绪说明替代。
-
-**现状盘点（只读，本轮已核实）**：`ordessa.skills` 已在默认产品 18 扩展
-启用清单中；`plugins/assets/skills/` 已具备 profile_facet（FR05 接缝，
-`NotConfiguredProfileLayerPort` 无 Profile 时类型化降级）、
-profile_contribution（`ProfileApiLayerPort`）、三品牌 harness_adapters
-（pi/codex/claude + apply_chain/conflict/intent/producer）。即链路组件
-已存在，N5 的工作形态是「读已批准 spec → 逐链路盘点 → 找一个真实断点 →
-单资源闭环验证」，不是从零建设。
-
-**Skills 闭环五步（若放行）**：
-1. 读 `docs/design/skills-v2/contracts.md` 与现行注册/存储/解析链，产出
-   链路清单与断点判断（不重做已接通段）。
-2. 单闭环：插件登记技能定义→Profile 稀疏选择（合成资源、隔离目录）→
-   解析→Harness 对应品牌 adapter facet 收到预期内容引用；无 Profile 时
-   原生配置仍可用。
-3. 隔离验证：项目级/系统级选择、未启用不注入、A/B 会话隔离、清理/卸载、
-   失败不进 confirmed；零模型请求、不连外部服务。
-4. 每步受控回归 + 检查点；无法接通的列精准缺口。
-5. 终态逐资源 CONTROLLED_WIRING_VERIFIED / UNSUPPORTED / PARTIAL_BLOCKED。
-
-**估时**：闭环五步约 2–3 小时（含回归与检查点）。明早用户只需决定是否
-放行（一句话即可），不阻塞其他验收。
-
+- **证据目录**：本夜探针/快照存于 `.cleanup-evidence/night-20261002/`
+  （pi-reverse-*.json、r2-*-sha256.txt）；该目录按设计 gitignore 不提交。
