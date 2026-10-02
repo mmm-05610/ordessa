@@ -2657,3 +2657,31 @@ zcode-profile-model-closeout.md；契约与裁定见 zcode-profile-model-appendi
   （无等价"拒绝先于效果"证据，盲改违反零信任；登记后续项）。
 - 诚实边界：生产当次漂移的确切来源（资源行改版 vs 凭证轮换 vs 其他）在
   零推理约束下无法定谳，登记为开放观察项；真实聊天验收仍留待用户。
+
+### N4-R1 核心职责盘点（2026-10-02 夜间，检查点 cfe7612c0f，只读+守卫）
+
+- 子代理 B 只读盘点交付 specs/021-nightly-product-closeout/core-inventory-20261002.md
+  （404 行）：desktop-platform 9 包/workbench/apps/server/pacthold/
+  server-plugin-api 的公开入口、消费者、注册 owner；职责图与依赖/装载图
+  分开（import 与装载两类箭头）；Server→Pacthold 记为正常使用不属违规。
+- 两套 Settings 入口结论（§3，全链 file:line 证据）：**两个独立注册表实例**，
+  无桥接无第三协调器；平台侧 SettingsContribution 注册表在默认产品中零插件
+  消费者且宿主入口被 root view 隐藏不可达；Workbench 是唯一活跃登记事实
+  （6 个插件族在用）。已钉成 layering 回归断言，R3 若接线会主动变红。
+  本轮未做任何合并（R3 留用户审批）。
+- 边界问题清单 B-01..B-08（file:line）：B-03 Harness 域契约仍在平台
+  contracts/foundation（零产品消费者，R4 最易先动）；B-05/B-06 connectors
+  对宿主内部/平台 native-bridge 的 type-only import（变值 import 会被
+  esbuild 内联进插件产物）；B-08 chat token 字面量不在 TOKEN_WATCHLIST。
+  合规项明确记录：apps/server→pacthold、harness→pacthold 不属违规。
+- docs/architecture.md 仅事实更新（+51/-4）：补 server-bridge/ui/
+  ui-components、插件清单纠偏、products/server 职责、依赖方向段记录两条
+  已登记例外、仓外归档仓与仓内 Profile/model-provider 插件的区分
+  （AGENTS.md 旧简称差异如实标注，未改 AGENTS.md）。
+- 新增守卫测试（主执行者复验通过）：pacthold 内核方向 tripwire 6 项
+  （真实变异红→删）、extension-host 插件宿主边界 7 项、workbench 分层 8 项；
+  pacthold 218P、extension-host 103P、workbench 70P 均记录基线对比。
+  B 未跑的两个构建级 guard 已由主执行者补跑：token-single-instance
+  （node --test，0 失败）与 products/desktop contract-ownership（5/5）。
+- apps/server 全量：74 失败/1178 通过/9 跳过/2 错误，与基线逐字一致
+  （inherited-red ledger 状态），本轮零新增失败。
