@@ -418,7 +418,7 @@
     "extensions/ordessa.skills/manifest.json": "8cc8a4d6735102795b5721d74e3e1184a1ba9c9b38663ac0088f1d25dea495e0",
     "extensions/ordessa.ui-components/entry.js": "27e58cac5d27d345cad3109f7b2c6d087bd3ec856ece40064c74a2ff2a2a5f48",
     "extensions/ordessa.ui-components/manifest.json": "a107c4e5c060513f9de30af4cfd043e238089f7bc493a32f67916bc19d66a073",
-    "extensions/ordessa.workbench/entry.js": "f434ca60a2d92e48e67e1689e07d199406b543ba629d40e998253521ca226d89",
+    "extensions/ordessa.workbench/entry.js": "3760f4091cf0263988421851f9e17c598dfb574b20b1b445a4b4a96121226c79",
     "extensions/ordessa.workbench/manifest.json": "7e79b54a52cd6b0837ac431d71bb17860c4bbf133e9b5fa00ac6f42849936884",
     "extensions/ordessa.workbench/react-resizable-panels-LICENSE.md": "a8f1e0280bf14adcf5d017547db85eb5c3bac0feb1690ca98650874002eaa8ea"
   }
