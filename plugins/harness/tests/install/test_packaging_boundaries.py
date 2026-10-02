@@ -463,7 +463,7 @@ def test_only_the_two_expected_roots_override_a_package_they_do_not_depend_on():
              for root in sorted(PACKAGING.iterdir()) if (root / "package.json").is_file()}
     assert found == {
         "claude": [], "claude-legacy": [], "codex": ["@agentclientprotocol/sdk"], "dsh": [], "kilo": [],
-        "pi": ["@agentclientprotocol/sdk"], "qwen": [],
+        "opencode": [], "pi": ["@agentclientprotocol/sdk"], "qwen": [],
     }, json.dumps(found, indent=2)
 
 
@@ -570,12 +570,12 @@ def test_every_runtime_artifact_builder_shares_one_bound():
 
     This is the bound the reviewer described as a download size limit. What is
     actually in the tree is `32768` entries / `1 GiB` per closure, identical in all
-    seven builders, and it bounds the *artifact the builder assembles* — not a
+    eight builders, and it bounds the *artifact the builder assembles* — not a
     download. `TEST-REVIEW.md` records the search that establishes that no 100 MB
     figure exists anywhere in the plugin, the scripts or the Server.
     """
     bounds = builder_bounds(BUILDERS)
-    assert len(bounds) == 7, f"expected one builder per brand, found {sorted(bounds)}"
+    assert len(bounds) == 8, f"expected one builder per brand, found {sorted(bounds)}"
     assert all({"MAX_ENTRIES", "MAX_BYTES"} <= set(value) for value in bounds.values()), bounds
     assert {tuple(sorted(v.items())) for v in bounds.values()} == {
         (("MAX_BYTES", MAX_BYTES), ("MAX_ENTRIES", MAX_ENTRIES))}, bounds

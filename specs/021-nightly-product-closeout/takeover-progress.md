@@ -1857,3 +1857,72 @@ npm run test:harness-packaging  →  282 tests / 281 pass / 0 fail / 1 skipped
 `verifyInstalledArtifact` 依旧在 `manifest.adapter.entry` 上拒 opencode（既不是
 `dist/index.js` 也不是 `dist/ordessa-profile.mjs`）。**构建完成 ≠ 可安装**；
 四个 harness 的安装仍然全卡在同一个信任根裁决上。
+
+---
+
+## 自查发现：上一节的提交打破了三道既有门，已修并复原 pin（2026-10-02）
+
+按 goal「一个阻塞只暂停相关依赖，继续独立任务」，提交后做了一件本来就该做的自查：
+**确认自己的提交没有移动 `verify-clean.sh` 冻结的 pin**。结果 pin 动了。
+
+```
+提交前 pin : 792 passed / 3 failed / 3 skipped / 3 errors
+提交后实测 : 789 passed / 6 failed / 3 skipped / 3 errors   ← 795 总数不变，3 条由绿翻红
+```
+
+### 归因（实测，不是推断）
+
+把 `packaging/opencode/` 临时移开再跑同一批用例，逐条对比：
+
+- **本来就有 3 红**（与 pin 的 `failed=3` 吻合）：`test_the_run_chain_declares_no_byte_ceiling_of_its_own`、
+  `test_the_acp_schema_a_closure_carries_satisfies_the_adapter_that_needs_it`、
+  `test_a_root_override_of_the_schema_does_not_violate_a_declaration_in_the_closure`。
+- **我引入的 3 红**：`packaging roots with no canonical or alias builder: ['opencode']`、
+  `expected one builder per brand, found 8`（原写死 7）、以及
+  `test_only_the_two_expected_roots_override_a_package_they_do_not_depend_on`
+  ——我的 `overrides` 让第三个 root 覆写了它并不直接依赖的传递包。
+
+另有 `plugins/harness/tests/access/real_adapter_protocol.test.mjs` 断言
+`packagingRoots().includes("opencode") === false`，注释写"there is no packaging/opencode
+directory"，也被我打破（该文件此前不在任何聚合门里，见下）。
+
+### 三处修法（都是改事实，不是放松断言）
+
+1. **删掉我加的 `overrides`，不是加豁免。** 那条门自己的 docstring 写着
+   "Overriding your own direct dependency is a restatement of a pin you already hold"，
+   而覆写未声明的传递包是"一次无声改写"。实测 lock 本来就把**全部 12 个**平台包
+   精确钉在 `1.18.21` 并带 integrity，所以 `overrides` 纯属多余：删掉后
+   `npm ci` 仍 exit 0、二进制仍是 184498304 字节、15 条 builder 测试仍 15/15，
+   `opencode` 的传递覆写集合回到 `[]`，"只有 codex 和 pi 两个 root 传递覆写"这条不变量原样保住。
+2. **把 opencode 写进安装集**（`harness-install-set.py`）：`NPM_ROOTS` 加 `"opencode": "opencode"`，
+   `CLOSURE_FAMILIES` 加 `opencode`，`BUILDERS` 加 `build-opencode-runtime-artifact.mjs`。
+   不写 `NPM_ROOTS` 正是那道门要抓的静默跳过——`npm ci` 会跳过它。`CLOSURE_FAMILIES`
+   原注释"the remaining ones (opencode) pin a single-file binary instead"已过时：
+   opencode 的产物是**两包目录闭包**，只是入口恰好是原生 ELF，这是入口属性不是产物形状。
+   确认过 `verify_artifact_tree` 走 `runtime_artifact_tree_digest`（树摘要）而非
+   `verifyInstalledArtifact` 的入口路径谓词，所以这一步**不会**提前撞上信任根阻塞。
+3. **把两处过时计数改成事实**：builder 数 7→8（docstring 同步），覆写期望表加 `"opencode": []`；
+   `real_adapter_protocol.test.mjs` 里"opencode 没有 root"改成"opencode 现在有 root，
+   但仍然读不到 JS adapter —— 因为入口是原生二进制"，并加断言
+   `acpPackagesInLock("opencode") === []`。**没有为了让测试变绿而删断言或加 skip。**
+
+### 复原证据
+
+```
+pytest plugins/harness -q            → 792 passed / 3 failed / 3 skipped / 3 errors   （与 pin 完全一致）
+npm run test:harness-packaging       → 282 tests / 281 pass / 0 fail / 1 skipped
+```
+
+**这条自查的价值**：它证明了"提交绿"不等于"没破坏东西"——`npm run test:harness-packaging`
+在上一节是 282/281 全绿，而我同时打红了 Python 侧三道门。若不复跑 pin，这个回归会
+一路带到干净克隆的 release gate 上。
+
+### 顺带查出一个新的门禁空洞（**未修，待裁决**）
+
+`plugins/harness/tests/access/` 下的 `.test.mjs` **不在任何聚合门里**：
+`tooling/test-all.mjs` 只有 `node-test:products/desktop` 和
+`node-test:plugins/harness/packaging` 两个 `node-test` 条目。所以
+`real_adapter_protocol.test.mjs` 是我**手工**跑才发现红的。
+这与我在 `6d417768b4` 里登记并修掉的 `plugins/harness/packaging/**` 那 23 条是**同一类缺陷**，
+只是这次在 `tests/access/`。**不自行扩范围**去改 `tooling/test-all.mjs` 的聚合清单
+——那会改变 `npm test` 的覆盖面和 CI 时长，属产品门禁范围决定，随信任根/品牌 id 裁决一并上报。

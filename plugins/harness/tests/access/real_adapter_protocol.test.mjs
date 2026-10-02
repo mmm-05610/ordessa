@@ -159,13 +159,19 @@ test("protocol source inventory: derived from disk, not from a list of claims", 
     `more adapter bytes than expected are on disk: ${JSON.stringify(inventory)}`)
 })
 
-test("protocol source inventory: the brands with nothing on disk are named, with the file that says so", () => {
+test("protocol source inventory: the brands with no readable JS adapter are named, with the file that says so", () => {
   // The reviewer asked for real-adapter tests for Codex, OpenCode, Qwen Code and
   // Hermes. Codex has one above. These are the filesystem facts that make the
-  // other three impossible offline today, asserted so the claim stays checkable:
-  // OpenCode and Hermes have no install root at all, Qwen's root carries the CLI
-  // rather than an adapter, and Claude's adapter is declared but never fetched.
-  assert.equal(packagingRoots().includes("opencode"), false, "there is no packaging/opencode directory")
+  // other three impossible to read offline today, asserted so the claim stays
+  // checkable. OpenCode used to sit here for the strongest possible reason — it had
+  // no install root at all. It now has one, and the reason it still cannot be read
+  // offline has changed with it: the root is a pinned closure whose entry is a
+  // native ELF, not JavaScript, so there is still no adapter source to assert on.
+  // Asserting "no root" now would be a stale claim that happened to be true.
+  assert.equal(packagingRoots().includes("opencode"), true,
+    "packaging/opencode now holds the pinned opencode-ai + opencode-linux-x64 closure")
+  assert.deepEqual(acpPackagesInLock("opencode"), [],
+    "OpenCode's root resolves no ACP package: its entry is a native binary, so there is no JS adapter to read")
   assert.equal(packagingRoots().includes("hermes"), false,
     "Hermes is a Python distribution (`hermes-agent`, entry `python3 -m hermes_cli.main acp`) with no npm root")
   assert.equal(vendorTarballs("qwen").length, 0)

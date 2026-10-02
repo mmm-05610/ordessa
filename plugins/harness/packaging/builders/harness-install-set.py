@@ -38,8 +38,11 @@ SCRIPT = "scripts/server-round1/harness-install-set.py"
 FAMILIES = ("codex", "claude-code", "opencode", "hermes", "dsh", "kilo", "pi")
 
 #: Families whose runtime artifact is a directory closure built by a builder
-#: script; the remaining ones (opencode) pin a single-file binary instead.
-CLOSURE_FAMILIES = ("codex", "claude-code", "hermes", "dsh", "kilo", "pi")
+#: script; the remaining ones pin a single-file binary instead. `opencode` joined
+#: this tuple when its pinned closure and builder landed — its artifact is a
+#: two-package directory closure whose entry happens to be a native ELF, which is
+#: a property of the entry, not of the artifact's shape.
+CLOSURE_FAMILIES = ("codex", "claude-code", "hermes", "dsh", "kilo", "opencode", "pi")
 
 MODULE_NAMES = {
     "codex": "codex", "claude-code": "claude", "opencode": "opencode",
@@ -52,6 +55,7 @@ BUILDERS = {
     "hermes": "build-hermes-runtime-artifact.mjs",
     "dsh": "build-dsh-runtime-artifact.mjs",
     "kilo": "build-kilo-runtime-artifact.mjs",
+    "opencode": "build-opencode-runtime-artifact.mjs",
     "pi": "build-pi-runtime-artifact.mjs",
 }
 
@@ -60,11 +64,15 @@ BUILDERS = {
 #: are not the same string: `claude-code` owns `packaging/claude/` (the name the
 #: builders and artifact gates already use). Every family with an npm root now
 #: owns exactly one, because the shared Codex/Pi lock was split; a family
-#: missing here (hermes, opencode) has no npm root at all.
+#: missing here (hermes) has no npm root at all. `opencode` was added when its
+#: pinned closure landed: without an entry it is skipped by the `npm ci` below,
+#: which is exactly the silent skip `test_every_packaging_npm_root_has_a_canonical_family_or_explicit_alias_builder`
+#: exists to catch.
 NPM_ROOTS = {
     "codex": "codex", "pi": "pi",
     "claude-code": "claude",
     "dsh": "dsh", "kilo": "kilo",
+    "opencode": "opencode",
 }
 
 REPORT: dict = {"script": SCRIPT}
