@@ -1,0 +1,51 @@
+{
+  "version": "1.0.0",
+  "frozenAt": "2026-10-03",
+  "order": "002",
+  "task": "T002-10 — 领域路径与逻辑 manifest schema 冻结（plugin-architecture §1/§3/§7 的可执行版）",
+  "logicalManifestSchema": {
+    "file": "plugin.manifest.json（逻辑插件根；构建时目录，不是第三个宿主）",
+    "fields": {
+      "schemaVersion": {"type": "integer", "const": 1},
+      "logicalPluginId": {"type": "string", "pattern": "^[a-z][a-z0-9.-]{1,63}$"},
+      "displayName": {"type": "string"},
+      "categories": {"type": "array", "items": {"enum": ["harness", "agent", "chat", "profile", "model-provider", "workspace", "resource", "service", "environment", "platform"]}, "note": "导航标签，无权限/依赖特权"},
+      "versionSource": {"type": "string", "description": "版本来源声明（如 package.json/pyproject/manifest.json 路径）"},
+      "artifacts": {"type": "array", "items": {"type": "object", "properties": {"kind": {"enum": ["npm", "wheel", "bundle", "assets"]}, "path": {"type": "string"}, "releaseIdentity": {"type": "string"}}}},
+      "entries": {"type": "array", "items": {"type": "object", "properties": {"entryId": {"type": "string"}, "package": {"type": "string"}, "entrypoint": {"type": "string"}, "executionDomain": {"enum": ["frontend", "backend"]}, "existingRuntimeManifest": {"type": "string", "description": "引用既有运行 manifest id，不新建调度"}}}}
+    },
+    "forbidden": ["独立 enable flag", "启动函数", "动态注册表", "父插件调度器", "运行时二次 resolve 依赖"],
+    "authority": "products/extensions.json 与各运行 manifest 仍是选择/调度权威；构建校验一致性并生成路径锁"
+  },
+  "domainPathMapping": [
+    {"from": "plugins/assets/model-provider", "to": "plugins/model-provider", "split": "server→backend；desktop/chat 贡献→frontend；profile-contribution→公开 facet 协作；品牌 adapters→harness 内部", "releaseIdentity": ["ordessa-model-provider", "ordessa-model-provider-profile", "@ordessa/plugin-model-provider", "@ordessa/plugin-model-provider-chat"], "orders": ["007", "010"]},
+    {"from": "plugins/assets/skills", "to": "plugins/skills", "releaseIdentity": ["ordessa-skills", "@ordessa/plugin-skills", "@ordessa/skills-contracts"], "orders": ["007"]},
+    {"from": "plugins/assets/prompts", "to": "plugins/prompts", "releaseIdentity": ["ordessa-prompts"], "orders": ["007"]},
+    {"from": "plugins/assets/command-templates", "to": "plugins/command-templates", "releaseIdentity": ["ordessa-command-templates"], "orders": ["007"]},
+    {"from": "plugins/assets/subagents", "to": "plugins/subagents", "releaseIdentity": ["ordessa-assets-subagents", "@ordessa/plugin-subagent-settings", "@ordessa/plugin-assets-subagents-ui"], "orders": ["007"]},
+    {"from": "plugins/assets/memory", "to": "plugins/memory", "releaseIdentity": ["ordessa-memory"], "orders": ["007"]},
+    {"from": "plugins/assets/runtime-preferences", "to": "plugins/runtime-preferences", "releaseIdentity": ["ordessa-runtime-preferences-adapters（import=ordessa_runtime_preferences）"], "orders": ["007"]},
+    {"from": "plugins/assets/mcp", "to": "plugins/mcp", "split": "backend/adapters/frontend 拆分层保持；扁平 import 包名 backend 的布局迁移时显式记录（identity-map pythonDistributions.specialLayouts）", "releaseIdentity": ["ordessa-mcp", "@ordessa/plugin-asset-mcp", "ordessa-mcp-pi-bridge"], "orders": ["007"]},
+    {"from": "plugins/assets/lsp", "to": "plugins/lsp", "releaseIdentity": ["ordessa-lsp-api", "ordessa-lsp-adapters"], "orders": ["007"]},
+    {"from": "plugins/assets/sandbox", "to": "plugins/sandbox", "releaseIdentity": ["ordessa-sandbox-api", "ordessa-sandbox-backend", "ordessa-sandbox-adapters", "@ordessa/plugin-sandbox-settings"], "orders": ["007"]},
+    {"from": "plugins/assets/extensions", "to": "plugins/extensions", "releaseIdentity": ["ordessa-extensions（Hooks/原生扩展资源，不是 Ordessa 插件 loader）"], "orders": ["007"]},
+    {"from": "plugins/permissions", "to": "plugins/permissions", "note": "同领域路径，内部统一 api/backend/adapters/frontend 公开契约布局", "orders": ["007"]},
+    {"from": "plugins/workspace", "to": "plugins/workspace", "orders": ["007"]},
+    {"from": "plugins/agent/{contracts,sessions,connections}", "to": "plugins/agent", "split": "contracts 保公共域 carrier；sessions UI/逻辑分开；connections 通用 handle→frontend/connections（008），Agent 客户端/投影留 Agent", "orders": ["008", "010"]},
+    {"from": "plugins/connectors/acp", "to": "Harness adapters + frontend/connections/native-bridge + Agent 适配", "note": "禁止整包塞 Harness；host.ts 禁私有 app import（008）", "orders": ["007", "008", "009"]},
+    {"from": "plugins/connectors/ordessa", "to": "frontend/server-bridge 通用 wire + Agent 消息解码适配", "orders": ["008"]},
+    {"from": "plugins/commands", "to": "frontend/extension-runtime（registry/execute）+ Workbench（键位/面板）+ 各插件（业务 handler）；旧 ID 薄 forward", "orders": ["008"]},
+    {"from": "packages/pacthold", "to": "packages/backend/pacthold", "orders": ["006"]},
+    {"from": "packages/server-plugin-api", "to": "packages/backend/server-plugin-api", "orders": ["006"]},
+    {"from": "packages/backend/environment-api", "to": "终位（002 已建）", "orders": ["002"]},
+    {"from": "CoreStore SQLite 实现（compat storage/database.py 机制半）", "to": "packages/backend/persistence-sqlite", "orders": ["005"]},
+    {"from": "SecretStore OS 适配（products/server platform_secrets.py）+ DataArea 文件/SQLite 适配", "to": "packages/backend/platform-services（可选，无激活注册表）", "orders": ["005"]},
+    {"from": "packages/desktop-platform/contracts/foundation", "to": "packages/frontend/contracts", "orders": ["008"]},
+    {"from": "packages/desktop-platform/{extension-api,extension-loader,extension-host}", "to": "packages/frontend/{extension-api,extension-runtime}", "orders": ["008"]},
+    {"from": "packages/desktop-platform/{ui,ui-components,connections,native-bridge,server-bridge}", "to": "packages/frontend/*", "orders": ["008"]},
+    {"from": "packages/workbench", "to": "packages/frontend/workbench", "orders": ["008"]},
+    {"from": "plugins/server-compat、runtime-compat", "to": "逐符号归领域/底座；无 legacy-compat 目标插件；必要旧发行仅薄壳（白名单）+ 封存迁移", "orders": ["006", "007", "010", "012"]}
+  ],
+  "noLegacyCompatPlugin": "目标树不设 legacy-compat 领域目录；架构图不画；保留壳白名单在 012 冻结（C95-6）",
+  "dataIdentityRule": "所有移动不改 extension id/npm 名/wheel 名/import 名/数据 namespace/表标识（M07）；名字变更须 docs/migration/ 记录+用户确认"
+}

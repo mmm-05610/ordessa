@@ -16,18 +16,18 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 
 ## 002 冻结联合契约、保证等级与兼容清单
 
-- [ ] T002-01 读取024V3最终修订和025V4§14，并将M04–06对旧候选的覆盖条款映射到每个affected case，不覆盖历史。
-- [ ] T002-02 冻结environment-api DTO/Ports/error族及版本；TypeScript F1/C1数据类型、canonical codec与Python对应wire序列化正反例能编译互通。
-- [ ] T002-03 Q01–Q12逐项列实际Harness支持、required保证、raw差异、provider职责和消费者；未支持原生原子性标unsupported而非上层重试补齐。
-- [ ] T002-04 定义request key作用域/完整输入MAC编码（附件/配置/目标）、密钥port/轮换/未知保存，可靠与raw显式选择；key失效不自动降级。
-- [ ] T002-05 冻结public API/export/Token/carrier/extension ID发行身份清单，列old CoreStore构造与领域carrier兼容例外/消费者及退出单。
-- [ ] T002-06 新增契约测试覆盖PythonDTO/TS wire identity、编码版本不产生新writer、scheme/realm/owner校验、领域程序集零host import。
-- [ ] T002-07 输出批准合同版本与hash，新增设计语义差异提交用户；已批准内部实现选择可自行锁定，不要求用户逐个选方法名。
-- [ ] T002-08 联合冻结C2恢复协议、E2/F2生命周期证据及shipping合同：同根排他、跨模式request key、跨库marker/查原ID、附件不可变、三序号/RecoveryBinding、native alias、frontend fence；每项有编译类型和对应反例。
+- [x] T002-01 读取024V3最终修订和025V4§14，并将M04–06对旧候选的覆盖条款映射到每个affected case，不覆盖历史。
+- [x] T002-02 冻结environment-api DTO/Ports/error族及版本；TypeScript F1/C1数据类型、canonical codec与Python对应wire序列化正反例能编译互通。
+- [x] T002-03 Q01–Q12逐项列实际Harness支持、required保证、raw差异、provider职责和消费者；未支持原生原子性标unsupported而非上层重试补齐。
+- [x] T002-04 定义request key作用域/完整输入MAC编码（附件/配置/目标）、密钥port/轮换/未知保存，可靠与raw显式选择；key失效不自动降级。
+- [x] T002-05 冻结public API/export/Token/carrier/extension ID发行身份清单，列old CoreStore构造与领域carrier兼容例外/消费者及退出单。
+- [x] T002-06 新增契约测试覆盖PythonDTO/TS wire identity、编码版本不产生新writer、scheme/realm/owner校验、领域程序集零host import。
+- [x] T002-07 输出批准合同版本与hash，新增设计语义差异提交用户；已批准内部实现选择可自行锁定，不要求用户逐个选方法名。
+- [x] T002-08 联合冻结C2恢复协议、E2/F2生命周期证据及shipping合同：同根排他、跨模式request key、跨库marker/查原ID、附件不可变、三序号/RecoveryBinding、native alias、frontend fence；每项有编译类型和对应反例。
 
-- [ ] T002-09 联合冻结E4/F4数据空间/宿主交互/秘密诊断、E5持久关联、A1 Agent公开合同，类型/codec/错误/缺席保证与A76–A95逐项映射，不引入第二核心。
+- [x] T002-09 联合冻结E4/F4数据空间/宿主交互/秘密诊断、E5持久关联、A1 Agent公开合同，类型/codec/错误/缺席保证与A76–A95逐项映射，不引入第二核心。
 
-- [ ] T002-10 按plugin-architecture冻结领域路径与逻辑manifest schema、公开exports、旧发行/入口/数据identity映射；检查元数据不二次调度，列每个移动消费者。
+- [x] T002-10 按plugin-architecture冻结领域路径与逻辑manifest schema、公开exports、旧发行/入口/数据identity映射；检查元数据不二次调度，列每个移动消费者。
 
 ## 003 实现可独立运行的空环境与中性对象模型
 

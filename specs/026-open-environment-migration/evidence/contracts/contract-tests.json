@@ -1,0 +1,42 @@
+{
+  "version": "1.0.0",
+  "frozenAt": "2026-10-03",
+  "order": "002",
+  "description": "contract-tests 台账：真实编译产物上的 Python/TS 互通正反例与 Token 唯一性证据（T002-06）。008/012 再验产品实际消费。",
+  "suites": [
+    {
+      "name": "python-contract-freeze",
+      "command": "PYTHONPATH=packages/backend/environment-api/src .venv/bin/python -m pytest packages/backend/environment-api/tests/test_contract_freeze.py -q",
+      "cwd": "repo root",
+      "toolchain": "Python 3.12.14 (.venv)",
+      "lastRun": {"exit": 0, "pass": 33, "fail": 0, "skip": 0},
+      "covers": [
+        "17 共享向量逐字节复现（decode→encode 恒等）",
+        "构造顺序不泄漏 wire 形态（'两份 Token'类反例的 wire 层）",
+        "envelope 拒未知键/外版 contractVersion/错 kind",
+        "realm/namespace/entity/authority_kind 校验负例",
+        "AuthorityKey 同目标=同 key（第二 writer 冲突可判）",
+        "reliable 缺指纹拒发+raw 不禁用+不降级",
+        "InputCapture 拒路径、Dialog cancel/revoke 零写、RevisionSelector 纪律",
+        "子进程证零 host import（pacthold/ordessa_server/ordessa_harness/compat 不加载）",
+        "向量文件 NFC/尾换行规范化"
+      ]
+    },
+    {
+      "name": "ts-mirror-freeze",
+      "command": "npm test -- node-test:packages/desktop-platform/contracts",
+      "cwd": "repo root",
+      "toolchain": "node 22.22.1 / esbuild（经桌面构建同路径）",
+      "lastRun": {"exit": 0, "pass": 6, "fail": 0, "note": "5 open-environment + 1 token-identity（后者原无聚合门，002 一并纳入）"},
+      "covers": [
+        "TS 镜像 17 向量逐字节一致（esbuild 产物上断言，非仅源码）",
+        "TS 构造顺序无关 + envelope 纪律负例",
+        "类型校验镜像（realm 大小写/selector/dialog/input 负例）",
+        "双实例 codec 输出恒等",
+        "token-identity：foundation carrier 与共享 ui-components Token 同对象"
+      ]
+    }
+  ],
+  "aggregateDiscovery": "npm test -- --list 现含 node-test:packages/desktop-platform/contracts（42 suites，001 时 41）；Python 侧显式路径运行，006 起纳入 verify-clean/CI",
+  "pendingProductVerification": "008/012：产品前端实际消费 open-environment 载体；012：解包产物内合同向量复验（C95-3）"
+}

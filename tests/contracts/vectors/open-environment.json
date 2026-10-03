@@ -1,0 +1,92 @@
+{
+ "contractVersion": "oe-contract/1",
+ "authority": "python/ordessa_environment_api.codec",
+ "note": "frozen by spec 026 order 002; TS mirror must match byte-for-byte",
+ "cases": [
+  {
+   "name": "request-key",
+   "kind": "request-key",
+   "encoded": "{\"contractVersion\":\"oe-contract/1\",\"kind\":\"request-key\",\"payload\":{\"comparison\":{\"binding\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"input\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"},\"environment_namespace\":\"prod-root\",\"principal_scope\":\"user:local:a1\",\"request_id\":\"req-0001\"}}"
+  },
+  {
+   "name": "authority-key",
+   "kind": "authority-key",
+   "encoded": "{\"contractVersion\":\"oe-contract/1\",\"kind\":\"authority-key\",\"payload\":{\"authority_kind\":\"session-config\",\"target\":{\"identity_namespace\":\"ordessa.workspace\",\"realm\":\"workspace\",\"stable_entity_id\":\"ws-main\"}}}"
+  },
+  {
+   "name": "binding-snapshot",
+   "kind": "binding-snapshot",
+   "encoded": "{\"contractVersion\":\"oe-contract/1\",\"kind\":\"binding-snapshot\",\"payload\":{\"binding_digest\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"environment\":\"env-a\",\"environment_context_revision\":\"ctx-12\",\"grant_refs\":[\"grant-read\"],\"guarantee\":\"reliable\",\"logical_surface\":\"codex.session\",\"native_axis\":{\"observed\":\"rev-3\"},\"provider_activation\":{\"environment\":\"env-a\",\"generation\":7,\"plugin_id\":\"ordessa.harness\"},\"transport_contract\":\"acp/1\"}}"
+  },
+  {
+   "name": "activity-receipt",
+   "kind": "activity-receipt",
+   "encoded": "{\"contractVersion\":\"oe-contract/1\",\"kind\":\"activity-receipt\",\"payload\":{\"delivery\":\"acknowledged\",\"issued_revision\":\"rev-41\",\"request\":{\"comparison\":{},\"environment_namespace\":\"prod-root\",\"principal_scope\":\"user:local:a1\",\"request_id\":\"req-0002\"},\"safe_summary\":{\"turns\":1},\"sequences\":{\"environment_knowledge_revision\":12,\"ingest_sequence\":4,\"source_revision\":\"n-88\"}}}"
+  },
+  {
+   "name": "current-fact",
+   "kind": "current-fact",
+   "encoded": "{\"contractVersion\":\"oe-contract/1\",\"kind\":\"current-fact\",\"payload\":{\"conflicts\":[],\"obligations\":[],\"outcome\":\"concluded\",\"revision\":5}}"
+  },
+  {
+   "name": "current-fact-disputed",
+   "kind": "current-fact",
+   "encoded": "{\"contractVersion\":\"oe-contract/1\",\"kind\":\"current-fact\",\"payload\":{\"conflicts\":[\"seq-conflict-9\"],\"obligations\":[\"scope-1\"],\"outcome\":\"disputed\",\"revision\":6}}"
+  },
+  {
+   "name": "persistent-reference",
+   "kind": "persistent-reference",
+   "encoded": "{\"contractVersion\":\"oe-contract/1\",\"kind\":\"persistent-reference\",\"payload\":{\"coverage_epoch\":1,\"declaring_owner_domain\":\"ordessa.profile\",\"operation_id\":\"op-77\",\"policy_contract_id\":\"profile.facet\",\"policy_contract_version\":2,\"relation_id\":\"rel-1\",\"revision_selector\":{\"op\":\"exact\",\"revision\":\"3\"},\"source_commit_evidence\":\"sha256:abcd1234\",\"source_key\":{\"identity_namespace\":\"ordessa.workspace\",\"realm\":\"workspace\",\"stable_entity_id\":\"ws-main\"},\"source_revision\":\"rev-9\",\"status\":\"published\",\"target_key\":{\"identity_namespace\":\"ordessa.skills\",\"realm\":\"resource\",\"stable_entity_id\":\"skill-x\"}}}"
+  },
+  {
+   "name": "change-reservation",
+   "kind": "change-reservation",
+   "encoded": "{\"contractVersion\":\"oe-contract/1\",\"kind\":\"change-reservation\",\"payload\":{\"change_kind\":\"delete\",\"expected_revision\":\"3\",\"operation_id\":\"op-78\",\"refused_relations\":[\"rel-1\"],\"reservation_id\":\"res-5\",\"target_key\":{\"identity_namespace\":\"ordessa.skills\",\"realm\":\"resource\",\"stable_entity_id\":\"skill-x\"}}}"
+  },
+  {
+   "name": "input-capture",
+   "kind": "input-capture",
+   "encoded": "{\"contractVersion\":\"oe-contract/1\",\"kind\":\"input-capture\",\"payload\":{\"attachment_digests\":[\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"],\"base_revision\":\"rev-40\",\"config_operation_ids\":[\"op-1\"],\"content_digest\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"handles\":{\"draft\":\"content-ref-1\"}}}"
+  },
+  {
+   "name": "fingerprint",
+   "kind": "fingerprint",
+   "encoded": "{\"contractVersion\":\"oe-contract/1\",\"kind\":\"fingerprint\",\"payload\":{\"algorithm\":\"hmac-sha256\",\"comparison_scope\":\"request-input\",\"key_id\":\"k-2026-04\"}}"
+  },
+  {
+   "name": "recovery-binding",
+   "kind": "recovery-binding",
+   "encoded": "{\"contractVersion\":\"oe-contract/1\",\"kind\":\"recovery-binding\",\"payload\":{\"binding_id\":\"rb-3\",\"continuity\":{\"rollout\":\"ok\"},\"environment\":\"env-a\",\"evidence_kind\":\"history-read\",\"native_authority\":\"codex\",\"native_generation\":2,\"native_owner_identity\":\"owner-1\",\"native_session_id\":\"s-9\",\"principal\":\"user:local:a1\",\"scope\":\"read-evidence\"}}"
+  },
+  {
+   "name": "unclassified-delivery",
+   "kind": "unclassified-delivery",
+   "encoded": "{\"contractVersion\":\"oe-contract/1\",\"kind\":\"unclassified-delivery\",\"payload\":{\"budget_max\":64,\"budget_used\":3,\"correlated_object\":\"obj-2\",\"environment\":\"env-a\",\"fact_id\":\"udf-1\",\"ingest_revision\":44,\"safe_digest\":\"ffffffffffffffffffffffffffffffff\",\"source_identity\":\"codex:stream\"}}"
+  },
+  {
+   "name": "data-area",
+   "kind": "data-area",
+   "encoded": "{\"contractVersion\":\"oe-contract/1\",\"kind\":\"data-area\",\"payload\":{\"access\":\"write\",\"area_id\":\"area-1\",\"backend_kind\":\"sqlite\",\"current_schema_evidence\":\"3\",\"namespace\":\"ordessa.skills.store\",\"owner_domain\":\"ordessa.skills\",\"persistence_guarantee\":\"durable\",\"retention\":\"keep\",\"supported_schema_range\":\"1-3\"}}"
+  },
+  {
+   "name": "secret-ref",
+   "kind": "secret-ref",
+   "encoded": "{\"contractVersion\":\"oe-contract/1\",\"kind\":\"secret-ref\",\"payload\":{\"access_purpose\":\"provider-auth\",\"owner_namespace\":\"ordessa.model-provider\",\"ref\":\"sec-9\",\"revision\":\"r-2\"}}"
+  },
+  {
+   "name": "host-dialog-request",
+   "kind": "host-dialog-request",
+   "encoded": "{\"contractVersion\":\"oe-contract/1\",\"kind\":\"host-dialog-request\",\"payload\":{\"caller_activation\":\"ordessa.profile\",\"caller_generation\":3,\"operation_id\":\"op-90\",\"options\":[],\"purpose\":\"choose-project-dir\",\"scope\":\"window-1\"}}"
+  },
+  {
+   "name": "host-dialog-result-cancelled",
+   "kind": "host-dialog-result",
+   "encoded": "{\"contractVersion\":\"oe-contract/1\",\"kind\":\"host-dialog-result\",\"payload\":{\"confirmed_option\":null,\"operation_id\":\"op-90\",\"selected_handle\":null,\"status\":\"cancelled\"}}"
+  },
+  {
+   "name": "activation-receipt",
+   "kind": "activation-receipt",
+   "encoded": "{\"contractVersion\":\"oe-contract/1\",\"kind\":\"activation-receipt\",\"payload\":{\"activation\":{\"environment\":\"env-a\",\"generation\":7,\"plugin_id\":\"ordessa.harness\"},\"published_contribution_revision\":\"cr-5\",\"settlement_notes\":[\"artifact-cleanup-pending\"]}}"
+  }
+ ]
+}

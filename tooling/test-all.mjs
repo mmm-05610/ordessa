@@ -64,6 +64,11 @@ const EXTRA_ROOTS = [
   // did not exist survived as long as it did. ~13s wall clock, and unlike the
   // packaging builders these need neither serial execution nor a TMPDIR.
   { name: 'node-test:plugins/harness/tests/access', probe: 'plugins/harness/tests/access', command: ['node', '--test', 'plugins/harness/tests/access/**/*.test.mjs'] },
+  // The frozen open-environment TS contract mirror (spec 026/002) and the
+  // foundation token-identity gate. The token-identity test had also never
+  // run in an aggregate before this entry — same defect class as the access
+  // row above, found while wiring the contract freeze.
+  { name: 'node-test:packages/desktop-platform/contracts', probe: 'packages/desktop-platform/contracts/foundation/open-environment.test.mjs', command: ['node', '--test', 'packages/desktop-platform/contracts/**/*.test.mjs'] },
   { name: 'rig:tests/integration/acp-connector', probe: 'tests/integration/acp-connector', command: ['npx', 'vitest', 'run', '--root', 'tests/integration/acp-connector'] },
 ]
 

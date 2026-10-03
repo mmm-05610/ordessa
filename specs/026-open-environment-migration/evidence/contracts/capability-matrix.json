@@ -1,0 +1,92 @@
+{
+  "version": "1.0.0",
+  "frozenAt": "2026-10-03",
+  "order": "002",
+  "description": "001 发现的全部品牌/资源能力 × 实际可用状态。不以接口存在推定支持（C95-3 前置）。available=有实测证据链；wired=接线但未全链验证；inert=广告面但无消费者（真产品缺口）；unsupported=声明不支持；unknown=未验证。",
+  "brands": {
+    "codex": {
+      "launchable": "available（021 A 组收口；安装资产 profile-codex-catalog-fast-off-v6）",
+      "nativeProfileAssets": "available（/opt/ordessa/harnesses 实测目录）",
+      "managedLogin": "available（混合托管登录+隔离 API 进程验证，021）",
+      "crossProviderHistory": "unsupported（原生 invalid_encrypted_content；用户裁定只封装不修，known-issues §Spec021）",
+      "runtimeArtifactVerification": "available（codex-runtime treeDigest 已核）"
+    },
+    "pi": {
+      "launchable": "available",
+      "nativeProfileAssets": "available（profile-pi-startup-admission-v2 为当前默认；tests 钉名漂移已登记 001）",
+      "managedLogin": "available（Pi RPC 受控链）",
+      "providerSwitch": "available（Pi DeepSeek→Go live-registration 历史回忆，021 引用）",
+      "runtimeArtifactVerification": "available"
+    },
+    "claude-code": {
+      "launchable": "available",
+      "nativeProfileAssets": "available（profile-claude-provider-restoration）",
+      "customProviderModels": "available（021：custom-provider 模型+标准 Anthropic 认证）",
+      "restartResume": "available（引用证据：restart/resume 历史回忆）",
+      "runtimeArtifactVerification": "available"
+    },
+    "opencode": {
+      "launchable": "unsupported（规范 id 无 launch 路由，仅别名 omp；known-issues identity 行）",
+      "artifactBuild": "available（builder+15 测试）",
+      "artifactVerification": "unsupported（verifier 不接受平台二进制形态第三类）",
+      "goProtocols": "wired（有界秘密安全探针验证）"
+    },
+    "hermes": {
+      "artifactBuild": "available",
+      "artifactVerification": "unsupported（manifest 形态 verifier 读不了）",
+      "launchable": "unknown"
+    },
+    "dsh": {
+      "artifactBuild": "available",
+      "artifactVerification": "unsupported（bin-only JS 入口形态未覆盖）",
+      "launchable": "unknown"
+    },
+    "kilo": {
+      "artifactBuild": "available",
+      "artifactVerification": "unsupported（同 dsh）",
+      "launchable": "unknown"
+    }
+  },
+  "resources": {
+    "skills": {
+      "import": "available（importBegin/Chunk/Preview/Commit + facet 发布，S02 实测）",
+      "enablement": "available（profile 层 + project assignmentsUpsert 两面）",
+      "nativeHomeDelivery": "inert（§G2 seam 未组装：importedSkillReachesNativeHome={codex:false,claude-code:false}；delivery_set 无生产调用者；known-issues S02 行）",
+      "defaultProductAssembly": "inert（default_plugins 无 ProductSkillsPlugin；仅 native_runtime 组装——P07 真装配缺口）"
+    },
+    "mcp": {
+      "frontend": "available（plugins/assets/mcp/frontend 套件绿）",
+      "backendPlugin": "wired（McpAssetServerPlugin 存在但默认组合从未实例化——known-issues 装配缺口）",
+      "probe": "available（test_asset_hubs 绿/状态敏感已登记）",
+      "brandApplication": "unknown（品牌应用归 Harness 待 007）"
+    },
+    "prompts": {"resourceChain": "wired（011-q2 线）", "brandApplication": "unknown"},
+    "memory": {"resourceChain": "wired（015 线，runtime-preferences+memory）", "nativeMemoryPath": "unknown（Harness 适配 007）"},
+    "runtime-preferences": {"resourceChain": "wired（015）", "facetResolution": "wired（C03：未覆盖偏好实测跟随全局）"},
+    "model-provider": {
+      "catalogue": "available（providerModels.* + probe）",
+      "sessionOverride": "available（profiles.v2.setSessionOverride 真实生效链，C02 L3）",
+      "chooseForSession": "inert（广告面 86 能力表内但永不成功：harness_config_port 未注入 + resolve_next_turn 无生产调用者——known-issues C02 行）",
+      "importApiKey": "wired（v2 面有方法；keyring 依赖环境）",
+      "nextTurnTrio": "wired（queryChoice/beginTurnApplication/reconcileChoice：chat-contribution 消费；服务端接线状态 010 核）"
+    },
+    "sandbox": {
+      "bwrapLocal": "available（TOOL_bwrap=present；placement scope-red 已裁决）",
+      "wsl": "unsupported（connector 退役→typed refusal）",
+      "ssh": "unsupported（同上）",
+      "policy": "wired（plugins/assets/sandbox 三包）"
+    },
+    "lsp": {"adapters": "wired（api/adapters 包在）", "serverComposition": "unknown"},
+    "subagents": {"definitions": "wired（011-q3 + profiles.subagentGrants）", "collaborationScheduling": "out-of-scope（022/023 不在本轮）"},
+    "command-templates": {"resourceChain": "wired（011-q2）", "platformRegistry": "迁移目标 008"},
+    "extensions-hooks": {"records": "wired（hooks.* wire）", "nativeTriggerExecution": "归 Harness 007"}
+  },
+  "platform": {
+    "reliableSubmission": "unsupported-until-005（Store+fingerprint 端口缺）",
+    "dataArea": "unsupported-until-005（DataAreaPort 未实现）",
+    "secretPort": "partial（SecretStore 存在；E4 扩充+borrowForUse 005）",
+    "hostDialog": "unsupported-until-009（globalThis picker/confirm 现状）",
+    "relationships": "unsupported-until-004/005"
+  },
+  "evidenceNotes": "available=本树或 021 记录的实测；引用证据标注来源；unknown 未验证不冒称。三品牌真实模型聊天=未授权未调用（全矩阵无真实推理证据）。"
+}

@@ -1,5 +1,28 @@
 # 迁移状态
 
+## 2026-10-03 002 合同冻结完成（codeReady）
+
+前序：001@51889021a0。002 交付：
+
+- **编译合同**：`packages/backend/environment-api`（新 dist `ordessa-environment-api`，stdlib-only、零状态；
+  identity/targets/guarantee/sequences/receipts/references/services/ports/errors/codec；
+  CONTRACT_VERSION=`oe-contract/1`）+ TS 镜像 `foundation/src/open-environment/`（codec/types，
+  esbuild 产物上逐字节断言）+ A1 面 `plugins/agent/contracts/src/config-owner.ts`（v0.2.0 追加导出）。
+  共享向量 `tests/contracts/vectors/open-environment.json`（17 例，Python 权威生成）。
+- **六份台账**（evidence/contracts/，JSON 全部可解析，hash 见 manifest.md）：public-api、identity-map
+  （88 wire 方法逐 owner + 钉面外 2 方法闭合=`modelProvider.beginTurnApplication`+`acp.sessions.list`、
+  18+5 extension 身份、33 workspace、29 dist、carrier/token 面、兼容构造退出单）、authority-map（20 类
+  事实 owner，侦察修正 2 处：set_overlay 实现在 profile 插件、Linux SecretStore 在产品层）、
+  capability-matrix（7 品牌×资源实际状态，惰性链如实标 inert）、contract-tests（33+6 绿）、
+  domain-paths（逻辑 manifest schema + 24 行映射）、guarantee-levels（Q01–Q12 + request-key MAC 编码 +
+  M04–M06 映射）。
+- **测试接线**：`node-test:packages/desktop-platform/contracts` 入聚合（41→42 suites；连带把从未入聚合的
+  token-identity.test.mjs 纳入门）。合同套件：Python 33 绿、TS 6 绿；typecheck 绿；workbench/chat-api/
+  agent-connections/agent-sessions 绿；pacthold 218 绿；runtime-compat 163 绿；products/desktop 1 红=
+  001 已登记继承红（pi 钉名）。发现并登记：pytest 组合调用 pacthold+runtime-compat 有同名测试模块收集
+  冲突（分开跑均绿，按 baseline.md 串行单套件调用）。
+- 002=DONE（codeReady）；003 解锁。侦察子代理 2 个（repo-scout），只读，主代理复核采纳。
+
 ## 2026-10-03 001 受控基线完成（codeReady）
 
 启动词授权后，起点 `ebe712c796`。T001-01…07 全部完成，证据在

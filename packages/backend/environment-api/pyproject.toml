@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-environment-api"
+version = "0.1.0"
+description = "Open-environment public contract types (E1/E3/E4/E5/C1/C2) — zero runtime state, stdlib only"
+requires-python = ">=3.9"
+license = { text = "Proprietary" }
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ordessa_environment_api = ["py.typed"]
