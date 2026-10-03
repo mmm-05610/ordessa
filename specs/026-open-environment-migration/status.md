@@ -1,5 +1,20 @@
 # 迁移状态
 
+## 2026-10-04 夜间里程碑 — 008 F5 全链 + frontend 物理迁移核心完成
+
+- 007=DONE（b37a5711ce）。008 F5 链 T008-11..20 全部 S/I 完成（44239ca767→eb9bb36bd9）：
+  oe-f5/1 冻结、状态库/选择绑定、查询缓存/任务/投影、编辑会话（ABA=编辑戳）/UI 存储、
+  Workbench 交互机制/上下文/i18n、A96–A103/A109 证据映射+双 fixture 入聚合（44 套件）。
+- frontend 包组物理迁移核心（4ff0e3859c）：10 包 → packages/frontend/，178 renames+81 修改；
+  标识零变化；workbench +1 深度全量修正；contract-ownership 守卫按 FR-009 本意限定运行时源
+  （工作台并入伞形后的测试/构建接线为 fixture 语义）。
+- 中途险情两起（sed 过滤复发→9 证据文件回滚+教训补正；workbench checkout 丢清扫→补扫），
+  均按协议处置。验证：workbench 77/ui 30/ui-components 77/合同 10/fixture 3/typecheck 0 错，
+  products/desktop 36/37（1F=既有 pi 钉红）。
+- 008 剩：T008-03（host settings 并 Workbench）、T008-04（foundation 拆分）、T008-06（连接器
+  NativeTransport 公共化）、T008-08（preflight）、T008-09（逻辑 manifest）、T008-10（commands
+  迁移）、T008-01 第二半（loader+host→extension-runtime 合并）、T008-07 GUI 面（U）。
+
 ## 2026-10-04 夜间继续 — 008 S2–S4 落地（slice-worker 通道故障期间主代理自建）
 
 S2（bfccfb04f3）状态库/选择绑定/双 fixture；S3（f1b8f46338）查询缓存/任务/投影适配；
