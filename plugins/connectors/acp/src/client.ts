@@ -40,6 +40,25 @@ const KNOWN_SESSION_UPDATES = new Set([
   'notice', 'compaction_update', 'compaction_summary_chunk',
 ])
 
+/**
+ * E2 generic outlet entry (T009-01): an unknown-type frame observed at the
+ * raw tap BEFORE the SDK's destructive filtering. Raw-safe SUMMARY only —
+ * no payload bodies, no verdict, no approval interpretation. Bounded per
+ * channel; overflow merges to one scope-unknown summary (obligation kept,
+ * bodies dropped).
+ */
+export interface UnknownDelivery {
+  readonly updateKind: string
+  readonly sessionId?: string
+  readonly frameDigest: string
+  readonly at: number
+}
+export interface UnknownOutlet {
+  readonly deliveries: readonly UnknownDelivery[]
+  readonly scopeUnknown: boolean
+  readonly gap: boolean
+}
+
 interface Channel {
   readonly projectId: string
   readonly sessionScopeId?: string
@@ -54,7 +73,19 @@ interface Channel {
   unsubscribeDown?: () => void
   creatingSessions: number
   readonly pendingCommands: Map<string, readonly import('./commands').NativeCommand[] | null>
+  /** E2 generic outlet: bounded unknown deliveries, merge-on-overflow. */
+  readonly unknownOutlet: { deliveries: UnknownDelivery[]; scopeUnknown: boolean; gap: boolean }
 }
+/** Raw-safe frame digest for the generic outlet: no bodies leave the tap. */
+function rawDigest(raw: Record<string, unknown>): string {
+  const text = JSON.stringify(raw)
+  let hash = 0
+  for (let i = 0; i < text.length; i++) {
+    hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0
+  }
+  return `f${(hash >>> 0).toString(16)}:${text.length}`
+}
+
 interface Route { channel: Channel; nativeId: string; key: string }
 /** `runId` is the run that was live when the native request arrived ('' when none was): the
  * answer belongs to THAT run, never to whatever the session happens to run later. */
@@ -349,6 +380,7 @@ export class AcpClient implements AgentClient {
       projectId: binding.id, sessionScopeId, configurationProfileId, binding, handle,
       conn: undefined as unknown as acp.ClientSideConnection,
       capabilities: {}, nativeToKey: new Map(), commandsDown: false,
+      unknownOutlet: { deliveries: [], scopeUnknown: false, gap: false },
       creatingSessions: 0, pendingCommands: new Map(),
     }
     if (handle.subscribeDown) channel.unsubscribeDown = handle.subscribeDown(() => {
@@ -453,6 +485,16 @@ export class AcpClient implements AgentClient {
     if (!update || typeof update.sessionUpdate !== 'string'
         || !KNOWN_SESSION_UPDATES.has(update.sessionUpdate)) {
       this.invalidateChannelCommands(channel, 'malformed')
+      // E2 generic outlet: the frame crossed the tap before the SDK's
+      // destructive filter dropped it — record a raw-safe SUMMARY entry.
+      // Observation role is known; the business type is not. No verdict, no
+      // approval interpretation, no state write of any kind.
+      this.recordUnknownDelivery(channel, {
+        updateKind: typeof update?.sessionUpdate === 'string' ? update.sessionUpdate : 'malformed',
+        sessionId: typeof params?.sessionId === 'string' ? params.sessionId : undefined,
+        frameDigest: rawDigest(raw),
+        at: Date.now(),
+      })
       return
     }
     if (update.sessionUpdate !== 'available_commands_update') return
@@ -1220,6 +1262,42 @@ export class AcpClient implements AgentClient {
   private closeStream(key: string) { this.openStreams.delete(key) }
   private textOf(content: acp.ContentBlock): string {
     return content.type === 'text' ? content.text : ''
+  }
+
+  /** Bounded capture with merge-on-overflow (E2: obligations never dropped). */
+  private recordUnknownDelivery(channel: Channel, entry: UnknownDelivery) {
+    const outlet = channel.unknownOutlet
+    const BOUND = 16
+    if (outlet.scopeUnknown) {
+      // Already merged: every further unknown folds into the one summary —
+      // the gap marker stays, bodies keep being dropped, never re-accumulate.
+      this.publish()
+      return
+    }
+    if (outlet.deliveries.length >= BOUND) {
+      // Overflow: merge to a scope-unknown summary; the obligation survives
+      // as a gap marker even though the bodies are dropped.
+      outlet.deliveries = Object.freeze([{
+        updateKind: 'scope-unknown', frameDigest: 'merged', at: Date.now(),
+      }]) as unknown as UnknownDelivery[]
+      outlet.scopeUnknown = true
+      outlet.gap = true
+      this.publish()
+      return
+    }
+    outlet.deliveries.push(Object.freeze(entry) as UnknownDelivery)
+    this.publish()
+  }
+
+  /** The E2 generic outlet face (read-only; surfaces consume it raw). */
+  unknownDeliveries(connectionId: string): UnknownOutlet | undefined {
+    const channel = this.channels.get(connectionId)
+    if (!channel) return undefined
+    return {
+      deliveries: [...channel.unknownOutlet.deliveries],
+      scopeUnknown: channel.unknownOutlet.scopeUnknown,
+      gap: channel.unknownOutlet.gap,
+    }
   }
 
   private onSessionUpdate(channel: Channel, params: acp.SessionNotification) {

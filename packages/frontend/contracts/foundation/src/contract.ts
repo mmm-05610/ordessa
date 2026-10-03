@@ -15,4 +15,4 @@ export * from './product/index'
 // F5 rides the carrier as a namespace export: the freeze (oe-f5/1) keeps its
 // own names (e.g. SettingsContribution) which would collide with the product
 // settings face at the carrier — `f5.*` preserves both surfaces byte-identical.
-export * as f5 from './open-environment/f5'
+export * as f5 from './open-environment/f5/index'
