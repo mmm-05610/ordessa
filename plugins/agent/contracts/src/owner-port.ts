@@ -105,6 +105,9 @@ export function createAgentOwnerPort(call: WireCall): AgentOwnerPort {
   }
 }
 
+// re-export the evidence chain with the owner face (T010-05)
+export * from './config-evidence'
+
 /** Absent wiring: typed unavailable everywhere, never a silent local store. */
 export function createAbsentAgentOwnerPort(): AgentOwnerPort {
   const unavailable = () => Promise.resolve({
@@ -119,6 +122,8 @@ export function createAbsentAgentOwnerPort(): AgentOwnerPort {
     queryRun: unavailable,
   }
 }
+
+import { ConfigEvidenceChain, type EvidenceFrame, type EvidenceIntake } from './config-evidence'
 
 /**
  * Local in-memory owner port (T010-02): the frontend's own UI-local state
@@ -142,6 +147,9 @@ export interface LocalAgentOwnerPort extends AgentOwnerPort {
   /** Trusted Harness evidence reporting (the evidence channel, not a competing writer). */
   reportEvidence(target: string, observed: 'native' | 'unset' | 'unknown',
                  fields?: Record<string, 'known' | 'unset' | 'unknown'>): void
+  /** Native ConfigEvidence intake (T010-05): ordered snapshot/patch frames via
+   * the ConfigEvidenceChain; only APPLIED frames change the owner's fields. */
+  reportEvidenceFrame(target: string, frame: EvidenceFrame): EvidenceIntake
   /** SessionOwner upsert: merge fields per session id, freeze each record. */
   reportSessions(target: string, entries: Record<string, Record<string, unknown>>): void
   /** SessionOwner removal face for UI-scope teardown (drops ALL records of one target). */
@@ -177,6 +185,7 @@ export function createLocalAgentOwnerPort(options: LocalOwnerOptions = {}): Loca
     operations: Array<{ operationId: string; patchKinds: Array<'present' | 'unset'>; sourceRef?: string }>
     submissions: Map<string, SubmissionOutcome>
     dispatchCounts: Map<string, number>
+    evidence: ConfigEvidenceChain
     sessions: Map<string, Record<string, unknown>>
     runs: Map<string, Record<string, unknown>>
   }>()
@@ -191,7 +200,8 @@ export function createLocalAgentOwnerPort(options: LocalOwnerOptions = {}): Loca
     registry.add(target) // first touch registers the single writer
     state = {
       fields: new Map(), resolved: new Map(), revision: 0, observed: 'unset' as const,
-      operations: [], submissions: new Map(), dispatchCounts: new Map(), sessions: new Map(), runs: new Map(),
+      operations: [], submissions: new Map(), dispatchCounts: new Map(), evidence: new ConfigEvidenceChain(),
+      sessions: new Map(), runs: new Map(),
     }
     targets.set(target, state)
     return state
@@ -291,6 +301,18 @@ export function createLocalAgentOwnerPort(options: LocalOwnerOptions = {}): Loca
       } catch (error) {
         return { kind: 'unavailable', reason: String(error) }
       }
+    },
+
+    reportEvidenceFrame(target, frame) {
+      const state = targetState(target)
+      const intake = state.evidence.intake(frame)
+      if (intake.status === 'applied') {
+        // only a settled frame moves the owner's evidence fields
+        const settled = state.evidence.getFields()
+        for (const [name, value] of Object.entries(settled)) state.fields.set(name, value)
+        state.observed = state.evidence.getObserved()
+      }
+      return intake
     },
 
     reportEvidence(target, observed, fields) {
