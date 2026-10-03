@@ -110,6 +110,12 @@ export function buildHostServices(options: BuildHostServicesOptions = {}): HostS
   const commands = createCommandSource({ keybindings, onError: options.onCommandError })
   const sections: SettingsSection[] = []
   const providers: DiagnosticProvider[] = []
+  // Identity-stable snapshots (T008-03): getSnapshot returns the SAME frozen
+  // array until a registration actually changes the list — safe for
+  // useSyncExternalStore consumers (the old shape returned a fresh array per
+  // call, which re-rendered every subscriber on every read).
+  let settingsSnapshot: readonly SettingsSection[] | null = null
+  let diagnosticsSnapshot: readonly DiagnosticProvider[] | null = null
   return {
     theme,
     commands,
@@ -120,16 +126,24 @@ export function buildHostServices(options: BuildHostServicesOptions = {}): HostS
     settings: {
       register(section) {
         sections.push(section)
-        return () => { const index = sections.indexOf(section); if (index >= 0) sections.splice(index, 1) }
+        settingsSnapshot = null // invalidate: uSES requires identity-stable reads
+        return () => {
+          const index = sections.indexOf(section)
+          if (index >= 0) { sections.splice(index, 1); settingsSnapshot = null }
+        }
       },
-      getSnapshot: () => [...sections],
+      getSnapshot: () => (settingsSnapshot ??= Object.freeze([...sections])),
     },
     diagnostics: {
       register(provider) {
         providers.push(provider)
-        return () => { const index = providers.indexOf(provider); if (index >= 0) providers.splice(index, 1) }
+        diagnosticsSnapshot = null
+        return () => {
+          const index = providers.indexOf(provider)
+          if (index >= 0) { providers.splice(index, 1); diagnosticsSnapshot = null }
+        }
       },
-      getSnapshot: () => [...providers],
+      getSnapshot: () => (diagnosticsSnapshot ??= Object.freeze([...providers])),
     },
   }
 }

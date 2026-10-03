@@ -1,7 +1,7 @@
 /**
  * C-01/C-02/C-03 的**受控 fixture**（PA-21 / PA-22）。
  *
- * ⚠️ 这是 fixture，不是真实现：`packages/desktop-platform/server-bridge` 由 P-B 交付。
+ * ⚠️ 这是 fixture，不是真实现：`packages/frontend/server-bridge` 由 P-B 交付。
  * 它按冻结契约实现三态与缺席语义，且**不 spawn 任何进程、不发任何网络请求**、
  * 不读取也不产生任何令牌。切换点：P-B 交付后，只需把 `createWirePort()` 的
  * 构造换成 server-bridge 的实例，本文件其余部分（渲染进程代理、缺席实现）不变。

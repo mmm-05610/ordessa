@@ -17,7 +17,7 @@
         "../../plugins/profile/api/src/index.ts"
       ],
       "@extensions/ordessa.contracts/contract.js": [
-        "../../packages/desktop-platform/contracts/foundation/src/contract.ts"
+        "../../packages/frontend/contracts/foundation/src/contract.ts"
       ],
       "@extensions/ordessa.agent-contracts/contract.js": [
         "../../plugins/agent/contracts/src/contract.ts"
@@ -32,7 +32,7 @@
         "../../plugins/chat/api/src/contract.ts"
       ],
       "@ordessa/ui-components/api": [
-        "../../packages/desktop-platform/ui-components/api/ui-components.ts"
+        "../../packages/frontend/ui-components/api/ui-components.ts"
       ]
     },
     "skipLibCheck": true,
@@ -46,14 +46,14 @@
   "include": [
     "renderer",
     "electron",
-    "../../packages/desktop-platform/*/src",
-    "../../packages/desktop-platform/*/api",
-    "../../packages/desktop-platform/ui-components/react",
-    "../../packages/desktop-platform/ui-components/tests",
-    "../../packages/desktop-platform/ui/tests",
-    "../../packages/desktop-platform/contracts/*/src",
-    "../../packages/workbench/api",
-    "../../packages/workbench/src",
+    "../../packages/frontend/*/src",
+    "../../packages/frontend/*/api",
+    "../../packages/frontend/ui-components/react",
+    "../../packages/frontend/ui-components/tests",
+    "../../packages/frontend/ui/tests",
+    "../../packages/frontend/contracts/*/src",
+    "../../packages/frontend/workbench/api",
+    "../../packages/frontend/workbench/src",
     "../../plugins/**/src",
     "../../plugins/*/tests",
     "../../plugins/*/*/tests",

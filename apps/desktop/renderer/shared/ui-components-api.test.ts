@@ -39,7 +39,7 @@ it('publishes the UI Components API as an import-map entry sharing the extension
 
   // The platform carrier is a separate extension build. Resolve its bare
   // imports as the browser import map would, then compare object identity.
-  const carrier = path.resolve(app, '../../packages/desktop-platform/contracts/foundation/src/contract.ts')
+  const carrier = path.resolve(app, '../../packages/frontend/contracts/foundation/src/contract.ts')
   const carrierFile = path.join(root, 'contract.js')
   await build({
     entryPoints: [carrier], outfile: carrierFile, bundle: true,
