@@ -1,5 +1,17 @@
 # 迁移状态
 
+## 2026-10-03 004 生命周期权威完成（codeReady）
+
+前序：003@ceca96799f。Environment 扩展：drain cut（原子关新准入+线性化点）、retire（M05 规则：
+owned 要范围退出证据/borrowed 仅 release/static 保内容/unknown 永不删、retire-pending）、
+失败激活 settlement 登记、等待环检测（WouldDeadlockError，回调已返回也查）、E5 持久关系门
+（publish 全量替换幂等/反查 coverage known-unknown/destructive 变更被 published 关系拒/
+reservation 仅显式证据释放/新关系与破坏 reservation 同门互斥/声明者退役后关系仍在）。
+published_revision 每次 committed batch 递增；handover usage 随 owner 关闭结算。
+测试 pacthold 241 绿（+12）。证据 evidence/order-004-report.md。
+004=DONE（codeReady）；005 解锁。如实缺口：ServerPluginHost 物理转发=006-02（届时消除双 registry）；
+关系/等待图持久化=005。
+
 ## 2026-10-03 003 空环境完成（codeReady）
 
 前序：002@8155d4b1a5。`pacthold.environment.Environment` 落地（经 public 导出）：实例级唯一索引

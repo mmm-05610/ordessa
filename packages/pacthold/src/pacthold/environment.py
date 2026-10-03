@@ -33,15 +33,19 @@ from ordessa_environment_api import (
     ActivityReceipt,
     AdmissionRefusedError,
     BindingSnapshot,
+    ChangeReservation,
     CreationReceipt,
     CurrentFactView,
     EnvironmentId,
     GuaranteeUnavailableError,
     IdentityMismatchError,
     ObjectRef,
+    PersistentReference,
     PolicyPort,
     ProtectedFingerprintPort,
+    ReferenceStatus,
     RequestKey,
+    RevisionSelector,
     SequenceTriple,
     StorePort,
     UsageRecord,
@@ -50,6 +54,7 @@ from ordessa_environment_api import (
 from ordessa_environment_api.errors import EnvironmentError
 from ordessa_environment_api.guarantee import GuaranteeLevel
 from ordessa_environment_api.identity import ActivationRef, ParticipantInstanceRef, SurfaceRef
+from ordessa_environment_api.targets import CanonicalFactTarget
 
 from .core.registration import (
     CoreContributionSet,
@@ -58,11 +63,22 @@ from .core.registration import (
     RegistrationConflictError,
 )
 
-__all__ = ["Environment", "EnvironmentClosedError", "InstallationRecord"]
+__all__ = [
+    "Environment",
+    "EnvironmentClosedError",
+    "InstallationRecord",
+    "WouldDeadlockError",
+]
 
 
 class EnvironmentClosedError(EnvironmentError):
     code = "ENVIRONMENT_CLOSED"
+
+
+class WouldDeadlockError(EnvironmentError):
+    """A wait registration would close a cycle in the wait graph (V3-9)."""
+
+    code = "WOULD_DEADLOCK"
 
 
 @dataclass(frozen=True)
@@ -96,6 +112,7 @@ class _ObjectEntry:
     owner_activation: ActivationRef
     state: str = "available"  # available|closing|released|unknown
     historical: bool = False
+    management: str = "owned"  # owned|borrowed|static-projection (V3-10)
 
 
 @dataclass
@@ -140,6 +157,19 @@ class Environment:
         self._activities: dict[tuple[str, str, str], _ActivityEntry] = {}
         self._usages: dict[str, UsageRecord] = {}
         self._usage_seq = 0
+        self._usage_object: dict[str, ObjectRef] = {}  # handover linkage
+        # 004 lifecycle + relationship state (all instance-scoped)
+        self._published_revision = 0
+        self._settlements: dict[str, tuple[str, ...]] = {}  # activation key -> notes
+        self._cut_revision = 0
+        self._retire_pending: dict[tuple[str, int], tuple[str, ...]] = {}
+        # E5: source key@revision -> declared relation set (full replacement)
+        self._relations: dict[tuple[str, str], tuple[PersistentReference, ...]] = {}
+        self._relation_epoch = 0
+        self._reservations: dict[str, ChangeReservation] = {}
+        # wait graph: waiter activation key -> set of waited activation keys
+        self._wait_edges: dict[tuple[str, int], set[tuple[str, int]]] = {}
+        self._unclassified: dict[tuple[str, int], int] = {}  # delivery obligations per activation
         # T003-03: reuse the existing staged-batch registry for validation.
         self._registry = CoreRegistry()
 
@@ -227,6 +257,7 @@ class Environment:
         entry = _ActivationEntry(ref=ref, contributions=payload)
         entry.contribution_revision += 1
         self._activations[(plugin_id, generation)] = entry
+        self._published_revision += 1  # one revision per committed batch (T004-02)
         # Capabilities contributed by this activation: static catalog ids from
         # the payload's contracts (pure query surface — no ExecutionPlan needed,
         # T003-03).
@@ -269,9 +300,7 @@ class Environment:
         """Creation attempt first; Object/Usage handed over in one step (V3-1)."""
         self._check_open()
         self._check_environment(request.environment_namespace)
-        cap = self._capabilities.get(surface_id)
-        if cap is None or cap.historical:
-            raise AdmissionRefusedError(f"capability {surface_id!r} is not active in this environment")
+        cap = self._admit_capability(surface_id)
         key = (request.environment_namespace, request.principal_scope, request.request_id)
         existing = self._activities.get(key)
         if existing is not None:
@@ -323,6 +352,7 @@ class Environment:
         self._usage_seq += 1
         usage = UsageRef(environment=self.environment_id, usage_id=f"u-{self._usage_seq}")
         self._usages[usage.usage_id] = UsageRecord(usage=usage, rights=rights, state="active")
+        self._usage_object[usage.usage_id] = obj_ref
         return usage
 
     def _object_entry(self, ref: ObjectRef) -> _ObjectEntry:
@@ -359,11 +389,22 @@ class Environment:
 
     # -- binding (E1 bind) ----------------------------------------------------
 
+    def _admit_capability(self, surface_id: str) -> _CapabilityEntry:
+        cap = self._capabilities.get(surface_id)
+        if cap is None:
+            raise AdmissionRefusedError(f"capability {surface_id!r} unknown in this environment")
+        owner_state = self._activations[
+            (cap.owner_activation.plugin_id, cap.owner_activation.generation)
+        ].state
+        if owner_state in ("draining", "retired") or cap.historical:
+            raise AdmissionRefusedError(
+                f"capability {surface_id!r} is {owner_state}: new admissions are cut"
+            )
+        return cap
+
     def bind(self, surface_id: str, expected_contract_version: str | None = None) -> BindingSnapshot:
         self._check_open()
-        cap = self._capabilities.get(surface_id)
-        if cap is None or cap.historical:
-            raise AdmissionRefusedError(f"capability {surface_id!r} not bindable")
+        cap = self._admit_capability(surface_id)
         if expected_contract_version is not None and cap.surface.contract_version != expected_contract_version:
             raise IdentityMismatchError(
                 f"capability {surface_id} is at {cap.surface.contract_version}, "
@@ -421,9 +462,7 @@ class Environment:
             principal, surface_id, guarantee.value
         ):
             raise AdmissionRefusedError(f"policy refused invoke on {surface_id} for {principal}")
-        cap = self._capabilities.get(surface_id)
-        if cap is None:
-            raise AdmissionRefusedError(f"capability {surface_id!r} unknown in this environment")
+        cap = self._admit_capability(surface_id)
         revision = 1
         receipt = ActivityReceipt(
             request=request, issued_revision=f"rev-{revision}", delivery="acknowledged",
@@ -465,6 +504,295 @@ class Environment:
             "owner_activation": entry.owner_activation,
         }
 
+    # -- lifecycle: drain / retire / closure (004, T004-03..05) ----------------
+
+    def drain(self, activation: ActivationRef) -> "CutReceiptLike":
+        """Atomically close new admissions for this activation.
+
+        The linearization point is the single ``state`` flip below (this
+        object is not thread-safe by design — callers serialize access, same
+        rule as the rest of the in-memory indices). After the cut: activate
+        of a NEW generation still works, but bind/use/invoke on THIS
+        generation's capabilities and late ``instantiate`` are refused.
+        """
+        self._check_open()
+        entry = self._activation_entry(activation)
+        if entry.state == "retired":
+            raise AdmissionRefusedError("cannot drain a retired activation")
+        entry.state = "draining"
+        self._cut_revision += 1
+        blockers = self._blockers(activation)
+        return CutReceiptLike(
+            activation=activation,
+            admission_cut_revision=f"cut-{self._cut_revision}",
+            blockers=blockers,
+        )
+
+    def _blockers(self, activation: ActivationRef) -> tuple[str, ...]:
+        blockers: list[str] = []
+        for (instance, generation), (owner, _surface) in self._instances.items():
+            if owner == activation:
+                obj_entry = next(
+                    (o for (i, g, oid), o in self._objects.items()
+                     if i == instance and g == generation),
+                    None,
+                )
+                if obj_entry is not None and obj_entry.state == "unknown":
+                    # unknown responsibility blocks retirement and is never deleted
+                    blockers.append(f"object-unknown:{instance}")
+        retiring_objects = {
+            (i, g) for (i, g), (owner, _s) in self._instances.items() if owner == activation
+        }
+        for usage in self._usages.values():
+            if usage.state != "active":
+                continue
+            linked = self._usage_object.get(usage.usage.usage_id)
+            settles_at_close = linked is not None and (
+                (linked.owner_instance_id, linked.owner_generation) in retiring_objects
+            )
+            if not settles_at_close:  # handover usages of own objects settle at close
+                blockers.append(f"active-usage:{usage.usage.usage_id}")
+        pending = self._unclassified.get((activation.plugin_id, activation.generation), 0)
+        if pending:
+            blockers.append(f"unclassified-deliveries:{pending}")
+        for waiter, targets in self._wait_edges.items():
+            if (activation.plugin_id, activation.generation) in targets:
+                blockers.append(f"waited-by:{waiter[0]}@{waiter[1]}")
+        return tuple(blockers)
+
+    def retire(
+        self, activation: ActivationRef, closure_evidence: Mapping[str, str] | None = None
+    ) -> tuple[str, tuple[str, ...]]:
+        """Retire per M05/D5: owned work needs scope-exit evidence; borrowed
+        only releases; static keeps content; unknown blocks, never deletes.
+
+        Returns ``(state, blockers)`` where state is ``retired`` or
+        ``retire-pending``.
+        """
+        self._check_open()
+        entry = self._activation_entry(activation)
+        if entry.state != "draining":
+            raise AdmissionRefusedError("retire requires a drain cut first (closure ordering)")
+        blockers = list(self._blockers(activation))
+        # owned objects demand exit evidence; borrowed/static objects do not
+        for (instance, generation), (owner, _surface) in self._instances.items():
+            if owner != activation:
+                continue
+            obj_entry = next(
+                (o for (i, g, oid), o in self._objects.items() if i == instance and g == generation),
+                None,
+            )
+            if obj_entry is None:
+                continue
+            if obj_entry.management == "owned" and not closure_evidence:
+                blockers.append(f"owned-exit-evidence-missing:{instance}")
+        if blockers:
+            self._retire_pending[(activation.plugin_id, activation.generation)] = tuple(blockers)
+            return "retire-pending", tuple(blockers)
+        self._finish_retire(activation)
+        return "retired", ()
+
+    def _finish_retire(self, activation: ActivationRef) -> None:
+        retiring_keys = {
+            (i, g) for (i, g), (owner, _s) in self._instances.items() if owner == activation
+        }
+        # static projections lose the relation, never the content; published
+        # persistent references survive retirement (E5)
+        for cap in self._capabilities.values():
+            if cap.owner_activation == activation:
+                cap.historical = True
+        for obj in self._objects.values():
+            if obj.owner_activation == activation:
+                obj.historical = True
+                if obj.management == "static-projection":
+                    obj.state = "released"  # relation closed, content untouched
+                elif obj.management == "borrowed":
+                    obj.state = "released"  # our usage released; nothing killed
+        self._activations[(activation.plugin_id, activation.generation)].state = "retired"
+        self._wait_edges.pop((activation.plugin_id, activation.generation), None)
+        # settle the handover usages of this activation's own objects
+        for usage_id, linked in list(self._usage_object.items()):
+            if (linked.owner_instance_id, linked.owner_generation) in retiring_keys and                     self._usages.get(usage_id) is not None and self._usages[usage_id].state == "active":
+                u = self._usages[usage_id]
+                self._usages[usage_id] = UsageRecord(usage=u.usage, rights=u.rights, state="released")
+        # release the owner's registry claims so a NEW generation may
+        # re-contribute the same contracts (the registry is owner-keyed)
+        try:
+            self._registry.unregister(activation.plugin_id)
+        except Exception:
+            pass  # already unregistered — nothing to release
+
+    def mark_object_management(self, ref: ObjectRef, management: str) -> None:
+        if management not in ("owned", "borrowed", "static-projection"):
+            raise EnvironmentError(f"unknown management kind {management!r}")
+        entry = self._object_entry(ref)
+        entry.management = management
+
+    def register_settlement(self, activation_key_plugin: str, generation: int, note: str) -> None:
+        """Failed activation external objects land here — no 'no side
+        effects' claim (T004-02)."""
+        self._settlements.setdefault((activation_key_plugin, generation), ())
+        self._settlements[(activation_key_plugin, generation)] += (note,)
+
+    def settlements(self, plugin_id: str, generation: int) -> tuple[str, ...]:
+        return self._settlements.get((plugin_id, generation), ())
+
+    # -- wait graph (T004-06) --------------------------------------------------
+
+    def register_wait(self, waiter: ActivationRef, target: ActivationRef) -> None:
+        """Register a wait edge; refuse registrations that close a cycle.
+
+        ``async`` alone proves nothing — the edge set is checked regardless of
+        whether the callback already returned (V3-9 counterexample).
+        """
+        self._check_open()
+        self._activation_entry(waiter)
+        self._activation_entry(target)
+        wkey = (waiter.plugin_id, waiter.generation)
+        tkey = (target.plugin_id, target.generation)
+        if wkey == tkey:
+            raise WouldDeadlockError("an activation cannot wait on itself")
+        # cycle check: can target (transitively) reach waiter already?
+        reachable: set[tuple[str, int]] = set()
+        stack = [tkey]
+        while stack:
+            node = stack.pop()
+            if node == wkey:
+                raise WouldDeadlockError(
+                    f"wait {wkey} -> {tkey} would close a cycle in the wait graph"
+                )
+            if node in reachable:
+                continue
+            reachable.add(node)
+            stack.extend(self._wait_edges.get(node, ()))
+        self._wait_edges.setdefault(wkey, set()).add(tkey)
+
+    def clear_wait(self, waiter: ActivationRef, target: ActivationRef) -> None:
+        self._wait_edges.get((waiter.plugin_id, waiter.generation), set()).discard(
+            (target.plugin_id, target.generation)
+        )
+
+    def wait_edges(self) -> Mapping[tuple[str, int], frozenset[tuple[str, int]]]:
+        return {k: frozenset(v) for k, v in self._wait_edges.items()}
+
+    def note_unclassified_delivery(self, activation: ActivationRef, count: int = 1) -> None:
+        self._activation_entry(activation)
+        key = (activation.plugin_id, activation.generation)
+        self._unclassified[key] = self._unclassified.get(key, 0) + count
+
+    def resolve_unclassified(self, activation: ActivationRef) -> None:
+        self._unclassified.pop((activation.plugin_id, activation.generation), None)
+
+    # -- E5 persistent relationships (T004-08) ---------------------------------
+
+    def publish_reference_set(
+        self,
+        source_key: CanonicalFactTarget,
+        source_revision: str,
+        relations: tuple[PersistentReference, ...],
+        operation_id: str,
+    ) -> None:
+        """Full replacement of the declared set for one source version.
+
+        Idempotent per (source, revision, operation); unknown never re-runs
+        the domain write. A conflicting open change reservation on a target
+        refuses the publish — new relations and destructive changes never
+        both pass the same gate.
+        """
+        self._check_open()
+        for rel in relations:
+            if rel.source_key != source_key or rel.source_revision != source_revision:
+                raise IdentityMismatchError("relation source does not match the publishing key")
+            for res in self._reservations.values():
+                if res.target_key == rel.target_key and res.change_kind in ("delete", "rewrite"):
+                    raise AdmissionRefusedError(
+                        f"target {rel.target_key.stable_entity_id} holds a destructive "
+                        f"change reservation {res.reservation_id}"
+                    )
+        key = (source_key.stable_entity_id, source_revision)
+        existing = self._relations.get(key)
+        if existing is not None and tuple(r.relation_id for r in existing) == tuple(
+            r.relation_id for r in relations
+        ):
+            return  # idempotent republication of the same set
+        self._relation_epoch += 1
+        self._relations[key] = tuple(
+            PersistentReference(
+                relation_id=r.relation_id, source_key=r.source_key, source_revision=r.source_revision,
+                target_key=r.target_key, revision_selector=r.revision_selector,
+                declaring_owner_domain=r.declaring_owner_domain,
+                policy_contract_id=r.policy_contract_id,
+                policy_contract_version=r.policy_contract_version,
+                operation_id=operation_id, source_commit_evidence=r.source_commit_evidence,
+                status=ReferenceStatus.PUBLISHED, coverage_epoch=self._relation_epoch,
+            )
+            for r in relations
+        )
+
+    def inspect_incoming(
+        self, target_key: CanonicalFactTarget, change_kind: str = "archive", coverage_epoch: int = 0
+    ) -> Mapping[str, Any]:
+        """Declared incoming relations + coverage verdict. Deactivating the
+        declaring plugin never erases published relations; a coverage gap is
+        reported as unknown, never as 'no references'."""
+        incoming = tuple(
+            r for relations in self._relations.values() for r in relations
+            if r.target_key == target_key and r.status is ReferenceStatus.PUBLISHED
+        )
+        coverage = "known" if incoming else "unknown"
+        blocking = change_kind in ("delete", "rewrite") and bool(incoming)
+        return {
+            "target": target_key,
+            "relations": incoming,
+            "coverage": coverage,
+            "blocking-destructive-change": blocking,
+        }
+
+    def prepare_resource_change(
+        self,
+        target_key: CanonicalFactTarget,
+        expected_revision: str,
+        change_kind: str,
+        operation_id: str,
+    ) -> ChangeReservation:
+        """One admission ticket per destructive change; serialized against
+        new relations at the same gate (E5)."""
+        self._check_open()
+        if change_kind not in ("archive", "delete", "rewrite"):
+            raise EnvironmentError(f"unknown change kind {change_kind!r}")
+        for res in self._reservations.values():
+            if res.target_key == target_key and res.reservation_id != operation_id:
+                raise AdmissionRefusedError(
+                    f"target already holds reservation {res.reservation_id}"
+                )
+        incoming = self.inspect_incoming(target_key, change_kind)
+        if change_kind in ("delete", "rewrite") and incoming["relations"]:
+            refused = tuple(r.relation_id for r in incoming["relations"])
+            self._reservations[operation_id] = ChangeReservation(
+                reservation_id=operation_id, target_key=target_key,
+                expected_revision=expected_revision, change_kind=change_kind,
+                operation_id=operation_id, refused_relations=refused,
+            )
+            raise AdmissionRefusedError(
+                f"destructive change on {target_key.stable_entity_id} blocked by "
+                f"published relations {refused} (coverage {incoming['coverage']})"
+            )
+        reservation = ChangeReservation(
+            reservation_id=operation_id, target_key=target_key,
+            expected_revision=expected_revision, change_kind=change_kind,
+            operation_id=operation_id,
+        )
+        self._reservations[operation_id] = reservation
+        return reservation
+
+    def release_reservation(self, operation_id: str, *, executed: bool) -> None:
+        """The ONLY release path for a reservation — UI close, TTL or process
+        death never auto-releases (E5). ``executed`` records the outcome;
+        a not-executed change keeps its reservation until evidence resolves it."""
+        if executed:
+            self._reservations.pop(operation_id, None)
+        # not executed: the reservation stays until an explicit resolution
+
     # -- lifecycle stubs (004 implements the real gates) ----------------------
 
     def mark_retired(self, activation: ActivationRef) -> None:
@@ -482,3 +810,13 @@ class Environment:
     def close(self) -> None:
         """Read-only close of the in-memory indices; no external effects here."""
         self._closed = True
+
+
+@dataclass(frozen=True)
+class CutReceiptLike:
+    """Drain result mirror of the frozen ``CutReceipt`` DTO shape."""
+
+    activation: ActivationRef
+    admission_cut_revision: str
+    blockers: tuple[str, ...]
+    closed_new_admission: bool = True

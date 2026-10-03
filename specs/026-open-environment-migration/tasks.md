@@ -40,15 +40,15 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 
 ## 004 将插件激活与退出权威合入Environment
 
-- [ ] T004-01 提取ServerPluginHost拓扑、冲突、stage/commit、holds与loader校验到Environment；不并存两个registry或scheduler。
-- [ ] T004-02 实现贡献事务及发布revision，失败撤未公开贡献；失败激活产生的外部对象登记settlement，不宣称无副作用。
-- [ ] T004-03 实现drain cut原子关新准入：与并发invoke/late open的线性化点明确，旧generation回调不得改新activation。
-- [ ] T004-04 实现closure root/cut/original grant/role/dependency/budget规则，停止确认与晚对象清理可继续，伪新业务拒绝。
-- [ ] T004-05 实现owned/borrowed usage退役：owned要范围退出证据；borrowed仅release；static移关系保内容；unknown不删。
-- [ ] T004-06 实现预检、异步等待关系与跨参与者退出排序，检测真实等待环；不因用async就认为无死锁，不加Agent协作业务。
-- [ ] T004-07 受控双插件激活失败/退役、晚事件、权限撤销、未知职责测试，所有状态仍来自单root。
+- [x] T004-01 提取ServerPluginHost拓扑、冲突、stage/commit、holds与loader校验到Environment；不并存两个registry或scheduler。
+- [x] T004-02 实现贡献事务及发布revision，失败撤未公开贡献；失败激活产生的外部对象登记settlement，不宣称无副作用。
+- [x] T004-03 实现drain cut原子关新准入：与并发invoke/late open的线性化点明确，旧generation回调不得改新activation。
+- [x] T004-04 实现closure root/cut/original grant/role/dependency/budget规则，停止确认与晚对象清理可继续，伪新业务拒绝。
+- [x] T004-05 实现owned/borrowed usage退役：owned要范围退出证据；borrowed仅release；static移关系保内容；unknown不删。
+- [x] T004-06 实现预检、异步等待关系与跨参与者退出排序，检测真实等待环；不因用async就认为无死锁，不加Agent协作业务。
+- [x] T004-07 受控双插件激活失败/退役、晚事件、权限撤销、未知职责测试，所有状态仍来自单root。
 
-- [ ] T004-08 在同Environment实现持久关系声明/反查完整性/变更reservation与引用准入的统一门，区分Usage/持久引用/历史关系，测试并发和停用不擦引用。
+- [x] T004-08 在同Environment实现持久关系声明/反查完整性/变更reservation与引用准入的统一门，区分Usage/持久引用/历史关系，测试并发和停用不擦引用。
 
 ## 005 提取SQLite持久化并验证真实故障窗口
 
