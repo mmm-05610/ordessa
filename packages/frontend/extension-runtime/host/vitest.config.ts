@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 // 别名直接指向平台内的公开载体：平台包不得引用 desktop-platform 之外的路径（FR-009）。
 export default defineConfig({
   resolve: { alias: {
-    '@extensions/ordessa.contracts/contract.js': fileURLToPath(new URL('../contracts/foundation/src/contract.ts', import.meta.url)),
+    '@extensions/ordessa.contracts/contract.js': fileURLToPath(new URL('../../contracts/foundation/src/contract.ts', import.meta.url)),
   } },
   test: { include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'], maxWorkers: 1 },
 })

@@ -1,3 +1,2 @@
-export { discover, confinedFile } from './extensions'
-export type { Installed, Discovery } from './extensions'
-export { protocolHandler } from './extension-protocol'
+// Thin compatibility shell (T008-01).
+export * from '@ordessa/extension-runtime/host/main'

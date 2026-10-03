@@ -1,0 +1,26 @@
+{
+  "name": "@ordessa/extension-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Merged extension runtime: loader + host (T008-01). The historical @ordessa/extension-loader and @ordessa/extension-host remain as thin re-export shells; Lumino dependency management has exactly ONE home here.",
+  "exports": {
+    "./loader": "./loader/src/index.ts",
+    "./loader/manifest": "./loader/src/manifest.ts",
+    "./host": "./host/src/index.ts",
+    "./host/main": "./host/src/main/index.ts",
+    "./host/platform": "./host/src/platform.ts",
+    "./host/services": "./host/src/services/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run --maxWorkers=1",
+    "typecheck": "tsc --noEmit -p host/tsconfig.json"
+  },
+  "dependencies": {
+    "@lumino/coreutils": "2.2.3",
+    "@ordessa/extension-api": "0.1.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  }
+}

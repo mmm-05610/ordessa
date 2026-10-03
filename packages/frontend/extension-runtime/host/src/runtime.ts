@@ -1,19 +1,19 @@
 import { PluginRegistry, type Token } from '@lumino/coreutils'
 import { Contributions, OwnedResources, type Host, type RootView, type Plugin, type PluginContext } from '@ordessa/extension-api'
-import { CommandSourceToken, DiagnosticsContributionToken, HarnessAvailabilityToken, KeybindingServiceToken, LoggerToken, SettingsContributionToken, ThemeServiceToken, WirePortToken } from '../../contracts/foundation/src/product/tokens'
+import { CommandSourceToken, DiagnosticsContributionToken, HarnessAvailabilityToken, KeybindingServiceToken, LoggerToken, SettingsContributionToken, ThemeServiceToken, WirePortToken } from '../../../contracts/foundation/src/product/tokens'
 export { scoped, OwnedResources } from '@ordessa/extension-api'
 export type { Host, RootView, Plugin } from '@ordessa/extension-api'
 export interface PluginState { id: string; phase: 'registered' | 'starting' | 'active' | 'stopped' | 'failed'; error?: string }
 
 // 平台服务类型从公开契约模块内联取（相对路径），使 runtime.ts 不依赖任何构建期别名。
-type Logger = import('../../contracts/foundation/src/product/logging').Logger
-type ThemeService = import('../../contracts/foundation/src/product/theme').ThemeService
-type SettingsContribution = import('../../contracts/foundation/src/product/settings-diagnostics').SettingsContribution
-type DiagnosticsContribution = import('../../contracts/foundation/src/product/settings-diagnostics').DiagnosticsContribution
-type CommandSource = import('../../contracts/foundation/src/product/commands-keybindings').CommandSource
-type KeybindingService = import('../../contracts/foundation/src/product/commands-keybindings').KeybindingService
-type WirePort = import('../../contracts/foundation/src/product/wire-port').WirePort
-type HarnessAvailability = import('../../contracts/foundation/src/product/harness-availability').HarnessAvailability
+type Logger = import('../../../contracts/foundation/src/product/logging').Logger
+type ThemeService = import('../../../contracts/foundation/src/product/theme').ThemeService
+type SettingsContribution = import('../../../contracts/foundation/src/product/settings-diagnostics').SettingsContribution
+type DiagnosticsContribution = import('../../../contracts/foundation/src/product/settings-diagnostics').DiagnosticsContribution
+type CommandSource = import('../../../contracts/foundation/src/product/commands-keybindings').CommandSource
+type KeybindingService = import('../../../contracts/foundation/src/product/commands-keybindings').KeybindingService
+type WirePort = import('../../../contracts/foundation/src/product/wire-port').WirePort
+type HarnessAvailability = import('../../../contracts/foundation/src/product/harness-availability').HarnessAvailability
 
 export interface PlatformServiceMap {
   logger?: Logger; theme?: ThemeService; settings?: SettingsContribution

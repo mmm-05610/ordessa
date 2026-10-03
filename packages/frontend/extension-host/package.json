@@ -3,22 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "description": "Thin compatibility shell (T008-01): the host lives in @ordessa/extension-runtime/host. Exit condition: 012 review may retire this shell once all consumers move.",
   "exports": {
     ".": "./src/index.ts",
     "./main": "./src/main/index.ts",
     "./platform": "./src/platform.ts",
     "./services": "./src/services/index.ts"
   },
-  "scripts": {
-    "test": "vitest run --maxWorkers=1",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
-  },
   "dependencies": {
-    "@lumino/coreutils": "2.2.3",
-    "@ordessa/extension-api": "0.1.0",
-    "@ordessa/extension-loader": "0.1.0"
-  },
-  "peerDependencies": {
-    "react": "^19.0.0"
+    "@ordessa/extension-runtime": "0.1.0"
   }
 }
