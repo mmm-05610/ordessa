@@ -11,7 +11,8 @@
     "./host/main": "./host/src/main/index.ts",
     "./host/platform": "./host/src/platform.ts",
     "./host/services": "./host/src/services/index.ts",
-    "./host/services/command-registry": "./host/src/services/command-registry.ts"
+    "./host/services/command-registry": "./host/src/services/command-registry.ts",
+    "./host/services/surface": "./host/src/services/surface.ts"
   },
   "scripts": {
     "test": "vitest run --maxWorkers=1",

@@ -45,3 +45,4 @@ export function scoped<T>(definition: Omit<Plugin<T>, 'activate'> & {
 export { Token, Contributions }
 export type { IDisposable }
 export const HOST_API_VERSION = '2'
+export * from './surface'
