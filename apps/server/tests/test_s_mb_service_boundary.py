@@ -85,6 +85,12 @@ def test_the_kernel_declares_no_runtime_dependency():
 
     requires = metadata.requires("pacthold") or []
     runtime_deps = [r for r in requires if "extra ==" not in r]
+    # T003 ruling (002 freeze, C95-2): the ONE allowed runtime dependency is
+    # the frozen contract package ordessa-environment-api — stdlib-only, below
+    # the kernel, the single wire vocabulary. Every OTHER dependency stays
+    # banned (zero product dependencies is the rule's intent).
+    runtime_deps = [r for r in runtime_deps
+                    if not r.startswith("ordessa-environment-api")]
     assert runtime_deps == [], runtime_deps
     for path in KERNEL_DIR.rglob("*.py"):
         for node in ast.walk(_tree(path)):

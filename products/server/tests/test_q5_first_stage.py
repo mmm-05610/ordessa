@@ -31,6 +31,7 @@ EXPECTED_PLUGIN_IDS = (
     "ordessa.workspace", "ordessa.server-compat", "ordessa.harness.acp",
     "ordessa.model-provider", "ordessa.profile", "ordessa.sandbox",
     "ordessa.sandbox-adapters", "permissions-backend", "ordessa.permissions-adapters",
+    "ordessa.agent",  # T010-01 A1 owner joins the default chain (pin updated with reason)
 )
 
 

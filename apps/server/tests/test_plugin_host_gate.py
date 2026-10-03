@@ -74,6 +74,12 @@ ACP_ADMISSION_METHODS = frozenset({
     "acp.submission.authorize", "acp.permission.authorize",
 })
 SANDBOX_DESCRIBE_METHOD = "sandbox.describe"
+#: T010-01 (A1): the Agent domain owner's five wire projections join the
+#: default composition — the standing pin obligation applies.
+AGENT_DOMAIN_METHODS = frozenset({
+    "agent.config.read", "agent.config.submitOperation", "agent.submitInput",
+    "agent.session.list", "agent.run.query",
+})
 
 
 def _hello_caps(runtime) -> dict[str, dict]:
@@ -85,14 +91,17 @@ def _assert_default_composition_caps(runtime, caps=None) -> None:
     """The post-AR-1 face, two ACP rows and Q5's read-only query coexist."""
     caps = _hello_caps(runtime) if caps is None else caps
     # 70(T002: 53+6+7+4) + 2(admission) + 11(profiles) + 2(imports)
-    # + 1(sandbox.describe) + 1(beginTurnApplication) + 1(acp.sessions.list) = 88
+    # + 1(sandbox.describe) + 1(beginTurnApplication) + 1(acp.sessions.list)
+    # + 5(agent.domain, T010-01) = 93
     assert len(caps) == (T002_METHOD_COUNT + len(ACP_ADMISSION_METHODS)
                          + len(PROFILE_MANAGEMENT_METHODS)
                          + len(MODEL_PROVIDER_IMPORT_METHODS)
                          + len(MODEL_PROVIDER_TURN_APPLICATION)
                          + 1  # sandbox.describe
-                         + 1)  # acp.sessions.list
+                         + 1  # acp.sessions.list
+                         + len(AGENT_DOMAIN_METHODS))
     assert PROFILE_MANAGEMENT_METHODS <= caps.keys()
+    assert AGENT_DOMAIN_METHODS <= caps.keys()
     for method in PROFILE_MANAGEMENT_METHODS:
         descriptor = runtime.wire._registry.lookup(method)
         assert descriptor is not None and descriptor.owner == "ordessa.profile"
@@ -288,7 +297,8 @@ def test_default_composition_advertises_the_full_baseline_table(tmp_path):
                     WORKSPACE_ID, "ordessa.server-compat", "ordessa.harness.acp",
                     "ordessa.model-provider", "ordessa.profile", "ordessa.sandbox",
                     "ordessa.sandbox-adapters", "permissions-backend",
-                    "ordessa.permissions-adapters")
+                    "ordessa.permissions-adapters",
+                    "ordessa.agent")  # T010-01 A1 owner (pin updated with reason)
     except BaseException:
         runtime.stop()
         raise

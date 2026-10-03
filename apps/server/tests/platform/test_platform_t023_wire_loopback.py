@@ -60,11 +60,18 @@ MODEL_PROVIDER_TURN_APPLICATION_METHOD_IDS = frozenset({
     "modelProvider.beginTurnApplication",
 })
 ACP_SESSION_HISTORY_METHOD_ID = "acp.sessions.list"
+#: T010-01 (A1): the Agent domain owner's five projections join the default
+#: composition — named like every other face (standing pin obligation).
+AGENT_DOMAIN_METHOD_IDS = frozenset({
+    "agent.config.read", "agent.config.submitOperation", "agent.submitInput",
+    "agent.session.list", "agent.run.query",
+})
 C0_METHOD_COUNT = (T002_BASELINE_METHOD_COUNT + len(ACP_ADMISSION_METHOD_IDS) + 1
                    + len(PROFILE_MANAGEMENT_METHOD_IDS)
                    + len(MODEL_PROVIDER_IMPORT_METHOD_IDS)
                    + len(MODEL_PROVIDER_TURN_APPLICATION_METHOD_IDS)
-                   + 1)  # acp.sessions.list
+                   + 1  # acp.sessions.list
+                   + len(AGENT_DOMAIN_METHOD_IDS))
 
 
 def _collect_live_method_ids() -> tuple[str, ...]:

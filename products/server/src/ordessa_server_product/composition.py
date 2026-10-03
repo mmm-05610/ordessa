@@ -157,6 +157,7 @@ class ServerProductComposition:
         from ordessa_permissions_backend.plugin import PermissionsBackendPlugin
         from ordessa_sandbox_adapters import SandboxAdaptersServerPlugin
         from ordessa_sandbox_backend import build_sandbox_plugin
+        from ordessa_agent.plugin import AgentDomainPlugin
 
         model_provider_kwargs = {
             name: composition_kwargs[name]
@@ -171,6 +172,10 @@ class ServerProductComposition:
             SandboxAdaptersServerPlugin(),
             PermissionsBackendPlugin(),
             PolicyAdaptersPlugin(),
+            # T010-01 (A1): the Agent domain owner serves the 010 consumer
+            # migration; one owner set per canonical target, wire projections
+            # only — it never becomes a second writer.
+            AgentDomainPlugin(),
         )
 
     def bind_contribution_points(self, host) -> None:
