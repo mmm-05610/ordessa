@@ -1,7 +1,7 @@
 import { constants, closeSync, fstatSync, openSync, readSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
 import path from 'node:path'
-import type { NativeConnection, NativeTransport } from '../../../../packages/desktop-platform/native-bridge/src/index'
+import type { NativeConnection, NativeTransport } from '../../../../packages/frontend/native-bridge/src/index'
 
 /**
  * The main-process half of the ACP connector. It is the only place this extension holds the Server

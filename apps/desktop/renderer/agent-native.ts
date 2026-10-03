@@ -1,9 +1,7 @@
-export interface AgentNativeBridge {
-  open(adapterId: string): Promise<string>
-  send(instanceId: string, frame: unknown): Promise<unknown>
-  close(instanceId: string): Promise<void>
-  subscribe(listener: (event: { instanceId: string; frame?: unknown; error?: string }) => void): () => void
-}
+// The public contract owns this type (T008-06); the app only re-exports it
+// so the window typing and consumers share ONE declaration.
+import type { AgentNativeBridge } from '@ordessa/native-bridge'
+export type { AgentNativeBridge }
 declare global { interface Window {
   agentNative: AgentNativeBridge
   projectDirectory?: { choose(): Promise<string | undefined> }

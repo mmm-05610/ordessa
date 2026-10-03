@@ -1,4 +1,4 @@
-import type { NativeConnection, NativeTransport } from '../../../../packages/desktop-platform/native-bridge/src/index'
+import type { NativeConnection, NativeTransport } from '../../../../packages/frontend/native-bridge/src/index'
 import { readRestrictedTokenFile } from './token-file'
 import { resolveServerTarget, serverInstanceId, type ServerTarget } from './target'
 import { WIRE_VERSION, WireError, WireClient, openEventStream, type EventFrame } from './wire'

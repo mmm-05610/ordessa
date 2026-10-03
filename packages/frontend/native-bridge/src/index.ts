@@ -86,3 +86,17 @@ export function installNativeBridge(win: BrowserWindow, discovery: Discovery) {
   win.once('closed', () => { void dispose() })
   return { dispose }
 }
+
+/**
+ * Renderer-side handle to the agent-native IPC bridge (T008-06): the type
+ * lives HERE, in the public bridge contract — the desktop app re-exports it
+ * and connectors must never import from `apps/desktop/**` (migration-map:
+ * "ACP host导入apps/desktop/renderer/agent-native → frontend公开bridge
+ * contract"). Shape frozen with the original declaration.
+ */
+export interface AgentNativeBridge {
+  open(adapterId: string): Promise<string>
+  send(instanceId: string, frame: unknown): Promise<unknown>
+  close(instanceId: string): Promise<void>
+  subscribe(listener: (event: { instanceId: string; frame?: unknown; error?: string }) => void): () => void
+}

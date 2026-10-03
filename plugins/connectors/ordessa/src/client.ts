@@ -2,7 +2,7 @@ import type {
   AgentCapabilities, AgentClient, AgentInteraction, AgentMessage, AgentSessionInfo, AgentSnapshot,
   AgentToolCall, AgentWorkspaceInfo, Availability, InteractionAnswer, RunStatus,
 } from '@extensions/ordessa.agent-contracts/contract.js'
-import type { AgentNativeBridge } from '../../../../apps/desktop/renderer/agent-native'
+import type { AgentNativeBridge } from '@ordessa/native-bridge'
 
 export const ORDESSA_ADAPTER_ID = 'ordessa.agent-server'
 /** The connector id is frozen from the authenticated hello before registration, so the Server instance is part of the identity every layer keys on. */

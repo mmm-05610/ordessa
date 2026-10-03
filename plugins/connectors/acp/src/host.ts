@@ -1,6 +1,6 @@
 import type * as acp from '@agentclientprotocol/sdk'
 import type { AgentWorkspaceInfo } from '@extensions/ordessa.agent-contracts/contract.js'
-import type { AgentNativeBridge } from '../../../../apps/desktop/renderer/agent-native'
+import type { AgentNativeBridge } from '@ordessa/native-bridge'
 import type { AcpChannelHandle, AcpChannelSpec } from './channel'
 import type { AcpControlledSubmission, AcpPermissionDecision, AcpSubmissionAdmission } from './submission'
 
