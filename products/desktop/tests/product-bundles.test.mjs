@@ -69,7 +69,7 @@ test('each shared DI token owner is served by the real import map and app artifa
   try {
     const moduleFile = path.join(temp, 'extension-protocol.mjs')
     await build({
-      entryPoints: [path.join(repoRoot, 'packages/frontend/extension-host/src/main/extension-protocol.ts')],
+      entryPoints: [path.join(repoRoot, 'packages/frontend/extension-runtime/host/src/main/extension-protocol.ts')],
       outfile: moduleFile, bundle: true, platform: 'node', format: 'esm',
     })
     const { protocolHandler } = await import(pathToFileURL(moduleFile).href)

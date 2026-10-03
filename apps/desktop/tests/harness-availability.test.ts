@@ -105,7 +105,7 @@ describe('C-08 §4 缺席：没有提供者时诚实缺席', () => {
 describe('C-08 §6.6 边界：宿主源码出现品牌名即判红', () => {
   it('C-08 相关的宿主/契约文件里没有品牌名', () => {
     const files = [
-      'packages/frontend/extension-host/src/services/harness-availability.ts',
+      'packages/frontend/extension-runtime/host/src/services/harness-availability.ts',
       'packages/frontend/contracts/foundation/src/product/harness-availability.ts',
       'apps/desktop/renderer/desktop-ui.tsx',
       'apps/desktop/renderer/host-services.ts',
