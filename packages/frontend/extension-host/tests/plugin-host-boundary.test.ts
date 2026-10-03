@@ -137,10 +137,14 @@ function violationsIn(files: string[]): Violation[] {
 // migration that R1 deliberately does not perform. A fifth entry turns the
 // suite red instead of letting the coupling grow unnoticed.
 const KNOWN_TYPE_ONLY_LEAKS = [
-  'plugins/connectors/acp/src/host.ts -> ../../../../apps/desktop/renderer/agent-native',
+  // (T008-06: the connectors' transport-handle imports now NAME the public
+  // @ordessa/native-bridge contract instead of reaching into apps/desktop —
+  // still type-only and still tracked here per the N4-R1 wall; the 012
+  // review decides when the wall retires these entries entirely.)
   'plugins/connectors/acp/src/native.ts -> ../../../../packages/frontend/native-bridge/src/index',
-  'plugins/connectors/ordessa/src/client.ts -> ../../../../apps/desktop/renderer/agent-native',
+  'plugins/connectors/acp/src/host.ts -> @ordessa/native-bridge',
   'plugins/connectors/ordessa/src/native.ts -> ../../../../packages/frontend/native-bridge/src/index',
+  'plugins/connectors/ordessa/src/client.ts -> @ordessa/native-bridge',
 ]
 
 describe('N4-R1: extension plugins never reach into host internals', () => {
