@@ -19,6 +19,7 @@ from .native_evidence import (
     LaunchProvenanceFacts, NativeEvidence, NativeOwnerReceiptFacts,
     NativeReadbackVerificationFacts, NativeSessionIdentityFacts,
 )
+from .participant import ParticipantEvidence, from_settlement_notes, to_settlement_notes
 from .intents import (
     BindSecret, ContentRef, FieldPath, Intent, IntentSet, IntentSource,
     InvokeAction, MountContent, RemoveOwnedContent, ResetField, SetField,
@@ -36,11 +37,11 @@ __all__ = [
     "JsonValue", "LaunchPlan", "LaunchProvenanceFacts", "LaunchRequest", "Match", "Mismatch",
     "MountContent", "NativeEvidence", "NativeOwnerReceiptFacts",
     "NativeReadbackVerificationFacts", "NativeSessionIdentityFacts",
-    "NotFound", "OperationRecord", "Plan", "PlanResult",
+    "NotFound", "OperationRecord", "ParticipantEvidence", "Plan", "PlanResult",
     "ReconfigurationDecision", "Refused", "RemoveOwnedContent", "ResetField",
     "ResumeRequest", "RuntimeAdapter", "RuntimeAdapterDescriptor",
     "RuntimeConfirmed", "RuntimeRefused", "RuntimeResult", "RuntimeUnknown",
     "SetField", "TargetDescriptor", "TargetHandle", "Unknown", "ValueSchema",
     "Verification", "VerificationUnknown", "VersionRange", "closed_object",
-    "validate_json",
+    "from_settlement_notes", "to_settlement_notes", "validate_json",
 ]
