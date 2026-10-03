@@ -56,9 +56,10 @@ def test_only_explicit_opt_in_forwards_fixed_test_mode(tmp_path, monkeypatch, co
     captured = {}
     original = acp_plugin.AcpChannelServerPlugin
 
-    def capture_plugin(*, launch, native_identity):
+    def capture_plugin(*, launch, native_identity, native_identity_for):
         captured["launch"] = launch
-        return original(launch=launch, native_identity=native_identity)
+        return original(launch=launch, native_identity=native_identity,
+                        native_identity_for=native_identity_for)
 
     class CapturedTransport:
         def __init__(self, **kwargs):

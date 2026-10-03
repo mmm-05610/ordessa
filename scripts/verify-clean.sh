@@ -107,6 +107,9 @@ pip install -q -r apps/server/lockfiles/server-linux-py312.txt >/dev/null 2>&1 &
 pip install -q \
   -e 'packages/pacthold[dev]' \
   -e packages/server-plugin-api \
+  -e packages/backend/environment-api \
+  -e packages/backend/persistence-sqlite \
+  -e packages/backend/platform-services \
   -e plugins/harness/api \
   -e plugins/permissions/api \
   -e plugins/permissions/backend \
@@ -124,8 +127,8 @@ pip install -q \
   -e 'apps/server[dev]' \
   -e 'plugins/harness[dev]' \
   -e products/server \
-  >/dev/null 2>&1 && ok "editable installs (all 18 in-tree packages)" || bad "editable installs"
-python -c "import pacthold, server_plugin_api, ordessa_harness_api, ordessa_server, ordessa_harness, ordessa_server_product" 2>/dev/null && ok "imports" || bad "imports"
+  >/dev/null 2>&1 && ok "editable installs (all 21 in-tree packages)" || bad "editable installs"
+python -c "import pacthold, server_plugin_api, ordessa_environment_api, ordessa_persistence_sqlite, ordessa_platform_services, ordessa_harness_api, ordessa_server, ordessa_harness, ordessa_server_product" 2>/dev/null && ok "imports" || bad "imports"
 star=$(python -c "import starlette; print(starlette.__version__)")
 echo "  starlette resolved: $star"
 [ "$star" = "1.7.0" ] && ok "starlette pinned at verified 1.7.0" || bad "starlette drifted to $star"
@@ -149,6 +152,11 @@ run_suite "pacthold" packages/pacthold passed=212
 run_suite "harness" plugins/harness passed=792 failed=3 skipped=3 errors=3
 run_suite "server" apps/server passed=1187 failed=64 skipped=9 errors=2
 run_suite "acp_orchestration" tests/integration/acp_orchestration passed=31 failed=28
+# New backend packages from the 026 migration (005 codeReady). Counts measured
+# 2026-10-03 in this tree; all three suites are green.
+run_suite "environment-api" packages/backend/environment-api passed=33
+run_suite "persistence-sqlite" packages/backend/persistence-sqlite passed=20
+run_suite "platform-services" packages/backend/platform-services passed=7
 
 step "bridge: byte-identical rebuild from clean clone"
 bash plugins/harness/packaging/acp-adapter/build-acp-adapter-round-h.sh "$BRIDGE_OUT" >/dev/null 2>&1

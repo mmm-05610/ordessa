@@ -46,7 +46,10 @@ WORKSPACE_METHODS = {
 }
 #: AR-1/W-1 后的方法面基数：67 − providerModels.* 六方法 − profile 写面八方法 = 53。
 #: 断言公式是 T002 + 2(admission) + 1(hello) = 56（总数）。随 W-1 同批落地。
-T002_METHOD_COUNT = 70  # S-03 装配：53 + PermissionsBackendPlugin 17 方法（权限后端进默认链）
+#: S-03 装配：53 + providerModels 6 + modelProvider 7 + permissions 4 = 70。
+#: （旧注 “PermissionsBackendPlugin 17 方法” 是误记：17 是这三个面之和，
+#: PermissionsBackendPlugin 本身只声明 permissions 4 方法。）
+T002_METHOD_COUNT = 70
 PROFILE_MANAGEMENT_METHODS = frozenset("profiles.v2." + name for name in (
     "configuredHarnesses", "listProfiles", "getProfile", "createProfile",
     "renameProfile", "archiveProfile", "restoreProfile", "describeFacets",
@@ -59,6 +62,14 @@ PROFILE_MANAGEMENT_METHODS = frozenset("profiles.v2." + name for name in (
 MODEL_PROVIDER_IMPORT_METHODS = frozenset({
     "modelProvider.importApiKey", "modelProvider.queryApiKeyImport",
 })
+#: 002 冻结的钉面漂移（identity-map wireMethods.pinDrift）：默认组合 live=88、
+#: 旧钉面公式=86，多出的两个方法在此显式钉住并各断言 owner。
+#: `modelProvider.beginTurnApplication` 是 Z3 冻结面 7→8 的第 8 个（声明于
+#: plugins/assets/model-provider/server/src/ordessa_model_provider/plugin.py）。
+MODEL_PROVIDER_TURN_APPLICATION = frozenset({"modelProvider.beginTurnApplication"})
+#: 021 原生历史面（docs/migration/native-session-history-v1.md），声明于
+#: plugins/harness/src/ordessa_harness/server_acp/plugin.py。
+ACP_SESSION_HISTORY_METHOD = "acp.sessions.list"
 ACP_ADMISSION_METHODS = frozenset({
     "acp.submission.authorize", "acp.permission.authorize",
 })
@@ -73,9 +84,14 @@ def _hello_caps(runtime) -> dict[str, dict]:
 def _assert_default_composition_caps(runtime, caps=None) -> None:
     """The post-AR-1 face, two ACP rows and Q5's read-only query coexist."""
     caps = _hello_caps(runtime) if caps is None else caps
+    # 70(T002: 53+6+7+4) + 2(admission) + 11(profiles) + 2(imports)
+    # + 1(sandbox.describe) + 1(beginTurnApplication) + 1(acp.sessions.list) = 88
     assert len(caps) == (T002_METHOD_COUNT + len(ACP_ADMISSION_METHODS)
                          + len(PROFILE_MANAGEMENT_METHODS)
-                         + len(MODEL_PROVIDER_IMPORT_METHODS) + 1)
+                         + len(MODEL_PROVIDER_IMPORT_METHODS)
+                         + len(MODEL_PROVIDER_TURN_APPLICATION)
+                         + 1  # sandbox.describe
+                         + 1)  # acp.sessions.list
     assert PROFILE_MANAGEMENT_METHODS <= caps.keys()
     for method in PROFILE_MANAGEMENT_METHODS:
         descriptor = runtime.wire._registry.lookup(method)
@@ -86,6 +102,15 @@ def _assert_default_composition_caps(runtime, caps=None) -> None:
         descriptor = runtime.wire._registry.lookup(method)
         assert descriptor is not None and descriptor.owner == "ordessa.model-provider"
         assert caps[method] == {"id": method, "supported": True}
+    # The two pin-drift ids 002 froze are pinned here by name with their owners.
+    for method in MODEL_PROVIDER_TURN_APPLICATION:
+        descriptor = runtime.wire._registry.lookup(method)
+        assert descriptor is not None and descriptor.owner == "ordessa.model-provider"
+        assert caps[method] == {"id": method, "supported": True}
+    acp_history = runtime.wire._registry.lookup(ACP_SESSION_HISTORY_METHOD)
+    assert acp_history is not None and acp_history.owner == "ordessa.harness.acp"
+    assert caps[ACP_SESSION_HISTORY_METHOD] == {
+        "id": ACP_SESSION_HISTORY_METHOD, "supported": True}
     sandbox = runtime.wire._registry.lookup(SANDBOX_DESCRIBE_METHOD)
     assert sandbox is not None and sandbox.owner == "ordessa.sandbox"
     assert caps[SANDBOX_DESCRIBE_METHOD] == {

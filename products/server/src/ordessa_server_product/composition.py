@@ -61,26 +61,28 @@ class ServerProductComposition:
 
     @staticmethod
     def _assemble_legacy_chain() -> None:
-        """T022b: the PRODUCT assembles the sealed legacy migration set.
+        """T022b / specs/026 T006-09: the PRODUCT registers the sealed set.
 
         Post-convergence the kernel no longer seeds the historical
         ``agent-box.*`` chain implicitly: the refusal raised at
         ``pacthold/work_core/registry.py`` for an un-assembled product is
         correct behaviour, and plan §43 assigns the assembly to this
-        composition (「B 默认产品显式装配旧迁移集」).  Both calls below go
-        through ``pacthold_runtime_compat`` — the compat assembly seam —
-        never by reviving implicit paths inside the kernel.
+        composition (「B 默认产品显式装配旧迁移集」).  The registration
+        point is this product package's explicit
+        ``sealed_migrations.register_sealed_legacy_migrations()`` — invoked
+        here on the default and native assembly paths, never as an import
+        side effect of ``pacthold_runtime_compat`` (the compat module stays
+        the thin carrier of the sealed SQL directory, namespace and version
+        table; SQL bytes, order, namespace and version table are unchanged).
 
-        ``register_legacy_migrations()`` is idempotent, and this runs at
-        composition time — before the host's first Core/legacy connection
+        Registration is idempotent, and this runs at composition time —
+        before the host's first Core/legacy connection
         (``ServerRuntime.start()``), which is when the runner applies the
         registered namespaces.
         """
-        from pacthold_runtime_compat.legacy_migrations import (
-            register_legacy_migrations,
-        )
+        from .sealed_migrations import register_sealed_legacy_migrations
 
-        register_legacy_migrations()
+        register_sealed_legacy_migrations()
 
     def database_type(self) -> type:
         """The selected product's storage provider, before any DB is opened."""

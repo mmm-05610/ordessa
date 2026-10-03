@@ -30,7 +30,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r apps/server/lockfiles/server-linux-py312.txt
-          pip install -e 'packages/pacthold[dev]' -e packages/server-plugin-api -e plugins/harness/api
+          pip install -e 'packages/pacthold[dev]' -e packages/server-plugin-api \
+                      -e packages/backend/environment-api -e packages/backend/persistence-sqlite \
+                      -e packages/backend/platform-services -e plugins/harness/api
           pip install -e plugins/assets/sandbox/api -e plugins/assets/sandbox/backend \
                       -e plugins/assets/sandbox/adapters -e plugins/permissions/api \
                       -e plugins/permissions/backend -e plugins/permissions/adapters
@@ -48,6 +50,12 @@ jobs:
         run: pytest -q plugins/server-compat/tests
       - name: model-provider
         run: pytest -q plugins/assets/model-provider/server/tests
+      - name: environment-api
+        run: pytest -q packages/backend/environment-api/tests
+      - name: persistence-sqlite
+        run: pytest -q packages/backend/persistence-sqlite/tests
+      - name: platform-services
+        run: pytest -q packages/backend/platform-services/tests
       # Excluded here (all run in the ledger step so the state stays visible):
       #  - tests/install/: two REGISTERED inherited reds (docs/known-issues.md:
       #    `@agentclientprotocol/sdk` override vs the pi-acp declaration);

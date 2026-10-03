@@ -29,7 +29,9 @@ from ordessa_server.bootstrap import build_runtime
 from ordessa_server.transport.http import create_app
 from server_plugin_api.wire_errors import FAMILIES
 
-T002_BASELINE_METHOD_COUNT = 70  # AR-1/W-1 后 53；S-03 装配 + PermissionsBackendPlugin 17 方法
+T002_BASELINE_METHOD_COUNT = 70  # AR-1/W-1 后 53；S-03 装配：providerModels 6 + modelProvider 7 + permissions 4
+# （旧注 “PermissionsBackendPlugin 17 方法” 是误记：17 是这三个面之和，
+# PermissionsBackendPlugin 本身只声明 permissions 4 方法。）
 ACP_ADMISSION_METHOD_IDS = frozenset({
     "acp.submission.authorize", "acp.permission.authorize",
 })
@@ -51,9 +53,18 @@ PROFILE_MANAGEMENT_METHOD_IDS = frozenset(
 MODEL_PROVIDER_IMPORT_METHOD_IDS = frozenset({
     "modelProvider.importApiKey", "modelProvider.queryApiKeyImport",
 })
+#: The two pin-drift ids 002 froze (identity-map `wireMethods.pinDrift`):
+#: the live default composition is 88 while the old pin arithmetic stopped
+#: at 86. Pinned here by name like every face above.
+MODEL_PROVIDER_TURN_APPLICATION_METHOD_IDS = frozenset({
+    "modelProvider.beginTurnApplication",
+})
+ACP_SESSION_HISTORY_METHOD_ID = "acp.sessions.list"
 C0_METHOD_COUNT = (T002_BASELINE_METHOD_COUNT + len(ACP_ADMISSION_METHOD_IDS) + 1
                    + len(PROFILE_MANAGEMENT_METHOD_IDS)
-                   + len(MODEL_PROVIDER_IMPORT_METHOD_IDS))
+                   + len(MODEL_PROVIDER_IMPORT_METHOD_IDS)
+                   + len(MODEL_PROVIDER_TURN_APPLICATION_METHOD_IDS)
+                   + 1)  # acp.sessions.list
 
 
 def _collect_live_method_ids() -> tuple[str, ...]:
@@ -101,7 +112,8 @@ def test_the_live_registry_holds_t002_baseline_acp_and_sandbox_describe_ids():
     assert len(LIVE_METHOD_IDS) == C0_METHOD_COUNT, (
         f"live registry collected {len(LIVE_METHOD_IDS)} method ids this run; "
         f"T002 baseline plus ACP admission, sandbox.describe, the Profile "
-        f"management face and the ModelProvider import pair is {C0_METHOD_COUNT}")
+        f"management face, the ModelProvider import pair, the turn-application "
+        f"gate and acp.sessions.list is {C0_METHOD_COUNT}")
     assert len(set(LIVE_METHOD_IDS)) == len(LIVE_METHOD_IDS)
     assert ACP_ADMISSION_METHOD_IDS <= set(LIVE_METHOD_IDS)
     assert SANDBOX_DESCRIBE_METHOD_ID in LIVE_METHOD_IDS
@@ -109,6 +121,8 @@ def test_the_live_registry_holds_t002_baseline_acp_and_sandbox_describe_ids():
     # unpinned one added in its place, so the added faces are asserted by name.
     assert PROFILE_MANAGEMENT_METHOD_IDS <= set(LIVE_METHOD_IDS)
     assert MODEL_PROVIDER_IMPORT_METHOD_IDS <= set(LIVE_METHOD_IDS)
+    assert MODEL_PROVIDER_TURN_APPLICATION_METHOD_IDS <= set(LIVE_METHOD_IDS)
+    assert ACP_SESSION_HISTORY_METHOD_ID in LIVE_METHOD_IDS
 
 
 def test_sandbox_describe_is_owned_by_the_selected_backend(loopback):
