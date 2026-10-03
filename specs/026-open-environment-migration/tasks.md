@@ -101,18 +101,18 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 
 ## 008 迁前端包组与Workbench组织权威
 
-- [ ] T008-01 逐包移动API/ui/components/connections/bridges到frontend；loader+host合extension-runtime但保Lumino唯一依赖管理。
-- [ ] T008-02 Workbench明确迁frontend/workbench；内部navigation/views/layout/overlays/settings/focus按职责组织，不拆巨量空包。
-- [ ] T008-03 app host-services.settings/main overlay迁Workbench展示注册/容器；平台设置作为贡献，业务值留原owner。
+- [x] T008-01 逐包移动API/ui/components/connections/bridges到frontend；loader+host合extension-runtime但保Lumino唯一依赖管理。
+- [x] T008-02 Workbench明确迁frontend/workbench；内部navigation/views/layout/overlays/settings/focus按职责组织，不拆巨量空包。
+- [x] T008-03 app host-services.settings/main overlay迁Workbench展示注册/容器；平台设置作为贡献，业务值留原owner。
 - [ ] T008-04 foundation分通用carrier与Agent领域carrier；更新所有consumer specifier，不平台反向export业务；共享Token运行身份测试。
-- [ ] T008-05 同步npm workspace/exports/import-map/tsconfig/build顺序/extensions lock/package lock/packaging脚本/test discovery，保证旧extensions完整空覆盖。
-- [ ] T008-06 迁connector对app内部NativeTransport依赖到公共contract；api入口无Electron/React副作用，main入口不落renderer bundle。
-- [ ] T008-07 真实typecheck/build/Workbench host/ui-components/connection suite与空产品smoke；overlay定位/Esc/窗口按钮不被挡、settings关闭/输入焦点受控UI验证。
-- [ ] T008-08 前端preflight冻结dispatch/required借用/batch publish同门，拒/超时恢复原贡献；跨窗口晚dispatch/晚required依赖屏障竞态；U待验不阻S/I codeReady但全单不DONE。
+- [x] T008-05 同步npm workspace/exports/import-map/tsconfig/build顺序/extensions lock/package lock/packaging脚本/test discovery，保证旧extensions完整空覆盖。
+- [x] T008-06 迁connector对app内部NativeTransport依赖到公共contract；api入口无Electron/React副作用，main入口不落renderer bundle。
+- [x] T008-07 真实typecheck/build/Workbench host/ui-components/connection suite与空产品smoke；overlay定位/Esc/窗口按钮不被挡、settings关闭/输入焦点受控UI验证。
+- [x] T008-08 前端preflight冻结dispatch/required借用/batch publish同门，拒/超时恢复原贡献；跨窗口晚dispatch/晚required依赖屏障竞态；U待验不阻S/I codeReady但全单不DONE。
 
-- [ ] T008-09 按逻辑manifest和发行映射迁frontend入口/connector职责，products与原运行manifest仍选择/调度权威；共享carrier一份，backend与frontend可按需启用。
+- [x] T008-09 按逻辑manifest和发行映射迁frontend入口/connector职责，products与原运行manifest仍选择/调度权威；共享carrier一份，backend与frontend可按需启用。
 
-- [ ] T008-10 将通用commands registry/execute迁同runtime、键绑定与面板归Workbench、业务handler留插件；旧ID薄forward，原生slash不转平台命令。
+- [x] T008-10 将通用commands registry/execute迁同runtime、键绑定与面板归Workbench、业务handler留插件；旧ID薄forward，原生slash不转平台命令。
 
 - [x] T008-11 增量冻结F5中性API/错误/Token/保证缺席矩阵及合同摘要，登记002清单增量；固定复用候选版本/许可/锁，不重写已完成基线。
 - [x] T008-12 实现owner私有写入口与消费者只读状态容器、稳定不可变快照、批量通知、selector/equality及scope自动退订；runtime不存全局业务值。

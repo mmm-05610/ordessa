@@ -1,5 +1,12 @@
 # 迁移状态
 
+## 2026-10-04 008 完成（codeReady，U 显式待验）
+
+T008-01..11 全部 S/I 完成（004 待用户裁决=HarnessAvailability 载体；007 GUI 面=U 待验），
+T008-11..20（R7 F5）全链完成。前端包组物理迁移+loader/host 合并 extension-runtime（薄壳保身份）。
+验证终态见 evidence/order-008-report.md。008=codeReady；009 解锁。
+移交：载体三选项待批复；GUI 面待真实授权；薄壳退役评估=012。
+
 ## 2026-10-04 夜间 — 008 持续推进（最新 2ad077a245）
 
 T008-06（连接器公共化，751552c398）、T008-09（逻辑 manifest+校验器+门，85d4fde2c1）、
