@@ -13,7 +13,9 @@ T010-03 收口：next-turn-client pending/sequence/route+chat-api-entry queued/c
 全部 owner 化（含 H1 红首修复：submit 在飞新 pick 不再被旧 tracked 误清；query 观测归一为
 "无更新查询/入队/核实开始才应用"单规则）。117+37 断言零改动。**H2 观察登记待裁决**
 （ready 迟到回执回退 M12 序栅栏，见 evidence/t010-03-h2-observation.md，建议 A）。
-待办：T010-04..11、T010-12..14、bootstrap 翻转时机、010 收口；011/012 队列。
+T010-04/05/06/07 收口（0345e36206/5d8377f21d/1cd090ba0d + T010-07 双红首修复：ABA 同文本不清新稿、
+view 离开仍收尾、editorLease 单编辑者）。待办：T010-08..11、T010-12..14、bootstrap 翻转时机、
+010 收口；011/012 队列（~07:30 硬切 011，012 报告优先）。
 
 ## 2026-10-04 009 完成（codeReady，U 显式待验）
 
