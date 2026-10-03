@@ -1,0 +1,79 @@
+{
+ "designId": "design-R7-M14-2026-10-03",
+ "ruling": "M14 (user-approved 2026-10-03)",
+ "receivedAt": "2026-10-03T23:48:43",
+ "implementationHEAD": "dfb4d3a4f4da31eb6235aaf3234055ab92b322fb",
+ "currentOrder": "007 (in flight: slice P batch-2 top-leveling running in background; merge done at a safe spec-tree boundary, no in-flight file conflicts)",
+ "sourceFiles": {
+  "frontend-infrastructure-update.md": "ef334d91793460655b3228a50b91366e2227c239c293224fd454577637d89cff",
+  "contracts/frontend-infrastructure.md": "8f78359c53021f3348e74289b2588136d6cd8065a9e052816321bd0e4bce1a9b"
+ },
+ "sourceNote": "designId is a design identifier, not a Git SHA (per M14 text); digests are of the main-tree source files read at merge time",
+ "mergedFiles": [
+  "frontend-infrastructure-update.md",
+  "contracts/frontend-infrastructure.md",
+  "orders/008.md",
+  "orders/010.md",
+  "orders/012.md",
+  "tasks.md",
+  "task-registry.json",
+  "case-registry.json",
+  "acceptance.md",
+  "decisions.md",
+  "spec.md",
+  "README.md",
+  "execution-detail.md",
+  "zcode-handoff.md",
+  "architecture.md",
+  "checks/validate-package.mjs"
+ ],
+ "mergeStyle": "content-level, additive; no directory overwrite; completed checkboxes/status/evidence untouched",
+ "newTaskIds": [
+  "T008-11",
+  "T008-12",
+  "T008-13",
+  "T008-14",
+  "T008-15",
+  "T008-16",
+  "T008-17",
+  "T008-18",
+  "T008-19",
+  "T008-20",
+  "T010-12",
+  "T010-13",
+  "T010-14",
+  "T012-12",
+  "T012-13"
+ ],
+ "newCaseIds": [
+  "A96",
+  "A97",
+  "A98",
+  "A99",
+  "A100",
+  "A101",
+  "A102",
+  "A103",
+  "A104",
+  "A105",
+  "A106",
+  "A107",
+  "A108",
+  "A109",
+  "A110",
+  "A111"
+ ],
+ "counts": {
+  "orders": 12,
+  "tasks": 129,
+  "acceptanceCases": 111,
+  "mutationsCaught": 30
+ },
+ "contractDelta": "F5 added as a NEW contract file; 002 freeze untouched (008 will register the F5 increment against the 002 ledgers per T008-11); no second core, no global business store; domain owners keep values",
+ "gate": "node checks/validate-package.mjs -> PASS (structure only; implementationTestsRun:false)",
+ "localValidatorAdaptation": "the 'missing task projection' mutation now injects through either checkbox state (worktree has completed [x] markers); check strengthened, not weakened",
+ "unverified": [
+  "all A96-A111 (S/I evidence due in 008/010/012)",
+  "A108/A111 remain U (real Electron GUI) pending authorization"
+ ]
+}

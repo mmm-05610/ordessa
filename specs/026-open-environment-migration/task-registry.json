@@ -1,1075 +1,1195 @@
 {
-  "schemaVersion": 1,
-  "singleExecutor": true,
-  "spec": "026-open-environment-migration",
-  "orders": [
-    {
-      "id": "001",
-      "title": "固定可复现的产品迁移基线",
-      "file": "orders/001.md",
-      "dependsOn": [],
-      "taskIds": [
-        "T001-01",
-        "T001-02",
-        "T001-03",
-        "T001-04",
-        "T001-05",
-        "T001-06",
-        "T001-07"
-      ],
-      "required": true,
-      "dependencyGate": "codeReady-SI"
-    },
-    {
-      "id": "002",
-      "title": "冻结联合契约、保证等级与兼容清单",
-      "file": "orders/002.md",
-      "dependsOn": [
-        "001"
-      ],
-      "taskIds": [
-        "T002-01",
-        "T002-02",
-        "T002-03",
-        "T002-04",
-        "T002-05",
-        "T002-06",
-        "T002-07",
-        "T002-08",
-        "T002-09",
-        "T002-10"
-      ],
-      "required": true,
-      "dependencyGate": "codeReady-SI"
-    },
-    {
-      "id": "003",
-      "title": "实现可独立运行的空环境与中性对象模型",
-      "file": "orders/003.md",
-      "dependsOn": [
-        "002"
-      ],
-      "taskIds": [
-        "T003-01",
-        "T003-02",
-        "T003-03",
-        "T003-04",
-        "T003-05",
-        "T003-06"
-      ],
-      "required": true,
-      "dependencyGate": "codeReady-SI"
-    },
-    {
-      "id": "004",
-      "title": "将插件激活与退出权威合入Environment",
-      "file": "orders/004.md",
-      "dependsOn": [
-        "003"
-      ],
-      "taskIds": [
-        "T004-01",
-        "T004-02",
-        "T004-03",
-        "T004-04",
-        "T004-05",
-        "T004-06",
-        "T004-07",
-        "T004-08"
-      ],
-      "required": true,
-      "dependencyGate": "codeReady-SI"
-    },
-    {
-      "id": "005",
-      "title": "提取SQLite持久化并验证真实故障窗口",
-      "file": "orders/005.md",
-      "dependsOn": [
-        "003",
-        "004"
-      ],
-      "taskIds": [
-        "T005-01",
-        "T005-02",
-        "T005-03",
-        "T005-04",
-        "T005-05",
-        "T005-06",
-        "T005-07",
-        "T005-08",
-        "T005-09",
-        "T005-10",
-        "T005-11",
-        "T005-12"
-      ],
-      "required": true,
-      "dependencyGate": "codeReady-SI"
-    },
-    {
-      "id": "006",
-      "title": "Server变薄并切换全部环境入口",
-      "file": "orders/006.md",
-      "dependsOn": [
-        "004",
-        "005"
-      ],
-      "taskIds": [
-        "T006-01",
-        "T006-02",
-        "T006-03",
-        "T006-04",
-        "T006-05",
-        "T006-06",
-        "T006-07",
-        "T006-08",
-        "T006-09"
-      ],
-      "required": true,
-      "dependencyGate": "codeReady-SI"
-    },
-    {
-      "id": "007",
-      "title": "Harness与资源按开放参与者接入",
-      "file": "orders/007.md",
-      "dependsOn": [
-        "006"
-      ],
-      "taskIds": [
-        "T007-01",
-        "T007-02",
-        "T007-03",
-        "T007-04",
-        "T007-05",
-        "T007-06",
-        "T007-07",
-        "T007-08",
-        "T007-09",
-        "T007-10",
-        "T007-11",
-        "T007-12"
-      ],
-      "required": true,
-      "dependencyGate": "codeReady-SI"
-    },
-    {
-      "id": "008",
-      "title": "迁前端包组与Workbench组织权威",
-      "file": "orders/008.md",
-      "dependsOn": [
-        "002"
-      ],
-      "taskIds": [
-        "T008-01",
-        "T008-02",
-        "T008-03",
-        "T008-04",
-        "T008-05",
-        "T008-06",
-        "T008-07",
-        "T008-08",
-        "T008-09",
-        "T008-10"
-      ],
-      "required": true,
-      "dependencyGate": "codeReady-SI"
-    },
-    {
-      "id": "009",
-      "title": "实现通用交互面与受控桥接",
-      "file": "orders/009.md",
-      "dependsOn": [
-        "008",
-        "007"
-      ],
-      "taskIds": [
-        "T009-01",
-        "T009-02",
-        "T009-03",
-        "T009-04",
-        "T009-05",
-        "T009-06",
-        "T009-07",
-        "T009-08",
-        "T009-09"
-      ],
-      "required": true,
-      "dependencyGate": "codeReady-SI"
-    },
-    {
-      "id": "010",
-      "title": "收束配置、会话、草稿唯一领域所有者",
-      "file": "orders/010.md",
-      "dependsOn": [
-        "009",
-        "007"
-      ],
-      "taskIds": [
-        "T010-01",
-        "T010-02",
-        "T010-03",
-        "T010-04",
-        "T010-05",
-        "T010-06",
-        "T010-07",
-        "T010-08",
-        "T010-09",
-        "T010-10",
-        "T010-11"
-      ],
-      "required": true,
-      "dependencyGate": "codeReady-SI"
-    },
-    {
-      "id": "011",
-      "title": "贯通发送、恢复与真实产品链",
-      "file": "orders/011.md",
-      "dependsOn": [
-        "010"
-      ],
-      "taskIds": [
-        "T011-01",
-        "T011-02",
-        "T011-03",
-        "T011-04",
-        "T011-05",
-        "T011-06",
-        "T011-07",
-        "T011-08",
-        "T011-09"
-      ],
-      "required": true,
-      "dependencyGate": "codeReady-SI"
-    },
-    {
-      "id": "012",
-      "title": "退役旧权威并完成发行前整体验收",
-      "file": "orders/012.md",
-      "dependsOn": [
-        "003",
-        "004",
-        "005",
-        "006",
-        "007",
-        "008",
-        "009",
-        "010",
-        "011"
-      ],
-      "taskIds": [
-        "T012-01",
-        "T012-02",
-        "T012-03",
-        "T012-04",
-        "T012-05",
-        "T012-06",
-        "T012-07",
-        "T012-08",
-        "T012-09",
-        "T012-10",
-        "T012-11"
-      ],
-      "required": true,
-      "dependencyGate": "codeReady-SI"
-    }
-  ],
-  "tasks": [
-    {
-      "id": "T001-01",
-      "order": "001",
-      "level": "L4",
-      "description": "只读核对main/P HEAD、merge-base、commit范围、脏文件所有者、根/子目录AGENTS及服务注册；输出批准范围冲突，禁止照过时AGENTS排除现插件。",
-      "required": true
-    },
-    {
-      "id": "T001-02",
-      "order": "001",
-      "level": "L4",
-      "description": "逐文件分类源码/测试/装配/文档/运行数据/凭据/生成物；来源manifest仅源码路径和digest，秘密文件只记录排除规则，不读正文。",
-      "required": true
-    },
-    {
-      "id": "T001-03",
-      "order": "001",
-      "level": "L4",
-      "description": "列出main与P的功能差异及现有验收引用，特别history、同Profile重选、model切换与输入闪烁；非引用证据不得当现测试通过。",
-      "required": true
-    },
-    {
-      "id": "T001-04",
-      "order": "001",
-      "level": "L4",
-      "description": "提交明确源合成和实施树建议并等待授权；获批后在同一实施树固定来源，未获批保BLOCKED，不自行commit其他人脏改。",
-      "required": true
-    },
-    {
-      "id": "T001-05",
-      "order": "001",
-      "level": "L4",
-      "description": "运行npm test -- --list并保存可发现suite清单；经许可在隔离环境跑Python/JS基线，保存每个失败ID/原因/skip/error及命令版本。",
-      "required": true
-    },
-    {
-      "id": "T001-06",
-      "order": "001",
-      "level": "L4",
-      "description": "形成baseline-receipt（合成SHA、源digest、授权、继承红、未验证GUI和资产）和恢复点，保证未跟踪024/025/026设计在实施树可读。",
-      "required": true
-    },
-    {
-      "id": "T001-07",
-      "order": "001",
-      "level": "L4",
-      "description": "冻结允许导入的不可变源码manifest（type/mode/link/content digest），前后重算并拒并发编辑/越界symlink；输出Python collect、Go package、独立ACP rig/lock、安装子进程suite发现表，见C2与shipping。",
-      "required": true
-    },
-    {
-      "id": "T002-01",
-      "order": "002",
-      "level": "L4",
-      "description": "读取024V3最终修订和025V4§14，并将M04–06对旧候选的覆盖条款映射到每个affected case，不覆盖历史。",
-      "required": true
-    },
-    {
-      "id": "T002-02",
-      "order": "002",
-      "level": "L4",
-      "description": "冻结environment-api DTO/Ports/error族及版本；TypeScript F1/C1数据类型、canonical codec与Python对应wire序列化正反例能编译互通。",
-      "required": true
-    },
-    {
-      "id": "T002-03",
-      "order": "002",
-      "level": "L4",
-      "description": "Q01–Q12逐项列实际Harness支持、required保证、raw差异、provider职责和消费者；未支持原生原子性标unsupported而非上层重试补齐。",
-      "required": true
-    },
-    {
-      "id": "T002-04",
-      "order": "002",
-      "level": "L4",
-      "description": "定义request key作用域/完整输入MAC编码（附件/配置/目标）、密钥port/轮换/未知保存，可靠与raw显式选择；key失效不自动降级。",
-      "required": true
-    },
-    {
-      "id": "T002-05",
-      "order": "002",
-      "level": "L4",
-      "description": "冻结public API/export/Token/carrier/extension ID发行身份清单，列old CoreStore构造与领域carrier兼容例外/消费者及退出单。",
-      "required": true
-    },
-    {
-      "id": "T002-06",
-      "order": "002",
-      "level": "L4",
-      "description": "新增契约测试覆盖PythonDTO/TS wire identity、编码版本不产生新writer、scheme/realm/owner校验、领域程序集零host import。",
-      "required": true
-    },
-    {
-      "id": "T002-07",
-      "order": "002",
-      "level": "L4",
-      "description": "输出批准合同版本与hash，新增设计语义差异提交用户；已批准内部实现选择可自行锁定，不要求用户逐个选方法名。",
-      "required": true
-    },
-    {
-      "id": "T002-08",
-      "order": "002",
-      "level": "L4",
-      "description": "联合冻结C2恢复协议、E2/F2生命周期证据及shipping合同：同根排他、跨模式request key、跨库marker/查原ID、附件不可变、三序号/RecoveryBinding、native alias、frontend fence；每项有编译类型和对应反例。",
-      "required": true
-    },
-    {
-      "id": "T003-01",
-      "order": "003",
-      "level": "L4",
-      "description": "建立environment-api独立pyproject与stdlib契约；保pacthold发行/import名称，新public.Environment不导入业务或具体Store。",
-      "required": true
-    },
-    {
-      "id": "T003-02",
-      "order": "003",
-      "level": "L4",
-      "description": "把安装选择、activation、instance、capability、ObjectRef、Activity、Usage的唯一索引归Environment root；拒完整身份不匹配。",
-      "required": true
-    },
-    {
-      "id": "T003-03",
-      "order": "003",
-      "level": "L4",
-      "description": "复用现core registration/providers/Ref校验；execution与资源编排保为内部机制，纯query/static能力不强制ExecutionPlan。",
-      "required": true
-    },
-    {
-      "id": "T003-04",
-      "order": "003",
-      "level": "L4",
-      "description": "实现显式空启用集、read/query/lookup入口，installed不自动enabled；历史read与invoke权限分开。",
-      "required": true
-    },
-    {
-      "id": "T003-05",
-      "order": "003",
-      "level": "L4",
-      "description": "隔离wheel/venv只装API+核心，执行无产品/无Server起停；将核心反向import和第二root故意注入作为失败反例。",
-      "required": true
-    },
-    {
-      "id": "T003-06",
-      "order": "003",
-      "level": "L4",
-      "description": "记录公开入口与实例identity，证明两个环境/两个数据根不共享模块级registry；给004/005同root消费接口。",
-      "required": true
-    },
-    {
-      "id": "T004-01",
-      "order": "004",
-      "level": "L4",
-      "description": "提取ServerPluginHost拓扑、冲突、stage/commit、holds与loader校验到Environment；不并存两个registry或scheduler。",
-      "required": true
-    },
-    {
-      "id": "T004-02",
-      "order": "004",
-      "level": "L4",
-      "description": "实现贡献事务及发布revision，失败撤未公开贡献；失败激活产生的外部对象登记settlement，不宣称无副作用。",
-      "required": true
-    },
-    {
-      "id": "T004-03",
-      "order": "004",
-      "level": "L4",
-      "description": "实现drain cut原子关新准入：与并发invoke/late open的线性化点明确，旧generation回调不得改新activation。",
-      "required": true
-    },
-    {
-      "id": "T004-04",
-      "order": "004",
-      "level": "L4",
-      "description": "实现closure root/cut/original grant/role/dependency/budget规则，停止确认与晚对象清理可继续，伪新业务拒绝。",
-      "required": true
-    },
-    {
-      "id": "T004-05",
-      "order": "004",
-      "level": "L4",
-      "description": "实现owned/borrowed usage退役：owned要范围退出证据；borrowed仅release；static移关系保内容；unknown不删。",
-      "required": true
-    },
-    {
-      "id": "T004-06",
-      "order": "004",
-      "level": "L4",
-      "description": "实现预检、异步等待关系与跨参与者退出排序，检测真实等待环；不因用async就认为无死锁，不加Agent协作业务。",
-      "required": true
-    },
-    {
-      "id": "T004-07",
-      "order": "004",
-      "level": "L4",
-      "description": "受控双插件激活失败/退役、晚事件、权限撤销、未知职责测试，所有状态仍来自单root。",
-      "required": true
-    },
-    {
-      "id": "T005-01",
-      "order": "005",
-      "level": "L4",
-      "description": "从现CoreStore提取SQLite实现与工厂；Core仅StorePort，兼容旧构造消费者迁移，不核心反向export实现。",
-      "required": true
-    },
-    {
-      "id": "T005-02",
-      "order": "005",
-      "level": "L4",
-      "description": "定义fixture新增schema与只读旧schema映射，保持原库命名与migration编号；真实数据写需另许可。",
-      "required": true
-    },
-    {
-      "id": "T005-03",
-      "order": "005",
-      "level": "L4",
-      "description": "以事务保存request占位、Activity、creation→Object/Usage、原Receipt与currentFact、response slot；外部调用不持DB锁。",
-      "required": true
-    },
-    {
-      "id": "T005-04",
-      "order": "005",
-      "level": "L4",
-      "description": "实现ProtectedFingerprintPort依合同用系统secret port的opaque key；临时测试key仅fixture，真实托管缺席可靠受限而raw不被禁。",
-      "required": true
-    },
-    {
-      "id": "T005-05",
-      "order": "005",
-      "level": "L4",
-      "description": "子进程kill分别覆盖intent前、持久intent后投递前、外部接纳后回执前、结果commit前后，重启查询与未知不重发。",
-      "required": true
-    },
-    {
-      "id": "T005-06",
-      "order": "005",
-      "level": "L4",
-      "description": "并发同ID同输入仅一个准入/相同回执、不同输入拒；跨ID同response slot只消费一次，两个data root隔离。",
-      "required": true
-    },
-    {
-      "id": "T005-07",
-      "order": "005",
-      "level": "L4",
-      "description": "测试SQLite只读包含WAL、事务失败/锁冲突/缺密钥/轮换/损坏schema；保原Receipt不变，晚证据修CurrentFact且冲突不自动解锁。",
-      "required": true
-    },
-    {
-      "id": "T005-08",
-      "order": "005",
-      "level": "L4",
-      "description": "输出新schema和真实迁移风险/备份恢复提案；没有许可只fixture，不提前开用户DB。",
-      "required": true
-    },
-    {
-      "id": "T005-09",
-      "order": "005",
-      "level": "L4",
-      "description": "落实C2同根跨进程writer排他、key轮换墓碑/独立history-read；真实暂停旧writer/双进程/正文过期测试；同步CoreBinding与产品具体Store构造消费者，防005→006依赖死锁。",
-      "required": true
-    },
-    {
-      "id": "T006-01",
-      "order": "006",
-      "level": "L4",
-      "description": "bootstrap由产品显式注入Environment/Store/Policy；应用只网络/认证/入口启动，移除global core_db配置与平行binding根。",
-      "required": true
-    },
-    {
-      "id": "T006-02",
-      "order": "006",
-      "level": "L4",
-      "description": "ServerPluginHost变有限投影/forwarder，methods/http/stream按同committed revision映射；保原签名/auth/origin与端口边界。",
-      "required": true
-    },
-    {
-      "id": "T006-03",
-      "order": "006",
-      "level": "L4",
-      "description": "server-plugin-api提纯transport契约并迁backend，应用不导入环境内部registry/privateStore；网络断线只释放transport。",
-      "required": true
-    },
-    {
-      "id": "T006-04",
-      "order": "006",
-      "level": "L4",
-      "description": "盘点所有入口与旧sidecar/work_core/NeutralRunTracker路径；旧执行新请求转Environment，旧记录只读，不能为绿复活退役worker。",
-      "required": true
-    },
-    {
-      "id": "T006-05",
-      "order": "006",
-      "level": "L4",
-      "description": "本地/CLI/HTTP/WS对同controlled provider检查dispatch次数/identity/receipt，错误族/发现与能力不可用行为保持明确。",
-      "required": true
-    },
-    {
-      "id": "T006-06",
-      "order": "006",
-      "level": "L4",
-      "description": "受控切换freeze准入、旧closure/unknown接管与route失败回退；新effects后只能兼容事实回退，不能热回旧writer。",
-      "required": true
-    },
-    {
-      "id": "T006-07",
-      "order": "006",
-      "level": "L4",
-      "description": "将pacthold/server-plugin-api物理归backend，同步pyproject、lock引用、安装脚本、CI、wheel隔离测试；保持发行/import/data标识。",
-      "required": true
-    },
-    {
-      "id": "T006-08",
-      "order": "006",
-      "level": "L4",
-      "description": "按C2效果fence受控切换，activation/instantiate/config apply/control reply均算外部效果；证据不足不能旧writer回退，旧实现仅既存closure继续者。",
-      "required": true
-    },
-    {
-      "id": "T007-01",
-      "order": "007",
-      "level": "L4",
-      "description": "Harness现start/connect/close保实现，增加Participant/Surface/Scope证据适配；native session/channel/Activity/Turn身份分开。",
-      "required": true
-    },
-    {
-      "id": "T007-02",
-      "order": "007",
-      "level": "L4",
-      "description": "品牌目录内部组织Codex/Pi/Claude生命周期及配置/资源适配；provider/profile/skill/mcp业务保持中性，不复制品牌判断。",
-      "required": true
-    },
-    {
-      "id": "T007-03",
-      "order": "007",
-      "level": "L4",
-      "description": "原生模型/provider/配置查询与应用按C1能力声明适配，不承诺native不支持的CAS；安装资产不重建除非新增必要协议。",
-      "required": true
-    },
-    {
-      "id": "T007-04",
-      "order": "007",
-      "level": "L4",
-      "description": "迁native-history的稳定owner/instance/native ID与只读decoder，空draft选择不创建原生会话；点击历史才native load/resume。",
-      "required": true
-    },
-    {
-      "id": "T007-05",
-      "order": "007",
-      "level": "L4",
-      "description": "资源/服务参与者支持静态catalog不需Agent/Profile/Store；borrowed MCP/外部服务release本方usage，owned进程退出scope测试。",
-      "required": true
-    },
-    {
-      "id": "T007-06",
-      "order": "007",
-      "level": "L4",
-      "description": "controlled peer支持/workflow/未知event/原生控制确认：原样有界、可信control单消费，不新增核心命令API。",
-      "required": true
-    },
-    {
-      "id": "T007-07",
-      "order": "007",
-      "level": "L4",
-      "description": "所有resource/provider来源范围/退出范围声明；partial/opaque owned实例不足证据retire pending，shared关系不误杀。",
-      "required": true
-    },
-    {
-      "id": "T007-08",
-      "order": "007",
-      "level": "L4",
-      "description": "保三品牌现有controlled回归逐ID，记录真实资产和登录测试未跑不冒称Pi/Codex/Claude真聊天通过。",
-      "required": true
-    },
-    {
-      "id": "T007-09",
-      "order": "007",
-      "level": "L4",
-      "description": "按E2保未知delivery_role义务与三序号/RecoveryBinding；独立第四种controlled Agent和独立静态资源包构建/安装/退出，可靠可unsupported，不核心品牌特判。",
-      "required": true
-    },
-    {
-      "id": "T008-01",
-      "order": "008",
-      "level": "L4",
-      "description": "逐包移动API/ui/components/connections/bridges到frontend；loader+host合extension-runtime但保Lumino唯一依赖管理。",
-      "required": true
-    },
-    {
-      "id": "T008-02",
-      "order": "008",
-      "level": "L4",
-      "description": "Workbench明确迁frontend/workbench；内部navigation/views/layout/overlays/settings/focus按职责组织，不拆巨量空包。",
-      "required": true
-    },
-    {
-      "id": "T008-03",
-      "order": "008",
-      "level": "L4",
-      "description": "app host-services.settings/main overlay迁Workbench展示注册/容器；平台设置作为贡献，业务值留原owner。",
-      "required": true
-    },
-    {
-      "id": "T008-04",
-      "order": "008",
-      "level": "L4",
-      "description": "foundation分通用carrier与Agent领域carrier；更新所有consumer specifier，不平台反向export业务；共享Token运行身份测试。",
-      "required": true
-    },
-    {
-      "id": "T008-05",
-      "order": "008",
-      "level": "L4",
-      "description": "同步npm workspace/exports/import-map/tsconfig/build顺序/extensions lock/package lock/packaging脚本/test discovery，保证旧extensions完整空覆盖。",
-      "required": true
-    },
-    {
-      "id": "T008-06",
-      "order": "008",
-      "level": "L4",
-      "description": "迁connector对app内部NativeTransport依赖到公共contract；api入口无Electron/React副作用，main入口不落renderer bundle。",
-      "required": true
-    },
-    {
-      "id": "T008-07",
-      "order": "008",
-      "level": "L4",
-      "description": "真实typecheck/build/Workbench host/ui-components/connection suite与空产品smoke；overlay定位/Esc/窗口按钮不被挡、settings关闭/输入焦点受控UI验证。",
-      "required": true
-    },
-    {
-      "id": "T008-08",
-      "order": "008",
-      "level": "L4",
-      "description": "前端preflight冻结dispatch/required借用/batch publish同门，拒/超时恢复原贡献；跨窗口晚dispatch/晚required依赖屏障竞态；U待验不阻S/I codeReady但全单不DONE。",
-      "required": true
-    },
-    {
-      "id": "T009-01",
-      "order": "009",
-      "level": "L4",
-      "description": "interaction-surfaces按通用target/schema/ref绑定，unknown kind/command原文降级；不要求Agent/Chat目标。A60必须穿实际connector/SDK，不能直feed新surface绕过旧过滤。",
-      "required": true
-    },
-    {
-      "id": "T009-02",
-      "order": "009",
-      "level": "L4",
-      "description": "connections仅本地phase/句柄/settlement；late open后scope关闭释放，关闭连接不伪remote stopped。",
-      "required": true
-    },
-    {
-      "id": "T009-03",
-      "order": "009",
-      "level": "L4",
-      "description": "native/server bridge分api/main/isolated executor入口，caller/activation/lease/target授权及await后重核；认证留main。",
-      "required": true
-    },
-    {
-      "id": "T009-04",
-      "order": "009",
-      "level": "L4",
-      "description": "明确可信内建与不可信模块执行域；禁止第三方main顶层动态import。隔离嵌入面CSP/IPC只授所需能力，不全局放宽sandbox。",
-      "required": true
-    },
-    {
-      "id": "T009-05",
-      "order": "009",
-      "level": "L4",
-      "description": "每跳raw byte/decoded/queued/history预算与credit/gap快照恢复；超限typed拒或明确incomplete，关键状态不吞。",
-      "required": true
-    },
-    {
-      "id": "T009-06",
-      "order": "009",
-      "level": "L4",
-      "description": "编辑与surface input ticket绑定target/epoch/lease，输入法composition尾Enter不发送；global Esc只消费一层，触发器消失返回有效焦点。",
-      "required": true
-    },
-    {
-      "id": "T009-07",
-      "order": "009",
-      "level": "L4",
-      "description": "独立构建非Chat terminal/document视图测试，无Profile/Agent也可附着；旧generation绑定/伪审批/伪窗口身份反例拒。",
-      "required": true
-    },
-    {
-      "id": "T010-01",
-      "order": "010",
-      "level": "L4",
-      "description": "Agent域提供ConfigOwner/SessionOwner/SubmissionOwner，DraftOwner与通用edit合同分离；runtime登记槽不吞domain state。",
-      "required": true
-    },
-    {
-      "id": "T010-02",
-      "order": "010",
-      "level": "L4",
-      "description": "移除Profile selection/glue的selections/lastConfirmed/retained/bindings/clickQueues写权；Profile只目录解析/操作源和薄UI贡献。",
-      "required": true
-    },
-    {
-      "id": "T010-03",
-      "order": "010",
-      "level": "L4",
-      "description": "移除model next-turn-client/chat-api-entry的pending/sequence/route/queued/current写权；codec仅关联请求，模型单项公开操作。",
-      "required": true
-    },
-    {
-      "id": "T010-04",
-      "order": "010",
-      "level": "L4",
-      "description": "实现present/unset字段、provider/model原子组、点击seq、异步解析归序、目录版本不追改capture、同Profile重选新opId。",
-      "required": true
-    },
-    {
-      "id": "T010-05",
-      "order": "010",
-      "level": "L4",
-      "description": "实现native ConfigEvidence known/unset/unknown及snapshot/patch链，乱序有界缓存，同revision冲突阻capture，重复原观察不解锁，完整新快照清旧缓存。",
-      "required": true
-    },
-    {
-      "id": "T010-06",
-      "order": "010",
-      "level": "L4",
-      "description": "实现稳定target/binding/native generation适用性与跨窗口同owner，selected只投影，binding替换旧queued操作stale且不自动重base。",
-      "required": true
-    },
-    {
-      "id": "T010-07",
-      "order": "010",
-      "level": "L4",
-      "description": "草稿stable draftId/revision/editorLease，view离开收尾仍能更新；成功只消费捕获revision，ABA同文本不清新稿。",
-      "required": true
-    },
-    {
-      "id": "T010-08",
-      "order": "010",
-      "level": "L4",
-      "description": "禁用Profile产品矩阵实构建运行controlled两轮和model切换；Agent/Chat/model不需要Profile私有serializer或身份。",
-      "required": true
-    },
-    {
-      "id": "T010-09",
-      "order": "010",
-      "level": "L4",
-      "description": "按E2逐字段迁ACP connector/session model的sessionList/runs/interactions/firstSends/pendingControlledSessions及alias写权；同native第二连接unverified只读，owner unknown不因重建client/晚success解锁。",
-      "required": true
-    },
-    {
-      "id": "T011-01",
-      "order": "011",
-      "level": "L4",
-      "description": "实现capture事务固定draft/附件/配置opIds/base/target/binding/schema/保证等级；UI选择/晚编辑不得改捕获快照。",
-      "required": true
-    },
-    {
-      "id": "T011-02",
-      "order": "011",
-      "level": "L4",
-      "description": "可靠路径持久request+fingerprint/reservation后调用Harness所声明条件提交；raw入口显式，绝不从可靠失败降级。",
-      "required": true
-    },
-    {
-      "id": "T011-03",
-      "order": "011",
-      "level": "L4",
-      "description": "首次create-with-config/creationAttempt关联与existing session分开；选择不create，unknown创建只核对，不new第二实例。",
-      "required": true
-    },
-    {
-      "id": "T011-04",
-      "order": "011",
-      "level": "L4",
-      "description": "分记config partial/input known-rejected/accepted/unknown和native run结果；UI异常说明准确，不把一切写连接中断。",
-      "required": true
-    },
-    {
-      "id": "T011-05",
-      "order": "011",
-      "level": "L4",
-      "description": "断线/应用崩溃重启持久关联只读reconcile，历史列表启动即读、点击才load/resume；旧owner/new generation不冒认。",
-      "required": true
-    },
-    {
-      "id": "T011-06",
-      "order": "011",
-      "level": "L4",
-      "description": "输出时Profile/model改意图不stop；应用完成UI模型标签更新同owner，输入每键不触发send错误闪烁。",
-      "required": true
-    },
-    {
-      "id": "T011-07",
-      "order": "011",
-      "level": "L4",
-      "description": "controlled三品牌provider/model切换与多会话隔离、同provider变化/cross-provider native restart/resume按原生支持；不修原生内部非阻塞问题。",
-      "required": true
-    },
-    {
-      "id": "T011-08",
-      "order": "011",
-      "level": "L4",
-      "description": "获单独许可后真实Pi/Codex/Claude各两轮、profile→model→profile、重启历史、官方登录与API并存隔离；缺许可/资产保测试BLOCKED，不把controlled算真实。",
-      "required": true
-    },
-    {
-      "id": "T011-09",
-      "order": "011",
-      "level": "L4",
-      "description": "按C2跨库mapping→possiblySubmitted→backend intent→native效果→领域result，真kill配置生效输入前等窗口；冻结附件内容避免MAC A/native B；同K可靠unknown换raw/key失效零重派。",
-      "required": true
-    },
-    {
-      "id": "T012-01",
-      "order": "012",
-      "level": "L4",
-      "description": "遍历old path/import/export/entrypoint/构造/registry/store/route生产引用，清zero-consumer兼容，保批准公开facade指向唯一实现。",
-      "required": true
-    },
-    {
-      "id": "T012-02",
-      "order": "012",
-      "level": "L4",
-      "description": "确认packages仅frontend/backend底座包组，旧desktop-platform/workbench/pacthold/server-plugin-api无运行实现；移动后的测试数量/ID发现映射可审计。",
-      "required": true
-    },
-    {
-      "id": "T012-03",
-      "order": "012",
-      "level": "L4",
-      "description": "npm ci从锁安装、typecheck、真实build/npm aggregate/Electron controlled、Python各包+全链；逐ID和cause比基线无新增未处置红，不删assert/skip假绿。",
-      "required": true
-    },
-    {
-      "id": "T012-04",
-      "order": "012",
-      "level": "L4",
-      "description": "干净venv隔离wheel导入与bare host、独立extension build、deb生成/解包/无凭据clean smoke；运行打包检查不签名/publish。",
-      "required": true
-    },
-    {
-      "id": "T012-05",
-      "order": "012",
-      "level": "L4",
-      "description": "所有acceptance必需场景正例反例证据，真实三品牌用户动作截图/日志关联脱敏；GUI/模型缺授权不算完成。",
-      "required": true
-    },
-    {
-      "id": "T012-06",
-      "order": "012",
-      "level": "L4",
-      "description": "数据fixture旧库/WAL/未知schema/两根/rollback/crash+秘密扫描+无追踪binary/userdata，真实数据若不获批注明未迁不能许诺已升级。",
-      "required": true
-    },
-    {
-      "id": "T012-07",
-      "order": "012",
-      "level": "L4",
-      "description": "更新architecture/baseline/naming/reference/migration/known-issues及云端draft（仅获对应token权限），目标与实现状态分开；不偷偷修改AGENTS。",
-      "required": true
-    },
-    {
-      "id": "T012-08",
-      "order": "012",
-      "level": "L4",
-      "description": "固定实施SHA、完整完成/缺口/兼容余项/操作步骤/安全回退点和main集成请求，用户批准前不合main不push。",
-      "required": true
-    },
-    {
-      "id": "T012-09",
-      "order": "012",
-      "level": "L4",
-      "description": "按shipping从解包产物验证required wheel/entrypoint/启用清单闭包，缺required不skip；默认和无Profilecontrolled两轮，禁止repo editable补依赖；发现清单逐suite重验。",
-      "required": true
-    },
-    {
-      "id": "T002-09",
-      "order": "002",
-      "level": "L4",
-      "description": "联合冻结E4/F4数据空间/宿主交互/秘密诊断、E5持久关联、A1 Agent公开合同，类型/codec/错误/缺席保证与A76–A95逐项映射，不引入第二核心。",
-      "required": true
-    },
-    {
-      "id": "T002-10",
-      "order": "002",
-      "level": "L4",
-      "description": "按plugin-architecture冻结领域路径与逻辑manifest schema、公开exports、旧发行/入口/数据identity映射；检查元数据不二次调度，列每个移动消费者。",
-      "required": true
-    },
-    {
-      "id": "T004-08",
-      "order": "004",
-      "level": "L4",
-      "description": "在同Environment实现持久关系声明/反查完整性/变更reservation与引用准入的统一门，区分Usage/持久引用/历史关系，测试并发和停用不擦引用。",
-      "required": true
-    },
-    {
-      "id": "T005-10",
-      "order": "005",
-      "level": "L4",
-      "description": "实现可注入DataAreaPort与文件/SQLite公开适配、稳定namespace/句柄/兼容schema及获批迁移准入；隔离fixture验证卸载保数据、旧版本拒写和CAS声明。",
-      "required": true
-    },
-    {
-      "id": "T005-11",
-      "order": "005",
-      "level": "L4",
-      "description": "实现持久引用跨Store与领域提交intent/证据/恢复、coverage未知和reservation崩溃保护；同根fence下不自动解锁或重做外部效果。",
-      "required": true
-    },
-    {
-      "id": "T005-12",
-      "order": "005",
-      "level": "L4",
-      "description": "扩现SecretStore为受管理SecretPort，OS适配不入内核；验证purpose/代次/renderer仅引用、locked拒绝、轮换和删除引用/在途责任，MAC墓碑保留。",
-      "required": true
-    },
-    {
-      "id": "T006-09",
-      "order": "006",
-      "level": "L4",
-      "description": "接可选backend/platform-services到同Environment；SecretStore兼容入口转同实现；按compat-retirement逐项拆清server/runtime兼容业务、切换旧入口到同Environment，仅保有证据的薄发行壳及封存迁移，保持原发行与入口ID。",
-      "required": true
-    },
-    {
-      "id": "T007-10",
-      "order": "007",
-      "level": "L4",
-      "description": "逐域将assets资源归顶层插件，业务/API留owner，品牌适配迁Harness内部品牌/资源模块；保全部现资产与支持矩阵，不按目录名整体搬错。",
-      "required": true
-    },
-    {
-      "id": "T007-11",
-      "order": "007",
-      "level": "L4",
-      "description": "资源消费者改用DataArea/公开绑定与E5关系声明；Provider归档不深扫Profile，关系coverage和变更竞态受控验证，资源无Profile仍可管理。",
-      "required": true
-    },
-    {
-      "id": "T007-12",
-      "order": "007",
-      "level": "L4",
-      "description": "独立外部资源包通过公共数据空间/关系/秘密可选能力安装运行，缺Agent/Chat/Profile及OS适配有明确降级，无私有宿主import。",
-      "required": true
-    },
-    {
-      "id": "T008-09",
-      "order": "008",
-      "level": "L4",
-      "description": "按逻辑manifest和发行映射迁frontend入口/connector职责，products与原运行manifest仍选择/调度权威；共享carrier一份，backend与frontend可按需启用。",
-      "required": true
-    },
-    {
-      "id": "T008-10",
-      "order": "008",
-      "level": "L4",
-      "description": "将通用commands registry/execute迁同runtime、键绑定与面板归Workbench、业务handler留插件；旧ID薄forward，原生slash不转平台命令。",
-      "required": true
-    },
-    {
-      "id": "T009-08",
-      "order": "009",
-      "level": "L4",
-      "description": "实现Workbench普通dialog与native-bridge文件/目录/clipboard公开能力，替换Chat全局picker/Profile window.confirm，验证取消/撤销/晚到不写及选择不授访问权。",
-      "required": true
-    },
-    {
-      "id": "T009-09",
-      "order": "009",
-      "level": "L4",
-      "description": "复用013日志/诊断公开scope注入与跨前后端关联、sink脱敏和late片段预算；诊断仅观察不probe/apply，日志不成为Receipt主账。",
-      "required": true
-    },
-    {
-      "id": "T010-10",
-      "order": "010",
-      "level": "L4",
-      "description": "落实A1 Session/Config/Submission/Run/Interaction owner公开只读/dispatch/Harness证据入口；同会话确认与操作单owner，前端代理无第二writer。",
-      "required": true
-    },
-    {
-      "id": "T010-11",
-      "order": "010",
-      "level": "L4",
-      "description": "资源选择控件与Profile facet走公开贡献及Agent操作，无私有binding/serializer；Profile字段覆盖、同预设重选、无Profile模型切换和无Chat资源管理都有证据。",
-      "required": true
-    },
-    {
-      "id": "T012-10",
-      "order": "012",
-      "level": "L4",
-      "description": "从干净发行产物验证领域插件多入口/旧ID与namespace兼容、backend-only/frontend-only及三外部样例，默认闭包不能用仓库源码或旧兼容引擎补。",
-      "required": true
-    },
-    {
-      "id": "T012-11",
-      "order": "012",
-      "level": "L4",
-      "description": "回归E3/E4/E5/A1和插件结构A66–A95全部必需场景，扫描第二关系/命令/配置权威及核心业务import；更新目录文档与剩余compat退出清单。",
-      "required": true
-    }
-  ]
+ "schemaVersion": 1,
+ "singleExecutor": true,
+ "spec": "026-open-environment-migration",
+ "orders": [
+  {
+   "id": "001",
+   "title": "固定可复现的产品迁移基线",
+   "file": "orders/001.md",
+   "dependsOn": [],
+   "taskIds": [
+    "T001-01",
+    "T001-02",
+    "T001-03",
+    "T001-04",
+    "T001-05",
+    "T001-06",
+    "T001-07"
+   ],
+   "required": true,
+   "dependencyGate": "codeReady-SI"
+  },
+  {
+   "id": "002",
+   "title": "冻结联合契约、保证等级与兼容清单",
+   "file": "orders/002.md",
+   "dependsOn": [
+    "001"
+   ],
+   "taskIds": [
+    "T002-01",
+    "T002-02",
+    "T002-03",
+    "T002-04",
+    "T002-05",
+    "T002-06",
+    "T002-07",
+    "T002-08",
+    "T002-09",
+    "T002-10"
+   ],
+   "required": true,
+   "dependencyGate": "codeReady-SI"
+  },
+  {
+   "id": "003",
+   "title": "实现可独立运行的空环境与中性对象模型",
+   "file": "orders/003.md",
+   "dependsOn": [
+    "002"
+   ],
+   "taskIds": [
+    "T003-01",
+    "T003-02",
+    "T003-03",
+    "T003-04",
+    "T003-05",
+    "T003-06"
+   ],
+   "required": true,
+   "dependencyGate": "codeReady-SI"
+  },
+  {
+   "id": "004",
+   "title": "将插件激活与退出权威合入Environment",
+   "file": "orders/004.md",
+   "dependsOn": [
+    "003"
+   ],
+   "taskIds": [
+    "T004-01",
+    "T004-02",
+    "T004-03",
+    "T004-04",
+    "T004-05",
+    "T004-06",
+    "T004-07",
+    "T004-08"
+   ],
+   "required": true,
+   "dependencyGate": "codeReady-SI"
+  },
+  {
+   "id": "005",
+   "title": "提取SQLite持久化并验证真实故障窗口",
+   "file": "orders/005.md",
+   "dependsOn": [
+    "003",
+    "004"
+   ],
+   "taskIds": [
+    "T005-01",
+    "T005-02",
+    "T005-03",
+    "T005-04",
+    "T005-05",
+    "T005-06",
+    "T005-07",
+    "T005-08",
+    "T005-09",
+    "T005-10",
+    "T005-11",
+    "T005-12"
+   ],
+   "required": true,
+   "dependencyGate": "codeReady-SI"
+  },
+  {
+   "id": "006",
+   "title": "Server变薄并切换全部环境入口",
+   "file": "orders/006.md",
+   "dependsOn": [
+    "004",
+    "005"
+   ],
+   "taskIds": [
+    "T006-01",
+    "T006-02",
+    "T006-03",
+    "T006-04",
+    "T006-05",
+    "T006-06",
+    "T006-07",
+    "T006-08",
+    "T006-09"
+   ],
+   "required": true,
+   "dependencyGate": "codeReady-SI"
+  },
+  {
+   "id": "007",
+   "title": "Harness与资源按开放参与者接入",
+   "file": "orders/007.md",
+   "dependsOn": [
+    "006"
+   ],
+   "taskIds": [
+    "T007-01",
+    "T007-02",
+    "T007-03",
+    "T007-04",
+    "T007-05",
+    "T007-06",
+    "T007-07",
+    "T007-08",
+    "T007-09",
+    "T007-10",
+    "T007-11",
+    "T007-12"
+   ],
+   "required": true,
+   "dependencyGate": "codeReady-SI"
+  },
+  {
+   "id": "008",
+   "title": "迁前端包组与Workbench组织权威",
+   "file": "orders/008.md",
+   "dependsOn": [
+    "002"
+   ],
+   "taskIds": [
+    "T008-01",
+    "T008-02",
+    "T008-03",
+    "T008-04",
+    "T008-05",
+    "T008-06",
+    "T008-07",
+    "T008-08",
+    "T008-09",
+    "T008-10",
+    "T008-11",
+    "T008-12",
+    "T008-13",
+    "T008-14",
+    "T008-15",
+    "T008-16",
+    "T008-17",
+    "T008-18",
+    "T008-19",
+    "T008-20"
+   ],
+   "required": true,
+   "dependencyGate": "codeReady-SI"
+  },
+  {
+   "id": "009",
+   "title": "实现通用交互面与受控桥接",
+   "file": "orders/009.md",
+   "dependsOn": [
+    "008",
+    "007"
+   ],
+   "taskIds": [
+    "T009-01",
+    "T009-02",
+    "T009-03",
+    "T009-04",
+    "T009-05",
+    "T009-06",
+    "T009-07",
+    "T009-08",
+    "T009-09"
+   ],
+   "required": true,
+   "dependencyGate": "codeReady-SI"
+  },
+  {
+   "id": "010",
+   "title": "收束配置、会话、草稿唯一领域所有者",
+   "file": "orders/010.md",
+   "dependsOn": [
+    "009",
+    "007"
+   ],
+   "taskIds": [
+    "T010-01",
+    "T010-02",
+    "T010-03",
+    "T010-04",
+    "T010-05",
+    "T010-06",
+    "T010-07",
+    "T010-08",
+    "T010-09",
+    "T010-10",
+    "T010-11",
+    "T010-12",
+    "T010-13",
+    "T010-14"
+   ],
+   "required": true,
+   "dependencyGate": "codeReady-SI"
+  },
+  {
+   "id": "011",
+   "title": "贯通发送、恢复与真实产品链",
+   "file": "orders/011.md",
+   "dependsOn": [
+    "010"
+   ],
+   "taskIds": [
+    "T011-01",
+    "T011-02",
+    "T011-03",
+    "T011-04",
+    "T011-05",
+    "T011-06",
+    "T011-07",
+    "T011-08",
+    "T011-09"
+   ],
+   "required": true,
+   "dependencyGate": "codeReady-SI"
+  },
+  {
+   "id": "012",
+   "title": "退役旧权威并完成发行前整体验收",
+   "file": "orders/012.md",
+   "dependsOn": [
+    "003",
+    "004",
+    "005",
+    "006",
+    "007",
+    "008",
+    "009",
+    "010",
+    "011"
+   ],
+   "taskIds": [
+    "T012-01",
+    "T012-02",
+    "T012-03",
+    "T012-04",
+    "T012-05",
+    "T012-06",
+    "T012-07",
+    "T012-08",
+    "T012-09",
+    "T012-10",
+    "T012-11",
+    "T012-12",
+    "T012-13"
+   ],
+   "required": true,
+   "dependencyGate": "codeReady-SI"
+  }
+ ],
+ "tasks": [
+  {
+   "id": "T001-01",
+   "order": "001",
+   "level": "L4",
+   "description": "只读核对main/P HEAD、merge-base、commit范围、脏文件所有者、根/子目录AGENTS及服务注册；输出批准范围冲突，禁止照过时AGENTS排除现插件。",
+   "required": true
+  },
+  {
+   "id": "T001-02",
+   "order": "001",
+   "level": "L4",
+   "description": "逐文件分类源码/测试/装配/文档/运行数据/凭据/生成物；来源manifest仅源码路径和digest，秘密文件只记录排除规则，不读正文。",
+   "required": true
+  },
+  {
+   "id": "T001-03",
+   "order": "001",
+   "level": "L4",
+   "description": "列出main与P的功能差异及现有验收引用，特别history、同Profile重选、model切换与输入闪烁；非引用证据不得当现测试通过。",
+   "required": true
+  },
+  {
+   "id": "T001-04",
+   "order": "001",
+   "level": "L4",
+   "description": "提交明确源合成和实施树建议并等待授权；获批后在同一实施树固定来源，未获批保BLOCKED，不自行commit其他人脏改。",
+   "required": true
+  },
+  {
+   "id": "T001-05",
+   "order": "001",
+   "level": "L4",
+   "description": "运行npm test -- --list并保存可发现suite清单；经许可在隔离环境跑Python/JS基线，保存每个失败ID/原因/skip/error及命令版本。",
+   "required": true
+  },
+  {
+   "id": "T001-06",
+   "order": "001",
+   "level": "L4",
+   "description": "形成baseline-receipt（合成SHA、源digest、授权、继承红、未验证GUI和资产）和恢复点，保证未跟踪024/025/026设计在实施树可读。",
+   "required": true
+  },
+  {
+   "id": "T001-07",
+   "order": "001",
+   "level": "L4",
+   "description": "冻结允许导入的不可变源码manifest（type/mode/link/content digest），前后重算并拒并发编辑/越界symlink；输出Python collect、Go package、独立ACP rig/lock、安装子进程suite发现表，见C2与shipping。",
+   "required": true
+  },
+  {
+   "id": "T002-01",
+   "order": "002",
+   "level": "L4",
+   "description": "读取024V3最终修订和025V4§14，并将M04–06对旧候选的覆盖条款映射到每个affected case，不覆盖历史。",
+   "required": true
+  },
+  {
+   "id": "T002-02",
+   "order": "002",
+   "level": "L4",
+   "description": "冻结environment-api DTO/Ports/error族及版本；TypeScript F1/C1数据类型、canonical codec与Python对应wire序列化正反例能编译互通。",
+   "required": true
+  },
+  {
+   "id": "T002-03",
+   "order": "002",
+   "level": "L4",
+   "description": "Q01–Q12逐项列实际Harness支持、required保证、raw差异、provider职责和消费者；未支持原生原子性标unsupported而非上层重试补齐。",
+   "required": true
+  },
+  {
+   "id": "T002-04",
+   "order": "002",
+   "level": "L4",
+   "description": "定义request key作用域/完整输入MAC编码（附件/配置/目标）、密钥port/轮换/未知保存，可靠与raw显式选择；key失效不自动降级。",
+   "required": true
+  },
+  {
+   "id": "T002-05",
+   "order": "002",
+   "level": "L4",
+   "description": "冻结public API/export/Token/carrier/extension ID发行身份清单，列old CoreStore构造与领域carrier兼容例外/消费者及退出单。",
+   "required": true
+  },
+  {
+   "id": "T002-06",
+   "order": "002",
+   "level": "L4",
+   "description": "新增契约测试覆盖PythonDTO/TS wire identity、编码版本不产生新writer、scheme/realm/owner校验、领域程序集零host import。",
+   "required": true
+  },
+  {
+   "id": "T002-07",
+   "order": "002",
+   "level": "L4",
+   "description": "输出批准合同版本与hash，新增设计语义差异提交用户；已批准内部实现选择可自行锁定，不要求用户逐个选方法名。",
+   "required": true
+  },
+  {
+   "id": "T002-08",
+   "order": "002",
+   "level": "L4",
+   "description": "联合冻结C2恢复协议、E2/F2生命周期证据及shipping合同：同根排他、跨模式request key、跨库marker/查原ID、附件不可变、三序号/RecoveryBinding、native alias、frontend fence；每项有编译类型和对应反例。",
+   "required": true
+  },
+  {
+   "id": "T003-01",
+   "order": "003",
+   "level": "L4",
+   "description": "建立environment-api独立pyproject与stdlib契约；保pacthold发行/import名称，新public.Environment不导入业务或具体Store。",
+   "required": true
+  },
+  {
+   "id": "T003-02",
+   "order": "003",
+   "level": "L4",
+   "description": "把安装选择、activation、instance、capability、ObjectRef、Activity、Usage的唯一索引归Environment root；拒完整身份不匹配。",
+   "required": true
+  },
+  {
+   "id": "T003-03",
+   "order": "003",
+   "level": "L4",
+   "description": "复用现core registration/providers/Ref校验；execution与资源编排保为内部机制，纯query/static能力不强制ExecutionPlan。",
+   "required": true
+  },
+  {
+   "id": "T003-04",
+   "order": "003",
+   "level": "L4",
+   "description": "实现显式空启用集、read/query/lookup入口，installed不自动enabled；历史read与invoke权限分开。",
+   "required": true
+  },
+  {
+   "id": "T003-05",
+   "order": "003",
+   "level": "L4",
+   "description": "隔离wheel/venv只装API+核心，执行无产品/无Server起停；将核心反向import和第二root故意注入作为失败反例。",
+   "required": true
+  },
+  {
+   "id": "T003-06",
+   "order": "003",
+   "level": "L4",
+   "description": "记录公开入口与实例identity，证明两个环境/两个数据根不共享模块级registry；给004/005同root消费接口。",
+   "required": true
+  },
+  {
+   "id": "T004-01",
+   "order": "004",
+   "level": "L4",
+   "description": "提取ServerPluginHost拓扑、冲突、stage/commit、holds与loader校验到Environment；不并存两个registry或scheduler。",
+   "required": true
+  },
+  {
+   "id": "T004-02",
+   "order": "004",
+   "level": "L4",
+   "description": "实现贡献事务及发布revision，失败撤未公开贡献；失败激活产生的外部对象登记settlement，不宣称无副作用。",
+   "required": true
+  },
+  {
+   "id": "T004-03",
+   "order": "004",
+   "level": "L4",
+   "description": "实现drain cut原子关新准入：与并发invoke/late open的线性化点明确，旧generation回调不得改新activation。",
+   "required": true
+  },
+  {
+   "id": "T004-04",
+   "order": "004",
+   "level": "L4",
+   "description": "实现closure root/cut/original grant/role/dependency/budget规则，停止确认与晚对象清理可继续，伪新业务拒绝。",
+   "required": true
+  },
+  {
+   "id": "T004-05",
+   "order": "004",
+   "level": "L4",
+   "description": "实现owned/borrowed usage退役：owned要范围退出证据；borrowed仅release；static移关系保内容；unknown不删。",
+   "required": true
+  },
+  {
+   "id": "T004-06",
+   "order": "004",
+   "level": "L4",
+   "description": "实现预检、异步等待关系与跨参与者退出排序，检测真实等待环；不因用async就认为无死锁，不加Agent协作业务。",
+   "required": true
+  },
+  {
+   "id": "T004-07",
+   "order": "004",
+   "level": "L4",
+   "description": "受控双插件激活失败/退役、晚事件、权限撤销、未知职责测试，所有状态仍来自单root。",
+   "required": true
+  },
+  {
+   "id": "T005-01",
+   "order": "005",
+   "level": "L4",
+   "description": "从现CoreStore提取SQLite实现与工厂；Core仅StorePort，兼容旧构造消费者迁移，不核心反向export实现。",
+   "required": true
+  },
+  {
+   "id": "T005-02",
+   "order": "005",
+   "level": "L4",
+   "description": "定义fixture新增schema与只读旧schema映射，保持原库命名与migration编号；真实数据写需另许可。",
+   "required": true
+  },
+  {
+   "id": "T005-03",
+   "order": "005",
+   "level": "L4",
+   "description": "以事务保存request占位、Activity、creation→Object/Usage、原Receipt与currentFact、response slot；外部调用不持DB锁。",
+   "required": true
+  },
+  {
+   "id": "T005-04",
+   "order": "005",
+   "level": "L4",
+   "description": "实现ProtectedFingerprintPort依合同用系统secret port的opaque key；临时测试key仅fixture，真实托管缺席可靠受限而raw不被禁。",
+   "required": true
+  },
+  {
+   "id": "T005-05",
+   "order": "005",
+   "level": "L4",
+   "description": "子进程kill分别覆盖intent前、持久intent后投递前、外部接纳后回执前、结果commit前后，重启查询与未知不重发。",
+   "required": true
+  },
+  {
+   "id": "T005-06",
+   "order": "005",
+   "level": "L4",
+   "description": "并发同ID同输入仅一个准入/相同回执、不同输入拒；跨ID同response slot只消费一次，两个data root隔离。",
+   "required": true
+  },
+  {
+   "id": "T005-07",
+   "order": "005",
+   "level": "L4",
+   "description": "测试SQLite只读包含WAL、事务失败/锁冲突/缺密钥/轮换/损坏schema；保原Receipt不变，晚证据修CurrentFact且冲突不自动解锁。",
+   "required": true
+  },
+  {
+   "id": "T005-08",
+   "order": "005",
+   "level": "L4",
+   "description": "输出新schema和真实迁移风险/备份恢复提案；没有许可只fixture，不提前开用户DB。",
+   "required": true
+  },
+  {
+   "id": "T005-09",
+   "order": "005",
+   "level": "L4",
+   "description": "落实C2同根跨进程writer排他、key轮换墓碑/独立history-read；真实暂停旧writer/双进程/正文过期测试；同步CoreBinding与产品具体Store构造消费者，防005→006依赖死锁。",
+   "required": true
+  },
+  {
+   "id": "T006-01",
+   "order": "006",
+   "level": "L4",
+   "description": "bootstrap由产品显式注入Environment/Store/Policy；应用只网络/认证/入口启动，移除global core_db配置与平行binding根。",
+   "required": true
+  },
+  {
+   "id": "T006-02",
+   "order": "006",
+   "level": "L4",
+   "description": "ServerPluginHost变有限投影/forwarder，methods/http/stream按同committed revision映射；保原签名/auth/origin与端口边界。",
+   "required": true
+  },
+  {
+   "id": "T006-03",
+   "order": "006",
+   "level": "L4",
+   "description": "server-plugin-api提纯transport契约并迁backend，应用不导入环境内部registry/privateStore；网络断线只释放transport。",
+   "required": true
+  },
+  {
+   "id": "T006-04",
+   "order": "006",
+   "level": "L4",
+   "description": "盘点所有入口与旧sidecar/work_core/NeutralRunTracker路径；旧执行新请求转Environment，旧记录只读，不能为绿复活退役worker。",
+   "required": true
+  },
+  {
+   "id": "T006-05",
+   "order": "006",
+   "level": "L4",
+   "description": "本地/CLI/HTTP/WS对同controlled provider检查dispatch次数/identity/receipt，错误族/发现与能力不可用行为保持明确。",
+   "required": true
+  },
+  {
+   "id": "T006-06",
+   "order": "006",
+   "level": "L4",
+   "description": "受控切换freeze准入、旧closure/unknown接管与route失败回退；新effects后只能兼容事实回退，不能热回旧writer。",
+   "required": true
+  },
+  {
+   "id": "T006-07",
+   "order": "006",
+   "level": "L4",
+   "description": "将pacthold/server-plugin-api物理归backend，同步pyproject、lock引用、安装脚本、CI、wheel隔离测试；保持发行/import/data标识。",
+   "required": true
+  },
+  {
+   "id": "T006-08",
+   "order": "006",
+   "level": "L4",
+   "description": "按C2效果fence受控切换，activation/instantiate/config apply/control reply均算外部效果；证据不足不能旧writer回退，旧实现仅既存closure继续者。",
+   "required": true
+  },
+  {
+   "id": "T007-01",
+   "order": "007",
+   "level": "L4",
+   "description": "Harness现start/connect/close保实现，增加Participant/Surface/Scope证据适配；native session/channel/Activity/Turn身份分开。",
+   "required": true
+  },
+  {
+   "id": "T007-02",
+   "order": "007",
+   "level": "L4",
+   "description": "品牌目录内部组织Codex/Pi/Claude生命周期及配置/资源适配；provider/profile/skill/mcp业务保持中性，不复制品牌判断。",
+   "required": true
+  },
+  {
+   "id": "T007-03",
+   "order": "007",
+   "level": "L4",
+   "description": "原生模型/provider/配置查询与应用按C1能力声明适配，不承诺native不支持的CAS；安装资产不重建除非新增必要协议。",
+   "required": true
+  },
+  {
+   "id": "T007-04",
+   "order": "007",
+   "level": "L4",
+   "description": "迁native-history的稳定owner/instance/native ID与只读decoder，空draft选择不创建原生会话；点击历史才native load/resume。",
+   "required": true
+  },
+  {
+   "id": "T007-05",
+   "order": "007",
+   "level": "L4",
+   "description": "资源/服务参与者支持静态catalog不需Agent/Profile/Store；borrowed MCP/外部服务release本方usage，owned进程退出scope测试。",
+   "required": true
+  },
+  {
+   "id": "T007-06",
+   "order": "007",
+   "level": "L4",
+   "description": "controlled peer支持/workflow/未知event/原生控制确认：原样有界、可信control单消费，不新增核心命令API。",
+   "required": true
+  },
+  {
+   "id": "T007-07",
+   "order": "007",
+   "level": "L4",
+   "description": "所有resource/provider来源范围/退出范围声明；partial/opaque owned实例不足证据retire pending，shared关系不误杀。",
+   "required": true
+  },
+  {
+   "id": "T007-08",
+   "order": "007",
+   "level": "L4",
+   "description": "保三品牌现有controlled回归逐ID，记录真实资产和登录测试未跑不冒称Pi/Codex/Claude真聊天通过。",
+   "required": true
+  },
+  {
+   "id": "T007-09",
+   "order": "007",
+   "level": "L4",
+   "description": "按E2保未知delivery_role义务与三序号/RecoveryBinding；独立第四种controlled Agent和独立静态资源包构建/安装/退出，可靠可unsupported，不核心品牌特判。",
+   "required": true
+  },
+  {
+   "id": "T008-01",
+   "order": "008",
+   "level": "L4",
+   "description": "逐包移动API/ui/components/connections/bridges到frontend；loader+host合extension-runtime但保Lumino唯一依赖管理。",
+   "required": true
+  },
+  {
+   "id": "T008-02",
+   "order": "008",
+   "level": "L4",
+   "description": "Workbench明确迁frontend/workbench；内部navigation/views/layout/overlays/settings/focus按职责组织，不拆巨量空包。",
+   "required": true
+  },
+  {
+   "id": "T008-03",
+   "order": "008",
+   "level": "L4",
+   "description": "app host-services.settings/main overlay迁Workbench展示注册/容器；平台设置作为贡献，业务值留原owner。",
+   "required": true
+  },
+  {
+   "id": "T008-04",
+   "order": "008",
+   "level": "L4",
+   "description": "foundation分通用carrier与Agent领域carrier；更新所有consumer specifier，不平台反向export业务；共享Token运行身份测试。",
+   "required": true
+  },
+  {
+   "id": "T008-05",
+   "order": "008",
+   "level": "L4",
+   "description": "同步npm workspace/exports/import-map/tsconfig/build顺序/extensions lock/package lock/packaging脚本/test discovery，保证旧extensions完整空覆盖。",
+   "required": true
+  },
+  {
+   "id": "T008-06",
+   "order": "008",
+   "level": "L4",
+   "description": "迁connector对app内部NativeTransport依赖到公共contract；api入口无Electron/React副作用，main入口不落renderer bundle。",
+   "required": true
+  },
+  {
+   "id": "T008-07",
+   "order": "008",
+   "level": "L4",
+   "description": "真实typecheck/build/Workbench host/ui-components/connection suite与空产品smoke；overlay定位/Esc/窗口按钮不被挡、settings关闭/输入焦点受控UI验证。",
+   "required": true
+  },
+  {
+   "id": "T008-08",
+   "order": "008",
+   "level": "L4",
+   "description": "前端preflight冻结dispatch/required借用/batch publish同门，拒/超时恢复原贡献；跨窗口晚dispatch/晚required依赖屏障竞态；U待验不阻S/I codeReady但全单不DONE。",
+   "required": true
+  },
+  {
+   "id": "T009-01",
+   "order": "009",
+   "level": "L4",
+   "description": "interaction-surfaces按通用target/schema/ref绑定，unknown kind/command原文降级；不要求Agent/Chat目标。A60必须穿实际connector/SDK，不能直feed新surface绕过旧过滤。",
+   "required": true
+  },
+  {
+   "id": "T009-02",
+   "order": "009",
+   "level": "L4",
+   "description": "connections仅本地phase/句柄/settlement；late open后scope关闭释放，关闭连接不伪remote stopped。",
+   "required": true
+  },
+  {
+   "id": "T009-03",
+   "order": "009",
+   "level": "L4",
+   "description": "native/server bridge分api/main/isolated executor入口，caller/activation/lease/target授权及await后重核；认证留main。",
+   "required": true
+  },
+  {
+   "id": "T009-04",
+   "order": "009",
+   "level": "L4",
+   "description": "明确可信内建与不可信模块执行域；禁止第三方main顶层动态import。隔离嵌入面CSP/IPC只授所需能力，不全局放宽sandbox。",
+   "required": true
+  },
+  {
+   "id": "T009-05",
+   "order": "009",
+   "level": "L4",
+   "description": "每跳raw byte/decoded/queued/history预算与credit/gap快照恢复；超限typed拒或明确incomplete，关键状态不吞。",
+   "required": true
+  },
+  {
+   "id": "T009-06",
+   "order": "009",
+   "level": "L4",
+   "description": "编辑与surface input ticket绑定target/epoch/lease，输入法composition尾Enter不发送；global Esc只消费一层，触发器消失返回有效焦点。",
+   "required": true
+  },
+  {
+   "id": "T009-07",
+   "order": "009",
+   "level": "L4",
+   "description": "独立构建非Chat terminal/document视图测试，无Profile/Agent也可附着；旧generation绑定/伪审批/伪窗口身份反例拒。",
+   "required": true
+  },
+  {
+   "id": "T010-01",
+   "order": "010",
+   "level": "L4",
+   "description": "Agent域提供ConfigOwner/SessionOwner/SubmissionOwner，DraftOwner与通用edit合同分离；runtime登记槽不吞domain state。",
+   "required": true
+  },
+  {
+   "id": "T010-02",
+   "order": "010",
+   "level": "L4",
+   "description": "移除Profile selection/glue的selections/lastConfirmed/retained/bindings/clickQueues写权；Profile只目录解析/操作源和薄UI贡献。",
+   "required": true
+  },
+  {
+   "id": "T010-03",
+   "order": "010",
+   "level": "L4",
+   "description": "移除model next-turn-client/chat-api-entry的pending/sequence/route/queued/current写权；codec仅关联请求，模型单项公开操作。",
+   "required": true
+  },
+  {
+   "id": "T010-04",
+   "order": "010",
+   "level": "L4",
+   "description": "实现present/unset字段、provider/model原子组、点击seq、异步解析归序、目录版本不追改capture、同Profile重选新opId。",
+   "required": true
+  },
+  {
+   "id": "T010-05",
+   "order": "010",
+   "level": "L4",
+   "description": "实现native ConfigEvidence known/unset/unknown及snapshot/patch链，乱序有界缓存，同revision冲突阻capture，重复原观察不解锁，完整新快照清旧缓存。",
+   "required": true
+  },
+  {
+   "id": "T010-06",
+   "order": "010",
+   "level": "L4",
+   "description": "实现稳定target/binding/native generation适用性与跨窗口同owner，selected只投影，binding替换旧queued操作stale且不自动重base。",
+   "required": true
+  },
+  {
+   "id": "T010-07",
+   "order": "010",
+   "level": "L4",
+   "description": "草稿stable draftId/revision/editorLease，view离开收尾仍能更新；成功只消费捕获revision，ABA同文本不清新稿。",
+   "required": true
+  },
+  {
+   "id": "T010-08",
+   "order": "010",
+   "level": "L4",
+   "description": "禁用Profile产品矩阵实构建运行controlled两轮和model切换；Agent/Chat/model不需要Profile私有serializer或身份。",
+   "required": true
+  },
+  {
+   "id": "T010-09",
+   "order": "010",
+   "level": "L4",
+   "description": "按E2逐字段迁ACP connector/session model的sessionList/runs/interactions/firstSends/pendingControlledSessions及alias写权；同native第二连接unverified只读，owner unknown不因重建client/晚success解锁。",
+   "required": true
+  },
+  {
+   "id": "T011-01",
+   "order": "011",
+   "level": "L4",
+   "description": "实现capture事务固定draft/附件/配置opIds/base/target/binding/schema/保证等级；UI选择/晚编辑不得改捕获快照。",
+   "required": true
+  },
+  {
+   "id": "T011-02",
+   "order": "011",
+   "level": "L4",
+   "description": "可靠路径持久request+fingerprint/reservation后调用Harness所声明条件提交；raw入口显式，绝不从可靠失败降级。",
+   "required": true
+  },
+  {
+   "id": "T011-03",
+   "order": "011",
+   "level": "L4",
+   "description": "首次create-with-config/creationAttempt关联与existing session分开；选择不create，unknown创建只核对，不new第二实例。",
+   "required": true
+  },
+  {
+   "id": "T011-04",
+   "order": "011",
+   "level": "L4",
+   "description": "分记config partial/input known-rejected/accepted/unknown和native run结果；UI异常说明准确，不把一切写连接中断。",
+   "required": true
+  },
+  {
+   "id": "T011-05",
+   "order": "011",
+   "level": "L4",
+   "description": "断线/应用崩溃重启持久关联只读reconcile，历史列表启动即读、点击才load/resume；旧owner/new generation不冒认。",
+   "required": true
+  },
+  {
+   "id": "T011-06",
+   "order": "011",
+   "level": "L4",
+   "description": "输出时Profile/model改意图不stop；应用完成UI模型标签更新同owner，输入每键不触发send错误闪烁。",
+   "required": true
+  },
+  {
+   "id": "T011-07",
+   "order": "011",
+   "level": "L4",
+   "description": "controlled三品牌provider/model切换与多会话隔离、同provider变化/cross-provider native restart/resume按原生支持；不修原生内部非阻塞问题。",
+   "required": true
+  },
+  {
+   "id": "T011-08",
+   "order": "011",
+   "level": "L4",
+   "description": "获单独许可后真实Pi/Codex/Claude各两轮、profile→model→profile、重启历史、官方登录与API并存隔离；缺许可/资产保测试BLOCKED，不把controlled算真实。",
+   "required": true
+  },
+  {
+   "id": "T011-09",
+   "order": "011",
+   "level": "L4",
+   "description": "按C2跨库mapping→possiblySubmitted→backend intent→native效果→领域result，真kill配置生效输入前等窗口；冻结附件内容避免MAC A/native B；同K可靠unknown换raw/key失效零重派。",
+   "required": true
+  },
+  {
+   "id": "T012-01",
+   "order": "012",
+   "level": "L4",
+   "description": "遍历old path/import/export/entrypoint/构造/registry/store/route生产引用，清zero-consumer兼容，保批准公开facade指向唯一实现。",
+   "required": true
+  },
+  {
+   "id": "T012-02",
+   "order": "012",
+   "level": "L4",
+   "description": "确认packages仅frontend/backend底座包组，旧desktop-platform/workbench/pacthold/server-plugin-api无运行实现；移动后的测试数量/ID发现映射可审计。",
+   "required": true
+  },
+  {
+   "id": "T012-03",
+   "order": "012",
+   "level": "L4",
+   "description": "npm ci从锁安装、typecheck、真实build/npm aggregate/Electron controlled、Python各包+全链；逐ID和cause比基线无新增未处置红，不删assert/skip假绿。",
+   "required": true
+  },
+  {
+   "id": "T012-04",
+   "order": "012",
+   "level": "L4",
+   "description": "干净venv隔离wheel导入与bare host、独立extension build、deb生成/解包/无凭据clean smoke；运行打包检查不签名/publish。",
+   "required": true
+  },
+  {
+   "id": "T012-05",
+   "order": "012",
+   "level": "L4",
+   "description": "所有acceptance必需场景正例反例证据，真实三品牌用户动作截图/日志关联脱敏；GUI/模型缺授权不算完成。",
+   "required": true
+  },
+  {
+   "id": "T012-06",
+   "order": "012",
+   "level": "L4",
+   "description": "数据fixture旧库/WAL/未知schema/两根/rollback/crash+秘密扫描+无追踪binary/userdata，真实数据若不获批注明未迁不能许诺已升级。",
+   "required": true
+  },
+  {
+   "id": "T012-07",
+   "order": "012",
+   "level": "L4",
+   "description": "更新architecture/baseline/naming/reference/migration/known-issues及云端draft（仅获对应token权限），目标与实现状态分开；不偷偷修改AGENTS。",
+   "required": true
+  },
+  {
+   "id": "T012-08",
+   "order": "012",
+   "level": "L4",
+   "description": "固定实施SHA、完整完成/缺口/兼容余项/操作步骤/安全回退点和main集成请求，用户批准前不合main不push。",
+   "required": true
+  },
+  {
+   "id": "T012-09",
+   "order": "012",
+   "level": "L4",
+   "description": "按shipping从解包产物验证required wheel/entrypoint/启用清单闭包，缺required不skip；默认和无Profilecontrolled两轮，禁止repo editable补依赖；发现清单逐suite重验。",
+   "required": true
+  },
+  {
+   "id": "T002-09",
+   "order": "002",
+   "level": "L4",
+   "description": "联合冻结E4/F4数据空间/宿主交互/秘密诊断、E5持久关联、A1 Agent公开合同，类型/codec/错误/缺席保证与A76–A95逐项映射，不引入第二核心。",
+   "required": true
+  },
+  {
+   "id": "T002-10",
+   "order": "002",
+   "level": "L4",
+   "description": "按plugin-architecture冻结领域路径与逻辑manifest schema、公开exports、旧发行/入口/数据identity映射；检查元数据不二次调度，列每个移动消费者。",
+   "required": true
+  },
+  {
+   "id": "T004-08",
+   "order": "004",
+   "level": "L4",
+   "description": "在同Environment实现持久关系声明/反查完整性/变更reservation与引用准入的统一门，区分Usage/持久引用/历史关系，测试并发和停用不擦引用。",
+   "required": true
+  },
+  {
+   "id": "T005-10",
+   "order": "005",
+   "level": "L4",
+   "description": "实现可注入DataAreaPort与文件/SQLite公开适配、稳定namespace/句柄/兼容schema及获批迁移准入；隔离fixture验证卸载保数据、旧版本拒写和CAS声明。",
+   "required": true
+  },
+  {
+   "id": "T005-11",
+   "order": "005",
+   "level": "L4",
+   "description": "实现持久引用跨Store与领域提交intent/证据/恢复、coverage未知和reservation崩溃保护；同根fence下不自动解锁或重做外部效果。",
+   "required": true
+  },
+  {
+   "id": "T005-12",
+   "order": "005",
+   "level": "L4",
+   "description": "扩现SecretStore为受管理SecretPort，OS适配不入内核；验证purpose/代次/renderer仅引用、locked拒绝、轮换和删除引用/在途责任，MAC墓碑保留。",
+   "required": true
+  },
+  {
+   "id": "T006-09",
+   "order": "006",
+   "level": "L4",
+   "description": "接可选backend/platform-services到同Environment；SecretStore兼容入口转同实现；按compat-retirement逐项拆清server/runtime兼容业务、切换旧入口到同Environment，仅保有证据的薄发行壳及封存迁移，保持原发行与入口ID。",
+   "required": true
+  },
+  {
+   "id": "T007-10",
+   "order": "007",
+   "level": "L4",
+   "description": "逐域将assets资源归顶层插件，业务/API留owner，品牌适配迁Harness内部品牌/资源模块；保全部现资产与支持矩阵，不按目录名整体搬错。",
+   "required": true
+  },
+  {
+   "id": "T007-11",
+   "order": "007",
+   "level": "L4",
+   "description": "资源消费者改用DataArea/公开绑定与E5关系声明；Provider归档不深扫Profile，关系coverage和变更竞态受控验证，资源无Profile仍可管理。",
+   "required": true
+  },
+  {
+   "id": "T007-12",
+   "order": "007",
+   "level": "L4",
+   "description": "独立外部资源包通过公共数据空间/关系/秘密可选能力安装运行，缺Agent/Chat/Profile及OS适配有明确降级，无私有宿主import。",
+   "required": true
+  },
+  {
+   "id": "T008-09",
+   "order": "008",
+   "level": "L4",
+   "description": "按逻辑manifest和发行映射迁frontend入口/connector职责，products与原运行manifest仍选择/调度权威；共享carrier一份，backend与frontend可按需启用。",
+   "required": true
+  },
+  {
+   "id": "T008-10",
+   "order": "008",
+   "level": "L4",
+   "description": "将通用commands registry/execute迁同runtime、键绑定与面板归Workbench、业务handler留插件；旧ID薄forward，原生slash不转平台命令。",
+   "required": true
+  },
+  {
+   "id": "T009-08",
+   "order": "009",
+   "level": "L4",
+   "description": "实现Workbench普通dialog与native-bridge文件/目录/clipboard公开能力，替换Chat全局picker/Profile window.confirm，验证取消/撤销/晚到不写及选择不授访问权。",
+   "required": true
+  },
+  {
+   "id": "T009-09",
+   "order": "009",
+   "level": "L4",
+   "description": "复用013日志/诊断公开scope注入与跨前后端关联、sink脱敏和late片段预算；诊断仅观察不probe/apply，日志不成为Receipt主账。",
+   "required": true
+  },
+  {
+   "id": "T010-10",
+   "order": "010",
+   "level": "L4",
+   "description": "落实A1 Session/Config/Submission/Run/Interaction owner公开只读/dispatch/Harness证据入口；同会话确认与操作单owner，前端代理无第二writer。",
+   "required": true
+  },
+  {
+   "id": "T010-11",
+   "order": "010",
+   "level": "L4",
+   "description": "资源选择控件与Profile facet走公开贡献及Agent操作，无私有binding/serializer；Profile字段覆盖、同预设重选、无Profile模型切换和无Chat资源管理都有证据。",
+   "required": true
+  },
+  {
+   "id": "T012-10",
+   "order": "012",
+   "level": "L4",
+   "description": "从干净发行产物验证领域插件多入口/旧ID与namespace兼容、backend-only/frontend-only及三外部样例，默认闭包不能用仓库源码或旧兼容引擎补。",
+   "required": true
+  },
+  {
+   "id": "T012-11",
+   "order": "012",
+   "level": "L4",
+   "description": "回归E3/E4/E5/A1和插件结构A66–A95全部必需场景，扫描第二关系/命令/配置权威及核心业务import；更新目录文档与剩余compat退出清单。",
+   "required": true
+  },
+  {
+   "id": "T008-11",
+   "order": "008",
+   "level": "L4",
+   "description": "增量冻结F5中性API/错误/Token/保证缺席矩阵及合同摘要，登记002清单增量；固定复用候选版本/许可/锁，不重写已完成基线。",
+   "required": true
+  },
+  {
+   "id": "T008-12",
+   "order": "008",
+   "level": "L4",
+   "description": "实现owner私有写入口与消费者只读状态容器、稳定不可变快照、批量通知、selector/equality及scope自动退订；runtime不存全局业务值。",
+   "required": true
+  },
+  {
+   "id": "T008-13",
+   "order": "008",
+   "level": "L4",
+   "description": "提供独立React状态选择绑定，真实构建两个非Agent消费者验证共享同源、字段变化更新及组件卸载，不让无关通知重写输入。",
+   "required": true
+  },
+  {
+   "id": "T008-14",
+   "order": "008",
+   "level": "L4",
+   "description": "实现复用E3观察的授权只读投影与普通read查询缓存，连接/权限/目标代次隔离、合并/分页/invalidate/有界清理及显式刷新重试策略。",
+   "required": true
+  },
+  {
+   "id": "T008-15",
+   "order": "008",
+   "level": "L4",
+   "description": "实现scope关联的异步等待任务、捕获目标和晚到结果屏障，区分取消等待与原操作取消，unknown保原关联不自动重发。",
+   "required": true
+  },
+  {
+   "id": "T008-16",
+   "order": "008",
+   "level": "L4",
+   "description": "实现非Chat依赖的公共编辑会话和设置绑定：base/edit revision、字段mask、dirty冲突、校验接口、保存结果关联及秘密字段隔离。",
+   "required": true
+  },
+  {
+   "id": "T008-17",
+   "order": "008",
+   "level": "L4",
+   "description": "实现可注入UI持久化合同与宿主fixture适配、命名空间/版本/条件写和布局恢复；无适配明示session-only，不保存业务正文或凭据。",
+   "required": true
+  },
+  {
+   "id": "T008-18",
+   "order": "008",
+   "level": "L4",
+   "description": "在Workbench实现统一通知/进度/选择确认接口及作用域句柄，消息更新不闪烁，取消不伪报停止；普通对话框复用既有浮层。",
+   "required": true
+  },
+  {
+   "id": "T008-19",
+   "order": "008",
+   "level": "L4",
+   "description": "完善命令上下文单源投影、翻译/图标回退及公共组件键盘焦点规范，when只管可用性不代替执行授权。",
+   "required": true
+  },
+  {
+   "id": "T008-20",
+   "order": "008",
+   "level": "L4",
+   "description": "接入全部F5 suite发现、真实包出口和两个独立fixture插件，完成A96–A103/A109定向正反例及依赖/生命周期回归。",
+   "required": true
+  },
+  {
+   "id": "T010-12",
+   "order": "010",
+   "level": "L4",
+   "description": "将Agent/Profile/model选择控件迁公共只读订阅及操作入口，移除控件镜像和重复缓存；字段覆盖语义及原配置owner保持不变。",
+   "required": true
+  },
+  {
+   "id": "T010-13",
+   "order": "010",
+   "level": "L4",
+   "description": "将Chat草稿及至少一个资源设置编辑页迁公共编辑工具，保领域owner、字段校验、未知保存及IME缓冲，测试dirty冲突/ABA与迟到保存。",
+   "required": true
+  },
+  {
+   "id": "T010-14",
+   "order": "010",
+   "level": "L4",
+   "description": "接入公共任务/通知/进度与查询机制，证明资源管理无Chat/Profile依赖；完成A104–A106并扫描第二写者和私有服务导入。",
+   "required": true
+  },
+  {
+   "id": "T012-12",
+   "order": "012",
+   "level": "L4",
+   "description": "从干净发行产物运行F5 API/React出口、独立插件和存储fixture，覆盖A107/A110；不以仓库源码或模块单例补发行/跨窗口保证。",
+   "required": true
+  },
+  {
+   "id": "T012-13",
+   "order": "012",
+   "level": "L4",
+   "description": "逐项回归A96–A111并执行A108/A111真实Electron输入/通知/焦点/UI恢复验收，记录资源缺席；更新公共接口、例子、依赖图及未验项。",
+   "required": true
+  }
+ ]
 }

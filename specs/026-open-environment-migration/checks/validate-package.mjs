@@ -42,10 +42,17 @@ function validate(files) {
  for(const o of reg.orders)for(const id of o.taskIds)if(!taskIds.has(id))errors.push('unknown-task:'+id);
  const ac=requireFile('acceptance.md');
  const caseReg=JSON.parse(requireFile('case-registry.json'));
- if(caseReg.cases.length!==95)errors.push('case-count');
+ if(caseReg.cases.length!==111)errors.push('case-count');
  const caseIds=new Set();
  for(const c of caseReg.cases){if(caseIds.has(c.id))errors.push('duplicate-case:'+c.id);caseIds.add(c.id);if(!ac.includes('| '+c.id+' |'))errors.push('missing-case:'+c.id);if(!orderIds.has(c.order))errors.push('case-order:'+c.id);}
+ const infra=requireFile('contracts/frontend-infrastructure.md');
+ requireFile('frontend-infrastructure-update.md');
+ for(const h of ['状态容器和选择订阅','后端投影和普通查询','异步任务和取消','编辑会话、表单和设置','UI保存和恢复','公共交互、上下文和显示','插入当前队列'])if(!infra.includes(h))errors.push('infra-section:'+h);
+ for(const id of ['008','010','012'])if(!requireFile('orders/'+id+'.md').includes('contracts/frontend-infrastructure.md'))errors.push('infra-assignment:'+id);
+ for(let n=96;n<=111;n++)if(!caseIds.has('A'+n))errors.push('infra-case:A'+n);
+ for(const id of ["T008-11","T008-12","T008-13","T008-14","T008-15","T008-16","T008-17","T008-18","T008-19","T008-20","T010-12","T010-13","T010-14","T012-12","T012-13"])if(!taskIds.has(id))errors.push('infra-task:'+id);
  const approved=requireFile('decisions.md');
+ if(!approved.includes('M14'))errors.push('infra-decision');
  for(const id of ['M04 / D4','M05 / D5','M06 / D6'])if(!approved.includes(id))errors.push('decision:'+id);
  if(!requireFile('architecture.md').includes('workbench/'))errors.push('workbench-target');
  const relationships=requireFile('contracts/relationships.md');
@@ -57,10 +64,10 @@ function validate(files) {
  if(!requireFile('architecture.md').includes('plugin-architecture.md')||requireFile('architecture.md').includes('现有领域路径保留，不顺手扁平化'))errors.push('plugin-layout-conflict');
  for(const id of ['002','004','005','006','007','008','009','010','012'])if(!requireFile('orders/'+id+'.md').includes('platform-services.md'))errors.push('supplement-order:'+id);
  for(const id of ['T002-09','T002-10','T004-08','T005-10','T005-11','T005-12','T006-09','T007-10','T007-11','T007-12','T008-09','T008-10','T009-08','T009-09','T010-10','T010-11','T012-10','T012-11'])if(!taskIds.has(id))errors.push('supplement-task:'+id);
- if(reg.tasks.length!==114)errors.push('task-count');
+ if(reg.tasks.length!==129)errors.push('task-count');
  for(let n=76;n<=95;n++)if(!caseIds.has('A'+n))errors.push('supplement-case:A'+n);
  const detail=requireFile('execution-detail.md');
- for(let n=1;n<=17;n++){const id='R'+String(n).padStart(2,'0');if(!requireFile('spec.md').includes('### Requirement: '+id+' ')||!detail.includes('| '+id+' '))errors.push('requirement-trace:'+id);}
+ for(let n=1;n<=18;n++){const id='R'+String(n).padStart(2,'0');if(!requireFile('spec.md').includes('### Requirement: '+id+' ')||!detail.includes('| '+id+' '))errors.push('requirement-trace:'+id);}
  for(const o of reg.orders)if(!requireFile(o.file).includes('execution-detail.md'))errors.push('execution-detail-link:'+o.id);
  if(!map.get('005')?.dependsOn.includes('004'))errors.push('persistence-reference-dependency');
  if(requireFile('orders/001.md').includes('001来源与002合同成立'))errors.push('baseline-future-gate');
@@ -77,7 +84,7 @@ const mutations=[
  ['cycle', f=>{const r=JSON.parse(f['task-registry.json']);r.orders[0].dependsOn=['012'];f['task-registry.json']=JSON.stringify(r);}],
  ['duplicate task', f=>{const r=JSON.parse(f['task-registry.json']);r.tasks.push(r.tasks[0]);f['task-registry.json']=JSON.stringify(r);}],
  ['missing case', f=>{f['acceptance.md']=f['acceptance.md'].replace('| A48 |','| BAD |');}],
- ['missing task projection', f=>{f['tasks.md']=f['tasks.md'].replace('- [ ] T001-01 ','- [ ] BAD ');}],
+ ['missing task projection', f=>{f['tasks.md']=f['tasks.md'].replace('- [ ] T001-01 ','- [ ] BAD ').replace('- [x] T001-01 ','- [x] BAD ');}],
  ['missing relationship contract', f=>{delete f['contracts/relationships.md'];}],
  ['missing relationship case', f=>{f['acceptance.md']=f['acceptance.md'].replace('| A68 |','| BAD |');}],
  ['missing implementation assignment', f=>{f['orders/004.md']=f['orders/004.md'].replace('relationships.md','removed.md');}],
@@ -94,6 +101,13 @@ const mutations=[
  ['wrong availability owner', f=>{f['migration-map.md']+='\nfoundation内HarnessAvailability | plugins/agent/contracts';}],
  ['case weakened', f=>{const r=JSON.parse(f['case-registry.json']);r.cases[0].required=false;f['case-registry.json']=JSON.stringify(r);}],
  ['case level drift', f=>{const r=JSON.parse(f['case-registry.json']);r.cases[0].level='P';f['case-registry.json']=JSON.stringify(r);}],
+ ['missing frontend infrastructure', f=>{delete f['contracts/frontend-infrastructure.md'];}],
+ ['missing infrastructure handoff', f=>{delete f['frontend-infrastructure-update.md'];}],
+ ['missing infrastructure section', f=>{f['contracts/frontend-infrastructure.md']=f['contracts/frontend-infrastructure.md'].replace('状态容器和选择订阅','BAD');}],
+ ['missing infrastructure assignment', f=>{f['orders/008.md']=f['orders/008.md'].replaceAll('contracts/frontend-infrastructure.md','BAD');}],
+ ['missing infrastructure task', f=>{const r=JSON.parse(f['task-registry.json']);r.tasks=r.tasks.filter(t=>t.id!=='T008-12');f['task-registry.json']=JSON.stringify(r);}],
+ ['missing infrastructure case', f=>{f['acceptance.md']=f['acceptance.md'].replace('| A96 |','| BAD |');}],
+ ['missing infrastructure ruling', f=>{f['decisions.md']=f['decisions.md'].replaceAll('M14','BAD');}],
  ['queue reordered', f=>{const r=JSON.parse(f['queue.json']);r.orders.reverse();f['queue.json']=JSON.stringify(r);}]
 ];
 for(const [name,mutate] of mutations){const copy={...snapshot};mutate(copy);assert.ok(validate(copy).length,'mutation not detected:'+name);}

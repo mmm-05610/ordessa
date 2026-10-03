@@ -114,6 +114,17 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 
 - [ ] T008-10 将通用commands registry/execute迁同runtime、键绑定与面板归Workbench、业务handler留插件；旧ID薄forward，原生slash不转平台命令。
 
+- [ ] T008-11 增量冻结F5中性API/错误/Token/保证缺席矩阵及合同摘要，登记002清单增量；固定复用候选版本/许可/锁，不重写已完成基线。
+- [ ] T008-12 实现owner私有写入口与消费者只读状态容器、稳定不可变快照、批量通知、selector/equality及scope自动退订；runtime不存全局业务值。
+- [ ] T008-13 提供独立React状态选择绑定，真实构建两个非Agent消费者验证共享同源、字段变化更新及组件卸载，不让无关通知重写输入。
+- [ ] T008-14 实现复用E3观察的授权只读投影与普通read查询缓存，连接/权限/目标代次隔离、合并/分页/invalidate/有界清理及显式刷新重试策略。
+- [ ] T008-15 实现scope关联的异步等待任务、捕获目标和晚到结果屏障，区分取消等待与原操作取消，unknown保原关联不自动重发。
+- [ ] T008-16 实现非Chat依赖的公共编辑会话和设置绑定：base/edit revision、字段mask、dirty冲突、校验接口、保存结果关联及秘密字段隔离。
+- [ ] T008-17 实现可注入UI持久化合同与宿主fixture适配、命名空间/版本/条件写和布局恢复；无适配明示session-only，不保存业务正文或凭据。
+- [ ] T008-18 在Workbench实现统一通知/进度/选择确认接口及作用域句柄，消息更新不闪烁，取消不伪报停止；普通对话框复用既有浮层。
+- [ ] T008-19 完善命令上下文单源投影、翻译/图标回退及公共组件键盘焦点规范，when只管可用性不代替执行授权。
+- [ ] T008-20 接入全部F5 suite发现、真实包出口和两个独立fixture插件，完成A96–A103/A109定向正反例及依赖/生命周期回归。
+
 ## 009 实现通用交互面与受控桥接
 
 - [ ] T009-01 interaction-surfaces按通用target/schema/ref绑定，unknown kind/command原文降级；不要求Agent/Chat目标。A60必须穿实际connector/SDK，不能直feed新surface绕过旧过滤。
@@ -144,6 +155,10 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 
 - [ ] T010-11 资源选择控件与Profile facet走公开贡献及Agent操作，无私有binding/serializer；Profile字段覆盖、同预设重选、无Profile模型切换和无Chat资源管理都有证据。
 
+- [ ] T010-12 将Agent/Profile/model选择控件迁公共只读订阅及操作入口，移除控件镜像和重复缓存；字段覆盖语义及原配置owner保持不变。
+- [ ] T010-13 将Chat草稿及至少一个资源设置编辑页迁公共编辑工具，保领域owner、字段校验、未知保存及IME缓冲，测试dirty冲突/ABA与迟到保存。
+- [ ] T010-14 接入公共任务/通知/进度与查询机制，证明资源管理无Chat/Profile依赖；完成A104–A106并扫描第二写者和私有服务导入。
+
 ## 011 贯通发送、恢复与真实产品链
 
 - [ ] T011-01 实现capture事务固定draft/附件/配置opIds/base/target/binding/schema/保证等级；UI选择/晚编辑不得改捕获快照。
@@ -171,3 +186,5 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 - [ ] T012-10 从干净发行产物验证领域插件多入口/旧ID与namespace兼容、backend-only/frontend-only及三外部样例，默认闭包不能用仓库源码或旧兼容引擎补。
 
 - [ ] T012-11 回归E3/E4/E5/A1和插件结构A66–A95全部必需场景，扫描第二关系/命令/配置权威及核心业务import；更新目录文档与剩余compat退出清单。
+- [ ] T012-12 从干净发行产物运行F5 API/React出口、独立插件和存储fixture，覆盖A107/A110；不以仓库源码或模块单例补发行/跨窗口保证。
+- [ ] T012-13 逐项回归A96–A111并执行A108/A111真实Electron输入/通知/焦点/UI恢复验收，记录资源缺席；更新公共接口、例子、依赖图及未验项。

@@ -95,3 +95,9 @@
 **WHEN** 独立安装仅后端或仅前端的资源插件，**THEN** 按公开能力和缺席规则工作，不硬依赖Chat/Profile；逻辑清单不二次调度；品牌适配集中Harness，既有发行身份保持。对应plugin-architecture与A89–A95。
 
 R01–R17的合同、实施阶段和验收追踪见execution-detail.md；该表不缩减case-registry中的必需场景。
+
+### Requirement: R18 前端插件开发基础设施
+#### Scenario: 独立插件复用公共机制
+**WHEN** 两个无Agent/Chat/Profile依赖的插件使用F5状态、查询、编辑、任务和交互接口，**THEN** 共享所需只读投影但不共享写权，关闭视图释放本地等待/订阅而不销毁已接纳工作；产物独立可加载。
+#### Scenario: 基础设施不能变成第二业务核心
+**WHEN** 消费者尝试写快照、跨权限复用缓存、以取消等待证明停止或旧结果覆盖新编辑，**THEN** 对应门拒绝，业务状态仍仅原owner维护，unknown不重发。A96–A111必需，UI证据缺席不能报fullDone。

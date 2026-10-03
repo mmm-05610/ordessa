@@ -1,575 +1,671 @@
 {
-  "version": 1,
-  "cases": [
-    {
-      "id": "A01",
-      "order": "001",
-      "level": "S",
-      "required": true
-    },
-    {
-      "id": "A02",
-      "order": "001",
-      "level": "S",
-      "required": true
-    },
-    {
-      "id": "A03",
-      "order": "002",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A04",
-      "order": "002",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A05",
-      "order": "003",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A06",
-      "order": "003",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A07",
-      "order": "003",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A08",
-      "order": "004",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A09",
-      "order": "004",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A10",
-      "order": "004",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A11",
-      "order": "004",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A12",
-      "order": "004",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A13",
-      "order": "005",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A14",
-      "order": "005",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A15",
-      "order": "005",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A16",
-      "order": "005",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A17",
-      "order": "005",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A18",
-      "order": "006",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A19",
-      "order": "006",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A20",
-      "order": "006",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A21",
-      "order": "007",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A22",
-      "order": "007",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A23",
-      "order": "007",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A24",
-      "order": "007",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A25",
-      "order": "008",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A26",
-      "order": "008",
-      "level": "U",
-      "required": true
-    },
-    {
-      "id": "A27",
-      "order": "009",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A28",
-      "order": "009",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A29",
-      "order": "009",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A30",
-      "order": "009",
-      "level": "U",
-      "required": true
-    },
-    {
-      "id": "A31",
-      "order": "009",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A32",
-      "order": "010",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A33",
-      "order": "010",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A34",
-      "order": "010",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A35",
-      "order": "010",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A36",
-      "order": "010",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A37",
-      "order": "010",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A38",
-      "order": "011",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A39",
-      "order": "011",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A40",
-      "order": "011",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A41",
-      "order": "011",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A42",
-      "order": "011",
-      "level": "U",
-      "required": true
-    },
-    {
-      "id": "A43",
-      "order": "011",
-      "level": "P",
-      "required": true
-    },
-    {
-      "id": "A44",
-      "order": "011",
-      "level": "P",
-      "required": true
-    },
-    {
-      "id": "A45",
-      "order": "012",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A46",
-      "order": "012",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A47",
-      "order": "012",
-      "level": "S/I",
-      "required": true
-    },
-    {
-      "id": "A48",
-      "order": "012",
-      "level": "S",
-      "required": true
-    },
-    {
-      "id": "A49",
-      "order": "011",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A50",
-      "order": "005",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A51",
-      "order": "011",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A52",
-      "order": "011",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A53",
-      "order": "001",
-      "level": "S/I",
-      "required": true
-    },
-    {
-      "id": "A54",
-      "order": "005",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A55",
-      "order": "010",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A56",
-      "order": "007",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A57",
-      "order": "008",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A58",
-      "order": "007",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A59",
-      "order": "010",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A60",
-      "order": "009",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A61",
-      "order": "009",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A62",
-      "order": "005",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A63",
-      "order": "012",
-      "level": "S",
-      "required": true
-    },
-    {
-      "id": "A64",
-      "order": "012",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A65",
-      "order": "012",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A66",
-      "order": "003",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A67",
-      "order": "002",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A68",
-      "order": "004",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A69",
-      "order": "004",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A70",
-      "order": "004",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A71",
-      "order": "009",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A72",
-      "order": "008",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A73",
-      "order": "004",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A74",
-      "order": "010",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A75",
-      "order": "012",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A76",
-      "order": "005",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A77",
-      "order": "005",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A78",
-      "order": "005",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A79",
-      "order": "004",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A80",
-      "order": "004",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A81",
-      "order": "005",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A82",
-      "order": "007",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A83",
-      "order": "009",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A84",
-      "order": "009",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A85",
-      "order": "005",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A86",
-      "order": "005",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A87",
-      "order": "005",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A88",
-      "order": "009",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A89",
-      "order": "008",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A90",
-      "order": "012",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A91",
-      "order": "007",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A92",
-      "order": "002",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A93",
-      "order": "010",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A94",
-      "order": "008",
-      "level": "I",
-      "required": true
-    },
-    {
-      "id": "A95",
-      "order": "012",
-      "level": "I",
-      "required": true
-    }
-  ]
+ "version": 1,
+ "cases": [
+  {
+   "id": "A01",
+   "order": "001",
+   "level": "S",
+   "required": true
+  },
+  {
+   "id": "A02",
+   "order": "001",
+   "level": "S",
+   "required": true
+  },
+  {
+   "id": "A03",
+   "order": "002",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A04",
+   "order": "002",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A05",
+   "order": "003",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A06",
+   "order": "003",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A07",
+   "order": "003",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A08",
+   "order": "004",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A09",
+   "order": "004",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A10",
+   "order": "004",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A11",
+   "order": "004",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A12",
+   "order": "004",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A13",
+   "order": "005",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A14",
+   "order": "005",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A15",
+   "order": "005",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A16",
+   "order": "005",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A17",
+   "order": "005",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A18",
+   "order": "006",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A19",
+   "order": "006",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A20",
+   "order": "006",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A21",
+   "order": "007",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A22",
+   "order": "007",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A23",
+   "order": "007",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A24",
+   "order": "007",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A25",
+   "order": "008",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A26",
+   "order": "008",
+   "level": "U",
+   "required": true
+  },
+  {
+   "id": "A27",
+   "order": "009",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A28",
+   "order": "009",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A29",
+   "order": "009",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A30",
+   "order": "009",
+   "level": "U",
+   "required": true
+  },
+  {
+   "id": "A31",
+   "order": "009",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A32",
+   "order": "010",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A33",
+   "order": "010",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A34",
+   "order": "010",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A35",
+   "order": "010",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A36",
+   "order": "010",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A37",
+   "order": "010",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A38",
+   "order": "011",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A39",
+   "order": "011",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A40",
+   "order": "011",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A41",
+   "order": "011",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A42",
+   "order": "011",
+   "level": "U",
+   "required": true
+  },
+  {
+   "id": "A43",
+   "order": "011",
+   "level": "P",
+   "required": true
+  },
+  {
+   "id": "A44",
+   "order": "011",
+   "level": "P",
+   "required": true
+  },
+  {
+   "id": "A45",
+   "order": "012",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A46",
+   "order": "012",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A47",
+   "order": "012",
+   "level": "S/I",
+   "required": true
+  },
+  {
+   "id": "A48",
+   "order": "012",
+   "level": "S",
+   "required": true
+  },
+  {
+   "id": "A49",
+   "order": "011",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A50",
+   "order": "005",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A51",
+   "order": "011",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A52",
+   "order": "011",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A53",
+   "order": "001",
+   "level": "S/I",
+   "required": true
+  },
+  {
+   "id": "A54",
+   "order": "005",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A55",
+   "order": "010",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A56",
+   "order": "007",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A57",
+   "order": "008",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A58",
+   "order": "007",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A59",
+   "order": "010",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A60",
+   "order": "009",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A61",
+   "order": "009",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A62",
+   "order": "005",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A63",
+   "order": "012",
+   "level": "S",
+   "required": true
+  },
+  {
+   "id": "A64",
+   "order": "012",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A65",
+   "order": "012",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A66",
+   "order": "003",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A67",
+   "order": "002",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A68",
+   "order": "004",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A69",
+   "order": "004",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A70",
+   "order": "004",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A71",
+   "order": "009",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A72",
+   "order": "008",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A73",
+   "order": "004",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A74",
+   "order": "010",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A75",
+   "order": "012",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A76",
+   "order": "005",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A77",
+   "order": "005",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A78",
+   "order": "005",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A79",
+   "order": "004",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A80",
+   "order": "004",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A81",
+   "order": "005",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A82",
+   "order": "007",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A83",
+   "order": "009",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A84",
+   "order": "009",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A85",
+   "order": "005",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A86",
+   "order": "005",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A87",
+   "order": "005",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A88",
+   "order": "009",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A89",
+   "order": "008",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A90",
+   "order": "012",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A91",
+   "order": "007",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A92",
+   "order": "002",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A93",
+   "order": "010",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A94",
+   "order": "008",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A95",
+   "order": "012",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A96",
+   "order": "008",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A97",
+   "order": "008",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A98",
+   "order": "008",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A99",
+   "order": "008",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A100",
+   "order": "008",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A101",
+   "order": "008",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A102",
+   "order": "008",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A103",
+   "order": "008",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A104",
+   "order": "010",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A105",
+   "order": "010",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A106",
+   "order": "010",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A107",
+   "order": "012",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A108",
+   "order": "012",
+   "level": "U",
+   "required": true
+  },
+  {
+   "id": "A109",
+   "order": "008",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A110",
+   "order": "012",
+   "level": "I",
+   "required": true
+  },
+  {
+   "id": "A111",
+   "order": "012",
+   "level": "U",
+   "required": true
+  }
+ ]
 }

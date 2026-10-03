@@ -8,6 +8,8 @@ R5已完成主会话落地前回审与修补，见reviews/pre-implementation-rev
 
 R6兼容清理见compat-retirement.md及evidence/compat-inventory.json：取消永久legacy-compat插件，不以整体搬目录替代业务清空；002冻结逐符号归属，006/007/010拆解，012在A95内验证C95-1–7。静态盘点不是已实施或运行验收。
 
+R7（M14，2026-10-03）追加前端插件开发基础设施：contracts/frontend-infrastructure.md及frontend-infrastructure-update.md。当前完整范围12工单/129任务/111验收；旧R2–R6计数和“未实施”是历史设计记录，实际实施进度以实施树status/evidence为准。
+
 ## 分层阅读
 
 | 层级 | 内容 | 文件 |
@@ -21,7 +23,7 @@ R6兼容清理见compat-retirement.md及evidence/compat-inventory.json：取消�
 
 先读 spec 与 architecture，再读 migration-map 和 contracts/recovery 的强制接缝，再执行 orders。tasks 不能绕过工单依赖。任务注册表是编号/依赖权威，tasks.md 是可读投影；结果权威是 status.md 和 evidence，不把复选框当证据。
 
-规模：7个阶段、12张工单、114个任务、95组验收。审查结果见reviews/report.md：19项第一轮问题均修订后由原审查者复核设计闭合；非生产符合性证明。R3/R4新增合同尚未独立复核。结构检查命令：node specs/026-open-environment-migration/checks/validate-package.mjs。
+规模：7个阶段、12张工单、129个任务、111组验收。审查结果见reviews/report.md：19项第一轮问题均修订后由原审查者复核设计闭合；非生产符合性证明。R3/R4新增合同尚未独立复核。结构检查命令：node specs/026-open-environment-migration/checks/validate-package.mjs。
 
 R3补充 contracts/relationships.md：同一Environment内的能力关联、领域单写者、订阅连续性和作用域。工单分配表是原单既有阶段的追加交付，A66–A75必须验收；不引入业务语义或第二关系核心。
 

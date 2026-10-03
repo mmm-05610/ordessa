@@ -60,3 +60,4 @@ E3/F3（contracts/relationships.md）强制补充受管理能力关联：注册�
 仅移动源码时保持package name/exports/entrypoint/extension id/数据库文件标识。旧specifier只可在明确登记兼容入口上转向唯一实现，不复制Token，不反向re-export领域。物理旧底座目录最终删除；兼容契约如确需保留可在新包exports体现，每项有消费者数和退出条件。
 
 R4替换先前保留plugins/assets路径的约束：按plugin-architecture.md领域归属迁移源码，保持发行/import/extension ID及数据身份；不是根据目录美观整体搬业务。connector与compat必须逐职责拆分，不可换目录后保留旧第二主写。
+新增F5合同见contracts/frontend-infrastructure.md。extension-api发布中性工具合同，extension-runtime提供状态工厂/任务等待/UI存储协调，Workbench呈现通知进度和上下文，ui-components提供独立React选择订阅及编辑工具，server-bridge维护已授权只读投影/普通查询。领域owner持状态实例及业务值，不是runtime中央业务Store；内部state/tasks/storage/queries/editing目录不自动成为新发行包。依赖方向和原单写者原则不变。

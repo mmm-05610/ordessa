@@ -128,3 +128,24 @@ Deb构建允许在实施授权内生成本地未签名产物，不安装/publish
 每个Axx的文件至少含：sourceCompositeSHA、contractVersion、caseId、mode、command/cwd/toolchain、exit、assertions、counterexample结果、fixture/capture标识、cleanup结果与缺口。GUI附当前产物SHA和操作截图；P附脱敏native回执/消息相关性、明确测试成本及授权范围。证据不可携token/输入秘密/MAC key。
 
 目录evidence/先只放设计校验和审查；实施日志后续新增。没有真实用户数据升级许可时交付“代码和fixture迁移完成，用户数据未迁移”；不能宣称安装升级已通过。完整DONE须A01–A95必需层次证据齐，真实目标不支持保证可明确拒绝并满足A38/A40，不假作已有保证。E3/F3分配到各工单的验收纳入该单codeReady所需S/I证据，不延至012才首次实现。
+
+## R7 / M14 前端基础设施（全部必需）
+
+| ID | 工单 | 范围 | 成功条件 | 必须抓住的反例 | 层次 | 缺席处理 |
+| --- | --- | --- | --- | --- | --- | --- |
+| A96 | 008 | 状态写权与快照 | owner更新后两个消费者读同快照，未变化引用稳定 | 消费者改嵌套值或用setState写领域事实被拒 | I | 无真实状态容器FAIL |
+| A97 | 008 | 字段选择与批量通知 | 无关字段零通知，批量只见完整快照，重入有界 | 全局revision使输入每键重置或中间半状态泄露 | I | 无真实消费者/通知证据FAIL |
+| A98 | 008 | 订阅和React生命周期 | 组件卸载释放订阅，旧dispose不撤新owner | 旧scope回调修改新目标或每次render重复订阅 | I | 无React构建/挂载证据FAIL |
+| A99 | 008 | 授权投影连续性 | 同E3观察，gap重同步，撤权后停止访问投递 | 缺事件仍标同步或缓存跨授权/连接共享 | I | 无连续性能力标resync-required；保证验收不通过 |
+| A100 | 008 | 普通查询缓存 | 同key共享read、分页失效有界，代次隔离 | 非幂等效果冒query自动重试或撤权仍读缓存 | I | 查询adapter缺席明确unavailable并FAIL |
+| A101 | 008 | 异步等待与晚到结果 | A晚到不覆盖B，关页只释放等待不销毁已接纳工作 | cancel直接当后端已停止或unknown自动重发 | I | 取消能力缺席仅cancel-wait；不能宣称停止 |
+| A102 | 008 | 通用编辑及设置 | 独立非Chat编辑消费mask/CAS，dirty更新保本地 | 迟到保存清新编辑、业务校验移核心或秘密入通用store | I | 编辑owner/条件写缺席拒save，保草稿 |
+| A103 | 008 | UI存储与恢复 | fixture跨重启恢复安全UI项，namespace/版本隔离 | 未知schema覆盖、关闭scope删偏好或存API Key | I | 无适配session-only；持久验收不通过 |
+| A104 | 010 | 配置控件公共消费 | 多个控件显示同owner，Profile/model覆盖按原语义 | 控件独立current/pending写权或Profile隐式必需 | I | 域owner缺席明确不可用，不走私有旧链 |
+| A105 | 010 | 草稿和设置编辑接线 | 真实消费者dirty冲突/ABA/迟到结果保新稿 | 两份DraftOwner或保存成功无条件清表单 | I | 消费者缺席FAIL，不用工具单测替代 |
+| A106 | 010 | 公共任务交互接线 | 资源页无Chat/Profile依赖，任务错误更新同通知 | 每次输入新红提示、取消伪报停止、资源页导私有serializer | I | 接口/独立构建缺席FAIL |
+| A107 | 012 | 发行闭包 | 解包产物独立插件读取F5及React入口，fixture恢复安全UI项 | editable源码补包、React污染中性入口或旧双store兜底 | I | 缺required依赖FAIL，不skip |
+| A108 | 012 | 输入和公共交互 | 实际窗口中文/英文输入无无关重写，菜单Esc和进度焦点正确 | 模型切换后输入闪烁、尾Enter误发或重复通知 | U | 无GUI/实际IME证据待验，不报fullDone |
+| A109 | 008 | 上下文及显示机制 | 按钮/菜单/快捷键同源，翻译/图标缺失明确回退 | when授予权限或持另一份业务状态，缺label键盘不可达 | I | 上下文/回退/组件证据缺席FAIL |
+| A110 | 012 | 多窗口存储隔离 | 受控双窗口共享项条件写或唯一owner，本地项独立 | 模块单例冒跨进程共享或旧窗口结果覆盖新目标 | I | 无协调拒共享写保证；必需验收未完成 |
+| A111 | 012 | 重启后的界面恢复 | 实际Electron重启恢复布局/展开与安全偏好，插件缺席可降级 | 恢复自动启停业务、触发模型或失效引用致空白崩溃 | U | 无GUI/存储适配待验，不报fullDone |

@@ -1,5 +1,15 @@
 # 迁移状态
 
+## R7/M14 修订接收回执（2026-10-03）
+
+主树方案修订（用户批准 M14）已在 007 安全边界内容级合并：新文件×2（F5 合同+更新说明）、
+orders/008/010/012 追加 15 任务（含 revisions 行与 F5 合同 Scope 引用）、tasks/task-registry/
+case-registry/acceptance 增量（12单/129任务/111验收，旧 ID/勾选/证据全保留）、decisions+M14、
+spec+R18、README/execution-detail/handoff/architecture 计数与指针、校验器合并 R7 检查与 7 新破坏
+样本（本树适配：T001-01 已勾选态下注入仍可检出）。结构检查 PASS（30 样本）。
+回执 evidence/frontend-infrastructure-r7-receipt.json（源文件摘要+合并清单+未验项）。
+002 冻结不重开；008 首切片按 T008-11 增量冻结 F5。接收时 007 切片 P 仍在后台运行，无同文件冲突。
+
 ## 2026-10-03 006 完成（codeReady）——最终检查点见 git log
 
 切片 A–J 全部交付验收：T006-01 两半（实例注入+LegacyCoreBinding 退役，全局 core_db 宿主零触碰）、

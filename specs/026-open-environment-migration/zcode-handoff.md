@@ -1,5 +1,10 @@
 # zcode启动与子代理配置
 
+## R7正在实施时的更新
+
+读frontend-infrastructure-update.md及contracts/frontend-infrastructure.md；从主树按差异合并R7，不覆盖本树status/evidence/完成标记，不reset当前切片。008/010/012新增15任务及A96–A111；008增量冻结F5，不重开002。原12单依赖和权限不变。
+
+
 R6开工前强制读compat-retirement.md：不创建永久legacy-compat插件；002逐符号台账，006/007/010拆业务，012核A95的C95-1–7。R6已融入当前执行包，开工核对本分支最新方案检查点，不能仍按8d4bc64旧目标树实施。原源快照历史不改，当前方案不是新产品测试证据。
 
 2026-10-03。用户明确允许新建worktree/026-open-environment-migration：产品已提交源码加核对后的源码/测试/清单修复及024–026方案，排除截图/凭据/运行数据/生成物；提交仅新分支，不改源树/main。基线准备不等001测试验收完成。
