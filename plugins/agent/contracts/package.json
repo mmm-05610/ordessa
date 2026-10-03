@@ -4,5 +4,8 @@
   "private": true,
   "ordessa": {
     "id": "ordessa.agent-contracts"
+  },
+  "scripts": {
+    "test": "vitest run"
   }
 }
