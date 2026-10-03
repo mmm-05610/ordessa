@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "radix-ui": "^1.6.7",
+    "@ordessa/agent-contracts": "*",
     "@ordessa/extension-api": "*",
     "@ordessa/plugin-profile-api": "*",
     "@ordessa/ui": "*",

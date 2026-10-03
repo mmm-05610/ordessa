@@ -2,6 +2,10 @@
   "name": "@ordessa/agent-contracts",
   "version": "0.2.0",
   "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/contract.ts"
+  },
   "ordessa": {
     "id": "ordessa.agent-contracts"
   },

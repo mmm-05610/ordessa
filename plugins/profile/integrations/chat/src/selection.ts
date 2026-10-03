@@ -20,7 +20,21 @@
  *   send is NOT silently allowed through with the old configuration.
  * - Ordinary bound-session submissions apply the effective configuration
  *   without reselecting.
+ *
+ * T010-02 ownership: this store holds NO business write state. Every pick,
+ * registration fact and confirmation is an owner operation dispatched through
+ * the Agent owner port (A1 single-writer rule); reads are frozen projections
+ * of owner answers. The only local state left is F5-sanctioned bookkeeping:
+ * counters, the operation-key sequence, the seen-keys index and the
+ * listener/revision pair. The default owner is the in-process local owner
+ * (F5 §1 UI-local state, served through the SAME owner face); a wire-backed
+ * owner swaps in when the Agent plugin is composed (T010-12).
  */
+import {
+  createLocalAgentOwnerPort,
+  type ConfigSnapshotView,
+  type LocalAgentOwnerPort,
+} from '@ordessa/agent-contracts'
 import type {
   AppliedReceiptDto,
   ProfileCatalogGroup,
@@ -49,14 +63,21 @@ interface StoreEntry {
 }
 
 export class ProfileSelectionStore {
-  private readonly entries = new Map<string, StoreEntry>()
-  private readonly lastConfirmed = new Map<string, ProfileSelection>()
+  /** The single writer of selection state (A1). Consumers dispatch through
+   * this store's methods; the port holds the state. */
+  readonly owner: LocalAgentOwnerPort
+  private readonly seenKeys = new Set<string>() // bookkeeping index, not state
   private sequence = 0
   private revision = 0
   private readonly listeners = new Set<() => void>()
   getSnapshot = () => this.revision
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener) } }
   private publish() { this.revision += 1; for (const listener of this.listeners) listener() }
+
+  constructor(options: { owner?: LocalAgentOwnerPort } = {}) {
+    // one owner per store by default: the store IS the host of its keys
+    this.owner = options.owner ?? createLocalAgentOwnerPort({ ownerRegistry: new Set() })
+  }
 
   readonly counters: SelectionCounters = {
     selections: 0,
@@ -65,68 +86,81 @@ export class ProfileSelectionStore {
     applyFailed: 0,
   }
 
-  /** Record the user's pick for one draft/session key (PA01). Bookkeeping
-   * only: no port call, no run interruption. The pick starts UNREGISTERED;
-   * the glue registers it (at click for bound sessions, at submit otherwise)
-   * and acknowledges with {@link markRegistered}. */
+  private fieldsOf(key: string): ConfigSnapshotView {
+    this.seenKeys.add(key)
+    return this.owner.readConfigSync(key)
+  }
+
+  /** Record the user's pick for one draft/session key (PA01). The pick is an
+   * OWNER operation (a same-pick re-select is a NEW operation, T010-04); no
+   * port call, no run interruption. The pick starts UNREGISTERED; the glue
+   * registers it (at click for bound sessions, at submit otherwise) and
+   * acknowledges with {@link markRegistered}. */
   select(key: string, selection: ProfileSelection): void {
     this.counters.selections += 1
-    this.entries.set(key, { selection, registered: false })
+    this.owner.submitConfigOperationSync(key,
+      { selection, registered: false }, { unset: ['registrationError'] })
     this.publish()
   }
 
   /** The click-time registration reached the backend: this exact pick is now
    * the session's pending intent (its action_seq is the click's). */
   markRegistered(key: string, selection: ProfileSelection): void {
-    const entry = this.entries.get(key)
-    if (!entry || entry.selection !== selection) return // a newer pick owns the key
-    this.entries.set(key, { selection, registered: true })
+    const snapshot = this.fieldsOf(key)
+    if (snapshot.fields.selection === undefined || snapshot.resolved.selection !== selection) return // a newer pick owns the key
+    this.owner.submitConfigOperationSync(key, { registered: true }, { unset: ['registrationError'] })
     this.publish()
   }
 
   /** The click-time registration failed: the pick is kept UNREGISTERED and
    * the reason is surfaced in the picker (never a silent drop). */
   markRegistrationFailed(key: string, selection: ProfileSelection, reason: string): void {
-    const entry = this.entries.get(key)
-    if (!entry || entry.selection !== selection) return
-    this.entries.set(key, { selection, registered: false, registrationError: reason })
+    const snapshot = this.fieldsOf(key)
+    if (snapshot.fields.selection === undefined || snapshot.resolved.selection !== selection) return
+    this.owner.submitConfigOperationSync(key, { registered: false, registrationError: reason })
     this.publish()
   }
 
   /** Whether the store's current pick for this key is the given one AND is
    * backend-registered. */
   isRegistered(key: string, selection: ProfileSelection): boolean {
-    const entry = this.entries.get(key)
-    return !!entry && entry.selection === selection && entry.registered
+    const snapshot = this.fieldsOf(key)
+    return snapshot.fields.registered === 'known' && snapshot.resolved.registered === true
+      && snapshot.resolved.selection === selection
   }
 
   /** The registered pending pick (the only one `applyOnSubmit` may consume
    * without an explicit caller vouch), or null. */
   registeredPending(key: string): ProfileSelection | null {
-    const entry = this.entries.get(key)
-    return entry && entry.registered ? entry.selection : null
+    const snapshot = this.fieldsOf(key)
+    return snapshot.resolved.registered === true ? (snapshot.resolved.selection ?? null) : null
   }
 
   /** The last registration failure reason for the current pick, if any. */
   registrationError(key: string): string | null {
-    return this.entries.get(key)?.registrationError ?? null
+    return (this.fieldsOf(key).resolved.registrationError as string | undefined) ?? null
   }
 
   /** What the button shows right now: the user's selection, falling back to
    * the last confirmed profile of this session. */
   currentLabel(key: string, fallbackName?: string): string | null {
-    return this.entries.get(key)?.selection.displayName ?? this.lastConfirmed.get(key)?.displayName ?? fallbackName ?? null
+    const snapshot = this.fieldsOf(key)
+    return (snapshot.resolved.selection as ProfileSelection | undefined)?.displayName
+      ?? (snapshot.resolved.lastConfirmed as ProfileSelection | undefined)?.displayName
+      ?? fallbackName ?? null
   }
 
   peek(key: string): ProfileSelection | null {
-    return this.entries.get(key)?.selection ?? null
+    return (this.fieldsOf(key).resolved.selection as ProfileSelection | undefined) ?? null
   }
 
   /** Clear only what the UI subscription owns (scope teardown); stored
    * selections for live sessions are not business data and nothing here
    * aborts a run. */
   forget(key: string): void {
-    this.entries.delete(key)
+    this.fieldsOf(key)
+    this.owner.submitConfigOperationSync(key, {},
+      { unset: ['selection', 'registered', 'registrationError'] })
     this.publish()
   }
 
@@ -135,8 +169,12 @@ export class ProfileSelectionStore {
    * Pending user picks and bound-session confirmations remain untouched. */
   clearDraftConfirmations(): void {
     let changed = false
-    for (const key of this.lastConfirmed.keys()) {
-      if (key.startsWith('draft:')) { this.lastConfirmed.delete(key); changed = true }
+    for (const key of this.seenKeys) {
+      if (!key.startsWith('draft:')) continue
+      const snapshot = this.owner.readConfigSync(key)
+      if (snapshot.fields.lastConfirmed === undefined) continue
+      this.owner.submitConfigOperationSync(key, {}, { unset: ['lastConfirmed'] })
+      changed = true
     }
     if (changed) this.publish()
   }
@@ -156,17 +194,20 @@ export class ProfileSelectionStore {
   ): Promise<ApplyOutcome> {
     // A captured binding is not a new user pick. In particular, a pick made
     // while native preparation/application waits belongs to the next turn.
-    const entry = this.entries.get(key)
-    const selection = continuation ?? (entry && entry.registered ? entry.selection : null)
+    const snapshot = this.fieldsOf(key)
+    const entrySelection = snapshot.fields.selection === undefined
+      ? null : snapshot.resolved.selection as ProfileSelection
+    const selection = continuation ?? (snapshot.resolved.registered === true ? entrySelection : null)
     if (!selection) {
-      if (entry && !entry.registered) {
+      if (entrySelection && snapshot.resolved.registered !== true) {
         // fail-closed: the user's newest pick was never registered — passing
         // this off as an "ordinary turn" would send on the OLD configuration
         // while the pick looks pending. Registration is the click's (bound
         // sessions) or the guard's (drafts) job; until then: no apply, no send.
-        return { ok: false, reason: '所选预设尚未登记到会话，已阻止本次应用；请重新选择或重试。', selection: entry.selection }
+        return { ok: false, reason: '所选预设尚未登记到会话，已阻止本次应用；请重新选择或重试。', selection: entrySelection }
       }
-      return { ok: true, applied: this.lastConfirmed.get(key) ?? { harnessId: sessionRef.harnessId, profileId: '', displayName: '' } }
+      return { ok: true, applied: (snapshot.resolved.lastConfirmed as ProfileSelection | undefined)
+        ?? { harnessId: sessionRef.harnessId, profileId: '', displayName: '' } }
     }
     if (!continuation && !this.isRegistered(key, selection)) {
       // fail-closed: an unregistered pick must be registered first — applying
@@ -199,9 +240,7 @@ export class ProfileSelectionStore {
           || config.evidence.journal.operationId !== receipt.operationId) {
           throw new Error('Profile current configuration is not confirmed for this selection')
         }
-        if (this.entries.get(key)?.selection === selection) this.entries.delete(key)
-        this.lastConfirmed.set(key, selection)
-        this.publish()
+        this.commitConfirmation(key, selection)
         return { ok: true, applied: selection, receipt }
       }
       const receipt = result.receipt
@@ -211,9 +250,7 @@ export class ProfileSelectionStore {
         throw Object.assign(new Error('Profile application receipt is unproven for this selection'), { kind: 'Unknown' })
       }
       this.counters.applyConfirmed += 1
-      if (this.entries.get(key)?.selection === selection) this.entries.delete(key)
-      this.lastConfirmed.set(key, selection)
-      this.publish()
+      this.commitConfirmation(key, selection)
       return { ok: true, applied: selection, receipt }
     } catch (error) {
       this.counters.applyFailed += 1
@@ -223,6 +260,17 @@ export class ProfileSelectionStore {
       return { ok: false, reason, selection,
         ...(error && typeof error === 'object' && 'kind' in error && error.kind === 'Unknown' ? { unknown: true } : {}) }
     }
+  }
+
+  /** Confirmation is one owner operation: the confirmation is recorded
+   * unconditionally; the consumed pick fields are dropped only if no newer
+   * pick has taken the key since (the entries.delete guard, preserved). */
+  private commitConfirmation(key: string, selection: ProfileSelection): void {
+    const current = this.owner.readConfigSync(key)
+    const stillCurrent = current.fields.selection !== undefined && current.resolved.selection === selection
+    this.owner.submitConfigOperationSync(key, { lastConfirmed: selection },
+      stillCurrent ? { unset: ['selection', 'registered', 'registrationError'] } : undefined)
+    this.publish()
   }
 }
 
