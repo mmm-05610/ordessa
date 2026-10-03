@@ -1,5 +1,16 @@
 # 迁移状态
 
+## 2026-10-03 006 完成（codeReady）——最终检查点见 git log
+
+切片 A–J 全部交付验收：T006-01 两半（实例注入+LegacyCoreBinding 退役，全局 core_db 宿主零触碰）、
+T006-02 started 门（dispatch+流入口，H 发现的 pre-start 缺口闭合）、T006-03/07 物理归组（pacthold、
+server-plugin-api → packages/backend/，标识不变）、T006-04 盘点存档、T006-05 双入口一致性、T006-06/08
+受控 fence（数据根双 writer 拒/效果类 stop 后 typed 拒/unknown 只查/未注册钉面）、T006-09 封存迁移显式
+装配+native Profile 接缝（**裁决：产品翻转推迟 010**）。终态：apps/server 68F+2E/1206P（红集逐 ID
+一致），products/server 251，server-compat 13，backend 353，runtime-compat 163；electron 4/6（本地
+staging，2 腿独立成因登记）。移交：host 全量转发随 007/010 领域发布自然完成；bootstrap=False 翻转=010；
+agent-server 装配/ui-foundations=012/008；docs 路径清扫=012。证据 order-006-report.md。
+
 ## 2026-10-03 006 进行中（阶段检查点 74b393b367 + 2432c55e85）
 
 委派模式运行：切片A/B/D 已交付验收（钉面 88+owner 断言 10红→143绿；compat kwarg 2红→9绿；封存迁移

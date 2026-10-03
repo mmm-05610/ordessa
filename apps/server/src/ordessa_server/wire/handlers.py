@@ -70,6 +70,13 @@ class WireService:
         #: the plugin host live, so unloading the Workspace plugin unbinds the
         #: port too. None resolver = the domain can never be present.
         self._workspace_resolver = None
+        #: 026 T006-02: the composed round's started state — a zero-arg
+        #: callable the composition root binds once the runtime exists
+        #: (`lambda: runtime.started`, read live per dispatch so stop() closes
+        #: the gate again). None = no round is composed here (a `WireService`
+        #: built standalone), and the dispatch wall applies no round gate — it
+        #: cannot invent a lifecycle the composition does not have.
+        self._round_state_resolver = None
         #: The composition's wire/1 error-family resolver (S2a-R): a
         #: `code -> family` callable built by the composition root over the
         #: declaring plugin host's own aggregate, handed over once here.
@@ -155,6 +162,22 @@ class WireService:
         the plugin host live, or None to declare the domain absent)."""
         self._workspace_resolver = resolver
 
+    def bind_round_state(self, resolver: "Callable[[], bool] | None") -> None:
+        """Bind how the dispatch wall reads the round's started state (a
+        zero-arg callable over the composed runtime's live `started` flag, or
+        None to declare no round composed here)."""
+        self._round_state_resolver = resolver
+
+    def _round_open(self) -> bool:
+        """Whether the composed round is accepting dispatches.
+
+        An unbound resolver means this transport has no round concept (no
+        composition attached), so the gate is inert; a bound one is read LIVE
+        per dispatch — start() opens the gate and stop() closes it again."""
+        if self._round_state_resolver is None:
+            return True
+        return bool(self._round_state_resolver())
+
     @property
     def workspaces(self):
         """The Workspace plugin's live resolution port, or None when absent."""
@@ -166,6 +189,25 @@ class WireService:
         descriptor = self._registry.lookup(method)
         if descriptor is None:
             raise WireError("INVALID_REQUEST", f"{method} is not a wire/1 method")
+        # 026 T006-02: the round gate. Activation populates this registry at
+        # composition time, so a built-but-never-started runtime carries every
+        # business row and would otherwise answer fabricated empty reads from
+        # domains that have no live round behind them. A round that is not
+        # started (never started, or stopped) therefore refuses every method
+        # except the host's discovery face — `server.hello` is how a client
+        # learns this Server exists at all — with an existing wire family and
+        # the internal code in details, never a new top-level error face. The
+        # gate sits AFTER the existence refusal on purpose: what is NOT
+        # registered keeps its unknown-method answer (the stopped round's rows
+        # are unregistered by shutdown, so a stopped round refuses exactly as
+        # the pinned T006-05 tests expect), and what IS registered but has no
+        # live round gets the round refusal below.
+        if method != "server.hello" and not self._round_open():
+            raise WireError(
+                "INVALID_REQUEST",
+                "this Server's round is not started; wire/1 methods answer only a started round",
+                {"internalCode": "ROUND_NOT_STARTED", "retryable": True},
+            )
         missing = descriptor.required_params - set(params)
         extra = set(params) - descriptor.required_params - descriptor.optional_params
         if missing or extra:

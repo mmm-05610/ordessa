@@ -71,13 +71,13 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 ## 006 Server变薄并切换全部环境入口
 
 - [x] T006-01 bootstrap由产品显式注入Environment/Store/Policy；应用只网络/认证/入口启动，移除global core_db配置与平行binding根。
-- [ ] T006-02 ServerPluginHost变有限投影/forwarder，methods/http/stream按同committed revision映射；保原签名/auth/origin与端口边界。
-- [ ] T006-03 server-plugin-api提纯transport契约并迁backend，应用不导入环境内部registry/privateStore；网络断线只释放transport。
+- [x] T006-02 ServerPluginHost变有限投影/forwarder，methods/http/stream按同committed revision映射；保原签名/auth/origin与端口边界。
+- [x] T006-03 server-plugin-api提纯transport契约并迁backend，应用不导入环境内部registry/privateStore；网络断线只释放transport。
 - [x] T006-04 盘点所有入口与旧sidecar/work_core/NeutralRunTracker路径；旧执行新请求转Environment，旧记录只读，不能为绿复活退役worker。
-- [ ] T006-05 本地/CLI/HTTP/WS对同controlled provider检查dispatch次数/identity/receipt，错误族/发现与能力不可用行为保持明确。
-- [ ] T006-06 受控切换freeze准入、旧closure/unknown接管与route失败回退；新effects后只能兼容事实回退，不能热回旧writer。
+- [x] T006-05 本地/CLI/HTTP/WS对同controlled provider检查dispatch次数/identity/receipt，错误族/发现与能力不可用行为保持明确。
+- [x] T006-06 受控切换freeze准入、旧closure/unknown接管与route失败回退；新effects后只能兼容事实回退，不能热回旧writer。
 - [x] T006-07 将pacthold/server-plugin-api物理归backend，同步pyproject、lock引用、安装脚本、CI、wheel隔离测试；保持发行/import/data标识。
-- [ ] T006-08 按C2效果fence受控切换，activation/instantiate/config apply/control reply均算外部效果；证据不足不能旧writer回退，旧实现仅既存closure继续者。
+- [x] T006-08 按C2效果fence受控切换，activation/instantiate/config apply/control reply均算外部效果；证据不足不能旧writer回退，旧实现仅既存closure继续者。
 
 - [x] T006-09 接可选backend/platform-services到同Environment；SecretStore兼容入口转同实现；按compat-retirement逐项拆清server/runtime兼容业务、切换旧入口到同Environment，仅保有证据的薄发行壳及封存迁移，保持原发行与入口ID。
 

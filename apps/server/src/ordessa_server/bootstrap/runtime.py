@@ -801,6 +801,14 @@ def build_runtime(
             plugin_host=plugin_host, plugin_selection=selected_plugins,
             core_binding=core_binding, legacy_core=legacy_core,
         )
+        # 026 T006-02: the wire round gate — dispatch answers business methods
+        # only for a started round. Bound after the runtime exists and read
+        # LIVE per dispatch (start() opens the gate, stop() closes it again);
+        # `server.hello` stays answerable so discovery never lies about the
+        # Server's existence. build_runtime internals (activate_all,
+        # database.initialize) never pass through wire dispatch and are
+        # unaffected.
+        wire.bind_round_state(lambda: runtime.started)
         return runtime
     except BaseException as failure:
         cleanup_errors: list[BaseException] = []

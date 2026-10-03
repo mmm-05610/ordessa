@@ -192,6 +192,14 @@ def create_app(runtime: ServerRuntime, *, on_bound: "Callable[[], None] | None" 
         if provided is None or not secrets.compare_digest(provided, "Bearer " + runtime.token):
             await websocket.close(code=4401, reason="UNAUTHENTICATED")
             return
+        # 026 T006-02: the same round gate wire dispatch answers — a stream
+        # attach is a business surface, not a discovery face. A composed
+        # runtime that has not started (or has stopped) serves no event stream:
+        # the port below resolves live against the activation round, which
+        # exists from composition time. Typed close, host-owned code family.
+        if not runtime.started:
+            await websocket.close(code=4400, reason="ROUND_NOT_STARTED")
+            return
         session_id = websocket.query_params.get("sessionId", "")
         cursor = websocket.query_params.get("cursor")
         if not session_id or len(session_id) > 160:
@@ -263,6 +271,12 @@ def create_app(runtime: ServerRuntime, *, on_bound: "Callable[[], None] | None" 
             return
         if provided is None or not secrets.compare_digest(provided, "Bearer " + runtime.token):
             await websocket.close(code=4401, reason="UNAUTHENTICATED")
+            return
+        # 026 T006-02: the same round gate wire dispatch answers — an ACP
+        # attach before start() (or after stop()) serves no round's channels.
+        # Typed close, host-owned code family.
+        if not runtime.started:
+            await websocket.close(code=4400, reason="ROUND_NOT_STARTED")
             return
         # Stream admission goes through the host's route registry: the route's
         # owner only resolves the connection; origin, bearer and close codes
