@@ -1,5 +1,15 @@
 # 迁移状态
 
+## 2026-10-04 009 进行中（最新 61d12fe66b）
+
+已完成：SDK 通用出口（3bfa7d6e3b，DRIFT 闭合：有界 raw 摘要/无裁决/溢出合并）、T008-08 dialog
+四步（75d71616f3 OS 能力+Workbench dialog 控制器；d3e1d0d359 Profile window.confirm 退役）、
+T009-06 IME/输入 ticket 门（test-author 9 绿）、**F1 SurfaceAPI 实现**（4a17fa9297，DRIFT-1
+闭合：registerSurface/attach/write(ticket)/observe、target/epoch/lease、只读面拒控制、
+raw-only 拒 reliable 不降级、预算/gap/scope-unknown）、样例#3 非 Chat terminal/document
+（61d12fe66b，6 绿）——**E2 三样例集齐**。
+待办：T009-02/03/05 验证（并行切片）、T009-04 执行域门、T009-09 诊断复用、009 收口；随后 010。
+
 ## 2026-10-04 008 完成（codeReady，U 显式待验）
 
 T008-01..11 全部 S/I 完成（004 待用户裁决=HarnessAvailability 载体；007 GUI 面=U 待验），
