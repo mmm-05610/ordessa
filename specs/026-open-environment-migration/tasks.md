@@ -83,17 +83,17 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 
 ## 007 Harness与资源按开放参与者接入
 
-- [ ] T007-01 Harness现start/connect/close保实现，增加Participant/Surface/Scope证据适配；native session/channel/Activity/Turn身份分开。
+- [x] T007-01 Harness现start/connect/close保实现，增加Participant/Surface/Scope证据适配；native session/channel/Activity/Turn身份分开。
 - [ ] T007-02 品牌目录内部组织Codex/Pi/Claude生命周期及配置/资源适配；provider/profile/skill/mcp业务保持中性，不复制品牌判断。
 - [ ] T007-03 原生模型/provider/配置查询与应用按C1能力声明适配，不承诺native不支持的CAS；安装资产不重建除非新增必要协议。
-- [ ] T007-04 迁native-history的稳定owner/instance/native ID与只读decoder，空draft选择不创建原生会话；点击历史才native load/resume。
-- [ ] T007-05 资源/服务参与者支持静态catalog不需Agent/Profile/Store；borrowed MCP/外部服务release本方usage，owned进程退出scope测试。
+- [x] T007-04 迁native-history的稳定owner/instance/native ID与只读decoder，空draft选择不创建原生会话；点击历史才native load/resume。
+- [x] T007-05 资源/服务参与者支持静态catalog不需Agent/Profile/Store；borrowed MCP/外部服务release本方usage，owned进程退出scope测试。
 - [ ] T007-06 controlled peer支持/workflow/未知event/原生控制确认：原样有界、可信control单消费，不新增核心命令API。
-- [ ] T007-07 所有resource/provider来源范围/退出范围声明；partial/opaque owned实例不足证据retire pending，shared关系不误杀。
+- [x] T007-07 所有resource/provider来源范围/退出范围声明；partial/opaque owned实例不足证据retire pending，shared关系不误杀。
 - [ ] T007-08 保三品牌现有controlled回归逐ID，记录真实资产和登录测试未跑不冒称Pi/Codex/Claude真聊天通过。
-- [ ] T007-09 按E2保未知delivery_role义务与三序号/RecoveryBinding；独立第四种controlled Agent和独立静态资源包构建/安装/退出，可靠可unsupported，不核心品牌特判。
+- [x] T007-09 按E2保未知delivery_role义务与三序号/RecoveryBinding；独立第四种controlled Agent和独立静态资源包构建/安装/退出，可靠可unsupported，不核心品牌特判。
 
-- [ ] T007-10 逐域将assets资源归顶层插件，业务/API留owner，品牌适配迁Harness内部品牌/资源模块；保全部现资产与支持矩阵，不按目录名整体搬错。
+- [x] T007-10 逐域将assets资源归顶层插件，业务/API留owner，品牌适配迁Harness内部品牌/资源模块；保全部现资产与支持矩阵，不按目录名整体搬错。
 
 - [ ] T007-11 资源消费者改用DataArea/公开绑定与E5关系声明；Provider归档不深扫Profile，关系coverage和变更竞态受控验证，资源无Profile仍可管理。
 
