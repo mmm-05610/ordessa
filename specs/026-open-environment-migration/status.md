@@ -1,5 +1,13 @@
 # 迁移状态
 
+## 2026-10-04 夜间继续 — 008 S2–S4 落地（slice-worker 通道故障期间主代理自建）
+
+S2（bfccfb04f3）状态库/选择绑定/双 fixture；S3（f1b8f46338）查询缓存/任务/投影适配；
+S4（03758d1ceb）编辑会话（ABA=编辑戳语义，同文本再编辑不被晚到成功清除）+UI 存储
+（session-only 诚实缺席/条件写/未知 schema 拒）。ui-components 77 测试绿、typecheck 0 错。
+007 已 DONE（b37a5711ce）。进行中：S5 Workbench 交互；待办 S6 发现+A96–103/109 证据、
+frontend 包组物理迁移（008 内）。slice-worker/general 通道 provider-not-found 持续，test-author 正常。
+
 ## 2026-10-04 007 完成（codeReady）
 
 T007-01..12 全部 S/I 完成（逐单证据见 evidence/order-007-report.md 与各切片报告）：Participant
