@@ -302,3 +302,26 @@ describe('bound/unbound send dispatch (appendix §3.3)', () => {
     void TURN_APPLICATION_GUARD_ID
   })
 })
+
+// T010-06: stable target/binding/native-generation applicability — a client
+// whose generation moved (isCurrent false) refuses every operation and applies
+// NOTHING to the owner; cross-window same-owner/refusal pins live in
+// agent-contracts (registry conflict + absent-port), and 'selected' surfaces
+// are pure projections (selectedOptionValue/owner projections).
+describe('generation applicability (T010-06)', () => {
+  it('counterexample: a generation-stale client refuses queue/submit and never writes the owner', async () => {
+    const invoke = vi.fn().mockResolvedValue({ outcome: 'pending-next-turn', sequence: 1, intentRoute: 'independent' })
+    let generationCurrent = true
+    const client = createNextTurnClient(invoke, { kind: 'session', session: TARGET }, () => generationCurrent)
+    expect((await client.queue({ harnessId: 'pi', providerConfigId: 'p-1', modelId: 'm1' })).state).toBe('pending-next-turn')
+    const afterQueue = client.owner.readConfigSync('model-next-turn').revision
+    expect(afterQueue).toBe(1) // the fresh-generation queue applied
+    generationCurrent = false // the native generation moved on
+    const owner = client.owner
+    expect(await client.queue({ harnessId: 'pi', providerConfigId: 'p-1', modelId: 'm2' }))
+      .toEqual({ state: 'refused', code: 'TARGET_STALE' })
+    expect(await client.submitTurn()).toEqual({ state: 'refused', code: 'TARGET_STALE' })
+    expect(owner.readConfigSync('model-next-turn').revision).toBe(afterQueue) // nothing applied
+    expect(invoke).toHaveBeenCalledTimes(1) // no wire call for stale operations
+  })
+})

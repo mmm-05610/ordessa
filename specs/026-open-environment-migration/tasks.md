@@ -146,7 +146,7 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 - [x] T010-03 移除model next-turn-client/chat-api-entry的pending/sequence/route/queued/current写权；codec仅关联请求，模型单项公开操作。
 - [x] T010-04 实现present/unset字段、provider/model原子组、点击seq、异步解析归序、目录版本不追改capture、同Profile重选新opId。
 - [x] T010-05 实现native ConfigEvidence known/unset/unknown及snapshot/patch链，乱序有界缓存，同revision冲突阻capture，重复原观察不解锁，完整新快照清旧缓存。
-- [ ] T010-06 实现稳定target/binding/native generation适用性与跨窗口同owner，selected只投影，binding替换旧queued操作stale且不自动重base。
+- [x] T010-06 实现稳定target/binding/native generation适用性与跨窗口同owner，selected只投影，binding替换旧queued操作stale且不自动重base。
 - [ ] T010-07 草稿stable draftId/revision/editorLease，view离开收尾仍能更新；成功只消费捕获revision，ABA同文本不清新稿。
 - [ ] T010-08 禁用Profile产品矩阵实构建运行controlled两轮和model切换；Agent/Chat/model不需要Profile私有serializer或身份。
 - [ ] T010-09 按E2逐字段迁ACP connector/session model的sessionList/runs/interactions/firstSends/pendingControlledSessions及alias写权；同native第二连接unverified只读，owner unknown不因重建client/晚success解锁。
