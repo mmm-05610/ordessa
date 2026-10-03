@@ -6,6 +6,9 @@
   "ordessa": {
     "id": "ordessa.model-provider-chat"
   },
+  "dependencies": {
+    "@ordessa/agent-contracts": "*"
+  },
   "scripts": {
     "build": "node build.mjs",
     "test": "vitest run --maxWorkers=1"

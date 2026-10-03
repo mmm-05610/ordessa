@@ -23,6 +23,7 @@
 // when the answer carries no valid route — and the send gate adjudicates it
 // (``intentFate``); a bound fact alone is no longer a sufficient permit.
 import type { ComposerLocation, QueuedChoice, ObservedModel } from './selector'
+import { createLocalAgentOwnerPort, type LocalAgentOwnerPort } from '@ordessa/agent-contracts'
 
 export const TRANSPORT_MISSING = 'MODEL_PROVIDER_CHAT_TRANSPORT_MISSING'
 export const TARGET_UNAVAILABLE = 'CHAT_TARGET_UNAVAILABLE'
@@ -119,6 +120,9 @@ export interface NextTurnClient {
   applyResolution(resolution: { session: Record<string, string>; sequence: number;
                                 outcome: string; reason?: string }): QueueOutcome | { rejected: true }
   readonly pending: QueuedChoice | null
+  /** The single writer of the queue facts (T010-03): every answer-application
+   * is an owner operation; `pending`/`intentFate` are frozen projections. */
+  readonly owner: LocalAgentOwnerPort
   /** The newest intent's handover fate (§6c F2.2/F2.3): the send gate's
    * verdict input. A bound fact alone is not a sufficient permit. */
   intentFate(): IntentFate
@@ -128,12 +132,14 @@ export interface NextTurnClient {
 
 export function createNextTurnClient(
   invoke: WireInvoke | undefined, location: ComposerLocation, isCurrent: () => boolean = () => true,
+  options: { owner?: LocalAgentOwnerPort } = {},
 ): NextTurnClient {
   if (invoke === undefined) {
     // No transport: a typed refusal, never a selector that silently no-ops
     // (same discipline as the settings side TRANSPORT_MISSING).
     return {
       get pending() { return null },
+      owner: options.owner ?? createLocalAgentOwnerPort({ ownerRegistry: new Set() }),
       queue: async () => ({ state: 'refused', code: TRANSPORT_MISSING }),
       query: async () => ({ state: 'unknown-outcome', code: TRANSPORT_MISSING }),
       submitTurn: async () => ({ state: 'refused', code: TRANSPORT_MISSING }),
@@ -143,16 +149,32 @@ export function createNextTurnClient(
       onUpdate: () => () => undefined,
     }
   }
-  let pending: QueuedChoice | null = null
-  let sequence = 0
+  // T010-03: the queue facts (pending/sequence/route latch) are OWNER state
+  // (A1 single-writer). Every wire-answer application is one owner operation;
+  // reads are frozen projections. Only bookkeeping stays local: the attempt
+  // counter (fresh operation keys) and the update listeners.
+  const stateOwner = options.owner ?? createLocalAgentOwnerPort({ ownerRegistry: new Set() })
+  const STATE_TARGET = 'model-next-turn'
+  type QueueState = {
+    pending: QueuedChoice | null
+    sequence: number
+    route: IntentRoute | null
+    handoverCode: string
+    undecided: string | null
+  }
+  const EMPTY_STATE: QueueState = {
+    pending: null, sequence: 0, route: null, handoverCode: 'HANDOVER_UNRESOLVED', undecided: null,
+  }
+  const state = (): QueueState =>
+    ({ ...EMPTY_STATE, ...(stateOwner.readConfigSync(STATE_TARGET).resolved as Partial<QueueState>) })
+  const applyState = (patch: Partial<QueueState>): void => {
+    stateOwner.submitConfigOperationSync(STATE_TARGET, patch)
+  }
   let attempts = 0
-  // §6c F2.2: the newest intent's handover route + the undecided latch.
-  let route: IntentRoute | null = null
-  let handoverCode = 'HANDOVER_UNRESOLVED'
-  let undecided: string | null = null
   const listeners = new Set<() => void>()
   const notify = () => { for (const listener of [...listeners]) listener() }
   const fate = (): IntentFate => {
+    const { pending, route, handoverCode, undecided } = state()
     if (undecided !== null) return { kind: 'undecided', code: undecided }
     if (pending === null) return { kind: 'none' }
     if (route === 'handover-failed') return { kind: 'handover-failed', code: handoverCode }
@@ -163,7 +185,8 @@ export function createNextTurnClient(
   }
   const target = targetOf(location)
   return {
-    get pending() { return pending },
+    owner: stateOwner,
+    get pending() { return state().pending },
     intentFate: fate,
     onUpdate(listener: () => void) {
       listeners.add(listener)
@@ -194,25 +217,27 @@ export function createNextTurnClient(
         const desired = answer.desired === null ? null : answer.desired && choiceOf(answer.desired)
         if (desired === undefined || (desired && !Number.isSafeInteger(answer.revision)))
           return { state: 'unknown-outcome', code: 'OPERATION_UNKNOWN' }
+        let observedRoute: IntentRoute | null = null
         if (desired) {
           // an observed pending intent must name its handover route (§6c F2.2)
-          const observedRoute = routeOf(answer)
+          observedRoute = routeOf(answer)
           if (observedRoute === null) return { state: 'unknown-outcome', code: 'OPERATION_UNKNOWN' }
-          route = observedRoute
-          handoverCode = typeof answer.intentReason === 'string' && answer.intentReason
-            ? answer.intentReason : 'HANDOVER_UNRESOLVED'
-        } else {
-          route = null
         }
-        // an observation settles whatever the queue latch was holding
-        undecided = null
         const fact = answer.lastConfirmed
         const lastConfirmed = fact && fact.harnessId === target.target.harnessId
           && Number.isSafeInteger(fact.providerConfigVersion)
           && ['read-back-verified', 'reconcile-verified'].includes(fact.evidence?.applied ?? '')
           ? choiceOf(fact) ?? null : null
-        pending = desired
-        if (typeof answer.revision === 'number') sequence = answer.revision
+        // one owner operation applies the observation (T010-03); an
+        // observation settles whatever the queue latch was holding
+        applyState({
+          pending: desired,
+          route: observedRoute,
+          ...(desired ? { handoverCode: typeof answer.intentReason === 'string' && answer.intentReason
+            ? answer.intentReason : 'HANDOVER_UNRESOLVED' } : {}),
+          undecided: null,
+          ...(typeof answer.revision === 'number' ? { sequence: answer.revision } : {}),
+        })
         notify()
         const current = answer.current && typeof answer.current.modelId === 'string' && answer.current.modelId.trim()
           && (answer.current.provider === null || typeof answer.current.provider === 'string')
@@ -236,30 +261,34 @@ export function createNextTurnClient(
         }) as { outcome?: string; sequence?: number; intentRoute?: unknown; intentReason?: unknown }
         if (!isCurrent()) return { state: 'refused', code: 'TARGET_STALE' }
         if (answer?.outcome !== 'pending-next-turn' || !Number.isSafeInteger(answer.sequence)) {
-          undecided = undecided ?? 'OPERATION_UNKNOWN'
+          const current = state()
+          applyState({ undecided: current.undecided ?? 'OPERATION_UNKNOWN' })
           return { state: 'unknown-outcome', code: 'OPERATION_UNKNOWN' }
         }
         const ackSequence = answer.sequence as number
         // a late acknowledgement of an older click never overrides a newer
         // recorded sequence (exact-sequence fencing, M12)
-        if (sequence > 0 && ackSequence < sequence) {
+        const recordedSequence = state().sequence
+        if (recordedSequence > 0 && ackSequence < recordedSequence) {
           return { state: 'unknown-outcome', code: 'OBSERVATION_STALE' }
         }
         const answerRoute = routeOf(answer)
         if (answerRoute === null) {
           // §6c F2.2: an answer that names no handover route is an unsafe
           // state — undecided, never "independent"
-          undecided = 'OPERATION_UNKNOWN'
+          applyState({ undecided: 'OPERATION_UNKNOWN' })
           return { state: 'unknown-outcome', code: 'OPERATION_UNKNOWN' }
         }
-        sequence = ackSequence
-        route = answerRoute
-        handoverCode = typeof answer.intentReason === 'string' && answer.intentReason
-          ? answer.intentReason : 'HANDOVER_UNRESOLVED'
-        undecided = null
-        pending = choice
+        applyState({
+          sequence: ackSequence,
+          route: answerRoute,
+          handoverCode: typeof answer.intentReason === 'string' && answer.intentReason
+            ? answer.intentReason : 'HANDOVER_UNRESOLVED',
+          undecided: null,
+          pending: choice,
+        })
         notify()
-        return { state: 'pending-next-turn', sequence }
+        return { state: 'pending-next-turn', sequence: ackSequence }
       } catch (error) {
         if (!isCurrent()) return { state: 'refused', code: 'TARGET_STALE' }
         const fact = error as { outcome?: string; details?: { internalCode?: string } }
@@ -267,7 +296,7 @@ export function createNextTurnClient(
         // a definitive refusal did not change the server's queue
         if (fact.outcome === 'Refused' || (code && fact.outcome !== 'Unknown'))
           return { state: 'refused', code: code ?? 'SELECTION_REFUSED' }
-        undecided = code ?? 'OPERATION_UNKNOWN'
+        applyState({ undecided: code ?? 'OPERATION_UNKNOWN' })
         return { state: 'unknown-outcome', code: code ?? 'OPERATION_UNKNOWN' }
       }
     },
@@ -279,12 +308,13 @@ export function createNextTurnClient(
       // key only ever replays a recorded outcome.
       attempts += 1
       const operationKey = `chat-submit-${target.target.acpSessionId}-${attempts}-${globalThis.crypto.randomUUID()}`
+      const recordedSequence = state().sequence
       const frozen = Number.isSafeInteger(expectedSequence) ? expectedSequence
-        : (Number.isSafeInteger(sequence) && sequence > 0 ? sequence : undefined)
+        : (Number.isSafeInteger(recordedSequence) && recordedSequence > 0 ? recordedSequence : undefined)
       // only the intent this submit actually froze may be consumed by its
       // ready answer; a pick made while the submit was in flight belongs to
       // the NEXT turn (FR-04/M12)
-      const tracked = pending
+      const tracked = state().pending
       try {
         const answer = await invoke(SUBMIT_METHOD, {
           target: target.target, operationKey,
@@ -308,10 +338,16 @@ export function createNextTurnClient(
             // a ready answer without real evidence references is not ready
             return { state: 'unknown-outcome', code: 'OPERATION_UNKNOWN' }
           }
-          pending = tracked === null ? pending : null
-          if (Number.isSafeInteger(answer.sequence)) sequence = answer.sequence!
-          route = null
-          undecided = null
+          // FR-04/H1: the ready consumes ONLY the frozen intent — clear the
+          // queue fact iff it is still that exact pick; a pick queued while
+          // the submit was in flight is next-turn intent and stays
+          const current = state()
+          applyState({
+            pending: current.pending === tracked ? null : current.pending,
+            ...(Number.isSafeInteger(answer.sequence) ? { sequence: answer.sequence! } : {}),
+            route: null,
+            undecided: null,
+          })
           notify()
           return { state: 'ready', sequence: answer.sequence ?? frozen ?? 0, application }
         }
@@ -334,7 +370,7 @@ export function createNextTurnClient(
     async reconcile(operationId?: number): Promise<ReconcileOutcome> {
       if (!target.ok) return { state: 'unknown-outcome', code: TARGET_UNAVAILABLE }
       if (!isCurrent()) return { state: 'unknown-outcome', code: 'TARGET_STALE' }
-      const id: number = Number.isSafeInteger(operationId) ? operationId as number : sequence
+      const id: number = Number.isSafeInteger(operationId) ? operationId as number : state().sequence
       if (!Number.isSafeInteger(id) || id <= 0) {
         return { state: 'unknown-outcome', code: 'OPERATION_UNKNOWN' }
       }
@@ -349,9 +385,7 @@ export function createNextTurnClient(
         const fact = answer?.turnFact
         if (answer?.outcome === 'confirmed' && fact
           && typeof fact.providerConfigId === 'string' && typeof fact.modelId === 'string') {
-          pending = null
-          route = null
-          undecided = null
+          applyState({ pending: null, route: null, undecided: null })
           notify()
           return { state: 'confirmed', turnFact: {
             harnessId: target.target.harnessId,
@@ -370,16 +404,15 @@ export function createNextTurnClient(
     },
     applyResolution(resolution): QueueOutcome | { rejected: true } {
       if (!isCurrent()) return { rejected: true }
-      if (!target.ok || !pending) return { rejected: true }
+      if (!target.ok || !state().pending) return { rejected: true }
+      const current = state()
       const sameSession = Object.entries(target.target)
         .every(([key, value]) => resolution.session[key] === value)
-      if (!sameSession || resolution.sequence !== sequence) return { rejected: true }
+      if (!sameSession || resolution.sequence !== current.sequence) return { rejected: true }
       if (resolution.outcome === 'confirmed') {
-        pending = null
-        route = null
-        undecided = null
+        applyState({ pending: null, route: null, undecided: null })
         notify()
-        return { state: 'pending-next-turn', sequence }  // applied; queue empty again
+        return { state: 'pending-next-turn', sequence: current.sequence }  // applied; queue empty again
       }
       notify()
       return { state: resolution.outcome === 'refused' ? 'refused' : 'unknown-outcome',

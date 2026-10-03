@@ -161,3 +161,34 @@ describe('next-turn client (consumer side)', () => {
     expect(client.pending).toBeNull()
   })
 })
+
+// -- T010-03 ownership: the queue facts (pending/sequence/route) live in the
+//    Agent owner; the client dispatches answer-applications as owner
+//    operations and exposes frozen projections. Reached behind the client
+//    (client.owner) to prove WHERE the state lives.
+
+describe('next-turn client ownership (T010-03)', () => {
+  it('keeps queue facts in the owner and counts every answer-application as an operation', async () => {
+    const invoke = vi.fn().mockResolvedValue({ outcome: 'pending-next-turn', sequence: 3, intentRoute: 'independent' })
+    const client = createNextTurnClient(invoke, SESSION_LOCATION)
+    await client.queue(CHOICE)
+    const view = client.owner.readConfigSync('model-next-turn')
+    expect(view.resolved).toMatchObject({
+      pending: CHOICE, sequence: 3, route: 'independent', undecided: null,
+    })
+    expect(view.revision).toBe(1) // exactly one owner operation for one application
+    expect(Object.isFrozen(view.resolved)).toBe(true)
+  })
+
+  it('counterexample: the client cannot hold a divergent copy — owner writes appear in the projections', async () => {
+    const invoke = vi.fn().mockResolvedValue({ outcome: 'pending-next-turn', sequence: 3, intentRoute: 'independent' })
+    const client = createNextTurnClient(invoke, SESSION_LOCATION)
+    await client.queue(CHOICE)
+    // a fact applied straight through the owner face shows up in pending/ fate
+    client.owner.submitConfigOperationSync('model-next-turn', { undecided: 'OPERATION_UNKNOWN' })
+    expect(client.pending).toEqual(CHOICE) // untouched field still projects
+    expect(client.intentFate()).toEqual({ kind: 'undecided', code: 'OPERATION_UNKNOWN' })
+    client.owner.submitConfigOperationSync('model-next-turn', { undecided: null, route: 'independent' })
+    expect(client.intentFate()).toEqual({ kind: 'independent' })
+  })
+})

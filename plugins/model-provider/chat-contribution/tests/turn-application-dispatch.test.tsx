@@ -168,6 +168,28 @@ describe('turn-application client (appendix §2 consumer)', () => {
     expect(client.pending).not.toBeNull() // the newer pick was not consumed (FR-04)
   })
 
+  it('counterexample (H1): a pick made while a submit of an EARLIER intent is in flight is not consumed (FR-04)', async () => {
+    let releaseSubmit: (() => void) | undefined
+    const submitInFlight = new Promise<void>(resolve => { releaseSubmit = resolve })
+    const first = { harnessId: 'pi', providerConfigId: 'p-1', modelId: 'm1' }
+    const second = { harnessId: 'pi', providerConfigId: 'p-1', modelId: 'm2' }
+    const invoke = vi.fn()
+      .mockImplementation((method: string) => {
+        if (method === SUBMIT_METHOD) return submitInFlight.then(() => ({
+          outcome: 'ready', sequence: 5, application: evidence() }))
+        return Promise.resolve({ outcome: 'pending-next-turn', sequence: 6, intentRoute: 'independent' })
+      })
+    const client = createNextTurnClient(invoke, { kind: 'session', session: TARGET })
+    await client.queue(first) // the submit will freeze THIS intent
+    const submitting = client.submitTurn()
+    const queued = await client.queue(second) // a newer pick during flight
+    expect(queued).toEqual({ state: 'pending-next-turn', sequence: 6 })
+    releaseSubmit!()
+    await submitting
+    // the ready consumed ONLY the frozen intent; the in-flight pick stays
+    expect(client.pending).toBe(second)
+  })
+
   it('reconciles read-only: a confirmed observation clears, others keep', async () => {
     const invoke = vi.fn()
       .mockResolvedValueOnce({ outcome: 'pending-next-turn', sequence: 9, intentRoute: 'independent' })
