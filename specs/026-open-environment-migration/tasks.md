@@ -151,7 +151,7 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 - [ ] T010-08 禁用Profile产品矩阵实构建运行controlled两轮和model切换；Agent/Chat/model不需要Profile私有serializer或身份。
 - [ ] T010-09 按E2逐字段迁ACP connector/session model的sessionList/runs/interactions/firstSends/pendingControlledSessions及alias写权；同native第二连接unverified只读，owner unknown不因重建client/晚success解锁。
 
-- [ ] T010-10 落实A1 Session/Config/Submission/Run/Interaction owner公开只读/dispatch/Harness证据入口；同会话确认与操作单owner，前端代理无第二writer。
+- [x] T010-10 落实A1 Session/Config/Submission/Run/Interaction owner公开只读/dispatch/Harness证据入口；同会话确认与操作单owner，前端代理无第二writer。
 
 - [ ] T010-11 资源选择控件与Profile facet走公开贡献及Agent操作，无私有binding/serializer；Profile字段覆盖、同预设重选、无Profile模型切换和无Chat资源管理都有证据。
 
