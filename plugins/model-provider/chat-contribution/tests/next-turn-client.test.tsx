@@ -192,3 +192,21 @@ describe('next-turn client ownership (T010-03)', () => {
     expect(client.intentFate()).toEqual({ kind: 'independent' })
   })
 })
+
+// T010-04: provider/model is an ATOMIC group — an observation carrying half a
+// pair is never applied (no half-desired, no half-confirmation).
+describe('provider/model atomic group (T010-04)', () => {
+  it('counterexample: a half pair in an answer is refused as unknown and never applied', async () => {
+    const invoke = vi.fn().mockResolvedValue({
+      desired: { providerConfigId: 'p-1' }, // modelId missing: HALF a pair
+      lastConfirmed: { harnessId: 'pi', providerConfigId: 'p-1' }, // half again
+      revision: 5, intentRoute: 'independent',
+    })
+    const client = createNextTurnClient(invoke, SESSION_LOCATION)
+    const outcome = await client.query()
+    expect(outcome).toEqual({ state: 'unknown-outcome', code: 'OPERATION_UNKNOWN' })
+    // nothing landed: the owner still shows an empty queue and no confirmation
+    expect(client.pending).toBeNull()
+    expect(client.lastConfirmed).toBeNull()
+  })
+})

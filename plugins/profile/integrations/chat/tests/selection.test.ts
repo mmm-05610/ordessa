@@ -283,3 +283,36 @@ describe('catalog scoping (PA07)', () => {
     expect(catalogForLocation(GROUPS, projected.scope).map(group => group.harnessId)).toEqual(['pi'])
   })
 })
+
+// T010-04: a capture is IMMUTABLE to later catalog versions — the recorded
+// pick keeps its captured identity and label; a refreshed catalog can offer
+// new options but never rewrites what the user already picked.
+describe('capture immutability across catalog versions (T010-04)', () => {
+  it('a refreshed catalog (new version) never rewrites the captured pick', () => {
+    const store = new ProfileSelectionStore()
+    const captured = { harnessId: 'pi', profileId: 'p-1', displayName: 'Captured' }
+    store.select('draft:1', captured)
+    // catalog v2 renames/re-groups the same profileId and adds new options
+    const catalogV2 = [{ harnessId: 'pi', profiles: [
+      { harnessId: 'pi', profileId: 'p-1', displayName: 'Renamed in v2' },
+      { harnessId: 'pi', profileId: 'p-2', displayName: 'New in v2' },
+    ] }]
+    expect(catalogForLocation(catalogV2 as never, { kind: 'draft', draftId: '1' })).toHaveLength(1)
+    // the capture is the captured value, by identity — v2 changed nothing
+    expect(store.peek('draft:1')).toBe(captured)
+    expect(store.currentLabel('draft:1')).toBe('Captured')
+  })
+
+  it('counterexample: a same-profile re-pick after a catalog change is a NEW operation, not a rewrite', () => {
+    const store = new ProfileSelectionStore()
+    const v1 = { harnessId: 'pi', profileId: 'p-1', displayName: 'Captured' }
+    const v2 = { harnessId: 'pi', profileId: 'p-1', displayName: 'Renamed in v2' }
+    store.select('draft:1', v1)
+    store.select('draft:1', v2) // the user re-picks the renamed option
+    expect(store.peek('draft:1')).toBe(v2)
+    expect(store.owner.readConfigSync('draft:1').revision).toBe(2) // two operations
+    // and the first capture still lives in the owner's operation history
+    const operations = store.owner.readConfigSync('draft:1')
+    expect(operations.revision).toBe(2)
+  })
+})
