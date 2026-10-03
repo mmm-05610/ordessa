@@ -175,7 +175,7 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 
 - [x] T012-01 遍历old path/import/export/entrypoint/构造/registry/store/route生产引用，清zero-consumer兼容，保批准公开facade指向唯一实现。
 - [x] T012-02 确认packages仅frontend/backend底座包组，旧desktop-platform/workbench/pacthold/server-plugin-api无运行实现；移动后的测试数量/ID发现映射可审计。
-- [ ] T012-03 npm ci从锁安装、typecheck、真实build/npm aggregate/Electron controlled、Python各包+全链；逐ID和cause比基线无新增未处置红，不删assert/skip假绿。
+- [ ] T012-03 npm ci从锁安装、typecheck、真实build/npm aggregate/Electron controlled、Python各包+全链；逐ID和cause比基线无新增未处置红，不删assert/skip假绿。（typecheck+build+Python 全绿已证；aggregate/无头 smoke 待续——evidence/t012-03-build.md）
 - [ ] T012-04 干净venv隔离wheel导入与bare host、独立extension build、deb生成/解包/无凭据clean smoke；运行打包检查不签名/publish。
 - [ ] T012-05 所有acceptance必需场景正例反例证据，真实三品牌用户动作截图/日志关联脱敏；GUI/模型缺授权不算完成。
 - [x] T012-06 数据fixture旧库/WAL/未知schema/两根/rollback/crash+秘密扫描+无追踪binary/userdata，真实数据若不获批注明未迁不能许诺已升级。

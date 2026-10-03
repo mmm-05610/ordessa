@@ -14,7 +14,8 @@
  * - a complete new snapshot clears the out-of-order cache (buffered frames
  *   are obsolete).
  */
-export type FieldState = 'known' | 'unset' | 'unknown'
+import type { FieldState } from './config-owner' // single definition (A1 vocabulary)
+
 export type ObservedState = 'native' | 'unset' | 'unknown'
 
 export interface EvidenceFrame {

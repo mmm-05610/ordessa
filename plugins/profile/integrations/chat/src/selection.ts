@@ -133,7 +133,8 @@ export class ProfileSelectionStore {
    * without an explicit caller vouch), or null. */
   registeredPending(key: string): ProfileSelection | null {
     const snapshot = this.fieldsOf(key)
-    return snapshot.resolved.registered === true ? (snapshot.resolved.selection ?? null) : null
+    return snapshot.resolved.registered === true
+      ? (snapshot.resolved.selection as ProfileSelection | undefined) ?? null : null
   }
 
   /** The last registration failure reason for the current pick, if any. */

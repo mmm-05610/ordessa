@@ -223,6 +223,7 @@ export function createProfileChatGlue(
               || !result.sessionRef.sessionUid || !result.sessionRef.realm) return { status: 'unknown' }
           binding = setBinding(identity, { ref: result.sessionRef, selection, uiSessionId: owner.sessionId, serverId: owner.serverInstanceId })
         }
+        const bound: Binding = binding // narrowed: the registration flow guarantees it
         const inspected = await input.profiles.inspectSessionConfig?.(binding.ref)
         if (inspected?.switchState === 'needs_recovery') {
           const recovered = await input.profiles.reconcile?.(`profile-reconcile:${snapshot.submissionId}`, binding.ref)
@@ -245,33 +246,33 @@ export function createProfileChatGlue(
           let outcome: ApplyOutcome
           if (live && store.isRegistered(key, live)) {
             // the backend already holds the newest click's intent: apply it
-            outcome = await store.applyOnSubmit(key, binding.ref, input.profiles)
+            outcome = await store.applyOnSubmit(key, bound.ref, input.profiles)
           } else if (selected && capturedRegistered) {
             // the click-registered pick is the backend's pending even though a
             // store-level re-pick arrived meanwhile (it stays for next submit)
-            outcome = await store.applyOnSubmit(key, binding.ref, input.profiles, selected)
+            outcome = await store.applyOnSubmit(key, bound.ref, input.profiles, selected)
           } else if (selected) {
             // never registered at click (draft flow / failed click): register
             // now, inside this serialized task, then apply the vouched pick
-            await registrationTask(key, binding.ref, selected)
+            await registrationTask(key, bound.ref, selected)
             if (store.peek(key) === selected && !store.isRegistered(key, selected))
               return { status: 'refused',
                 reason: `所选预设未能登记到会话：${store.registrationError(key) ?? '未知原因'}；草稿与选择已保留，可重试。` }
-            outcome = await store.applyOnSubmit(key, binding.ref, input.profiles, selected)
+            outcome = await store.applyOnSubmit(key, bound.ref, input.profiles, selected)
           } else {
             // ordinary bound turn: apply the effective configuration, no reselect
-            outcome = await store.applyOnSubmit(key, binding.ref, input.profiles, binding.selection)
+            outcome = await store.applyOnSubmit(key, bound.ref, input.profiles, bound.selection)
           }
           if (!outcome.ok) {
             if (outcome.unknown) return { status: 'unknown' }
             // Wire/1 currently hides business error details. Query the domain's
             // explicit safety state instead of guessing uncertainty from text.
-            const failed = await input.profiles.inspectSessionConfig?.(binding.ref)
+            const failed = await input.profiles.inspectSessionConfig?.(bound.ref)
             return failed?.switchState === 'needs_recovery' ? { status: 'unknown' }
               : { status: 'refused', reason: outcome.reason }
           }
           patchBinding(identity, { selection: outcome.applied })
-          binding = { ...binding, selection: outcome.applied }
+          binding = { ...bound, selection: outcome.applied }
           dropRetained(retainedKey)
           return { status: 'ready' }
         })

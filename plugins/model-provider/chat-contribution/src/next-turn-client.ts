@@ -200,7 +200,7 @@ export function createNextTurnClient(
       if (!target.ok || !isCurrent()) return { state: 'unknown-outcome', code: 'TARGET_STALE' }
       const capturedAttempts = attempts
       try {
-        const answer = await invoke(QUERY_METHOD, { target: target.target }) as {
+        const answer = await invoke!(QUERY_METHOD, { target: target.target }) as {
           current?: { modelId?: unknown; provider?: unknown } | null
           desired?: { providerConfigId?: string; modelId?: string } | null
           lastConfirmed?: { harnessId?: string; providerConfigId?: string; modelId?: string;
