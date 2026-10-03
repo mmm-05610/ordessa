@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "logicalPluginId": "ordessa.contracts",
+  "displayName": "Contract carriers",
+  "categories": [
+    "platform"
+  ],
+  "versionSource": "package.json",
+  "artifacts": [
+    {
+      "kind": "npm",
+      "path": ".",
+      "releaseIdentity": "ordessa.contracts"
+    }
+  ],
+  "entries": [
+    {
+      "entryId": "entry",
+      "package": "@ordessa/contracts-foundation",
+      "entrypoint": "src/entry.ts",
+      "executionDomain": "frontend",
+      "existingRuntimeManifest": "products/desktop/extensions.json"
+    }
+  ]
+}

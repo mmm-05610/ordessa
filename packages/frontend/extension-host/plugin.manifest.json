@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "logicalPluginId": "ordessa.extension-host",
+  "displayName": "Extension host",
+  "categories": [
+    "platform"
+  ],
+  "versionSource": "package.json",
+  "artifacts": [
+    {
+      "kind": "npm",
+      "path": ".",
+      "releaseIdentity": "ordessa.extension-host"
+    }
+  ],
+  "entries": [
+    {
+      "entryId": "host",
+      "package": "@ordessa/extension-host",
+      "entrypoint": "src/index.ts",
+      "executionDomain": "frontend"
+    },
+    {
+      "entryId": "main",
+      "package": "@ordessa/extension-host",
+      "entrypoint": "src/main/index.ts",
+      "executionDomain": "backend"
+    }
+  ]
+}

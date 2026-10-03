@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "logicalPluginId": "ordessa.workbench",
+  "displayName": "Workbench",
+  "categories": [
+    "platform"
+  ],
+  "versionSource": "package.json",
+  "artifacts": [
+    {
+      "kind": "npm",
+      "path": ".",
+      "releaseIdentity": "ordessa.workbench"
+    }
+  ],
+  "entries": [
+    {
+      "entryId": "entry",
+      "package": "@ordessa/workbench",
+      "entrypoint": "src/entry.tsx",
+      "executionDomain": "frontend",
+      "existingRuntimeManifest": "products/desktop/extensions.json"
+    }
+  ]
+}

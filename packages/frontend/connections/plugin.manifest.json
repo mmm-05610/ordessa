@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "logicalPluginId": "ordessa.connections",
+  "displayName": "Connections",
+  "categories": [
+    "service"
+  ],
+  "versionSource": "package.json",
+  "artifacts": [
+    {
+      "kind": "npm",
+      "path": ".",
+      "releaseIdentity": "ordessa.connections"
+    }
+  ],
+  "entries": [
+    {
+      "entryId": "api",
+      "package": "@ordessa/connections",
+      "entrypoint": "api/connections.ts",
+      "executionDomain": "frontend"
+    }
+  ]
+}

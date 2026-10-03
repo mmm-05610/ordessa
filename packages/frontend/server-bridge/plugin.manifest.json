@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "logicalPluginId": "ordessa.server-bridge",
+  "displayName": "Server bridge",
+  "categories": [
+    "platform"
+  ],
+  "versionSource": "package.json",
+  "artifacts": [
+    {
+      "kind": "npm",
+      "path": ".",
+      "releaseIdentity": "ordessa.server-bridge"
+    }
+  ],
+  "entries": []
+}

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "logicalPluginId": "ordessa.ui-components",
+  "displayName": "UI components",
+  "categories": [
+    "platform"
+  ],
+  "versionSource": "package.json",
+  "artifacts": [
+    {
+      "kind": "npm",
+      "path": ".",
+      "releaseIdentity": "ordessa.ui-components"
+    }
+  ],
+  "entries": [
+    {
+      "entryId": "assembly",
+      "package": "@ordessa/ui-components",
+      "entrypoint": "assembly/entry.ts",
+      "executionDomain": "frontend",
+      "existingRuntimeManifest": "products/desktop/extensions.json"
+    }
+  ]
+}
