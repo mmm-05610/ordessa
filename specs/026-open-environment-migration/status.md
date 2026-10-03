@@ -6,11 +6,14 @@ T010-01 完成：A1 五 owner 后端骨架（9e4d29bc2c，单写者/字段三态
 AgentOwnerPort 公开 dispatch 面（843abb81c7）、Agent 域进默认产品链（565e04fc21，三处钉带理由
 更新 88→93、两条边界测试按 T003 裁决带许可修订）。apps/server 66F+2E（比 008 基线少 2 红=
 边界测试修复）、products 238 绿。
-进行中：010（T010-01 owner 骨架 + T010-02 五写权拆除已落：32fd7f09f4/0c419c39a0/ebadd80517）。
-T010-02 收口：selections/lastConfirmed→owner 配置字段（83 断言零改动通过+5 结构正反例）、
-bindings→SessionOwner 记录、retained→配置字段、clickQueues 仅排序簿记；本地 owner 端口
-（sync 面与 Python submit_operation 对位，异步面 wire 对等，run.query unknown 归一）。
-待办：T010-03..11、T010-12..14、bootstrap 翻转时机、010 收口；011/012 队列。
+进行中：010（T010-01/02/03 已落：32fd7f09f4/0c419c39a0/ebadd80517/f7f580b596/bf848cd3e1）。
+T010-02 收口：五写权拆除（selections/lastConfirmed→owner 配置字段、bindings→SessionOwner
+记录、retained→配置字段、clickQueues 仅排序簿记），83+88 断言零改动通过+8 结构正反例。
+T010-03 收口：next-turn-client pending/sequence/route+chat-api-entry queued/current/lastConfirmed
+全部 owner 化（含 H1 红首修复：submit 在飞新 pick 不再被旧 tracked 误清；query 观测归一为
+"无更新查询/入队/核实开始才应用"单规则）。117+37 断言零改动。**H2 观察登记待裁决**
+（ready 迟到回执回退 M12 序栅栏，见 evidence/t010-03-h2-observation.md，建议 A）。
+待办：T010-04..11、T010-12..14、bootstrap 翻转时机、010 收口；011/012 队列。
 
 ## 2026-10-04 009 完成（codeReady，U 显式待验）
 

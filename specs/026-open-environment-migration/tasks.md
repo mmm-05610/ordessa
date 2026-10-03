@@ -143,7 +143,7 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 
 - [ ] T010-01 Agent域提供ConfigOwner/SessionOwner/SubmissionOwner，DraftOwner与通用edit合同分离；runtime登记槽不吞domain state。
 - [x] T010-02 移除Profile selection/glue的selections/lastConfirmed/retained/bindings/clickQueues写权；Profile只目录解析/操作源和薄UI贡献。
-- [ ] T010-03 移除model next-turn-client/chat-api-entry的pending/sequence/route/queued/current写权；codec仅关联请求，模型单项公开操作。
+- [x] T010-03 移除model next-turn-client/chat-api-entry的pending/sequence/route/queued/current写权；codec仅关联请求，模型单项公开操作。
 - [ ] T010-04 实现present/unset字段、provider/model原子组、点击seq、异步解析归序、目录版本不追改capture、同Profile重选新opId。
 - [ ] T010-05 实现native ConfigEvidence known/unset/unknown及snapshot/patch链，乱序有界缓存，同revision冲突阻capture，重复原观察不解锁，完整新快照清旧缓存。
 - [ ] T010-06 实现稳定target/binding/native generation适用性与跨窗口同owner，selected只投影，binding替换旧queued操作stale且不自动重base。
