@@ -123,6 +123,9 @@ export interface NextTurnClient {
   /** The single writer of the queue facts (T010-03): every answer-application
    * is an owner operation; `pending`/`intentFate` are frozen projections. */
   readonly owner: LocalAgentOwnerPort
+  /** The last read-back observation facts (T010-03 projections of owner state). */
+  readonly lastConfirmed: QueuedChoice | null
+  readonly current: ObservedModel | null
   /** The newest intent's handover fate (§6c F2.2/F2.3): the send gate's
    * verdict input. A bound fact alone is not a sufficient permit. */
   intentFate(): IntentFate
@@ -139,6 +142,8 @@ export function createNextTurnClient(
     // (same discipline as the settings side TRANSPORT_MISSING).
     return {
       get pending() { return null },
+      get lastConfirmed() { return null },
+      get current() { return null },
       owner: options.owner ?? createLocalAgentOwnerPort({ ownerRegistry: new Set() }),
       queue: async () => ({ state: 'refused', code: TRANSPORT_MISSING }),
       query: async () => ({ state: 'unknown-outcome', code: TRANSPORT_MISSING }),
@@ -161,9 +166,12 @@ export function createNextTurnClient(
     route: IntentRoute | null
     handoverCode: string
     undecided: string | null
+    lastConfirmed: QueuedChoice | null
+    current: ObservedModel | null
   }
   const EMPTY_STATE: QueueState = {
     pending: null, sequence: 0, route: null, handoverCode: 'HANDOVER_UNRESOLVED', undecided: null,
+    lastConfirmed: null, current: null,
   }
   const state = (): QueueState =>
     ({ ...EMPTY_STATE, ...(stateOwner.readConfigSync(STATE_TARGET).resolved as Partial<QueueState>) })
@@ -171,6 +179,10 @@ export function createNextTurnClient(
     stateOwner.submitConfigOperationSync(STATE_TARGET, patch)
   }
   let attempts = 0
+  // The observation supersession rule (formerly the entry's queryEpoch): a
+  // query outcome applies to the owner ONLY if no newer query/queue/reconcile
+  // began since it started. Stale outcomes are reported but never applied.
+  let queryEpoch = 0
   const listeners = new Set<() => void>()
   const notify = () => { for (const listener of [...listeners]) listener() }
   const fate = (): IntentFate => {
@@ -184,15 +196,7 @@ export function createNextTurnClient(
     return { kind: 'undecided', code: 'OPERATION_UNKNOWN' }
   }
   const target = targetOf(location)
-  return {
-    owner: stateOwner,
-    get pending() { return state().pending },
-    intentFate: fate,
-    onUpdate(listener: () => void) {
-      listeners.add(listener)
-      return () => { listeners.delete(listener) }
-    },
-    async query(): Promise<ChoiceObservation> {
+  async function runQuery(capturedEpoch: number): Promise<ChoiceObservation> {
       if (!target.ok || !isCurrent()) return { state: 'unknown-outcome', code: 'TARGET_STALE' }
       const capturedAttempts = attempts
       try {
@@ -206,7 +210,8 @@ export function createNextTurnClient(
           intentReason?: unknown
         }
         if (!isCurrent()) return { state: 'unknown-outcome', code: 'TARGET_STALE' }
-        if (attempts !== capturedAttempts) return { state: 'unknown-outcome', code: 'OBSERVATION_STALE' }
+        if (attempts !== capturedAttempts || queryEpoch !== capturedEpoch)
+          return { state: 'unknown-outcome', code: 'OBSERVATION_STALE' }
         if (!answer || !('desired' in answer) || !('lastConfirmed' in answer)
           || (answer.revision !== null && !Number.isSafeInteger(answer.revision)))
           return { state: 'unknown-outcome', code: 'OPERATION_UNKNOWN' }
@@ -228,6 +233,9 @@ export function createNextTurnClient(
           && Number.isSafeInteger(fact.providerConfigVersion)
           && ['read-back-verified', 'reconcile-verified'].includes(fact.evidence?.applied ?? '')
           ? choiceOf(fact) ?? null : null
+        const current = answer.current && typeof answer.current.modelId === 'string' && answer.current.modelId.trim()
+          && (answer.current.provider === null || typeof answer.current.provider === 'string')
+          ? { modelId: answer.current.modelId, provider: answer.current.provider as string | null } : null
         // one owner operation applies the observation (T010-03); an
         // observation settles whatever the queue latch was holding
         applyState({
@@ -237,21 +245,42 @@ export function createNextTurnClient(
             ? answer.intentReason : 'HANDOVER_UNRESOLVED' } : {}),
           undecided: null,
           ...(typeof answer.revision === 'number' ? { sequence: answer.revision } : {}),
+          lastConfirmed,
+          current: current ?? null,
         })
         notify()
-        const current = answer.current && typeof answer.current.modelId === 'string' && answer.current.modelId.trim()
-          && (answer.current.provider === null || typeof answer.current.provider === 'string')
-          ? { modelId: answer.current.modelId, provider: answer.current.provider as string | null } : null
         return { state: 'observed', desired, lastConfirmed, ...(Object.hasOwn(answer, 'current') ? { current } : {}) }
       } catch (error) {
         return { state: 'unknown-outcome', code: !isCurrent() ? 'TARGET_STALE'
           : (error as { details?: { internalCode?: string } })?.details?.internalCode ?? 'OPERATION_UNKNOWN' }
       }
+  }
+  return {
+    owner: stateOwner,
+    get pending() { return state().pending },
+    get lastConfirmed() { return state().lastConfirmed },
+    get current() { return state().current },
+    intentFate: fate,
+    onUpdate(listener: () => void) {
+      listeners.add(listener)
+      return () => { listeners.delete(listener) }
+    },
+    query: async () => {
+      const capturedEpoch = ++queryEpoch
+      const outcome = await runQuery(capturedEpoch)
+      if (outcome.state !== 'observed' && isCurrent() && queryEpoch === capturedEpoch) {
+        // a fresh unknown observation clears the displayed current model
+        // (the entry mirror used to do this; the owner holds the fact now)
+        applyState({ current: null })
+        notify()
+      }
+      return outcome
     },
     async queue(choice: QueuedChoice): Promise<QueueOutcome> {
       if (!isCurrent()) return { state: 'refused', code: 'TARGET_STALE' }
       if (!target.ok) return { state: 'refused', code: target.code }
       if (choice.harnessId !== target.target.harnessId) return { state: 'refused', code: 'TARGET_STALE' }
+      queryEpoch += 1 // supersedes any in-flight observation (M12 note: queue wins)
       attempts += 1
       try {
         const answer = await invoke(CHOOSE_METHOD, {
@@ -374,6 +403,7 @@ export function createNextTurnClient(
       if (!Number.isSafeInteger(id) || id <= 0) {
         return { state: 'unknown-outcome', code: 'OPERATION_UNKNOWN' }
       }
+      queryEpoch += 1 // the entry's reconcile path superseded in-flight observations
       try {
         const answer = await invoke(RECONCILE_METHOD, {
           target: target.target, operationId: id,

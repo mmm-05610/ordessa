@@ -87,9 +87,6 @@ function NativeSessionSelector({ wiring, location, snapshot }: {
 }) {
   const [owner, setOwner] = useState<ComposerLocation | undefined>()
   const [reason, setReason] = useState('正在确认原生会话身份。')
-  const [queued, setQueued] = useState<QueuedChoice | null>(null)
-  const [lastConfirmed, setLastConfirmed] = useState<QueuedChoice | null>(null)
-  const [current, setCurrent] = useState<import('./selector').ObservedModel | null>(null)
   const [queueError, setQueueError] = useState('')
   const [queueing, setQueueing] = useState(false)
   const live = useRef(true)
@@ -129,6 +126,12 @@ function NativeSessionSelector({ wiring, location, snapshot }: {
   }, [wiring.sessions, location.kind, sessionId, location.serverInstanceId, isCurrent])
   const client = useMemo(() => createNextTurnClient(wiring.invoke, owner ?? { kind: 'draft' }, isCurrent),
     [wiring.invoke, owner, isCurrent])
+  // T010-03: queued/lastConfirmed/current are OWNER projections (the client
+  // applies every observation as an owner operation); this component holds
+  // only UI-local interaction state (queueError/queueing/reason/owner).
+  const queued = useSyncExternalStore(client.onUpdate, () => client.pending)
+  const lastConfirmed = useSyncExternalStore(client.onUpdate, () => client.lastConfirmed)
+  const current = useSyncExternalStore(client.onUpdate, () => client.current)
   // The submission guard of this wiring reads exactly this client per session,
   // so the send gate and the composer UI share one queue bookkeeping.
   useEffect(() => {
@@ -139,9 +142,9 @@ function NativeSessionSelector({ wiring, location, snapshot }: {
     return () => { clients.delete(identity) }
   }, [client, owner, isCurrent, wiring])
   // Submit outcomes and reconciles update the projection live: a ready
-  // consumed the intent (queue empty), a refusal keeps it visible.
+  // consumed the intent (queue empty), a refusal keeps it visible. The
+  // projections re-render themselves; only the UI-local error text clears.
   useEffect(() => client.onUpdate(() => {
-    setQueued(client.pending)
     if (client.pending === null) setQueueError('')
   }), [client])
   const queryEpoch = useRef(0)
@@ -150,10 +153,11 @@ function NativeSessionSelector({ wiring, location, snapshot }: {
     const epoch = ++queryEpoch.current
     const observation = await client.query()
     if (!isCurrent() || epoch !== queryEpoch.current) return
+    // the client already applied the observation to the owner (projections
+    // re-render); only the UI-local status text is set here
     if (observation.state === 'observed') {
-      setQueued(observation.desired); setLastConfirmed(observation.lastConfirmed); setCurrent(observation.current ?? null); setQueueError('')
+      setQueueError('')
     } else {
-      setCurrent(null)
       setQueueError(`模型选择状态未知：${observation.code}；重新打开可查询，不会重试选择。`)
     }
   }, [owner, isCurrent, client])
@@ -223,8 +227,8 @@ function NativeSessionSelector({ wiring, location, snapshot }: {
       const enqueue = wiring.registrationSeam?.(location) ?? null
       const outcome = enqueue ? await enqueue(() => client.queue(choice)) : await client.queue(choice)
       if (!isCurrent()) return
-      if (outcome.state === 'pending-next-turn') setQueued(client.pending)
-      else setQueueError(outcome.state === 'refused' ? `模型选择被拒绝：${outcome.code}` : `模型选择结果未知：${outcome.code}；请先核实。`)
+      if (outcome.state !== 'pending-next-turn')
+        setQueueError(outcome.state === 'refused' ? `模型选择被拒绝：${outcome.code}` : `模型选择结果未知：${outcome.code}；请先核实。`)
     } finally {
       busy.current = false
       if (live.current) setQueueing(false)
