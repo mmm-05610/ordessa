@@ -153,7 +153,7 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 
 - [x] T010-10 落实A1 Session/Config/Submission/Run/Interaction owner公开只读/dispatch/Harness证据入口；同会话确认与操作单owner，前端代理无第二writer。
 
-- [ ] T010-11 资源选择控件与Profile facet走公开贡献及Agent操作，无私有binding/serializer；Profile字段覆盖、同预设重选、无Profile模型切换和无Chat资源管理都有证据。
+- [x] T010-11 资源选择控件与Profile facet走公开贡献及Agent操作，无私有binding/serializer；Profile字段覆盖、同预设重选、无Profile模型切换和无Chat资源管理都有证据。
 
 - [ ] T010-12 将Agent/Profile/model选择控件迁公共只读订阅及操作入口，移除控件镜像和重复缓存；字段覆盖语义及原配置owner保持不变。
 - [ ] T010-13 将Chat草稿及至少一个资源设置编辑页迁公共编辑工具，保领域owner、字段校验、未知保存及IME缓冲，测试dirty冲突/ABA与迟到保存。

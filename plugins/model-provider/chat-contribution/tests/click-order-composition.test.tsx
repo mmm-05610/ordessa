@@ -12,10 +12,11 @@
 // a later model click won the backend action_seq race.
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
-import { afterEach, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
 import { createChatContributions, type ChatSubmissionSnapshot } from '@extensions/ordessa.chat-api/contract.js'
 import { ChatModelSelector, PROFILE_BINDING_CONTRIBUTION_ID, profileRegistrationSeamOf, registerModelSelector, type SelectorWiring } from '../src/chat-api-entry'
+import { createNextTurnClient } from '../src/next-turn-client'
 import type { AgentWorkspaceSnapshot } from '@extensions/ordessa.agent-contracts/contract.js'
 // test-only cross-workspace composition: the two contributions must be the
 // REAL modules for this acceptance (appendix §6c F1.3); production wiring
@@ -217,4 +218,25 @@ it('M-click then P-click: the model choice reaches the wire before the Profile r
     await flush()
     expect(state.timeline).toEqual(['model-choose', 'profile-select'])
   } finally { await state.scope.dispose() }
+})
+
+// T010-11: no private binding/serializer — the click-order seam is a PUBLIC
+// projection (021 §6c F1.2): without the Profile glue it is simply null and
+// the model side calls the Server directly (no-Profile model switching).
+describe('public seam, no private serializer (T010-11)', () => {
+  it('the registration seam is null without the Profile glue and the choose call goes out directly', async () => {
+    const session = { serverInstanceId: 'srv-1', harnessId: 'pi', acpSessionId: 's-9' }
+    const location = { kind: 'session' as const, connectionId: 'client', serverInstanceId: 'srv-1',
+      sessionId: 's-9', harnessId: 'pi', contextRevision: 1, session }
+    const chat = createChatContributions()
+    expect(profileRegistrationSeamOf(chat, location as never)).toBeNull() // no Profile contribution registered
+    const invoke = vi.fn().mockResolvedValue({ outcome: 'pending-next-turn', sequence: 1, intentRoute: 'independent' })
+    const client = createNextTurnClient(invoke, { kind: 'session', session })
+    // the model side's own queue call — nothing Profile-private in the path
+    expect(await client.queue({ harnessId: 'pi', providerConfigId: 'p-1', modelId: 'm1' }))
+      .toEqual({ state: 'pending-next-turn', sequence: 1 })
+    expect(invoke).toHaveBeenCalledWith('modelProvider.chooseForSession', expect.objectContaining({
+      target: session,
+    }))
+  })
 })
