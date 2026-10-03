@@ -24,4 +24,8 @@ source-inspected / design-reviewed / finite-reference / controlled-integration /
 本轮仅文档与只读审查；真实模型测试0。子代理请求及费用无法精确取得时标未知，不伪记。
 
 ## Checkpoints
-无实现检查点。
+无迁移实现检查点；已准备源码/方案基线4ec124a2fce10878d55808963ac7e471dc4f7354，见evidence/preparation-receipt.md。
+
+## 实施准备（最新）
+2026-10-03用户已授权新树和批准范围基线提交，M12记录见准备回执。001现为PARTIAL/source-prepared，尚无codeReady：来源快照已固定，测试发现/隔离基线及剩余指令盘点未跑。002–012仍NOT_STARTED。旧“全NOT_STARTED/待源许可”描述为R5审查时点，不是本次准备后的状态。
+zcode主代理建议GLM-5.3；子代理配置/工具/简短启动词见zcode-handoff.md。没有配置或调用真实代理模型。
