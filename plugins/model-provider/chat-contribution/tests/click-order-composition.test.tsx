@@ -20,8 +20,8 @@ import type { AgentWorkspaceSnapshot } from '@extensions/ordessa.agent-contracts
 // test-only cross-workspace composition: the two contributions must be the
 // REAL modules for this acceptance (appendix §6c F1.3); production wiring
 // resolves them independently through the extension host.
-import { createProfileChatGlue } from '../../../../profile/integrations/chat/src/glue'
-import type { ProfilePickerProps } from '../../../../profile/integrations/chat/src/picker-model'
+import { createProfileChatGlue } from '../../../profile/integrations/chat/src/glue'
+import type { ProfilePickerProps } from '../../../profile/integrations/chat/src/picker-model'
 import type { ProfileServiceClient, AppliedReceiptDto, NativeCreationPreparationDto, SessionRef } from '@ordessa/plugin-profile-api'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true

@@ -10,7 +10,7 @@ requires-python = ">=3.11"
 license = {text = "MIT"}
 # SR-13 (amending I-1 "stdlib only"): src imports the published contract
 # vocabulary, so the runtime closure is exactly the published API packages —
-# nothing more. Unpinned, mirroring plugins/assets/sandbox/backend and
+# nothing more. Unpinned, mirroring plugins/sandbox/backend and
 # plugins/workspace; guarded against drift by
 # tests/test_boundaries_t03b.py (declared == imported, both directions).
 # ordessa-permissions-backend is absent from the runtime closure on purpose

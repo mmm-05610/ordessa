@@ -1,4 +1,4 @@
-# MIGRATION — `plugins/assets/model-provider/server`
+# MIGRATION — `plugins/model-provider/server`
 
 来源树：`/home/maoqh/projects/ordessa/worktrees/plugin-model-provider-impl`
 分支 `feature/plugin-model-provider-impl` @ `9305563719d25e04076b9221a7284660bd8f8642`（clean，只读）。
@@ -51,9 +51,9 @@
 
 ## 验证（2026-09-28，从仓库根）
 
-- 先红：`pytest plugins/assets/model-provider/server/tests/test_next_choice_wire.py`
+- 先红：`pytest plugins/model-provider/server/tests/test_next_choice_wire.py`
   → `15 failed, 2 errors`（实现前）。
-- 后绿：`.venv/bin/python -m pytest plugins/assets/model-provider/server -q`
+- 后绿：`.venv/bin/python -m pytest plugins/model-provider/server -q`
   → **87 passed**（70 迁移 + 17 新增），退出码 0。
 
 ## 限制与待接线（不冒充完成）

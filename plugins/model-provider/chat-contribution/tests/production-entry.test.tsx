@@ -15,7 +15,7 @@ import {
 } from '@extensions/ordessa.chat-api/contract.js'
 import { ComponentOutlet } from '@ordessa/ui-components/react'
 import { WirePortToken } from '@extensions/ordessa.contracts/contract.js'
-import { createUiComponentsService } from '../../../../../packages/desktop-platform/ui-components/src/index'
+import { createUiComponentsService } from '../../../../packages/desktop-platform/ui-components/src/index'
 import createPlugin, { COMPONENT_PROVIDER_ID, TRANSPORT_MISSING } from '../src/entry'
 import { MODEL_SELECTOR_ID, ModelSelectorKey } from '../src/chat-api-entry'
 import { ModelSelector } from '../src/selector'

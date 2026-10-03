@@ -26,7 +26,7 @@ from ordessa_sandbox_api import (
     ToolCategory,
 )
 
-REPO_ROOT = Path(__file__).resolve().parents[5]
+REPO_ROOT = Path(__file__).resolve().parents[4]
 HARNESSES_TOML = REPO_ROOT / "plugins/harness/src/ordessa_harness/harnesses.toml"
 CODEX_SCHEMA = (REPO_ROOT / "plugins/harness/adapters/acp-adapter/internal/"
                 "codex/schema/codex_app_server_protocol.v2.schemas.json")

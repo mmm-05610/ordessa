@@ -26,8 +26,8 @@ import { ChatModelSelector, PROFILE_BINDING_CONTRIBUTION_ID, clientRegistryOf, p
          registerModelSelector, type SelectorWiring } from '../src/chat-api-entry'
 // test-only cross-workspace composition (same seam as click-order-composition):
 // production wiring resolves the two contributions independently.
-import { createProfileChatGlue } from '../../../../profile/integrations/chat/src/glue'
-import type { ProfilePickerProps } from '../../../../profile/integrations/chat/src/picker-model'
+import { createProfileChatGlue } from '../../../profile/integrations/chat/src/glue'
+import type { ProfilePickerProps } from '../../../profile/integrations/chat/src/picker-model'
 import type { ProfileServiceClient, AppliedReceiptDto, NativeCreationPreparationDto, SessionRef } from '@ordessa/plugin-profile-api'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true

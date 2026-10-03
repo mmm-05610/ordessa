@@ -1,15 +1,15 @@
 // TypeScript mirror of the published `sandbox.describe@1` contract.
 //
 // Authority for every name below:
-//   plugins/assets/sandbox/api/src/ordessa_sandbox_api/describe.py   (SandboxOption,
+//   plugins/sandbox/api/src/ordessa_sandbox_api/describe.py   (SandboxOption,
 //       SandboxDescription.options_for_ui/select, _OPTION_STRICTNESS)
-//   plugins/assets/sandbox/api/src/ordessa_sandbox_api/matrix.py     (CellStatus,
+//   plugins/sandbox/api/src/ordessa_sandbox_api/matrix.py     (CellStatus,
 //       DescribeOption, BRAND_OPTIONS — the only option vocabulary that exists)
-//   plugins/assets/sandbox/api/src/ordessa_sandbox_api/platform.py   (PlatformResult)
-//   plugins/assets/sandbox/api/src/ordessa_sandbox_api/errors.py     (SandboxErrorCode)
-//   plugins/assets/sandbox/backend/src/ordessa_sandbox_backend/composition.py
+//   plugins/sandbox/api/src/ordessa_sandbox_api/platform.py   (PlatformResult)
+//   plugins/sandbox/api/src/ordessa_sandbox_api/errors.py     (SandboxErrorCode)
+//   plugins/sandbox/backend/src/ordessa_sandbox_backend/composition.py
 //       (FacetDescription.to_wire — the exact JSON the wire method answers with)
-//   plugins/assets/sandbox/backend/src/ordessa_sandbox_backend/plugin.py
+//   plugins/sandbox/backend/src/ordessa_sandbox_backend/plugin.py
 //       (method id `sandbox.describe`, required/optional parameter sets)
 //
 // Nothing here names an option, a platform or a coverage category: those values

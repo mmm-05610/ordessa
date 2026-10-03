@@ -21,7 +21,7 @@ WHY THIS EXISTS (measurement, recorded before any code change; full evidence:
   runtime-adapter version.
 * The Sandbox facet declared exactly ``(0, 1, 0)`` — its own release fact
   (``.../src/ordessa_sandbox_adapters/points.py:66`` backed by
-  ``plugins/assets/sandbox/adapters/pyproject.toml:7 version = "0.1.0"``).
+  ``plugins/sandbox/adapters/pyproject.toml:7 version = "0.1.0"``).
 * The Permissions facet declared ``VersionRange((1, 0, 0))`` = ``[1.0.0, ∞)``
   (``.../ordessa_permissions_adapters/contribution.py:120``) — unbounded, not
   even its own release fact (``plugins/permissions/adapters/pyproject.toml:7``
@@ -63,9 +63,9 @@ from ordessa_sandbox_adapters import (
 )
 from ordessa_sandbox_adapters.points import _ADAPTER_VERSIONS, build_configuration_descriptor
 
-REPO = Path(__file__).resolve().parents[5]
+REPO = Path(__file__).resolve().parents[4]
 PERM_SRC = REPO / "plugins/permissions/adapters/src/ordessa_permissions_adapters/contribution.py"
-SANDBOX_PYPROJECT = REPO / "plugins/assets/sandbox/adapters/pyproject.toml"
+SANDBOX_PYPROJECT = REPO / "plugins/sandbox/adapters/pyproject.toml"
 TARGET = ApplicationTarget("q5.t020.server", "q5.t020.session", "q5.t020.channel", 7)
 HANDLE = TargetHandle("codex-config-toml", 7)
 RESOURCE = ("private", "codex-settings.json")

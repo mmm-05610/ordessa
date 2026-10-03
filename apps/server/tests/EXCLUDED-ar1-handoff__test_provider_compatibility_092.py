@@ -2,7 +2,7 @@
 
 本文件断言的语义已由新 owner 接账，内容**完整保留**（不被收集）：
 
-  接账方：plugins/assets/model-provider/server/tests/test_plugin_registration.py
+  接账方：plugins/model-provider/server/tests/test_plugin_registration.py
   被测语义：能力判定由两侧声明推导，永不存储
 
 原由 server-compat 的 model_configs writer 实现；W-1 拆除该 writer 后，

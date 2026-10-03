@@ -45,9 +45,9 @@ def test_retired_brand_adapter_distribution_has_no_source_entry():
     harness = Path(importlib.import_module("ordessa_harness").__file__).parent
     root = harness.parents[3]
     assert (root / "plugins" / "harness" / "pyproject.toml").is_file()
-    assert not (root / "plugins/assets/model-provider/adapters/pyproject.toml").exists()
+    assert not (root / "plugins/model-provider/adapters/pyproject.toml").exists()
     # Ignored egg-info/bytecode may remain locally; no importable source shim.
-    retired = root / "plugins/assets/model-provider/adapters/src"
+    retired = root / "plugins/model-provider/adapters/src"
     assert not list(retired.rglob("*.py"))
 
 

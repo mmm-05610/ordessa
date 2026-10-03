@@ -1,5 +1,5 @@
 // Fixtures use only the option vocabulary the backend actually publishes
-// (plugins/assets/sandbox/api/src/ordessa_sandbox_api/matrix.py BRAND_OPTIONS)
+// (plugins/sandbox/api/src/ordessa_sandbox_api/matrix.py BRAND_OPTIONS)
 // so no test can pass by inventing an option name.
 import {
   SANDBOX_DESCRIBE_API_VERSION,

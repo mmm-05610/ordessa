@@ -67,7 +67,7 @@ SANDBOX_FACET_SCHEMA_VERSION = "1"
 
 #: this distribution's adapter version; the pin this build was measured at.
 #: Backing observation: this distribution's own release fact
-#: (`plugins/assets/sandbox/adapters/pyproject.toml:7`, `version = "0.1.0"`) -
+#: (`plugins/sandbox/adapters/pyproject.toml:7`, `version = "0.1.0"`) -
 #: exact on both bounds, never widened. The joint-facet proof against the
 #: Permissions facet lives in `tests/test_joint_facet_version_binding.py`
 #: (each side pins its OWN release fact; both independently measure 0.1.0 -

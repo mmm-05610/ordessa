@@ -114,12 +114,12 @@ pip install -q \
   -e plugins/permissions/api \
   -e plugins/permissions/backend \
   -e plugins/permissions/adapters \
-  -e plugins/assets/sandbox/api \
-  -e plugins/assets/sandbox/adapters \
-  -e plugins/assets/sandbox/backend \
-  -e plugins/assets/model-provider/profile-contribution \
-  -e plugins/assets/model-provider/server \
-  -e plugins/assets/skills \
+  -e plugins/sandbox/api \
+  -e plugins/sandbox/adapters \
+  -e plugins/sandbox/backend \
+  -e plugins/model-provider/profile-contribution \
+  -e plugins/model-provider/server \
+  -e plugins/skills \
   -e plugins/profile \
   -e plugins/runtime-compat \
   -e plugins/server-compat \

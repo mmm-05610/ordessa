@@ -16,7 +16,7 @@ adapter at 1.0.0 or promised compatibility with every future one. The only
 version fact this package can back is its own release pin —
 `version = "0.1.0"`, `plugins/permissions/adapters/pyproject.toml:7` — which
 is the same class of fact the Sandbox facet pins for itself
-(`plugins/assets/sandbox/adapters/src/ordessa_sandbox_adapters/points.py:66`).
+(`plugins/sandbox/adapters/src/ordessa_sandbox_adapters/points.py:66`).
 
 These tests pin the declaration to that measured fact; moving the release
 version without moving the claim (or re-widening the range) is red here.

@@ -263,6 +263,7 @@ def test_selected_product_host_registers_owner_methods_but_admission_stays_unava
     from ordessa_server.bootstrap import build_runtime
 
     runtime = build_runtime(tmp_path / "data")
+    runtime.start()  # T006-02 round gate: wire answers only a started round
     try:
         for method_id, body in (
             ("acp.submission.authorize", {"connectionId": "missing", "submission": {}}),

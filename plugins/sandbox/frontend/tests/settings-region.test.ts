@@ -5,7 +5,7 @@
 // point rather than a stand-in registry.
 import { describe, expect, it } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
-import { createWorkbench } from '../../../../../packages/workbench/src/model'
+import { createWorkbench } from '../../../../packages/workbench/src/model'
 import {
   SANDBOX_SETTINGS_SECTION_ID,
   SANDBOX_SETTINGS_SECTION_TITLE,

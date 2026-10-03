@@ -3,7 +3,7 @@
 // again instead of replaying a cached availability answer.
 import { describe, expect, it } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
-import { createWorkbench } from '../../../../../packages/workbench/src/model'
+import { createWorkbench } from '../../../../packages/workbench/src/model'
 import {
   SANDBOX_SETTINGS_SECTION_ID,
   createInMemoryDraftStore,

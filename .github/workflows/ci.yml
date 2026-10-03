@@ -33,14 +33,14 @@ jobs:
           pip install -e 'packages/backend/pacthold[dev]' -e packages/backend/server-plugin-api \
                       -e packages/backend/environment-api -e packages/backend/persistence-sqlite \
                       -e packages/backend/platform-services -e plugins/harness/api
-          pip install -e plugins/assets/sandbox/api -e plugins/assets/sandbox/backend \
-                      -e plugins/assets/sandbox/adapters -e plugins/permissions/api \
+          pip install -e plugins/sandbox/api -e plugins/sandbox/backend \
+                      -e plugins/sandbox/adapters -e plugins/permissions/api \
                       -e plugins/permissions/backend -e plugins/permissions/adapters
           pip install -e 'apps/server[dev]' -e 'plugins/harness[dev]' -e plugins/workspace \
                       -e plugins/runtime-compat -e plugins/server-compat \
-                      -e plugins/assets/model-provider/server -e plugins/assets/model-provider/adapters \
-                      -e plugins/assets/model-provider/profile-contribution -e plugins/prompts \
-                      -e plugins/memory -e plugins/extensions -e plugins/assets/skills \
+                      -e plugins/model-provider/server -e plugins/model-provider/adapters \
+                      -e plugins/model-provider/profile-contribution -e plugins/prompts \
+                      -e plugins/memory -e plugins/extensions -e plugins/skills \
                       -e plugins/assets/subagents -e plugins/assets/mcp \
                       -e plugins/command-templates -e plugins/profile
           pip install -e products/server
@@ -49,7 +49,7 @@ jobs:
       - name: server-compat
         run: pytest -q plugins/server-compat/tests
       - name: model-provider
-        run: pytest -q plugins/assets/model-provider/server/tests
+        run: pytest -q plugins/model-provider/server/tests
       - name: environment-api
         run: pytest -q packages/backend/environment-api/tests
       - name: persistence-sqlite
@@ -103,9 +103,9 @@ jobs:
             packages/desktop-platform/ui-components \
             plugins/agent/connections \
             plugins/agent/sessions \
-            plugins/assets/model-provider/chat-contribution \
-            plugins/assets/model-provider/desktop \
-            plugins/assets/sandbox/frontend \
+            plugins/model-provider/chat-contribution \
+            plugins/model-provider/desktop \
+            plugins/sandbox/frontend \
             plugins/assets/subagents/settings \
             plugins/assets/subagents/ui \
             plugins/chat/api \

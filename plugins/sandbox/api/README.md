@@ -74,7 +74,7 @@ T05 probes run; nothing in this package may present them as green.
 
 ```sh
 cd <monorepo root>
-PYTHONPATH=plugins/assets/sandbox/api/src python -m pytest plugins/assets/sandbox/api -q
+PYTHONPATH=plugins/sandbox/api/src python -m pytest plugins/sandbox/api -q
 ```
 
 Evidence ledgers: `specs/011-q5-safety/evidence/t04-red-sandbox-api.txt`

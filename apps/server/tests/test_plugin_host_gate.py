@@ -65,7 +65,7 @@ MODEL_PROVIDER_IMPORT_METHODS = frozenset({
 #: 002 冻结的钉面漂移（identity-map wireMethods.pinDrift）：默认组合 live=88、
 #: 旧钉面公式=86，多出的两个方法在此显式钉住并各断言 owner。
 #: `modelProvider.beginTurnApplication` 是 Z3 冻结面 7→8 的第 8 个（声明于
-#: plugins/assets/model-provider/server/src/ordessa_model_provider/plugin.py）。
+#: plugins/model-provider/server/src/ordessa_model_provider/plugin.py）。
 MODEL_PROVIDER_TURN_APPLICATION = frozenset({"modelProvider.beginTurnApplication"})
 #: 021 原生历史面（docs/migration/native-session-history-v1.md），声明于
 #: plugins/harness/src/ordessa_harness/server_acp/plugin.py。

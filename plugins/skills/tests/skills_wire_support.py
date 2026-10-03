@@ -28,7 +28,7 @@ import pytest
 
 from server_plugin_api import WireError
 
-REPO_ROOT = Path(__file__).resolve().parents[4]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 COMPAT_BOUNDARY_FILE = (REPO_ROOT / "apps" / "server" / "tests"
                         / "test_server_compat_boundary.py")
 

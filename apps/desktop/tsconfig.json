@@ -11,7 +11,7 @@
     "strict": true,
     "paths": {
       "@extensions/ordessa.model-provider/contract.js": [
-        "../../plugins/assets/model-provider/desktop/src/contract.ts"
+        "../../plugins/model-provider/desktop/src/contract.ts"
       ],
       "@extensions/ordessa.profile-api/contract.js": [
         "../../plugins/profile/api/src/index.ts"
@@ -61,5 +61,11 @@
     "../../examples/*/src",
     "tests",
     "fixtures"
+  ],
+  "exclude": [
+    "../../plugins/model-provider/desktop/tests",
+    "../../plugins/model-provider/chat-contribution/tests",
+    "../../plugins/skills/desktop/tests",
+    "../../plugins/sandbox/frontend/tests"
   ]
 }

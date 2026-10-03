@@ -40,7 +40,7 @@ const MANUAL_REPRO = [
  * editable installs; their sources are on the same baseline, so the subprocess
  * reads them from this tree's src dirs (environment fixup, not a code path). */
 const PYTHONPATH_EXTRA = [
-  path.join(REPO_ROOT, 'plugins/assets/model-provider/server/src'),
+  path.join(REPO_ROOT, 'plugins/model-provider/server/src'),
   path.join(REPO_ROOT, 'plugins/permissions/backend/src'),
 ].join(':')
 

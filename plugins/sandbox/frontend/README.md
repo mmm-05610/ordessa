@@ -1,4 +1,4 @@
-# `plugins/assets/sandbox/frontend` — Sandbox Settings 区（T06 / FR-05·06·08·09）
+# `plugins/sandbox/frontend` — Sandbox Settings 区（T06 / FR-05·06·08·09）
 
 Sandbox 域通过平台**真实**的 Settings 贡献接缝注册自己那一块
 "Harness 原生隔离" 区域，只渲染后端 `sandbox.describe@1` 说出来的事实。
@@ -25,7 +25,7 @@ Sandbox 域通过平台**真实**的 Settings 贡献接缝注册自己那一块
 
 ## 消费的后端
 
-`plugins/assets/sandbox/backend` 唯一的只读方法 `sandbox.describe`
+`plugins/sandbox/backend` 唯一的只读方法 `sandbox.describe`
 （required `{harnessId}`，optional `{nativeVersion,osName,osVersion,platformVersion}`，
 见 `plugin.py:34-36`），返回 `composition.py:FacetDescription.to_wire`。
 `src/contract.ts` 是它的 TypeScript 镜像；词汇来自

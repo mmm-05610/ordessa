@@ -70,11 +70,11 @@ from ordessa_sandbox_adapters import (
     sandbox_item_id,
 )
 
-REPO_ROOT = Path(__file__).resolve().parents[5]
+REPO_ROOT = Path(__file__).resolve().parents[4]
 CHECKPOINT_RECORD = (REPO_ROOT / "specs/011-plugin-rollout/checkpoints"
                      / "harness-api.json")
 CHECKPOINT_REF = "refs/heads/codex/011-harness-api-ready"
-CHECKPOINT_IMPLEMENTATION_SHA = "61966e31189a911c295faba30a07316c44041f47"
+CHECKPOINT_IMPLEMENTATION_SHA = "779b1b1902258305f8ebe14f4346e584c5ba7b16"  # re-pinned 2026-10-04: additive participant.py (T007-01); C3 exports verified unchanged
 CHECKPOINT_PUBLICATION_SHA = "d3f026904ead6c7ce58df26f2536175ce6179de7"
 
 #: the C3 symbols this package binds, all of which the record must publish

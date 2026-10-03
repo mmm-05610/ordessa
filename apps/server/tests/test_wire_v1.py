@@ -519,7 +519,7 @@ def test_profile_and_provider_model_maintenance_is_versioned_and_referential(wir
 
     本条测的是 wire 面的 profile / providerModel 维护本身；该 wire 面（8 个写
     handler + 注册表）随 W-1 退役，语义由 model-provider adapters 接账
-    （`plugins/assets/model-provider/server/tests/test_next_choice_wire.py`）。
+    （`plugins/model-provider/server/tests/test_next_choice_wire.py`）。
     保留函数名与 skip 让它可见可追，而不是删断言把红藏起来。
     """
     import pytest as _pytest

@@ -8,5 +8,5 @@
   注册载荷形状对齐 profile-v2 目标契约；**实际 `addEditor`/`addSettingsSection` 注册属 Z1 的
   profile-api**（REQ-Z3-3，OPEN）——本包不私建注册表。
 
-验证：`.venv/bin/python -m pytest plugins/assets/model-provider/profile-contribution -q` →
+验证：`.venv/bin/python -m pytest plugins/model-provider/profile-contribution -q` →
 13 passed（7 迁移 + 6 增量；增量先红：模块缺席 1 collection error，后绿）。

@@ -26,7 +26,7 @@ from ordessa_skills.harness_adapters.capabilities import (
 BRAND_MODULES = {"pi": pi, "codex": codex, "claude-code": claude}
 _CITATION = re.compile(r"[\w./+-]+:(\d+)")
 _CITED_RANGE = re.compile(r"-(\d+)")
-REPO_ROOT = Path(__file__).resolve().parents[4]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 # ---------------------------------------------------------------------------

@@ -16,16 +16,16 @@
     ],
     "paths": {
       "@extensions/ordessa.contracts/contract.js": [
-        "../../../../packages/desktop-platform/contracts/foundation/src/contract.ts"
+        "../../../packages/desktop-platform/contracts/foundation/src/contract.ts"
       ],
       "@extensions/ordessa.chat-api/contract.js": [
-        "../../../chat/api/src/contract.ts"
+        "../../chat/api/src/contract.ts"
       ],
       "@ordessa/extension-api": [
-        "../../../../packages/desktop-platform/extension-api/src/index.ts"
+        "../../../packages/desktop-platform/extension-api/src/index.ts"
       ],
       "@ordessa/ui-components/api": [
-        "../../../../packages/desktop-platform/ui-components/api/ui-components.ts"
+        "../../../packages/desktop-platform/ui-components/api/ui-components.ts"
       ]
     }
   },

@@ -2,7 +2,7 @@
 
 本文件断言的合并语义已由新 owner 接账，内容**完整保留**（不被收集）：
 
-  接账方：plugins/assets/model-provider/server/tests/test_union_semantics_successor.py
+  接账方：plugins/model-provider/server/tests/test_union_semantics_successor.py
           （codex/plugin-model-provider @ b14d1ecdfe）
   被测语义：update 合并五条 —— 缺省保持 / 显式 null 清除 / 方言归一 /
             未知拒绝零变更 / 仓库级 KEEP 哨兵反例
@@ -16,7 +16,7 @@ plugin 线已在 model-provider 侧补上 5 条等价测试，实跑 133 passed�
 >
 > W-1 拆掉 server-compat 的 `model_configs` writer 后，本文件的 5 条 union 语义
 > （缺省保持 / 显式 null 清除 / 方言归一 / 未知拒绝 / 仓库级反例）**在新 owner
-> 侧尚无等价测试**——`plugins/assets/model-provider/server/tests/test_next_choice_wire.py`
+> 侧尚无等价测试**——`plugins/model-provider/server/tests/test_next_choice_wire.py`
 > 的 `is None` 断言是关于 cursor/state 的，不覆盖 update 合并语义。
 >
 > 盲退会悄悄丢覆盖，故**保留本文件**。请 plugin 线在 model-provider 侧补上

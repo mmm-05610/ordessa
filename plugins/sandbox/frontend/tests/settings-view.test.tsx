@@ -6,7 +6,7 @@ import { act, createElement } from 'react'
 import { createRoot } from 'react-dom/client'
 import { afterEach, describe, expect, it } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
-import { createWorkbench } from '../../../../../packages/workbench/src/model'
+import { createWorkbench } from '../../../../packages/workbench/src/model'
 import {
   createInMemoryDraftStore,
   createSandboxSettingsRegion,

@@ -1,7 +1,7 @@
 """Make the package sources importable without an editable install.
 
 The test session runs from the repository root against
-`plugins/assets/skills/tests`. In the in-tree verification venv none of
+`plugins/skills/tests`. In the in-tree verification venv none of
 these distributions are pip-installed, so this pin adds repo `src/` roots
 for THIS package plus the runtime-compat assembly (`plugins/runtime-compat`
 — the product storage facade `Database`/`PRODUCT_SCHEMA_VERSION` and the
@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
-REPO_ROOT = PLUGIN_ROOT.parents[2]
+REPO_ROOT = PLUGIN_ROOT.parents[1]
 
 for _module, _root in (("ordessa_skills", PLUGIN_ROOT / "src"),
                        ("pacthold_runtime_compat",

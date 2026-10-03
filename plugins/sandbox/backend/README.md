@@ -1,7 +1,7 @@
 # ordessa-sandbox-backend
 
 The Sandbox domain's **backend service** for `docs/design/safety-controls`
-(task T04b, `plugins/assets/sandbox/backend`, dist `ordessa-sandbox-backend`):
+(task T04b, `plugins/sandbox/backend`, dist `ordessa-sandbox-backend`):
 native option/version management and verification for
 `sandbox.native-configuration@1` / `sandbox.describe@1` (contracts.md §C2,
 §C3, §C4; spec.md FR-05, FR-06, FR-08, FR-09). It builds on
@@ -90,7 +90,7 @@ control.
 
 ```sh
 cd <monorepo root>
-PYTHONPATH=plugins/assets/sandbox/backend/src python -m pytest plugins/assets/sandbox/backend -q
+PYTHONPATH=plugins/sandbox/backend/src python -m pytest plugins/sandbox/backend -q
 ```
 
 Evidence ledgers: `specs/011-q5-safety/evidence/t04b-red-sandbox-backend.txt`

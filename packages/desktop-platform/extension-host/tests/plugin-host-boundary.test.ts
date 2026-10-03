@@ -153,7 +153,7 @@ describe('N4-R1: extension plugins never reach into host internals', () => {
     expect(relative).toEqual(expect.arrayContaining([
       'plugins/chat/frontend/src/entry.tsx',
       'plugins/connectors/acp/src/host.ts',
-      'plugins/assets/model-provider/desktop/src/entry.tsx',
+      'plugins/model-provider/desktop/src/entry.tsx',
     ]))
   })
 
@@ -175,7 +175,7 @@ describe('N4-R1: extension plugins never reach into host internals', () => {
     const allowed = [
       ['plugins/chat/frontend/src/entry.tsx', '@ordessa/extension-api'],
       ['plugins/chat/frontend/src/entry.tsx', '@extensions/ordessa.contracts/contract.js'],
-      ['plugins/assets/model-provider/desktop/src/entry.tsx', '@ordessa/ui-components/api'],
+      ['plugins/model-provider/desktop/src/entry.tsx', '@ordessa/ui-components/api'],
       ['plugins/agent/contracts/src/agent.ts', '@extensions/ordessa.contracts/contract.js'],
       ['plugins/connectors/acp/src/host.ts', './channel'],
     ] as const

@@ -250,6 +250,7 @@ def test_controlled_product_wire_preparation_registration_and_authenticated_c4(t
     from ordessa_server_product.profile_configuration import NativeProfileConfigPort
 
     product = build_runtime(tmp_path / 'product')
+    product.start()  # T006-02 round gate: wire answers only a started round
     credentials = CredentialRecords(product.database)
     credentials.register('controlled-key', 'api_key', 'memory://controlled-key')
     class PrivateStore:

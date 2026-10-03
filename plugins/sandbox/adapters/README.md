@@ -106,8 +106,8 @@ The T05 L2 ACP effect probe and readback therefore remain open.
 ## Test
 
 ```
-PYTHONPATH=plugins/assets/sandbox/adapters/src \
-  <repo>/.venv/bin/python -m pytest plugins/assets/sandbox/adapters -q
+PYTHONPATH=plugins/sandbox/adapters/src \
+  <repo>/.venv/bin/python -m pytest plugins/sandbox/adapters -q
 ```
 
 The package tests exercise product carrier admission, a controlled callable

@@ -28,7 +28,7 @@ import ast
 import re
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[4]
+ROOT = Path(__file__).resolve().parents[3]
 PKG = ROOT / "plugins" / "assets" / "skills" / "src" / "ordessa_skills"
 AREA_DIRS = (PKG / "harness_adapters", PKG / "native_discovery")
 BRAND_IDS = {"pi", "codex", "claude-code"}

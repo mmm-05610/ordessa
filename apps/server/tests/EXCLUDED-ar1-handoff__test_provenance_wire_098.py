@@ -2,7 +2,7 @@
 
 本文件断言的语义已由新 owner 接账，内容**完整保留**（不被收集）：
 
-  接账方：plugins/assets/model-provider/server/tests/test_next_choice_wire.py
+  接账方：plugins/model-provider/server/tests/test_next_choice_wire.py
   被测语义：provenance 与 wire 形状：返回字典用 wire 名而非 SQL 列名；@staticmethod 不得按裸名读类属性
 
 原由 server-compat 的 model_configs writer 实现；W-1 拆除该 writer 后，

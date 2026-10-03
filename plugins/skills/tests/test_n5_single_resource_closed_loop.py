@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 for _module, _src in (("ordessa_profile", REPO_ROOT / "plugins" / "profile" / "src"),
                       ("pacthold_runtime_compat",
                        REPO_ROOT / "plugins" / "runtime-compat" / "src")):

@@ -82,7 +82,7 @@ import ast
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[4]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 PKG_DIR = REPO_ROOT / "plugins" / "assets" / "skills" / "src" / "ordessa_skills"
 
 #: Hard-forbidden import roots (AGENTS.md rule 3: plugins never touch host

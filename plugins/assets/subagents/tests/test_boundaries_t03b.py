@@ -37,8 +37,8 @@ Six locks:
    file of this package (verification.md G23: "skip/xfail 藏新红" is a FAIL).
 
 Precedent for the allow-list shape (a plugin declaring only published contracts
-as runtime deps): `plugins/assets/sandbox/adapters/tests/test_purity_no_fake_apply.py:37`
-and `plugins/assets/sandbox/adapters/pyproject.toml`.
+as runtime deps): `plugins/sandbox/adapters/tests/test_purity_no_fake_apply.py:37`
+and `plugins/sandbox/adapters/pyproject.toml`.
 
 Every guard ships with a capability probe: the same predicate is run over a
 synthetic defective input and must report it, so a green guard is never a

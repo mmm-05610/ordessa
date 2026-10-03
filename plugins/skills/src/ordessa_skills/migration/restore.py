@@ -115,7 +115,7 @@ def _repo_root() -> Path | None:
     checkout (marker: AGENTS.md next to ``docs``). When shipped as an
     installed wheel the guess is empty and the repo guard is skipped —
     the in-root guard still stands; this limit is stated, not hidden."""
-    guess = Path(__file__).resolve().parents[6]
+    guess = Path(__file__).resolve().parents[5]
     return guess if (guess / "AGENTS.md").is_file() else None
 
 

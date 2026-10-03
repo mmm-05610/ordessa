@@ -1,7 +1,7 @@
 """P-A conformance gates for the runtime-preferences brand adapters.
 
 Gate shapes follow the pinned form of
-``plugins/assets/model-provider/adapters/tests/test_adapters_conformance.py``
+``plugins/model-provider/adapters/tests/test_adapters_conformance.py``
 (lines 80-103 there: real-C2-registry overlap refusal and disjoint-range
 acceptance), re-driven against the production registry
 (``ordessa_harness.contributions``) — refusal semantics are the production

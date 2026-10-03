@@ -51,7 +51,7 @@ from pacthold_runtime_compat.storage import Database  # noqa: E402
 
 T0 = "2026-01-01T00:00:00+00:00"
 FOREIGN_KINDS = ("mcp", "command", "plugin")
-REPO_ROOT = Path(__file__).resolve().parents[4]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 SKILL_BODIES = {
     ("skill-alpha", 1): ("---\nname: skill-alpha\n"
