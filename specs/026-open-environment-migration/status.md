@@ -1,5 +1,12 @@
 # 迁移状态
 
+## 2026-10-04 009 完成（codeReady，U 显式待验）
+
+T009-01..09 全部 S/I 完成（evidence/order-009-report.md）：SurfaceAPI 落地（DRIFT-1 闭合）、
+SDK 通用出口（DRIFT 闭合）、call lease await 重核、执行域门、预算/gap 门、IME/输入 ticket 门、
+dialog 能力（window.confirm 退役）、诊断复用门、样例#3（E2 三样例集齐）。
+009=codeReady；010 解锁（Agent 唯一 owner + bootstrap 翻转 + T010-12..14）。
+
 ## 2026-10-04 009 进行中（最新 61d12fe66b）
 
 已完成：SDK 通用出口（3bfa7d6e3b，DRIFT 闭合：有界 raw 摘要/无裁决/溢出合并）、T008-08 dialog

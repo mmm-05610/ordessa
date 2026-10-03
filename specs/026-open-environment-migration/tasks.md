@@ -127,17 +127,17 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 
 ## 009 实现通用交互面与受控桥接
 
-- [ ] T009-01 interaction-surfaces按通用target/schema/ref绑定，unknown kind/command原文降级；不要求Agent/Chat目标。A60必须穿实际connector/SDK，不能直feed新surface绕过旧过滤。
-- [ ] T009-02 connections仅本地phase/句柄/settlement；late open后scope关闭释放，关闭连接不伪remote stopped。
-- [ ] T009-03 native/server bridge分api/main/isolated executor入口，caller/activation/lease/target授权及await后重核；认证留main。
-- [ ] T009-04 明确可信内建与不可信模块执行域；禁止第三方main顶层动态import。隔离嵌入面CSP/IPC只授所需能力，不全局放宽sandbox。
-- [ ] T009-05 每跳raw byte/decoded/queued/history预算与credit/gap快照恢复；超限typed拒或明确incomplete，关键状态不吞。
-- [ ] T009-06 编辑与surface input ticket绑定target/epoch/lease，输入法composition尾Enter不发送；global Esc只消费一层，触发器消失返回有效焦点。
-- [ ] T009-07 独立构建非Chat terminal/document视图测试，无Profile/Agent也可附着；旧generation绑定/伪审批/伪窗口身份反例拒。
+- [x] T009-01 interaction-surfaces按通用target/schema/ref绑定，unknown kind/command原文降级；不要求Agent/Chat目标。A60必须穿实际connector/SDK，不能直feed新surface绕过旧过滤。
+- [x] T009-02 connections仅本地phase/句柄/settlement；late open后scope关闭释放，关闭连接不伪remote stopped。
+- [x] T009-03 native/server bridge分api/main/isolated executor入口，caller/activation/lease/target授权及await后重核；认证留main。
+- [x] T009-04 明确可信内建与不可信模块执行域；禁止第三方main顶层动态import。隔离嵌入面CSP/IPC只授所需能力，不全局放宽sandbox。
+- [x] T009-05 每跳raw byte/decoded/queued/history预算与credit/gap快照恢复；超限typed拒或明确incomplete，关键状态不吞。
+- [x] T009-06 编辑与surface input ticket绑定target/epoch/lease，输入法composition尾Enter不发送；global Esc只消费一层，触发器消失返回有效焦点。
+- [x] T009-07 独立构建非Chat terminal/document视图测试，无Profile/Agent也可附着；旧generation绑定/伪审批/伪窗口身份反例拒。
 
-- [ ] T009-08 实现Workbench普通dialog与native-bridge文件/目录/clipboard公开能力，替换Chat全局picker/Profile window.confirm，验证取消/撤销/晚到不写及选择不授访问权。
+- [x] T009-08 实现Workbench普通dialog与native-bridge文件/目录/clipboard公开能力，替换Chat全局picker/Profile window.confirm，验证取消/撤销/晚到不写及选择不授访问权。
 
-- [ ] T009-09 复用013日志/诊断公开scope注入与跨前后端关联、sink脱敏和late片段预算；诊断仅观察不probe/apply，日志不成为Receipt主账。
+- [x] T009-09 复用013日志/诊断公开scope注入与跨前后端关联、sink脱敏和late片段预算；诊断仅观察不probe/apply，日志不成为Receipt主账。
 
 ## 010 收束配置、会话、草稿唯一领域所有者
 
