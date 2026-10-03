@@ -9,7 +9,10 @@
   "exports": {
     "./api": "./api/ui-components.ts",
     "./react": "./react/index.ts",
-    "./assembly": "./assembly/entry.ts"
+    "./assembly": "./assembly/entry.ts",
+    "./state": "./src/state/stateStore.ts",
+    "./state/selectors": "./src/state/selectors.ts",
+    "./react/state": "./react/state.ts"
   },
   "scripts": {
     "test": "vitest run --maxWorkers=1"

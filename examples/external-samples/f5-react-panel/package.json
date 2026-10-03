@@ -1,0 +1,13 @@
+{
+  "name": "ordessa-sample-f5-react-panel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "F5 fixture sample: standalone React panel on the F5 selection binding (R7/M14 T008-13/20)",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ordessa/ui-components": "0.1.0"
+  }
+}
