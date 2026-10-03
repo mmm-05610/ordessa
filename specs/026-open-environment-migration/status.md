@@ -1,5 +1,23 @@
 # 迁移状态
 
+## 2026-10-03 001 受控基线完成（codeReady）
+
+启动词授权后，起点 `ebe712c796`。T001-01…07 全部完成，证据在
+`evidence/baseline/`（T001-01-03-report、source-manifest-a/b 双算一致、suite-discovery、
+test-baseline、baseline-receipt、server-red-ids）。四门过：来源/授权链核对（含 3 份 AGENTS、
+known-issues §Services 不触碰清单）、3347 文件分类 0 违规 0 symlink、发现表（npm 41 套件、
+Python collect 218/846/1264/163/9/59、Go 10 包、rig 81）、受控基线逐 ID/原因记录。
+**001=DONE(codeReady)；002 解锁。**
+
+基线快照（详见 test-baseline.md）：pacthold 218P 绿；harness 3F=台账继承集；runtime-compat
+163P 绿；server-compat 2F（`native_identity_for` kwarg 漂移，69c0ea2818）；apps/server
+78F/2E（钉面漂移 10 ID 已证机制——live 88 vs 钉 86——精确方法归因 UNKNOWN 留 002 identity-map
+闭合；其余为继承/scope-red 类别）；acp_orchestration 28F=裁决保留；Go 桥 7ok 全绿；JS 33/41
+绿，红=products/desktop 1（pi 资产钉名，865f3ab45f 同提交漂移）+rig 1（发送钮 a11y 文本，
+865f3ab45f）+electron 6 腿（环境前置：/opt/ordessa 无 python/bin，安装未授权，U/P 缺口）。
+环境修复记录：根 npm ci 曾被管道掩盖失败、重装恢复；claude 打包闭包与 ACP rig 闭包本地补装；
+venv 需 setuptools。无断言删除/无 skip 求绿。
+
 ## 2026-10-03 R6兼容退役修订
 
 已完成方案盘点：以实施树8d4bc64为源码来源，99个Python模块/9份SQL，扫描1349个tracked Python文件，179个包外绝对import引用文件（含测试）。路径/符号/消费者见evidence/compat-inventory.json，目标归属与退役要求见compat-retirement.md。

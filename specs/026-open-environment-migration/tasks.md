@@ -6,13 +6,13 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 
 ## 001 固定可复现的产品迁移基线
 
-- [ ] T001-01 只读核对main/P HEAD、merge-base、commit范围、脏文件所有者、根/子目录AGENTS及服务注册；输出批准范围冲突，禁止照过时AGENTS排除现插件。
-- [ ] T001-02 逐文件分类源码/测试/装配/文档/运行数据/凭据/生成物；来源manifest仅源码路径和digest，秘密文件只记录排除规则，不读正文。
-- [ ] T001-03 列出main与P的功能差异及现有验收引用，特别history、同Profile重选、model切换与输入闪烁；非引用证据不得当现测试通过。
-- [ ] T001-04 提交明确源合成和实施树建议并等待授权；获批后在同一实施树固定来源，未获批保BLOCKED，不自行commit其他人脏改。
-- [ ] T001-05 运行npm test -- --list并保存可发现suite清单；经许可在隔离环境跑Python/JS基线，保存每个失败ID/原因/skip/error及命令版本。
-- [ ] T001-06 形成baseline-receipt（合成SHA、源digest、授权、继承红、未验证GUI和资产）和恢复点，保证未跟踪024/025/026设计在实施树可读。
-- [ ] T001-07 冻结允许导入的不可变源码manifest（type/mode/link/content digest），前后重算并拒并发编辑/越界symlink；输出Python collect、Go package、独立ACP rig/lock、安装子进程suite发现表，见C2与shipping。
+- [x] T001-01 只读核对main/P HEAD、merge-base、commit范围、脏文件所有者、根/子目录AGENTS及服务注册；输出批准范围冲突，禁止照过时AGENTS排除现插件。
+- [x] T001-02 逐文件分类源码/测试/装配/文档/运行数据/凭据/生成物；来源manifest仅源码路径和digest，秘密文件只记录排除规则，不读正文。
+- [x] T001-03 列出main与P的功能差异及现有验收引用，特别history、同Profile重选、model切换与输入闪烁；非引用证据不得当现测试通过。
+- [x] T001-04 提交明确源合成和实施树建议并等待授权；获批后在同一实施树固定来源，未获批保BLOCKED，不自行commit其他人脏改。
+- [x] T001-05 运行npm test -- --list并保存可发现suite清单；经许可在隔离环境跑Python/JS基线，保存每个失败ID/原因/skip/error及命令版本。
+- [x] T001-06 形成baseline-receipt（合成SHA、源digest、授权、继承红、未验证GUI和资产）和恢复点，保证未跟踪024/025/026设计在实施树可读。
+- [x] T001-07 冻结允许导入的不可变源码manifest（type/mode/link/content digest），前后重算并拒并发编辑/越界symlink；输出Python collect、Go package、独立ACP rig/lock、安装子进程suite发现表，见C2与shipping。
 
 ## 002 冻结联合契约、保证等级与兼容清单
 
