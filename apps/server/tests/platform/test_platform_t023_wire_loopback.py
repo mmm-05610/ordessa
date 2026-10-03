@@ -65,6 +65,7 @@ ACP_SESSION_HISTORY_METHOD_ID = "acp.sessions.list"
 AGENT_DOMAIN_METHOD_IDS = frozenset({
     "agent.config.read", "agent.config.submitOperation", "agent.submitInput",
     "agent.session.list", "agent.run.query",
+    "agent.interaction.record", "agent.interaction.list",
 })
 C0_METHOD_COUNT = (T002_BASELINE_METHOD_COUNT + len(ACP_ADMISSION_METHOD_IDS) + 1
                    + len(PROFILE_MANAGEMENT_METHOD_IDS)

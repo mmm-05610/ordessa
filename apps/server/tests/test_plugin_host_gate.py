@@ -79,6 +79,7 @@ SANDBOX_DESCRIBE_METHOD = "sandbox.describe"
 AGENT_DOMAIN_METHODS = frozenset({
     "agent.config.read", "agent.config.submitOperation", "agent.submitInput",
     "agent.session.list", "agent.run.query",
+    "agent.interaction.record", "agent.interaction.list",
 })
 
 
@@ -92,7 +93,7 @@ def _assert_default_composition_caps(runtime, caps=None) -> None:
     caps = _hello_caps(runtime) if caps is None else caps
     # 70(T002: 53+6+7+4) + 2(admission) + 11(profiles) + 2(imports)
     # + 1(sandbox.describe) + 1(beginTurnApplication) + 1(acp.sessions.list)
-    # + 5(agent.domain, T010-01) = 93
+    # + 7(agent.domain, T010-01/10) = 95
     assert len(caps) == (T002_METHOD_COUNT + len(ACP_ADMISSION_METHODS)
                          + len(PROFILE_MANAGEMENT_METHODS)
                          + len(MODEL_PROVIDER_IMPORT_METHODS)

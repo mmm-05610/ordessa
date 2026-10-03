@@ -52,6 +52,8 @@ export interface AgentOwnerPort {
   ): Promise<OwnerAnswer<SubmissionOutcome>>
   listSessions(target: string): Promise<OwnerAnswer<ReadonlyArray<Record<string, unknown>>>>
   queryRun(target: string, runId: string): Promise<OwnerAnswer<Record<string, unknown>>>
+  /** InteractionOwner read face (T010-10): the recorded interaction facts. */
+  listInteractions(target: string): Promise<OwnerAnswer<ReadonlyArray<Record<string, unknown>>>>
 }
 
 export interface WireCall {
@@ -92,6 +94,8 @@ export function createAgentOwnerPort(call: WireCall): AgentOwnerPort {
     // (`{outcome:'unknown', queryHint, resend:false}`); that is the OwnerAnswer
     // unknown arm, not an ok value — normalized here so wire and local ports
     // are swap-in identical (T010-12 parity).
+    listInteractions: target => ask('agent.interaction.list', { target },
+      r => (r.items as Array<Record<string, unknown>>) ?? []),
     queryRun: async (target, runId) => {
       const answer = await call('agent.run.query', { target, runId })
       if (answer.kind === 'Unknown') return { kind: 'unknown', queryHint: `wire:agent.run.query` }
@@ -120,6 +124,7 @@ export function createAbsentAgentOwnerPort(): AgentOwnerPort {
     submitInput: unavailable,
     listSessions: unavailable,
     queryRun: unavailable,
+    listInteractions: unavailable,
   }
 }
 
@@ -154,6 +159,8 @@ export interface LocalAgentOwnerPort extends AgentOwnerPort {
   reportSessions(target: string, entries: Record<string, Record<string, unknown>>): void
   /** SessionOwner removal face for UI-scope teardown (drops ALL records of one target). */
   dropSessions(target: string): void
+  /** InteractionOwner evidence face: the ONLY writer of interaction records. */
+  recordInteraction(target: string, interactionId: string, fields: Record<string, unknown>): void
   /** RunOwner report: the ONLY writer of run states for one target. */
   reportRun(target: string, runId: string, state: 'running' | 'completed' | 'cancelled' | 'failed' | 'unknown', reason?: string): void
   /** How many times one submission was dispatched (Python dispatch_count parity: exactly one, ever). */
@@ -166,6 +173,7 @@ export interface LocalAgentOwnerPort extends AgentOwnerPort {
    */
   readConfigSync(target: string): ConfigSnapshotView
   listSessionsSync(target: string): ReadonlyArray<Record<string, unknown>>
+  listInteractionsSync(target: string): ReadonlyArray<Record<string, unknown>>
   submitConfigOperationSync(
     target: string,
     patch: Readonly<Record<string, unknown>>,
@@ -188,6 +196,7 @@ export function createLocalAgentOwnerPort(options: LocalOwnerOptions = {}): Loca
     evidence: ConfigEvidenceChain
     sessions: Map<string, Record<string, unknown>>
     runs: Map<string, Record<string, unknown>>
+    interactions: Map<string, Record<string, unknown>>
   }>()
   let seq = 0
 
@@ -201,7 +210,7 @@ export function createLocalAgentOwnerPort(options: LocalOwnerOptions = {}): Loca
     state = {
       fields: new Map(), resolved: new Map(), revision: 0, observed: 'unset' as const,
       operations: [], submissions: new Map(), dispatchCounts: new Map(), evidence: new ConfigEvidenceChain(),
-      sessions: new Map(), runs: new Map(),
+      sessions: new Map(), runs: new Map(), interactions: new Map(),
     }
     targets.set(target, state)
     return state
@@ -261,6 +270,7 @@ export function createLocalAgentOwnerPort(options: LocalOwnerOptions = {}): Loca
 
     readConfigSync: snapshotOf,
     listSessionsSync: target => [...targetState(target).sessions.values()],
+    listInteractionsSync: target => [...targetState(target).interactions.values()],
     submitConfigOperationSync: submitConfigOperationNow,
 
     submitInput: async (target, draftRevision, capture) => {
@@ -285,6 +295,14 @@ export function createLocalAgentOwnerPort(options: LocalOwnerOptions = {}): Loca
     listSessions: async target => {
       try {
         return { kind: 'ok', value: [...targetState(target).sessions.values()] }
+      } catch (error) {
+        return { kind: 'unavailable', reason: String(error) }
+      }
+    },
+
+    listInteractions: async target => {
+      try {
+        return { kind: 'ok', value: [...targetState(target).interactions.values()] }
       } catch (error) {
         return { kind: 'unavailable', reason: String(error) }
       }
@@ -340,6 +358,10 @@ export function createLocalAgentOwnerPort(options: LocalOwnerOptions = {}): Loca
 
     dropSessions(target) {
       targetState(target).sessions.clear()
+    },
+
+    recordInteraction(target, interactionId, fields) {
+      targetState(target).interactions.set(interactionId, Object.freeze({ ...fields }))
     },
 
     dispatchCount(target, submissionId) {

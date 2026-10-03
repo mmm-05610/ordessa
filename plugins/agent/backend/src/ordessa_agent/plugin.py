@@ -107,6 +107,20 @@ class AgentDomainPlugin:
                 return {"outcome": "unknown", "queryHint": f"run:{run_id}", "resend": False}
             return {"run": dict(run)}
 
+        def interaction_record(params: Mapping[str, Any]) -> dict[str, Any]:
+            target = ensure_target(params)
+            interaction_id = str(params.get("interactionId", ""))
+            fields = params.get("fields", {})
+            if not interaction_id or not isinstance(fields, Mapping):
+                raise WireError("INVALID_REQUEST", "interactionId must name and fields must map")
+            self._registry.owners_of(target)["interaction"].record(interaction_id, fields)
+            return {"record": dict(fields)}
+
+        def interaction_list(params: Mapping[str, Any]) -> dict[str, Any]:
+            target = ensure_target(params)
+            interactions = self._registry.owners_of(target)["interaction"].list()
+            return {"items": [dict(i) for i in interactions]}
+
         methods = (
             ServerMethodDescriptor(method_id="agent.config.read", required_params=frozenset({"target"}),
                                    optional_params=frozenset(), handler=config_read, owner=PLUGIN_ID),
@@ -121,6 +135,11 @@ class AgentDomainPlugin:
                                    optional_params=frozenset(), handler=session_list, owner=PLUGIN_ID),
             ServerMethodDescriptor(method_id="agent.run.query", required_params=frozenset({"target"}),
                                    optional_params=frozenset({"runId"}), handler=run_query, owner=PLUGIN_ID),
+            ServerMethodDescriptor(method_id="agent.interaction.record", required_params=frozenset({"target"}),
+                                   optional_params=frozenset({"interactionId", "fields"}),
+                                   handler=interaction_record, owner=PLUGIN_ID),
+            ServerMethodDescriptor(method_id="agent.interaction.list", required_params=frozenset({"target"}),
+                                   optional_params=frozenset(), handler=interaction_list, owner=PLUGIN_ID),
         )
         return ServerPluginRegistration(
             methods=methods,

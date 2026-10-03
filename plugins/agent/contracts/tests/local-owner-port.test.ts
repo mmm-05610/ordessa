@@ -8,7 +8,7 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { createAgentOwnerPort, createLocalAgentOwnerPort, type WireCall } from '../src/owner-port'
+import { createAbsentAgentOwnerPort, createAgentOwnerPort, createLocalAgentOwnerPort, type WireCall } from '../src/owner-port'
 
 const isolated = () => createLocalAgentOwnerPort({ ownerRegistry: new Set() })
 
@@ -165,5 +165,34 @@ describe('local owner session lifecycle (T010-02 glue)', () => {
     ])
     port.dropSessions('chat.bindings')
     expect(port.listSessionsSync('chat.bindings')).toEqual([])
+  })
+})
+
+describe('A1 interaction face (T010-10)', () => {
+  it('records and lists interaction facts through the owner (Python InteractionOwner parity)', async () => {
+    const port = createLocalAgentOwnerPort({ ownerRegistry: new Set() })
+    port.recordInteraction('chat', 'i1', { kind: 'approval', state: 'pending' })
+    port.recordInteraction('chat', 'i1', { kind: 'approval', state: 'settled' }) // same id: replaces
+    port.recordInteraction('chat', 'i2', { kind: 'prompt' })
+    expect(port.listInteractionsSync('chat')).toEqual([
+      { kind: 'approval', state: 'settled' }, { kind: 'prompt' },
+    ])
+    const answer = await port.listInteractions('chat')
+    expect(answer).toEqual({ kind: 'ok', value: [{ kind: 'approval', state: 'settled' }, { kind: 'prompt' }] })
+    expect(Object.isFrozen(port.listInteractionsSync('chat')[0])).toBe(true)
+  })
+
+  it('swap-in parity: the wire face maps agent.interaction.list onto the same read arm', async () => {
+    const call: WireCall = async method => ({
+      kind: 'Accepted',
+      result: method === 'agent.interaction.list' ? { items: [{ kind: 'approval' }] } : {},
+    })
+    const wire = createAgentOwnerPort(call)
+    expect(await wire.listInteractions('chat')).toEqual({ kind: 'ok', value: [{ kind: 'approval' }] })
+  })
+
+  it('counterexample: absent wiring stays typed-unavailable for the interaction face too', async () => {
+    const absent = createAbsentAgentOwnerPort()
+    expect((await absent.listInteractions('chat')).kind).toBe('unavailable')
   })
 })
