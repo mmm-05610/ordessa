@@ -39,10 +39,10 @@ jobs:
           pip install -e 'apps/server[dev]' -e 'plugins/harness[dev]' -e plugins/workspace \
                       -e plugins/runtime-compat -e plugins/server-compat \
                       -e plugins/assets/model-provider/server -e plugins/assets/model-provider/adapters \
-                      -e plugins/assets/model-provider/profile-contribution -e plugins/assets/prompts \
-                      -e plugins/assets/memory -e plugins/assets/extensions -e plugins/assets/skills \
+                      -e plugins/assets/model-provider/profile-contribution -e plugins/prompts \
+                      -e plugins/memory -e plugins/extensions -e plugins/assets/skills \
                       -e plugins/assets/subagents -e plugins/assets/mcp \
-                      -e plugins/assets/command-templates -e plugins/profile
+                      -e plugins/command-templates -e plugins/profile
           pip install -e products/server
       - name: Kernel
         run: pytest -q packages/backend/pacthold/tests

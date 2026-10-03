@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[4]
+REPO = Path(__file__).resolve().parents[3]
 TOML = REPO / "plugins/harness/src/ordessa_harness/harnesses.toml"
 SCHEMA = REPO / "plugins/harness/src/ordessa_harness/registry/schema.py"
 HM = REPO / "docs/design/prompts/harness-adapters.md"

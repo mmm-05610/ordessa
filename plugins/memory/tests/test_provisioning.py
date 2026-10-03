@@ -95,7 +95,7 @@ def test_env_write_is_0600_under_the_data_root_and_never_in_the_source_tree(tmp_
     env_path = write_env(deploy, "ADMIN_API_KEY=x\n")
     assert env_path == deploy / ".env"
     assert (env_path.stat().st_mode & 0o777) == 0o600
-    source_tree = Path(common.__file__).resolve().parents[2]
+    source_tree = Path(common.__file__).resolve().parents[3]
     with pytest.raises(ProvisioningUnsupported):
         write_env(source_tree / "nowhere", "ADMIN_API_KEY=x\n")
 

@@ -31,6 +31,6 @@ mem0 自托管 server 的叶子插件：compose 子栈置备与生命周期、�
 ## 测试
 
 ```sh
-pip install -e 'plugins/assets/memory[dev]'
-pytest plugins/assets/memory/tests
+pip install -e 'plugins/memory[dev]'
+pytest plugins/memory/tests
 ```

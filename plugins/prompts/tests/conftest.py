@@ -2,7 +2,7 @@
 
 Deliberately *fixture-only*: no test module imports this file as a module
 (``import conftest``), because the sibling domain package
-(``plugins/assets/command-templates``) ships a conftest under the same
+(``plugins/command-templates``) ships a conftest under the same
 basename and both suites are collected in one pytest run by the line gate.
 Everything a test needs comes from ``ordessa_prompts.*`` or from these
 fixtures.

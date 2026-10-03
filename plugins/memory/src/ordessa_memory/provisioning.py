@@ -220,10 +220,10 @@ def render_env(port_plan: PortPlan, secrets_in: dict[str, str],
 
 def write_env(deploy_dir: Path, text: str) -> Path:
     """Write the ``.env`` 0600 into the deploy directory; refuse to write
-    anywhere inside this package's own source tree (the deploy directory
+    anywhere inside the repository source tree (the deploy directory
     always lives under the product data root, outside the repo)."""
     deploy_dir = Path(deploy_dir)
-    source_root = Path(__file__).resolve().parents[3]
+    source_root = Path(__file__).resolve().parents[4]
     resolved = deploy_dir.resolve()
     if resolved == source_root or source_root in resolved.parents:
         raise ProvisioningUnsupported(

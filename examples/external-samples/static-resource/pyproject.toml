@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-sample-static-resource"
+version = "0.1.0"
+description = "External sample #2: a static resource package composed through the public server plugin API"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+# The only runtime dependency is the public plugin contract. Installing this
+# distribution does NOT install or enable Server/Harness/Profile, and never
+# enables the plugin by itself: it composes only through an explicit
+# `server_plugins` selection at `build_runtime`.
+dependencies = [
+    "ordessa-server-plugin-api>=0.1.0,<1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ordessa_sample_static_resource = ["data/resources.json"]
