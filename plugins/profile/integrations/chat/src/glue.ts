@@ -4,8 +4,10 @@
  * glue is simply absent and both products keep working (contracts.md §4).
  *
  * The glue contributes one composer.toolbar picker.  It owns NO state of the
- * Chat, stores no draft text, and holds no session lifecycle: selections live
- * in {@link ProfileSelectionStore} and die with the UI scope (G18).
+ * Chat, stores no draft text, and holds no session lifecycle: selections,
+ * registration facts and retained picks live in the Agent owner (A1
+ * single-writer, T010-02) and are projected here; the glue keeps only
+ * click-order bookkeeping and dispatches owner operations.
  */
 import type { ResourceScope } from '@ordessa/extension-api'
 import {
@@ -79,8 +81,43 @@ export function createProfileChatGlue(
   }
   const getSnapshot = () => store.getSnapshot() + (input.catalogState?.getSnapshot() ?? 0)
   const scoped = contributions.forScope(scope)
-  const bindings = new Map<string, { ref: import('@ordessa/plugin-profile-api').SessionRef; selection: ProfileSelection; uiSessionId: string; serverId: string }>()
-  const retainedSelections = new Map<string, { selection: ProfileSelection; connectionId?: string }>()
+  // -- T010-02 ownership: binding facts and retained picks are OWNER state
+  //    (A1 SessionOwner records + ConfigOwner fields); the glue dispatches
+  //    owner operations and reads frozen projections. One owner shared with
+  //    the store: one writer for every fact class.
+  const ownerPort = store.owner
+  const BINDINGS_TARGET = 'profile-chat.bindings'
+  const RETAINED_TARGET = 'profile-chat.retained'
+  type Binding = {
+    identity: string
+    ref: import('@ordessa/plugin-profile-api').SessionRef
+    selection: ProfileSelection
+    uiSessionId: string
+    serverId: string
+  }
+  type Retained = { selection: ProfileSelection; connectionId?: string }
+  const bindingRecords = (): readonly Binding[] => ownerPort.listSessionsSync(BINDINGS_TARGET) as readonly Binding[]
+  const findBinding = (identity: string): Binding | undefined =>
+    bindingRecords().find(record => record.identity === identity)
+  const findBindingBy = (uiSessionId: string | undefined, serverId: string | undefined): Binding | undefined =>
+    bindingRecords().find(record => record.uiSessionId === uiSessionId && record.serverId === serverId)
+  const setBinding = (identity: string, record: Omit<Binding, 'identity'>): Binding => {
+    const bound: Binding = { ...record, identity }
+    ownerPort.reportSessions(BINDINGS_TARGET, { [identity]: bound })
+    return bound
+  }
+  const patchBinding = (identity: string, patch: Partial<Omit<Binding, 'identity'>>): void => {
+    ownerPort.reportSessions(BINDINGS_TARGET, { [identity]: patch })
+  }
+  const retainedAll = (): Record<string, Retained> =>
+    ownerPort.readConfigSync(RETAINED_TARGET).resolved as Record<string, Retained>
+  const getRetained = (key: string): Retained | undefined => retainedAll()[key]
+  const setRetained = (key: string, value: Retained): void => {
+    ownerPort.submitConfigOperationSync(RETAINED_TARGET, { [key]: value })
+  }
+  const dropRetained = (...keys: string[]): void => {
+    if (keys.length) ownerPort.submitConfigOperationSync(RETAINED_TARGET, {}, { unset: keys })
+  }
 
   // -- click-order seam (021 appendix §6c F1.2): registration wire calls for
   //    one picker key (selectForSession here, chooseForSession on the model
@@ -123,13 +160,14 @@ export function createProfileChatGlue(
     const native = input.nativeSessions?.getSnapshot?.()
     if (native?.draft?.active === false && native.draft.endedBy !== 'opened') store.clearDraftConfirmations()
     if (native?.draft?.endedBy !== 'discarded') return
-    for (const [key, retained] of retainedSelections)
-      if (retained.connectionId === native.selectedConnectionId) retainedSelections.delete(key)
+    dropRetained(...Object.entries(retainedAll())
+      .filter(([, retained]) => retained.connectionId === native.selectedConnectionId)
+      .map(([key]) => key))
   })
   const nativeLifetime = scope.add({ isDisposed: false as boolean, dispose() {
     if (this.isDisposed) return
     this.isDisposed = true
-    stopNative?.(); retainedSelections.clear()
+    stopNative?.(); dropRetained(...Object.keys(retainedAll()))
   } })
   const guard = scoped.addSubmissionGuard({ id: 'ordessa.profile-chat.application', order: 10,
     async prepare(snapshot) {
@@ -137,9 +175,8 @@ export function createProfileChatGlue(
       const target = snapshot.target
       const native = input.nativeSessions?.getSnapshot?.()
       const retainedKey = JSON.stringify([target.serverInstanceId, native?.selectedConnectionId ?? null, key])
-      const selected = store.peek(key) ?? (target.kind === 'draft' ? retainedSelections.get(retainedKey)?.selection : undefined)
-      const currentBinding = target.kind === 'session' ? [...bindings.values()].find(binding =>
-        binding.uiSessionId === target.sessionId && binding.serverId === target.serverInstanceId) : undefined
+      const selected = store.peek(key) ?? (target.kind === 'draft' ? getRetained(retainedKey)?.selection : undefined)
+      const currentBinding = target.kind === 'session' ? findBindingBy(target.sessionId, target.serverInstanceId) : undefined
       if (!selected && !currentBinding) return { status: 'ready' }
       if (!input.nativeSessions?.prepareSubmission || !input.profiles.registerNativeSession)
         return selected ? { status: 'refused', reason: 'Profile 会话应用尚未接入：缺少后端会话身份与生产应用端口。所选预设和草稿已保留。' } : { status: 'ready' }
@@ -155,7 +192,7 @@ export function createProfileChatGlue(
       if (selected && target.kind === 'draft' && !input.profiles.prepareNativeCreation)
         return { status: 'refused', reason: '所选 Harness 缺少 Profile 创建前准备服务；草稿和选择已保留。' }
       try {
-        if (selected && target.kind === 'draft') retainedSelections.set(retainedKey, { selection: selected, connectionId: native?.selectedConnectionId })
+        if (selected && target.kind === 'draft') setRetained(retainedKey, { selection: selected, connectionId: native?.selectedConnectionId })
         const owner = await input.nativeSessions.prepareSubmission(selected && input.profiles.prepareNativeCreation ? {
           configurationProfileId: selected.profileId,
           beforeCreate: async context => {
@@ -175,7 +212,7 @@ export function createProfileChatGlue(
         if (snapshot.target.serverInstanceId !== owner.serverInstanceId)
           return { status: 'refused', reason: 'Profile Server identity changed' }
         const identity = JSON.stringify([owner.serverInstanceId, owner.connectionId, owner.nativeSessionId])
-        let binding = bindings.get(identity)
+        let binding = findBinding(identity)
         const selection = selected ?? binding?.selection
         if (!selection) return { status: 'ready' }
         if (selection.harnessId !== owner.harnessId) return { status: 'refused', reason: 'Profile belongs to another Harness' }
@@ -184,8 +221,7 @@ export function createProfileChatGlue(
             nativeSessionId: owner.nativeSessionId, profileId: selection.profileId })
           if (result.sessionRef.harnessId !== owner.harnessId || result.sessionRef.nativeSessionKey !== owner.nativeSessionId
               || !result.sessionRef.sessionUid || !result.sessionRef.realm) return { status: 'unknown' }
-          binding = { ref: result.sessionRef, selection, uiSessionId: owner.sessionId, serverId: owner.serverInstanceId }
-          bindings.set(identity, binding)
+          binding = setBinding(identity, { ref: result.sessionRef, selection, uiSessionId: owner.sessionId, serverId: owner.serverInstanceId })
         }
         const inspected = await input.profiles.inspectSessionConfig?.(binding.ref)
         if (inspected?.switchState === 'needs_recovery') {
@@ -234,8 +270,9 @@ export function createProfileChatGlue(
             return failed?.switchState === 'needs_recovery' ? { status: 'unknown' }
               : { status: 'refused', reason: outcome.reason }
           }
-          binding.selection = outcome.applied
-          retainedSelections.delete(retainedKey)
+          patchBinding(identity, { selection: outcome.applied })
+          binding = { ...binding, selection: outcome.applied }
+          dropRetained(retainedKey)
           return { status: 'ready' }
         })
       } catch (error) {
@@ -254,8 +291,7 @@ export function createProfileChatGlue(
       const { key, scope: pickerScope } = pickerKeyFor(context.location)
       const liveProps = (): ProfilePickerProps => {
         const location = context.location
-        const bound = location.kind === 'session' ? [...bindings.values()].find(binding =>
-          binding.uiSessionId === location.sessionId && binding.serverId === location.serverInstanceId) : undefined
+        const bound = location.kind === 'session' ? findBindingBy(location.sessionId, location.serverInstanceId) : undefined
         const scope = pickerScope.kind === 'session' && bound ? { ...pickerScope, harnessId: bound.ref.harnessId } : pickerScope
         const groups = catalogForLocation(input.catalog(), scope)
         return {
@@ -276,8 +312,7 @@ export function createProfileChatGlue(
             if (location.kind !== 'session') return
             void enqueueClick(key, async () => {
               try {
-                let registered = [...bindings.values()].find(binding =>
-                  binding.uiSessionId === location.sessionId && binding.serverId === location.serverInstanceId)
+                let registered = findBindingBy(location.sessionId, location.serverInstanceId)
                 if (!registered) {
                   if (!input.nativeSessions?.prepareSubmission || !input.profiles.registerNativeSession)
                     throw new Error('原生会话登记端口不可用')
@@ -289,8 +324,8 @@ export function createProfileChatGlue(
                   if (result.sessionRef.harnessId !== owner.harnessId
                     || result.sessionRef.nativeSessionKey !== owner.nativeSessionId
                     || !result.sessionRef.sessionUid || !result.sessionRef.realm) throw new Error('会话登记未确认')
-                  registered = { ref: result.sessionRef, selection, uiSessionId: owner.sessionId, serverId: owner.serverInstanceId }
-                  bindings.set(JSON.stringify([owner.serverInstanceId, owner.connectionId, owner.nativeSessionId]), registered)
+                  registered = setBinding(JSON.stringify([owner.serverInstanceId, owner.connectionId, owner.nativeSessionId]),
+                    { ref: result.sessionRef, selection, uiSessionId: owner.sessionId, serverId: owner.serverInstanceId })
                 }
                 await registrationTask(key, registered.ref, selection)
               } catch (error) {
@@ -329,7 +364,7 @@ export function createProfileChatGlue(
     dispose() {
       disposeRegistration.dispose()
       guard.dispose()
-      bindings.clear()
+      ownerPort.dropSessions(BINDINGS_TARGET)
       nativeLifetime.dispose()
     },
   }

@@ -154,3 +154,16 @@ describe('local Agent owner port (T010-02)', () => {
     expect(await wire.queryRun('chat', 'r1')).toEqual(await local.queryRun('chat', 'r1'))
   })
 })
+
+describe('local owner session lifecycle (T010-02 glue)', () => {
+  it('merges session records by id and drops them wholesale on UI teardown', () => {
+    const port = createLocalAgentOwnerPort({ ownerRegistry: new Set() })
+    port.reportSessions('chat.bindings', { i1: { identity: 'i1', selection: 'A' } })
+    port.reportSessions('chat.bindings', { i1: { selection: 'B' }, i2: { identity: 'i2' } })
+    expect(port.listSessionsSync('chat.bindings')).toEqual([
+      { identity: 'i1', selection: 'B' }, { identity: 'i2' },
+    ])
+    port.dropSessions('chat.bindings')
+    expect(port.listSessionsSync('chat.bindings')).toEqual([])
+  })
+})

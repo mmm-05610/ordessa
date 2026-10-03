@@ -33,6 +33,7 @@ function setup() {
   const scope = new OwnedResources(), chat = createChatContributions(), order: string[] = []
   const registrations: string[] = []
   let registerFail: string | null = null
+  let prepareFail: string | null = null
   let nativePrepared = false
   let currentProfileId = 'profile'
   const currentReceipt = () => ({ ...receipt, profileId: currentProfileId })
@@ -62,6 +63,7 @@ function setup() {
     subscribe: () => () => undefined,
     async prepareSubmission(preparation) {
       order.push('prepare')
+      if (prepareFail) throw new Error(prepareFail)
       // beforeCreate belongs to session CREATION only: an existing session's
       // submission reuses its identity and never re-prepares the provider
       if (preparation && !nativePrepared) {
@@ -83,6 +85,7 @@ function setup() {
   }
   return { scope, chat, glue, order, registrations,
     failRegister: (reason: string | null) => { registerFail = reason },
+    failPrepare: (reason: string | null) => { prepareFail = reason },
     pickerProps, gateway }
 }
 
@@ -192,5 +195,62 @@ it('an unregistered pick is registered by the submit guard before it is applied'
       target: sessionLocation }, f.gateway)).toEqual({ status: 'accepted' })
     // the guard registered it, then applied exactly once
     expect(f.order).toEqual(['prepare', 'select:next', 'apply:next', 'prompt'])
+  } finally { f.scope.dispose() }
+})
+
+// -- T010-02 ownership: binding facts and retained picks live in the Agent
+//    owner (glue.store.owner), never in glue-local maps. Reached behind the
+//    glue to prove WHERE the state lives, same as selection-owner.test.ts.
+
+it('keeps binding facts in the owner session records and patches them through the owner', async () => {
+  const f = setup()
+  try {
+    await bindSession(f)
+    const records = f.glue.store.owner.listSessionsSync('profile-chat.bindings') as Array<Record<string, unknown>>
+    expect(records).toHaveLength(1)
+    expect(records[0]).toMatchObject({
+      identity: JSON.stringify(['server', 'channel', 'native']),
+      uiSessionId: 'native', serverId: 'server', ref,
+    })
+    // applying a new pick PATCHES the binding record through the owner
+    f.pickerProps().onSelect(next)
+    await vi.waitFor(() => expect(f.order).toContain('select:next'))
+    f.order.length = 0
+    expect(await f.chat.submit({ ...draftSnapshot, submissionId: 'send2',
+      target: sessionLocation }, f.gateway)).toEqual({ status: 'accepted' })
+    const patched = f.glue.store.owner.listSessionsSync('profile-chat.bindings') as Array<Record<string, unknown>>
+    expect(patched[0].selection).toBe(next)
+  } finally { f.scope.dispose() }
+})
+
+it('keeps retained draft picks in the owner config fields and clears them on success', async () => {
+  const f = setup()
+  try {
+    f.glue.store.select('draft:draft', selection)
+    f.failPrepare('transport lost')
+    expect(await f.chat.submit(draftSnapshot, f.gateway)).toEqual({ status: 'unknown' })
+    // the pick was retained through the owner BEFORE the failure (G18 retry)
+    const retainedKey = JSON.stringify(['server', 'client', 'draft:draft'])
+    const retained = f.glue.store.owner.readConfigSync('profile-chat.retained').resolved as Record<string, unknown>
+    expect(retained[retainedKey]).toEqual({ selection, connectionId: 'client' })
+    // the retained pick is the fallback when the store pick is gone (UI forget)
+    f.failPrepare(null)
+    f.glue.store.forget('draft:draft')
+    f.order.length = 0
+    expect(await f.chat.submit({ ...draftSnapshot, submissionId: 'send2' }, f.gateway)).toEqual({ status: 'accepted' })
+    expect(f.order).toEqual(['prepare', 'prepare-provider', 'register', 'select:profile', 'apply:profile', 'prompt'])
+    // a successful submit drops the retained record through the owner
+    expect(f.glue.store.owner.readConfigSync('profile-chat.retained').resolved[retainedKey]).toBeUndefined()
+  } finally { f.scope.dispose() }
+})
+
+it('counterexample: dispose drops owner-held bindings and retained picks, never stale owner state', async () => {
+  const f = setup()
+  try {
+    await bindSession(f)
+    expect(f.glue.store.owner.listSessionsSync('profile-chat.bindings')).toHaveLength(1)
+    f.glue.dispose()
+    expect(f.glue.store.owner.listSessionsSync('profile-chat.bindings')).toEqual([])
+    expect(Object.keys(f.glue.store.owner.readConfigSync('profile-chat.retained').resolved)).toEqual([])
   } finally { f.scope.dispose() }
 })

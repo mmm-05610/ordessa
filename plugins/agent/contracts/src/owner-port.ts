@@ -144,10 +144,25 @@ export interface LocalAgentOwnerPort extends AgentOwnerPort {
                  fields?: Record<string, 'known' | 'unset' | 'unknown'>): void
   /** SessionOwner upsert: merge fields per session id, freeze each record. */
   reportSessions(target: string, entries: Record<string, Record<string, unknown>>): void
+  /** SessionOwner removal face for UI-scope teardown (drops ALL records of one target). */
+  dropSessions(target: string): void
   /** RunOwner report: the ONLY writer of run states for one target. */
   reportRun(target: string, runId: string, state: 'running' | 'completed' | 'cancelled' | 'failed' | 'unknown', reason?: string): void
   /** How many times one submission was dispatched (Python dispatch_count parity: exactly one, ever). */
   dispatchCount(target: string, submissionId: string): number
+  /**
+   * Synchronous in-process face (Python owner parity: `submit_operation` is
+   * synchronous there too). Frontend stores read project/dispatch through
+   * these; the async AgentOwnerPort methods wrap the same core for wire
+   * parity. Both faces share ONE state — there is never a second writer.
+   */
+  readConfigSync(target: string): ConfigSnapshotView
+  listSessionsSync(target: string): ReadonlyArray<Record<string, unknown>>
+  submitConfigOperationSync(
+    target: string,
+    patch: Readonly<Record<string, unknown>>,
+    options?: { unset?: ReadonlyArray<string>; sourceRef?: string },
+  ): OperationReceipt
 }
 
 const processOwnerRegistry = new Set<string>()
@@ -193,6 +208,30 @@ export function createLocalAgentOwnerPort(options: LocalOwnerOptions = {}): Loca
     }
   }
 
+  function submitConfigOperationNow(
+    target: string,
+    patch: Readonly<Record<string, unknown>>,
+    opts?: { unset?: ReadonlyArray<string>; sourceRef?: string },
+  ): OperationReceipt {
+    const state = targetState(target)
+    seq += 1
+    const operationId = `op-${target}-${seq}`
+    const patchKinds: Array<'present' | 'unset'> = []
+    for (const [name, value] of Object.entries(patch)) {
+      state.fields.set(name, 'known')
+      state.resolved.set(name, value)
+      patchKinds.push('present')
+    }
+    for (const name of opts?.unset ?? []) {
+      state.fields.set(name, 'unset')
+      state.resolved.delete(name)
+      patchKinds.push('unset')
+    }
+    state.operations.push({ operationId, patchKinds, sourceRef: opts?.sourceRef })
+    state.revision += 1 // a same-value re-select is still a NEW operation
+    return { operationId, patchKinds, state: 'pending' }
+  }
+
   return {
     readConfig: async target => {
       try {
@@ -204,27 +243,15 @@ export function createLocalAgentOwnerPort(options: LocalOwnerOptions = {}): Loca
 
     submitConfigOperation: async (target, patch, opts) => {
       try {
-        const state = targetState(target)
-        seq += 1
-        const operationId = `op-${target}-${seq}`
-        const patchKinds: Array<'present' | 'unset'> = []
-        for (const [name, value] of Object.entries(patch)) {
-          state.fields.set(name, 'known')
-          state.resolved.set(name, value)
-          patchKinds.push('present')
-        }
-        for (const name of opts?.unset ?? []) {
-          state.fields.set(name, 'unset')
-          state.resolved.delete(name)
-          patchKinds.push('unset')
-        }
-        state.operations.push({ operationId, patchKinds, sourceRef: opts?.sourceRef })
-        state.revision += 1 // a same-value re-select is still a NEW operation
-        return { kind: 'ok', value: { operationId, patchKinds, state: 'pending' } }
+        return { kind: 'ok', value: submitConfigOperationNow(target, patch, opts) }
       } catch (error) {
         return { kind: 'unavailable', reason: String(error) }
       }
     },
+
+    readConfigSync: snapshotOf,
+    listSessionsSync: target => [...targetState(target).sessions.values()],
+    submitConfigOperationSync: submitConfigOperationNow,
 
     submitInput: async (target, draftRevision, capture) => {
       try {
@@ -287,6 +314,10 @@ export function createLocalAgentOwnerPort(options: LocalOwnerOptions = {}): Loca
         const record = { ...(state.sessions.get(sessionId) ?? {}), ...fields }
         state.sessions.set(sessionId, Object.freeze(record))
       }
+    },
+
+    dropSessions(target) {
+      targetState(target).sessions.clear()
     },
 
     dispatchCount(target, submissionId) {
