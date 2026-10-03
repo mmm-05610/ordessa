@@ -1,5 +1,14 @@
 # 迁移状态
 
+## 2026-10-04 夜间 — 008 持续推进（最新 2ad077a245）
+
+T008-06（连接器公共化，751552c398）、T008-09（逻辑 manifest+校验器+门，85d4fde2c1）、
+T008-03（host 呈现注册接缝+快照 uSES 安全化，b846874c63）完成。T008-04 物理拆分撞载体身份
+死结→硬决策三选项已记录（evidence/decision-pending-harness-carrier.md，建议 A：新建
+harness-contracts 载体），回滚绿态等待用户批复；其另一半已由既有门覆盖。
+验证面：apps/desktop 144、products/desktop 40/41（1F=pi 钉红）、connectors 67+48、typecheck 0。
+待办：T008-08 preflight、T008-10 commands、T008-01-2 loader+host 合并、T008-07 GUI(U)、008 收口。
+
 ## 2026-10-04 夜间里程碑 — 008 F5 全链 + frontend 物理迁移核心完成
 
 - 007=DONE（b37a5711ce）。008 F5 链 T008-11..20 全部 S/I 完成（44239ca767→eb9bb36bd9）：
