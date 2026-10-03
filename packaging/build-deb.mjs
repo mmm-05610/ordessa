@@ -155,8 +155,8 @@ const PRODUCT_PACKAGES = [
   // module scope since spec 026/003, so a closure without it boots nothing
   // (C95-3 wheel-gap counterexample, caught live by the local electron leg).
   'packages/backend/environment-api',
-  'packages/pacthold',
-  'packages/server-plugin-api',
+  'packages/backend/pacthold',
+  'packages/backend/server-plugin-api',
   'plugins/harness/api',
   'plugins/runtime-compat',
   'plugins/assets/sandbox/api',

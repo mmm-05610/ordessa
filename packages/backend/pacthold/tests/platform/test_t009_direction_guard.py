@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-PACKAGE_ROOT = Path(__file__).resolve().parents[2]  # packages/pacthold
+PACKAGE_ROOT = Path(__file__).resolve().parents[2]  # packages/backend/pacthold
 COMPAT_PACKAGE = "pacthold_runtime_compat"
 
 
@@ -119,7 +119,7 @@ def test_tripwire_from_import_form_is_also_detected(tmp_path):
 def test_guard_does_not_flag_the_assembly_importing_the_kernel(form):
     """The allowed direction is compat → kernel; prove the scanner runs on
     real assembly files without flagging legitimate forward imports."""
-    compat_root = PACKAGE_ROOT.parents[1] / "plugins" / "runtime-compat" / "src" / COMPAT_PACKAGE
+    compat_root = PACKAGE_ROOT.parents[2] / "plugins" / "runtime-compat" / "src" / COMPAT_PACKAGE
     files = sorted(compat_root.rglob("*.py"))
     assert files, "the compatibility assembly must exist for this scan"
     offending = []

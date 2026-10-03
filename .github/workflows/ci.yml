@@ -30,7 +30,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r apps/server/lockfiles/server-linux-py312.txt
-          pip install -e 'packages/pacthold[dev]' -e packages/server-plugin-api \
+          pip install -e 'packages/backend/pacthold[dev]' -e packages/backend/server-plugin-api \
                       -e packages/backend/environment-api -e packages/backend/persistence-sqlite \
                       -e packages/backend/platform-services -e plugins/harness/api
           pip install -e plugins/assets/sandbox/api -e plugins/assets/sandbox/backend \
@@ -45,7 +45,7 @@ jobs:
                       -e plugins/assets/command-templates -e plugins/profile
           pip install -e products/server
       - name: Kernel
-        run: pytest -q packages/pacthold/tests
+        run: pytest -q packages/backend/pacthold/tests
       - name: server-compat
         run: pytest -q plugins/server-compat/tests
       - name: model-provider

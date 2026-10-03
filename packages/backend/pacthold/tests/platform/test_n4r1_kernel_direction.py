@@ -24,8 +24,8 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-PACKAGE_ROOT = Path(__file__).resolve().parents[2]  # packages/pacthold
-REPO_ROOT = PACKAGE_ROOT.parents[1]  # repository root
+PACKAGE_ROOT = Path(__file__).resolve().parents[2]  # packages/backend/pacthold
+REPO_ROOT = PACKAGE_ROOT.parents[2]  # repository root
 
 # Every top-level module name that belongs to something ABOVE the kernel. The
 # rule is the prefix form: any `ordessa_*` distribution is a product/app/plugin

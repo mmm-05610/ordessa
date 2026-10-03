@@ -105,8 +105,8 @@ pip install -q -r apps/server/lockfiles/server-linux-py312.txt >/dev/null 2>&1 &
 # gate never reached its own suite steps. The API packages must be installed before
 # the backends that depend on them. Verified end-to-end in a clean clone.
 pip install -q \
-  -e 'packages/pacthold[dev]' \
-  -e packages/server-plugin-api \
+  -e 'packages/backend/pacthold[dev]' \
+  -e packages/backend/server-plugin-api \
   -e packages/backend/environment-api \
   -e packages/backend/persistence-sqlite \
   -e packages/backend/platform-services \
@@ -148,7 +148,7 @@ step "backend suites (strict ledger gates; python -m pytest from repo root)"
 # passing (795 without activation, 792 + 3 errors with it, both reproduced on
 # 2026-10-02). The pin states what this gate actually observes; the underlying
 # sensitivity is registered in docs/known-issues.md.
-run_suite "pacthold" packages/pacthold passed=212
+run_suite "pacthold" packages/backend/pacthold passed=212
 run_suite "harness" plugins/harness passed=792 failed=3 skipped=3 errors=3
 run_suite "server" apps/server passed=1187 failed=64 skipped=9 errors=2
 run_suite "acp_orchestration" tests/integration/acp_orchestration passed=31 failed=28

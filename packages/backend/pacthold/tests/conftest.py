@@ -14,7 +14,7 @@ from pacthold.work_core.db import _reset_connection_for_tests
 # session states the module explicitly (the same variable the gate scripts set).
 os.environ.setdefault("AGENT_BOX_SANDBOX_MODULE", "agent_box_sandbox_bwrap")
 
-_PRESENCE_PATH = (Path(__file__).resolve().parents[3]
+_PRESENCE_PATH = (Path(__file__).resolve().parents[4]
                   / "scripts/artifact_presence.py")
 _SKIPPED_REASONS: list[str] = []
 

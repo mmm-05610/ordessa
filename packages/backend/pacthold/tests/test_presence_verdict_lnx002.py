@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-TREE = Path(__file__).resolve().parents[3]
+TREE = Path(__file__).resolve().parents[4]
 ROOT = Path(__file__).resolve().parents[1]  # the pacthold package root
 CONFTEST = ROOT / "tests/conftest.py"
 PRESENCE = TREE / "scripts/artifact_presence.py"

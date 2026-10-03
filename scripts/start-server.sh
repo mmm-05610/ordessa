@@ -12,7 +12,7 @@ TREE=$(cd "$HERE/.." && pwd)
 DATA_ROOT=$(mktemp -d /tmp/ordessa-server-smoke.XXXXXX)/data-root  # the server creates and owns the dir itself
 
 export AGENT_BOX_HOME=$DATA_ROOT
-export PYTHONPATH="$TREE/packages/pacthold/src:$TREE/plugins/harness/src:$TREE/apps/server/src${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONPATH="$TREE/packages/backend/pacthold/src:$TREE/plugins/harness/src:$TREE/apps/server/src${PYTHONPATH:+:$PYTHONPATH}"
 
 echo "AGENT_BOX_HOME=$DATA_ROOT"
 echo "starting ordessa_server on 127.0.0.1:$PORT"

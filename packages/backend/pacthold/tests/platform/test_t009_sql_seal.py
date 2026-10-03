@@ -18,8 +18,8 @@ import hashlib
 import re
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[4]
-CORE_MIGRATIONS_DIR = REPO_ROOT / "packages" / "pacthold" / "src" / "pacthold" / "migrations"
+REPO_ROOT = Path(__file__).resolve().parents[5]
+CORE_MIGRATIONS_DIR = REPO_ROOT / "packages" / "backend" / "pacthold" / "src" / "pacthold" / "migrations"
 COMPAT_MIGRATIONS_DIR = (
     REPO_ROOT / "plugins" / "runtime-compat" / "src" / "pacthold_runtime_compat" / "migrations"
 )
