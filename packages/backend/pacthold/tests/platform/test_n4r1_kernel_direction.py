@@ -14,7 +14,7 @@ plugin (`ordessa_harness`) and every domain plugin package
 (`ordessa_profile`, `ordessa_model_provider`, …).
 
 It is AST-based, not comment-based, so a docstring that *names* the Server
-(`packages/pacthold/src/pacthold/execution/__init__.py:9` does) stays legal
+(`packages/backend/pacthold/src/pacthold/execution/__init__.py:9` does) stays legal
 while a real `import ordessa_server` turns the suite red. The tripwire
 self-tests prove the scanner has that discriminating power instead of passing
 vacuously.

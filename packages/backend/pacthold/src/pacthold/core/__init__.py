@@ -4,7 +4,7 @@ Contains only standard-library machinery (sqlite3 store, dataclasses,
 enums, protocols, in-process registry, instance-level dispatch).  It must
 never import ``work_core``, ``resource_contracts``, ``extensions``,
 ``storage.database`` or ``cli`` — the boundary test in
-``packages/pacthold/tests/platform/test_public_contract.py`` locks this.
+``packages/backend/pacthold/tests/platform/test_public_contract.py`` locks this.
 """
 from __future__ import annotations
 

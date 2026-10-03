@@ -14,7 +14,7 @@ missing …"`, `"… must be a bounded string"`, `"requestId must contain at lea
 8 characters"`, `"… must be a non-negative safe integer"`) and the
 `INVALID_REQUEST` family are what clients branch on, which is why exactly one
 implementation exists and
-`packages/server-plugin-api/tests/test_wire_shape.py` pins each string.
+`packages/backend/server-plugin-api/tests/test_wire_shape.py` pins each string.
 
 Domain-shape validators (`assignments`, `models`, `overrides`, `positive`,
 `slug`) are NOT here: the measured table in the lane report shows zero host use

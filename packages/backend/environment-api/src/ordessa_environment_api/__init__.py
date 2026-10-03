@@ -10,7 +10,7 @@ C2 (recovery). It is deliberately:
   that mutate on import, no side effects;
 * **wire-stable** — every DTO has a canonical JSON encoding produced by
   :mod:`ordessa_environment_api.codec`; the TypeScript mirror in
-  ``packages/desktop-platform/contracts/foundation/src/open-environment``
+  ``packages/frontend/contracts/src/open-environment``
   must produce byte-identical output for the shared vectors in
   ``tests/contracts/vectors``.
 

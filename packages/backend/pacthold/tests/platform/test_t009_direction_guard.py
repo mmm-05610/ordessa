@@ -2,7 +2,7 @@
 
 FR-011 / plan.md "核心不依赖它": import direction is exactly one way —
 ``pacthold_runtime_compat`` may import ``pacthold``; no file inside
-``packages/pacthold`` (source or tests) may import, re-export or otherwise
+``packages/backend/pacthold`` (source or tests) may import, re-export or otherwise
 depend on the compatibility assembly.  This guard is deliberately AST-based
 (not comment-based) so docstrings that *mention* the assembly stay legal, and
 it ships with a tripwire self-test proving the scanner would actually turn

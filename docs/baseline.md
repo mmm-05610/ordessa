@@ -29,7 +29,7 @@ npm test                     # root JS aggregate (tooling/test-all.mjs, T021): t
                              # `npm test -- --list` prints them
 npm run build                # 10 enabled extensions + electron app
 npm run --workspace apps/desktop test              # host shell only: 3 files / 36 tests (FR-010)
-(cd tests/acp-connector && npm ci && npx vitest run)   # 79 tests
+(cd tests/integration/acp-connector && npm ci && npx vitest run)   # moved under tests/integration/
 npm run test:agent-shell && npm run test:electron      # headless smokes (xvfb)
 ```
 
@@ -41,15 +41,17 @@ pip install -r apps/server/lockfiles/server-linux-py312.txt   # verified closure
 # All 18 installable in-tree packages. Every one except pacthold is local-only (no
 # index release) and is depended on by name, so an incomplete list fails the whole
 # editable step rather than degrading quietly — API packages before their backends.
-pip install -e 'packages/pacthold[dev]' -e packages/server-plugin-api -e plugins/harness/api \
+# Paths reflect the 026 monorepo layout (packages/backend/* after T006-07
+# grouping; plugins/* after the 007 top-leveling — plugins/assets/* is gone).
+pip install -e 'packages/backend/pacthold[dev]' -e packages/backend/server-plugin-api -e plugins/harness/api \
   -e plugins/permissions/api -e plugins/permissions/backend -e plugins/permissions/adapters \
-  -e plugins/assets/sandbox/api -e plugins/assets/sandbox/adapters -e plugins/assets/sandbox/backend \
-  -e plugins/assets/model-provider/profile-contribution -e plugins/assets/model-provider/server \
-  -e plugins/assets/skills -e plugins/profile -e plugins/runtime-compat \
+  -e plugins/sandbox/api -e plugins/sandbox/adapters -e plugins/sandbox/backend \
+  -e plugins/model-provider/profile-contribution -e plugins/model-provider/server \
+  -e plugins/skills -e plugins/profile -e plugins/runtime-compat \
   -e plugins/server-compat -e plugins/workspace -e 'apps/server[dev]' -e 'plugins/harness[dev]' \
   -e products/server
 python -c "import pacthold, server_plugin_api, ordessa_harness_api, ordessa_server, ordessa_harness, ordessa_server_product"
-python -m pytest packages/pacthold              # 238 passed (run from repo root: cwd must be on sys.path)
+python -m pytest packages/backend/pacthold      # 246 passed (measured 2026-01-04; 238 was the frozen switch baseline)
 python -m pytest plugins/harness                # 308 passed / 3 skipped / 2 failed (inherited)
 python -m pytest apps/server                    # inherited-red ledger: docs/migration/backend-build-test.md
 bash scripts/start-server.sh 8931             # loopback smoke, throwaway data root

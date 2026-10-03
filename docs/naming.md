@@ -9,7 +9,7 @@ legitimately survives.
 
 | Old (source tree) | New (this repo) | Kind |
 | --- | --- | --- |
-| `pacthold` 2.0.0a1 (declared) but modules under `agent_box` | `pacthold` — `packages/pacthold`, import `pacthold` | dist + import |
+| `pacthold` 2.0.0a1 (declared) but modules under `agent_box` | `pacthold` — `packages/backend/pacthold`, import `pacthold` | dist + import |
 | `agent_box.server` (inside core package) | `ordessa_server` — `apps/server`, import `ordessa_server` | dist + import |
 | `plugins/agent-box-harness` / `agent_box_harness` | `plugins/harness`, dist `ordessa-harness`, import `ordessa_harness` | path + dist + import |
 | entry points `agent-box`, `agent-box-server`, `agent-box-server-credential` (aliases in source pyproject) | dropped in this baseline; entry points are `pacthold…` / `ordessa-server…` (see `docs/baseline.md`) | CLI |

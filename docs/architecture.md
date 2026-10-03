@@ -11,11 +11,15 @@ apps/
                   schema, session/workspace/approval/asset endpoints, plugin
                   composition. Depends on pacthold, never embeds it.
 packages/
-  pacthold/       Governance kernel (src/pacthold): work_core execution
+  backend/        (026 T006-07 physical grouping; the packages below live here)
+    pacthold/     Governance kernel (src/pacthold): work_core execution
                   semantics, storage + migrations, execution composition,
                   extensions (plugin interfaces), service layer,
                   resource_contracts, CLI. Zero product dependencies.
-  desktop-platform/
+                  Also here: environment-api (oe-contract/1), persistence-sqlite,
+                  platform-services, server-plugin-api.
+  frontend/       (was packages/desktop-platform; 026 grouping + 008
+                  extension-runtime merge — loader/host remain as thin shells)
     extension-api/      registration/services/release contracts
     extension-loader/   discovery + loading
     extension-host/     activation, dependency & lifecycle
@@ -68,11 +72,11 @@ docs/
 ## Dependency direction (load-bearing)
 
 ```text
-apps/desktop ──▶ packages/desktop-platform ──▶ (contracts only)
+apps/desktop ──▶ packages/frontend ──▶ (contracts only)
    │                                    ▲
    └── plugins/* ───────────────────────┘ (plugins never import host internals)
 
-apps/server ──▶ packages/pacthold ◀── plugins/harness (loaded via plugin root)
+apps/server ──▶ packages/backend/pacthold ◀── plugins/harness (loaded via plugin root)
                      │
                      └── imports nothing above it (no app, no plugin, no product)
 
@@ -84,7 +88,7 @@ product (products/desktop) ── enables plugins by id; never imports internals
   `apps/server` → `pacthold` is **normal use, not an ownership breach**
   (`core_binding.py` imports `pacthold.public`; `bootstrap/runtime.py` imports
   `pacthold.storage`); the load-bearing rule is the reverse direction.
-- Two cross-layer edges inside `desktop-platform` are deliberate and are
+- Two cross-layer edges inside `packages/frontend` (formerly `desktop-platform`) are deliberate and are
   listed as accepted exceptions in the core inventory
   (`specs/021-nightly-product-closeout/core-inventory-20261002.md`, B-01/B-04):
   the `ordessa.contracts` carrier re-exports the Workbench and Connections
@@ -92,7 +96,7 @@ product (products/desktop) ── enables plugins by id; never imports internals
   `server-bridge/src/data-root.ts` imports the Server-owned
   `data_root_layout.json` (data, not API). The "contracts only" arrow above
   describes the intent, not these two documented carriers.
-- The Workbench (`packages/workbench`) is an application UI framework, not a
+- The Workbench (`packages/frontend/workbench`) is an application UI framework, not a
   business plugin: it owns navigation, regions/views/pages, overlays, the
   settings page container and UI-contribution registration — not model/Profile
   state, configuration storage or business components.

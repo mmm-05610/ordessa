@@ -1,7 +1,7 @@
 """Canonical wire codec — the cross-language identity contract.
 
 Rules (frozen; the TypeScript mirror in
-``packages/desktop-platform/contracts/foundation/src/open-environment/codec.ts``
+``packages/frontend/contracts/src/open-environment/codec.ts``
 must produce byte-identical output):
 
 1. Payloads are JSON objects; keys are sorted by UTF-16 code unit (Python's
