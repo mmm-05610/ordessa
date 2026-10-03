@@ -10,8 +10,11 @@
 → 4/6 腿绿；剩 2 腿新成因登记非运行时问题：agent-shell=发行装配断言 ordessa.agent-server 未启用
 （产品装配决策，交用户/012 裁决）；ui-foundations=360px padding 断言（UI 样式漂移，008 域）。
 密钥卫生：一次性更新密钥对生于 /tmp、私钥即删；误写入仓库根的 --help/ 密钥目录已发现即删（未跟踪，
-无泄露面）。006 余项：LegacyCoreBinding 拆除、host 转发（T006-02）、物理归组（T006-07）、fence 演练
-（T006-08）。
+无泄露面）。切片E/F 合入（61cd36c5f9+d51f0d78f2）：实例库注入拆除第三平行根（76F→68F，8 红转绿）+
+LegacyCoreBinding 退役（宿主全程全局 core_db 零触碰，configure_database spy==0 门）。T006-07 物理归组
+完成（66c7e23bd3：pacthold/server-plugin-api → packages/backend/，发行/import 名不变，353 绿新路径，
+docs/baseline.md 路径延至 012 文档清扫）。T006-01/04/07/09 勾结。进行中切片G（native Profile 必选性
+移除）+H（T006-05 多入口一致性测试）。006 余项：T006-02 host 转发、T006-03 提纯、T006-06/08 切换演练。
 
 ## 2026-10-03 005 持久化/秘密/数据空间完成（codeReady）
 
