@@ -23,7 +23,7 @@ plugins/
   sandbox/                 外部环境隔离策略/实现
   permissions/             外部权限规则；不接管原生内部审批
   extensions/              Hooks/原生扩展资源；不是Ordessa插件loader
-  legacy-compat/           有界旧入口和旧数据桥；不是长期业务归属
+  # 不设legacy-compat领域插件；必要旧发行薄壳另列兼容清单
 ```
 
 OpenShell等独立外部环境插件以后以自己的领域目录接入；本轮不新建占位实现、不增加022/023的功能开发范围。无Agent/Chat/Profile也可以接入普通资源/服务/终端插件。
@@ -138,7 +138,7 @@ Profile对外开放可选配置字段贡献：资源contractId/version、字段s
 | plugins/chat | Chat专属API/视图/草稿保留；通用注册/组件/scope复用平台，不新建Chat核心 |
 | plugins/profile | frontend/settings+清单业务保留，选择glue仅贡献，配置owner迁Agent |
 | plugins/commands | generic registry/execute→frontend/extension-runtime，快捷键/面板组织→Workbench，业务handlers→所属插件；旧ID仅forward入口 |
-| plugins/server-compat、runtime-compat | plugins/legacy-compat/{server,runtime}仅物理收拢；旧两个发行/入口ID仍分别保留，业务逐条迁owner，core旧入口转同Environment |
+| plugins/server-compat、runtime-compat | 按compat-retirement.md逐模块/符号迁所属owner；取消整体收拢legacy-compat，旧发行/入口ID必要时仅留同实现薄壳及封存历史迁移 |
 
 适配品牌以外的数据库/内容import/parser属于资源域的adapters，不因目录名一样都搬Harness。旧server-compat认证/资源业务不可仅换到legacy文件夹便算完成；逐项公开能力迁移，compat消费者/退出条件登记后退役。主树AGENTS关于外仓Profile的冲突仍由001获确认，不擅自改指令。
 

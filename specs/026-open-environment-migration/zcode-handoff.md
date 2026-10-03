@@ -1,5 +1,7 @@
 # zcode启动与子代理配置
 
+R6开工前强制读compat-retirement.md：不创建永久legacy-compat插件；002逐符号台账，006/007/010拆业务，012核A95的C95-1–7。R6已融入当前执行包，开工核对本分支最新方案检查点，不能仍按8d4bc64旧目标树实施。原源快照历史不改，当前方案不是新产品测试证据。
+
 2026-10-03。用户明确允许新建worktree/026-open-environment-migration：产品已提交源码加核对后的源码/测试/清单修复及024–026方案，排除截图/凭据/运行数据/生成物；提交仅新分支，不改源树/main。基线准备不等001测试验收完成。
 
 ## 目录与启动词
@@ -12,7 +14,7 @@
 
 ~~~text
 在本实施树按specs/026-open-environment-migration/README.md完成001–012迁移；这是本分支编码和本地检查点提交许可，不是用户应用或真实模型运行许可。
-先读charter、decisions、execution-detail及zcode-handoff，核prepared-source与HEAD，完成001测试发现/受控基线后依赖推进。
+先读README、charter、decisions、execution-detail、compat-retirement及zcode-handoff，核prepared-source与HEAD，完成001测试发现/受控基线后依赖推进。
 单Pacthold、Workbench入frontend、领域单状态owner、品牌适配归Harness，不重做原生业务。
 你唯一维护契约/Git/status；子代理只用于明确独立任务，报告由你复核；记录任务ID、测试、SHA和缺口。
 S/I与反例齐才解锁下游；U/P未验不报DONE，未知不重发，不删断言求绿。

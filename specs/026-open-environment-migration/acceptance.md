@@ -99,7 +99,7 @@ S=源码/结构；I=真实受控实现（包含SQLite/IPC/native fixture，不�
 | A92 | 002 | 公开契约身份 | 纯公开contract编译互通，旧发行与ID映射明确 | 导入其他插件私有store/新Token副本/重命名持久ID→失败 | I | 身份/兼容映射缺席FAIL |
 | A93 | 010 | Agent能力读写分离 | 多控件同owner，只有绑定Harness来源能报确认 | 普通插件setConfirmed/前后端双pending主写→拒 | I | 来源未知不更新确认 |
 | A94 | 008 | 命令权威与原生输入 | 平台注册执行一个服务，handler属业务，native slash原样到native | 旧commands另建服务/平台截workflow→失败 | I | 缺native通道明确不可用不转平台 |
-| A95 | 012 | compat与实际产物 | 旧ID薄forward同实现，领域移动后独立产物完整 | 仅换legacy目录保双核心/repo editable补漏→失败 | I | required实现缺席FAIL |
+| A95 | 012 | compat与实际产物 | 旧ID薄forward同实现，领域移动后独立产物完整；compat-retirement中C95-1–7全部成立 | 仅换legacy目录保双核心/repo editable补漏、残留业务owner、删测试求绿→失败 | I | required实现或退役台账/子断言证据缺席FAIL |
 
 ## 实测命令与发现
 

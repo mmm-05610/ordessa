@@ -1,0 +1,1841 @@
+{
+  "sourceCommit": "8d4bc64bb747ee5ab000038ad31bb2c5d8b41b36",
+  "level": "static-source-inspection-not-runtime-verification",
+  "limitations": [
+    "direct absolute Python AST imports only",
+    "tests included",
+    "dynamic/relative/entrypoint/wire/build consumers must be added in order002"
+  ],
+  "modules": {
+    "ordessa_server_compat.accounts": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/accounts/__init__.py",
+      "lines": 13,
+      "symbols": [],
+      "consumers": []
+    },
+    "ordessa_server_compat.accounts.assets": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/accounts/assets.py",
+      "lines": 218,
+      "symbols": [
+        "AccountAssetError",
+        "digest_of",
+        "pack_asset",
+        "unpack_asset",
+        "AccountAssetStore"
+      ],
+      "consumers": [
+        "apps/server/tests/test_accounts.py",
+        "apps/server/tests/test_import_asset_request_id_129.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.accounts.login_engine": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/accounts/login_engine.py",
+      "lines": 204,
+      "symbols": [
+        "LoginFlow",
+        "LoginSession",
+        "LoginEngine",
+        "session_flow",
+        "opaque_login_id",
+        "_codex_auth_bytes"
+      ],
+      "consumers": [
+        "apps/server/tests/test_subscription_login_engine_094.py"
+      ]
+    },
+    "ordessa_server_compat.accounts.records": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/accounts/records.py",
+      "lines": 111,
+      "symbols": [
+        "AccountRecords",
+        "account_view"
+      ],
+      "consumers": [
+        "apps/server/tests/test_accounts.py",
+        "apps/server/tests/test_import_asset_request_id_129.py",
+        "plugins/server-compat/src/ordessa_server_compat/core_wire.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.approvals": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/approvals/__init__.py",
+      "lines": 4,
+      "symbols": [],
+      "consumers": [
+        "apps/server/tests/test_delegation.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.approvals.records": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/approvals/records.py",
+      "lines": 206,
+      "symbols": [
+        "ApprovalRecords",
+        "_current_error"
+      ],
+      "consumers": [
+        "plugins/permissions/backend/tests/test_dual_authority.py",
+        "plugins/permissions/backend/tests/test_legacy_delegate.py",
+        "plugins/server-compat/src/ordessa_server_compat/approvals/__init__.py"
+      ]
+    },
+    "ordessa_server_compat.assets": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/assets/__init__.py",
+      "lines": 7,
+      "symbols": [],
+      "consumers": [
+        "plugins/assets/mcp/tests/migration/legacy_sample.py",
+        "plugins/assets/mcp/tests/migration/test_migrate.py",
+        "plugins/assets/mcp/tests/migration/test_refusals.py",
+        "plugins/assets/mcp/tests/migration/test_scan.py",
+        "plugins/assets/mcp/tests/test_definition_legacy_bytes.py",
+        "plugins/assets/mcp/tests/test_definition_v2.py"
+      ]
+    },
+    "ordessa_server_compat.assets.catalog": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/assets/catalog.py",
+      "lines": 223,
+      "symbols": [
+        "CatalogError",
+        "parse_index",
+        "CatalogStore"
+      ],
+      "consumers": [
+        "apps/server/tests/test_asset_hubs.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.assets.mcp": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/assets/mcp.py",
+      "lines": 172,
+      "symbols": [
+        "McpAssetError",
+        "_credential_references",
+        "canonical_definition",
+        "definition_digest",
+        "McpAssetStore"
+      ],
+      "consumers": [
+        "apps/server/tests/test_asset_hubs.py",
+        "plugins/assets/mcp/tests/codes/test_legacy_zero_overlap.py",
+        "plugins/assets/mcp/tests/migration/legacy_sample.py",
+        "plugins/assets/mcp/tests/migration/test_migrate.py",
+        "plugins/assets/mcp/tests/migration/test_refusals.py",
+        "plugins/assets/mcp/tests/migration/test_scan.py",
+        "plugins/assets/mcp/tests/test_definition_legacy_bytes.py",
+        "plugins/assets/mcp/tests/test_definition_v2.py",
+        "plugins/server-compat/src/ordessa_server_compat/assets/catalog.py",
+        "plugins/server-compat/src/ordessa_server_compat/core_wire.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.assets.mcp_probe": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/assets/mcp_probe.py",
+      "lines": 130,
+      "symbols": [
+        "McpProbeError",
+        "_initialize_request",
+        "probe_stdio",
+        "_shutdown"
+      ],
+      "consumers": [
+        "apps/server/tests/test_asset_hubs.py",
+        "plugins/assets/mcp/tests/codes/test_legacy_zero_overlap.py",
+        "plugins/server-compat/src/ordessa_server_compat/core_wire.py"
+      ]
+    },
+    "ordessa_server_compat.assets.plugins": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/assets/plugins.py",
+      "lines": 108,
+      "symbols": [
+        "PluginAssetError",
+        "preview_of",
+        "PluginAssetStore"
+      ],
+      "consumers": [
+        "apps/server/tests/test_asset_hubs.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.assets.records": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/assets/records.py",
+      "lines": 230,
+      "symbols": [
+        "AssetRecords",
+        "asset_view"
+      ],
+      "consumers": [
+        "apps/server/tests/test_asset_hubs.py",
+        "plugins/assets/mcp/tests/migration/legacy_sample.py",
+        "plugins/server-compat/src/ordessa_server_compat/core_wire.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.assets.rendering": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/assets/rendering.py",
+      "lines": 126,
+      "symbols": [
+        "McpRenderError",
+        "_toml_key",
+        "_toml_string",
+        "_server_entry",
+        "render_json_config",
+        "render_toml_config",
+        "render_for_family"
+      ],
+      "consumers": [
+        "apps/server/tests/test_asset_hubs.py",
+        "plugins/server-compat/src/ordessa_server_compat/composition.py"
+      ]
+    },
+    "ordessa_server_compat.assets.skills": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/assets/skills.py",
+      "lines": 173,
+      "symbols": [
+        "SkillAssetError",
+        "parse_skill_frontmatter",
+        "_walk_bounded",
+        "SkillAssetStore"
+      ],
+      "consumers": [
+        "apps/server/tests/test_asset_hubs.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.composition": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/composition.py",
+      "lines": 1488,
+      "symbols": [
+        "_home_projection_target",
+        "_protected_state_paths",
+        "_bound_mount_path",
+        "_runtime_artifact_declarations",
+        "_sidecar_deployment_file",
+        "_bridge_target",
+        "self_url_of",
+        "_registry_profile_spec",
+        "_registry_native_homes",
+        "_profile_home_locator",
+        "_window_of_state_target",
+        "_deployment_credentials",
+        "_capability_binding",
+        "_sandbox_provider_name",
+        "_capability_material",
+        "build_runtime_from_native_adapter",
+        "build_runtime_from_sidecar_deployment"
+      ],
+      "consumers": [
+        "apps/server/tests/_w1_seed.py",
+        "apps/server/tests/test_accounts.py",
+        "apps/server/tests/test_asset_hubs.py",
+        "apps/server/tests/test_delegation.py",
+        "apps/server/tests/test_deployment_credentials.py",
+        "apps/server/tests/test_harness_capability_integration.py",
+        "apps/server/tests/test_import_asset_request_id_129.py",
+        "apps/server/tests/test_native_bootstrap_identity_hd002.py",
+        "apps/server/tests/test_placement.py",
+        "apps/server/tests/test_profile_memory.py",
+        "apps/server/tests/test_server_boundaries.py",
+        "apps/server/tests/test_server_capability_contract.py",
+        "apps/server/tests/test_sidecar_native_driver.py",
+        "apps/server/tests/test_subagent_harness_real_round_086.py",
+        "apps/server/tests/test_subagent_harness_round_086.py",
+        "apps/server/tests/test_wire_discovery_facets_s3.py",
+        "plugins/server-compat/src/ordessa_server_compat/core_wire.py",
+        "plugins/server-compat/tests/test_controlled_peer_opt_in.py",
+        "products/server/src/ordessa_server_product/composition.py",
+        "products/server/tests/test_native_multi_composition.py",
+        "products/server/tests/test_native_profile_composition.py",
+        "tests/integration/acp_orchestration/conftest.py"
+      ]
+    },
+    "ordessa_server_compat.core_wire": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/core_wire.py",
+      "lines": 1865,
+      "symbols": [
+        "_asset_refusal",
+        "_artifact_error",
+        "_model_reference_list",
+        "_require_declared",
+        "_CallReader",
+        "CoreWireHandlers"
+      ],
+      "consumers": [
+        "apps/server/tests/EXCLUDED-ar1-handoff__test_config_describe_slots_125.py",
+        "apps/server/tests/EXCLUDED-ar1-handoff__test_provenance_wire_098.py",
+        "apps/server/tests/test_asset_surface_refusals_147.py",
+        "apps/server/tests/test_import_asset_request_id_129.py",
+        "apps/server/tests/test_plugin_host_gate.py",
+        "apps/server/tests/test_server_compat_boundary.py",
+        "apps/server/tests/test_subagent_rule_liveness_086.py",
+        "apps/server/tests/test_wire_error_family_101.py",
+        "plugins/permissions/backend/tests/test_legacy_delegate.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.credential_cli": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/credential_cli.py",
+      "lines": 58,
+      "symbols": [
+        "parser",
+        "main"
+      ],
+      "consumers": []
+    },
+    "ordessa_server_compat.error_families": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/error_families.py",
+      "lines": 69,
+      "symbols": [],
+      "consumers": [
+        "apps/server/tests/platform/test_platform_wire_error_families.py",
+        "apps/server/tests/test_asset_surface_refusals_147.py",
+        "plugins/assets/mcp/tests/codes/test_legacy_zero_overlap.py",
+        "plugins/server-compat/src/ordessa_server_compat/core_wire.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.execution": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/execution/__init__.py",
+      "lines": 159,
+      "symbols": [
+        "HarnessDescriptorError",
+        "_validate_wire_protocols",
+        "HarnessDescriptor",
+        "HarnessRegistry"
+      ],
+      "consumers": [
+        "apps/server/tests/EXCLUDED-ar1-handoff__test_config_describe_slots_125.py",
+        "apps/server/tests/EXCLUDED-ar1-handoff__test_provider_compatibility_092.py",
+        "apps/server/tests/platform/test_platform_t023_ws_loopback.py",
+        "apps/server/tests/test_a3_k2_filing_s.py",
+        "apps/server/tests/test_asset_surface_refusals_147.py",
+        "apps/server/tests/test_b4_acceptance_freeze_s.py",
+        "apps/server/tests/test_capability_namespace_boundary.py",
+        "apps/server/tests/test_capability_truth_table.py",
+        "apps/server/tests/test_child_limits_production_path_136.py",
+        "apps/server/tests/test_credential_identity_seam_149.py",
+        "apps/server/tests/test_delegation.py",
+        "apps/server/tests/test_delegation_recovery_and_read_146.py",
+        "apps/server/tests/test_delegation_workspace_dimension_138.py",
+        "apps/server/tests/test_e_inc0_block1_pins.py",
+        "apps/server/tests/test_e_inc1a_matrix_pins.py",
+        "apps/server/tests/test_e_inc1b_b4_pins.py",
+        "apps/server/tests/test_e_inc1b_b5_pins.py",
+        "apps/server/tests/test_e_modular_execution_boundary.py",
+        "apps/server/tests/test_e_modular_execution_lifecycle.py",
+        "apps/server/tests/test_environment_providers.py",
+        "apps/server/tests/test_native_materialization_093_stage3.py",
+        "apps/server/tests/test_profiles_list_sendability_117.py",
+        "apps/server/tests/test_sendability_resolvable_credential_152.py",
+        "apps/server/tests/test_server_boundaries.py",
+        "apps/server/tests/test_server_capability_contract.py",
+        "apps/server/tests/test_sidecar_transport_109.py",
+        "apps/server/tests/test_sidecar_upstream_cause_150.py",
+        "apps/server/tests/test_stage4_audit.py",
+        "apps/server/tests/test_stage_a_server.py",
+        "apps/server/tests/test_subagent_rule_liveness_086.py",
+        "apps/server/tests/test_subagent_timeout_stops_141.py",
+        "apps/server/tests/test_task_continuation_ownership_139.py",
+        "apps/server/tests/test_usage_parsing.py",
+        "apps/server/tests/test_wire_discovery_facets_s3.py",
+        "apps/server/tests/test_wire_seq_numbering_spaces_128.py",
+        "apps/server/tests/test_wire_v1.py",
+        "apps/server/tests/test_workspace_connection_reserved_145.py",
+        "plugins/harness/tests/configuration_model/test_native_credential_catalog.py",
+        "plugins/server-compat/src/ordessa_server_compat/composition.py",
+        "plugins/server-compat/src/ordessa_server_compat/core_wire.py",
+        "plugins/server-compat/src/ordessa_server_compat/facade.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py",
+        "plugins/server-compat/src/ordessa_server_compat/profiles/service.py",
+        "plugins/server-compat/src/ordessa_server_compat/sessions/service.py",
+        "tests/integration/acp_orchestration/conftest.py"
+      ]
+    },
+    "ordessa_server_compat.execution.artifact_store": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/execution/artifact_store.py",
+      "lines": 184,
+      "symbols": [
+        "ArtifactStoreError",
+        "_make_tree_writable",
+        "ArtifactStore"
+      ],
+      "consumers": [
+        "apps/server/tests/test_artifact_store.py",
+        "apps/server/tests/test_wire_error_family_101.py",
+        "plugins/server-compat/src/ordessa_server_compat/core_wire.py"
+      ]
+    },
+    "ordessa_server_compat.execution.change_set": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/execution/change_set.py",
+      "lines": 201,
+      "symbols": [
+        "ChangeSetError",
+        "_sha256",
+        "_is_text",
+        "snapshot_workspace",
+        "snapshot_with_copies",
+        "_line_count",
+        "diff_snapshots",
+        "_entry"
+      ],
+      "consumers": [
+        "apps/server/tests/test_change_set.py",
+        "plugins/server-compat/src/ordessa_server_compat/execution/local_channel.py"
+      ]
+    },
+    "ordessa_server_compat.execution.control_plane_sync": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/execution/control_plane_sync.py",
+      "lines": 233,
+      "symbols": [
+        "ControlPlaneSyncError",
+        "SyncItem",
+        "ManifestEntry",
+        "DeploymentManifest",
+        "_validate",
+        "plan_deployment",
+        "_Record",
+        "SyncReport",
+        "ExecutionSideProjection",
+        "verify_parity",
+        "collect_sync_snapshot",
+        "_public_body"
+      ],
+      "consumers": [
+        "apps/server/tests/test_control_plane_sync_091.py"
+      ]
+    },
+    "ordessa_server_compat.execution.delegation": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/execution/delegation.py",
+      "lines": 591,
+      "symbols": [
+        "_iter_model_ids",
+        "_child_permission_ceiling",
+        "DelegationService"
+      ],
+      "consumers": [
+        "apps/server/tests/test_a3_c_proxy_pins_s.py",
+        "apps/server/tests/test_child_limits_production_path_136.py",
+        "apps/server/tests/test_delegation.py",
+        "apps/server/tests/test_delegation_recovery_and_read_146.py",
+        "apps/server/tests/test_delegation_workspace_dimension_138.py",
+        "apps/server/tests/test_e_a3_ehalf_pins.py",
+        "apps/server/tests/test_e_inc0_block1_pins.py",
+        "apps/server/tests/test_e_inc1c_n1_pins.py",
+        "apps/server/tests/test_subagent_rule_liveness_086.py",
+        "apps/server/tests/test_subagent_timeout_stops_141.py",
+        "apps/server/tests/test_task_continuation_ownership_139.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.execution.execution_contract": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/execution/execution_contract.py",
+      "lines": 23,
+      "symbols": [],
+      "consumers": [
+        "apps/server/tests/test_e_inc1a_matrix_pins.py",
+        "apps/server/tests/test_e_inc1b_b5_pins.py",
+        "apps/server/tests/test_e_modular_execution_boundary.py",
+        "plugins/server-compat/src/ordessa_server_compat/execution/__init__.py"
+      ]
+    },
+    "ordessa_server_compat.execution.first_run_lock": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/execution/first_run_lock.py",
+      "lines": 20,
+      "symbols": [],
+      "consumers": [
+        "apps/server/tests/test_e_modular_execution_lifecycle.py",
+        "apps/server/tests/test_first_run_lock.py"
+      ]
+    },
+    "ordessa_server_compat.execution.inventory": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/execution/inventory.py",
+      "lines": 95,
+      "symbols": [
+        "InventoryError",
+        "list_executions"
+      ],
+      "consumers": [
+        "apps/server/tests/test_execution_inventory.py",
+        "plugins/server-compat/src/ordessa_server_compat/core_wire.py"
+      ]
+    },
+    "ordessa_server_compat.execution.local_channel": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/execution/local_channel.py",
+      "lines": 777,
+      "symbols": [
+        "_safe_bundle_path",
+        "LocalChannelError",
+        "_safe_relative",
+        "_subscription_target",
+        "write_subscription_files",
+        "read_subscription_files",
+        "_seed_store_entries",
+        "home_locator_segments",
+        "LocalHome",
+        "LocalSidecarLauncher",
+        "_LocalChannels",
+        "_new_process_job",
+        "_window_of"
+      ],
+      "consumers": [
+        "apps/server/tests/test_placement.py",
+        "plugins/server-compat/src/ordessa_server_compat/composition.py"
+      ]
+    },
+    "ordessa_server_compat.execution.placement": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/execution/placement.py",
+      "lines": 74,
+      "symbols": [
+        "PlacementUnsupported",
+        "Placement",
+        "resolve_placement"
+      ],
+      "consumers": [
+        "apps/server/tests/test_environment_providers.py",
+        "apps/server/tests/test_placement.py",
+        "plugins/server-compat/src/ordessa_server_compat/composition.py",
+        "plugins/server-compat/src/ordessa_server_compat/execution/sidecar_backend.py"
+      ]
+    },
+    "ordessa_server_compat.execution.protocols": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/execution/protocols.py",
+      "lines": 26,
+      "symbols": [],
+      "consumers": [
+        "plugins/server-compat/src/ordessa_server_compat/execution/__init__.py",
+        "plugins/server-compat/src/ordessa_server_compat/model_configs/provider_protocols.py"
+      ]
+    },
+    "ordessa_server_compat.execution.session_store_guard": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/execution/session_store_guard.py",
+      "lines": 90,
+      "symbols": [
+        "SessionStoreGuardError",
+        "_quoted",
+        "guard_shared_store"
+      ],
+      "consumers": [
+        "apps/server/tests/test_session_store_guard.py",
+        "plugins/server-compat/src/ordessa_server_compat/composition.py",
+        "plugins/server-compat/src/ordessa_server_compat/sessions/repository.py"
+      ]
+    },
+    "ordessa_server_compat.execution.sidecar": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/execution/sidecar.py",
+      "lines": 1783,
+      "symbols": [
+        "_matches_ephemeral_prefix",
+        "_state_error_is_transient",
+        "SidecarError",
+        "SidecarLauncher",
+        "SidecarChannels",
+        "LocalProcessLauncher",
+        "NativeProcessLauncher",
+        "_ProcessChannels",
+        "_advertised",
+        "_advertised_image",
+        "_require_matching_artifact_authorizations",
+        "_safe_bundle_relative",
+        "sidecar_bundle_files",
+        "_finish_bundle",
+        "WorkerSidecarLauncher",
+        "materialize_subscription",
+        "_WorkerChannels",
+        "_sha256",
+        "_safe_relative_state_path",
+        "SidecarEnvelope",
+        "SidecarHarnessPort",
+        "NativeHarnessPort"
+      ],
+      "consumers": [
+        "apps/server/tests/test_accounts.py",
+        "apps/server/tests/test_bounded_approval_forward_144.py",
+        "apps/server/tests/test_capability_truth_table.py",
+        "apps/server/tests/test_e_inc1a_matrix_pins.py",
+        "apps/server/tests/test_empty_snapshot_fold_142.py",
+        "apps/server/tests/test_harness_capability_projection.py",
+        "apps/server/tests/test_native_bootstrap_identity_hd002.py",
+        "apps/server/tests/test_native_execution_seam_hd002.py",
+        "apps/server/tests/test_placement.py",
+        "apps/server/tests/test_server_capability_contract.py",
+        "apps/server/tests/test_sidecar_native_driver.py",
+        "apps/server/tests/test_sidecar_transport_109.py",
+        "apps/server/tests/test_sidecar_upstream_cause_150.py",
+        "apps/server/tests/test_state_capture_settle.py",
+        "apps/server/tests/test_terminal_reason_consumer_134.py",
+        "plugins/server-compat/src/ordessa_server_compat/composition.py",
+        "plugins/server-compat/src/ordessa_server_compat/execution/sidecar_backend.py",
+        "tests/integration/acp_orchestration/conftest.py",
+        "tests/integration/acp_orchestration/test_channel_passthrough.py",
+        "tests/integration/acp_orchestration/test_disconnect_and_release.py"
+      ]
+    },
+    "ordessa_server_compat.execution.sidecar_backend": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/execution/sidecar_backend.py",
+      "lines": 1183,
+      "symbols": [
+        "_Run",
+        "_BoundResources",
+        "_CoreSidecarProvider",
+        "SidecarExecutionBackend",
+        "_sidecar_attachments",
+        "_effective_attachment_support",
+        "_reclaim_subscription",
+        "_audited_home",
+        "_resumable",
+        "_credential_hit_disposition",
+        "CapabilityGateRefusal",
+        "NativeProjectRefusal",
+        "NativeSessionUnavailable",
+        "SidecarRunRecoveryFailure",
+        "_capability_gate",
+        "_safe_code",
+        "_terminal_reason_from_result"
+      ],
+      "consumers": [
+        "apps/server/tests/test_capability_namespace_boundary.py",
+        "apps/server/tests/test_credential_missing_typed_120.py",
+        "apps/server/tests/test_delegation.py",
+        "apps/server/tests/test_e_a3_ehalf_pins.py",
+        "apps/server/tests/test_e_inc0_block1_pins.py",
+        "apps/server/tests/test_e_inc1a_matrix_pins.py",
+        "apps/server/tests/test_e_inc1b_b4_pins.py",
+        "apps/server/tests/test_e_inc1b_b5_pins.py",
+        "apps/server/tests/test_e_modular_execution_lifecycle.py",
+        "apps/server/tests/test_first_run_lock.py",
+        "apps/server/tests/test_native_execution_seam_hd002.py",
+        "apps/server/tests/test_server_capability_contract.py",
+        "apps/server/tests/test_sidecar_transport_109.py",
+        "apps/server/tests/test_sidecar_upstream_cause_150.py",
+        "apps/server/tests/test_terminal_reason_consumer_134.py",
+        "apps/server/tests/test_typed_code_live_leg_135.py",
+        "apps/server/tests/test_usage_parsing.py",
+        "plugins/server-compat/src/ordessa_server_compat/composition.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.execution.state_capture": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/execution/state_capture.py",
+      "lines": 138,
+      "symbols": [
+        "StateCaptureError",
+        "_matches_ephemeral_prefix",
+        "_safe_relative_state_path",
+        "audit_snapshot",
+        "_bump"
+      ],
+      "consumers": []
+    },
+    "ordessa_server_compat.execution.usage": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/execution/usage.py",
+      "lines": 399,
+      "symbols": [
+        "UsageParseError",
+        "_neutral",
+        "parse_pi_acp_journal",
+        "parse_codex_rollout",
+        "parse_claude_projects_line",
+        "_refuse_credential_queries",
+        "write_scratch_sqlite",
+        "_scratch_sqlite",
+        "parse_hermes_state_db",
+        "_tokens_blob",
+        "parse_opencode_db",
+        "parse_kilo_db",
+        "parse_usage"
+      ],
+      "consumers": [
+        "apps/server/tests/test_usage_parsing.py",
+        "plugins/server-compat/src/ordessa_server_compat/composition.py",
+        "plugins/server-compat/src/ordessa_server_compat/execution/local_channel.py",
+        "plugins/server-compat/src/ordessa_server_compat/execution/sidecar.py"
+      ]
+    },
+    "ordessa_server_compat.facade": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/facade.py",
+      "lines": 110,
+      "symbols": [
+        "ProductService"
+      ],
+      "consumers": [
+        "apps/server/tests/test_s_mb_service_boundary.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.hooks": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/hooks/__init__.py",
+      "lines": 8,
+      "symbols": [],
+      "consumers": []
+    },
+    "ordessa_server_compat.hooks.model": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/hooks/model.py",
+      "lines": 220,
+      "symbols": [
+        "HookModelError",
+        "FamilyHookSchema",
+        "schema_for",
+        "_bounded_text",
+        "validate_model",
+        "command_preview"
+      ],
+      "consumers": [
+        "apps/server/tests/test_hook_models.py",
+        "plugins/server-compat/src/ordessa_server_compat/hooks/records.py",
+        "plugins/server-compat/src/ordessa_server_compat/hooks/rendering.py",
+        "plugins/server-compat/src/ordessa_server_compat/profiles/clone.py"
+      ]
+    },
+    "ordessa_server_compat.hooks.records": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/hooks/records.py",
+      "lines": 174,
+      "symbols": [
+        "_refusal",
+        "HookRecords",
+        "hook_view"
+      ],
+      "consumers": [
+        "apps/server/tests/test_hook_models.py",
+        "plugins/server-compat/src/ordessa_server_compat/core_wire.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.hooks.rendering": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/hooks/rendering.py",
+      "lines": 98,
+      "symbols": [
+        "HookRenderError",
+        "render_hooks_fragment",
+        "merge_fragments",
+        "hooks_target_for"
+      ],
+      "consumers": [
+        "apps/server/tests/test_hook_models.py",
+        "plugins/server-compat/src/ordessa_server_compat/composition.py"
+      ]
+    },
+    "ordessa_server_compat.hooks.triggers": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/hooks/triggers.py",
+      "lines": 138,
+      "symbols": [
+        "TriggerError",
+        "classify_exit",
+        "HookTriggerRecords",
+        "trigger_view"
+      ],
+      "consumers": [
+        "apps/server/tests/test_hook_models.py",
+        "plugins/server-compat/src/ordessa_server_compat/core_wire.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.http": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/http.py",
+      "lines": 211,
+      "symbols": [
+        "StrictModel",
+        "CredentialImportRequest",
+        "ProfileRequest",
+        "SessionRequest",
+        "TurnRequest",
+        "compat_http_routes"
+      ],
+      "consumers": [
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.model_configs": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/model_configs/__init__.py",
+      "lines": 6,
+      "symbols": [],
+      "consumers": [
+        "apps/server/tests/test_probe_egress_104.py",
+        "apps/server/tests/test_provider_protocols_092.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.model_configs.probe": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/model_configs/probe.py",
+      "lines": 227,
+      "symbols": [
+        "ProbeError",
+        "ProbeResult",
+        "_validate_endpoint",
+        "_OneShotRedirect",
+        "_typed_http_error",
+        "_open_request",
+        "_fetch_models_response",
+        "_parse_models_payload",
+        "pull_models",
+        "probe_connection"
+      ],
+      "consumers": [
+        "apps/server/tests/test_probe_egress_104.py",
+        "apps/server/tests/test_usage_parsing.py",
+        "plugins/server-compat/src/ordessa_server_compat/model_configs/provider_protocols.py",
+        "plugins/server-compat/src/ordessa_server_compat/model_configs/service.py"
+      ]
+    },
+    "ordessa_server_compat.model_configs.provider_protocols": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/model_configs/provider_protocols.py",
+      "lines": 262,
+      "symbols": [
+        "normalize_protocol",
+        "_protocol_unknown",
+        "normalize_protocols",
+        "normalize_wire_api",
+        "validate_endpoints",
+        "validate_capabilities",
+        "_validate_reasoning_options",
+        "_validate_modalities",
+        "_validate_limits",
+        "_validate_cost",
+        "_invalid_model",
+        "normalize_model_facts"
+      ],
+      "consumers": [
+        "apps/server/tests/test_provider_protocols_092.py",
+        "plugins/server-compat/src/ordessa_server_compat/model_configs/service.py"
+      ]
+    },
+    "ordessa_server_compat.model_configs.reasoning_knobs": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/model_configs/reasoning_knobs.py",
+      "lines": 104,
+      "symbols": [
+        "_translate",
+        "effective_domain",
+        "default_effort",
+        "validate_reasoning_value"
+      ],
+      "consumers": [
+        "apps/server/tests/test_reasoning_knobs_096.py"
+      ]
+    },
+    "ordessa_server_compat.model_configs.repository": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/model_configs/repository.py",
+      "lines": 161,
+      "symbols": [
+        "_Keep",
+        "ProviderModelRecords"
+      ],
+      "consumers": [
+        "apps/server/tests/EXCLUDED-ar1-handoff__test_provider_compatibility_092.py",
+        "apps/server/tests/test_native_materialization_093_stage3.py",
+        "apps/server/tests/test_provider_neutralization_092.py",
+        "apps/server/tests/test_provider_protocols_092.py",
+        "plugins/server-compat/src/ordessa_server_compat/model_configs/__init__.py",
+        "plugins/server-compat/src/ordessa_server_compat/model_configs/service.py"
+      ]
+    },
+    "ordessa_server_compat.model_configs.service": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/model_configs/service.py",
+      "lines": 360,
+      "symbols": [
+        "ProviderModelService",
+        "_config_payload",
+        "_model_references"
+      ],
+      "consumers": [
+        "apps/server/tests/EXCLUDED-ar1-handoff__test_config_describe_slots_125.py",
+        "apps/server/tests/EXCLUDED-ar1-handoff__test_provider_compatibility_092.py",
+        "apps/server/tests/test_native_materialization_093_stage3.py",
+        "apps/server/tests/test_provider_neutralization_092.py",
+        "apps/server/tests/test_provider_protocols_092.py",
+        "plugins/server-compat/src/ordessa_server_compat/model_configs/__init__.py"
+      ]
+    },
+    "ordessa_server_compat.persistence": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/persistence.py",
+      "lines": 108,
+      "symbols": [
+        "ProductRepositoryView"
+      ],
+      "consumers": [
+        "apps/server/tests/test_b4_acceptance_freeze_s.py",
+        "apps/server/tests/test_server_boundaries.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.plugin": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/plugin.py",
+      "lines": 509,
+      "symbols": [
+        "TurnInputs",
+        "ServerCompatPlugin",
+        "_core_filer"
+      ],
+      "consumers": [
+        "apps/server/tests/platform/test_platform_stop_hooks.py",
+        "apps/server/tests/test_a3_c_proxy_pins_s.py",
+        "apps/server/tests/test_plugin_host_gate.py",
+        "apps/server/tests/test_wire_discovery_facets_s3.py",
+        "plugins/server-compat/src/ordessa_server_compat/composition.py",
+        "products/server/src/ordessa_server_product/composition.py"
+      ]
+    },
+    "ordessa_server_compat.profiles": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/profiles/__init__.py",
+      "lines": 5,
+      "symbols": [],
+      "consumers": [
+        "apps/server/tests/test_a3_k2_filing_s.py",
+        "apps/server/tests/test_b4_acceptance_freeze_s.py",
+        "apps/server/tests/test_child_limits_production_path_136.py",
+        "apps/server/tests/test_delegation.py",
+        "apps/server/tests/test_delegation_recovery_and_read_146.py",
+        "apps/server/tests/test_delegation_usage_rollup_140.py",
+        "apps/server/tests/test_delegation_workspace_dimension_138.py",
+        "apps/server/tests/test_e_a3_ehalf_pins.py",
+        "apps/server/tests/test_e_inc1c_n1_pins.py",
+        "apps/server/tests/test_execution_inventory.py",
+        "apps/server/tests/test_profile_permissions.py",
+        "apps/server/tests/test_server_boundaries.py",
+        "apps/server/tests/test_server_capability_contract.py",
+        "apps/server/tests/test_sidecar_upstream_cause_150.py",
+        "apps/server/tests/test_stage_a_server.py",
+        "apps/server/tests/test_subagent_timeout_stops_141.py",
+        "apps/server/tests/test_subagents.py",
+        "apps/server/tests/test_task_continuation_ownership_139.py",
+        "plugins/permissions/api/tests/test_legacy_last_match_divergence.py",
+        "plugins/server-compat/src/ordessa_server_compat/facade.py",
+        "plugins/server-compat/src/ordessa_server_compat/persistence.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.profiles.clone": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/profiles/clone.py",
+      "lines": 146,
+      "symbols": [
+        "CloneError",
+        "plan_migration"
+      ],
+      "consumers": [
+        "apps/server/tests/_w1_seed.py",
+        "apps/server/tests/test_profile_permissions.py"
+      ]
+    },
+    "ordessa_server_compat.profiles.memory": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/profiles/memory.py",
+      "lines": 103,
+      "symbols": [
+        "read_memory",
+        "memory_paths_for"
+      ],
+      "consumers": [
+        "apps/server/tests/test_profile_memory.py",
+        "plugins/server-compat/src/ordessa_server_compat/core_wire.py"
+      ]
+    },
+    "ordessa_server_compat.profiles.permissions": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/profiles/permissions.py",
+      "lines": 187,
+      "symbols": [
+        "PermissionRuleError",
+        "_validate_rule",
+        "validate_rules",
+        "preset_rules",
+        "effective_rules",
+        "_matches",
+        "resolve",
+        "resolve_all"
+      ],
+      "consumers": [
+        "apps/server/tests/test_a3_k2_filing_s.py",
+        "apps/server/tests/test_b4_acceptance_freeze_s.py",
+        "apps/server/tests/test_posture_config_write.py",
+        "apps/server/tests/test_posture_translation.py",
+        "apps/server/tests/test_profile_permissions.py",
+        "plugins/permissions/api/tests/test_legacy_last_match_divergence.py",
+        "plugins/server-compat/src/ordessa_server_compat/execution/delegation.py",
+        "plugins/server-compat/src/ordessa_server_compat/profiles/clone.py",
+        "plugins/server-compat/src/ordessa_server_compat/profiles/posture_config.py",
+        "plugins/server-compat/src/ordessa_server_compat/profiles/posture_translation.py",
+        "plugins/server-compat/src/ordessa_server_compat/profiles/repository.py",
+        "plugins/server-compat/src/ordessa_server_compat/sessions/service.py"
+      ]
+    },
+    "ordessa_server_compat.profiles.posture_config": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/profiles/posture_config.py",
+      "lines": 358,
+      "symbols": [
+        "PostureConfigError",
+        "_posture_keys",
+        "render_claude_settings",
+        "_toml_lines",
+        "_top_level",
+        "_codex_implied",
+        "_stricter",
+        "render_codex_config",
+        "render_posture_config",
+        "write_posture_config"
+      ],
+      "consumers": [
+        "apps/server/tests/test_posture_config_write.py"
+      ]
+    },
+    "ordessa_server_compat.profiles.posture_translation": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/profiles/posture_translation.py",
+      "lines": 142,
+      "symbols": [
+        "PostureTranslationError",
+        "translate_claude",
+        "translate_codex",
+        "translate_posture"
+      ],
+      "consumers": [
+        "apps/server/tests/test_posture_config_write.py",
+        "apps/server/tests/test_posture_translation.py"
+      ]
+    },
+    "ordessa_server_compat.profiles.repository": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/profiles/repository.py",
+      "lines": 270,
+      "symbols": [
+        "ProfileRecords"
+      ],
+      "consumers": [
+        "plugins/server-compat/src/ordessa_server_compat/profiles/__init__.py",
+        "plugins/server-compat/src/ordessa_server_compat/profiles/service.py"
+      ]
+    },
+    "ordessa_server_compat.profiles.service": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/profiles/service.py",
+      "lines": 133,
+      "symbols": [
+        "ProfileService"
+      ],
+      "consumers": [
+        "plugins/server-compat/src/ordessa_server_compat/profiles/__init__.py"
+      ]
+    },
+    "ordessa_server_compat.profiles.subagents": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/profiles/subagents.py",
+      "lines": 284,
+      "symbols": [
+        "DelegationError",
+        "grant_edges",
+        "resolve_roster",
+        "has_delegation",
+        "check_cycle",
+        "tool_definitions",
+        "validate_run_arguments",
+        "inline_available"
+      ],
+      "consumers": [
+        "apps/server/tests/test_child_limits_production_path_136.py",
+        "apps/server/tests/test_delegation.py",
+        "apps/server/tests/test_delegation_recovery_and_read_146.py",
+        "apps/server/tests/test_delegation_workspace_dimension_138.py",
+        "apps/server/tests/test_subagent_timeout_stops_141.py",
+        "apps/server/tests/test_subagents.py",
+        "apps/server/tests/test_task_continuation_ownership_139.py",
+        "plugins/server-compat/src/ordessa_server_compat/composition.py",
+        "plugins/server-compat/src/ordessa_server_compat/execution/delegation.py"
+      ]
+    },
+    "ordessa_server_compat.sessions": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/sessions/__init__.py",
+      "lines": 11,
+      "symbols": [],
+      "consumers": [
+        "apps/server/tests/test_a3_k2_filing_s.py",
+        "apps/server/tests/test_b4_acceptance_freeze_s.py",
+        "apps/server/tests/test_child_limits_production_path_136.py",
+        "apps/server/tests/test_delegation.py",
+        "apps/server/tests/test_delegation_recovery_and_read_146.py",
+        "apps/server/tests/test_delegation_usage_rollup_140.py",
+        "apps/server/tests/test_delegation_workspace_dimension_138.py",
+        "apps/server/tests/test_e_a3_ehalf_pins.py",
+        "apps/server/tests/test_e_inc1c_n1_pins.py",
+        "apps/server/tests/test_execution_inventory.py",
+        "apps/server/tests/test_profile_permissions.py",
+        "apps/server/tests/test_s_mb_sessions_boundary.py",
+        "apps/server/tests/test_server_boundaries.py",
+        "apps/server/tests/test_sidecar_upstream_cause_150.py",
+        "apps/server/tests/test_subagent_timeout_stops_141.py",
+        "apps/server/tests/test_task_continuation_ownership_139.py",
+        "apps/server/tests/test_terminal_reason_consumer_134.py",
+        "apps/server/tests/test_wire_seq_numbering_spaces_128.py",
+        "apps/server/tests/test_workspace_connection_reserved_145.py",
+        "plugins/harness/tools/import-legacy-pi-history.py",
+        "plugins/server-compat/src/ordessa_server_compat/facade.py",
+        "plugins/server-compat/src/ordessa_server_compat/persistence.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py"
+      ]
+    },
+    "ordessa_server_compat.sessions.queue": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/sessions/queue.py",
+      "lines": 229,
+      "symbols": [
+        "QueueRecords",
+        "_with_current"
+      ],
+      "consumers": [
+        "apps/server/tests/test_a3_k2_filing_s.py",
+        "apps/server/tests/test_s_mb_sessions_boundary.py",
+        "plugins/server-compat/src/ordessa_server_compat/plugin.py",
+        "plugins/server-compat/src/ordessa_server_compat/sessions/__init__.py"
+      ]
+    },
+    "ordessa_server_compat.sessions.repository": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/sessions/repository.py",
+      "lines": 1293,
+      "symbols": [
+        "_version_error",
+        "SessionRecords"
+      ],
+      "consumers": [
+        "apps/server/tests/test_s_mb_sessions_boundary.py",
+        "apps/server/tests/test_wire_seq_numbering_spaces_128.py",
+        "apps/server/tests/test_workspace_connection_reserved_145.py",
+        "plugins/server-compat/src/ordessa_server_compat/sessions/__init__.py",
+        "plugins/server-compat/src/ordessa_server_compat/sessions/service.py"
+      ]
+    },
+    "ordessa_server_compat.sessions.service": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/sessions/service.py",
+      "lines": 424,
+      "symbols": [
+        "SessionService"
+      ],
+      "consumers": [
+        "apps/server/tests/test_s_mb_sessions_boundary.py",
+        "plugins/server-compat/src/ordessa_server_compat/sessions/__init__.py"
+      ]
+    },
+    "ordessa_server_compat.usage_aggregate": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/usage_aggregate.py",
+      "lines": 126,
+      "symbols": [
+        "UsageAggregator"
+      ],
+      "consumers": [
+        "apps/server/tests/test_delegation_usage_rollup_140.py",
+        "apps/server/tests/test_usage_aggregate.py",
+        "apps/server/tests/test_wire_error_family_101.py"
+      ]
+    },
+    "ordessa_server_compat.wire_projection": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/wire_projection.py",
+      "lines": 332,
+      "symbols": [
+        "_tri_state",
+        "_latest_usage",
+        "profile_record",
+        "session_record",
+        "execution_state",
+        "event_frame",
+        "_event_body"
+      ],
+      "consumers": [
+        "apps/server/tests/platform/test_platform_published_wire_surface.py",
+        "apps/server/tests/test_profiles_list_sendability_117.py",
+        "apps/server/tests/test_terminal_reason_consumer_134.py",
+        "apps/server/tests/test_typed_code_live_leg_135.py",
+        "apps/server/tests/test_wire_seq_numbering_spaces_128.py",
+        "apps/server/tests/test_workspace_connection_reserved_145.py",
+        "plugins/server-compat/src/ordessa_server_compat/core_wire.py"
+      ]
+    },
+    "ordessa_server_compat.wire_validators": {
+      "path": "plugins/server-compat/src/ordessa_server_compat/wire_validators.py",
+      "lines": 97,
+      "symbols": [
+        "slug",
+        "positive",
+        "overrides",
+        "assignments",
+        "models"
+      ],
+      "consumers": [
+        "apps/server/tests/platform/test_platform_published_wire_surface.py",
+        "plugins/assets/model-provider/server/src/ordessa_model_provider/plugin.py",
+        "plugins/server-compat/src/ordessa_server_compat/core_wire.py"
+      ]
+    },
+    "pacthold_runtime_compat": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/__init__.py",
+      "lines": 12,
+      "symbols": [],
+      "consumers": [
+        "apps/server/tests/test_server_capability_contract.py",
+        "plugins/runtime-compat/tests/capability/test_capability_fake_refusals.py",
+        "plugins/runtime-compat/tests/test_legacy_migration_chain.py",
+        "plugins/runtime-compat/tests/test_product_assembly.py",
+        "plugins/server-compat/src/ordessa_server_compat/composition.py",
+        "plugins/server-compat/src/ordessa_server_compat/execution/sidecar_backend.py"
+      ]
+    },
+    "pacthold_runtime_compat.api": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/api.py",
+      "lines": 191,
+      "symbols": [
+        "HarnessProfileManager",
+        "ProfileEnvelope",
+        "ProviderHostControl",
+        "ContinuationRouteDescriptor",
+        "ContinuationRoute",
+        "ProviderContinuationRoute",
+        "PluginRegistration",
+        "AgentBoxPlugin"
+      ],
+      "consumers": [
+        "plugins/harness/src/ordessa_harness/generic/factory.py",
+        "plugins/harness/src/ordessa_harness/generic/profile_store.py",
+        "plugins/harness/src/ordessa_harness/plugin.py",
+        "plugins/runtime-compat/tests/test_product_assembly.py"
+      ]
+    },
+    "pacthold_runtime_compat.bootstrap": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/bootstrap.py",
+      "lines": 91,
+      "symbols": [
+        "register_shared_runtime_contracts",
+        "build_product_registry",
+        "build_product_environment",
+        "build_product_environment_from_parts"
+      ],
+      "consumers": [
+        "apps/server/tests/test_typed_code_live_leg_135.py",
+        "plugins/runtime-compat/tests/test_product_assembly.py",
+        "plugins/server-compat/src/ordessa_server_compat/execution/sidecar_backend.py"
+      ]
+    },
+    "pacthold_runtime_compat.capability": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/__init__.py",
+      "lines": 125,
+      "symbols": [],
+      "consumers": [
+        "apps/server/tests/test_server_capability_contract.py",
+        "plugins/runtime-compat/tests/capability/test_capability_authorization.py",
+        "plugins/runtime-compat/tests/capability/test_capability_documents.py",
+        "plugins/runtime-compat/tests/capability/test_capability_errors.py",
+        "plugins/runtime-compat/tests/capability/test_capability_fake_refusals.py",
+        "plugins/runtime-compat/tests/capability/test_capability_ids.py",
+        "plugins/runtime-compat/tests/capability/test_capability_match.py",
+        "plugins/runtime-compat/tests/capability/test_capability_requirements.py",
+        "plugins/runtime-compat/tests/capability/test_capability_selection.py",
+        "plugins/server-compat/src/ordessa_server_compat/composition.py",
+        "plugins/server-compat/src/ordessa_server_compat/execution/sidecar_backend.py"
+      ]
+    },
+    "pacthold_runtime_compat.capability.documents": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/documents.py",
+      "lines": 177,
+      "symbols": [
+        "EvidenceRef",
+        "Condition",
+        "RequirementParameterSet",
+        "SandboxRequirement",
+        "SandboxGrant",
+        "SandboxDeclaration",
+        "EnvironmentFact",
+        "SandboxDeclarationDocument",
+        "MatchContext",
+        "_jsonable",
+        "canonical_json",
+        "requirement_set_digest"
+      ],
+      "consumers": []
+    },
+    "pacthold_runtime_compat.capability.errors": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/errors.py",
+      "lines": 83,
+      "symbols": [
+        "CapabilityContractError",
+        "CapabilityIdInvalid",
+        "CapabilityUnknown",
+        "RequirementConflict",
+        "DeclarationConflict",
+        "AuthorizationMissing",
+        "AuthorizationExceeded",
+        "EvidenceInvalid"
+      ],
+      "consumers": [
+        "plugins/runtime-compat/tests/capability/test_capability_authorization.py",
+        "plugins/runtime-compat/tests/capability/test_capability_fake_refusals.py",
+        "plugins/runtime-compat/tests/capability/test_capability_match.py",
+        "plugins/runtime-compat/tests/capability/test_capability_selection.py"
+      ]
+    },
+    "pacthold_runtime_compat.capability.ids": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/ids.py",
+      "lines": 27,
+      "symbols": [
+        "require_capability_id"
+      ],
+      "consumers": []
+    },
+    "pacthold_runtime_compat.capability.match": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/match.py",
+      "lines": 388,
+      "symbols": [
+        "_targets_superset",
+        "_targets_equal",
+        "MatchRule",
+        "MatchedItem",
+        "Refusal",
+        "MatchOutcome",
+        "match_requirements",
+        "_match_demand",
+        "_authorization_refusal",
+        "_find_declaration",
+        "_declaration_shape_refusal",
+        "_evaluate_condition",
+        "_evidence_code"
+      ],
+      "consumers": [
+        "plugins/runtime-compat/tests/capability/test_capability_authorization.py",
+        "plugins/runtime-compat/tests/capability/test_capability_fake_refusals.py",
+        "plugins/runtime-compat/tests/capability/test_capability_match.py",
+        "plugins/runtime-compat/tests/capability/test_capability_requirements.py"
+      ]
+    },
+    "pacthold_runtime_compat.capability.requirements": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/requirements.py",
+      "lines": 119,
+      "symbols": [
+        "_config_key_evidence",
+        "_unique_in_order",
+        "sidecar_requirements",
+        "sidecar_grants"
+      ],
+      "consumers": [
+        "plugins/runtime-compat/tests/capability/test_capability_requirements.py"
+      ]
+    },
+    "pacthold_runtime_compat.capability.selection": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/selection.py",
+      "lines": 160,
+      "symbols": [
+        "SelectionRecord",
+        "select_declaration"
+      ],
+      "consumers": [
+        "plugins/runtime-compat/tests/capability/test_capability_authorization.py",
+        "plugins/runtime-compat/tests/capability/test_capability_selection.py"
+      ]
+    },
+    "pacthold_runtime_compat.capability.slots": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/slots.py",
+      "lines": 71,
+      "symbols": [
+        "slot_of_capability"
+      ],
+      "consumers": []
+    },
+    "pacthold_runtime_compat.catalog": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/catalog.py",
+      "lines": 201,
+      "symbols": [
+        "_route_id",
+        "_transport_id",
+        "_validate_materializer",
+        "_validate_transport",
+        "ProductExtensionCatalog",
+        "ProductExtensionCatalogBuilder",
+        "build_product_catalog_from_report",
+        "TransportOperationResolver"
+      ],
+      "consumers": [
+        "plugins/runtime-compat/tests/test_product_assembly.py"
+      ]
+    },
+    "pacthold_runtime_compat.cli": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/cli/__init__.py",
+      "lines": 147,
+      "symbols": [
+        "cmd_web",
+        "cmd_launch",
+        "cmd_doctor",
+        "cmd_help",
+        "build_product_parser",
+        "main"
+      ],
+      "consumers": []
+    },
+    "pacthold_runtime_compat.credentials": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/credentials.py",
+      "lines": 49,
+      "symbols": [
+        "ResolvedCredential",
+        "PreparedSecretMount",
+        "CredentialMaterializer"
+      ],
+      "consumers": [
+        "plugins/harness/src/ordessa_harness/codex/credentials.py"
+      ]
+    },
+    "pacthold_runtime_compat.legacy_migrations": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/legacy_migrations.py",
+      "lines": 53,
+      "symbols": [
+        "legacy_migration_source",
+        "register_legacy_migrations"
+      ],
+      "consumers": [
+        "apps/server/src/ordessa_server/bootstrap/runtime.py",
+        "apps/server/tests/platform/test_platform_t023_legacy_data.py",
+        "apps/server/tests/test_a3_c_proxy_pins_s.py",
+        "apps/server/tests/test_stage_a_server.py",
+        "apps/server/tests/test_work_core_migration_equivalence_121.py",
+        "plugins/runtime-compat/tests/test_legacy_migration_chain.py",
+        "products/server/src/ordessa_server_product/composition.py"
+      ]
+    },
+    "pacthold_runtime_compat.profile_envelope": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/profile_envelope.py",
+      "lines": 115,
+      "symbols": [
+        "_safe",
+        "to_profile_envelope",
+        "ProfileEnvelopeManager"
+      ],
+      "consumers": [
+        "plugins/harness/src/ordessa_harness/generic/factory.py"
+      ]
+    },
+    "pacthold_runtime_compat.resource_contracts": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/__init__.py",
+      "lines": 87,
+      "symbols": [
+        "contract_type"
+      ],
+      "consumers": [
+        "apps/server/tests/test_capability_namespace_boundary.py",
+        "apps/server/tests/test_capability_truth_table.py",
+        "apps/server/tests/test_harness_capability_integration.py",
+        "apps/server/tests/test_server_capability_contract.py",
+        "apps/server/tests/test_typed_code_live_leg_135.py",
+        "plugins/harness/src/ordessa_harness/claude/profile.py",
+        "plugins/harness/src/ordessa_harness/claude/provider.py",
+        "plugins/harness/src/ordessa_harness/codex/app_server/provider.py",
+        "plugins/harness/src/ordessa_harness/codex/composition.py",
+        "plugins/harness/src/ordessa_harness/codex/control.py",
+        "plugins/harness/src/ordessa_harness/codex/credentials.py",
+        "plugins/harness/src/ordessa_harness/codex/interactive/provider.py",
+        "plugins/harness/src/ordessa_harness/codex/launch.py",
+        "plugins/harness/src/ordessa_harness/codex/remote.py",
+        "plugins/harness/src/ordessa_harness/generic/factory.py",
+        "plugins/harness/src/ordessa_harness/generic/profile_selector.py",
+        "plugins/harness/src/ordessa_harness/generic/profile_store.py",
+        "plugins/harness/src/ordessa_harness/hermes/profile.py",
+        "plugins/harness/src/ordessa_harness/hermes/provider.py",
+        "plugins/harness/src/ordessa_harness/opencode/profiles.py",
+        "plugins/harness/src/ordessa_harness/opencode/provider.py",
+        "plugins/harness/src/ordessa_harness/pi/projection.py",
+        "plugins/harness/tests/test_capability_declarations.py",
+        "plugins/harness/tests/test_codex_credential_binding_p0.py",
+        "plugins/harness/tests/test_codex_provider.py",
+        "plugins/profile/src/ordessa_profile/plugin.py",
+        "plugins/profile/tests/test_brand_matrix_pa5.py",
+        "plugins/profile/tests/test_plugin_registration_v2.py",
+        "plugins/runtime-compat/tests/test_brand_rename.py",
+        "plugins/runtime-compat/tests/test_product_assembly.py",
+        "plugins/runtime-compat/tests/test_resource_contracts.py",
+        "plugins/server-compat/src/ordessa_server_compat/execution/sidecar_backend.py"
+      ]
+    },
+    "pacthold_runtime_compat.resource_contracts.agent_box_profile_v1": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/agent_box_profile_v1.py",
+      "lines": 27,
+      "symbols": [
+        "AgentBoxProfileV1"
+      ],
+      "consumers": [
+        "plugins/runtime-compat/tests/test_resource_contracts.py"
+      ]
+    },
+    "pacthold_runtime_compat.resource_contracts.agent_skill_v1": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/agent_skill_v1.py",
+      "lines": 49,
+      "symbols": [
+        "AgentSkillV1"
+      ],
+      "consumers": [
+        "plugins/assets/skills/src/ordessa_skills/harness_adapters/producer.py"
+      ]
+    },
+    "pacthold_runtime_compat.resource_contracts.credential_v1": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/credential_v1.py",
+      "lines": 28,
+      "symbols": [
+        "CredentialRefV1"
+      ],
+      "consumers": []
+    },
+    "pacthold_runtime_compat.resource_contracts.harness_capabilities": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/harness_capabilities.py",
+      "lines": 313,
+      "symbols": [
+        "CapabilityDeclarationError",
+        "CapabilityClaimsInvalid",
+        "CapabilityUnknownId",
+        "CapabilityValueNotBoolean",
+        "CapabilityDeclaration",
+        "_unknown_id",
+        "validate_claims",
+        "canonical_capabilities",
+        "_validated_observations",
+        "_validated_evidence",
+        "merge_capabilities",
+        "capability_view"
+      ],
+      "consumers": [
+        "apps/server/tests/test_capability_namespace_boundary.py",
+        "apps/server/tests/test_capability_truth_table.py",
+        "apps/server/tests/test_harness_capability_integration.py",
+        "apps/server/tests/test_server_capability_contract.py",
+        "plugins/harness/src/ordessa_harness/registry/capability_claims.py",
+        "plugins/harness/src/ordessa_harness/registry/schema.py",
+        "plugins/harness/tests/test_capability_declarations.py",
+        "plugins/server-compat/src/ordessa_server_compat/composition.py",
+        "plugins/server-compat/src/ordessa_server_compat/execution/__init__.py",
+        "plugins/server-compat/src/ordessa_server_compat/execution/sidecar.py"
+      ]
+    },
+    "pacthold_runtime_compat.resource_contracts.home_projection": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/home_projection.py",
+      "lines": 183,
+      "symbols": [
+        "HomeProjectionRejected",
+        "_reject",
+        "home_projection_target",
+        "protected_state_paths",
+        "is_protected_state_path"
+      ],
+      "consumers": [
+        "plugins/server-compat/src/ordessa_server_compat/composition.py"
+      ]
+    },
+    "pacthold_runtime_compat.resource_contracts.prompt_fragment_v1": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/prompt_fragment_v1.py",
+      "lines": 23,
+      "symbols": [
+        "PromptFragmentV1"
+      ],
+      "consumers": [
+        "plugins/runtime-compat/tests/test_resource_contracts.py"
+      ]
+    },
+    "pacthold_runtime_compat.resource_contracts.runtime_artifacts": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/runtime_artifacts.py",
+      "lines": 270,
+      "symbols": [
+        "RuntimeArtifactRejected",
+        "runtime_artifact_name",
+        "validate_runtime_artifact_target",
+        "runtime_artifact_tree_digest",
+        "runtime_artifact_tree_summary",
+        "_encode",
+        "_walk",
+        "_children",
+        "_shape",
+        "_validate_relative",
+        "_file_digest"
+      ],
+      "consumers": [
+        "apps/server/tests/test_artifact_store.py",
+        "apps/server/tests/test_profile_permissions.py",
+        "plugins/assets/skills/src/ordessa_skills/library/import_transfer.py",
+        "plugins/assets/skills/src/ordessa_skills/library/store.py",
+        "plugins/assets/skills/src/ordessa_skills/migration/restore.py",
+        "plugins/assets/skills/tests/test_g01_legacy_fidelity.py",
+        "plugins/assets/skills/tests/test_store_atomic.py",
+        "plugins/harness/packaging/builders/harness-install-set.py",
+        "plugins/server-compat/src/ordessa_server_compat/assets/skills.py",
+        "plugins/server-compat/src/ordessa_server_compat/composition.py",
+        "plugins/server-compat/src/ordessa_server_compat/execution/artifact_store.py"
+      ]
+    },
+    "pacthold_runtime_compat.resource_contracts.workspace_v1": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/workspace_v1.py",
+      "lines": 20,
+      "symbols": [
+        "WorkspaceV1"
+      ],
+      "consumers": [
+        "plugins/runtime-compat/tests/test_resource_contracts.py"
+      ]
+    },
+    "pacthold_runtime_compat.runtime_composition": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/runtime_composition/__init__.py",
+      "lines": 7,
+      "symbols": [],
+      "consumers": [
+        "apps/server/tests/test_e_inc0_block1_pins.py",
+        "apps/server/tests/test_e_inc2a_runtime_verbs_pins.py",
+        "plugins/assets/skills/src/ordessa_skills/harness_adapters/producer.py",
+        "plugins/assets/skills/tests/test_skill_delivery_producer_t14.py",
+        "plugins/harness/src/ordessa_harness/adapters/generic_cli.py",
+        "plugins/harness/src/ordessa_harness/claude/composition.py",
+        "plugins/harness/src/ordessa_harness/claude/provider.py",
+        "plugins/harness/src/ordessa_harness/codex/app_server/provider.py",
+        "plugins/harness/src/ordessa_harness/codex/composition.py",
+        "plugins/harness/src/ordessa_harness/codex/executable.py",
+        "plugins/harness/src/ordessa_harness/codex/interactive/provider.py",
+        "plugins/harness/src/ordessa_harness/generic/execution_provider.py",
+        "plugins/harness/src/ordessa_harness/hermes/composition.py",
+        "plugins/harness/src/ordessa_harness/hermes/provider.py",
+        "plugins/harness/src/ordessa_harness/opencode/provider.py",
+        "plugins/harness/src/ordessa_harness/pi/projection.py",
+        "plugins/harness/src/ordessa_harness/pi/provider.py",
+        "plugins/harness/tests/test_codex_composition_adapter.py",
+        "plugins/harness/tests/test_codex_provider.py",
+        "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/home_projection.py",
+        "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/runtime_artifacts.py",
+        "plugins/runtime-compat/tests/test_runtime_composition_protocol.py"
+      ]
+    },
+    "pacthold_runtime_compat.runtime_composition.assembler": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/runtime_composition/assembler.py",
+      "lines": 77,
+      "symbols": [
+        "assemble_runtime_composition"
+      ],
+      "consumers": []
+    },
+    "pacthold_runtime_compat.runtime_composition.coordinator": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/runtime_composition/coordinator.py",
+      "lines": 199,
+      "symbols": [
+        "ResolvedComposition",
+        "RuntimeCompositionCoordinator"
+      ],
+      "consumers": [
+        "apps/server/tests/test_e_inc2a_runtime_verbs_pins.py"
+      ]
+    },
+    "pacthold_runtime_compat.runtime_composition.fake": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/runtime_composition/fake.py",
+      "lines": 122,
+      "symbols": [
+        "TargetCreationSentinel",
+        "FakeHost",
+        "FakeSandbox",
+        "FakeTerminal",
+        "FakeCompositionCoordinator"
+      ],
+      "consumers": []
+    },
+    "pacthold_runtime_compat.runtime_composition.protocol": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/runtime_composition/protocol.py",
+      "lines": 605,
+      "symbols": [
+        "RuntimeHostV1",
+        "SandboxV1",
+        "TerminalSessionV1",
+        "CompositionError",
+        "CompositionErrorCode",
+        "CompositionRejected",
+        "StartAmbiguous",
+        "_text",
+        "digest",
+        "digest_json",
+        "content_digest",
+        "SandboxError",
+        "SandboxUnsupported",
+        "SandboxUnavailable",
+        "SandboxAmbiguous",
+        "ProjectionRejected",
+        "guest_path",
+        "SandboxRequirements",
+        "RuntimeHostRef",
+        "SandboxRef",
+        "TerminalSessionRef",
+        "RuntimeBinding",
+        "CapabilityStatus",
+        "CapabilitySet",
+        "RuntimeSourceDeclaration",
+        "declare_source",
+        "HarnessCommandSpec",
+        "PreparedMountSource",
+        "MountPlan",
+        "RuntimeBundle",
+        "HostTransportOperation",
+        "IsolatedProcessSpec",
+        "TerminalAllocation",
+        "TerminalRunHandle",
+        "AttachDescriptor",
+        "NativeCorrelationSet",
+        "CompositionPreflightReceipt",
+        "CompositionAttemptRecord",
+        "attempt_key",
+        "RuntimeHost",
+        "Sandbox",
+        "TerminalSession",
+        "HostTransport",
+        "TransportOperationDescriptor",
+        "TransportOperationHandler",
+        "TransportOperationContribution",
+        "RuntimeHostProvider",
+        "SandboxProvider",
+        "TerminalSessionProvider",
+        "CompositionCoordinator"
+      ],
+      "consumers": [
+        "apps/server/tests/test_e_inc2a_runtime_verbs_pins.py",
+        "plugins/harness/src/ordessa_harness/adapters/skill_observation.py",
+        "plugins/runtime-compat/tests/test_product_assembly.py"
+      ]
+    },
+    "pacthold_runtime_compat.runtime_composition.sandbox_port": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/runtime_composition/sandbox_port.py",
+      "lines": 285,
+      "symbols": [
+        "register_sandbox_port_factory",
+        "SandboxPortError",
+        "SandboxPortUnavailable",
+        "SandboxInvariantUnsupported",
+        "RoomInvariants",
+        "SidecarRoomRequest",
+        "RoomProcessSpec",
+        "SandboxPort",
+        "_load_factory",
+        "_factory_from_configured_module",
+        "resolve_sandbox_port"
+      ],
+      "consumers": [
+        "apps/server/tests/test_e_inc0_block1_pins.py",
+        "apps/server/tests/test_e_inc2a_runtime_verbs_pins.py",
+        "plugins/server-compat/src/ordessa_server_compat/composition.py",
+        "plugins/server-compat/src/ordessa_server_compat/execution/local_channel.py",
+        "plugins/server-compat/src/ordessa_server_compat/execution/sidecar.py",
+        "plugins/server-compat/src/ordessa_server_compat/execution/sidecar_backend.py",
+        "plugins/workspace/src/ordessa_workspace/local_environment.py"
+      ]
+    },
+    "pacthold_runtime_compat.sandbox": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/sandbox/__init__.py",
+      "lines": 35,
+      "symbols": [],
+      "consumers": []
+    },
+    "pacthold_runtime_compat.storage": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/storage/__init__.py",
+      "lines": 24,
+      "symbols": [],
+      "consumers": [
+        "apps/server/tests/EXCLUDED-ar1-handoff__test_provider_compatibility_092.py",
+        "apps/server/tests/platform/test_platform_t023_legacy_data.py",
+        "apps/server/tests/test_a3_k2_filing_s.py",
+        "apps/server/tests/test_accounts.py",
+        "apps/server/tests/test_asset_hubs.py",
+        "apps/server/tests/test_b4_acceptance_freeze_s.py",
+        "apps/server/tests/test_child_limits_production_path_136.py",
+        "apps/server/tests/test_delegation.py",
+        "apps/server/tests/test_delegation_recovery_and_read_146.py",
+        "apps/server/tests/test_delegation_usage_rollup_140.py",
+        "apps/server/tests/test_delegation_workspace_dimension_138.py",
+        "apps/server/tests/test_e_a3_ehalf_pins.py",
+        "apps/server/tests/test_e_inc1c_n1_pins.py",
+        "apps/server/tests/test_environment_providers.py",
+        "apps/server/tests/test_execution_inventory.py",
+        "apps/server/tests/test_hook_models.py",
+        "apps/server/tests/test_local_workspace_native_mode_hd002.py",
+        "apps/server/tests/test_native_materialization_093_stage3.py",
+        "apps/server/tests/test_profile_permissions.py",
+        "apps/server/tests/test_provider_neutralization_092.py",
+        "apps/server/tests/test_provider_protocols_092.py",
+        "apps/server/tests/test_server_boundaries.py",
+        "apps/server/tests/test_server_capability_contract.py",
+        "apps/server/tests/test_sidecar_upstream_cause_150.py",
+        "apps/server/tests/test_stage_a_server.py",
+        "apps/server/tests/test_subagent_timeout_stops_141.py",
+        "apps/server/tests/test_subagents.py",
+        "apps/server/tests/test_task_continuation_ownership_139.py",
+        "apps/server/tests/test_terminal_reason_consumer_134.py",
+        "plugins/assets/mcp/tests/integration/integration_helpers.py",
+        "plugins/assets/mcp/tests/migration/legacy_sample.py",
+        "plugins/assets/mcp/tests/permission_adapter/pa_shared.py",
+        "plugins/assets/model-provider/profile-contribution/tests/conftest.py",
+        "plugins/assets/model-provider/server/tests/conftest.py",
+        "plugins/assets/model-provider/server/tests/test_c_line_provider_semantics.py",
+        "plugins/assets/model-provider/server/tests/test_error_families.py",
+        "plugins/assets/skills/src/ordessa_skills/assignments/store.py",
+        "plugins/assets/skills/src/ordessa_skills/library/records.py",
+        "plugins/assets/skills/src/ordessa_skills/migration/profile_bindings.py",
+        "plugins/assets/skills/src/ordessa_skills/service.py",
+        "plugins/assets/skills/tests/assignments_support.py",
+        "plugins/assets/skills/tests/skills_wire_support.py",
+        "plugins/assets/skills/tests/test_binding_cas.py",
+        "plugins/assets/skills/tests/test_catalog_snapshot.py",
+        "plugins/assets/skills/tests/test_harness_api_registration.py",
+        "plugins/assets/skills/tests/test_import_session.py",
+        "plugins/assets/skills/tests/test_library_kind_isolation.py",
+        "plugins/assets/skills/tests/test_library_revisions.py",
+        "plugins/assets/skills/tests/test_migration_restore_demo.py",
+        "plugins/assets/skills/tests/test_records_pinning.py",
+        "plugins/harness/packaging/native-profile/probe-live-model.py",
+        "plugins/harness/tools/import-legacy-pi-history.py",
+        "plugins/server-compat/src/ordessa_server_compat/accounts/records.py",
+        "plugins/server-compat/src/ordessa_server_compat/approvals/records.py",
+        "plugins/server-compat/src/ordessa_server_compat/assets/records.py",
+        "plugins/server-compat/src/ordessa_server_compat/execution/inventory.py",
+        "plugins/server-compat/src/ordessa_server_compat/hooks/records.py",
+        "plugins/server-compat/src/ordessa_server_compat/hooks/triggers.py",
+        "plugins/server-compat/src/ordessa_server_compat/model_configs/repository.py",
+        "plugins/server-compat/src/ordessa_server_compat/persistence.py",
+        "plugins/server-compat/src/ordessa_server_compat/profiles/repository.py",
+        "plugins/server-compat/src/ordessa_server_compat/sessions/queue.py",
+        "plugins/server-compat/src/ordessa_server_compat/sessions/repository.py",
+        "plugins/workspace/src/ordessa_workspace/records.py",
+        "products/server/src/ordessa_server_product/composition.py",
+        "products/server/tests/test_native_model_turn_composition.py",
+        "products/server/tests/test_public_composition_points.py",
+        "products/server/tests/test_turn_application_product.py"
+      ]
+    },
+    "pacthold_runtime_compat.storage.database": {
+      "path": "plugins/runtime-compat/src/pacthold_runtime_compat/storage/database.py",
+      "lines": 792,
+      "symbols": [
+        "FutureSchemaError",
+        "_migrate_1_to_2",
+        "_has_table",
+        "_columns",
+        "_backfill",
+        "_add_columns",
+        "_migrate_17_to_18",
+        "_migrate_18_to_19",
+        "_migrate_20_to_21",
+        "_migrate_19_to_20",
+        "_migrate_16_to_17",
+        "_migrate_15_to_16",
+        "_migrate_14_to_15",
+        "_migrate_13_to_14",
+        "_migrate_12_to_13",
+        "_migrate_11_to_12",
+        "_migrate_10_to_11",
+        "_migrate_9_to_10",
+        "_migrate_8_to_9",
+        "_migrate_7_to_8",
+        "_migrate_6_to_7",
+        "_migrate_5_to_6",
+        "_migrate_2_to_3",
+        "_migrate_3_to_4",
+        "_migrate_4_to_5",
+        "Database"
+      ],
+      "consumers": [
+        "apps/server/tests/test_provider_neutralization_092.py",
+        "apps/server/tests/test_stage_a_server.py",
+        "apps/server/tests/test_usage_aggregate.py",
+        "plugins/server-compat/src/ordessa_server_compat/usage_aggregate.py"
+      ]
+    }
+  },
+  "sql": [
+    "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/001_init.sql",
+    "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/002_rename_claude_md_ref.sql",
+    "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/003_work_core.sql",
+    "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/004_minimal_work_core.sql",
+    "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/005_resource_contract_inputs.sql",
+    "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/006_resource_contract_inputs.sql",
+    "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/007_resource_observations.sql",
+    "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/008_resource_observation_evidence_metadata.sql",
+    "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/009_execution_finalization.sql"
+  ],
+  "scannedTrackedPython": 1349
+}

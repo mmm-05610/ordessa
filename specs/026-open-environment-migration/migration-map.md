@@ -22,7 +22,7 @@
 | Chat DraftStore/send页面 | stable DraftOwner + SubmissionOwner | 010/011；精确revision消费、view外收尾 |
 | native-session history M/P | Harness历史owner/decoder | 007/011；启动list、点击load，不把native locator当invoke权 |
 | plugins/assets各资源及品牌adapters | 顶层领域插件；品牌实现→Harness内部 | R4 plugin-architecture.md映射；007/010逐所有者，保所有现支持品牌与资产 |
-| plugins/server-compat与runtime-compat | legacy-compat/server与runtime的有界兼容入口 | 006/012保持两套既有发行ID但不保持两核心；业务迁owner |
+| plugins/server-compat与runtime-compat | 所属领域及中性底座；必要旧发行仅薄壳/封存迁移 | 按compat-retirement逐符号清空旧业务，不设legacy-compat长期插件；006/007/010迁owner，012逐项退役 |
 | plugins/commands通用registry | frontend/extension-runtime | 008；旧extension入口forward同服务，handler不迁平台 |
 | 插件裸data_root/database与自拼目录 | E4 DataAreaPort，领域Repository留插件 | 005/007；稳定namespace映射、许可/兼容迁移，真实数据未授权不动 |
 | ProfileViewReferencePort深扫Profile | E5持久资源关联声明 | 004/005/007；源owner登记版本关联，完整性未知拒破坏性操作 |

@@ -991,7 +991,7 @@
       "id": "T006-09",
       "order": "006",
       "level": "L4",
-      "description": "接可选backend/platform-services到同Environment；SecretStore兼容入口转同实现；server/runtime compat收至legacy-compat但不新增权威，保持原发行与入口ID。",
+      "description": "接可选backend/platform-services到同Environment；SecretStore兼容入口转同实现；按compat-retirement逐项拆清server/runtime兼容业务、切换旧入口到同Environment，仅保有证据的薄发行壳及封存迁移，保持原发行与入口ID。",
       "required": true
     },
     {

@@ -6,6 +6,8 @@
 
 R5已完成主会话落地前回审与修补，见reviews/pre-implementation-review.md。新增execution-detail.md将R01–R17追踪到合同/工单/验收，并明确002交付、owner切换和逐切片验证。R5不是新的独立代理复核，也不是产品测试；本包可以用于启动001来源/授权核对，不能绕过启动许可直接迁移。
 
+R6兼容清理见compat-retirement.md及evidence/compat-inventory.json：取消永久legacy-compat插件，不以整体搬目录替代业务清空；002冻结逐符号归属，006/007/010拆解，012在A95内验证C95-1–7。静态盘点不是已实施或运行验收。
+
 ## 分层阅读
 
 | 层级 | 内容 | 文件 |

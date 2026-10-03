@@ -79,7 +79,7 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 - [ ] T006-07 将pacthold/server-plugin-api物理归backend，同步pyproject、lock引用、安装脚本、CI、wheel隔离测试；保持发行/import/data标识。
 - [ ] T006-08 按C2效果fence受控切换，activation/instantiate/config apply/control reply均算外部效果；证据不足不能旧writer回退，旧实现仅既存closure继续者。
 
-- [ ] T006-09 接可选backend/platform-services到同Environment；SecretStore兼容入口转同实现；server/runtime compat收至legacy-compat但不新增权威，保持原发行与入口ID。
+- [ ] T006-09 接可选backend/platform-services到同Environment；SecretStore兼容入口转同实现；按compat-retirement逐项拆清server/runtime兼容业务、切换旧入口到同Environment，仅保有证据的薄发行壳及封存迁移，保持原发行与入口ID。
 
 ## 007 Harness与资源按开放参与者接入
 
