@@ -1,5 +1,14 @@
 # 迁移状态
 
+## 2026-10-04 010 进行中（最新 565e04fc21）
+
+T010-01 完成：A1 五 owner 后端骨架（9e4d29bc2c，单写者/字段三态/unknown 不重发/深冻结快照）、
+AgentOwnerPort 公开 dispatch 面（843abb81c7）、Agent 域进默认产品链（565e04fc21，三处钉带理由
+更新 88→93、两条边界测试按 T003 裁决带许可修订）。apps/server 66F+2E（比 008 基线少 2 红=
+边界测试修复）、products 238 绿。
+进行中：T010-02（Profile glue 写权拆除→OwnerPort 代理）。待办：T010-03..11、T010-12..14、
+bootstrap 翻转时机、010 收口；011/012 队列。
+
 ## 2026-10-04 009 完成（codeReady，U 显式待验）
 
 T009-01..09 全部 S/I 完成（evidence/order-009-report.md）：SurfaceAPI 落地（DRIFT-1 闭合）、
