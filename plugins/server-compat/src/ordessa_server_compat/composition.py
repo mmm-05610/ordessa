@@ -436,6 +436,7 @@ def build_runtime_from_native_adapter(
     extra_server_plugins: tuple = (),
     additional_adapters: tuple = (),
     channel_selection_resolver=None,
+    bootstrap_native_profile: bool | None = None,
 ) -> ServerRuntime:
     """Compose current-user ACP Agents in an explicitly native Server.
 
@@ -461,6 +462,12 @@ def build_runtime_from_native_adapter(
         raise RuntimeError("NATIVE_CONTINUATION_INVALID")
     if type(controlled_test_peer) is not bool:
         raise RuntimeError("NATIVE_CONTROLLED_PEER_INVALID")
+    if bootstrap_native_profile is not None and type(bootstrap_native_profile) is not bool:
+        # 026 T006-09: the startup auto-Profile control. None keeps the
+        # historical bootstrap; False starts without one (first send or an
+        # explicit selection drives native session creation); True is the
+        # explicit historical form.
+        raise RuntimeError('NATIVE_PROFILE_SELECTION_INVALID')
     if type(pi_profile_bridge) is not bool or (pi_profile_bridge and (
             installed_artifact_root is None or controlled_test_peer)):
         raise RuntimeError("NATIVE_PI_PROFILE_SELECTION_INVALID")
@@ -592,6 +599,13 @@ def build_runtime_from_native_adapter(
         # per call: it exists only once that plugin's build has run, and None
         # again after its disposal). Not an attribute of the host runtime —
         # T014-S1b removed that bag.
+        if not compat.native_profile_ids:
+            # 026 T006-09: no native identity was ever bound (e.g. the
+            # composition started with the startup auto-Profile switched off).
+            # That is typed absence — the discovery facet publishes no
+            # `nativeExecution` member at all — not an invalid claim, which
+            # stays reserved for a recorded identity that fails its rule.
+            return None
         service = compat.product_service
         identity = compat.native_profile_ids.get(selected_harness)
         try:
@@ -667,9 +681,16 @@ def build_runtime_from_native_adapter(
         harnesses=registry, execution_factory=factory,
         native_harness_id=harness_id,
         native_additional_harness_ids=tuple(hid for hid in adapters if hid != harness_id),
+        bootstrap_native_profile=bootstrap_native_profile,
     )
     acp = AcpChannelServerPlugin(
-        launch=launch_channel_transport, native_identity=native_identity,
+        launch=launch_channel_transport,
+        # 026 T006-09: with the startup auto-Profile switched off this
+        # composition never claims a single native identity (the facet's
+        # typed absence — no `nativeExecution` member), while the per-harness
+        # resolver still answers each request honestly (None -> typed
+        # refusals, never a guessed identity).
+        native_identity=(native_identity if bootstrap_native_profile is not False else None),
         native_identity_for=native_identity,
     )
     # S-06/S-03: the permissions backend joins the native composition (Q5-only

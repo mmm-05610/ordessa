@@ -96,6 +96,7 @@ class ServerCompatPlugin:
         native_harness_id: str | None = None,
         native_additional_harness_ids: tuple[str, ...] = (),
         native_profile_sink: "Callable[[str], None] | None" = None,
+        bootstrap_native_profile: bool | None = None,
     ) -> None:
         self._harnesses = harnesses
         self._execution = execution
@@ -106,6 +107,17 @@ class ServerCompatPlugin:
         self._declared_credentials = tuple(declared_credentials)
         self._native_harness_id = native_harness_id
         self._native_additional_harness_ids = tuple(native_additional_harness_ids)
+        #: 026 T006-09: the startup auto-Profile is no longer a mandatory basis
+        #: of a native Server. ``None`` (the default) keeps the historical
+        #: behaviour (bootstrap whenever a native harness is declared);
+        #: ``False`` starts without creating, binding or asserting a native
+        #: Profile — native session creation is then driven by the first send
+        #: or an explicit selection (the SessionService first-send semantics
+        #: stand on their own); ``True`` is the explicit form of the
+        #: historical behaviour.
+        if bootstrap_native_profile is not None and type(bootstrap_native_profile) is not bool:
+            raise ValueError("bootstrap_native_profile must be boolean or None")
+        self._bootstrap_native_profile_enabled = bootstrap_native_profile
         self.native_profile_ids: dict[str, str] = {}
         #: Composition-injected write-back channel (set after build_runtime
         #: returns, before start runs): the composition owns the runtime, the
@@ -406,15 +418,18 @@ class ServerCompatPlugin:
         """Startup recovery, in the baseline start() order.
 
         Credential import from the deployment declarations, the native
-        profile bootstrap (native compositions only), then sealing the turns
-        an interrupted process left behind. Idempotent per start, exactly as
+        profile bootstrap (native compositions only, and only when the
+        injected ``bootstrap_native_profile`` control has not switched the
+        startup auto-Profile off — 026 T006-09), then sealing the turns an
+        interrupted process left behind. Idempotent per start, exactly as
         the host's own recovery steps always were.
         """
         self._import_declared_credentials(
             self._credential_records, self._ports_secret_store,
             self._declared_credentials,
         )
-        if self._native_harness_id is not None:
+        if (self._native_harness_id is not None
+                and self._bootstrap_native_profile_enabled is not False):
             self._bootstrap_native_profile()
         self._session_records.seal_interrupted_turns()
 

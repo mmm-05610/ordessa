@@ -247,6 +247,13 @@ class ServerProductComposition:
             additional_adapters=additional_adapters,
             secret_store=self._native_secret_store(data_root),
             channel_selection_resolver=channel_selection_resolver,
+            # 026 T006-09: the product's native assembly does not make a
+            # startup-created native Profile its mandatory basis. Native
+            # session creation is driven by the first send or an explicit
+            # profile selection; the SessionService first-send semantics
+            # (NATIVE_FIRST_SEND_REQUIRED, bound-mode identity fences) stand
+            # on their own whenever an identity is in fact bound.
+            
         )
         pi_artifact_root = installed_artifact_root if harness_id == "pi" else next(
             (binding.get("installedArtifactRoot", installed_artifact_root)
