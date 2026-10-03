@@ -3,12 +3,13 @@
  * session (R7/M14, T008-13/20). No Agent/Profile/Chat/Harness: proves the
  * F5 mechanisms work for a standalone UI plugin.
  */
+// Real package entries (workspace-resolved), same shared snapshot source.
 import {
   stateStoreFactory,
   type OwnedState,
-} from '../../../../packages/desktop-platform/ui-components/src/state/stateStore'
-import { createSelector } from '../../../../packages/desktop-platform/ui-components/src/state/selectors'
-import { useStoreSelection } from '../../../../packages/desktop-platform/ui-components/react/state'
+} from '@ordessa/ui-components/state'
+import { createSelector } from '@ordessa/ui-components/state/selectors'
+import { useStoreSelection } from '@ordessa/ui-components/react/state'
 
 export interface PanelState {
   title: string

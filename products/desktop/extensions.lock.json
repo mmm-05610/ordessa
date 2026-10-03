@@ -392,7 +392,7 @@
     "extensions/ordessa.chat-api/contract.js": "f966acdd74e1a5e2034db670ad4d44218b49f0547ec6cd837a911827fd4f6633",
     "extensions/ordessa.chat-api/entry.js": "23abeb140aababe50c984c982ed509a7a6f8b59ac368d229af6283f90662dac9",
     "extensions/ordessa.chat-api/manifest.json": "7c483c16b7dcb4661500e66ca618009f7b00406b3276ec493091206f515cf1b1",
-    "extensions/ordessa.commands/entry.js": "5753e6e0802627ebf4ac4f1d65e6fc6e536ccd4cd7d1a831781da3d1c5215381",
+    "extensions/ordessa.commands/entry.js": "71ea52dae148aa49315a25fcbbdf836cf820c2bd26abfaa7bb400ed5897fae0b",
     "extensions/ordessa.commands/manifest.json": "5598761bd6bbe85ae9b208a88333d04e69a7aade49becececdfcb2272dd0e4a6",
     "extensions/ordessa.connections/entry.js": "c146729c417a18ad5051f5bdb145a29e28dd89e8b164de645d2e2d525815f052",
     "extensions/ordessa.connections/manifest.json": "79f002d56f4cfaaa0039df7c789ebd7667d258b9cf7bc25d063206fa3795ee6a",

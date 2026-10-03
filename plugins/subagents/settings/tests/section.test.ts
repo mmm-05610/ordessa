@@ -1,13 +1,13 @@
 /**
  * The Settings contribution, exercised against the **real** Workbench registry
- * (`packages/workbench/src/model.ts` + `packages/workbench/shared/registry.ts`),
+ * (`packages/frontend/workbench/src/model.ts` + `packages/frontend/workbench/shared/registry.ts`),
  * not a stand-in: section shape, duplicate-registration impossibility, unload
  * semantics and `openSettings` location all run through the host's own code.
  */
 import { OwnedResources } from '@ordessa/extension-api'
 import { describe, expect, it } from 'vitest'
-import { createWorkbench } from '../../../../packages/workbench/src/model'
-import { SETTINGS_OVERLAY_ID } from '../../../../packages/workbench/src/model'
+import { createWorkbench } from '../../../../packages/frontend/workbench/src/model'
+import { SETTINGS_OVERLAY_ID } from '../../../../packages/frontend/workbench/src/model'
 import {
   addSettingsSection, createSettingsSection, installSubagentSettings, SETTINGS_SECTION_ID,
   SETTINGS_SECTION_ORDER, SETTINGS_SECTION_TITLE, SettingsRegistrationError,

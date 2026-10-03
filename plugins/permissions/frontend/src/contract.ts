@@ -627,7 +627,7 @@ export interface PermissionsApprovalFactsSource {
 }
 
 /** The real Settings contribution surface: the `addSettingsSection` member of
- * `WorkbenchComposition.forScope(scope)` (packages/workbench/api/workbench.ts),
+ * `WorkbenchComposition.forScope(scope)` (packages/frontend/workbench/api/workbench.ts),
  * taken by type so registration cannot go through anything but the platform API. */
 export type PermissionsSettingsHostHandle = Pick<
   ReturnType<import('@extensions/ordessa.contracts/contract.js').WorkbenchComposition['forScope']>,

@@ -12,7 +12,7 @@ import type {
 // r3 integration item — see the negative below), and a type-only import from the
 // platform's public api surface is the only way this file can still see the
 // brand it is supposed to fail against. Nothing here is bundled or loaded.
-import type { UiComponentKey } from '../../../../packages/desktop-platform/ui-components/api/ui-components'
+import type { UiComponentKey } from '../../../../packages/frontend/ui-components/api/ui-components'
 import type { DefinitionState, EffectiveDefinition, InvokeGateway } from './subagent-definitions'
 import type { SubagentInputSourceDeps } from './subagent-input-source'
 import { createSubagentInputSource, describeDefinition } from './subagent-input-source'

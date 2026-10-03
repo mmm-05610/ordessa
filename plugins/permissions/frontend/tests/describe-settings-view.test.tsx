@@ -10,7 +10,7 @@ import { act, createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, describe, expect, it } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
-import { createWorkbench } from '../../../../packages/workbench/src/model'
+import { createWorkbench } from '../../../../packages/frontend/workbench/src/model'
 import { createPermissionsSettingsRegion } from '../src/settings-region'
 import {
   approvalsSource, approvalPayload, describeCeilingRow, describeIntentRow, describePayload,

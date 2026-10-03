@@ -15,7 +15,7 @@ import { OwnedResources } from '@ordessa/extension-api'
 import { ApprovalPanel } from '../src/components/interactions/approval-panel'
 import { ProjectDialog } from '../src/views/project-dialog'
 import { FacadeFixture } from './facade-fixture'
-import { createUiComponentsService } from '../../../../packages/desktop-platform/ui-components/src/index'
+import { createUiComponentsService } from '../../../../packages/frontend/ui-components/src/index'
 import createPlugin from '../src/entry'
 import { ChatContributionsToken, chatContribution, ChatMessageBodyKey } from '@extensions/ordessa.chat-api/contract.js'
 import type { AgentInteraction } from '@extensions/ordessa.agent-contracts/contract.js'
@@ -137,7 +137,7 @@ describe('project dialog (N01–N04/N06)', () => {
 
 describe('plugin entry (CHAT-V05/V08 seam)', () => {
   it('activates against the real workbench model, provides ChatContributionsToken, and its toolbar contribution is reachable', async () => {
-    const { createWorkbench } = await import('../../../../packages/workbench/src/model')
+    const { createWorkbench } = await import('../../../../packages/frontend/workbench/src/model')
     const facade = new FacadeFixture({ sessions: [{ id: 's1', title: '会话一' }], selectedSessionId: 's1', messages: { s1: [] } })
     const scope = new OwnedResources()
     cleanup.push(async () => scope.dispose())
@@ -164,7 +164,7 @@ describe('plugin entry (CHAT-V05/V08 seam)', () => {
   })
 
   it('rejects a second registration of the same contribution id (no last-write-wins)', async () => {
-    const { createWorkbench } = await import('../../../../packages/workbench/src/model')
+    const { createWorkbench } = await import('../../../../packages/frontend/workbench/src/model')
     const scope = new OwnedResources()
     cleanup.push(async () => scope.dispose())
     const workbench = createWorkbench(scope)

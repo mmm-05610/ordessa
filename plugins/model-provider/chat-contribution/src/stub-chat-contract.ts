@@ -2,7 +2,7 @@
 /**
  * LOCAL TRANSCRIPTION of the reviewed ChatContributionsToken contract from
  * the unmerged `feature/desktop-workbench-registration` lineage
- * (packages/desktop-platform/contracts/seam/src/chat.ts). main does not carry
+ * (packages/frontend/contracts/seam/src/chat.ts). main does not carry
  * that contract yet; this stub exists so the contribution's consumer logic is
  * testable in this lane. The real wiring swaps this import for the merged
  * contract - integration dependency #3 (specs/002-model-provider/plan.md §6).

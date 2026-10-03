@@ -6,7 +6,7 @@
 // fail closed with a typed reason — never fake green.
 import { afterEach, describe, expect, it } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
-import { createConnections } from '../../../../packages/desktop-platform/connections/src/index'
+import { createConnections } from '../../../../packages/frontend/connections/src/index'
 import { createAgentConnections } from '../../../../plugins/agent/connections/src/entry'
 import { createAgentSessions } from '../../../../plugins/agent/sessions/src/model'
 import type {

@@ -1,7 +1,7 @@
 // The Permissions domain's own Settings region («权限与审批»), contributed
 // through the platform's real seam:
-//   packages/workbench/api/workbench.ts:41  WorkbenchComposition.forScope(...).addSettingsSection
-//   packages/workbench/src/model.ts:124     the scoped registry behind it (scope-owned, auto-released)
+//   packages/frontend/workbench/api/workbench.ts:41  WorkbenchComposition.forScope(...).addSettingsSection
+//   packages/frontend/workbench/src/model.ts:124     the scoped registry behind it (scope-owned, auto-released)
 // Since T015 every policy fact here comes from a REAL read-only round-trip of
 // the wire method `permissions.policy.describe` through the injected
 // transport (no fetch/IPC lives in this package; tests fake the transport

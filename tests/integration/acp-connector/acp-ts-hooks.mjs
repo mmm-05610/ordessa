@@ -20,16 +20,16 @@ const SRC_DIR = path.join(ROOT, 'plugins/connectors/acp/src/')
 // resolve `@extensions/<id>/contract.js` to a different module than the product does.
 const ALIASES = new Map(Object.entries(contractAliases()))
 // The TypeScript roots the native loader may meet inside the connector chain (production sources only).
-// `packages/desktop-platform/connections/` is reached because the contracts foundation carrier re-exports
+// `packages/frontend/connections/` is reached because the contracts foundation carrier re-exports
 // the Connections platform API (single shared Token/kind copy), so the platform sources are part of that
 // chain from now on; without it the loader hands a raw .ts file to Node and the rig dies on syntax.
-// `packages/workbench/api/` is reached the same way: the contracts Agent connection API builds its
+// `packages/frontend/workbench/api/` is reached the same way: the contracts Agent connection API builds its
 // connection kind through the platform carrier's single shared `createConnectionKind`, so the chain
 // now crosses into the Workbench public API that foundation re-exports.
 // `plugins/agent/contracts/` is the domain carrier reached the same way: its `connections.ts` builds
 // the Agent connection kind through the platform carrier's single shared `createConnectionKind`.
-const TS_DIRS = [SRC_DIR, path.join(ROOT, 'packages/desktop-platform/contracts/'), path.join(ROOT, 'packages/desktop-platform/connections/'), path.join(ROOT, 'packages/desktop-platform/extension-api/'), // the C7 api rides the foundation carrier, so the rig has to transpile it too
-path.join(ROOT, 'packages/desktop-platform/ui-components/'), path.join(ROOT, 'packages/workbench/api/'), path.join(ROOT, 'plugins/agent/contracts/')]
+const TS_DIRS = [SRC_DIR, path.join(ROOT, 'packages/frontend/contracts/'), path.join(ROOT, 'packages/frontend/connections/'), path.join(ROOT, 'packages/frontend/extension-api/'), // the C7 api rides the foundation carrier, so the rig has to transpile it too
+path.join(ROOT, 'packages/frontend/ui-components/'), path.join(ROOT, 'packages/frontend/workbench/api/'), path.join(ROOT, 'plugins/agent/contracts/')]
 const tsTree = file => TS_DIRS.some(dir => file.startsWith(dir))
 
 export async function resolve(specifier, context, nextResolve) {

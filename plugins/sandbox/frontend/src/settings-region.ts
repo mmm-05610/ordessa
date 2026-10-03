@@ -1,7 +1,7 @@
 // The Sandbox domain's own Settings region ("Harness 原生隔离"), contributed
 // through the platform's real contribution seam:
-//   packages/workbench/api/workbench.ts:41  WorkbenchComposition.forScope(...).addSettingsSection
-//   packages/workbench/src/model.ts:124     the scoped registry behind it (scope-owned, auto-released)
+//   packages/frontend/workbench/api/workbench.ts:41  WorkbenchComposition.forScope(...).addSettingsSection
+//   packages/frontend/workbench/src/model.ts:124     the scoped registry behind it (scope-owned, auto-released)
 //
 // The region renders `sandbox.describe@1` facts and nothing else. Its whole
 // safety argument is the state machine below: absence hides the section, a

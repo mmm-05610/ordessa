@@ -6,7 +6,7 @@
 // local write; needsReview items are never auto-allowed.
 import { describe, expect, it } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
-import { createWorkbench } from '../../../../packages/workbench/src/model'
+import { createWorkbench } from '../../../../packages/frontend/workbench/src/model'
 import {
   PERMISSIONS_SETTINGS_SECTION_ID,
   createPermissionsSettingsRegion, permissionsRuleSources, resolvePermissionsRegionState,

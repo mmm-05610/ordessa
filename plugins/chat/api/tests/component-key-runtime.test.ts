@@ -24,7 +24,7 @@ it('constructs Chat keys through the shared C7 API used by the foundation carrie
   })
   const external = ['@ordessa/extension-api', '@ordessa/ui-components/api']
   for (const [name, source] of [
-    ['foundation', path.join(repo, 'packages/desktop-platform/contracts/foundation/src/contract.ts')],
+    ['foundation', path.join(repo, 'packages/frontend/contracts/foundation/src/contract.ts')],
     ['chat', path.join(here, '../src/contract.ts')],
   ] as const) {
     const file = path.join(root, `${name}.js`)

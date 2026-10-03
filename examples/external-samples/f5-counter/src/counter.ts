@@ -5,15 +5,17 @@
  * domain. The tests build this source together with the platform's state
  * store from repo source (controlled fixture wiring, declared in README).
  */
+// Real package entries (workspace-resolved): the fixture consumes the
+// platform only through its published exports, never relative source paths.
 import {
   stateStoreFactory,
   type OwnedState,
-} from '../../../../packages/desktop-platform/ui-components/src/state/stateStore'
+} from '@ordessa/ui-components/state'
 import {
   createSelector,
   selectionReader,
   type SelectionReader,
-} from '../../../../packages/desktop-platform/ui-components/src/state/selectors'
+} from '@ordessa/ui-components/state/selectors'
 
 export interface CounterState {
   count: number

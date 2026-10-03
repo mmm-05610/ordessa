@@ -78,7 +78,7 @@ async function loadBridgeRuntime() {
   mkdirSync(BUNDLE_DIR, { recursive: true })
   const out = path.join(BUNDLE_DIR, 'runtime.mjs')
   await build({
-    entryPoints: [path.join(repoRoot, 'packages/desktop-platform/server-bridge/src/runtime.ts')],
+    entryPoints: [path.join(repoRoot, 'packages/frontend/server-bridge/src/runtime.ts')],
     outfile: out,
     bundle: true,
     format: 'esm',

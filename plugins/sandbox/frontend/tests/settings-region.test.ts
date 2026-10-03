@@ -1,11 +1,11 @@
 // FR-05/FR-06/FR-08/FR-09 behaviour of the Sandbox Settings region, driven
 // through the real Workbench composition API
-// (packages/workbench/src/model.ts -> composition.forScope().addSettingsSection)
+// (packages/frontend/workbench/src/model.ts -> composition.forScope().addSettingsSection)
 // so the section's presence/absence is proven against the actual contribution
 // point rather than a stand-in registry.
 import { describe, expect, it } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
-import { createWorkbench } from '../../../../packages/workbench/src/model'
+import { createWorkbench } from '../../../../packages/frontend/workbench/src/model'
 import {
   SANDBOX_SETTINGS_SECTION_ID,
   SANDBOX_SETTINGS_SECTION_TITLE,

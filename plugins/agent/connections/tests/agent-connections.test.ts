@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
-import { createConnections } from '../../../../packages/desktop-platform/connections/src/index'
+import { createConnections } from '../../../../packages/frontend/connections/src/index'
 import { createAgentConnections } from '../../../../plugins/agent/connections/src/entry'
 
 // Since T028 the Agent facade is a consumer of the @ordessa/connections platform: in the product

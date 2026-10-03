@@ -126,7 +126,7 @@ export function sandboxMenuOptions(result: Pick<SandboxDescribeResult, 'options'
 /**
  * The real Settings contribution surface: the `addSettingsSection` member of
  * `WorkbenchComposition.forScope(scope)`, as published by the platform contract
- * (packages/workbench/api/workbench.ts). Taken by type so this region cannot
+ * (packages/frontend/workbench/api/workbench.ts). Taken by type so this region cannot
  * register through anything but the platform's own API.
  */
 export type SandboxSettingsHost = Pick<

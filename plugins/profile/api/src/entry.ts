@@ -1,5 +1,5 @@
 /**
- * Shared-module entry, mirroring packages/desktop-platform/contracts/agent-ui.
+ * Shared-module entry, mirroring packages/frontend/contracts/agent-ui.
  * The contract is delivered as an independently loaded module; importing it
  * enables nothing (no auto-enable, contracts.md preamble).
  */

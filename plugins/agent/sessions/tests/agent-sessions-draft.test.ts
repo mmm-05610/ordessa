@@ -1,6 +1,6 @@
 import { afterEach, expect, it } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
-import { createConnections } from '../../../../packages/desktop-platform/connections/src/index'
+import { createConnections } from '../../../../packages/frontend/connections/src/index'
 import { createAgentConnections } from '../../../../plugins/agent/connections/src/entry'
 import { createAgentSessions } from '../../../../plugins/agent/sessions/src/model'
 import type { AgentClient, AgentSnapshot } from '../../../../plugins/agent/contracts/src/contract'

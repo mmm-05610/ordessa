@@ -1,12 +1,12 @@
 // T011 + T015: the Permissions Settings region registers through the REAL
 // Workbench composition seam
-// (packages/workbench/src/model.ts:124 -> composition.forScope(scope).addSettingsSection),
+// (packages/frontend/workbench/src/model.ts:124 -> composition.forScope(scope).addSettingsSection),
 // asserted against the actual registry snapshot rather than a stand-in, and
 // every policy fact now arrives through a `permissions.policy.describe`
 // round-trip on the injected fake transport (no network, no stubbed backend).
 import { describe, expect, it } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
-import { createWorkbench } from '../../../../packages/workbench/src/model'
+import { createWorkbench } from '../../../../packages/frontend/workbench/src/model'
 import {
   PERMISSIONS_SETTINGS_SECTION_ID, PERMISSIONS_SETTINGS_SECTION_TITLE,
   createPermissionsSettingsRegion, filterApprovalHistory,

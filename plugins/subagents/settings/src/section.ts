@@ -3,7 +3,7 @@
  * through the public composition API, nothing else).
  *
  * The section object is a real `WorkbenchSettingsSection` from the platform
- * contract (`packages/workbench/api/workbench.ts:25`, registered at `:41`,
+ * contract (`packages/frontend/workbench/api/workbench.ts:25`, registered at `:41`,
  * located by `openSettings` at `:45`), and
  * the `IDisposable` handed back is the host's own handle, wrapped so that a
  * second live registration of the same section id in the same scope is

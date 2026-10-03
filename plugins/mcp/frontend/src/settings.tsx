@@ -1,7 +1,7 @@
 // MCP Settings section (ux.md「Settings 的 MCP 区」). Contributed to the
 // Workbench composition under owner id `ordessa.asset.mcp.settings`; the
 // Workbench owns the page and the empty state, this component owns only its
-// slice (packages/workbench renders registered sections verbatim).
+// slice (packages/frontend/workbench renders registered sections verbatim).
 //
 // Wording discipline enforced here and asserted in tests:
 // * a probe result renders as 探测成功（无凭据） — never 已连接 / 连接成功;
