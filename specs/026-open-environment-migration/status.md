@@ -16,7 +16,10 @@ T010-03 收口：next-turn-client pending/sequence/route+chat-api-entry queued/c
 T010-04/05/06/07 收口（0345e36206/5d8377f21d/1cd090ba0d + T010-07 双红首修复：ABA 同文本不清新稿、
 view 离开仍收尾、editorLease 单编辑者）。T010-10 收口（五 owner 公开面齐：InteractionOwner wire+TS 补全，pin 93→95）。
 T010-11 收口（无私有 serializer 静核+新钉）。T011-01 收口（capture 事务八要素钉死+深冻结）。
-待办：T010-08/09/12/13/14、T011-02..07、bootstrap 翻转时机；012 进行中（报告优先）。
+012 收口段完成：T012-01/02/06/07/08 勾+03/13 部分有据（evidence/t012-*.md 六件），
+最终交接报告=evidence/order-012-report.md（SHA 链/勾选账/缺口/待裁/可试入口/回退点/集成请求）。
+待办：T010-08/09/12/13/14、T011-02..07/09、T012-03 余/04/05(授权)/09/10/11/12、bootstrap 翻转时机。
+**夜班终止态：全部可推进工作已推进；余项均需用户裁决/授权或为验证执行（命令可达）。**
 
 ## 2026-10-04 009 完成（codeReady，U 显式待验）
 

@@ -32,7 +32,9 @@
 `9e4d29bc2c` T010-01 五 owner 骨架 → `843abb81c7` AgentOwnerPort → `565e04fc21` 产品装配+pin 93 → `32fd7f09f4` 本地 owner 端口（dispatch 基座）→ `0c419c39a0` selections/lastConfirmed 写权拆除 → `ebadd80517` bindings/retained 写权拆除（**五写权收口**）→ `cab78790c6`+`bf848cd3e1` next-turn client/entry 写权拆除（含 H1 红首修复）→ `0345e36206` 六语义钉面 → `5d8377f21d` ConfigEvidence 链 → `1cd090ba0d` target/binding/generation 钉面 → `a3d3a9811c` 草稿四语义（**双红首修复**）→ `6bce466b43` 五 owner 公开面补全（pin 95）→ `4f66503bc7` 公开贡献证据
 
 **011（1/7）+ 012 收口**：
-`9eb7477179` T011-01 capture 事务 → `0e9939b913` 账本 →（本报告提交）
+`9eb7477179` T011-01 capture 事务 → `0e9939b913` 账本 → `f75f446c9c` 本报告初版 →
+`85a1199cf9` T012-01/02 清点 → `45a23f1493` T012-07 docs 清扫 → `1b35fb94b9` T012-06/13
+完整性+回归证据 → `a1920a9af5` T012-03 typecheck/build 绿（含四处类型缺口修复）→（本更新提交）
 
 ## 3. 勾选账（tasks.md 129 任务：101 勾 / 28 空）
 
@@ -44,9 +46,13 @@
 | 009 | 全勾 | codeReady（SurfaceAPI/SDK 出口/dialog/lease/样例#3） |
 | 010 | 9/14 | 01/02/03/04/05/06/07/10/11 完成；**T010-01 未勾**（主体已落，DraftOwner/通用edit 分离缺专项边界核验）；08/09/12/13/14 待续 |
 | 011 | 1/7 | T011-01 capture 事务完成；02–07 待续；**T011-08 需真实模型许可（BLOCKED）** |
-| 012 | 0/13 | 本报告即 T012-08 交付物；其余见缺口 |
+| 012 | 5/13+2 部分 | **已勾**：T012-01（旧引用清点）、02（包组+测试映射审计）、06（数据/秘密扫描）、07（docs 清扫）、08（本报告）；**部分有据**：T012-03（typecheck+build+Python 全绿，aggregate/smoke 待续）、T012-13（A96–A107/A109/A110 绿，A108/A111 缺授权）；**未跑**：04/09/10/12（发行产物验证，命令已可达）、11（E 系+守卫 177F 已绿，A66–A95 逐 ID 表待补）；**BLOCKED**：05（真实用户动作，缺授权明文不算完成） |
 
 ## 4. 夜班实质交付（按价值序）
+
+> 012 段追加：docs 清扫（baseline 命令恢复可用、architecture/naming 路径更新、known-issues
+> 新增 5 行登记）、完整性扫描（零追踪二进制/凭据）、A96–A111 逐项回归证据表、
+> typecheck+build 全绿（修复夜班 TS 工作引入的 4 处类型缺口，行为零改动）。
 
 1. **A1 单写者落地全链**：五 owner（Python）+ 双面端口（wire/local，sync 与 Python `submit_operation` 对位）+ 产品装配 + wire pin 88→93→95 命名化。前端**五处写权全部拆除**（selections/lastConfirmed/bindings/retained/clickQueues），profile/model/chat 三域状态全部 owner 化——**既有断言零改动通过**（83→88→91→93、115→117→119→120、86→88）+ 20 项结构正反例新钉。
 2. **双红首语义修复**：H1（submit 在飞新 pick 被旧 tracked 误清，违 FR-04）；草稿 ABA（值比较清稿误删 A→B→A 新输入）+ view 离开仍收尾（早退跳过 settle）。修复前后红→绿全链有据。
@@ -104,6 +110,8 @@ npx vitest run --root plugins/chat/frontend -t "T010-07"
 1. `git log --oneline -1` 对 SHA 链末项（本报告提交）。
 2. 从待裁清单取 1/2 决议（H2-A、T008-04-A 可直接实施）。
 3. 实现待续段按第 6 节建议排期开工；每任务沿用：红首测试→实现→全套对照→pathspec 提交→账本。
+   012 余项多为**验证执行**（T012-04/09/10/12 发行产物、T012-03 aggregate/smoke、T012-11 A66–A95
+   逐 ID 表）：命令已全部可达（baseline.md 修复后），执行即可补账，无实现工作。
 4. 012-07 docs 清扫（architecture/baseline/naming/reference/migration/known-issues）在实现状态稳定后一次成文（目标与实现状态分开）。
 5. T012-08 本报告随进展增量更新；合 main 前必须用户批准。
 
