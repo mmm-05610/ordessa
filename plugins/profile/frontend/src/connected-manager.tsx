@@ -1,3 +1,4 @@
+import { confirmAction } from './dialog'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { WirePort } from '@extensions/ordessa.contracts/contract.js'
 import type { ProfileIdentityDto, ProfileServiceClient } from '@ordessa/plugin-profile-api'
@@ -56,7 +57,8 @@ export function ConnectedProfileManager({ client, wire, ui }: { client: ProfileS
     catch (e) { if (mounted.current) { setError(String(e)); setBusy(false) } }
   }
   const key = () => `profile-ui:${crypto.randomUUID()}`
-  const mayLeave = () => !busy && (!draft?.dirty || window.confirm('放弃未保存的预设配置？'))
+  const mayLeave = async () =>
+    !busy && (!draft?.dirty || await confirmAction('放弃未保存的预设配置？', '未保存的编辑将被丢弃。'))
   async function save() {
     if (!draft || busy || saving.current) return
     saving.current = true
@@ -71,7 +73,7 @@ export function ConnectedProfileManager({ client, wire, ui }: { client: ProfileS
   return <section aria-label="Profile 管理" className="profile-settings-surface">
     <style>{profileSettingsCss}</style>
     <div className="profile-manager-heading"><h2>配置预设</h2>
-    <button disabled={busy} onClick={() => { if (mayLeave()) void refresh() }}>刷新</button></div>
+    <button disabled={busy} onClick={() => { void (async () => { if (await mayLeave()) await refresh() })() }}>刷新</button></div>
     {error && <p role="alert">{error}</p>}
     <div className="profile-create-form">
         <label>名称 <input value={name} onChange={e => setName(e.target.value)} /></label>
@@ -84,7 +86,7 @@ export function ConnectedProfileManager({ client, wire, ui }: { client: ProfileS
     </div>
     <ProfileManagementView profiles={profiles} selectedId={selected} search={search}
       showArchived={showArchived} onSearch={setSearch} onShowArchived={setShowArchived}
-      onSelect={id => { if (id !== selected && !mayLeave()) return; setSelected(id); setName(profiles.find(p => p.profileId === id)?.displayName ?? '') }}
+      onSelect={id => { void (async () => { if (id !== selected && !(await mayLeave())) return; setSelected(id); setName(profiles.find(p => p.profileId === id)?.displayName ?? '') })() }}
       onCreate={id => { setHarness(id); setName('') }} draft={draft}
       onSave={() => void save()} onDiscard={() => { if (busy) return; draft?.discard(); setDraftGeneration(n => n + 1) }} categoryContent={{
         '预设配置': current && draft && ui ? <ProfileConfigurationPane key={`${current.profileId}:${current.version}`}

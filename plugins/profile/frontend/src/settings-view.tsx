@@ -5,6 +5,7 @@
  * Agent-autoswitch switch does not exist in v1 (PS03) — nothing to fake.
  */
 import type { ReactNode } from 'react'
+import { confirmAction } from './dialog'
 import { Button, Checkbox, Notice, Select } from '@ordessa/ui'
 import type { MechanismPolicyStore } from './stores'
 import { profileSettingsCss } from './styles'
@@ -67,7 +68,7 @@ export function ProfileSettingsView(props: ProfileSettingsViewProps): ReactNode 
                     onChange={(event) => {
                       void props.store.setFacetEnabled(
                         props.realm, facetId, event.target.checked,
-                        (impact) => window.confirm(describeImpact(impact)),
+                        (impact) => confirmAction('确认禁用该能力？', describeImpact(impact)),
                       )
                     }}
                   />

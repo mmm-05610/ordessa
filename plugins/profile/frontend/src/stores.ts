@@ -66,13 +66,13 @@ export class MechanismPolicyStore {
     realm: string,
     facetId: string,
     enabled: boolean,
-    confirm?: (impact: PolicyImpactPreview) => boolean,
+    confirm?: (impact: PolicyImpactPreview) => boolean | Promise<boolean>,
   ): Promise<void> {
     const policy = this.state.policy
     if (!policy) throw new Error('policy not loaded')
     if (!enabled && confirm) {
       const preview = await this.previewFacetDisable(realm, facetId)
-      if (preview && !confirm(preview)) return
+      if (preview && !(await confirm(preview))) return
     }
     await this.patch(realm, { facetEnabled: { [facetId]: enabled } }, facetId)
   }
