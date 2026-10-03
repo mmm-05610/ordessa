@@ -151,6 +151,10 @@ function stageServerDeps(python) {
 // member of the closure is a hard build failure — skipping it would produce a
 // deb that installs and then cannot start.
 const PRODUCT_PACKAGES = [
+  // Contract layer first (003): pacthold imports ordessa_environment_api at
+  // module scope since spec 026/003, so a closure without it boots nothing
+  // (C95-3 wheel-gap counterexample, caught live by the local electron leg).
+  'packages/backend/environment-api',
   'packages/pacthold',
   'packages/server-plugin-api',
   'plugins/harness/api',
