@@ -1,10 +1,10 @@
 // T018 (FR-009 "契约归属") — products/desktop guard: the ownership wall between
 // the platform and the Agent domain cannot silently fall back after the domain
-// carrier moved out of the platform umbrella (packages/desktop-platform/
+// carrier moved out of the platform umbrella (packages/frontend/
 // contracts/{agent,connections,agent-ui} → plugins/agent/contracts, carrier id
 // 'ordessa.agent-contracts' unchanged). Against REAL sources and REAL builds:
 //   1. platform-purity (structural): no Agent/Chat domain type/token/kind is
-//      DECLARED anywhere under packages/desktop-platform/** (frozen name list);
+//      DECLARED anywhere under packages/frontend/** (frozen name list);
 //   2. no reverse re-export: no platform source imports, re-exports or requires
 //      a plugins/** path, the '@extensions/ordessa.agent-*' channel, or a
 //      relative specifier escaping the platform root (except the C4-carried
@@ -33,7 +33,7 @@ import { promisify } from 'node:util'
 import {
   KIND_WATCHLIST, scanDirsForKindConstructions, TOKEN_WATCHLIST,
   scanDirsForTokenConstructions,
-} from '../../../packages/workbench/tests/token-scan.mjs'
+} from '../../../packages/frontend/workbench/tests/token-scan.mjs'
 import { acquireRealBuildLock } from '../../../tooling/real-build-lock.mjs'
 
 const runAsync = promisify(execFile)
@@ -41,7 +41,7 @@ const repoRoot = path.resolve(import.meta.dirname, '..', '..', '..')
 const productFile = path.join(repoRoot, 'products/desktop/extensions.json')
 const buildAll = path.join(repoRoot, 'tooling/build-all.mjs')
 const buildApp = path.join(repoRoot, 'apps/desktop/scripts/build.mjs')
-const platformRoot = path.join(repoRoot, 'packages/desktop-platform')
+const platformRoot = path.join(repoRoot, 'packages/frontend')
 const umbrellaRoot = path.join(platformRoot, 'contracts')
 const domainCarrierRoot = path.join(repoRoot, 'plugins/agent/contracts')
 const realExtensionsRoot = path.join(repoRoot, 'products/desktop/dist/extensions')
@@ -80,14 +80,14 @@ const FROZEN_DOMAIN_NAMES = [
 const ALLOWED_CHANNELS = ['@ordessa/extension-api', '@ordessa/connections', '@ordessa/workbench', '@extensions/ordessa.contracts/']
 // The documented platform-root escape the foundation carrier re-exports (C4):
 // '../../../../workbench/api/workbench' from contracts/foundation/src.
-const WORKBENCH_API_ROOT = path.join(repoRoot, 'packages/workbench/api')
+const WORKBENCH_API_ROOT = path.join(repoRoot, 'packages/frontend/workbench/api')
 // C-01 single-source layout data (nightly B-001): server-bridge/data-root.ts
 // imports the server-owned data_root_layout.json at build time. It is data
 // (not a domain API re-export), stays owned by apps/server, and is kept
 // honest by the cross-language comparison in server-bridge's data-root tests.
 const SERVER_LAYOUT_JSON = path.join(repoRoot, 'apps/server/src/ordessa_server/bootstrap/data_root_layout.json')
 
-/** Every *.ts/*.tsx source under packages/desktop-platform/**, excluding
+/** Every *.ts/*.tsx source under packages/frontend/**, excluding
  * installed/built output and tests/ directories (a wall test must be allowed
  * to NAME what it forbids). */
 async function platformSources() {
@@ -104,13 +104,20 @@ async function platformSources() {
   return found
 }
 
-const sources = await platformSources()
+// FR-009 purity is a RUNTIME guarantee: sources under src/ and api/ faces.
+// Harness wiring (vitest/build configs, test files) legitimately reaches
+// repo tooling and plugin FIXTURES as test inputs — that is test wiring, not
+// a runtime channel. Workbench joined the umbrella at 008 (it was outside
+// the old scan root), so the scan set is stated explicitly here rather than
+// silently broadened.
+const isRuntimeSource = file => /(?:^|\/)(?:src|api)\//.test(path.relative(platformRoot, file))
+const sources = (await platformSources()).filter(({ file }) => isRuntimeSource(file))
 // Fail loudly at load if the roots changed: both source scans would otherwise
 // pass vacuously over an empty file list.
-assert.ok(sources.length >= 15, `only ${sources.length} platform sources scanned — packages/desktop-platform layout changed; fix this guard's roots, do not let it pass empty`)
+assert.ok(sources.length >= 15, `only ${sources.length} platform sources scanned — packages/frontend layout changed; fix this guard's roots, do not let it pass empty`)
 
 // --- test 1: platform source purity (FR-009 / CN-01 structural) -------------
-test('no Agent/Chat domain type or token is declared under packages/desktop-platform', async () => {
+test('no Agent/Chat domain type or token is declared under packages/frontend', async () => {
   const declarations = FROZEN_DOMAIN_NAMES.map(name => [name, new RegExp(`export\\s+(?:declare\\s+)?(?:abstract\\s+)?(?:interface|type|const|enum|class|function)\\s+${name}\\b`)])
   const violations = []
   for (const { file, source } of sources) {
@@ -149,9 +156,9 @@ test('no platform source imports or re-exports a domain carrier path', async () 
         const resolved = path.resolve(path.dirname(file), specifier)
         // Whitelisted escapes: the C4 workbench API re-export and the C-01
         // layout data file above; every other relative path must stay inside
-        // packages/desktop-platform/.
+        // packages/frontend/.
         if (!insidePlatform(resolved) && !resolved.startsWith(WORKBENCH_API_ROOT + path.sep) && resolved !== SERVER_LAYOUT_JSON) {
-          violations.push(`${name} references '${specifier}' which resolves outside packages/desktop-platform/ (${path.relative(repoRoot, resolved)})`)
+          violations.push(`${name} references '${specifier}' which resolves outside packages/frontend/ (${path.relative(repoRoot, resolved)})`)
         }
       }
     }
@@ -164,7 +171,7 @@ test('the domain carrier lives in plugins/agent/contracts with its persistent id
   assert.ok(existsSync(path.join(domainCarrierRoot, 'src/contract.ts')), 'plugins/agent/contracts/src/contract.ts (the moved carrier) must exist')
   const umbrella = (await readdir(umbrellaRoot, { withFileTypes: true })).filter(e => e.isDirectory()).map(e => e.name).sort()
   for (const gone of ['agent', 'connections', 'agent-ui']) {
-    assert.ok(!umbrella.includes(gone), `packages/desktop-platform/contracts/${gone} was migrated away — it must not come back as a stub`)
+    assert.ok(!umbrella.includes(gone), `packages/frontend/contracts/${gone} was migrated away — it must not come back as a stub`)
   }
   assert.deepEqual(umbrella, ['commands', 'foundation'], 'the platform umbrella must hold exactly the platform carriers commands/ + foundation/')
   const manifest = JSON.parse(await readFile(path.join(domainCarrierRoot, 'manifest.json'), 'utf8'))

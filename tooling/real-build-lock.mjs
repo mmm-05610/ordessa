@@ -1,6 +1,6 @@
 // Cross-process mutex around rebuilds of the SHARED real product output
 // (products/desktop/dist + extensions.lock.json). Several guard files under
-// packages/workbench/tests and products/desktop/tests build the real product at
+// packages/frontend/workbench/tests and products/desktop/tests build the real product at
 // import time, and `node --test` runs files of one directory as parallel
 // processes while a developer may run two directories at once, so without
 // serialization two `tooling/build-all.mjs` runs would wipe/rebuild the same

@@ -55,7 +55,7 @@ async function sourceFiles(dir) {
 
 // --- 1. platform neutrality over real sources --------------------------------
 test('no controlled UI fixture name appears anywhere in the platform source', async () => {
-  const sources = await sourceFiles(path.join(repoRoot, 'packages/desktop-platform'))
+  const sources = await sourceFiles(path.join(repoRoot, 'packages/frontend'))
   // Fail loudly rather than pass over an empty scan.
   assert.ok(sources.length >= 20, `only ${sources.length} platform sources scanned — fix this guard's roots, do not let it pass empty`)
   const violations = []

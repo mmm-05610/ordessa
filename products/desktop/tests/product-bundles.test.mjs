@@ -2,7 +2,7 @@
 // really carries every admitted extension and the shared contract bundles
 // that own the single DI Token copies. The per-token uniqueness and the
 // rogue duplicate counterexample are verified by
-// packages/workbench/tests/token-single-instance.test.mjs (shared, not
+// packages/frontend/workbench/tests/token-single-instance.test.mjs (shared, not
 // re-counted here); this file proves the PRODUCT ADMISSION side:
 //   - every id in products/desktop/extensions.json resolves to a built bundle
 //     with an entry.js and a manifest.json (an admitted-but-unbuilt product
@@ -20,7 +20,7 @@ import { pathToFileURL } from 'node:url'
 import test from 'node:test'
 import { promisify } from 'node:util'
 import { build } from 'esbuild'
-import { TOKEN_WATCHLIST } from '../../../packages/workbench/tests/token-scan.mjs'
+import { TOKEN_WATCHLIST } from '../../../packages/frontend/workbench/tests/token-scan.mjs'
 import { acquireRealBuildLock } from '../../../tooling/real-build-lock.mjs'
 
 const run = promisify(execFile)
@@ -69,7 +69,7 @@ test('each shared DI token owner is served by the real import map and app artifa
   try {
     const moduleFile = path.join(temp, 'extension-protocol.mjs')
     await build({
-      entryPoints: [path.join(repoRoot, 'packages/desktop-platform/extension-host/src/main/extension-protocol.ts')],
+      entryPoints: [path.join(repoRoot, 'packages/frontend/extension-host/src/main/extension-protocol.ts')],
       outfile: moduleFile, bundle: true, platform: 'node', format: 'esm',
     })
     const { protocolHandler } = await import(pathToFileURL(moduleFile).href)

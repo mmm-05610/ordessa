@@ -19,7 +19,7 @@
 //      does not duplicate or drop the shared contract;
 //   4. the REAL built platform bundle reaches no business extension at all —
 //      CN-01's structural half, paired with a source-side guard in
-//      packages/desktop-platform/connections/tests/platform-isolation.test.ts;
+//      packages/frontend/connections/tests/platform-isolation.test.ts;
 //   5. the output-root override perturbs nothing: a FULL-enabled variant build
 //      must reproduce the real dist byte-for-byte (variant and real builds now
 //      run the same pipeline, so this holds only if no absolute artifact path
@@ -38,7 +38,7 @@ import { promisify } from 'node:util'
 import {
   KIND_WATCHLIST, scanDirsForKindConstructions, TOKEN_WATCHLIST,
   scanDirsForTokenConstructions, WATCHED_KIND_LITERALS, WATCHED_TOKEN_LITERALS,
-} from '../../../packages/workbench/tests/token-scan.mjs'
+} from '../../../packages/frontend/workbench/tests/token-scan.mjs'
 import { acquireRealBuildLock } from '../../../tooling/real-build-lock.mjs'
 
 const runAsync = promisify(execFile)
@@ -175,7 +175,7 @@ test('the built platform bundle reaches no business extension', async () => {
   // platform's own bundle graph, and the platform bundle must not name any
   // business extension id. The source-side twin of this check (token/kind
   // literals, relative escapes) lives in
-  // packages/desktop-platform/connections/tests/platform-isolation.test.ts.
+  // packages/frontend/connections/tests/platform-isolation.test.ts.
   const business = JSON.parse(await readFile(productFile, 'utf8')).enabled
     .filter(id => id !== 'ordessa.contracts' && id !== CONNECTIONS_ID)
   assert.ok(business.length >= 7, `the product admits only ${business.length} business extensions — this check would be near-vacuous`)

@@ -5,9 +5,9 @@
   "type": "module",
   "workspaces": [
     "apps/*",
-    "packages/desktop-platform/*",
-    "packages/desktop-platform/contracts/*",
-    "packages/workbench",
+    "packages/frontend/*",
+    "packages/frontend/contracts/*",
+    "packages/frontend/workbench",
     "plugins/**",
     "!plugins/harness/**",
     "products/*",

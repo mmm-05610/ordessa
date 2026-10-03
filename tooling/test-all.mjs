@@ -68,7 +68,7 @@ const EXTRA_ROOTS = [
   // foundation token-identity gate. The token-identity test had also never
   // run in an aggregate before this entry — same defect class as the access
   // row above, found while wiring the contract freeze.
-  { name: 'node-test:packages/desktop-platform/contracts', probe: 'packages/desktop-platform/contracts/foundation/open-environment.test.mjs', command: ['node', '--test', 'packages/desktop-platform/contracts/**/*.test.mjs'] },
+  { name: 'node-test:packages/frontend/contracts', probe: 'packages/frontend/contracts/foundation/open-environment.test.mjs', command: ['node', '--test', 'packages/frontend/contracts/**/*.test.mjs'] },
   // 008-T008-20: the two independent F5 fixture packages run in the
   // aggregate through their real package entries (examples are independent
   // build inputs, but their tests are gate evidence like any suite).

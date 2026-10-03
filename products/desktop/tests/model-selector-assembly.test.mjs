@@ -21,7 +21,7 @@ test('product admits the model selector and binds its published component key', 
 test('built provider and Chat consumer share one token and register through scoped public services', async () => {
   const outputRoot = await mkdtemp(path.join(os.tmpdir(), 'ordessa-model-selector-'))
   try {
-    for (const dir of ['packages/desktop-platform/contracts/foundation', 'plugins/agent/contracts', 'plugins/chat/api', 'plugins/profile/api',
+    for (const dir of ['packages/frontend/contracts/foundation', 'plugins/agent/contracts', 'plugins/chat/api', 'plugins/profile/api',
       'plugins/model-provider/desktop', 'plugins/model-provider/chat-contribution']) {
       execFileSync(process.execPath, [path.join(repoRoot, dir, 'build.mjs')], {
         cwd: repoRoot, env: { ...process.env, ORDESSA_PRODUCT_OUTPUT_ROOT: outputRoot }, stdio: 'pipe',
@@ -41,10 +41,10 @@ test('built provider and Chat consumer share one token and register through scop
         export { default as selector, ModelSelectorKey } from ${JSON.stringify(path.join(extensions, selectorId, 'entry.js'))};
         export { createChatContributions } from ${JSON.stringify(path.join(extensions, 'ordessa.chat-api/contract.js'))};
         export { OwnedResources } from '@ordessa/extension-api';
-        export { createUiComponentsService } from ${JSON.stringify(path.join(repoRoot, 'packages/desktop-platform/ui-components/src/index.ts'))};
+        export { createUiComponentsService } from ${JSON.stringify(path.join(repoRoot, 'packages/frontend/ui-components/src/index.ts'))};
         import { createElement } from 'react';
         import { renderToStaticMarkup } from 'react-dom/server';
-        import { ComponentOutlet } from ${JSON.stringify(path.join(repoRoot, 'packages/desktop-platform/ui-components/react/index.ts'))};
+        import { ComponentOutlet } from ${JSON.stringify(path.join(repoRoot, 'packages/frontend/ui-components/react/index.ts'))};
         export const renderSelector = (binding, location) => renderToStaticMarkup(createElement(ComponentOutlet, { binding, value: { location }, missing: null }));
       `, resolveDir: repoRoot },
       outfile, bundle: true, format: 'esm', platform: 'node', jsx: 'automatic',
@@ -54,7 +54,7 @@ test('built provider and Chat consumer share one token and register through scop
         builder.onResolve({ filter: /^@extensions\// }, ({ path: specifier }) =>
           ({ path: path.join(extensions, specifier.slice('@extensions/'.length)) }))
         builder.onResolve({ filter: /^@ordessa\/ui-components\/api$/ }, () =>
-          ({ path: path.join(repoRoot, 'packages/desktop-platform/ui-components/api/ui-components.ts') }))
+          ({ path: path.join(repoRoot, 'packages/frontend/ui-components/api/ui-components.ts') }))
       } }],
     })
     const assembly = await import(pathToFileURL(outfile).href)

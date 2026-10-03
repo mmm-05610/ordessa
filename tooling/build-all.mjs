@@ -27,7 +27,7 @@ if (!Array.isArray(enabled) || enabled.some(id => typeof id !== 'string' || !id)
 // Discovery only builds an index. A package is admitted by the product list, not its presence.
 const packages = new Map()
 async function scan(dir) {
-  // The root of a discovery scan may itself be an extension package (packages/workbench);
+  // The root of a discovery scan may itself be an extension package (packages/frontend/workbench);
   // index it before descending so no root layout assumption is baked in here.
   try {
     const { ordessa } = JSON.parse(await readFile(path.join(dir, 'package.json'), 'utf8'))
@@ -43,7 +43,7 @@ async function scan(dir) {
     await scan(path.join(dir, entry.name))
   }
 }
-for (const root of ['packages/desktop-platform/contracts', 'packages/desktop-platform/connections', 'packages/desktop-platform/ui-components', 'packages/workbench', 'plugins']) await scan(path.join(repoRoot, root))
+for (const root of ['packages/frontend/contracts', 'packages/frontend/connections', 'packages/frontend/ui-components', 'packages/frontend/workbench', 'plugins']) await scan(path.join(repoRoot, root))
 
 // esbuild externalizes @extensions/* imports. Require every referenced contract in the admitted
 // set, including type-only imports, so a local bundle cannot conceal a missing product dependency.
