@@ -69,6 +69,11 @@ const EXTRA_ROOTS = [
   // run in an aggregate before this entry — same defect class as the access
   // row above, found while wiring the contract freeze.
   { name: 'node-test:packages/desktop-platform/contracts', probe: 'packages/desktop-platform/contracts/foundation/open-environment.test.mjs', command: ['node', '--test', 'packages/desktop-platform/contracts/**/*.test.mjs'] },
+  // 008-T008-20: the two independent F5 fixture packages run in the
+  // aggregate through their real package entries (examples are independent
+  // build inputs, but their tests are gate evidence like any suite).
+  { name: 'node-test:examples/f5-counter', probe: 'examples/external-samples/f5-counter/tests/test.mjs', command: ['node', '--test', 'examples/external-samples/f5-counter/tests/test.mjs'] },
+  { name: 'vitest:examples/f5-react-panel', probe: 'examples/external-samples/f5-react-panel/tests/panel.test.tsx', command: ['npx', 'vitest', 'run', '--root', 'examples/external-samples/f5-react-panel'] },
   { name: 'rig:tests/integration/acp-connector', probe: 'tests/integration/acp-connector', command: ['npx', 'vitest', 'run', '--root', 'tests/integration/acp-connector'] },
 ]
 
