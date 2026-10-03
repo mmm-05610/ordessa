@@ -88,8 +88,20 @@ export function createAgentOwnerPort(call: WireCall): AgentOwnerPort {
         r => r as unknown as SubmissionOutcome),
     listSessions: target => ask('agent.session.list', { target },
       r => (r.items as Array<Record<string, unknown>>) ?? []),
-    queryRun: (target, runId) => ask('agent.run.query', { target, runId },
-      r => (r.run as Record<string, unknown>) ?? r),
+    // The server reports a missing/undecided run as an unknown-outcome record
+    // (`{outcome:'unknown', queryHint, resend:false}`); that is the OwnerAnswer
+    // unknown arm, not an ok value — normalized here so wire and local ports
+    // are swap-in identical (T010-12 parity).
+    queryRun: async (target, runId) => {
+      const answer = await call('agent.run.query', { target, runId })
+      if (answer.kind === 'Unknown') return { kind: 'unknown', queryHint: `wire:agent.run.query` }
+      if (answer.kind === 'Refused') return { kind: 'unavailable', reason: answer.reason }
+      const record = (answer.result.run as Record<string, unknown>) ?? answer.result
+      if (record.outcome === 'unknown' && typeof record.queryHint === 'string') {
+        return { kind: 'unknown', queryHint: record.queryHint }
+      }
+      return { kind: 'ok', value: record }
+    },
   }
 }
 
@@ -105,5 +117,187 @@ export function createAbsentAgentOwnerPort(): AgentOwnerPort {
     submitInput: unavailable,
     listSessions: unavailable,
     queryRun: unavailable,
+  }
+}
+
+/**
+ * Local in-memory owner port (T010-02): the frontend's own UI-local state
+ * (F5 §1 allows local state for independent UI targets) served through the
+ * SAME dispatch face — writes go through operations, reads are frozen
+ * projections, unknown outcomes keep query hints and never re-dispatch.
+ * Mirrors the Python owner semantics (ordessa_agent.owners) exactly; the
+ * wire-backed port swaps in when the Agent plugin is composed (T010-12):
+ * same receipts, same queryHint strings, same `resend: false` markers.
+ */
+export interface LocalOwnerOptions {
+  /**
+   * Cross-port single-writer registry (one owner per canonical target).
+   * Defaults to a process-wide set, matching the Python owner registry;
+   * tests inject a fresh Set for isolation.
+   */
+  ownerRegistry?: Set<string>
+}
+
+export interface LocalAgentOwnerPort extends AgentOwnerPort {
+  /** Trusted Harness evidence reporting (the evidence channel, not a competing writer). */
+  reportEvidence(target: string, observed: 'native' | 'unset' | 'unknown',
+                 fields?: Record<string, 'known' | 'unset' | 'unknown'>): void
+  /** SessionOwner upsert: merge fields per session id, freeze each record. */
+  reportSessions(target: string, entries: Record<string, Record<string, unknown>>): void
+  /** RunOwner report: the ONLY writer of run states for one target. */
+  reportRun(target: string, runId: string, state: 'running' | 'completed' | 'cancelled' | 'failed' | 'unknown', reason?: string): void
+  /** How many times one submission was dispatched (Python dispatch_count parity: exactly one, ever). */
+  dispatchCount(target: string, submissionId: string): number
+}
+
+const processOwnerRegistry = new Set<string>()
+
+export function createLocalAgentOwnerPort(options: LocalOwnerOptions = {}): LocalAgentOwnerPort {
+  const registry = options.ownerRegistry ?? processOwnerRegistry
+  const targets = new Map<string, {
+    fields: Map<string, 'known' | 'unset' | 'unknown'>
+    resolved: Map<string, unknown>
+    revision: number
+    observed: 'native' | 'unset' | 'unknown'
+    operations: Array<{ operationId: string; patchKinds: Array<'present' | 'unset'>; sourceRef?: string }>
+    submissions: Map<string, SubmissionOutcome>
+    dispatchCounts: Map<string, number>
+    sessions: Map<string, Record<string, unknown>>
+    runs: Map<string, Record<string, unknown>>
+  }>()
+  let seq = 0
+
+  function targetState(target: string) {
+    let state = targets.get(target)
+    if (state !== undefined) return state
+    if (registry.has(target)) {
+      throw new Error(`AUTHORITY_CONFLICT: target ${target} already has a registered owner`)
+    }
+    registry.add(target) // first touch registers the single writer
+    state = {
+      fields: new Map(), resolved: new Map(), revision: 0, observed: 'unset' as const,
+      operations: [], submissions: new Map(), dispatchCounts: new Map(), sessions: new Map(), runs: new Map(),
+    }
+    targets.set(target, state)
+    return state
+  }
+
+  const snapshotOf = (target: string): ConfigSnapshotView => {
+    const state = targetState(target)
+    return {
+      ownerRef: `agent-config:${target}`,
+      revision: state.revision,
+      observedEvidence: state.observed,
+      fields: Object.freeze(Object.fromEntries(state.fields)),
+      resolved: Object.freeze(Object.fromEntries(state.resolved)),
+    }
+  }
+
+  return {
+    readConfig: async target => {
+      try {
+        return { kind: 'ok', value: snapshotOf(target) }
+      } catch (error) {
+        return { kind: 'unavailable', reason: String(error) }
+      }
+    },
+
+    submitConfigOperation: async (target, patch, opts) => {
+      try {
+        const state = targetState(target)
+        seq += 1
+        const operationId = `op-${target}-${seq}`
+        const patchKinds: Array<'present' | 'unset'> = []
+        for (const [name, value] of Object.entries(patch)) {
+          state.fields.set(name, 'known')
+          state.resolved.set(name, value)
+          patchKinds.push('present')
+        }
+        for (const name of opts?.unset ?? []) {
+          state.fields.set(name, 'unset')
+          state.resolved.delete(name)
+          patchKinds.push('unset')
+        }
+        state.operations.push({ operationId, patchKinds, sourceRef: opts?.sourceRef })
+        state.revision += 1 // a same-value re-select is still a NEW operation
+        return { kind: 'ok', value: { operationId, patchKinds, state: 'pending' } }
+      } catch (error) {
+        return { kind: 'unavailable', reason: String(error) }
+      }
+    },
+
+    submitInput: async (target, draftRevision, capture) => {
+      try {
+        const state = targetState(target)
+        seq += 1
+        const submissionId = `sub-${target}-${seq}`
+        const queryRequestKey = `req-${submissionId}`
+        state.dispatchCounts.set(queryRequestKey,
+          (state.dispatchCounts.get(queryRequestKey) ?? 0) + 1) // exactly one dispatch, ever
+        const outcome = String(capture?.outcome ?? 'accepted') as SubmissionOutcome['outcome']
+        const receipt: SubmissionOutcome = outcome === 'unknown'
+          ? { submissionId, outcome: 'unknown', queryRequestKey, resend: false }
+          : { submissionId, outcome, consumedDraftRevision: draftRevision }
+        state.submissions.set(submissionId, receipt)
+        return { kind: 'ok', value: receipt }
+      } catch (error) {
+        return { kind: 'unavailable', reason: String(error) }
+      }
+    },
+
+    listSessions: async target => {
+      try {
+        return { kind: 'ok', value: [...targetState(target).sessions.values()] }
+      } catch (error) {
+        return { kind: 'unavailable', reason: String(error) }
+      }
+    },
+
+    queryRun: async (target, runId) => {
+      try {
+        const run = targetState(target).runs.get(runId)
+        // parity with the wire face: an undecided run is the unknown arm with
+        // the same queryHint string the Agent plugin emits
+        return run === undefined
+          ? { kind: 'unknown', queryHint: `run:${runId}` }
+          : { kind: 'ok', value: run }
+      } catch (error) {
+        return { kind: 'unavailable', reason: String(error) }
+      }
+    },
+
+    reportEvidence(target, observed, fields) {
+      const state = targetState(target)
+      if (!['native', 'unset', 'unknown'].includes(observed)) {
+        throw new Error(`bad observed evidence ${String(observed)}`)
+      }
+      state.observed = observed
+      for (const [name, value] of Object.entries(fields ?? {})) {
+        if (!['known', 'unset', 'unknown'].includes(value)) {
+          throw new Error(`bad field state ${String(value)}`)
+        }
+        state.fields.set(name, value)
+      }
+      // no revision bump: evidence is an observation, not an operation
+    },
+
+    reportSessions(target, entries) {
+      const state = targetState(target)
+      for (const [sessionId, fields] of Object.entries(entries)) {
+        const record = { ...(state.sessions.get(sessionId) ?? {}), ...fields }
+        state.sessions.set(sessionId, Object.freeze(record))
+      }
+    },
+
+    dispatchCount(target, submissionId) {
+      return targetState(target).dispatchCounts.get(`req-${submissionId}`) ?? 0
+    },
+
+    reportRun(target, runId, runState, reason) {
+      if (!['running', 'completed', 'cancelled', 'failed', 'unknown'].includes(runState)) {
+        throw new Error(`bad run state ${String(runState)}`)
+      }
+      targetState(target).runs.set(runId, Object.freeze({ state: runState, reason: reason ?? null }))
+    },
   }
 }
