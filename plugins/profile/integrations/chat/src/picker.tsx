@@ -1,12 +1,11 @@
 /**
  * The composer's Profile selector (composer.toolbar contribution view).
- * Grouped native select through the platform Select control: Harness groups
- * as option groups, profiles as options — the interaction shape reuses the
- * model-picker structure without pretending to be a two-level tree widget
- * (reuse-map: "现有 Select 是基础 select").
+ * Grouped Radix menu: selecting the current item is a new explicit intent,
+ * unlike a native select whose unchanged value emits no change event.
+ * Portal placement/focus/keyboard/dismissal reuse the existing UI dependency.
  */
 import { useSyncExternalStore, type ReactNode } from 'react'
-import { Select } from '@ordessa/ui'
+import { DropdownMenu } from 'radix-ui'
 import type { ProfilePickerProps } from './picker-model'
 import { pickerOptionGroups, selectedOptionValue } from './picker-model'
 
@@ -24,44 +23,39 @@ export function ProfilePicker(input: ProfilePickerProps): ReactNode {
       style={{ display: 'inline-flex', alignItems: 'center', gap: 4, minWidth: 0, maxWidth: '100%', fontSize: 12 }}
     >
       <style>{`[data-profile-picker] select{height:28px!important;max-width:180px;padding:0 20px 0 7px!important;border:0!important;border-radius:7px!important;background-color:transparent!important;color:inherit;font:inherit!important;cursor:pointer}[data-profile-picker] button{height:26px;padding:0 6px;border:0;border-radius:6px;background:transparent;color:#77777e;font:inherit;cursor:pointer}[data-profile-picker] select:hover,[data-profile-picker] button:hover{background-color:#88888812!important}[data-profile-picker] :focus-visible{outline:2px solid #548fe5;outline-offset:2px}[data-profile-picker] [role=status],[data-profile-picker] [role=alert]{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#77777e}`}</style>
-      <Select
+      <DropdownMenu.Root onOpenChange={(open) => { if (open) props.onOpenSelector?.() }}>
+      <DropdownMenu.Trigger
         aria-label="配置预设"
         disabled={props.disabledReason !== undefined}
         title={props.disabledReason}
-        value={value}
-        onPointerDown={props.onOpenSelector}
-        onKeyDown={(event) => { if (['Enter', ' ', 'ArrowDown', 'ArrowUp'].includes(event.key)) props.onOpenSelector?.() }}
-        onChange={(event) => {
-          const raw = event.target.value
-          if (raw === '') {
-            props.onClearSelection?.()
-            return
-          }
-          for (const group of groups) {
-            for (const option of group.options) {
-              if (option.value === raw) {
-                props.onSelect(option.selection)
-                return
-              }
-            }
-          }
-        }}
+        data-profile-trigger=""
       >
-        <option value="">{props.label ? `${props.label}（清除选择）` : '选择预设'}</option>
+        {props.label ?? '选择预设'} <span aria-hidden="true">⌄</span>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+      <DropdownMenu.Content data-profile-menu="" side="top" align="end" sideOffset={8} collisionPadding={8}
+        style={{ zIndex: 1000, minWidth: 240, maxWidth: 'calc(100vw - 16px)', maxHeight: 'var(--radix-dropdown-menu-content-available-height)', overflowY: 'auto', padding: 6, borderRadius: 12, border: '1px solid #dedee3', background: 'var(--surface, white)', color: 'var(--foreground, #222)', boxShadow: '0 8px 28px #00000018', fontSize: 13 }}>
+        {props.label && props.onClearSelection && <DropdownMenu.Item onSelect={props.onClearSelection}>清除预设选择</DropdownMenu.Item>}
         {groups.map((group) => (
-          <optgroup key={group.harnessId} label={group.harnessTitle}>
+          <DropdownMenu.Group key={group.harnessId}>
+            <DropdownMenu.Label style={{ padding: '8px 10px 4px', color: '#77777e', fontSize: 11 }}>{group.harnessTitle}</DropdownMenu.Label>
             {group.options.map((option) => (
-              <option
+              <DropdownMenu.Item
                 key={option.value}
-                value={option.value}
                 disabled={option.archived}
+                data-profile-value={option.value}
+                data-selected={option.value === value ? '' : undefined}
+                onSelect={() => props.onSelect(option.selection)}
               >
-                {option.label}
-              </option>
+                {option.label} {option.value === value && <span aria-hidden="true">✓</span>}
+              </DropdownMenu.Item>
             ))}
-          </optgroup>
+          </DropdownMenu.Group>
         ))}
-      </Select>
+      </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+      </DropdownMenu.Root>
+      <style>{`[data-profile-menu] [role=menuitem]{padding:8px 10px;border-radius:7px;outline:0;cursor:pointer}[data-profile-menu] [data-highlighted]{background:#88888816}[data-profile-menu] [data-disabled]{opacity:.45;cursor:default}[data-profile-trigger]{max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}`}</style>
       {props.onRefresh && <button type="button" aria-label="刷新预设" title="刷新预设" data-profile-refresh="" onClick={props.onRefresh}><span aria-hidden="true">↻</span></button>}
       {props.statusMessage && <span role="status" style={{ minWidth: 0 }} title={props.statusMessage}>{props.statusMessage}</span>}
       {/* 021 §6c F1.1: a click registration that failed is a visible fact, so

@@ -11,6 +11,7 @@
     "test": "vitest run --maxWorkers=1"
   },
   "dependencies": {
+    "radix-ui": "^1.6.7",
     "@ordessa/extension-api": "*",
     "@ordessa/plugin-profile-api": "*",
     "@ordessa/ui": "*",

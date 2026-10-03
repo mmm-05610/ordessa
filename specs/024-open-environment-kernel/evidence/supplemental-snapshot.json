@@ -1,0 +1,242 @@
+{
+  "/home/maoqh/projects/ordessa": [
+    {
+      "path": "plugins/profile/src/ordessa_profile/__init__.py",
+      "sha256": "964976ef019c3400bfeee71223a825408a6d7fd5771f55b2dc1159acbcc216b9"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/application_journal.py",
+      "sha256": "6b49e1b073d3e62c41d48dc96fae37ca4a4dfd5ce419ae622ff9eaea38e82a17"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/contracts.py",
+      "sha256": "5e002f48f8ef1571e6b7adabb86429b7ae159d50dbbdd4982321437d5b444e88"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/core.py",
+      "sha256": "f1893d589678123f50854b0a721f539615f816ce34d13dc5971a7d18dc221d12"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/errors.py",
+      "sha256": "3c7e8fa06dea4065f127e5b6abc64c7d38d2d4e4cc6b13fe8fda9bd3c0c4140d"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/facets.py",
+      "sha256": "a5824f1fde1b41090b388da277540aa7f3a901cff6001d9dfc176084d48de7e0"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/harness_port_adapter.py",
+      "sha256": "7d13a94d49c148f8849fca75644067edc5db1f5dd2617b9f3a0ec857f4ac8124"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/ids.py",
+      "sha256": "5c425bc9946c0cd1afb716224adc09d7efa21a96994bba86cb0738d688b1f176"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/migration.py",
+      "sha256": "cfccf272d21a92e03636b07f478d779bf8e63335bdf83451f97f954af500b10f"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/plugin.py",
+      "sha256": "f06e9ddc84cfe470e697625cc180b9d4fb3f724cd53e72dd4369715076999ed5"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/policy.py",
+      "sha256": "3d45d7e9614ce411cfd7c0d4b7690c1990982bf05b50abcd20ed12f58ba912ce"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/profiles.py",
+      "sha256": "ffaa36946f03577f808d8f3cde6ec805dd94a32836ff3b1022dfa7eba80ea11a"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/repository.py",
+      "sha256": "1e90de2ede119b230e5be1177d6cbb9217077005bc589371255c85aa8cb93e0c"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/resolution.py",
+      "sha256": "aad0875fe69fefbfc5fcbeee99942f6ec7e1787f1f0330711c392063ff5a1d1e"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/sensitive.py",
+      "sha256": "fffffa70921ce953bd790a2bc6acdebdf553bc0fadab5f68140dace446019c9b"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/sessions.py",
+      "sha256": "d04616ef37e061ec9d59d5d65da174db671cfa86577ce56d724f5db2817ede3b"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/storage.py",
+      "sha256": "f0c75ef96f797a53550deb117f034278461efd802b4d763bb38199721403a801"
+    },
+    {
+      "path": "plugins/profile/README.md",
+      "sha256": "6611b8bc70161608b85bb7eca76ab22f76e443c9d7476b5def27a1029718f80d"
+    },
+    {
+      "path": "plugins/profile/pyproject.toml",
+      "sha256": "0f703dab6e41a131287d29c111fee238762eed5db5f74dec826bbbef47be5807"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/__init__.py",
+      "sha256": "1587d16384e836e2045ea7ea8cd7728cfb6d188f675a79a19de934aaa190b82d"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/connectors.py",
+      "sha256": "5e6505ee5ff41b286d9a56191aaf9354e317151b0cc6ab8adc33302b1af79260"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/error_families.py",
+      "sha256": "760eb54e9a86e0abe2878c132bf7ffbdcd2137f76c3134dcc67394fc5a421e42"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/git_status.py",
+      "sha256": "11eaaafd0a819b4589d29ff8cf16ff6171d1bd1b5fafedc377b7c4b99512484a"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/http.py",
+      "sha256": "1595dbad4bb9ebf16b0fc8b84a042aa517f2a84908d9d84d23ece4f98c891e95"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/local_environment.py",
+      "sha256": "5d6a9dca2cca42ceba9088253ab1a0be514ce84327a85489bb8c37e5641144fb"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/plugin.py",
+      "sha256": "b620915d9b6b9e35a5b342b83b288739d569608a2259996e751e35d50d592994"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/records.py",
+      "sha256": "c1bc06e6f4915d7b9c2ede8dd1b15ecf2495addfbf10d2e10f67573ab3775f23"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/service.py",
+      "sha256": "8ee3af9e3c0e72f1dd49849b2417e0632795b03e608df212b18edd2e9b6ce5b2"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/wire_projection.py",
+      "sha256": "2712dac883303b45c1264a5f25e70aa94152bb9a17110ba97c221d473b08b7f0"
+    }
+  ],
+  "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout": [
+    {
+      "path": "plugins/profile/src/ordessa_profile/__init__.py",
+      "sha256": "964976ef019c3400bfeee71223a825408a6d7fd5771f55b2dc1159acbcc216b9"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/application_journal.py",
+      "sha256": "6b49e1b073d3e62c41d48dc96fae37ca4a4dfd5ce419ae622ff9eaea38e82a17"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/contracts.py",
+      "sha256": "5e002f48f8ef1571e6b7adabb86429b7ae159d50dbbdd4982321437d5b444e88"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/core.py",
+      "sha256": "fd901193b79c4e736a778a789302337f299d226362b8f3c80bef1713ae13ae9e"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/errors.py",
+      "sha256": "3c7e8fa06dea4065f127e5b6abc64c7d38d2d4e4cc6b13fe8fda9bd3c0c4140d"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/facets.py",
+      "sha256": "a5824f1fde1b41090b388da277540aa7f3a901cff6001d9dfc176084d48de7e0"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/harness_port_adapter.py",
+      "sha256": "178308deb2e3a63d913c9b1e178067f25957b519728e54b63317de79bf5a3bfa"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/ids.py",
+      "sha256": "5c425bc9946c0cd1afb716224adc09d7efa21a96994bba86cb0738d688b1f176"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/migration.py",
+      "sha256": "cfccf272d21a92e03636b07f478d779bf8e63335bdf83451f97f954af500b10f"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/plugin.py",
+      "sha256": "f06e9ddc84cfe470e697625cc180b9d4fb3f724cd53e72dd4369715076999ed5"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/policy.py",
+      "sha256": "3d45d7e9614ce411cfd7c0d4b7690c1990982bf05b50abcd20ed12f58ba912ce"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/profiles.py",
+      "sha256": "d7cc49156f626fe06fb02d2c19b9741e44252e9cdd025071f862d54b9b68d511"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/repository.py",
+      "sha256": "3de118175d637524bdd0cc6e99ea424f6d548e467efb04a8ff46a999a3858c43"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/resolution.py",
+      "sha256": "7372cb3692f6b44d69a278050012089f25fef9298ab42b6a1f49159756c2d410"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/sensitive.py",
+      "sha256": "fffffa70921ce953bd790a2bc6acdebdf553bc0fadab5f68140dace446019c9b"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/server_plugin.py",
+      "sha256": "349fdeae60cdcf5909520488817a5a60124a8bbe506e9c017895f17e37ed583c"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/sessions.py",
+      "sha256": "ba0387ab0d9b66df55b8acd79128da925f8fc4a176b2c9670251ea49a10b7f93"
+    },
+    {
+      "path": "plugins/profile/src/ordessa_profile/storage.py",
+      "sha256": "545ce6cec2185d477fd8785282f3fd13f4245b99a6722bf51c753bd808bd21f0"
+    },
+    {
+      "path": "plugins/profile/README.md",
+      "sha256": "6611b8bc70161608b85bb7eca76ab22f76e443c9d7476b5def27a1029718f80d"
+    },
+    {
+      "path": "plugins/profile/pyproject.toml",
+      "sha256": "59df21026eec540d307d6003c3c3932f43b3e192b081ed13e643608dbfd17c5e"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/__init__.py",
+      "sha256": "1587d16384e836e2045ea7ea8cd7728cfb6d188f675a79a19de934aaa190b82d"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/connectors.py",
+      "sha256": "5e6505ee5ff41b286d9a56191aaf9354e317151b0cc6ab8adc33302b1af79260"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/error_families.py",
+      "sha256": "760eb54e9a86e0abe2878c132bf7ffbdcd2137f76c3134dcc67394fc5a421e42"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/git_status.py",
+      "sha256": "11eaaafd0a819b4589d29ff8cf16ff6171d1bd1b5fafedc377b7c4b99512484a"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/http.py",
+      "sha256": "1595dbad4bb9ebf16b0fc8b84a042aa517f2a84908d9d84d23ece4f98c891e95"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/local_environment.py",
+      "sha256": "5d6a9dca2cca42ceba9088253ab1a0be514ce84327a85489bb8c37e5641144fb"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/plugin.py",
+      "sha256": "b620915d9b6b9e35a5b342b83b288739d569608a2259996e751e35d50d592994"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/records.py",
+      "sha256": "c1bc06e6f4915d7b9c2ede8dd1b15ecf2495addfbf10d2e10f67573ab3775f23"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/service.py",
+      "sha256": "8ee3af9e3c0e72f1dd49849b2417e0632795b03e608df212b18edd2e9b6ce5b2"
+    },
+    {
+      "path": "plugins/workspace/src/ordessa_workspace/wire_projection.py",
+      "sha256": "2712dac883303b45c1264a5f25e70aa94152bb9a17110ba97c221d473b08b7f0"
+    }
+  ]
+}

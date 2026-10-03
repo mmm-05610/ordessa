@@ -121,6 +121,7 @@ class AccessEntryTransport:
                               else "ORDESSA_NATIVE_INSTANCE_DIR"] = instance_directory
         elif instance_directory is not None:
             raise ValueError("instance directory requires explicit profile bridge")
+        self.instance_directory = instance_directory
         if codex_account_directory is not None:
             if (harness_id != "codex" or not native_profile_bridge or controlled_test_peer
                     or not isinstance(codex_account_directory, str)

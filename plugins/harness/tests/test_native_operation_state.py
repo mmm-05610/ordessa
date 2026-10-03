@@ -46,7 +46,7 @@ def rig():
             callback(item)
 
     channel.transport = _ObservedTransport(channel, ControlledTransport())
-    channel.attach(ImmediateLoop(), lambda line: replies.put(json.loads(line)))
+    channel.attach(ImmediateLoop(), lambda line: replies.put(None if line is None else json.loads(line)))
     channel.transport.send_line(json.dumps({"jsonrpc": "2.0", "id": "new", "method": "session/new",
                                             "params": {}}))
     registry = AcpChannelRegistry(session_records=None, profile_records=None,
@@ -92,3 +92,31 @@ def test_ended_channel_never_classifies(rig):
         channel._ended = True
     with pytest.raises(NativeConfigurationUnavailable):
         registry.query_native_operation_state("channel", "native-a", "provider:op")
+
+
+@pytest.mark.parametrize('change', ['removed', 'replaced', 'ended', 'native-owner'])
+@pytest.mark.parametrize('reply', ['result', 'invalid-params'])
+def test_changed_owner_after_reply_never_classifies(rig, monkeypatch, change, reply):
+    registry, channel, mode = rig
+    mode['operation'] = reply
+    original_rpc = channel._configuration_rpc
+
+    def change_after_reply(*args, **kwargs):
+        try:
+            return original_rpc(*args, **kwargs)
+        finally:
+            if change in {'removed', 'replaced'}:
+                with registry._lock:
+                    if change == 'removed':
+                        registry._by_id.pop('channel')
+                    else:
+                        registry._by_id['channel'] = object()
+            elif change == 'ended':
+                channel.finish()
+            else:
+                with channel._lock:
+                    channel._native_sessions['native-a'] = object()
+
+    monkeypatch.setattr(channel, '_configuration_rpc', change_after_reply)
+    with pytest.raises(NativeConfigurationUnavailable, match='operation owner changed'):
+        registry.query_native_operation_state('channel', 'native-a', 'provider:op')

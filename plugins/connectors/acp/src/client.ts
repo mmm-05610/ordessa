@@ -153,6 +153,8 @@ export class AcpClient implements AgentClient {
   private readonly usedControlledSubmissionIds = new Set<string>()
   private readonly pendingControlledSessions = new Set<string>()
   private readonly projects: AgentWorkspaceInfo[] = []
+  private readonly durableHistory = new Map<string, AgentSessionInfo>()
+  private readonly loadedHistory = new Set<string>()
   private selectedWorkspaceId: string | undefined
   private sequence = 0
   /** `AgentClient.addWorkspace`, present exactly when the host orchestration supplies the
@@ -176,7 +178,7 @@ export class AcpClient implements AgentClient {
     this.state = {
       connection: {
         id: connectorId, title: `ACP · ${spec.harness.title}`, status: 'connected',
-        capabilities: { history: 'unsupported', reasoning: 'supported', tools: 'supported', stop: 'supported',
+        capabilities: { history: spec.listSessionHistory ? 'supported' : 'unsupported', reasoning: 'supported', tools: 'supported', stop: 'supported',
           interactions: 'supported', models: 'unsupported', modes: 'unsupported', workspaces: 'supported' },
         serverInstanceId: spec.serverInstanceId, harnessId: spec.harness.id,
       },
@@ -188,7 +190,12 @@ export class AcpClient implements AgentClient {
   /** Reading the project list is orchestration work, not an ACP channel: nothing is acquired here. */
   static async connect(spec: AcpChannelSpec, connectorId: string): Promise<AcpClient> {
     const projects = await spec.listProjects()
-    return new AcpClient(spec, connectorId, projects)
+    const client = new AcpClient(spec, connectorId, projects)
+    if (spec.listSessionHistory) {
+      try { await client.refreshSessions() }
+      catch { /* Keep the live connection usable; sessionList exposes the history failure. */ }
+    }
+    return client
   }
 
   getSnapshot = () => this.state
@@ -229,7 +236,7 @@ export class AcpClient implements AgentClient {
 
   // ——— channel lifecycle ————————————————————————————————————————————————
 
-  private async ensureChannel(projectId: string, sessionScopeId?: string, configurationProfileId?: string): Promise<Channel> {
+  private async ensureChannel(projectId: string, sessionScopeId?: string, configurationProfileId?: string, historySessionId?: string): Promise<Channel> {
     this.assertLive()
     // Only history/load may explicitly reuse a project's existing channel. New sessions always
     // supply a fresh scope; connection identity, never project identity, owns their live routes.
@@ -245,7 +252,7 @@ export class AcpClient implements AgentClient {
     if (pending) return await pending
     // The opening entry is cleared on success AND failure: a failed task left in the map would pin
     // the project to the old error forever, so a retry could never recover a dropped handshake.
-    const task = this.acquireAndInitialize(projectId, sessionScopeId, configurationProfileId)
+    const task = this.acquireAndInitialize(projectId, sessionScopeId, configurationProfileId, historySessionId)
       // The entry stays until the task itself settles — after dispose() it is the drain
       // attestation's witness that this attempt can still stand a late handle down.
       .finally(() => {
@@ -314,12 +321,12 @@ export class AcpClient implements AgentClient {
    * every cwd this client sends (reviewed seam: `handle.binding.normalizedPath` is the
    * `session/new` cwd). `openProject` runs first (an unoffered project throws `project-invalid`
    * before any channel or wire traffic), then exactly one `initialize`. */
-  private async acquireAndInitialize(projectId: string, sessionScopeId?: string, configurationProfileId?: string): Promise<Channel> {
+  private async acquireAndInitialize(projectId: string, sessionScopeId?: string, configurationProfileId?: string, historySessionId?: string): Promise<Channel> {
     const opened = await this.spec.openProject(projectId)
     if (opened.id !== projectId) throw new Error('ACP project binding changed')
     if (!this.projects.some(item => item.id === opened.id)) this.projects.push(opened)
     this.assertLive()
-    const handle = await this.spec.acquireChannel(opened.id, sessionScopeId, configurationProfileId)
+    const handle = await this.spec.acquireChannel(opened.id, sessionScopeId, configurationProfileId, historySessionId)
     if (this.channels.has(handle.connectionId)
         || [...this.unownedHandles].some(item => item.connectionId === handle.connectionId))
       throw new Error('ACP channel acquisition reused a live connection identity')
@@ -382,7 +389,7 @@ export class AcpClient implements AgentClient {
   private publishHistory() {
     const supported = [...this.channels.values()].some(channel =>
       channel.capabilities.loadSession === true || channel.capabilities.sessionCapabilities?.list != null)
-    const capabilities: AgentCapabilities = { ...this.state.connection.capabilities, history: supported ? 'supported' : 'unsupported' }
+    const capabilities: AgentCapabilities = { ...this.state.connection.capabilities, history: supported || this.spec.listSessionHistory ? 'supported' : 'unsupported' }
     this.publish({ connection: { ...this.state.connection, capabilities } })
   }
 
@@ -394,7 +401,8 @@ export class AcpClient implements AgentClient {
   private keyFor(channel: Channel, nativeId: string): string {
     const known = channel.nativeToKey.get(nativeId)
     if (known) return known
-    let key = nativeId
+    let key = channel.handle.historySessionId && channel.nativeToKey.size === 0
+      ? channel.handle.historySessionId : nativeId
     if (this.routes.has(key)) key = `${channel.handle.connectionId}:${nativeId}`
     while (this.routes.has(key)) key = `${channel.handle.connectionId}:${nativeId}#${++this.sequence}`
     channel.nativeToKey.set(nativeId, key)
@@ -661,6 +669,25 @@ export class AcpClient implements AgentClient {
 
   async refreshSessions(): Promise<void> {
     this.assertLive()
+    if (this.spec.listSessionHistory) {
+      this.sessionList.state = 'loading'
+      this.publish()
+      try {
+        const items = await this.spec.listSessionHistory()
+        this.assertLive()
+        for (const item of items) {
+          this.durableHistory.set(item.id, item)
+          if (!this.routes.has(item.id)) this.upsertSession(item)
+        }
+        this.sessionList.state = 'ready'
+        this.publish()
+      } catch (error) {
+        this.sessionList.state = 'error'
+        this.publish()
+        throw error
+      }
+      return
+    }
     let listable = [...this.channels.values()].filter(channel => channel.capabilities.sessionCapabilities?.list != null)
     if (!listable.length && this.selectedWorkspaceId) {
       const projectId = this.selectedWorkspaceId
@@ -716,11 +743,38 @@ export class AcpClient implements AgentClient {
   /** List and load are different capabilities: an id never seen in a list is still loadable when the
    * wire allows it (R26); a refusal comes back as the wire's own error, never a fabricated success. */
   async openSession(id: string): Promise<void> {
-    const known = this.routes.get(id)
-    const channel = known?.channel ?? await this.ensureChannel(this.selectedChannelId())
-    const nativeId = known?.nativeId ?? id
+    let known = this.routes.get(id)
+    const history = this.durableHistory.get(id)
+    if (known && history && known.channel.commandsDown) {
+      this.routes.delete(id)
+      this.loadedHistory.delete(id)
+      this.buckets.delete(id)
+      this.closeStream(id)
+      known = undefined
+    }
+    if (known && history && this.loadedHistory.has(id) && !known.channel.commandsDown) {
+      this.selectedWorkspaceId = known.channel.binding.id
+      this.activateCommandSession(known.channel, id)
+      this.publish({ selectedSessionId: id })
+      return
+    }
+    const channel = known?.channel ?? (history?.workspaceId
+      ? await this.ensureChannel(history.workspaceId, `history:${id}`, undefined, id)
+      : await this.ensureChannel(this.selectedChannelId()))
+    const nativeId = known?.nativeId ?? (history ? channel.handle.nativeSessionId : id)
+    if (!nativeId) throw new Error('ACP restored channel did not resolve the native session')
     const key = this.keyFor(channel, nativeId)
     await channel.conn.loadSession({ sessionId: nativeId, cwd: channel.binding.normalizedPath, mcpServers: [] })
+    // Replay chunks are not a currently streaming prompt. Do not invent a
+    // completed run/stopReason: only discard the provisional display status.
+    this.closeStream(key)
+    this.buckets.set(key, (this.buckets.get(key) ?? []).map(message => {
+      if (message.status !== 'running') return message
+      const { status: _status, ...historical } = message
+      return historical
+    }))
+    if (history) this.loadedHistory.add(id)
+    this.selectedWorkspaceId = channel.binding.id
     this.activateCommandSession(channel, key)
     this.upsertSession({ id: key, title: this.sessionTitle(key) ?? 'Session', workspaceId: channel.binding.id })
     this.publish({ selectedSessionId: key })

@@ -109,15 +109,25 @@ export function hostChannelSpec(adapterId: string, bridge: AgentNativeBridge, in
     serverInstanceId: entry.serverInstanceId,
     harness: entry.harness,
     listProjects: async () => parseProjects(await call('acp/projects', { instanceId: entry.serverInstanceId })),
+    listSessionHistory: async () => {
+      const result = VALUE(await call('acp/session/history', { instanceId: entry.serverInstanceId }))
+      if (!Array.isArray(result?.items)) throw new Error('ACP session history is incomplete')
+      return result.items.map(raw => {
+        const item = VALUE(raw), id = STR(item?.id), title = STR(item?.title), workspaceId = STR(item?.workspaceId)
+        if (!id || !title || !workspaceId) throw new Error('ACP session history entry is incomplete')
+        return { id, title, workspaceId, ...(STR(item?.updatedAt) ? { updatedAt: STR(item?.updatedAt) } : {}) }
+      })
+    },
     openProject: async id => parseBinding(await call('acp/openProject', { instanceId: entry.serverInstanceId, id }), id),
     // The add rides the Server's existing `workspaces.open` upsert (native.ts owns that call and
     // validates the path); a Server without the capability refuses the frame honestly, and the UI
     // keeps the entry disabled.
     addProject: async path => parseBinding(await call('acp/addProject', { instanceId: entry.serverInstanceId, path }), 'added'),
-    async acquireChannel(projectId, sessionScopeId, configurationProfileId) {
+    async acquireChannel(projectId, sessionScopeId, configurationProfileId, historySessionId) {
       const opened = VALUE(await call('acp/channel/open', { instanceId: entry.serverInstanceId, projectId,
         ...(sessionScopeId === undefined ? {} : { sessionScopeId }),
-        ...(configurationProfileId === undefined ? {} : { configurationProfileId }) }))
+        ...(configurationProfileId === undefined ? {} : { configurationProfileId }),
+        ...(historySessionId === undefined ? {} : { historySessionId }) }))
       const connectionId = STR(opened?.connectionId)
       if (!connectionId) throw new Error(`ACP channel open returned no connection id for project ${projectId}`)
       const binding = parseBinding(opened?.binding, projectId)
@@ -144,6 +154,7 @@ export function hostChannelSpec(adapterId: string, bridge: AgentNativeBridge, in
       }
       return {
         connectionId, binding, stream,
+        historySessionId: STR(opened?.historySessionId), nativeSessionId: STR(opened?.nativeSessionId),
         subscribeDown(listener) {
           if (downReason !== undefined) listener(downReason)
           else downListeners.add(listener)

@@ -1,0 +1,1155 @@
+{
+  "date": "2026-10-03",
+  "kind": "prepared-source-not-product-acceptance",
+  "branch": "codex/open-environment-migration",
+  "destination": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration",
+  "sourceHead": "7951bf06a258d2dc41402556eb61319b8bab5cbe",
+  "mainHead": "b4bf7cd90951d0fa9bcf3a3de2e66b7db6a62aa0",
+  "mainIsAncestor": true,
+  "userAuthorizedPreparationAndBaselineCommit": true,
+  "entries": [
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "package-lock.json",
+      "group": "product-repairs",
+      "sourceDigest": "d7120b88759e95b5e2232f72323f69b71987b0910bf5a3424540c6e2c414751f",
+      "sourceMode": 436,
+      "bytes": 239429,
+      "normalizedFinalNewline": false,
+      "importedDigest": "d7120b88759e95b5e2232f72323f69b71987b0910bf5a3424540c6e2c414751f"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "plugins/connectors/acp/src/channel.ts",
+      "group": "product-repairs",
+      "sourceDigest": "a8cf93c9d9eae3a81130a3193d4e9ad3eb67b0140cabe70a91813ed4f327cdd4",
+      "sourceMode": 436,
+      "bytes": 4038,
+      "normalizedFinalNewline": false,
+      "importedDigest": "a8cf93c9d9eae3a81130a3193d4e9ad3eb67b0140cabe70a91813ed4f327cdd4"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "plugins/connectors/acp/src/client.ts",
+      "group": "product-repairs",
+      "sourceDigest": "9d9a7fef206b92a3d32f68d3a63ba0113f83f36172da780dbe90c7be7e8008ad",
+      "sourceMode": 436,
+      "bytes": 74856,
+      "normalizedFinalNewline": false,
+      "importedDigest": "9d9a7fef206b92a3d32f68d3a63ba0113f83f36172da780dbe90c7be7e8008ad"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "plugins/connectors/acp/src/host.ts",
+      "group": "product-repairs",
+      "sourceDigest": "2d87027f9cec98087f3c2deb62b33289cd6dd46c8355ecbada9fc6d65b265556",
+      "sourceMode": 436,
+      "bytes": 11305,
+      "normalizedFinalNewline": false,
+      "importedDigest": "2d87027f9cec98087f3c2deb62b33289cd6dd46c8355ecbada9fc6d65b265556"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "plugins/connectors/acp/src/native.ts",
+      "group": "product-repairs",
+      "sourceDigest": "2a142fc869b95c5723b86f435a1bf9e7906a669d375f0564f5d8d657f5c8412e",
+      "sourceMode": 436,
+      "bytes": 24319,
+      "normalizedFinalNewline": false,
+      "importedDigest": "2a142fc869b95c5723b86f435a1bf9e7906a669d375f0564f5d8d657f5c8412e"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "plugins/harness/src/ordessa_harness/server_acp/access_entry.py",
+      "group": "product-repairs",
+      "sourceDigest": "dd295fb156fa157443cf9c2734b6ca5e859bdd88a07db1a650bd2146871ffac9",
+      "sourceMode": 436,
+      "bytes": 19946,
+      "normalizedFinalNewline": false,
+      "importedDigest": "dd295fb156fa157443cf9c2734b6ca5e859bdd88a07db1a650bd2146871ffac9"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "plugins/harness/src/ordessa_harness/server_acp/plugin.py",
+      "group": "product-repairs",
+      "sourceDigest": "7e548d1ce38335a9907897de8ff497153f741cc667a097e8e59d4cacb00257b6",
+      "sourceMode": 436,
+      "bytes": 24673,
+      "normalizedFinalNewline": false,
+      "importedDigest": "7e548d1ce38335a9907897de8ff497153f741cc667a097e8e59d4cacb00257b6"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "plugins/harness/src/ordessa_harness/server_acp/registry.py",
+      "group": "product-repairs",
+      "sourceDigest": "6f4be17278d6c7a18b50340f06f3d83cead1e3d02378c2e49e710f9795ccae0a",
+      "sourceMode": 436,
+      "bytes": 41419,
+      "normalizedFinalNewline": false,
+      "importedDigest": "6f4be17278d6c7a18b50340f06f3d83cead1e3d02378c2e49e710f9795ccae0a"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "plugins/harness/tests/test_native_operation_state.py",
+      "group": "product-repairs",
+      "sourceDigest": "c315a80942af16f940fd49b306e8a55b386e32d21ffaadf9f6b6973cb4ab7963",
+      "sourceMode": 436,
+      "bytes": 5410,
+      "normalizedFinalNewline": false,
+      "importedDigest": "c315a80942af16f940fd49b306e8a55b386e32d21ffaadf9f6b6973cb4ab7963"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "plugins/profile/integrations/chat/package.json",
+      "group": "product-repairs",
+      "sourceDigest": "fd72a3a5659b81f533f50d66d3562761f8da2bde51409d2bde2d63087940e6b8",
+      "sourceMode": 436,
+      "bytes": 496,
+      "normalizedFinalNewline": false,
+      "importedDigest": "fd72a3a5659b81f533f50d66d3562761f8da2bde51409d2bde2d63087940e6b8"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "plugins/profile/integrations/chat/src/picker.tsx",
+      "group": "product-repairs",
+      "sourceDigest": "baa4ffa2b3bf1ea74dd3153666c5ca3714dcdb980cbadd048f24a16d767a699b",
+      "sourceMode": 436,
+      "bytes": 5428,
+      "normalizedFinalNewline": false,
+      "importedDigest": "baa4ffa2b3bf1ea74dd3153666c5ca3714dcdb980cbadd048f24a16d767a699b"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "plugins/profile/integrations/chat/tests/entry.test.tsx",
+      "group": "product-repairs",
+      "sourceDigest": "534d4a6bbee732b820c0eb1f729e98f2e35dc0cb7fa18a36cc062c009ed09660",
+      "sourceMode": 436,
+      "bytes": 7566,
+      "normalizedFinalNewline": false,
+      "importedDigest": "534d4a6bbee732b820c0eb1f729e98f2e35dc0cb7fa18a36cc062c009ed09660"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "plugins/profile/integrations/chat/tests/picker.test.tsx",
+      "group": "product-repairs",
+      "sourceDigest": "80fe1cf80c09bc2685a018995e75f76bec97d10fa8ee2ec877187e14129e3210",
+      "sourceMode": 436,
+      "bytes": 6203,
+      "normalizedFinalNewline": false,
+      "importedDigest": "80fe1cf80c09bc2685a018995e75f76bec97d10fa8ee2ec877187e14129e3210"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "plugins/server-compat/src/ordessa_server_compat/composition.py",
+      "group": "product-repairs",
+      "sourceDigest": "e108b390a208b700d7ce180fb412983687c140c221423831933610c866d01981",
+      "sourceMode": 436,
+      "bytes": 80449,
+      "normalizedFinalNewline": false,
+      "importedDigest": "e108b390a208b700d7ce180fb412983687c140c221423831933610c866d01981"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "products/desktop/extensions.lock.json",
+      "group": "product-repairs",
+      "sourceDigest": "01df6212e9d72590d6ed5ce81b6f60686f7b5aa28ac2985d3b6b7f18b7e4ed0b",
+      "sourceMode": 436,
+      "bytes": 48270,
+      "normalizedFinalNewline": false,
+      "importedDigest": "01df6212e9d72590d6ed5ce81b6f60686f7b5aa28ac2985d3b6b7f18b7e4ed0b"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "specs/021-nightly-product-closeout/takeover-progress.md",
+      "group": "product-repairs",
+      "sourceDigest": "a563bb3449d42aa3b5532a951584d4131949627aaa3462ee2620631089eb5450",
+      "sourceMode": 436,
+      "bytes": 359769,
+      "normalizedFinalNewline": false,
+      "importedDigest": "a563bb3449d42aa3b5532a951584d4131949627aaa3462ee2620631089eb5450"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "docs/migration/native-session-history-v1.md",
+      "group": "product-repairs",
+      "sourceDigest": "283509918b9da1791cc3582d353ee980132d9fee56d97161268eb64e12f2b73a",
+      "sourceMode": 436,
+      "bytes": 2810,
+      "normalizedFinalNewline": false,
+      "importedDigest": "283509918b9da1791cc3582d353ee980132d9fee56d97161268eb64e12f2b73a"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "plugins/connectors/acp/tests/durable-history.test.ts",
+      "group": "product-repairs",
+      "sourceDigest": "56ed7573eb6ef262a5846dcfe18dcd9cfd868683af3d2e6fd8ebb73fabe12e08",
+      "sourceMode": 436,
+      "bytes": 3257,
+      "normalizedFinalNewline": false,
+      "importedDigest": "56ed7573eb6ef262a5846dcfe18dcd9cfd868683af3d2e6fd8ebb73fabe12e08"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "plugins/harness/src/ordessa_harness/server_acp/history.py",
+      "group": "product-repairs",
+      "sourceDigest": "9f3c87094a31c5713e13430ed7750f942466c09663adb65a8603705539355102",
+      "sourceMode": 436,
+      "bytes": 3389,
+      "normalizedFinalNewline": false,
+      "importedDigest": "9f3c87094a31c5713e13430ed7750f942466c09663adb65a8603705539355102"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "plugins/harness/tests/test_legacy_pi_history_import.py",
+      "group": "product-repairs",
+      "sourceDigest": "fd9358789613b9d5246132c7469f4bbff6a5880e3388d1827ac3af51f6b85452",
+      "sourceMode": 436,
+      "bytes": 3759,
+      "normalizedFinalNewline": false,
+      "importedDigest": "fd9358789613b9d5246132c7469f4bbff6a5880e3388d1827ac3af51f6b85452"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "plugins/harness/tests/test_native_session_history.py",
+      "group": "product-repairs",
+      "sourceDigest": "37051cbd01f1f8598d302f932b2a77bd4dbfdaa1e21260308dbd47ac746855a9",
+      "sourceMode": 436,
+      "bytes": 7419,
+      "normalizedFinalNewline": false,
+      "importedDigest": "37051cbd01f1f8598d302f932b2a77bd4dbfdaa1e21260308dbd47ac746855a9"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "plugins/harness/tools/import-legacy-pi-history.py",
+      "group": "product-repairs",
+      "sourceDigest": "3f1f97ec99c484d3fb5f33bcd0a1dc1020eb095ed7dfb4185c692d8bb07a334d",
+      "sourceMode": 436,
+      "bytes": 7190,
+      "normalizedFinalNewline": false,
+      "importedDigest": "3f1f97ec99c484d3fb5f33bcd0a1dc1020eb095ed7dfb4185c692d8bb07a334d"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "path": "specs/021-nightly-product-closeout/acceptance-20261003.md",
+      "group": "product-repairs",
+      "sourceDigest": "b19476adc2d11b7322cd60da1ebc1f192671807dcaa95ab04fb12772bc83456c",
+      "sourceMode": 436,
+      "bytes": 6338,
+      "normalizedFinalNewline": false,
+      "importedDigest": "b19476adc2d11b7322cd60da1ebc1f192671807dcaa95ab04fb12772bc83456c"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/024-open-environment-kernel/README.md",
+      "group": "design",
+      "sourceDigest": "074d9f9181140f29ef3fa8888234da4088114257e9925f10c3f3233e772a8a85",
+      "sourceMode": 436,
+      "bytes": 13931,
+      "normalizedFinalNewline": false,
+      "importedDigest": "074d9f9181140f29ef3fa8888234da4088114257e9925f10c3f3233e772a8a85"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/024-open-environment-kernel/attacks/round-1.md",
+      "group": "design",
+      "sourceDigest": "a2ac5f060fa8a3fd2bd0f2453875f28c1ae60541ee76a473f0effc637676ecaf",
+      "sourceMode": 436,
+      "bytes": 16038,
+      "normalizedFinalNewline": false,
+      "importedDigest": "a2ac5f060fa8a3fd2bd0f2453875f28c1ae60541ee76a473f0effc637676ecaf"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/024-open-environment-kernel/attacks/round-2.md",
+      "group": "design",
+      "sourceDigest": "3cf1eb76be419ff2deb65b51fe6c9591bec6dc6e34520f1a70abb866a8777ba0",
+      "sourceMode": 436,
+      "bytes": 13642,
+      "normalizedFinalNewline": false,
+      "importedDigest": "3cf1eb76be419ff2deb65b51fe6c9591bec6dc6e34520f1a70abb866a8777ba0"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/024-open-environment-kernel/boundary.md",
+      "group": "design",
+      "sourceDigest": "7f8632b07331c2f1b71307148293f11bca54c1b700d57208a3442380ea761d07",
+      "sourceMode": 436,
+      "bytes": 5985,
+      "normalizedFinalNewline": false,
+      "importedDigest": "7f8632b07331c2f1b71307148293f11bca54c1b700d57208a3442380ea761d07"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/024-open-environment-kernel/checks/contract_checks.py",
+      "group": "design",
+      "sourceDigest": "b302d2ca75a5b2ae76a2770a9248f4bd9da27d094679933677fb8661ab26a624",
+      "sourceMode": 436,
+      "bytes": 20894,
+      "normalizedFinalNewline": false,
+      "importedDigest": "b302d2ca75a5b2ae76a2770a9248f4bd9da27d094679933677fb8661ab26a624"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/024-open-environment-kernel/evidence/acceptance-repair-checks.json",
+      "group": "design",
+      "sourceDigest": "fa11eb2b6c1dc7599aaabd4cdb2876bf9e1679b9993c6be8c9a9d79c62965678",
+      "sourceMode": 436,
+      "bytes": 4970,
+      "normalizedFinalNewline": false,
+      "importedDigest": "fa11eb2b6c1dc7599aaabd4cdb2876bf9e1679b9993c6be8c9a9d79c62965678"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/024-open-environment-kernel/evidence/migration-seams.md",
+      "group": "design",
+      "sourceDigest": "effaec042090ce2d30c35166ffca732ab6b281a5605da85d0e21680f3bff877b",
+      "sourceMode": 436,
+      "bytes": 3966,
+      "normalizedFinalNewline": false,
+      "importedDigest": "effaec042090ce2d30c35166ffca732ab6b281a5605da85d0e21680f3bff877b"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/024-open-environment-kernel/evidence/offline-checks.json",
+      "group": "design",
+      "sourceDigest": "2bbd501b11d6389623ca8473c2608bc8ebca035b432b4956eec6ddc5afe19d30",
+      "sourceMode": 436,
+      "bytes": 4224,
+      "normalizedFinalNewline": false,
+      "importedDigest": "2bbd501b11d6389623ca8473c2608bc8ebca035b432b4956eec6ddc5afe19d30"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/024-open-environment-kernel/evidence/scope-audit.json",
+      "group": "design",
+      "sourceDigest": "6a72d6aa900937eafeb230ab15e873670ace04968c14cdc2907aa3c82f840fc7",
+      "sourceMode": 436,
+      "bytes": 1211,
+      "normalizedFinalNewline": false,
+      "importedDigest": "6a72d6aa900937eafeb230ab15e873670ace04968c14cdc2907aa3c82f840fc7"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/024-open-environment-kernel/evidence/source-snapshot.json",
+      "group": "design",
+      "sourceDigest": "d6f0074ea353aec16a27bd882f7f6800c71975a59eaf03502d4feca7f0cf3dc5",
+      "sourceMode": 436,
+      "bytes": 137846,
+      "normalizedFinalNewline": false,
+      "importedDigest": "d6f0074ea353aec16a27bd882f7f6800c71975a59eaf03502d4feca7f0cf3dc5"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/024-open-environment-kernel/evidence/supplemental-snapshot.json",
+      "group": "design",
+      "sourceDigest": "1ffafc94602ecea4c1d1658add0b36936030907a94e731a472fdbfe38a849be4",
+      "sourceMode": 436,
+      "bytes": 9687,
+      "normalizedFinalNewline": false,
+      "importedDigest": "1ffafc94602ecea4c1d1658add0b36936030907a94e731a472fdbfe38a849be4"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/024-open-environment-kernel/inventory.md",
+      "group": "design",
+      "sourceDigest": "702f10b4b3e60cab8c8512a3b3b3a2d8811074d73c2e22d0d38b35d854afa8a6",
+      "sourceMode": 436,
+      "bytes": 13120,
+      "normalizedFinalNewline": false,
+      "importedDigest": "702f10b4b3e60cab8c8512a3b3b3a2d8811074d73c2e22d0d38b35d854afa8a6"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/024-open-environment-kernel/models/v1.md",
+      "group": "design",
+      "sourceDigest": "8ad4c2f52d34ddfdaa098fd0c309067896ce7e2c21d3e79311398dba07c4b2ea",
+      "sourceMode": 436,
+      "bytes": 14869,
+      "normalizedFinalNewline": false,
+      "importedDigest": "8ad4c2f52d34ddfdaa098fd0c309067896ce7e2c21d3e79311398dba07c4b2ea"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/024-open-environment-kernel/models/v2.md",
+      "group": "design",
+      "sourceDigest": "eb7df8e5bd8194bec09500a34596580d6e3038f454ad39594175b1a45949ebf0",
+      "sourceMode": 436,
+      "bytes": 30235,
+      "normalizedFinalNewline": false,
+      "importedDigest": "eb7df8e5bd8194bec09500a34596580d6e3038f454ad39594175b1a45949ebf0"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/024-open-environment-kernel/models/v3.md",
+      "group": "design",
+      "sourceDigest": "87c9fe1e00143717a64de525ab3f40d7ffb0db4cdb92d1d0ec15f4b284027b1e",
+      "sourceMode": 436,
+      "bytes": 47278,
+      "normalizedFinalNewline": false,
+      "importedDigest": "87c9fe1e00143717a64de525ab3f40d7ffb0db4cdb92d1d0ec15f4b284027b1e"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/024-open-environment-kernel/refactor-plan.md",
+      "group": "design",
+      "sourceDigest": "04e8c4a764f05f4821dde549a737754474f41216d63b83ecd0f14a28f0d851a4",
+      "sourceMode": 436,
+      "bytes": 19995,
+      "normalizedFinalNewline": false,
+      "importedDigest": "04e8c4a764f05f4821dde549a737754474f41216d63b83ecd0f14a28f0d851a4"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/024-open-environment-kernel/review.md",
+      "group": "design",
+      "sourceDigest": "34a1b030f8f7d756f1c3d72615938e4589222497b4d2a621de39148852ef368a",
+      "sourceMode": 436,
+      "bytes": 8316,
+      "normalizedFinalNewline": false,
+      "importedDigest": "34a1b030f8f7d756f1c3d72615938e4589222497b4d2a621de39148852ef368a"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/024-open-environment-kernel/scenarios.md",
+      "group": "design",
+      "sourceDigest": "a90ab676b983ad5cf3b635d8d30404134a3a5e3aa6c3017d6658219e41e89401",
+      "sourceMode": 436,
+      "bytes": 12422,
+      "normalizedFinalNewline": false,
+      "importedDigest": "a90ab676b983ad5cf3b635d8d30404134a3a5e3aa6c3017d6658219e41e89401"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/024-open-environment-kernel/status.md",
+      "group": "design",
+      "sourceDigest": "cc6da2ec160fb05dfbe4c47c097dc9897e6423b439e568e5f4b461dfb43c4fe2",
+      "sourceMode": 436,
+      "bytes": 4810,
+      "normalizedFinalNewline": false,
+      "importedDigest": "cc6da2ec160fb05dfbe4c47c097dc9897e6423b439e568e5f4b461dfb43c4fe2"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/README.md",
+      "group": "design",
+      "sourceDigest": "8e7e08566357e3db918636c2fb44d8b758b13237a58368279852445bab92c3ae",
+      "sourceMode": 436,
+      "bytes": 14602,
+      "normalizedFinalNewline": false,
+      "importedDigest": "8e7e08566357e3db918636c2fb44d8b758b13237a58368279852445bab92c3ae"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/attacks/round-1.md",
+      "group": "design",
+      "sourceDigest": "0b6c4958c569f4a52f563ee1c247cc24ed473ad3dffbe5f4e63ec143060d8b31",
+      "sourceMode": 436,
+      "bytes": 5402,
+      "normalizedFinalNewline": false,
+      "importedDigest": "0b6c4958c569f4a52f563ee1c247cc24ed473ad3dffbe5f4e63ec143060d8b31"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/attacks/round-2.md",
+      "group": "design",
+      "sourceDigest": "8ab72feee395755ba5c7ad1578fd316eb0a55817d979520c10b20d79e404b85e",
+      "sourceMode": 436,
+      "bytes": 3767,
+      "normalizedFinalNewline": false,
+      "importedDigest": "8ab72feee395755ba5c7ad1578fd316eb0a55817d979520c10b20d79e404b85e"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/backend-interface-questions.md",
+      "group": "design",
+      "sourceDigest": "29a32b0fb1b36e30b21772596f0e044238304ace36d77c6b63439ccc4ae19f43",
+      "sourceMode": 436,
+      "bytes": 2755,
+      "normalizedFinalNewline": false,
+      "importedDigest": "29a32b0fb1b36e30b21772596f0e044238304ace36d77c6b63439ccc4ae19f43"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/boundary.md",
+      "group": "design",
+      "sourceDigest": "044806b8be0030a3f950a8c77c21700435cd1c08b62c601645908502b1143e9d",
+      "sourceMode": 436,
+      "bytes": 2139,
+      "normalizedFinalNewline": false,
+      "importedDigest": "044806b8be0030a3f950a8c77c21700435cd1c08b62c601645908502b1143e9d"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/checks/README.md",
+      "group": "design",
+      "sourceDigest": "4491933a3b10eb77fdb32939318db3c02a5445d6e83e40831093629f4fe6d7b7",
+      "sourceMode": 436,
+      "bytes": 1255,
+      "normalizedFinalNewline": false,
+      "importedDigest": "4491933a3b10eb77fdb32939318db3c02a5445d6e83e40831093629f4fe6d7b7"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/checks/model_checks.py",
+      "group": "design",
+      "sourceDigest": "43ed1053003836a5089d90826a26c1e19b18d2bdf445196bb847895f58ea26eb",
+      "sourceMode": 436,
+      "bytes": 20296,
+      "normalizedFinalNewline": false,
+      "importedDigest": "43ed1053003836a5089d90826a26c1e19b18d2bdf445196bb847895f58ea26eb"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/evidence/acceptance-repair-checks.json",
+      "group": "design",
+      "sourceDigest": "fcbaaeb07b448051ef379778d753b4c4404c4d831a7512ec4f9ee12adf2261f7",
+      "sourceMode": 436,
+      "bytes": 5556,
+      "normalizedFinalNewline": false,
+      "importedDigest": "fcbaaeb07b448051ef379778d753b4c4404c4d831a7512ec4f9ee12adf2261f7"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/evidence/delivery-check.json",
+      "group": "design",
+      "sourceDigest": "acd41ae937dad14312c3ce0e76e84df9498dc7b7dead251c34fd47e1e95743af",
+      "sourceMode": 436,
+      "bytes": 611,
+      "normalizedFinalNewline": false,
+      "importedDigest": "acd41ae937dad14312c3ce0e76e84df9498dc7b7dead251c34fd47e1e95743af"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/evidence/offline-results.json",
+      "group": "design",
+      "sourceDigest": "25d7cde95ecb9f1ab93ebc6946044cd49b65e102c71b4e3f616aa754e3ffd5ee",
+      "sourceMode": 436,
+      "bytes": 4802,
+      "normalizedFinalNewline": false,
+      "importedDigest": "25d7cde95ecb9f1ab93ebc6946044cd49b65e102c71b4e3f616aa754e3ffd5ee"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/evidence/source-excerpts.txt",
+      "group": "design",
+      "sourceDigest": "afb11039c4675031fedc3e3b67250cc9ace4a9ef2977c5a01f3e784ebbd3e003",
+      "sourceMode": 436,
+      "bytes": 419731,
+      "normalizedFinalNewline": false,
+      "importedDigest": "afb11039c4675031fedc3e3b67250cc9ace4a9ef2977c5a01f3e784ebbd3e003"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/evidence/source-snapshot.json",
+      "group": "design",
+      "sourceDigest": "4b501a3e9e35d63bd9b7ea09b63400e1980b703e3af3b571d68d9baa8512d796",
+      "sourceMode": 436,
+      "bytes": 7936,
+      "normalizedFinalNewline": false,
+      "importedDigest": "4b501a3e9e35d63bd9b7ea09b63400e1980b703e3af3b571d68d9baa8512d796"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/inventory.md",
+      "group": "design",
+      "sourceDigest": "62025f8535242589b6a8f80695d0afd6142cf3b3fc528d035689f1f93395a4b0",
+      "sourceMode": 436,
+      "bytes": 6383,
+      "normalizedFinalNewline": false,
+      "importedDigest": "62025f8535242589b6a8f80695d0afd6142cf3b3fc528d035689f1f93395a4b0"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/models/v1.md",
+      "group": "design",
+      "sourceDigest": "f2bc65e3950e8a3ca25a1091e930891d25953add0e95ac19de0dc120af52f4a2",
+      "sourceMode": 436,
+      "bytes": 15167,
+      "normalizedFinalNewline": false,
+      "importedDigest": "f2bc65e3950e8a3ca25a1091e930891d25953add0e95ac19de0dc120af52f4a2"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/models/v2.md",
+      "group": "design",
+      "sourceDigest": "4736bd593844fa2ee0c2cd26574080213af02ded4b832f36771e1fde9169f57c",
+      "sourceMode": 436,
+      "bytes": 27960,
+      "normalizedFinalNewline": false,
+      "importedDigest": "4736bd593844fa2ee0c2cd26574080213af02ded4b832f36771e1fde9169f57c"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/models/v3.md",
+      "group": "design",
+      "sourceDigest": "44d0d6ba07a4f08bc914439f7cd98d586bccc2d81f285d8e6c52bff83ccf6d49",
+      "sourceMode": 436,
+      "bytes": 41066,
+      "normalizedFinalNewline": false,
+      "importedDigest": "44d0d6ba07a4f08bc914439f7cd98d586bccc2d81f285d8e6c52bff83ccf6d49"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/models/v4.md",
+      "group": "design",
+      "sourceDigest": "294badd2d838f81c8880542b3efa2adf337c4dcc5a1dea0b370bb07bcf83cd1a",
+      "sourceMode": 436,
+      "bytes": 44189,
+      "normalizedFinalNewline": false,
+      "importedDigest": "294badd2d838f81c8880542b3efa2adf337c4dcc5a1dea0b370bb07bcf83cd1a"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/refactor-plan.md",
+      "group": "design",
+      "sourceDigest": "1ed8a703761ceeaf251d82e2308613932132962a75b4b7d372c9b891aedce152",
+      "sourceMode": 436,
+      "bytes": 9882,
+      "normalizedFinalNewline": false,
+      "importedDigest": "1ed8a703761ceeaf251d82e2308613932132962a75b4b7d372c9b891aedce152"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/review.md",
+      "group": "design",
+      "sourceDigest": "1960690cbcce2aefb5f38db66ae57380b6ecf590ae131a7486641c8b089b3657",
+      "sourceMode": 436,
+      "bytes": 6906,
+      "normalizedFinalNewline": false,
+      "importedDigest": "1960690cbcce2aefb5f38db66ae57380b6ecf590ae131a7486641c8b089b3657"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/scenarios.md",
+      "group": "design",
+      "sourceDigest": "c887606d00b66b46a448307f0676af257e23d7793db10bf140d78720d24ff304",
+      "sourceMode": 436,
+      "bytes": 7932,
+      "normalizedFinalNewline": false,
+      "importedDigest": "c887606d00b66b46a448307f0676af257e23d7793db10bf140d78720d24ff304"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/state-ownership.md",
+      "group": "design",
+      "sourceDigest": "74daff972b9d8780ec9606ab91ee96e65695ab2d5b0a5395c6ec3854d24365c1",
+      "sourceMode": 436,
+      "bytes": 5454,
+      "normalizedFinalNewline": false,
+      "importedDigest": "74daff972b9d8780ec9606ab91ee96e65695ab2d5b0a5395c6ec3854d24365c1"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/025-open-frontend-environment/status.md",
+      "group": "design",
+      "sourceDigest": "3327f6a96f4c0fa391c5f3b07dc178f9c0060df0b9c0531fea4e9184a73cc284",
+      "sourceMode": 436,
+      "bytes": 4198,
+      "normalizedFinalNewline": false,
+      "importedDigest": "3327f6a96f4c0fa391c5f3b07dc178f9c0060df0b9c0531fea4e9184a73cc284"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/README.md",
+      "group": "design",
+      "sourceDigest": "8bd354687153668841f11797105f872d7d6fb3d0809678020a9ea906dd0e5547",
+      "sourceMode": 436,
+      "bytes": 4061,
+      "normalizedFinalNewline": false,
+      "importedDigest": "8bd354687153668841f11797105f872d7d6fb3d0809678020a9ea906dd0e5547"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/acceptance.md",
+      "group": "design",
+      "sourceDigest": "3b6d91aa87b778c5db825fdd3344343020d24c42f14bfdf4eee33d75751ae7ec",
+      "sourceMode": 436,
+      "bytes": 20649,
+      "normalizedFinalNewline": false,
+      "importedDigest": "3b6d91aa87b778c5db825fdd3344343020d24c42f14bfdf4eee33d75751ae7ec"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/architecture.md",
+      "group": "design",
+      "sourceDigest": "19c523d176a822e0bddc3d524fd899e64aad986c5b1160d41564d22934e78adf",
+      "sourceMode": 436,
+      "bytes": 5373,
+      "normalizedFinalNewline": false,
+      "importedDigest": "19c523d176a822e0bddc3d524fd899e64aad986c5b1160d41564d22934e78adf"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/case-registry.json",
+      "group": "design",
+      "sourceDigest": "bf422e5f7ba1e49d8b3cff5843255f103be121c409f2000f1770e0c8cf405ed0",
+      "sourceMode": 436,
+      "bytes": 9255,
+      "normalizedFinalNewline": false,
+      "importedDigest": "bf422e5f7ba1e49d8b3cff5843255f103be121c409f2000f1770e0c8cf405ed0"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/charter.md",
+      "group": "design",
+      "sourceDigest": "0966feed23f7b94e314a2a55ba5a275e770426ebdc115b3b1438bbb77c3d126d",
+      "sourceMode": 436,
+      "bytes": 1686,
+      "normalizedFinalNewline": false,
+      "importedDigest": "0966feed23f7b94e314a2a55ba5a275e770426ebdc115b3b1438bbb77c3d126d"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/checks/validate-package.mjs",
+      "group": "design",
+      "sourceDigest": "1a530f07d26d7acfe64a06abf74ad69c43cc569cf6b9971b4bd8a9861e96cb69",
+      "sourceMode": 436,
+      "bytes": 10421,
+      "normalizedFinalNewline": false,
+      "importedDigest": "1a530f07d26d7acfe64a06abf74ad69c43cc569cf6b9971b4bd8a9861e96cb69"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/contracts/agent-domain.md",
+      "group": "design",
+      "sourceDigest": "d602f94b66122989f6f0a0c57a57b189b0ba27e676e246ff4f61c6b4e10ee24d",
+      "sourceMode": 436,
+      "bytes": 4764,
+      "normalizedFinalNewline": false,
+      "importedDigest": "d602f94b66122989f6f0a0c57a57b189b0ba27e676e246ff4f61c6b4e10ee24d"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/contracts/environment.md",
+      "group": "design",
+      "sourceDigest": "d3c5b3b53e0cdc2a00d5724f044813c74a55643827194cfb85620f0c6f53fb78",
+      "sourceMode": 436,
+      "bytes": 2830,
+      "normalizedFinalNewline": false,
+      "importedDigest": "d3c5b3b53e0cdc2a00d5724f044813c74a55643827194cfb85620f0c6f53fb78"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/contracts/frontend.md",
+      "group": "design",
+      "sourceDigest": "df9c50e6c3c428ec358e836d0fec50e1858cbb5ca515c108a69ee1a4be7cfa29",
+      "sourceMode": 436,
+      "bytes": 2548,
+      "normalizedFinalNewline": false,
+      "importedDigest": "df9c50e6c3c428ec358e836d0fec50e1858cbb5ca515c108a69ee1a4be7cfa29"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/contracts/lifecycle-evidence.md",
+      "group": "design",
+      "sourceDigest": "201f7b5f5296a88371e1cf9fe713b9ef0082b9fc154699ba2b9053daba8418d5",
+      "sourceMode": 436,
+      "bytes": 4284,
+      "normalizedFinalNewline": false,
+      "importedDigest": "201f7b5f5296a88371e1cf9fe713b9ef0082b9fc154699ba2b9053daba8418d5"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/contracts/platform-services.md",
+      "group": "design",
+      "sourceDigest": "ecf929559320a3396e85354cf13160575af292236eb11fee017f109ea481b9e1",
+      "sourceMode": 436,
+      "bytes": 7517,
+      "normalizedFinalNewline": false,
+      "importedDigest": "ecf929559320a3396e85354cf13160575af292236eb11fee017f109ea481b9e1"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/contracts/recovery.md",
+      "group": "design",
+      "sourceDigest": "53de3f2fbb97d4c5f95c900cd404b066f3150626f732fa6b3b75fd3f883ea71f",
+      "sourceMode": 436,
+      "bytes": 4936,
+      "normalizedFinalNewline": false,
+      "importedDigest": "53de3f2fbb97d4c5f95c900cd404b066f3150626f732fa6b3b75fd3f883ea71f"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/contracts/relationships.md",
+      "group": "design",
+      "sourceDigest": "aed7aa106bc9057e0099396c19194119e2371d7f8dc79d109cbc7940fbad76fc",
+      "sourceMode": 436,
+      "bytes": 8087,
+      "normalizedFinalNewline": false,
+      "importedDigest": "aed7aa106bc9057e0099396c19194119e2371d7f8dc79d109cbc7940fbad76fc"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/contracts/resource-references.md",
+      "group": "design",
+      "sourceDigest": "c5b163b40a4ede14d47387c8e17ede7198f82fb0f7e6316daca5ff92ef99ae37",
+      "sourceMode": 436,
+      "bytes": 4349,
+      "normalizedFinalNewline": false,
+      "importedDigest": "c5b163b40a4ede14d47387c8e17ede7198f82fb0f7e6316daca5ff92ef99ae37"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/contracts/shipping.md",
+      "group": "design",
+      "sourceDigest": "7dfb980f553f1d7a1b05583b6de27ff042b65b54416faa80724fb784d4317aeb",
+      "sourceMode": 436,
+      "bytes": 2431,
+      "normalizedFinalNewline": false,
+      "importedDigest": "7dfb980f553f1d7a1b05583b6de27ff042b65b54416faa80724fb784d4317aeb"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/contracts/submission.md",
+      "group": "design",
+      "sourceDigest": "3f6488b39ee041ebba9ba1ac96f12773484df089f38c965c0ddedda956790199",
+      "sourceMode": 436,
+      "bytes": 2888,
+      "normalizedFinalNewline": false,
+      "importedDigest": "3f6488b39ee041ebba9ba1ac96f12773484df089f38c965c0ddedda956790199"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/data-model.md",
+      "group": "design",
+      "sourceDigest": "66d0b7a8073aa84ace7525915975fc6e0e9417a26845803f1254012b49b39ed1",
+      "sourceMode": 436,
+      "bytes": 5588,
+      "normalizedFinalNewline": false,
+      "importedDigest": "66d0b7a8073aa84ace7525915975fc6e0e9417a26845803f1254012b49b39ed1"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/decisions.md",
+      "group": "design",
+      "sourceDigest": "025fd7e115e1fb99025ab23382c03ad716c211c2d84c631c55a4ffe48ed6dc15",
+      "sourceMode": 436,
+      "bytes": 2310,
+      "normalizedFinalNewline": false,
+      "importedDigest": "025fd7e115e1fb99025ab23382c03ad716c211c2d84c631c55a4ffe48ed6dc15"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/evidence/README.md",
+      "group": "design",
+      "sourceDigest": "752ba9390ac6d0d1944f82cf9ce5d655b4c4fec92372901c2c0f0f3c7c731c97",
+      "sourceMode": 436,
+      "bytes": 212,
+      "normalizedFinalNewline": false,
+      "importedDigest": "752ba9390ac6d0d1944f82cf9ce5d655b4c4fec92372901c2c0f0f3c7c731c97"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/evidence/design-validation.json",
+      "group": "design",
+      "sourceDigest": "724f562b44bd543f147561f77919260fd8e47c7d1a4c0e91dec13b12fa810d53",
+      "sourceMode": 436,
+      "bytes": 1661,
+      "normalizedFinalNewline": false,
+      "importedDigest": "724f562b44bd543f147561f77919260fd8e47c7d1a4c0e91dec13b12fa810d53"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/execution-detail.md",
+      "group": "design",
+      "sourceDigest": "05b6c2a941d30023565c72933305c03a8bafb153043d3f669787905bf6f4fb8a",
+      "sourceMode": 436,
+      "bytes": 7888,
+      "normalizedFinalNewline": false,
+      "importedDigest": "05b6c2a941d30023565c72933305c03a8bafb153043d3f669787905bf6f4fb8a"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/migration-map.md",
+      "group": "design",
+      "sourceDigest": "6b72d78456628d964caf263f1ddf76ebeab66270a2cbc19a77cd8471fd2ae6e7",
+      "sourceMode": 436,
+      "bytes": 6209,
+      "normalizedFinalNewline": false,
+      "importedDigest": "6b72d78456628d964caf263f1ddf76ebeab66270a2cbc19a77cd8471fd2ae6e7"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/migration.md",
+      "group": "design",
+      "sourceDigest": "1bfaa2b0af7d2007779645e991f43a2d098b0bdb677af61848703b93fa8139cb",
+      "sourceMode": 436,
+      "bytes": 3369,
+      "normalizedFinalNewline": false,
+      "importedDigest": "1bfaa2b0af7d2007779645e991f43a2d098b0bdb677af61848703b93fa8139cb"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/orders/001.md",
+      "group": "design",
+      "sourceDigest": "1ac43b443a5c608c5a94d29c62eee149f4426f4d51288e5935ab858fd91e707f",
+      "sourceMode": 436,
+      "bytes": 6269,
+      "normalizedFinalNewline": false,
+      "importedDigest": "1ac43b443a5c608c5a94d29c62eee149f4426f4d51288e5935ab858fd91e707f"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/orders/002.md",
+      "group": "design",
+      "sourceDigest": "3ac4cda4d9a057a2c90df84693f882cf9950c68cc9316a0b1abebad693840bf7",
+      "sourceMode": 436,
+      "bytes": 7651,
+      "normalizedFinalNewline": false,
+      "importedDigest": "3ac4cda4d9a057a2c90df84693f882cf9950c68cc9316a0b1abebad693840bf7"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/orders/003.md",
+      "group": "design",
+      "sourceDigest": "d72fd8e8546a7959c174cbadca03059805b8f1e72afe2a0173c3829fbcb0477e",
+      "sourceMode": 436,
+      "bytes": 6289,
+      "normalizedFinalNewline": false,
+      "importedDigest": "d72fd8e8546a7959c174cbadca03059805b8f1e72afe2a0173c3829fbcb0477e"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/orders/004.md",
+      "group": "design",
+      "sourceDigest": "4eb5e669604524ff5342b745c7639a9e39cc8e3a89aefb960e545fcec8304609",
+      "sourceMode": 436,
+      "bytes": 6889,
+      "normalizedFinalNewline": false,
+      "importedDigest": "4eb5e669604524ff5342b745c7639a9e39cc8e3a89aefb960e545fcec8304609"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/orders/005.md",
+      "group": "design",
+      "sourceDigest": "bc9dcd18d030ca07a4c8dedde6cfae3942b514bbefb6facf4b3c2e74d980a42d",
+      "sourceMode": 436,
+      "bytes": 7779,
+      "normalizedFinalNewline": false,
+      "importedDigest": "bc9dcd18d030ca07a4c8dedde6cfae3942b514bbefb6facf4b3c2e74d980a42d"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/orders/006.md",
+      "group": "design",
+      "sourceDigest": "517b705b27cae4ef7ec0258206bc55fb4a568dfa35e9d6ecf4b23e27adc1b0e9",
+      "sourceMode": 436,
+      "bytes": 7507,
+      "normalizedFinalNewline": false,
+      "importedDigest": "517b705b27cae4ef7ec0258206bc55fb4a568dfa35e9d6ecf4b23e27adc1b0e9"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/orders/007.md",
+      "group": "design",
+      "sourceDigest": "0a3182d02fe42d9d391d70a083ab2dd554054a2cc6769a2d2af19b2f3e87e806",
+      "sourceMode": 436,
+      "bytes": 8047,
+      "normalizedFinalNewline": false,
+      "importedDigest": "0a3182d02fe42d9d391d70a083ab2dd554054a2cc6769a2d2af19b2f3e87e806"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/orders/008.md",
+      "group": "design",
+      "sourceDigest": "4ff34a9471597eabd0c3af4017788decc13acc85e2f37ed5a5280514c0b4ecf1",
+      "sourceMode": 436,
+      "bytes": 7457,
+      "normalizedFinalNewline": false,
+      "importedDigest": "4ff34a9471597eabd0c3af4017788decc13acc85e2f37ed5a5280514c0b4ecf1"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/orders/009.md",
+      "group": "design",
+      "sourceDigest": "89e139c0c50b8861a4d49b4d0459755928f39ade628c14a15cfaa8ca30964adc",
+      "sourceMode": 436,
+      "bytes": 7437,
+      "normalizedFinalNewline": false,
+      "importedDigest": "89e139c0c50b8861a4d49b4d0459755928f39ade628c14a15cfaa8ca30964adc"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/orders/010.md",
+      "group": "design",
+      "sourceDigest": "54819fd034da7dc3c119074fbce82785aab6d9398b8faee3c644c50e4592d058",
+      "sourceMode": 436,
+      "bytes": 7919,
+      "normalizedFinalNewline": false,
+      "importedDigest": "54819fd034da7dc3c119074fbce82785aab6d9398b8faee3c644c50e4592d058"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/orders/011.md",
+      "group": "design",
+      "sourceDigest": "8f327e3db59eccfa1dadeaac76298ad1495a7a8bdd0740e2c082ab96ce8f35be",
+      "sourceMode": 436,
+      "bytes": 6810,
+      "normalizedFinalNewline": false,
+      "importedDigest": "8f327e3db59eccfa1dadeaac76298ad1495a7a8bdd0740e2c082ab96ce8f35be"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/orders/012.md",
+      "group": "design",
+      "sourceDigest": "81ec9758b09fa4fb57422d64c93177c06421cb311f2ef44dcafe255a39a6c542",
+      "sourceMode": 436,
+      "bytes": 8792,
+      "normalizedFinalNewline": false,
+      "importedDigest": "81ec9758b09fa4fb57422d64c93177c06421cb311f2ef44dcafe255a39a6c542"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/plan.md",
+      "group": "design",
+      "sourceDigest": "687a4ee28e939c9be81eb9b5043de7891654200f322f15b4f7ce9ce14f541e40",
+      "sourceMode": 436,
+      "bytes": 3884,
+      "normalizedFinalNewline": false,
+      "importedDigest": "687a4ee28e939c9be81eb9b5043de7891654200f322f15b4f7ce9ce14f541e40"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/plugin-architecture.md",
+      "group": "design",
+      "sourceDigest": "9e97292883e1ea4f22d964e148eb1b0481118afaab3b7fbd6e362f8cb786c034",
+      "sourceMode": 436,
+      "bytes": 12952,
+      "normalizedFinalNewline": false,
+      "importedDigest": "9e97292883e1ea4f22d964e148eb1b0481118afaab3b7fbd6e362f8cb786c034"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/queue.json",
+      "group": "design",
+      "sourceDigest": "5ae62f24cf6e9986f27a7fbbd0783c7bf4abd1cf6c00d7456e2467fab1c03916",
+      "sourceMode": 436,
+      "bytes": 315,
+      "normalizedFinalNewline": false,
+      "importedDigest": "5ae62f24cf6e9986f27a7fbbd0783c7bf4abd1cf6c00d7456e2467fab1c03916"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/quickstart.md",
+      "group": "design",
+      "sourceDigest": "f2df93e8ff553384c9e958857c7fce522b680941ec010e48258c6bca34273c30",
+      "sourceMode": 436,
+      "bytes": 1177,
+      "normalizedFinalNewline": false,
+      "importedDigest": "f2df93e8ff553384c9e958857c7fce522b680941ec010e48258c6bca34273c30"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/research.md",
+      "group": "design",
+      "sourceDigest": "2220ab6b46b8741fcb9542a47b5230f613fc6f84621f852a9c5fdf067c91113f",
+      "sourceMode": 436,
+      "bytes": 2795,
+      "normalizedFinalNewline": false,
+      "importedDigest": "2220ab6b46b8741fcb9542a47b5230f613fc6f84621f852a9c5fdf067c91113f"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/reviews/plugin-core-responsibility-audit.md",
+      "group": "design",
+      "sourceDigest": "24644b7cf15a61cb62228f56dd06aa5126a30b564868f024b3f12412f63d377a",
+      "sourceMode": 436,
+      "bytes": 13771,
+      "normalizedFinalNewline": false,
+      "importedDigest": "24644b7cf15a61cb62228f56dd06aa5126a30b564868f024b3f12412f63d377a"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/reviews/pre-implementation-review.md",
+      "group": "design",
+      "sourceDigest": "942c8825a4d9363a1661e32a82a765e852b199489630b19bcb711d2d889ca866",
+      "sourceMode": 436,
+      "bytes": 4944,
+      "normalizedFinalNewline": false,
+      "importedDigest": "942c8825a4d9363a1661e32a82a765e852b199489630b19bcb711d2d889ca866"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/reviews/report.md",
+      "group": "design",
+      "sourceDigest": "71b1aced50c1bad69183a3d526f738b7947fd3d8d0f17b185c8240a6a54459e7",
+      "sourceMode": 436,
+      "bytes": 4439,
+      "normalizedFinalNewline": false,
+      "importedDigest": "71b1aced50c1bad69183a3d526f738b7947fd3d8d0f17b185c8240a6a54459e7"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/reviews/revisions.md",
+      "group": "design",
+      "sourceDigest": "b5536a579ce5eb6b4fe410e1bd18b05542e6ec3b9ef3368623c41670eb0bd9ce",
+      "sourceMode": 436,
+      "bytes": 1391,
+      "normalizedFinalNewline": false,
+      "importedDigest": "b5536a579ce5eb6b4fe410e1bd18b05542e6ec3b9ef3368623c41670eb0bd9ce"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/spec.md",
+      "group": "design",
+      "sourceDigest": "3f1975d2e71117f663676c8cc607ac223f5e327962ed5067783e55fa9f400acf",
+      "sourceMode": 436,
+      "bytes": 6010,
+      "normalizedFinalNewline": false,
+      "importedDigest": "3f1975d2e71117f663676c8cc607ac223f5e327962ed5067783e55fa9f400acf"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/status.md",
+      "group": "design",
+      "sourceDigest": "cb59322869ad91f47c570ac171634fb30c72b611b7e3ebca2fc9d74d94e5193d",
+      "sourceMode": 436,
+      "bytes": 2267,
+      "normalizedFinalNewline": false,
+      "importedDigest": "cb59322869ad91f47c570ac171634fb30c72b611b7e3ebca2fc9d74d94e5193d"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/task-registry.json",
+      "group": "design",
+      "sourceDigest": "d6e74e9075856f56e735f7d43c77e40e486e9de210f8813ea62b26938519a14d",
+      "sourceMode": 436,
+      "bytes": 37614,
+      "normalizedFinalNewline": false,
+      "importedDigest": "d6e74e9075856f56e735f7d43c77e40e486e9de210f8813ea62b26938519a14d"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/tasks.md",
+      "group": "design",
+      "sourceDigest": "3bb9273a79843c9bd76e6e067bc3538fbc4b23df0db47090630d62569ee70acf",
+      "sourceMode": 436,
+      "bytes": 20446,
+      "normalizedFinalNewline": false,
+      "importedDigest": "3bb9273a79843c9bd76e6e067bc3538fbc4b23df0db47090630d62569ee70acf"
+    },
+    {
+      "origin": "/home/maoqh/projects/ordessa",
+      "path": "specs/026-open-environment-migration/zcode-handoff.md",
+      "group": "design",
+      "sourceDigest": "0ff1b94115cf9fcd297e534d6c86d9a5f19701e8727a3ec0c42fe57fdd87fb7c",
+      "sourceMode": 436,
+      "bytes": 7502,
+      "normalizedFinalNewline": false,
+      "importedDigest": "0ff1b94115cf9fcd297e534d6c86d9a5f19701e8727a3ec0c42fe57fdd87fb7c"
+    }
+  ],
+  "excluded": [
+    "docs/ui-preview/01-empty.png",
+    ".zcodeignore"
+  ],
+  "privateFilesExcludedWithoutReading": true,
+  "sourceTreesUntouched": true,
+  "productTestsRun": false,
+  "baselineCommit": "record actual SHA in preparation-receipt.md after commit",
+  "remaining001": [
+    "suite discovery",
+    "controlled baseline regression",
+    "subdirectory instruction inventory"
+  ]
+}

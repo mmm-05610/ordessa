@@ -1,5 +1,60 @@
 # 2026-09-30 接手检查点：启动接缝与 Profile 管理
 
+## 2026-10-03 推进顺序与小重构范围（用户确认）
+
+本轮先明确边界、做限定范围的小重构，再按功能逐项验收和修复；不要求先修完所有已知问题。基础链路已跑通，但不能把局部成功等同于第一版已经完成。
+
+1. **固定验收基线**：记录已验证场景、失败场景及草稿/历史保护要求。Pi 新会话三轮配置切换、历史列出与回放已有真实证据；恢复后续聊因运行时凭证未重新接入失败，Codex/Claude 实机恢复尚未验证。
+2. **讨论并确认职责边界**：逐项明确 products、apps、desktop-platform、workbench、pacthold、server-plugin-api 与领域插件的公共接口、实现归属、允许依赖。先更新架构文档，未确认项标记为提案。
+3. **限定范围的小重构**：整理实现位置、入口与依赖，收敛重复注册体系，保留已有行为和持久标识。若涉及状态权威、协议、生命周期或数据迁移变化，单独提出决策，不以“整理代码”暗中改变语义。
+4. **按相同基线验收并修复**：真实检查三品牌首次发送、后续发送、模型/Profile 覆盖、输出中切换不打断、冷启动历史与续聊、失败草稿及多会话隔离；每项记录实际结果，不用“全部验收”替代明确条目。
+5. **收口第一版**：复跑上述场景及包边界测试，更新云端和仓库架构文档，形成可追溯检查点；未验证或未修复项继续登记，不代报完成。
+
+“子 repo 边界”本轮指 monorepo 内独立包的职责、公共 API、依赖与测试边界，不意味着拆成多个 Git 仓库。本次记录不启动重构、不分派任务、不新增 Harness、不提交/合并/推送，也不重启当前应用。
+
+## 2026-10-03 验收后修复（最新增量）
+
+### 用户校准后的增量：菜单重选与持久历史（进行中）
+
+- 下方“重新应用”按钮方案已被用户否决并替换：Profile 使用 Radix 菜单，当前项始终可再次选择；复用 onSelect 操作登记，下次发送生效，不直接打断/发送。Profile Chat 83 项及 18 扩展构建通过；新版真实 Electron 菜单尚待重启验证。
+- 用户批准 Harness 原生历史方案。已接 `acp.sessions.list` → ACP connector 冷启动读目录、点击后 server-resolved 原目录 → 原生 session/load；无 Profile 必需依赖，无配置副本，无模型调用。Metadata 复用现有 server_session_events，兼容说明 docs/migration/native-session-history-v1.md。
+- 新增 SQLite 元数据/关联帧 5 项测试通过；ACP connector 65 项通过，定向 Harness 42 项通过，root typecheck 和构建通过。只是受控证据，不代表三品牌实机恢复已验收。
+- 未完成：已有会话的可靠导入关联、真实 cold restart/load 回放、恢复后的配置与凭证接线验证。旧版本没有写目录关联，不能用猜测冒充迁移完成。当前保留数据，未调用更多模型。
+- 后续真实菜单验证通过：正常关闭旧测试窗口后重启，当前 Profile 菜单项可再次点击且关闭；无独立重应用按钮，draft 空、alerts=[]、overflow=false。截图 `/tmp/ordessa-profile-menu-reselect-20261003.png` 已检查。没有追加模型调用。
+- 旧 Pi 一次性迁移：只读交叉核对旧 Profile 登记→旧连接幂等回执→原生 ID 文件头→项目路径。9 条已知登记有 8 条唯一可靠匹配，1 条无文件不导入。迁移 4 项反例测试通过；正常关闭 Desktop、取得 Server 锁后备份主数据库为 `~/.ordessa/backups/native-history-pre-v1-20261003T015119234842.sqlite`，追加 8 条历史事件，未改旧 Profile 库/凭证/原生文件。运行链无 Profile 依赖；真实冷启动与加载验证进行中。
+- 实机增量：冷启动选 Pi 后 8 条历史自动列出；点击三轮验收会话，原生 load 回放全部 3 条用户消息及 ONE_OK/TWO_OK/THREE_OK 松果73；无告警、草稿空，无 session/new 或追加模型消息。模型菜单列出两种 DeepSeek 模型可下轮使用。截图 `/tmp/ordessa-history-restored-20261003.png`。回放 provisional running 状态及重复点击重复追加已补受控测试/修复，最新构建需重启；“恢复后继续发送”未验收，前述 3 次调用授权已用完。
+- 最新回归：Harness 历史/迁移/操作归属/原生观察/接线与边界 53 项、ACP connector 65 项、Profile Chat 83 项通过；18 扩展 build、root typecheck、diff-check 通过。新增目录恢复测试验证不同调用 nonce 不会同时拉起同一历史的两个 owner，显式释放后可再申请新 owner，旧 execution 不复活。
+- 等待真实推理验收授权：仅需在已恢复的 Pi 三轮会话再发 1 条短消息检查暗号上下文；不可擅自追加到原 3 次调用配额。Codex/Claude 实机恢复未验证，不据 Pi 证据代报通过。未提交/合并/推送。
+- 用户随后明确授权 1 条恢复续聊测试。实际只点击发送一次：`恢复验收：第一轮让我记住的暗号是什么？只回复 RESTORE_OK 和暗号，不调用工具。`。结果明确拒绝 `SUBMISSION_REFUSED: Authentication required`，草稿原样保留，未重试，不能标记恢复续聊通过。截图 `/tmp/ordessa-resume-auth-refused-20261003.png`。
+- 已定位接线缺口：Pi 创建/注册适配调用原生 `setRuntimeApiKey` 注入当前运行时；恢复启动仅保留 instance directory，不重新执行供应商/凭证接入。原生 auth_required 分类并非历史文件损坏。需要补“已生效模型供应商引用→model-provider 安全取凭证→Harness 原生重新接入”的恢复链，不自动选 Profile、不把 API Key 写历史、不修原生认证实现。该链尚未实现/验收；当前停止追加真实发送。
+
+### 同 Profile 重应用入口修复
+
+- 配置预设控件增加“重新应用”：直接复用所选 Profile 的 onSelect 登记入口，不清选择、不刷新目录、不直接应用配置/发送消息；仍按后操作覆盖和下次发送生效。
+- 无选择或目录中已不存在该选择时不显示；禁用/归档时不可点。使用现有样式、原生键盘可达 button，没有新增 effect 或状态副本。
+- 新增 5 个控件测试，Profile Chat 82、model contribution 114、Chat 78（合计 274）项通过，18 扩展构建、root typecheck、diff-check 通过；原生 select 重选同值不触发 onChange 不再需要作为操作入口。
+- 单包 typecheck 暴露昨晚 `tests/alternating-session-isolation.test.ts` 的 8 条既有类型错误（本次该文件无 diff）；不报告该包全绿。root typecheck 仅检查 apps/desktop，不能覆盖此缺口。
+- 用户要求继续后先重载页面，主进程扩展缓存仍显示旧控件；确认草稿为空、输出 completed 后正常关闭本轮测试窗口并启动同一完整产品，原进程已退出，未杀其他服务。
+- 新版真实 Electron 草稿界面显示“重新应用”，点击后 sameSelection=true、alerts=[]、overflow=false、draft 空；没有发送消息，也没有新增原生会话推理。视觉截图 `/tmp/ordessa-profile-reapply-verified.png` 已检查。此项证明真实按钮显示/点击，不冒充运行会话下轮发送通过。
+- 应用保持打开，Electron 777094，exec session 37082。冷启动重新选 Pi 后侧栏暂显示 No sessions yet，未证明旧会话可列出/恢复，也没有证据证明历史数据被删除；另列待查，不改数据或清 recovery。
+
+### 用户授权后的真实 Electron 三轮（2026-10-03）
+
+- 用户明确授权启动并最多发送 3 条短消息。启动完整三品牌默认开发产品，真实数据根 `/home/maoqh/.ordessa`，原系统资产不变；Electron sandbox 保留，loopback CDP 9333 仅用于本轮自动操作。环境没有 Playwright，复用系统已有 ws 通过 CDP 操作真实页面，没有安装依赖或 fixture 替换。
+- 新建 Pi/agent-box 测试会话，选择 `测试 · pi · deepseek-flash` Profile，首条发送后收到 `ONE_OK`；实际模型控件 deepseek-flash。
+- 通过模型菜单单独选 deepseek-v4-pro，第二条发送收到 `TWO_OK`；实际模型控件 deepseek-v4-pro。
+- 清除 Profile 选择并重新选择原 flash Profile，第三条发送收到 `THREE_OK 松果73`；模型控件切回 deepseek-flash。未重发旧草稿、未清旧 recovery、未修改登录或全局配置；第三轮仍能读上下文，不能据此证明所有隔离边界。
+- 后两轮完成时 draft 为空、alerts=[]、completed；最终横向溢出 false。三次发送点击用满授权，不追加推理。
+- 截图：`/tmp/ordessa-acceptance-round1.png`、`/tmp/ordessa-acceptance-round2.png`、`/tmp/ordessa-acceptance-round3.png`，第三张已视觉核验。
+- UI 已知缺口：Profile A 标签在单独切模型后仍保持 A；原生 select 同值重选不能触发 onChange，因此此次切回使用现有“清除选择→重新选择”两步入口。不能报“一步重选 A”通过；需后续调整重应用入口。
+- 应用继续保持打开：Electron 773659、Server 773718，exec session 30259。本轮没有 Codex/Claude 真实聊天，也没有验证正在输出时切换；这两项仍未完成。
+
+- 已修复 `query_native_operation_state` 拒绝分支漏掉最终 registry/channel/native-owner 复核的问题：成功与拒绝返回都经过同一归属检查。没有放宽 unknown、重发效果或改 Harness 原生逻辑。
+- 新增 8 个反例：两种回复 × 通道移除/替换/结束/native owner 变化。定向 Python 63 项通过，扩展原生 observation/config selection/ACP boundary 回归合计 79 项通过；diff-check 通过。
+- 已安装 Pi v2 的独立零推理逆向探针通过：A → B → A，reverse registration observed、modelPrompts=0、processExit=0。
+- 前一轮修复阶段未调用模型；用户授权后真实三轮已完成，范围及仍存 UI 缺口见上方，不扩大为整产品验收通过。
+- 夜间产物独立结论见 `acceptance-20261003.md`；N5 仍只有 Skills 投影闭环测试，MCP/Prompts 未做。
+
 状态：部分实现，**不是完整 Harness Desktop 验收通过**。
 最新核验（2026-10-02）：本树三品牌默认资产已对齐已安装增强版本；
 build/typecheck、Python 619 条、native-profile JS/默认装配 94 条通过；

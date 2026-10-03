@@ -132,6 +132,12 @@ class _Channel:
         self._ended = False
         self._seen_request_ids: set[tuple[type, str | int]] = set()
         self._pending_new: set[tuple[type, str | int]] = set()
+        self._pending_load: dict[tuple[type, str | int], str] = {}
+        self._pending_prompt: dict[tuple[type, str | int], tuple[str, str]] = {}
+        self.history_id: str | None = None
+        self.restore_native_id: str | None = None
+        self.history_writer = None
+        self.history_error: str | None = None
         self._native_sessions: dict[str, NativeSessionObservation] = {}
         self._configuration_queries: dict[str, _ConfigurationQuery] = {}
         self._owner_query_ids: set[str] = set()
@@ -146,6 +152,8 @@ class _Channel:
             "connectionId": self.connection_id,
             "executionId": self.execution_id,
             "binding": dict(self.binding or {}),
+            **({'historySessionId': self.history_id or self.session_id} if self.session_scope_id else {}),
+            **({"nativeSessionId": self.restore_native_id} if self.restore_native_id else {}),
         }
 
     def attach(self, loop: Any, sink: Callable[[Any], None]) -> None:
@@ -182,6 +190,8 @@ class _Channel:
                 return
             self._ended = True
             self._pending_new.clear()
+            self._pending_load.clear()
+            self._pending_prompt.clear()
             self._native_sessions.clear()
             for pending in self._configuration_queries.values():
                 pending.ready.set()
@@ -223,6 +233,8 @@ class _Channel:
                 # A reused ID makes even the first outstanding reply
                 # ambiguous. Keep the ID spent and refuse that observation.
                 self._pending_new.discard(request_id)
+                self._pending_load.pop(request_id, None)
+                self._pending_prompt.pop(request_id, None)
                 return
             # Exhaustion disables new observations; it never promotes an
             # unbounded stream of client-selected request IDs into evidence.
@@ -231,6 +243,20 @@ class _Channel:
             self._seen_request_ids.add(request_id)
             if frame["method"] == "session/new":
                 self._pending_new.add(request_id)
+            else:
+                params = frame.get('params')
+                native_id = params.get('sessionId') if isinstance(params, dict) else None
+                if type(native_id) is not str or not native_id or len(native_id) > 4096:
+                    return
+                if frame['method'] in {'session/load', 'session/resume'}:
+                    # Restored channels only accept their server-resolved native target.
+                    if self.restore_native_id is None or native_id == self.restore_native_id:
+                        self._pending_load[request_id] = native_id
+                elif frame['method'] == 'session/prompt' and native_id in self._native_sessions:
+                    blocks = params.get('prompt', [])
+                    title = next((b['text'][:160] for b in blocks if isinstance(b, dict)
+                                  and b.get('type') == 'text' and isinstance(b.get('text'), str)), 'Session') if isinstance(blocks, list) else 'Session'
+                    self._pending_prompt[request_id] = (native_id, title)
 
     def invalidate_client_line(self, line: str) -> None:
         try:
@@ -243,6 +269,8 @@ class _Channel:
         if request_id is not None:
             with self._lock:
                 self._pending_new.discard(request_id)
+                self._pending_load.pop(request_id, None)
+                self._pending_prompt.pop(request_id, None)
 
     def _observe_agent_line(self, line: str) -> None:
         try:
@@ -252,16 +280,29 @@ class _Channel:
         if not isinstance(frame, dict) or frame.get("jsonrpc") != "2.0" or "method" in frame:
             return
         request_id = self._request_id(frame)
-        if request_id is None or request_id not in self._pending_new:
+        if request_id is None:
             return
-        self._pending_new.remove(request_id)
+        prompt = self._pending_prompt.pop(request_id, None)
+        if prompt is not None:
+            if ('error' not in frame and isinstance(frame.get('result'), dict)
+                    and prompt[0] in self._native_sessions and self.history_writer is not None):
+                try:
+                    self.history_writer(self, *prompt)
+                    self.history_error = None
+                except Exception:
+                    self.history_error = 'Native session history could not be persisted'
+            return
+        loaded_id = self._pending_load.pop(request_id, None)
+        if loaded_id is None and request_id not in self._pending_new:
+            return
+        self._pending_new.discard(request_id)
         result = frame.get("result")
         if ("error" in frame or not isinstance(result, dict) or
-                type(result.get("sessionId")) is not str or not result["sessionId"] or
-                result["sessionId"].strip() != result["sessionId"] or
                 not self.execution_id or not self.session_id):
             return
-        native_id = result["sessionId"]
+        native_id = loaded_id or result.get('sessionId')
+        if type(native_id) is not str or not native_id or native_id.strip() != native_id or len(native_id) > 4096:
+            return
         if len(self._native_sessions) >= 128 and native_id not in self._native_sessions:
             return
         self._native_sessions[native_id] = NativeSessionObservation(
@@ -412,6 +453,8 @@ class AcpChannelRegistry:
         self._records = session_records
         self._profiles = profile_records
         self._launch = launch
+        from .history import NativeSessionHistory
+        self.history = NativeSessionHistory(session_records) if hasattr(session_records, 'database') else None
         self._lock = threading.RLock()
         self._by_pair: dict[tuple[str, ...], _Channel] = {}
         self._scope_locks: dict[tuple[str, ...], threading.RLock] = {}
@@ -422,7 +465,20 @@ class AcpChannelRegistry:
 
     def acquire(self, *, harness_id: str, workspace_id: str,
                 profile_id: str, cwd: str, session_scope_id: str | None = None,
-                configuration_profile_id: str | None = None) -> dict[str, Any]:
+                configuration_profile_id: str | None = None, history_session_id: str | None = None) -> dict[str, Any]:
+        retained = None
+        if history_session_id is not None:
+            if (type(history_session_id) is not str or not history_session_id or len(history_session_id) > 96
+                    or history_session_id.strip() != history_session_id
+                    or any(ord(c) < 32 or ord(c) == 127 for c in history_session_id)
+                    or self.history is None or configuration_profile_id is not None or session_scope_id is None):
+                raise SessionAcquisitionRefused('native history acquisition unavailable')
+            try:
+                retained = self.history.lookup(harness_id, history_session_id, workspace_id)
+            except (ValueError, OSError) as exc:
+                raise SessionAcquisitionRefused('native history target unavailable') from exc
+            # The history identity, not a caller-selected nonce, owns the instance.
+            session_scope_id = 'history:' + history_session_id
         if configuration_profile_id is not None and (session_scope_id is None
                 or type(configuration_profile_id) is not str or not configuration_profile_id
                 or configuration_profile_id.strip() != configuration_profile_id or len(configuration_profile_id) > 128
@@ -444,17 +500,17 @@ class AcpChannelRegistry:
             # Serialize its establishment to avoid speculative duplicate Agents.
             with scope_lock:
                 with self._lock:
-                    if pair in self._spent_scopes and pair not in self._by_pair:
+                    if retained is None and pair in self._spent_scopes and pair not in self._by_pair:
                         raise SessionAcquisitionRefused("session acquisition scope is terminal")
                 return self._acquire(harness_id=harness_id, workspace_id=workspace_id,
                                      profile_id=profile_id, cwd=cwd, session_scope_id=session_scope_id,
-                                     configuration_profile_id=configuration_profile_id)
+                                     configuration_profile_id=configuration_profile_id, retained=retained)
         return self._acquire(harness_id=harness_id, workspace_id=workspace_id,
                              profile_id=profile_id, cwd=cwd)
 
     def _acquire(self, *, harness_id: str, workspace_id: str, profile_id: str,
                  cwd: str, session_scope_id: str | None = None,
-                 configuration_profile_id: str | None = None) -> dict[str, Any]:
+                 configuration_profile_id: str | None = None, retained=None) -> dict[str, Any]:
         pair = ((harness_id, workspace_id) if session_scope_id is None
                 else (harness_id, workspace_id, session_scope_id))
         with self._lock:
@@ -469,11 +525,15 @@ class AcpChannelRegistry:
                 session_scope_id=session_scope_id,
                 configuration_profile_id=configuration_profile_id,
             )
+            if retained is not None:
+                connection.history_id = retained['historyId']
+                connection.restore_native_id = retained['nativeId']
         # Launch first: a provider that refuses starts no process and records
         # no run.  The ledger row appears only for a channel that is up.
         transport = self._launch(
             harness_id=harness_id, cwd=cwd,
             **({'configuration_profile_id': configuration_profile_id} if configuration_profile_id is not None else {}),
+            **({'retained_instance_directory': retained['instanceDirectory']} if retained is not None else {}),
             on_line=connection.deliver,
             on_exit=lambda code: self._handle_exit(connection, code),
         )
@@ -492,6 +552,8 @@ class AcpChannelRegistry:
             transport.terminate()
             raise
         connection.transport = _ObservedTransport(connection, transport)
+        connection.history_writer = (self.history.remember if self.history is not None
+                                     and getattr(transport, 'instance_directory', None) else None)
         connection.configuration_profile_snapshot = getattr(transport, 'configuration_profile_snapshot', None)
         with self._lock:
             racer = self._by_pair.get(connection.pair)
@@ -588,6 +650,15 @@ class AcpChannelRegistry:
         with self._lock:
             return self._by_id.get(connection_id)
 
+    def list_history(self, harness_id: str) -> list[dict[str, Any]]:
+        if self.history is None:
+            raise ValueError('native session history unavailable')
+        with self._lock:
+            if any(channel.history_error for channel in self._by_id.values()
+                   if channel.harness_id == harness_id):
+                raise ValueError('native session history persistence failed')
+        return self.history.list(harness_id)
+
     def native_session_observation(self, connection_id: str,
                                    native_session_id: str) -> NativeSessionObservation | None:
         """Read only an Agent-confirmed native session on this live connection."""
@@ -640,6 +711,10 @@ class AcpChannelRegistry:
         channel = self.get(connection_id)
         if channel is None:
             raise NativeConfigurationUnavailable('channel owner unavailable')
+        owner = channel.native_session_observation(native_session_id)
+        if owner is None:
+            raise NativeConfigurationUnavailable('native session owner unavailable')
+        state = 'present'
         try:
             owner, record = channel._configuration_rpc(native_session_id,
                 '_ordessa/session/configuration/operation',
@@ -648,11 +723,11 @@ class AcpChannelRegistry:
         except NativeConfigurationRefused as exc:
             if exc.error_code != -32602:
                 raise
-            return 'refused'
+            state = 'refused'
         if (self.get(connection_id) is not channel or channel.ended
                 or channel.native_session_observation(native_session_id) is not owner):
             raise NativeConfigurationUnavailable('operation owner changed')
-        return 'present'
+        return state
 
     def prepare_native_creation(self, connection_id: str, params: Mapping[str, Any], *, timeout: float = 10):
         """Trusted plugin-only initial preparation; no native session exists yet.

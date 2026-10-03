@@ -81,13 +81,16 @@ it('renders directory failure, explicitly refreshes new profiles, and immediatel
   expect(container.textContent).toContain('目录断开')
   profileCatalog.mockResolvedValue([{ ...groups[0]!, profiles: [A, B] }])
   await act(async () => { container.querySelector<HTMLButtonElement>('[data-profile-refresh]')!.click() })
-  expect(container.querySelectorAll('optgroup option')).toHaveLength(2)
-  const select = container.querySelector('select')!
+  const openPicker = async () => {
+    await act(async () => {
+      container.querySelector('[data-profile-trigger]')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }))
+    })
+  }
+  await openPicker()
+  expect(document.querySelectorAll('[data-profile-value]')).toHaveLength(2)
   await act(async () => {
-    select.value = 'pi::b'
-    select.dispatchEvent(new Event('change', { bubbles: true }))
+    document.querySelector<HTMLElement>('[data-profile-value="pi::b"]')!.click()
   })
-  expect(select.value).toBe('pi::b')
   expect(container.textContent).toContain('预设 B')
   expect(state.selectForSession).not.toHaveBeenCalled()
   expect(state.beginTurnApplication).not.toHaveBeenCalled()
@@ -95,18 +98,17 @@ it('renders directory failure, explicitly refreshes new profiles, and immediatel
   expect(await state.chat.submit(snapshot, gateway)).toMatchObject({ status: 'refused' })
   expect(gateway.submit).not.toHaveBeenCalled()
   expect(state.glue.store.peek('draft:d1')).toEqual({ profileId: B.profileId, harnessId: B.harnessId, displayName: B.displayName })
-  await act(async () => {
-    select.value = ''
-    select.dispatchEvent(new Event('change', { bubbles: true }))
-  })
+  await openPicker()
+  await act(async () => { Array.from(document.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(item => item.textContent === '清除预设选择')!.click() })
   expect(state.glue.store.peek('draft:d1')).toBeNull()
-  expect(select.value).toBe('')
+  expect(container.querySelector('[data-profile-trigger]')?.textContent).toContain('选择预设')
   expect(await state.chat.submit(snapshot, gateway)).toEqual({ status: 'accepted' })
   expect(gateway.submit).toHaveBeenCalledTimes(1)
   expect(state.selectForSession).not.toHaveBeenCalled()
   expect(state.beginTurnApplication).not.toHaveBeenCalled()
-  await act(async () => { select.dispatchEvent(new Event('pointerdown', { bubbles: true })) })
-  expect(profileCatalog).toHaveBeenCalledTimes(3)
+  const priorRefreshes = profileCatalog.mock.calls.length
+  await openPicker()
+  expect(profileCatalog).toHaveBeenCalledTimes(priorRefreshes + 1)
 })
 
 it('a synchronously throwing directory client can be explicitly refreshed again', async () => {

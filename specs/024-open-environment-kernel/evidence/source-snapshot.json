@@ -1,0 +1,3010 @@
+{
+  "/home/maoqh/projects/ordessa": {
+    "head": "b4bf7cd90951d0fa9bcf3a3de2e66b7db6a62aa0",
+    "status": "?? specs/022-openshell-integration/\n?? specs/023-subagent-collaboration/\n?? specs/024-open-environment-kernel/\n",
+    "files": [
+      {
+        "path": "packages/pacthold/src/pacthold/__init__.py",
+        "sha256": "b0b54e135188be465ccf8efb624d80b7a12d838e3404d90fb99bfce81527f6f9"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/cli/__init__.py",
+        "sha256": "8d70964520f28ec44a335bb421c9c9c37b2aba08a9eb04910f7e037b89654573"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/cli/commands/plugins.py",
+        "sha256": "7d4d43b5eeaa0ca86b335693b1a3dd299e5d18647ae64573507afaf75f0ec065"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/__init__.py",
+        "sha256": "0de216e2562caf61b8889faad16f6faabb5d8f3a8739bfe2ecb185e1a2c47af9"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/descriptors.py",
+        "sha256": "cb63742759fef03d9b34ba48ca1fe0a5bec0c25f2cc8648268efbb1ad655003e"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/dispatch.py",
+        "sha256": "b075e544f7bb1fb8fb490842a828d4a1bbce8ebb502ab213e6314858b6f3a473"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/dtos.py",
+        "sha256": "ed34e688c501d5f2eaca8cb6cbfdd4ef6ff221e9a353e4346a1254ed179d6a16"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/enums.py",
+        "sha256": "6608e4488d0602f46e8e1252ae34dbb4943b833cee50f83ba595b367a643f6f0"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/errors.py",
+        "sha256": "17aa8de22a9f86d35e2d51f75b27009d879befab698cf3978f60095c8fa64c15"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/plan.py",
+        "sha256": "4d750e9f1380af75d51d4e1adb846bd67896043f6e0ab41300c050e9ca6b9f3c"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/protocols.py",
+        "sha256": "505e4818c6852d00815f73bb2e0790e61ba47fe7800c0d33ab9ee846d63a3726"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/registration.py",
+        "sha256": "96b4e488c2c0d6dba54f3f5e3250d57715704b7a360d7bef07aaad2b190d095d"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/runtime.py",
+        "sha256": "00bc6929cb36d420a74c47d7c010c6dbd5b5781281d0232e3281e38ec06660dc"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/store.py",
+        "sha256": "7c435fe4a22dc15068553d70f2ad89c1ef702676ad11a955678fee8c1dcdcb0b"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/execution/__init__.py",
+        "sha256": "5740ca20fd4b65e4d518f1cad8fc12f72f6b3f9fda5e88d0cd5e8b0e7e29974f"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/execution/contracts.py",
+        "sha256": "33e994bcfa2c8470a0d4b9eb768b6539707413a126bb4dcc5096221ab2ae5e46"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/execution/first_run_lock.py",
+        "sha256": "80eeace72dd4d598425cdb51a8ee18ee871d8ac6e335453c21bc9a8d150ccf5c"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/execution/lifecycle.py",
+        "sha256": "70e28e36f0b06cf7c74396f786f2b56acf7e9fa1d4b34607fded43d89f515743"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/extensions/__init__.py",
+        "sha256": "5bb0aa2df29fa6660edf5e27059643dd67b66f4b26b12d2009559b2f494ad586"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/extensions/api.py",
+        "sha256": "3719edd3ef97f902cb197306fb78184db9e8b9b08c53a88da95fe5d9b99d89ea"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/extensions/bootstrap.py",
+        "sha256": "494bef1ef2c5befec1e9d4eef5d8a009297b9ce1e6edb9757b2f718e6636fea2"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/extensions/catalog.py",
+        "sha256": "7b77baa8e765cdcbee86450db86864e11ea891a2e6a8bcc8601078b95052f708"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/extensions/conformance.py",
+        "sha256": "57c16b760149bc57b984b9ca4035b2a95215fd498ad5ef452a4bee0ec9b5e887"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/extensions/diagnostics.py",
+        "sha256": "9cc545b1a2407cd8dd53203ce28b378c6df52c726652585103362c5988544f61"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/extensions/finalization.py",
+        "sha256": "d7917ae5f57e76d248d3d7ba57961a55ec257ed9314155ff1ab4153da6c053b3"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/extensions/loader.py",
+        "sha256": "49daa8ff00ce318fec2598a53c43925361988df6141bc2554a0ca9efe607a800"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/migrations/001_core_schema.sql",
+        "sha256": "8d0a6b399fdcf2e80f7f317a6e192661be6d9be69d2e758864fc4bc545e0ca3c"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/public.py",
+        "sha256": "782dae0a0486787ffcda7515e6296b99052d49ee37c69e53384e00a70f19612c"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/storage/__init__.py",
+        "sha256": "e7e4fa41bc1ca0b14725e3f188eeeebd6d85f8e7e362fee294e47b7475df378e"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/storage/objects.py",
+        "sha256": "2503c1b867da443d381caa73eb0b6d20d1a6109dc47edbf8d0b9d466427b84fe"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/storage/secrets.py",
+        "sha256": "d298ebdb95c2932489171727110b9f475d0c004da5b88acb6abe9a994424e114"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/__init__.py",
+        "sha256": "5aa54fc0e79e2dd87572ce8e4ae414a66b5ab2257a73b955265cd877ad6d08f7"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/db.py",
+        "sha256": "04a4815303f630a2f212cb0d0baf3ae882f04efd2853502e392c24bb864094ad"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/errors.py",
+        "sha256": "530d6b0653a006f9fbc85a38253711e83ea7a1d04e6d3366b0a29a840e5b6d4c"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/events.py",
+        "sha256": "e09cc4bc7b0737446b9749ee77b416fe4c7ce48b185f27d8d74f0b2c15f77dbd"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/finalization.py",
+        "sha256": "7731dfef1fb1cc48826ec120637a635b9de80ea028a0539e720a538224628665"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/models.py",
+        "sha256": "8c3eaaae604a771b1e26023e3c9db0b7d957214d4b4e4c83bdd2967000104c44"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/projection.py",
+        "sha256": "d27fee13681ffc278cdea34261c2301caf87fc2fb091e8c86264abb06e756c8b"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/registry.py",
+        "sha256": "b64f5bc2ed4aa4c71a5974bf5e10248fb4f38f6eca40bd7e93e70a9e5310d482"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/repository.py",
+        "sha256": "cdc1712a38eb4fdab69e83f9b01c55a397d95fc0fc21c87f3bcf322f19b26797"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/resource_observations.py",
+        "sha256": "b034e6918834a2cf221d7118caf45bd1cd6d2763451ce4fcaf9a5c119e52fd62"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/runtime.py",
+        "sha256": "1dc9c87a4b51e459214aacdd5986afc5b4815ee556232678e7fbd209699875c8"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/services.py",
+        "sha256": "fe5ea863ad252efabc2187339075cf3ad6b16e0347e1bb453eafd8717188624f"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/__init__.py",
+        "sha256": "e0e544fa702c7a7cf83420af52d54ab7c8edab42e62c9b179a1f523fa21b611c"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/__main__.py",
+        "sha256": "d1d30942d562c3d8e107c77d1ac9db3e7a04c8a0bf829d38c3b1ae3bca2756a3"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/acp_admission.py",
+        "sha256": "371b31927f1836db6dd3d515a9d115be5a3eb042e54b30525fbebf8a4c1bb2a3"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/bootstrap/__init__.py",
+        "sha256": "1ee83ac88072475803f150ef636a89ce32d9c95141f6737bdba793d2c22a6dc1"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/bootstrap/data_root.py",
+        "sha256": "5074ab6f0a7b4b4630747784844d63c6dd6521363b0eb0ccff6a03db19ea1d9a"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/bootstrap/handshake.py",
+        "sha256": "2903cfb72a56ca3fd2bb9c83f853f33a14be6ebad0b982ba35e48116b65dddd0"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/bootstrap/runtime.py",
+        "sha256": "77ffe48e0d5cc814fa08f1ab8a10f441c1d0200884a6efc83bea6fd90ca1e5c7"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/connectors.py",
+        "sha256": "18ba9625e630e1ed2fc572818a688ee2f68c2022fb879de001742e61ceb1a4cd"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/core_binding.py",
+        "sha256": "300cf8c95fed6bd2eebd44ad019b4e264bfe4ddb012b632006c4bc13bb0c1747"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/credentials.py",
+        "sha256": "540019c1907baac827415860b39125218a13d579131e86019283308f5bddd470"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/errors.py",
+        "sha256": "3213e67518932b87028314ed5a841f30957d41ffa2a177473d281550388d87c4"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/events/__init__.py",
+        "sha256": "b00849366e3cb24ad68ab9371eed45c319735f8fdf1bcb3fd6b940fc09846f0b"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/events/notifier.py",
+        "sha256": "c00ce353c438a48a0a10bdecbd1d46e56c7547e6c85af20b46cfaa4374cb0078"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/idempotency.py",
+        "sha256": "a68f939d7a2d7175f504ca94726c1bee805a97614e25d2630aebf8df1d4b4e7d"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/ids.py",
+        "sha256": "f2c909d1edb9872ec59d72c5843025f98799a5a23eec0970af3b203a8af1cc64"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/observability/__init__.py",
+        "sha256": "5aae7869fd9972c1eca916222f4dd2439084c369c03b780a0a5aca2cf376408b"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/observability/logging_sink.py",
+        "sha256": "a1b54f85d1b6ddc0a5432167d7498b8f0fe286fc54255b8fb20752f6552f286e"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/plugin_host/__init__.py",
+        "sha256": "21f04718194e4b956c6f9662018f2fce9c927bdf3f5831425e18ee2799a3452b"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/plugin_host/contribution_points.py",
+        "sha256": "9e80435d0bb0f3cfaf79a13acfccbf0a8403ef4c39aaa3fc251f45607a8011e1"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/plugin_host/host.py",
+        "sha256": "29a012f3d18f87c906bb94c56761061d6433f7baeec191993204d2e38cddcc54"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/records.py",
+        "sha256": "c74fca9d2683e23e6dda3bfe8368ee6d9c50a8cd4195461001f906c424b255e1"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/storage_port.py",
+        "sha256": "68b63f9b1e0051719770dc47ce524223af18e49140376a3f45b042afa49c5289"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/transport/__init__.py",
+        "sha256": "30f220af4ec51281faf552e033df9e071557cd48fef75b1c820c90117e04f203"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/transport/http/__init__.py",
+        "sha256": "5abaf4212df43f25dcd2e0cef8da2b25a97b6756bdfe28f38f172d64f7c22a3e"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/transport/http/admission.py",
+        "sha256": "dbbc793851bdd5abe4b1eb19170b1165cc7c2203de2dd2871c54a9e01e44c39c"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/transport/http/app.py",
+        "sha256": "e257897a2477dbafe1684c5f38b0d7b4c3e3a2d43a48803a68bc01ce65355bfd"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/wire/__init__.py",
+        "sha256": "452c5a6583af5021982a8638d8efadd1ad07be45eeefb8934862c06795ae3802"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/wire/discovery.py",
+        "sha256": "c7413c55552be78615b1c064e820da10b2b6ea5ec5bd41b6f4f419e0fe32a3f7"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/wire/envelope.py",
+        "sha256": "cac8c62661199c4cc7648d47dd5175a51cc4cfcf93a5900bedf38cb400afb512"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/wire/errors.py",
+        "sha256": "106b02e7ae9d7b1b35c0c1964ebb4ccfeb00f1dd4fd89c0942176f0abe70d26b"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/wire/handlers.py",
+        "sha256": "ff91ab91a8327856ab372760b2259d8deca45fb1b611080552875705a108e2dc"
+      },
+      {
+        "path": "packages/server-plugin-api/src/server_plugin_api/__init__.py",
+        "sha256": "16df94e45e6d04350c71073afdf46637c9b66991347143cca7876659d7d33221"
+      },
+      {
+        "path": "packages/server-plugin-api/src/server_plugin_api/acp_admission.py",
+        "sha256": "e655596142361f9ddd3879042cc6670aac14b04ad3b0a28e8eb66ca2c4204529"
+      },
+      {
+        "path": "packages/server-plugin-api/src/server_plugin_api/contract.py",
+        "sha256": "972796b941b1752c7c53ac2490115b189cd91499eb97ab416d6052628a976012"
+      },
+      {
+        "path": "packages/server-plugin-api/src/server_plugin_api/contributions.py",
+        "sha256": "2054dc985b3d321f887e4eae01de19ae6ae28f5bc1e712ad3448e20bb3b8aea0"
+      },
+      {
+        "path": "packages/server-plugin-api/src/server_plugin_api/errors.py",
+        "sha256": "840b5782a45f300085d7aaa19e8d44c3c13ccf5370ce0ec896250edcd2361ee4"
+      },
+      {
+        "path": "packages/server-plugin-api/src/server_plugin_api/internal_errors.py",
+        "sha256": "d7d29367066a5ba17399cc2b223d9cb4bdbdfb189561eb1a2dd589d763ddece2"
+      },
+      {
+        "path": "packages/server-plugin-api/src/server_plugin_api/record_encoding.py",
+        "sha256": "5afb6a8dcee1d2c879344b70b21769604726793a6a8a1b47acfffc77bff52a80"
+      },
+      {
+        "path": "packages/server-plugin-api/src/server_plugin_api/wire_errors.py",
+        "sha256": "ebb90012a3d84d893fd78ede652c757cfa10d749becaf68ab54570edb11d9b22"
+      },
+      {
+        "path": "packages/server-plugin-api/src/server_plugin_api/wire_shape.py",
+        "sha256": "fec9ebadcf425f8497dce3057d48ff365c6d466872f28a8866f396988eedc416"
+      },
+      {
+        "path": "products/server/src/ordessa_server_product/__init__.py",
+        "sha256": "50fef7870a56a721d5a105f74e1eb088bc8da6dd52d644c47090b0eb5a61752d"
+      },
+      {
+        "path": "products/server/src/ordessa_server_product/cli.py",
+        "sha256": "53ffca877733c8567f063cdd721251c9a6b6679c297b64089bbc9e05df8aa353"
+      },
+      {
+        "path": "products/server/src/ordessa_server_product/composition.py",
+        "sha256": "124a23a4a0f0b1d53fb825d54f7c03bb6282aad3aac3aee89ca81362e1cac0c7"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/accounts/__init__.py",
+        "sha256": "c33d95fe92c3f751bfd52c0f4fe981b94bb566f756ce45df677dcc401450d7a0"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/accounts/assets.py",
+        "sha256": "b30a06628f9b9eca74df594cb780df0daf92503ed77c7f56c3713c9536325231"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/accounts/login_engine.py",
+        "sha256": "9e3d2768d5b65fff5b5c2e333572ce73b1bddcc8f6ebda8943a743eb25f76b2a"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/accounts/records.py",
+        "sha256": "f161cf19b465fe9eec90fe4cac33bf6b520c710fdb5ed13b4fc7787e1b8c677c"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/approvals/__init__.py",
+        "sha256": "b18b620a320e501685b858c783684df13f55730c94f7291666aacb5a94d86ced"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/approvals/records.py",
+        "sha256": "db7d0ecbdf5d723f4134d040298b488976d98d2e7973c6ea67cef3d44bcce7d2"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/assets/__init__.py",
+        "sha256": "ee035283e3f6d7cd0cbd8afbf5e4d7df90986f66c6c23f7121004d7afe4d8eb9"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/assets/catalog.py",
+        "sha256": "6f911f74006ed798163eacc6138779ca93f56b4dfd244aa9f850755d99d32eda"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/assets/mcp.py",
+        "sha256": "7f01ff4466d526f640e6c109d89040564714073b9b92fc75ffefc25e40b7cc91"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/assets/mcp_probe.py",
+        "sha256": "89693695f55d24b9e814b24a13b270dda2a893760e0b7fe6dbe04f7fc489ffee"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/assets/plugins.py",
+        "sha256": "58e40d91fe61586f0dc9530d2add7577d7878dd234e6d7f8664db702b79e5281"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/assets/records.py",
+        "sha256": "9ef9782a376e833cb0ae55db88858ab97d03b8ab7cfca04b42e1bb6de47f58cc"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/assets/rendering.py",
+        "sha256": "ed982544dd1df552088957aa33c8ec9e0b70f924b0d6ef85859a78c4723f99fc"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/assets/skills.py",
+        "sha256": "59ed2d67d212998f519b4ec300d461f70567f337350dc309e280446a3246d2e8"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/composition.py",
+        "sha256": "9cb896ff763169d5b31d777bfbed0d3dd66c88566400de32a2b8fe3745d117d7"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/core_wire.py",
+        "sha256": "3e1c489021b56a8c6bce202725c52f6ceb9f76ee6584db97b1e326cf56a8b7dd"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/credential_cli.py",
+        "sha256": "9bbfac7ef5ab9f935fe15496498e9e930b2b14acfc61190045bcf6af96ac1188"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/error_families.py",
+        "sha256": "f3d46ff1104d6f00f91c6acbd5e086a72386b73d847d830a5c41044d1186b349"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/__init__.py",
+        "sha256": "4dac9f0b4118628a90eb25bd11bbdc0ff103da4419962c4ddb9b3845018dbfcb"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/artifact_store.py",
+        "sha256": "0e43d3f81abeac2b09073d3ea032e8fde7385622a9727e21fe2861d8c0b9dd27"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/change_set.py",
+        "sha256": "521b3f7b9e2ccb05bcad39bf2c3140e046b45fd19841bffad43658515fc9745e"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/control_plane_sync.py",
+        "sha256": "0fee754f72702ef595df55fc89f0a6f1b6b8dff03858decb4654a51219e54dfc"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/delegation.py",
+        "sha256": "c32d78695ae140d475fb0204b5ba5e4464516115f768b7b55f4823aecb4b5576"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/execution_contract.py",
+        "sha256": "ee9fe04761f2f0a3ff75be9f9984ff8e735370bde01e044eab4148336345e786"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/first_run_lock.py",
+        "sha256": "3f1938e709c9ccdd6c9edd78fdb5752b44e2ee10f2ddedbb551bef3bb449c2a6"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/inventory.py",
+        "sha256": "53e1545609e70723facd9958fed64c571f6b6b5f65aaec7bdedf493a96b2caeb"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/local_channel.py",
+        "sha256": "36a4c19ea844fd879d98577808783fec39fc413bb1a253834b17cde3fe7dc4cf"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/placement.py",
+        "sha256": "51a0a0ea957020419ac3f10f1df26dd42001eec8e8c416720ec2ee3eb369612c"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/protocols.py",
+        "sha256": "15dbb164db8ddf354847b01dc8e95b1538ce85dec0b901f9c60a7f6d808e6fc5"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/session_store_guard.py",
+        "sha256": "d8a60cf2dcdf349cf4da96ffc93f2301a19641abf26b35544db37c4806213d4d"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/sidecar.py",
+        "sha256": "9c6045d2a0bce2aa615ee8f63983495bb0e68878e57eb17591a65845b541174b"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/sidecar_backend.py",
+        "sha256": "7c3b07d664424f00c11967abf382303144e78c4759ef1133e47ff6e193d72042"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/state_capture.py",
+        "sha256": "bf1d8e2630806f288aed9e247a6b6e479cbec94530e7274b7d8a6aeb0097140d"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/usage.py",
+        "sha256": "39bf47086198d857bdba0777db73bfb2871c5af7cb3781d1ff9aeb1994af0e05"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/facade.py",
+        "sha256": "85c256d8223701e4b623ac08091ebb09c2140b9db62b9a949e8444b069514dfd"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/hooks/__init__.py",
+        "sha256": "46db0091f52c20a09b6be94b27b3bcfc4cc1961f6943c6a8a7ad4cda4a544d94"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/hooks/model.py",
+        "sha256": "468e4067cc6920c6b65084a3d4b002facc1c4df18c163a406997576bb172790e"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/hooks/records.py",
+        "sha256": "9cfaa301e55e17b1e6d4ea23ffb594894e7a8a60682619d339d4f5e44b55cddc"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/hooks/rendering.py",
+        "sha256": "237641edda5802dc4dde0faf8d1a5e258191803242866bee1d0a42521b2380fd"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/hooks/triggers.py",
+        "sha256": "51519fc761a5b3d802e7c00e88927740fa7d9d7402c2a7f989940cf601ebe353"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/http.py",
+        "sha256": "dd3deab743846853ca2c01fd4f17f013582e9d0cb4edf9343faa335cb7f6f2e2"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/model_configs/__init__.py",
+        "sha256": "5202525106fe8783b59a132384a4cb5d674a2da26ee562a6e0a5a423b6718358"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/model_configs/probe.py",
+        "sha256": "2867909445ba26567d346a0ac21148dcfb3474baf4aa2f9b8f96411161374c38"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/model_configs/provider_protocols.py",
+        "sha256": "75f1e3f6d0f286fe801777d10d521aead7f6e583b879b89794499be62af8143e"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/model_configs/reasoning_knobs.py",
+        "sha256": "1ebc7614ee142b25bb4d2af549cff378a961bf1fa0f09238827b154cb7b871a7"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/model_configs/repository.py",
+        "sha256": "be287963e25a2f825c584ae5e51d896c83fe6a490bfb03d66f8b633e5bfeac81"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/model_configs/service.py",
+        "sha256": "adc6919f9e12cedde103873e9a7ae6e9be9e7e71ea97824acc4a4b89143f0c34"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/persistence.py",
+        "sha256": "a4134d5b8f653c14f885ed4a274e6e4d18657cec2db35ea80fb720b9844135b6"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/plugin.py",
+        "sha256": "4878793e347aedb5796586f4ff06f28d1955a1034c26eb632268ff217c34b93a"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/profiles/__init__.py",
+        "sha256": "8d923c1ebd14a4114dffedeaa0fac1a7faf29e12c7cab1b63a9e6a851f724ea7"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/profiles/clone.py",
+        "sha256": "7820f4e6fd56411f7d7d119d07e880509fe12f072c993c637ef88caeea5e36d2"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/profiles/memory.py",
+        "sha256": "e5d5bf19525fece8e23dfbaf646135e58fe381f6399edf8102137e351ad5d4a9"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/profiles/permissions.py",
+        "sha256": "a8312eab8e400002ea627d3b61cd0d30cf1cca4b207453daa895ff2d573aafda"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/profiles/posture_config.py",
+        "sha256": "4ec3845ae321fc532dc9d3c6e5afa290bff58dcacfef4477950c40ccb99ae313"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/profiles/posture_translation.py",
+        "sha256": "72b150afe72d127c2fffe55a150f318a4535acfbdd8cf0051105a76d1be800e8"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/profiles/repository.py",
+        "sha256": "30d716d29adc4c3b89c4e303858a213c63bb286e81f4492e24d4e36abac8e365"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/profiles/service.py",
+        "sha256": "de739b48bad8ec0925f76ab6511c48a81e441982813fb66d71ade8b7c7de225a"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/profiles/subagents.py",
+        "sha256": "35c0d4a5fc0d31348a1bd834b2fe0b9e5e6b9e70af69c7de527ec6d63024bb31"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/sessions/__init__.py",
+        "sha256": "be8b4a8ca385c0c4bb6e0967ddb0c4f3db93a94025030e236df38cb5ff073a8b"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/sessions/queue.py",
+        "sha256": "0bd4785d178d081be6808016cd7b125114c51dbb76659e97d7eaaeb7eba5d751"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/sessions/repository.py",
+        "sha256": "73c48f956a5211269044aeb3b57c5a2a2cb52cf813f0dcbfa6124318d0158839"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/sessions/service.py",
+        "sha256": "cbab94e6abee956477b636f198f26f28353eee65b3edd28482dc330e0cdf3c61"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/usage_aggregate.py",
+        "sha256": "34fe157a6084595c56cfac219dc00edaaad4b8964bf8d5055520548cad21bd04"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/wire_projection.py",
+        "sha256": "5d3d78e6e410b8c1409ae2c0b1519617aed2103356f5ee475a54afc3e5d34ee1"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/wire_validators.py",
+        "sha256": "118ee9c441a1f7480e45698ce9f78aa15fe5d0ee745007113ccf49e426f7ea80"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/__init__.py",
+        "sha256": "9fb195dd59de4e630f5f73df62317f3650906dbd4a9ee0de9d6d4cd5166c8572"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/api.py",
+        "sha256": "31b485dc8afc59a10c3cebe1e5f89ef5bdaeaad6213ef06c0ba4d81b5d458b60"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/bootstrap.py",
+        "sha256": "b3d1968784e979f1003ae45b1dc90b7d13f8fcc21e94e080975454fb4c8bcc6e"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/__init__.py",
+        "sha256": "ceab814f0104ab0a4f0f5db84236c9fa29df7fbadc76e5355b3ff73c616d4766"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/documents.py",
+        "sha256": "900ce39751d26a037b944723728fd5b5c5e3b44781a6c7e1e0bccdb2c95935eb"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/errors.py",
+        "sha256": "eec48531a347fd1829ac233abcf4786956435658a8984d805e87d114d23526fb"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/ids.py",
+        "sha256": "05af4e9afc0b0861feeebe6cd904e1b31d0bd518906469479ab7615f6bf78046"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/match.py",
+        "sha256": "f65214a53f8d20a7fa937d6427dadd51342fac3c3dd2174b8248fd440f2d926d"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/requirements.py",
+        "sha256": "3f7c6d6db4434939ffb07222c432954186283c3e1b72e203a8e7f7ddc2e71333"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/selection.py",
+        "sha256": "e662779f7ad09b6ccc81984c1931bb9ab6fea97417021a5206973fd00ee2f635"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/slots.py",
+        "sha256": "600f34d820a622e0b7892b550d8d6ac2cfebe89440424f6148ead10f4cead985"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/catalog.py",
+        "sha256": "28d31a97d7c13098cbc6420fc801647c88297e78101910e7c48f4bf8d4bead22"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/cli/__init__.py",
+        "sha256": "b42b5b91a40bc58fce8299e95207ef6471c656c2053a56c79be0e4e96edc6cc0"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/credentials.py",
+        "sha256": "c6a3fe102af7d2a7d0f004ebe76fbb5c6ac57648934ea12bbc41bcb66e62e40b"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/legacy_migrations.py",
+        "sha256": "b21d6315c2a90534f34cc201061b851b15ba1a93c12009600dc1fb14decc709e"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/001_init.sql",
+        "sha256": "556abd7252c0941d202c87c1b83327107c08f0c812e4839cdc7ca63c5da19c35"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/002_rename_claude_md_ref.sql",
+        "sha256": "296727f8c9238f9bd90b25ed70ce85a9850b0052980f4311b67153e9ec56a171"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/003_work_core.sql",
+        "sha256": "046286b3669ecfad5097ac5e4348c6823da8681dc6f23eac825ebb0e1476b534"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/004_minimal_work_core.sql",
+        "sha256": "1202e06f678c3af55a2b5a05ad8e97d86301ecf04e309cf4950b1c577ba9cd15"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/005_resource_contract_inputs.sql",
+        "sha256": "961a19845a60b69fb8c6a9ab915f74ceabb1e85d3f378d6a534b40edb94d6870"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/006_resource_contract_inputs.sql",
+        "sha256": "0ac124d4bfcd74d3debd885c7221afea076204b964ed5a3c710ad7066f775b3f"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/007_resource_observations.sql",
+        "sha256": "84fcdf3805497f2cce7b81fbf81879cd96631524fd04ae9af655c6342d611c29"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/008_resource_observation_evidence_metadata.sql",
+        "sha256": "96f9e8007d30ad27b0441255b9780a02a86d04e7715bb18bd135fd371a512575"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/009_execution_finalization.sql",
+        "sha256": "d66c4de7df8216d24028c2c4180ed6bf47ae18018f2853d197b7e2f80ca43e5b"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/profile_envelope.py",
+        "sha256": "d445f910b846a6aed4c8081446824f24852acbc1f174d0108449d0c6d3fbf3e6"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/__init__.py",
+        "sha256": "7970085fde87bf57edd2192d1a7455b218a9a804249bbb503d8b7d6b9b733146"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/agent_box_profile_v1.py",
+        "sha256": "291ec17890b00df4f2e2ff4d763ec3497ffb1c5c9ed1a6a569e8559c62b14e98"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/agent_skill_v1.py",
+        "sha256": "49149f8fcdc064f772f5c5312a452a774a9c815a52e47c273a979e4672c7e74c"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/credential_v1.py",
+        "sha256": "05db44b299c111d35770727e0608dd0826c445476f49848583c320363bcd418a"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/harness_capabilities.py",
+        "sha256": "823a1b1a72bbb5dd5a946568d360699c3670075c8c9d8e541ebb0a0a85d6a4dd"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/home_projection.py",
+        "sha256": "d5718dfcea39f1ed2088f259d640e5885c678483e3b561eaab6a3a061e8d604c"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/prompt_fragment_v1.py",
+        "sha256": "945eef1f17cda2d20c446c7491dd1ff79f3ba3a1232c9b81090de8a7891bae84"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/runtime_artifacts.py",
+        "sha256": "63ab504f81a163ce5a555b14735812e395a9fae423d0bf448eb013eb4bcfd2af"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/workspace_v1.py",
+        "sha256": "b8b1f01f7c50b4a4b3af937f4f0941501a71743e525724a300cd3560183e793e"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/runtime_composition/__init__.py",
+        "sha256": "7d378b5982ced96ec3061094028e31ce447ea001ab4995862fe65ba12317d4dd"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/runtime_composition/assembler.py",
+        "sha256": "84cde8271d87e53e277b54c5e7f2deeaaaed9139f05b3c4a396a1dfe80b4ebd5"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/runtime_composition/coordinator.py",
+        "sha256": "e091c7db7050e6540f35800cde1de3307917a70b1d86a2a604e25b7943bd7784"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/runtime_composition/fake.py",
+        "sha256": "3aaab9c47c9b5642bd9b5a3dfae2f4e580792858544b1499e66707918dc4f80e"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/runtime_composition/protocol.py",
+        "sha256": "6d820301ded09b238e71b235ae411e581abbf186700a61f7a2593f822cbef9c9"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/runtime_composition/sandbox_port.py",
+        "sha256": "31bff8512ca84ade4b739afc2de35213f049a65470703bc2e7083c6c2c8c5326"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/sandbox/__init__.py",
+        "sha256": "b17fd6193cb9d105f4d2b000ce26aaba27cf2b57bff3cebdc862bc2d6a146b90"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/storage/__init__.py",
+        "sha256": "20acedf28a3e0cbe3de2e22775eb6bd6ce37edcd63a07002b5def68e72e8f328"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/storage/database.py",
+        "sha256": "a1928f672ffe1ba7bc40543e9bbe66b218b92a2d644f282f92d3ac9c51467662"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/__init__.py",
+        "sha256": "c534109f8bc9941ec7c1694ff6625076bde4635c909c9c99d5ffea947547602e"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/_compat.py",
+        "sha256": "8b6e3b4eb20ded605c66faa1c8e2176114e1b4c8caa6330bdf1116ca562a3d8c"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/__init__.py",
+        "sha256": "f453c79ff5bf76ed9f2ab77e39401844180b7b4ab9ba435e353dfd5d0af87946"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/base.py",
+        "sha256": "a369b13d0e5867da234ae64d72b5bad94493c3d53cd287966eed8cce7390e830"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/claude.py",
+        "sha256": "31d93f3f68dd48b6e4120209d1766eaa35808f3adbb585fbc1e28a07b4a2d4f3"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/codex.py",
+        "sha256": "3b697255fc7975f4bb18673f9cbd9b2d7c5a5a45ece2890b8a1cde238ccbed48"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/dsh.py",
+        "sha256": "08e4e07298c0b1e01bbe1934a3f8c642fceb7838a98c5b4e4b7d9eb20b89e478"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/generic_cli.py",
+        "sha256": "40738539226660caa0d5d2b9273b38dbfc7ab32552f83436bfcb78fc951d47a5"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/hermes.py",
+        "sha256": "5855c64dc894348d8fd03decbffbf6c30f3a263024748e565085d8b134e2823a"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/kilo.py",
+        "sha256": "88cb7054147e1346e71923ea81084e6e7e9181c7c325caa041ed7fd66defa054"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/opencode.py",
+        "sha256": "68a6d451424bc845ca62a662596e95bcc42496270bd7272fbbccef3909705888"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/pi.py",
+        "sha256": "dd91d85bee796a618382b49c68f8e4666591756e79cb55a5ab7c25e009a5e8c8"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/qwen.py",
+        "sha256": "3df9f0f9911aeeb3380451c8a9b30dc75baf03d9cd6be2bd0e00f05345381eab"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/skill_observation.py",
+        "sha256": "ff6e2a8d4c676200fdc317488d4ae9937f653e4a3e30ddae8208764b5d491d56"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/application/__init__.py",
+        "sha256": "061325c31dd0ddd9b664d7a29d06fc6a9649d898c7aaecef98655f062b4b1fe7"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/application/configuration_service.py",
+        "sha256": "ac4fa3ba1edb9fe2c6f3f995e7ab516e61dddaaa8e0e6cb7381ed5c4ff191f83"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/application/native_evidence.py",
+        "sha256": "595ddc35c04a20cd2d4747e3e72be817e19b5e1c75128142cb376cce957f88af"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/application/operation_journal.py",
+        "sha256": "68daacb81955c9b4ce9e1edbe769f0980da9b2d45a636154828b61621d85a84e"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/__init__.py",
+        "sha256": "3ea828b3b159cc10cb9fd7380e9bdfc6746ffa4c931c4cf6d889fd726a4f9a44"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/attachments.py",
+        "sha256": "133f17a7e889ff69dc3206df1071f2d2d7a8f545b76ba66ca4d5d818057ae238"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/composition.py",
+        "sha256": "19252885487d7d90835052dc080304663a604193140c5066ed4e1614662d56e4"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/contracts.py",
+        "sha256": "3ee850fbfeb20958a4fbb3df46121a8158b90c6115337d21b74c1b3ce924384f"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/fake_claude.py",
+        "sha256": "6c4ff7ba7290366da1178fdedbb8b3c35bc9710ab3ab534d9e4fca48ced6cdc4"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/launch.py",
+        "sha256": "926a9e6785e50caafd7bb5435a51359b5a7bcbf04e235641de436aa204715849"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/native.py",
+        "sha256": "319d2ab8a246c9a68334e4c4ebc8888544ff0b68c48311c9eb9cf9754f3696ce"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/production.py",
+        "sha256": "bcf4e39eed3ea85d6d8cb10c567ee15a04f2aebd3af689bd3fcca93f839ec387"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/profile.py",
+        "sha256": "4481aff8248276738c3080c2b469ebeee84af2260e73e47a945f0795ddda2442"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/provider.py",
+        "sha256": "14ca9fb33fd5b21d90247559b9692617e0b426f88184d47c7c69e17cb53e556d"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/__init__.py",
+        "sha256": "ec57e5acea156de743aa312075b0a5a14ef7c1a4168ba29c9b0fd83d91cc4847"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/app_server/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/app_server/provider.py",
+        "sha256": "72237d9e9f8b104b07de622261322a0be7ced304c6faf3caaed421acd7aac7eb"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/composition.py",
+        "sha256": "1750d5b2e9db571c5ddb0f176a4da55871acaae9f42cc4c2d68844345cb157bd"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/continuation.py",
+        "sha256": "8beb303519e73b745443e67a96281d746dce5bf1f763124ba70bc2a27114cc28"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/contracts.py",
+        "sha256": "40037f5351387c93e4d0545112d524cb00487ed7c4f67f762532a3a5f2e47820"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/control.py",
+        "sha256": "00ad9cab0fb9f413e56127c6debf4200c0794fbbbf093a841391b0e45c5353cc"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/credentials.py",
+        "sha256": "f8bdd7c349b429a7b8bf5243cb1a2f02a9eb5e257414197af33d6afc2a2bc0ca"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/deepseek-sidecar-config.toml",
+        "sha256": "4a639c47cbbc9469d31f98a45e40732e98d5af805713fb422ba042af92fd5ee3"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/executable.py",
+        "sha256": "0f0bb18ae3ee4243d644b9368df27d4fd7fdee00ec9648725e64d342c1f0459b"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/hooks.py",
+        "sha256": "4cc513deb3fe9671ae5a83a2b7074e274556764717fa4615b8830ea02bf35241"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/interactive/control.py",
+        "sha256": "69d98603371615fbb779abdbe0ca6d13b5615baf4e5df0ba7bfab81aeb49c58d"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/interactive/provider.py",
+        "sha256": "800d6e0a11324b8dea1a07072161a152aed5eab8b128125e154405bff1cd9d98"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/launch.py",
+        "sha256": "1009113ad60c16e8c813381ec2d6fb8cd84b380bd9801de61b7eaeaed732ff40"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/native.py",
+        "sha256": "7362ddc4bb75c38fb2b6de63c4a75c77515524b13a08a1ea5f00f2cd32b5aecb"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/production.py",
+        "sha256": "81d194bb03b03161a97c31fbb809eb2225c685cecfbe6e5746f0a8f8faaefd3f"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/remote.py",
+        "sha256": "4502af76acb065cb244440cc241b35c270f618dfa04263545b9600cc246b747c"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/contributions.py",
+        "sha256": "848b86fe0e53b89ad65bb9f3a3b7fabaac658025ae72361287f910839280a256"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/dsh/__init__.py",
+        "sha256": "f31b6df3005b80a159d0822771dad45360d9f2ee9afb46b00115c671330ea712"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/dsh/native.py",
+        "sha256": "76933cdaadd0b8561015ee8ef9e8cd859b03d91fe17589834e1a6cbe1c112741"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/dsh/production.py",
+        "sha256": "412692cf8a377083373b0a43ca6c0c9e8d9c7ff612b1236567178d4d65795a3f"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/entrypoints.py",
+        "sha256": "7f86e9605bc9585746dcf0c3c9d0930b83ed45e135346355d101dae8ad313375"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/generic/__init__.py",
+        "sha256": "fee734592f3ccf4dc44daf4bd4d1e92ac157495bfbb3370feb6ff9701bd330cf"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/generic/execution_provider.py",
+        "sha256": "23ab9a7808d113c641581385ab564e7b172de1bdaa7371fd8e4c3f8d42fd9b8e"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/generic/factory.py",
+        "sha256": "577c1fa9afb73cbe89d9c394636c184c05dad450137911ee4e2fe5cfcf1bba52"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/generic/profile_manager.py",
+        "sha256": "1f3a5c9a9163912cabc0341ff2300b35eb89713b5663e23469a9e1f40399af3d"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/generic/profile_provider.py",
+        "sha256": "9836d87d08f2de892aaddd604f2f97c1f6cbef928aeb5fa675daa807e65f241b"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/generic/profile_selector.py",
+        "sha256": "8f7522768464a9a8a91cd19d19e519c4313fd8eb1836f333e13284435e66e22b"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/generic/profile_store.py",
+        "sha256": "f36369f596162c121fee73631e631fd72ee3073e8ba92a4dbcc6b50b1334a8ec"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/harnesses.toml",
+        "sha256": "68d30dd8433819cffc7d8128a5883a2ece9f0f0930e4f873196b4d18e2b997bd"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/hermes/__init__.py",
+        "sha256": "1297c386650fc1b08e488f8d164ebc515f3414d29609eccb870455c81f41f504"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/hermes/composition.py",
+        "sha256": "dfb83e8f7e0aaf4754045763fd01595aa392d26b6d4845fecec3356d7729f8ca"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/hermes/contracts.py",
+        "sha256": "6a73cc90aa6939360adf4d236e3b7cab6d218a8986fc9f1a8fa87deb8af0868c"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/hermes/launch.py",
+        "sha256": "279f5a3a7f9d424e7f3f3ac13763af7b73e2b5b6fe562662f397ed87af077837"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/hermes/native.py",
+        "sha256": "7dd28db0701d779794ff12f0f88f614d97ff06a58a522ea6996b9148f94f88ca"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/hermes/production.py",
+        "sha256": "eb300a8c88dc3c5580be1c9bc520b37a4919f6a3f1f6f508cf4496b67915362c"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/hermes/profile.py",
+        "sha256": "c60ccf62ff27da3ded38e6a5d7a2c29d30711b7e055422f6d02c77501c06cc08"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/hermes/projection.py",
+        "sha256": "f502a02dbb9d81916cc5c07680f501f4f65790e92d3f6fe7db6c2c43acf87eda"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/hermes/provider.py",
+        "sha256": "13af875bec56e25b4a5cad7fff6a119cf73fd6ff3d75bb3f88c2d36d98c09ef7"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/importers/models.py",
+        "sha256": "0f494ff3b52e7af6863df7621a185aae97756c9cdc090e2559c020eb2ae80bdb"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/kilo/__init__.py",
+        "sha256": "a39145a8433ad17b379b2d52c1180072df1b11a304826a0e77843d7a5d6e9202"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/kilo/native.py",
+        "sha256": "02d4ecd64c9bd07fdbf23c139093eba76b46425a2952d8986b8f600f1aec963c"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/kilo/production.py",
+        "sha256": "1396b3774e36cf1603c5b0893a874df5a965e3cbc2c317f02f8cdee16d062e1b"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/materialization/__init__.py",
+        "sha256": "d214af56e871e19341132056d4850bb0aaf60fba7a92cb9e590a3688c74c5f6b"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/materialization/intent_merge.py",
+        "sha256": "b2032bd90602690998a8287637bcd6848cb9e4f8c49f66c65724a83acf2f4cbe"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/materialization/private_generation.py",
+        "sha256": "b47966fbcbaceda38e2a3e3a1525c48cb0bb7d8e4100555bec70ec41fb24baf1"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/native_materialization.py",
+        "sha256": "e3c3ae0c8904c3c1690599e429c141a73f179f2b4aa8933468bddb9b3a4612f0"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/opencode/__init__.py",
+        "sha256": "f64103b53c3f3728aab096d7d470bfd0b6867b1447e288eba67f56ad7de023ff"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/opencode/native.py",
+        "sha256": "76bd2f5cfba64a6f9cb3f90dccd6f86dba5347bbd007a6c633364ec05a8ec57d"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/opencode/production.py",
+        "sha256": "f678021aaf9647e528e10400a2553f9603bda0fb49cb4a0788230cb14210ee23"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/opencode/profiles.py",
+        "sha256": "59c54cf095ac46c8fa027b3deed3e34f5abba2f7e4f36c5f4d4660c18df25474"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/opencode/projection.py",
+        "sha256": "91acdbf482a42a45fdc80cb97e2c07c992ad6d610318a7998d88b821bda85570"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/opencode/provider.py",
+        "sha256": "40447dd875ac534dde4e340320c807b4937a7571fd7c308334ca26d635c06e77"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/__init__.py",
+        "sha256": "55a30fd647655368939f385235bb04bd0ac17796e64a799231e54306bcd8b19a"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/config.py",
+        "sha256": "4b36338a7888df3c6bdd122b112df6474d5bd15bcad4a7efa76ce364fe1f8753"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/contract.py",
+        "sha256": "1a26ac1fc9048aca911a01329c968026a94bb12a43a7bdb25f92552899b56320"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/native.py",
+        "sha256": "76cc30eb21215bd30459dae0085f3c20a9554bbd0763d41e2bc7f86e3cfef398"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/production.py",
+        "sha256": "adbe15806e17b17b4faf8dcbc54121efafa3032b29a5915acfe6f0e01d4dc9c7"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/projection.py",
+        "sha256": "37ba9d41ea5b4f1a8203a5808a91eb51a1e5a52fd17b7969061dd1980fb408d4"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/provider.py",
+        "sha256": "0b9adc9993af5febcff2fe3616dcd9a9ff31555417b65b5ec8621dd6aba0b0fc"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/sessions.py",
+        "sha256": "7e312dffc8239c2477d01a0d27c4a942e75a0e69ccca77dcdeab83704796a1f6"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/plugin.py",
+        "sha256": "28de27078ae685eb499147e039871cd9e7fbd1000c02e98295af26bb7c7b18e7"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/qoder/__init__.py",
+        "sha256": "15e1b73bc49d65d9c3b0ecb9a5739c5a3386b4a8ca62d3c930e46583d0215f7e"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/qoder/native_config.py",
+        "sha256": "86059fe8ecf53fa2f20601cb5f72c608fe6cbbd873e17362e57d0b6570337585"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/qwen/__init__.py",
+        "sha256": "bef0e29da59daddfe54fb535b99537290df740024aefa8ea2dd604458954a36c"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/qwen/native.py",
+        "sha256": "a63311f87fbc6098122788b74ca017d59c8aa1d99c4cc1894eae80da5a5f77d1"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/qwen/production.py",
+        "sha256": "3e73a8b17e80fe87063c064b2f414229c512e95a043a575efced8caf55dac7b3"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/registry/__init__.py",
+        "sha256": "3f0ff644db462496b3e4977dad231af5b51007165633781eec4aa69a9a3ce9ec"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/registry/capability_claims.py",
+        "sha256": "32c5012657bbeefa67138ea8e3ac00e3a6b6572695b25e207144ea37d621c2f9"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/registry/definitions.py",
+        "sha256": "00b8dc1c619288d7632cd4a0c05d7233ddde8c318652315c1b1c7854ae191c69"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/registry/loader.py",
+        "sha256": "0cbe26980fe334df85c4aa2a4c0e96622ece6f69cf9ae690f2709582e6cb7aba"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/registry/schema.py",
+        "sha256": "c9e57316290b4bb46c050423204d7812df985cb83f4f42da29b02ec51d13cf9a"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/registry/validation.py",
+        "sha256": "39d0ba2ff2d192261c78092933a5734f82c0d10df19900b44b243caddb87c64c"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/resources/__init__.py",
+        "sha256": "a66f7e74d5a648cdc38e046822f1e1a7373552f1ed3a95da5d2037bd598e413e"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/resources/executable.py",
+        "sha256": "057bac72ba8a1201552ba71112fdf5d1fb37a13def52abc6bf2446d143542c3f"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/resources/profile_codec.py",
+        "sha256": "88f9ceb9bdfab8ca32198de63766eae078c7ed4f16f19f5deb65ac3f29b54680"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/server_acp/__init__.py",
+        "sha256": "3e1b8de39a99ef6bede02743956feac8e7bb74220875355ac4063c34c62a72fa"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/server_acp/access_entry.py",
+        "sha256": "8ccce9d2a2dd972280adc09d51712c30db8837b6b3e6c00faa043413db879612"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/server_acp/plugin.py",
+        "sha256": "cd85b272b0ea35aee01a14d51407c961b3696e1813e69f8f50ae6e1016b23cbe"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/server_acp/registry.py",
+        "sha256": "53cda308f8e79ee5df9a509d9a12f4b753a1ef75d691df1882c8f998d118a833"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/server_acp/runs.py",
+        "sha256": "2437fe296d1a6c55aa479b93a04872809c1290232889ebbba9e6bd7fb84324d1"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/server_acp/transport.py",
+        "sha256": "4cecfe363d1be2222f4743504757189d880f962d380023da4ba2ab176a65b88e"
+      },
+      {
+        "path": "specs/010-platform-core/README.md",
+        "sha256": "330aaae91a22de7fc75dab1c21554f646a70128958e68d5dc6f1e97cc51971ae"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-components/README.md",
+        "sha256": "29d99e6ed5e4ad48741731b6234c56942be4fccfc543ab4d8fcdfc943039c8f8"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-components/checklists/design-review.md",
+        "sha256": "db73ed5f8076954be849aa2bbd0175f885dc84de03960b7f80d469e9f3a0f707"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-components/component-catalog.md",
+        "sha256": "3d8e5c8c9aa4714533622da4d6fd666089325fbd62b483227f6a3c3ba13a38aa"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-components/contracts/agent-ui.md",
+        "sha256": "0b3205d7760b6057b93fb7f0ec554575d3e0d99bdc98677b9fd6d135ed33df30"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-components/contracts/component-platform.md",
+        "sha256": "9c7fa610136ef874705c9607eb1b1da83c936e447802b675c55172c8843d386d"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-components/plan.md",
+        "sha256": "c336d93b1b86916b0fb24f35a971a5d38ab30da762f4a796d372038933b3c58a"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-components/spec.md",
+        "sha256": "7a8d4057ef004bdd624d8a2da9b82f2fab9fba7420f28f9984ba910d68968f8c"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-components/tasks.md",
+        "sha256": "160ad8fa358dd200e94643ca098ce422b41a860844a253531a05391fd9d67e2f"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-foundations/README.md",
+        "sha256": "af9d7ac91119e8ecab4dd49d12b01c539c394a26a48239a78dbc78d0025c0969"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-foundations/plan.md",
+        "sha256": "72d550e644d5b3b03db2cc527ed1821ab17ba377071049fecfca313ffdf9876b"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-foundations/qoder-addendum.md",
+        "sha256": "f213a8aa223e597e596e7412adeb43e11e88b6e8e938512992c8f13654ea262d"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-foundations/spec.md",
+        "sha256": "ed2431d4b3cf08ad21174c8bb6fa0a03cd1df730c9003f8c043bb37ac2336800"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-foundations/tasks.md",
+        "sha256": "da493421c34d39d7bfdd3ddffa94e433ef42165f49feb36469c313835583bb15"
+      },
+      {
+        "path": "specs/010-platform-core/checklists/analysis.md",
+        "sha256": "82393498b9373160af2250a1fe25c80af8d354d112e37addf6af83b573d9c08c"
+      },
+      {
+        "path": "specs/010-platform-core/checklists/requirements.md",
+        "sha256": "c6050875064ba9b41bd3f5693c681a79e82922e1018e7a3c3d9c45308c92b1bb"
+      },
+      {
+        "path": "specs/010-platform-core/contracts/connections-platform.md",
+        "sha256": "4437800adbf40c46beaf64500ea1c11c20a84560cadf3324b9c9baa8417f3bbc"
+      },
+      {
+        "path": "specs/010-platform-core/contracts/platform-api.md",
+        "sha256": "61fe38205aba26f0dd88bed9d6e064d54d3e2e93c488d2fa517439b008c47e62"
+      },
+      {
+        "path": "specs/010-platform-core/contracts/ui-components-platform.md",
+        "sha256": "7f0f524ff2fb2fff1d6a0c85b6096531587ed7a8525aa2eabc82e4b75fc08723"
+      },
+      {
+        "path": "specs/010-platform-core/contracts/ui-foundations.md",
+        "sha256": "f05dd76cf103e2d665dce7654e9cb547faa5c7e3f44f5938aae8a448f5109eb5"
+      },
+      {
+        "path": "specs/010-platform-core/data-model.md",
+        "sha256": "34c3715aa09631ee3965637617420d3d27a7d9c9b1258a9c75657c059153d1f8"
+      },
+      {
+        "path": "specs/010-platform-core/plan.md",
+        "sha256": "e4ea1f041c113d0802e2feb9ead1130d9dd1d3187291d8a2cdbafe7e03c1a701"
+      },
+      {
+        "path": "specs/010-platform-core/prompts/C7-goal.md",
+        "sha256": "b70db814cc9716521b0767139158b45d8287b1c7b1d5dd7f93d878810c9d664a"
+      },
+      {
+        "path": "specs/010-platform-core/quickstart.md",
+        "sha256": "02187e1dc4133be17a6acdb313755581eb2c0253f57d040a8483826d33c57a43"
+      },
+      {
+        "path": "specs/010-platform-core/reports/A.md",
+        "sha256": "10f92f5302609019c337fc5db2c5a79eab3bc6cbd6343f650a71eae6bf92bf12"
+      },
+      {
+        "path": "specs/010-platform-core/reports/B.md",
+        "sha256": "3ebbe72bbed20236c943a9c66ae8054c620274a3403a2b3864780e712b2366b3"
+      },
+      {
+        "path": "specs/010-platform-core/reports/C-baseline/connections-freeze.md",
+        "sha256": "551d7c18b8c73b8b62b71f00e70d3d954ffdb9c421cf2e1dc0ac6cc5449f16bc"
+      },
+      {
+        "path": "specs/010-platform-core/reports/C-baseline/t018-migration-plan.md",
+        "sha256": "0fe423090c97719c34b9eb91e3d2816d793207768e96623be95e4d7b304c7620"
+      },
+      {
+        "path": "specs/010-platform-core/reports/C-baseline/t019-migration-plan.md",
+        "sha256": "793bb3b945afe544cb4df19c81bfe773530788f0f72c55874cfabeb82044db2b"
+      },
+      {
+        "path": "specs/010-platform-core/reports/C.md",
+        "sha256": "0ffb7ce430404198608f2add8fb34978a55e084fa39c5b445c57a8faca200377"
+      },
+      {
+        "path": "specs/010-platform-core/reports/C7.md",
+        "sha256": "c8e00cf6cbbf4afd36a5bc9af518215cb9b1ef1dbd73bdeb4e6ba6136a985ff7"
+      },
+      {
+        "path": "specs/010-platform-core/research.md",
+        "sha256": "1848a815afdb67bdea3c7d81f2e3f914c1cffcf73975f244933a864fca8e7e99"
+      },
+      {
+        "path": "specs/010-platform-core/spec.md",
+        "sha256": "7ad2ab6878608124adf6982654555ea7f93d2e6ada20a4272e03df223610d1fc"
+      },
+      {
+        "path": "specs/010-platform-core/tasks.md",
+        "sha256": "7dfa21ac05af1d8db267a9fb77c28bbcb08ca569a2c52e862cfd25cd31b27a73"
+      }
+    ]
+  },
+  "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout": {
+    "head": "7951bf06a258d2dc41402556eb61319b8bab5cbe",
+    "status": " M docs/ui-preview/01-empty.png\n M package-lock.json\n M plugins/connectors/acp/src/channel.ts\n M plugins/connectors/acp/src/client.ts\n M plugins/connectors/acp/src/host.ts\n M plugins/connectors/acp/src/native.ts\n M plugins/harness/src/ordessa_harness/server_acp/access_entry.py\n M plugins/harness/src/ordessa_harness/server_acp/plugin.py\n M plugins/harness/src/ordessa_harness/server_acp/registry.py\n M plugins/harness/tests/test_native_operation_state.py\n M plugins/profile/integrations/chat/package.json\n M plugins/profile/integrations/chat/src/picker.tsx\n M plugins/profile/integrations/chat/tests/entry.test.tsx\n M plugins/profile/integrations/chat/tests/picker.test.tsx\n M plugins/server-compat/src/ordessa_server_compat/composition.py\n M products/desktop/extensions.lock.json\n M specs/021-nightly-product-closeout/takeover-progress.md\n?? .zcodeignore\n?? docs/migration/native-session-history-v1.md\n?? plugins/connectors/acp/tests/durable-history.test.ts\n?? plugins/harness/src/ordessa_harness/server_acp/history.py\n?? plugins/harness/tests/test_legacy_pi_history_import.py\n?? plugins/harness/tests/test_native_session_history.py\n?? plugins/harness/tools/\n?? specs/021-nightly-product-closeout/acceptance-20261003.md\n",
+    "files": [
+      {
+        "path": "packages/pacthold/src/pacthold/__init__.py",
+        "sha256": "b0b54e135188be465ccf8efb624d80b7a12d838e3404d90fb99bfce81527f6f9"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/cli/__init__.py",
+        "sha256": "8d70964520f28ec44a335bb421c9c9c37b2aba08a9eb04910f7e037b89654573"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/cli/commands/plugins.py",
+        "sha256": "7d4d43b5eeaa0ca86b335693b1a3dd299e5d18647ae64573507afaf75f0ec065"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/__init__.py",
+        "sha256": "0de216e2562caf61b8889faad16f6faabb5d8f3a8739bfe2ecb185e1a2c47af9"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/descriptors.py",
+        "sha256": "cb63742759fef03d9b34ba48ca1fe0a5bec0c25f2cc8648268efbb1ad655003e"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/dispatch.py",
+        "sha256": "b075e544f7bb1fb8fb490842a828d4a1bbce8ebb502ab213e6314858b6f3a473"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/dtos.py",
+        "sha256": "ed34e688c501d5f2eaca8cb6cbfdd4ef6ff221e9a353e4346a1254ed179d6a16"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/enums.py",
+        "sha256": "6608e4488d0602f46e8e1252ae34dbb4943b833cee50f83ba595b367a643f6f0"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/errors.py",
+        "sha256": "17aa8de22a9f86d35e2d51f75b27009d879befab698cf3978f60095c8fa64c15"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/plan.py",
+        "sha256": "4d750e9f1380af75d51d4e1adb846bd67896043f6e0ab41300c050e9ca6b9f3c"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/protocols.py",
+        "sha256": "505e4818c6852d00815f73bb2e0790e61ba47fe7800c0d33ab9ee846d63a3726"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/registration.py",
+        "sha256": "96b4e488c2c0d6dba54f3f5e3250d57715704b7a360d7bef07aaad2b190d095d"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/runtime.py",
+        "sha256": "00bc6929cb36d420a74c47d7c010c6dbd5b5781281d0232e3281e38ec06660dc"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/core/store.py",
+        "sha256": "7c435fe4a22dc15068553d70f2ad89c1ef702676ad11a955678fee8c1dcdcb0b"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/execution/__init__.py",
+        "sha256": "5740ca20fd4b65e4d518f1cad8fc12f72f6b3f9fda5e88d0cd5e8b0e7e29974f"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/execution/contracts.py",
+        "sha256": "33e994bcfa2c8470a0d4b9eb768b6539707413a126bb4dcc5096221ab2ae5e46"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/execution/first_run_lock.py",
+        "sha256": "80eeace72dd4d598425cdb51a8ee18ee871d8ac6e335453c21bc9a8d150ccf5c"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/execution/lifecycle.py",
+        "sha256": "70e28e36f0b06cf7c74396f786f2b56acf7e9fa1d4b34607fded43d89f515743"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/extensions/__init__.py",
+        "sha256": "5bb0aa2df29fa6660edf5e27059643dd67b66f4b26b12d2009559b2f494ad586"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/extensions/api.py",
+        "sha256": "3719edd3ef97f902cb197306fb78184db9e8b9b08c53a88da95fe5d9b99d89ea"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/extensions/bootstrap.py",
+        "sha256": "494bef1ef2c5befec1e9d4eef5d8a009297b9ce1e6edb9757b2f718e6636fea2"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/extensions/catalog.py",
+        "sha256": "7b77baa8e765cdcbee86450db86864e11ea891a2e6a8bcc8601078b95052f708"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/extensions/conformance.py",
+        "sha256": "57c16b760149bc57b984b9ca4035b2a95215fd498ad5ef452a4bee0ec9b5e887"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/extensions/diagnostics.py",
+        "sha256": "9cc545b1a2407cd8dd53203ce28b378c6df52c726652585103362c5988544f61"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/extensions/finalization.py",
+        "sha256": "d7917ae5f57e76d248d3d7ba57961a55ec257ed9314155ff1ab4153da6c053b3"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/extensions/loader.py",
+        "sha256": "49daa8ff00ce318fec2598a53c43925361988df6141bc2554a0ca9efe607a800"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/migrations/001_core_schema.sql",
+        "sha256": "8d0a6b399fdcf2e80f7f317a6e192661be6d9be69d2e758864fc4bc545e0ca3c"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/public.py",
+        "sha256": "782dae0a0486787ffcda7515e6296b99052d49ee37c69e53384e00a70f19612c"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/storage/__init__.py",
+        "sha256": "e7e4fa41bc1ca0b14725e3f188eeeebd6d85f8e7e362fee294e47b7475df378e"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/storage/objects.py",
+        "sha256": "2503c1b867da443d381caa73eb0b6d20d1a6109dc47edbf8d0b9d466427b84fe"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/storage/secrets.py",
+        "sha256": "d298ebdb95c2932489171727110b9f475d0c004da5b88acb6abe9a994424e114"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/__init__.py",
+        "sha256": "5aa54fc0e79e2dd87572ce8e4ae414a66b5ab2257a73b955265cd877ad6d08f7"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/db.py",
+        "sha256": "04a4815303f630a2f212cb0d0baf3ae882f04efd2853502e392c24bb864094ad"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/errors.py",
+        "sha256": "530d6b0653a006f9fbc85a38253711e83ea7a1d04e6d3366b0a29a840e5b6d4c"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/events.py",
+        "sha256": "e09cc4bc7b0737446b9749ee77b416fe4c7ce48b185f27d8d74f0b2c15f77dbd"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/finalization.py",
+        "sha256": "7731dfef1fb1cc48826ec120637a635b9de80ea028a0539e720a538224628665"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/models.py",
+        "sha256": "8c3eaaae604a771b1e26023e3c9db0b7d957214d4b4e4c83bdd2967000104c44"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/projection.py",
+        "sha256": "d27fee13681ffc278cdea34261c2301caf87fc2fb091e8c86264abb06e756c8b"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/registry.py",
+        "sha256": "b64f5bc2ed4aa4c71a5974bf5e10248fb4f38f6eca40bd7e93e70a9e5310d482"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/repository.py",
+        "sha256": "cdc1712a38eb4fdab69e83f9b01c55a397d95fc0fc21c87f3bcf322f19b26797"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/resource_observations.py",
+        "sha256": "b034e6918834a2cf221d7118caf45bd1cd6d2763451ce4fcaf9a5c119e52fd62"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/runtime.py",
+        "sha256": "1dc9c87a4b51e459214aacdd5986afc5b4815ee556232678e7fbd209699875c8"
+      },
+      {
+        "path": "packages/pacthold/src/pacthold/work_core/services.py",
+        "sha256": "fe5ea863ad252efabc2187339075cf3ad6b16e0347e1bb453eafd8717188624f"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/__init__.py",
+        "sha256": "e0e544fa702c7a7cf83420af52d54ab7c8edab42e62c9b179a1f523fa21b611c"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/__main__.py",
+        "sha256": "d1d30942d562c3d8e107c77d1ac9db3e7a04c8a0bf829d38c3b1ae3bca2756a3"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/acp_admission.py",
+        "sha256": "faf950158be44bb303488f408bbe9dc4d81eb8bfe2c19f9d3456e5a0e620832e"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/bootstrap/__init__.py",
+        "sha256": "1ee83ac88072475803f150ef636a89ce32d9c95141f6737bdba793d2c22a6dc1"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/bootstrap/data_root.py",
+        "sha256": "a654ca34b12e0413e2d1bd37fa0cd9fb153e33fcffa69ad077690a1e42435635"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/bootstrap/handshake.py",
+        "sha256": "2903cfb72a56ca3fd2bb9c83f853f33a14be6ebad0b982ba35e48116b65dddd0"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/bootstrap/runtime.py",
+        "sha256": "7c5896abd5fad4f085842c008a15c8a360f019ce9c48e35775ebc8cef1d49eff"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/connectors.py",
+        "sha256": "18ba9625e630e1ed2fc572818a688ee2f68c2022fb879de001742e61ceb1a4cd"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/core_binding.py",
+        "sha256": "300cf8c95fed6bd2eebd44ad019b4e264bfe4ddb012b632006c4bc13bb0c1747"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/credentials.py",
+        "sha256": "540019c1907baac827415860b39125218a13d579131e86019283308f5bddd470"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/errors.py",
+        "sha256": "3213e67518932b87028314ed5a841f30957d41ffa2a177473d281550388d87c4"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/events/__init__.py",
+        "sha256": "b00849366e3cb24ad68ab9371eed45c319735f8fdf1bcb3fd6b940fc09846f0b"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/events/notifier.py",
+        "sha256": "c00ce353c438a48a0a10bdecbd1d46e56c7547e6c85af20b46cfaa4374cb0078"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/idempotency.py",
+        "sha256": "a68f939d7a2d7175f504ca94726c1bee805a97614e25d2630aebf8df1d4b4e7d"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/ids.py",
+        "sha256": "f2c909d1edb9872ec59d72c5843025f98799a5a23eec0970af3b203a8af1cc64"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/observability/__init__.py",
+        "sha256": "5aae7869fd9972c1eca916222f4dd2439084c369c03b780a0a5aca2cf376408b"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/observability/logging_sink.py",
+        "sha256": "a1b54f85d1b6ddc0a5432167d7498b8f0fe286fc54255b8fb20752f6552f286e"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/plugin_host/__init__.py",
+        "sha256": "21f04718194e4b956c6f9662018f2fce9c927bdf3f5831425e18ee2799a3452b"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/plugin_host/contribution_points.py",
+        "sha256": "9e80435d0bb0f3cfaf79a13acfccbf0a8403ef4c39aaa3fc251f45607a8011e1"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/plugin_host/host.py",
+        "sha256": "29a012f3d18f87c906bb94c56761061d6433f7baeec191993204d2e38cddcc54"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/records.py",
+        "sha256": "c74fca9d2683e23e6dda3bfe8368ee6d9c50a8cd4195461001f906c424b255e1"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/storage_port.py",
+        "sha256": "68b63f9b1e0051719770dc47ce524223af18e49140376a3f45b042afa49c5289"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/transport/__init__.py",
+        "sha256": "30f220af4ec51281faf552e033df9e071557cd48fef75b1c820c90117e04f203"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/transport/http/__init__.py",
+        "sha256": "5abaf4212df43f25dcd2e0cef8da2b25a97b6756bdfe28f38f172d64f7c22a3e"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/transport/http/admission.py",
+        "sha256": "dbbc793851bdd5abe4b1eb19170b1165cc7c2203de2dd2871c54a9e01e44c39c"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/transport/http/app.py",
+        "sha256": "e257897a2477dbafe1684c5f38b0d7b4c3e3a2d43a48803a68bc01ce65355bfd"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/wire/__init__.py",
+        "sha256": "452c5a6583af5021982a8638d8efadd1ad07be45eeefb8934862c06795ae3802"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/wire/discovery.py",
+        "sha256": "c7413c55552be78615b1c064e820da10b2b6ea5ec5bd41b6f4f419e0fe32a3f7"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/wire/envelope.py",
+        "sha256": "cac8c62661199c4cc7648d47dd5175a51cc4cfcf93a5900bedf38cb400afb512"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/wire/errors.py",
+        "sha256": "106b02e7ae9d7b1b35c0c1964ebb4ccfeb00f1dd4fd89c0942176f0abe70d26b"
+      },
+      {
+        "path": "apps/server/src/ordessa_server/wire/handlers.py",
+        "sha256": "ff91ab91a8327856ab372760b2259d8deca45fb1b611080552875705a108e2dc"
+      },
+      {
+        "path": "packages/server-plugin-api/src/server_plugin_api/__init__.py",
+        "sha256": "16df94e45e6d04350c71073afdf46637c9b66991347143cca7876659d7d33221"
+      },
+      {
+        "path": "packages/server-plugin-api/src/server_plugin_api/acp_admission.py",
+        "sha256": "e655596142361f9ddd3879042cc6670aac14b04ad3b0a28e8eb66ca2c4204529"
+      },
+      {
+        "path": "packages/server-plugin-api/src/server_plugin_api/contract.py",
+        "sha256": "972796b941b1752c7c53ac2490115b189cd91499eb97ab416d6052628a976012"
+      },
+      {
+        "path": "packages/server-plugin-api/src/server_plugin_api/contributions.py",
+        "sha256": "2054dc985b3d321f887e4eae01de19ae6ae28f5bc1e712ad3448e20bb3b8aea0"
+      },
+      {
+        "path": "packages/server-plugin-api/src/server_plugin_api/errors.py",
+        "sha256": "840b5782a45f300085d7aaa19e8d44c3c13ccf5370ce0ec896250edcd2361ee4"
+      },
+      {
+        "path": "packages/server-plugin-api/src/server_plugin_api/internal_errors.py",
+        "sha256": "d7d29367066a5ba17399cc2b223d9cb4bdbdfb189561eb1a2dd589d763ddece2"
+      },
+      {
+        "path": "packages/server-plugin-api/src/server_plugin_api/record_encoding.py",
+        "sha256": "5afb6a8dcee1d2c879344b70b21769604726793a6a8a1b47acfffc77bff52a80"
+      },
+      {
+        "path": "packages/server-plugin-api/src/server_plugin_api/wire_errors.py",
+        "sha256": "ebb90012a3d84d893fd78ede652c757cfa10d749becaf68ab54570edb11d9b22"
+      },
+      {
+        "path": "packages/server-plugin-api/src/server_plugin_api/wire_shape.py",
+        "sha256": "fec9ebadcf425f8497dce3057d48ff365c6d466872f28a8866f396988eedc416"
+      },
+      {
+        "path": "products/server/src/ordessa_server_product/__init__.py",
+        "sha256": "50fef7870a56a721d5a105f74e1eb088bc8da6dd52d644c47090b0eb5a61752d"
+      },
+      {
+        "path": "products/server/src/ordessa_server_product/cli.py",
+        "sha256": "f6c9a4362952054c473618f7ad99ab6af134304d02b22b3adec167e7bdb559ef"
+      },
+      {
+        "path": "products/server/src/ordessa_server_product/composition.py",
+        "sha256": "37d496c78231f0bfb772d1efb0206aab20a4c21cd0b2d4301bcba20af0eb9361"
+      },
+      {
+        "path": "products/server/src/ordessa_server_product/native_configuration.py",
+        "sha256": "fa1241cbf08d5190297d662aa4818e519cfbd2247e6253888b8b00252ce6cf5e"
+      },
+      {
+        "path": "products/server/src/ordessa_server_product/platform_secrets.py",
+        "sha256": "86b0d138aba2b311c6857ce25b7ea577980a9af0fc87c9453b56438be98015a9"
+      },
+      {
+        "path": "products/server/src/ordessa_server_product/profile_configuration.py",
+        "sha256": "3d3540886ca05cb3abd1196ac553721a19007ce537bb50e65661cf3b81c4778c"
+      },
+      {
+        "path": "products/server/src/ordessa_server_product/profile_preparation.py",
+        "sha256": "d08affc1456432517503f77c9cac7a70b74f2ec781ebd5367a84564273705c5a"
+      },
+      {
+        "path": "products/server/src/ordessa_server_product/profile_sessions.py",
+        "sha256": "398b0b34ac9f5907224608dd2dff964fadcd603014bf8f8c26e4d60bf9dcd9f0"
+      },
+      {
+        "path": "products/server/src/ordessa_server_product/skills.py",
+        "sha256": "207ed570ed9cc2b52f06d6576a8451bf99cb04e509051879b51cb8905cacc4d0"
+      },
+      {
+        "path": "products/server/src/ordessa_server_product/turn_application.py",
+        "sha256": "5bf7343c2638eb920718818c77f66e9d907f7e4e27579be261cae80db51f732f"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/accounts/__init__.py",
+        "sha256": "c33d95fe92c3f751bfd52c0f4fe981b94bb566f756ce45df677dcc401450d7a0"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/accounts/assets.py",
+        "sha256": "b30a06628f9b9eca74df594cb780df0daf92503ed77c7f56c3713c9536325231"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/accounts/login_engine.py",
+        "sha256": "9e3d2768d5b65fff5b5c2e333572ce73b1bddcc8f6ebda8943a743eb25f76b2a"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/accounts/records.py",
+        "sha256": "f161cf19b465fe9eec90fe4cac33bf6b520c710fdb5ed13b4fc7787e1b8c677c"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/approvals/__init__.py",
+        "sha256": "b18b620a320e501685b858c783684df13f55730c94f7291666aacb5a94d86ced"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/approvals/records.py",
+        "sha256": "db7d0ecbdf5d723f4134d040298b488976d98d2e7973c6ea67cef3d44bcce7d2"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/assets/__init__.py",
+        "sha256": "ee035283e3f6d7cd0cbd8afbf5e4d7df90986f66c6c23f7121004d7afe4d8eb9"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/assets/catalog.py",
+        "sha256": "6f911f74006ed798163eacc6138779ca93f56b4dfd244aa9f850755d99d32eda"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/assets/mcp.py",
+        "sha256": "7f01ff4466d526f640e6c109d89040564714073b9b92fc75ffefc25e40b7cc91"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/assets/mcp_probe.py",
+        "sha256": "89693695f55d24b9e814b24a13b270dda2a893760e0b7fe6dbe04f7fc489ffee"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/assets/plugins.py",
+        "sha256": "58e40d91fe61586f0dc9530d2add7577d7878dd234e6d7f8664db702b79e5281"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/assets/records.py",
+        "sha256": "9ef9782a376e833cb0ae55db88858ab97d03b8ab7cfca04b42e1bb6de47f58cc"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/assets/rendering.py",
+        "sha256": "ed982544dd1df552088957aa33c8ec9e0b70f924b0d6ef85859a78c4723f99fc"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/assets/skills.py",
+        "sha256": "59ed2d67d212998f519b4ec300d461f70567f337350dc309e280446a3246d2e8"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/composition.py",
+        "sha256": "e108b390a208b700d7ce180fb412983687c140c221423831933610c866d01981"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/core_wire.py",
+        "sha256": "3e1c489021b56a8c6bce202725c52f6ceb9f76ee6584db97b1e326cf56a8b7dd"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/credential_cli.py",
+        "sha256": "9bbfac7ef5ab9f935fe15496498e9e930b2b14acfc61190045bcf6af96ac1188"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/error_families.py",
+        "sha256": "f3d46ff1104d6f00f91c6acbd5e086a72386b73d847d830a5c41044d1186b349"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/__init__.py",
+        "sha256": "4dac9f0b4118628a90eb25bd11bbdc0ff103da4419962c4ddb9b3845018dbfcb"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/artifact_store.py",
+        "sha256": "0e43d3f81abeac2b09073d3ea032e8fde7385622a9727e21fe2861d8c0b9dd27"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/change_set.py",
+        "sha256": "521b3f7b9e2ccb05bcad39bf2c3140e046b45fd19841bffad43658515fc9745e"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/control_plane_sync.py",
+        "sha256": "0fee754f72702ef595df55fc89f0a6f1b6b8dff03858decb4654a51219e54dfc"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/delegation.py",
+        "sha256": "c32d78695ae140d475fb0204b5ba5e4464516115f768b7b55f4823aecb4b5576"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/execution_contract.py",
+        "sha256": "ee9fe04761f2f0a3ff75be9f9984ff8e735370bde01e044eab4148336345e786"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/first_run_lock.py",
+        "sha256": "3f1938e709c9ccdd6c9edd78fdb5752b44e2ee10f2ddedbb551bef3bb449c2a6"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/inventory.py",
+        "sha256": "53e1545609e70723facd9958fed64c571f6b6b5f65aaec7bdedf493a96b2caeb"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/local_channel.py",
+        "sha256": "36a4c19ea844fd879d98577808783fec39fc413bb1a253834b17cde3fe7dc4cf"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/placement.py",
+        "sha256": "51a0a0ea957020419ac3f10f1df26dd42001eec8e8c416720ec2ee3eb369612c"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/protocols.py",
+        "sha256": "15dbb164db8ddf354847b01dc8e95b1538ce85dec0b901f9c60a7f6d808e6fc5"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/session_store_guard.py",
+        "sha256": "d8a60cf2dcdf349cf4da96ffc93f2301a19641abf26b35544db37c4806213d4d"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/sidecar.py",
+        "sha256": "9c6045d2a0bce2aa615ee8f63983495bb0e68878e57eb17591a65845b541174b"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/sidecar_backend.py",
+        "sha256": "7c3b07d664424f00c11967abf382303144e78c4759ef1133e47ff6e193d72042"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/state_capture.py",
+        "sha256": "bf1d8e2630806f288aed9e247a6b6e479cbec94530e7274b7d8a6aeb0097140d"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/execution/usage.py",
+        "sha256": "39bf47086198d857bdba0777db73bfb2871c5af7cb3781d1ff9aeb1994af0e05"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/facade.py",
+        "sha256": "85c256d8223701e4b623ac08091ebb09c2140b9db62b9a949e8444b069514dfd"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/hooks/__init__.py",
+        "sha256": "46db0091f52c20a09b6be94b27b3bcfc4cc1961f6943c6a8a7ad4cda4a544d94"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/hooks/model.py",
+        "sha256": "468e4067cc6920c6b65084a3d4b002facc1c4df18c163a406997576bb172790e"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/hooks/records.py",
+        "sha256": "9cfaa301e55e17b1e6d4ea23ffb594894e7a8a60682619d339d4f5e44b55cddc"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/hooks/rendering.py",
+        "sha256": "237641edda5802dc4dde0faf8d1a5e258191803242866bee1d0a42521b2380fd"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/hooks/triggers.py",
+        "sha256": "51519fc761a5b3d802e7c00e88927740fa7d9d7402c2a7f989940cf601ebe353"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/http.py",
+        "sha256": "dd3deab743846853ca2c01fd4f17f013582e9d0cb4edf9343faa335cb7f6f2e2"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/model_configs/__init__.py",
+        "sha256": "5202525106fe8783b59a132384a4cb5d674a2da26ee562a6e0a5a423b6718358"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/model_configs/probe.py",
+        "sha256": "2867909445ba26567d346a0ac21148dcfb3474baf4aa2f9b8f96411161374c38"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/model_configs/provider_protocols.py",
+        "sha256": "75f1e3f6d0f286fe801777d10d521aead7f6e583b879b89794499be62af8143e"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/model_configs/reasoning_knobs.py",
+        "sha256": "1ebc7614ee142b25bb4d2af549cff378a961bf1fa0f09238827b154cb7b871a7"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/model_configs/repository.py",
+        "sha256": "be287963e25a2f825c584ae5e51d896c83fe6a490bfb03d66f8b633e5bfeac81"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/model_configs/service.py",
+        "sha256": "adc6919f9e12cedde103873e9a7ae6e9be9e7e71ea97824acc4a4b89143f0c34"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/persistence.py",
+        "sha256": "a4134d5b8f653c14f885ed4a274e6e4d18657cec2db35ea80fb720b9844135b6"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/plugin.py",
+        "sha256": "53c50ff67496fa1512cc799a2cf2749590cf12d4e72db88617ee11ac3c9930c2"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/profiles/__init__.py",
+        "sha256": "8d923c1ebd14a4114dffedeaa0fac1a7faf29e12c7cab1b63a9e6a851f724ea7"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/profiles/clone.py",
+        "sha256": "7820f4e6fd56411f7d7d119d07e880509fe12f072c993c637ef88caeea5e36d2"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/profiles/memory.py",
+        "sha256": "e5d5bf19525fece8e23dfbaf646135e58fe381f6399edf8102137e351ad5d4a9"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/profiles/permissions.py",
+        "sha256": "a8312eab8e400002ea627d3b61cd0d30cf1cca4b207453daa895ff2d573aafda"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/profiles/posture_config.py",
+        "sha256": "4ec3845ae321fc532dc9d3c6e5afa290bff58dcacfef4477950c40ccb99ae313"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/profiles/posture_translation.py",
+        "sha256": "72b150afe72d127c2fffe55a150f318a4535acfbdd8cf0051105a76d1be800e8"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/profiles/repository.py",
+        "sha256": "30d716d29adc4c3b89c4e303858a213c63bb286e81f4492e24d4e36abac8e365"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/profiles/service.py",
+        "sha256": "de739b48bad8ec0925f76ab6511c48a81e441982813fb66d71ade8b7c7de225a"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/profiles/subagents.py",
+        "sha256": "35c0d4a5fc0d31348a1bd834b2fe0b9e5e6b9e70af69c7de527ec6d63024bb31"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/sessions/__init__.py",
+        "sha256": "be8b4a8ca385c0c4bb6e0967ddb0c4f3db93a94025030e236df38cb5ff073a8b"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/sessions/queue.py",
+        "sha256": "0bd4785d178d081be6808016cd7b125114c51dbb76659e97d7eaaeb7eba5d751"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/sessions/repository.py",
+        "sha256": "73c48f956a5211269044aeb3b57c5a2a2cb52cf813f0dcbfa6124318d0158839"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/sessions/service.py",
+        "sha256": "076727b46aee729db468f0b336db6171f733b63d637a3bc5b4728cb70eb1e5d6"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/usage_aggregate.py",
+        "sha256": "34fe157a6084595c56cfac219dc00edaaad4b8964bf8d5055520548cad21bd04"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/wire_projection.py",
+        "sha256": "5d3d78e6e410b8c1409ae2c0b1519617aed2103356f5ee475a54afc3e5d34ee1"
+      },
+      {
+        "path": "plugins/server-compat/src/ordessa_server_compat/wire_validators.py",
+        "sha256": "118ee9c441a1f7480e45698ce9f78aa15fe5d0ee745007113ccf49e426f7ea80"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/__init__.py",
+        "sha256": "9fb195dd59de4e630f5f73df62317f3650906dbd4a9ee0de9d6d4cd5166c8572"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/api.py",
+        "sha256": "31b485dc8afc59a10c3cebe1e5f89ef5bdaeaad6213ef06c0ba4d81b5d458b60"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/bootstrap.py",
+        "sha256": "b3d1968784e979f1003ae45b1dc90b7d13f8fcc21e94e080975454fb4c8bcc6e"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/__init__.py",
+        "sha256": "ceab814f0104ab0a4f0f5db84236c9fa29df7fbadc76e5355b3ff73c616d4766"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/documents.py",
+        "sha256": "900ce39751d26a037b944723728fd5b5c5e3b44781a6c7e1e0bccdb2c95935eb"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/errors.py",
+        "sha256": "eec48531a347fd1829ac233abcf4786956435658a8984d805e87d114d23526fb"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/ids.py",
+        "sha256": "05af4e9afc0b0861feeebe6cd904e1b31d0bd518906469479ab7615f6bf78046"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/match.py",
+        "sha256": "f65214a53f8d20a7fa937d6427dadd51342fac3c3dd2174b8248fd440f2d926d"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/requirements.py",
+        "sha256": "3f7c6d6db4434939ffb07222c432954186283c3e1b72e203a8e7f7ddc2e71333"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/selection.py",
+        "sha256": "e662779f7ad09b6ccc81984c1931bb9ab6fea97417021a5206973fd00ee2f635"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/capability/slots.py",
+        "sha256": "600f34d820a622e0b7892b550d8d6ac2cfebe89440424f6148ead10f4cead985"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/catalog.py",
+        "sha256": "28d31a97d7c13098cbc6420fc801647c88297e78101910e7c48f4bf8d4bead22"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/cli/__init__.py",
+        "sha256": "b42b5b91a40bc58fce8299e95207ef6471c656c2053a56c79be0e4e96edc6cc0"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/credentials.py",
+        "sha256": "c6a3fe102af7d2a7d0f004ebe76fbb5c6ac57648934ea12bbc41bcb66e62e40b"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/legacy_migrations.py",
+        "sha256": "b21d6315c2a90534f34cc201061b851b15ba1a93c12009600dc1fb14decc709e"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/001_init.sql",
+        "sha256": "556abd7252c0941d202c87c1b83327107c08f0c812e4839cdc7ca63c5da19c35"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/002_rename_claude_md_ref.sql",
+        "sha256": "296727f8c9238f9bd90b25ed70ce85a9850b0052980f4311b67153e9ec56a171"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/003_work_core.sql",
+        "sha256": "046286b3669ecfad5097ac5e4348c6823da8681dc6f23eac825ebb0e1476b534"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/004_minimal_work_core.sql",
+        "sha256": "1202e06f678c3af55a2b5a05ad8e97d86301ecf04e309cf4950b1c577ba9cd15"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/005_resource_contract_inputs.sql",
+        "sha256": "961a19845a60b69fb8c6a9ab915f74ceabb1e85d3f378d6a534b40edb94d6870"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/006_resource_contract_inputs.sql",
+        "sha256": "0ac124d4bfcd74d3debd885c7221afea076204b964ed5a3c710ad7066f775b3f"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/007_resource_observations.sql",
+        "sha256": "84fcdf3805497f2cce7b81fbf81879cd96631524fd04ae9af655c6342d611c29"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/008_resource_observation_evidence_metadata.sql",
+        "sha256": "96f9e8007d30ad27b0441255b9780a02a86d04e7715bb18bd135fd371a512575"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/migrations/009_execution_finalization.sql",
+        "sha256": "d66c4de7df8216d24028c2c4180ed6bf47ae18018f2853d197b7e2f80ca43e5b"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/profile_envelope.py",
+        "sha256": "d445f910b846a6aed4c8081446824f24852acbc1f174d0108449d0c6d3fbf3e6"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/__init__.py",
+        "sha256": "7970085fde87bf57edd2192d1a7455b218a9a804249bbb503d8b7d6b9b733146"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/agent_box_profile_v1.py",
+        "sha256": "291ec17890b00df4f2e2ff4d763ec3497ffb1c5c9ed1a6a569e8559c62b14e98"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/agent_skill_v1.py",
+        "sha256": "49149f8fcdc064f772f5c5312a452a774a9c815a52e47c273a979e4672c7e74c"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/credential_v1.py",
+        "sha256": "05db44b299c111d35770727e0608dd0826c445476f49848583c320363bcd418a"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/harness_capabilities.py",
+        "sha256": "823a1b1a72bbb5dd5a946568d360699c3670075c8c9d8e541ebb0a0a85d6a4dd"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/home_projection.py",
+        "sha256": "d5718dfcea39f1ed2088f259d640e5885c678483e3b561eaab6a3a061e8d604c"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/prompt_fragment_v1.py",
+        "sha256": "945eef1f17cda2d20c446c7491dd1ff79f3ba3a1232c9b81090de8a7891bae84"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/runtime_artifacts.py",
+        "sha256": "63ab504f81a163ce5a555b14735812e395a9fae423d0bf448eb013eb4bcfd2af"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/workspace_v1.py",
+        "sha256": "b8b1f01f7c50b4a4b3af937f4f0941501a71743e525724a300cd3560183e793e"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/runtime_composition/__init__.py",
+        "sha256": "7d378b5982ced96ec3061094028e31ce447ea001ab4995862fe65ba12317d4dd"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/runtime_composition/assembler.py",
+        "sha256": "84cde8271d87e53e277b54c5e7f2deeaaaed9139f05b3c4a396a1dfe80b4ebd5"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/runtime_composition/coordinator.py",
+        "sha256": "e091c7db7050e6540f35800cde1de3307917a70b1d86a2a604e25b7943bd7784"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/runtime_composition/fake.py",
+        "sha256": "3aaab9c47c9b5642bd9b5a3dfae2f4e580792858544b1499e66707918dc4f80e"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/runtime_composition/protocol.py",
+        "sha256": "6d820301ded09b238e71b235ae411e581abbf186700a61f7a2593f822cbef9c9"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/runtime_composition/sandbox_port.py",
+        "sha256": "31bff8512ca84ade4b739afc2de35213f049a65470703bc2e7083c6c2c8c5326"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/sandbox/__init__.py",
+        "sha256": "b17fd6193cb9d105f4d2b000ce26aaba27cf2b57bff3cebdc862bc2d6a146b90"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/storage/__init__.py",
+        "sha256": "20acedf28a3e0cbe3de2e22775eb6bd6ce37edcd63a07002b5def68e72e8f328"
+      },
+      {
+        "path": "plugins/runtime-compat/src/pacthold_runtime_compat/storage/database.py",
+        "sha256": "a1928f672ffe1ba7bc40543e9bbe66b218b92a2d644f282f92d3ac9c51467662"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/__init__.py",
+        "sha256": "c534109f8bc9941ec7c1694ff6625076bde4635c909c9c99d5ffea947547602e"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/_compat.py",
+        "sha256": "8b6e3b4eb20ded605c66faa1c8e2176114e1b4c8caa6330bdf1116ca562a3d8c"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/__init__.py",
+        "sha256": "f453c79ff5bf76ed9f2ab77e39401844180b7b4ab9ba435e353dfd5d0af87946"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/base.py",
+        "sha256": "a369b13d0e5867da234ae64d72b5bad94493c3d53cd287966eed8cce7390e830"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/claude.py",
+        "sha256": "31d93f3f68dd48b6e4120209d1766eaa35808f3adbb585fbc1e28a07b4a2d4f3"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/codex.py",
+        "sha256": "3b697255fc7975f4bb18673f9cbd9b2d7c5a5a45ece2890b8a1cde238ccbed48"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/dsh.py",
+        "sha256": "08e4e07298c0b1e01bbe1934a3f8c642fceb7838a98c5b4e4b7d9eb20b89e478"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/generic_cli.py",
+        "sha256": "40738539226660caa0d5d2b9273b38dbfc7ab32552f83436bfcb78fc951d47a5"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/hermes.py",
+        "sha256": "5855c64dc894348d8fd03decbffbf6c30f3a263024748e565085d8b134e2823a"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/kilo.py",
+        "sha256": "88cb7054147e1346e71923ea81084e6e7e9181c7c325caa041ed7fd66defa054"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/opencode.py",
+        "sha256": "68a6d451424bc845ca62a662596e95bcc42496270bd7272fbbccef3909705888"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/pi.py",
+        "sha256": "dd91d85bee796a618382b49c68f8e4666591756e79cb55a5ab7c25e009a5e8c8"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/qwen.py",
+        "sha256": "3df9f0f9911aeeb3380451c8a9b30dc75baf03d9cd6be2bd0e00f05345381eab"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/adapters/skill_observation.py",
+        "sha256": "ff6e2a8d4c676200fdc317488d4ae9937f653e4a3e30ddae8208764b5d491d56"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/application/__init__.py",
+        "sha256": "061325c31dd0ddd9b664d7a29d06fc6a9649d898c7aaecef98655f062b4b1fe7"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/application/action_execution.py",
+        "sha256": "d6e6cbd28f0b6d303e719f3847886709b7945134130891d814d9e39acfcba801"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/application/configuration_service.py",
+        "sha256": "c10cdd5a9f2ef74d9a194a6bd16a6e11991225ecbeadd6f39aedd1ce41a3c5a5"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/application/native_evidence.py",
+        "sha256": "595ddc35c04a20cd2d4747e3e72be817e19b5e1c75128142cb376cce957f88af"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/application/operation_journal.py",
+        "sha256": "68daacb81955c9b4ce9e1edbe769f0980da9b2d45a636154828b61621d85a84e"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/__init__.py",
+        "sha256": "3ea828b3b159cc10cb9fd7380e9bdfc6746ffa4c931c4cf6d889fd726a4f9a44"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/attachments.py",
+        "sha256": "133f17a7e889ff69dc3206df1071f2d2d7a8f545b76ba66ca4d5d818057ae238"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/composition.py",
+        "sha256": "19252885487d7d90835052dc080304663a604193140c5066ed4e1614662d56e4"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/configuration/__init__.py",
+        "sha256": "40f5fde3faeb9e197749f6071e7ca1fa039ce6482290c4a625030e9803965efd"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/configuration/model.py",
+        "sha256": "94e9916036583a69596ecc040c5b78aee971611deeec9b2f439bd29b793ccaf4"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/configuration/runtime.py",
+        "sha256": "3c5736791596d1ba1ec6b1858a25b02df1354063f203b61ba1c819736efa96a4"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/contracts.py",
+        "sha256": "3ee850fbfeb20958a4fbb3df46121a8158b90c6115337d21b74c1b3ce924384f"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/fake_claude.py",
+        "sha256": "6c4ff7ba7290366da1178fdedbb8b3c35bc9710ab3ab534d9e4fca48ced6cdc4"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/launch.py",
+        "sha256": "926a9e6785e50caafd7bb5435a51359b5a7bcbf04e235641de436aa204715849"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/native.py",
+        "sha256": "319d2ab8a246c9a68334e4c4ebc8888544ff0b68c48311c9eb9cf9754f3696ce"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/production.py",
+        "sha256": "bcf4e39eed3ea85d6d8cb10c567ee15a04f2aebd3af689bd3fcca93f839ec387"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/profile.py",
+        "sha256": "4481aff8248276738c3080c2b469ebeee84af2260e73e47a945f0795ddda2442"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/provider.py",
+        "sha256": "14ca9fb33fd5b21d90247559b9692617e0b426f88184d47c7c69e17cb53e556d"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/claude/registration.py",
+        "sha256": "ebea82424222fe8e048fb64fa1d998e5b37bbf86d75003042b8ee19bb963ca2a"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/__init__.py",
+        "sha256": "ec57e5acea156de743aa312075b0a5a14ef7c1a4168ba29c9b0fd83d91cc4847"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/app_server/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/app_server/provider.py",
+        "sha256": "72237d9e9f8b104b07de622261322a0be7ced304c6faf3caaed421acd7aac7eb"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/composition.py",
+        "sha256": "1750d5b2e9db571c5ddb0f176a4da55871acaae9f42cc4c2d68844345cb157bd"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/configuration/__init__.py",
+        "sha256": "40f5fde3faeb9e197749f6071e7ca1fa039ce6482290c4a625030e9803965efd"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/configuration/model.py",
+        "sha256": "af24f9a5247a6a7c77946815bc2fb0b2fac5c2ef54b25fa4e05961cf6364c8ef"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/configuration/runtime.py",
+        "sha256": "6823a0d894a1b16b0f521a68b456825c9c053abbf784223620cb9d2e72fbdb11"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/continuation.py",
+        "sha256": "8beb303519e73b745443e67a96281d746dce5bf1f763124ba70bc2a27114cc28"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/contracts.py",
+        "sha256": "40037f5351387c93e4d0545112d524cb00487ed7c4f67f762532a3a5f2e47820"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/control.py",
+        "sha256": "00ad9cab0fb9f413e56127c6debf4200c0794fbbbf093a841391b0e45c5353cc"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/credentials.py",
+        "sha256": "f8bdd7c349b429a7b8bf5243cb1a2f02a9eb5e257414197af33d6afc2a2bc0ca"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/deepseek-sidecar-config.toml",
+        "sha256": "4a639c47cbbc9469d31f98a45e40732e98d5af805713fb422ba042af92fd5ee3"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/executable.py",
+        "sha256": "0f0bb18ae3ee4243d644b9368df27d4fd7fdee00ec9648725e64d342c1f0459b"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/hooks.py",
+        "sha256": "4cc513deb3fe9671ae5a83a2b7074e274556764717fa4615b8830ea02bf35241"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/interactive/control.py",
+        "sha256": "69d98603371615fbb779abdbe0ca6d13b5615baf4e5df0ba7bfab81aeb49c58d"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/interactive/provider.py",
+        "sha256": "800d6e0a11324b8dea1a07072161a152aed5eab8b128125e154405bff1cd9d98"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/launch.py",
+        "sha256": "1009113ad60c16e8c813381ec2d6fb8cd84b380bd9801de61b7eaeaed732ff40"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/managed_account.py",
+        "sha256": "e56a3844bc7d2611829947a7b7d76892bccaedec54e7514c74ab8b4d68567753"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/native.py",
+        "sha256": "7362ddc4bb75c38fb2b6de63c4a75c77515524b13a08a1ea5f00f2cd32b5aecb"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/production.py",
+        "sha256": "81d194bb03b03161a97c31fbb809eb2225c685cecfbe6e5746f0a8f8faaefd3f"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/registration.py",
+        "sha256": "b083d4af156742a0d8ce74f08693aad3aeea84ba92ab1f3e4abffeb3686d4a47"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/codex/remote.py",
+        "sha256": "4502af76acb065cb244440cc241b35c270f618dfa04263545b9600cc246b747c"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/configuration/__init__.py",
+        "sha256": "b1aa6b42966b07e621043b40a8fe71e89f056f27e2cbd2aabe2f6ff0bbe0cc0c"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/configuration/model/__init__.py",
+        "sha256": "622be741b24618213ed48588d320cb1b18aae13236728c18c7da21a7136ed206"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/configuration/model/backend.py",
+        "sha256": "844bc3463f92b61f00ee7712b255c24e6d2a8c7fd87db11410dac288a1ff3f95"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/configuration/model/bridge.py",
+        "sha256": "a0a0e3bfea641baa2051acd3d6453d4fcd2ac8d54e717a9bef681588c0a78692"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/configuration/model/catalog.py",
+        "sha256": "a5e4ff4ce80ce67f46915eac6c6cbb1e1969b2b0e0348378dc9a510c1582b331"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/configuration/model/common.py",
+        "sha256": "fb204782b42e18c8e38eabb60ed4462784d96d34e09ce431f5d83216bc82f91f"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/configuration/model/initial.py",
+        "sha256": "58b03eccd5755e341b1fc1f52d9226766bfdc4a5c49efbb69f7d13760354b026"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/configuration/model/live_context.py",
+        "sha256": "dee235e6b7472dc6a77f8a669d16cd9d468e949764deb860359ce567968fb774"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/configuration/model/live_model.py",
+        "sha256": "cbed666abf632cc6adef637f9c9ae6f1ee57d353a98766571f425f585152005b"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/configuration/model/live_runtime.py",
+        "sha256": "9c3c7a629bc8b6783cadbbde2d445c0e51bdb209dd67af803211a55a211abc21"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/configuration/model/live_service.py",
+        "sha256": "3af0d81d5dd4a3eecc9183ab9b336f46e69b0f682b32ce919e3c889b992be6ac"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/configuration/model/plugin.py",
+        "sha256": "07907ce00b04c9224a3e3fe571c32f171468ec89c373d67249edd8ea739d52d5"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/configuration/model/provider_registration.py",
+        "sha256": "c1f35ca4ffe4b2f43e29fa2c532846c15ef196473fb4d7960be8dc287d59200b"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/configuration/model/restoration.py",
+        "sha256": "a2b65b25148ed2a3a36dd2eb709032edc4d8bda9a63849eacbd7b0f95f66ba7e"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/configuration/model/types.py",
+        "sha256": "1c26489945344c984bd2ab9179600a25c04a7d6fe4f7f59b5bd0ab43372b2d2d"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/contributions.py",
+        "sha256": "848b86fe0e53b89ad65bb9f3a3b7fabaac658025ae72361287f910839280a256"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/dsh/__init__.py",
+        "sha256": "f31b6df3005b80a159d0822771dad45360d9f2ee9afb46b00115c671330ea712"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/dsh/native.py",
+        "sha256": "76933cdaadd0b8561015ee8ef9e8cd859b03d91fe17589834e1a6cbe1c112741"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/dsh/production.py",
+        "sha256": "412692cf8a377083373b0a43ca6c0c9e8d9c7ff612b1236567178d4d65795a3f"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/entrypoints.py",
+        "sha256": "7f86e9605bc9585746dcf0c3c9d0930b83ed45e135346355d101dae8ad313375"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/generic/__init__.py",
+        "sha256": "fee734592f3ccf4dc44daf4bd4d1e92ac157495bfbb3370feb6ff9701bd330cf"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/generic/execution_provider.py",
+        "sha256": "23ab9a7808d113c641581385ab564e7b172de1bdaa7371fd8e4c3f8d42fd9b8e"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/generic/factory.py",
+        "sha256": "577c1fa9afb73cbe89d9c394636c184c05dad450137911ee4e2fe5cfcf1bba52"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/generic/profile_manager.py",
+        "sha256": "1f3a5c9a9163912cabc0341ff2300b35eb89713b5663e23469a9e1f40399af3d"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/generic/profile_provider.py",
+        "sha256": "9836d87d08f2de892aaddd604f2f97c1f6cbef928aeb5fa675daa807e65f241b"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/generic/profile_selector.py",
+        "sha256": "8f7522768464a9a8a91cd19d19e519c4313fd8eb1836f333e13284435e66e22b"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/generic/profile_store.py",
+        "sha256": "f36369f596162c121fee73631e631fd72ee3073e8ba92a4dbcc6b50b1334a8ec"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/harnesses.toml",
+        "sha256": "68d30dd8433819cffc7d8128a5883a2ece9f0f0930e4f873196b4d18e2b997bd"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/hermes/__init__.py",
+        "sha256": "1297c386650fc1b08e488f8d164ebc515f3414d29609eccb870455c81f41f504"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/hermes/composition.py",
+        "sha256": "dfb83e8f7e0aaf4754045763fd01595aa392d26b6d4845fecec3356d7729f8ca"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/hermes/contracts.py",
+        "sha256": "6a73cc90aa6939360adf4d236e3b7cab6d218a8986fc9f1a8fa87deb8af0868c"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/hermes/launch.py",
+        "sha256": "279f5a3a7f9d424e7f3f3ac13763af7b73e2b5b6fe562662f397ed87af077837"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/hermes/native.py",
+        "sha256": "7dd28db0701d779794ff12f0f88f614d97ff06a58a522ea6996b9148f94f88ca"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/hermes/production.py",
+        "sha256": "a34c24507fb2297c98b49e1f325d51d9b0bf84a110b7584090fef0f4edd16099"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/hermes/profile.py",
+        "sha256": "c60ccf62ff27da3ded38e6a5d7a2c29d30711b7e055422f6d02c77501c06cc08"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/hermes/projection.py",
+        "sha256": "f502a02dbb9d81916cc5c07680f501f4f65790e92d3f6fe7db6c2c43acf87eda"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/hermes/provider.py",
+        "sha256": "13af875bec56e25b4a5cad7fff6a119cf73fd6ff3d75bb3f88c2d36d98c09ef7"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/importers/models.py",
+        "sha256": "0f494ff3b52e7af6863df7621a185aae97756c9cdc090e2559c020eb2ae80bdb"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/kilo/__init__.py",
+        "sha256": "a39145a8433ad17b379b2d52c1180072df1b11a304826a0e77843d7a5d6e9202"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/kilo/native.py",
+        "sha256": "02d4ecd64c9bd07fdbf23c139093eba76b46425a2952d8986b8f600f1aec963c"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/kilo/production.py",
+        "sha256": "1396b3774e36cf1603c5b0893a874df5a965e3cbc2c317f02f8cdee16d062e1b"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/materialization/__init__.py",
+        "sha256": "d214af56e871e19341132056d4850bb0aaf60fba7a92cb9e590a3688c74c5f6b"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/materialization/intent_merge.py",
+        "sha256": "b2032bd90602690998a8287637bcd6848cb9e4f8c49f66c65724a83acf2f4cbe"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/materialization/private_generation.py",
+        "sha256": "b47966fbcbaceda38e2a3e3a1525c48cb0bb7d8e4100555bec70ec41fb24baf1"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/native_materialization.py",
+        "sha256": "e3c3ae0c8904c3c1690599e429c141a73f179f2b4aa8933468bddb9b3a4612f0"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/opencode/__init__.py",
+        "sha256": "f64103b53c3f3728aab096d7d470bfd0b6867b1447e288eba67f56ad7de023ff"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/opencode/native.py",
+        "sha256": "76bd2f5cfba64a6f9cb3f90dccd6f86dba5347bbd007a6c633364ec05a8ec57d"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/opencode/production.py",
+        "sha256": "f678021aaf9647e528e10400a2553f9603bda0fb49cb4a0788230cb14210ee23"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/opencode/profiles.py",
+        "sha256": "59c54cf095ac46c8fa027b3deed3e34f5abba2f7e4f36c5f4d4660c18df25474"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/opencode/projection.py",
+        "sha256": "91acdbf482a42a45fdc80cb97e2c07c992ad6d610318a7998d88b821bda85570"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/opencode/provider.py",
+        "sha256": "40447dd875ac534dde4e340320c807b4937a7571fd7c308334ca26d635c06e77"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/__init__.py",
+        "sha256": "55a30fd647655368939f385235bb04bd0ac17796e64a799231e54306bcd8b19a"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/config.py",
+        "sha256": "4b36338a7888df3c6bdd122b112df6474d5bd15bcad4a7efa76ce364fe1f8753"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/configuration/__init__.py",
+        "sha256": "40f5fde3faeb9e197749f6071e7ca1fa039ce6482290c4a625030e9803965efd"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/configuration/context.py",
+        "sha256": "16545c27a8df9945615f6b8beca1b2001865d4b69982eef0dc56943aaf78ec92"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/configuration/live_model.py",
+        "sha256": "65b9126a7f7f3c6bef93d4eb50841e92d1e9c822d96a2b92e87f9f3049ea735c"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/configuration/model.py",
+        "sha256": "0c9f0438836a704bc641e90d7c90d6547d0f42f1aebae5a2179e280d35667cec"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/configuration/runtime.py",
+        "sha256": "fedd74370503febfd7693dea45dcd934bfca5ce2529a5989e0c1179989f3339e"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/configuration/service.py",
+        "sha256": "176353f6959da468c3f0b0ab8b6525e44c20604a608a9f070f51faaca11309e1"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/contract.py",
+        "sha256": "1a26ac1fc9048aca911a01329c968026a94bb12a43a7bdb25f92552899b56320"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/native.py",
+        "sha256": "76cc30eb21215bd30459dae0085f3c20a9554bbd0763d41e2bc7f86e3cfef398"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/production.py",
+        "sha256": "adbe15806e17b17b4faf8dcbc54121efafa3032b29a5915acfe6f0e01d4dc9c7"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/projection.py",
+        "sha256": "37ba9d41ea5b4f1a8203a5808a91eb51a1e5a52fd17b7969061dd1980fb408d4"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/provider.py",
+        "sha256": "0b9adc9993af5febcff2fe3616dcd9a9ff31555417b65b5ec8621dd6aba0b0fc"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/registration.py",
+        "sha256": "944a4b62d1301b3963ee1e4854d16ce61e1be51815c8d4b430d076617f1e1830"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/pi/sessions.py",
+        "sha256": "7e312dffc8239c2477d01a0d27c4a942e75a0e69ccca77dcdeab83704796a1f6"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/plugin.py",
+        "sha256": "28de27078ae685eb499147e039871cd9e7fbd1000c02e98295af26bb7c7b18e7"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/qoder/__init__.py",
+        "sha256": "15e1b73bc49d65d9c3b0ecb9a5739c5a3386b4a8ca62d3c930e46583d0215f7e"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/qoder/native_config.py",
+        "sha256": "86059fe8ecf53fa2f20601cb5f72c608fe6cbbd873e17362e57d0b6570337585"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/qwen/__init__.py",
+        "sha256": "bef0e29da59daddfe54fb535b99537290df740024aefa8ea2dd604458954a36c"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/qwen/native.py",
+        "sha256": "a63311f87fbc6098122788b74ca017d59c8aa1d99c4cc1894eae80da5a5f77d1"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/qwen/production.py",
+        "sha256": "3e73a8b17e80fe87063c064b2f414229c512e95a043a575efced8caf55dac7b3"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/registry/__init__.py",
+        "sha256": "3f0ff644db462496b3e4977dad231af5b51007165633781eec4aa69a9a3ce9ec"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/registry/capability_claims.py",
+        "sha256": "32c5012657bbeefa67138ea8e3ac00e3a6b6572695b25e207144ea37d621c2f9"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/registry/definitions.py",
+        "sha256": "00b8dc1c619288d7632cd4a0c05d7233ddde8c318652315c1b1c7854ae191c69"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/registry/loader.py",
+        "sha256": "0cbe26980fe334df85c4aa2a4c0e96622ece6f69cf9ae690f2709582e6cb7aba"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/registry/schema.py",
+        "sha256": "c9e57316290b4bb46c050423204d7812df985cb83f4f42da29b02ec51d13cf9a"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/registry/validation.py",
+        "sha256": "39d0ba2ff2d192261c78092933a5734f82c0d10df19900b44b243caddb87c64c"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/resources/__init__.py",
+        "sha256": "a66f7e74d5a648cdc38e046822f1e1a7373552f1ed3a95da5d2037bd598e413e"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/resources/executable.py",
+        "sha256": "057bac72ba8a1201552ba71112fdf5d1fb37a13def52abc6bf2446d143542c3f"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/resources/profile_codec.py",
+        "sha256": "88f9ceb9bdfab8ca32198de63766eae078c7ed4f16f19f5deb65ac3f29b54680"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/server_acp/__init__.py",
+        "sha256": "a146f85742a0ac2b773be2d0f86da3b3d42c59e40d1e85acf80c05d00f259490"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/server_acp/access_entry.py",
+        "sha256": "dd295fb156fa157443cf9c2734b6ca5e859bdd88a07db1a650bd2146871ffac9"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/server_acp/history.py",
+        "sha256": "9f3c87094a31c5713e13430ed7750f942466c09663adb65a8603705539355102"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/server_acp/instance_directory.py",
+        "sha256": "22bdff5c3adfcc6a2ad4fe67a52f0f5299d88bcb4c3e2644f94075df262d9244"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/server_acp/native_action_executor.py",
+        "sha256": "e875d3321434bfa6318ce3b01df6c979b69c922726db225d4868954f0da0c1c1"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/server_acp/pi_action_executor.py",
+        "sha256": "db87e63ab165137bc4827931dff657ea95d9d0b97cadfcef39b02d9dc7d9ae7e"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/server_acp/plugin.py",
+        "sha256": "7e548d1ce38335a9907897de8ff497153f741cc667a097e8e59d4cacb00257b6"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/server_acp/profile_owner.py",
+        "sha256": "1232cdcc8337282119096537214281fca16aee4e9babaf76430fadcb5dcd57f8"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/server_acp/registry.py",
+        "sha256": "6f4be17278d6c7a18b50340f06f3d83cead1e3d02378c2e49e710f9795ccae0a"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/server_acp/runs.py",
+        "sha256": "2437fe296d1a6c55aa479b93a04872809c1290232889ebbba9e6bd7fb84324d1"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/server_acp/transport.py",
+        "sha256": "4cecfe363d1be2222f4743504757189d880f962d380023da4ba2ab176a65b88e"
+      },
+      {
+        "path": "plugins/harness/src/ordessa_harness/verifier_deployment.py",
+        "sha256": "3eb1e4d2fc2c2e5e2125078f45205568926f3cba638b560ac24bb60a30422a7a"
+      },
+      {
+        "path": "specs/010-platform-core/README.md",
+        "sha256": "330aaae91a22de7fc75dab1c21554f646a70128958e68d5dc6f1e97cc51971ae"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-components/README.md",
+        "sha256": "29d99e6ed5e4ad48741731b6234c56942be4fccfc543ab4d8fcdfc943039c8f8"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-components/checklists/design-review.md",
+        "sha256": "db73ed5f8076954be849aa2bbd0175f885dc84de03960b7f80d469e9f3a0f707"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-components/component-catalog.md",
+        "sha256": "3d8e5c8c9aa4714533622da4d6fd666089325fbd62b483227f6a3c3ba13a38aa"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-components/contracts/agent-ui.md",
+        "sha256": "0b3205d7760b6057b93fb7f0ec554575d3e0d99bdc98677b9fd6d135ed33df30"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-components/contracts/component-platform.md",
+        "sha256": "9c7fa610136ef874705c9607eb1b1da83c936e447802b675c55172c8843d386d"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-components/plan.md",
+        "sha256": "c336d93b1b86916b0fb24f35a971a5d38ab30da762f4a796d372038933b3c58a"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-components/spec.md",
+        "sha256": "7a8d4057ef004bdd624d8a2da9b82f2fab9fba7420f28f9984ba910d68968f8c"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-components/tasks.md",
+        "sha256": "160ad8fa358dd200e94643ca098ce422b41a860844a253531a05391fd9d67e2f"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-foundations/README.md",
+        "sha256": "af9d7ac91119e8ecab4dd49d12b01c539c394a26a48239a78dbc78d0025c0969"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-foundations/plan.md",
+        "sha256": "72d550e644d5b3b03db2cc527ed1821ab17ba377071049fecfca313ffdf9876b"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-foundations/qoder-addendum.md",
+        "sha256": "f213a8aa223e597e596e7412adeb43e11e88b6e8e938512992c8f13654ea262d"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-foundations/spec.md",
+        "sha256": "ed2431d4b3cf08ad21174c8bb6fa0a03cd1df730c9003f8c043bb37ac2336800"
+      },
+      {
+        "path": "specs/010-platform-core/amendments/ui-foundations/tasks.md",
+        "sha256": "da493421c34d39d7bfdd3ddffa94e433ef42165f49feb36469c313835583bb15"
+      },
+      {
+        "path": "specs/010-platform-core/checklists/analysis.md",
+        "sha256": "82393498b9373160af2250a1fe25c80af8d354d112e37addf6af83b573d9c08c"
+      },
+      {
+        "path": "specs/010-platform-core/checklists/requirements.md",
+        "sha256": "c6050875064ba9b41bd3f5693c681a79e82922e1018e7a3c3d9c45308c92b1bb"
+      },
+      {
+        "path": "specs/010-platform-core/contracts/connections-platform.md",
+        "sha256": "4437800adbf40c46beaf64500ea1c11c20a84560cadf3324b9c9baa8417f3bbc"
+      },
+      {
+        "path": "specs/010-platform-core/contracts/platform-api.md",
+        "sha256": "61fe38205aba26f0dd88bed9d6e064d54d3e2e93c488d2fa517439b008c47e62"
+      },
+      {
+        "path": "specs/010-platform-core/contracts/ui-components-platform.md",
+        "sha256": "7f0f524ff2fb2fff1d6a0c85b6096531587ed7a8525aa2eabc82e4b75fc08723"
+      },
+      {
+        "path": "specs/010-platform-core/contracts/ui-foundations.md",
+        "sha256": "f05dd76cf103e2d665dce7654e9cb547faa5c7e3f44f5938aae8a448f5109eb5"
+      },
+      {
+        "path": "specs/010-platform-core/data-model.md",
+        "sha256": "34c3715aa09631ee3965637617420d3d27a7d9c9b1258a9c75657c059153d1f8"
+      },
+      {
+        "path": "specs/010-platform-core/plan.md",
+        "sha256": "e4ea1f041c113d0802e2feb9ead1130d9dd1d3187291d8a2cdbafe7e03c1a701"
+      },
+      {
+        "path": "specs/010-platform-core/prompts/C7-goal.md",
+        "sha256": "b70db814cc9716521b0767139158b45d8287b1c7b1d5dd7f93d878810c9d664a"
+      },
+      {
+        "path": "specs/010-platform-core/quickstart.md",
+        "sha256": "02187e1dc4133be17a6acdb313755581eb2c0253f57d040a8483826d33c57a43"
+      },
+      {
+        "path": "specs/010-platform-core/reports/A.md",
+        "sha256": "10f92f5302609019c337fc5db2c5a79eab3bc6cbd6343f650a71eae6bf92bf12"
+      },
+      {
+        "path": "specs/010-platform-core/reports/B.md",
+        "sha256": "3ebbe72bbed20236c943a9c66ae8054c620274a3403a2b3864780e712b2366b3"
+      },
+      {
+        "path": "specs/010-platform-core/reports/C-baseline/connections-freeze.md",
+        "sha256": "551d7c18b8c73b8b62b71f00e70d3d954ffdb9c421cf2e1dc0ac6cc5449f16bc"
+      },
+      {
+        "path": "specs/010-platform-core/reports/C-baseline/t018-migration-plan.md",
+        "sha256": "0fe423090c97719c34b9eb91e3d2816d793207768e96623be95e4d7b304c7620"
+      },
+      {
+        "path": "specs/010-platform-core/reports/C-baseline/t019-migration-plan.md",
+        "sha256": "793bb3b945afe544cb4df19c81bfe773530788f0f72c55874cfabeb82044db2b"
+      },
+      {
+        "path": "specs/010-platform-core/reports/C.md",
+        "sha256": "0ffb7ce430404198608f2add8fb34978a55e084fa39c5b445c57a8faca200377"
+      },
+      {
+        "path": "specs/010-platform-core/reports/C7.md",
+        "sha256": "c8e00cf6cbbf4afd36a5bc9af518215cb9b1ef1dbd73bdeb4e6ba6136a985ff7"
+      },
+      {
+        "path": "specs/010-platform-core/research.md",
+        "sha256": "1848a815afdb67bdea3c7d81f2e3f914c1cffcf73975f244933a864fca8e7e99"
+      },
+      {
+        "path": "specs/010-platform-core/spec.md",
+        "sha256": "7ad2ab6878608124adf6982654555ea7f93d2e6ada20a4272e03df223610d1fc"
+      },
+      {
+        "path": "specs/010-platform-core/tasks.md",
+        "sha256": "7dfa21ac05af1d8db267a9fb77c28bbcb08ca569a2c52e862cfd25cd31b27a73"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/README.md",
+        "sha256": "25439e0d4b78a6ab1c81a5d99bc222c65b68e1ecb9911fbd5fe34bfc3e988489"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/acceptance-20261003.md",
+        "sha256": "b19476adc2d11b7322cd60da1ebc1f192671807dcaa95ab04fb12772bc83456c"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/acceptance.md",
+        "sha256": "a8d8cecec5efba842efa3f2f1159d70bae3097919bc464c5986781dd7fc6be80"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/api-key-import-seam.md",
+        "sha256": "6a4753ba0f48eed355321b0b4b078e2d76aa6cf1ae7a03bbe829976482af144b"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/api-key-usage.md",
+        "sha256": "23fac4a098872f1ad45e5a4df534f1f55f4704aea76d1b0c7a4162ca9a982030"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/checkpoint-20261002-desktop.md",
+        "sha256": "83d678cc1a5a116d269ebc943de25dd6ec8085b3b00d9f322b932d74e57f5a27"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/checkpoints.md",
+        "sha256": "855ffacf2ee77f6a33227cb9a2109b6ceb86dee37c433ed770f6d295755c95e5"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/codex-zcode-review.md",
+        "sha256": "1dd505b5e7bdd71359bafff77181e24ef52614f349b54ca656f7f0d0d246b2b6"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/continuous-operation.md",
+        "sha256": "cd0892d9103e6f8ff0b626a619163589b1eaffccf324d39355c59d90937e2ed4"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/core-boundaries-small-refactor.md",
+        "sha256": "724343b9dfc7854ae2ee4388e9f6c767fc693acc8b1bdb21b4e65a9918355352"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/core-inventory-20261002.md",
+        "sha256": "fb0660a038040a3ab34c21109c5b3c0f04898bd9309df15cdb0bcbb7ea2c05e9"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/decision-log.md",
+        "sha256": "85d0febb66f327568a61b4123b0f09bebe60817acf165c7b0e534fd16594a212"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/evidence.md",
+        "sha256": "a683bc018395b2228ee4cdb8cfdcc7ac8b8c4d0c1c9afd8e8e9e9432ccedbec8"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/execution-plan.md",
+        "sha256": "31c04a4db2ffb0adce61ebb340fdceda61dde18bfc45784df71f399eda90f788"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/final-report.md",
+        "sha256": "290482422bcf88e23ea3b2f76546cefe770d18069cc718a7a65b460747589ded"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/ledger.md",
+        "sha256": "618444ebcdae97c27f74cad7ba3da051c7a2b35f1331f8c940bd56f81628b73a"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/native-preparation-seam.md",
+        "sha256": "cba70f394071252a2e876e39eb0fc95dbedfb9f80e691cc91811b4ab09169a65"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/night-proposal-20261002.md",
+        "sha256": "cd2b2ee9f6afc24f0aa947d3bba3fdf09ba8f546b3545a85366c99b883c88491"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/night-report-20261002.md",
+        "sha256": "6da4dd6760dfaf8d457e4708c2f46785859d44f62578bb50f2a779a4f925599a"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/overnight-acceptance.md",
+        "sha256": "a77de2f2d92d05820c93e4ecd4239a7adf7e319b6d36bd6f68176ca0e4c07cfd"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/overnight-handoff.md",
+        "sha256": "98a5091bde9d838d4e144e4d9a3e030045167541d35f567f1077b523b39fcf49"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/overnight-tasks.md",
+        "sha256": "f2cd5499561c6e05b52c445b5778f740a3040a34cd428b3a4bc66bb2b9410e8c"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/subagents.md",
+        "sha256": "21ee83ce1ef6bda3a522dd44dbcfb9a4f6b8baf8bac399abc57ec2cdf4a4e07b"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/takeover-progress.md",
+        "sha256": "a563bb3449d42aa3b5532a951584d4131949627aaa3462ee2620631089eb5450"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/ui-refresh-acceptance.md",
+        "sha256": "152eebcd5f8be8907d02f976e681cd41a5b215b04875886d4e333d16bab7a2be"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/zcode-profile-model-appendix.md",
+        "sha256": "ed8e4bd8e953982ea481cec2c69ec030f35bf106e91ef8f4202d3b61db05608a"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/zcode-profile-model-closeout.md",
+        "sha256": "e798ec28bda21ec9b8e5a749cf3f145ab5ab550180fa8774fde25c6af1bf7e23"
+      },
+      {
+        "path": "specs/021-nightly-product-closeout/zcode-profile-model-report.md",
+        "sha256": "b3fa1a435c78f8b7882a69ca3003650e84b553aed2b3534ddbb8579dc99e7448"
+      }
+    ]
+  }
+}

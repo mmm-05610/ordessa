@@ -3,7 +3,7 @@
  * badges, keyboard-reachable select, manage entry present. */
 import { act, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { afterEach, expect, it } from 'vitest'
+import { afterEach, expect, it, vi } from 'vitest'
 import { ProfilePicker } from '../src/picker'
 import type { ProfileCatalogGroup } from '@ordessa/plugin-profile-api'
 
@@ -31,6 +31,12 @@ async function mount(element: ReactNode) {
   return container
 }
 
+async function openMenu(container: HTMLElement) {
+  await act(async () => {
+    container.querySelector('[data-profile-trigger]')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }))
+  })
+}
+
 it('renders harness groups, the selected name, and a manage entry', async () => {
   let selected: string | null = null
   const container = await mount(
@@ -43,17 +49,14 @@ it('renders harness groups, the selected name, and a manage entry', async () => 
   )
   const picker = container.querySelector('[data-profile-picker]')
   expect(picker).not.toBeNull()
-  const select = picker?.querySelector('select')
-  expect(select).not.toBeNull()
-  const groups = select?.querySelectorAll('optgroup')
-  expect(groups?.length).toBe(2)
-  expect(groups?.[0]?.getAttribute('label')).toBe('Pi')
+  await openMenu(container)
+  expect(document.querySelector('[data-profile-menu]')?.textContent).toContain('Pi')
+  expect(document.querySelector('[data-profile-menu]')?.textContent).toContain('Codex')
   const manage = container.querySelector('[data-profile-manage]')
   expect(manage?.textContent).toBe('管理')
 
   await act(async () => {
-    select!.value = 'pi::p2'
-    select!.dispatchEvent(new Event('change', { bubbles: true }))
+    document.querySelector<HTMLElement>('[data-profile-value="pi::p2"]')!.click()
   })
   expect(selected).toBe('代码审阅')
 })
@@ -73,7 +76,58 @@ it('disabled pickers expose their reason instead of failing silently', async () 
   const container = await mount(
     <ProfilePicker label={null} groups={[]} disabledReason="Profile 未启用" onSelect={() => {}} />,
   )
-  const select = container.querySelector('select')
-  expect((select as HTMLSelectElement | null)?.disabled).toBe(true)
-  expect((select as HTMLSelectElement | null)?.title).toBe('Profile 未启用')
+  const trigger = container.querySelector<HTMLButtonElement>('[data-profile-trigger]')
+  expect(trigger?.disabled).toBe(true)
+  expect(trigger?.title).toBe('Profile 未启用')
+})
+
+it('reselects the current profile on every menu click without clearing it', async () => {
+  const onSelect = vi.fn()
+  const onClearSelection = vi.fn()
+  const onRefresh = vi.fn()
+  const container = await mount(<ProfilePicker label="开发助手" groups={GROUPS}
+    onSelect={onSelect} onClearSelection={onClearSelection} onRefresh={onRefresh} />)
+  expect(onSelect).not.toHaveBeenCalled()
+  await openMenu(container)
+  await act(async () => document.querySelector<HTMLElement>('[data-profile-value="pi::p1"]')!.click())
+  expect(onSelect).toHaveBeenCalledExactlyOnceWith({ harnessId: 'pi', profileId: 'p1', displayName: '开发助手' })
+  expect(onClearSelection).not.toHaveBeenCalled()
+  expect(onRefresh).not.toHaveBeenCalled()
+  await openMenu(container)
+  await act(async () => document.querySelector<HTMLElement>('[data-profile-value="pi::p1"]')!.click())
+  expect(onSelect).toHaveBeenCalledTimes(2)
+  expect(container.querySelector('[data-profile-trigger]')?.textContent).toContain('开发助手')
+  expect(container.querySelector('[data-profile-reapply]')).toBeNull()
+})
+
+it.each([null, '已移除的预设'])('does not offer reapply without a catalogued selection (%s)', async label => {
+  const container = await mount(<ProfilePicker label={label} groups={GROUPS} onSelect={() => {}} />)
+  expect(container.querySelector('[data-profile-reapply]')).toBeNull()
+})
+
+it.each(['disabled', 'archived'])('cannot choose an unavailable profile (%s)', async state => {
+  const onSelect = vi.fn()
+  const groups = state === 'archived' ? GROUPS.map(group => ({ ...group,
+    profiles: group.profiles.map(profile => ({ ...profile, archived: true })) })) : GROUPS
+  const container = await mount(<ProfilePicker label="开发助手" groups={groups}
+    disabledReason={state === 'disabled' ? '会话不可用' : undefined} onSelect={onSelect} />)
+  if (state === 'disabled') {
+    expect(container.querySelector<HTMLButtonElement>('[data-profile-trigger]')?.disabled).toBe(true)
+  } else {
+    await openMenu(container)
+    const item = document.querySelector<HTMLElement>('[data-profile-value="pi::p1"]')!
+    expect(item.hasAttribute('data-disabled')).toBe(true)
+    await act(async () => item.click())
+  }
+  expect(onSelect).not.toHaveBeenCalled()
+})
+
+it('closes with Escape without selecting or clearing', async () => {
+  const onSelect = vi.fn(), onClearSelection = vi.fn()
+  const container = await mount(<ProfilePicker label="开发助手" groups={GROUPS} onSelect={onSelect} onClearSelection={onClearSelection} />)
+  await openMenu(container)
+  await act(async () => document.querySelector('[data-profile-menu]')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
+  expect(document.querySelector('[data-profile-menu]')).toBeNull()
+  expect(onSelect).not.toHaveBeenCalled()
+  expect(onClearSelection).not.toHaveBeenCalled()
 })

@@ -1,0 +1,22 @@
+{
+  "single_executor": true,
+  "shared_paths": [
+    "specs/026-open-environment-migration/status.md",
+    "specs/026-open-environment-migration/evidence/**"
+  ],
+  "orders": [
+    "001",
+    "002",
+    "003",
+    "004",
+    "005",
+    "006",
+    "007",
+    "008",
+    "009",
+    "010",
+    "011",
+    "012"
+  ]
+}
+

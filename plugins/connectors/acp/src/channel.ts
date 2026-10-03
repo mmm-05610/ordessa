@@ -1,5 +1,5 @@
 import type * as acp from '@agentclientprotocol/sdk'
-import type { AgentWorkspaceInfo } from '@extensions/ordessa.agent-contracts/contract.js'
+import type { AgentSessionInfo, AgentWorkspaceInfo } from '@extensions/ordessa.agent-contracts/contract.js'
 import type { AcpControlledSubmission, AcpPermissionDecision, AcpSubmissionAdmission } from './submission'
 import type { AcpAttachmentPreparePort } from './attachments'
 
@@ -19,6 +19,8 @@ import type { AcpAttachmentPreparePort } from './attachments'
 export interface AcpChannelHandle {
   /** Orchestration-issued identity for this channel instance. */
   readonly connectionId: string
+  readonly historySessionId?: string
+  readonly nativeSessionId?: string
   /** The authoritative project binding this channel serves; `binding.normalizedPath` is the
    * `session/new` cwd. */
   readonly binding: AgentWorkspaceInfo
@@ -43,6 +45,8 @@ export interface AcpChannelSpec {
   harness: { id: string; title: string }
   /** Server-authoritative project records; readable on selection, without any ACP channel. */
   listProjects: () => Promise<readonly AgentWorkspaceInfo[]>
+  /** Durable Harness metadata only: listing never starts a native process. */
+  listSessionHistory?: () => Promise<readonly AgentSessionInfo[]>
   /** The authoritative binding for one project; its `normalizedPath` is the `session/new` cwd. */
   openProject: (id: string) => Promise<AgentWorkspaceInfo>
   /** Register a user-picked local directory with this Server over the SAME existing
@@ -53,5 +57,5 @@ export interface AcpChannelSpec {
   /** Acquire the managed channel for the selected project. A new session supplies a unique
    * acquisition scope, kept stable by its attempt; this is not a native or canonical session id.
    * History/load may omit the scope. `initialize` runs on the handle's stream. */
-  acquireChannel: (projectId: string, sessionScopeId?: string, configurationProfileId?: string) => Promise<AcpChannelHandle>
+  acquireChannel: (projectId: string, sessionScopeId?: string, configurationProfileId?: string, historySessionId?: string) => Promise<AcpChannelHandle>
 }

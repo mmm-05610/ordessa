@@ -275,6 +275,11 @@ export default function createTransport(): NativeTransport {
           if (!known) throw new Error('project-invalid: the added project is not in the Server list')
           return { id, normalizedPath: text(workspace?.normalizedPath) ?? known.normalizedPath }
         }
+        case 'acp/session/history': {
+          if (!pair || params.instanceId !== pair.serverInstanceId) throw new Error('history needs the offered instance')
+          required('acp.sessions.list')
+          return await rpc(target, 'acp.sessions.list', { harnessId: pair.harnessId })
+        }
         case 'acp/channel/open': {
           if (!pair || params.instanceId !== pair.serverInstanceId) throw new Error('opening an ACP channel needs the offered instance')
           const projectId = text(params.projectId)
@@ -293,6 +298,7 @@ export default function createTransport(): NativeTransport {
           // identity again before launching anything.
           const opened = record(await rpc(target, 'acp.channel.open', { harnessId: pair.harnessId, projectId,
             ...(scope === undefined ? {} : { sessionScopeId: scope }),
+            ...(params.historySessionId === undefined ? {} : { historySessionId: params.historySessionId }),
             ...(configurationProfileId === undefined ? {} : { configurationProfileId }) }))
           const connectionId = text(opened?.connectionId), executionId = text(opened?.executionId)
           const binding = record(opened?.binding)
@@ -303,7 +309,9 @@ export default function createTransport(): NativeTransport {
           // The open is idempotent per live pair; a second attach would double-deliver inbound frames,
           // so the existing relay is reused rather than re-attached.
           if (!relays.has(connectionId)) openRelay(connectionId)
-          return { connectionId, executionId, binding: { id: projectId, normalizedPath: cwd } }
+          return { connectionId, executionId, binding: { id: projectId, normalizedPath: cwd },
+            ...(text(opened?.historySessionId) ? { historySessionId: text(opened?.historySessionId) } : {}),
+            ...(text(opened?.nativeSessionId) ? { nativeSessionId: text(opened?.nativeSessionId) } : {}) }
         }
         case 'acp/channel/send': {
           const connectionId = text(params.connectionId)

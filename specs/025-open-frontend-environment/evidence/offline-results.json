@@ -1,0 +1,259 @@
+{
+  "kind": "offline-design-reference",
+  "passed": 28,
+  "failed": 0,
+  "limitations": [
+    "No production imports",
+    "No backend/IPC/IME execution",
+    "Budget is abstract accounting, not measured memory"
+  ],
+  "checks": [
+    {
+      "name": "field-mask-and-order",
+      "result": "PASS",
+      "scenarios": [
+        2,
+        3,
+        4
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "same-value-new-operation",
+      "result": "PASS",
+      "scenarios": [
+        5
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "frozen-submission-does-not-consume-later-op",
+      "result": "PASS",
+      "scenarios": [
+        6
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "new-observation-before-old-receipt",
+      "result": "PASS",
+      "scenarios": [
+        12
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "same-authority-exclusive-reservation",
+      "result": "PASS",
+      "scenarios": [
+        10
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "no-full-snapshot-writeback-and-cas",
+      "result": "PASS",
+      "scenarios": [
+        3,
+        12
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "unknown-and-restart-only-correlate",
+      "result": "PASS",
+      "scenarios": [
+        8,
+        11
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "execution-is-not-current-evidence",
+      "result": "PASS",
+      "scenarios": [
+        2,
+        11,
+        12
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "partial-application-blocks-input-and-retry",
+      "result": "PASS",
+      "scenarios": [
+        8
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "pre-outbound-write-failure-releases-reservation",
+      "result": "PASS",
+      "scenarios": [
+        11
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "draft-ABA-and-negative-text-equality",
+      "result": "PASS",
+      "scenarios": [
+        7,
+        8
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "late-result-stays-with-captured-session",
+      "result": "PASS",
+      "scenarios": [
+        10
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "async-catalog-version-mismatch-refused",
+      "result": "PASS",
+      "scenarios": [
+        4
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "out-of-order-patch-requires-complete-chain",
+      "result": "PASS",
+      "scenarios": [
+        12,
+        21
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "binding-applicability-and-creation-proof",
+      "result": "PASS",
+      "scenarios": [
+        9,
+        18
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "authority-cross-major-and-reconnect-alias",
+      "result": "PASS",
+      "scenarios": [
+        1,
+        10,
+        16,
+        19
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "raw-command-routing-and-surface-provider-identity",
+      "result": "PASS",
+      "scenarios": [
+        13,
+        14
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "admission-fence-and-old-settlement",
+      "result": "PASS",
+      "scenarios": [
+        17,
+        18,
+        22
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "authorization-commit-versus-revocation",
+      "result": "PASS",
+      "scenarios": [
+        22
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "document-and-read-delivery-rights",
+      "result": "PASS",
+      "scenarios": [
+        15,
+        22
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "all-send-entry-barrier-and-single-Esc",
+      "result": "PASS",
+      "scenarios": [
+        7,
+        20
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "approval-condition-single-claim",
+      "result": "PASS",
+      "scenarios": [
+        15,
+        22
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "joint-budget-decoded-retention-and-stream-epoch",
+      "result": "PASS",
+      "scenarios": [
+        21
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "positive-and-negative-identity-guards",
+      "result": "PASS",
+      "scenarios": [
+        10,
+        18,
+        19
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "configuration-confirmed-input-unknown-stays-locked",
+      "result": "PASS",
+      "scenarios": [
+        8,
+        11
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "terminal-marker-write-failure-conservative-unknown",
+      "result": "PASS",
+      "scenarios": [
+        11
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "same-revision-conflict-blocks-capture-positive-negative",
+      "result": "PASS",
+      "scenarios": [
+        12
+      ],
+      "grade": "L"
+    },
+    {
+      "name": "target-schema-version-normalizes-same-fact",
+      "result": "PASS",
+      "scenarios": [
+        16,
+        18,
+        19
+      ],
+      "grade": "L"
+    }
+  ]
+}

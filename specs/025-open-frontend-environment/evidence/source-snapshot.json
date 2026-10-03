@@ -1,0 +1,189 @@
+{
+  "time": "2026-10-03T12:07:49.746521+08:00",
+  "trees": {
+    "M": {
+      "path": "/home/maoqh/projects/ordessa",
+      "head": "b4bf7cd90951d0fa9bcf3a3de2e66b7db6a62aa0",
+      "status": "?? specs/022-openshell-integration/\n?? specs/023-subagent-collaboration/\n?? specs/024-open-environment-kernel/\n?? specs/025-open-frontend-environment/\n",
+      "branch": "main"
+    },
+    "P": {
+      "path": "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout",
+      "head": "7951bf06a258d2dc41402556eb61319b8bab5cbe",
+      "status": " M docs/ui-preview/01-empty.png\n M package-lock.json\n M plugins/connectors/acp/src/channel.ts\n M plugins/connectors/acp/src/client.ts\n M plugins/connectors/acp/src/host.ts\n M plugins/connectors/acp/src/native.ts\n M plugins/harness/src/ordessa_harness/server_acp/access_entry.py\n M plugins/harness/src/ordessa_harness/server_acp/plugin.py\n M plugins/harness/src/ordessa_harness/server_acp/registry.py\n M plugins/harness/tests/test_native_operation_state.py\n M plugins/profile/integrations/chat/package.json\n M plugins/profile/integrations/chat/src/picker.tsx\n M plugins/profile/integrations/chat/tests/entry.test.tsx\n M plugins/profile/integrations/chat/tests/picker.test.tsx\n M plugins/server-compat/src/ordessa_server_compat/composition.py\n M products/desktop/extensions.lock.json\n M specs/021-nightly-product-closeout/takeover-progress.md\n?? .zcodeignore\n?? docs/migration/native-session-history-v1.md\n?? plugins/connectors/acp/tests/durable-history.test.ts\n?? plugins/harness/src/ordessa_harness/server_acp/history.py\n?? plugins/harness/tests/test_legacy_pi_history_import.py\n?? plugins/harness/tests/test_native_session_history.py\n?? plugins/harness/tools/\n?? specs/021-nightly-product-closeout/acceptance-20261003.md\n",
+      "branch": "nightly/021-harness-rollout-opencode-hermes-dsh-kilo"
+    }
+  },
+  "sources": [
+    {
+      "tree": "M",
+      "file": "AGENTS.md",
+      "sha256": "ef1102f6f8dd6138496f74327b717a841c7e98efc2ab48adc0550eaf6cf73d20"
+    },
+    {
+      "tree": "M",
+      "file": "apps/desktop/AGENTS.md",
+      "sha256": "34c62ae5aa051c9ad018aa0ececd8c58e422c837529c606e94006d481012b8cc"
+    },
+    {
+      "tree": "M",
+      "file": "packages/desktop-platform/extension-api/src/index.ts",
+      "sha256": "3b824a227f1deaf61c5d6164e95dc20e939552a8f6d7d5581d036219024a46a7"
+    },
+    {
+      "tree": "M",
+      "file": "packages/desktop-platform/extension-host/src/runtime.ts",
+      "sha256": "b1b812c564302a6499d37244874f5c9535283153ca6a13edf1cbeb547e36a06b"
+    },
+    {
+      "tree": "M",
+      "file": "packages/desktop-platform/extension-loader/src/index.ts",
+      "sha256": "6848273746f704782d9b759188db5c85ab28b7e9242277179647f25b81ebef27"
+    },
+    {
+      "tree": "M",
+      "file": "packages/desktop-platform/extension-host/src/main/extension-protocol.ts",
+      "sha256": "47b86b89bfaeb7ee5a366d6392a7caf4878a400372d3d944f55801e74300d626"
+    },
+    {
+      "tree": "M",
+      "file": "packages/desktop-platform/contracts/foundation/src/contract.ts",
+      "sha256": "84324f2b59174f9c1afb41a50a85206c0c1b25831a8b3a8f39699b16cbfb6966"
+    },
+    {
+      "tree": "M",
+      "file": "packages/desktop-platform/connections/src/index.ts",
+      "sha256": "f06c35e3c6c9125bbf85cd325df58858a6a2474bfa54a4cd511dff6e1a17715d"
+    },
+    {
+      "tree": "M",
+      "file": "packages/desktop-platform/ui-components/src/index.ts",
+      "sha256": "0f5bb773c3b6a192fe76175e5261f26526b7f4b78c494dd7b7a2a2c96e512697"
+    },
+    {
+      "tree": "M",
+      "file": "packages/workbench/src/model.ts",
+      "sha256": "6bd5027010bc0bc6872373140f447ff4ebff27d20de0b8cac31f25936dfc3f12"
+    },
+    {
+      "tree": "M",
+      "file": "packages/workbench/api/workbench.ts",
+      "sha256": "a377f2e7945442ba5061589a34d64e9c0b420016fe9cfb30e877a10b5870d301"
+    },
+    {
+      "tree": "M",
+      "file": "apps/desktop/renderer/main.tsx",
+      "sha256": "06d4e597b1c76715aec34f67ef5468f53f30fc9d1ca069053a56c409fe422b0f"
+    },
+    {
+      "tree": "M",
+      "file": "apps/desktop/renderer/host-services.ts",
+      "sha256": "e72553c451fa0b5a9b811618d1c93f416efc680276343282172cf95e88cb3b38"
+    },
+    {
+      "tree": "M",
+      "file": "apps/desktop/electron/security.ts",
+      "sha256": "3ab8eb0610d9173ae6cf7a2fa23b11728ec94340dc580ad7d58c284134ea5c56"
+    },
+    {
+      "tree": "M",
+      "file": "apps/desktop/electron/preload.ts",
+      "sha256": "9c05c58d1961b518940a0b02b7d9323bc8afd2060dc0aaa258abbd1cffe24bde"
+    },
+    {
+      "tree": "M",
+      "file": "packages/desktop-platform/native-bridge/src/index.ts",
+      "sha256": "850841d51fac51ef43955b4643b69c664401bd02543a4cf47b7647e63054659b"
+    },
+    {
+      "tree": "M",
+      "file": "plugins/connectors/acp/src/host.ts",
+      "sha256": "4ed4c9546a69b82be73ad63f7fc4e5c0a986ed38454327c4d94b38cd9a131711"
+    },
+    {
+      "tree": "M",
+      "file": "plugins/connectors/acp/src/client.ts",
+      "sha256": "dcc264c18b6b90a43f5883a69f71c3fe6e4d6b34b69a992893580bd6870d8dd8"
+    },
+    {
+      "tree": "M",
+      "file": "plugins/connectors/ordessa/src/client.ts",
+      "sha256": "e2de785b8f69c91a074c2022bca21e0fa76f32657fc22d76d665a7945817c031"
+    },
+    {
+      "tree": "M",
+      "file": "plugins/agent/sessions/src/model.ts",
+      "sha256": "9596781446a3b8ee88c6029430f8928fdb5d24ce3669fd09ddaa4f4a1bc12e11"
+    },
+    {
+      "tree": "M",
+      "file": "plugins/chat/frontend/src/views/chat-page.tsx",
+      "sha256": "1811fd8ee8e4648428b24051b82e40861786339b04ff2844adb2c962785a82c5"
+    },
+    {
+      "tree": "M",
+      "file": "plugins/chat/frontend/src/components/composer/text-input.tsx",
+      "sha256": "61883ae55ddf13bc9dc7acd94f33afaa63ad2ace64493617aff07ffc6a46ad52"
+    },
+    {
+      "tree": "M",
+      "file": "plugins/chat/frontend/src/adapters/agent.ts",
+      "sha256": "7eb65e6c7cf7a1c71ee6c06d1b63ac0c4a56126d1d14dae9c516057ddfa07f74"
+    },
+    {
+      "tree": "M",
+      "file": "plugins/profile/integrations/chat/src/selection.ts",
+      "sha256": "a60840a18d047bcf5538e890349a4617e322c6a8e55cb9dc1d2ae9518c6a00e3"
+    },
+    {
+      "tree": "M",
+      "file": "plugins/profile/integrations/chat/src/glue.ts",
+      "sha256": "899b28190331f1f66579afd6537d2fae7b8f587db8c712c7364c2548fed9688b"
+    },
+    {
+      "tree": "M",
+      "file": "products/desktop/extensions.json",
+      "sha256": "757a302daf4c8a0120d187ae748586a5bbf79885e580e9d602ffbafed8280bf2"
+    },
+    {
+      "tree": "M",
+      "file": "plugins/chat/api/src/contract.ts",
+      "sha256": "48f9630de58b1097d431e5a3cca0be9b14ba81db7e29b9cdd4214f9d09b522b7"
+    },
+    {
+      "tree": "P",
+      "file": "plugins/profile/integrations/chat/src/selection.ts",
+      "sha256": "36604dfaf3ba7a25e5e22cd83c35dee5c67ac96d7520249053978ff9d1481d1d"
+    },
+    {
+      "tree": "P",
+      "file": "plugins/profile/integrations/chat/src/glue.ts",
+      "sha256": "f446bdf5156c68fd5a442648b6fa5f13fd9367963d7be8d8ac663f9d9a2133a1"
+    },
+    {
+      "tree": "P",
+      "file": "plugins/profile/integrations/chat/src/picker.tsx",
+      "sha256": "baa4ffa2b3bf1ea74dd3153666c5ca3714dcdb980cbadd048f24a16d767a699b"
+    },
+    {
+      "tree": "P",
+      "file": "plugins/assets/model-provider/chat-contribution/src/next-turn-client.ts",
+      "sha256": "1af61b951cb2da32427b93456edcac6f6bb49f4ecd8b4a410c1fd9265bcacb31"
+    },
+    {
+      "tree": "P",
+      "file": "plugins/assets/model-provider/chat-contribution/src/chat-api-entry.tsx",
+      "sha256": "ea524ea51a14949195ceb9e6af4ea4021840d3d524ce424c92863787d74315f8"
+    },
+    {
+      "tree": "P",
+      "file": "plugins/assets/model-provider/chat-contribution/src/selector.tsx",
+      "sha256": "82b39b91e6c695d08dc652c50e7cf4588de55146bad6579f22ee6e72e96c4acc"
+    },
+    {
+      "tree": "P",
+      "file": "products/desktop/extensions.json",
+      "sha256": "f79cbe9f3f3e76d618418be5f70f4f1309c267c4b59ca49317588dadbd21b199"
+    }
+  ]
+}

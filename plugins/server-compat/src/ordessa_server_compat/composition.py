@@ -604,7 +604,8 @@ def build_runtime_from_native_adapter(
     # own close-with-OS-confirmation contract.  Nothing here spawns an Agent
     # directly. The registry, its wire methods and the stream route belong to
     # the Harness server facet; this composition only supplies the launch.
-    def launch_channel_transport(*, harness_id: str, cwd: str, on_line, on_exit, configuration_profile_id=None):
+    def launch_channel_transport(*, harness_id: str, cwd: str, on_line, on_exit, configuration_profile_id=None,
+                                 retained_instance_directory=None):
         if harness_id not in adapters:
             raise RuntimeError("NATIVE_HARNESS_INVALID")
         selection = None
@@ -625,11 +626,13 @@ def build_runtime_from_native_adapter(
         if pi_profile_bridge and harness_id == "pi":
             from ordessa_harness.server_acp.instance_directory import allocate_instance_directory
             instance_options = {"pi_profile_bridge": True,
-                                "instance_directory": str(allocate_instance_directory(root))}
+                                "instance_directory": retained_instance_directory or str(allocate_instance_directory(root))}
         elif harness_id in native_profile_harnesses:
             from ordessa_harness.server_acp.instance_directory import allocate_instance_directory
             instance_options = {"native_profile_bridge": True,
-                                "instance_directory": str(allocate_instance_directory(root))}
+                                "instance_directory": retained_instance_directory or str(allocate_instance_directory(root))}
+        elif retained_instance_directory is not None:
+            raise RuntimeError('NATIVE_CONTINUATION_UNSUPPORTED')
         transport = AccessEntryTransport(
             node=node, entry=str(access_entry), harness_id=harness_id,
             cwd=cwd, adapter=adapters[harness_id], on_line=on_line, on_exit=on_exit,

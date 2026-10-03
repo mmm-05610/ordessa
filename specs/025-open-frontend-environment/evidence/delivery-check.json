@@ -1,0 +1,16 @@
+{
+  "time": "2026-10-03T12:38:03.924627+08:00",
+  "required_files_except_final_review": "all required files present",
+  "scenarios": 22,
+  "round1_attacks": 25,
+  "round2_attacks": 16,
+  "offline": 28,
+  "current_heads": {
+    "M": "b4bf7cd90951d0fa9bcf3a3de2e66b7db6a62aa0",
+    "P": "7951bf06a258d2dc41402556eb61319b8bab5cbe"
+  },
+  "source_hash_changes_since_start": [],
+  "meaning": "Main session only wrote 025. Product tree is externally active; hashes identify drift, not attribution.",
+  "final_review": "review.md present; independent C accepts V4 for design review",
+  "final_model": "models/v4.md"
+}

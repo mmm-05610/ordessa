@@ -1,0 +1,169 @@
+{
+  "verification_level": "O: finite normative reference examples only",
+  "production_imports": false,
+  "service_or_model_calls": false,
+  "checks": [
+    {
+      "id": "S01",
+      "result": "pass",
+      "claim": "empty environment / dependency absence"
+    },
+    {
+      "id": "S02",
+      "result": "pass",
+      "claim": "independent instance generations"
+    },
+    {
+      "id": "S03",
+      "result": "pass",
+      "claim": "creation/detach does not end object"
+    },
+    {
+      "id": "S04",
+      "result": "pass",
+      "claim": "multiple ingress activities / one native session"
+    },
+    {
+      "id": "S05",
+      "result": "pass",
+      "claim": "unknown native payload preserved"
+    },
+    {
+      "id": "S06",
+      "result": "pass",
+      "claim": "UI-only feature cannot claim reachability"
+    },
+    {
+      "id": "S07",
+      "result": "pass",
+      "claim": "opaque payload is not outcome evidence"
+    },
+    {
+      "id": "S08",
+      "result": "pass",
+      "claim": "bounded observation gap / independent control capacity"
+    },
+    {
+      "id": "S09",
+      "result": "pass",
+      "claim": "memory query pin / effect missing store refusal"
+    },
+    {
+      "id": "S10",
+      "result": "pass",
+      "claim": "same key replay / conflict / spent claim"
+    },
+    {
+      "id": "S11",
+      "result": "pass",
+      "claim": "five finite crash cuts; real process crashes remain future tests"
+    },
+    {
+      "id": "S12",
+      "result": "pass",
+      "claim": "cancel acknowledgement / conflict / immutable receipts"
+    },
+    {
+      "id": "S13",
+      "result": "pass",
+      "claim": "unknown preserved / closure admitted / no reissue"
+    },
+    {
+      "id": "S14",
+      "result": "pass",
+      "claim": "shared usage / destroy and release authority"
+    },
+    {
+      "id": "S15",
+      "result": "pass",
+      "claim": "foreign/stale reference / self escalation refusal"
+    },
+    {
+      "id": "S16",
+      "result": "pass",
+      "claim": "separate ordering counterexample / partial effects preserved"
+    },
+    {
+      "id": "S17",
+      "result": "pass",
+      "claim": "drain / live and unpublished obligations / unreadable facts"
+    },
+    {
+      "id": "S18",
+      "result": "pass",
+      "claim": "environment revision versus mutable native / required guarantee"
+    },
+    {
+      "id": "S19",
+      "result": "pass",
+      "claim": "minimum history / reinstall cannot revive old handle"
+    },
+    {
+      "id": "S20",
+      "result": "pass",
+      "claim": "one reference admission table across ingress names"
+    },
+    {
+      "id": "X01",
+      "result": "pass",
+      "claim": "all two-operation use/destroy reference permutations"
+    },
+    {
+      "id": "X02",
+      "result": "pass",
+      "claim": "obligation continuity across abstract create completion transaction"
+    },
+    {
+      "id": "X03",
+      "result": "pass",
+      "claim": "full-input keyed fixture comparison / absent fingerprint port"
+    },
+    {
+      "id": "X04",
+      "result": "pass",
+      "claim": "history lookup independent of active binding"
+    },
+    {
+      "id": "X05",
+      "result": "pass",
+      "claim": "observer sequence epochs cannot be ordered as native revisions"
+    },
+    {
+      "id": "X06",
+      "result": "pass",
+      "claim": "response-slot unique across request keys / spent-hold read replay"
+    },
+    {
+      "id": "X07",
+      "result": "pass",
+      "claim": "late results / required control / existing dependency closure scope"
+    },
+    {
+      "id": "X08",
+      "result": "pass",
+      "claim": "unknown delivery role produces a scope obligation"
+    },
+    {
+      "id": "X09",
+      "result": "pass",
+      "claim": "owned scope evidence / borrowed relationship distinction"
+    },
+    {
+      "id": "X10",
+      "result": "pass",
+      "claim": "asynchronous waits are still edges in the reference wait graph"
+    },
+    {
+      "id": "X11",
+      "result": "pass",
+      "claim": "memory static relationship retirement preserves content"
+    },
+    {
+      "id": "X12",
+      "result": "pass",
+      "claim": "decoder version compatibility / pin until result encoding"
+    }
+  ],
+  "count": 32,
+  "implementation_tests": "not run"
+}

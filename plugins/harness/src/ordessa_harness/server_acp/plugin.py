@@ -168,6 +168,8 @@ class AcpChannelServerPlugin:
                              if "sessionScopeId" in params else None)
             configuration_profile = (_bounded(params['configurationProfileId'], 'configurationProfileId', 128)
                                      if 'configurationProfileId' in params else None)
+            history_session = (_bounded(params['historySessionId'], 'historySessionId', 96)
+                               if 'historySessionId' in params else None)
             if session_scope is not None and (session_scope.strip() != session_scope
                     or any(ord(char) < 32 for char in session_scope)):
                 raise WireError("INVALID_REQUEST", "invalid sessionScopeId")
@@ -184,6 +186,8 @@ class AcpChannelServerPlugin:
                 )
             workspace_id = _bounded(params["projectId"], "projectId")
             row = workspaces.records.get(workspace_id)
+            if row.get('archived_at') is not None:
+                raise WireError('INVALID_REQUEST', 'the project is archived')
             if str(row.get("env_kind") or "") != "local":
                 raise WireError("CAPABILITY_UNSUPPORTED", "managed channels are placed on local projects only")
             selected = str(row.get("normalized_path") or "")
@@ -199,9 +203,24 @@ class AcpChannelServerPlugin:
                     profile_id=str(identity["profileId"]), cwd=selected,
                     **({"session_scope_id": session_scope} if session_scope is not None else {}),
                     **({'configuration_profile_id': configuration_profile} if configuration_profile is not None else {}),
+                    **({'history_session_id': history_session} if history_session is not None else {}),
                 )
             except SessionAcquisitionRefused as exc:
                 raise WireError("INVALID_REQUEST", str(exc)) from exc
+
+        def acp_sessions_list(params: Mapping[str, Any]) -> dict[str, Any]:
+            _require(params, 'harnessId')
+            if self._registry is None or self._registry.history is None:
+                raise WireError('CAPABILITY_UNSUPPORTED', 'native session history unavailable')
+            harness_id = _bounded(params['harnessId'], 'harnessId', 64)
+            identity = (native_identity_for(harness_id) if native_identity_for
+                        else native_identity() if native_identity else None)
+            if not isinstance(identity, Mapping) or identity.get('harness') != harness_id:
+                raise WireError('CAPABILITY_UNSUPPORTED', 'native Harness unavailable')
+            try:
+                return {'items': self._registry.list_history(harness_id)}
+            except (ValueError, OSError) as exc:
+                raise WireError('INTERNAL_ERROR', 'native session history unavailable') from exc
 
         def acp_channel_release(params: Mapping[str, Any]) -> dict[str, Any]:
             """Release one channel by ownership: its transport stops, its run
@@ -351,8 +370,12 @@ class AcpChannelServerPlugin:
             ServerMethodDescriptor(
                 method_id="acp.channel.open",
                 required_params=frozenset({"harnessId", "projectId"}),
-                optional_params=frozenset({"requestId", "sessionScopeId", "configurationProfileId"}),
+                optional_params=frozenset({"requestId", "sessionScopeId", "configurationProfileId", "historySessionId"}),
                 handler=acp_channel_open, owner=PLUGIN_ID,
+            ),
+            ServerMethodDescriptor(
+                method_id='acp.sessions.list', required_params=frozenset({'harnessId'}),
+                optional_params=frozenset({'requestId'}), handler=acp_sessions_list, owner=PLUGIN_ID,
             ),
             ServerMethodDescriptor(
                 method_id="acp.channel.release",

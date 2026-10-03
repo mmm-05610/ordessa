@@ -1,0 +1,44 @@
+{
+  "/home/maoqh/projects/ordessa": {
+    "source-snapshot.json": {
+      "checked": 338,
+      "changed_since_snapshot": []
+    },
+    "supplemental-snapshot.json": {
+      "checked": 29,
+      "changed_since_snapshot": []
+    }
+  },
+  "/home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout": {
+    "source-snapshot.json": {
+      "checked": 411,
+      "changed_since_snapshot": []
+    },
+    "supplemental-snapshot.json": {
+      "checked": 30,
+      "changed_since_snapshot": []
+    }
+  },
+  "main_tracked_diff_names": [],
+  "task_files": [
+    "README.md",
+    "attacks/round-1.md",
+    "attacks/round-2.md",
+    "boundary.md",
+    "checks/contract_checks.py",
+    "evidence/migration-seams.md",
+    "evidence/offline-checks.json",
+    "evidence/scope-audit.json",
+    "evidence/source-snapshot.json",
+    "evidence/supplemental-snapshot.json",
+    "inventory.md",
+    "models/v1.md",
+    "models/v2.md",
+    "models/v3.md",
+    "refactor-plan.md",
+    "review.md",
+    "scenarios.md",
+    "status.md"
+  ],
+  "limitations": "Hash audit covers inspected files only. Other active writers, especially product worktree, cannot be attributed from hashes; this task performed no production edits."
+}
