@@ -161,7 +161,7 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 
 ## 011 贯通发送、恢复与真实产品链
 
-- [ ] T011-01 实现capture事务固定draft/附件/配置opIds/base/target/binding/schema/保证等级；UI选择/晚编辑不得改捕获快照。
+- [x] T011-01 实现capture事务固定draft/附件/配置opIds/base/target/binding/schema/保证等级；UI选择/晚编辑不得改捕获快照。
 - [ ] T011-02 可靠路径持久request+fingerprint/reservation后调用Harness所声明条件提交；raw入口显式，绝不从可靠失败降级。
 - [ ] T011-03 首次create-with-config/creationAttempt关联与existing session分开；选择不create，unknown创建只核对，不new第二实例。
 - [ ] T011-04 分记config partial/input known-rejected/accepted/unknown和native run结果；UI异常说明准确，不把一切写连接中断。
