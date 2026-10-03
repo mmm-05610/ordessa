@@ -20,6 +20,7 @@ from typing import get_type_hints
 
 import pytest
 
+from pacthold.core.store_port import CoreStoreProtocol
 from pacthold.public import (
     AcquireOutcome,
     AcquireRequest,
@@ -221,7 +222,10 @@ def test_core_runtime_entry_signatures(runtime: CoreRuntime):
     init_params = list(inspect.signature(CoreRuntime).parameters)
     assert init_params == ["store"]
     hints = get_type_hints(CoreRuntime.__init__)
-    assert hints["store"] is CoreStore
+    # T005-01 seam migration: the runtime admits stores by the structural
+    # CoreStoreProtocol face; the pin moved from the concrete CoreStore to
+    # the seam type (same exactness, now the frozen port).
+    assert hints["store"] is CoreStoreProtocol
 
     assert list(inspect.signature(runtime.stage).parameters) == ["owner", "contributions"]
     stage_hints = get_type_hints(CoreRuntime.stage)

@@ -1,5 +1,16 @@
 # 迁移状态
 
+## 2026-10-03 005 持久化/秘密/数据空间完成（codeReady）
+
+前序：004@7c94ec8140。新包 ordessa-persistence-sqlite（StorePort：同根写者排他+显式证据接管、
+key 占位/重放/冲突、slot 单消费、回执不可变+current 修订、墓碑；指纹 HMAC+轮换不可比；封存
+schema 只读 reader；E5 关系持久化）与 ordessa-platform-services（File DataArea：稳定 namespace/
+close 保字节/purge 须授权/超范围拒写；SecretRef：逐次校验/locked 拒/墓碑）。pacthold CoreStore
+协议化 seam（CoreStoreProtocol，切片A）。5 个真 SIGKILL 崩溃窗 + 备份恢复提案（零真实数据）。
+测试：pacthold 246、persistence 20、services 7、env-api 33、runtime-compat 163 全绿；server platform
+5F=继承（stash 对照）。证据 evidence/order-005-report.md + order-005-schema-risk.md。
+005=DONE（codeReady）；006 解锁。缺口：CoreBinding/产品构造消费者物理迁移=006；五窗提交链=011。
+
 ## 2026-10-03 004 生命周期权威完成（codeReady）
 
 前序：003@ceca96799f。Environment 扩展：drain cut（原子关新准入+线性化点）、retire（M05 规则：

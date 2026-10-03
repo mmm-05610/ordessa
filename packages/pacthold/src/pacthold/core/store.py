@@ -25,7 +25,19 @@ _MEMORY_SENTINEL = ":memory:"
 
 
 class CoreStore:
-    """One self-owned SQLite database bound to one CoreRuntime instance."""
+    """One self-owned SQLite database bound to one CoreRuntime instance.
+
+    Mechanism extraction note (order 005, T005-01): the SQLite
+    connection/transaction *mechanism* belongs to the environment-level
+    persistence package (``ordessa-persistence-sqlite``, the environment
+    ``StorePort`` implementation).  ``CoreStore`` stays the kernel's internal
+    schema implementation (the neutral ``core_execution``/``core_operation``
+    tables) behind the ``CoreStoreProtocol`` seam
+    (``pacthold.core.store_port``).  The core never imports or re-exports the
+    environment implementation: import direction is implementation → core
+    only, never core → implementation (no reverse export).  Consumers built
+    as ``CoreStore(path)`` keep working unchanged.
+    """
 
     __slots__ = ("_path", "_conn", "_closed")
 

@@ -1,6 +1,8 @@
 """``CoreRuntime`` — the C1 composition root of one core instance.
 
-One runtime owns one ``CoreStore`` and one instance-scoped
+One runtime owns one store — admitted through the structural
+``CoreStoreProtocol`` seam (T005-01; ``CoreStore`` is the kernel's own
+implementation of it) — and one instance-scoped
 ``CoreRegistry``; nothing here is process-global (FR-001).  Since T008 the
 runtime also composes the real dispatch state machine
 (:class:`pacthold.core.dispatch.DispatchCoordinator`): ``submit`` /
@@ -39,7 +41,7 @@ from .errors import (
 )
 from .plan import ExecutionPlan
 from .registration import CoreContributionSet, CoreRegistration, CoreRegistry, CoreRegistrySnapshot
-from .store import CoreStore
+from .store_port import CoreStoreProtocol
 
 
 @dataclass(frozen=True)
@@ -59,9 +61,14 @@ class CoreRuntime:
         "_shutdown_report", "_dispatch",
     )
 
-    def __init__(self, store: CoreStore) -> None:
-        if not isinstance(store, CoreStore):
-            raise TypeError(f"CoreRuntime requires a CoreStore instance, got {store!r}")
+    def __init__(self, store: CoreStoreProtocol) -> None:
+        # T005-01: the runtime consumes the structural store face, not the
+        # concrete CoreStore class; runtime_checkable keeps a typed refusal
+        # for objects missing the face (no behavioral duck-typing drift).
+        if not isinstance(store, CoreStoreProtocol):
+            raise TypeError(
+                f"CoreRuntime requires a CoreStoreProtocol-compatible store, got {store!r}"
+            )
         self._store = store
         self._registry = CoreRegistry()
         self._closed = False
@@ -76,7 +83,7 @@ class CoreRuntime:
         )
 
     @property
-    def store(self) -> CoreStore:
+    def store(self) -> CoreStoreProtocol:
         return self._store
 
     def _ensure_open(self) -> None:

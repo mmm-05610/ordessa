@@ -52,21 +52,21 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 
 ## 005 提取SQLite持久化并验证真实故障窗口
 
-- [ ] T005-01 从现CoreStore提取SQLite实现与工厂；Core仅StorePort，兼容旧构造消费者迁移，不核心反向export实现。
-- [ ] T005-02 定义fixture新增schema与只读旧schema映射，保持原库命名与migration编号；真实数据写需另许可。
-- [ ] T005-03 以事务保存request占位、Activity、creation→Object/Usage、原Receipt与currentFact、response slot；外部调用不持DB锁。
-- [ ] T005-04 实现ProtectedFingerprintPort依合同用系统secret port的opaque key；临时测试key仅fixture，真实托管缺席可靠受限而raw不被禁。
-- [ ] T005-05 子进程kill分别覆盖intent前、持久intent后投递前、外部接纳后回执前、结果commit前后，重启查询与未知不重发。
-- [ ] T005-06 并发同ID同输入仅一个准入/相同回执、不同输入拒；跨ID同response slot只消费一次，两个data root隔离。
-- [ ] T005-07 测试SQLite只读包含WAL、事务失败/锁冲突/缺密钥/轮换/损坏schema；保原Receipt不变，晚证据修CurrentFact且冲突不自动解锁。
-- [ ] T005-08 输出新schema和真实迁移风险/备份恢复提案；没有许可只fixture，不提前开用户DB。
-- [ ] T005-09 落实C2同根跨进程writer排他、key轮换墓碑/独立history-read；真实暂停旧writer/双进程/正文过期测试；同步CoreBinding与产品具体Store构造消费者，防005→006依赖死锁。
+- [x] T005-01 从现CoreStore提取SQLite实现与工厂；Core仅StorePort，兼容旧构造消费者迁移，不核心反向export实现。
+- [x] T005-02 定义fixture新增schema与只读旧schema映射，保持原库命名与migration编号；真实数据写需另许可。
+- [x] T005-03 以事务保存request占位、Activity、creation→Object/Usage、原Receipt与currentFact、response slot；外部调用不持DB锁。
+- [x] T005-04 实现ProtectedFingerprintPort依合同用系统secret port的opaque key；临时测试key仅fixture，真实托管缺席可靠受限而raw不被禁。
+- [x] T005-05 子进程kill分别覆盖intent前、持久intent后投递前、外部接纳后回执前、结果commit前后，重启查询与未知不重发。
+- [x] T005-06 并发同ID同输入仅一个准入/相同回执、不同输入拒；跨ID同response slot只消费一次，两个data root隔离。
+- [x] T005-07 测试SQLite只读包含WAL、事务失败/锁冲突/缺密钥/轮换/损坏schema；保原Receipt不变，晚证据修CurrentFact且冲突不自动解锁。
+- [x] T005-08 输出新schema和真实迁移风险/备份恢复提案；没有许可只fixture，不提前开用户DB。
+- [x] T005-09 落实C2同根跨进程writer排他、key轮换墓碑/独立history-read；真实暂停旧writer/双进程/正文过期测试；同步CoreBinding与产品具体Store构造消费者，防005→006依赖死锁。
 
-- [ ] T005-10 实现可注入DataAreaPort与文件/SQLite公开适配、稳定namespace/句柄/兼容schema及获批迁移准入；隔离fixture验证卸载保数据、旧版本拒写和CAS声明。
+- [x] T005-10 实现可注入DataAreaPort与文件/SQLite公开适配、稳定namespace/句柄/兼容schema及获批迁移准入；隔离fixture验证卸载保数据、旧版本拒写和CAS声明。
 
-- [ ] T005-11 实现持久引用跨Store与领域提交intent/证据/恢复、coverage未知和reservation崩溃保护；同根fence下不自动解锁或重做外部效果。
+- [x] T005-11 实现持久引用跨Store与领域提交intent/证据/恢复、coverage未知和reservation崩溃保护；同根fence下不自动解锁或重做外部效果。
 
-- [ ] T005-12 扩现SecretStore为受管理SecretPort，OS适配不入内核；验证purpose/代次/renderer仅引用、locked拒绝、轮换和删除引用/在途责任，MAC墓碑保留。
+- [x] T005-12 扩现SecretStore为受管理SecretPort，OS适配不入内核；验证purpose/代次/renderer仅引用、locked拒绝、轮换和删除引用/在途责任，MAC墓碑保留。
 
 ## 006 Server变薄并切换全部环境入口
 
