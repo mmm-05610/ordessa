@@ -178,7 +178,7 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 - [ ] T012-03 npm ci从锁安装、typecheck、真实build/npm aggregate/Electron controlled、Python各包+全链；逐ID和cause比基线无新增未处置红，不删assert/skip假绿。
 - [ ] T012-04 干净venv隔离wheel导入与bare host、独立extension build、deb生成/解包/无凭据clean smoke；运行打包检查不签名/publish。
 - [ ] T012-05 所有acceptance必需场景正例反例证据，真实三品牌用户动作截图/日志关联脱敏；GUI/模型缺授权不算完成。
-- [ ] T012-06 数据fixture旧库/WAL/未知schema/两根/rollback/crash+秘密扫描+无追踪binary/userdata，真实数据若不获批注明未迁不能许诺已升级。
+- [x] T012-06 数据fixture旧库/WAL/未知schema/两根/rollback/crash+秘密扫描+无追踪binary/userdata，真实数据若不获批注明未迁不能许诺已升级。
 - [x] T012-07 更新architecture/baseline/naming/reference/migration/known-issues及云端draft（仅获对应token权限），目标与实现状态分开；不偷偷修改AGENTS。
 - [x] T012-08 固定实施SHA、完整完成/缺口/兼容余项/操作步骤/安全回退点和main集成请求，用户批准前不合main不push。
 - [ ] T012-09 按shipping从解包产物验证required wheel/entrypoint/启用清单闭包，缺required不skip；默认和无Profilecontrolled两轮，禁止repo editable补依赖；发现清单逐suite重验。
@@ -187,4 +187,4 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 
 - [ ] T012-11 回归E3/E4/E5/A1和插件结构A66–A95全部必需场景，扫描第二关系/命令/配置权威及核心业务import；更新目录文档与剩余compat退出清单。
 - [ ] T012-12 从干净发行产物运行F5 API/React出口、独立插件和存储fixture，覆盖A107/A110；不以仓库源码或模块单例补发行/跨窗口保证。
-- [ ] T012-13 逐项回归A96–A111并执行A108/A111真实Electron输入/通知/焦点/UI恢复验收，记录资源缺席；更新公共接口、例子、依赖图及未验项。
+- [ ] T012-13 逐项回归A96–A111并执行A108/A111真实Electron输入/通知/焦点/UI恢复验收，记录资源缺席；更新公共接口、例子、依赖图及未验项。（A96–A107/A109/A110 回归绿；A108/A111 缺授权未验——见 evidence/t012-13-regression.md）
