@@ -212,9 +212,9 @@ def test_public_symbols_defined_under_pacthold_core_only():
     for name in public.__all__:
         symbol = getattr(public, name)
         module = getattr(symbol, "__module__", None)
-        assert module is None or module.startswith("pacthold.core"), (
-            f"{name} leaked from {module}"
-        )
+        assert module is None or module.startswith(
+            ("pacthold.core", "pacthold.environment")
+        ), f"{name} leaked from {module}"
 
 
 def test_core_runtime_entry_signatures(runtime: CoreRuntime):
@@ -744,7 +744,7 @@ def _module_sources() -> list[tuple[Path, str]]:
     root = Path(__file__).resolve().parents[2] / "src" / "pacthold"
     return [(root / "public.py", "pacthold")] + [
         (path, "pacthold.core") for path in sorted((root / "core").glob("*.py"))
-    ]
+    ] + [(root / "environment.py", "pacthold")]
 
 
 def _imported_names(source: Path, package: str) -> list[str]:
@@ -762,13 +762,21 @@ def _imported_names(source: Path, package: str) -> list[str]:
 
 
 def test_facade_chain_ast_forbids_business_modules():
+    allowed = {"core", "environment"}
     for source, package in _module_sources():
         for name in _imported_names(source, package):
             parts = name.split(".")
             if parts and parts[0] == "pacthold":
-                assert len(parts) > 1 and parts[1] == "core", (
-                    f"{source.name} imports {name!r}: the public chain is core-only"
+                assert len(parts) > 1 and parts[1] in allowed, (
+                    f"{source.name} imports {name!r}: the public chain is core/environment-only"
                 )
+            elif parts and parts[0] == "ordessa_environment_api":
+                continue  # the frozen contract package (stdlib-only, 002 freeze)
+            else:
+                assert parts == [] or parts[0] not in (
+                    "ordessa_server", "ordessa_harness", "ordessa_server_compat",
+                    "pacthold_runtime_compat",
+                ), f"{source.name} imports {name!r}: product/plugin dependency in the public chain"
 
 
 def test_importing_public_pulls_no_reverse_dependency_modules():

@@ -31,12 +31,12 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 
 ## 003 实现可独立运行的空环境与中性对象模型
 
-- [ ] T003-01 建立environment-api独立pyproject与stdlib契约；保pacthold发行/import名称，新public.Environment不导入业务或具体Store。
-- [ ] T003-02 把安装选择、activation、instance、capability、ObjectRef、Activity、Usage的唯一索引归Environment root；拒完整身份不匹配。
-- [ ] T003-03 复用现core registration/providers/Ref校验；execution与资源编排保为内部机制，纯query/static能力不强制ExecutionPlan。
-- [ ] T003-04 实现显式空启用集、read/query/lookup入口，installed不自动enabled；历史read与invoke权限分开。
-- [ ] T003-05 隔离wheel/venv只装API+核心，执行无产品/无Server起停；将核心反向import和第二root故意注入作为失败反例。
-- [ ] T003-06 记录公开入口与实例identity，证明两个环境/两个数据根不共享模块级registry；给004/005同root消费接口。
+- [x] T003-01 建立environment-api独立pyproject与stdlib契约；保pacthold发行/import名称，新public.Environment不导入业务或具体Store。
+- [x] T003-02 把安装选择、activation、instance、capability、ObjectRef、Activity、Usage的唯一索引归Environment root；拒完整身份不匹配。
+- [x] T003-03 复用现core registration/providers/Ref校验；execution与资源编排保为内部机制，纯query/static能力不强制ExecutionPlan。
+- [x] T003-04 实现显式空启用集、read/query/lookup入口，installed不自动enabled；历史read与invoke权限分开。
+- [x] T003-05 隔离wheel/venv只装API+核心，执行无产品/无Server起停；将核心反向import和第二root故意注入作为失败反例。
+- [x] T003-06 记录公开入口与实例identity，证明两个环境/两个数据根不共享模块级registry；给004/005同root消费接口。
 
 ## 004 将插件激活与退出权威合入Environment
 

@@ -165,6 +165,11 @@ from .core import (
     UnknownExecutionError,
     UnknownOperationError,
 )
+from .environment import (
+    Environment,
+    EnvironmentClosedError,
+    InstallationRecord,
+)
 
 __all__ = [
     "AcquireOutcome",
@@ -181,12 +186,15 @@ __all__ = [
     "CoreRuntime",
     "CoreStore",
     "DispatchError",
+    "Environment",
+    "EnvironmentClosedError",
     "ExecutionPlan",
     "ExecutionProvider",
     "ExecutionState",
     "ExecutionView",
     "InvalidContractIdError",
     "InvalidProviderIdError",
+    "InstallationRecord",
     "LeaseState",
     "LeaseView",
     "MissingContractReferenceError",

@@ -1,5 +1,16 @@
 # 迁移状态
 
+## 2026-10-03 003 空环境完成（codeReady）
+
+前序：002@8155d4b1a5。`pacthold.environment.Environment` 落地（经 public 导出）：实例级唯一索引
+（activation/instance/capability/Object 全键/Activity 按 request key/Usage）、显式空启用集
+（installed≠enabled）、history-read 与 use/invoke 分权、reliable 缺端口发前拒+raw 存活、
+request key 同 digest 重放/异 digest 冲突、双环境零共享。测试：pacthold 229 绿（+11 新，含
+in-tree 子进程零产品 import）；隔离 wheel+fresh venv 启动只读验证通过（/tmp 受控）。
+守卫修订三处（public 链允许 environment 模块并新增产品前缀禁入；n4r1 allowlist 唯一合同包；
+pacthold 依赖 +ordessa-environment-api，006/012 同步安装闭包）。证据 evidence/order-003-report.md。
+003=DONE（codeReady）；004 解锁。缺口如实：drain/retire/reply/subscribe 属 004；C2 同根排他属 005。
+
 ## 2026-10-03 002 合同冻结完成（codeReady）
 
 前序：001@51889021a0。002 交付：

@@ -31,7 +31,14 @@ REPO_ROOT = PACKAGE_ROOT.parents[1]  # repository root
 # rule is the prefix form: any `ordessa_*` distribution is a product/app/plugin
 # package, and `plugins` is the source directory itself. Nothing in the kernel
 # may reach any of them in either import form.
+#
+# The one deliberate exception (spec 026/002): `ordessa_environment_api` is
+# the FROZEN CONTRACT package that sits BELOW the kernel — stdlib-only, zero
+# product dependencies, gated by its own zero-host-import suite. The kernel
+# consuming it is the intended direction (one wire vocabulary, no second copy
+# of the DTOs); every other `ordessa_*` prefix stays forbidden.
 FORBIDDEN_PREFIXES = ("ordessa_", "plugins")
+ALLOWED_MODULES = frozenset({"ordessa_environment_api"})
 
 
 def _scanned_files() -> list[Path]:
@@ -72,7 +79,7 @@ def find_product_imports(files: list[Path] | None = None) -> list[tuple[str, str
             continue
         for module in sorted(modules):
             top = module.split(".", 1)[0]
-            if top.startswith(FORBIDDEN_PREFIXES):
+            if top.startswith(FORBIDDEN_PREFIXES) and top not in ALLOWED_MODULES:
                 hits.append((str(path), module))
     return hits
 
