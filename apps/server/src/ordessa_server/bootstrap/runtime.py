@@ -102,6 +102,13 @@ def _require_legacy_provider_for_historical_root(root: Path) -> None:
     from pacthold_runtime_compat.legacy_migrations import (
         LEGACY_MIGRATION_NAMESPACE, legacy_migration_source, db as core_db,
     )
+    # 026 T006-01: the registry read below is the ONLY fact this preflight
+    # still takes from `pacthold.work_core.db`, and it is a pure registration
+    # read — `registered_migration_sources()` returns the assembled sources
+    # under their own lock and never touches `_conn`/`configure_database`
+    # (verified: no connection, no file, no AGENT_BOX_HOME resolution beyond
+    # the module-import-time path computation). The host must not OPEN the
+    # old database here; that stays the product DatabasePort's business.
     expected = legacy_migration_source()
     present = any(
         source.namespace == LEGACY_MIGRATION_NAMESPACE
@@ -117,12 +124,12 @@ def _require_legacy_provider_for_historical_root(root: Path) -> None:
 
 
 class LegacyCoreBinding:
-    """Composition-owned binding of the LEGACY global Core connection (S1c).
+    """Composition-owned instance connection to the LEGACY product database.
 
-    The S1c file-topology decision, landed with T015 in the same commit:
-    the new C1 core instance gets **its own file inside the data root**
-    (`<data root>/state/core.sqlite`, owned by :class:`CoreBinding`), not
-    the legacy product database file — because ``CoreStore`` is self-owned
+    Topology history: the S1c file-topology decision (T015) gave the new C1
+    core instance its **own file inside the data root**
+    (`<data root>/state/core.sqlite`, owned by :class:`CoreBinding`), not the
+    legacy product database file — because ``CoreStore`` is self-owned
     (``sqlite3.connect(path, timeout=10.0, check_same_thread=False)``, no
     connection-injection seam) and the host's in-process write lock does
     not serialise a second OS-level connection over the same file. The
@@ -130,29 +137,91 @@ class LegacyCoreBinding:
     `apps/server/tests/platform/test_platform_core_instance_124.py::
     test_shared_file_topology_counterexample_double_applies_a_write`.
 
-    What remains legacy is the process-global migration-runner connection
-    the compatibility ``CoreRepository()`` still resolves through (it takes
-    no store at the consumed A SHA), so the binding cannot be deleted this
-    slice — it becomes composition-owned instead: built once per
-    composition by ``build_runtime``, binding exactly the server-owned
-    database file, and the only site of the host that touches the global.
-    The legacy SQL chain itself is assembled by the PRODUCT before the
-    first connection below (T022b: ``products/server`` →
-    ``pacthold_runtime_compat.legacy_migrations.register_legacy_migrations()``,
-    idempotent, plan §43 「B 默认产品显式装配旧迁移集」).
+    026 T006-01 (second half): this binding no longer goes through the
+    process-global ``pacthold.work_core.db`` singleton AT ALL. The historical
+    shape — ``configure_database(path)`` + ``get_conn()`` on start and
+    ``configure_database(None)`` on stop, the last host site that configured
+    the module global — is gone. The binding is an instance connection
+    holder instead: built once per composition by ``build_runtime`` holding
+    exactly the server-owned database file, ``connect()`` opens THIS round's
+    own ``sqlite3`` connection to it (the same connection shape the global
+    used, minus the module state), ``release()`` closes it. No module-level
+    state is written: after a full round the global ``_database_override``
+    and ``_conn`` are still ``None`` — never configured, never opened. (The
+    ``work_core.db`` module itself is retired by order 012; this slice only
+    severs the host from it.)
+
+    What the connection is FOR: the registered (sealed legacy + kernel)
+    migration chain is applied HERE, onto this instance connection, by the
+    kernel runner's own applier — the application ``get_conn()`` used to
+    perform when it opened the global, moved onto the instance connection
+    byte-for-byte (idempotent: already-applied versions are skipped, so a
+    historical root's ledger is neither renumbered nor rewritten). The host
+    never re-binds the module: the registry read behind the applier is pure,
+    and the runner writes only through the connection passed in. The legacy
+    SQL chain itself is assembled by the PRODUCT before the first connection
+    below (T022b: ``products/server`` →
+    ``pacthold_runtime_compat.legacy_migrations.register_legacy_migrations()``
+    — sealed registration, idempotent, plan §43 「B 默认产品显式装配旧迁移集」).
+    The old library's remaining build-time READ need (the historical-root
+    preflight) goes through the migration REGISTRY
+    (``registered_migration_sources()``, a pure registration read, no
+    connection), which is why a full round leaves the global untouched.
     """
 
     def __init__(self, database_path: Path) -> None:
         self.database_path = database_path
+        self._conn: sqlite3.Connection | None = None
 
     def connect(self) -> None:
-        from pacthold_runtime_compat.legacy_migrations import db as core_db
-        core_db.configure_database(self.database_path)
-        core_db.get_conn()
+        """Open THIS round's own connection to the legacy database file.
+
+        Applies the registered migration chain to that instance connection
+        (the application ``get_conn()`` used to perform on the global —
+        idempotent, so an applied ledger is only re-scanned, never
+        renumbered). Idempotent within a round (a re-entrant connect keeps
+        the open connection); ``release()`` between rounds closes it, so a
+        restart re-opens fresh. Never touches ``pacthold.work_core.db``
+        module state — no ``configure_database``, no ``get_conn``, no
+        global; the runner writes only through the connection passed in.
+        """
+        if self._conn is not None:
+            return
+        from pacthold.work_core import db as core_db
+        conn = sqlite3.connect(
+            str(self.database_path), timeout=10.0, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA foreign_keys = ON")
+        # The same chain application get_conn() performed when it opened the
+        # global, on THIS connection (the precedent is the sidecar backend's
+        # _InstanceStore, which applies the kernel's namespace to its own
+        # instance store the same way; the product file takes ALL registered
+        # sources, because this file IS the legacy product database).
+        core_db._run_migrations(conn)
+        self._conn = conn
+
+    @property
+    def connection(self) -> sqlite3.Connection:
+        """The round's own legacy-database connection (never the global).
+
+        Typed refusal before ``connect()`` or after ``release()``: a closed
+        round must not hand out a connection that would silently re-open
+        the file behind the released data-root lock.
+        """
+        if self._conn is None:
+            raise RuntimeError(
+                "LEGACY_CORE_NOT_CONNECTED: the legacy binding has no open "
+                "connection; connect() opens it for the running round")
+        return self._conn
 
     def release(self) -> None:
-        from pacthold_runtime_compat.legacy_migrations import db as core_db
-        core_db.configure_database(None)
+        """Close this round's own connection (idempotent)."""
+        if self._conn is None:
+            return
+        try:
+            self._conn.close()
+        finally:
+            self._conn = None
 
 
 class DataRootOwner:
@@ -301,8 +370,9 @@ class ServerRuntime:
     #: T015: this composition's single Pacthold seam — one CoreBinding per
     #: runtime, constructed by build_runtime, never a module global.
     core_binding: CoreBinding | None = None
-    #: S1c: the composition-owned binding of the legacy global Core
-    #: connection (the server-owned database file).
+    #: S1c: the composition-owned legacy binding — 026 T006-01 (second half):
+    #: an INSTANCE connection holder for the server-owned legacy database
+    #: file, never the process-global work_core singleton.
     legacy_core: LegacyCoreBinding | None = None
     #: The ShutdownReport the composition's stop() surfaced (T015: the
     #: report is a fact of the round, never a discarded return value).
@@ -347,7 +417,8 @@ class ServerRuntime:
             if self.legacy_core is not None:
                 self.legacy_core.connect()
         except BaseException as start_failure:
-            # S1c: composition-owned release of the legacy global binding.
+            # S1c / 026 T006-01: composition-owned release of the round's own
+            # legacy connection (never module state).
             if self.legacy_core is not None:
                 self.legacy_core.release()
             # A failed start must not leave the round active with the lock
@@ -384,7 +455,10 @@ class ServerRuntime:
         if self.plugin_host is not None:
             self.plugin_host.run_stop_hooks()
         if self.started and self.legacy_core is not None:
-            # S1c: composition-owned release of the legacy global binding.
+            # S1c / 026 T006-01: the round's own legacy connection closes
+            # here — the process-global work_core singleton was never
+            # configured or opened this round, and nothing module-level
+            # needs releasing.
             self.legacy_core.release()
         # Plugins release what they own exactly once, reverse activation
         # order. A plugin whose disposal raises must not keep the data root:
@@ -628,14 +702,15 @@ def build_runtime(
         # T015/S1c: ONE CoreBinding per composition (never a module global), owning
         # the C1 instance store at its own file inside the data root (topology
         # decision: `state/core.sqlite`, see core_binding.py's docstring), and the
-        # legacy global binding as a composition-owned object. Both are handed to
-        # consumers through the existing host wall: `host_ports` for declaring
-        # plugins (the same wall the harness/ssh ports cross), construction-time
-        # references for host-side consumers (the per-composition accessor shape).
+        # legacy binding as a composition-owned INSTANCE connection holder
+        # (026 T006-01: it never configures the work_core module global).
         core_binding = CoreBinding(root / "state" / "core.sqlite")
-        # The process-global legacy connection belongs to a selected product's
-        # historical database. A host-only composition with its own DatabasePort
-        # must be able to start without the compatibility distribution installed.
+        # The legacy database connection belongs to a selected product's
+        # historical database as an INSTANCE holder (026 T006-01: it opens
+        # its own sqlite3 connection in start(), never the process-global
+        # work_core singleton). A host-only composition with its own
+        # DatabasePort must be able to start without the compatibility
+        # distribution installed.
         legacy_core = LegacyCoreBinding(database.path) if composition is not None else None
         plugin_host = ServerPluginHost(
             methods=method_registry, stream_routes=stream_route_registry, data_root=root,

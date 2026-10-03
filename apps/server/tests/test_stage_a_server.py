@@ -296,7 +296,7 @@ def test_object_failure_cannot_leave_a_dangling_profile_reference(tmp_path):
 
 
 def test_core_uses_the_server_owned_database_file(tmp_path):
-    """S1c target state (026 T006-01 first half): the execution chain rides
+    """S1c target state (026 T006-01, both halves): the execution chain rides
     the composition's instance store, and the server owns its file.
 
     Change note (assertions re-pointed, none deleted — the S1c entry in
@@ -307,14 +307,16 @@ def test_core_uses_the_server_owned_database_file(tmp_path):
     instance-store injection landed, the execution chain (the sidecar
     backend's WorkService/ExecutionService, the reach the S1c entry measures)
     no longer touches that global at all: the host's C1 instance store
-    (`state/core.sqlite`, the `CoreBinding` seam) IS the chain's store. The
-    gate now asserts that target state directly — the injected store is the
-    binding's own connection and a chain filing lands in the instance file,
-    never in the legacy one — while keeping both original halves that remain
-    true: the instance store is server-owned (its own file, never the legacy
-    one), and the LEGACY binding still binds exactly the server-owned legacy
-    database (its semantics are unchanged; retiring it is the next T006-01
-    slice, not this one).
+    (`state/core.sqlite`, the `CoreBinding` seam) IS the chain's store. And
+    since the second T006-01 half landed, the LEGACY binding no longer binds
+    the process-global either — it opens the round's OWN connection to the
+    server-owned legacy database (the global stays unconfigured and unopened
+    through the whole round). The gate now asserts that target state
+    directly: the injected store is the binding's own connection, a chain
+    filing lands in the instance file and never in the legacy one, the
+    legacy-side reads below go through the binding's OWN connection (same
+    `PRAGMA database_list` fact, instance-side), and the work_core global is
+    still `None` on both dials at the end of the round.
     """
     backends = []
 
@@ -350,9 +352,12 @@ def test_core_uses_the_server_owned_database_file(tmp_path):
         assert core_path.resolve() != runtime.database.path
         runtime.core_binding.snapshot()  # opens the round lazily
         assert core_path.is_file(), "the instance store did not land in the data root"
-        row = core_db.get_conn().execute("PRAGMA database_list").fetchone()
+        # instance-side fact (was: the same PRAGMA through the global conn):
+        # the LEGACY binding's OWN connection resolves to the product file
+        legacy_conn = runtime.legacy_core.connection
+        row = legacy_conn.execute("PRAGMA database_list").fetchone()
         assert Path(row[2]).resolve() == runtime.database.path
-        assert core_db.get_conn().execute(
+        assert legacy_conn.execute(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name='core_works'"
         ).fetchone() is not None
         # -- S1c target state: the chain's store is the host's instance store
@@ -364,10 +369,14 @@ def test_core_uses_the_server_owned_database_file(tmp_path):
         filed = runtime.core_binding.store.execute(
             "SELECT objective FROM core_works WHERE id = ?", (work.id,)).fetchone()
         assert filed is not None and filed[0] == "S1c target-state filing"
-        # and the legacy global database did not receive the chain's filing
-        legacy = core_db.get_conn().execute(
+        # and the legacy product database did not receive the chain's filing
+        legacy = legacy_conn.execute(
             "SELECT COUNT(*) FROM core_works WHERE id = ?", (work.id,)).fetchone()
         assert legacy[0] == 0
+        # the process-global work_core singleton was never configured and
+        # never opened by this round (T006-01 second half)
+        assert core_db._database_override is None
+        assert core_db._conn is None
     finally:
         runtime.stop()
 
