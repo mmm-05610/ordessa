@@ -1,5 +1,19 @@
 # 迁移状态
 
+## 2026-10-04 夜间推进（无人值守）— 007 收尾中 + 008-S1 提前冻结
+
+- 007：批次2 合入（98e7a4ad7b，含 harness-api checkpoint 重钉+2 测试 start 修复）、批次3 顶层化
+  （3a5037117c：mcp/subagents/lsp/runtime-preferences；sed 误伤历史证据已回滚，教训入档
+  range-change-sed-lesson.md）、S 品牌/CAS 门（16 绿）、样例#1 异协议 Agent（923c5c0445，10 绿）。
+  U（T007-06 穿透验证）在跑；样例#3 路由 008/009（需 Surface 面）。T007-02/03 补测 S 交付含
+  DRIFT 登记（sandbox platform.py 品牌分支唯一例外、skills 前端静态品牌选项）。
+- 008-S1 提前于 007 收口完成（合同冻结=主代理独占活，无文件冲突）：f5/ 五模块冻结
+  （types 9 接口/errors 7 码/tokens 4 字面量/absence 矩阵）、oe-f5/1、002 五台账增量、
+  hash 追加、freeze 测试 4 例（node 聚合自动发现，10/10 绿）、typecheck 绿。T008-11 勾结。
+  复用裁决（order-008-f5-freeze-plan）：自建零新依赖；zustand 仅 dev 传递依赖已互证。
+- 子代理通道状态：test-author 正常；slice-worker/general-purpose 一度 provider-not-found
+  （GLM-5.3-Flash），样例#1 由主代理亲自实现——阻塞不停滞纪律执行。
+
 ## R7/M14 修订接收回执（2026-10-03）
 
 主树方案修订（用户批准 M14）已在 007 安全边界内容级合并：新文件×2（F5 合同+更新说明）、

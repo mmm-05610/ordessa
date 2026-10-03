@@ -114,7 +114,7 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 
 - [ ] T008-10 将通用commands registry/execute迁同runtime、键绑定与面板归Workbench、业务handler留插件；旧ID薄forward，原生slash不转平台命令。
 
-- [ ] T008-11 增量冻结F5中性API/错误/Token/保证缺席矩阵及合同摘要，登记002清单增量；固定复用候选版本/许可/锁，不重写已完成基线。
+- [x] T008-11 增量冻结F5中性API/错误/Token/保证缺席矩阵及合同摘要，登记002清单增量；固定复用候选版本/许可/锁，不重写已完成基线。
 - [ ] T008-12 实现owner私有写入口与消费者只读状态容器、稳定不可变快照、批量通知、selector/equality及scope自动退订；runtime不存全局业务值。
 - [ ] T008-13 提供独立React状态选择绑定，真实构建两个非Agent消费者验证共享同源、字段变化更新及组件卸载，不让无关通知重写输入。
 - [ ] T008-14 实现复用E3观察的授权只读投影与普通read查询缓存，连接/权限/目标代次隔离、合并/分页/invalidate/有界清理及显式刷新重试策略。

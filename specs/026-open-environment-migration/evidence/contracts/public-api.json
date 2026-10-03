@@ -1,114 +1,274 @@
 {
-  "version": "1.0.0",
-  "frozenAt": "2026-10-03",
-  "order": "002",
-  "description": "公开 API/导出面清单（public-api 台账）。每包：导出面、版本、消费者计数（grep 文件数，含测试；非运行时精筛）、边界约束、迁移目标。",
-  "packages": [
-    {
-      "name": "pacthold", "dist": "pacthold", "import": "pacthold",
-      "publicSurface": "pacthold.public（60 符号 facade：CoreRuntime/CoreStore/CoreRegistration 族/ResourceProvider+ExecutionProvider/DTO 族/ExecutionPlan/SubmitResult+ExecutionView+LeaseView/11 枚举/21 typed errors）；顶层 __init__ 仅 __version__",
-      "apiVersion": "C1 公共入口（specs/010 冻结）",
-      "boundary": "facade 链只许 pacthold.core.*；禁 work_core/resource_contracts/extensions/storage.database/cli（AST+子进程双测 test_public_contract.py）",
-      "consumers": {"apps": 3, "plugins": 0, "packages": 9, "rootTests": 0, "note": "plugins 直 import 内部模块（work_core/storage）53 文件——006 收口为 public/Environment 入口"},
-      "target": "packages/backend/pacthold（006 物理归组；public facade 保持，新增 environment-api 合同消费）",
-      "orders": ["003", "006"]
-    },
-    {
-      "name": "ordessa-environment-api", "dist": "ordessa-environment-api", "import": "ordessa_environment_api",
-      "publicSurface": "CONTRACT_VERSION=oe-contract/1；identity/targets/guarantee/sequences/receipts/references/services DTO + codec + 7 typed errors（002 新建）",
-      "boundary": "stdlib-only、零状态、零 host import（子进程断言）",
-      "consumers": {"apps": 0, "plugins": 0, "note": "002 冻结载体；003+ Environment/领域消费"},
-      "target": "packages/backend/environment-api（终位）",
-      "orders": ["002", "003"]
-    },
-    {
-      "name": "ordessa-server-plugin-api", "dist": "ordessa-server-plugin-api", "import": "server_plugin_api",
-      "publicSurface": "SERVER_PLUGIN_API_VERSION=1；descriptor/context/registration 9 类 + acp_admission 8 符号 + contributions 13 + errors 30 + record_encoding + wire_errors + wire_shape（78 符号）",
-      "boundary": "禁 import pacthold/ordessa_server/ordessa_harness（零依赖测试）",
-      "consumers": {"apps": 30, "plugins": 123, "packages": 9},
-      "target": "传输契约提纯 → packages/backend/server-plugin-api（006；import 名不变）",
-      "orders": ["006"]
-    },
-    {
-      "name": "ordessa-harness-api", "dist": "ordessa-harness-api", "import": "ordessa_harness_api",
-      "publicSurface": "56 符号：application.py（ConfigurationService/Plan/OperationRecord/Confirmed/Refused/Unknown）、contracts.py（Adapter/Runtime 16 类）、intents.py、native_evidence.py、schema.py、errors.py",
-      "boundary": "Harness 公开合同；不含逻辑会话业务",
-      "consumers": {"apps": 1, "plugins": 123, "note": "43 src + 77 tests + 3 probes"},
-      "target": "plugins/harness/api（保持；品牌适配集中 Harness）",
-      "orders": ["007"]
-    },
-    {
-      "name": "@ordessa/agent-contracts", "id": "ordessa.agent-contracts",
-      "publicSurface": "contract.ts=connections+agent+config-owner（A1 面）；Token：AgentSessionsToken/AgentConnectionsToken/AgentClientConnectionKind；agent.ts 391 行类型面（AgentClient/AgentSessions/AgentSnapshot/attachments/native commands 等）",
-      "boundary": "消费者经 @extensions/ordessa.agent-contracts/contract.js 共享载体；npm 名 0 直接 import 属预期",
-      "consumers": {"apps": 1, "plugins": 40, "packages": 1, "rootTests": 2},
-      "target": "plugins/agent/contracts（保公共域 carrier；contracts/ 顶层结构 008 不动，010 扩 backend owner）",
-      "orders": ["008", "010"]
-    },
-    {
-      "name": "@ordessa/contracts-foundation", "id": "ordessa.contracts",
-      "publicSurface": "contract.ts 聚合：commands(C7)+workbench(C4 carrier)+connections(C6 carrier)+ui-components(api)+product/*（wire-port/logging/theme/settings-diagnostics/harness-availability/tokens 8 Token/C07 命令键位）；open-environment/（002 新增，暂不经 contract.ts 导出，008 入载体）",
-      "boundary": "HarnessAvailability 文件头禁品牌名；Token 单点构造",
-      "consumers": {"apps": 16, "plugins": 47, "packages": 28, "note": "@extensions/ordessa.contracts/contract.js 记法"},
-      "target": "packages/frontend/contracts（008 物理迁移；foundation 内 HarnessAvailability 混合字段拆 Agent，Token 字面量不变）",
-      "orders": ["008"]
-    },
-    {
-      "name": "@ordessa/workbench", "id": "ordessa.workbench",
-      "publicSurface": "api/workbench.ts：Region/View/WorkbenchModule/Overlay/SettingsSection/Composition/UIContribution/Workbench/WorkbenchToken(ordessa.workbench.v1)",
-      "boundary": "N4 已按稳定职责分组（exports 未动）",
-      "consumers": {"packages": 1, "products": 1, "note": "经 foundation carrier"},
-      "target": "packages/frontend/workbench（008）",
-      "orders": ["008"]
-    },
-    {
-      "name": "@ordessa/extension-api", "publicSurface": "HOST_API_VERSION='2'；OwnedResources/RootView/ResourceScope/Host/PluginContext/Plugin/scoped()/Token/Contributions/IDisposable",
-      "consumers": {"apps": 13, "plugins": 90, "packages": 48, "tests": 2, "tooling": 2, "products": 12},
-      "target": "packages/frontend/extension-api（008）", "orders": ["008"]
-    },
-    {
-      "name": "@ordessa/extension-loader", "publicSurface": "loadExtensions(catalog,importModule,timeout)；重复 id/provider 全拒；bounded 超时",
-      "consumers": {"apps": 3, "packages": 4},
-      "target": "与 extension-host 合为 frontend/extension-runtime（008；Lumino 唯一依赖管理）", "orders": ["008"]
-    },
-    {
-      "name": "@ordessa/extension-host", "publicSurface": "index（runtime/scoped/Shell/platform）+ main（Discovery/confinedFile）+ services（LogService/redact/Diagnostics）",
-      "consumers": {"apps": 13, "packages": 7},
-      "target": "frontend/extension-runtime（008）", "orders": ["008"]
-    },
-    {
-      "name": "@ordessa/server-bridge", "publicSurface": "data-root 常量+resolveDataRoot/layout、启动错误族、ServerBridge/parseHandshake/serverInstanceId、productServerArgs、wire 口（HttpWirePort/Absent/Pending/interpret/tokenReaderFor）；resolveBundledRuntime（打包运行时完整性）",
-      "boundary": "不 import plugin/host 内部/品牌",
-      "consumers": {"apps": 1, "packages": 2},
-      "target": "packages/frontend/server-bridge（008/009）", "orders": ["008", "009"]
-    },
-    {
-      "name": "@ordessa/connections", "id": "ordessa.connections", "publicSurface": "api/connections.ts：ConnectionKind/createConnectionKind（唯一构造点）/Connector/Endpoint/State/Snapshot/CloseOutcome/Handle/SettlementReport/Connections/ConnectionsToken",
-      "consumers": {"packages": 7, "products": 1},
-      "target": "packages/frontend/connections（008/009；通用 handle 生命周期，不理解 ACP/model）", "orders": ["008", "009"]
-    },
-    {
-      "name": "@ordessa/native-bridge", "publicSurface": "NativeConnection/NativeTransport/installNativeBridge（IPC agent-native:open/send/close；受信来源校验+帧上限+启动缓冲）",
-      "consumers": {"apps": 2, "packages": 2},
-      "target": "packages/frontend/native-bridge（008/009；F4 受限选择能力）", "orders": ["008", "009"]
-    },
-    {
-      "name": "@ordessa/ui", "publicSurface": "纯 React 基件 barrel + styles.css 单独入口",
-      "consumers": {"apps": 1, "plugins": 9, "packages": 3},
-      "target": "packages/frontend/ui（008）", "orders": ["008"]
-    },
-    {
-      "name": "@ordessa/ui-components", "id": "ordessa.ui-components", "publicSurface": "api（defineUiComponent/UiComponents Token 等 30+ 符号）+react+assembly",
-      "consumers": {"apps": 7, "plugins": 27, "packages": 13, "tooling": 2},
-      "target": "packages/frontend/ui-components（008）", "orders": ["008"]
-    }
-  ],
-  "authorityLeadSources": {
-    "sessionConfig": ["plugins/profile/src/ordessa_profile/sessions.py:971 set_overlay", "plugins/assets/model-provider/server/src/ordessa_model_provider/choices.py:324-347 inspect/lastConfirmed", "plugins/assets/model-provider/chat-contribution/src/{next-turn-client,chat-api-entry}.tsx", "plugins/profile/integrations/chat/src/selection.ts:51"],
-    "drafts": ["plugins/chat/frontend/src/state/draft.ts:22 DraftStore（主 owner）", "相邻不同实体：ProfileDraftStore/SandboxDraftStore/AgentWorkspaceSnapshot.draft（前端新会话草稿）"],
-    "nativeHistory": ["plugins/harness/src/ordessa_harness/server_acp/history.py:13 NativeSessionHistory（持久权威，KIND=acp.session.history.v1）", "registry.py:653 list_history", "wire: acp.sessions.list", "连接器只读投影：client.ts:156/672/747"],
-    "secrets": ["packages/pacthold/src/pacthold/storage/secrets.py:19（Protocol+Windows+Memory）", "products/server/src/ordessa_server_product/platform_secrets.py（Linux SecretService，产品层）", "apps/server bootstrap runtime.py:607-610 注入"],
-    "submissionQueue": "plugins/server-compat/src/ordessa_server_compat/sessions/queue.py:22 QueueRecords（后端）；createAndSend 后端实现在 server-compat core_wire sessions 面（wire :347）"
+ "version": "1.0.0",
+ "frozenAt": "2026-10-03",
+ "order": "002",
+ "description": "公开 API/导出面清单（public-api 台账）。每包：导出面、版本、消费者计数（grep 文件数，含测试；非运行时精筛）、边界约束、迁移目标。",
+ "packages": [
+  {
+   "name": "pacthold",
+   "dist": "pacthold",
+   "import": "pacthold",
+   "publicSurface": "pacthold.public（60 符号 facade：CoreRuntime/CoreStore/CoreRegistration 族/ResourceProvider+ExecutionProvider/DTO 族/ExecutionPlan/SubmitResult+ExecutionView+LeaseView/11 枚举/21 typed errors）；顶层 __init__ 仅 __version__",
+   "apiVersion": "C1 公共入口（specs/010 冻结）",
+   "boundary": "facade 链只许 pacthold.core.*；禁 work_core/resource_contracts/extensions/storage.database/cli（AST+子进程双测 test_public_contract.py）",
+   "consumers": {
+    "apps": 3,
+    "plugins": 0,
+    "packages": 9,
+    "rootTests": 0,
+    "note": "plugins 直 import 内部模块（work_core/storage）53 文件——006 收口为 public/Environment 入口"
+   },
+   "target": "packages/backend/pacthold（006 物理归组；public facade 保持，新增 environment-api 合同消费）",
+   "orders": [
+    "003",
+    "006"
+   ]
   },
-  "consumerCountingCaveats": "TS 计数含 tsconfig/vitest/package.json specifier 映射（运行时 import 精筛未做）；dist/ 产物副本不计；entrypoint/动态 import/文档脚本引用 006+ 补查（compat-retirement §结论 8）"
+  {
+   "name": "ordessa-environment-api",
+   "dist": "ordessa-environment-api",
+   "import": "ordessa_environment_api",
+   "publicSurface": "CONTRACT_VERSION=oe-contract/1；identity/targets/guarantee/sequences/receipts/references/services DTO + codec + 7 typed errors（002 新建）",
+   "boundary": "stdlib-only、零状态、零 host import（子进程断言）",
+   "consumers": {
+    "apps": 0,
+    "plugins": 0,
+    "note": "002 冻结载体；003+ Environment/领域消费"
+   },
+   "target": "packages/backend/environment-api（终位）",
+   "orders": [
+    "002",
+    "003"
+   ]
+  },
+  {
+   "name": "ordessa-server-plugin-api",
+   "dist": "ordessa-server-plugin-api",
+   "import": "server_plugin_api",
+   "publicSurface": "SERVER_PLUGIN_API_VERSION=1；descriptor/context/registration 9 类 + acp_admission 8 符号 + contributions 13 + errors 30 + record_encoding + wire_errors + wire_shape（78 符号）",
+   "boundary": "禁 import pacthold/ordessa_server/ordessa_harness（零依赖测试）",
+   "consumers": {
+    "apps": 30,
+    "plugins": 123,
+    "packages": 9
+   },
+   "target": "传输契约提纯 → packages/backend/server-plugin-api（006；import 名不变）",
+   "orders": [
+    "006"
+   ]
+  },
+  {
+   "name": "ordessa-harness-api",
+   "dist": "ordessa-harness-api",
+   "import": "ordessa_harness_api",
+   "publicSurface": "56 符号：application.py（ConfigurationService/Plan/OperationRecord/Confirmed/Refused/Unknown）、contracts.py（Adapter/Runtime 16 类）、intents.py、native_evidence.py、schema.py、errors.py",
+   "boundary": "Harness 公开合同；不含逻辑会话业务",
+   "consumers": {
+    "apps": 1,
+    "plugins": 123,
+    "note": "43 src + 77 tests + 3 probes"
+   },
+   "target": "plugins/harness/api（保持；品牌适配集中 Harness）",
+   "orders": [
+    "007"
+   ]
+  },
+  {
+   "name": "@ordessa/agent-contracts",
+   "id": "ordessa.agent-contracts",
+   "publicSurface": "contract.ts=connections+agent+config-owner（A1 面）；Token：AgentSessionsToken/AgentConnectionsToken/AgentClientConnectionKind；agent.ts 391 行类型面（AgentClient/AgentSessions/AgentSnapshot/attachments/native commands 等）",
+   "boundary": "消费者经 @extensions/ordessa.agent-contracts/contract.js 共享载体；npm 名 0 直接 import 属预期",
+   "consumers": {
+    "apps": 1,
+    "plugins": 40,
+    "packages": 1,
+    "rootTests": 2
+   },
+   "target": "plugins/agent/contracts（保公共域 carrier；contracts/ 顶层结构 008 不动，010 扩 backend owner）",
+   "orders": [
+    "008",
+    "010"
+   ]
+  },
+  {
+   "name": "@ordessa/contracts-foundation",
+   "id": "ordessa.contracts",
+   "publicSurface": "contract.ts 聚合：commands(C7)+workbench(C4 carrier)+connections(C6 carrier)+ui-components(api)+product/*（wire-port/logging/theme/settings-diagnostics/harness-availability/tokens 8 Token/C07 命令键位）；open-environment/（002 新增，暂不经 contract.ts 导出，008 入载体）",
+   "boundary": "HarnessAvailability 文件头禁品牌名；Token 单点构造",
+   "consumers": {
+    "apps": 16,
+    "plugins": 47,
+    "packages": 28,
+    "note": "@extensions/ordessa.contracts/contract.js 记法"
+   },
+   "target": "packages/frontend/contracts（008 物理迁移；foundation 内 HarnessAvailability 混合字段拆 Agent，Token 字面量不变）",
+   "orders": [
+    "008"
+   ]
+  },
+  {
+   "name": "@ordessa/workbench",
+   "id": "ordessa.workbench",
+   "publicSurface": "api/workbench.ts：Region/View/WorkbenchModule/Overlay/SettingsSection/Composition/UIContribution/Workbench/WorkbenchToken(ordessa.workbench.v1)",
+   "boundary": "N4 已按稳定职责分组（exports 未动）",
+   "consumers": {
+    "packages": 1,
+    "products": 1,
+    "note": "经 foundation carrier"
+   },
+   "target": "packages/frontend/workbench（008）",
+   "orders": [
+    "008"
+   ]
+  },
+  {
+   "name": "@ordessa/extension-api",
+   "publicSurface": "HOST_API_VERSION='2'；OwnedResources/RootView/ResourceScope/Host/PluginContext/Plugin/scoped()/Token/Contributions/IDisposable",
+   "consumers": {
+    "apps": 13,
+    "plugins": 90,
+    "packages": 48,
+    "tests": 2,
+    "tooling": 2,
+    "products": 12
+   },
+   "target": "packages/frontend/extension-api（008）",
+   "orders": [
+    "008"
+   ]
+  },
+  {
+   "name": "@ordessa/extension-loader",
+   "publicSurface": "loadExtensions(catalog,importModule,timeout)；重复 id/provider 全拒；bounded 超时",
+   "consumers": {
+    "apps": 3,
+    "packages": 4
+   },
+   "target": "与 extension-host 合为 frontend/extension-runtime（008；Lumino 唯一依赖管理）",
+   "orders": [
+    "008"
+   ]
+  },
+  {
+   "name": "@ordessa/extension-host",
+   "publicSurface": "index（runtime/scoped/Shell/platform）+ main（Discovery/confinedFile）+ services（LogService/redact/Diagnostics）",
+   "consumers": {
+    "apps": 13,
+    "packages": 7
+   },
+   "target": "frontend/extension-runtime（008）",
+   "orders": [
+    "008"
+   ]
+  },
+  {
+   "name": "@ordessa/server-bridge",
+   "publicSurface": "data-root 常量+resolveDataRoot/layout、启动错误族、ServerBridge/parseHandshake/serverInstanceId、productServerArgs、wire 口（HttpWirePort/Absent/Pending/interpret/tokenReaderFor）；resolveBundledRuntime（打包运行时完整性）",
+   "boundary": "不 import plugin/host 内部/品牌",
+   "consumers": {
+    "apps": 1,
+    "packages": 2
+   },
+   "target": "packages/frontend/server-bridge（008/009）",
+   "orders": [
+    "008",
+    "009"
+   ]
+  },
+  {
+   "name": "@ordessa/connections",
+   "id": "ordessa.connections",
+   "publicSurface": "api/connections.ts：ConnectionKind/createConnectionKind（唯一构造点）/Connector/Endpoint/State/Snapshot/CloseOutcome/Handle/SettlementReport/Connections/ConnectionsToken",
+   "consumers": {
+    "packages": 7,
+    "products": 1
+   },
+   "target": "packages/frontend/connections（008/009；通用 handle 生命周期，不理解 ACP/model）",
+   "orders": [
+    "008",
+    "009"
+   ]
+  },
+  {
+   "name": "@ordessa/native-bridge",
+   "publicSurface": "NativeConnection/NativeTransport/installNativeBridge（IPC agent-native:open/send/close；受信来源校验+帧上限+启动缓冲）",
+   "consumers": {
+    "apps": 2,
+    "packages": 2
+   },
+   "target": "packages/frontend/native-bridge（008/009；F4 受限选择能力）",
+   "orders": [
+    "008",
+    "009"
+   ]
+  },
+  {
+   "name": "@ordessa/ui",
+   "publicSurface": "纯 React 基件 barrel + styles.css 单独入口",
+   "consumers": {
+    "apps": 1,
+    "plugins": 9,
+    "packages": 3
+   },
+   "target": "packages/frontend/ui（008）",
+   "orders": [
+    "008"
+   ]
+  },
+  {
+   "name": "@ordessa/ui-components",
+   "id": "ordessa.ui-components",
+   "publicSurface": "api（defineUiComponent/UiComponents Token 等 30+ 符号）+react+assembly",
+   "consumers": {
+    "apps": 7,
+    "plugins": 27,
+    "packages": 13,
+    "tooling": 2
+   },
+   "target": "packages/frontend/ui-components（008）",
+   "orders": [
+    "008"
+   ]
+  },
+  {
+   "name": "@ordessa/contracts-foundation (f5/)",
+   "id": "ordessa.contracts",
+   "publicSurface": "open-environment/f5/*: 9 interfaces (state/selectors/projection/query/tasks/editing/uiStorage/interactions/context), 7 typed F5Error codes, 4 token literals, absence matrix (T008-11 freeze, types only)",
+   "boundary": "zero runtime imports; implementations in T008-12..20 must satisfy the signatures; no generic setState reaches consumers",
+   "consumers": {
+    "note": "two neutral fixture consumers planned (examples/external-samples/f5-counter, f5-react-panel) in T008-13/20"
+   },
+   "target": "packages/frontend/contracts (008 physical move)",
+   "orders": [
+    "008",
+    "010",
+    "012"
+   ]
+  }
+ ],
+ "authorityLeadSources": {
+  "sessionConfig": [
+   "plugins/profile/src/ordessa_profile/sessions.py:971 set_overlay",
+   "plugins/assets/model-provider/server/src/ordessa_model_provider/choices.py:324-347 inspect/lastConfirmed",
+   "plugins/assets/model-provider/chat-contribution/src/{next-turn-client,chat-api-entry}.tsx",
+   "plugins/profile/integrations/chat/src/selection.ts:51"
+  ],
+  "drafts": [
+   "plugins/chat/frontend/src/state/draft.ts:22 DraftStore（主 owner）",
+   "相邻不同实体：ProfileDraftStore/SandboxDraftStore/AgentWorkspaceSnapshot.draft（前端新会话草稿）"
+  ],
+  "nativeHistory": [
+   "plugins/harness/src/ordessa_harness/server_acp/history.py:13 NativeSessionHistory（持久权威，KIND=acp.session.history.v1）",
+   "registry.py:653 list_history",
+   "wire: acp.sessions.list",
+   "连接器只读投影：client.ts:156/672/747"
+  ],
+  "secrets": [
+   "packages/pacthold/src/pacthold/storage/secrets.py:19（Protocol+Windows+Memory）",
+   "products/server/src/ordessa_server_product/platform_secrets.py（Linux SecretService，产品层）",
+   "apps/server bootstrap runtime.py:607-610 注入"
+  ],
+  "submissionQueue": "plugins/server-compat/src/ordessa_server_compat/sessions/queue.py:22 QueueRecords（后端）；createAndSend 后端实现在 server-compat core_wire sessions 面（wire :347）"
+ },
+ "consumerCountingCaveats": "TS 计数含 tsconfig/vitest/package.json specifier 映射（运行时 import 精筛未做）；dist/ 产物副本不计；entrypoint/动态 import/文档脚本引用 006+ 补查（compat-retirement §结论 8）"
 }

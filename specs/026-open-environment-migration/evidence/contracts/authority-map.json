@@ -1,194 +1,304 @@
 {
-  "version": "1.0.0",
-  "frozenAt": "2026-10-03",
-  "order": "002",
-  "description": "每种事实的唯一 owner/权威与写权迁移目标（authority-map 台账）。source=当前树实测/已知问题；target=026 冻结归属（工单见 execution-detail §2 与 plugin-architecture）。",
-  "facts": [
-    {
-      "fact": "插件安装选择、activation、instance、capability 唯一索引",
-      "currentOwner": "ServerPluginHost (apps/server/src/ordessa_server/plugin_host.py) + pacthold core registration",
-      "targetOwner": "Pacthold Environment root（004 提取拓扑/事务/holds）",
-      "readOnlyProjection": ["Server methods/http 投影（006 变薄）"],
-      "storage": "core store（现 pacthold.work_core db → 005 persistence-sqlite）",
-      "orders": ["004", "005", "006"],
-      "notes": "禁止第二 registry/scheduler；bootstrap 的 global core_db 模块单例在 006 拆除"
-    },
-    {
-      "fact": "环境活动/回执/当前事实（Activity/Receipt/CurrentFact）",
-      "currentOwner": "pacthold.work_core（CoreRepository）+ ServerCompat 执行链",
-      "targetOwner": "Pacthold Environment（StorePort 落 005）",
-      "readOnlyProjection": ["wire_projection.py", "usage_aggregate.py"],
-      "storage": "SQLite（core_execution 等表，PRODUCT_SCHEMA_VERSION=21 内嵌 server-compat storage/database.py）",
-      "orders": ["005", "006"],
-      "notes": "Receipt 不可改；CurrentFact 可凭核对证据追加 revision"
-    },
-    {
-      "fact": "逻辑会话（sessionList/创建/归档/切换）",
-      "currentOwner": "ordessa_server_compat/sessions/{repository,service}.py（1293+424 行）",
-      "targetOwner": "Agent 域 SessionOwner（plugins/agent）",
-      "readOnlyProjection": ["Chat 会话视图", "connector session model（010 T010-09 迁）"],
-      "storage": "server_sessions 表（领域库，010 落 Agent persistence）",
-      "orders": ["007", "010"],
-      "notes": "native 恢复与 native ID 证据归 Harness；同 native 第二连接 unverified 只读"
-    },
-    {
-      "fact": "会话配置（current/selected/overlay/mask）",
-      "currentOwner": "后端 writer=plugins/profile/src/ordessa_profile/sessions.py:971 set_overlay（wire 注册 server_plugin.py:216-223 profiles.v2.*）+ ModelChoiceService inspect/lastConfirmed（plugins/assets/model-provider/server/src/ordessa_model_provider/choices.py:324-347）+ 前端投影 chat-contribution next-turn-client/chat-api-entry lastConfirmed state + ProfileSelectionStore（plugins/profile/integrations/chat/src/selection.ts:51）",
-      "targetOwner": "Agent 域 SessionConfigOwner（010 唯一写者；A1 合同已冻结）",
-      "readOnlyProjection": ["全部选择控件经 DomainAccess.observe", "selected 只投影"],
-      "storage": "Agent 领域库",
-      "orders": ["010"],
-      "notes": "Profile 只目录/操作源；model 控件只单项操作；同 Profile 重选新 opId。侦察修正：server-compat core_wire 只有 sessions.* 路由注册，set_overlay 实现在 profile 插件"
-    },
-    {
-      "fact": "提交（草稿冻结→投递→回执）与 creationAttempt",
-      "currentOwner": "Chat DraftStore + sessions.createAndSend/send + queue.py",
-      "targetOwner": "Agent 域 SubmissionOwner（010/011）；DraftOwner 与编辑合同分离",
-      "readOnlyProjection": ["sendOutcome.query"],
-      "storage": "前端持久 journal + 后端 Store（C2 六步握手）",
-      "orders": ["010", "011"],
-      "notes": "unknown 只查原 request key；同 key 异 digest 拒"
-    },
-    {
-      "fact": "运行/交互记录（runs、interactions、审批卡数据）",
-      "currentOwner": "ordessa_server_compat/{approvals,usage_aggregate}.py + ACP connector runs/interactions 状态",
-      "targetOwner": "Agent 域 RunOwner/InteractionOwner；原生审批执行留 Harness/原生",
-      "readOnlyProjection": ["Chat 消息视图"],
-      "storage": "Agent 领域库",
-      "orders": ["007", "010"],
-      "notes": "假 approvalId 只可显示未验证；control 单消费"
-    },
-    {
-      "fact": "Profile 清单（预设 CRUD/facet 解析/提交 patch）",
-      "currentOwner": "ordessa_server_compat/profiles/{repository,service,clone}.py + plugins/profile 前端",
-      "targetOwner": "Profile 域（plugins/profile 清单业务；实例/原生 generation 迁 Harness）",
-      "readOnlyProjection": ["Agent 配置链读取 facet 声明"],
-      "storage": "server_profiles 表（领域库随 Profile）",
-      "orders": ["007", "010"],
-      "notes": "Profile 可选：无 Profile 模型切换可用（R05）"
-    },
-    {
-      "fact": "供应商/模型目录与认证引用",
-      "currentOwner": "ordessa_server_compat/model_configs/{service,repository,probe}.py + plugins/assets/model-provider",
-      "targetOwner": "Model-provider 域（plugins/model-provider 顶层化）；原生落盘/刷新归 Harness",
-      "readOnlyProjection": ["Chat model picker", "Profile facet 桥（公开贡献）"],
-      "storage": "server_provider_models 等表（领域库）",
-      "orders": ["007", "010"],
-      "notes": "chooseForSession/inspectChoice 惰性链（known-issues）→ capability-matrix 记 unsupported-候选，010 接线或显式 unsupported"
-    },
-    {
-      "fact": "原生实例/进程/目录/品牌配置/账号登录资产",
-      "currentOwner": "ordessa_server_compat/{accounts,execution/sidecar*,execution/local_channel,composition 部分}.py + plugins/harness",
-      "targetOwner": "Harness（instances/sessions/surfaces/protocols/brands 内部组织）",
-      "readOnlyProjection": ["HarnessAvailability 公开合同（混合逻辑会话字段 008 拆 Agent）"],
-      "storage": "原生自有（rollout/配置）；证据归 Harness 库",
-      "orders": ["007"],
-      "notes": "原生内部推理/工具/workflow 不重做（R03）；品牌适配集中 Harness（M02/M08）"
-    },
-    {
-      "fact": "资源目录/内容/版本（skills/prompts/memory/command-templates/subagents/extensions hooks）",
-      "currentOwner": "ordessa_server_compat/{assets,hooks}/* + plugins/assets/*",
-      "targetOwner": "各资源域顶层插件；品牌应用归 Harness 内部 brands/",
-      "readOnlyProjection": ["assets.* wire 面", "Profile facet 声明"],
-      "storage": "各域 DataArea（005 DataAreaPort；namespace 保持）",
-      "orders": ["005", "007"],
-      "notes": "资源插件无 Agent/Chat/Profile 仍可用（R05/R17）"
-    },
-    {
-      "fact": "MCP 服务定义/绑定/探测",
-      "currentOwner": "ordessa_server_compat/assets/{mcp,mcp_probe}.py + plugins/assets/mcp",
-      "targetOwner": "MCP 域（plugins/mcp 顶层化）；品牌应用归 Harness",
-      "readOnlyProjection": ["assets.probe/publishMcp wire"],
-      "storage": "MCP 域库",
-      "orders": ["007"],
-      "notes": "borrowed 服务 release 本方 usage；owned 进程退出 scope 证据"
-    },
-    {
-      "fact": "外部权限规则/posture（permissions 规则资源）",
-      "currentOwner": "ordessa_server_compat/profiles/{permissions,posture_*}.py + plugins/permissions",
-      "targetOwner": "Permissions 域；原生内置审批不改（Harness/原生保留）",
-      "readOnlyProjection": ["permissions.* wire 面"],
-      "storage": "Permissions 域库",
-      "orders": ["007"],
-      "notes": "不接管 Harness 内部工具判断"
-    },
-    {
-      "fact": "沙箱外部环境声明/匹配/slots",
-      "currentOwner": "pacthold_runtime_compat/capability/* + plugins/assets/sandbox",
-      "targetOwner": "Sandbox 域（外部环境策略）；中性访问准入复用 Pacthold",
-      "readOnlyProjection": ["placement 决议输入"],
-      "storage": "Sandbox 域库",
-      "orders": ["007"],
-      "notes": "capability 业务枚举不进核心（compat-retirement 接缝表）"
-    },
-    {
-      "fact": "秘密（凭据存储/借用）",
-      "currentOwner": "Protocol+WindowsDpapi+Memory 在 packages/pacthold/src/pacthold/storage/secrets.py:19；Linux SecretService 实现在 products/server/src/ordessa_server_product/platform_secrets.py（产品层）；apps/server bootstrap runtime.py:607-610 注入；runtime_compat/credentials.py 为秘密载体适配",
-      "targetOwner": "SecretPort 受管理能力（E4）；OS 适配 backend/platform-services（005）",
-      "readOnlyProjection": ["renderer 只见 SecretRef"],
-      "storage": "OS keyring/DPAPI/file-test 适配（不在核心）",
-      "orders": ["005", "006"],
-      "notes": "Linux 实现本就在产品层——005 迁 platform-services 时保持 dist 归属从 products/server 抬为可选平台适配包；锁定/缺席拒相应需求，无明文 fallback；MAC 墓碑保留"
-    },
-    {
-      "fact": "SQLite 连接/事务机制与产品 schema 历史",
-      "currentOwner": "pacthold_runtime_compat/storage/database.py（792 行，PRODUCT_SCHEMA_VERSION=21 + 9 SQL）",
-      "targetOwner": "连接/事务 → backend/persistence-sqlite；业务 schema → 各领域；历史链 → 显式产品装配（products/server 注册封存迁移）",
-      "readOnlyProjection": [],
-      "storage": "同库同标识（M07：namespace/版本表/表名不变）",
-      "orders": ["005", "006"],
-      "notes": "九份 SQL 保字节；只 fixture 测试，真实库迁移另许可"
-    },
-    {
-      "fact": "wire 面（方法路由/DTO/校验/错误族）",
-      "currentOwner": "ordessa_server_compat/{core_wire,http,wire_*,error_families}.py",
-      "targetOwner": "传输/auth/origin 留 Server+server-plugin-api；业务 handler/DTO → 各领域公开能力发布；旧 route 薄映射同能力",
-      "readOnlyProjection": ["前端 connector 解码（008/009 切新领域客户端）"],
-      "storage": "无独立存储",
-      "orders": ["006", "008", "009"],
-      "notes": "无第二 CoreWireHandlers 业务实例；88 方法逐方法归属见 identity-map"
-    },
-    {
-      "fact": "前端 UI 状态（页面/布局/设置容器/浮层/焦点/快捷键）",
-      "currentOwner": "apps/desktop host overlay + packages/workbench",
-      "targetOwner": "Workbench（frontend/workbench，008）；设置业务值留领域",
-      "readOnlyProjection": [],
-      "storage": "UI 本地（不持业务权威）",
-      "orders": ["008", "009"],
-      "notes": "menu overlay 不遮窗口控制；Esc 只消费一层"
-    },
-    {
-      "fact": "诊断/日志 sink 与关联",
-      "currentOwner": "apps/server bootstrap 日志 + 各域 print/log 混用",
-      "targetOwner": "E4/F4 受管理 Logger/DiagnosticProvider（复用 013 C04/C06；008/009 接线）",
-      "readOnlyProjection": ["诊断导出（显式用户动作）"],
-      "storage": "sink 适配（非 Receipt 主账）",
-      "orders": ["008", "009"],
-      "notes": "sink 二次脱敏；诊断只读不 probe/apply"
-    },
-    {
-      "fact": "持久资源关联（Profile↔资源版本引用）",
-      "currentOwner": "无统一合同（ProfileViewReferencePort 深扫 Profile JSON）",
-      "targetOwner": "E5 PersistentReference（同一 Environment 关系门；004 准入/005 持久化）",
-      "readOnlyProjection": ["inspectIncoming 反查（coverage known/unknown）"],
-      "storage": "关系 Store + 源领域库",
-      "orders": ["004", "005", "007"],
-      "notes": "不再深扫 Profile 内容判可删；coverage unknown 拒破坏性变更"
-    },
-    {
-      "fact": "通用命令注册表/快捷键",
-      "currentOwner": "plugins/commands（registry+handlers 混合）",
-      "targetOwner": "registry/execute → frontend/extension-runtime；键绑定/面板组织 → Workbench；业务 handler → 各插件；旧 ID 薄 forward",
-      "readOnlyProjection": [],
-      "storage": "无",
-      "orders": ["008"],
-      "notes": "原生 slash 命令不转平台命令（M10/E2）"
-    }
-  ],
-  "unknowns": [
-    "已闭合（002 侦察）：钉面外 2 方法 = modelProvider.beginTurnApplication（plugins/assets/model-provider/server/src/ordessa_model_provider/plugin.py:203-204，Z3 冻结面 7→8 的第 8 个）+ acp.sessions.list（plugins/harness/src/ordessa_harness/server_acp/plugin.py:377，021 原生历史面）；算术 1+5+45+5+16+11+1+4=88 闭合",
-    "钉面公式注释'53+PermissionsBackendPlugin 17 方法'与源码不符（permissions 默认只注册 4）；17 实际= providerModels 6 + modelProvider 7 + permissions 4——修钉时须同时纠正注释",
-    "modelProvider.probeProvider 读写分类存疑（handler :349+ 可能写回探测结果），010 接线时定",
-    "TS foundation/src/open-environment 目前不经 contract.ts 载体再导出（有意两段式：002 由测试直接构建断言；008 迁前端底座时再入共享 carrier）"
-  ]
+ "version": "1.0.0",
+ "frozenAt": "2026-10-03",
+ "order": "002",
+ "description": "每种事实的唯一 owner/权威与写权迁移目标（authority-map 台账）。source=当前树实测/已知问题；target=026 冻结归属（工单见 execution-detail §2 与 plugin-architecture）。",
+ "facts": [
+  {
+   "fact": "插件安装选择、activation、instance、capability 唯一索引",
+   "currentOwner": "ServerPluginHost (apps/server/src/ordessa_server/plugin_host.py) + pacthold core registration",
+   "targetOwner": "Pacthold Environment root（004 提取拓扑/事务/holds）",
+   "readOnlyProjection": [
+    "Server methods/http 投影（006 变薄）"
+   ],
+   "storage": "core store（现 pacthold.work_core db → 005 persistence-sqlite）",
+   "orders": [
+    "004",
+    "005",
+    "006"
+   ],
+   "notes": "禁止第二 registry/scheduler；bootstrap 的 global core_db 模块单例在 006 拆除"
+  },
+  {
+   "fact": "环境活动/回执/当前事实（Activity/Receipt/CurrentFact）",
+   "currentOwner": "pacthold.work_core（CoreRepository）+ ServerCompat 执行链",
+   "targetOwner": "Pacthold Environment（StorePort 落 005）",
+   "readOnlyProjection": [
+    "wire_projection.py",
+    "usage_aggregate.py"
+   ],
+   "storage": "SQLite（core_execution 等表，PRODUCT_SCHEMA_VERSION=21 内嵌 server-compat storage/database.py）",
+   "orders": [
+    "005",
+    "006"
+   ],
+   "notes": "Receipt 不可改；CurrentFact 可凭核对证据追加 revision"
+  },
+  {
+   "fact": "逻辑会话（sessionList/创建/归档/切换）",
+   "currentOwner": "ordessa_server_compat/sessions/{repository,service}.py（1293+424 行）",
+   "targetOwner": "Agent 域 SessionOwner（plugins/agent）",
+   "readOnlyProjection": [
+    "Chat 会话视图",
+    "connector session model（010 T010-09 迁）"
+   ],
+   "storage": "server_sessions 表（领域库，010 落 Agent persistence）",
+   "orders": [
+    "007",
+    "010"
+   ],
+   "notes": "native 恢复与 native ID 证据归 Harness；同 native 第二连接 unverified 只读"
+  },
+  {
+   "fact": "会话配置（current/selected/overlay/mask）",
+   "currentOwner": "后端 writer=plugins/profile/src/ordessa_profile/sessions.py:971 set_overlay（wire 注册 server_plugin.py:216-223 profiles.v2.*）+ ModelChoiceService inspect/lastConfirmed（plugins/assets/model-provider/server/src/ordessa_model_provider/choices.py:324-347）+ 前端投影 chat-contribution next-turn-client/chat-api-entry lastConfirmed state + ProfileSelectionStore（plugins/profile/integrations/chat/src/selection.ts:51）",
+   "targetOwner": "Agent 域 SessionConfigOwner（010 唯一写者；A1 合同已冻结）",
+   "readOnlyProjection": [
+    "全部选择控件经 DomainAccess.observe",
+    "selected 只投影"
+   ],
+   "storage": "Agent 领域库",
+   "orders": [
+    "010"
+   ],
+   "notes": "Profile 只目录/操作源；model 控件只单项操作；同 Profile 重选新 opId。侦察修正：server-compat core_wire 只有 sessions.* 路由注册，set_overlay 实现在 profile 插件"
+  },
+  {
+   "fact": "提交（草稿冻结→投递→回执）与 creationAttempt",
+   "currentOwner": "Chat DraftStore + sessions.createAndSend/send + queue.py",
+   "targetOwner": "Agent 域 SubmissionOwner（010/011）；DraftOwner 与编辑合同分离",
+   "readOnlyProjection": [
+    "sendOutcome.query"
+   ],
+   "storage": "前端持久 journal + 后端 Store（C2 六步握手）",
+   "orders": [
+    "010",
+    "011"
+   ],
+   "notes": "unknown 只查原 request key；同 key 异 digest 拒"
+  },
+  {
+   "fact": "运行/交互记录（runs、interactions、审批卡数据）",
+   "currentOwner": "ordessa_server_compat/{approvals,usage_aggregate}.py + ACP connector runs/interactions 状态",
+   "targetOwner": "Agent 域 RunOwner/InteractionOwner；原生审批执行留 Harness/原生",
+   "readOnlyProjection": [
+    "Chat 消息视图"
+   ],
+   "storage": "Agent 领域库",
+   "orders": [
+    "007",
+    "010"
+   ],
+   "notes": "假 approvalId 只可显示未验证；control 单消费"
+  },
+  {
+   "fact": "Profile 清单（预设 CRUD/facet 解析/提交 patch）",
+   "currentOwner": "ordessa_server_compat/profiles/{repository,service,clone}.py + plugins/profile 前端",
+   "targetOwner": "Profile 域（plugins/profile 清单业务；实例/原生 generation 迁 Harness）",
+   "readOnlyProjection": [
+    "Agent 配置链读取 facet 声明"
+   ],
+   "storage": "server_profiles 表（领域库随 Profile）",
+   "orders": [
+    "007",
+    "010"
+   ],
+   "notes": "Profile 可选：无 Profile 模型切换可用（R05）"
+  },
+  {
+   "fact": "供应商/模型目录与认证引用",
+   "currentOwner": "ordessa_server_compat/model_configs/{service,repository,probe}.py + plugins/assets/model-provider",
+   "targetOwner": "Model-provider 域（plugins/model-provider 顶层化）；原生落盘/刷新归 Harness",
+   "readOnlyProjection": [
+    "Chat model picker",
+    "Profile facet 桥（公开贡献）"
+   ],
+   "storage": "server_provider_models 等表（领域库）",
+   "orders": [
+    "007",
+    "010"
+   ],
+   "notes": "chooseForSession/inspectChoice 惰性链（known-issues）→ capability-matrix 记 unsupported-候选，010 接线或显式 unsupported"
+  },
+  {
+   "fact": "原生实例/进程/目录/品牌配置/账号登录资产",
+   "currentOwner": "ordessa_server_compat/{accounts,execution/sidecar*,execution/local_channel,composition 部分}.py + plugins/harness",
+   "targetOwner": "Harness（instances/sessions/surfaces/protocols/brands 内部组织）",
+   "readOnlyProjection": [
+    "HarnessAvailability 公开合同（混合逻辑会话字段 008 拆 Agent）"
+   ],
+   "storage": "原生自有（rollout/配置）；证据归 Harness 库",
+   "orders": [
+    "007"
+   ],
+   "notes": "原生内部推理/工具/workflow 不重做（R03）；品牌适配集中 Harness（M02/M08）"
+  },
+  {
+   "fact": "资源目录/内容/版本（skills/prompts/memory/command-templates/subagents/extensions hooks）",
+   "currentOwner": "ordessa_server_compat/{assets,hooks}/* + plugins/assets/*",
+   "targetOwner": "各资源域顶层插件；品牌应用归 Harness 内部 brands/",
+   "readOnlyProjection": [
+    "assets.* wire 面",
+    "Profile facet 声明"
+   ],
+   "storage": "各域 DataArea（005 DataAreaPort；namespace 保持）",
+   "orders": [
+    "005",
+    "007"
+   ],
+   "notes": "资源插件无 Agent/Chat/Profile 仍可用（R05/R17）"
+  },
+  {
+   "fact": "MCP 服务定义/绑定/探测",
+   "currentOwner": "ordessa_server_compat/assets/{mcp,mcp_probe}.py + plugins/assets/mcp",
+   "targetOwner": "MCP 域（plugins/mcp 顶层化）；品牌应用归 Harness",
+   "readOnlyProjection": [
+    "assets.probe/publishMcp wire"
+   ],
+   "storage": "MCP 域库",
+   "orders": [
+    "007"
+   ],
+   "notes": "borrowed 服务 release 本方 usage；owned 进程退出 scope 证据"
+  },
+  {
+   "fact": "外部权限规则/posture（permissions 规则资源）",
+   "currentOwner": "ordessa_server_compat/profiles/{permissions,posture_*}.py + plugins/permissions",
+   "targetOwner": "Permissions 域；原生内置审批不改（Harness/原生保留）",
+   "readOnlyProjection": [
+    "permissions.* wire 面"
+   ],
+   "storage": "Permissions 域库",
+   "orders": [
+    "007"
+   ],
+   "notes": "不接管 Harness 内部工具判断"
+  },
+  {
+   "fact": "沙箱外部环境声明/匹配/slots",
+   "currentOwner": "pacthold_runtime_compat/capability/* + plugins/assets/sandbox",
+   "targetOwner": "Sandbox 域（外部环境策略）；中性访问准入复用 Pacthold",
+   "readOnlyProjection": [
+    "placement 决议输入"
+   ],
+   "storage": "Sandbox 域库",
+   "orders": [
+    "007"
+   ],
+   "notes": "capability 业务枚举不进核心（compat-retirement 接缝表）"
+  },
+  {
+   "fact": "秘密（凭据存储/借用）",
+   "currentOwner": "Protocol+WindowsDpapi+Memory 在 packages/pacthold/src/pacthold/storage/secrets.py:19；Linux SecretService 实现在 products/server/src/ordessa_server_product/platform_secrets.py（产品层）；apps/server bootstrap runtime.py:607-610 注入；runtime_compat/credentials.py 为秘密载体适配",
+   "targetOwner": "SecretPort 受管理能力（E4）；OS 适配 backend/platform-services（005）",
+   "readOnlyProjection": [
+    "renderer 只见 SecretRef"
+   ],
+   "storage": "OS keyring/DPAPI/file-test 适配（不在核心）",
+   "orders": [
+    "005",
+    "006"
+   ],
+   "notes": "Linux 实现本就在产品层——005 迁 platform-services 时保持 dist 归属从 products/server 抬为可选平台适配包；锁定/缺席拒相应需求，无明文 fallback；MAC 墓碑保留"
+  },
+  {
+   "fact": "SQLite 连接/事务机制与产品 schema 历史",
+   "currentOwner": "pacthold_runtime_compat/storage/database.py（792 行，PRODUCT_SCHEMA_VERSION=21 + 9 SQL）",
+   "targetOwner": "连接/事务 → backend/persistence-sqlite；业务 schema → 各领域；历史链 → 显式产品装配（products/server 注册封存迁移）",
+   "readOnlyProjection": [],
+   "storage": "同库同标识（M07：namespace/版本表/表名不变）",
+   "orders": [
+    "005",
+    "006"
+   ],
+   "notes": "九份 SQL 保字节；只 fixture 测试，真实库迁移另许可"
+  },
+  {
+   "fact": "wire 面（方法路由/DTO/校验/错误族）",
+   "currentOwner": "ordessa_server_compat/{core_wire,http,wire_*,error_families}.py",
+   "targetOwner": "传输/auth/origin 留 Server+server-plugin-api；业务 handler/DTO → 各领域公开能力发布；旧 route 薄映射同能力",
+   "readOnlyProjection": [
+    "前端 connector 解码（008/009 切新领域客户端）"
+   ],
+   "storage": "无独立存储",
+   "orders": [
+    "006",
+    "008",
+    "009"
+   ],
+   "notes": "无第二 CoreWireHandlers 业务实例；88 方法逐方法归属见 identity-map"
+  },
+  {
+   "fact": "前端 UI 状态（页面/布局/设置容器/浮层/焦点/快捷键）",
+   "currentOwner": "apps/desktop host overlay + packages/workbench",
+   "targetOwner": "Workbench（frontend/workbench，008）；设置业务值留领域",
+   "readOnlyProjection": [],
+   "storage": "UI 本地（不持业务权威）",
+   "orders": [
+    "008",
+    "009"
+   ],
+   "notes": "menu overlay 不遮窗口控制；Esc 只消费一层"
+  },
+  {
+   "fact": "诊断/日志 sink 与关联",
+   "currentOwner": "apps/server bootstrap 日志 + 各域 print/log 混用",
+   "targetOwner": "E4/F4 受管理 Logger/DiagnosticProvider（复用 013 C04/C06；008/009 接线）",
+   "readOnlyProjection": [
+    "诊断导出（显式用户动作）"
+   ],
+   "storage": "sink 适配（非 Receipt 主账）",
+   "orders": [
+    "008",
+    "009"
+   ],
+   "notes": "sink 二次脱敏；诊断只读不 probe/apply"
+  },
+  {
+   "fact": "持久资源关联（Profile↔资源版本引用）",
+   "currentOwner": "无统一合同（ProfileViewReferencePort 深扫 Profile JSON）",
+   "targetOwner": "E5 PersistentReference（同一 Environment 关系门；004 准入/005 持久化）",
+   "readOnlyProjection": [
+    "inspectIncoming 反查（coverage known/unknown）"
+   ],
+   "storage": "关系 Store + 源领域库",
+   "orders": [
+    "004",
+    "005",
+    "007"
+   ],
+   "notes": "不再深扫 Profile 内容判可删；coverage unknown 拒破坏性变更"
+  },
+  {
+   "fact": "通用命令注册表/快捷键",
+   "currentOwner": "plugins/commands（registry+handlers 混合）",
+   "targetOwner": "registry/execute → frontend/extension-runtime；键绑定/面板组织 → Workbench；业务 handler → 各插件；旧 ID 薄 forward",
+   "readOnlyProjection": [],
+   "storage": "无",
+   "orders": [
+    "008"
+   ],
+   "notes": "原生 slash 命令不转平台命令（M10/E2）"
+  },
+  {
+   "fact": "前端本地 UI 状态/编辑草稿（非后端事实）",
+   "currentOwner": "各域手写容器（DraftStore/ProfileSelectionStore/SandboxDraftStore 等 10+ 处）+ host settings-store",
+   "targetOwner": "创建它的域 owner；平台只提供 F5 工厂/编辑工具/交互机制（无全局业务 Store、无第二核心）",
+   "readOnlyProjection": [
+    "消费者只读 snapshot/subscribe"
+   ],
+   "storage": "UiStoreContract（缺宿主适配=session-only）",
+   "orders": [
+    "008",
+    "010"
+   ],
+   "notes": "两套 settings 注册（SettingsContributionToken vs Workbench addSettingsSection）是 T008-03 收口对象；禁止第二 DraftOwner"
+  }
+ ],
+ "unknowns": [
+  "已闭合（002 侦察）：钉面外 2 方法 = modelProvider.beginTurnApplication（plugins/assets/model-provider/server/src/ordessa_model_provider/plugin.py:203-204，Z3 冻结面 7→8 的第 8 个）+ acp.sessions.list（plugins/harness/src/ordessa_harness/server_acp/plugin.py:377，021 原生历史面）；算术 1+5+45+5+16+11+1+4=88 闭合",
+  "钉面公式注释'53+PermissionsBackendPlugin 17 方法'与源码不符（permissions 默认只注册 4）；17 实际= providerModels 6 + modelProvider 7 + permissions 4——修钉时须同时纠正注释",
+  "modelProvider.probeProvider 读写分类存疑（handler :349+ 可能写回探测结果），010 接线时定",
+  "TS foundation/src/open-environment 目前不经 contract.ts 载体再导出（有意两段式：002 由测试直接构建断言；008 迁前端底座时再入共享 carrier）"
+ ]
 }

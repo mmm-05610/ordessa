@@ -1,113 +1,384 @@
 {
-  "version": "1.0.0",
-  "frozenAt": "2026-10-03",
-  "order": "002",
-  "sources": [
-    "repo-scout 静态清单（2026-10-03，两路：wire/扩展身份 + 公开API/authority，主代理复核）",
-    "evidence/compat-inventory.json（99 模块 AST 盘点，R6）",
-    "001 受控基线实测（build_runtime wire.hello = 88）"
-  ],
-  "wireMethods": {
-    "liveDefaultComposition": 88,
-    "pinnedByGates": 86,
-    "pinDrift": {
-      "unpinned": [
-        {"id": "modelProvider.beginTurnApplication", "declaredAt": "plugins/assets/model-provider/server/src/ordessa_model_provider/plugin.py:203-204", "origin": "Z3 冻结面 7→8 的第 8 个（021 zcode-profile-model-report.md:126）"},
-        {"id": "acp.sessions.list", "declaredAt": "plugins/harness/src/ordessa_harness/server_acp/plugin.py:377", "origin": "021 原生历史面（docs/migration/native-session-history-v1.md）"}
-      ],
-      "arithmetic": "1(server.hello)+5(workspaces)+45(compat)+5(acp)+16(model-provider)+11(profiles.v2)+1(sandbox)+4(permissions)=88",
-      "disposition": "001 登记的 10 个钉面红即此漂移；修钉工单=006（wire 收口）随领域迁移同步更新两公式与注释（'17 方法'注释错误一并纠正）"
+ "version": "1.0.0",
+ "frozenAt": "2026-10-03",
+ "order": "002",
+ "sources": [
+  "repo-scout 静态清单（2026-10-03，两路：wire/扩展身份 + 公开API/authority，主代理复核）",
+  "evidence/compat-inventory.json（99 模块 AST 盘点，R6）",
+  "001 受控基线实测（build_runtime wire.hello = 88）"
+ ],
+ "wireMethods": {
+  "liveDefaultComposition": 88,
+  "pinnedByGates": 86,
+  "pinDrift": {
+   "unpinned": [
+    {
+     "id": "modelProvider.beginTurnApplication",
+     "declaredAt": "plugins/assets/model-provider/server/src/ordessa_model_provider/plugin.py:203-204",
+     "origin": "Z3 冻结面 7→8 的第 8 个（021 zcode-profile-model-report.md:126）"
     },
-    "owners": {
-      "server.host": {"count": 1, "declaredAt": "apps/server/src/ordessa_server/wire/handlers.py:91", "targetOwner": "Server（传输/发现保留）", "orders": ["006"]},
-      "ordessa.workspace": {"count": 5, "declaredAt": "plugins/workspace/src/ordessa_workspace/plugin.py:195-219", "targetOwner": "Workspace 域", "orders": ["007"]},
-      "ordessa.server-compat": {"count": 45, "declaredAt": "plugins/server-compat/src/ordessa_server_compat/core_wire.py:310-356（注册 plugin.py:309-321）", "targetOwner": "逐方法归各领域：sessions.*/queue/sendOutcome/runs/approvals→Agent；assets.*/hooks.*/providerArtifacts/usage/config→资源域；accounts→Harness；profiles.list/memory/subagentGrants→Profile/资源域只读投影", "orders": ["006", "007", "010"]},
-      "ordessa.harness.acp": {"count": 5, "declaredAt": "plugins/harness/src/ordessa_harness/server_acp/plugin.py:371-394", "targetOwner": "Harness（acp.channel/sessions）+ Agent（授权裁决语义经 Environment）", "orders": ["007"]},
-      "ordessa.model-provider": {"count": 16, "declaredAt": "plugins/assets/model-provider/server/src/ordessa_model_provider/plugin.py:163-207", "targetOwner": "Model-provider 域（plugins/model-provider 顶层化）；chooseForSession/inspectChoice 惰性链见 capability-matrix", "orders": ["007", "010"]},
-      "ordessa.profile": {"count": 11, "declaredAt": "plugins/profile/src/ordessa_profile/server_plugin.py:254-258（基础 operations :120-139）", "targetOwner": "Profile 域清单业务；native 专属 8 项（:148-223，不在默认 88）随 010 归 Agent 配置链", "orders": ["007", "010"]},
-      "ordessa.sandbox": {"count": 1, "declaredAt": "plugins/assets/sandbox/backend/src/ordessa_sandbox_backend/plugin.py:96-103", "targetOwner": "Sandbox 域", "orders": ["007"]},
-      "permissions-backend": {"count": 4, "declaredAt": "plugins/permissions/backend/src/ordessa_permissions_backend/plugin.py:318-331", "targetOwner": "Permissions 域（legacy approvals.decide 仅 legacy-delegated 路由注册 :338-348，默认不冲突）", "orders": ["007"]}
-    },
-    "declaredOutsideDefaultComposition": {
-      "ordessa.extensions": 2, "ordessa.asset.mcp": 12, "ordessa.assets.memory": 7, "ordessa.assets.prompts": 12,
-      "ordessa.skills": 20, "ordessa.assets-subagents": 10,
-      "note": "63 个方法已声明但默认组合未装配（skills 20 个即 S02/P07 装配缺口面）；006/007 迁移时逐 id 保持 owner 与 ID 不变"
+    {
+     "id": "acp.sessions.list",
+     "declaredAt": "plugins/harness/src/ordessa_harness/server_acp/plugin.py:377",
+     "origin": "021 原生历史面（docs/migration/native-session-history-v1.md）"
     }
+   ],
+   "arithmetic": "1(server.hello)+5(workspaces)+45(compat)+5(acp)+16(model-provider)+11(profiles.v2)+1(sandbox)+4(permissions)=88",
+   "disposition": "001 登记的 10 个钉面红即此漂移；修钉工单=006（wire 收口）随领域迁移同步更新两公式与注释（'17 方法'注释错误一并纠正）"
   },
-  "extensionIdentities": {
-    "enabled": [
-      {"id": "ordessa.contracts", "source": "packages/desktop-platform/contracts/foundation", "lockEntries": 4},
-      {"id": "ordessa.agent-contracts", "source": "plugins/agent/contracts", "lockEntries": 3},
-      {"id": "ordessa.commands", "source": "plugins/commands", "lockEntries": 2},
-      {"id": "ordessa.workbench", "source": "packages/workbench", "lockEntries": 3},
-      {"id": "ordessa.ui-components", "source": "packages/desktop-platform/ui-components", "lockEntries": 2},
-      {"id": "ordessa.connections", "source": "packages/desktop-platform/connections", "lockEntries": 2},
-      {"id": "ordessa.agent-connections", "source": "plugins/agent/connections", "lockEntries": 2},
-      {"id": "ordessa.agent-sessions", "source": "plugins/agent/sessions", "lockEntries": 3},
-      {"id": "ordessa.agent-acp", "source": "plugins/connectors/acp", "lockEntries": 3},
-      {"id": "ordessa.chat-api", "source": "plugins/chat/api", "lockEntries": 4},
-      {"id": "ordessa.chat", "source": "plugins/chat/frontend", "lockEntries": 355},
-      {"id": "ordessa.profile-api", "source": "plugins/profile/api", "lockEntries": 4},
-      {"id": "ordessa.profile-frontend", "source": "plugins/profile/frontend", "lockEntries": 2},
-      {"id": "ordessa.profile-chat", "source": "plugins/profile/integrations/chat", "lockEntries": 2},
-      {"id": "ordessa.skills", "source": "plugins/assets/skills/desktop", "lockEntries": 2},
-      {"id": "ordessa.asset-mcp", "source": "plugins/assets/mcp/frontend", "lockEntries": 2},
-      {"id": "ordessa.model-provider", "source": "plugins/assets/model-provider/desktop", "lockEntries": 4},
-      {"id": "ordessa.model-provider-chat", "source": "plugins/assets/model-provider/chat-contribution", "lockEntries": 2}
-    ],
-    "declaredNotEnabled": ["ordessa.sandbox-settings", "ordessa.subagent-settings", "ordessa.assets-subagents-ui", "ordessa.agent-server", "ordessa.permissions-chat"],
-    "lockFilesTotal": 401,
-    "identityRule": "extension id / package name / 入口 manifest id 全部保持（M07）；目录移动不改 ID；用户 extensions.json 完整显式覆盖不可覆盖"
+  "owners": {
+   "server.host": {
+    "count": 1,
+    "declaredAt": "apps/server/src/ordessa_server/wire/handlers.py:91",
+    "targetOwner": "Server（传输/发现保留）",
+    "orders": [
+     "006"
+    ]
+   },
+   "ordessa.workspace": {
+    "count": 5,
+    "declaredAt": "plugins/workspace/src/ordessa_workspace/plugin.py:195-219",
+    "targetOwner": "Workspace 域",
+    "orders": [
+     "007"
+    ]
+   },
+   "ordessa.server-compat": {
+    "count": 45,
+    "declaredAt": "plugins/server-compat/src/ordessa_server_compat/core_wire.py:310-356（注册 plugin.py:309-321）",
+    "targetOwner": "逐方法归各领域：sessions.*/queue/sendOutcome/runs/approvals→Agent；assets.*/hooks.*/providerArtifacts/usage/config→资源域；accounts→Harness；profiles.list/memory/subagentGrants→Profile/资源域只读投影",
+    "orders": [
+     "006",
+     "007",
+     "010"
+    ]
+   },
+   "ordessa.harness.acp": {
+    "count": 5,
+    "declaredAt": "plugins/harness/src/ordessa_harness/server_acp/plugin.py:371-394",
+    "targetOwner": "Harness（acp.channel/sessions）+ Agent（授权裁决语义经 Environment）",
+    "orders": [
+     "007"
+    ]
+   },
+   "ordessa.model-provider": {
+    "count": 16,
+    "declaredAt": "plugins/assets/model-provider/server/src/ordessa_model_provider/plugin.py:163-207",
+    "targetOwner": "Model-provider 域（plugins/model-provider 顶层化）；chooseForSession/inspectChoice 惰性链见 capability-matrix",
+    "orders": [
+     "007",
+     "010"
+    ]
+   },
+   "ordessa.profile": {
+    "count": 11,
+    "declaredAt": "plugins/profile/src/ordessa_profile/server_plugin.py:254-258（基础 operations :120-139）",
+    "targetOwner": "Profile 域清单业务；native 专属 8 项（:148-223，不在默认 88）随 010 归 Agent 配置链",
+    "orders": [
+     "007",
+     "010"
+    ]
+   },
+   "ordessa.sandbox": {
+    "count": 1,
+    "declaredAt": "plugins/assets/sandbox/backend/src/ordessa_sandbox_backend/plugin.py:96-103",
+    "targetOwner": "Sandbox 域",
+    "orders": [
+     "007"
+    ]
+   },
+   "permissions-backend": {
+    "count": 4,
+    "declaredAt": "plugins/permissions/backend/src/ordessa_permissions_backend/plugin.py:318-331",
+    "targetOwner": "Permissions 域（legacy approvals.decide 仅 legacy-delegated 路由注册 :338-348，默认不冲突）",
+    "orders": [
+     "007"
+    ]
+   }
   },
-  "npmWorkspaces": {
-    "count": 33,
-    "extraneousLockEntries": ["packages/desktop-platform/contracts/agent-ui", "plugins/agent/conversation", "plugins/connections/service"],
-    "names": ["@modular/desktop-app@apps/desktop", "@ordessa/connections", "@ordessa/contracts-foundation", "@ordessa/extension-api", "@ordessa/extension-host", "@ordessa/extension-loader", "@ordessa/native-bridge", "@ordessa/server-bridge", "@ordessa/ui", "@ordessa/ui-components", "@ordessa/workbench", "@ordessa/plugin-agent-connections", "@ordessa/agent-contracts", "@ordessa/plugin-agent-sessions", "ordessa-mcp-pi-bridge", "@ordessa/plugin-asset-mcp", "@ordessa/plugin-model-provider-chat", "@ordessa/plugin-model-provider", "@ordessa/plugin-sandbox-settings", "@ordessa/skills-contracts", "@ordessa/plugin-skills", "@ordessa/plugin-subagent-settings", "@ordessa/plugin-assets-subagents-ui", "@ordessa/plugin-chat-api", "@ordessa/plugin-chat", "@ordessa/plugin-commands", "@ordessa/plugin-agent-acp", "@ordessa/plugin-agent-server", "@ordessa/plugin-permissions-chat", "@ordessa/plugin-profile-api", "@ordessa/plugin-profile-frontend", "@ordessa/plugin-profile-chat", "@ordessa/product-desktop"],
-    "workspacePatterns": ["apps/*", "packages/desktop-platform/*", "packages/desktop-platform/contracts/*", "packages/workbench", "plugins/**", "!plugins/harness/**", "products/*", "plugins/chat/api", "plugins/chat/frontend", "plugins/profile/api", "plugins/profile/frontend", "plugins/profile/integrations/chat", "plugins/assets/model-provider/desktop"],
-    "migration": "008 迁 frontend 包组时同步 root patterns/lock；`@modular/desktop-app` 内部名保持（known-issues 登记不改）"
-  },
-  "pythonDistributions": {
-    "count": 29,
-    "fixture": "plugins/harness/tests/fixtures/external_adapter（ordessa-test-external-adapter）",
-    "specialLayouts": ["plugins/assets/mcp：扁平布局 import 包名=backend（pyproject where=['.'] include=['backend*']），008/012 迁移时保持或显式改造记录"],
-    "entryPoints": ["ordessa.server_product → ordessa_server_product.composition:create_composition（products/server）"],
-    "compatDists": {
-      "ordessa-server-compat": {"import": "ordessa_server_compat", "modules": 60, "retirement": "006/007/010 逐符号清空，012 只留薄壳或删除（compat-retirement §5）"},
-      "pacthold-runtime-compat": {"import": "pacthold_runtime_compat", "modules": 39, "retirement": "同上；storage/database.py 连接机制 005 提取 persistence-sqlite，业务 DDL 不进核心"}
-    },
-    "newIn002": {"ordessa-environment-api": {"import": "ordessa_environment_api", "path": "packages/backend/environment-api", "stdlibOnly": true, "contractVersion": "oe-contract/1"}}
-  },
-  "importCarriers": {
-    "rule": "TS 合同身份= @extensions/<id>/contract.js 共享载体（npm 名零直接消费者是预期，不是死代码）；隔离域经 schema/消息握手，不跨进程传 JS Token 对象",
-    "sources": {"ordessa.contracts": "packages/desktop-platform/contracts/foundation/src/contract.ts", "ordessa.agent-contracts": "plugins/agent/contracts/src/contract.ts"},
-    "tokens": {
-      "platform": ["LoggerToken", "ThemeServiceToken", "SettingsContributionToken", "DiagnosticsContributionToken", "CommandSourceToken", "KeybindingServiceToken", "WirePortToken", "HarnessAvailabilityToken"],
-      "domain": ["AgentSessionsToken(ordessa.agent.sessions.v1)", "AgentConnectionsToken(ordessa.agent.connections.v1)", "AgentClientConnectionKind(ordessa.agent-client)", "WorkbenchToken(ordessa.workbench.v1)", "ConnectionsToken(ordessa.connections.v1)", "UiComponentsToken(ordessa.ui-components.v1)"],
-      "rule": "每个 Token 唯一构造点；HarnessAvailability 混合逻辑会话字段 008 拆分时保持 Token 字面量不变"
-    },
-    "driftRiskRegistered": "8 个 vitest 配置手写 alias 不在 tooling/vitest-extensions.mjs CONTRACT_SOURCES 内（chat/frontend、model-provider/chat-contribution、mcp/frontend、permissions/frontend、skills/desktop、sandbox/frontend、extension-host、connections）；chat-api/profile-api/model-provider 未登记 CONTRACT_SOURCES——008 迁移时统一收编，避免第二 carrier 漂移"
-  },
-  "oldConstructorsAndCompatibility": [
-    {"legacy": "CoreStore(path) 直构造", "consumers": "apps/server core_binding + 测试", "target": "产品提供 SQLite 工厂注入（005/006）；旧 facade 保 submit/query 兼容入口只转同 Environment", "exitOrder": "006"},
-    {"legacy": "bootstrap global core_db（pacthold.work_core.db configure_database 模块单例）", "consumers": "apps/server/bootstrap/runtime.py:258-291", "target": "实例级 Store；known-issues S1c 行（test_stage_a 红待指向实例 store）", "exitOrder": "006"},
-    {"legacy": "execution_contract/first_run_lock 从 pacthold.execution 重导出", "consumers": "compat 内 4+2 文件", "target": "保持同对象 re-export（不重复迁实现）；identity 测试保留", "exitOrder": "012 核销"},
-    {"legacy": "AGENT_BOX_HOME/AGENTBOX_* 环境变量与 agent_box.plugins entry-point 组", "consumers": "pacthold/__init__ 兼容声明", "target": "上游标识保持（M07/naming.md）", "exitOrder": "不退役"}
-  ],
-  "compatModuleLedger": {
-    "reference": "evidence/compat-inventory.json（99 模块×路径/符号/直接绝对 import 消费者数）",
-    "moduleLevelTargets": "compat-retirement.md §3 逐模块目标归属表（本文件不复制；002 冻结该表为权威，逐符号移动时各单在 status 记录符号级决定）",
-    "requirements": [
-      "零静态 import ≠ 可删除证明；动态/entrypoint/HTTP/npm/脚本/文档消费者在 006/007/010 迁移前补查",
-      "九份封存 SQL 与 21 版 schema fixture 五态测试（空库/旧版/当前/未来拒/失败回滚）在 005 建",
-      "旧测试是迁移证据不因 import 旧模块删；删除项须关联替代正反测试（C95-7）"
-    ],
-    "undeterminedSymbols": "逐符号级台账随工单推进在各自 status/batch report 落档；未判定符号不放行其下游（G002-1）"
-  },
-  "contractArtifacts": {
-    "python": "packages/backend/environment-api（CONTRACT_VERSION=oe-contract/1，stdlib-only，无状态）",
-    "typescript": "packages/desktop-platform/contracts/foundation/src/open-environment（codec/types/index；008 入共享 carrier，当前由测试直接构建断言）",
-    "agentDomain": "plugins/agent/contracts/src/config-owner.ts（A1 面：ConfigSnapshot/ConfigOperationSummary/ConfigOperationReceipt/SubmissionReceipt/AgentDomainCapabilities/FieldState）",
-    "vectors": "tests/contracts/vectors/open-environment.json（17 例；Python 权威生成，TS 逐字节断言）",
-    "tests": "packages/backend/environment-api/tests/test_contract_freeze.py（33）+ packages/desktop-platform/contracts/foundation/open-environment.test.mjs（5，入聚合 node-test:packages/desktop-platform/contracts）"
+  "declaredOutsideDefaultComposition": {
+   "ordessa.extensions": 2,
+   "ordessa.asset.mcp": 12,
+   "ordessa.assets.memory": 7,
+   "ordessa.assets.prompts": 12,
+   "ordessa.skills": 20,
+   "ordessa.assets-subagents": 10,
+   "note": "63 个方法已声明但默认组合未装配（skills 20 个即 S02/P07 装配缺口面）；006/007 迁移时逐 id 保持 owner 与 ID 不变"
   }
+ },
+ "extensionIdentities": {
+  "enabled": [
+   {
+    "id": "ordessa.contracts",
+    "source": "packages/desktop-platform/contracts/foundation",
+    "lockEntries": 4
+   },
+   {
+    "id": "ordessa.agent-contracts",
+    "source": "plugins/agent/contracts",
+    "lockEntries": 3
+   },
+   {
+    "id": "ordessa.commands",
+    "source": "plugins/commands",
+    "lockEntries": 2
+   },
+   {
+    "id": "ordessa.workbench",
+    "source": "packages/workbench",
+    "lockEntries": 3
+   },
+   {
+    "id": "ordessa.ui-components",
+    "source": "packages/desktop-platform/ui-components",
+    "lockEntries": 2
+   },
+   {
+    "id": "ordessa.connections",
+    "source": "packages/desktop-platform/connections",
+    "lockEntries": 2
+   },
+   {
+    "id": "ordessa.agent-connections",
+    "source": "plugins/agent/connections",
+    "lockEntries": 2
+   },
+   {
+    "id": "ordessa.agent-sessions",
+    "source": "plugins/agent/sessions",
+    "lockEntries": 3
+   },
+   {
+    "id": "ordessa.agent-acp",
+    "source": "plugins/connectors/acp",
+    "lockEntries": 3
+   },
+   {
+    "id": "ordessa.chat-api",
+    "source": "plugins/chat/api",
+    "lockEntries": 4
+   },
+   {
+    "id": "ordessa.chat",
+    "source": "plugins/chat/frontend",
+    "lockEntries": 355
+   },
+   {
+    "id": "ordessa.profile-api",
+    "source": "plugins/profile/api",
+    "lockEntries": 4
+   },
+   {
+    "id": "ordessa.profile-frontend",
+    "source": "plugins/profile/frontend",
+    "lockEntries": 2
+   },
+   {
+    "id": "ordessa.profile-chat",
+    "source": "plugins/profile/integrations/chat",
+    "lockEntries": 2
+   },
+   {
+    "id": "ordessa.skills",
+    "source": "plugins/assets/skills/desktop",
+    "lockEntries": 2
+   },
+   {
+    "id": "ordessa.asset-mcp",
+    "source": "plugins/assets/mcp/frontend",
+    "lockEntries": 2
+   },
+   {
+    "id": "ordessa.model-provider",
+    "source": "plugins/assets/model-provider/desktop",
+    "lockEntries": 4
+   },
+   {
+    "id": "ordessa.model-provider-chat",
+    "source": "plugins/assets/model-provider/chat-contribution",
+    "lockEntries": 2
+   }
+  ],
+  "declaredNotEnabled": [
+   "ordessa.sandbox-settings",
+   "ordessa.subagent-settings",
+   "ordessa.assets-subagents-ui",
+   "ordessa.agent-server",
+   "ordessa.permissions-chat"
+  ],
+  "lockFilesTotal": 401,
+  "identityRule": "extension id / package name / 入口 manifest id 全部保持（M07）；目录移动不改 ID；用户 extensions.json 完整显式覆盖不可覆盖"
+ },
+ "npmWorkspaces": {
+  "count": 33,
+  "extraneousLockEntries": [
+   "packages/desktop-platform/contracts/agent-ui",
+   "plugins/agent/conversation",
+   "plugins/connections/service"
+  ],
+  "names": [
+   "@modular/desktop-app@apps/desktop",
+   "@ordessa/connections",
+   "@ordessa/contracts-foundation",
+   "@ordessa/extension-api",
+   "@ordessa/extension-host",
+   "@ordessa/extension-loader",
+   "@ordessa/native-bridge",
+   "@ordessa/server-bridge",
+   "@ordessa/ui",
+   "@ordessa/ui-components",
+   "@ordessa/workbench",
+   "@ordessa/plugin-agent-connections",
+   "@ordessa/agent-contracts",
+   "@ordessa/plugin-agent-sessions",
+   "ordessa-mcp-pi-bridge",
+   "@ordessa/plugin-asset-mcp",
+   "@ordessa/plugin-model-provider-chat",
+   "@ordessa/plugin-model-provider",
+   "@ordessa/plugin-sandbox-settings",
+   "@ordessa/skills-contracts",
+   "@ordessa/plugin-skills",
+   "@ordessa/plugin-subagent-settings",
+   "@ordessa/plugin-assets-subagents-ui",
+   "@ordessa/plugin-chat-api",
+   "@ordessa/plugin-chat",
+   "@ordessa/plugin-commands",
+   "@ordessa/plugin-agent-acp",
+   "@ordessa/plugin-agent-server",
+   "@ordessa/plugin-permissions-chat",
+   "@ordessa/plugin-profile-api",
+   "@ordessa/plugin-profile-frontend",
+   "@ordessa/plugin-profile-chat",
+   "@ordessa/product-desktop"
+  ],
+  "workspacePatterns": [
+   "apps/*",
+   "packages/desktop-platform/*",
+   "packages/desktop-platform/contracts/*",
+   "packages/workbench",
+   "plugins/**",
+   "!plugins/harness/**",
+   "products/*",
+   "plugins/chat/api",
+   "plugins/chat/frontend",
+   "plugins/profile/api",
+   "plugins/profile/frontend",
+   "plugins/profile/integrations/chat",
+   "plugins/assets/model-provider/desktop"
+  ],
+  "migration": "008 迁 frontend 包组时同步 root patterns/lock；`@modular/desktop-app` 内部名保持（known-issues 登记不改）"
+ },
+ "pythonDistributions": {
+  "count": 29,
+  "fixture": "plugins/harness/tests/fixtures/external_adapter（ordessa-test-external-adapter）",
+  "specialLayouts": [
+   "plugins/assets/mcp：扁平布局 import 包名=backend（pyproject where=['.'] include=['backend*']），008/012 迁移时保持或显式改造记录"
+  ],
+  "entryPoints": [
+   "ordessa.server_product → ordessa_server_product.composition:create_composition（products/server）"
+  ],
+  "compatDists": {
+   "ordessa-server-compat": {
+    "import": "ordessa_server_compat",
+    "modules": 60,
+    "retirement": "006/007/010 逐符号清空，012 只留薄壳或删除（compat-retirement §5）"
+   },
+   "pacthold-runtime-compat": {
+    "import": "pacthold_runtime_compat",
+    "modules": 39,
+    "retirement": "同上；storage/database.py 连接机制 005 提取 persistence-sqlite，业务 DDL 不进核心"
+   }
+  },
+  "newIn002": {
+   "ordessa-environment-api": {
+    "import": "ordessa_environment_api",
+    "path": "packages/backend/environment-api",
+    "stdlibOnly": true,
+    "contractVersion": "oe-contract/1"
+   }
+  }
+ },
+ "importCarriers": {
+  "rule": "TS 合同身份= @extensions/<id>/contract.js 共享载体（npm 名零直接消费者是预期，不是死代码）；隔离域经 schema/消息握手，不跨进程传 JS Token 对象",
+  "sources": {
+   "ordessa.contracts": "packages/desktop-platform/contracts/foundation/src/contract.ts",
+   "ordessa.agent-contracts": "plugins/agent/contracts/src/contract.ts"
+  },
+  "tokens": {
+   "platform": [
+    "LoggerToken",
+    "ThemeServiceToken",
+    "SettingsContributionToken",
+    "DiagnosticsContributionToken",
+    "CommandSourceToken",
+    "KeybindingServiceToken",
+    "WirePortToken",
+    "HarnessAvailabilityToken"
+   ],
+   "domain": [
+    "AgentSessionsToken(ordessa.agent.sessions.v1)",
+    "AgentConnectionsToken(ordessa.agent.connections.v1)",
+    "AgentClientConnectionKind(ordessa.agent-client)",
+    "WorkbenchToken(ordessa.workbench.v1)",
+    "ConnectionsToken(ordessa.connections.v1)",
+    "UiComponentsToken(ordessa.ui-components.v1)"
+   ],
+   "rule": "每个 Token 唯一构造点；HarnessAvailability 混合逻辑会话字段 008 拆分时保持 Token 字面量不变"
+  },
+  "driftRiskRegistered": "8 个 vitest 配置手写 alias 不在 tooling/vitest-extensions.mjs CONTRACT_SOURCES 内（chat/frontend、model-provider/chat-contribution、mcp/frontend、permissions/frontend、skills/desktop、sandbox/frontend、extension-host、connections）；chat-api/profile-api/model-provider 未登记 CONTRACT_SOURCES——008 迁移时统一收编，避免第二 carrier 漂移"
+ },
+ "oldConstructorsAndCompatibility": [
+  {
+   "legacy": "CoreStore(path) 直构造",
+   "consumers": "apps/server core_binding + 测试",
+   "target": "产品提供 SQLite 工厂注入（005/006）；旧 facade 保 submit/query 兼容入口只转同 Environment",
+   "exitOrder": "006"
+  },
+  {
+   "legacy": "bootstrap global core_db（pacthold.work_core.db configure_database 模块单例）",
+   "consumers": "apps/server/bootstrap/runtime.py:258-291",
+   "target": "实例级 Store；known-issues S1c 行（test_stage_a 红待指向实例 store）",
+   "exitOrder": "006"
+  },
+  {
+   "legacy": "execution_contract/first_run_lock 从 pacthold.execution 重导出",
+   "consumers": "compat 内 4+2 文件",
+   "target": "保持同对象 re-export（不重复迁实现）；identity 测试保留",
+   "exitOrder": "012 核销"
+  },
+  {
+   "legacy": "AGENT_BOX_HOME/AGENTBOX_* 环境变量与 agent_box.plugins entry-point 组",
+   "consumers": "pacthold/__init__ 兼容声明",
+   "target": "上游标识保持（M07/naming.md）",
+   "exitOrder": "不退役"
+  }
+ ],
+ "compatModuleLedger": {
+  "reference": "evidence/compat-inventory.json（99 模块×路径/符号/直接绝对 import 消费者数）",
+  "moduleLevelTargets": "compat-retirement.md §3 逐模块目标归属表（本文件不复制；002 冻结该表为权威，逐符号移动时各单在 status 记录符号级决定）",
+  "requirements": [
+   "零静态 import ≠ 可删除证明；动态/entrypoint/HTTP/npm/脚本/文档消费者在 006/007/010 迁移前补查",
+   "九份封存 SQL 与 21 版 schema fixture 五态测试（空库/旧版/当前/未来拒/失败回滚）在 005 建",
+   "旧测试是迁移证据不因 import 旧模块删；删除项须关联替代正反测试（C95-7）"
+  ],
+  "undeterminedSymbols": "逐符号级台账随工单推进在各自 status/batch report 落档；未判定符号不放行其下游（G002-1）"
+ },
+ "contractArtifacts": {
+  "python": "packages/backend/environment-api（CONTRACT_VERSION=oe-contract/1，stdlib-only，无状态）",
+  "typescript": "packages/desktop-platform/contracts/foundation/src/open-environment（codec/types/index；008 入共享 carrier，当前由测试直接构建断言）",
+  "agentDomain": "plugins/agent/contracts/src/config-owner.ts（A1 面：ConfigSnapshot/ConfigOperationSummary/ConfigOperationReceipt/SubmissionReceipt/AgentDomainCapabilities/FieldState）",
+  "vectors": "tests/contracts/vectors/open-environment.json（17 例；Python 权威生成，TS 逐字节断言）",
+  "tests": "packages/backend/environment-api/tests/test_contract_freeze.py（33）+ packages/desktop-platform/contracts/foundation/open-environment.test.mjs（5，入聚合 node-test:packages/desktop-platform/contracts）",
+  "f5Freeze": {
+   "version": "oe-f5/1",
+   "modules": "packages/desktop-platform/contracts/foundation/src/open-environment/f5/{types,errors,tokens,absence,index}.ts",
+   "tokenLiterals": [
+    "ordessa.f5.state-stores.v1",
+    "ordessa.f5.query-cache.v1",
+    "ordessa.f5.ui-storage.v1",
+    "ordessa.f5.interaction-service.v1"
+   ],
+   "note": "T008-11 incremental freeze; runtime Token objects land at the carrier's single construction point in T008-12 (a second construction point is the Token-two-copies counterexample)"
+  }
+ }
 }
