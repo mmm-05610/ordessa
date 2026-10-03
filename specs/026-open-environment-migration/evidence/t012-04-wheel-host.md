@@ -9,5 +9,9 @@
 注：首次误在仓库 .venv 运行该检查被其断言正确拒绝（runtime-compat 在开发环境属预期）——
 该脚本的设计就是"必须跑在裸 venv"，断言拒绝开发环境是其正确行为。
 
-待续（T012-04 余半，命令可达）：独立 extension build、deb 生成/解包/无凭据 clean smoke、
-打包检查不签名/publish（本轮 deb 生成见后续提交追记）。
+| deb 生成 | ✅ `packaging/.out/ordessa_0.1.0_amd64.deb`（EXIT=0；ORDESSA_UPDATE_PUBKEY 用 /tmp 一次性测试公钥——**私钥在 /tmp/throwaway-keys 未入仓、不签名、不 publish**） |
+| deb 解包闭包 | ✅ `dpkg-deb -x` 成功；闭包含 ordessa_server/server_product/server_plugin_api/server_compat + 打包解释器；入口 `ordessa`/`acp` 在 `/opt/ordessa/bin` |
+| 无凭据 clean smoke（解包载荷扫描） | ✅ 无 .pem/secret/credential 文件（`ordessa-server-credential` 为入口脚本名、`token.py` 等为 Python stdlib——均为假阳性） |
+
+待续（T012-04/09 余项，命令可达）：独立 extension build 的单独验收、解包产物启动 smoke（需运行
+环境）、T012-09 的 required wheel/启用清单逐项闭包表与默认/无 Profile controlled 两轮。
