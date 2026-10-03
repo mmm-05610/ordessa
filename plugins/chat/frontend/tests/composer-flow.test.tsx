@@ -337,6 +337,40 @@ describe('send flow (C04/A04/unknown)', () => {
     expect(input(container).value).toBe('已发送的文本 加上新的输入')
   })
 
+  it('counterexample (T010-07 ABA): an accepted result consumes ONLY the captured revision — same text after an ABA round-trip is NOT cleared', async () => {
+    const facade = new FacadeFixture({ sessions: [{ id: 's1', title: '会话一' }], selectedSessionId: 's1', messages: { s1: [] } })
+    let release: (() => void) | undefined
+    facade.sendBehavior = () => new Promise<void>(resolve => { release = resolve })
+    const container = await mount(page(facade))
+    await type(container, 'ABA 初稿')
+    await clickSend(container)
+    // A -> B -> A: the user edits and returns to the SAME text (two edit events)
+    await type(container, 'ABA 初稿 改过')
+    await type(container, 'ABA 初稿')
+    await act(async () => { release!() })
+    // the capture's revision is consumed; the post-capture draft survives
+    expect(input(container).value).toBe('ABA 初稿')
+  })
+
+  it('counterexample (T010-07 settle): the accepted result still settles the CAPTURED pane after the view left it', async () => {
+    const facade = new FacadeFixture({
+      sessions: [{ id: 's1', title: '会话一' }, { id: 's2', title: '会话二' }],
+      selectedSessionId: 's1', messages: { s1: [], s2: [] },
+    })
+    let release: (() => void) | undefined
+    facade.sendBehavior = () => new Promise<void>(resolve => { release = resolve })
+    const container = await mount(page(facade))
+    await type(container, '离开视图也要收尾')
+    await clickSend(container)
+    // the view LEAVES the captured pane while the send is in flight
+    await act(async () => { facade.selectSession('s2') })
+    await act(async () => { release!() })
+    expect(input(container).value).toBe('') // s2 untouched by A's settle
+    // stepping back to the captured pane shows the SETTLED draft
+    await act(async () => { facade.selectSession('s1') })
+    expect(input(container).value).toBe('')
+  })
+
   it('a late result after switching panes touches nothing in the new pane (X05)', async () => {
     const facade = new FacadeFixture({
       sessions: [{ id: 's1', title: '会话一' }, { id: 's2', title: '会话二' }],

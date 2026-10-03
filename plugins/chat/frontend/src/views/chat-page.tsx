@@ -165,6 +165,16 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
     })
   }, [])
 
+  // T010-07: this view is the pane's single editor; the lease is claimed per
+  // pane and released on switch/unmount. The settle path (store.write) is not
+  // an edit and runs regardless.
+  const editorId = useRef(`chat-editor-${globalThis.crypto.randomUUID()}`).current
+  useEffect(() => {
+    let lease
+    try { lease = store.claimEditor(pane, editorId) } catch { return } // another view owns it
+    return () => { lease.release() }
+  }, [store, pane, editorId])
+
   const submit = useCallback(async () => {
     const capturedPane = paneRef.current
     if (pendingPane !== undefined || !canSend) return
@@ -203,19 +213,26 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
     } finally {
       setPendingPane(current => (current === capturedPane ? undefined : current))
     }
-    if (paneRef.current !== capturedPane) return // X05: a switched pane is never touched
+    // X05 protects the NEW pane; the captured pane's own settle still runs
+    // after the view left (T010-07: view离开收尾仍能更新) — safe precisely
+    // because the settle consumes only the CAPTURED revision.
+    const stillCurrent = paneRef.current === capturedPane
     if (result.status === 'accepted') {
-      const now = store.read(capturedPane)
-      // Clear exactly the sent version; typing that happened after the send
-      // stays (C04).
-      const text = now.text === snapshot.text ? '' : now.text
-      store.markHandedOff(capturedPane, snapshot.attachmentIds)
-      store.write(capturedPane, { ...now, text, revision: now.revision + 1 })
-      setPanel(null)
-    } else if (result.status === 'refused') {
+      if (store.has(capturedPane)) {
+        const now = store.read(capturedPane)
+        store.markHandedOff(capturedPane, snapshot.attachmentIds)
+        // Success consumes ONLY the captured revision (T010-07): any edit
+        // event after the capture — including an ABA round-trip back to the
+        // same text (C04) — means the draft is NEWER and survives untouched.
+        if (now.revision === captured.revision) {
+          store.write(capturedPane, { ...now, text: '', revision: now.revision + 1 })
+        }
+      }
+      if (stillCurrent) setPanel(null)
+    } else if (stillCurrent && result.status === 'refused') {
       // Refusal keeps the draft AND its prepared attachments (US4-1/US3-3).
       setSendError(result.reason)
-    } else {
+    } else if (stillCurrent) {
       // Unknown keeps everything, never auto-retries (US4-2).
       setSendError(`发送结果未知。草稿已保留，请核实状态后再决定是否重发。${result.reason ? ` 原因：${result.reason}` : ''}`)
     }
@@ -237,14 +254,14 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
     const capturedLocation = { ...location }
     void action(capturedLocation, itemId).then(result => {
       if (result.status === 'accepted' && result.reference) {
-        store.updateItem(targetPane, itemId, { phase: { state: 'ready', reference: result.reference } })
+        store.updateItem(targetPane, itemId, { phase: { state: 'ready', reference: result.reference } }, editorId)
       } else if (result.status === 'refused') {
         // US3-3: a refused preparation stays visible in the draft with its reason.
-        store.updateItem(targetPane, itemId, { phase: { state: 'failed', reason: result.message } })
+        store.updateItem(targetPane, itemId, { phase: { state: 'failed', reason: result.message } }, editorId)
       } else if (result.status === 'unknown') {
-        store.updateItem(targetPane, itemId, { phase: { state: 'unknown' } })
+        store.updateItem(targetPane, itemId, { phase: { state: 'unknown' } }, editorId)
       } else {
-        store.removeItem(targetPane, itemId)
+        store.removeItem(targetPane, itemId, editorId)
         setSendError('该来源暂时无法提供此内容。')
       }
       setPanel(null)
@@ -293,7 +310,7 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
     const prepare = entry.action.prepare
     store.addItem(paneRef.current, {
       id: itemId, sourceId: entry.id, kind: 'file', displayName: '附件', phase: { state: 'preparing' },
-    })
+    }, editorId)
     prepareActionsRef.current.set(itemId, prepare)
     runPrepare(paneRef.current, itemId, prepare)
   }, [location, panel, runPrepare, store])
@@ -408,11 +425,11 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
                 .catch(cause => setSendError(`附件清理失败：${cause instanceof Error ? cause.message : String(cause)}`))
             }
             prepareActionsRef.current.delete(itemId)
-            store.removeItem(pane, itemId)
+            store.removeItem(pane, itemId, editorId)
           }}
           onRetry={itemId => {
             const action = prepareActionsRef.current.get(itemId)
-            store.updateItem(pane, itemId, { phase: { state: 'preparing' } })
+            store.updateItem(pane, itemId, { phase: { state: 'preparing' } }, editorId)
             if (action) runPrepare(pane, itemId, action)
           }} />
         {attachmentBlocked && <p role="status" className="chat-compose-block" data-testid="chat-attachment-block">{attachmentBlocked}</p>}
@@ -432,7 +449,7 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
             editable={pendingPane === undefined || pendingPane === pane}
             placeholder={drafting ? '向新会话发送第一条消息' : '向这个代理发送消息'}
             submitDisabled={sendDisabled}
-            onTextChange={value => store.setText(pane, value)}
+            onTextChange={value => store.setText(pane, value, editorId)}
             onCaretChange={caret => { caretRef.current = caret; syncSlashToken(composition.text, caret) }}
             panelConsumeKey={panelConsumeKey}
             onSubmit={() => void submit()}

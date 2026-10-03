@@ -19,13 +19,44 @@ export interface DraftComposition {
 
 const EMPTY_COMPOSITION: DraftComposition = { text: '', items: [], revision: 0 }
 
+/** The single-editor lease of one pane (T010-07): at most one editor may edit
+ * a draft composition at a time. The captured submission settle (`write`) is
+ * NOT an edit — it always runs, even after the editor view is gone. */
+export interface DraftEditorLease {
+  readonly editorId: string
+  readonly pane: string
+  release(): void
+}
+
 export class DraftStore {
   private readonly panes = new Map<string, DraftComposition>()
+  private readonly editors = new Map<string, string>() // pane → editorId (lease)
   private readonly objectUrls = new Map<string, string>() // itemId → URL (revocable)
   private readonly handedOff = new Set<string>()
   private readonly listeners = new Set<() => void>()
 
   read = (pane: string): DraftComposition => this.panes.get(pane) ?? EMPTY_COMPOSITION
+
+  /** Claim the pane's editor lease (stable draftId/revision/editorLease,
+   * T010-07). A second editor is refused — one writer per pane. */
+  claimEditor(pane: string, editorId: string): DraftEditorLease {
+    const held = this.editors.get(pane)
+    if (held !== undefined && held !== editorId) throw new Error('DRAFT_EDITOR_LEASE_HELD')
+    this.editors.set(pane, editorId)
+    return {
+      editorId, pane,
+      release: () => { if (this.editors.get(pane) === editorId) this.editors.delete(pane) },
+    }
+  }
+
+  private assertEditor(pane: string, editorId?: string): void {
+    const held = this.editors.get(pane)
+    if (held !== undefined && editorId !== held) throw new Error('DRAFT_EDITOR_LEASE_HELD')
+  }
+
+  /** Whether this pane still has a live composition (a disposed pane is never
+   * resurrected by a late settle). */
+  has = (pane: string): boolean => this.panes.has(pane)
 
   /** Identity-stable snapshot for useSyncExternalStore: writes produce a new
    * composition object, so React re-renders exactly on real mutations. */
@@ -37,19 +68,23 @@ export class DraftStore {
     for (const listener of [...this.listeners]) listener()
   }
 
+  /** The captured-settle primitive: NOT an edit — it bypasses the editor
+   * lease so a submission settle runs even after the editor view is gone. */
   write(pane: string, next: DraftComposition): void {
     this.panes.set(pane, next)
     this.changed()
   }
 
-  addItem(pane: string, item: ChatInputItem): void {
+  addItem(pane: string, item: ChatInputItem, editorId?: string): void {
+    this.assertEditor(pane, editorId)
     const current = this.read(pane)
     if (current.items.some(existing => existing.id === item.id)) return
     if (item.kind === 'image' && item.previewUrl) this.objectUrls.set(item.id, item.previewUrl)
     this.write(pane, { ...current, items: [...current.items, item], revision: current.revision + 1 })
   }
 
-  updateItem(pane: string, itemId: string, patch: Partial<ChatInputItem>): void {
+  updateItem(pane: string, itemId: string, patch: Partial<ChatInputItem>, editorId?: string): void {
+    this.assertEditor(pane, editorId)
     const current = this.read(pane)
     if (!current.items.some(item => item.id === itemId)) return
     this.write(pane, {
@@ -59,7 +94,8 @@ export class DraftStore {
     })
   }
 
-  removeItem(pane: string, itemId: string): void {
+  removeItem(pane: string, itemId: string, editorId?: string): void {
+    this.assertEditor(pane, editorId)
     const current = this.read(pane)
     if (!current.items.some(item => item.id === itemId)) return
     this.reclaimItem(itemId)
@@ -76,7 +112,8 @@ export class DraftStore {
     void pane
   }
 
-  setText(pane: string, text: string): void {
+  setText(pane: string, text: string, editorId?: string): void {
+    this.assertEditor(pane, editorId)
     const current = this.read(pane)
     if (current.text === text) return
     this.write(pane, { ...current, text, revision: current.revision + 1 })

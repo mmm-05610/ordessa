@@ -110,3 +110,32 @@ describe('input source panel data (P04/P05)', () => {
     expect(states.find(s => s.source.id === 'bad')?.state.error).toContain('目录服务不可用')
   })
 })
+
+// T010-07: stable draftId/revision/editorLease — one editor per pane; the
+// captured submission settle (write) is NOT an edit and always runs.
+describe('draft editor lease (T010-07)', () => {
+  it('claims one editor per pane, refuses a second, and frees on release', () => {
+    const store = new DraftStore()
+    const a = store.claimEditor('draft', 'editor-a')
+    expect(() => store.claimEditor('draft', 'editor-b')).toThrow('DRAFT_EDITOR_LEASE_HELD')
+    expect(() => store.setText('draft', 'x', 'editor-b')).toThrow('DRAFT_EDITOR_LEASE_HELD')
+    expect(() => store.setText('draft', 'x')).toThrow('DRAFT_EDITOR_LEASE_HELD') // no id: refused too
+    store.setText('draft', 'hello', 'editor-a') // the holder edits freely
+    expect(store.read('draft').text).toBe('hello')
+    a.release()
+    store.setText('draft', 'after release') // unclaimed: single-user mode
+    expect(store.read('draft').text).toBe('after release')
+  })
+
+  it('counterexample: the captured settle bypasses the lease (view离开收尾仍能更新)', () => {
+    const store = new DraftStore()
+    store.claimEditor('draft', 'editor-a')
+    store.setText('draft', 'sent', 'editor-a')
+    const captured = store.read('draft')
+    // the settle runs even though the lease is held by the (departed) editor
+    store.write('draft', { ...captured, text: '', revision: captured.revision + 1 })
+    expect(store.read('draft').text).toBe('')
+    // and an edit by another editor is still refused afterwards
+    expect(() => store.setText('draft', 'x', 'editor-b')).toThrow('DRAFT_EDITOR_LEASE_HELD')
+  })
+})
