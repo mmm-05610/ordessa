@@ -115,6 +115,21 @@ class CoreBinding:
         return self._ever_opened
 
     @property
+    def store(self) -> Any:
+        """The instance store's ONE SQLite connection (026 T006-01 / S1c).
+
+        The execution chain's injection seam: resolved lazily, so the FIRST
+        read opens the round (and with it the ``state/core.sqlite`` file) —
+        a composition whose chain never touches Core still never grows the
+        store. Borrowers execute their statements on this connection and
+        never close it and never open a second connection on the file (the
+        topology decision in the class docstring). After ``close()`` the read
+        refuses typed (``RuntimeClosedError``): a stopped composition must
+        never grow a new writer behind the released data-root lock.
+        """
+        return self._round().store.connection()
+
+    @property
     def shutdown_report(self) -> Any | None:
         """The last ``close()`` report, surfaced (never swallowed) for the
         composition's owner to read after the round retired."""

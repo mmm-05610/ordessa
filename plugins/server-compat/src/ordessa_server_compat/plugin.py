@@ -74,6 +74,11 @@ class TurnInputs:
     accounts: Any               # AccountRecords
     account_assets: Any         # AccountAssetStore, None without a SecretStore
     delegation_tokens: "dict[str, dict[str, str]]"
+    ports: Any                  # The host ports this build received (026 T006-01:
+                                #   an execution factory reads the facts it consumes
+                                #   from it — e.g. ``core_store``, the instance store
+                                #   of the legacy execution chain — instead of
+                                #   reaching the host runtime).
 
 
 class ServerCompatPlugin:
@@ -217,6 +222,7 @@ class ServerCompatPlugin:
                     mcp_assets=mcp_assets, hooks=hook_records,
                     accounts=account_records, account_assets=account_assets,
                     delegation_tokens=delegation_tokens,
+                    ports=ports,
                 ),
             )
         if execution is not None and hasattr(execution, "bind_queue"):

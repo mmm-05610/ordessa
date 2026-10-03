@@ -61,6 +61,23 @@ class CoreStore:
     def path(self) -> str:
         return self._path
 
+    def connection(self) -> sqlite3.Connection:
+        """The one connection this store owns, for same-instance borrowers.
+
+        T006-01 (order 026): the host composition hands its legacy execution
+        chain THIS connection (through ``CoreBinding.store``) so the chain and
+        the C1 runtime share the instance store through one OS-level
+        connection — the S1c composition decision. Borrowers execute their
+        statements on it, never close it, and never open a second connection
+        on the file (the counterexample witness for that hazard is
+        ``apps/server/tests/platform/test_platform_core_instance.py``).
+        Deliberately NOT part of the ``CoreStoreProtocol`` face: this is the
+        concrete store's same-instance composition seam, not a runtime
+        contract.
+        """
+        self._ensure_open()
+        return self._conn
+
     def _ensure_open(self) -> None:
         if self._closed:
             raise ValueError("CoreStore is closed")

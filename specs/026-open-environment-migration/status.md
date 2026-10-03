@@ -1,5 +1,18 @@
 # 迁移状态
 
+## 2026-10-03 006 进行中（阶段检查点 74b393b367 + 2432c55e85）
+
+委派模式运行：切片A/B/D 已交付验收（钉面 88+owner 断言 10红→143绿；compat kwarg 2红→9绿；封存迁移
+显式装配+6 测试 238 绿；verify-clean/CI 三新包扩容——含关键发现：pacthold 依赖 environment-api 不在
+锁定文件，CI 安装行必须 -e）。C 盘点存档（三平行根/14 接缝点/native Profile 必选路径）→ 切片E 进行中
+（sidecar_backend CoreRepository 实例注入+S1c）。**electron 6 腿环境缺口闭环**：本地 staging
+（ORDESSA_BUNDLED_ROOT，零系统写入）+ deb 闭包补 environment-api（C95-3 实抓：缺包的 deb 起不来）
+→ 4/6 腿绿；剩 2 腿新成因登记非运行时问题：agent-shell=发行装配断言 ordessa.agent-server 未启用
+（产品装配决策，交用户/012 裁决）；ui-foundations=360px padding 断言（UI 样式漂移，008 域）。
+密钥卫生：一次性更新密钥对生于 /tmp、私钥即删；误写入仓库根的 --help/ 密钥目录已发现即删（未跟踪，
+无泄露面）。006 余项：LegacyCoreBinding 拆除、host 转发（T006-02）、物理归组（T006-07）、fence 演练
+（T006-08）。
+
 ## 2026-10-03 005 持久化/秘密/数据空间完成（codeReady）
 
 前序：004@7c94ec8140。新包 ordessa-persistence-sqlite（StorePort：同根写者排他+显式证据接管、

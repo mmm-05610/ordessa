@@ -409,6 +409,21 @@ _CREDENTIAL_ID = re.compile(r"^credential_[0-9a-f]{32}$")
 
 
 
+def _injected_core_store(turn_inputs):
+    """The host's instance-store port for the legacy execution chain (026 T006-01).
+
+    Read from the host ports the plugin forwarded on its ``TurnInputs``: a
+    zero-arg provider (or connection) for the composition's C1 instance store
+    (``state/core.sqlite``), or ``None`` when the host provides none — which
+    keeps the historical process-global default byte-for-byte. The factories
+    below consume exactly this fact and no other port.
+    """
+    ports = getattr(turn_inputs, "ports", None)
+    if ports is None:
+        return None
+    return ports.get("core_store")
+
+
 def build_runtime_from_native_adapter(
     data_root: Path | str, *, plugin_root: Path | str, harness_id: str,
     adapter_command: str, adapter_args: tuple[str, ...] = (),
@@ -569,6 +584,7 @@ def build_runtime_from_native_adapter(
         return _SidecarBackendCls(
             records, objects, approvals, port_factory=port_factory,
             on_event=notifier.notify,
+            store=_injected_core_store(_turn_inputs),
         )
 
     def native_identity(selected_harness=harness_id):
@@ -1458,6 +1474,7 @@ def build_runtime_from_sidecar_deployment(
         return SidecarExecutionBackend(
             records, objects, approvals, port_factory=port_factory,
             on_event=notifier.notify,
+            store=_injected_core_store(turn_inputs),
         )
 
     # T014-S1d: the deployment composition names its plugins directly, the

@@ -30,10 +30,56 @@ from pacthold.work_core import (
     ExecutionFinalizationRequest, ExecutionProjection, ExecutionStartReceipt,
     Freshness, Outcome, Phase, ProviderDescriptor, Ref, RefType,
 )
+from pacthold.work_core import db as _work_core_db
 from pacthold.work_core.errors import DispatchAmbiguous, ExecutionStartRejected
 from pacthold_runtime_compat.bootstrap import build_product_registry
 from pacthold.work_core.repository import CoreRepository
 from pacthold.work_core.services import ExecutionService, WorkService
+
+
+def _ensure_instance_work_core_schema(conn) -> None:
+    """Apply the kernel's own neutral work-core schema to an injected store.
+
+    T006-01: when the compatibility chain is composed onto an instance store
+    instead of the process-global connection, the kernel's neutral source
+    (``pacthold``'s own ``001_core_schema`` — exactly the tables
+    ``CoreRepository`` touches) is applied to that store the same way
+    ``work_core.db.get_conn`` applies registered sources to the global.
+    ONLY the kernel namespace runs here: assembly/legacy sources remain the
+    product database's business, so the instance store never grows product
+    tables. Idempotent (``IF NOT EXISTS`` DDL + version-table MAX check).
+    ``_run_migration_source`` is the runner's single-source applier; the
+    compatibility layer already owns the legacy chain (``legacy_migrations``).
+    """
+    for source in _work_core_db.registered_migration_sources():
+        if source.namespace == _work_core_db.CORE_MIGRATION_NAMESPACE:
+            _work_core_db._run_migration_source(conn, source)
+
+
+class _InstanceStore:
+    """Resolve an injected instance store to its ONE connection, lazily.
+
+    T006-01: the host hands the execution chain the C1 instance store as a
+    zero-arg provider (the binding's round opens lazily, so no connection
+    exists at composition time). The first core statement resolves it,
+    applies the kernel's neutral work-core schema once (double-checked, one
+    lock), and every later statement reuses the SAME connection — never a
+    second connection on the instance file, never the process-global one.
+    """
+
+    def __init__(self, store) -> None:
+        self._store = store
+        self._conn = None
+        self._lock = threading.Lock()
+
+    def __call__(self):
+        if self._conn is None:
+            with self._lock:
+                if self._conn is None:
+                    conn = self._store() if callable(self._store) else self._store
+                    _ensure_instance_work_core_schema(conn)
+                    self._conn = conn
+        return self._conn
 
 
 @dataclass
@@ -192,13 +238,28 @@ class SidecarExecutionBackend:
         self, records, objects, approvals, *,
         port_factory: Callable[[Mapping[str, Any], Callable[..., None]], SidecarHarnessPort],
         on_event: Callable[[], None] | None = None,
+        store: Any | None = None,
+        registry: Any | None = None,
     ) -> None:
         self.records = records
         self.objects = objects
         self.approvals = approvals
         self.port_factory = port_factory
         self.on_event = on_event or (lambda: None)
-        self.core_repository = CoreRepository()
+        # T006-01: the execution chain's Core store, injected by the host
+        # composition through the plugin's TurnInputs ports. ``None`` keeps
+        # the historical default byte-for-byte: CoreRepository binds the
+        # process-global work_core connection. An injected store — a
+        # ``sqlite3.Connection`` or a zero-arg callable returning one (the
+        # seam CoreRepository already owns) — routes every legacy-chain
+        # statement onto that ONE instance connection; the global singleton
+        # is never configured, read or written on this path. The raw injected
+        # value is kept on ``self.store`` so a composition can assert it is
+        # the host's own instance store; ``_InstanceStore`` adds the lazy
+        # resolution and the one-time kernel schema application.
+        self.store = store
+        self.core_repository = CoreRepository(
+            _InstanceStore(store) if store is not None else None)
         self.work_service = WorkService(self.core_repository)
         self.execution_service = ExecutionService(self.core_repository)
         self.resources = _BoundResources()
@@ -206,7 +267,11 @@ class SidecarExecutionBackend:
         # Post-T009 the bare kernel registry starts EMPTY; this is the
         # product seam registered in BOUNDARY-BREAKS-FOR-B (seeded via
         # pacthold_runtime_compat.bootstrap.build_product_registry()).
-        self.registry = build_product_registry()
+        # T006-01: the registry is injectable the same way (the host may hand
+        # the composition's own ExtensionRegistry); absent injection a fresh
+        # per-activation product registry is built exactly as before — never
+        # a shared global.
+        self.registry = registry if registry is not None else build_product_registry()
         self.registry.register_resource_provider(self.resources.provider_id, self.resources)
         self.registry.register_execution_provider(self.provider)
         self._turn_by_core: dict[str, str] = {}

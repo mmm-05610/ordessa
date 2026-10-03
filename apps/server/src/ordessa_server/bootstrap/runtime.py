@@ -655,6 +655,13 @@ def build_runtime(
                 "cursor.codec": CursorCodec(token.encode("utf-8")),
                 "workspace.local_provider": local_workspace_provider,
                 "core.binding": core_binding,
+                # 026 T006-01 / S1c: the legacy execution chain's instance
+                # store — the same file and connection this composition's C1
+                # binding owns (never the process-global work_core singleton).
+                # Carried as a zero-arg provider because the binding's round
+                # opens lazily (no connection exists at composition time);
+                # CoreRepository's callable seam resolves it per statement.
+                "core_store": lambda: core_binding.store,
                 ACP_ADMISSION_PORT: acp_admission_port,
                 # T014-S2c: the same per-composition resolver the transport gets
                 # below, handed to the one plugin that converts errors inside its

@@ -296,19 +296,52 @@ def test_object_failure_cannot_leave_a_dangling_profile_reference(tmp_path):
 
 
 def test_core_uses_the_server_owned_database_file(tmp_path):
-    """S1c re-point: "Core" is the composition's instance store, and the
-    server owns its file.
+    """S1c target state (026 T006-01 first half): the execution chain rides
+    the composition's instance store, and the server owns its file.
 
-    Before the S1c topology decision this gate resolved the process-global
-    legacy connection via `PRAGMA database_list`; that reach stays visible
-    for the compatibility chain, but the *new* core (T015 `CoreBinding`)
-    is what "Core" names now, and its store is a file the composition root
-    itself decided inside THIS data root — a foreign `AGENT_BOX_HOME` can
-    no longer answer through it. Both halves are asserted: the instance
-    store is server-owned (its own file, never the legacy one), and the
-    legacy chain's server binding is unchanged (same file, same tables).
+    Change note (assertions re-pointed, none deleted — the S1c entry in
+    `docs/known-issues.md` names this ID as the one to move onto the instance
+    store): the original gate proved via `PRAGMA database_list` that the
+    process-global legacy connection resolved to the server-owned product
+    database — at the time the only "Core" the execution chain had. Since the
+    instance-store injection landed, the execution chain (the sidecar
+    backend's WorkService/ExecutionService, the reach the S1c entry measures)
+    no longer touches that global at all: the host's C1 instance store
+    (`state/core.sqlite`, the `CoreBinding` seam) IS the chain's store. The
+    gate now asserts that target state directly — the injected store is the
+    binding's own connection and a chain filing lands in the instance file,
+    never in the legacy one — while keeping both original halves that remain
+    true: the instance store is server-owned (its own file, never the legacy
+    one), and the LEGACY binding still binds exactly the server-owned legacy
+    database (its semantics are unchanged; retiring it is the next T006-01
+    slice, not this one).
     """
-    runtime = build_runtime(tmp_path / "core-shared")
+    backends = []
+
+    def execution_factory(records, objects, approvals, notifier, _connectors,
+                          _credentials, _secrets, turn_inputs):
+        # the same injection line the composition's own factories run: the
+        # host port rides host_ports -> context.ports -> TurnInputs.ports
+        from ordessa_server_compat.composition import _injected_core_store
+        from ordessa_server_compat.execution.sidecar_backend import (
+            SidecarExecutionBackend,
+        )
+
+        def port_factory(context, on_event):
+            raise RuntimeError("no native turn runs in this gate")
+
+        backend = SidecarExecutionBackend(
+            records, objects, approvals, port_factory=port_factory,
+            on_event=notifier.notify, store=_injected_core_store(turn_inputs),
+        )
+        backends.append(backend)
+        return backend
+
+    runtime = build_runtime(
+        tmp_path / "core-shared",
+        server_plugins=create_composition().compatibility_plugins(
+            execution_factory=execution_factory),
+    )
     runtime.start()
     try:
         root = (tmp_path / "core-shared").resolve()
@@ -322,6 +355,19 @@ def test_core_uses_the_server_owned_database_file(tmp_path):
         assert core_db.get_conn().execute(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name='core_works'"
         ).fetchone() is not None
+        # -- S1c target state: the chain's store is the host's instance store
+        assert len(backends) == 1
+        backend = backends[0]
+        assert callable(backend.store)
+        assert backend.store() is runtime.core_binding.store
+        work = backend.work_service.create_work("S1c target-state filing")
+        filed = runtime.core_binding.store.execute(
+            "SELECT objective FROM core_works WHERE id = ?", (work.id,)).fetchone()
+        assert filed is not None and filed[0] == "S1c target-state filing"
+        # and the legacy global database did not receive the chain's filing
+        legacy = core_db.get_conn().execute(
+            "SELECT COUNT(*) FROM core_works WHERE id = ?", (work.id,)).fetchone()
+        assert legacy[0] == 0
     finally:
         runtime.stop()
 
