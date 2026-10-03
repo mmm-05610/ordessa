@@ -1,5 +1,14 @@
 # 迁移状态
 
+## 2026-10-04 007 完成（codeReady）
+
+T007-01..12 全部 S/I 完成（逐单证据见 evidence/order-007-report.md 与各切片报告）：Participant
+证据适配、品牌/CAS 门、历史 owner 门、退役充分性门、未知事件//workflow 穿透（真 SDK 链）、
+无 Profile 全链管理、E5 引用门、11 域顶层化（标识零变化）、四独立样例。
+007=DONE(codeReady)；008 已先行冻结 F5（T008-11，44239ca767）并实现 S2（bfccfb04f3：状态库/
+选择绑定/双 fixture）。移交：SDK 通用出口缺口与样例#3 → 009；品牌物理归位与 runtime-preferences
+归属 → 012/用户。继承红 2 项（prompts toml 漂移、subagents overlay 清理语义）如实登记。
+
 ## 2026-10-04 夜间推进（无人值守）— 007 收尾中 + 008-S1 提前冻结
 
 - 007：批次2 合入（98e7a4ad7b，含 harness-api checkpoint 重钉+2 测试 start 修复）、批次3 顶层化
