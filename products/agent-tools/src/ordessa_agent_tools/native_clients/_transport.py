@@ -359,10 +359,15 @@ class ProcessChannel:
         self.send_raw({"jsonrpc": JSONRPC_VERSION, "id": request_id, "error": error})
 
     def next_message(self, *, timeout: float = 10.0) -> Message:
-        """Next server→client message in arrival order (unknown preserved)."""
+        """Next server→client message in arrival order (unknown preserved).
+
+        A closed channel stays closed: reads after :meth:`close` raise
+        :class:`ChannelClosed` even when buffered frames remain (drain first;
+        preserved records live in the client's own event lists).
+        """
+        self._ensure_open()
         if self._inbox:
             return self._inbox.pop(0)
-        self._ensure_open()
         deadline = time.monotonic() + timeout
         assert self._process.stdout is not None
         while True:
@@ -406,6 +411,16 @@ class ProcessChannel:
     def stderr_tail(self) -> str:
         self._drain_stderr()
         return self._stderr_tail.decode("utf-8", errors="replace")[-4096:]
+
+    def sigint(self) -> None:
+        """Send SIGINT to the owned subprocess (documented turn-end for some
+        families). Only the owned process is signalled (G8); the exit evidence
+        stays observable via :meth:`close`."""
+        import signal
+
+        self._ensure_open()
+        if self._process.poll() is None:
+            self._process.send_signal(signal.SIGINT)
 
     # -- lifecycle ------------------------------------------------------
     def close(self, *, timeout: float = 5.0) -> int:

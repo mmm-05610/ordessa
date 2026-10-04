@@ -44,9 +44,9 @@ parallel_units: ["claude-code-driver：仅N001钉定的本家族Harness驱动/�
 
 ## Stages
 
-- [ ] 1. 核官方/上游源码和各候选通道，形成claude-code决策报告与固定版本/许可；SDK callback权限、会话恢复、技能/插件配置加载；别把Anthropic Client SDK或Managed Agents当Claude Code。官方SDK认证/分发条款须逐项记录，不偷用订阅token。（主执行者阶段检查点，精确路径提交）
-- [ ] 2. 沿冻结接缝实现驱动与消费者，不重写agent loop；发前校验材料适用性、隔离home、权限、shared scope和请求关联（主执行者阶段检查点，精确路径提交）
-- [ ] 3. 定向协议反例＋实际无模型进程验证可做部分；审批/取消/恢复/失回执/unknown扩展逐项核实，不把fixture当原生；回填矩阵与检查点（主执行者阶段检查点，精确路径提交）
+- [x] 1. 核官方/上游源码和各候选通道，形成claude-code决策报告与固定版本/许可；SDK callback权限、会话恢复、技能/插件配置加载；别把Anthropic Client SDK或Managed Agents当Claude Code。官方SDK认证/分发条款须逐项记录，不偷用订阅token。— `evidence/claude-code-decision.md`：Agent SDK≠Client SDK≠Managed Agents已固化；Commercial Terms+OAuth限制逐项记录；release未钉登记
+- [x] 2. 沿冻结接缝实现驱动与消费者，不重写agent loop；发前校验材料适用性、隔离home、权限、shared scope和请求关联 — `native_clients/claude_code.py`+`claude/native_channel.py`；subscriptionToken发前拒、隔离HOME钉住
+- [x] 3. 定向协议反例＋实际无模型进程验证可做部分；审批/取消/恢复/失回执/unknown扩展逐项核实，不把fixture当原生；回填矩阵与检查点 — 16用例；L2=未测（无本机CLI，安装待授权）；api_retry上游重试作事实透出不加码（G11）；stdin stream-json形状=文档未写明登记unknown
 
 ## Parallel units
 
@@ -82,5 +82,12 @@ git diff --check
 
 ## Batch report
 
-阶段结束填：门与反例计数、命令/退出码、证据路径、源码SHA、清理、调用成本、未测项。阶段复选框不得提前勾选。
+终态 **N005_PARTIAL**（CODE_READY＋L1；L2未测；管理绑定依赖阻塞）。
+
+- 门：BASE✓ NATIVE（实现/隔离/owner/条款逐项/不发runtimeReady✓） SAFETY✓（订阅token拒收/永不auto-approve/仅owned信号与清理） EVIDENCE✓。
+- 反例计数：16用例（token键拒、api_retry事实、未知保留、超时unknown不重发、close后typed）。顺带修复冻结接缝1缺陷（关闭后仍可读缓存→严格ChannelClosed，反例抓到）。
+- 命令/退出码：`pytest plugins/harness/tests/claude -q` 11P/0F exit0；`pytest tests/native_clients/test_claude_code_client.py -q` 5P/0F exit0；native_clients全量回归88P exit0。
+- 证据路径：evidence/claude-code-decision.md；源码SHA：5132e0e284 后本单提交；清理：fake peer owned清理；成本：模型0、安装0、WebFetch 2。
+- 未测项：L2/L3/L4；canUseTool请求形状、stdin stream-json=文档未写明；**待授权：安装Claude Code CLI/Agent SDK重钉版本补L2并复核SDK分发条款**。
+- 家族终态：CODE_READY；管理绑定依赖阻塞。
 
