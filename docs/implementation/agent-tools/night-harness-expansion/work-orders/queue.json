@@ -1,0 +1,9 @@
+{
+  "single_executor": true,
+  "shared_paths": [
+    "plugins/harness/**",
+    "products/agent-tools/**",
+    "docs/implementation/agent-tools/night-harness-expansion/**"
+  ]
+}
+

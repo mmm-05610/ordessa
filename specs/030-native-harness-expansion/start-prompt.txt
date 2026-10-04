@@ -1,0 +1,13 @@
+继续在当前实施树执行夜间Harness扩展，不另开执行会话或工作树。
+工作目录：/home/maoqh/.codex/worktrees/agent-tools-product/ordessa
+完整读取 specs/030-native-harness-expansion/ 的README、design、candidates、acceptance，以及 docs/implementation/agent-tools/night-harness-expansion/README.md。
+承接原029规则/裁决/状态；本夜12张工单在 docs/implementation/agent-tools/night-harness-expansion/work-orders/。
+先做N001：收口你自己的初步成果，记录实际SHA与dirty摘要，核实节点/输入/配置owner/fence前置，不拿旧HEAD或命令发现冒充完整适配。
+按队列接入Codex、Pi、OpenCode、Claude、Kimi、Qwen、Gemini、Copilot、Goose、Vibe；优先完整原生通道/官方SDK，不逐功能翻译、不造第二核心。
+前置未完成就承接原已批准工单；研究及协议代码可继续，运行能力未验不发布ready。某家阻塞继续其他可做项，不用替换名称凑10个。
+合同冻结后最多3个子代理处理互不交叉的家族切片，主会话独占共享入口/合同/Git/status/总验收，并亲自复跑；子代理深度1。
+本夜不调用真实模型、不继承用户认证、不做额外未授权Harness安装/更新，不改全局配置或用户数据、不重启用户服务、不push/合并主树。
+真实上游探针仅隔离home与干净env，先核启动副作用；fixture、真实进程、loopback模型、真实模型证据分账，unknown不重发、审批不自动批准。
+每家写固定版本、通道、实际能力、测试/反例/清理及缺口，按本夜规则打阶段检查点后继续；全部安全队列完成再交接，不因单家阻塞整夜停摆。
+最终完成N012实际wheel安装和整合，报告每家RESEARCHED/CODE_READY/NATIVE_VERIFIED/PRODUCT_VERIFIED/PARTIAL/BLOCKED及明晨可执行的验收步骤。
+
