@@ -1,0 +1,85 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/extension-runtime/host
+
+ ❯ tests/ui-command-lifecycle.test.ts (4 tests | 4 failed) 27ms
+     × rejects duplicate live identities without replacing the first handler 11ms
+     × scope exit removes the contribution and rejects registration into a closed scope 6ms
+     × a late old handle cannot retire a replacement contribution 6ms
+     × captured menus reject replaced identity and recheck current availability 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/ui-command-lifecycle.test.ts > UI01 single command contribution lifecycle > rejects duplicate live identities without replacing the first handler
+AssertionError: expected [Function] to throw an error
+ ❯ tests/ui-command-lifecycle.test.ts:10:103
+      8|     let first = 0, second = 0
+      9|     source.forScope(a).add({ id: 'neutral.edit', title: 'A', run: () =…
+     10|     expect(() => source.forScope(b).add({ id: 'neutral.edit', title: '…
+       |                                                                                                       ^
+     11|     await expect(source.execute('neutral.edit')).resolves.toMatchObjec…
+     12|     expect([first, second]).toEqual([1, 0])
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/ui-command-lifecycle.test.ts > UI01 single command contribution lifecycle > scope exit removes the contribution and rejects registration into a closed scope
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/ui-command-lifecycle.test.ts:21:31
+     19|     const handle = source.forScope(scope).add({ id: 'neutral.edit', ti…
+     20|     scope.dispose()
+     21|     expect(handle.isDisposed).toBe(true)
+       |                               ^
+     22|     expect(source.getSnapshot()).toEqual([])
+     23|     await expect(source.execute('neutral.edit')).resolves.toMatchObjec…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/ui-command-lifecycle.test.ts > UI01 single command contribution lifecycle > a late old handle cannot retire a replacement contribution
+AssertionError: expected [ { id: 'neutral.edit', …(2) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "id": "neutral.edit",
++     "run": [Function run],
++     "title": "B",
++   },
++ ]
+
+ ❯ tests/ui-command-lifecycle.test.ts:38:34
+     36|     expect(replacement).toBe(1)
+     37|     current.dispose()
+     38|     expect(source.getSnapshot()).toEqual([])
+       |                                  ^
+     39|     a.dispose(); b.dispose()
+     40|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/ui-command-lifecycle.test.ts > UI01 single command contribution lifecycle > captured menus reject replaced identity and recheck current availability
+TypeError: source.capture is not a function
+ ❯ tests/ui-command-lifecycle.test.ts:47:107
+     45|     let effects = 0
+     46|     source.forScope(a).add({ id: 'neutral.edit', title: 'A', when: 'al…
+     47|     const captured = (source as typeof source & { capture(id: string):…
+       |                                                                                                           ^
+     48|     allowed = false
+     49|     await expect(captured.execute()).resolves.toMatchObject({ kind: 'R…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  17:45:42
+   Duration  472ms (transform 104ms, setup 0ms, import 154ms, tests 27ms, environment 0ms)
+

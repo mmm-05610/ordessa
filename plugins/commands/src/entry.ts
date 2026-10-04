@@ -7,11 +7,12 @@
  * platform commands.
  */
 import type { PluginContext, ResourceScope } from '@ordessa/extension-api'
-import { CommandsToken, type Commands } from '@extensions/ordessa.contracts/contract.js'
-import { createCommands, ordered, registry } from '@ordessa/extension-runtime/host/services/command-registry'
+import { CommandsToken, CommandSourceToken, type C07 } from '@extensions/ordessa.contracts/contract.js'
+import { createCommands, ordered, registry, createLegacyCommandsAdapter } from '@ordessa/extension-runtime/host/services/command-registry'
 
 export { createCommands, ordered, registry }
 
 export default function createPlugin() {
-  return { id: 'ordessa.commands', provides: CommandsToken, activate: (context: PluginContext) => createCommands(context.resources) }
+  return { id: 'ordessa.commands', provides: CommandsToken, requires: [CommandSourceToken],
+    activate: (_context: PluginContext, source: C07.CommandSource) => createLegacyCommandsAdapter(source) }
 }

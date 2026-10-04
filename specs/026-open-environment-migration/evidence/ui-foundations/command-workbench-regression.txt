@@ -1,0 +1,54 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/workbench
+
+ ❯ tests/contributor-unload.test.tsx (1 test | 1 failed) 13ms
+     × unloading contributor A erases A everywhere while B keeps its handle, subscription, state and open views intact 11ms
+ ❯ tests/host-integration.test.tsx (2 tests | 1 failed) 14ms
+     × exposes composition on the v1 Workbench service and runs addModule → addView → activateModule end to end 10ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/contributor-unload.test.tsx > independent contributor unload through the extension host > unloading contributor A erases A everywhere while B keeps its handle, subscription, state and open views intact
+TypeError: No provider for: ordessa.commandSource.v1.
+ ❯ PluginRegistry.resolveRequiredService ../../../node_modules/@lumino/coreutils/src/plugins.ts:444:12
+ ❯ ../../../node_modules/@lumino/coreutils/src/plugins.ts:303:51
+ ❯ PluginRegistry.activatePlugin ../../../node_modules/@lumino/coreutils/src/plugins.ts:303:37
+ ❯ PluginRegistry.resolveRequiredService ../../../node_modules/@lumino/coreutils/src/plugins.ts:450:17
+ ❯ ../../../node_modules/@lumino/coreutils/src/plugins.ts:303:51
+ ❯ PluginRegistry.activatePlugin ../../../node_modules/@lumino/coreutils/src/plugins.ts:303:37
+ ❯ Object.activate ../extension-runtime/host/src/runtime.ts:146:33
+    144|   async function activate(id: string) {
+    145|     if (states.get(id)?.phase !== 'active') update(id, 'starting')
+    146|     try { return await registry.activatePlugin(id) }
+       |                                 ^
+    147|     catch (error) { failed(id, error); throw error }
+    148|   }
+ ❯ tests/contributor-unload.test.tsx:78:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/host-integration.test.tsx > workbench plugin through the extension host > exposes composition on the v1 Workbench service and runs addModule → addView → activateModule end to end
+TypeError: No provider for: ordessa.commandSource.v1.
+ ❯ PluginRegistry.resolveRequiredService ../../../node_modules/@lumino/coreutils/src/plugins.ts:444:12
+ ❯ ../../../node_modules/@lumino/coreutils/src/plugins.ts:303:51
+ ❯ PluginRegistry.activatePlugin ../../../node_modules/@lumino/coreutils/src/plugins.ts:303:37
+ ❯ PluginRegistry.resolveRequiredService ../../../node_modules/@lumino/coreutils/src/plugins.ts:450:17
+ ❯ ../../../node_modules/@lumino/coreutils/src/plugins.ts:303:51
+ ❯ PluginRegistry.activatePlugin ../../../node_modules/@lumino/coreutils/src/plugins.ts:303:37
+ ❯ Object.activate ../extension-runtime/host/src/runtime.ts:146:33
+    144|   async function activate(id: string) {
+    145|     if (states.get(id)?.phase !== 'active') update(id, 'starting')
+    146|     try { return await registry.activatePlugin(id) }
+       |                                 ^
+    147|     catch (error) { failed(id, error); throw error }
+    148|   }
+ ❯ tests/host-integration.test.tsx:33:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 10 passed (12)
+      Tests  2 failed | 82 passed (84)
+   Start at  17:49:33
+   Duration  14.26s (transform 600ms, setup 0ms, import 1.63s, tests 4.01s, environment 5.45s)
+

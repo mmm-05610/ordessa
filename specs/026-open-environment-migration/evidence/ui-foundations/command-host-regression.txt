@@ -1,0 +1,35 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/extension-runtime/host
+
+ ❯ tests/plugin-host-boundary.test.ts (7 tests | 1 failed) 28ms
+     × has no VALUE import of a host-internal module 12ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/plugin-host-boundary.test.ts > N4-R1: extension plugins never reach into host internals > has no VALUE import of a host-internal module
+AssertionError: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "plugins/commands/src/entry.ts -> @ordessa/extension-host/platform [@ordessa/extension-host]",
++ ]
+
+ ❯ tests/plugin-host-boundary.test.ts:167:115
+    165|     // Type-only imports are erased at build time and are enumerated s…
+    166|     const valueViolations = violations.filter(violation => !violation.…
+    167|     expect(valueViolations.map(violation => `${violation.file} -> ${vi…
+       |                                                                                                                   ^
+    168|   })
+    169|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 10 passed (11)
+      Tests  1 failed | 121 passed (122)
+   Start at  17:49:17
+   Duration  13.15s (transform 385ms, setup 0ms, import 781ms, tests 9.40s, environment 2ms)
+

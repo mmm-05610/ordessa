@@ -38,6 +38,12 @@ export interface CommandRegistration extends IDisposable {
   readonly commandId: string
 }
 
+/** A delayed UI action remains bound to the contribution captured on opening. */
+export interface CapturedCommand {
+  readonly commandId: string
+  execute(args?: Readonly<Record<string, unknown>>): Promise<CommandOutcome>
+}
+
 export interface CommandSource {
   forScope(scope: ResourceScope): {
     add(command: Command): CommandRegistration
@@ -45,6 +51,8 @@ export interface CommandSource {
   getSnapshot(): readonly Command[]
   subscribe(listener: () => void): () => void
   execute(id: string, args?: Readonly<Record<string, unknown>>): Promise<CommandOutcome>
+  /** UI01 compatible capability; older providers may explicitly lack capture. */
+  capture?(id: string): CapturedCommand
 }
 
 /** 快捷键层：解析、冲突拒绝、查表（C-07 §2/§3）。 */

@@ -3,6 +3,7 @@ import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { afterEach, describe, expect, it } from 'vitest'
 import { runtime } from '@ordessa/extension-host'
+import { createCommandSource } from '@ordessa/extension-host/platform'
 import { WorkbenchToken, type Workbench, type WorkbenchComposition } from '@extensions/ordessa.contracts/contract.js'
 import commandsPlugin from '../../../../plugins/commands/src/entry'
 import workbenchPlugin from '../src/entry'
@@ -29,7 +30,7 @@ describe('workbench plugin through the extension host', () => {
         composition.forScope(ctx.resources).addModule({ id: 'chat', title: 'Chat', homeViewId: 'chat.main', sidebarViewId: 'chat.side' })
         composition.activateModule('chat')
       },
-    }])
+    }], { commands: createCommandSource({}) })
     await app.activate('ordessa.workbench')
     await app.activate('consumer.chat')
     expect(app.getSnapshot().find(s => s.id === 'consumer.chat')?.phase).toBe('active')

@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/workbench
+
+
+ Test Files  13 passed (13)
+      Tests  86 passed (86)
+   Start at  17:51:16
+   Duration  15.41s (transform 645ms, setup 0ms, import 1.66s, tests 4.65s, environment 5.64s)
+

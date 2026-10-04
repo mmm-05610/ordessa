@@ -8,6 +8,7 @@ import { act, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { afterEach, describe, expect, it } from 'vitest'
 import { runtime } from '@ordessa/extension-host'
+import { createCommandSource } from '@ordessa/extension-host/platform'
 import type { PluginContext } from '@ordessa/extension-api'
 import { CommandsToken, WorkbenchToken, type Commands, type Workbench } from '@extensions/ordessa.contracts/contract.js'
 import commandsPlugin from '../../../../plugins/commands/src/entry'
@@ -73,7 +74,7 @@ describe('independent contributor unload through the extension host', () => {
       },
     }
 
-    const App = runtime([commandsPlugin(), workbenchPlugin(), contributorA, contributorB])
+    const App = runtime([commandsPlugin(), workbenchPlugin(), contributorA, contributorB], { commands: createCommandSource({}) })
 
     await App.activate('ordessa.workbench')
     await App.activate('contributor.a')

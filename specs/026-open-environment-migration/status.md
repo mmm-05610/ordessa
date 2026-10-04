@@ -1,3 +1,7 @@
+## UI01接口冻结及同一命令owner（最新）
+
+原109/129、20项开放保持；新增UI-T01完成接口冻结，UI1/8任务、0/12完整验收场景。Workspace/页面实例/安全布局/可返回设置/纯控件接口与归属见workspace-delta-freeze.md；尚未实施部分不提前勾选。C07四新反例4F修复，Commands生产薄适配同一实例；完整host122P/Workbench86P零skip、typecheck0。所有失败/原断言与受控层级保留，详见command-owner-checkpoint.md。继续公共实现与最终新固定源码发行，不以视觉或机制单测替代原20项。
+
 ## 批准的兼容UI CAS增量（最新，非UI产品通过）
 
 原109/129不变；UI0/8任务、0/12场景，UI-T01已IN_PROGRESS。用户批准带版本读取/仅缺席创建能力；原F5合同签名和配置权威保留。5F1P/public红首、1F1P双进程首次创建、2F6P漏版本/坏版本反例均修实现；公共113P、native3P、真实public factory/native集成1P、typecheck0。Workbench整套增量接口尚未冻结，GUI/最终含新能力产物未验。证据cas-checkpoint.md/cas-delta-approval.md，不替代核心剩余项。

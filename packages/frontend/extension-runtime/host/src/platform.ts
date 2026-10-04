@@ -5,6 +5,7 @@
 export { createThemeService, createNeutralThemeService, completeThemeTokens, themeCssVariables, applyThemeToDocument, NEUTRAL_TOKENS, THEME_CSS_VARIABLE_PREFIX } from './services/theme'
 export type { ThemeServiceOptions, ThemeStyleTarget, PartialThemeTokens } from './services/theme'
 export { createCommandSource, listPalette, evaluateWhen, dispatchKey, boundChords, EMPTY_SEQUENCE } from './services/commands'
+export { createLegacyCommandsAdapter } from './services/legacy-commands-adapter'
 export type { CommandContext, CommandSourceOptions, CommandSourceHost, PaletteEntry, KeyEventLike, KeySequenceState, BoundChord, WhenExpressionError } from './services/commands'
 export { createKeybindingService, parseKeyChord, describeChord, isKeyChordError } from './services/keybindings'
 // 公开契约类型也一并转发：宿主与插件用同一份形状（C-07 的 `Command` 因与既有

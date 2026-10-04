@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/extension-runtime/host
+
+
+ Test Files  3 passed (3)
+      Tests  33 passed (33)
+   Start at  17:47:29
+   Duration  1.10s (transform 135ms, setup 0ms, import 244ms, tests 50ms, environment 1ms)
+

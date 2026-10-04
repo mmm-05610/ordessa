@@ -190,6 +190,7 @@ export interface CommandSourceOptions {
 export interface CommandSourceHost extends CommandSource {
   /** 提供者卸载：命令离开面板，其绑定在快捷键服务里标记为 unbound（配置保留）。 */
   unload(commandId: string): void
+  capture(id: string): C07.CapturedCommand
 }
 
 /** 宿主自身贡献的命令没有插件作用域，用一个不回收的哨兵作用域表示。 */
@@ -197,6 +198,7 @@ const HOST_SCOPE: ResourceScopeLike = { isDisposed: false, add: item => item }
 
 class HostCommandSource implements CommandSourceHost {
   private readonly records: CommandRecord[] = []
+  private snapshot: readonly Command[] | undefined
   private readonly listeners = new Set<() => void>()
   private readonly keybindings: KeybindingServiceHost | undefined
   private readonly context: () => CommandContext
@@ -213,18 +215,20 @@ class HostCommandSource implements CommandSourceHost {
   }
 
   private register(command: Command, scope: ResourceScopeLike): CommandRegistration {
+    if (scope.isDisposed) throw new Error('Registration scope is closed')
     if (typeof command.id !== 'string' || command.id.trim() === '') throw new Error('命令必须带非空 id')
+    if (this.records.some(record => record.active && record.command.id === command.id)) throw new Error(`Command already registered: ${command.id}`)
     // 语法先于登记：非法 `when` / 非法 `defaultKeybinding` 在注册点被拒，不留下半条记录。
     if (command.when !== undefined) parseWhen(command.when.trim())
     const chord = command.defaultKeybinding === undefined
       ? undefined
       : parseKeyChord(command.defaultKeybinding, this.keybindings?.platform ?? 'linux')
-    const record: CommandRecord = { command, run: command.run, active: true }
+    const record: CommandRecord = { command: Object.freeze({ ...command }), run: command.run, active: true }
     this.records.push(record)
     // C-07：命令的 `defaultKeybinding` 就是经快捷键服务登记的一条绑定。
     if (chord) this.attachDefaultBinding(record, chord, scope)
     this.emit()
-    return new CommandRegistrationHandle(command.id, () => this.unload(command.id))
+    return scope.add(new CommandRegistrationHandle(command.id, () => this.retire(record)))
   }
 
   private attachDefaultBinding(record: CommandRecord, chord: KeyChord, scope: ResourceScopeLike): void {
@@ -244,15 +248,20 @@ class HostCommandSource implements CommandSourceHost {
   }
 
   unload(commandId: string): void {
-    const record = this.records.find(item => item.command.id === commandId)
-    if (!record || !record.active) return
+    const record = this.records.find(item => item.command.id === commandId && item.active)
+    if (record) this.retire(record)
+  }
+
+  private retire(record: CommandRecord): void {
+    if (!record.active) return
     record.active = false
-    this.keybindings?.markUnbound(commandId)
+    this.records.splice(this.records.indexOf(record), 1)
+    this.keybindings?.markUnbound(record.command.id)
     this.emit()
   }
 
   getSnapshot(): readonly Command[] {
-    return this.records.filter(record => record.active).map(record => record.command)
+    return this.snapshot ??= Object.freeze(this.records.filter(record => record.active).map(record => record.command))
   }
 
   subscribe(listener: () => void): () => void {
@@ -261,13 +270,26 @@ class HostCommandSource implements CommandSourceHost {
   }
 
   private emit(): void {
+    this.snapshot = undefined
     for (const listener of [...this.listeners]) listener()
   }
 
   /** C-07 §4 的四态判定；**任何**路径都不得把异常抛给调用方。 */
   async execute(id: string, args?: Readonly<Record<string, unknown>>): Promise<CommandOutcome> {
-    if (this.context().hostReady === false) return { kind: 'Unknown', commandId: id, reason: 'host-not-ready' }
     const record = this.records.find(item => item.command.id === id && item.active)
+    return this.executeRecord(id, record, args)
+  }
+
+  capture(id: string): C07.CapturedCommand {
+    const record = this.records.find(item => item.command.id === id && item.active)
+    return Object.freeze({ commandId: id, execute: (args?: Readonly<Record<string, unknown>>) => {
+      if (record && !record.active) return Promise.resolve({ kind: 'Refused' as const, commandId: id, reason: 'command-stale', retryable: false })
+      return this.executeRecord(id, record, args)
+    } })
+  }
+
+  private async executeRecord(id: string, record: CommandRecord | undefined, args?: Readonly<Record<string, unknown>>): Promise<CommandOutcome> {
+    if (this.context().hostReady === false) return { kind: 'Unknown', commandId: id, reason: 'host-not-ready' }
     if (!record) return { kind: 'Refused', commandId: id, reason: 'command-absent', retryable: false }
     const when = record.command.when
     if (when !== undefined && !whenIsSatisfied(when, this.context())) {

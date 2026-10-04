@@ -1,0 +1,36 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/workbench
+
+ ❯ tests/contributor-unload.test.tsx (1 test | 1 failed) 348ms
+     × unloading contributor A erases A everywhere while B keeps its handle, subscription, state and open views intact 346ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/contributor-unload.test.tsx > independent contributor unload through the extension host > unloading contributor A erases A everywhere while B keeps its handle, subscription, state and open views intact
+AssertionError: expected { ok: false, error: 'command-absent' } to match object { ok: false, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "error": "Command unavailable: a.tool",
++   "error": "command-absent",
+    "ok": false,
+  }
+
+ ❯ tests/contributor-unload.test.tsx:147:46
+    145|     expect(() => aApi.addUI({ id: 'a.late-ui', kind: 'component', slot…
+    146|     expect(() => aWorkbench.open('a.1')).toThrow('View unavailable')
+    147|     await expect(aCommands.execute('a.tool')).resolves.toMatchObject({…
+       |                                              ^
+    148|     await act(async () => {})
+    149|     // the failed resurrection attempts changed nothing on screen
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 12 passed (13)
+      Tests  1 failed | 85 passed (86)
+   Start at  17:50:40
+   Duration  15.22s (transform 551ms, setup 0ms, import 1.50s, tests 4.57s, environment 5.65s)
+

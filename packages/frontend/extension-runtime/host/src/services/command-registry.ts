@@ -7,6 +7,7 @@
  */
 import { Contributions, type ResourceScope, type IDisposable } from '@ordessa/extension-api'
 import type { Commands, Command } from '@extensions/ordessa.contracts/contract.js'
+export { createLegacyCommandsAdapter } from './legacy-commands-adapter'
 
 /** Internal helper, not another host service or dependency scheduler. */
 export function registry<T extends { id: string; order?: number }>(lifetime: ResourceScope) {
