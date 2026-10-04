@@ -1,0 +1,18 @@
+....F                                                                    [100%]
+=================================== FAILURES ===================================
+_ test_production_draft_target_is_backend_minted_and_reopened_without_native_creation _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-811/test_production_draft_target_i0')
+
+    def test_production_draft_target_is_backend_minted_and_reopened_without_native_creation(tmp_path):
+        plugin=AgentDomainPlugin()
+        handlers=methods(plugin,tmp_path)
+        location={'kind':'draft','draftId':'draft-one','connectionId':'fixture','contextRevision':1}
+>       result=handlers['agent.session.resolve']({'location':location})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'agent.session.resolve'
+
+plugins/agent/backend/tests/test_closeout_production_owner.py:55: KeyError
+=========================== short test summary info ============================
+FAILED plugins/agent/backend/tests/test_closeout_production_owner.py::test_production_draft_target_is_backend_minted_and_reopened_without_native_creation
+1 failed, 4 passed in 0.06s

@@ -166,8 +166,8 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
   }, [])
 
   // T010-07: this view is the pane's single editor; the lease is claimed per
-  // pane and released on switch/unmount. The settle path (store.write) is not
-  // an edit and runs regardless.
+  // pane and released on switch/unmount. The F5 capture settle bypasses the
+  // lease and remains bound to the captured draft revision.
   const editorId = useRef(`chat-editor-${globalThis.crypto.randomUUID()}`).current
   useEffect(() => {
     let lease
@@ -178,11 +178,14 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
   const submit = useCallback(async () => {
     const capturedPane = paneRef.current
     if (pendingPane !== undefined || !canSend) return
-    const captured = store.read(capturedPane)
-    if (!captured.text.trim()) return
+    const currentDraft = store.read(capturedPane)
+    if (!currentDraft.text.trim()) return
+    const submissionId = globalThis.crypto.randomUUID()
+    const editCapture = store.captureForSend(capturedPane, submissionId)
+    const captured = editCapture.composition
     const readyItems = captured.items.filter(item => item.phase.state === 'ready')
     const snapshot: ChatSubmissionSnapshot = {
-      submissionId: globalThis.crypto.randomUUID(),
+      submissionId,
       target: { ...location },
       draftId: capturedPane,
       draftRevision: captured.revision,
@@ -213,21 +216,17 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
     } finally {
       setPendingPane(current => (current === capturedPane ? undefined : current))
     }
+    // Resolve the captured F5 edit session even if this view has switched or
+    // closed. It consumes only the exact captured revision on acceptance.
+    if (result.status === 'accepted' && store.has(capturedPane)) {
+      store.markHandedOff(capturedPane, snapshot.attachmentIds)
+    }
+    await editCapture.settle(result.status)
     // X05 protects the NEW pane; the captured pane's own settle still runs
     // after the view left (T010-07: view离开收尾仍能更新) — safe precisely
     // because the settle consumes only the CAPTURED revision.
     const stillCurrent = paneRef.current === capturedPane
     if (result.status === 'accepted') {
-      if (store.has(capturedPane)) {
-        const now = store.read(capturedPane)
-        store.markHandedOff(capturedPane, snapshot.attachmentIds)
-        // Success consumes ONLY the captured revision (T010-07): any edit
-        // event after the capture — including an ABA round-trip back to the
-        // same text (C04) — means the draft is NEWER and survives untouched.
-        if (now.revision === captured.revision) {
-          store.write(capturedPane, { ...now, text: '', revision: now.revision + 1 })
-        }
-      }
       if (stillCurrent) setPanel(null)
     } else if (stillCurrent && result.status === 'refused') {
       // Refusal keeps the draft AND its prepared attachments (US4-1/US3-3).

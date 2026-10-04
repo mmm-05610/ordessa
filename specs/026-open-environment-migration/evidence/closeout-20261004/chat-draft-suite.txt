@@ -1,0 +1,74 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/chat/frontend
+
+ ❯ tests/closeout-draft-edit.test.tsx (3 tests | 1 failed) 16ms
+     × preserves a same-text edit made after an accepted-send capture 12ms
+ ❯ tests/input-ticket-boundary.test.tsx (6 tests | 1 failed) 470ms
+     × Escape consumes exactly the open panel layer once; with no panel Chat leaves the event to the global layer 46ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-draft-edit.test.tsx > Chat draft F5 edit-session integration > preserves a same-text edit made after an accepted-send capture
+AssertionError: expected '' to be 'same text' // Object.is equality
+
+- Expected
++ Received
+
+- same text
+
+ ❯ tests/closeout-draft-edit.test.tsx:16:38
+     14|     await capture.settle('accepted')
+     15|
+     16|     expect(store.read('draft').text).toBe('same text')
+       |                                      ^
+     17|     expect(store.read('draft').revision).toBeGreaterThan(capture.compo…
+     18|     lease.release()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/input-ticket-boundary.test.tsx > T009-06 composer input ticket boundary > Escape consumes exactly the open panel layer once; with no panel Chat leaves the event to the global layer
+AssertionError: expected <div …(3)><div …(3)>…(1)</div></div> to be null
+
+- Expected:
+null
+
++ Received:
+<div
+  class="chat-panel-backdrop"
+  data-mode="slash"
+  data-testid="chat-input-panel"
+>
+  <div
+    aria-label="命令建议"
+    class="chat-panel"
+    role="listbox"
+  >
+    <div
+      class="chat-panel-list"
+    >
+      <div
+        class="chat-panel-note"
+        data-state="empty"
+      >
+        没有匹配项
+      </div>
+    </div>
+  </div>
+</div>
+
+ ❯ tests/input-ticket-boundary.test.tsx:222:73
+    220|     await act(async () => { input(container).dispatchEvent(first) })
+    221|     expect(first.defaultPrevented).toBe(true) // this layer consumed it
+    222|     expect(container.querySelector('[data-testid="chat-input-panel"]')…
+       |                                                                         ^
+    223|     expect(input(container).value).toBe('/co')
+    224|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 6 passed (8)
+      Tests  2 failed | 89 passed (91)
+   Start at  09:47:15
+   Duration  14.48s (transform 672ms, setup 0ms, import 2.40s, tests 3.28s, environment 6.62s)
+

@@ -1,0 +1,66 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/profile/frontend
+
+ ❯ tests/closeout-edit-consumer.test.tsx (3 tests | 3 failed) 20ms
+     × keeps a same-value edit made during a late save (ABA) 14ms
+     × anchors the public edit session to the loaded profile revision 2ms
+     × merges same-key concurrent catalog reads and publishes the newest waiter result 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-edit-consumer.test.tsx > Profile resource editing closeout > keeps a same-value edit made during a late save (ABA)
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/closeout-edit-consumer.test.tsx:33:25
+     31|
+     32|     expect(saveProfile).toHaveBeenCalledTimes(1)
+     33|     expect(draft.dirty).toBe(true)
+       |                         ^
+     34|     expect(draft.localPatches).toEqual([patch])
+     35|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/closeout-edit-consumer.test.tsx > Profile resource editing closeout > anchors the public edit session to the loaded profile revision
+AssertionError: expected undefined to be '7' // Object.is equality
+
+- Expected:
+"7"
+
++ Received:
+undefined
+
+ ❯ tests/closeout-edit-consumer.test.tsx:39:32
+     37|   it('anchors the public edit session to the loaded profile revision',…
+     38|     const draft = new ProfileDraftStore({} as ProfileServiceClient, PR…
+     39|     expect(draft.baseRevision).toBe('7')
+       |                                ^
+     40|   })
+     41| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/closeout-edit-consumer.test.tsx > Profile catalog read coordination > merges same-key concurrent catalog reads and publishes the newest waiter result
+AssertionError: expected "vi.fn()" to be called 1 times, but got 2 times
+ ❯ tests/closeout-edit-consumer.test.tsx:53:26
+     51|     const first = catalog.refresh('local', false)
+     52|     const second = catalog.refresh('local', false)
+     53|     expect(listProfiles).toHaveBeenCalledTimes(1)
+       |                          ^
+     54|     expect(describeFacets).toHaveBeenCalledTimes(1)
+     55|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  09:32:40
+   Duration  377ms (transform 49ms, setup 0ms, import 69ms, tests 20ms, environment 0ms)
+

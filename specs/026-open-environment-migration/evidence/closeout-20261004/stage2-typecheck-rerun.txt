@@ -1,0 +1,18 @@
+
+> ordessa@0.1.0 typecheck
+> npm run --workspace apps/desktop typecheck
+
+
+> @modular/desktop-app@0.1.0 typecheck
+> tsc --noEmit
+
+../../plugins/model-provider/chat-contribution/src/canonical-selector.tsx(67,35): error TS2339: Property 'wiring' does not exist on type 'CanonicalModelSelectorWiring & { location: ChatLocation; }'.
+../../plugins/model-provider/chat-contribution/src/canonical-selector.tsx(80,58): error TS7006: Parameter 'value' implicitly has an 'any' type.
+../../plugins/model-provider/chat-contribution/src/canonical-selector.tsx(84,14): error TS7006: Parameter 'error' implicitly has an 'any' type.
+../../plugins/model-provider/chat-contribution/src/canonical-selector.tsx(154,36): error TS2322: Type '{ wiring: CanonicalModelSelectorWiring; location: ChatLocation; }' is not assignable to type 'IntrinsicAttributes & CanonicalModelSelectorWiring & { location: ChatLocation; }'.
+  Property 'wiring' does not exist on type 'IntrinsicAttributes & CanonicalModelSelectorWiring & { location: ChatLocation; }'.
+../../plugins/model-provider/chat-contribution/src/canonical-selector.tsx(179,3): error TS2741: Property 'isDisposed' is missing in type '{ dispose(): void; }' but required in type 'IDisposable'.
+npm ERR! Lifecycle script `typecheck` failed with error: 
+npm ERR! Error: command failed 
+npm ERR!   in workspace: @modular/desktop-app@0.1.0 
+npm ERR!   at location: /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/apps/desktop 

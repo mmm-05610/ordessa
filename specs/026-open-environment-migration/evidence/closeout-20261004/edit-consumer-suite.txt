@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/profile/frontend
+
+
+ Test Files  6 passed (6)
+      Tests  24 passed (24)
+   Start at  09:36:45
+   Duration  5.01s (transform 444ms, setup 0ms, import 853ms, tests 775ms, environment 1.76s)
+

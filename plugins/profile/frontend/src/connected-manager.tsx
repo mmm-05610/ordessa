@@ -6,7 +6,7 @@ import type { UiScope } from '@ordessa/ui-components/api'
 import { ProfileConfigurationPane } from './configuration-pane'
 import { profileCall } from './wire-client'
 import { ProfileManagementView } from './management-view'
-import { ProfileDraftStore } from './stores'
+import { ProfileCatalogStore, ProfileDraftStore } from './stores'
 import { profileSettingsCss } from './styles'
 
 /** Connected management surface. No picker/application until a real runtime
@@ -25,6 +25,7 @@ export function ConnectedProfileManager({ client, wire, ui }: { client: ProfileS
   const generation = useRef(0)
   const mounted = useRef(true)
   const saving = useRef(false)
+  const catalog = useMemo(() => new ProfileCatalogStore(client), [client])
   const current = profiles.find(p => p.profileId === selected)
   const draft = useMemo(() => current ? new ProfileDraftStore(client, current) : null, [client, current])
 
@@ -33,12 +34,13 @@ export function ConnectedProfileManager({ client, wire, ui }: { client: ProfileS
     setBusy(true)
     try {
       const [rows, ids] = await Promise.all([
-        client.listProfiles('local', true), profileCall(wire, 'configuredHarnesses', {}),
+        catalog.refresh('local', true).then(() => catalog.state),
+        profileCall(wire, 'configuredHarnesses', {}),
       ])
       if (request !== generation.current) return
-      setProfiles(rows)
+      setProfiles(rows.profiles)
       setHarnesses(ids as readonly string[])
-      setError(null)
+      setError(rows.online ? null : 'Profile catalog unavailable; showing last known profiles')
     } catch (e) {
       if (request === generation.current) setError(String(e))
     } finally {
@@ -48,8 +50,8 @@ export function ConnectedProfileManager({ client, wire, ui }: { client: ProfileS
   useEffect(() => {
     mounted.current = true
     void refresh()
-    return () => { mounted.current = false; ++generation.current }
-  }, [client, wire])
+    return () => { mounted.current = false; ++generation.current; catalog.dispose() }
+  }, [client, wire, catalog])
 
   async function mutate(action: () => Promise<unknown>) {
     setBusy(true)

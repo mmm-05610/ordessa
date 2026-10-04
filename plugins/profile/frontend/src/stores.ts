@@ -21,6 +21,15 @@ import type {
   ProfileServiceClient,
   UpdatePolicyOutcomeDto,
 } from '@ordessa/plugin-profile-api'
+import { createEditSession } from '@ordessa/ui-components/editing'
+import { createQueryCache } from '@ordessa/ui-components/query-cache'
+import { createTaskScope } from '@ordessa/ui-components/tasks'
+
+let editSessionSeq = 0
+
+function editField(patch: Pick<ItemPatch, 'facetId' | 'itemId'>): string {
+  return `${patch.facetId}\u0000${patch.itemId}`
+}
 
 export interface PolicyState {
   policy: MechanismPolicyDto | null
@@ -109,53 +118,103 @@ export type SaveOutcome =
 
 /** One open profile editor: buffered patches + explicit save. */
 export class ProfileDraftStore {
-  private patches: ItemPatch[] = []
-  dirty = false
+  private session: ReturnType<typeof createEditSession<Record<string, ItemPatch>>>
+  private pendingOperationKey = ''
+  private savedRevision: number | null = null
   saveError: string | null = null
   lastConflictRemote: ProfileIdentityDto | null = null
 
   constructor(
     private readonly client: ProfileServiceClient,
     readonly profile: ProfileIdentityDto,
-  ) {}
+  ) {
+    this.session = this.newSession()
+  }
+
+  private newSession() {
+    return createEditSession<Record<string, ItemPatch>>({
+      editId: `profile-edit:${this.profile.profileId}:${++editSessionSeq}`,
+      baseRevision: String(this.profile.currentRevision),
+      initial: {},
+      commitHandler: capture => this.commitCapture(capture),
+    })
+  }
+
+  get baseRevision(): string {
+    return this.session.baseRevision
+  }
+
+  get dirty(): boolean {
+    return this.session.dirtyFields().size > 0
+  }
 
   get localPatches(): readonly ItemPatch[] {
-    return this.patches
+    return [...this.session.dirtyFields()].map(field => this.session.current[field]!)
   }
 
   edit(patch: ItemPatch): void {
-    this.patches = [...this.patches.filter((p) => !(p.facetId === patch.facetId && p.itemId === patch.itemId)), patch]
-    this.dirty = true
+    this.session.setValue(editField(patch), patch)
   }
 
   discard(): void {
-    this.patches = []; this.dirty = false; this.saveError = null; this.lastConflictRemote = null
+    this.session.cancel()
+    this.session = this.newSession()
+    this.saveError = null
+    this.lastConflictRemote = null
   }
 
   async save(operationKey: string): Promise<SaveOutcome> {
     if (!this.dirty) return { ok: true, revision: this.profile.currentRevision }
-    try {
-      const result = await this.client.saveProfile(operationKey, {
-        profileId: this.profile.profileId,
-        expectedVersion: this.profile.version,
-        patches: this.patches,
-      })
-      this.patches = []
-      this.dirty = false
+    this.pendingOperationKey = operationKey
+    this.savedRevision = null
+    const outcome = await this.session.commit()
+    if (outcome.kind === 'saved') {
       this.saveError = null
       this.lastConflictRemote = null
-      return { ok: true, revision: result.profile.currentRevision }
+      return { ok: true, revision: this.savedRevision ?? this.profile.currentRevision }
+    }
+    if (outcome.kind === 'conflict') {
+      return { ok: false, conflict: true, localPatches: this.localPatches }
+    }
+    if (outcome.kind === 'unknown') {
+      return { ok: false, conflict: false, reason: this.saveError ?? `unknown save outcome (${outcome.queryHint})` }
+    }
+    this.saveError = outcome.reason
+    return { ok: false, conflict: false, reason: outcome.reason }
+  }
+
+  private async commitCapture(capture: {
+    editId: string
+    baseRevision: string
+    editRevision: number
+    fields: ReadonlyArray<string>
+    values: Readonly<Partial<Record<string, ItemPatch>>>
+  }) {
+    const patches = capture.fields.map(field => capture.values[field]!).filter(Boolean)
+    try {
+      const result = await this.client.saveProfile(this.pendingOperationKey, {
+        profileId: this.profile.profileId,
+        expectedVersion: this.profile.version,
+        patches,
+      })
+      this.savedRevision = result.profile.currentRevision
+      return { kind: 'saved' as const, consumedFields: [...capture.fields] }
     } catch (error) {
       const code = (error as { code?: string }).code
       if (code === 'PROFILE_VERSION_CONFLICT') {
         // Keep every local input for compare/reload; never auto-overwrite.
         this.lastConflictRemote = (error as { current?: ProfileIdentityDto }).current ?? null
-        return { ok: false, conflict: true, localPatches: this.patches }
+        return {
+          kind: 'conflict' as const,
+          field: capture.fields[0] ?? 'profile',
+          theirRevision: String(this.lastConflictRemote?.currentRevision ?? this.lastConflictRemote?.version ?? 'unknown'),
+        }
       }
       this.saveError = message(error)
-      return { ok: false, conflict: false, reason: this.saveError }
+      return { kind: 'unknown' as const, queryHint: `profile-save:${this.pendingOperationKey}` }
     }
   }
+
 }
 
 /** Catalog state for the management navigator (PM02): offline keeps the last
@@ -169,23 +228,80 @@ export class ProfileCatalogStore {
     lastSyncedAt: null as string | null,
   }
 
+  private readonly cache = createQueryCache({ maxEntries: 16 })
+  private readonly generationScope = 'profile-catalog-instance'
+  private generation = 0
+  private readonly tasks = createTaskScope({ currentGeneration: () => this.generation })
+
   constructor(private readonly client: ProfileServiceClient) {}
 
   async refresh(realm: string, includeArchived: boolean): Promise<void> {
+    const generation = ++this.generation
     this.state = { ...this.state, loading: true }
-    try {
+    const key = {
+      environment: realm,
+      connectionGeneration: 0,
+      authorizationScope: this.generationScope,
+      authorizationGeneration: 0,
+      serviceTarget: 'profile.catalog',
+      contractVersion: 'profile-service/1',
+      params: { realm, includeArchived },
+    }
+    const declaration = this.cache.declaration({ key, run: async () => {
       const [profiles, facets] = await Promise.all([
         this.client.listProfiles(realm, includeArchived),
         this.client.describeFacets(null),
       ])
+      return { profiles, facets }
+    } })
+    const task = this.tasks.run(
+      { activation: 'profile-catalog', generation },
+      async () => {
+        const entry = this.cache.read(declaration)
+        if (entry.state === 'success' || entry.state === 'error' || entry.state === 'stale') {
+          await this.cache.refresh(key)
+        }
+        const refreshed = this.cache.read(declaration)
+        await this.waitForTerminal(refreshed)
+        if (refreshed.state === 'error' || refreshed.data === undefined) {
+          throw new Error('Profile catalog read failed')
+        }
+        return refreshed.data
+      },
+    )
+    const result = await task.result()
+    if (generation !== this.generation) return
+    if (result.kind === 'done') {
       this.state = {
-        profiles, facets, online: true, loading: false,
+        profiles: result.value.profiles, facets: result.value.facets, online: true, loading: false,
         lastSyncedAt: new Date().toISOString(),
       }
-    } catch {
+    } else if (result.kind === 'failed') {
       // keep the previous lists; mark offline/read-only (PM02)
       this.state = { ...this.state, online: false, loading: false }
+    } else {
+      this.state = { ...this.state, loading: false }
     }
+  }
+
+  private waitForTerminal(entry: {
+    readonly state: 'idle' | 'loading' | 'success' | 'error' | 'stale'
+    subscribe(listener: () => void): { release(): void }
+  }): Promise<void> {
+    if (entry.state === 'success' || entry.state === 'error' || entry.state === 'stale') return Promise.resolve()
+    return new Promise(resolve => {
+      const handle = entry.subscribe(() => {
+        if (entry.state === 'success' || entry.state === 'error' || entry.state === 'stale') {
+          handle.release()
+          resolve()
+        }
+      })
+    })
+  }
+
+  dispose(): void {
+    this.tasks.releaseAll()
+    this.cache.clearScope(this.generationScope)
   }
 }
 

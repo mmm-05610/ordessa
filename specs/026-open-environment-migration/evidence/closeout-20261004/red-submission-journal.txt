@@ -1,0 +1,478 @@
+FFFFFFFF                                                                 [100%]
+=================================== FAILURES ===================================
+__________ test_capture_freezes_attachment_bytes_and_same_key_digest ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-806/test_capture_freezes_attachmen0')
+
+    def test_capture_freezes_attachment_bytes_and_same_key_digest(tmp_path):
+>       from ordessa_agent.submission_journal import SubmissionJournal
+E       ModuleNotFoundError: No module named 'ordessa_agent.submission_journal'
+
+plugins/agent/backend/tests/test_closeout_submission_journal.py:55: ModuleNotFoundError
+________ test_same_request_with_different_frozen_content_is_a_conflict _________
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-806/test_same_request_with_differe0')
+
+    def test_same_request_with_different_frozen_content_is_a_conflict(tmp_path):
+>       from ordessa_agent.submission_journal import JournalConflictError, SubmissionJournal
+E       ModuleNotFoundError: No module named 'ordessa_agent.submission_journal'
+
+plugins/agent/backend/tests/test_closeout_submission_journal.py:87: ModuleNotFoundError
+____________ test_missing_reliable_capability_is_typed_unsupported _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-806/test_missing_reliable_capabili0')
+
+    def test_missing_reliable_capability_is_typed_unsupported(tmp_path):
+>       from ordessa_agent.submission_journal import (
+            ReliableCapabilities,
+            ReliableSubmissionUnsupported,
+            SubmissionJournal,
+        )
+E       ModuleNotFoundError: No module named 'ordessa_agent.submission_journal'
+
+plugins/agent/backend/tests/test_closeout_submission_journal.py:106: ModuleNotFoundError
+_ test_sigkill_windows_recover_by_query_without_redispatch[mapping-0-False-mapped] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-806/test_sigkill_windows_recover_b0')
+kill_after = 'mapping', expected_effects = 0, expected_backend_intent = False
+expected_stage = 'mapped'
+
+    @pytest.mark.parametrize(
+        "kill_after, expected_effects, expected_backend_intent, expected_stage",
+        [
+            ("mapping", 0, False, "mapped"),
+            ("possibly_submitted", 0, False, "possibly-submitted"),
+            ("backend_intent", 0, True, "possibly-submitted"),
+            ("native_effect", 1, True, "possibly-submitted"),
+            ("domain_result", 1, True, "completed"),
+        ],
+    )
+    def test_sigkill_windows_recover_by_query_without_redispatch(
+        tmp_path, kill_after, expected_effects, expected_backend_intent, expected_stage,
+    ):
+        domain_db = tmp_path / "domain.sqlite"
+        backend_db = tmp_path / "environment.sqlite"
+        effects_db = tmp_path / "harness-effects.sqlite"
+        worker = r'''
+    import os, sqlite3, sys
+    from dataclasses import dataclass
+    from ordessa_agent.submission_journal import ReliableCapabilities, SubmissionJournal
+    from ordessa_environment_api import RequestKey
+    from ordessa_environment_api.guarantee import GuaranteeLevel
+    from ordessa_persistence_sqlite import ProtectedFingerprintHmac, SqliteStorePort
+    from pacthold.core.registration import CoreContributionSet
+    from pacthold.environment import Environment, InstallationRecord
+    
+    @dataclass(frozen=True)
+    class Contract:
+        contract_id: str = "demo.submit@1"
+    
+    domain_path, backend_path, effects_path, kill_after = sys.argv[1:]
+    domain = SqliteStorePort(domain_path, writer_token="domain-child")
+    backend = SqliteStorePort(backend_path, writer_token="backend-child")
+    journal = SubmissionJournal(domain)
+    request = RequestKey("env-a", "user:local:closeout", "req-closeout-1",
+                         {"target": "session:S1", "binding": "binding:g1"})
+    capabilities = ReliableCapabilities(True, True, True, True)
+    record = journal.capture(request, {
+        "draftId": "draft-1", "draftRevision": 7, "text": "captured text",
+        "configOperationIds": ["op-model-3"], "baseRevision": "native-r4",
+        "target": {"logical": "session:S1", "generation": 1},
+        "binding": {"native": "instance-1", "generation": 2},
+        "schema": "agent-input/v1", "guarantee": "reliable",
+    }, attachments={"report.bin": b"original attachment"}, capabilities=capabilities)
+    def die(stage):
+        if kill_after == stage:
+            os._exit(91)
+    die("mapping")
+    journal.mark_possibly_submitted(request, record.digest)
+    die("possibly_submitted")
+    fingerprint = ProtectedFingerprintHmac({"fixture-key": b"fixture-only-key"}, active_key_id="fixture-key")
+    env = Environment("env-a", store=backend, fingerprint_port=fingerprint)
+    env.install(InstallationRecord("submit-plugin", "d" * 64))
+    env.enable("submit-plugin")
+    env.activate("submit-plugin", CoreContributionSet(contracts=(Contract,)))
+    env.invoke("demo.submit", request, guarantee=GuaranteeLevel.RELIABLE, input_digest=record.digest)
+    die("backend_intent")
+    with sqlite3.connect(effects_path) as effects:
+        effects.execute("CREATE TABLE IF NOT EXISTS effects (request_id TEXT PRIMARY KEY, count INTEGER NOT NULL)")
+        effects.execute("INSERT INTO effects VALUES (?, 1) ON CONFLICT(request_id) DO UPDATE SET count=count+1",
+                        (request.request_id,))
+    die("native_effect")
+    journal.record_config_apply(request, {"outcome": "applied", "operationIds": ["op-model-3"]})
+    journal.record_input_acceptance(request, {"outcome": "accepted"})
+    journal.record_run_result(request, {"outcome": "running", "runId": "run-1"})
+    journal.record_completed(request)
+    die("domain_result")
+    '''
+        child = subprocess.run(
+            [sys.executable, "-c", worker, str(domain_db), str(backend_db), str(effects_db), kill_after],
+            check=False,
+        )
+>       assert child.returncode == 91
+E       AssertionError: assert 1 == 91
+E        +  where 1 = CompletedProcess(args=['/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/.venv/bin/python', '-c', ...e', '/tmp/pytest-of-maoqh/pytest-806/test_sigkill_windows_recover_b0/harness-effects.sqlite', 'mapping'], returncode=1).returncode
+
+plugins/agent/backend/tests/test_closeout_submission_journal.py:200: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+ModuleNotFoundError: No module named 'ordessa_agent.submission_journal'
+_ test_sigkill_windows_recover_by_query_without_redispatch[possibly_submitted-0-False-possibly-submitted] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-806/test_sigkill_windows_recover_b1')
+kill_after = 'possibly_submitted', expected_effects = 0
+expected_backend_intent = False, expected_stage = 'possibly-submitted'
+
+    @pytest.mark.parametrize(
+        "kill_after, expected_effects, expected_backend_intent, expected_stage",
+        [
+            ("mapping", 0, False, "mapped"),
+            ("possibly_submitted", 0, False, "possibly-submitted"),
+            ("backend_intent", 0, True, "possibly-submitted"),
+            ("native_effect", 1, True, "possibly-submitted"),
+            ("domain_result", 1, True, "completed"),
+        ],
+    )
+    def test_sigkill_windows_recover_by_query_without_redispatch(
+        tmp_path, kill_after, expected_effects, expected_backend_intent, expected_stage,
+    ):
+        domain_db = tmp_path / "domain.sqlite"
+        backend_db = tmp_path / "environment.sqlite"
+        effects_db = tmp_path / "harness-effects.sqlite"
+        worker = r'''
+    import os, sqlite3, sys
+    from dataclasses import dataclass
+    from ordessa_agent.submission_journal import ReliableCapabilities, SubmissionJournal
+    from ordessa_environment_api import RequestKey
+    from ordessa_environment_api.guarantee import GuaranteeLevel
+    from ordessa_persistence_sqlite import ProtectedFingerprintHmac, SqliteStorePort
+    from pacthold.core.registration import CoreContributionSet
+    from pacthold.environment import Environment, InstallationRecord
+    
+    @dataclass(frozen=True)
+    class Contract:
+        contract_id: str = "demo.submit@1"
+    
+    domain_path, backend_path, effects_path, kill_after = sys.argv[1:]
+    domain = SqliteStorePort(domain_path, writer_token="domain-child")
+    backend = SqliteStorePort(backend_path, writer_token="backend-child")
+    journal = SubmissionJournal(domain)
+    request = RequestKey("env-a", "user:local:closeout", "req-closeout-1",
+                         {"target": "session:S1", "binding": "binding:g1"})
+    capabilities = ReliableCapabilities(True, True, True, True)
+    record = journal.capture(request, {
+        "draftId": "draft-1", "draftRevision": 7, "text": "captured text",
+        "configOperationIds": ["op-model-3"], "baseRevision": "native-r4",
+        "target": {"logical": "session:S1", "generation": 1},
+        "binding": {"native": "instance-1", "generation": 2},
+        "schema": "agent-input/v1", "guarantee": "reliable",
+    }, attachments={"report.bin": b"original attachment"}, capabilities=capabilities)
+    def die(stage):
+        if kill_after == stage:
+            os._exit(91)
+    die("mapping")
+    journal.mark_possibly_submitted(request, record.digest)
+    die("possibly_submitted")
+    fingerprint = ProtectedFingerprintHmac({"fixture-key": b"fixture-only-key"}, active_key_id="fixture-key")
+    env = Environment("env-a", store=backend, fingerprint_port=fingerprint)
+    env.install(InstallationRecord("submit-plugin", "d" * 64))
+    env.enable("submit-plugin")
+    env.activate("submit-plugin", CoreContributionSet(contracts=(Contract,)))
+    env.invoke("demo.submit", request, guarantee=GuaranteeLevel.RELIABLE, input_digest=record.digest)
+    die("backend_intent")
+    with sqlite3.connect(effects_path) as effects:
+        effects.execute("CREATE TABLE IF NOT EXISTS effects (request_id TEXT PRIMARY KEY, count INTEGER NOT NULL)")
+        effects.execute("INSERT INTO effects VALUES (?, 1) ON CONFLICT(request_id) DO UPDATE SET count=count+1",
+                        (request.request_id,))
+    die("native_effect")
+    journal.record_config_apply(request, {"outcome": "applied", "operationIds": ["op-model-3"]})
+    journal.record_input_acceptance(request, {"outcome": "accepted"})
+    journal.record_run_result(request, {"outcome": "running", "runId": "run-1"})
+    journal.record_completed(request)
+    die("domain_result")
+    '''
+        child = subprocess.run(
+            [sys.executable, "-c", worker, str(domain_db), str(backend_db), str(effects_db), kill_after],
+            check=False,
+        )
+>       assert child.returncode == 91
+E       AssertionError: assert 1 == 91
+E        +  where 1 = CompletedProcess(args=['/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/.venv/bin/python', '-c', ...ytest-of-maoqh/pytest-806/test_sigkill_windows_recover_b1/harness-effects.sqlite', 'possibly_submitted'], returncode=1).returncode
+
+plugins/agent/backend/tests/test_closeout_submission_journal.py:200: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+ModuleNotFoundError: No module named 'ordessa_agent.submission_journal'
+_ test_sigkill_windows_recover_by_query_without_redispatch[backend_intent-0-True-possibly-submitted] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-806/test_sigkill_windows_recover_b2')
+kill_after = 'backend_intent', expected_effects = 0
+expected_backend_intent = True, expected_stage = 'possibly-submitted'
+
+    @pytest.mark.parametrize(
+        "kill_after, expected_effects, expected_backend_intent, expected_stage",
+        [
+            ("mapping", 0, False, "mapped"),
+            ("possibly_submitted", 0, False, "possibly-submitted"),
+            ("backend_intent", 0, True, "possibly-submitted"),
+            ("native_effect", 1, True, "possibly-submitted"),
+            ("domain_result", 1, True, "completed"),
+        ],
+    )
+    def test_sigkill_windows_recover_by_query_without_redispatch(
+        tmp_path, kill_after, expected_effects, expected_backend_intent, expected_stage,
+    ):
+        domain_db = tmp_path / "domain.sqlite"
+        backend_db = tmp_path / "environment.sqlite"
+        effects_db = tmp_path / "harness-effects.sqlite"
+        worker = r'''
+    import os, sqlite3, sys
+    from dataclasses import dataclass
+    from ordessa_agent.submission_journal import ReliableCapabilities, SubmissionJournal
+    from ordessa_environment_api import RequestKey
+    from ordessa_environment_api.guarantee import GuaranteeLevel
+    from ordessa_persistence_sqlite import ProtectedFingerprintHmac, SqliteStorePort
+    from pacthold.core.registration import CoreContributionSet
+    from pacthold.environment import Environment, InstallationRecord
+    
+    @dataclass(frozen=True)
+    class Contract:
+        contract_id: str = "demo.submit@1"
+    
+    domain_path, backend_path, effects_path, kill_after = sys.argv[1:]
+    domain = SqliteStorePort(domain_path, writer_token="domain-child")
+    backend = SqliteStorePort(backend_path, writer_token="backend-child")
+    journal = SubmissionJournal(domain)
+    request = RequestKey("env-a", "user:local:closeout", "req-closeout-1",
+                         {"target": "session:S1", "binding": "binding:g1"})
+    capabilities = ReliableCapabilities(True, True, True, True)
+    record = journal.capture(request, {
+        "draftId": "draft-1", "draftRevision": 7, "text": "captured text",
+        "configOperationIds": ["op-model-3"], "baseRevision": "native-r4",
+        "target": {"logical": "session:S1", "generation": 1},
+        "binding": {"native": "instance-1", "generation": 2},
+        "schema": "agent-input/v1", "guarantee": "reliable",
+    }, attachments={"report.bin": b"original attachment"}, capabilities=capabilities)
+    def die(stage):
+        if kill_after == stage:
+            os._exit(91)
+    die("mapping")
+    journal.mark_possibly_submitted(request, record.digest)
+    die("possibly_submitted")
+    fingerprint = ProtectedFingerprintHmac({"fixture-key": b"fixture-only-key"}, active_key_id="fixture-key")
+    env = Environment("env-a", store=backend, fingerprint_port=fingerprint)
+    env.install(InstallationRecord("submit-plugin", "d" * 64))
+    env.enable("submit-plugin")
+    env.activate("submit-plugin", CoreContributionSet(contracts=(Contract,)))
+    env.invoke("demo.submit", request, guarantee=GuaranteeLevel.RELIABLE, input_digest=record.digest)
+    die("backend_intent")
+    with sqlite3.connect(effects_path) as effects:
+        effects.execute("CREATE TABLE IF NOT EXISTS effects (request_id TEXT PRIMARY KEY, count INTEGER NOT NULL)")
+        effects.execute("INSERT INTO effects VALUES (?, 1) ON CONFLICT(request_id) DO UPDATE SET count=count+1",
+                        (request.request_id,))
+    die("native_effect")
+    journal.record_config_apply(request, {"outcome": "applied", "operationIds": ["op-model-3"]})
+    journal.record_input_acceptance(request, {"outcome": "accepted"})
+    journal.record_run_result(request, {"outcome": "running", "runId": "run-1"})
+    journal.record_completed(request)
+    die("domain_result")
+    '''
+        child = subprocess.run(
+            [sys.executable, "-c", worker, str(domain_db), str(backend_db), str(effects_db), kill_after],
+            check=False,
+        )
+>       assert child.returncode == 91
+E       AssertionError: assert 1 == 91
+E        +  where 1 = CompletedProcess(args=['/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/.venv/bin/python', '-c', ...mp/pytest-of-maoqh/pytest-806/test_sigkill_windows_recover_b2/harness-effects.sqlite', 'backend_intent'], returncode=1).returncode
+
+plugins/agent/backend/tests/test_closeout_submission_journal.py:200: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+ModuleNotFoundError: No module named 'ordessa_agent.submission_journal'
+_ test_sigkill_windows_recover_by_query_without_redispatch[native_effect-1-True-possibly-submitted] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-806/test_sigkill_windows_recover_b3')
+kill_after = 'native_effect', expected_effects = 1
+expected_backend_intent = True, expected_stage = 'possibly-submitted'
+
+    @pytest.mark.parametrize(
+        "kill_after, expected_effects, expected_backend_intent, expected_stage",
+        [
+            ("mapping", 0, False, "mapped"),
+            ("possibly_submitted", 0, False, "possibly-submitted"),
+            ("backend_intent", 0, True, "possibly-submitted"),
+            ("native_effect", 1, True, "possibly-submitted"),
+            ("domain_result", 1, True, "completed"),
+        ],
+    )
+    def test_sigkill_windows_recover_by_query_without_redispatch(
+        tmp_path, kill_after, expected_effects, expected_backend_intent, expected_stage,
+    ):
+        domain_db = tmp_path / "domain.sqlite"
+        backend_db = tmp_path / "environment.sqlite"
+        effects_db = tmp_path / "harness-effects.sqlite"
+        worker = r'''
+    import os, sqlite3, sys
+    from dataclasses import dataclass
+    from ordessa_agent.submission_journal import ReliableCapabilities, SubmissionJournal
+    from ordessa_environment_api import RequestKey
+    from ordessa_environment_api.guarantee import GuaranteeLevel
+    from ordessa_persistence_sqlite import ProtectedFingerprintHmac, SqliteStorePort
+    from pacthold.core.registration import CoreContributionSet
+    from pacthold.environment import Environment, InstallationRecord
+    
+    @dataclass(frozen=True)
+    class Contract:
+        contract_id: str = "demo.submit@1"
+    
+    domain_path, backend_path, effects_path, kill_after = sys.argv[1:]
+    domain = SqliteStorePort(domain_path, writer_token="domain-child")
+    backend = SqliteStorePort(backend_path, writer_token="backend-child")
+    journal = SubmissionJournal(domain)
+    request = RequestKey("env-a", "user:local:closeout", "req-closeout-1",
+                         {"target": "session:S1", "binding": "binding:g1"})
+    capabilities = ReliableCapabilities(True, True, True, True)
+    record = journal.capture(request, {
+        "draftId": "draft-1", "draftRevision": 7, "text": "captured text",
+        "configOperationIds": ["op-model-3"], "baseRevision": "native-r4",
+        "target": {"logical": "session:S1", "generation": 1},
+        "binding": {"native": "instance-1", "generation": 2},
+        "schema": "agent-input/v1", "guarantee": "reliable",
+    }, attachments={"report.bin": b"original attachment"}, capabilities=capabilities)
+    def die(stage):
+        if kill_after == stage:
+            os._exit(91)
+    die("mapping")
+    journal.mark_possibly_submitted(request, record.digest)
+    die("possibly_submitted")
+    fingerprint = ProtectedFingerprintHmac({"fixture-key": b"fixture-only-key"}, active_key_id="fixture-key")
+    env = Environment("env-a", store=backend, fingerprint_port=fingerprint)
+    env.install(InstallationRecord("submit-plugin", "d" * 64))
+    env.enable("submit-plugin")
+    env.activate("submit-plugin", CoreContributionSet(contracts=(Contract,)))
+    env.invoke("demo.submit", request, guarantee=GuaranteeLevel.RELIABLE, input_digest=record.digest)
+    die("backend_intent")
+    with sqlite3.connect(effects_path) as effects:
+        effects.execute("CREATE TABLE IF NOT EXISTS effects (request_id TEXT PRIMARY KEY, count INTEGER NOT NULL)")
+        effects.execute("INSERT INTO effects VALUES (?, 1) ON CONFLICT(request_id) DO UPDATE SET count=count+1",
+                        (request.request_id,))
+    die("native_effect")
+    journal.record_config_apply(request, {"outcome": "applied", "operationIds": ["op-model-3"]})
+    journal.record_input_acceptance(request, {"outcome": "accepted"})
+    journal.record_run_result(request, {"outcome": "running", "runId": "run-1"})
+    journal.record_completed(request)
+    die("domain_result")
+    '''
+        child = subprocess.run(
+            [sys.executable, "-c", worker, str(domain_db), str(backend_db), str(effects_db), kill_after],
+            check=False,
+        )
+>       assert child.returncode == 91
+E       AssertionError: assert 1 == 91
+E        +  where 1 = CompletedProcess(args=['/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/.venv/bin/python', '-c', ...tmp/pytest-of-maoqh/pytest-806/test_sigkill_windows_recover_b3/harness-effects.sqlite', 'native_effect'], returncode=1).returncode
+
+plugins/agent/backend/tests/test_closeout_submission_journal.py:200: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+ModuleNotFoundError: No module named 'ordessa_agent.submission_journal'
+_ test_sigkill_windows_recover_by_query_without_redispatch[domain_result-1-True-completed] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-806/test_sigkill_windows_recover_b4')
+kill_after = 'domain_result', expected_effects = 1
+expected_backend_intent = True, expected_stage = 'completed'
+
+    @pytest.mark.parametrize(
+        "kill_after, expected_effects, expected_backend_intent, expected_stage",
+        [
+            ("mapping", 0, False, "mapped"),
+            ("possibly_submitted", 0, False, "possibly-submitted"),
+            ("backend_intent", 0, True, "possibly-submitted"),
+            ("native_effect", 1, True, "possibly-submitted"),
+            ("domain_result", 1, True, "completed"),
+        ],
+    )
+    def test_sigkill_windows_recover_by_query_without_redispatch(
+        tmp_path, kill_after, expected_effects, expected_backend_intent, expected_stage,
+    ):
+        domain_db = tmp_path / "domain.sqlite"
+        backend_db = tmp_path / "environment.sqlite"
+        effects_db = tmp_path / "harness-effects.sqlite"
+        worker = r'''
+    import os, sqlite3, sys
+    from dataclasses import dataclass
+    from ordessa_agent.submission_journal import ReliableCapabilities, SubmissionJournal
+    from ordessa_environment_api import RequestKey
+    from ordessa_environment_api.guarantee import GuaranteeLevel
+    from ordessa_persistence_sqlite import ProtectedFingerprintHmac, SqliteStorePort
+    from pacthold.core.registration import CoreContributionSet
+    from pacthold.environment import Environment, InstallationRecord
+    
+    @dataclass(frozen=True)
+    class Contract:
+        contract_id: str = "demo.submit@1"
+    
+    domain_path, backend_path, effects_path, kill_after = sys.argv[1:]
+    domain = SqliteStorePort(domain_path, writer_token="domain-child")
+    backend = SqliteStorePort(backend_path, writer_token="backend-child")
+    journal = SubmissionJournal(domain)
+    request = RequestKey("env-a", "user:local:closeout", "req-closeout-1",
+                         {"target": "session:S1", "binding": "binding:g1"})
+    capabilities = ReliableCapabilities(True, True, True, True)
+    record = journal.capture(request, {
+        "draftId": "draft-1", "draftRevision": 7, "text": "captured text",
+        "configOperationIds": ["op-model-3"], "baseRevision": "native-r4",
+        "target": {"logical": "session:S1", "generation": 1},
+        "binding": {"native": "instance-1", "generation": 2},
+        "schema": "agent-input/v1", "guarantee": "reliable",
+    }, attachments={"report.bin": b"original attachment"}, capabilities=capabilities)
+    def die(stage):
+        if kill_after == stage:
+            os._exit(91)
+    die("mapping")
+    journal.mark_possibly_submitted(request, record.digest)
+    die("possibly_submitted")
+    fingerprint = ProtectedFingerprintHmac({"fixture-key": b"fixture-only-key"}, active_key_id="fixture-key")
+    env = Environment("env-a", store=backend, fingerprint_port=fingerprint)
+    env.install(InstallationRecord("submit-plugin", "d" * 64))
+    env.enable("submit-plugin")
+    env.activate("submit-plugin", CoreContributionSet(contracts=(Contract,)))
+    env.invoke("demo.submit", request, guarantee=GuaranteeLevel.RELIABLE, input_digest=record.digest)
+    die("backend_intent")
+    with sqlite3.connect(effects_path) as effects:
+        effects.execute("CREATE TABLE IF NOT EXISTS effects (request_id TEXT PRIMARY KEY, count INTEGER NOT NULL)")
+        effects.execute("INSERT INTO effects VALUES (?, 1) ON CONFLICT(request_id) DO UPDATE SET count=count+1",
+                        (request.request_id,))
+    die("native_effect")
+    journal.record_config_apply(request, {"outcome": "applied", "operationIds": ["op-model-3"]})
+    journal.record_input_acceptance(request, {"outcome": "accepted"})
+    journal.record_run_result(request, {"outcome": "running", "runId": "run-1"})
+    journal.record_completed(request)
+    die("domain_result")
+    '''
+        child = subprocess.run(
+            [sys.executable, "-c", worker, str(domain_db), str(backend_db), str(effects_db), kill_after],
+            check=False,
+        )
+>       assert child.returncode == 91
+E       AssertionError: assert 1 == 91
+E        +  where 1 = CompletedProcess(args=['/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/.venv/bin/python', '-c', ...tmp/pytest-of-maoqh/pytest-806/test_sigkill_windows_recover_b4/harness-effects.sqlite', 'domain_result'], returncode=1).returncode
+
+plugins/agent/backend/tests/test_closeout_submission_journal.py:200: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+ModuleNotFoundError: No module named 'ordessa_agent.submission_journal'
+=========================== short test summary info ============================
+FAILED plugins/agent/backend/tests/test_closeout_submission_journal.py::test_capture_freezes_attachment_bytes_and_same_key_digest
+FAILED plugins/agent/backend/tests/test_closeout_submission_journal.py::test_same_request_with_different_frozen_content_is_a_conflict
+FAILED plugins/agent/backend/tests/test_closeout_submission_journal.py::test_missing_reliable_capability_is_typed_unsupported
+FAILED plugins/agent/backend/tests/test_closeout_submission_journal.py::test_sigkill_windows_recover_by_query_without_redispatch[mapping-0-False-mapped]
+FAILED plugins/agent/backend/tests/test_closeout_submission_journal.py::test_sigkill_windows_recover_by_query_without_redispatch[possibly_submitted-0-False-possibly-submitted]
+FAILED plugins/agent/backend/tests/test_closeout_submission_journal.py::test_sigkill_windows_recover_by_query_without_redispatch[backend_intent-0-True-possibly-submitted]
+FAILED plugins/agent/backend/tests/test_closeout_submission_journal.py::test_sigkill_windows_recover_by_query_without_redispatch[native_effect-1-True-possibly-submitted]
+FAILED plugins/agent/backend/tests/test_closeout_submission_journal.py::test_sigkill_windows_recover_by_query_without_redispatch[domain_result-1-True-completed]
+8 failed in 0.38s

@@ -12,6 +12,8 @@ injection seam reserved (005 provides the durable implementation later).
 from __future__ import annotations
 
 import re
+import json
+from threading import RLock
 from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Any, Mapping
@@ -61,10 +63,26 @@ class SubmissionReceipt:
     query_request_key: str | None = None
 
 
+def freeze_value(value):
+    if isinstance(value, dict):
+        return MappingProxyType({key: freeze_value(item) for key, item in value.items()})
+    if isinstance(value, list):
+        return tuple(freeze_value(item) for item in value)
+    return value
+
+
+def wire_value(value):
+    if isinstance(value, Mapping):
+        return {key: wire_value(item) for key, item in value.items()}
+    if isinstance(value, tuple):
+        return [wire_value(item) for item in value]
+    return value
+
+
 class ConfigOwner:
     """The ONLY writer of a target's configuration chain."""
 
-    def __init__(self, target: str) -> None:
+    def __init__(self, target: str, repository=None) -> None:
         if not _TARGET.match(target):
             raise AgentOwnerError(f"malformed target {target!r}")
         self._target = target
@@ -74,46 +92,66 @@ class ConfigOwner:
         self._operations: list[OperationSummary] = []
         self._op_seq = 0
         self._observed = "unset"
+        self._repository = repository
+        self._lock = RLock()
+        if repository is not None:
+            prior = repository.read(target)
+            if prior is not None:
+                self._revision = prior['revision']
+                self._op_seq = prior['opSequence']
+                self._fields = prior['fields']
+                self._resolved = prior['resolved']
+                self._observed = 'unknown' # restarting a journal is not native confirmation
+                self._operations = [OperationSummary(**{**op, 'patch_kinds':tuple(op['patch_kinds'])}) for op in prior['operations']]
+
 
     @property
     def target(self) -> str:
         return self._target
 
     def snapshot(self) -> ConfigSnapshot:
-        return ConfigSnapshot(
-            owner_ref=f"agent-config:{self._target}",
-            revision=self._revision,
-            observed_evidence=self._observed,
-            # deep immutability: nested maps are read-only views, not shallow
-            # freezes pretending to be safe
-            fields=MappingProxyType(dict(self._fields)),
-            resolved=MappingProxyType(dict(self._resolved)),
-        )
+        with self._lock:
+            return ConfigSnapshot(
+                owner_ref=f"agent-config:{self._target}", revision=self._revision,
+                observed_evidence=self._observed, fields=freeze_value(self._fields),
+                resolved=freeze_value(self._resolved),
+            )
 
     def submit_operation(
         self, patch: Mapping[str, Any], source_ref: str, *, unset: tuple[str, ...] = (),
     ) -> OperationSummary:
         """One operation = one operationId. A same-Profile re-select is a NEW
         operation (never a no-op reuse of an old id)."""
-        self._op_seq += 1
+        # Copy at the operation boundary before any publication or await.
+        patch = json.loads(json.dumps(dict(patch), allow_nan=False))
+        with self._lock:
+            return self._submit_operation(patch, source_ref, unset=unset)
+
+    def _submit_operation(self, patch, source_ref, *, unset):
+        sequence = self._op_seq + 1
+        fields, resolved = dict(self._fields), dict(self._resolved)
         kinds: list[str] = []
         for name, value in patch.items():
-            self._fields[name] = "known"
-            self._resolved[name] = value
+            fields[name] = "known"
+            resolved[name] = value
             kinds.append("present")
         for name in unset:
-            self._fields[name] = "unset"
-            self._resolved.pop(name, None)
+            fields[name] = "unset"
+            resolved.pop(name, None)
             kinds.append("unset")
-        summary = OperationSummary(
-            operation_id=f"op-{self._target}-{self._op_seq}",
-            patch_kinds=tuple(kinds),
-            source_ref=source_ref,
-            submitted_at_order=self._op_seq,
-            state="pending",
-        )
-        self._operations.append(summary)
-        self._revision += 1
+        summary = OperationSummary(operation_id=f"op-{self._target}-{sequence}",
+            patch_kinds=tuple(kinds), source_ref=source_ref,
+            submitted_at_order=sequence, state="pending")
+        operations = [*self._operations, summary]
+        revision = self._revision + 1
+        if self._repository is not None:
+            from dataclasses import asdict
+            self._repository.write(self._target, {'revision':revision,
+                'opSequence':sequence, 'fields':fields, 'resolved':resolved,
+                'operations':[asdict(op) for op in operations]})
+        # Durable failure publishes nothing, including no spent operation ID.
+        self._op_seq, self._revision = sequence, revision
+        self._fields, self._resolved, self._operations = fields, resolved, operations
         return summary
 
     def report_evidence(self, observed: str, fields: Mapping[str, str] | None = None) -> None:
@@ -231,15 +269,17 @@ class InteractionOwner:
 class AgentOwnerRegistry:
     """One canonical target maps to ONE set of owners — second writer refused."""
 
-    def __init__(self) -> None:
+    def __init__(self, repository=None) -> None:
         self._targets: dict[str, dict[str, Any]] = {}
+        self._repository = repository
+        self.lock = RLock()
 
     def register(self, target: str) -> Mapping[str, Any]:
         if target in self._targets:
             raise AuthorityConflictError(
                 f"target {target!r} already has its owners — one writer per canonical target")
         owners = {
-            "config": ConfigOwner(target),
+            "config": ConfigOwner(target, self._repository),
             "session": SessionOwner(target),
             "submission": SubmissionOwner(target),
             "run": RunOwner(target),

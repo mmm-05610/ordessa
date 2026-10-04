@@ -1,0 +1,36 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts
+
+ ❯ tests/closeout-configuration-projection.test.ts (6 tests | 1 failed | 5 skipped) 22ms
+     × captures each queued operation patch at dispatch time 19ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-configuration-projection.test.ts > Agent configuration projection closeout > captures each queued operation patch at dispatch time
+AssertionError: expected { prompt: 'first', model: 'M3' } to match object { prompt: 'first', model: 'M2' }
+
+- Expected
++ Received
+
+  {
+-   "model": "M2",
++   "model": "M3",
+    "prompt": "first",
+  }
+
+ ❯ tests/closeout-configuration-projection.test.ts:181:55
+    179|
+    180|     await Promise.all([first, second])
+    181|     expect(projection.getSnapshot().config?.resolved).toMatchObject({
+       |                                                       ^
+    182|       prompt: 'first',
+    183|       model: 'M2',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 skipped (6)
+   Start at  09:33:50
+   Duration  445ms (transform 121ms, setup 0ms, import 146ms, tests 22ms, environment 0ms)
+

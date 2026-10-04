@@ -1,0 +1,51 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+_ test_production_owner_rejects_claimed_acceptance_without_native_submit_port __
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-807/test_production_owner_rejects_0')
+
+    def test_production_owner_rejects_claimed_acceptance_without_native_submit_port(tmp_path):
+        handlers=methods(AgentDomainPlugin(),tmp_path)
+>       with pytest.raises(Exception, match='CAPABILITY_UNSUPPORTED|unsupported|unavailable'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE Exception
+
+plugins/agent/backend/tests/test_closeout_production_owner.py:12: Failed
+__ test_production_targets_are_resolved_by_trusted_binding_not_frontend_claim __
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-807/test_production_targets_are_re0')
+
+    def test_production_targets_are_resolved_by_trusted_binding_not_frontend_claim(tmp_path):
+        handlers=methods(AgentDomainPlugin(),tmp_path)
+>       with pytest.raises(Exception, match='AUTHORIZATION|unverified|binding'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE Exception
+
+plugins/agent/backend/tests/test_closeout_production_owner.py:18: Failed
+_____ test_two_transport_clients_share_backend_revision_and_omitted_fields _____
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-807/test_two_transport_clients_sha0')
+
+    def test_two_transport_clients_share_backend_revision_and_omitted_fields(tmp_path):
+>       plugin=AgentDomainPlugin(target_resolver=lambda target: target if target=='trusted:S' else None)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: AgentDomainPlugin.__init__() got an unexpected keyword argument 'target_resolver'
+
+plugins/agent/backend/tests/test_closeout_production_owner.py:23: TypeError
+_ test_restart_retains_config_operations_and_nested_input_cannot_mutate_owner __
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-807/test_restart_retains_config_op0')
+
+    def test_restart_retains_config_operations_and_nested_input_cannot_mutate_owner(tmp_path):
+        patch={'model':{'provider':'fixture','id':'M1'}}
+>       plugin=AgentDomainPlugin(target_resolver=lambda target:target)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: AgentDomainPlugin.__init__() got an unexpected keyword argument 'target_resolver'
+
+plugins/agent/backend/tests/test_closeout_production_owner.py:37: TypeError
+=========================== short test summary info ============================
+FAILED plugins/agent/backend/tests/test_closeout_production_owner.py::test_production_owner_rejects_claimed_acceptance_without_native_submit_port
+FAILED plugins/agent/backend/tests/test_closeout_production_owner.py::test_production_targets_are_resolved_by_trusted_binding_not_frontend_claim
+FAILED plugins/agent/backend/tests/test_closeout_production_owner.py::test_two_transport_clients_share_backend_revision_and_omitted_fields
+FAILED plugins/agent/backend/tests/test_closeout_production_owner.py::test_restart_retains_config_operations_and_nested_input_cannot_mutate_owner
+4 failed in 0.06s

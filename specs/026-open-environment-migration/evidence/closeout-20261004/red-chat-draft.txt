@@ -1,0 +1,52 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/chat/frontend
+
+ ❯ tests/closeout-draft-edit.test.tsx (3 tests | 3 failed) 5ms
+     × preserves a same-text edit made after an accepted-send capture 3ms
+     × settles the captured draft after its editor lease closes, without consuming newer text 0ms
+     × keeps the edit session dirty on refusal or an unknown submission result 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-draft-edit.test.tsx > Chat draft F5 edit-session integration > preserves a same-text edit made after an accepted-send capture
+TypeError: store.captureForSend is not a function
+ ❯ tests/closeout-draft-edit.test.tsx:9:27
+      7|     const lease = store.claimEditor('draft', 'editor-a')
+      8|     store.setText('draft', 'same text', 'editor-a')
+      9|     const capture = store.captureForSend('draft', 'submission-a')
+       |                           ^
+     10|
+     11|     store.setText('draft', 'same text', 'editor-a')
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/closeout-draft-edit.test.tsx > Chat draft F5 edit-session integration > settles the captured draft after its editor lease closes, without consuming newer text
+TypeError: store.captureForSend is not a function
+ ❯ tests/closeout-draft-edit.test.tsx:23:27
+     21|     const lease = store.claimEditor('draft', 'editor-a')
+     22|     store.setText('draft', 'sent text', 'editor-a')
+     23|     const capture = store.captureForSend('draft', 'submission-b')
+       |                           ^
+     24|     lease.release()
+     25|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/closeout-draft-edit.test.tsx > Chat draft F5 edit-session integration > keeps the edit session dirty on refusal or an unknown submission result
+TypeError: store.captureForSend is not a function
+ ❯ tests/closeout-draft-edit.test.tsx:36:29
+     34|       const store = new DraftStore()
+     35|       store.setText('draft', `keep-${outcome}`)
+     36|       const capture = store.captureForSend('draft', `submission-${outc…
+       |                             ^
+     37|
+     38|       await capture.settle(outcome)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  09:44:17
+   Duration  1.03s (transform 36ms, setup 0ms, import 46ms, tests 5ms, environment 701ms)
+

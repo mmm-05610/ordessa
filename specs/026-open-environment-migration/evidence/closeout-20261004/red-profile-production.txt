@@ -1,0 +1,26 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/profile/integrations/chat
+
+ ❯ tests/canonical-production.test.tsx (1 test | 1 failed) 18ms
+   × the production Profile entry resolves only preview fields into the Agent canonical target 16ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/canonical-production.test.tsx > the production Profile entry resolves only preview fields into the Agent canonical target
+AssertionError: expected [ Token{ …(3) }, Token{ …(3) }, …(2) ] to include Token{ …(3) }
+ ❯ tests/canonical-production.test.tsx:119:33
+    117| it('the production Profile entry resolves only preview fields into the…
+    118|   const state = setup()
+    119|   expect(state.plugin.requires).toContain(WirePortToken)
+       |                                 ^
+    120|   expect(state.plugin.requires).toContain(AgentSessionsToken)
+    121|   expect(state.plugin.requires).toContain(UiComponentsToken)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  09:44:18
+   Duration  1.75s (transform 335ms, setup 0ms, import 546ms, tests 18ms, environment 890ms)
+

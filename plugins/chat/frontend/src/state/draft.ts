@@ -10,6 +10,26 @@
 // everything alive: nothing may be reclaimed while the backend outcome is
 // unproven.
 import type { ChatInputItem, ChatInputItemKind } from '@extensions/ordessa.chat-api/contract.js'
+import type { f5 } from '@extensions/ordessa.contracts/contract.js'
+import { createEditSession } from '@ordessa/ui-components/editing'
+
+type DraftEditValue = { composition: DraftComposition }
+type DraftEditSession = f5.EditSession<DraftEditValue>
+type DraftEditOutcome = f5.EditOutcome
+
+interface PaneEditState {
+  session: DraftEditSession
+  resolvePending?: (outcome: DraftEditOutcome) => void
+}
+
+export interface DraftSendCapture {
+  readonly composition: DraftComposition
+  readonly editId: string
+  readonly baseRevision: string
+  settle(outcome: 'accepted' | 'refused' | 'unknown'): Promise<void>
+}
+
+let editSessionSeq = 0
 
 export interface DraftComposition {
   text: string
@@ -20,8 +40,8 @@ export interface DraftComposition {
 const EMPTY_COMPOSITION: DraftComposition = { text: '', items: [], revision: 0 }
 
 /** The single-editor lease of one pane (T010-07): at most one editor may edit
- * a draft composition at a time. The captured submission settle (`write`) is
- * NOT an edit — it always runs, even after the editor view is gone. */
+ * a draft composition at a time. Captured submission settlement has its own
+ * lease-independent path and remains bound to the captured revision. */
 export interface DraftEditorLease {
   readonly editorId: string
   readonly pane: string
@@ -30,6 +50,8 @@ export interface DraftEditorLease {
 
 export class DraftStore {
   private readonly panes = new Map<string, DraftComposition>()
+  private readonly editSessions = new Map<string, PaneEditState>()
+  private readonly pendingCaptures = new Set<string>()
   private readonly editors = new Map<string, string>() // pane → editorId (lease)
   private readonly objectUrls = new Map<string, string>() // itemId → URL (revocable)
   private readonly handedOff = new Set<string>()
@@ -58,8 +80,8 @@ export class DraftStore {
    * resurrected by a late settle). */
   has = (pane: string): boolean => this.panes.has(pane)
 
-  /** Identity-stable snapshot for useSyncExternalStore: writes produce a new
-   * composition object, so React re-renders exactly on real mutations. */
+  /** Identity-stable snapshot for useSyncExternalStore: user mutations update
+   * the owner snapshot and its F5 edit session together. */
   subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener)
     return () => { this.listeners.delete(listener) }
@@ -68,10 +90,72 @@ export class DraftStore {
     for (const listener of [...this.listeners]) listener()
   }
 
-  /** The captured-settle primitive: NOT an edit — it bypasses the editor
-   * lease so a submission settle runs even after the editor view is gone. */
+  private editState(pane: string): PaneEditState {
+    let state = this.editSessions.get(pane)
+    if (state !== undefined) return state
+    const initial = this.read(pane)
+    state = {
+      session: undefined as unknown as DraftEditSession,
+    }
+    state.session = createEditSession<DraftEditValue>({
+      editId: `chat-draft:${pane}:${++editSessionSeq}`,
+      baseRevision: String(initial.revision),
+      initial: { composition: initial },
+      commitHandler: async () => new Promise<DraftEditOutcome>(resolve => {
+        state!.resolvePending = resolve
+      }),
+    })
+    this.editSessions.set(pane, state)
+    return state
+  }
+
+  /** Capture the current composition with F5 edit revision semantics. The
+   * later settle is bound to this capture and remains valid after its editor
+   * lease is released or its view unmounts. */
+  captureForSend(pane: string, submissionId: string): DraftSendCapture {
+    if (this.pendingCaptures.has(pane)) throw new Error('DRAFT_SEND_CAPTURE_PENDING')
+    const composition = this.read(pane)
+    const state = this.editState(pane)
+    this.pendingCaptures.add(pane)
+    const commit = state.session.commit()
+    let settled = false
+    return {
+      composition,
+      editId: state.session.editId,
+      baseRevision: state.session.baseRevision,
+      settle: async outcome => {
+        if (settled) return
+        settled = true
+        const editOutcome: DraftEditOutcome = outcome === 'accepted'
+          ? { kind: 'saved', consumedFields: ['composition'] }
+          : outcome === 'refused'
+            ? { kind: 'rejected', reason: 'submission refused' }
+            : { kind: 'unknown', queryHint: `submission:${submissionId}` }
+        state.resolvePending?.(editOutcome)
+        await commit
+        if (this.editSessions.get(pane) === state) state.resolvePending = undefined
+        this.pendingCaptures.delete(pane)
+
+        // Preserve DraftStore ownership and its durable pane identity. The
+        // session only authorizes consuming the exact captured revision.
+        if (outcome === 'accepted' && this.has(pane) && this.editSessions.get(pane) === state) {
+          const current = this.read(pane)
+          if (current.revision === composition.revision) {
+            this.panes.set(pane, { ...current, text: '', revision: current.revision + 1 })
+            this.editSessions.delete(pane)
+            this.changed()
+          }
+        }
+      },
+    }
+  }
+
+  /** Owner mutation primitive used by composer edits and input insertion. */
   write(pane: string, next: DraftComposition): void {
     this.panes.set(pane, next)
+    // DraftStore remains the owner; its user-visible mutation is mirrored into
+    // the public F5 edit session so a captured settle observes every edit event.
+    this.editState(pane).session.setValue('composition', next)
     this.changed()
   }
 
@@ -132,6 +216,7 @@ export class DraftStore {
     // are explicitly excluded by reclaimItem.
     for (const item of this.read(pane).items) this.reclaimItem(item.id)
     this.panes.delete(pane)
+    this.editSessions.delete(pane)
   }
 
   dispose(): void {

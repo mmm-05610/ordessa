@@ -1,0 +1,274 @@
+FFF.FFFFFF                                                               [100%]
+=================================== FAILURES ===================================
+_______ test_invoke_runs_handler_once_and_persists_result_before_replay ________
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-810/test_invoke_runs_handler_once_0')
+
+    def test_invoke_runs_handler_once_and_persists_result_before_replay(tmp_path):
+        store = SqliteStorePort(tmp_path / "environment.sqlite3")
+        env = _environment(store)
+        effects = []
+    
+        first, current = env.invoke(
+            "closeout.dispatch", _key("invoke-once"), handler=lambda: effects.append("native") or {"accepted": True},
+            **_reliable(),
+        )
+        replay, replay_current = env.invoke(
+            "closeout.dispatch", _key("invoke-once"), handler=lambda: effects.append("duplicate"),
+            **_reliable(),
+        )
+    
+>       assert effects == ["native"]
+E       AssertionError: assert [] == ['native']
+E         
+E         Right contains one more item: 'native'
+E         Use -v to get more diff
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py:70: AssertionError
+___ test_handler_failure_is_durable_unknown_and_never_reissued_after_restart ___
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-810/test_handler_failure_is_durabl0')
+
+    def test_handler_failure_is_durable_unknown_and_never_reissued_after_restart(tmp_path):
+        path = tmp_path / "environment.sqlite3"
+        store = SqliteStorePort(path)
+        env = _environment(store)
+        effects = []
+    
+        def interrupted_handler():
+            effects.append("effect-may-have-started")
+            raise RuntimeError("connection lost after dispatch")
+    
+>       with pytest.raises(RuntimeError, match="connection lost"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE RuntimeError
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py:87: Failed
+_______ test_policy_refusal_does_not_spend_request_key_before_admission ________
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-810/test_policy_refusal_does_not_s0')
+
+    def test_policy_refusal_does_not_spend_request_key_before_admission(tmp_path):
+        path = tmp_path / "environment.sqlite3"
+        store = SqliteStorePort(path)
+        denied = _environment(store, policy=_DenyInvoke())
+        effects = []
+        with pytest.raises(AdmissionRefusedError):
+            denied.invoke("closeout.dispatch", _key("policy-retry"),
+                          handler=lambda: effects.append("denied"), **_reliable())
+        assert effects == []
+        store.close()
+    
+        reopened = SqliteStorePort(path, allow_takeover=True)
+        admitted = _environment(reopened)
+        receipt, current = admitted.invoke(
+            "closeout.dispatch", _key("policy-retry"),
+            handler=lambda: effects.append("admitted") or {"ok": True}, **_reliable(),
+        )
+>       assert effects == ["admitted"]
+E       AssertionError: assert [] == ['admitted']
+E         
+E         Right contains one more item: 'admitted'
+E         Use -v to get more diff
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py:122: AssertionError
+_____ test_query_reads_namespaced_durable_history_not_only_instance_memory _____
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-810/test_query_reads_namespaced_du0')
+
+    def test_query_reads_namespaced_durable_history_not_only_instance_memory(tmp_path):
+        path = tmp_path / "environment.sqlite3"
+        store = SqliteStorePort(path)
+        env = _environment(store)
+        request = _key("durable-query")
+        env.invoke("closeout.dispatch", request, handler=lambda: {"ok": True}, **_reliable())
+        store.close()
+    
+        reopened = SqliteStorePort(path, allow_takeover=True)
+        restarted = Environment("env-closeout", store=reopened)
+        history = restarted.query(request)
+>       assert history is not None
+E       assert None is not None
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py:154: AssertionError
+___________ test_same_key_different_capture_conflicts_after_restart ____________
+
+self = <ordessa_persistence_sqlite.store.SqliteStorePort object at 0x7f26c27dbad0>
+key = RequestKey(environment_namespace='env-closeout', principal_scope='user:local:test', request_id='digest-conflict', comparison={})
+digest = '54118a4272700aacd0bdd16bab73b483e3cafb75c7515e86d82fcdd6b956c7d5'
+
+    def reserve_request(self, key: RequestKey, digest: str) -> bool:
+        """Atomically claim a request key; True when newly claimed.
+    
+        A spent key returns True only for the SAME digest (the caller replays
+        the stored receipt); a different digest raises IdentityMismatchError
+        semantics via False-with-conflict marker ``KeyConflictError``."""
+        try:
+            with self._conn:
+>               self._conn.execute(
+                    "INSERT INTO env_requests (environment, principal, request_id, digest, spent) "
+                    "VALUES (?, ?, ?, ?, 1)",
+                    (key.environment_namespace, key.principal_scope, key.request_id, digest),
+                )
+E               sqlite3.IntegrityError: UNIQUE constraint failed: env_requests.environment, env_requests.principal, env_requests.request_id
+
+packages/backend/persistence-sqlite/src/ordessa_persistence_sqlite/store.py:201: IntegrityError
+
+During handling of the above exception, another exception occurred:
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-810/test_same_key_different_captur0')
+
+    def test_same_key_different_capture_conflicts_after_restart(tmp_path):
+        path = tmp_path / "environment.sqlite3"
+        store = SqliteStorePort(path)
+        env = _environment(store)
+        effects = []
+        env.invoke("closeout.dispatch", _key("digest-conflict"),
+                   handler=lambda: effects.append(1), guarantee=GuaranteeLevel.RELIABLE,
+                   input_digest="c" * 64)
+        store.close()
+    
+        reopened = SqliteStorePort(path, allow_takeover=True)
+        restarted = _environment(reopened)
+        with pytest.raises(IdentityMismatchError):
+>           restarted.invoke("closeout.dispatch", _key("digest-conflict"),
+                             handler=lambda: effects.append(2), guarantee=GuaranteeLevel.RELIABLE,
+                             input_digest="d" * 64)
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py:178: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+packages/backend/pacthold/src/pacthold/environment.py:458: in invoke
+    claimed = self._store.reserve_request(request, mac)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_persistence_sqlite.store.SqliteStorePort object at 0x7f26c27dbad0>
+key = RequestKey(environment_namespace='env-closeout', principal_scope='user:local:test', request_id='digest-conflict', comparison={})
+digest = '54118a4272700aacd0bdd16bab73b483e3cafb75c7515e86d82fcdd6b956c7d5'
+
+    def reserve_request(self, key: RequestKey, digest: str) -> bool:
+        """Atomically claim a request key; True when newly claimed.
+    
+        A spent key returns True only for the SAME digest (the caller replays
+        the stored receipt); a different digest raises IdentityMismatchError
+        semantics via False-with-conflict marker ``KeyConflictError``."""
+        try:
+            with self._conn:
+                self._conn.execute(
+                    "INSERT INTO env_requests (environment, principal, request_id, digest, spent) "
+                    "VALUES (?, ?, ?, ?, 1)",
+                    (key.environment_namespace, key.principal_scope, key.request_id, digest),
+                )
+            return True
+        except sqlite3.IntegrityError:
+            row = self._conn.execute(
+                "SELECT digest FROM env_requests WHERE environment=? AND principal=? AND request_id=?",
+                (key.environment_namespace, key.principal_scope, key.request_id),
+            ).fetchone()
+            if row is None:
+                raise
+            if row["digest"] != digest:
+>               raise KeyConflictError(
+                    f"request key {key.request_id} is spent with a different digest"
+                )
+E               ordessa_persistence_sqlite.store.KeyConflictError: request key digest-conflict is spent with a different digest
+
+packages/backend/persistence-sqlite/src/ordessa_persistence_sqlite/store.py:215: KeyConflictError
+_____ test_atomic_dispatch_claim_is_first_writer_only_and_survives_restart _____
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-810/test_atomic_dispatch_claim_is_0')
+
+    def test_atomic_dispatch_claim_is_first_writer_only_and_survives_restart(tmp_path):
+        path = tmp_path / "claims.sqlite3"
+        store = SqliteStorePort(path)
+        request = _key("claim-once")
+>       assert store.claim_dispatch(request, "a" * 64) is True
+               ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'SqliteStorePort' object has no attribute 'claim_dispatch'
+
+packages/backend/persistence-sqlite/tests/test_closeout_dispatch_claim.py:21: AttributeError
+___ test_claim_and_history_keys_include_environment_and_principal_namespaces ___
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-810/test_claim_and_history_keys_in0')
+
+    def test_claim_and_history_keys_include_environment_and_principal_namespaces(tmp_path):
+        store = SqliteStorePort(tmp_path / "claims.sqlite3")
+>       assert store.claim_dispatch(_key("same-id", environment="env-a"), "a" * 64)
+               ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'SqliteStorePort' object has no attribute 'claim_dispatch'
+
+packages/backend/persistence-sqlite/tests/test_closeout_dispatch_claim.py:33: AttributeError
+_______ test_concurrent_identical_claims_have_exactly_one_dispatch_owner _______
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-810/test_concurrent_identical_clai0')
+
+    def test_concurrent_identical_claims_have_exactly_one_dispatch_owner(tmp_path):
+        store = SqliteStorePort(tmp_path / "claims.sqlite3")
+        request = _key("concurrent")
+        with ThreadPoolExecutor(max_workers=12) as pool:
+>           outcomes = list(pool.map(lambda _: store.claim_dispatch(request, "c" * 64), range(48)))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+packages/backend/persistence-sqlite/tests/test_closeout_dispatch_claim.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py:619: in result_iterator
+    yield _result_or_cancel(fs.pop())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py:317: in _result_or_cancel
+    return fut.result(timeout)
+           ^^^^^^^^^^^^^^^^^^^
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/concurrent/futures/thread.py:59: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+_ = 0
+
+>   outcomes = list(pool.map(lambda _: store.claim_dispatch(request, "c" * 64), range(48)))
+                                       ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'SqliteStorePort' object has no attribute 'claim_dispatch'
+
+packages/backend/persistence-sqlite/tests/test_closeout_dispatch_claim.py:48: AttributeError
+___ test_dispatch_result_read_is_scoped_and_unknown_claim_is_not_replayable ____
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-810/test_dispatch_result_read_is_s0')
+
+    def test_dispatch_result_read_is_scoped_and_unknown_claim_is_not_replayable(tmp_path):
+        path = tmp_path / "claims.sqlite3"
+        store = SqliteStorePort(path)
+        request = _key("pending-result")
+>       assert store.claim_dispatch(request, "d" * 64)
+               ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'SqliteStorePort' object has no attribute 'claim_dispatch'
+
+packages/backend/persistence-sqlite/tests/test_closeout_dispatch_claim.py:58: AttributeError
+ARTIFACT_worker-debug=ABSENT workers/agent-box-worker/target/debug/agent-box-worker
+ARTIFACT_worker-release=ABSENT workers/agent-box-worker/target/release/agent-box-worker
+ARTIFACT_worker-musl-dir=ABSENT workers/agent-box-worker/target/x86_64-unknown-linux-musl
+ARTIFACT_sidecar-entry=ABSENT plugins/agent-box-harness/runtime/worker-entry.mjs
+ARTIFACT_acp-npm-closure=ABSENT plugins/agent-box-harness/packaging/claude/node_modules/@agentclientprotocol/claude-agent-acp
+TOOL_bwrap=present
+TOOL_node=present
+TOOL_npm=present
+TOOL_claude=ABSENT
+TOOL_tmux=present
+TOOL_wsl.exe=ABSENT
+SKIPPED_TOTAL=0
+WORKER_ARTIFACT=ABSENT
+VERDICT=FAILED
+=========================== short test summary info ============================
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py::test_invoke_runs_handler_once_and_persists_result_before_replay
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py::test_handler_failure_is_durable_unknown_and_never_reissued_after_restart
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py::test_policy_refusal_does_not_spend_request_key_before_admission
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py::test_query_reads_namespaced_durable_history_not_only_instance_memory
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py::test_same_key_different_capture_conflicts_after_restart
+FAILED packages/backend/pacthold::test_atomic_dispatch_claim_is_first_writer_only_and_survives_restart
+FAILED packages/backend/pacthold::test_claim_and_history_keys_include_environment_and_principal_namespaces
+FAILED packages/backend/pacthold::test_concurrent_identical_claims_have_exactly_one_dispatch_owner
+FAILED packages/backend/pacthold::test_dispatch_result_read_is_scoped_and_unknown_claim_is_not_replayable
+9 failed, 1 passed in 0.19s

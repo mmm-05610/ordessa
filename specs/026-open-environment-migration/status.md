@@ -1,3 +1,15 @@
+## 2026-10-04 013 阶段2 检查点（提交后继续）
+
+T010-13 已实用公共编辑工具：Chat领域DraftStore保留租约/修订权，F5 EditSession负责捕获保存状态；Profile设置编辑页使用同工具及公共任务/查询。Profile 24P；Chat首次89P2F，真实ABA输入修正为A→B→A后92P，Escape旧反例复跑通过。无断言删除/skip，首次失败记录保留。真实IME/GUI仍未验。
+
+Agent后端新增持久配置链、后端铸造逻辑draft target（选择不创建native），新操作按字段覆盖。ConfigRepository落盘后才发布快照，深冻结数据；后端28P、合同33P。共享Wire projection只缓存后端视图，不创建local owner；生产Profile/model入口仍在迁移，跨窗口连续观察未完成，不能勾T010-12。
+
+C2 domain journal已隔离测试五个SIGKILL窗口8P；目前仍是domain/backend分步fixture，不能勾T011-02/05。新增Environment反例9F1P：handler未调用/重启查询不读持久状态/请求键跨principal边界/同key并发；正在修复。CoreBinding仍旧CoreRuntime，旧sidecar/WorkCore仍新操作路径，不能称单Environment已装配。
+
+typecheck首次2错误（ResourceScope的IDisposable形状，已修），第二次5错误来自正在编写的Model生产consumer，等待源文件完成再复跑。下一ready：生产两控件共同target与native绑定、Environment/持久效果claim、发行解包验证。
+
+Questions：冻结StorePort只有reserve_request且旧实现同digest返回True，不能单凭该布尔值判断重启后可重派。本次用适配器显式原子dispatch claim能力，缺能力拒可靠效果；不默改冻结接口。无新增外部授权请求。
+
 ## 013 阶段1检查点（2026-10-04）
 
 F5三类已复现反例已修复，原断言零修改；UI104通过、真实文件双进程CAS1通过、两独立store真实文件1通过。见 evidence/closeout-20261004/f5-report.md。runtime/server-bridge负责机制，UI工具保持编辑/React。初始三个脏文件仍保留。第1阶段产品发行与独立出口校验随阶段4续证；不冒报全产品。
