@@ -1,0 +1,87 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/ui-components
+
+ ❯ tests/versioned-ui-storage.test.ts (6 tests | 5 failed) 9ms
+     × returns value and opaque revision from one public snapshot, with null for absence 4ms
+     × only creates when the captured absence is still current 1ms
+     × deeply isolates the returned versioned snapshot from stored values 0ms
+     × refuses unsupported schemas and secret-shaped values on the versioned path 0ms
+     × does not emulate absent-only creation for an adapter without that atomic capability 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/versioned-ui-storage.test.ts > F5 versioned UI storage increment > returns value and opaque revision from one public snapshot, with null for absence
+TypeError: store.readVersioned is not a function
+ ❯ tests/versioned-ui-storage.test.ts:87:24
+     85|     const store = versioned(sessionOnlyUiStore())
+     86|
+     87|     expect(await store.readVersioned(ns, 'layout')).toEqual({ value: u…
+       |                        ^
+     88|     expect(await store.writeVersioned(ns, 'layout', { width: 320 }, nu…
+     89|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  tests/versioned-ui-storage.test.ts > F5 versioned UI storage increment > only creates when the captured absence is still current
+TypeError: store.writeVersioned is not a function
+ ❯ tests/versioned-ui-storage.test.ts:98:24
+     96|   it('only creates when the captured absence is still current', async …
+     97|     const store = versioned(sessionOnlyUiStore())
+     98|     expect(await store.writeVersioned(ns, 'layout', { width: 320 }, nu…
+       |                        ^
+     99|
+    100|     expect(await store.writeVersioned(ns, 'layout', { width: 640 }, nu…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  tests/versioned-ui-storage.test.ts > F5 versioned UI storage increment > deeply isolates the returned versioned snapshot from stored values
+TypeError: store.writeVersioned is not a function
+ ❯ tests/versioned-ui-storage.test.ts:116:17
+    114|   it('deeply isolates the returned versioned snapshot from stored valu…
+    115|     const store = versioned(sessionOnlyUiStore())
+    116|     await store.writeVersioned(ns, 'layout', { panes: { left: { width:…
+       |                 ^
+    117|
+    118|     const first = await store.readVersioned<{ panes: { left: { width: …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  tests/versioned-ui-storage.test.ts > F5 versioned UI storage increment > refuses unsupported schemas and secret-shaped values on the versioned path
+TypeError: store.writeVersioned is not a function
+ ❯ tests/versioned-ui-storage.test.ts:128:24
+    126|     const store = versioned(sessionOnlyUiStore())
+    127|
+    128|     await expect(store.writeVersioned({ ...ns, schemaVersion: 99 }, 'l…
+       |                        ^
+    129|       .rejects.toThrow(UiSchemaUnknownError)
+    130|     await expect(store.writeVersioned(ns, 'layout', { accessToken: 'pr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  tests/versioned-ui-storage.test.ts > F5 versioned UI storage increment > does not emulate absent-only creation for an adapter without that atomic capability
+AssertionError: expected undefined to be 'unavailable' // Object.is equality
+
+- Expected:
+"unavailable"
+
++ Received:
+undefined
+
+ ❯ tests/versioned-ui-storage.test.ts:139:39
+    137|     const store = versioned(fileBackedUiStore(backing.adapter))
+    138|
+    139|     expect(store.versionedCapability).toBe('unavailable')
+       |                                       ^
+    140|     const result = await store.writeVersioned(ns, 'layout', { width: 3…
+    141|     expect(result).not.toBe('written')
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 1 passed (6)
+   Start at  17:04:43
+   Duration  401ms (transform 68ms, setup 0ms, import 88ms, tests 9ms, environment 0ms)
+
+
+EXIT_CODE=1

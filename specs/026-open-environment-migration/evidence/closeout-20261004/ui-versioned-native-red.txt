@@ -1,0 +1,38 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/native-bridge
+
+ ❯ src/ui-storage-versioned.test.ts (2 tests | 1 failed) 329ms
+     × two independent OS processes race an absent version: exactly one writes 169ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/ui-storage-versioned.test.ts > versioned file UI CAS adapter > two independent OS processes race an absent version: exactly one writes
+AssertionError: expected [ 'conflict', 'conflict' ] to deeply equal [ 'conflict', 'written' ]
+
+- Expected
++ Received
+
+  [
+    "conflict",
+-   "written",
++   "conflict",
+  ]
+
+ ❯ src/ui-storage-versioned.test.ts:28:49
+     26|       const adapter = createFileUiAdapter(root)
+     27|       const answers = await Promise.all([child(root, null, 20), child(…
+     28|       expect(answers.map(x => x.status).sort()).toEqual(['conflict', '…
+       |                                                 ^
+     29|       const winner = answers.find(x => x.status === 'written')
+     30|       expect(typeof winner.revision).toBe('string')
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  17:04:44
+   Duration  677ms (transform 45ms, setup 0ms, import 76ms, tests 329ms, environment 0ms)
+
+
+EXIT_CODE=1

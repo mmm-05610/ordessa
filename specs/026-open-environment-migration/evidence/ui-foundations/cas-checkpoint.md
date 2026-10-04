@@ -1,0 +1,9 @@
+# Compatible public versioned UI CAS checkpoint
+
+User explicitly approved the capability increment; source parentadce734db2. Original UiStoreContract signatures and old undefined unconditional semantics remain exact. VersionedUiStoreContract is a subtype with versionedCapability/readVersioned/writeVersioned. Read returns value+opaque revision from one adapter read, missing revision is null; write requires explicit null or captured nonempty revision, never silently treats undefined as unconditional. Unknown/malformed stored version/schema is refused. Returned/captured values are deep copies.
+
+Same HostUiAdapter owns opaque revisions; native existing file lock compares null to real absence and strings to actual versions before same fsync/rename/directory-sync. No new store/config authority or private adapter dependency in Workbench. Old adapter without declared atomic absent-CAS cannot emulate missing creation with read/write. Session-only uses the same owned memory/revision mechanism and has no persistence promise.
+
+All raw failures retained: public5F1P; real two-process null first-create1F1P; additional omitted-version and malformed-stored-revision2F6P. Guards fixed, not assertions. Verification: existing+new public UI-components113P0skip; native3P0skip (first-create and existing-revision independent OS races plus prior race); actual public UI factory+native file adapter integration1P; source typecheck0 after annotating native JS true capability literal (initial type failure preserved). No user keys/data/system install/services/model.
+
+UI-T01 remains IN_PROGRESS: only CAS part frozen/implemented, not the complete workspace/view-instance/command/settings API. UI8tasks and12cases are separately open; these mechanism tests do not count as new GUI or clean final-UI artifact acceptance. Artifact4ad proves the preceding core source and does not contain this later increment.

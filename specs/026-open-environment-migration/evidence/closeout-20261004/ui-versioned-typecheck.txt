@@ -1,0 +1,29 @@
+
+> ordessa@0.1.0 typecheck
+> npm run --workspace apps/desktop typecheck
+
+
+> @modular/desktop-app@0.1.0 typecheck
+> tsc --noEmit
+
+../../packages/frontend/ui-components/tests/closeout-file-store.test.ts(12,29): error TS2345: Argument of type '{ supportsAbsentCompareAndSwap: boolean; read: (namespace: any, key: any) => Promise<any>; compareAndSwap(namespace: any, key: any, expectedRevision: any, input: any): Promise<...>; remove(namespace: any, key: any): Promise<...>; }' is not assignable to parameter of type 'HostUiAdapter'.
+  Types of property 'supportsAbsentCompareAndSwap' are incompatible.
+    Type 'boolean' is not assignable to type 'true'.
+../../packages/frontend/ui-components/tests/closeout-file-store.test.ts(12,60): error TS2345: Argument of type '{ supportsAbsentCompareAndSwap: boolean; read: (namespace: any, key: any) => Promise<any>; compareAndSwap(namespace: any, key: any, expectedRevision: any, input: any): Promise<...>; remove(namespace: any, key: any): Promise<...>; }' is not assignable to parameter of type 'HostUiAdapter'.
+  Types of property 'supportsAbsentCompareAndSwap' are incompatible.
+    Type 'boolean' is not assignable to type 'true'.
+../../packages/frontend/ui-components/tests/closeout-file-store.test.ts(14,34): error TS2345: Argument of type '{ supportsAbsentCompareAndSwap: boolean; read: (namespace: any, key: any) => Promise<any>; compareAndSwap(namespace: any, key: any, expectedRevision: any, input: any): Promise<...>; remove(namespace: any, key: any): Promise<...>; }' is not assignable to parameter of type 'HostUiAdapter'.
+  Types of property 'supportsAbsentCompareAndSwap' are incompatible.
+    Type 'boolean' is not assignable to type 'true'.
+../../packages/frontend/ui-components/tests/closeout-file-store.test.ts(17,36): error TS2345: Argument of type '{ supportsAbsentCompareAndSwap: boolean; read: (namespace: any, key: any) => Promise<any>; compareAndSwap(namespace: any, key: any, expectedRevision: any, input: any): Promise<...>; remove(namespace: any, key: any): Promise<...>; }' is not assignable to parameter of type 'HostUiAdapter'.
+  Types of property 'supportsAbsentCompareAndSwap' are incompatible.
+    Type 'boolean' is not assignable to type 'true'.
+../../packages/frontend/ui-components/tests/closeout-file-store.test.ts(19,31): error TS2345: Argument of type '{ supportsAbsentCompareAndSwap: boolean; read: (namespace: any, key: any) => Promise<any>; compareAndSwap(namespace: any, key: any, expectedRevision: any, input: any): Promise<...>; remove(namespace: any, key: any): Promise<...>; }' is not assignable to parameter of type 'HostUiAdapter'.
+  Types of property 'supportsAbsentCompareAndSwap' are incompatible.
+    Type 'boolean' is not assignable to type 'true'.
+npm ERR! Lifecycle script `typecheck` failed with error: 
+npm ERR! Error: command failed 
+npm ERR!   in workspace: @modular/desktop-app@0.1.0 
+npm ERR!   at location: /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/apps/desktop 
+
+EXIT_CODE=1

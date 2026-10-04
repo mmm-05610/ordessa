@@ -170,6 +170,20 @@ export interface UiStoreContract {
   migrate(ns: UiNamespace, toSchemaVersion: number): Promise<'migrated' | 'refused'>
 }
 
+/** Approved compatible UI layout increment; original UiStoreContract remains unchanged. */
+export interface VersionedUiRead<T> {
+  readonly value: T | undefined
+  /** Null denotes a genuinely absent record from the SAME atomic read. */
+  readonly revision: string | null
+}
+
+export interface VersionedUiStoreContract extends UiStoreContract {
+  readonly versionedCapability: 'available' | 'session-only' | 'unavailable'
+  readVersioned<T>(ns: UiNamespace, key: string): Promise<VersionedUiRead<T>>
+  /** Null means create only while absent; a string compares the captured revision. */
+  writeVersioned<T>(ns: UiNamespace, key: string, value: T, expectedRevision: string | null): Promise<'written' | 'conflict'>
+}
+
 export interface UiNamespace {
   pluginNamespace: string
   workspace: string | null

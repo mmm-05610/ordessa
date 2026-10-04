@@ -32,13 +32,15 @@ export function createFileUiAdapter(root, { lockTimeoutMs = 2000 } = {}) {
     try { return await action(path) } finally { await rmdir(lock) }
   }
   return {
+    supportsAbsentCompareAndSwap: /** @type {true} */ (true),
     read,
     compareAndSwap(namespace, key, expectedRevision, input) {
       // Capture before awaits: consumers cannot change bytes during persistence.
       const captured = JSON.parse(JSON.stringify(input))
       return locked(namespace, key, async path => {
         const previous = await read(namespace, key)
-        if (expectedRevision !== undefined && previous?.revision !== expectedRevision)
+        if (expectedRevision === null ? previous !== undefined
+          : expectedRevision !== undefined && previous?.revision !== expectedRevision)
           return { status: 'conflict' }
         const revision = randomUUID()
         const temporary = path + '.' + revision + '.tmp'

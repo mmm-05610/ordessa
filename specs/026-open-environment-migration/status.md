@@ -1,3 +1,7 @@
+## 批准的兼容UI CAS增量（最新，非UI产品通过）
+
+原109/129不变；UI0/8任务、0/12场景，UI-T01已IN_PROGRESS。用户批准带版本读取/仅缺席创建能力；原F5合同签名和配置权威保留。5F1P/public红首、1F1P双进程首次创建、2F6P漏版本/坏版本反例均修实现；公共113P、native3P、真实public factory/native集成1P、typecheck0。Workbench整套增量接口尚未冻结，GUI/最终含新能力产物未验。证据cas-checkpoint.md/cas-delta-approval.md，不替代核心剩余项。
+
 ## 4ad固定产物及生产raw提交守卫（最新）
 
 原109/129，仍20项未完成。完整4ad3d670358ce1cca226511526653f56a61804f3 DEB SHA2566718c82a25a7b32d7f1cfd5d79b0d98032b74531cd9fec4344d4d8e80ccb2306，仓库外解包：11受控场景、前端2窗、公开Chat适配器有/无Profile两轮及冷查询、跨侧5窗双进程SIGKILL全部通过。无Profile完整Desktop UI及真实品牌未验，外界fixture边界不变。

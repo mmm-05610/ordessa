@@ -1,0 +1,63 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/ui-components
+
+ ❯ tests/versioned-ui-storage.test.ts (8 tests | 2 failed) 29ms
+   × refuses an omitted version on the versioned method instead of falling back to unconditional write 9ms
+   × rejects a malformed stored revision rather than publishing an unusable CAS snapshot 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/versioned-ui-storage.test.ts > refuses an omitted version on the versioned method instead of falling back to unconditional write
+AssertionError: promise resolved "'written'" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+"written"
+
+ ❯ tests/versioned-ui-storage.test.ts:150:87
+    148| it('refuses an omitted version on the versioned method instead of fall…
+    149|   const store = sessionOnlyUiStore()
+    150|   await expect(store.writeVersioned(ns, 'layout', { width: 800 }, unde…
+       |                                                                                       ^
+    151|   expect(await store.readVersioned(ns, 'layout')).toEqual({ value: und…
+    152| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/versioned-ui-storage.test.ts > rejects a malformed stored revision rather than publishing an unusable CAS snapshot
+AssertionError: promise resolved "{ value: { width: 800 }, …(1) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "revision": undefined,
++   "value": {
++     "width": 800,
++   },
+  }
+
+ ❯ tests/versioned-ui-storage.test.ts:161:71
+    159|     remove: async () => undefined,
+    160|   } as unknown as HostUiAdapter
+    161|   await expect(fileBackedUiStore(adapter).readVersioned(ns, 'layout'))…
+       |                                                                       ^
+    162| })
+    163|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 6 passed (8)
+   Start at  17:08:07
+   Duration  443ms (transform 101ms, setup 0ms, import 125ms, tests 29ms, environment 0ms)
+
+
+EXIT_CODE=1

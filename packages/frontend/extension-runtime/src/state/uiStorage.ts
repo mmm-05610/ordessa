@@ -13,7 +13,7 @@
  */
 import type {
   UiNamespace,
-  UiStoreContract,
+  VersionedUiStoreContract,
 } from '../../../contracts/foundation/src/open-environment/f5/types'
 import { UiSchemaUnknownError } from '../../../contracts/foundation/src/open-environment/f5/errors'
 
@@ -40,10 +40,12 @@ export type CasResult =
  */
 export interface HostUiAdapter {
   read(nsKey: string, key: string): Promise<RecordEnvelope | undefined>
+  /** True only when compareAndSwap atomically recognizes expectedRevision=null as absent. */
+  readonly supportsAbsentCompareAndSwap?: true
   compareAndSwap?(
     nsKey: string,
     key: string,
-    expectedRevision: string | undefined,
+    expectedRevision: string | null | undefined,
     envelope: UiEnvelopeInput,
   ): Promise<CasResult>
   /** Optional legacy method is never used to emulate conditional writes. */
@@ -86,7 +88,7 @@ export async function readUiRevision(
 }
 
 /** Session-only store: honest absence, no persistence promises. */
-export function sessionOnlyUiStore(): UiStoreContract & { readonly persistenceNote: string } {
+export function sessionOnlyUiStore(): VersionedUiStoreContract & { readonly persistenceNote: string } {
   const store = buildUiStore(undefined)
   return { ...store, persistenceNote: store.persistenceNote ?? UI_STORAGE_ABSENCE_REASON }
 }
@@ -95,17 +97,20 @@ export function sessionOnlyUiStore(): UiStoreContract & { readonly persistenceNo
 export function fileBackedUiStore(
   adapter: HostUiAdapter,
   options: { supportedSchemaVersions?: readonly number[] } = {},
-): UiStoreContract {
+): VersionedUiStoreContract {
   return buildUiStore(adapter, options.supportedSchemaVersions)
 }
 
 function buildUiStore(
   adapter: HostUiAdapter | undefined,
   configuredSchemaVersions: readonly number[] = [1],
-): UiStoreContract & { persistenceNote?: string } {
+): VersionedUiStoreContract & { persistenceNote?: string } {
   const memory = new Map<string, RecordEnvelope>()
   const supportedSchemaVersions = new Set(configuredSchemaVersions)
   const hasAtomicWrite = adapter === undefined || typeof adapter.compareAndSwap === 'function'
+  const hasAbsentCompareAndSwap = adapter === undefined
+    || (adapter.supportsAbsentCompareAndSwap === true
+      && typeof adapter.compareAndSwap === 'function')
 
   for (const version of supportedSchemaVersions) {
     if (!Number.isInteger(version) || version < 1) {
@@ -121,11 +126,14 @@ function buildUiStore(
     nsKey: string,
     key: string,
     envelope: UiEnvelopeInput,
-    expectedRevision: string | undefined,
+    expectedRevision: string | null | undefined,
   ): Promise<'written' | 'conflict'> {
     if (adapter) {
       if (!adapter.compareAndSwap) {
         throw new UiSchemaUnknownError('host adapter lacks atomic UI storage writes')
+      }
+      if (expectedRevision === null && adapter.supportsAbsentCompareAndSwap !== true) {
+        throw new UiSchemaUnknownError('host adapter lacks atomic absent-only UI storage writes')
       }
       const result = await adapter.compareAndSwap(nsKey, key, expectedRevision, envelope)
       return result.status
@@ -133,11 +141,16 @@ function buildUiStore(
 
     const id = storageKey(nsKey, key)
     const existing = memory.get(id)
-    if (expectedRevision !== undefined
-        && (existing === undefined || existing.revision !== expectedRevision)) {
+    if ((expectedRevision === null && existing !== undefined)
+        || (typeof expectedRevision === 'string'
+          && (existing === undefined || existing.revision !== expectedRevision))) {
       return 'conflict'
     }
-    memory.set(id, { ...envelope, revision: nextSessionRevision() })
+    memory.set(id, {
+      ...envelope,
+      value: cloneSafeUiValue(envelope.value),
+      revision: nextSessionRevision(),
+    })
     return 'written'
   }
 
@@ -149,11 +162,34 @@ function buildUiStore(
 
   return {
     capability: adapter === undefined ? 'session-only' : hasAtomicWrite ? 'available' : 'unavailable',
+    versionedCapability: adapter === undefined
+      ? 'session-only'
+      : hasAbsentCompareAndSwap ? 'available' : 'unavailable',
     ...(adapter === undefined ? { persistenceNote: UI_STORAGE_ABSENCE_REASON } : {}),
 
     async read<T>(ns: UiNamespace, key: string): Promise<T | undefined> {
       const envelope = await load(nsKeyOf(ns), key)
       return envelope === undefined ? undefined : envelope.value as T
+    },
+
+    async readVersioned<T>(ns: UiNamespace, key: string): Promise<{
+      value: T | undefined
+      revision: string | null
+    }> {
+      validateSchemaVersion(ns.schemaVersion)
+      const envelope = await load(nsKeyOf(ns), key)
+      if (envelope === undefined) return { value: undefined, revision: null }
+      if (typeof envelope.revision !== 'string' || envelope.revision.length === 0) {
+        throw new UiSchemaUnknownError('stored UI revision is not a usable opaque version')
+      }
+      if (envelope.schemaVersion !== ns.schemaVersion) {
+        throw new UiSchemaUnknownError('stored UI schema version does not match its namespace')
+      }
+      assertSafeUiValue(envelope.value)
+      return {
+        value: cloneSafeUiValue(envelope.value) as T,
+        revision: envelope.revision,
+      }
     },
 
     async write<T>(
@@ -169,6 +205,24 @@ function buildUiStore(
         schemaVersion: ns.schemaVersion,
         value,
       }, opts.ifRevision)
+    },
+
+    async writeVersioned<T>(
+      ns: UiNamespace,
+      key: string,
+      value: T,
+      expectedRevision: string | null,
+    ): Promise<'written' | 'conflict'> {
+      if (expectedRevision !== null && (typeof expectedRevision !== 'string' || expectedRevision.length === 0)) {
+        throw new UiSchemaUnknownError('versioned UI writes require a captured revision or explicit null')
+      }
+      validateSchemaVersion(ns.schemaVersion)
+      assertSafeUiValue(value)
+      const nsKey = nsKeyOf(ns)
+      return save(nsKey, key, {
+        schemaVersion: ns.schemaVersion,
+        value: cloneSafeUiValue(value),
+      }, expectedRevision)
     },
 
     async remove(ns: UiNamespace, key: string): Promise<void> {
@@ -254,4 +308,34 @@ export function assertSafeUiValue(value: unknown): void {
     visited.delete(node)
   }
   walk(value)
+}
+
+/** Copy the validated JSON-safe value so callers never hold a storage alias. */
+function cloneSafeUiValue<T>(value: T): T {
+  if (value === null || typeof value !== 'object') return value
+  if (Array.isArray(value)) {
+    const copy: unknown[] = new Array(value.length)
+    for (const key of Reflect.ownKeys(value)) {
+      if (key === 'length') continue
+      const descriptor = Object.getOwnPropertyDescriptor(value, key)!
+      Object.defineProperty(copy, key, {
+        value: cloneSafeUiValue(descriptor.value),
+        enumerable: descriptor.enumerable,
+        configurable: true,
+        writable: true,
+      })
+    }
+    return copy as T
+  }
+  const copy = Object.create(Object.getPrototypeOf(value)) as Record<string, unknown>
+  for (const key of Reflect.ownKeys(value)) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key)!
+    Object.defineProperty(copy, key, {
+      value: cloneSafeUiValue(descriptor.value),
+      enumerable: descriptor.enumerable,
+      configurable: true,
+      writable: true,
+    })
+  }
+  return copy as T
 }
