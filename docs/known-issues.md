@@ -135,3 +135,9 @@ Agent Tools目前Profile纯数据切片已实现，provider/DirectoryBinding/节
 受影响Server/Plugin API联跑11F/162P退出1，与隔离固定adce源码的11个失败ID完全相同；原始日志在本树docs/implementation/agent-tools/evidence/server-seams-{regression,fixed-baseline}.txt。没有把新核心薄绑定导致的失败藏进继承项。全core新增一项scanner探针路径漂移：退休storage/object_store.py的fallback取到新agents/contracts.py，其合法environment-api导入被探针“无ordessa字符串”假设误判；将探针指向实际core/dtos.py，保留全部断言/扫描范围/植入私有import反例。原三个方向失败仍红。
 
 Agent Tools后续基础快照187P exit0：DirectoryBinding与同journal具名OperationStore仅隔离基础实测，生产授权/贡献接纳与节点调用尚未接入。InvocationAuthorityPort来源获用户R-0005批准，具体合同实现中。核心回归339P/3F仍为上述三个继承方向失败；没有把fixture或存储完成升级为真实运行节点完成。
+
+## 030 原生Harness扩展夜批（2026-10-04）登记
+
+Harness全量 `python -m pytest plugins/harness -q`：1031 passed / 3 skipped / **4 failed**，退出1。四个失败均为029遗留继承红、非030批次引入：`tests/install/test_acp_schema_drift_target.py` 2项（ACP schema drift）、`tests/install/test_packaging_boundaries.py::test_the_run_chain_declares_no_byte_ceiling_of_its_own`（native-artifact-policy.mjs 字节上限）、`tests/test_native_evidence_boundaries.py::test_api_dto_modules_stay_host_and_implementation_free`（029的command_discovery.py导入hashlib越界）。保留断言不skip不报绿。products/agent-tools 全量 402 passed / 0 failed（其后安全修复批次 native_clients 子集 146 passed）。
+
+030十家交付为 CODE_READY（适配实现/协议验证）＋pi一家L2 partial；真实模型0、第三方安装0。管理绑定（节点/原生session reservation/InputAttempt/transport fence）依赖阻塞（029 AT-009/010/011未交付），未另造core/ledger绕开；不发布runtimeReady。安全审查遗留已知限制3项（kimi replay围栏窗口、wait关联校验、启动pin声明残留）登记于 docs/implementation/agent-tools/night-harness-expansion/evidence/N012-safety-review.md。
