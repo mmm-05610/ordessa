@@ -44,9 +44,9 @@ parallel_units: ["qwen-driver：仅N001钉定的本家族Harness驱动/配置与
 
 ## Stages
 
-- [ ] 1. 核官方/上游源码和各候选通道，形成qwen决策报告与固定版本/许可；serve与ACP谁持有workspace/runtime/权限；serve源码可能设计与实现不同；不让桥创建第二会话账，不把CLI输出当完整管理面。（主执行者阶段检查点，精确路径提交）
-- [ ] 2. 沿冻结接缝实现驱动与消费者，不重写agent loop；发前校验材料适用性、隔离home、权限、shared scope和请求关联（主执行者阶段检查点，精确路径提交）
-- [ ] 3. 定向协议反例＋实际无模型进程验证可做部分；审批/取消/恢复/失回执/unknown扩展逐项核实，不把fixture当原生；回填矩阵与检查点（主执行者阶段检查点，精确路径提交）
+- [x] 1. 核官方/上游源码和各候选通道，形成qwen决策报告与固定版本/许可；serve与ACP谁持有workspace/runtime/权限；serve源码可能设计与实现不同；不让桥创建第二会话账，不把CLI输出当完整管理面。— `evidence/qwen-decision.md`（家族单元产出+主执行者复核）：主通道`qwen serve`环回HTTP+SSE；归属钉定serve daemon持workspace/runtime、权限经客户端显式HTTP投票（无auto-approve）；**源码vs文档差异2项已登记**（prompt 202多`eventEpoch`字段；文档v0.16-alpha vs 包0.24.7漂移）；CLI stdout不当管理面
+- [x] 2. 沿冻结接缝实现驱动与消费者，不重写agent loop；发前校验材料适用性、隔离home、权限、shared scope和请求关联 — `native_clients/qwen.py`（LoopbackHttpChannel）+`qwen/native_channel.py`；相对workspace发前拒、sessionScope/thread不建第二账
+- [x] 3. 定向协议反例＋实际无模型进程验证可做部分；审批/取消/恢复/失回执/unknown扩展逐项核实，不把fixture当原生；回填矩阵与检查点 — 32用例（非环回拒、SSE未知保留、500不重发、投票前计数0、attached不伪造）；L2=未测（无本机CLI）
 
 ## Parallel units
 
@@ -82,5 +82,11 @@ git diff --check
 
 ## Batch report
 
-阶段结束填：门与反例计数、命令/退出码、证据路径、源码SHA、清理、调用成本、未测项。阶段复选框不得提前勾选。
+终态 **N007_PARTIAL**（CODE_READY＋L1；L2未测；管理绑定依赖阻塞）。家族切片子代理产出，主执行者复跑核实（18P+14P、runtimeReady仅否定语义、无observed-yes）。
+
+- 门：BASE✓ NATIVE（serve通道/归属钉定/源码vs文档差异登记/不发runtimeReady✓） SAFETY✓（权限显式投票无auto、非环回拒、无凭据继承） EVIDENCE✓。
+- 反例计数：32用例（驱动18+客户端14）。命令/退出码（主执行者复跑）：`pytest plugins/harness/tests/qwen -q` 18P/0F exit0；`pytest tests/native_clients/test_qwen_client.py -q` 14P/0F exit0。
+- 证据路径：evidence/qwen-decision.md；源码SHA：b228983454 后本单提交；清理：fake upstream fixture内shutdown；成本：模型0、安装0（WebFetch多页含398KB大文档降级raw核读）。
+- 未测项：L2/L3/L4；serve遥测/自动更新、load/resume真机、权限多策略真机=unknown；**待授权：安装qwen CLI（钉0.24.7或新）重钉digest补L2**。
+- 家族终态：CODE_READY；管理绑定依赖阻塞；harnesses.toml基线无qwen block→登记同步归N012。
 
