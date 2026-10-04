@@ -44,9 +44,9 @@ parallel_units: ["kimi-driver：仅N001钉定的本家族Harness驱动/配置与
 
 ## Stages
 
-- [ ] 1. 核官方/上游源码和各候选通道，形成kimi决策报告与固定版本/许可；Wire版本协商、question/approval反向请求、steer、replay；replay不能再次回答历史审批，Rust变体不得冒充Python版同能力。（主执行者阶段检查点，精确路径提交）
-- [ ] 2. 沿冻结接缝实现驱动与消费者，不重写agent loop；发前校验材料适用性、隔离home、权限、shared scope和请求关联（主执行者阶段检查点，精确路径提交）
-- [ ] 3. 定向协议反例＋实际无模型进程验证可做部分；审批/取消/恢复/失回执/unknown扩展逐项核实，不把fixture当原生；回填矩阵与检查点（主执行者阶段检查点，精确路径提交）
+- [x] 1. 核官方/上游源码和各候选通道，形成kimi决策报告与固定版本/许可；Wire版本协商、question/approval反向请求、steer、replay；replay不能再次回答历史审批，Rust变体不得冒充Python版同能力。— `evidence/kimi-decision.md`：`kimi --wire`（非--mode wire）、Wire 1.10版本协商、`request`+params.type反向请求、replay只读不答历史审批、Rust kimi-agent能力差异登记（1.52.0 Apache-2.0已归档，后继kimi-code迁移unknown）
+- [x] 2. 沿冻结接缝实现驱动与消费者，不重写agent loop；发前校验材料适用性、隔离home、权限、shared scope和请求关联 — `native_clients/kimi.py`+`kimi/native_channel.py`；KIMI_SHARE_DIR隔离锚、--wire守卫、发前拒
+- [x] 3. 定向协议反例＋实际无模型进程验证可做部分；审批/取消/恢复/失回执/unknown扩展逐项核实，不把fixture当原生；回填矩阵与检查点 — 38用例（replay fence拒答历史审批、失回执recv=1不重发、两id不串、未知保留）；L2=未测（无本机CLI）
 
 ## Parallel units
 
@@ -82,5 +82,12 @@ git diff --check
 
 ## Batch report
 
-阶段结束填：门与反例计数、命令/退出码、证据路径、源码SHA、清理、调用成本、未测项。阶段复选框不得提前勾选。
+终态 **N006_PARTIAL**（CODE_READY＋L1；L2未测；管理绑定依赖阻塞）。家族切片子代理产出，主执行者复跑核实（含runtimeReady否定语义grep核对）。
+
+- 门：BASE✓ NATIVE（版本协商/反向请求/replay fence/Rust差异登记/不发runtimeReady✓） SAFETY✓（审批永不auto、replay历史审批拒答、凭据不注入、--wire守卫） EVIDENCE✓。
+- 反例计数：38用例（驱动19+客户端19）。
+- 命令/退出码（主执行者复跑）：`pytest plugins/harness/tests/kimi -q` 19P/0F exit0；`pytest tests/native_clients/test_kimi_client.py -q` 19P/0F exit0。
+- 证据路径：evidence/kimi-decision.md；源码SHA：本单与N005同批提交；清理：fake peer owned清理；成本：模型0、安装0。
+- 未测项：L2/L3/L4；Wire版本mismatch策略=文档未写明；后继kimi-code迁移=unknown；**待授权：安装kimi CLI重钉版本补L2**。
+- 家族终态：CODE_READY；管理绑定依赖阻塞。
 
