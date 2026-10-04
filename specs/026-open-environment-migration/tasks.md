@@ -104,7 +104,7 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 - [x] T008-01 逐包移动API/ui/components/connections/bridges到frontend；loader+host合extension-runtime但保Lumino唯一依赖管理。
 - [x] T008-02 Workbench明确迁frontend/workbench；内部navigation/views/layout/overlays/settings/focus按职责组织，不拆巨量空包。
 - [x] T008-03 app host-services.settings/main overlay迁Workbench展示注册/容器；平台设置作为贡献，业务值留原owner。
-- [ ] T008-04 foundation分通用carrier与Agent领域carrier；更新所有consumer specifier，不平台反向export业务；共享Token运行身份测试。
+- [x] T008-04 foundation分通用carrier与Agent领域carrier；更新所有consumer specifier，不平台反向export业务；共享Token运行身份测试。
 - [x] T008-05 同步npm workspace/exports/import-map/tsconfig/build顺序/extensions lock/package lock/packaging脚本/test discovery，保证旧extensions完整空覆盖。
 - [x] T008-06 迁connector对app内部NativeTransport依赖到公共contract；api入口无Electron/React副作用，main入口不落renderer bundle。
 - [x] T008-07 真实typecheck/build/Workbench host/ui-components/connection suite与空产品smoke；overlay定位/Esc/窗口按钮不被挡、settings关闭/输入焦点受控UI验证。
@@ -155,7 +155,7 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 
 - [x] T010-11 资源选择控件与Profile facet走公开贡献及Agent操作，无私有binding/serializer；Profile字段覆盖、同预设重选、无Profile模型切换和无Chat资源管理都有证据。
 
-- [ ] T010-12 将Agent/Profile/model选择控件迁公共只读订阅及操作入口，移除控件镜像和重复缓存；字段覆盖语义及原配置owner保持不变。
+- [x] T010-12 将Agent/Profile/model选择控件迁公共只读订阅及操作入口，移除控件镜像和重复缓存；字段覆盖语义及原配置owner保持不变。
 - [x] T010-13 将Chat草稿及至少一个资源设置编辑页迁公共编辑工具，保领域owner、字段校验、未知保存及IME缓冲，测试dirty冲突/ABA与迟到保存。
 - [ ] T010-14 接入公共任务/通知/进度与查询机制，证明资源管理无Chat/Profile依赖；完成A104–A106并扫描第二写者和私有服务导入。
 
@@ -197,3 +197,9 @@ T010-12/T011-02/03/05/06 增量：同一Backend owner公开投影、完整条件
 ## 013 / UI01 追加证据接续（2026-10-04，不改原编号或历史勾选）
 
 当前原任务107/129；4b产物的提交、只读冷恢复、F5实际共同实例/CAS新增子条件证据见 evidence/closeout-20261004/artifact-guard-review.md。完整Desktop无Profile变体、原生三品牌与真实GUI仍缺，不据窄fixture勾全任务。requestId新增反例正在串行验证，新固定源码产物待重建。UI-T01–08/UI-A01–12仍独立记账 evidence/ui-foundations/ledger.md；更新源包摘要及历史夜验快照见 package-refresh-receipt.json，不用历史验收覆盖增量。
+
+## Harness carrier /共同生产控件受控证明（2026-10-04）
+
+T008-04：独立Harness typed carrier已迁移，平台只留原构造点opaque Token，同literal/运行对象；域absence与fixture语义移出平台。构建Token身份8P、归属/纯度/变体6P、C08/Host UI42P、typecheck exit0；原两条类型反例迁址并以去注释编译实证仍拒绝。未改shape、未处理桥/原生内部业务，详见 evidence/closeout-20261004/harness-carrier-checkpoint.md。
+
+T010-12：同时启真实Profile和Model生产entry/组件，经同一公开Wire/client共享投影，A(M1+prompt)→M2→prompt-only B→A保持字段并即时共同revision；一侧scope退出不撤另一侧，迟到旧目标被拒。联合1P、Model全套122P/0skip；实际后端/产物权威证明分别已有记录，未据jsdom声称真实多窗口或GUI通过。原账109/129，其余完整Desktop、T010-14公共任务/通知/查询、跨侧五窗仍继续。

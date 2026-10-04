@@ -1,0 +1,14 @@
+
+> ordessa@0.1.0 typecheck
+> npm run --workspace apps/desktop typecheck
+
+
+> @modular/desktop-app@0.1.0 typecheck
+> tsc --noEmit
+
+tests/fixtures/third-party-plugin.ts(49,24): error TS1005: ',' expected.
+tests/fixtures/third-party-plugin.ts(49,30): error TS1005: ':' expected.
+npm ERR! Lifecycle script `typecheck` failed with error: 
+npm ERR! Error: command failed 
+npm ERR!   in workspace: @modular/desktop-app@0.1.0 
+npm ERR!   at location: /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/apps/desktop 

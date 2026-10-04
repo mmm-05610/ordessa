@@ -1,0 +1,31 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/model-provider/chat-contribution
+
+ ❯ tests/closeout-shared-production.test.tsx (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-shared-production.test.tsx [ tests/closeout-shared-production.test.tsx ]
+Error: Failed to resolve import "@extensions/ordessa.profile-api/contract.js" from "plugins/profile/integrations/chat/src/entry.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/profile/integrations/chat/src/entry.ts:2:63
+  1  |  import { ProfileServiceToken } from "@extensions/ordessa.profile-api/contract.js";
+     |                                       ^
+  2  |  import { ChatContributionsToken } from "@extensions/ordessa.chat-api/contract.js";
+  3  |  import { UiComponentsToken, WirePortToken } from "@extensions/ordessa.contracts/contract.js";
+ ❯ TransformPluginContext._formatLog ../../../node_modules/vite/dist/node/chunks/node.js:31011:39
+ ❯ TransformPluginContext.error ../../../node_modules/vite/dist/node/chunks/node.js:31008:14
+ ❯ normalizeUrl ../../../node_modules/vite/dist/node/chunks/node.js:27957:18
+ ❯ ../../../node_modules/vite/dist/node/chunks/node.js:28025:30
+ ❯ TransformPluginContext.transform ../../../node_modules/vite/dist/node/chunks/node.js:27993:4
+ ❯ EnvironmentPluginContainer.transform ../../../node_modules/vite/dist/node/chunks/node.js:30796:14
+ ❯ loadAndTransform ../../../node_modules/vite/dist/node/chunks/node.js:20594:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  16:08:49
+   Duration  1.87s (transform 339ms, setup 0ms, import 0ms, tests 0ms, environment 1.04s)
+

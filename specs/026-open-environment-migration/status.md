@@ -1,3 +1,9 @@
+## 公共carrier与共同控件接续（最新）
+
+原账109/129，新增完成T008-04/T010-12：Harness公开域载体迁址，平台只留唯一opaque Token身份，同literal/严格对象相等；真实Profile/Model生产组件经共同公开projection验证字段序列及scope/lategeneration。串行C08/Host42P、构建identity8P、归属6P、Model122P、typecheck0、原类型反例仍拒绝。后端非法requestId永久拒绝17P/更广73P。全部失败与边界见harness-carrier-checkpoint.md。
+
+7335完整DEB已在仓库外重新解包并通过闭包/F5/两轮前后端冷查询；临时目录配额首次失败与owned副本清理见artifact-build-7335-receipt.json。该产物不包含本次typed-id guard/carrier源码；下一固定SHA需重建。跨侧5窗首跑失败：生成的Electron入口SyntaxError，首窗口未完成；日志artifact-cross-side-7335.txt保留，正在修QA模板并新增生成源码语法检查，不能计作恢复通过。T010-14继续接公共任务/通知机制；UI01未实施，不替代核心缺口。
+
 requestId串行验证完成：Agent contracts94P/0skip、Chat95P/0skip、typecheck exit0；新旧key边界反例均保留断言。下一ready提交本切片固定源码并完整发行重建，未凭窄绿勾原任务。
 
 ## 更新实施包核对与013产物复验（最新，尚未整项收口）

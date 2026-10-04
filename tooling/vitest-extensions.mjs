@@ -12,6 +12,7 @@ const repoRoot = path.resolve(import.meta.dirname, '..')
 /** Extension id → its contract source file, relative to the repository root. */
 export const CONTRACT_SOURCES = {
   'ordessa.contracts': 'packages/frontend/contracts/foundation/src/contract.ts',
+  'ordessa.harness-contracts': 'plugins/harness/contracts/src/contract.ts',
   'ordessa.agent-contracts': 'plugins/agent/contracts/src/contract.ts',
 }
 

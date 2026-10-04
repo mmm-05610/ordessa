@@ -8,8 +8,8 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   createAbsentHarnessAvailability, createFixtureHarnessAvailability, enforceReportInvariant, INSPECT_TIMEOUT_MS,
-} from '@ordessa/extension-host/platform'
-import type { HarnessReport, HarnessState } from '@extensions/ordessa.contracts/contract.js'
+} from '@ordessa/harness-contracts/service'
+import type { HarnessReport, HarnessState } from '@extensions/ordessa.harness-contracts/contract.js'
 import { buildHostServices } from '../renderer/host-services'
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')
@@ -105,8 +105,8 @@ describe('C-08 §4 缺席：没有提供者时诚实缺席', () => {
 describe('C-08 §6.6 边界：宿主源码出现品牌名即判红', () => {
   it('C-08 相关的宿主/契约文件里没有品牌名', () => {
     const files = [
-      'packages/frontend/extension-runtime/host/src/services/harness-availability.ts',
-      'packages/frontend/contracts/foundation/src/product/harness-availability.ts',
+      'plugins/harness/contracts/src/service.ts',
+      'plugins/harness/contracts/src/harness-availability.ts',
       'apps/desktop/renderer/desktop-ui.tsx',
       'apps/desktop/renderer/host-services.ts',
       'apps/desktop/electron/main.ts',

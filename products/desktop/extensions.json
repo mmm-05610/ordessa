@@ -2,6 +2,7 @@
  "enabled": [
   "ordessa.contracts",
   "ordessa.agent-contracts",
+  "ordessa.harness-contracts",
   "ordessa.commands",
   "ordessa.workbench",
   "ordessa.workbench-interactions",

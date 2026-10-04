@@ -1,0 +1,5 @@
+packaging/.cache/ordessa-harness-types-orw83dah/invalid.ts(5,8): error TS2540: Cannot assign to 'state' because it is a read-only property.
+packaging/.cache/ordessa-harness-types-orw83dah/invalid.ts(6,7): error TS2322: Type '"ready"' is not assignable to type 'HarnessState'.
+ 
+EXIT_CODE=2
+EXPECTED_REJECTION=PASS: both original readonly and invalid-state counterexamples remain effective

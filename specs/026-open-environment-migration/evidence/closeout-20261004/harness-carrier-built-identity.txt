@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: watch list is synced with the DI Tokens constructed in current product sources
+ok 1 - watch list is synced with the DI Tokens constructed in current product sources
+  ---
+  duration_ms: 2.572633
+  type: 'test'
+  ...
+# Subtest: real product build constructs each watched DI token exactly once
+ok 2 - real product build constructs each watched DI token exactly once
+  ---
+  duration_ms: 121.592258
+  type: 'test'
+  ...
+# Subtest: counterexample: a rogue direct-source import bundles a second construction and the guard goes red
+ok 3 - counterexample: a rogue direct-source import bundles a second construction and the guard goes red
+  ---
+  duration_ms: 1312.091762
+  type: 'test'
+  ...
+# Subtest: watch list is synced with the connection kinds constructed in current product sources
+ok 4 - watch list is synced with the connection kinds constructed in current product sources
+  ---
+  duration_ms: 0.430383
+  type: 'test'
+  ...
+# Subtest: real product build constructs each watched connection kind exactly once
+ok 5 - real product build constructs each watched connection kind exactly once
+  ---
+  duration_ms: 49.272744
+  type: 'test'
+  ...
+# Subtest: counterexample: a rogue direct-source import bundles a second kind construction and the guard goes red
+ok 6 - counterexample: a rogue direct-source import bundles a second kind construction and the guard goes red
+  ---
+  duration_ms: 90.385218
+  type: 'test'
+  ...
+# Subtest: kind identity is per-construction: a duplicated kind literal is a functional break, not cosmetics
+ok 7 - kind identity is per-construction: a duplicated kind literal is a functional break, not cosmetics
+  ---
+  duration_ms: 24.561476
+  type: 'test'
+  ...
+# Subtest: built Harness typed carrier reuses the exact platform opaque identity
+ok 8 - built Harness typed carrier reuses the exact platform opaque identity
+  ---
+  duration_ms: 4.292923
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6565.034197

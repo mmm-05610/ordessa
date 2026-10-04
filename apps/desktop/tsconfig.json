@@ -33,6 +33,9 @@
       ],
       "@ordessa/ui-components/api": [
         "../../packages/frontend/ui-components/api/ui-components.ts"
+      ],
+      "@extensions/ordessa.harness-contracts/contract.js": [
+        "../../plugins/harness/contracts/src/contract.ts"
       ]
     },
     "skipLibCheck": true,

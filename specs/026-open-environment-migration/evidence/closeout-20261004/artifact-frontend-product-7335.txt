@@ -1,0 +1,777 @@
+{
+  "schema": "ordessa.closeout-frontend-product.v1",
+  "artifactRoot": "/home/maoqh/.cache/ordessa-026-artifact-7335-ddeofjgv/extracted",
+  "artifactExports": {
+    "agentContract": "/home/maoqh/.cache/ordessa-026-artifact-7335-ddeofjgv/extracted/opt/ordessa/app/dist/extensions/ordessa.agent-contracts/contract.js",
+    "chatAdapter": "/home/maoqh/.cache/ordessa-026-artifact-7335-ddeofjgv/extracted/opt/ordessa/app/dist/extensions/ordessa.chat/submission.js",
+    "sharedContract": "/home/maoqh/.cache/ordessa-026-artifact-7335-ddeofjgv/extracted/opt/ordessa/app/dist/extensions/ordessa.contracts/contract.js",
+    "chatManifestEntry": "entry.js",
+    "expectedPublicFunctions": [
+      "createWireConfigurationClient",
+      "createFrontendSubmissionJournal",
+      "createDurableSubmissionClient",
+      "createReliableChatSubmission"
+    ],
+    "declaration": "The current source tree exports these; this runner validates the built artifact at runtime."
+  },
+  "variants": {
+    "withProfile": {
+      "variant": "withProfile",
+      "includeProfile": true,
+      "pluginIds": [
+        "ordessa.workspace",
+        "ordessa.server-compat",
+        "ordessa.harness.acp",
+        "ordessa.model-provider",
+        "ordessa.profile",
+        "ordessa.sandbox",
+        "ordessa.sandbox-adapters",
+        "permissions-backend",
+        "ordessa.permissions-adapters",
+        "ordessa.agent"
+      ],
+      "warm": [
+        {
+          "requestId": "closeout-withprofile-1",
+          "target": "agent-draft-f72dc7b343f44243866b46039ad124d3",
+          "generation": 1,
+          "configOperationIds": [
+            "op-agent-draft-f72dc7b343f44243866b46039ad124d3-1"
+          ],
+          "expectedConditions": {
+            "binding": {
+              "sessionId": "logical-session-controlled-1",
+              "nativeSessionId": "native-session-controlled-1",
+              "generation": "1",
+              "ownerRef": "native-owner:controlled-1",
+              "surfaceId": "agent.submit",
+              "environment": "environment-822cd4ebcb7143d2aa3971504a47ec29",
+              "environmentContextRevision": "cr-1",
+              "providerActivation": "ordessa.native-submit:1"
+            },
+            "baseRevision": "native-revision-1",
+            "sourceRevision": "1",
+            "configOwnerRef": "agent-config:agent-draft-f72dc7b343f44243866b46039ad124d3"
+          },
+          "resolved": {
+            "model": "controlled-model-M1",
+            "prompt": "Keep this prompt across profile operations"
+          },
+          "outcome": "accepted",
+          "journalState": "result-recorded",
+          "nativeMode": "createWithConfig"
+        },
+        {
+          "requestId": "closeout-withprofile-2",
+          "target": "agent-draft-f72dc7b343f44243866b46039ad124d3",
+          "generation": 1,
+          "configOperationIds": [
+            "op-agent-draft-f72dc7b343f44243866b46039ad124d3-2"
+          ],
+          "expectedConditions": {
+            "binding": {
+              "sessionId": "logical-session-controlled-1",
+              "nativeSessionId": "native-session-controlled-1",
+              "generation": "1",
+              "ownerRef": "native-owner:controlled-1",
+              "surfaceId": "agent.submit",
+              "environment": "environment-822cd4ebcb7143d2aa3971504a47ec29",
+              "environmentContextRevision": "cr-1",
+              "providerActivation": "ordessa.native-submit:1"
+            },
+            "baseRevision": "native-revision-1",
+            "sourceRevision": "3",
+            "configOwnerRef": "agent-config:agent-draft-f72dc7b343f44243866b46039ad124d3"
+          },
+          "resolved": {
+            "model": "controlled-model-M2",
+            "prompt": "Keep this prompt across profile operations"
+          },
+          "outcome": "accepted",
+          "journalState": "result-recorded",
+          "nativeMode": "existing"
+        }
+      ],
+      "cold": [
+        {
+          "requestId": "closeout-withprofile-1",
+          "target": "agent-draft-f72dc7b343f44243866b46039ad124d3",
+          "originalKey": {
+            "namespace": "environment-822cd4ebcb7143d2aa3971504a47ec29",
+            "principalScope": "local",
+            "requestId": "closeout-withprofile-1"
+          },
+          "nativeMode": "createWithConfig",
+          "configOperationIds": [
+            "op-agent-draft-f72dc7b343f44243866b46039ad124d3-1"
+          ],
+          "calls": [
+            "agent.submission.query"
+          ],
+          "outcome": "accepted",
+          "facts": {
+            "submissionId": "closeout-withprofile-1",
+            "request": {
+              "environmentNamespace": "environment-822cd4ebcb7143d2aa3971504a47ec29",
+              "principalScope": "local",
+              "requestId": "closeout-withprofile-1"
+            },
+            "outcome": "accepted",
+            "backend": {
+              "request": {
+                "environmentNamespace": "environment-822cd4ebcb7143d2aa3971504a47ec29",
+                "principalScope": "local",
+                "requestId": "closeout-withprofile-1"
+              },
+              "delivery": "acknowledged",
+              "issuedRevision": "rev-1",
+              "outcome": "concluded",
+              "revision": 1
+            },
+            "configApply": {
+              "operationIds": [
+                "op-agent-draft-f72dc7b343f44243866b46039ad124d3-1"
+              ],
+              "outcome": "applied"
+            },
+            "inputAcceptance": {
+              "draftRevision": 1,
+              "outcome": "accepted",
+              "session": {
+                "generation": 1,
+                "nativeSessionId": "native-session-controlled-1",
+                "ownerRef": "native-owner:controlled-1",
+                "sessionId": "logical-session-controlled-1"
+              }
+            },
+            "runResult": {
+              "outcome": "running",
+              "runId": "run-closeout-withprofile-1"
+            },
+            "resend": false
+          }
+        },
+        {
+          "requestId": "closeout-withprofile-2",
+          "target": "agent-draft-f72dc7b343f44243866b46039ad124d3",
+          "originalKey": {
+            "namespace": "environment-822cd4ebcb7143d2aa3971504a47ec29",
+            "principalScope": "local",
+            "requestId": "closeout-withprofile-2"
+          },
+          "nativeMode": "existing",
+          "configOperationIds": [
+            "op-agent-draft-f72dc7b343f44243866b46039ad124d3-2"
+          ],
+          "calls": [
+            "agent.submission.query"
+          ],
+          "outcome": "accepted",
+          "facts": {
+            "submissionId": "closeout-withprofile-2",
+            "request": {
+              "environmentNamespace": "environment-822cd4ebcb7143d2aa3971504a47ec29",
+              "principalScope": "local",
+              "requestId": "closeout-withprofile-2"
+            },
+            "outcome": "accepted",
+            "backend": {
+              "request": {
+                "environmentNamespace": "environment-822cd4ebcb7143d2aa3971504a47ec29",
+                "principalScope": "local",
+                "requestId": "closeout-withprofile-2"
+              },
+              "delivery": "acknowledged",
+              "issuedRevision": "rev-1",
+              "outcome": "concluded",
+              "revision": 1
+            },
+            "configApply": {
+              "operationIds": [
+                "op-agent-draft-f72dc7b343f44243866b46039ad124d3-2"
+              ],
+              "outcome": "applied"
+            },
+            "inputAcceptance": {
+              "draftRevision": 2,
+              "outcome": "accepted",
+              "session": {
+                "generation": 1,
+                "nativeSessionId": "native-session-controlled-1",
+                "ownerRef": "native-owner:controlled-1",
+                "sessionId": "logical-session-controlled-1"
+              }
+            },
+            "runResult": {
+              "outcome": "running",
+              "runId": "run-closeout-withprofile-2"
+            },
+            "resend": false
+          }
+        }
+      ],
+      "warmWireStats": {
+        "methodCalls": [
+          "agent.session.resolve",
+          "agent.config.observe",
+          "agent.config.read",
+          "agent.submission.capture.read",
+          "agent.config.observe",
+          "agent.config.submitOperation",
+          "agent.config.read",
+          "agent.config.observe",
+          "agent.config.read",
+          "agent.session.resolve",
+          "agent.config.read",
+          "agent.submission.capture.read",
+          "agent.submitInput",
+          "agent.config.observe",
+          "agent.session.resolve",
+          "agent.config.read",
+          "agent.submission.capture.read",
+          "agent.config.submitOperation",
+          "agent.config.read",
+          "agent.config.observe",
+          "agent.config.read",
+          "agent.session.resolve",
+          "agent.config.read",
+          "agent.submission.capture.read",
+          "agent.submitInput",
+          "agent.config.observe"
+        ],
+        "effects": [
+          {
+            "key": [
+              "environment-822cd4ebcb7143d2aa3971504a47ec29",
+              "local",
+              "closeout-withprofile-1"
+            ],
+            "count": 1,
+            "mode": "createWithConfig",
+            "target": "agent-draft-f72dc7b343f44243866b46039ad124d3",
+            "binding": {
+              "environment": "environment-822cd4ebcb7143d2aa3971504a47ec29",
+              "environmentContextRevision": "cr-1",
+              "generation": "1",
+              "nativeSessionId": "native-session-controlled-1",
+              "ownerRef": "native-owner:controlled-1",
+              "providerActivation": "ordessa.native-submit:1",
+              "sessionId": "logical-session-controlled-1",
+              "surfaceId": "agent.submit"
+            },
+            "configOperationIds": [
+              "op-agent-draft-f72dc7b343f44243866b46039ad124d3-1"
+            ]
+          },
+          {
+            "key": [
+              "environment-822cd4ebcb7143d2aa3971504a47ec29",
+              "local",
+              "closeout-withprofile-2"
+            ],
+            "count": 1,
+            "mode": "existing",
+            "target": "agent-draft-f72dc7b343f44243866b46039ad124d3",
+            "binding": {
+              "environment": "environment-822cd4ebcb7143d2aa3971504a47ec29",
+              "environmentContextRevision": "cr-1",
+              "generation": "1",
+              "nativeSessionId": "native-session-controlled-1",
+              "ownerRef": "native-owner:controlled-1",
+              "providerActivation": "ordessa.native-submit:1",
+              "sessionId": "logical-session-controlled-1",
+              "surfaceId": "agent.submit"
+            },
+            "configOperationIds": [
+              "op-agent-draft-f72dc7b343f44243866b46039ad124d3-2"
+            ]
+          }
+        ],
+        "effectCounts": [
+          {
+            "key": [
+              "environment-822cd4ebcb7143d2aa3971504a47ec29",
+              "local",
+              "closeout-withprofile-1"
+            ],
+            "count": 1
+          },
+          {
+            "key": [
+              "environment-822cd4ebcb7143d2aa3971504a47ec29",
+              "local",
+              "closeout-withprofile-2"
+            ],
+            "count": 1
+          }
+        ]
+      },
+      "coldWireStats": {
+        "methodCalls": [
+          "agent.submission.query",
+          "agent.submission.query"
+        ],
+        "effects": [
+          {
+            "key": [
+              "environment-822cd4ebcb7143d2aa3971504a47ec29",
+              "local",
+              "closeout-withprofile-1"
+            ],
+            "count": 1,
+            "mode": "createWithConfig",
+            "target": "agent-draft-f72dc7b343f44243866b46039ad124d3",
+            "binding": {
+              "environment": "environment-822cd4ebcb7143d2aa3971504a47ec29",
+              "environmentContextRevision": "cr-1",
+              "generation": "1",
+              "nativeSessionId": "native-session-controlled-1",
+              "ownerRef": "native-owner:controlled-1",
+              "providerActivation": "ordessa.native-submit:1",
+              "sessionId": "logical-session-controlled-1",
+              "surfaceId": "agent.submit"
+            },
+            "configOperationIds": [
+              "op-agent-draft-f72dc7b343f44243866b46039ad124d3-1"
+            ]
+          },
+          {
+            "key": [
+              "environment-822cd4ebcb7143d2aa3971504a47ec29",
+              "local",
+              "closeout-withprofile-2"
+            ],
+            "count": 1,
+            "mode": "existing",
+            "target": "agent-draft-f72dc7b343f44243866b46039ad124d3",
+            "binding": {
+              "environment": "environment-822cd4ebcb7143d2aa3971504a47ec29",
+              "environmentContextRevision": "cr-1",
+              "generation": "1",
+              "nativeSessionId": "native-session-controlled-1",
+              "ownerRef": "native-owner:controlled-1",
+              "providerActivation": "ordessa.native-submit:1",
+              "sessionId": "logical-session-controlled-1",
+              "surfaceId": "agent.submit"
+            },
+            "configOperationIds": [
+              "op-agent-draft-f72dc7b343f44243866b46039ad124d3-2"
+            ]
+          }
+        ],
+        "effectCounts": [
+          {
+            "key": [
+              "environment-822cd4ebcb7143d2aa3971504a47ec29",
+              "local",
+              "closeout-withprofile-1"
+            ],
+            "count": 1
+          },
+          {
+            "key": [
+              "environment-822cd4ebcb7143d2aa3971504a47ec29",
+              "local",
+              "closeout-withprofile-2"
+            ],
+            "count": 1
+          }
+        ]
+      },
+      "boundary": {
+        "frontendAndChatAdapter": "shipped extension artifacts in Chromium; real IndexedDB",
+        "productOwner": "artifact Python interpreter and actual ServerProductComposition/runtime.wire.dispatch",
+        "bridge": "owned ephemeral 127.0.0.1 HTTP, not production transport",
+        "controlledSeams": [
+          "ControlledNativeFixture",
+          "fixture ProtectedFingerprintHmac",
+          "explicit local test policy"
+        ],
+        "sessionsFacade": "controlled runtimeGeneration projection only; draft target and binding are backend-issued",
+        "realModel": false,
+        "realBrandConnector": false,
+        "chromiumSandbox": "not established; Electron launched with --no-sandbox"
+      }
+    },
+    "withoutProfile": {
+      "variant": "withoutProfile",
+      "includeProfile": false,
+      "pluginIds": [
+        "ordessa.workspace",
+        "ordessa.server-compat",
+        "ordessa.harness.acp",
+        "ordessa.model-provider",
+        "ordessa.sandbox",
+        "ordessa.sandbox-adapters",
+        "permissions-backend",
+        "ordessa.permissions-adapters",
+        "ordessa.agent"
+      ],
+      "warm": [
+        {
+          "requestId": "closeout-withoutprofile-1",
+          "target": "agent-draft-3412a8632c7d44d9859fb66beb3667fb",
+          "generation": 1,
+          "configOperationIds": [
+            "op-agent-draft-3412a8632c7d44d9859fb66beb3667fb-1"
+          ],
+          "expectedConditions": {
+            "binding": {
+              "sessionId": "logical-session-controlled-1",
+              "nativeSessionId": "native-session-controlled-1",
+              "generation": "1",
+              "ownerRef": "native-owner:controlled-1",
+              "surfaceId": "agent.submit",
+              "environment": "environment-663936e93e0b44d6b96e0c852b766a21",
+              "environmentContextRevision": "cr-1",
+              "providerActivation": "ordessa.native-submit:1"
+            },
+            "baseRevision": "native-revision-1",
+            "sourceRevision": "1",
+            "configOwnerRef": "agent-config:agent-draft-3412a8632c7d44d9859fb66beb3667fb"
+          },
+          "resolved": {
+            "model": "controlled-model-M1",
+            "prompt": "Keep this prompt across profile operations"
+          },
+          "outcome": "accepted",
+          "journalState": "result-recorded",
+          "nativeMode": "createWithConfig"
+        },
+        {
+          "requestId": "closeout-withoutprofile-2",
+          "target": "agent-draft-3412a8632c7d44d9859fb66beb3667fb",
+          "generation": 1,
+          "configOperationIds": [
+            "op-agent-draft-3412a8632c7d44d9859fb66beb3667fb-2"
+          ],
+          "expectedConditions": {
+            "binding": {
+              "sessionId": "logical-session-controlled-1",
+              "nativeSessionId": "native-session-controlled-1",
+              "generation": "1",
+              "ownerRef": "native-owner:controlled-1",
+              "surfaceId": "agent.submit",
+              "environment": "environment-663936e93e0b44d6b96e0c852b766a21",
+              "environmentContextRevision": "cr-1",
+              "providerActivation": "ordessa.native-submit:1"
+            },
+            "baseRevision": "native-revision-1",
+            "sourceRevision": "3",
+            "configOwnerRef": "agent-config:agent-draft-3412a8632c7d44d9859fb66beb3667fb"
+          },
+          "resolved": {
+            "model": "controlled-model-M2",
+            "prompt": "Keep this prompt across profile operations"
+          },
+          "outcome": "accepted",
+          "journalState": "result-recorded",
+          "nativeMode": "existing"
+        }
+      ],
+      "cold": [
+        {
+          "requestId": "closeout-withoutprofile-1",
+          "target": "agent-draft-3412a8632c7d44d9859fb66beb3667fb",
+          "originalKey": {
+            "namespace": "environment-663936e93e0b44d6b96e0c852b766a21",
+            "principalScope": "local",
+            "requestId": "closeout-withoutprofile-1"
+          },
+          "nativeMode": "createWithConfig",
+          "configOperationIds": [
+            "op-agent-draft-3412a8632c7d44d9859fb66beb3667fb-1"
+          ],
+          "calls": [
+            "agent.submission.query"
+          ],
+          "outcome": "accepted",
+          "facts": {
+            "submissionId": "closeout-withoutprofile-1",
+            "request": {
+              "environmentNamespace": "environment-663936e93e0b44d6b96e0c852b766a21",
+              "principalScope": "local",
+              "requestId": "closeout-withoutprofile-1"
+            },
+            "outcome": "accepted",
+            "backend": {
+              "request": {
+                "environmentNamespace": "environment-663936e93e0b44d6b96e0c852b766a21",
+                "principalScope": "local",
+                "requestId": "closeout-withoutprofile-1"
+              },
+              "delivery": "acknowledged",
+              "issuedRevision": "rev-1",
+              "outcome": "concluded",
+              "revision": 1
+            },
+            "configApply": {
+              "operationIds": [
+                "op-agent-draft-3412a8632c7d44d9859fb66beb3667fb-1"
+              ],
+              "outcome": "applied"
+            },
+            "inputAcceptance": {
+              "draftRevision": 1,
+              "outcome": "accepted",
+              "session": {
+                "generation": 1,
+                "nativeSessionId": "native-session-controlled-1",
+                "ownerRef": "native-owner:controlled-1",
+                "sessionId": "logical-session-controlled-1"
+              }
+            },
+            "runResult": {
+              "outcome": "running",
+              "runId": "run-closeout-withoutprofile-1"
+            },
+            "resend": false
+          }
+        },
+        {
+          "requestId": "closeout-withoutprofile-2",
+          "target": "agent-draft-3412a8632c7d44d9859fb66beb3667fb",
+          "originalKey": {
+            "namespace": "environment-663936e93e0b44d6b96e0c852b766a21",
+            "principalScope": "local",
+            "requestId": "closeout-withoutprofile-2"
+          },
+          "nativeMode": "existing",
+          "configOperationIds": [
+            "op-agent-draft-3412a8632c7d44d9859fb66beb3667fb-2"
+          ],
+          "calls": [
+            "agent.submission.query"
+          ],
+          "outcome": "accepted",
+          "facts": {
+            "submissionId": "closeout-withoutprofile-2",
+            "request": {
+              "environmentNamespace": "environment-663936e93e0b44d6b96e0c852b766a21",
+              "principalScope": "local",
+              "requestId": "closeout-withoutprofile-2"
+            },
+            "outcome": "accepted",
+            "backend": {
+              "request": {
+                "environmentNamespace": "environment-663936e93e0b44d6b96e0c852b766a21",
+                "principalScope": "local",
+                "requestId": "closeout-withoutprofile-2"
+              },
+              "delivery": "acknowledged",
+              "issuedRevision": "rev-1",
+              "outcome": "concluded",
+              "revision": 1
+            },
+            "configApply": {
+              "operationIds": [
+                "op-agent-draft-3412a8632c7d44d9859fb66beb3667fb-2"
+              ],
+              "outcome": "applied"
+            },
+            "inputAcceptance": {
+              "draftRevision": 2,
+              "outcome": "accepted",
+              "session": {
+                "generation": 1,
+                "nativeSessionId": "native-session-controlled-1",
+                "ownerRef": "native-owner:controlled-1",
+                "sessionId": "logical-session-controlled-1"
+              }
+            },
+            "runResult": {
+              "outcome": "running",
+              "runId": "run-closeout-withoutprofile-2"
+            },
+            "resend": false
+          }
+        }
+      ],
+      "warmWireStats": {
+        "methodCalls": [
+          "agent.session.resolve",
+          "agent.config.observe",
+          "agent.config.read",
+          "agent.submission.capture.read",
+          "agent.config.observe",
+          "agent.config.submitOperation",
+          "agent.config.read",
+          "agent.config.observe",
+          "agent.config.read",
+          "agent.session.resolve",
+          "agent.config.read",
+          "agent.submission.capture.read",
+          "agent.submitInput",
+          "agent.config.observe",
+          "agent.session.resolve",
+          "agent.config.read",
+          "agent.submission.capture.read",
+          "agent.config.submitOperation",
+          "agent.config.read",
+          "agent.config.observe",
+          "agent.config.read",
+          "agent.session.resolve",
+          "agent.config.read",
+          "agent.submission.capture.read",
+          "agent.submitInput",
+          "agent.config.observe"
+        ],
+        "effects": [
+          {
+            "key": [
+              "environment-663936e93e0b44d6b96e0c852b766a21",
+              "local",
+              "closeout-withoutprofile-1"
+            ],
+            "count": 1,
+            "mode": "createWithConfig",
+            "target": "agent-draft-3412a8632c7d44d9859fb66beb3667fb",
+            "binding": {
+              "environment": "environment-663936e93e0b44d6b96e0c852b766a21",
+              "environmentContextRevision": "cr-1",
+              "generation": "1",
+              "nativeSessionId": "native-session-controlled-1",
+              "ownerRef": "native-owner:controlled-1",
+              "providerActivation": "ordessa.native-submit:1",
+              "sessionId": "logical-session-controlled-1",
+              "surfaceId": "agent.submit"
+            },
+            "configOperationIds": [
+              "op-agent-draft-3412a8632c7d44d9859fb66beb3667fb-1"
+            ]
+          },
+          {
+            "key": [
+              "environment-663936e93e0b44d6b96e0c852b766a21",
+              "local",
+              "closeout-withoutprofile-2"
+            ],
+            "count": 1,
+            "mode": "existing",
+            "target": "agent-draft-3412a8632c7d44d9859fb66beb3667fb",
+            "binding": {
+              "environment": "environment-663936e93e0b44d6b96e0c852b766a21",
+              "environmentContextRevision": "cr-1",
+              "generation": "1",
+              "nativeSessionId": "native-session-controlled-1",
+              "ownerRef": "native-owner:controlled-1",
+              "providerActivation": "ordessa.native-submit:1",
+              "sessionId": "logical-session-controlled-1",
+              "surfaceId": "agent.submit"
+            },
+            "configOperationIds": [
+              "op-agent-draft-3412a8632c7d44d9859fb66beb3667fb-2"
+            ]
+          }
+        ],
+        "effectCounts": [
+          {
+            "key": [
+              "environment-663936e93e0b44d6b96e0c852b766a21",
+              "local",
+              "closeout-withoutprofile-1"
+            ],
+            "count": 1
+          },
+          {
+            "key": [
+              "environment-663936e93e0b44d6b96e0c852b766a21",
+              "local",
+              "closeout-withoutprofile-2"
+            ],
+            "count": 1
+          }
+        ]
+      },
+      "coldWireStats": {
+        "methodCalls": [
+          "agent.submission.query",
+          "agent.submission.query"
+        ],
+        "effects": [
+          {
+            "key": [
+              "environment-663936e93e0b44d6b96e0c852b766a21",
+              "local",
+              "closeout-withoutprofile-1"
+            ],
+            "count": 1,
+            "mode": "createWithConfig",
+            "target": "agent-draft-3412a8632c7d44d9859fb66beb3667fb",
+            "binding": {
+              "environment": "environment-663936e93e0b44d6b96e0c852b766a21",
+              "environmentContextRevision": "cr-1",
+              "generation": "1",
+              "nativeSessionId": "native-session-controlled-1",
+              "ownerRef": "native-owner:controlled-1",
+              "providerActivation": "ordessa.native-submit:1",
+              "sessionId": "logical-session-controlled-1",
+              "surfaceId": "agent.submit"
+            },
+            "configOperationIds": [
+              "op-agent-draft-3412a8632c7d44d9859fb66beb3667fb-1"
+            ]
+          },
+          {
+            "key": [
+              "environment-663936e93e0b44d6b96e0c852b766a21",
+              "local",
+              "closeout-withoutprofile-2"
+            ],
+            "count": 1,
+            "mode": "existing",
+            "target": "agent-draft-3412a8632c7d44d9859fb66beb3667fb",
+            "binding": {
+              "environment": "environment-663936e93e0b44d6b96e0c852b766a21",
+              "environmentContextRevision": "cr-1",
+              "generation": "1",
+              "nativeSessionId": "native-session-controlled-1",
+              "ownerRef": "native-owner:controlled-1",
+              "providerActivation": "ordessa.native-submit:1",
+              "sessionId": "logical-session-controlled-1",
+              "surfaceId": "agent.submit"
+            },
+            "configOperationIds": [
+              "op-agent-draft-3412a8632c7d44d9859fb66beb3667fb-2"
+            ]
+          }
+        ],
+        "effectCounts": [
+          {
+            "key": [
+              "environment-663936e93e0b44d6b96e0c852b766a21",
+              "local",
+              "closeout-withoutprofile-1"
+            ],
+            "count": 1
+          },
+          {
+            "key": [
+              "environment-663936e93e0b44d6b96e0c852b766a21",
+              "local",
+              "closeout-withoutprofile-2"
+            ],
+            "count": 1
+          }
+        ]
+      },
+      "boundary": {
+        "frontendAndChatAdapter": "shipped extension artifacts in Chromium; real IndexedDB",
+        "productOwner": "artifact Python interpreter and actual ServerProductComposition/runtime.wire.dispatch",
+        "bridge": "owned ephemeral 127.0.0.1 HTTP, not production transport",
+        "controlledSeams": [
+          "ControlledNativeFixture",
+          "fixture ProtectedFingerprintHmac",
+          "explicit local test policy"
+        ],
+        "sessionsFacade": "controlled runtimeGeneration projection only; draft target and binding are backend-issued",
+        "realModel": false,
+        "realBrandConnector": false,
+        "chromiumSandbox": "not established; Electron launched with --no-sandbox"
+      }
+    }
+  },
+  "limitations": [],
+  "status": "pass"
+}
+EXIT_CODE=0

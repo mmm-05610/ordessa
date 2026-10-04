@@ -1,0 +1,29 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/model-provider/chat-contribution
+
+ ❯ tests/closeout-shared-production.test.tsx (1 test | 1 failed) 106ms
+   × shares the production Profile and Model controls projection, preserves omitted fields, and retires one scope independently 105ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-shared-production.test.tsx > shares the production Profile and Model controls projection, preserves omitted fields, and retires one scope independently
+TypeError: Cannot read properties of null (reading 'click')
+ ❯ tests/closeout-shared-production.test.tsx:151:120
+    149|   const selectProfile = async (name: 'A' | 'B') => {
+    150|     await act(async () => container.querySelector<HTMLElement>('[data-…
+    151|     await act(async () => document.body.querySelector<HTMLElement>(`[d…
+       |                                                                                                                        ^
+    152|   }
+    153|   const selectModel = async (modelId: 'model-1' | 'model-2') => {
+ ❯ process.env.NODE_ENV.exports.act ../../../node_modules/react/cjs/react.development.js:814:22
+ ❯ selectProfile tests/closeout-shared-production.test.tsx:151:11
+ ❯ tests/closeout-shared-production.test.tsx:160:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  16:09:42
+   Duration  1.57s (transform 400ms, setup 0ms, import 664ms, tests 106ms, environment 524ms)
+

@@ -249,6 +249,20 @@ class AgentDomainPlugin:
             self._submission_service = service
             return service
 
+        def validate_submission_request_id(submission_id: Any) -> None:
+            # Validate the original key with the public Environment codec before
+            # opening the submission journal. Never normalize a historical ID.
+            from ordessa_environment_api import RequestKey
+            binding = context.ports.get('core.binding')
+            environment = getattr(binding, 'environment', None)
+            if environment is None:
+                raise WireError('CAPABILITY_UNSUPPORTED', 'composed Environment is unavailable')
+            try:
+                RequestKey(environment_namespace=environment.environment_id,
+                           principal_scope='local', request_id=submission_id)
+            except ValueError as error:
+                raise WireError('INVALID_REQUEST', 'submissionId violates the Environment request identity contract') from error
+
         def submit_input(params: Mapping[str, Any]) -> dict[str, Any]:
             target = ensure_target(params)
             capture = params.get("capture", {})
@@ -261,6 +275,7 @@ class AgentDomainPlugin:
                         'CAPABILITY_UNSUPPORTED',
                         'reliable submission requires trusted expectedConditions from agent.submission.capture.read',
                     )
+                validate_submission_request_id(capture.get('submissionId'))
                 service = submission_service()
                 required = {'submissionId', 'draft', 'configOperationIds', 'schema', 'mode'}
                 if not required.issubset(capture):
@@ -334,6 +349,7 @@ class AgentDomainPlugin:
                 raise WireError('INVALID_REQUEST', 'submissionId is required')
             if not production:
                 return {'outcome': 'unknown', 'submissionId': submission_id, 'resend': False}
+            validate_submission_request_id(submission_id)
             service = submission_service()
             observation = service.query(target, submission_id, 'local')
             if observation is None:

@@ -14,7 +14,4 @@ export type { Logger, LogLevel, LogHealth } from '@extensions/ordessa.contracts/
 export type { ThemeMode, ThemeService, ThemeTokens, ResolvedTheme } from '@extensions/ordessa.contracts/contract.js'
 export type { SettingsSection, SettingsItemDescriptor, DiagnosticProvider, Fault, FaultKind, DiagnosticFragment, SettingsContribution, DiagnosticsContribution } from '@extensions/ordessa.contracts/contract.js'
 export type { WirePort, WireResult, AbsentWirePort } from '@extensions/ordessa.contracts/contract.js'
-export type { HarnessAvailability, AbsentHarnessAvailability, HarnessReport, HarnessState } from '@extensions/ordessa.contracts/contract.js'
 export type { Chord, KeyChord, KeyChordError, KeybindingServiceHost, ResourceScopeLike, DisposableLike } from './services/keybindings'
-export { createAbsentHarnessAvailability, createFixtureHarnessAvailability, enforceReportInvariant, inspectBounded, INSPECT_TIMEOUT_MS } from './services/harness-availability'
-export type { FixtureBrandSpec, FixtureHarnessOptions } from './services/harness-availability'

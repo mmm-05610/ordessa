@@ -17,7 +17,8 @@
     "plugins/profile/frontend",
     "plugins/profile/integrations/chat",
     "plugins/model-provider/desktop",
-    "packages/frontend/workbench/interactions"
+    "packages/frontend/workbench/interactions",
+    "plugins/harness/contracts"
   ],
   "scripts": {
     "test:agent-ui": "node apps/desktop/scripts/test-agent-ui.mjs",

@@ -1,0 +1,114 @@
+{
+  "sourceHead": "7335f4254480efba6f31402761661c510c82e2be",
+  "qaId": "root-closeout-ee63652c-9455-49ac-b4d4-6e36c01414f5",
+  "qaWork": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-ee63652c-9455-49ac-b4d4-6e36c01414f5",
+  "stage": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.staging/root-closeout-ee63652c-9455-49ac-b4d4-6e36c01414f5",
+  "out": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-ee63652c-9455-49ac-b4d4-6e36c01414f5/out",
+  "cache": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-ee63652c-9455-49ac-b4d4-6e36c01414f5/cache",
+  "publicPath": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-ee63652c-9455-49ac-b4d4-6e36c01414f5/fixture-public.pem",
+  "signing": "Fresh controlled public Ed25519 fixture only; private key never exported or persisted",
+  "scope": "Owned build/extract only, no installation/services, no skip-pip",
+  "exitCode": 0,
+  "result": {
+    "version": "0.1.0",
+    "build": "20261004-7335f4254",
+    "deb": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-ee63652c-9455-49ac-b4d4-6e36c01414f5/out/ordessa_0.1.0_amd64.deb",
+    "debSha256": "e582bf9c8185bcc3f3174d7f84364a0b97ab48cd08ba05aaaa255c396dc13df6",
+    "debSize": 211696896,
+    "appTreeSha256": "791d4d63b1537b771ffe76cb91e6de7dc31f6482cb391f84c36bd78fd23d719f",
+    "sha256sums": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-ee63652c-9455-49ac-b4d4-6e36c01414f5/out/SHA256SUMS",
+    "bridgeSha256": "714044a5b490a53d5fa89aade993c496e5fa3a5f7c614b4465c4990575185cbd",
+    "bridgeMatchesBaseline": true,
+    "iconPlaceholder": false,
+    "metadataStubs": [],
+    "pythonSha256": "269b2c99e4db15b242bf01832f4fea1e8f1a664f273cff519393f296e9820b41",
+    "productPackages": [
+      "packages/backend/environment-api",
+      "packages/backend/persistence-sqlite",
+      "packages/backend/pacthold",
+      "packages/backend/server-plugin-api",
+      "plugins/harness/api",
+      "plugins/runtime-compat",
+      "plugins/sandbox/api",
+      "plugins/sandbox/backend",
+      "plugins/sandbox/adapters",
+      "plugins/permissions/api",
+      "plugins/permissions/backend",
+      "plugins/permissions/adapters",
+      "plugins/workspace",
+      "plugins/harness",
+      "apps/server",
+      "plugins/server-compat",
+      "plugins/model-provider/server",
+      "plugins/model-provider/profile-contribution",
+      "plugins/profile",
+      "plugins/skills",
+      "plugins/agent/backend",
+      "products/server"
+    ],
+    "pipSkipped": false,
+    "steps": [
+      {
+        "name": "python-runtime",
+        "ms": 414
+      },
+      {
+        "name": "server-deps",
+        "ms": 165354
+      },
+      {
+        "name": "product-packages",
+        "ms": 36110
+      },
+      {
+        "name": "harnesses",
+        "ms": 0
+      },
+      {
+        "name": "app",
+        "ms": 650
+      },
+      {
+        "name": "acp-bridge",
+        "ms": 471
+      },
+      {
+        "name": "bin",
+        "ms": 6
+      },
+      {
+        "name": "desktop-entry",
+        "ms": 0
+      },
+      {
+        "name": "doc",
+        "ms": 4
+      },
+      {
+        "name": "icons",
+        "ms": 1538
+      }
+    ]
+  },
+  "extractAttempts": [
+    {
+      "root": "/tmp/ordessa-026-artifact-7335-uro04or0/extracted",
+      "exitCode": 2,
+      "reason": "tar write Disk quota exceeded; partial owned extraction removed; never accepted"
+    },
+    {
+      "root": "/home/maoqh/.cache/ordessa-026-artifact-7335-ddeofjgv/extracted",
+      "exitCode": 0
+    }
+  ],
+  "cleanup": {
+    "removed": [
+      "/tmp/ordessa-026-artifact-7335-uro04or0",
+      "/tmp/ordessa-026-artifact-y8h5oxy7"
+    ],
+    "reason": "Owned reconstructable extract copies only; retained both DEBs and complete evidence",
+    "at": "2026-10-04T08:05:40.018973+00:00"
+  },
+  "extractedRoot": "/home/maoqh/.cache/ordessa-026-artifact-7335-ddeofjgv/extracted",
+  "behaviorAcceptance": "NOT_RUN"
+}

@@ -1,6 +1,6 @@
 import { PluginRegistry, type Token } from '@lumino/coreutils'
 import { Contributions, OwnedResources, type Host, type RootView, type Plugin, type PluginContext } from '@ordessa/extension-api'
-import { CommandSourceToken, DiagnosticsContributionToken, HarnessAvailabilityToken, KeybindingServiceToken, LoggerToken, SettingsContributionToken, ThemeServiceToken, WirePortToken } from '../../../contracts/foundation/src/product/tokens'
+import { CommandSourceToken, DiagnosticsContributionToken, HarnessAvailabilityServiceToken, KeybindingServiceToken, LoggerToken, SettingsContributionToken, ThemeServiceToken, WirePortToken } from '../../../contracts/foundation/src/product/tokens'
 export { scoped, OwnedResources } from '@ordessa/extension-api'
 export type { Host, RootView, Plugin } from '@ordessa/extension-api'
 export interface PluginState { id: string; phase: 'registered' | 'starting' | 'active' | 'stopped' | 'failed'; error?: string }
@@ -13,12 +13,11 @@ type DiagnosticsContribution = import('../../../contracts/foundation/src/product
 type CommandSource = import('../../../contracts/foundation/src/product/commands-keybindings').CommandSource
 type KeybindingService = import('../../../contracts/foundation/src/product/commands-keybindings').KeybindingService
 type WirePort = import('../../../contracts/foundation/src/product/wire-port').WirePort
-type HarnessAvailability = import('../../../contracts/foundation/src/product/harness-availability').HarnessAvailability
 
 export interface PlatformServiceMap {
   logger?: Logger; theme?: ThemeService; settings?: SettingsContribution
   diagnostics?: DiagnosticsContribution; commands?: CommandSource; keybindings?: KeybindingService
-  wire?: WirePort; harness?: HarnessAvailability
+  wire?: WirePort; harness?: unknown
 }
 
 /**
@@ -37,7 +36,7 @@ function registerHostServices(registry: PluginRegistry<Host>, plugins: Plugin<an
     [LoggerToken, services.logger], [ThemeServiceToken, services.theme],
     [SettingsContributionToken, services.settings], [DiagnosticsContributionToken, services.diagnostics],
     [CommandSourceToken, services.commands], [KeybindingServiceToken, services.keybindings],
-    [WirePortToken, services.wire], [HarnessAvailabilityToken, services.harness],
+    [WirePortToken, services.wire], [HarnessAvailabilityServiceToken, services.harness],
   ]
   const present = new Map<string, Token<unknown>>()
   for (const [token, service] of pairs) if (service !== undefined) present.set(token.name, token)

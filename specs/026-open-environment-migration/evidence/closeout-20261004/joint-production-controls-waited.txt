@@ -1,0 +1,26 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/model-provider/chat-contribution
+
+ ❯ tests/closeout-shared-production.test.tsx (1 test | 1 failed) 1207ms
+   × shares the production Profile and Model controls projection, preserves omitted fields, and retires one scope independently 1205ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-shared-production.test.tsx > shares the production Profile and Model controls projection, preserves omitted fields, and retires one scope independently
+AssertionError: expected null not to be null
+ ❯ tests/closeout-shared-production.test.tsx:151:121
+    149|   const selectProfile = async (name: 'A' | 'B') => {
+    150|     await act(async () => container.querySelector<HTMLElement>('[data-…
+    151|     await vi.waitFor(() => expect(document.body.querySelector(`[data-p…
+       |                                                                                                                         ^
+    152|     await act(async () => document.body.querySelector<HTMLElement>(`[d…
+    153|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  16:11:31
+   Duration  3.29s (transform 490ms, setup 0ms, import 796ms, tests 1.21s, environment 1000ms)
+

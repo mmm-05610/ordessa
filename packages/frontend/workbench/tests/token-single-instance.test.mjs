@@ -275,3 +275,13 @@ test('kind identity is per-construction: a duplicated kind literal is a function
   const agentContractsAgain = await import(pathToFileURL(path.join(extensionsRoot, 'ordessa.agent-contracts', 'contract.js')).href)
   assert.equal(agentContractsAgain.AgentClientConnectionKind, realKind, 'the same built carrier module must hand out one shared kind instance')
 })
+
+
+test('built Harness typed carrier reuses the exact platform opaque identity', async () => {
+  const platform = await import(pathToFileURL(path.join(extensionsRoot, 'ordessa.contracts', 'contract.js')).href)
+  const harness = await import(pathToFileURL(path.join(extensionsRoot, 'ordessa.harness-contracts', 'contract.js')).href)
+  assert.ok(platform.HarnessAvailabilityServiceToken, 'opaque identity must be exported by its unique constructor owner')
+  assert.equal(harness.HarnessAvailabilityToken, platform.HarnessAvailabilityServiceToken)
+  assert.equal(harness.HarnessAvailabilityToken.name, 'ordessa.harnessAvailability.v1')
+  assert.equal(platform.HarnessAvailabilityToken, undefined, 'platform must not publish a typed domain face')
+})

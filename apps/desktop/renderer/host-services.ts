@@ -1,3 +1,5 @@
+import { createAbsentHarnessAvailability } from '@ordessa/harness-contracts/service'
+import type { AbsentHarnessAvailability } from '@extensions/ordessa.harness-contracts/contract.js'
 /**
  * 渲染进程的平台服务装配（PA-16/19/21/22 的接线点）。
  *
@@ -6,7 +8,7 @@
  *   · 日志服务不直接写盘：渲染进程把记录交给主进程 sink 脱敏，避免渲染侧另起一套格式；
  *   · 缺席的服务用**缺席实现**（C-03 §6 / C-05 §5 / C-08 §4），不返回 null 让界面崩。
  */
-import { createAbsentHarnessAvailability, createCommandSource, createKeybindingService, createThemeService, listPalette, type AbsentHarnessAvailability, type CommandSourceHost, type KeybindingServiceHost, type ThemeService } from '@ordessa/extension-host/platform'
+import { createCommandSource, createKeybindingService, createThemeService, listPalette, type CommandSourceHost, type KeybindingServiceHost, type ThemeService } from '@ordessa/extension-host/platform'
 import type { CommandOutcome, DiagnosticProvider, Logger, SettingsSection, WirePort, WireResult } from '@extensions/ordessa.contracts/contract.js'
 import { NEUTRAL_TOKENS, createNeutralThemeService } from '@ordessa/extension-host/platform'
 

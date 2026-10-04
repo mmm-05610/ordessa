@@ -1,0 +1,35 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/model-provider/chat-contribution
+
+ ❯ tests/closeout-shared-production.test.tsx (1 test | 1 failed) 1108ms
+   × shares the production Profile and Model controls projection, preserves omitted fields, and retires one scope independently 1107ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-shared-production.test.tsx > shares the production Profile and Model controls projection, preserves omitted fields, and retires one scope independently
+AssertionError: Profile menu option missing. selector=[data-profile-value="harness-1::profile-A"]; catalogCalls=1; body=<div><span data-profile-picker="" style="display: inline-flex; align-items: center; gap: 4px; min-width: 0px; max-width: 100%; font-size: 12px;"><style>[data-profile-picker] select{height:28px!important;max-width:180px;padding:0 20px 0 7px!important;border:0!important;border-radius:7px!important;background-color:transparent!important;color:inherit;font:inherit!important;cursor:pointer}[data-profile-picker] button{height:26px;padding:0 6px;border:0;border-radius:6px;background:transparent;color:#77777e;font:inherit;cursor:pointer}[data-profile-picker] select:hover,[data-profile-picker] button:hover{background-color:#88888812!important}[data-profile-picker] :focus-visible{outline:2px solid #548fe5;outline-offset:2px}[data-profile-picker] [role=status],[data-profile-picker] [role=alert]{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#77777e}</style><button type="button" id="radix-_r_0_" aria-haspopup="menu" aria-expanded="false" data-state="closed" aria-label="配置预设" data-profile-trigger="">选择预设 <span aria-hidden="true">⌄</span></button><style>[data-profile-menu] [role=menuitem]{padding:8px 10px;border-radius:7px;outline:0;cursor:pointer}[data-profile-menu] [data-highlighted]{background:#88888816}[data-profile-menu] [data-disabled]{opacity:.45;cursor:default}[data-profile-trigger]{max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}</style><button type="button" aria-label="刷新预设" title="刷新预设" data-profile-refresh=""><span aria-hidden="true">↻</span></button><style>[data-profile-picker] select{min-width:0;flex:0 1 auto}[data-profile-picker] [role=status],[data-profile-picker] [role=alert]{min-width:0;flex:0 1 auto}[data-profile-picker] [role=alert]{min-width:64px}[data-profile-picker] button{flex-shrink:0}</style></span><div data-testid="model-selector" style="display: inline-flex; min-width: 0px; max-width: 100%;"><style>
+.mp-selector-trigger{display:inline-flex;align-items:center;gap:6px;max-width:100%;height:28px;padding:0 7px;border:0;border-radius:7px;background:transparent;color:inherit;font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}
+.mp-selector-trigger>span:first-child{overflow:hidden;text-overflow:ellipsis}.mp-selector-trigger small{color:#858589;font-size:10px}.mp-selector-trigger:hover{background:#88888812}
+.mp-selector-trigger:focus-visible,.mp-selector-option:focus-visible{outline:2px solid #548fe5;outline-offset:2px}
+.mp-selector-popover{z-index:1000;box-sizing:border-box;overflow:auto;padding:8px;background:var(--ordessa-color-surface,#fff);color:var(--ordessa-color-text,#242426);border:1px solid var(--ordessa-color-border,#88888830);border-radius:14px;box-shadow:0 8px 30px #00000018;font:12px/1.5 system-ui,sans-serif}
+.mp-selector-heading{display:flex;justify-content:space-between;gap:12px;padding:6px 8px;font-weight:600}.mp-selector-heading span{color:#858589;font-size:11px;font-weight:400}
+.mp-selector-group{padding:10px 8px 4px;color:#77777e;font-size:11px}.mp-selector-option{display:block;width:100%;text-align:left;padding:7px 9px;background:transparent;color:inherit;border:0;border-radius:8px;font:inherit;cursor:pointer}.mp-selector-option:hover,.mp-selector-option:focus{background:#88888812}.mp-selector-option[aria-disabled=true]{cursor:not-allowed}.mp-selector-model{display:flex;justify-content:space-between;font-size:13px}.mp-selector-evidence{display:block;color:#77777e;font-size:11px;overflow-wrap:anywhere}.mp-selector-popover p{padding:4px 8px;margin:6px 0;font-size:12px;overflow-wrap:anywhere}
+.mp-selector-heading span,.mp-selector-group,.mp-selector-evidence{color:var(--ordessa-color-muted,#77777e)}
+@media(prefers-color-scheme:dark){.mp-selector-popover{background:var(--ordessa-color-surface,#252526);color:var(--ordessa-color-text,#eee)}}
+</style><button type="button" class="mp-selector-trigger" aria-haspopup="listbox" aria-expanded="false" data-testid="model-selector-trigger"><span>模型</span><span aria-hidden="true">⌄</span></button></div></div>; wire=[{"method":"agent.session.resolve","params":{"location":{"kind":"draft","draftId":"draft-1","connectionId":"connection-1","serverInstanceId":"server-1","projectId":"project-1","harnessId":"harness-1","contextRevision":4,"runtimeGeneration":9}}},{"method":"agent.config.read","params":{"target":"canonical-draft-1"}},{"method":"agent.session.resolve","params":{"location":{"kind":"draft","draftId":"draft-1","connectionId":"connection-1","serverInstanceId":"server-1","projectId":"project-1","harnessId":"harness-1","contextRevision":4,"runtimeGeneration":9}}},{"method":"agent.config.read","params":{"target":"canonical-draft-1"}},{"method":"modelProvider.inspectChoice","params":{"harnessId":"harness-1","providerConfigId":"provider-1","modelId":"model-1","configVersion":7}},{"method":"modelProvider.inspectChoice","params":{"harnessId":"harness-1","providerConfigId":"provider-1","modelId":"model-2","configVersion":7}}]: expected null not to be null
+ ❯ tests/closeout-shared-production.test.tsx:157:83
+    155|     await vi.waitFor(() => expect(document.body.querySelector(selector…
+    156|       `Profile menu option missing. selector=${selector}; catalogCalls…
+    157|       + `body=${document.body.innerHTML}; wire=${JSON.stringify(wireCa…
+       |                                                                                   ^
+    158|     await act(async () => document.body.querySelector<HTMLElement>(`[d…
+    159|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  16:14:38
+   Duration  2.66s (transform 396ms, setup 0ms, import 608ms, tests 1.11s, environment 670ms)
+

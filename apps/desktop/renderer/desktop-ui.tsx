@@ -1,3 +1,4 @@
+import { type HarnessReport } from '@extensions/ordessa.harness-contracts/contract.js'
 /**
  * 宿主 UI：故障屏、设置页、关于面板、命令面板、Harness 可用性面板。
  * 纪律（C-05 §2 / C-06 / C-07 / C-08）：
@@ -7,7 +8,7 @@
  *   · 键盘可达：面板可用 Tab / ↑↓ / Enter / Esc 走完，不需要鼠标。
  */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import type { CommandOutcome, DiagnosticFragment, Fault, HarnessReport, SettingsSection } from '@extensions/ordessa.contracts/contract.js'
+import type { CommandOutcome, DiagnosticFragment, Fault, SettingsSection } from '@extensions/ordessa.contracts/contract.js'
 
 // --- PA-12 故障屏 -----------------------------------------------------------
 

@@ -1,0 +1,13 @@
+{
+  "name": "@ordessa/harness-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/contract.ts",
+    "./service": "./src/service.ts"
+  },
+  "ordessa": {
+    "id": "ordessa.harness-contracts"
+  }
+}

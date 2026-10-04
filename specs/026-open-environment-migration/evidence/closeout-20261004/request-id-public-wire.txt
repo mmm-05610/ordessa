@@ -1,0 +1,273 @@
+.FFFF............                                                        [100%]
+=================================== FAILURES ===================================
+_ test_public_wire_invalid_identity_is_permanent_and_has_no_submission_effect[agent.submitInput-Uppercase-1] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-864/test_public_wire_invalid_ident0')
+submission_id = 'Uppercase-1', method = 'agent.submitInput'
+
+    @pytest.mark.parametrize("submission_id", ["Uppercase-1", "1starts-with-digit", "has:colon", "x" * 65])
+    @pytest.mark.parametrize("method", ["agent.submitInput", "agent.submission.query"])
+    def test_public_wire_invalid_identity_is_permanent_and_has_no_submission_effect(tmp_path, submission_id, method):
+        native = ControlledNativeFixture(tmp_path / "native-effects.sqlite", mode="existing")
+        runtime = controlled_product_composition(
+            native_submit_port=native,
+            fingerprint_port=_test_fingerprint_fixture(),
+            submission_policy=controlled_submission_policy(),
+        ).default_runtime(tmp_path / "server-data", include_profile=False)
+        try:
+            runtime.start()
+            location = {"kind": "draft", "connectionId": "controlled-connection", "draftId": "controlled-draft-1"}
+            target = runtime.wire.dispatch("agent.session.resolve", {"location": location})["target"]
+            native.bind_backend_target(target)
+            params = {"target": target, "submissionId": submission_id}
+            if method == "agent.submitInput":
+>               conditions = runtime.wire.dispatch("agent.submission.capture.read", {"target": target})
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+products/server/tests/test_closeout_expected_conditions_wire.py:78: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_server.wire.handlers.WireService object at 0x761855ab9ee0>
+method = 'agent.submission.capture.read'
+params = {'target': 'agent-draft-a0e016b514ab4bfea1ecd2c2c43e9f42'}
+
+    def dispatch(self, method: str, params: Mapping[str, Any]) -> Any:
+        descriptor = self._registry.lookup(method)
+        if descriptor is None:
+            raise WireError("INVALID_REQUEST", f"{method} is not a wire/1 method")
+        # 026 T006-02: the round gate. Activation populates this registry at
+        # composition time, so a built-but-never-started runtime carries every
+        # business row and would otherwise answer fabricated empty reads from
+        # domains that have no live round behind them. A round that is not
+        # started (never started, or stopped) therefore refuses every method
+        # except the host's discovery face — `server.hello` is how a client
+        # learns this Server exists at all — with an existing wire family and
+        # the internal code in details, never a new top-level error face. The
+        # gate sits AFTER the existence refusal on purpose: what is NOT
+        # registered keeps its unknown-method answer (the stopped round's rows
+        # are unregistered by shutdown, so a stopped round refuses exactly as
+        # the pinned T006-05 tests expect), and what IS registered but has no
+        # live round gets the round refusal below.
+        if method != "server.hello" and not self._round_open():
+            raise WireError(
+                "INVALID_REQUEST",
+                "this Server's round is not started; wire/1 methods answer only a started round",
+                {"internalCode": "ROUND_NOT_STARTED", "retryable": True},
+            )
+        missing = descriptor.required_params - set(params)
+        extra = set(params) - descriptor.required_params - descriptor.optional_params
+        if missing or extra:
+            reason = "missing " + ", ".join(sorted(missing)) if missing else (
+                "unexpected " + ", ".join(sorted(extra))
+            )
+>           raise WireError("INVALID_REQUEST", f"params shape is invalid: {reason}")
+E           server_plugin_api.wire_errors.WireError: params shape is invalid: missing mode
+
+apps/server/src/ordessa_server/wire/handlers.py:217: WireError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-864/test_public_wire_invalid_ident0/server-data/state/agentbox.sqlite
+_ test_public_wire_invalid_identity_is_permanent_and_has_no_submission_effect[agent.submitInput-1starts-with-digit] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-864/test_public_wire_invalid_ident1')
+submission_id = '1starts-with-digit', method = 'agent.submitInput'
+
+    @pytest.mark.parametrize("submission_id", ["Uppercase-1", "1starts-with-digit", "has:colon", "x" * 65])
+    @pytest.mark.parametrize("method", ["agent.submitInput", "agent.submission.query"])
+    def test_public_wire_invalid_identity_is_permanent_and_has_no_submission_effect(tmp_path, submission_id, method):
+        native = ControlledNativeFixture(tmp_path / "native-effects.sqlite", mode="existing")
+        runtime = controlled_product_composition(
+            native_submit_port=native,
+            fingerprint_port=_test_fingerprint_fixture(),
+            submission_policy=controlled_submission_policy(),
+        ).default_runtime(tmp_path / "server-data", include_profile=False)
+        try:
+            runtime.start()
+            location = {"kind": "draft", "connectionId": "controlled-connection", "draftId": "controlled-draft-1"}
+            target = runtime.wire.dispatch("agent.session.resolve", {"location": location})["target"]
+            native.bind_backend_target(target)
+            params = {"target": target, "submissionId": submission_id}
+            if method == "agent.submitInput":
+>               conditions = runtime.wire.dispatch("agent.submission.capture.read", {"target": target})
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+products/server/tests/test_closeout_expected_conditions_wire.py:78: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_server.wire.handlers.WireService object at 0x761855af4920>
+method = 'agent.submission.capture.read'
+params = {'target': 'agent-draft-78541d6722a8449faed6f0b78bc1811b'}
+
+    def dispatch(self, method: str, params: Mapping[str, Any]) -> Any:
+        descriptor = self._registry.lookup(method)
+        if descriptor is None:
+            raise WireError("INVALID_REQUEST", f"{method} is not a wire/1 method")
+        # 026 T006-02: the round gate. Activation populates this registry at
+        # composition time, so a built-but-never-started runtime carries every
+        # business row and would otherwise answer fabricated empty reads from
+        # domains that have no live round behind them. A round that is not
+        # started (never started, or stopped) therefore refuses every method
+        # except the host's discovery face — `server.hello` is how a client
+        # learns this Server exists at all — with an existing wire family and
+        # the internal code in details, never a new top-level error face. The
+        # gate sits AFTER the existence refusal on purpose: what is NOT
+        # registered keeps its unknown-method answer (the stopped round's rows
+        # are unregistered by shutdown, so a stopped round refuses exactly as
+        # the pinned T006-05 tests expect), and what IS registered but has no
+        # live round gets the round refusal below.
+        if method != "server.hello" and not self._round_open():
+            raise WireError(
+                "INVALID_REQUEST",
+                "this Server's round is not started; wire/1 methods answer only a started round",
+                {"internalCode": "ROUND_NOT_STARTED", "retryable": True},
+            )
+        missing = descriptor.required_params - set(params)
+        extra = set(params) - descriptor.required_params - descriptor.optional_params
+        if missing or extra:
+            reason = "missing " + ", ".join(sorted(missing)) if missing else (
+                "unexpected " + ", ".join(sorted(extra))
+            )
+>           raise WireError("INVALID_REQUEST", f"params shape is invalid: {reason}")
+E           server_plugin_api.wire_errors.WireError: params shape is invalid: missing mode
+
+apps/server/src/ordessa_server/wire/handlers.py:217: WireError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-864/test_public_wire_invalid_ident1/server-data/state/agentbox.sqlite
+_ test_public_wire_invalid_identity_is_permanent_and_has_no_submission_effect[agent.submitInput-has:colon] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-864/test_public_wire_invalid_ident2')
+submission_id = 'has:colon', method = 'agent.submitInput'
+
+    @pytest.mark.parametrize("submission_id", ["Uppercase-1", "1starts-with-digit", "has:colon", "x" * 65])
+    @pytest.mark.parametrize("method", ["agent.submitInput", "agent.submission.query"])
+    def test_public_wire_invalid_identity_is_permanent_and_has_no_submission_effect(tmp_path, submission_id, method):
+        native = ControlledNativeFixture(tmp_path / "native-effects.sqlite", mode="existing")
+        runtime = controlled_product_composition(
+            native_submit_port=native,
+            fingerprint_port=_test_fingerprint_fixture(),
+            submission_policy=controlled_submission_policy(),
+        ).default_runtime(tmp_path / "server-data", include_profile=False)
+        try:
+            runtime.start()
+            location = {"kind": "draft", "connectionId": "controlled-connection", "draftId": "controlled-draft-1"}
+            target = runtime.wire.dispatch("agent.session.resolve", {"location": location})["target"]
+            native.bind_backend_target(target)
+            params = {"target": target, "submissionId": submission_id}
+            if method == "agent.submitInput":
+>               conditions = runtime.wire.dispatch("agent.submission.capture.read", {"target": target})
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+products/server/tests/test_closeout_expected_conditions_wire.py:78: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_server.wire.handlers.WireService object at 0x761855a4bc50>
+method = 'agent.submission.capture.read'
+params = {'target': 'agent-draft-b1eef46b7e7444fcbb289722cfd1b35c'}
+
+    def dispatch(self, method: str, params: Mapping[str, Any]) -> Any:
+        descriptor = self._registry.lookup(method)
+        if descriptor is None:
+            raise WireError("INVALID_REQUEST", f"{method} is not a wire/1 method")
+        # 026 T006-02: the round gate. Activation populates this registry at
+        # composition time, so a built-but-never-started runtime carries every
+        # business row and would otherwise answer fabricated empty reads from
+        # domains that have no live round behind them. A round that is not
+        # started (never started, or stopped) therefore refuses every method
+        # except the host's discovery face — `server.hello` is how a client
+        # learns this Server exists at all — with an existing wire family and
+        # the internal code in details, never a new top-level error face. The
+        # gate sits AFTER the existence refusal on purpose: what is NOT
+        # registered keeps its unknown-method answer (the stopped round's rows
+        # are unregistered by shutdown, so a stopped round refuses exactly as
+        # the pinned T006-05 tests expect), and what IS registered but has no
+        # live round gets the round refusal below.
+        if method != "server.hello" and not self._round_open():
+            raise WireError(
+                "INVALID_REQUEST",
+                "this Server's round is not started; wire/1 methods answer only a started round",
+                {"internalCode": "ROUND_NOT_STARTED", "retryable": True},
+            )
+        missing = descriptor.required_params - set(params)
+        extra = set(params) - descriptor.required_params - descriptor.optional_params
+        if missing or extra:
+            reason = "missing " + ", ".join(sorted(missing)) if missing else (
+                "unexpected " + ", ".join(sorted(extra))
+            )
+>           raise WireError("INVALID_REQUEST", f"params shape is invalid: {reason}")
+E           server_plugin_api.wire_errors.WireError: params shape is invalid: missing mode
+
+apps/server/src/ordessa_server/wire/handlers.py:217: WireError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-864/test_public_wire_invalid_ident2/server-data/state/agentbox.sqlite
+_ test_public_wire_invalid_identity_is_permanent_and_has_no_submission_effect[agent.submitInput-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-864/test_public_wire_invalid_ident3')
+submission_id = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+method = 'agent.submitInput'
+
+    @pytest.mark.parametrize("submission_id", ["Uppercase-1", "1starts-with-digit", "has:colon", "x" * 65])
+    @pytest.mark.parametrize("method", ["agent.submitInput", "agent.submission.query"])
+    def test_public_wire_invalid_identity_is_permanent_and_has_no_submission_effect(tmp_path, submission_id, method):
+        native = ControlledNativeFixture(tmp_path / "native-effects.sqlite", mode="existing")
+        runtime = controlled_product_composition(
+            native_submit_port=native,
+            fingerprint_port=_test_fingerprint_fixture(),
+            submission_policy=controlled_submission_policy(),
+        ).default_runtime(tmp_path / "server-data", include_profile=False)
+        try:
+            runtime.start()
+            location = {"kind": "draft", "connectionId": "controlled-connection", "draftId": "controlled-draft-1"}
+            target = runtime.wire.dispatch("agent.session.resolve", {"location": location})["target"]
+            native.bind_backend_target(target)
+            params = {"target": target, "submissionId": submission_id}
+            if method == "agent.submitInput":
+>               conditions = runtime.wire.dispatch("agent.submission.capture.read", {"target": target})
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+products/server/tests/test_closeout_expected_conditions_wire.py:78: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_server.wire.handlers.WireService object at 0x761855af4ec0>
+method = 'agent.submission.capture.read'
+params = {'target': 'agent-draft-8ffd2b4edaed400e8e041f32efee54f8'}
+
+    def dispatch(self, method: str, params: Mapping[str, Any]) -> Any:
+        descriptor = self._registry.lookup(method)
+        if descriptor is None:
+            raise WireError("INVALID_REQUEST", f"{method} is not a wire/1 method")
+        # 026 T006-02: the round gate. Activation populates this registry at
+        # composition time, so a built-but-never-started runtime carries every
+        # business row and would otherwise answer fabricated empty reads from
+        # domains that have no live round behind them. A round that is not
+        # started (never started, or stopped) therefore refuses every method
+        # except the host's discovery face — `server.hello` is how a client
+        # learns this Server exists at all — with an existing wire family and
+        # the internal code in details, never a new top-level error face. The
+        # gate sits AFTER the existence refusal on purpose: what is NOT
+        # registered keeps its unknown-method answer (the stopped round's rows
+        # are unregistered by shutdown, so a stopped round refuses exactly as
+        # the pinned T006-05 tests expect), and what IS registered but has no
+        # live round gets the round refusal below.
+        if method != "server.hello" and not self._round_open():
+            raise WireError(
+                "INVALID_REQUEST",
+                "this Server's round is not started; wire/1 methods answer only a started round",
+                {"internalCode": "ROUND_NOT_STARTED", "retryable": True},
+            )
+        missing = descriptor.required_params - set(params)
+        extra = set(params) - descriptor.required_params - descriptor.optional_params
+        if missing or extra:
+            reason = "missing " + ", ".join(sorted(missing)) if missing else (
+                "unexpected " + ", ".join(sorted(extra))
+            )
+>           raise WireError("INVALID_REQUEST", f"params shape is invalid: {reason}")
+E           server_plugin_api.wire_errors.WireError: params shape is invalid: missing mode
+
+apps/server/src/ordessa_server/wire/handlers.py:217: WireError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-864/test_public_wire_invalid_ident3/server-data/state/agentbox.sqlite
+=========================== short test summary info ============================
+FAILED plugins/agent/backend::test_public_wire_invalid_identity_is_permanent_and_has_no_submission_effect[agent.submitInput-Uppercase-1]
+FAILED plugins/agent/backend::test_public_wire_invalid_identity_is_permanent_and_has_no_submission_effect[agent.submitInput-1starts-with-digit]
+FAILED plugins/agent/backend::test_public_wire_invalid_identity_is_permanent_and_has_no_submission_effect[agent.submitInput-has:colon]
+FAILED plugins/agent/backend::test_public_wire_invalid_identity_is_permanent_and_has_no_submission_effect[agent.submitInput-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx]
+4 failed, 13 passed in 0.73s

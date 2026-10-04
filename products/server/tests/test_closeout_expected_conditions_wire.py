@@ -57,3 +57,39 @@ def test_public_wire_requires_conditions_before_journal_or_native_effect(tmp_pat
         assert not journal_path.exists()
     finally:
         runtime.stop()
+
+
+@pytest.mark.parametrize("submission_id", ["Uppercase-1", "1starts-with-digit", "has:colon", "x" * 65])
+@pytest.mark.parametrize("method", ["agent.submitInput", "agent.submission.query"])
+def test_public_wire_invalid_identity_is_permanent_and_has_no_submission_effect(tmp_path, submission_id, method):
+    native = ControlledNativeFixture(tmp_path / "native-effects.sqlite", mode="existing")
+    runtime = controlled_product_composition(
+        native_submit_port=native,
+        fingerprint_port=_test_fingerprint_fixture(),
+        submission_policy=controlled_submission_policy(),
+    ).default_runtime(tmp_path / "server-data", include_profile=False)
+    try:
+        runtime.start()
+        location = {"kind": "draft", "connectionId": "controlled-connection", "draftId": "controlled-draft-1"}
+        target = runtime.wire.dispatch("agent.session.resolve", {"location": location})["target"]
+        native.bind_backend_target(target)
+        params = {"target": target, "submissionId": submission_id}
+        if method == "agent.submitInput":
+            # Invalid identity is rejected before any source capture/journal work.
+            # A mapping exists so this is not the missing-conditions guard.
+            conditions = {}
+            params = {"target": target, "draftRevision": 1, "capture": {
+                "submissionId": submission_id,
+                "draft": {"draftId": "controlled-draft-1", "draftRevision": 1,
+                          "text": "must not dispatch", "attachmentIds": []},
+                "configOperationIds": [], "schema": "agent-input/v1", "mode": "existing",
+                "expectedConditions": conditions,
+            }}
+        with pytest.raises(WireError) as failure:
+            runtime.wire.dispatch(method, params)
+        assert failure.value.family == "INVALID_REQUEST"
+        assert native.dispatches == []
+        assert native.all_effect_counts() == {}
+        assert not (tmp_path / "server-data" / "plugins" / "agent" / "submissions.sqlite").exists()
+    finally:
+        runtime.stop()

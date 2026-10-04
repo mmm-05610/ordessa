@@ -328,3 +328,20 @@ test('without the Agent implementations the built domain carrier still exports a
   assert.equal(await readFile(lockFile, 'utf8'), snapshot.lock, 'extensions.lock.json changed around the variant builds')
   assert.deepEqual(await digestTree(realExtensionsRoot), snapshot.dist, 'products/desktop/dist changed around the variant builds')
 })
+
+
+test('Harness domain API and behavior live in the Harness carrier while platform keeps only opaque identity', async () => {
+  const harnessRoot = path.join(repoRoot, 'plugins/harness/contracts')
+  const domain = await readFile(path.join(harnessRoot, 'src/harness-availability.ts'), 'utf8')
+  for (const name of ['HarnessAvailability', 'HarnessReport', 'HarnessState', 'AbsentHarnessAvailability']) {
+    assert.match(domain, new RegExp(`export (?:interface|type) ${name}\\b`))
+    for (const { file, source } of await platformSources()) {
+      assert.doesNotMatch(source, new RegExp(`(?:interface|type)\\s+${name}\\b`), `${file} must not declare Harness domain API`)
+    }
+  }
+  const publicCarrier = await readFile(path.join(harnessRoot, 'src/contract.ts'), 'utf8')
+  assert.match(publicCarrier, /HarnessAvailabilityServiceToken as Token<HarnessAvailability>/)
+  assert.doesNotMatch(publicCarrier, /new Token/)
+  const platform = await readFile(path.join(platformRoot, 'extension-runtime/host/src/platform.ts'), 'utf8')
+  assert.doesNotMatch(platform, /HarnessAvailability|FixtureHarness|FixtureBrand|inspectBounded/)
+})

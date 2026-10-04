@@ -6,6 +6,5 @@
  * 名称即 lumino 解析键（`application[token.name]`/provides 注册），不得随意改写。
  */
 import { Token } from '@lumino/coreutils'
-import type { HarnessAvailability } from '../harness-availability'
 
-export const HarnessAvailabilityToken = new Token<HarnessAvailability>('ordessa.harnessAvailability.v1')
+export const HarnessAvailabilityServiceToken = new Token<unknown>('ordessa.harnessAvailability.v1')

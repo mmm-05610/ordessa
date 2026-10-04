@@ -5,7 +5,7 @@
  * 本文件不参与任何运行时加载。
  */
 import type {
-  AbsentWirePort, CommandOutcome, CommandSource, DiagnosticFragment, Fault, HarnessReport, HarnessState,
+  AbsentWirePort, CommandOutcome, CommandSource, DiagnosticFragment, Fault,
   Keybinding, LogFields, LogLevel, SettingsSection, ThemeMode, ThemeTokens, WirePort, WireResult,
 } from './index'
 import type { Command } from './commands-keybindings'
@@ -16,7 +16,6 @@ declare const wire: WirePort
 declare const result: WireResult
 declare const tokens: ThemeTokens
 declare const section: SettingsSection
-declare const report: HarnessReport
 declare const outcome: CommandOutcome
 declare const source: CommandSource
 declare const absent: AbsentWirePort
@@ -42,7 +41,6 @@ void source.forScope(scope).add(command)
 const key: Keybinding = { commandId: 'example.send', key: 'Mod+Enter' }
 void key
 void wire.call('example.method', { a: 1 })
-void report.state
 void outcome.kind
 void absent.ready
 void tokens.color.accent
@@ -58,17 +56,12 @@ tokens = {} as ThemeTokens
 command.id = 'other'
 // @ts-expect-error 设置分区 id 只读。
 section.id = 'other'
-// @ts-expect-error 可用性报告不可变。
-report.state = 'available'
 // @ts-expect-error 三态结果不可变：不得把 Refused 就地升级为 Accepted。
 result.kind = 'Accepted'
 // @ts-expect-error 传输口 ready 是只读事实。
 wire.ready = true
 
 // --- 反例：三态与类型化形状 --------------------------------------------------
-// @ts-expect-error 非法状态名：不得自造第四态。
-const badState: HarnessState = 'ready'
-void badState
 // @ts-expect-error `unknown` 不得携带 retryable：无法确定时没有重试判据。
 const unknownWithRetry: WireResult = { kind: 'Unknown', requestId: 'r', reason: 'x', retryable: true }
 void unknownWithRetry

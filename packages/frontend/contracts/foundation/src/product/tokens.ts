@@ -13,14 +13,13 @@ export { DiagnosticsContributionToken } from './token/DiagnosticsContributionTok
 export { CommandSourceToken } from './token/CommandSourceToken'
 export { KeybindingServiceToken } from './token/KeybindingServiceToken'
 export { WirePortToken } from './token/WirePortToken'
-export { HarnessAvailabilityToken } from './token/HarnessAvailabilityToken'
+export { HarnessAvailabilityServiceToken } from './token/HarnessAvailabilityToken'
 
 import type { Logger } from './logging'
 import type { ThemeService } from './theme'
 import type { SettingsContribution, DiagnosticsContribution } from './settings-diagnostics'
 import type { CommandSource, KeybindingService } from './commands-keybindings'
 import type { WirePort } from './wire-port'
-import type { HarnessAvailability } from './harness-availability'
 
 /** 宿主注入的整套平台服务；缺席语义由各服务自身实现（C-05 §5 / C-03 §6 / C-08 §4）。 */
 export interface PlatformServices {
@@ -31,5 +30,5 @@ export interface PlatformServices {
   readonly commands?: CommandSource
   readonly keybindings?: KeybindingService
   readonly wire?: WirePort
-  readonly harness?: HarnessAvailability
+  readonly harness?: unknown
 }
