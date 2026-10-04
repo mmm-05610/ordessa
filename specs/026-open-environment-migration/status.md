@@ -1,3 +1,7 @@
+## 013 生命周期与恢复检查点（最新）
+
+同一 Environment 的 host owner 生命周期已补齐；中性装配保持五参数与 state/core.sqlite。23 场景装配/生命周期和 63 场景门禁/提交恢复分别通过，均零 skip；附件与只读恢复组合 57 通过。完整证据及失败保留见 evidence/closeout-20261004/lifecycle-recovery-checkpoint.md。原任务仍 107/129，端到端前端提交与发行未完成；UI01 独立排队，历史验收不抵新增覆盖。
+
 ## 2026-10-04 公共 UI 增量已接收，排在013之后
 
 UI-FOUNDATIONS-20261004三份设计已完整读入，按内容新增文件，仅给README增入口；原contracts/status/evidence/tasks/额外守卫保留。接收HEAD 29f00be68500cdeb5fc7558de34e20f9f0d6dfe7，当前013阶段2/3后端检查点已提交、前端/发行/全回归仍进行中；不打断Luna写者。摘要/脏项/写者/阶段见evidence/ui-foundations/receipt.json。UI-T01–08、UI-A01–12见该目录ledger.md，全部QUEUED/NOT_RUN，UI-T01仅接收部分，不冒报接口冻结。默认013收尾后冻结增量接口，再复用Lumino/F5/公共交互并用两个中性消费者验证；无领域全面redesign、第二总线/弹层/业务store/配置权威。无额外外部运行授权。

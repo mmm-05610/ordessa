@@ -123,20 +123,28 @@ class ControlledNativeFixture:
         except KeyError as error:
             raise FileNotFoundError(f"controlled attachment unavailable: {attachment_id}") from error
 
-    def submit_existing(self, request: RequestKey, capture: Any) -> None:
-        self._record_effect(request, capture, mode="existing")
+    def submit_existing(self, request: RequestKey, capture: Any, *,
+                        attachments: Mapping[str, bytes]) -> None:
+        self._record_effect(request, capture, attachments=attachments, mode="existing")
 
-    def create_with_config(self, request: RequestKey, capture: Any) -> None:
-        self._record_effect(request, capture, mode="createWithConfig")
+    def create_with_config(self, request: RequestKey, capture: Any, *,
+                           attachments: Mapping[str, bytes]) -> None:
+        self._record_effect(request, capture, attachments=attachments, mode="createWithConfig")
 
-    def _record_effect(self, request: RequestKey, capture: Any, *, mode: str) -> None:
+    def _record_effect(self, request: RequestKey, capture: Any, *,
+                       attachments: Mapping[str, bytes], mode: str) -> None:
         if mode != self.mode:
             raise RuntimeError("native method does not match the externally selected mode")
         if self._target is None or capture.target.get("target") != self._target:
             raise RuntimeError("capture target does not match native target binding")
+        attachment_ids = tuple(capture.draft.get("attachmentIds", ()))
+        if set(attachments) != set(attachment_ids) or any(
+            not isinstance(content, bytes) for content in attachments.values()
+        ):
+            raise RuntimeError("native submission requires the exact immutable captured attachment bytes")
         attachment_hashes = {
-            attachment_id: hashlib.sha256(self.read_attachment(self._target, attachment_id)).hexdigest()
-            for attachment_id in capture.draft.get("attachmentIds", ())
+            attachment_id: hashlib.sha256(attachments[attachment_id]).hexdigest()
+            for attachment_id in attachment_ids
         }
         config_apply = {
             "outcome": "applied",

@@ -117,3 +117,9 @@ adapter 把部分原生非重试错误发成 Agent 正文且 ACP end_turn，不�
 | qoder sessions pids 36036/66577 (bc-native), 66935 (fc-functional), 273506 (desktop-ui-codex) | idle-but-alive executor sessions | **No** — read-only on their trees |
 | Old trial servers 18790 / 18810 | stopped (no listener, 2026-09-25) | n/a |
 | `.c1-001-runtime/`, `.c1-001-secrets/`, `runtime/native-pi-user` in the workspace root | run data + credentials (one 64-byte token registered, never read) | **No** — environment exceptions, never enter git |
+
+## 026 / 013 本次收尾回归（2026-10-04）
+
+同树全量 Server 检查点为 84 failed / 1205 passed / 9 skipped / 2 errors；精确 ID 和基线差异保留在 specs/026-open-environment-migration/evidence/closeout-20261004/server-red-comparison.txt（17 新增 ID），原始输出 server-full-checkpoint.txt。后续 23 场景和 63 场景窄验证修复了装配五参数、T016、新 owner 生命周期和故障回收输入；没有重新跑全量，不宣称全量变绿。
+
+剩余旧 CoreRuntime/store/sidecar 依赖断言与单 Environment 合同冲突仍登记；实际生产原生 first-send 路由缺口、前端 Chat 可靠提交/原键恢复接线和干净发行验证仍未收口。受控 native fixture 与 SIGKILL 证据不覆盖真实 Harness 内部业务、真实模型或 GUI/IME。UI01 追加独立排队，不能替代这些缺口。

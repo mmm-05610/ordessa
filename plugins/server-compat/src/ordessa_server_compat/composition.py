@@ -438,7 +438,8 @@ def build_runtime_from_native_adapter(
     channel_selection_resolver=None,
     native_transport_admitter=None,
     bootstrap_native_profile: bool | None = None,
-    product_composition=None,
+    product_selection=None,
+    database_factory=None,
 ) -> ServerRuntime:
     """Compose current-user ACP Agents in an explicitly native Server.
 
@@ -457,6 +458,7 @@ def build_runtime_from_native_adapter(
     from ordessa_server_compat.plugin import ServerCompatPlugin
     from ordessa_workspace.local_environment import LocalEnvironmentProvider
     from ordessa_workspace.plugin import WorkspaceServerPlugin
+    from server_plugin_api import ServerPluginSelection
 
     if not re.fullmatch(r"[a-z][a-z0-9._-]{0,63}", harness_id):
         raise RuntimeError("NATIVE_HARNESS_INVALID")
@@ -709,13 +711,28 @@ def build_runtime_from_native_adapter(
     # table), giving the admission gate its product authority. The dual-write
     # guard stays armed for the legacy-delegated route.
     from ordessa_permissions_backend.plugin import PermissionsBackendPlugin
+    native_plugins = (WorkspaceServerPlugin(), compat, acp,
+                      PermissionsBackendPlugin(), *extra_server_plugins)
+    if product_selection is None:
+        selected_plugins = native_plugins
+    else:
+        if not isinstance(product_selection, ServerPluginSelection):
+            raise TypeError("product_selection must be a ServerPluginSelection")
+        # The helper owns the native plugin instances. Copy only the product's
+        # neutral host declarations onto that explicit sequence; no product
+        # object or domain composition bag enters build_runtime.
+        selected_plugins = ServerPluginSelection(
+            plugins=native_plugins,
+            contribution_points=product_selection.contribution_points,
+            environment_factory=product_selection.environment_factory,
+            owned_environment_factory=product_selection.owned_environment_factory,
+        )
     runtime = build_runtime(
         root,
         secret_store=secret_store,
         local_workspace_provider=LocalEnvironmentProvider(execution_mode="native"),
-        server_plugins=(WorkspaceServerPlugin(), compat, acp,
-                        PermissionsBackendPlugin(), *extra_server_plugins),
-        product_composition=product_composition,
+        server_plugins=selected_plugins,
+        database_factory=database_factory,
     )
     if new_profile_root:
         try:

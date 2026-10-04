@@ -23,6 +23,8 @@ stays host-side is per-composition state (the contributed family aggregate).
 """
 from __future__ import annotations
 
+from .selection import ServerPluginSelection
+
 from .acp_admission import (
     ACP_ADMISSION_PORT,
     ACP_ADMISSION_PORT_VERSION,
@@ -113,6 +115,7 @@ from .errors import (
 )
 
 __all__ = [
+    "ServerPluginSelection",
     "ACP_ADMISSION_PORT",
     "ACP_ADMISSION_PORT_VERSION",
     "AcpAdmissionPort",

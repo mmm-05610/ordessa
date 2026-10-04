@@ -1,0 +1,146 @@
+F...F                                                                    [100%]
+=================================== FAILURES ===================================
+_ test_core_binding_host_activation_installs_and_explicitly_enables_one_owner __
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-844/test_core_binding_host_activat0')
+
+    def test_core_binding_host_activation_installs_and_explicitly_enables_one_owner(tmp_path):
+        environment = Environment("host-owner")
+        binding = CoreBinding(
+            tmp_path / "unused.sqlite",
+            environment_factory=lambda _path: environment,
+        )
+        host = ServerPluginHost()
+        host.register_contribution_point(
+            PACTHOLD_CONTRIBUTIONS_POINT_ID,
+            PACTHOLD_CONTRIBUTIONS_API_VERSION,
+            handler=binding,
+        )
+        owner = "controlled.owner"
+        try:
+>           host.activate(_plugin(owner, payload={}))
+
+apps/server/tests/platform/test_closeout_host_environment_owner_lifecycle.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+apps/server/src/ordessa_server/plugin_host/host.py:536: in activate
+    return self.activate_all([plugin])[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+apps/server/src/ordessa_server/plugin_host/host.py:509: in activate_all
+    activated.append(self._activate_one(by_id[plugin_id], descriptors[plugin_id]))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+apps/server/src/ordessa_server/plugin_host/host.py:643: in _activate_one
+    self._stage_contributions(descriptor.id, registration.contributions)
+apps/server/src/ordessa_server/plugin_host/host.py:714: in _stage_contributions
+    staged = stage_contributions(point.handler, owner,
+packages/backend/server-plugin-api/src/server_plugin_api/contributions.py:409: in stage_contributions
+    entries.append((contribution, handler.stage(contribution, owner)))
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+apps/server/src/ordessa_server/core_binding.py:132: in stage
+    return self.environment.stage_activation(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <pacthold.environment.Environment object at 0x7d2cffd06090>
+owner = 'controlled.owner'
+contributions = CoreContributionSet(contracts=(), resource_providers=(), execution_providers=())
+
+    def stage_activation(
+        self, owner: str, contributions: CoreContributionSet | None = None
+    ) -> _EnvironmentActivationStage:
+        """Stage an activation using this Environment's single CoreRegistry.
+    
+        Installation and enablement are product metadata: this method never
+        creates either implicitly. The returned handle publishes registry and
+        Environment activation facts together at ``commit()``.
+        """
+        self._check_open()
+        if owner not in self._enabled:
+>           raise AdmissionRefusedError(
+                f"plugin {owner!r} is not enabled in this environment "
+                f"(installed={self.installed}, enabled={self.enabled})"
+            )
+E           ordessa_environment_api.errors.AdmissionRefusedError: plugin 'controlled.owner' is not enabled in this environment (installed=(), enabled=())
+
+packages/backend/pacthold/src/pacthold/environment.py:481: AdmissionRefusedError
+_ test_core_binding_refuses_to_disable_owner_when_activation_retirement_is_pending _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-844/test_core_binding_refuses_to_d0')
+
+    def test_core_binding_refuses_to_disable_owner_when_activation_retirement_is_pending(tmp_path):
+        """The host must keep ownership attached to a live Environment blocker.
+    
+        This case is deliberately exercised via the host API: rollback/retirement
+        cannot be replaced by owner-only unregister or swallowed as cleanup.
+        """
+        environment = Environment("host-owner")
+        binding = CoreBinding(
+            tmp_path / "unused.sqlite",
+            environment_factory=lambda _path: environment,
+        )
+        host = ServerPluginHost()
+        host.register_contribution_point(
+            PACTHOLD_CONTRIBUTIONS_POINT_ID,
+            PACTHOLD_CONTRIBUTIONS_API_VERSION,
+            handler=binding,
+        )
+        owner = "blocked.owner"
+>       host.activate(_plugin(owner, payload={}))
+
+apps/server/tests/platform/test_closeout_host_environment_owner_lifecycle.py:205: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+apps/server/src/ordessa_server/plugin_host/host.py:536: in activate
+    return self.activate_all([plugin])[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+apps/server/src/ordessa_server/plugin_host/host.py:509: in activate_all
+    activated.append(self._activate_one(by_id[plugin_id], descriptors[plugin_id]))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+apps/server/src/ordessa_server/plugin_host/host.py:643: in _activate_one
+    self._stage_contributions(descriptor.id, registration.contributions)
+apps/server/src/ordessa_server/plugin_host/host.py:714: in _stage_contributions
+    staged = stage_contributions(point.handler, owner,
+packages/backend/server-plugin-api/src/server_plugin_api/contributions.py:409: in stage_contributions
+    entries.append((contribution, handler.stage(contribution, owner)))
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+apps/server/src/ordessa_server/core_binding.py:132: in stage
+    return self.environment.stage_activation(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <pacthold.environment.Environment object at 0x7d2cffb269c0>
+owner = 'blocked.owner'
+contributions = CoreContributionSet(contracts=(), resource_providers=(), execution_providers=())
+
+    def stage_activation(
+        self, owner: str, contributions: CoreContributionSet | None = None
+    ) -> _EnvironmentActivationStage:
+        """Stage an activation using this Environment's single CoreRegistry.
+    
+        Installation and enablement are product metadata: this method never
+        creates either implicitly. The returned handle publishes registry and
+        Environment activation facts together at ``commit()``.
+        """
+        self._check_open()
+        if owner not in self._enabled:
+>           raise AdmissionRefusedError(
+                f"plugin {owner!r} is not enabled in this environment "
+                f"(installed={self.installed}, enabled={self.enabled})"
+            )
+E           ordessa_environment_api.errors.AdmissionRefusedError: plugin 'blocked.owner' is not enabled in this environment (installed=(), enabled=())
+
+packages/backend/pacthold/src/pacthold/environment.py:481: AdmissionRefusedError
+ARTIFACT_worker-debug=ABSENT workers/agent-box-worker/target/debug/agent-box-worker
+ARTIFACT_worker-release=ABSENT workers/agent-box-worker/target/release/agent-box-worker
+ARTIFACT_worker-musl-dir=ABSENT workers/agent-box-worker/target/x86_64-unknown-linux-musl
+ARTIFACT_sidecar-entry=ABSENT plugins/agent-box-harness/runtime/worker-entry.mjs
+ARTIFACT_acp-npm-closure=ABSENT plugins/agent-box-harness/packaging/claude/node_modules/@agentclientprotocol/claude-agent-acp
+TOOL_bwrap=present
+TOOL_node=present
+TOOL_npm=present
+TOOL_claude=ABSENT
+TOOL_tmux=present
+TOOL_wsl.exe=ABSENT
+SKIPPED_TOTAL=0
+WORKER_ARTIFACT=ABSENT
+VERDICT=FAILED
+=========================== short test summary info ============================
+FAILED apps/server/tests/platform/test_closeout_host_environment_owner_lifecycle.py::test_core_binding_host_activation_installs_and_explicitly_enables_one_owner
+FAILED apps/server/tests/platform/test_closeout_host_environment_owner_lifecycle.py::test_core_binding_refuses_to_disable_owner_when_activation_retirement_is_pending
+2 failed, 3 passed in 0.24s

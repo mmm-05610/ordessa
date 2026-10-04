@@ -109,6 +109,23 @@ class ServerProductComposition:
         from ordessa_persistence_sqlite import SqliteStorePort
         from pacthold.environment import Environment
 
+        # Existing C1 effect tombstones cannot be reinterpreted as absent
+        # Environment requests. Refuse before writing any new schema; the
+        # sealed historical source remains available to an explicit recovery.
+        from pathlib import Path
+        legacy_path = Path(store_path)
+        if legacy_path.exists():
+            import sqlite3
+            from contextlib import closing
+            from ordessa_environment_api import GuaranteeUnavailableError
+            with closing(sqlite3.connect(legacy_path.resolve().as_uri() + '?mode=ro', uri=True)) as legacy:
+                tables = {row[0] for row in legacy.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+                for name in ('core_execution', 'core_operation'):
+                    if name in tables and legacy.execute('SELECT 1 FROM ' + name + ' LIMIT 1').fetchone():
+                        raise GuaranteeUnavailableError(
+                            'sealed legacy Core effect records require explicit reconciliation; '
+                            'their request tombstones cannot be compared as new Environment requests')
+
         # The host holds the OS process lock before constructing this store.
         # Acquiring it proves the previous product process released ownership;
         # a stale SQL marker alone never authorizes dispatch or a takeover.
@@ -168,8 +185,10 @@ class ServerProductComposition:
         from ordessa_persistence_sqlite import SqliteStorePort
         from ordessa_agent.submission_journal import SubmissionJournal, ReliableSubmissionUnsupported
         from ordessa_agent.submission_service import AgentSubmissionService
-        if self._native_submit_port is None or self._fingerprint_port is None:
-            raise ReliableSubmissionUnsupported('declared native conditional submit/fingerprint capability absent')
+        # Read-only reconciliation retains domain/kernel facts even when a
+        # native adapter or protected comparison key is currently absent.
+        # AgentSubmissionService rejects effect admission without its valid
+        # declaration/key before journaling any new submission.
         environment = context.ports['core.binding'].environment
         binding = context.ports['core.binding']
         if not binding.owns_data_root:
@@ -178,7 +197,14 @@ class ServerProductComposition:
                                      allow_takeover=True)
         try:
             journal = SubmissionJournal(domain_store, fingerprint_port=self._fingerprint_port)
-            service = AgentSubmissionService(environment=environment, journal=journal,
+            service_type = AgentSubmissionService
+            if self._native_submit_port is None or self._fingerprint_port is None:
+                class ReadOnlySubmissionQueries(AgentSubmissionService):
+                    def submit(self, *args, **kwargs):
+                        raise ReliableSubmissionUnsupported(
+                            'declared native conditional submit/fingerprint capability absent')
+                service_type = ReadOnlySubmissionQueries
+            service = service_type(environment=environment, journal=journal,
                 owners=owners, native_submit_port=self._native_submit_port)
         except BaseException:
             domain_store.close()
@@ -311,6 +337,7 @@ class ServerProductComposition:
 
     def default_runtime(self, data_root: Any, *, include_profile: bool = True) -> Any:
         from ordessa_server.bootstrap import build_runtime
+        from server_plugin_api import ServerPluginSelection
 
         self._assemble_legacy_chain()
         from .platform_secrets import product_secret_store
@@ -319,8 +346,14 @@ class ServerProductComposition:
         plugins = self.default_plugins()
         if not include_profile:
             plugins = tuple(plugin for plugin in plugins if plugin.descriptor().id != 'ordessa.profile')
+        selection = ServerPluginSelection(
+            plugins=plugins,
+            contribution_points=self.server_contribution_points(),
+            environment_factory=self.environment_factory,
+            owned_environment_factory=self.owned_environment_factory,
+        )
         runtime = build_runtime(data_root, secret_store=product_secret_store(data_root),
-            server_plugins=plugins, product_composition=self)
+            server_plugins=selection, database_factory=self.database_type())
         return runtime
 
     def native_runtime(
@@ -334,6 +367,7 @@ class ServerProductComposition:
         include_profile: bool = True,
     ) -> Any:
         from ordessa_server_compat.composition import build_runtime_from_native_adapter
+        from server_plugin_api import ServerPluginSelection
         from ordessa_model_provider.plugin import ModelProviderPlugin
         from .native_configuration import NativeConfigurationPlugin, PLUGIN_ID as NATIVE_CONFIGURATION_ID
         from ordessa_harness.configuration.model.plugin import ModelProviderAdaptersPlugin
@@ -344,6 +378,12 @@ class ServerProductComposition:
 
         self._native_channels_selected = True
         self._assemble_legacy_chain()
+        product_selection = ServerPluginSelection(
+            plugins=(),
+            contribution_points=self.server_contribution_points(),
+            environment_factory=self.environment_factory,
+            owned_environment_factory=self.owned_environment_factory,
+        )
         def channel_selection_resolver(*, profile_id, harness_id):
             # Resolve the current activation round; never retain a stopped port.
             sessions = runtime.plugin_host.provided_port('profile.native-sessions')
@@ -361,7 +401,8 @@ class ServerProductComposition:
             additional_adapters=additional_adapters,
             secret_store=self._native_secret_store(data_root),
             channel_selection_resolver=channel_selection_resolver,
-            product_composition=self,
+            product_selection=product_selection,
+            database_factory=self.database_type(),
             native_transport_admitter=lambda transport: self._admit_native_transport(runtime, transport),
             # 026 T006-09: the product's native assembly does not make a
             # startup-created native Profile its mandatory basis. Native
@@ -490,7 +531,16 @@ class ServerProductComposition:
             # The host bound this explicit composition's points before
             # activating its selected base; there is one handler per point.
             runtime.plugin_host.activate_all(extras)
-            runtime.plugin_selection = (*runtime.plugin_selection, *extras)
+            selected = runtime.plugin_selection
+            if isinstance(selected, ServerPluginSelection):
+                runtime.plugin_selection = ServerPluginSelection(
+                    plugins=(*tuple(selected), *extras),
+                    contribution_points=selected.contribution_points,
+                    environment_factory=selected.environment_factory,
+                    owned_environment_factory=selected.owned_environment_factory,
+                )
+            else:
+                runtime.plugin_selection = (*tuple(selected), *extras)
         except BaseException as activation_failure:
             try:
                 runtime.stop()

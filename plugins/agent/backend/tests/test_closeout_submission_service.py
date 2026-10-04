@@ -100,14 +100,16 @@ class _ControlledNativeSubmitPort:
         assert attachment_id == "attachment-1"
         return b"immutable attachment bytes"
 
-    def submit_existing(self, request, capture):
-        return self._effect(request, capture, kind="existing")
+    def submit_existing(self, request, capture, *, attachments):
+        return self._effect(request, capture, attachments=attachments, kind="existing")
 
-    def create_with_config(self, request, capture):
-        return self._effect(request, capture, kind="createWithConfig")
+    def create_with_config(self, request, capture, *, attachments):
+        return self._effect(request, capture, attachments=attachments, kind="createWithConfig")
 
-    def _effect(self, request, capture, *, kind):
+    def _effect(self, request, capture, *, attachments, kind):
         self.effect_calls += 1
+        assert set(attachments) == set(capture.draft.get("attachmentIds", ()))
+        assert all(isinstance(content, bytes) for content in attachments.values())
         if self.on_effect is not None:
             callback, self.on_effect = self.on_effect, None
             callback()

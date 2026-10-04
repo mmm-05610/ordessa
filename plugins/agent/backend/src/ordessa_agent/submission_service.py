@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Any, Literal, Mapping, Protocol
 
 from ordessa_environment_api import RequestKey
@@ -72,9 +73,15 @@ class NativeSubmitPort(Protocol):
 
     def read_attachment(self, target: str, attachment_id: str) -> bytes: ...
 
-    def submit_existing(self, request: RequestKey, capture: CaptureTransaction) -> Any: ...
+    def submit_existing(
+        self, request: RequestKey, capture: CaptureTransaction, *,
+        attachments: Mapping[str, bytes],
+    ) -> Any: ...
 
-    def create_with_config(self, request: RequestKey, capture: CaptureTransaction) -> Any: ...
+    def create_with_config(
+        self, request: RequestKey, capture: CaptureTransaction, *,
+        attachments: Mapping[str, bytes],
+    ) -> Any: ...
 
     def query(self, request: RequestKey) -> NativeSubmitResult | None: ...
 
@@ -347,10 +354,15 @@ class AgentSubmissionService:
             return SubmissionResult(record.request, outcome, record, replayed=True)
         record = self.journal.mark_possibly_submitted(request, record.digest)
 
+        # The journal and native handler must observe the very same immutable
+        # bytes. Passing only attachment IDs would let a mutable native source
+        # return different content after the trusted capture was fingerprinted.
+        dispatch_attachments = MappingProxyType(dict(attachment_bytes))
+
         def dispatch() -> None:
             method = (self.native_submit_port.submit_existing if item.mode == "existing"
                       else self.native_submit_port.create_with_config)
-            method(request, capture)
+            method(request, capture, attachments=dispatch_attachments)
 
         try:
             self.environment.invoke(

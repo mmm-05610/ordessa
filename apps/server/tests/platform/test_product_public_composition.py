@@ -251,8 +251,8 @@ def test_wire_construction_failure_closes_core_and_releases_owner(tmp_path, monk
             owners.append(self)
 
     class TrackedBinding(real_binding):
-        def __init__(self, path):
-            super().__init__(path)
+        def __init__(self, path, **kwargs):
+            super().__init__(path, **kwargs)
             bindings.append(self)
 
         def close(self):

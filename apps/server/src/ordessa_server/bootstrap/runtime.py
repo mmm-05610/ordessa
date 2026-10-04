@@ -566,7 +566,6 @@ def build_runtime(
     local_workspace_provider=None,
     server_plugins: "tuple[Any, ...] | list[Any] | None" = None,
     database_factory: Callable[[Path], DatabasePort] | None = None,
-    product_composition: Any | None = None,
 ) -> ServerRuntime:
     """Assemble a Server runtime: the generic host plus the selected plugins.
 
@@ -612,27 +611,60 @@ def build_runtime(
     from server_plugin_api import (
         ContributionDeclarationError, ContributionPointSpec,
         PACTHOLD_CONTRIBUTIONS_POINT_ID, WIRE_DISCOVERY_FACETS_POINT_ID,
-        WIRE_ERROR_FAMILIES_POINT_ID, unique_contribution_point_specs,
+        WIRE_ERROR_FAMILIES_POINT_ID, ServerPluginSelection,
+        unique_contribution_point_specs,
     )
 
     selected_plugins: tuple[Any, ...]
+    selection: ServerPluginSelection | None = None
+    composition = None
+    selected_product = False
     if server_plugins is None:
-        composition = product_composition if product_composition is not None else _resolve_product_composition()
-        selected_plugins = tuple(composition.default_plugins())
+        composition = _resolve_product_composition()
+        selection = ServerPluginSelection(
+            plugins=tuple(composition.default_plugins()),
+            contribution_points=tuple(composition.server_contribution_points()),
+            environment_factory=getattr(composition, "environment_factory", None),
+            owned_environment_factory=getattr(composition, "owned_environment_factory", None),
+        )
+        selected_plugins = tuple(selection)
+        selected_product = True
+        if database_factory is None:
+            database_factory = (composition.database_type()
+                if callable(getattr(composition, "database_type", None)) else None)
+    elif isinstance(server_plugins, ServerPluginSelection):
+        selection = server_plugins
+        selected_plugins = tuple(selection)
         selected_product = True
     else:
         selected_plugins = tuple(server_plugins)
-        selected_product = False
-        # An explicit selection with an injected database is a host-only
-        # composition. Otherwise an installed product may supply storage,
-        # while the explicit plugin list still controls capabilities.
-        composition = product_composition
-        if database_factory is None and composition is None:
+        # Plain sequences retain their old capability semantics. If the
+        # installed product is needed only to supply the database factory,
+        # carry its Environment factory neutrally while keeping product
+        # contribution points absent for this explicit host selection.
+        if database_factory is None:
             try:
                 composition = _resolve_product_composition()
             except RuntimeError as exc:
                 if selected_plugins or not str(exc).startswith("SERVER_PRODUCT_MISSING:"):
                     raise
+            if composition is not None:
+                selection = ServerPluginSelection(
+                    plugins=selected_plugins,
+                    contribution_points=(),
+                    environment_factory=getattr(composition, "environment_factory", None),
+                    owned_environment_factory=getattr(composition, "owned_environment_factory", None),
+                )
+                database_factory = (composition.database_type()
+                if callable(getattr(composition, "database_type", None)) else None)
+
+    if database_factory is None and selected_product and composition is None:
+        # A detached explicit product selection still needs the selected
+        # product's real storage provider; it never transfers product state
+        # into the host.
+        composition = _resolve_product_composition()
+        database_factory = (composition.database_type()
+                if callable(getattr(composition, "database_type", None)) else None)
 
     # The product selection had its chance to assemble the sealed historical
     # migration source. Reject an old root before accepting any factory that
@@ -653,20 +685,15 @@ def build_runtime(
     # point. This is a pure preflight: no host registry, token or data file has
     # been written yet. The owner/handler still belong to the host and product
     # respectively, never to an author contribution.
-    if not selected_product and product_composition is None:
-        product_points: tuple[ContributionPointSpec, ...] = ()
-    else:
-        point_provider = getattr(composition, "server_contribution_points", None)
-        if not callable(point_provider):
-            raise ContributionDeclarationError("selected product has no server_contribution_points()")
-        product_points = unique_contribution_point_specs(point_provider())
-        host_owned_points = frozenset((
-            PACTHOLD_CONTRIBUTIONS_POINT_ID,
-            WIRE_ERROR_FAMILIES_POINT_ID,
-            WIRE_DISCOVERY_FACETS_POINT_ID,
-        ))
-        if any(spec.point_id in host_owned_points for spec in product_points):
-            raise ContributionDeclarationError("product cannot redeclare a host-owned point")
+    points = selection.contribution_points if selected_product and selection is not None else ()
+    product_points: tuple[ContributionPointSpec, ...] = unique_contribution_point_specs(points)
+    host_owned_points = frozenset((
+        PACTHOLD_CONTRIBUTIONS_POINT_ID,
+        WIRE_ERROR_FAMILIES_POINT_ID,
+        WIRE_DISCOVERY_FACETS_POINT_ID,
+    ))
+    if any(spec.point_id in host_owned_points for spec in product_points):
+        raise ContributionDeclarationError("product cannot redeclare a host-owned point")
     owner = DataRootOwner(root)
     owner.acquire()
     core_binding: CoreBinding | None = None
@@ -712,15 +739,12 @@ def build_runtime(
         # declared by the selected product. Server never creates a parallel
         # CoreRuntime or concrete store. A host-only composition has no
         # environment authority and its effect operations remain unavailable.
-        environment_factory = (
-            getattr(composition, "environment_factory", None)
-            if composition is not None else None
-        )
-        owned_factory = getattr(composition, 'owned_environment_factory', None)
+        environment_factory = selection.environment_factory if selection is not None else None
+        owned_factory = selection.owned_environment_factory if selection is not None else None
         if callable(owned_factory):
             environment_factory = lambda path: owned_factory(path, lambda: owner.acquired)
         core_binding = CoreBinding(
-            root / "state" / "environment.sqlite",
+            root / "state" / "core.sqlite",
             environment_factory=environment_factory,
             ownership_probe=lambda: owner.acquired,
         )
@@ -730,7 +754,7 @@ def build_runtime(
         # work_core singleton). A host-only composition with its own
         # DatabasePort must be able to start without the compatibility
         # distribution installed.
-        legacy_core = LegacyCoreBinding(database.path) if composition is not None else None
+        legacy_core = LegacyCoreBinding(database.path) if composition is not None or selected_product else None
         plugin_host = ServerPluginHost(
             methods=method_registry, stream_routes=stream_route_registry, data_root=root,
             host_ports={

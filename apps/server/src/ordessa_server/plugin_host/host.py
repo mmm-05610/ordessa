@@ -161,6 +161,38 @@ def _carry_cleanup_errors(errors: list[ServerPluginError]) -> None:
         pass
 
 
+class OwnerLifecycleError(ServerPluginError):
+    """A selected contribution handler could not settle its owner hook.
+
+    This is separate from a contribution rollback failure: the outstanding
+    obligation belongs to the descriptor-level owner lifecycle hook.
+    """
+
+    def __init__(self, owner: str, phase: str, error: BaseException) -> None:
+        super().__init__(
+            "PLUGIN_OWNER_LIFECYCLE_PENDING",
+            f"owner {owner!r} lifecycle {phase} did not settle: "
+            f"{type(error).__name__}: {error}",
+        )
+        self.owner = owner
+        self.phase = phase
+        self.error = error
+
+
+def _handler_lifecycle(handler: Any) -> tuple[Any, Any, Any] | None:
+    """Return the optional begin/rollback/retire hook trio, or refuse a
+    partially implemented lifecycle contract instead of guessing cleanup."""
+    names = ("begin_owner_activation", "rollback_owner_activation",
+             "retire_owner_activation")
+    hooks = tuple(getattr(handler, name, None) for name in names)
+    if not any(callable(hook) for hook in hooks):
+        return None
+    if not all(callable(hook) for hook in hooks):
+        raise InvalidDeclarationError(
+            "a contribution handler owner lifecycle must implement all three hooks")
+    return hooks  # type: ignore[return-value]
+
+
 def _undo_records(records: Iterable[PublishedRecord]) -> list[ContributionCleanupError]:
     """Attempt every rollback in `records`, containing each failure.
 
@@ -184,6 +216,10 @@ class MethodRegistry:
         self._methods: dict[str, ServerMethodDescriptor] = {}
 
     def register(self, descriptor: ServerMethodDescriptor) -> None:
+        self.check_register(descriptor)
+        self._methods[descriptor.method_id] = descriptor
+
+    def check_register(self, descriptor: ServerMethodDescriptor, *, pending=()) -> None:
         try:
             ServerMethodDescriptor(
                 method_id=descriptor.method_id,
@@ -196,10 +232,12 @@ class MethodRegistry:
         except (TypeError, ValueError) as exc:
             raise InvalidDeclarationError(f"{descriptor.method_id}: {exc}") from exc
         existing = self._methods.get(descriptor.method_id)
+        if existing is None:
+            existing = next((item for item in pending
+                             if item.method_id == descriptor.method_id), None)
         if existing is not None:
             raise DuplicateMethodError(
                 descriptor.method_id, existing.owner, descriptor.owner)
-        self._methods[descriptor.method_id] = descriptor
 
     def unregister(self, method_id: str, *, owner: str) -> ServerMethodDescriptor | None:
         """Remove a row; absent rows are already gone (idempotent unload),
@@ -237,6 +275,10 @@ class StreamRouteRegistry:
         self._routes: dict[str, StreamRouteDescriptor] = {}
 
     def register(self, descriptor: StreamRouteDescriptor) -> None:
+        self.check_register(descriptor)
+        self._routes[descriptor.route_id] = descriptor
+
+    def check_register(self, descriptor: StreamRouteDescriptor, *, pending=()) -> None:
         try:
             StreamRouteDescriptor(
                 route_id=descriptor.route_id,
@@ -246,10 +288,12 @@ class StreamRouteRegistry:
         except (TypeError, ValueError) as exc:
             raise InvalidDeclarationError(f"{descriptor.route_id}: {exc}") from exc
         existing = self._routes.get(descriptor.route_id)
+        if existing is None:
+            existing = next((item for item in pending
+                             if item.route_id == descriptor.route_id), None)
         if existing is not None:
             raise DuplicateStreamRouteError(
                 descriptor.route_id, existing.owner, descriptor.owner)
-        self._routes[descriptor.route_id] = descriptor
 
     def unregister(self, route_id: str, *, owner: str) -> None:
         descriptor = self._routes.get(route_id)
@@ -280,6 +324,10 @@ class HttpRouteRegistry:
         self._routes: list[HttpRouteDescriptor] = []
 
     def register(self, descriptor: HttpRouteDescriptor) -> None:
+        self.check_register(descriptor)
+        self._routes.append(descriptor)
+
+    def check_register(self, descriptor: HttpRouteDescriptor, *, pending=()) -> None:
         try:
             HttpRouteDescriptor(
                 path=descriptor.path, methods=descriptor.methods,
@@ -287,14 +335,13 @@ class HttpRouteRegistry:
             )
         except (TypeError, ValueError) as exc:
             raise InvalidDeclarationError(f"{descriptor.path}: {exc}") from exc
-        for existing in self._routes:
+        for existing in (*self._routes, *pending):
             if existing.path == descriptor.path:
                 overlap = existing.methods & descriptor.methods
                 if overlap:
                     raise DuplicateHttpRouteError(
                         descriptor.path, tuple(overlap),
                         existing.owner, descriptor.owner)
-        self._routes.append(descriptor)
 
     def unregister_owner(self, owner: str) -> None:
         self._routes = [item for item in self._routes if item.owner != owner]
@@ -309,6 +356,7 @@ class ActivePlugin:
     registration: ServerPluginRegistration
     method_ids: tuple[str, ...] = ()
     stream_route_ids: tuple[str, ...] = ()
+    owner_lifecycle: tuple[tuple[Any, Any], ...] = ()
 
 
 @dataclass
@@ -519,7 +567,7 @@ class ServerPluginHost:
             # through their handlers, every entry attempted.
             cleanup: list[ServerPluginError] = self._rollback_round_contributions()
             for active in reversed(activated):
-                failure = self._dispose_active(active)
+                failure = self._dispose_active(active, failed_round=True)
                 if failure is not None:
                     cleanup.append(failure)
             if cleanup:
@@ -597,44 +645,29 @@ class ServerPluginHost:
                 f"{descriptor.id}: build() must return ServerPluginRegistration")
         staged_methods: list[str] = []
         staged_routes: list[str] = []
+        owner_lifecycle: list[tuple[Any, Any]] = []
         try:
+            # Validate every host registration before the optional owner hook
+            # can install/enable anything in the selected Environment. The
+            # registries repeat these checks at insertion, but this preflight
+            # makes duplicate admission side-effect free.
+            self._preflight_registration(descriptor, registration)
+            for handler in self._lifecycle_handlers(registration.contributions):
+                hooks = _handler_lifecycle(handler)
+                if hooks is not None:
+                    try:
+                        token = hooks[0](descriptor)
+                    except BaseException as err:
+                        raise OwnerLifecycleError(descriptor.id, "begin", err) from err
+                    owner_lifecycle.append((handler, token))
+
             for item in registration.methods:
-                if item.owner != descriptor.id:
-                    raise InvalidDeclarationError(
-                        f"{descriptor.id} declares method {item.method_id} "
-                        f"owned by {item.owner!r}")
                 self.methods.register(item)
                 staged_methods.append(item.method_id)
             for item in registration.stream_routes:
-                if item.owner != descriptor.id:
-                    raise InvalidDeclarationError(
-                        f"{descriptor.id} declares stream route {item.route_id} "
-                        f"owned by {item.owner!r}")
                 self.stream_routes.register(item)
                 staged_routes.append(item.route_id)
-            if self.frozen_http_routes is not None and registration.http_routes:
-                unmounted: list[str] = []
-                reshaped: list[str] = []
-                for item in registration.http_routes:
-                    mounted_shape = next(
-                        (shape for shape in self.frozen_http_routes
-                         if shape[:3] == (item.path, frozenset(item.methods), item.owner)),
-                        None)
-                    label = f"{item.path} ({', '.join(sorted(item.methods))})"
-                    if mounted_shape is None:
-                        unmounted.append(label)
-                    elif (mounted_shape[3] != item.authenticated
-                          or mounted_shape[4] != _route_signature(item.endpoint)):
-                        reshaped.append(label)
-                if unmounted:
-                    raise HttpRouteUnmountedError(descriptor.id, tuple(unmounted))
-                if reshaped:
-                    raise HttpRouteShapeChangedError(descriptor.id, tuple(reshaped))
             for item in registration.http_routes:
-                if item.owner != descriptor.id:
-                    raise InvalidDeclarationError(
-                        f"{descriptor.id} declares http route {item.path} "
-                        f"owned by {item.owner!r}")
                 self.http_routes.register(item)
             # The C2 carrier: the registration's contribution batch STAGES
             # here (validated against the host's point registry, handler
@@ -648,7 +681,7 @@ class ServerPluginHost:
             # that raises here is contained and carried on the in-flight
             # failure's `cleanup_errors` — it may never replace the typed
             # conflict (or whatever else) that caused the rollback.
-            cleanup: list[PluginCleanupError] = []
+            cleanup: list[ServerPluginError] = []
             for method_id in staged_methods:
                 self.methods.unregister(method_id, owner=descriptor.id)
             for route_id in staged_routes:
@@ -659,16 +692,103 @@ class ServerPluginHost:
                     registration.disposal()
                 except Exception as err:  # noqa: BLE001 - carried, never primary
                     cleanup.append(PluginCleanupError(descriptor.id, err))
+            for handler, token in reversed(owner_lifecycle):
+                hooks = _handler_lifecycle(handler)
+                if hooks is None:
+                    continue
+                try:
+                    hooks[1](descriptor, token)
+                except Exception as err:  # noqa: BLE001 - carried, never primary
+                    cleanup.append(OwnerLifecycleError(descriptor.id, "rollback", err))
             if cleanup:
                 _carry_cleanup_errors(cleanup)
             raise
         active = ActivePlugin(
             descriptor=descriptor, registration=registration,
             method_ids=tuple(staged_methods), stream_route_ids=tuple(staged_routes),
+            owner_lifecycle=tuple(owner_lifecycle),
         )
         self._active[descriptor.id] = active
         self._activation_order.append(descriptor.id)
         return active
+
+    def _preflight_registration(self, descriptor: ServerPluginDescriptor,
+                                registration: ServerPluginRegistration) -> None:
+        """Validate the entire host-visible registration without mutation."""
+        pending_methods: list[ServerMethodDescriptor] = []
+        for item in registration.methods:
+            if item.owner != descriptor.id:
+                raise InvalidDeclarationError(
+                    f"{descriptor.id} declares method {item.method_id} "
+                    f"owned by {item.owner!r}")
+            self.methods.check_register(item, pending=pending_methods)
+            pending_methods.append(item)
+
+        pending_streams: list[StreamRouteDescriptor] = []
+        for item in registration.stream_routes:
+            if item.owner != descriptor.id:
+                raise InvalidDeclarationError(
+                    f"{descriptor.id} declares stream route {item.route_id} "
+                    f"owned by {item.owner!r}")
+            self.stream_routes.check_register(item, pending=pending_streams)
+            pending_streams.append(item)
+
+        if self.frozen_http_routes is not None and registration.http_routes:
+            unmounted: list[str] = []
+            reshaped: list[str] = []
+            for item in registration.http_routes:
+                mounted_shape = next(
+                    (shape for shape in self.frozen_http_routes
+                     if shape[:3] == (item.path, frozenset(item.methods), item.owner)),
+                    None)
+                label = f"{item.path} ({', '.join(sorted(item.methods))})"
+                if mounted_shape is None:
+                    unmounted.append(label)
+                elif (mounted_shape[3] != item.authenticated
+                      or mounted_shape[4] != _route_signature(item.endpoint)):
+                    reshaped.append(label)
+            if unmounted:
+                raise HttpRouteUnmountedError(descriptor.id, tuple(unmounted))
+            if reshaped:
+                raise HttpRouteShapeChangedError(descriptor.id, tuple(reshaped))
+
+        pending_http: list[HttpRouteDescriptor] = []
+        for item in registration.http_routes:
+            if item.owner != descriptor.id:
+                raise InvalidDeclarationError(
+                    f"{descriptor.id} declares http route {item.path} "
+                    f"owned by {item.owner!r}")
+            self.http_routes.check_register(item, pending=pending_http)
+            pending_http.append(item)
+
+        self._preflight_contributions(descriptor.id, registration.contributions)
+
+    def _preflight_contributions(self, owner: str, batch: ContributionBatch) -> None:
+        batch.check_required()
+        for item in batch.contributions:
+            point = self.contribution_points.point(item.point_id)
+            if point is None or point.handler is None:
+                raise ContributionPointUnboundError(item.point_id, owner)
+            if item.api_version != point.api_version:
+                raise ContributionVersionRefusedError(
+                    item.point_id, owner, item.api_version, point.api_version)
+            if point.exclusive:
+                holder = (self.contribution_points.holder(item.point_id)
+                          or self._round_claims.get(item.point_id))
+                if holder is not None:
+                    raise ContributionPointHeldError(item.point_id, holder, owner)
+
+    def _lifecycle_handlers(self, batch: ContributionBatch) -> tuple[Any, ...]:
+        handlers: list[Any] = []
+        seen: set[int] = set()
+        for item in batch.contributions:
+            point = self.contribution_points.point(item.point_id)
+            if point is None or point.handler is None:
+                continue
+            if id(point.handler) not in seen:
+                seen.add(id(point.handler))
+                handlers.append(point.handler)
+        return tuple(handlers)
 
     # -- contribution points: admission, staging, publication ------------------
 
@@ -878,7 +998,8 @@ class ServerPluginHost:
 
     # -- unload / shutdown ----------------------------------------------------
 
-    def _dispose_active(self, active: ActivePlugin) -> PluginCleanupError | None:
+    def _dispose_active(self, active: ActivePlugin, *,
+                        failed_round: bool = False) -> PluginCleanupError | None:
         """Tear one active plugin down; a raising disposal is captured and
         carried, never allowed to stop the cleanups behind it.
 
@@ -887,7 +1008,10 @@ class ServerPluginHost:
         registry leak. A `DependentActiveError` here would mean the host tore
         down in the wrong order — that is a host bug and propagates."""
         try:
-            self._deactivate(active.descriptor.id)
+            self._deactivate(
+                active.descriptor.id,
+                owner_lifecycle_mode="rollback" if failed_round else "retire",
+            )
         except DependentActiveError:
             raise
         except Exception as err:  # noqa: BLE001 - captured, carried, never hidden
@@ -906,7 +1030,10 @@ class ServerPluginHost:
         """
         self._deactivate(plugin_id, require_idle=True)
 
-    def _deactivate(self, plugin_id: str, *, require_idle: bool = False) -> None:
+    def _deactivate(self, plugin_id: str, *, require_idle: bool = False,
+                    owner_lifecycle_mode: str = "retire") -> None:
+        if owner_lifecycle_mode not in ("retire", "rollback"):
+            raise ValueError(f"unknown owner lifecycle mode {owner_lifecycle_mode!r}")
         with self._contribution_lifecycle_lock:
             if require_idle:
                 self._require_admission_open("plugin deactivation")
@@ -923,6 +1050,39 @@ class ServerPluginHost:
             )
             if dependents:
                 raise DependentActiveError(plugin_id, dependents)
+
+            # Settle the exact selected-handler obligation before removing
+            # host registrations. A pending Environment retirement leaves the
+            # active owner and its tokens available for a later retry.
+            self._retiring_owners.add(plugin_id)
+
+        hooks_done = False
+        if owner_lifecycle_mode == "retire":
+            for handler, token in reversed(active.owner_lifecycle):
+                hooks = _handler_lifecycle(handler)
+                if hooks is None:
+                    continue
+                try:
+                    hooks[2](active.descriptor, token)
+                except BaseException as err:
+                    raise OwnerLifecycleError(plugin_id, "retire", err) from err
+        else:
+            for handler, token in reversed(active.owner_lifecycle):
+                hooks = _handler_lifecycle(handler)
+                if hooks is None:
+                    continue
+                try:
+                    hooks[1](active.descriptor, token)
+                except BaseException as err:
+                    raise OwnerLifecycleError(plugin_id, "rollback", err) from err
+
+        with self._contribution_lifecycle_lock:
+            # Recheck that this exact owner is still the tracked activation.
+            # Admission is closed for the enclosing round; this also guards
+            # direct concurrent deactivation callers.
+            if self._active.get(plugin_id) is not active:
+                raise InvalidDeclarationError(
+                    f"plugin owner {plugin_id!r} changed during lifecycle settlement")
             for method_id in active.method_ids:
                 self.methods.unregister(method_id, owner=plugin_id)
             for route_id in active.stream_route_ids:
@@ -934,7 +1094,7 @@ class ServerPluginHost:
             records = self.contribution_points.retire_owner(plugin_id)
             del self._active[plugin_id]
             self._activation_order.remove(plugin_id)
-            self._retiring_owners.add(plugin_id)
+            hooks_done = True
         try:
             # Undo every record even if one handler fails. The owner's name is
             # reserved until all rollback/disposal work has finished.
@@ -949,8 +1109,9 @@ class ServerPluginHost:
                 raise ContributionBatchCleanupError(tuple(
                     err for err in cleanup if isinstance(err, ContributionCleanupError)))
         finally:
-            with self._contribution_lifecycle_lock:
-                self._retiring_owners.discard(plugin_id)
+            if hooks_done:
+                with self._contribution_lifecycle_lock:
+                    self._retiring_owners.discard(plugin_id)
 
     def run_stop_hooks(self) -> None:
         """Run every active plugin's `stop_hooks`, reverse activation order.
