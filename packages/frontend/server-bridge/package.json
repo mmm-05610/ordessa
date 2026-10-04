@@ -9,7 +9,9 @@
     "./data-root": "./src/data-root.ts",
     "./errors": "./src/errors.ts",
     "./wire-port": "./src/wire-port.ts",
-    "./lifecycle": "./src/lifecycle.ts"
+    "./lifecycle": "./src/lifecycle.ts",
+    "./projection": "./src/state/projection.ts",
+    "./query-cache": "./src/state/queryCache.ts"
   },
   "scripts": {
     "test": "vitest run --maxWorkers=1"

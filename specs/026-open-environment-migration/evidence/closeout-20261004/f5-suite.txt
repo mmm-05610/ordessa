@@ -1,0 +1,38 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/ui-components
+
+ ❯ tests/closeout-projection-query.test.ts (8 tests | 1 failed) 12ms
+     × close is idempotent and queued snapshot, delta, and gap callbacks cannot change the projection 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-projection-query.test.ts > T013 projection closeout > close is idempotent and queued snapshot, delta, and gap callbacks cannot change the projection
+AssertionError: expected { kind: 'revoked' } to deeply equal { kind: 'snapshot', …(3) }
+
+- Expected
++ Received
+
+  {
+-   "cursor": "c-1",
+-   "kind": "snapshot",
+-   "revision": "r1",
+-   "value": "one",
++   "kind": "revoked",
+  }
+
+ ❯ tests/closeout-projection-query.test.ts:56:41
+     54|
+     55|     expect(source.detach).toHaveBeenCalledTimes(1)
+     56|     expect(projection.observe(null, 8)).toEqual({
+       |                                         ^
+     57|       kind: 'snapshot', revision: 'r1', value: 'one', cursor: 'c-1',
+     58|     })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 10 passed (11)
+      Tests  1 failed | 103 passed (104)
+   Start at  09:27:23
+   Duration  7.89s (transform 497ms, setup 0ms, import 1.05s, tests 609ms, environment 3.28s)
+

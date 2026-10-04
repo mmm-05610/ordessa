@@ -1,0 +1,9 @@
+{
+  "kind": "design-structure-only",
+  "orders": 12,
+  "tasks": 129,
+  "acceptanceCases": 111,
+  "mutationsCaught": 30,
+  "implementationTestsRun": false,
+  "status": "PASS"
+}

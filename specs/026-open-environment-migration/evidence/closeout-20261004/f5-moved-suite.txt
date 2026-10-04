@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/ui-components
+
+
+ Test Files  11 passed (11)
+      Tests  104 passed (104)
+   Start at  09:30:31
+   Duration  8.18s (transform 508ms, setup 0ms, import 1.12s, tests 628ms, environment 3.44s)
+

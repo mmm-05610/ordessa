@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/native-bridge
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  09:27:48
+   Duration  517ms (transform 47ms, setup 0ms, import 79ms, tests 165ms, environment 0ms)
+

@@ -1,0 +1,140 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/ui-components
+
+ ❯ tests/closeout-ui-storage.test.ts (8 tests | 8 failed) 25ms
+     × allows exactly one of two independent clients to commit the same revision 9ms
+     × uses globally unique revisions observable through the host adapter 1ms
+     × refuses an unsupported schema without changing its existing record 1ms
+     × does not report migration when it has not transformed a stored record 1ms
+     × keeps the prior value when persistence fails 1ms
+     × does not claim deletion when host storage removal fails 1ms
+     × isolates plugin and window namespaces when writing and deleting 1ms
+     × applies the safety guard on the write path before persistence 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-ui-storage.test.ts > 013 F5 UI storage closeout regressions > allows exactly one of two independent clients to commit the same revision
+TypeError: adapter.write is not a function
+ ❯ save src/state/uiStorage.ts:65:32
+     63|
+     64|   async function save(nsKey: string, key: string, envelope: RecordEnve…
+     65|     if (adapter) await adapter.write(nsKey, key, envelope)
+       |                                ^
+     66|     else memory.set(`${nsKey}|${key}`, envelope)
+     67|   }
+ ❯ Object.write src/state/uiStorage.ts:93:13
+ ❯ tests/closeout-ui-storage.test.ts:80:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  tests/closeout-ui-storage.test.ts > 013 F5 UI storage closeout regressions > uses globally unique revisions observable through the host adapter
+TypeError: adapter.write is not a function
+ ❯ save src/state/uiStorage.ts:65:32
+     63|
+     64|   async function save(nsKey: string, key: string, envelope: RecordEnve…
+     65|     if (adapter) await adapter.write(nsKey, key, envelope)
+       |                                ^
+     66|     else memory.set(`${nsKey}|${key}`, envelope)
+     67|   }
+ ❯ Object.write src/state/uiStorage.ts:93:13
+ ❯ tests/closeout-ui-storage.test.ts:97:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  tests/closeout-ui-storage.test.ts > 013 F5 UI storage closeout regressions > refuses an unsupported schema without changing its existing record
+TypeError: adapter.write is not a function
+ ❯ save src/state/uiStorage.ts:65:32
+     63|
+     64|   async function save(nsKey: string, key: string, envelope: RecordEnve…
+     65|     if (adapter) await adapter.write(nsKey, key, envelope)
+       |                                ^
+     66|     else memory.set(`${nsKey}|${key}`, envelope)
+     67|   }
+ ❯ Object.write src/state/uiStorage.ts:93:13
+ ❯ tests/closeout-ui-storage.test.ts:111:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  tests/closeout-ui-storage.test.ts > 013 F5 UI storage closeout regressions > does not report migration when it has not transformed a stored record
+TypeError: adapter.write is not a function
+ ❯ save src/state/uiStorage.ts:65:32
+     63|
+     64|   async function save(nsKey: string, key: string, envelope: RecordEnve…
+     65|     if (adapter) await adapter.write(nsKey, key, envelope)
+       |                                ^
+     66|     else memory.set(`${nsKey}|${key}`, envelope)
+     67|   }
+ ❯ Object.write src/state/uiStorage.ts:93:13
+ ❯ tests/closeout-ui-storage.test.ts:133:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  tests/closeout-ui-storage.test.ts > 013 F5 UI storage closeout regressions > keeps the prior value when persistence fails
+TypeError: adapter.write is not a function
+ ❯ save src/state/uiStorage.ts:65:32
+     63|
+     64|   async function save(nsKey: string, key: string, envelope: RecordEnve…
+     65|     if (adapter) await adapter.write(nsKey, key, envelope)
+       |                                ^
+     66|     else memory.set(`${nsKey}|${key}`, envelope)
+     67|   }
+ ❯ Object.write src/state/uiStorage.ts:93:13
+ ❯ tests/closeout-ui-storage.test.ts:145:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  tests/closeout-ui-storage.test.ts > 013 F5 UI storage closeout regressions > does not claim deletion when host storage removal fails
+TypeError: adapter.write is not a function
+ ❯ save src/state/uiStorage.ts:65:32
+     63|
+     64|   async function save(nsKey: string, key: string, envelope: RecordEnve…
+     65|     if (adapter) await adapter.write(nsKey, key, envelope)
+       |                                ^
+     66|     else memory.set(`${nsKey}|${key}`, envelope)
+     67|   }
+ ❯ Object.write src/state/uiStorage.ts:93:13
+ ❯ tests/closeout-ui-storage.test.ts:156:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  tests/closeout-ui-storage.test.ts > 013 F5 UI storage closeout regressions > isolates plugin and window namespaces when writing and deleting
+TypeError: adapter.write is not a function
+ ❯ save src/state/uiStorage.ts:65:32
+     63|
+     64|   async function save(nsKey: string, key: string, envelope: RecordEnve…
+     65|     if (adapter) await adapter.write(nsKey, key, envelope)
+       |                                ^
+     66|     else memory.set(`${nsKey}|${key}`, envelope)
+     67|   }
+ ❯ Object.write src/state/uiStorage.ts:93:13
+ ❯ tests/closeout-ui-storage.test.ts:169:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  tests/closeout-ui-storage.test.ts > 013 F5 UI storage closeout regressions > applies the safety guard on the write path before persistence
+AssertionError: expected error to be instance of UiSchemaUnknownError
+
+- Expected:
+[Function UiSchemaUnknownError]
+
++ Received:
+TypeError {
+  "message": "adapter.write is not a function",
+}
+
+ ❯ tests/closeout-ui-storage.test.ts:184:88
+    182|     const store = fileBackedUiStore(backing.adapter)
+    183|
+    184|     await expect(store.write(ns, 'layout', { nested: { accessToken: 'p…
+       |                                                                                        ^
+    185|       .rejects.toThrow(UiSchemaUnknownError)
+    186|     expect(await store.read(ns, 'layout')).toBeUndefined()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  8 failed (8)
+   Start at  09:24:45
+   Duration  429ms (transform 95ms, setup 0ms, import 119ms, tests 25ms, environment 0ms)
+

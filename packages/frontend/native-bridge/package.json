@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./ui-storage": "./src/ui-storage.mjs"
   },
   "scripts": {
     "test": "vitest run --maxWorkers=1"

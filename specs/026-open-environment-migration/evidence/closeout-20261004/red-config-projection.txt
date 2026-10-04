@@ -1,0 +1,25 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts
+
+ ❯ tests/closeout-configuration-projection.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-configuration-projection.test.ts [ tests/closeout-configuration-projection.test.ts ]
+Error: Cannot find module '../src/configuration-projection' imported from /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts/tests/closeout-configuration-projection.test.ts
+ ❯ tests/closeout-configuration-projection.test.ts:9:1
+      7|
+      8| import { createAgentOwnerPort, type WireCall } from '../src/owner-port'
+      9| import { createConfigurationProjection } from '../src/configuration-pr…
+       | ^
+     10|
+     11| type WireAnswer = Awaited<ReturnType<WireCall>>
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  09:29:47
+   Duration  400ms (transform 81ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+

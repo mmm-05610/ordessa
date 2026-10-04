@@ -1,0 +1,78 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/ui-components
+
+ ❯ tests/closeout-state.test.ts (11 tests | 7 failed) 35ms
+     × deep-freezes descendants even when an ancestor was already shallow-frozen 14ms
+     × bounds reentrant publication instead of recursing without limit 10ms
+     × rejects unsupported Map values instead of presenting a shallow freeze as safe 1ms
+     × rejects unsupported Set values instead of presenting a shallow freeze as safe 1ms
+     × rejects unsupported Date values instead of presenting a shallow freeze as safe 1ms
+     × rejects unsupported class instance values instead of presenting a shallow freeze as safe 1ms
+     × does not replace a valid snapshot when an update introduces an unsupported shape 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-state.test.ts > F5 closeout state-store regressions > deep-freezes descendants even when an ancestor was already shallow-frozen
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/closeout-state.test.ts:18:52
+     16|
+     17|     const snapshot = store.getSnapshot()
+     18|     expect(Object.isFrozen(snapshot.child.nested)).toBe(true)
+       |                                                    ^
+     19|     expect(() => {
+     20|       ;(snapshot.child.nested as { value: number }).value = 2
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  tests/closeout-state.test.ts > F5 closeout state-store regressions > bounds reentrant publication instead of recursing without limit
+AssertionError: expected 1865 to be less than or equal to 100
+ ❯ tests/closeout-state.test.ts:106:19
+    104|     store.update(current => ({ value: current.value + 1 }))
+    105|
+    106|     expect(calls).toBeLessThanOrEqual(100)
+       |                   ^
+    107|     expect(maxDepth).toBe(1)
+    108|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  tests/closeout-state.test.ts > F5 closeout state-store regressions > rejects unsupported Map values instead of presenting a shallow freeze as safe
+ FAIL  tests/closeout-state.test.ts > F5 closeout state-store regressions > rejects unsupported Set values instead of presenting a shallow freeze as safe
+ FAIL  tests/closeout-state.test.ts > F5 closeout state-store regressions > rejects unsupported Date values instead of presenting a shallow freeze as safe
+ FAIL  tests/closeout-state.test.ts > F5 closeout state-store regressions > rejects unsupported class instance values instead of presenting a shallow freeze as safe
+AssertionError: expected function to throw an error, but it didn't
+ ❯ tests/closeout-state.test.ts:116:73
+    114|     ['class instance', () => new (class DomainValue { value = 1 })()],
+    115|   ])('rejects unsupported %s values instead of presenting a shallow fr…
+    116|     expect(() => stateStoreFactory.createOwned({ value: makeValue() })…
+       |                                                                         ^
+    117|   })
+    118|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  tests/closeout-state.test.ts > F5 closeout state-store regressions > does not replace a valid snapshot when an update introduces an unsupported shape
+AssertionError: expected function to throw an error, but it didn't
+ ❯ tests/closeout-state.test.ts:125:83
+    123|     store.subscribe(listener)
+    124|
+    125|     expect(() => store.update(() => ({ value: new Map() as unknown as …
+       |                                                                                   ^
+    126|     expect(store.getSnapshot()).toBe(original)
+    127|     expect(store.getSnapshot().value).toBe(1)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  7 failed | 4 passed (11)
+   Start at  09:23:57
+   Duration  407ms (transform 49ms, setup 0ms, import 71ms, tests 35ms, environment 0ms)
+

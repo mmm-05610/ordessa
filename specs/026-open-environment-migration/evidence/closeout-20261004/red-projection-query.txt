@@ -1,0 +1,139 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/ui-components
+
+ ❯ tests/closeout-projection-query.test.ts (8 tests | 6 failed) 35ms
+     × close is idempotent and queued snapshot, delta, and gap callbacks cannot change the projection 18ms
+     × synchronous revocation during attach detaches once and remains revoked after close 2ms
+     × overflow requires resync instead of returning a snapshot with a truncated delta chain 2ms
+     × an invalidation during an in-flight read is not overwritten as fresh by that result 5ms
+     × a cleared scope late result neither changes nor notifies the replacement entry 2ms
+     × an evicted request late result neither changes nor notifies a re-created entry 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-projection-query.test.ts > T013 projection closeout > close is idempotent and queued snapshot, delta, and gap callbacks cannot change the projection
+AssertionError: expected { kind: 'snapshot', …(3) } to deeply equal { kind: 'snapshot', …(3) }
+
+- Expected
++ Received
+
+  {
+-   "cursor": "c-1",
++   "cursor": "c-2",
+    "kind": "snapshot",
+-   "revision": "r1",
+-   "value": "one",
++   "revision": "r2",
++   "value": "two",
+  }
+
+ ❯ tests/closeout-projection-query.test.ts:56:41
+     54|
+     55|     expect(source.detach).toHaveBeenCalledTimes(1)
+     56|     expect(projection.observe(null, 8)).toEqual({
+       |                                         ^
+     57|       kind: 'snapshot', revision: 'r1', value: 'one', cursor: 'c-1',
+     58|     })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  tests/closeout-projection-query.test.ts > T013 projection closeout > synchronous revocation during attach detaches once and remains revoked after close
+AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times
+ ❯ tests/closeout-projection-query.test.ts:71:20
+     69|
+     70|     const projection = projectionFromObservable(source, { scope: 'scop…
+     71|     expect(detach).toHaveBeenCalledTimes(1)
+       |                    ^
+     72|     projection.close()
+     73|     expect(detach).toHaveBeenCalledTimes(1)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  tests/closeout-projection-query.test.ts > T013 projection closeout > overflow requires resync instead of returning a snapshot with a truncated delta chain
+AssertionError: expected { kind: 'resync-required', …(1) } to deeply equal { kind: 'resync-required', …(1) }
+
+- Expected
++ Received
+
+  {
+    "kind": "resync-required",
+-   "reason": "overflow",
++   "reason": "reconnect",
+  }
+
+ ❯ tests/closeout-projection-query.test.ts:86:41
+     84|     source.queued().delta('r3', { value: 3 })
+     85|
+     86|     expect(projection.observe(null, 8)).toEqual({ kind: 'resync-requir…
+       |                                         ^
+     87|     projection.close()
+     88|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  tests/closeout-projection-query.test.ts > T013 query cache closeout > an invalidation during an in-flight read is not overwritten as fresh by that result
+AssertionError: expected 'fresh' to be 'stale' // Object.is equality
+
+Expected: "stale"
+Received: "fresh"
+
+ ❯ tests/closeout-projection-query.test.ts:130:29
+    128|     await Promise.resolve()
+    129|
+    130|     expect(entry.freshness).toBe('stale')
+       |                             ^
+    131|     expect(entry.state).toBe('stale')
+    132|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  tests/closeout-projection-query.test.ts > T013 query cache closeout > a cleared scope late result neither changes nor notifies the replacement entry
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array []
+
+
+Number of calls: 1
+
+ ❯ tests/closeout-projection-query.test.ts:152:26
+    150|     expect(replacement.data).toBeUndefined()
+    151|     expect(replacement.state).toBe('loading')
+    152|     expect(listener).not.toHaveBeenCalled()
+       |                          ^
+    153|     replacementResult.resolve('new scope')
+    154|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  tests/closeout-projection-query.test.ts > T013 query cache closeout > an evicted request late result neither changes nor notifies a re-created entry
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array []
+
+
+Number of calls: 1
+
+ ❯ tests/closeout-projection-query.test.ts:176:26
+    174|     expect(replacement.data).toBeUndefined()
+    175|     expect(replacement.state).toBe('loading')
+    176|     expect(listener).not.toHaveBeenCalled()
+       |                          ^
+    177|     replacementResult.resolve('current result')
+    178|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 2 passed (8)
+   Start at  09:24:09
+   Duration  416ms (transform 62ms, setup 0ms, import 87ms, tests 35ms, environment 0ms)
+

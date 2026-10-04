@@ -1,0 +1,14 @@
+
+> ordessa@0.1.0 typecheck
+> npm run --workspace apps/desktop typecheck
+
+
+> @modular/desktop-app@0.1.0 typecheck
+> tsc --noEmit
+
+../../plugins/agent/contracts/tests/closeout-configuration-projection.test.ts(9,47): error TS2307: Cannot find module '../src/configuration-projection' or its corresponding type declarations.
+../../plugins/agent/contracts/tests/closeout-configuration-projection.test.ts(174,28): error TS7006: Parameter 'generation' implicitly has an 'any' type.
+npm ERR! Lifecycle script `typecheck` failed with error: 
+npm ERR! Error: command failed 
+npm ERR!   in workspace: @modular/desktop-app@0.1.0 
+npm ERR!   at location: /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/apps/desktop 

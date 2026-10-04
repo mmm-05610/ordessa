@@ -12,7 +12,10 @@
     "./host/platform": "./host/src/platform.ts",
     "./host/services": "./host/src/services/index.ts",
     "./host/services/command-registry": "./host/src/services/command-registry.ts",
-    "./host/services/surface": "./host/src/services/surface.ts"
+    "./host/services/surface": "./host/src/services/surface.ts",
+    "./state": "./src/state/stateStore.ts",
+    "./tasks": "./src/state/tasks.ts",
+    "./ui-storage": "./src/state/uiStorage.ts"
   },
   "scripts": {
     "test": "vitest run --maxWorkers=1",

@@ -1,3 +1,9 @@
+## 013 阶段1检查点（2026-10-04）
+
+F5三类已复现反例已修复，原断言零修改；UI104通过、真实文件双进程CAS1通过、两独立store真实文件1通过。见 evidence/closeout-20261004/f5-report.md。runtime/server-bridge负责机制，UI工具保持编辑/React。初始三个脏文件仍保留。第1阶段产品发行与独立出口校验随阶段4续证；不冒报全产品。
+
+可试：UI套件及 native-bridge/src/ui-storage.test.ts，期望反例被拒/并发恰一写。未含生产共同owner/可靠提交/发行/真实GUI；下一ready阶段2接线。子代理费用未知；累计6次任务请求。
+
 ## 2026-10-04 013 接管（本次最新，覆盖下方旧结论）
 
 基线 0887b95bf900f50d2021a673aa7cfce967a2c3c2，分支 codex/open-environment-migration。唯一牵头/提交/合同/账本/测试写者：本会话。list_threads 无另一同树活动会话；用户服务在021树，不触碰。用户明确授权 Luna 舰队，覆盖013默认串行；三独立文件切片 stateStore、projection/queryCache、uiStorage，深度1，无子代理Git或测试写权。测试主会话串行。

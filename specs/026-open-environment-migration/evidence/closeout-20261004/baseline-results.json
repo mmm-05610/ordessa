@@ -7,7 +7,7 @@
     "cwd": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration",
     "sourceSha": "0887b95bf900f50d2021a673aa7cfce967a2c3c2",
     "exitCode": 0,
-    "log": "baseline-0.log"
+    "log": "baseline-0.txt"
   },
   {
     "command": [
@@ -22,7 +22,7 @@
     "cwd": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration",
     "sourceSha": "0887b95bf900f50d2021a673aa7cfce967a2c3c2",
     "exitCode": 0,
-    "log": "baseline-1.log"
+    "log": "baseline-1.txt"
   },
   {
     "command": [
@@ -37,7 +37,7 @@
     "cwd": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration",
     "sourceSha": "0887b95bf900f50d2021a673aa7cfce967a2c3c2",
     "exitCode": 0,
-    "log": "baseline-2.log"
+    "log": "baseline-2.txt"
   },
   {
     "command": [
@@ -50,7 +50,7 @@
     "cwd": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration",
     "sourceSha": "0887b95bf900f50d2021a673aa7cfce967a2c3c2",
     "exitCode": 0,
-    "log": "baseline-3.log"
+    "log": "baseline-3.txt"
   },
   {
     "command": [
@@ -63,6 +63,6 @@
     "cwd": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration",
     "sourceSha": "0887b95bf900f50d2021a673aa7cfce967a2c3c2",
     "exitCode": 0,
-    "log": "baseline-4.log"
+    "log": "baseline-4.txt"
   }
 ]

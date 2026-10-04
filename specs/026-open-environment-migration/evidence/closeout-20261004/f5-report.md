@@ -1,0 +1,9 @@
+# 013 stage 1 F5 repairs
+
+Red-first: state 7F/4P, projection/query 6F/2P, UI storage 8F/0P (new seam absent included); exact logs retained. After fixes original 77 +27 new =104 pass, no skips; f5-suite-final.txt. Mechanisms relocated with one implementation: runtime owns state/tasks/UI coordination, server-bridge owns query/projection, ui-components retains selectors/React/editing and compatibility forwarding only. Post-move suite104 pass. Real file store scenario1 pass, independent child CAS scenario1 pass: two OS processes, no frontend singleton, one written/one conflict, UUID version owned by adapter, reopen and delete conflict verified. Commands in corresponding logs; Node22.22.1/Vitest4.1.10/fixture temporary roots only.
+
+Public F5 types unchanged. Internal HostUiAdapter now atomic CAS; existing adapter test fixture synchronized without changing any assertions. Unknown schema99 retains preexisting record, actual write safety guard rejects secrets, migration absent transformer refused; session migration really moves partitions. No writable business data storage, no user's preference/data opened. Host file adapter is explicit host-only subpath; default absent composition stays session-only.
+
+Close is local detach and preserves cached pre-close snapshot; authorization revocation clears accessible frames. Both prevent late delivery. Overflow/gap/expired cursor/zero credit separately tested. Query invalidation cancels logical flight epoch; old scope/entry cannot notify replacement. Task cancelWait existing tests show waiting cancellation, no native stop claim.
+
+Stage typecheck initially failed because stage2 red-first new module did not exist while being authored; f5-typecheck.txt captures this, not an inherited red. Rerun after helper integration required. React/nonReact independent package and clean F5 distribution tests remain stage4 obligations. Scope: controlled mechanisms only; A108/A111 GUI still REAL_PENDING.

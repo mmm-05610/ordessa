@@ -191,7 +191,14 @@ describe('F5 UI storage', () => {
     const backing = new Map<string, { revision: string; schemaVersion: number; value: unknown }>()
     const store = fileBackedUiStore({
       async read(nsKey, key) { return backing.get(`${nsKey}|${key}`) },
-      async write(nsKey, key, envelope) { backing.set(`${nsKey}|${key}`, envelope) },
+      async compareAndSwap(nsKey, key, expectedRevision, envelope) {
+        const identity = `${nsKey}|${key}`
+        if (expectedRevision !== undefined && backing.get(identity)?.revision !== expectedRevision)
+          return { status: 'conflict' as const }
+        const revision = crypto.randomUUID()
+        backing.set(identity, { ...envelope, revision })
+        return { status: 'written' as const, revision }
+      },
       async remove(nsKey, key) { backing.delete(`${nsKey}|${key}`) },
     })
     expect(store.capability).toBe('available')

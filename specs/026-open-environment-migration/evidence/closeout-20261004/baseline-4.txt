@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/model-provider/chat-contribution
+
+
+ Test Files  12 passed (12)
+      Tests  120 passed (120)
+   Start at  09:23:09
+   Duration  18.48s (transform 524ms, setup 0ms, import 2.12s, tests 2.70s, environment 10.40s)
+
