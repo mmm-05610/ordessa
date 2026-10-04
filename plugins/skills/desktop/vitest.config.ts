@@ -9,6 +9,8 @@ export default defineConfig({
     // published contract surface only, the same alias shape the chat packages
     // use among themselves — no deep import of a host-internal path.
     '@extensions/ordessa.chat-api/contract.js': fileURLToPath(new URL('../../chat/api/src/contract.ts', import.meta.url)),
+    // Optional-dependency absence assertions import the public Profile API token.
+    '@extensions/ordessa.profile-api/contract.js': fileURLToPath(new URL('../../profile/api/src/index.ts', import.meta.url)),
   } },
   test: { include: ['tests/**/*.test.tsx', 'tests/**/*.test.ts'], environment: 'jsdom' },
 })

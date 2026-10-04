@@ -4,6 +4,7 @@
   "ordessa.agent-contracts",
   "ordessa.commands",
   "ordessa.workbench",
+  "ordessa.workbench-interactions",
   "ordessa.ui-components",
   "ordessa.connections",
   "ordessa.agent-connections",
@@ -21,9 +22,21 @@
  ],
  "config": {
   "ordessa.ui-components": [
-   {"componentId": "ordessa.profile.picker", "major": 1, "providerId": "ordessa.profile-chat"},
-   {"componentId": "ordessa.profile.editor:assets.model-provider", "major": 1, "providerId": "ordessa.model-provider"},
-   {"componentId": "ordessa.chat.model-selector", "major": 1, "providerId": "ordessa.model-provider-chat"}
+   {
+    "componentId": "ordessa.profile.picker",
+    "major": 1,
+    "providerId": "ordessa.profile-chat"
+   },
+   {
+    "componentId": "ordessa.profile.editor:assets.model-provider",
+    "major": 1,
+    "providerId": "ordessa.model-provider"
+   },
+   {
+    "componentId": "ordessa.chat.model-selector",
+    "major": 1,
+    "providerId": "ordessa.model-provider-chat"
+   }
   ]
  }
 }

@@ -1,0 +1,10 @@
+{
+  "name": "@ordessa/workbench-interactions",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Workbench provider for the public F5 interaction service",
+  "ordessa": { "id": "ordessa.workbench-interactions" },
+  "scripts": { "build": "node build.mjs", "test": "vitest run --maxWorkers=1" },
+  "dependencies": { "@ordessa/workbench": "*" }
+}

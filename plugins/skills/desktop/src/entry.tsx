@@ -11,7 +11,7 @@
  * to live is exactly that case.
  */
 import type { PluginContext } from '@ordessa/extension-api'
-import { WirePortToken, WorkbenchToken, type Workbench, type WirePort } from '@extensions/ordessa.contracts/contract.js'
+import { F5InteractionToken, WirePortToken, WorkbenchToken, type Workbench, type WirePort, type f5 } from '@extensions/ordessa.contracts/contract.js'
 import type { ChatContributionsService } from '@extensions/ordessa.chat-api/contract.js'
 import type { SkillsGateway, WorkspaceListPort, ProjectEntry } from '../../contracts/src/gateway'
 import type { SkillsChatSnapshotPort } from '../../contracts/src/chat'
@@ -20,6 +20,7 @@ import type { WireCaller } from './gateway'
 import { createSkillsGateway } from './gateway'
 import { createSkillsSnapshotGateway, unloadedSkillsSnapshotPort } from './snapshotGateway'
 import { createSkillsModel } from './model'
+import { createInteractionModel } from './task-integration'
 import { SKILLS_DETAIL_OVERLAY_ID, SKILLS_SETTINGS_SECTION_ID, SkillDetailOverlay, SkillsSection } from './view'
 
 export interface SkillsDependencies {
@@ -39,6 +40,8 @@ export interface SkillsDependencies {
   /** Injected-port escape hatch for tests and for a product that owns a
    * better snapshot producer: it always wins over `wire`. */
   chatSnapshot?: SkillsChatSnapshotPort
+  /** Production F5 task, notification and progress service. */
+  interaction?: f5.InteractionService
 }
 
 export const SKILLS_MODULE_ID = 'ordessa.skills'
@@ -51,10 +54,10 @@ export default function createPlugin() {
   return {
     id: SKILLS_MODULE_ID,
     autoStart: true,
-    requires: [WorkbenchToken, WirePortToken],
+    requires: [WorkbenchToken, WirePortToken, F5InteractionToken],
     provides: undefined,
-    activate(context: PluginContext, workbench: Workbench, wire: WirePort) {
-      return createSkillsPlugin(wireDependencies(wire)).activate(context, workbench)
+    activate(context: PluginContext, workbench: Workbench, wire: WirePort, interaction: f5.InteractionService) {
+      return createSkillsPlugin({ ...wireDependencies(wire), interaction }).activate(context, workbench)
     },
   }
 }
@@ -118,7 +121,10 @@ export function createSkillsPlugin(injected?: unknown) {
         throw Error('ordessa.skills requires a Workbench with composition support')
       }
       const deps = requireDependencies(injected)
-      const model = createSkillsModel(deps.gateway, deps.workspaces)
+      const businessModel = createSkillsModel(deps.gateway, deps.workspaces)
+      const model = deps.interaction === undefined
+        ? businessModel // isolated historical fixture path; production requires F5InteractionToken
+        : createInteractionModel(businessModel, context.resources, deps.interaction)
       const scoped = composition.forScope(context.resources)
       const views = workbench.forScope(context.resources)
       // The chat input contribution is registered under the host-issued scope,
@@ -176,6 +182,7 @@ function requireDependencies(injected: unknown): SkillsDependencies {
       ...(candidate.chat === undefined ? {} : { chat: candidate.chat }),
       ...(candidate.wire === undefined ? {} : { wire: candidate.wire }),
       ...(candidate.chatSnapshot === undefined ? {} : { chatSnapshot: candidate.chatSnapshot }),
+      ...(candidate.interaction === undefined ? {} : { interaction: candidate.interaction }),
     }
   }
   throw Error(

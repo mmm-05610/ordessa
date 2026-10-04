@@ -5,6 +5,7 @@
  *
  * 每个 Token 一个模块（`token/`），本文件只做聚合再导出。
  */
+export { F5InteractionToken } from './token/F5InteractionToken'
 export { LoggerToken } from './token/LoggerToken'
 export { ThemeServiceToken } from './token/ThemeServiceToken'
 export { SettingsContributionToken } from './token/SettingsContributionToken'

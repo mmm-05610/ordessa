@@ -5,14 +5,14 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
 import { ProfileServiceToken, type ProfileServiceClient } from '@extensions/ordessa.profile-api/contract.js'
 import { ChatContributionsToken, createChatContributions, type ChatSubmissionSnapshot } from '@extensions/ordessa.chat-api/contract.js'
-import { UiComponentsToken } from '@extensions/ordessa.contracts/contract.js'
+import { UiComponentsToken, WirePortToken, type WirePort } from '@extensions/ordessa.contracts/contract.js'
 import { createUiComponentsService } from '../../../../../packages/frontend/ui-components/src/index'
 import createPlugin from '../src/entry'
 import { ProfilePickerKey } from '../src/glue'
 import { ProfilePicker } from '../src/picker'
 import type { ProfilePickerProps } from '../src/picker-model'
 import { ProfileCatalog } from '../src/catalog'
-import { AgentSessionsToken } from '@extensions/ordessa.agent-contracts/contract.js'
+import { AgentSessionsToken, type AgentSessions } from '@extensions/ordessa.agent-contracts/contract.js'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 const cleanups: (() => void | Promise<void>)[] = []
@@ -30,22 +30,67 @@ function setup(profileCatalog = vi.fn(async (_realm: string) => groups)) {
   const service = createUiComponentsService([{ componentId: ProfilePickerKey.id, major: 1, providerId: 'ordessa.profile-chat' }])
   cleanups.push(() => service.dispose())
   const ui = service.uiComponents
-  const beginTurnApplication = vi.fn(), selectForSession = vi.fn()
-  const profiles = { profileCatalog, beginTurnApplication, selectForSession } as unknown as ProfileServiceClient
+  const writes: Readonly<Record<string, unknown>>[] = []
+  const records = new Map<string, { revision: number; resolved: Record<string, unknown> }>()
+  const wire: WirePort = {
+    ready: true,
+    scope: 'http://127.0.0.1:9|server_profile_test',
+    async call(method, params) {
+      if (method === 'agent.session.resolve') {
+        return { kind: 'Accepted', requestId: 'resolve', result: { target: 'canonical-profile-draft', generation: 9 } }
+      }
+      const target = String(params.target)
+      let record = records.get(target)
+      if (!record) { record = { revision: 0, resolved: {} }; records.set(target, record) }
+      if (method === 'agent.config.read') {
+        return { kind: 'Accepted', requestId: 'read', result: {
+          ownerRef: `agent-config:${target}`, revision: record.revision, observedEvidence: 'unset',
+          fields: Object.fromEntries(Object.keys(record.resolved).map(key => [key, 'known'])),
+          resolved: { ...record.resolved },
+        } }
+      }
+      if (method === 'agent.config.submitOperation') {
+        const patch = params.patch as Record<string, unknown>
+        writes.push(patch)
+        Object.assign(record.resolved, patch)
+        record.revision += 1
+        return { kind: 'Accepted', requestId: `write-${record.revision}`, result: {
+          operationId: `operation-${record.revision}`, patchKinds: Object.keys(patch).map(() => 'present' as const), state: 'pending',
+        } }
+      }
+      return { kind: 'Refused', requestId: 'unexpected', reason: `unexpected method ${method}`, retryable: false }
+    },
+  }
+  const sessions = {
+    getSnapshot: () => ({ available: [], selectedConnectionId: 'connection-profile-test', runtimeGeneration: 9 }),
+    subscribe: () => () => undefined,
+  } as unknown as AgentSessions
+  const profiles = {
+    profileCatalog,
+    resolvePreview: vi.fn(async (profileId: string) => ({
+      profileId, harnessId: 'pi', revision: profileId === 'a' ? 3 : 4, digest: `digest:${profileId}`,
+      unavailable: [], conflicts: [],
+      items: profileId === 'a'
+        ? [{ facetId: 'general', itemId: 'prompt', value: 'A prompt', state: 'explicit', source: { kind: 'profile', revision: 3 } }]
+        : [{ facetId: 'general', itemId: 'prompt', value: 'B prompt', state: 'explicit', source: { kind: 'profile', revision: 4 } }],
+    })),
+  } as unknown as ProfileServiceClient
   const plugin = createPlugin()
-  const glue = plugin.activate({ resources, root: { mount() { throw Error('Profile Chat must not mount a root') } } }, profiles, chat, ui)
+  const glue = plugin.activate({ resources, root: { mount() { throw Error('Profile Chat must not mount a root') } } }, profiles, chat, ui, wire, sessions)
   const props = () => {
     const view = chat.contributionsBySlot('composer.toolbar').getSnapshot()[0]!
     const projection = view.project!({ slot: 'composer.toolbar', location: snapshot.target, connection: { status: 'connected' } })
     if (projection.hidden) throw Error('picker unexpectedly hidden')
     return projection.props as ProfilePickerProps
   }
-  return { resources, chat, ui, plugin, glue, profileCatalog, beginTurnApplication, selectForSession, props }
+  return { resources, chat, ui, plugin, glue, profileCatalog, profiles, props, writes, records, wire }
 }
 
-it('activates the default factory with shared tokens and the original key; scope revokes provider and guard', async () => {
+it('activates the default factory with shared tokens and original key; scope revokes provider', async () => {
   const state = setup()
-  expect(state.plugin.requires).toEqual([ProfileServiceToken, ChatContributionsToken, UiComponentsToken, AgentSessionsToken])
+  // WirePort and AgentSessions are required because this production consumer
+  // resolves backend-issued canonical targets and fences their generation.
+  expect(state.plugin.requires).toEqual([ProfileServiceToken, ChatContributionsToken, UiComponentsToken, WirePortToken, AgentSessionsToken])
   expect(state.plugin.id).toBe('ordessa.profile-chat')
   const consumer = new OwnedResources()
   cleanups.push(() => consumer.dispose())
@@ -56,12 +101,11 @@ it('activates the default factory with shared tokens and the original key; scope
   expect(state.profileCatalog).toHaveBeenCalledWith('local')
   const gateway = { submit: vi.fn(async () => ({ status: 'accepted' as const })) }
   expect(await state.chat.submit(snapshot, gateway)).toEqual({ status: 'accepted' })
-  state.glue.store.select('draft:d1', A)
-  expect(await state.chat.submit(snapshot, gateway)).toMatchObject({ status: 'refused', reason: expect.stringContaining('尚未接入') })
-  expect(gateway.submit).toHaveBeenCalledTimes(1)
-  expect(state.beginTurnApplication).not.toHaveBeenCalled()
-  expect(state.selectForSession).not.toHaveBeenCalled()
-  expect(state.glue.store.peek('draft:d1')).toEqual(A)
+  state.props().onSelect(A)
+  await vi.waitFor(() => expect(state.writes).toHaveLength(1))
+  expect(state.writes[0]).toEqual({ 'general.prompt': 'A prompt' })
+  expect([...state.records.values()].map(record => record.resolved)).toEqual([{ 'general.prompt': 'A prompt' }])
+  expect(state.profiles.resolvePreview).toHaveBeenCalledWith('a', undefined)
   expect(snapshot.text).toBe('保留草稿')
   state.resources.dispose()
   expect(state.chat.contributionsBySlot('composer.toolbar').getSnapshot()).toEqual([])
@@ -69,7 +113,7 @@ it('activates the default factory with shared tokens and the original key; scope
   expect(await state.chat.submit(snapshot, gateway)).toEqual({ status: 'accepted' })
 })
 
-it('renders directory failure, explicitly refreshes new profiles, and immediately shows a pure selection', async () => {
+it('renders directory failure, explicitly refreshes new profiles, and dispatches only present Profile fields', async () => {
   const profileCatalog = vi.fn(async (_realm: string) => groups)
   profileCatalog.mockRejectedValueOnce(Error('目录断开'))
   const state = setup(profileCatalog)
@@ -91,21 +135,17 @@ it('renders directory failure, explicitly refreshes new profiles, and immediatel
   await act(async () => {
     document.querySelector<HTMLElement>('[data-profile-value="pi::b"]')!.click()
   })
+  await vi.waitFor(() => expect(state.writes).toHaveLength(1))
   expect(container.textContent).toContain('预设 B')
-  expect(state.selectForSession).not.toHaveBeenCalled()
-  expect(state.beginTurnApplication).not.toHaveBeenCalled()
+  expect(state.profiles.resolvePreview).toHaveBeenCalledWith('b', undefined)
+  // The second Profile has no model field, so this backend operation preserves
+  // every model choice and only carries its explicit prompt field.
+  expect(state.writes[0]).toEqual({ 'general.prompt': 'B prompt' })
+  expect([...state.records.values()].map(record => record.resolved)).toEqual([{ 'general.prompt': 'B prompt' }])
+  expect(snapshot.text).toBe('保留草稿')
   const gateway = { submit: vi.fn(async () => ({ status: 'accepted' as const })) }
-  expect(await state.chat.submit(snapshot, gateway)).toMatchObject({ status: 'refused' })
-  expect(gateway.submit).not.toHaveBeenCalled()
-  expect(state.glue.store.peek('draft:d1')).toEqual({ profileId: B.profileId, harnessId: B.harnessId, displayName: B.displayName })
-  await openPicker()
-  await act(async () => { Array.from(document.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(item => item.textContent === '清除预设选择')!.click() })
-  expect(state.glue.store.peek('draft:d1')).toBeNull()
-  expect(container.querySelector('[data-profile-trigger]')?.textContent).toContain('选择预设')
   expect(await state.chat.submit(snapshot, gateway)).toEqual({ status: 'accepted' })
   expect(gateway.submit).toHaveBeenCalledTimes(1)
-  expect(state.selectForSession).not.toHaveBeenCalled()
-  expect(state.beginTurnApplication).not.toHaveBeenCalled()
   const priorRefreshes = profileCatalog.mock.calls.length
   await openPicker()
   expect(profileCatalog).toHaveBeenCalledTimes(priorRefreshes + 1)

@@ -33,6 +33,7 @@ export interface InteractionPresenter {
     severity?: 'info' | 'warning' | 'error'
     fraction?: number | null
     cancellable: boolean
+    requestCancel?: () => void
   }): void
   dismiss(id: string): void
 }
@@ -75,6 +76,7 @@ export function createInteractionService(options: InteractionServiceOptions): In
       severity: state.severity,
       fraction: state.fraction,
       cancellable: state.cancel !== undefined,
+      ...(state.cancel === undefined ? {} : { requestCancel: () => { guard(state); state.cancel?.() } }),
     })
   }
 

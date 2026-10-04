@@ -7,7 +7,8 @@
     "id": "ordessa.workbench"
   },
   "exports": {
-    "./api": "./api/workbench.ts"
+    "./api": "./api/workbench.ts",
+    "./interactions": "./src/interactions.ts"
   },
   "scripts": {
     "test": "vitest run --maxWorkers=1 && node --test tests/"

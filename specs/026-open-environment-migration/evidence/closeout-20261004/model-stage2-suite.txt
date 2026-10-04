@@ -1,0 +1,26 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/model-provider/chat-contribution
+
+ ❯ tests/production-entry.test.tsx (9 tests | 1 failed) 275ms
+     × refuses activation with no wire port rather than a selector that cannot reach the Server 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/production-entry.test.tsx > the declared plugin entry is the real Chat wiring > refuses activation with no wire port rather than a selector that cannot reach the Server
+AssertionError: expected [Function] to throw an error
+ ❯ tests/production-entry.test.tsx:162:41
+    160|     cleanup.push(() => resources.dispose())
+    161|     expect(() => createPlugin().activate(activationContext(resources),…
+    162|       undefined as never, service([]))).toThrow(TRANSPORT_MISSING)
+       |                                         ^
+    163|   })
+    164|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 12 passed (13)
+      Tests  1 failed | 120 passed (121)
+   Start at  10:08:12
+   Duration  19.79s (transform 637ms, setup 0ms, import 2.48s, tests 3.04s, environment 10.78s)
+

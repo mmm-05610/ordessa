@@ -1,3 +1,13 @@
+## 2026-10-04 013 生产前端消费者检查点（源代码 SHA 为本段所在提交）
+
+Profile/model 的生产入口已调用公开 wire-backed Agent owner；local owner只留明确fixture，选择只写操作意图。Profile全套94P，Model121P，Skills135P，0 skip；资源通知/进度由独立Workbench provider呈现，cancelWait只停止等待。依赖变更对应真实生产WirePort/AgentSessions/F5InteractionToken，不恢复旧local store。Profile原测试改为真实wire fixture并保字段mask/文本保留；新requires按实际DI增补，旧失败日志保留。
+
+当前原账107/129（010=9/14、011=1/9、012=5/13）。除此前T010-13，不以窄套件勾整体任务。typecheck与19扩展build通过；刚新增观察反例test的类型错误已定位，待最终重跑。package-lock保留初始补锁并增本次provider/deps；extensions.lock、bundle-manifest仍保留并等待固定源码后的发行重建，不宣称当前产物已验。
+
+后端可靠提交独立Agent43P；同Environment观察及真实产品两轮/重启9场景与kernel合计21P（后续新增detach责任反例还需复跑）。这些源代码继续独立收口，未凭本次前端提交认定T011完成。修复发现请求/响应WirePort能承载同Environment管理的credit观察，无须第二broker；未知操作/重复旧观察不得解锁捕获的新红首已登记。
+
+下一ready：观察退出责任复跑、生产观察多窗口实测、原生opaque transport准入、默认/无Profile产物两轮、F5独立React/nonReact消费、全链继承红逐ID复核。真实GUI/IME/真实三品牌模型/系统安装/真实数据保持REAL_PENDING，未动用户服务或密钥。所有检查点后继续。
+
 ## 2026-10-04 013 阶段2 检查点（提交后继续）
 
 T010-13 已实用公共编辑工具：Chat领域DraftStore保留租约/修订权，F5 EditSession负责捕获保存状态；Profile设置编辑页使用同工具及公共任务/查询。Profile 24P；Chat首次89P2F，真实ABA输入修正为A→B→A后92P，Escape旧反例复跑通过。无断言删除/skip，首次失败记录保留。真实IME/GUI仍未验。
