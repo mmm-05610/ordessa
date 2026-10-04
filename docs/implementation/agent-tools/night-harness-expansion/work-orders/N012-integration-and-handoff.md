@@ -45,9 +45,9 @@ parallelism_reason: "共享接缝、Git及总验收由唯一执行者串行处�
 
 ## Stages
 
-- [ ] 1. 逐家复核证据、损失/不支持面与许可；同步唯一catalog生成镜像，移除假ready声明但不删原家族（主执行者阶段检查点，精确路径提交）
-- [ ] 2. 真实fresh client wheel安装，接口/冲突/unknown/恢复/跨node隔离反例复跑，记录每类回归和固定继承失败（主执行者阶段检查点，精确路径提交）
-- [ ] 3. 列产品能力/每家L0–L4/安装清理/调用花费/未测项；打不覆盖tag，给明晨操作与授权清单（主执行者阶段检查点，精确路径提交）
+- [x] 1. 逐家复核证据、损失/不支持面与许可；同步唯一catalog生成镜像，移除假ready声明但不删原家族（主执行者阶段检查点，精确路径提交）— 10份decision.md+矩阵逐家复核；catalog生成器验证 exit0（8家族镜像一致，无假ready声明可移除——全部runtimeReady语义本为否定）；5新家族registry块**defer登记**（需dialect/物化合同冻结，P-A②等价pin先例，见status待决）；原7+qwen家族未删
+- [x] 2. 真实fresh client wheel安装，接口/冲突/unknown/恢复/跨node隔离反例复跑，记录每类回归和固定继承失败（主执行者阶段检查点，精确路径提交）— wheel 0.1.0a2 fresh venv安装+init/doctor实测（G10零宿主内部依赖）；native_clients反例146P/0F、家族驱动86P+49P；固定继承失败4F记录于docs/known-issues.md
+- [x] 3. 列产品能力/每家L0–L4/安装清理/调用花费/未测项；打不覆盖tag，给明晨操作与授权清单（主执行者阶段检查点，精确路径提交）— `evidence/N012-family-matrix.xlsx`（4表）+status.md终账（成本0/清理/明晨5步/待授权清单）；tag checkpoint/agent-tools-native-030-N012（不覆盖既有tag）
 
 ## Parallel units
 
@@ -82,5 +82,14 @@ git diff --check
 
 ## Batch report
 
-阶段结束填：门与反例计数、命令/退出码、证据路径、源码SHA、清理、调用成本、未测项。阶段复选框不得提前勾选。
+终态 **N012_PARTIAL**（整合/分发/矩阵/交接齐；L2真实任务门未测→按acceptance批次整体PARTIAL）。
+
+- 门：BASE✓（快照链完整） NATIVE（fresh wheel公开入口可用✓；接入家族使用=适配层可导入可调用，运行接纳依赖阻塞） SAFETY✓（safety-reviewer全批复查+2严重7中低修复+遗留登记） EVIDENCE✓（十家L0-L4分账矩阵、不累加DONE）。
+- 反例计数：native_clients 146用例＋驱动 86+49+64等（含安全钉测11例）；产品全量 402P/0F。
+- 命令/退出码：validate_order 12/12 OK exit0；git diff --check exit0；generate_harness_catalog verify exit0；pip wheel+fresh install+init exit0。
+- 证据路径：evidence/N012-family-matrix.xlsx、N012-safety-review.md、status.md终账、各 *-decision.md。
+- 源码SHA：至 20be628540 + 本单提交；tag `checkpoint/agent-tools-native-030-N012`。
+- 清理：/tmp scratch（pi/codex/wheel/fresh/matrix-png）收尾删除；真实~/.pi/~/.codex/~/.vibe零接触。
+- 调用成本：真实模型0；安装0（LibreOffice因sudo/apt授权边界未装，登记待授权）；文档WebFetch约12次。
+- 未测项：L2全运行面（pi partial除外）、L3/L4；registry登记defer；安全遗留3项。
 
