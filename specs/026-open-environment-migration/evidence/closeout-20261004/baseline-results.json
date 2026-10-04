@@ -1,0 +1,68 @@
+[
+  {
+    "command": [
+      "node",
+      "specs/026-open-environment-migration/checks/validate-package.mjs"
+    ],
+    "cwd": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration",
+    "sourceSha": "0887b95bf900f50d2021a673aa7cfce967a2c3c2",
+    "exitCode": 0,
+    "log": "baseline-0.log"
+  },
+  {
+    "command": [
+      ".venv/bin/python",
+      "-m",
+      "pytest",
+      "plugins/agent/backend/tests",
+      "-q",
+      "-p",
+      "no:cacheprovider"
+    ],
+    "cwd": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration",
+    "sourceSha": "0887b95bf900f50d2021a673aa7cfce967a2c3c2",
+    "exitCode": 0,
+    "log": "baseline-1.log"
+  },
+  {
+    "command": [
+      "./node_modules/.bin/vitest",
+      "run",
+      "--root",
+      "packages/frontend/ui-components",
+      "--exclude",
+      "**/closeout*.test.ts",
+      "--maxWorkers=1"
+    ],
+    "cwd": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration",
+    "sourceSha": "0887b95bf900f50d2021a673aa7cfce967a2c3c2",
+    "exitCode": 0,
+    "log": "baseline-2.log"
+  },
+  {
+    "command": [
+      "./node_modules/.bin/vitest",
+      "run",
+      "--root",
+      "plugins/profile/integrations/chat",
+      "--maxWorkers=1"
+    ],
+    "cwd": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration",
+    "sourceSha": "0887b95bf900f50d2021a673aa7cfce967a2c3c2",
+    "exitCode": 0,
+    "log": "baseline-3.log"
+  },
+  {
+    "command": [
+      "./node_modules/.bin/vitest",
+      "run",
+      "--root",
+      "plugins/model-provider/chat-contribution",
+      "--maxWorkers=1"
+    ],
+    "cwd": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration",
+    "sourceSha": "0887b95bf900f50d2021a673aa7cfce967a2c3c2",
+    "exitCode": 0,
+    "log": "baseline-4.log"
+  }
+]
