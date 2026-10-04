@@ -207,3 +207,16 @@ def test_identity_matches_assigned_family_and_key_sets_disjoint() -> None:
     assert native_channel.COMPILE_SUPPORTED_KEYS.isdisjoint(native_channel.COMPILE_REFUSAL_KEYS)
     for key in native_channel.COMPILE_SUPPORTED_KEYS:
         assert not native_channel.is_token_key(key)
+
+
+@pytest.mark.parametrize("flag", ["--allow-all", "--yolo", "--auto-approve", "--yes"])
+def test_plan_launch_refuses_auto_approve_flags(tmp_path, flag) -> None:
+    # SAFETY counter-example: the forbidden-flag list is a real fence in
+    # plan_launch, not a dead constant.
+    with pytest.raises(native_channel.ConfigRefusal):
+        native_channel.plan_launch(
+            executable="copilot",
+            home=tmp_path / "home",
+            workspace=tmp_path / "work",
+            extra_args=(flag,),
+        )

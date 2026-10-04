@@ -121,6 +121,14 @@ def compile_config(materials: Mapping[str, Any]) -> dict:
                 else "not a recognized gemini configuration key"
             )
             raise ConfigRefusal(key, reason)
+    approval_mode = materials.get("approval_mode")
+    if approval_mode is not None:
+        mode = str(approval_mode).lower()
+        if mode in {"auto", "acceptall", "yolo", "bypass"} or "bypass" in mode or "auto-approve" in mode:
+            raise ConfigRefusal(
+                "approval_mode",
+                "auto-approve modes are never compiled (SAFETY: no auto-approve)",
+            )
     args: list[str] = []
     if materials.get("debug") is True:
         args.append("--debug")

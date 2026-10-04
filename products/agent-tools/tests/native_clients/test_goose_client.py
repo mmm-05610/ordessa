@@ -97,3 +97,17 @@ def test_l1_cancel_is_notification(client) -> None:
     client.initialize(timeout=5)
     client.cancel(sessionId="gs-1")
     client.new_session(timeout=5)  # channel still healthy
+
+
+def test_launch_refuses_unauthenticated_flag_before_spawn(tmp_path) -> None:
+    # SAFETY counter-example: bypassing the harness planner still cannot get
+    # --dangerously-unauthenticated through the client launch path.
+    script = tmp_path / "fake_goose.py"
+    script.write_text("import time; time.sleep(5)", encoding="utf-8")
+    spec = LaunchSpec.build(
+        [sys.executable, str(script), "--dangerously-unauthenticated"],
+        home=str(tmp_path / "home"),
+        cwd=str(tmp_path),
+    )
+    with pytest.raises(ValueError):
+        GooseClient.launch(spec)

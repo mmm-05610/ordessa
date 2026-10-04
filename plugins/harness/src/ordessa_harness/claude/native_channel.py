@@ -141,8 +141,15 @@ def compile_config(materials: Mapping[str, Any]) -> dict:
     args: list[str] = []
     if materials.get("model") is not None:
         args.extend(["--model", str(materials["model"])])
-    if materials.get("permission_mode") is not None:
-        args.extend(["--permission-mode", str(materials["permission_mode"])])
+    permission_mode = materials.get("permission_mode")
+    if permission_mode is not None:
+        mode = str(permission_mode)
+        if "bypass" in mode.lower() or mode.lower() in {"auto", "acceptall", "yolo", "dangerouslyskip"}:
+            raise ConfigRefusal(
+                "permission_mode",
+                "auto-approve/bypass modes are never compiled (SAFETY: no auto-approve)",
+            )
+        args.extend(["--permission-mode", mode])
     if materials.get("allowed_tools") is not None:
         args.extend(["--allowedTools", str(materials["allowed_tools"])])
     if materials.get("system_prompt") is not None:

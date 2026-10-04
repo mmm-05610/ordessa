@@ -178,3 +178,16 @@ def test_close_then_use_is_channel_closed(client) -> None:
     client.close()
     with pytest.raises(ChannelClosed):
         client.command("thread/list", timeout=2)
+
+
+def test_declined_decision_is_never_upgraded_by_amendment(client) -> None:
+    # SAFETY counter-example: an amendment payload must never silently turn a
+    # "decline" into an acceptWithExecpolicyAmendment approval.
+    client.initialize(timeout=5)
+    with pytest.raises(ValueError):
+        client.reply_approval(1, "decline", amendment={"rules": ["x"]})
+
+
+def test_turn_failed_is_not_a_channel_closed_condition() -> None:
+    # G11 boundary: a failed turn is a run outcome, not "safe to resend".
+    assert not issubclass(TurnFailed, ChannelClosed)

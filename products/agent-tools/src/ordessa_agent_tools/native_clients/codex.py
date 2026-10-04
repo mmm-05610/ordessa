@@ -34,6 +34,7 @@ from typing import Any, Callable, Mapping
 
 from ._transport import (
     ChannelClosed,
+    ChannelFailure,
     FramingError,
     LostReceipt,
     Message,
@@ -69,12 +70,13 @@ class CodexRpcError(RemoteFailure):
         self.raw_error = dict(raw_error)
 
 
-class TurnFailed(ChannelClosed):
+class TurnFailed(ChannelFailure):
     """A turn ended in terminal state ``failed``/``interrupted`` where a
-    completion was awaited. The raw notification is preserved (G6)."""
+    completion was awaited. The raw notification is preserved (G6). This is a
+    run outcome, not a transport condition — never treat it as "not sent"."""
 
     def __init__(self, status: str, raw: Mapping[str, Any]):
-        super().__init__(f"turn ended with status {status!r}")
+        ChannelFailure.__init__(self, "TURN_FAILED", f"turn ended with status {status!r}")
         self.status = status
         self.raw = dict(raw)
 
@@ -249,14 +251,22 @@ class CodexAppServerClient:
         """Answer ``item/permissions/requestApproval`` with the SAME id.
 
         ``decision`` must be one of the documented values; the caller owns
-        the decision — no default, no auto-approve (SAFETY).
+        the decision — no default, no auto-approve (SAFETY). An ``amendment``
+        payload is only valid together with the explicit
+        ``acceptWithExecpolicyAmendment`` decision — a declined decision can
+        never silently become an approval.
         """
-        if decision not in APPROVAL_DECISIONS and amendment is None:
-            raise ValueError(f"decision must be one of {sorted(APPROVAL_DECISIONS)}")
-        result: Any = decision
         if amendment is not None:
-            result = {"acceptWithExecpolicyAmendment": dict(amendment)}
-        self._channel.reply(request_id, result)
+            if decision != "acceptWithExecpolicyAmendment":
+                raise ValueError(
+                    "an amendment payload requires decision='acceptWithExecpolicyAmendment'; "
+                    "a declined decision is never upgraded to an approval"
+                )
+            self._channel.reply(request_id, {"acceptWithExecpolicyAmendment": dict(amendment)})
+            return
+        if decision not in APPROVAL_DECISIONS:
+            raise ValueError(f"decision must be one of {sorted(APPROVAL_DECISIONS)}")
+        self._channel.reply(request_id, decision)
 
     def reply_request(self, request_id: Any, result: Any) -> None:
         self._channel.reply(request_id, result)

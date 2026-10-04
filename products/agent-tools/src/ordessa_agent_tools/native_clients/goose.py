@@ -36,6 +36,19 @@ class GooseClient(AcpClient):
     FAMILY_ID = FAMILY_ID
     PROTOCOL = PROTOCOL
 
+    #: Pre-spawn fence: even a caller who bypasses the harness planner cannot
+    #: get this flag through (SAFETY; upstream restricts it to isolated
+    #: local development).
+    _FORBIDDEN_FLAGS = ("--dangerously-unauthenticated",)
+
+    @classmethod
+    def launch(cls, spec: Any, *, name: str = "goose-acp") -> "GooseClient":
+        for token in getattr(spec, "argv", ()):
+            base = token.split("=", 1)[0]
+            if base in cls._FORBIDDEN_FLAGS:
+                raise ValueError(f"refusing launch: {base} is never used (SAFETY)")
+        return super().launch(spec, name=name)  # type: ignore[return-value]
+
     def describe(self) -> dict[str, Any]:
         return {
             "familyId": FAMILY_ID,

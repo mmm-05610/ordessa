@@ -84,3 +84,10 @@ def test_capability_matrix_has_no_observed_yes() -> None:
 def test_identity_keeps_both_names_without_rename() -> None:
     assert native_channel.FAMILY_ID == "claude"
     assert native_channel.COMMAND_CATALOG_ID == "claude-code"
+
+
+@pytest.mark.parametrize("bad_mode", ["bypassPermissions", "auto", "acceptAll", "yolo"])
+def test_auto_approve_permission_modes_are_refused(bad_mode) -> None:
+    # SAFETY counter-example: auto-approve/bypass modes are never compiled.
+    with pytest.raises(native_channel.ConfigRefusal):
+        native_channel.compile_config({"permission_mode": bad_mode})

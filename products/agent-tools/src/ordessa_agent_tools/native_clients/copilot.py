@@ -726,6 +726,7 @@ class CopilotClient:
             if rid in self._pending:
                 # Receipt for another in-flight (possibly nested) request.
                 self._responses[rid] = incoming
+                self._events.append(incoming)  # kept verbatim even if its waiter timed out (G4)
                 continue
             # Stale/foreign response: preserved verbatim, never a receipt.
             self._events.append(incoming)

@@ -48,7 +48,22 @@ _TOKEN_ENV_KEYS = (
     "COPILOT_TOKEN",
     "AWS_SECRET_ACCESS_KEY",
     "AWS_SESSION_TOKEN",
+    "AWS_ACCESS_KEY_ID",
     "AZURE_API_KEY",
+    "COPILOT_GITHUB_TOKEN",
+    "COPILOT_SDK_AUTH_TOKEN",
+    "GOOGLE_APPLICATION_CREDENTIALS",
+    "HF_TOKEN",
+    "HUGGING_FACE_HUB_TOKEN",
+    "NETRC",
+    "SSH_AUTH_SOCK",
+    "KIMI_API_KEY",
+    "QWEN_API_KEY",
+    "DASHSCOPE_API_KEY",
+    "MOONSHOT_API_KEY",
+    "MISTRAL_API_KEY",
+    "VIBE_API_KEY",
+    "GOOSE_API_KEY",
 )
 
 
@@ -290,7 +305,9 @@ class ProcessChannel:
             self._process.stdin.write(data)
             self._process.stdin.flush()
         except BrokenPipeError as exc:
-            raise ChannelClosed("pipe closed while writing") from exc
+            # A partial write may already have reached the peer: the outcome is
+            # unknown here, not "never sent" (G11).
+            raise ChannelClosed("pipe broke while writing (partial write possible; outcome unknown)") from exc
 
     def request(
         self,

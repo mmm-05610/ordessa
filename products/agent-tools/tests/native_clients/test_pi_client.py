@@ -424,3 +424,16 @@ def test_close_releases_only_owned_process(tmp_path) -> None:
                                               "steeringMode": "all"}
     finally:
         kept.close()
+
+
+def test_l1_lost_receipt_marks_unknown_not_no_run(tmp_path) -> None:
+    # G11 counter-example: a lost prompt receipt means the run MAY exist —
+    # wait_settled must answer "unknown", never the fabricated "no-run".
+    client = launch_client(tmp_path, "prompt-silent")
+    try:
+        with pytest.raises(RequestTimeout):
+            client.send_prompt("hello", timeout=1)
+        outcome = client.wait_settled(timeout=1)
+        assert outcome["outcome"] == "unknown"
+    finally:
+        client.close()

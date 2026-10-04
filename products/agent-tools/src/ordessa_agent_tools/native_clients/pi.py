@@ -247,7 +247,13 @@ class PiRpcClient:
         """
         args = dict(fields)
         args["message"] = message
-        record = self._request("prompt", args, timeout=timeout, on_event=on_event)
+        try:
+            record = self._request("prompt", args, timeout=timeout, on_event=on_event)
+        except (RequestTimeout, LostReceipt):
+            # Sent without a receipt: the run MAY be in flight — the outcome is
+            # unknown, never "no run" (G11).
+            self._run_state = "unknown"
+            raise
         data = record.get("data")
         if isinstance(data, dict):
             disposition = data.get("disposition")
@@ -255,6 +261,10 @@ class PiRpcClient:
                 self._run_state = "started"
             elif disposition == "handled":
                 self._run_state = "handled"
+            else:
+                self._run_state = "unknown"  # undocumented disposition: unknown, not guessed
+        else:
+            self._run_state = "unknown"
         return data
 
     def wait_settled(self, *, timeout: float) -> Mapping[str, Any]:
@@ -270,6 +280,14 @@ class PiRpcClient:
         marker immediately instead of waiting — no run, no settle boundary,
         and no fabricated completion.
         """
+        if self._run_state == "unknown":
+            # The prompt outcome was never observed (lost receipt / unknown
+            # disposition): a run MAY exist. Answering "no-run" would be a
+            # fabricated conclusion — the answer stays unknown (G11).
+            return {
+                "outcome": "unknown",
+                "reason": "prompt receipt was lost or undocumented; run state unknown",
+            }
         if self._run_state in _SETTLE_QUIET_STATES:
             return {
                 "outcome": "no-run",

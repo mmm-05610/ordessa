@@ -96,12 +96,13 @@ def plan_launch(
     ``extra_args`` (docs restrict it to isolated local development).
     """
     forbidden = {"--dangerously-unauthenticated"}
-    clash = forbidden.intersection(extra_args)
-    if clash:
-        raise ConfigRefusal(
-            sorted(clash)[0],
-            "upstream restricts this flag to isolated local development; never planned",
-        )
+    for token in extra_args:
+        base = token.split("=", 1)[0]
+        if base in forbidden or token in forbidden:
+            raise ConfigRefusal(
+                base,
+                "upstream restricts this flag to isolated local development; never planned",
+            )
     home_path = Path(home)
     argv = ["goose", "acp"]
     argv.extend(extra_args)
@@ -128,6 +129,14 @@ def compile_config(materials: Mapping[str, Any]) -> dict:
                 else "not a recognized goose configuration key"
             )
             raise ConfigRefusal(key, reason)
+    approval_mode = materials.get("approval_mode")
+    if approval_mode is not None:
+        mode = str(approval_mode).lower()
+        if mode in {"auto", "acceptall", "yolo", "bypass", "unauthenticated"} or "bypass" in mode:
+            raise ConfigRefusal(
+                "approval_mode",
+                "auto-approve modes are never compiled (SAFETY: no auto-approve)",
+            )
     session_params = {
         k: materials[k] for k in ("model", "provider", "extension", "approval_mode") if materials.get(k) is not None
     }

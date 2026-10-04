@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 from typing import Any, Iterator, Mapping
 from urllib.parse import urlparse
 
-from ._transport import ChannelFailure, ChannelClosed, FramingError
+from ._transport import ChannelFailure, ChannelClosed, FramingError, LostReceipt
 
 MAX_EVENT_BYTES = 8 * 1024 * 1024
 
@@ -103,13 +103,21 @@ class LoopbackHttpChannel:
         connection = http.client.HTTPConnection(
             self._host, self._port, timeout=timeout or self._timeout
         )
+        sent = False
         try:
             connection.request(
                 method, f"{self._base_path}{path}", body=payload, headers=request_headers
             )
+            sent = True
             response = connection.getresponse()
             raw = response.read()
         except (OSError, socket.timeout) as exc:
+            if sent:
+                # bytes left this side and no receipt arrived: outcome unknown
+                # (G11) — callers must not treat this as "safe to resend".
+                raise LostReceipt(
+                    f"http {method} {path}", None, f"sent but no receipt: {exc}"
+                ) from exc
             raise HttpChannelFailure("HTTP_IO_ERROR", f"{method} {path}: {exc}") from exc
         finally:
             connection.close()
@@ -119,6 +127,10 @@ class LoopbackHttpChannel:
             return response.status, json.loads(raw.decode("utf-8"))
         except (UnicodeDecodeError, ValueError) as exc:
             raise FramingError(f"response body is not valid UTF-8 JSON: {exc}") from exc
+
+    # NOTE: request_json distinguishes "never sent" from "sent, receipt lost"
+    # below: a transport failure after the request bytes were written is a
+    # LostReceipt (outcome unknown, never silently retried, G11).
 
     # -- SSE ---------------------------------------------------------------
     def stream_events(
@@ -183,6 +195,8 @@ def _iter_sse(response: Any) -> Iterator[SseEvent]:
         size += len(line)
         if size > MAX_EVENT_BYTES:
             raise FramingError(f"SSE event exceeded {MAX_EVENT_BYTES} bytes")
+        # note: size resets at each event boundary below — one oversized event
+        # is a framing breach; a long healthy stream is not.
         if line in (b"\n", b"\r\n"):
             if data_lines:
                 yield SseEvent(event=event_name, data="\n".join(data_lines), id=event_id, retry=retry)
@@ -190,6 +204,7 @@ def _iter_sse(response: Any) -> Iterator[SseEvent]:
             data_lines = []
             event_id = None
             retry = None
+            size = 0  # the cap bounds ONE event, not the whole stream (G5)
             continue
         try:
             decoded = line.decode("utf-8", errors="strict").rstrip("\r\n")

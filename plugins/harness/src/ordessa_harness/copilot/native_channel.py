@@ -352,6 +352,13 @@ def plan_launch(
     ``--no-auto-login`` and download/telemetry-off environment pins (G12).
     """
     home_path = Path(home)
+    for token in extra_args:
+        base = token.split("=", 1)[0]
+        if base in FORBIDDEN_AUTO_APPROVE_FLAGS:
+            raise ConfigRefusal(
+                base,
+                "auto-approve flags are never planned (SAFETY: approval decisions stay with the caller)",
+            )
     argv = [os.fspath(executable), "--headless", "--stdio"]
     argv.extend(ISOLATION_FLAGS)
     argv.extend(["--log-level", str(log_level)])
