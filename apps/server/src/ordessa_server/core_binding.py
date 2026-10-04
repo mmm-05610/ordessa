@@ -1,77 +1,24 @@
-"""``CoreBinding`` — the single Pacthold seam of one Server composition (T015).
+"""Server's compatibility facade for the composition's single Environment.
 
-Shape (fixed by ``specs/010-platform-core/reports/B.md`` §"T015 seam decision"):
-
-* exactly ONE class, constructed ONCE PER COMPOSITION by
-  ``bootstrap/runtime.build_runtime`` and handed to consumers through the
-  existing host wall (``host_ports["core.binding"]`` for declaring plugins,
-  the per-composition resolver position for host-side consumers — the same
-  shape as ``harness_resolver`` / ``error_family_resolver``).  It is never a
-  module-level singleton: S2a-R proved in this repo that per-composition
-  state on a module global leaks across hosts in one process, and a Core
-  binding installed that way would be strictly worse.
-* imports come ONLY from ``pacthold.public`` (the facade's own docstring is
-  the authority on what it exposes; ``packages/pacthold/tests/platform/
-  test_public_contract.py`` locks it).  No dataclass here mirrors a C1 type.
-* the C2→C1 step is a TRANSLATION BY IDENTITY: the plugin's opaque
-  ``Contribution`` payload is handed to ``CoreContributionSet`` construction
-  as-is (``_as_contribution_set``).  If a payload shape does not fit the C1
-  constructor, that is a report-worthy mismatch, surfaced as the constructor
-  error — never reshaped inside the host.
-* failure semantics inherit the T012/T013 registration transaction: a
-  raising ``stage`` aborts the round with zero leaked contributions and the
-  owner stays unbound (``CoreRegistry.stage`` validates against local copies
-  and reserves nothing until the whole batch checks out).
-* ``close()`` runs BEFORE any store teardown in the composition's stop path
-  and SURFACES the ``ShutdownReport`` instead of discarding it.
-
-Store topology (S1c decision, landed in the same commit as required): the
-composition's C1 Core gets its OWN file inside the data root
-(``<data root>/state/core.sqlite``), never the legacy product database file.
-``CoreStore`` is self-owned (``sqlite3.connect(path, timeout=10.0,
-check_same_thread=False)``, no connection-injection seam), and the host's
-in-process write lock does not serialise a second OS-level connection on the
-same file — so a shared legacy file would rest on sqlite's bare 10 s timeout
-for every multi-statement write sequence that the legacy chain performs
-outside one explicit transaction.  The counterexample witness for that
-decision is ``apps/server/tests/platform/
-test_platform_core_instance_124.py::
-test_shared_file_topology_counterexample_double_applies_a_write``; the two
-live compositions gate ("关闭 A 后 B 仍可读写") is proven in the same module
-with two real compositions in one process.
+This module only forwards identity and contribution registration to the
+Environment supplied by the selected product. It owns no registry, SQLite
+connection, execution runtime, or effect-dispatch fallback. In particular,
+legacy Core ``ExecutionPlan`` verbs are intentionally absent: the frozen
+Environment activity contract is not a signature-compatible substitute for
+that older execution API.
 """
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
 
-from pacthold.public import (
-    CoreContributionSet,
-    CoreRegistration,
-    CoreRegistrySnapshot,
-    CoreRuntime,
-    CoreStore,
-    ExecutionPlan,
-    ExecutionView,
-    OwnerNotRegisteredError,
-    ReconcileResult,
-    RuntimeClosedError,
-    ShutdownReport,
-    StopDispatchResult,
-    SubmitResult,
-)
+from ordessa_environment_api import GuaranteeUnavailableError
+from pacthold.public import CoreContributionSet, Environment
 
 
 def _as_contribution_set(payload: Any) -> CoreContributionSet:
-    """Translate the plugin's opaque C2 payload to C1 by identity.
-
-    Accepted shapes, tried in order: an already-built ``CoreContributionSet``
-    (passed through untouched), a mapping of the C1 constructor's own keyword
-    names (expanded verbatim), or any object exposing the three C1 field
-    names (handed to the constructor as-is).  Anything else raises from the
-    C1 constructor itself — the mismatch stays visible at the seam.
-    """
+    """Translate the plugin contribution payload through the frozen C1 DTO."""
     if isinstance(payload, CoreContributionSet):
         return payload
     if isinstance(payload, Mapping):
@@ -84,159 +31,126 @@ def _as_contribution_set(payload: Any) -> CoreContributionSet:
 
 
 class CoreBinding:
-    """One composition's whole Pacthold core: one instance store, one runtime.
+    """A thin per-composition facade over a product-created Environment.
 
-    Lifecycle: constructed cold by ``build_runtime`` (no file, no connection);
-    the first verb opens the round lazily, so a composition that never uses
-    Core never grows a core file.  ``close()`` retires the round and keeps
-    the ``ShutdownReport``; ``open()`` on a closed binding starts the next
-    round over the same server-owned file (a restart, not a resurrection —
-    in-memory registration state is the new round's, durable facts stay in
-    the store, exactly ``CoreRuntime``'s own restart contract).
+    The factory is product supplied because the product owns concrete storage
+    construction. Server and Pacthold never import a concrete SQLite adapter.
+    A missing factory is an explicit unavailable capability; it does not
+    create an in-memory substitute that could be mistaken for the composition
+    authority.
     """
 
-    def __init__(self, store_path: Path | str) -> None:
+    def __init__(
+        self,
+        store_path: Path | str,
+        *,
+        environment_factory: Callable[[Path], Environment] | None = None,
+        ownership_probe: Callable[[], bool] | None = None,
+    ) -> None:
         if not isinstance(store_path, (Path, str)):
             raise TypeError(f"CoreBinding store_path must be Path or str, got {store_path!r}")
-        self._store_path = str(store_path)
-        self._store: CoreStore | None = None
-        self._runtime: CoreRuntime | None = None
+        self._store_path = Path(store_path)
+        self._environment_factory = environment_factory
+        self._ownership_probe = ownership_probe
+        self._environment: Environment | None = None
+        self._closed = False
         self._ever_opened = False
-        self._shutdown_report: ShutdownReport | None = None
 
-    # -- identity / topology facts (plain data, never C1 mirrors) -----------
+    @property
+    def owns_data_root(self) -> bool:
+        return self._ownership_probe is not None and self._ownership_probe() is True
 
     @property
     def store_path(self) -> str:
-        return self._store_path
+        """Path passed to the product factory; Server never opens it itself."""
+        return str(self._store_path)
 
     @property
     def ever_opened(self) -> bool:
         return self._ever_opened
 
     @property
-    def store(self) -> Any:
-        """The instance store's ONE SQLite connection (026 T006-01 / S1c).
-
-        The execution chain's injection seam: resolved lazily, so the FIRST
-        read opens the round (and with it the ``state/core.sqlite`` file) —
-        a composition whose chain never touches Core still never grows the
-        store. Borrowers execute their statements on this connection and
-        never close it and never open a second connection on the file (the
-        topology decision in the class docstring). After ``close()`` the read
-        refuses typed (``RuntimeClosedError``): a stopped composition must
-        never grow a new writer behind the released data-root lock.
-        """
-        return self._round().store.connection()
+    def environment(self) -> Environment:
+        return self.open()
 
     @property
-    def shutdown_report(self) -> Any | None:
-        """The last ``close()`` report, surfaced (never swallowed) for the
-        composition's owner to read after the round retired."""
-        return self._shutdown_report
+    def shutdown_report(self) -> None:
+        """The frozen Environment API has no shutdown-report contract."""
+        return None
 
-    # -- lifecycle -----------------------------------------------------------
+    def open(self) -> Environment:
+        """Return this round's exact product Environment.
 
-    def open(self) -> CoreRuntime:
-        """Start (or restart after a close) this composition's Core round."""
-        if self._runtime is not None:
-            return self._runtime
-        self._store = CoreStore(self._store_path)
-        self._runtime = CoreRuntime(self._store)
+        After close, a new round can only be created by the product factory,
+        which is responsible for reopening the same durable environment.
+        """
+        if self._environment is not None and not self._closed:
+            return self._environment
+        if self._environment_factory is None:
+            raise GuaranteeUnavailableError(
+                "the selected product did not provide an Environment factory; "
+                "Server effects are unavailable"
+            )
+        environment = self._environment_factory(self._store_path)
+        if not isinstance(environment, Environment):
+            raise TypeError("environment_factory must return pacthold.public.Environment")
+        self._environment = environment
+        self._closed = False
         self._ever_opened = True
-        return self._runtime
+        return environment
 
-    def close(self) -> ShutdownReport:
-        """Retire the round: ``CoreRuntime.close()`` FIRST (it surfaces the
-        report and closes its own store last); an unopened binding reports
-        the empty shutdown fact without ever touching the filesystem."""
-        if self._runtime is None:
-            if self._shutdown_report is None:
-                self._shutdown_report = ShutdownReport()
-            return self._shutdown_report
-        runtime = self._runtime
-        self._runtime = None
-        self._store = None
-        self._shutdown_report = runtime.close()
-        return self._shutdown_report
+    def close(self) -> None:
+        """Close the Environment without inventing a shutdown success report."""
+        if self._environment is None or self._closed:
+            return None
+        environment = self._environment
+        self._closed = True
+        environment.close()
+        return None
 
-    def _round(self) -> CoreRuntime:
-        if self._runtime is None:
-            if not self._ever_opened:
-                return self.open()
-            raise RuntimeClosedError(
-                "CoreBinding round is closed; the composition re-opens it on start()")
-        return self._runtime
+    # -- registration: one Environment registry and activation authority ----
 
-    # -- registration --------------------------------------------------------
-
-    def bind_owner(self, owner: str, contributions: Any) -> CoreRegistration:
-        """Stage the owner's batch through C1 and publish it atomically.
-
-        A raising stage leaves the registry exactly as before (zero leaked
-        contributions) and the owner stays unbound — C1's
-        ``CoreRegistry.stage`` contract, not a re-implementation."""
-        return self._round_bind(owner, _as_contribution_set(contributions))
-
-    def _round_bind(self, owner: str, contribution_set: CoreContributionSet) -> CoreRegistration:
-        registration = self._round().stage(owner, contribution_set)
-        registration.commit()
-        return registration
+    def bind_owner(self, owner: str, contributions: Any) -> Any:
+        """Convenience activation for callers outside the host transaction."""
+        prepared = self.environment.stage_activation(owner, _as_contribution_set(contributions))
+        prepared.commit()
+        return prepared
 
     def unbind_owner(self, owner: str) -> None:
-        """Remove one owner's active batch; refused typed while the owner
-        still holds unresolved leases (FR-007, C1 ``unregister``)."""
-        self._round().unregister(owner)
+        del owner
+        raise GuaranteeUnavailableError(
+            "owner-only unbind is unavailable; retirement requires the Environment activation ref"
+        )
 
-    def snapshot(self) -> CoreRegistrySnapshot:
-        return self._round().registry_snapshot()
+    def snapshot(self) -> Any:
+        return self.environment.registry_snapshot
 
-    # -- the pacthold.contributions point handler (T012/T013 round shape) ---
+    # -- pacthold.contributions point handler -------------------------------
 
-    def stage(self, contribution: Any, owner: str) -> CoreRegistration:
-        """Contribution-point handler: validate + reserve, publish nothing.
+    def stage(self, contribution: Any, owner: str) -> Any:
+        """Reserve a contribution in the same Environment CoreRegistry."""
+        return self.environment.stage_activation(
+            owner, _as_contribution_set(contribution.payload)
+        )
 
-        ``contribution`` is the C2 ``Contribution`` the host injects the
-        owner with; its opaque ``payload`` is translated by identity.  The
-        returned handle is the prepared record the host commits or rolls
-        back when the whole round stages."""
-        return self._round().stage(owner, _as_contribution_set(contribution.payload))
-
-    def commit(self, contribution: Any, prepared: CoreRegistration, owner: str) -> None:
+    def commit(self, contribution: Any, prepared: Any, owner: str) -> None:
+        del contribution, owner
         prepared.commit()
 
-    def rollback(self, contribution: Any, prepared: CoreRegistration, owner: str) -> None:
-        """The host's retirement/undo call — C1's own batch rules, no fudge.
-
-        A STAGED batch rolls back (idempotent). A COMMITTED batch may already
-        have been consumed by dispatch, and C1 forbids rolling it back: it
-        retires through ``CoreRuntime.unregister`` — which refuses typed
-        (``OwnerBusyError``) while the owner holds unresolved leases, the
-        busy-refusal the unload gate demands. An already-closed round has
-        nothing to retire into: the store keeps the durable facts and the
-        ``ShutdownReport`` lists what is unresolved."""
-        if prepared.state == "committed":
-            if self._runtime is None:
-                return
-            try:
-                self._runtime.unregister(owner)
-            except OwnerNotRegisteredError:
-                pass  # idempotent: already retired through a prior round
+    def rollback(self, contribution: Any, prepared: Any, owner: str) -> None:
+        """Delegate rollback/retirement to the Environment's staged handle."""
+        del contribution, owner
+        state = getattr(prepared, "state", None)
+        if state in ("rolled_back", "retired"):
             return
-        if prepared.state in ("rolled_back", "unregistered"):
+        if state == "staged":
+            prepared.rollback()
             return
-        prepared.rollback()
-
-    # -- execution verbs (real C1 dispatch, not a substitute) ----------------
-
-    def submit(self, plan: ExecutionPlan) -> SubmitResult:
-        return self._round().submit(plan)
-
-    def query(self, execution_id: str) -> ExecutionView:
-        return self._round().query(execution_id)
-
-    def request_stop(self, execution_id: str, operation_key: str) -> StopDispatchResult:
-        return self._round().request_stop(execution_id, operation_key)
-
-    def reconcile(self, execution_id: str, operation_key: str) -> ReconcileResult:
-        return self._round().reconcile(execution_id, operation_key)
+        if state == "committed":
+            status, blockers = self.environment.retire_activation(prepared.receipt.activation)
+            if status != "retired":
+                raise RuntimeError(
+                    f"Environment activation retirement remains {status}: {blockers}"
+                )
+            return
+        raise RuntimeError(f"unknown Environment registration state: {state!r}")

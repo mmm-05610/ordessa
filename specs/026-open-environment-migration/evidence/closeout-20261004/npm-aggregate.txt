@@ -1,0 +1,3852 @@
+
+> ordessa@0.1.0 test
+> node tooling/test-all.mjs
+
+
+[1m▶ typecheck[0m npm run typecheck
+
+> ordessa@0.1.0 typecheck
+> npm run --workspace apps/desktop typecheck
+
+
+> @modular/desktop-app@0.1.0 typecheck
+> tsc --noEmit
+
+
+[1m▶ build:examples[0m npm run build:examples
+
+> ordessa@0.1.0 build:examples
+> node tooling/build-examples.mjs
+
+Built standalone examples into examples/dist; host was not rebuilt.
+
+[1m▶ build:foundations[0m npm run build:foundations
+
+> ordessa@0.1.0 build:foundations
+> node tooling/build-all.mjs
+
+Built 19 enabled extensions into products/desktop/dist
+
+[1m▶ build:app[0m npm run build
+
+> ordessa@0.1.0 build
+> npm run --workspace apps/desktop build
+
+
+> @modular/desktop-app@0.1.0 build
+> node scripts/build.mjs
+
+Built 19 enabled extensions into products/desktop/dist
+product: Ordessa Desktop 0.1.0 (0.1.0-local); icons: source=true rasterized=false
+
+[1m▶ workspace:apps/desktop[0m npm run --workspace apps/desktop test
+
+> @modular/desktop-app@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/apps/desktop
+
+
+ Test Files  9 passed (9)
+      Tests  144 passed (144)
+   Start at  11:07:23
+   Duration  8.06s (transform 686ms, setup 0ms, import 1.40s, tests 1.55s, environment 2.67s)
+
+
+[1m▶ workspace:packages/frontend/connections[0m npm run --workspace packages/frontend/connections test
+
+> @ordessa/connections@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/connections
+
+
+ Test Files  4 passed (4)
+      Tests  29 passed (29)
+   Start at  11:07:32
+   Duration  1.57s (transform 190ms, setup 0ms, import 358ms, tests 105ms, environment 1ms)
+
+
+[1m▶ workspace:packages/frontend/extension-runtime[0m npm run --workspace packages/frontend/extension-runtime test
+
+> @ordessa/extension-runtime@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/extension-runtime
+
+
+ Test Files  10 passed (10)
+      Tests  116 passed (116)
+   Start at  11:07:35
+   Duration  12.71s (transform 404ms, setup 0ms, import 772ms, tests 9.37s, environment 2ms)
+
+
+[1m▶ workspace:packages/frontend/native-bridge[0m npm run --workspace packages/frontend/native-bridge test
+
+> @ordessa/native-bridge@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/native-bridge
+
+
+ Test Files  2 passed (2)
+      Tests  14 passed (14)
+   Start at  11:07:49
+   Duration  1.02s (transform 156ms, setup 0ms, import 208ms, tests 265ms, environment 0ms)
+
+
+[1m▶ workspace:packages/frontend/server-bridge[0m npm run --workspace packages/frontend/server-bridge test
+
+> @ordessa/server-bridge@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/server-bridge
+
+
+ Test Files  7 passed (7)
+      Tests  83 passed (83)
+   Start at  11:07:51
+   Duration  5.84s (transform 196ms, setup 0ms, import 356ms, tests 3.60s, environment 1ms)
+
+
+[1m▶ workspace:packages/frontend/ui[0m npm run --workspace packages/frontend/ui test
+
+> @ordessa/ui@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/ui
+
+Not implemented: HTMLFormElement's requestSubmit() method
+Not implemented: HTMLFormElement's requestSubmit() method
+
+ Test Files  6 passed (6)
+      Tests  30 passed (30)
+   Start at  11:07:59
+   Duration  8.11s (transform 194ms, setup 0ms, import 772ms, tests 515ms, environment 5.14s)
+
+
+[1m▶ workspace:packages/frontend/ui-components[0m npm run --workspace packages/frontend/ui-components test
+
+> @ordessa/ui-components@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/ui-components
+
+
+ Test Files  12 passed (12)
+      Tests  105 passed (105)
+   Start at  11:08:08
+   Duration  8.27s (transform 402ms, setup 0ms, import 1.00s, tests 627ms, environment 3.49s)
+
+
+[1m▶ workspace:packages/frontend/workbench[0m npm run --workspace packages/frontend/workbench test
+
+> @ordessa/workbench@0.1.0 test
+> vitest run --maxWorkers=1 && node --test tests/
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/workbench
+
+
+ Test Files  12 passed (12)
+      Tests  84 passed (84)
+   Start at  11:08:17
+   Duration  15.20s (transform 709ms, setup 0ms, import 1.66s, tests 4.82s, environment 5.72s)
+
+TAP version 13
+# node:internal/fs/promises:952
+#   const result = await PromisePrototypeThen(
+#                  ^
+# Error: ENOENT: no such file or directory, scandir '/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/packages/frontend/contracts'
+#     at async readdir (node:internal/fs/promises:952:18)
+#     at async walk (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/workbench/tests/token-scan.mjs:190:25)
+#     at async discoverSources (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/workbench/tests/token-scan.mjs:205:29)
+#     at async file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/workbench/tests/token-single-instance.test.mjs:51:52 {
+#   errno: -2,
+#   code: 'ENOENT',
+#   syscall: 'scandir',
+#   path: '/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/packages/frontend/contracts'
+# }
+# Node.js v22.22.1
+# Subtest: tests
+not ok 1 - tests
+  ---
+  duration_ms: 198.341159
+  type: 'test'
+  location: '/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/workbench/tests:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 213.890112
+npm ERR! Lifecycle script `test` failed with error: 
+npm ERR! Error: command failed 
+npm ERR!   in workspace: @ordessa/workbench@0.1.0 
+npm ERR!   at location: /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/workbench 
+
+> @ordessa/workbench-interactions@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/workbench/interactions
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  11:08:34
+   Duration  1.55s (transform 194ms, setup 0ms, import 329ms, tests 65ms, environment 877ms)
+
+
+[1m▶ workspace:packages/frontend/workbench/interactions[0m npm run --workspace packages/frontend/workbench/interactions test
+
+> @ordessa/workbench-interactions@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/frontend/workbench/interactions
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  11:08:37
+   Duration  1.29s (transform 139ms, setup 0ms, import 228ms, tests 65ms, environment 722ms)
+
+
+[1m▶ workspace:plugins/agent/connections[0m npm run --workspace plugins/agent/connections test
+
+> @ordessa/plugin-agent-connections@0.1.0 test
+> vitest run --maxWorkers=1
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/connections
+
+
+ Test Files  2 passed (2)
+      Tests  13 passed (13)
+   Start at  11:08:39
+   Duration  2.18s (transform 379ms, setup 0ms, import 609ms, tests 146ms, environment 880ms)
+
+
+[1m▶ workspace:plugins/agent/contracts[0m npm run --workspace plugins/agent/contracts test
+
+> @ordessa/agent-contracts@0.2.0 test
+> vitest run
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts
+
+
+ Test Files  6 passed (6)
+      Tests  39 passed (39)
+   Start at  11:08:43
+   Duration  405ms (transform 347ms, setup 0ms, import 546ms, tests 80ms, environment 1ms)
+
+
+[1m▶ workspace:plugins/agent/sessions[0m npm run --workspace plugins/agent/sessions test
+
+> @ordessa/plugin-agent-sessions@0.1.0 test
+> vitest run --maxWorkers=1
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/sessions
+
+
+ Test Files  4 passed (4)
+      Tests  45 passed (45)
+   Start at  11:08:44
+   Duration  3.23s (transform 588ms, setup 0ms, import 1.06s, tests 337ms, environment 873ms)
+
+
+[1m▶ workspace:plugins/chat/api[0m npm run --workspace plugins/chat/api test
+
+> @ordessa/plugin-chat-api@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/chat/api
+
+
+ Test Files  3 passed (3)
+      Tests  31 passed (31)
+   Start at  11:08:49
+   Duration  1.42s (transform 431ms, setup 0ms, import 289ms, tests 303ms, environment 1ms)
+
+
+[1m▶ workspace:plugins/chat/frontend[0m npm run --workspace plugins/chat/frontend test
+
+> @ordessa/plugin-chat@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/chat/frontend
+
+
+ Test Files  8 passed (8)
+      Tests  92 passed (92)
+   Start at  11:08:51
+   Duration  12.92s (transform 620ms, setup 0ms, import 2.19s, tests 2.82s, environment 5.73s)
+
+
+[1m▶ workspace:plugins/connectors/acp[0m npm run --workspace plugins/connectors/acp test
+
+> @ordessa/plugin-agent-acp@0.1.0 test
+> vitest run --maxWorkers=1
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/connectors/acp
+
+
+ Test Files  9 passed (9)
+      Tests  67 passed (67)
+   Start at  11:09:06
+   Duration  5.76s (transform 447ms, setup 0ms, import 2.53s, tests 847ms, environment 2ms)
+
+
+[1m▶ workspace:plugins/connectors/ordessa[0m npm run --workspace plugins/connectors/ordessa test
+
+> @ordessa/plugin-agent-server@0.1.0 test
+> vitest run --maxWorkers=1
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/connectors/ordessa
+
+
+ Test Files  3 passed (3)
+      Tests  48 passed (48)
+   Start at  11:09:13
+   Duration  1.49s (transform 326ms, setup 0ms, import 572ms, tests 112ms, environment 1ms)
+
+
+[1m▶ workspace:plugins/mcp/frontend[0m npm run --workspace plugins/mcp/frontend test
+
+> @ordessa/plugin-asset-mcp@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/mcp/frontend
+
+
+ Test Files  5 passed (5)
+      Tests  39 passed (39)
+   Start at  11:09:16
+   Duration  6.23s (transform 308ms, setup 0ms, import 518ms, tests 360ms, environment 3.96s)
+
+
+[1m▶ workspace:plugins/model-provider/chat-contribution[0m npm run --workspace plugins/model-provider/chat-contribution test
+
+> @ordessa/plugin-model-provider-chat@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/model-provider/chat-contribution
+
+
+ Test Files  13 passed (13)
+      Tests  121 passed (121)
+   Start at  11:09:23
+   Duration  19.57s (transform 515ms, setup 0ms, import 2.27s, tests 2.86s, environment 10.87s)
+
+
+[1m▶ workspace:plugins/model-provider/desktop[0m npm run --workspace plugins/model-provider/desktop test
+
+> @ordessa/plugin-model-provider@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/model-provider/desktop
+
+
+ Test Files  2 passed (2)
+      Tests  37 passed (37)
+   Start at  11:09:44
+   Duration  3.98s (transform 260ms, setup 0ms, import 515ms, tests 1.16s, environment 1.75s)
+
+
+[1m▶ workspace:plugins/permissions/frontend[0m npm run --workspace plugins/permissions/frontend test
+
+> @ordessa/plugin-permissions-chat@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/permissions/frontend
+
+
+ Test Files  10 passed (10)
+      Tests  93 passed (93)
+   Start at  11:09:49
+   Duration  11.56s (transform 293ms, setup 0ms, import 885ms, tests 551ms, environment 7.44s)
+
+
+[1m▶ workspace:plugins/profile/api[0m npm run --workspace plugins/profile/api test
+
+> @ordessa/plugin-profile-api@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/profile/api
+
+
+ Test Files  2 passed (2)
+      Tests  10 passed (10)
+   Start at  11:10:02
+   Duration  814ms (transform 130ms, setup 0ms, import 230ms, tests 26ms, environment 0ms)
+
+
+[1m▶ workspace:plugins/profile/frontend[0m npm run --workspace plugins/profile/frontend test
+
+> @ordessa/plugin-profile-frontend@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/profile/frontend
+
+
+ Test Files  6 passed (6)
+      Tests  24 passed (24)
+   Start at  11:10:04
+   Duration  5.00s (transform 428ms, setup 0ms, import 840ms, tests 768ms, environment 1.76s)
+
+
+[1m▶ workspace:plugins/profile/integrations/chat[0m npm run --workspace plugins/profile/integrations/chat test
+
+> @ordessa/plugin-profile-chat@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/profile/integrations/chat
+
+
+ Test Files  9 passed (9)
+      Tests  94 passed (94)
+   Start at  11:10:11
+   Duration  8.65s (transform 514ms, setup 0ms, import 2.22s, tests 1.83s, environment 2.26s)
+
+
+[1m▶ workspace:plugins/sandbox/frontend[0m npm run --workspace plugins/sandbox/frontend test
+
+> @ordessa/plugin-sandbox-settings@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/sandbox/frontend
+
+
+ Test Files  6 passed (6)
+      Tests  34 passed (34)
+   Start at  11:10:21
+   Duration  3.29s (transform 287ms, setup 0ms, import 591ms, tests 198ms, environment 880ms)
+
+
+[1m▶ workspace:plugins/skills/desktop[0m npm run --workspace plugins/skills/desktop test
+
+> @ordessa/plugin-skills@0.1.0 test
+> vitest run --maxWorkers=1
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/skills/desktop
+
+
+ Test Files  11 passed (11)
+      Tests  135 passed (135)
+   Start at  11:10:25
+   Duration  15.45s (transform 533ms, setup 0ms, import 1.15s, tests 2.47s, environment 8.81s)
+
+
+[1m▶ workspace:plugins/subagents/settings[0m npm run --workspace plugins/subagents/settings test
+
+> @ordessa/plugin-subagent-settings@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/subagents/settings
+
+
+ Test Files  7 passed (7)
+      Tests  95 passed (95)
+   Start at  11:10:42
+   Duration  2.74s (transform 260ms, setup 0ms, import 644ms, tests 201ms, environment 1ms)
+
+
+[1m▶ workspace:plugins/subagents/ui[0m npm run --workspace plugins/subagents/ui test
+
+> @ordessa/plugin-assets-subagents-ui@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/subagents/ui
+
+
+ Test Files  1 passed (1)
+      Tests  31 passed (31)
+   Start at  11:10:46
+   Duration  491ms (transform 140ms, setup 0ms, import 196ms, tests 23ms, environment 0ms)
+
+
+[1m▶ workspace:products/desktop[0m npm run --workspace products/desktop test
+
+> @ordessa/product-desktop@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/products/desktop
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  11:10:48
+   Duration  2.43s (transform 83ms, setup 0ms, import 814ms, tests 499ms, environment 838ms)
+
+
+[1m▶ node-test:products/desktop[0m node --test products/desktop/tests/
+TAP version 13
+# Subtest: variant build without ordessa.connections succeeds and keeps the platform API importable
+not ok 1 - variant build without ordessa.connections succeeds and keeps the platform API importable
+  ---
+  duration_ms: 4119.947074
+  type: 'test'
+  location: '/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/products/desktop/tests/connections-platform-isolation.test.mjs:117:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    token 'ordessa.agent.connections.v1' must be constructed exactly once in the variant build, found 2: [{"file":"/tmp/ordessa-cn08-Ti7E3D/out-without/extensions/ordessa.agent-contracts/contract.js","count":1},{"file":"/tmp/ordessa-cn08-Ti7E3D/out-without/extensions/ordessa.profile-chat/entry.js","count":1}]
+    
+    2 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/products/desktop/tests/connections-platform-isolation.test.mjs:163:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: the built platform bundle reaches no business extension
+ok 2 - the built platform bundle reaches no business extension
+  ---
+  duration_ms: 4.077031
+  type: 'test'
+  ...
+# Subtest: redirecting the output root perturbs the product build not at all
+ok 3 - redirecting the output root perturbs the product build not at all
+  ---
+  duration_ms: 4268.233942
+  type: 'test'
+  ...
+# Subtest: variant builds never touched the real product dist or lock
+ok 4 - variant builds never touched the real product dist or lock
+  ---
+  duration_ms: 161.671414
+  type: 'test'
+  ...
+# Subtest: no Agent/Chat domain type or token is declared under packages/frontend
+ok 5 - no Agent/Chat domain type or token is declared under packages/frontend
+  ---
+  duration_ms: 34.824643
+  type: 'test'
+  ...
+# Subtest: no platform source imports or re-exports a domain carrier path
+ok 6 - no platform source imports or re-exports a domain carrier path
+  ---
+  duration_ms: 3.238791
+  type: 'test'
+  ...
+# Subtest: the domain carrier lives in plugins/agent/contracts with its persistent ids
+not ok 7 - the domain carrier lives in plugins/agent/contracts with its persistent ids
+  ---
+  duration_ms: 3.879774
+  type: 'test'
+  location: '/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/products/desktop/tests/contract-ownership.test.mjs:170:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    the platform umbrella must hold exactly the platform carriers commands/ + foundation/
+    + actual - expected
+    
+      [
+        'commands',
+        'foundation',
+    +   'node_modules'
+      ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0: 'commands'
+    1: 'foundation'
+  actual:
+    0: 'commands'
+    1: 'foundation'
+    2: 'node_modules'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/products/desktop/tests/contract-ownership.test.mjs:176:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: the real build constructs every domain token/kind exactly once, in the domain carrier only
+not ok 8 - the real build constructs every domain token/kind exactly once, in the domain carrier only
+  ---
+  duration_ms: 3971.825517
+  type: 'test'
+  location: '/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/products/desktop/tests/contract-ownership.test.mjs:250:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    domain token 'ordessa.agent.connections.v1' must be constructed exactly once in the build, found 2: [{"file":"/tmp/ordessa-t018-KTtEc1/out-full/extensions/ordessa.agent-contracts/contract.js","count":1},{"file":"/tmp/ordessa-t018-KTtEc1/out-full/extensions/ordessa.profile-chat/entry.js","count":1}]
+    
+    2 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/products/desktop/tests/contract-ownership.test.mjs:271:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: without the Agent implementations the built domain carrier still exports a usable API
+ok 9 - without the Agent implementations the built domain carrier still exports a usable API
+  ---
+  duration_ms: 3969.567992
+  type: 'test'
+  ...
+# Subtest: only trusted builtins carry main-process (native:) entries
+ok 10 - only trusted builtins carry main-process (native:) entries
+  ---
+  duration_ms: 28.553341
+  type: 'test'
+  ...
+# Subtest: no main-process source performs a top-level variable dynamic import
+ok 11 - no main-process source performs a top-level variable dynamic import
+  ---
+  duration_ms: 1.143863
+  type: 'test'
+  ...
+# Subtest: the renderer keeps its isolation posture (no global relaxation)
+ok 12 - the renderer keeps its isolation posture (no global relaxation)
+  ---
+  duration_ms: 0.229879
+  type: 'test'
+  ...
+# Subtest: apps/desktop/renderer holds exactly the frozen host test suites
+ok 13 - apps/desktop/renderer holds exactly the frozen host test suites
+  ---
+  duration_ms: 1.300067
+  type: 'test'
+  ...
+# Subtest: logical manifests exist for the moved frontend packages and validate
+ok 14 - logical manifests exist for the moved frontend packages and validate
+  ---
+  duration_ms: 0.792907
+  type: 'test'
+  ...
+# Subtest: counterexample: a manifest that behaves like a scheduler is refused
+ok 15 - counterexample: a manifest that behaves like a scheduler is refused
+  ---
+  duration_ms: 0.139352
+  type: 'test'
+  ...
+# Subtest: counterexample: malformed identity or unknown schema version is refused
+ok 16 - counterexample: malformed identity or unknown schema version is refused
+  ---
+  duration_ms: 0.119655
+  type: 'test'
+  ...
+# Subtest: logical identity agrees with the runtime extension identity
+ok 17 - logical identity agrees with the runtime extension identity
+  ---
+  duration_ms: 0.399958
+  type: 'test'
+  ...
+# Subtest: product admits the model selector and binds its published component key
+ok 18 - product admits the model selector and binds its published component key
+  ---
+  duration_ms: 1.110222
+  type: 'test'
+  ...
+# Subtest: built provider and Chat consumer share one token and register through scoped public services
+ok 19 - built provider and Chat consumer share one token and register through scoped public services
+  ---
+  duration_ms: 1206.270257
+  type: 'test'
+  ...
+# Subtest: desktop launch and installed probes select the verified Profile assets by default
+not ok 20 - desktop launch and installed probes select the verified Profile assets by default
+  ---
+  duration_ms: 1.971044
+  type: 'test'
+  location: '/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/products/desktop/tests/native-profile-defaults.test.mjs:12:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        'claude-code': '/opt/ordessa/harnesses/profile-claude-provider-restoration/artifacts',
+        codex: '/opt/ordessa/harnesses/profile-codex-catalog-fast-off-v6/artifacts',
+    +   pi: '/opt/ordessa/harnesses/profile-pi-startup-admission-v2/artifacts'
+    -   pi: '/opt/ordessa/harnesses/profile-pi-registration-owner-bound/artifacts'
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    codex: '/opt/ordessa/harnesses/profile-codex-catalog-fast-off-v6/artifacts'
+    pi: '/opt/ordessa/harnesses/profile-pi-registration-owner-bound/artifacts'
+    claude-code: '/opt/ordessa/harnesses/profile-claude-provider-restoration/artifacts'
+  actual:
+    pi: '/opt/ordessa/harnesses/profile-pi-startup-admission-v2/artifacts'
+    codex: '/opt/ordessa/harnesses/profile-codex-catalog-fast-off-v6/artifacts'
+    claude-code: '/opt/ordessa/harnesses/profile-claude-provider-restoration/artifacts'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/products/desktop/tests/native-profile-defaults.test.mjs:15:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: Codex probe seed and native acceptance use the same delivered default as the desktop
+ok 21 - Codex probe seed and native acceptance use the same delivered default as the desktop
+  ---
+  duration_ms: 2.330123
+  type: 'test'
+  ...
+# Subtest: every admitted product extension is really built with entry and manifest
+ok 22 - every admitted product extension is really built with entry and manifest
+  ---
+  duration_ms: 12.41311
+  type: 'test'
+  ...
+# Subtest: each DI token owner bundle is an admitted contract carrier in the product build
+ok 23 - each DI token owner bundle is an admitted contract carrier in the product build
+  ---
+  duration_ms: 1.863804
+  type: 'test'
+  ...
+# Subtest: each shared DI token owner is served by the real import map and app artifact
+ok 24 - each shared DI token owner is served by the real import map and app artifact
+  ---
+  duration_ms: 63.513052
+  type: 'test'
+  ...
+# Subtest: brand selection refuses accidental API inference and false evidence flags
+ok 25 - brand selection refuses accidental API inference and false evidence flags
+  ---
+  duration_ms: 1.239098
+  type: 'test'
+  ...
+# Subtest: UI alert diagnostics emit only closed categories, never messages or credential fragments
+ok 26 - UI alert diagnostics emit only closed categories, never messages or credential fragments
+  ---
+  duration_ms: 1.991843
+  type: 'test'
+  ...
+# Subtest: cleanup deletes only API-key locators read from the disposable database
+ok 27 - cleanup deletes only API-key locators read from the disposable database
+  ---
+  duration_ms: 118.916487
+  type: 'test'
+  ...
+# Subtest: changed Profile receipt requires same session and matching selected brand
+ok 28 - changed Profile receipt requires same session and matching selected brand
+  ---
+  duration_ms: 0.766141
+  type: 'test'
+  ...
+# Subtest: no-model seed creates two real-shaped presets without opening credential source or native channel
+ok 29 - no-model seed creates two real-shaped presets without opening credential source or native channel
+  ---
+  duration_ms: 246.43886
+  type: 'test'
+  ...
+# Subtest: the shared plan selects all three Profile variants through Harness
+ok 30 - the shared plan selects all three Profile variants through Harness
+  ---
+  duration_ms: 1.324389
+  type: 'test'
+  ...
+# Subtest: installed layout rebases product asset roots without knowing adapter entries
+ok 31 - installed layout rebases product asset roots without knowing adapter entries
+  ---
+  duration_ms: 0.969128
+  type: 'test'
+  ...
+# Subtest: existing environment overrides retain precedence and shared Claude fallback
+ok 32 - existing environment overrides retain precedence and shared Claude fallback
+  ---
+  duration_ms: 0.933743
+  type: 'test'
+  ...
+# Subtest: invalid override fails before Harness planning: ORDESSA_PI_PROFILE_BRIDGE
+ok 33 - invalid override fails before Harness planning: ORDESSA_PI_PROFILE_BRIDGE
+  ---
+  duration_ms: 0.901644
+  type: 'test'
+  ...
+# Subtest: invalid override fails before Harness planning: ORDESSA_NATIVE_PROFILE_ARTIFACT_ROOT
+ok 34 - invalid override fails before Harness planning: ORDESSA_NATIVE_PROFILE_ARTIFACT_ROOT
+  ---
+  duration_ms: 1.002348
+  type: 'test'
+  ...
+# Subtest: invalid override fails before Harness planning: ORDESSA_CLAUDE_PROFILE_ARTIFACT_ROOT
+ok 35 - invalid override fails before Harness planning: ORDESSA_CLAUDE_PROFILE_ARTIFACT_ROOT
+  ---
+  duration_ms: 1.071939
+  type: 'test'
+  ...
+# Subtest: development runner never starts Electron after MISSING_CODEX_ASSET
+ok 36 - development runner never starts Electron after MISSING_CODEX_ASSET
+  ---
+  duration_ms: 4.433159
+  type: 'test'
+  ...
+# Subtest: development runner never starts Electron after MISSING_PI_ASSET
+ok 37 - development runner never starts Electron after MISSING_PI_ASSET
+  ---
+  duration_ms: 0.805482
+  type: 'test'
+  ...
+# Subtest: development runner never starts Electron after MISSING_CLAUDE_ASSET
+ok 38 - development runner never starts Electron after MISSING_CLAUDE_ASSET
+  ---
+  duration_ms: 0.725159
+  type: 'test'
+  ...
+# Subtest: development launch passes exactly the shared plan to its child
+ok 39 - development launch passes exactly the shared plan to its child
+  ---
+  duration_ms: 3.328721
+  type: 'test'
+  ...
+# Subtest: release generator writes only plan JSON on success and nothing on refusal
+ok 40 - release generator writes only plan JSON on success and nothing on refusal
+  ---
+  duration_ms: 2.634339
+  type: 'test'
+  ...
+# Subtest: empty plan and malformed release layout cannot masquerade as a successful empty host
+ok 41 - empty plan and malformed release layout cannot masquerade as a successful empty host
+  ---
+  duration_ms: 0.862865
+  type: 'test'
+  ...
+# Subtest: no controlled UI fixture name appears anywhere in the platform source
+ok 42 - no controlled UI fixture name appears anywhere in the platform source
+  ---
+  duration_ms: 47.645266
+  type: 'test'
+  ...
+# Subtest: the controlled key is constructed exactly once in the real build and React stays shared
+ok 43 - the controlled key is constructed exactly once in the real build and React stays shared
+  ---
+  duration_ms: 4.636412
+  type: 'test'
+  ...
+# Subtest: the product explicitly selects the Profile UI provider while the carrier stays API-only
+ok 44 - the product explicitly selects the Profile UI provider while the carrier stays API-only
+  ---
+  duration_ms: 10.823064
+  type: 'test'
+  ...
+1..44
+# tests 44
+# suites 0
+# pass 40
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 37084.856133
+
+[1m▶ node-test:plugins/harness/packaging[0m npm run test:harness-packaging
+
+> ordessa@0.1.0 test:harness-packaging
+> mkdir -p packaging/.cache/test-tmp && TMPDIR="${TMPDIR:-$PWD/packaging/.cache/test-tmp}" node --test --test-concurrency=1 "plugins/harness/packaging/**/*.test.mjs"
+
+TAP version 13
+# Subtest: builds the closure, keeps the native payload, and is deterministic
+ok 1 - builds the closure, keeps the native payload, and is deterministic
+  ---
+  duration_ms: 173.332435
+  type: 'test'
+  ...
+# Subtest: a missing required dependency fails loudly
+ok 2 - a missing required dependency fails loudly
+  ---
+  duration_ms: 5.628734
+  type: 'test'
+  ...
+# Subtest: a package version that disagrees with the lock fails loudly
+ok 3 - a package version that disagrees with the lock fails loudly
+  ---
+  duration_ms: 2.466515
+  type: 'test'
+  ...
+# Subtest: a native package that describes another target fails loudly
+ok 4 - a native package that describes another target fails loudly
+  ---
+  duration_ms: 2.465228
+  type: 'test'
+  ...
+# Subtest: a non-executable native binary fails loudly
+ok 5 - a non-executable native binary fails loudly
+  ---
+  duration_ms: 2.347011
+  type: 'test'
+  ...
+# Subtest: a symlink anywhere in the closure fails loudly
+ok 6 - a symlink anywhere in the closure fails loudly
+  ---
+  duration_ms: 3.526805
+  type: 'test'
+  ...
+# Subtest: output policy refuses the repository, relative paths and user config roots
+ok 7 - output policy refuses the repository, relative paths and user config roots
+  ---
+  duration_ms: 2.19735
+  type: 'test'
+  ...
+# Subtest: an unmarked output is never deleted, and an owned one needs --replace
+ok 8 - an unmarked output is never deleted, and an owned one needs --replace
+  ---
+  duration_ms: 159.534228
+  type: 'test'
+  ...
+# Subtest: a fixture fifo in the closure fails loudly
+ok 9 - a fixture fifo in the closure fails loudly
+  ---
+  duration_ms: 11.640038
+  type: 'test'
+  ...
+# Subtest: builds the locked closure from the source root, and is deterministic
+ok 10 - builds the locked closure from the source root, and is deterministic
+  ---
+  duration_ms: 179.501514
+  type: 'test'
+  ...
+# Subtest: a package version that disagrees with the lock fails loudly
+ok 11 - a package version that disagrees with the lock fails loudly
+  ---
+  duration_ms: 2.749392
+  type: 'test'
+  ...
+# Subtest: a package the lock does not record fails loudly
+ok 12 - a package the lock does not record fails loudly
+  ---
+  duration_ms: 2.358081
+  type: 'test'
+  ...
+# Subtest: an adapter version other than the pinned one fails loudly
+ok 13 - an adapter version other than the pinned one fails loudly
+  ---
+  duration_ms: 3.889137
+  type: 'test'
+  ...
+# Subtest: a missing required dependency fails loudly
+ok 14 - a missing required dependency fails loudly
+  ---
+  duration_ms: 2.339562
+  type: 'test'
+  ...
+# Subtest: a source root without the installed adapter fails loudly
+ok 15 - a source root without the installed adapter fails loudly
+  ---
+  duration_ms: 1.984432
+  type: 'test'
+  ...
+# Subtest: an absent source is refused with a clear error, not an empty artifact
+ok 16 - an absent source is refused with a clear error, not an empty artifact
+  ---
+  duration_ms: 2.082397
+  type: 'test'
+  ...
+# Subtest: another family's adapter installed in the dsh root fails loudly
+ok 17 - another family's adapter installed in the dsh root fails loudly
+  ---
+  duration_ms: 1.724554
+  type: 'test'
+  ...
+# Subtest: a symlink in the closure fails loudly
+ok 18 - a symlink in the closure fails loudly
+  ---
+  duration_ms: 4.459705
+  type: 'test'
+  ...
+# Subtest: a special file in the closure fails loudly
+ok 19 - a special file in the closure fails loudly
+  ---
+  duration_ms: 10.310759
+  type: 'test'
+  ...
+# Subtest: a lock without a package map fails loudly
+ok 20 - a lock without a package map fails loudly
+  ---
+  duration_ms: 1.427991
+  type: 'test'
+  ...
+# Subtest: output policy refuses the repository, relative paths and user config roots
+ok 21 - output policy refuses the repository, relative paths and user config roots
+  ---
+  duration_ms: 1.823389
+  type: 'test'
+  ...
+# Subtest: an unmarked output is never deleted, and an owned one needs --replace
+ok 22 - an unmarked output is never deleted, and an owned one needs --replace
+  ---
+  duration_ms: 130.871225
+  type: 'test'
+  ...
+# Subtest: the copy filter keeps what a running adapter loads
+ok 23 - the copy filter keeps what a running adapter loads
+  ---
+  duration_ms: 0.264445
+  type: 'test'
+  ...
+# Subtest: the package lookup is bounded to the runtime root it is given
+ok 24 - the package lookup is bounded to the runtime root it is given
+  ---
+  duration_ms: 0.475352
+  type: 'test'
+  ...
+# Subtest: the real locked dsh closure builds, is deterministic and is self-contained
+ok 25 - the real locked dsh closure builds, is deterministic and is self-contained # SKIP run `npm ci` in plugins/harness/packaging/dsh first
+  ---
+  duration_ms: 0.043497
+  type: 'test'
+  ...
+# Subtest: builds the closure, excludes extras and cache, and is deterministic
+ok 26 - builds the closure, excludes extras and cache, and is deterministic
+  ---
+  duration_ms: 188.48201
+  type: 'test'
+  ...
+# Subtest: a missing required dependency fails loudly
+ok 27 - a missing required dependency fails loudly
+  ---
+  duration_ms: 5.247883
+  type: 'test'
+  ...
+# Subtest: a version that does not satisfy its pin fails loudly
+ok 28 - a version that does not satisfy its pin fails loudly
+  ---
+  duration_ms: 4.269226
+  type: 'test'
+  ...
+# Subtest: an entry version other than the pinned one fails loudly
+ok 29 - an entry version other than the pinned one fails loudly
+  ---
+  duration_ms: 3.585743
+  type: 'test'
+  ...
+# Subtest: a missing entry distribution fails loudly
+ok 30 - a missing entry distribution fails loudly
+  ---
+  duration_ms: 4.19714
+  type: 'test'
+  ...
+# Subtest: an entry extra that is not declared fails loudly
+ok 31 - an entry extra that is not declared fails loudly
+  ---
+  duration_ms: 3.365856
+  type: 'test'
+  ...
+# Subtest: a distribution the artifact does not provide an extra for stays out
+ok 32 - a distribution the artifact does not provide an extra for stays out
+  ---
+  duration_ms: 79.919459
+  type: 'test'
+  ...
+# Subtest: the unrelated-tool probe names what it would have caught
+ok 33 - the unrelated-tool probe names what it would have caught
+  ---
+  duration_ms: 80.710912
+  type: 'test'
+  ...
+# Subtest: a direct reference in the metadata fails loudly
+ok 34 - a direct reference in the metadata fails loudly
+  ---
+  duration_ms: 4.7144
+  type: 'test'
+  ...
+# Subtest: the entry point must import the module its extra provides
+ok 35 - the entry point must import the module its extra provides
+  ---
+  duration_ms: 4.495772
+  type: 'test'
+  ...
+# Subtest: a symlink in the closure fails loudly
+ok 36 - a symlink in the closure fails loudly
+  ---
+  duration_ms: 9.747245
+  type: 'test'
+  ...
+# Subtest: a special file in the closure fails loudly
+ok 37 - a special file in the closure fails loudly
+  ---
+  duration_ms: 13.096706
+  type: 'test'
+  ...
+# Subtest: a recorded file that is not installed fails loudly
+ok 38 - a recorded file that is not installed fails loudly
+  ---
+  duration_ms: 6.514917
+  type: 'test'
+  ...
+# Subtest: a distribution with neither RECORD nor top_level fails loudly
+ok 39 - a distribution with neither RECORD nor top_level fails loudly
+  ---
+  duration_ms: 7.139203
+  type: 'test'
+  ...
+# Subtest: two paths that differ only by case are refused
+ok 40 - two paths that differ only by case are refused
+  ---
+  duration_ms: 7.2958
+  type: 'test'
+  ...
+# Subtest: a tree beyond the artifact byte bound fails loudly
+ok 41 - a tree beyond the artifact byte bound fails loudly
+  ---
+  duration_ms: 757.23945
+  type: 'test'
+  ...
+# Subtest: output policy refuses the repository, relative paths and user config roots
+ok 42 - output policy refuses the repository, relative paths and user config roots
+  ---
+  duration_ms: 2.793726
+  type: 'test'
+  ...
+# Subtest: an unmarked output is never deleted, and an owned one needs --replace
+ok 43 - an unmarked output is never deleted, and an owned one needs --replace
+  ---
+  duration_ms: 155.230395
+  type: 'test'
+  ...
+# Subtest: a source root that is not an installed-package directory fails loudly
+ok 44 - a source root that is not an installed-package directory fails loudly
+  ---
+  duration_ms: 2.95498
+  type: 'test'
+  ...
+# Subtest: with no source at all the build refuses and names the variable
+ok 45 - with no source at all the build refuses and names the variable
+  ---
+  duration_ms: 79.72791
+  type: 'test'
+  ...
+# Subtest: resolveSource prefers an explicit source and otherwise only the variable
+ok 46 - resolveSource prefers an explicit source and otherwise only the variable
+  ---
+  duration_ms: 0.951567
+  type: 'test'
+  ...
+# Subtest: an explicit source is honoured even when the variable points elsewhere
+ok 47 - an explicit source is honoured even when the variable points elsewhere
+  ---
+  duration_ms: 80.296985
+  type: 'test'
+  ...
+# Subtest: the CLI refuses without --source or the variable, and builds with either
+ok 48 - the CLI refuses without --source or the variable, and builds with either
+  ---
+  duration_ms: 649.109054
+  type: 'test'
+  ...
+# Subtest: an unset variable is never filled in from PATH or from the home directory
+ok 49 - an unset variable is never filled in from PATH or from the home directory
+  ---
+  duration_ms: 401.109159
+  type: 'test'
+  ...
+# Subtest: the builder carries no machine-local default source
+ok 50 - the builder carries no machine-local default source
+  ---
+  duration_ms: 0.758203
+  type: 'test'
+  ...
+# Subtest: a symlinked source root is refused
+ok 51 - a symlinked source root is refused
+  ---
+  duration_ms: 81.147856
+  type: 'test'
+  ...
+# Subtest: a source path that escapes its declared root is refused
+ok 52 - a source path that escapes its declared root is refused
+  ---
+  duration_ms: 80.30452
+  type: 'test'
+  ...
+# Subtest: output policy is enforced before a source is read
+ok 53 - output policy is enforced before a source is read
+  ---
+  duration_ms: 3.079408
+  type: 'test'
+  ...
+# Subtest: a declared pin deviation applies only to the declared source root
+ok 54 - a declared pin deviation applies only to the declared source root
+  ---
+  duration_ms: 84.605584
+  type: 'test'
+  ...
+# Subtest: the reviewed installed closure builds and is self-contained
+ok 55 - the reviewed installed closure builds and is self-contained # SKIP
+  ---
+  duration_ms: 0.128679
+  type: 'test'
+  ...
+# Subtest: builds the closure, keeps the native payload, and is deterministic
+ok 56 - builds the closure, keeps the native payload, and is deterministic
+  ---
+  duration_ms: 173.834701
+  type: 'test'
+  ...
+# Subtest: a package version that disagrees with the lock fails loudly
+ok 57 - a package version that disagrees with the lock fails loudly
+  ---
+  duration_ms: 3.220457
+  type: 'test'
+  ...
+# Subtest: a package the lock does not record fails loudly
+ok 58 - a package the lock does not record fails loudly
+  ---
+  duration_ms: 3.435216
+  type: 'test'
+  ...
+# Subtest: a launcher version other than the pinned one fails loudly
+ok 59 - a launcher version other than the pinned one fails loudly
+  ---
+  duration_ms: 2.739756
+  type: 'test'
+  ...
+# Subtest: a missing platform package is recorded as skipped, not shipped as an empty payload
+ok 60 - a missing platform package is recorded as skipped, not shipped as an empty payload
+  ---
+  duration_ms: 75.359131
+  type: 'test'
+  ...
+# Subtest: a source root without the installed launcher fails loudly
+ok 61 - a source root without the installed launcher fails loudly
+  ---
+  duration_ms: 2.466823
+  type: 'test'
+  ...
+# Subtest: an absent source is refused with a clear error, not an empty artifact
+ok 62 - an absent source is refused with a clear error, not an empty artifact
+  ---
+  duration_ms: 2.761942
+  type: 'test'
+  ...
+# Subtest: another family's adapter installed in the kilo root fails loudly
+ok 63 - another family's adapter installed in the kilo root fails loudly
+  ---
+  duration_ms: 2.421734
+  type: 'test'
+  ...
+# Subtest: a symlink in the closure fails loudly
+ok 64 - a symlink in the closure fails loudly
+  ---
+  duration_ms: 5.729007
+  type: 'test'
+  ...
+# Subtest: a special file in the closure fails loudly
+ok 65 - a special file in the closure fails loudly
+  ---
+  duration_ms: 10.303813
+  type: 'test'
+  ...
+# Subtest: a lock without a package map fails loudly
+ok 66 - a lock without a package map fails loudly
+  ---
+  duration_ms: 1.540985
+  type: 'test'
+  ...
+# Subtest: output policy refuses the repository, relative paths and user config roots
+ok 67 - output policy refuses the repository, relative paths and user config roots
+  ---
+  duration_ms: 1.357757
+  type: 'test'
+  ...
+# Subtest: an unmarked output is never deleted, and an owned one needs --replace
+ok 68 - an unmarked output is never deleted, and an owned one needs --replace
+  ---
+  duration_ms: 155.043032
+  type: 'test'
+  ...
+# Subtest: the copy filter keeps what a running adapter loads
+ok 69 - the copy filter keeps what a running adapter loads
+  ---
+  duration_ms: 0.357545
+  type: 'test'
+  ...
+# Subtest: the package lookup is bounded to the runtime root it is given
+ok 70 - the package lookup is bounded to the runtime root it is given
+  ---
+  duration_ms: 1.313759
+  type: 'test'
+  ...
+# Subtest: the real locked kilo closure builds, is deterministic and is self-contained
+ok 71 - the real locked kilo closure builds, is deterministic and is self-contained # SKIP run `npm ci` in plugins/harness/packaging/kilo first
+  ---
+  duration_ms: 0.129546
+  type: 'test'
+  ...
+# Subtest: an unconfigured environment resolves to no installation at all
+ok 72 - an unconfigured environment resolves to no installation at all
+  ---
+  duration_ms: 4.244074
+  type: 'test'
+  ...
+# Subtest: requireInstall refuses and names both missing inputs
+ok 73 - requireInstall refuses and names both missing inputs
+  ---
+  duration_ms: 1.106107
+  type: 'test'
+  ...
+# Subtest: requireInstall names only the input that is actually missing
+ok 74 - requireInstall names only the input that is actually missing
+  ---
+  duration_ms: 0.50114
+  type: 'test'
+  ...
+# Subtest: the command line refuses when neither flag nor environment is supplied
+ok 75 - the command line refuses when neither flag nor environment is supplied
+  ---
+  duration_ms: 151.750705
+  type: 'test'
+  ...
+# Subtest: explicit arguments are honoured with an empty environment
+ok 76 - explicit arguments are honoured with an empty environment
+  ---
+  duration_ms: 6.154728
+  type: 'test'
+  ...
+# Subtest: the environment is honoured when no argument is supplied
+ok 77 - the environment is honoured when no argument is supplied
+  ---
+  duration_ms: 1.858251
+  type: 'test'
+  ...
+# Subtest: the derived package binary path follows the resolved package root
+ok 78 - the derived package binary path follows the resolved package root
+  ---
+  duration_ms: 1.302882
+  type: 'test'
+  ...
+# Subtest: a configured but non-absolute entry is still refused as non-canonical
+ok 79 - a configured but non-absolute entry is still refused as non-canonical
+  ---
+  duration_ms: 0.318079
+  type: 'test'
+  ...
+# Subtest: builds the locked closure from the source root, and is deterministic
+ok 80 - builds the locked closure from the source root, and is deterministic
+  ---
+  duration_ms: 1051.210654
+  type: 'test'
+  ...
+# Subtest: the platform is pinned, never inferred from the machine running the build
+ok 81 - the platform is pinned, never inferred from the machine running the build
+  ---
+  duration_ms: 0.39399
+  type: 'test'
+  ...
+# Subtest: a closure without the pinned platform package fails loudly
+ok 82 - a closure without the pinned platform package fails loudly
+  ---
+  duration_ms: 2.453858
+  type: 'test'
+  ...
+# Subtest: a sibling linux/x64 platform package installed alongside the pinned one is excluded, not shipped
+ok 83 - a sibling linux/x64 platform package installed alongside the pinned one is excluded, not shipped
+  ---
+  duration_ms: 537.692329
+  type: 'test'
+  ...
+# Subtest: the native binary is verified, and never produced by running the install script
+ok 84 - the native binary is verified, and never produced by running the install script
+  ---
+  duration_ms: 547.283907
+  type: 'test'
+  ...
+# Subtest: the sealed entry is the binary the manifest describes
+ok 85 - the sealed entry is the binary the manifest describes
+  ---
+  duration_ms: 1035.054608
+  type: 'test'
+  ...
+# Subtest: a package version that disagrees with the lock fails loudly
+ok 86 - a package version that disagrees with the lock fails loudly
+  ---
+  duration_ms: 2.279081
+  type: 'test'
+  ...
+# Subtest: a package the lock does not record fails loudly
+ok 87 - a package the lock does not record fails loudly
+  ---
+  duration_ms: 1.675423
+  type: 'test'
+  ...
+# Subtest: an adapter version other than the pinned one fails loudly
+ok 88 - an adapter version other than the pinned one fails loudly
+  ---
+  duration_ms: 2.250887
+  type: 'test'
+  ...
+# Subtest: another family's adapter installed in the opencode root fails loudly
+ok 89 - another family's adapter installed in the opencode root fails loudly
+  ---
+  duration_ms: 2.048997
+  type: 'test'
+  ...
+# Subtest: an absent source is refused with a clear error, not an empty artifact
+ok 90 - an absent source is refused with a clear error, not an empty artifact
+  ---
+  duration_ms: 0.604721
+  type: 'test'
+  ...
+# Subtest: output policy refuses the repository, relative paths and user config roots
+ok 91 - output policy refuses the repository, relative paths and user config roots
+  ---
+  duration_ms: 0.868408
+  type: 'test'
+  ...
+# Subtest: an unmarked output is never deleted, and an owned one needs --replace
+ok 92 - an unmarked output is never deleted, and an owned one needs --replace
+  ---
+  duration_ms: 1.988014
+  type: 'test'
+  ...
+# Subtest: the copy filter keeps what a running binary loads
+ok 93 - the copy filter keeps what a running binary loads
+  ---
+  duration_ms: 0.261508
+  type: 'test'
+  ...
+# Subtest: the real locked opencode closure builds, is deterministic and its sealed entry runs
+ok 94 - the real locked opencode closure builds, is deterministic and its sealed entry runs # SKIP run `npm ci` in plugins/harness/packaging/opencode first
+  ---
+  duration_ms: 0.097501
+  type: 'test'
+  ...
+# Subtest: builds the closure, excludes non-runtime files, and is deterministic
+ok 95 - builds the closure, excludes non-runtime files, and is deterministic
+  ---
+  duration_ms: 172.335889
+  type: 'test'
+  ...
+# Subtest: a missing required dependency fails loudly
+ok 96 - a missing required dependency fails loudly
+  ---
+  duration_ms: 3.777873
+  type: 'test'
+  ...
+# Subtest: Profile bridge is an explicit reproducible variant, not an upstream-entry replacement
+ok 97 - Profile bridge is an explicit reproducible variant, not an upstream-entry replacement
+  ---
+  duration_ms: 225.35725
+  type: 'test'
+  ...
+# Subtest: a package version that disagrees with the lock fails loudly
+ok 98 - a package version that disagrees with the lock fails loudly
+  ---
+  duration_ms: 2.036498
+  type: 'test'
+  ...
+# Subtest: a package the lock does not record fails loudly
+ok 99 - a package the lock does not record fails loudly
+  ---
+  duration_ms: 1.986388
+  type: 'test'
+  ...
+# Subtest: an adapter version other than the pinned one fails loudly
+ok 100 - an adapter version other than the pinned one fails loudly
+  ---
+  duration_ms: 2.52604
+  type: 'test'
+  ...
+# Subtest: a symlink anywhere in the closure fails loudly
+ok 101 - a symlink anywhere in the closure fails loudly
+  ---
+  duration_ms: 4.731305
+  type: 'test'
+  ...
+# Subtest: a special file in the closure fails loudly
+ok 102 - a special file in the closure fails loudly
+  ---
+  duration_ms: 9.669356
+  type: 'test'
+  ...
+# Subtest: a package reachable only from codex fails loudly
+ok 103 - a package reachable only from codex fails loudly
+  ---
+  duration_ms: 2.533311
+  type: 'test'
+  ...
+# Subtest: a tree beyond the artifact byte bound fails loudly
+ok 104 - a tree beyond the artifact byte bound fails loudly
+  ---
+  duration_ms: 772.394485
+  type: 'test'
+  ...
+# Subtest: output policy refuses the repository, relative paths and user config roots
+ok 105 - output policy refuses the repository, relative paths and user config roots
+  ---
+  duration_ms: 2.348374
+  type: 'test'
+  ...
+# Subtest: an unmarked output is never deleted, and an owned one needs --replace
+ok 106 - an unmarked output is never deleted, and an owned one needs --replace
+  ---
+  duration_ms: 148.09661
+  type: 'test'
+  ...
+# Subtest: opencode refuses to start when its executable is not configured
+ok 107 - opencode refuses to start when its executable is not configured
+  ---
+  duration_ms: 154.430923
+  type: 'test'
+  ...
+# Subtest: hermes refuses to start and names both of its required inputs
+ok 108 - hermes refuses to start and names both of its required inputs
+  ---
+  duration_ms: 151.340433
+  type: 'test'
+  ...
+# Subtest: a partial configuration still refuses and names what remains missing
+ok 109 - a partial configuration still refuses and names what remains missing
+  ---
+  duration_ms: 147.684438
+  type: 'test'
+  ...
+# Subtest: a blank value is a refusal, not an empty path
+ok 110 - a blank value is a refusal, not an empty path
+  ---
+  duration_ms: 148.030203
+  type: 'test'
+  ...
+# Subtest: a relative configured location is refused
+ok 111 - a relative configured location is refused
+  ---
+  duration_ms: 152.060654
+  type: 'test'
+  ...
+# Subtest: an explicitly supplied location is used verbatim
+ok 112 - an explicitly supplied location is used verbatim
+  ---
+  duration_ms: 153.912889
+  type: 'test'
+  ...
+# Subtest: pi requires no external location at all
+ok 113 - pi requires no external location at all
+  ---
+  duration_ms: 150.889547
+  type: 'test'
+  ...
+# Subtest: the isolated PATH is the system directories plus the resolved tool directory
+ok 114 - the isolated PATH is the system directories plus the resolved tool directory
+  ---
+  duration_ms: 149.685976
+  type: 'test'
+  ...
+# Subtest: the isolated PATH never contains a personal home directory
+ok 115 - the isolated PATH never contains a personal home directory
+  ---
+  duration_ms: 451.747592
+  type: 'test'
+  ...
+# Subtest: pi preparation is bounded and secret-free
+ok 116 - pi preparation is bounded and secret-free
+  ---
+  duration_ms: 156.840782
+  type: 'test'
+  ...
+# Subtest: hermes preparation is bounded and secret-free
+ok 117 - hermes preparation is bounded and secret-free
+  ---
+  duration_ms: 152.344819
+  type: 'test'
+  ...
+# Subtest: opencode preparation is bounded and secret-free
+ok 118 - opencode preparation is bounded and secret-free
+  ---
+  duration_ms: 153.870618
+  type: 'test'
+  ...
+# Subtest: ACP continuation and reopen use only a local fake peer
+ok 119 - ACP continuation and reopen use only a local fake peer
+  ---
+  duration_ms: 294.030894
+  type: 'test'
+  ...
+# Subtest: build-opencode-authorization.mjs embeds no absolute path under a personal home directory
+ok 120 - build-opencode-authorization.mjs embeds no absolute path under a personal home directory
+  ---
+  duration_ms: 2.579864
+  type: 'test'
+  ...
+# Subtest: model-validation-42d.mjs embeds no absolute path under a personal home directory
+ok 121 - model-validation-42d.mjs embeds no absolute path under a personal home directory
+  ---
+  duration_ms: 0.194333
+  type: 'test'
+  ...
+# Subtest: the OpenCode authorization defaults are configuration, not paths
+ok 122 - the OpenCode authorization defaults are configuration, not paths
+  ---
+  duration_ms: 0.301533
+  type: 'test'
+  ...
+# Subtest: the 42-D coordinator declares what each family needs and where from
+ok 123 - the 42-D coordinator declares what each family needs and where from
+  ---
+  duration_ms: 0.307311
+  type: 'test'
+  ...
+# Subtest: codex: current monorepo imports compute a real digest and fail closed
+ok 124 - codex: current monorepo imports compute a real digest and fail closed
+  ---
+  duration_ms: 862.54442
+  type: 'test'
+  ...
+# Subtest: pi: current monorepo imports compute a real digest and fail closed
+ok 125 - pi: current monorepo imports compute a real digest and fail closed
+  ---
+  duration_ms: 851.82507
+  type: 'test'
+  ...
+# Subtest: claude: current monorepo imports compute a real digest and fail closed
+ok 126 - claude: current monorepo imports compute a real digest and fail closed
+  ---
+  duration_ms: 875.866589
+  type: 'test'
+  ...
+# Subtest: dsh: current monorepo imports compute a real digest and fail closed
+ok 127 - dsh: current monorepo imports compute a real digest and fail closed
+  ---
+  duration_ms: 846.755038
+  type: 'test'
+  ...
+# Subtest: qwen: current monorepo imports compute a real digest and fail closed
+ok 128 - qwen: current monorepo imports compute a real digest and fail closed
+  ---
+  duration_ms: 856.373874
+  type: 'test'
+  ...
+# Subtest: kilo: current monorepo imports compute a real digest and fail closed
+ok 129 - kilo: current monorepo imports compute a real digest and fail closed
+  ---
+  duration_ms: 873.522062
+  type: 'test'
+  ...
+# Subtest: hermes: current monorepo imports compute a real digest and fail closed
+ok 130 - hermes: current monorepo imports compute a real digest and fail closed
+  ---
+  duration_ms: 857.326718
+  type: 'test'
+  ...
+# Subtest: both per-session env and settings changes invalidate only that session fingerprint
+ok 131 - both per-session env and settings changes invalidate only that session fingerprint
+  ---
+  duration_ms: 3.49334
+  type: 'test'
+  ...
+# Subtest: resuming one Claude session with a new route replaces only its Query
+ok 132 - resuming one Claude session with a new route replaces only its Query
+  ---
+  duration_ms: 2.605043
+  type: 'test'
+  ...
+# Subtest: private provider key replaces the upstream local-login placeholder
+ok 133 - private provider key replaces the upstream local-login placeholder
+  ---
+  duration_ms: 2.85354
+  type: 'test'
+  ...
+# Subtest: ambiguous or malformed authorization fails without echoing secrets
+ok 134 - ambiguous or malformed authorization fails without echoing secrets
+  ---
+  duration_ms: 1.788344
+  type: 'test'
+  ...
+# Subtest: custom model is a candidate only on an independently captured explicit provider route
+ok 135 - custom model is a candidate only on an independently captured explicit provider route
+  ---
+  duration_ms: 2.062939
+  type: 'test'
+  ...
+# Subtest: malformed models, capacity and unsafe captured routes fail before SDK effects
+ok 136 - malformed models, capacity and unsafe captured routes fail before SDK effects
+  ---
+  duration_ms: 0.348816
+  type: 'test'
+  ...
+# Subtest: accepted exact identifier is retained without fabricating model capabilities
+ok 137 - accepted exact identifier is retained without fabricating model capabilities
+  ---
+  duration_ms: 0.17374
+  type: 'test'
+  ...
+# Subtest: an accepted off-picker model survives the upstream selector rebuild and strict restoration readback
+ok 138 - an accepted off-picker model survives the upstream selector rebuild and strict restoration readback
+  ---
+  duration_ms: 1.00181
+  type: 'test'
+  ...
+# Subtest: catalogue is built from declared facts, not an official model template
+ok 139 - catalogue is built from declared facts, not an official model template
+  ---
+  duration_ms: 5.45377
+  type: 'test'
+  ...
+# Subtest: unknown facts and malformed facts cannot become advertised capabilities
+ok 140 - unknown facts and malformed facts cannot become advertised capabilities
+  ---
+  duration_ms: 0.945675
+  type: 'test'
+  ...
+# Subtest: catalogue files are content addressed, immutable and instance scoped
+ok 141 - catalogue files are content addressed, immutable and instance scoped
+  ---
+  duration_ms: 20.25469
+  type: 'test'
+  ...
+# Subtest: existing symlink catalogue directory is refused
+ok 142 - existing symlink catalogue directory is refused
+  ---
+  duration_ms: 2.7501
+  type: 'test'
+  ...
+# Subtest: history path must match the owned session and scope; only a previously bound path crosses homes
+ok 143 - history path must match the owned session and scope; only a previously bound path crosses homes
+  ---
+  duration_ms: 9.409987
+  type: 'test'
+  ...
+# Subtest: replacement starts only after authoritative exit, not killed flag
+ok 144 - replacement starts only after authoritative exit, not killed flag
+  ---
+  duration_ms: 13.12016
+  type: 'test'
+  ...
+# Subtest: an unconfirmed exit refuses replacement even when kill returned true
+ok 145 - an unconfirmed exit refuses replacement even when kill returned true
+  ---
+  duration_ms: 3.897574
+  type: 'test'
+  ...
+# Subtest: initialization failure disposes the new process without retrying
+ok 146 - initialization failure disposes the new process without retrying
+  ---
+  duration_ms: 2.770073
+  type: 'test'
+  ...
+# Subtest: a start() that throws has nothing to clean up and keeps the primary error
+ok 147 - a start() that throws has nothing to clean up and keeps the primary error
+  ---
+  duration_ms: 0.869764
+  type: 'test'
+  ...
+# Subtest: actual native-style child exits before replacement and sibling stays live
+ok 148 - actual native-style child exits before replacement and sibling stays live
+  ---
+  duration_ms: 171.505277
+  type: 'test'
+  ...
+# Subtest: the native target is selected explicitly; other platforms and triples are refused
+ok 149 - the native target is selected explicitly; other platforms and triples are refused
+  ---
+  duration_ms: 0.898824
+  type: 'test'
+  ...
+# Subtest: resolution composes the pinned vendor path and never accepts a launcher or a PATH shim
+ok 150 - resolution composes the pinned vendor path and never accepts a launcher or a PATH shim
+  ---
+  duration_ms: 5.060092
+  type: 'test'
+  ...
+# Subtest: a managed process must really be the native executable, never a Node launcher
+ok 151 - a managed process must really be the native executable, never a Node launcher
+  ---
+  duration_ms: 184.160077
+  type: 'test'
+  ...
+# Subtest: a launcher exit is never accepted as native exit; the owned group must be gone first
+ok 152 - a launcher exit is never accepted as native exit; the owned group must be gone first
+  ---
+  duration_ms: 401.639214
+  type: 'test'
+  ...
+# Subtest: an unkillable surviving native descendant still refuses the replacement
+ok 153 - an unkillable surviving native descendant still refuses the replacement
+  ---
+  duration_ms: 1.076425
+  type: 'test'
+  ...
+# Subtest: the owned set closes over descendants in any procfs enumeration order
+ok 154 - the owned set closes over descendants in any procfs enumeration order
+  ---
+  duration_ms: 0.743852
+  type: 'test'
+  ...
+# Subtest: a pid reused inside the stop window is never signalled, and its exit is confirmed
+ok 155 - a pid reused inside the stop window is never signalled, and its exit is confirmed
+  ---
+  duration_ms: 1.034152
+  type: 'test'
+  ...
+# Subtest: grace, terminate and kill stay bounded and only the OS exit event confirms
+ok 156 - grace, terminate and kill stay bounded and only the OS exit event confirms
+  ---
+  duration_ms: 605.376238
+  type: 'test'
+  ...
+# Subtest: replacement publishes the new native owner only after the old one is confirmed gone
+ok 157 - replacement publishes the new native owner only after the old one is confirmed gone
+  ---
+  duration_ms: 123.907146
+  type: 'test'
+  ...
+# Subtest: a fresh native client that fails to initialize keeps the primary error and the dead binding invalid
+ok 158 - a fresh native client that fails to initialize keeps the primary error and the dead binding invalid
+  ---
+  duration_ms: 1.098576
+  type: 'test'
+  ...
+# Subtest: replacement never spawns twice when the previous exit cannot be confirmed
+ok 159 - replacement never spawns twice when the previous exit cannot be confirmed
+  ---
+  duration_ms: 6.858091
+  type: 'test'
+  ...
+# Subtest: the fresh client, commands and resume path all follow the new connection
+ok 160 - the fresh client, commands and resume path all follow the new connection
+  ---
+  duration_ms: 0.818003
+  type: 'test'
+  ...
+# Subtest: a sibling thread or an unpersisted thread stops the replacement before any effect
+ok 161 - a sibling thread or an unpersisted thread stops the replacement before any effect
+  ---
+  duration_ms: 1.53734
+  type: 'test'
+  ...
+# Subtest: an empty or damaged rollout is refused; a real persisted rollout binds
+ok 162 - an empty or damaged rollout is refused; a real persisted rollout binds
+  ---
+  duration_ms: 6.095791
+  type: 'test'
+  ...
+# Subtest: a rollout larger than the read window and one still being written both bind
+ok 163 - a rollout larger than the read window and one still being written both bind
+  ---
+  duration_ms: 4.014717
+  type: 'test'
+  ...
+# Subtest: a symlinked parent directory is refused even when the file itself is regular
+ok 164 - a symlinked parent directory is refused even when the file itself is regular
+  ---
+  duration_ms: 1.678936
+  type: 'test'
+  ...
+# Subtest: the replacement refuses history first and only then stops, invalidates and respawns
+ok 165 - the replacement refuses history first and only then stops, invalidates and respawns
+  ---
+  duration_ms: 0.55577
+  type: 'test'
+  ...
+# Subtest: a failed exit confirmation never starts a second native process and invalidates the old binding
+ok 166 - a failed exit confirmation never starts a second native process and invalidates the old binding
+  ---
+  duration_ms: 0.346201
+  type: 'test'
+  ...
+# Subtest: initialization failure disposes the new native process exactly once, without retry
+ok 167 - initialization failure disposes the new native process exactly once, without retry
+  ---
+  duration_ms: 0.612216
+  type: 'test'
+  ...
+# Subtest: a start() that throws invalidates the dead binding and cleans up nothing
+ok 168 - a start() that throws invalidates the dead binding and cleans up nothing
+  ---
+  duration_ms: 0.603816
+  type: 'test'
+  ...
+# Subtest: a cleanup failure is surfaced separately and never replaces the primary error
+ok 169 - a cleanup failure is surfaced separately and never replaces the primary error
+  ---
+  duration_ms: 0.546612
+  type: 'test'
+  ...
+# Subtest: a successful replacement reports the new owner and the retired one as gone
+ok 170 - a successful replacement reports the new owner and the retired one as gone
+  ---
+  duration_ms: 0.375173
+  type: 'test'
+  ...
+# Subtest: a resume ACK is refused unless the native side really resumed the bound thread and rollout
+ok 171 - a resume ACK is refused unless the native side really resumed the bound thread and rollout
+  ---
+  duration_ms: 0.590574
+  type: 'test'
+  ...
+# Subtest: managed Codex rejects external provider effects without blocking internal read-only preparation
+ok 172 - managed Codex rejects external provider effects without blocking internal read-only preparation
+  ---
+  duration_ms: 5.032973
+  type: 'test'
+  ...
+# Subtest: Codex model routing evidence comes from its accepted thread snapshot, not mutable provider state
+ok 173 - Codex model routing evidence comes from its accepted thread snapshot, not mutable provider state
+  ---
+  duration_ms: 5.35428
+  type: 'test'
+  ...
+# Subtest: Codex accepts the native nullable description for an active custom model
+ok 174 - Codex accepts the native nullable description for an active custom model
+  ---
+  duration_ms: 0.630033
+  type: 'test'
+  ...
+# Subtest: Claude routing evidence uses captured query configuration and rejects secret-bearing endpoints
+ok 175 - Claude routing evidence uses captured query configuration and rejects secret-bearing endpoints
+  ---
+  duration_ms: 1.029597
+  type: 'test'
+  ...
+# Subtest: Claude exposes an off-picker effective model only with captured native routing
+ok 176 - Claude exposes an off-picker effective model only with captured native routing
+  ---
+  duration_ms: 0.794918
+  type: 'test'
+  ...
+# Subtest: codex: initial provider precedes new, native model is applied before returning, and never resumes
+ok 177 - codex: initial provider precedes new, native model is applied before returning, and never resumes
+  ---
+  duration_ms: 4.710178
+  type: 'test'
+  ...
+# Subtest: claude-code: initial provider precedes new, native model is applied before returning, and never resumes
+ok 178 - claude-code: initial provider precedes new, native model is applied before returning, and never resumes
+  ---
+  duration_ms: 1.590432
+  type: 'test'
+  ...
+# Subtest: first configuration refuses live siblings and cannot report native ACK as readback
+ok 179 - first configuration refuses live siblings and cannot report native ACK as readback
+  ---
+  duration_ms: 1.676412
+  type: 'test'
+  ...
+# Subtest: initial model readback alone cannot confirm a different or missing provider route
+ok 180 - initial model readback alone cannot confirm a different or missing provider route
+  ---
+  duration_ms: 2.356673
+  type: 'test'
+  ...
+# Subtest: codex: live readback and idempotent replay, no credential metadata
+ok 181 - codex: live readback and idempotent replay, no credential metadata
+  ---
+  duration_ms: 2.90811
+  type: 'test'
+  ...
+# Subtest: codex: successful setter ACK without changed live state is unknown
+ok 182 - codex: successful setter ACK without changed live state is unknown
+  ---
+  duration_ms: 1.177772
+  type: 'test'
+  ...
+# Subtest: codex: live instance replacement cannot reuse old generation evidence
+ok 183 - codex: live instance replacement cannot reuse old generation evidence
+  ---
+  duration_ms: 0.925257
+  type: 'test'
+  ...
+# Subtest: codex: actual active turn refuses before effect
+ok 184 - codex: actual active turn refuses before effect
+  ---
+  duration_ms: 0.463865
+  type: 'test'
+  ...
+# Subtest: codex: disappearing session despite successful ACK is unknown
+ok 185 - codex: disappearing session despite successful ACK is unknown
+  ---
+  duration_ms: 0.591589
+  type: 'test'
+  ...
+# Subtest: codex: pre-existing configuration drift refuses with zero effects
+ok 186 - codex: pre-existing configuration drift refuses with zero effects
+  ---
+  duration_ms: 0.56087
+  type: 'test'
+  ...
+# Subtest: claude-code: live readback and idempotent replay, no credential metadata
+ok 187 - claude-code: live readback and idempotent replay, no credential metadata
+  ---
+  duration_ms: 1.91821
+  type: 'test'
+  ...
+# Subtest: claude-code: successful setter ACK without changed live state is unknown
+ok 188 - claude-code: successful setter ACK without changed live state is unknown
+  ---
+  duration_ms: 0.6119
+  type: 'test'
+  ...
+# Subtest: claude-code: live instance replacement cannot reuse old generation evidence
+ok 189 - claude-code: live instance replacement cannot reuse old generation evidence
+  ---
+  duration_ms: 0.58623
+  type: 'test'
+  ...
+# Subtest: claude-code: actual active turn refuses before effect
+ok 190 - claude-code: actual active turn refuses before effect
+  ---
+  duration_ms: 0.569691
+  type: 'test'
+  ...
+# Subtest: claude-code: disappearing session despite successful ACK is unknown
+ok 191 - claude-code: disappearing session despite successful ACK is unknown
+  ---
+  duration_ms: 0.619694
+  type: 'test'
+  ...
+# Subtest: claude-code: pre-existing configuration drift refuses with zero effects
+ok 192 - claude-code: pre-existing configuration drift refuses with zero effects
+  ---
+  duration_ms: 0.466389
+  type: 'test'
+  ...
+# Subtest: codex: dedicated provider resume retains native session, proves new generation and never leaks headers
+ok 193 - codex: dedicated provider resume retains native session, proves new generation and never leaks headers
+  ---
+  duration_ms: 4.013749
+  type: 'test'
+  ...
+# Subtest: claude-code: dedicated provider resume retains native session, proves new generation and never leaks headers
+ok 194 - claude-code: dedicated provider resume retains native session, proves new generation and never leaks headers
+  ---
+  duration_ms: 1.528907
+  type: 'test'
+  ...
+# Subtest: Claude swallowed resume failure is Unknown, query/replay never attempts another resume
+ok 195 - Claude swallowed resume failure is Unknown, query/replay never attempts another resume
+  ---
+  duration_ms: 1.12205
+  type: 'test'
+  ...
+# Subtest: Codex return to managed account uses replacement, never a gateway setter or account login
+ok 196 - Codex return to managed account uses replacement, never a gateway setter or account login
+  ---
+  duration_ms: 2.081911
+  type: 'test'
+  ...
+# Subtest: provider resume refuses adapter siblings and unsupported protocols before effect
+ok 197 - provider resume refuses adapter siblings and unsupported protocols before effect
+  ---
+  duration_ms: 1.112758
+  type: 'test'
+  ...
+# Subtest: restoration failure exposes only closed diagnostics, never upstream secrets, and replay has no effect
+ok 198 - restoration failure exposes only closed diagnostics, never upstream secrets, and replay has no effect
+  ---
+  duration_ms: 1.536457
+  type: 'test'
+  ...
+# Subtest: Claude provider update and closed query cannot be treated as idle live evidence
+ok 199 - Claude provider update and closed query cannot be treated as idle live evidence
+  ---
+  duration_ms: 0.631957
+  type: 'test'
+  ...
+# Subtest: duplicate/malformed selector evidence fails closed
+ok 200 - duplicate/malformed selector evidence fails closed
+  ---
+  duration_ms: 0.508914
+  type: 'test'
+  ...
+# Subtest: codex: provider and lifecycle/turn operations cannot overlap
+ok 201 - codex: provider and lifecycle/turn operations cannot overlap
+  ---
+  duration_ms: 1.146261
+  type: 'test'
+  ...
+# Subtest: claude-code: provider and lifecycle/turn operations cannot overlap
+ok 202 - claude-code: provider and lifecycle/turn operations cannot overlap
+  ---
+  duration_ms: 0.6561
+  type: 'test'
+  ...
+# Subtest: codex: the supported non-model preference is admitted by the model-only gate, unknown ids and unexposed values are not
+ok 203 - codex: the supported non-model preference is admitted by the model-only gate, unknown ids and unexposed values are not
+  ---
+  duration_ms: 1.991122
+  type: 'test'
+  ...
+# Subtest: claude-code: the supported non-model preference is admitted by the model-only gate, unknown ids and unexposed values are not
+ok 204 - claude-code: the supported non-model preference is admitted by the model-only gate, unknown ids and unexposed values are not
+  ---
+  duration_ms: 1.429662
+  type: 'test'
+  ...
+# Subtest: codex restoration re-applies the preserved reasoning preference instead of the restarted default
+ok 205 - codex restoration re-applies the preserved reasoning preference instead of the restarted default
+  ---
+  duration_ms: 2.478029
+  type: 'test'
+  ...
+# Subtest: codex absent fast selector preserves only proven disabled state: off/true
+ok 206 - codex absent fast selector preserves only proven disabled state: off/true
+  ---
+  duration_ms: 1.920221
+  type: 'test'
+  ...
+# Subtest: codex absent fast selector preserves only proven disabled state: false/true
+ok 207 - codex absent fast selector preserves only proven disabled state: false/true
+  ---
+  duration_ms: 2.107112
+  type: 'test'
+  ...
+# Subtest: codex absent fast selector preserves only proven disabled state: off/false
+ok 208 - codex absent fast selector preserves only proven disabled state: off/false
+  ---
+  duration_ms: 1.396149
+  type: 'test'
+  ...
+# Subtest: codex absent fast selector preserves only proven disabled state: on/true
+ok 209 - codex absent fast selector preserves only proven disabled state: on/true
+  ---
+  duration_ms: 1.431864
+  type: 'test'
+  ...
+# Subtest: codex restoration records an explicit refusal when the target rejects the preserved preference
+ok 210 - codex restoration records an explicit refusal when the target rejects the preserved preference
+  ---
+  duration_ms: 1.317232
+  type: 'test'
+  ...
+# Subtest: codex restoration never reports success when the target silently keeps a native default
+ok 211 - codex restoration never reports success when the target silently keeps a native default
+  ---
+  duration_ms: 1.132405
+  type: 'test'
+  ...
+# Subtest: claude-code restoration keeps the supported effort preference at the user value
+ok 212 - claude-code restoration keeps the supported effort preference at the user value
+  ---
+  duration_ms: 1.21556
+  type: 'test'
+  ...
+# Subtest: enhancement refuses upstream content drift and unknown brands
+ok 213 - enhancement refuses upstream content drift and unknown brands
+  ---
+  duration_ms: 3.901138
+  type: 'test'
+  ...
+# Subtest: builder enhancement flags are explicit and cannot upgrade a legacy Claude alias
+ok 214 - builder enhancement flags are explicit and cannot upgrade a legacy Claude alias
+  ---
+  duration_ms: 1.315486
+  type: 'test'
+  ...
+# Subtest: every symbol the enhanced artifact imports is really exported by the staged module
+ok 215 - every symbol the enhanced artifact imports is really exported by the staged module
+  ---
+  duration_ms: 41.625816
+  type: 'test'
+  ...
+# Subtest: the enhanced ACP shutdown releases the owned native group, never one pid
+ok 216 - the enhanced ACP shutdown releases the owned native group, never one pid
+  ---
+  duration_ms: 1.770061
+  type: 'test'
+  ...
+# Subtest: codex: isolated entry refuses unsafe directories before upstream evaluation
+ok 217 - codex: isolated entry refuses unsafe directories before upstream evaluation
+  ---
+  duration_ms: 659.626502
+  type: 'test'
+  ...
+# Subtest: codex: isolated entry establishes native HOME before imports without copying global state
+ok 218 - codex: isolated entry establishes native HOME before imports without copying global state
+  ---
+  duration_ms: 136.628478
+  type: 'test'
+  ...
+# Subtest: claude-code: isolated entry refuses unsafe directories before upstream evaluation
+ok 219 - claude-code: isolated entry refuses unsafe directories before upstream evaluation
+  ---
+  duration_ms: 622.747489
+  type: 'test'
+  ...
+# Subtest: claude-code: isolated entry establishes native HOME before imports without copying global state
+ok 220 - claude-code: isolated entry establishes native HOME before imports without copying global state
+  ---
+  duration_ms: 136.903569
+  type: 'test'
+  ...
+# Subtest: Codex managed scope uses only its explicit private account; inherited authentication is removed
+ok 221 - Codex managed scope uses only its explicit private account; inherited authentication is removed
+  ---
+  duration_ms: 931.824827
+  type: 'test'
+  ...
+# Subtest: Codex accepted thread binds its submitted routing snapshot, never mutable provider catalogue
+ok 222 - Codex accepted thread binds its submitted routing snapshot, never mutable provider catalogue
+  ---
+  duration_ms: 4.216393
+  type: 'test'
+  ...
+# Subtest: routing never invents default endpoint/protocol or exposes URL credentials
+ok 223 - routing never invents default endpoint/protocol or exposes URL credentials
+  ---
+  duration_ms: 0.346458
+  type: 'test'
+  ...
+# Subtest: official routing requires actual managed account verification and accepted openai thread
+ok 224 - official routing requires actual managed account verification and accepted openai thread
+  ---
+  duration_ms: 0.265494
+  type: 'test'
+  ...
+# Subtest: bound native record retains exact C4 target and canonical manifest digest without conferring authority
+ok 225 - bound native record retains exact C4 target and canonical manifest digest without conferring authority
+  ---
+  duration_ms: 11.626551
+  type: 'test'
+  ...
+# Subtest: unbound six-field operation remains a development record with no C4 target/digest
+ok 226 - unbound six-field operation remains a development record with no C4 target/digest
+  ---
+  duration_ms: 1.183093
+  type: 'test'
+  ...
+# Subtest: operation ID cannot switch target, manifest source or binding mode on replay
+ok 227 - operation ID cannot switch target, manifest source or binding mode on replay
+  ---
+  duration_ms: 3.476932
+  type: 'test'
+  ...
+# Subtest: manifest refuses null manifest with zero effects/reservation
+ok 228 - manifest refuses null manifest with zero effects/reservation
+  ---
+  duration_ms: 0.675996
+  type: 'test'
+  ...
+# Subtest: manifest refuses extra root field with zero effects/reservation
+ok 229 - manifest refuses extra root field with zero effects/reservation
+  ---
+  duration_ms: 0.6228
+  type: 'test'
+  ...
+# Subtest: manifest refuses wrong scope with zero effects/reservation
+ok 230 - manifest refuses wrong scope with zero effects/reservation
+  ---
+  duration_ms: 0.528705
+  type: 'test'
+  ...
+# Subtest: manifest refuses extra target field with zero effects/reservation
+ok 231 - manifest refuses extra target field with zero effects/reservation
+  ---
+  duration_ms: 0.513205
+  type: 'test'
+  ...
+# Subtest: manifest refuses missing target field with zero effects/reservation
+ok 232 - manifest refuses missing target field with zero effects/reservation
+  ---
+  duration_ms: 0.515133
+  type: 'test'
+  ...
+# Subtest: manifest refuses empty target identity with zero effects/reservation
+ok 233 - manifest refuses empty target identity with zero effects/reservation
+  ---
+  duration_ms: 1.096072
+  type: 'test'
+  ...
+# Subtest: manifest refuses negative generation with zero effects/reservation
+ok 234 - manifest refuses negative generation with zero effects/reservation
+  ---
+  duration_ms: 1.045083
+  type: 'test'
+  ...
+# Subtest: manifest refuses boolean generation with zero effects/reservation
+ok 235 - manifest refuses boolean generation with zero effects/reservation
+  ---
+  duration_ms: 0.54125
+  type: 'test'
+  ...
+# Subtest: manifest refuses unsafe generation with zero effects/reservation
+ok 236 - manifest refuses unsafe generation with zero effects/reservation
+  ---
+  duration_ms: 0.395571
+  type: 'test'
+  ...
+# Subtest: manifest refuses multiple actions with zero effects/reservation
+ok 237 - manifest refuses multiple actions with zero effects/reservation
+  ---
+  duration_ms: 0.42625
+  type: 'test'
+  ...
+# Subtest: manifest refuses zero actions with zero effects/reservation
+ok 238 - manifest refuses zero actions with zero effects/reservation
+  ---
+  duration_ms: 0.347709
+  type: 'test'
+  ...
+# Subtest: manifest refuses unknown action with zero effects/reservation
+ok 239 - manifest refuses unknown action with zero effects/reservation
+  ---
+  duration_ms: 0.33055
+  type: 'test'
+  ...
+# Subtest: manifest refuses unknown schema with zero effects/reservation
+ok 240 - manifest refuses unknown schema with zero effects/reservation
+  ---
+  duration_ms: 0.350358
+  type: 'test'
+  ...
+# Subtest: manifest refuses wrong model input with zero effects/reservation
+ok 241 - manifest refuses wrong model input with zero effects/reservation
+  ---
+  duration_ms: 0.360198
+  type: 'test'
+  ...
+# Subtest: manifest refuses wrong config input with zero effects/reservation
+ok 242 - manifest refuses wrong config input with zero effects/reservation
+  ---
+  duration_ms: 0.338515
+  type: 'test'
+  ...
+# Subtest: manifest refuses secret input with zero effects/reservation
+ok 243 - manifest refuses secret input with zero effects/reservation
+  ---
+  duration_ms: 0.389785
+  type: 'test'
+  ...
+# Subtest: manifest refuses missing expected observation with zero effects/reservation
+ok 244 - manifest refuses missing expected observation with zero effects/reservation
+  ---
+  duration_ms: 0.332943
+  type: 'test'
+  ...
+# Subtest: manifest refuses unknown source business field with zero effects/reservation
+ok 245 - manifest refuses unknown source business field with zero effects/reservation
+  ---
+  duration_ms: 1.249144
+  type: 'test'
+  ...
+# Subtest: manifest refuses unknown source batch field with zero effects/reservation
+ok 246 - manifest refuses unknown source batch field with zero effects/reservation
+  ---
+  duration_ms: 0.361534
+  type: 'test'
+  ...
+# Subtest: manifest refuses missing source identity with zero effects/reservation
+ok 247 - manifest refuses missing source identity with zero effects/reservation
+  ---
+  duration_ms: 0.296014
+  type: 'test'
+  ...
+# Subtest: manifest refuses oversized source with zero effects/reservation
+ok 248 - manifest refuses oversized source with zero effects/reservation
+  ---
+  duration_ms: 0.296606
+  type: 'test'
+  ...
+# Subtest: bound unknown record retains target and manifest; no repeat effect
+ok 249 - bound unknown record retains target and manifest; no repeat effect
+  ---
+  duration_ms: 1.458073
+  type: 'test'
+  ...
+# Subtest: canonical JSON/digest are stable and reject non-JSON input
+ok 250 - canonical JSON/digest are stable and reject non-JSON input
+  ---
+  duration_ms: 0.788411
+  type: 'test'
+  ...
+# Subtest: observed operation uses independent reads, not a forged ACK; replay is detached
+ok 251 - observed operation uses independent reads, not a forged ACK; replay is detached
+  ---
+  duration_ms: 0.921383
+  type: 'test'
+  ...
+# Subtest: thinking only accepts the exact pinned live option spelling
+ok 252 - thinking only accepts the exact pinned live option spelling
+  ---
+  duration_ms: 0.550618
+  type: 'test'
+  ...
+# Subtest: same operation id cannot change payload or native session
+ok 253 - same operation id cannot change payload or native session
+  ---
+  duration_ms: 0.919101
+  type: 'test'
+  ...
+# Subtest: refuses generation before effects or reservation
+ok 254 - refuses generation before effects or reservation
+  ---
+  duration_ms: 0.646772
+  type: 'test'
+  ...
+# Subtest: refuses digest before effects or reservation
+ok 255 - refuses digest before effects or reservation
+  ---
+  duration_ms: 0.622082
+  type: 'test'
+  ...
+# Subtest: refuses value not exposed before effects or reservation
+ok 256 - refuses value not exposed before effects or reservation
+  ---
+  duration_ms: 0.48529
+  type: 'test'
+  ...
+# Subtest: refuses secret field before effects or reservation
+ok 257 - refuses secret field before effects or reservation
+  ---
+  duration_ms: 0.375751
+  type: 'test'
+  ...
+# Subtest: refuses unsupported provider config before effects or reservation
+ok 258 - refuses unsupported provider config before effects or reservation
+  ---
+  duration_ms: 0.349779
+  type: 'test'
+  ...
+# Subtest: refuses wrong thinking spelling before effects or reservation
+ok 259 - refuses wrong thinking spelling before effects or reservation
+  ---
+  duration_ms: 0.549091
+  type: 'test'
+  ...
+# Subtest: refuses empty id before effects or reservation
+ok 260 - refuses empty id before effects or reservation
+  ---
+  duration_ms: 0.384535
+  type: 'test'
+  ...
+# Subtest: refuses oversized id before effects or reservation
+ok 261 - refuses oversized id before effects or reservation
+  ---
+  duration_ms: 0.318702
+  type: 'test'
+  ...
+# Subtest: refuses oversized session before effects or reservation
+ok 262 - refuses oversized session before effects or reservation
+  ---
+  duration_ms: 0.354554
+  type: 'test'
+  ...
+# Subtest: refuses NUL value before effects or reservation
+ok 263 - refuses NUL value before effects or reservation
+  ---
+  duration_ms: 0.345221
+  type: 'test'
+  ...
+# Subtest: refuses nonstring value before effects or reservation
+ok 264 - refuses nonstring value before effects or reservation
+  ---
+  duration_ms: 0.308125
+  type: 'test'
+  ...
+# Subtest: busy and unknown/disposed/closing sessions refuse without interrupting output
+ok 265 - busy and unknown/disposed/closing sessions refuse without interrupting output
+  ---
+  duration_ms: 0.866909
+  type: 'test'
+  ...
+# Subtest: upstream throw after mutation records unknown, never retries
+ok 266 - upstream throw after mutation records unknown, never retries
+  ---
+  duration_ms: 0.869005
+  type: 'test'
+  ...
+# Subtest: ACK with no actual change records unknown
+ok 267 - ACK with no actual change records unknown
+  ---
+  duration_ms: 0.706429
+  type: 'test'
+  ...
+# Subtest: replacement, close, busy or failed independent post-read never observe success
+ok 268 - replacement, close, busy or failed independent post-read never observe success
+  ---
+  duration_ms: 3.008355
+  type: 'test'
+  ...
+# Subtest: inflight duplicate returns retained unknown; competing same-session action fails immediately
+ok 269 - inflight duplicate returns retained unknown; competing same-session action fails immediately
+  ---
+  duration_ms: 0.828338
+  type: 'test'
+  ...
+# Subtest: shared nonwaiting session lock blocks prompt/config/apply, isolates sessions and releases after errors
+ok 270 - shared nonwaiting session lock blocks prompt/config/apply, isolates sessions and releases after errors
+  ---
+  duration_ms: 0.947835
+  type: 'test'
+  ...
+# Subtest: record/lock capacity refuses without eviction or native effects; replay/query remain usable
+ok 271 - record/lock capacity refuses without eviction or native effects; replay/query remain usable
+  ---
+  duration_ms: 1.092013
+  type: 'test'
+  ...
+# Subtest: oversized native readback and duplicate options refuse before effects
+ok 272 - oversized native readback and duplicate options refuse before effects
+  ---
+  duration_ms: 1.176779
+  type: 'test'
+  ...
+# Subtest: query is exact and bounded, rejects arbitrary methods/extra data
+ok 273 - query is exact and bounded, rejects arbitrary methods/extra data
+  ---
+  duration_ms: 0.369569
+  type: 'test'
+  ...
+# Subtest: actual server registration wraps prompt/setConfigOption/apply with one session lock
+ok 274 - actual server registration wraps prompt/setConfigOption/apply with one session lock
+  ---
+  duration_ms: 44.706747
+  type: 'test'
+  ...
+# Subtest: readback uses live state, is detached, and generation tracks actual instances
+ok 275 - readback uses live state, is detached, and generation tracks actual instances
+  ---
+  duration_ms: 3.568857
+  type: 'test'
+  ...
+# Subtest: unknown, closed and disposed sessions never report applied configuration
+ok 276 - unknown, closed and disposed sessions never report applied configuration
+  ---
+  duration_ms: 0.909361
+  type: 'test'
+  ...
+# Subtest: model readback exposes exact live routing facts but never credential material
+ok 277 - model readback exposes exact live routing facts but never credential material
+  ---
+  duration_ms: 2.474768
+  type: 'test'
+  ...
+# Subtest: missing or ambiguous native model routing facts are not invented
+ok 278 - missing or ambiguous native model routing facts are not invented
+  ---
+  duration_ms: 0.337581
+  type: 'test'
+  ...
+# Subtest: reserved routing evidence cannot survive missing or unsafe native facts
+ok 279 - reserved routing evidence cannot survive missing or unsafe native facts
+  ---
+  duration_ms: 1.17133
+  type: 'test'
+  ...
+# Subtest: registers privately, opaque key via runtime API, observes native creation once
+ok 280 - registers privately, opaque key via runtime API, observes native creation once
+  ---
+  duration_ms: 8.510465
+  type: 'test'
+  ...
+# Subtest: extension model definitions contain the pinned Pi request fields
+ok 281 - extension model definitions contain the pinned Pi request fields
+  ---
+  duration_ms: 0.916443
+  type: 'test'
+  ...
+# Subtest: unknown preparation is query-only and never exposes upstream key
+ok 282 - unknown preparation is query-only and never exposes upstream key
+  ---
+  duration_ms: 0.887041
+  type: 'test'
+  ...
+# Subtest: refuses malformed dialect, shared adapter, changed replay and lifecycle competition
+ok 283 - refuses malformed dialect, shared adapter, changed replay and lifecycle competition
+  ---
+  duration_ms: 2.122953
+  type: 'test'
+  ...
+# Subtest: provider request during creation and mismatched native route never confirm
+ok 284 - provider request during creation and mismatched native route never confirm
+  ---
+  duration_ms: 1.348168
+  type: 'test'
+  ...
+# Subtest: startup refuses missing, shared, relative and symlinked instance directories before imports
+ok 285 - startup refuses missing, shared, relative and symlinked instance directories before imports
+  ---
+  duration_ms: 814.906906
+  type: 'test'
+  ...
+# Subtest: a startup-admitted provider can add a model after the first turn without replacing credentials or losing models
+ok 286 - a startup-admitted provider can add a model after the first turn without replacing credentials or losing models
+  ---
+  duration_ms: 11.62165
+  type: 'test'
+  ...
+# Subtest: new provider admission preserves session, generation, selection and prior catalogue
+ok 287 - new provider admission preserves session, generation, selection and prior catalogue
+  ---
+  duration_ms: 1.726016
+  type: 'test'
+  ...
+# Subtest: busy, stale, shared and existing provider inputs refuse before effects
+ok 288 - busy, stale, shared and existing provider inputs refuse before effects
+  ---
+  duration_ms: 2.637914
+  type: 'test'
+  ...
+# Subtest: partial provider effect stays unknown, secret-free, query-only and blocks new work
+ok 289 - partial provider effect stays unknown, secret-free, query-only and blocks new work
+  ---
+  duration_ms: 1.470699
+  type: 'test'
+  ...
+# Subtest: owner loss or unfaithful catalogue readback never confirms registration
+ok 290 - owner loss or unfaithful catalogue readback never confirms registration
+  ---
+  duration_ms: 1.859951
+  type: 'test'
+  ...
+# Subtest: concurrent admissions cannot race runtime provider effects
+ok 291 - concurrent admissions cannot race runtime provider effects
+  ---
+  duration_ms: 1.026684
+  type: 'test'
+  ...
+# Subtest: adding another model to an admitted route retains earlier models, but cannot rotate its credentials
+ok 292 - adding another model to an admitted route retains earlier models, but cannot rotate its credentials
+  ---
+  duration_ms: 1.561121
+  type: 'test'
+  ...
+1..292
+# tests 292
+# suites 0
+# pass 288
+# fail 0
+# cancelled 0
+# skipped 4
+# todo 0
+# duration_ms 27357.164902
+
+[1m▶ node-test:plugins/harness/tests/access[0m node --test plugins/harness/tests/access/**/*.test.mjs
+TAP version 13
+# Subtest: E1: connecting uses the explicit entry and the directory the caller named, and writes nothing into the Agent home
+ok 1 - E1: connecting uses the explicit entry and the directory the caller named, and writes nothing into the Agent home
+  ---
+  duration_ms: 372.555761
+  type: 'test'
+  ...
+# Subtest: E2: connect demands an explicit launch context, and the adapter environment is validated rather than trusted
+ok 2 - E2: connect demands an explicit launch context, and the adapter environment is validated rather than trusted
+  ---
+  duration_ms: 398.634855
+  type: 'test'
+  ...
+# Subtest: E3: an undirected frame, a second connection and a retired field are each refused by name
+ok 3 - E3: an undirected frame, a second connection and a retired field are each refused by name
+  ---
+  duration_ms: 443.095052
+  type: 'test'
+  ...
+# Subtest: E4: status reports the connection and its process, and close and a crash stay two different facts
+ok 4 - E4: status reports the connection and its process, and close and a crash stay two different facts
+  ---
+  duration_ms: 968.659819
+  type: 'test'
+  ...
+# Subtest: E5: two Sessions on one transport keep their own native ids and their own turn counters
+ok 5 - E5: two Sessions on one transport keep their own native ids and their own turn counters
+  ---
+  duration_ms: 415.43512
+  type: 'test'
+  ...
+# Subtest: E6: discovery answers without a connection, and a brand that is not registered is refused
+ok 6 - E6: discovery answers without a connection, and a brand that is not registered is refused
+  ---
+  duration_ms: 344.530804
+  type: 'test'
+  ...
+# Subtest: E7: closing one connection releases exactly its own Agent process, not the neighbour's
+ok 7 - E7: closing one connection releases exactly its own Agent process, not the neighbour's
+  ---
+  duration_ms: 701.929072
+  type: 'test'
+  ...
+# Subtest: E8: the execution-mode gate and the provenance check fail closed
+ok 8 - E8: the execution-mode gate and the provenance check fail closed
+  ---
+  duration_ms: 622.90111
+  type: 'test'
+  ...
+# Subtest: E9: a release is reported only once the process is gone, escalating past an ignored SIGTERM
+ok 9 - E9: a release is reported only once the process is gone, escalating past an ignored SIGTERM
+  ---
+  duration_ms: 2590.034124
+  type: 'test'
+  ...
+# Subtest: E9b: a release the OS will not confirm is a failure, with the process identity kept
+ok 10 - E9b: a release the OS will not confirm is a failure, with the process identity kept
+  ---
+  duration_ms: 90.985623
+  type: 'test'
+  ...
+# Subtest: E14: only ESRCH proves an exit — an odd probe answer is not a death
+ok 11 - E14: only ESRCH proves an exit — an odd probe answer is not a death
+  ---
+  duration_ms: 144.901527
+  type: 'test'
+  ...
+# Subtest: E15: without a process table to read, a tree is never reported as reclaimed
+ok 12 - E15: without a process table to read, a tree is never reported as reclaimed
+  ---
+  duration_ms: 37.875764
+  type: 'test'
+  ...
+# Subtest: E10: two connects at once establish one Harness, and the loser is refused by name
+ok 13 - E10: two connects at once establish one Harness, and the loser is refused by name
+  ---
+  duration_ms: 563.709047
+  type: 'test'
+  ...
+# Subtest: E11: a close that arrives during an establishment waits and releases what it produced
+ok 14 - E11: a close that arrives during an establishment waits and releases what it produced
+  ---
+  duration_ms: 418.849822
+  type: 'test'
+  ...
+# Subtest: E12: a host that hangs up mid-establishment leaves no Harness behind
+ok 15 - E12: a host that hangs up mid-establishment leaves no Harness behind
+  ---
+  duration_ms: 324.953303
+  type: 'test'
+  ...
+# Subtest: E13: an ACP frame carrying an `op` extension field is relayed, not eaten as control
+ok 16 - E13: an ACP frame carrying an `op` extension field is relayed, not eaten as control
+  ---
+  duration_ms: 543.985682
+  type: 'test'
+  ...
+# Subtest: E16: close reclaims the children the launch started, not only the process it spawned
+ok 17 - E16: close reclaims the children the launch started, not only the process it spawned
+  ---
+  duration_ms: 588.802484
+  type: 'test'
+  ...
+# Subtest: E17: a bridge that exits first does not release its children out from under the report
+ok 18 - E17: a bridge that exits first does not release its children out from under the report
+  ---
+  duration_ms: 700.80817
+  type: 'test'
+  ...
+# Subtest: E18: a child that moved itself out of the group is still accounted for
+ok 19 - E18: a child that moved itself out of the group is still accounted for
+  ---
+  duration_ms: 574.28069
+  type: 'test'
+  ...
+# Subtest: E19: an unrelated process running the same thing in the same directory is left alone
+ok 20 - E19: an unrelated process running the same thing in the same directory is left alone
+  ---
+  duration_ms: 528.916358
+  type: 'test'
+  ...
+# Subtest: E20: a grandchild that left the group is found through the member it came from
+ok 21 - E20: a grandchild that left the group is found through the member it came from
+  ---
+  duration_ms: 701.059527
+  type: 'test'
+  ...
+# Subtest: E21: a pid the OS describes as a different process is never signalled
+ok 22 - E21: a pid the OS describes as a different process is never signalled
+  ---
+  duration_ms: 1.639192
+  type: 'test'
+  ...
+# Subtest: E22: a group is aimed at only while a process the launch recorded answers to that number
+ok 23 - E22: a group is aimed at only while a process the launch recorded answers to that number
+  ---
+  duration_ms: 46.19506
+  type: 'test'
+  ...
+# Subtest: E23: an orphan's escaped child is found by both rules at once, with no parent link left
+ok 24 - E23: an orphan's escaped child is found by both rules at once, with no parent link left
+  ---
+  duration_ms: 691.692364
+  type: 'test'
+  ...
+# Subtest: E24: an identity that cannot be re-read is not an identity that was checked
+ok 25 - E24: an identity that cannot be re-read is not an identity that was checked
+  ---
+  duration_ms: 2.716941
+  type: 'test'
+  ...
+# Subtest: E25: a member that has left the group neither proves it nor needs it
+ok 26 - E25: a member that has left the group neither proves it nor needs it
+  ---
+  duration_ms: 1.583473
+  type: 'test'
+  ...
+# Subtest: G05: each canonical brand refuses a self-asserted installed adapter
+ok 27 - G05: each canonical brand refuses a self-asserted installed adapter
+  ---
+  duration_ms: 957.476588
+  type: 'test'
+  ...
+# Subtest: G05: the orchestration fixture needs an explicit controlled entry mode
+ok 28 - G05: the orchestration fixture needs an explicit controlled entry mode
+  ---
+  duration_ms: 1655.43288
+  type: 'test'
+  ...
+# Subtest: G05: the controlled peer is chosen by content, not by location
+ok 29 - G05: the controlled peer is chosen by content, not by location
+  ---
+  duration_ms: 771.784898
+  type: 'test'
+  ...
+# Subtest: G05: an injected allowlist replaces the built-in table and is fail-closed
+ok 30 - G05: an injected allowlist replaces the built-in table and is fail-closed
+  ---
+  duration_ms: 1056.008944
+  type: 'test'
+  ...
+# Subtest: G05: wrong brand, wrong version, legacy alias, and renderer-chosen command are refused before spawn
+ok 31 - G05: wrong brand, wrong version, legacy alias, and renderer-chosen command are refused before spawn
+  ---
+  duration_ms: 674.268099
+  type: 'test'
+  ...
+# Subtest: G05: Claude alias and canonical route to distinct pinned read-only artifact entries
+ok 32 - G05: Claude alias and canonical route to distinct pinned read-only artifact entries
+  ---
+  duration_ms: 300.286879
+  type: 'test'
+  ...
+# Subtest: G05: legacy brands keep descriptor routes but reject arbitrary renderer executables
+ok 33 - G05: legacy brands keep descriptor routes but reject arbitrary renderer executables
+  ---
+  duration_ms: 429.361914
+  type: 'test'
+  ...
+# Subtest: G05: a version-probe executable cannot replace itself before managed spawn
+ok 34 - G05: a version-probe executable cannot replace itself before managed spawn
+  ---
+  duration_ms: 339.083871
+  type: 'test'
+  ...
+# Subtest: baseline: a reply resolves exactly the request its id belongs to, out of order
+ok 35 - baseline: a reply resolves exactly the request its id belongs to, out of order
+  ---
+  duration_ms: 7.986699
+  type: 'test'
+  ...
+# Subtest: baseline: notifications reach the host verbatim, including unknown methods and custom fields
+ok 36 - baseline: notifications reach the host verbatim, including unknown methods and custom fields
+  ---
+  duration_ms: 1.102203
+  type: 'test'
+  ...
+# Subtest: baseline: advertised capabilities are reported as advertised, unknown keys included
+ok 37 - baseline: advertised capabilities are reported as advertised, unknown keys included
+  ---
+  duration_ms: 0.536547
+  type: 'test'
+  ...
+# Subtest: baseline: a reverse permission request is answered, an unknown reverse request is refused, and neither is executed
+ok 38 - baseline: a reverse permission request is answered, an unknown reverse request is refused, and neither is executed
+  ---
+  duration_ms: 1.29217
+  type: 'test'
+  ...
+# Subtest: baseline: cancel is a notification, not a response, and is not a disconnect
+ok 39 - baseline: cancel is a notification, not a response, and is not a disconnect
+  ---
+  duration_ms: 10.026363
+  type: 'test'
+  ...
+# Subtest: baseline: a disconnect is not a cancel — the in-flight request is rejected with the exit cause
+ok 40 - baseline: a disconnect is not a cancel — the in-flight request is rejected with the exit cause
+  ---
+  duration_ms: 3.743014
+  type: 'test'
+  ...
+# Subtest: baseline: close() releases only this connection's child and its own pending work
+ok 41 - baseline: close() releases only this connection's child and its own pending work
+  ---
+  duration_ms: 1.717551
+  type: 'test'
+  ...
+# Subtest: baseline: the prompt watchdog is per session — one live session does not keep another alive
+ok 42 - baseline: the prompt watchdog is per session — one live session does not keep another alive
+  ---
+  duration_ms: 201.805072
+  type: 'test'
+  ...
+# Subtest: fixture self-proof: the async-failure recorder notices a failure and uninstalls itself
+ok 43 - fixture self-proof: the async-failure recorder notices a failure and uninstalls itself
+  ---
+  duration_ms: 32.190701
+  type: 'test'
+  ...
+# Subtest: fixture self-proof: a success reply resolves, is recorded on the wire, and leaves nothing pending
+ok 44 - fixture self-proof: a success reply resolves, is recorded on the wire, and leaves nothing pending
+  ---
+  duration_ms: 33.57184
+  type: 'test'
+  ...
+# Subtest: fixture self-proof: an error-only reply rejects with its cause, and leaves nothing pending
+ok 45 - fixture self-proof: an error-only reply rejects with its cause, and leaves nothing pending
+  ---
+  duration_ms: 31.932546
+  type: 'test'
+  ...
+# Subtest: T1: establishing the connection sends no ACP frame — initialize/session/new/prompt are the client's
+ok 46 - T1: establishing the connection sends no ACP frame — initialize/session/new/prompt are the client's
+  ---
+  duration_ms: 388.311881
+  type: 'test'
+  ...
+# Subtest: T2: every frame the client sends reaches the Agent verbatim, including fields the plugin does not know
+ok 47 - T2: every frame the client sends reaches the Agent verbatim, including fields the plugin does not know
+  ---
+  duration_ms: 423.719396
+  type: 'test'
+  ...
+# Subtest: T3: an agent-bound method the client names reaches the Agent unchanged and the Agent's answer comes back as the Agent sent it
+ok 48 - T3: an agent-bound method the client names reaches the Agent unchanged and the Agent's answer comes back as the Agent sent it
+  ---
+  duration_ms: 455.988868
+  type: 'test'
+  ...
+# Subtest: T4: an error the Agent answers with reaches the client unchanged
+ok 49 - T4: an error the Agent answers with reaches the client unchanged
+  ---
+  duration_ms: 485.002905
+  type: 'test'
+  ...
+# Subtest: T5: a client-bound request arrives as the Agent's own frame and the client's own reply is what the Agent receives
+ok 50 - T5: a client-bound request arrives as the Agent's own frame and the client's own reply is what the Agent receives
+  ---
+  duration_ms: 453.383697
+  type: 'test'
+  ...
+# Subtest: T6: a client method the access layer does not implement is routed, not refused on the client's behalf
+ok 51 - T6: a client method the access layer does not implement is routed, not refused on the client's behalf
+  ---
+  duration_ms: 454.511145
+  type: 'test'
+  ...
+# Subtest: T7: concurrent client-bound requests keep their own ids and their own answers
+ok 52 - T7: concurrent client-bound requests keep their own ids and their own answers
+  ---
+  duration_ms: 459.651551
+  type: 'test'
+  ...
+# Subtest: T8: an error-only reply from the client is delivered and the turn still ends
+ok 53 - T8: an error-only reply from the client is delivered and the turn still ends
+  ---
+  duration_ms: 430.041178
+  type: 'test'
+  ...
+# Subtest: T9: an unanswered request stays unanswered — no refusal, no timeout decision, no brand policy
+ok 54 - T9: an unanswered request stays unanswered — no refusal, no timeout decision, no brand policy
+  ---
+  duration_ms: 6304.619675
+  type: 'test'
+  ...
+# Subtest: T10: a connection that dies is reported as the transport ending, not as an answer
+ok 55 - T10: a connection that dies is reported as the transport ending, not as an answer
+  ---
+  duration_ms: 993.004201
+  type: 'test'
+  ...
+# Subtest: fixture self-proof: a success answer is received, recorded, and ends the held turn
+ok 56 - fixture self-proof: a success answer is received, recorded, and ends the held turn
+  ---
+  duration_ms: 153.846232
+  type: 'test'
+  ...
+# Subtest: fixture self-proof: an error-only answer is received, recorded, and ends the held turn
+ok 57 - fixture self-proof: an error-only answer is received, recorded, and ends the held turn
+  ---
+  duration_ms: 120.875812
+  type: 'test'
+  ...
+# Subtest: fixture self-proof: several requests stay separate, and the turn ends once, after the last answer
+ok 58 - fixture self-proof: several requests stay separate, and the turn ends once, after the last answer
+  ---
+  duration_ms: 255.88313
+  type: 'test'
+  ...
+# Subtest: codex: native Profile assets require explicit selection and exact extension provenance
+ok 59 - codex: native Profile assets require explicit selection and exact extension provenance
+  ---
+  duration_ms: 13.632392
+  type: 'test'
+  ...
+# Subtest: claude-code: native Profile assets require explicit selection and exact extension provenance
+ok 60 - claude-code: native Profile assets require explicit selection and exact extension provenance
+  ---
+  duration_ms: 5.110814
+  type: 'test'
+  ...
+# Subtest: native Profile selection cannot select a different, duplicated or invalid brand
+ok 61 - native Profile selection cannot select a different, duplicated or invalid brand
+  ---
+  duration_ms: 0.22454
+  type: 'test'
+  ...
+# Subtest: Pi enhanced entry requires explicit variant; default and read-only routes do not adopt it
+ok 62 - Pi enhanced entry requires explicit variant; default and read-only routes do not adopt it
+  ---
+  duration_ms: 3.54884
+  type: 'test'
+  ...
+# Subtest: enhanced manifest identity, extension metadata and entire tree remain authoritative
+ok 63 - enhanced manifest identity, extension metadata and entire tree remain authoritative
+  ---
+  duration_ms: 10.062038
+  type: 'test'
+  ...
+# Subtest: enhanced route rejects unsupported brands, unexpected argv and unknown variants
+ok 64 - enhanced route rejects unsupported brands, unexpected argv and unknown variants
+  ---
+  duration_ms: 1.929437
+  type: 'test'
+  ...
+# Subtest: enhanced installed source retains every root ownership and mode guard
+ok 65 - enhanced installed source retains every root ownership and mode guard
+  ---
+  duration_ms: 5.616609
+  type: 'test'
+  ...
+# Subtest: actual user-owned enhanced tree is refused even with matching manifest and protected modes
+ok 66 - actual user-owned enhanced tree is refused even with matching manifest and protected modes
+  ---
+  duration_ms: 1.702281
+  type: 'test'
+  ...
+# Subtest: native enhanced plan is explicit and may replace only the selected Pi binding
+ok 67 - native enhanced plan is explicit and may replace only the selected Pi binding
+  ---
+  duration_ms: 5.409165
+  type: 'test'
+  ...
+# Subtest: multi-brand launch preserves each binding's independently verified installation root
+ok 68 - multi-brand launch preserves each binding's independently verified installation root
+  ---
+  duration_ms: 4.844529
+  type: 'test'
+  ...
+# Subtest: pi: simulated root metadata verifies actual content against Python v1
+ok 69 - pi: simulated root metadata verifies actual content against Python v1
+  ---
+  duration_ms: 76.885003
+  type: 'test'
+  ...
+# Subtest: codex: simulated root metadata verifies actual content against Python v1
+ok 70 - codex: simulated root metadata verifies actual content against Python v1
+  ---
+  duration_ms: 75.980198
+  type: 'test'
+  ...
+# Subtest: claude-code: simulated root metadata verifies actual content against Python v1
+ok 71 - claude-code: simulated root metadata verifies actual content against Python v1
+  ---
+  duration_ms: 76.744201
+  type: 'test'
+  ...
+# Subtest: multi-brand plan uses individually verified launch references
+ok 72 - multi-brand plan uses individually verified launch references
+  ---
+  duration_ms: 12.715171
+  type: 'test'
+  ...
+# Subtest: multi-brand selection never accepts ambiguous or duplicate identities
+ok 73 - multi-brand selection never accepts ambiguous or duplicate identities
+  ---
+  duration_ms: 0.415268
+  type: 'test'
+  ...
+# Subtest: installed manifest/brand/argv remain authoritative
+ok 74 - installed manifest/brand/argv remain authoritative
+  ---
+  duration_ms: 10.982509
+  type: 'test'
+  ...
+# Subtest: every ancestor, tree member and sibling manifest require root ownership and protected modes
+ok 75 - every ancestor, tree member and sibling manifest require root ownership and protected modes
+  ---
+  duration_ms: 16.733033
+  type: 'test'
+  ...
+# Subtest: actual user-owned chmod555 tree is refused; old managed route still requires its ro source
+ok 76 - actual user-owned chmod555 tree is refused; old managed route still requires its ro source
+  ---
+  duration_ms: 1.854042
+  type: 'test'
+  ...
+# Subtest: codex: enhanced access startup never accepts client-owned instance scope
+ok 77 - codex: enhanced access startup never accepts client-owned instance scope
+  ---
+  duration_ms: 1315.865804
+  type: 'test'
+  ...
+# Subtest: claude-code: enhanced access startup never accepts client-owned instance scope
+ok 78 - claude-code: enhanced access startup never accepts client-owned instance scope
+  ---
+  duration_ms: 1343.906213
+  type: 'test'
+  ...
+# Subtest: enhanced startup selects exact route and refuses client instance overrides
+ok 79 - enhanced startup selects exact route and refuses client instance overrides
+  ---
+  duration_ms: 828.46939
+  type: 'test'
+  ...
+# Subtest: startup root is native-only, immutable from connect and never falls back
+ok 80 - startup root is native-only, immutable from connect and never falls back
+  ---
+  duration_ms: 2010.831505
+  type: 'test'
+  ...
+# Subtest: real adapter: the Codex bundle's own protocol tables are what they claim to be
+ok 81 - real adapter: the Codex bundle's own protocol tables are what they claim to be
+  ---
+  duration_ms: 1.157875
+  type: 'test'
+  ...
+# Subtest: real adapter: the controlled harness only ever speaks methods the real adapter knows
+ok 82 - real adapter: the controlled harness only ever speaks methods the real adapter knows
+  ---
+  duration_ms: 1.432414
+  type: 'test'
+  ...
+# Subtest: real adapter: the method-name scan is not a detector that matches nothing
+ok 83 - real adapter: the method-name scan is not a detector that matches nothing
+  ---
+  duration_ms: 0.224381
+  type: 'test'
+  ...
+# Subtest: real adapter: the harness answers with the real result fields, not fixture words
+ok 84 - real adapter: the harness answers with the real result fields, not fixture words
+  ---
+  duration_ms: 1.624777
+  type: 'test'
+  ...
+# Subtest: protocol source inventory: derived from disk, not from a list of claims
+ok 85 - protocol source inventory: derived from disk, not from a list of claims
+  ---
+  duration_ms: 8.3235
+  type: 'test'
+  ...
+# Subtest: protocol source inventory: the brands with no readable JS adapter are named, with the file that says so
+ok 86 - protocol source inventory: the brands with no readable JS adapter are named, with the file that says so
+  ---
+  duration_ms: 1.442332
+  type: 'test'
+  ...
+1..86
+# tests 86
+# suites 0
+# pass 86
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 13040.800077
+
+[1m▶ node-test:packages/frontend/contracts[0m node --test packages/frontend/contracts/**/*.test.mjs
+TAP version 13
+# Subtest: F5 contract version and token literals are frozen
+ok 1 - F5 contract version and token literals are frozen
+  ---
+  duration_ms: 24.166309
+  type: 'test'
+  ...
+# Subtest: F5 error family codes are frozen and typed
+ok 2 - F5 error family codes are frozen and typed
+  ---
+  duration_ms: 5.361949
+  type: 'test'
+  ...
+# Subtest: absence matrix is honest: absent ui-storage is session-only, not pretend-persistent
+ok 3 - absence matrix is honest: absent ui-storage is session-only, not pretend-persistent
+  ---
+  duration_ms: 4.899916
+  type: 'test'
+  ...
+# Subtest: surface types compile: every frozen interface is exported
+ok 4 - surface types compile: every frozen interface is exported
+  ---
+  duration_ms: 4.299371
+  type: 'test'
+  ...
+# Subtest: TS mirror reproduces every frozen vector byte-for-byte
+ok 5 - TS mirror reproduces every frozen vector byte-for-byte
+  ---
+  duration_ms: 15.733451
+  type: 'test'
+  ...
+# Subtest: construction order never leaks into the wire form
+ok 6 - construction order never leaks into the wire form
+  ---
+  duration_ms: 3.583189
+  type: 'test'
+  ...
+# Subtest: envelope discipline: unknown keys and foreign versions are refused
+ok 7 - envelope discipline: unknown keys and foreign versions are refused
+  ---
+  duration_ms: 5.348688
+  type: 'test'
+  ...
+# Subtest: typed validation mirrors the Python rules
+ok 8 - typed validation mirrors the Python rules
+  ---
+  duration_ms: 6.946842
+  type: 'test'
+  ...
+# Subtest: single carrier: building the mirror twice yields identical codec output, one symbol identity
+ok 9 - single carrier: building the mirror twice yields identical codec output, one symbol identity
+  ---
+  duration_ms: 7.769979
+  type: 'test'
+  ...
+# Subtest: built foundation carrier reuses the shared UI components Token artifact
+ok 10 - built foundation carrier reuses the shared UI components Token artifact
+  ---
+  duration_ms: 55.169554
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 259.557833
+
+[1m▶ node-test:examples/f5-counter[0m node --test examples/external-samples/f5-counter/tests/test.mjs
+TAP version 13
+# Subtest: owner writes, two consumers read the same identity-stable snapshot
+ok 1 - owner writes, two consumers read the same identity-stable snapshot
+  ---
+  duration_ms: 29.854145
+  type: 'test'
+  ...
+# Subtest: counterexample: consumers hold no write face
+ok 2 - counterexample: consumers hold no write face
+  ---
+  duration_ms: 7.595276
+  type: 'test'
+  ...
+# Subtest: counterexample: published snapshots are deeply immutable
+ok 3 - counterexample: published snapshots are deeply immutable
+  ---
+  duration_ms: 7.604381
+  type: 'test'
+  ...
+# Subtest: batched relabel+increment publishes exactly one complete snapshot
+ok 4 - batched relabel+increment publishes exactly one complete snapshot
+  ---
+  duration_ms: 6.209989
+  type: 'test'
+  ...
+# Subtest: a released consumer never fires again (scope exit)
+ok 5 - a released consumer never fires again (scope exit)
+  ---
+  duration_ms: 8.195793
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 287.433128
+
+[1m▶ vitest:examples/f5-react-panel[0m npx vitest run --root examples/external-samples/f5-react-panel
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/examples/external-samples/f5-react-panel
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  11:12:11
+   Duration  1.39s (transform 92ms, setup 0ms, import 181ms, tests 33ms, environment 896ms)
+
+
+[1m▶ rig:tests/integration/acp-connector[0m npx vitest run --root tests/integration/acp-connector
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/tests/integration/acp-connector
+
+ ❯ ui/acp-conversation.test.tsx (7 tests | 1 failed) 1089ms
+   × U1 first send from a draft is blocked until a project is bound 529ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  ui/acp-conversation.test.tsx > U1 first send from a draft is blocked until a project is bound
+AssertionError: expected '↑发送' to be '发送' // Object.is equality
+
+Expected: "发送"
+Received: "↑发送"
+
+ ❯ ui/acp-conversation.test.tsx:83:46
+     81|   act(() => { sessions.startDraft!() })
+     82|   // The existing composer already carries the draft/project gate — no…
+     83|   expect(sendButton(container)?.textContent).toBe('发送')
+       |                                              ^
+     84|   expect(sendButton(container)?.disabled).toBe(true)
+     85|   const blocked = await sessions.send('hello').then(() => undefined, e…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 12 passed (13)
+      Tests  1 failed | 88 passed (89)
+   Start at  11:12:13
+   Duration  16.35s (transform 895ms, setup 0ms, import 3.87s, tests 5.59s, environment 1.78s)
+
+
+[1m▶ electron:test:electron[0m npm run test:electron
+
+> ordessa@0.1.0 test:electron
+> npm run --workspace apps/desktop test:electron
+
+
+> @modular/desktop-app@0.1.0 test:electron
+> node scripts/smoke-electron.mjs
+
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'Ordessa 无法继续Server 启动失败原因：the bundled runtime is incomplete: python, bin你可以：reinstall the application; the bundled runtime is part of the package日志：server:launch查看日志导出诊断'
++ ]
+- []
+
+    at file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/apps/desktop/scripts/smoke-electron.mjs:10:46 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: [
+    'Ordessa 无法继续Server 启动失败原因：the bundled runtime is incomplete: python, bin你可以：reinstall the application; the bundled runtime is part of the package日志：server:launch查看日志导出诊断'
+  ],
+  expected: [],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.22.1
+npm ERR! Lifecycle script `test:electron` failed with error: 
+npm ERR! Error: command failed 
+npm ERR!   in workspace: @modular/desktop-app@0.1.0 
+npm ERR!   at location: /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/apps/desktop 
+
+[1m▶ electron:test:extensions[0m npm run test:extensions
+
+> ordessa@0.1.0 test:extensions
+> node apps/desktop/scripts/test-extensions.mjs
+
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'Ordessa 无法继续Server 启动失败原因：the bundled runtime is incomplete: python, bin你可以：reinstall the application; the bundled runtime is part of the package日志：server:launch查看日志导出诊断'
++ ]
+- []
+
+    at file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/apps/desktop/scripts/test-extensions.mjs:43:40
+    at check (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/apps/desktop/scripts/test-extensions.mjs:36:3)
+    at async file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/apps/desktop/scripts/test-extensions.mjs:43:3 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: [
+    'Ordessa 无法继续Server 启动失败原因：the bundled runtime is incomplete: python, bin你可以：reinstall the application; the bundled runtime is part of the package日志：server:launch查看日志导出诊断'
+  ],
+  expected: [],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.22.1
+
+[1m▶ electron:test:agent-ui[0m npm run test:agent-ui
+
+> ordessa@0.1.0 test:agent-ui
+> node apps/desktop/scripts/test-agent-ui.mjs
+
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'Ordessa 无法继续Server 启动失败原因：the bundled runtime is incomplete: python, bin你可以：reinstall the application; the bundled runtime is part of the package日志：server:launch查看日志导出诊断'
++ ]
+- []
+
+    at file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/apps/desktop/scripts/test-agent-ui.mjs:14:10 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: [
+    'Ordessa 无法继续Server 启动失败原因：the bundled runtime is incomplete: python, bin你可以：reinstall the application; the bundled runtime is part of the package日志：server:launch查看日志导出诊断'
+  ],
+  expected: [],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.22.1
+
+[1m▶ electron:test:agent-shell[0m npm run test:agent-shell
+
+> ordessa@0.1.0 test:agent-shell
+> node apps/desktop/scripts/test-agent-shell.mjs
+
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: ordessa.agent-server must be in the shipping product
+    at file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/apps/desktop/scripts/test-agent-shell.mjs:19:37 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v22.22.1
+
+[1m▶ electron:test:ui-service[0m npm run test:ui-service
+
+> ordessa@0.1.0 test:ui-service
+> node apps/desktop/scripts/test-ui-service.mjs
+
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'Ordessa 无法继续Server 启动失败原因：the bundled runtime is incomplete: python, bin你可以：reinstall the application; the bundled runtime is part of the package日志：server:launch查看日志导出诊断'
++ ]
+- []
+
+    at file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/apps/desktop/scripts/test-ui-service.mjs:82:12
+    at launch (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/apps/desktop/scripts/test-ui-service.mjs:72:5)
+    at async file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/apps/desktop/scripts/test-ui-service.mjs:78:20 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: [
+    'Ordessa 无法继续Server 启动失败原因：the bundled runtime is incomplete: python, bin你可以：reinstall the application; the bundled runtime is part of the package日志：server:launch查看日志导出诊断'
+  ],
+  expected: [],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.22.1
+
+[1m▶ electron:test:ui-foundations[0m npm run test:ui-foundations
+
+> ordessa@0.1.0 test:ui-foundations
+> node apps/desktop/scripts/test-ui-foundations.mjs
+
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: the fixture uses an optional binding, so nothing may report a failure
++ actual - expected
+
++ [
++   'Ordessa 无法继续Server 启动失败原因：the bundled runtime is incomplete: python, bin你可以：reinstall the application; the bundled runtime is part of the package日志：server:launch查看日志导出诊断'
++ ]
+- []
+
+    at file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/apps/desktop/scripts/test-ui-foundations.mjs:64:10 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: [
+    'Ordessa 无法继续Server 启动失败原因：the bundled runtime is incomplete: python, bin你可以：reinstall the application; the bundled runtime is part of the package日志：server:launch查看日志导出诊断'
+  ],
+  expected: [],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.22.1
+
+[1m▶ electron:test:ui-preview[0m npm run test:ui-preview
+
+> ordessa@0.1.0 test:ui-preview
+> node apps/desktop/scripts/test-ui-preview.mjs
+
+
+> @modular/desktop-app@0.1.0 build
+> node scripts/build.mjs
+
+Built 19 enabled extensions into products/desktop/dist
+product: Ordessa Desktop 0.1.0 (0.1.0-local); icons: source=true rasterized=false
+{
+  "boot": {
+    "nav": true,
+    "connectors": 4
+  },
+  "empty": {
+    "placeholder": true,
+    "emptyList": true,
+    "rightInert": true,
+    "bottomInert": true
+  },
+  "history": {
+    "opened": true,
+    "userRole": true,
+    "assistantRole": true,
+    "userRight": true,
+    "assistantFont": "14px",
+    "userRadius": "18px",
+    "composer": true,
+    "composerRadius": "22px",
+    "toolCards": 3,
+    "thinkingCards": 1
+  },
+  "sessionSwitch": {
+    "switched": true,
+    "restored": true
+  },
+  "send": {
+    "enabled": true,
+    "replied": true,
+    "total": 6,
+    "userBubbles": 3
+  },
+  "toolExpand": {
+    "expanded": true,
+    "thinkingOpen": true
+  },
+  "approval": {
+    "card": true,
+    "inComposer": true,
+    "count": 1,
+    "choices": [
+      "Allow once",
+      "Always allow",
+      "Reject"
+    ],
+    "runChip": "running"
+  },
+  "approvalRespond": {
+    "resolved": true,
+    "runDone": true,
+    "response": {
+      "interactionId": "I1",
+      "answer": {
+        "kind": "choice",
+        "choiceId": "allow"
+      }
+    },
+    "responseCount": 1,
+    "actionable": 0
+  },
+  "running": {
+    "chipRunning": true,
+    "stopVisible": true,
+    "stopEnabled": true,
+    "runningTool": true
+  },
+  "stop": {
+    "requested": true,
+    "notice": true,
+    "cancelled": true
+  },
+  "gateRelease": {
+    "backInHistory": true
+  },
+  "layout": {
+    "collapsed": true,
+    "expanded": true,
+    "separator": true,
+    "leftWidth": 264
+  },
+  "resize": {
+    "widthBefore": 264,
+    "widthAfter": 360,
+    "dragged": true,
+    "pointerCounts": {
+      "down": 1,
+      "move": 8,
+      "up": 1
+    },
+    "dragProbe": {
+      "stateAfterDown": "active",
+      "widths": [
+        276,
+        288,
+        300,
+        312,
+        324,
+        336,
+        348,
+        360
+      ],
+      "stateAfterUp": "inactive"
+    },
+    "keyboard": {
+      "before": 360,
+      "right": 360,
+      "arrowRight": 360
+    },
+    "keyboardResized": false
+  },
+  "focus": {
+    "focused": true,
+    "tag": "BUTTON"
+  },
+  "scroll": {
+    "innerHeight": 560,
+    "messages": 16,
+    "chain": [
+      {
+        "el": "chat-scroll-viewport",
+        "scrollH": 1456,
+        "clientH": 291,
+        "overflowY": "auto"
+      },
+      {
+        "el": "chat-scroll-wrap",
+        "scrollH": 291,
+        "clientH": 291,
+        "overflowY": "visible"
+      },
+      {
+        "el": "chat-thread-stage",
+        "scrollH": 291,
+        "clientH": 291,
+        "overflowY": "visible"
+      },
+      {
+        "el": "chat-page",
+        "scrollH": 496,
+        "clientH": 496,
+        "overflowY": "visible"
+      },
+      {
+        "el": "wb-surface",
+        "scrollH": 524,
+        "clientH": 524,
+        "overflowY": "visible"
+      },
+      {
+        "el": "wb-content",
+        "scrollH": 524,
+        "clientH": 524,
+        "overflowY": "auto"
+      },
+      {
+        "el": "wb-region wb-main",
+        "scrollH": 560,
+        "clientH": 560,
+        "overflowY": "hidden"
+      },
+      {
+        "el": "",
+        "scrollH": 560,
+        "clientH": 560,
+        "overflowY": "auto"
+      },
+      {
+        "el": "",
+        "scrollH": 560,
+        "clientH": 560,
+        "overflowY": "visible"
+      },
+      {
+        "el": "wb-group",
+        "scrollH": 560,
+        "clientH": 560,
+        "overflowY": "hidden"
+      },
+      {
+        "el": "",
+        "scrollH": 560,
+        "clientH": 560,
+        "overflowY": "auto"
+      },
+      {
+        "el": "",
+        "scrollH": 560,
+        "clientH": 560,
+        "overflowY": "visible"
+      },
+      {
+        "el": "wb-group",
+        "scrollH": 560,
+        "clientH": 560,
+        "overflowY": "hidden"
+      },
+      {
+        "el": "wb-layout",
+        "scrollH": 560,
+        "clientH": 560,
+        "overflowY": "visible"
+      },
+      {
+        "el": "wb-body",
+        "scrollH": 560,
+        "clientH": 560,
+        "overflowY": "visible"
+      },
+      {
+        "el": "",
+        "scrollH": 560,
+        "clientH": 560,
+        "overflowY": "visible"
+      },
+      {
+        "el": "wb",
+        "scrollH": 560,
+        "clientH": 560,
+        "overflowY": "hidden"
+      },
+      {
+        "el": "",
+        "scrollH": 560,
+        "clientH": 560,
+        "overflowY": "visible"
+      },
+      {
+        "el": "",
+        "scrollH": 560,
+        "clientH": 560,
+        "overflowY": "visible"
+      },
+      {
+        "el": "",
+        "scrollH": 560,
+        "clientH": 560,
+        "overflowY": "visible"
+      }
+    ],
+    "scrolled": true,
+    "scroller": "chat-scroll-viewport"
+  },
+  "narrow": {
+    "overflowX": 0,
+    "composerVisible": true
+  },
+  "inputMenu": {
+    "bounded": true,
+    "hitTestable": true,
+    "heightStable": true,
+    "closed": true,
+    "focusReturned": true
+  },
+  "consoleErrors": []
+}
+UI_PREVIEW_OK screenshots=/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/docs/ui-preview
+
+===== root JS aggregation summary =====
+PASS exit=0     7.8s  typecheck
+PASS exit=0     1.0s  build:examples
+PASS exit=0     4.9s  build:foundations
+PASS exit=0     5.9s  build:app
+PASS exit=0     9.4s  workspace:apps/desktop
+PASS exit=0     2.9s  workspace:packages/frontend/connections
+PASS exit=0    14.1s  workspace:packages/frontend/extension-runtime
+PASS exit=0     2.3s  workspace:packages/frontend/native-bridge
+PASS exit=0     7.2s  workspace:packages/frontend/server-bridge
+PASS exit=0     9.4s  workspace:packages/frontend/ui
+PASS exit=0     9.5s  workspace:packages/frontend/ui-components
+FAIL exit=1    19.1s  workspace:packages/frontend/workbench
+PASS exit=0     2.6s  workspace:packages/frontend/workbench/interactions
+PASS exit=0     3.5s  workspace:plugins/agent/connections
+PASS exit=0     1.6s  workspace:plugins/agent/contracts
+PASS exit=0     4.5s  workspace:plugins/agent/sessions
+PASS exit=0     2.7s  workspace:plugins/chat/api
+PASS exit=0    14.3s  workspace:plugins/chat/frontend
+PASS exit=0     7.1s  workspace:plugins/connectors/acp
+PASS exit=0     2.7s  workspace:plugins/connectors/ordessa
+PASS exit=0     7.6s  workspace:plugins/mcp/frontend
+PASS exit=0    20.8s  workspace:plugins/model-provider/chat-contribution
+PASS exit=0     5.3s  workspace:plugins/model-provider/desktop
+PASS exit=0    12.9s  workspace:plugins/permissions/frontend
+PASS exit=0     2.1s  workspace:plugins/profile/api
+PASS exit=0     6.2s  workspace:plugins/profile/frontend
+PASS exit=0    10.0s  workspace:plugins/profile/integrations/chat
+PASS exit=0     4.6s  workspace:plugins/sandbox/frontend
+PASS exit=0    16.8s  workspace:plugins/skills/desktop
+PASS exit=0     4.1s  workspace:plugins/subagents/settings
+PASS exit=0     1.7s  workspace:plugins/subagents/ui
+PASS exit=0     3.8s  workspace:products/desktop
+FAIL exit=1    37.2s  node-test:products/desktop
+PASS exit=0    28.1s  node-test:plugins/harness/packaging
+PASS exit=0    13.2s  node-test:plugins/harness/tests/access
+PASS exit=0     0.4s  node-test:packages/frontend/contracts
+PASS exit=0     0.4s  node-test:examples/f5-counter
+PASS exit=0     2.6s  vitest:examples/f5-react-panel
+FAIL exit=1    17.6s  rig:tests/integration/acp-connector
+FAIL exit=1     2.4s  electron:test:electron
+FAIL exit=1     1.4s  electron:test:extensions
+FAIL exit=1     3.1s  electron:test:agent-ui
+FAIL exit=1     0.8s  electron:test:agent-shell
+FAIL exit=1     2.3s  electron:test:ui-service
+FAIL exit=1     4.7s  electron:test:ui-foundations
+PASS exit=0    13.2s  electron:test:ui-preview
+
+37/46 suites green
+Failed: workspace:packages/frontend/workbench (exit 1), node-test:products/desktop (exit 1), rig:tests/integration/acp-connector (exit 1), electron:test:electron (exit 1), electron:test:extensions (exit 1), electron:test:agent-ui (exit 1), electron:test:agent-shell (exit 1), electron:test:ui-service (exit 1), electron:test:ui-foundations (exit 1)

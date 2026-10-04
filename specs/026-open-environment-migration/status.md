@@ -1,3 +1,13 @@
+## 2026-10-04 013 后端受控恢复检查点（SHA为本段所在提交）
+
+真实产品DataRootOwner独占OS锁、Environment和Agent持久库已接同一production composition；有/无Profile实际wire两轮、共同配置观察、原请求历史核对已测。后端承重137P/后续退出及owner回归147P（均零skip）；另真实产品子进程五窗SIGKILL5P，活writer第二runtime拒绝，失效后新owner取得OS锁才处理stale SQL marker，原request查询零重派。新native opaque通道start/write只经同Environment RAW入口；unknown start保留原owner资源并阻退役，显式confirmed cleanup后才解除，无自动retry/close。
+
+E3观察detach失败/未知attach保真实Usage责任，credit/cursor/gap/租约/撤权各有反例。配置observe/release绑定backend目标，release允许旧代次释放原订阅；ConfigOwner同步attach失败移除真实listener。可靠能力缺native条件/fingerprint则typed unsupported，默认不读真实key。受控native adapter只模拟公开外界效果；不含Harness内部业务。
+
+npm ci成功；全量首轮37/46 suites通过，9失败及原有asset skip保留在npm-aggregate.txt，不能称全绿。正在修发现路径、重复token、platform-only Electron fixture；其中旧agent-server shell和Pi旧路径断言需逐ID/来源解释，未恢复旧兼容链。Workbench token重新7P。新generation观察反例1F38P待修；发行checker仅syntax验证未运行。原107/129不变，stage2/3/4仍未整项完成：T010-09 ACP前端事实写权、前端capture可靠链与原跨侧journal、干净产物、逐场景矩阵未收口。
+
+下一ready：generation observer修复、受控Electron与发行固定源码build/解包；独立复核原C2跨侧缺口。无新增外部授权请求；真实GUI/模型/系统安装/真实数据仍REAL_PENDING。原三个dirty产出保留；lock已纳入前阶段，bundle/extensions锁等待固定源码发行重证。
+
 ## 2026-10-04 013 生产前端消费者检查点（源代码 SHA 为本段所在提交）
 
 Profile/model 的生产入口已调用公开 wire-backed Agent owner；local owner只留明确fixture，选择只写操作意图。Profile全套94P，Model121P，Skills135P，0 skip；资源通知/进度由独立Workbench provider呈现，cancelWait只停止等待。依赖变更对应真实生产WirePort/AgentSessions/F5InteractionToken，不恢复旧local store。Profile原测试改为真实wire fixture并保字段mask/文本保留；新requires按实际DI增补，旧失败日志保留。

@@ -436,7 +436,9 @@ def build_runtime_from_native_adapter(
     extra_server_plugins: tuple = (),
     additional_adapters: tuple = (),
     channel_selection_resolver=None,
+    native_transport_admitter=None,
     bootstrap_native_profile: bool | None = None,
+    product_composition=None,
 ) -> ServerRuntime:
     """Compose current-user ACP Agents in an explicitly native Server.
 
@@ -672,7 +674,16 @@ def build_runtime_from_native_adapter(
             **({"controlled_test_peer": True} if controlled_test_peer else {}),
             **({"installed_artifact_root": artifact_roots[harness_id]}
                if artifact_roots[harness_id] is not None else {}),
-        ).start()
+        )
+        # The selected product may place transport lifecycle callbacks behind
+        # its one Environment. The explicit legacy fixture path keeps the
+        # historical direct start for compositions that do not provide one.
+        if native_transport_admitter is None:
+            transport = transport.start()
+        else:
+            if not callable(native_transport_admitter):
+                raise TypeError("native_transport_admitter must be callable")
+            transport = native_transport_admitter(transport)
         if selection is not None:
             transport.configuration_profile_snapshot = dict(selection['snapshot'])
         return transport
@@ -704,6 +715,7 @@ def build_runtime_from_native_adapter(
         local_workspace_provider=LocalEnvironmentProvider(execution_mode="native"),
         server_plugins=(WorkspaceServerPlugin(), compat, acp,
                         PermissionsBackendPlugin(), *extra_server_plugins),
+        product_composition=product_composition,
     )
     if new_profile_root:
         try:

@@ -2,6 +2,19 @@ from types import SimpleNamespace
 import pytest
 from ordessa_agent.plugin import AgentDomainPlugin
 
+def test_failed_atomic_observer_attachment_removes_callback_before_later_intent():
+    from ordessa_agent.owners import ConfigOwner
+    owner = ConfigOwner('trusted:S')
+    received = []
+    def broken(snapshot):
+        received.append(snapshot.revision)
+        raise RuntimeError('consumer cannot attach')
+    with pytest.raises(RuntimeError, match='consumer cannot attach'):
+        owner.attach_observer(broken)
+    owner.submit_operation({'model':'M1'}, 'observer-regression')
+    assert received == [0]
+    assert owner.snapshot().revision == 1
+
 
 def methods(plugin, root):
     return {m.method_id:m.handler for m in plugin.build(SimpleNamespace(data_root=root, ports={})).methods}
@@ -9,8 +22,12 @@ def methods(plugin, root):
 
 def test_production_owner_rejects_claimed_acceptance_without_native_submit_port(tmp_path):
     handlers=methods(AgentDomainPlugin(),tmp_path)
+    draft=handlers['agent.session.resolve']({'location':{
+        'kind':'draft','draftId':'unbound-draft','connectionId':'fixture','contextRevision':1,
+    }})
     with pytest.raises(Exception, match='CAPABILITY_UNSUPPORTED|unsupported|unavailable'):
-        handlers['agent.submitInput']({'target':'session:S','draftRevision':1,'capture':{'outcome':'accepted'}})
+        handlers['agent.submitInput']({'target':draft['target'],'draftRevision':1,
+                                       'capture':{'outcome':'accepted'}})
 
 
 def test_production_targets_are_resolved_by_trusted_binding_not_frontend_claim(tmp_path):

@@ -23,6 +23,7 @@ import subprocess
 from typing import Any, Callable
 from uuid import uuid4
 
+from ordessa_environment_api import GuaranteeUnavailableError
 from ordessa_server.credentials import CredentialRecords
 from ordessa_server.core_binding import CoreBinding
 from ordessa_server.events import EventNotifier
@@ -41,6 +42,13 @@ class LegacyMigrationProviderMissingError(RuntimeError):
     """A historical data root cannot be opened without its sealed SQL chain."""
 
     code = "LEGACY_MIGRATION_PROVIDER_MISSING"
+
+
+def _unavailable_legacy_core_store() -> Any:
+    """Fail closed instead of letting an old WorkCore chain use its global DB."""
+    raise GuaranteeUnavailableError(
+        "legacy WorkCore dispatch has no Environment-backed store adapter"
+    )
 
 
 class DataRootPathUnsafeError(RuntimeError):
@@ -558,6 +566,7 @@ def build_runtime(
     local_workspace_provider=None,
     server_plugins: "tuple[Any, ...] | list[Any] | None" = None,
     database_factory: Callable[[Path], DatabasePort] | None = None,
+    product_composition: Any | None = None,
 ) -> ServerRuntime:
     """Assemble a Server runtime: the generic host plus the selected plugins.
 
@@ -608,7 +617,7 @@ def build_runtime(
 
     selected_plugins: tuple[Any, ...]
     if server_plugins is None:
-        composition = _resolve_product_composition()
+        composition = product_composition if product_composition is not None else _resolve_product_composition()
         selected_plugins = tuple(composition.default_plugins())
         selected_product = True
     else:
@@ -617,8 +626,8 @@ def build_runtime(
         # An explicit selection with an injected database is a host-only
         # composition. Otherwise an installed product may supply storage,
         # while the explicit plugin list still controls capabilities.
-        composition = None
-        if database_factory is None:
+        composition = product_composition
+        if database_factory is None and composition is None:
             try:
                 composition = _resolve_product_composition()
             except RuntimeError as exc:
@@ -644,7 +653,7 @@ def build_runtime(
     # point. This is a pure preflight: no host registry, token or data file has
     # been written yet. The owner/handler still belong to the host and product
     # respectively, never to an author contribution.
-    if not selected_product:
+    if not selected_product and product_composition is None:
         product_points: tuple[ContributionPointSpec, ...] = ()
     else:
         point_provider = getattr(composition, "server_contribution_points", None)
@@ -699,12 +708,22 @@ def build_runtime(
         stream_route_registry = StreamRouteRegistry()
         acp_admission_gate = AcpAdmissionGate(native_permissions=True)
         acp_admission_port = AcpAdmissionPortAdapter(acp_admission_gate, stream_route_registry)
-        # T015/S1c: ONE CoreBinding per composition (never a module global), owning
-        # the C1 instance store at its own file inside the data root (topology
-        # decision: `state/core.sqlite`, see core_binding.py's docstring), and the
-        # legacy binding as a composition-owned INSTANCE connection holder
-        # (026 T006-01: it never configures the work_core module global).
-        core_binding = CoreBinding(root / "state" / "core.sqlite")
+        # One facade per composition forwards to the Environment factory
+        # declared by the selected product. Server never creates a parallel
+        # CoreRuntime or concrete store. A host-only composition has no
+        # environment authority and its effect operations remain unavailable.
+        environment_factory = (
+            getattr(composition, "environment_factory", None)
+            if composition is not None else None
+        )
+        owned_factory = getattr(composition, 'owned_environment_factory', None)
+        if callable(owned_factory):
+            environment_factory = lambda path: owned_factory(path, lambda: owner.acquired)
+        core_binding = CoreBinding(
+            root / "state" / "environment.sqlite",
+            environment_factory=environment_factory,
+            ownership_probe=lambda: owner.acquired,
+        )
         # The legacy database connection belongs to a selected product's
         # historical database as an INSTANCE holder (026 T006-01: it opens
         # its own sqlite3 connection in start(), never the process-global
@@ -730,13 +749,10 @@ def build_runtime(
                 "cursor.codec": CursorCodec(token.encode("utf-8")),
                 "workspace.local_provider": local_workspace_provider,
                 "core.binding": core_binding,
-                # 026 T006-01 / S1c: the legacy execution chain's instance
-                # store — the same file and connection this composition's C1
-                # binding owns (never the process-global work_core singleton).
-                # Carried as a zero-arg provider because the binding's round
-                # opens lazily (no connection exists at composition time);
-                # CoreRepository's callable seam resolves it per statement.
-                "core_store": lambda: core_binding.store,
+                # The legacy WorkCore connection seam cannot alias an
+                # Environment StorePort. Keep the old caller fail-closed so
+                # it cannot silently fall back to its process-global writer.
+                "core_store": _unavailable_legacy_core_store,
                 ACP_ADMISSION_PORT: acp_admission_port,
                 # T014-S2c: the same per-composition resolver the transport gets
                 # below, handed to the one plugin that converts errors inside its

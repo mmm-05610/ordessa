@@ -168,6 +168,12 @@ from pacthold.environment import Environment, InstallationRecord
 class Contract:
     contract_id: str = "demo.submit@1"
 
+class AllowPolicy:
+    def admit_invoke(self, principal, surface, guarantee):
+        return True
+    def admit_object_access(self, principal, object_ref, mode):
+        return True
+
 domain_path, backend_path, effects_path, marker_path, pause_at = sys.argv[1:]
 def pause(stage):
     if pause_at == stage:
@@ -191,17 +197,19 @@ record = journal.capture(request, {
 pause("mapping")
 journal.mark_possibly_submitted(request, record.digest)
 pause("possibly_submitted")
-env = Environment("env-a", store=backend, fingerprint_port=fingerprint)
+env = Environment("env-a", store=backend, fingerprint_port=fingerprint, policy=AllowPolicy())
 env.install(InstallationRecord("submit-plugin", "d" * 64))
 env.enable("submit-plugin")
 env.activate("submit-plugin", CoreContributionSet(contracts=(Contract,)))
-env.invoke("demo.submit", request, guarantee=GuaranteeLevel.RELIABLE, input_digest=record.digest)
-pause("backend_intent")
-with sqlite3.connect(effects_path) as effects:
-    effects.execute("CREATE TABLE IF NOT EXISTS effects (request_id TEXT PRIMARY KEY, count INTEGER NOT NULL)")
-    effects.execute("INSERT INTO effects VALUES (?, 1) ON CONFLICT(request_id) DO UPDATE SET count=count+1",
-                    (request.request_id,))
-pause("native_effect")
+def native_effect():
+    pause("backend_intent")
+    with sqlite3.connect(effects_path) as effects:
+        effects.execute("CREATE TABLE IF NOT EXISTS effects (request_id TEXT PRIMARY KEY, count INTEGER NOT NULL)")
+        effects.execute("INSERT INTO effects VALUES (?, 1) ON CONFLICT(request_id) DO UPDATE SET count=count+1",
+                        (request.request_id,))
+    pause("native_effect")
+env.invoke("demo.submit", request, guarantee=GuaranteeLevel.RELIABLE,
+          input_digest=record.digest, handler=native_effect)
 journal.record_config_apply(request, {"outcome": "applied", "operationIds": ["op-model-3"]})
 journal.record_input_acceptance(request, {"outcome": "accepted"})
 journal.record_run_result(request, {"outcome": "running", "runId": "run-1"})

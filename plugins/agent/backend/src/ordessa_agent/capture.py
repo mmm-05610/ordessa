@@ -56,6 +56,7 @@ class CaptureTransaction:
         binding: Mapping[str, Any],
         schema: str,
         guarantee: GuaranteeLevel | str,
+        configuration_free: bool = False,
     ) -> "CaptureTransaction":
         if not isinstance(submission_id, str) or not submission_id.strip():
             raise CaptureError("submission_id must name the submission")
@@ -73,7 +74,7 @@ class CaptureTransaction:
         if not isinstance(attachment_ids, (list, tuple)) or not all(isinstance(i, str) for i in attachment_ids):
             raise CaptureError("draft attachmentIds must be id strings")
         ops = tuple(config_op_ids)
-        if not ops or not all(isinstance(op, str) and op.strip() for op in ops):
+        if (not ops and not configuration_free) or not all(isinstance(op, str) and op.strip() for op in ops):
             raise CaptureError("config_op_ids must name the consumed operations")
         if len(set(ops)) != len(ops):
             raise CaptureError("config_op_ids must not repeat: one capture, one consumption")

@@ -41,9 +41,18 @@ from . import cli
 class ServerProductComposition:
     """The deployment's plugin selection and CLI composition mapping."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, native_submit_port=None, fingerprint_port=None,
+                 submission_policy=None, submission_contributions=None) -> None:
         self._point_lock = Lock()
         self._point_specs: tuple[ContributionPointSpec, ...] | None = None
+        self._native_submit_port = native_submit_port
+        self._fingerprint_port = fingerprint_port
+        self._submission_policy = submission_policy
+        self._submission_contributions = submission_contributions
+        self._native_channels_selected = False
+        self._native_closure_lock = Lock()
+        self._native_closure_records: dict[str, dict[str, Any]] = {}
+        self._native_closure_blockers: set[tuple[str, str, int]] = set()
 
     #: The composition facts that flow into the compatibility core; the
     #: ACP facet takes none of them.
@@ -83,6 +92,99 @@ class ServerProductComposition:
         from .sealed_migrations import register_sealed_legacy_migrations
 
         register_sealed_legacy_migrations()
+
+    def owned_environment_factory(self, store_path, ownership_probe):
+        if ownership_probe() is not True:
+            raise RuntimeError('DATA_ROOT_IN_USE: exclusive ownership is required')
+        return self.environment_factory(store_path, _exclusive_owner=ownership_probe)
+
+    def environment_factory(self, store_path, *, _exclusive_owner=None):
+        """The product supplies concrete persistence; host/kernel stay neutral.
+
+        No real secret is read at construction. Reliable effects require a
+        separately injected protected key/policy/native condition capability.
+        Existing historical tables retain their identifiers and are not run.
+        """
+        from uuid import uuid4
+        from ordessa_persistence_sqlite import SqliteStorePort
+        from pacthold.environment import Environment
+
+        # The host holds the OS process lock before constructing this store.
+        # Acquiring it proves the previous product process released ownership;
+        # a stale SQL marker alone never authorizes dispatch or a takeover.
+        store = SqliteStorePort(store_path, allow_takeover=(
+            _exclusive_owner is not None and _exclusive_owner() is True))
+        with store.transaction() as connection:
+            row = connection.execute("SELECT value FROM env_meta WHERE key='environment_id'").fetchone()
+            identity = row[0] if row else 'environment-' + uuid4().hex
+            if row is None:
+                connection.execute("INSERT INTO env_meta VALUES('environment_id', ?)", (identity,))
+
+        class ProductEnvironment(Environment):
+            @property
+            def store_port(self):
+                return store
+
+            def close(self):
+                if self._closed:
+                    return
+                super().close()
+                store.close()
+
+        class LocalProductPolicy:
+            # The product is one authenticated local-user realm. Transport
+            # authenticates before entering its business method registry.
+            def admit_invoke(self, principal, surface, guarantee):
+                return principal == 'local' and (surface in ('agent.configuration-intent', 'agent.configuration-observation')
+                    or (self_native_channels and surface in ('native.channel-start', 'native.channel-write', 'native.channel-release')
+                        and guarantee == 'raw'))
+            def admit_object_access(self, principal, object_ref, mode):
+                return principal == 'local'
+
+        self_native_channels = self._native_channels_selected
+        from ordessa_agent.contributions import configuration_contributions
+        from pacthold.environment import InstallationRecord
+        environment = ProductEnvironment(identity, store=store,
+            policy=self._submission_policy or LocalProductPolicy(),
+            fingerprint_port=self._fingerprint_port)
+        environment.install(InstallationRecord('ordessa.agent', 'agent-domain-0.1.0'))
+        environment.enable('ordessa.agent')
+        agent_receipt = environment.activate('ordessa.agent', configuration_contributions())
+        environment.agent_activation = agent_receipt.activation
+        if self_native_channels:
+            from .native_transport_contributions import native_transport_contributions
+            environment.install(InstallationRecord('ordessa.native-channel', 'public-access-entry-transport'))
+            environment.enable('ordessa.native-channel')
+            channel_receipt = environment.activate('ordessa.native-channel', native_transport_contributions())
+            environment.native_channel_activation = channel_receipt.activation
+        if self._submission_contributions is not None:
+            environment.install(InstallationRecord('ordessa.native-submit', 'declared-native-submit'))
+            environment.enable('ordessa.native-submit')
+            environment.activate('ordessa.native-submit', self._submission_contributions)
+        return environment
+
+    def _submission_service_factory(self, context, owners):
+        from pathlib import Path
+        from ordessa_persistence_sqlite import SqliteStorePort
+        from ordessa_agent.submission_journal import SubmissionJournal, ReliableSubmissionUnsupported
+        from ordessa_agent.submission_service import AgentSubmissionService
+        if self._native_submit_port is None or self._fingerprint_port is None:
+            raise ReliableSubmissionUnsupported('declared native conditional submit/fingerprint capability absent')
+        environment = context.ports['core.binding'].environment
+        binding = context.ports['core.binding']
+        if not binding.owns_data_root:
+            raise ReliableSubmissionUnsupported('exclusive data-root ownership is unavailable')
+        domain_store = SqliteStorePort(Path(context.data_root) / 'plugins/agent/submissions.sqlite',
+                                     allow_takeover=True)
+        try:
+            journal = SubmissionJournal(domain_store, fingerprint_port=self._fingerprint_port)
+            service = AgentSubmissionService(environment=environment, journal=journal,
+                owners=owners, native_submit_port=self._native_submit_port)
+        except BaseException:
+            domain_store.close()
+            raise
+        service.close = domain_store.close
+        return service
 
     def database_type(self) -> type:
         """The selected product's storage provider, before any DB is opened."""
@@ -175,7 +277,7 @@ class ServerProductComposition:
             # T010-01 (A1): the Agent domain owner serves the 010 consumer
             # migration; one owner set per canonical target, wire projections
             # only — it never becomes a second writer.
-            AgentDomainPlugin(),
+            AgentDomainPlugin(submission_service_factory=self._submission_service_factory),
         )
 
     def bind_contribution_points(self, host) -> None:
@@ -207,12 +309,18 @@ class ServerProductComposition:
         with which arguments, or the refusal to report (T014-S4)."""
         return cli.plan_server_cli(values)
 
-    def default_runtime(self, data_root: Any) -> Any:
+    def default_runtime(self, data_root: Any, *, include_profile: bool = True) -> Any:
         from ordessa_server.bootstrap import build_runtime
 
         self._assemble_legacy_chain()
         from .platform_secrets import product_secret_store
-        runtime = build_runtime(data_root, secret_store=product_secret_store(data_root))
+        if type(include_profile) is not bool:
+            raise ValueError('include_profile must be boolean')
+        plugins = self.default_plugins()
+        if not include_profile:
+            plugins = tuple(plugin for plugin in plugins if plugin.descriptor().id != 'ordessa.profile')
+        runtime = build_runtime(data_root, secret_store=product_secret_store(data_root),
+            server_plugins=plugins, product_composition=self)
         return runtime
 
     def native_runtime(
@@ -234,6 +342,7 @@ class ServerProductComposition:
         if type(include_profile) is not bool:
             raise ValueError('include_profile must be boolean')
 
+        self._native_channels_selected = True
         self._assemble_legacy_chain()
         def channel_selection_resolver(*, profile_id, harness_id):
             # Resolve the current activation round; never retain a stopped port.
@@ -252,6 +361,8 @@ class ServerProductComposition:
             additional_adapters=additional_adapters,
             secret_store=self._native_secret_store(data_root),
             channel_selection_resolver=channel_selection_resolver,
+            product_composition=self,
+            native_transport_admitter=lambda transport: self._admit_native_transport(runtime, transport),
             # 026 T006-09: the product's native assembly does not make a
             # startup-created native Profile its mandatory basis. Native
             # session creation is driven by the first send or an explicit
@@ -332,7 +443,40 @@ class ServerProductComposition:
                 intent_sink = ProfileTurnIntentSink(
                     core_of=lambda: provided_port("profile.core"),
                     sessions_of=lambda: provided_port("profile.native-sessions"))
-            extras = (*((ModelProviderAdaptersPlugin(),) if model_roots else ()),
+            from ordessa_agent.plugin import AgentDomainPlugin
+            agent_bindings = {}
+            def resolve_agent_session(location):
+                from server_plugin_api import WireError
+                authority = provided_port('native.configuration')
+                if authority is None:
+                    raise WireError('CAPABILITY_UNSUPPORTED', 'native session authority unavailable')
+                if location.get('kind') != 'session':
+                    raise WireError('INVALID_REQUEST', 'existing native session required')
+                try:
+                    snapshot = authority.register_native(
+                        connection_id=str(location.get('connectionId') or ''),
+                        native_session_id=str(location.get('sessionId') or ''))
+                except Exception as error:
+                    raise WireError('FORBIDDEN', str(error), {'internalCode':'AUTHORIZATION_REFUSED'}) from error
+                target = snapshot.target.session_id
+                agent_bindings[target] = snapshot.target
+                return {'target':target, 'generation':snapshot.target.runtime_generation}
+
+            def validate_agent_target(target):
+                authority = provided_port('native.configuration')
+                native_target = agent_bindings.get(target)
+                if authority is None or native_target is None:
+                    return None
+                try:
+                    snapshot = authority.resolve(native_target)
+                    return target if snapshot.target == native_target else None
+                except Exception:
+                    return None
+
+            extras = (AgentDomainPlugin(target_resolver=validate_agent_target,
+                                        session_resolver=resolve_agent_session,
+                                        submission_service_factory=self._submission_service_factory),
+                      *((ModelProviderAdaptersPlugin(),) if model_roots else ()),
                       NativeConfigurationPlugin(carrier=runtime.plugin_host, roots=model_roots),
                       ModelProviderPlugin(harnesses=ModelConfigurationCatalog(
                           runtime.plugin_host.provided_port("harness.directory")),
@@ -343,10 +487,8 @@ class ServerProductComposition:
                       *profile_plugins)
             # Native composition uses an explicit base selection. The product,
             # not the host or business plugins, declares its additional points.
-            for point in self.server_contribution_points():
-                runtime.plugin_host.register_contribution_point(
-                    point.point_id, point.api_version, handler=point.handler,
-                    exclusive=point.exclusive)
+            # The host bound this explicit composition's points before
+            # activating its selected base; there is one handler per point.
             runtime.plugin_host.activate_all(extras)
             runtime.plugin_selection = (*runtime.plugin_selection, *extras)
         except BaseException as activation_failure:
@@ -357,6 +499,104 @@ class ServerProductComposition:
                     *getattr(activation_failure, "cleanup_errors", ()), cleanup_failure)
             raise
         return runtime
+
+    def _admit_native_transport(self, runtime, transport):
+        from uuid import uuid4
+        from .managed_transport import EnvironmentManagedTransport
+        from .managed_transport import ManagedTransportStartUnknown
+
+        environment = runtime.core_binding.environment
+        activation = getattr(environment, 'native_channel_activation', None)
+        if activation is None:
+            raise RuntimeError('native channel activation is unavailable; transport start refused')
+        blocker_key = (environment.environment_id, activation.plugin_id, activation.generation)
+        token = 'native-opening-' + uuid4().hex
+        with self._native_closure_lock:
+            if blocker_key not in self._native_closure_blockers:
+                environment.note_unclassified_delivery(activation)
+                self._native_closure_blockers.add(blocker_key)
+            self._native_closure_records[token] = {
+                'environment': environment,
+                'activation': activation,
+                'blocker_key': blocker_key,
+                'state': 'starting',
+                'closure': None,
+            }
+        try:
+            managed = EnvironmentManagedTransport.open(environment, transport)
+        except ManagedTransportStartUnknown as exc:
+            with self._native_closure_lock:
+                record = self._native_closure_records[token]
+                record['state'] = 'unknown'
+                record['closure'] = exc.pending_closure
+                environment.register_settlement(
+                    activation.plugin_id,
+                    activation.generation,
+                    'native-channel-start-unknown:' + exc.pending_closure.request.request_id,
+                )
+            raise
+        except BaseException:
+            self._finish_native_closure_record(token)
+            raise
+        self._finish_native_closure_record(token)
+        return managed
+
+    def _finish_native_closure_record(self, token: str) -> None:
+        """Remove a start that has a known outcome; clear its shared blocker last."""
+        with self._native_closure_lock:
+            record = self._native_closure_records.pop(token, None)
+            if record is None:
+                return
+            key = record['blocker_key']
+            if not any(item['blocker_key'] == key for item in self._native_closure_records.values()):
+                if key in self._native_closure_blockers:
+                    record['environment'].resolve_unclassified(record['activation'])
+                    self._native_closure_blockers.discard(key)
+
+    def release_pending_native_transport(self, request_id: str) -> Any:
+        """Explicitly ask the public transport owner to release an unknown start.
+
+        An unconfirmed receipt or exception keeps the retirement blocker and
+        owner handle. Only a truthful confirmed receipt removes the record.
+        This is cleanup of an already-owned ambiguous start, not a new
+        start/write admission. It remains available after drain and only a
+        truthful confirmed receipt removes the blocker. It is never retried
+        automatically.
+        """
+        with self._native_closure_lock:
+            match = next((
+                (token, record) for token, record in self._native_closure_records.items()
+                if record['state'] == 'unknown'
+                and record['closure'].request.request_id == request_id
+            ), None)
+            if match is None:
+                raise KeyError('unknown pending native transport request')
+            token, record = match
+            if record.get('cleaning'):
+                raise RuntimeError('pending native transport cleanup is already in progress')
+            record['cleaning'] = True
+            closure = record['closure']
+        try:
+            receipt = closure.transport.release_owned_after_unknown_start()
+        except BaseException:
+            with self._native_closure_lock:
+                current = self._native_closure_records.get(token)
+                if current is not None:
+                    current['cleaning'] = False
+            raise
+        if not isinstance(receipt, Mapping) or receipt.get('confirmed') is not True:
+            with self._native_closure_lock:
+                current = self._native_closure_records.get(token)
+                if current is not None:
+                    current['cleaning'] = False
+            return receipt
+        closure.environment.register_settlement(
+            closure.activation.plugin_id,
+            closure.activation.generation,
+            'native-channel-release-confirmed:' + closure.request.request_id,
+        )
+        self._finish_native_closure_record(token)
+        return receipt
 
     @staticmethod
     def _native_secret_store(data_root):

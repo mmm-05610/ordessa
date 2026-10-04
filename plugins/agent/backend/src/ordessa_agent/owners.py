@@ -44,6 +44,7 @@ class ConfigSnapshot:
     observed_evidence: str  # native | unset | unknown
     fields: Mapping[str, str]  # field -> known | unset | unknown
     resolved: Mapping[str, Any] = field(default_factory=dict)
+    operations: tuple[OperationSummary, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -94,6 +95,7 @@ class ConfigOwner:
         self._observed = "unset"
         self._repository = repository
         self._lock = RLock()
+        self._observers = set()
         if repository is not None:
             prior = repository.read(target)
             if prior is not None:
@@ -115,6 +117,7 @@ class ConfigOwner:
                 owner_ref=f"agent-config:{self._target}", revision=self._revision,
                 observed_evidence=self._observed, fields=freeze_value(self._fields),
                 resolved=freeze_value(self._resolved),
+                operations=tuple(self._operations),
             )
 
     def submit_operation(
@@ -125,7 +128,32 @@ class ConfigOwner:
         # Copy at the operation boundary before any publication or await.
         patch = json.loads(json.dumps(dict(patch), allow_nan=False))
         with self._lock:
-            return self._submit_operation(patch, source_ref, unset=unset)
+            summary = self._submit_operation(patch, source_ref, unset=unset)
+            snapshot, listeners = self.snapshot(), tuple(self._observers)
+        self._notify(snapshot, listeners)
+        return summary
+
+    @staticmethod
+    def _notify(snapshot, listeners):
+        for listener in listeners:
+            try:
+                listener(snapshot)
+            except Exception:
+                pass # one closed observation cannot break domain publication
+
+    def attach_observer(self, callback):
+        """Atomic snapshot and successor attachment owned by the domain lock."""
+        with self._lock:
+            self._observers.add(callback)
+            try:
+                callback(self.snapshot())
+            except BaseException:
+                self._observers.discard(callback)
+                raise
+        def detach():
+            with self._lock:
+                self._observers.discard(callback)
+        return detach
 
     def _submit_operation(self, patch, source_ref, *, unset):
         sequence = self._op_seq + 1
@@ -168,7 +196,39 @@ class ConfigOwner:
                 self._fields[name] = state
 
     def list_operations(self) -> tuple[OperationSummary, ...]:
-        return tuple(self._operations)
+        with self._lock:
+            return tuple(self._operations)
+
+    def capture_configuration(self) -> tuple[ConfigSnapshot, tuple[OperationSummary, ...]]:
+        """One atomic read of intent facts and operation associations."""
+        with self._lock:
+            return self.snapshot(), tuple(self._operations)
+
+    def settle_operations(self, operation_ids: tuple[str, ...], *, state: str = 'applied') -> None:
+        """Trusted native result settles only operations captured by that request.
+
+        Later selections keep their pending intent. No native values are inferred
+        from selection or from input acceptance alone.
+        """
+        if state not in ('applied', 'unknown', 'conflict'):
+            raise AgentOwnerError('invalid operation settlement state')
+        from dataclasses import asdict, replace
+        with self._lock:
+            ids = set(operation_ids)
+            if len(ids) != len(operation_ids) or not ids.issubset({op.operation_id for op in self._operations}):
+                raise AgentOwnerError('settlement contains unknown or duplicated operations')
+            operations = [replace(op, state=state) if op.operation_id in ids else op for op in self._operations]
+            if operations == self._operations:
+                return
+            revision = self._revision + 1
+            if self._repository is not None:
+                self._repository.write(self._target, {'revision': revision,
+                    'opSequence': self._op_seq, 'fields': dict(self._fields),
+                    'resolved': wire_value(self._resolved),
+                    'operations': [asdict(op) for op in operations]})
+            self._operations, self._revision = operations, revision
+            snapshot, listeners = self.snapshot(), tuple(self._observers)
+        self._notify(snapshot, listeners)
 
 
 class SubmissionOwner:
@@ -220,19 +280,24 @@ class SubmissionOwner:
 class SessionOwner:
     """The ONLY writer of the logical session list for one target."""
 
-    def __init__(self, target: str) -> None:
+    def __init__(self, target: str, repository=None) -> None:
         self._target = target
-        self._sessions: dict[str, Mapping[str, Any]] = {}
+        self._repository = repository
+        self._lock = RLock()
+        self._sessions = {} if repository is None else repository.read_records(target, 'session')
 
     def upsert(self, session_id: str, fields: Mapping[str, Any]) -> Mapping[str, Any]:
-        record = dict(self._sessions.get(session_id, {}))
-        record.update(fields)
-        frozen = dict(record)
-        self._sessions[session_id] = frozen
-        return frozen
+        with self._lock:
+            record = dict(self._sessions.get(session_id, {}))
+            record.update(json.loads(json.dumps(dict(fields), allow_nan=False)))
+            if self._repository is not None:
+                self._repository.write_record(self._target, 'session', session_id, record)
+            self._sessions[session_id] = record
+            return freeze_value(record)
 
     def list(self) -> tuple[Mapping[str, Any], ...]:
-        return tuple(dict(v) for v in self._sessions.values())
+        with self._lock:
+            return tuple(freeze_value(v) for v in self._sessions.values())
 
 
 class RunOwner:
@@ -280,7 +345,7 @@ class AgentOwnerRegistry:
                 f"target {target!r} already has its owners — one writer per canonical target")
         owners = {
             "config": ConfigOwner(target, self._repository),
-            "session": SessionOwner(target),
+            "session": SessionOwner(target, self._repository),
             "submission": SubmissionOwner(target),
             "run": RunOwner(target),
             "interaction": InteractionOwner(target),

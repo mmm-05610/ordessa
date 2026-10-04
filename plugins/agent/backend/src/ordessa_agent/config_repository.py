@@ -17,6 +17,7 @@ class ConfigRepository:
         self.connection.execute('PRAGMA journal_mode=WAL')
         self.connection.execute('CREATE TABLE IF NOT EXISTS agent_config(target TEXT PRIMARY KEY, payload TEXT NOT NULL)')
         self.connection.execute('CREATE TABLE IF NOT EXISTS agent_draft_targets(location TEXT PRIMARY KEY, target TEXT UNIQUE NOT NULL, generation INTEGER NOT NULL)')
+        self.connection.execute('CREATE TABLE IF NOT EXISTS agent_observed_records(target TEXT NOT NULL, kind TEXT NOT NULL, record_id TEXT NOT NULL, payload TEXT NOT NULL, PRIMARY KEY(target,kind,record_id))')
         self.connection.commit()
 
     def read(self, target):
@@ -31,6 +32,16 @@ class ConfigRepository:
 
     def close(self):
         self.connection.close()
+
+    def read_records(self, target, kind):
+        with self.lock:
+            return {row[0]: json.loads(row[1]) for row in self.connection.execute(
+                'SELECT record_id,payload FROM agent_observed_records WHERE target=? AND kind=?', (target,kind))}
+
+    def write_record(self, target, kind, record_id, payload):
+        with self.lock, self.connection:
+            self.connection.execute('INSERT INTO agent_observed_records VALUES(?,?,?,?) ON CONFLICT(target,kind,record_id) DO UPDATE SET payload=excluded.payload',
+                (target, kind, record_id, json.dumps(payload, sort_keys=True, allow_nan=False)))
 
     def resolve_draft(self, location):
         # UI draft references name intent buffers, never native sessions.

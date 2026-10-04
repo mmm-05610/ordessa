@@ -1,0 +1,26 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts
+
+ ❯ tests/closeout-wire-configuration-observer.test.ts (4 tests | 1 failed) 1030ms
+     × refuses writes after trusted generation changes and releases the scoped observation 1013ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-wire-configuration-observer.test.ts > wire configuration observer lifecycle > refuses writes after trusted generation changes and releases the scoped observation
+Error: timed out waiting for generation observation release
+ ❯ Timeout.check [as _onTimeout] tests/closeout-wire-configuration-observer.test.ts:44:49
+     42|     const check = () => {
+     43|       if (predicate()) { resolve(); return }
+     44|       if (Date.now() - started > 1000) { reject(new Error(`timed out w…
+       |                                                 ^
+     45|       setTimeout(check, 0)
+     46|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 5 passed (6)
+      Tests  1 failed | 38 passed (39)
+   Start at  11:13:35
+   Duration  2.97s (transform 160ms, setup 0ms, import 318ms, tests 1.11s, environment 1ms)
+
