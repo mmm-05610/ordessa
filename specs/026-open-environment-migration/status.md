@@ -1,3 +1,7 @@
+## 2026-10-04 公共 UI 增量已接收，排在013之后
+
+UI-FOUNDATIONS-20261004三份设计已完整读入，按内容新增文件，仅给README增入口；原contracts/status/evidence/tasks/额外守卫保留。接收HEAD 29f00be68500cdeb5fc7558de34e20f9f0d6dfe7，当前013阶段2/3后端检查点已提交、前端/发行/全回归仍进行中；不打断Luna写者。摘要/脏项/写者/阶段见evidence/ui-foundations/receipt.json。UI-T01–08、UI-A01–12见该目录ledger.md，全部QUEUED/NOT_RUN，UI-T01仅接收部分，不冒报接口冻结。默认013收尾后冻结增量接口，再复用Lumino/F5/公共交互并用两个中性消费者验证；无领域全面redesign、第二总线/弹层/业务store/配置权威。无额外外部运行授权。
+
 ## 2026-10-04 013 后端受控恢复检查点（SHA为本段所在提交）
 
 真实产品DataRootOwner独占OS锁、Environment和Agent持久库已接同一production composition；有/无Profile实际wire两轮、共同配置观察、原请求历史核对已测。后端承重137P/后续退出及owner回归147P（均零skip）；另真实产品子进程五窗SIGKILL5P，活writer第二runtime拒绝，失效后新owner取得OS锁才处理stale SQL marker，原request查询零重派。新native opaque通道start/write只经同Environment RAW入口；unknown start保留原owner资源并阻退役，显式confirmed cleanup后才解除，无自动retry/close。

@@ -40,3 +40,7 @@ R4补充contracts/platform-services.md（数据空间、宿主交互、秘密/�
 采用 incremental-work-order 的可判定工单/四列门/反例/单提交者原则。用户明确只派一个牵头 Agent，因此一条有序队列；不初始化第二套 docs/implementation 全局账，不自动开树/提交：本包尚是 Spec Kit 设计，不是已投递任务。每单无需父树合并，依赖的是同一实施树前序证据与提交。检查点不是自动 main 合并许可。
 
 三名审查子代理只读材料并返回攻击，主会话唯一方案写者。未来执行侧默认单 Agent，若需要代理，先按 charter 中声明独立单元决定，不增加常驻协调层。
+
+## 公共 UI 增量 UI-FOUNDATIONS-20261004
+
+[接收说明](ui-foundations-update.md)、[公共UI合同](contracts/ui-foundations.md)、[UI01工单](supplemental-orders/UI01-public-workspace.md)。追加在013现有收尾之后；UI-T01–08/UI-A01–12单列，不扩充或重编号原129 tasks/111 cases。历史证据不覆盖此增量。接收记录见 evidence/ui-foundations/receipt.json。
