@@ -44,9 +44,9 @@ parallel_units: ["copilot-driver：仅N001钉定的本家族Harness驱动/配置
 
 ## Stages
 
-- [ ] 1. 核官方/上游源码和各候选通道，形成copilot决策报告与固定版本/许可；SDK可能自动启动/下载CLI并读取账号环境；显式绑定受控二进制与临时home，校验ownership、权限回调、session resume和token隔离。（主执行者阶段检查点，精确路径提交）
-- [ ] 2. 沿冻结接缝实现驱动与消费者，不重写agent loop；发前校验材料适用性、隔离home、权限、shared scope和请求关联（主执行者阶段检查点，精确路径提交）
-- [ ] 3. 定向协议反例＋实际无模型进程验证可做部分；审批/取消/恢复/失回执/unknown扩展逐项核实，不把fixture当原生；回填矩阵与检查点（主执行者阶段检查点，精确路径提交）
+- [x] 1. 核官方/上游源码和各候选通道，形成copilot决策报告与固定版本/许可；SDK可能自动启动/下载CLI并读取账号环境；显式绑定受控二进制与临时home，校验ownership、权限回调、session resume和token隔离。— `evidence/copilot-decision.md`（家族单元产出+主执行者复核）：通道=CLI server原生JSON-RPC（`copilot --headless --stdio`，协议v3钉定）；SDK自动下载/进程托管风险一手源码钉定+反制；许可逐项（SDK MIT/CLI自定义分发限制）；SDK v1.0.16/CLI v1.0.91钉版
+- [x] 2. 沿冻结接缝实现驱动与消费者，不重写agent loop；发前校验材料适用性、隔离home、权限、shared scope和请求关联 — `native_clients/copilot.py`+`copilot/native_channel.py`；executable必填不解析PATH、`--no-auto-update --no-auto-login`固定、COPILOT_SKIP_CLI_DOWNLOAD=1/COPILOT_DISABLE_KEYTAR=1、token类键发前拒
+- [x] 3. 定向协议反例＋实际无模型进程验证可做部分；审批/取消/恢复/失回执/unknown扩展逐项核实，不把fixture当原生；回填矩阵与检查点 — 44用例（协议超范围硬失败不降级、无handler绝不auto应答、失回执peer恰1次写、launch缺server标志零spawn）；L2=未测（无本机CLI）
 
 ## Parallel units
 
@@ -82,5 +82,11 @@ git diff --check
 
 ## Batch report
 
-阶段结束填：门与反例计数、命令/退出码、证据路径、源码SHA、清理、调用成本、未测项。阶段复选框不得提前勾选。
+终态 **N009_PARTIAL**（CODE_READY＋L1；L2未测；管理绑定依赖阻塞）。家族切片子代理产出，主执行者复跑核实（22P+22P、无runtimeReady-true/observed-yes）。
+
+- 门：BASE✓ NATIVE（协议v3钉定/SDK风险反制/许可逐项/不发runtimeReady✓） SAFETY✓（token隔离、永不auto-approve、SDK不引入、自动下载禁用、显式二进制绑定） EVIDENCE✓。
+- 反例计数：44用例（驱动22+客户端22）。命令/退出码（主执行者复跑）：`pytest plugins/harness/tests/copilot -q` 22P/0F exit0；`pytest tests/native_clients/test_copilot_client.py -q` 22P/0F exit0；新家族驱动合跑64P exit0。
+- 证据路径：evidence/copilot-decision.md；源码SHA：4217b3d1f3 后本单提交；清理：fake peer owned清理；成本：模型0、安装0（npm页403如实登记）。
+- 未测项：L2/L3/L4；COPILOT_TOKEN/device flow/--server别名=unknown；反制在真机是否生效=L2未测；**待授权：安装copilot CLI重钉digest补L2（注意CLI再分发条款）**。
+- 家族终态：CODE_READY；管理绑定依赖阻塞。
 
