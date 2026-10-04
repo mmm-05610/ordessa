@@ -44,9 +44,9 @@ parallel_units: ["codex-driver：仅N001钉定的本家族Harness驱动/配置�
 
 ## Stages
 
-- [ ] 1. 核官方/上游源码和各候选通道，形成codex决策报告与固定版本/许可；初始化与通知、反向审批/工具请求、thread/turn身份和resume；未知新method/event不得丢弃。不要混淆exec-server、模型API与本地app-server。（主执行者阶段检查点，精确路径提交）
-- [ ] 2. 沿冻结接缝实现驱动与消费者，不重写agent loop；发前校验材料适用性、隔离home、权限、shared scope和请求关联（主执行者阶段检查点，精确路径提交）
-- [ ] 3. 定向协议反例＋实际无模型进程验证可做部分；审批/取消/恢复/失回执/unknown扩展逐项核实，不把fixture当原生；回填矩阵与检查点（主执行者阶段检查点，精确路径提交）
+- [x] 1. 核官方/上游源码和各候选通道，形成codex决策报告与固定版本/许可；初始化与通知、反向审批/工具请求、thread/turn身份和resume；未知新method/event不得丢弃。不要混淆exec-server、模型API与本地app-server。— `evidence/N002-codex-decision.md`：钉版0.157.1/Apache-2.0/sha256全量；initialize/initialized+无版本协商、审批回调id关联、thread/turn身份、turn回执≠完成、-32001不重试；app-server≠exec-server≠模型API已分离
+- [x] 2. 沿冻结接缝实现驱动与消费者，不重写agent loop；发前校验材料适用性、隔离home、权限、shared scope和请求关联 — `native_clients/codex.py`+`codex/native_channel.py`；CODEX_HOME钉scratch、compile_config发前拒、响应id关联
+- [x] 3. 定向协议反例＋实际无模型进程验证可做部分；审批/取消/恢复/失回执/unknown扩展逐项核实，不把fixture当原生；回填矩阵与检查点 — **实际进程验证BLOCKED：本机artifact截断损坏（125,251,498B vs ELF段表285,338,280B，execve EFAULT→SIGSEGV，strace实证；npm launcher另报缺可选依赖）**，重装待授权不擅动；反例28用例fixture层；逐项：unknown=fixture、失回执=fixture、审批/取消/恢复=未观察（登记）
 
 ## Parallel units
 
@@ -82,5 +82,13 @@ git diff --check
 
 ## Batch report
 
-阶段结束填：门与反例计数、命令/退出码、证据路径、源码SHA、清理、调用成本、未测项。阶段复选框不得提前勾选。
+终态 **N002_PARTIAL**（实现+测试齐＝CODE_READY；L2因本机artifact损坏BLOCKED；管理绑定依赖阻塞）。
+
+- 门：BASE✓ NATIVE（实现/隔离/owner/不发runtimeReady✓；真实进程结果=BLOCKED实证登记） SAFETY✓（CODEX_HOME钉住/无Token/审批不auto） EVIDENCE✓（L0/L1分账、L2 BLOCKED如实）。
+- 反例计数：28用例（-32001不重试、turn failed带原文、wait超时unknown、非法审批决策本地拒、未知事件保留、缺配置发前拒）。
+- 命令/退出码：`pytest tests/native_clients/test_codex_client.py -q` 11P/0F exit0；`pytest plugins/harness/tests/pi plugins/harness/tests/codex -q` 30P/0F exit0（同跑验证无收集冲突）。
+- 证据路径：evidence/N002-codex-decision.md（含strace症状）；源码SHA：344c85c49d 后本单提交。
+- 清理：/tmp scratch（codex-home/strace）收尾删；成本：模型0、安装0、WebFetch 2（app-server doc+404探测）。
+- 未测项：L2全部（initialize/thread/审批真实进程）、L3/L4；**待授权：重装/更新 @openai/codex 后重钉digest重测L2**。
+- 家族终态：CODE_READY（L2-blocked登记）；管理绑定依赖阻塞。
 
