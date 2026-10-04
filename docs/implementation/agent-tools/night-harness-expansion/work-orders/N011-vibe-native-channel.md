@@ -44,9 +44,9 @@ parallel_units: ["vibe-driver：仅N001钉定的本家族Harness驱动/配置与
 
 ## Stages
 
-- [ ] 1. 核官方/上游源码和各候选通道，形成vibe决策报告与固定版本/许可；认证和配置共享home、skills/MCP的实际加载、ACP扩展；不使用installer改变uv或用户全局环境，不把IDE上下文当必要且已提供。（主执行者阶段检查点，精确路径提交）
-- [ ] 2. 沿冻结接缝实现驱动与消费者，不重写agent loop；发前校验材料适用性、隔离home、权限、shared scope和请求关联（主执行者阶段检查点，精确路径提交）
-- [ ] 3. 定向协议反例＋实际无模型进程验证可做部分；审批/取消/恢复/失回执/unknown扩展逐项核实，不把fixture当原生；回填矩阵与检查点（主执行者阶段检查点，精确路径提交）
+- [x] 1. 核官方/上游源码和各候选通道，形成vibe决策报告与固定版本/许可；认证和配置共享home、skills/MCP的实际加载、ACP扩展；不使用installer改变uv或用户全局环境，不把IDE上下文当必要且已提供。— `evidence/vibe-decision.md`：~/.vibe跨CLI/VS Code共享危害登记；ACP扩展页面未枚举→unknown；installer危害登记（不运行）；IDE上下文不默认具备；页面无server命令→启动形状unpinned
+- [x] 2. 沿冻结接缝实现驱动与消费者，不重写agent loop；发前校验材料适用性、隔离home、权限、shared scope和请求关联 — `native_clients/vibe.py`（复用_acp.py）+`vibe/native_channel.py`；**VIBE_HOME重定向进scratch**、mistralApiKey拒收
+- [x] 3. 定向协议反例＋实际无模型进程验证可做部分；审批/取消/恢复/失回执/unknown扩展逐项核实，不把fixture当原生；回填矩阵与检查点 — 13用例（共享home重定向、凭据键拒、_vibe/*保留、hang超时unknown）；L2=未测（无本机vibe+启动形状未钉）
 
 ## Parallel units
 
@@ -82,5 +82,11 @@ git diff --check
 
 ## Batch report
 
-阶段结束填：门与反例计数、命令/退出码、证据路径、源码SHA、清理、调用成本、未测项。阶段复选框不得提前勾选。
+终态 **N011_PARTIAL**（CODE_READY＋L1；L2未测且启动形状未钉；管理绑定依赖阻塞）。
+
+- 门：BASE✓ NATIVE（ACP通道/共享home缓解/扩展保留/不发runtimeReady✓） SAFETY✓（VIBE_HOME重定向、installer不运行、凭据零注入） EVIDENCE✓。
+- 反例计数：13用例（驱动8+客户端5）。命令/退出码：`pytest tests/goose tests/vibe -q` 15P exit0；`pytest tests/native_clients/test_goose_client.py test_vibe_client.py -q` 10P exit0（主执行者复跑）。
+- 证据路径：evidence/vibe-decision.md；源码SHA：同N010批提交；清理：fake peer owned清理；成本：模型0、安装0、WebFetch 1。
+- 未测项：L2/L3/L4；启动形状/ACP扩展/IDE上下文=文档未写明；**待授权：安装Vibe后重钉release与启动形状补L2**。
+- 家族终态：CODE_READY；管理绑定依赖阻塞。
 

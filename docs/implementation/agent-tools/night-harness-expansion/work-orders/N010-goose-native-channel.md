@@ -44,9 +44,9 @@ parallel_units: ["goose-driver：仅N001钉定的本家族Harness驱动/配置�
 
 ## Stages
 
-- [ ] 1. 核官方/上游源码和各候选通道，形成goose决策报告与固定版本/许可；Goose自身作ACP server与其使用别人作provider不是同一件事；secret/origin与会话边界；不得开启dangerously-unauthenticated。（主执行者阶段检查点，精确路径提交）
-- [ ] 2. 沿冻结接缝实现驱动与消费者，不重写agent loop；发前校验材料适用性、隔离home、权限、shared scope和请求关联（主执行者阶段检查点，精确路径提交）
-- [ ] 3. 定向协议反例＋实际无模型进程验证可做部分；审批/取消/恢复/失回执/unknown扩展逐项核实，不把fixture当原生；回填矩阵与检查点（主执行者阶段检查点，精确路径提交）
+- [x] 1. 核官方/上游源码和各候选通道，形成goose决策报告与固定版本/许可；Goose自身作ACP server与其使用别人作provider不是同一件事；secret/origin与会话边界；不得开启dangerously-unauthenticated。— `evidence/goose-decision.md`：goose作ACP server（stdio `goose acp`）≠用别人作provider已区分；secret/origin（X-Secret-Key/--allowed-origin精确匹配）登记；version/license页面未载→unpinned
+- [x] 2. 沿冻结接缝实现驱动与消费者，不重写agent loop；发前校验材料适用性、隔离home、权限、shared scope和请求关联 — `native_clients/goose.py`（复用_acp.py）+`goose/native_channel.py`；**--dangerously-unauthenticated双防线硬拒**、secretKey拒收、凭据零注入
+- [x] 3. 定向协议反例＋实际无模型进程验证可做部分；审批/取消/恢复/失回执/unknown扩展逐项核实，不把fixture当原生；回填矩阵与检查点 — 12用例（禁flag硬拒、回调id保持、_goose/*保留、cancel通知）；L2=未测（无本机CLI）
 
 ## Parallel units
 
@@ -82,5 +82,11 @@ git diff --check
 
 ## Batch report
 
-阶段结束填：门与反例计数、命令/退出码、证据路径、源码SHA、清理、调用成本、未测项。阶段复选框不得提前勾选。
+终态 **N010_PARTIAL**（CODE_READY＋L1；L2未测；管理绑定依赖阻塞）。
+
+- 门：BASE✓ NATIVE（ACP通道/身份区分/扩展保留/不发runtimeReady✓） SAFETY✓（**dangerously-unauthenticated硬拒双防线**、secret/origin边界、无凭据继承） EVIDENCE✓。
+- 反例计数：12用例（驱动7+客户端5）。命令/退出码：`pytest tests/goose tests/vibe -q` 15P exit0；`pytest tests/native_clients/test_goose_client.py test_vibe_client.py -q` 10P exit0（主执行者复跑）。
+- 证据路径：evidence/goose-decision.md；源码SHA：04aa59979d 后本单提交；清理：fake peer owned清理；成本：模型0、安装0、WebFetch 1。
+- 未测项：L2/L3/L4；goose扩展方法集、会话/权限细则、version/license=unpinned；**待授权：安装goose CLI重钉版本补L2**。
+- 家族终态：CODE_READY；管理绑定依赖阻塞。
 
