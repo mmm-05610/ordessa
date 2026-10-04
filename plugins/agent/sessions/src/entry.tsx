@@ -8,7 +8,7 @@ export default function createPlugin() {
   return { id: 'ordessa.agent-sessions', autoStart: true,
     requires: [AgentConnectionsToken, CommandsToken, WorkbenchToken], provides: AgentSessionsToken,
     activate: (context: PluginContext, connections: AgentConnections, commands: Commands, workbench: Workbench) => {
-      const sessions = createAgentSessions(context.resources, connections)
+      const sessions = createAgentSessions(context.resources, connections, { submissionPolicy: 'reliable-only' })
       const ui = workbench.forScope(context.resources)
       ui.addView({ id: 'agent.sessions', title: 'Sessions', presentation: 'region', region: 'left', component: () => <SessionBrowser service={sessions} /> })
       commands.forScope(context.resources).add({ id: 'agent.open', title: 'Agents', execute: () => {

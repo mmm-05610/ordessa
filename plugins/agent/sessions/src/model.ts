@@ -10,7 +10,21 @@ import type {
  * CP-SESSION-001 (FC-0021): the draft and the per-Server project gate are owned here —
  * New session never reaches a client, and first send goes through createAndSend with one
  * requestId held until accepted. */
-export function createAgentSessions(lifetime: ResourceScope, connections: AgentConnections): AgentSessions {
+export interface AgentSessionsOptions {
+  /** Historical direct fixtures can exercise raw adapters; the product always selects reliable-only. */
+  submissionPolicy?: 'legacy-raw-fixture' | 'reliable-only'
+}
+
+class ReliableOwnerRequired extends Error {
+  readonly code = 'CAPABILITY_UNSUPPORTED'
+  constructor() { super('AGENT_RELIABLE_OWNER_REQUIRED: submit through the durable Agent owner') }
+}
+
+export function createAgentSessions(lifetime: ResourceScope, connections: AgentConnections,
+  options: AgentSessionsOptions = {}): AgentSessions {
+  const rawAllowed = options.submissionPolicy !== 'reliable-only'
+  const guardLegacyRaw = () => { if (!rawAllowed) throw new ReliableOwnerRequired() }
+
   void lifetime // workspace ownership moved to the connections service scope (P2-1)
   const workspace = connections.workspace
   interface ConnState { draftActive: boolean; draftEndedBy?: 'discarded' | 'opened'; requestId?: string; restoreFailed: boolean; preparationRequested?: boolean;
@@ -134,6 +148,7 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
     reconnect: async id => { selectionRevision += 1; await workspace.reconnect(id); await revalidate(id) },
     refreshSessions: () => workspace.selected().refreshSessions(),
     prepareSubmission: async preparation => {
+      guardLegacyRaw()
       const client = workspace.selected()
       const connectionId = workspace.getSnapshot().selectedConnectionId ?? '-'
       const state = stateFor(connectionId)
@@ -176,8 +191,8 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
         throw Error('Native owner route identity changed')
       return owner
     },
-    // Legacy passthrough kept type-compatible for the direct prototypes; the CP UI never calls it (FC-0021).
-    newSession: () => workspace.selected().newSession().then(() => undefined),
+    // Legacy adapter fixtures keep this method; ordinary product writes use the durable owner.
+    newSession: async () => { guardLegacyRaw(); await workspace.selected().newSession() },
     openSession: id => {
       selectionRevision += 1
       const connId = workspace.getSnapshot().selectedConnectionId
@@ -188,6 +203,8 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
       return workspace.selected().openSession(id)
     },
     send: async (text, attachments?) => {
+      if (!rawAllowed) return { kind: 'refused', code: 'CAPABILITY_UNSUPPORTED',
+        reason: 'AGENT_RELIABLE_OWNER_REQUIRED: submit through the durable Agent owner' }
       const client = workspace.selected()
       const connectionId = workspace.getSnapshot().selectedConnectionId ?? '-'
       const state = stateFor(connectionId)

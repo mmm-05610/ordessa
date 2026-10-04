@@ -1,3 +1,11 @@
+## 4ad固定产物及生产raw提交守卫（最新）
+
+原109/129，仍20项未完成。完整4ad3d670358ce1cca226511526653f56a61804f3 DEB SHA2566718c82a25a7b32d7f1cfd5d79b0d98032b74531cd9fec4344d4d8e80ccb2306，仓库外解包：11受控场景、前端2窗、公开Chat适配器有/无Profile两轮及冷查询、跨侧5窗双进程SIGKILL全部通过。无Profile完整Desktop UI及真实品牌未验，外界fixture边界不变。
+
+独立复核发现旧AgentSessions公开facade可raw提交绕过可靠owner；当前Chat本来已持久gateway，无raw fallback。新增真实product entry红首 accepted→应refused，修生产reliable-only门后整包47P0skip；普通send/create/prepare零native效果，readonly回看和draft选择保留。旧fixture断言不改。T010-09 alias/run/interaction完整持久provenance仍未迁，不冒报完成。详见production-raw-facade-checkpoint.md。
+
+用户另批准版本化公共UI CAS增量，原接口/单一适配器权威保留。该增量和本次raw守卫均晚于4ad产物，待后续固定源码发行验证。
+
 ## 跨侧五窗与资源可选边界（最新）
 
 原账109/129（20项未完成）；UI独立0/8任务、0/12场景。源码父检查点aaba66dc48。7335发行产物跨侧五窗口双进程真SIGKILL与原键冷query全部通过，强化namespace/principal/effect三元组与原captured/cold runtime代次记录后复跑也通过。首次QA语法失败保留，真实品牌未覆盖。

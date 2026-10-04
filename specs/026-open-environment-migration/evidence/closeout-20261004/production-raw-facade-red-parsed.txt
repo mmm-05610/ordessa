@@ -1,0 +1,41 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/sessions
+
+ ❯ tests/closeout-production-raw-fence.test.ts (1 test | 1 failed) 26ms
+   × production AgentSessions fences raw submit, attachment carry, native create and preparation while retaining read-only session navigation 23ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-production-raw-fence.test.ts > production AgentSessions fences raw submit, attachment carry, native create and preparation while retaining read-only session navigation
+AssertionError: expected { kind: 'accepted' } to match object { kind: 'refused', …(1) }
+
+- Expected
++ Received
+
+  {
+-   "code": "CAPABILITY_UNSUPPORTED",
+-   "kind": "refused",
++   "kind": "accepted",
+  }
+
+ ❯ tests/closeout-production-raw-fence.test.ts:74:39
+     72|   // attachment carry route must all be rejected before reaching the c…
+     73|   for (const text of ['first attempt', 'second attempt'])
+     74|     expect(await sessions.send(text)).toMatchObject({ kind: 'refused',…
+       |                                       ^
+     75|   expect(await sessions.send('with refs', ['opaque-ref'])).toMatchObje…
+     76|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  17:23:47
+   Duration  870ms (transform 377ms, setup 0ms, import 561ms, tests 26ms, environment 0ms)
+
+
+EXIT_CODE=1

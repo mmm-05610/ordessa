@@ -1,0 +1,106 @@
+{
+  "sourceHead": "4ad3d670358ce1cca226511526653f56a61804f3",
+  "qaId": "root-closeout-d8d698dc-e7b7-4109-846f-fa8e56a8bba4",
+  "qaWork": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-d8d698dc-e7b7-4109-846f-fa8e56a8bba4",
+  "stage": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.staging/root-closeout-d8d698dc-e7b7-4109-846f-fa8e56a8bba4",
+  "out": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-d8d698dc-e7b7-4109-846f-fa8e56a8bba4/out",
+  "cache": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-d8d698dc-e7b7-4109-846f-fa8e56a8bba4/cache",
+  "publicPath": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-d8d698dc-e7b7-4109-846f-fa8e56a8bba4/fixture-public.pem",
+  "signing": "Controlled Ed25519 public fixture only; no signing/private key read",
+  "scope": "Owned full build/extract only; no installation/services; no skip-pip",
+  "status": "built",
+  "exitCode": 0,
+  "result": {
+    "version": "0.1.0",
+    "build": "20261004-4ad3d6703",
+    "deb": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-d8d698dc-e7b7-4109-846f-fa8e56a8bba4/out/ordessa_0.1.0_amd64.deb",
+    "debSha256": "6718c82a25a7b32d7f1cfd5d79b0d98032b74531cd9fec4344d4d8e80ccb2306",
+    "debSize": 211720324,
+    "appTreeSha256": "107f98bc170d7e537429227a7614dcea331073127195ae7c8582d587808486bd",
+    "sha256sums": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-d8d698dc-e7b7-4109-846f-fa8e56a8bba4/out/SHA256SUMS",
+    "bridgeSha256": "714044a5b490a53d5fa89aade993c496e5fa3a5f7c614b4465c4990575185cbd",
+    "bridgeMatchesBaseline": true,
+    "iconPlaceholder": false,
+    "metadataStubs": [],
+    "pythonSha256": "269b2c99e4db15b242bf01832f4fea1e8f1a664f273cff519393f296e9820b41",
+    "productPackages": [
+      "packages/backend/environment-api",
+      "packages/backend/persistence-sqlite",
+      "packages/backend/pacthold",
+      "packages/backend/server-plugin-api",
+      "plugins/harness/api",
+      "plugins/runtime-compat",
+      "plugins/sandbox/api",
+      "plugins/sandbox/backend",
+      "plugins/sandbox/adapters",
+      "plugins/permissions/api",
+      "plugins/permissions/backend",
+      "plugins/permissions/adapters",
+      "plugins/workspace",
+      "plugins/harness",
+      "apps/server",
+      "plugins/server-compat",
+      "plugins/model-provider/server",
+      "plugins/model-provider/profile-contribution",
+      "plugins/profile",
+      "plugins/skills",
+      "plugins/agent/backend",
+      "products/server"
+    ],
+    "pipSkipped": false,
+    "steps": [
+      {
+        "name": "python-runtime",
+        "ms": 443
+      },
+      {
+        "name": "server-deps",
+        "ms": 193930
+      },
+      {
+        "name": "product-packages",
+        "ms": 35699
+      },
+      {
+        "name": "harnesses",
+        "ms": 0
+      },
+      {
+        "name": "app",
+        "ms": 617
+      },
+      {
+        "name": "acp-bridge",
+        "ms": 473
+      },
+      {
+        "name": "bin",
+        "ms": 5
+      },
+      {
+        "name": "desktop-entry",
+        "ms": 0
+      },
+      {
+        "name": "doc",
+        "ms": 4
+      },
+      {
+        "name": "icons",
+        "ms": 1625
+      }
+    ]
+  },
+  "extractedRoot": "/home/maoqh/.cache/ordessa-026-artifact-4ad3-0a5jkzac/extracted",
+  "extractionExit": 0,
+  "behaviorAcceptance": {
+    "controlled": "pass (11 named controlled scenes)",
+    "frontendJournal": "pass (2 isolated frontend kill windows)",
+    "frontendProduct": "pass (with/without Profile public adapter two rounds + original-key cold query)",
+    "crossSide": "pass (5 dual-process SIGKILL/cold-query windows)",
+    "fullAlternateDesktopUI": "NOT_RUN",
+    "realNativeBrands": "NOT_RUN",
+    "newVersionedUiIncrement": "not present in this source SHA",
+    "productionRawFacadeFence": "not present in this source SHA"
+  }
+}
