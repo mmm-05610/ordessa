@@ -44,9 +44,9 @@ parallel_units: ["pi-driver：仅N001钉定的本家族Harness驱动/配置与�
 
 ## Stages
 
-- [ ] 1. 核官方/上游源码和各候选通道，形成pi决策报告与固定版本/许可；prompt回执不是完成；区分settled/event、extension UI、steer/abort；真实版本可能不同于现有pi-acp资产，不能沿用旧桥覆盖结论。（主执行者阶段检查点，精确路径提交）
-- [ ] 2. 沿冻结接缝实现驱动与消费者，不重写agent loop；发前校验材料适用性、隔离home、权限、shared scope和请求关联（主执行者阶段检查点，精确路径提交）
-- [ ] 3. 定向协议反例＋实际无模型进程验证可做部分；审批/取消/恢复/失回执/unknown扩展逐项核实，不把fixture当原生；回填矩阵与检查点（主执行者阶段检查点，精确路径提交）
+- [x] 1. 核官方/上游源码和各候选通道，形成pi决策报告与固定版本/许可；prompt回执不是完成；区分settled/event、extension UI、steer/abort；真实版本可能不同于现有pi-acp资产，不能沿用旧桥覆盖结论。— 决策报告 `evidence/N003-pi-decision.md`（钉版0.86.1/MIT/rpc.md+rpc-commands.md；disposition/settled/extension UI/steer-abort语义入实现；未沿用pi-acp旧资产）
+- [x] 2. 沿冻结接缝实现驱动与消费者，不重写agent loop；发前校验材料适用性、隔离home、权限、shared scope和请求关联 — `native_clients/pi.py`+`pi/native_channel.py`；compile_config发前拒、隔离env、响应id关联
+- [x] 3. 定向协议反例＋实际无模型进程验证可做部分；审批/取消/恢复/失回执/unknown扩展逐项核实，不把fixture当原生；回填矩阵与检查点 — fixture反例27用例；真实进程L2 partial（N001探针）；逐项：unknown扩展=已观察、失回执=L1、**审批/取消/恢复=未观察**（登记unknown/no不冒充）；矩阵回填capability_matrix
 
 ## Parallel units
 
@@ -82,5 +82,14 @@ git diff --check
 
 ## Batch report
 
-阶段结束填：门与反例计数、命令/退出码、证据路径、源码SHA、清理、调用成本、未测项。阶段复选框不得提前勾选。
+终态 **N003_PARTIAL**（切片交付齐；stage3审批/取消/恢复未在真实进程观察；管理绑定依赖阻塞）。
+
+- 门：BASE✓ NATIVE✓ SAFETY✓ EVIDENCE✓（分账见 evidence/N003-pi-decision.md）。
+- 反例计数：27 fixture用例（陌生event保留、失回执不重发、handled不等settled、缺配置发前拒、非法JSON/未知命令typed失败真实进程）。
+- 命令/退出码：`pytest .../test_pi_client.py -q` 14P/0F exit0；`pytest plugins/harness/tests/pi -q` 13P/0F exit0（主执行者复跑）。
+- 证据路径：evidence/N003-pi-decision.md、N001-vertical-entry.md、N001-vertical-pi-rpc.txt。
+- 源码SHA：f8f23d57f2 之后本单提交；清理：scratch收尾删、真实 ~/.pi 未动；成本：模型0、安装0、WebFetch 2。
+- 未测项：审批/取消/恢复真实进程验证、--session-dir持久化、prompt→settled全链、L3/L4。
+- 家族终态：CODE_READY＋L2 partial（握手/配置/退出已观察）；管理绑定依赖阻塞（029 AT-009/010/011）。
+- 事故登记：子代理报告幻觉1例（落盘经审查正确、复跑为准）、失败2例（驱动切片截断由主执行者补完）。
 

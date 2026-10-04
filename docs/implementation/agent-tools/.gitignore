@@ -1,0 +1,4 @@
+# Local recovery archive; retain the text receipt and digest in Git.
+evidence/pre-switch/*.tar.gz
+# Fixed-SHA regression source copies are temporary test resources.
+evidence/fixed-baseline-*/
