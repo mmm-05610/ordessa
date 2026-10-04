@@ -44,9 +44,9 @@ parallel_units: ["gemini-cli-driver：仅N001钉定的本家族Harness驱动/配
 
 ## Stages
 
-- [ ] 1. 核官方/上游源码和各候选通道，形成gemini-cli决策报告与固定版本/许可；ACP客户端文件/terminal回调、版本与扩展覆盖；同引擎不代表所有TUI命令可用，headless不能冒持续双向通道。（主执行者阶段检查点，精确路径提交）
-- [ ] 2. 沿冻结接缝实现驱动与消费者，不重写agent loop；发前校验材料适用性、隔离home、权限、shared scope和请求关联（主执行者阶段检查点，精确路径提交）
-- [ ] 3. 定向协议反例＋实际无模型进程验证可做部分；审批/取消/恢复/失回执/unknown扩展逐项核实，不把fixture当原生；回填矩阵与检查点（主执行者阶段检查点，精确路径提交）
+- [x] 1. 核官方/上游源码和各候选通道，形成gemini-cli决策报告与固定版本/许可；ACP客户端文件/terminal回调、版本与扩展覆盖；同引擎不代表所有TUI命令可用，headless不能冒持续双向通道。— `evidence/gemini-cli-decision.md`：ACP v1规范+gemini页面双源；文件回调（proxied fs）与terminal回调（ACP规范名，页面未写明登记）；headless=有限备选不冒双向；TUI差距清单=文档未写明
+- [x] 2. 沿冻结接缝实现驱动与消费者，不重写agent loop；发前校验材料适用性、隔离home、权限、shared scope和请求关联 — 共享 `native_clients/_acp.py`（三家族实际复用抽取，G4/G11内建）+`gemini_cli.py`+`gemini_cli/native_channel.py`；telemetry钉false、oauthToken发前拒
+- [x] 3. 定向协议反例＋实际无模型进程验证可做部分；审批/取消/恢复/失回执/unknown扩展逐项核实，不把fixture当原生；回填矩阵与检查点 — 16用例（回调id保持、`_`方法保留、cancel通知不阻塞、hang超时unknown）；L2=未测（无本机CLI）
 
 ## Parallel units
 
@@ -82,5 +82,12 @@ git diff --check
 
 ## Batch report
 
-阶段结束填：门与反例计数、命令/退出码、证据路径、源码SHA、清理、调用成本、未测项。阶段复选框不得提前勾选。
+终态 **N008_PARTIAL**（CODE_READY＋L1；L2未测；管理绑定依赖阻塞）。
+
+- 门：BASE✓ NATIVE（官方ACP通道/回调与扩展保留/不发runtimeReady✓） SAFETY✓（永不auto-approve、proxied FS、telemetry钉false、无凭据继承） EVIDENCE✓。
+- 反例计数：16用例（驱动8+客户端8）。共享_acp.py抽取有据（gemini/goose/vibe三家复用）。
+- 命令/退出码：`pytest plugins/harness/tests/gemini_cli -q` 8P/0F exit0；`pytest tests/native_clients/test_gemini_cli_client.py -q` 8P/0F exit0。
+- 证据路径：evidence/gemini-cli-decision.md；源码SHA：本单提交（含_acp.py）；清理：fake peer owned清理；成本：模型0、安装0、WebFetch 2。
+- 未测项：L2/L3/L4；terminal回调实测、TUI差距清单=unknown；**待授权：安装Gemini CLI重钉版本补L2**。
+- 家族终态：CODE_READY；管理绑定依赖阻塞。
 
