@@ -1,0 +1,312 @@
+.....F.........FFF......................                                 [100%]
+=================================== FAILURES ===================================
+_ test_production_owner_rejects_claimed_acceptance_without_native_submit_port __
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-827/test_production_owner_rejects_0')
+
+    def test_production_owner_rejects_claimed_acceptance_without_native_submit_port(tmp_path):
+        handlers=methods(AgentDomainPlugin(),tmp_path)
+>       with pytest.raises(Exception, match='CAPABILITY_UNSUPPORTED|unsupported|unavailable'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'CAPABILITY_UNSUPPORTED|unsupported|unavailable'
+E         Actual message: 'Agent target has no verified binding'
+
+plugins/agent/backend/tests/test_closeout_production_owner.py:12: AssertionError
+_ test_sigkill_windows_recover_by_query_without_redispatch[backend_intent-0-True-possibly-submitted] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-827/test_sigkill_windows_recover_b2')
+kill_after = 'backend_intent', expected_effects = 0
+expected_backend_intent = True, expected_stage = 'possibly-submitted'
+
+    @pytest.mark.parametrize(
+        "kill_after, expected_effects, expected_backend_intent, expected_stage",
+        [
+            ("mapping", 0, False, "mapped"),
+            ("possibly_submitted", 0, False, "possibly-submitted"),
+            ("backend_intent", 0, True, "possibly-submitted"),
+            ("native_effect", 1, True, "possibly-submitted"),
+            ("domain_result", 1, True, "completed"),
+        ],
+    )
+    def test_sigkill_windows_recover_by_query_without_redispatch(
+        tmp_path, kill_after, expected_effects, expected_backend_intent, expected_stage,
+    ):
+        domain_db = tmp_path / "domain.sqlite"
+        backend_db = tmp_path / "environment.sqlite"
+        effects_db = tmp_path / "harness-effects.sqlite"
+        marker = tmp_path / "child-paused"
+        worker = r'''
+    import sqlite3, sys, time
+    from dataclasses import dataclass
+    from pathlib import Path
+    from ordessa_agent.submission_journal import ReliableCapabilities, SubmissionJournal
+    from ordessa_environment_api import RequestKey
+    from ordessa_environment_api.guarantee import GuaranteeLevel
+    from ordessa_persistence_sqlite import ProtectedFingerprintHmac, SqliteStorePort
+    from pacthold.core.registration import CoreContributionSet
+    from pacthold.environment import Environment, InstallationRecord
+    
+    @dataclass(frozen=True)
+    class Contract:
+        contract_id: str = "demo.submit@1"
+    
+    domain_path, backend_path, effects_path, marker_path, pause_at = sys.argv[1:]
+    def pause(stage):
+        if pause_at == stage:
+            Path(marker_path).write_text(stage)
+            while True:
+                time.sleep(1)
+    domain = SqliteStorePort(domain_path, writer_token="domain-child")
+    backend = SqliteStorePort(backend_path, writer_token="backend-child")
+    fingerprint = ProtectedFingerprintHmac({"fixture-key": b"fixture-only-key"}, active_key_id="fixture-key")
+    journal = SubmissionJournal(domain, fingerprint_port=fingerprint)
+    request = RequestKey("env-a", "user:local:closeout", "req-closeout-1",
+                         {"target": "session:S1", "binding": "binding:g1"})
+    capabilities = ReliableCapabilities(True, True, True)
+    record = journal.capture(request, {
+        "draftId": "draft-1", "draftRevision": 7, "text": "captured text",
+        "configOperationIds": ["op-model-3"], "baseRevision": "native-r4",
+        "target": {"logical": "session:S1", "generation": 1},
+        "binding": {"native": "instance-1", "generation": 2},
+        "schema": "agent-input/v1", "guarantee": "reliable",
+    }, attachments={"report.bin": b"original attachment"}, capabilities=capabilities)
+    pause("mapping")
+    journal.mark_possibly_submitted(request, record.digest)
+    pause("possibly_submitted")
+    env = Environment("env-a", store=backend, fingerprint_port=fingerprint)
+    env.install(InstallationRecord("submit-plugin", "d" * 64))
+    env.enable("submit-plugin")
+    env.activate("submit-plugin", CoreContributionSet(contracts=(Contract,)))
+    env.invoke("demo.submit", request, guarantee=GuaranteeLevel.RELIABLE, input_digest=record.digest)
+    pause("backend_intent")
+    with sqlite3.connect(effects_path) as effects:
+        effects.execute("CREATE TABLE IF NOT EXISTS effects (request_id TEXT PRIMARY KEY, count INTEGER NOT NULL)")
+        effects.execute("INSERT INTO effects VALUES (?, 1) ON CONFLICT(request_id) DO UPDATE SET count=count+1",
+                        (request.request_id,))
+    pause("native_effect")
+    journal.record_config_apply(request, {"outcome": "applied", "operationIds": ["op-model-3"]})
+    journal.record_input_acceptance(request, {"outcome": "accepted"})
+    journal.record_run_result(request, {"outcome": "running", "runId": "run-1"})
+    journal.record_completed(request)
+    pause("domain_result")
+    '''
+        child = subprocess.Popen(
+            [sys.executable, "-c", worker, str(domain_db), str(backend_db), str(effects_db), str(marker), kill_after],
+        )
+        deadline = time.monotonic() + 15
+        while not marker.exists() and child.poll() is None and time.monotonic() < deadline:
+            time.sleep(0.01)
+>       assert marker.exists(), f"worker did not reach kill window {kill_after!r}; rc={child.poll()}"
+E       AssertionError: worker did not reach kill window 'backend_intent'; rc=1
+E       assert False
+E        +  where False = exists()
+E        +    where exists = PosixPath('/tmp/pytest-of-maoqh/pytest-827/test_sigkill_windows_recover_b2/child-paused').exists
+
+plugins/agent/backend/tests/test_closeout_submission_journal.py:217: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 43, in <module>
+  File "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/backend/pacthold/src/pacthold/environment.py", line 639, in invoke
+    raise GuaranteeUnavailableError(
+ordessa_environment_api.errors.GuaranteeUnavailableError: reliable invocation requires an explicit dispatch handler; refused before dispatch
+_ test_sigkill_windows_recover_by_query_without_redispatch[native_effect-1-True-possibly-submitted] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-827/test_sigkill_windows_recover_b3')
+kill_after = 'native_effect', expected_effects = 1
+expected_backend_intent = True, expected_stage = 'possibly-submitted'
+
+    @pytest.mark.parametrize(
+        "kill_after, expected_effects, expected_backend_intent, expected_stage",
+        [
+            ("mapping", 0, False, "mapped"),
+            ("possibly_submitted", 0, False, "possibly-submitted"),
+            ("backend_intent", 0, True, "possibly-submitted"),
+            ("native_effect", 1, True, "possibly-submitted"),
+            ("domain_result", 1, True, "completed"),
+        ],
+    )
+    def test_sigkill_windows_recover_by_query_without_redispatch(
+        tmp_path, kill_after, expected_effects, expected_backend_intent, expected_stage,
+    ):
+        domain_db = tmp_path / "domain.sqlite"
+        backend_db = tmp_path / "environment.sqlite"
+        effects_db = tmp_path / "harness-effects.sqlite"
+        marker = tmp_path / "child-paused"
+        worker = r'''
+    import sqlite3, sys, time
+    from dataclasses import dataclass
+    from pathlib import Path
+    from ordessa_agent.submission_journal import ReliableCapabilities, SubmissionJournal
+    from ordessa_environment_api import RequestKey
+    from ordessa_environment_api.guarantee import GuaranteeLevel
+    from ordessa_persistence_sqlite import ProtectedFingerprintHmac, SqliteStorePort
+    from pacthold.core.registration import CoreContributionSet
+    from pacthold.environment import Environment, InstallationRecord
+    
+    @dataclass(frozen=True)
+    class Contract:
+        contract_id: str = "demo.submit@1"
+    
+    domain_path, backend_path, effects_path, marker_path, pause_at = sys.argv[1:]
+    def pause(stage):
+        if pause_at == stage:
+            Path(marker_path).write_text(stage)
+            while True:
+                time.sleep(1)
+    domain = SqliteStorePort(domain_path, writer_token="domain-child")
+    backend = SqliteStorePort(backend_path, writer_token="backend-child")
+    fingerprint = ProtectedFingerprintHmac({"fixture-key": b"fixture-only-key"}, active_key_id="fixture-key")
+    journal = SubmissionJournal(domain, fingerprint_port=fingerprint)
+    request = RequestKey("env-a", "user:local:closeout", "req-closeout-1",
+                         {"target": "session:S1", "binding": "binding:g1"})
+    capabilities = ReliableCapabilities(True, True, True)
+    record = journal.capture(request, {
+        "draftId": "draft-1", "draftRevision": 7, "text": "captured text",
+        "configOperationIds": ["op-model-3"], "baseRevision": "native-r4",
+        "target": {"logical": "session:S1", "generation": 1},
+        "binding": {"native": "instance-1", "generation": 2},
+        "schema": "agent-input/v1", "guarantee": "reliable",
+    }, attachments={"report.bin": b"original attachment"}, capabilities=capabilities)
+    pause("mapping")
+    journal.mark_possibly_submitted(request, record.digest)
+    pause("possibly_submitted")
+    env = Environment("env-a", store=backend, fingerprint_port=fingerprint)
+    env.install(InstallationRecord("submit-plugin", "d" * 64))
+    env.enable("submit-plugin")
+    env.activate("submit-plugin", CoreContributionSet(contracts=(Contract,)))
+    env.invoke("demo.submit", request, guarantee=GuaranteeLevel.RELIABLE, input_digest=record.digest)
+    pause("backend_intent")
+    with sqlite3.connect(effects_path) as effects:
+        effects.execute("CREATE TABLE IF NOT EXISTS effects (request_id TEXT PRIMARY KEY, count INTEGER NOT NULL)")
+        effects.execute("INSERT INTO effects VALUES (?, 1) ON CONFLICT(request_id) DO UPDATE SET count=count+1",
+                        (request.request_id,))
+    pause("native_effect")
+    journal.record_config_apply(request, {"outcome": "applied", "operationIds": ["op-model-3"]})
+    journal.record_input_acceptance(request, {"outcome": "accepted"})
+    journal.record_run_result(request, {"outcome": "running", "runId": "run-1"})
+    journal.record_completed(request)
+    pause("domain_result")
+    '''
+        child = subprocess.Popen(
+            [sys.executable, "-c", worker, str(domain_db), str(backend_db), str(effects_db), str(marker), kill_after],
+        )
+        deadline = time.monotonic() + 15
+        while not marker.exists() and child.poll() is None and time.monotonic() < deadline:
+            time.sleep(0.01)
+>       assert marker.exists(), f"worker did not reach kill window {kill_after!r}; rc={child.poll()}"
+E       AssertionError: worker did not reach kill window 'native_effect'; rc=1
+E       assert False
+E        +  where False = exists()
+E        +    where exists = PosixPath('/tmp/pytest-of-maoqh/pytest-827/test_sigkill_windows_recover_b3/child-paused').exists
+
+plugins/agent/backend/tests/test_closeout_submission_journal.py:217: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 43, in <module>
+  File "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/backend/pacthold/src/pacthold/environment.py", line 639, in invoke
+    raise GuaranteeUnavailableError(
+ordessa_environment_api.errors.GuaranteeUnavailableError: reliable invocation requires an explicit dispatch handler; refused before dispatch
+_ test_sigkill_windows_recover_by_query_without_redispatch[domain_result-1-True-completed] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-827/test_sigkill_windows_recover_b4')
+kill_after = 'domain_result', expected_effects = 1
+expected_backend_intent = True, expected_stage = 'completed'
+
+    @pytest.mark.parametrize(
+        "kill_after, expected_effects, expected_backend_intent, expected_stage",
+        [
+            ("mapping", 0, False, "mapped"),
+            ("possibly_submitted", 0, False, "possibly-submitted"),
+            ("backend_intent", 0, True, "possibly-submitted"),
+            ("native_effect", 1, True, "possibly-submitted"),
+            ("domain_result", 1, True, "completed"),
+        ],
+    )
+    def test_sigkill_windows_recover_by_query_without_redispatch(
+        tmp_path, kill_after, expected_effects, expected_backend_intent, expected_stage,
+    ):
+        domain_db = tmp_path / "domain.sqlite"
+        backend_db = tmp_path / "environment.sqlite"
+        effects_db = tmp_path / "harness-effects.sqlite"
+        marker = tmp_path / "child-paused"
+        worker = r'''
+    import sqlite3, sys, time
+    from dataclasses import dataclass
+    from pathlib import Path
+    from ordessa_agent.submission_journal import ReliableCapabilities, SubmissionJournal
+    from ordessa_environment_api import RequestKey
+    from ordessa_environment_api.guarantee import GuaranteeLevel
+    from ordessa_persistence_sqlite import ProtectedFingerprintHmac, SqliteStorePort
+    from pacthold.core.registration import CoreContributionSet
+    from pacthold.environment import Environment, InstallationRecord
+    
+    @dataclass(frozen=True)
+    class Contract:
+        contract_id: str = "demo.submit@1"
+    
+    domain_path, backend_path, effects_path, marker_path, pause_at = sys.argv[1:]
+    def pause(stage):
+        if pause_at == stage:
+            Path(marker_path).write_text(stage)
+            while True:
+                time.sleep(1)
+    domain = SqliteStorePort(domain_path, writer_token="domain-child")
+    backend = SqliteStorePort(backend_path, writer_token="backend-child")
+    fingerprint = ProtectedFingerprintHmac({"fixture-key": b"fixture-only-key"}, active_key_id="fixture-key")
+    journal = SubmissionJournal(domain, fingerprint_port=fingerprint)
+    request = RequestKey("env-a", "user:local:closeout", "req-closeout-1",
+                         {"target": "session:S1", "binding": "binding:g1"})
+    capabilities = ReliableCapabilities(True, True, True)
+    record = journal.capture(request, {
+        "draftId": "draft-1", "draftRevision": 7, "text": "captured text",
+        "configOperationIds": ["op-model-3"], "baseRevision": "native-r4",
+        "target": {"logical": "session:S1", "generation": 1},
+        "binding": {"native": "instance-1", "generation": 2},
+        "schema": "agent-input/v1", "guarantee": "reliable",
+    }, attachments={"report.bin": b"original attachment"}, capabilities=capabilities)
+    pause("mapping")
+    journal.mark_possibly_submitted(request, record.digest)
+    pause("possibly_submitted")
+    env = Environment("env-a", store=backend, fingerprint_port=fingerprint)
+    env.install(InstallationRecord("submit-plugin", "d" * 64))
+    env.enable("submit-plugin")
+    env.activate("submit-plugin", CoreContributionSet(contracts=(Contract,)))
+    env.invoke("demo.submit", request, guarantee=GuaranteeLevel.RELIABLE, input_digest=record.digest)
+    pause("backend_intent")
+    with sqlite3.connect(effects_path) as effects:
+        effects.execute("CREATE TABLE IF NOT EXISTS effects (request_id TEXT PRIMARY KEY, count INTEGER NOT NULL)")
+        effects.execute("INSERT INTO effects VALUES (?, 1) ON CONFLICT(request_id) DO UPDATE SET count=count+1",
+                        (request.request_id,))
+    pause("native_effect")
+    journal.record_config_apply(request, {"outcome": "applied", "operationIds": ["op-model-3"]})
+    journal.record_input_acceptance(request, {"outcome": "accepted"})
+    journal.record_run_result(request, {"outcome": "running", "runId": "run-1"})
+    journal.record_completed(request)
+    pause("domain_result")
+    '''
+        child = subprocess.Popen(
+            [sys.executable, "-c", worker, str(domain_db), str(backend_db), str(effects_db), str(marker), kill_after],
+        )
+        deadline = time.monotonic() + 15
+        while not marker.exists() and child.poll() is None and time.monotonic() < deadline:
+            time.sleep(0.01)
+>       assert marker.exists(), f"worker did not reach kill window {kill_after!r}; rc={child.poll()}"
+E       AssertionError: worker did not reach kill window 'domain_result'; rc=1
+E       assert False
+E        +  where False = exists()
+E        +    where exists = PosixPath('/tmp/pytest-of-maoqh/pytest-827/test_sigkill_windows_recover_b4/child-paused').exists
+
+plugins/agent/backend/tests/test_closeout_submission_journal.py:217: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 43, in <module>
+  File "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/backend/pacthold/src/pacthold/environment.py", line 639, in invoke
+    raise GuaranteeUnavailableError(
+ordessa_environment_api.errors.GuaranteeUnavailableError: reliable invocation requires an explicit dispatch handler; refused before dispatch
+=========================== short test summary info ============================
+FAILED plugins/agent/backend/tests/test_closeout_production_owner.py::test_production_owner_rejects_claimed_acceptance_without_native_submit_port
+FAILED plugins/agent/backend/tests/test_closeout_submission_journal.py::test_sigkill_windows_recover_by_query_without_redispatch[backend_intent-0-True-possibly-submitted]
+FAILED plugins/agent/backend/tests/test_closeout_submission_journal.py::test_sigkill_windows_recover_by_query_without_redispatch[native_effect-1-True-possibly-submitted]
+FAILED plugins/agent/backend/tests/test_closeout_submission_journal.py::test_sigkill_windows_recover_by_query_without_redispatch[domain_result-1-True-completed]
+4 failed, 36 passed in 0.95s

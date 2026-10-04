@@ -169,7 +169,7 @@ test('no platform source imports or re-exports a domain carrier path', async () 
 // --- test 3: domain ownership is where the plan says it is ------------------
 test('the domain carrier lives in plugins/agent/contracts with its persistent ids', async () => {
   assert.ok(existsSync(path.join(domainCarrierRoot, 'src/contract.ts')), 'plugins/agent/contracts/src/contract.ts (the moved carrier) must exist')
-  const umbrella = (await readdir(umbrellaRoot, { withFileTypes: true })).filter(e => e.isDirectory()).map(e => e.name).sort()
+  const umbrella = (await readdir(umbrellaRoot, { withFileTypes: true })).filter(e => e.isDirectory() && e.name !== 'node_modules').map(e => e.name).sort()
   for (const gone of ['agent', 'connections', 'agent-ui']) {
     assert.ok(!umbrella.includes(gone), `packages/frontend/contracts/${gone} was migrated away — it must not come back as a stub`)
   }

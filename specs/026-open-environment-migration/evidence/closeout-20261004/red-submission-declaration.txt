@@ -1,0 +1,23 @@
+....F                                                                    [100%]
+=================================== FAILURES ===================================
+_ test_default_draft_declares_absent_reliable_capability_and_stable_namespace __
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-851/test_default_draft_declares_ab0')
+
+    def test_default_draft_declares_absent_reliable_capability_and_stable_namespace(tmp_path):
+        from ordessa_server_product.composition import create_composition
+        location = {'kind': 'draft', 'draftId': 'draft-1', 'connectionId': 'frontend-1'}
+        first = create_composition().default_runtime(tmp_path / 'default-data')
+        try:
+            first.start()
+            before = first.wire.dispatch('agent.session.resolve', {'location': location})
+>           assert before['submission']['available'] is False
+                   ^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'submission'
+
+products/server/tests/test_closeout_native_owner_resolution.py:57: KeyError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-851/test_default_draft_declares_ab0/default-data/state/agentbox.sqlite
+=========================== short test summary info ============================
+FAILED products/server/tests/test_closeout_native_owner_resolution.py::test_default_draft_declares_absent_reliable_capability_and_stable_namespace
+1 failed, 4 passed in 0.83s

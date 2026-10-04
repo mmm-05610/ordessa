@@ -1,0 +1,28 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/model-provider/chat-contribution
+
+ ❯ tests/canonical-production.test.tsx (1 test | 1 failed) 51ms
+   × the production Model selector writes an atomic model intent to the Agent owner 48ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/canonical-production.test.tsx > the production Model selector writes an atomic model intent to the Agent owner
+TypeError: Cannot read properties of null (reading 'click')
+ ❯ tests/canonical-production.test.tsx:124:105
+    122|   resourcesToDispose.push(async () => { await act(async () => root.unm…
+    123|   await act(async () => root.render(<ComponentOutlet binding={binding}…
+    124|   await act(async () => { container.querySelector<HTMLElement>('[data-…
+       |                                                                                                         ^
+    125|   await act(async () => { document.body.querySelector<HTMLElement>('[d…
+    126|   await vi.waitFor(() => expect(writes).toHaveLength(1))
+ ❯ process.env.NODE_ENV.exports.act ../../../node_modules/react/cjs/react.development.js:814:22
+ ❯ tests/canonical-production.test.tsx:124:9
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  09:57:03
+   Duration  1.63s (transform 281ms, setup 0ms, import 410ms, tests 51ms, environment 870ms)
+

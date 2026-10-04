@@ -1,0 +1,647 @@
+FF....FFFFFF                                                             [100%]
+=================================== FAILURES ===================================
+_ test_existing_submission_uses_environment_once_and_persists_separate_domain_facts _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-824/test_existing_submission_uses_0')
+
+    def test_existing_submission_uses_environment_once_and_persists_separate_domain_facts(tmp_path):
+        service, environment, journal, port, backend_store, domain_store = _service(tmp_path)
+        try:
+>           result = service.submit(_input())
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+plugins/agent/backend/tests/test_closeout_submission_service.py:210: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_agent.submission_service.AgentSubmissionService object at 0x7e6df3408710>
+item = SubmissionInput(submission_id='submission-1', principal_scope='user:local:agent-test', target='session:S1', mode='exis...text': 'hello', 'attachmentIds': ['attachment-1']}, config_operation_ids=('op-session:S1-1',), schema='agent-input/v1')
+
+    def submit(self, item: SubmissionInput) -> SubmissionResult:
+        """Run a new captured submission or query an existing stable request.
+    
+        Any prior journal mapping takes the query-only branch. The branch first
+        checks the caller-supplied text/draft/config intent against the frozen
+        capture, then reads the original backend key and native owner. It never
+        resolves a replacement binding or invokes a second submit.
+        """
+        self._validate_input(item)
+        prior = self._find_prior(item)
+        if prior is not None:
+            self._assert_retry_matches(prior, item)
+            observation = self.query(item.target, item.submission_id, item.principal_scope)
+            if observation is None:
+                return SubmissionResult(prior.request, "unknown", prior, replayed=True)
+            result = self._result_from_observation(prior, observation.native_fact)
+            if (result in ("accepted", "known-rejected")
+                    and prior.stage == "possibly-submitted"
+                    and observation.native_fact is not None):
+                self._record_native_result(prior.request, observation.native_fact)
+                refreshed = self.journal.read(prior.request)
+                if refreshed is not None:
+                    prior = refreshed
+            return SubmissionResult(prior.request, result, prior, replayed=True)
+    
+        declaration = self.declaration
+        if not callable(getattr(self.native_submit_port, "resolve_binding", None)):
+            raise ReliableSubmissionUnsupported("native submit adapter cannot resolve an owner binding")
+        try:
+            binding = self.native_submit_port.resolve_binding(item.target)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native owner binding is unavailable: {exc}"
+            ) from exc
+        self._validate_binding(item, declaration, binding)
+        method_name = "submit_existing" if item.mode == "existing" else "create_with_config"
+        if not callable(getattr(self.native_submit_port, method_name, None)):
+            raise ReliableSubmissionUnsupported(
+                f"native adapter does not implement declared conditional {item.mode} submission"
+            )
+        if not callable(getattr(self.native_submit_port, "query", None)):
+            raise ReliableSubmissionUnsupported("native submit adapter has no read-only query surface")
+        try:
+            environment_binding = self.environment.bind(binding.surface_id)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native binding is not an active Environment capability: {exc}"
+            ) from exc
+        if environment_binding.environment != self.environment.environment_id:
+            raise ReliableSubmissionUnsupported("Environment binding identity does not match the composed Environment")
+        preflight = getattr(self.environment, "check_invocation", None)
+        if not callable(preflight):
+            raise ReliableSubmissionUnsupported(
+                "Environment has no reliable effect preflight; submission remains unsupported"
+            )
+        preflight_result = preflight(
+            binding.surface_id,
+            guarantee=GuaranteeLevel.RELIABLE,
+            principal=item.principal_scope,
+            effect=True,
+        )
+        backend_durable = getattr(preflight_result, "backend_durable", False) is True
+        if not backend_durable:
+            raise ReliableSubmissionUnsupported(
+                "Environment did not declare durable reliable dispatch support"
+            )
+    
+        owners = self.owners.owners_of(item.target)
+        if owners is None or "config" not in owners:
+            raise ReliableSubmissionUnsupported("Agent target has no registered configuration owner")
+        config_owner = owners["config"]
+        capture_configuration = getattr(config_owner, "capture_configuration", None)
+        if not callable(capture_configuration):
+>           raise ReliableSubmissionUnsupported(
+                "configuration owner cannot atomically capture its snapshot and operations"
+            )
+E           ordessa_agent.submission_journal.ReliableSubmissionUnsupported: configuration owner cannot atomically capture its snapshot and operations
+
+plugins/agent/backend/src/ordessa_agent/submission_service.py:249: ReliableSubmissionUnsupported
+_ test_same_request_id_with_changed_immutable_input_conflicts_without_second_effect _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-824/test_same_request_id_with_chan0')
+
+    def test_same_request_id_with_changed_immutable_input_conflicts_without_second_effect(tmp_path):
+        service, _, _, port, backend_store, domain_store = _service(tmp_path)
+        try:
+>           service.submit(_input())
+
+plugins/agent/backend/tests/test_closeout_submission_service.py:242: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_agent.submission_service.AgentSubmissionService object at 0x7e6df3409520>
+item = SubmissionInput(submission_id='submission-1', principal_scope='user:local:agent-test', target='session:S1', mode='exis...text': 'hello', 'attachmentIds': ['attachment-1']}, config_operation_ids=('op-session:S1-1',), schema='agent-input/v1')
+
+    def submit(self, item: SubmissionInput) -> SubmissionResult:
+        """Run a new captured submission or query an existing stable request.
+    
+        Any prior journal mapping takes the query-only branch. The branch first
+        checks the caller-supplied text/draft/config intent against the frozen
+        capture, then reads the original backend key and native owner. It never
+        resolves a replacement binding or invokes a second submit.
+        """
+        self._validate_input(item)
+        prior = self._find_prior(item)
+        if prior is not None:
+            self._assert_retry_matches(prior, item)
+            observation = self.query(item.target, item.submission_id, item.principal_scope)
+            if observation is None:
+                return SubmissionResult(prior.request, "unknown", prior, replayed=True)
+            result = self._result_from_observation(prior, observation.native_fact)
+            if (result in ("accepted", "known-rejected")
+                    and prior.stage == "possibly-submitted"
+                    and observation.native_fact is not None):
+                self._record_native_result(prior.request, observation.native_fact)
+                refreshed = self.journal.read(prior.request)
+                if refreshed is not None:
+                    prior = refreshed
+            return SubmissionResult(prior.request, result, prior, replayed=True)
+    
+        declaration = self.declaration
+        if not callable(getattr(self.native_submit_port, "resolve_binding", None)):
+            raise ReliableSubmissionUnsupported("native submit adapter cannot resolve an owner binding")
+        try:
+            binding = self.native_submit_port.resolve_binding(item.target)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native owner binding is unavailable: {exc}"
+            ) from exc
+        self._validate_binding(item, declaration, binding)
+        method_name = "submit_existing" if item.mode == "existing" else "create_with_config"
+        if not callable(getattr(self.native_submit_port, method_name, None)):
+            raise ReliableSubmissionUnsupported(
+                f"native adapter does not implement declared conditional {item.mode} submission"
+            )
+        if not callable(getattr(self.native_submit_port, "query", None)):
+            raise ReliableSubmissionUnsupported("native submit adapter has no read-only query surface")
+        try:
+            environment_binding = self.environment.bind(binding.surface_id)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native binding is not an active Environment capability: {exc}"
+            ) from exc
+        if environment_binding.environment != self.environment.environment_id:
+            raise ReliableSubmissionUnsupported("Environment binding identity does not match the composed Environment")
+        preflight = getattr(self.environment, "check_invocation", None)
+        if not callable(preflight):
+            raise ReliableSubmissionUnsupported(
+                "Environment has no reliable effect preflight; submission remains unsupported"
+            )
+        preflight_result = preflight(
+            binding.surface_id,
+            guarantee=GuaranteeLevel.RELIABLE,
+            principal=item.principal_scope,
+            effect=True,
+        )
+        backend_durable = getattr(preflight_result, "backend_durable", False) is True
+        if not backend_durable:
+            raise ReliableSubmissionUnsupported(
+                "Environment did not declare durable reliable dispatch support"
+            )
+    
+        owners = self.owners.owners_of(item.target)
+        if owners is None or "config" not in owners:
+            raise ReliableSubmissionUnsupported("Agent target has no registered configuration owner")
+        config_owner = owners["config"]
+        capture_configuration = getattr(config_owner, "capture_configuration", None)
+        if not callable(capture_configuration):
+>           raise ReliableSubmissionUnsupported(
+                "configuration owner cannot atomically capture its snapshot and operations"
+            )
+E           ordessa_agent.submission_journal.ReliableSubmissionUnsupported: configuration owner cannot atomically capture its snapshot and operations
+
+plugins/agent/backend/src/ordessa_agent/submission_service.py:249: ReliableSubmissionUnsupported
+_____ test_frontend_outcome_claim_is_not_capture_or_native_result_evidence _____
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-824/test_frontend_outcome_claim_is0')
+
+    def test_frontend_outcome_claim_is_not_capture_or_native_result_evidence(tmp_path):
+        service, _, journal, port, backend_store, domain_store = _service(tmp_path)
+        forged = _input()
+        forged = SubmissionInput(
+            submission_id=forged.submission_id,
+            principal_scope=forged.principal_scope,
+            target=forged.target,
+            mode=forged.mode,
+            draft={**forged.draft, "outcome": "accepted"},
+            config_operation_ids=forged.config_operation_ids,
+            schema=forged.schema,
+        )
+        try:
+>           with pytest.raises(ReliableSubmissionUnsupported, match="undeclared fields"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AssertionError: Regex pattern did not match.
+E             Expected regex: 'undeclared fields'
+E             Actual message: 'configuration owner cannot atomically capture its snapshot and operations'
+
+plugins/agent/backend/tests/test_closeout_submission_service.py:320: AssertionError
+_ test_unknown_native_answer_is_query_only_and_same_key_is_never_redispatched __
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-824/test_unknown_native_answer_is_0')
+
+    def test_unknown_native_answer_is_query_only_and_same_key_is_never_redispatched(tmp_path):
+        service, environment, journal, port, backend_store, domain_store = _service(
+            tmp_path, lose_answer=True,
+        )
+        try:
+>           first = service.submit(_input())
+                    ^^^^^^^^^^^^^^^^^^^^^^^^
+
+plugins/agent/backend/tests/test_closeout_submission_service.py:334: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_agent.submission_service.AgentSubmissionService object at 0x7e6df340b590>
+item = SubmissionInput(submission_id='submission-1', principal_scope='user:local:agent-test', target='session:S1', mode='exis...text': 'hello', 'attachmentIds': ['attachment-1']}, config_operation_ids=('op-session:S1-1',), schema='agent-input/v1')
+
+    def submit(self, item: SubmissionInput) -> SubmissionResult:
+        """Run a new captured submission or query an existing stable request.
+    
+        Any prior journal mapping takes the query-only branch. The branch first
+        checks the caller-supplied text/draft/config intent against the frozen
+        capture, then reads the original backend key and native owner. It never
+        resolves a replacement binding or invokes a second submit.
+        """
+        self._validate_input(item)
+        prior = self._find_prior(item)
+        if prior is not None:
+            self._assert_retry_matches(prior, item)
+            observation = self.query(item.target, item.submission_id, item.principal_scope)
+            if observation is None:
+                return SubmissionResult(prior.request, "unknown", prior, replayed=True)
+            result = self._result_from_observation(prior, observation.native_fact)
+            if (result in ("accepted", "known-rejected")
+                    and prior.stage == "possibly-submitted"
+                    and observation.native_fact is not None):
+                self._record_native_result(prior.request, observation.native_fact)
+                refreshed = self.journal.read(prior.request)
+                if refreshed is not None:
+                    prior = refreshed
+            return SubmissionResult(prior.request, result, prior, replayed=True)
+    
+        declaration = self.declaration
+        if not callable(getattr(self.native_submit_port, "resolve_binding", None)):
+            raise ReliableSubmissionUnsupported("native submit adapter cannot resolve an owner binding")
+        try:
+            binding = self.native_submit_port.resolve_binding(item.target)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native owner binding is unavailable: {exc}"
+            ) from exc
+        self._validate_binding(item, declaration, binding)
+        method_name = "submit_existing" if item.mode == "existing" else "create_with_config"
+        if not callable(getattr(self.native_submit_port, method_name, None)):
+            raise ReliableSubmissionUnsupported(
+                f"native adapter does not implement declared conditional {item.mode} submission"
+            )
+        if not callable(getattr(self.native_submit_port, "query", None)):
+            raise ReliableSubmissionUnsupported("native submit adapter has no read-only query surface")
+        try:
+            environment_binding = self.environment.bind(binding.surface_id)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native binding is not an active Environment capability: {exc}"
+            ) from exc
+        if environment_binding.environment != self.environment.environment_id:
+            raise ReliableSubmissionUnsupported("Environment binding identity does not match the composed Environment")
+        preflight = getattr(self.environment, "check_invocation", None)
+        if not callable(preflight):
+            raise ReliableSubmissionUnsupported(
+                "Environment has no reliable effect preflight; submission remains unsupported"
+            )
+        preflight_result = preflight(
+            binding.surface_id,
+            guarantee=GuaranteeLevel.RELIABLE,
+            principal=item.principal_scope,
+            effect=True,
+        )
+        backend_durable = getattr(preflight_result, "backend_durable", False) is True
+        if not backend_durable:
+            raise ReliableSubmissionUnsupported(
+                "Environment did not declare durable reliable dispatch support"
+            )
+    
+        owners = self.owners.owners_of(item.target)
+        if owners is None or "config" not in owners:
+            raise ReliableSubmissionUnsupported("Agent target has no registered configuration owner")
+        config_owner = owners["config"]
+        capture_configuration = getattr(config_owner, "capture_configuration", None)
+        if not callable(capture_configuration):
+>           raise ReliableSubmissionUnsupported(
+                "configuration owner cannot atomically capture its snapshot and operations"
+            )
+E           ordessa_agent.submission_journal.ReliableSubmissionUnsupported: configuration owner cannot atomically capture its snapshot and operations
+
+plugins/agent/backend/src/ordessa_agent/submission_service.py:249: ReliableSubmissionUnsupported
+_______ test_query_rejects_a_different_target_for_an_existing_submission _______
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-824/test_query_rejects_a_different0')
+
+    def test_query_rejects_a_different_target_for_an_existing_submission(tmp_path):
+        service, _, _, _, backend_store, domain_store = _service(tmp_path)
+        try:
+>           service.submit(_input())
+
+plugins/agent/backend/tests/test_closeout_submission_service.py:360: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_agent.submission_service.AgentSubmissionService object at 0x7e6df31506b0>
+item = SubmissionInput(submission_id='submission-1', principal_scope='user:local:agent-test', target='session:S1', mode='exis...text': 'hello', 'attachmentIds': ['attachment-1']}, config_operation_ids=('op-session:S1-1',), schema='agent-input/v1')
+
+    def submit(self, item: SubmissionInput) -> SubmissionResult:
+        """Run a new captured submission or query an existing stable request.
+    
+        Any prior journal mapping takes the query-only branch. The branch first
+        checks the caller-supplied text/draft/config intent against the frozen
+        capture, then reads the original backend key and native owner. It never
+        resolves a replacement binding or invokes a second submit.
+        """
+        self._validate_input(item)
+        prior = self._find_prior(item)
+        if prior is not None:
+            self._assert_retry_matches(prior, item)
+            observation = self.query(item.target, item.submission_id, item.principal_scope)
+            if observation is None:
+                return SubmissionResult(prior.request, "unknown", prior, replayed=True)
+            result = self._result_from_observation(prior, observation.native_fact)
+            if (result in ("accepted", "known-rejected")
+                    and prior.stage == "possibly-submitted"
+                    and observation.native_fact is not None):
+                self._record_native_result(prior.request, observation.native_fact)
+                refreshed = self.journal.read(prior.request)
+                if refreshed is not None:
+                    prior = refreshed
+            return SubmissionResult(prior.request, result, prior, replayed=True)
+    
+        declaration = self.declaration
+        if not callable(getattr(self.native_submit_port, "resolve_binding", None)):
+            raise ReliableSubmissionUnsupported("native submit adapter cannot resolve an owner binding")
+        try:
+            binding = self.native_submit_port.resolve_binding(item.target)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native owner binding is unavailable: {exc}"
+            ) from exc
+        self._validate_binding(item, declaration, binding)
+        method_name = "submit_existing" if item.mode == "existing" else "create_with_config"
+        if not callable(getattr(self.native_submit_port, method_name, None)):
+            raise ReliableSubmissionUnsupported(
+                f"native adapter does not implement declared conditional {item.mode} submission"
+            )
+        if not callable(getattr(self.native_submit_port, "query", None)):
+            raise ReliableSubmissionUnsupported("native submit adapter has no read-only query surface")
+        try:
+            environment_binding = self.environment.bind(binding.surface_id)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native binding is not an active Environment capability: {exc}"
+            ) from exc
+        if environment_binding.environment != self.environment.environment_id:
+            raise ReliableSubmissionUnsupported("Environment binding identity does not match the composed Environment")
+        preflight = getattr(self.environment, "check_invocation", None)
+        if not callable(preflight):
+            raise ReliableSubmissionUnsupported(
+                "Environment has no reliable effect preflight; submission remains unsupported"
+            )
+        preflight_result = preflight(
+            binding.surface_id,
+            guarantee=GuaranteeLevel.RELIABLE,
+            principal=item.principal_scope,
+            effect=True,
+        )
+        backend_durable = getattr(preflight_result, "backend_durable", False) is True
+        if not backend_durable:
+            raise ReliableSubmissionUnsupported(
+                "Environment did not declare durable reliable dispatch support"
+            )
+    
+        owners = self.owners.owners_of(item.target)
+        if owners is None or "config" not in owners:
+            raise ReliableSubmissionUnsupported("Agent target has no registered configuration owner")
+        config_owner = owners["config"]
+        capture_configuration = getattr(config_owner, "capture_configuration", None)
+        if not callable(capture_configuration):
+>           raise ReliableSubmissionUnsupported(
+                "configuration owner cannot atomically capture its snapshot and operations"
+            )
+E           ordessa_agent.submission_journal.ReliableSubmissionUnsupported: configuration owner cannot atomically capture its snapshot and operations
+
+plugins/agent/backend/src/ordessa_agent/submission_service.py:249: ReliableSubmissionUnsupported
+___________ test_simultaneous_same_request_enters_native_effect_once ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-824/test_simultaneous_same_request0')
+
+    def test_simultaneous_same_request_enters_native_effect_once(tmp_path):
+        barrier = Barrier(2)
+        service, _, journal, port, backend_store, domain_store = _service(
+            tmp_path, binding_barrier=barrier,
+        )
+        try:
+            with ThreadPoolExecutor(max_workers=2) as pool:
+>               results = list(pool.map(lambda _: service.submit(_input()), range(2)))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+plugins/agent/backend/tests/test_closeout_submission_service.py:374: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py:619: in result_iterator
+    yield _result_or_cancel(fs.pop())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py:317: in _result_or_cancel
+    return fut.result(timeout)
+           ^^^^^^^^^^^^^^^^^^^
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/concurrent/futures/thread.py:59: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/agent/backend/tests/test_closeout_submission_service.py:374: in <lambda>
+    results = list(pool.map(lambda _: service.submit(_input()), range(2)))
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_agent.submission_service.AgentSubmissionService object at 0x7e6df340b140>
+item = SubmissionInput(submission_id='submission-1', principal_scope='user:local:agent-test', target='session:S1', mode='exis...text': 'hello', 'attachmentIds': ['attachment-1']}, config_operation_ids=('op-session:S1-1',), schema='agent-input/v1')
+
+    def submit(self, item: SubmissionInput) -> SubmissionResult:
+        """Run a new captured submission or query an existing stable request.
+    
+        Any prior journal mapping takes the query-only branch. The branch first
+        checks the caller-supplied text/draft/config intent against the frozen
+        capture, then reads the original backend key and native owner. It never
+        resolves a replacement binding or invokes a second submit.
+        """
+        self._validate_input(item)
+        prior = self._find_prior(item)
+        if prior is not None:
+            self._assert_retry_matches(prior, item)
+            observation = self.query(item.target, item.submission_id, item.principal_scope)
+            if observation is None:
+                return SubmissionResult(prior.request, "unknown", prior, replayed=True)
+            result = self._result_from_observation(prior, observation.native_fact)
+            if (result in ("accepted", "known-rejected")
+                    and prior.stage == "possibly-submitted"
+                    and observation.native_fact is not None):
+                self._record_native_result(prior.request, observation.native_fact)
+                refreshed = self.journal.read(prior.request)
+                if refreshed is not None:
+                    prior = refreshed
+            return SubmissionResult(prior.request, result, prior, replayed=True)
+    
+        declaration = self.declaration
+        if not callable(getattr(self.native_submit_port, "resolve_binding", None)):
+            raise ReliableSubmissionUnsupported("native submit adapter cannot resolve an owner binding")
+        try:
+            binding = self.native_submit_port.resolve_binding(item.target)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native owner binding is unavailable: {exc}"
+            ) from exc
+        self._validate_binding(item, declaration, binding)
+        method_name = "submit_existing" if item.mode == "existing" else "create_with_config"
+        if not callable(getattr(self.native_submit_port, method_name, None)):
+            raise ReliableSubmissionUnsupported(
+                f"native adapter does not implement declared conditional {item.mode} submission"
+            )
+        if not callable(getattr(self.native_submit_port, "query", None)):
+            raise ReliableSubmissionUnsupported("native submit adapter has no read-only query surface")
+        try:
+            environment_binding = self.environment.bind(binding.surface_id)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native binding is not an active Environment capability: {exc}"
+            ) from exc
+        if environment_binding.environment != self.environment.environment_id:
+            raise ReliableSubmissionUnsupported("Environment binding identity does not match the composed Environment")
+        preflight = getattr(self.environment, "check_invocation", None)
+        if not callable(preflight):
+            raise ReliableSubmissionUnsupported(
+                "Environment has no reliable effect preflight; submission remains unsupported"
+            )
+        preflight_result = preflight(
+            binding.surface_id,
+            guarantee=GuaranteeLevel.RELIABLE,
+            principal=item.principal_scope,
+            effect=True,
+        )
+        backend_durable = getattr(preflight_result, "backend_durable", False) is True
+        if not backend_durable:
+            raise ReliableSubmissionUnsupported(
+                "Environment did not declare durable reliable dispatch support"
+            )
+    
+        owners = self.owners.owners_of(item.target)
+        if owners is None or "config" not in owners:
+            raise ReliableSubmissionUnsupported("Agent target has no registered configuration owner")
+        config_owner = owners["config"]
+        capture_configuration = getattr(config_owner, "capture_configuration", None)
+        if not callable(capture_configuration):
+>           raise ReliableSubmissionUnsupported(
+                "configuration owner cannot atomically capture its snapshot and operations"
+            )
+E           ordessa_agent.submission_journal.ReliableSubmissionUnsupported: configuration owner cannot atomically capture its snapshot and operations
+
+plugins/agent/backend/src/ordessa_agent/submission_service.py:249: ReliableSubmissionUnsupported
+_______ test_configuration_capture_requires_exact_pending_operation_set ________
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-824/test_configuration_capture_req0')
+
+    def test_configuration_capture_requires_exact_pending_operation_set(tmp_path):
+        service, _, journal, port, backend_store, domain_store = _service(tmp_path)
+        try:
+            service.owners.owners_of("session:S1")["config"].submit_operation(
+                {"temperature": 0.4}, "late-profile-selection",
+            )
+>           with pytest.raises(ReliableSubmissionUnsupported, match="exactly capture"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AssertionError: Regex pattern did not match.
+E             Expected regex: 'exactly capture'
+E             Actual message: 'configuration owner cannot atomically capture its snapshot and operations'
+
+plugins/agent/backend/tests/test_closeout_submission_service.py:392: AssertionError
+_______ test_config_free_submission_allows_empty_owner_operation_capture _______
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-824/test_config_free_submission_al0')
+
+    def test_config_free_submission_allows_empty_owner_operation_capture(tmp_path):
+        service, _, journal, port, backend_store, domain_store = _service(
+            tmp_path, create_config_operation=False,
+        )
+        try:
+>           result = service.submit(_input(config_operation_ids=()))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+plugins/agent/backend/tests/test_closeout_submission_service.py:406: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_agent.submission_service.AgentSubmissionService object at 0x7e6df30a4e90>
+item = SubmissionInput(submission_id='submission-1', principal_scope='user:local:agent-test', target='session:S1', mode='exis...aftRevision': 7, 'text': 'hello', 'attachmentIds': ['attachment-1']}, config_operation_ids=(), schema='agent-input/v1')
+
+    def submit(self, item: SubmissionInput) -> SubmissionResult:
+        """Run a new captured submission or query an existing stable request.
+    
+        Any prior journal mapping takes the query-only branch. The branch first
+        checks the caller-supplied text/draft/config intent against the frozen
+        capture, then reads the original backend key and native owner. It never
+        resolves a replacement binding or invokes a second submit.
+        """
+        self._validate_input(item)
+        prior = self._find_prior(item)
+        if prior is not None:
+            self._assert_retry_matches(prior, item)
+            observation = self.query(item.target, item.submission_id, item.principal_scope)
+            if observation is None:
+                return SubmissionResult(prior.request, "unknown", prior, replayed=True)
+            result = self._result_from_observation(prior, observation.native_fact)
+            if (result in ("accepted", "known-rejected")
+                    and prior.stage == "possibly-submitted"
+                    and observation.native_fact is not None):
+                self._record_native_result(prior.request, observation.native_fact)
+                refreshed = self.journal.read(prior.request)
+                if refreshed is not None:
+                    prior = refreshed
+            return SubmissionResult(prior.request, result, prior, replayed=True)
+    
+        declaration = self.declaration
+        if not callable(getattr(self.native_submit_port, "resolve_binding", None)):
+            raise ReliableSubmissionUnsupported("native submit adapter cannot resolve an owner binding")
+        try:
+            binding = self.native_submit_port.resolve_binding(item.target)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native owner binding is unavailable: {exc}"
+            ) from exc
+        self._validate_binding(item, declaration, binding)
+        method_name = "submit_existing" if item.mode == "existing" else "create_with_config"
+        if not callable(getattr(self.native_submit_port, method_name, None)):
+            raise ReliableSubmissionUnsupported(
+                f"native adapter does not implement declared conditional {item.mode} submission"
+            )
+        if not callable(getattr(self.native_submit_port, "query", None)):
+            raise ReliableSubmissionUnsupported("native submit adapter has no read-only query surface")
+        try:
+            environment_binding = self.environment.bind(binding.surface_id)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native binding is not an active Environment capability: {exc}"
+            ) from exc
+        if environment_binding.environment != self.environment.environment_id:
+            raise ReliableSubmissionUnsupported("Environment binding identity does not match the composed Environment")
+        preflight = getattr(self.environment, "check_invocation", None)
+        if not callable(preflight):
+            raise ReliableSubmissionUnsupported(
+                "Environment has no reliable effect preflight; submission remains unsupported"
+            )
+        preflight_result = preflight(
+            binding.surface_id,
+            guarantee=GuaranteeLevel.RELIABLE,
+            principal=item.principal_scope,
+            effect=True,
+        )
+        backend_durable = getattr(preflight_result, "backend_durable", False) is True
+        if not backend_durable:
+            raise ReliableSubmissionUnsupported(
+                "Environment did not declare durable reliable dispatch support"
+            )
+    
+        owners = self.owners.owners_of(item.target)
+        if owners is None or "config" not in owners:
+            raise ReliableSubmissionUnsupported("Agent target has no registered configuration owner")
+        config_owner = owners["config"]
+        capture_configuration = getattr(config_owner, "capture_configuration", None)
+        if not callable(capture_configuration):
+>           raise ReliableSubmissionUnsupported(
+                "configuration owner cannot atomically capture its snapshot and operations"
+            )
+E           ordessa_agent.submission_journal.ReliableSubmissionUnsupported: configuration owner cannot atomically capture its snapshot and operations
+
+plugins/agent/backend/src/ordessa_agent/submission_service.py:249: ReliableSubmissionUnsupported
+=========================== short test summary info ============================
+FAILED plugins/agent/backend/tests/test_closeout_submission_service.py::test_existing_submission_uses_environment_once_and_persists_separate_domain_facts
+FAILED plugins/agent/backend/tests/test_closeout_submission_service.py::test_same_request_id_with_changed_immutable_input_conflicts_without_second_effect
+FAILED plugins/agent/backend/tests/test_closeout_submission_service.py::test_frontend_outcome_claim_is_not_capture_or_native_result_evidence
+FAILED plugins/agent/backend/tests/test_closeout_submission_service.py::test_unknown_native_answer_is_query_only_and_same_key_is_never_redispatched
+FAILED plugins/agent/backend/tests/test_closeout_submission_service.py::test_query_rejects_a_different_target_for_an_existing_submission
+FAILED plugins/agent/backend/tests/test_closeout_submission_service.py::test_simultaneous_same_request_enters_native_effect_once
+FAILED plugins/agent/backend/tests/test_closeout_submission_service.py::test_configuration_capture_requires_exact_pending_operation_set
+FAILED plugins/agent/backend/tests/test_closeout_submission_service.py::test_config_free_submission_allows_empty_owner_operation_capture
+8 failed, 4 passed in 0.28s

@@ -1,0 +1,30 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts
+
+ ❯ tests/closeout-observation-gap.test.ts (1 test | 1 failed) 7ms
+   × repeating a pre-gap snapshot cannot unlock a configuration capture 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-observation-gap.test.ts > repeating a pre-gap snapshot cannot unlock a configuration capture
+AssertionError: expected 'ready' to be 'unknown' // Object.is equality
+
+Expected: "unknown"
+Received: "ready"
+
+ ❯ tests/closeout-observation-gap.test.ts:19:43
+     17|   expect(projection.getSnapshot().status).toBe('ready')
+     18|   fail?.('gap')
+     19|   expect(projection.getSnapshot().status).toBe('unknown')
+       |                                           ^
+     20|   await projection.refresh()
+     21|   expect(projection.getSnapshot().status).toBe('unknown')
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  10:46:36
+   Duration  375ms (transform 74ms, setup 0ms, import 92ms, tests 7ms, environment 0ms)
+

@@ -27,7 +27,10 @@ def test_native_product_shared_agent_owner_uses_verified_native_binding(monkeypa
         controlled=controlled_native(monkeypatch,runtime)
         binding=bind_native(controlled)
         result=runtime.wire.dispatch('agent.session.resolve',{'location':{
-            'kind':'session','connectionId':'connection','sessionId':'s-1'}})
+            'kind':'session','connectionId':'connection','sessionId':'s-1'},
+            'nativeOwner':{'sessionId':'s-1','connectionId':'connection','nativeSessionId':'s-1',
+                'serverInstanceId':runtime.owner.instance_id,'harnessId':controlled.channel.harness_id,
+                'workspaceId':controlled.channel.workspace_id}})
         target=result['target']
         assert target==binding.snapshot.target.session_id
         runtime.wire.dispatch('agent.config.submitOperation',{'target':target,'patch':{'model':'M1','prompt':'A'}})

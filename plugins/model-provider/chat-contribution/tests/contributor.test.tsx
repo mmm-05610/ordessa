@@ -269,7 +269,8 @@ describe('contribution registration semantics (contract stub)', () => {
     cleanup.push(() => ui.dispose())
     createPlugin().activate(
       { root: { mount: () => ({ dispose() {} }) }, resources } as never,
-      chat, ui.uiComponents, port as never, fakeService())
+      chat, ui.uiComponents, port as never, fakeService(),
+      { getSnapshot: () => ({ runtimeGeneration: 0 }), subscribe: () => () => undefined } as never)
     const [view] = chat.contributionsBySlot('composer.toolbar').getSnapshot()
     expect(view).toBeDefined()
     expect(view.id).toBe(MODEL_SELECTOR_ID)

@@ -1,0 +1,71 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts
+
+ ❯ tests/closeout-wire-native-owner.test.ts (2 tests | 2 failed) 24ms
+     × resolves a route key only through its distinct connector-observed native owner 18ms
+     × fails closed before wire resolution when a session location has no trusted owner lookup 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-wire-native-owner.test.ts > wire configuration native owner bridge > resolves a route key only through its distinct connector-observed native owner
+AssertionError: expected [] to deeply equal [ { kind: 'session', …(5) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "connectionId": "connection-7",
+-     "contextRevision": 12,
+-     "harnessId": "acp",
+-     "kind": "session",
+-     "serverInstanceId": "server-2",
+-     "sessionId": "connection-7:native-route-4",
+-   },
+- ]
++ []
+
+ ❯ tests/closeout-wire-native-owner.test.ts:64:25
+     62|     const projection = await client.forLocation(location)
+     63|
+     64|     expect(lookupCalls).toEqual([location])
+       |                         ^
+     65|     const resolve = calls.find(call => call.method === 'agent.session.…
+     66|     expect(resolve?.params.nativeOwner).toEqual(nativeOwner)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/closeout-wire-native-owner.test.ts > wire configuration native owner bridge > fails closed before wire resolution when a session location has no trusted owner lookup
+AssertionError: promise resolved "{ …(7) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "close": [Function close],
++   "dispatch": [Function dispatch],
++   "dispose": [Function dispose],
++   "getSnapshot": [Function getSnapshot],
++   "refresh": [Function refresh],
++   "retire": [Function retire],
++   "subscribe": [Function subscribe],
+  }
+
+ ❯ tests/closeout-wire-native-owner.test.ts:81:47
+     79|     const client = createWireConfigurationClient({ wire: wire(calls), …
+     80|
+     81|     await expect(client.forLocation(location)).rejects.toThrow(/native…
+       |                                               ^
+     82|
+     83|     expect(calls).toEqual([])
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  12:14:39
+   Duration  434ms (transform 91ms, setup 0ms, import 119ms, tests 24ms, environment 0ms)
+

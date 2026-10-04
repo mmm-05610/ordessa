@@ -1,3 +1,7 @@
+## 013 前端 C2 源码检查点（发行与浏览器恢复未验）
+
+生产 Chat 已接 Agent 域严格持久 mapping→possibly-submitted→一次派发链及原 key 查询；点击时冻结可信条件，后端 CAS 对比。源码合同89P、Chat94P、Agent/产品70P、ACP67P及受控集成89P、typecheck退出0；逐场景/失败/限制见 evidence/closeout-20261004/frontend-c2-checkpoint.md。没有凭源码绿勾完整任务：仍107/129，IndexedDB强退/干净发行主链下一ready，UI01继续独立排队。检查点后继续，不等待普通决策确认。
+
 ## 013 生命周期与恢复检查点（最新）
 
 同一 Environment 的 host owner 生命周期已补齐；中性装配保持五参数与 state/core.sqlite。23 场景装配/生命周期和 63 场景门禁/提交恢复分别通过，均零 skip；附件与只读恢复组合 57 通过。完整证据及失败保留见 evidence/closeout-20261004/lifecycle-recovery-checkpoint.md。原任务仍 107/129，端到端前端提交与发行未完成；UI01 独立排队，历史验收不抵新增覆盖。

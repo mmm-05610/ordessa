@@ -188,3 +188,8 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 - [ ] T012-11 回归E3/E4/E5/A1和插件结构A66–A95全部必需场景，扫描第二关系/命令/配置权威及核心业务import；更新目录文档与剩余compat退出清单。
 - [ ] T012-12 从干净发行产物运行F5 API/React出口、独立插件和存储fixture，覆盖A107/A110；不以仓库源码或模块单例补发行/跨窗口保证。
 - [ ] T012-13 逐项回归A96–A111并执行A108/A111真实Electron输入/通知/焦点/UI恢复验收，记录资源缺席；更新公共接口、例子、依赖图及未验项。（A96–A107/A109/A110 回归绿；A108/A111 缺授权未验——见 evidence/t012-13-regression.md）
+
+
+## 013 C2源码检查点增补（不替换上方原任务/旧记录）
+
+T010-12/T011-02/03/05/06 增量：同一Backend owner公开投影、完整条件capture、IndexedDB durable mapping/spent marker、原key query-only及冷恢复scope已实现，源码测试见 evidence/closeout-20261004/frontend-c2-checkpoint.md。浏览器真实持久强退和发行两产品闭环仍未验，原未完成框不勾；107/129不变。T012-09/12实际产物与F5消费者下一ready。UI-T01–08/UI-A01–12仍在独立ledger，不重编号/不抵原验收。

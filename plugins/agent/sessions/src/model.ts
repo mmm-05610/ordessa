@@ -2,6 +2,7 @@ import type { ResourceScope } from '@ordessa/extension-api'
 import type {
   AgentAttachmentPreparation, AgentClient, AgentCommandCatalog, AgentConnections, AgentPreparedAttachment,
   AgentSessions, AgentSnapshot, AgentSubmissionOutcome, AgentWorkspaceSnapshot, AgentNativeSessionOwner,
+  AgentSessionLocation,
 } from '@extensions/ordessa.agent-contracts/contract.js'
 
 /** Thin delegate facade: client holding, selection, and reconnection live in the connections
@@ -156,6 +157,23 @@ export function createAgentSessions(lifetime: ResourceScope, connections: AgentC
       if (state.requestId === attemptId) state.prepared = { client, owner }
       if (workspace.selected() !== client || !state.draftActive
           || selectionRevision !== capturedRevision || client.getSnapshot().workspaces?.selectedWorkspaceId !== projectId) throw Error('Draft context changed during preparation')
+      return owner
+    },
+    nativeOwnerForLocation: (location: AgentSessionLocation) => {
+      if (location.kind !== 'session' || !location.sessionId || !location.connectionId)
+        throw Error('Native owner lookup requires an exact existing session route')
+      const connectionId = workspace.getSnapshot().selectedConnectionId
+      if (!connectionId || connectionId !== location.connectionId)
+        throw Error('Native owner route belongs to a different Agent connection')
+      const client = workspace.selected()
+      if (!client.nativeSessionOwner) throw Error('Native owner lookup unavailable on this connection')
+      const owner = client.nativeSessionOwner(location.sessionId)
+      const serverInstanceId = client.getSnapshot().connection.serverInstanceId
+      if (owner.sessionId !== location.sessionId
+          || (serverInstanceId && owner.serverInstanceId !== serverInstanceId)
+          || (location.serverInstanceId && owner.serverInstanceId !== location.serverInstanceId)
+          || (location.harnessId && owner.harnessId !== location.harnessId))
+        throw Error('Native owner route identity changed')
       return owner
     },
     // Legacy passthrough kept type-compatible for the direct prototypes; the CP UI never calls it (FC-0021).

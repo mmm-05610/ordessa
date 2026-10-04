@@ -1,0 +1,131 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+_ test_capture_conditions_returns_complete_trusted_descriptor_without_effects __
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-857/test_capture_conditions_return0')
+
+    def test_capture_conditions_returns_complete_trusted_descriptor_without_effects(tmp_path):
+        service, environment, journal, port, backend_store, domain_store = _service(tmp_path)
+        try:
+>           descriptor = service.capture_conditions(
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+                "session:S1", "existing", principal_scope="user:local:agent-test",
+            )
+E           AttributeError: 'AgentSubmissionService' object has no attribute 'capture_conditions'
+
+plugins/agent/backend/tests/test_closeout_capture_conditions.py:20: AttributeError
+_ test_same_pending_operation_ids_with_new_config_revision_refuse_before_mapping _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-857/test_same_pending_operation_id0')
+
+    def test_same_pending_operation_ids_with_new_config_revision_refuse_before_mapping(tmp_path):
+        service, _, journal, port, backend_store, domain_store = _service(tmp_path)
+        try:
+>           expected = service.capture_conditions(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+                "session:S1", "existing", principal_scope="user:local:agent-test",
+            )
+E           AttributeError: 'AgentSubmissionService' object has no attribute 'capture_conditions'
+
+plugins/agent/backend/tests/test_closeout_capture_conditions.py:52: AttributeError
+_ test_changed_native_base_revision_refuses_expected_conditions_before_mapping _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-857/test_changed_native_base_revis0')
+
+    def test_changed_native_base_revision_refuses_expected_conditions_before_mapping(tmp_path):
+        service, _, journal, port, backend_store, domain_store = _service(tmp_path)
+        try:
+>           expected = service.capture_conditions(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+                "session:S1", "existing", principal_scope="user:local:agent-test",
+            )
+E           AttributeError: 'AgentSubmissionService' object has no attribute 'capture_conditions'
+
+plugins/agent/backend/tests/test_closeout_capture_conditions.py:76: AttributeError
+_ test_existing_request_compares_expected_conditions_to_frozen_capture_query_only _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-857/test_existing_request_compares0')
+
+    def test_existing_request_compares_expected_conditions_to_frozen_capture_query_only(tmp_path):
+        service, _, _, port, backend_store, domain_store = _service(tmp_path)
+        try:
+            first = service.submit(_input())
+            capture = __import__("json").loads(first.record.encoded_input)["capture"]
+            frozen = {
+                "binding": capture["binding"],
+                "baseRevision": capture["baseRevision"],
+                "sourceRevision": capture["target"]["config"]["revision"],
+                "configOwnerRef": capture["target"]["config"]["ownerRef"],
+            }
+            changed = {**frozen, "baseRevision": "different-base"}
+            calls_before = port.query_calls
+    
+            with pytest.raises(JournalConflictError, match="condition"):
+>               service.submit(replace(_input(), expected_conditions=changed))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+plugins/agent/backend/tests/test_closeout_capture_conditions.py:118: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+obj = SubmissionInput(submission_id='submission-1', principal_scope='user:local:agent-test', target='session:S1', mode='exis...text': 'hello', 'attachmentIds': ['attachment-1']}, config_operation_ids=('op-session:S1-1',), schema='agent-input/v1')
+changes = {'expected_conditions': {'binding': {'environment': 'env-agent-service', 'environmentContextRevision': 'cr-1', 'genera...session:S1'}, 'submission_id': 'submission-1', 'principal_scope': 'user:local:agent-test', 'target': 'session:S1', ...}
+
+    def replace(obj, /, **changes):
+        """Return a new object replacing specified fields with new values.
+    
+        This is especially useful for frozen classes.  Example usage::
+    
+          @dataclass(frozen=True)
+          class C:
+              x: int
+              y: int
+    
+          c = C(1, 2)
+          c1 = replace(c, x=3)
+          assert c1.x == 3 and c1.y == 2
+        """
+    
+        # We're going to mutate 'changes', but that's okay because it's a
+        # new dict, even if called with 'replace(obj, **my_changes)'.
+    
+        if not _is_dataclass_instance(obj):
+            raise TypeError("replace() should be called on dataclass instances")
+    
+        # It's an error to have init=False fields in 'changes'.
+        # If a field is not in 'changes', read its value from the provided obj.
+    
+        for f in getattr(obj, _FIELDS).values():
+            # Only consider normal fields or InitVars.
+            if f._field_type is _FIELD_CLASSVAR:
+                continue
+    
+            if not f.init:
+                # Error if this field is specified in changes.
+                if f.name in changes:
+                    raise ValueError(f'field {f.name} is declared with '
+                                     'init=False, it cannot be specified with '
+                                     'replace()')
+                continue
+    
+            if f.name not in changes:
+                if f._field_type is _FIELD_INITVAR and f.default is MISSING:
+                    raise ValueError(f"InitVar {f.name!r} "
+                                     'must be specified with replace()')
+                changes[f.name] = getattr(obj, f.name)
+    
+        # Create the new object, which calls __init__() and
+        # __post_init__() (if defined), using all of the init fields we've
+        # added and/or left in 'changes'.  If there are values supplied in
+        # changes that aren't fields, this will correctly raise a
+        # TypeError.
+>       return obj.__class__(**changes)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: SubmissionInput.__init__() got an unexpected keyword argument 'expected_conditions'
+
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/dataclasses.py:1588: TypeError
+=========================== short test summary info ============================
+FAILED plugins/agent/backend/tests/test_closeout_capture_conditions.py::test_capture_conditions_returns_complete_trusted_descriptor_without_effects
+FAILED plugins/agent/backend/tests/test_closeout_capture_conditions.py::test_same_pending_operation_ids_with_new_config_revision_refuse_before_mapping
+FAILED plugins/agent/backend/tests/test_closeout_capture_conditions.py::test_changed_native_base_revision_refuses_expected_conditions_before_mapping
+FAILED plugins/agent/backend/tests/test_closeout_capture_conditions.py::test_existing_request_compares_expected_conditions_to_frozen_capture_query_only
+4 failed in 0.13s

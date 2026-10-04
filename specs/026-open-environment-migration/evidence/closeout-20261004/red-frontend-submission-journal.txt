@@ -1,0 +1,24 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts
+
+ ❯ tests/frontend-submission-journal.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/frontend-submission-journal.test.ts [ tests/frontend-submission-journal.test.ts ]
+Error: Cannot find module '../src/frontend-submission-journal' imported from /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts/tests/frontend-submission-journal.test.ts
+ ❯ tests/frontend-submission-journal.test.ts:2:1
+      1| import { beforeEach, describe, expect, it, vi } from 'vitest'
+      2| import {
+       | ^
+      3|   createFrontendSubmissionJournal,
+      4|   type FrontendSubmissionCapture,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  13:48:42
+   Duration  358ms (transform 47ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+

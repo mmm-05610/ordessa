@@ -1,0 +1,1 @@
+{"ready":true,"pages":[],"views":[],"rootText":"Desktop 已启动尚无根界面，请启用一个工作台扩展。命令面板设置关于","activeElement":"BODY:","rootMounted":false,"emptyHost":true,"errors":[],"starting":[],"nodeAbsent":true,"bridgeKeys":["read"],"activeElementAfterTab":"BUTTON:"}

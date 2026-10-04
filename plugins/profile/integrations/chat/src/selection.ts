@@ -34,7 +34,7 @@ import {
   createLocalAgentOwnerPort,
   type ConfigSnapshotView,
   type LocalAgentOwnerPort,
-} from '@ordessa/agent-contracts'
+} from '@extensions/ordessa.agent-contracts/contract.js'
 import type {
   AppliedReceiptDto,
   ProfileCatalogGroup,

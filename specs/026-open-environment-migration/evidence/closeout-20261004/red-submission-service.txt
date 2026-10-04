@@ -1,0 +1,16 @@
+
+==================================== ERRORS ====================================
+__________ ERROR collecting tests/test_closeout_submission_service.py __________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/backend/tests/test_closeout_submission_service.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/agent/backend/tests/test_closeout_submission_service.py:20: in <module>
+    from ordessa_agent.submission_service import (
+E   ModuleNotFoundError: No module named 'ordessa_agent.submission_service'
+=========================== short test summary info ============================
+ERROR plugins/agent/backend/tests/test_closeout_submission_service.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.14s

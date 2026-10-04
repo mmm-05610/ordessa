@@ -1,0 +1,24 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts
+
+ ❯ tests/capture-conditions.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/capture-conditions.test.ts [ tests/capture-conditions.test.ts ]
+Error: Cannot find module '../src/capture-conditions' imported from /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts/tests/capture-conditions.test.ts
+ ❯ tests/capture-conditions.test.ts:2:1
+      1| import { describe, expect, it } from 'vitest'
+      2| import { createSubmissionConditionsCache } from '../src/capture-condit…
+       | ^
+      3|
+      4| type LocationBinding = {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  14:28:25
+   Duration  373ms (transform 56ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+

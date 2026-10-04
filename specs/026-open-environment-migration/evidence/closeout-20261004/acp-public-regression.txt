@@ -1,0 +1,12 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/connectors/acp
+
+
+ Test Files  9 passed (9)
+      Tests  67 passed (67)
+   Start at  14:40:10
+   Duration  5.36s (transform 475ms, setup 0ms, import 2.32s, tests 786ms, environment 2ms)
+

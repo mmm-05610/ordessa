@@ -1,0 +1,24 @@
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'Ordessa 无法继续Server 启动失败原因：the bundled runtime is incomplete: python, bin你可以：reinstall the application; the bundled runtime is part of the package日志：server:launch查看日志导出诊断'
++ ]
+- []
+
+    at file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/apps/desktop/scripts/test-agent-ui.mjs:14:10 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: [
+    'Ordessa 无法继续Server 启动失败原因：the bundled runtime is incomplete: python, bin你可以：reinstall the application; the bundled runtime is part of the package日志：server:launch查看日志导出诊断'
+  ],
+  expected: [],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.22.1

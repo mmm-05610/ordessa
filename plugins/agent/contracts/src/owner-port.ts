@@ -21,6 +21,7 @@ export interface ConfigSnapshotView {
   observedEvidence: 'native' | 'unset' | 'unknown'
   fields: Readonly<Record<string, 'known' | 'unset' | 'unknown'>>
   resolved: Readonly<Record<string, unknown>>
+  operations?: ReadonlyArray<OperationReceipt & { readonly sourceRef?: string; readonly submittedAtOrder?: number }>
 }
 
 export interface OperationReceipt {

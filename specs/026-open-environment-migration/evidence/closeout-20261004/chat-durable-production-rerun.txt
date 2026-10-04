@@ -1,0 +1,52 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/chat/frontend
+
+ ❯ tests/approval-project.test.tsx (11 tests | 2 failed) 169ms
+     × activates against the real workbench model, provides ChatContributionsToken, and its toolbar contribution is reachable 30ms
+     × rejects a second registration of the same contribution id (no last-write-wins) 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/approval-project.test.tsx > plugin entry (CHAT-V05/V08 seam) > activates against the real workbench model, provides ChatContributionsToken, and its toolbar contribution is reachable
+AssertionError: expected Token{ …(3) } to be Token{ …(3) } // Object.is equality
+
+- Expected
++ Received
+
+  Token {
+    "_tokenStructuralPropertyT": null,
+    "description": "",
+-   "name": "ordessa.ui-components.v1",
++   "name": "ordessa.wirePort.v1",
+  }
+
+ ❯ tests/approval-project.test.tsx:148:36
+    146|     expect(plugin.id).toBe('ordessa.chat')
+    147|     expect(plugin.provides).toBe(ChatContributionsToken)
+    148|     expect(plugin.requires.at(-1)).toBe(UiComponentsToken)
+       |                                    ^
+    149|     const provided = await plugin.activate({ resources: scope } as nev…
+    150|     expect(provided).toBeTruthy()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/approval-project.test.tsx > plugin entry (CHAT-V05/V08 seam) > rejects a second registration of the same contribution id (no last-write-wins)
+FrontendSubmissionJournalUnavailableError: IndexedDB is unavailable; reliable submission is disabled
+ ❯ createFrontendSubmissionJournal ../../agent/contracts/src/frontend-submission-journal.ts:374:25
+    372|   else {
+    373|     const factory = options.indexedDB ?? globalThis.indexedDB
+    374|     if (!factory) throw new FrontendSubmissionJournalUnavailableError(…
+       |                         ^
+    375|     storage = createIndexedDbStorage(factory, options.databaseName ?? …
+    376|   }
+ ❯ Object.activate src/entry.tsx:29:23
+ ❯ tests/approval-project.test.tsx:172:35
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 8 passed (9)
+      Tests  2 failed | 92 passed (94)
+   Start at  14:22:02
+   Duration  14.39s (transform 590ms, setup 0ms, import 2.04s, tests 2.46s, environment 7.55s)
+

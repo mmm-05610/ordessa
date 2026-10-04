@@ -35,6 +35,7 @@ export interface ConfigurationProjectionSnapshot {
 export type ConfigurationObserveSource = (
   target: string,
   onSnapshot: (snapshot: ConfigSnapshotView) => void,
+  onUnavailable: (reason: string) => void,
 ) => { release(): void } | (() => void)
 
 export interface ConfigurationProjectionOptions {
@@ -117,6 +118,7 @@ function copySnapshot(source: ConfigSnapshotView): ConfigSnapshotView {
     observedEvidence: source.observedEvidence,
     fields,
     resolved,
+    ...(source.operations === undefined ? {} : { operations: copyFrozenValue(source.operations, copies) as ConfigSnapshotView['operations'] }),
   })
 }
 
@@ -147,6 +149,7 @@ function sameSnapshot(left: ConfigSnapshotView, right: ConfigSnapshotView): bool
     && left.observedEvidence === right.observedEvidence
     && sameGraph(left.fields, right.fields)
     && sameGraph(left.resolved, right.resolved)
+    && sameGraph(left.operations, right.operations)
 }
 
 /**
@@ -212,8 +215,6 @@ export function createConfigurationProjection(options: ConfigurationProjectionOp
             reason: 'Agent config owner returned conflicting data at one revision',
             config: latestConfig,
           })
-        } else if (snapshot.status !== 'ready' && latestConfig) {
-          publish({ status: 'ready', target, ...(generation === undefined ? {} : { generation }), config: latestConfig })
         }
         return
       }
@@ -296,6 +297,12 @@ export function createConfigurationProjection(options: ConfigurationProjectionOp
         answer = { kind: 'unknown', queryHint: 'wire:agent.config.submitOperation' }
       }
       if (!isCurrent()) return answer
+      if (answer.kind === 'unknown' || (answer.kind === 'ok' && answer.value.state === 'unknown')) {
+        publish({ status: 'unknown', target,
+          ...(generation === undefined ? {} : { generation }),
+          queryHint: answer.kind === 'unknown' ? answer.queryHint : `operation:${answer.value.operationId}`,
+          ...(currentConfig() === undefined ? {} : { config: currentConfig() }) })
+      }
       // Unknown remains unknown: refresh may read current state, but it cannot
       // establish whether this operation applied and never resends it.
       if (answer.kind === 'ok' && answer.value.state !== 'unknown' && answer.value.state !== 'conflict') {
@@ -320,7 +327,11 @@ export function createConfigurationProjection(options: ConfigurationProjectionOp
   } else {
     if (options.observeSource) {
       try {
-        const observation = options.observeSource(target, acceptSnapshot)
+        const observation = options.observeSource(target, acceptSnapshot, reason => {
+          publish({ status: 'unknown', target,
+            ...(generation === undefined ? {} : { generation }),
+            reason, ...(currentConfig() === undefined ? {} : { config: currentConfig() }) })
+        })
         releaseObservation = typeof observation === 'function'
           ? observation
           : () => observation.release()

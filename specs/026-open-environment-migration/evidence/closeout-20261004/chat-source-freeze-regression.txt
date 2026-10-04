@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/chat/frontend
+
+
+ Test Files  9 passed (9)
+      Tests  94 passed (94)
+   Start at  14:45:09
+   Duration  13.53s (transform 631ms, setup 0ms, import 2.22s, tests 2.73s, environment 6.29s)
+

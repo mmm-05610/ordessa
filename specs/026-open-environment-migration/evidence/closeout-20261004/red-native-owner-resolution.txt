@@ -1,0 +1,91 @@
+FF..                                                                     [100%]
+=================================== FAILURES ===================================
+_____________ test_route_alias_uses_verified_distinct_native_owner _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7306c8c77bc0>
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-849/test_route_alias_uses_verified0')
+
+    def test_route_alias_uses_verified_distinct_native_owner(monkeypatch, tmp_path):
+        runtime = runtime_at(tmp_path, include_profile=False)
+        try:
+            runtime.start()
+            controlled = controlled_native(monkeypatch, runtime)
+            binding = bind_native(controlled)
+            owner = native_owner(runtime)
+            owner['workspaceId'] = controlled.channel.workspace_id
+>           answer = runtime.wire.dispatch('agent.session.resolve', {
+                'location': {'kind': 'session', 'sessionId': 'history-route', 'connectionId': 'frontend'},
+                'nativeOwner': owner})
+
+products/server/tests/test_closeout_native_owner_resolution.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_server.wire.handlers.WireService object at 0x7306c87da510>
+method = 'agent.session.resolve'
+params = {'location': {'kind': 'session', 'sessionId': 'history-route', 'connectionId': 'frontend'}, 'nativeOwner': {'sessionId...erInstanceId': 'server_eabcb13d384f4595b1bfae76e5c616bb', 'connectionId': 'connection', 'nativeSessionId': 's-1', ...}}
+
+    def dispatch(self, method: str, params: Mapping[str, Any]) -> Any:
+        descriptor = self._registry.lookup(method)
+        if descriptor is None:
+            raise WireError("INVALID_REQUEST", f"{method} is not a wire/1 method")
+        # 026 T006-02: the round gate. Activation populates this registry at
+        # composition time, so a built-but-never-started runtime carries every
+        # business row and would otherwise answer fabricated empty reads from
+        # domains that have no live round behind them. A round that is not
+        # started (never started, or stopped) therefore refuses every method
+        # except the host's discovery face — `server.hello` is how a client
+        # learns this Server exists at all — with an existing wire family and
+        # the internal code in details, never a new top-level error face. The
+        # gate sits AFTER the existence refusal on purpose: what is NOT
+        # registered keeps its unknown-method answer (the stopped round's rows
+        # are unregistered by shutdown, so a stopped round refuses exactly as
+        # the pinned T006-05 tests expect), and what IS registered but has no
+        # live round gets the round refusal below.
+        if method != "server.hello" and not self._round_open():
+            raise WireError(
+                "INVALID_REQUEST",
+                "this Server's round is not started; wire/1 methods answer only a started round",
+                {"internalCode": "ROUND_NOT_STARTED", "retryable": True},
+            )
+        missing = descriptor.required_params - set(params)
+        extra = set(params) - descriptor.required_params - descriptor.optional_params
+        if missing or extra:
+            reason = "missing " + ", ".join(sorted(missing)) if missing else (
+                "unexpected " + ", ".join(sorted(extra))
+            )
+>           raise WireError("INVALID_REQUEST", f"params shape is invalid: {reason}")
+E           server_plugin_api.wire_errors.WireError: params shape is invalid: unexpected nativeOwner
+
+apps/server/src/ordessa_server/wire/handlers.py:217: WireError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-849/test_route_alias_uses_verified0/data/state/agentbox.sqlite
+_____ test_unverified_native_owner_refuses_without_native_effect[missing] ______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7306c7cf93d0>
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-849/test_unverified_native_owner_r0')
+defect = 'missing'
+
+    @pytest.mark.parametrize('defect', ['missing', 'server', 'workspace'])
+    def test_unverified_native_owner_refuses_without_native_effect(monkeypatch, tmp_path, defect):
+        runtime = runtime_at(tmp_path, include_profile=False)
+        try:
+            runtime.start()
+            controlled = controlled_native(monkeypatch, runtime)
+            bind_native(controlled)
+            owner = native_owner(runtime)
+            owner['workspaceId'] = controlled.channel.workspace_id
+            params = {'location': {'kind': 'session', 'sessionId': 's-1', 'connectionId': 'connection'}}
+            if defect != 'missing':
+                params['nativeOwner'] = owner
+                owner['serverInstanceId' if defect == 'server' else 'workspaceId'] = 'wrong'
+>           with pytest.raises(WireError):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE WireError
+
+products/server/tests/test_closeout_native_owner_resolution.py:43: Failed
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-849/test_unverified_native_owner_r0/data/state/agentbox.sqlite
+=========================== short test summary info ============================
+FAILED products/server/tests/test_closeout_native_owner_resolution.py::test_route_alias_uses_verified_distinct_native_owner
+FAILED products/server/tests/test_closeout_native_owner_resolution.py::test_unverified_native_owner_refuses_without_native_effect[missing]
+2 failed, 2 passed in 0.55s

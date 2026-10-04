@@ -1,0 +1,52 @@
+TAP version 13
+# Subtest: no Agent/Chat domain type or token is declared under packages/frontend
+ok 1 - no Agent/Chat domain type or token is declared under packages/frontend
+  ---
+  duration_ms: 42.661713
+  type: 'test'
+  ...
+# Subtest: no platform source imports or re-exports a domain carrier path
+ok 2 - no platform source imports or re-exports a domain carrier path
+  ---
+  duration_ms: 3.374777
+  type: 'test'
+  ...
+# Subtest: the domain carrier lives in plugins/agent/contracts with its persistent ids
+ok 3 - the domain carrier lives in plugins/agent/contracts with its persistent ids
+  ---
+  duration_ms: 13.247016
+  type: 'test'
+  ...
+# Subtest: the real build constructs every domain token/kind exactly once, in the domain carrier only
+ok 4 - the real build constructs every domain token/kind exactly once, in the domain carrier only
+  ---
+  duration_ms: 4119.167501
+  type: 'test'
+  ...
+# Subtest: without the Agent implementations the built domain carrier still exports a usable API
+ok 5 - without the Agent implementations the built domain carrier still exports a usable API
+  ---
+  duration_ms: 3729.329674
+  type: 'test'
+  ...
+# Subtest: product admits the model selector and binds its published component key
+ok 6 - product admits the model selector and binds its published component key
+  ---
+  duration_ms: 8.601343
+  type: 'test'
+  ...
+# Subtest: built provider and Chat consumer share one token and register through scoped public services
+ok 7 - built provider and Chat consumer share one token and register through scoped public services
+  ---
+  duration_ms: 1234.491032
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 12723.685655

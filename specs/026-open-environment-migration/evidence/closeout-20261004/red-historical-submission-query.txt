@@ -1,0 +1,66 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_original_submission_facts_survive_missing_draft_binding_decoder _____
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-853/test_original_submission_facts0')
+
+    def test_original_submission_facts_survive_missing_draft_binding_decoder(tmp_path):
+        data_root = tmp_path / "server-data"
+        native = ControlledNativeFixture(tmp_path / "native-effects.sqlite", mode="existing")
+        first = controlled_product_composition(
+            native_submit_port=native,
+            fingerprint_port=_test_fingerprint(),
+        ).default_runtime(data_root, include_profile=False)
+        location = {"kind": "draft", "connectionId": "query-recovery", "draftId": "draft-history"}
+        capture = {
+            "submissionId": "historical-request-1",
+            "draft": {
+                "draftId": "draft-history",
+                "draftRevision": 7,
+                "text": "captured historical input",
+                "attachmentIds": [],
+            },
+            "configOperationIds": [],
+            "schema": "agent-input/v1",
+            "mode": "existing",
+        }
+    
+        try:
+            first.start()
+            target = first.wire.dispatch("agent.session.resolve", {"location": location})["target"]
+            native.bind_backend_target(target)
+            accepted = first.wire.dispatch("agent.submitInput", {
+                "target": target,
+                "draftRevision": capture["draft"]["draftRevision"],
+                "capture": capture,
+            })
+            assert accepted["outcome"] == "accepted"
+            assert accepted["configApply"] == {"outcome": "applied", "operationIds": []}
+            assert accepted["inputAcceptance"]["outcome"] == "accepted"
+            assert accepted["runResult"]["outcome"] == "running"
+            dispatch_counts = native.all_effect_counts()
+            assert len(dispatch_counts) == 1
+            assert set(dispatch_counts.values()) == {1}
+        finally:
+            first.stop()
+    
+        # Reopen the actual persisted Environment and Agent journal without a
+        # native submit/query port or protected fingerprint key. Then make the
+        # Agent draft decoder unavailable while retaining the original journal.
+        restarted = create_composition().default_runtime(data_root, include_profile=False)
+        try:
+            restarted.start()
+            agent_plugin = next(
+>               plugin for plugin in restarted.plugin_selection.plugins
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                if plugin.descriptor().id == "ordessa.agent"
+            )
+E           AttributeError: 'tuple' object has no attribute 'plugins'
+
+products/server/tests/test_closeout_historical_submission_query.py:73: AttributeError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-853/test_original_submission_facts0/server-data/state/agentbox.sqlite
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-853/test_original_submission_facts0/server-data/state/agentbox.sqlite
+=========================== short test summary info ============================
+FAILED products/server/tests/test_closeout_historical_submission_query.py::test_original_submission_facts_survive_missing_draft_binding_decoder
+1 failed in 0.67s

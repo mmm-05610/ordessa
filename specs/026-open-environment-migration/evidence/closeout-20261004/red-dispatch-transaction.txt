@@ -1,0 +1,126 @@
+........FF.....F                                                         [100%]
+=================================== FAILURES ===================================
+_ test_reliable_admission_and_claim_linearize_before_drain_but_handler_runs_unlocked _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-820/test_reliable_admission_and_cl0')
+
+    def test_reliable_admission_and_claim_linearize_before_drain_but_handler_runs_unlocked(tmp_path):
+        store = _BlockingClaimStore(tmp_path / "environment.sqlite3")
+        env = _environment(store)
+        handler_entered = Event()
+        release_handler = Event()
+        drained = Event()
+        result = []
+    
+        def handler():
+            handler_entered.set()
+            if not release_handler.wait(timeout=5):
+                raise TimeoutError("test did not release effect handler")
+    
+        invoke_thread = Thread(target=lambda: result.append(env.invoke(
+            "closeout.dispatch", _key("claim-drain-order"), handler=handler, **_reliable())))
+        invoke_thread.start()
+        assert store.claim_entered.wait(timeout=2)
+    
+        activation = env.bind("closeout.dispatch").provider_activation
+        drain_thread = Thread(target=lambda: (env.drain(activation), drained.set()))
+        drain_thread.start()
+        try:
+            # The claim has entered but not committed. A drain cut must wait for
+            # this admitted invoke to either acquire or refuse its durable claim.
+>           assert not drained.wait(timeout=0.1)
+E           assert not True
+E            +  where True = wait(timeout=0.1)
+E            +    where wait = <threading.Event at 0x71b5a97fa840: set>.wait
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py:278: AssertionError
+______ test_raw_handler_has_one_in_process_claim_for_concurrent_same_key _______
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-820/test_raw_handler_has_one_in_pr0')
+
+    def test_raw_handler_has_one_in_process_claim_for_concurrent_same_key(tmp_path):
+        store = SqliteStorePort(tmp_path / "environment.sqlite3")
+        env = _environment(store)
+        handler_entered = Event()
+        duplicate_entered = Event()
+        release_handler = Event()
+        count_lock = Lock()
+        calls = []
+    
+        def handler():
+            with count_lock:
+                calls.append("effect")
+                if len(calls) > 1:
+                    duplicate_entered.set()
+            handler_entered.set()
+            if not release_handler.wait(timeout=5):
+                raise TimeoutError("test did not release effect handler")
+    
+        request = _key("raw-process-claim")
+        executor = ThreadPoolExecutor(max_workers=2)
+        first = executor.submit(env.invoke, "closeout.dispatch", request,
+                                guarantee=GuaranteeLevel.RAW, input_digest="f" * 64,
+                                handler=handler)
+        try:
+            assert handler_entered.wait(timeout=2)
+            second = executor.submit(env.invoke, "closeout.dispatch", request,
+                                     guarantee=GuaranteeLevel.RAW, input_digest="f" * 64,
+                                     handler=handler)
+>           assert not duplicate_entered.wait(timeout=0.1)
+E           assert not True
+E            +  where True = wait(timeout=0.1)
+E            +    where wait = <threading.Event at 0x71b5a97fae10: set>.wait
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py:322: AssertionError
+_________ test_transaction_context_holds_connection_lock_until_commit __________
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-820/test_transaction_context_holds0')
+
+    def test_transaction_context_holds_connection_lock_until_commit(tmp_path):
+        store = SqliteStorePort(tmp_path / "claims.sqlite3")
+        started = Event()
+        finished = Event()
+        failures = []
+    
+        def competing_claim():
+            started.set()
+            try:
+                store.claim_dispatch(_key("context-serialized"), "e" * 64)
+            except BaseException as exc:
+                failures.append(exc)
+            finally:
+                finished.set()
+    
+        try:
+            with store.transaction() as conn:
+                conn.execute("INSERT INTO env_meta(key, value) VALUES ('closeout-lock', 'held')")
+                worker = Thread(target=competing_claim)
+                worker.start()
+                assert started.wait(timeout=1)
+                # The transaction owns the connection through the complete context.
+                # A competing dispatch claim must wait rather than join or corrupt it.
+>               assert not finished.wait(timeout=0.1)
+E               assert not True
+E                +  where True = wait(timeout=0.1)
+E                +    where wait = <threading.Event at 0x71b5a9839ee0: set>.wait
+
+packages/backend/persistence-sqlite/tests/test_closeout_dispatch_claim.py:93: AssertionError
+ARTIFACT_worker-debug=ABSENT workers/agent-box-worker/target/debug/agent-box-worker
+ARTIFACT_worker-release=ABSENT workers/agent-box-worker/target/release/agent-box-worker
+ARTIFACT_worker-musl-dir=ABSENT workers/agent-box-worker/target/x86_64-unknown-linux-musl
+ARTIFACT_sidecar-entry=ABSENT plugins/agent-box-harness/runtime/worker-entry.mjs
+ARTIFACT_acp-npm-closure=ABSENT plugins/agent-box-harness/packaging/claude/node_modules/@agentclientprotocol/claude-agent-acp
+TOOL_bwrap=present
+TOOL_node=present
+TOOL_npm=present
+TOOL_claude=ABSENT
+TOOL_tmux=present
+TOOL_wsl.exe=ABSENT
+SKIPPED_TOTAL=0
+WORKER_ARTIFACT=ABSENT
+VERDICT=FAILED
+=========================== short test summary info ============================
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py::test_reliable_admission_and_claim_linearize_before_drain_but_handler_runs_unlocked
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py::test_raw_handler_has_one_in_process_claim_for_concurrent_same_key
+FAILED packages/backend/pacthold::test_transaction_context_holds_connection_lock_until_commit
+3 failed, 13 passed in 0.28s

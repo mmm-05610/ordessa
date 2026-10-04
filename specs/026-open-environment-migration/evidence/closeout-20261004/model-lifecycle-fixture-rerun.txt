@@ -1,0 +1,74 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/model-provider/chat-contribution
+
+ ❯ tests/contributor.test.tsx (14 tests | 1 failed) 177ms
+     × the plugin wires the selector through Chat's public contract only 4ms
+ ❯ tests/production-entry.test.tsx (9 tests | 3 failed) 248ms
+     × registers the selector on the real Chat registry, on a slot Chat actually renders 13ms
+     × the composer actually renders the selector through the bound key 2ms
+     × a queued choice travels over the declared wire port, through the frozen method 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/contributor.test.tsx > contribution registration semantics (contract stub) > the plugin wires the selector through Chat's public contract only
+TypeError: Cannot read properties of undefined (reading 'subscribe')
+ ❯ createWireConfigurationClient ../../agent/contracts/src/wire-configuration.ts:98:48
+     96|   }
+     97|
+     98|   const unsubscribeSessions = options.sessions.subscribe(() => {
+       |                                                ^
+     99|     let currentGeneration: number | undefined
+    100|     try { currentGeneration = options.sessions.getSnapshot().runtimeGe…
+ ❯ Object.activate src/entry.tsx:24:29
+ ❯ tests/contributor.test.tsx:270:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/production-entry.test.tsx > the declared plugin entry is the real Chat wiring > registers the selector on the real Chat registry, on a slot Chat actually renders
+TypeError: Cannot read properties of undefined (reading 'subscribe')
+ ❯ createWireConfigurationClient ../../agent/contracts/src/wire-configuration.ts:98:48
+     96|   }
+     97|
+     98|   const unsubscribeSessions = options.sessions.subscribe(() => {
+       |                                                ^
+     99|     let currentGeneration: number | undefined
+    100|     try { currentGeneration = options.sessions.getSnapshot().runtimeGe…
+ ❯ Object.activate src/entry.tsx:24:29
+ ❯ tests/production-entry.test.tsx:67:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/production-entry.test.tsx > the declared plugin entry is the real Chat wiring > the composer actually renders the selector through the bound key
+TypeError: Cannot read properties of undefined (reading 'subscribe')
+ ❯ createWireConfigurationClient ../../agent/contracts/src/wire-configuration.ts:98:48
+     96|   }
+     97|
+     98|   const unsubscribeSessions = options.sessions.subscribe(() => {
+       |                                                ^
+     99|     let currentGeneration: number | undefined
+    100|     try { currentGeneration = options.sessions.getSnapshot().runtimeGe…
+ ❯ Object.activate src/entry.tsx:24:29
+ ❯ tests/production-entry.test.tsx:85:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/production-entry.test.tsx > the declared plugin entry is the real Chat wiring > a queued choice travels over the declared wire port, through the frozen method
+TypeError: Cannot read properties of undefined (reading 'subscribe')
+ ❯ createWireConfigurationClient ../../agent/contracts/src/wire-configuration.ts:98:48
+     96|   }
+     97|
+     98|   const unsubscribeSessions = options.sessions.subscribe(() => {
+       |                                                ^
+     99|     let currentGeneration: number | undefined
+    100|     try { currentGeneration = options.sessions.getSnapshot().runtimeGe…
+ ❯ Object.activate src/entry.tsx:24:29
+ ❯ tests/production-entry.test.tsx:119:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  2 failed | 11 passed (13)
+      Tests  4 failed | 117 passed (121)
+   Start at  12:06:52
+   Duration  19.11s (transform 520ms, setup 0ms, import 2.34s, tests 2.80s, environment 10.45s)
+

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": { "./submission": "./src/submission.ts" },
   "ordessa": {
     "id": "ordessa.chat"
   },

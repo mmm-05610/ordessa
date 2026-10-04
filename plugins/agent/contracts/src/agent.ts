@@ -307,12 +307,24 @@ export interface AgentClient extends IDisposable {
 }
 /** Connector-observed routing identity, NOT a Profile canonical SessionRef. */
 export interface AgentNativeSessionOwner {
+  /** Connector route key; this is not `nativeSessionId`. */
   readonly sessionId: string
   readonly serverInstanceId: string
+  /** Backend ACP channel identity, not AgentConnections' frontend connector id. */
   readonly connectionId: string
   readonly nativeSessionId: string
   readonly harnessId: string
   readonly workspaceId: string
+}
+/** A frontend route reference used only to ask its owning connector for the
+ * native identity it observed. `sessionId` is a route key, never a native ID. */
+export interface AgentSessionLocation {
+  readonly kind: 'session'
+  readonly sessionId: string
+  /** AgentConnections frontend connector id used to select the exact client. */
+  readonly connectionId: string
+  readonly serverInstanceId?: string
+  readonly harnessId?: string
 }
 export interface AgentConnector {
   id: string
@@ -365,6 +377,10 @@ export interface AgentSessions {
   /** Prepare a draft's native owner or inspect the selected session. No prompt.
    * A failed configuration keeps the prepared owner for explicit retry. */
   prepareSubmission?(preparation?: AgentNativePreparation): Promise<AgentNativeSessionOwner>
+  /** Resolve an exact existing route through the selected connector's private
+   * route map. Absent means unsupported; callers must never infer native IDs
+   * from ChatLocation JSON or fall back to a selected-session guess. */
+  nativeOwnerForLocation?(location: AgentSessionLocation): AgentNativeSessionOwner
   stop(runId: string): Promise<void>
   respond(interactionId: string, answer: InteractionAnswer): Promise<void>
   setOption(id: string, value: string): Promise<void>

@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/profile/integrations/chat
+
+
+ Test Files  9 passed (9)
+      Tests  94 passed (94)
+   Start at  11:58:52
+   Duration  9.07s (transform 623ms, setup 0ms, import 2.39s, tests 1.50s, environment 2.75s)
+

@@ -1,0 +1,496 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+_ test_default_product_two_wire_controls_share_backend_draft_without_native_creation _
+
+self = <ordessa_server.wire.handlers.WireService object at 0x78b9bd7349e0>
+method = 'agent.config.submitOperation'
+params = {'target': 'agent-draft-887edddae8ef49d88679b106b76e87a1', 'patch': {'model': 'M1', 'prompt': 'A'}}
+
+    def dispatch(self, method: str, params: Mapping[str, Any]) -> Any:
+        descriptor = self._registry.lookup(method)
+        if descriptor is None:
+            raise WireError("INVALID_REQUEST", f"{method} is not a wire/1 method")
+        # 026 T006-02: the round gate. Activation populates this registry at
+        # composition time, so a built-but-never-started runtime carries every
+        # business row and would otherwise answer fabricated empty reads from
+        # domains that have no live round behind them. A round that is not
+        # started (never started, or stopped) therefore refuses every method
+        # except the host's discovery face — `server.hello` is how a client
+        # learns this Server exists at all — with an existing wire family and
+        # the internal code in details, never a new top-level error face. The
+        # gate sits AFTER the existence refusal on purpose: what is NOT
+        # registered keeps its unknown-method answer (the stopped round's rows
+        # are unregistered by shutdown, so a stopped round refuses exactly as
+        # the pinned T006-05 tests expect), and what IS registered but has no
+        # live round gets the round refusal below.
+        if method != "server.hello" and not self._round_open():
+            raise WireError(
+                "INVALID_REQUEST",
+                "this Server's round is not started; wire/1 methods answer only a started round",
+                {"internalCode": "ROUND_NOT_STARTED", "retryable": True},
+            )
+        missing = descriptor.required_params - set(params)
+        extra = set(params) - descriptor.required_params - descriptor.optional_params
+        if missing or extra:
+            reason = "missing " + ", ".join(sorted(missing)) if missing else (
+                "unexpected " + ", ".join(sorted(extra))
+            )
+            raise WireError("INVALID_REQUEST", f"params shape is invalid: {reason}")
+        if "requestId" in params:
+            _request_id(params["requestId"])
+        try:
+>           result = descriptor.handler(params)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+apps/server/src/ordessa_server/wire/handlers.py:221: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+plugins/agent/backend/src/ordessa_agent/plugin.py:117: in config_submit_operation
+    environment = binding.environment
+                  ^^^^^^^^^^^^^^^^^^^
+apps/server/src/ordessa_server/core_binding.py:68: in environment
+    return self.open()
+           ^^^^^^^^^^^
+apps/server/src/ordessa_server/core_binding.py:88: in open
+    environment = self._environment_factory(self._store_path)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+products/server/src/ordessa_server_product/composition.py:130: in environment_factory
+    environment.activate('ordessa.agent', configuration_contributions())
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/agent/backend/src/ordessa_agent/contributions.py:8: in configuration_contributions
+    return CoreContributionSet(contracts=(AgentConfigurationIntent,))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+packages/backend/pacthold/src/pacthold/core/registration.py:57: in __post_init__
+    _validate_contract(contract)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+contract = <class 'ordessa_agent.contributions.AgentConfigurationIntent'>
+
+    def _validate_contract(contract: object) -> None:
+        if not isinstance(contract, type):
+            raise CoreDTOError("resource contract must be a Python type")
+        try:
+            validate_contract_id(getattr(contract, "contract_id", None))
+        except CoreError as exc:
+            raise CoreDTOError(f"invalid resource contract: {exc}") from exc
+        if not dataclasses.is_dataclass(contract) or not contract.__dataclass_params__.frozen:
+>           raise CoreDTOError("resource contract must be a frozen dataclass")
+E           pacthold.core.errors.CoreDTOError: resource contract must be a frozen dataclass
+
+packages/backend/pacthold/src/pacthold/core/registration.py:72: CoreDTOError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-817/test_default_product_two_wire_0')
+
+    def test_default_product_two_wire_controls_share_backend_draft_without_native_creation(tmp_path):
+        runtime=create_composition().default_runtime(tmp_path/'data')
+        try:
+            runtime.start()
+            wire=runtime.wire
+            target=wire.dispatch('agent.session.resolve', {'location':{'kind':'draft','draftId':'D','connectionId':'C'}})['target']
+            for patch in [{'model':'M1','prompt':'A'}, {'model':'M2'}, {'prompt':'B'}, {'model':'M1','prompt':'A'}]:
+>               wire.dispatch('agent.config.submitOperation', {'target':target, 'patch':patch})
+
+products/server/tests/test_closeout_agent_configuration.py:14: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_server.wire.handlers.WireService object at 0x78b9bd7349e0>
+method = 'agent.config.submitOperation'
+params = {'target': 'agent-draft-887edddae8ef49d88679b106b76e87a1', 'patch': {'model': 'M1', 'prompt': 'A'}}
+
+    def dispatch(self, method: str, params: Mapping[str, Any]) -> Any:
+        descriptor = self._registry.lookup(method)
+        if descriptor is None:
+            raise WireError("INVALID_REQUEST", f"{method} is not a wire/1 method")
+        # 026 T006-02: the round gate. Activation populates this registry at
+        # composition time, so a built-but-never-started runtime carries every
+        # business row and would otherwise answer fabricated empty reads from
+        # domains that have no live round behind them. A round that is not
+        # started (never started, or stopped) therefore refuses every method
+        # except the host's discovery face — `server.hello` is how a client
+        # learns this Server exists at all — with an existing wire family and
+        # the internal code in details, never a new top-level error face. The
+        # gate sits AFTER the existence refusal on purpose: what is NOT
+        # registered keeps its unknown-method answer (the stopped round's rows
+        # are unregistered by shutdown, so a stopped round refuses exactly as
+        # the pinned T006-05 tests expect), and what IS registered but has no
+        # live round gets the round refusal below.
+        if method != "server.hello" and not self._round_open():
+            raise WireError(
+                "INVALID_REQUEST",
+                "this Server's round is not started; wire/1 methods answer only a started round",
+                {"internalCode": "ROUND_NOT_STARTED", "retryable": True},
+            )
+        missing = descriptor.required_params - set(params)
+        extra = set(params) - descriptor.required_params - descriptor.optional_params
+        if missing or extra:
+            reason = "missing " + ", ".join(sorted(missing)) if missing else (
+                "unexpected " + ", ".join(sorted(extra))
+            )
+            raise WireError("INVALID_REQUEST", f"params shape is invalid: {reason}")
+        if "requestId" in params:
+            _request_id(params["requestId"])
+        try:
+            result = descriptor.handler(params)
+            if self.acp_admission_gate is not None and self.stream_routes is not None:
+                self.acp_admission_gate.observe_wire_result(method, params, result, self.stream_routes)
+            return result
+        except WireError:
+            # A typed refusal is the contract answering, not a crash: the wall
+            # below must never re-project it onto `UNAVAILABLE`.
+            raise
+        except ServerError as exc:
+            # The composition's resolver (bound at construction, never a
+            # process-global table) answers contributed codes for THIS
+            # transport's composition; without one the static host table
+            # and the documented fall-through answer (T014-S2a-R).
+            raise WireError.from_server_error(exc, self._error_family_resolver) from exc
+        except Exception as exc:  # noqa: BLE001 - the wire contract, not the caller's convenience
+            # The last wall of the error family (order 115): anything else that
+            # escapes a handler still leaves this Server as a JSON-RPC error
+            # object. The exception's *text* never goes out — it can name a host
+            # path or a credential locator — only its type, as `internalCode`.
+>           raise WireError(
+                "UNAVAILABLE", "this Server could not answer the request",
+                {"internalCode": type(exc).__name__, "retryable": True},
+            ) from exc
+E           server_plugin_api.wire_errors.WireError: this Server could not answer the request
+
+apps/server/src/ordessa_server/wire/handlers.py:240: WireError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-817/test_default_product_two_wire_0/data/state/agentbox.sqlite
+__ test_native_product_shared_agent_owner_uses_verified_native_binding[True] ___
+
+self = <ordessa_server.wire.handlers.WireService object at 0x78b9bc9f8290>
+method = 'agent.config.submitOperation'
+params = {'target': 'profile-session-a4f9dd4843df44b0ac9328ded30fc3cb', 'patch': {'model': 'M1', 'prompt': 'A'}}
+
+    def dispatch(self, method: str, params: Mapping[str, Any]) -> Any:
+        descriptor = self._registry.lookup(method)
+        if descriptor is None:
+            raise WireError("INVALID_REQUEST", f"{method} is not a wire/1 method")
+        # 026 T006-02: the round gate. Activation populates this registry at
+        # composition time, so a built-but-never-started runtime carries every
+        # business row and would otherwise answer fabricated empty reads from
+        # domains that have no live round behind them. A round that is not
+        # started (never started, or stopped) therefore refuses every method
+        # except the host's discovery face — `server.hello` is how a client
+        # learns this Server exists at all — with an existing wire family and
+        # the internal code in details, never a new top-level error face. The
+        # gate sits AFTER the existence refusal on purpose: what is NOT
+        # registered keeps its unknown-method answer (the stopped round's rows
+        # are unregistered by shutdown, so a stopped round refuses exactly as
+        # the pinned T006-05 tests expect), and what IS registered but has no
+        # live round gets the round refusal below.
+        if method != "server.hello" and not self._round_open():
+            raise WireError(
+                "INVALID_REQUEST",
+                "this Server's round is not started; wire/1 methods answer only a started round",
+                {"internalCode": "ROUND_NOT_STARTED", "retryable": True},
+            )
+        missing = descriptor.required_params - set(params)
+        extra = set(params) - descriptor.required_params - descriptor.optional_params
+        if missing or extra:
+            reason = "missing " + ", ".join(sorted(missing)) if missing else (
+                "unexpected " + ", ".join(sorted(extra))
+            )
+            raise WireError("INVALID_REQUEST", f"params shape is invalid: {reason}")
+        if "requestId" in params:
+            _request_id(params["requestId"])
+        try:
+>           result = descriptor.handler(params)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+apps/server/src/ordessa_server/wire/handlers.py:221: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+plugins/agent/backend/src/ordessa_agent/plugin.py:117: in config_submit_operation
+    environment = binding.environment
+                  ^^^^^^^^^^^^^^^^^^^
+apps/server/src/ordessa_server/core_binding.py:68: in environment
+    return self.open()
+           ^^^^^^^^^^^
+apps/server/src/ordessa_server/core_binding.py:88: in open
+    environment = self._environment_factory(self._store_path)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+products/server/src/ordessa_server_product/composition.py:130: in environment_factory
+    environment.activate('ordessa.agent', configuration_contributions())
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/agent/backend/src/ordessa_agent/contributions.py:8: in configuration_contributions
+    return CoreContributionSet(contracts=(AgentConfigurationIntent,))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+packages/backend/pacthold/src/pacthold/core/registration.py:57: in __post_init__
+    _validate_contract(contract)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+contract = <class 'ordessa_agent.contributions.AgentConfigurationIntent'>
+
+    def _validate_contract(contract: object) -> None:
+        if not isinstance(contract, type):
+            raise CoreDTOError("resource contract must be a Python type")
+        try:
+            validate_contract_id(getattr(contract, "contract_id", None))
+        except CoreError as exc:
+            raise CoreDTOError(f"invalid resource contract: {exc}") from exc
+        if not dataclasses.is_dataclass(contract) or not contract.__dataclass_params__.frozen:
+>           raise CoreDTOError("resource contract must be a frozen dataclass")
+E           pacthold.core.errors.CoreDTOError: resource contract must be a frozen dataclass
+
+packages/backend/pacthold/src/pacthold/core/registration.py:72: CoreDTOError
+
+The above exception was the direct cause of the following exception:
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x78b9bca54cb0>
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-817/test_native_product_shared_age0')
+include_profile = True
+
+    @pytest.mark.parametrize('include_profile',[True,False])
+    def test_native_product_shared_agent_owner_uses_verified_native_binding(monkeypatch,tmp_path,include_profile):
+        runtime=runtime_at(tmp_path,include_profile=include_profile)
+        try:
+            runtime.start()
+            controlled=controlled_native(monkeypatch,runtime)
+            binding=bind_native(controlled)
+            result=runtime.wire.dispatch('agent.session.resolve',{'location':{
+                'kind':'session','connectionId':'connection','sessionId':'s-1'}})
+            target=result['target']
+            assert target==binding.snapshot.target.session_id
+>           runtime.wire.dispatch('agent.config.submitOperation',{'target':target,'patch':{'model':'M1','prompt':'A'}})
+
+products/server/tests/test_closeout_agent_configuration.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_server.wire.handlers.WireService object at 0x78b9bc9f8290>
+method = 'agent.config.submitOperation'
+params = {'target': 'profile-session-a4f9dd4843df44b0ac9328ded30fc3cb', 'patch': {'model': 'M1', 'prompt': 'A'}}
+
+    def dispatch(self, method: str, params: Mapping[str, Any]) -> Any:
+        descriptor = self._registry.lookup(method)
+        if descriptor is None:
+            raise WireError("INVALID_REQUEST", f"{method} is not a wire/1 method")
+        # 026 T006-02: the round gate. Activation populates this registry at
+        # composition time, so a built-but-never-started runtime carries every
+        # business row and would otherwise answer fabricated empty reads from
+        # domains that have no live round behind them. A round that is not
+        # started (never started, or stopped) therefore refuses every method
+        # except the host's discovery face — `server.hello` is how a client
+        # learns this Server exists at all — with an existing wire family and
+        # the internal code in details, never a new top-level error face. The
+        # gate sits AFTER the existence refusal on purpose: what is NOT
+        # registered keeps its unknown-method answer (the stopped round's rows
+        # are unregistered by shutdown, so a stopped round refuses exactly as
+        # the pinned T006-05 tests expect), and what IS registered but has no
+        # live round gets the round refusal below.
+        if method != "server.hello" and not self._round_open():
+            raise WireError(
+                "INVALID_REQUEST",
+                "this Server's round is not started; wire/1 methods answer only a started round",
+                {"internalCode": "ROUND_NOT_STARTED", "retryable": True},
+            )
+        missing = descriptor.required_params - set(params)
+        extra = set(params) - descriptor.required_params - descriptor.optional_params
+        if missing or extra:
+            reason = "missing " + ", ".join(sorted(missing)) if missing else (
+                "unexpected " + ", ".join(sorted(extra))
+            )
+            raise WireError("INVALID_REQUEST", f"params shape is invalid: {reason}")
+        if "requestId" in params:
+            _request_id(params["requestId"])
+        try:
+            result = descriptor.handler(params)
+            if self.acp_admission_gate is not None and self.stream_routes is not None:
+                self.acp_admission_gate.observe_wire_result(method, params, result, self.stream_routes)
+            return result
+        except WireError:
+            # A typed refusal is the contract answering, not a crash: the wall
+            # below must never re-project it onto `UNAVAILABLE`.
+            raise
+        except ServerError as exc:
+            # The composition's resolver (bound at construction, never a
+            # process-global table) answers contributed codes for THIS
+            # transport's composition; without one the static host table
+            # and the documented fall-through answer (T014-S2a-R).
+            raise WireError.from_server_error(exc, self._error_family_resolver) from exc
+        except Exception as exc:  # noqa: BLE001 - the wire contract, not the caller's convenience
+            # The last wall of the error family (order 115): anything else that
+            # escapes a handler still leaves this Server as a JSON-RPC error
+            # object. The exception's *text* never goes out — it can name a host
+            # path or a credential locator — only its type, as `internalCode`.
+>           raise WireError(
+                "UNAVAILABLE", "this Server could not answer the request",
+                {"internalCode": type(exc).__name__, "retryable": True},
+            ) from exc
+E           server_plugin_api.wire_errors.WireError: this Server could not answer the request
+
+apps/server/src/ordessa_server/wire/handlers.py:240: WireError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-817/test_native_product_shared_age0/data/state/agentbox.sqlite
+__ test_native_product_shared_agent_owner_uses_verified_native_binding[False] __
+
+self = <ordessa_server.wire.handlers.WireService object at 0x78b9bc9f99d0>
+method = 'agent.config.submitOperation'
+params = {'target': 'profile-session-734b0e327fee458caba285d489ca97b9', 'patch': {'model': 'M1', 'prompt': 'A'}}
+
+    def dispatch(self, method: str, params: Mapping[str, Any]) -> Any:
+        descriptor = self._registry.lookup(method)
+        if descriptor is None:
+            raise WireError("INVALID_REQUEST", f"{method} is not a wire/1 method")
+        # 026 T006-02: the round gate. Activation populates this registry at
+        # composition time, so a built-but-never-started runtime carries every
+        # business row and would otherwise answer fabricated empty reads from
+        # domains that have no live round behind them. A round that is not
+        # started (never started, or stopped) therefore refuses every method
+        # except the host's discovery face — `server.hello` is how a client
+        # learns this Server exists at all — with an existing wire family and
+        # the internal code in details, never a new top-level error face. The
+        # gate sits AFTER the existence refusal on purpose: what is NOT
+        # registered keeps its unknown-method answer (the stopped round's rows
+        # are unregistered by shutdown, so a stopped round refuses exactly as
+        # the pinned T006-05 tests expect), and what IS registered but has no
+        # live round gets the round refusal below.
+        if method != "server.hello" and not self._round_open():
+            raise WireError(
+                "INVALID_REQUEST",
+                "this Server's round is not started; wire/1 methods answer only a started round",
+                {"internalCode": "ROUND_NOT_STARTED", "retryable": True},
+            )
+        missing = descriptor.required_params - set(params)
+        extra = set(params) - descriptor.required_params - descriptor.optional_params
+        if missing or extra:
+            reason = "missing " + ", ".join(sorted(missing)) if missing else (
+                "unexpected " + ", ".join(sorted(extra))
+            )
+            raise WireError("INVALID_REQUEST", f"params shape is invalid: {reason}")
+        if "requestId" in params:
+            _request_id(params["requestId"])
+        try:
+>           result = descriptor.handler(params)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+apps/server/src/ordessa_server/wire/handlers.py:221: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+plugins/agent/backend/src/ordessa_agent/plugin.py:117: in config_submit_operation
+    environment = binding.environment
+                  ^^^^^^^^^^^^^^^^^^^
+apps/server/src/ordessa_server/core_binding.py:68: in environment
+    return self.open()
+           ^^^^^^^^^^^
+apps/server/src/ordessa_server/core_binding.py:88: in open
+    environment = self._environment_factory(self._store_path)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+products/server/src/ordessa_server_product/composition.py:130: in environment_factory
+    environment.activate('ordessa.agent', configuration_contributions())
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/agent/backend/src/ordessa_agent/contributions.py:8: in configuration_contributions
+    return CoreContributionSet(contracts=(AgentConfigurationIntent,))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+packages/backend/pacthold/src/pacthold/core/registration.py:57: in __post_init__
+    _validate_contract(contract)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+contract = <class 'ordessa_agent.contributions.AgentConfigurationIntent'>
+
+    def _validate_contract(contract: object) -> None:
+        if not isinstance(contract, type):
+            raise CoreDTOError("resource contract must be a Python type")
+        try:
+            validate_contract_id(getattr(contract, "contract_id", None))
+        except CoreError as exc:
+            raise CoreDTOError(f"invalid resource contract: {exc}") from exc
+        if not dataclasses.is_dataclass(contract) or not contract.__dataclass_params__.frozen:
+>           raise CoreDTOError("resource contract must be a frozen dataclass")
+E           pacthold.core.errors.CoreDTOError: resource contract must be a frozen dataclass
+
+packages/backend/pacthold/src/pacthold/core/registration.py:72: CoreDTOError
+
+The above exception was the direct cause of the following exception:
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x78b9bc9f9ca0>
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-817/test_native_product_shared_age1')
+include_profile = False
+
+    @pytest.mark.parametrize('include_profile',[True,False])
+    def test_native_product_shared_agent_owner_uses_verified_native_binding(monkeypatch,tmp_path,include_profile):
+        runtime=runtime_at(tmp_path,include_profile=include_profile)
+        try:
+            runtime.start()
+            controlled=controlled_native(monkeypatch,runtime)
+            binding=bind_native(controlled)
+            result=runtime.wire.dispatch('agent.session.resolve',{'location':{
+                'kind':'session','connectionId':'connection','sessionId':'s-1'}})
+            target=result['target']
+            assert target==binding.snapshot.target.session_id
+>           runtime.wire.dispatch('agent.config.submitOperation',{'target':target,'patch':{'model':'M1','prompt':'A'}})
+
+products/server/tests/test_closeout_agent_configuration.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_server.wire.handlers.WireService object at 0x78b9bc9f99d0>
+method = 'agent.config.submitOperation'
+params = {'target': 'profile-session-734b0e327fee458caba285d489ca97b9', 'patch': {'model': 'M1', 'prompt': 'A'}}
+
+    def dispatch(self, method: str, params: Mapping[str, Any]) -> Any:
+        descriptor = self._registry.lookup(method)
+        if descriptor is None:
+            raise WireError("INVALID_REQUEST", f"{method} is not a wire/1 method")
+        # 026 T006-02: the round gate. Activation populates this registry at
+        # composition time, so a built-but-never-started runtime carries every
+        # business row and would otherwise answer fabricated empty reads from
+        # domains that have no live round behind them. A round that is not
+        # started (never started, or stopped) therefore refuses every method
+        # except the host's discovery face — `server.hello` is how a client
+        # learns this Server exists at all — with an existing wire family and
+        # the internal code in details, never a new top-level error face. The
+        # gate sits AFTER the existence refusal on purpose: what is NOT
+        # registered keeps its unknown-method answer (the stopped round's rows
+        # are unregistered by shutdown, so a stopped round refuses exactly as
+        # the pinned T006-05 tests expect), and what IS registered but has no
+        # live round gets the round refusal below.
+        if method != "server.hello" and not self._round_open():
+            raise WireError(
+                "INVALID_REQUEST",
+                "this Server's round is not started; wire/1 methods answer only a started round",
+                {"internalCode": "ROUND_NOT_STARTED", "retryable": True},
+            )
+        missing = descriptor.required_params - set(params)
+        extra = set(params) - descriptor.required_params - descriptor.optional_params
+        if missing or extra:
+            reason = "missing " + ", ".join(sorted(missing)) if missing else (
+                "unexpected " + ", ".join(sorted(extra))
+            )
+            raise WireError("INVALID_REQUEST", f"params shape is invalid: {reason}")
+        if "requestId" in params:
+            _request_id(params["requestId"])
+        try:
+            result = descriptor.handler(params)
+            if self.acp_admission_gate is not None and self.stream_routes is not None:
+                self.acp_admission_gate.observe_wire_result(method, params, result, self.stream_routes)
+            return result
+        except WireError:
+            # A typed refusal is the contract answering, not a crash: the wall
+            # below must never re-project it onto `UNAVAILABLE`.
+            raise
+        except ServerError as exc:
+            # The composition's resolver (bound at construction, never a
+            # process-global table) answers contributed codes for THIS
+            # transport's composition; without one the static host table
+            # and the documented fall-through answer (T014-S2a-R).
+            raise WireError.from_server_error(exc, self._error_family_resolver) from exc
+        except Exception as exc:  # noqa: BLE001 - the wire contract, not the caller's convenience
+            # The last wall of the error family (order 115): anything else that
+            # escapes a handler still leaves this Server as a JSON-RPC error
+            # object. The exception's *text* never goes out — it can name a host
+            # path or a credential locator — only its type, as `internalCode`.
+>           raise WireError(
+                "UNAVAILABLE", "this Server could not answer the request",
+                {"internalCode": type(exc).__name__, "retryable": True},
+            ) from exc
+E           server_plugin_api.wire_errors.WireError: this Server could not answer the request
+
+apps/server/src/ordessa_server/wire/handlers.py:240: WireError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-817/test_native_product_shared_age1/data/state/agentbox.sqlite
+=========================== short test summary info ============================
+FAILED products/server/tests/test_closeout_agent_configuration.py::test_default_product_two_wire_controls_share_backend_draft_without_native_creation
+FAILED products/server/tests/test_closeout_agent_configuration.py::test_native_product_shared_agent_owner_uses_verified_native_binding[True]
+FAILED products/server/tests/test_closeout_agent_configuration.py::test_native_product_shared_agent_owner_uses_verified_native_binding[False]
+3 failed in 0.97s

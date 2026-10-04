@@ -49,7 +49,7 @@ const draftBlockCopy: Record<string, string> = {
 type PanelState = { readonly mode: 'plus'; readonly caret: number } | { readonly mode: 'slash'; readonly token: SlashTokenSnapshot } | null
 type PrepareAction = (location: ChatLocation, idempotencyKey: string) => Promise<ChatPrepareResult>
 
-export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiComponents }: {
+export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiComponents, reliableSubmission }: {
   service: AgentSessions
   chat: ChatContributionsService
   /** Explicit theme from the host; defaults to the OS preference. */
@@ -58,6 +58,8 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
   openViaOverlay?: () => void
   /** Consumer scope supplied by the host; bare views can omit it. */
   uiComponents?: UiScope
+  /** Product entry supplies the Agent durable path; standalone view fixtures use their explicit facade. */
+  reliableSubmission?: import('../adapters/reliable-agent').ReliableChatSubmission
 }) {
   const theme = themeProp ?? usePreferredTheme()
   const state = useSyncExternalStore(service.subscribe, service.getSnapshot, service.getSnapshot)
@@ -75,6 +77,7 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
   const gateway = useMemo(() => createFacadeGateway(service), [service])
   const [dialogOpen, setDialogOpen] = useState(false)
   const [panel, setPanel] = useState<PanelState>(null)
+  const dismissedSlashRef = useRef<{ pane: string; text: string; caret: number } | undefined>(undefined)
   const [sendError, setSendError] = useState('')
   const [pendingPane, setPendingPane] = useState<string | undefined>(undefined)
   const [plusQuery, setPlusQuery] = useState('')
@@ -149,6 +152,9 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
   [drafting, pane, connectionId, agent?.connection.serverInstanceId, agent?.connection.harnessId, workspaceId, revision, sessionId, state.runtimeGeneration])
   const locationRef = useRef(location)
   locationRef.current = location
+  useEffect(() => {
+    if (reliableSubmission) void reliableSubmission.observe(location).catch(() => undefined)
+  }, [reliableSubmission, location])
   // PC-3: the attach entry and its note are driven by the facade's REAL
   // capability for this location — a missing production prepare owner, a
   // partial client surface or a draft without a native session all render
@@ -158,12 +164,22 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
   // Slash token reconciliation: any text/caret change re-derives or closes the
   // panel; the + panel and the slash panel are mutually exclusive.
   const syncSlashToken = useCallback((text: string, caret: number) => {
+    const dismissed = dismissedSlashRef.current
+    if (dismissed && dismissed.pane === paneRef.current && dismissed.text === text && dismissed.caret === caret) return
+    dismissedSlashRef.current = undefined
     setPanel(current => {
       if (current?.mode === 'plus') return current
       const next = reconcileSlashSnapshot(current?.mode === 'slash' ? current.token : null, text, caret)
       return next ? { mode: 'slash', token: next } : null
     })
   }, [])
+  const closeInputPanel = () => {
+    if (panel?.mode === 'slash') {
+      dismissedSlashRef.current = { pane: paneRef.current, text: store.read(paneRef.current).text,
+        caret: composerInputRef.current?.selectionStart ?? caretRef.current ?? 0 }
+    }
+    setPanel(null)
+  }
 
   // T010-07: this view is the pane's single editor; the lease is claimed per
   // pane and released on switch/unmount. The F5 capture settle bypasses the
@@ -193,11 +209,13 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
       attachmentIds: readyItems.map(item => item.id),
       attachmentRefs: captured.items.flatMap(item => item.phase.state === 'ready' ? [item.phase.reference] : []),
     }
+    // Resolve the exact backend binding synchronously, before guards await.
+    const capturedGateway = reliableSubmission ? reliableSubmission.capture(snapshot) : gateway
     setSendError('')
     setPendingPane(capturedPane)
     let result: ChatSubmissionResult
     try {
-      result = await chat.submit(snapshot, gateway, () => {
+      result = await chat.submit(snapshot, capturedGateway, () => {
         const current = service.getSnapshot()
         // Native preparation legitimately publishes progress. Preserve strict
         // legacy fencing where no explicit user-navigation epoch is offered.
@@ -235,7 +253,7 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
       // Unknown keeps everything, never auto-retries (US4-2).
       setSendError(`发送结果未知。草稿已保留，请核实状态后再决定是否重发。${result.reason ? ` 原因：${result.reason}` : ''}`)
     }
-  }, [canSend, chat, gateway, location, pendingPane, service, state, store])
+  }, [canSend, chat, gateway, reliableSubmission, location, pendingPane, service, state, store])
 
   const stop = useCallback(() => {
     if (!run?.runId) return
@@ -328,7 +346,7 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
     ? (event: { key: string; preventDefault(): void }) => {
         if (event.key === 'Escape') {
           event.preventDefault()
-          setPanel(null)
+          closeInputPanel()
           return true
         }
         if (panel.mode === 'slash' && ['Enter', 'Tab', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
@@ -438,7 +456,7 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
             onPick={pickEntry}
             onComplete={entry => pickEntry(entry)}
             onRetry={() => setPlusQuery(query => `${query}`)}
-            onClose={() => setPanel(null)} />
+            onClose={closeInputPanel} />
         )}
         <div className="chat-composer-card">
           <div className="chat-input-row">
@@ -474,7 +492,7 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
                 {run?.status === 'stop-requested' ? '停止中…' : '请求停止'}
               </button>
             : <button type="button" className="chat-primary-action chat-send-action" data-testid="chat-send" aria-label="发送"
-                disabled={sendDisabled} onClick={() => void submit()}><span aria-hidden="true">↑</span><span className="chat-sr-only">发送</span></button>}
+                disabled={sendDisabled} onClick={() => void submit()}><span className="chat-sr-only">发送</span></button>}
           </div>
         </div>
         {sendError && <p role="alert" className="chat-error" data-testid="chat-send-error">{sendError}</p>}

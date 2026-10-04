@@ -1,0 +1,25 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts
+
+ ❯ tests/durable-submission.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/durable-submission.test.ts [ tests/durable-submission.test.ts ]
+Error: Cannot find module '../src/durable-submission' imported from /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts/tests/durable-submission.test.ts
+ ❯ tests/durable-submission.test.ts:10:1
+      8|   type FrontendSubmissionRecord,
+      9| } from '../src/frontend-submission-journal'
+     10| import { createDurableSubmissionClient } from '../src/durable-submissi…
+       | ^
+     11|
+     12| function storage() {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  14:10:48
+   Duration  398ms (transform 81ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+

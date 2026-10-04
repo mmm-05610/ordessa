@@ -1,0 +1,124 @@
+F......F.F.F                                                             [100%]
+=================================== FAILURES ===================================
+_ test_existing_submission_uses_environment_once_and_persists_separate_domain_facts _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-825/test_existing_submission_uses_0')
+
+    def test_existing_submission_uses_environment_once_and_persists_separate_domain_facts(tmp_path):
+        service, environment, journal, port, backend_store, domain_store = _service(tmp_path)
+        try:
+            result = service.submit(_input())
+    
+>           assert result.outcome == "accepted"
+E           AssertionError: assert 'unknown' == 'accepted'
+E             
+E             - accepted
+E             + unknown
+
+plugins/agent/backend/tests/test_closeout_submission_service.py:212: AssertionError
+_ test_unknown_native_answer_is_query_only_and_same_key_is_never_redispatched __
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-825/test_unknown_native_answer_is_0')
+
+    def test_unknown_native_answer_is_query_only_and_same_key_is_never_redispatched(tmp_path):
+        service, environment, journal, port, backend_store, domain_store = _service(
+            tmp_path, lose_answer=True,
+        )
+        try:
+            first = service.submit(_input())
+            assert first.outcome == "unknown"
+>           assert first.record.stage == "possibly-submitted"
+E           AssertionError: assert 'mapped' == 'possibly-submitted'
+E             
+E             - possibly-submitted
+E             + mapped
+
+plugins/agent/backend/tests/test_closeout_submission_service.py:336: AssertionError
+___________ test_simultaneous_same_request_enters_native_effect_once ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-825/test_simultaneous_same_request0')
+
+    def test_simultaneous_same_request_enters_native_effect_once(tmp_path):
+        barrier = Barrier(2)
+        service, _, journal, port, backend_store, domain_store = _service(
+            tmp_path, binding_barrier=barrier,
+        )
+        try:
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                results = list(pool.map(lambda _: service.submit(_input()), range(2)))
+            assert len(results) == 2
+            assert all(result.request.request_id == "submission-1" for result in results)
+            assert port.effect_calls == 1
+>           assert journal.read(results[0].request).stage == "completed"
+E           AssertionError: assert 'possibly-submitted' == 'completed'
+E             
+E             - completed
+E             + possibly-submitted
+
+plugins/agent/backend/tests/test_closeout_submission_service.py:378: AssertionError
+_______ test_config_free_submission_allows_empty_owner_operation_capture _______
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-825/test_config_free_submission_al0')
+
+    def test_config_free_submission_allows_empty_owner_operation_capture(tmp_path):
+        service, _, journal, port, backend_store, domain_store = _service(
+            tmp_path, create_config_operation=False,
+        )
+        try:
+>           result = service.submit(_input(config_operation_ids=()))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+plugins/agent/backend/tests/test_closeout_submission_service.py:406: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+plugins/agent/backend/src/ordessa_agent/submission_service.py:313: in submit
+    capture = CaptureTransaction.capture(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'ordessa_agent.capture.CaptureTransaction'>
+submission_id = 'submission-1'
+draft = {'draftId': 'draft-1', 'draftRevision': 7, 'text': 'hello', 'attachmentIds': ['attachment-1']}
+config_op_ids = (), base = 'native-r4'
+target = {'target': 'session:S1', 'mode': 'existing', 'config': {'ownerRef': 'agent-config:session:S1', 'revision': '0', 'observedEvidence': 'unset', 'fields': {}, ...}}
+binding = {'sessionId': 'session-1', 'generation': '2', 'ownerRef': 'harness-owner:session-1', 'surfaceId': 'agent.submit', ...}
+schema = 'agent-input/v1', guarantee = <GuaranteeLevel.RELIABLE: 'reliable'>
+
+    @classmethod
+    def capture(
+        cls,
+        *,
+        submission_id: str,
+        draft: Mapping[str, Any],
+        config_op_ids: tuple[str, ...] | list[str],
+        base: str,
+        target: Mapping[str, Any],
+        binding: Mapping[str, Any],
+        schema: str,
+        guarantee: GuaranteeLevel | str,
+    ) -> "CaptureTransaction":
+        if not isinstance(submission_id, str) or not submission_id.strip():
+            raise CaptureError("submission_id must name the submission")
+        if not isinstance(draft, Mapping):
+            raise CaptureError("draft must map")
+        draft_id = draft.get("draftId")
+        draft_revision = draft.get("draftRevision")
+        if not isinstance(draft_id, str) or not draft_id.strip():
+            raise CaptureError("draft must carry a stable draftId")
+        if not isinstance(draft_revision, int) or draft_revision < 0:
+            raise CaptureError("draft must carry its captured revision")
+        if not isinstance(draft.get("text"), str):
+            raise CaptureError("draft must carry its captured text")
+        attachment_ids = draft.get("attachmentIds", ())
+        if not isinstance(attachment_ids, (list, tuple)) or not all(isinstance(i, str) for i in attachment_ids):
+            raise CaptureError("draft attachmentIds must be id strings")
+        ops = tuple(config_op_ids)
+        if not ops or not all(isinstance(op, str) and op.strip() for op in ops):
+>           raise CaptureError("config_op_ids must name the consumed operations")
+E           ordessa_agent.capture.CaptureError: config_op_ids must name the consumed operations
+
+plugins/agent/backend/src/ordessa_agent/capture.py:77: CaptureError
+=========================== short test summary info ============================
+FAILED plugins/agent/backend/tests/test_closeout_submission_service.py::test_existing_submission_uses_environment_once_and_persists_separate_domain_facts
+FAILED plugins/agent/backend/tests/test_closeout_submission_service.py::test_unknown_native_answer_is_query_only_and_same_key_is_never_redispatched
+FAILED plugins/agent/backend/tests/test_closeout_submission_service.py::test_simultaneous_same_request_enters_native_effect_once
+FAILED plugins/agent/backend/tests/test_closeout_submission_service.py::test_config_free_submission_allows_empty_owner_operation_capture
+4 failed, 8 passed in 0.18s

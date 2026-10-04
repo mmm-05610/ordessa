@@ -19,7 +19,12 @@ import { createUiComponentsService } from '../../../../packages/frontend/ui-comp
 import createPlugin from '../src/entry'
 import { ChatContributionsToken, chatContribution, ChatMessageBodyKey } from '@extensions/ordessa.chat-api/contract.js'
 import type { AgentInteraction } from '@extensions/ordessa.agent-contracts/contract.js'
-import { UiComponentsToken } from '@extensions/ordessa.contracts/contract.js'
+import { UiComponentsToken, type WirePort } from '@extensions/ordessa.contracts/contract.js'
+
+// Entry fixture supplies the declared transport dependency; no connection or effects.
+const unavailableWire = { ready: false, scope: null,
+  async call() { return { kind: 'Refused', reason: 'controlled fixture has no transport' } },
+} as unknown as WirePort
 
 const roots = new Map<HTMLElement, ReturnType<typeof createRoot>>()
 const cleanup: (() => Promise<void>)[] = []
@@ -146,7 +151,7 @@ describe('plugin entry (CHAT-V05/V08 seam)', () => {
     expect(plugin.id).toBe('ordessa.chat')
     expect(plugin.provides).toBe(ChatContributionsToken)
     expect(plugin.requires.at(-1)).toBe(UiComponentsToken)
-    const provided = await plugin.activate({ resources: scope } as never, workbench.service, facade, createUiComponentsService([]).uiComponents)
+    const provided = await plugin.activate({ resources: scope } as never, workbench.service, facade, unavailableWire, createUiComponentsService([]).uiComponents)
     expect(provided).toBeTruthy()
     expect(workbench.getSelection().main).toBe('chat.page')
     // The chat-owned contribution is registered and readable in the toolbar slot.
@@ -169,7 +174,7 @@ describe('plugin entry (CHAT-V05/V08 seam)', () => {
     cleanup.push(async () => scope.dispose())
     const workbench = createWorkbench(scope)
     const plugin = createPlugin()
-    const provided = await plugin.activate({ resources: scope } as never, workbench.service, new FacadeFixture(), createUiComponentsService([]).uiComponents)
+    const provided = await plugin.activate({ resources: scope } as never, workbench.service, new FacadeFixture(), unavailableWire, createUiComponentsService([]).uiComponents)
     expect(() => provided.forScope(scope).addContribution(chatContribution({
       id: 'ordessa.chat.connection-badge', slot: 'composer.toolbar', order: 1, key: ChatMessageBodyKey,
     }))).toThrowError(/ordessa\.chat\.connection-badge/)

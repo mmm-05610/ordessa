@@ -1,0 +1,788 @@
+FFFFFFFFFFF..FFFFFF                                                      [100%]
+=================================== FAILURES ===================================
+___ test_read_and_subscribe_delivers_snapshot_then_delta_with_bounded_credit ___
+
+    def test_read_and_subscribe_delivers_snapshot_then_delta_with_bounded_credit():
+>       environment, _activation, target, _registration, binding = _setup()
+                                                                   ^^^^^^^^
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:73: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:58: in _setup
+    "closeout.plugin", CoreContributionSet(contracts=(_Contract,))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:6: in __init__
+    ???
+packages/backend/pacthold/src/pacthold/core/registration.py:57: in __post_init__
+    _validate_contract(contract)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+contract = <class 'test_closeout_environment_observation._Contract'>
+
+    def _validate_contract(contract: object) -> None:
+        if not isinstance(contract, type):
+            raise CoreDTOError("resource contract must be a Python type")
+        try:
+            validate_contract_id(getattr(contract, "contract_id", None))
+        except CoreError as exc:
+            raise CoreDTOError(f"invalid resource contract: {exc}") from exc
+        if not dataclasses.is_dataclass(contract) or not contract.__dataclass_params__.frozen:
+>           raise CoreDTOError("resource contract must be a frozen dataclass")
+E           pacthold.core.errors.CoreDTOError: resource contract must be a frozen dataclass
+
+packages/backend/pacthold/src/pacthold/core/registration.py:72: CoreDTOError
+_____________ test_resume_gap_is_visible_before_new_full_snapshot ______________
+
+    def test_resume_gap_is_visible_before_new_full_snapshot():
+>       environment, _activation, target, _registration, binding = _setup()
+                                                                   ^^^^^^^^
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:58: in _setup
+    "closeout.plugin", CoreContributionSet(contracts=(_Contract,))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:6: in __init__
+    ???
+packages/backend/pacthold/src/pacthold/core/registration.py:57: in __post_init__
+    _validate_contract(contract)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+contract = <class 'test_closeout_environment_observation._Contract'>
+
+    def _validate_contract(contract: object) -> None:
+        if not isinstance(contract, type):
+            raise CoreDTOError("resource contract must be a Python type")
+        try:
+            validate_contract_id(getattr(contract, "contract_id", None))
+        except CoreError as exc:
+            raise CoreDTOError(f"invalid resource contract: {exc}") from exc
+        if not dataclasses.is_dataclass(contract) or not contract.__dataclass_params__.frozen:
+>           raise CoreDTOError("resource contract must be a frozen dataclass")
+E           pacthold.core.errors.CoreDTOError: resource contract must be a frozen dataclass
+
+packages/backend/pacthold/src/pacthold/core/registration.py:72: CoreDTOError
+______ test_zero_credit_returns_only_gap_and_never_leaks_initial_snapshot ______
+
+    def test_zero_credit_returns_only_gap_and_never_leaks_initial_snapshot():
+>       environment, _activation, target, _registration, binding = _setup()
+                                                                   ^^^^^^^^
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:58: in _setup
+    "closeout.plugin", CoreContributionSet(contracts=(_Contract,))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:6: in __init__
+    ???
+packages/backend/pacthold/src/pacthold/core/registration.py:57: in __post_init__
+    _validate_contract(contract)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+contract = <class 'test_closeout_environment_observation._Contract'>
+
+    def _validate_contract(contract: object) -> None:
+        if not isinstance(contract, type):
+            raise CoreDTOError("resource contract must be a Python type")
+        try:
+            validate_contract_id(getattr(contract, "contract_id", None))
+        except CoreError as exc:
+            raise CoreDTOError(f"invalid resource contract: {exc}") from exc
+        if not dataclasses.is_dataclass(contract) or not contract.__dataclass_params__.frozen:
+>           raise CoreDTOError("resource contract must be a frozen dataclass")
+E           pacthold.core.errors.CoreDTOError: resource contract must be a frozen dataclass
+
+packages/backend/pacthold/src/pacthold/core/registration.py:72: CoreDTOError
+____ test_buffer_overflow_becomes_gap_and_never_truncates_as_current_state _____
+
+    def test_buffer_overflow_becomes_gap_and_never_truncates_as_current_state():
+>       environment, _activation, target, _registration, binding = _setup()
+                                                                   ^^^^^^^^
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:120: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:58: in _setup
+    "closeout.plugin", CoreContributionSet(contracts=(_Contract,))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:6: in __init__
+    ???
+packages/backend/pacthold/src/pacthold/core/registration.py:57: in __post_init__
+    _validate_contract(contract)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+contract = <class 'test_closeout_environment_observation._Contract'>
+
+    def _validate_contract(contract: object) -> None:
+        if not isinstance(contract, type):
+            raise CoreDTOError("resource contract must be a Python type")
+        try:
+            validate_contract_id(getattr(contract, "contract_id", None))
+        except CoreError as exc:
+            raise CoreDTOError(f"invalid resource contract: {exc}") from exc
+        if not dataclasses.is_dataclass(contract) or not contract.__dataclass_params__.frozen:
+>           raise CoreDTOError("resource contract must be a frozen dataclass")
+E           pacthold.core.errors.CoreDTOError: resource contract must be a frozen dataclass
+
+packages/backend/pacthold/src/pacthold/core/registration.py:72: CoreDTOError
+_____ test_authority_is_single_writer_and_exact_registration_is_idempotent _____
+
+    def test_authority_is_single_writer_and_exact_registration_is_idempotent():
+>       environment, activation, target, registration, _binding = _setup()
+                                                                  ^^^^^^^^
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:58: in _setup
+    "closeout.plugin", CoreContributionSet(contracts=(_Contract,))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:6: in __init__
+    ???
+packages/backend/pacthold/src/pacthold/core/registration.py:57: in __post_init__
+    _validate_contract(contract)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+contract = <class 'test_closeout_environment_observation._Contract'>
+
+    def _validate_contract(contract: object) -> None:
+        if not isinstance(contract, type):
+            raise CoreDTOError("resource contract must be a Python type")
+        try:
+            validate_contract_id(getattr(contract, "contract_id", None))
+        except CoreError as exc:
+            raise CoreDTOError(f"invalid resource contract: {exc}") from exc
+        if not dataclasses.is_dataclass(contract) or not contract.__dataclass_params__.frozen:
+>           raise CoreDTOError("resource contract must be a frozen dataclass")
+E           pacthold.core.errors.CoreDTOError: resource contract must be a frozen dataclass
+
+packages/backend/pacthold/src/pacthold/core/registration.py:72: CoreDTOError
+____________ test_observation_ref_cannot_cross_principal_or_target _____________
+
+    def test_observation_ref_cannot_cross_principal_or_target():
+>       environment, _activation, target, _registration, binding = _setup()
+                                                                   ^^^^^^^^
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:155: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:58: in _setup
+    "closeout.plugin", CoreContributionSet(contracts=(_Contract,))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:6: in __init__
+    ???
+packages/backend/pacthold/src/pacthold/core/registration.py:57: in __post_init__
+    _validate_contract(contract)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+contract = <class 'test_closeout_environment_observation._Contract'>
+
+    def _validate_contract(contract: object) -> None:
+        if not isinstance(contract, type):
+            raise CoreDTOError("resource contract must be a Python type")
+        try:
+            validate_contract_id(getattr(contract, "contract_id", None))
+        except CoreError as exc:
+            raise CoreDTOError(f"invalid resource contract: {exc}") from exc
+        if not dataclasses.is_dataclass(contract) or not contract.__dataclass_params__.frozen:
+>           raise CoreDTOError("resource contract must be a frozen dataclass")
+E           pacthold.core.errors.CoreDTOError: resource contract must be a frozen dataclass
+
+packages/backend/pacthold/src/pacthold/core/registration.py:72: CoreDTOError
+______ test_subscription_blocks_drain_and_idempotent_release_unblocks_it _______
+
+    def test_subscription_blocks_drain_and_idempotent_release_unblocks_it():
+>       environment, activation, target, _registration, binding = _setup()
+                                                                  ^^^^^^^^
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:173: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:58: in _setup
+    "closeout.plugin", CoreContributionSet(contracts=(_Contract,))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:6: in __init__
+    ???
+packages/backend/pacthold/src/pacthold/core/registration.py:57: in __post_init__
+    _validate_contract(contract)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+contract = <class 'test_closeout_environment_observation._Contract'>
+
+    def _validate_contract(contract: object) -> None:
+        if not isinstance(contract, type):
+            raise CoreDTOError("resource contract must be a Python type")
+        try:
+            validate_contract_id(getattr(contract, "contract_id", None))
+        except CoreError as exc:
+            raise CoreDTOError(f"invalid resource contract: {exc}") from exc
+        if not dataclasses.is_dataclass(contract) or not contract.__dataclass_params__.frozen:
+>           raise CoreDTOError("resource contract must be a frozen dataclass")
+E           pacthold.core.errors.CoreDTOError: resource contract must be a frozen dataclass
+
+packages/backend/pacthold/src/pacthold/core/registration.py:72: CoreDTOError
+___ test_lease_expiry_detaches_without_background_worker_and_unblocks_drain ____
+
+    def test_lease_expiry_detaches_without_background_worker_and_unblocks_drain():
+>       environment, activation, target, _registration, binding = _setup()
+                                                                  ^^^^^^^^
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:187: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:58: in _setup
+    "closeout.plugin", CoreContributionSet(contracts=(_Contract,))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:6: in __init__
+    ???
+packages/backend/pacthold/src/pacthold/core/registration.py:57: in __post_init__
+    _validate_contract(contract)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+contract = <class 'test_closeout_environment_observation._Contract'>
+
+    def _validate_contract(contract: object) -> None:
+        if not isinstance(contract, type):
+            raise CoreDTOError("resource contract must be a Python type")
+        try:
+            validate_contract_id(getattr(contract, "contract_id", None))
+        except CoreError as exc:
+            raise CoreDTOError(f"invalid resource contract: {exc}") from exc
+        if not dataclasses.is_dataclass(contract) or not contract.__dataclass_params__.frozen:
+>           raise CoreDTOError("resource contract must be a frozen dataclass")
+E           pacthold.core.errors.CoreDTOError: resource contract must be a frozen dataclass
+
+packages/backend/pacthold/src/pacthold/core/registration.py:72: CoreDTOError
+___ test_attach_callback_can_reenter_drain_without_holding_environment_lock ____
+
+    def test_attach_callback_can_reenter_drain_without_holding_environment_lock():
+>       environment, activation, target, _registration, binding = _setup()
+                                                                  ^^^^^^^^
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:200: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:58: in _setup
+    "closeout.plugin", CoreContributionSet(contracts=(_Contract,))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:6: in __init__
+    ???
+packages/backend/pacthold/src/pacthold/core/registration.py:57: in __post_init__
+    _validate_contract(contract)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+contract = <class 'test_closeout_environment_observation._Contract'>
+
+    def _validate_contract(contract: object) -> None:
+        if not isinstance(contract, type):
+            raise CoreDTOError("resource contract must be a Python type")
+        try:
+            validate_contract_id(getattr(contract, "contract_id", None))
+        except CoreError as exc:
+            raise CoreDTOError(f"invalid resource contract: {exc}") from exc
+        if not dataclasses.is_dataclass(contract) or not contract.__dataclass_params__.frozen:
+>           raise CoreDTOError("resource contract must be a frozen dataclass")
+E           pacthold.core.errors.CoreDTOError: resource contract must be a frozen dataclass
+
+packages/backend/pacthold/src/pacthold/core/registration.py:72: CoreDTOError
+____________ test_non_observe_policy_refusal_does_not_attach_source ____________
+
+    def test_non_observe_policy_refusal_does_not_attach_source():
+>       environment, _activation, target, _registration, binding = _setup()
+                                                                   ^^^^^^^^
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:218: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py:58: in _setup
+    "closeout.plugin", CoreContributionSet(contracts=(_Contract,))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:6: in __init__
+    ???
+packages/backend/pacthold/src/pacthold/core/registration.py:57: in __post_init__
+    _validate_contract(contract)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+contract = <class 'test_closeout_environment_observation._Contract'>
+
+    def _validate_contract(contract: object) -> None:
+        if not isinstance(contract, type):
+            raise CoreDTOError("resource contract must be a Python type")
+        try:
+            validate_contract_id(getattr(contract, "contract_id", None))
+        except CoreError as exc:
+            raise CoreDTOError(f"invalid resource contract: {exc}") from exc
+        if not dataclasses.is_dataclass(contract) or not contract.__dataclass_params__.frozen:
+>           raise CoreDTOError("resource contract must be a frozen dataclass")
+E           pacthold.core.errors.CoreDTOError: resource contract must be a frozen dataclass
+
+packages/backend/pacthold/src/pacthold/core/registration.py:72: CoreDTOError
+_ test_default_product_two_wire_controls_share_backend_draft_without_native_creation _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-831/test_default_product_two_wire_0')
+
+    def test_default_product_two_wire_controls_share_backend_draft_without_native_creation(tmp_path):
+>       runtime=create_composition().default_runtime(tmp_path/'data')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+products/server/tests/test_closeout_agent_configuration.py:8: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+products/server/src/ordessa_server_product/composition.py:296: in default_runtime
+    runtime = build_runtime(data_root, secret_store=product_secret_store(data_root),
+apps/server/src/ordessa_server/bootstrap/runtime.py:803: in build_runtime
+    plugin_host.activate_all(selected_plugins)
+apps/server/src/ordessa_server/plugin_host/host.py:509: in activate_all
+    activated.append(self._activate_one(by_id[plugin_id], descriptors[plugin_id]))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+apps/server/src/ordessa_server/plugin_host/host.py:643: in _activate_one
+    self._stage_contributions(descriptor.id, registration.contributions)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ServerPluginHost(methods=<ordessa_server.plugin_host.host.MethodRegistry object at 0x713decf7cda0>, stream_routes=<ord...rror_family_resolver': <function build_runtime.<locals>.<lambda> at 0x713ded3e0ae0>}, _active={}, _activation_order=[])
+owner = 'ordessa.sandbox-adapters'
+batch = ContributionBatch(contributions=(Contribution(point_id='harness.configuration-adapters', api_version='v1', payload=Har...SandboxAdapter object at 0x713dec2404a0>), required=False)), open_points=frozenset({'harness.configuration-adapters'}))
+
+    def _stage_contributions(self, owner: str, batch: ContributionBatch) -> None:
+        """Admission-check and stage one registration's batch, no publish.
+    
+        Every entry passes the host's point registry first — bound
+        handler, accepted api_version, and for exclusive points no
+        published or round-claimed holder (a takeover always retires
+        first, even by the same owner). Each contribution then stages
+        through ITS point's handler with the host injecting the owner:
+        author code names neither. The batch's `required` flags are
+        checked against the whole batch before the first stage."""
+        batch.check_required()
+        for item in batch.contributions:
+            point = self.contribution_points.point(item.point_id)
+            if point is None or point.handler is None:
+>               raise ContributionPointUnboundError(item.point_id, owner)
+E               server_plugin_api.errors.ContributionPointUnboundError: PLUGIN_CONTRIBUTION_POINT_UNBOUND: contribution point harness.configuration-adapters carries no host-bound handler; the batch by 'ordessa.sandbox-adapters' is refused (register the point and bind its handler, or do not declare it)
+
+apps/server/src/ordessa_server/plugin_host/host.py:705: ContributionPointUnboundError
+_ test_controlled_native_two_rounds_and_restart_history_use_real_product_wire[True] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-831/test_controlled_native_two_rou0')
+include_profile = True
+
+    @pytest.mark.parametrize("include_profile", [True, False])
+    def test_controlled_native_two_rounds_and_restart_history_use_real_product_wire(
+        tmp_path, include_profile,
+    ):
+        effects_db = tmp_path / "native-effects.sqlite"
+        native = ControlledNativeFixture(
+            effects_db,
+            mode="createWithConfig",
+            attachment_bytes={ATTACHMENT_ID: ATTACHMENT_BYTES},
+        )
+        fingerprint = _test_fingerprint_fixture()
+        policy = controlled_submission_policy()
+        data_root = tmp_path / "server-data"
+    
+>       runtime = _runtime(data_root, native, fingerprint, policy, include_profile=include_profile)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+products/server/tests/test_closeout_submission_composition.py:110: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+products/server/tests/test_closeout_submission_composition.py:46: in _runtime
+    return composition.default_runtime(data_root, include_profile=include_profile)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+products/server/src/ordessa_server_product/composition.py:296: in default_runtime
+    runtime = build_runtime(data_root, secret_store=product_secret_store(data_root),
+apps/server/src/ordessa_server/bootstrap/runtime.py:803: in build_runtime
+    plugin_host.activate_all(selected_plugins)
+apps/server/src/ordessa_server/plugin_host/host.py:509: in activate_all
+    activated.append(self._activate_one(by_id[plugin_id], descriptors[plugin_id]))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+apps/server/src/ordessa_server/plugin_host/host.py:643: in _activate_one
+    self._stage_contributions(descriptor.id, registration.contributions)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ServerPluginHost(methods=<ordessa_server.plugin_host.host.MethodRegistry object at 0x713dec1db680>, stream_routes=<ord...rror_family_resolver': <function build_runtime.<locals>.<lambda> at 0x713dec1a0a40>}, _active={}, _activation_order=[])
+owner = 'ordessa.sandbox-adapters'
+batch = ContributionBatch(contributions=(Contribution(point_id='harness.configuration-adapters', api_version='v1', payload=Har...SandboxAdapter object at 0x713dec0adee0>), required=False)), open_points=frozenset({'harness.configuration-adapters'}))
+
+    def _stage_contributions(self, owner: str, batch: ContributionBatch) -> None:
+        """Admission-check and stage one registration's batch, no publish.
+    
+        Every entry passes the host's point registry first — bound
+        handler, accepted api_version, and for exclusive points no
+        published or round-claimed holder (a takeover always retires
+        first, even by the same owner). Each contribution then stages
+        through ITS point's handler with the host injecting the owner:
+        author code names neither. The batch's `required` flags are
+        checked against the whole batch before the first stage."""
+        batch.check_required()
+        for item in batch.contributions:
+            point = self.contribution_points.point(item.point_id)
+            if point is None or point.handler is None:
+>               raise ContributionPointUnboundError(item.point_id, owner)
+E               server_plugin_api.errors.ContributionPointUnboundError: PLUGIN_CONTRIBUTION_POINT_UNBOUND: contribution point harness.configuration-adapters carries no host-bound handler; the batch by 'ordessa.sandbox-adapters' is refused (register the point and bind its handler, or do not declare it)
+
+apps/server/src/ordessa_server/plugin_host/host.py:705: ContributionPointUnboundError
+_ test_controlled_native_two_rounds_and_restart_history_use_real_product_wire[False] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-831/test_controlled_native_two_rou1')
+include_profile = False
+
+    @pytest.mark.parametrize("include_profile", [True, False])
+    def test_controlled_native_two_rounds_and_restart_history_use_real_product_wire(
+        tmp_path, include_profile,
+    ):
+        effects_db = tmp_path / "native-effects.sqlite"
+        native = ControlledNativeFixture(
+            effects_db,
+            mode="createWithConfig",
+            attachment_bytes={ATTACHMENT_ID: ATTACHMENT_BYTES},
+        )
+        fingerprint = _test_fingerprint_fixture()
+        policy = controlled_submission_policy()
+        data_root = tmp_path / "server-data"
+    
+>       runtime = _runtime(data_root, native, fingerprint, policy, include_profile=include_profile)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+products/server/tests/test_closeout_submission_composition.py:110: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+products/server/tests/test_closeout_submission_composition.py:46: in _runtime
+    return composition.default_runtime(data_root, include_profile=include_profile)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+products/server/src/ordessa_server_product/composition.py:296: in default_runtime
+    runtime = build_runtime(data_root, secret_store=product_secret_store(data_root),
+apps/server/src/ordessa_server/bootstrap/runtime.py:803: in build_runtime
+    plugin_host.activate_all(selected_plugins)
+apps/server/src/ordessa_server/plugin_host/host.py:509: in activate_all
+    activated.append(self._activate_one(by_id[plugin_id], descriptors[plugin_id]))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+apps/server/src/ordessa_server/plugin_host/host.py:643: in _activate_one
+    self._stage_contributions(descriptor.id, registration.contributions)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ServerPluginHost(methods=<ordessa_server.plugin_host.host.MethodRegistry object at 0x713dec2f3620>, stream_routes=<ord...rror_family_resolver': <function build_runtime.<locals>.<lambda> at 0x713dec1a0360>}, _active={}, _activation_order=[])
+owner = 'ordessa.sandbox-adapters'
+batch = ContributionBatch(contributions=(Contribution(point_id='harness.configuration-adapters', api_version='v1', payload=Har...SandboxAdapter object at 0x713dec1ce390>), required=False)), open_points=frozenset({'harness.configuration-adapters'}))
+
+    def _stage_contributions(self, owner: str, batch: ContributionBatch) -> None:
+        """Admission-check and stage one registration's batch, no publish.
+    
+        Every entry passes the host's point registry first — bound
+        handler, accepted api_version, and for exclusive points no
+        published or round-claimed holder (a takeover always retires
+        first, even by the same owner). Each contribution then stages
+        through ITS point's handler with the host injecting the owner:
+        author code names neither. The batch's `required` flags are
+        checked against the whole batch before the first stage."""
+        batch.check_required()
+        for item in batch.contributions:
+            point = self.contribution_points.point(item.point_id)
+            if point is None or point.handler is None:
+>               raise ContributionPointUnboundError(item.point_id, owner)
+E               server_plugin_api.errors.ContributionPointUnboundError: PLUGIN_CONTRIBUTION_POINT_UNBOUND: contribution point harness.configuration-adapters carries no host-bound handler; the batch by 'ordessa.sandbox-adapters' is refused (register the point and bind its handler, or do not declare it)
+
+apps/server/src/ordessa_server/plugin_host/host.py:705: ContributionPointUnboundError
+_ test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects[native] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-831/test_missing_native_capability0')
+missing = 'native'
+
+    @pytest.mark.parametrize("missing", ["native", "native-condition", "fingerprint", "policy"])
+    def test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects(
+        tmp_path, missing,
+    ):
+        mode = "createWithConfig" if missing == "native-condition" else "existing"
+        native = ControlledNativeFixture(
+            tmp_path / "native-effects.sqlite", mode=mode,
+            attachment_bytes={ATTACHMENT_ID: ATTACHMENT_BYTES},
+            create_with_config_conditional=(missing != "native-condition"),
+        )
+        fingerprint = _test_fingerprint_fixture()
+        policy = None
+        if missing == "native":
+            native_port = None
+        else:
+            native_port = native
+        if missing == "fingerprint":
+            fingerprint = None
+        if missing == "policy":
+            # Product's default local policy deliberately refuses agent.submit.
+            # This must remain a typed authorization refusal before any native call.
+            policy = None
+    
+>       runtime = _runtime(
+            tmp_path / "server-data", native_port, fingerprint, policy, include_profile=False,
+        )
+
+products/server/tests/test_closeout_submission_composition.py:246: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+products/server/tests/test_closeout_submission_composition.py:46: in _runtime
+    return composition.default_runtime(data_root, include_profile=include_profile)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+products/server/src/ordessa_server_product/composition.py:296: in default_runtime
+    runtime = build_runtime(data_root, secret_store=product_secret_store(data_root),
+apps/server/src/ordessa_server/bootstrap/runtime.py:803: in build_runtime
+    plugin_host.activate_all(selected_plugins)
+apps/server/src/ordessa_server/plugin_host/host.py:509: in activate_all
+    activated.append(self._activate_one(by_id[plugin_id], descriptors[plugin_id]))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+apps/server/src/ordessa_server/plugin_host/host.py:643: in _activate_one
+    self._stage_contributions(descriptor.id, registration.contributions)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ServerPluginHost(methods=<ordessa_server.plugin_host.host.MethodRegistry object at 0x713dec1cce30>, stream_routes=<ord...rror_family_resolver': <function build_runtime.<locals>.<lambda> at 0x713dec086160>}, _active={}, _activation_order=[])
+owner = 'ordessa.sandbox-adapters'
+batch = ContributionBatch(contributions=(Contribution(point_id='harness.configuration-adapters', api_version='v1', payload=Har...SandboxAdapter object at 0x713dec1cdcd0>), required=False)), open_points=frozenset({'harness.configuration-adapters'}))
+
+    def _stage_contributions(self, owner: str, batch: ContributionBatch) -> None:
+        """Admission-check and stage one registration's batch, no publish.
+    
+        Every entry passes the host's point registry first — bound
+        handler, accepted api_version, and for exclusive points no
+        published or round-claimed holder (a takeover always retires
+        first, even by the same owner). Each contribution then stages
+        through ITS point's handler with the host injecting the owner:
+        author code names neither. The batch's `required` flags are
+        checked against the whole batch before the first stage."""
+        batch.check_required()
+        for item in batch.contributions:
+            point = self.contribution_points.point(item.point_id)
+            if point is None or point.handler is None:
+>               raise ContributionPointUnboundError(item.point_id, owner)
+E               server_plugin_api.errors.ContributionPointUnboundError: PLUGIN_CONTRIBUTION_POINT_UNBOUND: contribution point harness.configuration-adapters carries no host-bound handler; the batch by 'ordessa.sandbox-adapters' is refused (register the point and bind its handler, or do not declare it)
+
+apps/server/src/ordessa_server/plugin_host/host.py:705: ContributionPointUnboundError
+_ test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects[native-condition] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-831/test_missing_native_capability1')
+missing = 'native-condition'
+
+    @pytest.mark.parametrize("missing", ["native", "native-condition", "fingerprint", "policy"])
+    def test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects(
+        tmp_path, missing,
+    ):
+        mode = "createWithConfig" if missing == "native-condition" else "existing"
+        native = ControlledNativeFixture(
+            tmp_path / "native-effects.sqlite", mode=mode,
+            attachment_bytes={ATTACHMENT_ID: ATTACHMENT_BYTES},
+            create_with_config_conditional=(missing != "native-condition"),
+        )
+        fingerprint = _test_fingerprint_fixture()
+        policy = None
+        if missing == "native":
+            native_port = None
+        else:
+            native_port = native
+        if missing == "fingerprint":
+            fingerprint = None
+        if missing == "policy":
+            # Product's default local policy deliberately refuses agent.submit.
+            # This must remain a typed authorization refusal before any native call.
+            policy = None
+    
+>       runtime = _runtime(
+            tmp_path / "server-data", native_port, fingerprint, policy, include_profile=False,
+        )
+
+products/server/tests/test_closeout_submission_composition.py:246: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+products/server/tests/test_closeout_submission_composition.py:46: in _runtime
+    return composition.default_runtime(data_root, include_profile=include_profile)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+products/server/src/ordessa_server_product/composition.py:296: in default_runtime
+    runtime = build_runtime(data_root, secret_store=product_secret_store(data_root),
+apps/server/src/ordessa_server/bootstrap/runtime.py:803: in build_runtime
+    plugin_host.activate_all(selected_plugins)
+apps/server/src/ordessa_server/plugin_host/host.py:509: in activate_all
+    activated.append(self._activate_one(by_id[plugin_id], descriptors[plugin_id]))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+apps/server/src/ordessa_server/plugin_host/host.py:643: in _activate_one
+    self._stage_contributions(descriptor.id, registration.contributions)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ServerPluginHost(methods=<ordessa_server.plugin_host.host.MethodRegistry object at 0x713dec0ec3e0>, stream_routes=<ord...rror_family_resolver': <function build_runtime.<locals>.<lambda> at 0x713dec07df80>}, _active={}, _activation_order=[])
+owner = 'ordessa.sandbox-adapters'
+batch = ContributionBatch(contributions=(Contribution(point_id='harness.configuration-adapters', api_version='v1', payload=Har...SandboxAdapter object at 0x713dec073a70>), required=False)), open_points=frozenset({'harness.configuration-adapters'}))
+
+    def _stage_contributions(self, owner: str, batch: ContributionBatch) -> None:
+        """Admission-check and stage one registration's batch, no publish.
+    
+        Every entry passes the host's point registry first — bound
+        handler, accepted api_version, and for exclusive points no
+        published or round-claimed holder (a takeover always retires
+        first, even by the same owner). Each contribution then stages
+        through ITS point's handler with the host injecting the owner:
+        author code names neither. The batch's `required` flags are
+        checked against the whole batch before the first stage."""
+        batch.check_required()
+        for item in batch.contributions:
+            point = self.contribution_points.point(item.point_id)
+            if point is None or point.handler is None:
+>               raise ContributionPointUnboundError(item.point_id, owner)
+E               server_plugin_api.errors.ContributionPointUnboundError: PLUGIN_CONTRIBUTION_POINT_UNBOUND: contribution point harness.configuration-adapters carries no host-bound handler; the batch by 'ordessa.sandbox-adapters' is refused (register the point and bind its handler, or do not declare it)
+
+apps/server/src/ordessa_server/plugin_host/host.py:705: ContributionPointUnboundError
+_ test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects[fingerprint] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-831/test_missing_native_capability2')
+missing = 'fingerprint'
+
+    @pytest.mark.parametrize("missing", ["native", "native-condition", "fingerprint", "policy"])
+    def test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects(
+        tmp_path, missing,
+    ):
+        mode = "createWithConfig" if missing == "native-condition" else "existing"
+        native = ControlledNativeFixture(
+            tmp_path / "native-effects.sqlite", mode=mode,
+            attachment_bytes={ATTACHMENT_ID: ATTACHMENT_BYTES},
+            create_with_config_conditional=(missing != "native-condition"),
+        )
+        fingerprint = _test_fingerprint_fixture()
+        policy = None
+        if missing == "native":
+            native_port = None
+        else:
+            native_port = native
+        if missing == "fingerprint":
+            fingerprint = None
+        if missing == "policy":
+            # Product's default local policy deliberately refuses agent.submit.
+            # This must remain a typed authorization refusal before any native call.
+            policy = None
+    
+>       runtime = _runtime(
+            tmp_path / "server-data", native_port, fingerprint, policy, include_profile=False,
+        )
+
+products/server/tests/test_closeout_submission_composition.py:246: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+products/server/tests/test_closeout_submission_composition.py:46: in _runtime
+    return composition.default_runtime(data_root, include_profile=include_profile)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+products/server/src/ordessa_server_product/composition.py:296: in default_runtime
+    runtime = build_runtime(data_root, secret_store=product_secret_store(data_root),
+apps/server/src/ordessa_server/bootstrap/runtime.py:803: in build_runtime
+    plugin_host.activate_all(selected_plugins)
+apps/server/src/ordessa_server/plugin_host/host.py:509: in activate_all
+    activated.append(self._activate_one(by_id[plugin_id], descriptors[plugin_id]))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+apps/server/src/ordessa_server/plugin_host/host.py:643: in _activate_one
+    self._stage_contributions(descriptor.id, registration.contributions)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ServerPluginHost(methods=<ordessa_server.plugin_host.host.MethodRegistry object at 0x713dec0718b0>, stream_routes=<ord...rror_family_resolver': <function build_runtime.<locals>.<lambda> at 0x713dec09d120>}, _active={}, _activation_order=[])
+owner = 'ordessa.sandbox-adapters'
+batch = ContributionBatch(contributions=(Contribution(point_id='harness.configuration-adapters', api_version='v1', payload=Har...SandboxAdapter object at 0x713dec1ce4b0>), required=False)), open_points=frozenset({'harness.configuration-adapters'}))
+
+    def _stage_contributions(self, owner: str, batch: ContributionBatch) -> None:
+        """Admission-check and stage one registration's batch, no publish.
+    
+        Every entry passes the host's point registry first — bound
+        handler, accepted api_version, and for exclusive points no
+        published or round-claimed holder (a takeover always retires
+        first, even by the same owner). Each contribution then stages
+        through ITS point's handler with the host injecting the owner:
+        author code names neither. The batch's `required` flags are
+        checked against the whole batch before the first stage."""
+        batch.check_required()
+        for item in batch.contributions:
+            point = self.contribution_points.point(item.point_id)
+            if point is None or point.handler is None:
+>               raise ContributionPointUnboundError(item.point_id, owner)
+E               server_plugin_api.errors.ContributionPointUnboundError: PLUGIN_CONTRIBUTION_POINT_UNBOUND: contribution point harness.configuration-adapters carries no host-bound handler; the batch by 'ordessa.sandbox-adapters' is refused (register the point and bind its handler, or do not declare it)
+
+apps/server/src/ordessa_server/plugin_host/host.py:705: ContributionPointUnboundError
+_ test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects[policy] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-831/test_missing_native_capability3')
+missing = 'policy'
+
+    @pytest.mark.parametrize("missing", ["native", "native-condition", "fingerprint", "policy"])
+    def test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects(
+        tmp_path, missing,
+    ):
+        mode = "createWithConfig" if missing == "native-condition" else "existing"
+        native = ControlledNativeFixture(
+            tmp_path / "native-effects.sqlite", mode=mode,
+            attachment_bytes={ATTACHMENT_ID: ATTACHMENT_BYTES},
+            create_with_config_conditional=(missing != "native-condition"),
+        )
+        fingerprint = _test_fingerprint_fixture()
+        policy = None
+        if missing == "native":
+            native_port = None
+        else:
+            native_port = native
+        if missing == "fingerprint":
+            fingerprint = None
+        if missing == "policy":
+            # Product's default local policy deliberately refuses agent.submit.
+            # This must remain a typed authorization refusal before any native call.
+            policy = None
+    
+>       runtime = _runtime(
+            tmp_path / "server-data", native_port, fingerprint, policy, include_profile=False,
+        )
+
+products/server/tests/test_closeout_submission_composition.py:246: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+products/server/tests/test_closeout_submission_composition.py:46: in _runtime
+    return composition.default_runtime(data_root, include_profile=include_profile)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+products/server/src/ordessa_server_product/composition.py:296: in default_runtime
+    runtime = build_runtime(data_root, secret_store=product_secret_store(data_root),
+apps/server/src/ordessa_server/bootstrap/runtime.py:803: in build_runtime
+    plugin_host.activate_all(selected_plugins)
+apps/server/src/ordessa_server/plugin_host/host.py:509: in activate_all
+    activated.append(self._activate_one(by_id[plugin_id], descriptors[plugin_id]))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+apps/server/src/ordessa_server/plugin_host/host.py:643: in _activate_one
+    self._stage_contributions(descriptor.id, registration.contributions)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ServerPluginHost(methods=<ordessa_server.plugin_host.host.MethodRegistry object at 0x713dec1ce120>, stream_routes=<ord...rror_family_resolver': <function build_runtime.<locals>.<lambda> at 0x713dec09c5e0>}, _active={}, _activation_order=[])
+owner = 'ordessa.sandbox-adapters'
+batch = ContributionBatch(contributions=(Contribution(point_id='harness.configuration-adapters', api_version='v1', payload=Har...SandboxAdapter object at 0x713dec0c0710>), required=False)), open_points=frozenset({'harness.configuration-adapters'}))
+
+    def _stage_contributions(self, owner: str, batch: ContributionBatch) -> None:
+        """Admission-check and stage one registration's batch, no publish.
+    
+        Every entry passes the host's point registry first — bound
+        handler, accepted api_version, and for exclusive points no
+        published or round-claimed holder (a takeover always retires
+        first, even by the same owner). Each contribution then stages
+        through ITS point's handler with the host injecting the owner:
+        author code names neither. The batch's `required` flags are
+        checked against the whole batch before the first stage."""
+        batch.check_required()
+        for item in batch.contributions:
+            point = self.contribution_points.point(item.point_id)
+            if point is None or point.handler is None:
+>               raise ContributionPointUnboundError(item.point_id, owner)
+E               server_plugin_api.errors.ContributionPointUnboundError: PLUGIN_CONTRIBUTION_POINT_UNBOUND: contribution point harness.configuration-adapters carries no host-bound handler; the batch by 'ordessa.sandbox-adapters' is refused (register the point and bind its handler, or do not declare it)
+
+apps/server/src/ordessa_server/plugin_host/host.py:705: ContributionPointUnboundError
+ARTIFACT_worker-debug=ABSENT workers/agent-box-worker/target/debug/agent-box-worker
+ARTIFACT_worker-release=ABSENT workers/agent-box-worker/target/release/agent-box-worker
+ARTIFACT_worker-musl-dir=ABSENT workers/agent-box-worker/target/x86_64-unknown-linux-musl
+ARTIFACT_sidecar-entry=ABSENT plugins/agent-box-harness/runtime/worker-entry.mjs
+ARTIFACT_acp-npm-closure=ABSENT plugins/agent-box-harness/packaging/claude/node_modules/@agentclientprotocol/claude-agent-acp
+TOOL_bwrap=present
+TOOL_node=present
+TOOL_npm=present
+TOOL_claude=ABSENT
+TOOL_tmux=present
+TOOL_wsl.exe=ABSENT
+SKIPPED_TOTAL=0
+WORKER_ARTIFACT=ABSENT
+VERDICT=FAILED
+=========================== short test summary info ============================
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py::test_read_and_subscribe_delivers_snapshot_then_delta_with_bounded_credit
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py::test_resume_gap_is_visible_before_new_full_snapshot
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py::test_zero_credit_returns_only_gap_and_never_leaks_initial_snapshot
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py::test_buffer_overflow_becomes_gap_and_never_truncates_as_current_state
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py::test_authority_is_single_writer_and_exact_registration_is_idempotent
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py::test_observation_ref_cannot_cross_principal_or_target
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py::test_subscription_blocks_drain_and_idempotent_release_unblocks_it
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py::test_lease_expiry_detaches_without_background_worker_and_unblocks_drain
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py::test_attach_callback_can_reenter_drain_without_holding_environment_lock
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_observation.py::test_non_observe_policy_refusal_does_not_attach_source
+FAILED packages/backend/pacthold::test_default_product_two_wire_controls_share_backend_draft_without_native_creation
+FAILED packages/backend/pacthold::test_controlled_native_two_rounds_and_restart_history_use_real_product_wire[True]
+FAILED packages/backend/pacthold::test_controlled_native_two_rounds_and_restart_history_use_real_product_wire[False]
+FAILED packages/backend/pacthold::test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects[native]
+FAILED packages/backend/pacthold::test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects[native-condition]
+FAILED packages/backend/pacthold::test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects[fingerprint]
+FAILED packages/backend/pacthold::test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects[policy]
+17 failed, 2 passed in 1.09s

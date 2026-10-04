@@ -1,0 +1,77 @@
+..........F.                                                             [100%]
+=================================== FAILURES ===================================
+_______ test_concurrent_identical_claims_have_exactly_one_dispatch_owner _______
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-815/test_concurrent_identical_clai0')
+
+    def test_concurrent_identical_claims_have_exactly_one_dispatch_owner(tmp_path):
+        store = SqliteStorePort(tmp_path / "claims.sqlite3")
+        request = _key("concurrent")
+        with ThreadPoolExecutor(max_workers=12) as pool:
+>           outcomes = list(pool.map(lambda _: store.claim_dispatch(request, "c" * 64), range(48)))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+packages/backend/persistence-sqlite/tests/test_closeout_dispatch_claim.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py:619: in result_iterator
+    yield _result_or_cancel(fs.pop())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py:317: in _result_or_cancel
+    return fut.result(timeout)
+           ^^^^^^^^^^^^^^^^^^^
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/concurrent/futures/thread.py:59: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+packages/backend/persistence-sqlite/tests/test_closeout_dispatch_claim.py:48: in <lambda>
+    outcomes = list(pool.map(lambda _: store.claim_dispatch(request, "c" * 64), range(48)))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_persistence_sqlite.store.SqliteStorePort object at 0x74db3715b620>
+key = RequestKey(environment_namespace='env-closeout', principal_scope='user:local:test', request_id='concurrent', comparison={})
+digest = 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc'
+
+    def claim_dispatch(self, key: RequestKey, digest: str) -> bool:
+        """Atomically claim effect dispatch for one complete RequestKey.
+    
+        ``True`` grants the one dispatch claim. A same-digest existing row is
+        already spent and returns ``False``; a changed digest is a conflict.
+        The initial row is committed as possibly-dispatched/unknown before a
+        caller can enter native code, so recovery can never infer permission
+        to send again from a missing final receipt.
+        """
+        identity = (key.environment_namespace, key.principal_scope, key.request_id)
+        unknown_receipt = json.dumps({
+            "delivery": "issue_possible", "issued_revision": "rev-0",
+            "safe_summary": {"recovery": "dispatch-claimed"}, "sequences": None,
+        }, sort_keys=True)
+        unknown_current = json.dumps({
+            "outcome": "unknown", "revision": 0, "conflicts": [], "obligations": [],
+        }, sort_keys=True)
+        try:
+>           self._conn.execute("BEGIN IMMEDIATE")
+E           sqlite3.OperationalError: cannot start a transaction within a transaction
+
+packages/backend/persistence-sqlite/src/ordessa_persistence_sqlite/store.py:254: OperationalError
+ARTIFACT_worker-debug=ABSENT workers/agent-box-worker/target/debug/agent-box-worker
+ARTIFACT_worker-release=ABSENT workers/agent-box-worker/target/release/agent-box-worker
+ARTIFACT_worker-musl-dir=ABSENT workers/agent-box-worker/target/x86_64-unknown-linux-musl
+ARTIFACT_sidecar-entry=ABSENT plugins/agent-box-harness/runtime/worker-entry.mjs
+ARTIFACT_acp-npm-closure=ABSENT plugins/agent-box-harness/packaging/claude/node_modules/@agentclientprotocol/claude-agent-acp
+TOOL_bwrap=present
+TOOL_node=present
+TOOL_npm=present
+TOOL_claude=ABSENT
+TOOL_tmux=present
+TOOL_wsl.exe=ABSENT
+SKIPPED_TOTAL=0
+WORKER_ARTIFACT=ABSENT
+VERDICT=FAILED
+=========================== short test summary info ============================
+FAILED packages/backend/pacthold::test_concurrent_identical_claims_have_exactly_one_dispatch_owner
+1 failed, 11 passed in 0.15s

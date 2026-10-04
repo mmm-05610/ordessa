@@ -1,0 +1,215 @@
+FFFFFF                                                                   [100%]
+=================================== FAILURES ===================================
+_ test_existing_submission_uses_environment_once_and_persists_separate_domain_facts _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-823/test_existing_submission_uses_0')
+
+    def test_existing_submission_uses_environment_once_and_persists_separate_domain_facts(tmp_path):
+        service, environment, journal, port, backend_store, domain_store = _service(tmp_path)
+        try:
+>           result = service.submit(_input())
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+plugins/agent/backend/tests/test_closeout_submission_service.py:199: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+plugins/agent/backend/src/ordessa_agent/submission_service.py:185: in submit
+    prior = self._find_prior(item)
+            ^^^^^^^^^^^^^^^^^^^^^^
+plugins/agent/backend/src/ordessa_agent/submission_service.py:396: in _find_prior
+    return self.journal.read(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/agent/backend/src/ordessa_agent/submission_journal.py:404: in read
+    return self._record(self._read_row(request))
+                        ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_agent.submission_journal.SubmissionJournal object at 0x761a33bd13a0>
+request = RequestKey(environment_namespace='env-agent-service', principal_scope='user:local:agent-test', request_id='submission-1', comparison={})
+
+    def _read_row(self, request: RequestKey) -> sqlite3.Row | None:
+        connection = self._store.transaction()
+>       connection.row_factory = sqlite3.Row
+        ^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: '_SerializedConnectionView' object has no attribute 'row_factory'
+
+plugins/agent/backend/src/ordessa_agent/submission_journal.py:185: AttributeError
+_ test_same_request_id_with_changed_immutable_input_conflicts_without_second_effect _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-823/test_same_request_id_with_chan0')
+
+    def test_same_request_id_with_changed_immutable_input_conflicts_without_second_effect(tmp_path):
+        service, _, _, port, backend_store, domain_store = _service(tmp_path)
+        try:
+>           service.submit(_input())
+
+plugins/agent/backend/tests/test_closeout_submission_service.py:231: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+plugins/agent/backend/src/ordessa_agent/submission_service.py:185: in submit
+    prior = self._find_prior(item)
+            ^^^^^^^^^^^^^^^^^^^^^^
+plugins/agent/backend/src/ordessa_agent/submission_service.py:396: in _find_prior
+    return self.journal.read(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/agent/backend/src/ordessa_agent/submission_journal.py:404: in read
+    return self._record(self._read_row(request))
+                        ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_agent.submission_journal.SubmissionJournal object at 0x761a33bd2750>
+request = RequestKey(environment_namespace='env-agent-service', principal_scope='user:local:agent-test', request_id='submission-1', comparison={})
+
+    def _read_row(self, request: RequestKey) -> sqlite3.Row | None:
+        connection = self._store.transaction()
+>       connection.row_factory = sqlite3.Row
+        ^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: '_SerializedConnectionView' object has no attribute 'row_factory'
+
+plugins/agent/backend/src/ordessa_agent/submission_journal.py:185: AttributeError
+_ test_create_with_config_requires_declared_conditional_support_and_never_falls_back _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-823/test_create_with_config_requir0')
+
+    def test_create_with_config_requires_declared_conditional_support_and_never_falls_back(tmp_path):
+        service, _, journal, port, backend_store, domain_store = _service(
+            tmp_path, mode="createWithConfig", supports_create_with_config=False,
+        )
+        try:
+            with pytest.raises(ReliableSubmissionUnsupported, match="createWithConfig"):
+>               service.submit(_input(mode="createWithConfig"))
+
+plugins/agent/backend/tests/test_closeout_submission_service.py:246: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+plugins/agent/backend/src/ordessa_agent/submission_service.py:185: in submit
+    prior = self._find_prior(item)
+            ^^^^^^^^^^^^^^^^^^^^^^
+plugins/agent/backend/src/ordessa_agent/submission_service.py:396: in _find_prior
+    return self.journal.read(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/agent/backend/src/ordessa_agent/submission_journal.py:404: in read
+    return self._record(self._read_row(request))
+                        ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_agent.submission_journal.SubmissionJournal object at 0x761a33bd1370>
+request = RequestKey(environment_namespace='env-agent-service', principal_scope='user:local:agent-test', request_id='submission-1', comparison={})
+
+    def _read_row(self, request: RequestKey) -> sqlite3.Row | None:
+        connection = self._store.transaction()
+>       connection.row_factory = sqlite3.Row
+        ^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: '_SerializedConnectionView' object has no attribute 'row_factory'
+
+plugins/agent/backend/src/ordessa_agent/submission_journal.py:185: AttributeError
+_ test_existing_mode_does_not_fallback_to_create_when_conditional_existing_is_absent _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-823/test_existing_mode_does_not_fa0')
+
+    def test_existing_mode_does_not_fallback_to_create_when_conditional_existing_is_absent(tmp_path):
+        service, _, journal, port, backend_store, domain_store = _service(
+            tmp_path, mode="existing", supports_existing=False,
+        )
+        try:
+            with pytest.raises(ReliableSubmissionUnsupported, match="existing"):
+>               service.submit(_input())
+
+plugins/agent/backend/tests/test_closeout_submission_service.py:260: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+plugins/agent/backend/src/ordessa_agent/submission_service.py:185: in submit
+    prior = self._find_prior(item)
+            ^^^^^^^^^^^^^^^^^^^^^^
+plugins/agent/backend/src/ordessa_agent/submission_service.py:396: in _find_prior
+    return self.journal.read(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/agent/backend/src/ordessa_agent/submission_journal.py:404: in read
+    return self._record(self._read_row(request))
+                        ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_agent.submission_journal.SubmissionJournal object at 0x761a33bd3e00>
+request = RequestKey(environment_namespace='env-agent-service', principal_scope='user:local:agent-test', request_id='submission-1', comparison={})
+
+    def _read_row(self, request: RequestKey) -> sqlite3.Row | None:
+        connection = self._store.transaction()
+>       connection.row_factory = sqlite3.Row
+        ^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: '_SerializedConnectionView' object has no attribute 'row_factory'
+
+plugins/agent/backend/src/ordessa_agent/submission_journal.py:185: AttributeError
+___ test_mismatched_native_owner_binding_is_refused_before_mapping_or_effect ___
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-823/test_mismatched_native_owner_b0')
+
+    def test_mismatched_native_owner_binding_is_refused_before_mapping_or_effect(tmp_path):
+        service, _, journal, port, backend_store, domain_store = _service(
+            tmp_path, binding_owner_ref="harness-owner:other-session",
+        )
+        try:
+            with pytest.raises(ReliableSubmissionUnsupported, match="owner binding"):
+>               service.submit(_input())
+
+plugins/agent/backend/tests/test_closeout_submission_service.py:274: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+plugins/agent/backend/src/ordessa_agent/submission_service.py:185: in submit
+    prior = self._find_prior(item)
+            ^^^^^^^^^^^^^^^^^^^^^^
+plugins/agent/backend/src/ordessa_agent/submission_service.py:396: in _find_prior
+    return self.journal.read(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/agent/backend/src/ordessa_agent/submission_journal.py:404: in read
+    return self._record(self._read_row(request))
+                        ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_agent.submission_journal.SubmissionJournal object at 0x761a33bd91c0>
+request = RequestKey(environment_namespace='env-agent-service', principal_scope='user:local:agent-test', request_id='submission-1', comparison={})
+
+    def _read_row(self, request: RequestKey) -> sqlite3.Row | None:
+        connection = self._store.transaction()
+>       connection.row_factory = sqlite3.Row
+        ^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: '_SerializedConnectionView' object has no attribute 'row_factory'
+
+plugins/agent/backend/src/ordessa_agent/submission_journal.py:185: AttributeError
+_ test_unknown_native_answer_is_query_only_and_same_key_is_never_redispatched __
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-823/test_unknown_native_answer_is_0')
+
+    def test_unknown_native_answer_is_query_only_and_same_key_is_never_redispatched(tmp_path):
+        service, environment, journal, port, backend_store, domain_store = _service(
+            tmp_path, lose_answer=True,
+        )
+        try:
+>           first = service.submit(_input())
+                    ^^^^^^^^^^^^^^^^^^^^^^^^
+
+plugins/agent/backend/tests/test_closeout_submission_service.py:287: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+plugins/agent/backend/src/ordessa_agent/submission_service.py:185: in submit
+    prior = self._find_prior(item)
+            ^^^^^^^^^^^^^^^^^^^^^^
+plugins/agent/backend/src/ordessa_agent/submission_service.py:396: in _find_prior
+    return self.journal.read(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/agent/backend/src/ordessa_agent/submission_journal.py:404: in read
+    return self._record(self._read_row(request))
+                        ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_agent.submission_journal.SubmissionJournal object at 0x761a33bd9190>
+request = RequestKey(environment_namespace='env-agent-service', principal_scope='user:local:agent-test', request_id='submission-1', comparison={})
+
+    def _read_row(self, request: RequestKey) -> sqlite3.Row | None:
+        connection = self._store.transaction()
+>       connection.row_factory = sqlite3.Row
+        ^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: '_SerializedConnectionView' object has no attribute 'row_factory'
+
+plugins/agent/backend/src/ordessa_agent/submission_journal.py:185: AttributeError
+=========================== short test summary info ============================
+FAILED plugins/agent/backend/tests/test_closeout_submission_service.py::test_existing_submission_uses_environment_once_and_persists_separate_domain_facts
+FAILED plugins/agent/backend/tests/test_closeout_submission_service.py::test_same_request_id_with_changed_immutable_input_conflicts_without_second_effect
+FAILED plugins/agent/backend/tests/test_closeout_submission_service.py::test_create_with_config_requires_declared_conditional_support_and_never_falls_back
+FAILED plugins/agent/backend/tests/test_closeout_submission_service.py::test_existing_mode_does_not_fallback_to_create_when_conditional_existing_is_absent
+FAILED plugins/agent/backend/tests/test_closeout_submission_service.py::test_mismatched_native_owner_binding_is_refused_before_mapping_or_effect
+FAILED plugins/agent/backend/tests/test_closeout_submission_service.py::test_unknown_native_answer_is_query_only_and_same_key_is_never_redispatched
+6 failed in 0.27s

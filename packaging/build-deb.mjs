@@ -155,6 +155,7 @@ const PRODUCT_PACKAGES = [
   // module scope since spec 026/003, so a closure without it boots nothing
   // (C95-3 wheel-gap counterexample, caught live by the local electron leg).
   'packages/backend/environment-api',
+  'packages/backend/persistence-sqlite',
   'packages/backend/pacthold',
   'packages/backend/server-plugin-api',
   'plugins/harness/api',
@@ -173,6 +174,7 @@ const PRODUCT_PACKAGES = [
   'plugins/model-provider/profile-contribution',
   'plugins/profile',
   'plugins/skills',
+  'plugins/agent/backend',
   'products/server',
 ]
 
@@ -237,7 +239,7 @@ function stageApp(id) {
   if (!existsSync(electronDist)) throw new Error('electron runtime missing: ' + electronDist)
   cpSync(electronDist, path.join(appDir, 'electron-dist'), { recursive: true })
   // Flatten so the launcher's fixed path (app/electron) is the real binary.
-  for (const entry of ['electron', 'chrome-sandbox', 'chrome_crashpad_handler', 'resources.pak', 'icudtl.dat', 'v8_context_snapshot.bin', 'snapshot_blob.bin', 'vk_swiftshader', 'libEGL.so', 'libGLESv2.so', 'libffmpeg.so', 'locales']) {
+  for (const entry of ['electron', 'chrome-sandbox', 'chrome_crashpad_handler', 'resources.pak', 'icudtl.dat', 'v8_context_snapshot.bin', 'snapshot_blob.bin', 'libvk_swiftshader.so', 'libvulkan.so.1', 'vk_swiftshader_icd.json', 'resources', 'libEGL.so', 'libGLESv2.so', 'libffmpeg.so', 'locales']) {
     const from = path.join(electronDist, entry)
     if (!existsSync(from)) continue
     const st = statSync(from)

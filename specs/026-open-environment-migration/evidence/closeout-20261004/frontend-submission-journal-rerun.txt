@@ -1,0 +1,67 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts
+
+ ❯ tests/frontend-submission-journal.test.ts (6 tests | 3 failed) 30ms
+     × treats identical capture as idempotent and refuses changed content under the same logical key 12ms
+     × grants at most one dispatch claim and withholds it when the marker transaction fails 4ms
+     × keeps unknown/spent keys query-only across disposal and recovery, with no expiry or delete path 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/frontend-submission-journal.test.ts > Agent frontend persistent submission journal > treats identical capture as idempotent and refuses changed content under the same logical key
+AssertionError: expected 'conflict' to be 'existing' // Object.is equality
+
+Expected: "existing"
+Received: "conflict"
+
+ ❯ tests/frontend-submission-journal.test.ts:113:30
+    111|
+    112|     expect(first.status).toBe('created')
+    113|     expect(duplicate.status).toBe('existing')
+       |                              ^
+    114|     expect(duplicate.record).toEqual(first.record)
+    115|     for (const changed of [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/frontend-submission-journal.test.ts > Agent frontend persistent submission journal > grants at most one dispatch claim and withholds it when the marker transaction fails
+AssertionError: expected [Function] to throw error including 'journal commit failed' but got 'Could not durably write possibly-subm…'
+
+Expected: "journal commit failed"
+Received: "Could not durably write possibly-submitted marker"
+
+ ❯ tests/frontend-submission-journal.test.ts:148:92
+    146|     await other.capture(capture({ key: { ...submitted.key, requestId: …
+    147|     freshStorage.failWrite()
+    148|     await expect(other.markPossiblySubmitted({ ...submitted.key, reque…
+       |                                                                                            ^
+    149|       .rejects.toThrow('journal commit failed')
+    150|     expect(freshStorage.records.get(storageKey({ ...submitted.key, req…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/frontend-submission-journal.test.ts > Agent frontend persistent submission journal > keeps unknown/spent keys query-only across disposal and recovery, with no expiry or delete path
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/frontend-submission-journal.test.ts:178:60
+    176|     expect(recovered).not.toHaveProperty('delete')
+    177|     expect(recovered).not.toHaveProperty('clear')
+    178|     expect(storage.records.has(storageKey(submitted.key))).toBe(true)
+       |                                                            ^
+    179|     await recovered.dispose()
+    180|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 3 passed (6)
+   Start at  13:56:01
+   Duration  464ms (transform 118ms, setup 0ms, import 146ms, tests 30ms, environment 0ms)
+

@@ -1,0 +1,8 @@
+
+> ordessa@0.1.0 typecheck
+> npm run --workspace apps/desktop typecheck
+
+
+> @modular/desktop-app@0.1.0 typecheck
+> tsc --noEmit
+

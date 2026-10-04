@@ -180,6 +180,20 @@ class ServerProductComposition:
             environment.activate('ordessa.native-submit', self._submission_contributions)
         return environment
 
+    def _submission_capabilities(self, target=None):
+        # Availability is a declaration of injected public capabilities, never
+        # proof that a particular binding/condition will be admitted.
+        result = {'available': self._native_submit_port is not None
+                  and self._fingerprint_port is not None}
+        if result['available'] and isinstance(target, str):
+            try:
+                binding = self._native_submit_port.resolve_binding(target)
+                if binding.target == target and binding.mode in ('existing', 'createWithConfig'):
+                    result.update(mode=binding.mode, nativeBound=binding.mode == 'existing')
+            except Exception:
+                pass  # Only trusted capture.read may admit a reliable operation.
+        return result
+
     def _submission_service_factory(self, context, owners):
         from pathlib import Path
         from ordessa_persistence_sqlite import SqliteStorePort
@@ -303,7 +317,8 @@ class ServerProductComposition:
             # T010-01 (A1): the Agent domain owner serves the 010 consumer
             # migration; one owner set per canonical target, wire projections
             # only — it never becomes a second writer.
-            AgentDomainPlugin(submission_service_factory=self._submission_service_factory),
+            AgentDomainPlugin(submission_service_factory=self._submission_service_factory,
+                              submission_capabilities=self._submission_capabilities),
         )
 
     def bind_contribution_points(self, host) -> None:
@@ -486,17 +501,34 @@ class ServerProductComposition:
                     sessions_of=lambda: provided_port("profile.native-sessions"))
             from ordessa_agent.plugin import AgentDomainPlugin
             agent_bindings = {}
-            def resolve_agent_session(location):
+            def resolve_agent_session(location, native_owner):
                 from server_plugin_api import WireError
                 authority = provided_port('native.configuration')
                 if authority is None:
                     raise WireError('CAPABILITY_UNSUPPORTED', 'native session authority unavailable')
                 if location.get('kind') != 'session':
                     raise WireError('INVALID_REQUEST', 'existing native session required')
+                # A renderer route key is never a native identity. The connector
+                # supplies its observed tuple; only the backend's live owner and
+                # deployment facts authorize the canonical binding below.
+                from collections.abc import Mapping
+                if not isinstance(native_owner, Mapping):
+                    raise WireError('FORBIDDEN', 'native owner evidence required')
+                if (native_owner.get('sessionId') != location.get('sessionId')
+                        or native_owner.get('serverInstanceId') != runtime.owner.instance_id):
+                    raise WireError('FORBIDDEN', 'native owner route/server evidence changed')
+                connection_id = native_owner.get('connectionId')
+                native_id = native_owner.get('nativeSessionId')
+                if not isinstance(connection_id, str) or not isinstance(native_id, str) or not native_id:
+                    raise WireError('INVALID_REQUEST', 'native owner identity incomplete')
+                channel = authority.channels.get(connection_id)
+                if (channel is None or channel.ended
+                        or channel.harness_id != native_owner.get('harnessId')
+                        or channel.workspace_id != native_owner.get('workspaceId')):
+                    raise WireError('FORBIDDEN', 'native owner deployment evidence changed')
                 try:
                     snapshot = authority.register_native(
-                        connection_id=str(location.get('connectionId') or ''),
-                        native_session_id=str(location.get('sessionId') or ''))
+                        connection_id=connection_id, native_session_id=native_id)
                 except Exception as error:
                     raise WireError('FORBIDDEN', str(error), {'internalCode':'AUTHORIZATION_REFUSED'}) from error
                 target = snapshot.target.session_id
@@ -516,7 +548,8 @@ class ServerProductComposition:
 
             extras = (AgentDomainPlugin(target_resolver=validate_agent_target,
                                         session_resolver=resolve_agent_session,
-                                        submission_service_factory=self._submission_service_factory),
+                                        submission_service_factory=self._submission_service_factory,
+                              submission_capabilities=self._submission_capabilities),
                       *((ModelProviderAdaptersPlugin(),) if model_roots else ()),
                       NativeConfigurationPlugin(carrier=runtime.plugin_host, roots=model_roots),
                       ModelProviderPlugin(harnesses=ModelConfigurationCatalog(

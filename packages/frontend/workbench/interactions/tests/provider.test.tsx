@@ -34,10 +34,14 @@ it('provides the public InteractionService and renders stable notifications and 
   expect(component).toBeTypeOf('function')
   const container = await mount(createElement(component!))
 
-  const notice = service.notify({ id: 'skills:refresh', severity: 'info', text: 'Reading resources' })
-  service.notify({ id: 'skills:refresh', severity: 'warning', text: 'Still reading' })
-  const progress = service.progress({ id: 'skills:import', text: 'Transferring' })
-  progress.update(0.5, 'Halfway')
+  let notice!: ReturnType<typeof service.notify>
+  let progress!: ReturnType<typeof service.progress>
+  act(() => {
+    notice = service.notify({ id: 'skills:refresh', severity: 'info', text: 'Reading resources' })
+    service.notify({ id: 'skills:refresh', severity: 'warning', text: 'Still reading' })
+    progress = service.progress({ id: 'skills:import', text: 'Transferring' })
+    progress.update(0.5, 'Halfway')
+  })
 
   expect(container.querySelectorAll('[data-interaction-id="skills:refresh"]')).toHaveLength(1)
   expect(container.querySelector('[data-interaction-id="skills:refresh"]')?.textContent).toContain('Still reading')

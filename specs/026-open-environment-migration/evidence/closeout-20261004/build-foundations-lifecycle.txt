@@ -1,0 +1,5 @@
+
+> ordessa@0.1.0 build:foundations
+> node tooling/build-all.mjs
+
+Built 19 enabled extensions into products/desktop/dist

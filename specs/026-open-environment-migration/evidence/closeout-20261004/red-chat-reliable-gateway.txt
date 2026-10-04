@@ -1,0 +1,32 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/chat/frontend
+
+ ❯ tests/closeout-reliable-gateway.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-reliable-gateway.test.ts [ tests/closeout-reliable-gateway.test.ts ]
+Error: Failed to resolve import "../src/adapters/reliable-agent" from "plugins/chat/frontend/tests/closeout-reliable-gateway.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/chat/frontend/tests/closeout-reliable-gateway.test.ts:2:45
+  1  |  import { expect, it } from "vitest";
+  2  |  import { createReliableChatSubmission } from "../src/adapters/reliable-agent";
+     |                                                ^
+  3  |  it("captures the backend binding and complete draft before asynchronous guards can change them", async () => {
+  4  |  	const operations = ["operation-a", "operation-b"];
+ ❯ TransformPluginContext._formatLog ../../../node_modules/vite/dist/node/chunks/node.js:31011:39
+ ❯ TransformPluginContext.error ../../../node_modules/vite/dist/node/chunks/node.js:31008:14
+ ❯ normalizeUrl ../../../node_modules/vite/dist/node/chunks/node.js:27957:18
+ ❯ ../../../node_modules/vite/dist/node/chunks/node.js:28025:30
+ ❯ TransformPluginContext.transform ../../../node_modules/vite/dist/node/chunks/node.js:27993:4
+ ❯ EnvironmentPluginContainer.transform ../../../node_modules/vite/dist/node/chunks/node.js:30796:14
+ ❯ loadAndTransform ../../../node_modules/vite/dist/node/chunks/node.js:20594:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  14:17:43
+   Duration  1.29s (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 983ms)
+

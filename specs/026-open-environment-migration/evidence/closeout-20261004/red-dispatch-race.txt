@@ -1,0 +1,192 @@
+........FFF....                                                          [100%]
+=================================== FAILURES ===================================
+_ test_reliable_admission_and_claim_linearize_before_drain_but_handler_runs_unlocked _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-818/test_reliable_admission_and_cl0')
+
+    def test_reliable_admission_and_claim_linearize_before_drain_but_handler_runs_unlocked(tmp_path):
+        store = _BlockingClaimStore(tmp_path / "environment.sqlite3")
+        env = _environment(store)
+        handler_entered = Event()
+        release_handler = Event()
+        drained = Event()
+        result = []
+    
+        def handler():
+            handler_entered.set()
+            if not release_handler.wait(timeout=5):
+                raise TimeoutError("test did not release effect handler")
+    
+        invoke_thread = Thread(target=lambda: result.append(env.invoke(
+            "closeout.dispatch", _key("claim-drain-order"), handler=handler, **_reliable())))
+        invoke_thread.start()
+        assert store.claim_entered.wait(timeout=2)
+    
+        activation = env.bind("closeout.dispatch").provider_activation
+        drain_thread = Thread(target=lambda: (env.drain(activation), drained.set()))
+        drain_thread.start()
+        try:
+            # The claim has entered but not committed. A drain cut must wait for
+            # this admitted invoke to either acquire or refuse its durable claim.
+>           assert not drained.wait(timeout=0.1)
+E           assert not True
+E            +  where True = wait(timeout=0.1)
+E            +    where wait = <threading.Event at 0x7a2ce3e19dc0: set>.wait
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py:278: AssertionError
+______ test_raw_handler_has_one_in_process_claim_for_concurrent_same_key _______
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-818/test_raw_handler_has_one_in_pr0')
+
+    def test_raw_handler_has_one_in_process_claim_for_concurrent_same_key(tmp_path):
+        store = SqliteStorePort(tmp_path / "environment.sqlite3")
+        env = _environment(store)
+        handler_entered = Event()
+        duplicate_entered = Event()
+        release_handler = Event()
+        count_lock = Lock()
+        calls = []
+    
+        def handler():
+            with count_lock:
+                calls.append("effect")
+                if len(calls) > 1:
+                    duplicate_entered.set()
+            handler_entered.set()
+            if not release_handler.wait(timeout=5):
+                raise TimeoutError("test did not release effect handler")
+    
+        request = _key("raw-process-claim")
+        executor = ThreadPoolExecutor(max_workers=2)
+        first = executor.submit(env.invoke, "closeout.dispatch", request,
+                                guarantee=GuaranteeLevel.RAW, input_digest="f" * 64,
+                                handler=handler)
+        try:
+            assert handler_entered.wait(timeout=2)
+            second = executor.submit(env.invoke, "closeout.dispatch", request,
+                                     guarantee=GuaranteeLevel.RAW, input_digest="f" * 64,
+                                     handler=handler)
+>           assert not duplicate_entered.wait(timeout=0.1)
+E           assert not True
+E            +  where True = wait(timeout=0.1)
+E            +    where wait = <threading.Event at 0x7a2ce3e1b140: set>.wait
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py:324: AssertionError
+_____ test_sigkill_after_durable_claim_recovers_unknown_without_redispatch _____
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-818/test_sigkill_after_durable_cla0')
+
+    def test_sigkill_after_durable_claim_recovers_unknown_without_redispatch(tmp_path):
+        test_file = Path(__file__).resolve()
+        package_root = test_file.parents[4]
+        sources = [
+            str(test_file.parents[2] / "src"),
+            str(package_root / "backend" / "environment-api" / "src"),
+            str(package_root / "backend" / "persistence-sqlite" / "src"),
+        ]
+        path = tmp_path / "environment.sqlite3"
+        child = subprocess.Popen(
+            [sys.executable, "-c", _SIGKILL_ENVIRONMENT_SCRIPT, str(path), *sources],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        )
+        try:
+            assert child.stdout.readline().strip() == "CLAIMED"
+            os.kill(child.pid, signal.SIGKILL)
+            assert child.wait(timeout=10) == -signal.SIGKILL
+        finally:
+            if child.poll() is None:
+                child.kill()
+                child.wait(timeout=10)
+    
+        reopened = SqliteStorePort(path, allow_takeover=True)
+        env = _environment(reopened)
+        request = _key("sigkill-window")
+        history = env.query(request)
+        assert history is not None and history[1].outcome == "unknown"
+        calls = []
+>       replay, current = env.invoke("closeout.dispatch", request,
+                                     handler=lambda: calls.append("must-not-run"), **_reliable())
+
+packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py:394: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <pacthold.environment.Environment object at 0x7a2ce2ccc440>
+surface_id = 'closeout.dispatch'
+request = RequestKey(environment_namespace='env-closeout', principal_scope='user:local:test', request_id='sigkill-window', comparison={})
+guarantee = <GuaranteeLevel.RELIABLE: 'reliable'>
+input_digest = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+principal = 'local'
+handler = <function test_sigkill_after_durable_claim_recovers_unknown_without_redispatch.<locals>.<lambda> at 0x7a2ce2ced940>
+
+    def invoke(
+        self,
+        surface_id: str,
+        request: RequestKey,
+        *,
+        guarantee: GuaranteeLevel = GuaranteeLevel.RAW,
+        input_digest: str = "",
+        principal: str = "local",
+        handler: Any = None,
+    ) -> tuple[ActivityReceipt, CurrentFactView]:
+        """Admission → request-key dedup → guarantee check → dispatch.
+    
+        G003-1 counterexample held by construction: a RELIABLE invocation
+        without the fingerprint port or store is refused BEFORE any dispatch;
+        RAW keeps working. Same key + same digest replays the original
+        receipt; same key + different digest is a conflict, never a re-issue.
+        """
+        self._check_open()
+        self._check_environment(request.environment_namespace)
+        key = (request.environment_namespace, request.principal_scope, request.request_id)
+        existing = self._activities.get(key)
+        if existing is not None:
+            if existing.binding_digest == input_digest:
+                return existing.receipt, existing.current
+            if existing.binding_digest == "" and guarantee is GuaranteeLevel.RELIABLE:
+                reader = getattr(self._store, "read_request", None)
+                if (self._fingerprint_port is not None and callable(reader)
+                        and callable(getattr(self._store, "claim_dispatch", None))):
+                    expected = self._fingerprint_port.fingerprint(request, "", input_digest)
+                    durable = reader(request)
+                    if durable is not None and durable.get("digest") == expected:
+                        existing.binding_digest = input_digest
+                        return existing.receipt, existing.current
+>           raise IdentityMismatchError(
+                f"request key {key} is spent with a different input digest (comparison conflict)"
+            )
+E           ordessa_environment_api.errors.IdentityMismatchError: request key ('env-closeout', 'user:local:test', 'sigkill-window') is spent with a different input digest (comparison conflict)
+
+packages/backend/pacthold/src/pacthold/environment.py:513: IdentityMismatchError
+ARTIFACT_worker-debug=ABSENT workers/agent-box-worker/target/debug/agent-box-worker
+ARTIFACT_worker-release=ABSENT workers/agent-box-worker/target/release/agent-box-worker
+ARTIFACT_worker-musl-dir=ABSENT workers/agent-box-worker/target/x86_64-unknown-linux-musl
+ARTIFACT_sidecar-entry=ABSENT plugins/agent-box-harness/runtime/worker-entry.mjs
+ARTIFACT_acp-npm-closure=ABSENT plugins/agent-box-harness/packaging/claude/node_modules/@agentclientprotocol/claude-agent-acp
+TOOL_bwrap=present
+TOOL_node=present
+TOOL_npm=present
+TOOL_claude=ABSENT
+TOOL_tmux=present
+TOOL_wsl.exe=ABSENT
+SKIPPED_TOTAL=0
+WORKER_ARTIFACT=ABSENT
+VERDICT=FAILED
+=========================== short test summary info ============================
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py::test_reliable_admission_and_claim_linearize_before_drain_but_handler_runs_unlocked
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py::test_raw_handler_has_one_in_process_claim_for_concurrent_same_key
+FAILED packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py::test_sigkill_after_durable_claim_recovers_unknown_without_redispatch
+3 failed, 12 passed in 0.29s
+Exception in thread Thread-1 (<lambda>):
+Traceback (most recent call last):
+  File "/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py", line 267, in <lambda>
+    invoke_thread = Thread(target=lambda: result.append(env.invoke(
+                                                        ^^^^^^^^^^^
+  File "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/backend/pacthold/src/pacthold/environment.py", line 583, in invoke
+    handler()
+  File "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py", line 265, in handler
+    raise TimeoutError("test did not release effect handler")
+TimeoutError: test did not release effect handler

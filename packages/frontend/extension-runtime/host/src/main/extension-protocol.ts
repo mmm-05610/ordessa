@@ -9,6 +9,19 @@ export function protocolHandler(rendererRoot: string, discovery: Discovery) {
     'react-dom': '/shared/react-dom.js', 'react-dom/client': '/shared/react-dom-client.js',
     '@ordessa/extension-api': '/shared/api.js',
     '@ordessa/ui-components/api': '/shared/ui-components-api.js',
+    '@ordessa/extension-runtime/state': '/shared/f5-runtime.js',
+    '@ordessa/extension-runtime/tasks': '/shared/f5-runtime.js',
+    '@ordessa/extension-runtime/ui-storage': '/shared/f5-runtime.js',
+    '@ordessa/server-bridge/projection': '/shared/f5-bridge.js',
+    '@ordessa/server-bridge/query-cache': '/shared/f5-bridge.js',
+    '@ordessa/ui-components/state': '/shared/f5-runtime.js',
+    '@ordessa/ui-components/tasks': '/shared/f5-runtime.js',
+    '@ordessa/ui-components/ui-storage': '/shared/f5-runtime.js',
+    '@ordessa/ui-components/state/selectors': '/shared/f5-api.js',
+    '@ordessa/ui-components/editing': '/shared/f5-api.js',
+    '@ordessa/ui-components/react/state': '/shared/f5-react.js',
+    '@ordessa/ui-components/projection': '/shared/f5-bridge.js',
+    '@ordessa/ui-components/query-cache': '/shared/f5-bridge.js',
   }
   for (const id of discovery.installed.keys()) imports['@extensions/' + id + '/'] = '/extensions/' + id + '/'
   return async (request: { url: string; method: string }): Promise<Response> => {

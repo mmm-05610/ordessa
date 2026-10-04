@@ -1,0 +1,56 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration
+
+ ❯ plugins/agent/contracts/tests/closeout-wire-native-owner.test.ts (3 tests | 2 failed) 17ms
+     × resolves a route key only through its distinct connector-observed native owner 9ms
+     × keeps backend-minted draft resolution available without creating or looking up a native session 1ms
+ ❯ plugins/agent/sessions/tests/closeout-native-owner-location.test.ts (1 test | 1 failed) 6ms
+   × resolves the exact route while keeping frontend connection and backend channel IDs distinct 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  plugins/agent/contracts/tests/closeout-wire-native-owner.test.ts > wire configuration native owner bridge > resolves a route key only through its distinct connector-observed native owner
+Error: Agent configuration native owner route identity changed
+ ❯ Object.forLocation plugins/agent/contracts/src/wire-configuration.ts:131:13
+    129|         || (location.serverInstanceId && nativeOwner.serverInstanceId …
+    130|         || (location.harnessId && nativeOwner.harnessId !== location.h…
+    131|       throw new Error('Agent configuration native owner route identity…
+       |             ^
+    132|     }
+    133|     const wireScope = options.wire.scope
+ ❯ plugins/agent/contracts/tests/closeout-wire-native-owner.test.ts:63:37
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  plugins/agent/contracts/tests/closeout-wire-native-owner.test.ts > wire configuration native owner bridge > keeps backend-minted draft resolution available without creating or looking up a native session
+Error: Agent configuration native owner lookup requires an existing session route
+ ❯ Object.forLocation plugins/agent/contracts/src/wire-configuration.ts:114:13
+    112|     }
+    113|     if (location.kind !== 'session' || !location.sessionId || !locatio…
+    114|       throw new Error('Agent configuration native owner lookup require…
+       |             ^
+    115|     }
+    116|     const lookup = options.sessions.nativeOwnerForLocation
+ ❯ plugins/agent/contracts/tests/closeout-wire-native-owner.test.ts:102:37
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  plugins/agent/sessions/tests/closeout-native-owner-location.test.ts > resolves the exact route while keeping frontend connection and backend channel IDs distinct
+Error: Native owner route identity changed
+ ❯ Object.nativeOwnerForLocation plugins/agent/sessions/src/model.ts:176:15
+    174|           || (location.serverInstanceId && owner.serverInstanceId !== …
+    175|           || (location.harnessId && owner.harnessId !== location.harne…
+    176|         throw Error('Native owner route identity changed')
+       |               ^
+    177|       return owner
+    178|     },
+ ❯ plugins/agent/sessions/tests/closeout-native-owner-location.test.ts:39:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  3 failed | 1 passed (4)
+   Start at  13:42:30
+   Duration  813ms (transform 142ms, setup 0ms, import 208ms, tests 22ms, environment 0ms)
+

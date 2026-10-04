@@ -1,0 +1,195 @@
+...FF...F                                                                [100%]
+=================================== FAILURES ===================================
+_ test_controlled_native_two_rounds_and_restart_history_use_real_product_wire[True] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-832/test_controlled_native_two_rou0')
+include_profile = True
+
+    @pytest.mark.parametrize("include_profile", [True, False])
+    def test_controlled_native_two_rounds_and_restart_history_use_real_product_wire(
+        tmp_path, include_profile,
+    ):
+        effects_db = tmp_path / "native-effects.sqlite"
+        native = ControlledNativeFixture(
+            effects_db,
+            mode="createWithConfig",
+            attachment_bytes={ATTACHMENT_ID: ATTACHMENT_BYTES},
+        )
+        fingerprint = _test_fingerprint_fixture()
+        policy = controlled_submission_policy()
+        data_root = tmp_path / "server-data"
+    
+        runtime = _runtime(data_root, native, fingerprint, policy, include_profile=include_profile)
+        try:
+            runtime.start()
+            enabled = {plugin.descriptor().id for plugin in runtime.plugin_selection}
+            assert ('ordessa.profile' in enabled) is include_profile
+            target = _resolve_target(runtime)
+            native.bind_backend_target(target)
+    
+            # A first-send draft is backend-minted and maps to the same logical
+            # target through both configurations and the later restart.
+            first_operation = _write_config_operation(
+                runtime, target, {"model": "M1", "general.prompt": "Preserve this prompt"},
+            )
+            native.set_mode("createWithConfig")  # explicit fresh-session condition
+            first_capture = _capture(
+                submission_id="controlled-submission-1", revision=1,
+                text="first prompt", operation_id=first_operation, mode="createWithConfig",
+            )
+            first = _submit(runtime, target, first_capture)
+            assert first["outcome"] == "accepted"
+            assert first["stage"] == "completed"
+            assert first["replayed"] is False
+            assert first["configApply"] == {"outcome": "applied", "operationIds": [first_operation]}
+            assert first["inputAcceptance"]["session"] == {
+                "sessionId": "logical-session-controlled-1",
+                "nativeSessionId": "native-session-controlled-1",
+                "generation": 1,
+                "ownerRef": "native-owner:controlled-1",
+            }
+            assert first["runResult"] == {"outcome": "running", "runId": "run-controlled-submission-1"}
+    
+            second_operation = _write_config_operation(runtime, target, {"model": "M2"})
+            native.set_mode("existing")  # explicit continuation of that native session
+            second_capture = _capture(
+                submission_id="controlled-submission-2", revision=2,
+                text="second prompt", operation_id=second_operation, mode="existing",
+            )
+            second = _submit(runtime, target, second_capture)
+            assert second["outcome"] == "accepted"
+            assert second["stage"] == "completed"
+            assert second["configApply"] == {"outcome": "applied", "operationIds": [second_operation]}
+            config = runtime.wire.dispatch("agent.config.read", {"target": target})
+            assert config["resolved"] == {"model": "M2", "general.prompt": "Preserve this prompt"}
+>           assert config["revision"] == 2
+E           assert 4 == 2
+
+products/server/tests/test_closeout_submission_composition.py:153: AssertionError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-832/test_controlled_native_two_rou0/server-data/state/agentbox.sqlite
+_ test_controlled_native_two_rounds_and_restart_history_use_real_product_wire[False] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-832/test_controlled_native_two_rou1')
+include_profile = False
+
+    @pytest.mark.parametrize("include_profile", [True, False])
+    def test_controlled_native_two_rounds_and_restart_history_use_real_product_wire(
+        tmp_path, include_profile,
+    ):
+        effects_db = tmp_path / "native-effects.sqlite"
+        native = ControlledNativeFixture(
+            effects_db,
+            mode="createWithConfig",
+            attachment_bytes={ATTACHMENT_ID: ATTACHMENT_BYTES},
+        )
+        fingerprint = _test_fingerprint_fixture()
+        policy = controlled_submission_policy()
+        data_root = tmp_path / "server-data"
+    
+        runtime = _runtime(data_root, native, fingerprint, policy, include_profile=include_profile)
+        try:
+            runtime.start()
+            enabled = {plugin.descriptor().id for plugin in runtime.plugin_selection}
+            assert ('ordessa.profile' in enabled) is include_profile
+            target = _resolve_target(runtime)
+            native.bind_backend_target(target)
+    
+            # A first-send draft is backend-minted and maps to the same logical
+            # target through both configurations and the later restart.
+            first_operation = _write_config_operation(
+                runtime, target, {"model": "M1", "general.prompt": "Preserve this prompt"},
+            )
+            native.set_mode("createWithConfig")  # explicit fresh-session condition
+            first_capture = _capture(
+                submission_id="controlled-submission-1", revision=1,
+                text="first prompt", operation_id=first_operation, mode="createWithConfig",
+            )
+            first = _submit(runtime, target, first_capture)
+            assert first["outcome"] == "accepted"
+            assert first["stage"] == "completed"
+            assert first["replayed"] is False
+            assert first["configApply"] == {"outcome": "applied", "operationIds": [first_operation]}
+            assert first["inputAcceptance"]["session"] == {
+                "sessionId": "logical-session-controlled-1",
+                "nativeSessionId": "native-session-controlled-1",
+                "generation": 1,
+                "ownerRef": "native-owner:controlled-1",
+            }
+            assert first["runResult"] == {"outcome": "running", "runId": "run-controlled-submission-1"}
+    
+            second_operation = _write_config_operation(runtime, target, {"model": "M2"})
+            native.set_mode("existing")  # explicit continuation of that native session
+            second_capture = _capture(
+                submission_id="controlled-submission-2", revision=2,
+                text="second prompt", operation_id=second_operation, mode="existing",
+            )
+            second = _submit(runtime, target, second_capture)
+            assert second["outcome"] == "accepted"
+            assert second["stage"] == "completed"
+            assert second["configApply"] == {"outcome": "applied", "operationIds": [second_operation]}
+            config = runtime.wire.dispatch("agent.config.read", {"target": target})
+            assert config["resolved"] == {"model": "M2", "general.prompt": "Preserve this prompt"}
+>           assert config["revision"] == 2
+E           assert 4 == 2
+
+products/server/tests/test_closeout_submission_composition.py:153: AssertionError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-832/test_controlled_native_two_rou1/server-data/state/agentbox.sqlite
+_ test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects[policy] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-832/test_missing_native_capability3')
+missing = 'policy'
+
+    @pytest.mark.parametrize("missing", ["native", "native-condition", "fingerprint", "policy"])
+    def test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects(
+        tmp_path, missing,
+    ):
+        mode = "createWithConfig" if missing == "native-condition" else "existing"
+        native = ControlledNativeFixture(
+            tmp_path / "native-effects.sqlite", mode=mode,
+            attachment_bytes={ATTACHMENT_ID: ATTACHMENT_BYTES},
+            create_with_config_conditional=(missing != "native-condition"),
+        )
+        fingerprint = _test_fingerprint_fixture()
+        policy = None
+        if missing == "native":
+            native_port = None
+        else:
+            native_port = native
+        if missing == "fingerprint":
+            fingerprint = None
+        if missing == "policy":
+            # Product's default local policy deliberately refuses agent.submit.
+            # This must remain a typed authorization refusal before any native call.
+            policy = None
+    
+        runtime = _runtime(
+            tmp_path / "server-data", native_port, fingerprint, policy, include_profile=False,
+        )
+        try:
+            runtime.start()
+            target = _resolve_target(runtime)
+            native.bind_backend_target(target)
+            operation_id = _write_config_operation(runtime, target, {"model": "M1"})
+            capture = _capture(
+                submission_id=f"missing-{missing}", revision=1, text="cannot dispatch",
+                operation_id=operation_id, mode=mode,
+            )
+            expected_family = "AUTHORIZATION_REFUSED" if missing == "policy" else "CAPABILITY_UNSUPPORTED"
+            with pytest.raises(WireError) as failure:
+                _submit(runtime, target, capture)
+>           assert failure.value.family == expected_family
+E           AssertionError: assert 'UNAVAILABLE' == 'AUTHORIZATION_REFUSED'
+E             
+E             - AUTHORIZATION_REFUSED
+E             + UNAVAILABLE
+
+products/server/tests/test_closeout_submission_composition.py:261: AssertionError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-832/test_missing_native_capability3/server-data/state/agentbox.sqlite
+=========================== short test summary info ============================
+FAILED products/server/tests/test_closeout_submission_composition.py::test_controlled_native_two_rounds_and_restart_history_use_real_product_wire[True]
+FAILED products/server/tests/test_closeout_submission_composition.py::test_controlled_native_two_rounds_and_restart_history_use_real_product_wire[False]
+FAILED products/server/tests/test_closeout_submission_composition.py::test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects[policy]
+3 failed, 6 passed in 0.90s

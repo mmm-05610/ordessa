@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts
+
+
+ Test Files  7 passed (7)
+      Tests  44 passed (44)
+   Start at  12:11:18
+   Duration  2.39s (transform 229ms, setup 0ms, import 397ms, tests 98ms, environment 1ms)
+

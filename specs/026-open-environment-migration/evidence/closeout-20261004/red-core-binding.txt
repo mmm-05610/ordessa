@@ -1,0 +1,49 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_ test_core_binding_forwards_the_product_environment_without_a_second_runtime __
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-813/test_core_binding_forwards_the0')
+
+    def test_core_binding_forwards_the_product_environment_without_a_second_runtime(tmp_path):
+        environment = Environment("server-root")
+        path = tmp_path / "server-root.sqlite"
+        factory_paths = []
+    
+        def environment_factory(store_path):
+            factory_paths.append(Path(store_path))
+            return environment
+    
+>       binding = CoreBinding(path, environment_factory=environment_factory)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: CoreBinding.__init__() got an unexpected keyword argument 'environment_factory'
+
+apps/server/tests/platform/test_closeout_core_binding_environment.py:30: TypeError
+__ test_binding_environment_refuses_reliable_invocation_without_store_or_key ___
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-813/test_binding_environment_refus0')
+
+    def test_binding_environment_refuses_reliable_invocation_without_store_or_key(tmp_path):
+        environment = Environment("server-root")
+>       binding = CoreBinding(tmp_path / "unused.sqlite", environment_factory=lambda _path: environment)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: CoreBinding.__init__() got an unexpected keyword argument 'environment_factory'
+
+apps/server/tests/platform/test_closeout_core_binding_environment.py:46: TypeError
+ARTIFACT_worker-debug=ABSENT workers/agent-box-worker/target/debug/agent-box-worker
+ARTIFACT_worker-release=ABSENT workers/agent-box-worker/target/release/agent-box-worker
+ARTIFACT_worker-musl-dir=ABSENT workers/agent-box-worker/target/x86_64-unknown-linux-musl
+ARTIFACT_sidecar-entry=ABSENT plugins/agent-box-harness/runtime/worker-entry.mjs
+ARTIFACT_acp-npm-closure=ABSENT plugins/agent-box-harness/packaging/claude/node_modules/@agentclientprotocol/claude-agent-acp
+TOOL_bwrap=present
+TOOL_node=present
+TOOL_npm=present
+TOOL_claude=ABSENT
+TOOL_tmux=present
+TOOL_wsl.exe=ABSENT
+SKIPPED_TOTAL=0
+WORKER_ARTIFACT=ABSENT
+VERDICT=FAILED
+=========================== short test summary info ============================
+FAILED apps/server/tests/platform/test_closeout_core_binding_environment.py::test_core_binding_forwards_the_product_environment_without_a_second_runtime
+FAILED apps/server/tests/platform/test_closeout_core_binding_environment.py::test_binding_environment_refuses_reliable_invocation_without_store_or_key
+2 failed in 0.11s

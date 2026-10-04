@@ -1,0 +1,88 @@
+......F..                                                                [100%]
+=================================== FAILURES ===================================
+______ test_transport_error_is_unknown_and_wrapper_does_not_resend[write] ______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74c54bc47800>
+failed_operation = 'write'
+
+    @pytest.mark.parametrize("failed_operation", ["start", "write"])
+    def test_transport_error_is_unknown_and_wrapper_does_not_resend(monkeypatch, failed_operation):
+        environment = _environment(f"env-transport-{failed_operation}-unknown", policy=_Policy())
+        transport = _Transport(
+            start_error=RuntimeError("connect reply lost") if failed_operation == "start" else None,
+            write_error=RuntimeError("write reply lost") if failed_operation == "write" else None,
+        )
+        request_suffix = f"fixed-{failed_operation}-request"
+        monkeypatch.setattr(
+            "ordessa_server_product.managed_transport.uuid4",
+            lambda: SimpleNamespace(hex=request_suffix),
+        )
+    
+        if failed_operation == "start":
+            with pytest.raises(RuntimeError, match="connect reply lost"):
+                EnvironmentManagedTransport.open(environment, transport)
+        else:
+            managed = EnvironmentManagedTransport.open(environment, transport)
+            with pytest.raises(RuntimeError, match="write reply lost"):
+>               managed.send_line("possible partial write")
+
+products/server/tests/test_closeout_managed_transport.py:127: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+products/server/src/ordessa_server_product/managed_transport.py:73: in send_line
+    self._invoke(
+products/server/src/ordessa_server_product/managed_transport.py:54: in _invoke
+    self._environment.invoke(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <pacthold.environment.Environment object at 0x74c54bc47cb0>
+surface_id = 'native.channel-write'
+request = RequestKey(environment_namespace='env-transport-write-unknown', principal_scope='local', request_id='managed-transport-fixed-write-request', comparison={'operation': 'write'})
+guarantee = <GuaranteeLevel.RAW: 'raw'>
+input_digest = 'f2eb84a40407122c6dfdeecce3e20504b65dbb41c268f1ad0ea4005e60e6f815'
+principal = 'local'
+handler = <function EnvironmentManagedTransport._invoke.<locals>.dispatch at 0x74c54bc70860>
+
+    def invoke(
+        self,
+        surface_id: str,
+        request: RequestKey,
+        *,
+        guarantee: GuaranteeLevel = GuaranteeLevel.RAW,
+        input_digest: str = "",
+        principal: str = "local",
+        handler: Any = None,
+    ) -> tuple[ActivityReceipt, CurrentFactView]:
+        """Admission → request-key dedup → guarantee check → dispatch.
+    
+        G003-1 counterexample held by construction: a RELIABLE invocation
+        without the fingerprint port or store is refused BEFORE any dispatch;
+        RAW keeps working. Same key + same digest replays the original
+        receipt; same key + different digest is a conflict, never a re-issue.
+        """
+        key = (request.environment_namespace, request.principal_scope, request.request_id)
+        unknown_current = CurrentFactView(outcome="unknown", revision=0)
+        with self._admission_lock:
+            self._check_open()
+            self._check_environment(request.environment_namespace)
+            existing = self._activities.get(key)
+            if existing is not None:
+                if existing.binding_digest == input_digest:
+                    return existing.receipt, existing.current
+                if existing.binding_digest == "" and guarantee is GuaranteeLevel.RELIABLE:
+                    reader = getattr(self._store, "read_request", None)
+                    if (self._fingerprint_port is not None and callable(reader)
+                            and callable(getattr(self._store, "claim_dispatch", None))):
+                        expected = self._fingerprint_port.fingerprint(request, "", input_digest)
+                        durable = reader(request)
+                        if durable is not None and durable.get("digest") == expected:
+                            existing.binding_digest = input_digest
+                            return existing.receipt, existing.current
+>               raise IdentityMismatchError(
+                    f"request key {key} is spent with a different input digest (comparison conflict)"
+                )
+E               ordessa_environment_api.errors.IdentityMismatchError: request key ('env-transport-write-unknown', 'local', 'managed-transport-fixed-write-request') is spent with a different input digest (comparison conflict)
+
+packages/backend/pacthold/src/pacthold/environment.py:769: IdentityMismatchError
+=========================== short test summary info ============================
+FAILED products/server/tests/test_closeout_managed_transport.py::test_transport_error_is_unknown_and_wrapper_does_not_resend[write]
+1 failed, 8 passed in 0.73s

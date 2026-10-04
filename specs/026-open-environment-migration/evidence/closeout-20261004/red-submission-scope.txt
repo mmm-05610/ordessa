@@ -1,0 +1,31 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_authenticated_scope_survives_restart_without_native_binding _______
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-856/test_authenticated_scope_survi0')
+
+    def test_authenticated_scope_survives_restart_without_native_binding(tmp_path):
+        first = create_composition().default_runtime(tmp_path / 'data')
+        try:
+            first.start()
+>           before = first.wire.dispatch('agent.submission.scope', {})
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+products/server/tests/test_closeout_submission_scope.py:9: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_server.wire.handlers.WireService object at 0x70c881c63d40>
+method = 'agent.submission.scope', params = {}
+
+    def dispatch(self, method: str, params: Mapping[str, Any]) -> Any:
+        descriptor = self._registry.lookup(method)
+        if descriptor is None:
+>           raise WireError("INVALID_REQUEST", f"{method} is not a wire/1 method")
+E           server_plugin_api.wire_errors.WireError: agent.submission.scope is not a wire/1 method
+
+apps/server/src/ordessa_server/wire/handlers.py:191: WireError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-856/test_authenticated_scope_survi0/data/state/agentbox.sqlite
+=========================== short test summary info ============================
+FAILED products/server/tests/test_closeout_submission_scope.py::test_authenticated_scope_survives_restart_without_native_binding
+1 failed in 0.64s

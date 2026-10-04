@@ -123,3 +123,5 @@ adapter 把部分原生非重试错误发成 Agent 正文且 ACP end_turn，不�
 同树全量 Server 检查点为 84 failed / 1205 passed / 9 skipped / 2 errors；精确 ID 和基线差异保留在 specs/026-open-environment-migration/evidence/closeout-20261004/server-red-comparison.txt（17 新增 ID），原始输出 server-full-checkpoint.txt。后续 23 场景和 63 场景窄验证修复了装配五参数、T016、新 owner 生命周期和故障回收输入；没有重新跑全量，不宣称全量变绿。
 
 剩余旧 CoreRuntime/store/sidecar 依赖断言与单 Environment 合同冲突仍登记；实际生产原生 first-send 路由缺口、前端 Chat 可靠提交/原键恢复接线和干净发行验证仍未收口。受控 native fixture 与 SIGKILL 证据不覆盖真实 Harness 内部业务、真实模型或 GUI/IME。UI01 追加独立排队，不能替代这些缺口。
+
+026 受控 Electron `test:ui-foundations` 本次已运行，失败在360px样式断言：期望禁用 foundations sheet 后 Workbench button padding 5px 10px，实测6px 10px。固定baseline 0887b95 的 workbench/src/styles/index.ts 同为6px 10px；这是已确认继承断言/实现不一致，保留 electron-ui-foundations.txt，不修改断言，不算产品或UI01通过。Agent UI fixture 的9个交互检查通过（electron-agent-ui-verified.txt），仅该fixture显式smoke模式使用 absent WirePort，不是生产Server启动证据。

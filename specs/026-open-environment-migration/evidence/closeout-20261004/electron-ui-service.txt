@@ -1,0 +1,98 @@
+{
+  "hostDigest": "d7c644f2ae15e781644f96a60248f23acc824c610c1b35f7572ea23b397d4bc8",
+  "hostUnchanged": true,
+  "cases": [
+    {
+      "name": "selected provider renders",
+      "ready": true,
+      "pages": [],
+      "views": [],
+      "rootText": "ready:example.provider-aprovider-a from-consumer act命令面板设置关于",
+      "activeElement": "BODY:",
+      "rootMounted": false,
+      "emptyHost": false,
+      "errors": [],
+      "starting": [],
+      "nodeAbsent": true,
+      "bridgeKeys": [
+        "read"
+      ],
+      "activeElementAfterTab": "BUTTON:"
+    },
+    {
+      "name": "other provider selected without touching the consumer",
+      "ready": true,
+      "pages": [],
+      "views": [],
+      "rootText": "ready:example.provider-bprovider-b from-consumer命令面板设置关于",
+      "activeElement": "BODY:",
+      "rootMounted": false,
+      "emptyHost": false,
+      "errors": [],
+      "starting": [],
+      "nodeAbsent": true,
+      "bridgeKeys": [
+        "read"
+      ],
+      "activeElementAfterTab": "BUTTON:"
+    },
+    {
+      "name": "nothing selected reports the missing required component",
+      "ready": true,
+      "pages": [],
+      "views": [],
+      "rootText": "required ui component unavailable: example.widget major 1 (not selected)missing:unselectedabsent命令面板设置关于",
+      "activeElement": "BODY:",
+      "rootMounted": false,
+      "emptyHost": false,
+      "errors": [
+        "required ui component unavailable: example.widget major 1 (not selected)"
+      ],
+      "starting": [],
+      "nodeAbsent": true,
+      "bridgeKeys": [
+        "read"
+      ],
+      "activeElementAfterTab": "BUTTON:"
+    },
+    {
+      "name": "service absent is fail-closed, not backfilled",
+      "ready": true,
+      "pages": [],
+      "views": [],
+      "rootText": "example.ui-provider: TypeError: No provider for: ordessa.ui-components.v1.example.ui-consumer: TypeError: No provider for: ordessa.ui-components.v1.Desktop 已启动尚无根界面，请启用一个工作台扩展。命令面板设置关于",
+      "activeElement": "BODY:",
+      "rootMounted": false,
+      "emptyHost": true,
+      "errors": [
+        "example.ui-provider: TypeError: No provider for: ordessa.ui-components.v1.",
+        "example.ui-consumer: TypeError: No provider for: ordessa.ui-components.v1."
+      ],
+      "starting": [],
+      "nodeAbsent": true,
+      "bridgeKeys": [
+        "read"
+      ],
+      "activeElementAfterTab": "BUTTON:"
+    },
+    {
+      "name": "a copied key instance is rejected at registration",
+      "ready": true,
+      "pages": [],
+      "views": [],
+      "rootText": "example.rogue: UiComponentsError: UI_KEY_IDENTITY_CONFLICT: example.widget major 1 is already represented by another key instance in this hostready:example.provider-aprovider-a from-consumer act命令面板设置关于",
+      "activeElement": "BODY:",
+      "rootMounted": false,
+      "emptyHost": false,
+      "errors": [
+        "example.rogue: UiComponentsError: UI_KEY_IDENTITY_CONFLICT: example.widget major 1 is already represented by another key instance in this host"
+      ],
+      "starting": [],
+      "nodeAbsent": true,
+      "bridgeKeys": [
+        "read"
+      ],
+      "activeElementAfterTab": "BUTTON:"
+    }
+  ]
+}

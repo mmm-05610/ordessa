@@ -33,6 +33,11 @@ async function mount(element: React.ReactNode) {
   return container
 }
 
+// Supply the public session lifecycle dependency now required by the entry.
+function sessions() {
+  return { getSnapshot: () => ({ runtimeGeneration: 0 }), subscribe: () => () => undefined }
+}
+
 function activationContext(resources: OwnedResources) {
   return { root: { mount: () => ({ dispose() {} }) }, resources } as never
 }
@@ -64,7 +69,7 @@ describe('the declared plugin entry is the real Chat wiring', () => {
     const plugin = createPlugin()
     expect(plugin.requires).toContain(ChatContributionsToken)
     expect(plugin.requires).toContain(WirePortToken)
-    plugin.activate(activationContext(resources), chat, uiComponents(), port as never, service([]))
+    plugin.activate(activationContext(resources), chat, uiComponents(), port as never, service([]), sessions() as never)
 
     const views: readonly ChatContributionView[] = chat.contributionsBySlot('composer.toolbar').getSnapshot()
     expect(views).toHaveLength(1)
@@ -82,7 +87,7 @@ describe('the declared plugin entry is the real Chat wiring', () => {
     cleanup.push(() => resources.dispose())
     const ui = uiComponents()
     const { port } = wirePort({ outcome: 'pending-next-turn', sequence: 4, intentRoute: 'independent' })
-    createPlugin().activate(activationContext(resources), chat, ui, port as never, service([config()]))
+    createPlugin().activate(activationContext(resources), chat, ui, port as never, service([config()]), sessions() as never)
 
     const [view] = chat.contributionsBySlot('composer.toolbar').getSnapshot()
     const context = {
@@ -116,7 +121,7 @@ describe('the declared plugin entry is the real Chat wiring', () => {
     cleanup.push(() => resources.dispose())
     const ui = uiComponents()
     const { port, calls } = wirePort({ outcome: 'pending-next-turn', sequence: 4, intentRoute: 'independent' })
-    createPlugin().activate(activationContext(resources), chat, ui, port as never, service([config()]))
+    createPlugin().activate(activationContext(resources), chat, ui, port as never, service([config()]), sessions() as never)
     const [view] = chat.contributionsBySlot('composer.toolbar').getSnapshot()
     const projection = view.project?.({
       slot: 'composer.toolbar',
@@ -159,7 +164,7 @@ describe('the declared plugin entry is the real Chat wiring', () => {
     const resources = new OwnedResources()
     cleanup.push(() => resources.dispose())
     expect(() => createPlugin().activate(activationContext(resources), chat, uiComponents(),
-      undefined as never, service([]))).toThrow(TRANSPORT_MISSING)
+      undefined as never, service([]), sessions() as never)).toThrow(TRANSPORT_MISSING)
   })
 
 })

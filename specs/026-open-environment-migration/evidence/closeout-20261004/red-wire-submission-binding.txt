@@ -1,0 +1,109 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts
+
+ ❯ tests/closeout-wire-submission-binding.test.ts (7 tests | 6 failed) 16ms
+     × captures a frozen binding from backend metadata and the current ready projection 6ms
+     × reads operation IDs from the live projection at each synchronous capture 1ms
+     × captures the complete pending operation set and refuses unknown or conflicted operation facts 1ms
+     × refuses missing or explicitly unavailable backend submission capability metadata 3ms
+     × captures the backend createWithConfig mode for a draft without native owner lookup 1ms
+     × uses prepare only as a local binding guard and does not dispatch config preparation 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-wire-submission-binding.test.ts > wire configuration submission binding capture > captures a frozen binding from backend metadata and the current ready projection
+TypeError: client.captureSubmissionBinding is not a function
+ ❯ capture tests/closeout-wire-submission-binding.test.ts:96:36
+     94|
+     95| function capture(client: ReturnType<typeof createWireConfigurationClie…
+     96|   return (client as BindingClient).captureSubmissionBinding(location)
+       |                                    ^
+     97| }
+     98|
+ ❯ tests/closeout-wire-submission-binding.test.ts:104:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  tests/closeout-wire-submission-binding.test.ts > wire configuration submission binding capture > reads operation IDs from the live projection at each synchronous capture
+TypeError: client.captureSubmissionBinding is not a function
+ ❯ capture tests/closeout-wire-submission-binding.test.ts:96:36
+     94|
+     95| function capture(client: ReturnType<typeof createWireConfigurationClie…
+     96|   return (client as BindingClient).captureSubmissionBinding(location)
+       |                                    ^
+     97| }
+     98|
+ ❯ tests/closeout-wire-submission-binding.test.ts:119:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  tests/closeout-wire-submission-binding.test.ts > wire configuration submission binding capture > captures the complete pending operation set and refuses unknown or conflicted operation facts
+TypeError: client.captureSubmissionBinding is not a function
+ ❯ capture tests/closeout-wire-submission-binding.test.ts:96:36
+     94|
+     95| function capture(client: ReturnType<typeof createWireConfigurationClie…
+     96|   return (client as BindingClient).captureSubmissionBinding(location)
+       |                                    ^
+     97| }
+     98|
+ ❯ tests/closeout-wire-submission-binding.test.ts:139:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  tests/closeout-wire-submission-binding.test.ts > wire configuration submission binding capture > refuses missing or explicitly unavailable backend submission capability metadata
+AssertionError: expected [Function] to throw error matching /submission.*unavailable|metadata/i but got 'client.captureSubmissionBinding is no…'
+
+- Expected:
+/submission.*unavailable|metadata/i
+
++ Received:
+"client.captureSubmissionBinding is not a function"
+
+ ❯ tests/closeout-wire-submission-binding.test.ts:157:62
+    155|       const backend = fixture(options)
+    156|       await backend.client.forLocation(sessionLocation)
+    157|       expect(() => capture(backend.client, sessionLocation)).toThrow(/…
+       |                                                              ^
+    158|       backend.client.dispose()
+    159|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  tests/closeout-wire-submission-binding.test.ts > wire configuration submission binding capture > captures the backend createWithConfig mode for a draft without native owner lookup
+TypeError: client.captureSubmissionBinding is not a function
+ ❯ capture tests/closeout-wire-submission-binding.test.ts:96:36
+     94|
+     95| function capture(client: ReturnType<typeof createWireConfigurationClie…
+     96|   return (client as BindingClient).captureSubmissionBinding(location)
+       |                                    ^
+     97| }
+     98|
+ ❯ tests/closeout-wire-submission-binding.test.ts:169:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  tests/closeout-wire-submission-binding.test.ts > wire configuration submission binding capture > uses prepare only as a local binding guard and does not dispatch config preparation
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/closeout-wire-submission-binding.test.ts:200:80
+    198|     })).resolves.toMatchObject({ status: 'ready' })
+    199|
+    200|     expect(backend.calls.some(call => call.method === 'agent.config.pr…
+       |                                                                                ^
+    201|     backend.client.dispose()
+    202|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 1 passed (7)
+   Start at  13:57:24
+   Duration  414ms (transform 88ms, setup 0ms, import 112ms, tests 16ms, environment 0ms)
+

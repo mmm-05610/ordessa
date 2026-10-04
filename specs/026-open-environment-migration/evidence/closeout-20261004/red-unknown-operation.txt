@@ -1,0 +1,30 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts
+
+ ❯ tests/closeout-observation-gap.test.ts (2 tests | 1 failed) 17ms
+   × an uncertain write cannot leave the send projection ready 10ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-observation-gap.test.ts > an uncertain write cannot leave the send projection ready
+AssertionError: expected 'ready' to be 'unknown' // Object.is equality
+
+Expected: "unknown"
+Received: "ready"
+
+ ❯ tests/closeout-observation-gap.test.ts:40:43
+     38|   const result = await projection.dispatch({model:'M2'})
+     39|   expect(result.kind).toBe('unknown')
+     40|   expect(projection.getSnapshot().status).toBe('unknown')
+       |                                           ^
+     41|   await projection.refresh()
+     42|   expect(projection.getSnapshot().status).toBe('unknown')
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  10:56:40
+   Duration  482ms (transform 147ms, setup 0ms, import 171ms, tests 17ms, environment 0ms)
+

@@ -103,6 +103,7 @@ class SubmissionInput:
     draft: Mapping[str, Any]
     config_operation_ids: tuple[str, ...]
     schema: str
+    expected_conditions: Mapping[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -194,6 +195,12 @@ class AgentSubmissionService:
         prior = self._find_prior(item)
         if prior is not None:
             self._assert_retry_matches(prior, item)
+            if item.expected_conditions is not None:
+                frozen_conditions = self._conditions_from_record(prior)
+                if not self._conditions_equal(item.expected_conditions, frozen_conditions):
+                    raise JournalConflictError(
+                        "logical RequestKey expected conditions differ from its frozen capture"
+                    )
             observation = self.query(item.target, item.submission_id, item.principal_scope)
             if observation is None:
                 return SubmissionResult(prior.request, "unknown", prior, replayed=True)
@@ -279,6 +286,17 @@ class AgentSubmissionService:
             "resolved": _plain(config_snapshot.resolved),
         }
 
+        binding_identity = self._binding_identity(binding, environment_binding)
+        conditions = self._conditions_descriptor(
+            binding_identity, binding.base_revision, config_snapshot,
+        )
+        if item.expected_conditions is not None and not self._conditions_equal(
+            item.expected_conditions, conditions,
+        ):
+            raise ReliableSubmissionUnsupported(
+                "source condition conflict: trusted native or configuration conditions changed"
+            )
+
         draft = self._normalize_draft(item.draft)
         if draft.get("draftId") is None or draft.get("draftRevision") is None or not isinstance(
             draft.get("text"), str
@@ -307,15 +325,6 @@ class AgentSubmissionService:
                 )
             attachment_bytes[attachment_id] = bytes(content)
 
-        binding_identity = {
-            **{str(key): str(value) for key, value in binding.identity.items()},
-            "ownerRef": binding.owner_ref,
-            "surfaceId": binding.surface_id,
-            "environment": self.environment.environment_id,
-            "environmentContextRevision": environment_binding.environment_context_revision,
-            "providerActivation": environment_binding.provider_activation.plugin_id + ":"
-            + str(environment_binding.provider_activation.generation),
-        }
         request = self._request_key(
             item.target, item.submission_id, item.principal_scope, binding_identity
         )
@@ -394,6 +403,155 @@ class AgentSubmissionService:
             raise ReliableSubmissionUnsupported("submission result disappeared after durable recording")
         return SubmissionResult(request, native_fact.outcome, completed, replayed=False)
 
+    def capture_conditions(self, target: str, mode: SubmissionMode,
+                           principal_scope: str = "local") -> Mapping[str, Any]:
+        """Read current native/configuration conditions for a caller CAS.
+
+        This method performs only public binding, Environment admission and
+        owner snapshot reads. It never creates a journal mapping or invokes a
+        native effect.
+        """
+        if not isinstance(target, str) or not target.strip():
+            raise ValueError("target must be non-empty")
+        if not isinstance(principal_scope, str) or not principal_scope.strip():
+            raise ValueError("principal_scope must be non-empty")
+        binding, environment_binding, config_snapshot, _ = self._resolve_conditions(
+            target, mode, principal_scope,
+        )
+        return self._conditions_descriptor(
+            self._binding_identity(binding, environment_binding),
+            binding.base_revision,
+            config_snapshot,
+        )
+
+    def _resolve_conditions(self, target: str, mode: SubmissionMode,
+                            principal_scope: str):
+        if mode not in ("existing", "createWithConfig"):
+            raise ReliableSubmissionUnsupported(
+                f"unsupported conditional submission mode {mode!r}"
+            )
+        declaration = self.declaration
+        supported = (declaration.existing_conditional if mode == "existing"
+                     else declaration.create_with_config_conditional)
+        method_name = "submit_existing" if mode == "existing" else "create_with_config"
+        if supported is not True or not callable(getattr(self.native_submit_port, method_name, None)):
+            raise ReliableSubmissionUnsupported(
+                f"native adapter does not declare conditional {mode} submission"
+            )
+        if not callable(getattr(self.native_submit_port, "query", None)):
+            raise ReliableSubmissionUnsupported("native submit adapter has no read-only query surface")
+        resolve = getattr(self.native_submit_port, "resolve_binding", None)
+        if not callable(resolve):
+            raise ReliableSubmissionUnsupported("native submit adapter cannot resolve an owner binding")
+        try:
+            binding = resolve(target)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native owner binding is unavailable: {exc}"
+            ) from exc
+        self._validate_binding_values(target, mode, declaration, binding)
+        try:
+            environment_binding = self.environment.bind(binding.surface_id)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native binding is not an active Environment capability: {exc}"
+            ) from exc
+        if environment_binding.environment != self.environment.environment_id:
+            raise ReliableSubmissionUnsupported(
+                "Environment binding identity does not match the composed Environment"
+            )
+        preflight = getattr(self.environment, "check_invocation", None)
+        if not callable(preflight):
+            raise ReliableSubmissionUnsupported(
+                "Environment has no reliable effect preflight; submission remains unsupported"
+            )
+        try:
+            preflight_result = preflight(
+                binding.surface_id,
+                guarantee=GuaranteeLevel.RELIABLE,
+                principal=principal_scope,
+                effect=True,
+            )
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"Environment reliable capability is unavailable: {exc}"
+            ) from exc
+        if getattr(preflight_result, "backend_durable", False) is not True:
+            raise ReliableSubmissionUnsupported(
+                "Environment did not declare durable reliable dispatch support"
+            )
+        owners = self.owners.owners_of(target)
+        if owners is None or "config" not in owners:
+            raise ReliableSubmissionUnsupported(
+                "Agent target has no registered configuration owner"
+            )
+        capture_configuration = getattr(owners["config"], "capture_configuration", None)
+        if not callable(capture_configuration):
+            raise ReliableSubmissionUnsupported(
+                "configuration owner cannot atomically capture its snapshot and operations"
+            )
+        config_snapshot, config_operations = capture_configuration()
+        if config_snapshot.observed_evidence == "unknown":
+            raise ReliableSubmissionUnsupported(
+                "configuration source conditions are unknown"
+            )
+        if any(state == "unknown" for state in config_snapshot.fields.values()):
+            raise ReliableSubmissionUnsupported(
+                "configuration source conditions contain unknown fields"
+            )
+        if any(operation.state in ("unknown", "conflict") for operation in config_operations):
+            raise ReliableSubmissionUnsupported(
+                "configuration source conditions contain unknown or conflicting operations"
+            )
+        return binding, environment_binding, config_snapshot, config_operations
+
+    @staticmethod
+    def _binding_identity(binding: NativeSubmitBinding, environment_binding: Any) -> dict[str, str]:
+        return {
+            **{str(key): str(value) for key, value in binding.identity.items()},
+            "ownerRef": binding.owner_ref,
+            "surfaceId": binding.surface_id,
+            "environment": environment_binding.environment,
+            "environmentContextRevision": environment_binding.environment_context_revision,
+            "providerActivation": environment_binding.provider_activation.plugin_id + ":"
+            + str(environment_binding.provider_activation.generation),
+        }
+
+    @staticmethod
+    def _conditions_descriptor(binding_identity: Mapping[str, str], base_revision: str,
+                               config_snapshot: Any) -> dict[str, Any]:
+        return {
+            "binding": _plain(binding_identity),
+            "baseRevision": str(base_revision),
+            "sourceRevision": str(config_snapshot.revision),
+            "configOwnerRef": str(config_snapshot.owner_ref),
+        }
+
+    @staticmethod
+    def _conditions_equal(expected: Mapping[str, Any], actual: Mapping[str, Any]) -> bool:
+        if not isinstance(expected, Mapping):
+            return False
+        try:
+            return _canonical(_plain(expected)) == _canonical(_plain(actual))
+        except (TypeError, ValueError):
+            return False
+
+    @staticmethod
+    def _conditions_from_record(record: SubmissionRecord) -> Mapping[str, Any]:
+        try:
+            capture = json.loads(record.encoded_input)["capture"]
+            config = capture["target"]["config"]
+            return {
+                "binding": capture["binding"],
+                "baseRevision": capture["baseRevision"],
+                "sourceRevision": str(config["revision"]),
+                "configOwnerRef": config["ownerRef"],
+            }
+        except (KeyError, TypeError, json.JSONDecodeError) as exc:
+            raise ReliableSubmissionUnsupported(
+                "frozen submission has no valid source condition descriptor"
+            ) from exc
+
     def query(self, target: str, submission_id: str,
               principal_scope: str) -> SubmissionObservation | None:
         """Read-only reconciliation by the original RequestKey; never invoke."""
@@ -435,13 +593,21 @@ class AgentSubmissionService:
     @staticmethod
     def _validate_binding(item: SubmissionInput, declaration: NativeSubmitDeclaration,
                           binding: NativeSubmitBinding) -> None:
+        AgentSubmissionService._validate_binding_values(
+            item.target, item.mode, declaration, binding,
+        )
+
+    @staticmethod
+    def _validate_binding_values(target: str, mode: SubmissionMode,
+                                 declaration: NativeSubmitDeclaration,
+                                 binding: NativeSubmitBinding) -> None:
         if not isinstance(declaration.owner_ref, str) or not declaration.owner_ref:
             raise ReliableSubmissionUnsupported("native adapter declaration has no owner binding")
         if not isinstance(binding, NativeSubmitBinding):
             raise ReliableSubmissionUnsupported("native adapter returned an invalid owner binding")
-        if binding.owner_ref != declaration.owner_ref or binding.target != item.target:
+        if binding.owner_ref != declaration.owner_ref or binding.target != target:
             raise ReliableSubmissionUnsupported("native owner binding does not match the requested target")
-        if binding.mode != item.mode:
+        if binding.mode != mode:
             raise ReliableSubmissionUnsupported("native owner binding mode differs from the requested operation")
         if not binding.surface_id or not binding.base_revision or not binding.identity:
             raise ReliableSubmissionUnsupported("native owner binding is incomplete")
@@ -449,11 +615,11 @@ class AgentSubmissionService:
                 or not all(isinstance(key, str) and isinstance(value, str)
                            for key, value in binding.identity.items())):
             raise ReliableSubmissionUnsupported("native owner binding identity is malformed")
-        supported = (declaration.existing_conditional if item.mode == "existing"
+        supported = (declaration.existing_conditional if mode == "existing"
                      else declaration.create_with_config_conditional)
         if supported is not True:
             raise ReliableSubmissionUnsupported(
-                f"native adapter does not declare conditional {item.mode} submission"
+                f"native adapter does not declare conditional {mode} submission"
             )
 
     @staticmethod

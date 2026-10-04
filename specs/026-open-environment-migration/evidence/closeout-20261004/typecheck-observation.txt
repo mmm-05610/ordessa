@@ -1,0 +1,14 @@
+
+> ordessa@0.1.0 typecheck
+> npm run --workspace apps/desktop typecheck
+
+
+> @modular/desktop-app@0.1.0 typecheck
+> tsc --noEmit
+
+../../plugins/agent/contracts/tests/closeout-observation-gap.test.ts(15,17): error TS2352: Conversion of type '{ readConfig: () => Promise<{ kind: "ok"; value: ConfigSnapshotView; }>; }' to type 'AgentOwnerPort' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ readConfig: () => Promise<{ kind: "ok"; value: ConfigSnapshotView; }>; }' is missing the following properties from type 'AgentOwnerPort': submitConfigOperation, submitInput, listSessions, queryRun, listInteractions
+npm ERR! Lifecycle script `typecheck` failed with error: 
+npm ERR! Error: command failed 
+npm ERR!   in workspace: @modular/desktop-app@0.1.0 
+npm ERR!   at location: /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/apps/desktop 

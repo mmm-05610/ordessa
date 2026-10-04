@@ -27,7 +27,7 @@ PLUGIN_VERSION = "1"
 class AgentDomainPlugin:
     def __init__(self, registry: AgentOwnerRegistry | None = None, *, target_resolver=None,
                  submission_port=None, submission_service_factory=None,
-                 session_resolver=None, config_preparer=None) -> None:
+                 session_resolver=None, config_preparer=None, submission_capabilities=None) -> None:
         self._registry = registry
         self._target_resolver = target_resolver
         self._submission_port = submission_port
@@ -35,6 +35,7 @@ class AgentDomainPlugin:
         self._submission_service = None
         self._session_resolver = session_resolver
         self._config_preparer = config_preparer
+        self._submission_capabilities = submission_capabilities
         self._repository = None
 
     def close(self):
@@ -97,14 +98,21 @@ class AgentDomainPlugin:
                 return observation_capability(result)
             if self._session_resolver is None:
                 raise WireError('CAPABILITY_UNSUPPORTED', 'native session binding unavailable')
-            return observation_capability(self._session_resolver(location))
+            return observation_capability(self._session_resolver(location, params.get('nativeOwner')))
 
         def observation_capability(result):
             binding = context.ports.get('core.binding') if production else None
             if binding is None:
                 return result
             environment = binding.environment
-            return {**result, 'observation': {'method': 'agent.config.observe',
+            declared = self._submission_capabilities(result['target']) if self._submission_capabilities else {}
+            return {**result, 'submission': {
+                'namespace': environment.environment_id, 'principalScope': 'local',
+                'schema': 'agent-input/v1', 'available': declared.get('available') is True,
+                'nativeBound': declared.get('nativeBound') is True,
+                'mode': declared.get('mode') or ('createWithConfig' if self._repository is not None
+                    and self._repository.knows_draft(result['target']) else 'existing'),
+            }, 'observation': {'method': 'agent.config.observe',
                 'releaseMethod': 'agent.config.release', 'environment': environment.environment_id,
                 'creditLimit': 32}}
 
@@ -117,7 +125,7 @@ class AgentDomainPlugin:
         def observation_binding(params):
             from ordessa_environment_api.targets import CanonicalFactTarget
             target = ensure_target(params)
-            resolved = session_resolve({'location': params.get('location')})
+            resolved = session_resolve({'location': params.get('location'), 'nativeOwner': params.get('nativeOwner')})
             if resolved.get('target') != target or str(resolved.get('generation')) != str(params.get('generation')):
                 raise WireError('CONFLICT_VERSION', 'configuration observation binding/generation changed')
             binding = context.ports.get('core.binding') if production else None
@@ -251,7 +259,7 @@ class AgentDomainPlugin:
                 required = {'submissionId', 'draft', 'configOperationIds', 'schema', 'mode'}
                 if not required.issubset(capture):
                     raise WireError('INVALID_REQUEST', 'capture requires submissionId, draft, configOperationIds, schema, and mode')
-                if set(capture) - required:
+                if set(capture) - required - {'expectedConditions'}:
                     raise WireError('INVALID_REQUEST', 'capture contains undeclared fields')
                 if 'outcome' in capture or 'accepted' in capture:
                     raise WireError('INVALID_REQUEST', 'caller outcome claims are not submission evidence')
@@ -272,6 +280,7 @@ class AgentDomainPlugin:
                     draft=draft,
                     config_operation_ids=tuple(operation_ids),
                     schema=capture['schema'],
+                    expected_conditions=capture.get('expectedConditions'),
                 )
                 try:
                     result = service.submit(item)
@@ -307,9 +316,15 @@ class AgentDomainPlugin:
             }
 
         def submission_query(params: Mapping[str, Any]) -> dict[str, Any]:
-            target = ensure_target(params)
+            # Historical reconciliation is keyed by the durable original
+            # RequestKey and its frozen target/principal association. It must
+            # remain readable when today's draft/native binding decoder has
+            # been retired; effectful operations still use ensure_target.
+            target = params.get('target')
+            if not isinstance(target, str) or not target or target.strip() != target:
+                raise WireError('INVALID_REQUEST', 'target is required')
             submission_id = params.get('submissionId')
-            if not isinstance(submission_id, str) or not submission_id:
+            if not isinstance(submission_id, str) or not submission_id or submission_id.strip() != submission_id:
                 raise WireError('INVALID_REQUEST', 'submissionId is required')
             if not production:
                 return {'outcome': 'unknown', 'submissionId': submission_id, 'resend': False}
@@ -413,15 +428,38 @@ class AgentDomainPlugin:
             interactions = self._registry.owners_of(target)["interaction"].list()
             return {"items": [dict(i) for i in interactions]}
 
+        def submission_scope(params):
+            binding = context.ports.get('core.binding') if production else None
+            if binding is None:
+                raise WireError('CAPABILITY_UNSUPPORTED', 'authorized submission scope unavailable')
+            # Same authenticated scope as submit/query. Never enumerate other
+            # installations or principals, and do not require a live native owner.
+            return {'namespace': binding.environment.environment_id, 'principalScope': 'local'}
+
+        def submission_capture_read(params):
+            target = ensure_target(params)
+            service = submission_service()
+            reader = getattr(service, 'capture_conditions', None)
+            if not callable(reader):
+                raise WireError('CAPABILITY_UNSUPPORTED', 'trusted capture conditions unavailable')
+            try:
+                return reader(target, params.get('mode'), principal_scope='local')
+            except Exception as error:
+                raise WireError('CAPABILITY_UNSUPPORTED', f'trusted capture conditions unavailable: {error}') from error
+
         methods = (
+            ServerMethodDescriptor(method_id='agent.submission.scope', required_params=frozenset(),
+                                   optional_params=frozenset(), handler=submission_scope, owner=PLUGIN_ID),
+            ServerMethodDescriptor(method_id='agent.submission.capture.read', required_params=frozenset({'target', 'mode'}),
+                                   optional_params=frozenset(), handler=submission_capture_read, owner=PLUGIN_ID),
             ServerMethodDescriptor(method_id='agent.config.observe',
                 required_params=frozenset({'target','location','generation','credits'}),
-                optional_params=frozenset({'subscriptionId','cursor'}), handler=config_observe, owner=PLUGIN_ID),
+                optional_params=frozenset({'subscriptionId','cursor','nativeOwner'}), handler=config_observe, owner=PLUGIN_ID),
             ServerMethodDescriptor(method_id='agent.config.release',
                 required_params=frozenset({'target','location','generation','subscriptionId'}),
                 optional_params=frozenset(), handler=config_release, owner=PLUGIN_ID),
             ServerMethodDescriptor(method_id='agent.session.resolve', required_params=frozenset({'location'}),
-                optional_params=frozenset(), handler=session_resolve, owner=PLUGIN_ID),
+                optional_params=frozenset({'nativeOwner'}), handler=session_resolve, owner=PLUGIN_ID),
             ServerMethodDescriptor(method_id='agent.config.prepare', required_params=frozenset({'target'}),
                 optional_params=frozenset({'revision','generation','submissionId','draftRevision'}), handler=config_prepare, owner=PLUGIN_ID),
             ServerMethodDescriptor(method_id="agent.config.read", required_params=frozenset({"target"}),

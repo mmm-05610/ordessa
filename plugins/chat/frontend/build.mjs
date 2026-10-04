@@ -1,6 +1,6 @@
 import { buildExtension } from '../../../tooling/build-extension.mjs'
 await buildExtension(import.meta.dirname, {
-  entries: { entry: 'src/entry.tsx' },
+  entries: { entry: 'src/entry.tsx', submission: 'src/submission.ts' },
   licenses: [
     ['streamdown/LICENSE', 'streamdown-LICENSE'],
     ['shiki/LICENSE', 'shiki-LICENSE'],

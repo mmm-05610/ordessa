@@ -1,0 +1,41 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts
+
+ ❯ tests/closeout-wire-native-owner.test.ts (3 tests | 1 failed) 11ms
+     × resolves a route key only through its distinct connector-observed native owner 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-wire-native-owner.test.ts > wire configuration native owner bridge > resolves a route key only through its distinct connector-observed native owner
+AssertionError: expected [ { kind: 'session', …(4) } ] to deeply equal [ { kind: 'session', …(5) } ]
+
+- Expected
++ Received
+
+@@ -1,9 +1,8 @@
+  [
+    {
+      "connectionId": "frontend-connector-7",
+-     "contextRevision": 12,
+      "harnessId": "acp",
+      "kind": "session",
+      "serverInstanceId": "server-2",
+      "sessionId": "connection-7:native-route-4",
+    },
+
+ ❯ tests/closeout-wire-native-owner.test.ts:72:25
+     70|     const projection = await client.forLocation(location)
+     71|
+     72|     expect(lookupCalls).toEqual([location])
+       |                         ^
+     73|     const resolve = calls.find(call => call.method === 'agent.session.…
+     74|     expect(resolve?.params.nativeOwner).toEqual(nativeOwner)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 7 passed (8)
+      Tests  1 failed | 46 passed (47)
+   Start at  13:46:07
+   Duration  2.49s (transform 186ms, setup 0ms, import 363ms, tests 114ms, environment 1ms)
+

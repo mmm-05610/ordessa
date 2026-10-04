@@ -1,0 +1,33 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts
+
+ ❯ tests/closeout-wire-configuration-observer.test.ts (4 tests | 1 failed) 13ms
+     × releases an observation that attaches after its client was disposed 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-wire-configuration-observer.test.ts > wire configuration observer lifecycle > releases an observation that attaches after its client was disposed
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ tests/closeout-wire-configuration-observer.test.ts:175:27
+    173|     expect(backend.calls.filter(call => call.method === 'agent.config.…
+    174|     expect(projection.getSnapshot().config?.resolved.model).toBe('M1')
+    175|     expect(notifications).toBe(0)
+       |                           ^
+    176|     expect(backend.calls.some(call => call.method === 'agent.config.su…
+    177|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 5 passed (6)
+      Tests  1 failed | 38 passed (39)
+   Start at  11:26:01
+   Duration  1.90s (transform 184ms, setup 0ms, import 332ms, tests 91ms, environment 1ms)
+

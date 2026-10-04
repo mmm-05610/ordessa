@@ -27,7 +27,7 @@ import {
 import { acquireRealBuildLock } from '../../../../tooling/real-build-lock.mjs'
 
 const run = promisify(execFile)
-const repoRoot = path.resolve(import.meta.dirname, '..', '..', '..')
+const repoRoot = path.resolve(import.meta.dirname, '..', '..', '..', '..')
 const extensionsRoot = path.join(repoRoot, 'products/desktop/dist/extensions')
 const sharedRoot = path.join(repoRoot, 'apps/desktop/dist/renderer/shared')
 const artifactRoots = [extensionsRoot, sharedRoot]

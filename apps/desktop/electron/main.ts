@@ -122,7 +122,11 @@ app.whenReady().then(async () => {
   // 令牌只在主进程（C-03 §4）：`readToken` 由这里供给，WirePort 不存令牌字段。
   let bridge: ServerBridge | undefined
   let wire: WirePort
-  try {
+  if (smoke && (process.env.ORDESSA_EMPTY_HOST === '1' || process.env.MODULAR_AGENT_SMOKE === '1')) {
+    // Explicit platform-only fixture: no product is discovered and no
+    // native product process is owned by this host round.
+    wire = createAbsentWirePort()
+  } else try {
     bridge = new ServerBridge({ args: productServerArgs() })
     const instance = await bridge.start()
     // C-02 §2：握手已读，把 origin/token 定位符交给本进程的扩展宿主（native 适配器

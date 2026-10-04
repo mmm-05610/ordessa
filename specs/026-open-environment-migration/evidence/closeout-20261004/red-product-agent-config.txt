@@ -1,0 +1,161 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+_ test_default_product_two_wire_controls_share_backend_draft_without_native_creation _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-814/test_default_product_two_wire_0')
+
+    def test_default_product_two_wire_controls_share_backend_draft_without_native_creation(tmp_path):
+>       runtime=create_composition().default_runtime(tmp_path/'data')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+products/server/tests/test_closeout_agent_configuration.py:8: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+products/server/src/ordessa_server_product/composition.py:243: in default_runtime
+    from ordessa_server.bootstrap import build_runtime
+apps/server/src/ordessa_server/bootstrap/__init__.py:4: in <module>
+    from ordessa_server.bootstrap.runtime import (
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    """Bootstrap assembly: the generic host composition root.
+    
+    The host composes only what it owns — the data root, the storage primitives,
+    the transport walls, the plugin host — and resolves the deployment's business
+    composition through the product seam: exactly one installed product package
+    answers the `ordessa.server_product` entry point with its plugin selection.
+    Business domains live in `plugins/*`; `products/server` decides which are
+    enabled. Nothing here imports a plugin.
+    """
+    from __future__ import annotations
+    
+    from dataclasses import dataclass, field
+    from contextlib import closing
+    import csv
+    from datetime import datetime, timezone
+    import io
+    import os
+    from pathlib import Path
+    import re
+    import secrets
+    import sqlite3
+    import subprocess
+    from typing import Any, Callable
+    from uuid import uuid4
+    
+    from ordessa_server.credentials import CredentialRecords
+>   from ordessa_server.core_binding import CoreBinding
+E   ModuleNotFoundError: No module named 'ordessa_server.core_binding'
+
+apps/server/src/ordessa_server/bootstrap/runtime.py:27: ModuleNotFoundError
+__ test_native_product_shared_agent_owner_uses_verified_native_binding[True] ___
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7712b73233e0>
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-814/test_native_product_shared_age0')
+include_profile = True
+
+    @pytest.mark.parametrize('include_profile',[True,False])
+    def test_native_product_shared_agent_owner_uses_verified_native_binding(monkeypatch,tmp_path,include_profile):
+>       runtime=runtime_at(tmp_path,include_profile=include_profile)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+products/server/tests/test_closeout_agent_configuration.py:24: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+products/server/tests/test_native_model_turn_composition.py:136: in runtime_at
+    return create_composition().native_runtime(tmp_path / "data", **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+products/server/src/ordessa_server_product/composition.py:260: in native_runtime
+    from ordessa_server_compat.composition import build_runtime_from_native_adapter
+plugins/server-compat/src/ordessa_server_compat/composition.py:24: in <module>
+    from ordessa_server.bootstrap import ServerRuntime, build_runtime
+apps/server/src/ordessa_server/bootstrap/__init__.py:4: in <module>
+    from ordessa_server.bootstrap.runtime import (
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    """Bootstrap assembly: the generic host composition root.
+    
+    The host composes only what it owns — the data root, the storage primitives,
+    the transport walls, the plugin host — and resolves the deployment's business
+    composition through the product seam: exactly one installed product package
+    answers the `ordessa.server_product` entry point with its plugin selection.
+    Business domains live in `plugins/*`; `products/server` decides which are
+    enabled. Nothing here imports a plugin.
+    """
+    from __future__ import annotations
+    
+    from dataclasses import dataclass, field
+    from contextlib import closing
+    import csv
+    from datetime import datetime, timezone
+    import io
+    import os
+    from pathlib import Path
+    import re
+    import secrets
+    import sqlite3
+    import subprocess
+    from typing import Any, Callable
+    from uuid import uuid4
+    
+    from ordessa_server.credentials import CredentialRecords
+>   from ordessa_server.core_binding import CoreBinding
+E   ModuleNotFoundError: No module named 'ordessa_server.core_binding'
+
+apps/server/src/ordessa_server/bootstrap/runtime.py:27: ModuleNotFoundError
+__ test_native_product_shared_agent_owner_uses_verified_native_binding[False] __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7712b738fe30>
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-814/test_native_product_shared_age1')
+include_profile = False
+
+    @pytest.mark.parametrize('include_profile',[True,False])
+    def test_native_product_shared_agent_owner_uses_verified_native_binding(monkeypatch,tmp_path,include_profile):
+>       runtime=runtime_at(tmp_path,include_profile=include_profile)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+products/server/tests/test_closeout_agent_configuration.py:24: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+products/server/tests/test_native_model_turn_composition.py:136: in runtime_at
+    return create_composition().native_runtime(tmp_path / "data", **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+products/server/src/ordessa_server_product/composition.py:260: in native_runtime
+    from ordessa_server_compat.composition import build_runtime_from_native_adapter
+plugins/server-compat/src/ordessa_server_compat/composition.py:24: in <module>
+    from ordessa_server.bootstrap import ServerRuntime, build_runtime
+apps/server/src/ordessa_server/bootstrap/__init__.py:4: in <module>
+    from ordessa_server.bootstrap.runtime import (
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    """Bootstrap assembly: the generic host composition root.
+    
+    The host composes only what it owns — the data root, the storage primitives,
+    the transport walls, the plugin host — and resolves the deployment's business
+    composition through the product seam: exactly one installed product package
+    answers the `ordessa.server_product` entry point with its plugin selection.
+    Business domains live in `plugins/*`; `products/server` decides which are
+    enabled. Nothing here imports a plugin.
+    """
+    from __future__ import annotations
+    
+    from dataclasses import dataclass, field
+    from contextlib import closing
+    import csv
+    from datetime import datetime, timezone
+    import io
+    import os
+    from pathlib import Path
+    import re
+    import secrets
+    import sqlite3
+    import subprocess
+    from typing import Any, Callable
+    from uuid import uuid4
+    
+    from ordessa_server.credentials import CredentialRecords
+>   from ordessa_server.core_binding import CoreBinding
+E   ModuleNotFoundError: No module named 'ordessa_server.core_binding'
+
+apps/server/src/ordessa_server/bootstrap/runtime.py:27: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED products/server/tests/test_closeout_agent_configuration.py::test_default_product_two_wire_controls_share_backend_draft_without_native_creation
+FAILED products/server/tests/test_closeout_agent_configuration.py::test_native_product_shared_agent_owner_uses_verified_native_binding[True]
+FAILED products/server/tests/test_closeout_agent_configuration.py::test_native_product_shared_agent_owner_uses_verified_native_binding[False]
+3 failed in 0.31s

@@ -1,0 +1,113 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts
+
+ ❯ tests/closeout-durable-conditions.test.ts (10 tests | 8 failed) 38ms
+     × refuses missing conditions before writing a journal mapping or calling the wire 19ms
+     × refuses a partial descriptor (missing binding field) before journal or wire effects 3ms
+     × refuses a partial descriptor (missing base revision) before journal or wire effects 2ms
+     × refuses a partial descriptor (missing source revision) before journal or wire effects 2ms
+     × refuses a partial descriptor (missing config owner) before journal or wire effects 1ms
+     × refuses conditions captured for a different target before journaling 1ms
+     × refuses conditions captured for a different generation before journaling 1ms
+     × requires the native conditions environment to match the durable key namespace 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-durable-conditions.test.ts > durable submission expected conditions guard > refuses missing conditions before writing a journal mapping or calling the wire
+AssertionError: expected { status: 'accepted', …(1) } to match object { status: 'refused' }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "status": "refused",
++   "status": "accepted",
+  }
+
+ ❯ tests/closeout-durable-conditions.test.ts:81:20
+     79|     const result = await backend.client.submit(value)
+     80|
+     81|     expect(result).toMatchObject({ status: 'refused' })
+       |                    ^
+     82|     expect(await backend.journal.get(value.key)).toBeUndefined()
+     83|     expect(backend.calls).toEqual([])
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  tests/closeout-durable-conditions.test.ts > durable submission expected conditions guard > refuses a partial descriptor (missing binding field) before journal or wire effects
+ FAIL  tests/closeout-durable-conditions.test.ts > durable submission expected conditions guard > refuses a partial descriptor (missing base revision) before journal or wire effects
+ FAIL  tests/closeout-durable-conditions.test.ts > durable submission expected conditions guard > refuses a partial descriptor (missing source revision) before journal or wire effects
+ FAIL  tests/closeout-durable-conditions.test.ts > durable submission expected conditions guard > refuses a partial descriptor (missing config owner) before journal or wire effects
+AssertionError: expected { status: 'accepted', …(1) } to match object { status: 'refused' }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "status": "refused",
++   "status": "accepted",
+  }
+
+ ❯ tests/closeout-durable-conditions.test.ts:101:20
+     99|     const result = await backend.client.submit(value)
+    100|
+    101|     expect(result).toMatchObject({ status: 'refused' })
+       |                    ^
+    102|     expect(await backend.journal.get(value.key)).toBeUndefined()
+    103|     expect(backend.calls).toEqual([])
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  tests/closeout-durable-conditions.test.ts > durable submission expected conditions guard > refuses conditions captured for a different target before journaling
+ FAIL  tests/closeout-durable-conditions.test.ts > durable submission expected conditions guard > refuses conditions captured for a different generation before journaling
+AssertionError: expected { status: 'accepted', …(1) } to match object { status: 'refused' }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "status": "refused",
++   "status": "accepted",
+  }
+
+ ❯ tests/closeout-durable-conditions.test.ts:119:20
+    117|     const result = await backend.client.submit(value)
+    118|
+    119|     expect(result).toMatchObject({ status: 'refused' })
+       |                    ^
+    120|     expect(await backend.journal.get(value.key)).toBeUndefined()
+    121|     expect(backend.calls).toEqual([])
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  tests/closeout-durable-conditions.test.ts > durable submission expected conditions guard > requires the native conditions environment to match the durable key namespace
+AssertionError: expected { status: 'accepted', …(1) } to match object { status: 'refused' }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "status": "refused",
++   "status": "accepted",
+  }
+
+ ❯ tests/closeout-durable-conditions.test.ts:136:20
+    134|     const result = await backend.client.submit(value)
+    135|
+    136|     expect(result).toMatchObject({ status: 'refused' })
+       |                    ^
+    137|     expect(await backend.journal.get(value.key)).toBeUndefined()
+    138|     expect(backend.calls).toEqual([])
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  8 failed | 2 passed (10)
+   Start at  14:41:18
+   Duration  475ms (transform 106ms, setup 0ms, import 138ms, tests 38ms, environment 0ms)
+

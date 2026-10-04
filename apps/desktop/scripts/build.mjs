@@ -11,7 +11,7 @@ await import('../../../tooling/build-all.mjs')
 await mkdir(path.join(root, 'dist/renderer/shared'), { recursive: true })
 // All shared entrypoints are one splitting build, so React and API have one identity.
 await build({
-  entryPoints: Object.fromEntries(['react', 'jsx-runtime', 'react-dom', 'react-dom-client', 'api', 'ui-components-api'].map(name => [name, path.join(root, 'renderer/shared/' + name + '.ts')])),
+  entryPoints: Object.fromEntries(['react', 'jsx-runtime', 'react-dom', 'react-dom-client', 'api', 'ui-components-api', 'f5-runtime', 'f5-bridge', 'f5-api', 'f5-react'].map(name => [name, path.join(root, 'renderer/shared/' + name + '.ts')])),
   outdir: path.join(root, 'dist/renderer/shared'), bundle: true, splitting: true,
   platform: 'browser', format: 'esm', target: 'chrome132',
   define: { 'process.env.NODE_ENV': '"production"' },
@@ -21,6 +21,15 @@ await build({
   bundle: true, platform: 'browser', format: 'esm', target: 'chrome132', jsx: 'automatic',
   external: ['react', 'react/*', 'react-dom', 'react-dom/*', '@ordessa/extension-api'],
   loader: { '.css': 'css' },
+})
+// F5's host adapter is a public native-bridge entrypoint. Ship that exact
+// public module as a Node asset so packaged-artifact checks and host assembly
+// resolve the same implementation instead of importing workspace source.
+await mkdir(path.join(root, 'dist'), { recursive: true })
+await build({
+  entryPoints: [fileURLToPath(import.meta.resolve('@ordessa/native-bridge/ui-storage'))],
+  outfile: path.join(root, 'dist/native-ui-storage.cjs'),
+  bundle: true, platform: 'node', format: 'cjs', target: 'node22',
 })
 for (const name of ['main', 'preload']) await build({
   entryPoints: [path.join(root, 'electron/' + name + '.ts')],

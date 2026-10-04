@@ -68,10 +68,11 @@ test('built provider and Chat consumer share one token and register through scop
     ])
     const chat = assembly.createChatContributions()
     const calls = []
-    const wire = { call: async (method, params) => { calls.push({ method, params }); return { kind: 'Accepted', result: { items: [] } } } }
+    const wire = { ready: true, scope: 'fixture-wire', call: async (method, params) => { calls.push({ method, params }); return { kind: 'Accepted', result: { items: [] } } } }
+    const sessions = { getSnapshot: () => ({ runtimeGeneration: 0 }), subscribe: () => () => undefined }
     const context = { resources }
     const service = provider.activate(context, { composition: { forScope: () => ({ addSettingsSection() {} }) } }, wire, null)
-    selector.activate(context, chat, uiService.uiComponents, wire, service)
+    selector.activate(context, chat, uiService.uiComponents, wire, service, sessions)
     const [view] = chat.contributionsBySlot('composer.toolbar').getSnapshot()
     assert.equal(view.id, 'model-provider.composer.model-selector')
     const consumer = new assembly.OwnedResources()

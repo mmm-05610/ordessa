@@ -1,0 +1,317 @@
+TAP version 13
+# Subtest: variant build without ordessa.connections succeeds and keeps the platform API importable
+ok 1 - variant build without ordessa.connections succeeds and keeps the platform API importable
+  ---
+  duration_ms: 3993.458977
+  type: 'test'
+  ...
+# Subtest: the built platform bundle reaches no business extension
+ok 2 - the built platform bundle reaches no business extension
+  ---
+  duration_ms: 1.672952
+  type: 'test'
+  ...
+# Subtest: redirecting the output root perturbs the product build not at all
+ok 3 - redirecting the output root perturbs the product build not at all
+  ---
+  duration_ms: 4068.124448
+  type: 'test'
+  ...
+# Subtest: variant builds never touched the real product dist or lock
+ok 4 - variant builds never touched the real product dist or lock
+  ---
+  duration_ms: 45.697401
+  type: 'test'
+  ...
+# Subtest: no Agent/Chat domain type or token is declared under packages/frontend
+ok 5 - no Agent/Chat domain type or token is declared under packages/frontend
+  ---
+  duration_ms: 27.267382
+  type: 'test'
+  ...
+# Subtest: no platform source imports or re-exports a domain carrier path
+ok 6 - no platform source imports or re-exports a domain carrier path
+  ---
+  duration_ms: 2.244972
+  type: 'test'
+  ...
+# Subtest: the domain carrier lives in plugins/agent/contracts with its persistent ids
+ok 7 - the domain carrier lives in plugins/agent/contracts with its persistent ids
+  ---
+  duration_ms: 1.419394
+  type: 'test'
+  ...
+# Subtest: the real build constructs every domain token/kind exactly once, in the domain carrier only
+ok 8 - the real build constructs every domain token/kind exactly once, in the domain carrier only
+  ---
+  duration_ms: 4276.65034
+  type: 'test'
+  ...
+# Subtest: without the Agent implementations the built domain carrier still exports a usable API
+ok 9 - without the Agent implementations the built domain carrier still exports a usable API
+  ---
+  duration_ms: 3679.559116
+  type: 'test'
+  ...
+# Subtest: only trusted builtins carry main-process (native:) entries
+ok 10 - only trusted builtins carry main-process (native:) entries
+  ---
+  duration_ms: 17.249941
+  type: 'test'
+  ...
+# Subtest: no main-process source performs a top-level variable dynamic import
+ok 11 - no main-process source performs a top-level variable dynamic import
+  ---
+  duration_ms: 1.723567
+  type: 'test'
+  ...
+# Subtest: the renderer keeps its isolation posture (no global relaxation)
+ok 12 - the renderer keeps its isolation posture (no global relaxation)
+  ---
+  duration_ms: 0.297727
+  type: 'test'
+  ...
+# Subtest: apps/desktop/renderer holds exactly the frozen host test suites
+ok 13 - apps/desktop/renderer holds exactly the frozen host test suites
+  ---
+  duration_ms: 0.877598
+  type: 'test'
+  ...
+# Subtest: logical manifests exist for the moved frontend packages and validate
+ok 14 - logical manifests exist for the moved frontend packages and validate
+  ---
+  duration_ms: 0.90858
+  type: 'test'
+  ...
+# Subtest: counterexample: a manifest that behaves like a scheduler is refused
+ok 15 - counterexample: a manifest that behaves like a scheduler is refused
+  ---
+  duration_ms: 0.15347
+  type: 'test'
+  ...
+# Subtest: counterexample: malformed identity or unknown schema version is refused
+ok 16 - counterexample: malformed identity or unknown schema version is refused
+  ---
+  duration_ms: 0.133135
+  type: 'test'
+  ...
+# Subtest: logical identity agrees with the runtime extension identity
+ok 17 - logical identity agrees with the runtime extension identity
+  ---
+  duration_ms: 0.452633
+  type: 'test'
+  ...
+# Subtest: product admits the model selector and binds its published component key
+ok 18 - product admits the model selector and binds its published component key
+  ---
+  duration_ms: 1.285311
+  type: 'test'
+  ...
+# Subtest: built provider and Chat consumer share one token and register through scoped public services
+not ok 19 - built provider and Chat consumer share one token and register through scoped public services
+  ---
+  duration_ms: 1239.946615
+  type: 'test'
+  location: '/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/products/desktop/tests/model-selector-assembly.test.mjs:21:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'subscribe')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    createWireConfigurationClient (file:///tmp/ordessa-model-selector-r4lF1E/assembly.mjs:37093:48)
+    Object.activate (file:///tmp/ordessa-model-selector-r4lF1E/assembly.mjs:37706:29)
+    TestContext.<anonymous> (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/products/desktop/tests/model-selector-assembly.test.mjs:74:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: desktop launch and installed probes select the verified Profile assets by default
+not ok 20 - desktop launch and installed probes select the verified Profile assets by default
+  ---
+  duration_ms: 7.906032
+  type: 'test'
+  location: '/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/products/desktop/tests/native-profile-defaults.test.mjs:12:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        'claude-code': '/opt/ordessa/harnesses/profile-claude-provider-restoration/artifacts',
+        codex: '/opt/ordessa/harnesses/profile-codex-catalog-fast-off-v6/artifacts',
+    +   pi: '/opt/ordessa/harnesses/profile-pi-startup-admission-v2/artifacts'
+    -   pi: '/opt/ordessa/harnesses/profile-pi-registration-owner-bound/artifacts'
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    codex: '/opt/ordessa/harnesses/profile-codex-catalog-fast-off-v6/artifacts'
+    pi: '/opt/ordessa/harnesses/profile-pi-registration-owner-bound/artifacts'
+    claude-code: '/opt/ordessa/harnesses/profile-claude-provider-restoration/artifacts'
+  actual:
+    pi: '/opt/ordessa/harnesses/profile-pi-startup-admission-v2/artifacts'
+    codex: '/opt/ordessa/harnesses/profile-codex-catalog-fast-off-v6/artifacts'
+    claude-code: '/opt/ordessa/harnesses/profile-claude-provider-restoration/artifacts'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/products/desktop/tests/native-profile-defaults.test.mjs:15:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: Codex probe seed and native acceptance use the same delivered default as the desktop
+ok 21 - Codex probe seed and native acceptance use the same delivered default as the desktop
+  ---
+  duration_ms: 3.104915
+  type: 'test'
+  ...
+# Subtest: every admitted product extension is really built with entry and manifest
+ok 22 - every admitted product extension is really built with entry and manifest
+  ---
+  duration_ms: 9.087655
+  type: 'test'
+  ...
+# Subtest: each DI token owner bundle is an admitted contract carrier in the product build
+ok 23 - each DI token owner bundle is an admitted contract carrier in the product build
+  ---
+  duration_ms: 4.435808
+  type: 'test'
+  ...
+# Subtest: each shared DI token owner is served by the real import map and app artifact
+ok 24 - each shared DI token owner is served by the real import map and app artifact
+  ---
+  duration_ms: 65.536269
+  type: 'test'
+  ...
+# Subtest: brand selection refuses accidental API inference and false evidence flags
+ok 25 - brand selection refuses accidental API inference and false evidence flags
+  ---
+  duration_ms: 1.279764
+  type: 'test'
+  ...
+# Subtest: UI alert diagnostics emit only closed categories, never messages or credential fragments
+ok 26 - UI alert diagnostics emit only closed categories, never messages or credential fragments
+  ---
+  duration_ms: 2.094557
+  type: 'test'
+  ...
+# Subtest: cleanup deletes only API-key locators read from the disposable database
+ok 27 - cleanup deletes only API-key locators read from the disposable database
+  ---
+  duration_ms: 116.060707
+  type: 'test'
+  ...
+# Subtest: changed Profile receipt requires same session and matching selected brand
+ok 28 - changed Profile receipt requires same session and matching selected brand
+  ---
+  duration_ms: 0.659394
+  type: 'test'
+  ...
+# Subtest: no-model seed creates two real-shaped presets without opening credential source or native channel
+ok 29 - no-model seed creates two real-shaped presets without opening credential source or native channel
+  ---
+  duration_ms: 241.691998
+  type: 'test'
+  ...
+# Subtest: the shared plan selects all three Profile variants through Harness
+ok 30 - the shared plan selects all three Profile variants through Harness
+  ---
+  duration_ms: 1.355338
+  type: 'test'
+  ...
+# Subtest: installed layout rebases product asset roots without knowing adapter entries
+ok 31 - installed layout rebases product asset roots without knowing adapter entries
+  ---
+  duration_ms: 1.255718
+  type: 'test'
+  ...
+# Subtest: existing environment overrides retain precedence and shared Claude fallback
+ok 32 - existing environment overrides retain precedence and shared Claude fallback
+  ---
+  duration_ms: 2.728011
+  type: 'test'
+  ...
+# Subtest: invalid override fails before Harness planning: ORDESSA_PI_PROFILE_BRIDGE
+ok 33 - invalid override fails before Harness planning: ORDESSA_PI_PROFILE_BRIDGE
+  ---
+  duration_ms: 0.99128
+  type: 'test'
+  ...
+# Subtest: invalid override fails before Harness planning: ORDESSA_NATIVE_PROFILE_ARTIFACT_ROOT
+ok 34 - invalid override fails before Harness planning: ORDESSA_NATIVE_PROFILE_ARTIFACT_ROOT
+  ---
+  duration_ms: 1.284871
+  type: 'test'
+  ...
+# Subtest: invalid override fails before Harness planning: ORDESSA_CLAUDE_PROFILE_ARTIFACT_ROOT
+ok 35 - invalid override fails before Harness planning: ORDESSA_CLAUDE_PROFILE_ARTIFACT_ROOT
+  ---
+  duration_ms: 3.191463
+  type: 'test'
+  ...
+# Subtest: development runner never starts Electron after MISSING_CODEX_ASSET
+ok 36 - development runner never starts Electron after MISSING_CODEX_ASSET
+  ---
+  duration_ms: 6.929072
+  type: 'test'
+  ...
+# Subtest: development runner never starts Electron after MISSING_PI_ASSET
+ok 37 - development runner never starts Electron after MISSING_PI_ASSET
+  ---
+  duration_ms: 0.831956
+  type: 'test'
+  ...
+# Subtest: development runner never starts Electron after MISSING_CLAUDE_ASSET
+ok 38 - development runner never starts Electron after MISSING_CLAUDE_ASSET
+  ---
+  duration_ms: 0.691716
+  type: 'test'
+  ...
+# Subtest: development launch passes exactly the shared plan to its child
+ok 39 - development launch passes exactly the shared plan to its child
+  ---
+  duration_ms: 1.077496
+  type: 'test'
+  ...
+# Subtest: release generator writes only plan JSON on success and nothing on refusal
+ok 40 - release generator writes only plan JSON on success and nothing on refusal
+  ---
+  duration_ms: 3.01474
+  type: 'test'
+  ...
+# Subtest: empty plan and malformed release layout cannot masquerade as a successful empty host
+ok 41 - empty plan and malformed release layout cannot masquerade as a successful empty host
+  ---
+  duration_ms: 0.919879
+  type: 'test'
+  ...
+# Subtest: no controlled UI fixture name appears anywhere in the platform source
+ok 42 - no controlled UI fixture name appears anywhere in the platform source
+  ---
+  duration_ms: 26.369704
+  type: 'test'
+  ...
+# Subtest: the controlled key is constructed exactly once in the real build and React stays shared
+ok 43 - the controlled key is constructed exactly once in the real build and React stays shared
+  ---
+  duration_ms: 4.686183
+  type: 'test'
+  ...
+# Subtest: the product explicitly selects the Profile UI provider while the carrier stays API-only
+ok 44 - the product explicitly selects the Profile UI provider while the carrier stays API-only
+  ---
+  duration_ms: 7.313393
+  type: 'test'
+  ...
+1..44
+# tests 44
+# suites 0
+# pass 42
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 37259.037896

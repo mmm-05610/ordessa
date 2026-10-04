@@ -1,0 +1,47 @@
+{
+  "reason": "Only root-owned aggregate-generated previews; clean at takeover. Initial three dirty metadata files untouched. Verbatim generated screenshots/result preserved in own ignored backup.",
+  "rows": [
+    {
+      "path": "docs/ui-preview/01-empty.png",
+      "saved": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-preview-preservation-asudz8_l/01-empty.png",
+      "generatedSha256": "cf7b0d8bf82ff4f4a6f8101ce4ab904b24862beef163184fad35ef81288cbc5b",
+      "restoredHeadSha256": "b1216d724694fd7c1be89cf6605c8b603b461def81e48a9e816a200402900b87"
+    },
+    {
+      "path": "docs/ui-preview/02-history.png",
+      "saved": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-preview-preservation-asudz8_l/02-history.png",
+      "generatedSha256": "88386765b9fe05bae0ca3647c80cd33383b48e82ff91146fa887a4994293cb88",
+      "restoredHeadSha256": "95f42dfb38f63603d8c818d8d0d1e7995ad59f91f34811545ff29b36252e08c0"
+    },
+    {
+      "path": "docs/ui-preview/03-tool-expanded.png",
+      "saved": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-preview-preservation-asudz8_l/03-tool-expanded.png",
+      "generatedSha256": "9d0f80d86a7fa1fd8698a2a0c42eb2ad6bf30bdc3f08839a7188818cb97ed950",
+      "restoredHeadSha256": "d20a8306d9de179ca54a0bc53c81a24ef5c8a552bcaf6a6bad10ad0fc7ebed1e"
+    },
+    {
+      "path": "docs/ui-preview/04-approval.png",
+      "saved": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-preview-preservation-asudz8_l/04-approval.png",
+      "generatedSha256": "7260abd5119cb2fac2ee3bb59efc0aa3292a05d1eb599059aad1ae3e5b6df5cc",
+      "restoredHeadSha256": "d5ec58791e0baf33b3485c375b3566edf9dfbbdf8afbeb0c10c6cbd7aec0da0d"
+    },
+    {
+      "path": "docs/ui-preview/05-running.png",
+      "saved": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-preview-preservation-asudz8_l/05-running.png",
+      "generatedSha256": "2c0d579f3c6587de689ac592c67e44040cfa2893252019feee10fafd16661185",
+      "restoredHeadSha256": "b2d698950285a4b02c265ddfd13ceba0ebef31a8fe4f06f4686c7d3dee0edbf4"
+    },
+    {
+      "path": "docs/ui-preview/06-narrow.png",
+      "saved": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-preview-preservation-asudz8_l/06-narrow.png",
+      "generatedSha256": "d6baf463762b868064a4ff492c0c1c57c996cfb8724cff79b94b62a345a2f7c7",
+      "restoredHeadSha256": "5f634636084d514e3244003dc575c300c842ce588e51b56a0fe909ac10fe4052"
+    },
+    {
+      "path": "docs/ui-preview/result.json",
+      "saved": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-preview-preservation-asudz8_l/result.json",
+      "generatedSha256": "6be8d16ce09f364e2a5188412d4c1d071437d33d08509ce3c359df235f88becb",
+      "trackedAtHead": false
+    }
+  ]
+}

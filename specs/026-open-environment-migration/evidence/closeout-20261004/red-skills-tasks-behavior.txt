@@ -1,0 +1,36 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/skills/desktop
+
+ ❯ tests/f5-tasks.test.tsx (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/f5-tasks.test.tsx [ tests/f5-tasks.test.tsx ]
+Error: Failed to resolve import "../src/task-integration" from "plugins/skills/desktop/tests/f5-tasks.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/skills/desktop/tests/f5-tasks.test.tsx:12:39
+  9  |  import { default as createProductPlugin } from "../src/entry";
+  10 |  import { createSkillsModel } from "../src/model";
+  11 |  import { createInteractionModel } from "../src/task-integration";
+     |                                          ^
+  12 |  import { fakeSkillsGateway, fakeWorkspaces } from "./fakes";
+  13 |  globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+ ❯ TransformPluginContext._formatLog ../../../node_modules/vite/dist/node/chunks/node.js:31011:39
+ ❯ TransformPluginContext.error ../../../node_modules/vite/dist/node/chunks/node.js:31008:14
+ ❯ normalizeUrl ../../../node_modules/vite/dist/node/chunks/node.js:27957:18
+ ❯ ../../../node_modules/vite/dist/node/chunks/node.js:28025:30
+ ❯ TransformPluginContext.transform ../../../node_modules/vite/dist/node/chunks/node.js:27993:4
+ ❯ EnvironmentPluginContainer.transform ../../../node_modules/vite/dist/node/chunks/node.js:30796:14
+ ❯ loadAndTransform ../../../node_modules/vite/dist/node/chunks/node.js:20594:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  10:13:55
+   Duration  1.22s (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 856ms)
+

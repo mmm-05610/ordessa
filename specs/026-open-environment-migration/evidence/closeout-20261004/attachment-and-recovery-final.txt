@@ -1,0 +1,57 @@
+.................................................F......                 [100%]
+=================================== FAILURES ===================================
+_ test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects[fingerprint] _
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-841/test_missing_native_capability2')
+missing = 'fingerprint'
+
+    @pytest.mark.parametrize("missing", ["native", "native-condition", "fingerprint", "policy"])
+    def test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects(
+        tmp_path, missing,
+    ):
+        mode = "createWithConfig" if missing == "native-condition" else "existing"
+        native = ControlledNativeFixture(
+            tmp_path / "native-effects.sqlite", mode=mode,
+            attachment_bytes={ATTACHMENT_ID: ATTACHMENT_BYTES},
+            create_with_config_conditional=(missing != "native-condition"),
+        )
+        fingerprint = _test_fingerprint_fixture()
+        policy = None
+        if missing == "native":
+            native_port = None
+        else:
+            native_port = native
+        if missing == "fingerprint":
+            fingerprint = None
+        if missing == "policy":
+            # Product's default local policy deliberately refuses agent.submit.
+            # This must remain a typed authorization refusal before any native call.
+            policy = None
+    
+        runtime = _runtime(
+            tmp_path / "server-data", native_port, fingerprint, policy, include_profile=False,
+        )
+        try:
+            runtime.start()
+            target = _resolve_target(runtime)
+            native.bind_backend_target(target)
+            operation_id = _write_config_operation(runtime, target, {"model": "M1"})
+            capture = _capture(
+                submission_id=f"missing-{missing}", revision=1, text="cannot dispatch",
+                operation_id=operation_id, mode=mode,
+            )
+            expected_family = "FORBIDDEN" if missing == "policy" else "CAPABILITY_UNSUPPORTED"
+            with pytest.raises(WireError) as failure:
+                _submit(runtime, target, capture)
+>           assert failure.value.family == expected_family
+E           AssertionError: assert 'FORBIDDEN' == 'CAPABILITY_UNSUPPORTED'
+E             
+E             - CAPABILITY_UNSUPPORTED
+E             + FORBIDDEN
+
+products/server/tests/test_closeout_submission_composition.py:266: AssertionError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-841/test_missing_native_capability2/server-data/state/agentbox.sqlite
+=========================== short test summary info ============================
+FAILED plugins/agent/backend::test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects[fingerprint]
+1 failed, 55 passed in 4.98s
