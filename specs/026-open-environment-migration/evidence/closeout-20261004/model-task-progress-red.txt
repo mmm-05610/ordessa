@@ -1,0 +1,35 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/model-provider/desktop
+
+ ❯ tests/task-integration.test.ts (6 tests | 1 failed) 17ms
+     × does not let an older same-operation completion dismiss the newer progress handle 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/task-integration.test.ts > Model Provider F5 task/interaction adapter > does not let an older same-operation completion dismiss the newer progress handle
+AssertionError: expected undefined to be 'progress' // Object.is equality
+
+- Expected:
+"progress"
+
++ Received:
+undefined
+
+ ❯ tests/task-integration.test.ts:92:45
+     90|
+     91|     // Completing the replaced handle must not dismiss the newer same-…
+     92|     expect(presented.get(progressId)?.kind).toBe('progress')
+       |                                             ^
+     93|     resolveCalls[1]({ items: [{ id: 'new', version: 1 }], nextCursor: …
+     94|     await expect(newer).resolves.toEqual([{ id: 'new', version: 1 }])
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  16:46:02
+   Duration  506ms (transform 140ms, setup 0ms, import 207ms, tests 17ms, environment 0ms)
+
+
+EXIT_CODE=1

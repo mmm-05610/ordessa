@@ -1,0 +1,11 @@
+# Model resource boundary delta (core 013, before UI01)
+
+Reception source checkpoint aaba66dc48; original T010-14 and no-Profile composition gap. Root owns existing entry/assembly/lock/Git/tests. Luna only owns new task integration/tests and new optional Profile adapter. This is a core domain contribution separation, not a new generic UI package.
+
+Model settings/service remains ordessa.model-provider and owns resource values/operations. Its public production entry requires existing F5InteractionToken and wraps actual service operations with public TaskScope and interaction progress/notification. Waiter release does not cancel accepted domain effects; original errors, request IDs and unknown handling must survive without retry. Secret values never enter progress, notifications, cache or logs. Direct createPlugin fixtures can omit interactions, while the loadable production entry cannot.
+
+Profile facet rendering moves unchanged to optional ordessa.model-provider-profile. It consumes the original ModelProviderToken and UiComponentsToken and original Profile API key/Props. Its component registration providerId remains ordessa.model-provider, preserving existing product selection. Saved providerConfigId remains the server resource record identity; no migration. Default product admits the adapter; no-Profile product omits Profile API/frontend/contributors and this adapter, while retaining Model settings and service. The base Model package/source no longer imports Profile API.
+
+QueryCache already exists in server-bridge and is publicly forwarded by ui-components. Public WirePort supplies ready/scope only, not authenticated/connection generations. Do not fabricate these as backend facts or broaden the frozen WirePort ad hoc. Query integration remains separately tracked until a real compatible scope source is established. No new command bus, business store, configuration owner or Harness internals.
+
+Required proofs: actual production entry public F5 resolution/refusal, success/unknown/unload and secret boundaries, stable adapter key/provider selection, base source/built import closure without Profile, independent no-Profile real build/load and two rounds, full scope disposal and meaningful regressions. Historical greens cannot replace these cases.

@@ -19,6 +19,7 @@
   "ordessa.skills",
   "ordessa.asset-mcp",
   "ordessa.model-provider",
+  "ordessa.model-provider-profile",
   "ordessa.model-provider-chat"
  ],
  "config": {

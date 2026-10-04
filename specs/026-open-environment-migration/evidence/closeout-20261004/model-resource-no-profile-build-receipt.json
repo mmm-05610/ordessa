@@ -1,0 +1,28 @@
+{
+  "ownedWork": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-no-profile-68a6e9f6-2e96-4c7f-9a6a-62802b3f1df3",
+  "manifest": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-no-profile-68a6e9f6-2e96-4c7f-9a6a-62802b3f1df3/extensions.json",
+  "dist": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-no-profile-68a6e9f6-2e96-4c7f-9a6a-62802b3f1df3/dist",
+  "enabled": [
+    "ordessa.contracts",
+    "ordessa.agent-contracts",
+    "ordessa.harness-contracts",
+    "ordessa.commands",
+    "ordessa.workbench",
+    "ordessa.workbench-interactions",
+    "ordessa.ui-components",
+    "ordessa.connections",
+    "ordessa.agent-connections",
+    "ordessa.agent-sessions",
+    "ordessa.agent-acp",
+    "ordessa.chat-api",
+    "ordessa.chat",
+    "ordessa.skills",
+    "ordessa.asset-mcp",
+    "ordessa.model-provider",
+    "ordessa.model-provider-chat"
+  ],
+  "sourceHead": "aaba66dc486a1a11babe7f79fe931a99162ebdda",
+  "sourceDirty": true,
+  "buildOnly": true,
+  "twoRoundActualDesktop": "NOT_RUN"
+}

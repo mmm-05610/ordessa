@@ -3,6 +3,7 @@ import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { afterEach, expect, it, vi } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
+import { createInteractionService } from '@ordessa/workbench/interactions'
 import type { Workbench, WirePort } from '@extensions/ordessa.contracts/contract.js'
 import { ModelProviderWireError, type ProviderConfigView } from '../../contracts/index'
 import { createModelProviderService } from '../src/service'
@@ -277,7 +278,7 @@ it.each(['Unknown', 'Refused'] as const)('the product adapter preserves %s class
   const resources = new OwnedResources(); cleanups.push(() => resources.dispose())
   const wire = { call: async () => ({ kind: outcome, reason: KEY }) } as unknown as WirePort
   const workbench = { composition: { forScope: () => ({ addSettingsSection: () => ({ isDisposed: false, dispose() {} }) }) } } as unknown as Workbench
-  const service = createProductPlugin().activate({ resources, root: { mount: () => ({ isDisposed: false, dispose() {} }) } }, workbench, wire)
+  const service = createProductPlugin().activate({ resources, root: { mount: () => ({ isDisposed: false, dispose() {} }) } }, workbench, wire, createInteractionService({ scopeGeneration: () => 1, presenter: { show() {}, dismiss() {} } }))
   const error = await service.importApiKey('request-1', 'pi', KEY).catch(error => error)
   expect(error).toBeInstanceOf(ModelProviderWireError); expect(error.outcome).toBe(outcome); expect(error.message).not.toContain(KEY)
 })

@@ -1,0 +1,28 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/model-provider/desktop
+
+ ❯ tests/resource-boundary.test.ts (3 tests | 1 failed) 7ms
+   × the optional Profile adapter retains product selection and unloads its own registration 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/resource-boundary.test.ts > the optional Profile adapter retains product selection and unloads its own registration
+TypeError: ui.forScope is not a function
+ ❯ tests/resource-boundary.test.ts:26:22
+     24|   const ui = createUiComponentsService([{ componentId: key.id, major: …
+     25|   const domain = createModelProviderService(async () => ({ items: [], …
+     26|   const binding = ui.forScope(consumerScope).bind(key, { required: tru…
+       |                      ^
+     27|   expect(binding.getSnapshot().status).toBe('missing')
+     28|   createProfileAdapter().activate({ resources: adapterScope } as never…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  1 failed | 45 passed (46)
+   Start at  16:46:50
+   Duration  4.55s (transform 338ms, setup 0ms, import 707ms, tests 1.44s, environment 1.36s)
+
+
+EXIT_CODE=1

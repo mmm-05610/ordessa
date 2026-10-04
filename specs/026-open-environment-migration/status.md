@@ -1,8 +1,14 @@
+## 跨侧五窗与资源可选边界（最新）
+
+原账109/129（20项未完成）；UI独立0/8任务、0/12场景。源码父检查点aaba66dc48。7335发行产物跨侧五窗口双进程真SIGKILL与原键冷query全部通过，强化namespace/principal/effect三元组与原captured/cold runtime代次记录后复跑也通过。首次QA语法失败保留，真实品牌未覆盖。
+
+Model生产settings实际接公共TaskScope与既有F5交互provider；同operation旧完成误关新progress反例1F5P已修，完整本包46P，Profile frontend24P，Model Chat122P/typecheck0。可选Profile editor迁到独立贡献包，原providerId/持久字段保持，默认21扩展及无Profile17扩展真实构建通过。后者仅build证据，完整Desktop两轮和最终固定源码DEB未完成，不勾T010-08/14。Wire缺真实cache scope代次的缺口不伪造，详见model-resource-checkpoint.md。
+
 ## 公共carrier与共同控件接续（最新）
 
 原账109/129，新增完成T008-04/T010-12：Harness公开域载体迁址，平台只留唯一opaque Token身份，同literal/严格对象相等；真实Profile/Model生产组件经共同公开projection验证字段序列及scope/lategeneration。串行C08/Host42P、构建identity8P、归属6P、Model122P、typecheck0、原类型反例仍拒绝。后端非法requestId永久拒绝17P/更广73P。全部失败与边界见harness-carrier-checkpoint.md。
 
-7335完整DEB已在仓库外重新解包并通过闭包/F5/两轮前后端冷查询；临时目录配额首次失败与owned副本清理见artifact-build-7335-receipt.json。该产物不包含本次typed-id guard/carrier源码；下一固定SHA需重建。跨侧5窗首跑失败：生成的Electron入口SyntaxError，首窗口未完成；日志artifact-cross-side-7335.txt保留，正在修QA模板并新增生成源码语法检查，不能计作恢复通过。T010-14继续接公共任务/通知机制；UI01未实施，不替代核心缺口。
+7335完整DEB已在仓库外重新解包并通过闭包/F5/两轮前后端冷查询；临时目录配额首次失败与owned副本清理见artifact-build-7335-receipt.json。该产物不包含本次typed-id guard/carrier源码；下一固定SHA需重建。跨侧5窗首跑因生成Electron入口SyntaxError未完成，保留失败；修模板并增加每个生成JS/Python语法校验后，artifact-cross-side-7335-syntax-fixed.txt逐窗通过：前三unknown/0effects，后两accepted/1effect，双进程SIGKILL、冷启动原key单次query零重派。真实品牌仍未覆盖。T010-14继续接公共任务/通知机制；UI01未实施，不替代核心缺口。
 
 requestId串行验证完成：Agent contracts94P/0skip、Chat95P/0skip、typecheck exit0；新旧key边界反例均保留断言。下一ready提交本切片固定源码并完整发行重建，未凭窄绿勾原任务。
 

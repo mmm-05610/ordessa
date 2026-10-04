@@ -1,0 +1,11 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/model-provider/desktop
+
+
+ Test Files  4 passed (4)
+      Tests  46 passed (46)
+   Start at  16:47:30
+   Duration  5.21s (transform 454ms, setup 0ms, import 904ms, tests 1.50s, environment 1.73s)
+
+
+EXIT_CODE=0

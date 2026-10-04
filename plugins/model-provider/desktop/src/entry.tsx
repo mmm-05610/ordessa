@@ -1,11 +1,10 @@
 // migrated from plugins/model-provider@9305563719d25e04076b9221a7284660bd8f8642 (src/entry.tsx, verbatim)
 import type { PluginContext } from '@ordessa/extension-api'
-import { WirePortToken, WorkbenchToken, UiComponentsToken, type UiComponents, type Workbench, type WirePort } from '@extensions/ordessa.contracts/contract.js'
-import { profileFacetEditorKey, type ProfileFacetEditorProps } from '@extensions/ordessa.profile-api/contract.js'
-import { ModelProfileEditor } from './profile-editor'
+import { WirePortToken, WorkbenchToken, F5InteractionToken, type f5, type Workbench, type WirePort } from '@extensions/ordessa.contracts/contract.js'
 import { ModelProviderToken, ModelProviderWireError, type ModelProviderService, type WireInvoke } from '../../contracts/index'
 import { createModelProviderService } from './service'
 import { ModelProviderSettings } from './settings'
+import { createInteractionService } from './task-integration'
 
 /** The settings section id is the extension's whole registration surface:
  * when this plugin is absent the Workbench shows no such section and the
@@ -20,7 +19,7 @@ export const TRANSPORT_MISSING = 'MODEL_PROVIDER_TRANSPORT_MISSING'
  * Unbound transport = a typed activation refusal, never a settings page that
  * cannot reach the Server (integration dependency #6, plan.md §6).
  */
-export function createPlugin(transport?: WireInvoke) {
+export function createPlugin(transport?: WireInvoke, interaction?: f5.InteractionService) {
   return {
     id: 'ordessa.model-provider',
     autoStart: true,
@@ -32,7 +31,8 @@ export function createPlugin(transport?: WireInvoke) {
           `${TRANSPORT_MISSING}: no Server wire transport was bound for the model-provider settings; ` +
           'the product composition must inject one - refusing to render a section that cannot reach the Server')
       }
-      const service = createModelProviderService(transport)
+      const domainService = createModelProviderService(transport)
+      const service = interaction === undefined ? domainService : createInteractionService(domainService, context.resources, interaction)
       const composition = workbench.composition
       // The contract makes absence explicit: consumers must reject it rather
       // than silently substituting legacy navigation (workbench.ts).
@@ -58,19 +58,16 @@ export default function createProductPlugin() {
   return {
     id: 'ordessa.model-provider',
     autoStart: true,
-    requires: [WorkbenchToken, WirePortToken],
-    optional: [UiComponentsToken],
+    requires: [WorkbenchToken, WirePortToken, F5InteractionToken],
     provides: ModelProviderToken,
-    activate(context: PluginContext, workbench: Workbench, wire?: WirePort, ui?: UiComponents | null): ModelProviderService {
+    activate(context: PluginContext, workbench: Workbench, wire?: WirePort, interaction?: f5.InteractionService): ModelProviderService {
       if (wire === undefined || wire === null) {
         throw new Error(
           `${TRANSPORT_MISSING}: no Server wire port was provided for the model-provider settings; ` +
           'the host must resolve ordessa.wirePort.v1 - refusing to render a section that cannot reach the Server')
       }
-      const service = createPlugin(wireInvokeOf(wire)).activate(context, workbench)
-      ui?.forScope(context.resources).register({ key: profileFacetEditorKey('assets.model-provider'),
-        providerId: 'ordessa.model-provider', component: (props: ProfileFacetEditorProps) => <ModelProfileEditor {...props} service={service} /> })
-      return service
+      if (interaction === undefined || interaction === null) throw new Error('MODEL_PROVIDER_INTERACTION_MISSING')
+      return createPlugin(wireInvokeOf(wire), interaction).activate(context, workbench)
     },
   }
 }

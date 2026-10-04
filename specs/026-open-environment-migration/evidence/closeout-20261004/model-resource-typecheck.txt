@@ -1,0 +1,15 @@
+
+> ordessa@0.1.0 typecheck
+> npm run --workspace apps/desktop typecheck
+
+
+> @modular/desktop-app@0.1.0 typecheck
+> tsc --noEmit
+
+../../plugins/profile/frontend/tests/connected-manager.test.tsx(8,36): error TS2307: Cannot find module '../../../model-provider/desktop/src/profile-editor' or its corresponding type declarations.
+npm ERR! Lifecycle script `typecheck` failed with error: 
+npm ERR! Error: command failed 
+npm ERR!   in workspace: @modular/desktop-app@0.1.0 
+npm ERR!   at location: /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/apps/desktop 
+
+EXIT_CODE=1

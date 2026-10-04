@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { ProfileFacetEditorProps } from '@extensions/ordessa.profile-api/contract.js'
-import type { ModelProviderService, ProviderConfigView } from '../../contracts/index'
+import type { ModelProviderService, ProviderConfigView } from '@extensions/ordessa.model-provider/contract.js'
 
 /** Model-provider owns this editor; Profile only loads it through C7. */
 export function ModelProfileEditor({ service, ...props }: ProfileFacetEditorProps & { service: ModelProviderService }) {

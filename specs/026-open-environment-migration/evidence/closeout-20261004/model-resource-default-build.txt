@@ -1,0 +1,12 @@
+
+> ordessa@0.1.0 build
+> npm run --workspace apps/desktop build
+
+
+> @modular/desktop-app@0.1.0 build
+> node scripts/build.mjs
+
+Built 21 enabled extensions into products/desktop/dist
+product: Ordessa Desktop 0.1.0 (0.1.0-local); icons: source=true rasterized=false
+
+EXIT_CODE=0

@@ -19,6 +19,7 @@
     "ordessa.skills",
     "ordessa.asset-mcp",
     "ordessa.model-provider",
+    "ordessa.model-provider-profile",
     "ordessa.model-provider-chat"
   ],
   "files": {
@@ -410,10 +411,12 @@
     "extensions/ordessa.harness-contracts/service.js": "87086f7d8583d4600f4acafa16abf79741ae43caee85c502a6e1b054b55563a6",
     "extensions/ordessa.model-provider/chunk-AHJXDBV5.js": "5d330b8854149d225b02a675b46fedd76fb379ce572abd283b654a5710013dce",
     "extensions/ordessa.model-provider/contract.js": "65087a4eb563e18f8100b934278c591ad4378f04e13a23f1d9271af7984b034d",
-    "extensions/ordessa.model-provider/entry.js": "a5027cbdbf74cf0d78aa912cc9583e4b920faa5825e42a33a53bf80bb1b014c4",
+    "extensions/ordessa.model-provider/entry.js": "1a6d8c764428112c94d176b7d3d5ac2e0f3faa3513817e65d713f336f41e62d3",
     "extensions/ordessa.model-provider/manifest.json": "2d12d1ab5be8ac897d18de878d9fb338a800445a18e35b57b6f588ff93b2a3b7",
     "extensions/ordessa.model-provider-chat/entry.js": "b57a9121aafec771ca62217b8e65654ab63f171cd02e76d6100e48f7b597254a",
     "extensions/ordessa.model-provider-chat/manifest.json": "8b89a8cc6a862ac508320189d712c9b1db002d110be9148ca5bb3d5a281f85f2",
+    "extensions/ordessa.model-provider-profile/entry.js": "966852e1a64ad917d1c42c34a8d63cead7e81d0348b4ceb93cac7f08c772f703",
+    "extensions/ordessa.model-provider-profile/manifest.json": "57dfe3cda6a8b8022a98c0a149b5114d2fecf109cfd1da528cd5985540c7faae",
     "extensions/ordessa.profile-api/chunk-TRTQSARU.js": "eb4a8e71a94c3b9ea153fda5aceddf26646c6a12c0c036f6a031b9a46410d2dd",
     "extensions/ordessa.profile-api/contract.js": "f67ba5928653531c73cd5549d782205c6205138bf9cf81ba11988cf526ea0912",
     "extensions/ordessa.profile-api/entry.js": "23f5931a65199994d01d236c0ca9021b30c9a5c507117da68fe521ad62b48018",

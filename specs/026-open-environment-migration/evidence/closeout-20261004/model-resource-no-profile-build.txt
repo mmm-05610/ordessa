@@ -1,0 +1,3 @@
+Built 17 extensions of /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-no-profile-68a6e9f6-2e96-4c7f-9a6a-62802b3f1df3/extensions.json into /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-no-profile-68a6e9f6-2e96-4c7f-9a6a-62802b3f1df3/dist (variant mode: real product output and lock untouched)
+
+EXIT_CODE=0

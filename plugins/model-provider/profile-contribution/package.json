@@ -1,0 +1,19 @@
+{
+  "name": "@ordessa/plugin-model-provider-profile",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "ordessa": {
+    "id": "ordessa.model-provider-profile"
+  },
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "@ordessa/extension-api": "*",
+    "@ordessa/plugin-model-provider": "*",
+    "@ordessa/plugin-profile-api": "*",
+    "@ordessa/ui-components": "*",
+    "react": "*"
+  }
+}

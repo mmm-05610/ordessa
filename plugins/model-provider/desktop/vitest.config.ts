@@ -4,6 +4,7 @@ import { defineConfig } from 'vitest/config'
 import { fileURLToPath } from 'node:url'
 export default defineConfig({
   resolve: { alias: {
+    '@extensions/ordessa.model-provider/contract.js': fileURLToPath(new URL('./src/contract.ts', import.meta.url)),
     '@extensions/ordessa.profile-api/contract.js': fileURLToPath(new URL('../../profile/api/src/index.ts', import.meta.url)),
     '@extensions/ordessa.contracts/contract.js': fileURLToPath(new URL('../../../packages/frontend/contracts/foundation/src/contract.ts', import.meta.url)),
   } },
