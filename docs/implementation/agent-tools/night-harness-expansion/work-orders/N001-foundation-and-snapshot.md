@@ -45,9 +45,9 @@ CLI源码只读见init/Profile入口，native_clients目录未存在；原status
 
 ## Stages
 
-- [ ] 1. 核Git/status/原队列写权，确认原成果来源并建立本夜源码快照，不stash或巻入别人改动（主执行者阶段检查点，精确路径提交）
-- [ ] 2. 盘点已有家族和新家族id，不删原8项；冻结最小接缝与目录owner，整理许可/版本/授权门（主执行者阶段检查点，精确路径提交）
-- [ ] 3. 亲跑一个可得家族的隔离纵向入口；没有原生接纳则登记依赖、后续仅研究/协议代码，整包PARTIAL（主执行者阶段检查点，精确路径提交）
+- [x] 1. 核Git/status/原队列写权，确认原成果来源并建立本夜源码快照，不stash或巻入别人改动（主执行者阶段检查点，精确路径提交）— 提交 `0f786dfc34`（029成果117文件）+`8155c659e3`（030材料）；来源/扫描见 `evidence/N001-source-snapshot.md`
+- [x] 2. 盘点已有家族和新家族id，不删原8项；冻结最小接缝与目录owner，整理许可/版本/授权门（主执行者阶段检查点，精确路径提交）— `seams.md` + `native_clients/{_transport,_http}.py` 冻结，定向测试30P/0F exit0，提交 `aa0a35fcf4`
+- [x] 3. 亲跑一个可得家族的隔离纵向入口；没有原生接纳则登记依赖、后续仅研究/协议代码，整包PARTIAL（主执行者阶段检查点，精确路径提交）— pi 0.86.1 原生RPC隔离纵向入口实测（get_state/能力发现/反例2/exit 0），证据 `evidence/N001-vertical-entry.md`；原生接纳前置缺失登记，整包PARTIAL
 
 ## Parallel units
 
@@ -82,5 +82,14 @@ git diff --check
 
 ## Batch report
 
-阶段结束填：门与反例计数、命令/退出码、证据路径、源码SHA、清理、调用成本、未测项。阶段复选框不得提前勾选。
+终态 **N001_PARTIAL**（DoD：前置缺失即PARTIAL）。
+
+- 门：BASE✓（快照/来源/写权实证）、NATIVE✓（接缝表+真实pi纵向L2 partial）、SAFETY✓（unshare无网+隔离HOME+Token剔除+仅owned清理）、EVIDENCE✓（L0/L1/L2分账，L3/L4未测）。
+- 反例：transport30用例（G4/G5/G11/G12）+pi真实进程2反例（未知命令/非法JSON），全绿。
+- 命令/退出码：pytest native_clients 30P/0F exit0；pi纵向探针 exit0（两轮）；validate_order+git diff --check 由收尾复跑。
+- 证据路径：evidence/N001-source-snapshot.md、N001-vertical-entry.md、N001-vertical-pi-rpc.txt、N001-vertical-pi-rpc-probe.py。
+- 源码SHA：基线 adce734db2 → 快照 0f786dfc34 → 8155c659e3 → aa0a35fcf4（+本阶段）。
+- 清理：/tmp scratch 夜间收尾删除；真实 ~/.pi 未动。
+- 调用成本：真实模型0；安装0；网络仅官方文档WebFetch（L0）。
+- 未测/缺口：029前置四项+transport fence缺失（运行接纳依赖阻塞）；pi会话持久化/恢复、prompt受理、steer/abort、extension UI回调未测；`pi` 全量artifact摘要待N003。
 

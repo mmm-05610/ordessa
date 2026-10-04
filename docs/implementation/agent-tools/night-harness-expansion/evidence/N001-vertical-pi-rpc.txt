@@ -1,0 +1,96 @@
+{
+ "probe": "pi-0.86.1-rpc-vertical",
+ "isolation": "unshare -rn + HOME=/tmp/n001-pi-home + --offline + PI_TELEMETRY=0 + no extensions/skills/context/approve",
+ "steps": [
+  {
+   "step": "get_state",
+   "messages": [
+    {
+     "id": "ev-1",
+     "type": "response",
+     "command": "get_state",
+     "success": true,
+     "data": {
+      "model": {
+       "id": "unknown",
+       "name": "unknown",
+       "api": "unknown",
+       "provider": "unknown",
+       "baseUrl": "",
+       "reasoning": false,
+       "input": [],
+       "cost": {
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0
+       },
+       "contextWindow": 0,
+       "maxTokens": 0
+      },
+      "thinkingLevel": "off",
+      "isStreaming": false,
+      "isCompacting": false,
+      "steeringMode": "one-at-a-time",
+      "followUpMode": "one-at-a-time",
+      "sessionId": "01a107ac-fcd8-76b5-b38f-4d248b8e0928",
+      "autoCompactionEnabled": true,
+      "messageCount": 0,
+      "pendingMessageCount": 0
+     }
+    }
+   ]
+  },
+  {
+   "step": "get_commands",
+   "messages": [
+    {
+     "id": "ev-2",
+     "type": "response",
+     "command": "get_commands",
+     "success": true,
+     "data": {
+      "commands": [
+       {
+        "name": "llama",
+        "description": "Manage llama.cpp router models",
+        "source": "extension",
+        "sourceInfo": {
+         "path": "<inline:llama.cpp>",
+         "source": "inline",
+         "scope": "temporary",
+         "origin": "top-level"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "step": "unknown-command",
+   "messages": [
+    {
+     "id": "ev-3",
+     "type": "response",
+     "command": "definitely_not_a_command",
+     "success": false,
+     "error": "Unknown command: definitely_not_a_command"
+    }
+   ]
+  },
+  {
+   "step": "malformed-json",
+   "messages": [
+    {
+     "type": "response",
+     "command": "parse",
+     "success": false,
+     "error": "Failed to parse command: Expected property name or '}' in JSON at position 1 (line 1 column 2)"
+    }
+   ]
+  }
+ ]
+}
+STDERR_TAIL: ''
+EXIT: 0

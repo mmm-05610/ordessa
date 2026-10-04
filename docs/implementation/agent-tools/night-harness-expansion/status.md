@@ -13,9 +13,10 @@
 
 ## Queue
 
-N001前置与快照；N002 Codex；N003 Pi；N004 OpenCode；N005 Claude；N006 Kimi；N007 Qwen；N008 Gemini；N009 Copilot；N010 Goose；N011 Vibe；N012整合分发。
+- [x] **N001 = N001_PARTIAL**（阶段1-3执行完毕：快照收口 0f786dfc34/8155c659e3；冻结接缝+30P定向测试；pi 0.86.1 原生RPC真实隔离纵向入口 L2 partial。缺口：029前置四项+transport fence缺失→运行接纳依赖阻塞。详见工单Batch report与evidence/N001-*.md）
+- [ ] N002 Codex；N003 Pi；N004 OpenCode；N005 Claude；N006 Kimi；N007 Qwen；N008 Gemini；N009 Copilot；N010 Goose；N011 Vibe；N012整合分发。
 
-所有工单prepared，产品测试未跑。资料结构校验结果由包准备者追加在validation.md，不记为产品绿。
+家族单元写权边界已冻结于 `seams.md`。每家交付上限＝CODE_READY（适配实现/协议验证）＋L0，除非主执行者亲测L2并记录。
 
 ## Questions
 
