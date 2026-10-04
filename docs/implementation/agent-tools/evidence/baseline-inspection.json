@@ -1,0 +1,98 @@
+{
+  "kind": "read-only baseline inspection; not product validation",
+  "original_files": {
+    "docs/implementation/agent-tools/status.md": "a15fee05e25606875aa2aec2218360a58a7468129731f27a64c53a9002b404fc",
+    "docs/implementation/agent-tools/worktree-charter.md": "7395245e81788f7dd1fa0a6d941e6da5eab36a96bd2ed24979af7951dba5c216",
+    "specs/029-agent-tools-product/README.md": "904ab2ae40f4c7b4d0ae0a47b28b292a46261dfcac1d42b02eb10b90acbd07f5",
+    "specs/029-agent-tools-product/architecture.md": "8608599e905df1bda7a600ea8478972381477f67a0b781409f1d90414b890ca7",
+    "specs/029-agent-tools-product/interfaces.md": "788d974bc18d8c1f2aca930a4d9f0f08cab9338fb5c743476419909a1f0729a5",
+    "specs/029-agent-tools-product/plan.md": "997c5a60e41aa53684c9481260b4884e29683533bda9b732861c67785696c0a8"
+  },
+  "core_design": {
+    "/home/maoqh/projects/ordessa/specs/028-profile-harness-native-units/agent-assembly-core/README.md": "af0014e98d331906edec10cd39e93bd88a2a44fbdddefaf86bdb7bade67fc5e0",
+    "/home/maoqh/projects/ordessa/specs/028-profile-harness-native-units/agent-assembly-core/acceptance.md": "8db7ce5d860c64a79784a655dbcd1a24d2701ed07211d6c447b64bf54d22c3a2",
+    "/home/maoqh/projects/ordessa/specs/028-profile-harness-native-units/agent-assembly-core/contracts.md": "de554d8c319a9acf1489cba8f46a0b505bce16bde7995a6d35514502565fc3b9",
+    "/home/maoqh/projects/ordessa/specs/028-profile-harness-native-units/agent-assembly-core/design.md": "c08588a2352c418db210853eeb650c54db83decbdf9777199701bcad40edb019",
+    "/home/maoqh/projects/ordessa/specs/028-profile-harness-native-units/agent-assembly-core/migration.md": "a58641ce515184aafcfd0bb4ffca062c4799f7adb319bd86209029b4cc1da14c",
+    "/home/maoqh/projects/ordessa/specs/028-profile-harness-native-units/agent-assembly-core/review.md": "9c5494d6aa346a077940489874fc9a747599900c06fb55482409cf14276c48e8",
+    "/home/maoqh/projects/ordessa/specs/028-profile-harness-native-units/agent-assembly-core/validate-materials.mjs": "8908b9d01215119331d568c52d1a21ea3f8d3e3bf3094592cd776121747114b1"
+  },
+  "commands": [
+    {
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "stdout": "6a3f24456130b5caad82682d692d2d198721f0a8\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "status",
+        "--short"
+      ],
+      "exit": 0,
+      "stdout": "?? docs/implementation/\n?? specs/\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "worktree",
+        "list",
+        "--porcelain"
+      ],
+      "exit": 0,
+      "stdout": "worktree /home/maoqh/projects/ordessa\nHEAD b4bf7cd90951d0fa9bcf3a3de2e66b7db6a62aa0\nbranch refs/heads/main\n\nworktree /home/maoqh/.codex/worktrees/agent-tools-product/ordessa\nHEAD 6a3f24456130b5caad82682d692d2d198721f0a8\nbranch refs/heads/codex/agent-tools-product\n\nworktree /home/maoqh/projects/ordessa/worktree/021-ordessa-product-closeout\nHEAD 7951bf06a258d2dc41402556eb61319b8bab5cbe\nbranch refs/heads/nightly/021-harness-rollout-opencode-hermes-dsh-kilo\n\nworktree /home/maoqh/projects/ordessa/worktree/026-open-environment-migration\nHEAD b12296ad4444c1cf0c1cdb891be2ca55cc850536\nbranch refs/heads/codex/open-environment-migration\n\nworktree /home/maoqh/projects/ordessa/worktree/tasks/i003-wire-timing\nHEAD 61a41b264df199bf3e2aff99fb70e198387d890c\nbranch refs/heads/nightly/021-i003-wire-facts-timing\n\nworktree /home/maoqh/projects/ordessa/worktree/tasks/w019-agent-shell\nHEAD 2b050e24674132e88dd381e47bed149aa7fa0b44\nbranch refs/heads/nightly/021-w019-agent-shell\n\nworktree /home/maoqh/projects/ordessa/worktrees/consolidated-core\nHEAD c20ce5853dba682602e1aa52ef6949d5fa190088\nbranch refs/heads/codex/core\n\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "merge-base",
+        "--is-ancestor",
+        "HEAD",
+        "adce734db21945181bf93da9720158d05e957654"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--name-only",
+        "adce734db21945181bf93da9720158d05e957654",
+        "b12296ad4444c1cf0c1cdb891be2ca55cc850536",
+        "--",
+        "packages/backend",
+        "apps/server",
+        "plugins/agent",
+        "plugins/harness",
+        "products/server"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "ls-tree",
+        "-r",
+        "--name-only",
+        "adce734db21945181bf93da9720158d05e957654",
+        "--",
+        "docs/implementation/agent-tools",
+        "specs/029-agent-tools-product"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

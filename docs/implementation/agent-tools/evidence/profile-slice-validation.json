@@ -1,0 +1,22 @@
+{
+  "command": "venvpython -m pytest -c products/agent-tools/pyproject.toml products/agent-tools/tests -q",
+  "exit": 0,
+  "passed": 116,
+  "seconds": 27.17,
+  "phase": "Profile-only snapshot before Directory/Operation extensions",
+  "unit_client_and_wheel": 42,
+  "bundle": 6,
+  "core_sqlite": 31,
+  "lifecycle_registry_doubles": 16,
+  "thin_wire_contract_sqlite": 12,
+  "deployment_and_real_service": 9,
+  "real_model_calls": 0,
+  "limits": [
+    "node/native RuntimeProvider absent",
+    "managed input absent",
+    "DirectoryBinding not composed",
+    "real model untested",
+    "preseed unknown is fixture; actual TCP response-loss tested separately"
+  ],
+  "evidence": "product-slice-validation.txt"
+}

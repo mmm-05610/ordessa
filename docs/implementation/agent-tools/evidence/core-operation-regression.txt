@@ -1,0 +1,86 @@
+......................................................F.FF.............. [ 21%]
+........................................................................ [ 42%]
+........................................................................ [ 63%]
+........................................................................ [ 84%]
+......................................................                   [100%]
+=================================== FAILURES ===================================
+_________ test_kernel_tree_has_no_import_of_server_harness_or_product __________
+
+    def test_kernel_tree_has_no_import_of_server_harness_or_product() -> None:
+        hits = find_product_imports()
+>       assert hits == [], (
+            "the governance kernel must not import the app, the product composition "
+            f"or any plugin (core-boundaries-small-refactor.md §判断): {hits}"
+        )
+E       AssertionError: the governance kernel must not import the app, the product composition or any plugin (core-boundaries-small-refactor.md §判断): [('/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py', 'ordessa_persistence_sqlite')]
+E       assert [('/home/maoq...ence_sqlite')] == []
+E         
+E         Left contains one more item: ('/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py', 'ordessa_persistence_sqlite')
+E         Use -v to get more diff
+
+packages/backend/pacthold/tests/platform/test_n4r1_kernel_direction.py:89: AssertionError
+___________ test_tripwire_planted_server_import_turns_the_guard_red ____________
+
+    def test_tripwire_planted_server_import_turns_the_guard_red() -> None:
+        """Counterexample self-test: a kernel module importing the Server must be
+        detected, and the scan must go back green once the probe is removed."""
+        probe = PACKAGE_ROOT / "src" / "pacthold" / "_n4r1_direction_tripwire.py"
+        probe.write_text(
+            "import ordessa_server  # planted tripwire, must never persist\n",
+            encoding="utf-8",
+        )
+        try:
+            hits = find_product_imports()
+            assert any(str(probe) in file for file, _ in hits), (
+                "the N4-R1 kernel direction guard did not detect a planted "
+                "`import ordessa_server` — it is vacuously green"
+            )
+        finally:
+            probe.unlink(missing_ok=True)
+>       assert find_product_imports() == []
+E       AssertionError: assert [('/home/maoq...ence_sqlite')] == []
+E         
+E         Left contains one more item: ('/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py', 'ordessa_persistence_sqlite')
+E         Use -v to get more diff
+
+packages/backend/pacthold/tests/platform/test_n4r1_kernel_direction.py:131: AssertionError
+________________ test_tripwire_from_import_form_is_detected_too ________________
+
+    def test_tripwire_from_import_form_is_detected_too() -> None:
+        probe = PACKAGE_ROOT / "tests" / "platform" / "_n4r1_direction_tripwire2.py"
+        probe.write_text(
+            "from ordessa_harness.launch import ClaudeLaunchAdapter  # planted tripwire\n",
+            encoding="utf-8",
+        )
+        try:
+            hits = find_product_imports()
+            assert hits, "the from-import form of a reverse import must be detected"
+            assert any(module == "ordessa_harness.launch" for _, module in hits), hits
+        finally:
+            probe.unlink(missing_ok=True)
+>       assert find_product_imports() == []
+E       AssertionError: assert [('/home/maoq...ence_sqlite')] == []
+E         
+E         Left contains one more item: ('/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/pacthold/tests/environment/test_closeout_environment_dispatch.py', 'ordessa_persistence_sqlite')
+E         Use -v to get more diff
+
+packages/backend/pacthold/tests/platform/test_n4r1_kernel_direction.py:146: AssertionError
+ARTIFACT_worker-debug=ABSENT workers/agent-box-worker/target/debug/agent-box-worker
+ARTIFACT_worker-release=ABSENT workers/agent-box-worker/target/release/agent-box-worker
+ARTIFACT_worker-musl-dir=ABSENT workers/agent-box-worker/target/x86_64-unknown-linux-musl
+ARTIFACT_sidecar-entry=ABSENT plugins/agent-box-harness/runtime/worker-entry.mjs
+ARTIFACT_acp-npm-closure=ABSENT plugins/agent-box-harness/packaging/claude/node_modules/@agentclientprotocol/claude-agent-acp
+TOOL_bwrap=present
+TOOL_node=present
+TOOL_npm=present
+TOOL_claude=ABSENT
+TOOL_tmux=present
+TOOL_wsl.exe=ABSENT
+SKIPPED_TOTAL=0
+WORKER_ARTIFACT=ABSENT
+VERDICT=FAILED
+=========================== short test summary info ============================
+FAILED packages/backend/pacthold/tests/platform/test_n4r1_kernel_direction.py::test_kernel_tree_has_no_import_of_server_harness_or_product
+FAILED packages/backend/pacthold/tests/platform/test_n4r1_kernel_direction.py::test_tripwire_planted_server_import_turns_the_guard_red
+FAILED packages/backend/pacthold/tests/platform/test_n4r1_kernel_direction.py::test_tripwire_from_import_form_is_detected_too
+3 failed, 339 passed in 7.50s

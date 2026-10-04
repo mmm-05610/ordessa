@@ -22,6 +22,7 @@ import sqlite3
 import subprocess
 from typing import Any, Callable
 from uuid import uuid4
+from threading import RLock
 
 from ordessa_environment_api import GuaranteeUnavailableError
 from ordessa_server.credentials import CredentialRecords
@@ -385,7 +386,69 @@ class ServerRuntime:
     #: The ShutdownReport the composition's stop() surfaced (T015: the
     #: report is a fact of the round, never a discarded return value).
     core_shutdown_report: Any | None = None
+    #: Optional core-owned descriptors share the host registry; no plugin or
+    #: domain state is stored here. Each round receives a fenced resolver.
+    core_method_factory: Callable[[Callable[[], Any]], tuple[Any, ...]] | None = None
+    _core_method_ids: tuple[str, ...] = field(default=(), init=False, repr=False)
+    _core_method_epoch: int = field(default=0, init=False, repr=False)
+    _core_method_lock: Any = field(default_factory=RLock, init=False, repr=False)
     started: bool = False
+
+    def _bind_core_methods(self) -> None:
+        with self._core_method_lock:
+            self._bind_core_methods_locked()
+
+    def _bind_core_methods_locked(self) -> None:
+        if self.core_method_factory is None:
+            return
+        from server_plugin_api import InvalidDeclarationError, ServerMethodDescriptor
+        if not callable(self.core_method_factory):
+            raise InvalidDeclarationError("core_method_factory must be callable")
+        if self.core_binding is None or self.plugin_host is None:
+            raise GuaranteeUnavailableError("core methods require the current CoreBinding and method registry")
+        self._core_method_epoch += 1
+        epoch = self._core_method_epoch
+        environment = self.core_binding.environment
+
+        def current_environment():
+            with self._core_method_lock:
+                if epoch != self._core_method_epoch:
+                    raise GuaranteeUnavailableError("core method resolver belongs to a retired runtime round")
+                if self.core_binding is None:
+                    raise GuaranteeUnavailableError("current CoreBinding is unavailable")
+                # The resolver never lazily opens a new round, even if stop
+                # crosses the admission after this check. The captured old
+                # Environment enforces its own close/admission ordering.
+                return environment
+
+        # A descriptor batch cannot advertise a fabricated substitute when
+        # its selected Environment factory is absent or cannot open.
+        current_environment()
+        descriptors = self.core_method_factory(current_environment)
+        if not isinstance(descriptors, tuple):
+            raise InvalidDeclarationError("core method factory must return a tuple of descriptors")
+        for descriptor in descriptors:
+            if not isinstance(descriptor, ServerMethodDescriptor):
+                raise InvalidDeclarationError("core method factory returned a non-descriptor")
+            if descriptor.owner != "pacthold.agents" or not descriptor.method_id.startswith("agents."):
+                raise InvalidDeclarationError("core methods require owner pacthold.agents and agents.* ids")
+        if epoch != self._core_method_epoch:
+            raise GuaranteeUnavailableError("core method factory retired its runtime round")
+        self.plugin_host.methods.register_batch(descriptors)
+        self._core_method_ids = tuple(item.method_id for item in descriptors)
+
+    def _unbind_core_methods(self) -> None:
+        with self._core_method_lock:
+            self._unbind_core_methods_locked()
+
+    def _unbind_core_methods_locked(self) -> None:
+        # Invalidate even a resolver retained by a factory that failed before
+        # publication. It must never lazily reopen a stopped Environment.
+        self._core_method_epoch += 1
+        if self.plugin_host is not None:
+            for method_id in self._core_method_ids:
+                self.plugin_host.methods.unregister(method_id, owner="pacthold.agents")
+        self._core_method_ids = ()
 
     def start(self) -> None:
         if self.started:
@@ -407,6 +470,7 @@ class ServerRuntime:
             # database file and its migrations exist; the constructor stores
             # paths and opens nothing. Future-schema refusal stays at start().
             self.database.initialize()
+            self._bind_core_methods()
             if (self.plugin_host is not None and self.plugin_selection
                     and not self.plugin_host.active_ids()):
                 self.plugin_host.activate_all(self.plugin_selection)
@@ -425,6 +489,7 @@ class ServerRuntime:
             if self.legacy_core is not None:
                 self.legacy_core.connect()
         except BaseException as start_failure:
+            self._unbind_core_methods()
             # S1c / 026 T006-01: composition-owned release of the round's own
             # legacy connection (never module state).
             if self.legacy_core is not None:
@@ -453,6 +518,7 @@ class ServerRuntime:
         self.started = True
 
     def stop(self) -> None:
+        self._unbind_core_methods()
         # What a running plugin owns, it stops itself. The active round's stop
         # hooks run in reverse activation order, so the plugin that sits on
         # top of the round tears its own resources down first, while
@@ -840,6 +906,7 @@ def build_runtime(
             secret_store=secrets_store, wire=wire,
             plugin_host=plugin_host, plugin_selection=selected_plugins,
             core_binding=core_binding, legacy_core=legacy_core,
+            core_method_factory=selection.core_method_factory if selection is not None else None,
         )
         # 026 T006-02: the wire round gate — dispatch answers business methods
         # only for a started round. Bound after the runtime exists and read

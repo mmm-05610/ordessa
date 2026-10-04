@@ -1,0 +1,37 @@
+{
+  "initial_structure_check": "5 failures: dependency entries lacked order id; corrected and rerun",
+  "results": [
+    {
+      "argv": [
+        "python3",
+        "/home/maoqh/.agents/skills/incremental-work-order/scripts/validate_order.py",
+        "docs/implementation/agent-tools/work-orders",
+        "--strict"
+      ],
+      "exit": 0,
+      "stdout": "OK   docs/implementation/agent-tools/work-orders/001-public-contract-inventory.md\nOK   docs/implementation/agent-tools/work-orders/002-core-persistence-seams.md\nOK   docs/implementation/agent-tools/work-orders/003-profiles-and-providers.md\nOK   docs/implementation/agent-tools/work-orders/004-directory-and-node-lifecycle.md\nOK   docs/implementation/agent-tools/work-orders/005-cli-public-client.md\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "stdout": "6a3f24456130b5caad82682d692d2d198721f0a8\n",
+      "stderr": ""
+    }
+  ],
+  "product_tests_run": 0
+}

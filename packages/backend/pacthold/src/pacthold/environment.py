@@ -477,12 +477,18 @@ class Environment:
         Environment activation facts together at ``commit()``.
         """
         self._check_open()
+        if owner == "pacthold.agents":
+            raise RegistrationConflictError("Agent core owner is not a plugin activation")
         if owner not in self._enabled:
             raise AdmissionRefusedError(
                 f"plugin {owner!r} is not enabled in this environment "
                 f"(installed={self.installed}, enabled={self.enabled})"
             )
         payload = contributions if contributions is not None else CoreContributionSet()
+        if any(str(getattr(contract, "contract_id", "")) == "pacthold.agents"
+               or str(getattr(contract, "contract_id", "")).startswith("pacthold.agents.")
+               for contract in payload.contracts):
+            raise RegistrationConflictError("Agent core surfaces cannot be owned by a plugin activation")
         batch = self._registry.stage(owner, payload)
         return _EnvironmentActivationStage(self, owner, payload, batch)
 

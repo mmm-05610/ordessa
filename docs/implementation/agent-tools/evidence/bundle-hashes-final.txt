@@ -1,0 +1,8 @@
+.gitignore: OK
+ACCEPTANCE.md: OK
+README.md: OK
+cli/ordessa_agent_tools-0.1.0a1-py3-none-any.whl: OK
+schema.json: OK
+skills/configure-agent-profile/SKILL.md: OK
+skills/manage-external-agent/SKILL.md: OK
+skills/use-external-agent/SKILL.md: OK

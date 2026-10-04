@@ -1,0 +1,13 @@
+OK   docs/implementation/agent-tools/work-orders/001-public-contract-inventory.md
+OK   docs/implementation/agent-tools/work-orders/002-core-persistence-seams.md
+OK   docs/implementation/agent-tools/work-orders/003-profiles-and-providers.md
+OK   docs/implementation/agent-tools/work-orders/004-directory-and-node-lifecycle.md
+OK   docs/implementation/agent-tools/work-orders/005-cli-public-client.md
+OK   docs/implementation/agent-tools/work-orders/006-directory-binding.md
+OK   docs/implementation/agent-tools/work-orders/007-named-operation-store.md
+OK   docs/implementation/agent-tools/work-orders/008-harness-runtime-owner.md
+OK   docs/implementation/agent-tools/work-orders/009-provider-admission.md
+OK   docs/implementation/agent-tools/work-orders/010-node-publication-management.md
+OK   docs/implementation/agent-tools/work-orders/011-native-input-client.md
+OK   docs/implementation/agent-tools/work-orders/012-release-acceptance.md
+OK   docs/implementation/agent-tools/work-orders/013-local-initialization.md

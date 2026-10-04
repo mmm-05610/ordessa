@@ -15,6 +15,10 @@ class ServerPluginSelection(Sequence[Any]):
     contribution_points: tuple[Any, ...] = ()
     environment_factory: Callable[[Path], Any] | None = None
     owned_environment_factory: Callable[[Path, Callable[[], bool]], Any] | None = None
+    # Core-owned public method descriptors share the host's sole registry.
+    # The resolver supplied by the host returns its current-round Environment.
+    # No plugin activation or second dispatcher is created by this capability.
+    core_method_factory: Callable[[Callable[[], Any]], tuple[Any, ...]] | None = None
 
     def __len__(self):
         return len(self.plugins)

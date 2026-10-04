@@ -1,0 +1,24 @@
+{
+  "baseline": "adce734db21945181bf93da9720158d05e957654",
+  "baselineCommandExit": 1,
+  "implementationCommandExit": 1,
+  "baselinePassed": 162,
+  "implementationPassed": 162,
+  "failedIds": [
+    "apps/server/tests/test_plugin_host_gate.py::test_a_failed_composition_disposes_activated_plugins_and_releases_the_root",
+    "apps/server/tests/test_plugin_host_gate.py::test_a_failed_composition_with_a_throwing_disposal_releases_the_root",
+    "apps/server/tests/test_plugin_host_gate.py::test_a_failed_start_hook_disposes_the_round_and_releases_the_root",
+    "apps/server/tests/test_plugin_host_gate.py::test_a_failed_start_keeps_its_error_primary_with_cleanup_errors",
+    "apps/server/tests/test_plugin_host_gate.py::test_a_pre_startup_auth_swap_cannot_double_mount",
+    "apps/server/tests/test_plugin_host_gate.py::test_a_restart_re_activates_the_same_selection",
+    "apps/server/tests/test_plugin_host_gate.py::test_activation_failure_releases_the_data_root_lock",
+    "apps/server/tests/test_plugin_host_gate.py::test_default_composition_advertises_the_full_baseline_table",
+    "apps/server/tests/test_plugin_host_gate.py::test_runtime_stop_releases_the_root_even_when_a_disposal_throws",
+    "apps/server/tests/test_wire_discovery_facets_s3.py::test_the_harness_facet_answers_byte_identically_to_the_deleted_host_block",
+    "apps/server/tests/test_wire_discovery_facets_s3.py::test_two_live_compositions_in_one_process_do_not_see_each_others_facet"
+  ],
+  "newFailedIds": [],
+  "scope": "4 selected affected suites; not full Server regression",
+  "sourceIsolation": "git archive of fixed tracked commit into temporary directory in this implementation tree; removed after comparison",
+  "limitations": "other editable domain distributions in dedicated venv come from current same fixed-baseline tree; no product plugin domain source modifications"
+}

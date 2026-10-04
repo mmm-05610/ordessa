@@ -1,0 +1,28 @@
+# AT-008B Harness目标与同owner journal迁移准备
+
+来源为028 contracts §5真实unit/session目标及§3同Environment可信贡献，两个独立只读审阅；尚未执行迁移或开启新作用入口。
+
+## 可固定的安全方向
+
+新增UnitConfigurationTarget与SessionConfigurationTarget的版本化codec，保留旧ApplicationTarget四字段JSON、旧Plan fingerprint、历史result/native evidence原字节。Unit必须真实reservation、installation scope与规范配置target，不填随机/空session；Session须真实nativeSessionRef。旧Confirmed/NativeActivationReceipt/NativeOwnerReceiptFacts均强制session，不能仅放宽target或nullable session；Unit须独立确认形态，明确nativeSession=notCreated及真实验证范围。新decoder拒额外/混合字段，无kind历史只按旧codec解释。
+
+原journal作用身份与排他身份分别处理。请求身份包含完整目标及runtime generation；排他不得包含generation。已有one_active_session_operation是server/session/channel，现有9项journal测试通过但只证明该范围；临时SQLite同server/session换channel两次reserve均成功，不能假称共同物理配置域互斥。
+
+CanonicalConfigurationScopeRef方向沿028规范target要求：由同Harness配置owner解析/签发/验证，普通字符串或DTO不代表权威。Unit/Session/shared channels共享资源必须同scope，scope身份不含target kind、nodeId、runtime generation或provider activation；这些属于作用前其他校验。初版保守锁整个共享配置域，只有owner具字段隔离证据才能细分。
+
+迁移必须有admission cut，权威scope映射与持久reservation原子建立；所有配置作用入口共同经过它。缺映射、alias证明不足、旧unknown未映射拒新Unit作用，不先开放后补迁移。旧缺证明confirmed仍投影Unknown并保持阻塞，不能仅筛旧SQL active state或换codec绕过。单journal之外的共享文件必须有同持久authority，不能声称单SQLite索引跨库排他。
+
+## 尚缺实施事实
+
+- 第一家Harness真实unit reservation/存续证据和旧session/channel→unit/共享配置对象的owner权威映射。
+- 文件目标host/filesystem/object/alias关系，或RPC目标native realm/object身份。RuntimeSnapshot.target/private_root/MergeAuthority当前不提供完整证明。
+- 跨journal根共享资源的统一占有者和接纳边界。
+- Unit准备、native初始化、配置各自证据的具体版本化shape与生产provider接纳。
+
+这些需要owner实现和宿主接纳证据，不要求用户再次裁决已有安全方向。缺资源拒绝，不把fixture值当生产scope。
+
+## 必需迁移反例
+
+历史字节与摘要不变；旧新Session同key去重；跨generation和Unit/Session共享scope BUSY；历史缺证明confirmed仍Unknown/BUSY；缺真实reservation拒Unit；Unit无session不能伪Confirmed；alias/shared channel互斥；迁移中断回滚；双连接只产生一次reservation；receipt错target/manifest/generation拒确认；未映射旧unknown阻塞接纳；不同journal共享资源缺统一authority拒绝。
+
+该准备材料不计产品验收，无用户数据、服务或模型作用。

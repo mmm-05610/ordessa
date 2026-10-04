@@ -1,0 +1,650 @@
+...F.............F.F.F.....F....F........F....FF.F.......F.............. [ 41%]
+........................................................................ [ 83%]
+.............................                                            [100%]
+=================================== FAILURES ===================================
+_________ test_default_composition_advertises_the_full_baseline_table __________
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_default_composition_adver0')
+
+    def test_default_composition_advertises_the_full_baseline_table(tmp_path):
+        runtime = build_runtime(tmp_path / "data")
+        try:
+            with _Started(runtime):
+                caps = _hello_caps(runtime)
+                assert WORKSPACE_METHODS <= set(caps)
+>               _assert_default_composition_caps(runtime, caps)
+
+apps/server/tests/test_plugin_host_gate.py:298: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+runtime = ServerRuntime(data_root=PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_default_composition_adver0/data'), database=<p...ordessa_server.bootstrap.runtime.LegacyCoreBinding object at 0x710f28da5a00>, core_shutdown_report=None, started=False)
+caps = {'server.hello': {'id': 'server.hello', 'supported': True}, 'workspaces.browse': {'id': 'workspaces.browse', 'supporte...ILABLE'}, 'workspaces.list': {'id': 'workspaces.list', 'supported': False, 'reason': 'LOCAL_SANDBOX_UNAVAILABLE'}, ...}
+
+    def _assert_default_composition_caps(runtime, caps=None) -> None:
+        """The post-AR-1 face, two ACP rows and Q5's read-only query coexist."""
+        caps = _hello_caps(runtime) if caps is None else caps
+        # 70(T002: 53+6+7+4) + 2(admission) + 11(profiles) + 2(imports)
+        # + 1(sandbox.describe) + 1(beginTurnApplication) + 1(acp.sessions.list)
+        # + 12(agent.domain, 013 resolved binding/managed observation/recovery) = 100
+>       assert len(caps) == (T002_METHOD_COUNT + len(ACP_ADMISSION_METHODS)
+                             + len(PROFILE_MANAGEMENT_METHODS)
+                             + len(MODEL_PROVIDER_IMPORT_METHODS)
+                             + len(MODEL_PROVIDER_TURN_APPLICATION)
+                             + 1  # sandbox.describe
+                             + 1  # acp.sessions.list
+                             + len(AGENT_DOMAIN_METHODS))
+E       AssertionError: assert 102 == (((((((70 + 2) + 11) + 2) + 1) + 1) + 1) + 12)
+E        +  where 102 = len({'server.hello': {'id': 'server.hello', 'supported': True}, 'workspaces.browse': {'id': 'workspaces.browse', 'supporte...ILABLE'}, 'workspaces.list': {'id': 'workspaces.list', 'supported': False, 'reason': 'LOCAL_SANDBOX_UNAVAILABLE'}, ...})
+E        +  and   2 = len(frozenset({'acp.permission.authorize', 'acp.submission.authorize'}))
+E        +  and   11 = len(frozenset({'profiles.v2.archiveProfile', 'profiles.v2.configuredHarnesses', 'profiles.v2.createProfile', 'profiles.v2.describeFacets', 'profiles.v2.getProfile', 'profiles.v2.listProfiles', ...}))
+E        +  and   2 = len(frozenset({'modelProvider.importApiKey', 'modelProvider.queryApiKeyImport'}))
+E        +  and   1 = len(frozenset({'modelProvider.beginTurnApplication'}))
+E        +  and   12 = len(frozenset({'agent.config.observe', 'agent.config.prepare', 'agent.config.read', 'agent.config.release', 'agent.config.submitOperation', 'agent.interaction.list', ...}))
+
+apps/server/tests/test_plugin_host_gate.py:99: AssertionError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-907/test_default_composition_adver0/data/state/agentbox.sqlite
+________________ test_a_restart_re_activates_the_same_selection ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_a_restart_re_activates_th0')
+
+    def test_a_restart_re_activates_the_same_selection(tmp_path):
+        """stop() disposes every plugin; the next start() must bring the whole
+        wire surface back — a restart that silently shrinks to `server.hello` is
+        a broken restart (the in-process restart cycle is product behaviour)."""
+        runtime = build_runtime(tmp_path / "data")
+        with TestClient(create_app(runtime), base_url="http://127.0.0.1") as client:
+>           _assert_default_composition_caps(runtime)
+
+apps/server/tests/test_plugin_host_gate.py:530: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+runtime = ServerRuntime(data_root=PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_a_restart_re_activates_th0/data'), database=<p...ordessa_server.bootstrap.runtime.LegacyCoreBinding object at 0x710f28c5a000>, core_shutdown_report=None, started=False)
+caps = {'server.hello': {'id': 'server.hello', 'supported': True}, 'workspaces.browse': {'id': 'workspaces.browse', 'supporte...ILABLE'}, 'workspaces.list': {'id': 'workspaces.list', 'supported': False, 'reason': 'LOCAL_SANDBOX_UNAVAILABLE'}, ...}
+
+    def _assert_default_composition_caps(runtime, caps=None) -> None:
+        """The post-AR-1 face, two ACP rows and Q5's read-only query coexist."""
+        caps = _hello_caps(runtime) if caps is None else caps
+        # 70(T002: 53+6+7+4) + 2(admission) + 11(profiles) + 2(imports)
+        # + 1(sandbox.describe) + 1(beginTurnApplication) + 1(acp.sessions.list)
+        # + 12(agent.domain, 013 resolved binding/managed observation/recovery) = 100
+>       assert len(caps) == (T002_METHOD_COUNT + len(ACP_ADMISSION_METHODS)
+                             + len(PROFILE_MANAGEMENT_METHODS)
+                             + len(MODEL_PROVIDER_IMPORT_METHODS)
+                             + len(MODEL_PROVIDER_TURN_APPLICATION)
+                             + 1  # sandbox.describe
+                             + 1  # acp.sessions.list
+                             + len(AGENT_DOMAIN_METHODS))
+E       AssertionError: assert 102 == (((((((70 + 2) + 11) + 2) + 1) + 1) + 1) + 12)
+E        +  where 102 = len({'server.hello': {'id': 'server.hello', 'supported': True}, 'workspaces.browse': {'id': 'workspaces.browse', 'supporte...ILABLE'}, 'workspaces.list': {'id': 'workspaces.list', 'supported': False, 'reason': 'LOCAL_SANDBOX_UNAVAILABLE'}, ...})
+E        +  and   2 = len(frozenset({'acp.permission.authorize', 'acp.submission.authorize'}))
+E        +  and   11 = len(frozenset({'profiles.v2.archiveProfile', 'profiles.v2.configuredHarnesses', 'profiles.v2.createProfile', 'profiles.v2.describeFacets', 'profiles.v2.getProfile', 'profiles.v2.listProfiles', ...}))
+E        +  and   2 = len(frozenset({'modelProvider.importApiKey', 'modelProvider.queryApiKeyImport'}))
+E        +  and   1 = len(frozenset({'modelProvider.beginTurnApplication'}))
+E        +  and   12 = len(frozenset({'agent.config.observe', 'agent.config.prepare', 'agent.config.read', 'agent.config.release', 'agent.config.submitOperation', 'agent.interaction.list', ...}))
+
+apps/server/tests/test_plugin_host_gate.py:99: AssertionError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-907/test_a_restart_re_activates_th0/data/state/agentbox.sqlite
+_____ test_a_failed_composition_with_a_throwing_disposal_releases_the_root _____
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_a_failed_composition_with0')
+
+    def test_a_failed_composition_with_a_throwing_disposal_releases_the_root(tmp_path):
+        """The same shape through build_runtime: the round returns no runtime, the
+        data-root lock is released for the retry path, and every disposal of the
+        round ran — including the one that threw."""
+        class Boom(RuntimeError):
+            pass
+    
+        records: list[tuple[str, str]] = []
+        root = tmp_path / "data"
+        with pytest.raises(Boom) as captured:
+            build_runtime(root, server_plugins=[
+                _LifecyclePlugin("fake.ok", records=records, method="fake.first"),
+                _LifecyclePlugin("fake.messy", records=records, method="fake.second",
+                                 dispose_raises=RuntimeError("messy cleanup")),
+                _LifecyclePlugin("fake.boom", records=records, method="fake.third",
+                                 build_raises=Boom()),
+            ])
+        assert ("dispose", "fake.messy") in records
+        assert ("dispose", "fake.ok") in records
+        carried = getattr(captured.value, "cleanup_errors", None)
+        assert carried is not None and [e.plugin_id for e in carried] == ["fake.messy"]
+        runtime = build_runtime(root)
+        try:
+            with _Started(runtime):
+>               _assert_default_composition_caps(runtime)
+
+apps/server/tests/test_plugin_host_gate.py:631: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+runtime = ServerRuntime(data_root=PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_a_failed_composition_with0/data'), database=<p...ordessa_server.bootstrap.runtime.LegacyCoreBinding object at 0x710f28c7e540>, core_shutdown_report=None, started=False)
+caps = {'server.hello': {'id': 'server.hello', 'supported': True}, 'workspaces.browse': {'id': 'workspaces.browse', 'supporte...ILABLE'}, 'workspaces.list': {'id': 'workspaces.list', 'supported': False, 'reason': 'LOCAL_SANDBOX_UNAVAILABLE'}, ...}
+
+    def _assert_default_composition_caps(runtime, caps=None) -> None:
+        """The post-AR-1 face, two ACP rows and Q5's read-only query coexist."""
+        caps = _hello_caps(runtime) if caps is None else caps
+        # 70(T002: 53+6+7+4) + 2(admission) + 11(profiles) + 2(imports)
+        # + 1(sandbox.describe) + 1(beginTurnApplication) + 1(acp.sessions.list)
+        # + 12(agent.domain, 013 resolved binding/managed observation/recovery) = 100
+>       assert len(caps) == (T002_METHOD_COUNT + len(ACP_ADMISSION_METHODS)
+                             + len(PROFILE_MANAGEMENT_METHODS)
+                             + len(MODEL_PROVIDER_IMPORT_METHODS)
+                             + len(MODEL_PROVIDER_TURN_APPLICATION)
+                             + 1  # sandbox.describe
+                             + 1  # acp.sessions.list
+                             + len(AGENT_DOMAIN_METHODS))
+E       AssertionError: assert 102 == (((((((70 + 2) + 11) + 2) + 1) + 1) + 1) + 12)
+E        +  where 102 = len({'server.hello': {'id': 'server.hello', 'supported': True}, 'workspaces.browse': {'id': 'workspaces.browse', 'supporte...ILABLE'}, 'workspaces.list': {'id': 'workspaces.list', 'supported': False, 'reason': 'LOCAL_SANDBOX_UNAVAILABLE'}, ...})
+E        +  and   2 = len(frozenset({'acp.permission.authorize', 'acp.submission.authorize'}))
+E        +  and   11 = len(frozenset({'profiles.v2.archiveProfile', 'profiles.v2.configuredHarnesses', 'profiles.v2.createProfile', 'profiles.v2.describeFacets', 'profiles.v2.getProfile', 'profiles.v2.listProfiles', ...}))
+E        +  and   2 = len(frozenset({'modelProvider.importApiKey', 'modelProvider.queryApiKeyImport'}))
+E        +  and   1 = len(frozenset({'modelProvider.beginTurnApplication'}))
+E        +  and   12 = len(frozenset({'agent.config.observe', 'agent.config.prepare', 'agent.config.read', 'agent.config.release', 'agent.config.submitOperation', 'agent.interaction.list', ...}))
+
+apps/server/tests/test_plugin_host_gate.py:99: AssertionError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-907/test_a_failed_composition_with0/data/state/agentbox.sqlite
+_______ test_runtime_stop_releases_the_root_even_when_a_disposal_throws ________
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_runtime_stop_releases_the0')
+
+    def test_runtime_stop_releases_the_root_even_when_a_disposal_throws(tmp_path):
+        """stop() must not leave the data-root lock behind because a plugin's
+        disposal raised: the root stays usable for the next composition."""
+        from server_plugin_api import CleanupError
+    
+        records: list[tuple[str, str]] = []
+        runtime = build_runtime(tmp_path / "data", server_plugins=[
+            _LifecyclePlugin("fake.messy", records=records,
+                             dispose_raises=RuntimeError("messy cleanup")),
+        ])
+        runtime.start()
+        with pytest.raises(CleanupError):
+            runtime.stop()
+        assert ("dispose", "fake.messy") in records
+        assert runtime.owner.acquired is False, "the lock must be released"
+        retry = build_runtime(tmp_path / "data")
+        try:
+            with _Started(retry):
+>               _assert_default_composition_caps(retry)
+
+apps/server/tests/test_plugin_host_gate.py:684: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+runtime = ServerRuntime(data_root=PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_runtime_stop_releases_the0/data'), database=<p...ordessa_server.bootstrap.runtime.LegacyCoreBinding object at 0x710f28cf5640>, core_shutdown_report=None, started=False)
+caps = {'server.hello': {'id': 'server.hello', 'supported': True}, 'workspaces.browse': {'id': 'workspaces.browse', 'supporte...ILABLE'}, 'workspaces.list': {'id': 'workspaces.list', 'supported': False, 'reason': 'LOCAL_SANDBOX_UNAVAILABLE'}, ...}
+
+    def _assert_default_composition_caps(runtime, caps=None) -> None:
+        """The post-AR-1 face, two ACP rows and Q5's read-only query coexist."""
+        caps = _hello_caps(runtime) if caps is None else caps
+        # 70(T002: 53+6+7+4) + 2(admission) + 11(profiles) + 2(imports)
+        # + 1(sandbox.describe) + 1(beginTurnApplication) + 1(acp.sessions.list)
+        # + 12(agent.domain, 013 resolved binding/managed observation/recovery) = 100
+>       assert len(caps) == (T002_METHOD_COUNT + len(ACP_ADMISSION_METHODS)
+                             + len(PROFILE_MANAGEMENT_METHODS)
+                             + len(MODEL_PROVIDER_IMPORT_METHODS)
+                             + len(MODEL_PROVIDER_TURN_APPLICATION)
+                             + 1  # sandbox.describe
+                             + 1  # acp.sessions.list
+                             + len(AGENT_DOMAIN_METHODS))
+E       AssertionError: assert 102 == (((((((70 + 2) + 11) + 2) + 1) + 1) + 1) + 12)
+E        +  where 102 = len({'server.hello': {'id': 'server.hello', 'supported': True}, 'workspaces.browse': {'id': 'workspaces.browse', 'supporte...ILABLE'}, 'workspaces.list': {'id': 'workspaces.list', 'supported': False, 'reason': 'LOCAL_SANDBOX_UNAVAILABLE'}, ...})
+E        +  and   2 = len(frozenset({'acp.permission.authorize', 'acp.submission.authorize'}))
+E        +  and   11 = len(frozenset({'profiles.v2.archiveProfile', 'profiles.v2.configuredHarnesses', 'profiles.v2.createProfile', 'profiles.v2.describeFacets', 'profiles.v2.getProfile', 'profiles.v2.listProfiles', ...}))
+E        +  and   2 = len(frozenset({'modelProvider.importApiKey', 'modelProvider.queryApiKeyImport'}))
+E        +  and   1 = len(frozenset({'modelProvider.beginTurnApplication'}))
+E        +  and   12 = len(frozenset({'agent.config.observe', 'agent.config.prepare', 'agent.config.read', 'agent.config.release', 'agent.config.submitOperation', 'agent.interaction.list', ...}))
+
+apps/server/tests/test_plugin_host_gate.py:99: AssertionError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-907/test_runtime_stop_releases_the0/data/state/agentbox.sqlite
+_____________ test_activation_failure_releases_the_data_root_lock ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_activation_failure_releas0')
+
+    def test_activation_failure_releases_the_data_root_lock(tmp_path):
+        """A plugin that fails to build must not keep the data-root lock: the same
+        process composing the same root again is the retry path, and it must not
+        die of DATA_ROOT_IN_USE."""
+        class Boom(RuntimeError):
+            pass
+    
+        root = tmp_path / "data"
+        with pytest.raises(Boom):
+            build_runtime(root, server_plugins=[FakePlugin("fake.boom", raises=Boom())])
+        runtime = build_runtime(root)
+        try:
+            with _Started(runtime):
+>               _assert_default_composition_caps(runtime)
+
+apps/server/tests/test_plugin_host_gate.py:818: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+runtime = ServerRuntime(data_root=PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_activation_failure_releas0/data'), database=<p...ordessa_server.bootstrap.runtime.LegacyCoreBinding object at 0x710f289c7d40>, core_shutdown_report=None, started=False)
+caps = {'server.hello': {'id': 'server.hello', 'supported': True}, 'workspaces.browse': {'id': 'workspaces.browse', 'supporte...ILABLE'}, 'workspaces.list': {'id': 'workspaces.list', 'supported': False, 'reason': 'LOCAL_SANDBOX_UNAVAILABLE'}, ...}
+
+    def _assert_default_composition_caps(runtime, caps=None) -> None:
+        """The post-AR-1 face, two ACP rows and Q5's read-only query coexist."""
+        caps = _hello_caps(runtime) if caps is None else caps
+        # 70(T002: 53+6+7+4) + 2(admission) + 11(profiles) + 2(imports)
+        # + 1(sandbox.describe) + 1(beginTurnApplication) + 1(acp.sessions.list)
+        # + 12(agent.domain, 013 resolved binding/managed observation/recovery) = 100
+>       assert len(caps) == (T002_METHOD_COUNT + len(ACP_ADMISSION_METHODS)
+                             + len(PROFILE_MANAGEMENT_METHODS)
+                             + len(MODEL_PROVIDER_IMPORT_METHODS)
+                             + len(MODEL_PROVIDER_TURN_APPLICATION)
+                             + 1  # sandbox.describe
+                             + 1  # acp.sessions.list
+                             + len(AGENT_DOMAIN_METHODS))
+E       AssertionError: assert 102 == (((((((70 + 2) + 11) + 2) + 1) + 1) + 1) + 12)
+E        +  where 102 = len({'server.hello': {'id': 'server.hello', 'supported': True}, 'workspaces.browse': {'id': 'workspaces.browse', 'supporte...ILABLE'}, 'workspaces.list': {'id': 'workspaces.list', 'supported': False, 'reason': 'LOCAL_SANDBOX_UNAVAILABLE'}, ...})
+E        +  and   2 = len(frozenset({'acp.permission.authorize', 'acp.submission.authorize'}))
+E        +  and   11 = len(frozenset({'profiles.v2.archiveProfile', 'profiles.v2.configuredHarnesses', 'profiles.v2.createProfile', 'profiles.v2.describeFacets', 'profiles.v2.getProfile', 'profiles.v2.listProfiles', ...}))
+E        +  and   2 = len(frozenset({'modelProvider.importApiKey', 'modelProvider.queryApiKeyImport'}))
+E        +  and   1 = len(frozenset({'modelProvider.beginTurnApplication'}))
+E        +  and   12 = len(frozenset({'agent.config.observe', 'agent.config.prepare', 'agent.config.read', 'agent.config.release', 'agent.config.submitOperation', 'agent.interaction.list', ...}))
+
+apps/server/tests/test_plugin_host_gate.py:99: AssertionError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-907/test_activation_failure_releas0/data/state/agentbox.sqlite
+__ test_a_failed_composition_disposes_activated_plugins_and_releases_the_root __
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_a_failed_composition_disp0')
+
+    def test_a_failed_composition_disposes_activated_plugins_and_releases_the_root(tmp_path):
+        """A succeeded, B failed to build: the round never returns a runtime, so
+        the host must dispose A exactly once and release the lock — the same-root
+        retry then starts clean, with none of A's methods still advertised."""
+        class Boom(RuntimeError):
+            pass
+    
+        records: list[str] = []
+        root = tmp_path / "data"
+        with pytest.raises(Boom):
+            build_runtime(root, server_plugins=[
+                FakePlugin("fake.first", methods=(("fake.first.method", set()),),
+                           dispose_records=records),
+                FakePlugin("fake.boom", raises=Boom()),
+            ])
+        assert records == ["fake.first"], (
+            f"the activated plugin must be disposed exactly once, saw {records}")
+        runtime = build_runtime(root)
+        try:
+            with _Started(runtime):
+                assert "fake.first.method" not in _hello_caps(runtime)
+>               _assert_default_composition_caps(runtime)
+
+apps/server/tests/test_plugin_host_gate.py:949: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+runtime = ServerRuntime(data_root=PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_a_failed_composition_disp0/data'), database=<p...ordessa_server.bootstrap.runtime.LegacyCoreBinding object at 0x710f28959280>, core_shutdown_report=None, started=False)
+caps = {'server.hello': {'id': 'server.hello', 'supported': True}, 'workspaces.browse': {'id': 'workspaces.browse', 'supporte...ILABLE'}, 'workspaces.list': {'id': 'workspaces.list', 'supported': False, 'reason': 'LOCAL_SANDBOX_UNAVAILABLE'}, ...}
+
+    def _assert_default_composition_caps(runtime, caps=None) -> None:
+        """The post-AR-1 face, two ACP rows and Q5's read-only query coexist."""
+        caps = _hello_caps(runtime) if caps is None else caps
+        # 70(T002: 53+6+7+4) + 2(admission) + 11(profiles) + 2(imports)
+        # + 1(sandbox.describe) + 1(beginTurnApplication) + 1(acp.sessions.list)
+        # + 12(agent.domain, 013 resolved binding/managed observation/recovery) = 100
+>       assert len(caps) == (T002_METHOD_COUNT + len(ACP_ADMISSION_METHODS)
+                             + len(PROFILE_MANAGEMENT_METHODS)
+                             + len(MODEL_PROVIDER_IMPORT_METHODS)
+                             + len(MODEL_PROVIDER_TURN_APPLICATION)
+                             + 1  # sandbox.describe
+                             + 1  # acp.sessions.list
+                             + len(AGENT_DOMAIN_METHODS))
+E       AssertionError: assert 102 == (((((((70 + 2) + 11) + 2) + 1) + 1) + 1) + 12)
+E        +  where 102 = len({'server.hello': {'id': 'server.hello', 'supported': True}, 'workspaces.browse': {'id': 'workspaces.browse', 'supporte...ILABLE'}, 'workspaces.list': {'id': 'workspaces.list', 'supported': False, 'reason': 'LOCAL_SANDBOX_UNAVAILABLE'}, ...})
+E        +  and   2 = len(frozenset({'acp.permission.authorize', 'acp.submission.authorize'}))
+E        +  and   11 = len(frozenset({'profiles.v2.archiveProfile', 'profiles.v2.configuredHarnesses', 'profiles.v2.createProfile', 'profiles.v2.describeFacets', 'profiles.v2.getProfile', 'profiles.v2.listProfiles', ...}))
+E        +  and   2 = len(frozenset({'modelProvider.importApiKey', 'modelProvider.queryApiKeyImport'}))
+E        +  and   1 = len(frozenset({'modelProvider.beginTurnApplication'}))
+E        +  and   12 = len(frozenset({'agent.config.observe', 'agent.config.prepare', 'agent.config.read', 'agent.config.release', 'agent.config.submitOperation', 'agent.interaction.list', ...}))
+
+apps/server/tests/test_plugin_host_gate.py:99: AssertionError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-907/test_a_failed_composition_disp0/data/state/agentbox.sqlite
+______ test_a_failed_start_hook_disposes_the_round_and_releases_the_root _______
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_a_failed_start_hook_dispo0')
+
+    def test_a_failed_start_hook_disposes_the_round_and_releases_the_root(tmp_path):
+        """A start hook that raises must not leave the round active with the lock
+        released: the plugins are disposed (reverse order), the start error stays
+        primary with any cleanup errors attached, and the same root retries."""
+    
+        class HookBoom(RuntimeError):
+            pass
+    
+        records: list[tuple[str, str]] = []
+    
+        class _HookedPlugin:
+            def descriptor(self):
+                return ServerPluginDescriptor(id="fake.start", display_name="s", version="1")
+    
+            def build(self, context):
+                def _disposal():
+                    records.append(("dispose", "fake.start"))
+                def _hook():
+                    raise HookBoom("start hook refused this round")
+                return ServerPluginRegistration(
+                    methods=(ServerMethodDescriptor(
+                        method_id="fake.start.ping", required_params=frozenset({"requestId"}),
+                        optional_params=frozenset(), handler=lambda params: {"ok": True},
+                        owner="fake.start",
+                    ),),
+                    start_hooks=(_hook,), disposal=_disposal,
+                )
+    
+        root = tmp_path / "data"
+        runtime = build_runtime(root, server_plugins=[_HookedPlugin()])
+        with pytest.raises(HookBoom) as captured:
+            runtime.start()
+        assert runtime.plugin_host.active_ids() == (), (
+            "a failed start must not leave the round active")
+        assert records == [("dispose", "fake.start")], records
+        assert runtime.owner.acquired is False, "the lock must be released"
+        retry = build_runtime(root)
+        try:
+            with _Started(retry):
+>               _assert_default_composition_caps(retry)
+
+apps/server/tests/test_plugin_host_gate.py:1264: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+runtime = ServerRuntime(data_root=PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_a_failed_start_hook_dispo0/data'), database=<p...ordessa_server.bootstrap.runtime.LegacyCoreBinding object at 0x710f289a07a0>, core_shutdown_report=None, started=False)
+caps = {'server.hello': {'id': 'server.hello', 'supported': True}, 'workspaces.browse': {'id': 'workspaces.browse', 'supporte...ILABLE'}, 'workspaces.list': {'id': 'workspaces.list', 'supported': False, 'reason': 'LOCAL_SANDBOX_UNAVAILABLE'}, ...}
+
+    def _assert_default_composition_caps(runtime, caps=None) -> None:
+        """The post-AR-1 face, two ACP rows and Q5's read-only query coexist."""
+        caps = _hello_caps(runtime) if caps is None else caps
+        # 70(T002: 53+6+7+4) + 2(admission) + 11(profiles) + 2(imports)
+        # + 1(sandbox.describe) + 1(beginTurnApplication) + 1(acp.sessions.list)
+        # + 12(agent.domain, 013 resolved binding/managed observation/recovery) = 100
+>       assert len(caps) == (T002_METHOD_COUNT + len(ACP_ADMISSION_METHODS)
+                             + len(PROFILE_MANAGEMENT_METHODS)
+                             + len(MODEL_PROVIDER_IMPORT_METHODS)
+                             + len(MODEL_PROVIDER_TURN_APPLICATION)
+                             + 1  # sandbox.describe
+                             + 1  # acp.sessions.list
+                             + len(AGENT_DOMAIN_METHODS))
+E       AssertionError: assert 102 == (((((((70 + 2) + 11) + 2) + 1) + 1) + 1) + 12)
+E        +  where 102 = len({'server.hello': {'id': 'server.hello', 'supported': True}, 'workspaces.browse': {'id': 'workspaces.browse', 'supporte...ILABLE'}, 'workspaces.list': {'id': 'workspaces.list', 'supported': False, 'reason': 'LOCAL_SANDBOX_UNAVAILABLE'}, ...})
+E        +  and   2 = len(frozenset({'acp.permission.authorize', 'acp.submission.authorize'}))
+E        +  and   11 = len(frozenset({'profiles.v2.archiveProfile', 'profiles.v2.configuredHarnesses', 'profiles.v2.createProfile', 'profiles.v2.describeFacets', 'profiles.v2.getProfile', 'profiles.v2.listProfiles', ...}))
+E        +  and   2 = len(frozenset({'modelProvider.importApiKey', 'modelProvider.queryApiKeyImport'}))
+E        +  and   1 = len(frozenset({'modelProvider.beginTurnApplication'}))
+E        +  and   12 = len(frozenset({'agent.config.observe', 'agent.config.prepare', 'agent.config.read', 'agent.config.release', 'agent.config.submitOperation', 'agent.interaction.list', ...}))
+
+apps/server/tests/test_plugin_host_gate.py:99: AssertionError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-907/test_a_failed_start_hook_dispo0/data/state/agentbox.sqlite
+_______ test_a_failed_start_keeps_its_error_primary_with_cleanup_errors ________
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_a_failed_start_keeps_its_0')
+
+    def test_a_failed_start_keeps_its_error_primary_with_cleanup_errors(tmp_path):
+        """The reviewer's second round-4 gap: the cleanup failure must attach to
+        the START error explicitly — reading sys.exc_info() inside the inner
+        except captures the cleanup exception itself, so cleanup_errors ends up
+        missing. The start error stays primary; the disposal failure is
+        inspectable."""
+    
+        class HookBoom(ValueError):
+            pass
+    
+        class CleanBoom(RuntimeError):
+            pass
+    
+        records: list[tuple[str, str]] = []
+    
+        class _DoubleFault:
+            def descriptor(self):
+                return ServerPluginDescriptor(id="fake.double", display_name="d", version="1")
+    
+            def build(self, context):
+                def _disposal():
+                    records.append(("dispose", "fake.double"))
+                    raise CleanBoom("disposal refused")
+                def _hook():
+                    raise HookBoom("start refused")
+                return ServerPluginRegistration(
+                    methods=(ServerMethodDescriptor(
+                        method_id="fake.double.ping", required_params=frozenset({"requestId"}),
+                        optional_params=frozenset(), handler=lambda params: {"ok": True},
+                        owner="fake.double",
+                    ),),
+                    start_hooks=(_hook,), disposal=_disposal,
+                )
+    
+        root = tmp_path / "data"
+        runtime = build_runtime(root, server_plugins=[_DoubleFault()])
+        with pytest.raises(HookBoom) as captured:
+            runtime.start()
+        assert isinstance(captured.value, HookBoom), "the start error stays primary"
+        carried = getattr(captured.value, "cleanup_errors", None)
+        assert carried is not None and len(carried) == 1, (
+            "the disposal failure must be inspectable on the start error")
+        assert carried[0].plugin_id == "fake.double"
+        assert isinstance(carried[0].error, CleanBoom)
+        assert records == [("dispose", "fake.double")]
+        assert runtime.plugin_host.active_ids() == ()
+        assert runtime.owner.acquired is False
+        retry = build_runtime(root)
+        try:
+            with _Started(retry):
+>               _assert_default_composition_caps(retry)
+
+apps/server/tests/test_plugin_host_gate.py:1510: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+runtime = ServerRuntime(data_root=PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_a_failed_start_keeps_its_0/data'), database=<p...ordessa_server.bootstrap.runtime.LegacyCoreBinding object at 0x710f289dfd70>, core_shutdown_report=None, started=False)
+caps = {'server.hello': {'id': 'server.hello', 'supported': True}, 'workspaces.browse': {'id': 'workspaces.browse', 'supporte...ILABLE'}, 'workspaces.list': {'id': 'workspaces.list', 'supported': False, 'reason': 'LOCAL_SANDBOX_UNAVAILABLE'}, ...}
+
+    def _assert_default_composition_caps(runtime, caps=None) -> None:
+        """The post-AR-1 face, two ACP rows and Q5's read-only query coexist."""
+        caps = _hello_caps(runtime) if caps is None else caps
+        # 70(T002: 53+6+7+4) + 2(admission) + 11(profiles) + 2(imports)
+        # + 1(sandbox.describe) + 1(beginTurnApplication) + 1(acp.sessions.list)
+        # + 12(agent.domain, 013 resolved binding/managed observation/recovery) = 100
+>       assert len(caps) == (T002_METHOD_COUNT + len(ACP_ADMISSION_METHODS)
+                             + len(PROFILE_MANAGEMENT_METHODS)
+                             + len(MODEL_PROVIDER_IMPORT_METHODS)
+                             + len(MODEL_PROVIDER_TURN_APPLICATION)
+                             + 1  # sandbox.describe
+                             + 1  # acp.sessions.list
+                             + len(AGENT_DOMAIN_METHODS))
+E       AssertionError: assert 102 == (((((((70 + 2) + 11) + 2) + 1) + 1) + 1) + 12)
+E        +  where 102 = len({'server.hello': {'id': 'server.hello', 'supported': True}, 'workspaces.browse': {'id': 'workspaces.browse', 'supporte...ILABLE'}, 'workspaces.list': {'id': 'workspaces.list', 'supported': False, 'reason': 'LOCAL_SANDBOX_UNAVAILABLE'}, ...})
+E        +  and   2 = len(frozenset({'acp.permission.authorize', 'acp.submission.authorize'}))
+E        +  and   11 = len(frozenset({'profiles.v2.archiveProfile', 'profiles.v2.configuredHarnesses', 'profiles.v2.createProfile', 'profiles.v2.describeFacets', 'profiles.v2.getProfile', 'profiles.v2.listProfiles', ...}))
+E        +  and   2 = len(frozenset({'modelProvider.importApiKey', 'modelProvider.queryApiKeyImport'}))
+E        +  and   1 = len(frozenset({'modelProvider.beginTurnApplication'}))
+E        +  and   12 = len(frozenset({'agent.config.observe', 'agent.config.prepare', 'agent.config.read', 'agent.config.release', 'agent.config.submitOperation', 'agent.interaction.list', ...}))
+
+apps/server/tests/test_plugin_host_gate.py:99: AssertionError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-907/test_a_failed_start_keeps_its_0/data/state/agentbox.sqlite
+_______________ test_a_pre_startup_auth_swap_cannot_double_mount _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_a_pre_startup_auth_swap_c0')
+
+    def test_a_pre_startup_auth_swap_cannot_double_mount(tmp_path):
+        """create_app mounts routes before the lifespan freezes the served set.
+        In that window an unload + re-activation with a flipped auth shape must
+        not survive startup: the mount stage sees the overlap (same path and
+        methods, different shape) and refuses type-wise — the app never enters a
+        state where the unauthenticated wall serves, and the failed startup
+        cleans the round and the data root up."""
+        plugin = _ServedPlugin("fake.window", authenticated=False)
+        runtime = build_runtime(tmp_path / "data", server_plugins=[plugin])
+        app = create_app(runtime)  # mounts the unauthenticated shape; frozen not yet set
+        runtime.plugin_host.deactivate("fake.window")
+        plugin.authenticated = True
+        runtime.plugin_host.activate(plugin)  # the window: no freeze to refuse yet
+        from server_plugin_api import ServerPluginError
+    
+        with pytest.raises(ServerPluginError) as captured:
+            with TestClient(app, base_url="http://127.0.0.1"):
+                pass
+        assert "PLUGIN_HTTP_ROUTE_SHAPE_CHANGED" in str(captured.value), captured.value
+        # the covered cleanup: the failed startup disposed the round and the root
+        assert runtime.plugin_host.active_ids() == ()
+        assert runtime.owner.acquired is False
+        retry = build_runtime(tmp_path / "data")
+        try:
+            with _Started(retry):
+>               _assert_default_composition_caps(retry)
+
+apps/server/tests/test_plugin_host_gate.py:1544: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+runtime = ServerRuntime(data_root=PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_a_pre_startup_auth_swap_c0/data'), database=<p...ordessa_server.bootstrap.runtime.LegacyCoreBinding object at 0x710f2898d640>, core_shutdown_report=None, started=False)
+caps = {'server.hello': {'id': 'server.hello', 'supported': True}, 'workspaces.browse': {'id': 'workspaces.browse', 'supporte...ILABLE'}, 'workspaces.list': {'id': 'workspaces.list', 'supported': False, 'reason': 'LOCAL_SANDBOX_UNAVAILABLE'}, ...}
+
+    def _assert_default_composition_caps(runtime, caps=None) -> None:
+        """The post-AR-1 face, two ACP rows and Q5's read-only query coexist."""
+        caps = _hello_caps(runtime) if caps is None else caps
+        # 70(T002: 53+6+7+4) + 2(admission) + 11(profiles) + 2(imports)
+        # + 1(sandbox.describe) + 1(beginTurnApplication) + 1(acp.sessions.list)
+        # + 12(agent.domain, 013 resolved binding/managed observation/recovery) = 100
+>       assert len(caps) == (T002_METHOD_COUNT + len(ACP_ADMISSION_METHODS)
+                             + len(PROFILE_MANAGEMENT_METHODS)
+                             + len(MODEL_PROVIDER_IMPORT_METHODS)
+                             + len(MODEL_PROVIDER_TURN_APPLICATION)
+                             + 1  # sandbox.describe
+                             + 1  # acp.sessions.list
+                             + len(AGENT_DOMAIN_METHODS))
+E       AssertionError: assert 102 == (((((((70 + 2) + 11) + 2) + 1) + 1) + 1) + 12)
+E        +  where 102 = len({'server.hello': {'id': 'server.hello', 'supported': True}, 'workspaces.browse': {'id': 'workspaces.browse', 'supporte...ILABLE'}, 'workspaces.list': {'id': 'workspaces.list', 'supported': False, 'reason': 'LOCAL_SANDBOX_UNAVAILABLE'}, ...})
+E        +  and   2 = len(frozenset({'acp.permission.authorize', 'acp.submission.authorize'}))
+E        +  and   11 = len(frozenset({'profiles.v2.archiveProfile', 'profiles.v2.configuredHarnesses', 'profiles.v2.createProfile', 'profiles.v2.describeFacets', 'profiles.v2.getProfile', 'profiles.v2.listProfiles', ...}))
+E        +  and   2 = len(frozenset({'modelProvider.importApiKey', 'modelProvider.queryApiKeyImport'}))
+E        +  and   1 = len(frozenset({'modelProvider.beginTurnApplication'}))
+E        +  and   12 = len(frozenset({'agent.config.observe', 'agent.config.prepare', 'agent.config.read', 'agent.config.release', 'agent.config.submitOperation', 'agent.interaction.list', ...}))
+
+apps/server/tests/test_plugin_host_gate.py:99: AssertionError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-907/test_a_pre_startup_auth_swap_c0/data/state/agentbox.sqlite
+__ test_the_harness_facet_answers_byte_identically_to_the_deleted_host_block ___
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_the_harness_facet_answers0')
+
+    def test_the_harness_facet_answers_byte_identically_to_the_deleted_host_block(tmp_path):
+        directory = _registry()
+        runtime = build_runtime(
+            tmp_path / "full",
+            server_plugins=create_composition().compatibility_plugins(harnesses=directory))
+        try:
+            with _serving(runtime) as client:
+                result = _hello(client, runtime)
+                assert json.dumps(result["harnesses"]) == json.dumps(
+                    _reference_harnesses(directory)), (
+                    "the facet's answer drifted from what the host built before S3")
+                # The reference itself has to be non-trivial or the comparison
+                # above proves nothing: both conditional keys and the bare case
+                # are published here.
+                assert [entry["id"] for entry in result["harnesses"]] == SEAT_IDS
+                assert result["harnesses"][0]["credentialKind"] == "alpha-key"
+                assert result["harnesses"][1]["modelControlId"] == "model"
+                assert set(result["harnesses"][2]) == {"id"}
+                # The envelope and the order are still the host's.
+                assert list(result) == list(FROZEN_MEMBER_ORDER), list(result)
+                assert result["protocolVersion"] == "wire/1"
+                assert result["auth"] == {"required": True, "schemes": ["session_token"]}
+                assert "nativeExecution" not in result
+                # And the answer belongs to the domain that projected it.
+>               assert runtime.plugin_host.wire_discovery_facets.contributed_facets() == {
+                    "harnesses": ACP_PLUGIN_ID, "nativeExecution": ACP_PLUGIN_ID,
+                }
+E               AssertionError: assert {'harnesses':....harness.acp'} == {'harnesses':....harness.acp'}
+E                 
+E                 Omitting 2 identical items, use -vv to show
+E                 Left contains 1 more item:
+E                 {'acpChannelHarnesses': 'ordessa.harness.acp'}
+E                 Use -v to get more diff
+
+apps/server/tests/test_wire_discovery_facets_s3.py:185: AssertionError
+____ test_two_live_compositions_in_one_process_do_not_see_each_others_facet ____
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-907/test_two_live_compositions_in_0')
+
+    def test_two_live_compositions_in_one_process_do_not_see_each_others_facet(tmp_path):
+        """A bare host composed first, a harnessed one while it stays live.
+    
+        Module-level state — the shape this slice must never regress to — publishes
+        the second host's facet into the first host's hello, and both hosts are
+        live at the same moment here, so no teardown hides it. A third bare host
+        composed LAST covers the other direction: a facet published by a host that
+        is already live must not reach a host that composes no producer.
+        """
+        bare_first = build_runtime(tmp_path / "bare-first", server_plugins=[])
+        directory = _registry()
+        harnessed = build_runtime(
+            tmp_path / "harnessed",
+            server_plugins=create_composition().compatibility_plugins(harnesses=directory))
+        bare_second = build_runtime(tmp_path / "bare-second", server_plugins=[])
+        try:
+            with _serving(bare_first) as first_client:
+                with _serving(harnessed) as harnessed_client:
+                    with _serving(bare_second) as second_client:
+                        assert _hello(first_client, bare_first)["harnesses"] == []
+                        assert json.dumps(_hello(harnessed_client, harnessed)["harnesses"]) \
+                            == json.dumps(_reference_harnesses(directory))
+                        assert _hello(first_client, bare_first)["harnesses"] == []
+                        assert _hello(second_client, bare_second)["harnesses"] == []
+                        assert "nativeExecution" not in _hello(first_client, bare_first)
+                        assert "nativeExecution" not in _hello(second_client, bare_second)
+                        # The aggregates themselves, read while all three hosts are
+                        # alive: a stop() retires a round's contributions, so this
+                        # is the only moment the publishing state is observable.
+                        assert (bare_first.plugin_host.wire_discovery_facets
+                                is not harnessed.plugin_host.wire_discovery_facets)
+                        assert (bare_second.plugin_host.wire_discovery_facets
+                                is not harnessed.plugin_host.wire_discovery_facets)
+                        assert bare_first.plugin_host.wire_discovery_facets.facets() == {}
+                        assert bare_second.plugin_host.wire_discovery_facets.facets() == {}
+>                       assert set(harnessed.plugin_host.wire_discovery_facets.facets()) == {
+                            "harnesses", "nativeExecution"}
+E                           AssertionError: assert {'acpChannelH...iveExecution'} == {'harnesses',...iveExecution'}
+E                             
+E                             Extra items in the left set:
+E                             'acpChannelHarnesses'
+E                             Use -v to get more diff
+
+apps/server/tests/test_wire_discovery_facets_s3.py:395: AssertionError
+=============================== warnings summary ===============================
+../../../../../../.venv-ordessa-py312/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+ARTIFACT_worker-debug=ABSENT workers/agent-box-worker/target/debug/agent-box-worker
+ARTIFACT_worker-release=ABSENT workers/agent-box-worker/target/release/agent-box-worker
+ARTIFACT_worker-musl-dir=ABSENT workers/agent-box-worker/target/x86_64-unknown-linux-musl
+ARTIFACT_sidecar-entry=ABSENT plugins/agent-box-harness/runtime/worker-entry.mjs
+ARTIFACT_acp-npm-closure=ABSENT plugins/agent-box-harness/packaging/claude/node_modules/@agentclientprotocol/claude-agent-acp
+TOOL_bwrap=present
+TOOL_node=present
+TOOL_npm=present
+TOOL_claude=ABSENT
+TOOL_tmux=present
+TOOL_wsl.exe=ABSENT
+SKIPPED_TOTAL=0
+WORKER_ARTIFACT=ABSENT
+VERDICT=FAILED
+=========================== short test summary info ============================
+FAILED apps/server/tests/test_plugin_host_gate.py::test_default_composition_advertises_the_full_baseline_table
+FAILED apps/server/tests/test_plugin_host_gate.py::test_a_restart_re_activates_the_same_selection
+FAILED apps/server/tests/test_plugin_host_gate.py::test_a_failed_composition_with_a_throwing_disposal_releases_the_root
+FAILED apps/server/tests/test_plugin_host_gate.py::test_runtime_stop_releases_the_root_even_when_a_disposal_throws
+FAILED apps/server/tests/test_plugin_host_gate.py::test_activation_failure_releases_the_data_root_lock
+FAILED apps/server/tests/test_plugin_host_gate.py::test_a_failed_composition_disposes_activated_plugins_and_releases_the_root
+FAILED apps/server/tests/test_plugin_host_gate.py::test_a_failed_start_hook_disposes_the_round_and_releases_the_root
+FAILED apps/server/tests/test_plugin_host_gate.py::test_a_failed_start_keeps_its_error_primary_with_cleanup_errors
+FAILED apps/server/tests/test_plugin_host_gate.py::test_a_pre_startup_auth_swap_cannot_double_mount
+FAILED apps/server/tests/test_wire_discovery_facets_s3.py::test_the_harness_facet_answers_byte_identically_to_the_deleted_host_block
+FAILED apps/server/tests/test_wire_discovery_facets_s3.py::test_two_live_compositions_in_one_process_do_not_see_each_others_facet
+11 failed, 162 passed, 1 warning in 2.67s

@@ -78,6 +78,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from functools import wraps
 from threading import RLock
 from typing import Any, Iterable, Iterator, Mapping
 
@@ -209,16 +210,38 @@ def _undo_records(records: Iterable[PublishedRecord]) -> list[ContributionCleanu
     return cleanup
 
 
+def _method_registry_locked(method):
+    @wraps(method)
+    def call(self, *args, **kwargs):
+        with self._lock:
+            return method(self, *args, **kwargs)
+    return call
+
+
 class MethodRegistry:
     """The single wire/1 dispatch registry."""
 
     def __init__(self) -> None:
+        self._lock = RLock()
         self._methods: dict[str, ServerMethodDescriptor] = {}
 
+    @_method_registry_locked
     def register(self, descriptor: ServerMethodDescriptor) -> None:
         self.check_register(descriptor)
         self._methods[descriptor.method_id] = descriptor
 
+    @_method_registry_locked
+    def register_batch(self, descriptors: Iterable[ServerMethodDescriptor]) -> None:
+        """Validate the entire batch before one registry publication."""
+        pending: list[ServerMethodDescriptor] = []
+        for descriptor in descriptors:
+            self.check_register(descriptor, pending=pending)
+            pending.append(descriptor)
+        replacement = dict(self._methods)
+        replacement.update((item.method_id, item) for item in pending)
+        self._methods = replacement
+
+    @_method_registry_locked
     def check_register(self, descriptor: ServerMethodDescriptor, *, pending=()) -> None:
         try:
             ServerMethodDescriptor(
@@ -239,6 +262,7 @@ class MethodRegistry:
             raise DuplicateMethodError(
                 descriptor.method_id, existing.owner, descriptor.owner)
 
+    @_method_registry_locked
     def unregister(self, method_id: str, *, owner: str) -> ServerMethodDescriptor | None:
         """Remove a row; absent rows are already gone (idempotent unload),
         but a row owned by someone else is never silently removed."""
@@ -251,19 +275,24 @@ class MethodRegistry:
         del self._methods[method_id]
         return descriptor
 
+    @_method_registry_locked
     def lookup(self, method_id: str) -> ServerMethodDescriptor | None:
         return self._methods.get(method_id)
 
+    @_method_registry_locked
     def descriptors(self) -> tuple[ServerMethodDescriptor, ...]:
         return tuple(self._methods.values())
 
+    @_method_registry_locked
     def method_ids(self) -> tuple[str, ...]:
         return tuple(self._methods)
 
+    @_method_registry_locked
     def handler_view(self) -> dict[str, Any]:
         """`{method_id: handler}` in registration order (order-097's view)."""
         return {method_id: item.handler for method_id, item in self._methods.items()}
 
+    @_method_registry_locked
     def __len__(self) -> int:
         return len(self._methods)
 
@@ -532,6 +561,8 @@ class ServerPluginHost:
             if not isinstance(descriptor, ServerPluginDescriptor):
                 raise InvalidDeclarationError(
                     f"descriptor() must return ServerPluginDescriptor, got {type(descriptor).__name__}")
+            if descriptor.id == "pacthold.agents":
+                raise InvalidDeclarationError("pacthold.agents is reserved for the core method owner")
             if descriptor.id in descriptors or descriptor.id in self._active:
                 raise DuplicatePluginError(descriptor.id)
             if descriptor.api_version != SERVER_PLUGIN_API_VERSION:

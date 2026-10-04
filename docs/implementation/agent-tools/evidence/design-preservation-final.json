@@ -1,0 +1,22 @@
+{
+  "specs/029-agent-tools-product/README.md": {
+    "expected": "904ab2ae40f4c7b4d0ae0a47b28b292a46261dfcac1d42b02eb10b90acbd07f5",
+    "actual": "904ab2ae40f4c7b4d0ae0a47b28b292a46261dfcac1d42b02eb10b90acbd07f5",
+    "unchanged": true
+  },
+  "specs/029-agent-tools-product/architecture.md": {
+    "expected": "8608599e905df1bda7a600ea8478972381477f67a0b781409f1d90414b890ca7",
+    "actual": "8608599e905df1bda7a600ea8478972381477f67a0b781409f1d90414b890ca7",
+    "unchanged": true
+  },
+  "specs/029-agent-tools-product/interfaces.md": {
+    "expected": "788d974bc18d8c1f2aca930a4d9f0f08cab9338fb5c743476419909a1f0729a5",
+    "actual": "788d974bc18d8c1f2aca930a4d9f0f08cab9338fb5c743476419909a1f0729a5",
+    "unchanged": true
+  },
+  "specs/029-agent-tools-product/plan.md": {
+    "expected": "997c5a60e41aa53684c9481260b4884e29683533bda9b732861c67785696c0a8",
+    "actual": "997c5a60e41aa53684c9481260b4884e29683533bda9b732861c67785696c0a8",
+    "unchanged": true
+  }
+}

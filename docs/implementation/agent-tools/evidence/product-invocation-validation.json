@@ -1,0 +1,59 @@
+{
+  "baseline": "adce734db21945181bf93da9720158d05e957654",
+  "command": "/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python -m pytest -c products/agent-tools/pyproject.toml products/agent-tools/tests -q",
+  "exit": 0,
+  "passed": 240,
+  "seconds": 29.13,
+  "by_file": {
+    "tests/contracts/test_profile_wire.py": 16,
+    "tests/integration/test_agent_deployment.py": 11,
+    "tests/integration/test_core_method_lifecycle.py": 17,
+    "tests/integration/test_core_profile_catalog.py": 32,
+    "tests/integration/test_directory_binding.py": 20,
+    "tests/integration/test_invocation_authority.py": 53,
+    "tests/integration/test_operation_store.py": 34,
+    "tests/integration/test_profile_service.py": 2,
+    "tests/test_bundle.py": 6,
+    "tests/test_discovery.py": 20,
+    "tests/test_distribution.py": 2,
+    "tests/test_profile_cli.py": 27
+  },
+  "phase": "Profile, DirectoryBinding, OperationStore and InvocationAuthority foundations; incomplete Agent product",
+  "real_model_calls": 0,
+  "evidence": "product-invocation-validation.txt",
+  "groups": {
+    "client_and_isolated_wheel": 49,
+    "bundle": 6,
+    "thin_wire_contract": 16,
+    "lifecycle_registry_doubles": 17,
+    "core_profile_sqlite": 32,
+    "directory_workspace_filesystem": 20,
+    "operation_sqlite": 34,
+    "invocation_contract_real_claim_fake_authority_state": 53,
+    "deployment_boundary": 11,
+    "real_server_cli_service_scenarios": 2
+  },
+  "regressions": {
+    "core": {
+      "passed": 339,
+      "failed": 3,
+      "exit": 1,
+      "seconds": 7.74,
+      "evidence": "core-invocation-regression.txt"
+    },
+    "server_targeted_fixed_baseline_comparison": {
+      "passed": 162,
+      "failed": 11,
+      "new_failed_ids": 0,
+      "exit": 1
+    }
+  },
+  "limits": [
+    "native RuntimeProvider and Unit/Session scope owner mapping absent",
+    "production Authority/CurrentState and provider admission absent",
+    "actual native and transport fencing unverified",
+    "managed input/tasks/results commands absent",
+    "Python3.9 not executed",
+    "zero real model calls"
+  ]
+}

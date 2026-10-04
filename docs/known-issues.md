@@ -125,3 +125,13 @@ adapter 把部分原生非重试错误发成 Agent 正文且 ACP end_turn，不�
 剩余旧 CoreRuntime/store/sidecar 依赖断言与单 Environment 合同冲突仍登记；实际生产原生 first-send 路由缺口、前端 Chat 可靠提交/原键恢复接线和干净发行验证仍未收口。受控 native fixture 与 SIGKILL 证据不覆盖真实 Harness 内部业务、真实模型或 GUI/IME。UI01 追加独立排队，不能替代这些缺口。
 
 026 受控 Electron `test:ui-foundations` 本次已运行，失败在360px样式断言：期望禁用 foundations sheet 后 Workbench button padding 5px 10px，实测6px 10px。固定baseline 0887b95 的 workbench/src/styles/index.ts 同为6px 10px；这是已确认继承断言/实现不一致，保留 electron-ui-foundations.txt，不修改断言，不算产品或UI01通过。Agent UI fixture 的9个交互检查通过（electron-agent-ui-verified.txt），仅该fixture显式smoke模式使用 absent WirePort，不是生产Server启动证据。
+
+## Agent Tools 实施树基线回归（2026-10-04）
+
+固定消费adce734db21945181bf93da9720158d05e957654。首次环境/持久化/Pacthold全量命令 `python -m pytest packages/backend/pacthold packages/backend/persistence-sqlite packages/backend/environment-api -q`：327 passed / 3 failed，退出1。三个失败均为platform/test_n4r1_kernel_direction.py的test_kernel_tree_has_no_import_of_server_harness_or_product、test_tripwire_planted_server_import_turns_the_guard_red、test_tripwire_from_import_form_is_detected_too；既有tests/environment/test_closeout_environment_dispatch.py导入ordessa_persistence_sqlite触发测试树扫描。保留断言，不skip，不把全量报绿。新真实SQLite核心测试放products/agent-tools，未在Pacthold引入具体存储依赖。
+
+Agent Tools目前Profile纯数据切片已实现，provider/DirectoryBinding/节点/原生输入闭环缺席；preview明确unresolved/providerUnavailable，nodes与managedInput为false。CLI和Skill包可安装不代表独立产品全部验收通过。真实模型、用户服务、用户DB/凭据和全局配置均未碰。
+
+受影响Server/Plugin API联跑11F/162P退出1，与隔离固定adce源码的11个失败ID完全相同；原始日志在本树docs/implementation/agent-tools/evidence/server-seams-{regression,fixed-baseline}.txt。没有把新核心薄绑定导致的失败藏进继承项。全core新增一项scanner探针路径漂移：退休storage/object_store.py的fallback取到新agents/contracts.py，其合法environment-api导入被探针“无ordessa字符串”假设误判；将探针指向实际core/dtos.py，保留全部断言/扫描范围/植入私有import反例。原三个方向失败仍红。
+
+Agent Tools后续基础快照187P exit0：DirectoryBinding与同journal具名OperationStore仅隔离基础实测，生产授权/贡献接纳与节点调用尚未接入。InvocationAuthorityPort来源获用户R-0005批准，具体合同实现中。核心回归339P/3F仍为上述三个继承方向失败；没有把fixture或存储完成升级为真实运行节点完成。

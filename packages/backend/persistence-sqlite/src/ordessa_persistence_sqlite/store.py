@@ -29,6 +29,9 @@ from typing import Any, Mapping
 
 from ordessa_environment_api import IdentityMismatchError
 from ordessa_environment_api.identity import RequestKey
+from ordessa_environment_api.domain import DomainWrite, DomainRevisionConflict
+from ordessa_environment_api.errors import GuaranteeUnavailableError, UnknownResultError
+from .operation_records import OperationRecordsMixin
 
 SCHEMA_VERSION = 1
 
@@ -124,6 +127,28 @@ class _SerializedConnectionView:
         return call
 
 _SCHEMA = """
+CREATE TABLE IF NOT EXISTS env_domain_records (
+    environment TEXT NOT NULL,
+    namespace TEXT NOT NULL,
+    record_id TEXT NOT NULL,
+    revision INTEGER NOT NULL CHECK (revision > 0),
+    payload TEXT NOT NULL,
+    PRIMARY KEY (environment, namespace, record_id)
+);
+CREATE TABLE IF NOT EXISTS env_request_steps (
+    environment TEXT NOT NULL,
+    principal TEXT NOT NULL,
+    request_id TEXT NOT NULL,
+    step_id TEXT NOT NULL,
+    intent_json TEXT NOT NULL,
+    revision INTEGER NOT NULL CHECK(revision > 0),
+    outcome TEXT NOT NULL,
+    evidence_json TEXT NOT NULL,
+    result_digest TEXT,
+    PRIMARY KEY(environment, principal, request_id, step_id),
+    FOREIGN KEY(environment, principal, request_id)
+      REFERENCES env_requests(environment, principal, request_id)
+);
 CREATE TABLE IF NOT EXISTS env_meta (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
@@ -200,7 +225,7 @@ class WriterLockHeldError(RuntimeError):
     code = "WRITER_LOCK_HELD"
 
 
-class SqliteStorePort:
+class SqliteStorePort(OperationRecordsMixin):
     """One SQLite file implementing StorePort for one environment root."""
 
     def __init__(self, path: Path | str, *, writer_token: str | None = None,
@@ -216,7 +241,25 @@ class SqliteStorePort:
         self._conn.execute("PRAGMA foreign_keys=ON")
         self._conn.executescript(_SCHEMA)
         self._ensure_dispatch_state_column()
+        self._ensure_operation_columns()
         self._acquire_writer_lock(allow_takeover=allow_takeover)
+
+    @_serialized
+    def _ensure_operation_columns(self) -> None:
+        """Add named-step storage without changing old request/Usage identity."""
+        additions = {
+            "env_requests": {"operation_json": "TEXT", "operation_revision": "INTEGER NOT NULL DEFAULT 0",
+                             "operation_intent_digest": "TEXT"},
+            "env_usages": {"holder_ref": "TEXT", "target_ref": "TEXT",
+                           "revision": "INTEGER NOT NULL DEFAULT 0", "payload": "TEXT"},
+            "env_request_steps": {"evidence_digest": "TEXT"},
+        }
+        with self._conn:
+            for table, declarations in additions.items():
+                columns = {row["name"] for row in self._conn.execute("PRAGMA table_info(" + table + ")")}
+                for name, declaration in declarations.items():
+                    if name not in columns:
+                        self._conn.execute("ALTER TABLE " + table + " ADD COLUMN " + name + " " + declaration)
 
     @_serialized
     def _ensure_dispatch_state_column(self) -> None:
@@ -305,6 +348,127 @@ class SqliteStorePort:
     def transaction(self) -> Any:
         """Return a serialized connection view for the frozen StorePort API."""
         return _SerializedConnectionView(self)
+
+    @_serialized
+    def read_domain(self, environment: str, namespace: str,
+                    record_id: str) -> Mapping[str, Any] | None:
+        row = self._conn.execute(
+            "SELECT record_id, revision, payload FROM env_domain_records "
+            "WHERE environment=? AND namespace=? AND record_id=?",
+            (environment, namespace, record_id),
+        ).fetchone()
+        return self._domain_record(row) if row is not None else None
+
+    @staticmethod
+    def _domain_record(row) -> Mapping[str, Any]:
+        try:
+            value = json.loads(row["payload"])
+            if not isinstance(value, dict):
+                raise ValueError("domain record is not an object")
+            return {"record_id": row["record_id"], "revision": row["revision"], "value": value}
+        except (TypeError, ValueError, RecursionError):
+            raise GuaranteeUnavailableError("stored domain record is unreadable") from None
+
+    @_serialized
+    def list_domain(self, environment: str,
+                    namespace: str) -> tuple[Mapping[str, Any], ...]:
+        rows = self._conn.execute(
+            "SELECT record_id, revision, payload FROM env_domain_records "
+            "WHERE environment=? AND namespace=? ORDER BY record_id",
+            (environment, namespace),
+        ).fetchall()
+        return tuple(self._domain_record(row) for row in rows)
+
+    @staticmethod
+    def _domain_result(existing, digest: str) -> Mapping[str, Any]:
+        if existing["digest"] != digest:
+            raise KeyConflictError("request key is spent with a different digest")
+        try:
+            receipt = json.loads(existing["receipt"]) if existing["receipt"] else None
+            current = json.loads(existing["current"]) if existing["current"] else None
+        except (TypeError, ValueError) as exc:
+            raise UnknownResultError("stored domain result is unreadable") from exc
+        if (existing["dispatch_state"] != "concluded" or not isinstance(current, dict)
+                or current.get("outcome") != "concluded" or not isinstance(receipt, dict)
+                or not isinstance(receipt.get("domain_result"), dict)):
+            raise UnknownResultError("spent request has no complete concluded domain result")
+        return receipt["domain_result"]
+
+    @_serialized
+    def read_domain_result(self, request: RequestKey,
+                           digest: str) -> Mapping[str, Any] | None:
+        existing = self._conn.execute(
+            "SELECT digest, dispatch_state, receipt, current FROM env_requests "
+            "WHERE environment=? AND principal=? AND request_id=?",
+            (request.environment_namespace, request.principal_scope, request.request_id),
+        ).fetchone()
+        return self._domain_result(existing, digest) if existing is not None else None
+
+    @_serialized
+    def commit_domain_change(self, request: RequestKey, digest: str,
+                             writes: tuple[DomainWrite, ...],
+                             result: Mapping[str, Any]) -> Mapping[str, Any]:
+        """CAS domain rows and the existing request result in one transaction.
+
+        This data-only operation never enters a provider or dispatch callback.
+        A spent uncertain request remains spent, even without a domain result.
+        """
+        if self._conn.in_transaction:
+            raise GuaranteeUnavailableError("domain commit cannot nest inside an open transaction")
+        identities = [(write.namespace, write.record_id) for write in writes]
+        if len(set(identities)) != len(identities):
+            raise ValueError("duplicate domain record in one change")
+        payloads = [json.dumps(dict(write.value), sort_keys=True, allow_nan=False)
+                    for write in writes]
+        result_json = json.dumps(dict(result), sort_keys=True, allow_nan=False)
+        receipt_json = json.dumps({"delivery": "acknowledged", "domain_result":
+                                   json.loads(result_json)}, sort_keys=True, allow_nan=False)
+        current_json = json.dumps({"outcome": "concluded", "revision": 1,
+                                   "conflicts": [], "obligations": []}, sort_keys=True)
+        identity = (request.environment_namespace, request.principal_scope, request.request_id)
+        try:
+            self._conn.execute("BEGIN IMMEDIATE")
+            existing = self._conn.execute(
+                "SELECT digest, dispatch_state, receipt, current FROM env_requests "
+                "WHERE environment=? AND principal=? AND request_id=?", identity,
+            ).fetchone()
+            if existing is not None:
+                replay = self._domain_result(existing, digest)
+                self._conn.rollback()
+                return replay
+            for write, payload in zip(writes, payloads):
+                row = self._conn.execute(
+                    "SELECT revision FROM env_domain_records "
+                    "WHERE environment=? AND namespace=? AND record_id=?",
+                    (request.environment_namespace, write.namespace, write.record_id),
+                ).fetchone()
+                actual = row["revision"] if row is not None else 0
+                if actual != write.expected_revision:
+                    raise DomainRevisionConflict("domain record revision does not match")
+                if row is None:
+                    self._conn.execute(
+                        "INSERT INTO env_domain_records(environment, namespace, record_id, revision, payload) "
+                        "VALUES (?, ?, ?, 1, ?)",
+                        (request.environment_namespace, write.namespace, write.record_id, payload),
+                    )
+                else:
+                    self._conn.execute(
+                        "UPDATE env_domain_records SET revision=?, payload=? "
+                        "WHERE environment=? AND namespace=? AND record_id=? AND revision=?",
+                        (actual + 1, payload, request.environment_namespace, write.namespace,
+                         write.record_id, actual),
+                    )
+            self._conn.execute(
+                "INSERT INTO env_requests(environment, principal, request_id, digest, spent, "
+                "receipt, current, dispatch_state) VALUES (?, ?, ?, ?, 1, ?, ?, 'concluded')",
+                (*identity, digest, receipt_json, current_json),
+            )
+            self._conn.commit()
+            return json.loads(result_json)
+        except BaseException:
+            if self._conn.in_transaction:
+                self._conn.rollback()
+            raise
 
     @_serialized
     def reserve_request(self, key: RequestKey, digest: str) -> bool:
@@ -414,9 +578,25 @@ class SqliteStorePort:
     def commit_activity(self, activity_id: str, receipt: Mapping[str, Any]) -> None:
         self.append_receipt(activity_id, receipt)
 
+    def _reject_scoped_activity_mutation(self, activity_id: str) -> None:
+        """Bare activity ids cannot overwrite full scoped durable results."""
+        rows = self._conn.execute(
+            "SELECT operation_json,receipt FROM env_requests WHERE request_id=?", (activity_id,),
+        ).fetchall()
+        for row in rows:
+            if row["operation_json"] is not None:
+                raise GuaranteeUnavailableError("bare activity mutation cannot change a scoped operation")
+            try:
+                receipt = json.loads(row["receipt"]) if row["receipt"] else None
+            except (TypeError, ValueError):
+                raise GuaranteeUnavailableError("bare activity mutation cannot replace an unreadable receipt") from None
+            if isinstance(receipt, dict) and "domain_result" in receipt:
+                raise GuaranteeUnavailableError("bare activity mutation cannot change a scoped domain result")
+
     @_serialized
     def append_receipt(self, activity_id: str, receipt: Mapping[str, Any]) -> None:
-        with self._conn:
+        with self._operation_transaction():
+            self._reject_scoped_activity_mutation(activity_id)
             self._conn.execute(
                 "UPDATE env_requests SET receipt=? WHERE request_id=?",
                 (json.dumps(dict(receipt), sort_keys=True), activity_id),
@@ -438,7 +618,8 @@ class SqliteStorePort:
     @_serialized
     def revise_current(self, activity_id: str, current: Mapping[str, Any]) -> None:
         """Current facts are REVISED, never overwritten silently (V2-3)."""
-        with self._conn:
+        with self._operation_transaction():
+            self._reject_scoped_activity_mutation(activity_id)
             self._conn.execute(
                 "UPDATE env_requests SET current=? WHERE request_id=?",
                 (json.dumps(dict(current), sort_keys=True), activity_id),
@@ -484,11 +665,16 @@ class SqliteStorePort:
         self, activity_id: str, objects: Mapping[str, Any], usages: Mapping[str, Any]
     ) -> None:
         """V3-1: objects + usages + receipt in ONE transaction."""
-        env_row = self._conn.execute(
-            "SELECT environment FROM env_requests WHERE request_id=?", (activity_id,)
-        ).fetchone()
-        environment = env_row["environment"] if env_row else ""
-        with self._conn:
+        with self._operation_transaction():
+            self._reject_scoped_activity_mutation(activity_id)
+            env_row = self._conn.execute(
+                "SELECT environment FROM env_requests WHERE request_id=?", (activity_id,)
+            ).fetchone()
+            environment = env_row["environment"] if env_row else ""
+            for usage_id in usages:
+                row = self._conn.execute("SELECT holder_ref FROM env_usages WHERE usage_id=?", (usage_id,)).fetchone()
+                if row is not None and row["holder_ref"] is not None:
+                    raise GuaranteeUnavailableError("legacy creation cannot replace a scoped Usage holder")
             for ref, state in objects.items():
                 env, inst, gen, oid = _split_object(ref)
                 self._conn.execute(

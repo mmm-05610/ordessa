@@ -101,7 +101,10 @@ def test_scanner_covers_src_and_tests_and_reads_real_imports() -> None:
     assert src and tests, "the scan must cover both the kernel source and its tests"
     assert len(src) >= 40, f"unexpectedly small kernel module walk: {len(src)}"
     # Sanity that the scanner reads real import statements, not comments.
-    known = PACKAGE_ROOT / "src" / "pacthold" / "storage" / "object_store.py"
+    # The pre-026 storage/object_store.py probe was retired. Pin an existing
+    # kernel DTO module rather than whichever new module sorts first (legal
+    # environment-contract consumers also contain the string "ordessa").
+    known = PACKAGE_ROOT / "src" / "pacthold" / "core" / "dtos.py"
     if not known.exists():  # keep the probe honest if the file is ever renamed
         known = next(path for path in src if path.name != "__init__.py")
     modules = _imported_modules(known)

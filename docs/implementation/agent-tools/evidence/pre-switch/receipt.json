@@ -1,0 +1,23 @@
+{
+  "before": "6a3f24456130b5caad82682d692d2d198721f0a8",
+  "target": "adce734db21945181bf93da9720158d05e957654",
+  "files": {
+    "docs/implementation/agent-tools/baseline-review.md": "cb2e7bd5e1ed8c7907371accb5ce70f4119249dda0b020f0a2be25f14e7a87eb",
+    "docs/implementation/agent-tools/evidence/baseline-inspection.json": "617ab6d5de6e976939a804486e73ec779b1d1259e9a7da9b3e77fdbc842f454d",
+    "docs/implementation/agent-tools/evidence/preparation-validation.json": "b2f26e7ae19edc63d99919de8026c2e3f79cdfb03d76acc6a776de9070c768df",
+    "docs/implementation/agent-tools/rulings.md": "76fba7ca73ee72f11c8ea789570c860f3dbbda4f2bd3d8c5bde476c11563d494",
+    "docs/implementation/agent-tools/status.md": "f18b0452871736da7b495ac4c94357a385e68be518864944886ce987f43ce9b9",
+    "docs/implementation/agent-tools/work-orders/001-public-contract-inventory.md": "c0365586012454344793467d8faedab97f85916682fe3a9cbd9e42e8b41a571e",
+    "docs/implementation/agent-tools/work-orders/002-core-persistence-seams.md": "43dccaddd999502026f5c9251011be548b90c300d1bfd5cae904ead4907f781a",
+    "docs/implementation/agent-tools/work-orders/003-profiles-and-providers.md": "602ee109ea930afc359ba5ea5cb5c327ee16b69be79351f61bd95d2e7ec4506a",
+    "docs/implementation/agent-tools/work-orders/004-directory-and-node-lifecycle.md": "af9308b5dde4628c5e555738f1a24bbcd8599d94fe6bf6898308b141cd3b3d01",
+    "docs/implementation/agent-tools/work-orders/005-cli-public-client.md": "af53bad36e3abbb1c7eb55d8a174a58b1fc48300d768f8c16b354704fa0baf75",
+    "docs/implementation/agent-tools/worktree-charter.md": "cbb31bc9ce56f64cdb3033d9e9d9d119f3fd3d0d6c74072111dd7dc81df1d81a",
+    "specs/029-agent-tools-product/README.md": "904ab2ae40f4c7b4d0ae0a47b28b292a46261dfcac1d42b02eb10b90acbd07f5",
+    "specs/029-agent-tools-product/architecture.md": "8608599e905df1bda7a600ea8478972381477f67a0b781409f1d90414b890ca7",
+    "specs/029-agent-tools-product/interfaces.md": "788d974bc18d8c1f2aca930a4d9f0f08cab9338fb5c743476419909a1f0729a5",
+    "specs/029-agent-tools-product/plan.md": "997c5a60e41aa53684c9481260b4884e29683533bda9b732861c67785696c0a8"
+  },
+  "archive_sha256": "51e163b34899036cebc6bad58517fdb00efc7ddae6a32fd86f315db69f1be94d",
+  "authorization": "user go after exact baseline and ff-only proposal"
+}
