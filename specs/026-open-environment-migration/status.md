@@ -1,3 +1,15 @@
+## 2026-10-04 013 接管（本次最新，覆盖下方旧结论）
+
+基线 0887b95bf900f50d2021a673aa7cfce967a2c3c2，分支 codex/open-environment-migration。唯一牵头/提交/合同/账本/测试写者：本会话。list_threads 无另一同树活动会话；用户服务在021树，不触碰。用户明确授权 Luna 舰队，覆盖013默认串行；三独立文件切片 stateStore、projection/queryCache、uiStorage，深度1，无子代理Git或测试写权。测试主会话串行。
+
+初始脏项 package-lock.json 是 profile-chat 已声明 agent-contracts 依赖补锁；bundle-manifest 和 extensions.lock 是前执行者构建元数据/入口摘要更新，来源与旧T012构建报告一致但本次尚未重证产物；全部保留、首提交排除。原始patch/digest见 evidence/closeout-20261004/takeover.json 和 initial-tracked.patch。013初始digest 9b728e88c69adc27f30f9deb576d2dabacbbe8481772707b522b90b8d7f2494c。
+
+原账实际106/129，010=8/14，011=1/9，012=5/13。下方及旧order-012报告101/129、011=1/7、2026-01-04日期与“可推进已全部推进”均过时；保留历史，不沿用。A104–106生产消费者未迁、A107发行未跑、A110真实CAS失败；旧表绿不成立，需逐场景重证。
+
+下一ready：串行承重基线、F5红首/修复，随后生产共同配置owner、C2提交恢复、干净发行。真实GUI/模型/安装/数据明确未授权；不能用受控fixture覆盖。
+
+Spend：Luna子代理3个请求；实际token费用未知。Questions：尚无新增合同冲突。
+
 # 迁移状态
 
 ## 2026-10-04 010 进行中（最新 565e04fc21）

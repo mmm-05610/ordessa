@@ -1,0 +1,107 @@
+diff --git a/package-lock.json b/package-lock.json
+index 172730e922..4d787c8f91 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -7277,6 +7277,7 @@
+       "name": "@ordessa/plugin-profile-chat",
+       "version": "0.1.0",
+       "dependencies": {
++        "@ordessa/agent-contracts": "*",
+         "@ordessa/extension-api": "*",
+         "@ordessa/plugin-profile-api": "*",
+         "@ordessa/ui": "*",
+diff --git a/packaging/bundle-manifest.json b/packaging/bundle-manifest.json
+index daac41d774..5e4b101b72 100644
+--- a/packaging/bundle-manifest.json
++++ b/packaging/bundle-manifest.json
+@@ -1,15 +1,15 @@
+ {
+   "schemaVersion": 1,
+   "version": "0.1.0",
+-  "build": "20261001-16bf0a204",
++  "build": "20261003-7c2ecc6f3",
+   "productName": "Ordessa Desktop",
+-  "createdAt": "2026-10-01T18:40:54.400Z",
++  "createdAt": "2026-10-03T23:06:08.466Z",
+   "components": [
+     {
+       "kind": "desktop",
+       "source": "apps/desktop/dist + products/desktop/dist",
+       "version": "0.1.0",
+-      "sha256": "fa4486243146490f79050642e75ca13fc1b82ff5840c3ecb93e112a0a072f224",
++      "sha256": "039e4c9cf38ec9d94f4539e72af6954c5977f57f859c7077e13a6b85089c4788",
+       "dest": "/opt/ordessa/app"
+     },
+     {
+@@ -28,9 +28,9 @@
+     },
+     {
+       "kind": "server-product",
+-      "source": "products/server + local closure (19 local distributions)",
++      "source": "products/server + local closure (20 local distributions)",
+       "version": "0.1.0",
+-      "sha256": "1829c0755d97a839d7d468362b9a12337ebd8100c62529207778da47ef11da92",
++      "sha256": "182226b202caa714b9c6b52b76123f21aec85cd13d57b8f60425a52c05af9248",
+       "dest": "/opt/ordessa/python/lib/python3.12/site-packages"
+     },
+     {
+@@ -51,10 +51,10 @@
+       "kind": "licenses",
+       "source": "build-time aggregation",
+       "version": "0.1.0",
+-      "sha256": "9d23447627d0059e43ef20d8b6528109da954241745198b0558f0b19847959e5",
++      "sha256": "ac6dbe9ef869dab73443814bb56fe3bccdf4441693340bdcd0766894d471779b",
+       "dest": "/opt/ordessa/licenses",
+       "counts": {
+-        "python": 54,
++        "python": 55,
+         "npm": 0
+       }
+     }
+diff --git a/products/desktop/extensions.lock.json b/products/desktop/extensions.lock.json
+index dfbf299f6d..14e191012b 100644
+--- a/products/desktop/extensions.lock.json
++++ b/products/desktop/extensions.lock.json
+@@ -20,12 +20,12 @@
+     "ordessa.model-provider-chat"
+   ],
+   "files": {
+-    "extensions/ordessa.agent-acp/entry.js": "a86d2bc36d5915bb18db864ebabbe3a447a8dbb4a1ab9e078c3dc45ded130724",
++    "extensions/ordessa.agent-acp/entry.js": "0c13a7a774e46ad5d2fe791bb2392f72546e31e07463116b5a80037046e69319",
+     "extensions/ordessa.agent-acp/manifest.json": "fe48dee1e39840187916c71ce70f3315c248f7cd0f26e3d8c7e59ac095e12c1d",
+     "extensions/ordessa.agent-acp/native.js": "bf10c76d18636fc81da16c0d9c2da04f09a8b89f7ff8271bd38d6fa46b3980f4",
+     "extensions/ordessa.agent-connections/entry.js": "1ea34d456c1f9296699e4c5f3b9ede6dc7f1441b034c284db09955adb4b0ce77",
+     "extensions/ordessa.agent-connections/manifest.json": "ff47baf6c3e151e16ecdd0784b104036cb4023ece4892ec143ff84b45d248a86",
+-    "extensions/ordessa.agent-contracts/contract.js": "bfc27fba8456c372f2d2b4667e2e6f1bb6605a801e5a401e4a4be69e2093192a",
++    "extensions/ordessa.agent-contracts/contract.js": "fa95a078371d4ca639dd62d65a29995e856a6038d79e1457b52e472e7d8935de",
+     "extensions/ordessa.agent-contracts/entry.js": "8bc4d7302aa900a89047b84a2d5aa103f7412976d0806f7119154423140d44d1",
+     "extensions/ordessa.agent-contracts/manifest.json": "71587380669303269661357dfb4fc277a2f0341391d1fa4d875ebdaa95f0a0da",
+     "extensions/ordessa.agent-sessions/entry.js": "c196e740f17695de57b59a10f6d2b90e32871e6f065a6260a5745d8114f33e27",
+@@ -147,7 +147,7 @@
+     "extensions/ordessa.chat/elixir-YGZACILI.js": "5a329b35c2f27404babdc32cf404f01615e9bcc290040e8fb0baa0b4e2784ac2",
+     "extensions/ordessa.chat/elm-HPGSZACC.js": "df57cd63307be3305a4dbe59921e36eb73e8b66ba4460f234de9a580052ee84d",
+     "extensions/ordessa.chat/emacs-lisp-H6F6N667.js": "4f6b923df94fbafbf058d1b8a1ae51172076c853c3938bed27c1654f95a17ebc",
+-    "extensions/ordessa.chat/entry.js": "3c6aa54d655067a57903230b0b00677962404cc0b66c2e3620c3e02b51b35e15",
++    "extensions/ordessa.chat/entry.js": "26994f7954c5202cec1eecbf805cb22acbecaecac35febdca0602eec394af6ba",
+     "extensions/ordessa.chat/erb-PWUTGGHT.js": "2ec847cf9bb5f3c8cb6ad0bdb146a41b926f7e77d5c0598dff414776e1af1541",
+     "extensions/ordessa.chat/erlang-CH4T3R76.js": "bc848a920f0f890ea1e09f27b955df51a1cceb25079e8fc155123e6c8b8869dc",
+     "extensions/ordessa.chat/everforest-dark-Z33NVR73.js": "2207b2b6b4f71d21a70a1d958e2daad896a922ef5b45b4b806bb4f1cfa6f0598",
+@@ -404,15 +404,15 @@
+     "extensions/ordessa.model-provider/contract.js": "65087a4eb563e18f8100b934278c591ad4378f04e13a23f1d9271af7984b034d",
+     "extensions/ordessa.model-provider/entry.js": "a5027cbdbf74cf0d78aa912cc9583e4b920faa5825e42a33a53bf80bb1b014c4",
+     "extensions/ordessa.model-provider/manifest.json": "2d12d1ab5be8ac897d18de878d9fb338a800445a18e35b57b6f588ff93b2a3b7",
+-    "extensions/ordessa.model-provider-chat/entry.js": "ffd790eaf91e325423a95c2fbdea390fcb3bdca4ef3cbb0902517354d9aabc30",
++    "extensions/ordessa.model-provider-chat/entry.js": "50dc8e9f2436f55c321183e9745174af0a382a4be11a08b7a65cf02b6c3a9052",
+     "extensions/ordessa.model-provider-chat/manifest.json": "8b89a8cc6a862ac508320189d712c9b1db002d110be9148ca5bb3d5a281f85f2",
+     "extensions/ordessa.profile-api/chunk-TRTQSARU.js": "eb4a8e71a94c3b9ea153fda5aceddf26646c6a12c0c036f6a031b9a46410d2dd",
+     "extensions/ordessa.profile-api/contract.js": "f67ba5928653531c73cd5549d782205c6205138bf9cf81ba11988cf526ea0912",
+     "extensions/ordessa.profile-api/entry.js": "23f5931a65199994d01d236c0ca9021b30c9a5c507117da68fe521ad62b48018",
+     "extensions/ordessa.profile-api/manifest.json": "2aaa67904f84f13b194b7aee704f3178c3f7214bd0f7098b438d483a9f5168c8",
+-    "extensions/ordessa.profile-chat/entry.js": "97d54f06d4453065dfbad76def2fb1f71acd8619c5950ea80e620c3a53307e09",
++    "extensions/ordessa.profile-chat/entry.js": "a933bc47dfdb2a145880ddf6cb3edda5512b77ddb5ccf6e151f362b894e0d29b",
+     "extensions/ordessa.profile-chat/manifest.json": "fc89a7a68ffbdcdebcb21b6c95579317eb350c40a8e453bd05abf4652d0f86e2",
+-    "extensions/ordessa.profile-frontend/entry.js": "e17e8a9fe0b7f068d6ae5ffe13fe4e9e47064b474062ac5ab2b36d4ec2bfde58",
++    "extensions/ordessa.profile-frontend/entry.js": "c2016e6dfc4a042234f85f051d92326a56b860f711ca6b4bf9e80d6a1158bb3f",
+     "extensions/ordessa.profile-frontend/manifest.json": "c79846c822d958f1194ec0bb2671dc0e3b1fa47981742bc0cb969f79cfe4ece2",
+     "extensions/ordessa.skills/entry.js": "646ba5cb601ddeeded122cd7bb3d50ee87d0171d78bd5a48bc0ff54fc0f88c71",
+     "extensions/ordessa.skills/manifest.json": "8cc8a4d6735102795b5721d74e3e1184a1ba9c9b38663ac0088f1d25dea495e0",

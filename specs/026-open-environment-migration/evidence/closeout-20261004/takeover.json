@@ -1,0 +1,12 @@
+{
+  "baseline": "0887b95bf900f50d2021a673aa7cfce967a2c3c2",
+  "branch": "codex/open-environment-migration",
+  "digests": {
+    "docs/implementation/work-orders/013-acceptance-closeout.md": "9b728e88c69adc27f30f9deb576d2dabacbbe8481772707b522b90b8d7f2494c",
+    "package-lock.json": "e4e18129e3d0d60373a0c645b84294a5c559477c2d09bc59fc5012cdcf9317cc",
+    "packaging/bundle-manifest.json": "63b0d6e11962492caa0ed15ab6b87702b77afab0b45700ba2064ac7574717567",
+    "products/desktop/extensions.lock.json": "44f90e20ee1c8231748494b1efeb509cb010fb0f24c010afb4ce7e94e90af029"
+  },
+  "writer": "01a1047f-1d05-7533-aa23-804c3d9b23dc; list_threads only active same cwd; no separate executor found",
+  "date": "2026-10-04 Asia/Shanghai"
+}
