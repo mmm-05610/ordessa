@@ -1,0 +1,13 @@
+ARTIFACT_SOURCE_HEAD=4b320cad97c2e53d3972f224e50302449514a6e3
+COMMAND=['xvfb-run', '-a', '--server-args=-screen 0 1440x900x24', 'node', 'scripts/packaging/closeout-frontend-product.mjs', '--artifact-root', '/tmp/ordessa-026-artifact-y8h5oxy7/extracted']
+{
+  "schema": "ordessa.closeout-frontend-product.v1",
+  "status": "fail",
+  "failure": {
+    "type": "Error",
+    "message": "artifact Python product runtime exited before PRODUCT_READY : {\"code\":1,\"signal\":null} Traceback (most recent call last):\n  File \"<string>\", line 23, in <module>\n  File \"/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_server_product/composition.py\", line 370, in default_runtime\n    runtime = build_runtime(data_root, secret_store=product_secret_store(data_root),\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_server/bootstrap/runtime.py\", line 698, in build_runtime\n    owner.acquire()\n  File \"/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_server/bootstrap/runtime.py\", line 248, in acquire\n    raise RuntimeError(\"DATA_ROOT_UNOWNED: existing directory has no AgentBox owner marker\")\nRuntimeError: DATA_ROOT_UNOWNED: existing directory has no AgentBox owner marker\n",
+    "stack": "Error: artifact Python product runtime exited before PRODUCT_READY : {\"code\":1,\"signal\":null} Traceback (most recent call last):\n  File \"<string>\", line 23, in <module>\n  File \"/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_server_product/composition.py\", line 370, in default_runtime\n    runtime = build_runtime(data_root, secret_store=product_secret_store(data_root),\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_server/bootstrap/runtime.py\", line 698, in build_runtime\n    owner.acquire()\n  File \"/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_server/bootstrap/runtime.py\", line 248, in acquire\n    raise RuntimeError(\"DATA_ROOT_UNOWNED: existing directory has no AgentBox owner marker\")\nRuntimeError: DATA_ROOT_UNOWNED: existing directory has no AgentBox owner marker\n\n    at file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-product.mjs:504:20\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)"
+  }
+}
+
+EXIT_CODE=1

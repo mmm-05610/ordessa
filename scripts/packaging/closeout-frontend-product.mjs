@@ -5,7 +5,7 @@
 // native effects, fingerprint key material and explicit local test policy are
 // supplied by controlled_native_fixture.py.
 import { spawn } from 'node:child_process'
-import { access, copyFile, mkdtemp, mkdir, readFile, realpath, rm, stat, writeFile } from 'node:fs/promises'
+import { access, copyFile, mkdtemp, mkdir, readFile, readdir, realpath, rm, stat, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
@@ -19,14 +19,24 @@ const option = name => {
 }
 const assert = (condition, message) => { if (!condition) throw new Error(message) }
 
-async function firstFile(paths) {
+async function firstFile(paths, boundary) {
   for (const item of paths) {
-    try { if ((await stat(item)).isFile()) return await realpath(item) } catch { /* continue */ }
+    try {
+      if (!(await stat(item)).isFile()) continue
+      const resolved = await realpath(item)
+      if (!isWithin(resolved, boundary)) throw new Error(`artifact file escapes ${boundary}: ${item} -> ${resolved}`)
+      return resolved
+    } catch (error) { if (String(error?.message).includes('escapes')) throw error }
   }
 }
-async function firstDirectory(paths) {
+async function firstDirectory(paths, boundary) {
   for (const item of paths) {
-    try { if ((await stat(item)).isDirectory()) return await realpath(item) } catch { /* continue */ }
+    try {
+      if (!(await stat(item)).isDirectory()) continue
+      const resolved = await realpath(item)
+      if (!isWithin(resolved, boundary)) throw new Error(`artifact directory escapes ${boundary}: ${item} -> ${resolved}`)
+      return resolved
+    } catch (error) { if (String(error?.message).includes('escapes')) throw error }
   }
 }
 function isWithin(file, directory) {
@@ -34,20 +44,32 @@ function isWithin(file, directory) {
   return relative === '' || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative))
 }
 
-function locate(rootInput, electronOverride, pythonOverride) {
-  if (!rootInput) throw new Error('usage: closeout-frontend-product.mjs --artifact-root <unpacked product> [--electron <artifact Electron>]')
+async function assertTreeWithin(root, boundary, seen = new Set()) {
+  const resolved = await realpath(root)
+  assert(isWithin(resolved, boundary), `artifact member escapes ${boundary}: ${root} -> ${resolved}`)
+  if (seen.has(resolved)) return
+  seen.add(resolved)
+  if (!(await stat(resolved)).isDirectory()) return
+  for (const entry of await readdir(resolved)) {
+    const child = path.join(resolved, entry)
+    const childResolved = await realpath(child)
+    assert(isWithin(childResolved, boundary), `artifact member escapes ${boundary}: ${child} -> ${childResolved}`)
+    if ((await stat(childResolved)).isDirectory()) await assertTreeWithin(childResolved, boundary, seen)
+  }
+}
+
+function locate(rootInput) {
+  if (!rootInput) throw new Error('usage: closeout-frontend-product.mjs --artifact-root <unpacked deb root containing opt/ordessa>')
   const root = path.resolve(rootInput)
+  const prefix = path.join(root, 'opt/ordessa')
   return {
-    root,
-    prefix: [path.join(root, 'opt/ordessa'), root, path.join(root, 'app')],
-    agent: [path.join(root, 'app/dist/extensions/ordessa.agent-contracts'), path.join(root, 'dist/extensions/ordessa.agent-contracts'), path.join(root, 'extensions/ordessa.agent-contracts'), path.join(root, 'products/desktop/dist/extensions/ordessa.agent-contracts')],
-    chat: [path.join(root, 'app/dist/extensions/ordessa.chat'), path.join(root, 'dist/extensions/ordessa.chat'), path.join(root, 'extensions/ordessa.chat'), path.join(root, 'products/desktop/dist/extensions/ordessa.chat')],
-    shared: [path.join(root, 'app/dist/extensions/ordessa.contracts'), path.join(root, 'dist/extensions/ordessa.contracts'), path.join(root, 'extensions/ordessa.contracts'), path.join(root, 'products/desktop/dist/extensions/ordessa.contracts')],
-    api: [path.join(root, 'app/dist/renderer/shared/api.js'), path.join(root, 'dist/renderer/shared/api.js'), path.join(root, 'renderer/shared/api.js'), path.join(root, 'apps/desktop/dist/renderer/shared/api.js')],
-    electron: electronOverride ? [path.resolve(electronOverride)] : [path.join(root, 'app/electron/electron'), path.join(root, 'app/electron'), path.join(root, 'electron/electron'), path.join(root, 'electron'), path.join(root, 'apps/desktop/electron/electron')],
-    python: pythonOverride ? [path.resolve(pythonOverride)] : [
-      path.join(root, 'opt/ordessa/python/bin/python3.12'), path.join(root, 'python/bin/python3.12'),
-    ],
+    root, prefix,
+    agent: [path.join(prefix, 'app/dist/extensions/ordessa.agent-contracts')],
+    chat: [path.join(prefix, 'app/dist/extensions/ordessa.chat')],
+    shared: [path.join(prefix, 'app/dist/extensions/ordessa.contracts')],
+    api: [path.join(prefix, 'app/dist/renderer/shared/api.js')],
+    electron: [path.join(prefix, 'app/electron')],
+    python: [path.join(prefix, 'python/bin/python3.12')],
     fixture: path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'controlled_native_fixture.py'),
   }
 }
@@ -170,7 +192,8 @@ class Handler(BaseHTTPRequestHandler):
                 respond(self, 200, {'kind': 'Accepted', 'result': result})
             except BaseException as error:
                 respond(self, 200, {'kind': 'Refused', 'reason': type(error).__name__ + ': ' + str(error),
-                    'code': getattr(error, 'code', None), 'details': plain(getattr(error, 'details', None))})
+                    'code': getattr(error, 'family', getattr(error, 'code', None)), 'details': plain(getattr(error, 'details', None)),
+                    'fixtureCause': {'type': type(error.__cause__).__name__, 'message': str(error.__cause__)} if error.__cause__ is not None else None})
         except BaseException as error:
             respond(self, 500, {'error': type(error).__name__ + ': ' + str(error), 'traceback': traceback.format_exc(limit=3)})
 
@@ -194,6 +217,7 @@ function browserHtml({ port, variant, phase, databaseName, requestPrefix, keys =
     '@extensions/ordessa.chat/': '/extensions/ordessa.chat/',
     '@extensions/ordessa.contracts/': '/extensions/ordessa.contracts/',
     '@ordessa/extension-api': '/shared/api.js',
+    '@ordessa/ui-components/api': '/shared/ui-components-api.js',
   } }
   const script = `import * as agent from '@extensions/ordessa.agent-contracts/contract.js';
 import { createReliableChatSubmission } from '@extensions/ordessa.chat/submission.js';
@@ -205,6 +229,9 @@ const requestPrefix = ${JSON.stringify(requestPrefix)};
 const originalKeys = ${JSON.stringify(keys)};
 const base = 'http://127.0.0.1:' + port;
 const calls = [];
+const wireOutcomes = [];
+let diagnosticPhase = 'module-ready';
+const setPhase = value => { diagnosticPhase = value; };
 const report = value => { window.__closeoutProductResult = value; };
 async function control(path, body) {
   const response = await fetch(base + path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body ?? {}) });
@@ -216,9 +243,19 @@ const wire = {
   ready: true,
   scope: 'controlled-product-wire:' + variant,
   async call(method, params) {
-    calls.push(method);
     const response = await fetch(base + '/dispatch', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ method, params }) });
     const value = await response.json();
+    const result = value?.result && typeof value.result === 'object' ? value.result : {};
+    calls.push(method);
+    wireOutcomes.push({ method, kind: value?.kind ?? null, code: value?.code ?? null, fixtureCause: value.fixtureCause ?? null,
+      status: result.status ?? null, outcome: result.outcome ?? null,
+      submissionId: result.submissionId ?? null, reason: value.reason ?? result.reason ?? null,
+      queryHint: result.queryHint ?? null,
+      receipt: result.receipt && typeof result.receipt === 'object' ? {
+        submissionId: result.receipt.submissionId ?? null,
+        outcome: result.receipt.outcome ?? null,
+        consumedDraftRevision: result.receipt.consumedDraftRevision ?? null,
+      } : null });
     if (!response.ok) throw new Error('product runtime wire bridge failed: ' + JSON.stringify(value));
     return value;
   },
@@ -275,16 +312,20 @@ try {
   if (phase === 'warm') {
     const rounds = [];
     for (let index = 0; index < 2; index += 1) {
+      setPhase('warm-round-' + (index + 1) + ':select-native-mode');
       const expectedMode = index === 0 ? 'createWithConfig' : 'existing';
       const selected = await control('/control/mode', { mode: expectedMode });
       if (selected.selectedMode !== expectedMode || selected.externalSelection !== true)
         throw new Error('native mode was not externally selected before location resolution');
+      setPhase('warm-round-' + (index + 1) + ':resolve-config');
       const projection = await config.forLocation(location);
+      setPhase('warm-round-' + (index + 1) + ':submit-config-operation');
       const operation = await projection.dispatch(index === 0
         ? { model: 'controlled-model-M1', prompt: 'Keep this prompt across profile operations' }
         : { model: 'controlled-model-M2' }, { sourceRef: variant === 'withProfile'
           ? 'controlled-profile-fixture' : 'controlled-default-fixture' });
       if (operation.kind !== 'ok' || !operation.value?.operationId) throw new Error('real Agent config owner refused operation: ' + JSON.stringify(operation));
+      setPhase('warm-round-' + (index + 1) + ':refresh-config-projection');
       await projection.refresh();
       await config.forLocation(location); // Refreshes authorized projection and expected conditions.
       const projected = projection.getSnapshot();
@@ -298,8 +339,11 @@ try {
         draftRevision: index + 1, text: index === 0 ? 'controlled first prompt' : 'controlled second prompt',
         attachmentIds: Object.freeze(['item-' + (index + 1)]),
         attachmentRefs: Object.freeze(['attachment-controlled-1']) });
+      setPhase('warm-round-' + (index + 1) + ':capture-chat-submission');
       const gateway = chat.capture(snapshot);
+      setPhase('warm-round-' + (index + 1) + ':submit-chat');
       const result = await gateway.submit(snapshot);
+      setPhase('warm-round-' + (index + 1) + ':chat-result-' + result.status);
       const capture = captured[index];
       if (!capture) throw new Error('Chat production adapter did not submit a captured request');
       assertCapture(capture, index);
@@ -340,6 +384,7 @@ try {
     for (let index = 0; index < 2; index += 1) {
       const requestId = requestPrefix + '-' + (index + 1);
       const key = originalKeys[index];
+      setPhase('cold-recovery-' + (index + 1) + ':read-journal');
       if (!key || key.requestId !== requestId) throw new Error('warm run did not provide the original durable key');
       const list = await journal.list({ namespace: key.namespace, principalScope: key.principalScope });
       const record = list.find(item => item.key.requestId === requestId);
@@ -348,6 +393,7 @@ try {
           || record.submissionMode !== expectedMode || record.results.every(item => item.outcome !== 'accepted'))
         throw new Error('real IndexedDB did not recover the original complete submission record: ' + requestId);
       const before = calls.length;
+      setPhase('cold-recovery-' + (index + 1) + ':query-original-key');
       const result = await durable.reconcile(record.key);
       const queryCalls = calls.slice(before);
       if (result.status !== 'accepted' || queryCalls.length !== 1 || queryCalls[0] !== 'agent.submission.query')
@@ -387,10 +433,37 @@ try {
         recovery: 'DurableSubmissionClient.reconcile queried only original keys' } });
   }
 } catch (error) {
-  report({ ok: false, phase, variant, error: String(error && error.stack || error), wireCalls: calls });
+  const lastCapture = captured.at(-1);
+  const journalRead = lastCapture ? journal.get(lastCapture.key) : Promise.resolve(undefined);
+  const statsRead = control('/control/stats', {});
+  const bounded = promise => Promise.race([promise, new Promise(resolve => setTimeout(() => resolve({ diagnosticTimeout: true }), 1500))])
+    .catch(cause => ({ diagnosticError: String(cause && cause.stack || cause) }));
+  const [lastRecord, nativeStats] = await Promise.all([bounded(journalRead), bounded(statsRead)]);
+  const recordSummary = lastRecord && typeof lastRecord === 'object' ? {
+    key: lastRecord.key && { namespace: lastRecord.key.namespace, principalScope: lastRecord.key.principalScope,
+      requestId: lastRecord.key.requestId },
+    target: lastRecord.target, state: lastRecord.state, submissionMode: lastRecord.submissionMode,
+    resultCount: Array.isArray(lastRecord.results) ? lastRecord.results.length : null,
+    results: (lastRecord.results ?? []).map(item => ({ outcome: item.outcome,
+      factKeys: item.facts && typeof item.facts === 'object' ? Object.keys(item.facts) : [],
+      reason: item.facts?.reason ?? item.reason ?? null, queryHint: item.facts?.queryHint ?? item.queryHint ?? null,
+      factOutcome: item.facts?.outcome, configApplyOutcome: item.facts?.configApply?.outcome,
+      inputAcceptanceOutcome: item.facts?.inputAcceptance?.outcome, runResultOutcome: item.facts?.runResult?.outcome })),
+  } : lastRecord;
+  report({ ok: false, phase, variant, diagnosticPhase, error: String(error && error.stack || error),
+    wireCalls: calls, wireOutcomes, lastJournalRecord: recordSummary, nativeStats });
 }
 </script>`
-  return `<!doctype html><meta charset="utf-8"><script type="importmap">${JSON.stringify(importMap)}</script><script type="module">${script}</script>`
+  const errorHooks = `<script>
+window.__closeoutRendererErrors = [];
+window.addEventListener('error', event => window.__closeoutRendererErrors.push({
+  kind: 'error', message: event.message || String(event.error || 'renderer error'), filename: event.filename || '',
+}));
+window.addEventListener('unhandledrejection', event => window.__closeoutRendererErrors.push({
+  kind: 'unhandledrejection', reason: String(event.reason?.stack || event.reason),
+}));
+</script>`
+  return `<!doctype html><meta charset="utf-8"><script type="importmap">${JSON.stringify(importMap)}</script>${errorHooks}<script type="module">${script}</script>`
 }
 
 function electronMainSource({ userData, html, roots }) {
@@ -402,12 +475,15 @@ const roots=${JSON.stringify(roots)}, page=${JSON.stringify(html)};
 function typeOf(file){return file.endsWith('.js')||file.endsWith('.mjs')?'text/javascript; charset=utf-8':file.endsWith('.json')?'application/json; charset=utf-8':'application/octet-stream'}
 async function file(base, rel){const target=path.resolve(base,rel);if(target!==base&&!target.startsWith(base+path.sep))return new Response('Denied',{status:403});try{return new Response(await fs.readFile(target),{headers:{'content-type':typeOf(target),'cache-control':'no-store'}})}catch{return new Response('Not found',{status:404})}}
 let win, done=false; function finish(value){if(done)return;done=true;console.log('PRODUCT_BROWSER_RESULT '+JSON.stringify(value));app.quit()}
+app.whenReady().then(async()=>{
 protocol.handle('ordessa',async req=>{const url=new URL(req.url);if(url.host!=='desktop'||req.method!=='GET')return new Response('Denied',{status:403});if(url.pathname==='/'||url.pathname==='/index.html')return new Response(page,{headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store'}});
 for(const [prefix,key] of [['/extensions/ordessa.agent-contracts/','agent'],['/extensions/ordessa.chat/','chat'],['/extensions/ordessa.contracts/','contracts']])if(url.pathname.startsWith(prefix))return file(roots[key],decodeURIComponent(url.pathname.slice(prefix.length)));
-if(url.pathname==='/shared/api.js')return file(path.dirname(roots.api),path.basename(roots.api));return new Response('Not found',{status:404})});
-app.whenReady().then(async()=>{win=new BrowserWindow({show:false,width:700,height:500,webPreferences:{contextIsolation:true,nodeIntegration:false,sandbox:true}});
+if(url.pathname.startsWith('/shared/'))return file(roots.shared,decodeURIComponent(url.pathname.slice('/shared/'.length)));return new Response('Not found',{status:404})});
+win=new BrowserWindow({show:false,width:700,height:500,webPreferences:{contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false}});
+const consoleErrors=[];
 win.webContents.on('render-process-gone',(_e,d)=>finish({ok:false,error:'renderer process gone',details:d}));win.webContents.on('did-fail-load',(_e,c,d)=>finish({ok:false,error:'renderer load failed',code:c,description:d}));
-await win.loadURL('ordessa://desktop/index.html');const until=Date.now()+${timeoutMs};while(!done&&Date.now()<until){const value=await win.webContents.executeJavaScript('window.__closeoutProductResult || null').catch(e=>({ok:false,error:String(e)}));if(value&&Object.hasOwn(value,'ok')){finish(value);return}await new Promise(r=>setTimeout(r,30))}finish({ok:false,error:'browser scenario timed out'})}).catch(e=>finish({ok:false,error:String(e&&e.stack||e)}));`
+win.webContents.on('console-message',(_event,detailsOrLevel,message,lineNumber,sourceId)=>{const item=typeof detailsOrLevel==='object'&&detailsOrLevel!==null?detailsOrLevel:{level:detailsOrLevel,message,lineNumber,sourceId};const level=item.level??item.type;if(level===2||level==='error'||level==='ERROR')consoleErrors.push({message:item.message??String(message??''),lineNumber:item.lineNumber??lineNumber,sourceId:item.sourceId??sourceId,level})});
+await win.loadURL('ordessa://desktop/index.html');const until=Date.now()+${timeoutMs};while(!done&&Date.now()<until){const state=await win.webContents.executeJavaScript('({result:window.__closeoutProductResult||null,rendererErrors:window.__closeoutRendererErrors||[]})').catch(e=>({result:{ok:false,error:String(e)},rendererErrors:[]}));const value=state.result||(state.rendererErrors.length?{ok:false,error:'renderer error event',rendererErrors:state.rendererErrors}:null);if(value&&Object.hasOwn(value,'ok')){if(value.ok===false)value.consoleErrors=consoleErrors;finish(value);return}await new Promise(r=>setTimeout(r,30))}const rendererState=await win.webContents.executeJavaScript('({errors:window.__closeoutRendererErrors||[]})').catch(e=>({inspectionError:String(e)}));finish({ok:false,error:'browser scenario timed out',rendererErrors:rendererState.errors??[],consoleErrors})}).catch(e=>finish({ok:false,error:String(e&&e.stack||e)}));`
 }
 
 function cleanEnvironment(home, python = false) {
@@ -415,7 +491,6 @@ function cleanEnvironment(home, python = false) {
     HOME: home, PATH: process.env.PATH ?? '/usr/bin:/bin',
     XDG_CONFIG_HOME: path.join(home, '.config'), XDG_CACHE_HOME: path.join(home, '.cache'),
     XDG_DATA_HOME: path.join(home, '.local/share'), LANG: 'C.UTF-8', LC_ALL: 'C.UTF-8',
-    ELECTRON_RUN_AS_NODE: python ? undefined : '0',
   }
   for (const key of ['DISPLAY', 'WAYLAND_DISPLAY', 'XAUTHORITY']) if (process.env[key]) env[key] = process.env[key]
   if (python) {
@@ -423,6 +498,7 @@ function cleanEnvironment(home, python = false) {
     env.ORDESSA_BUNDLED_ROOT = process.env.ORDESSA_BUNDLED_ROOT
   }
   for (const key of Object.keys(env)) if (env[key] === undefined) delete env[key]
+  delete env.ELECTRON_RUN_AS_NODE
   return env
 }
 
@@ -517,7 +593,7 @@ async function runBrowser({ electron, mainFile, userData, home, label }) {
     const result = JSON.parse(await lines.waitLine('PRODUCT_BROWSER_RESULT '))
     const closed = await lines.close
     assert(closed.code === 0 && closed.signal === null, `${label} Electron process did not exit cleanly: ${JSON.stringify(closed)} ${lines.output().slice(-3000)}`)
-    assert(result.ok === true, `${label} failed: ${result.error ?? JSON.stringify(result)}`)
+    assert(result.ok === true, `${label} failed: ${JSON.stringify(result)}`)
     return result
   } finally {
     terminateChildTree(child, true)
@@ -532,9 +608,10 @@ async function runVariant({ variant, includeProfile, artifact, paths, temp, pyth
   const warmHome = path.join(root, 'warm-home')
   const coldHome = path.join(root, 'cold-home')
   const work = path.join(root, 'cwd')
-  await Promise.all([dataRoot, userData, warmHome, coldHome, work].map(item => mkdir(item, { recursive: true, mode: 0o700 })))
+  // Let the actual product DataRootOwner create and mark its fresh root.
+  await Promise.all([userData, warmHome, coldHome, work].map(item => mkdir(item, { recursive: true, mode: 0o700 })))
   const dbName = `ordessa.closeout.frontend-product.${variant}.v1`
-  const requestPrefix = `closeout-${variant}`
+  const requestPrefix = `closeout-${variant.toLowerCase()}`
   let warmRuntime
   let coldRuntime
   try {
@@ -570,14 +647,19 @@ async function runVariant({ variant, includeProfile, artifact, paths, temp, pyth
 }
 
 async function main() {
-  const artifact = locate(option('--artifact-root') ?? process.env.ORDESSA_ARTIFACT_ROOT, option('--electron'), option('--python'))
-  const agentRoot = await firstDirectory(artifact.agent)
-  const chatRoot = await firstDirectory(artifact.chat)
-  const contractsRoot = await firstDirectory(artifact.shared)
-  const sharedApi = await firstFile(artifact.api)
-  const electron = await firstFile(artifact.electron)
-  const python = await firstFile(artifact.python)
-  const prefix = await firstDirectory(artifact.prefix)
+  const artifact = locate(option('--artifact-root') ?? process.env.ORDESSA_ARTIFACT_ROOT)
+  assert(!argv.includes('--electron') && !argv.includes('--python'),
+    'artifact acceptance does not allow external Electron or Python overrides')
+  artifact.root = await realpath(artifact.root)
+  const prefix = await realpath(artifact.prefix)
+  assert(isWithin(prefix, artifact.root) && path.basename(prefix) === 'ordessa',
+    `expected unpacked artifact prefix at ${artifact.prefix}`)
+  const agentRoot = await firstDirectory(artifact.agent, prefix)
+  const chatRoot = await firstDirectory(artifact.chat, prefix)
+  const contractsRoot = await firstDirectory(artifact.shared, prefix)
+  const sharedApi = await firstFile(artifact.api, prefix)
+  const electron = await firstFile(artifact.electron, prefix)
+  const python = await firstFile(artifact.python, prefix)
   const report = { schema: 'ordessa.closeout-frontend-product.v1', artifactRoot: artifact.root,
     artifactExports: {}, variants: {}, limitations: [], status: 'fail' }
   if (!agentRoot || !chatRoot || !contractsRoot || !sharedApi || !electron || !python || !prefix
@@ -593,6 +675,7 @@ async function main() {
   const sharedContract = path.join(contractsRoot, 'contract.js')
   const chatManifestPath = path.join(chatRoot, 'manifest.json')
   for (const file of [agentContract, chatAdapter, sharedContract, chatManifestPath]) await access(file)
+  for (const tree of [agentRoot, chatRoot, contractsRoot, path.dirname(sharedApi)]) await assertTreeWithin(tree, prefix)
   const chatManifest = JSON.parse(await readFile(chatManifestPath, 'utf8'))
   report.artifactExports = { agentContract: agentContract, chatAdapter: chatAdapter,
     sharedContract: sharedContract, chatManifestEntry: chatManifest.entry,
@@ -603,7 +686,7 @@ async function main() {
   try {
     const fixtureCopy = path.join(temp, 'controlled_native_fixture.py')
     await copyFile(artifact.fixture, fixtureCopy)
-    const paths = { prefix, fixtureCopy, roots: { agent: agentRoot, chat: chatRoot, contracts: contractsRoot, api: sharedApi } }
+    const paths = { prefix, fixtureCopy, roots: { agent: agentRoot, chat: chatRoot, contracts: contractsRoot, shared: path.dirname(sharedApi), api: sharedApi } }
     report.variants.withProfile = await runVariant({ variant: 'withProfile', includeProfile: true, artifact, paths, temp, python, electron })
     report.variants.withoutProfile = await runVariant({ variant: 'withoutProfile', includeProfile: false, artifact, paths, temp, python, electron })
     report.status = 'pass'

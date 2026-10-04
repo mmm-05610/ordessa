@@ -25,6 +25,7 @@ export interface DurableSubmissionClient {
   list(scope: FrontendSubmissionStorageScope): Promise<readonly FrontendSubmissionRecord[]>
 }
 
+const ENVIRONMENT_LOCAL_ID = /^[a-z][a-z0-9._-]{0,63}$/
 const queryHint = (requestId: string) => `submission:${requestId}`
 
 function refusal(reason: string): DurableSubmissionAnswer {
@@ -84,7 +85,10 @@ function requireProductionCapture(input: FrontendSubmissionCapture): void {
   requiredText(input.target, 'target')
   requiredText(input.key?.namespace, 'namespace')
   requiredText(input.key?.principalScope, 'principal scope')
-  requiredText(input.key?.requestId, 'request ID')
+  const requestId = requiredText(input.key?.requestId, 'request ID')
+  if (!ENVIRONMENT_LOCAL_ID.test(requestId)) {
+    throw new TypeError('Reliable submission request ID must match the Environment local-ID grammar')
+  }
   if (!validGeneration(input.generation)) throw new TypeError('Reliable submission generation is missing or invalid')
   if (typeof input.inputSchema !== 'string' || !input.inputSchema.trim() || input.inputSchema.trim() !== input.inputSchema) {
     throw new TypeError('Reliable submission input schema is missing')

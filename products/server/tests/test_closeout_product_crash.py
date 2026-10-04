@@ -144,6 +144,9 @@ resolved = runtime.wire.dispatch("agent.session.resolve", {"location": {
 }})
 target = resolved["target"]
 native.bind_backend_target(target)
+conditions = runtime.wire.dispatch("agent.submission.capture.read", {
+    "target": target, "mode": "existing",
+})
 runtime.wire.dispatch("agent.submitInput", {
     "target": target,
     "draftRevision": 1,
@@ -152,6 +155,7 @@ runtime.wire.dispatch("agent.submitInput", {
         "draft": {"draftId": "crash-controlled-draft", "draftRevision": 1,
                   "text": "crash recovery request", "attachmentIds": []},
         "configOperationIds": [], "schema": "agent-input/v1", "mode": "existing",
+        "expectedConditions": conditions,
     },
 })
 raise AssertionError("worker unexpectedly passed the requested crash boundary")

@@ -1,0 +1,48 @@
+ARTIFACT_SOURCE_HEAD=4b320cad97c2e53d3972f224e50302449514a6e3
+COMMAND=['xvfb-run', '-a', '--server-args=-screen 0 1440x900x24', 'node', 'scripts/packaging/closeout-frontend-journal.mjs', '--artifact-root', '/tmp/ordessa-026-artifact-y8h5oxy7/extracted']
+file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-journal.mjs:277
+        new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(`${label} timed out waiting for ${prefix}: ${output.slice(-5000)}`)), timeoutMs) }),
+                                                                     ^
+
+Error: capture-crash timed out waiting for FJ_CRASH_READY : App threw an error during load
+TypeError: Session can only be received when app is ready
+    at get defaultSession (node:electron/js2c/browser_init:2:66446)
+    at Object.handle (node:electron/js2c/browser_init:2:62087)
+    at Object.<anonymous> (/tmp/ordessa-frontend-journal-kill-2qhIhP/closeout-capture-window.cjs:31:10)
+    at Module._compile (node:internal/modules/cjs/loader:1838:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1971:10)
+    at Module.load (node:internal/modules/cjs/loader:1560:32)
+    at Module._load (node:internal/modules/cjs/loader:1362:12)
+    at c._load (node:electron/js2c/node_init:2:18095)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:262:19)
+    at loadCJSModuleWithModuleLoad (node:internal/modules/esm/translators:332:3)
+[1m[47m[31mA JavaScript error occurred in the main process
+[30mUncaught Exception:
+TypeError: Session can only be received when app is ready
+    at get defaultSession (node:electron/js2c/browser_init:2:66446)
+    at Object.handle (node:electron/js2c/browser_init:2:62087)
+    at Object.<anonymous> (/tmp/ordessa-frontend-journal-kill-2qhIhP/closeout-capture-window.cjs:31:10)
+    at Module._compile (node:internal/modules/cjs/loader:1838:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1971:10)
+    at Module.load (node:internal/modules/cjs/loader:1560:32)
+    at Module._load (node:internal/modules/cjs/loader:1362:12)
+    at c._load (node:electron/js2c/node_init:2:18095)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:262:19)
+    at loadCJSModuleWithModuleLoad (node:internal/modules/esm/translators:332:3)
+[0m[1272289:1004/152422.740734:ERROR:dbus/bus.cc:406] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+[1272289:1004/152422.740772:ERROR:dbus/bus.cc:406] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+[1272317:1004/152422.755512:ERROR:media/gpu/vaapi/vaapi_wrapper.cc:1627] vaInitialize failed: unknown libva error
+[1272289:1004/152422.755596:ERROR:dbus/object_proxy.cc:573] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+[1272289:1004/152422.755631:ERROR:dbus/object_proxy.cc:573] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+[1272289:1004/152422.755681:ERROR:dbus/bus.cc:406] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+[1272289:1004/152422.755699:ERROR:dbus/bus.cc:406] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+[1272289:1004/152422.755706:ERROR:dbus/object_proxy.cc:573] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+[1272289:1004/152422.758296:ERROR:dbus/object_proxy.cc:573] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+
+    at Timeout.<anonymous> (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-journal.mjs:277:70)
+    at listOnTimeout (node:internal/timers:585:17)
+    at process.processTimers (node:internal/timers:521:7)
+
+Node.js v22.22.1
+
+EXIT_CODE=1

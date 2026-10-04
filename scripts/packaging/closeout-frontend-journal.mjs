@@ -4,7 +4,7 @@
 // this script serves only built public contract artifacts and never starts a
 // Server, Harness, connector, model, or user service.
 import { spawn } from 'node:child_process'
-import { access, mkdir, mkdtemp, readFile, realpath, rm, stat, writeFile } from 'node:fs/promises'
+import { access, mkdir, mkdtemp, readFile, readdir, realpath, rm, stat, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
@@ -20,52 +20,63 @@ function assert(condition, message) {
   if (!condition) throw new Error(message)
 }
 
-async function firstFile(paths) {
+function isWithin(file, directory) {
+  const relative = path.relative(directory, file)
+  return relative === '' || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative))
+}
+
+async function assertTreeWithin(root, boundary, seen = new Set()) {
+  const resolved = await realpath(root)
+  assert(isWithin(resolved, boundary), `artifact member escapes ${boundary}: ${root} -> ${resolved}`)
+  if (seen.has(resolved)) return
+  seen.add(resolved)
+  if (!(await stat(resolved)).isDirectory()) return
+  for (const entry of await readdir(resolved)) {
+    const child = path.join(resolved, entry)
+    const childResolved = await realpath(child)
+    assert(isWithin(childResolved, boundary), `artifact member escapes ${boundary}: ${child} -> ${childResolved}`)
+    if ((await stat(childResolved)).isDirectory()) await assertTreeWithin(childResolved, boundary, seen)
+  }
+}
+
+async function firstFile(paths, boundary) {
   for (const candidate of paths) {
-    try { if ((await stat(candidate)).isFile()) return await realpath(candidate) } catch { /* try next artifact layout */ }
+    try {
+      if (!(await stat(candidate)).isFile()) continue
+      const resolved = await realpath(candidate)
+      assert(isWithin(resolved, boundary), `artifact file escapes ${boundary}: ${candidate} -> ${resolved}`)
+      return resolved
+    } catch (error) {
+      if (String(error?.message).includes('escapes')) throw error
+    }
   }
   return undefined
 }
 
-async function firstDirectory(paths) {
+async function firstDirectory(paths, boundary) {
   for (const candidate of paths) {
-    try { if ((await stat(candidate)).isDirectory()) return await realpath(candidate) } catch { /* try next artifact layout */ }
+    try {
+      if (!(await stat(candidate)).isDirectory()) continue
+      const resolved = await realpath(candidate)
+      assert(isWithin(resolved, boundary), `artifact directory escapes ${boundary}: ${candidate} -> ${resolved}`)
+      return resolved
+    } catch (error) {
+      if (String(error?.message).includes('escapes')) throw error
+    }
   }
   return undefined
 }
 
-function locate(input, electronOverride) {
-  if (!input) throw new Error('usage: closeout-frontend-journal.mjs --artifact-root <built/extracted product> [--electron <Electron executable>]')
+function locate(input) {
+  if (!input) throw new Error('usage: closeout-frontend-journal.mjs --artifact-root <unpacked deb root containing opt/ordessa>')
   const root = path.resolve(input)
+  const prefix = path.join(root, 'opt/ordessa')
   return {
-    root,
-    agentContracts: [
-      path.join(root, 'app/dist/extensions/ordessa.agent-contracts'),
-      path.join(root, 'dist/extensions/ordessa.agent-contracts'),
-      path.join(root, 'extensions/ordessa.agent-contracts'),
-      path.join(root, 'products/desktop/dist/extensions/ordessa.agent-contracts'),
-    ],
-    sharedContracts: [
-      path.join(root, 'app/dist/extensions/ordessa.contracts'),
-      path.join(root, 'dist/extensions/ordessa.contracts'),
-      path.join(root, 'extensions/ordessa.contracts'),
-      path.join(root, 'products/desktop/dist/extensions/ordessa.contracts'),
-    ],
-    sharedApi: [
-      path.join(root, 'app/dist/renderer/shared/api.js'),
-      path.join(root, 'dist/renderer/shared/api.js'),
-      path.join(root, 'renderer/shared/api.js'),
-      path.join(root, 'apps/desktop/dist/renderer/shared/api.js'),
-    ],
-    electron: electronOverride ? [path.resolve(electronOverride)] : [
-      path.join(root, 'app/electron/electron'),
-      path.join(root, 'app/electron'),
-      path.join(root, 'electron/electron'),
-      path.join(root, 'electron'),
-      path.join(root, 'app/electron-dist/electron'),
-      path.join(root, 'electron-dist/electron'),
-      path.join(root, 'node_modules/electron/dist/electron'),
-    ],
+    root, prefix,
+    agentContracts: [path.join(prefix, 'app/dist/extensions/ordessa.agent-contracts')],
+    sharedContracts: [path.join(prefix, 'app/dist/extensions/ordessa.contracts')],
+    sharedApi: [path.join(prefix, 'app/dist/renderer/shared/api.js')],
+    electron: [path.join(prefix, 'app/electron')],
   }
 }
 
@@ -75,10 +86,46 @@ function fixtureMainSource({ artifactRoots, userData, mode, requestId, expectedS
       '@extensions/ordessa.agent-contracts/': '/extensions/ordessa.agent-contracts/',
       '@extensions/ordessa.contracts/': '/extensions/ordessa.contracts/',
       '@ordessa/extension-api': '/shared/api.js',
+      '@ordessa/ui-components/api': '/shared/ui-components-api.js',
     },
   }
-  const html = `<!doctype html><meta charset="utf-8"><div id="root"></div><script type="importmap">${JSON.stringify(importMap)}</script><script type="module">
+  const html = `<!doctype html><meta charset="utf-8"><div id="root"></div><script type="importmap">${JSON.stringify(importMap)}</script><script>
+window.__frontendJournalErrors = [];
+window.__frontendJournalPhase = 'module-import-pending';
+window.__frontendJournalIdb = { opens: 0, openState: 'idle', transactions: 0, transactionState: 'idle' };
+const nativeOpen = IDBFactory.prototype.open;
+IDBFactory.prototype.open = function(...args) {
+  window.__frontendJournalIdb.opens += 1;
+  window.__frontendJournalIdb.openState = 'pending';
+  window.__frontendJournalPhase = 'indexeddb.open:pending';
+  const request = nativeOpen.apply(this, args);
+  request.addEventListener('blocked', () => { window.__frontendJournalIdb.openState = 'blocked'; window.__frontendJournalPhase = 'indexeddb.open:blocked'; });
+  request.addEventListener('upgradeneeded', () => { window.__frontendJournalIdb.openState = 'upgrading'; window.__frontendJournalPhase = 'indexeddb.open:upgradeneeded'; });
+  request.addEventListener('success', () => { window.__frontendJournalIdb.openState = 'success'; window.__frontendJournalPhase = 'indexeddb.open:success'; });
+  request.addEventListener('error', () => { window.__frontendJournalIdb.openState = 'error'; window.__frontendJournalPhase = 'indexeddb.open:error'; });
+  return request;
+};
+const nativeTransaction = IDBDatabase.prototype.transaction;
+IDBDatabase.prototype.transaction = function(...args) {
+  window.__frontendJournalIdb.transactions += 1;
+  window.__frontendJournalIdb.transactionState = 'pending';
+  window.__frontendJournalPhase = 'indexeddb.transaction:pending';
+  const transaction = nativeTransaction.apply(this, args);
+  transaction.addEventListener('complete', () => { window.__frontendJournalIdb.transactionState = 'complete'; window.__frontendJournalPhase = 'indexeddb.transaction:complete'; });
+  transaction.addEventListener('abort', () => { window.__frontendJournalIdb.transactionState = 'abort'; window.__frontendJournalPhase = 'indexeddb.transaction:abort'; });
+  transaction.addEventListener('error', () => { window.__frontendJournalIdb.transactionState = 'error'; window.__frontendJournalPhase = 'indexeddb.transaction:error'; });
+  return transaction;
+};
+window.__frontendJournalSetPhase = value => { window.__frontendJournalPhase = value; };
+window.addEventListener('error', event => window.__frontendJournalErrors.push({
+  kind: 'error', message: event.message || String(event.error || 'renderer error'), filename: event.filename || '',
+}));
+window.addEventListener('unhandledrejection', event => window.__frontendJournalErrors.push({
+  kind: 'unhandledrejection', reason: String(event.reason?.stack || event.reason),
+}));
+</script><script type="module">
 import * as agent from '@extensions/ordessa.agent-contracts/contract.js';
+window.__frontendJournalSetPhase('module-imports:complete');
 const mode = ${JSON.stringify(mode)};
 const requestId = ${JSON.stringify(requestId)};
 const expectedState = ${JSON.stringify(expectedState)};
@@ -99,23 +146,35 @@ const requireArtifactApi = () => {
   }
 };
 try {
+  window.__frontendJournalSetPhase('artifact-api:checking');
   requireArtifactApi();
+  window.__frontendJournalSetPhase('artifact-api:ready');
+  window.__frontendJournalSetPhase('journal.create:starting');
   const journal = agent.createFrontendSubmissionJournal({ databaseName: 'ordessa.closeout.frontend-submission.v1' });
+  window.__frontendJournalSetPhase('journal.create:returned');
   if (mode === 'capture-crash' || mode === 'marker-crash') {
+    window.__frontendJournalSetPhase('journal.capture:waiting');
     const captured = await journal.capture(capture);
+    window.__frontendJournalSetPhase('journal.capture:resolved');
     if (captured.status !== 'created' || captured.record.state !== 'captured')
       throw new Error('capture transaction did not commit a new captured record');
     if (mode === 'marker-crash') {
+      window.__frontendJournalSetPhase('journal.markPossiblySubmitted:waiting');
       const claim = await journal.markPossiblySubmitted(key);
+      window.__frontendJournalSetPhase('journal.markPossiblySubmitted:resolved');
       if (claim.status !== 'dispatch-authorized' || claim.record.state !== 'possibly-submitted')
         throw new Error('possibly-submitted transaction did not commit its dispatch marker');
     }
+    window.__frontendJournalSetPhase('journal.get-after-write:waiting');
     const persisted = await journal.get(key);
+    window.__frontendJournalSetPhase('journal.get-after-write:resolved');
     const stage = mode === 'capture-crash' ? 'captured' : 'possibly-submitted';
     if (persisted?.state !== stage) throw new Error('journal record was not visible after its commit promise resolved');
     window.__frontendJournalStage = { ok: true, stage, requestId, state: persisted.state };
   } else {
+    window.__frontendJournalSetPhase('journal.get-cold-record:waiting');
     const record = await journal.get(key);
+    window.__frontendJournalSetPhase('journal.get-cold-record:resolved');
     if (!record || record.state !== expectedState || record.target !== capture.target
         || record.key.namespace !== key.namespace || record.key.principalScope !== key.principalScope
         || record.key.requestId !== requestId) {
@@ -130,8 +189,12 @@ try {
         throw new Error('recovery did not query the original frozen target and request key');
       return { kind: 'Unknown', reason: 'controlled fixture has no backend receipt' };
     } });
+    window.__frontendJournalSetPhase('reconcile:waiting');
     const answer = await client.reconcile(key);
+    window.__frontendJournalSetPhase('reconcile:resolved');
+    window.__frontendJournalSetPhase('journal.get-after-reconcile:waiting');
     const after = await journal.get(key);
+    window.__frontendJournalSetPhase('journal.get-after-reconcile:resolved');
     if (answer.status !== 'unknown') throw new Error('unavailable backend evidence must remain unknown');
     if (calls.length !== 1 || calls[0].method !== 'agent.submission.query')
       throw new Error('recovery must make exactly one query-only wire call');
@@ -149,7 +212,8 @@ try {
       answer: answer.status, calls: calls.map(call => call.method), results: after.results.length });
   }
 } catch (error) {
-  report({ ok: false, error: String(error && error.stack || error) });
+  report({ ok: false, phase: window.__frontendJournalPhase, idb: window.__frontendJournalIdb,
+    error: String(error && error.stack || error) });
 }
 </script>`
 
@@ -183,30 +247,39 @@ function finish(result) {
   console.log('FJ_COLD_RESULT ' + JSON.stringify(result));
   app.quit();
 }
-protocol.handle('ordessa', async request => {
-  const url = new URL(request.url);
-  if (url.host !== 'desktop' || request.method !== 'GET') return new Response('Denied', { status: 403 });
-  if (url.pathname === '/' || url.pathname === '/index.html') return new Response(page, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
-  if (url.pathname.startsWith('/extensions/ordessa.agent-contracts/'))
-    return serveFile(roots.agent, decodeURIComponent(url.pathname.slice('/extensions/ordessa.agent-contracts/'.length)));
-  if (url.pathname.startsWith('/extensions/ordessa.contracts/'))
-    return serveFile(roots.sharedContracts, decodeURIComponent(url.pathname.slice('/extensions/ordessa.contracts/'.length)));
-  if (url.pathname === '/shared/api.js') {
-    try { return new Response(await fs.readFile(roots.sharedApi), { headers: { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' } }); }
-    catch { return new Response('Not found', { status: 404 }); }
-  }
-  return new Response('Not found', { status: 404 });
-});
 app.whenReady().then(async () => {
+  protocol.handle('ordessa', async request => {
+    const url = new URL(request.url);
+    if (url.host !== 'desktop' || request.method !== 'GET') return new Response('Denied', { status: 403 });
+    if (url.pathname === '/' || url.pathname === '/index.html') return new Response(page, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+    if (url.pathname.startsWith('/extensions/ordessa.agent-contracts/'))
+      return serveFile(roots.agent, decodeURIComponent(url.pathname.slice('/extensions/ordessa.agent-contracts/'.length)));
+    if (url.pathname.startsWith('/extensions/ordessa.contracts/'))
+      return serveFile(roots.sharedContracts, decodeURIComponent(url.pathname.slice('/extensions/ordessa.contracts/'.length)));
+    if (url.pathname.startsWith('/shared/'))
+      return serveFile(roots.shared, decodeURIComponent(url.pathname.slice('/shared/'.length)));
+    return new Response('Not found', { status: 404 });
+  });
   win = new BrowserWindow({ show: false, width: 420, height: 240, webPreferences: {
-    contextIsolation: true, nodeIntegration: false, sandbox: true,
+    contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false,
   } });
   win.webContents.on('render-process-gone', (_event, details) => finish({ ok: false, error: 'renderer process gone', details }));
   win.webContents.on('did-fail-load', (_event, code, description) => finish({ ok: false, error: 'renderer load failed', code, description }));
+  const consoleErrors = [];
+  win.webContents.on('console-message', (_event, detailsOrLevel, message, lineNumber, sourceId) => {
+    const item = typeof detailsOrLevel === 'object' && detailsOrLevel !== null
+      ? detailsOrLevel : { level: detailsOrLevel, message, lineNumber, sourceId };
+    const level = item.level ?? item.type;
+    if (level === 2 || level === 'error' || level === 'ERROR') consoleErrors.push({
+      message: item.message ?? String(message ?? ''), lineNumber: item.lineNumber ?? lineNumber,
+      sourceId: item.sourceId ?? sourceId, level,
+    });
+  });
   await win.loadURL('ordessa://desktop/index.html');
   const deadline = Date.now() + 20000;
   while (!finished && Date.now() < deadline) {
-    const value = await win.webContents.executeJavaScript('window.__frontendJournalStage || window.__frontendJournalResult || null').catch(error => ({ ok: false, error: String(error) }));
+    const state = await win.webContents.executeJavaScript('({ value: window.__frontendJournalStage || window.__frontendJournalResult || null, rendererErrors: window.__frontendJournalErrors || [], phase: window.__frontendJournalPhase || null, idb: window.__frontendJournalIdb || null })').catch(error => ({ value: { ok: false, error: String(error) }, rendererErrors: [], phase: null, idb: null }));
+    const value = state.value || (state.rendererErrors.length ? { ok: false, error: 'renderer error event', rendererErrors: state.rendererErrors, consoleErrors, phase: state.phase, idb: state.idb } : null);
     if (value && value.stage) {
       console.log('FJ_CRASH_READY ' + JSON.stringify(value));
       // Parent will SIGKILL this Electron process group only after the IndexedDB
@@ -216,7 +289,9 @@ app.whenReady().then(async () => {
     if (value && Object.hasOwn(value, 'ok')) { finish(value); return; }
     await new Promise(resolve => setTimeout(resolve, 30));
   }
-  finish({ ok: false, error: 'frontend journal renderer did not reach a barrier/result' });
+  const rendererState = await win.webContents.executeJavaScript('({ errors: window.__frontendJournalErrors || [], phase: window.__frontendJournalPhase || null, idb: window.__frontendJournalIdb || null })').catch(error => ({ inspectionError: String(error) }));
+  finish({ ok: false, error: 'frontend journal renderer did not reach a barrier/result', phase: rendererState.phase ?? null,
+    idb: rendererState.idb ?? null, rendererErrors: rendererState.errors ?? [], consoleErrors });
 }).catch(error => finish({ ok: false, error: String(error && error.stack || error) }));
 `
 }
@@ -226,8 +301,8 @@ function minimalEnvironment(tempHome) {
     PATH: process.env.PATH ?? '', HOME: tempHome,
     XDG_CONFIG_HOME: path.join(tempHome, '.config'),
     XDG_CACHE_HOME: path.join(tempHome, '.cache'),
-    ELECTRON_RUN_AS_NODE: '0',
   }
+  delete env.ELECTRON_RUN_AS_NODE
   for (const name of ['DISPLAY', 'WAYLAND_DISPLAY', 'XAUTHORITY', 'LANG']) {
     if (process.env[name] !== undefined) env[name] = process.env[name]
   }
@@ -310,22 +385,28 @@ async function runColdRecovery({ electron, mainFile, home, mode, requestId, expe
     coldProcessExit: closed.code }
 }
 
-const artifact = locate(option('--artifact-root') ?? process.env.ORDESSA_ARTIFACT_ROOT, option('--electron'))
-const agentRoot = await firstDirectory(artifact.agentContracts)
-const sharedContractsRoot = await firstDirectory(artifact.sharedContracts)
-const sharedApi = await firstFile(artifact.sharedApi)
-const electron = await firstFile(artifact.electron)
+const artifact = locate(option('--artifact-root') ?? process.env.ORDESSA_ARTIFACT_ROOT)
+assert(!argv.includes('--electron'), 'artifact acceptance does not allow an external Electron override')
+artifact.root = await realpath(artifact.root)
+const prefix = await realpath(artifact.prefix)
+assert(isWithin(prefix, artifact.root) && path.basename(prefix) === 'ordessa',
+  `expected unpacked artifact prefix at ${artifact.prefix}`)
+const agentRoot = await firstDirectory(artifact.agentContracts, prefix)
+const sharedContractsRoot = await firstDirectory(artifact.sharedContracts, prefix)
+const sharedApi = await firstFile(artifact.sharedApi, prefix)
+const electron = await firstFile(artifact.electron, prefix)
 assert(agentRoot, `built Agent contracts artifact missing under ${artifact.root}`)
 assert(sharedContractsRoot, `built shared contracts artifact missing under ${artifact.root}`)
 assert(sharedApi, `built extension API artifact missing under ${artifact.root}`)
-assert(electron, `Electron executable missing under ${artifact.root}; use --electron for an explicitly selected binary`)
+assert(electron, `packaged Electron executable missing under ${artifact.root}`)
+for (const tree of [agentRoot, sharedContractsRoot, path.dirname(sharedApi)]) await assertTreeWithin(tree, prefix)
 for (const modulePath of [
   path.join(agentRoot, 'contract.js'),
   path.join(sharedContractsRoot, 'contract.js'),
 ]) await access(modulePath)
 
 const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'ordessa-frontend-journal-kill-'))
-const artifactRoots = { agent: agentRoot, sharedContracts: sharedContractsRoot, sharedApi }
+const artifactRoots = { agent: agentRoot, sharedContracts: sharedContractsRoot, shared: path.dirname(sharedApi), sharedApi }
 const scenarios = [
   { crashMode: 'capture-crash', coldMode: 'recover-capture', stage: 'captured', id: 'closeout-capture-window' },
   { crashMode: 'marker-crash', coldMode: 'recover-marker', stage: 'possibly-submitted', id: 'closeout-marker-window' },

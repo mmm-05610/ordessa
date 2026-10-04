@@ -241,14 +241,18 @@ function stageApp(id) {
   // Flatten so the launcher's fixed path (app/electron) is the real binary.
   for (const entry of ['electron', 'chrome-sandbox', 'chrome_crashpad_handler', 'resources.pak', 'icudtl.dat', 'v8_context_snapshot.bin', 'snapshot_blob.bin', 'libvk_swiftshader.so', 'libvulkan.so.1', 'vk_swiftshader_icd.json', 'resources', 'libEGL.so', 'libGLESv2.so', 'libffmpeg.so', 'locales']) {
     const from = path.join(electronDist, entry)
-    if (!existsSync(from)) continue
+    if (!existsSync(from)) {
+      if (['snapshot_blob.bin'].includes(entry)) continue // version-dependent legacy snapshot
+      throw new Error('required Electron runtime resource missing: ' + from)
+    }
     const st = statSync(from)
     if (st.isDirectory()) cpSync(from, path.join(appDir, entry), { recursive: true })
     else cpSync(from, path.join(appDir, entry))
   }
   for (const pak of ['chrome_100_percent.pak', 'chrome_200_percent.pak', 'LICENSES.chromium.html']) {
     const from = path.join(electronDist, pak)
-    if (existsSync(from)) cpSync(from, path.join(appDir, pak))
+    if (!existsSync(from)) throw new Error('required Electron resource missing: ' + from)
+    cpSync(from, path.join(appDir, pak))
   }
   // The Chromium sandbox helper must be setuid-root for the sandbox to work.
   // This is what makes "no --no-sandbox" (FR-072) viable on a real machine.
@@ -462,7 +466,7 @@ function writeHashes(debPath, id) {
   const entries = []
   entries.push({ rel: path.basename(debPath), sha256: sha256File(debPath) })
 
-  const manifestPath = path.join(repoRoot, 'packaging/bundle-manifest.json')
+  const manifestPath = path.join(OUT, 'bundle-manifest.json')
   if (existsSync(manifestPath)) {
     entries.push({ rel: 'bundle-manifest.json', sha256: sha256File(manifestPath) })
   }
@@ -537,8 +541,10 @@ async function main() {
   const lic = stageLicenses(bundleManifest, app.appDir, serverDeps.dest)
   components.find(c => c.kind === 'licenses').sha256 = sha256File(path.join(lic.dir, 'THIRD-PARTY-NOTICES'))
   components.find(c => c.kind === 'licenses').counts = { python: lic.python, npm: lic.npm }
-  writeFileSync(path.join(repoRoot, 'packaging/bundle-manifest.json'), JSON.stringify(bundleManifest, null, 2) + '\n')
-  cpSync(path.join(repoRoot, 'packaging/bundle-manifest.json'), path.join(app.appDir, 'bundle-manifest.json'))
+  mkdirSync(OUT, { recursive: true })
+  const manifestPath = path.join(OUT, 'bundle-manifest.json')
+  writeFileSync(manifestPath, JSON.stringify(bundleManifest, null, 2) + '\n')
+  cpSync(manifestPath, path.join(app.appDir, 'bundle-manifest.json'))
 
   const debPath = buildDeb(id)
   const hashes = writeHashes(debPath, id)

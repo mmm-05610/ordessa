@@ -1,0 +1,13 @@
+ARTIFACT_SOURCE_HEAD=4b320cad97c2e53d3972f224e50302449514a6e3
+COMMAND=['xvfb-run', '-a', '--server-args=-screen 0 1440x900x24', 'node', 'scripts/packaging/closeout-frontend-product.mjs', '--artifact-root', '/tmp/ordessa-026-artifact-y8h5oxy7/extracted']
+{
+  "schema": "ordessa.closeout-frontend-product.v1",
+  "status": "fail",
+  "failure": {
+    "type": "Error",
+    "message": "withProfile warm frontend/product failed: Error: real Agent/Product submission was not accepted: {\"status\":\"unknown\",\"reason\":\"submission:closeout-withProfile-1\"}\n    at ordessa://desktop/index.html:117:47",
+    "stack": "Error: withProfile warm frontend/product failed: Error: real Agent/Product submission was not accepted: {\"status\":\"unknown\",\"reason\":\"submission:closeout-withProfile-1\"}\n    at ordessa://desktop/index.html:117:47\n    at assert (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-product.mjs:20:64)\n    at runBrowser (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-product.mjs:555:5)\n    at async runVariant (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-product.mjs:582:18)\n    at async main (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-product.mjs:649:35)\n    at async file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-product.mjs:659:18"
+  }
+}
+
+EXIT_CODE=1

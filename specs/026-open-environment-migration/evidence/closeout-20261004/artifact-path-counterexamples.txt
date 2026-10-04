@@ -1,0 +1,67 @@
+product-escape
+COMMAND=['node', 'scripts/packaging/closeout-frontend-product.mjs', '--artifact-root', '/tmp/ordessa-artifact-guard-negative-nxnpsyzg']
+{
+  "schema": "ordessa.closeout-frontend-product.v1",
+  "status": "fail",
+  "failure": {
+    "type": "Error",
+    "message": "artifact directory escapes /tmp/ordessa-artifact-guard-negative-nxnpsyzg/opt/ordessa: /tmp/ordessa-artifact-guard-negative-nxnpsyzg/opt/ordessa/app/dist/extensions/ordessa.agent-contracts -> /tmp/ordessa-artifact-guard-negative-nxnpsyzg/outside-source",
+    "stack": "Error: artifact directory escapes /tmp/ordessa-artifact-guard-negative-nxnpsyzg/opt/ordessa: /tmp/ordessa-artifact-guard-negative-nxnpsyzg/opt/ordessa/app/dist/extensions/ordessa.agent-contracts -> /tmp/ordessa-artifact-guard-negative-nxnpsyzg/outside-source\n    at firstDirectory (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-product.mjs:37:48)\n    at async main (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-product.mjs:602:21)\n    at async file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-product.mjs:645:18"
+  }
+}
+
+EXIT_CODE=1
+journal-escape
+COMMAND=['node', 'scripts/packaging/closeout-frontend-journal.mjs', '--artifact-root', '/tmp/ordessa-artifact-guard-negative-nxnpsyzg']
+file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-journal.mjs:20
+  if (!condition) throw new Error(message)
+                        ^
+
+Error: artifact directory escapes /tmp/ordessa-artifact-guard-negative-nxnpsyzg/opt/ordessa: /tmp/ordessa-artifact-guard-negative-nxnpsyzg/opt/ordessa/app/dist/extensions/ordessa.agent-contracts -> /tmp/ordessa-artifact-guard-negative-nxnpsyzg/outside-source
+    at assert (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-journal.mjs:20:25)
+    at firstDirectory (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-journal.mjs:61:7)
+    at async file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-journal.mjs:330:19
+
+Node.js v22.22.1
+
+EXIT_CODE=1
+f5-escape
+COMMAND=['node', 'scripts/packaging/closeout-f5-consumers.mjs', '--artifact-root', '/tmp/ordessa-artifact-guard-negative-nxnpsyzg/opt/ordessa']
+file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-f5-consumers.mjs:57
+  if (!condition) throw new Error(message)
+                        ^
+
+Error: artifact path escapes /tmp/ordessa-artifact-guard-negative-nxnpsyzg/opt/ordessa: /tmp/ordessa-artifact-guard-negative-nxnpsyzg/opt/ordessa/app/dist/renderer/shared -> /tmp/ordessa-artifact-guard-negative-nxnpsyzg/outside-source
+    at assert (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-f5-consumers.mjs:57:25)
+    at firstExisting (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-f5-consumers.mjs:33:7)
+    at async file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-f5-consumers.mjs:504:19
+
+Node.js v22.22.1
+
+EXIT_CODE=1
+product-external-runtime
+COMMAND=['node', 'scripts/packaging/closeout-frontend-product.mjs', '--artifact-root', '/tmp/ordessa-artifact-guard-negative-nxnpsyzg', '--electron', '/tmp/external-electron']
+{
+  "schema": "ordessa.closeout-frontend-product.v1",
+  "status": "fail",
+  "failure": {
+    "type": "Error",
+    "message": "artifact acceptance does not allow external Electron or Python overrides",
+    "stack": "Error: artifact acceptance does not allow external Electron or Python overrides\n    at assert (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-product.mjs:20:64)\n    at main (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-product.mjs:596:3)\n    at file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-product.mjs:645:24\n    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:665:26)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)"
+  }
+}
+
+EXIT_CODE=1
+f5-external-runtime
+COMMAND=['node', 'scripts/packaging/closeout-f5-consumers.mjs', '--artifact-root', '/tmp/ordessa-artifact-guard-negative-nxnpsyzg/opt/ordessa', '--electron', '/tmp/external-electron']
+file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-f5-consumers.mjs:57
+  if (!condition) throw new Error(message)
+                        ^
+
+Error: F5 artifact acceptance accepts only --artifact-root; external runtime overrides are forbidden
+    at assert (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-f5-consumers.mjs:57:25)
+    at file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-f5-consumers.mjs:501:1
+
+Node.js v22.22.1
+
+EXIT_CODE=1

@@ -193,3 +193,7 @@ R3强制追加：contracts/relationships.md（E3/F3）§8将受管理关联交�
 ## 013 C2源码检查点增补（不替换上方原任务/旧记录）
 
 T010-12/T011-02/03/05/06 增量：同一Backend owner公开投影、完整条件capture、IndexedDB durable mapping/spent marker、原key query-only及冷恢复scope已实现，源码测试见 evidence/closeout-20261004/frontend-c2-checkpoint.md。浏览器真实持久强退和发行两产品闭环仍未验，原未完成框不勾；107/129不变。T012-09/12实际产物与F5消费者下一ready。UI-T01–08/UI-A01–12仍在独立ledger，不重编号/不抵原验收。
+
+## 013 / UI01 追加证据接续（2026-10-04，不改原编号或历史勾选）
+
+当前原任务107/129；4b产物的提交、只读冷恢复、F5实际共同实例/CAS新增子条件证据见 evidence/closeout-20261004/artifact-guard-review.md。完整Desktop无Profile变体、原生三品牌与真实GUI仍缺，不据窄fixture勾全任务。requestId新增反例正在串行验证，新固定源码产物待重建。UI-T01–08/UI-A01–12仍独立记账 evidence/ui-foundations/ledger.md；更新源包摘要及历史夜验快照见 package-refresh-receipt.json，不用历史验收覆盖增量。

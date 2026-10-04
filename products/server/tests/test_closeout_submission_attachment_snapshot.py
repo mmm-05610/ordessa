@@ -58,6 +58,9 @@ def test_native_effect_uses_attachment_bytes_frozen_before_dispatch(tmp_path: Pa
             "draftId": "attachment-snapshot-draft",
         }})["target"]
         native.bind_backend_target(target)
+        conditions = runtime.wire.dispatch("agent.submission.capture.read", {
+            "target": target, "mode": "existing",
+        })
         response = runtime.wire.dispatch("agent.submitInput", {
             "target": target,
             "draftRevision": 1,
@@ -72,6 +75,7 @@ def test_native_effect_uses_attachment_bytes_frozen_before_dispatch(tmp_path: Pa
                 "configOperationIds": [],
                 "schema": "agent-input/v1",
                 "mode": "existing",
+                "expectedConditions": conditions,
             },
         })
         assert response["outcome"] == "accepted"

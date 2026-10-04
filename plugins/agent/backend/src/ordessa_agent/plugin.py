@@ -255,6 +255,12 @@ class AgentDomainPlugin:
             if not isinstance(capture, Mapping):
                 raise WireError("INVALID_REQUEST", "capture must map")
             if production:
+                expected_conditions = capture.get('expectedConditions')
+                if not isinstance(expected_conditions, Mapping):
+                    raise WireError(
+                        'CAPABILITY_UNSUPPORTED',
+                        'reliable submission requires trusted expectedConditions from agent.submission.capture.read',
+                    )
                 service = submission_service()
                 required = {'submissionId', 'draft', 'configOperationIds', 'schema', 'mode'}
                 if not required.issubset(capture):
@@ -280,7 +286,7 @@ class AgentDomainPlugin:
                     draft=draft,
                     config_operation_ids=tuple(operation_ids),
                     schema=capture['schema'],
-                    expected_conditions=capture.get('expectedConditions'),
+                    expected_conditions=expected_conditions,
                 )
                 try:
                     result = service.submit(item)

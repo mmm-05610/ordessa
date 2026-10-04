@@ -1,0 +1,5 @@
+COMMAND=['.venv/bin/python', '-m', 'pytest', '-q', 'plugins/agent/backend/tests', 'products/server/tests/test_closeout_expected_conditions_wire.py', 'products/server/tests/test_closeout_submission_composition.py', 'products/server/tests/test_closeout_submission_attachment_snapshot.py', 'products/server/tests/test_closeout_historical_submission_query.py', 'products/server/tests/test_closeout_product_crash.py', 'products/server/tests/test_closeout_readonly_recovery.py', 'products/server/tests/test_closeout_submission_scope.py']
+..................................................................       [100%]
+66 passed in 4.99s
+
+EXIT_CODE=0

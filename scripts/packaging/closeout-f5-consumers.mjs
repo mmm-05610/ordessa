@@ -2,7 +2,7 @@
 // Runtime evidence for the packaged F5 surface. This deliberately imports
 // only the built application artifact; it does not resolve source packages.
 import { spawn } from 'node:child_process'
-import { mkdtemp, cp, writeFile, rm, access } from 'node:fs/promises'
+import { mkdtemp, cp, writeFile, rm, access, realpath, readdir, stat } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { createRequire } from 'node:module'
@@ -17,33 +17,40 @@ function option(name) {
 
 function locateArtifactRoot(input) {
   if (!input) throw new Error('usage: closeout-f5-consumers.mjs --artifact-root <extracted /opt/ordessa>')
-  const root = path.resolve(input)
-  const sharedCandidates = [
-    path.join(root, 'app/dist/renderer/shared'),
-    path.join(root, 'dist/renderer/shared'),
-    path.join(root, 'renderer/shared'),
-  ]
-  const electronCandidates = [
-    path.join(root, 'app/electron'),
-    path.join(root, 'electron'),
-    path.join(root, 'app/electron-dist/electron'),
-    path.join(root, 'electron-dist/electron'),
-    path.join(root, 'app/electron/electron'),
-    path.join(root, 'electron/electron'),
-  ]
-  const nativeUiStorageCandidates = [
-    path.join(root, 'app/dist/native-ui-storage.cjs'),
-    path.join(root, 'dist/native-ui-storage.cjs'),
-    path.join(root, 'native-ui-storage.cjs'),
-  ]
-  return { root, sharedCandidates, electronCandidates, nativeUiStorageCandidates }
+  return { root: path.resolve(input) }
 }
 
-async function firstExisting(paths) {
+function isWithin(file, directory) {
+  const relative = path.relative(directory, file)
+  return relative === '' || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative))
+}
+
+async function firstExisting(paths, boundary) {
   for (const candidate of paths) {
-    try { await access(candidate); return candidate } catch { /* keep searching */ }
+    try {
+      await access(candidate)
+      const resolved = await realpath(candidate)
+      assert(isWithin(resolved, boundary), `artifact path escapes ${boundary}: ${candidate} -> ${resolved}`)
+      return resolved
+    } catch (error) {
+      if (String(error?.message).includes('escapes')) throw error
+    }
   }
   return undefined
+}
+
+async function assertTreeWithin(root, boundary, seen = new Set()) {
+  const resolved = await realpath(root)
+  assert(isWithin(resolved, boundary), `artifact member escapes ${boundary}: ${root} -> ${resolved}`)
+  if (seen.has(resolved)) return
+  seen.add(resolved)
+  if (!(await stat(resolved)).isDirectory()) return
+  for (const entry of await readdir(resolved)) {
+    const child = path.join(resolved, entry)
+    const childResolved = await realpath(child)
+    assert(isWithin(childResolved, boundary), `artifact member escapes ${boundary}: ${child} -> ${childResolved}`)
+    if ((await stat(childResolved)).isDirectory()) await assertTreeWithin(childResolved, boundary, seen)
+  }
 }
 
 function assert(condition, message) {
@@ -340,19 +347,38 @@ function finish(result) {
   app.quit();
 }
 app.whenReady().then(async () => {
-  win = new BrowserWindow({ show: false, width: 320, height: 200, webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true } });
+  win = new BrowserWindow({ show: false, width: 320, height: 200, webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false } });
+  const consoleErrors = [];
   win.webContents.on('render-process-gone', (_event, details) => finish({ ok: false, error: 'renderer process gone', details }));
   win.webContents.on('did-fail-load', (_event, code, description) => finish({ ok: false, error: 'renderer load failed', code, description }));
+  win.webContents.on('console-message', (_event, detailsOrLevel, message, lineNumber, sourceId) => {
+    const item = typeof detailsOrLevel === 'object' && detailsOrLevel !== null
+      ? detailsOrLevel
+      : { level: detailsOrLevel, message, lineNumber, sourceId };
+    const level = item.level ?? item.type;
+    if (level === 2 || level === 'error' || level === 'ERROR') {
+      consoleErrors.push({ message: item.message ?? String(message ?? ''), lineNumber: item.lineNumber ?? lineNumber,
+        sourceId: item.sourceId ?? sourceId, level });
+    }
+  });
   await win.loadFile(${JSON.stringify(htmlPath)});
   const deadline = Date.now() + 15000;
   while (!finished && Date.now() < deadline) {
     try {
-      const result = await win.webContents.executeJavaScript('window.__f5ConsumerResult || null');
+      const state = await win.webContents.executeJavaScript('({ result: window.__f5ConsumerResult || null, phase: window.__f5Phase || null, rendererErrors: window.__f5RendererErrors || [] })');
+      const result = state.result || (state.rendererErrors.length
+        ? { ok: false, error: 'renderer error event', rendererErrors: state.rendererErrors, phase: state.phase }
+        : null);
       if (result) { finish(result); return; }
     } catch (error) { finish({ ok: false, error: String(error) }); return; }
     await new Promise(resolve => setTimeout(resolve, 40));
   }
-  finish({ ok: false, error: 'renderer result deadline exceeded' });
+  let rendererState = {};
+  try {
+    rendererState = await win.webContents.executeJavaScript('({ phase: window.__f5Phase || null, rendererErrors: window.__f5RendererErrors || [] })');
+  } catch (error) { rendererState = { inspectionError: String(error) }; }
+  finish({ ok: false, error: 'renderer result deadline exceeded', phase: rendererState.phase ?? null,
+    rendererErrors: rendererState.rendererErrors ?? [], consoleErrors });
 }).catch(error => finish({ ok: false, error: String(error && error.stack || error) }));
 `
 }
@@ -360,6 +386,7 @@ app.whenReady().then(async () => {
 function browserHtml(sharedDir) {
   const imports = {
     '@ordessa/f5/react': pathToFileURL(path.join(sharedDir, 'f5-react.js')).href,
+    '@ordessa/f5/api': pathToFileURL(path.join(sharedDir, 'f5-api.js')).href,
     '@ordessa/f5/runtime': pathToFileURL(path.join(sharedDir, 'f5-runtime.js')).href,
     '@ordessa/react': pathToFileURL(path.join(sharedDir, 'react.js')).href,
     '@ordessa/react-dom/client': pathToFileURL(path.join(sharedDir, 'react-dom-client.js')).href,
@@ -369,8 +396,13 @@ import React from '@ordessa/react';
 import { createRoot } from '@ordessa/react-dom/client';
 import { stateStoreFactory } from '@ordessa/f5/runtime';
 import { useStoreSelection } from '@ordessa/f5/react';
+import { createSelector, selectionReader } from '@ordessa/f5/api';
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 const owner = stateStoreFactory.createOwned({ selected: 'A', unrelated: 0 });
+const nonReactReader = owner.reader();
+const nonReactSelection = selectionReader(nonReactReader, createSelector(snapshot => snapshot.selected));
+const nonReactSnapshots = [];
+const releaseNonReact = nonReactReader.subscribe(() => nonReactSnapshots.push(nonReactReader.getSnapshot()));
 let activeSubscriptions = 0;
 const store = {
   getSnapshot: owner.getSnapshot,
@@ -389,35 +421,60 @@ function Consumer() {
   return React.createElement('output', { id: 'selected' }, selected);
 }
 const root = createRoot(document.getElementById('root'));
-const frame = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+async function settle(label) {
+  window.__f5Phase = label + ':waiting';
+  await new Promise(resolve => setTimeout(resolve, 40));
+  window.__f5Phase = label + ':settled';
+}
 try {
+  window.__f5Phase = 'initial-render:start';
   root.render(React.createElement(Consumer));
-  await frame();
+  await settle('initial-render');
   assert(document.getElementById('selected')?.textContent === 'A', 'initial artifact React render missing');
   assert(renders === 1 && activeSubscriptions === 1, 'initial render/subscription counts incorrect');
+  assert(nonReactReader.getSnapshot() === owner.getSnapshot() && nonReactSelection.get() === 'A',
+    'React and non-React consumers did not begin on the same owner snapshot');
   owner.update(snapshot => ({ ...snapshot, unrelated: 1 }));
-  await frame();
+  await settle('unrelated-update');
   assert(renders === 1, 'unrelated field caused a React render');
   owner.update(snapshot => ({ ...snapshot, selected: 'B' }));
-  await frame();
+  await settle('selected-update');
   assert(document.getElementById('selected')?.textContent === 'B' && renders === 2, 'selected field did not render once');
+  assert(nonReactSelection.get() === 'B' && nonReactSnapshots.length === 2
+    && nonReactSnapshots[1] === owner.getSnapshot(),
+  'React and non-React consumers did not observe the same selected update/snapshot');
   root.unmount();
-  await frame();
+  await settle('react-unmount');
   assert(activeSubscriptions === 0, 'unmount did not release the artifact store subscription');
   owner.update(snapshot => ({ ...snapshot, selected: 'C' }));
-  await frame();
+  await settle('post-unmount-update');
   assert(renders === 2, 'unmounted consumer still rendered');
-  window.__f5ConsumerResult = { ok: true, evidence: { consumer: 'artifact React hook', renders, activeSubscriptions, ignoredUnrelatedUpdate: true, unmountReleasedSubscription: true } };
+  assert(nonReactSelection.get() === 'C' && nonReactSnapshots.at(-1) === owner.getSnapshot(),
+    'non-React consumer did not retain access to the shared owner after React unmount');
+  releaseNonReact.release();
+  owner.update(snapshot => ({ ...snapshot, selected: 'D' }));
+  assert(nonReactSnapshots.length === 3, 'non-React release did not unsubscribe from the shared owner');
+  window.__f5ConsumerResult = { ok: true, evidence: { consumer: 'artifact React hook plus non-React selector on same owner', renders, activeSubscriptions, sharedOwnerSnapshot: true, sharedSelectionUpdates: true, ignoredUnrelatedUpdate: true, reactUnmountReleasedSubscription: true, nonReactReleaseStoppedNotifications: true } };
 } catch (error) {
   try { root.unmount(); } catch {}
   window.__f5ConsumerResult = { ok: false, error: String(error && error.stack || error), evidence: { renders, activeSubscriptions } };
 }
 `
-  return `<!doctype html><meta charset="utf-8"><div id="root"></div><script type="importmap">${JSON.stringify({ imports })}</script><script type="module">${script}</script>`
+  const errorHooks = `<script>
+window.__f5RendererErrors = [];
+window.addEventListener('error', event => window.__f5RendererErrors.push({
+  kind: 'error', message: event.message || String(event.error || 'renderer error'),
+  filename: event.filename || '', line: event.lineno || 0, column: event.colno || 0,
+}));
+window.addEventListener('unhandledrejection', event => window.__f5RendererErrors.push({
+  kind: 'unhandledrejection', reason: String(event.reason?.stack || event.reason),
+}));
+</script>`
+  return `<!doctype html><meta charset="utf-8"><div id="root"></div><script type="importmap">${JSON.stringify({ imports })}</script>${errorHooks}<script type="module">${script}</script>`
 }
 
 async function runArtifactReactScene({ sharedDir, electronPath, tempRoot }) {
-  const reactArtifactFiles = ['f5-react.js', 'f5-runtime.js', 'react.js', 'react-dom-client.js']
+  const reactArtifactFiles = ['f5-react.js', 'f5-api.js', 'f5-runtime.js', 'react.js', 'react-dom-client.js']
   for (const file of reactArtifactFiles) {
     await access(path.join(sharedDir, file))
   }
@@ -433,7 +490,8 @@ async function runArtifactReactScene({ sharedDir, electronPath, tempRoot }) {
 
   // Do not inherit a caller's Electron-as-Node override. A literal "0" makes
   // the browser launch mode explicit while preserving other host variables.
-  const env = { ...process.env, ELECTRON_RUN_AS_NODE: '0' }
+  const env = { ...process.env }
+  delete env.ELECTRON_RUN_AS_NODE
   const child = spawn(electronPath, ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', mainPath], {
     cwd: fixture,
     env,
@@ -470,9 +528,17 @@ async function scene(name, body) {
 }
 
 const artifact = locateArtifactRoot(option('--artifact-root') ?? process.env.ORDESSA_ARTIFACT_ROOT)
-const sharedDir = await firstExisting(artifact.sharedCandidates)
-const electronPath = await firstExisting(artifact.electronCandidates)
-const nativeUiStoragePath = await firstExisting(artifact.nativeUiStorageCandidates)
+artifact.root = await realpath(artifact.root)
+assert(path.basename(artifact.root) === 'ordessa', `expected /opt/ordessa artifact prefix, got ${artifact.root}`)
+assert(path.basename(path.dirname(artifact.root)) === 'opt',
+  `artifact prefix parent must be named opt: ${artifact.root}`)
+assert(args.every((arg, index) => arg === '--artifact-root'
+  || (index > 0 && args[index - 1] === '--artifact-root')),
+'F5 artifact acceptance accepts only --artifact-root; external runtime overrides are forbidden')
+const sharedDir = await firstExisting([path.join(artifact.root, 'app/dist/renderer/shared')], artifact.root)
+const electronPath = await firstExisting([path.join(artifact.root, 'app/electron')], artifact.root)
+const nativeUiStoragePath = await firstExisting([path.join(artifact.root, 'app/dist/native-ui-storage.cjs')], artifact.root)
+if (sharedDir) await assertTreeWithin(sharedDir, artifact.root)
 const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'ordessa-f5-artifact-consumers-'))
 let results
 try {

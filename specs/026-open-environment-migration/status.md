@@ -1,3 +1,17 @@
+requestId串行验证完成：Agent contracts94P/0skip、Chat95P/0skip、typecheck exit0；新旧key边界反例均保留断言。下一ready提交本切片固定源码并完整发行重建，未凭窄绿勾原任务。
+
+## 更新实施包核对与013产物复验（最新，尚未整项收口）
+
+本次HEAD4b320cad97c2e53d3972f224e50302449514a6e3。源UI三文件摘要未变；增量接收reviews/overnight-acceptance-20261004.md，审查快照是0887b95，保留历史并用当前场景证据逐项回应。不覆盖原合同/status/tasks/registry/守卫。接收清单及全部源摘要见evidence/ui-foundations/package-refresh-receipt.json。
+
+4b干净DEB已通过受控Python闭包/产品wire两轮、F5双进程CAS与React/nonReact同owner、真实IndexedDB两个SIGKILL窗口、实际Chat公开adapter有/无Profile两轮及前后端重启原key只读查询。全部原始失败与成功记录见artifact-guard-review.md；这些不能代替完整Desktop变体、三品牌原生生产者、真实IME/GUI或真实模型验收。当前修Chat UUID可能数字开头的请求ID语法缺口：只改未来ID及持久化前拒绝，历史key不改名/不补发；源码串行回归中，新固定SHA发行复验尚待执行。原107/129、UI8task/12case排队仍保留，检查点后继续。
+
+## 013 生产 wire 条件守卫与发行反例修复（中间检查点）
+
+父源码4b320cad97；新增生产 expectedConditions 必需守卫，缺失零提交 journal/native效果，内部后端仍自主捕获。串行定向66P/0skip，第一轮4F62P及修正输入保留。完整DEB重试成功且解包移到仓库外；该4b产物独立Python闭包、UI Token运行身份、默认/无Profile真实产品wire两轮+后端原key幂等回放通过。F5产物API、双进程CAS、React/nonReact同owner通过；5个产物路径反例均拒绝。
+
+详细SHA/哈希/命令/失败见 evidence/closeout-20261004/artifact-guard-review.md 与原始日志。前端IndexedDB kill第一轮因QA协议注册过早失败，仍未验，正在修；下一ready修后串行kill/冷查询、Chat前端产物两轮、新固定SHA完整重构建。原107/129仍保留，不能用窄绿勾完原task。UI01仍8task/12case单列queued；未实施视觉改造。无新增授权问题；不合main、不push、未触碰真实密钥/数据/模型/用户服务。
+
 ## 013 前端 C2 源码检查点（发行与浏览器恢复未验）
 
 生产 Chat 已接 Agent 域严格持久 mapping→possibly-submitted→一次派发链及原 key 查询；点击时冻结可信条件，后端 CAS 对比。源码合同89P、Chat94P、Agent/产品70P、ACP67P及受控集成89P、typecheck退出0；逐场景/失败/限制见 evidence/closeout-20261004/frontend-c2-checkpoint.md。没有凭源码绿勾完整任务：仍107/129，IndexedDB强退/干净发行主链下一ready，UI01继续独立排队。检查点后继续，不等待普通决策确认。

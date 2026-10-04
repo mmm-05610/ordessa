@@ -63,7 +63,8 @@ def _write_config_operation(runtime, target: str, patch: dict[str, object]) -> s
     return result["operationId"]
 
 
-def _capture(*, submission_id: str, revision: int, text: str, operation_id: str, mode: str):
+def _capture(*, submission_id: str, revision: int, text: str, operation_id: str, mode: str,
+             expected_conditions: dict[str, object]):
     return {
         "submissionId": submission_id,
         "draft": {
@@ -75,6 +76,7 @@ def _capture(*, submission_id: str, revision: int, text: str, operation_id: str,
         "configOperationIds": [operation_id],
         "schema": "agent-input/v1",
         "mode": mode,
+        "expectedConditions": expected_conditions,
     }
 
 
@@ -122,9 +124,13 @@ def test_controlled_native_two_rounds_and_restart_history_use_real_product_wire(
         )
         assert runtime.wire.dispatch('agent.config.read', {'target':target})['revision'] == 1
         native.set_mode("createWithConfig")  # explicit fresh-session condition
+        first_conditions = runtime.wire.dispatch("agent.submission.capture.read", {
+            "target": target, "mode": "createWithConfig",
+        })
         first_capture = _capture(
             submission_id="controlled-submission-1", revision=1,
             text="first prompt", operation_id=first_operation, mode="createWithConfig",
+            expected_conditions=first_conditions,
         )
         first = _submit(runtime, target, first_capture)
         assert first["outcome"] == "accepted"
@@ -143,9 +149,13 @@ def test_controlled_native_two_rounds_and_restart_history_use_real_product_wire(
         second_operation = _write_config_operation(runtime, target, {"model": "M2"})
         assert runtime.wire.dispatch('agent.config.read', {'target':target})['revision'] == 3
         native.set_mode("existing")  # explicit continuation of that native session
+        second_conditions = runtime.wire.dispatch("agent.submission.capture.read", {
+            "target": target, "mode": "existing",
+        })
         second_capture = _capture(
             submission_id="controlled-submission-2", revision=2,
             text="second prompt", operation_id=second_operation, mode="existing",
+            expected_conditions=second_conditions,
         )
         second = _submit(runtime, target, second_capture)
         assert second["outcome"] == "accepted"
@@ -259,6 +269,10 @@ def test_missing_native_capability_or_durability_dependency_is_typed_and_has_zer
         capture = _capture(
             submission_id=f"missing-{missing}", revision=1, text="cannot dispatch",
             operation_id=operation_id, mode=mode,
+            # These cases assert the selected dependency's typed refusal. A
+            # placeholder passes only the public shape guard; it does not
+            # claim to be backend-issued trusted conditions.
+            expected_conditions={},
         )
         expected_family = "FORBIDDEN" if missing == "policy" else "CAPABILITY_UNSUPPORTED"
         with pytest.raises(WireError) as failure:

@@ -1,0 +1,643 @@
+COMMAND=['.venv/bin/python', '-m', 'pytest', '-q', 'plugins/agent/backend/tests', 'products/server/tests/test_closeout_expected_conditions_wire.py', 'products/server/tests/test_closeout_submission_composition.py', 'products/server/tests/test_closeout_submission_attachment_snapshot.py', 'products/server/tests/test_closeout_historical_submission_query.py', 'products/server/tests/test_closeout_product_crash.py', 'products/server/tests/test_closeout_readonly_recovery.py', 'products/server/tests/test_closeout_submission_scope.py']
+............F.........................................FFF.........       [100%]
+=================================== FAILURES ===================================
+_ test_production_owner_rejects_claimed_acceptance_without_native_submit_port __
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-862/test_production_owner_rejects_0')
+
+    def test_production_owner_rejects_claimed_acceptance_without_native_submit_port(tmp_path):
+        handlers=methods(AgentDomainPlugin(),tmp_path)
+        draft=handlers['agent.session.resolve']({'location':{
+            'kind':'draft','draftId':'unbound-draft','connectionId':'fixture','contextRevision':1,
+        }})
+>       with pytest.raises(Exception, match='CAPABILITY_UNSUPPORTED|unsupported|unavailable'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'CAPABILITY_UNSUPPORTED|unsupported|unavailable'
+E         Actual message: 'reliable submission requires trusted expectedConditions from agent.submission.capture.read'
+
+plugins/agent/backend/tests/test_closeout_production_owner.py:28: AssertionError
+_ test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects[native-condition] _
+
+params = {'target': 'agent-draft-542eccb2fe1b4b97ab06ceaf36ed3bca', 'mode': 'createWithConfig'}
+
+    def submission_capture_read(params):
+        target = ensure_target(params)
+        service = submission_service()
+        reader = getattr(service, 'capture_conditions', None)
+        if not callable(reader):
+            raise WireError('CAPABILITY_UNSUPPORTED', 'trusted capture conditions unavailable')
+        try:
+>           return reader(target, params.get('mode'), principal_scope='local')
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+plugins/agent/backend/src/ordessa_agent/plugin.py:452: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+plugins/agent/backend/src/ordessa_agent/submission_service.py:418: in capture_conditions
+    binding, environment_binding, config_snapshot, _ = self._resolve_conditions(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_agent.submission_service.AgentSubmissionService object at 0x7b3c30b32870>
+target = 'agent-draft-542eccb2fe1b4b97ab06ceaf36ed3bca'
+mode = 'createWithConfig', principal_scope = 'local'
+
+    def _resolve_conditions(self, target: str, mode: SubmissionMode,
+                            principal_scope: str):
+        if mode not in ("existing", "createWithConfig"):
+            raise ReliableSubmissionUnsupported(
+                f"unsupported conditional submission mode {mode!r}"
+            )
+        declaration = self.declaration
+        supported = (declaration.existing_conditional if mode == "existing"
+                     else declaration.create_with_config_conditional)
+        method_name = "submit_existing" if mode == "existing" else "create_with_config"
+        if supported is not True or not callable(getattr(self.native_submit_port, method_name, None)):
+>           raise ReliableSubmissionUnsupported(
+                f"native adapter does not declare conditional {mode} submission"
+            )
+E           ordessa_agent.submission_journal.ReliableSubmissionUnsupported: native adapter does not declare conditional createWithConfig submission
+
+plugins/agent/backend/src/ordessa_agent/submission_service.py:438: ReliableSubmissionUnsupported
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-862/test_missing_native_capability1')
+missing = 'native-condition'
+
+    @pytest.mark.parametrize("missing", ["native", "native-condition", "fingerprint", "policy"])
+    def test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects(
+        tmp_path, missing,
+    ):
+        mode = "createWithConfig" if missing == "native-condition" else "existing"
+        native = ControlledNativeFixture(
+            tmp_path / "native-effects.sqlite", mode=mode,
+            attachment_bytes={ATTACHMENT_ID: ATTACHMENT_BYTES},
+            create_with_config_conditional=(missing != "native-condition"),
+        )
+        fingerprint = _test_fingerprint_fixture()
+        policy = None
+        if missing == "native":
+            native_port = None
+        else:
+            native_port = native
+        if missing == "fingerprint":
+            fingerprint = None
+        if missing == "policy":
+            # Product's default local policy deliberately refuses agent.submit.
+            # This must remain a typed authorization refusal before any native call.
+            policy = None
+    
+        runtime = _runtime(
+            tmp_path / "server-data", native_port, fingerprint, policy, include_profile=False,
+        )
+        try:
+            runtime.start()
+            target = _resolve_target(runtime)
+            native.bind_backend_target(target)
+            operation_id = _write_config_operation(runtime, target, {"model": "M1"})
+            capture = _capture(
+                submission_id=f"missing-{missing}", revision=1, text="cannot dispatch",
+                operation_id=operation_id, mode=mode,
+                expected_conditions=(
+>                   {} if missing == "native" else runtime.wire.dispatch(
+                        "agent.submission.capture.read", {"target": target, "mode": mode},
+                    )
+                ),
+            )
+
+products/server/tests/test_closeout_submission_composition.py:273: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+apps/server/src/ordessa_server/wire/handlers.py:221: in dispatch
+    result = descriptor.handler(params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+params = {'target': 'agent-draft-542eccb2fe1b4b97ab06ceaf36ed3bca', 'mode': 'createWithConfig'}
+
+    def submission_capture_read(params):
+        target = ensure_target(params)
+        service = submission_service()
+        reader = getattr(service, 'capture_conditions', None)
+        if not callable(reader):
+            raise WireError('CAPABILITY_UNSUPPORTED', 'trusted capture conditions unavailable')
+        try:
+            return reader(target, params.get('mode'), principal_scope='local')
+        except Exception as error:
+>           raise WireError('CAPABILITY_UNSUPPORTED', f'trusted capture conditions unavailable: {error}') from error
+E           server_plugin_api.wire_errors.WireError: trusted capture conditions unavailable: native adapter does not declare conditional createWithConfig submission
+
+plugins/agent/backend/src/ordessa_agent/plugin.py:454: WireError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-862/test_missing_native_capability1/server-data/state/agentbox.sqlite
+_ test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects[fingerprint] _
+
+self = <ordessa_server_product.composition.ServerProductComposition._submission_service_factory.<locals>.ReadOnlySubmissionQueries object at 0x7b3c30b55280>
+target = 'agent-draft-e0f5bded83974633b86d8059fd6c271d', mode = 'existing'
+principal_scope = 'local'
+
+    def _resolve_conditions(self, target: str, mode: SubmissionMode,
+                            principal_scope: str):
+        if mode not in ("existing", "createWithConfig"):
+            raise ReliableSubmissionUnsupported(
+                f"unsupported conditional submission mode {mode!r}"
+            )
+        declaration = self.declaration
+        supported = (declaration.existing_conditional if mode == "existing"
+                     else declaration.create_with_config_conditional)
+        method_name = "submit_existing" if mode == "existing" else "create_with_config"
+        if supported is not True or not callable(getattr(self.native_submit_port, method_name, None)):
+            raise ReliableSubmissionUnsupported(
+                f"native adapter does not declare conditional {mode} submission"
+            )
+        if not callable(getattr(self.native_submit_port, "query", None)):
+            raise ReliableSubmissionUnsupported("native submit adapter has no read-only query surface")
+        resolve = getattr(self.native_submit_port, "resolve_binding", None)
+        if not callable(resolve):
+            raise ReliableSubmissionUnsupported("native submit adapter cannot resolve an owner binding")
+        try:
+            binding = resolve(target)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native owner binding is unavailable: {exc}"
+            ) from exc
+        self._validate_binding_values(target, mode, declaration, binding)
+        try:
+            environment_binding = self.environment.bind(binding.surface_id)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native binding is not an active Environment capability: {exc}"
+            ) from exc
+        if environment_binding.environment != self.environment.environment_id:
+            raise ReliableSubmissionUnsupported(
+                "Environment binding identity does not match the composed Environment"
+            )
+        preflight = getattr(self.environment, "check_invocation", None)
+        if not callable(preflight):
+            raise ReliableSubmissionUnsupported(
+                "Environment has no reliable effect preflight; submission remains unsupported"
+            )
+        try:
+>           preflight_result = preflight(
+                binding.surface_id,
+                guarantee=GuaranteeLevel.RELIABLE,
+                principal=principal_scope,
+                effect=True,
+            )
+
+plugins/agent/backend/src/ordessa_agent/submission_service.py:469: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_server_product.composition.ServerProductComposition.environment_factory.<locals>.ProductEnvironment object at 0x7b3c30b546b0>
+surface_id = 'agent.submit', guarantee = <GuaranteeLevel.RELIABLE: 'reliable'>
+principal = 'local', effect = True
+
+    def check_invocation(
+        self,
+        surface_id: str,
+        *,
+        guarantee: GuaranteeLevel = GuaranteeLevel.RAW,
+        principal: str = "local",
+        effect: bool = True,
+    ) -> InvocationPreflight:
+        """Read-only preflight for a possible invoke; it never spends a key.
+    
+        This is useful to fail closed before a caller writes its own durable
+        submission intent. It checks the current lifecycle capability, effect
+        policy, and (for RELIABLE) the same protected-fingerprint metadata and
+        atomic namespaced dispatch-claim primitives required by ``invoke``.
+        The result is informational only: ``invoke`` repeats these admission
+        checks under the same lifecycle lock and atomically claims the request
+        key immediately before dispatch.
+        """
+        if not isinstance(guarantee, GuaranteeLevel):
+            raise TypeError("guarantee must be a GuaranteeLevel")
+        if not isinstance(effect, bool):
+            raise TypeError("effect must be a bool")
+    
+        with self._admission_lock:
+            self._check_open()
+            self._admit_capability(surface_id)
+    
+            if effect:
+                if self._policy is None:
+                    raise AdmissionRefusedError(
+                        f"policy is unavailable for effectful invoke on {surface_id} for {principal}"
+                    )
+                if not self._policy.admit_invoke(principal, surface_id, guarantee.value):
+>                   raise AdmissionRefusedError(
+                        f"policy refused invoke on {surface_id} for {principal}"
+                    )
+E                   ordessa_environment_api.errors.AdmissionRefusedError: policy refused invoke on agent.submit for local
+
+packages/backend/pacthold/src/pacthold/environment.py:696: AdmissionRefusedError
+
+The above exception was the direct cause of the following exception:
+
+params = {'target': 'agent-draft-e0f5bded83974633b86d8059fd6c271d', 'mode': 'existing'}
+
+    def submission_capture_read(params):
+        target = ensure_target(params)
+        service = submission_service()
+        reader = getattr(service, 'capture_conditions', None)
+        if not callable(reader):
+            raise WireError('CAPABILITY_UNSUPPORTED', 'trusted capture conditions unavailable')
+        try:
+>           return reader(target, params.get('mode'), principal_scope='local')
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+plugins/agent/backend/src/ordessa_agent/plugin.py:452: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+plugins/agent/backend/src/ordessa_agent/submission_service.py:418: in capture_conditions
+    binding, environment_binding, config_snapshot, _ = self._resolve_conditions(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_server_product.composition.ServerProductComposition._submission_service_factory.<locals>.ReadOnlySubmissionQueries object at 0x7b3c30b55280>
+target = 'agent-draft-e0f5bded83974633b86d8059fd6c271d', mode = 'existing'
+principal_scope = 'local'
+
+    def _resolve_conditions(self, target: str, mode: SubmissionMode,
+                            principal_scope: str):
+        if mode not in ("existing", "createWithConfig"):
+            raise ReliableSubmissionUnsupported(
+                f"unsupported conditional submission mode {mode!r}"
+            )
+        declaration = self.declaration
+        supported = (declaration.existing_conditional if mode == "existing"
+                     else declaration.create_with_config_conditional)
+        method_name = "submit_existing" if mode == "existing" else "create_with_config"
+        if supported is not True or not callable(getattr(self.native_submit_port, method_name, None)):
+            raise ReliableSubmissionUnsupported(
+                f"native adapter does not declare conditional {mode} submission"
+            )
+        if not callable(getattr(self.native_submit_port, "query", None)):
+            raise ReliableSubmissionUnsupported("native submit adapter has no read-only query surface")
+        resolve = getattr(self.native_submit_port, "resolve_binding", None)
+        if not callable(resolve):
+            raise ReliableSubmissionUnsupported("native submit adapter cannot resolve an owner binding")
+        try:
+            binding = resolve(target)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native owner binding is unavailable: {exc}"
+            ) from exc
+        self._validate_binding_values(target, mode, declaration, binding)
+        try:
+            environment_binding = self.environment.bind(binding.surface_id)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native binding is not an active Environment capability: {exc}"
+            ) from exc
+        if environment_binding.environment != self.environment.environment_id:
+            raise ReliableSubmissionUnsupported(
+                "Environment binding identity does not match the composed Environment"
+            )
+        preflight = getattr(self.environment, "check_invocation", None)
+        if not callable(preflight):
+            raise ReliableSubmissionUnsupported(
+                "Environment has no reliable effect preflight; submission remains unsupported"
+            )
+        try:
+            preflight_result = preflight(
+                binding.surface_id,
+                guarantee=GuaranteeLevel.RELIABLE,
+                principal=principal_scope,
+                effect=True,
+            )
+        except Exception as exc:
+>           raise ReliableSubmissionUnsupported(
+                f"Environment reliable capability is unavailable: {exc}"
+            ) from exc
+E           ordessa_agent.submission_journal.ReliableSubmissionUnsupported: Environment reliable capability is unavailable: policy refused invoke on agent.submit for local
+
+plugins/agent/backend/src/ordessa_agent/submission_service.py:476: ReliableSubmissionUnsupported
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-862/test_missing_native_capability2')
+missing = 'fingerprint'
+
+    @pytest.mark.parametrize("missing", ["native", "native-condition", "fingerprint", "policy"])
+    def test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects(
+        tmp_path, missing,
+    ):
+        mode = "createWithConfig" if missing == "native-condition" else "existing"
+        native = ControlledNativeFixture(
+            tmp_path / "native-effects.sqlite", mode=mode,
+            attachment_bytes={ATTACHMENT_ID: ATTACHMENT_BYTES},
+            create_with_config_conditional=(missing != "native-condition"),
+        )
+        fingerprint = _test_fingerprint_fixture()
+        policy = None
+        if missing == "native":
+            native_port = None
+        else:
+            native_port = native
+        if missing == "fingerprint":
+            fingerprint = None
+        if missing == "policy":
+            # Product's default local policy deliberately refuses agent.submit.
+            # This must remain a typed authorization refusal before any native call.
+            policy = None
+    
+        runtime = _runtime(
+            tmp_path / "server-data", native_port, fingerprint, policy, include_profile=False,
+        )
+        try:
+            runtime.start()
+            target = _resolve_target(runtime)
+            native.bind_backend_target(target)
+            operation_id = _write_config_operation(runtime, target, {"model": "M1"})
+            capture = _capture(
+                submission_id=f"missing-{missing}", revision=1, text="cannot dispatch",
+                operation_id=operation_id, mode=mode,
+                expected_conditions=(
+>                   {} if missing == "native" else runtime.wire.dispatch(
+                        "agent.submission.capture.read", {"target": target, "mode": mode},
+                    )
+                ),
+            )
+
+products/server/tests/test_closeout_submission_composition.py:273: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+apps/server/src/ordessa_server/wire/handlers.py:221: in dispatch
+    result = descriptor.handler(params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+params = {'target': 'agent-draft-e0f5bded83974633b86d8059fd6c271d', 'mode': 'existing'}
+
+    def submission_capture_read(params):
+        target = ensure_target(params)
+        service = submission_service()
+        reader = getattr(service, 'capture_conditions', None)
+        if not callable(reader):
+            raise WireError('CAPABILITY_UNSUPPORTED', 'trusted capture conditions unavailable')
+        try:
+            return reader(target, params.get('mode'), principal_scope='local')
+        except Exception as error:
+>           raise WireError('CAPABILITY_UNSUPPORTED', f'trusted capture conditions unavailable: {error}') from error
+E           server_plugin_api.wire_errors.WireError: trusted capture conditions unavailable: Environment reliable capability is unavailable: policy refused invoke on agent.submit for local
+
+plugins/agent/backend/src/ordessa_agent/plugin.py:454: WireError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-862/test_missing_native_capability2/server-data/state/agentbox.sqlite
+_ test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects[policy] _
+
+self = <ordessa_agent.submission_service.AgentSubmissionService object at 0x7b3c30cd4c20>
+target = 'agent-draft-11115f2320054d0a8f1073397f9f5277', mode = 'existing'
+principal_scope = 'local'
+
+    def _resolve_conditions(self, target: str, mode: SubmissionMode,
+                            principal_scope: str):
+        if mode not in ("existing", "createWithConfig"):
+            raise ReliableSubmissionUnsupported(
+                f"unsupported conditional submission mode {mode!r}"
+            )
+        declaration = self.declaration
+        supported = (declaration.existing_conditional if mode == "existing"
+                     else declaration.create_with_config_conditional)
+        method_name = "submit_existing" if mode == "existing" else "create_with_config"
+        if supported is not True or not callable(getattr(self.native_submit_port, method_name, None)):
+            raise ReliableSubmissionUnsupported(
+                f"native adapter does not declare conditional {mode} submission"
+            )
+        if not callable(getattr(self.native_submit_port, "query", None)):
+            raise ReliableSubmissionUnsupported("native submit adapter has no read-only query surface")
+        resolve = getattr(self.native_submit_port, "resolve_binding", None)
+        if not callable(resolve):
+            raise ReliableSubmissionUnsupported("native submit adapter cannot resolve an owner binding")
+        try:
+            binding = resolve(target)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native owner binding is unavailable: {exc}"
+            ) from exc
+        self._validate_binding_values(target, mode, declaration, binding)
+        try:
+            environment_binding = self.environment.bind(binding.surface_id)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native binding is not an active Environment capability: {exc}"
+            ) from exc
+        if environment_binding.environment != self.environment.environment_id:
+            raise ReliableSubmissionUnsupported(
+                "Environment binding identity does not match the composed Environment"
+            )
+        preflight = getattr(self.environment, "check_invocation", None)
+        if not callable(preflight):
+            raise ReliableSubmissionUnsupported(
+                "Environment has no reliable effect preflight; submission remains unsupported"
+            )
+        try:
+>           preflight_result = preflight(
+                binding.surface_id,
+                guarantee=GuaranteeLevel.RELIABLE,
+                principal=principal_scope,
+                effect=True,
+            )
+
+plugins/agent/backend/src/ordessa_agent/submission_service.py:469: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_server_product.composition.ServerProductComposition.environment_factory.<locals>.ProductEnvironment object at 0x7b3c30cd73b0>
+surface_id = 'agent.submit', guarantee = <GuaranteeLevel.RELIABLE: 'reliable'>
+principal = 'local', effect = True
+
+    def check_invocation(
+        self,
+        surface_id: str,
+        *,
+        guarantee: GuaranteeLevel = GuaranteeLevel.RAW,
+        principal: str = "local",
+        effect: bool = True,
+    ) -> InvocationPreflight:
+        """Read-only preflight for a possible invoke; it never spends a key.
+    
+        This is useful to fail closed before a caller writes its own durable
+        submission intent. It checks the current lifecycle capability, effect
+        policy, and (for RELIABLE) the same protected-fingerprint metadata and
+        atomic namespaced dispatch-claim primitives required by ``invoke``.
+        The result is informational only: ``invoke`` repeats these admission
+        checks under the same lifecycle lock and atomically claims the request
+        key immediately before dispatch.
+        """
+        if not isinstance(guarantee, GuaranteeLevel):
+            raise TypeError("guarantee must be a GuaranteeLevel")
+        if not isinstance(effect, bool):
+            raise TypeError("effect must be a bool")
+    
+        with self._admission_lock:
+            self._check_open()
+            self._admit_capability(surface_id)
+    
+            if effect:
+                if self._policy is None:
+                    raise AdmissionRefusedError(
+                        f"policy is unavailable for effectful invoke on {surface_id} for {principal}"
+                    )
+                if not self._policy.admit_invoke(principal, surface_id, guarantee.value):
+>                   raise AdmissionRefusedError(
+                        f"policy refused invoke on {surface_id} for {principal}"
+                    )
+E                   ordessa_environment_api.errors.AdmissionRefusedError: policy refused invoke on agent.submit for local
+
+packages/backend/pacthold/src/pacthold/environment.py:696: AdmissionRefusedError
+
+The above exception was the direct cause of the following exception:
+
+params = {'target': 'agent-draft-11115f2320054d0a8f1073397f9f5277', 'mode': 'existing'}
+
+    def submission_capture_read(params):
+        target = ensure_target(params)
+        service = submission_service()
+        reader = getattr(service, 'capture_conditions', None)
+        if not callable(reader):
+            raise WireError('CAPABILITY_UNSUPPORTED', 'trusted capture conditions unavailable')
+        try:
+>           return reader(target, params.get('mode'), principal_scope='local')
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+plugins/agent/backend/src/ordessa_agent/plugin.py:452: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+plugins/agent/backend/src/ordessa_agent/submission_service.py:418: in capture_conditions
+    binding, environment_binding, config_snapshot, _ = self._resolve_conditions(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ordessa_agent.submission_service.AgentSubmissionService object at 0x7b3c30cd4c20>
+target = 'agent-draft-11115f2320054d0a8f1073397f9f5277', mode = 'existing'
+principal_scope = 'local'
+
+    def _resolve_conditions(self, target: str, mode: SubmissionMode,
+                            principal_scope: str):
+        if mode not in ("existing", "createWithConfig"):
+            raise ReliableSubmissionUnsupported(
+                f"unsupported conditional submission mode {mode!r}"
+            )
+        declaration = self.declaration
+        supported = (declaration.existing_conditional if mode == "existing"
+                     else declaration.create_with_config_conditional)
+        method_name = "submit_existing" if mode == "existing" else "create_with_config"
+        if supported is not True or not callable(getattr(self.native_submit_port, method_name, None)):
+            raise ReliableSubmissionUnsupported(
+                f"native adapter does not declare conditional {mode} submission"
+            )
+        if not callable(getattr(self.native_submit_port, "query", None)):
+            raise ReliableSubmissionUnsupported("native submit adapter has no read-only query surface")
+        resolve = getattr(self.native_submit_port, "resolve_binding", None)
+        if not callable(resolve):
+            raise ReliableSubmissionUnsupported("native submit adapter cannot resolve an owner binding")
+        try:
+            binding = resolve(target)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native owner binding is unavailable: {exc}"
+            ) from exc
+        self._validate_binding_values(target, mode, declaration, binding)
+        try:
+            environment_binding = self.environment.bind(binding.surface_id)
+        except Exception as exc:
+            raise ReliableSubmissionUnsupported(
+                f"native binding is not an active Environment capability: {exc}"
+            ) from exc
+        if environment_binding.environment != self.environment.environment_id:
+            raise ReliableSubmissionUnsupported(
+                "Environment binding identity does not match the composed Environment"
+            )
+        preflight = getattr(self.environment, "check_invocation", None)
+        if not callable(preflight):
+            raise ReliableSubmissionUnsupported(
+                "Environment has no reliable effect preflight; submission remains unsupported"
+            )
+        try:
+            preflight_result = preflight(
+                binding.surface_id,
+                guarantee=GuaranteeLevel.RELIABLE,
+                principal=principal_scope,
+                effect=True,
+            )
+        except Exception as exc:
+>           raise ReliableSubmissionUnsupported(
+                f"Environment reliable capability is unavailable: {exc}"
+            ) from exc
+E           ordessa_agent.submission_journal.ReliableSubmissionUnsupported: Environment reliable capability is unavailable: policy refused invoke on agent.submit for local
+
+plugins/agent/backend/src/ordessa_agent/submission_service.py:476: ReliableSubmissionUnsupported
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-862/test_missing_native_capability3')
+missing = 'policy'
+
+    @pytest.mark.parametrize("missing", ["native", "native-condition", "fingerprint", "policy"])
+    def test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects(
+        tmp_path, missing,
+    ):
+        mode = "createWithConfig" if missing == "native-condition" else "existing"
+        native = ControlledNativeFixture(
+            tmp_path / "native-effects.sqlite", mode=mode,
+            attachment_bytes={ATTACHMENT_ID: ATTACHMENT_BYTES},
+            create_with_config_conditional=(missing != "native-condition"),
+        )
+        fingerprint = _test_fingerprint_fixture()
+        policy = None
+        if missing == "native":
+            native_port = None
+        else:
+            native_port = native
+        if missing == "fingerprint":
+            fingerprint = None
+        if missing == "policy":
+            # Product's default local policy deliberately refuses agent.submit.
+            # This must remain a typed authorization refusal before any native call.
+            policy = None
+    
+        runtime = _runtime(
+            tmp_path / "server-data", native_port, fingerprint, policy, include_profile=False,
+        )
+        try:
+            runtime.start()
+            target = _resolve_target(runtime)
+            native.bind_backend_target(target)
+            operation_id = _write_config_operation(runtime, target, {"model": "M1"})
+            capture = _capture(
+                submission_id=f"missing-{missing}", revision=1, text="cannot dispatch",
+                operation_id=operation_id, mode=mode,
+                expected_conditions=(
+>                   {} if missing == "native" else runtime.wire.dispatch(
+                        "agent.submission.capture.read", {"target": target, "mode": mode},
+                    )
+                ),
+            )
+
+products/server/tests/test_closeout_submission_composition.py:273: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+apps/server/src/ordessa_server/wire/handlers.py:221: in dispatch
+    result = descriptor.handler(params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+params = {'target': 'agent-draft-11115f2320054d0a8f1073397f9f5277', 'mode': 'existing'}
+
+    def submission_capture_read(params):
+        target = ensure_target(params)
+        service = submission_service()
+        reader = getattr(service, 'capture_conditions', None)
+        if not callable(reader):
+            raise WireError('CAPABILITY_UNSUPPORTED', 'trusted capture conditions unavailable')
+        try:
+            return reader(target, params.get('mode'), principal_scope='local')
+        except Exception as error:
+>           raise WireError('CAPABILITY_UNSUPPORTED', f'trusted capture conditions unavailable: {error}') from error
+E           server_plugin_api.wire_errors.WireError: trusted capture conditions unavailable: Environment reliable capability is unavailable: policy refused invoke on agent.submit for local
+
+plugins/agent/backend/src/ordessa_agent/plugin.py:454: WireError
+----------------------------- Captured stderr call -----------------------------
+[ensure_schema] called, db=/tmp/pytest-of-maoqh/pytest-862/test_missing_native_capability3/server-data/state/agentbox.sqlite
+=========================== short test summary info ============================
+FAILED plugins/agent/backend/tests/test_closeout_production_owner.py::test_production_owner_rejects_claimed_acceptance_without_native_submit_port
+FAILED plugins/agent/backend::test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects[native-condition]
+FAILED plugins/agent/backend::test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects[fingerprint]
+FAILED plugins/agent/backend::test_missing_native_capability_or_durability_dependency_is_typed_and_has_zero_effects[policy]
+4 failed, 62 passed in 5.67s
+
+EXIT_CODE=1

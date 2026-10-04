@@ -106,10 +106,13 @@ controlled_fixture = Path(sys.argv[6]).resolve(strict=True)
 
 def under(path, root):
     try:
-        Path(path).resolve().relative_to(root)
+        Path(path).resolve().relative_to(Path(root).resolve())
         return True
     except (OSError, ValueError):
         return False
+
+def under_repo_marker(path):
+    return any(marker and under(path, marker) for marker in repo_markers)
 
 report = {
     "interpreter": sys.executable,
@@ -132,7 +135,7 @@ for entry in sys.path:
         continue
     if not under(entry, prefix):
         report["sourceFree"]["violations"].append("sys.path outside artifact: " + entry)
-    if any(marker and (entry == marker or entry.startswith(marker + os.sep)) for marker in repo_markers):
+    if under_repo_marker(entry):
         report["sourceFree"]["violations"].append("repository path in sys.path: " + entry)
 
 installed = {}
@@ -170,10 +173,30 @@ for name in required_imports:
         if origin is None:
             spec = getattr(module, "__spec__", None)
             origin = getattr(spec, "origin", None)
+        namespace_paths = getattr(module, "__path__", None)
+        resolved_namespace_paths = []
+        if namespace_paths is not None:
+            try:
+                resolved_namespace_paths = [str(Path(item).resolve()) for item in namespace_paths]
+            except (OSError, TypeError, ValueError):
+                resolved_namespace_paths = []
+        is_namespace_package = origin is None and bool(resolved_namespace_paths)
         record = {"status": "imported", "origin": origin}
-        if not origin or origin in ("built-in", "frozen") or not under(origin, prefix):
+        if is_namespace_package:
+            record["namespacePaths"] = resolved_namespace_paths
+        origin_in_artifact = bool(origin and origin not in ("built-in", "frozen") and under(origin, prefix))
+        namespace_in_artifact = (is_namespace_package and all(
+            under(path, prefix) and not under_repo_marker(path) for path in resolved_namespace_paths
+        ))
+        if not (origin_in_artifact or namespace_in_artifact):
             record["status"] = "outside-artifact"
-            report["sourceFree"]["violations"].append("import outside artifact: " + name + " at " + str(origin))
+            report["sourceFree"]["violations"].append(
+                "import outside artifact: " + name + " at " + str(origin)
+                + (" namespacePaths=" + repr(resolved_namespace_paths) if resolved_namespace_paths else "")
+            )
+        elif origin_in_artifact and under_repo_marker(origin):
+            record["status"] = "outside-artifact"
+            report["sourceFree"]["violations"].append("import from repository path: " + name + " at " + str(origin))
     except BaseException as exc:
         record = {"status": "failed", "error": type(exc).__name__ + ": " + str(exc)}
         report.setdefault("missingRequired", []).append("import:" + name)
@@ -231,8 +254,10 @@ except (OSError, ValueError):
 host_text = text_at(host_bundle)
 di_checks["hostImportMap"] = ('@ordessa/ui-components/api' in host_text
                                and '/shared/ui-components-api.js' in host_text)
-missing_di = [name for name, passed in di_checks.items() if not passed]
-if not missing_di:
+missing_di_prerequisites = [
+    name for name, passed in di_checks.items() if name != "runtimeIdentity" and not passed
+]
+if not missing_di_prerequisites:
     # Evaluate the built carrier and shared public module through the shipped
     # Electron/V8 runtime. Copies live only in the isolated temp root; bare
     # package imports are redirected to the artifact's own shared files.
@@ -291,7 +316,7 @@ console.log(JSON.stringify({ status: "pass", sameToken: true, sharedTokenType: t
         report["uiComponentsDI"]["runtimeError"] = {
             "type": type(exc).__name__, "message": str(exc),
         }
-    missing_di = [name for name, passed in di_checks.items() if not passed]
+missing_di = [name for name, passed in di_checks.items() if not passed]
 report["uiComponentsDI"] = {
     **report["uiComponentsDI"],
     "status": "pass" if not missing_di else "fail",
@@ -335,12 +360,18 @@ def config_operation(runtime, target, patch):
         raise RuntimeError("Agent config operation did not enter pending state: " + repr(outcome))
     return outcome["operationId"]
 
-def capture(submission_id, revision, text, operation_id, mode):
+def capture_conditions(runtime, target, mode):
+    return require_wire(runtime, "agent.submission.capture.read", {
+        "target": target, "mode": mode,
+    })
+
+def capture(submission_id, revision, text, operation_id, mode, expected_conditions):
     return {
         "submissionId": submission_id,
         "draft": {"draftId": DRAFT_LOCATION["draftId"], "draftRevision": revision,
                   "text": text, "attachmentIds": [ATTACHMENT_ID]},
         "configOperationIds": [operation_id], "schema": "agent-input/v1", "mode": mode,
+        "expectedConditions": expected_conditions,
     }
 
 def submit(runtime, target, captured):
@@ -399,8 +430,9 @@ def run_variant(name, include_profile, root, native_effects_path):
         if first_config.get("revision") != 1:
             raise RuntimeError("first config revision is not 1: " + repr(first_config))
         native.set_mode("createWithConfig")
+        first_conditions = capture_conditions(runtime, target, "createWithConfig")
         first_capture = capture("controlled-submission-1", 1, "first prompt",
-                                first_operation, "createWithConfig")
+                                first_operation, "createWithConfig", first_conditions)
         first = submit(runtime, target, first_capture)
         if first.get("outcome") != "accepted" or first.get("stage") != "completed":
             raise RuntimeError("first controlled native submission was not accepted/completed: " + repr(first))
@@ -414,8 +446,9 @@ def run_variant(name, include_profile, root, native_effects_path):
 
         second_operation = config_operation(runtime, target, {"model": "M2"})
         native.set_mode("existing")
+        second_conditions = capture_conditions(runtime, target, "existing")
         second_capture = capture("controlled-submission-2", 2, "second prompt",
-                                 second_operation, "existing")
+                                 second_operation, "existing", second_conditions)
         second = submit(runtime, target, second_capture)
         if second.get("outcome") != "accepted" or second.get("stage") != "completed":
             raise RuntimeError("second controlled native submission was not accepted/completed: " + repr(second))
@@ -584,9 +617,14 @@ def _run_f5_consumers(artifact_root: Path, work: Path, home: Path,
         "XDG_CACHE_HOME": str(home / ".cache"),
         "XDG_DATA_HOME": str(home / ".local" / "share"),
     }
+    command = [node, str(runner), "--artifact-root", str(artifact_root)]
+    virtual_display = shutil.which("xvfb-run")
+    if virtual_display:
+        # An owned, temporary QA display; never reuse user display credentials.
+        command = [virtual_display, "-a", "--server-args=-screen 0 1440x900x24", *command]
     try:
         completed = subprocess.run(
-            [node, str(runner), "--artifact-root", str(artifact_root)],
+            command,
             cwd=work, env=env, text=True, stdout=subprocess.PIPE,
             stderr=subprocess.PIPE, timeout=min(timeout, 180.0), check=False,
         )
@@ -639,6 +677,8 @@ def _run_f5_consumers(artifact_root: Path, work: Path, home: Path,
         and nonreact and nonreact.get("ok") is True else "fail",
         "runner": str(runner.name),
         "node": str(Path(node).resolve()),
+        "nodeDependency": "external QA tool, not a shipped runtime requirement",
+        "display": "owned temporary Xvfb" if virtual_display else "absent; GUI evidence cannot pass",
         "returnCode": completed.returncode,
         "records": records,
         "parseErrors": parse_errors,

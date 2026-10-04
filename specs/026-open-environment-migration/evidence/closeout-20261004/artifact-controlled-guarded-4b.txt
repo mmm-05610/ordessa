@@ -1,0 +1,4613 @@
+ARTIFACT_SOURCE_HEAD=4b320cad97c2e53d3972f224e50302449514a6e3
+COMMAND=['python3', 'scripts/packaging/closeout-controlled.py', '/tmp/ordessa-026-artifact-y8h5oxy7/extracted', '--timeout', '120', '--json-out', 'specs/026-open-environment-migration/evidence/closeout-20261004/artifact-controlled-guarded-4b.json']
+{
+  "artifactRoot": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted",
+  "f5ConsumerEvidence": {
+    "display": "owned temporary Xvfb",
+    "node": "/usr/bin/node",
+    "nodeDependency": "external QA tool, not a shipped runtime requirement",
+    "parseErrors": [],
+    "records": [
+      {
+        "evidence": {
+          "consumers": 2,
+          "deepFreezeCycleAndSharedReferences": true,
+          "fieldSelectorIgnoresUnrelatedState": true,
+          "independentConsumerRelease": true,
+          "modules": [
+            "f5-runtime.js",
+            "f5-api.js",
+            "f5-bridge.js"
+          ],
+          "reentrantLimitObserved": 100,
+          "sessionOnlyStorageExplicit": true,
+          "shallowFrozenAncestorDescendantFrozen": true,
+          "stableNoopAndBatchPublication": true,
+          "taskAndProjectionDisposed": true,
+          "tempRoot": "/tmp/ordessa-closeout-j1pm936f/cwd/f5-consumer-tmp/ordessa-f5-artifact-consumers-sAXtKs",
+          "throwingSubscriberIsolation": true,
+          "unsupportedShapeRejected": true
+        },
+        "name": "artifact-api-consumers",
+        "ok": true
+      },
+      {
+        "evidence": {
+          "adapterExport": "@ordessa/native-bridge/ui-storage",
+          "independentWriterPids": [
+            1272067,
+            1272068
+          ],
+          "modules": [
+            "f5-runtime.js",
+            "native-ui-storage.cjs"
+          ],
+          "namespaceIsolationAndDeletion": true,
+          "reopenedWinnerWidth": 200,
+          "revisionChanged": true,
+          "revisionsUniqueAcrossRecords": true,
+          "sameRevisionRace": [
+            "conflict",
+            "written"
+          ],
+          "sensitiveValueRejectedBeforePersistence": true,
+          "unsupportedSchemaPreserved": true
+        },
+        "name": "artifact-file-ui-storage",
+        "ok": true
+      },
+      {
+        "evidence": {
+          "activeSubscriptions": 0,
+          "browserWindow": "hidden",
+          "chromiumSandbox": "not proven: this fixture uses --no-sandbox",
+          "consumer": "artifact React hook plus non-React selector on same owner",
+          "electronPath": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/app/electron",
+          "ignoredUnrelatedUpdate": true,
+          "isolatedUserData": true,
+          "launchFlags": [
+            "--no-sandbox",
+            "--disable-gpu",
+            "--disable-dev-shm-usage"
+          ],
+          "nonReactReleaseStoppedNotifications": true,
+          "reactUnmountReleasedSubscription": true,
+          "renders": 2,
+          "sharedArtifactFiles": [
+            "f5-react.js",
+            "f5-api.js",
+            "f5-runtime.js",
+            "react.js",
+            "react-dom-client.js"
+          ],
+          "sharedOwnerSnapshot": true,
+          "sharedSelectionUpdates": true
+        },
+        "name": "artifact-react-consumer",
+        "ok": true
+      }
+    ],
+    "returnCode": 0,
+    "runner": "closeout-f5-consumers.mjs",
+    "status": "pass",
+    "stderr": ""
+  },
+  "interpreter": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/bin/python3.12",
+  "probe": {
+    "controlledFixture": {
+      "effectStores": "separate SQLite files from product Environment and Agent journal",
+      "isolatedPath": "/tmp/ordessa-closeout-j1pm936f/controlled_native_fixture.py",
+      "name": "controlled_native_fixture.py",
+      "status": "pass"
+    },
+    "distributions": {
+      "ordessa-agent": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "0.1.0"
+      },
+      "ordessa-environment-api": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "0.1.0"
+      },
+      "ordessa-harness": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "2.0.0a1"
+      },
+      "ordessa-harness-api": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "1.0.0a1"
+      },
+      "ordessa-model-provider": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "2.0.0a1"
+      },
+      "ordessa-model-provider-profile": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "2.0.0a1"
+      },
+      "ordessa-permissions-adapters": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "0.1.0"
+      },
+      "ordessa-permissions-api": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "0.1.0"
+      },
+      "ordessa-permissions-backend": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "0.1.0"
+      },
+      "ordessa-persistence-sqlite": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "0.1.0"
+      },
+      "ordessa-profile": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "2.0.0a1"
+      },
+      "ordessa-sandbox-adapters": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "0.1.0"
+      },
+      "ordessa-sandbox-api": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "0.1.0"
+      },
+      "ordessa-sandbox-backend": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "0.1.0"
+      },
+      "ordessa-server": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "2.0.0a1"
+      },
+      "ordessa-server-compat": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "2.0.0a1"
+      },
+      "ordessa-server-plugin-api": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "0.1.0"
+      },
+      "ordessa-server-product": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "2.0.0a1"
+      },
+      "ordessa-skills": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "2.0.0a1"
+      },
+      "ordessa-workspace": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "2.0.0a1"
+      },
+      "pacthold": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "2.0.0a1"
+      },
+      "pacthold-runtime-compat": {
+        "editable": false,
+        "location": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages",
+        "version": "0.1.0"
+      }
+    },
+    "environment": {
+      "NODE_OPTIONS": null,
+      "NODE_PATH": null,
+      "ORDESSA_BUNDLED_ROOT": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa",
+      "ORDESSA_DATA_ROOT": "/tmp/ordessa-closeout-j1pm936f/data",
+      "PYTHONHOME": null,
+      "PYTHONPATH": null,
+      "VIRTUAL_ENV": null
+    },
+    "f5Consumers": {
+      "display": "owned temporary Xvfb",
+      "node": "/usr/bin/node",
+      "nodeDependency": "external QA tool, not a shipped runtime requirement",
+      "parseErrors": [],
+      "records": [
+        {
+          "evidence": {
+            "consumers": 2,
+            "deepFreezeCycleAndSharedReferences": true,
+            "fieldSelectorIgnoresUnrelatedState": true,
+            "independentConsumerRelease": true,
+            "modules": [
+              "f5-runtime.js",
+              "f5-api.js",
+              "f5-bridge.js"
+            ],
+            "reentrantLimitObserved": 100,
+            "sessionOnlyStorageExplicit": true,
+            "shallowFrozenAncestorDescendantFrozen": true,
+            "stableNoopAndBatchPublication": true,
+            "taskAndProjectionDisposed": true,
+            "tempRoot": "/tmp/ordessa-closeout-j1pm936f/cwd/f5-consumer-tmp/ordessa-f5-artifact-consumers-sAXtKs",
+            "throwingSubscriberIsolation": true,
+            "unsupportedShapeRejected": true
+          },
+          "name": "artifact-api-consumers",
+          "ok": true
+        },
+        {
+          "evidence": {
+            "adapterExport": "@ordessa/native-bridge/ui-storage",
+            "independentWriterPids": [
+              1272067,
+              1272068
+            ],
+            "modules": [
+              "f5-runtime.js",
+              "native-ui-storage.cjs"
+            ],
+            "namespaceIsolationAndDeletion": true,
+            "reopenedWinnerWidth": 200,
+            "revisionChanged": true,
+            "revisionsUniqueAcrossRecords": true,
+            "sameRevisionRace": [
+              "conflict",
+              "written"
+            ],
+            "sensitiveValueRejectedBeforePersistence": true,
+            "unsupportedSchemaPreserved": true
+          },
+          "name": "artifact-file-ui-storage",
+          "ok": true
+        },
+        {
+          "evidence": {
+            "activeSubscriptions": 0,
+            "browserWindow": "hidden",
+            "chromiumSandbox": "not proven: this fixture uses --no-sandbox",
+            "consumer": "artifact React hook plus non-React selector on same owner",
+            "electronPath": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/app/electron",
+            "ignoredUnrelatedUpdate": true,
+            "isolatedUserData": true,
+            "launchFlags": [
+              "--no-sandbox",
+              "--disable-gpu",
+              "--disable-dev-shm-usage"
+            ],
+            "nonReactReleaseStoppedNotifications": true,
+            "reactUnmountReleasedSubscription": true,
+            "renders": 2,
+            "sharedArtifactFiles": [
+              "f5-react.js",
+              "f5-api.js",
+              "f5-runtime.js",
+              "react.js",
+              "react-dom-client.js"
+            ],
+            "sharedOwnerSnapshot": true,
+            "sharedSelectionUpdates": true
+          },
+          "name": "artifact-react-consumer",
+          "ok": true
+        }
+      ],
+      "returnCode": 0,
+      "runner": "closeout-f5-consumers.mjs",
+      "status": "pass",
+      "stderr": ""
+    },
+    "imports": {
+      "ordessa_agent": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_agent/__init__.py",
+        "status": "imported"
+      },
+      "ordessa_environment_api": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_environment_api/__init__.py",
+        "status": "imported"
+      },
+      "ordessa_harness": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_harness/__init__.py",
+        "status": "imported"
+      },
+      "ordessa_harness_api": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_harness_api/__init__.py",
+        "status": "imported"
+      },
+      "ordessa_model_provider": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_model_provider/__init__.py",
+        "status": "imported"
+      },
+      "ordessa_model_provider_profile": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_model_provider_profile/__init__.py",
+        "status": "imported"
+      },
+      "ordessa_permissions_adapters": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_permissions_adapters/__init__.py",
+        "status": "imported"
+      },
+      "ordessa_permissions_api": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_permissions_api/__init__.py",
+        "status": "imported"
+      },
+      "ordessa_permissions_backend": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_permissions_backend/__init__.py",
+        "status": "imported"
+      },
+      "ordessa_persistence_sqlite": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_persistence_sqlite/__init__.py",
+        "status": "imported"
+      },
+      "ordessa_profile": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_profile/__init__.py",
+        "status": "imported"
+      },
+      "ordessa_sandbox_adapters": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_sandbox_adapters/__init__.py",
+        "status": "imported"
+      },
+      "ordessa_sandbox_api": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_sandbox_api/__init__.py",
+        "status": "imported"
+      },
+      "ordessa_sandbox_backend": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_sandbox_backend/__init__.py",
+        "status": "imported"
+      },
+      "ordessa_server": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_server/__init__.py",
+        "status": "imported"
+      },
+      "ordessa_server_compat": {
+        "namespacePaths": [
+          "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_server_compat"
+        ],
+        "origin": null,
+        "status": "imported"
+      },
+      "ordessa_server_product": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_server_product/__init__.py",
+        "status": "imported"
+      },
+      "ordessa_skills": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_skills/__init__.py",
+        "status": "imported"
+      },
+      "ordessa_workspace": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/ordessa_workspace/__init__.py",
+        "status": "imported"
+      },
+      "pacthold": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/pacthold/__init__.py",
+        "status": "imported"
+      },
+      "pacthold_runtime_compat": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/pacthold_runtime_compat/__init__.py",
+        "status": "imported"
+      },
+      "server_plugin_api": {
+        "origin": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages/server_plugin_api/__init__.py",
+        "status": "imported"
+      }
+    },
+    "interpreter": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/bin/python3.12",
+    "prefix": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa",
+    "productSelection": {
+      "composition": "ServerProductComposition",
+      "pluginIds": [
+        "ordessa.workspace",
+        "ordessa.server-compat",
+        "ordessa.harness.acp",
+        "ordessa.model-provider",
+        "ordessa.profile",
+        "ordessa.sandbox",
+        "ordessa.sandbox-adapters",
+        "permissions-backend",
+        "ordessa.permissions-adapters",
+        "ordessa.agent"
+      ],
+      "status": "resolved"
+    },
+    "productVariants": {
+      "withProfile": {
+        "agentSubmission": {
+          "outcomes": [
+            "accepted",
+            "accepted"
+          ],
+          "stages": [
+            "completed",
+            "completed"
+          ],
+          "status": "pass",
+          "wireRounds": [
+            {
+              "outcome": "accepted",
+              "round": 1,
+              "stage": "completed",
+              "submissionId": "controlled-submission-1"
+            },
+            {
+              "outcome": "accepted",
+              "round": 2,
+              "stage": "completed",
+              "submissionId": "controlled-submission-2"
+            }
+          ]
+        },
+        "controlledHarness": {
+          "attachmentFixture": "immutable-bytes-in-isolated-test-root",
+          "attachmentSha256": "edef69930d96996ba9057466bdcc8b16de0fbb5ffea9211b7c46726a3d8049d0",
+          "effectCounts": [
+            1,
+            1
+          ],
+          "modeDispatches": [
+            "createWithConfig",
+            "existing"
+          ],
+          "separateResults": [
+            "configApply",
+            "inputAcceptance",
+            "runResult"
+          ],
+          "status": "pass"
+        },
+        "profileIncluded": true,
+        "rounds": [
+          {
+            "configRevision": 4,
+            "hello": {
+              "status": "returned",
+              "value": {
+                "auth": {
+                  "required": true,
+                  "schemes": [
+                    "session_token"
+                  ]
+                },
+                "capabilities": [
+                  {
+                    "id": "server.hello",
+                    "supported": true
+                  },
+                  {
+                    "id": "workspaces.browse",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "workspaces.open",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "workspaces.list",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "workspaces.archive",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "workspaces.gitStatus",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "executions.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "executions.get",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.memory",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.subagentGrants",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.publishSkill",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.publishMcp",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.publishPlugin",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.bind",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.unbind",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.bindings",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.syncCatalog",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.catalog",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.installFromCatalog",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.probe",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.create",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.update",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.setEnabled",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.delete",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.triggers",
+                    "supported": true
+                  },
+                  {
+                    "id": "accounts.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "accounts.create",
+                    "supported": true
+                  },
+                  {
+                    "id": "accounts.bind",
+                    "supported": true
+                  },
+                  {
+                    "id": "accounts.importAsset",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerArtifacts.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerArtifacts.install",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerArtifacts.rollback",
+                    "supported": true
+                  },
+                  {
+                    "id": "usage.aggregate",
+                    "supported": true
+                  },
+                  {
+                    "id": "usage.export",
+                    "supported": true
+                  },
+                  {
+                    "id": "config.describe",
+                    "supported": true
+                  },
+                  {
+                    "id": "config.resolve",
+                    "supported": true
+                  },
+                  {
+                    "id": "sessions.list",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.update",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.archive",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.createAndSend",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.send",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.switchProfile",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sendOutcome.query",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "queue.get",
+                    "supported": true
+                  },
+                  {
+                    "id": "queue.withdraw",
+                    "supported": true
+                  },
+                  {
+                    "id": "runs.stop",
+                    "supported": true
+                  },
+                  {
+                    "id": "approvals.decide",
+                    "supported": true
+                  },
+                  {
+                    "id": "history.snapshot",
+                    "supported": true
+                  },
+                  {
+                    "id": "acp.channel.open",
+                    "supported": true
+                  },
+                  {
+                    "id": "acp.sessions.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "acp.channel.release",
+                    "supported": true
+                  },
+                  {
+                    "id": "acp.submission.authorize",
+                    "reason": "ACP admission authority is unavailable",
+                    "supported": false
+                  },
+                  {
+                    "id": "acp.permission.authorize",
+                    "reason": "ACP admission authority is unavailable",
+                    "supported": false
+                  },
+                  {
+                    "id": "providerModels.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.create",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.update",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.archive",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.probeModels",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.probeConnection",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.catalogue",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.saveProviderConfig",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.probeProvider",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.inspectChoice",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.chooseForSession",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.queryChoice",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.reconcileChoice",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.beginTurnApplication",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.importApiKey",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.queryApiKeyImport",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.configuredHarnesses",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.listProfiles",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.getProfile",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.createProfile",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.renameProfile",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.saveProfile",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.archiveProfile",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.restoreProfile",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.describeFacets",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.resolvePreview",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.profileCatalog",
+                    "supported": true
+                  },
+                  {
+                    "id": "sandbox.describe",
+                    "supported": true
+                  },
+                  {
+                    "id": "permissions.approvals.decide",
+                    "supported": true
+                  },
+                  {
+                    "id": "permissions.approvals.query",
+                    "supported": true
+                  },
+                  {
+                    "id": "permissions.policy.describe",
+                    "supported": true
+                  },
+                  {
+                    "id": "permissions.authority.query",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.submission.scope",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.submission.capture.read",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.observe",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.release",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.session.resolve",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.prepare",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.read",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.submitOperation",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.submitInput",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.submission.query",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.session.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.run.query",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.interaction.record",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.interaction.list",
+                    "supported": true
+                  }
+                ],
+                "harnesses": [],
+                "protocolVersion": "wire/1",
+                "serverId": "server_02f0f447c3854c7ba0aefe24c62e1e86"
+              }
+            },
+            "round": 1,
+            "started": true,
+            "submissions": [
+              {
+                "configApply": {
+                  "operationIds": [
+                    "op-agent-draft-97742013437443658cb6e046b37287f1-1"
+                  ],
+                  "outcome": "applied"
+                },
+                "inputAcceptance": {
+                  "draftRevision": 1,
+                  "outcome": "accepted",
+                  "session": {
+                    "generation": 1,
+                    "nativeSessionId": "native-session-controlled-1",
+                    "ownerRef": "native-owner:controlled-1",
+                    "sessionId": "logical-session-controlled-1"
+                  }
+                },
+                "outcome": "accepted",
+                "replayed": false,
+                "request": {
+                  "environmentNamespace": "environment-34db1bd9411b423695fd02f93d33341e",
+                  "principalScope": "local",
+                  "requestId": "controlled-submission-1"
+                },
+                "resend": false,
+                "runResult": {
+                  "outcome": "running",
+                  "runId": "run-controlled-submission-1"
+                },
+                "stage": "completed",
+                "submissionId": "controlled-submission-1"
+              },
+              {
+                "configApply": {
+                  "operationIds": [
+                    "op-agent-draft-97742013437443658cb6e046b37287f1-2"
+                  ],
+                  "outcome": "applied"
+                },
+                "inputAcceptance": {
+                  "draftRevision": 2,
+                  "outcome": "accepted",
+                  "session": {
+                    "generation": 1,
+                    "nativeSessionId": "native-session-controlled-1",
+                    "ownerRef": "native-owner:controlled-1",
+                    "sessionId": "logical-session-controlled-1"
+                  }
+                },
+                "outcome": "accepted",
+                "replayed": false,
+                "request": {
+                  "environmentNamespace": "environment-34db1bd9411b423695fd02f93d33341e",
+                  "principalScope": "local",
+                  "requestId": "controlled-submission-2"
+                },
+                "resend": false,
+                "runResult": {
+                  "outcome": "running",
+                  "runId": "run-controlled-submission-2"
+                },
+                "stage": "completed",
+                "submissionId": "controlled-submission-2"
+              }
+            ],
+            "target": "agent-draft-97742013437443658cb6e046b37287f1"
+          },
+          {
+            "hello": {
+              "status": "returned",
+              "value": {
+                "auth": {
+                  "required": true,
+                  "schemes": [
+                    "session_token"
+                  ]
+                },
+                "capabilities": [
+                  {
+                    "id": "server.hello",
+                    "supported": true
+                  },
+                  {
+                    "id": "workspaces.browse",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "workspaces.open",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "workspaces.list",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "workspaces.archive",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "workspaces.gitStatus",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "executions.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "executions.get",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.memory",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.subagentGrants",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.publishSkill",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.publishMcp",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.publishPlugin",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.bind",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.unbind",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.bindings",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.syncCatalog",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.catalog",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.installFromCatalog",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.probe",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.create",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.update",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.setEnabled",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.delete",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.triggers",
+                    "supported": true
+                  },
+                  {
+                    "id": "accounts.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "accounts.create",
+                    "supported": true
+                  },
+                  {
+                    "id": "accounts.bind",
+                    "supported": true
+                  },
+                  {
+                    "id": "accounts.importAsset",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerArtifacts.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerArtifacts.install",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerArtifacts.rollback",
+                    "supported": true
+                  },
+                  {
+                    "id": "usage.aggregate",
+                    "supported": true
+                  },
+                  {
+                    "id": "usage.export",
+                    "supported": true
+                  },
+                  {
+                    "id": "config.describe",
+                    "supported": true
+                  },
+                  {
+                    "id": "config.resolve",
+                    "supported": true
+                  },
+                  {
+                    "id": "sessions.list",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.update",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.archive",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.createAndSend",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.send",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.switchProfile",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sendOutcome.query",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "queue.get",
+                    "supported": true
+                  },
+                  {
+                    "id": "queue.withdraw",
+                    "supported": true
+                  },
+                  {
+                    "id": "runs.stop",
+                    "supported": true
+                  },
+                  {
+                    "id": "approvals.decide",
+                    "supported": true
+                  },
+                  {
+                    "id": "history.snapshot",
+                    "supported": true
+                  },
+                  {
+                    "id": "acp.channel.open",
+                    "supported": true
+                  },
+                  {
+                    "id": "acp.sessions.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "acp.channel.release",
+                    "supported": true
+                  },
+                  {
+                    "id": "acp.submission.authorize",
+                    "reason": "ACP admission authority is unavailable",
+                    "supported": false
+                  },
+                  {
+                    "id": "acp.permission.authorize",
+                    "reason": "ACP admission authority is unavailable",
+                    "supported": false
+                  },
+                  {
+                    "id": "providerModels.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.create",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.update",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.archive",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.probeModels",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.probeConnection",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.catalogue",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.saveProviderConfig",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.probeProvider",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.inspectChoice",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.chooseForSession",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.queryChoice",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.reconcileChoice",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.beginTurnApplication",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.importApiKey",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.queryApiKeyImport",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.configuredHarnesses",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.listProfiles",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.getProfile",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.createProfile",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.renameProfile",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.saveProfile",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.archiveProfile",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.restoreProfile",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.describeFacets",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.resolvePreview",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.v2.profileCatalog",
+                    "supported": true
+                  },
+                  {
+                    "id": "sandbox.describe",
+                    "supported": true
+                  },
+                  {
+                    "id": "permissions.approvals.decide",
+                    "supported": true
+                  },
+                  {
+                    "id": "permissions.approvals.query",
+                    "supported": true
+                  },
+                  {
+                    "id": "permissions.policy.describe",
+                    "supported": true
+                  },
+                  {
+                    "id": "permissions.authority.query",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.submission.scope",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.submission.capture.read",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.observe",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.release",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.session.resolve",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.prepare",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.read",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.submitOperation",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.submitInput",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.submission.query",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.session.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.run.query",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.interaction.record",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.interaction.list",
+                    "supported": true
+                  }
+                ],
+                "harnesses": [],
+                "protocolVersion": "wire/1",
+                "serverId": "server_02f0f447c3854c7ba0aefe24c62e1e86"
+              }
+            },
+            "round": 2,
+            "started": true
+          }
+        ],
+        "status": "pass",
+        "twoRoundHistory": {
+          "nativeEffectCounts": [
+            1,
+            1
+          ],
+          "replayDidNotRedispatch": true,
+          "sessionHistorySource": "native-query",
+          "status": "pass",
+          "submissionQueries": 2,
+          "targetStableAcrossRestart": true
+        },
+        "wireSubmissionRounds": [
+          {
+            "outcome": "accepted",
+            "round": 1,
+            "stage": "completed",
+            "submissionId": "controlled-submission-1"
+          },
+          {
+            "outcome": "accepted",
+            "round": 2,
+            "stage": "completed",
+            "submissionId": "controlled-submission-2"
+          }
+        ]
+      },
+      "withoutProfile": {
+        "agentSubmission": {
+          "outcomes": [
+            "accepted",
+            "accepted"
+          ],
+          "stages": [
+            "completed",
+            "completed"
+          ],
+          "status": "pass",
+          "wireRounds": [
+            {
+              "outcome": "accepted",
+              "round": 1,
+              "stage": "completed",
+              "submissionId": "controlled-submission-1"
+            },
+            {
+              "outcome": "accepted",
+              "round": 2,
+              "stage": "completed",
+              "submissionId": "controlled-submission-2"
+            }
+          ]
+        },
+        "controlledHarness": {
+          "attachmentFixture": "immutable-bytes-in-isolated-test-root",
+          "attachmentSha256": "edef69930d96996ba9057466bdcc8b16de0fbb5ffea9211b7c46726a3d8049d0",
+          "effectCounts": [
+            1,
+            1
+          ],
+          "modeDispatches": [
+            "createWithConfig",
+            "existing"
+          ],
+          "separateResults": [
+            "configApply",
+            "inputAcceptance",
+            "runResult"
+          ],
+          "status": "pass"
+        },
+        "profileIncluded": false,
+        "rounds": [
+          {
+            "configRevision": 4,
+            "hello": {
+              "status": "returned",
+              "value": {
+                "auth": {
+                  "required": true,
+                  "schemes": [
+                    "session_token"
+                  ]
+                },
+                "capabilities": [
+                  {
+                    "id": "server.hello",
+                    "supported": true
+                  },
+                  {
+                    "id": "workspaces.browse",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "workspaces.open",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "workspaces.list",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "workspaces.archive",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "workspaces.gitStatus",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "executions.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "executions.get",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.memory",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.subagentGrants",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.publishSkill",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.publishMcp",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.publishPlugin",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.bind",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.unbind",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.bindings",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.syncCatalog",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.catalog",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.installFromCatalog",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.probe",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.create",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.update",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.setEnabled",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.delete",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.triggers",
+                    "supported": true
+                  },
+                  {
+                    "id": "accounts.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "accounts.create",
+                    "supported": true
+                  },
+                  {
+                    "id": "accounts.bind",
+                    "supported": true
+                  },
+                  {
+                    "id": "accounts.importAsset",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerArtifacts.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerArtifacts.install",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerArtifacts.rollback",
+                    "supported": true
+                  },
+                  {
+                    "id": "usage.aggregate",
+                    "supported": true
+                  },
+                  {
+                    "id": "usage.export",
+                    "supported": true
+                  },
+                  {
+                    "id": "config.describe",
+                    "supported": true
+                  },
+                  {
+                    "id": "config.resolve",
+                    "supported": true
+                  },
+                  {
+                    "id": "sessions.list",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.update",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.archive",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.createAndSend",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.send",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.switchProfile",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sendOutcome.query",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "queue.get",
+                    "supported": true
+                  },
+                  {
+                    "id": "queue.withdraw",
+                    "supported": true
+                  },
+                  {
+                    "id": "runs.stop",
+                    "supported": true
+                  },
+                  {
+                    "id": "approvals.decide",
+                    "supported": true
+                  },
+                  {
+                    "id": "history.snapshot",
+                    "supported": true
+                  },
+                  {
+                    "id": "acp.channel.open",
+                    "supported": true
+                  },
+                  {
+                    "id": "acp.sessions.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "acp.channel.release",
+                    "supported": true
+                  },
+                  {
+                    "id": "acp.submission.authorize",
+                    "reason": "ACP admission authority is unavailable",
+                    "supported": false
+                  },
+                  {
+                    "id": "acp.permission.authorize",
+                    "reason": "ACP admission authority is unavailable",
+                    "supported": false
+                  },
+                  {
+                    "id": "providerModels.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.create",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.update",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.archive",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.probeModels",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.probeConnection",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.catalogue",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.saveProviderConfig",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.probeProvider",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.inspectChoice",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.chooseForSession",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.queryChoice",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.reconcileChoice",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.beginTurnApplication",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.importApiKey",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.queryApiKeyImport",
+                    "supported": true
+                  },
+                  {
+                    "id": "sandbox.describe",
+                    "supported": true
+                  },
+                  {
+                    "id": "permissions.approvals.decide",
+                    "supported": true
+                  },
+                  {
+                    "id": "permissions.approvals.query",
+                    "supported": true
+                  },
+                  {
+                    "id": "permissions.policy.describe",
+                    "supported": true
+                  },
+                  {
+                    "id": "permissions.authority.query",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.submission.scope",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.submission.capture.read",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.observe",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.release",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.session.resolve",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.prepare",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.read",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.submitOperation",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.submitInput",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.submission.query",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.session.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.run.query",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.interaction.record",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.interaction.list",
+                    "supported": true
+                  }
+                ],
+                "harnesses": [],
+                "protocolVersion": "wire/1",
+                "serverId": "server_ff9ec41eaef948b49d34a006314bd849"
+              }
+            },
+            "round": 1,
+            "started": true,
+            "submissions": [
+              {
+                "configApply": {
+                  "operationIds": [
+                    "op-agent-draft-27492b4b093543aea8e07f375909030c-1"
+                  ],
+                  "outcome": "applied"
+                },
+                "inputAcceptance": {
+                  "draftRevision": 1,
+                  "outcome": "accepted",
+                  "session": {
+                    "generation": 1,
+                    "nativeSessionId": "native-session-controlled-1",
+                    "ownerRef": "native-owner:controlled-1",
+                    "sessionId": "logical-session-controlled-1"
+                  }
+                },
+                "outcome": "accepted",
+                "replayed": false,
+                "request": {
+                  "environmentNamespace": "environment-342c875ccf6d4e838ef0322fa579a3fb",
+                  "principalScope": "local",
+                  "requestId": "controlled-submission-1"
+                },
+                "resend": false,
+                "runResult": {
+                  "outcome": "running",
+                  "runId": "run-controlled-submission-1"
+                },
+                "stage": "completed",
+                "submissionId": "controlled-submission-1"
+              },
+              {
+                "configApply": {
+                  "operationIds": [
+                    "op-agent-draft-27492b4b093543aea8e07f375909030c-2"
+                  ],
+                  "outcome": "applied"
+                },
+                "inputAcceptance": {
+                  "draftRevision": 2,
+                  "outcome": "accepted",
+                  "session": {
+                    "generation": 1,
+                    "nativeSessionId": "native-session-controlled-1",
+                    "ownerRef": "native-owner:controlled-1",
+                    "sessionId": "logical-session-controlled-1"
+                  }
+                },
+                "outcome": "accepted",
+                "replayed": false,
+                "request": {
+                  "environmentNamespace": "environment-342c875ccf6d4e838ef0322fa579a3fb",
+                  "principalScope": "local",
+                  "requestId": "controlled-submission-2"
+                },
+                "resend": false,
+                "runResult": {
+                  "outcome": "running",
+                  "runId": "run-controlled-submission-2"
+                },
+                "stage": "completed",
+                "submissionId": "controlled-submission-2"
+              }
+            ],
+            "target": "agent-draft-27492b4b093543aea8e07f375909030c"
+          },
+          {
+            "hello": {
+              "status": "returned",
+              "value": {
+                "auth": {
+                  "required": true,
+                  "schemes": [
+                    "session_token"
+                  ]
+                },
+                "capabilities": [
+                  {
+                    "id": "server.hello",
+                    "supported": true
+                  },
+                  {
+                    "id": "workspaces.browse",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "workspaces.open",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "workspaces.list",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "workspaces.archive",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "workspaces.gitStatus",
+                    "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "executions.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "executions.get",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.memory",
+                    "supported": true
+                  },
+                  {
+                    "id": "profiles.subagentGrants",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.publishSkill",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.publishMcp",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.publishPlugin",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.bind",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.unbind",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.bindings",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.syncCatalog",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.catalog",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.installFromCatalog",
+                    "supported": true
+                  },
+                  {
+                    "id": "assets.probe",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.create",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.update",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.setEnabled",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.delete",
+                    "supported": true
+                  },
+                  {
+                    "id": "hooks.triggers",
+                    "supported": true
+                  },
+                  {
+                    "id": "accounts.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "accounts.create",
+                    "supported": true
+                  },
+                  {
+                    "id": "accounts.bind",
+                    "supported": true
+                  },
+                  {
+                    "id": "accounts.importAsset",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerArtifacts.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerArtifacts.install",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerArtifacts.rollback",
+                    "supported": true
+                  },
+                  {
+                    "id": "usage.aggregate",
+                    "supported": true
+                  },
+                  {
+                    "id": "usage.export",
+                    "supported": true
+                  },
+                  {
+                    "id": "config.describe",
+                    "supported": true
+                  },
+                  {
+                    "id": "config.resolve",
+                    "supported": true
+                  },
+                  {
+                    "id": "sessions.list",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.update",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.archive",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.createAndSend",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.send",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sessions.switchProfile",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "sendOutcome.query",
+                    "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                    "supported": false
+                  },
+                  {
+                    "id": "queue.get",
+                    "supported": true
+                  },
+                  {
+                    "id": "queue.withdraw",
+                    "supported": true
+                  },
+                  {
+                    "id": "runs.stop",
+                    "supported": true
+                  },
+                  {
+                    "id": "approvals.decide",
+                    "supported": true
+                  },
+                  {
+                    "id": "history.snapshot",
+                    "supported": true
+                  },
+                  {
+                    "id": "acp.channel.open",
+                    "supported": true
+                  },
+                  {
+                    "id": "acp.sessions.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "acp.channel.release",
+                    "supported": true
+                  },
+                  {
+                    "id": "acp.submission.authorize",
+                    "reason": "ACP admission authority is unavailable",
+                    "supported": false
+                  },
+                  {
+                    "id": "acp.permission.authorize",
+                    "reason": "ACP admission authority is unavailable",
+                    "supported": false
+                  },
+                  {
+                    "id": "providerModels.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.create",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.update",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.archive",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.probeModels",
+                    "supported": true
+                  },
+                  {
+                    "id": "providerModels.probeConnection",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.catalogue",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.saveProviderConfig",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.probeProvider",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.inspectChoice",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.chooseForSession",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.queryChoice",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.reconcileChoice",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.beginTurnApplication",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.importApiKey",
+                    "supported": true
+                  },
+                  {
+                    "id": "modelProvider.queryApiKeyImport",
+                    "supported": true
+                  },
+                  {
+                    "id": "sandbox.describe",
+                    "supported": true
+                  },
+                  {
+                    "id": "permissions.approvals.decide",
+                    "supported": true
+                  },
+                  {
+                    "id": "permissions.approvals.query",
+                    "supported": true
+                  },
+                  {
+                    "id": "permissions.policy.describe",
+                    "supported": true
+                  },
+                  {
+                    "id": "permissions.authority.query",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.submission.scope",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.submission.capture.read",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.observe",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.release",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.session.resolve",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.prepare",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.read",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.config.submitOperation",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.submitInput",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.submission.query",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.session.list",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.run.query",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.interaction.record",
+                    "supported": true
+                  },
+                  {
+                    "id": "agent.interaction.list",
+                    "supported": true
+                  }
+                ],
+                "harnesses": [],
+                "protocolVersion": "wire/1",
+                "serverId": "server_ff9ec41eaef948b49d34a006314bd849"
+              }
+            },
+            "round": 2,
+            "started": true
+          }
+        ],
+        "status": "pass",
+        "twoRoundHistory": {
+          "nativeEffectCounts": [
+            1,
+            1
+          ],
+          "replayDidNotRedispatch": true,
+          "sessionHistorySource": "native-query",
+          "status": "pass",
+          "submissionQueries": 2,
+          "targetStableAcrossRestart": true
+        },
+        "wireSubmissionRounds": [
+          {
+            "outcome": "accepted",
+            "round": 1,
+            "stage": "completed",
+            "submissionId": "controlled-submission-1"
+          },
+          {
+            "outcome": "accepted",
+            "round": 2,
+            "stage": "completed",
+            "submissionId": "controlled-submission-2"
+          }
+        ]
+      }
+    },
+    "sourceFree": {
+      "status": "pass",
+      "violations": []
+    },
+    "sysPath": [
+      "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python312.zip",
+      "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12",
+      "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/lib-dynload",
+      "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/python/lib/python3.12/site-packages"
+    ],
+    "uiComponentsDI": {
+      "checks": {
+        "carrierUsesSharedApi": true,
+        "contractCarrier": true,
+        "hostImportMap": true,
+        "productEnabled": true,
+        "providerEntry": true,
+        "providerManifest": true,
+        "runtimeIdentity": true,
+        "sharedApiExportsTokenType": true,
+        "sharedExtensionApi": true,
+        "sharedUiApi": true,
+        "singleUiTokenConstruction": true
+      },
+      "missing": [],
+      "status": "pass"
+    }
+  },
+  "process": {
+    "returnCode": 0,
+    "stderr": "[ensure_schema] called, db=/tmp/ordessa-closeout-j1pm936f/data/withProfile/state/agentbox.sqlite\n[ensure_schema] called, db=/tmp/ordessa-closeout-j1pm936f/data/withProfile/state/agentbox.sqlite\n[ensure_schema] called, db=/tmp/ordessa-closeout-j1pm936f/data/withoutProfile/state/agentbox.sqlite\n[ensure_schema] called, db=/tmp/ordessa-closeout-j1pm936f/data/withoutProfile/state/agentbox.sqlite\n"
+  },
+  "requiredFiles": {
+    "opt/ordessa/app/electron": true,
+    "opt/ordessa/bin/acp": true,
+    "opt/ordessa/bin/ordessa": true
+  },
+  "scenes": {
+    "agent_harness_two_rounds_history": {
+      "agentSubmission": {
+        "withProfile": {
+          "outcomes": [
+            "accepted",
+            "accepted"
+          ],
+          "stages": [
+            "completed",
+            "completed"
+          ],
+          "status": "pass",
+          "wireRounds": [
+            {
+              "outcome": "accepted",
+              "round": 1,
+              "stage": "completed",
+              "submissionId": "controlled-submission-1"
+            },
+            {
+              "outcome": "accepted",
+              "round": 2,
+              "stage": "completed",
+              "submissionId": "controlled-submission-2"
+            }
+          ]
+        },
+        "withoutProfile": {
+          "outcomes": [
+            "accepted",
+            "accepted"
+          ],
+          "stages": [
+            "completed",
+            "completed"
+          ],
+          "status": "pass",
+          "wireRounds": [
+            {
+              "outcome": "accepted",
+              "round": 1,
+              "stage": "completed",
+              "submissionId": "controlled-submission-1"
+            },
+            {
+              "outcome": "accepted",
+              "round": 2,
+              "stage": "completed",
+              "submissionId": "controlled-submission-2"
+            }
+          ]
+        }
+      },
+      "controlledHarness": {
+        "withProfile": {
+          "attachmentFixture": "immutable-bytes-in-isolated-test-root",
+          "attachmentSha256": "edef69930d96996ba9057466bdcc8b16de0fbb5ffea9211b7c46726a3d8049d0",
+          "effectCounts": [
+            1,
+            1
+          ],
+          "modeDispatches": [
+            "createWithConfig",
+            "existing"
+          ],
+          "separateResults": [
+            "configApply",
+            "inputAcceptance",
+            "runResult"
+          ],
+          "status": "pass"
+        },
+        "withoutProfile": {
+          "attachmentFixture": "immutable-bytes-in-isolated-test-root",
+          "attachmentSha256": "edef69930d96996ba9057466bdcc8b16de0fbb5ffea9211b7c46726a3d8049d0",
+          "effectCounts": [
+            1,
+            1
+          ],
+          "modeDispatches": [
+            "createWithConfig",
+            "existing"
+          ],
+          "separateResults": [
+            "configApply",
+            "inputAcceptance",
+            "runResult"
+          ],
+          "status": "pass"
+        }
+      },
+      "reason": null,
+      "status": "pass",
+      "withProfile": {
+        "nativeEffectCounts": [
+          1,
+          1
+        ],
+        "replayDidNotRedispatch": true,
+        "sessionHistorySource": "native-query",
+        "status": "pass",
+        "submissionQueries": 2,
+        "targetStableAcrossRestart": true
+      },
+      "withoutProfile": {
+        "nativeEffectCounts": [
+          1,
+          1
+        ],
+        "replayDidNotRedispatch": true,
+        "sessionHistorySource": "native-query",
+        "status": "pass",
+        "submissionQueries": 2,
+        "targetStableAcrossRestart": true
+      }
+    },
+    "artifact_runtime": {
+      "returnCode": 0,
+      "status": "pass",
+      "stderr": "[ensure_schema] called, db=/tmp/ordessa-closeout-j1pm936f/data/withProfile/state/agentbox.sqlite\n[ensure_schema] called, db=/tmp/ordessa-closeout-j1pm936f/data/withProfile/state/agentbox.sqlite\n[ensure_schema] called, db=/tmp/ordessa-closeout-j1pm936f/data/withoutProfile/state/agentbox.sqlite\n[ensure_schema] called, db=/tmp/ordessa-closeout-j1pm936f/data/withoutProfile/state/agentbox.sqlite\n"
+    },
+    "controlled_fixture": {
+      "effectStores": "separate SQLite files from product Environment and Agent journal",
+      "isolatedPath": "/tmp/ordessa-closeout-j1pm936f/controlled_native_fixture.py",
+      "name": "controlled_native_fixture.py",
+      "status": "pass"
+    },
+    "f5_nonreact_consumer": {
+      "consumer": {
+        "evidence": {
+          "consumers": 2,
+          "deepFreezeCycleAndSharedReferences": true,
+          "fieldSelectorIgnoresUnrelatedState": true,
+          "independentConsumerRelease": true,
+          "modules": [
+            "f5-runtime.js",
+            "f5-api.js",
+            "f5-bridge.js"
+          ],
+          "reentrantLimitObserved": 100,
+          "sessionOnlyStorageExplicit": true,
+          "shallowFrozenAncestorDescendantFrozen": true,
+          "stableNoopAndBatchPublication": true,
+          "taskAndProjectionDisposed": true,
+          "tempRoot": "/tmp/ordessa-closeout-j1pm936f/cwd/f5-consumer-tmp/ordessa-f5-artifact-consumers-sAXtKs",
+          "throwingSubscriberIsolation": true,
+          "unsupportedShapeRejected": true
+        },
+        "name": "artifact-api-consumers",
+        "ok": true
+      },
+      "reason": null,
+      "status": "pass"
+    },
+    "f5_react_consumer": {
+      "consumer": {
+        "evidence": {
+          "activeSubscriptions": 0,
+          "browserWindow": "hidden",
+          "chromiumSandbox": "not proven: this fixture uses --no-sandbox",
+          "consumer": "artifact React hook plus non-React selector on same owner",
+          "electronPath": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted/opt/ordessa/app/electron",
+          "ignoredUnrelatedUpdate": true,
+          "isolatedUserData": true,
+          "launchFlags": [
+            "--no-sandbox",
+            "--disable-gpu",
+            "--disable-dev-shm-usage"
+          ],
+          "nonReactReleaseStoppedNotifications": true,
+          "reactUnmountReleasedSubscription": true,
+          "renders": 2,
+          "sharedArtifactFiles": [
+            "f5-react.js",
+            "f5-api.js",
+            "f5-runtime.js",
+            "react.js",
+            "react-dom-client.js"
+          ],
+          "sharedOwnerSnapshot": true,
+          "sharedSelectionUpdates": true
+        },
+        "name": "artifact-react-consumer",
+        "ok": true
+      },
+      "reason": null,
+      "status": "pass"
+    },
+    "required_python_closure": {
+      "missing": [],
+      "status": "pass"
+    },
+    "runtime_files": {
+      "status": "pass"
+    },
+    "source_free_imports": {
+      "status": "pass",
+      "violations": []
+    },
+    "ui_components_di": {
+      "checks": {
+        "carrierUsesSharedApi": true,
+        "contractCarrier": true,
+        "hostImportMap": true,
+        "productEnabled": true,
+        "providerEntry": true,
+        "providerManifest": true,
+        "runtimeIdentity": true,
+        "sharedApiExportsTokenType": true,
+        "sharedExtensionApi": true,
+        "sharedUiApi": true,
+        "singleUiTokenConstruction": true
+      },
+      "missing": [],
+      "status": "pass"
+    },
+    "withProfile": {
+      "agentSubmission": {
+        "outcomes": [
+          "accepted",
+          "accepted"
+        ],
+        "stages": [
+          "completed",
+          "completed"
+        ],
+        "status": "pass",
+        "wireRounds": [
+          {
+            "outcome": "accepted",
+            "round": 1,
+            "stage": "completed",
+            "submissionId": "controlled-submission-1"
+          },
+          {
+            "outcome": "accepted",
+            "round": 2,
+            "stage": "completed",
+            "submissionId": "controlled-submission-2"
+          }
+        ]
+      },
+      "controlledHarness": {
+        "attachmentFixture": "immutable-bytes-in-isolated-test-root",
+        "attachmentSha256": "edef69930d96996ba9057466bdcc8b16de0fbb5ffea9211b7c46726a3d8049d0",
+        "effectCounts": [
+          1,
+          1
+        ],
+        "modeDispatches": [
+          "createWithConfig",
+          "existing"
+        ],
+        "separateResults": [
+          "configApply",
+          "inputAcceptance",
+          "runResult"
+        ],
+        "status": "pass"
+      },
+      "failure": null,
+      "rounds": [
+        {
+          "configRevision": 4,
+          "hello": {
+            "status": "returned",
+            "value": {
+              "auth": {
+                "required": true,
+                "schemes": [
+                  "session_token"
+                ]
+              },
+              "capabilities": [
+                {
+                  "id": "server.hello",
+                  "supported": true
+                },
+                {
+                  "id": "workspaces.browse",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "workspaces.open",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "workspaces.list",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "workspaces.archive",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "workspaces.gitStatus",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "executions.list",
+                  "supported": true
+                },
+                {
+                  "id": "executions.get",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.list",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.memory",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.subagentGrants",
+                  "supported": true
+                },
+                {
+                  "id": "assets.list",
+                  "supported": true
+                },
+                {
+                  "id": "assets.publishSkill",
+                  "supported": true
+                },
+                {
+                  "id": "assets.publishMcp",
+                  "supported": true
+                },
+                {
+                  "id": "assets.publishPlugin",
+                  "supported": true
+                },
+                {
+                  "id": "assets.bind",
+                  "supported": true
+                },
+                {
+                  "id": "assets.unbind",
+                  "supported": true
+                },
+                {
+                  "id": "assets.bindings",
+                  "supported": true
+                },
+                {
+                  "id": "assets.syncCatalog",
+                  "supported": true
+                },
+                {
+                  "id": "assets.catalog",
+                  "supported": true
+                },
+                {
+                  "id": "assets.installFromCatalog",
+                  "supported": true
+                },
+                {
+                  "id": "assets.probe",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.list",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.create",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.update",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.setEnabled",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.delete",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.triggers",
+                  "supported": true
+                },
+                {
+                  "id": "accounts.list",
+                  "supported": true
+                },
+                {
+                  "id": "accounts.create",
+                  "supported": true
+                },
+                {
+                  "id": "accounts.bind",
+                  "supported": true
+                },
+                {
+                  "id": "accounts.importAsset",
+                  "supported": true
+                },
+                {
+                  "id": "providerArtifacts.list",
+                  "supported": true
+                },
+                {
+                  "id": "providerArtifacts.install",
+                  "supported": true
+                },
+                {
+                  "id": "providerArtifacts.rollback",
+                  "supported": true
+                },
+                {
+                  "id": "usage.aggregate",
+                  "supported": true
+                },
+                {
+                  "id": "usage.export",
+                  "supported": true
+                },
+                {
+                  "id": "config.describe",
+                  "supported": true
+                },
+                {
+                  "id": "config.resolve",
+                  "supported": true
+                },
+                {
+                  "id": "sessions.list",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.update",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.archive",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.createAndSend",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.send",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.switchProfile",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sendOutcome.query",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "queue.get",
+                  "supported": true
+                },
+                {
+                  "id": "queue.withdraw",
+                  "supported": true
+                },
+                {
+                  "id": "runs.stop",
+                  "supported": true
+                },
+                {
+                  "id": "approvals.decide",
+                  "supported": true
+                },
+                {
+                  "id": "history.snapshot",
+                  "supported": true
+                },
+                {
+                  "id": "acp.channel.open",
+                  "supported": true
+                },
+                {
+                  "id": "acp.sessions.list",
+                  "supported": true
+                },
+                {
+                  "id": "acp.channel.release",
+                  "supported": true
+                },
+                {
+                  "id": "acp.submission.authorize",
+                  "reason": "ACP admission authority is unavailable",
+                  "supported": false
+                },
+                {
+                  "id": "acp.permission.authorize",
+                  "reason": "ACP admission authority is unavailable",
+                  "supported": false
+                },
+                {
+                  "id": "providerModels.list",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.create",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.update",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.archive",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.probeModels",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.probeConnection",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.catalogue",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.saveProviderConfig",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.probeProvider",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.inspectChoice",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.chooseForSession",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.queryChoice",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.reconcileChoice",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.beginTurnApplication",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.importApiKey",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.queryApiKeyImport",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.configuredHarnesses",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.listProfiles",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.getProfile",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.createProfile",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.renameProfile",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.saveProfile",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.archiveProfile",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.restoreProfile",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.describeFacets",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.resolvePreview",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.profileCatalog",
+                  "supported": true
+                },
+                {
+                  "id": "sandbox.describe",
+                  "supported": true
+                },
+                {
+                  "id": "permissions.approvals.decide",
+                  "supported": true
+                },
+                {
+                  "id": "permissions.approvals.query",
+                  "supported": true
+                },
+                {
+                  "id": "permissions.policy.describe",
+                  "supported": true
+                },
+                {
+                  "id": "permissions.authority.query",
+                  "supported": true
+                },
+                {
+                  "id": "agent.submission.scope",
+                  "supported": true
+                },
+                {
+                  "id": "agent.submission.capture.read",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.observe",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.release",
+                  "supported": true
+                },
+                {
+                  "id": "agent.session.resolve",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.prepare",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.read",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.submitOperation",
+                  "supported": true
+                },
+                {
+                  "id": "agent.submitInput",
+                  "supported": true
+                },
+                {
+                  "id": "agent.submission.query",
+                  "supported": true
+                },
+                {
+                  "id": "agent.session.list",
+                  "supported": true
+                },
+                {
+                  "id": "agent.run.query",
+                  "supported": true
+                },
+                {
+                  "id": "agent.interaction.record",
+                  "supported": true
+                },
+                {
+                  "id": "agent.interaction.list",
+                  "supported": true
+                }
+              ],
+              "harnesses": [],
+              "protocolVersion": "wire/1",
+              "serverId": "server_02f0f447c3854c7ba0aefe24c62e1e86"
+            }
+          },
+          "round": 1,
+          "started": true,
+          "submissions": [
+            {
+              "configApply": {
+                "operationIds": [
+                  "op-agent-draft-97742013437443658cb6e046b37287f1-1"
+                ],
+                "outcome": "applied"
+              },
+              "inputAcceptance": {
+                "draftRevision": 1,
+                "outcome": "accepted",
+                "session": {
+                  "generation": 1,
+                  "nativeSessionId": "native-session-controlled-1",
+                  "ownerRef": "native-owner:controlled-1",
+                  "sessionId": "logical-session-controlled-1"
+                }
+              },
+              "outcome": "accepted",
+              "replayed": false,
+              "request": {
+                "environmentNamespace": "environment-34db1bd9411b423695fd02f93d33341e",
+                "principalScope": "local",
+                "requestId": "controlled-submission-1"
+              },
+              "resend": false,
+              "runResult": {
+                "outcome": "running",
+                "runId": "run-controlled-submission-1"
+              },
+              "stage": "completed",
+              "submissionId": "controlled-submission-1"
+            },
+            {
+              "configApply": {
+                "operationIds": [
+                  "op-agent-draft-97742013437443658cb6e046b37287f1-2"
+                ],
+                "outcome": "applied"
+              },
+              "inputAcceptance": {
+                "draftRevision": 2,
+                "outcome": "accepted",
+                "session": {
+                  "generation": 1,
+                  "nativeSessionId": "native-session-controlled-1",
+                  "ownerRef": "native-owner:controlled-1",
+                  "sessionId": "logical-session-controlled-1"
+                }
+              },
+              "outcome": "accepted",
+              "replayed": false,
+              "request": {
+                "environmentNamespace": "environment-34db1bd9411b423695fd02f93d33341e",
+                "principalScope": "local",
+                "requestId": "controlled-submission-2"
+              },
+              "resend": false,
+              "runResult": {
+                "outcome": "running",
+                "runId": "run-controlled-submission-2"
+              },
+              "stage": "completed",
+              "submissionId": "controlled-submission-2"
+            }
+          ],
+          "target": "agent-draft-97742013437443658cb6e046b37287f1"
+        },
+        {
+          "hello": {
+            "status": "returned",
+            "value": {
+              "auth": {
+                "required": true,
+                "schemes": [
+                  "session_token"
+                ]
+              },
+              "capabilities": [
+                {
+                  "id": "server.hello",
+                  "supported": true
+                },
+                {
+                  "id": "workspaces.browse",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "workspaces.open",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "workspaces.list",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "workspaces.archive",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "workspaces.gitStatus",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "executions.list",
+                  "supported": true
+                },
+                {
+                  "id": "executions.get",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.list",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.memory",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.subagentGrants",
+                  "supported": true
+                },
+                {
+                  "id": "assets.list",
+                  "supported": true
+                },
+                {
+                  "id": "assets.publishSkill",
+                  "supported": true
+                },
+                {
+                  "id": "assets.publishMcp",
+                  "supported": true
+                },
+                {
+                  "id": "assets.publishPlugin",
+                  "supported": true
+                },
+                {
+                  "id": "assets.bind",
+                  "supported": true
+                },
+                {
+                  "id": "assets.unbind",
+                  "supported": true
+                },
+                {
+                  "id": "assets.bindings",
+                  "supported": true
+                },
+                {
+                  "id": "assets.syncCatalog",
+                  "supported": true
+                },
+                {
+                  "id": "assets.catalog",
+                  "supported": true
+                },
+                {
+                  "id": "assets.installFromCatalog",
+                  "supported": true
+                },
+                {
+                  "id": "assets.probe",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.list",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.create",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.update",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.setEnabled",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.delete",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.triggers",
+                  "supported": true
+                },
+                {
+                  "id": "accounts.list",
+                  "supported": true
+                },
+                {
+                  "id": "accounts.create",
+                  "supported": true
+                },
+                {
+                  "id": "accounts.bind",
+                  "supported": true
+                },
+                {
+                  "id": "accounts.importAsset",
+                  "supported": true
+                },
+                {
+                  "id": "providerArtifacts.list",
+                  "supported": true
+                },
+                {
+                  "id": "providerArtifacts.install",
+                  "supported": true
+                },
+                {
+                  "id": "providerArtifacts.rollback",
+                  "supported": true
+                },
+                {
+                  "id": "usage.aggregate",
+                  "supported": true
+                },
+                {
+                  "id": "usage.export",
+                  "supported": true
+                },
+                {
+                  "id": "config.describe",
+                  "supported": true
+                },
+                {
+                  "id": "config.resolve",
+                  "supported": true
+                },
+                {
+                  "id": "sessions.list",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.update",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.archive",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.createAndSend",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.send",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.switchProfile",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sendOutcome.query",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "queue.get",
+                  "supported": true
+                },
+                {
+                  "id": "queue.withdraw",
+                  "supported": true
+                },
+                {
+                  "id": "runs.stop",
+                  "supported": true
+                },
+                {
+                  "id": "approvals.decide",
+                  "supported": true
+                },
+                {
+                  "id": "history.snapshot",
+                  "supported": true
+                },
+                {
+                  "id": "acp.channel.open",
+                  "supported": true
+                },
+                {
+                  "id": "acp.sessions.list",
+                  "supported": true
+                },
+                {
+                  "id": "acp.channel.release",
+                  "supported": true
+                },
+                {
+                  "id": "acp.submission.authorize",
+                  "reason": "ACP admission authority is unavailable",
+                  "supported": false
+                },
+                {
+                  "id": "acp.permission.authorize",
+                  "reason": "ACP admission authority is unavailable",
+                  "supported": false
+                },
+                {
+                  "id": "providerModels.list",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.create",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.update",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.archive",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.probeModels",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.probeConnection",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.catalogue",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.saveProviderConfig",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.probeProvider",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.inspectChoice",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.chooseForSession",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.queryChoice",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.reconcileChoice",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.beginTurnApplication",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.importApiKey",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.queryApiKeyImport",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.configuredHarnesses",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.listProfiles",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.getProfile",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.createProfile",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.renameProfile",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.saveProfile",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.archiveProfile",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.restoreProfile",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.describeFacets",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.resolvePreview",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.v2.profileCatalog",
+                  "supported": true
+                },
+                {
+                  "id": "sandbox.describe",
+                  "supported": true
+                },
+                {
+                  "id": "permissions.approvals.decide",
+                  "supported": true
+                },
+                {
+                  "id": "permissions.approvals.query",
+                  "supported": true
+                },
+                {
+                  "id": "permissions.policy.describe",
+                  "supported": true
+                },
+                {
+                  "id": "permissions.authority.query",
+                  "supported": true
+                },
+                {
+                  "id": "agent.submission.scope",
+                  "supported": true
+                },
+                {
+                  "id": "agent.submission.capture.read",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.observe",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.release",
+                  "supported": true
+                },
+                {
+                  "id": "agent.session.resolve",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.prepare",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.read",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.submitOperation",
+                  "supported": true
+                },
+                {
+                  "id": "agent.submitInput",
+                  "supported": true
+                },
+                {
+                  "id": "agent.submission.query",
+                  "supported": true
+                },
+                {
+                  "id": "agent.session.list",
+                  "supported": true
+                },
+                {
+                  "id": "agent.run.query",
+                  "supported": true
+                },
+                {
+                  "id": "agent.interaction.record",
+                  "supported": true
+                },
+                {
+                  "id": "agent.interaction.list",
+                  "supported": true
+                }
+              ],
+              "harnesses": [],
+              "protocolVersion": "wire/1",
+              "serverId": "server_02f0f447c3854c7ba0aefe24c62e1e86"
+            }
+          },
+          "round": 2,
+          "started": true
+        }
+      ],
+      "status": "pass",
+      "twoRoundHistory": {
+        "nativeEffectCounts": [
+          1,
+          1
+        ],
+        "replayDidNotRedispatch": true,
+        "sessionHistorySource": "native-query",
+        "status": "pass",
+        "submissionQueries": 2,
+        "targetStableAcrossRestart": true
+      },
+      "wireSubmissionRounds": [
+        {
+          "outcome": "accepted",
+          "round": 1,
+          "stage": "completed",
+          "submissionId": "controlled-submission-1"
+        },
+        {
+          "outcome": "accepted",
+          "round": 2,
+          "stage": "completed",
+          "submissionId": "controlled-submission-2"
+        }
+      ]
+    },
+    "withoutProfile": {
+      "agentSubmission": {
+        "outcomes": [
+          "accepted",
+          "accepted"
+        ],
+        "stages": [
+          "completed",
+          "completed"
+        ],
+        "status": "pass",
+        "wireRounds": [
+          {
+            "outcome": "accepted",
+            "round": 1,
+            "stage": "completed",
+            "submissionId": "controlled-submission-1"
+          },
+          {
+            "outcome": "accepted",
+            "round": 2,
+            "stage": "completed",
+            "submissionId": "controlled-submission-2"
+          }
+        ]
+      },
+      "controlledHarness": {
+        "attachmentFixture": "immutable-bytes-in-isolated-test-root",
+        "attachmentSha256": "edef69930d96996ba9057466bdcc8b16de0fbb5ffea9211b7c46726a3d8049d0",
+        "effectCounts": [
+          1,
+          1
+        ],
+        "modeDispatches": [
+          "createWithConfig",
+          "existing"
+        ],
+        "separateResults": [
+          "configApply",
+          "inputAcceptance",
+          "runResult"
+        ],
+        "status": "pass"
+      },
+      "failure": null,
+      "rounds": [
+        {
+          "configRevision": 4,
+          "hello": {
+            "status": "returned",
+            "value": {
+              "auth": {
+                "required": true,
+                "schemes": [
+                  "session_token"
+                ]
+              },
+              "capabilities": [
+                {
+                  "id": "server.hello",
+                  "supported": true
+                },
+                {
+                  "id": "workspaces.browse",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "workspaces.open",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "workspaces.list",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "workspaces.archive",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "workspaces.gitStatus",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "executions.list",
+                  "supported": true
+                },
+                {
+                  "id": "executions.get",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.list",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.memory",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.subagentGrants",
+                  "supported": true
+                },
+                {
+                  "id": "assets.list",
+                  "supported": true
+                },
+                {
+                  "id": "assets.publishSkill",
+                  "supported": true
+                },
+                {
+                  "id": "assets.publishMcp",
+                  "supported": true
+                },
+                {
+                  "id": "assets.publishPlugin",
+                  "supported": true
+                },
+                {
+                  "id": "assets.bind",
+                  "supported": true
+                },
+                {
+                  "id": "assets.unbind",
+                  "supported": true
+                },
+                {
+                  "id": "assets.bindings",
+                  "supported": true
+                },
+                {
+                  "id": "assets.syncCatalog",
+                  "supported": true
+                },
+                {
+                  "id": "assets.catalog",
+                  "supported": true
+                },
+                {
+                  "id": "assets.installFromCatalog",
+                  "supported": true
+                },
+                {
+                  "id": "assets.probe",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.list",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.create",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.update",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.setEnabled",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.delete",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.triggers",
+                  "supported": true
+                },
+                {
+                  "id": "accounts.list",
+                  "supported": true
+                },
+                {
+                  "id": "accounts.create",
+                  "supported": true
+                },
+                {
+                  "id": "accounts.bind",
+                  "supported": true
+                },
+                {
+                  "id": "accounts.importAsset",
+                  "supported": true
+                },
+                {
+                  "id": "providerArtifacts.list",
+                  "supported": true
+                },
+                {
+                  "id": "providerArtifacts.install",
+                  "supported": true
+                },
+                {
+                  "id": "providerArtifacts.rollback",
+                  "supported": true
+                },
+                {
+                  "id": "usage.aggregate",
+                  "supported": true
+                },
+                {
+                  "id": "usage.export",
+                  "supported": true
+                },
+                {
+                  "id": "config.describe",
+                  "supported": true
+                },
+                {
+                  "id": "config.resolve",
+                  "supported": true
+                },
+                {
+                  "id": "sessions.list",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.update",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.archive",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.createAndSend",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.send",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.switchProfile",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sendOutcome.query",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "queue.get",
+                  "supported": true
+                },
+                {
+                  "id": "queue.withdraw",
+                  "supported": true
+                },
+                {
+                  "id": "runs.stop",
+                  "supported": true
+                },
+                {
+                  "id": "approvals.decide",
+                  "supported": true
+                },
+                {
+                  "id": "history.snapshot",
+                  "supported": true
+                },
+                {
+                  "id": "acp.channel.open",
+                  "supported": true
+                },
+                {
+                  "id": "acp.sessions.list",
+                  "supported": true
+                },
+                {
+                  "id": "acp.channel.release",
+                  "supported": true
+                },
+                {
+                  "id": "acp.submission.authorize",
+                  "reason": "ACP admission authority is unavailable",
+                  "supported": false
+                },
+                {
+                  "id": "acp.permission.authorize",
+                  "reason": "ACP admission authority is unavailable",
+                  "supported": false
+                },
+                {
+                  "id": "providerModels.list",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.create",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.update",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.archive",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.probeModels",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.probeConnection",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.catalogue",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.saveProviderConfig",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.probeProvider",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.inspectChoice",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.chooseForSession",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.queryChoice",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.reconcileChoice",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.beginTurnApplication",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.importApiKey",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.queryApiKeyImport",
+                  "supported": true
+                },
+                {
+                  "id": "sandbox.describe",
+                  "supported": true
+                },
+                {
+                  "id": "permissions.approvals.decide",
+                  "supported": true
+                },
+                {
+                  "id": "permissions.approvals.query",
+                  "supported": true
+                },
+                {
+                  "id": "permissions.policy.describe",
+                  "supported": true
+                },
+                {
+                  "id": "permissions.authority.query",
+                  "supported": true
+                },
+                {
+                  "id": "agent.submission.scope",
+                  "supported": true
+                },
+                {
+                  "id": "agent.submission.capture.read",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.observe",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.release",
+                  "supported": true
+                },
+                {
+                  "id": "agent.session.resolve",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.prepare",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.read",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.submitOperation",
+                  "supported": true
+                },
+                {
+                  "id": "agent.submitInput",
+                  "supported": true
+                },
+                {
+                  "id": "agent.submission.query",
+                  "supported": true
+                },
+                {
+                  "id": "agent.session.list",
+                  "supported": true
+                },
+                {
+                  "id": "agent.run.query",
+                  "supported": true
+                },
+                {
+                  "id": "agent.interaction.record",
+                  "supported": true
+                },
+                {
+                  "id": "agent.interaction.list",
+                  "supported": true
+                }
+              ],
+              "harnesses": [],
+              "protocolVersion": "wire/1",
+              "serverId": "server_ff9ec41eaef948b49d34a006314bd849"
+            }
+          },
+          "round": 1,
+          "started": true,
+          "submissions": [
+            {
+              "configApply": {
+                "operationIds": [
+                  "op-agent-draft-27492b4b093543aea8e07f375909030c-1"
+                ],
+                "outcome": "applied"
+              },
+              "inputAcceptance": {
+                "draftRevision": 1,
+                "outcome": "accepted",
+                "session": {
+                  "generation": 1,
+                  "nativeSessionId": "native-session-controlled-1",
+                  "ownerRef": "native-owner:controlled-1",
+                  "sessionId": "logical-session-controlled-1"
+                }
+              },
+              "outcome": "accepted",
+              "replayed": false,
+              "request": {
+                "environmentNamespace": "environment-342c875ccf6d4e838ef0322fa579a3fb",
+                "principalScope": "local",
+                "requestId": "controlled-submission-1"
+              },
+              "resend": false,
+              "runResult": {
+                "outcome": "running",
+                "runId": "run-controlled-submission-1"
+              },
+              "stage": "completed",
+              "submissionId": "controlled-submission-1"
+            },
+            {
+              "configApply": {
+                "operationIds": [
+                  "op-agent-draft-27492b4b093543aea8e07f375909030c-2"
+                ],
+                "outcome": "applied"
+              },
+              "inputAcceptance": {
+                "draftRevision": 2,
+                "outcome": "accepted",
+                "session": {
+                  "generation": 1,
+                  "nativeSessionId": "native-session-controlled-1",
+                  "ownerRef": "native-owner:controlled-1",
+                  "sessionId": "logical-session-controlled-1"
+                }
+              },
+              "outcome": "accepted",
+              "replayed": false,
+              "request": {
+                "environmentNamespace": "environment-342c875ccf6d4e838ef0322fa579a3fb",
+                "principalScope": "local",
+                "requestId": "controlled-submission-2"
+              },
+              "resend": false,
+              "runResult": {
+                "outcome": "running",
+                "runId": "run-controlled-submission-2"
+              },
+              "stage": "completed",
+              "submissionId": "controlled-submission-2"
+            }
+          ],
+          "target": "agent-draft-27492b4b093543aea8e07f375909030c"
+        },
+        {
+          "hello": {
+            "status": "returned",
+            "value": {
+              "auth": {
+                "required": true,
+                "schemes": [
+                  "session_token"
+                ]
+              },
+              "capabilities": [
+                {
+                  "id": "server.hello",
+                  "supported": true
+                },
+                {
+                  "id": "workspaces.browse",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "workspaces.open",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "workspaces.list",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "workspaces.archive",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "workspaces.gitStatus",
+                  "reason": "LOCAL_SANDBOX_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "executions.list",
+                  "supported": true
+                },
+                {
+                  "id": "executions.get",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.list",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.memory",
+                  "supported": true
+                },
+                {
+                  "id": "profiles.subagentGrants",
+                  "supported": true
+                },
+                {
+                  "id": "assets.list",
+                  "supported": true
+                },
+                {
+                  "id": "assets.publishSkill",
+                  "supported": true
+                },
+                {
+                  "id": "assets.publishMcp",
+                  "supported": true
+                },
+                {
+                  "id": "assets.publishPlugin",
+                  "supported": true
+                },
+                {
+                  "id": "assets.bind",
+                  "supported": true
+                },
+                {
+                  "id": "assets.unbind",
+                  "supported": true
+                },
+                {
+                  "id": "assets.bindings",
+                  "supported": true
+                },
+                {
+                  "id": "assets.syncCatalog",
+                  "supported": true
+                },
+                {
+                  "id": "assets.catalog",
+                  "supported": true
+                },
+                {
+                  "id": "assets.installFromCatalog",
+                  "supported": true
+                },
+                {
+                  "id": "assets.probe",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.list",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.create",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.update",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.setEnabled",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.delete",
+                  "supported": true
+                },
+                {
+                  "id": "hooks.triggers",
+                  "supported": true
+                },
+                {
+                  "id": "accounts.list",
+                  "supported": true
+                },
+                {
+                  "id": "accounts.create",
+                  "supported": true
+                },
+                {
+                  "id": "accounts.bind",
+                  "supported": true
+                },
+                {
+                  "id": "accounts.importAsset",
+                  "supported": true
+                },
+                {
+                  "id": "providerArtifacts.list",
+                  "supported": true
+                },
+                {
+                  "id": "providerArtifacts.install",
+                  "supported": true
+                },
+                {
+                  "id": "providerArtifacts.rollback",
+                  "supported": true
+                },
+                {
+                  "id": "usage.aggregate",
+                  "supported": true
+                },
+                {
+                  "id": "usage.export",
+                  "supported": true
+                },
+                {
+                  "id": "config.describe",
+                  "supported": true
+                },
+                {
+                  "id": "config.resolve",
+                  "supported": true
+                },
+                {
+                  "id": "sessions.list",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.update",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.archive",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.createAndSend",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.send",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sessions.switchProfile",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "sendOutcome.query",
+                  "reason": "EXECUTION_CAPABILITY_UNAVAILABLE",
+                  "supported": false
+                },
+                {
+                  "id": "queue.get",
+                  "supported": true
+                },
+                {
+                  "id": "queue.withdraw",
+                  "supported": true
+                },
+                {
+                  "id": "runs.stop",
+                  "supported": true
+                },
+                {
+                  "id": "approvals.decide",
+                  "supported": true
+                },
+                {
+                  "id": "history.snapshot",
+                  "supported": true
+                },
+                {
+                  "id": "acp.channel.open",
+                  "supported": true
+                },
+                {
+                  "id": "acp.sessions.list",
+                  "supported": true
+                },
+                {
+                  "id": "acp.channel.release",
+                  "supported": true
+                },
+                {
+                  "id": "acp.submission.authorize",
+                  "reason": "ACP admission authority is unavailable",
+                  "supported": false
+                },
+                {
+                  "id": "acp.permission.authorize",
+                  "reason": "ACP admission authority is unavailable",
+                  "supported": false
+                },
+                {
+                  "id": "providerModels.list",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.create",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.update",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.archive",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.probeModels",
+                  "supported": true
+                },
+                {
+                  "id": "providerModels.probeConnection",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.catalogue",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.saveProviderConfig",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.probeProvider",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.inspectChoice",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.chooseForSession",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.queryChoice",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.reconcileChoice",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.beginTurnApplication",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.importApiKey",
+                  "supported": true
+                },
+                {
+                  "id": "modelProvider.queryApiKeyImport",
+                  "supported": true
+                },
+                {
+                  "id": "sandbox.describe",
+                  "supported": true
+                },
+                {
+                  "id": "permissions.approvals.decide",
+                  "supported": true
+                },
+                {
+                  "id": "permissions.approvals.query",
+                  "supported": true
+                },
+                {
+                  "id": "permissions.policy.describe",
+                  "supported": true
+                },
+                {
+                  "id": "permissions.authority.query",
+                  "supported": true
+                },
+                {
+                  "id": "agent.submission.scope",
+                  "supported": true
+                },
+                {
+                  "id": "agent.submission.capture.read",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.observe",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.release",
+                  "supported": true
+                },
+                {
+                  "id": "agent.session.resolve",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.prepare",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.read",
+                  "supported": true
+                },
+                {
+                  "id": "agent.config.submitOperation",
+                  "supported": true
+                },
+                {
+                  "id": "agent.submitInput",
+                  "supported": true
+                },
+                {
+                  "id": "agent.submission.query",
+                  "supported": true
+                },
+                {
+                  "id": "agent.session.list",
+                  "supported": true
+                },
+                {
+                  "id": "agent.run.query",
+                  "supported": true
+                },
+                {
+                  "id": "agent.interaction.record",
+                  "supported": true
+                },
+                {
+                  "id": "agent.interaction.list",
+                  "supported": true
+                }
+              ],
+              "harnesses": [],
+              "protocolVersion": "wire/1",
+              "serverId": "server_ff9ec41eaef948b49d34a006314bd849"
+            }
+          },
+          "round": 2,
+          "started": true
+        }
+      ],
+      "status": "pass",
+      "twoRoundHistory": {
+        "nativeEffectCounts": [
+          1,
+          1
+        ],
+        "replayDidNotRedispatch": true,
+        "sessionHistorySource": "native-query",
+        "status": "pass",
+        "submissionQueries": 2,
+        "targetStableAcrossRestart": true
+      },
+      "wireSubmissionRounds": [
+        {
+          "outcome": "accepted",
+          "round": 1,
+          "stage": "completed",
+          "submissionId": "controlled-submission-1"
+        },
+        {
+          "outcome": "accepted",
+          "round": 2,
+          "stage": "completed",
+          "submissionId": "controlled-submission-2"
+        }
+      ]
+    }
+  },
+  "schema": "ordessa.closeout-controlled.v1"
+}
+
+EXIT_CODE=0

@@ -1,0 +1,36 @@
+
+ RUN  v4.1.10 /home/maoqh/projects/ordessa/worktree/026-open-environment-migration/plugins/agent/contracts
+
+ ❯ tests/closeout-request-id-grammar.test.ts (5 tests | 1 failed) 24ms
+     × reconciles a legacy key by its original ID without normalizing or redispatching it 14ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/closeout-request-id-grammar.test.ts > durable request ID grammar > reconciles a legacy key by its original ID without normalizing or redispatching it
+AssertionError: expected { status: 'unknown', …(1) } to match object { status: 'accepted' }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "status": "accepted",
++   "status": "unknown",
+  }
+
+ ❯ tests/closeout-request-id-grammar.test.ts:86:20
+     84|     const result = await client.reconcile(legacy.key)
+     85|
+     86|     expect(result).toMatchObject({ status: 'accepted' })
+       |                    ^
+     87|     expect(calls).toEqual([{
+     88|       method: 'agent.submission.query',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 14 passed (15)
+      Tests  1 failed | 93 passed (94)
+   Start at  15:56:01
+   Duration  4.74s (transform 285ms, setup 0ms, import 603ms, tests 259ms, environment 3ms)
+

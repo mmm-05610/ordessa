@@ -1,0 +1,32 @@
+[
+  {
+    "case": "product-escape",
+    "exitCode": 1,
+    "expectedRefusal": "escapes",
+    "pass": true
+  },
+  {
+    "case": "journal-escape",
+    "exitCode": 1,
+    "expectedRefusal": "escapes",
+    "pass": true
+  },
+  {
+    "case": "f5-escape",
+    "exitCode": 1,
+    "expectedRefusal": "escapes",
+    "pass": true
+  },
+  {
+    "case": "product-external-runtime",
+    "exitCode": 1,
+    "expectedRefusal": "external",
+    "pass": true
+  },
+  {
+    "case": "f5-external-runtime",
+    "exitCode": 1,
+    "expectedRefusal": "only",
+    "pass": true
+  }
+]

@@ -1,0 +1,13 @@
+ARTIFACT_SOURCE_HEAD=4b320cad97c2e53d3972f224e50302449514a6e3
+COMMAND=['xvfb-run', '-a', '--server-args=-screen 0 1440x900x24', 'node', 'scripts/packaging/closeout-frontend-product.mjs', '--artifact-root', '/tmp/ordessa-026-artifact-y8h5oxy7/extracted']
+{
+  "schema": "ordessa.closeout-frontend-product.v1",
+  "status": "fail",
+  "failure": {
+    "type": "ReferenceError",
+    "message": "result is not defined",
+    "stack": "ReferenceError: result is not defined\n    at browserHtml (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-product.mjs:345:62)\n    at runVariant (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-product.mjs:619:22)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async main (file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-product.mjs:689:35)\n    at async file:///home/maoqh/projects/ordessa/worktree/026-open-environment-migration/scripts/packaging/closeout-frontend-product.mjs:699:18"
+  }
+}
+
+EXIT_CODE=1

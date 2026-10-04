@@ -27,7 +27,7 @@ def test_production_owner_rejects_claimed_acceptance_without_native_submit_port(
     }})
     with pytest.raises(Exception, match='CAPABILITY_UNSUPPORTED|unsupported|unavailable'):
         handlers['agent.submitInput']({'target':draft['target'],'draftRevision':1,
-                                       'capture':{'outcome':'accepted'}})
+                                       'capture':{'outcome':'accepted', 'expectedConditions':{}}})
 
 
 def test_production_targets_are_resolved_by_trusted_binding_not_frontend_claim(tmp_path):

@@ -24,6 +24,9 @@ def test_original_results_remain_readable_without_native_or_fingerprint(tmp_path
         first.start()
         target = first.wire.dispatch('agent.session.resolve', {'location':location})['target']
         native.bind_backend_target(target)
+        capture['expectedConditions'] = first.wire.dispatch('agent.submission.capture.read', {
+            'target': target, 'mode': 'existing',
+        })
         accepted = first.wire.dispatch('agent.submitInput', {'target':target,
             'draftRevision':1, 'capture':capture})
         assert accepted['outcome'] == 'accepted'

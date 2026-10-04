@@ -40,6 +40,11 @@ import { reconcileSlashSnapshot, slashReplacementRange, type SlashTokenSnapshot 
 const draftPaneOf = 'draft'
 const sessionPane = (sessionId: string) => `session:${sessionId}`
 
+/** Environment-local request IDs must begin with a lowercase letter. */
+export function createChatSubmissionId(): string {
+  return `chat-${globalThis.crypto.randomUUID()}`
+}
+
 const draftBlockCopy: Record<string, string> = {
   unsupported: '当前连接不支持在项目中创建会话。',
   'no-project': '还没有选择项目，先在弹窗中选择一个项目。',
@@ -196,7 +201,7 @@ export function ChatPage({ service, chat, theme: themeProp, openViaOverlay, uiCo
     if (pendingPane !== undefined || !canSend) return
     const currentDraft = store.read(capturedPane)
     if (!currentDraft.text.trim()) return
-    const submissionId = globalThis.crypto.randomUUID()
+    const submissionId = createChatSubmissionId()
     const editCapture = store.captureForSend(capturedPane, submissionId)
     const captured = editCapture.composition
     const readyItems = captured.items.filter(item => item.phase.state === 'ready')

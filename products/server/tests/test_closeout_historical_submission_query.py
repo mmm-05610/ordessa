@@ -48,6 +48,9 @@ def test_original_submission_facts_survive_missing_draft_binding_decoder(tmp_pat
         first.start()
         target = first.wire.dispatch("agent.session.resolve", {"location": location})["target"]
         native.bind_backend_target(target)
+        capture["expectedConditions"] = first.wire.dispatch("agent.submission.capture.read", {
+            "target": target, "mode": "existing",
+        })
         accepted = first.wire.dispatch("agent.submitInput", {
             "target": target,
             "draftRevision": capture["draft"]["draftRevision"],

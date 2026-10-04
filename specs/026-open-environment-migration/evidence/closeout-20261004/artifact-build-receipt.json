@@ -1,0 +1,110 @@
+{
+  "sourceHead": "4b320cad97c2e53d3972f224e50302449514a6e3",
+  "qaId": "root-closeout-25cc0477-2e8d-49c0-9469-f1d93f5fe121",
+  "qaWork": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-25cc0477-2e8d-49c0-9469-f1d93f5fe121",
+  "stage": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.staging/root-closeout-25cc0477-2e8d-49c0-9469-f1d93f5fe121",
+  "out": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-25cc0477-2e8d-49c0-9469-f1d93f5fe121/out-retry-1",
+  "publicPath": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-25cc0477-2e8d-49c0-9469-f1d93f5fe121/fixture-public.pem",
+  "signing": "Fresh controlled Ed25519 fixture public key only; private key never exported or persisted. No real key paths accessed.",
+  "scope": "Build/extract local artifact only, no system installation or user services; no --skip-pip.",
+  "interruptedAttempt": {
+    "out": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-25cc0477-2e8d-49c0-9469-f1d93f5fe121/out",
+    "finalExitCode": "unavailable after turn interruption",
+    "bytes": 3876,
+    "sha256": "3c85a8462aab4f60b376bf159e553a0ca5d686500acd5ce7690460aeba26fa41",
+    "accepted": false
+  },
+  "cache": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-25cc0477-2e8d-49c0-9469-f1d93f5fe121/cache",
+  "completedAttempt": {
+    "exitCode": 0,
+    "acceptedBuild": true,
+    "result": {
+      "version": "0.1.0",
+      "build": "20261004-4b320cad9",
+      "deb": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-25cc0477-2e8d-49c0-9469-f1d93f5fe121/out-retry-1/ordessa_0.1.0_amd64.deb",
+      "debSha256": "707b8fbb2e5894b8dbdb1c6c4aee8e6b082bbdac1a6f13b28b2ff904e6ea7e98",
+      "debSize": 211689720,
+      "appTreeSha256": "1ec64e12b904ec488434adb79ac657eee2980eb82d641b3e7b8fd493db73828f",
+      "sha256sums": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-25cc0477-2e8d-49c0-9469-f1d93f5fe121/out-retry-1/SHA256SUMS",
+      "bridgeSha256": "714044a5b490a53d5fa89aade993c496e5fa3a5f7c614b4465c4990575185cbd",
+      "bridgeMatchesBaseline": true,
+      "iconPlaceholder": false,
+      "metadataStubs": [],
+      "pythonSha256": "269b2c99e4db15b242bf01832f4fea1e8f1a664f273cff519393f296e9820b41",
+      "productPackages": [
+        "packages/backend/environment-api",
+        "packages/backend/persistence-sqlite",
+        "packages/backend/pacthold",
+        "packages/backend/server-plugin-api",
+        "plugins/harness/api",
+        "plugins/runtime-compat",
+        "plugins/sandbox/api",
+        "plugins/sandbox/backend",
+        "plugins/sandbox/adapters",
+        "plugins/permissions/api",
+        "plugins/permissions/backend",
+        "plugins/permissions/adapters",
+        "plugins/workspace",
+        "plugins/harness",
+        "apps/server",
+        "plugins/server-compat",
+        "plugins/model-provider/server",
+        "plugins/model-provider/profile-contribution",
+        "plugins/profile",
+        "plugins/skills",
+        "plugins/agent/backend",
+        "products/server"
+      ],
+      "pipSkipped": false,
+      "steps": [
+        {
+          "name": "python-runtime",
+          "ms": 433
+        },
+        {
+          "name": "server-deps",
+          "ms": 102769
+        },
+        {
+          "name": "product-packages",
+          "ms": 35533
+        },
+        {
+          "name": "harnesses",
+          "ms": 0
+        },
+        {
+          "name": "app",
+          "ms": 562
+        },
+        {
+          "name": "acp-bridge",
+          "ms": 865
+        },
+        {
+          "name": "bin",
+          "ms": 6
+        },
+        {
+          "name": "desktop-entry",
+          "ms": 1
+        },
+        {
+          "name": "doc",
+          "ms": 9
+        },
+        {
+          "name": "icons",
+          "ms": 1509
+        }
+      ]
+    },
+    "behaviorAcceptance": "NOT_RUN"
+  },
+  "extractedRoot": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted",
+  "relocation": {
+    "old": "/home/maoqh/projects/ordessa/worktree/026-open-environment-migration/packaging/.cache/root-closeout-25cc0477-2e8d-49c0-9469-f1d93f5fe121/extracted-retry-1",
+    "new": "/tmp/ordessa-026-artifact-y8h5oxy7/extracted",
+    "reason": "Owned extracted artifact relocated physically outside checkout to prove source-free imports; no system install."
+  }
+}
