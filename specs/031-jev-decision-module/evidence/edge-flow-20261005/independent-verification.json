@@ -1,0 +1,33 @@
+{
+  "verified_runs": 4,
+  "rows": [
+    {
+      "batch": "empty",
+      "run_id": "b86d56d3-245b-4167-89f1-8141a556105c",
+      "disposition": "clarify",
+      "action": null,
+      "verified": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_FLOW_EXPECTED_COUNTS"
+    },
+    {
+      "batch": "main",
+      "run_id": "1c59b2d5-ff12-43af-9977-442635788eca",
+      "disposition": "ready",
+      "action": "noDelegation",
+      "verified": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_FLOW_EXPECTED_COUNTS"
+    },
+    {
+      "batch": "configuration",
+      "run_id": "2f44c0c1-453f-41c4-8bf0-f3311d10c342",
+      "disposition": "clarify",
+      "action": null,
+      "verified": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_FLOW_EXPECTED_COUNTS"
+    },
+    {
+      "batch": "injection",
+      "run_id": "5346b6a9-7542-4a28-8980-9151a15c04a6",
+      "disposition": "ready",
+      "action": "reuse",
+      "verified": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_FLOW_EXPECTED_COUNTS"
+    }
+  ]
+}

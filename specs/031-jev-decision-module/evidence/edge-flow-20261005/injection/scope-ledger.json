@@ -1,0 +1,52 @@
+{
+  "scope_id": "jev-edge-injection-20261005",
+  "input_hash": "sha256:a1a165fc4edf12fd3b5a6e112f7373b2cbbdede69e5665fdba0625cf6cc145e8",
+  "limit": 6,
+  "cases": [
+    "edge"
+  ],
+  "requests": [
+    {
+      "case_id": "edge",
+      "attempt": 1,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.3864
+    },
+    {
+      "case_id": "edge",
+      "attempt": 2,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6078
+    },
+    {
+      "case_id": "edge",
+      "attempt": 3,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.9181
+    },
+    {
+      "case_id": "edge",
+      "attempt": 4,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.9132
+    },
+    {
+      "case_id": "edge",
+      "attempt": 5,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.278
+    },
+    {
+      "case_id": "edge",
+      "attempt": 6,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6511
+    }
+  ]
+}

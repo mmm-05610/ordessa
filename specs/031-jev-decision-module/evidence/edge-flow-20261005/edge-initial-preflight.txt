@@ -1,0 +1,7 @@
+Initial prepare-only check, credential_reads=0, real_model_requests=0:
+edge-empty-plan: PREPARED
+edge-main-plan: PREPARED
+edge-configuration-plan: FAILED plan_invalid
+edge-injection-plan: PREPARED
+Static trace: VersionedObservation.__init__ received unexpected descriptor_digest in edge_flow_probe.py:62; correct DTO field is content_digest.
+No model scope reservation or key read occurred; this probe defect was caught before live calls.

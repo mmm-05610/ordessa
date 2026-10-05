@@ -163,3 +163,9 @@ JD009 交付与离线行为已验证，真实家族 opt-out/unsupported 仍 PART
 [原参考图证据](evidence/reference-flow-20261005/README.md)，[原排名证据](evidence/rank-flow-20261005/README.md)。累计184次真实Jev请求，已报告141209输入/12613输出，3次历史usage未知，费用UNKNOWN，无重试/付费fallback/原生效果。旧协议与标签失败保持原记录。
 
 [最终离线证据](evidence/original-graph-final-offline-20261005/README.md)：260项全套、67逐场景、固定基线和当前各57核心ID通过。新增排名取消与截止反例通过，已发attempt不返还、不重用。JD009家族缺能力与JD010模型协议稳定性/旧标签失败仍PARTIAL；不把局部通过提升为产品全就绪。
+
+## 原图边界补齐与授权范围交付
+
+[新增边界证据](evidence/edge-flow-20261005/README.md)：无候选clarify、显式主Agent处理noDelegation（零候选/组合/校验）、新配置结构合法但必需owner语义unknown而clarify、v2第三方注入贯穿原图和受控组合/校验，共24真实请求/4run全部符合先冻结预期。四个终态/source/plan/FlowRef与计数独立复验通过。配置schema/字段外部定义，字段改名反例通过；首DTO字段预检失败和审计排序错误留档，无key/HTTP重试填绿。
+
+最终269项全套、67逐场景、57固定基线/当前ID通过；累计208次真实免费Jev调用，已报告164315输入/13689输出，3次历史usage未知，费用UNKNOWN。原计划9类样本没有未跑类别，但不把有限样本、受控owner或新规则通过推广为整体成熟。源码实施与规定验收报告已交付；产品就绪仍PARTIAL，JD009家族能力缺席、JD010历史标签失败/概率和协议错误仍开放。实际Harness应用不在本轮，不扩大授权、不改其他工作树、不merge/push。
