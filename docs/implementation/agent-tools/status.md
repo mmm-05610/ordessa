@@ -184,3 +184,23 @@ C层结构测试先33P exit0(0.08s)，增加wire版本反例后与runtime/node/i
 本包--strict结构5份通过。首次误提前加--batch完成门exit1，五单每单四stage未勾选；这是未完成门真实红，未删门/改合同或伪勾选。接纳commit前格式检查exit0，仅说明格式。AU001尚待核心回归与公开验证收口；下一AU002仍按串行依赖进入，不派三家执行。三家生产scope及CAS能力未核，M预算0，整体PARTIAL。
 
 AU001补强：UnitInspection为当前owner只读来源，DirectoryBinding/epoch/ownership不由core猜测；版本未知snapshot允许sourceRevision=null且comparisonGuarantee=unavailable，未知kind允许scope=null/actions空，不制造支持。配置结构最终38P，连runtime/node/input119P/0F、exit0、1.15s；核心全回归269P/3F、exit1、7.38s，仍同三个已登记方向扫描ID，日志au001-core-regression.txt。未改继承红断言，未恢复legacy。AU001契约切片CODE_READY、整体门PARTIAL，后续AU002按已冻结契约推进；AU003之前不派三家包写者。
+
+### 初始化入口再次实测 · 2026-10-05 02:10 UTC
+
+用户再次要求初始化探查系统Harness二进制。现有CLI与三Skill已覆盖，无需重复新增入口；独立子代理只读复查确认。系统`python3 -m pytest` exit1（缺pytest），改用本树既有专属venv，未安装或修改全局依赖。
+
+执行`/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python -m pytest -c products/agent-tools/pyproject.toml products/agent-tools/tests/test_initialization.py products/agent-tools/tests/test_distribution.py -q`：22P/0F、exit0、3.93s。含当前源码wheel构建、fresh隔离venv安装及实际entrypoint初始化受控目录；候选执行标记未创建。不是真实Harness任务验收。
+
+执行`PYTHONPATH=products/agent-tools/src /home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python -m ordessa_agent_tools init --json`：exit0，扫描完整，找到Codex `/usr/lib/chatgpt/resources/codex` 和Pi `/home/maoqh/.local/bin/pi`；Claude Code未找到。候选未执行，runtimeReady=unknown。范围仍为八家已审阅命令名及绝对PATH；版本、登录、真实运行、Windows实机及远端安装未验证。AU003拆包时必须同步迁移目录生成器的旧Harness汇总来源。AU002未提交工作保留，整体仍PARTIAL。
+
+### AU002 核心配置协调阶段检查点
+
+基线2ce8a151286760b427c58c8111fcf341060ce95f，旧三个执行者及初始化只读审阅者均已结束，主会话唯一共享写者。新增AgentConfiguration复用Environment的同一个OperationStore/DomainStore、受保护fingerprint及InvocationIssuer；规范target scope在同SQLite事务预留，固定Node/Unit/provider activation/目录/epoch/expected native revision。required未知配置或未取得材料发前拒绝；optional不送owner并逐项rejected；全optional不适用则无claim/无native dispatch、记录refused。
+
+owner必须实际通过同Issuer的verify_and_consume；仅收到ACK、错误digest/scope、吞掉失败验证均unknown。同key重放只读原操作，unknown/deferred占用scope，查询只核实原attempt。确认后发布中断可从concluded step完成数据发布，不重新调owner。并发查询捕获step revision，迟到结果不替换后来的已记录结果；步骤内保留独立历史观察而非“最新配置”。inspect每次向当前owner查询，实例修改不保存Profile。Issuer成功验证标志复用原_live issued_条目，无新授权字典/持久权限源。
+
+Server的agent_core_methods新增显式contract_version参数，默认agent-assembly/1及原Profile镜像不变。显式v2接四个配置公开方法，配置结果只投影operationRef/revision/status/configurationResult，不暴露内部授权/请求事实。版本冲突为CONFLICT_VERSION、同key异内容CONFLICT_REQUEST、授权不足FORBIDDEN、未实现节点操作CAPABILITY_UNSUPPORTED；supportedMethods不包含尚未实现的节点方法，nodes/managedInput仍false。生产部署未切v2，不宣称节点产品可用。
+
+验证（Python均为本树专属venv）：初始management10P/0F exit0、0.87s；补optional/deferred/ACK/并发及中断反例22P/0F exit0、1.82s；补Server绑定、退役、真实SQLite冷开/原子回滚后management31项。`-m pytest evidence/agent-unit-model/test_management.py`与Profile wire、Invocation组合100P/0F exit0、2.46s。随后management/configuration合同/Profile wire/Invocation/runtime接纳/Node/input七文件组合219P/0F exit0、4.36s（真实路径均为docs/implementation/agent-tools/evidence/agent-unit-model或products/agent-tools/tests）。发行test_distribution.py＋test_bundle.py 8P/0F exit0、6.30s，含fresh wheel安装；不累计历史快照。核心全回归269P/3F exit1、7.12s，仍同三个继承方向扫描ID，原始日志au002-core-regression.txt；只去行尾空白，保留诊断。五单--strict结构检查exit0，不代表完成门。
+
+C：同SQLite真实事务＋受控owner/authority，无真实Harness；P：本阶段未启动真实Harness（发行测试为独立客户端安装证据）；M：0/未授权。AU002_PARTIAL：C1材料acquire与SecretRef受权解析仍缺生产接线；不能把resourceRefs直接传成已取得材料。生产prepare/applyProfile/lifecycle/access、三家实际Unit/native确认与owner版本比较、完整迟到原生证据的provider持久保存待后续补齐。没有新DB版本或用户数据迁移，没有安装更新第三方/读用户认证/改登录/服务重启/模型调用。共享接口及管理反例已具阶段提交条件，依AU003前置进入三家接线；所有未完成门保留，整体PARTIAL，不勾伪Stages。

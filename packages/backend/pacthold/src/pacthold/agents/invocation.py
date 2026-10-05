@@ -304,7 +304,7 @@ class InvocationIssuer:
                                  "grant": grant.to_dict()})
             context = object.__new__(InvocationContext)
             object.__setattr__(context, "_payload", payload)
-            self._issued[id(context)] = [context, payload, grant, "issued"]
+            self._issued[id(context)] = [context, payload, grant, "issued", False]
             return context
 
     def issue(self, request, operation_digest, step_id, action, target_ref, *, delegation_ref=None, cleanup=False):
@@ -314,6 +314,27 @@ class InvocationIssuer:
         _, _, binding = self._operation_binding(request, operation_digest, step_id)
         return self._issue(request, operation_digest, step_id, "query", binding["targetRef"],
                            binding["delegationRef"], binding["cleanup"], query=True)
+
+    def verified_consumption(self, context):
+        """Read this live issuer's successful effect verification, not a grant.
+
+        Lost or capacity-collected proof is unknown; it never authorizes a
+        second dispatch or claims that native effects completed.
+        """
+        with self._lock:
+            entry = self._issued.get(id(context))
+            return (type(context) is InvocationContext and entry is not None
+                    and entry[0] is context and entry[1] == context._payload
+                    and entry[3] == "consumed" and entry[4] is True)
+
+    def verified_observation(self, context):
+        """Successful live query verification; conveys no effect permission."""
+        with self._lock:
+            entry = self._issued.get(id(context))
+            return (type(context) is InvocationContext and entry is not None
+                    and entry[0] is context and entry[1] == context._payload
+                    and entry[3] == "issued" and entry[4] is True
+                    and json.loads(entry[1])["query"] is True)
 
     def verify_and_consume(self, context, action, provider_ref, target_ref, input_digest):
         """Trusted provider checks immediately before use; no native call occurs here."""
@@ -327,9 +348,12 @@ class InvocationIssuer:
                 raise UnknownResultError("invocation permission has already been consumed")
             # Set before calling any trusted port, including reentrant callbacks.
             registered[3] = "verifying"
+            registered[4] = False
             facts = json.loads(registered[1])
             try:
-                return self._verify_registered(registered, facts, action, provider_ref, target_ref, input_digest)
+                verified = self._verify_registered(registered, facts, action, provider_ref, target_ref, input_digest)
+                registered[4] = True
+                return verified
             finally:
                 registered[3] = "issued" if facts["query"] else "consumed"
 

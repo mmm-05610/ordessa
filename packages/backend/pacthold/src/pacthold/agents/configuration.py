@@ -9,6 +9,7 @@ from dataclasses import dataclass
 import json
 from typing import Mapping
 
+from ordessa_environment_api import IdentityMismatchError
 from ordessa_environment_api.operations import safe_json, sealed_mapping
 from .contracts import manifest_content, _safe_tree
 
@@ -22,6 +23,10 @@ class ConfigurationContractError(ValueError):
 
 class ConfigurationUnsupported(ConfigurationContractError):
     code = "CONFIGURATION_UNSUPPORTED"
+
+
+class ConfigurationRevisionConflict(IdentityMismatchError):
+    code = "CONFIGURATION_REVISION_CONFLICT"
 
 
 def _name(value):
