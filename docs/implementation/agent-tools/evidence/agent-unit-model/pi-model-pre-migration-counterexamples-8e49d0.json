@@ -1,0 +1,30 @@
+{
+  "sourceHead": "8e49d0413e6119e8a05aad59aabbdd5f74f9244a",
+  "checks": {
+    "retry_only_does_not_replace_provider_subtree": false,
+    "restart_plan_keeps_desired_model": false,
+    "missing_model_and_session_not_match": false
+  },
+  "passed": 0,
+  "failed": 3,
+  "intentFields": [
+    [
+      "providers",
+      "acme"
+    ],
+    [
+      "retry"
+    ]
+  ],
+  "providerObjects": [
+    {
+      "baseUrl": "https://fixture.test",
+      "api": "openai-completions"
+    }
+  ],
+  "emptyReadbackVerdict": "match",
+  "evidenceLevel": "controlledPureCompilerCounterexamples",
+  "nativeHarnessProcesses": 0,
+  "modelCalls": 0,
+  "productReady": false
+}

@@ -680,3 +680,5 @@ sidecar与旧C2批量注册仍有路径，独立生产模型/凭据/恢复owner�
 七own wheel final安装13命令全exit0、七hash、pipcheck/cleaned/M0/productReady=false，回执au003-codex-model-install-final-6af84d.json不覆盖旧证据。全产品integration311P1F exit1 16.98s，仍strict冷代次目标、断言不改；Core/全Server/旧C2本轮未跑，继承红和旧consumer债继续。两只读终审无切片阻断，但verify仅thread/model/provider，非完整endpoint/credential/effort应用；None/True resume期望是未验证计划，无真实同thread恢复证据。ACP历史1.1.14不冒app-server0.157.1支持，provider methods不扩。
 
 生产授权/材料/凭据/owner/coldgeneration/lifecycle/tasks/results/A18和native P/M仍PARTIAL；资源ABSENT、费用unknown，无第三方安装更新/登录/用户DB/全局配置/用户服务操作/push/主树合并。下一Pi纯迁移只读盘点已识别漏model/retry覆盖问题，先补反例再迁。检查点后继续goal，不标DONE。
+
+Codex迁移检查点8e49d0413e6119e8a05aad59aabbdd5f74f9244a clean后继续Pi前置。Claude只读盘点确认existing公共DTO可复用、原独立Pi生产面仅model/thinking；主会话实跑旧pure受控反例exit1、0P3F（非pytest）：retry-only丢models、restart漏desired model、缺model/session仍match。新JSON保留原输入结果，可复跑probe与迁移盘点显式纳入材料检查点。下一迁compiler/facts并加typed/重复model反例，生产完整owner/applied/native P/M仍PARTIAL；未操作用户服务或模型。见[evidence/agent-unit-model/pi-model-migration-inventory.md](evidence/agent-unit-model/pi-model-migration-inventory.md)。

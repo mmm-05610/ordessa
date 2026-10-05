@@ -161,3 +161,7 @@ AgentUnit迁移切片在 `ServerProductComposition.native_runtime` 早拒 Pi/Cod
 ### AU003 Codex历史纯配置迁移不等于生产路由确认（2026-10-05，Open）
 
 旧pure compiler/facts已迁独立Codex，旧common/native/remote/materialization消费同一事实；203P仅受控和fresh own-wheel。verify成功只证thread/model/provider样本，不能证明endpoint/credential/effort已应用；resume None/True仅未验证计划、不能称同thread恢复。历史ACP1.1.14不代表app-server0.157.1兼容，默认provider methods未扩大。旧Harness新增own Codex依赖，历史baseline安装清单/完整Server发行闭包仍待复核；七own wheel13命令安装成功只证明独立闭包。cold1F/旧C2消费者债未隐藏，详见 `docs/implementation/agent-tools/evidence/agent-unit-model/codex-model-compilation.md`。
+
+### AU003 Pi旧pure compiler丢失与误确认（2026-10-05，Open）
+
+Codex检查点后旧Pi pure编译实跑三个反例0P3F exit1：已存在provider的retry-only仍替换为无models子树；restart分支未保留desired session model；无model/session readback的None相等报match。原成熟能力保留待迁独立owner修补，不能用这份pure verdict宣称生产applied。具体复现脚本/受控receipt见 `docs/implementation/agent-tools/evidence/agent-unit-model/pi-model-migration-inventory.md`，无native/model效果；迁移后必须保留正向与反例复跑。
