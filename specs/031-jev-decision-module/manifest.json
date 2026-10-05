@@ -870,7 +870,7 @@
   "implementationRun": {
     "authorization": "user /goal current worktree only",
     "baseline": "e4714eba00a78ba04c5b53318830a0d409e76bbe",
-    "receipt": "evidence/zen-offline-20261005/receipt.json",
+    "receipt": "evidence/completion-offline-20261005/receipt.json",
     "tasks": {
       "JD001": "OFFLINE_VERIFIED",
       "JD002": "OFFLINE_VERIFIED",
@@ -953,7 +953,7 @@
       "T67": "PASSED",
       "T68": "PASSED"
     },
-    "unique_tests_passed": 211,
+    "unique_tests_passed": 232,
     "all_work_complete": false,
     "additionalCoreRegression": {
       "matchedIds": 57,
@@ -979,6 +979,15 @@
       "matchedLabels": 9,
       "modelScoredCases": 25,
       "status": "PARTIAL_NOT_DEFAULTED"
+    },
+    "completionFollowup": {
+      "offline": "PASSED",
+      "evaluationPrepared": "evidence/completion-offline-20261005/evaluation-prepared.json",
+      "scopeId": "jev-domain-v2-20261005",
+      "maximumAdditionalRequests": 42,
+      "liveAuthorization": "PENDING",
+      "sourceAuthority": "native core and owner unchanged",
+      "JD009Delivery": "OFFLINE_VERIFIED; real family capability remains PARTIAL"
     }
   }
 }

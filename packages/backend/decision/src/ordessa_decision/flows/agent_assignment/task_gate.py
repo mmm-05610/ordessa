@@ -7,8 +7,9 @@ from dataclasses import dataclass
 from collections.abc import Mapping
 import json
 from pathlib import Path
+from urllib.parse import urlsplit, parse_qsl
 from ordessa_decision.contracts import (TaskBrief, PolicyRef, DecisionQuestion,
-    DecisionAnswer, digest, freeze, plain)
+    DecisionAnswer, ExternalRef, canonical, digest, freeze, plain)
 from ordessa_decision.runtime import RuntimeFailure
 
 class PolicyInvalid(RuntimeFailure):
@@ -46,12 +47,25 @@ def load_task_gate_policy():
 def _policy(policy):
     try:
         value = freeze(plain(policy))
-        if set(value) != {'schema_version','policy_id','version','applicable_task_categories',
+        if set(value) - {'input_projection'} != {'schema_version','policy_id','version','applicable_task_categories',
             'max_rounds','aggregate_precedence','dimensions','hard_checks','fact_checks',
             'code_catalog','templates'}: raise ValueError()
         if value['schema_version'] != 'task-gate/1': raise ValueError()
         if not value['policy_id'] or not value['version'] or not value['applicable_task_categories']:
             raise ValueError()
+        projection = value.get('input_projection')
+        if projection is not None:
+            if (set(projection) != {'version','fields','max_entries','max_text_bytes','trust_classifications','reference_identity_fields'}
+                    or projection['version'] != 'task-input-summary/1'
+                    or not {'source_ref','description','trust_classification'} <= set(projection['fields'])
+                    or set(projection['fields']) - {'source_ref','source_version','description','trust_classification','content_summary','requirement_ids'}
+                    or len(set(projection['fields'])) != len(projection['fields'])
+                    or any(type(projection[k]) is not int or projection[k] <= 0 for k in ('max_entries','max_text_bytes'))
+                    or not projection['trust_classifications']
+                    or any(type(v) is not str or not v for v in projection['trust_classifications'])
+                    or not projection['reference_identity_fields']
+                    or any(type(v) is not str or not v for v in projection['reference_identity_fields'])):
+                raise ValueError()
         if type(value['max_rounds']) is not int or not 1 <= value['max_rounds'] <= 16:
             raise ValueError()
         if tuple(value['aggregate_precedence']) != ('fatalBusinessBlock','clarify','revise','gate_pass'):
@@ -141,6 +155,65 @@ def _aggregate(policy, issues):
     if 'revise' in statuses: return GateResult('revise',tuple(issues))
     return GateResult('gate_pass')
 
+def _input_context(task, policy):
+    """Project explicit safe summaries as data; never resolve their references.
+
+    Opaque/display input is not new task evidence. Structured source summaries
+    are included in both questions and the review signature, including revisions.
+    Their trust labels never become the host's confirmation or authority facts.
+    """
+    config = policy.get('input_projection')
+    if config is None:
+        return {}
+    sensitive = {'apikey','password','accesstoken','authorization','privatekey','clientsecret',
+                 'token','cookie','secret','credentials','credential','bearer','refreshtoken'}
+    def norm(value): return value.lower().replace('_','').replace('-','')
+    def reference(value):
+        ref = ExternalRef.from_dict(plain(value))
+        for key, child in ref.identity.items():
+            if norm(key) in sensitive:
+                raise RuntimeFailure('task_input_sensitive')
+            if key not in config['reference_identity_fields'] or type(child) not in (str,int,type(None)):
+                raise RuntimeFailure('task_input_ref_unsupported')
+            if isinstance(child,str):
+                url = urlsplit(child) if '://' in child else None
+                if child.lower().startswith('bearer ') or (url and (url.username or url.password
+                        or any(norm(k) in sensitive for k,_ in parse_qsl(url.query)))):
+                    raise RuntimeFailure('task_input_sensitive')
+        canonical(ref,max_bytes=config['max_text_bytes'])
+        return plain(ref)
+    inputs = []
+    for item in task.inputs:
+        if not isinstance(item, Mapping) or item.get('purpose') == 'display':
+            continue
+        if item.get('purpose','task_evidence') != 'task_evidence':
+            raise RuntimeFailure('task_input_purpose_unknown')
+        if not {'source_ref','description','trust_classification'} <= set(item):
+            if 'purpose' in item or {'source_ref','content_summary','trust_classification'} & set(item):
+                raise RuntimeFailure('task_input_incomplete')
+            # Generic extension/display metadata is not a source-backed summary.
+            continue
+        if item['trust_classification'] not in config['trust_classifications']:
+            raise RuntimeFailure('task_input_trust_unknown')
+        projected = {k:plain(item[k]) for k in config['fields'] if k in item}
+        projected['source_ref'] = reference(item['source_ref'])
+        for key in ('description','content_summary'):
+            if key in projected and (type(projected[key]) is not str
+                    or len(projected[key].encode('utf-8')) > config['max_text_bytes']):
+                raise RuntimeFailure('task_input_size')
+        if 'source_version' in projected and projected['source_version'] is not None and (type(projected['source_version']) is not str or not projected['source_version']):
+            raise RuntimeFailure('task_input_version')
+        if 'requirement_ids' in projected and (not isinstance(projected['requirement_ids'],list)
+                or any(type(v) is not str or not v for v in projected['requirement_ids'])):
+            raise RuntimeFailure('task_input_requirements')
+        canonical(projected,max_bytes=config['max_text_bytes'])
+        inputs.append(projected)
+    contexts = [reference(value) for value in task.context_refs]
+    if len(inputs)>config['max_entries'] or len(contexts)>config['max_entries']:
+        raise RuntimeFailure('task_input_size')
+    return {'role':'task_data_not_authority','inputs':inputs,'context_refs':contexts,
+            'continuation_ref':reference(task.continuation_ref) if task.continuation_ref else None}
+
 def compile_task_gate(task, ctx, policy, *, facts=None, policy_ref=None):
     """Pure compile stage for separate HardTaskGate and AssessTask nodes."""
     if not isinstance(task,TaskBrief): raise RuntimeFailure('task_gate_task_invalid')
@@ -153,9 +226,10 @@ def compile_task_gate(task, ctx, policy, *, facts=None, policy_ref=None):
     category = facts.get('task_category','general')
     if category not in policy['applicable_task_categories']:
         raise PolicyInvalid()
+    input_context = _input_context(task,policy)
     relevant = {'task_id':task.task_id,'task_revision':task.task_revision,'goal':task.goal,
         'boundaries':task.boundaries,'acceptance_criteria':task.acceptance_criteria,
-        'policy_digest':digest('policy',policy),'facts':facts}
+        'policy_digest':digest('policy',policy),'facts':facts,'input_context':input_context}
     signature = digest('feedback',relevant)
     issues = []
     for check in policy['hard_checks']:
@@ -178,7 +252,7 @@ def compile_task_gate(task, ctx, policy, *, facts=None, policy_ref=None):
             options = {key:{'description':answer['description'],'code':answer['code']} for key,answer in dimension['answers'].items()}
             questions.append(DecisionQuestion('task-gate.'+dimension['id'],policy['version'],'choice',
                 {'task':{'goal':task.goal,'boundaries':task.boundaries,'acceptance_criteria':task.acceptance_criteria},
-                 'facts':facts,'dimension_id':dimension['id'],'required':dimension['required']},
+                 'input_context':input_context,'facts':facts,'dimension_id':dimension['id'],'required':dimension['required']},
                 dimension['question_text'],options=options,evidence_ids=facts.get('evidence_refs',()),policy_ref=policy_ref))
     return GatePlan(signature,policy_ref,policy,facts,tuple(questions),_aggregate(policy,issues) if issues else None)
 

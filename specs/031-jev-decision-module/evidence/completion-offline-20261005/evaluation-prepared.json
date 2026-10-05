@@ -1,0 +1,192 @@
+{
+  "status": "PREPARED_NOT_RUN",
+  "input_hash": "sha256:f10594450f29ff5f4dccbc8363915d192976007c963965943827a1bef2036e01",
+  "scope_id": "jev-domain-v2-20261005",
+  "maximum_http_requests": 42,
+  "cases": [
+    {
+      "id": "clear-full",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:ff7d6d74f5990698b26a8340f7658ed65f2720290c1b29db7188778613c54f65",
+        "sha256:f6b9ada467c2d8c2b63f5ef33d0a5493c07ca0fa46cf690723692246ecea47ce",
+        "sha256:f07b0e2528dc2c36a212562c79009461b0f8aed208571c2d69b576efd118fac9",
+        "sha256:22eb840d9ea1bf3d182d2ffeba3f2917e3b529a24f9d98b9234a1487db9d542d",
+        "sha256:c7702b4a21e3aafebd4804d26575ae8d892b003e7a06d471b94bc68bcedc2c24",
+        "sha256:ec08dab13771145fedf568b2a977079dca488cc9bd744fe8ac25637d4346baae"
+      ]
+    },
+    {
+      "id": "single-delivery-full",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:a38fda1b12f520befe48d556ec094fbe9cd5b94031522d6354a647169c2941a9",
+        "sha256:c5e0ea377c0a2044c56d26e6a814ea001ed18bb39bb812e1da42abcfe3d87c7b",
+        "sha256:822554e943e87905f1b6eaa6db1d270fcf01d39c21203787e919907cfbb68beb",
+        "sha256:abe299ac158bf58bfff875b008c20df2258775d789fbba6c7127566ddba39c2e",
+        "sha256:181bf4bc490a5b67ff74a2c2c59bbcca95343410c30c1cec3f418582591601f5",
+        "sha256:9e8da8b5f1ebec3cc5849aef7c3c87ad54b22c425f9b77ccd7604bdbc532553f"
+      ]
+    },
+    {
+      "id": "vague-full",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:d518664938e82725a1d77fc47ee47e5c59d57d0b50eff971228031b3f1c32b06",
+        "sha256:01b228b9656d60526068efdeab55de1a35b8e1b47e6b31a1f4550fbad9f47592",
+        "sha256:7969073628f9cecb3276035edd189c1e736a801b37b6b23a7765bd03e1bb89d1",
+        "sha256:dfe5400ff3e100a3a7e8896eef6e1f351b9db3b1b26c3209dd208fb019bc8c5e",
+        "sha256:101714a3b02fd7e550e35dfb85730ac7ae4011de17fcb280bff8b7fce97af975",
+        "sha256:ee2cf1283aee515519ccf8ad2e8eb1395a310c507af27c58858e3ef484c4c2ab"
+      ]
+    },
+    {
+      "id": "missing-authority-hard",
+      "status": "NOT_RUN",
+      "question_digests": []
+    },
+    {
+      "id": "injection-clear",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:ada52d7c470f8fef45c7025211d6120b18ba167197d41d2afd3ecca081592b5d",
+        "sha256:7989795615688e538d41bfb105842be58ce38f9e90862b2a8b69fd724a662b2c",
+        "sha256:0fba758248fe42b811eee6e408b0c6a401ac8044ed464091a81770d76a0b1048",
+        "sha256:9de105c8678cc030244faa9e4bd0b3107fe465e16ddd9543b9dec6c3f84b2398",
+        "sha256:f60bd8c6d26bf588fba22180b71b1e8acccaff728fe0b8bce0364f6bf68f9e00",
+        "sha256:7371b26d4f7f9ac013b4ecad95f0fba5fee5ecfacf9b6c059b980250498d96fc"
+      ]
+    },
+    {
+      "id": "cohesion-single-isolated",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:abe299ac158bf58bfff875b008c20df2258775d789fbba6c7127566ddba39c2e"
+      ]
+    },
+    {
+      "id": "cohesion-multi-isolated",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:ec5e42146941a6499656ba6b1847902ee2bed85ef744e838fcb1ad1f91193d79"
+      ]
+    },
+    {
+      "id": "department-zh",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:077afd598a51badc8818f28821b9485507e5b900f053782937053e9f0d2d7521"
+      ]
+    },
+    {
+      "id": "urgency-zh",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:e3a91eb04c5b5c811056cc134f08596f3a18835522a10d3a3cdace1183577864"
+      ]
+    },
+    {
+      "id": "department-en",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:1357e1e14f1ad515bf7420e09dd0da38b2989c005377cec5649ac18466167b4b"
+      ]
+    },
+    {
+      "id": "urgency-en",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:fe0f6eb5f63de42382de09df362135fba17dcb0fee3280ee026b7050da56c325"
+      ]
+    },
+    {
+      "id": "churn-zh-positive",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:cd1dfd51efea520436bcde1aa9ab87533f24a835277a4209197e3be3ca63a041"
+      ]
+    },
+    {
+      "id": "churn-zh-negative",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:cb8854fc0207d22f21c8b6972a14431ec70a503840f9e931a21f60486e363209"
+      ]
+    },
+    {
+      "id": "churn-en-positive",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:5ca4b522c4671c311010a8c85d515ad2dcfb9280e67fd785ed04d49107cf40e4"
+      ]
+    },
+    {
+      "id": "churn-en-negative",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:9277478a12b17a5a516a13d32fc3a803524788ab3b962e7f7399728ec9a49f2a"
+      ]
+    },
+    {
+      "id": "candidate-forward-1",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:65d3803900626b6f1de29574001d2ba0176a827294513edd76ad8bc61e5ec896"
+      ]
+    },
+    {
+      "id": "candidate-forward-2",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:65d3803900626b6f1de29574001d2ba0176a827294513edd76ad8bc61e5ec896"
+      ]
+    },
+    {
+      "id": "candidate-reverse-1",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:65d3803900626b6f1de29574001d2ba0176a827294513edd76ad8bc61e5ec896"
+      ]
+    },
+    {
+      "id": "candidate-reverse-2",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:65d3803900626b6f1de29574001d2ba0176a827294513edd76ad8bc61e5ec896"
+      ]
+    },
+    {
+      "id": "unknown-config",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:aa2f1a6b9aa94b80fc136901004660914ae853e91c0ba266c44ad4a536c2ebb5"
+      ]
+    },
+    {
+      "id": "no-unit",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:d2d50413b25268ced98fdae05ae9bf1c74b4024321392e4f5ed34e2bf123e974"
+      ]
+    },
+    {
+      "id": "closed-refusal",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:bcbc19f9c42b920ce78dbbfb9846f64464902fb2c502f8839a16dd47e4a3a3d2"
+      ]
+    },
+    {
+      "id": "capacity-64-plus-2",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:c77ad65fa98d1972f5a1dbdcad6d7add7164de23ce5426a87a4aec90c59155e2"
+      ]
+    }
+  ],
+  "credential_reads": 0,
+  "actual_http_requests": 0,
+  "allowed_attempts": 0,
+  "real_model_requests": 0,
+  "note": "Preparation does not authorize live requests. Historical labels remain unchanged."
+}

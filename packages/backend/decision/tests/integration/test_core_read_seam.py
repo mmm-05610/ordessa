@@ -1,5 +1,10 @@
 """Real temporary Environment registry with controlled owner; no native effects."""
 from dataclasses import replace
+from contextlib import contextmanager
+import builtins
+import hashlib
+import io
+import os
 import pytest
 from pacthold.public import Environment, InstallationRecord
 from pacthold.agents.public import *
@@ -50,17 +55,42 @@ def input_for(api):
     return OwnerProposalInput(DEF,provider,'1',{'configurationKind':'brand.new','payload':0.7},(),
         ({'obligationId':'config','requirement':'must','checkerId':'owner','checkerVersion':'1'},))
 
+@contextmanager
+def watch_file_writes(root,monkeypatch):
+    """Observe existing bytes as well as directory entries; forbid Python writes."""
+    def snapshot():
+        return {p.relative_to(root).as_posix():hashlib.sha256(p.read_bytes()).hexdigest()
+                for p in root.rglob('*') if p.is_file()}
+    before=snapshot();attempts=[]
+    with monkeypatch.context() as patch:
+        def guard(original):
+            def opening(file,mode='r',*args,**kwargs):
+                if any(flag in mode for flag in 'wa+x'):
+                    attempts.append('open-write');raise AssertionError('file write forbidden')
+                return original(file,mode,*args,**kwargs)
+            return opening
+        patch.setattr(builtins,'open',guard(builtins.open));patch.setattr(io,'open',guard(io.open))
+        original=os.open
+        def opening(path,flags,*args,**kwargs):
+            if flags & (os.O_WRONLY|os.O_RDWR|os.O_CREAT|os.O_TRUNC|os.O_APPEND):
+                attempts.append('os-open-write');raise AssertionError('file write forbidden')
+            return original(path,flags,*args,**kwargs)
+        patch.setattr(os,'open',opening)
+        yield attempts
+    assert snapshot()==before,'existing files or core store changed during read'
+
 def test_T55_T57_T61_T62_real_public_forward(setup,tmp_path,monkeypatch):
     env,policy,owner,api=setup
     import subprocess
     def forbidden(*args,**kw): raise AssertionError('process forbidden')
     monkeypatch.setattr(subprocess,'Popen',forbidden)
-    before=tuple(tmp_path.iterdir())
-    offers=api.providers.describe_configuration_offers(DEF)
-    result=api.providers.assess_configuration_proposal(input_for(api))
+    value=input_for(api)
+    with watch_file_writes(tmp_path,monkeypatch) as writes:
+        offers=api.providers.describe_configuration_offers(DEF)
+        result=api.providers.assess_configuration_proposal(value)
     assert offers.offers[0].configuration_kind=='brand.new' and result.status=='valid'
     assert owner.calls==['offers','assessment'] and owner.effects==[]
-    assert tuple(tmp_path.iterdir())==before
+    assert writes==[]
     assert owner.context.principal_scope=='authenticated'
     with pytest.raises(TypeError): api.providers.describe_configuration_offers(DEF,principal='root')
 
@@ -75,8 +105,45 @@ def test_T57_permission_version_and_bad_receipt(setup):
 
 def test_T57_owner_retired_in_callback(setup):
     env,policy,owner,api=setup
-    owner.after=lambda: env.retire(env.agent_runtime_contribution(DEF).owner_activation)
-    with pytest.raises(Exception): api.providers.describe_configuration_offers(DEF)
+    activation=env.agent_runtime_contribution(DEF).owner_activation
+    def retire_owner():
+        env.drain(activation)
+        assert env.retire(activation)[0]=='retired'
+    owner.after=retire_owner
+    with pytest.raises(AdmissionRefusedError): api.providers.describe_configuration_offers(DEF)
+    assert owner.calls==['offers']
+    with pytest.raises(AdmissionRefusedError): api.providers.describe(DEF)
+    assert owner.effects==[]
+
+@pytest.mark.parametrize('method',['offers','assessment'])
+def test_T57_owner_generation_replaced_during_pure_read(setup,method):
+    env,policy,owner,api=setup;value=input_for(api);old_ref=api.providers.describe(DEF)['providerRef']
+    replacement=Owner()
+    def replace_owner():
+        activation=env.agent_runtime_contribution(DEF).owner_activation
+        env.drain(activation)
+        assert env.retire(activation)[0]=='retired'
+        env.enable('fake.plugin')
+        env.activate('fake.plugin',AgentContributionSet(agent_runtime_providers=(replacement,)))
+    owner.after=replace_owner
+    with pytest.raises(AdmissionRefusedError,match='changed during observation'):
+        if method=='offers':api.providers.describe_configuration_offers(DEF)
+        else:api.providers.assess_configuration_proposal(value)
+    assert api.providers.describe(DEF)['providerRef']!=old_ref
+    assert replacement.calls==[] and owner.effects==[] and replacement.effects==[]
+    fresh=api.providers.describe_configuration_offers(DEF)
+    assert fresh.owner_ref==api.providers.describe(DEF)['providerRef']
+
+@pytest.mark.parametrize('method',['offers','assessment'])
+def test_T57_T62_file_guard_catches_existing_file_write(setup,tmp_path,monkeypatch,method):
+    env,policy,owner,api=setup;value=input_for(api)
+    witness=tmp_path/'existing.txt';witness.write_text('unchanged')
+    owner.after=lambda:witness.write_text('mutated')
+    with watch_file_writes(tmp_path,monkeypatch) as writes:
+        with pytest.raises(GuaranteeUnavailableError):
+            if method=='offers':api.providers.describe_configuration_offers(DEF)
+            else:api.providers.assess_configuration_proposal(value)
+    assert writes==['open-write'] and witness.read_text()=='unchanged'
     assert owner.effects==[]
 
 def test_T65_old_provider_unsupported(setup):

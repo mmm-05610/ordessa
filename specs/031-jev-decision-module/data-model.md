@@ -27,6 +27,8 @@ TaskBrief：
 结构有效但目标/边界/验收为空是可审查任务，返回 clarify/revise；不能在 codec 层拒绝所有不完整任务。
 输入来自用户/文件/第三方的文本都是数据，不成为系统指令。
 
+TaskGate 策略 v2 用 input_projection 外部配置选择字段、信任分类、引用身份字段白名单、条数与字节上限。结构化 task_evidence 摘要、contextRefs、continuationRef 同时进入每维问题 bounded_state 与相关任务签名；来源版本变化触发复评。display 元数据不成为业务证据，显式业务证据字段不完整则拒绝。引用不被自动解引用，不读取引用文件；凭据键、URL 凭据参数及未知引用身份字段拒绝。正文摘要仍由宿主提供脱敏数据，字段白名单不意味着自动发现任意文本中的秘密。信任标签和第三方自称授权不能改变宿主 requires_confirmation 事实。
+
 ## 观测
 VersionedObservation：
 observationId、subjectRef、sourceVersion|null、contentDigest、observedAt（含时区）、validUntil|null、

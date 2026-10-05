@@ -127,3 +127,13 @@ JD001–JD008 OFFLINE_VERIFIED；JD009 PARTIAL（真实配置家族 opt-out/unsu
 ## 正确逐维绑定补充（检查点后不停工）
 
 继续使用剩余额度，对 vague/single-result 各以原编译器逐问题 bounded_state 发 6 次请求；规则/任务/标签/阈值不变。vague clarify 符合标签，single-result 仍 clarify，问题 acceptance_unknown/delegation_unknown。原失败保留，T60 仍 PARTIAL。真实请求累计最终 62/64，reported usage 更新为 32611 input + 2540 output；1 个超时的 usage/服务端完成仍未知。正确状态输入、原脚本/配置快照和答案已保留在 Jev 证据 bound-state-controls。剩余 2 attempts 不足跑另一个六维场景；追加真实评测须另定预算。
+
+## 继续实施与完整复验
+
+修复 TaskBrief 业务输入遗漏：外部策略 v2 的有限摘要/引用投影进入问题及签名，来源变化重新判定；不解引用、不授予第三方权威。JD007 未新建核心，补公开观察期间退役/替换反例和已有文件写入检测。
+
+完整套件 232 passed；67 个离线场景、固定基线/当前 57 个核心 ID 再次全部通过。[继续实施证据](evidence/completion-offline-20261005/README.md)。收集器首次 3F/3P 原因是缺失 durable 目录，修复后 6P，失败日志保留。假传输不计作真实模型。
+
+原 single-result 泛化验收不足，不能断言模型错误；保留旧失败与标签，冻结新增完整任务、单维控制及各领域 23 场景/42 请求。新 plan hash f10594450f29ff5f4dccbc8363915d192976007c963965943827a1bef2036e01，预检 credential_reads=0。此前 62/64 额度不足新增批次，已提出最多额外42请求/300秒/每请求30秒/无重试/无付费fallback的具体授权，等待答复；此前私有 key 读取和迁移授权仍有效。
+
+JD009 交付与离线行为已验证，真实家族 opt-out/unsupported 仍 PARTIAL；JD010 真实质量仍 PARTIAL。检查点不停工，all_work_complete=false。

@@ -1,0 +1,299 @@
+.FFF..                                                                   [100%]
+=================================== FAILURES ===================================
+_________ test_real_graph_answer_survives_terminal_collection_failure __________
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-1312/test_real_graph_answer_survive0')
+
+    @pytest.mark.asyncio
+    async def test_real_graph_answer_survives_terminal_collection_failure(tmp_path):
+        key = tmp_path / 'fake-key'; key.write_text('offline-test-only')
+        async def reject(*args): raise RuntimeError('hostile exception never recorded')
+>       result = await live.run_plan(plan(), tmp_path / 'out', key, True, ledger_path=tmp_path / 'ledger',
+            transport=httpx2.MockTransport(lambda request: response()), terminal_verifier=reject)
+
+packages/backend/decision/tests/evaluation/test_live_acceptance.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+plan = {'version': 'jev-live-acceptance/1', 'scope_id': 'offline-scope', 'synthetic_only': True, 'settings': {'binding_ref': 'offline-zen', 'secret_ref': 'offline-key', 'base_url': 'https://opencode.ai/zen', 'model': 'jev-1.13-free', ...}, ...}
+output = PosixPath('/tmp/pytest-of-maoqh/pytest-1312/test_real_graph_answer_survive0/out')
+credential_file = PosixPath('/tmp/pytest-of-maoqh/pytest-1312/test_real_graph_answer_survive0/fake-key')
+authorize_live = True
+ledger_path = PosixPath('/tmp/pytest-of-maoqh/pytest-1312/test_real_graph_answer_survive0/ledger')
+transport = <httpx2.MockTransport object at 0x72ff3c46f740>
+terminal_verifier = <function test_real_graph_answer_survives_terminal_collection_failure.<locals>.reject at 0x72ff3c46ab60>
+
+    async def run_plan(plan, output, credential_file, authorize_live=False, *, ledger_path,
+                       transport=None, terminal_verifier=verify_terminal):
+        settings, refs, cases = validate(plan)
+        if not authorize_live: raise EvaluationError('live_authorization_required')
+        output = Path(output); ledger = ScopeLedger(ledger_path, plan)
+        if any(c['id'] in ledger.data['cases'] for c, _, _, _ in cases):
+            ledger.close(); raise EvaluationError('case_already_claimed')
+        receipt = prepare(plan); receipt.update(status='IN_PROGRESS', rows=[], retry=0, native_effects=0, cost='UNKNOWN')
+        receipt['rows'] = [{'id': c['id'], 'technical_status': 'NOT_RUN', 'quality_pass': False, 'answers': []} for c, _, _, _ in cases]
+        def save(): atomic_write(output / 'receipt.json', receipt)
+        provider = sink = None; start = time.monotonic(); deadline = start + plan['limits']['wall_timeout_seconds']
+        try:
+            save()
+            key = Path(credential_file).read_text().strip()
+            if not key or '\n' in key: raise EvaluationError('credential_invalid')
+            audited = AuditedTransport(transport or httpx2.AsyncHTTPTransport(retries=0), ledger, deadline)
+            provider = JevDecisionProvider(settings, secret_resolver=lambda _: key, transport=audited)
+            context = ReadContext(object(), 'synthetic-live-acceptance'); sink = FileEvidenceSink(output / 'durable', read_context=context)
+            code = digest('flow', {'reviewed_source': reviewed_code_digest(__file__), 'plan_digest': digest('policy', plan)})
+            ref = FlowRef('jev.live-acceptance', '1', flow_digest(code, refs))
+            for (case, task, questions, gate), row in zip(cases, receipt['rows']):
+                if time.monotonic() >= deadline: row['error'] = 'global_deadline'; save(); continue
+                ledger.begin(case['id']); audited.case_id = case['id']; row['technical_status'] = 'CLAIMED'; save()
+                recorded = RecordedProvider(provider, row, save)
+                builder = GraphBuilder(name='jev-live-acceptance', state_type=dict, deps_type=RunContext, input_type=DecisionRequest, output_type=BusinessOutcome, auto_instrument=False)
+                @builder.step
+                async def evaluate(ctx) -> BusinessOutcome:
+                    await ctx.deps.enter_node('EvaluateSyntheticCase')
+                    for question in questions: await ctx.deps.gateway.decide(question)
+                    return BusinessOutcome('clarify', issues=({'code': 'evaluation_only_no_proposal'},))
+                builder.add(builder.edge_from(builder.start_node).to(evaluate), builder.edge_from(evaluate).to(builder.end_node))
+                flow = TrustedFlow(ref, builder.build(), lambda request: {}, refs, code, plan['scope_id'])
+                limits = RunLimits(max_model_attempts=max(1, len(questions)), max_node_entries=2, max_repair_rounds=0, max_inflight_model_calls=1,
+                    wall_timeout_seconds=min(plan['limits']['case_timeout_seconds'], deadline - time.monotonic()), cleanup_timeout_seconds=2)
+                services = DecisionServices(None, None, None, None, recorded, sink, {}, context, refs, mode='real')
+                request = DecisionRequest('eval-' + case['id'], task, ref, limits)
+                try:
+                    result = await run_decision(request, flow=flow, services=services)
+                    row.update(run_id=result.run_id, technical_status=result.status, result_digest=digest('result', result)); save()
+                    await terminal_verifier(sink, result, context)
+                    row['terminal_verified'] = True
+                    if result.status == 'completed':
+                        row.update(score(case, questions, tuple(DecisionAnswer.from_dict(a) for a in row['answers']), gate))
+                        row['quality_source'] = 'model' if questions else 'hard_rule_zero_model'
+                except asyncio.CancelledError:
+                    row.update(technical_status='CANCELLED', error='cancelled_unknown'); save(); raise
+                except Exception:
+                    row.update(technical_status='COLLECTION_FAILED', error='collection_failed', quality_pass=False)
+                finally: save()
+            receipt['status'] = 'SCOPED_PASS' if all(r['quality_pass'] for r in receipt['rows']) else 'PARTIAL'
+        except asyncio.CancelledError:
+            receipt.update(status='PARTIAL', error='cancelled_unknown'); raise
+        except Exception:
+>           receipt.update(status='PARTIAL', error='evaluation_failed'); raise EvaluationError('evaluation_failed') from None
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           decision_live_acceptance.EvaluationError: evaluation_failed
+
+packages/backend/decision/evaluation/live_acceptance.py:255: EvaluationError
+__________ test_http_claim_persists_and_reexecution_preserves_receipt __________
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-1312/test_http_claim_persists_and_r0')
+
+    @pytest.mark.asyncio
+    async def test_http_claim_persists_and_reexecution_preserves_receipt(tmp_path):
+        data = plan(); key = tmp_path / 'fake-key'; key.write_text('offline-test-only')
+        calls = []
+        def handler(request): calls.append(request); return response()
+>       result = await live.run_plan(data, tmp_path / 'out', key, True, ledger_path=tmp_path / 'ledger', transport=httpx2.MockTransport(handler))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+packages/backend/decision/tests/evaluation/test_live_acceptance.py:72: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+plan = {'version': 'jev-live-acceptance/1', 'scope_id': 'offline-scope', 'synthetic_only': True, 'settings': {'binding_ref': 'offline-zen', 'secret_ref': 'offline-key', 'base_url': 'https://opencode.ai/zen', 'model': 'jev-1.13-free', ...}, ...}
+output = PosixPath('/tmp/pytest-of-maoqh/pytest-1312/test_http_claim_persists_and_r0/out')
+credential_file = PosixPath('/tmp/pytest-of-maoqh/pytest-1312/test_http_claim_persists_and_r0/fake-key')
+authorize_live = True
+ledger_path = PosixPath('/tmp/pytest-of-maoqh/pytest-1312/test_http_claim_persists_and_r0/ledger')
+transport = <httpx2.MockTransport object at 0x72ff3c49d640>
+terminal_verifier = <function verify_terminal at 0x72ff3c469440>
+
+    async def run_plan(plan, output, credential_file, authorize_live=False, *, ledger_path,
+                       transport=None, terminal_verifier=verify_terminal):
+        settings, refs, cases = validate(plan)
+        if not authorize_live: raise EvaluationError('live_authorization_required')
+        output = Path(output); ledger = ScopeLedger(ledger_path, plan)
+        if any(c['id'] in ledger.data['cases'] for c, _, _, _ in cases):
+            ledger.close(); raise EvaluationError('case_already_claimed')
+        receipt = prepare(plan); receipt.update(status='IN_PROGRESS', rows=[], retry=0, native_effects=0, cost='UNKNOWN')
+        receipt['rows'] = [{'id': c['id'], 'technical_status': 'NOT_RUN', 'quality_pass': False, 'answers': []} for c, _, _, _ in cases]
+        def save(): atomic_write(output / 'receipt.json', receipt)
+        provider = sink = None; start = time.monotonic(); deadline = start + plan['limits']['wall_timeout_seconds']
+        try:
+            save()
+            key = Path(credential_file).read_text().strip()
+            if not key or '\n' in key: raise EvaluationError('credential_invalid')
+            audited = AuditedTransport(transport or httpx2.AsyncHTTPTransport(retries=0), ledger, deadline)
+            provider = JevDecisionProvider(settings, secret_resolver=lambda _: key, transport=audited)
+            context = ReadContext(object(), 'synthetic-live-acceptance'); sink = FileEvidenceSink(output / 'durable', read_context=context)
+            code = digest('flow', {'reviewed_source': reviewed_code_digest(__file__), 'plan_digest': digest('policy', plan)})
+            ref = FlowRef('jev.live-acceptance', '1', flow_digest(code, refs))
+            for (case, task, questions, gate), row in zip(cases, receipt['rows']):
+                if time.monotonic() >= deadline: row['error'] = 'global_deadline'; save(); continue
+                ledger.begin(case['id']); audited.case_id = case['id']; row['technical_status'] = 'CLAIMED'; save()
+                recorded = RecordedProvider(provider, row, save)
+                builder = GraphBuilder(name='jev-live-acceptance', state_type=dict, deps_type=RunContext, input_type=DecisionRequest, output_type=BusinessOutcome, auto_instrument=False)
+                @builder.step
+                async def evaluate(ctx) -> BusinessOutcome:
+                    await ctx.deps.enter_node('EvaluateSyntheticCase')
+                    for question in questions: await ctx.deps.gateway.decide(question)
+                    return BusinessOutcome('clarify', issues=({'code': 'evaluation_only_no_proposal'},))
+                builder.add(builder.edge_from(builder.start_node).to(evaluate), builder.edge_from(evaluate).to(builder.end_node))
+                flow = TrustedFlow(ref, builder.build(), lambda request: {}, refs, code, plan['scope_id'])
+                limits = RunLimits(max_model_attempts=max(1, len(questions)), max_node_entries=2, max_repair_rounds=0, max_inflight_model_calls=1,
+                    wall_timeout_seconds=min(plan['limits']['case_timeout_seconds'], deadline - time.monotonic()), cleanup_timeout_seconds=2)
+                services = DecisionServices(None, None, None, None, recorded, sink, {}, context, refs, mode='real')
+                request = DecisionRequest('eval-' + case['id'], task, ref, limits)
+                try:
+                    result = await run_decision(request, flow=flow, services=services)
+                    row.update(run_id=result.run_id, technical_status=result.status, result_digest=digest('result', result)); save()
+                    await terminal_verifier(sink, result, context)
+                    row['terminal_verified'] = True
+                    if result.status == 'completed':
+                        row.update(score(case, questions, tuple(DecisionAnswer.from_dict(a) for a in row['answers']), gate))
+                        row['quality_source'] = 'model' if questions else 'hard_rule_zero_model'
+                except asyncio.CancelledError:
+                    row.update(technical_status='CANCELLED', error='cancelled_unknown'); save(); raise
+                except Exception:
+                    row.update(technical_status='COLLECTION_FAILED', error='collection_failed', quality_pass=False)
+                finally: save()
+            receipt['status'] = 'SCOPED_PASS' if all(r['quality_pass'] for r in receipt['rows']) else 'PARTIAL'
+        except asyncio.CancelledError:
+            receipt.update(status='PARTIAL', error='cancelled_unknown'); raise
+        except Exception:
+>           receipt.update(status='PARTIAL', error='evaluation_failed'); raise EvaluationError('evaluation_failed') from None
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           decision_live_acceptance.EvaluationError: evaluation_failed
+
+packages/backend/decision/evaluation/live_acceptance.py:255: EvaluationError
+_____________ test_cancelled_http_remains_unknown_and_not_replayed _____________
+
+fut = <coroutine object Event.wait at 0x72ff3c211ee0>, timeout = 3
+
+    async def wait_for(fut, timeout):
+        """Wait for the single Future or coroutine to complete, with timeout.
+    
+        Coroutine will be wrapped in Task.
+    
+        Returns result of the Future or coroutine.  When a timeout occurs,
+        it cancels the task and raises TimeoutError.  To avoid the task
+        cancellation, wrap it in shield().
+    
+        If the wait is cancelled, the task is also cancelled.
+    
+        If the task suppresses the cancellation and returns a value instead,
+        that value is returned.
+    
+        This function is a coroutine.
+        """
+        # The special case for timeout <= 0 is for the following case:
+        #
+        # async def test_waitfor():
+        #     func_started = False
+        #
+        #     async def func():
+        #         nonlocal func_started
+        #         func_started = True
+        #
+        #     try:
+        #         await asyncio.wait_for(func(), 0)
+        #     except asyncio.TimeoutError:
+        #         assert not func_started
+        #     else:
+        #         assert False
+        #
+        # asyncio.run(test_waitfor())
+    
+    
+        if timeout is not None and timeout <= 0:
+            fut = ensure_future(fut)
+    
+            if fut.done():
+                return fut.result()
+    
+            await _cancel_and_wait(fut)
+            try:
+                return fut.result()
+            except exceptions.CancelledError as exc:
+                raise TimeoutError from exc
+    
+        async with timeouts.timeout(timeout):
+>           return await fut
+                   ^^^^^^^^^
+
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/asyncio/tasks.py:520: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <asyncio.locks.Event object at 0x72ff3c49f890 [unset]>
+
+    async def wait(self):
+        """Block until the internal flag is true.
+    
+        If the internal flag is true on entry, return True
+        immediately.  Otherwise, block until another coroutine calls
+        set() to set the flag to true, then return True.
+        """
+        if self._value:
+            return True
+    
+        fut = self._get_loop().create_future()
+        self._waiters.append(fut)
+        try:
+>           await fut
+E           asyncio.exceptions.CancelledError
+
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/asyncio/locks.py:212: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-1312/test_cancelled_http_remains_un0')
+
+    @pytest.mark.asyncio
+    async def test_cancelled_http_remains_unknown_and_not_replayed(tmp_path):
+        key = tmp_path / 'fake-key'; key.write_text('offline-test-only'); entered = asyncio.Event()
+        async def handler(request):
+            entered.set(); await asyncio.Event().wait()
+        task = asyncio.create_task(live.run_plan(plan(), tmp_path / 'out', key, True,
+            ledger_path=tmp_path / 'ledger', transport=httpx2.MockTransport(handler)))
+>       await asyncio.wait_for(entered.wait(), 3)
+
+packages/backend/decision/tests/evaluation/test_live_acceptance.pyTask exception was never retrieved
+future: <Task finished name='Task-11' coro=<run_plan() done, defined at /home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/evaluation/live_acceptance.py:202> exception=EvaluationError('evaluation_failed')>
+Traceback (most recent call last):
+  File "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/evaluation/live_acceptance.py", line 255, in run_plan
+    except Exception:
+                      
+decision_live_acceptance.EvaluationError: evaluation_failed
+:91: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/asyncio/tasks.py:519: in wait_for
+    async with timeouts.timeout(timeout):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x72ff3c319940>
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Optional[bool]:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+    
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+    
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+    
+            if self._task.uncancel() <= self._cancelling and exc_type is exceptions.CancelledError:
+                # Since there are no new cancel requests, we're
+                # handling this.
+>               raise TimeoutError from exc_val
+E               TimeoutError
+
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/asyncio/timeouts.py:115: TimeoutError
+=========================== short test summary info ============================
+FAILED packages/backend/decision/tests/evaluation/test_live_acceptance.py::test_real_graph_answer_survives_terminal_collection_failure
+FAILED packages/backend/decision/tests/evaluation/test_live_acceptance.py::test_http_claim_persists_and_reexecution_preserves_receipt
+FAILED packages/backend/decision/tests/evaluation/test_live_acceptance.py::test_cancelled_http_remains_unknown_and_not_replayed
+3 failed, 3 passed in 3.32s
