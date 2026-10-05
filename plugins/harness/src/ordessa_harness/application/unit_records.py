@@ -24,6 +24,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hashlib
 import json
+import re
 from typing import Mapping, Protocol
 from uuid import uuid4
 
@@ -73,6 +74,19 @@ class NativeSessionEvidencePort(Protocol):
 
 
 UNIT_CONFIRMATION_VERSION = 'harness-unit-confirmation/1'
+INPUT_SESSION_ASSOCIATION_VERSION = 'harness-input-session-association/1'
+SESSIONLESS_INPUT_VERSION = 'harness-sessionless-input/1'
+
+
+class NativeInputAssociationEvidencePort(Protocol):
+    """Original input receipt and Session identity, not input effect completion.
+
+    Reverify original persisted input/Unit/process/transport/native correlation,
+    fixed roots and installation, original Session absence observation, actual
+    returned Session and current owner liveness. ACK/latest Session is no proof.
+    This port observes only; it must never start or submit an input.
+    """
+    def verify_association(self, unit, identity, evidence) -> Mapping: ...
 
 
 class NativeUnitEvidencePort(Protocol):
@@ -140,7 +154,19 @@ class NativeSessionBinding:
 
     @property
     def native_facts(self):
-        return None if self.native_json is None else sealed_mapping(json.loads(self.native_json))
+        if self.native_json is None:
+            return None
+        proof = json.loads(self.native_json)
+        if proof.get('contractVersion') == INPUT_SESSION_ASSOCIATION_VERSION:
+            return sealed_mapping(proof['nativeBinding'])
+        return sealed_mapping(proof)
+
+    @property
+    def association_facts(self):
+        if self.native_json is None:
+            return None
+        proof = json.loads(self.native_json)
+        return sealed_mapping(proof) if proof.get('contractVersion') == INPUT_SESSION_ASSOCIATION_VERSION else None
 
 
 @dataclass(frozen=True)
@@ -210,7 +236,7 @@ def _correlation(facts):
 
 class UnitRecords:
     def __init__(self, journal, *, scope_authority, native_evidence, verifier, epoch_port,
-                 configuration_evidence=None, native_unit_evidence=None):
+                 configuration_evidence=None, native_unit_evidence=None, input_association_evidence=None):
         if (not isinstance(journal, OperationJournal) or any(p is None for p in
                 (scope_authority, native_evidence, verifier, epoch_port))):
             raise UnitRecordsRefused("existing journal and explicit authority ports required")
@@ -219,6 +245,7 @@ class UnitRecords:
         self.verifier, self.epoch_port = verifier, epoch_port
         self.configuration_evidence = configuration_evidence
         self.native_unit_evidence = native_unit_evidence
+        self.input_association_evidence = input_association_evidence
         self._tickets = {}
         self._configuration_tickets = {}
         authority = getattr(journal, '_unit_records_scope_authority', None)
@@ -299,9 +326,19 @@ class UnitRecords:
             raise UnitRecordsRefused("session binding missing or damaged")
         if type(row['source_revision']) is not int or row['source_revision'] < 1:
             raise UnitRecordsRefused("binding revision damaged")
+        try:
+            native = None if row['native_json'] is None else json.loads(row['native_json'])
+        except (TypeError, ValueError):
+            raise UnitRecordsRefused('binding native evidence damaged') from None
+        association = isinstance(native, Mapping) and native.get('contractVersion') == INPUT_SESSION_ASSOCIATION_VERSION
+        if (native is not None and (not isinstance(native, Mapping)
+                or not association and set(native) != {'nativeRealm', 'sessionId', 'evidenceRef'})):
+            raise UnitRecordsRefused('binding native evidence version or fields damaged')
         if ((row['state'] == 'notCreated' and row['source_revision'] != 1)
                 or (row['state'] == 'opening' and row['source_revision'] != 2)
-                or (row['state'] in ('unknown', 'confirmed') and row['source_revision'] < 3)):
+                or (row['state'] == 'unknown' and row['source_revision'] < 3)
+                or (row['state'] == 'confirmed' and row['source_revision'] != 2 and association)
+                or (row['state'] == 'confirmed' and row['source_revision'] < 3 and not association)):
             raise UnitRecordsRefused('binding state and revision damaged')
         if ((row['state'] == 'notCreated') != (row['creation_correlation'] is None)
                 or (row['state'] == 'confirmed') != (row['native_json'] is not None)
@@ -309,12 +346,24 @@ class UnitRecords:
                 or (row['native_json'] is not None and row['native_digest'] != _digest(row['native_json']))):
             raise UnitRecordsRefused("binding identity or evidence damaged")
         if row['state'] == 'confirmed':
-            native = json.loads(row['native_json'])
-            if not isinstance(native, dict) or not isinstance(native.get('evidenceRef'), str):
-                raise UnitRecordsRefused("binding native evidence damaged")
-            verified = self.native_evidence.verify_binding(self._unit(db, unit_ref),
-                        row['creation_correlation'], native['evidenceRef'])
-            if safe_json(verified) != row['native_json']:
+            unit = self._unit(db, unit_ref)
+            if association:
+                if (set(native) != {'contractVersion', 'identity', 'nativeBinding', 'evidenceRef', 'associationRef'}
+                        or not isinstance(native['identity'], Mapping)):
+                    raise UnitRecordsRefused('Session association envelope damaged')
+                self._check_association_identity(unit, native['identity'])
+                if _correlation(native['identity']) != row['creation_correlation']:
+                    raise UnitRecordsRefused('Session association correlation damaged')
+                confirmed_unit = self._unit_confirmation(db, unit_ref)
+                if (confirmed_unit.state != 'confirmed'
+                        or safe_json(confirmed_unit.native_facts['evidenceRef']) != safe_json(native['identity']['unitConfirmationRef'])):
+                    raise UnitRecordsRefused('Session association original Unit confirmation changed')
+                verified = self._association_proof(unit, native['identity'], native['evidenceRef'])
+            else:
+                if not isinstance(native, dict) or not isinstance(native.get('evidenceRef'), str):
+                    raise UnitRecordsRefused("binding native evidence damaged")
+                verified = safe_json(self.native_evidence.verify_binding(unit, row['creation_correlation'], native['evidenceRef']))
+            if verified != row['native_json']:
                 raise UnitRecordsRefused("binding differs from native owner evidence")
         return NativeSessionBinding(unit_ref, row['state'], row['source_revision'],
                                     row['creation_correlation'], row['native_json'])
@@ -572,6 +621,155 @@ class UnitRecords:
     def read_session(self, unit_ref, context, *, input_digest):
         self.read_unit(unit_ref, context, input_digest=input_digest)
         with self.journal._connect() as db:
+            return self._binding(db, unit_ref)
+
+    def _check_association_identity(self, unit, identity):
+        fields = {'request', 'operationRef', 'stepId', 'inputDigest', 'providerRef', 'unitRef',
+                  'nodeRef', 'managementEpoch', 'nativeCorrelation', 'unitConfirmationRef', 'sessionAbsenceRef', 'capturedInputRef'}
+        if (not isinstance(identity, Mapping) or set(identity) != fields
+                or identity['stepId'] != 'native-input'
+                or any(not isinstance(identity[key], str) or not identity[key] for key in ('operationRef', 'inputDigest'))
+                or type(identity['managementEpoch']) is not int or identity['managementEpoch'] < 0
+                or any(not isinstance(identity[key], Mapping) for key in ('unitRef', 'providerRef', 'nodeRef'))
+                or safe_json(identity['unitRef']) != safe_json(unit.public_ref)
+                or safe_json(identity['providerRef']) != safe_json(unit.facts['providerRef'])
+                or safe_json(identity['nodeRef']) != safe_json(unit.facts['nodeRef'])):
+            raise UnitRecordsRefused('original input association identity differs')
+        request = identity['request']
+        correlation = identity['nativeCorrelation']
+        environment = unit.scope_ref.environment_namespace
+        if (not isinstance(request, Mapping) or set(request) != {'environmentNamespace', 'principalScope', 'requestId'}
+                or request['environmentNamespace'] != environment
+                or any(not isinstance(request[key], str) or not request[key] for key in ('principalScope', 'requestId'))
+                or not isinstance(correlation, Mapping)
+                or set(correlation) != {'environmentNamespace', 'protocol', 'requestId'}
+                or correlation['environmentNamespace'] != environment
+                or not isinstance(correlation['protocol'], str) or not correlation['protocol']
+                or type(correlation['requestId']) not in (str, int)
+                or correlation['requestId'] == ''):
+            raise UnitRecordsRefused('original input native correlation differs')
+        for ref in (identity['unitConfirmationRef'], identity['sessionAbsenceRef']):
+            self._association_source(unit, ref)
+        captured = identity['capturedInputRef']
+        if (not isinstance(captured, Mapping)
+                or set(captured) != {'environmentNamespace', 'captureId', 'captureRevision', 'contentDigest'}
+                or captured['environmentNamespace'] != environment
+                or not isinstance(captured['captureId'], str) or not re.fullmatch(r'[a-z][a-z0-9._-]{0,63}', captured['captureId'])
+                or type(captured['captureRevision']) is not int or captured['captureRevision'] < 1
+                or not isinstance(captured['contentDigest'], str) or not re.fullmatch(r'sha256:[0-9a-f]{64}', captured['contentDigest'])):
+            raise UnitRecordsRefused('original captured input source differs')
+
+    @staticmethod
+    def _association_source(unit, ref):
+        if (not isinstance(ref, Mapping)
+                or set(ref) != {'environmentNamespace', 'ownerProviderRef', 'sourceRevision', 'ref'}
+                or ref['environmentNamespace'] != unit.scope_ref.environment_namespace
+                or not isinstance(ref['ownerProviderRef'], Mapping)
+                or safe_json(ref['ownerProviderRef']) != safe_json(unit.facts['providerRef'])
+                or any(not isinstance(ref[key], str) or not ref[key] or len(ref[key]) > 256
+                       or any(ord(c) < 32 for c in ref[key]) for key in ('sourceRevision', 'ref'))):
+            raise UnitRecordsRefused('input association owner source differs')
+
+    def _association_proof(self, unit, identity, evidence):
+        port = self.input_association_evidence
+        if not callable(getattr(port, 'verify_association', None)):
+            raise UnitRecordsRefused('original input association evidence owner unavailable')
+        proof = port.verify_association(unit, identity, evidence)
+        if (not isinstance(proof, Mapping)
+                or set(proof) != {'contractVersion', 'identity', 'nativeBinding', 'evidenceRef', 'associationRef'}
+                or proof['contractVersion'] != INPUT_SESSION_ASSOCIATION_VERSION
+                or not isinstance(proof['identity'], Mapping)
+                or safe_json(proof['identity']) != safe_json(identity)):
+            raise UnitRecordsRefused('original input association proof identity differs')
+        native = proof['nativeBinding']
+        if (not isinstance(native, Mapping) or set(native) != {'nativeRealm', 'sessionId', 'evidenceRef'}
+                or any(not isinstance(native[key], str) or not native[key] for key in native)
+                or native['sessionId'] == 'default'):
+            raise UnitRecordsRefused('actual input-associated Session proof required')
+        self._association_source(unit, proof['evidenceRef'])
+        self._association_source(unit, proof['associationRef'])
+        return safe_json(proof)
+
+    def _input_association_identity(self, db, unit, context, input_digest):
+        if (not callable(getattr(self.input_association_evidence, 'verify_association', None))
+                or not callable(getattr(self.verifier, 'verify_claimed_query', None))):
+            raise UnitRecordsRefused('original input association/query owner unavailable')
+        facts = self._authorize(context, 'query', unit.facts['providerRef'], unit.public_ref,
+                                input_digest, query=True, epoch_target=unit.facts['nodeRef'])
+        claimed = self.verifier.verify_claimed_query(context, unit.facts['providerRef'], unit.public_ref, input_digest,
+                                                    operation_kind='managed-input')
+        if safe_json(claimed) != safe_json(facts):
+            raise UnitRecordsRefused('original claimed query facts differ')
+        fixed = facts['contextRef']
+        binding = fixed.get('sessionlessInputBinding')
+        if (not {'nodeRef', 'nativeCorrelation', 'capturedInputRef'} <= set(fixed)
+                or not isinstance(binding, Mapping)
+                or set(binding) != {'contractVersion', 'unitRef', 'unitConfirmationRef', 'sessionAbsenceRef'}
+                or binding['contractVersion'] != SESSIONLESS_INPUT_VERSION
+                or not isinstance(binding['unitRef'], Mapping)
+                or safe_json(binding['unitRef']) != safe_json(unit.public_ref)):
+            raise UnitRecordsRefused('original sessionless input binding unavailable')
+        invocations = fixed.get('invocationBindings')
+        original_input = invocations.get('native-input') if isinstance(invocations, Mapping) else None
+        expected_input = {'action': 'submitInput', 'targetRef': unit.public_ref, 'delegationRef': None, 'cleanup': False}
+        if safe_json({'binding': original_input}) != safe_json({'binding': expected_input}):
+            raise UnitRecordsRefused('claimed operation is not the original full Unit input')
+        identity = {'request': facts['request'], 'operationRef': facts['operationRef'], 'stepId': facts['stepId'],
+                    'inputDigest': input_digest, 'providerRef': facts['providerRef'], 'unitRef': binding['unitRef'],
+                    'nodeRef': fixed['nodeRef'], 'managementEpoch': facts['managementEpoch'],
+                    'nativeCorrelation': fixed['nativeCorrelation'], 'unitConfirmationRef': binding['unitConfirmationRef'],
+                    'sessionAbsenceRef': binding['sessionAbsenceRef'], 'capturedInputRef': fixed['capturedInputRef']}
+        self._check_association_identity(unit, identity)
+        confirmation = self._unit_confirmation(db, unit.unit_ref)
+        if (confirmation.state != 'confirmed'
+                or safe_json(confirmation.native_facts['evidenceRef']) != safe_json(identity['unitConfirmationRef'])):
+            raise UnitRecordsRefused('original confirmed Unit input source differs')
+        return identity
+
+    def query_input_session(self, unit_ref, context, *, input_digest):
+        """Observe only the original claimed first-input association, no start."""
+        with self.journal._connect() as db:
+            unit = self._unit(db, unit_ref)
+            identity = self._input_association_identity(db, unit, context, input_digest)
+            binding = self._binding(db, unit_ref)
+            if binding.state == 'notCreated':
+                return binding
+            if (binding.association_facts is None
+                    or safe_json(binding.association_facts['identity']) != safe_json(identity)):
+                raise UnitRecordsRefused('Session belongs to a different original input')
+            self._input_association_identity(db, unit, context, input_digest)
+            return binding
+
+    def reconcile_input_session(self, unit_ref, context, *, input_digest, expected_source_revision, evidence):
+        """Record original owner Session evidence; never create a dispatch ticket.
+
+        A confirmed Session identity does not conclude the input effect, task or
+        core operation. Its first-input hold remains until verified publication.
+        """
+        with self.journal._connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            unit = self._unit(db, unit_ref)
+            identity = self._input_association_identity(db, unit, context, input_digest)
+            binding = self._binding(db, unit_ref)
+            if type(expected_source_revision) is not int or binding.source_revision != expected_source_revision:
+                raise UnitRecordsRefused('input Session association revision conflict')
+            if binding.association_facts is not None:
+                if safe_json(binding.association_facts['identity']) != safe_json(identity):
+                    raise UnitRecordsRefused('Session belongs to a different original input')
+                if self._association_proof(unit, identity, evidence) != binding.native_json:
+                    raise UnitRecordsRefused('Session association proof cannot replace original evidence')
+                self._input_association_identity(db, unit, context, input_digest)
+                return binding  # Original owner proof reverified; never replace it.
+            if binding.state != 'notCreated':
+                raise UnitRecordsRefused('original Session creation retains its fence')
+            native = self._association_proof(unit, identity, evidence)
+            # Owner receipt verification can revoke authority; recheck the same
+            # opaque query and original claim before the record-only write.
+            if safe_json(self._input_association_identity(db, unit, context, input_digest)) != safe_json(identity):
+                raise UnitRecordsRefused('input association authority changed during observation')
+            db.execute("UPDATE harness_unit_sessions SET state='confirmed',source_revision=2,creation_correlation=?,native_json=?,native_digest=? WHERE unit_ref=?",
+                       (_correlation(identity), native, _digest(native), unit_ref))
+            db.commit()
             return self._binding(db, unit_ref)
 
     def _configuration_attempt(self, db, attempt_ref):

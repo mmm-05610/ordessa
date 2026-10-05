@@ -133,11 +133,12 @@ class InvocationContext:
 
 class InvocationVerifier:
     """Provider-facing capability exposing verification alone."""
-    __slots__ = ("_verify", "_continue")
+    __slots__ = ("_verify", "_continue", "_claimed_query")
 
-    def __init__(self, verify, continuation=None):
+    def __init__(self, verify, continuation=None, claimed_query=None):
         self._verify = verify
         self._continue = continuation
+        self._claimed_query = claimed_query
 
     def verify_and_consume(self, context, action, provider_ref, target_ref, input_digest):
         return self._verify(context, action, provider_ref, target_ref, input_digest)
@@ -152,6 +153,17 @@ class InvocationVerifier:
         if not callable(self._continue):
             raise InvocationAuthorityRefused('original invocation continuation unavailable')
         return self._continue(context, action, provider_ref, target_ref, input_digest)
+
+    def verify_claimed_query(self, context, provider_ref, target_ref, input_digest, *, operation_kind):
+        """Observe an existing original dispatch claim under query authority.
+
+        Ordinary query permission also permits reads before a step was claimed.
+        Native result association needs this additional durable identity check;
+        it creates no claim, ticket or effect permission.
+        """
+        if not callable(self._claimed_query):
+            raise InvocationAuthorityRefused("original claimed-query verification unavailable")
+        return self._claimed_query(context, provider_ref, target_ref, input_digest, operation_kind=operation_kind)
 
 
 class InvocationIssuer:
@@ -173,7 +185,27 @@ class InvocationIssuer:
         self._max_contexts, self._issuing = max_contexts, 0
 
     def verifier(self):
-        return InvocationVerifier(self.verify_and_consume, self.verify_continuation)
+        return InvocationVerifier(self.verify_and_consume, self.verify_continuation, self.verify_claimed_query)
+
+    def verify_claimed_query(self, context, provider_ref, target_ref, input_digest, *, operation_kind):
+        if not isinstance(operation_kind, str) or not operation_kind:
+            raise InvocationAuthorityRefused("original operation kind required for claimed query")
+        facts = self.verify_continuation(context, "query", provider_ref, target_ref, input_digest)
+        if facts["query"] is not True:
+            raise InvocationAuthorityRefused("claimed query requires original read permission")
+        ref = facts["request"]
+        request = RequestKey(ref["environmentNamespace"], ref["principalScope"], ref["requestId"])
+        operation, step, _ = self._operation_binding(request, facts["operationDigest"], facts["stepId"])
+        claim = self._store.read_operation_step(request, facts["stepId"])
+        if (claim is None or operation.intent.kind != operation_kind
+                or safe_json(claim.intent.to_dict()) != safe_json(step.to_dict())
+                or hashlib.sha256(operation.intent_json.encode()).hexdigest() != facts["operationIntentDigest"]
+                or operation.intent.operation_ref != facts["operationRef"]
+                or step.input_digest != input_digest
+                or step.management_epoch != facts["managementEpoch"]
+                or operation.intent.management_epoch != facts["managementEpoch"]):
+            raise InvocationAuthorityRefused("original durable claim identity or epoch unavailable")
+        return self.verify_continuation(context, "query", provider_ref, target_ref, input_digest)
 
     def _now(self):
         current = self._refused_call(self._clock)

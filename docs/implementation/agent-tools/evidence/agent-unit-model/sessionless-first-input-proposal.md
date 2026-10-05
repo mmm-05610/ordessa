@@ -36,5 +36,6 @@ ledger、通用协议翻译、后台daemon或配置真值。保留原Session-onl
 不迁移用户DB、不调用模型。需验证同Unit不同draft并发、丢回执与冷query、
 撤权/退役/目录/epoch变动、错输入摘要/原关联、晚到CAS和ACK不释放占用。
 
-尚未按提案实现核心输入或association，当前该路径保持unsupported。
-先纳入当前Claude家族切片，再由主会话串行补共享输入与association；不另开共享写者。
+预留/claim已在e4714eba00检查点实现；原Session行的只读association接缝继续由
+主会话串行补齐，见input-session-association-port.md。生产native owner/输入writer、
+双证据确认和原publication仍未贯通，该产品路径保持unsupported。不另开共享写者。

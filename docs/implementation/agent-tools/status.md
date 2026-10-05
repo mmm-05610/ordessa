@@ -380,3 +380,21 @@ C真实SQLite/Issuer＋受控effect/native owner；SDK实际执行桥、FencedSd
 C临时SQLite/真实Issuer＋受控capture/native/authority；无owner journal关联或native输入writer，P未验证、M0。未安装更新第三方、修改用户DB/凭据/全局配置或重启服务，未push/主树合并。CLI/Skill/发行、三家生产owner/权限/writer/receipt、完整生命周期及原首次关联/出版仍继续。
 
 Pi只读终审确认before-config/Issuer类型比较及独立连接CAS反例补齐；未新增修改/测试/Git。保持reserve＋claim切片与association/publish缺口分账。工单结构五项exit0、diff-check exit0；显式纳入本轮两个核心文件、测试、冻结说明及status形成检查点，继续原InputAttempt association与发布，不标完成门。
+
+### 2026-10-05 AU002 原 InputAttempt Session 只读关联检查点（PARTIAL）
+
+上轮为progress：e4714eba00改变核心与真实测试证据；本轮实际HEAD同提交、clean、三家completed无写权，保留所有既有成果。主会话唯一共享作者，Pi仅只读设计/终审；无共享并发写者。原query可读取未claim步骤，不能据此声称输入已发生。新增原InvocationVerifier.verify_claimed_query只读核验：成功query continuation、同Store原step/intent/opIntentDigest/digest/kind/provider/原epoch，前后重核，不claim/发ticket。普通query含义不变。
+
+原UnitRecords新增显式可选NativeInputAssociationEvidencePort、query_input_session/reconcile_input_session，固定原request/op/step/inputDigest/provider/完整Unit/Node/epoch/nativeCorrelation/Unit确认/历史Session absence/CapturedInputRef。原step还须完整Unit submitInput、非cleanup、无额外delegation；prepare/stop claim不能冒充首输入。实际native字节、receipt、owner进程/运输/固定根和原absence由显式owner独立核实，core参数摘要/claim/ACK都不是实际输入证明。缺owner默认拒绝，未装控制fixture为生产port。
+
+关联直接写同harness_unit_sessions.native_json/digest，显式harness-input-session-association/1，不建新表/ledger/Session真值。原notCreated1 CAS到新confirmed2；只有明确新codec完整证明/owner重核允许2，旧三字段confirmed2仍红，旧start>=3仍沿原native_evidence合同。native_facts投影原三字段，association_facts提供原版本证明。旧数据不迁移、不补造来源；方法不start/input/ticket，不改Core input unknown/首次Domain held/Usage。双证据确认与publication/转移尚未实现，不能宣称后续输入已可接纳。
+
+定向命令 `/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python -m pytest -c products/agent-tools/pyproject.toml docs/implementation/agent-tools/evidence/agent-unit-model/test_input_session_association.py -q --tb=short`：初34P exit0、3.35s；补原action/kind/claim/query身份及旧codec反例后47P exit0、4.61s；冷owner失效/两journal并发CAS/SQL回滚/过期51P exit0、5.07s；commit后观察52P exit0、4.92s；最终原prepare action不能作input53P/0F exit0、4.52s。此前快照不累加。新关联测试未出现pytest失败，原断言保留，未新增skip。
+
+Pi审阅要求区分commit前失败与commit后观察失效，已补实际反例：初证明成功、写Session行commit、返回前owner第二次核验失败，调用抛错但confirmed2已经持久；不能报整次回滚。原Core unknown/fence held不变，冷query读取同原来源，旧CAS1不能重写或补输入。另一末端反例确认prepare action在调用native owner前拒绝。只读终审确认补强成立，无修改/复跑/Git。冻结input-session-association-port.md；已更新已批准提案的实施进度，未重写授权裁决。
+
+最终集成完整命令：`PYTHONPATH=plugins/harness/codex/src:packages/backend/harness-transport/src <python> -m pytest -c products/agent-tools/pyproject.toml products/agent-tools/tests/integration docs/implementation/agent-tools/evidence/agent-unit-model/test_assembly.py docs/implementation/agent-tools/evidence/agent-unit-model/test_codex_assembly.py docs/implementation/agent-tools/evidence/agent-unit-model/test_provider_discovery.py docs/implementation/agent-tools/evidence/agent-unit-model/test_preparation_holds.py docs/implementation/agent-tools/evidence/agent-unit-model/test_management.py docs/implementation/agent-tools/evidence/agent-unit-model/test_invocation_continuation.py docs/implementation/agent-tools/evidence/agent-unit-model/test_sessionless_input.py docs/implementation/agent-tools/evidence/agent-unit-model/test_input_session_association.py -q --tb=short`：434P/0F exit0、19.32s（原381＋新53）。较早433P/19.01s不累加。共享原四文件107P exit0、0.94s；Claude全家族149P exit0、8.08s。核心 `<python> -m pytest -c packages/backend/pacthold/pyproject.toml packages/backend/pacthold/tests -q --tb=short`：269P/3F exit1、7.51s，仍已登记三个test_n4r1_kernel_direction ID，既有test_closeout_environment_dispatch导入具体SQLite触发扫描；没有删除/移出断言或skip，缺worker/Claude等资源仍ABSENT，不当绿。全部测试句柄terminal。
+
+C真实临时SQLite/Issuer＋受控capture/native proof，三家生产native owner/真实进程P未验证，M0。生产字节/receipt/transport fence、目录/Invocation权限装配、C1材料/SecretRef、原双证据publication、完整生命周期、CLI/Skill薄化与完整发行验收继续；AU002/AU003不报DONE。只改本树/临时测试DB，无用户DB迁移、第三方安装更新/登录/凭据/全局配置/用户服务操作、真实模型或push/主树合并。
+
+工单结构五项strict exit0、diff-check exit0。显式纳入本轮两个源码文件、53项测试、两份证据文档与status形成检查点；下一切片沿原Core双证据确认和publication转移占用/Usage，不按Session出现或terminal状态自动释放。
