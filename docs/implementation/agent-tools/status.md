@@ -682,3 +682,17 @@ sidecar与旧C2批量注册仍有路径，独立生产模型/凭据/恢复owner�
 生产授权/材料/凭据/owner/coldgeneration/lifecycle/tasks/results/A18和native P/M仍PARTIAL；资源ABSENT、费用unknown，无第三方安装更新/登录/用户DB/全局配置/用户服务操作/push/主树合并。下一Pi纯迁移只读盘点已识别漏model/retry覆盖问题，先补反例再迁。检查点后继续goal，不标DONE。
 
 Codex迁移检查点8e49d0413e6119e8a05aad59aabbdd5f74f9244a clean后继续Pi前置。Claude只读盘点确认existing公共DTO可复用、原独立Pi生产面仅model/thinking；主会话实跑旧pure受控反例exit1、0P3F（非pytest）：retry-only丢models、restart漏desired model、缺model/session仍match。新JSON保留原输入结果，可复跑probe与迁移盘点显式纳入材料检查点。下一迁compiler/facts并加typed/重复model反例，生产完整owner/applied/native P/M仍PARTIAL；未操作用户服务或模型。见[evidence/agent-unit-model/pi-model-migration-inventory.md](evidence/agent-unit-model/pi-model-migration-inventory.md)。
+
+### 2026-10-05 AU003 Pi成熟纯模型配置迁移（PARTIAL）
+
+前置65e409534505d5701d87a84d58c6138671bdd5d9 clean，主会话独占共享源码/测试/Git/账本，Codex/Claude只读双审无写测试权；上一检查点属progress。旧pure compiler物理迁独立Pi，无shim/旧import；DTO复用现有API，facts归独立owner，shared common/native/materialization/bridge复用，普通renderer原体/异常表面不变。独立Pi补API、旧Harness补ownPi dependency；未扩provider默认methods/schema。
+
+原模型/预算siblings/metadata/SecretRef/retry/settings target/sameSession正向计划保留，修restart漏model、retry/credential-only丢models、None误match。新增typed/change flags/missing observation/direct params/重复modelid/endpoint sample反例；二审实测apiKey/headers复制秘密问题，仅保$ENV_NAME、非空headers拒，拒绝消息无内容，非通用脱敏器。详细命令/范围见[evidence/agent-unit-model/pi-model-compilation.md](evidence/agent-unit-model/pi-model-compilation.md)，初AST/finalSHA receipt分开。
+
+初30为1P29F exit1 .21s；补43为39P4F .15s；扩48为40P8F .16s。全修组合159P1F37subtests exit1 .56s，仅原host-issued缺endpoint抢先拒，补fixture明确endpoint保原断言后160P37subtests exit0 .63s。全Pi初262P exit0 8.67s，增强fresh预算/retry正控后末端262P exit0 8.58s；新增48pure/1发行/1ownership不累计。原materialization/family/ownership57P exit0 .46s；其输出ABSENT不冒资源绿。原三反例probe新ownerexit0，旧JSON不覆盖。
+
+七own wheels final13命令全0、pipcheck/hashes/cleaned/M0/productReady=false，au003-pi-model-install-final-65e409.json；finalSHA实核。产品integration311P1F exit1 16.40s仍strict冷代次目标，未改断言。末端Pi启动前未先收集product终态，现两个句柄皆terminal，后续严格先收集再发下一测试。Core/全Server/旧C2未跑，继承红/consumer债保持。
+
+两审无切片阻断；verify仅model/sameSession，routing/credential/budget/retry真实applied与恢复仍缺owner/capture/receipt/授权/material，native P/M无。生产消费者/冷代次/lifecycle/tasks/results/Skill/A18与baseline全Server安装待整合；M0、费用unknown、ABSENT不算绿，无第三方安装更新/登录/用户DB/全局配置/用户服务/push/主树合并。检查点继续goal，不标DONE。
+
+为消除末端调用未先收集product句柄的串行证据不确定，最终明确先product终态再Pi：311P1F exit1 16.85s，随后262P exit0 8.48s，所有句柄terminal。最终采此串行组，旧运行记录不覆盖、不累计；源代码未再改。strict五工单/diff资料门exit0，仅资料验证。全部新增源码/测试/安装与反例收据已读核，显式stage本切片检查点。

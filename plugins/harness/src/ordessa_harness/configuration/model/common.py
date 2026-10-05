@@ -13,6 +13,7 @@ from typing import Any, Iterable, Mapping
 from ordessa_harness_api.model_compilation import parse_version
 from ordessa_harness_claude_code import acp_model_facts as claude_facts
 from ordessa_harness_codex import acp_model_facts as codex_facts
+from ordessa_harness_pi import acp_model_facts as pi_facts
 from ordessa_harness_codex.acp_model_facts import codex_effort_values, digest_label, render_codex_provider_section
 
 #: The canonical protocol vocabulary (092's contract, four values).
@@ -21,13 +22,13 @@ CANONICAL_PROTOCOLS = ("openai-chat", "openai-responses", "anthropic-messages", 
 #: (native field, dialect token) per brand; ``None`` token = endpoint carries it.
 #: provenance: ordessa_harness/{brand}/native.py DIALECTS @ 96fef2db47.
 DIALECTS: dict[str, dict[str, tuple[str, str | None]]] = {
-    "pi": {"openai-chat": ("api", "openai-completions")},
+    "pi": pi_facts.DIALECT,
     "codex": codex_facts.DIALECT,
     "claude-code": claude_facts.DIALECT,
 }
 
 #: Native target each brand writes inside its instance root (same provenance).
-NATIVE_TARGET = {"pi": "models.json", "codex": codex_facts.NATIVE_TARGET["codex"], "claude-code": claude_facts.NATIVE_TARGET["claude-code"]}
+NATIVE_TARGET = {"pi": pi_facts.NATIVE_TARGET["pi"], "codex": codex_facts.NATIVE_TARGET["codex"], "claude-code": claude_facts.NATIVE_TARGET["claude-code"]}
 
 #: The pinned upstream adapter versions this package was assessed against
 #: (specs/011-z3-model-provider/t00-freeze.md §5). The tuple form drives
@@ -35,13 +36,13 @@ NATIVE_TARGET = {"pi": "models.json", "codex": codex_facts.NATIVE_TARGET["codex"
 #: ``parse_range`` proves (dis)joint.
 SUPPORTED_VERSION_RANGES: dict[str, tuple[str, str]] = {
     # (min inclusive, max exclusive) on the native adapter package version
-    "pi": ("0.5.0", "0.6"),
+    "pi": pi_facts.VERSION_RANGE,
     "codex": codex_facts.VERSION_RANGE,
     "claude-code": claude_facts.VERSION_RANGE,
 }
 
 RANGE_STRINGS: dict[str, str] = {
-    "pi": ">=0.5.0 <0.6",
+    "pi": pi_facts.RANGE_STRINGS["pi"],
     "codex": codex_facts.RANGE_STRINGS["codex"],
     "claude-code": claude_facts.RANGE_STRINGS["claude-code"],
 }
@@ -57,14 +58,14 @@ CODEX_DEEPSEEK_EFFORT_VALUES = codex_facts.CODEX_DEEPSEEK_EFFORT_VALUES
 #: provenance: plugins/harness/deploy/pi/settings.json — the checked-in native
 #: settings template carries exactly this retry block (read by
 #: ordessa_harness.pi.production.settings_document).
-PI_SETTINGS_NATIVE_TARGET = "settings.json"
+PI_SETTINGS_NATIVE_TARGET = pi_facts.PI_SETTINGS_NATIVE_TARGET
 #: the handle id the host must issue for the pi native settings target (the
 #: models.json handle stays HANDLE_IDS["pi"]; this one carries the retry block)
-PI_SETTINGS_HANDLE_ID = "pi.settings.json"
+PI_SETTINGS_HANDLE_ID = pi_facts.PI_SETTINGS_HANDLE_ID
 #: provenance: plugins/harness/deploy/pi/models.json — every model entry
 #: carries ``maxTokens`` (the production template writes it via
 #: ordessa_harness.pi.production.gate_models_document).
-PI_MAX_TOKENS_KEY = "maxTokens"
+PI_MAX_TOKENS_KEY = pi_facts.PI_MAX_TOKENS_KEY
 #: The timeout facts that DO exist first-hand live on the harness deployment
 #: descriptor (``timeoutMs`` in ordessa_harness/{pi,codex,claude}/production.py
 #: harness_deployment) — a target this facet is not authorized to claim, so

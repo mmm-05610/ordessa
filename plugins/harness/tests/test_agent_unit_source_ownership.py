@@ -106,3 +106,13 @@ def test_codex_model_compiler_and_facts_have_one_independent_owner():
         assert path.is_file()
         assert not legacy_harness_imports(path.read_text()), path
         assert not product_imports(path.read_text()), path
+
+
+def test_pi_model_compiler_and_facts_have_one_independent_owner():
+    source = ROOT / 'plugins/harness/pi/src/ordessa_harness_pi'
+    assert not (ROOT / 'plugins/harness/src/ordessa_harness/pi/configuration/model.py').exists()
+    for name in ('acp_model_configuration.py', 'acp_model_facts.py'):
+        path = source / name
+        assert path.is_file()
+        assert not legacy_harness_imports(path.read_text()), path
+        assert not product_imports(path.read_text()), path

@@ -20,7 +20,7 @@ from server_plugin_api import Contribution, ContributionBatch, stage_contributio
 from ordessa_harness.configuration.model import bridge, common
 from ordessa_harness_claude_code.acp_model_configuration import ClaudeAdapter
 from ordessa_harness_codex.acp_model_configuration import CodexAdapter
-from ordessa_harness.pi.configuration.model import PiAdapter
+from ordessa_harness_pi.acp_model_configuration import PiAdapter
 from ordessa_harness_api.model_compilation import (
     AdapterContext, ChoiceRequest, CompileIntent, Refusal, TargetHandle,
 )
@@ -70,7 +70,8 @@ def _request(protocol=None, model="m1", endpoint="https://api.acme.test/v1",
         provider_config_id="p-1", model_id=model, endpoint=endpoint,
         protocol=protocol, credential_ref=credential_ref,
         brand_fields=({"before_provider": "acme", **dict(brand or {})}
-                      if _CURRENT["harness"] == "codex" else dict(brand or {})), provider_name="acme",
+                      if _CURRENT["harness"] == "codex" else
+                      {"provider_in_instance": False, **dict(brand or {})} if _CURRENT["harness"] == "pi" else dict(brand or {})), provider_name="acme",
     )
 
 
@@ -432,9 +433,10 @@ _FORBIDDEN = re.compile(
 _BRIDGE_ALLOWED_ROOTS = {"__future__", "json", "tomllib", "typing", "hashlib",
                          "ordessa_harness_api", "server_plugin_api", "ordessa_environment_api"}
 _BRIDGE_ALLOWED_NATIVE_MODULES = {
-    f"ordessa_harness.{brand}.configuration.model"
-    for brand in ("pi",)
-} | {"ordessa_harness_claude_code.acp_model_configuration", "ordessa_harness_codex.acp_model_configuration"}
+    "ordessa_harness_pi.acp_model_configuration",
+    "ordessa_harness_claude_code.acp_model_configuration",
+    "ordessa_harness_codex.acp_model_configuration",
+}
 
 
 def _module_source(cls):

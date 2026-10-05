@@ -1,0 +1,23 @@
+{
+  "sourceHead": "65e409534505d5701d87a84d58c6138671bdd5d9",
+  "compilerBeforeSha256": "f9ebf417c82f62405207e5df1086fc384327f031d3b3356eb9d9adc3c1ade032",
+  "initialCompilerClassFunctionASTEqual": true,
+  "initialRendererFunctionASTEqual": true,
+  "productionWired": false,
+  "modelCalls": 0,
+  "finalSourceSha256": {
+    "plugins/harness/pi/src/ordessa_harness_pi/acp_model_configuration.py": "b3a7323b65cc2f04ae6a501a3ddcf573970c927eef63803b8f117b5b4e1f0344",
+    "plugins/harness/pi/src/ordessa_harness_pi/acp_model_facts.py": "20ff47b24b80aa8822c89b2dca7ecf0225595ebd2eff839f318b1cbc45967d80"
+  },
+  "finalCompilerASTUnchanged": false,
+  "repairs": [
+    "keep desired session model in restart plans",
+    "retry/credential-only preserve provider subtree",
+    "endpoint change rewrites from observed native sample",
+    "budget preserves siblings and refuses duplicate target identities",
+    "typed targets/identities/references/change flags/direct params",
+    "missing provider observation and model/session readback do not imply facts",
+    "reject native inline apiKey or nonempty headers before provider sample projection"
+  ],
+  "confirmationScope": "model and same-session sample only; not native routing/credential/budget/retry applied proof"
+}

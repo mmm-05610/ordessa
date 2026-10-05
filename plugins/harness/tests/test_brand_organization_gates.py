@@ -323,7 +323,7 @@ def test_brand_registration_modules_publish_bridge_adapters_inside_harness():
     for harness_id, directory in (("codex", "codex"), ("pi", "pi"), ("claude-code", "claude")):
         brand_dir = _HARNESS_SRC / directory
         assert (brand_dir / "registration.py").is_file(), harness_id
-        compilers = {"codex": "codex/src/ordessa_harness_codex/acp_model_configuration.py",
+        compilers = {"pi": "pi/src/ordessa_harness_pi/acp_model_configuration.py", "codex": "codex/src/ordessa_harness_codex/acp_model_configuration.py",
                      "claude-code": "claude-code/src/ordessa_harness_claude_code/acp_model_configuration.py"}
         compiler = (_HARNESS_SRC.parents[1] / compilers[harness_id]
                     if harness_id in compilers else brand_dir / "configuration" / "model.py")

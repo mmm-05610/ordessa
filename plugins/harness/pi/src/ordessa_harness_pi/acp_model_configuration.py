@@ -11,10 +11,10 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from ...configuration.model import common
+from . import acp_model_facts as common
 from ordessa_harness_api.model_compilation import (
     AdapterContext, Assessment, BindSecret, ChoiceRequest, CompileIntent,
-    IntentSet, Refusal, TargetHandle, Verdict,
+    IntentSet, Refusal, RequestParams, TargetHandle, Verdict,
 )
 
 ADAPTER_ID = "assets.model-provider.pi"
@@ -62,21 +62,50 @@ class PiAdapter:
         self, context: AdapterContext, before: Mapping[str, Any],
         desired: ChoiceRequest,
     ) -> IntentSet | Refusal:
+        if (context.target_handle.harness_id != "pi" or context.target_handle.scope != "instance"
+                or not common.identity_text(context.target_handle.identity)):
+            return Refusal("target-conflict", "Pi compiler requires its own explicit instance target")
         assessment = self.assess(context, desired)
         if assessment.verdict != "supported":
             return Refusal("capability-unsupported", assessment.reason or "not supported")
+        if not isinstance(desired.brand_fields, Mapping):
+            return Refusal("capability-unsupported", "brand facts must be an object")
         brand = dict(desired.brand_fields)
-        provider_ready = bool(brand.get("provider_in_instance"))
-        credential_changed = bool(brand.get("credential_changed"))
+        if any(name in brand and type(brand[name]) is not bool
+               for name in ("provider_in_instance", "credential_changed", "endpoint_changed")):
+            return Refusal("capability-unsupported", "provider and credential change facts must be booleans")
+        if not common.identity_text(desired.model_id) or not common.identity_text(desired.provider_name):
+            return Refusal("capability-unsupported", "model and provider identities must be explicit text")
+        if desired.endpoint is not None and not common.identity_text(desired.endpoint):
+            return Refusal("capability-unsupported", "endpoint must be explicit text")
+        if desired.credential_ref is not None and not common.identity_text(desired.credential_ref):
+            return Refusal("capability-unsupported", "secret reference must be explicit text")
+        provider_ready = brand.get("provider_in_instance", False)
+        credential_changed = brand.get("credential_changed", False)
+        endpoint_changed = brand.get("endpoint_changed", False)
+        if credential_changed and desired.credential_ref is None:
+            return Refusal("capability-unsupported", "credential change requires a secret reference")
         params = desired.params
         param_intents: list[Any] = []
         params_escalate = False
+        if params is not None:
+            if not isinstance(params, RequestParams):
+                return Refusal("capability-unsupported", "request params must use the public DTO")
+            try:
+                params = RequestParams.from_record({"reasoningEffort": params.reasoning_effort,
+                    "maxTokens": params.max_tokens, "timeoutMs": params.timeout_ms, "retry": params.retry})
+            except ValueError as error:
+                return Refusal("capability-unsupported", str(error))
         if params is not None and params.has_any():
             param_intents, refusal, params_escalate = _compile_params(
                 context, before, desired, params)
             if refusal is not None:
                 return refusal
-        if provider_ready and not credential_changed and not params_escalate:
+        if "provider_in_instance" not in brand:
+            return Refusal("capability-unsupported", "provider presence observation unavailable")
+        if endpoint_changed and not common.identity_text(desired.endpoint):
+            return Refusal("capability-unsupported", "endpoint change requires explicit endpoint")
+        if provider_ready and not credential_changed and not endpoint_changed and not params_escalate:
             # session-local: the provider config already lives in the private
             # instance's models.json; the model travels via the set_model RPC.
             return IntentSet(
@@ -102,7 +131,18 @@ class PiAdapter:
             isinstance(intent, CompileIntent)
             and intent.field_path == ("providers", desired.provider_name)
             for intent in param_intents)
-        if not golden_written:
+        if endpoint_changed and provider_ready and not golden_written:
+            providers = before.get("providers") if isinstance(before, Mapping) else None
+            observed = providers.get(desired.provider_name) if isinstance(providers, Mapping) else None
+            if not isinstance(observed, Mapping):
+                return Refusal("capability-unsupported", "endpoint change requires current native provider sample")
+            if not common.safe_provider_sample(observed):
+                return Refusal("capability-unsupported", "native provider credential material requires the credential owner")
+            intents.append(CompileIntent(context.target_handle, ("providers", desired.provider_name),
+                {**dict(observed), "baseUrl": desired.endpoint, "api": dialect}))
+        if not provider_ready and not golden_written:
+            if not common.identity_text(desired.endpoint):
+                return Refusal("capability-unsupported", "provider addition requires explicit endpoint")
             # a param family that already rewrote the provider subtree (the
             # budget golden object) owns the write; a second base object here
             # would clobber the models array it just preserved
@@ -111,6 +151,7 @@ class PiAdapter:
                 ("providers", desired.provider_name), provider_object,
             ))
         intents.extend(param_intents)
+        intents.append(CompileIntent(context.target_handle, ("session", "model"), desired.model_id))
         if desired.credential_ref:
             intents.append(BindSecret(
                 context.target_handle, "api_key", desired.credential_ref))
@@ -122,16 +163,23 @@ class PiAdapter:
         )
 
     def verify(self, context: AdapterContext, observed: Mapping[str, Any]) -> Verdict:
+        if (context.target_handle.harness_id != "pi" or context.target_handle.scope != "instance"
+                or not common.identity_text(context.target_handle.identity)):
+            return Verdict("unknown", "Pi instance target identity evidence unavailable")
         read_back = observed.get("readback")
         if not isinstance(read_back, Mapping):
             return Verdict("unknown", "no read-back sample; a projected file digest "
                                       "and an RPC ack are not evidence of effect")
         expected = observed.get("desired_model")
+        if not common.identity_text(expected) or not common.identity_text(read_back.get("model")):
+            return Verdict("unknown", "model identity evidence unavailable")
         if read_back.get("model") != expected:
             return Verdict("mismatch", "session read-back differs from the desired model",
                            evidence={"readback": dict(read_back)})
         session_now = observed.get("native_session_id")
         expected_session = context.capabilities.get("native_session_id")
+        if not common.identity_text(session_now) or not common.identity_text(expected_session):
+            return Verdict("unknown", "native session identity evidence unavailable")
         if session_now != expected_session:
             return Verdict("mismatch", "native session identity changed; "
                                        "a session/new must never impersonate resume")
@@ -170,6 +218,8 @@ def _compile_params(context: AdapterContext, before: Mapping[str, Any],
                 "pi budget (maxTokens) needs the current native provider "
                 "sample in `before`; rewriting the provider subtree without "
                 "it would clobber the models array"), False
+        if sum(isinstance(entry, Mapping) and entry.get("id") == desired.model_id for entry in models) > 1:
+            return [], Refusal("capability-unsupported", "duplicate model identity in current native sample"), False
         rewritten: list[Any] = []
         hit = False
         for entry in models:
@@ -182,14 +232,18 @@ def _compile_params(context: AdapterContext, before: Mapping[str, Any],
                 "capability-unsupported",
                 f"model {desired.model_id!r} is not in the current native "
                 "sample; a budget write may only retune a declared entry"), False
+        if not common.safe_provider_sample(provider_sample):
+            return [], Refusal("capability-unsupported", "native provider credential material requires the credential owner"), False
+        endpoint = desired.endpoint if desired.endpoint is not None else provider_sample.get("baseUrl")
+        if not common.identity_text(endpoint):
+            return [], Refusal("capability-unsupported", "budget requires observed or desired endpoint"), False
         # The golden object keeps the sample's untouched fields (cost, input,
         # sibling models) but the CHOICE's own routing facts win: an endpoint
         # or protocol change in the same compile is never silently dropped.
         _, dialect = common.translate_protocol("pi", desired.protocol)
         provider_object = {
             **dict(provider_sample),
-            "baseUrl": desired.endpoint
-            if desired.endpoint is not None else provider_sample.get("baseUrl"),
+            "baseUrl": endpoint,
             "api": dialect,
             "models": rewritten,
         }

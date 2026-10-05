@@ -7,7 +7,7 @@ name = "ordessa-harness-pi"
 version = "0.1.0a1"
 description = "Independent Pi native RPC AgentUnit provider"
 requires-python = ">=3.10"
-dependencies = ["pacthold", "ordessa-harness-transport"]
+dependencies = ["pacthold", "ordessa-harness-transport", "ordessa-harness-api==1.0.0a1"]
 
 [project.optional-dependencies]
 server = ["ordessa-server-plugin-api>=0.1.0,<1"]

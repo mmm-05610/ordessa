@@ -23,6 +23,7 @@ channel injects (R-0012 - the one-time credential projection is the only path).
 from __future__ import annotations
 
 from typing import Mapping
+from ordessa_harness_pi.acp_model_facts import render_pi_provider as _pi_render
 from ordessa_harness_codex.acp_model_facts import render_codex_provider_section as _codex_render
 
 # P-A② (approvals/PA2-dialect-release.md): each family's dialect facts live in
@@ -117,13 +118,9 @@ def render_codex_provider_section(*, provider: str, base_url: str, protocol: str
 
 
 def render_pi_provider(*, provider: str, base_url: str, protocol: str) -> dict:
-    """The `providers.<id>` object pi's models.json reads for one upstream."""
-    field, dialect = translate_protocol("pi", protocol)
-    return {
-        "baseUrl": base_url,
-        field: dialect,
-        "apiKey": "$DEEPSEEK_API_KEY",  # a reference, never credential content
-    }
+    """Reuse the Pi owner renderer while preserving historical refusal type."""
+    translate_protocol("pi", protocol)
+    return _pi_render(provider=provider, base_url=base_url, protocol=protocol)
 
 
 def render_claude_env(*, base_url: str, protocol: str) -> dict:

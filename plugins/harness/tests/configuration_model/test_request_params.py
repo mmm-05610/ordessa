@@ -11,7 +11,7 @@ import pytest
 from ordessa_harness.configuration.model import common
 from ordessa_harness_codex.acp_model_configuration import CodexAdapter
 from ordessa_harness_claude_code.acp_model_configuration import ClaudeAdapter
-from ordessa_harness.pi.configuration.model import PiAdapter
+from ordessa_harness_pi.acp_model_configuration import PiAdapter
 from ordessa_harness_api.model_compilation import (
     AdapterContext, ChoiceRequest, IntentSet, Refusal, RequestParams,
     TargetHandle,
@@ -30,6 +30,8 @@ def _context(brand: str, identity: str) -> AdapterContext:
 def _choice(brand: str, *, provider="openai", model="gpt-5.1", params=None,
             protocol="openai-responses", brand_fields=None):
     facts = dict(brand_fields or {})
+    if brand == "pi":
+        facts = {"provider_in_instance": True, **facts}
     if brand == "codex":
         # The controlled old-provider observation is independent of parameter changes.
         facts = {"before_provider": provider, **facts}
@@ -324,6 +326,7 @@ def test_an_unissued_param_target_compiles_to_a_typed_refusal_not_a_lookalike():
     refused = bridge.BridgeConfigurationAdapter("pi").compile(
         _Context(), {}, {
             "provider": "deepseek", "model": "m", "protocol": "openai-chat",
+            "endpoint": "https://fixture.test",
             "brandFields": {"provider_in_instance": False},
             "requestParams": {"retry": {
                 "enabled": False, "maxRetries": 0,

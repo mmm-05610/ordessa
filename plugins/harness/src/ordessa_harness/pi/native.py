@@ -6,9 +6,6 @@ whatever is not pinned here.
 from __future__ import annotations
 
 #: first-hand source: deploy/pi/models.json providers.deepseek.api = "openai-completions".
-DIALECTS: dict[str, tuple[str, str | None]] = {
-    "openai-chat": ("api", "openai-completions"),
-}
-
-#: First-hand-pinned native config target path (relative to the guest home).
-NATIVE_TARGET = "models.json"
+from ordessa_harness_pi.acp_model_facts import DIALECT as DIALECTS
+from ordessa_harness_pi.acp_model_facts import NATIVE_TARGET as _TARGETS
+NATIVE_TARGET = _TARGETS["pi"]
