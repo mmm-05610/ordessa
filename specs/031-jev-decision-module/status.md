@@ -98,3 +98,10 @@ SDK fake HTTP、6 个真实子进程崩溃窗、ACK 未知/取消/预算/必须�
 没有真实模型质量成绩；不存在授权超时自动调用或凭据环境 fallback。
 剩余门：真实 Jev 请求/凭据读取须另行授权；真实家族/Harness 能力不由本模块凭 fake owner 宣称完成。
 完整 Server/Harness 继承失败集未重跑。现有服务、用户数据和其他工作树未触碰。
+
+## 自动续轮授权审计
+上一轮为进展：提交源码与 67 个逐场景回执。本轮补充原 Environment lifecycle/store seam 的 17 个离线测试；
+默认离线入口与 T64 现在按 57 个固定基线/当前测试 ID 比对，两边全部 passed、结果一致。
+[补充回归](evidence/implementation-20261005/additional-core-regression/README.md)。
+JD007 没有要求旧家族必须新增能力：旧 provider unsupported 是验收缺席行为，仍如实保留 JD009 PARTIAL。
+真实 JD010 尚未授权，模型/凭据/费用门未解除。已向用户提出具体授权范围问题；未读取任何凭据。

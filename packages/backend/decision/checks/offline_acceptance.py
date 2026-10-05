@@ -41,7 +41,7 @@ def prepare():
     if data.returncode: raise RuntimeError('baseline archive failed')
     with tarfile.open(fileobj=io.BytesIO(data.stdout)) as tf:
         tf.extractall(baseline,filter='data')
-    cases=['packages/backend/pacthold/tests/platform/test_t009_direction_guard.py','packages/backend/pacthold/tests/platform/test_public_contract.py']
+    cases=['packages/backend/pacthold/tests/platform/test_t009_direction_guard.py','packages/backend/pacthold/tests/platform/test_public_contract.py','packages/backend/pacthold/tests/environment/test_lifecycle.py','packages/backend/pacthold/tests/environment/test_store_port_seam.py']
     for label in ('baseline','current'):
         env=dict(os.environ)
         if label=='baseline':
@@ -68,7 +68,7 @@ for p in sorted((PACKAGE/'src').rglob('*')):
 receipt={'baseline':BASELINE,'head':sha,'source_digest':'sha256:'+source_hash.hexdigest(),
     'python':sys.version,'mode':'offline','model_http':'fake_transport_only','real_model_requests':0,
     'credential_reads':0,'scope':'local POSIX + temporary real core/fake owner; no live services',
-    'inherited_scope':'40 targeted Pacthold baseline IDs; full server/Harness registered reds not rerun',
+    'inherited_scope':'57 targeted Pacthold baseline IDs; full server/Harness registered reds not rerun',
     'scenarios':[]}
 failed=False
 for i in range(1,69):

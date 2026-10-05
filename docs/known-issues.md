@@ -146,6 +146,6 @@ Harness全量 `python -m pytest plugins/harness -q`：1031 passed / 3 skipped / 
 
 - Scoped offline acceptance: 67 scenarios and 209 tests passed; T60 real Jev quality NOT_RUN pending separate model/cost/credential authorization. Fake HTTP is protocol evidence only.
 - Public Agent pure-read seam is additive and opt-in. Existing Pi/Codex/Claude families remain unsupported for these new configuration reads; temporary real-core tests use a fake owner and perform zero effects. JD009 remains PARTIAL for family capability.
-- Targeted 40 baseline/current core IDs match. Full inherited Server/Harness red suites were not rerun or removed; original entries above remain authoritative.
+- Targeted 57 baseline/current core IDs match (40 direction/public API plus 17 Environment lifecycle/store seam IDs). Full inherited Server/Harness red suites were not rerun or removed; original entries above remain authoritative.
 - Python runtime uses >=3.10-compatible cooperative cancellation, tested on 3.12.14 only; blocking or cancellation-resistant host code cannot be hard-killed. File durability is verified on local POSIX with subprocess crash windows, not power loss or remote filesystems.
 - Full scene receipts and limitations: specs/031-jev-decision-module/evidence/implementation-20261005/README.md.

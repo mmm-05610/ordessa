@@ -42,11 +42,11 @@ def test_T64_fixed_baseline_regression_id_comparison():
         assert path.exists(),'baseline receipt absent'
         out={}
         for t in ET.parse(path).findall('.//testcase'):
-            cls=t.attrib['classname'];cls=cls[cls.index('tests.platform'):]
+            cls=t.attrib['classname'];cls=cls[cls.index('tests.'):]
             key=cls+'::'+t.attrib['name']
             assert key not in out
             out[key]='failed' if t.find('failure') is not None or t.find('error') is not None else 'skipped' if t.find('skipped') is not None else 'passed'
         return out
     baseline=results(ROOT/'.decision-tmp/baseline-core.xml'); current=results(ROOT/'.decision-tmp/current-core.xml')
-    assert len(baseline)==len(current)==40 and baseline==current
+    assert len(baseline)==len(current)==57 and baseline==current
     assert set(current.values())=={'passed'}

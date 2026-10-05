@@ -954,6 +954,11 @@
       "T68": "PASSED"
     },
     "unique_tests_passed": 209,
-    "all_work_complete": false
+    "all_work_complete": false,
+    "additionalCoreRegression": {
+      "matchedIds": 57,
+      "receipt": "evidence/implementation-20261005/additional-core-regression/id-comparison.json",
+      "scope": "direction/public API/Environment lifecycle/store seams only"
+    }
   }
 }
