@@ -65,7 +65,9 @@ def test_wheel_isolated_install_and_actual_http_discovery(tmp_path):
     assert absence.returncode == 0, absence.stderr
     executable = environment / "bin/ordessa-agent"
     help_result = subprocess.run([str(executable), "--help"], cwd=tmp_path, env=env, capture_output=True, text=True)
-    assert help_result.returncode == 0 and "profiles" in help_result.stdout and "providers" in help_result.stdout
+    assert help_result.returncode == 0 and "profiles" in help_result.stdout and "providers" in help_result.stdout and "nodes" in help_result.stdout
+    node_help = subprocess.run([str(executable), "nodes", "configuration", "describe", "--help"], cwd=tmp_path, env=env, capture_output=True, text=True)
+    assert node_help.returncode == 0 and "node_ref" in node_help.stdout
     binary_directory = tmp_path / "local-binaries"
     binary_directory.mkdir()
     marker = tmp_path / "must-not-run"

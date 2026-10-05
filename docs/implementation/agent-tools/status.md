@@ -477,3 +477,17 @@ C真实临时SQLite/实际Core＋受控native owner，P未验证、M0。生产re
 详情、完整命令与失败账：[provider-cli-v2-evidence.md](provider-cli-v2-evidence.md)。实际 PY 为本树外既有 .venv-ordessa-py312/bin/python，所有测试主会话串行且 terminal：CLI/契约/发行组合90P exit0、34.26s；部署/真实独立Server组合17P exit0、6.38s；完整Core/SQLite/Python-pipe集成511P exit0、29.84s；末端新增 @file 安装describe 与严格缺席授权断言复验3P exit0、5.76s。本轮新增23项，原发行2项加强，不累加组合快照。两次初失败分别包数据夹带旧客户端1P/1F和缺席ref误猜NOT_FOUND导致15P/1F，已保留断言并修实现或严格按现有核心错误映射校准。未删断言/skip/兼容链复活。公开schema生成和五工单strict exit0、diff-check exit0仅资料门。
 
 真实隔离Server属于服务进程证据，不代表真实 Harness P 或任务 M。三家 production owner/capture/receipt/effect/Session/writer、部署授权、材料/SecretRef、冷恢复/完整生命周期、旧装配迁移、Node/config/tasks/results CLI、三Skill与发行闭包仍缺。历史Core269P/3F未本轮修复，缺资源ABSENT，M0。未安装更新第三方、改登录/用户DB/凭据/全局配置、重启用户服务、push/主树合并；费用 unknown。Codex只读终审确认闭方法集/洁净bundle/精确read权限无新增阻断，无执行者写入/测试/Git。整体PARTIAL；显式纳入本轮路径后继续下一公开接缝和生产装配。
+
+### 2026-10-05 AU004 owner 配置描述薄 CLI（PARTIAL）
+
+前置04013950a5，clean；主会话仍唯一共享写者，Codex只读盘点与审阅，无子代理测试/Git。检查点后继续源码推进：新增 `ordessa-agent nodes configuration describe @node-ref.json --config service.json --service local --json`。只调用既有公开 agents.nodes.configuration.describe，完整三字段NodeRef环境/正整数generation（拒bool）先核验；描述DTO严格字段/类型/actions/scope/modes/confirmation/supportStatus及重复种类/版本校验，禁止已知Token回显。没有原生代码、写入、第二配置真值或新wire。输出configurationDescriptionObserved，runtimeVerified=false、configurationValuesObserved=false；描述supported不代表真实运行ready。
+
+公开接缝盘点发现schema有nodes.list/read但Server尚未实绑/宣告，输出wrapper及缺席行为需要补核心公开合同；没有nodes.get/nodes.query wire，不自造。configuration.describe/inspect已有owner读绑定，configurationManagement仅reflect同storeissuer写能力，不能拿false挡纯读；本轮只落describe，inspect下一切片。configuration.query会_record/_finish_recorded/publish，是原操作核实协调，不冒充无作用读取。
+
+主会话串行命令，PY=/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python：
+- `PY -m pytest -c products/agent-tools/pyproject.toml products/agent-tools/tests/test_configuration_cli.py -q --tb=short`：11P/0F exit0、5.97s。实际原Sqlite发布Node＋真实Core handlers＋临时HTTP和受控owner，没有production native。正例同Environment无issuer也能按read权限describe，不创建配置操作、dispatch/queryCalls均0；反例缺方法、拒权限、bool/外环境/额外principal、重复描述、未知actions/status、缺scope和Token回显。没有pytest失败或删除/skip断言。
+- `PY -m pytest -c products/agent-tools/pyproject.toml products/agent-tools/tests/test_configuration_cli.py products/agent-tools/tests/test_provider_cli.py products/agent-tools/tests/test_profile_cli.py products/agent-tools/tests/test_discovery.py products/agent-tools/tests/contracts/test_profile_wire.py products/agent-tools/tests/test_distribution.py products/agent-tools/tests/test_bundle.py -q --tb=short`：101P/0F exit0、38.69s（原90＋新11，快照不累加）。fresh wheel新nodes/describe help可用，运行时Core/Server/Harness/品牌clients缺席；已安装describe正向原生服务全链路未验证。实际bundle仍green。源码Core/server/三家未改，不声称本轮跑了其全回归；真实Harness P缺席、M0；历史Core3红仍登记。全部测试句柄terminal，diff-check exit0。
+
+README同步命令/证据边界。本轮新增configuration.py与11项测试，修改cli、发行help断言和README，账本显式纳入检查点。nodes绑定/inspect/apply/query/access/lifecycle/tasks/results、三Skill、production owner/权限/冷恢复/迁移与AU005仍继续，不标AU004_DONE。未改用户数据/凭据/全局配置、更新第三方、登录、模型、用户服务、push/主树合并，费用unknown。
+
+Codex只读终审确认describe DTO类型/枚举/身份与无issuer读路径，无安全阻断；建议畸形类型反例，主会话新增8项真实HTTP响应：descriptions对象/元素bool、actions对象或bool、modes嵌套list、scope对象、confirmation list、inputSchema list。另补2项缺发布Node和已retired owner，分别严格4/3拒绝、calls3且effect/query0。末端同定向命令最终21P/0F exit0、11.28s（原11＋新10），未出现pytest失败。源码行为未变，仅测试补强；101组合是新10加入前结果，不声称111完整组合已跑。工单strict/diff-check前述通过；本次diff-check再exit0。全部句柄terminal，审阅者无写入/测试/Git。检查点继续配置观察、节点公开接缝与生产装配。

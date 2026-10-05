@@ -229,3 +229,11 @@ core catalog; report those counts separately. Missing core/build resources fail
 instead of silently skipping. Node lifecycle, DirectoryBinding, leaf provider
 routing/material preparation, native input, stop/recovery and real models remain
 outside the completed slice.
+
+配置能力描述使用完整 NodeRef，查询的是 owner 支持的配置种类、scope、应用模式及确认方式：
+
+```sh
+ordessa-agent nodes configuration describe @node-ref.json --config service.json --service local --json
+```
+
+此命令只消费公开 `agents.nodes.configuration.describe`，不读取实际配置值，不修改 Profile 或运行配置。输出 `configurationDescriptionObserved`，`runtimeVerified=false`、`configurationValuesObserved=false`。服务必须明确发布此方法并授予 Node 读取权限；`configurationManagement` 标志主要反映写入 issuer，不能代替逐方法与 owner 权限。缺 owner、权限或必要事实时拒绝，不回退或补默认值。节点 list/read 的网络绑定及配置 inspect/apply/query CLI 仍待完成。
