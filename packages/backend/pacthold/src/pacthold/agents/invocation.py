@@ -252,7 +252,7 @@ class InvocationIssuer:
         if not isinstance(state, InvocationCurrentState):
             raise InvocationAuthorityRefused("trusted current-state response is invalid")
         directory = operation.intent.context_ref["directoryBindingRef"]
-        if (state.provider_ref != step.pinned_provider_ref or not state.provider_active
+        if (safe_json(state.provider_ref) != safe_json(step.pinned_provider_ref) or not state.provider_active
                 or not state.directory_permitted or state.directory_binding_ref.to_dict() != directory
                 or state.directory_binding_ref.environment_namespace != request.environment_namespace):
             raise InvocationAuthorityRefused("provider generation or directory permission changed")
@@ -260,7 +260,7 @@ class InvocationIssuer:
         if (expected_epoch is not None and epoch != expected_epoch) or (not query and epoch != operation.intent.management_epoch):
             raise InvocationAuthorityRefused("management epoch changed")
         if binding["cleanup"]:
-            if action not in {"stop", "query", "release"} or state.acquired_target_ref != binding["targetRef"]:
+            if action not in {"stop", "query", "release"} or safe_json({"ref": state.acquired_target_ref}) != safe_json({"ref": binding["targetRef"]}):
                 raise InvocationAuthorityRefused("cleanup lacks the exact previously acquired target")
             _scoped(state.acquired_target_ref, request.environment_namespace)
             _scoped(state.acquisition_evidence_ref, request.environment_namespace)
@@ -275,8 +275,10 @@ class InvocationIssuer:
             _scoped(grant.delegation_ref, request.environment_namespace)
         current_issuer = self._refused_call(lambda: sealed_mapping(self._authority.issuer_ref))
         if (grant.principal_scope != request.principal_scope or grant.actions != (action,)
-                or grant.target_ref != binding["targetRef"] or grant.delegation_ref != binding["delegationRef"]
-                or grant.issuer_ref != self._authority_issuer or current_issuer != self._authority_issuer
+                or safe_json(grant.target_ref) != safe_json(binding["targetRef"])
+                or safe_json({"ref": grant.delegation_ref}) != safe_json({"ref": binding["delegationRef"]})
+                or safe_json(grant.issuer_ref) != safe_json(self._authority_issuer)
+                or safe_json(current_issuer) != safe_json(self._authority_issuer)
                 or grant.expires_at <= self._now()):
             raise InvocationAuthorityRefused("grant scope, issuer or expiry does not match")
         return grant
@@ -313,8 +315,8 @@ class InvocationIssuer:
                 claim_revision = claim.step.revision
             # Failure here deliberately preserves a possibly-dispatched durable claim.
             latest_state = self._state(request, operation, step, binding, action, query=query, expected_epoch=state.management_epoch)
-            if (latest_state.acquired_target_ref != state.acquired_target_ref
-                    or latest_state.acquisition_evidence_ref != state.acquisition_evidence_ref):
+            if (safe_json({"ref": latest_state.acquired_target_ref}) != safe_json({"ref": state.acquired_target_ref})
+                    or safe_json({"ref": latest_state.acquisition_evidence_ref}) != safe_json({"ref": state.acquisition_evidence_ref})):
                 raise InvocationAuthorityRefused("acquisition relationship changed during issuance")
             self._revalidate(grant, request, action, binding)
             payload = safe_json({"issuerInstance": self._instance, "request": _request_fields(request),

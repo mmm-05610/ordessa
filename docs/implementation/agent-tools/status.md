@@ -362,3 +362,21 @@ C为受控owner/SDK以及真实临时SQLite/Python peer；三家真实上游进�
 共享集成沿上一段完整356项命令，修改generic owner门前356P/0F exit0、12.70s；该测试不导入Claude，末端Claude改动由149项覆盖，不把集成绿当生产全绿。子代理compile/collect exit0；其初plain python exit127和fixture路径收集exit2已修；主会话两次只读猜测不存在test_claude_provider.py、docs/owner-ports.md exit2/1，随后按实际路径读取，不形成实现依据。diff-check exit0。
 
 C真实SQLite/Issuer＋受控effect/native owner；SDK实际执行桥、FencedSdkTransport生产装配、真实Claude证据owner、prepare查询、首输入association仍缺。P未验证、M0；核心继承3项方向扫描红未修。无第三方安装更新/真实模型/用户服务及数据操作、push或主树合并。AU003不报DONE，收妥此切片后串行回AU002已批准首输入接缝。
+
+### 2026-10-05 AU002 Sessionless 首输入预留/claim 检查点（PARTIAL）
+
+前置d637a65946，clean；家族作者已释放，主会话唯一共享写者，Pi只读终审。按577014c450用户批准口径增加SessionlessNativeInputState：原完整UnitRef、原Unit确认与Session缺席来源，不填default/假Session。原Session DTO及context解释保留；首次原submitInput目标为完整Unit，原Issuer明确授权这一目标后claim一次。原DomainStore中Node＋Unit首次占用与draft及operation同事务预留，跨draft/key、terminal、仅观察到Session均保留占用；claim重读原holder。核心不发送输入、不建新ledger。冻结见sessionless-input-reservation-port.md。
+
+当前只完成预留/claim，所有首次占用held；尚无record-only association、原输入作用已知与Session关联双证据确认、原publish/Usage转移，不能宣称多输入可用或AU002_DONE。Session观察也不能绕到原Session路径。下一切片沿原record_operation_step/publish_operation补来源与CAS；owner journal/core库不是跨库原子事务，崩溃窗须保留占用并只读恢复。
+
+新增真实Issuer bool反例先跑 `<python> -m pytest -c products/agent-tools/pyproject.toml docs/implementation/agent-tools/evidence/agent-unit-model/test_sessionless_input.py -k retain_json_types -q`：0P/2F、19 deselected，exit1、0.28s，证明原provider/grant target普通dict比较接受True==1。改safe_json后首组合73P/60F exit1、3.70s，原因是主会话误将可空delegation/acquisition直接传入只接受mapping的safe_json；修为mapping包装，原断言保留，133P exit0、2.68s。Pi审阅再补before-config嵌套bool来源与safe_json比较。独立连接测试初135P/1F exit1、2.79s，原writer锁正确拒绝不同owner；改为显式同测试writer owner（无takeover），并保留不同writer拒绝反例，最终137P/0F exit0、2.84s。新25项＋原managed-input/authority/continuation112，不累加快照。
+
+定向完整命令：`/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python -m pytest -c products/agent-tools/pyproject.toml docs/implementation/agent-tools/evidence/agent-unit-model/test_sessionless_input.py products/agent-tools/tests/integration/test_managed_input_reservations.py products/agent-tools/tests/integration/test_invocation_authority.py docs/implementation/agent-tools/evidence/agent-unit-model/test_invocation_continuation.py -q`。初新增19项＋原managed35为54P exit0、1.73s；最终137为授权及并发补强后的组合。独立Environment/连接同步读absent竞争原Domain CAS，只有一个操作/draft/first占用，输家事务回滚；不是第二生产writer许可。
+
+最终集成完整命令：`PYTHONPATH=plugins/harness/codex/src:packages/backend/harness-transport/src <python> -m pytest -c products/agent-tools/pyproject.toml products/agent-tools/tests/integration docs/implementation/agent-tools/evidence/agent-unit-model/test_assembly.py docs/implementation/agent-tools/evidence/agent-unit-model/test_codex_assembly.py docs/implementation/agent-tools/evidence/agent-unit-model/test_provider_discovery.py docs/implementation/agent-tools/evidence/agent-unit-model/test_preparation_holds.py docs/implementation/agent-tools/evidence/agent-unit-model/test_management.py docs/implementation/agent-tools/evidence/agent-unit-model/test_invocation_continuation.py docs/implementation/agent-tools/evidence/agent-unit-model/test_sessionless_input.py -q`：381P/0F exit0、13.93s。共享原四文件107P exit0、0.71s；Claude全家族149P exit0、7.98s，均在授权比较末端修改后串行完成。
+
+核心全回归 `<python> -m pytest -c packages/backend/pacthold/pyproject.toml packages/backend/pacthold/tests -q --tb=short`：269P/3F exit1、6.37s，仍已登记三个test_n4r1_kernel_direction ID、既有test_closeout_environment_dispatch导入ordessa_persistence_sqlite触发扫描。未删断言/skip或移动失败，缺实际Claude/worker等资源记录ABSENT，不算绿。只读探测不存在products/agent-tools/tests/conftest.py exit2已改为按已有evidence测试显式插入integration路径，不依赖缺文件。全部实际测试句柄terminal。
+
+C临时SQLite/真实Issuer＋受控capture/native/authority；无owner journal关联或native输入writer，P未验证、M0。未安装更新第三方、修改用户DB/凭据/全局配置或重启服务，未push/主树合并。CLI/Skill/发行、三家生产owner/权限/writer/receipt、完整生命周期及原首次关联/出版仍继续。
+
+Pi只读终审确认before-config/Issuer类型比较及独立连接CAS反例补齐；未新增修改/测试/Git。保持reserve＋claim切片与association/publish缺口分账。工单结构五项exit0、diff-check exit0；显式纳入本轮两个核心文件、测试、冻结说明及status形成检查点，继续原InputAttempt association与发布，不标完成门。

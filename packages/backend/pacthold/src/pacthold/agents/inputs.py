@@ -23,6 +23,8 @@ from .directory import DirectoryBindingRef
 from .invocation import InvocationIssuer
 
 DRAFT_ATTEMPTS = "agents.draft-attempts"
+FIRST_SESSION_ATTEMPTS = "agents.first-session-attempts"
+SESSIONLESS_INPUT_VERSION = "harness-sessionless-input/1"
 
 
 def _plain(value):
@@ -99,10 +101,58 @@ class NativeInputState:
             object.__setattr__(self, field, sealed_mapping(value))
 
 
+@dataclass(frozen=True)
+class SessionlessNativeInputState:
+    """Owner-observed confirmed Unit with no Session, never a fake SessionRef.
+
+    The trusted owner re-verifies the original Unit confirmation and absence
+    at every inspection. Provenance shape alone does not establish those facts.
+    A Unit submitInput grant covers the whole native input, including Session
+    creation; Session/start grants cannot be substituted by the consumer.
+    """
+    node_ref: Mapping
+    provider_ref: Mapping
+    unit_ref: Mapping
+    unit_confirmation_ref: Mapping
+    session_absence_ref: Mapping
+    management_epoch: int
+    directory_binding_ref: DirectoryBindingRef
+    before_configuration_evidence: Mapping
+
+    def __post_init__(self):
+        node = _node(self.node_ref)
+        if (type(self.management_epoch) is not int or self.management_epoch < 0
+                or not isinstance(self.directory_binding_ref, DirectoryBindingRef)
+                or self.directory_binding_ref.environment_namespace != node.environment):
+            raise ValueError("current sessionless Unit evidence required")
+        for field in ("node_ref", "provider_ref", "unit_ref", "unit_confirmation_ref",
+                      "session_absence_ref", "before_configuration_evidence"):
+            value = getattr(self, field)
+            if not isinstance(value, Mapping) or len(value) < 2 or value.get("environmentNamespace") != node.environment:
+                raise ValueError("sessionless evidence scope differs")
+            object.__setattr__(self, field, sealed_mapping(value))
+        if (set(self.unit_ref) != {"environmentNamespace", "unitId", "ownerProviderRef", "sourceRevision"}
+                or not isinstance(self.unit_ref["unitId"], str) or not self.unit_ref["unitId"]
+                or safe_json(self.unit_ref["ownerProviderRef"]) != safe_json(self.provider_ref)
+                or not isinstance(self.unit_ref["sourceRevision"], str) or not self.unit_ref["sourceRevision"]):
+            raise ValueError("complete original Unit source reference required")
+        for ref in (self.unit_confirmation_ref, self.session_absence_ref):
+            if (set(ref) != {"environmentNamespace", "ownerProviderRef", "sourceRevision", "ref"}
+                    or safe_json(ref["ownerProviderRef"]) != safe_json(self.provider_ref)
+                    or any(not isinstance(ref[key], str) or not ref[key] or len(ref[key]) > 256
+                           or any(ord(c) < 32 for c in ref[key]) for key in ("sourceRevision", "ref"))):
+                raise ValueError("original Unit confirmation and Session absence sources required")
+
+    def binding(self):
+        return {"contractVersion": SESSIONLESS_INPUT_VERSION, "unitRef": _plain(self.unit_ref),
+                "unitConfirmationRef": _plain(self.unit_confirmation_ref),
+                "sessionAbsenceRef": _plain(self.session_absence_ref)}
+
+
 @runtime_checkable
 class NativeInputStatePort(Protocol):
     """Harness-owned confirmed mapping/config evidence, re-read each time."""
-    def inspect(self, node_ref: ParticipantInstanceRef, principal: str) -> NativeInputState | None: ...
+    def inspect(self, node_ref: ParticipantInstanceRef, principal: str) -> NativeInputState | SessionlessNativeInputState | None: ...
 
 
 class ManagedInputReservations:
@@ -116,6 +166,46 @@ class ManagedInputReservations:
             return port.inspect(*args)
         except Exception:
             raise GuaranteeUnavailableError("trusted input evidence is unavailable") from None
+
+    @staticmethod
+    def _first_fence_id(node_ref, unit_ref):
+        return "first-session-" + hashlib.sha256(safe_json(
+            {"nodeRef": node_ref, "unitRef": unit_ref}).encode()).hexdigest()[:48]
+
+    def _first_fence(self, node_ref, unit_ref):
+        """Read the SAME domain reservation; Session observation never clears it.
+
+        Publication/transfer requires separate verified original input and
+        association evidence. Until that path is composed, all markers remain
+        held, even if an operation was cancelled/refused or a Session appeared.
+        """
+        env = self._environment
+        fence_id = self._first_fence_id(node_ref, unit_ref)
+        prior = env._store.read_domain(env.environment_id, FIRST_SESSION_ATTEMPTS, fence_id)
+        if prior is None:
+            return fence_id, None
+        frozen = prior["value"]
+        try:
+            old = env._store.read_operation(RequestKey(env.environment_id,
+                frozen["principalScope"], frozen["requestId"]))
+            context = old.intent.context_ref
+            valid = (old.intent.kind == "managed-input" and old.digest == frozen["inputDigest"]
+                and old.intent.operation_ref == frozen["operationRef"]
+                and old.intent.management_epoch == frozen["managementEpoch"]
+                and safe_json(old.intent.node_ref) == safe_json(node_ref)
+                and safe_json(context["sessionlessInputBinding"]["unitRef"]) == safe_json(unit_ref)
+                and safe_json(frozen["nodeRef"]) == safe_json(node_ref)
+                and safe_json(frozen["unitRef"]) == safe_json(unit_ref)
+                and safe_json(context["sessionlessInputBinding"]) == safe_json(frozen["binding"])
+                and safe_json(context["nativeCorrelation"]) == safe_json(frozen["nativeCorrelation"])
+                and safe_json(old.intent.steps[0].pinned_provider_ref) == safe_json(frozen["providerRef"])
+                and frozen["state"] == "held" and type(frozen["managementEpoch"]) is int
+                and type(prior["revision"]) is int and prior["revision"] == 1)
+        except Exception:
+            valid = False
+        if not valid:
+            raise GuaranteeUnavailableError("first Session attempt source identity is damaged")
+        return fence_id, prior
 
     def _admit(self, request, node_ref):
         env = self._environment
@@ -191,31 +281,47 @@ class ManagedInputReservations:
                 if evidence.draft_revision <= old.intent.context_ref["draftRevision"]:
                     raise IdentityMismatchError("captured draft revision already has a spent attempt")
             state = self._inspect(self._native, node_ref, request.principal_scope)
-            if (not isinstance(state, NativeInputState) or state.node_ref != exact_node
-                    or state.provider_ref != node["binding"]["harnessProviderRef"]
-                    or state.unit_ref != node["binding"]["harnessUnitRef"]):
-                raise GuaranteeUnavailableError("current Harness-owned single-session evidence is unavailable")
+            if (not isinstance(state, (NativeInputState, SessionlessNativeInputState))
+                    or safe_json(state.node_ref) != safe_json(exact_node)
+                    or safe_json(state.provider_ref) != safe_json(node["binding"]["harnessProviderRef"])
+                    or safe_json(state.unit_ref) != safe_json(node["binding"]["harnessUnitRef"])):
+                raise GuaranteeUnavailableError("current Harness-owned input binding evidence is unavailable")
+            first_fence_id, first_prior = self._first_fence(exact_node, state.unit_ref)
+            if first_prior is not None:
+                raise UnknownResultError("Unit first input retains its original association fence; inspect the original request")
             # Current trusted contribution, not a self-reported provider id.
             admitted = env.agent_runtime_contribution(node["binding"]["harnessDefinitionRef"])
-            if admitted.provider_ref != state.provider_ref:
+            if safe_json(admitted.provider_ref) != safe_json(state.provider_ref):
                 raise AdmissionRefusedError("native provider activation changed")
             operation_id = "input-" + hashlib.sha256(safe_json({"environmentNamespace": env.environment_id,
                 "principalScope": request.principal_scope, "requestId": request.request_id}).encode()).hexdigest()[:48]
             step_id = "native-input"
+            first_input = isinstance(state, SessionlessNativeInputState)
+            target = state.unit_ref if first_input else state.session_ref
+            binding_evidence = ({"sessionlessInputBinding": state.binding()} if first_input else
+                                {"nativeSessionRef": _plain(state.session_ref), "sessionSourceRevision": state.source_revision})
             context = {"environmentNamespace": env.environment_id, **parameters,
                        "directoryBindingRef": state.directory_binding_ref.to_dict(),
-                       "nativeSessionRef": _plain(state.session_ref), "sessionSourceRevision": state.source_revision,
+                       **binding_evidence,
                        "beforeConfigurationEvidence": _plain(state.before_configuration_evidence),
-                       "invocationBindings": {step_id: {"action": "submitInput", "targetRef": _plain(state.session_ref),
+                       "invocationBindings": {step_id: {"action": "submitInput", "targetRef": _plain(target),
                            "delegationRef": None, "cleanup": False}}}
             step = StepIntent(step_id, state.provider_ref, digest, operation_id + ".submit",
                               management_epoch=state.management_epoch)
             intent = OperationIntent(operation_id, "managed-input", node["lineage"]["profileSnapshotRef"],
                 context, (step,), exact_node, state.management_epoch)
-            return env._store.reserve_operation(request, digest, intent, writes=(DomainWrite(DRAFT_ATTEMPTS,
+            writes = (DomainWrite(DRAFT_ATTEMPTS,
                 fence_id, prior["revision"] if prior else 0,
                 {"nodeRef": exact_node, "draftId": evidence.draft_id, "principalScope": request.principal_scope,
-                 "requestId": request.request_id, "operationRef": operation_id}),))
+                 "requestId": request.request_id, "operationRef": operation_id}),)
+            if first_input:
+                writes += (DomainWrite(FIRST_SESSION_ATTEMPTS, first_fence_id, 0,
+                    {"nodeRef": exact_node, "unitRef": _plain(state.unit_ref), "state": "held",
+                     "principalScope": request.principal_scope, "requestId": request.request_id,
+                     "operationRef": operation_id, "inputDigest": digest, "binding": state.binding(),
+                     "providerRef": _plain(state.provider_ref), "managementEpoch": state.management_epoch,
+                     "nativeCorrelation": correlation}),)
+            return env._store.reserve_operation(request, digest, intent, writes=writes)
 
     def claim_dispatch(self, request: RequestKey, issuer: InvocationIssuer):
         """Issue the existing one-shot InvocationContext, never submit input."""
@@ -233,18 +339,29 @@ class ManagedInputReservations:
             node = self._admit(request, ref)
             context = operation.intent.context_ref
             state = self._inspect(self._native, ref, request.principal_scope)
-            if (not isinstance(state, NativeInputState)
-                    or state.node_ref != operation.intent.node_ref
-                    or state.provider_ref != operation.intent.steps[0].pinned_provider_ref
-                    or state.unit_ref != node["binding"]["harnessUnitRef"]
-                    or state.session_ref != context["nativeSessionRef"]
-                    or state.source_revision != context["sessionSourceRevision"]
+            first_input = "sessionlessInputBinding" in context
+            matching_binding = (isinstance(state, SessionlessNativeInputState)
+                and safe_json(state.binding()) == safe_json(context["sessionlessInputBinding"])) if first_input else (
+                isinstance(state, NativeInputState)
+                and safe_json(state.session_ref) == safe_json(context["nativeSessionRef"])
+                and state.source_revision == context["sessionSourceRevision"])
+            if (not matching_binding
+                    or safe_json(state.node_ref) != safe_json(operation.intent.node_ref)
+                    or safe_json(state.provider_ref) != safe_json(operation.intent.steps[0].pinned_provider_ref)
+                    or safe_json(state.unit_ref) != safe_json(node["binding"]["harnessUnitRef"])
                     or state.management_epoch != operation.intent.management_epoch
                     or state.directory_binding_ref.to_dict() != context["directoryBindingRef"]
-                    or state.before_configuration_evidence != context["beforeConfigurationEvidence"]):
+                    or safe_json(state.before_configuration_evidence) != safe_json(context["beforeConfigurationEvidence"])):
                 raise AdmissionRefusedError("native input binding changed before dispatch claim")
+            _, first_fence = self._first_fence(operation.intent.node_ref, state.unit_ref)
+            if (first_input and (first_fence is None
+                    or first_fence["value"]["principalScope"] != request.principal_scope
+                    or first_fence["value"]["requestId"] != request.request_id)):
+                raise GuaranteeUnavailableError("original Unit first-input fence unavailable")
+            if not first_input and first_fence is not None:
+                raise UnknownResultError("Session observation cannot release the Unit first-input fence")
             admitted = env.agent_runtime_contribution(node["binding"]["harnessDefinitionRef"])
-            if admitted.provider_ref != state.provider_ref:
+            if safe_json(admitted.provider_ref) != safe_json(state.provider_ref):
                 raise AdmissionRefusedError("native provider activation changed")
             binding = operation.intent.context_ref["invocationBindings"]["native-input"]
             return issuer.issue(request, operation.digest, "native-input", "submitInput", binding["targetRef"])
