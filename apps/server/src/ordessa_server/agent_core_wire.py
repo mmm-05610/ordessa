@@ -20,6 +20,7 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
     """Bind to the current host lifecycle, never create an Environment here."""
     schema=wire_contract(contract_version)
     configuration_actions={'describeConfiguration','inspectConfiguration','applyConfiguration','queryChange'}
+    provider_actions={'providersList','providersDescribe'}
     profile_actions={item['action'] for item in wire_contract()['methods'].values()}
     def handler(action, definition):
         def invoke(params):
@@ -41,6 +42,12 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
                         for name in ("profileRef", "baseManifestRef") if name in params}
                 node_ref=decode_node_ref(params['nodeRef']) if 'nodeRef' in params else None
                 change=ConfigurationChangeRequest.from_dict(params['change']) if 'change' in params else None
+                if 'definitionRef' in params:
+                    ref=params['definitionRef']
+                    if (not isinstance(ref,dict)
+                            or set(ref)!={'environmentNamespace','definitionId','revision'}
+                            or any(not isinstance(value,str) or not value for value in ref.values())):
+                        raise ValueError('complete definition reference required')
                 if "requestId" in params:
                     RequestKey("parameter-check", "local", params["requestId"])
             except (ValueError, TypeError, KeyError, IdentityMismatchError):
@@ -56,8 +63,13 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
                     if contract_version==AGENT_MANAGEMENT_CONTRACT_VERSION:
                         result['supports'].update(services.configuration.capabilities())
                         result['supportedMethods']=[name for name,item in schema['methods'].items()
-                            if item['action'] in profile_actions or item['action'] in configuration_actions]
+                            if item['action'] in profile_actions or item['action'] in configuration_actions
+                            or item['action'] in provider_actions]
                     return result
+                if action=='providersList':
+                    return {'providers':list(services.providers.list())}
+                if action=='providersDescribe':
+                    return services.providers.describe(params['definitionRef'])
                 if action in configuration_actions:
                     manager=services.configuration
                     if action=='describeConfiguration':

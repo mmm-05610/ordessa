@@ -531,6 +531,28 @@ class Environment:
             raise IdentityMismatchError(f"unknown activation {ref!r}")
         return entry
 
+    def agent_runtime_contributions(self):
+        """Observe current active Agent contributions from the sole registry.
+
+        Staged and draining activations are excluded. A mutated active
+        contribution is refused rather than advertised as usable.
+        """
+        with self._admission_lock:
+            self._check_open()
+            if self._policy is None or not self._policy.admit_object_access(
+                    self._principal_scope, f"{self.environment_id}:agents.runtime", "read"):
+                raise AdmissionRefusedError("RuntimeProvider discovery refused")
+            result = []
+            for provider_id in self._registry.snapshot().agent_runtime_provider_ids:
+                owner, provider, descriptor = self._registry.agent_runtime_provider(provider_id)
+                if not any(entry.ref.plugin_id == owner and entry.state == "active"
+                           and any(candidate is provider for candidate in
+                                   getattr(entry.contributions, "agent_runtime_providers", ()))
+                           for entry in self._activations.values()):
+                    continue
+                result.append(self.agent_runtime_contribution(descriptor.definition_ref))
+            return tuple(result)
+
     def agent_runtime_contribution(self, definition_ref):
         """Read a live, host-owned Agent RuntimeProvider from the sole registry.
 

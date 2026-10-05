@@ -267,3 +267,11 @@ AU003增量e08916abae冻结/提交后三家写权全部释放，主会话串行�
 命令：`/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python -m pytest -c products/agent-tools/pyproject.toml docs/implementation/agent-tools/evidence/agent-unit-model/test_preparation_holds.py products/agent-tools/tests/integration/test_node_publication.py -q`。首跑29P/1F exit1、0.49s，冷启动fixture未关闭原writer，正确触发WriterLockHeldError；第二次30P/1 teardown error exit1、0.50s，fixture重复close；修正资源清理后30P/0F exit0、0.46s。新增5项真实SQLite验证：dispatch前持有、错误holder和跨环境target导致身份/操作/Usage整体回滚、重放不追加占用、unknown及冷启动保留原占用且不重复claim。既有Node25项同跑；未删除断言、放宽writer锁或用takeover绕过。
 
 C为真实SQLite受控协调证据；P/M均未运行，本次无第三方安装/更新、用户数据或配置操作、服务重启。生产prepare→Unit→Node、材料/SecretRef、完整使用与生命周期仍未完成，AU002_PARTIAL。此前核心全回归3个已登记失败仍保持，未用本次窄测宣称修复。下一步接固定Profile与当前Registry Provider的准备协调及实际owner证据。
+
+### 2026-10-05 AU002 唯一 Registry 公开发现
+
+开工HEAD84b980f619c6351daacc219fa3694d39799966c5，clean；上一轮是已提交占用接缝进展，本轮继续可行核心工作。新增Environment.agent_runtime_contributions与AgentServices.providers只观察唯一CoreRegistry当前active贡献；公开descriptor/host providerRef不泄漏实例对象，不调用品牌生命周期/安装探测。staged/draining排除，active接纳后篡改拒绝，空Registry仍检查读权限。显式v2 wire绑定既定agents.providers.list/describe并如实加入supportedMethods；默认v1不变，nodes.prepare仍未组成。详见provider-discovery-port.md。
+
+命令 `/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python -m pytest -c products/agent-tools/pyproject.toml docs/implementation/agent-tools/evidence/agent-unit-model/test_provider_discovery.py docs/implementation/agent-tools/evidence/agent-unit-model/test_management.py products/agent-tools/tests/integration/test_runtime_admission.py -q`：首跑64P/1F exit1、1.85s，新增测试误用WireError.code，修为既定family；最终65P exit0、2.32s（新发现13、管理31、接纳21）。涵盖公开wire、权限/引用反例、篡改、generation更新及副本隔离；没有修改既有断言。
+
+Environment共享修改后核心全回归同命令 `-m pytest -c packages/backend/pacthold/pyproject.toml packages/backend/pacthold/tests -q`：269P/3F exit1、7.37s，仍已登记test_n4r1_kernel_direction的三个ID，触发源仍是既有核心test_closeout_environment_dispatch导入具体SQLite；没有把全量报绿或移除失败。P/M0，无第三方安装更新、用户服务/登录/数据操作。AU002仍PARTIAL：生产prepare/材料/SecretRef/Unit→Node装配与使用生命周期待接通；发现可用不等于产品可用。

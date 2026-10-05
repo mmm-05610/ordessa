@@ -12,6 +12,7 @@ from .schema import wire_contract, wire_schema_digest, AGENT_MANAGEMENT_CONTRACT
 from .directory import DirectoryBindingRef
 from .nodes import NodePublication, encode_node_ref, decode_node_ref
 from .management import AgentConfiguration
+from .providers import AgentProviders
 from .invocation import InvocationContext, InvocationVerifier, InvocationAuthorityRefused
 
 
@@ -20,6 +21,7 @@ class AgentServices:
     profiles: ProfileCatalog
     nodes: NodePublication
     configuration: AgentConfiguration
+    providers: AgentProviders
 
 
 def agent_services(environment, *, invocation_issuer=None, node_evidence_port=None) -> AgentServices:
@@ -34,7 +36,8 @@ def agent_services(environment, *, invocation_issuer=None, node_evidence_port=No
         if services is None:
             nodes = NodePublication(environment, evidence_port=node_evidence_port)
             services = AgentServices(ProfileCatalog(environment), nodes,
-                AgentConfiguration(environment, nodes, invocation_issuer=invocation_issuer))
+                AgentConfiguration(environment, nodes, invocation_issuer=invocation_issuer),
+                AgentProviders(environment))
             environment._agent_services = services
         elif ((invocation_issuer is not None and services.configuration._issuer is not invocation_issuer)
                 or (node_evidence_port is not None and services.nodes._evidence_port is not node_evidence_port)):
@@ -51,6 +54,7 @@ __all__ += ["DirectoryBindingRef"]
 __all__ += ["AgentConfiguration", "InvocationContext", "InvocationVerifier"]
 __all__ += ["NodePublication", "encode_node_ref", "decode_node_ref"]
 __all__ += ["InvocationAuthorityRefused"]
+__all__ += ["AgentProviders"]
 from .runtime import AgentContributionSet, RuntimeProvider, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
 __all__ += ["AgentContributionSet", "RuntimeProvider", "RuntimeProviderDescriptor", "RUNTIME_PROVIDER_VERSION"]
 from .configuration import (
