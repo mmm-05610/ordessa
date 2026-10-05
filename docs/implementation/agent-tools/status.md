@@ -423,3 +423,27 @@ Pi首次审阅发现漏报Usage恢复死角：先concluded再由publish检漏，
 C真实临时SQLite/实际Core＋受控native owner，P未验证、M0。生产receipt/writer fence、目录/Invocation授权接线、完整冷启动/生命周期、材料/SecretRef、三家公开生产装配、CLI/Skill薄化及发行闭包仍继续，AU002/AU003不报DONE。只改本树及测试临时文件；无第三方安装更新、真实模型、用户DB/凭据/全局配置或用户服务操作，未push/合并主树。核验工单结构和diff后显式纳入检查点，继续后续，不把本接缝绿当产品完成。
 
 本切片末端五工单strict结构exit0、git diff --check exit0，50项新C与最终扩大回归均已terminal。显式stage上述三份原源码/接口、两份新测试及四份证据/账本；不裸add其他dirty。检查点后继续生产接缝与余下工单，goal保持active。
+
+### 2026-10-05 AU003 原生预分配帧与 Core claim 实际写入接缝（PARTIAL）
+
+本轮起点 ffe569dee03c5a5d9d9467824e71f0a8399df89a、clean；保留既有首次双证据与出版。Codex/Pi 家族执行者各持自己的 prefix，交回后释放；主会话唯一共享 transport/合同/整合/测试/Git/账本作者。终审三家仅只读，不跑测试或共享写入。用户确认 sessionless 原机制提案持续有效，不追加常规批准门。
+
+共享 PreparedFramePool 是客户端有界一次性原生帧 handle，固定 UTF-8 JSONL、原生 ID/协议/SHA；不发 IO/claim、不保存操作或 Session真值。家族先分配 req-N、后 capture/reserve/claim，再 dispatch 原字节。before_write(actual_wire_bytes) 在原 transport 实际 stdin 锁及 lease 校验内核 capture、native ID/协议和原 opaque Context/完整Unit/Provider/input digest/权限。失败消费 handle，无换键/重发。Codex/Pi 保留各自原生协议，不给 Claude 造 request-id；品牌能力声明未扩张。冻结说明 prepared-native-input-port.md。
+
+终审补两条实际竞争缺口：guard 在同锁内撤销 writer 后旧 view 已无法 markUnknown，及原 write成功后等待回执期间 revoke 可让新 writer接替。已在 transport 原锁内 latch unknown，并在实际write前登记原 ID类型/ID→原lease 的live IO项；家族验证原RPC receipt才ACK，ACK只删IO项，原stale lease晚到ACK不清unknown/不许新writer。初始stale lease未入guard即拒，不毒化另一合法writer。guard/callback抛CodexRpcError/PiCommandError不冒充原回执。Pi send_prompt全路径串行，unknown先于cached settled，晚到事件原样保存。裸 channel/ACK仍可信owner内部，不作产品公开句柄。此IO项不是持久ledger，也不证明任务完成。
+
+实际失败与修正记录：Codex家族首149P/1F exit1、2.09s，新测试将原events tuple误写list，修为tuple并保留空集合断言；随后150P exit0、2.42s。Pi首201P/3F exit1、3.26s：一项event-hook遗漏已保存agent_end，修期望为完整原事件序列；两项缺实际端口路径触发PreparedFrameRefused漏导入，补源码导入。fake peer补显式ACK端口，缺ACK在消费前拒。Pi旧单例 raw prompt-after-timeout 实际0P/1F exit1、0.11s、37 deselected，按用户unknown不重发要求改为拒第二prompt，保留原get_state响应、sent数量和便利输入拒绝断言；未删除断言/skip隐藏失败。
+
+新Core纵向首次6P/2F exit1、1.15s：撤权后的再次claim先报InvocationAuthorityRefused而非UnknownResultError，测试先明确核撤权拒绝，再恢复测试grant并核原claim不能重发；没有弱化为宽异常。之后8P exit0、1.22s；终审补正确SHA但错ID/类型/协议、bool correlation入门拒、异issuer Context、核验后显式owner fence反例，最终20P exit0。正确核验后单独变更授权bool不被声称为跨域原子IO fence；生产必须协调原writer显式cut，不能倒销已写输入。
+
+本轮实际解释器 `<python>` 均 `/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python`，主会话所有测试串行，最终每个句柄terminal：
+- `<python> -m pytest -c packages/backend/harness-transport/pyproject.toml packages/backend/harness-transport/tests -q --tb=short`：100P/0F exit0、6.94s（原55＋新45）。较早96P/6.81s为补末端反例前快照，不累加。
+- `PYTHONPATH=plugins/harness/codex/src:packages/backend/harness-transport/src <python> -m pytest -c plugins/harness/codex/pyproject.toml plugins/harness/codex/tests -q --tb=short`：154P/0F exit0、2.10s（原120＋新34）。
+- `PYTHONPATH=plugins/harness/pi/src:packages/backend/harness-transport/src <python> -m pytest -c plugins/harness/pi/pyproject.toml plugins/harness/pi/tests -q --tb=short`：213P/0F exit0、3.20s（原172＋新41）。
+- `PYTHONPATH=plugins/harness/claude-code/src:packages/backend/harness-transport/src <python> -m pytest -c plugins/harness/claude-code/pyproject.toml plugins/harness/claude-code/tests -q --tb=short`：149P/0F exit0、8.18s；共享transport扩大后的原家族回归。
+- `PYTHONPATH=plugins/harness/codex/src:plugins/harness/pi/src:packages/backend/harness-transport/src <python> -m pytest -c products/agent-tools/pyproject.toml docs/implementation/agent-tools/evidence/agent-unit-model/test_prepared_input_claim.py -q --tb=short`：20P/0F exit0、2.62s。实际 Core/SQLite/Issuer、实际临时Python peer独立算收到字节SHA/大小；capture/Unit/native状态/authority受控。原 ACK后 Core step仍possibly-dispatched、首hold held，不能换key/draft再首输。
+- 最终完整集成命令：`PYTHONPATH=plugins/harness/codex/src:plugins/harness/pi/src:packages/backend/harness-transport/src <python> -m pytest -c products/agent-tools/pyproject.toml products/agent-tools/tests/integration docs/implementation/agent-tools/evidence/agent-unit-model/test_assembly.py docs/implementation/agent-tools/evidence/agent-unit-model/test_codex_assembly.py docs/implementation/agent-tools/evidence/agent-unit-model/test_provider_discovery.py docs/implementation/agent-tools/evidence/agent-unit-model/test_preparation_holds.py docs/implementation/agent-tools/evidence/agent-unit-model/test_management.py docs/implementation/agent-tools/evidence/agent-unit-model/test_invocation_continuation.py docs/implementation/agent-tools/evidence/agent-unit-model/test_sessionless_input.py docs/implementation/agent-tools/evidence/agent-unit-model/test_input_session_association.py docs/implementation/agent-tools/evidence/agent-unit-model/test_first_input_publication.py docs/implementation/agent-tools/evidence/agent-unit-model/test_first_input_journal_publication.py docs/implementation/agent-tools/evidence/agent-unit-model/test_prepared_input_claim.py -q --tb=short`：504P/0F exit0、27.83s（原484＋新20）。较早492P/27.04s为新8项时快照，不累加。
+
+本轮未改Core源码；上轮核心269P/3F是历史回归、既有test_n4r1_kernel_direction具体SQLite导入扫描三个红未消除，本轮不补称全Core绿。五工单strict exit0、git diff --check exit0只是结构/格式检查。没有原生Codex/Pi/Claude真实进程P或模型M，M0；Python peers是实际受控pipe C，不偷换分类。本轮新增140项C：45运输＋34Codex＋41Pi＋20纵向；各最终集合分账，原回归快照不累加。
+
+当前缺口：生产capture/native receipt/effect/Session proof/UnitRecords journal与writer/lease装配、Directory/Invocation部署授权、C1材料/SecretRef、完整冷Core重启与生命周期、品牌旧bundle/factory/Server迁移、CLI节点/任务/结果、三Skill和完整发行闭包。Claude native user input缺Core要求request-id继续不支持，不自创协议。AU002/AU003及总产品均PARTIAL，不报DONE；缺资源ABSENT保持未验证。无第三方安装更新/模型/登录/用户DB/凭据/全局配置/用户服务修改，无push/主树合并。费用无法精确取得，unknown。显式纳入本轮实际路径检查点后继续余下工单。

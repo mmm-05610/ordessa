@@ -43,6 +43,9 @@ from ordessa_harness_transport import (
     ProcessChannel,
     RemoteFailure,
     RequestTimeout,
+    PreparedFrame,
+    PreparedFramePool,
+    PreparedFrameRefused,
 )
 
 FAMILY_ID = "codex"
@@ -117,11 +120,15 @@ class CodexAppServerClient:
         self._rpc_lock = threading.RLock()
         self._events: list[Mapping[str, Any]] = []
         self._pending: dict[Any, str] = {}
+        self._prepared_waiting = set()
         self._turn_requests: dict[Any, str] = {}
         self._request_seq = 0
         self._initialized = False
         self._last_turn: tuple[str, str] | None = None
         self._reverse_requests: dict[Any, Message] = {}
+        self._prepared = PreparedFramePool(PROTOCOL)
+        self._prepared_requests = {}  # local unspent handles, never recovery truth
+        self._prepared_unknown = False
 
     @classmethod
     def launch(cls, spec: Any, *, name: str = "codex-app-server") -> "CodexAppServerClient":
@@ -372,8 +379,100 @@ class CodexAppServerClient:
             raise ValueError("explicit pre-send persistence hook required")
         return self._request(method, params, timeout=timeout, before_send=before_send)
 
+    @staticmethod
+    def _prepared_method(method, params):
+        if (not isinstance(method, str) or not method or any(ord(c) < 32 for c in method)
+                or not isinstance(params, Mapping)):
+            raise ValueError("native method and parameter object required")
+        if method == "turn/start":
+            thread = params.get("threadId")
+            if not isinstance(thread, str) or not thread:
+                raise ValueError("turn/start requires the original native threadId")
+            return thread
+        return None
+
+    def prepare_request(self, method: str, params: Mapping[str, Any]) -> PreparedFrame:
+        """Allocate/freeze the actual native request before capture/admission.
+
+        No pending request, transport write or effect permission is created.
+        The returned bytes include LF and are the exact later dispatch bytes.
+        """
+        with self._rpc_lock:
+            self._prepared_method(method, params)
+            self._request_seq += 1
+            native_id = f"req-{self._request_seq}"
+            payload = {"id": native_id, "method": method}
+            if params:
+                payload["params"] = dict(params)
+            frame = self._prepared.prepare(payload, native_id)
+            self._prepared_requests[id(frame)] = frame
+            return frame
+
+    def dispatch_prepared(self, frame: PreparedFrame, *, before_write: Callable[[bytes], None],
+                          timeout: float = 10.0,
+                          on_request: Callable[[Message], None] | None = None) -> Any:
+        """Spend this client's original frame once, guarded at actual stdin.
+
+        Guard failure spends the frame too. Missing confirmation fences the
+        original transport; later receipt observation cannot grant a resend.
+        This primitive supplies neither admission nor durable input evidence.
+        """
+        with self._rpc_lock:
+            if type(frame) is not PreparedFrame or self._prepared_requests.get(id(frame)) is not frame:
+                raise PreparedFrameRefused("prepared request belongs to another client or is spent")
+            if not callable(before_write) or (on_request is not None and not callable(on_request)):
+                raise ValueError("explicit write guard and callable native request callback required")
+            if not isinstance(timeout, (int, float)) or isinstance(timeout, bool) or not 0 < timeout < float("inf"):
+                raise ValueError("finite positive receipt timeout required")
+            try:
+                payload = frame.payload
+            except (ValueError, TypeError, UnicodeError):
+                raise PreparedFrameRefused("prepared native payload is damaged") from None
+            if not isinstance(payload, Mapping):
+                raise PreparedFrameRefused("prepared native payload is damaged")
+            method = payload.get("method")
+            thread = self._prepared_method(method, payload.get("params", {}))
+            if self._prepared_unknown:
+                raise LostReceipt(method, frame.request_id, "original prepared input unresolved; query without another write")
+            self._check_pending_method(method)
+            if any(not callable(getattr(self._channel, name, None)) for name in
+                   ("send_frame", "mark_input_unknown", "acknowledge_frame")):
+                raise PreparedFrameRefused("actual write barrier and unknown transport fence unavailable")
+            native_id, wire = self._prepared.consume(frame)
+            del self._prepared_requests[id(frame)]
+            self._pending[native_id] = method
+            self._prepared_waiting.add(native_id)
+            if method == "turn/start":
+                self._turn_requests[native_id] = thread
+            try:
+                self._channel.send_frame(wire, before_write=lambda: before_write(wire))
+                return self.recover_request(native_id, timeout=timeout, on_request=on_request)
+            except CodexRpcError as error:
+                if native_id not in self._pending and error.request_id == native_id and error.method == method:
+                    raise  # Only the original accepted response is a known receipt.
+                self._cut_prepared_unknown()
+                raise
+            except BaseException:
+                self._cut_prepared_unknown()
+                raise
+
+    def _cut_prepared_unknown(self):
+        self._prepared_unknown = True
+        try:
+            self._channel.mark_input_unknown()
+        except BaseException:
+            pass  # Preserve original error; actual transport already retains its cut.
+
+    def _ack_prepared_request(self, request_id):
+        if request_id in self._prepared_waiting:
+            self._channel.acknowledge_frame(request_id)
+            self._prepared_waiting.remove(request_id)
+
     def close(self) -> int:
         """Release this client's own channel/process only (G6/G8)."""
+        with self._rpc_lock:
+            self._prepared.close()
+            self._prepared_requests.clear()
         return self._channel.close()
 
     # -- internals -----------------------------------------------------------
@@ -396,11 +495,7 @@ class CodexAppServerClient:
         unknown); a deadline raises :class:`RequestTimeout`; a JSON-RPC error
         object raises :class:`CodexRpcError` with its ``codexErrorInfo`` kept.
         """
-        if method == "turn/start" and "turn/start" in self._pending.values():
-            raise LostReceipt(method, None, "earlier turn/start receipt is unknown; recover without resending input")
-        if method in {"config/batchWrite", "config/value/write"} and any(
-                pending in {"config/batchWrite", "config/value/write"} for pending in self._pending.values()):
-            raise LostReceipt(method, None, "original configuration receipt unknown; query without another write")
+        self._check_pending_method(method)
         self._request_seq += 1
         request_id = f"req-{self._request_seq}"
         payload: dict[str, Any] = {"id": request_id, "method": method}
@@ -413,6 +508,13 @@ class CodexAppServerClient:
             self._turn_requests[request_id] = params["threadId"]
         self._channel.send_raw(payload)
         return self.recover_request(request_id, timeout=timeout, on_request=on_request)
+
+    def _check_pending_method(self, method):
+        if method == "turn/start" and "turn/start" in self._pending.values():
+            raise LostReceipt(method, None, "earlier turn/start receipt is unknown; recover without resending input")
+        if method in {"config/batchWrite", "config/value/write"} and any(
+                pending in {"config/batchWrite", "config/value/write"} for pending in self._pending.values()):
+            raise LostReceipt(method, None, "original configuration receipt unknown; query without another write")
 
     def recover_request(self, request_id: Any, *, timeout: float = 10.0,
                         on_request: Callable[[Message], None] | None = None) -> Any:
@@ -455,6 +557,7 @@ class CodexAppServerClient:
         if error is not None:
             if not isinstance(error, Mapping):
                 raise LostReceipt(method, request_id, "malformed error; outcome unknown")
+            self._ack_prepared_request(request_id)
             del self._pending[request_id]
             self._turn_requests.pop(request_id, None)
             raise CodexRpcError(method, request_id, error)
@@ -464,6 +567,7 @@ class CodexAppServerClient:
             if not isinstance(turn, Mapping) or not isinstance(turn.get("id"), str) or not turn["id"] or turn.get("status") not in TURN_TERMINAL_STATUSES | {"inProgress"} or not isinstance(turn.get("items"), list):
                 raise LostReceipt(method, request_id, "malformed turn receipt; outcome unknown")
             self._last_turn = (self._turn_requests[request_id], turn["id"])
+        self._ack_prepared_request(request_id)
         del self._pending[request_id]
         self._turn_requests.pop(request_id, None)
         return result

@@ -35,3 +35,34 @@ Prepare returns the original UnitReservation.public_ref unchanged: exactly envir
 Unit inspection also requires publication_facts to identify the same canonical Unit, owner provider, canonical configuration target and management epoch. The supplied DirectoryBindingRef and current observation sourceRevision remain their owners' facts; the immutable Unit source hash is not substituted for the current native observation or configuration revision. These controlled fixtures do not provide production authorization/native proof.
 
 Configuration target references now consume the authorized original UnitReservation.configuration_target_ref unchanged, including ownerProviderRef/sourceRevision plus physical environment/scopeId/revision. Snapshot, Invocation target, journal receipt, item confirmation and query target share that exact reference; publication compares complete JSON identities including type-sensitive owner generation. Description.scope remains the contract's `instance` enum; it does not invent another target identity. Target source identity stays fixed independently of fresh native configuration versions.
+
+## Prepared native requests
+
+`CodexAppServerClient.prepare_request(method, params)` allocates the actual native
+request ID and freezes its complete UTF-8 JSONL bytes before capture/admission.
+It does not send, register a pending RPC, or grant effect permission. The shared
+`PreparedFramePool` owns each opaque client-local handle; copied, foreign,
+tampered, spent and closed handles cannot dispatch. Ordinary commands and
+prepared requests use the same ID allocator.
+
+`dispatch_prepared(frame, before_write=guard)` consumes that original handle once,
+registers its original method/thread correlation, and sends its exact frozen
+bytes through the transport's actual write-lock/lease barrier. The trusted
+owner supplies `guard(actual_wire_bytes)` and checks those immutable bytes
+against the original capture digest, native ID and opaque Core context. Guard failure also spends the
+handle. Missing confirmation retains the original pending ID and fences input;
+`recover_request(original_id)` can read a late receipt without sending again.
+Receiving a late receipt does not reopen the uncertain transport for new input.
+Native RPC errors retain their original error and are never automatically retried.
+Only a structurally accepted original receipt acknowledges live transport IO
+metadata; it does not publish Core input/effect facts. Revocation while awaiting
+that receipt latches unknown even before the waiting caller notices. A late
+receipt never clears that latch. The ACK and bare channel stay inside the
+trusted family owner, never a public consumer handle.
+Reverse requests retain native IDs and still require explicit caller replies.
+
+This is a framing primitive, not a managed input writer or a production authority
+port. Provider capability declarations do not expand. Capture, original claim,
+durable native receipt/effect evidence, first Session association and production
+lease composition remain separate, incomplete work. Tests use controlled
+channels and temporary Python peers, without executing Codex or a model.

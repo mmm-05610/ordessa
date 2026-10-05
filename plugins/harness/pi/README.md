@@ -74,3 +74,24 @@ and original result confirmations retain the same full target. Comparisons use
 type-sensitive safe_json so boolean generation cannot impersonate an integer.
 The target's fixed sourceRevision is distinct from the native snapshot revision.
 The Pi package does not generate target provenance or strip it to raw scope.
+
+
+PiRpcClient.prepare_request(command, fields) freezes the actual native req-N,
+same-level Pi payload, UTF-8 LF bytes and digest without sending or marking a
+pending request. dispatch_prepared consumes that client-local handle once and
+passes the frozen bytes through the shared transport write barrier and explicit
+`before_write(actual_wire_bytes)` guard. The trusted owner verifies the actual
+immutable bytes against the original capture, native ID and Core context. Copies, another client, tampering and reuse are refused;
+a failed guard spends the handle. This is framing only, not input authority or
+a durable native receipt. The deployment must bind original capture/claim and
+persist the original request/receipt in its existing owner journal. Missing
+receipt fences the original transport writer and remains unknown; prompt, steer
+and follow_up cannot bypass that state via generic command or another prepared
+frame. A successful prompt receipt proves acceptance only. Closing revokes
+unused frames. Tests use controlled peers, including a temporary Python pipe;
+production owner/lease/receipt assembly and native Pi P/M remain unverified.
+
+Only a validated original receipt acknowledges live IO metadata. Revocation
+while awaiting that receipt prevents replacement writers; late ACK/settled
+events cannot clear unknown. A callback throwing PiCommandError does not supply
+a native receipt. ACK and bare channels remain trusted owner internals.

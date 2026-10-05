@@ -20,6 +20,7 @@ Invariants enforced here (see specs/030-native-harness-expansion/acceptance.md):
 from __future__ import annotations
 
 import json
+import math
 import os
 import subprocess
 import time
@@ -278,6 +279,7 @@ class ProcessChannel:
         self._reader = FrameReader(max_frame_bytes=max_frame_bytes)
         self._inbox: list[Message] = []
         self._inflight: dict[Any, str] = {}
+        self._prepared_inflight = {}  # actual written frame IDs and original writer, not durable truth
         self._next_id = 0
         self._closed = False
         self._eof = False
@@ -331,6 +333,8 @@ class ProcessChannel:
         with self._write_lock:
             if not self._managed:
                 raise WriterLeaseRefused('writer fencing requires managed mode')
+            if self._prepared_inflight:
+                self._unresolved = True
             self._active_writer=None
             self._writer_epoch+=1
             return self._writer_epoch
@@ -354,6 +358,89 @@ class ProcessChannel:
     def send_raw_for(self, lease, payload):
         self._send(payload,lease)
 
+    def send_frame(self, frame_bytes, *, before_write):
+        """One already frozen native frame, with the guard at the write barrier."""
+        self._send_frame(frame_bytes, None, before_write=before_write)
+
+    def _send_frame(self, frame_bytes, lease, *, before_write):
+        if not callable(before_write):
+            raise ValueError('explicit native write guard required')
+        if (not isinstance(frame_bytes, bytes) or not frame_bytes.endswith(b'\n')
+                or b'\n' in frame_bytes[:-1] or b'\r' in frame_bytes):
+            raise FramingError('native frame must be one complete UTF-8 JSONL record')
+        if len(frame_bytes) - 1 > self._reader._max:
+            raise FramingError('native frame exceeds byte limit')
+        native = self._decode_frame(self._reader._decode(frame_bytes[:-1])).raw
+        request_id = native.get('id')
+        if type(request_id) not in (str, int) or isinstance(request_id, str) and not request_id:
+            raise FramingError('frozen native request must carry its original ID')
+        request_key = type(request_id).__name__, request_id
+        with self._write_lock:
+            self._ensure_open()
+            if self._managed:
+                self._validate_writer(lease)
+            if self._unresolved:
+                raise WriterLeaseRefused('original input remains unresolved')
+            if request_key in self._prepared_inflight:
+                raise WriterLeaseRefused('original native request ID remains pending')
+            try:
+                before_write()
+                # Guard callbacks can revoke the same writer under this RLock.
+                if self._managed:
+                    self._validate_writer(lease)
+                self._ensure_open()
+                if self._unresolved:
+                    raise WriterLeaseRefused('original input remains unresolved')
+            except BaseException:
+                # The original valid writer reached this admitted attempt's
+                # guard. Fence here before releasing the barrier: afterwards
+                # a revoked view cannot latch unknown on its old lease.
+                self._unresolved = True
+                if self._managed:
+                    self.fence_all()
+                raise
+            assert self._process.stdin is not None
+            self._prepared_inflight[request_key] = lease
+            try:
+                count = self._process.stdin.write(frame_bytes)
+                if count != len(frame_bytes):
+                    raise OSError('partial delivery')
+                self._process.stdin.flush()
+            except (BrokenPipeError, OSError, ValueError):
+                self._unresolved = True
+                if self._managed:
+                    self.fence_all()
+                raise ChannelClosed('native write lost; partial delivery possible, outcome unknown') from None
+            except BaseException:
+                self._unresolved = True
+                if self._managed:
+                    self.fence_all()
+                raise
+
+    def acknowledge_frame(self, request_id):
+        self._acknowledge_frame(request_id, None)
+
+    def _acknowledge_frame(self, request_id, lease):
+        """Trusted family verified its original RPC receipt, not task completion.
+
+        A late known receipt removes live IO metadata only. It never clears an
+        unknown latch or grants a replacement writer after a revocation.
+        """
+        if type(request_id) not in (str, int) or isinstance(request_id, str) and not request_id:
+            raise ValueError('original native request ID required')
+        with self._write_lock:
+            key = type(request_id).__name__, request_id
+            if key not in self._prepared_inflight or self._prepared_inflight[key] is not lease:
+                raise WriterLeaseRefused('receipt differs from original actual writer')
+            del self._prepared_inflight[key]
+
+    def mark_input_unknown(self):
+        """Unmanaged compatibility cut; managed writers use their bound view."""
+        with self._write_lock:
+            if self._managed:
+                raise WriterLeaseRefused('managed unknown cut requires original writer lease')
+            self._unresolved = True
+
     def _send(self,payload,lease):
         if not isinstance(payload,Mapping):
             raise FramingError('native frame must be a JSON object')
@@ -366,6 +453,8 @@ class ProcessChannel:
         with self._write_lock:
             self._ensure_open()
             if self._managed: self._validate_writer(lease)
+            if self._unresolved:
+                raise WriterLeaseRefused('original input remains unresolved')
             assert self._process.stdin is not None
             try:
                 count=self._process.stdin.write(data)
@@ -534,8 +623,13 @@ class ProcessChannel:
     def _decode_frame(self, frame: str) -> Message:
         def invalid_constant(value):
             raise ValueError('non-finite JSON')
+        def finite_float(value):
+            decoded = float(value)
+            if not math.isfinite(decoded):
+                raise ValueError('non-finite JSON number')
+            return decoded
         try:
-            payload = json.loads(frame,parse_constant=invalid_constant)
+            payload = json.loads(frame,parse_constant=invalid_constant,parse_float=finite_float)
         except ValueError as exc:
             raise FramingError(f"frame is not valid JSON: {exc}") from exc
         if not isinstance(payload, dict):
@@ -578,6 +672,18 @@ class LeaseBoundChannel:
     def send_raw(self,payload):
         self._check()
         return self._channel.send_raw_for(self._lease,payload)
+
+    def send_frame(self, frame_bytes, *, before_write):
+        self._check()
+        return self._channel._send_frame(frame_bytes, self._lease, before_write=before_write)
+
+    def mark_input_unknown(self):
+        self._check()
+        return self._channel.mark_unresolved(self._lease)
+
+    def acknowledge_frame(self, request_id):
+        self._check()
+        return self._channel._acknowledge_frame(request_id, self._lease)
 
     def request(self,method,params=None,*,timeout=10.0,on_request=None):
         self._check()

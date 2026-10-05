@@ -76,17 +76,23 @@ def test_late_receipt_clears_pending_but_does_not_clear_unknown(success):
     assert len(channel.sent) == 1
 
 
-def test_raw_command_keeps_explicit_native_semantics_when_convenience_unknown():
+def test_raw_read_keeps_native_semantics_but_cannot_bypass_unknown_input():
     channel = Channel()
     client = PiRpcClient(channel)
     with pytest.raises(RequestTimeout):
         client.send_prompt('first', timeout=.001)
-    native = {'type': 'response', 'id': 'req-2', 'command': 'prompt', 'success': True}
+    # The old assertion allowed a second raw prompt after a lost first receipt.
+    # Preserve raw read-response coverage while enforcing the original input
+    # fence on every input path, including the generic command API.
+    with pytest.raises(LostReceipt):
+        client.command('prompt', message='explicit native choice')
+    native = {'type': 'response', 'id': 'req-2', 'command': 'get_state', 'success': True}
     channel.frames.append(native)
-    assert client.command('prompt', message='explicit native choice') == native
+    assert client.command('get_state') == native
     with pytest.raises(LostReceipt):
         client.send_prompt('still blocked')
     assert len(channel.sent) == 2
+    assert channel.sent[-1]['type'] == 'get_state'
 
 
 @pytest.mark.parametrize('method,payload', [

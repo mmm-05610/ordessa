@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import time
 import threading
+import json
 from collections import deque
 from typing import Any, Callable, Mapping, Sequence
 
@@ -50,6 +51,9 @@ from ordessa_harness_transport import (
     LostReceipt,
     Message,
     ProcessChannel,
+    PreparedFrame,
+    PreparedFramePool,
+    PreparedFrameRefused,
     RequestTimeout,
 )
 
@@ -183,7 +187,10 @@ class PiRpcClient:
         self.name = name
         self._events: deque[Mapping[str, Any]] = deque()
         self._pending: dict[str, str] = {}  # request_id -> command (G11 ledger)
+        self._prepared_waiting = set()
         self._request_seq = 0
+        self._prepared = PreparedFramePool(PI_PROTOCOL_ID)
+        self._rpc_lock = threading.RLock()
         self._run_state: str | None = None
         self._run_settled_event: Mapping[str, Any] | None = None
         self._ui_pending: dict[str, str] = {}
@@ -251,6 +258,10 @@ class PiRpcClient:
         being waited for; it is never fed an auto-reply and never causes one
         (no auto-approve).
         """
+        with self._rpc_lock:
+            return self._send_prompt_locked(message, timeout=timeout, on_event=on_event, **fields)
+
+    def _send_prompt_locked(self, message, *, timeout, on_event, **fields):
         if self._run_state == "unknown":
             raise LostReceipt("prompt", None, "prior prompt outcome remains unknown; next prompt refused")
         args = dict(fields)
@@ -296,8 +307,10 @@ class PiRpcClient:
         marker immediately instead of waiting — no run, no settle boundary,
         and no fabricated completion.
         """
-        if self._run_settled_event is not None:
-            return self._run_settled_event
+        with self._rpc_lock:
+            return self._wait_settled_locked(timeout=timeout)
+
+    def _wait_settled_locked(self, *, timeout):
         if self._run_state == "unknown":
             # The prompt outcome was never observed (lost receipt / unknown
             # disposition): a run MAY exist. Answering "no-run" would be a
@@ -306,6 +319,8 @@ class PiRpcClient:
                 "outcome": "unknown",
                 "reason": "prompt receipt was lost or undocumented; run state unknown",
             }
+        if self._run_settled_event is not None:
+            return self._run_settled_event
         if self._run_state in _SETTLE_QUIET_STATES:
             return {
                 "outcome": "no-run",
@@ -428,6 +443,7 @@ class PiRpcClient:
         """Release this client's own channel/process only (G6/G8). Other
         clients' connections are untouched; pending requests stay unknown and
         are never re-sent (G11)."""
+        self._prepared.close()
         return self._channel.close()
 
     # -- internals -------------------------------------------------------------
@@ -454,11 +470,13 @@ class PiRpcClient:
         ):
             if raw.get("command") != self._pending[rid] or type(raw.get("success")) is not bool:
                 raise LostReceipt(self._pending[rid], rid, "response identity or success field invalid")
+            self._ack_prepared_request(rid)
             del self._pending[rid]
             return raw
         if (record_type == "response" and type(raw.get("success")) is bool
                 and addressed and rid in self._pending
                 and raw.get("command") == self._pending[rid]):
+            self._ack_prepared_request(rid)
             del self._pending[rid]
             # fall through: the stale receipt still surfaces verbatim below
         self._events.append(raw)
@@ -501,31 +519,128 @@ class PiRpcClient:
             self._ui_seen.add(rid)
             self._ui_pending[rid] = method
 
-    def _request(
-        self,
-        command: str,
-        fields: Mapping[str, Any],
-        *,
-        timeout: float,
-        on_event: Callable[[Mapping[str, Any]], None] | None = None,
-    ) -> Mapping[str, Any]:
-        """One pi command round trip: same-id ``success`` receipt or typed
-        failure. Never retries (G11); a write failure before send is
-        ChannelClosed, a transport breach after send is LostReceipt
-        (outcome unknown), a deadline is RequestTimeout."""
+    def _input_gate(self, command):
+        if command in {"prompt", "steer", "follow_up"} and self._run_state == "unknown":
+            raise LostReceipt(command, None, "prior input outcome remains unknown; next input refused")
+
+    def _unknown_request(self, command):
+        self._run_state = "unknown"
+        cut = getattr(self._channel, "mark_input_unknown", None)
+        if callable(cut):
+            try:
+                cut()
+            except Exception:
+                pass  # Preserve original receipt error; never restore a writer.
+
+    def _ack_prepared_request(self, request_id):
+        if request_id in self._prepared_waiting:
+            self._channel.acknowledge_frame(request_id)
+            self._prepared_waiting.remove(request_id)
+
+    def prepare_request(self, command: str, fields: Mapping[str, Any]) -> PreparedFrame:
+        """Freeze an original Pi record for capture; no send or authority."""
+        with self._rpc_lock:
+            return self._prepare_request_locked(command, fields)
+
+    def _prepare_request_locked(self, command, fields):
+        if (not isinstance(command, str) or not command or len(command) > 256
+                or any(ord(c) < 32 for c in command) or not isinstance(fields, Mapping)):
+            raise ValueError("native command and same-level fields required")
         if {"id", "type"}.intersection(fields):
             raise ValueError("command fields cannot replace record identity")
+        self._input_gate(command)
+        self._request_seq += 1
+        rid = f"req-{self._request_seq}"
+        return self._prepared.prepare({"id": rid, "type": command, **dict(fields)}, rid)
+
+    def dispatch_prepared(self, frame: PreparedFrame, *, before_write,
+                          timeout: float = 10.0, on_event=None) -> Mapping[str, Any]:
+        """Spend once, guarded at actual write; no durable receipt or grant."""
+        with self._rpc_lock:
+            return self._dispatch_prepared_locked(frame, before_write=before_write, timeout=timeout, on_event=on_event)
+
+    def _dispatch_prepared_locked(self, frame, *, before_write, timeout, on_event):
+        if not callable(before_write) or on_event is not None and not callable(on_event):
+            raise ValueError("explicit native write guard and callable event callback required")
+        if type(timeout) not in (int, float) or not 0 < timeout < float('inf'):
+            raise ValueError("finite positive receipt timeout required")
+        if any(not callable(getattr(self._channel, name, None)) for name in
+               ('send_frame', 'mark_input_unknown', 'acknowledge_frame')):
+            raise PreparedFrameRefused("actual write barrier and unknown transport fence unavailable")
+        rid, wire = self._prepared.consume(frame)
+        command = json.loads(wire)["type"]
+        self._input_gate(command)
+        self._pending[rid] = command
+        self._prepared_waiting.add(rid)
+        if command in {"prompt", "steer", "follow_up"}:
+            self._run_settled_event = None
+        guard_failed = False
+        def guard():
+            nonlocal guard_failed
+            try:
+                before_write(wire)
+            except BaseException:
+                guard_failed = True
+                raise
+        try:
+            self._channel.send_frame(wire, before_write=guard)
+        except BaseException as exc:
+            if guard_failed:
+                self._pending.pop(rid, None)
+                self._prepared_waiting.discard(rid)
+                self._unknown_request(command)
+                raise
+            self._unknown_request(command)
+            if isinstance(exc, ChannelClosed):
+                raise LostReceipt(command, rid, f"write outcome unknown: {exc}") from exc
+            raise
+        try:
+            record = self._wait_receipt(command, rid, timeout=timeout, on_event=on_event)
+        except PiCommandError as error:
+            if rid not in self._pending and error.request_id == rid and error.command == command:
+                raise  # Only this original accepted native response is known.
+            self._unknown_request(command)
+            raise
+        except BaseException:
+            self._unknown_request(command)
+            raise
+        if command in {"prompt", "steer", "follow_up"}:
+            self._run_state = "settled" if self._run_settled_event is not None else "accepted"
+        return record
+
+    def _request(self, command, fields, *, timeout, on_event=None):
+        """Immediate consumer path; unknown input never enables another send."""
+        with self._rpc_lock:
+            return self._request_locked(command, fields, timeout=timeout, on_event=on_event)
+
+    def _request_locked(self, command, fields, *, timeout, on_event=None):
+        if {"id", "type"}.intersection(fields):
+            raise ValueError("command fields cannot replace record identity")
+        self._input_gate(command)
         self._request_seq += 1
         request_id = f"req-{self._request_seq}"
-        payload: dict[str, Any] = {"id": request_id, "type": command}
-        payload.update(fields)
         self._pending[request_id] = command
+        if command in {"prompt", "steer", "follow_up"}:
+            self._run_settled_event = None
         try:
-            self._channel.send_raw(payload)
+            self._channel.send_raw({"id": request_id, "type": command, **dict(fields)})
+            record = self._wait_receipt(command, request_id, timeout=timeout, on_event=on_event)
         except ChannelClosed as exc:
-            # BrokenPipe can occur after a partial write. Do not invent proof
-            # that the peer never accepted the command.
+            self._unknown_request(command)
             raise LostReceipt(command, request_id, f"write outcome unknown: {exc}") from exc
+        except PiCommandError as error:
+            if request_id not in self._pending and error.request_id == request_id and error.command == command:
+                raise
+            self._unknown_request(command)
+            raise
+        except BaseException:
+            self._unknown_request(command)
+            raise
+        if command in {"prompt", "steer", "follow_up"}:
+            self._run_state = "settled" if self._run_settled_event is not None else "accepted"
+        return record
+
+    def _wait_receipt(self, command, request_id, *, timeout, on_event=None):
         deadline = time.monotonic() + timeout
         while True:
             remaining = deadline - time.monotonic()
