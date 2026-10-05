@@ -1,8 +1,12 @@
-"""Single Harness package: common contracts and internal brand implementations.
+"""Transitional storage and implementations for the unmigrated Harness group.
 
-Brands are modules, not separately installed plugins. Historical Python import
-names are compatibility aliases shipped by this same distribution.
+Independent AgentUnit providers live in sibling packages. Importing this
+package for its existing journal must not eagerly import brand implementations.
 """
-from .plugin import create_plugin
+
+
+def create_plugin():
+    from .plugin import create_plugin as factory
+    return factory()
 
 __all__ = ["create_plugin"]

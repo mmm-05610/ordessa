@@ -204,3 +204,21 @@ Server的agent_core_methods新增显式contract_version参数，默认agent-asse
 验证（Python均为本树专属venv）：初始management10P/0F exit0、0.87s；补optional/deferred/ACK/并发及中断反例22P/0F exit0、1.82s；补Server绑定、退役、真实SQLite冷开/原子回滚后management31项。`-m pytest evidence/agent-unit-model/test_management.py`与Profile wire、Invocation组合100P/0F exit0、2.46s。随后management/configuration合同/Profile wire/Invocation/runtime接纳/Node/input七文件组合219P/0F exit0、4.36s（真实路径均为docs/implementation/agent-tools/evidence/agent-unit-model或products/agent-tools/tests）。发行test_distribution.py＋test_bundle.py 8P/0F exit0、6.30s，含fresh wheel安装；不累计历史快照。核心全回归269P/3F exit1、7.12s，仍同三个继承方向扫描ID，原始日志au002-core-regression.txt；只去行尾空白，保留诊断。五单--strict结构检查exit0，不代表完成门。
 
 C：同SQLite真实事务＋受控owner/authority，无真实Harness；P：本阶段未启动真实Harness（发行测试为独立客户端安装证据）；M：0/未授权。AU002_PARTIAL：C1材料acquire与SecretRef受权解析仍缺生产接线；不能把resourceRefs直接传成已取得材料。生产prepare/applyProfile/lifecycle/access、三家实际Unit/native确认与owner版本比较、完整迟到原生证据的provider持久保存待后续补齐。没有新DB版本或用户数据迁移，没有安装更新第三方/读用户认证/改登录/服务重启/模型调用。共享接口及管理反例已具阶段提交条件，依AU003前置进入三家接线；所有未完成门保留，整体PARTIAL，不勾伪Stages。
+
+### 2026-10-05 初始化入口再次实测
+
+用户要求CLI或Skill补初始化探查。本树现有 `ordessa-agent init --json` 及三份Skill步骤已核实；执行 `PYTHONPATH=products/agent-tools/src /home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python -m ordessa_agent_tools init --json` exit0，扫描完整，发现Codex `/usr/lib/chatgpt/resources/codex`、Pi `/home/maoqh/.local/bin/pi`（实际链接目标 `/home/maoqh/.pi/agent/bin/pi`），Claude Code未找到。未执行候选、探版本、读登录凭据或启动服务；runtimeReady=unknown。
+
+执行专属Python `-m pytest -c products/agent-tools/pyproject.toml products/agent-tools/tests/test_initialization.py -q`：20P/0F，exit0，0.06s。只验证初始化发现切片；实际Harness启动、认证、模型调用及远端资源仍未验证。没有新增依赖或全局配置修改，整体产品保持PARTIAL。
+
+### 2026-10-05 AU003 独立包与公共运输检查点（PARTIAL）
+
+真实前置HEAD 77a1d8a92c95f607db1671e8c700d96e4ccabe3f。三家执行者均已完成切片并明确释放写权；主会话独占共享运输、原journal、装配、Git及账本。保留所有已核对成果，不回退、不整树stash。新包与复用比较逐项核对后显式纳入；原UnitRecords导入改为延迟旧品牌入口，未移除旧三家注册，A15迁移仍未完成。
+
+三家主会话最终串行执行（专属Python，分别以各包pyproject为-c）：Pi tests 86P/0F exit0、2.92s；Codex tests 48P/0F exit0、1.50s；Claude Code tests 112P/0F exit0、6.75s。早期Pi 81P/2F为迁移后旧异常类型导入，已改为公共运输异常，断言保留；Claude96P及Codex41P是较早快照，不与最终计数累加。新公共运输完整目录55P/0F exit0、6.37s（包含最终UTF-8跨LF反例），复用说明au003-transport-reuse.md。
+
+独立Registry与导入隔离8P/0F exit0、0.85s：staged隐藏、同唯一Environment接纳、单家退役不影响其他家、只导入选定家及故意导入另一家使guard失败。原UnitRecords＋OperationJournal＋隔离guard组合36P/0F exit0、1.00s。曾误用不存在的tests/application/test_operation_journal.py，exit4、0 tests；改为实际tests/test_operation_journal.py后执行上述36项，未隐藏失败。
+
+执行 packages/backend/harness-transport/tests/acceptance_install.py：六个本树包构建、fresh venv离线安装、pip check及三家fresh独立Registry，共12条命令全exit0，临时环境已清除；证据au003-fresh-provider-install.json。无Server/旧Harness/CLI/Claude SDK安装，未导入其他家。工单结构五单exit0、git diff --check exit0，只证明材料/格式。
+
+C为受控契约及真实Python peer/SQLite；P为三家真实上游进程0（未验证），M为0（未授权）。Pi实际配置读写与原操作确认消费显式owner端口；Codex接prepare/start原UnitRecords但生产端口未接，配置写入待补；Claude选官方SDK显式适配，但SDK实物/真实Unit未装配。公共运输lease仅是stdin屏障，不授予执行权。生产原生回执持久保存、授权持续重核、scope释放/恢复、三家生命周期、核心prepare/Node纵向接线及产品品牌客户端迁出仍缺，AU003_PARTIAL，不勾完成门。没有第三方安装更新、用户认证/全局配置修改、服务重启、模型调用、push或主树合并。
