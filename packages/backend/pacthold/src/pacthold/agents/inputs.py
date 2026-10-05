@@ -17,7 +17,10 @@ from ordessa_environment_api import (
     ParticipantInstanceRef, RequestKey, UnknownResultError,
 )
 from ordessa_environment_api.domain import DomainStorePort, DomainWrite
-from ordessa_environment_api.operations import OperationIntent, OperationStorePort, StepIntent, safe_json, sealed_mapping
+from ordessa_environment_api.operations import (
+    OperationIntent, OperationStorePort, StepIntent, UsageMutation,
+    node_holder, operation_holder, safe_json, sealed_mapping,
+)
 
 from .directory import DirectoryBindingRef
 from .invocation import InvocationIssuer
@@ -25,6 +28,7 @@ from .invocation import InvocationIssuer
 DRAFT_ATTEMPTS = "agents.draft-attempts"
 FIRST_SESSION_ATTEMPTS = "agents.first-session-attempts"
 SESSIONLESS_INPUT_VERSION = "harness-sessionless-input/1"
+FIRST_INPUT_RESULT_VERSION = "managed-first-input-result/1"
 
 
 def _plain(value):
@@ -155,10 +159,131 @@ class NativeInputStatePort(Protocol):
     def inspect(self, node_ref: ParticipantInstanceRef, principal: str) -> NativeInputState | SessionlessNativeInputState | None: ...
 
 
+@dataclass(frozen=True)
+class FirstInputObservation:
+    """Two independently verified original-owner facts, never a task status.
+
+    The deployment owner observes the original claimed input receipt and the
+    original journal association. References alone are not native proof.
+    Usages describe the original receipt's frozen mutations, including after
+    a concluded-step/publication crash; they are not a new Usage registry.
+    """
+    identity: Mapping
+    association_ref: Mapping
+    session_ref: Mapping
+    session_source_revision: int
+    effect_evidence_ref: Mapping
+    usages: tuple[UsageMutation, ...] = ()
+
+    def __post_init__(self):
+        if type(self.session_source_revision) is not int or self.session_source_revision < 2:
+            raise ValueError("original Session association revision required")
+        if not isinstance(self.usages, tuple) or any(type(item) is not UsageMutation for item in self.usages):
+            raise ValueError("original Usage mutations required")
+        for name in ("identity", "association_ref", "session_ref", "effect_evidence_ref"):
+            object.__setattr__(self, name, sealed_mapping(getattr(self, name)))
+
+
+@runtime_checkable
+class FirstInputObservationPort(Protocol):
+    """Explicit read-only owner; missing/unknown facts return None or refuse.
+
+    Verify the opaque original query, original journal association and actual
+    input effect separately, including capture/native correlation, receipt,
+    Unit/process/transport/root and current authority. Never send/start here.
+    """
+    def observe(self, operation, query_context) -> FirstInputObservation | None: ...
+
+
 class ManagedInputReservations:
-    def __init__(self, environment, nodes, capture_port=None, native_state_port=None):
+    def __init__(self, environment, nodes, capture_port=None, native_state_port=None,
+                 first_input_observation_port=None):
         self._environment, self._nodes = environment, nodes
         self._capture, self._native = capture_port, native_state_port
+        self._first_observation = first_input_observation_port
+
+    @staticmethod
+    def _first_identity(operation):
+        intent, request = operation.intent, operation.request
+        context = intent.context_ref
+        if intent.kind != "managed-input" or not isinstance(context.get("sessionlessInputBinding"), Mapping):
+            raise GuaranteeUnavailableError("original sessionless managed input required")
+        binding = context["sessionlessInputBinding"]
+        if (set(binding) != {"contractVersion", "unitRef", "unitConfirmationRef", "sessionAbsenceRef"}
+                or len(intent.steps) != 1
+                or intent.steps[0].step_id != "native-input"
+                or intent.steps[0].input_digest != operation.digest
+                or binding.get("contractVersion") != SESSIONLESS_INPUT_VERSION
+                or safe_json(context["invocationBindings"]["native-input"]) != safe_json(
+                    {"action": "submitInput", "targetRef": binding["unitRef"],
+                     "delegationRef": None, "cleanup": False})):
+            raise GuaranteeUnavailableError("original Unit submitInput identity unavailable")
+        return {"request": {"environmentNamespace": request.environment_namespace,
+                    "principalScope": request.principal_scope, "requestId": request.request_id},
+                "operationRef": intent.operation_ref, "stepId": "native-input",
+                "inputDigest": operation.digest, "providerRef": intent.steps[0].pinned_provider_ref,
+                "unitRef": binding["unitRef"], "nodeRef": intent.node_ref,
+                "managementEpoch": intent.management_epoch, "nativeCorrelation": context["nativeCorrelation"],
+                "unitConfirmationRef": binding["unitConfirmationRef"],
+                "sessionAbsenceRef": binding["sessionAbsenceRef"],
+                "capturedInputRef": context["capturedInputRef"]}
+
+    @staticmethod
+    def _first_result(evidence):
+        return {"contractVersion": FIRST_INPUT_RESULT_VERSION,
+                "nodeRef": evidence["identity"]["nodeRef"],
+                "operationRef": evidence["identity"]["operationRef"],
+                "inputDigest": evidence["identity"]["inputDigest"],
+                "associationRef": evidence["associationRef"], "sessionRef": evidence["sessionRef"],
+                "sessionSourceRevision": evidence["sessionSourceRevision"],
+                "effectEvidenceRef": evidence["effectEvidenceRef"]}
+
+    def _observation_evidence(self, operation, observation):
+        if not isinstance(observation, FirstInputObservation):
+            raise UnknownResultError("original input effect and Session association are not both known")
+        identity = self._first_identity(operation)
+        if safe_json(observation.identity) != safe_json(identity):
+            raise IdentityMismatchError("first-input observation differs from its original input")
+        for ref in (observation.association_ref, observation.session_ref, observation.effect_evidence_ref):
+            if (set(ref) != {"environmentNamespace", "ownerProviderRef", "sourceRevision", "ref"}
+                    or ref["environmentNamespace"] != operation.request.environment_namespace
+                    or safe_json(ref["ownerProviderRef"]) != safe_json(identity["providerRef"])
+                    or any(not isinstance(ref[key], str) or not ref[key] or len(ref[key]) > 256
+                           or any(ord(c) < 32 for c in ref[key]) for key in ("sourceRevision", "ref"))):
+                raise GuaranteeUnavailableError("original owner evidence source unavailable")
+        if safe_json(observation.association_ref) == safe_json(observation.effect_evidence_ref):
+            raise GuaranteeUnavailableError("Session identity cannot substitute for input effect evidence")
+        owner = operation_holder(operation.request, operation.intent.operation_ref)
+        usages = []
+        for usage in observation.usages:
+            if (safe_json(usage.holder_ref) != safe_json(owner) or usage.state != "active"
+                    or safe_json({"ref": usage.expected_holder_ref}) != safe_json(
+                        {"ref": owner if usage.expected_revision else None})):
+                raise IdentityMismatchError("original input Usage must remain with its original operation")
+            usages.append({"usageId": usage.usage_id, "revision": usage.expected_revision + 1,
+                           "targetRef": usage.target_ref, "rights": list(usage.rights), "payload": usage.payload})
+        if len({item["usageId"] for item in usages}) != len(usages):
+            raise IdentityMismatchError("duplicate original input Usage")
+        return _plain({"contractVersion": FIRST_INPUT_RESULT_VERSION, "identity": identity,
+                       "associationRef": observation.association_ref, "sessionRef": observation.session_ref,
+                       "sessionSourceRevision": observation.session_source_revision,
+                       "effectEvidenceRef": observation.effect_evidence_ref, "acquiredUsages": usages})
+
+    def _stored_first_evidence(self, operation, evidence):
+        """Validate the frozen recipe, including JSON types, without refreshing CAS."""
+        try:
+            owner = operation_holder(operation.request, operation.intent.operation_ref)
+            acquisitions = tuple(UsageMutation(item["usageId"], item["revision"] - 1,
+                owner if item["revision"] > 1 else None, owner, item["targetRef"],
+                tuple(item["rights"]), "active", item["payload"]) for item in evidence["acquiredUsages"])
+            observation = FirstInputObservation(evidence["identity"], evidence["associationRef"],
+                evidence["sessionRef"], evidence["sessionSourceRevision"], evidence["effectEvidenceRef"], acquisitions)
+            verified = self._observation_evidence(operation, observation)
+            if safe_json(verified) != safe_json(evidence):
+                raise ValueError()
+            return verified
+        except Exception:
+            raise GuaranteeUnavailableError("stored first-input publication evidence is inconsistent") from None
 
     @staticmethod
     def _inspect(port, *args):
@@ -173,12 +298,7 @@ class ManagedInputReservations:
             {"nodeRef": node_ref, "unitRef": unit_ref}).encode()).hexdigest()[:48]
 
     def _first_fence(self, node_ref, unit_ref):
-        """Read the SAME domain reservation; Session observation never clears it.
-
-        Publication/transfer requires separate verified original input and
-        association evidence. Until that path is composed, all markers remain
-        held, even if an operation was cancelled/refused or a Session appeared.
-        """
+        """Read original held or published reservation, never infer from Session."""
         env = self._environment
         fence_id = self._first_fence_id(node_ref, unit_ref)
         prior = env._store.read_domain(env.environment_id, FIRST_SESSION_ATTEMPTS, fence_id)
@@ -189,7 +309,11 @@ class ManagedInputReservations:
             old = env._store.read_operation(RequestKey(env.environment_id,
                 frozen["principalScope"], frozen["requestId"]))
             context = old.intent.context_ref
-            valid = (old.intent.kind == "managed-input" and old.digest == frozen["inputDigest"]
+            fields = {"nodeRef", "unitRef", "state", "principalScope", "requestId", "operationRef",
+                      "inputDigest", "binding", "providerRef", "managementEpoch", "nativeCorrelation"}
+            if frozen["state"] == "resolved":
+                fields.add("publicationResult")
+            valid = (set(frozen) == fields and old.intent.kind == "managed-input" and old.digest == frozen["inputDigest"]
                 and old.intent.operation_ref == frozen["operationRef"]
                 and old.intent.management_epoch == frozen["managementEpoch"]
                 and safe_json(old.intent.node_ref) == safe_json(node_ref)
@@ -199,13 +323,125 @@ class ManagedInputReservations:
                 and safe_json(context["sessionlessInputBinding"]) == safe_json(frozen["binding"])
                 and safe_json(context["nativeCorrelation"]) == safe_json(frozen["nativeCorrelation"])
                 and safe_json(old.intent.steps[0].pinned_provider_ref) == safe_json(frozen["providerRef"])
-                and frozen["state"] == "held" and type(frozen["managementEpoch"]) is int
-                and type(prior["revision"]) is int and prior["revision"] == 1)
+                and type(frozen["managementEpoch"]) is int and type(prior["revision"]) is int)
+            self._first_identity(old)
+            if frozen["state"] == "held":
+                valid = (valid and prior["revision"] == 1 and "publicationResult" not in frozen
+                         and old.status != "published")
+            elif frozen["state"] == "resolved":
+                step = env._store.read_operation_step(old.request, "native-input")
+                evidence = self._stored_first_evidence(old, step.evidence)
+                result = self._first_result(evidence)
+                valid = (valid and prior["revision"] == 2 and old.status == "published"
+                    and step.outcome == "concluded" and safe_json(old.result) == safe_json(result)
+                    and safe_json(frozen["publicationResult"]) == safe_json(result))
+            else:
+                valid = False
         except Exception:
             valid = False
         if not valid:
             raise GuaranteeUnavailableError("first Session attempt source identity is damaged")
         return fence_id, prior
+
+    @staticmethod
+    def _admit_after_first(prior, state):
+        if prior is None:
+            return
+        if prior["value"]["state"] == "held":
+            raise UnknownResultError("Unit first input retains its original association fence; inspect the original request")
+        result = prior["value"]["publicationResult"]
+        if (not isinstance(state, NativeInputState)
+                or safe_json(state.session_ref) != safe_json(result["sessionRef"])
+                or state.source_revision != result["sessionSourceRevision"]):
+            raise GuaranteeUnavailableError("current Session differs from the original published input association")
+
+    def _first_publication_permission(self, request, identity):
+        env = self._environment
+        env._check_open()
+        env._check_environment(request.environment_namespace)
+        ref = _node(identity["nodeRef"])
+        if (request.principal_scope != env._principal_scope or env._policy is None
+                or not env._policy.admit_invoke(env._principal_scope, "pacthold.agents.inputs.query", "reliable")
+                or not env._policy.admit_object_access(env._principal_scope,
+                    f"{env.environment_id}:agents.node:{ref.instance_id}", "write")):
+            raise AdmissionRefusedError("original input observation/publication admission refused")
+        node = self._nodes.read(ref)
+        if (node is None or safe_json(node["binding"]["harnessUnitRef"]) != safe_json(identity["unitRef"])
+                or safe_json(env.agent_runtime_contribution(node["binding"]["harnessDefinitionRef"]).provider_ref)
+                != safe_json(identity["providerRef"])):
+            raise AdmissionRefusedError("original published Unit/provider unavailable")
+
+    def reconcile_first_input(self, request: RequestKey, issuer: InvocationIssuer):
+        """Read the original owner, conclude two facts, publish the original recipe.
+
+        No dispatch/start/claim. Step conclusion and publication are separate
+        transactions: a crash between them leaves the first fence held. The
+        original step recipe survives cold recovery and published replay.
+        """
+        env = self._environment
+        with env._admission_lock:
+            env._check_open()
+            env._check_environment(request.environment_namespace)
+            if request.principal_scope != env._principal_scope:
+                raise AdmissionRefusedError("input principal differs from the authenticated realm")
+            if (env._policy is None or not env._policy.admit_invoke(
+                    env._principal_scope, "pacthold.agents.inputs.query", "reliable")):
+                raise AdmissionRefusedError("original input observation admission refused")
+            if (not isinstance(issuer, InvocationIssuer) or issuer._store is not env._store
+                    or not isinstance(env._store, OperationStorePort) or not isinstance(env._store, DomainStorePort)
+                    or not isinstance(self._first_observation, FirstInputObservationPort)):
+                raise GuaranteeUnavailableError("original input observation requires explicit owner and core issuer")
+            operation = env._store.read_operation(request)
+            if operation is None:
+                raise GuaranteeUnavailableError("original input attempt unavailable")
+            identity = self._first_identity(operation)
+            ref = _node(identity["nodeRef"])
+            self._first_publication_permission(request, identity)
+            fence_id, fence = self._first_fence(identity["nodeRef"], identity["unitRef"])
+            if (fence is None or fence["value"]["principalScope"] != request.principal_scope
+                    or fence["value"]["requestId"] != request.request_id):
+                raise GuaranteeUnavailableError("original first-input reservation unavailable")
+            step = env._store.read_operation_step(request, "native-input")
+            if step is None or step.outcome == "refused" or operation.status in {"refused", "cancelled"}:
+                raise UnknownResultError("original input has no reconcilable claim")
+            query = issuer.issue_query(request, operation.digest, "native-input")
+        try:
+            observation = self._first_observation.observe(operation, query)
+        except Exception:
+            raise GuaranteeUnavailableError("original input owner observation unavailable") from None
+        if not issuer.verified_observation(query):
+            raise GuaranteeUnavailableError("original owner did not verify its read-only invocation")
+        verifier = issuer.verifier()
+        verifier.verify_claimed_query(query, identity["providerRef"], identity["unitRef"],
+                                      operation.digest, operation_kind="managed-input")
+        evidence = self._observation_evidence(operation, observation)
+        with env._admission_lock:
+            self._first_publication_permission(request, identity)
+            verifier.verify_claimed_query(query, identity["providerRef"], identity["unitRef"],
+                                          operation.digest, operation_kind="managed-input")
+            if step.outcome == "concluded":
+                frozen = self._stored_first_evidence(operation, step.evidence)
+                if safe_json(frozen) != safe_json(evidence):
+                    raise IdentityMismatchError("original concluded input observation changed")
+            else:
+                # Original revision, never refresh a stale reply into a newer write.
+                env._store.record_operation_step(request, operation.digest, "native-input", operation.digest,
+                    step.revision, "concluded", evidence, usages=observation.usages, require_complete_usages=True)
+            current = env._store.read_operation(request)
+            result = self._first_result(evidence)
+            # Both new publication and replay carry exactly the original CAS1 write.
+            marker = {key: value for key, value in fence["value"].items() if key != "publicationResult"}
+            marker.update(state="resolved", publicationResult=result)
+            write = DomainWrite(FIRST_SESSION_ATTEMPTS, fence_id, 1, marker)
+            owner = operation_holder(request, operation.intent.operation_ref)
+            destination = node_holder(ref.environment, ref.instance_id, ref.generation)
+            transfers = tuple(UsageMutation(item["usageId"], item["revision"], owner, destination,
+                item["targetRef"], tuple(item["rights"]), "active", item["payload"]) for item in evidence["acquiredUsages"])
+            self._first_publication_permission(request, identity)
+            verifier.verify_claimed_query(query, identity["providerRef"], identity["unitRef"],
+                                          operation.digest, operation_kind="managed-input")
+            return env._store.publish_operation(request, operation.digest, current.revision,
+                ("native-input",), (write,), transfers, result)
 
     def _admit(self, request, node_ref):
         env = self._environment
@@ -287,8 +523,7 @@ class ManagedInputReservations:
                     or safe_json(state.unit_ref) != safe_json(node["binding"]["harnessUnitRef"])):
                 raise GuaranteeUnavailableError("current Harness-owned input binding evidence is unavailable")
             first_fence_id, first_prior = self._first_fence(exact_node, state.unit_ref)
-            if first_prior is not None:
-                raise UnknownResultError("Unit first input retains its original association fence; inspect the original request")
+            self._admit_after_first(first_prior, state)
             # Current trusted contribution, not a self-reported provider id.
             admitted = env.agent_runtime_contribution(node["binding"]["harnessDefinitionRef"])
             if safe_json(admitted.provider_ref) != safe_json(state.provider_ref):
@@ -358,8 +593,10 @@ class ManagedInputReservations:
                     or first_fence["value"]["principalScope"] != request.principal_scope
                     or first_fence["value"]["requestId"] != request.request_id)):
                 raise GuaranteeUnavailableError("original Unit first-input fence unavailable")
-            if not first_input and first_fence is not None:
-                raise UnknownResultError("Session observation cannot release the Unit first-input fence")
+            if first_input and first_fence["value"]["state"] != "held":
+                raise UnknownResultError("published original first input cannot be dispatched again")
+            if not first_input:
+                self._admit_after_first(first_fence, state)
             admitted = env.agent_runtime_contribution(node["binding"]["harnessDefinitionRef"])
             if safe_json(admitted.provider_ref) != safe_json(state.provider_ref):
                 raise AdmissionRefusedError("native provider activation changed")

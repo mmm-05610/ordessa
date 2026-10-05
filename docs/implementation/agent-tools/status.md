@@ -398,3 +398,28 @@ Pi审阅要求区分commit前失败与commit后观察失效，已补实际反例
 C真实临时SQLite/Issuer＋受控capture/native proof，三家生产native owner/真实进程P未验证，M0。生产字节/receipt/transport fence、目录/Invocation权限装配、C1材料/SecretRef、原双证据publication、完整生命周期、CLI/Skill薄化与完整发行验收继续；AU002/AU003不报DONE。只改本树/临时测试DB，无用户DB迁移、第三方安装更新/登录/凭据/全局配置/用户服务操作、真实模型或push/主树合并。
 
 工单结构五项strict exit0、diff-check exit0。显式纳入本轮两个源码文件、53项测试、两份证据文档与status形成检查点；下一切片沿原Core双证据确认和publication转移占用/Usage，不按Session出现或terminal状态自动释放。
+
+### 2026-10-05 AU002 原首输入双证据结论与发布转移（PARTIAL）
+
+前置de29fb04da9b61329079b1ab9f3eb9f20cba71c2、clean；三家completed已释放写权，Pi/Codex仅只读设计和终审，主会话唯一共享作者。用户已批准首输入提案，不另问常规实现权限。依照本包主会话共享契约写权，必要接口改动在现有environment-api的OperationStorePort声明，复用依据是原结论/Usage事务；没有新增共享包、持久表、ledger或wire方法。
+
+增加显式可选FirstInputObservationPort与reconcile_first_input：原opaque query/claimed-query核原request/op/step/digest/provider/完整Unit/Node/epoch/capture/nativeCorrelation与原Unit确认/absence。owner分别核原Session association与原输入作用已知（不冒充任务完成）；缺端口/ACK/一份事实不成立即拒或unknown，不start/claim/补ticket/发输入。原Core policy/registry/Node/Unit及当前Invocation权限在观察后、结论前和发布前重核。数据出处见first-input-publication-port.md，生产owner不以fixture替代。
+
+原record_operation_step结论固定双证据和原Usage recipe，first fence仍held。原publish_operation同事务CAS marker原revision1→resolved2、operation和全部Usages→固定Node active；失败整体回滚，不released资源绕门。原published重放保持CAS1和原Usage/result，不按已转Node集合或最新revision重算。resolved须核原published Operation/concluded step/result，held+published拒为损坏。后续Session输入只接受同原关联引用/revision；sessionless、仅观察Session、仅terminal或换Session不能二次首输。原结果managed-first-input-result/1是内部结果投影，不新增通用翻译层。
+
+Pi首次审阅发现漏报Usage恢复死角：先concluded再由publish检漏，会固定不完整recipe、阻止补齐。已沿原Store补兼容可选require_complete_usages=False（首次输入显式True），同结论事务任何写前核全部retained operation-held Usage包含于active mutations，原holder/target/rights/revision CAS保留。完整选项进入原result digest。漏报unknown或active Usage均保持原step和Usage，补完整原receipt后可只读恢复发布。没有删断言/skip。旧弱口径已经冻结的不完整concluded数据拒绝改写，不做用户数据迁移；本次True新结论不会产生该死角。
+
+实际解释器均 `/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python`，测试主会话串行，最终句柄全部terminal：
+- `<python> -m pytest -c products/agent-tools/pyproject.toml docs/implementation/agent-tools/evidence/agent-unit-model/test_first_input_publication.py -q --tb=short`：首32P/0F exit0、3.34s；补policy/unknown Usage后36P/0F exit0、4.14s。未出现pytest失败。
+- `<python> -m pytest -c products/agent-tools/pyproject.toml docs/implementation/agent-tools/evidence/agent-unit-model/test_first_input_journal_publication.py -q --tb=short`：5P/0F exit0、1.53s。实际Registry/Node/ManagedInput/Issuer/UnitRecords与两原SQLite文件；native/capture/authority/effect仍受控。
+- 两新文件同上述命令组合：修完整Usage事务后43P/0F exit0、6.07s；补迟到CAS/ACK/Session路径/flag反例48P exit0、6.61s；终审新增active遗漏及强结论True幂等/False不能冒认，最终50P/0F exit0、7.23s（45核心＋5纵向）。历史快照不累加。
+- 最终完整集成命令：`PYTHONPATH=plugins/harness/codex/src:packages/backend/harness-transport/src <python> -m pytest -c products/agent-tools/pyproject.toml products/agent-tools/tests/integration docs/implementation/agent-tools/evidence/agent-unit-model/test_assembly.py docs/implementation/agent-tools/evidence/agent-unit-model/test_codex_assembly.py docs/implementation/agent-tools/evidence/agent-unit-model/test_provider_discovery.py docs/implementation/agent-tools/evidence/agent-unit-model/test_preparation_holds.py docs/implementation/agent-tools/evidence/agent-unit-model/test_management.py docs/implementation/agent-tools/evidence/agent-unit-model/test_invocation_continuation.py docs/implementation/agent-tools/evidence/agent-unit-model/test_sessionless_input.py docs/implementation/agent-tools/evidence/agent-unit-model/test_input_session_association.py docs/implementation/agent-tools/evidence/agent-unit-model/test_first_input_publication.py docs/implementation/agent-tools/evidence/agent-unit-model/test_first_input_journal_publication.py -q --tb=short`：484P/0F exit0、25.65s（原434＋新50）。较早482P/25.99s为新增48项时快照，不累加。
+- `<python> -m pytest -c packages/backend/environment-api/pyproject.toml packages/backend/environment-api/tests packages/backend/persistence-sqlite/tests -q --tb=short`：70P/0F exit0、0.91s；原Store默认False与环境合同回归保留。
+- `<python> -m pytest -c plugins/harness/pyproject.toml plugins/harness/tests/test_native_unit_confirmation.py plugins/harness/tests/test_unit_records.py plugins/harness/tests/test_unit_configuration_records.py plugins/harness/tests/test_operation_journal.py -q --tb=short`：107P/0F exit0、0.97s。
+- `<python> -m pytest -c packages/backend/pacthold/pyproject.toml packages/backend/pacthold/tests -q --tb=short`：269P/3F exit1、7.71s。仍已登记test_n4r1_kernel_direction三个失败，既有test_closeout_environment_dispatch导入具体SQLite触发扫描；未删除、移动失败或skip。worker/Claude等ABSENT保持未验证，不算绿。
+
+原journal association已commit/Core写失败以及concluded未publish均保持占用，沿原查询/recipe恢复；晚到使用观察前原revision，不刷新覆盖。纵向cold_owner仅重开Harness journal，Core/Environment/Issuer沿用，不能声称完整进程重启恢复。Pi/Codex终审均未发现新窄切片阻断，无测试/写入/Git；其建议两项额外反例已由主会话实际补跑。两次只读猜测不存在AU002-core-assembly.md/test_operation_records.py路径已纠正，无实现/测试结论依赖缺文件。
+
+C真实临时SQLite/实际Core＋受控native owner，P未验证、M0。生产receipt/writer fence、目录/Invocation授权接线、完整冷启动/生命周期、材料/SecretRef、三家公开生产装配、CLI/Skill薄化及发行闭包仍继续，AU002/AU003不报DONE。只改本树及测试临时文件；无第三方安装更新、真实模型、用户DB/凭据/全局配置或用户服务操作，未push/合并主树。核验工单结构和diff后显式纳入检查点，继续后续，不把本接缝绿当产品完成。
+
+本切片末端五工单strict结构exit0、git diff --check exit0，50项新C与最终扩大回归均已terminal。显式stage上述三份原源码/接口、两份新测试及四份证据/账本；不裸add其他dirty。检查点后继续生产接缝与余下工单，goal保持active。

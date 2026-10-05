@@ -246,7 +246,16 @@ class OperationStorePort(Protocol):
     def read_operation_step(self, request: RequestKey, step_id: str) -> StepRecord | None: ...
     def record_operation_step(self, request: RequestKey, operation_digest: str, step_id: str,
                               step_digest: str, expected_revision: int, outcome: str, evidence: Mapping[str, Any],
-                              writes: tuple[DomainWrite, ...] = (), usages: tuple[UsageMutation, ...] = ()) -> StepRecord: ...
+                              writes: tuple[DomainWrite, ...] = (), usages: tuple[UsageMutation, ...] = (),
+                              *, require_complete_usages: bool = False) -> StepRecord:
+        """Optionally conclude every retained operation Usage in this same CAS.
+
+        The opt-in is valid only for concluded steps. All retained Usages must
+        be represented by active original-operation mutations; newly acquired
+        Usages may also be included. Failure must leave the step unmodified.
+        Older callers retain their original per-step behavior.
+        """
+        ...
     def publish_operation(self, request: RequestKey, digest: str, expected_revision: int,
                           required_steps: tuple[str, ...], writes: tuple[DomainWrite, ...],
                           usages: tuple[UsageMutation, ...], result: Mapping[str, Any]) -> OperationRecord: ...

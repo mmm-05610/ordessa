@@ -75,3 +75,10 @@ kind/step/digest/native关联/capture、错误版本/ACK/default/来源、CAS/bo
 activation/目录/epoch/过期、观察中撤权、owner缺席、冷读取、两原journal实例
 并发、SQL失败、commit后观察失效、晚到与旧start codec。原unknown/fence逐项保留。
 实际命令/次数/退出码及扩大回归在status.md。C绿不证明P/M或生产装配；AU002仍PARTIAL。
+
+## 后续核心接缝
+
+原双证据结论与publication/Usage转移现已补齐核心C接缝，见
+first-input-publication-port.md；本文件以上是de29fb04da阶段的关联边界，不把
+association本身提升为输入确认。生产owner/原生writer、完整冷启动和产品消费
+仍未贯通，整体PARTIAL。

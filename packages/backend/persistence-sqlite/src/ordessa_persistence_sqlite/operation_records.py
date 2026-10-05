@@ -383,14 +383,20 @@ class OperationRecordsMixin:
 
     @_serialized
     def record_operation_step(self, request, operation_digest, step_id, step_digest,
-                              expected_revision, outcome, evidence, writes=(), usages=()):
+                              expected_revision, outcome, evidence, writes=(), usages=(),
+                              *, require_complete_usages=False):
         if outcome not in {"concluded", "refused", "unknown"}:
             raise ValueError("invalid step result outcome")
+        if type(require_complete_usages) is not bool or require_complete_usages and outcome != "concluded":
+            raise ValueError("complete retained Usage check requires a concluded step")
         evidence_json = safe_json(evidence)
         if outcome != "unknown" and not evidence:
             raise ValueError("a known result requires explicit evidence references")
         domains, usage_rows = _domain_encoding(writes), _usage_encoding(usages)
         change_digest = _change_digest(outcome, evidence, domains, usage_rows)
+        if require_complete_usages:
+            change_digest = hashlib.sha256(safe_json({"changeDigest": change_digest,
+                                                     "requireCompleteUsages": True}).encode()).hexdigest()
         with self._operation_transaction():
             op_row, operation = self._check_operation(request, operation_digest)
             row = self._step_row(request, step_id)
@@ -405,6 +411,14 @@ class OperationRecordsMixin:
                     or step.outcome in {"concluded", "refused"}
                     or operation.status in {"published", "refused", "cancelled"}):
                 raise OperationRevisionConflict("step result revision or terminal state conflict")
+            if require_complete_usages:
+                held = self._conn.execute(
+                    "SELECT usage_id FROM env_usages WHERE environment=? AND holder_ref=? AND state!='released'",
+                    (request.environment_namespace, safe_json(operation_holder(request, operation.intent.operation_ref))),
+                ).fetchall()
+                if (not {item["usage_id"] for item in held} <= {item[0].usage_id for item in usage_rows}
+                        or any(item[0].state != "active" for item in usage_rows)):
+                    raise IdentityMismatchError("step conclusion must account for every retained operation Usage")
             self._write_domains(request.environment_namespace, domains)
             self._write_usages(request, operation.intent, usage_rows, uncertain=(outcome == "unknown"),
                                concluded=(outcome == "concluded"))
