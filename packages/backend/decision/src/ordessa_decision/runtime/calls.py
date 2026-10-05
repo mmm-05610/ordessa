@@ -52,7 +52,7 @@ class ModelGateway:
                     except asyncio.CancelledError:
                         raise
                     except Exception:
-                        raise EvidenceUnknown() from None
+                        ctx.mark_evidence_unknown()
                     ctx.check()
                     permit = CallPermit(ctx.run_id, question.question_digest, settings_digest, ctx.deadline)
                     model_context = ModelCallContext(ctx.run_id, call_id, ctx.model_attempts,
@@ -84,5 +84,5 @@ class ModelGateway:
                 except asyncio.CancelledError:
                     raise
                 except Exception:
-                    raise EvidenceUnknown() from None
+                    ctx.mark_evidence_unknown()
                 return answer

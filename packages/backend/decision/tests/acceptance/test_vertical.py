@@ -74,7 +74,8 @@ async def test_T33_T21_T22_real_sdk_graph_durable_evidence(tmp_path):
         assert result.outcome.disposition=='ready' and len(calls)==6
         assert read['status']=='completed'
         events=read['events']; assert events[0]['payload']['type']=='run.started'
-        assert [e['payload']['type'] for e in events[1:]]==['call.intent','call.response']*6
+        assert [e['payload']['type'] for e in events[1:-1]]==['call.intent','call.response']*6
+        assert events[-1]['payload']['type']=='terminal.commit'
         assert read['terminal']['terminal_digest']==result.result_digest
     finally: await provider.close();await sink.close()
 
@@ -115,3 +116,36 @@ def test_T19_T55_boundary_scanner_positive_and_injected_private(tmp_path):
     assert not violations(root)
     (tmp_path/'bad.py').write_text('from pydantic_graph._internal import _GraphIterator\nx=admitted.provider\n')
     assert len(violations(tmp_path))==2
+
+async def test_T10_T55_mandatory_read_gap_prevents_ready():
+    request,flow,services=offline_case()
+    class Read:
+        async def observe(self,query,context): return ObservationBatch('required',(),False,'filtered',unobserved_items=('permission',))
+    flow=build_assignment_flow(services.policy,read_query={'kind':'required'})
+    services=dataclasses.replace(services,read=Read());request=dataclasses.replace(request,flow_ref=flow.ref)
+    result=await run_decision(request,flow=flow,services=services)
+    assert result.outcome.disposition=='clarify' and result.outcome.issues[0]['code']=='required_read_facts_incomplete'
+
+async def test_T16_T66_mutable_query_snapshotted_before_digest():
+    request,flow,services=offline_case()
+    query={'kind':'review','scope':['original']}; observed=[]
+    class Read:
+        async def observe(self,q,context):
+            observed.append(plain(q));return ObservationBatch('required',(),True,'explicit no facts required')
+    flow=build_assignment_flow(services.policy,read_query=query)
+    digest_before=flow.ref.content_digest;query['scope'][0]='mutated'
+    services=dataclasses.replace(services,read=Read());request=dataclasses.replace(request,flow_ref=flow.ref)
+    result=await run_decision(request,flow=flow,services=services)
+    assert observed==[{'kind':'review','scope':['original']}] and result.flow_ref.content_digest==digest_before
+
+async def test_T05_T14_business_repair_limit_zero_is_effective():
+    request,flow,services=offline_case()
+    policy=plain(services.policy);policy['selection']['limits']['max_repair_rounds']=0;policy=freeze(policy)
+    flow=build_assignment_flow(policy);request=dataclasses.replace(request,flow_ref=flow.ref)
+    class Validator(OfflineValidator):
+        async def validate(self,draft,basis,context):
+            return dataclasses.replace(await super().validate(draft,basis,context),status='invalid',issues=({'code':'fix'},))
+    services=dataclasses.replace(services,policy=policy,policy_refs=flow.policy_refs,validator=Validator())
+    result=await run_decision(request,flow=flow,services=services)
+    assert result.status=='budget_exhausted' and result.exhausted_dimension=='max_repair_rounds'
+    assert result.consumed['repair_rounds']==0 and result.outcome is None

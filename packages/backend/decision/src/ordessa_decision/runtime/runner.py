@@ -2,8 +2,9 @@
 import asyncio
 import time
 import uuid
+from collections.abc import Mapping
 from ordessa_decision.contracts import (BusinessOutcome, DecisionRequest, DecisionResult,
-    RunManifest, ContractError)
+    RunManifest, ContractError, canonical, digest)
 from .calls import ModelGateway, require_ack
 from .context import RunContext
 from .errors import BudgetExhausted, EvidenceUnknown, ExplicitCancellation, RuntimeFailure
@@ -55,9 +56,21 @@ async def run_decision(request, *, flow, services):
     async def query_committed(expected):
         try:
             read = await bounded(services.evidence.read(run_id, services.read_context), request.limits.cleanup_timeout_seconds)
-            value = read.get('terminal') if isinstance(read, dict) or hasattr(read, 'get') else None
-            if value and value.get('terminal_digest', value.get('result_digest')) == expected['terminal_digest']:
-                return True
+            if not isinstance(read, Mapping) or read.get('status') != 'completed':
+                return False
+            value = read.get('terminal')
+            if not isinstance(value, Mapping) or value.get('run_id') != run_id or value.get('status') != expected['status']:
+                return False
+            observed_result = value.get('result')
+            if not isinstance(observed_result, Mapping) or canonical(observed_result) != canonical(expected['result']):
+                return False
+            observed_digest = digest('result', observed_result)
+            terminal_digest = value.get('terminal_digest',value.get('result_digest'))
+            if terminal_digest != expected['terminal_digest'] or observed_digest != terminal_digest:
+                return False
+            if 'result_digest' in value and value['result_digest'] != terminal_digest:
+                return False
+            return True
         except Exception:
             pass
         return False
@@ -74,7 +87,7 @@ async def run_decision(request, *, flow, services):
             raise
         except Exception:
             if not await query_committed(terminal):
-                raise EvidenceUnknown() from None
+                raise EvidenceUnknown(run_id) from None
         return value
 
     try:
@@ -87,7 +100,7 @@ async def run_decision(request, *, flow, services):
         except asyncio.CancelledError:
             raise
         except Exception:
-            raise EvidenceUnknown() from None
+            raise EvidenceUnknown(run_id) from None
         try:
             async with deadline_at(context.deadline):
                 state = flow.new_state(request)
@@ -107,8 +120,15 @@ async def run_decision(request, *, flow, services):
         except Exception as exc:
             value = result('failed', code=exc.code if isinstance(exc, RuntimeFailure) else 'graph_failed')
         return await commit(value)
+    except EvidenceUnknown:
+        # Calls and bounded helpers do not know the run's public query key.
+        context.evidence_unknown = True
+        raise EvidenceUnknown(run_id) from None
     except asyncio.CancelledError as cancellation:
         context.cancel()
+        cancellation.run_id = run_id
+        if hasattr(cancellation, 'add_note'):
+            cancellation.add_note('decision run_id=' + run_id)
         async def cleanup():
             if finish_started:
                 # An attempted terminal may already be durable. Never oppose it.

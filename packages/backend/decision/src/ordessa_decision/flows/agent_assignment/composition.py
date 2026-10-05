@@ -12,6 +12,16 @@ from ordessa_decision.contracts import ProposalCandidateBatch, ProposalDraft, Co
 DIALECT = 'https://json-schema.org/draft/2020-12/schema'
 
 
+def _json_equal(a,b):
+    """JSON numbers compare numerically; booleans remain a distinct type."""
+    if type(a) in (int,float) and type(b) in (int,float): return a==b
+    if isinstance(a,Mapping) and isinstance(b,Mapping):
+        return set(a)==set(b) and all(_json_equal(a[k],b[k]) for k in a)
+    if isinstance(a,(tuple,list)) and isinstance(b,(tuple,list)):
+        return len(a)==len(b) and all(_json_equal(x,y) for x,y in zip(a,b))
+    return type(a) is type(b) and a==b
+
+
 def check_schema(value, schema):
     """Return valid/invalid/unverifiable; this is structural, never owner approval."""
     if not isinstance(schema, Mapping): return 'unverifiable'
@@ -31,7 +41,7 @@ def check_schema(value, schema):
     if set(schema)-(common|specific.get(kind,set())): return 'unverifiable'
     if 'enum' in schema:
         if not isinstance(schema['enum'], (tuple,list)) or not schema['enum']: return 'unverifiable'
-        if plain(value) not in [plain(v) for v in schema['enum']]: return 'invalid'
+        if not any(_json_equal(value,v) for v in schema['enum']): return 'invalid'
     if kind in ('number','integer'):
         for key, op in (('minimum', lambda v,b: v < b), ('maximum', lambda v,b: v > b)):
             if key in schema:

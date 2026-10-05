@@ -12,16 +12,34 @@ _SUMMARY = frozenset(('type', 'event', 'run_id', 'call_id', 'attempt', 'attempt_
     'request_digest', 'flow_digest', 'manifest_digest', 'run_manifest_digest',
     'question_digest', 'answer_digest', 'provider_settings_digest', 'stage',
     'error_code', 'code', 'usage', 'consumed', 'effective_policy_refs',
-    'policy_refs', 'flow_ref', 'task_revision', 'request_id', 'evidence_refs'))
+    'policy_refs', 'flow_ref', 'task_revision', 'request_id', 'evidence_refs',
+    'result_digest', 'terminal_record_digest'))
 _FORBIDDEN = frozenset(('prompt', 'body', 'headers', 'header', 'secret', 'token',
     'api_key', 'raw', 'raw_response', 'response', 'exception', 'state', 'text',
     'description', 'instructions', 'title', 'content'))
+_CREDENTIALS = frozenset(('token','accesstoken','apikey','password','secret',
+    'clientsecret','privatekey','authorization','credential','credentials',
+    'refreshtoken','bearertoken'))
+
+def _normal_key(key): return key.lower().replace('_','').replace('-','')
+
+def _secret_reference(value):
+    if not isinstance(value, Mapping) or set(value) != {'secretRef'}: return False
+    ref = value['secretRef']
+    if not (isinstance(ref,Mapping)
+            and set(ref)=={'ref','revision','owner_namespace','access_purpose'}
+            and all(type(v) is str for v in ref.values())): return False
+    return (re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:-]{0,191}',ref['ref']) is not None
+        and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:+-]{0,63}',ref['revision']) is not None
+        and all(re.fullmatch(r'[a-z][a-z0-9._-]{0,95}',ref[k]) is not None
+                for k in ('owner_namespace','access_purpose')))
 
 def redact(value, *, depth=0):
     if depth > 24: raise EvidenceError('evidence_depth')
     if isinstance(value, Mapping):
         return {k: redact(v, depth=depth+1) for k,v in value.items()
-                if type(k) is str and k.lower() not in _FORBIDDEN}
+                if type(k) is str and k.lower() not in _FORBIDDEN
+                and _normal_key(k) not in _CREDENTIALS}
     if type(value) in (list, tuple):
         return [redact(v, depth=depth+1) for v in value]
     if value is None or type(value) in (bool, int, float): return value
@@ -51,7 +69,10 @@ def terminal(value):
         if isinstance(item, Mapping):
             forbidden = {'prompt','body','headers','header','secret','api_key',
                          'access_token','authorization','raw','raw_response','exception','state'}
-            if any(type(k) is not str or k.lower() in forbidden for k in item):
+            if any(type(k) is not str or
+                   (k.lower() in forbidden and not (_normal_key(k) in _CREDENTIALS and _secret_reference(v))) or
+                   (_normal_key(k) in _CREDENTIALS and v is not None and not _secret_reference(v))
+                   for k,v in item.items()):
                 raise EvidenceError('evidence_terminal_sensitive')
             return {k:public_result(v,depth+1) for k,v in item.items()}
         if type(item) in (tuple,list): return [public_result(v,depth+1) for v in item]

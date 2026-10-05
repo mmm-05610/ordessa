@@ -3,6 +3,7 @@ import asyncio
 from dataclasses import replace
 from pathlib import Path
 import time
+import uuid
 import pytest
 from pydantic_graph import GraphBuilder, StepContext
 from ordessa_decision.contracts import *
@@ -163,6 +164,53 @@ async def test_T06_concurrent_one_attempt():
     assert len(svc.decision_provider.calls) == 1
 
 @pytest.mark.asyncio
+async def test_T06_cancelled_slot_waiter_zero_dispatch():
+    release = asyncio.Event()
+    class BlockingProvider(Provider):
+        async def decide(self,q,context):
+            context.claim(q,self.settings_digest)
+            self.calls.append(context)
+            self.entered.set()
+            await release.wait()
+            return DecisionAnswer(q.question_id,q.kind,'yes',{})
+    provider = BlockingProvider()
+    async def action(ctx):
+        first = asyncio.create_task(ctx.deps.gateway.decide(question(0)))
+        await provider.entered.wait()
+        waiting = asyncio.Event()
+        async def queued():
+            waiting.set()
+            return await ctx.deps.gateway.decide(question(1))
+        second = asyncio.create_task(queued())
+        await waiting.wait()
+        await asyncio.sleep(0)
+        second.cancel()
+        with pytest.raises(asyncio.CancelledError): await second
+        release.set()
+        await first
+    flow = build_flow(action)
+    req,svc = compose(flow,provider=provider)
+    result = await run_decision(req,flow=flow,services=svc)
+    assert result.status=='completed' and result.consumed['model_attempts']==1
+    assert len(provider.calls)==1
+    assert len([e for e in svc.evidence.events if e['type']=='call.intent'])==1
+
+@pytest.mark.asyncio
+async def test_T06_expired_slot_waiter_zero_dispatch():
+    provider = Provider(delay=10)
+    async def action(ctx):
+        first = asyncio.create_task(ctx.deps.gateway.decide(question(0)))
+        await provider.entered.wait()
+        second = asyncio.create_task(ctx.deps.gateway.decide(question(1)))
+        await asyncio.gather(first,second)
+    flow = build_flow(action)
+    req,svc = compose(flow,provider=provider,limits=RunLimits(wall_timeout_seconds=.04))
+    result = await run_decision(req,flow=flow,services=svc)
+    assert result.status=='budget_exhausted' and result.exhausted_dimension=='wall_timeout_seconds'
+    assert result.consumed['model_attempts']==1 and len(provider.calls)==1
+    assert len([e for e in svc.evidence.events if e['type']=='call.intent'])==1
+
+@pytest.mark.asyncio
 async def test_T11_external_cancel_propagates_and_shared_provider_survives():
     flow = build_flow()
     req, svc = compose(flow,provider=Provider(delay=10))
@@ -193,12 +241,52 @@ async def test_T13_invalid_answer_and_node_failure():
 
 @pytest.mark.asyncio
 async def test_T15_runs_isolated():
-    flow = build_flow(rounds=2)
-    req, svc = compose(flow)
-    results = await asyncio.gather(*(run_decision(req,flow=flow,services=svc) for _ in range(2)))
-    assert results[0].run_id != results[1].run_id
-    assert all(r.consumed['node_entries']==2 for r in results)
-    assert len(svc.evidence.terminals) == 2
+    from ordessa_decision.evidence import MemoryEvidenceSink
+    seen_states, calls = {}, []
+    class Candidates:
+        async def list_candidates(self,task,*args,**kwargs):
+            ref = ExternalRef('test-candidate',{'task_id':task.task_id,'id':'candidate-'+task.goal})
+            obs = VersionedObservation('obs-'+task.task_id,ref,'1','sha256:obs','2026-10-05T00:00:00Z',{},'current')
+            return CandidateBatch((CandidateOffer(ref,'test',obs,{}),),True)
+    class TrackingProvider(Provider):
+        async def decide(self,q,context):
+            calls.append((context,q))
+            return await super().decide(q,context)
+    async def action(ctx):
+        task = ctx.deps.request.task
+        if task.task_id in seen_states:
+            assert seen_states[task.task_id] is ctx.state
+            assert len(ctx.state['candidates'])==1
+        else:
+            seen_states[task.task_id]=ctx.state
+            assert 'candidates' not in ctx.state
+            ctx.state['candidates']=[]
+        batch = await ctx.deps.services.candidate_source.list_candidates(task,(),POLICY,READ)
+        candidate = batch.candidates[0].candidate_ref
+        assert candidate.identity['task_id']==task.task_id
+        ctx.state['candidates'].append(candidate)
+        q=replace(question(len(ctx.state['candidates'])),bounded_state={'task_id':task.task_id,'goal':task.goal,'candidate':candidate.to_dict()})
+        await asyncio.sleep(0)
+        await ctx.deps.gateway.decide(q)
+    flow = build_flow(action,rounds=2)
+    req,svc = compose(flow,sink=MemoryEvidenceSink(read_context=READ),provider=TrackingProvider())
+    svc=replace(svc,candidate_source=Candidates())
+    req_a=replace(req,request_id='request-A',task=TaskBrief('task-A','1','alpha'))
+    req_b=replace(req,request_id='request-B',task=TaskBrief('task-B','2','beta'))
+    results = await asyncio.gather(*(run_decision(r,flow=flow,services=svc) for r in (req_a,req_b)))
+    assert results[0].run_id != results[1].run_id and seen_states['task-A'] is not seen_states['task-B']
+    for result,request in zip(results,(req_a,req_b)):
+        assert result.status=='completed' and result.consumed['node_entries']==2 and result.consumed['model_attempts']==2
+        own_calls=[(c,q) for c,q in calls if c.run_id==result.run_id]
+        assert [c.attempt_no for c,q in own_calls]==[1,2]
+        assert all(q.bounded_state['task_id']==request.task.task_id and q.bounded_state['goal']==request.task.goal for c,q in own_calls)
+        read=await read_result(result.run_id,services=svc)
+        assert read['status']=='completed'
+        assert read['terminal']['result']['request_id']==request.request_id
+        assert read['terminal']['result']['task_revision']==request.task.task_revision
+        assert [e['seq'] for e in read['events']]==list(range(1,len(read['events'])+1))
+        assert all(e['payload']['run_id']==result.run_id for e in read['events'])
+        assert [e['payload']['question_digest'] for e in read['events'] if e['payload']['type']=='call.intent']==[q.question_digest for c,q in own_calls]
 
 @pytest.mark.parametrize('field,value', [('review_ref',''),('reviewed_code_digest','name-only'),('parallel_state_writes',True)])
 def test_T16_T29_untrusted_flow_rejected(field,value):
@@ -209,8 +297,34 @@ def test_T16_T29_untrusted_flow_rejected(field,value):
 async def test_T21_T22_T26_persistence_failure(failure):
     flow = build_flow()
     req, svc = compose(flow,sink=Sink(failure))
-    with pytest.raises(EvidenceUnknown): await run_decision(req,flow=flow,services=svc)
+    with pytest.raises(EvidenceUnknown) as raised: await run_decision(req,flow=flow,services=svc)
+    assert str(uuid.UUID(raised.value.run_id))==raised.value.run_id
+    assert 'sensitive' not in str(raised.value)
+    assert (await read_result(raised.value.run_id,services=svc))['status']=='unknown'
     assert len(svc.decision_provider.calls) == (1 if failure=='call.response' else 0)
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('failure',['call.intent','call.response'])
+async def test_T22_T26_caught_uncertainty_sticky_refuses_completion_and_future_dispatch(failure):
+    caught=[]
+    async def action(ctx):
+        with pytest.raises(EvidenceUnknown) as initial:
+            await ctx.deps.gateway.decide(question(0))
+        caught.append(initial.value)
+        # A trusted node's fallback cannot erase unknown evidence or retry.
+        with pytest.raises(EvidenceUnknown) as later:
+            await ctx.deps.gateway.decide(question(1))
+        assert initial.value.run_id==later.value.run_id==ctx.deps.run_id
+        with pytest.raises(EvidenceUnknown): await ctx.deps.enter_node('fallback')
+        assert ctx.deps.evidence_unknown
+        return BusinessOutcome('clarify')
+    flow=build_flow(action)
+    req,svc=compose(flow,sink=Sink(failure))
+    with pytest.raises(EvidenceUnknown) as raised:
+        await run_decision(req,flow=flow,services=svc)
+    assert raised.value.run_id==caught[0].run_id
+    assert len(svc.decision_provider.calls)==(1 if failure=='call.response' else 0)
+    assert not svc.evidence.terminals
 
 def test_T23_permit_replay_cross_run_digest_expiry():
     for kwargs in ({'run_id':'other'},{'question_digest':'different'},{'settings_digest':'different'}):
@@ -231,6 +345,28 @@ async def test_T25_lost_finish_ack_query():
     assert len(svc.evidence.terminals) == 1
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize('mutation',['unknown','refused','unavailable','run_id','status','result','digest','conflicting_digest'])
+async def test_T25_uncertain_or_mismatched_read_never_ready(mutation):
+    class BadReadSink(Sink):
+        async def read(self,run_id,read_context):
+            response=await super().read(run_id,read_context)
+            response=plain(response)
+            if mutation in ('unknown','refused','unavailable'):
+                response['status']=mutation
+            elif mutation=='run_id': response['terminal']['run_id']=str(uuid.uuid4())
+            elif mutation=='status': response['terminal']['status']='cancelled'
+            elif mutation=='result': response['terminal']['result']['request_id']='another-request'
+            elif mutation=='digest': response['terminal']['terminal_digest']='sha256:other'
+            elif mutation=='conflicting_digest': response['terminal']['result_digest']='sha256:other'
+            return response
+    flow=build_flow()
+    req,svc=compose(flow,sink=BadReadSink('lost_ack'))
+    with pytest.raises(EvidenceUnknown) as raised:
+        await run_decision(req,flow=flow,services=svc)
+    assert raised.value.run_id in svc.evidence.terminals
+    assert len(svc.evidence.terminals)==1 and len(svc.decision_provider.calls)==1
+
+@pytest.mark.asyncio
 async def test_T28_hung_cancel_cleanup_bounded():
     class HungSink(Sink):
         async def finish(self, terminal): await asyncio.Event().wait()
@@ -240,6 +376,62 @@ async def test_T28_hung_cancel_cleanup_bounded():
     await svc.decision_provider.entered.wait()
     task.cancel()
     with pytest.raises(asyncio.CancelledError): await asyncio.wait_for(task,.3)
+
+@pytest.mark.asyncio
+async def test_T28_cancellation_resistant_cleanup_bound_and_secondary_error():
+    from ordessa_decision.runtime.runner import bounded
+    released, suppressed, done = asyncio.Event(),asyncio.Event(),asyncio.Event()
+    async def resistant():
+        try:
+            try:
+                await released.wait()
+            except asyncio.CancelledError:
+                suppressed.set()
+                await released.wait()
+        finally:
+            done.set()
+    began=time.monotonic()
+    try:
+        with pytest.raises(EvidenceUnknown): await bounded(resistant(),.02)
+        assert time.monotonic()-began < .25
+        await asyncio.wait_for(suppressed.wait(),.1)
+        assert not done.is_set()
+    finally:
+        released.set()
+        await asyncio.wait_for(done.wait(),.2)
+    # No perpetual task is left for pytest/event-loop shutdown to cancel.
+
+@pytest.mark.asyncio
+async def test_T28_run_cancel_resistant_sink_preserves_original_cancel():
+    class ResistantSink(Sink):
+        def __init__(self):
+            super().__init__()
+            self.release,self.suppressed,self.done=asyncio.Event(),asyncio.Event(),asyncio.Event()
+        async def finish(self,terminal):
+            try:
+                while not self.release.is_set():
+                    try: await self.release.wait()
+                    except asyncio.CancelledError: self.suppressed.set()
+            finally:
+                self.done.set()
+    sink=ResistantSink()
+    provider=Provider(delay=10)
+    flow=build_flow()
+    req,svc=compose(flow,sink=sink,provider=provider,limits=RunLimits(cleanup_timeout_seconds=.02))
+    task=asyncio.create_task(run_decision(req,flow=flow,services=svc))
+    await provider.entered.wait()
+    task.cancel()
+    try:
+        with pytest.raises(asyncio.CancelledError) as raised:
+            await asyncio.wait_for(task,.3)
+        assert str(uuid.UUID(raised.value.run_id))==raised.value.run_id
+        if hasattr(raised.value,'add_note'):
+            assert any('cleanup unconfirmed' in note for note in raised.value.__notes__)
+        await asyncio.wait_for(sink.suppressed.wait(),.1)
+        assert not sink.terminals and not sink.done.is_set() and provider.closed==0
+    finally:
+        sink.release.set()
+        await asyncio.wait_for(sink.done.wait(),.2)
 
 @pytest.mark.asyncio
 async def test_T29_immutable_parallel_join():

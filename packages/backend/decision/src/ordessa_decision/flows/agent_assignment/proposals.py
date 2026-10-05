@@ -33,7 +33,7 @@ def ready_outcome(proposal, receipt, policy_refs):
     return BusinessOutcome('ready', (proposal,), (receipt,))
 
 
-def check_proposal_basis(proposal, candidate, task, required_checks=()):
+def check_proposal_basis(proposal, candidate, task, required_checks=(), required_validation=()):
     """Decision-time hard facts also remain versioned application preconditions."""
     action = candidate.capability_claims.get('action')
     if proposal.payload.get('action') != action or not proposal.required_validation_obligations:
@@ -52,9 +52,21 @@ def check_proposal_basis(proposal, candidate, task, required_checks=()):
     if not task_conditions:
         raise ContractError('proposal_basis_invalid')
 
+    if len({c.condition_id for c in proposal.preconditions}) != len(proposal.preconditions):
+        raise ContractError('duplicate_precondition')
+    for required in required_validation:
+        covered=any(o.requirement=='must' and o.subject_ref==source.subject_ref
+            and o.validator_kind==required['validator_kind']
+            and o.version_constraint==required['version_constraint']
+            for o in proposal.required_validation_obligations)
+        if not covered:
+            raise ContractError('mandatory_semantic_obligation_missing')
     conditions={c.condition_id:c for c in proposal.preconditions if c.requirement=='must'}
     for key in required_checks:
         check=candidate.capability_claims['hard_checks'][key]
         condition=conditions.get(key)
-        if condition is None or condition.expected_version!=check['source_version'] or not condition.checker_id:
+        subject=ExternalRef.from_dict(check['subject_ref'])
+        if (condition is None or condition.expected_version!=check['source_version']
+                or condition.subject_ref!=subject or condition.checker_id!=check['checker_id']
+                or condition.checker_version!=check['checker_version']):
             raise ContractError('proposal_precondition_missing')

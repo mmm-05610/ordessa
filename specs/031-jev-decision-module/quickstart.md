@@ -19,3 +19,13 @@ node /home/maoqh/projects/ordessa/specs/031-jev-decision-module/checks/validate-
 
 目标示例与测试路径见tasks；目前未实现，不给用户伪装成可运行产品命令。
 
+
+## 当前树可直接离线运行
+```bash
+.venv-decision/bin/python packages/backend/decision/checks/offline_acceptance.py
+.venv-decision/bin/python packages/backend/decision/examples/offline_assignment.py
+.venv-decision/bin/python packages/backend/decision/examples/alternate_flow.py
+.venv-decision/bin/python packages/backend/decision/evaluation/prepare.py
+```
+入口串行构建独立 wheel、离线安装基础依赖、对比固定基线、逐场景复验；不发真实模型请求。
+需要已有本树 .venv-decision 和 .decision-tmp/wheels 缓存；缺席时明确失败，不自动下载/读取凭据。

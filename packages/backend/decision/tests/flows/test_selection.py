@@ -21,7 +21,8 @@ def task(): return TaskBrief('task','v1','review',acceptance_criteria=('clear fi
 
 def candidate(action='reuse',identity='c', p=None, **overrides):
     p=p or policy(); ref=ExternalRef('test.candidate',{'id':identity})
-    checks={key:{'status':'passed','source_version':'v1','evidence_refs':['evidence:'+key]}
+    checks={key:{'status':'passed','source_version':'v1','evidence_refs':['evidence:'+key],
+        'subject_ref':ref.to_dict(),'checker_id':key,'checker_version':'1'}
         for key in p['required_checks'][action]}
     claims={'action':action,'cost_status':'known','hard_checks':checks}; claims.update(overrides)
     obs=VersionedObservation(identity,ref,'v1',digest('descriptor',claims),
@@ -204,3 +205,100 @@ async def test_T53_page_and_combination_bounds_are_intersection():
     source=DeterministicProposalSource(tuple(RegisteredTemplate(str(i),handler,'new',{'type':'object'}) for i in range(3)),max_combinations=1)
     batch=await source.compose(task(),(),(),{'selection_policy':p},None,ReadContext(object(),'test'))
     assert len(called)==1 and not batch.complete
+
+
+@pytest.mark.parametrize('change',['advisory','missing','wrong_subject','wrong_checker'])
+async def test_T58_required_semantics_cannot_be_downgraded(change):
+    p=policy(); c=candidate('reuse',p=p); d=proposal(c,p=p)
+    o=d.required_validation_obligations[0]
+    if change=='advisory': o=dataclasses.replace(o,requirement='advisory')
+    elif change=='missing':
+        o=dataclasses.replace(o,validator_kind='structural.only')
+    elif change=='wrong_subject': o=dataclasses.replace(o,subject_ref=ExternalRef('unrelated',{'id':'other'}))
+    else: o=dataclasses.replace(o,version_constraint='other')
+    d=dataclasses.replace(d,required_validation_obligations=(o,))
+    with pytest.raises(ContractError,match='proposal_basis_invalid'):
+        await decide_assignment(task(),Context(p,(c,),proposals=(d,)),p)
+
+
+@pytest.mark.parametrize('change',['subject','checker_id','checker_version','duplicate'])
+async def test_T58_check_identity_and_duplicate_conditions(change):
+    p=policy(); c=candidate('reuse',p=p); d=proposal(c,p=p)
+    conditions=list(d.preconditions); index=next(i for i,v in enumerate(conditions) if v.condition_id=='availability')
+    old=conditions[index]
+    if change=='subject': conditions[index]=dataclasses.replace(old,subject_ref=ExternalRef('other',{'id':'unrelated'}))
+    elif change=='checker_id': conditions[index]=dataclasses.replace(old,checker_id='unrelated')
+    elif change=='checker_version': conditions[index]=dataclasses.replace(old,checker_version='unrelated')
+    else:
+        conditions.append(old)
+        with pytest.raises(ContractError,match='duplicate_precondition'):
+            dataclasses.replace(d,preconditions=tuple(conditions))
+        return
+    d=dataclasses.replace(d,preconditions=tuple(conditions))
+    with pytest.raises(ContractError,match='proposal_basis_invalid'):
+        await decide_assignment(task(),Context(p,(c,),proposals=(d,)),p)
+
+
+async def test_T50_expired_current_observation_rejected_before_model():
+    p=policy(); c=candidate('reuse',p=p)
+    c=dataclasses.replace(c,observation=dataclasses.replace(c.observation,valid_until='2000-01-01T00:00:00Z'))
+    ctx=Context(p,(c,))
+    out=await decide_assignment(task(),ctx,p)
+    assert out.disposition=='clarify' and not ctx.compose_calls and not ctx.model_calls
+
+
+async def test_T50_expiry_rechecked_after_composition_and_owner_validation(monkeypatch):
+    import ordessa_decision.flows.agent_assignment.selection as selection
+    from datetime import datetime as NativeDatetime,timezone
+    class Clock(NativeDatetime):
+        expired=False
+        @classmethod
+        def now(cls,tz=None):
+            return NativeDatetime(2099 if cls.expired else 2026,1,1,tzinfo=timezone.utc)
+    monkeypatch.setattr(selection,'datetime',Clock)
+    p=policy(); c=candidate('reuse',p=p)
+    c=dataclasses.replace(c,observation=dataclasses.replace(c.observation,valid_until='2098-01-01T00:00:00Z'))
+    def validator(d,b):
+        Clock.expired=True
+        return receipt(d)
+    ctx=Context(p,(c,),validator=validator)
+    out=await decide_assignment(task(),ctx,p)
+    assert out.disposition=='clarify' and out.issues[0]['code']=='candidate_evidence_expired'
+    Clock.expired=False; ctx=Context(p,(c,))
+    class Composer:
+        async def compose(self,*args):
+            Clock.expired=True
+            return ProposalCandidateBatch((proposal(c,p=p),),True)
+    ctx.services.proposal_source=Composer()
+    out=await decide_assignment(task(),ctx,p)
+    assert out.disposition=='clarify' and not ctx.model_calls
+
+
+async def test_T67_schema_enum_distinguishes_boolean_and_number():
+    assert check_schema(True,{'type':'boolean','enum':[1]})=='invalid'
+    assert check_schema(1,{'type':'number','enum':[True]})=='invalid'
+    assert check_schema(1,{'type':'number','enum':[1.0]})=='valid'
+    schema={'type':'object','enum':[{'value':True}]}
+    assert check_schema({'value':1},schema)=='invalid'
+
+
+async def test_T58_read_observations_bound_into_source_progress_and_validator():
+    p=policy(); c=candidate('reuse',p=p); ctx=Context(p,(c,)); refs=(c.observation,)
+    seen={}
+    class Candidates:
+        async def list_candidates(self,t,observations,*args,**kwargs):
+            seen['source']=observations
+            return CandidateBatch((c,),True)
+    class Validator:
+        async def validate(self,d,b,*args):
+            seen['basis']=b
+            return receipt(d)
+    ctx.services.candidate_source=Candidates(); ctx.services.validator=Validator()
+    first=await assignment_round(task(),ctx,p,observation_refs=refs)
+    second=await assignment_round(task(),ctx,p,observation_refs=())
+    assert seen['source']==()
+    assert first.progress_digest!=second.progress_digest
+    assert first.outcome.disposition=='ready'
+    await assignment_round(task(),ctx,p,observation_refs=refs)
+    assert seen['source']==refs
+    assert seen['basis']['read_observations']==freeze(plain(refs))

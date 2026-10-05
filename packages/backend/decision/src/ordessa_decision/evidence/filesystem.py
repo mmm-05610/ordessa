@@ -86,10 +86,10 @@ class FileEvidenceReader:
             alive = False
             try: fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError: alive = True
-            data = _read(directory, 'events.jsonl', self.max_events*self.max_record_bytes)
+            data = _read(directory, 'events.jsonl', (self.max_events+1)*(self.max_record_bytes+1))
             if not data.endswith(b'\n'): raise EvidenceError('evidence_truncated')
             lines = data.splitlines()
-            if not lines or len(lines)>self.max_events: raise EvidenceError('evidence_limit')
+            if not lines or len(lines)>self.max_events+1: raise EvidenceError('evidence_limit')
             events, previous = [], None
             for seq,line in enumerate(lines, 1):
                 item = plain(decode(line, max_bytes=self.max_record_bytes))
@@ -98,16 +98,27 @@ class FileEvidenceReader:
                     raise EvidenceError('evidence_corrupt')
                 events.append(item); previous = item['digest']
             if events[0]['payload'].get('type') != 'run.started': raise EvidenceError('evidence_started')
+            commits = [e for e in events if e['payload'].get('type')=='terminal.commit']
+            if commits and (len(commits)!=1 or commits[0] is not events[-1]):
+                raise EvidenceError('evidence_commit_corrupt')
             committed = None
             try:
                 raw = plain(decode(_read(directory, 'terminal.json', self.max_record_bytes), max_bytes=self.max_record_bytes))
                 safe, td = terminal(raw['terminal'])
-                if (raw['expected_last_seq'] != len(events) or raw['last_digest'] != previous
+                # The completion receipt is appended only after the terminal's
+                # rename AND directory fsync. A visible rename is not a commit.
+                if alive or not commits: return {'status':'unknown'}
+                commit = commits[0]
+                if (raw['expected_last_seq'] != len(events)-1
+                        or raw['last_digest'] != commit['prev_digest']
                         or raw['terminal_digest'] != td or safe.get('run_id') != run_id
-                        or raw['digest'] != digest('event', {k:v for k,v in raw.items() if k!='digest'})):
+                        or raw['digest'] != digest('event', {k:v for k,v in raw.items() if k!='digest'})
+                        or commit['payload'].get('result_digest') != td
+                        or commit['payload'].get('terminal_record_digest') != raw['digest']):
                     raise EvidenceError('evidence_terminal_corrupt')
                 committed = safe
-            except FileNotFoundError: pass
+            except FileNotFoundError:
+                if commits: return {'status':'unknown'}
             return projection(events, committed, alive=alive)
         except FileNotFoundError: return {'status':'not_found' if directory is None else 'unknown'}
         except (EvidenceError, KeyError, TypeError, ValueError): return {'status':'unknown'}
@@ -148,9 +159,13 @@ class FileEvidenceSink(FileEvidenceReader):
             raise EvidenceError('evidence_start_failed') from None
 
     async def append_durable(self, event):
+        if event.get('type',event.get('event')) == 'terminal.commit': raise EvidenceError('evidence_reserved_event')
+        return self._append(event)
+
+    def _append(self, event, *, completion=False):
         writer = self._writers.get(event.get('run_id'))
         if writer is None or writer['poisoned']: raise EvidenceError('evidence_writer')
-        if writer['seq'] >= self.max_events: raise EvidenceError('evidence_limit')
+        if writer['seq'] >= self.max_events+int(completion): raise EvidenceError('evidence_limit')
         item = record(event, writer['seq']+1, writer['digest'], self.max_record_bytes)
         try: _write(writer['log'], canonical(item, max_bytes=self.max_record_bytes)+b'\n')
         except BaseException:
@@ -180,6 +195,8 @@ class FileEvidenceSink(FileEvidenceReader):
             os.close(fd); fd = None
             os.rename('terminal.tmp', 'terminal.json', src_dir_fd=writer['dir'], dst_dir_fd=writer['dir'])
             os.fsync(writer['dir'])
+            self._append({'type':'terminal.commit','run_id':run_id,'result_digest':td,
+                          'terminal_record_digest':payload['digest']}, completion=True)
         except BaseException:
             writer['poisoned'] = True
             raise EvidenceError('evidence_terminal_unknown') from None

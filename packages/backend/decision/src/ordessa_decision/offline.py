@@ -40,7 +40,7 @@ def offline_case(*, alternate=False, action='continue', unclear=False, limits=No
         boundaries=() if unclear else ('mainAgentHandlingAllowed', 'read_only'),acceptance_criteria=() if unclear else ('One report with source evidence.',))
     request=DecisionRequest('offline-request',task,flow.ref,limits or RunLimits())
     ref=ExternalRef('controlled-unit',{'id':'unit-1','revision':'1'})
-    checks={k:{'status':'passed','source_version':'1','evidence_refs':['controlled-owner-fact']} for k in policy['selection']['required_checks'][action]}
+    checks={k:{'status':'passed','source_version':'1','evidence_refs':['controlled-owner-fact'],'subject_ref':ref.to_dict(),'checker_id':k,'checker_version':'1'} for k in policy['selection']['required_checks'][action]}
     claims={'action':action,'cost_status':'known','hard_checks':checks}
     obs=VersionedObservation('controlled-observation',ref,'1',digest('descriptor',claims),datetime.now(timezone.utc).isoformat(),{},'current',evidence_refs=('controlled-observation',))
     candidate=CandidateOffer(ref,'unit',obs,claims)

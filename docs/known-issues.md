@@ -141,3 +141,11 @@ Agent Tools后续基础快照187P exit0：DirectoryBinding与同journal具名Ope
 Harness全量 `python -m pytest plugins/harness -q`：1031 passed / 3 skipped / **4 failed**，退出1。四个失败均为029遗留继承红、非030批次引入：`tests/install/test_acp_schema_drift_target.py` 2项（ACP schema drift）、`tests/install/test_packaging_boundaries.py::test_the_run_chain_declares_no_byte_ceiling_of_its_own`（native-artifact-policy.mjs 字节上限）、`tests/test_native_evidence_boundaries.py::test_api_dto_modules_stay_host_and_implementation_free`（029的command_discovery.py导入hashlib越界）。保留断言不skip不报绿。products/agent-tools 全量 402 passed / 0 failed（其后安全修复批次 native_clients 子集 146 passed）。
 
 030十家交付为 CODE_READY（适配实现/协议验证）＋pi一家L2 partial；真实模型0、第三方安装0。管理绑定（节点/原生session reservation/InputAttempt/transport fence）依赖阻塞（029 AT-009/010/011未交付），未另造core/ledger绕开；不发布runtimeReady。安全审查遗留已知限制3项（kimi replay围栏窗口、wait关联校验、启动pin声明残留）登记于 docs/implementation/agent-tools/night-harness-expansion/evidence/N012-safety-review.md。
+
+## Optional decision module (031, 2026-10-05)
+
+- Scoped offline acceptance: 67 scenarios and 209 tests passed; T60 real Jev quality NOT_RUN pending separate model/cost/credential authorization. Fake HTTP is protocol evidence only.
+- Public Agent pure-read seam is additive and opt-in. Existing Pi/Codex/Claude families remain unsupported for these new configuration reads; temporary real-core tests use a fake owner and perform zero effects. JD009 remains PARTIAL for family capability.
+- Targeted 40 baseline/current core IDs match. Full inherited Server/Harness red suites were not rerun or removed; original entries above remain authoritative.
+- Python runtime uses >=3.10-compatible cooperative cancellation, tested on 3.12.14 only; blocking or cancellation-resistant host code cannot be hard-killed. File durability is verified on local POSIX with subprocess crash windows, not power loss or remote filesystems.
+- Full scene receipts and limitations: specs/031-jev-decision-module/evidence/implementation-20261005/README.md.

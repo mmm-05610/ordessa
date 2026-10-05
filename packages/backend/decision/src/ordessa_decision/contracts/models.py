@@ -231,6 +231,7 @@ class ProposalDraft(DTO):
         object.__setattr__(self,'preconditions',tuple(self.preconditions))
         object.__setattr__(self,'required_validation_obligations',tuple(self.required_validation_obligations))
         if any(not isinstance(v,Precondition) for v in self.preconditions) or any(not isinstance(v,ValidationObligation) for v in self.required_validation_obligations): raise ContractError('proposal_types')
+        if len({v.condition_id for v in self.preconditions})!=len(self.preconditions): raise ContractError('duplicate_precondition')
         if len({v.obligation_id for v in self.required_validation_obligations})!=len(self.required_validation_obligations): raise ContractError('duplicate_obligation')
         canonical(self)
     @property

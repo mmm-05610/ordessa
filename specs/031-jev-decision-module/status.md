@@ -59,7 +59,7 @@ liveJevValidated NOT_RUN; native effects OUT_OF_SCOPE.
 
 ## P2–P4 checkpoint
 
-Main serial verification: runtime 23, evidence 17, provider 36, task/selection 44;
+Main serial verification: runtime 23, evidence 17, provider 35, task/selection 44;
 public native seam initial 4, strengthened counterexamples 14; current vertical
 examples and actual graph+SDK/durable sink verification included in checkpoint-tests.txt.
 Subagent reports were not accepted as test evidence; main reran their suites.
@@ -81,3 +81,20 @@ per-ID JUnit comparison will be recorded at final acceptance. Initial baseline c
 runtime-compat guard resource and failed 2 tests; populated tracked baseline source and reran,
 not skip or assertion deletion. Full server/Harness inherited-red suites are not covered by
 this narrow regression; registered baseline failures remain inherited and unverified here.
+
+## 最终离线检查点
+
+JD001–JD008 OFFLINE_VERIFIED；JD009 PARTIAL（真实家族配置能力未声明支持）；JD010 NOT_RUN。
+codeReady 已验证；offlineVerified 67 个场景逐项通过；coreReadOnlyVerified 限真实临时核心+fake owner，原生效果 0。
+liveJevValidated NOT_RUN；native effects OUT_OF_SCOPE；不得宣布全部完成。
+
+最终完整套件 209 passed，固定基线/当前 40 个核心定向 ID 一致。
+[逐场景证据与限制](evidence/implementation-20261005/README.md) 和 [机器回执](evidence/implementation-20261005/receipt.json)。
+SDK fake HTTP、6 个真实子进程崩溃窗、ACK 未知/取消/预算/必须义务缺失反例都分别记录。
+最终证据提交新增 journal terminal.commit 持久确认；rename 后目录 fsync 失败不能经重开 reader 升格为 committed。
+
+真实评测准备：9 个脱敏标签样本、54 个 rubric 问题预编译，候选模型 jev-1.13.0；
+提出但未授权的上限 64 attempts/300 seconds，费用未知，需单独确定成本额度和凭据来源。
+没有真实模型质量成绩；不存在授权超时自动调用或凭据环境 fallback。
+剩余门：真实 Jev 请求/凭据读取须另行授权；真实家族/Harness 能力不由本模块凭 fake owner 宣称完成。
+完整 Server/Harness 继承失败集未重跑。现有服务、用户数据和其他工作树未触碰。

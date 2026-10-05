@@ -141,7 +141,7 @@ async def main():
     await sink.start({'run_id':run_id,'manifest_digest':digest('runmanifest', {})})
     if window != 'started':
         await sink.append_durable({'type':'call.intent','run_id':run_id,'call_id':'call.1'})
-    if window in ('response','terminal_staged','terminal_committed'):
+    if window in ('response','terminal_staged','terminal_renamed','terminal_committed'):
         await sink.append_durable({'type':'call.response','run_id':run_id,'call_id':'call.1'})
     if window == 'terminal_staged':
         original = os.rename
@@ -150,7 +150,16 @@ async def main():
             sys.stdin.read(1)
             return original(*args, **kwargs)
         os.rename = pause
-    if window in ('terminal_staged','terminal_committed'):
+    if window == 'terminal_renamed':
+        import stat
+        original_fsync = os.fsync
+        def pause_fsync(fd):
+            if stat.S_ISDIR(os.fstat(fd).st_mode) and os.path.exists(os.path.join(root,run_id,'terminal.json')):
+                print('ready',flush=True)
+                sys.stdin.read(1)
+            return original_fsync(fd)
+        os.fsync = pause_fsync
+    if window in ('terminal_staged','terminal_renamed','terminal_committed'):
         result = {'run_id':run_id,'status':'failed','error_code':'controlled_failure'}
         await sink.finish({'run_id':run_id,'status':'failed','result':result,'result_digest':digest('result', result)})
     print('ready', flush=True)
@@ -158,8 +167,8 @@ async def main():
 asyncio.run(main())
 '''
 
-@pytest.mark.parametrize('window', ['started','intent','response','terminal_staged','terminal_committed'])
-def test_t22_t24_t27_actual_process_kill_five_windows(store, window):
+@pytest.mark.parametrize('window', ['started','intent','response','terminal_staged','terminal_renamed','terminal_committed'])
+def test_t22_t24_t27_actual_process_kill_commit_windows(store, window):
     root, context, sink = store
     run_id = str(uuid.uuid4())
     child = subprocess.Popen([sys.executable, '-u', '-c', _CHILD, str(root), run_id, window],
@@ -172,18 +181,20 @@ def test_t22_t24_t27_actual_process_kill_five_windows(store, window):
             assert selector.select(10), 'child did not reach controlled crash window'
         assert child.stdout.readline().strip() == 'ready'
         live = run(sink.read(run_id, context))
-        assert live['status'] == ('completed' if window=='terminal_committed' else 'running')
+        assert live['status'] == ('completed' if window=='terminal_committed' else
+                                 'unknown' if window=='terminal_renamed' else 'running')
         child.kill(); child.wait(timeout=10)
         assert child.returncode < 0
         dead = run(sink.read(run_id, context))
-        assert dead['status'] == ('completed' if window=='terminal_committed' else 'interrupted')
+        assert dead['status'] == ('completed' if window=='terminal_committed' else
+                                 'unknown' if window=='terminal_renamed' else 'interrupted')
         if window=='intent': assert dead['call_evidence'] == 'unknown'
         if window=='terminal_committed': assert dead['terminal']['status'] == 'failed'
     finally:
         if child.poll() is None: child.kill(); child.wait(timeout=10)
         for pipe in (child.stdin, child.stdout, child.stderr): pipe.close()
 
-def test_t25_terminal_ack_lost_after_rename_query_preserves_committed(store, monkeypatch):
+def test_t25_terminal_directory_fsync_failure_remains_unknown(store, monkeypatch):
     root, context, sink = store
     run_id = str(uuid.uuid4())
     run(sink.start(meta(run_id)))
@@ -191,10 +202,90 @@ def test_t25_terminal_ack_lost_after_rename_query_preserves_committed(store, mon
     original = os.fsync
     def lose_ack(fd):
         if fd == writer['dir'] and (root/run_id/'terminal.json').exists():
-            raise OSError('controlled acknowledgement failure')
+            raise OSError('controlled directory fsync failure')
         return original(fd)
     monkeypatch.setattr(os, 'fsync', lose_ack)
     with pytest.raises(EvidenceError, match='evidence_terminal_unknown'): run(sink.finish(terminal(run_id)))
     monkeypatch.setattr(os, 'fsync', original)
-    assert run(sink.read(run_id, context))['status'] == 'completed'
+    assert run(sink.read(run_id, context))['status'] == 'unknown'
     with pytest.raises(EvidenceError): run(sink.finish(terminal(run_id, 'cancelled')))
+    run(sink.close())
+    reader = FileEvidenceReader(root,read_context=context)
+    try: assert run(reader.read(run_id,context))['status'] == 'unknown'
+    finally: run(reader.close())
+
+def test_t25_ack_lost_after_successful_fsync_and_release_preserves_committed(store,monkeypatch):
+    _,context,sink = store
+    run_id = str(uuid.uuid4()); run(sink.start(meta(run_id)))
+    original = sink.finish
+    async def lose_ack(value):
+        await original(value)
+        raise EvidenceError('controlled_ack_lost')
+    monkeypatch.setattr(sink,'finish',lose_ack)
+    with pytest.raises(EvidenceError,match='controlled_ack_lost'): run(sink.finish(terminal(run_id)))
+    assert run_id not in sink._writers
+    result = run(sink.read(run_id,context))
+    assert result['status']=='completed' and result['events'][-1]['payload']['type']=='terminal.commit'
+    monkeypatch.setattr(sink,'finish',original)
+    assert run(sink.finish(terminal(run_id))).durability == 'durable'
+
+def test_t25_completion_receipt_fsync_failure_live_writer_unknown(store,monkeypatch):
+    _,context,sink = store
+    run_id = str(uuid.uuid4()); run(sink.start(meta(run_id)))
+    writer = sink._writers[run_id]
+    original = os.fsync
+    def fail_commit(fd):
+        if fd==writer['log']: raise OSError('controlled receipt fsync failure')
+        return original(fd)
+    monkeypatch.setattr(os,'fsync',fail_commit)
+    with pytest.raises(EvidenceError,match='evidence_terminal_unknown'): run(sink.finish(terminal(run_id)))
+    assert run(sink.read(run_id,context))['status']=='unknown'
+    with pytest.raises(EvidenceError): run(sink.finish(terminal(run_id,'cancelled')))
+
+@pytest.mark.parametrize('credential',['apiKey','api-key','password','token','client_secret','privateKey'])
+def test_t31_normalized_plaintext_credentials_never_recorded(store,credential):
+    root,context,sink = store
+    run_id = str(uuid.uuid4()); run(sink.start(meta(run_id)))
+    run(sink.append_durable({'type':'call.intent','run_id':run_id,'call_id':'call.1',
+        'evidence_refs':[{'environmentNamespace':'test',credential:'sk-SECRET'}]}))
+    assert b'sk-SECRET' not in (root/run_id/'events.jsonl').read_bytes()
+    result = {'run_id':run_id,'status':'failed','error_code':'test',
+              'configuration':{credential:'sk-SECRET'}}
+    with pytest.raises(EvidenceError,match='evidence_terminal_sensitive'):
+        run(sink.finish({'run_id':run_id,'status':'failed','result':result,'result_digest':digest('result',result)}))
+    assert not (root/run_id/'terminal.json').exists()
+
+def test_t31_credential_secret_reference_is_preserved_exactly(store):
+    _,context,sink = store
+    run_id = str(uuid.uuid4()); run(sink.start(meta(run_id)))
+    secret_ref = {'secretRef':{'ref':'credential.test','revision':'1','owner_namespace':'test',
+                               'access_purpose':'decision.read'}}
+    result = {'run_id':run_id,'status':'failed','error_code':'test',
+              'configuration':{'apiKey':secret_ref,'password':secret_ref}}
+    value = {'run_id':run_id,'status':'failed','result':result,'result_digest':digest('result',result)}
+    run(sink.finish(value))
+    assert run(sink.read(run_id,context))['terminal'] == value
+
+def test_t25_reserved_completion_receipt_cannot_be_supplied_by_caller(store):
+    _,context,sink = store
+    run_id = str(uuid.uuid4()); run(sink.start(meta(run_id)))
+    with pytest.raises(EvidenceError,match='evidence_reserved_event'):
+        run(sink.append_durable({'type':'terminal.commit','run_id':run_id}))
+    assert run(sink.read(run_id,context))['status']=='running'
+
+def test_t25_completion_receipt_has_reserved_capacity(tmp_path):
+    tmp_path.chmod(0o700)
+    context=ReadContext(object(),'test.scope')
+    sink=FileEvidenceSink(tmp_path,read_context=context,max_events=1)
+    try:
+        run_id=str(uuid.uuid4()); run(sink.start(meta(run_id)))
+        ack=run(sink.finish(terminal(run_id)))
+        assert ack.seq==2 and run(sink.read(run_id,context))['status']=='completed'
+    finally: run(sink.close())
+
+def test_t32_torn_completion_receipt_never_recovers_success(store):
+    root,context,sink=store
+    run_id=str(uuid.uuid4()); run(sink.start(meta(run_id))); run(sink.finish(terminal(run_id)))
+    log=root/run_id/'events.jsonl'
+    log.write_bytes(log.read_bytes()[:-4])
+    assert run(sink.read(run_id,context))['status']=='unknown'

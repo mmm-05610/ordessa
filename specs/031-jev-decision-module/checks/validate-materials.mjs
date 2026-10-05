@@ -9,7 +9,7 @@ export function loadSnapshot(root) {
       const p = path.join(dir, e.name);
       if (e.isSymbolicLink()) throw new Error('symlink in material tree');
       if (e.isDirectory()) walk(p);
-      else if (/\.(md|json|mjs)$/.test(e.name)) files[path.relative(root, p).split(path.sep).join('/')] = fs.readFileSync(p, 'utf8');
+      else if (/\.(md|json|mjs|txt|xml)$/.test(e.name)) files[path.relative(root, p).split(path.sep).join('/')] = fs.readFileSync(p, 'utf8');
     }
   }
   walk(root);

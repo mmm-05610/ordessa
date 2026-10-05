@@ -2,7 +2,7 @@ import asyncio
 import time
 from dataclasses import dataclass
 from ordessa_decision.contracts import freeze, plain
-from .errors import BudgetExhausted, ExplicitCancellation
+from .errors import BudgetExhausted, ExplicitCancellation, EvidenceUnknown
 
 @dataclass(frozen=True)
 class NodeServices:
@@ -28,11 +28,14 @@ class RunContext:
         self.node_entries = self.model_attempts = self.repair_rounds = 0
         self.cancelled = False
         self.exhausted_dimension = None
+        self.evidence_unknown = False
         self.lock = asyncio.Lock()
 
     def check(self):
         if self.cancelled:
             raise ExplicitCancellation()
+        if self.evidence_unknown:
+            raise EvidenceUnknown(self.run_id)
         if self.exhausted_dimension:
             raise BudgetExhausted(self.exhausted_dimension)
         if time.monotonic() >= self.deadline:
@@ -41,6 +44,11 @@ class RunContext:
     def exhaust(self, dimension):
         self.exhausted_dimension = self.exhausted_dimension or dimension
         raise BudgetExhausted(self.exhausted_dimension)
+
+    def mark_evidence_unknown(self):
+        """Uncertain evidence cannot be caught and converted into completion."""
+        self.evidence_unknown = True
+        raise EvidenceUnknown(self.run_id) from None
 
     async def enter_node(self, node_id):
         if not isinstance(node_id, str) or not node_id:
