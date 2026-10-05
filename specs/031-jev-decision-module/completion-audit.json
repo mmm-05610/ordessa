@@ -607,5 +607,20 @@
     "goal_status": "active",
     "evidence": "evidence/codex-pure-read-20261005/README.md",
     "next_scope_plan": "harness-smoke-next.md"
+  },
+  "codex_effects_continuation": {
+    "tested_head_before_checkpoint": "44c7bbf29c24c907550106a6b24014c6735cd098",
+    "tested_source_digest": "sha256:d3bf63ed8e629da341d32699416d3176afae78ebd0be3956295048372ffbc44d",
+    "decision_suite_passed": 359,
+    "codex_family_passed": 147,
+    "offline_scenes_passed": 67,
+    "baseline_core_passed": 57,
+    "current_core_passed": 57,
+    "additional_live_requests": 0,
+    "real_native_harness": "NOT_RUN",
+    "evidence": "evidence/codex-effects-20261005/README.md",
+    "all_work_complete": false,
+    "goal_status": "active",
+    "pending_authorization": "existing finite native Harness smoke question"
   }
 }

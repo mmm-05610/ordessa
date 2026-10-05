@@ -243,6 +243,6 @@ python packages/backend/decision/examples/alternate_flow.py
 
 
 ## 当前实施状态
-JD001–JD008 在记录的离线/临时核心范围验证；JD009 已实现并逐场景复验，但真实家族能力缺席，状态 PARTIAL；JD010 已授权并运行真实 Jev 合成评测，质量与容量协议门 PARTIAL；最新详见 evidence/jev-domain-v2-20261005/README.md，历史超时保留。勾选表示本项授权实施和离线验证完成，不表示真实 Jev 或原生效果完成。
+JD001–JD008 在记录的离线/临时核心范围验证；JD009 已实现并逐场景复验，批准扩展后的Codex仅有原owner声明编译纯读能力，原生应用仍unknown、其他家族unsupported，状态 PARTIAL；JD010 已授权并运行真实 Jev 合成评测，质量与容量协议门 PARTIAL；最新详见 status.md 与 evidence/codex-effects-20261005/README.md，历史模型失败及超时保留。勾选表示本项授权实施和离线验证完成，不表示真实 Jev 或原生效果完成。
 
 实施交付审计见 [completion-audit](completion-audit.md)。40个JD子项已交付；JD009/JD010要求的缺席/未达标PARTIAL结果仍保留，未提升产品就绪层级。

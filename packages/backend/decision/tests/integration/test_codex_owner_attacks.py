@@ -5,6 +5,12 @@ discovery id assigned before admission. Its pure-read ports are never called;
 the fixture exists only to attack the core's source generation/version checks.
 """
 from dataclasses import replace
+from contextlib import contextmanager
+import builtins
+import io
+import os
+import socket
+import subprocess
 
 import pytest
 
@@ -229,3 +235,99 @@ def test_actual_codex_owner_replaced_after_real_assessment_before_core_return(se
     assert_real_compile_receipt(value,owner._test_assess_results[0])
     assert replacement._test_assess_calls==[]
     assert api.providers.describe(DEF)['providerRef']!=old
+
+
+@contextmanager
+def observe_effect_attempts(monkeypatch):
+    """Python effect edges only; SQLite bytes are independently compared below.
+
+    Counters survive swallowed guard errors, so an invalid result cannot hide an
+    attempted effect. This is instrumentation, not an OS sandbox claim.
+    """
+    attempts=[]
+    def forbidden(name):
+        def fail(*args,**kwargs):
+            attempts.append(name)
+            raise AssertionError('effect attempted: '+name)
+        return fail
+    with monkeypatch.context() as guard:
+        for module in (builtins,io):
+            original=module.open
+            def guarded_open(*args,_original=original,**kwargs):
+                mode=kwargs.get('mode',args[1] if len(args)>1 else 'r')
+                if any(flag in mode for flag in 'wax+'):
+                    return forbidden('file.write')()
+                return _original(*args,**kwargs)
+            guard.setattr(module,'open',guarded_open)
+        original_os_open=os.open
+        def guarded_os_open(path,flags,*args,**kwargs):
+            if flags & (os.O_WRONLY|os.O_RDWR|os.O_CREAT|os.O_TRUNC|os.O_APPEND):
+                return forbidden('os.open.write')()
+            return original_os_open(path,flags,*args,**kwargs)
+        guard.setattr(os,'open',guarded_os_open)
+        for name in ('unlink','remove','rename','replace','mkdir','makedirs','rmdir',
+                     'chmod','chown','truncate','write','pwrite','writev','ftruncate',
+                     'link','symlink','system','posix_spawn',
+                     'posix_spawnp','fork','execv','execve','execvp','execvpe'):
+            if hasattr(os,name): guard.setattr(os,name,forbidden('os.'+name))
+        guard.setattr(subprocess,'Popen',forbidden('subprocess.Popen'))
+        for name in ('connect','connect_ex','sendto','send','sendall'):
+            guard.setattr(socket.socket,name,forbidden('socket.'+name))
+        yield attempts
+
+
+def tree_bytes(root):
+    return {str(path.relative_to(root)):path.read_bytes() if path.is_file() else None
+            for path in root.rglob('*')}
+
+
+@pytest.mark.parametrize('status',['valid','invalid','unverifiable'])
+def test_T57_T62_actual_codex_public_reads_leave_sqlite_and_files_unchanged(setup,tmp_path,monkeypatch,status):
+    _,_,owner,api,_=setup
+    value=proposal(api,sources=(make_profile(api),))
+    if status=='invalid':
+        data={'declarations':[dict(value.proposal_data['declarations'][0],payload={'unknown':'field'})]}
+        value=replace(value,proposal_data=data)
+    elif status=='unverifiable':
+        value=replace(value,required_obligations=())
+    before=tree_bytes(tmp_path)
+    with observe_effect_attempts(monkeypatch) as attempts:
+        offers=api.providers.describe_configuration_offers(DEF)
+        result=api.providers.assess_configuration_proposal(value)
+    assert offers.complete is False and result.status==status
+    assert attempts==[]
+    after=tree_bytes(tmp_path)
+    assert after.keys()==before.keys()
+    for name,prior in before.items():
+        if name=='core.sqlite-shm':
+            # WAL readers may update aReadMark[0..4] in the wal-index header.
+            assert len(after[name])==len(prior)
+            changed={i for i,(a,b) in enumerate(zip(prior,after[name])) if a!=b}
+            assert changed<=set(range(100,120)), changed
+        else:
+            assert after[name]==prior, name
+    assert owner._channels=={} and owner._configuration_waiters=={}
+
+
+@pytest.mark.parametrize('effect',['write','fd_write','process','network'])
+def test_T57_T62_effect_observer_records_attempt_even_when_compiler_swallows_guard(setup,tmp_path,monkeypatch,effect):
+    _,_,owner,api,_=setup
+    value=proposal(api)
+    original=owner._compile_change
+    def faulty_compiler(change):
+        try:
+            if effect=='write': (tmp_path/'forbidden.txt').write_text('forbidden')
+            elif effect=='fd_write': os.write(-1,b'forbidden')
+            elif effect=='process': subprocess.Popen(['never-start-this-process'])
+            else:
+                with socket.socket() as connection: connection.connect(('127.0.0.1',1))
+        except AssertionError:
+            pass
+        return original(change)
+    monkeypatch.setattr(owner,'_compile_change',faulty_compiler)
+    before=tree_bytes(tmp_path)
+    with observe_effect_attempts(monkeypatch) as attempts:
+        result=api.providers.assess_configuration_proposal(value)
+    assert result.status=='valid'
+    assert attempts==[{'write':'file.write','fd_write':'os.write','process':'subprocess.Popen','network':'socket.connect'}[effect]]
+    assert tree_bytes(tmp_path)==before

@@ -187,3 +187,9 @@ JD009 交付与离线行为已验证，真实家族 opt-out/unsupported 仍 PART
 新6真实Jev＋实际Codex纯读owner贯穿原图，compile passed、应用mandatory unknown，clarify无payload；无重试/原生效果。归档独立复核question/answer/hash chain/terminal/manifest/source/plan/FlowRef/native input双摘要/义务通过。累计220调用、已报告176303输入／14227输出，历史3次usage未知，费用UNKNOWN。模型质量及协议旧失败、其他继承红／未验证项不关闭。
 
 真实Harness及实际配置应用未授权／未运行。已准备 harness-smoke-next.md 的具体有限协议烟测方案；原目标仍active，all_work_complete=false，不宣布全部完成。
+
+## Codex纯读效果接缝补验
+
+补上实际owner三状态的文件／进程／网络直接监测与四项吞guard故障注入，计数独立于回执，fd写入反例也覆盖。SQLite只读查询变化仅限官方WAL-index读者标记；DB/WAL、目录项、其他文件和SHM其余字节严格相同。初版3F/15P及修订依据保留，不能声称OS级sandbox或任意未监测瞬时效果已证明不存在。
+
+[本批证据](evidence/codex-effects-20261005/README.md)：Decision359P、Codex147P、67场景、基线／当前各57P、独立wheel安装通过，T57/T62逐场景纳入新反例。真实Jev旧归档独立复验通过；本批无新模型调用，累计220与费用UNKNOWN不变。待答复原有限Harness烟测授权；目标active，all_work_complete=false。
