@@ -632,3 +632,11 @@ production授权/材料/SecretRef/capture/receipt/effect/Session owner、三家n
 完整命令与计数见[evidence/agent-unit-model/retired-native-assembly.md](evidence/agent-unit-model/retired-native-assembly.md)。实现前7P/10F exit1 0.35s；初36P exit0 0.38s；增强import门及原模型语义105P exit0 0.44s，新23项/旧82项。旧ServerPi正向原测试实跑0P/1F exit1 0.11s，因旧统一入口被拒，保留断言未skip/删/改绿；后续需独立消费迁移。产品integration297P exit0 12.21s，测试串行terminal。只读终审确认范围与无参数旁路，七家正控仅原assembly reach，不能冒运行成功。
 
 sidecar与旧C2批量注册仍有路径，独立生产模型/凭据/恢复owner、native全生命周期/tasks/results未完成；全Server/Core本轮未跑，继承三红/ABSENT保持。C-only/M0，无任何未授权操作，费用unknown。依本树AGENTS规则10，另在docs/known-issues.md窄幅登记本次明确旧Server预期冲突；这是必需失败登记，不扩张实现范围或修改工单合同。显式检查点后继续goal，不标AU003_DONE。
+
+### 2026-10-05 AU003 独立三家Server装配／AU002公开注册点（PARTIAL）
+
+前置478643a80a clean；agents completed，主会话唯一共享源码/测试/Git/账本写者，Codex只读接缝与终审。新增三家可选Server wrappers＋server extra，原owner/provider IDs不改；从现有core.binding取唯一EnvironmentId，固定AgentContributionSet经宿主stage/commit，不另Registry/存储/授权/nativeIO。AgentToolsDeployment默认零plugins，显式tuple/v2可选；公共点原exclusive阻第二家，主会话将Server pacthold.contributions设multi-owner、冲突留原CoreRegistry。未并行共享写，必要公共宿主接缝属于AU002串行补齐，不改工单语义。
+
+完整命令/资源/边界见[evidence/agent-unit-model/independent-server-providers.md](evidence/agent-unit-model/independent-server-providers.md)。初3P/4F exit1 0.34s，修point/负例调用位置后6P/1F exit1 0.25s，补隔离/回滚12P/1F exit1 5.04s。真实冷重开generation复用1，保留失败，不改断言假绿。当前暂时在既有root store takeover前typed拒非空provider选择，不冒成功重开；corebinding/源码门26P/1F exit1 0.53s；全产品integration＋fresh无ServerAPI Claude wheel311P/1F exit1 16.87s、0skip，新14原297发行1不累计快照。原fullcold目标断言保留，known-issues登记。
+
+冷持久allocation/fresh seed无既有合同，已写activation-generation-proposal.md并向用户请求初始化边界裁定，未自创counter或修改用户DB。此临时guard只约束本部署，不修其他composition冷代问题。只读终审无新增源码阻断，首轮三家Registry发布是C原型而非可重启生产服务；native P/M、完整owner/lifecycle/旧model/sidecar/tasks仍PARTIAL，M0、资源ABSENT继续。无未授权操作、费用unknown；所有测试terminal，显式纳入新材料和改动检查点，goal继续，不标DONE。

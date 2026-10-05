@@ -95,3 +95,21 @@ Only a validated original receipt acknowledges live IO metadata. Revocation
 while awaiting that receipt prevents replacement writers; late ACK/settled
 events cannot clear unknown. A callback throwing PiCommandError does not supply
 a native receipt. ACK and bare channels remain trusted owner internals.
+
+## Optional Server host binding
+
+`ordessa_harness_pi.server_plugin.PiServerPlugin(provider_factory)` is an explicit
+optional binding to the existing `pacthold.contributions` point. The factory
+receives the host's unique `EnvironmentId` and returns this package's provider
+with matching definition namespace and explicit implementation digest/ports.
+The host supplies owner activation; the wrapper does not install, activate,
+issue authority, create a store or launch a native process. Owner ID remains
+`pi`. Server API imports are lazy and the dependency is in the `server`
+extra; base provider imports and wheel conversion need no Server API.
+
+This proves contribution wiring only. In the optional Agent Tools deployment,
+select wrappers through `AgentToolsDeployment(..., agent_contract_version=
+"agent-assembly/2", provider_plugins=(... ,))`; the default tuple is empty.
+Current deployment refuses provider publication on an existing root because
+durable cold activation generations are not yet composed. Native production
+ports, task readiness and successful cold recovery remain unverified.

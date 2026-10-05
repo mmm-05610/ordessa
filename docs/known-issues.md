@@ -145,3 +145,7 @@ Harness全量 `python -m pytest plugins/harness -q`：1031 passed / 3 skipped / 
 ### AU003 旧 Server 原生装配预期尚未迁移（2026-10-05，Open）
 
 AgentUnit迁移切片在 `ServerProductComposition.native_runtime` 早拒 Pi/Codex/Claude Code（含claude别名、additional/profile/implicitPi），要求独立provider admission。原 `products/server/tests/test_native_profile_composition.py::test_native_product_owns_profile_management_without_claiming_application` 仍要求旧统一Pi正向装配，实际复跑1 failed、exit1、0.11s；保留原断言，不skip/删除或报告全Server绿。需将消费者迁到独立provider并保留其原Profile/Skills/配置验证。sidecar入口和旧C2三家model批量贡献仍未完全退役，独立生产模型/凭据/restart-resume owner尚未完整承接。详细范围与其他105P/297P证据见 `docs/implementation/agent-tools/evidence/agent-unit-model/retired-native-assembly.md`；窄门通过不能替代全产品验收。未调用模型或操作用户服务/数据。
+
+### AU003 独立提供者冷代次未持久分配（2026-10-05，Open）
+
+新三家Server wrappers沿原CoreBinding进入唯一Registry，首轮受控装配可运行，但Environment激活代次仅在实例dict；冷重开同owner复用generation=1。原 `products/agent-tools/tests/integration/test_independent_server_providers.py::test_three_independent_server_owners_share_registry_and_restart_identity` 失败断言保持。当前AgentToolsDeployment对已有root的非空provider选择typed拒绝，避免在该部署继续复用旧代；其他Server composition仍未由此guard保护。全integration＋fresh发行为311P/1F、exit1、16.87s，不能报全绿/可重启服务。fresh初始化证明与历史缺高水位拒绝提案尚待裁定，见 `docs/implementation/agent-tools/evidence/agent-unit-model/activation-generation-proposal.md`；未自动seed或迁移用户数据。

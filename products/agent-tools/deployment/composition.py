@@ -1,6 +1,8 @@
 """Opt-in Profile service with explicit v2 registry reads using existing Server storage.
 
-No plugins, native providers, ambient credentials or daemon are selected.
+No plugins, native providers, ambient credentials or daemon are selected by default.
+Provider plugins may be explicitly selected through the existing Server host;
+this selection supplies no native authority and cold reactivation is refused.
 The existing Server database closure is reused; it includes sealed historical
 schema support, but no historical Profile/Agent coordinator is activated.
 """
@@ -49,9 +51,14 @@ class _ProfilePolicy:
 
 class AgentToolsDeployment:
     """Service composition whose key capability must be explicitly supplied."""
-    def __init__(self, *, fingerprint_port, agent_contract_version="agent-assembly/1"):
+    def __init__(self, *, fingerprint_port, agent_contract_version="agent-assembly/1", provider_plugins=()):
         if agent_contract_version not in ("agent-assembly/1", "agent-assembly/2"):
             raise GuaranteeUnavailableError("unsupported Agent public contract")
+        if not isinstance(provider_plugins, tuple):
+            raise TypeError("explicit provider plugin tuple required")
+        if provider_plugins and agent_contract_version != "agent-assembly/2":
+            raise GuaranteeUnavailableError("provider selection requires agent-assembly/2")
+        self.provider_plugins = provider_plugins
         self.agent_contract_version = agent_contract_version
         if fingerprint_port is None:
             raise GuaranteeUnavailableError("Agent Tools service requires an explicit protected fingerprint port")
@@ -80,6 +87,11 @@ class AgentToolsDeployment:
                     raise GuaranteeUnavailableError("existing core database is not an Agent Tools deployment")
                 identity = row[0]
                 EnvironmentId(identity)
+        if identity is not None and self.provider_plugins:
+            # Existing Environment cold activation would reuse its in-memory
+            # owner generation. Until durable allocation/bootstrap is composed,
+            # refuse before store takeover or provider publication; never guess.
+            raise GuaranteeUnavailableError("durable provider activation generation unavailable on reopen")
         # Recheck the OS owner proof immediately before permitting SQL marker
         # takeover. No timeout or stale SQL marker grants ownership.
         if ownership_probe() is not True:
@@ -134,7 +146,7 @@ class AgentToolsDeployment:
         from ordessa_server.agent_core_wire import agent_core_methods
         from ordessa_server_product.composition import ServerProductComposition
         from server_plugin_api import ServerPluginSelection
-        selection = ServerPluginSelection(plugins=(), contribution_points=(),
+        selection = ServerPluginSelection(plugins=self.provider_plugins, contribution_points=(),
             owned_environment_factory=self.owned_environment_factory,
             core_method_factory=partial(agent_core_methods, contract_version=self.agent_contract_version))
         # Only the public database closure is selected. default_plugins and

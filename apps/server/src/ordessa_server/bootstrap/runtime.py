@@ -864,7 +864,9 @@ def build_runtime(
         )
         plugin_host.register_contribution_point(
             PACTHOLD_CONTRIBUTIONS_POINT_ID, PACTHOLD_CONTRIBUTIONS_API_VERSION,
-            handler=core_binding)
+            handler=core_binding, exclusive=False)
+        # CoreRegistry owns identity conflicts across independent owners. The
+        # contribution point itself must not exclude a second unrelated plugin.
         for spec in product_points:
             plugin_host.register_contribution_point(
                 spec.point_id, spec.api_version,

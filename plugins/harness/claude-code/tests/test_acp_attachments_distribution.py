@@ -41,7 +41,8 @@ def test_independent_attachment_wheel_without_monolith_product_server_or_sdk(tmp
     program = '''
 import base64, hashlib, importlib.util, json
 assert all(importlib.util.find_spec(name) is None for name in
-    ('ordessa_harness', 'ordessa_agent_tools', 'ordessa_server', 'claude_agent_sdk'))
+    ('ordessa_harness', 'ordessa_agent_tools', 'ordessa_server', 'claude_agent_sdk', 'server_plugin_api'))
+import ordessa_harness_claude_code.server_plugin
 from ordessa_harness_claude_code.acp_attachments import (
     ClaudePreparedAttachment, ClaudeAttachmentRefused, assemble_attachment_blocks,
     CLAUDE_ATTACHMENT_UNSUPPORTED, CLAUDE_ATTACHMENT_HASH_MISMATCH)

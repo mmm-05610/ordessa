@@ -66,3 +66,21 @@ port. Provider capability declarations do not expand. Capture, original claim,
 durable native receipt/effect evidence, first Session association and production
 lease composition remain separate, incomplete work. Tests use controlled
 channels and temporary Python peers, without executing Codex or a model.
+
+## Optional Server host binding
+
+`ordessa_harness_codex.server_plugin.CodexServerPlugin(provider_factory)` is an explicit
+optional binding to the existing `pacthold.contributions` point. The factory
+receives the host's unique `EnvironmentId` and returns this package's provider
+with matching definition namespace and explicit implementation digest/ports.
+The host supplies owner activation; the wrapper does not install, activate,
+issue authority, create a store or launch a native process. Owner ID remains
+`codex`. Server API imports are lazy and the dependency is in the `server`
+extra; base provider imports and wheel conversion need no Server API.
+
+This proves contribution wiring only. In the optional Agent Tools deployment,
+select wrappers through `AgentToolsDeployment(..., agent_contract_version=
+"agent-assembly/2", provider_plugins=(... ,))`; the default tuple is empty.
+Current deployment refuses provider publication on an existing root because
+durable cold activation generations are not yet composed. Native production
+ports, task readiness and successful cold recovery remain unverified.

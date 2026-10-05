@@ -9,6 +9,9 @@ description = "Independent Pi native RPC AgentUnit provider"
 requires-python = ">=3.10"
 dependencies = ["pacthold", "ordessa-harness-transport"]
 
+[project.optional-dependencies]
+server = ["ordessa-server-plugin-api>=0.1.0,<1"]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
