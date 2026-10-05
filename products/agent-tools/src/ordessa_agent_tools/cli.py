@@ -9,7 +9,8 @@ import sys
 import uuid
 
 from .initialization import discover, save_report
-from .client import ClientError, WireClient, load_service, parse_json, core_schema, profile_ref_valid, MAX_BYTES
+from .providers import definition_ref_valid, provider_result_valid
+from .client import ClientError, WireClient, load_service, parse_json, core_schema, profile_ref_valid, provider_schema, MAX_BYTES
 
 
 class Parser(argparse.ArgumentParser):
@@ -32,6 +33,13 @@ def parser():
         child.add_argument("--timeout", type=float, default=10, help="Read timeout in seconds (0 < value <= 120)")
     for command in ("doctor", "capabilities"):
         connection(commands.add_parser(command))
+    providers = commands.add_parser("providers", help="Observe the service's admitted Provider registry")
+    provider_actions = providers.add_subparsers(dest="action", required=True, parser_class=Parser)
+    for action in ("list", "describe"):
+        child = provider_actions.add_parser(action)
+        connection(child)
+        if action == "describe":
+            child.add_argument("definition_ref", help="Complete DefinitionRef JSON or @file")
     profile = commands.add_parser("profiles")
     actions = profile.add_subparsers(dest="action", required=True, parser_class=Parser)
     for action in ("list", "show", "entry", "preview", "create", "edit", "clone", "rename", "archive", "restore"):
@@ -163,6 +171,14 @@ def main(argv=None):
             emit(args, envelope)
             return 0 if found else 4
         prepared = profile_request(options) if options.command == "profiles" else None
+        if options.command == "providers":
+            params = {}
+            if options.action == "describe":
+                definition = json_input(options.definition_ref)
+                if not definition_ref_valid(definition):
+                    raise ClientError("PARAMETER_INVALID", "Complete DefinitionRef required", 2)
+                params["definitionRef"] = definition
+            prepared = ("agents.providers." + options.action, params)
         if not math.isfinite(options.timeout) or not 0 < options.timeout <= 120:
             raise ClientError("PARAMETER_INVALID", "Timeout must be greater than zero and at most 120 seconds", 2)
         service = load_service(options.config, options.service)
@@ -183,9 +199,25 @@ def main(argv=None):
         core = client.negotiate(str(uuid.uuid4()))
         data["coreAgent"] = core
         evidence = {"level": "coreCapabilitiesObserved"}
-        if core["supports"]["profileCatalog"] is not True:
+        if options.command != "providers" and core["supports"]["profileCatalog"] is not True:
             raise ClientError("PROFILE_CATALOG_UNAVAILABLE", "Profile catalog guarantees are unavailable", 4)
-        if prepared is not None:
+        if options.command == "providers":
+            method, params = prepared
+            if method not in core.get("supportedMethods", ()):
+                raise ClientError("PROVIDER_DISCOVERY_UNAVAILABLE", "Service did not publish Provider discovery", 4)
+            if "definitionRef" in params and not definition_ref_valid(params["definitionRef"], core["environmentNamespace"]):
+                raise ClientError("PARAMETER_INVALID", "DefinitionRef belongs to another service environment", 2)
+            result = client.core_call(method, params, request_id)
+            runtime_version = core_schema(client.schema_version)["schema"]["configurationChange"]["providerContractVersion"]
+            contract = provider_schema()["schema"]
+            if contract["contractVersion"] != runtime_version:
+                raise ClientError("CLIENT_SCHEMA_UNAVAILABLE", "Provider schema version differs from the Agent contract", 4)
+            if (not provider_result_valid(options.action, result, core["environmentNamespace"], runtime_version, contract["supportedMethods"], params.get("definitionRef"))
+                    or service.token in json.dumps(result)):
+                raise ClientError("CORE_RESPONSE_INVALID", "Provider registry result could not be safely validated", 4)
+            data = result
+            evidence = {"level": "providerRegistryObserved", "runtimeVerified": False}
+        elif prepared is not None:
             method, params = prepared
             result = client.core_call(method, params, request_id)
             effectful = core_schema()["schema"]["methods"][method]["effectful"]

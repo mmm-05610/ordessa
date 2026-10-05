@@ -12,11 +12,15 @@ dependencies = []
 [project.scripts]
 ordessa-agent = "ordessa_agent_tools.cli:main"
 
+[tool.setuptools]
+include-package-data = false
+
 [tool.setuptools.packages.find]
 where = ["src"]
+exclude = ["ordessa_agent_tools.native_clients*"]
 
 [tool.setuptools.package-data]
-ordessa_agent_tools = ["schema.json", "harness_commands.json"]
+ordessa_agent_tools = ["schema.json", "schema-management.json", "provider-schema.json", "harness_commands.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

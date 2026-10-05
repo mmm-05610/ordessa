@@ -19,9 +19,22 @@ from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_ope
 MAX_BYTES = 1024 * 1024
 
 
-def core_schema():
+SCHEMA_FILES = {"agent-assembly/1": "schema.json", "agent-assembly/2": "schema-management.json"}
+
+
+def core_schema(version="agent-assembly/1"):
+    if not isinstance(version, str) or version not in SCHEMA_FILES:
+        raise ClientError("CORE_VERSION_UNSUPPORTED", "Agent core version is unsupported", 4)
+    return _schema_mirror(SCHEMA_FILES[version])
+
+
+def provider_schema():
+    return _schema_mirror("provider-schema.json")
+
+
+def _schema_mirror(filename):
     try:
-        contract = parse_json(files("ordessa_agent_tools").joinpath("schema.json").read_bytes())
+        contract = parse_json(files("ordessa_agent_tools").joinpath(filename).read_bytes())
         encoded = json.dumps(contract["schema"], sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
         if "sha256:" + hashlib.sha256(encoded.encode()).hexdigest() != contract["schemaDigest"]:
             raise ValueError("digest")
@@ -136,6 +149,8 @@ class NoRedirect(HTTPRedirectHandler):
 class WireClient:
     def __init__(self, service: Service, *, timeout: float = 10):
         self.service, self.timeout = service, timeout
+        self.schema_version = "agent-assembly/1"
+        self.supported_methods = None
         # Disable ambient proxies to prevent handing local bearer tokens to them.
         self.opener = build_opener(ProxyHandler({}), NoRedirect(), HTTPSHandler(context=ssl.create_default_context()))
 
@@ -191,27 +206,44 @@ class WireClient:
         return result["result"]
 
     def core_call(self, method, params, request_id):
-        definition = core_schema()["schema"]["methods"].get(method)
+        definition = core_schema(self.schema_version)["schema"]["methods"].get(method)
         if definition is None or not set(definition["required"]) <= params.keys() or set(params) - set(definition["required"] + definition["optional"]):
             raise ClientError("PARAMETER_INVALID", "Parameters do not match the published core schema", 2)
+        if self.supported_methods is not None and method not in self.supported_methods:
+            raise ClientError("CORE_CAPABILITY_UNAVAILABLE", "Service did not publish the required core method", 4)
         return self.call(method, params, request_id, effectful=definition["effectful"])
 
     def negotiate(self, request_id):
-        expected = core_schema()
         result = self.core_call("agents.capabilities", {}, request_id)
-        if (not isinstance(result, dict) or set(result) != {"contractVersion", "schemaDigest", "schema", "environmentNamespace", "supports"}
-                or result["contractVersion"] != expected["schema"]["contractVersion"]
-                or result["schemaDigest"] != expected["schemaDigest"] or result["schema"] != expected["schema"]):
+        if not isinstance(result, dict):
+            raise ClientError("CORE_RESPONSE_INVALID", "Agent core capability schema is invalid", 4)
+        version = result.get("contractVersion")
+        expected = core_schema(version)
+        management = version == "agent-assembly/2"
+        fields = {"contractVersion", "schemaDigest", "schema", "environmentNamespace", "supports"}
+        if management:
+            fields.add("supportedMethods")
+        if (set(result) != fields or result["schemaDigest"] != expected["schemaDigest"]
+                or json.dumps(result["schema"], sort_keys=True, separators=(",", ":")) != json.dumps(expected["schema"], sort_keys=True, separators=(",", ":"))):
             raise ClientError("CORE_VERSION_UNSUPPORTED", "Agent core version or schema does not match this client", 4)
         supports = result["supports"]
-        if (not isinstance(supports, dict) or set(supports) != {"profileCatalog", "nodes", "managedInput"}
+        support_keys = {"profileCatalog", "nodes", "managedInput"}
+        if management:
+            support_keys.update(("configurationManagement", "nodePreparation"))
+        if (not isinstance(supports, dict) or set(supports) != support_keys
                 or any(type(value) is not bool for value in supports.values())
-                or supports["nodes"] is not False or supports["managedInput"] is not False
+                or not management and (supports["nodes"] is not False or supports["managedInput"] is not False)
                 or not isinstance(result["environmentNamespace"], str) or not result["environmentNamespace"]):
             raise ClientError("CORE_RESPONSE_INVALID", "Agent core capability schema is invalid", 4)
+        methods = result.get("supportedMethods")
+        if management and (not isinstance(methods, list) or any(not isinstance(name, str) or name not in expected["schema"]["methods"] for name in methods)
+                           or len(methods) != len(set(methods)) or "agents.capabilities" not in methods):
+            raise ClientError("CORE_RESPONSE_INVALID", "Agent core methods are invalid", 4)
         if self.service.token in json.dumps(result):
             raise ClientError("CORE_RESPONSE_INVALID", "Agent core returned an unsafe response", 4)
-        return {key: result[key] for key in ("contractVersion", "schemaDigest", "environmentNamespace", "supports")}
+        self.schema_version = version
+        self.supported_methods = frozenset(methods) if management else None
+        return {key: result[key] for key in ("contractVersion", "schemaDigest", "environmentNamespace", "supports") + (("supportedMethods",) if management else ())}
 
     def hello(self, request_id: str):
         result = self.call("server.hello", {"clientVersions": ["wire/1"], "clientPresentationSupports": []}, request_id)

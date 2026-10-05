@@ -72,7 +72,8 @@ def test_optional_deployment_source_separate(tmp_path):
 def test_backend_import_rejected_in_wheel(tmp_path):
     wheel = tmp_path / "bad.whl"
     with zipfile.ZipFile(wheel, "w") as archive:
-        archive.writestr("ordessa_agent_tools/schema.json", "{}")
+        for name in ("schema.json", "schema-management.json", "provider-schema.json"):
+            archive.writestr("ordessa_agent_tools/" + name, "{}")
         archive.writestr("ordessa_agent_tools/bad.py", "from ordessa_server.bootstrap import runtime\n")
     with pytest.raises(ValueError, match="dependency"):
         bundle.verify_wheel(wheel)
@@ -82,3 +83,13 @@ def test_source_core_schema_check():
     result = subprocess.run([sys.executable, str(ROOT / "packaging/generate_schema.py")], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
     assert "verified" in result.stdout
+
+
+def test_stdlib_native_client_rejected_in_wheel(tmp_path):
+    wheel = tmp_path / "native.whl"
+    with zipfile.ZipFile(wheel, "w") as archive:
+        for name in ("schema.json", "schema-management.json", "provider-schema.json"):
+            archive.writestr("ordessa_agent_tools/" + name, "{}")
+        archive.writestr("ordessa_agent_tools/native_clients/codex.py", "import json\n")
+    with pytest.raises(ValueError, match="implementation"):
+        bundle.verify_wheel(wheel)

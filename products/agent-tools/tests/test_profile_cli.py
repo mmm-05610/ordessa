@@ -17,9 +17,9 @@ MANIFEST = {"schemaVersion": "1", "harnessDefinitionRef": {"environmentNamespace
 
 
 @contextmanager
-def profile_server(mode="healthy"):
+def profile_server(mode="healthy", version="agent-assembly/1"):
     calls = []
-    contract = core_schema()
+    contract = core_schema(version)
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
             pass
@@ -35,6 +35,9 @@ def profile_server(mode="healthy"):
                 result = {"contractVersion": contract["schema"]["contractVersion"], "schemaDigest": contract["schemaDigest"],
                           "schema": contract["schema"], "environmentNamespace": "fixture-env",
                           "supports": {"profileCatalog": mode != "missing", "nodes": False, "managedInput": False}}
+                if version == "agent-assembly/2":
+                    result["supports"].update(configurationManagement=False, nodePreparation=False)
+                    result["supportedMethods"] = [name for name in contract["schema"]["methods"] if name.startswith("agents.profiles.") or name == "agents.capabilities"]
                 if mode == "digest":
                     result["schemaDigest"] = "sha256:" + "0" * 64
             elif method == "agents.profiles.list":
@@ -186,3 +189,13 @@ def test_invalid_finite_utf8_input_rejected(raw):
     from ordessa_agent_tools.client import parse_json
     with pytest.raises(ValueError):
         parse_json(raw)
+
+
+def test_profile_cli_remains_available_on_exact_management_contract(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("TOOLS_TEST_TOKEN", SECRET)
+    with profile_server(version="agent-assembly/2") as (endpoint, calls):
+        code = main(["profiles", "list", "--config", str(config(tmp_path, endpoint)), "--service", "local", "--json"])
+        output = capsys.readouterr()
+        assert code == 0 and json.loads(output.out)["data"] == {"entries": [ENTRY]}
+        assert SECRET not in output.out + output.err
+        assert [call["method"] for call in calls] == ["server.hello", "agents.capabilities", "agents.profiles.list"]

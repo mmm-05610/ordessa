@@ -18,7 +18,7 @@ SKILLS = ("configure-agent-profile", "use-external-agent", "manage-external-agen
 
 def verify_checksums(directory):
     directory = Path(directory)
-    required = {"schema.json", "README.md", "SHA256SUMS"} | {"skills/" + name + "/SKILL.md" for name in SKILLS}
+    required = {"schema.json", "schema-management.json", "provider-schema.json", "README.md", "SHA256SUMS"} | {"skills/" + name + "/SKILL.md" for name in SKILLS}
     if any(not (directory / name).is_file() for name in required) or len(list((directory / "cli").glob("ordessa_agent_tools-*.whl"))) != 1:
         raise ValueError("Bundle required asset is missing")
     lines = (directory / "SHA256SUMS").read_text(encoding="ascii").splitlines()
@@ -39,10 +39,10 @@ def verify_checksums(directory):
 def verify_wheel(path):
     with zipfile.ZipFile(path) as archive:
         names = archive.namelist()
-        if "ordessa_agent_tools/schema.json" not in names:
+        if any("ordessa_agent_tools/" + name not in names for name in ("schema.json", "schema-management.json", "provider-schema.json")):
             raise ValueError("Wheel is missing its core schema")
         for name in names:
-            if name.startswith(("pacthold/", "ordessa_server/", "ordessa_harness/", "deployment/", "ordessa_agent/")):
+            if name.startswith(("pacthold/", "ordessa_server/", "ordessa_harness/", "deployment/", "ordessa_agent/", "ordessa_agent_tools/native_clients/")):
                 raise ValueError("Wheel includes service implementation")
             if name.endswith(".py"):
                 for node in ast.walk(ast.parse(archive.read(name))):
@@ -78,8 +78,12 @@ def build(output, *, include_deployment_source=False):
         stage.mkdir()
         wheel_dir = stage / "cli"
         wheel_dir.mkdir()
+        source = Path(workspace) / "wheel-source"
+        source.mkdir()
+        shutil.copy2(ROOT / "pyproject.toml", source / "pyproject.toml")
+        shutil.copytree(ROOT / "src", source / "src", ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.egg-info"))
         result = subprocess.run([sys.executable, "-m", "pip", "wheel", "--no-build-isolation", "--no-deps",
-                                 "--wheel-dir", str(wheel_dir), str(ROOT)], capture_output=True, text=True)
+                                 "--wheel-dir", str(wheel_dir), str(source)], capture_output=True, text=True)
         if result.returncode != 0:
             raise ValueError("Wheel build failed; ensure setuptools and wheel are installed in the build environment")
         wheels = list(wheel_dir.glob("ordessa_agent_tools-*.whl"))
@@ -89,6 +93,12 @@ def build(output, *, include_deployment_source=False):
         with zipfile.ZipFile(wheels[0]) as archive:
             if json.loads(archive.read("ordessa_agent_tools/schema.json")) != schema:
                 raise ValueError("Wheel schema differs from bundled schema")
+        with zipfile.ZipFile(wheels[0]) as archive:
+            for name in ("schema-management.json", "provider-schema.json"):
+                expected = json.loads((ROOT / "src/ordessa_agent_tools" / name).read_text())
+                if json.loads(archive.read("ordessa_agent_tools/" + name)) != expected:
+                    raise ValueError("Wheel schema differs from bundled schema")
+                shutil.copy2(ROOT / "src/ordessa_agent_tools" / name, stage / name)
         for name in SKILLS:
             shutil.copytree(ROOT / "skills" / name, stage / "skills" / name,
                             ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))

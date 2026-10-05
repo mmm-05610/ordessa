@@ -180,3 +180,35 @@ def test_core_sidecar_link_refused_before_opening_database(deployment, tmp_path,
     assert target.read_bytes() == b"must-not-be-opened-as-a-sidecar"
     assert path.read_bytes() == before
     assert sidecar.is_symlink()
+
+
+def test_unknown_contract_refuses_before_creating_root(deployment, tmp_path):
+    root = tmp_path / "unselected-contract"
+    with pytest.raises(ValueError): deployment.AgentServiceConfiguration(root, agent_contract_version="agent-assembly/999")
+    assert not root.exists()
+
+
+def test_v2_policy_grants_registry_read_only(deployment, tmp_path):
+    configuration = deployment.AgentServiceConfiguration(tmp_path / "v2-root", agent_contract_version="agent-assembly/2")
+    runtime = deployment.build_agent_runtime(configuration, fingerprint_port=fingerprint())
+    try:
+        runtime.start()
+        env = runtime.core_binding.environment
+        assert runtime.plugin_selection == () and env.installed == ()
+        assert agent_services(env).providers.list() == ()
+        target = env.environment_id + ":agents.runtime"
+        assert env._policy.admit_object_access("local", target, "read")
+        assert not env._policy.admit_object_access("local", target, "write")
+        assert not env._policy.admit_object_access("foreign", target, "read")
+        assert not env._policy.admit_object_access("local", target + ":forged", "read")
+        assert not env._policy.admit_invoke("local", "pacthold.agents.prepare", "reliable")
+    finally:
+        runtime.stop()
+
+
+def test_composition_contract_mismatch_refuses_before_creating_root(deployment, tmp_path):
+    root = tmp_path / "mismatched-contract"
+    selected = deployment.AgentToolsDeployment(fingerprint_port=fingerprint())
+    with pytest.raises(GuaranteeUnavailableError):
+        selected.build_runtime(deployment.AgentServiceConfiguration(root, agent_contract_version="agent-assembly/2"))
+    assert not root.exists()

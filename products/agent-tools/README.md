@@ -75,6 +75,34 @@ certificate verification. Userinfo, paths, queries and fragments in the endpoint
 are refused. Redirects, ambient proxies and automatic retries are disabled. The
 service must already be running under its authorized owner.
 
+## Observe registered Providers
+
+The CLI wheel packages the service client and both core schema mirrors.
+Prototype native client modules are excluded from that wheel; independent
+Harness packages supply native protocol implementations.
+
+Provider discovery requires the service's explicit `agent-assembly/2` public
+contract. The client also accepts the exact `agent-assembly/1` Profile contract;
+that older service refuses Provider commands without a fallback. The optional
+local composition selects v2 explicitly with
+`AgentServiceConfiguration(data_root, agent_contract_version="agent-assembly/2")`.
+It publishes registry reads for its authenticated local principal; no native
+providers, Directory execute grants or Invocation authority are created. The
+legacy Profile-only composition remains the default. Construction never starts
+its service; the authorized service owner controls startup.
+
+```sh
+ordessa-agent providers list --config services.json --service local --json
+ordessa-agent providers describe @definition-ref.json --config services.json --service local --json
+```
+
+Use the complete `definitionRef` returned by `providers list` in the selected
+service environment. Output preserves the admitted Provider descriptor and
+host-issued activation/generation reference. Supported methods are declarations;
+`runtimeVerified` remains false. Empty results mean no admitted Provider was
+observed, including staged/draining entries; they do not prove installation or
+native readiness. Authorization, schema mismatch and unavailable methods refuse.
+
 ## Create and edit a Profile
 
 The following examples call an installed `ordessa-agent` on PATH. Append the

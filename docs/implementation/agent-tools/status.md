@@ -467,3 +467,13 @@ C真实临时SQLite/实际Core＋受控native owner，P未验证、M0。生产re
 当前生产capture保存与原字节读取、原receipt/effect owner、Directory/Invocation/lease装配、C1材料/SecretRef、冷Core恢复与完整生命周期、旧三家bundle/factory/Server迁移、薄CLI/三Skill/发行仍缺。Codex当前start已创建原thread，可沿普通Session输入继续；只initialize的sessionless Codex原thread创建与原turn帧/correlation映射未冻结，保持不支持，不发明两步协议或复用另一操作证明。其余原核准sessionlessCore机制继续保留。生产owner未装不报enabled，AU002/AU003/整体产品均PARTIAL。
 
 只改本树/测试临时DB/自建Python peers，未改用户DB/凭据/全局配置、安装第三方、执行模型/登录、重启用户服务、push/合并主树。费用unknown。显式纳入本轮七个路径检查点后继续下一生产装配切片，goal保持active。
+
+### 2026-10-05 AU004 Provider CLI / 显式 v2 发现 / fresh wheel（PARTIAL）
+
+前置 c7ca893cbfa1b58eb5c543282788e6028f54384f，现存修改均主会话本轮成果，保留三家既有修复；live agents 核验仅 au003_codex completed，无另一共享写者。上一状态回复仅核查，无新增实现，本轮完成复验、源码说明、证据及检查点，属于 progress。沿既有 incremental-work-order 与 AU 章程继续；合同不重写。
+
+公开 providers list/describe 已实现，完整 DefinitionRef 支持 JSON/@file；双 wire 版本严格 schema/digest/类型和方法校验，v1 Profile 保留，Provider 不 fallback。Provider 方法闭集从 public Protocol/DTO 构建时生成，无客户端私有 imports 或新 wire。输出 registryObserved/runtimeVerified=false。可选部署显式 v2 仅精确 local registry read，无 native providers/execute/Directory/Invocation 授权；默认 v1 和 mismatch 拒绝。实际 wheel 从临时洁净源码构建，拒 native_clients，三镜像与checksum一致；源码旧品牌副本仍未迁完，Skill 本轮未改，不把打包排除算 AU003_DONE。
+
+详情、完整命令与失败账：[provider-cli-v2-evidence.md](provider-cli-v2-evidence.md)。实际 PY 为本树外既有 .venv-ordessa-py312/bin/python，所有测试主会话串行且 terminal：CLI/契约/发行组合90P exit0、34.26s；部署/真实独立Server组合17P exit0、6.38s；完整Core/SQLite/Python-pipe集成511P exit0、29.84s；末端新增 @file 安装describe 与严格缺席授权断言复验3P exit0、5.76s。本轮新增23项，原发行2项加强，不累加组合快照。两次初失败分别包数据夹带旧客户端1P/1F和缺席ref误猜NOT_FOUND导致15P/1F，已保留断言并修实现或严格按现有核心错误映射校准。未删断言/skip/兼容链复活。公开schema生成和五工单strict exit0、diff-check exit0仅资料门。
+
+真实隔离Server属于服务进程证据，不代表真实 Harness P 或任务 M。三家 production owner/capture/receipt/effect/Session/writer、部署授权、材料/SecretRef、冷恢复/完整生命周期、旧装配迁移、Node/config/tasks/results CLI、三Skill与发行闭包仍缺。历史Core269P/3F未本轮修复，缺资源ABSENT，M0。未安装更新第三方、改登录/用户DB/凭据/全局配置、重启用户服务、push/主树合并；费用 unknown。Codex只读终审确认闭方法集/洁净bundle/精确read权限无新增阻断，无执行者写入/测试/Git。整体PARTIAL；显式纳入本轮路径后继续下一公开接缝和生产装配。

@@ -2,6 +2,7 @@
 import ast
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -9,6 +10,7 @@ import zipfile
 
 from test_discovery import SECRET, config
 from test_profile_cli import profile_server
+from test_provider_cli import provider_server
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -35,12 +37,20 @@ def test_client_import_boundary_with_adversarial_imports():
 
 def test_wheel_isolated_install_and_actual_http_discovery(tmp_path):
     wheel_dir = tmp_path / "wheels"
-    build = subprocess.run([sys.executable, "-m", "pip", "wheel", "--no-build-isolation", "--no-deps", "--wheel-dir", str(wheel_dir), str(ROOT)], capture_output=True, text=True)
+    # Build fresh source in a temporary tree: old ignored build/lib files must
+    # not silently enter the wheel after package exclusions change.
+    source = tmp_path / "wheel-source"
+    source.mkdir()
+    shutil.copy2(ROOT / "pyproject.toml", source / "pyproject.toml")
+    shutil.copytree(ROOT / "src", source / "src", ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.egg-info"))
+    build = subprocess.run([sys.executable, "-m", "pip", "wheel", "--no-build-isolation", "--no-deps", "--wheel-dir", str(wheel_dir), str(source)], capture_output=True, text=True)
     assert build.returncode == 0, build.stdout + build.stderr
     wheels = list(wheel_dir.glob("ordessa_agent_tools-*.whl"))
     assert len(wheels) == 1
     with zipfile.ZipFile(wheels[0]) as archive:
         assert "ordessa_agent_tools/schema.json" in archive.namelist()
+        assert "ordessa_agent_tools/schema-management.json" in archive.namelist()
+        assert not any(name.startswith("ordessa_agent_tools/native_clients/") for name in archive.namelist())
         commands = json.loads(archive.read("ordessa_agent_tools/harness_commands.json"))["catalog"]["candidates"]
         assert all(not name.startswith(("pacthold/", "ordessa_server/", "ordessa_harness/", "ordessa_agent/")) for name in archive.namelist())
     environment = tmp_path / "isolated"
@@ -51,11 +61,11 @@ def test_wheel_isolated_install_and_actual_http_discovery(tmp_path):
     assert install.returncode == 0, install.stderr
     env = {key: value for key, value in os.environ.items() if key not in {"PYTHONPATH", "PYTHONHOME", "VIRTUAL_ENV"}}
     env["TOOLS_TEST_TOKEN"] = SECRET
-    absence = subprocess.run([str(python), "-I", "-c", "import importlib.util; assert all(importlib.util.find_spec(n) is None for n in ('pacthold','ordessa_server','ordessa_harness','ordessa_agent'))"], cwd=tmp_path, env=env, capture_output=True, text=True)
+    absence = subprocess.run([str(python), "-I", "-c", "import importlib.util; assert all(importlib.util.find_spec(n) is None for n in ('pacthold','ordessa_server','ordessa_harness','ordessa_agent','ordessa_agent_tools.native_clients'))"], cwd=tmp_path, env=env, capture_output=True, text=True)
     assert absence.returncode == 0, absence.stderr
     executable = environment / "bin/ordessa-agent"
     help_result = subprocess.run([str(executable), "--help"], cwd=tmp_path, env=env, capture_output=True, text=True)
-    assert help_result.returncode == 0 and "profiles" in help_result.stdout
+    assert help_result.returncode == 0 and "profiles" in help_result.stdout and "providers" in help_result.stdout
     binary_directory = tmp_path / "local-binaries"
     binary_directory.mkdir()
     marker = tmp_path / "must-not-run"
@@ -76,3 +86,19 @@ def test_wheel_isolated_install_and_actual_http_discovery(tmp_path):
         assert result["data"]["coreAgent"]["supports"]["managedInput"] is False
         assert len(calls) == 2
         assert SECRET not in checked.stdout + checked.stderr
+
+    with provider_server() as (endpoint, calls, definition):
+        path = config(tmp_path, endpoint)
+        checked = subprocess.run([str(executable), "providers", "list", "--config", str(path), "--service", "local", "--json"], cwd=tmp_path, env=env, capture_output=True, text=True)
+        assert checked.returncode == 0, checked.stdout + checked.stderr
+        result = json.loads(checked.stdout)
+        assert result["data"]["providers"][0]["descriptor"]["definitionRef"] == dict(definition)
+        assert result["evidence"] == {"level": "providerRegistryObserved", "runtimeVerified": False}
+        assert len(calls) == 3 and SECRET not in checked.stdout + checked.stderr
+
+        reference = tmp_path / "definition-ref.json"
+        reference.write_text(json.dumps(dict(definition)))
+        described = subprocess.run([str(executable), "providers", "describe", "@" + str(reference), "--config", str(path), "--service", "local", "--json"], cwd=tmp_path, env=env, capture_output=True, text=True)
+        assert described.returncode == 0, described.stdout + described.stderr
+        assert json.loads(described.stdout)["data"]["descriptor"]["definitionRef"] == dict(definition)
+        assert SECRET not in described.stdout + described.stderr and len(calls) == 6

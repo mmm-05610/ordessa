@@ -11,13 +11,31 @@ def main(argv=None):
     parser.add_argument("--write", action="store_true", help="Replace the client schema mirror from core authority")
     options = parser.parse_args(argv)
     # Never imported by runtime client code or included in its wheel package.
-    from pacthold.agents.public import wire_contract, wire_schema_digest
-    mirror = Path(__file__).resolve().parents[1] / "src/ordessa_agent_tools/schema.json"
-    value = {"schema": wire_contract(), "schemaDigest": wire_schema_digest()}
+    from pacthold.agents.public import wire_contract, wire_schema_digest, AGENT_CONTRACT_VERSION, AGENT_MANAGEMENT_CONTRACT_VERSION, RuntimeProvider, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
+    root = Path(__file__).resolve().parents[1] / "src/ordessa_agent_tools"
+    for name, version in (("schema.json", AGENT_CONTRACT_VERSION),
+                          ("schema-management.json", AGENT_MANAGEMENT_CONTRACT_VERSION)):
+        mirror = root / name
+        value = {"schema": wire_contract(version), "schemaDigest": wire_schema_digest(version)}
+        if options.write:
+            mirror.write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        if json.loads(mirror.read_text(encoding="utf-8")) != value:
+            raise SystemExit("Client schema mirror differs from the core public contract")
+    methods = sorted(name for name, value in vars(RuntimeProvider).items() if not name.startswith("_") and callable(value))
+    # Validate the public Protocol's methods against its public DTO. No private
+    # core constants or runtime core imports enter the client wheel.
+    RuntimeProviderDescriptor("schema-probe", RUNTIME_PROVIDER_VERSION,
+        {"environmentNamespace": "schema-probe", "definitionId": "schema-probe", "revision": "1"},
+        "sha256:" + "0" * 64, tuple(methods))
+    schema = {"contractVersion": RUNTIME_PROVIDER_VERSION, "supportedMethods": methods}
+    encoded = json.dumps(schema, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    import hashlib
+    value = {"schema": schema, "schemaDigest": "sha256:" + hashlib.sha256(encoded.encode()).hexdigest()}
+    mirror = root / "provider-schema.json"
     if options.write:
         mirror.write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     if json.loads(mirror.read_text(encoding="utf-8")) != value:
-        raise SystemExit("Client schema mirror differs from the core public contract")
+        raise SystemExit("Provider schema mirror differs from the core public contract")
     print("Core schema mirror verified")
     return 0
 

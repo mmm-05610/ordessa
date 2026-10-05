@@ -1,0 +1,25 @@
+{
+  "schema": {
+    "contractVersion": "agent-runtime/2",
+    "supportedMethods": [
+      "apply_configuration",
+      "assess_configuration",
+      "connect",
+      "describe_access",
+      "describe_configuration",
+      "describe_definition",
+      "inspect_configuration",
+      "inspect_installation",
+      "inspect_unit",
+      "plan_preparation",
+      "prepare",
+      "query_change",
+      "query_step",
+      "recover",
+      "release",
+      "start",
+      "stop"
+    ]
+  },
+  "schemaDigest": "sha256:5feb59cd9a2b92e72f7ef18add8c31d014df0f81ae2bb6d5c7de61a2f1e4775a"
+}

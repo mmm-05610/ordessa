@@ -20,7 +20,7 @@ from ordessa_persistence_sqlite import ProtectedFingerprintHmac
 import uvicorn
 root, ready = Path(sys.argv[2]), Path(sys.argv[3])
 port = ProtectedFingerprintHmac({"fixture": b"isolated-http-fixture"}, active_key_id="fixture")
-runtime = build_agent_runtime(AgentServiceConfiguration(root), fingerprint_port=port)
+runtime = build_agent_runtime(AgentServiceConfiguration(root, agent_contract_version=sys.argv[4]), fingerprint_port=port)
 sock = socket.socket()
 sock.bind(("127.0.0.1", 0))
 sock.listen(128)
@@ -38,7 +38,8 @@ server.run(sockets=[sock])
 
 
 class IsolatedService:
-    def __init__(self, tmp_path):
+    def __init__(self, tmp_path, *, version="agent-assembly/1"):
+        self.version = version
         self.product = Path(__file__).resolve().parents[2]
         self.root = tmp_path / "server-root"
         self.ready = tmp_path / "ready.json"
@@ -50,7 +51,7 @@ class IsolatedService:
         self.ready.unlink(missing_ok=True)
         self.log_stream = self.log.open("ab")
         self.process = subprocess.Popen([sys.executable, "-c", SERVER_SCRIPT, str(self.product),
-                                         str(self.root), str(self.ready)],
+                                         str(self.root), str(self.ready), self.version],
                                         stdin=subprocess.PIPE, stdout=self.log_stream, stderr=self.log_stream)
         deadline = time.monotonic() + 15
         while not self.ready.exists():
@@ -270,4 +271,24 @@ def test_real_committed_create_receipt_lost_on_tcp_never_resubmits(tmp_path):
         if proxy_thread is not None:
             proxy_thread.join(timeout=5)
             assert not proxy_thread.is_alive()
+        service.stop()
+
+
+def test_real_http_v2_provider_discovery_has_no_native_readiness_or_execution(tmp_path):
+    service = IsolatedService(tmp_path, version="agent-assembly/2")
+    try:
+        service.start()
+        capabilities = service.cli(["capabilities"])["data"]["coreAgent"]
+        assert capabilities["contractVersion"] == "agent-assembly/2"
+        assert capabilities["supports"] == {"profileCatalog": True, "nodes": False, "managedInput": False,
+                                            "configurationManagement": False, "nodePreparation": False}
+        listed = service.cli(["providers", "list"])
+        assert listed["data"] == {"providers": []}
+        assert listed["evidence"] == {"level": "providerRegistryObserved", "runtimeVerified": False}
+        denied = service.cli(["providers", "list"], expected=3, token="invalid-test-token")
+        assert denied["error"]["code"] == "AUTHORIZATION_REFUSED"
+        absent = service.cli(["providers", "describe", json.dumps({"environmentNamespace": service.identity,
+                    "definitionId": "absent", "revision": "1"})], expected=3)
+        assert absent["error"]["code"] == "AUTHORIZATION_REFUSED"
+    finally:
         service.stop()
