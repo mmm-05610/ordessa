@@ -45,8 +45,13 @@ blocking or cancellation-suppressing trusted code. Host closes shared clients an
 sinks. Evidence uncertainty carries a safe run ID for authorised read/query only.
 
 Real Jev synthetic evaluation through the separately authorized OpenCode Zen free
-route is PARTIAL; model labels/capacity timeout remain recorded. Host settings bind
+route is PARTIAL; model label failures and the live capacity protocol failure remain recorded. Host settings bind
 requested model and a finite response-model allowlist in the provider digest. The
 evaluation profile and explicit opt-in runner live in evaluation/, with no default
 live execution. Real Harness operation and real family effects are unverified. See
 the spec status and per-scenario evidence ledger for tested scope.
+
+The implementation and required evaluation reports are delivered; product readiness
+remains PARTIAL. The spec completion-audit.md maps the original JD items and
+requirements to scoped evidence. Existing family opt-out and unmet live labels are
+reported exactly as the task contract requires, without advertising native effects.

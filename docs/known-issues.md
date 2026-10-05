@@ -156,3 +156,21 @@ Harness全量 `python -m pytest plugins/harness -q`：1031 passed / 3 skipped / 
 - New gateway settings source offline verified: 211 tests, 67 separate scenes, 57 matched baseline/core IDs; first suite failed stale-wheel integrity guard (210P/1F), normal offline rebuild fixed packaging before 211P. Full Server/Harness inherited failures and real family effects remain unverified. Evidence: specs/031-jev-decision-module/evidence/zen-offline-20261005/README.md.
 
 - 031 proper-bound-state follow-up: unchanged frozen single-deliverable label still misses (clarify), vague correctly clarify, 12 additional HTTP requests. Final cumulative 62/64; known usage 32611/2540, one timeout usage unknown. Original misses remain; T60 PARTIAL. Same Jev evidence summary is authoritative over earlier 50-call snapshot.
+
+
+## Decision module (spec 031)
+
+These entries apply to the optional read-only module in this implementation tree;
+they do not change default product composition or the existing service registry.
+
+| Issue | Status | Evidence and practical limit |
+| --- | --- | --- |
+| DEC031-01: Jev synthetic model labels are not all met | Open, real-model quality limit, 2026-10-05 | The frozen v2 batch used 42 authorized requests. Of 22 model cases, 21 retained valid typed answers and 20 matched labels. `churn-en-positive` returned 0.40 against the predeclared [0.50, 1.00] interval. No threshold reduction or production-readiness claim. [Frozen inputs and answers](../specs/031-jev-decision-module/evidence/jev-domain-v2-20261005/README.md). |
+| DEC031-02: live 64 business choices + 2 refusal slots are not verified | Open, protocol/capacity limit, 2026-10-05 | An earlier 10-second call timed out; the separately authorized v2 call returned HTTP 200 then `protocol_invalid`. Exact offending response fields are unknown because raw responses were not retained. Offline mapping preserves all 66 IDs but does not prove a valid live response. Do not lower protocol validation or silently truncate candidates. Further live diagnosis needs a new explicit scope; prior 62 and additional 42 requests remain charged to their own exhausted/limited ledgers. [Historical timeout](../specs/031-jev-decision-module/evidence/jev-zen-20261005/README.md), [current failure](../specs/031-jev-decision-module/evidence/jev-domain-v2-20261005/README.md). |
+| DEC031-03: shipped Agent families do not opt in to pure read configuration offers/assessment | Registered unsupported capability, 2026-10-05 | JD007 adds only optional public routing within the native Agent authority. Existing providers return unsupported/unverifiable; temporary-core tests use a controlled owner. JD009 explicitly retains PARTIAL for absent family capability. No new owner, execution authority, or real Harness apply support is claimed. [Core/offline scope](../specs/031-jev-decision-module/evidence/completion-offline-20261005/README.md). |
+| DEC031-04: evaluation collector evidence defects | Fixed prospectively; historical receipts retained, 2026-10-05 | The first collector lost three typed answers after an incorrect terminal digest key. The v2 collector preserves answers before terminal verification and keeps durable cross-process reservations. Its initial `credential_reads` counter stayed at the preparation default despite one authorized file read; the raw receipt is retained and the independent summary corrects this value to 1. Future counting is fixed and covered by the 232-test suite. These fixes do not retroactively verify lost answers. [History](../specs/031-jev-decision-module/evidence/jev-zen-20261005/README.md), [v2 audited counter](../specs/031-jev-decision-module/evidence/jev-domain-v2-20261005/summary.json). |
+
+Python 3.10, real power loss, remote-filesystem durability, real family effects and
+the complete Server/Harness inherited-red suites were not verified in spec 031.
+The fixed baseline and current tree matched 57 targeted core test IDs; this is not
+a whole-product green claim. Known inherited rows above remain open.

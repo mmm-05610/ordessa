@@ -862,7 +862,7 @@
     "materials": "materialsValidated",
     "offline": "offlineVerified_SCOPED",
     "coreReadOnly": "coreReadOnlyVerified_TEMP_CORE_FAKE_OWNER",
-    "liveJev": "PARTIAL_REAL_QUALITY_AND_CAPACITY_TIMEOUT",
+    "liveJev": "PARTIAL_REAL_LABEL_AND_CAPACITY_PROTOCOL_FAILURE",
     "nativeEffects": "OUT_OF_SCOPE",
     "codeReady": "VERIFIED_CURRENT_SOURCE"
   },
@@ -1023,6 +1023,13 @@
       "native_effects": 0,
       "retry": 0,
       "all_work_complete": false
+    },
+    "deliveryAudit": {
+      "document": "completion-audit.md",
+      "machine": "completion-audit.json",
+      "implementationAndRequiredEvaluationDelivered": true,
+      "productReadinessComplete": false,
+      "remainingRequiredOfflineImplementationItems": 0
     }
   }
 }
