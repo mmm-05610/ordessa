@@ -13,6 +13,7 @@ from .directory import DirectoryBindingRef
 from .nodes import NodePublication, encode_node_ref, decode_node_ref
 from .management import AgentConfiguration
 from .providers import AgentProviders
+from .assembly import AgentAssembly, PreparationContext, PreparationObservation, PreparationContextPort, PreparationObservationPort
 from .invocation import InvocationContext, InvocationVerifier, InvocationAuthorityRefused
 
 
@@ -22,9 +23,11 @@ class AgentServices:
     nodes: NodePublication
     configuration: AgentConfiguration
     providers: AgentProviders
+    assembly: AgentAssembly
 
 
-def agent_services(environment, *, invocation_issuer=None, node_evidence_port=None) -> AgentServices:
+def agent_services(environment, *, invocation_issuer=None, node_evidence_port=None,
+                   preparation_context_port=None, preparation_observation_port=None) -> AgentServices:
     """Bootstrap one core-owned catalog on the existing Environment.
 
     No plugin activation, native process or second Environment is created.
@@ -35,12 +38,17 @@ def agent_services(environment, *, invocation_issuer=None, node_evidence_port=No
         services = getattr(environment, "_agent_services", None)
         if services is None:
             nodes = NodePublication(environment, evidence_port=node_evidence_port)
-            services = AgentServices(ProfileCatalog(environment), nodes,
+            profiles = ProfileCatalog(environment)
+            services = AgentServices(profiles, nodes,
                 AgentConfiguration(environment, nodes, invocation_issuer=invocation_issuer),
-                AgentProviders(environment))
+                AgentProviders(environment), AgentAssembly(environment, profiles, nodes,
+                    invocation_issuer=invocation_issuer, context_port=preparation_context_port,
+                    observation_port=preparation_observation_port))
             environment._agent_services = services
         elif ((invocation_issuer is not None and services.configuration._issuer is not invocation_issuer)
-                or (node_evidence_port is not None and services.nodes._evidence_port is not node_evidence_port)):
+                or (node_evidence_port is not None and services.nodes._evidence_port is not node_evidence_port)
+                or (preparation_context_port is not None and services.assembly._context_port is not preparation_context_port)
+                or (preparation_observation_port is not None and services.assembly._observation_port is not preparation_observation_port)):
             raise ValueError("Agent service authorities must be composed once before use")
         return services
 
@@ -55,6 +63,7 @@ __all__ += ["AgentConfiguration", "InvocationContext", "InvocationVerifier"]
 __all__ += ["NodePublication", "encode_node_ref", "decode_node_ref"]
 __all__ += ["InvocationAuthorityRefused"]
 __all__ += ["AgentProviders"]
+__all__ += ["AgentAssembly", "PreparationContext", "PreparationObservation", "PreparationContextPort", "PreparationObservationPort"]
 from .runtime import AgentContributionSet, RuntimeProvider, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
 __all__ += ["AgentContributionSet", "RuntimeProvider", "RuntimeProviderDescriptor", "RUNTIME_PROVIDER_VERSION"]
 from .configuration import (

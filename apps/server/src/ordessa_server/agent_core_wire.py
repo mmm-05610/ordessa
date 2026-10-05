@@ -38,6 +38,8 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
                     raise ValueError("positive revision required")
                 if type(params.get("includeArchived", False)) is not bool:
                     raise ValueError("boolean required")
+                if any(name in params and not isinstance(params[name],dict) for name in ('context','options')):
+                    raise ValueError('structured preparation parameters required')
                 refs = {name: ProfileRef.from_dict(params[name])
                         for name in ("profileRef", "baseManifestRef") if name in params}
                 node_ref=decode_node_ref(params['nodeRef']) if 'nodeRef' in params else None
@@ -62,14 +64,20 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
                             "supports": dict(catalog.capabilities())}
                     if contract_version==AGENT_MANAGEMENT_CONTRACT_VERSION:
                         result['supports'].update(services.configuration.capabilities())
+                        result['supports'].update(services.assembly.capabilities())
                         result['supportedMethods']=[name for name,item in schema['methods'].items()
                             if item['action'] in profile_actions or item['action'] in configuration_actions
-                            or item['action'] in provider_actions]
+                            or item['action'] in provider_actions
+                            or (item['action']=='prepare' and result['supports']['nodePreparation'])]
                     return result
                 if action=='providersList':
                     return {'providers':list(services.providers.list())}
                 if action=='providersDescribe':
                     return services.providers.describe(params['definitionRef'])
+                if action=='prepare':
+                    operation=services.assembly.prepare(catalog.request_key(params['requestId']),
+                        refs['profileRef'],params['context'],params['options'])
+                    return services.assembly.operation_view(operation)
                 if action in configuration_actions:
                     manager=services.configuration
                     if action=='describeConfiguration':
