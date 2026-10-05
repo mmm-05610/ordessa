@@ -75,6 +75,21 @@ def test_port_must_declare_exact_real_methods_not_callable_presence():
         provider(unit_port=Owner(), verifier=object())
 
 
+@pytest.mark.parametrize("damage", ["missing-records", "other-records", "other-verifier"])
+def test_generic_owner_cannot_advertise_recover_with_unrelated_authority(damage):
+    verifier = object()
+    records = Records(verifier)
+    calls = []
+    owner = SimpleNamespace(supported_methods=("recover",), records=records, verifier=verifier,
+                            recover=lambda *args: calls.append(args) or {"state": "confirmed"})
+    if damage == "missing-records": records = None
+    elif damage == "other-records": owner.records = Records(verifier)
+    else: owner.verifier = object()
+    with pytest.raises(ClaudeProviderUnavailable, match="same original"):
+        provider(unit_records=records, verifier=verifier, unit_port=owner)
+    assert calls == []
+
+
 class Records:
     def __init__(self, verifier):
         self.verifier = verifier

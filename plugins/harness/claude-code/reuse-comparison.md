@@ -63,3 +63,14 @@ native Unit/session confirmation ports remain unsupported. Syntax compile and
 package diff-check exit 0; the same collect command now reports **128 tests,
 exit 0, 0.14s**. This is collection only; the main executor owns serial execution
 and the result ledger. No P/M evidence was added.
+
+Follow-up at shared freeze `9e1a6db19b`: original sessionless Unit start/query
+coordination, opaque capability continuation checks and owner-retained unknown
+handles. Fourteen added C cases reuse actual InvocationIssuer and SQLite journals
+with controlled native ports; none execute SDK/Claude or prove a production
+execution bridge. Compile exit 0; collection **144 tests, exit 0, 0.17s** before
+the final confirmed-query correlation check. Initial plain `python` commands
+failed exit 127 because that executable was absent; rerunning with the explicit
+project interpreter fixed compilation and collection. Main executor owns all
+execution results. Production native owner, SDK bridge, preparation query lookup
+and first-input Session association remain explicit gaps; no P/M evidence.

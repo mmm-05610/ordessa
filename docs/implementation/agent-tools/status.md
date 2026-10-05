@@ -352,3 +352,13 @@ C为受控owner/SDK以及真实临时SQLite/Python peer；三家真实上游进�
 9e1a6db19b检查点后继续：Claude恢复仅其家族目录写权，实现显式owner effect/query协调，主会话仍独占共享。Pi只读盘点确认首输入当前强制Session：inputs.NativeInputState/reserve/claim_dispatch均依赖sessionRef。原InvocationContext已固定原输入身份，但Unit目标首次输入权限、跨draft首关联占用和Session关联尚未定义；不能用default或UnitRef冒充Session。提案现存evidence/agent-unit-model/sessionless-first-input-proposal.md，已向用户请求采用显式Unit full-native输入权限＋原占用＋原InputAttempt只读association；确认前不改核心输入协议，不以等待阻塞Claude start/query。提问时路径写成docs/implementation/agent-tools/sessionless-first-input-proposal.md，随后按本单写路径收归证据目录，本文给出实际位置。尚无用户答复，不假定授权。
 
 用户随后明确选择“采用提案，沿原机制扩展”。首输入Unit权限/跨draft占用/原InputAttempt只读Session关联口径已授权，提案已标确认，未宣称实现。继续先纳入现Claude AU003切片，再由主会话串行回AU002共享输入并补AU003 journal association，保持工单串行及共享唯一作者。原Session路径与已持久请求语义保留，无用户数据迁移或模型授权。
+
+### 2026-10-05 AU003 Claude 原 Unit start/query 检查点（PARTIAL）
+
+前置577014c450，Claude仅家族目录作者已明确释放，Pi/Codex只读。新增ClaudeUnitCoordinator，复用原UnitRecords/Issuer/Unit确认：begin_unit先持久opening并消费原start，opaque Context传给显式部署effect owner，逐作用continuation＋dispatch_guard；unknown保留原handle，不close/kill/重启/补ticket。冷query仅沿原start correlation/input/CAS核owner，不开启SDK/新loop/daemon。缺生产ports不advertise能力；prepare correlation公开lookup仍缺，不能用start替代。
+
+主会话串行实际命令 `PYTHONPATH=plugins/harness/claude-code/src:packages/backend/harness-transport/src /home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python -m pytest -c plugins/harness/claude-code/pyproject.toml plugins/harness/claude-code/tests -q` 首144P exit0、7.85s。只读终审发现既有generic unit_port只声明方法而不核同records/verifier，补typed拒及三项反例；另补confirmed owner失效和prepare context不能查询start两项。最终149P/0F exit0、8.07s（新增19＋原130）。没有删断言或skip。
+
+共享集成沿上一段完整356项命令，修改generic owner门前356P/0F exit0、12.70s；该测试不导入Claude，末端Claude改动由149项覆盖，不把集成绿当生产全绿。子代理compile/collect exit0；其初plain python exit127和fixture路径收集exit2已修；主会话两次只读猜测不存在test_claude_provider.py、docs/owner-ports.md exit2/1，随后按实际路径读取，不形成实现依据。diff-check exit0。
+
+C真实SQLite/Issuer＋受控effect/native owner；SDK实际执行桥、FencedSdkTransport生产装配、真实Claude证据owner、prepare查询、首输入association仍缺。P未验证、M0；核心继承3项方向扫描红未修。无第三方安装更新/真实模型/用户服务及数据操作、push或主树合并。AU003不报DONE，收妥此切片后串行回AU002已批准首输入接缝。

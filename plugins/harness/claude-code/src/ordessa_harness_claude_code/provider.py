@@ -21,6 +21,7 @@ from pacthold.agents.public import (
 )
 from .native_channel import FAMILY_ID, COMMAND_CATALOG_ID, compile_config, plan_launch, channel_report
 from .sdk import SDK_VERSION
+from .unit_lifecycle import ClaudeUnitCoordinator
 
 
 class ClaudeProviderUnavailable(ConfigurationUnsupported):
@@ -36,12 +37,13 @@ class ClaudeCodeRuntimeProvider:
     The object must not claim methods whose effect/confirmation is unavailable.
     """
     _PURE = ("describe_definition", "inspect_installation", "assess_configuration", "plan_preparation")
-    _PORT = ("start", "query_step", "describe_access", "connect", "inspect_unit",
+    _PORT = ("describe_access", "connect", "inspect_unit",
              "describe_configuration", "inspect_configuration", "apply_configuration",
              "query_change", "stop", "release", "recover")
 
     def __init__(self, *, definition_ref, implementation_digest, verifier=None,
-                 unit_records=None, unit_port=None, preparation_authority=None):
+                 unit_records=None, unit_port=None, preparation_authority=None,
+                 unit_projection=None, native_unit_effects=None, native_unit_observations=None):
         self._verifier, self._records, self._units = verifier, unit_records, unit_port
         self._preparation_authority = preparation_authority
         supported = list(self._PURE)
@@ -62,9 +64,23 @@ class ClaudeCodeRuntimeProvider:
                 raise ClaudeProviderUnavailable("unit owner must declare exact implemented public methods")
             if verifier is None:
                 raise ClaudeProviderUnavailable("unit owner needs explicit invocation verifier")
+            if (unit_records is None or getattr(unit_records, "verifier", None) is not verifier
+                    or getattr(unit_port, "records", None) is not unit_records
+                    or getattr(unit_port, "verifier", None) is not verifier):
+                raise ClaudeProviderUnavailable("unit owner must use the same original records and verifier")
             supported.extend(declared)
         self.descriptor = RuntimeProviderDescriptor(FAMILY_ID, RUNTIME_PROVIDER_VERSION,
             definition_ref, implementation_digest, tuple(supported))
+        self._unit_coordinator = ClaudeUnitCoordinator(records=unit_records, verifier=verifier,
+            projection=unit_projection, effects=native_unit_effects, observations=native_unit_observations,
+            provider_descriptor=self.descriptor)
+        if self._unit_coordinator.start_ready:
+            supported.append("start")
+        if self._unit_coordinator.query_ready:
+            supported.append("query_step")
+        self.descriptor = RuntimeProviderDescriptor(FAMILY_ID, RUNTIME_PROVIDER_VERSION,
+            definition_ref, implementation_digest, tuple(supported))
+        self._unit_coordinator.descriptor = self.descriptor
 
     def contributions(self):
         return AgentContributionSet(agent_runtime_providers=(self,))
@@ -180,16 +196,12 @@ class ClaudeCodeRuntimeProvider:
         return getattr(self._units, method)(unit_ref, *args, context)
 
     def start(self, prepared_unit, invocation_context):
-        # Trusted owner must call existing begin_session BEFORE its SDK open,
-        # and record_session only after native evidence. Until composed it is
-        # absent from supported_methods; this adapter never opens a substitute.
         self._required("start")
-        return self._units.start(prepared_unit, invocation_context)
+        return self._unit_coordinator.start(prepared_unit, invocation_context)
 
     def query_step(self, correlation, authorized_read_context):
         self._required("query_step")
-        self._verify_read(authorized_read_context)
-        return self._read("query_step", correlation, authorized_read_context)
+        return self._unit_coordinator.query(correlation, authorized_read_context)
 
     def _verify_read(self, context, inspection=None):
         facts = context.facts
