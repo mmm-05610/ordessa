@@ -870,7 +870,7 @@
   "implementationRun": {
     "authorization": "user /goal current worktree only",
     "baseline": "e4714eba00a78ba04c5b53318830a0d409e76bbe",
-    "receipt": "evidence/protocol-diagnostic-20261005/offline/receipt.json",
+    "receipt": "evidence/original-graph-final-offline-20261005/run/receipt.json",
     "tasks": {
       "JD001": "OFFLINE_VERIFIED",
       "JD002": "OFFLINE_VERIFIED",
@@ -953,7 +953,7 @@
       "T67": "PASSED",
       "T68": "PASSED"
     },
-    "unique_tests_passed": 242,
+    "unique_tests_passed": 260,
     "all_work_complete": false,
     "additionalCoreRegression": {
       "matchedIds": 57,
@@ -1034,12 +1034,20 @@
     "continuedDiagnostics": {
       "receipt": "evidence/protocol-diagnostic-20261005/summary.json",
       "authorization": "User authorized no cumulative attempt limit for same free synthetic diagnostic scope; each run remains finite",
-      "status": "ONGOING",
+      "status": "ORIGINAL_GRAPH_SCOPED_VERIFIED",
       "newHttpRequests": 23,
-      "cumulativeHttpRequests": 127,
+      "cumulativeHttpRequests": 184,
       "capacityFailureDiagnostic": "probability_sum",
       "intentRubricV3Matches": 8,
-      "intentRubricV3Cases": 8
+      "intentRubricV3Cases": 8,
+      "referenceFlowReceipt": "evidence/reference-flow-20261005/summary.json",
+      "rankFlowReceipt": "evidence/rank-flow-20261005/summary.json",
+      "referenceGraphCasesPassed": 6,
+      "rankGraphCasesPassed": 3,
+      "reportedInputTokens": 141209,
+      "reportedOutputTokens": 12613,
+      "unknownUsageRequests": 3,
+      "productReadinessComplete": false
     }
   }
 }

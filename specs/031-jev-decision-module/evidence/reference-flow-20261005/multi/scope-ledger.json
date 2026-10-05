@@ -1,0 +1,95 @@
+{
+  "scope_id": "jev-reference-multi-20261005",
+  "input_hash": "sha256:50e7858e77448647fc10c95d0e806119929338117c3af78b74c49fb9b4f453aa",
+  "limit": 12,
+  "cases": [
+    "reference-ready",
+    "reference-repair"
+  ],
+  "requests": [
+    {
+      "case_id": "reference-ready",
+      "attempt": 1,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.9992
+    },
+    {
+      "case_id": "reference-ready",
+      "attempt": 2,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6698
+    },
+    {
+      "case_id": "reference-ready",
+      "attempt": 3,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.8285
+    },
+    {
+      "case_id": "reference-ready",
+      "attempt": 4,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6489
+    },
+    {
+      "case_id": "reference-ready",
+      "attempt": 5,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.3253
+    },
+    {
+      "case_id": "reference-ready",
+      "attempt": 6,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.0045
+    },
+    {
+      "case_id": "reference-repair",
+      "attempt": 7,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6472
+    },
+    {
+      "case_id": "reference-repair",
+      "attempt": 8,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.9951
+    },
+    {
+      "case_id": "reference-repair",
+      "attempt": 9,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6138
+    },
+    {
+      "case_id": "reference-repair",
+      "attempt": 10,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.9072
+    },
+    {
+      "case_id": "reference-repair",
+      "attempt": 11,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.9838
+    },
+    {
+      "case_id": "reference-repair",
+      "attempt": 12,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6616
+    }
+  ]
+}

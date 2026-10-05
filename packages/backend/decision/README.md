@@ -55,3 +55,9 @@ The implementation and required evaluation reports are delivered; product readin
 remains PARTIAL. The spec completion-audit.md maps the original JD items and
 requirements to scoped evidence. Existing family opt-out and unmet live labels are
 reported exactly as the task contract requires, without advertising native effects.
+
+真实 Jev 合成验收另有两个原图探针：`evaluation/reference_flow_probe.py`
+覆盖任务门、提案与原 Repair 回环；`evaluation/rank_flow_probe.py` 覆盖原多候选
+排名。它们的 `prepare` 入口不读凭据，计划/规则/预期先冻结；真实 `run` 需要
+显式授权、私有凭据路径与不可重用scope ledger。候选/组合/校验是受控资料，
+不代表真实家族支持或原生效果。完整调用与失败证据在本树specs的evidence目录。
