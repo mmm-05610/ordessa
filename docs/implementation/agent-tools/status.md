@@ -232,3 +232,9 @@ C为受控契约及真实Python peer/SQLite；P为三家真实上游进程0（�
 Codex执行者恢复写权仅plugins/harness/codex/**，接expectedVersion＋白名单defaults/readback＋实际pre-send id与原receipt；不写共享、不运行pytest。主会话独占原journal、装配与账本。Pi/Claude尚无生产确认端口，三家生命周期/core prepare/Node及CLI迁出缺口保持；AU003整体PARTIAL。
 
 本接缝追加真实InvocationIssuer＋SqliteStorePort贯通5项：首跑56P/5F exit1、0.71s，受控流程漏掉prepare/start原步骤结论，核心正确拒绝后续claim。补真实owner结果后的原step concluded记录，保持全部门和断言；最终同三文件61P/0F exit0、0.66s（配置29＋UnitRecords23＋journal9）。issue之后撤销authority/activation/Directory/epoch均无新配置attempt，原possibly-dispatched claim保留；原配置query不重发。C层贯通，不升级为三家P/M。
+
+### 2026-10-05 现有Codex隔离版本探测
+
+独立于init文件扫描，在新临时HOME/CODEX_HOME/XDG与显式清空环境下，仅运行绝对路径 `/usr/lib/chatgpt/resources/codex --version`：子命令exit0，stdout `codex-cli 0.159.0`，二进制SHA256 d2752c52353401f7f6efbfcea68796f4f7a3d3e4769f5d1da53fa49d4856b72f。stderr提示临时CODEX_HOME子目录不存在、未创建PATH aliases。临时环境清除；未继承用户登录环境、未安装更新或启动服务、模型0。未对进程任意文件读取实施OS sandbox，因此证据不声称沙箱级用户文件隔离。
+
+当前Codex实现依据固定0.157.1协议源码；观察到0.159.0不证明兼容，不自动更改pin或选该二进制运行Agent。证据codex-local-version-probe.json仅版本探测成功，compatibilityVerified=false/runtimeReady=unknown。此前init“不执行候选”仍指init自身，不能与此次独立版本探测混淆。原历史截断npm artifact仍是另一来源的已知缺口。

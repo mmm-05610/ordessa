@@ -1,0 +1,16 @@
+{
+  "executable": "/usr/lib/chatgpt/resources/codex",
+  "scope": "isolated-version-probe",
+  "models": 0,
+  "sha256": "d2752c52353401f7f6efbfcea68796f4f7a3d3e4769f5d1da53fa49d4856b72f",
+  "exitCode": 0,
+  "stdout": "codex-cli 0.159.0",
+  "stderr": "WARNING: proceeding, even though we could not create PATH aliases: CODEX_HOME points to \"/tmp/au003-codex-version-9uqz9q6c/codex\", but that path does not exist",
+  "verified": true,
+  "temporaryEnvironmentRemoved": true,
+  "ambientConfigurationInherited": false,
+  "pinnedProtocolVersion": "0.157.1",
+  "observedVersion": "0.159.0",
+  "compatibilityVerified": false,
+  "runtimeReady": "unknown"
+}
