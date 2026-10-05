@@ -8,12 +8,13 @@ DIGEST='sha256:'+'a'*64
 DEFINITION={'environmentNamespace':'test','definitionId':'pi','revision':'1'}
 PROVIDER={'environmentNamespace':'test','providerId':'pi','implementationDigest':DIGEST,'contractVersion':'agent-runtime/2'}
 NODE={'environmentNamespace':'test','instanceId':'node','generation':1}
-UNIT={'environmentNamespace':'test','unitId':'unit-1'}
+TARGET={'environmentNamespace':'test','scopeId':'scope','revision':'1','ownerProviderRef':PROVIDER,'sourceRevision':'controlled-scope-source-1'}
+UNIT={'environmentNamespace':'test','unitId':'unit-1','ownerProviderRef':PROVIDER,'sourceRevision':'controlled-unit-source-1'}
 
 
 class Projection:
     def __init__(self):
-        self.unit=SimpleNamespace(unit_ref='unit-1',facts={'providerRef':PROVIDER,'nodeRef':NODE,
+        self.unit=SimpleNamespace(unit_ref='unit-1',public_ref=UNIT,configuration_target_ref=TARGET,facts={'providerRef':PROVIDER,'nodeRef':NODE,
             'privateRootFacts':{'cwd':'/isolated'},'managementEpoch':1},
             scope_ref=SimpleNamespace(to_dict=lambda:{'environmentNamespace':'test','scopeId':'scope','revision':'1'}))
         self.binding=SimpleNamespace(state='notCreated',native_facts=None,source_revision=1)
@@ -181,4 +182,68 @@ def test_preparation_materials_not_silently_swallowed():
     with pytest.raises(PiProviderRefused):
         provider.plan_preparation({'manifest':{'declarations':[{'requirement':'required'}]}},
             {'privateRootFacts':{'cwd':'/isolated'}},{'operationRef':'original'})
+    assert not opens
+
+
+@pytest.mark.parametrize('forgery',['raw','source','owner','environment','extra','missing'])
+@pytest.mark.parametrize('entry',['start','access','connect','inspect'])
+def test_complete_original_unit_ref_required_before_native_effect(forgery,entry):
+    from copy import deepcopy
+    provider,projection,records,client,context,opens=fixture(SimpleNamespace(bind=lambda *args:object()))
+    ref=deepcopy(UNIT)
+    if forgery=='raw': ref={key:ref[key] for key in ('environmentNamespace','unitId')}
+    elif forgery=='source': ref['sourceRevision']='forged-source'
+    elif forgery=='owner': ref['ownerProviderRef']['generation']=999
+    elif forgery=='environment': ref['environmentNamespace']='foreign'
+    elif forgery=='extra': ref['extra']='field'
+    else: del ref['ownerProviderRef']
+    with pytest.raises(PiProviderRefused):
+        if entry=='start': provider.start({'unitRef':ref},context)
+        elif entry=='access': provider.describe_access(ref)
+        elif entry=='connect': provider.connect(ref,object())
+        else: provider.inspect_unit(ref)
+    assert not opens and records.begins==0 and not client.calls
+
+
+def test_prepare_returns_exact_original_reservation_source_ref():
+    provider,projection,records,client,context,opens=fixture()
+    result=provider.prepare({'context':{'nodeRef':NODE}},context)
+    assert result['unitRef']==projection.unit.public_ref
+    assert set(result['unitRef'])=={'environmentNamespace','unitId','ownerProviderRef','sourceRevision'}
+
+
+@pytest.mark.parametrize('wrong',['unit','target','epoch'])
+def test_publication_projection_cannot_change_original_unit_target_or_epoch(wrong):
+    from pacthold.agents.directory import DirectoryBindingRef
+    provider,projection,records,client,context,opens=fixture()
+    value={'unitRef':UNIT,'configurationTargetRef':projection.unit.configuration_target_ref,
+        'managementEpoch':1,'directoryBindingRef':DirectoryBindingRef('test','directory',1,'sha256:'+'a'*64),
+        'sourceRevision':'observation-1','evidenceRef':{'environmentNamespace':'test','evidenceId':'owner'}}
+    if wrong=='unit': value['unitRef']={**UNIT,'sourceRevision':'other'}
+    elif wrong=='target': value['configurationTargetRef']={**value['configurationTargetRef'],'scopeId':'other'}
+    else: value['managementEpoch']=2
+    projection.publication_facts=lambda ref:value
+    with pytest.raises(PiProviderRefused): provider.inspect_unit(UNIT)
+    assert not opens and not client.calls
+
+
+def test_boolean_owner_generation_cannot_bypass_full_unit_comparison():
+    from copy import deepcopy
+    provider,projection,records,client,context,opens=fixture()
+    ref=deepcopy(UNIT); ref['ownerProviderRef']['generation']=True
+    # Original fixture provider has no generation, so use an explicit int-vs-bool
+    # controlled original owner reference while retaining all provenance fields.
+    projection.unit.public_ref=deepcopy(UNIT)
+    projection.unit.public_ref['ownerProviderRef']['generation']=1
+    with pytest.raises(PiProviderRefused): provider.start({'unitRef':ref},context)
+    assert not opens and records.begins==0
+
+
+def test_publication_uses_complete_original_configuration_target():
+    from pacthold.agents.directory import DirectoryBindingRef
+    provider,projection,records,client,context,opens=fixture()
+    projection.publication_facts=lambda ref:{'unitRef':UNIT,'configurationTargetRef':TARGET,
+        'managementEpoch':1,'directoryBindingRef':DirectoryBindingRef('test','directory',1,'sha256:'+'a'*64),
+        'sourceRevision':'observed-1','evidenceRef':{'environmentNamespace':'test','evidenceId':'owner'}}
+    assert provider.inspect_unit(UNIT).configuration_target_ref==projection.unit.configuration_target_ref
     assert not opens

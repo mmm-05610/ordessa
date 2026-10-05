@@ -1,5 +1,6 @@
 """C: explicit trusted ports and native responses; no Pi/model execution."""
 from contextlib import nullcontext
+from types import SimpleNamespace
 from copy import deepcopy
 from datetime import datetime, timezone
 import pytest
@@ -16,14 +17,15 @@ class Context:
 
 class Owner:
     def __init__(self):
-        self.ref = {'environmentNamespace':'pi-test', 'unitId':'unit-1'}
         self.provider = {'environmentNamespace':'pi-test', 'providerId':'pi', 'generation':1}
-        self.target = {'environmentNamespace':'pi-test', 'scopeId':'scope-1'}
+        self.ref = {'environmentNamespace':'pi-test', 'unitId':'unit-1', 'ownerProviderRef':self.provider,'sourceRevision':'controlled-unit-source-1'}
+        self.target = {'environmentNamespace':'pi-test', 'scopeId':'scope-1','revision':'1','ownerProviderRef':self.provider,'sourceRevision':'controlled-scope-source-1'}
         self.state = {'sessionId':'session-1', 'model':{'provider':'native','id':'old'}, 'thinkingLevel':'off'}
         self.commands=[]; self.ack_only=False; self.lost=False; self.permitted=True; self.session_valid=True
         self.inspection = UnitInspection(self.ref,self.provider,self.target,
             DirectoryBindingRef('pi-test','directory',1,'sha256:'+'a'*64),1,'owned','unit-1',
             datetime.now(timezone.utc).isoformat(),{'environmentNamespace':'pi-test','evidenceId':'unit'})
+    def read_unit(self, ref): return SimpleNamespace(public_ref=self.ref,configuration_target_ref=self.target)
     def inspect_unit(self, ref): return self.inspection
     def channel(self, ref): return self
     def serialize_configuration(self, ref): return nullcontext()
@@ -202,3 +204,62 @@ def test_incomplete_trusted_ports_refused_at_construction():
     with pytest.raises(PiProviderRefused):
         PiRuntimeProvider(definition_ref={'environmentNamespace':'pi-test','definitionId':'pi','revision':'1'},
                           implementation_digest='sha256:'+'b'*64,owner=object())
+
+
+@pytest.mark.parametrize('forgery',['raw','source','owner','environment','extra','missing'])
+@pytest.mark.parametrize('entry',['inspect','snapshot','describe','apply','query'])
+def test_configuration_entries_reject_counterfeit_original_unit_ref(setup,forgery,entry):
+    provider,owner,confirmations=setup
+    ref=deepcopy(owner.ref)
+    if forgery=='raw': ref={key:ref[key] for key in ('environmentNamespace','unitId')}
+    elif forgery=='source': ref['sourceRevision']='forged-source'
+    elif forgery=='owner': ref['ownerProviderRef']['generation']=999
+    elif forgery=='environment': ref['environmentNamespace']='foreign'
+    elif forgery=='extra': ref['extra']='field'
+    else: del ref['ownerProviderRef']
+    with pytest.raises(PiProviderRefused):
+        if entry=='inspect': provider.inspect_unit(ref)
+        elif entry=='snapshot': provider.inspect_configuration(ref)
+        elif entry=='describe': provider.describe_configuration(ref)
+        elif entry=='apply':
+            request=ConfigurationChangeRequest('request-1','unverified-source',(declaration(),))
+            provider.apply_configuration(ref,request,Context())
+        else: provider.query_change(ref,'operation-1',Context())
+    assert not owner.commands and not confirmations.receipts
+
+
+@pytest.mark.parametrize('forgery',['raw','source','owner','boolean-generation','environment','extra'])
+def test_inspection_cannot_substitute_configuration_target_source(setup,forgery):
+    from dataclasses import replace
+    provider,owner,confirmations=setup
+    original_target=deepcopy(owner.target)
+    altered=deepcopy(owner.target)
+    if forgery=='raw': altered={key:altered[key] for key in ('environmentNamespace','scopeId','revision')}
+    elif forgery=='source': altered['sourceRevision']='forged-source'
+    elif forgery=='owner': altered['ownerProviderRef']['generation']=999
+    elif forgery=='boolean-generation': altered['ownerProviderRef']['generation']=True
+    elif forgery=='environment': altered['environmentNamespace']='foreign'
+    else: altered['extra']='field'
+    # Inspection DTO cannot accept foreign environment at all; all other source
+    # changes remain structurally valid but must fail same original owner check.
+    if forgery=='environment':
+        with pytest.raises(ValueError): replace(owner.inspection,configuration_target_ref=altered)
+    else:
+        owner.inspection=replace(owner.inspection,configuration_target_ref=altered)
+        with pytest.raises(PiProviderRefused): provider.inspect_configuration(owner.ref)
+    assert owner.target==original_target and not owner.commands and not confirmations.receipts
+
+
+def test_boolean_owner_generation_cannot_equal_original_integer_unit_generation(setup):
+    provider,owner,_=setup
+    ref=deepcopy(owner.ref); ref['ownerProviderRef']['generation']=True
+    with pytest.raises(PiProviderRefused): provider.inspect_configuration(ref)
+    assert not owner.commands
+
+
+def test_confirmed_scope_is_complete_original_target(setup):
+    provider,owner,_=setup
+    result=provider.apply_configuration(owner.ref,change(provider,owner),Context())
+    assert result.confirmed_snapshot.scope_ref==owner.read_unit(owner.ref).configuration_target_ref
+    assert result.item_results[0].confirmation['scopeRef']==owner.target
+    assert set(result.item_results[0].confirmation['scopeRef'])=={'environmentNamespace','scopeId','revision','ownerProviderRef','sourceRevision'}

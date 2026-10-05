@@ -1,5 +1,6 @@
 """Pure contribution/planning C; production Unit ports explicitly absent."""
 import hashlib
+from types import SimpleNamespace
 import pytest
 
 from ordessa_harness_claude_code import ClaudeCodeRuntimeProvider, ClaudeProviderUnavailable
@@ -81,7 +82,12 @@ class Records:
 
     def reserve_unit(self, context, **kwargs):
         self.calls.append(kwargs)
-        return object(), True
+        # Controlled owner fixture, not a production Unit/native proof and not
+        # a reimplementation of UnitReservation's source derivation.
+        reference = {"environmentNamespace": kwargs["provider_ref"]["environmentNamespace"],
+                     "unitId": "controlled-unit", "ownerProviderRef": kwargs["provider_ref"],
+                     "sourceRevision": "sha256:" + "3" * 64}
+        return SimpleNamespace(public_ref=reference), True
 
 
 class PreparationAuthority:
@@ -146,3 +152,64 @@ def test_prepare_only_reserves_original_fixed_plan_no_native_effect():
     assert result["created"] is True and result["nativeStarted"] is False
     assert len(records.calls) == 1
     assert records.calls[0]["private_root_facts"] == plan["privateRootFacts"]
+    assert result["unitRef"]["ownerProviderRef"] == context.facts["providerRef"]
+    assert result["unitRef"]["sourceRevision"] == "sha256:" + "3" * 64
+    assert "unitReservation" not in result
+
+
+@pytest.mark.parametrize("damage", ["missing", "extra", "owner", "environment", "source"])
+def test_prepare_does_not_fabricate_or_repair_owner_reference(damage):
+    runtime, records, plan, context = preparation_setup()
+    reserve = records.reserve_unit
+    def damaged(*args, **kwargs):
+        unit, created = reserve(*args, **kwargs)
+        if damage == "missing":
+            return object(), created
+        reference = dict(unit.public_ref)
+        if damage == "extra":
+            reference["privateRootFacts"] = {"root": "forbidden"}
+        elif damage == "owner":
+            reference["ownerProviderRef"] = dict(reference["ownerProviderRef"], providerId="pi")
+        elif damage == "environment":
+            reference["environmentNamespace"] = "foreign"
+        elif damage == "source":
+            reference.pop("sourceRevision")
+        return SimpleNamespace(public_ref=reference), created
+    records.reserve_unit = damaged
+    with pytest.raises(ClaudeProviderUnavailable, match="public source"):
+        runtime.prepare(plan, context)
+    assert len(records.calls) == 1  # reserved original; no second reserve or native start.
+
+
+@pytest.mark.parametrize("field", ["generation", "ownerActivationGeneration"])
+def test_prepare_rejects_bool_masquerading_as_owner_generation(field, monkeypatch):
+    runtime, records, plan, context = preparation_setup()
+    owner = context.facts["providerRef"]
+    owner["generation"] = 1
+    owner["ownerActivationRef"] = {"environmentNamespace": "test", "pluginId": "claude-provider", "generation": 1}
+    original_reserve = records.reserve_unit
+
+    def forged(*args, **kwargs):
+        unit, created = original_reserve(*args, **kwargs)
+        reference = dict(unit.public_ref)
+        forged_owner = dict(reference["ownerProviderRef"])
+        if field == "generation":
+            forged_owner["generation"] = True
+        else:
+            forged_owner["ownerActivationRef"] = dict(forged_owner["ownerActivationRef"], generation=True)
+        # Python equality would accept this. The whole public owner reference
+        # must retain types, including its nested activation generation.
+        assert forged_owner == owner
+        reference["ownerProviderRef"] = forged_owner
+        return SimpleNamespace(public_ref=reference), created
+
+    records.reserve_unit = forged
+    monkeypatch.setattr("subprocess.Popen", lambda *a, **k: pytest.fail("prepare must not start native process"))
+    monkeypatch.setattr("ordessa_harness_claude_code.sdk.installed_sdk_factory",
+                        lambda: pytest.fail("prepare must not load actual SDK"))
+    with pytest.raises(ClaudeProviderUnavailable, match="public source"):
+        runtime.prepare(plan, context)
+    assert len(records.calls) == 1
+    assert type(owner["generation"]) is int
+    assert type(owner["ownerActivationRef"]["generation"]) is int
+    assert "start" not in runtime.descriptor.supported_methods

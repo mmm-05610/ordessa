@@ -17,7 +17,7 @@ from pacthold.agents.configuration import (
 )
 from pacthold.core.lifecycle import RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
 from pacthold.agents.invocation import InvocationVerifier
-from .lifecycle import PiUnitLifecycle, records_ready
+from .lifecycle import PiUnitLifecycle, records_ready, same_reference
 
 
 class PiProviderRefused(RuntimeError):
@@ -26,6 +26,7 @@ class PiProviderRefused(RuntimeError):
 
 class UnitOwnerPort(Protocol):
     """Trusted deployment binding to existing Unit/authority, never caller data."""
+    def read_unit(self, unit_ref): ...  # same authorized journal UnitReservation
     def inspect_unit(self, unit_ref) -> UnitInspection: ...
     def channel(self, unit_ref): ...  # existing PiRpcClient; MUST NOT launch
     def verify_session(self, unit_ref, native_session_id) -> bool: ...
@@ -67,7 +68,7 @@ class PiRuntimeProvider(PiUnitLifecycle):
     """
     def __init__(self, *, definition_ref, implementation_digest, owner=None, confirmations=None, verifier=None,
                  unit_records=None, projection=None, channel_factory=None, lease_port=None):
-        owner_methods = ("inspect_unit", "channel", "verify_session", "serialize_configuration", "revalidate_write")
+        owner_methods = ("read_unit", "inspect_unit", "channel", "verify_session", "serialize_configuration", "revalidate_write")
         if owner is not None and any(not callable(getattr(owner, name, None)) for name in owner_methods):
             raise PiProviderRefused("complete trusted Unit owner ports required")
         if confirmations is not None and any(not callable(getattr(confirmations, name, None)) for name in ("record", "read")):
@@ -105,8 +106,14 @@ class PiRuntimeProvider(PiUnitLifecycle):
             if "inspect_unit" in self.descriptor.supported_methods:
                 return self._inspect_record(unit_ref)
             raise PiProviderRefused("trusted current Unit owner is absent")
+        if (not isinstance(unit_ref, Mapping) or set(unit_ref) !=
+                {"environmentNamespace", "unitId", "ownerProviderRef", "sourceRevision"}):
+            raise PiProviderRefused("complete original Unit source reference required")
+        reservation = self._owner.read_unit(unit_ref)
+        if not same_reference(getattr(reservation, "public_ref", None), unit_ref):
+            raise PiProviderRefused("original Unit source identity differs")
         unit = self._owner.inspect_unit(unit_ref)
-        if not isinstance(unit, UnitInspection) or unit.unit_ref != unit_ref or unit.provider_ref.get("providerId") != "pi":
+        if not isinstance(unit, UnitInspection) or not same_reference(unit.unit_ref, unit_ref) or unit.provider_ref.get("providerId") != "pi" or not same_reference(unit.provider_ref, reservation.public_ref["ownerProviderRef"]) or not same_reference(unit.configuration_target_ref, getattr(reservation, "configuration_target_ref", None)):
             raise PiProviderRefused("current Pi Unit evidence differs")
         return unit
 
@@ -169,8 +176,8 @@ class PiRuntimeProvider(PiUnitLifecycle):
         except Exception:
             raise PiProviderRefused("current core invocation refused") from None
         if (not isinstance(facts, Mapping) or facts.get("query") is not query
-                or facts.get("action") != action or facts.get("providerRef") != unit.provider_ref
-                or facts.get("managementEpoch") != unit.management_epoch
+                or facts.get("action") != action or not same_reference(facts.get("providerRef"), unit.provider_ref)
+                or type(facts.get("managementEpoch")) is not int or facts.get("managementEpoch") != unit.management_epoch
                 or not _text(facts.get("operationRef")) or not _text(facts.get("inputDigest"))):
             raise PiProviderRefused("verified core invocation facts differ")
         return facts
@@ -229,8 +236,8 @@ class PiRuntimeProvider(PiUnitLifecycle):
         if not isinstance(result, ConfigurationChangeResult) or result.operation_ref != operation_ref:
             raise PiProviderRefused("original native attempt confirmation unavailable")
         for item in result.item_results:
-            if item.confirmation is not None and (item.confirmation["unitRef"] != unit_ref
-                    or item.confirmation["scopeRef"] != unit.configuration_target_ref
+            if item.confirmation is not None and (not same_reference(item.confirmation["unitRef"], unit_ref)
+                    or not same_reference(item.confirmation["scopeRef"], unit.configuration_target_ref)
                     or item.confirmation["requestDigest"] != facts["inputDigest"]):
                 raise PiProviderRefused("original native receipt target differs")
         return result

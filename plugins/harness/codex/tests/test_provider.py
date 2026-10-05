@@ -7,13 +7,19 @@ from pacthold.agents.public import RuntimeProvider
 DIGEST = "sha256:" + "a" * 64
 DEFINITION = {"environmentNamespace": "test", "definitionId": "codex", "revision": "1"}
 PROVIDER = {"environmentNamespace": "test", "providerId": "codex", "implementationDigest": DIGEST,
-            "contractVersion": "agent-runtime/2"}
+            "contractVersion": "agent-runtime/2", "generation": 1,
+            "ownerActivationRef": {"environmentNamespace": "test", "pluginId": "codex-plugin", "generation": 1}}
 NODE = {"environmentNamespace": "test", "instanceId": "node", "generation": 1}
-UNIT = {"environmentNamespace": "test", "unitId": "unit-1"}
+# Explicit C fixture source reference, not production journal/native proof.
+UNIT = {"environmentNamespace": "test", "unitId": "unit-1", "ownerProviderRef": PROVIDER, "sourceRevision": "sha256:" + "c" * 64}
+
+# Explicit controlled owner projection, not a copied production hash algorithm.
+CONFIGURATION_TARGET = {"environmentNamespace":"test", "scopeId":"scope", "revision":"1",
+                        "ownerProviderRef":PROVIDER, "sourceRevision":"sha256:"+"b"*64}
 
 class Projection:
     def __init__(self):
-        self.unit = SimpleNamespace(unit_ref="unit-1", facts={"providerRef": PROVIDER, "nodeRef": NODE,
+        self.unit = SimpleNamespace(unit_ref="unit-1", public_ref=UNIT, configuration_target_ref=CONFIGURATION_TARGET, facts={"providerRef": PROVIDER, "nodeRef": NODE,
                   "privateRootFacts": {"cwd": "/isolated"}, "managementEpoch": 1},
                   scope_ref=SimpleNamespace(to_dict=lambda: {"environmentNamespace": "test", "scopeId": "scope", "revision": "1"}))
         self.binding = SimpleNamespace(state="notCreated", native_facts=None, source_revision=1)
@@ -201,3 +207,119 @@ def test_config_unknown_structure_never_returns_profile_desired():
     provider,projection,records,client,context=fixture(); provider.start({"unitRef":UNIT},context)
     client.command=lambda *args,**kwargs: {"ack":True}
     with pytest.raises(CodexProviderRefused): provider.inspect_configuration(UNIT)
+
+
+def forged_unit_references():
+    from copy import deepcopy
+    values=[]
+    values.append({"environmentNamespace":UNIT["environmentNamespace"],"unitId":UNIT["unitId"]})
+    for key,value in [("environmentNamespace","foreign"),("unitId","different-unit"),
+                      ("sourceRevision","sha256:"+"d"*64),("extra","unpublished")]:
+        ref=deepcopy(UNIT);ref[key]=value;values.append(ref)
+    for key,value in [("providerId","foreign"),("generation",2),("implementationDigest","sha256:"+"e"*64)]:
+        ref=deepcopy(UNIT);ref["ownerProviderRef"][key]=value;values.append(ref)
+    ref=deepcopy(UNIT);ref["ownerProviderRef"]["ownerActivationRef"]["generation"]=2;values.append(ref)
+    ref=deepcopy(UNIT);ref["ownerProviderRef"]["environmentNamespace"]="foreign";values.append(ref)
+    ref=deepcopy(UNIT);ref["ownerProviderRef"]["generation"]=True;values.append(ref)
+    ref=deepcopy(UNIT);ref["ownerProviderRef"]["ownerActivationRef"]["generation"]=True;values.append(ref)
+    return values
+
+
+@pytest.mark.parametrize("reference",forged_unit_references())
+def test_received_full_unit_identity_rejected_before_any_native_start(reference):
+    provider,projection,records,client,context=fixture()
+    with pytest.raises(CodexProviderRefused): provider.start({"unitRef":reference},context)
+    assert records.begins == 0 and client.calls == []
+
+
+@pytest.mark.parametrize("reference",forged_unit_references())
+def test_received_full_unit_identity_rejected_by_every_live_read_and_access(reference):
+    bound=[]
+    lease=SimpleNamespace(bind=lambda *args:bound.append(args))
+    provider,projection,records,client,context=fixture(lease_port=lease)
+    provider.start({"unitRef":UNIT},context)
+    calls=list(client.calls)
+    for method,args in [("inspect_unit",(reference,)),("describe_configuration",(reference,)),
+                        ("inspect_configuration",(reference,)),("describe_access",(reference,)),
+                        ("connect",(reference,object()))]:
+        with pytest.raises(CodexProviderRefused): getattr(provider,method)(*args)
+    assert client.calls == calls and bound == []
+
+
+def test_prepare_preserves_original_public_reference_without_rehashing():
+    provider,projection,records,client,context=fixture()
+    result=provider.prepare({"context":{"nodeRef":NODE}},context)
+    assert result["unitRef"] is projection.unit.public_ref
+    assert set(result["unitRef"]) == {"environmentNamespace","unitId","ownerProviderRef","sourceRevision"}
+    assert result["unitRef"]["ownerProviderRef"] == PROVIDER
+    assert result["unitRef"]["sourceRevision"] == UNIT["sourceRevision"]
+    assert client.calls == []
+
+
+def test_prepare_does_not_publish_owner_return_with_forged_public_identity():
+    from copy import deepcopy
+    provider,projection,records,client,context=fixture()
+    projection.unit.public_ref=deepcopy(UNIT)
+    projection.unit.public_ref["ownerProviderRef"]["generation"]=2
+    with pytest.raises(CodexProviderRefused): provider.prepare({"context":{"nodeRef":NODE}},context)
+    assert client.calls == []
+
+
+def publication_fixture(projection):
+    from pacthold.agents.public import DirectoryBindingRef
+    return {"unitRef":projection.unit.public_ref,"providerRef":projection.unit.facts["providerRef"],
+            "configurationTargetRef":projection.unit.configuration_target_ref,
+            "managementEpoch":1,"sourceRevision":"native-owner-observation-3",
+            "directoryBindingRef":DirectoryBindingRef("test","workspace",1,"sha256:"+"f"*64),
+            "evidenceRef":{"environmentNamespace":"test","evidenceRef":"native-observation"}}
+
+
+def test_inspection_preserves_current_observation_and_canonical_config_target():
+    provider,projection,records,client,context=fixture()
+    facts=publication_fixture(projection);projection.publication_facts=lambda ref:facts
+    observed=provider.inspect_unit(UNIT)
+    assert observed.unit_ref == projection.unit.public_ref
+    assert observed.provider_ref == PROVIDER
+    assert observed.configuration_target_ref == projection.unit.configuration_target_ref
+    assert observed.source_revision == "native-owner-observation-3"
+    assert observed.source_revision != UNIT["sourceRevision"]
+    assert client.calls == []
+
+
+@pytest.mark.parametrize("field,value",[("unitRef",{}),("providerRef",{}),("configurationTargetRef",{}),
+                                         ("managementEpoch",2),("managementEpoch",True)])
+def test_publication_cannot_replace_original_owner_scope_or_epoch(field,value):
+    provider,projection,records,client,context=fixture()
+    facts=publication_fixture(projection);facts[field]=value;projection.publication_facts=lambda ref:facts
+    with pytest.raises(CodexProviderRefused): provider.inspect_unit(UNIT)
+    assert client.calls == []
+
+
+def forged_configuration_targets():
+    from copy import deepcopy
+    values=[]
+    values.append({"environmentNamespace":"test","scopeId":"scope","revision":"1"})
+    for key,value in [("environmentNamespace","foreign"),("scopeId","different"),("revision","different"),
+                      ("sourceRevision","sha256:"+"d"*64),("extra","unpublished")]:
+        ref=deepcopy(CONFIGURATION_TARGET);ref[key]=value;values.append(ref)
+    ref=deepcopy(CONFIGURATION_TARGET);ref["ownerProviderRef"]["generation"]=2;values.append(ref)
+    ref=deepcopy(CONFIGURATION_TARGET);ref["ownerProviderRef"]["generation"]=True;values.append(ref)
+    ref=deepcopy(CONFIGURATION_TARGET);ref["ownerProviderRef"]["ownerActivationRef"]["generation"]=True;values.append(ref)
+    return values
+
+
+@pytest.mark.parametrize("target",forged_configuration_targets())
+def test_publication_cannot_replace_complete_owner_bound_configuration_target(target):
+    provider,projection,records,client,context=fixture()
+    facts=publication_fixture(projection);facts["configurationTargetRef"]=target
+    projection.publication_facts=lambda ref:facts
+    with pytest.raises(CodexProviderRefused): provider.inspect_unit(UNIT)
+    assert client.calls == []
+
+
+def test_snapshot_target_source_is_distinct_from_native_version():
+    provider,projection,records,client,context=fixture();provider.start({"unitRef":UNIT},context)
+    observed=provider.inspect_configuration(UNIT)
+    assert observed.scope_ref == CONFIGURATION_TARGET
+    assert observed.scope_ref["sourceRevision"] == projection.unit.configuration_target_ref["sourceRevision"]
+    assert observed.source_revision != observed.scope_ref["sourceRevision"]

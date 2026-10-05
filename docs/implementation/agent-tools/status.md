@@ -293,3 +293,18 @@ Environment共享修改后核心全回归同命令 `-m pytest -c packages/backen
 前置48bf7b159f5eb031bee70a400407e1871ce019a0，clean；实时三家状态completed，原成果已提交保留。AU002共享准备协调检查点后串行进入AU003，主会话仍独占共享接口/journal/Git/账本及验证。UnitReservation.public_ref从原journal immutable来源生成严格owner/source引用，sourceRevision不是native配置/session计数；resolve_unit_reference沿原授权read核实四字段，拒绝raw两字段/伪owner/来源/环境与缺权限。没有新增库或迁移。家族冻结消费说明unit-reference-port.md。
 
 命令 `/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python -m pytest -c plugins/harness/pyproject.toml plugins/harness/tests/test_unit_records.py plugins/harness/tests/test_unit_configuration_records.py plugins/harness/tests/test_operation_journal.py -q`：66P exit0、0.73s（新增引用5、原Unit23、配置29、journal9）。覆盖冷读取来源不变、session观察与引用版本分离、嵌套不可变、原授权及伪引用反例。C真实SQLite＋受控authority；P/M未运行。接下来Pi/Codex/Claude各自包独占接入，主会话串行复跑；本冻结不标AU003_DONE。
+
+### 2026-10-05 AU003 三家完整引用与同配置目标检查点（PARTIAL）
+
+真实HEAD3826f18204507314deaefbd1527475d1f5216fd1，保留19份已有未提交文件。核实Pi/Codex已释放写权；Claude interrupted，恢复其原窄切片补两项bool冒充generation反例，完成后明确释放。主会话独占共享journal、Git、账本与串行pytest，没有另开共享写者。共享配置目标从同原scope投影owner/source，原物理scope/key不变；配置attempt、Unit引用及授权目标保留完整来源。旧缺来源attempt查询拒绝且unknown占用保留，不补写或迁移用户DB。
+
+Pi/Codex消费原Unit.public_ref与configuration_target_ref，不自造摘要；配置/发布/查询比较保留JSON类型。Claude prepare只返回原公开Unit引用，SDK接实际SystemMessage.data init session身份；坏身份保留unknown并拒新输入/配置写，不把init当任务完成或伪造session。阶段审阅保留所有原断言和历史限制。
+
+本轮最终实际串行命令（解释器均 `/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python`）：
+- `PYTHONPATH=plugins/harness/codex/src:packages/backend/harness-transport/src <python> -m pytest -c plugins/harness/codex/pyproject.toml plugins/harness/codex/tests -q`：120P/0F，exit0，1.81s。
+- `<python> -m pytest -c plugins/harness/pyproject.toml plugins/harness/tests/test_unit_records.py plugins/harness/tests/test_unit_configuration_records.py plugins/harness/tests/test_operation_journal.py -q`：68P/0F，exit0，0.80s；其中配置31、Unit28、journal9。新增完整目标及旧raw unknown不释放两项。
+- `PYTHONPATH=plugins/harness/claude-code/src:packages/backend/harness-transport/src <python> -m pytest -c plugins/harness/claude-code/pyproject.toml plugins/harness/claude-code/tests -q`：130P/0F，exit0，6.80s；128为较早快照，不累加。
+- `PYTHONPATH=plugins/harness/pi/src:packages/backend/harness-transport/src <python> -m pytest -c plugins/harness/pi/pyproject.toml plugins/harness/pi/tests -q`：172P/0F，exit0，2.96s；中断前同版本172P/2.99s不累加。
+- `python3 /home/maoqh/.agents/skills/incremental-work-order/scripts/validate_order.py docs/implementation/work-orders/agent-unit-model/orders --strict`：五单结构exit0；`git diff --check` exit0。初次读取误用AU003.md不存在，exit1，已读取实际AU003-three-providers.md；不影响实现或测试。
+
+C为受控owner/SDK以及真实临时SQLite/Python peer；三家真实上游进程P未验证，真实模型M0。核心继承3项方向扫描失败未在本窄测修复，不报全量绿。无安装更新/登录配置/用户服务/用户DB操作、push或主树合并。AU003仍PARTIAL：生产授权投影/原生writer fence与receipt端口、真实family→核心装配、Claude无session Unit确认、C1材料/SecretRef、生命周期与冷恢复、旧注册迁出、CLI/Skill薄化及发行验收继续。此检查点只冻结引用一致性，不能认定AU002或AU003收尾。

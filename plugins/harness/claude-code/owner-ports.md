@@ -8,7 +8,7 @@ implemented second runtime. Its missing methods are unsupported today.
 | Existing object / port | Used public method | Current behavior |
 | --- | --- | --- |
 | Core RuntimeProviderDescriptor / AgentContributionSet | fixed definition + `supported_methods`; contribution | Same CoreRegistry admission. No author activation identity or side registry. |
-| Existing UnitRecords | `reserve_unit(context, provider_ref=..., node_ref=..., input_digest=..., private_root_facts=...)` | Provider prepare reserves the existing owner scope and returns its reservation. No process/session is started, no Node readiness is claimed. |
+| Existing UnitRecords | `reserve_unit(context, provider_ref=..., node_ref=..., input_digest=..., private_root_facts=...)` | Provider prepare reserves the existing owner scope and returns the original reservation's immutable `public_ref` as `unitRef`. No private reservation object escapes, no process/session is started, no Node readiness is claimed. |
 | Trusted original core-operation preparation projection | `verify_preparation(plan, invocation_facts)` -> exact bool | Must verify every supplied root/native/material/profile/correlation against the fixed original operation context and claim digest in the same store. Without this port or the exact same UnitRecords verifier, prepare is not advertised. Copied valid inputDigest does not authorize a new plan. |
 | Existing UnitRecords | `begin_session(unit_ref, context, input_digest=...)`, `record_session(ticket, expected_source_revision=..., state=..., evidence=...)` | Required production start owner sequence. This family slice has not composed it with a real SDK binding/evidence port. Not default supported. |
 | Core InvocationVerifier | `verify_and_consume(context, action, provider_ref, target_ref, input_digest)` | Config and destructive lifecycle helpers consume original authority, compare owner/epoch and target. Query helpers verify current query context. |
@@ -29,6 +29,21 @@ future complete preparation composition. It cannot be accepted as an invocation
 authority; the explicit preparation projection verifies it against the original
 operation and UnitRecords consumes the issued context. The plan itself does not
 publish a public Unit binding or Node.
+
+Shared reference freeze `3826f18204` supplies `UnitReservation.public_ref` with
+exact environmentNamespace/unitId/ownerProviderRef/sourceRevision. This package
+consumes that owner property unchanged; it never derives or repairs these fields.
+The trusted production unit projection still needs authorized reads from the
+original journal and whole-reference comparison for every instance entrance.
+Missing production projection remains unsupported; returning a correct prepared
+Unit reference does not prove native creation or session readiness.
+
+The pinned SDK's `SystemMessage(subtype="init")` carries the native raw frame in
+`.data`. This package now consumes that actual session_id, refuses missing,
+empty, `default`, malformed or mismatched identities, and preserves the typed
+message/raw fields. An init receipt neither completes a pending turn nor grants
+permission to resend. Unit creation without a session remains a separate shared
+owner confirmation gap; connect alone does not fabricate nativeSessionRefs.
 
 Before production method declaration, the main composition must prove: same
 journal/provider/unit/operation identity; native creation evidence; actual config

@@ -55,3 +55,11 @@ PYTHONPATH=plugins/harness/claude-code/src:packages/backend/harness-transport/sr
 All executions must be rerun serially by the main executor. No P (real
 Claude/SDK process) or M (real task)
 evidence. Actual executable and installed SDK versions remain unmeasured.
+
+Follow-up at shared freeze `3826f18204`: consume SDK `SystemMessage.data` init
+session identity, retain original-session consistency and unknown input fence,
+and return only the original UnitReservation.public_ref from prepare. Missing
+native Unit/session confirmation ports remain unsupported. Syntax compile and
+package diff-check exit 0; the same collect command now reports **128 tests,
+exit 0, 0.14s**. This is collection only; the main executor owns serial execution
+and the result ledger. No P/M evidence was added.

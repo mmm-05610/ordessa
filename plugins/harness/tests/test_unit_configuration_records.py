@@ -4,9 +4,11 @@ No native Harness/SDK/model is run. Current configuration values are never
 written here and cannot be used to settle an original native attempt.
 """
 import copy
+import hashlib
 import json
 
 import pytest
+from ordessa_environment_api.operations import safe_json
 
 from test_unit_records import parts, reserve, begin, PROVIDER, NODE
 from ordessa_harness.application.unit_records import (
@@ -42,11 +44,44 @@ def setup(tmp_path):
 
 
 def context(p, unit, action='applyConfiguration', step='configuration-apply', digest=DIGEST):
-    return p[2].issue(action, step, digest, node=unit.scope_ref.to_dict())
+    return p[2].issue(action, step, digest, node=unit.configuration_target_ref)
 
 
 def opening(p, unit):
     return p[0].begin_configuration_change(unit.unit_ref, context(p, unit), input_digest=DIGEST, expected_revision='native-version-1')
+
+
+def test_configuration_attempt_keeps_same_scope_with_complete_owner_sources(tmp_path):
+    p, unit = setup(tmp_path)
+    ticket = opening(p, unit)
+    attempt = p[0].bind_configuration_dispatch(ticket, native_request_id=7, native_request_digest=NATIVE_DIGEST)
+    assert attempt.identity['unitRef'] == unit.public_ref
+    assert attempt.identity['scopeRef'] == unit.configuration_target_ref
+    assert {name: attempt.identity['scopeRef'][name] for name in ('environmentNamespace', 'scopeId', 'revision')} == unit.scope_ref.to_dict()
+    assert attempt.identity['scopeRef']['ownerProviderRef'] == PROVIDER
+    assert attempt.identity['scopeRef']['sourceRevision'].startswith('sha256:')
+    assert unit.configuration_target_ref == unit.scope_ref.owner_ref(PROVIDER)
+
+
+def test_older_incomplete_attempt_is_not_reinterpreted_or_released(tmp_path):
+    p, unit = setup(tmp_path)
+    ticket = bound(p, unit)
+    p[0].record_configuration_change(ticket, expected_source_revision=2, state='unknown')
+    with p[1]._connect() as db:
+        row = db.execute('SELECT attempt_ref,identity_json FROM harness_unit_configuration_attempts').fetchone()
+        identity = json.loads(row['identity_json'])
+        identity['unitRef'] = {'environmentNamespace': 'env', 'unitId': unit.unit_ref}
+        identity['scopeRef'] = unit.scope_ref.to_dict()
+        encoded = safe_json(identity)
+        digest = hashlib.sha256(encoded.encode()).hexdigest()
+        db.execute('UPDATE harness_unit_configuration_attempts SET identity_json=?,identity_digest=? WHERE attempt_ref=?', (encoded, digest, row['attempt_ref']))
+        db.commit()
+    with pytest.raises(UnitRecordsRefused, match='scope or owner changed'): query(p, unit)
+    with pytest.raises(UnitRecordsRefused, match='retains scope fence'):
+        p[0].begin_configuration_change(unit.unit_ref, context(p, unit, step='another-key'), input_digest=DIGEST, expected_revision='native-version-1')
+    with p[1]._connect() as db:
+        unchanged = db.execute('SELECT state,identity_json FROM harness_unit_configuration_attempts').fetchone()
+        assert unchanged['state'] == 'unknown' and unchanged['identity_json'] == encoded
 
 
 def bound(p, unit):
@@ -230,7 +265,7 @@ def real_core_parts(tmp_path):
     from pacthold.agents.directory import DirectoryBindingRef
     from pacthold.agents.invocation import InvocationIssuer
     p = parts(tmp_path)
-    target = p[3].scope.to_dict()
+    target = p[3].scope.owner_ref(PROVIDER)
     request = RequestKey('env', 'controlled-principal', 'unit-flow')
     directory = DirectoryBindingRef('env', 'directory', 1, 'sha256:' + 'd' * 64)
     bindings = {

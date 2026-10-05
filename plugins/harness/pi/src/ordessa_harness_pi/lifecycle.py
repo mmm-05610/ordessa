@@ -40,6 +40,14 @@ def plain(value):
     return json.loads(safe_json(value))
 
 
+def same_reference(left, right):
+    """Compare the full original owner projection, retaining JSON scalar types."""
+    try:
+        return isinstance(left, Mapping) and isinstance(right, Mapping) and safe_json(left) == safe_json(right)
+    except Exception:
+        return False
+
+
 def records_ready(records, projection, verifier):
     return (records is not None and projection is not None and verifier is not None
         and getattr(records, 'verifier', None) is verifier
@@ -77,21 +85,27 @@ class PiUnitLifecycle:
         provider = facts['providerRef']
         if (provider.get('providerId') != 'pi' or provider.get('implementationDigest') != self.descriptor.implementation_digest
             or provider.get('contractVersion') != RUNTIME_PROVIDER_VERSION
-            or not isinstance(plan, Mapping) or plan.get('context', {}).get('nodeRef') != facts['targetRef']):
+            or not isinstance(plan, Mapping) or not same_reference(plan.get('context', {}).get('nodeRef'), facts['targetRef'])):
             self._unsupported()
         # The same UnitRecords consumes the original prepare claim itself.
         roots = self.projection.verify_preparation(plan, facts)
         unit, created = self.records.reserve_unit(invocation_context, provider_ref=provider,
             node_ref=facts['targetRef'], input_digest=facts['inputDigest'], private_root_facts=roots)
-        return {'unitRef':{'environmentNamespace':provider['environmentNamespace'],'unitId':unit.unit_ref},
+        reference = getattr(unit, 'public_ref', None)
+        if (not isinstance(reference, Mapping) or set(reference) !=
+                {'environmentNamespace','unitId','ownerProviderRef','sourceRevision'}
+                or not same_reference(reference['ownerProviderRef'], provider) or reference['unitId'] != unit.unit_ref
+                or reference['environmentNamespace'] != provider['environmentNamespace']):
+            self._unsupported()
+        return {'unitRef':plain(reference),
                 'created':created,'state':'notCreated'}
 
     def _unit_record(self, unit_ref):
-        if not isinstance(unit_ref, Mapping) or set(unit_ref) != {'environmentNamespace','unitId'}:
+        if not isinstance(unit_ref, Mapping) or set(unit_ref) != {'environmentNamespace','unitId','ownerProviderRef','sourceRevision'}:
             self._unsupported()
         unit = self.projection.read_unit(unit_ref)
         provider = unit.facts['providerRef']
-        if (unit.unit_ref != unit_ref['unitId'] or provider.get('environmentNamespace') != unit_ref['environmentNamespace']
+        if (not same_reference(getattr(unit, 'public_ref', None), unit_ref) or unit.unit_ref != unit_ref['unitId'] or provider.get('environmentNamespace') != unit_ref['environmentNamespace']
             or provider.get('providerId') != 'pi' or provider.get('implementationDigest') != self.descriptor.implementation_digest
             or provider.get('contractVersion') != RUNTIME_PROVIDER_VERSION):
             self._unsupported()
@@ -100,10 +114,10 @@ class PiUnitLifecycle:
     def _current_start(self, unit, context):
         facts = self.projection.revalidate_start(unit, context)
         original = context.facts
-        if (not isinstance(facts, Mapping) or facts != original or facts.get('action') != 'start'
-            or facts.get('query') is not False or facts.get('providerRef') != unit.facts['providerRef']
-            or facts.get('targetRef') != unit.facts['nodeRef']
-            or facts.get('managementEpoch') != unit.facts['managementEpoch']):
+        if (not isinstance(facts, Mapping) or not same_reference(facts, original) or facts.get('action') != 'start'
+            or facts.get('query') is not False or not same_reference(facts.get('providerRef'), unit.facts['providerRef'])
+            or not same_reference(facts.get('targetRef'), unit.facts['nodeRef'])
+            or type(facts.get('managementEpoch')) is not int or facts.get('managementEpoch') != unit.facts['managementEpoch']):
             self._unsupported()
         return facts
 
@@ -149,7 +163,11 @@ class PiUnitLifecycle:
     def _inspect_record(self, unit_ref):
         unit = self._unit_record(unit_ref)
         projection = self.projection.publication_facts(unit_ref)
-        return UnitInspection(unit_ref,unit.facts['providerRef'],unit.scope_ref.to_dict(),
+        if (not same_reference(projection.get('unitRef'), unit.public_ref)
+                or not same_reference(projection.get('configurationTargetRef'), unit.configuration_target_ref)
+                or type(projection.get('managementEpoch')) is not int or projection.get('managementEpoch') != unit.facts['managementEpoch']):
+            self._unsupported()
+        return UnitInspection(unit_ref,unit.facts['providerRef'],unit.configuration_target_ref,
             projection['directoryBindingRef'],projection['managementEpoch'],'owned',
             projection['sourceRevision'],datetime.now(timezone.utc).isoformat(),projection['evidenceRef'])
 
@@ -161,7 +179,7 @@ class PiUnitLifecycle:
             or provider.get('contractVersion') != RUNTIME_PROVIDER_VERSION):
             self._unsupported()
         verified = self._verifier.verify_and_consume(authorized_read_context,'query',provider,facts['targetRef'],facts['inputDigest'])
-        if verified != facts or verified.get('query') is not True:
+        if not same_reference(verified, facts) or verified.get('query') is not True:
             self._unsupported()
         return self.projection.query_creation(correlation, verified)
 

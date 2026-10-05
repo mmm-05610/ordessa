@@ -52,6 +52,15 @@ class CanonicalConfigurationScopeRef:
         return {"environmentNamespace": self.environment_namespace,
                 "scopeId": self.scope_id, "revision": self.revision}
 
+    def owner_ref(self, provider_ref):
+        """Provenance projection of this SAME canonical scope identity."""
+        if (not isinstance(provider_ref, Mapping)
+                or provider_ref.get('environmentNamespace') != self.environment_namespace):
+            raise UnitRecordsRefused('canonical scope owner environment differs')
+        source = safe_json({'scopeRef': self.to_dict(), 'ownerProviderRef': provider_ref})
+        return sealed_mapping({**self.to_dict(), 'ownerProviderRef': provider_ref,
+                               'sourceRevision': 'sha256:' + _digest(source)})
+
 
 class ScopeAuthorityPort(Protocol):
     def issue_scope(self, provider_ref, node_ref, private_root_facts) -> CanonicalConfigurationScopeRef: ...
@@ -101,6 +110,10 @@ class UnitReservation:
         return sealed_mapping({'environmentNamespace': provider['environmentNamespace'],
                                'unitId': self.unit_ref, 'ownerProviderRef': provider,
                                'sourceRevision': 'sha256:' + _digest(source)})
+
+    @property
+    def configuration_target_ref(self):
+        return self.scope_ref.owner_ref(self.facts['providerRef'])
 
 
 @dataclass(frozen=True)
@@ -395,8 +408,9 @@ class UnitRecords:
                 or (row['confirmation_json'] is not None) != (row['state'] == 'confirmed')):
             raise UnitRecordsRefused('configuration attempt binding damaged')
         unit = self._unit(db, row['unit_ref'])
-        if (identity['scopeRef'] != unit.scope_ref.to_dict()
-                or identity['providerRef'] != unit.facts['providerRef']):
+        if (safe_json(identity['scopeRef']) != safe_json(unit.configuration_target_ref)
+                or safe_json(identity['unitRef']) != safe_json(unit.public_ref)
+                or safe_json(identity['providerRef']) != safe_json(unit.facts['providerRef'])):
             raise UnitRecordsRefused('configuration scope or owner changed')
         native_id = None
         if row['native_request_json'] is not None:
@@ -437,7 +451,7 @@ class UnitRecords:
             if self._binding(db, unit_ref).state != 'confirmed':
                 raise UnitRecordsRefused('confirmed native unit required')
             facts = self._authorize(context, 'applyConfiguration', unit.facts['providerRef'],
-                unit.scope_ref.to_dict(), input_digest, epoch_target=unit.facts['nodeRef'])
+                unit.configuration_target_ref, input_digest, epoch_target=unit.facts['nodeRef'])
             if facts['managementEpoch'] != unit.facts['managementEpoch']:
                 raise UnitRecordsRefused('unit management epoch changed')
             correlation = _correlation(facts)
@@ -447,8 +461,8 @@ class UnitRecords:
             if db.execute("SELECT 1 FROM harness_unit_configuration_attempts WHERE unit_ref=? AND state IN ('opening','unknown')",
                           (unit_ref,)).fetchone():
                 raise UnitRecordsRefused('unknown configuration attempt retains scope fence')
-            identity = safe_json({'unitRef': {'environmentNamespace': unit.scope_ref.environment_namespace,
-                'unitId': unit_ref}, 'scopeRef': unit.scope_ref.to_dict(), 'providerRef': unit.facts['providerRef'],
+            identity = safe_json({'unitRef': unit.public_ref,
+                'scopeRef': unit.configuration_target_ref, 'providerRef': unit.facts['providerRef'],
                 'correlation': correlation, 'operationRef': facts['operationRef'], 'requestDigest': input_digest,
                 'expectedRevision': expected_revision, 'managementEpoch': facts['managementEpoch']})
             attempt_ref = 'configuration-' + uuid4().hex
@@ -532,7 +546,7 @@ class UnitRecords:
         """Read the original attempt under query authority; never infer from current config."""
         with self.journal._connect() as db:
             unit = self._unit(db, unit_ref)
-            facts = self._authorize(context, 'query', unit.facts['providerRef'], unit.scope_ref.to_dict(),
+            facts = self._authorize(context, 'query', unit.facts['providerRef'], unit.configuration_target_ref,
                 input_digest, query=True, epoch_target=unit.facts['nodeRef'])
             if facts['operationRef'] != operation_ref:
                 raise UnitRecordsRefused('query operation identity differs')

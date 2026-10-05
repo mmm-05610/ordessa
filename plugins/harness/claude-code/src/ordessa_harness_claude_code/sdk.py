@@ -17,6 +17,18 @@ SDK_VERSION = "0.2.163"
 SDK_SOURCE_COMMIT = "9c69ce7aced5cdf2aa1ac86fe62e877b4962de8b"
 
 
+def _native_identity(value):
+    # 'default' is an SDK input selector, never observed native identity.
+    if (not isinstance(value, str) or not value or value.strip() != value
+            or value == "default" or any(ord(character) < 32 for character in value)):
+        return False
+    try:
+        value.encode("utf-8", errors="strict")
+    except UnicodeError:
+        return False
+    return True
+
+
 class SdkRuntimeUnavailable(RuntimeError):
     code = "CLAUDE_SDK_UNAVAILABLE"
 
@@ -108,7 +120,7 @@ class ClaudeSdkSession:
                  sdk_factory=None, native_session_id=None):
         if not isinstance(transport, FencedSdkTransport):
             raise SdkRuntimeUnavailable("a fenced isolated SDK transport is required")
-        if native_session_id is not None and (not isinstance(native_session_id, str) or not native_session_id):
+        if native_session_id is not None and not _native_identity(native_session_id):
             raise ValueError("native session identity must be explicit")
         options = dict(options or {})
         allowed = {"model", "system_prompt", "permission_mode", "can_use_tool"}
@@ -124,6 +136,7 @@ class ClaudeSdkSession:
         self.__connect_attempted = False
         self.__session_id = native_session_id
         self.__turn_pending = False
+        self.__identity_unknown = False
         self.__closed = False
         self.__lock = asyncio.Lock()
 
@@ -150,6 +163,8 @@ class ClaudeSdkSession:
 
     async def submit(self, native_payload):
         self._context()
+        if self.__identity_unknown:
+            raise SdkOutcomeUnknown("native session evidence is unresolved; no new input permitted")
         if not isinstance(native_payload, Mapping) or set(native_payload) != {"content", "session_id"}:
             raise ValueError("explicit native content/session payload required")
         session = native_payload["session_id"]
@@ -174,8 +189,20 @@ class ClaudeSdkSession:
             # Preserve typed native messages. Result ends a human turn only,
             # not process/background lifecycle. Never infer readiness here.
             identity = getattr(message, "session_id", None)
+            if getattr(message, "subtype", None) == "init":
+                # The pinned SDK's SystemMessage has no session_id member:
+                # message_parser.py retains the original native init in data.
+                # Do not substitute the requested session or 'default'.
+                raw = getattr(message, "data", None)
+                if (not isinstance(raw, Mapping) or raw.get("type") != "system"
+                        or raw.get("subtype") != "init" or not _native_identity(raw.get("session_id"))
+                        or (identity is not None and identity != raw["session_id"])):
+                    self.__identity_unknown = True
+                    raise SdkOutcomeUnknown("native initialization lacks consistent session identity")
+                identity = raw["session_id"]
             if identity is not None:
-                if self.__session_id is not None and identity != self.__session_id:
+                if not _native_identity(identity) or (self.__session_id is not None and identity != self.__session_id):
+                    self.__identity_unknown = True
                     raise SdkOutcomeUnknown("native session evidence does not match unit")
                 self.__session_id = identity
             origin = getattr(message, "origin", None)
@@ -184,9 +211,15 @@ class ClaudeSdkSession:
                 # SDK ResultMessage has no durable operation receipt. Its own
                 # turn identity is sufficient only for this local pending guard.
                 if not isinstance(identity, str) or not identity:
+                    self.__identity_unknown = True
                     raise SdkOutcomeUnknown("terminal turn lacks native session evidence")
                 self.__turn_pending = False
             yield message
+
+    @property
+    def native_session_id(self):
+        """Read-only binding observation, not Unit/process readiness evidence."""
+        return self.__session_id
 
     async def interrupt(self):
         self._context()
@@ -196,6 +229,8 @@ class ClaudeSdkSession:
 
     async def mutate_configuration(self, kind, action, payload):
         self._context()
+        if self.__identity_unknown:
+            raise SdkOutcomeUnknown("native session evidence is unresolved; configuration write refused")
         async with self.__lock:
             if kind == "claude.model" and action in {"value", "reset"}:
                 if action == "value" and (not isinstance(payload, Mapping) or set(payload) != {"model"}

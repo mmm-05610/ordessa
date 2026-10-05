@@ -51,3 +51,16 @@ verification, reservation-before-launch, original-claim rechecks and unknown
 handle retention have the same core contract. New lifecycle fixtures test these
 cuts without running Pi. A trusted factory is still required for pinned/offline/
 isolated installation plus managed stdin; production composition is not claimed.
+
+
+Frozen Unit identity is reused via UnitReservation.public_ref. The Pi package
+neither imports private journal implementation nor reproduces its source digest
+algorithm. Lifecycle and configuration consumers compare the complete reference
+with their trusted original-journal read; no raw-field stripping or core/CLI
+identity generation is introduced. Preparation returns that original reference.
+
+Configuration target provenance is also consumed directly from the original
+UnitReservation.configuration_target_ref. Raw scope_ref remains only the
+journal's physical admission identity; public inspection/snapshot/invocation/
+result use the complete original owner-bound target. No family-local digest
+algorithm or source identity is created. Fixtures provide explicit C targets.

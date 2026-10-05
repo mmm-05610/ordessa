@@ -53,3 +53,24 @@ fixture port is a default production implementation.
 Tests are controlled C, including real Python fixture subprocesses for framing.
 Native Pi process P and authorized model task M are separate and not claimed by
 these tests. No third-party install/update or model call is required for tests.
+
+
+Unit identity uses only the original UnitReservation.public_ref: exact
+`environmentNamespace/unitId/ownerProviderRef/sourceRevision`. Prepare returns
+that immutable original reference; every lifecycle/configuration use verifies
+the complete received identity against the trusted original journal projection.
+Raw two-field handles, altered owner/generation/source/environment and extra or
+missing fields are rejected before native effects. Configuration UnitOwnerPort
+must expose read_unit from that same authorized journal, not a caller field
+copy. Unit publication also binds that same Unit and canonical configuration
+scope/current epoch. Tests' explicit controlled public_ref is C proof only,
+not production provenance or native readiness evidence.
+
+Configuration targets now come directly from the original authorized
+UnitReservation.configuration_target_ref, retaining environment/scopeId/revision
+and ownerProviderRef/sourceRevision. Publication and configuration owner
+inspection must match that exact property; apply/query verification, snapshots
+and original result confirmations retain the same full target. Comparisons use
+type-sensitive safe_json so boolean generation cannot impersonate an integer.
+The target's fixed sourceRevision is distinct from the native snapshot revision.
+The Pi package does not generate target provenance or strip it to raw scope.

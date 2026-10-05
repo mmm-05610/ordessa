@@ -60,6 +60,12 @@ class ResultMessage:
     origin: dict | None = None
 
 
+@dataclass
+class SystemMessage:
+    subtype: str
+    data: dict
+
+
 class Client:
     def __init__(self, *, options, transport):
         self.options, self.transport = options, transport
@@ -222,6 +228,103 @@ def test_explicit_session_is_bound_before_dispatch_and_receive():
         with pytest.raises(SdkOutcomeUnknown):
             await session.submit({"content": "resend", "session_id": "explicit-session"})
         assert len(native.writes) == 2
+        await session.disconnect()
+    asyncio.run(scenario())
+
+
+def unbound_setup():
+    native, gate = Native(), Gate()
+    session = ClaudeSdkSession(transport=FencedSdkTransport(native, gate), options={"can_use_tool": decision},
+                              sdk_factory=lambda: (Client, lambda **kw: kw))
+    return session, native, gate
+
+
+def test_sdk_init_data_binds_actual_session_and_preserves_message():
+    async def scenario():
+        session, native, gate = unbound_setup()
+        await session.open()
+        assert session.native_session_id is None  # control connect does not fabricate session.
+        raw = {"type": "system", "subtype": "init", "session_id": "actual-session",
+               "future_field": {"keep": [1, 2]}}
+        message = SystemMessage("init", raw)
+        native.messages = [message]
+        observed = [item async for item in session.receive_native()]
+        assert observed == [message] and observed[0] is message
+        assert message.data is raw and raw["future_field"] == {"keep": [1, 2]}
+        assert session.native_session_id == "actual-session"
+        await session.submit({"content": "once", "session_id": "actual-session"})
+        assert len(native.writes) == 2
+        await session.disconnect()
+    asyncio.run(scenario())
+
+
+@pytest.mark.parametrize("raw", [
+    {"type": "system", "subtype": "init"},
+    {"type": "system", "subtype": "init", "session_id": None},
+    {"type": "system", "subtype": "init", "session_id": ""},
+    {"type": "system", "subtype": "init", "session_id": "default"},
+    {"type": "system", "subtype": "init", "session_id": " whitespace "},
+    {"type": "system", "subtype": "init", "session_id": "\ud800"},
+    {"type": "other", "subtype": "init", "session_id": "invented"},
+])
+def test_sdk_init_invalid_native_identity_does_not_license_new_input(raw):
+    async def scenario():
+        session, native, gate = unbound_setup()
+        await session.open()
+        native.messages = [SystemMessage("init", raw)]
+        with pytest.raises(SdkOutcomeUnknown, match="initialization"):
+            [item async for item in session.receive_native()]
+        assert session.native_session_id is None
+        with pytest.raises(SdkOutcomeUnknown):
+            await session.submit({"content": "replacement", "session_id": "default"})
+        with pytest.raises(SdkOutcomeUnknown):
+            await session.mutate_configuration("claude.model", "reset", None)
+        assert len(native.writes) == 1  # no query, prompt, second initialize or resend.
+        await session.disconnect()
+    asyncio.run(scenario())
+
+
+def test_sdk_init_cannot_replace_original_session_or_settle_pending_input():
+    async def scenario():
+        session, native, gate = setup()
+        await session.open()
+        await session.submit({"content": "original", "session_id": "session-1"})
+        native.messages = [SystemMessage("init", {"type": "system", "subtype": "init", "session_id": "replacement"})]
+        with pytest.raises(SdkOutcomeUnknown):
+            [item async for item in session.receive_native()]
+        assert session.native_session_id == "session-1"
+        with pytest.raises(SdkOutcomeUnknown):
+            await session.submit({"content": "new", "session_id": "session-1"})
+        assert len(native.writes) == 2
+        await session.disconnect()
+    asyncio.run(scenario())
+
+
+def test_consistent_repeated_init_does_not_complete_turn():
+    async def scenario():
+        session, native, gate = setup()
+        await session.open()
+        await session.submit({"content": "original", "session_id": "session-1"})
+        raw = {"type": "system", "subtype": "init", "session_id": "session-1"}
+        native.messages = [SystemMessage("init", raw), SystemMessage("init", raw)]
+        assert len([item async for item in session.receive_native()]) == 2
+        with pytest.raises(SdkOutcomeUnknown):
+            await session.submit({"content": "new", "session_id": "session-1"})
+        assert len(native.writes) == 2
+        await session.disconnect()
+    asyncio.run(scenario())
+
+
+def test_unknown_system_data_preserved_not_reinterpreted_as_init():
+    async def scenario():
+        session, native, gate = unbound_setup()
+        await session.open()
+        raw = {"type": "system", "subtype": "future", "session_id": "future-unverified", "unknown": ["verbatim"]}
+        message = SystemMessage("future", raw)
+        native.messages = [message]
+        observed = [item async for item in session.receive_native()]
+        assert observed[0] is message and observed[0].data is raw
+        assert session.native_session_id is None and len(native.writes) == 1
         await session.disconnect()
     asyncio.run(scenario())
 

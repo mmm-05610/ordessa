@@ -12,6 +12,8 @@ import os
 from pathlib import Path
 from typing import Mapping
 
+from ordessa_environment_api.operations import safe_json
+
 from pacthold.agents.public import (
     AgentContributionSet, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION,
     ConfigurationUnsupported, ConfigurationDescription, ConfigurationChangeResult,
@@ -145,7 +147,17 @@ class ClaudeCodeRuntimeProvider:
         unit, created = self._records.reserve_unit(invocation_context,
             provider_ref=provider, node_ref=facts["targetRef"],
             input_digest=facts["inputDigest"], private_root_facts=plan["privateRootFacts"])
-        return {"unitReservation": unit, "created": created, "nativeStarted": False}
+        reference = getattr(unit, "public_ref", None)
+        if (not isinstance(reference, Mapping)
+                or set(reference) != {"environmentNamespace", "unitId", "ownerProviderRef", "sourceRevision"}
+                or safe_json(reference["ownerProviderRef"]) != safe_json(provider)
+                or reference["environmentNamespace"] != provider["environmentNamespace"]
+                or not isinstance(reference["unitId"], str) or not reference["unitId"]
+                or not isinstance(reference["sourceRevision"], str) or not reference["sourceRevision"]):
+            raise ClaudeProviderUnavailable("original UnitReservation public source reference unavailable")
+        # No copying of the owner/source derivation or exposed private journal
+        # object. Native/session creation is still a separate original step.
+        return {"unitRef": reference, "created": created, "nativeStarted": False}
 
     def _read(self, method, *args):
         self._required(method)

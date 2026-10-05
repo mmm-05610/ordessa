@@ -104,7 +104,7 @@ def change(provider,*,action="value",payload=None,extra=()):
     if action == "value": declaration["payload"]={"model":"default-b"} if payload is None else payload
     request=ConfigurationChangeRequest("request-1",provider.inspect_configuration(UNIT).source_revision,(declaration,)+extra)
     unit=provider._unit(UNIT)
-    context=SimpleNamespace(facts={"providerRef":unit.facts["providerRef"],"targetRef":unit.scope_ref.to_dict(),"inputDigest":"fixed-digest",
+    context=SimpleNamespace(facts={"providerRef":unit.facts["providerRef"],"targetRef":unit.configuration_target_ref,"inputDigest":"fixed-digest",
                 "action":"applyConfiguration","query":False,"managementEpoch":1,"operationRef":"operation-1", "contextRef":{"effectiveDeclarations":request.declarations}})
     return request,context
 
@@ -203,3 +203,30 @@ def test_external_change_after_original_receipt_keeps_unknown_not_latest_receipt
     query=SimpleNamespace(facts={**context.facts,"action":"query","query":True})
     result=provider.query_change(UNIT,"operation-1",query)
     assert result.overall_outcome == "unknown" and evidence.captured == {}
+
+
+@pytest.mark.parametrize("reference",__import__("test_provider").forged_unit_references())
+def test_forged_full_unit_reference_cannot_read_write_or_query_configuration(reference):
+    provider,projection,records,client,evidence=setup();request,context=change(provider)
+    calls=list(client.calls)
+    with pytest.raises(CodexProviderRefused): provider.apply_configuration(reference,request,context)
+    query=SimpleNamespace(facts={**context.facts,"action":"query","query":True})
+    with pytest.raises(CodexProviderRefused): provider.query_change(reference,"operation-1",query)
+    assert client.calls == calls and records.claims == 0 and records.contexts == [] and evidence.captured == {}
+
+
+def test_configuration_receipt_snapshot_and_context_use_original_complete_target():
+    provider,projection,records,client,evidence=setup();request,context=change(provider)
+    result=provider.apply_configuration(UNIT,request,context)
+    target=projection.unit.configuration_target_ref
+    assert provider.describe_configuration(UNIT)[0].scope == "instance"
+    assert context.facts["targetRef"] == target
+    assert result.confirmed_snapshot.scope_ref == target
+    assert result.item_results[0].confirmation["scopeRef"] == target
+    assert set(target) == {"environmentNamespace","scopeId","revision","ownerProviderRef","sourceRevision"}
+    assert target["ownerProviderRef"] == projection.unit.public_ref["ownerProviderRef"]
+    assert result.confirmed_snapshot.source_revision != target["sourceRevision"]
+    query=SimpleNamespace(facts={**context.facts,"action":"query","query":True})
+    queried=provider.query_change(UNIT,"operation-1",query)
+    assert queried.confirmed_snapshot.scope_ref == target
+    assert client.calls.count("config/batchWrite") == 1

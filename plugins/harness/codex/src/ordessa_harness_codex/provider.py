@@ -184,17 +184,37 @@ class CodexRuntimeProvider:
         unit, created = self.records.reserve_unit(invocation_context, provider_ref=provider,
                         node_ref=facts["targetRef"], input_digest=facts["inputDigest"],
                         private_root_facts=self.projection.verify_preparation(plan, facts))
-        return {"unitRef": {"environmentNamespace": provider["environmentNamespace"], "unitId": unit.unit_ref},
-                "created": created, "state": "notCreated"}
+        public_ref = unit.public_ref
+        if (not _complete_unit_reference(public_ref) or public_ref["unitId"] != unit.unit_ref
+                or not _same_reference(public_ref["ownerProviderRef"], provider)
+                or public_ref["environmentNamespace"] != provider["environmentNamespace"]):
+            raise CodexProviderRefused("original prepared unit owner reference differs")
+        return {"unitRef": public_ref, "created": created, "state": "notCreated"}
 
     def _unit(self, unit_ref):
-        if not isinstance(unit_ref, Mapping) or set(unit_ref) != {"environmentNamespace", "unitId"}:
-            raise CodexProviderRefused("complete unit reference required")
+        if not _complete_unit_reference(unit_ref):
+            raise CodexProviderRefused("complete owner-bound unit reference required")
+        # The projection must authorize and verify the original owner journal
+        # read. A copied public reference never supplies read permission.
         unit = self.projection.read_unit(unit_ref)
-        if (unit.unit_ref != unit_ref["unitId"] or unit.facts["providerRef"]["environmentNamespace"] != unit_ref["environmentNamespace"] or
-                unit.facts["providerRef"].get("providerId") != "codex" or
-                unit.facts["providerRef"].get("implementationDigest") != self.descriptor.implementation_digest):
-            raise CodexProviderRefused("unit owner differs")
+        canonical = unit.public_ref
+        provider = unit.facts["providerRef"]
+        if (not _complete_unit_reference(canonical) or not _same_reference(canonical, unit_ref)
+                or unit.unit_ref != canonical["unitId"]
+                or not _same_reference(canonical["ownerProviderRef"], provider)
+                or provider["environmentNamespace"] != canonical["environmentNamespace"]
+                or provider.get("providerId") != "codex"
+                or provider.get("contractVersion") != RUNTIME_PROVIDER_VERSION
+                or provider.get("implementationDigest") != self.descriptor.implementation_digest):
+            raise CodexProviderRefused("unit owner or source differs")
+        target = unit.configuration_target_ref
+        physical = unit.scope_ref.to_dict()
+        if (not isinstance(target, Mapping) or set(target) != {"environmentNamespace", "scopeId", "revision", "ownerProviderRef", "sourceRevision"}
+                or not _same_reference(target.get("ownerProviderRef"), provider)
+                or any(target.get(key) != physical.get(key) for key in ("environmentNamespace", "scopeId", "revision"))
+                or target.get("environmentNamespace") != canonical["environmentNamespace"]
+                or not _source_identity(target.get("sourceRevision"))):
+            raise CodexProviderRefused("original configuration target owner or source unavailable")
         return unit
 
     def start(self, prepared_unit, invocation_context):
@@ -245,7 +265,7 @@ class CodexRuntimeProvider:
         # authority/activation/epoch/DirectoryBinding before each native edge.
         facts = self.projection.revalidate_start(unit, context)
         original = context.facts
-        if (not isinstance(facts, Mapping) or facts != original or facts.get("action") != "start"
+        if (not isinstance(facts, Mapping) or not _same_reference(facts, original) or facts.get("action") != "start"
                 or facts.get("providerRef") != unit.facts["providerRef"]
                 or facts.get("targetRef") != unit.facts["nodeRef"] or facts.get("query") is not False
                 or facts.get("managementEpoch") != unit.facts["managementEpoch"]):
@@ -263,8 +283,15 @@ class CodexRuntimeProvider:
         self._supported("inspect_unit")
         unit = self._unit(unit_ref)
         projection = self.projection.publication_facts(unit_ref)
-        # The port returns core-issued DirectoryBindingRef plus journal evidence.
-        return UnitInspection(unit_ref, unit.facts["providerRef"], unit.scope_ref.to_dict(),
+        if (not isinstance(projection, Mapping) or not _same_reference(projection.get("unitRef"), unit.public_ref)
+                or not _same_reference(projection.get("providerRef"), unit.facts["providerRef"])
+                or not _same_reference(projection.get("configurationTargetRef"), unit.configuration_target_ref)
+                or type(projection.get("managementEpoch")) is not int
+                or projection["managementEpoch"] != unit.facts["managementEpoch"]):
+            raise CodexProviderRefused("publication owner or configuration scope differs")
+        # DirectoryBinding and current observation revision still belong to
+        # their original owners; the fixed Unit source is not substituted.
+        return UnitInspection(unit_ref, unit.facts["providerRef"], unit.configuration_target_ref,
                     projection["directoryBindingRef"], projection["managementEpoch"], "owned",
                     projection["sourceRevision"], _now(), projection["evidenceRef"])
 
@@ -324,7 +351,7 @@ class CodexRuntimeProvider:
         for key in ("model", "reasoningEffort"):
             if key not in actual_thread: unknown.append("thread." + key)
         if version is None: unknown.append("defaultsVersion")
-        snapshot = ConfigurationSnapshot(unit_ref, unit.scope_ref.to_dict(), revision, _now(),
+        snapshot = ConfigurationSnapshot(unit_ref, unit.configuration_target_ref, revision, _now(),
                     {"defaults": user, "effectiveDefaults": effective, "thread": actual_thread}, tuple(unknown),
                     {"environmentNamespace": unit_ref["environmentNamespace"], "evidenceRef": binding.native_facts["evidenceRef"]},
                     "ownerSerialized" if version and "apply_configuration" in self.descriptor.supported_methods else "unavailable")
@@ -356,9 +383,9 @@ class CodexRuntimeProvider:
     def _current_configuration(self, unit, context):
         facts = self.projection.revalidate_configuration(unit, context)
         original = context.facts
-        if (not isinstance(facts, Mapping) or facts != original
+        if (not isinstance(facts, Mapping) or not _same_reference(facts, original)
                 or facts.get("providerRef") != unit.facts["providerRef"]
-                or facts.get("targetRef") != unit.scope_ref.to_dict()
+                or not _same_reference(facts.get("targetRef"), unit.configuration_target_ref)
                 or facts.get("managementEpoch") != unit.facts["managementEpoch"]
                 or (facts.get("action"), facts.get("query")) not in {("applyConfiguration", False), ("query", True)}):
             raise CodexProviderRefused("current configuration authority unavailable or changed")
@@ -402,12 +429,12 @@ class CodexRuntimeProvider:
         for item in result.item_results:
             if item.outcome == "applied":
                 proof = item.confirmation
-                if (proof["unitRef"] != unit_ref or proof["scopeRef"] != unit.scope_ref.to_dict()
+                if (not _same_reference(proof["unitRef"], unit_ref) or not _same_reference(proof["scopeRef"], unit.configuration_target_ref)
                         or proof["requestDigest"] != facts["inputDigest"]):
                     raise CodexProviderRefused("original owner result scope or request differs")
         if result.confirmed_snapshot is not None:
             snapshot = result.confirmed_snapshot
-            if snapshot.unit_ref != unit_ref or snapshot.scope_ref != unit.scope_ref.to_dict():
+            if not _same_reference(snapshot.unit_ref, unit_ref) or not _same_reference(snapshot.scope_ref, unit.configuration_target_ref):
                 raise CodexProviderRefused("original owner snapshot scope differs")
         return result
 
@@ -437,7 +464,7 @@ class CodexRuntimeProvider:
                 outcome = "applied" if matches and receipt["status"] == "ok" else "unknown"
             outcomes.append({"declarationId":item["declarationId"], "outcome":outcome})
         summary = {"operationRef": facts["operationRef"], "unitRef": _plain(unit_ref),
-                   "scopeRef": _plain(unit.scope_ref.to_dict()), "requestDigest": facts["inputDigest"],
+                   "scopeRef": _plain(unit.configuration_target_ref), "requestDigest": facts["inputDigest"],
                    "itemOutcomes": outcomes, "confirmedSnapshot": snapshot.to_dict()}
         safe_receipt = {key: receipt[key] for key in ("status", "version", "filePath")}
         evidence = self.configuration_evidence.capture_configuration(unit, facts, request, safe_receipt, before, after, summary)
@@ -451,7 +478,7 @@ class CodexRuntimeProvider:
                 expected_source_revision=waiter['attempt_revision'], state='unknown')
             waiter['attempt_revision'] = attempt.source_revision
             proof = {'operationRef': facts['operationRef'], 'unitRef': unit_ref,
-                'scopeRef': unit.scope_ref.to_dict(), 'requestDigest': facts['inputDigest'],
+                'scopeRef': unit.configuration_target_ref, 'requestDigest': facts['inputDigest'],
                 'evidenceRef': {'environmentNamespace': unit_ref['environmentNamespace'], 'evidenceRef': evidence}}
             result = ConfigurationChangeResult(facts['operationRef'], tuple(
                 ConfigurationItemResult(item['declarationId'], item['outcome'],
@@ -474,7 +501,7 @@ class CodexRuntimeProvider:
         if not edits:
             # Consume the original authority even for an explicit no-effect rejection.
             verified = self.verifier.verify_and_consume(invocation_context, "applyConfiguration",
-                           unit.facts["providerRef"], unit.scope_ref.to_dict(), facts["inputDigest"])
+                           unit.facts["providerRef"], unit.configuration_target_ref, facts["inputDigest"])
             if verified != facts: raise CodexProviderRefused("configuration authority differs")
             return ConfigurationChangeResult(facts["operationRef"],
                 tuple(ConfigurationItemResult(item["declarationId"], "rejected") for item in change_request.declarations))
@@ -574,3 +601,27 @@ def _safe_defaults(config):
     if not isinstance(config, Mapping): return {}
     return {key: value for key,value in config.items() if key in DEFAULT_FIELDS
             and isinstance(value, str) and 0 < len(value) <= 256 and not any(ord(c) < 32 for c in value)}
+
+
+def _complete_unit_reference(value):
+    # Validate only the published shape. The immutable source hash is obtained
+    # from the original authorized UnitReservation, never regenerated here.
+    return (isinstance(value, Mapping) and set(value) == {"environmentNamespace", "unitId", "ownerProviderRef", "sourceRevision"}
+            and isinstance(value.get("environmentNamespace"), str) and bool(value["environmentNamespace"])
+            and isinstance(value.get("unitId"), str) and bool(value["unitId"])
+            and isinstance(value.get("ownerProviderRef"), Mapping)
+            and value["ownerProviderRef"].get("environmentNamespace") == value["environmentNamespace"]
+            and _source_identity(value.get("sourceRevision")))
+
+
+def _same_reference(left, right):
+    # JSON identity is type-sensitive (bool is not an integer generation).
+    try:
+        return safe_json(left) == safe_json(right)
+    except (TypeError, ValueError):
+        return False
+
+
+def _source_identity(value):
+    return (isinstance(value, str) and len(value) == 71 and value.startswith("sha256:")
+            and all(c in "0123456789abcdef" for c in value[7:]))
