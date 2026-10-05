@@ -73,6 +73,7 @@ async def test_http_claim_persists_and_reexecution_preserves_receipt(tmp_path):
     assert result['status'] == 'SCOPED_PASS' and result['controlled_label_matches'] == 1
     assert result['model_quality_passes'] == result['real_model_requests'] == 0
     assert result['evaluation_mode'] == 'injected_test_transport'
+    assert result['credential_reads'] == 1
     original = (tmp_path / 'out' / 'receipt.json').read_bytes()
     with pytest.raises(live.EvaluationError, match='case_already_claimed'):
         await live.run_plan(data, tmp_path / 'out', key, True, ledger_path=tmp_path / 'ledger', transport=httpx2.MockTransport(handler))

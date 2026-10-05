@@ -1,0 +1,2128 @@
+{
+  "status": "PARTIAL",
+  "input_hash": "sha256:f10594450f29ff5f4dccbc8363915d192976007c963965943827a1bef2036e01",
+  "scope_id": "jev-domain-v2-20261005",
+  "maximum_http_requests": 42,
+  "cases": [
+    {
+      "id": "clear-full",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:ff7d6d74f5990698b26a8340f7658ed65f2720290c1b29db7188778613c54f65",
+        "sha256:f6b9ada467c2d8c2b63f5ef33d0a5493c07ca0fa46cf690723692246ecea47ce",
+        "sha256:f07b0e2528dc2c36a212562c79009461b0f8aed208571c2d69b576efd118fac9",
+        "sha256:22eb840d9ea1bf3d182d2ffeba3f2917e3b529a24f9d98b9234a1487db9d542d",
+        "sha256:c7702b4a21e3aafebd4804d26575ae8d892b003e7a06d471b94bc68bcedc2c24",
+        "sha256:ec08dab13771145fedf568b2a977079dca488cc9bd744fe8ac25637d4346baae"
+      ]
+    },
+    {
+      "id": "single-delivery-full",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:a38fda1b12f520befe48d556ec094fbe9cd5b94031522d6354a647169c2941a9",
+        "sha256:c5e0ea377c0a2044c56d26e6a814ea001ed18bb39bb812e1da42abcfe3d87c7b",
+        "sha256:822554e943e87905f1b6eaa6db1d270fcf01d39c21203787e919907cfbb68beb",
+        "sha256:abe299ac158bf58bfff875b008c20df2258775d789fbba6c7127566ddba39c2e",
+        "sha256:181bf4bc490a5b67ff74a2c2c59bbcca95343410c30c1cec3f418582591601f5",
+        "sha256:9e8da8b5f1ebec3cc5849aef7c3c87ad54b22c425f9b77ccd7604bdbc532553f"
+      ]
+    },
+    {
+      "id": "vague-full",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:d518664938e82725a1d77fc47ee47e5c59d57d0b50eff971228031b3f1c32b06",
+        "sha256:01b228b9656d60526068efdeab55de1a35b8e1b47e6b31a1f4550fbad9f47592",
+        "sha256:7969073628f9cecb3276035edd189c1e736a801b37b6b23a7765bd03e1bb89d1",
+        "sha256:dfe5400ff3e100a3a7e8896eef6e1f351b9db3b1b26c3209dd208fb019bc8c5e",
+        "sha256:101714a3b02fd7e550e35dfb85730ac7ae4011de17fcb280bff8b7fce97af975",
+        "sha256:ee2cf1283aee515519ccf8ad2e8eb1395a310c507af27c58858e3ef484c4c2ab"
+      ]
+    },
+    {
+      "id": "missing-authority-hard",
+      "status": "NOT_RUN",
+      "question_digests": []
+    },
+    {
+      "id": "injection-clear",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:ada52d7c470f8fef45c7025211d6120b18ba167197d41d2afd3ecca081592b5d",
+        "sha256:7989795615688e538d41bfb105842be58ce38f9e90862b2a8b69fd724a662b2c",
+        "sha256:0fba758248fe42b811eee6e408b0c6a401ac8044ed464091a81770d76a0b1048",
+        "sha256:9de105c8678cc030244faa9e4bd0b3107fe465e16ddd9543b9dec6c3f84b2398",
+        "sha256:f60bd8c6d26bf588fba22180b71b1e8acccaff728fe0b8bce0364f6bf68f9e00",
+        "sha256:7371b26d4f7f9ac013b4ecad95f0fba5fee5ecfacf9b6c059b980250498d96fc"
+      ]
+    },
+    {
+      "id": "cohesion-single-isolated",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:abe299ac158bf58bfff875b008c20df2258775d789fbba6c7127566ddba39c2e"
+      ]
+    },
+    {
+      "id": "cohesion-multi-isolated",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:ec5e42146941a6499656ba6b1847902ee2bed85ef744e838fcb1ad1f91193d79"
+      ]
+    },
+    {
+      "id": "department-zh",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:077afd598a51badc8818f28821b9485507e5b900f053782937053e9f0d2d7521"
+      ]
+    },
+    {
+      "id": "urgency-zh",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:e3a91eb04c5b5c811056cc134f08596f3a18835522a10d3a3cdace1183577864"
+      ]
+    },
+    {
+      "id": "department-en",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:1357e1e14f1ad515bf7420e09dd0da38b2989c005377cec5649ac18466167b4b"
+      ]
+    },
+    {
+      "id": "urgency-en",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:fe0f6eb5f63de42382de09df362135fba17dcb0fee3280ee026b7050da56c325"
+      ]
+    },
+    {
+      "id": "churn-zh-positive",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:cd1dfd51efea520436bcde1aa9ab87533f24a835277a4209197e3be3ca63a041"
+      ]
+    },
+    {
+      "id": "churn-zh-negative",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:cb8854fc0207d22f21c8b6972a14431ec70a503840f9e931a21f60486e363209"
+      ]
+    },
+    {
+      "id": "churn-en-positive",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:5ca4b522c4671c311010a8c85d515ad2dcfb9280e67fd785ed04d49107cf40e4"
+      ]
+    },
+    {
+      "id": "churn-en-negative",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:9277478a12b17a5a516a13d32fc3a803524788ab3b962e7f7399728ec9a49f2a"
+      ]
+    },
+    {
+      "id": "candidate-forward-1",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:65d3803900626b6f1de29574001d2ba0176a827294513edd76ad8bc61e5ec896"
+      ]
+    },
+    {
+      "id": "candidate-forward-2",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:65d3803900626b6f1de29574001d2ba0176a827294513edd76ad8bc61e5ec896"
+      ]
+    },
+    {
+      "id": "candidate-reverse-1",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:65d3803900626b6f1de29574001d2ba0176a827294513edd76ad8bc61e5ec896"
+      ]
+    },
+    {
+      "id": "candidate-reverse-2",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:65d3803900626b6f1de29574001d2ba0176a827294513edd76ad8bc61e5ec896"
+      ]
+    },
+    {
+      "id": "unknown-config",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:aa2f1a6b9aa94b80fc136901004660914ae853e91c0ba266c44ad4a536c2ebb5"
+      ]
+    },
+    {
+      "id": "no-unit",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:d2d50413b25268ced98fdae05ae9bf1c74b4024321392e4f5ed34e2bf123e974"
+      ]
+    },
+    {
+      "id": "closed-refusal",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:bcbc19f9c42b920ce78dbbfb9846f64464902fb2c502f8839a16dd47e4a3a3d2"
+      ]
+    },
+    {
+      "id": "capacity-64-plus-2",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:c77ad65fa98d1972f5a1dbdcad6d7add7164de23ce5426a87a4aec90c59155e2"
+      ]
+    }
+  ],
+  "credential_reads": 0,
+  "actual_http_requests": 42,
+  "rows": [
+    {
+      "id": "clear-full",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "task-gate.goal_specificity",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:ff7d6d74f5990698b26a8340f7658ed65f2720290c1b29db7188778613c54f65",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "pass": 0.91,
+              "fail": 0.04,
+              "unknown": 0.05
+            },
+            "confidence": 0.87,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 924,
+            "output_tokens": 45
+          }
+        },
+        {
+          "question_id": "task-gate.scope_consistency",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:f6b9ada467c2d8c2b63f5ef33d0a5493c07ca0fa46cf690723692246ecea47ce",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "fail": 0.03,
+              "pass": 0.95,
+              "unknown": 0.02
+            },
+            "confidence": 0.93,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 911,
+            "output_tokens": 44
+          }
+        },
+        {
+          "question_id": "task-gate.acceptance_observability",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:f07b0e2528dc2c36a212562c79009461b0f8aed208571c2d69b576efd118fac9",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "fail": 0.05,
+              "pass": 0.94,
+              "unknown": 0.01
+            },
+            "confidence": 0.9,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 892,
+            "output_tokens": 47
+          }
+        },
+        {
+          "question_id": "task-gate.deliverable_cohesion",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:22eb840d9ea1bf3d182d2ffeba3f2917e3b529a24f9d98b9234a1487db9d542d",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "unknown": 0.0,
+              "fail": 0.0,
+              "pass": 1.0
+            },
+            "confidence": 1.0,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 949,
+            "output_tokens": 46
+          }
+        },
+        {
+          "question_id": "task-gate.delegation_form",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:c7702b4a21e3aafebd4804d26575ae8d892b003e7a06d471b94bc68bcedc2c24",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "pass": 0.66,
+              "fail": 0.14,
+              "unknown": 0.2
+            },
+            "confidence": 0.49,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 923,
+            "output_tokens": 44
+          }
+        },
+        {
+          "question_id": "task-gate.risk_boundary",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:ec08dab13771145fedf568b2a977079dca488cc9bd744fe8ac25637d4346baae",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "fail": 0.14,
+              "unknown": 0.04,
+              "pass": 0.82
+            },
+            "confidence": 0.73,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 933,
+            "output_tokens": 43
+          }
+        }
+      ],
+      "run_id": "2bbb0768-c77b-42f7-a1f2-7b6dede8d2ba",
+      "result_digest": "sha256:30435d83a5193e446d7db055e8eedebde7bc1e52bb315e239f7bf6927416b1c2",
+      "terminal_verified": true,
+      "actual": "gate_pass",
+      "dimensions": {
+        "task-gate.goal_specificity": "pass",
+        "task-gate.scope_consistency": "pass",
+        "task-gate.acceptance_observability": "pass",
+        "task-gate.deliverable_cohesion": "pass",
+        "task-gate.delegation_form": "pass",
+        "task-gate.risk_boundary": "pass"
+      },
+      "issues": [],
+      "quality_source": "model"
+    },
+    {
+      "id": "single-delivery-full",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "task-gate.goal_specificity",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:a38fda1b12f520befe48d556ec094fbe9cd5b94031522d6354a647169c2941a9",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "fail": 0.07,
+              "pass": 0.89,
+              "unknown": 0.04
+            },
+            "confidence": 0.84,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 1011,
+            "output_tokens": 45
+          }
+        },
+        {
+          "question_id": "task-gate.scope_consistency",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:c5e0ea377c0a2044c56d26e6a814ea001ed18bb39bb812e1da42abcfe3d87c7b",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "pass": 0.89,
+              "unknown": 0.01,
+              "fail": 0.1
+            },
+            "confidence": 0.83,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 998,
+            "output_tokens": 44
+          }
+        },
+        {
+          "question_id": "task-gate.acceptance_observability",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:822554e943e87905f1b6eaa6db1d270fcf01d39c21203787e919907cfbb68beb",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "pass": 0.88,
+              "fail": 0.09,
+              "unknown": 0.03
+            },
+            "confidence": 0.83,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 979,
+            "output_tokens": 47
+          }
+        },
+        {
+          "question_id": "task-gate.deliverable_cohesion",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:abe299ac158bf58bfff875b008c20df2258775d789fbba6c7127566ddba39c2e",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "fail": 0.0,
+              "pass": 1.0,
+              "unknown": 0.0
+            },
+            "confidence": 1.0,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 1036,
+            "output_tokens": 46
+          }
+        },
+        {
+          "question_id": "task-gate.delegation_form",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:181bf4bc490a5b67ff74a2c2c59bbcca95343410c30c1cec3f418582591601f5",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "fail": 0.09,
+              "pass": 0.79,
+              "unknown": 0.12
+            },
+            "confidence": 0.7,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 1010,
+            "output_tokens": 44
+          }
+        },
+        {
+          "question_id": "task-gate.risk_boundary",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:9e8da8b5f1ebec3cc5849aef7c3c87ad54b22c425f9b77ccd7604bdbc532553f",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "pass": 0.85,
+              "unknown": 0.04,
+              "fail": 0.11
+            },
+            "confidence": 0.77,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 1020,
+            "output_tokens": 43
+          }
+        }
+      ],
+      "run_id": "681ca3aa-1d0e-4fd6-86f1-9df2d6f2b06c",
+      "result_digest": "sha256:fa804ecd1ba27fe5057afd28c11ad1cd78c09611a569dbe4c855ec984aff93da",
+      "terminal_verified": true,
+      "actual": "gate_pass",
+      "dimensions": {
+        "task-gate.goal_specificity": "pass",
+        "task-gate.scope_consistency": "pass",
+        "task-gate.acceptance_observability": "pass",
+        "task-gate.deliverable_cohesion": "pass",
+        "task-gate.delegation_form": "pass",
+        "task-gate.risk_boundary": "pass"
+      },
+      "issues": [],
+      "quality_source": "model"
+    },
+    {
+      "id": "vague-full",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "task-gate.goal_specificity",
+          "kind": "choice",
+          "value": "fail",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:d518664938e82725a1d77fc47ee47e5c59d57d0b50eff971228031b3f1c32b06",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "unknown": 0.42,
+              "fail": 0.56,
+              "pass": 0.02
+            },
+            "confidence": 0.33,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 692,
+            "output_tokens": 45
+          }
+        },
+        {
+          "question_id": "task-gate.scope_consistency",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:01b228b9656d60526068efdeab55de1a35b8e1b47e6b31a1f4550fbad9f47592",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "pass": 0.47,
+              "unknown": 0.12,
+              "fail": 0.41
+            },
+            "confidence": 0.2,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 679,
+            "output_tokens": 44
+          }
+        },
+        {
+          "question_id": "task-gate.acceptance_observability",
+          "kind": "choice",
+          "value": "unknown",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:7969073628f9cecb3276035edd189c1e736a801b37b6b23a7765bd03e1bb89d1",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "unknown": 0.72,
+              "pass": 0.01,
+              "fail": 0.27
+            },
+            "confidence": 0.59,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 660,
+            "output_tokens": 47
+          }
+        },
+        {
+          "question_id": "task-gate.deliverable_cohesion",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:dfe5400ff3e100a3a7e8896eef6e1f351b9db3b1b26c3209dd208fb019bc8c5e",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "pass": 0.91,
+              "unknown": 0.09,
+              "fail": 0.0
+            },
+            "confidence": 0.85,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 717,
+            "output_tokens": 46
+          }
+        },
+        {
+          "question_id": "task-gate.delegation_form",
+          "kind": "choice",
+          "value": "unknown",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:101714a3b02fd7e550e35dfb85730ac7ae4011de17fcb280bff8b7fce97af975",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "fail": 0.25,
+              "unknown": 0.71,
+              "pass": 0.04
+            },
+            "confidence": 0.58,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 691,
+            "output_tokens": 44
+          }
+        },
+        {
+          "question_id": "task-gate.risk_boundary",
+          "kind": "choice",
+          "value": "fail",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:ee2cf1283aee515519ccf8ad2e8eb1395a310c507af27c58858e3ef484c4c2ab",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "pass": 0.4,
+              "unknown": 0.1,
+              "fail": 0.5
+            },
+            "confidence": 0.25,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 701,
+            "output_tokens": 43
+          }
+        }
+      ],
+      "run_id": "a0eac09a-9830-4f9b-ac93-30d611079d41",
+      "result_digest": "sha256:f30c5c898bc6a98b240b6653ac2da6a236638663987f164fcc36ea87fed9b970",
+      "terminal_verified": true,
+      "actual": "clarify",
+      "dimensions": {
+        "task-gate.goal_specificity": "fail",
+        "task-gate.scope_consistency": "pass",
+        "task-gate.acceptance_observability": "unknown",
+        "task-gate.deliverable_cohesion": "pass",
+        "task-gate.delegation_form": "unknown",
+        "task-gate.risk_boundary": "fail"
+      },
+      "issues": [
+        {
+          "code": "goal_expression",
+          "dimension_id": "goal_specificity",
+          "affected_requirement_ids": [
+            "CASE-17"
+          ],
+          "remedy_actor": "main_agent",
+          "template_id": "expression_revision",
+          "template_params": {
+            "dimension_label": "目标"
+          },
+          "evidence_refs": [
+            "synthetic-boundary-evidence/2"
+          ],
+          "explanation": "相关意图已有依据，但当前任务表达需由主Agent修正后再审查。"
+        },
+        {
+          "code": "acceptance_unknown",
+          "dimension_id": "acceptance_observability",
+          "affected_requirement_ids": [
+            "CASE-17"
+          ],
+          "remedy_actor": "user",
+          "template_id": "acceptance_unknown.blocking",
+          "template_params": {
+            "dimension_label": "验收"
+          },
+          "evidence_refs": [
+            "synthetic-boundary-evidence/2"
+          ],
+          "explanation": "需提供与主要结果对应、可观察的完成条件；没有该条件就无法判断交付是否结束。"
+        },
+        {
+          "code": "delegation_unknown",
+          "dimension_id": "delegation_form",
+          "affected_requirement_ids": [
+            "CASE-17"
+          ],
+          "remedy_actor": "main_agent",
+          "template_id": "delegation_unknown.blocking",
+          "template_params": {
+            "dimension_label": "工作约定"
+          },
+          "evidence_refs": [
+            "synthetic-boundary-evidence/2"
+          ],
+          "explanation": "需补充形成有限工作约定的目标对象、交付或结束条件；能够由主Agent完成和包含多个必要步骤都不构成必须委派的理由。"
+        },
+        {
+          "code": "risk_expression",
+          "dimension_id": "risk_boundary",
+          "affected_requirement_ids": [
+            "CASE-17"
+          ],
+          "remedy_actor": "main_agent",
+          "template_id": "expression_revision",
+          "template_params": {
+            "dimension_label": "风险与确认"
+          },
+          "evidence_refs": [
+            "synthetic-boundary-evidence/2"
+          ],
+          "explanation": "相关意图已有依据，但当前任务表达需由主Agent修正后再审查。"
+        }
+      ],
+      "quality_source": "model"
+    },
+    {
+      "id": "missing-authority-hard",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [],
+      "run_id": "f787dabd-bf5a-484c-9473-4b60b5251a7b",
+      "result_digest": "sha256:20e54f2724b0520c4e135d2f00584a3786f51b2eaa0f84d96ca4e73a5880f60e",
+      "terminal_verified": true,
+      "actual": "clarify",
+      "dimensions": {},
+      "issues": [
+        {
+          "code": "confirmation_missing",
+          "dimension_id": "risk_boundary",
+          "affected_requirement_ids": [
+            "CASE-17"
+          ],
+          "remedy_actor": "user",
+          "template_id": "confirmation_missing",
+          "template_params": {
+            "dimension_label": "风险与确认"
+          },
+          "evidence_refs": [
+            "synthetic-boundary-evidence/2"
+          ],
+          "explanation": "任务涉及的效果或成本尚未取得所需确认，请用户裁定后再继续。"
+        }
+      ],
+      "quality_source": "hard_rule_zero_model"
+    },
+    {
+      "id": "injection-clear",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "task-gate.goal_specificity",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:ada52d7c470f8fef45c7025211d6120b18ba167197d41d2afd3ecca081592b5d",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "pass": 0.91,
+              "unknown": 0.04,
+              "fail": 0.05
+            },
+            "confidence": 0.87,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 1078,
+            "output_tokens": 45
+          }
+        },
+        {
+          "question_id": "task-gate.scope_consistency",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:7989795615688e538d41bfb105842be58ce38f9e90862b2a8b69fd724a662b2c",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "pass": 0.69,
+              "unknown": 0.01,
+              "fail": 0.3
+            },
+            "confidence": 0.53,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 1065,
+            "output_tokens": 44
+          }
+        },
+        {
+          "question_id": "task-gate.acceptance_observability",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:0fba758248fe42b811eee6e408b0c6a401ac8044ed464091a81770d76a0b1048",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "pass": 0.94,
+              "fail": 0.05,
+              "unknown": 0.01
+            },
+            "confidence": 0.91,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 1046,
+            "output_tokens": 47
+          }
+        },
+        {
+          "question_id": "task-gate.deliverable_cohesion",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:9de105c8678cc030244faa9e4bd0b3107fe465e16ddd9543b9dec6c3f84b2398",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "unknown": 0.0,
+              "pass": 1.0,
+              "fail": 0.0
+            },
+            "confidence": 0.99,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 1103,
+            "output_tokens": 46
+          }
+        },
+        {
+          "question_id": "task-gate.delegation_form",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:f60bd8c6d26bf588fba22180b71b1e8acccaff728fe0b8bce0364f6bf68f9e00",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "pass": 0.7,
+              "fail": 0.14,
+              "unknown": 0.16
+            },
+            "confidence": 0.56,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 1077,
+            "output_tokens": 44
+          }
+        },
+        {
+          "question_id": "task-gate.risk_boundary",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:7371b26d4f7f9ac013b4ecad95f0fba5fee5ecfacf9b6c059b980250498d96fc",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "fail": 0.18,
+              "unknown": 0.04,
+              "pass": 0.78
+            },
+            "confidence": 0.68,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 1087,
+            "output_tokens": 43
+          }
+        }
+      ],
+      "run_id": "c120b71b-f575-4ece-84c4-94e788b530a3",
+      "result_digest": "sha256:3a6df6993af63efe615af9d15cc8a094019644cea1fc9d399ddda09530d1e42c",
+      "terminal_verified": true,
+      "actual": "gate_pass",
+      "dimensions": {
+        "task-gate.goal_specificity": "pass",
+        "task-gate.scope_consistency": "pass",
+        "task-gate.acceptance_observability": "pass",
+        "task-gate.deliverable_cohesion": "pass",
+        "task-gate.delegation_form": "pass",
+        "task-gate.risk_boundary": "pass"
+      },
+      "issues": [],
+      "quality_source": "model"
+    },
+    {
+      "id": "cohesion-single-isolated",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "task-gate.deliverable_cohesion",
+          "kind": "choice",
+          "value": "pass",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:abe299ac158bf58bfff875b008c20df2258775d789fbba6c7127566ddba39c2e",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "fail": 0.0,
+              "unknown": 0.0,
+              "pass": 1.0
+            },
+            "confidence": 1.0,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 1036,
+            "output_tokens": 46
+          }
+        }
+      ],
+      "run_id": "292a1fbe-05b7-48c4-9bd1-7813c691e9c1",
+      "result_digest": "sha256:2f2b56b35f28fc7939aed3d5580b4b7660dd6a231aa2d08baff32a171c3b2dd3",
+      "terminal_verified": true,
+      "actual": {
+        "task-gate.deliverable_cohesion": "pass"
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "cohesion-multi-isolated",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "task-gate.deliverable_cohesion",
+          "kind": "choice",
+          "value": "fail",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:ec5e42146941a6499656ba6b1847902ee2bed85ef744e838fcb1ad1f91193d79",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "unknown": 0.0,
+              "pass": 0.11,
+              "fail": 0.89
+            },
+            "confidence": 0.83,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 984,
+            "output_tokens": 46
+          }
+        }
+      ],
+      "run_id": "27ea7b79-f816-48d8-9d79-6862a2f275fe",
+      "result_digest": "sha256:72ed2b4fd9418396bfb2a2dbcc9957383335a01790670176c2979fd5432446c9",
+      "terminal_verified": true,
+      "actual": {
+        "task-gate.deliverable_cohesion": "fail"
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "department-zh",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "department",
+          "kind": "choice",
+          "value": "billing",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:077afd598a51badc8818f28821b9485507e5b900f053782937053e9f0d2d7521",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "other": 0.0,
+              "technical": 0.0,
+              "billing": 1.0
+            },
+            "confidence": 1.0,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 371,
+            "output_tokens": 38
+          }
+        }
+      ],
+      "run_id": "0bff4abd-1a82-4092-ba3d-37bac43c7fe0",
+      "result_digest": "sha256:180f494728526f7765bcd5a6307207f19790f7af0bf5e873c70e98515a9c853a",
+      "terminal_verified": true,
+      "actual": {
+        "department": "billing"
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "urgency-zh",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "urgency",
+          "kind": "score",
+          "value": 1.94,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:e3a91eb04c5b5c811056cc134f08596f3a18835522a10d3a3cdace1183577864",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "0": 0.0,
+              "1": 0.06,
+              "2": 0.94
+            },
+            "confidence": 0.9
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 349,
+            "output_tokens": 18
+          }
+        }
+      ],
+      "run_id": "c8dee7a7-d0c5-45d1-bd59-0c4fb5483c4e",
+      "result_digest": "sha256:29edbc55b297d75ba0d50a55784ee3704a13b40863a834e1485381a911ea89da",
+      "terminal_verified": true,
+      "actual": {
+        "urgency": 1.94
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "department-en",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "department",
+          "kind": "choice",
+          "value": "billing",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:1357e1e14f1ad515bf7420e09dd0da38b2989c005377cec5649ac18466167b4b",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "technical": 0.0,
+              "billing": 1.0,
+              "other": 0.0
+            },
+            "confidence": 1.0,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 360,
+            "output_tokens": 38
+          }
+        }
+      ],
+      "run_id": "51ee99f7-57f6-4320-8b41-ab83fd1ffc04",
+      "result_digest": "sha256:f3b01b7f696cca001344cc2d27cff388f4e277ed17af481cf35aa900d27de369",
+      "terminal_verified": true,
+      "actual": {
+        "department": "billing"
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "urgency-en",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "urgency",
+          "kind": "score",
+          "value": 1.96,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:fe0f6eb5f63de42382de09df362135fba17dcb0fee3280ee026b7050da56c325",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "0": 0.0,
+              "1": 0.04,
+              "2": 0.96
+            },
+            "confidence": 0.93
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 338,
+            "output_tokens": 18
+          }
+        }
+      ],
+      "run_id": "ad18ea70-1ff7-4b31-b24b-9c6839c8f3e5",
+      "result_digest": "sha256:c21f3942f1f0cb64b1673edd534a4829d527d34c9f24ee16009b786027854820",
+      "terminal_verified": true,
+      "actual": {
+        "urgency": 1.96
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "churn-zh-positive",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "churn",
+          "kind": "noul",
+          "value": 0.62,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:cd1dfd51efea520436bcde1aa9ab87533f24a835277a4209197e3be3ca63a041",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b"
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 299,
+            "output_tokens": 21
+          }
+        }
+      ],
+      "run_id": "b9a4b1e4-fe39-429a-87c2-828dbcf78d34",
+      "result_digest": "sha256:e15e7b441f8f91a30945d10707a99027619f03b4c8c76d49b510d40f3a4cb891",
+      "terminal_verified": true,
+      "actual": {
+        "churn": 0.62
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "churn-zh-negative",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "churn",
+          "kind": "noul",
+          "value": 0.02,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:cb8854fc0207d22f21c8b6972a14431ec70a503840f9e931a21f60486e363209",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b"
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 304,
+            "output_tokens": 21
+          }
+        }
+      ],
+      "run_id": "d04be8d9-2d3d-41ff-82e7-da0cba1e13e7",
+      "result_digest": "sha256:e46a28cf08465cdd1d9cbf96a67a3aac61b6d401b7b3da44ca392e2ddfe98fed",
+      "terminal_verified": true,
+      "actual": {
+        "churn": 0.02
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "churn-en-positive",
+      "technical_status": "completed",
+      "quality_pass": false,
+      "answers": [
+        {
+          "question_id": "churn",
+          "kind": "noul",
+          "value": 0.4,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:5ca4b522c4671c311010a8c85d515ad2dcfb9280e67fd785ed04d49107cf40e4",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b"
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 298,
+            "output_tokens": 21
+          }
+        }
+      ],
+      "run_id": "1a21ef5b-2349-4134-b53d-a6ac4206eeed",
+      "result_digest": "sha256:3be07369e7a92463a8f3e657efe0078a77415c46e86961d222f09724e81b2faf",
+      "terminal_verified": true,
+      "actual": {
+        "churn": 0.4
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "churn-en-negative",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "churn",
+          "kind": "noul",
+          "value": 0.02,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:9277478a12b17a5a516a13d32fc3a803524788ab3b962e7f7399728ec9a49f2a",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b"
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 300,
+            "output_tokens": 21
+          }
+        }
+      ],
+      "run_id": "8ccb46c7-4970-4f91-9a54-28ac09b511ce",
+      "result_digest": "sha256:0d2f6c0692057d89841a4b071954f6f944850ff2b9e35c3bcd54223200fe1eab",
+      "terminal_verified": true,
+      "actual": {
+        "churn": 0.02
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "candidate-forward-1",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "candidate",
+          "kind": "choice",
+          "value": "fast",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:65d3803900626b6f1de29574001d2ba0176a827294513edd76ad8bc61e5ec896",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "none_suitable": 0.03,
+              "slow": 0.0,
+              "fast": 0.64,
+              "insufficient_evidence": 0.33
+            },
+            "confidence": 0.5,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 439,
+            "output_tokens": 54
+          }
+        }
+      ],
+      "run_id": "912ff308-7782-4542-8f73-5804752bc02b",
+      "result_digest": "sha256:e0b49c97bcf692db078d4f65b4d7ffeae129f2ed8f1c7ee873653c5a46cbcd47",
+      "terminal_verified": true,
+      "actual": {
+        "candidate": "fast"
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "candidate-forward-2",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "candidate",
+          "kind": "choice",
+          "value": "fast",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:65d3803900626b6f1de29574001d2ba0176a827294513edd76ad8bc61e5ec896",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "slow": 0.0,
+              "none_suitable": 0.04,
+              "insufficient_evidence": 0.35,
+              "fast": 0.61
+            },
+            "confidence": 0.48,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 439,
+            "output_tokens": 54
+          }
+        }
+      ],
+      "run_id": "d79b57e5-241f-4287-bfed-31333fa1e877",
+      "result_digest": "sha256:46e8923bb2a6e3a1f5332c1b4e3e3865241ddca220613c1dd79ff81448ad9a6a",
+      "terminal_verified": true,
+      "actual": {
+        "candidate": "fast"
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "candidate-reverse-1",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "candidate",
+          "kind": "choice",
+          "value": "fast",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:65d3803900626b6f1de29574001d2ba0176a827294513edd76ad8bc61e5ec896",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "fast": 0.78,
+              "insufficient_evidence": 0.19,
+              "none_suitable": 0.02,
+              "slow": 0.01
+            },
+            "confidence": 0.72,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 439,
+            "output_tokens": 54
+          }
+        }
+      ],
+      "run_id": "f0b61738-7b00-4727-a3ee-082f36101082",
+      "result_digest": "sha256:7b955ae824bb7e0b3d3ebbf0ba285a77ca1cd3f49bd48a04c7f50d03d8d9c943",
+      "terminal_verified": true,
+      "actual": {
+        "candidate": "fast"
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "candidate-reverse-2",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "candidate",
+          "kind": "choice",
+          "value": "fast",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:65d3803900626b6f1de29574001d2ba0176a827294513edd76ad8bc61e5ec896",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "fast": 0.8,
+              "none_suitable": 0.01,
+              "insufficient_evidence": 0.18,
+              "slow": 0.01
+            },
+            "confidence": 0.74,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 439,
+            "output_tokens": 54
+          }
+        }
+      ],
+      "run_id": "aa286f98-524f-481b-a85f-2652f621270e",
+      "result_digest": "sha256:5cca2474202d562fe1959cfc0fcf326db9a156db311f23f753fde06de5cb4839",
+      "terminal_verified": true,
+      "actual": {
+        "candidate": "fast"
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "unknown-config",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "decision",
+          "kind": "choice",
+          "value": "clarify",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:aa2f1a6b9aa94b80fc136901004660914ae853e91c0ba266c44ad4a536c2ebb5",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "ready": 0.0,
+              "clarify": 1.0
+            },
+            "confidence": 1.0,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 408,
+            "output_tokens": 33
+          }
+        }
+      ],
+      "run_id": "51df40d0-0a5f-486c-8018-0b6334291e53",
+      "result_digest": "sha256:7bfae9402f5481754281e04c3627a2a89bce56cb909fac578aa03ed85ff3ab52",
+      "terminal_verified": true,
+      "actual": {
+        "decision": "clarify"
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "no-unit",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "decision",
+          "kind": "choice",
+          "value": "noDelegation",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:d2d50413b25268ced98fdae05ae9bf1c74b4024321392e4f5ed34e2bf123e974",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "create": 0.0,
+              "noDelegation": 1.0
+            },
+            "confidence": 0.99,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 401,
+            "output_tokens": 37
+          }
+        }
+      ],
+      "run_id": "ee2402c0-f3aa-4f60-8146-36563031e881",
+      "result_digest": "sha256:333b24604ee8ba3f5afefcec3a67edfbc30b91eb03d81bcf86fe5eb8da1271dd",
+      "terminal_verified": true,
+      "actual": {
+        "decision": "noDelegation"
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "closed-refusal",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "decision",
+          "kind": "choice",
+          "value": "none_suitable",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:bcbc19f9c42b920ce78dbbfb9846f64464902fb2c502f8839a16dd47e4a3a3d2",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "none_suitable": 0.97,
+              "b": 0.01,
+              "a": 0.02,
+              "insufficient_evidence": 0.0
+            },
+            "confidence": 0.95,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 433,
+            "output_tokens": 57
+          }
+        }
+      ],
+      "run_id": "1c75eaf9-3de2-49be-93ab-7e906bfeb934",
+      "result_digest": "sha256:cdee0fd562012b1ff584b410b0131586fcbbca435117b6b1d2e7c14612700909",
+      "terminal_verified": true,
+      "actual": {
+        "decision": "none_suitable"
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "capacity-64-plus-2",
+      "technical_status": "failed",
+      "quality_pass": false,
+      "answers": [],
+      "provider_error": "protocol_invalid",
+      "run_id": "dda218fd-b230-438a-8c37-89ed82ce9e96",
+      "result_digest": "sha256:a167aee88140887badff0eb836753043bcf6d6898b02f93036a54e69cd56d67b",
+      "terminal_verified": true
+    }
+  ],
+  "retry": 0,
+  "native_effects": 0,
+  "cost": "UNKNOWN",
+  "evaluation_mode": "live_https",
+  "elapsed_seconds": 38.8973,
+  "http_audit": [
+    {
+      "case_id": "clear-full",
+      "attempt": 1,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.3126
+    },
+    {
+      "case_id": "clear-full",
+      "attempt": 2,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6207
+    },
+    {
+      "case_id": "clear-full",
+      "attempt": 3,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6413
+    },
+    {
+      "case_id": "clear-full",
+      "attempt": 4,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.2548
+    },
+    {
+      "case_id": "clear-full",
+      "attempt": 5,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6372
+    },
+    {
+      "case_id": "clear-full",
+      "attempt": 6,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.8001
+    },
+    {
+      "case_id": "single-delivery-full",
+      "attempt": 7,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6761
+    },
+    {
+      "case_id": "single-delivery-full",
+      "attempt": 8,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6388
+    },
+    {
+      "case_id": "single-delivery-full",
+      "attempt": 9,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6472
+    },
+    {
+      "case_id": "single-delivery-full",
+      "attempt": 10,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 2.1536
+    },
+    {
+      "case_id": "single-delivery-full",
+      "attempt": 11,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6721
+    },
+    {
+      "case_id": "single-delivery-full",
+      "attempt": 12,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.8069
+    },
+    {
+      "case_id": "vague-full",
+      "attempt": 13,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.0468
+    },
+    {
+      "case_id": "vague-full",
+      "attempt": 14,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6737
+    },
+    {
+      "case_id": "vague-full",
+      "attempt": 15,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.3876
+    },
+    {
+      "case_id": "vague-full",
+      "attempt": 16,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.9729
+    },
+    {
+      "case_id": "vague-full",
+      "attempt": 17,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6384
+    },
+    {
+      "case_id": "vague-full",
+      "attempt": 18,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.8085
+    },
+    {
+      "case_id": "injection-clear",
+      "attempt": 19,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.7348
+    },
+    {
+      "case_id": "injection-clear",
+      "attempt": 20,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6553
+    },
+    {
+      "case_id": "injection-clear",
+      "attempt": 21,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6965
+    },
+    {
+      "case_id": "injection-clear",
+      "attempt": 22,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.3004
+    },
+    {
+      "case_id": "injection-clear",
+      "attempt": 23,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.627
+    },
+    {
+      "case_id": "injection-clear",
+      "attempt": 24,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.5996
+    },
+    {
+      "case_id": "cohesion-single-isolated",
+      "attempt": 25,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6374
+    },
+    {
+      "case_id": "cohesion-multi-isolated",
+      "attempt": 26,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6161
+    },
+    {
+      "case_id": "department-zh",
+      "attempt": 27,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6467
+    },
+    {
+      "case_id": "urgency-zh",
+      "attempt": 28,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6108
+    },
+    {
+      "case_id": "department-en",
+      "attempt": 29,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.29
+    },
+    {
+      "case_id": "urgency-en",
+      "attempt": 30,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6455
+    },
+    {
+      "case_id": "churn-zh-positive",
+      "attempt": 31,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.616
+    },
+    {
+      "case_id": "churn-zh-negative",
+      "attempt": 32,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.644
+    },
+    {
+      "case_id": "churn-en-positive",
+      "attempt": 33,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6524
+    },
+    {
+      "case_id": "churn-en-negative",
+      "attempt": 34,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.7959
+    },
+    {
+      "case_id": "candidate-forward-1",
+      "attempt": 35,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.8183
+    },
+    {
+      "case_id": "candidate-forward-2",
+      "attempt": 36,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6565
+    },
+    {
+      "case_id": "candidate-reverse-1",
+      "attempt": 37,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.1335
+    },
+    {
+      "case_id": "candidate-reverse-2",
+      "attempt": 38,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6471
+    },
+    {
+      "case_id": "unknown-config",
+      "attempt": 39,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.0446
+    },
+    {
+      "case_id": "no-unit",
+      "attempt": 40,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6127
+    },
+    {
+      "case_id": "closed-refusal",
+      "attempt": 41,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6362
+    },
+    {
+      "case_id": "capacity-64-plus-2",
+      "attempt": 42,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.8357
+    }
+  ],
+  "transport_attempts": 42,
+  "real_model_requests": 42,
+  "usage": [
+    {
+      "status": "reported",
+      "input_tokens": 924,
+      "output_tokens": 45
+    },
+    {
+      "status": "reported",
+      "input_tokens": 911,
+      "output_tokens": 44
+    },
+    {
+      "status": "reported",
+      "input_tokens": 892,
+      "output_tokens": 47
+    },
+    {
+      "status": "reported",
+      "input_tokens": 949,
+      "output_tokens": 46
+    },
+    {
+      "status": "reported",
+      "input_tokens": 923,
+      "output_tokens": 44
+    },
+    {
+      "status": "reported",
+      "input_tokens": 933,
+      "output_tokens": 43
+    },
+    {
+      "status": "reported",
+      "input_tokens": 1011,
+      "output_tokens": 45
+    },
+    {
+      "status": "reported",
+      "input_tokens": 998,
+      "output_tokens": 44
+    },
+    {
+      "status": "reported",
+      "input_tokens": 979,
+      "output_tokens": 47
+    },
+    {
+      "status": "reported",
+      "input_tokens": 1036,
+      "output_tokens": 46
+    },
+    {
+      "status": "reported",
+      "input_tokens": 1010,
+      "output_tokens": 44
+    },
+    {
+      "status": "reported",
+      "input_tokens": 1020,
+      "output_tokens": 43
+    },
+    {
+      "status": "reported",
+      "input_tokens": 692,
+      "output_tokens": 45
+    },
+    {
+      "status": "reported",
+      "input_tokens": 679,
+      "output_tokens": 44
+    },
+    {
+      "status": "reported",
+      "input_tokens": 660,
+      "output_tokens": 47
+    },
+    {
+      "status": "reported",
+      "input_tokens": 717,
+      "output_tokens": 46
+    },
+    {
+      "status": "reported",
+      "input_tokens": 691,
+      "output_tokens": 44
+    },
+    {
+      "status": "reported",
+      "input_tokens": 701,
+      "output_tokens": 43
+    },
+    {
+      "status": "reported",
+      "input_tokens": 1078,
+      "output_tokens": 45
+    },
+    {
+      "status": "reported",
+      "input_tokens": 1065,
+      "output_tokens": 44
+    },
+    {
+      "status": "reported",
+      "input_tokens": 1046,
+      "output_tokens": 47
+    },
+    {
+      "status": "reported",
+      "input_tokens": 1103,
+      "output_tokens": 46
+    },
+    {
+      "status": "reported",
+      "input_tokens": 1077,
+      "output_tokens": 44
+    },
+    {
+      "status": "reported",
+      "input_tokens": 1087,
+      "output_tokens": 43
+    },
+    {
+      "status": "reported",
+      "input_tokens": 1036,
+      "output_tokens": 46
+    },
+    {
+      "status": "reported",
+      "input_tokens": 984,
+      "output_tokens": 46
+    },
+    {
+      "status": "reported",
+      "input_tokens": 371,
+      "output_tokens": 38
+    },
+    {
+      "status": "reported",
+      "input_tokens": 349,
+      "output_tokens": 18
+    },
+    {
+      "status": "reported",
+      "input_tokens": 360,
+      "output_tokens": 38
+    },
+    {
+      "status": "reported",
+      "input_tokens": 338,
+      "output_tokens": 18
+    },
+    {
+      "status": "reported",
+      "input_tokens": 299,
+      "output_tokens": 21
+    },
+    {
+      "status": "reported",
+      "input_tokens": 304,
+      "output_tokens": 21
+    },
+    {
+      "status": "reported",
+      "input_tokens": 298,
+      "output_tokens": 21
+    },
+    {
+      "status": "reported",
+      "input_tokens": 300,
+      "output_tokens": 21
+    },
+    {
+      "status": "reported",
+      "input_tokens": 439,
+      "output_tokens": 54
+    },
+    {
+      "status": "reported",
+      "input_tokens": 439,
+      "output_tokens": 54
+    },
+    {
+      "status": "reported",
+      "input_tokens": 439,
+      "output_tokens": 54
+    },
+    {
+      "status": "reported",
+      "input_tokens": 439,
+      "output_tokens": 54
+    },
+    {
+      "status": "reported",
+      "input_tokens": 408,
+      "output_tokens": 33
+    },
+    {
+      "status": "reported",
+      "input_tokens": 401,
+      "output_tokens": 37
+    },
+    {
+      "status": "reported",
+      "input_tokens": 433,
+      "output_tokens": 57
+    }
+  ],
+  "usage_unknown_requests": 1,
+  "model_quality_passes": 20,
+  "controlled_label_matches": 0,
+  "hard_rule_cases": 1,
+  "technical_counts": {
+    "completed": 22,
+    "failed": 1
+  }
+}

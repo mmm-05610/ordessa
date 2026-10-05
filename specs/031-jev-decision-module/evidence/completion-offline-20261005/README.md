@@ -79,3 +79,7 @@
 | T66 | PASSED | 3 passed in 0.32s | [证据](T66.txt) |
 | T67 | PASSED | 3 passed in 0.21s | [证据](T67.txt) |
 | T68 | PASSED | 4 passed in 0.25s | [证据](T68.txt) |
+
+失败日志导出只移除了行末空格，原始日志保留于 .decision-tmp/completion-evaluation-tests.txt。
+
+扩展后的默认离线入口实跑：完整232项通过后，67场景逐项通过。首次扩展运行已通过完整套件和T01，但 full_suite.command 中 PosixPath 不能JSON编码；改成字符串后全入口重跑通过。[保留失败](first-expanded-entry-failure.txt)，不是产品行为失败，未改变断言。

@@ -985,9 +985,44 @@
       "evaluationPrepared": "evidence/completion-offline-20261005/evaluation-prepared.json",
       "scopeId": "jev-domain-v2-20261005",
       "maximumAdditionalRequests": 42,
-      "liveAuthorization": "PENDING",
+      "liveAuthorization": "AUTHORIZED_AND_EXHAUSTED_42",
       "sourceAuthority": "native core and owner unchanged",
-      "JD009Delivery": "OFFLINE_VERIFIED; real family capability remains PARTIAL"
+      "JD009Delivery": "OFFLINE_VERIFIED; real family capability remains PARTIAL",
+      "liveReceipt": "evidence/jev-domain-v2-20261005/summary.json",
+      "realModelRequests": 42,
+      "liveStatus": "PARTIAL_LABEL_AND_PROTOCOL_FAILURE",
+      "offlineDefaultEntry": "FULL_SUITE_AND_67_SCENARIOS_PASSED"
+    },
+    "liveEvaluationFollowup": {
+      "status": "PARTIAL",
+      "plan_hash": "sha256:f10594450f29ff5f4dccbc8363915d192976007c963965943827a1bef2036e01",
+      "new_requests": 42,
+      "previous_requests": 62,
+      "cumulative_requests": 104,
+      "elapsed_seconds": 38.8973,
+      "technical_completed": 22,
+      "technical_failed": 1,
+      "model_cases": 22,
+      "model_cases_with_typed_answers": 21,
+      "model_label_matches": 20,
+      "hard_rule_zero_model_cases": 1,
+      "verified_durable_runs": 23,
+      "reported_usage_new": {
+        "input_tokens": 29819,
+        "output_tokens": 1707
+      },
+      "reported_usage_cumulative": {
+        "input_tokens": 62430,
+        "output_tokens": 4247
+      },
+      "usage_unknown_requests_new": 1,
+      "usage_unknown_requests_cumulative": 2,
+      "cost": "UNKNOWN",
+      "credential_read_attempts_audited": 1,
+      "raw_receipt_counter_error": "credential_reads remained preparation default 0; actual run reads the specifically authorized private file once. Fixed prospectively and raw receipt retained.",
+      "native_effects": 0,
+      "retry": 0,
+      "all_work_complete": false
     }
   }
 }

@@ -1,0 +1,166 @@
+{
+  "verified_runs": 23,
+  "rows": [
+    {
+      "case_id": "clear-full",
+      "run_id": "2bbb0768-c77b-42f7-a1f2-7b6dede8d2ba",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:30435d83a5193e446d7db055e8eedebde7bc1e52bb315e239f7bf6927416b1c2",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "single-delivery-full",
+      "run_id": "681ca3aa-1d0e-4fd6-86f1-9df2d6f2b06c",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:fa804ecd1ba27fe5057afd28c11ad1cd78c09611a569dbe4c855ec984aff93da",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "vague-full",
+      "run_id": "a0eac09a-9830-4f9b-ac93-30d611079d41",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:f30c5c898bc6a98b240b6653ac2da6a236638663987f164fcc36ea87fed9b970",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "missing-authority-hard",
+      "run_id": "f787dabd-bf5a-484c-9473-4b60b5251a7b",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:20e54f2724b0520c4e135d2f00584a3786f51b2eaa0f84d96ca4e73a5880f60e",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "injection-clear",
+      "run_id": "c120b71b-f575-4ece-84c4-94e788b530a3",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:3a6df6993af63efe615af9d15cc8a094019644cea1fc9d399ddda09530d1e42c",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "cohesion-single-isolated",
+      "run_id": "292a1fbe-05b7-48c4-9bd1-7813c691e9c1",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:2f2b56b35f28fc7939aed3d5580b4b7660dd6a231aa2d08baff32a171c3b2dd3",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "cohesion-multi-isolated",
+      "run_id": "27ea7b79-f816-48d8-9d79-6862a2f275fe",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:72ed2b4fd9418396bfb2a2dbcc9957383335a01790670176c2979fd5432446c9",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "department-zh",
+      "run_id": "0bff4abd-1a82-4092-ba3d-37bac43c7fe0",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:180f494728526f7765bcd5a6307207f19790f7af0bf5e873c70e98515a9c853a",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "urgency-zh",
+      "run_id": "c8dee7a7-d0c5-45d1-bd59-0c4fb5483c4e",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:29edbc55b297d75ba0d50a55784ee3704a13b40863a834e1485381a911ea89da",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "department-en",
+      "run_id": "51ee99f7-57f6-4320-8b41-ab83fd1ffc04",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:f3b01b7f696cca001344cc2d27cff388f4e277ed17af481cf35aa900d27de369",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "urgency-en",
+      "run_id": "ad18ea70-1ff7-4b31-b24b-9c6839c8f3e5",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:c21f3942f1f0cb64b1673edd534a4829d527d34c9f24ee16009b786027854820",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "churn-zh-positive",
+      "run_id": "b9a4b1e4-fe39-429a-87c2-828dbcf78d34",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:e15e7b441f8f91a30945d10707a99027619f03b4c8c76d49b510d40f3a4cb891",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "churn-zh-negative",
+      "run_id": "d04be8d9-2d3d-41ff-82e7-da0cba1e13e7",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:e46a28cf08465cdd1d9cbf96a67a3aac61b6d401b7b3da44ca392e2ddfe98fed",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "churn-en-positive",
+      "run_id": "1a21ef5b-2349-4134-b53d-a6ac4206eeed",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:3be07369e7a92463a8f3e657efe0078a77415c46e86961d222f09724e81b2faf",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "churn-en-negative",
+      "run_id": "8ccb46c7-4970-4f91-9a54-28ac09b511ce",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:0d2f6c0692057d89841a4b071954f6f944850ff2b9e35c3bcd54223200fe1eab",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "candidate-forward-1",
+      "run_id": "912ff308-7782-4542-8f73-5804752bc02b",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:e0b49c97bcf692db078d4f65b4d7ffeae129f2ed8f1c7ee873653c5a46cbcd47",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "candidate-forward-2",
+      "run_id": "d79b57e5-241f-4287-bfed-31333fa1e877",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:46e8923bb2a6e3a1f5332c1b4e3e3865241ddca220613c1dd79ff81448ad9a6a",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "candidate-reverse-1",
+      "run_id": "f0b61738-7b00-4727-a3ee-082f36101082",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:7b955ae824bb7e0b3d3ebbf0ba285a77ca1cd3f49bd48a04c7f50d03d8d9c943",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "candidate-reverse-2",
+      "run_id": "aa286f98-524f-481b-a85f-2652f621270e",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:5cca2474202d562fe1959cfc0fcf326db9a156db311f23f753fde06de5cb4839",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "unknown-config",
+      "run_id": "51df40d0-0a5f-486c-8018-0b6334291e53",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:7bfae9402f5481754281e04c3627a2a89bce56cb909fac578aa03ed85ff3ab52",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "no-unit",
+      "run_id": "ee2402c0-f3aa-4f60-8146-36563031e881",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:333b24604ee8ba3f5afefcec3a67edfbc30b91eb03d81bcf86fe5eb8da1271dd",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "closed-refusal",
+      "run_id": "1c75eaf9-3de2-49be-93ab-7e906bfeb934",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:cdee0fd562012b1ff584b410b0131586fcbbca435117b6b1d2e7c14612700909",
+      "evaluated_source_and_plan": "VERIFIED"
+    },
+    {
+      "case_id": "capacity-64-plus-2",
+      "run_id": "dda218fd-b230-438a-8c37-89ed82ce9e96",
+      "hash_chain": "VERIFIED",
+      "terminal_digest": "sha256:a167aee88140887badff0eb836753043bcf6d6898b02f93036a54e69cd56d67b",
+      "evaluated_source_and_plan": "VERIFIED"
+    }
+  ]
+}

@@ -1,0 +1,326 @@
+{
+  "scope_id": "jev-domain-v2-20261005",
+  "input_hash": "sha256:f10594450f29ff5f4dccbc8363915d192976007c963965943827a1bef2036e01",
+  "limit": 42,
+  "cases": [
+    "clear-full",
+    "single-delivery-full",
+    "vague-full",
+    "missing-authority-hard",
+    "injection-clear",
+    "cohesion-single-isolated",
+    "cohesion-multi-isolated",
+    "department-zh",
+    "urgency-zh",
+    "department-en",
+    "urgency-en",
+    "churn-zh-positive",
+    "churn-zh-negative",
+    "churn-en-positive",
+    "churn-en-negative",
+    "candidate-forward-1",
+    "candidate-forward-2",
+    "candidate-reverse-1",
+    "candidate-reverse-2",
+    "unknown-config",
+    "no-unit",
+    "closed-refusal",
+    "capacity-64-plus-2"
+  ],
+  "requests": [
+    {
+      "case_id": "clear-full",
+      "attempt": 1,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.3126
+    },
+    {
+      "case_id": "clear-full",
+      "attempt": 2,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6207
+    },
+    {
+      "case_id": "clear-full",
+      "attempt": 3,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6413
+    },
+    {
+      "case_id": "clear-full",
+      "attempt": 4,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.2548
+    },
+    {
+      "case_id": "clear-full",
+      "attempt": 5,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6372
+    },
+    {
+      "case_id": "clear-full",
+      "attempt": 6,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.8001
+    },
+    {
+      "case_id": "single-delivery-full",
+      "attempt": 7,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6761
+    },
+    {
+      "case_id": "single-delivery-full",
+      "attempt": 8,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6388
+    },
+    {
+      "case_id": "single-delivery-full",
+      "attempt": 9,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6472
+    },
+    {
+      "case_id": "single-delivery-full",
+      "attempt": 10,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 2.1536
+    },
+    {
+      "case_id": "single-delivery-full",
+      "attempt": 11,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6721
+    },
+    {
+      "case_id": "single-delivery-full",
+      "attempt": 12,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.8069
+    },
+    {
+      "case_id": "vague-full",
+      "attempt": 13,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.0468
+    },
+    {
+      "case_id": "vague-full",
+      "attempt": 14,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6737
+    },
+    {
+      "case_id": "vague-full",
+      "attempt": 15,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.3876
+    },
+    {
+      "case_id": "vague-full",
+      "attempt": 16,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.9729
+    },
+    {
+      "case_id": "vague-full",
+      "attempt": 17,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6384
+    },
+    {
+      "case_id": "vague-full",
+      "attempt": 18,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.8085
+    },
+    {
+      "case_id": "injection-clear",
+      "attempt": 19,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.7348
+    },
+    {
+      "case_id": "injection-clear",
+      "attempt": 20,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6553
+    },
+    {
+      "case_id": "injection-clear",
+      "attempt": 21,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6965
+    },
+    {
+      "case_id": "injection-clear",
+      "attempt": 22,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.3004
+    },
+    {
+      "case_id": "injection-clear",
+      "attempt": 23,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.627
+    },
+    {
+      "case_id": "injection-clear",
+      "attempt": 24,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.5996
+    },
+    {
+      "case_id": "cohesion-single-isolated",
+      "attempt": 25,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6374
+    },
+    {
+      "case_id": "cohesion-multi-isolated",
+      "attempt": 26,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6161
+    },
+    {
+      "case_id": "department-zh",
+      "attempt": 27,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6467
+    },
+    {
+      "case_id": "urgency-zh",
+      "attempt": 28,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6108
+    },
+    {
+      "case_id": "department-en",
+      "attempt": 29,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.29
+    },
+    {
+      "case_id": "urgency-en",
+      "attempt": 30,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6455
+    },
+    {
+      "case_id": "churn-zh-positive",
+      "attempt": 31,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.616
+    },
+    {
+      "case_id": "churn-zh-negative",
+      "attempt": 32,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.644
+    },
+    {
+      "case_id": "churn-en-positive",
+      "attempt": 33,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6524
+    },
+    {
+      "case_id": "churn-en-negative",
+      "attempt": 34,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.7959
+    },
+    {
+      "case_id": "candidate-forward-1",
+      "attempt": 35,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.8183
+    },
+    {
+      "case_id": "candidate-forward-2",
+      "attempt": 36,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6565
+    },
+    {
+      "case_id": "candidate-reverse-1",
+      "attempt": 37,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.1335
+    },
+    {
+      "case_id": "candidate-reverse-2",
+      "attempt": 38,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6471
+    },
+    {
+      "case_id": "unknown-config",
+      "attempt": 39,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.0446
+    },
+    {
+      "case_id": "no-unit",
+      "attempt": 40,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6127
+    },
+    {
+      "case_id": "closed-refusal",
+      "attempt": 41,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6362
+    },
+    {
+      "case_id": "capacity-64-plus-2",
+      "attempt": 42,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.8357
+    }
+  ]
+}

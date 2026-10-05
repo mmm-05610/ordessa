@@ -71,6 +71,16 @@ receipt={'baseline':BASELINE,'head':sha,'source_digest':'sha256:'+source_hash.he
     'inherited_scope':'57 targeted Pacthold baseline IDs; full server/Harness registered reds not rerun',
     'scenarios':[]}
 failed=False
+if not args.scenario:
+    command=[sys.executable,'-m','pytest',str(PACKAGE/'tests'),'-q','--junitxml='+str(args.output/'full-suite.xml')]
+    result=run(command)
+    (args.output/'full-suite.txt').write_text(result.stdout+result.stderr)
+    ok=result.returncode==0 and not re.search(r'\b\d+ skipped\b',result.stdout)
+    failed|=not ok
+    receipt['full_suite']={'status':'PASSED' if ok else 'FAILED','command':command,'exit_code':result.returncode,
+        'summary':next((x for x in reversed(result.stdout.splitlines()) if 'passed' in x or 'failed' in x),''),
+        'evidence':str(args.output/'full-suite.txt')}
+    print('full suite',receipt['full_suite']['status'],receipt['full_suite']['summary'],flush=True)
 for i in range(1,69):
     scenario=f'T{i:02}'
     if args.scenario and scenario!=args.scenario: continue

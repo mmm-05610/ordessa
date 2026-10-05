@@ -1,0 +1,12 @@
+{
+  "authorization": "User explicitly authorized the proposed free batch",
+  "scope_id": "jev-domain-v2-20261005",
+  "plan_hash": "sha256:f10594450f29ff5f4dccbc8363915d192976007c963965943827a1bef2036e01",
+  "max_http_requests": 42,
+  "wall_seconds": 300,
+  "per_request_seconds": 30,
+  "retry": 0,
+  "synthetic_only": true,
+  "native_effects": 0,
+  "paid_fallback": false
+}

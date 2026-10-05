@@ -214,6 +214,7 @@ async def run_plan(plan, output, credential_file, authorize_live=False, *, ledge
     provider = sink = None; start = time.monotonic(); deadline = start + plan['limits']['wall_timeout_seconds']
     try:
         save()
+        receipt['credential_reads'] += 1; save()
         key = Path(credential_file).read_text().strip()
         if not key or '\n' in key: raise EvaluationError('credential_invalid')
         audited = AuditedTransport(transport or httpx2.AsyncHTTPTransport(retries=0), ledger, deadline)
