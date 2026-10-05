@@ -56,3 +56,7 @@ input_verifier(draft, basis, OwnerProposalInput) 必须返回精确 True；缺�
 政策内容进入 DecisionServices 时冻结，外部别名不得改变已检查策略。
 证据 ACK 绑定精确记录摘要／序号；成功也须读取核对精确持久终态。已 dispatch 的未知失败与协议失败锁定技术失败，业务捕获不恢复预算或重发。
 写者身份只证明原目录的非终态存活／中断；已提交归档可通过完整终态与 commit 链验证，复制后的 inode 不作为原写者退出证明。
+
+## 已批准 Codex 单家族扩展
+
+用户随后明确同意 downstream-next.md 的 Codex 原owner纯读接入，范围与合同见 [codex-pure-read-extension.md](codex-pure-read-extension.md)。原“Existing providers stay unsupported”对其他家族保持；Codex新增仅声明编译语义，不承诺实际启动／应用。真实Harness未授权、未运行。

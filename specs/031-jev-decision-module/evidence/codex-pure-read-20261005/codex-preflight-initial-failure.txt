@@ -1,0 +1,3 @@
+failed graph_failed
+candidates 1 compose 1 validate 0
+ValueError operation data must be a mapping

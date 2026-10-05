@@ -34,6 +34,16 @@ def prepare():
     install=run([executable,'-m','pip','install','--no-index','--find-links',TEMP/'wheels','--force-reinstall',TEMP/'dist/ordessa_decision-0.1.0-py3-none-any.whl'])
     (TEMP/'acceptance-wheel-install.txt').write_text(install.stdout+install.stderr)
     if install.returncode: raise RuntimeError('offline wheel install failed')
+    # User-authorised Codex pure-read extension: local editable sources only.
+    # This does not install a native executable or open a Harness session.
+    for package in ('packages/backend/harness-transport','plugins/harness/codex'):
+        native_install=run([sys.executable,'-m','pip','install','--no-index','--no-deps','--no-build-isolation','-e',ROOT/package])
+        label=Path(package).name
+        (TEMP/('acceptance-'+label+'-install.txt')).write_text(native_install.stdout+native_install.stderr)
+        if native_install.returncode: raise RuntimeError('local native read dependency install failed')
+    family=run([sys.executable,'-m','pytest','plugins/harness/codex/tests','-q','--junitxml='+str(TEMP/'codex-family.xml')])
+    (TEMP/'codex-family.txt').write_text(family.stdout+family.stderr)
+    if family.returncode: raise RuntimeError('Codex family regression failed; no scenes promoted')
     archive=run(['git','rev-parse',BASELINE])
     if archive.returncode or archive.stdout.strip()!=BASELINE: raise RuntimeError('fixed baseline unavailable')
     baseline=TEMP/'baseline';baseline.mkdir(exist_ok=True)

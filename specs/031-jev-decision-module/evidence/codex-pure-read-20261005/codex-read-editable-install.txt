@@ -1,0 +1,13 @@
+Obtaining file:///home/maoqh/projects/ordessa/worktree/031-jev-decision-module/plugins/harness/codex
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: ordessa-harness-codex
+  Building editable for ordessa-harness-codex (pyproject.toml): started
+  Building editable for ordessa-harness-codex (pyproject.toml): finished with status 'done'
+  Created wheel for ordessa-harness-codex: filename=ordessa_harness_codex-0.1.0a1-0.editable-py3-none-any.whl size=1519 sha256=a71f98f7ac87fa2bb0b21fa4b9e4f698b267084656a98a021c26e25d59e50234
+  Stored in directory: /tmp/pip-ephem-wheel-cache-3zm0el0b/wheels/b3/a9/04/ff84fc2d7b118eddae89bcb1b3698e889b49ac658e09e3240b
+Successfully built ordessa-harness-codex
+Installing collected packages: ordessa-harness-codex
+Successfully installed ordessa-harness-codex-0.1.0a1

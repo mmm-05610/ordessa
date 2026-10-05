@@ -39,13 +39,17 @@ def _supported_schema(schema):
     """Validate declaration support without relying on which values are present."""
     if not isinstance(schema, Mapping) or schema.get('$schema', DIALECT) != DIALECT: return False
     common = {'$schema', 'type', 'enum', 'description', 'title'}
-    specific = {'object': {'properties', 'required', 'additionalProperties'},
+    specific = {'object': {'properties', 'required', 'additionalProperties', 'minProperties', 'maxProperties'},
         'array': {'items', 'minItems', 'maxItems'}, 'number': {'minimum', 'maximum'},
-        'integer': {'minimum', 'maximum'}, 'string': set(), 'boolean': set(), 'null': set()}
+        'integer': {'minimum', 'maximum'}, 'string': {'minLength','maxLength'}, 'boolean': set(), 'null': set()}
     kind = schema.get('type')
-    if type(kind) is not str or kind not in specific or set(schema) - (common | specific[kind]): return False
+    if kind is None:
+        if 'enum' not in schema or set(schema)-common: return False
+    elif type(kind) is not str or kind not in specific or set(schema) - (common | specific[kind]): return False
     if any(type(schema[key]) is not str for key in ('title', 'description') if key in schema): return False
     if 'enum' in schema and (not isinstance(schema['enum'], (tuple, list)) or not schema['enum']): return False
+    for key in ('minLength','maxLength','minProperties','maxProperties'):
+        if key in schema and (type(schema[key]) is not int or schema[key]<0): return False
     if kind in ('number', 'integer'):
         if any(type(schema[key]) not in (int, float) or not math.isfinite(schema[key]) for key in ('minimum', 'maximum') if key in schema): return False
     if kind == 'object':
@@ -73,37 +77,30 @@ def check_schema(value, schema):
     """Return valid/invalid/unverifiable; this is structural, never owner approval."""
     try:
         if not _finite_json_tree(schema) or not _supported_schema(schema): return 'unverifiable'
+        return _check_value(value,schema)
     except (RecursionError, TypeError, ValueError, OverflowError):
         return 'unverifiable'
-    return _check_value(value, schema)
 
 
 def _check_value(value, schema):
     """Validate values only after the complete declaration has been checked."""
-    if not isinstance(schema, Mapping): return 'unverifiable'
-    allowed = {'$schema', 'type', 'properties', 'required', 'additionalProperties',
-               'enum', 'minimum', 'maximum', 'items', 'minItems', 'maxItems', 'description', 'title'}
-    if set(schema)-allowed or schema.get('$schema', DIALECT) != DIALECT:
-        return 'unverifiable'
     kind = schema.get('type')
     types = {'object': lambda v: isinstance(v, Mapping), 'array': lambda v: isinstance(v, (tuple, list)),
              'string': lambda v: type(v) is str, 'number': lambda v: type(v) in (int, float) and math.isfinite(v),
              'integer': lambda v: type(v) is int, 'boolean': lambda v: type(v) is bool, 'null': lambda v: v is None}
-    if kind not in types: return 'unverifiable'
-    if not types[kind](value): return 'invalid'
-    common={'$schema','type','enum','description','title'}
-    specific={'object':{'properties','required','additionalProperties'},
-        'array':{'items','minItems','maxItems'},'number':{'minimum','maximum'},'integer':{'minimum','maximum'}}
-    if set(schema)-(common|specific.get(kind,set())): return 'unverifiable'
+    if kind is not None and not types[kind](value): return 'invalid'
     if 'enum' in schema:
         if not isinstance(schema['enum'], (tuple,list)) or not schema['enum']: return 'unverifiable'
         if not any(_json_equal(value,v) for v in schema['enum']): return 'invalid'
+    if kind == 'string':
+        if len(value)<schema.get('minLength',0) or len(value)>schema.get('maxLength',len(value)): return 'invalid'
     if kind in ('number','integer'):
         for key, op in (('minimum', lambda v,b: v < b), ('maximum', lambda v,b: v > b)):
             if key in schema:
                 if type(schema[key]) not in (int,float) or not math.isfinite(schema[key]): return 'unverifiable'
                 if op(value, schema[key]): return 'invalid'
     if kind == 'object':
+        if len(value)<schema.get('minProperties',0) or len(value)>schema.get('maxProperties',len(value)): return 'invalid'
         props = schema.get('properties', {})
         required = schema.get('required', ())
         additional = schema.get('additionalProperties', True)

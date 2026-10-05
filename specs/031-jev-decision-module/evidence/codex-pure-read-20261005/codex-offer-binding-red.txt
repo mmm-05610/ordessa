@@ -1,0 +1,54 @@
+....FF.                                                                  [100%]
+=================================== FAILURES ===================================
+___ test_T57_T62_tampered_native_bindings_are_refused_before_key[offer_ref] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-1596/test_T57_T62_tampered_native_b3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x714694bd7560>
+defect = 'offer_ref'
+
+    @pytest.mark.parametrize('defect',['implementation','schema','provider_generation','offer_ref','evidence'])
+    async def test_T57_T62_tampered_native_bindings_are_refused_before_key(tmp_path,monkeypatch,defect):
+        data=plan();offer=data['fixture']['offer']
+        if defect=='implementation':offer['descriptor_digest']='sha256:'+'f'*64
+        elif defect=='schema':offer['input_schema']['properties']['model']['maxLength']=999
+        elif defect=='provider_generation':offer['provider_ref']['identity']['provider_ref']['generation']=2
+        elif defect=='offer_ref':offer['offer_ref']['identity']['definition_ref']['environmentNamespace']='foreign'
+        else:offer['evidence_refs']=[{'environmentNamespace':'spec031-codex-pure','evidenceId':'fabricated'}]
+        path=tmp_path/'must-not-read';original=Path.read_text
+        def guarded(p,*args,**kwargs):
+            assert p!=path,'credential read before plan rejection'
+            return original(p,*args,**kwargs)
+        monkeypatch.setattr(Path,'read_text',guarded)
+>       with pytest.raises(probe.edge.EvaluationError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE EvaluationError
+
+packages/backend/decision/tests/evaluation/test_codex_flow_probe.py:66: Failed
+____ test_T57_T62_tampered_native_bindings_are_refused_before_key[evidence] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-1596/test_T57_T62_tampered_native_b4')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x714694a69220>
+defect = 'evidence'
+
+    @pytest.mark.parametrize('defect',['implementation','schema','provider_generation','offer_ref','evidence'])
+    async def test_T57_T62_tampered_native_bindings_are_refused_before_key(tmp_path,monkeypatch,defect):
+        data=plan();offer=data['fixture']['offer']
+        if defect=='implementation':offer['descriptor_digest']='sha256:'+'f'*64
+        elif defect=='schema':offer['input_schema']['properties']['model']['maxLength']=999
+        elif defect=='provider_generation':offer['provider_ref']['identity']['provider_ref']['generation']=2
+        elif defect=='offer_ref':offer['offer_ref']['identity']['definition_ref']['environmentNamespace']='foreign'
+        else:offer['evidence_refs']=[{'environmentNamespace':'spec031-codex-pure','evidenceId':'fabricated'}]
+        path=tmp_path/'must-not-read';original=Path.read_text
+        def guarded(p,*args,**kwargs):
+            assert p!=path,'credential read before plan rejection'
+            return original(p,*args,**kwargs)
+        monkeypatch.setattr(Path,'read_text',guarded)
+>       with pytest.raises(probe.edge.EvaluationError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE EvaluationError
+
+packages/backend/decision/tests/evaluation/test_codex_flow_probe.py:66: Failed
+=========================== short test summary info ============================
+FAILED packages/backend/decision/tests/evaluation/test_codex_flow_probe.py::test_T57_T62_tampered_native_bindings_are_refused_before_key[offer_ref]
+FAILED packages/backend/decision/tests/evaluation/test_codex_flow_probe.py::test_T57_T62_tampered_native_bindings_are_refused_before_key[evidence]
+2 failed, 5 passed in 0.82s

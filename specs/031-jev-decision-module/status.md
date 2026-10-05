@@ -177,3 +177,13 @@ JD009 交付与离线行为已验证，真实家族 opt-out/unsupported 仍 PART
 最终320全套、67逐场景、固定基线／当前各57核心ID、独立wheel离线重建安装通过。新增6次真实Jev原图合成注入复验通过，归档终态／source／plan／FlowRef独立核验；累计214请求、已报告170771输入／13958输出、历史3次usage未知，费用UNKNOWN，重试0、原生效果0。单个样本不能证明全面抗注入。
 
 原生家族仍按冻结合同unsupported，真实Harness／实际应用未运行，JD009／JD010保持PARTIAL；历史模型标签与概率协议失败、继承Server/Harness红、Python3.10及真实断电等未验证项不关闭。原目标保持active，all_work_complete=false；已准备 [后续家族扩展的具体方案](downstream-next.md)，扩展冻结范围和真实Harness动作须单独授权，不把Jev无上限授权扩大解释。
+
+## 已批准 Codex 原 owner 纯读扩展
+
+用户明确答复同意扩展。实施与冻结范围见 contracts/codex-pure-read-extension.md，复用原CodexRuntimeProvider/ConfigurationChangeRequest/_compile_change，声明编译范围的公开纯读端口；owner/状态/原生操作仍归原核心，未新增执行器。Codex不再笼统标unsupported，但offer/runtimeReady/application仍unknown，Pi/Claude保持unsupported。
+
+[本批逐场景与失败证据](evidence/codex-pure-read-20261005/README.md)：Decision352项、Codex家族147项、67离线场景、57基线／当前核心ID及独立wheel通过。继承客户端夹具退役import的16失败已在固定基线复现，改为现有公开Message类型且保留断言后通过；内部异常误报和offer身份／证据错绑定的RED记录保留。
+
+新6真实Jev＋实际Codex纯读owner贯穿原图，compile passed、应用mandatory unknown，clarify无payload；无重试/原生效果。归档独立复核question/answer/hash chain/terminal/manifest/source/plan/FlowRef/native input双摘要/义务通过。累计220调用、已报告176303输入／14227输出，历史3次usage未知，费用UNKNOWN。模型质量及协议旧失败、其他继承红／未验证项不关闭。
+
+真实Harness及实际配置应用未授权／未运行。已准备 harness-smoke-next.md 的具体有限协议烟测方案；原目标仍active，all_work_complete=false，不宣布全部完成。

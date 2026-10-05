@@ -30,7 +30,7 @@ EXPECTED = {
     'configuration_unverifiable': {'disposition': 'clarify', 'action': None, 'issue_code': 'proposal_unverifiable', 'candidate_reads': 1, 'compose': 1, 'validate': 1}}
 
 
-def validate(plan):
+def validate(plan, *, binding_digest=None):
     try:
         if set(plan) != {'version','synthetic_only','scope_id','settings','limits','task','policy','fixture','expected'}: raise ValueError()
         if plan['version'] != 'jev-edge-flow/1' or plan['synthetic_only'] is not True: raise ValueError()
@@ -65,10 +65,12 @@ def validate(plan):
                 'configuration': fixture['configuration']})
         elif set(fixture) != {'kind'}: raise ValueError()
         check_proposal_basis(draft, candidate, task, selection['required_checks']['reuse'], selection['required_validation']['reuse'])
+        if binding_digest is not None and (type(binding_digest) is not str or len(binding_digest)!=71 or not binding_digest.startswith('sha256:') or any(c not in '0123456789abcdef' for c in binding_digest[7:])): raise ValueError()
         original = build_assignment_flow(policy)
         code = digest('flow', {'original_graph_code': original.reviewed_code_digest,
             'probe_helpers': reviewed_code_digest(__file__, Path(__file__).with_name('reference_flow_probe.py'), Path(__file__).with_name('live_acceptance.py')),
             'plan': digest('policy', plan)})
+        if binding_digest is not None: code=digest('flow',{'edge_code':code,'trusted_port_binding_digest':binding_digest})
         flow = replace(original, ref=FlowRef('agent.assignment.synthetic-edge','1',flow_digest(code,original.policy_refs)),
             reviewed_code_digest=code, review_ref=plan['scope_id']); flow.validate()
         request = DecisionRequest('edge',task,flow.ref,RunLimits(max_model_attempts=bounds['max_model_attempts'],
@@ -135,18 +137,21 @@ def _services(values, fixture, provider, sink, context, row, save, mode):
         Validator(kind,row,save),provider,sink,policy,context,flow.policy_refs,mode=mode)
 
 
-async def prepare(plan):
-    values = validate(plan); _,policy,kind,candidate,draft,offer,flow,request = values
+async def prepare(plan, *, binding_digest=None, services_factory=None):
+    if (services_factory is None)!=(binding_digest is None) or (services_factory is not None and not callable(services_factory)):
+        raise EvaluationError('port_binding_unreviewed')
+    values = validate(plan,binding_digest=binding_digest); _,policy,kind,candidate,draft,offer,flow,request = values
     provider = CaptureProvider(); context = ReadContext(object(),'offline-edge-capture'); sink = MemoryEvidenceSink(read_context=context)
     row = _row(); state = flow.new_state(request); flow = replace(flow,new_state=lambda _:state)
-    services = _services(values,plan['fixture'],provider,sink,context,row,lambda:None,'offline')
+    factory=services_factory or _services
+    services = factory(values,plan['fixture'],provider,sink,context,row,lambda:None,'offline')
     try: result = await run_decision(request,flow=flow,services=services)
     finally: await sink.close()
     if result.status != 'completed' or not _matches(result,row,plan['expected']) or len(provider.questions) != 6:
         raise EvaluationError('edge_capture_failed')
     if any(not q.question_id.startswith('task-gate.') for q in provider.questions): raise EvaluationError('edge_capture_failed')
     for q in provider.questions: JevDecisionProvider._map_question(q)
-    return {'status':'PREPARED_NOT_RUN','input_hash':digest('policy',plan),'scope_id':plan['scope_id'],'plan':plain(plan),
+    return {'status':'PREPARED_NOT_RUN','port_binding_digest':binding_digest,'port_binding':row.get('port_binding'),'input_hash':digest('policy',plan),'scope_id':plan['scope_id'],'plan':plain(plan),
         'flow':plain(flow.ref),'reviewed_code_digest':flow.reviewed_code_digest,'policy_refs':plain(flow.policy_refs),'request':plain(request),
         'candidate':plain(candidate),'proposal':plain(draft),'configuration_offer':plain(offer),'questions':plain(provider.questions),
         'question_digests':[q.question_digest for q in provider.questions],'preparation_graph_trace':list(state.trace),
@@ -165,8 +170,8 @@ def _matches(result,row,expected):
         and len(row['validate_calls']) == expected['validate'])
 
 
-async def run_plan(plan,output,credential_file,authorize_live=False,*,ledger_path,transport=None):
-    values = validate(plan); frozen = await prepare(plan)
+async def run_plan(plan,output,credential_file,authorize_live=False,*,ledger_path,transport=None,binding_digest=None,services_factory=None):
+    values = validate(plan,binding_digest=binding_digest); frozen = await prepare(plan,binding_digest=binding_digest,services_factory=services_factory)
     if not authorize_live: raise EvaluationError('live_authorization_required')
     if ledger_path is None: raise EvaluationError('scope_ledger_required')
     ledger = live.ScopeLedger(ledger_path,plan)
@@ -188,7 +193,8 @@ async def run_plan(plan,output,credential_file,authorize_live=False,*,ledger_pat
         ledger.begin('edge'); audited.case_id = 'edge'
         questions = tuple(DecisionQuestion.from_dict(q) for q in frozen['questions'])
         recorded = reference.FrozenQuestions(provider,row,save,questions)
-        services = _services(values,plan['fixture'],recorded,sink,context,row,save,'real')
+        factory=services_factory or _services
+        services = factory(values,plan['fixture'],recorded,sink,context,row,save,'real')
         flow = replace(flow,new_state=lambda _:state)
         async with asyncio.timeout_at(deadline): result = await run_decision(request,flow=flow,services=services)
         row.update(run_id=result.run_id,technical_status=result.status,result=plain(result),result_digest=digest('result',result))

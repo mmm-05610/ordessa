@@ -1,0 +1,16 @@
+
+==================================== ERRORS ====================================
+____________________ ERROR collecting tests/test_client.py _____________________
+ImportError while importing test module '/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/plugins/harness/codex/tests/test_client.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/maoqh/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/harness/codex/tests/test_client.py:16: in <module>
+    from ordessa_harness_transport import (
+E   ModuleNotFoundError: No module named 'ordessa_harness_transport'
+=========================== short test summary info ============================
+ERROR plugins/harness/codex/tests/test_client.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.29s

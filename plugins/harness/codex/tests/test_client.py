@@ -206,7 +206,7 @@ class ScriptedChannel:
         self.sent.append(raw)
 
     def next_message(self, *, timeout):
-        from ordessa_agent_tools.native_clients._transport import Message
+        from ordessa_harness_transport import Message
         if not self.messages:
             raise ChannelClosed("controlled disconnect")
         return Message(self.messages.popleft())

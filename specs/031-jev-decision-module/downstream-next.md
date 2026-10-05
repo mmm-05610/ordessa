@@ -17,3 +17,7 @@
 此步骤也不能证明真实原生启动／配置应用。若要实际 Harness 攻击链，须另批准隔离安装与进程启动／关闭、指定模型凭据和调用成本、临时实例 prepare/start/connect/apply 的动作及清理范围；不得重启现有服务或迁移用户资料。实际模型费用未授权前，不能让原生进程自动发请求。
 
 本页是审阅计划，不是授权记录；尚未修改原家族或调用 Harness。即使扩展获批，其他 Pi/Claude 家族仍 unsupported，不宣称七动作全部可用。
+
+## 授权与执行回执
+
+用户明确答复“同意扩展 Codex 纯只读接入”。此步骤已按 codex-pure-read-extension.md 实施、147家族／352 Decision／67场景复验及6次真实Jev＋实际owner验证，证据在 evidence/codex-pure-read-20261005。只读语义范围完成，未知应用没有升级。下一步真实协议烟测单列 harness-smoke-next.md，尚未获批／执行。

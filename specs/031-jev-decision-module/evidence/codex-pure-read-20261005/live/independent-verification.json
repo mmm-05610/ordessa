@@ -1,0 +1,9 @@
+{
+  "verified_runs": 1,
+  "run_id": "86eff16f-4aeb-40a8-b2f5-21502e32b4a5",
+  "verified": "HASH_CHAIN_TERMINAL_MANIFEST_SOURCE_PLAN_FLOW_NATIVE_INPUT_MAPPING_OBLIGATIONS_COUNTS",
+  "credential_reads": 0,
+  "real_model_requests": 0,
+  "native_effects": 0,
+  "scope": "actual Codex compiler only; controlled candidate; no Harness or actual apply"
+}

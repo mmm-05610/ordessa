@@ -29,3 +29,9 @@ node /home/maoqh/projects/ordessa/specs/031-jev-decision-module/checks/validate-
 ```
 入口串行构建独立 wheel、离线安装基础依赖、对比固定基线、逐场景复验；不发真实模型请求。
 需要已有本树 .venv-decision 和 .decision-tmp/wheels 缓存；缺席时明确失败，不自动下载/读取凭据。
+
+Codex纯读范围扩展后，同一离线入口还会从本树以 --no-index/--no-deps/--no-build-isolation editable安装既有 harness-transport 与 Codex Python包，并串行跑家族回归；不安装/启动原生二进制。原owner计算证据不是实际应用保证。真实归档可无key/HTTP复核：
+
+```bash
+.venv-decision/bin/python specs/031-jev-decision-module/evidence/codex-pure-read-20261005/verify_archive.py
+```

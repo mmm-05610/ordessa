@@ -1,0 +1,13 @@
+Obtaining file:///home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/harness-transport
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: ordessa-harness-transport
+  Building editable for ordessa-harness-transport (pyproject.toml): started
+  Building editable for ordessa-harness-transport (pyproject.toml): finished with status 'done'
+  Created wheel for ordessa-harness-transport: filename=ordessa_harness_transport-0.1.0a1-0.editable-py3-none-any.whl size=1516 sha256=a9a04282a8cbb07d70a8d484afd5a6497af6e3dee7a58124bb88b8fdd318078c
+  Stored in directory: /tmp/pip-ephem-wheel-cache-uh2tynln/wheels/7c/0c/7c/0befc888594a6dabdff0b97f5d2865e83abc628e735d739ca9
+Successfully built ordessa-harness-transport
+Installing collected packages: ordessa-harness-transport
+Successfully installed ordessa-harness-transport-0.1.0a1

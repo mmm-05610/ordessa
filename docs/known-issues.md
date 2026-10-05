@@ -186,3 +186,11 @@ Spec031 edge continuation: four more original-graph synthetic runs cover complet
 [两轮反例证据](../specs/031-jev-decision-module/evidence/adversarial-20261005/README.md)记录来源撤权／换代、义务虚构版本及标量类型、owner错映射、隐藏schema分支、策略别名、未知重发、ACK／终态和写者锁攻击；修复后320项与67离线场景、57基线／当前核心ID通过。可信映射verifier仍需业务审阅，不证明任意映射正确；旧非终态缺写者身份返回unknown、不迁移原日志。
 
 新增6真实免费Jev合成原图请求通过；累计214请求，已报告170771输入／13958输出，历史3次usage未知，费用UNKNOWN。DEC031-01/02历史模型标签和协议风险、DEC031-03家族unsupported及实际Harness未验证不因此关闭。后续Codex原owner纯只读接入是待批准范围扩展，尚未实施。
+
+### Spec 031 用户批准 Codex 纯读扩展（2026-10-05）
+
+Codex原owner已opt-in公开只读offer/assessment，仅证明既有声明编译语义；offer/application/runtimeReady仍unknown，其他Pi/Claude仍unsupported。DEC031-03的“全家族未opt-in”是此前状态，不把新增纯读能力写成实际Harness或应用支持。[证据](../specs/031-jev-decision-module/evidence/codex-pure-read-20261005/README.md)：352项Decision、147项Codex家族、67场景及57基线／当前ID通过；新6真实Jev调用给compile passed＋应用义务unknown，原图正确clarify。
+
+新增发现的Codex客户端夹具退役Message import在固定基线复现16失败；夹具改接现有公开transport类型，未复活兼容链、未改变断言，当前家族147通过。脚本peer不证明真实原生二进制协议；本机入口只盘点到/usr/lib/chatgpt/resources/codex，未执行或确认版本。全部Server/Harness继承红仍未整体复验，真实断电/远程FS/Python3.10仍未验证。
+
+累计220真实免费Jev请求、已报告176303输入／14227输出，历史3usage未知、费用UNKNOWN。模型历史标签和概率协议风险DEC031-01/02保持开放；真实Harness及native apply须另批，尚未执行。

@@ -1,0 +1,160 @@
+FFFFFFFF....F                                                            [100%]
+=================================== FAILURES ===================================
+___________ test_T62_original_owner_schema_constraints[value0-valid] ___________
+
+value = {'model': 'does-not-prove-model-exists'}, expected = 'valid'
+
+    @pytest.mark.parametrize('value,expected',[
+        ({'model':'does-not-prove-model-exists'},'valid'),
+        ({},'invalid'),({'model':''},'invalid'),({'model':'x'*257},'invalid'),
+        ({'model_reasoning_effort':'high'},'valid'),({'model_reasoning_effort':'invented'},'invalid'),
+        ({'model_reasoning_effort':True},'invalid'),({'extra':'x'},'invalid')])
+    def test_T62_original_owner_schema_constraints(value,expected):
+>       assert check_schema(value,SCHEMA)==expected
+E       AssertionError: assert 'unverifiable' == 'valid'
+E         
+E         - valid
+E         + unverifiable
+
+packages/backend/decision/tests/flows/test_native_schema_subset.py:15: AssertionError
+__________ test_T62_original_owner_schema_constraints[value1-invalid] __________
+
+value = {}, expected = 'invalid'
+
+    @pytest.mark.parametrize('value,expected',[
+        ({'model':'does-not-prove-model-exists'},'valid'),
+        ({},'invalid'),({'model':''},'invalid'),({'model':'x'*257},'invalid'),
+        ({'model_reasoning_effort':'high'},'valid'),({'model_reasoning_effort':'invented'},'invalid'),
+        ({'model_reasoning_effort':True},'invalid'),({'extra':'x'},'invalid')])
+    def test_T62_original_owner_schema_constraints(value,expected):
+>       assert check_schema(value,SCHEMA)==expected
+E       AssertionError: assert 'unverifiable' == 'invalid'
+E         
+E         - invalid
+E         + unverifiable
+
+packages/backend/decision/tests/flows/test_native_schema_subset.py:15: AssertionError
+__________ test_T62_original_owner_schema_constraints[value2-invalid] __________
+
+value = {'model': ''}, expected = 'invalid'
+
+    @pytest.mark.parametrize('value,expected',[
+        ({'model':'does-not-prove-model-exists'},'valid'),
+        ({},'invalid'),({'model':''},'invalid'),({'model':'x'*257},'invalid'),
+        ({'model_reasoning_effort':'high'},'valid'),({'model_reasoning_effort':'invented'},'invalid'),
+        ({'model_reasoning_effort':True},'invalid'),({'extra':'x'},'invalid')])
+    def test_T62_original_owner_schema_constraints(value,expected):
+>       assert check_schema(value,SCHEMA)==expected
+E       AssertionError: assert 'unverifiable' == 'invalid'
+E         
+E         - invalid
+E         + unverifiable
+
+packages/backend/decision/tests/flows/test_native_schema_subset.py:15: AssertionError
+__________ test_T62_original_owner_schema_constraints[value3-invalid] __________
+
+value = {'model': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'}
+expected = 'invalid'
+
+    @pytest.mark.parametrize('value,expected',[
+        ({'model':'does-not-prove-model-exists'},'valid'),
+        ({},'invalid'),({'model':''},'invalid'),({'model':'x'*257},'invalid'),
+        ({'model_reasoning_effort':'high'},'valid'),({'model_reasoning_effort':'invented'},'invalid'),
+        ({'model_reasoning_effort':True},'invalid'),({'extra':'x'},'invalid')])
+    def test_T62_original_owner_schema_constraints(value,expected):
+>       assert check_schema(value,SCHEMA)==expected
+E       AssertionError: assert 'unverifiable' == 'invalid'
+E         
+E         - invalid
+E         + unverifiable
+
+packages/backend/decision/tests/flows/test_native_schema_subset.py:15: AssertionError
+___________ test_T62_original_owner_schema_constraints[value4-valid] ___________
+
+value = {'model_reasoning_effort': 'high'}, expected = 'valid'
+
+    @pytest.mark.parametrize('value,expected',[
+        ({'model':'does-not-prove-model-exists'},'valid'),
+        ({},'invalid'),({'model':''},'invalid'),({'model':'x'*257},'invalid'),
+        ({'model_reasoning_effort':'high'},'valid'),({'model_reasoning_effort':'invented'},'invalid'),
+        ({'model_reasoning_effort':True},'invalid'),({'extra':'x'},'invalid')])
+    def test_T62_original_owner_schema_constraints(value,expected):
+>       assert check_schema(value,SCHEMA)==expected
+E       AssertionError: assert 'unverifiable' == 'valid'
+E         
+E         - valid
+E         + unverifiable
+
+packages/backend/decision/tests/flows/test_native_schema_subset.py:15: AssertionError
+__________ test_T62_original_owner_schema_constraints[value5-invalid] __________
+
+value = {'model_reasoning_effort': 'invented'}, expected = 'invalid'
+
+    @pytest.mark.parametrize('value,expected',[
+        ({'model':'does-not-prove-model-exists'},'valid'),
+        ({},'invalid'),({'model':''},'invalid'),({'model':'x'*257},'invalid'),
+        ({'model_reasoning_effort':'high'},'valid'),({'model_reasoning_effort':'invented'},'invalid'),
+        ({'model_reasoning_effort':True},'invalid'),({'extra':'x'},'invalid')])
+    def test_T62_original_owner_schema_constraints(value,expected):
+>       assert check_schema(value,SCHEMA)==expected
+E       AssertionError: assert 'unverifiable' == 'invalid'
+E         
+E         - invalid
+E         + unverifiable
+
+packages/backend/decision/tests/flows/test_native_schema_subset.py:15: AssertionError
+__________ test_T62_original_owner_schema_constraints[value6-invalid] __________
+
+value = {'model_reasoning_effort': True}, expected = 'invalid'
+
+    @pytest.mark.parametrize('value,expected',[
+        ({'model':'does-not-prove-model-exists'},'valid'),
+        ({},'invalid'),({'model':''},'invalid'),({'model':'x'*257},'invalid'),
+        ({'model_reasoning_effort':'high'},'valid'),({'model_reasoning_effort':'invented'},'invalid'),
+        ({'model_reasoning_effort':True},'invalid'),({'extra':'x'},'invalid')])
+    def test_T62_original_owner_schema_constraints(value,expected):
+>       assert check_schema(value,SCHEMA)==expected
+E       AssertionError: assert 'unverifiable' == 'invalid'
+E         
+E         - invalid
+E         + unverifiable
+
+packages/backend/decision/tests/flows/test_native_schema_subset.py:15: AssertionError
+__________ test_T62_original_owner_schema_constraints[value7-invalid] __________
+
+value = {'extra': 'x'}, expected = 'invalid'
+
+    @pytest.mark.parametrize('value,expected',[
+        ({'model':'does-not-prove-model-exists'},'valid'),
+        ({},'invalid'),({'model':''},'invalid'),({'model':'x'*257},'invalid'),
+        ({'model_reasoning_effort':'high'},'valid'),({'model_reasoning_effort':'invented'},'invalid'),
+        ({'model_reasoning_effort':True},'invalid'),({'extra':'x'},'invalid')])
+    def test_T62_original_owner_schema_constraints(value,expected):
+>       assert check_schema(value,SCHEMA)==expected
+E       AssertionError: assert 'unverifiable' == 'invalid'
+E         
+E         - invalid
+E         + unverifiable
+
+packages/backend/decision/tests/flows/test_native_schema_subset.py:15: AssertionError
+____________ test_T62_unicode_codepoint_length_and_json_enum_types _____________
+
+    def test_T62_unicode_codepoint_length_and_json_enum_types():
+>       assert check_schema('中文',{'type':'string','minLength':2,'maxLength':2})=='valid'
+E       AssertionError: assert 'unverifiable' == 'valid'
+E         
+E         - valid
+E         + unverifiable
+
+packages/backend/decision/tests/flows/test_native_schema_subset.py:25: AssertionError
+=========================== short test summary info ============================
+FAILED packages/backend/decision/tests/flows/test_native_schema_subset.py::test_T62_original_owner_schema_constraints[value0-valid]
+FAILED packages/backend/decision/tests/flows/test_native_schema_subset.py::test_T62_original_owner_schema_constraints[value1-invalid]
+FAILED packages/backend/decision/tests/flows/test_native_schema_subset.py::test_T62_original_owner_schema_constraints[value2-invalid]
+FAILED packages/backend/decision/tests/flows/test_native_schema_subset.py::test_T62_original_owner_schema_constraints[value3-invalid]
+FAILED packages/backend/decision/tests/flows/test_native_schema_subset.py::test_T62_original_owner_schema_constraints[value4-valid]
+FAILED packages/backend/decision/tests/flows/test_native_schema_subset.py::test_T62_original_owner_schema_constraints[value5-invalid]
+FAILED packages/backend/decision/tests/flows/test_native_schema_subset.py::test_T62_original_owner_schema_constraints[value6-invalid]
+FAILED packages/backend/decision/tests/flows/test_native_schema_subset.py::test_T62_original_owner_schema_constraints[value7-invalid]
+FAILED packages/backend/decision/tests/flows/test_native_schema_subset.py::test_T62_unicode_codepoint_length_and_json_enum_types
+9 failed, 4 passed in 0.12s

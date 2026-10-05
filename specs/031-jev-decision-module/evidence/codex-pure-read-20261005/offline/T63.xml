@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="0.235" timestamp="2026-10-05T19:57:44.217002+08:00" hostname="maoqh-g15"><testcase classname="tests.acceptance.test_release" name="test_T63_independent_wheel_optional_boundaries" time="0.214" /></testsuite></testsuites>

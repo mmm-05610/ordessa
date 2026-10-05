@@ -19,3 +19,7 @@ JD009-03原文要求“缺家族能力诚实PARTIAL”，python-freeze合同明�
 ```
 
 此入口串行离线重建wheel、57个固定基线/当前回归、完整套件、67个离线场景；T60不自动调用模型。真实评测的PARTIAL报告另列，不用离线green覆盖。
+
+## 单家族扩展继续记录
+
+用户批准Codex纯读接入，现实际原owner编译端口已接入，其他家族unsupported和原生应用unknown仍保持。352项Decision、147项家族及6次真实Jev原图证据见 [Codex纯读证据](evidence/codex-pure-read-20261005/README.md)。本页旧“交付结束”是历史审计，不能推断扩展或Harness已完成；原目标保持active/all_work_complete=false，后续有限Harness方案见harness-smoke-next.md。

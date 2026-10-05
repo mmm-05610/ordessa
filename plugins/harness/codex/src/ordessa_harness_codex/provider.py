@@ -20,6 +20,9 @@ from pacthold.agents.public import (
     ConfigurationDescription, ConfigurationSnapshot, ConfigurationUnsupported,
     ConfigurationChangeRequest, ConfigurationChangeResult, ConfigurationItemResult, ConfigurationRevisionConflict,
     UnitInspection,
+    PURE_READ_VERSION, OwnerReadContext, OwnerProposalInput,
+    OwnerConfigurationOfferBatch, OwnerProposalAssessment,
+    ConfigurationContractError, ProfileValidationError,
 )
 
 
@@ -98,7 +101,8 @@ class CodexRuntimeProvider:
         self._configuration_waiters = {}  # live original tickets/receipts only; no cold truth or replay authority
         self._channels = {}  # live process handles; never used as persistent recovery proof
         self._lock = threading.RLock()
-        methods = ["describe_definition", "inspect_installation", "assess_configuration", "plan_preparation"]
+        methods = ["describe_definition", "inspect_installation", "assess_configuration", "plan_preparation",
+                   "describe_configuration_offers", "assess_configuration_proposal"]
         if records_ready(unit_records, projection, verifier):
             methods += ["prepare", "inspect_unit", "describe_configuration"]
             if callable(getattr(channel_factory, "open", None)):
@@ -110,7 +114,81 @@ class CodexRuntimeProvider:
             if callable(getattr(projection, "query_creation", None)):
                 methods += ["query_step"]
         self.descriptor = RuntimeProviderDescriptor("codex", RUNTIME_PROVIDER_VERSION,
-                    definition_ref, implementation_digest, tuple(methods))
+                    definition_ref, implementation_digest, tuple(methods), PURE_READ_VERSION)
+
+    def _pure_read_context(self, definition_ref, context):
+        """Validate the core's typed read capability without consuming invocation."""
+        if not isinstance(context, OwnerReadContext):
+            raise CodexProviderRefused("typed owner read context required")
+        provider = context.provider_ref
+        namespace = self.descriptor.definition_ref["environmentNamespace"]
+        if (context.contract_version != PURE_READ_VERSION or context.environment_namespace != namespace
+                or not _same_reference(definition_ref, self.descriptor.definition_ref)
+                or provider.get("environmentNamespace") != namespace or provider.get("providerId") != "codex"
+                or provider.get("contractVersion") != RUNTIME_PROVIDER_VERSION
+                or provider.get("implementationDigest") != self.descriptor.implementation_digest
+                or type(provider.get("generation")) is not int or provider["generation"] < 1):
+            raise CodexProviderRefused("pure read owner identity differs")
+        activation = provider.get("ownerActivationRef")
+        if (not isinstance(activation, Mapping) or activation.get("environmentNamespace") != namespace
+                or type(activation.get("generation")) is not int or activation["generation"] != provider["generation"]
+                or not isinstance(activation.get("pluginId"), str) or not activation["pluginId"]):
+            raise CodexProviderRefused("pure read owner activation differs")
+        return namespace
+
+    def describe_configuration_offers(self, definition_ref, context):
+        namespace = self._pure_read_context(definition_ref, context)
+        return OwnerConfigurationOfferBatch(context.provider_ref, self.descriptor.definition_ref,
+            self.descriptor.definition_ref["revision"], self.descriptor.implementation_digest,
+            (_defaults_description("unknown"),), False, PURE_READ_VERSION,
+            ("installation", "runtimeReady", "unit", "application", "effect", "credentials"),
+            ({"environmentNamespace": namespace, "evidenceId": "codex.defaults.schema:" + DEFAULTS_SCHEMA,
+              "descriptorDigest": self.descriptor.implementation_digest, "durability": "computed_nonpersistent"},))
+
+    def assess_configuration_proposal(self, proposal, context):
+        if not isinstance(proposal, OwnerProposalInput):
+            raise CodexProviderRefused("typed owner proposal required")
+        namespace = self._pure_read_context(proposal.definition_ref, context)
+        if (not _same_reference(proposal.provider_ref, context.provider_ref)
+                or proposal.descriptor_revision != self.descriptor.definition_ref["revision"]):
+            raise CodexProviderRefused("pure read input owner or descriptor differs")
+        versions = {"descriptor": proposal.descriptor_revision}
+        for ref in proposal.source_refs:
+            version = ref.get("sourceRevision", ref.get("manifestRevision", ref.get("revision")))
+            if (ref.get("environmentNamespace") != namespace or type(version) not in (str, int)
+                    or (type(version) is int and version < 1)
+                    or (type(version) is str and (not version or len(version) > 256 or any(ord(c) < 32 for c in version)))):
+                raise CodexProviderRefused("pure read source version unavailable")
+            versions[safe_json(ref)] = version
+        evidence = {"environmentNamespace": namespace,
+            "evidenceId": "codex.defaults.compile:" + proposal.input_digest,
+            "inputDigest": proposal.input_digest, "version": DEFAULTS_SCHEMA,
+            "durability": "computed_nonpersistent"}
+        invalid = False; skipped = ()
+        try:
+            data = proposal.proposal_data
+            if not isinstance(data, Mapping) or set(data) != {"declarations"} or not isinstance(data["declarations"], (tuple, list)):
+                raise ConfigurationContractError("pure read declarations shape differs")
+            change = ConfigurationChangeRequest(proposal.input_digest, proposal.descriptor_revision, tuple(data["declarations"]))
+            _, _, skipped = self._compile_change(change)
+        except (ConfigurationContractError, ProfileValidationError, CodexProviderRefused):
+            invalid = True
+        rows = []; must_known = False; must_unknown = False
+        for obligation in proposal.required_obligations:
+            known = obligation["checkerId"] == "codex.defaults.compile" and obligation["checkerVersion"] == DEFAULTS_SCHEMA
+            must = obligation["requirement"] == "must"
+            must_known = must_known or (must and known)
+            must_unknown = must_unknown or (must and not known)
+            rows.append({"obligationId": obligation["obligationId"],
+                "status": ("failed" if invalid else "passed") if known else "unknown",
+                "checkerId": obligation["checkerId"], "checkerVersion": obligation["checkerVersion"],
+                "sourceVersions": versions, "evidenceRefs": (evidence,) if known else ()})
+        status = "invalid" if invalid else "valid" if must_known and not must_unknown else "unverifiable"
+        issues = ({"code": "codex_defaults_declarations_invalid"},) if invalid else ()
+        if not invalid and (not must_known or must_unknown): issues += ({"code": "codex_defaults_semantics_unverified"},)
+        if skipped: issues += ({"code": "codex_defaults_optional_declarations_skipped", "declarationIds": list(skipped)},)
+        return OwnerProposalAssessment(proposal.input_digest, versions, status, issues, tuple(rows),
+            "codex.defaults.declaration-compile/" + DEFAULTS_SCHEMA, (evidence,), PURE_READ_VERSION)
 
     def _supported(self, name):
         if name not in self.descriptor.supported_methods:
@@ -299,12 +377,7 @@ class CodexRuntimeProvider:
         self._supported("describe_configuration")
         self._unit(unit_ref)
         supported = "apply_configuration" in self.descriptor.supported_methods
-        schema = {"type": "object", "properties": {"model": {"type": "string", "minLength": 1, "maxLength": 256},
-                  "model_reasoning_effort": {"enum": sorted(EFFORTS)}}, "additionalProperties": False, "minProperties": 1}
-        return (ConfigurationDescription(DEFAULTS_KIND, DEFAULTS_SCHEMA, schema,
-                    ("value", "reset") if supported else (), "instance" if supported else None,
-                    ("live",) if supported else (), "readback" if supported else "none",
-                    "supported" if supported else "unsupported"),)
+        return (_defaults_description("supported" if supported else "unsupported"),)
 
     def _live(self, unit_ref, unit):
         binding = self.projection.read_session(unit_ref)
@@ -601,6 +674,15 @@ def _safe_defaults(config):
     if not isinstance(config, Mapping): return {}
     return {key: value for key,value in config.items() if key in DEFAULT_FIELDS
             and isinstance(value, str) and 0 < len(value) <= 256 and not any(ord(c) < 32 for c in value)}
+
+
+def _defaults_description(status):
+    schema = {"type": "object", "properties": {"model": {"type": "string", "minLength": 1, "maxLength": 256},
+              "model_reasoning_effort": {"enum": sorted(EFFORTS)}}, "additionalProperties": False, "minProperties": 1}
+    supported = status == "supported"
+    return ConfigurationDescription(DEFAULTS_KIND, DEFAULTS_SCHEMA, schema,
+        ("value", "reset") if status != "unsupported" else (), "instance" if status != "unsupported" else None,
+        ("live",) if supported else (), "readback" if supported else "none", status)
 
 
 def _complete_unit_reference(value):

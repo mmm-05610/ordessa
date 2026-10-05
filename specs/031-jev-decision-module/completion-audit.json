@@ -583,5 +583,29 @@
     "goal_status": "active",
     "next_scope_plan": "downstream-next.md",
     "authorization": "pending family scope extension"
+  },
+  "codex_authorized_extension": {
+    "authorization": "user explicitly approved Codex pure read extension",
+    "tested_head_before_checkpoint": "606c6c73fcc27e76edbd0008518622e653549662",
+    "tested_source_digest": "sha256:d3bf63ed8e629da341d32699416d3176afae78ebd0be3956295048372ffbc44d",
+    "decision_suite_passed": 352,
+    "codex_family_passed": 147,
+    "offline_scenes_passed": 67,
+    "baseline_core_passed": 57,
+    "current_core_passed": 57,
+    "codex_capability": "declaration compiler pure read only",
+    "codex_offer_support": "unknown",
+    "other_families": "unsupported",
+    "real_native_harness": "NOT_RUN",
+    "live_jev_requests_total": 220,
+    "reported_input_tokens": 176303,
+    "reported_output_tokens": 14227,
+    "historical_usage_unknown_requests": 3,
+    "cost": "UNKNOWN",
+    "native_effects": 0,
+    "all_work_complete": false,
+    "goal_status": "active",
+    "evidence": "evidence/codex-pure-read-20261005/README.md",
+    "next_scope_plan": "harness-smoke-next.md"
   }
 }
