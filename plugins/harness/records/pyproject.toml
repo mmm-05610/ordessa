@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-harness-records"
+version = "0.1.0a1"
+description = "Deployment-owned Harness operation journal and UnitRecords"
+requires-python = ">=3.10"
+dependencies = ["ordessa-harness-api==1.0.0a1", "ordessa-environment-api==0.1.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

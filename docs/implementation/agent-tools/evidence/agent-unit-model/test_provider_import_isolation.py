@@ -9,13 +9,13 @@ import pytest
 ROOT=Path(__file__).resolve().parents[5]
 FAMILIES=('ordessa_harness_pi','ordessa_harness_codex','ordessa_harness_claude_code')
 SEARCH=[ROOT/'plugins/harness'/family/'src' for family in ('pi','codex','claude-code')]
-SEARCH += [ROOT/'packages/backend/harness-transport/src',ROOT/'plugins/harness/src']
+SEARCH += [ROOT/'packages/backend/harness-transport/src',ROOT/'plugins/harness/src',ROOT/'plugins/harness/records/src',ROOT/'plugins/harness/api/src']
 
 
 def probe(family,*,extra=None):
  script=f'''
 import importlib,sys
-from ordessa_harness.application.unit_records import UnitRecords
+from ordessa_harness_records.unit_records import UnitRecords
 importlib.import_module({family!r})
 extra={extra!r}
 if extra: importlib.import_module(extra)

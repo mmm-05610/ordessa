@@ -5,7 +5,7 @@ import json
 from typing import Protocol
 
 from ordessa_harness_api import ApplicationTarget, InvokeAction
-from .operation_journal import NativeActivationReceipt
+from ordessa_harness_records.operation_journal import NativeActivationReceipt
 
 
 @dataclass(frozen=True)

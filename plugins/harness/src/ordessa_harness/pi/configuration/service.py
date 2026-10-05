@@ -6,7 +6,7 @@ import subprocess
 from ordessa_harness_api import Installation
 from ...application.action_execution import ActionGrant
 from ...application.configuration_service import ConfigurationApplicationService
-from ...application.operation_journal import OperationJournal
+from ordessa_harness_records.operation_journal import OperationJournal
 from ...verifier_deployment import installed_verifier
 from .runtime import PiLiveModelRuntime
 

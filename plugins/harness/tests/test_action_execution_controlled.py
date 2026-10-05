@@ -15,7 +15,7 @@ from ordessa_harness_api import (
 )
 from ordessa_harness.application.configuration_service import ConfigurationApplicationService, NativeReadback, RuntimeSnapshot
 from ordessa_harness.application.action_execution import ActionBatch, ActionGrant, ActionInvocation
-from ordessa_harness.application.operation_journal import NativeActivationReceipt, OperationJournal
+from ordessa_harness_records.operation_journal import NativeActivationReceipt, OperationJournal
 from ordessa_harness.contributions import CONFIGURATION_POINT
 from ordessa_harness.materialization import MergeAuthority, TargetAuthority
 from ordessa_server.bootstrap import build_runtime

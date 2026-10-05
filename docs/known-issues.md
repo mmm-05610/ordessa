@@ -165,3 +165,7 @@ AgentUnit迁移切片在 `ServerProductComposition.native_runtime` 早拒 Pi/Cod
 ### AU003 Pi纯配置缺陷已修，生产确认仍未接线（2026-10-05，Open）
 
 原三个反例retry-only丢models/restart漏model/None误match已在独立pure owner修复，原probe新ownerexit0、末端Pi262P含fresh five-wheel；不关闭生产routing/credential/budget/retry applied与真实恢复缺口。新增typed/missing observation/预算重复id与sample plaintext apiKey/headers反例已修，仅保既有$ENV_NAME，非任意对象脱敏器。原48反例/旧纯语义160P37subtests与七own wheel13命令成功不证明wholeServer发行；通用baseline依赖清单仍待整合。cold1F/旧C2和Core红不隐藏，详见 `docs/implementation/agent-tools/evidence/agent-unit-model/pi-model-compilation.md`。历史ACP0.5范围与native RPC source pin分别保留，默认methods未扩张。
+
+### AU003 records迁移的Profile测试消费者尚待跨域确认（2026-10-05，Open）
+
+原journal/UnitRecords按bytes迁独立public records，无shim，scope内消费者已迁。唯一active旧module import在 `plugins/profile/tests/test_harness_real_service.py:127`，原六测试实跑2P4F exit1 .89s：三SESSION_NEEDS_RECOVERY与lost-ack activate_count=0，effect前import断裂；这是本次引入的迁移债，不冒继承，未删改/skip断言。Profile测试不在AU003/其余单write_paths，已备一行patch并请求范围确认，未触目标。原owner/SQLite181P＋input/发行76P＋八wheel14命令成功不关闭此债或production owner/issuer/native确认。详见 `docs/implementation/agent-tools/evidence/agent-unit-model/records-owner-migration.md`；生产factory、唯一journal注入与冷代次未完成，旧Service/C2/Sidecar和fullServer发行缺口继续。

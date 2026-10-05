@@ -698,3 +698,13 @@ Codex迁移检查点8e49d0413e6119e8a05aad59aabbdd5f74f9244a clean后继续Pi前
 为消除末端调用未先收集product句柄的串行证据不确定，最终明确先product终态再Pi：311P1F exit1 16.85s，随后262P exit0 8.48s，所有句柄terminal。最终采此串行组，旧运行记录不覆盖、不累计；源代码未再改。strict五工单/diff资料门exit0，仅资料验证。全部新增源码/测试/安装与反例收据已读核，显式stage本切片检查点。
 
 Pi检查点66936bcedf后继续生产接线只读盘点（非停工/非DONE）：主会话核对Server旧C4/sidecar与独立provider ports。关键依赖是实际UnitRecords仍在旧Harness application，要求原OperationJournal及显式scope/native evidence/verifier/epoch，生产deployment尚无构造；独立测试Records不是真实持久owner。下一先核并复用这条owner链，再作显式Codex新Server装配/现defaults管理与读回，不能复制journal或用pure compiler承诺完整applied。详细实核与下一步骤见[evidence/agent-unit-model/server-production-owner-inventory.md](evidence/agent-unit-model/server-production-owner-inventory.md)，其他资源/cold语义仍按原PARTIAL，未触用户数据/服务。
+
+### 2026-10-05 AU003 原journal/UnitRecords可分发owner提取（PARTIAL）
+
+前置b2e4a1ab368de15e25d06cc467612012d7cb29f2 clean；上一Pi/盘点progress。主会话独占共享源码/测试/Git/账本，Codex/Claude只读双审无写测试权。原两实现合计1453行按bytes迁独立records library，无新core/registry/plugin/daemon/DB；原表/codec/事务/ticket/unknown/legacy guard全不改，最终HEAD旧bytes与新SHA再核相等。scope内消费者同class，旧二文件删除无shim；原application根reexport仍同class保七家服务。
+
+依据与完整命令见[evidence/agent-unit-model/records-owner-migration.md](evidence/agent-unit-model/records-owner-migration.md)，原文件receipt记录两SHA。初原组合165P2F exit1 2.56s，窄迁新owner/已有stdlibhashlib门后含source181P exit0 3.05s；发行/输入关联/首publication/Codex/隔离76P exit0 13.88s，Claude全194P exit0 13.50s；新增发行1/ownership1，不累计。fresh records三own wheels净环境验证import无SQLiteIO、无monolith/Server/Pacthold/品牌、原journalunknown/replay/busy/reopen/query及缺authority拒，非native P/M。
+
+八own wheel final14命令全0、hash/pipcheck/cleaned/M0/productReady=false，au003-records-install-final-b2e4a1.json不覆盖旧证据。产品integration311P1F exit1 16.69s仍strict coldgeneration，原断言不动。Profile六原测试outside scope实跑2P4F exit1 .89s，旧import导致effect前失败；新迁移债不是继承，原断言/目标未改。一行公开records consumer patch已准备，因AU003“只处理write_paths”且Profile测试不在任何单写域，异步范围确认pending，不能据等待elapsed授权。缺口known-issues登记，不复活shim。所有测试串行terminal。
+
+生产真实owner factory/原InvocationIssuer/authority-current-state/scope/epoch/native evidence/lease/receipt和独立projection仍待接；独立可分发不等于已装配/ready。旧live_service每次新journal待同owner注入，cold提案待裁定。Core/全Server/旧C2本轮未跑，继承红/consumer债/ABSENT保留；所有AU/lifecycle/tasks/results/Skill/A18继续PARTIAL。M0、费用unknown，无第三方安装更新/登录/用户数据/全局配置/用户服务/push/主树合并。新增文件/回执/依赖/consumer已核，显式stage检查点后继续。

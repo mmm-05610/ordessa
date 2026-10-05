@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[5] / 'plugins/harness/te
 from test_unit_configuration_records import setup, opening, query, context, DIGEST
 from ordessa_environment_api.operations import safe_json
 from ordessa_harness_codex.client import CodexAppServerClient
-from ordessa_harness.application.unit_records import UnitRecordsRefused
+from ordessa_harness_records.unit_records import UnitRecordsRefused
 from ordessa_harness_transport import LaunchSpec, ProcessChannel, RequestTimeout, WriterLeaseRefused
 
 

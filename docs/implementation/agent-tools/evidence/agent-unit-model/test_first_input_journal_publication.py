@@ -21,8 +21,8 @@ from test_input_session_association import AssociationEvidence
 from ordessa_environment_api import RequestKey, GuaranteeUnavailableError, UnknownResultError
 from ordessa_environment_api.operations import OperationIntent, StepIntent, UsageMutation, operation_holder, node_holder, safe_json
 from ordessa_persistence_sqlite import ProtectedFingerprintHmac
-from ordessa_harness.application.operation_journal import OperationJournal
-from ordessa_harness.application.unit_records import UnitRecords
+from ordessa_harness_records.operation_journal import OperationJournal
+from ordessa_harness_records.unit_records import UnitRecords
 from pacthold.agents.directory import DirectoryBindingRef
 from pacthold.agents.nodes import NodePublicationEvidence
 from pacthold.agents.invocation import InvocationIssuer

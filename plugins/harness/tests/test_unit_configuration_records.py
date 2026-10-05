@@ -11,7 +11,7 @@ import pytest
 from ordessa_environment_api.operations import safe_json
 
 from test_unit_records import parts, reserve, begin, PROVIDER, NODE
-from ordessa_harness.application.unit_records import (
+from ordessa_harness_records.unit_records import (
     UnitRecords, UnitRecordsRefused, ConfigurationRecordTicket,
 )
 

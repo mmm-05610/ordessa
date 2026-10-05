@@ -106,7 +106,7 @@ def probe(artifact: Path, drift: str = None) -> dict:
                 from ordessa_harness.configuration.model.plugin import ModelProviderAdaptersPlugin
                 from ordessa_harness.pi.configuration.runtime import PiLiveModelRuntime
                 from ordessa_harness.application.configuration_service import ConfigurationApplicationService
-                from ordessa_harness.application.operation_journal import OperationJournal
+                from ordessa_harness_records.operation_journal import OperationJournal
                 from ordessa_harness.application.action_execution import ActionGrant
                 from ordessa_server.bootstrap import build_runtime
 

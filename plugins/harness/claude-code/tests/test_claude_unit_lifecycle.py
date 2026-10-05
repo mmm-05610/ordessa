@@ -12,8 +12,8 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 import test_unit_configuration_records as shared_fixture
 from test_native_unit_confirmation import UnitEvidence
-from ordessa_harness.application.operation_journal import OperationJournal
-from ordessa_harness.application.unit_records import UnitRecords, UnitRecordsRefused
+from ordessa_harness_records.operation_journal import OperationJournal
+from ordessa_harness_records.unit_records import UnitRecords, UnitRecordsRefused
 from ordessa_environment_api.operations import safe_json
 from ordessa_harness_claude_code.provider import ClaudeCodeRuntimeProvider
 from ordessa_harness_claude_code.unit_lifecycle import ClaudeUnitCoordinationRefused

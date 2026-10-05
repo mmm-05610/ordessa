@@ -1,6 +1,6 @@
 """Harness application operation journal (no external executor)."""
 
-from .operation_journal import FenceObservation, NativeActivationReceipt, OperationJournal, JournalError
+from ordessa_harness_records.operation_journal import FenceObservation, NativeActivationReceipt, OperationJournal, JournalError
 _SERVICE_EXPORTS={'ConfigurationApplicationService','NativeReadback','RuntimeSnapshot'}
 _EVIDENCE_EXPORTS={'ControlledNativeStandIn','EVIDENCE_SUPPORTED_BRANDS','EVIDENCE_UNSUPPORTED_BRANDS',
     'NativeEvidenceService','NativeEvidenceUnsupported','supply_brand_evidence'}

@@ -26,7 +26,7 @@ from ordessa_harness_api.native_evidence import (
     NativeReadbackVerificationFacts, NativeSessionIdentityFacts,
 )
 
-from .operation_journal import (
+from ordessa_harness_records.operation_journal import (
     FenceObservation, NativeActivationReceipt, OperationJournal,
 )
 

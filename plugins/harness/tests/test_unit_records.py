@@ -12,8 +12,8 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from ordessa_harness_api import ApplicationTarget, Plan, Confirmed
-from ordessa_harness.application.operation_journal import OperationJournal, FenceObservation
-from ordessa_harness.application.unit_records import (
+from ordessa_harness_records.operation_journal import OperationJournal, FenceObservation
+from ordessa_harness_records.unit_records import (
     UnitRecords, UnitRecordsRefused, CanonicalConfigurationScopeRef, RecordTicket,
 )
 

@@ -8,7 +8,7 @@ import json
 import pytest
 from ordessa_harness_api import ApplicationTarget, DesiredFragment, Installation
 from ordessa_harness.application.configuration_service import ConfigurationApplicationService
-from ordessa_harness.application.operation_journal import OperationJournal
+from ordessa_harness_records.operation_journal import OperationJournal
 from ordessa_harness.application.action_execution import ActionGrant
 from ordessa_harness.configuration.model.plugin import ModelProviderAdaptersPlugin
 from ordessa_harness.pi.configuration.runtime import PiLiveModelRuntime

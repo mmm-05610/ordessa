@@ -15,8 +15,8 @@ from test_assembly import (
     PreparationObservation, RequestKey, SqliteStorePort, ProtectedFingerprintHmac,
     UsageMutation, operation_holder, decode_node_ref, safe_json,
 )
-from ordessa_harness.application.operation_journal import OperationJournal
-from ordessa_harness.application.unit_records import UnitRecords, CanonicalConfigurationScopeRef
+from ordessa_harness_records.operation_journal import OperationJournal
+from ordessa_harness_records.unit_records import UnitRecords, CanonicalConfigurationScopeRef
 from ordessa_harness_codex import CodexRuntimeProvider
 
 
@@ -258,7 +258,7 @@ def test_prepare_receipt_loss_queries_original_unit_without_starting_missing_ste
 
 
 def test_other_authorized_request_cannot_escape_unknown_physical_scope(flow, monkeypatch):
-    from ordessa_harness.application.unit_records import UnitRecordsRefused
+    from ordessa_harness_records.unit_records import UnitRecordsRefused
     flow.client.fail = True
     original_request = flow.request
     assert flow.assembly.prepare(original_request, flow.profile, {}, {}).status == 'unknown'

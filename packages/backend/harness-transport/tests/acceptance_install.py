@@ -13,7 +13,7 @@ import textwrap
 
 ROOT=Path(__file__).resolve().parents[4]
 PROJECTS=('packages/backend/environment-api','packages/backend/pacthold',
- 'packages/backend/harness-transport','plugins/harness/api','plugins/harness/pi','plugins/harness/codex','plugins/harness/claude-code')
+ 'packages/backend/harness-transport','plugins/harness/api','plugins/harness/records','plugins/harness/pi','plugins/harness/codex','plugins/harness/claude-code')
 
 
 def exercise(output):

@@ -9,7 +9,7 @@ import json
 
 from ordessa_harness_api import ApplicationTarget
 from ordessa_harness.application.action_execution import ActionBatch
-from ordessa_harness.application.operation_journal import NativeActivationReceipt
+from ordessa_harness_records.operation_journal import NativeActivationReceipt
 from .profile_owner import ProfileSessionOwner
 from .registry import AcpChannelRegistry, NativeConfigurationUnavailable
 

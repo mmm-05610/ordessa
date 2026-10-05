@@ -33,7 +33,7 @@ from ..materialization import (
     AuthorizedIntents, IntentMergeError, MaterializationError, MergeAuthority, PublishedGeneration,
     materialize_generation, merge_intents, preflight_generation,
 )
-from .operation_journal import FenceObservation, NativeActivationReceipt, OperationJournal
+from ordessa_harness_records.operation_journal import FenceObservation, NativeActivationReceipt, OperationJournal
 from .action_execution import ActionBatch, ActionExecutor, ActionGrant, ActionInvocation
 
 

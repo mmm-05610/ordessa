@@ -18,8 +18,8 @@ from test_native_unit_confirmation import UnitEvidence
 from ordessa_environment_api import RequestKey
 from ordessa_environment_api.domain import DomainWrite
 from ordessa_environment_api.operations import OperationIntent, StepIntent, safe_json
-from ordessa_harness.application.operation_journal import OperationJournal
-from ordessa_harness.application.unit_records import (
+from ordessa_harness_records.operation_journal import OperationJournal
+from ordessa_harness_records.unit_records import (
     UnitRecords, UnitRecordsRefused, INPUT_SESSION_ASSOCIATION_VERSION,
 )
 from pacthold.agents.inputs import SessionlessNativeInputState, CapturedInputRef, FIRST_SESSION_ATTEMPTS, ManagedInputReservations

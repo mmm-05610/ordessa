@@ -116,3 +116,13 @@ def test_pi_model_compiler_and_facts_have_one_independent_owner():
         assert path.is_file()
         assert not legacy_harness_imports(path.read_text()), path
         assert not product_imports(path.read_text()), path
+
+
+def test_deployment_records_have_one_independent_source_owner():
+    source = ROOT / 'plugins/harness/records/src/ordessa_harness_records'
+    for name in ('operation_journal.py', 'unit_records.py'):
+        assert not (ROOT / 'plugins/harness/src/ordessa_harness/application' / name).exists()
+        path = source / name
+        assert path.is_file()
+        assert not legacy_harness_imports(path.read_text()), path
+        assert not product_imports(path.read_text()), path

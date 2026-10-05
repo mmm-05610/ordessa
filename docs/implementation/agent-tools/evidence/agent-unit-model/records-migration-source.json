@@ -1,0 +1,18 @@
+{
+  "sourceHead": "b2e4a1ab368de15e25d06cc467612012d7cb29f2",
+  "files": {
+    "operation_journal.py": {
+      "beforeSha256": "4cb92f552a4fc41b6aa06248481672047025f2ab6054d079164ffea381d098d0",
+      "afterSha256": "4cb92f552a4fc41b6aa06248481672047025f2ab6054d079164ffea381d098d0",
+      "byteEqual": true
+    },
+    "unit_records.py": {
+      "beforeSha256": "a7642ce7b51533af6d64981c2249caf7cf262bf4635d701e537dccfc2f5d7106",
+      "afterSha256": "a7642ce7b51533af6d64981c2249caf7cf262bf4635d701e537dccfc2f5d7106",
+      "byteEqual": true
+    }
+  },
+  "modelCalls": 0,
+  "productionWired": false,
+  "finalByteEqualityReverified": true
+}

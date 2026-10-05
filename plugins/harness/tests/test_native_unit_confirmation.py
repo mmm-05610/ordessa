@@ -4,8 +4,8 @@ import copy
 import pytest
 
 from test_unit_records import parts, reserve, begin, read, ROOT
-from ordessa_harness.application.operation_journal import OperationJournal
-from ordessa_harness.application.unit_records import (
+from ordessa_harness_records.operation_journal import OperationJournal
+from ordessa_harness_records.unit_records import (
     UnitRecords, UnitRecordsRefused, NativeUnitBinding, UNIT_CONFIRMATION_VERSION,
 )
 
