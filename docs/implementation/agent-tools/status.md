@@ -622,3 +622,5 @@ production授权/材料/SecretRef/capture/receipt/effect/Session owner、三家n
 完整命令、反例及限制见[evidence/agent-unit-model/claude-acp-attachments.md](evidence/agent-unit-model/claude-acp-attachments.md)，字节/AST收据同目录json。新增六拒绝反例＋fresh四自有wheel安装闭包＋三个边界门；初迁移6P0.10s，扩充12P/1F4.65s（安装继承源码env缺包），旧metadata/边界/Coreidentity87P/1F1.47s（新门误纳原核心集成测试），皆exit1如实保留。安装清理env/cwd、门限定源码与迁移附件测试，既有生命周期集成未改/未skip。最终组合101P exit0、6.15s；独立Claude全包162P exit0、12.69s含原集成覆盖，无缺资源冒绿。新增快照不累加。
 
 仅C/自有安装进程，无native P/M，M0。旧model/Server装配、production owner与全生命周期/tasks/results/三家纵向仍PARTIAL，Core继承三红与ABSENT沿前账本、本轮未全回归。未授权操作无；成本unknown。新材料显式纳入检查点后继续，不标DONE。
+
+附件检查点 d7b99ac3c1 后继续只读核对旧Model/Server装配。源码证实products/server仍激活旧三家配置plugin/backend/live_service；Claude旧compiler保留endpoint/credential/restart-resume同Session语义，独立SDK owner未承接。Codex代理独立确认消费者及三家缺口；盘点写入[evidence/agent-unit-model/model-server-migration-inventory.md](evidence/agent-unit-model/model-server-migration-inventory.md)。这项依赖证据限制下一清理范围，不当生产测试/验收，不删除成熟旧语义或复活旧入口。整体goal继续active，所有本轮测试terminal。
