@@ -8,6 +8,7 @@ import pytest
 from pydantic_graph import GraphBuilder, StepContext
 from ordessa_decision.contracts import *
 from ordessa_decision.runtime import *
+from ordessa_decision.evidence.codec import record
 
 POLICY = PolicyRef('test-policy','1','sha256:policy')
 READ = ReadContext(object(),'test-read')
@@ -15,25 +16,30 @@ READ = ReadContext(object(),'test-read')
 class Sink:
     durable = True
     def __init__(self, fail=None):
-        self.events, self.terminals = [], {}
+        self.events, self.terminals, self.records = [], {}, []
         self.fail = fail
+        self.uncertain = False
     async def start(self, meta):
         if self.fail == 'start': raise OSError('sensitive exception')
         self.events.append(meta)
-        return DurabilityAck(len(self.events),'sha256:ack','durable')
+        self.records.append(record(meta, 1, None, 65536))
+        return DurabilityAck(1,self.records[-1]['digest'],'durable')
     async def append_durable(self, event):
-        if self.fail == event['type']: raise OSError('sensitive exception')
+        if self.fail == event['type']:
+            self.uncertain = True
+            raise OSError('sensitive exception')
         self.events.append(event)
-        return DurabilityAck(len(self.events),'sha256:ack','durable')
+        self.records.append(record(event,len(self.records)+1,self.records[-1]['digest'],65536))
+        return DurabilityAck(self.records[-1]['seq'],self.records[-1]['digest'],'durable')
     async def finish(self, terminal):
         old = self.terminals.get(terminal['run_id'])
         if old and old != terminal: raise ValueError('terminal_conflict')
         self.terminals[terminal['run_id']] = terminal
         if self.fail == 'lost_ack': raise OSError('lost_ack')
-        return DurabilityAck(len(self.events)+1,'sha256:ack','durable')
+        return DurabilityAck(len(self.events)+1,terminal['terminal_digest'],'durable')
     async def read(self, run_id, read_context):
         assert read_context is READ
-        return {'status':'completed','terminal':self.terminals[run_id]} if run_id in self.terminals else {'status':'unknown'}
+        return {'status':'completed','terminal':self.terminals[run_id]} if run_id in self.terminals else ({'status':'unknown'} if self.uncertain or not self.records else {'status':'running','events':self.records})
 
 class Provider:
     binding_ref = 'test-provider'
@@ -350,6 +356,7 @@ async def test_T25_uncertain_or_mismatched_read_never_ready(mutation):
     class BadReadSink(Sink):
         async def read(self,run_id,read_context):
             response=await super().read(run_id,read_context)
+            if response.get('status') != 'completed': return response
             response=plain(response)
             if mutation in ('unknown','refused','unavailable'):
                 response['status']=mutation

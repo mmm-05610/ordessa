@@ -2,6 +2,8 @@
 
 Only a host-selected local filesystem with working flock/fsync is supported.
 The hash chain detects accidental corruption, not a malicious filesystem owner.
+Older started records without lock identity remain readable as evidence, but
+cannot prove interruption. No old file is rewritten or migrated.
 """
 import errno
 import fcntl
@@ -11,10 +13,19 @@ import uuid
 from pathlib import Path
 from ..contracts.codec import canonical, decode, digest, plain
 from ..contracts.ports import DurabilityAck, ReadContext
-from .codec import EvidenceError, authorised, projection, record, terminal
+from .codec import EvidenceError, authorised, projection, record, terminal, summary, require_terminal_binding
 
 _DIR = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
 _FILE = os.O_NOFOLLOW | os.O_CLOEXEC
+
+def _close_once(descriptors):
+    """Attempt each owned fd once; POSIX close errors may already release it."""
+    failed = False
+    for fd in descriptors:
+        if fd is not None:
+            try: os.close(fd)
+            except OSError: failed = True
+    if failed: raise EvidenceError('evidence_cleanup_failed') from None
 
 def _run_id(value):
     try:
@@ -76,6 +87,7 @@ class FileEvidenceReader:
 
     async def read(self, run_id, read_context):
         if not authorised(self.read_context, read_context): return {'status':'refused'}
+        if self._root_fd is None: return {'status':'unavailable'}
         directory = lock = None
         try:
             _run_id(run_id)
@@ -98,6 +110,24 @@ class FileEvidenceReader:
                     raise EvidenceError('evidence_corrupt')
                 events.append(item); previous = item['digest']
             if events[0]['payload'].get('type') != 'run.started': raise EvidenceError('evidence_started')
+            started = events[0]['payload']
+            identity_fields = {'writer_incarnation','writer_device','writer_inode'}
+            present = identity_fields.intersection(started)
+            identity_verified = False
+            if present:
+                if present != identity_fields: raise EvidenceError('evidence_writer_identity')
+                incarnation = _run_id(started['writer_incarnation'])
+                if any(type(started[k]) is not int or started[k]<0 for k in ('writer_device','writer_inode')):
+                    raise EvidenceError('evidence_writer_identity')
+                held = os.fstat(lock)
+                named = os.stat('writer.lock',dir_fd=directory,follow_symlinks=False)
+                if os.pread(lock,257,0) != incarnation.encode('ascii'):
+                    raise EvidenceError('evidence_writer_identity')
+                identity_verified = ((held.st_dev,held.st_ino)==(started['writer_device'],started['writer_inode'])
+                    and (named.st_dev,named.st_ino)==(held.st_dev,held.st_ino))
+                # A copied durable terminal is proved by its exact commit chain,
+                # not the archive's new inode. Nonterminal liveness still needs
+                # the original held inode and can never use this relaxation.
             commits = [e for e in events if e['payload'].get('type')=='terminal.commit']
             if commits and (len(commits)!=1 or commits[0] is not events[-1]):
                 raise EvidenceError('evidence_commit_corrupt')
@@ -105,6 +135,7 @@ class FileEvidenceReader:
             try:
                 raw = plain(decode(_read(directory, 'terminal.json', self.max_record_bytes), max_bytes=self.max_record_bytes))
                 safe, td = terminal(raw['terminal'])
+                require_terminal_binding(safe,started)
                 # The completion receipt is appended only after the terminal's
                 # rename AND directory fsync. A visible rename is not a commit.
                 if alive or not commits: return {'status':'unknown'}
@@ -119,17 +150,18 @@ class FileEvidenceReader:
                 committed = safe
             except FileNotFoundError:
                 if commits: return {'status':'unknown'}
+            if committed is None and not identity_verified: return {'status':'unknown'}
             return projection(events, committed, alive=alive)
         except FileNotFoundError: return {'status':'not_found' if directory is None else 'unknown'}
         except (EvidenceError, KeyError, TypeError, ValueError): return {'status':'unknown'}
         except OSError as exc:
             return {'status':'refused' if exc.errno in (errno.EACCES, errno.EPERM, errno.ELOOP) else 'unavailable'}
         finally:
-            if lock is not None: os.close(lock)
-            if directory is not None: os.close(directory)
+            _close_once((lock,directory))
 
     async def close(self):
-        if self._root_fd is not None: os.close(self._root_fd); self._root_fd = None
+        root,self._root_fd = self._root_fd,None
+        _close_once((root,))
 
 class FileEvidenceSink(FileEvidenceReader):
     durable = True
@@ -140,22 +172,32 @@ class FileEvidenceSink(FileEvidenceReader):
 
     async def start(self, meta):
         run_id = _run_id(meta.get('run_id'))
+        if self._root_fd is None or run_id in self._writers or run_id in self._terminals:
+            raise EvidenceError('evidence_start_failed')
         directory = lock = log = None
+        owned_writer = None
         try:
             os.mkdir(run_id, 0o700, dir_fd=self._root_fd)
             os.fsync(self._root_fd)
             directory = os.open(run_id, _DIR, dir_fd=self._root_fd)
             lock = _open_file(directory, 'writer.lock', os.O_RDWR | os.O_CREAT | os.O_EXCL)
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            _write(lock, str(uuid.uuid4()).encode())
+            incarnation = str(uuid.uuid4())
+            _write(lock, incarnation.encode('ascii'))
             log = _open_file(directory, 'events.jsonl', os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_APPEND)
             os.fsync(directory)
-            self._writers[run_id] = {'dir':directory, 'lock':lock, 'log':log, 'seq':0, 'digest':None, 'poisoned':False}
-            return await self.append_durable(dict(meta, type='run.started'))
+            held = os.fstat(lock)
+            started = summary(dict(meta,type='run.started',writer_incarnation=incarnation,
+                                   writer_device=held.st_dev,writer_inode=held.st_ino))
+            owned_writer = {'dir':directory, 'lock':lock, 'log':log, 'seq':0,
+                            'digest':None, 'poisoned':False, 'meta':started}
+            self._writers[run_id] = owned_writer
+            return await self.append_durable(started)
         except BaseException:
-            self._writers.pop(run_id, None)
-            for fd in (log, lock, directory):
-                if fd is not None: os.close(fd)
+            if owned_writer is not None and self._writers.get(run_id) is owned_writer:
+                self._writers.pop(run_id)
+            try: _close_once((log,lock,directory))
+            except EvidenceError: pass
             raise EvidenceError('evidence_start_failed') from None
 
     async def append_durable(self, event):
@@ -183,6 +225,7 @@ class FileEvidenceSink(FileEvidenceReader):
             return ack
         writer = self._writers.get(run_id)
         if writer is None or writer['poisoned']: raise EvidenceError('evidence_writer')
+        require_terminal_binding(safe,writer['meta'])
         if 'expected_last_seq' in safe and safe['expected_last_seq'] != writer['seq']:
             raise EvidenceError('evidence_terminal_sequence')
         payload = {'expected_last_seq':writer['seq'], 'last_digest':writer['digest'],
@@ -192,7 +235,8 @@ class FileEvidenceSink(FileEvidenceReader):
         try:
             fd = _open_file(writer['dir'], 'terminal.tmp', os.O_WRONLY | os.O_CREAT | os.O_EXCL)
             _write(fd, canonical(payload, max_bytes=self.max_record_bytes))
-            os.close(fd); fd = None
+            closing,fd = fd,None
+            _close_once((closing,))
             os.rename('terminal.tmp', 'terminal.json', src_dir_fd=writer['dir'], dst_dir_fd=writer['dir'])
             os.fsync(writer['dir'])
             self._append({'type':'terminal.commit','run_id':run_id,'result_digest':td,
@@ -201,7 +245,7 @@ class FileEvidenceSink(FileEvidenceReader):
             writer['poisoned'] = True
             raise EvidenceError('evidence_terminal_unknown') from None
         finally:
-            if fd is not None: os.close(fd)
+            _close_once((fd,))
         ack = DurabilityAck(writer['seq'], td, 'durable')
         self._terminals[run_id] = (safe, ack)
         self._release(run_id)
@@ -209,8 +253,13 @@ class FileEvidenceSink(FileEvidenceReader):
 
     def _release(self, run_id):
         writer = self._writers.pop(run_id)
-        for key in ('log','lock','dir'): os.close(writer[key])
+        _close_once(tuple(writer[key] for key in ('log','lock','dir')))
 
     async def close(self):
-        for run_id in tuple(self._writers): self._release(run_id)
-        await super().close()
+        descriptors = []
+        for run_id in tuple(self._writers):
+            writer = self._writers.pop(run_id)
+            descriptors.extend(writer[key] for key in ('log','lock','dir'))
+        root,self._root_fd = self._root_fd,None
+        descriptors.append(root)
+        _close_once(descriptors)

@@ -1,0 +1,65 @@
+.............FF.....F                                                    [100%]
+=================================== FAILURES ===================================
+____ test_T66_task_reference_revision_cannot_conflict_with_expected_version ____
+
+    def test_T66_task_reference_revision_cannot_conflict_with_expected_version():
+        task, candidate, proposal=basis()
+        condition=replace(proposal.preconditions[0],subject_ref=ExternalRef('task',{'id':'task','revision':'999'}))
+>       with pytest.raises(ContractError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ContractError
+
+packages/backend/decision/tests/flows/test_basis_schema_attacks.py:92: Failed
+_________ test_T62_huge_number_in_absent_schema_branch_is_unverifiable _________
+
+    def test_T62_huge_number_in_absent_schema_branch_is_unverifiable():
+>       assert check_schema({}, {'type':'object','properties':{'optional':{'type':'number','minimum':10**1000}}})=='unverifiable'
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+packages/backend/decision/tests/flows/test_basis_schema_attacks.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+packages/backend/decision/src/ordessa_decision/flows/agent_assignment/composition.py:75: in check_schema
+    if not _finite_json_tree(schema) or not _supported_schema(schema): return 'unverifiable'
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+packages/backend/decision/src/ordessa_decision/flows/agent_assignment/composition.py:55: in _supported_schema
+    if any(not _supported_schema(child) for child in properties.values()): return False
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+packages/backend/decision/src/ordessa_decision/flows/agent_assignment/composition.py:55: in <genexpr>
+    if any(not _supported_schema(child) for child in properties.values()): return False
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+packages/backend/decision/src/ordessa_decision/flows/agent_assignment/composition.py:50: in _supported_schema
+    if any(type(schema[key]) not in (int, float) or not math.isfinite(schema[key]) for key in ('minimum', 'maximum') if key in schema): return False
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <tuple_iterator object at 0x7dfc4cfaa950>
+
+>   if any(type(schema[key]) not in (int, float) or not math.isfinite(schema[key]) for key in ('minimum', 'maximum') if key in schema): return False
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+
+packages/backend/decision/src/ordessa_decision/flows/agent_assignment/composition.py:50: OverflowError
+_______ test_T17_caught_question_policy_failure_cannot_become_completed ________
+
+    @pytest.mark.asyncio
+    async def test_T17_caught_question_policy_failure_cannot_become_completed():
+        async def catches(ctx):
+            bad=replace(question(),policy_ref=PolicyRef('foreign','1',digest('policy',{})))
+            try: await ctx.deps.gateway.decide(bad)
+            except RuntimeFailure: pass
+            return BusinessOutcome('clarify')
+        provider=Provider(); flow=build_flow(action=catches)
+        req,svc=compose(flow,provider=provider)
+        result=await run_decision(req,flow=flow,services=svc)
+>       assert result.status=='failed' and result.error_code=='question_policy_invalid'
+E       AssertionError: assert ('completed' == 'failed'
+E         
+E         - failed
+E         + completed)
+
+packages/backend/decision/tests/runtime/test_adversarial_runtime.py:87: AssertionError
+=========================== short test summary info ============================
+FAILED packages/backend/decision/tests/flows/test_basis_schema_attacks.py::test_T66_task_reference_revision_cannot_conflict_with_expected_version
+FAILED packages/backend/decision/tests/flows/test_basis_schema_attacks.py::test_T62_huge_number_in_absent_schema_branch_is_unverifiable
+FAILED packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T17_caught_question_policy_failure_cannot_become_completed
+3 failed, 18 passed in 0.12s

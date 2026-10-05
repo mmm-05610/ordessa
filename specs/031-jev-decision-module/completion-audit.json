@@ -562,5 +562,26 @@
     "Historical lost answers/timeout remain unverified; costs and two request usages unknown.",
     "Whole Server/Harness inherited reds, Python3.10, power loss and remote FS not reverified."
   ],
-  "completion_basis": "The original JD009/JD010 requirements mandate honest PARTIAL output for absent capability or unmet model labels. This audit completes implementation and required evaluation/reporting; it does not promote product readiness or erase failures."
+  "completion_basis": "The original JD009/JD010 requirements mandate honest PARTIAL output for absent capability or unmet model labels. This audit completes implementation and required evaluation/reporting; it does not promote product readiness or erase failures.",
+  "latest_continuation": {
+    "tested_head_before_checkpoint": "f864f95682beb1b8676fa6b348148fd16a848e2f",
+    "tested_source_digest": "sha256:98ff570f2039de2c5e13e75f95484e42a6c29ca91735b3a96e4f042f1ae3fc7d",
+    "full_suite": "320 passed",
+    "offline_scenarios_passed": 67,
+    "baseline_core_ids_passed": 57,
+    "current_core_ids_passed": 57,
+    "live_jev_requests_total": 214,
+    "reported_input_tokens": 170771,
+    "reported_output_tokens": 13958,
+    "historical_usage_unknown_requests": 3,
+    "cost": "UNKNOWN",
+    "evidence": "evidence/adversarial-20261005/README.md",
+    "native_effects": 0,
+    "real_harness": "NOT_RUN",
+    "family_capability": "UNSUPPORTED_PER_FREEZE",
+    "all_work_complete": false,
+    "goal_status": "active",
+    "next_scope_plan": "downstream-next.md",
+    "authorization": "pending family scope extension"
+  }
 }

@@ -1,17 +1,29 @@
 import asyncio
 import math
+import re
 import time
 import uuid
 from ordessa_decision.contracts import (CallPermit, ModelCallContext, DecisionAnswer,
     DecisionQuestion, DurabilityAck)
 from .errors import BudgetExhausted, EvidenceUnknown, RuntimeFailure
 from .timeouts import deadline_at
+from ..evidence.codec import record
 
-def require_ack(ack, mode):
-    if not isinstance(ack, DurabilityAck) or ack.seq < 1 or not ack.digest:
+def require_ack(ack, mode, *, expected_seq=None, expected_digest=None):
+    if (not isinstance(ack, DurabilityAck) or type(ack.seq) is not int or ack.seq < 1
+            or type(ack.digest) is not str or not re.fullmatch(r'sha256:[0-9a-f]{64}', ack.digest)
+            or (expected_seq is not None and ack.seq != expected_seq)
+            or (expected_digest is not None and ack.digest != expected_digest)):
         raise EvidenceUnknown()
-    if mode == 'real' and ack.durability != 'durable':
+    if ack.durability not in ('memory','durable') or (mode == 'real' and ack.durability != 'durable'):
         raise EvidenceUnknown()
+
+async def append_checked(context, evidence, mode, event):
+    """Caller holds the run lock, so the ACK binds one exact journal entry."""
+    expected = record(event, context.evidence_seq + 1, context.evidence_digest, 65536)
+    ack = await evidence.append_durable(event)
+    require_ack(ack, mode, expected_seq=expected['seq'], expected_digest=expected['digest'])
+    context.evidence_seq, context.evidence_digest = ack.seq, ack.digest
 
 def safe_usage(usage):
     """Receipts are provider data: persist only numeric usage and closed status."""
@@ -29,12 +41,16 @@ class ModelGateway:
         self._context, self._provider, self._evidence, self._mode = context, provider, evidence, mode
         self._slots = asyncio.Semaphore(context.limits.max_inflight_model_calls)
 
+    def _fail(self, code):
+        self._context.failure_code = self._context.failure_code or code
+        raise RuntimeFailure(self._context.failure_code) from None
+
     async def decide(self, question):
         ctx = self._context
         if not isinstance(question, DecisionQuestion) or question.policy_ref not in ctx.services.policy_refs:
-            raise RuntimeFailure('question_policy_invalid')
+            self._fail('question_policy_invalid')
         if question.kind == 'choice' and len(question.options) > ctx.limits.max_choice_options:
-            raise RuntimeFailure('question_size')
+            self._fail('question_size')
         async with deadline_at(ctx.deadline):
             async with self._slots:
                 async with ctx.lock:
@@ -45,10 +61,9 @@ class ModelGateway:
                     call_id = 'call-' + uuid.uuid4().hex
                     settings_digest = self._provider.settings_digest
                     try:
-                        ack = await self._evidence.append_durable({
+                        await append_checked(ctx, self._evidence, self._mode, {
                             'type': 'call.intent', 'run_id': ctx.run_id, 'call_id': call_id,
                             'attempt': ctx.model_attempts, 'question_digest': question.question_digest})
-                        require_ack(ack, self._mode)
                     except asyncio.CancelledError:
                         raise
                     except Exception:
@@ -62,27 +77,28 @@ class ModelGateway:
                 except asyncio.CancelledError:
                     raise
                 except Exception:
-                    raise RuntimeFailure('provider_failed') from None
+                    self._fail('provider_failed')
                 if not isinstance(answer, DecisionAnswer) or answer.question_id != question.question_id or answer.kind != question.kind:
-                    raise RuntimeFailure('answer_mismatch')
+                    self._fail('answer_mismatch')
                 if answer.kind == 'choice':
                     if answer.value is None:
                         tied = answer.provider_receipt.get('tied_option_ids', ())
                         if answer.provider_receipt.get('selection_status') != 'tie' or len(tied) < 2 or any(v not in question.options for v in tied):
-                            raise RuntimeFailure('answer_choice_invalid')
+                            self._fail('answer_choice_invalid')
                     elif not isinstance(answer.value, str) or answer.value not in question.options:
-                        raise RuntimeFailure('answer_choice_invalid')
+                        self._fail('answer_choice_invalid')
                 if answer.kind == 'score' and (type(answer.value) not in (float,int) or not math.isfinite(answer.value) or not 0 <= answer.value <= len(question.scale)-1):
-                    raise RuntimeFailure('answer_score_invalid')
+                    self._fail('answer_score_invalid')
                 if answer.kind == 'noul' and (type(answer.value) not in (float,int) or not math.isfinite(answer.value) or not 0 <= answer.value <= 1):
-                    raise RuntimeFailure('answer_noul_invalid')
+                    self._fail('answer_noul_invalid')
                 try:
-                    ack = await self._evidence.append_durable({'type': 'call.response',
-                        'run_id': ctx.run_id, 'call_id': call_id, 'attempt': model_context.attempt_no,
-                        'answer_digest': answer.answer_digest, 'usage': safe_usage(answer.usage_evidence)})
-                    require_ack(ack, self._mode)
+                    async with ctx.lock:
+                        await append_checked(ctx, self._evidence, self._mode, {'type': 'call.response',
+                            'run_id': ctx.run_id, 'call_id': call_id, 'attempt': model_context.attempt_no,
+                            'answer_digest': answer.answer_digest, 'usage': safe_usage(answer.usage_evidence)})
                 except asyncio.CancelledError:
                     raise
                 except Exception:
                     ctx.mark_evidence_unknown()
+                ctx.check()
                 return answer

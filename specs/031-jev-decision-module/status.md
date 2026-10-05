@@ -169,3 +169,11 @@ JD009 交付与离线行为已验证，真实家族 opt-out/unsupported 仍 PART
 [新增边界证据](evidence/edge-flow-20261005/README.md)：无候选clarify、显式主Agent处理noDelegation（零候选/组合/校验）、新配置结构合法但必需owner语义unknown而clarify、v2第三方注入贯穿原图和受控组合/校验，共24真实请求/4run全部符合先冻结预期。四个终态/source/plan/FlowRef与计数独立复验通过。配置schema/字段外部定义，字段改名反例通过；首DTO字段预检失败和审计排序错误留档，无key/HTTP重试填绿。
 
 最终269项全套、67逐场景、57固定基线/当前ID通过；累计208次真实免费Jev调用，已报告164315输入/13689输出，3次历史usage未知，费用UNKNOWN。原计划9类样本没有未跑类别，但不把有限样本、受控owner或新规则通过推广为整体成熟。源码实施与规定验收报告已交付；产品就绪仍PARTIAL，JD009家族能力缺席、JD010历史标签失败/概率和协议错误仍开放。实际Harness应用不在本轮，不扩大授权、不改其他工作树、不merge/push。
+
+## 用户要求继续：下游边界两轮反例与修复
+
+此前“已授权交付结束”不能作为停工依据。继续实施实际攻击反例，修复来源撤权／换代、义务来源版本／类型、提案摘要与task revision、隐藏schema分支、可信owner映射缺检查、策略别名、吞异常重发、ACK重放／假终态、写者锁替换／重复start及close EIO。失败与修复逐项见 [本批证据](evidence/adversarial-20261005/README.md)，不删除旧失败。
+
+最终320全套、67逐场景、固定基线／当前各57核心ID、独立wheel离线重建安装通过。新增6次真实Jev原图合成注入复验通过，归档终态／source／plan／FlowRef独立核验；累计214请求、已报告170771输入／13958输出、历史3次usage未知，费用UNKNOWN，重试0、原生效果0。单个样本不能证明全面抗注入。
+
+原生家族仍按冻结合同unsupported，真实Harness／实际应用未运行，JD009／JD010保持PARTIAL；历史模型标签与概率协议失败、继承Server/Harness红、Python3.10及真实断电等未验证项不关闭。原目标保持active，all_work_complete=false；已准备 [后续家族扩展的具体方案](downstream-next.md)，扩展冻结范围和真实Harness动作须单独授权，不把Jev无上限授权扩大解释。

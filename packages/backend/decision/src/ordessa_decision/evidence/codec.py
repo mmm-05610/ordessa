@@ -13,7 +13,8 @@ _SUMMARY = frozenset(('type', 'event', 'run_id', 'call_id', 'attempt', 'attempt_
     'question_digest', 'answer_digest', 'provider_settings_digest', 'stage',
     'error_code', 'code', 'usage', 'consumed', 'effective_policy_refs',
     'policy_refs', 'flow_ref', 'task_revision', 'request_id', 'evidence_refs',
-    'result_digest', 'terminal_record_digest'))
+    'result_digest', 'terminal_record_digest', 'writer_incarnation',
+    'writer_device', 'writer_inode'))
 _FORBIDDEN = frozenset(('prompt', 'body', 'headers', 'header', 'secret', 'token',
     'api_key', 'raw', 'raw_response', 'response', 'exception', 'state', 'text',
     'description', 'instructions', 'title', 'content'))
@@ -60,6 +61,7 @@ def terminal(value):
     if value.get('terminal_digest', supplied) != supplied:
         raise EvidenceError('evidence_terminal_digest')
     result = value.get('result')
+    if not isinstance(result, Mapping): raise EvidenceError('evidence_terminal_result')
     # Unlike event summaries, terminal results must not be silently rewritten:
     # the runtime digest binds the exact validated public DTO.
     allowed = {'run_id', 'status', 'result', 'result_digest', 'terminal_digest', 'expected_last_seq'}
@@ -80,13 +82,25 @@ def terminal(value):
         if type(item) is str and len(item.encode('utf-8'))<=4096: return item
         raise EvidenceError('evidence_terminal_type')
     safe = public_result(value)
-    if not _TOKEN.fullmatch(safe.get('run_id','')): raise EvidenceError('evidence_run_id')
+    result = safe['result']
+    if type(safe.get('run_id')) is not str or not _TOKEN.fullmatch(safe['run_id']):
+        raise EvidenceError('evidence_run_id')
     if safe.get('status') not in ('completed', 'failed', 'cancelled', 'budget_exhausted'):
         raise EvidenceError('evidence_terminal_status')
-    if result is not None and digest('result', result) != supplied:
+    if result.get('run_id') != safe['run_id'] or result.get('status') != safe['status']:
+        raise EvidenceError('evidence_terminal_binding')
+    if digest('result', result) != supplied:
         raise EvidenceError('evidence_terminal_digest')
     canonical(safe)
     return safe, supplied
+
+def require_terminal_binding(value, started):
+    """Bind a safe exact result to its original started manifest, if declared."""
+    if value['run_id'] != started.get('run_id'): raise EvidenceError('evidence_terminal_binding')
+    if 'manifest_digest' in started or 'run_manifest_digest' in started:
+        expected = started.get('manifest_digest',started.get('run_manifest_digest'))
+        if value['result'].get('run_manifest_digest') != expected:
+            raise EvidenceError('evidence_terminal_manifest')
 
 def record(event, seq, previous, max_bytes):
     payload = summary(event)

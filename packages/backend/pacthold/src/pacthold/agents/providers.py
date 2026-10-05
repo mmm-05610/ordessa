@@ -76,6 +76,24 @@ class AgentProviders:
                 raise GuaranteeUnavailableError('pure-read offer version or owner differs')
             return result
 
+    def _proposal_source_snapshot(self, source):
+        """Recheck the existing public read authority; no secondary registry."""
+        from .configuration import ConfigurationUnsupported
+        from ordessa_environment_api import GuaranteeUnavailableError
+        if set(source) == {'environmentNamespace','profileId','manifestRevision','contentDigest'}:
+            from .contracts import ProfileRef
+            from .profiles import ProfileCatalog
+            value = ProfileCatalog(self._environment).read(ProfileRef.from_dict(json.loads(safe_json(source))))
+            return safe_json({'ref': value.ref.to_dict(), 'content': value.content})
+        if set(source) == {'environmentNamespace','instanceId','generation'}:
+            from .nodes import decode_node_ref, NodePublication
+            value = NodePublication(self._environment).read(decode_node_ref(source))
+            if value is None: raise GuaranteeUnavailableError('proposal source Node absent')
+            return safe_json(value)
+        if set(source) == {'environmentNamespace','definitionId','revision'}:
+            return safe_json(self.describe(source))
+        raise ConfigurationUnsupported('proposal source read scheme unsupported')
+
     def assess_configuration_proposal(self, proposal):
         from .read_configuration import OwnerProposalInput, require_assessment
         from ordessa_environment_api import GuaranteeUnavailableError, IdentityMismatchError
@@ -87,22 +105,7 @@ class AgentProviders:
             admitted, context = self._pure_read_owner(proposal.definition_ref, 'assess_configuration_proposal')
             if proposal.provider_ref != admitted.provider_ref:
                 raise IdentityMismatchError('proposal owner generation differs')
-            for source in proposal.source_refs:
-                # Reuse native public read admission. Unknown reference schemes
-                # cannot be made readable by inventing a generic policy target.
-                from .configuration import ConfigurationUnsupported
-                if set(source) == {'environmentNamespace','profileId','manifestRevision','contentDigest'}:
-                    from .contracts import ProfileRef
-                    from .profiles import ProfileCatalog
-                    ProfileCatalog(env).read(ProfileRef.from_dict(json.loads(safe_json(source))))
-                elif set(source) == {'environmentNamespace','instanceId','generation'}:
-                    from .nodes import decode_node_ref, NodePublication
-                    if NodePublication(env).read(decode_node_ref(source)) is None:
-                        raise GuaranteeUnavailableError('proposal source Node absent')
-                elif set(source) == {'environmentNamespace','definitionId','revision'}:
-                    self.describe(source)
-                else:
-                    raise ConfigurationUnsupported('proposal source read scheme unsupported')
+            sources = tuple(self._proposal_source_snapshot(source) for source in proposal.source_refs)
             if proposal.descriptor_revision != admitted.descriptor.definition_ref['revision']:
                 raise ConfigurationRevisionConflict('proposal descriptor revision differs')
         try:
@@ -116,4 +119,7 @@ class AgentProviders:
             raise GuaranteeUnavailableError('pure-read proposal assessment unavailable or unverified') from None
         with env._admission_lock:
             self._recheck_read_owner(admitted, proposal.definition_ref, 'assess_configuration_proposal')
+            current_sources = tuple(self._proposal_source_snapshot(source) for source in proposal.source_refs)
+            if current_sources != sources:
+                raise GuaranteeUnavailableError('proposal source changed during assessment')
             return result

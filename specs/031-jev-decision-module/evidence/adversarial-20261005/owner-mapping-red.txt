@@ -1,0 +1,66 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+__________ test_builder_without_reviewed_mapping_cannot_return_ready ___________
+
+setup = (<pacthold.environment.Environment object at 0x7c67ffc373b0>, <test_core_read_seam.Policy object at 0x7c67ffc34aa0>, <....AgentProviders object at 0x7c67ffc377d0>, assembly=<pacthold.agents.assembly.AgentAssembly object at 0x7c67ffc37830>))
+
+    async def test_builder_without_reviewed_mapping_cannot_return_ready(setup):
+        env, policy, owner, api = setup
+        request, flow, services = offline_case(action='create')
+        validator = OwnerProposalValidator(api.providers,
+            input_builder=lambda draft, basis: native_input(api, draft, 0.1),
+            read_context=services.read_context)
+        result = await run_decision(request, flow=flow, services=replace(services, validator=validator))
+>       assert not (result.status == 'completed' and result.outcome.disposition == 'ready')
+E       AssertionError: assert not ('completed' == 'completed'
+E         
+E           completed and 'ready' == 'ready'
+E         
+E           ready)
+
+packages/backend/decision/tests/integration/test_owner_mapping_attacks.py:27: AssertionError
+_____________ test_builder_wrong_field_rejected_before_owner[0.1] ______________
+
+setup = (<pacthold.environment.Environment object at 0x7c67ffc87590>, <test_core_read_seam.Policy object at 0x7c67ffc87920>, <....AgentProviders object at 0x7c67ffc86ed0>, assembly=<pacthold.agents.assembly.AgentAssembly object at 0x7c67ffc869f0>))
+ratio = 0.1
+
+    @pytest.mark.parametrize('ratio', [0.1, 0.9])
+    async def test_builder_wrong_field_rejected_before_owner(setup, ratio):
+        env, policy, owner, api = setup
+        request, flow, services = offline_case(action='create')
+        def verify(draft, basis, value):
+            return (value.proposal_data['configurationKind'] == 'brand.new'
+                and draft.payload['configuration_kind'] == 'controlled.new.kind'
+                and draft.payload['action'] == 'create'
+                and value.proposal_data['payload'] == draft.payload['configuration']['ratio'])
+>       validator = OwnerProposalValidator(api.providers,
+            input_builder=lambda draft, basis: native_input(api, draft, ratio),
+            input_verifier=verify, read_context=services.read_context)
+E       TypeError: OwnerProposalValidator.__init__() got an unexpected keyword argument 'input_verifier'
+
+packages/backend/decision/tests/integration/test_owner_mapping_attacks.py:40: TypeError
+_____________ test_builder_wrong_field_rejected_before_owner[0.9] ______________
+
+setup = (<pacthold.environment.Environment object at 0x7c67ffcaaa50>, <test_core_read_seam.Policy object at 0x7c67ffcaadb0>, <....AgentProviders object at 0x7c67ffcab170>, assembly=<pacthold.agents.assembly.AgentAssembly object at 0x7c67ffcab140>))
+ratio = 0.9
+
+    @pytest.mark.parametrize('ratio', [0.1, 0.9])
+    async def test_builder_wrong_field_rejected_before_owner(setup, ratio):
+        env, policy, owner, api = setup
+        request, flow, services = offline_case(action='create')
+        def verify(draft, basis, value):
+            return (value.proposal_data['configurationKind'] == 'brand.new'
+                and draft.payload['configuration_kind'] == 'controlled.new.kind'
+                and draft.payload['action'] == 'create'
+                and value.proposal_data['payload'] == draft.payload['configuration']['ratio'])
+>       validator = OwnerProposalValidator(api.providers,
+            input_builder=lambda draft, basis: native_input(api, draft, ratio),
+            input_verifier=verify, read_context=services.read_context)
+E       TypeError: OwnerProposalValidator.__init__() got an unexpected keyword argument 'input_verifier'
+
+packages/backend/decision/tests/integration/test_owner_mapping_attacks.py:40: TypeError
+=========================== short test summary info ============================
+FAILED packages/backend/decision/tests/integration/test_owner_mapping_attacks.py::test_builder_without_reviewed_mapping_cannot_return_ready
+FAILED packages/backend/decision/tests/integration/test_owner_mapping_attacks.py::test_builder_wrong_field_rejected_before_owner[0.1]
+FAILED packages/backend/decision/tests/integration/test_owner_mapping_attacks.py::test_builder_wrong_field_rejected_before_owner[0.9]
+3 failed in 0.27s

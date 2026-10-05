@@ -10,6 +10,7 @@ from .context import RunContext
 from .errors import BudgetExhausted, EvidenceUnknown, ExplicitCancellation, RuntimeFailure
 from .flow import TrustedFlow
 from .timeouts import deadline_at
+from ..evidence.codec import record, summary
 
 async def bounded(operation, timeout):
     """Never await cancellation-resistant cleanup beyond the configured bound."""
@@ -82,20 +83,39 @@ async def run_decision(request, *, flow, services):
         finish_started = True
         try:
             ack = await bounded(services.evidence.finish(terminal), request.limits.cleanup_timeout_seconds)
-            require_ack(ack, services.mode)
+            require_ack(ack, services.mode, expected_digest=value.result_digest)
+            # Memory commits its separate terminal at the last event sequence;
+            # filesystem commits add exactly one terminal.commit event.
+            if ack.seq not in (context.evidence_seq,context.evidence_seq+1): raise EvidenceUnknown(run_id)
         except asyncio.CancelledError:
             raise
         except Exception:
             if not await query_committed(terminal):
                 raise EvidenceUnknown(run_id) from None
+        else:
+            # A syntactically correct ACK is insufficient proof of a queryable
+            # exact terminal. Confirm the public read projection before success.
+            if not await query_committed(terminal): raise EvidenceUnknown(run_id)
         return value
 
     try:
         try:
-            ack = await bounded(services.evidence.start({'type':'run.started', 'run_id':run_id,
+            meta = {'type':'run.started', 'run_id':run_id,
                 'request_digest':request.request_digest, 'flow_digest':flow.ref.content_digest,
-                'manifest_digest':manifest.manifest_digest}), min(request.limits.wall_timeout_seconds, request.limits.cleanup_timeout_seconds))
-            require_ack(ack, services.mode)
+                'manifest_digest':manifest.manifest_digest}
+            ack = await bounded(services.evidence.start(meta), min(request.limits.wall_timeout_seconds, request.limits.cleanup_timeout_seconds))
+            require_ack(ack, services.mode, expected_seq=1)
+            observation = await bounded(services.evidence.read(run_id, services.read_context), request.limits.cleanup_timeout_seconds)
+            if not isinstance(observation, Mapping) or observation.get('status') != 'running': raise EvidenceUnknown(run_id)
+            entries = observation.get('events')
+            if not isinstance(entries, (list, tuple)) or len(entries) != 1: raise EvidenceUnknown(run_id)
+            first = entries[0]
+            if not isinstance(first, Mapping) or not isinstance(first.get('payload'), Mapping): raise EvidenceUnknown(run_id)
+            if any(first['payload'].get(k) != v for k,v in summary(meta).items()): raise EvidenceUnknown(run_id)
+            expected = record(first['payload'], 1, None, 65536)
+            if first != expected: raise EvidenceUnknown(run_id)
+            require_ack(ack, services.mode, expected_seq=1, expected_digest=expected['digest'])
+            context.evidence_seq, context.evidence_digest = ack.seq, ack.digest
             started = True
         except asyncio.CancelledError:
             raise

@@ -2,7 +2,7 @@ import asyncio
 import time
 from dataclasses import dataclass
 from ordessa_decision.contracts import freeze, plain
-from .errors import BudgetExhausted, ExplicitCancellation, EvidenceUnknown
+from .errors import BudgetExhausted, ExplicitCancellation, EvidenceUnknown, RuntimeFailure
 
 @dataclass(frozen=True)
 class NodeServices:
@@ -29,6 +29,9 @@ class RunContext:
         self.cancelled = False
         self.exhausted_dimension = None
         self.evidence_unknown = False
+        self.failure_code = None
+        self.evidence_seq = 0
+        self.evidence_digest = None
         self.lock = asyncio.Lock()
 
     def check(self):
@@ -36,6 +39,8 @@ class RunContext:
             raise ExplicitCancellation()
         if self.evidence_unknown:
             raise EvidenceUnknown(self.run_id)
+        if self.failure_code:
+            raise RuntimeFailure(self.failure_code)
         if self.exhausted_dimension:
             raise BudgetExhausted(self.exhausted_dimension)
         if time.monotonic() >= self.deadline:

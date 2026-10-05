@@ -10,6 +10,53 @@ import math
 from ordessa_decision.contracts import ProposalCandidateBatch, ProposalDraft, ContractError, freeze, plain
 
 DIALECT = 'https://json-schema.org/draft/2020-12/schema'
+MAX_SCHEMA_DEPTH = 32
+MAX_SCHEMA_NODES = 4096
+
+
+def _finite_json_tree(value):
+    """Bound the complete declaration, including absent branches and enum data."""
+    active = set(); remaining = MAX_SCHEMA_NODES
+    def visit(item, depth):
+        nonlocal remaining
+        remaining -= 1
+        if depth > MAX_SCHEMA_DEPTH or remaining < 0: return False
+        if item is None or type(item) in (str, bool, int): return True
+        if type(item) is float: return math.isfinite(item)
+        if not isinstance(item, (Mapping, tuple, list)): return False
+        identity = id(item)
+        if identity in active: return False
+        active.add(identity)
+        try:
+            if isinstance(item, Mapping):
+                return all(type(key) is str and visit(child, depth + 1) for key, child in item.items())
+            return all(visit(child, depth + 1) for child in item)
+        finally: active.remove(identity)
+    return visit(value, 0)
+
+
+def _supported_schema(schema):
+    """Validate declaration support without relying on which values are present."""
+    if not isinstance(schema, Mapping) or schema.get('$schema', DIALECT) != DIALECT: return False
+    common = {'$schema', 'type', 'enum', 'description', 'title'}
+    specific = {'object': {'properties', 'required', 'additionalProperties'},
+        'array': {'items', 'minItems', 'maxItems'}, 'number': {'minimum', 'maximum'},
+        'integer': {'minimum', 'maximum'}, 'string': set(), 'boolean': set(), 'null': set()}
+    kind = schema.get('type')
+    if type(kind) is not str or kind not in specific or set(schema) - (common | specific[kind]): return False
+    if any(type(schema[key]) is not str for key in ('title', 'description') if key in schema): return False
+    if 'enum' in schema and (not isinstance(schema['enum'], (tuple, list)) or not schema['enum']): return False
+    if kind in ('number', 'integer'):
+        if any(type(schema[key]) not in (int, float) or not math.isfinite(schema[key]) for key in ('minimum', 'maximum') if key in schema): return False
+    if kind == 'object':
+        properties = schema.get('properties', {}); required = schema.get('required', ())
+        if not isinstance(properties, Mapping) or not isinstance(required, (tuple, list)) or any(type(key) is not str for key in required): return False
+        if type(schema.get('additionalProperties', True)) is not bool: return False
+        if any(not _supported_schema(child) for child in properties.values()): return False
+    if kind == 'array':
+        if 'items' not in schema or not _supported_schema(schema['items']): return False
+        if any(type(schema[key]) is not int or schema[key] < 0 for key in ('minItems', 'maxItems') if key in schema): return False
+    return True
 
 
 def _json_equal(a,b):
@@ -24,6 +71,15 @@ def _json_equal(a,b):
 
 def check_schema(value, schema):
     """Return valid/invalid/unverifiable; this is structural, never owner approval."""
+    try:
+        if not _finite_json_tree(schema) or not _supported_schema(schema): return 'unverifiable'
+    except (RecursionError, TypeError, ValueError, OverflowError):
+        return 'unverifiable'
+    return _check_value(value, schema)
+
+
+def _check_value(value, schema):
+    """Validate values only after the complete declaration has been checked."""
     if not isinstance(schema, Mapping): return 'unverifiable'
     allowed = {'$schema', 'type', 'properties', 'required', 'additionalProperties',
                'enum', 'minimum', 'maximum', 'items', 'minItems', 'maxItems', 'description', 'title'}
@@ -57,7 +113,7 @@ def check_schema(value, schema):
         if set(required)-set(value): return 'invalid'
         if not additional and set(value)-set(props): return 'invalid'
         for key in set(props)&set(value):
-            status = check_schema(value[key], props[key])
+            status = _check_value(value[key], props[key])
             if status != 'valid': return status
     if kind == 'array':
         for key, op in (('minItems', lambda n,b:n<b), ('maxItems', lambda n,b:n>b)):
@@ -66,7 +122,7 @@ def check_schema(value, schema):
                 if op(len(value),schema[key]): return 'invalid'
         if 'items' not in schema: return 'unverifiable'
         for item in value:
-            status=check_schema(item,schema['items'])
+            status=_check_value(item,schema['items'])
             if status!='valid': return status
     return 'valid'
 

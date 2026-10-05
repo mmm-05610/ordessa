@@ -84,3 +84,6 @@ class DecisionServices:
     mode: str = 'offline'
     def __post_init__(self):
         if self.mode not in ('offline','real') or not isinstance(self.read_context,ReadContext) or not self.policy_refs: raise ContractError('services')
+        object.__setattr__(self, 'policy', freeze(plain(self.policy)))
+        object.__setattr__(self, 'policy_refs', tuple(self.policy_refs))
+        if any(not isinstance(ref, PolicyRef) for ref in self.policy_refs): raise ContractError('services_policy_refs')

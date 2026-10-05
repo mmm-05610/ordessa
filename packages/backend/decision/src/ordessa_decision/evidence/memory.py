@@ -1,6 +1,6 @@
 """Offline evidence. These ACKs never claim disk durability."""
 from ..contracts.ports import DurabilityAck
-from .codec import EvidenceError, authorised, projection, record, summary, terminal
+from .codec import EvidenceError, authorised, projection, record, summary, terminal, require_terminal_binding
 
 class MemoryEvidenceSink:
     durable = False
@@ -33,6 +33,7 @@ class MemoryEvidenceSink:
         safe, result_digest = terminal(value)
         run = self._runs.get(safe.get('run_id'))
         if self._closed or run is None: raise EvidenceError('evidence_writer')
+        require_terminal_binding(safe,run['events'][0]['payload'])
         if run['terminal'] is not None:
             if run['terminal'] != safe: raise EvidenceError('terminal_conflict')
             return run['ack']

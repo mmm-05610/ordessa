@@ -52,6 +52,18 @@ def check_proposal_basis(proposal, candidate, task, required_checks=(), required
     if not task_conditions:
         raise ContractError('proposal_basis_invalid')
 
+    # A declared content digest is evidence, not an unchecked display field.
+    # Null remains permitted where the frozen source only supplies a revision.
+    task_digest = digest('request', task)
+    for condition in task_conditions:
+        if 'revision' in condition.subject_ref.identity and condition.subject_ref.identity['revision'] != task.task_revision:
+            raise ContractError('proposal_task_revision_mismatch')
+        if condition.expected_digest is not None and condition.expected_digest != task_digest:
+            raise ContractError('proposal_task_digest_mismatch')
+    for condition in matched:
+        if condition.expected_digest is not None and condition.expected_digest != source.content_digest:
+            raise ContractError('proposal_source_digest_mismatch')
+
     if len({c.condition_id for c in proposal.preconditions}) != len(proposal.preconditions):
         raise ContractError('duplicate_precondition')
     for required in required_validation:
@@ -62,6 +74,7 @@ def check_proposal_basis(proposal, candidate, task, required_checks=(), required
         if not covered:
             raise ContractError('mandatory_semantic_obligation_missing')
     conditions={c.condition_id:c for c in proposal.preconditions if c.requirement=='must'}
+    digest_bound = {c.condition_id for c in task_conditions + matched}
     for key in required_checks:
         check=candidate.capability_claims['hard_checks'][key]
         condition=conditions.get(key)
@@ -70,3 +83,11 @@ def check_proposal_basis(proposal, candidate, task, required_checks=(), required
                 or condition.subject_ref!=subject or condition.checker_id!=check['checker_id']
                 or condition.checker_version!=check['checker_version']):
             raise ContractError('proposal_precondition_missing')
+        declared = [check[field] for field in ('content_digest', 'expected_digest') if check.get(field) is not None]
+        if declared:
+            if any(type(value) is not str or not value for value in declared) or len(set(declared)) != 1 or condition.expected_digest != declared[0]:
+                raise ContractError('proposal_check_digest_mismatch')
+            digest_bound.add(condition.condition_id)
+    if any(c.expected_digest is not None and c.condition_id not in digest_bound for c in conditions.values()):
+        # No contract here defines the content behind an arbitrary checker.
+        raise ContractError('proposal_digest_source_unknown')

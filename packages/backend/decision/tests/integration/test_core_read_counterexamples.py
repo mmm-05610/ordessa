@@ -120,3 +120,37 @@ def test_t01_receipt_scalar_metadata_cannot_hide_mutable_values():
     with pytest.raises(ContractError):
         ValidationReceipt('validator','1',digest('proposal',{}),'valid',(),
                           ['2026-10-05T00:00:00Z'],['pure read only'])
+
+@pytest.mark.parametrize('versions', [{}, {'descriptor':'wrong'}, {'descriptor':'1','foreign':'3'}])
+def test_T65_obligation_versions_cannot_disagree_with_assessment(versions):
+    value = proposal()
+    row = {'obligationId':'configuration','status':'passed','checkerId':'owner','checkerVersion':'1',
+           'sourceVersions':versions,'evidenceRefs':[EVIDENCE]}
+    assessment = OwnerProposalAssessment(value.input_digest,{'descriptor':'1'},'valid',(),
+        (row,),'owner pure read only',(EVIDENCE,),PURE_READ_VERSION)
+    with pytest.raises(ConfigurationContractError): require_assessment(value, assessment)
+
+
+def test_T65_owner_cannot_invent_shared_overall_and_obligation_source():
+    value = proposal()
+    row = {'obligationId':'configuration','status':'passed','checkerId':'owner','checkerVersion':'1',
+        'sourceVersions':{'invented':'7'},'evidenceRefs':[EVIDENCE]}
+    assessment = OwnerProposalAssessment(value.input_digest,{'descriptor':'1','invented':'7'},
+        'valid',(),(row,),'owner pure read only',(EVIDENCE,),PURE_READ_VERSION)
+    with pytest.raises(ConfigurationContractError): require_assessment(value, assessment)
+
+
+@pytest.mark.parametrize('bad_version', [True, 1.0])
+@pytest.mark.parametrize('stage', ['overall','obligation'])
+def test_T65_source_versions_preserve_json_scalar_type(bad_version, stage):
+    from ordessa_environment_api.operations import safe_json
+    ref={'environmentNamespace':'counterexample','profileId':'p','manifestRevision':1,
+        'contentDigest':'sha256:'+'a'*64}
+    value=replace(proposal(),source_refs=(ref,))
+    key=safe_json(ref)
+    overall={'descriptor':'1',key:bad_version if stage=='overall' else 1}
+    row={'obligationId':'configuration','status':'passed','checkerId':'owner','checkerVersion':'1',
+        'sourceVersions':{key:bad_version},'evidenceRefs':[EVIDENCE]}
+    assessment=OwnerProposalAssessment(value.input_digest,overall,'valid',(),(row,),
+        'owner pure read only',(EVIDENCE,),PURE_READ_VERSION)
+    with pytest.raises(ConfigurationContractError): require_assessment(value,assessment)

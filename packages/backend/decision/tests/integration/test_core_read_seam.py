@@ -194,7 +194,13 @@ async def test_T61_T62_T67_core_adapter_graph_owner_validation(setup,tmp_path):
         return OwnerProposalInput(DEF,api.providers.describe(DEF)['providerRef'],'1',
             {'configurationKind':'brand.new','payload':draft.payload['configuration']['ratio']},(),
             tuple({'obligationId':o.obligation_id,'requirement':o.requirement,'checkerId':o.validator_kind,'checkerVersion':o.version_constraint} for o in draft.required_validation_obligations))
-    validator=OwnerProposalValidator(api.providers,input_builder=builder,read_context=services.read_context)
+    def verify_mapping(draft,basis,value):
+        return (draft.payload['action']=='create'
+            and draft.payload['configuration_kind']=='controlled.new.kind'
+            and value.proposal_data['configurationKind']=='brand.new'
+            and value.proposal_data['payload']==draft.payload['configuration']['ratio'])
+    validator=OwnerProposalValidator(api.providers,input_builder=builder,
+        input_verifier=verify_mapping,read_context=services.read_context)
     services=replace(services,read=adapter,validator=validator)
     native_before=api.providers.list()
     result=await run_decision(request,flow=flow,services=services)
@@ -207,3 +213,61 @@ async def test_T61_T62_T67_core_adapter_graph_owner_validation(setup,tmp_path):
     owner.descriptor=replace(owner.descriptor,implementation_digest='sha256:'+'b'*64)
     with pytest.raises(Exception): await validator.validate(result.outcome.proposals[0],{},services.read_context)
     assert owner.effects==[]
+
+# Adversarial source checks: the assessed owner stays admitted while a separate
+# source changes. No user environment, provider process or model is used.
+def _assessment_with_source_versions(owner):
+    from ordessa_environment_api.operations import safe_json
+    original = owner.assess_configuration_proposal
+    def assess(value, context):
+        result = original(value, context)
+        versions = {'descriptor': value.descriptor_revision}
+        for ref in value.source_refs:
+            versions[safe_json(ref)] = ref.get('manifestRevision', ref.get('revision'))
+        return replace(result, source_versions=versions)
+    owner.assess_configuration_proposal = assess
+
+
+def test_T57_profile_read_revoked_during_owner_callback(setup):
+    env, policy, owner, api = setup
+    profile = api.profiles.create(profile_id='revoked-source', display_name='Source',
+        manifest={'harnessDefinitionRef': DEF, 'schemaVersion': 'profile/1', 'declarations': []},
+        request=api.profiles.request_key('setup-revoked-profile'))
+    source = profile.current_manifest_ref.to_dict()
+    value = replace(input_for(api), source_refs=(source,))
+    revoked = set()
+    policy.admit_object_access = lambda principal, target, access: target not in revoked
+    owner.after = lambda: revoked.add('test:agents.profile:revoked-source')
+    _assessment_with_source_versions(owner)
+    with pytest.raises(AdmissionRefusedError):
+        api.providers.assess_configuration_proposal(value)
+    assert owner.calls == ['assessment'] and owner.effects == []
+
+
+@pytest.mark.parametrize('change', ['retire', 'replace', 'descriptor'])
+def test_T57_separate_provider_source_changes_during_assessment(setup, change):
+    env, policy, owner, api = setup
+    source_def = dict(DEF, definitionId='source-provider')
+    source_owner = Owner()
+    source_owner.descriptor = replace(source_owner.descriptor, provider_id='source-owner', definition_ref=source_def)
+    env.install(InstallationRecord('source.plugin','b'*64)); env.enable('source.plugin')
+    env.activate('source.plugin', AgentContributionSet(agent_runtime_providers=(source_owner,)))
+    old = api.providers.describe(source_def)
+    value = replace(input_for(api), source_refs=(source_def,))
+    def change_source():
+        if change == 'descriptor':
+            source_owner.descriptor = replace(source_owner.descriptor, implementation_digest='sha256:'+'c'*64)
+            return
+        activation = env.agent_runtime_contribution(source_def).owner_activation
+        env.drain(activation); assert env.retire(activation)[0] == 'retired'
+        if change == 'replace':
+            replacement = Owner()
+            replacement.descriptor = replace(source_owner.descriptor)
+            env.enable('source.plugin')
+            env.activate('source.plugin', AgentContributionSet(agent_runtime_providers=(replacement,)))
+            assert api.providers.describe(source_def)['providerRef'] != old['providerRef']
+    owner.after = change_source
+    _assessment_with_source_versions(owner)
+    with pytest.raises((AdmissionRefusedError, GuaranteeUnavailableError)):
+        api.providers.assess_configuration_proposal(value)
+    assert owner.calls == ['assessment'] and owner.effects == [] and source_owner.effects == []

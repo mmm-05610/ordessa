@@ -180,3 +180,9 @@ Spec 031 continuation evidence: [safe protocol diagnostics and fixed repeats](..
 Spec031 continuation (2026-10-05): the original assignment graph now has 9 independently verified live synthetic runs: ready/repair/clarify/revise and multi-proposal rank/order reversal/insufficient evidence. These reuse the original graph and official SDK; controlled ports do not supply real family capability. Latest offline suite: 260 tests + 67 scenarios + 57 baseline/current core IDs. Totals: 184 live HTTP requests, 3 historical unknown usage entries, cost UNKNOWN. [Reference flow](../specs/031-jev-decision-module/evidence/reference-flow-20261005/README.md), [Rank flow](../specs/031-jev-decision-module/evidence/rank-flow-20261005/README.md). Registered historical model/protocol failures remain open.
 
 Spec031 edge continuation: four more original-graph synthetic runs cover complete-empty candidates, explicit main-Agent noDelegation, structurally valid ConfigurationOffer with mandatory owner semantics unknown, and third-party injection through controlled composition/validation. Latest suite269 +67 scenarios +57 baseline/current IDs. Cumulative208 HTTP, usage164315 input/13689 output plus3 historical unknown entries; cost UNKNOWN. These do not supply real family capability or erase historical failures. [Edge evidence](../specs/031-jev-decision-module/evidence/edge-flow-20261005/README.md).
+
+### Spec 031 防御边界修复复验（2026-10-05续）
+
+[两轮反例证据](../specs/031-jev-decision-module/evidence/adversarial-20261005/README.md)记录来源撤权／换代、义务虚构版本及标量类型、owner错映射、隐藏schema分支、策略别名、未知重发、ACK／终态和写者锁攻击；修复后320项与67离线场景、57基线／当前核心ID通过。可信映射verifier仍需业务审阅，不证明任意映射正确；旧非终态缺写者身份返回unknown、不迁移原日志。
+
+新增6真实免费Jev合成原图请求通过；累计214请求，已报告170771输入／13958输出，历史3次usage未知，费用UNKNOWN。DEC031-01/02历史模型标签和协议风险、DEC031-03家族unsupported及实际Harness未验证不因此关闭。后续Codex原owner纯只读接入是待批准范围扩展，尚未实施。

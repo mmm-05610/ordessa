@@ -45,3 +45,14 @@ Jev: providers/jev/** and tests/providers/** only.
 Evidence: evidence/** and tests/integration/test_evidence* only.
 No contracts/shared assembly/pyproject/locks/status/Git writes; no test/install execution;
 no nested agents. Main session reruns every submitted check serially.
+
+## 防御性绑定补充（2026-10-05）
+
+OwnerProposalValidator 的 input_builder 与 input_verifier 都是可信 host 装配，业务映射不由模型生成。
+input_verifier(draft, basis, OwnerProposalInput) 必须返回精确 True；缺席／非 True 在 owner 调用前拒绝。
+它负责独立审阅不同 wire 字段、配置 kind 与引用的语义对应；adapter 另外精确核对全部 required_obligations，保留双摘要绑定。
+这不是任意映射的自动正确性证明：恶意或错误的可信 verifier 仍是装配风险，不能据此宣称真实家族支持。
+原核心复读来源权限／版本与来源 provider generation；must 义务只能引用 input 的已知资料版本或 descriptor，版本标量类型严格一致。
+政策内容进入 DecisionServices 时冻结，外部别名不得改变已检查策略。
+证据 ACK 绑定精确记录摘要／序号；成功也须读取核对精确持久终态。已 dispatch 的未知失败与协议失败锁定技术失败，业务捕获不恢复预算或重发。
+写者身份只证明原目录的非终态存活／中断；已提交归档可通过完整终态与 commit 链验证，复制后的 inode 不作为原写者退出证明。

@@ -28,7 +28,8 @@ def meta(run_id):
             'effective_policy_refs':[{'policy_id':'test', 'version':'1', 'digest':digest('policy', {})}]}
 
 def terminal(run_id, status='failed'):
-    result = {'run_id':run_id, 'status':status, 'error_code':'test_failure'}
+    result = {'run_id':run_id, 'status':status, 'error_code':'test_failure',
+              'run_manifest_digest':meta(run_id)['manifest_digest']}
     return {'run_id':run_id, 'status':status, 'result':result, 'result_digest':digest('result', result)}
 
 def test_t21_memory_ack_never_claims_durability():
@@ -95,6 +96,7 @@ def test_t31_terminal_exact_digest_free_text_and_sensitive_rejection(store):
     run_id = str(uuid.uuid4())
     run(sink.start(meta(run_id)))
     result = {'run_id':run_id,'status':'failed','error_code':'test_failure',
+              'run_manifest_digest':meta(run_id)['manifest_digest'],
               'validation_scope':'Checked configuration description only.',
               'checked_at':'2026-10-05T10:00:00+08:00',
               'configuration':{'label':'普通配置名称'}}
@@ -160,7 +162,8 @@ async def main():
             return original_fsync(fd)
         os.fsync = pause_fsync
     if window in ('terminal_staged','terminal_renamed','terminal_committed'):
-        result = {'run_id':run_id,'status':'failed','error_code':'controlled_failure'}
+        result = {'run_id':run_id,'status':'failed','error_code':'controlled_failure',
+                  'run_manifest_digest':digest('runmanifest', {})}
         await sink.finish({'run_id':run_id,'status':'failed','result':result,'result_digest':digest('result', result)})
     print('ready', flush=True)
     sys.stdin.read(1)
@@ -250,6 +253,7 @@ def test_t31_normalized_plaintext_credentials_never_recorded(store,credential):
         'evidence_refs':[{'environmentNamespace':'test',credential:'sk-SECRET'}]}))
     assert b'sk-SECRET' not in (root/run_id/'events.jsonl').read_bytes()
     result = {'run_id':run_id,'status':'failed','error_code':'test',
+              'run_manifest_digest':meta(run_id)['manifest_digest'],
               'configuration':{credential:'sk-SECRET'}}
     with pytest.raises(EvidenceError,match='evidence_terminal_sensitive'):
         run(sink.finish({'run_id':run_id,'status':'failed','result':result,'result_digest':digest('result',result)}))
@@ -261,6 +265,7 @@ def test_t31_credential_secret_reference_is_preserved_exactly(store):
     secret_ref = {'secretRef':{'ref':'credential.test','revision':'1','owner_namespace':'test',
                                'access_purpose':'decision.read'}}
     result = {'run_id':run_id,'status':'failed','error_code':'test',
+              'run_manifest_digest':meta(run_id)['manifest_digest'],
               'configuration':{'apiKey':secret_ref,'password':secret_ref}}
     value = {'run_id':run_id,'status':'failed','result':result,'result_digest':digest('result',result)}
     run(sink.finish(value))

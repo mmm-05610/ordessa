@@ -116,9 +116,16 @@ def require_assessment(input, result):
         for ref in row['evidenceRefs']: _reference(ref,input.definition_ref['environmentNamespace'])
     if result.status=='valid':
         if result.source_versions.get('descriptor') != input.descriptor_revision: raise ConfigurationContractError('assessment descriptor version missing')
+        known_versions={'descriptor':input.descriptor_revision}
         for ref in input.source_refs:
             expected=ref.get('sourceRevision',ref.get('manifestRevision',ref.get('revision')))
-            if expected is None or result.source_versions.get(safe_json(ref)) != expected: raise ConfigurationContractError('assessment source version unknown')
+            actual=result.source_versions.get(safe_json(ref))
+            if expected is None or type(actual) is not type(expected) or actual != expected: raise ConfigurationContractError('assessment source version unknown')
+            known_versions[safe_json(ref)]=expected
         for o in input.required_obligations:
             r=by_id.get(o['obligationId'])
+            if o['requirement']=='must' and r is not None:
+                versions=r['sourceVersions']
+                if not versions or any(k not in known_versions or type(known_versions[k]) is not type(v) or known_versions[k]!=v for k,v in versions.items()):
+                    raise ConfigurationContractError('assessment obligation source version unverified')
             if o['requirement']=='must' and (r is None or r['status']!='passed' or not r['evidenceRefs'] or r['checkerId']!=o['checkerId'] or r['checkerVersion']!=o['checkerVersion']): raise ConfigurationContractError('assessment must obligation unverified')
