@@ -10,7 +10,7 @@ import uuid
 
 from .initialization import discover, save_report
 from .providers import definition_ref_valid, provider_result_valid
-from .configuration import node_ref_valid, description_result_valid, snapshot_result_valid
+from .configuration import node_ref_valid, description_result_valid, snapshot_result_valid, change_request_valid, operation_result_valid, operation_disposition
 from .client import ClientError, WireClient, load_service, parse_json, core_schema, profile_ref_valid, provider_schema, MAX_BYTES
 
 
@@ -50,6 +50,14 @@ def parser():
         child = configuration_actions.add_parser(action, help=help_text)
         connection(child)
         child.add_argument("node_ref", help="Complete NodeRef JSON or @file")
+    for action in ("apply", "query"):
+        child = configuration_actions.add_parser(action, help="Submit a fixed configuration change" if action == "apply" else "Reconcile the original configuration operation without resending the change")
+        connection(child)
+        child.add_argument("node_ref", help="Complete NodeRef JSON or @file")
+        if action == "apply":
+            child.add_argument("--file", required=True, help="Complete change JSON with requestId, expectedConfigurationRevision, declarations, applicationPolicy")
+        else:
+            child.add_argument("operation_ref", help="Original core operation identity")
     profile = commands.add_parser("profiles")
     actions = profile.add_subparsers(dest="action", required=True, parser_class=Parser)
     for action in ("list", "show", "entry", "preview", "create", "edit", "clone", "rename", "archive", "restore"):
@@ -163,6 +171,8 @@ def main(argv=None):
     service_ref = None
     data = None
     evidence = {"level": "unobserved"}
+    operation_ref = None
+    result_status = None
     try:
         options = parser().parse_args(args)
         if options.command == "init":
@@ -193,7 +203,18 @@ def main(argv=None):
             node = json_input(options.node_ref)
             if not node_ref_valid(node):
                 raise ClientError("PARAMETER_INVALID", "Complete NodeRef required", 2)
-            prepared = ("agents.nodes.configuration." + options.action, {"nodeRef": node})
+            params = {"nodeRef": node}
+            if options.action == "apply":
+                change = json_input(options.file, file_only=True)
+                if not change_request_valid(change):
+                    raise ClientError("PARAMETER_INVALID", "Complete bounded configuration change required", 2)
+                params["change"] = change
+                options.request_id = change["requestId"]
+            elif options.action == "query":
+                if not isinstance(options.operation_ref, str) or not options.operation_ref or len(options.operation_ref) > 256:
+                    raise ClientError("PARAMETER_INVALID", "Original operation identity required", 2)
+                params["operationRef"] = options.operation_ref
+            prepared = ("agents.nodes.configuration." + options.action, params)
         if not math.isfinite(options.timeout) or not 0 < options.timeout <= 120:
             raise ClientError("PARAMETER_INVALID", "Timeout must be greater than zero and at most 120 seconds", 2)
         service = load_service(options.config, options.service)
@@ -235,17 +256,32 @@ def main(argv=None):
         elif options.command == "nodes":
             method, params = prepared
             if method not in core.get("supportedMethods", ()):
-                raise ClientError("NODE_CONFIGURATION_UNAVAILABLE", "Service did not publish the requested configuration observation", 4)
+                raise ClientError("NODE_CONFIGURATION_UNAVAILABLE", "Service did not publish the requested configuration method", 4)
             if not node_ref_valid(params["nodeRef"], core["environmentNamespace"]):
                 raise ClientError("PARAMETER_INVALID", "NodeRef belongs to another service environment", 2)
+            if "change" in params and not change_request_valid(params["change"], core["environmentNamespace"]):
+                raise ClientError("PARAMETER_INVALID", "Configuration material belongs to another environment", 2)
+            if service.token in json.dumps(params):
+                raise ClientError("PARAMETER_INVALID", "Configuration request cannot contain authentication material", 2)
             result = client.core_call(method, params, request_id)
-            valid = (description_result_valid(result) if options.action == "describe"
+            managing = options.action in {"apply", "query"}
+            valid = (operation_result_valid(result, core["environmentNamespace"], params.get("operationRef"), params.get("change")) if managing
+                     else description_result_valid(result) if options.action == "describe"
                      else snapshot_result_valid(result, core["environmentNamespace"]))
             if not valid or service.token in json.dumps(result):
-                raise ClientError("CORE_RESPONSE_INVALID", "Owner configuration observation could not be safely validated", 4)
+                raise ClientError("OUTCOME_UNKNOWN" if options.action == "apply" else "CORE_RESPONSE_INVALID",
+                                  "Owner configuration result could not be safely validated", 6 if options.action == "apply" else 4)
             data = result
-            evidence = {"level": "configurationDescriptionObserved" if options.action == "describe" else "configurationSnapshotObserved",
-                        "runtimeVerified": False, "configurationValuesObserved": options.action == "inspect"}
+            if managing:
+                operation_ref = result["operationRef"]
+                result_status, exit_code, code = operation_disposition(result)
+                evidence = {"level": "configurationOperationObserved", "runtimeVerified": False,
+                            "allDeclarationsApplied": result["status"] == "published" and result["configurationResult"]["overallOutcome"] == "applied"}
+                if exit_code:
+                    raise ClientError(code, "Configuration outcome requires inspection of the original operation; do not resend", exit_code)
+            else:
+                evidence = {"level": "configurationDescriptionObserved" if options.action == "describe" else "configurationSnapshotObserved",
+                            "runtimeVerified": False, "configurationValuesObserved": options.action == "inspect"}
         elif prepared is not None:
             method, params = prepared
             result = client.core_call(method, params, request_id)
@@ -260,14 +296,14 @@ def main(argv=None):
             if options.action == "preview":
                 raise ClientError("PROVIDER_UNAVAILABLE", "Profile preview remains unresolved until trusted providers are available", 4)
         envelope = {"apiVersion": "agent-tools/1", "requestId": request_id,
-                    "serviceRef": service_ref, "operationRef": None, "status": "confirmed",
+                    "serviceRef": service_ref, "operationRef": operation_ref, "status": result_status or "confirmed",
                     "data": data, "evidence": evidence, "error": None}
         emit(args, envelope)
         return 0
     except ClientError as error:
         envelope = {"apiVersion": "agent-tools/1", "requestId": request_id,
-                    "serviceRef": service_ref, "operationRef": None,
-                    "status": "unknown" if error.exit_code == 6 else "refused",
+                    "serviceRef": service_ref, "operationRef": operation_ref,
+                    "status": result_status or ("unknown" if error.exit_code == 6 else "refused"),
                     "data": data, "evidence": evidence,
                     "error": {"code": error.code, "message": error.message,
                               "retryable": False, "recoveryAction": "inspectLocalInstallation" if args[:1] == ["init"] else "inspectService"}}

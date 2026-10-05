@@ -106,7 +106,7 @@ def test_wheel_isolated_install_and_actual_http_discovery(tmp_path, node_setup):
         assert json.loads(described.stdout)["data"]["descriptor"]["definitionRef"] == dict(definition)
         assert SECRET not in described.stdout + described.stderr and len(calls) == 6
 
-    with observation_server(node_setup) as (endpoint, calls):
+    with observation_server(node_setup, managing=True) as (endpoint, calls):
         path = config(tmp_path, endpoint)
         reference = tmp_path / "node-ref.json"
         reference.write_text(json.dumps({"environmentNamespace": "env", "instanceId": "node", "generation": 1}))
@@ -124,3 +124,19 @@ def test_wheel_isolated_install_and_actual_http_discovery(tmp_path, node_setup):
             assert SECRET not in checked.stdout + checked.stderr
         assert len(calls) == 6
         assert node_setup[7]["calls"] == 0 and node_setup[7]["queryCalls"] == 0
+
+        change = tmp_path / "change.json"
+        change.write_text(json.dumps(node_setup[6].to_dict()))
+        applied = subprocess.run([str(executable), "nodes", "configuration", "apply", "@" + str(reference),
+            "--file", str(change), "--config", str(path), "--service", "local", "--json"], cwd=tmp_path, env=env, capture_output=True, text=True)
+        assert applied.returncode == 0, applied.stdout + applied.stderr
+        result = json.loads(applied.stdout)
+        assert result["requestId"] == node_setup[6].request_id and result["status"] == "confirmed"
+        assert result["data"]["configurationResult"]["overallOutcome"] == "applied"
+        assert result["evidence"]["allDeclarationsApplied"] is True
+        queried = subprocess.run([str(executable), "nodes", "configuration", "query", "@" + str(reference), result["operationRef"],
+            "--config", str(path), "--service", "local", "--json"], cwd=tmp_path, env=env, capture_output=True, text=True)
+        assert queried.returncode == 0, queried.stdout + queried.stderr
+        assert json.loads(queried.stdout)["data"] == result["data"]
+        assert node_setup[7]["calls"] == 1 and node_setup[7]["queryCalls"] == 0
+        assert len(calls) == 12 and SECRET not in applied.stdout + applied.stderr + queried.stdout + queried.stderr

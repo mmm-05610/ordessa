@@ -1,5 +1,6 @@
 """Validate the public configuration observation DTOs, without native adapters."""
 import re
+import json
 from datetime import datetime
 
 
@@ -97,3 +98,88 @@ def snapshot_result_valid(result, environment):
         return datetime.fromisoformat(result['observedAt'].replace('Z', '+00:00')).tzinfo is not None
     except ValueError:
         return False
+
+
+def change_request_valid(value, environment=None):
+    if (not isinstance(value, dict) or set(value) != {'requestId', 'expectedConfigurationRevision', 'declarations', 'applicationPolicy'}
+            or not _name(value['requestId']) or not _name(value['expectedConfigurationRevision'])
+            or not isinstance(value['applicationPolicy'], dict) or set(value['applicationPolicy']) != {'allowDeferred', 'allowRestart'}
+            or not all(type(item) is bool for item in value['applicationPolicy'].values())
+            or not isinstance(value['declarations'], list) or not 1 <= len(value['declarations']) <= 256
+            or not _safe_tree(value)):
+        return False
+    ids = []
+    for item in value['declarations']:
+        fields = {'declarationId', 'configurationKind', 'schemaVersion', 'action', 'requirement'}
+        if (not isinstance(item, dict) or not fields <= item.keys() or item.keys() - fields - {'payload', 'resourceRefs'}
+                or not all(isinstance(item[key], str) and bool(item[key]) for key in ('declarationId', 'configurationKind', 'schemaVersion'))
+                or item['action'] not in ('value', 'reset', 'disabled') or item['requirement'] not in ('required', 'optional')):
+            return False
+        refs = item.get('resourceRefs', [])
+        if not isinstance(refs, list) or any(not isinstance(ref, dict) or len(ref) < 2 or not _name(ref.get('environmentNamespace')) for ref in refs):
+            return False
+        if environment is not None and any(ref['environmentNamespace'] != environment for ref in refs):
+            return False
+        if item['action'] != 'value' and ('payload' in item or refs):
+            return False
+        if item['action'] == 'value' and 'payload' not in item and not refs:
+            return False
+        ids.append(item['declarationId'])
+    return len(ids) == len(set(ids))
+
+
+def operation_result_valid(value, environment, requested_operation=None, change=None):
+    if (not isinstance(value, dict) or set(value) != {'operationRef', 'revision', 'status', 'configurationResult'}
+            or not _name(value['operationRef']) or type(value['revision']) is not int or value['revision'] < 1
+            or value['status'] not in ('reserved', 'running', 'unknown', 'published', 'refused', 'cancelled')
+            or (requested_operation is not None and value['operationRef'] != requested_operation)):
+        return False
+    result = value['configurationResult']
+    if result is None:
+        return value['status'] != 'published'
+    if (not isinstance(result, dict) or set(result) != {'operationRef', 'overallOutcome', 'itemResults', 'confirmedSnapshot'}
+            or result['operationRef'] != value['operationRef'] or not isinstance(result['itemResults'], list) or not result['itemResults']):
+        return False
+    snapshot = result['confirmedSnapshot']
+    if snapshot is not None and not snapshot_result_valid(snapshot, environment):
+        return False
+    ids, outcomes = [], []
+    for item in result['itemResults']:
+        if (not isinstance(item, dict) or set(item) != {'declarationId', 'outcome', 'confirmation'} or not _name(item['declarationId'])
+                or item['outcome'] not in ('applied', 'deferred', 'restartRequired', 'rejected', 'conflict', 'unknown')):
+            return False
+        confirmation = item['confirmation']
+        if item['outcome'] == 'applied' and confirmation is None:
+            return False
+        if confirmation is not None:
+            if (not isinstance(confirmation, dict) or set(confirmation) != {'operationRef', 'unitRef', 'scopeRef', 'requestDigest', 'evidenceRef'}
+                    or confirmation['operationRef'] != value['operationRef'] or not _name(confirmation['requestDigest'])
+                    or not all(_scoped_ref(confirmation[key], environment) for key in ('unitRef', 'scopeRef', 'evidenceRef'))):
+                return False
+            if item['outcome'] == 'applied' and snapshot is not None and any(json.dumps(confirmation[key], sort_keys=True, separators=(',', ':')) != json.dumps(snapshot[key], sort_keys=True, separators=(',', ':')) for key in ('unitRef', 'scopeRef')):
+                return False
+        ids.append(item['declarationId']); outcomes.append(item['outcome'])
+    if len(ids) != len(set(ids)):
+        return False
+    if change is not None:
+        if set(ids) != {item['declarationId'] for item in change['declarations']}:
+            return False
+        if 'deferred' in outcomes and not change['applicationPolicy']['allowDeferred']:
+            return False
+    overall = outcomes[0] if len(set(outcomes)) == 1 else 'partial'
+    return result['overallOutcome'] == overall and not (value['status'] == 'published' and any(item in ('unknown', 'deferred') for item in outcomes))
+
+
+def operation_disposition(value):
+    """Envelope status/exit describes observed outcome, never native readiness."""
+    result = value['configurationResult']
+    overall = result['overallOutcome'] if result is not None else None
+    if overall == 'partial':
+        return 'partial', 6, 'CONFIGURATION_PARTIAL'
+    if value['status'] in ('unknown', 'running') or overall == 'unknown':
+        return 'unknown', 6, 'OUTCOME_UNKNOWN'
+    if value['status'] in ('refused', 'cancelled') or overall in ('rejected', 'conflict'):
+        return 'refused', 5 if overall == 'conflict' else 4, 'PRECONDITION_CONFLICT' if overall == 'conflict' else 'CONFIGURATION_REFUSED'
+    if value['status'] == 'reserved' or overall in ('deferred', 'restartRequired'):
+        return 'pending', 0, None
+    return 'confirmed', 0, None

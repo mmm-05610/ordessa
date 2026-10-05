@@ -236,7 +236,7 @@ outside the completed slice.
 ordessa-agent nodes configuration describe @node-ref.json --config service.json --service local --json
 ```
 
-此命令只消费公开 `agents.nodes.configuration.describe`，不读取实际配置值，不修改 Profile 或运行配置。输出 `configurationDescriptionObserved`，`runtimeVerified=false`、`configurationValuesObserved=false`。服务必须明确发布此方法并授予 Node 读取权限；`configurationManagement` 标志主要反映写入 issuer，不能代替逐方法与 owner 权限。缺 owner、权限或必要事实时拒绝，不回退或补默认值。节点 list/read 的网络绑定及配置 apply/query CLI 仍待完成。
+此命令只消费公开 `agents.nodes.configuration.describe`，不读取实际配置值，不修改 Profile 或运行配置。输出 `configurationDescriptionObserved`，`runtimeVerified=false`、`configurationValuesObserved=false`。服务必须明确发布此方法并授予 Node 读取权限；`configurationManagement` 标志主要反映写入 issuer，不能代替逐方法与 owner 权限。缺 owner、权限或必要事实时拒绝，不回退或补默认值。节点 list/read 的网络绑定及节点生命周期与任务 CLI 仍待完成。
 
 实际配置观察使用同一个公开 owner 入口：
 
@@ -245,3 +245,16 @@ ordessa-agent nodes configuration inspect @node-ref.json --config service.json -
 ```
 
 返回完整 `unitRef`、`scopeRef`、`sourceRevision`、带时区的 `observedAt`、`configuration`、`unknownItems`、`confirmationEvidence` 和 `comparisonGuarantee`。CLI 不补 Profile 值、不推算版本、不消除 unknown，也不缓存另一份配置真值。输出 `configurationSnapshotObserved`、`configurationValuesObserved=true` 表示这次服务观察，`runtimeVerified=false` 不代表真实模型验收。引用叶身份由 owner 与核心核验，客户端保留其原始结构；不能用快照代替执行授权。
+
+配置修改与原操作核实：
+
+```sh
+ordessa-agent nodes configuration apply @node-ref.json --file change.json --config service.json --service local --json
+ordessa-agent nodes configuration query @node-ref.json ORIGINAL_OPERATION_REF --config service.json --service local --json
+```
+
+`change.json` 必须包含调用者固定的 `requestId`、owner 观察得到的 `expectedConfigurationRevision`、非空 `declarations` 和显式 `applicationPolicy`（`allowDeferred`／`allowRestart` 两个布尔值）。声明按 owner 的 describe 结果构造；CLI 不猜测原生模型字段。Profile 编辑与实例修改独立。默认建议两个许可都为 false；它们不是执行授权，不能代替服务签发的许可。
+
+结果保留原 `operationRef`、操作 revision/status、完整逐项 `configurationResult` 与可缺席的确认快照。`evidence.allDeclarationsApplied=true` 仅表示所有声明均有核心验证的 applied 结论；partial 中具体已作用的项仍看 `itemResults`。`runtimeVerified=false` 不代替真实 Harness 验收。restartRequired 返回 pending，不重启；deferred 在当前核心中保持 unknown。partial／unknown 返回 6，禁止自动换键、重发或回滚。版本／同键异内容冲突返回 5。
+
+`query` 沿原操作核实并可能记录确认或完成原发布，不是无作用的日志读取；它不重新执行修改。断连或未确认回执时保留原 requestId，不推导 operationRef。若回执丢失且此前未取得 operationRef，公开按请求键查找操作的入口尚缺，不能声称恢复流程完整；测试从唯一 Core 记录取得原引用仅是受控验证方法，不是客户端后门。
