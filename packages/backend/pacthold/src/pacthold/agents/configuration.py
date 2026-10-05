@@ -227,7 +227,7 @@ class ConfigurationChangeResult:
             if item.confirmation is not None and item.confirmation["operationRef"] != self.operation_ref:
                 raise ConfigurationContractError("item confirmation belongs to another operation")
             if item.outcome == "applied" and self.confirmed_snapshot is not None:
-                if item.confirmation["unitRef"] != self.confirmed_snapshot.unit_ref or item.confirmation["scopeRef"] != self.confirmed_snapshot.scope_ref:
+                if safe_json(item.confirmation["unitRef"]) != safe_json(self.confirmed_snapshot.unit_ref) or safe_json(item.confirmation["scopeRef"]) != safe_json(self.confirmed_snapshot.scope_ref):
                     raise ConfigurationContractError("confirmed snapshot target differs")
 
     @property

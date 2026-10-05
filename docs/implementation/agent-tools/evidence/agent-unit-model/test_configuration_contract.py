@@ -140,3 +140,14 @@ def test_unit_inspection_is_owner_projection_without_native_state_machine():
  for changes in [{'management_epoch':True},{'ownership':'assumedOwned'},{'directory_binding_ref':None},
                  {'provider_ref':{'environmentNamespace':'other','providerId':'controlled'}}]:
   with pytest.raises(ValueError): replace(value,**changes)
+
+
+@pytest.mark.parametrize('target',['unitRef','scopeRef'])
+@pytest.mark.parametrize('wrong',[True,1.0])
+def test_applied_confirmation_snapshot_reference_preserves_json_types(target,wrong):
+ fields={'unitRef':'unit_ref','scopeRef':'scope_ref'}
+ correct=dict(UNIT if target=='unitRef' else SCOPE,identityNumber=1)
+ observed=replace(snapshot(),**{fields[target]:correct})
+ proof=confirmation(); proof[target]=dict(correct,identityNumber=wrong)
+ with pytest.raises(ValueError):
+  ConfigurationChangeResult('op',(ConfigurationItemResult('model','applied',proof),),observed)

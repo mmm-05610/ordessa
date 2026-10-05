@@ -522,3 +522,13 @@ PY解释器为/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py3
 新增反例保留wrongop/boolrevision/无proof/unknown冒published/错overall/缺item/foreignproof/明文/Token/引用bool或float、receipt-lost。丢回执测试从原Core记录取得operationRef再query，仅验证原记录查询不重发；调用者尚未取得operationRef时的公开按请求键查找入口仍缺，不把测试直接读库包装为产品恢复方案。README明确此限制。
 
 Codex两轮只读审阅发现Python引用等价漏洞与deferred组合，CLI已补。既有Core DTO/manager有同类==比较，尚需下一AU002接缝做真实反例与类型敏感核验，不把客户端拒绝替代核心防线。当前未改Core/server/三家源码，历史269P/3F仍红；生产权限/capture/receipt/effect/Session/writer、材料SecretRef解析、冷恢复、nodes绑定/生命周期/access/tasks/results、三Skill/旧装配迁移及全纵向P/M仍缺，总产品/AU002–005 PARTIAL。M0、原生P缺席；无第三方更新/登录/用户DB/凭据/全局配置/用户服务重启/push/主树合并，费用unknown。显式纳入本轮六路径检查点后继续核心类型身份防线。
+
+### 2026-10-05 AU002 配置 DTO/manager 精确 JSON 身份（PARTIAL）
+
+前置03dfe83233，clean，上一CLI检查点真实progress。主会话唯一共享写者，Codex仅只读终审，不修改/测试/Git。发现既有Core把Bool/Int/Float opaque引用用Python相等，新增4 DTO＋4原SQLite管理反例修复前全部红（0P/8F exit1、0.60s，69 deselected）；真实错confirmation原先被published。改DTO及manager引用/原fence/query/观察比较为原safe_json类型敏感比较，包value安全处理None，不增加引用schema/表/registry/配置真值。受控effect已发生时只保unknown，不能声称无作用；当前owner类型错则发前拒。证据与完整命令：[configuration-json-identity-evidence.md](configuration-json-identity-evidence.md)。
+
+两文件组合修复后77P exit0、2.69s；补当前Unit/provider/target bool/float6项后83P exit0、2.93s。终审建议补实际apply，而非仅inspect推断，已加apply＋无Operation/Step断言，定向6P exit0、0.36s、35 deselected。新增14项，不累加组合快照。完整集成563P exit0、29.72s（原511＋首次纳入configuration_contract42＋manager新10）。核心全回归269P/3F exit1、7.89s，三个已登记kernel_direction失败仍既有closeout测试导入具体SQLite，无新来源；未删/skip/移走失败，worker/claude等ABSENT仍未验证。DTO/SQLite/Core＋受控owner C，不生产nativeP/M。
+
+Codex只读终审确认_none/类型身份/原操作未知与重放未旁路，apply发前补实际反例已完成。本轮未改CLI/server/三家源码；生产权限/capture/receipt/effect/Session/writer、材料/SecretRef、冷恢复、节点wire/请求键恢复/完整生命周期、三Skill/旧装配迁移与全P/M仍缺，不报DONE。M0，无用户DB/凭据/全局配置/服务/登录/第三方更新/push/主树合并，费用unknown。检查点后继续。
+
+核心修改后的调用方实际回归：`PY -m pytest -c products/agent-tools/pyproject.toml products/agent-tools/tests/test_configuration_cli.py products/agent-tools/tests/test_distribution.py -q --tb=short`：71P/0F exit0、42.66s。fresh CLI安装/四管理命令回归保持原结果；仅受控owner而非真实Harness。五工单strict/diff-check exit0，所有测试terminal。显式纳入两核心文件、两真实反例文件、新证据与status形成检查点；不隐藏已登记三红，不终结总goal。

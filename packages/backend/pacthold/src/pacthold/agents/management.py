@@ -26,6 +26,7 @@ CONFIGURATION_ATTEMPTS = 'agents.configuration-attempts'
 
 def _plain(value): return json.loads(safe_json(value))
 def _hash(value): return 'sha256:' + hashlib.sha256(safe_json(value).encode()).hexdigest()
+def _same(left,right): return safe_json({'value':left}) == safe_json({'value':right})
 
 
 class AgentConfiguration:
@@ -53,7 +54,7 @@ class AgentConfiguration:
 
     def _owner(self, node, *methods):
         admitted = self._environment.agent_runtime_contribution(node['binding']['harnessDefinitionRef'])
-        if admitted.provider_ref != node['binding']['harnessProviderRef']:
+        if not _same(admitted.provider_ref,node['binding']['harnessProviderRef']):
             raise AdmissionRefusedError('Node owner activation differs')
         if any(method not in admitted.descriptor.supported_methods for method in methods):
             raise ConfigurationUnsupported('owner does not support the requested operation')
@@ -68,9 +69,9 @@ class AgentConfiguration:
 
     def _inspection(self, node, admitted):
         unit = self._call(admitted.provider.inspect_unit, node['binding']['harnessUnitRef'])
-        if (not isinstance(unit, UnitInspection) or unit.unit_ref != node['binding']['harnessUnitRef']
-                or unit.provider_ref != admitted.provider_ref
-                or unit.configuration_target_ref != node['binding']['configurationTargetRef']):
+        if (not isinstance(unit, UnitInspection) or not _same(unit.unit_ref,node['binding']['harnessUnitRef'])
+                or not _same(unit.provider_ref,admitted.provider_ref)
+                or not _same(unit.configuration_target_ref,node['binding']['configurationTargetRef'])):
             raise GuaranteeUnavailableError('current Unit owner evidence differs from Node binding')
         return unit
 
@@ -89,7 +90,7 @@ class AgentConfiguration:
         admitted = self._owner(node, 'inspect_unit', 'inspect_configuration')
         unit = self._inspection(node, admitted)
         result = self._call(admitted.provider.inspect_configuration, unit.unit_ref)
-        if not isinstance(result, ConfigurationSnapshot) or result.unit_ref != unit.unit_ref or result.scope_ref != unit.configuration_target_ref:
+        if not isinstance(result, ConfigurationSnapshot) or not _same(result.unit_ref,unit.unit_ref) or not _same(result.scope_ref,unit.configuration_target_ref):
             raise GuaranteeUnavailableError('owner snapshot target differs')
         return result
 
@@ -150,10 +151,10 @@ class AgentConfiguration:
                 source = fence['value']
                 old_key = RequestKey(env.environment_id, source['principalScope'], source['requestId'])
                 old = env._store.read_operation(old_key)
-                if (source.get('scopeRef') != unit.configuration_target_ref or old is None
+                if (not _same(source.get('scopeRef'),unit.configuration_target_ref) or old is None
                         or old.intent.kind != 'configuration-change'
                         or old.intent.operation_ref != source.get('operationRef')
-                        or old.intent.context_ref.get('configurationTargetRef') != unit.configuration_target_ref):
+                        or not _same(old.intent.context_ref.get('configurationTargetRef'),unit.configuration_target_ref)):
                     raise GuaranteeUnavailableError('configuration scope source identity damaged')
                 if old.status not in {'published','refused','cancelled'}:
                     raise UnknownResultError('scope has an unresolved configuration operation')
@@ -190,7 +191,7 @@ class AgentConfiguration:
             snapshot = self.inspect(node_ref)
             if (unit.management_epoch != operation.intent.management_epoch
                     or unit.source_revision != context['unitSourceRevision']
-                    or unit.directory_binding_ref.to_dict() != context['directoryBindingRef']
+                    or not _same(unit.directory_binding_ref.to_dict(),context['directoryBindingRef'])
                     or snapshot.source_revision != change.expected_configuration_revision
                     or snapshot.comparison_guarantee != context['comparisonGuarantee']):
                 raise AdmissionRefusedError('owner evidence changed before configuration dispatch')
@@ -221,14 +222,14 @@ class AgentConfiguration:
         if {item.declaration_id for item in result.item_results} != {item['declarationId'] for item in change.declarations}:
             raise ConfigurationContractError('result must account for every declaration')
         for item in result.item_results:
-            if item.outcome=='applied' and (item.confirmation['unitRef'] != unit.unit_ref
-                    or item.confirmation['scopeRef'] != unit.configuration_target_ref
+            if item.outcome=='applied' and (not _same(item.confirmation['unitRef'],unit.unit_ref)
+                    or not _same(item.confirmation['scopeRef'],unit.configuration_target_ref)
                     or item.confirmation['requestDigest'] != operation.digest):
                 raise ConfigurationContractError('owner confirmation target or request differs')
             if item.outcome=='deferred' and not change.application_policy.allow_deferred:
                 raise ConfigurationContractError('owner deferred without application permission')
-        if result.confirmed_snapshot is not None and (result.confirmed_snapshot.unit_ref != unit.unit_ref
-                or result.confirmed_snapshot.scope_ref != unit.configuration_target_ref):
+        if result.confirmed_snapshot is not None and (not _same(result.confirmed_snapshot.unit_ref,unit.unit_ref)
+                or not _same(result.confirmed_snapshot.scope_ref,unit.configuration_target_ref)):
             raise ConfigurationContractError('owner confirmed snapshot target differs')
 
     def _finish_recorded(self, request, operation, step):
@@ -263,7 +264,7 @@ class AgentConfiguration:
             previous=json.loads(step.evidence_json)
             observations=list(previous.get('observations',()))
             observation={key:value for key,value in evidence.items() if key not in {'environmentNamespace','operationRef'}}
-            if not observations or observations[-1] != observation:
+            if not observations or not _same(observations[-1],observation):
                 observations.append(observation)
             evidence['observations']=observations
             uncertain=result is None or any(item.outcome in {'unknown','deferred'} for item in result.item_results)
@@ -296,7 +297,7 @@ class AgentConfiguration:
             operation=env._store.read_operation(request)
             if (operation is None or operation.intent.kind!='configuration-change'
                     or operation.intent.operation_ref!=operation_ref
-                    or operation.intent.node_ref!=encode_node_ref(node_ref)):
+                    or not _same(operation.intent.node_ref,encode_node_ref(node_ref))):
                 raise IdentityMismatchError('configuration operation target differs')
             if operation.status in {'published','refused','cancelled','reserved'}:
                 return operation
@@ -307,7 +308,7 @@ class AgentConfiguration:
                 return self._finish_recorded(request,operation,step)
             admitted=self._owner(node,'inspect_unit','query_change')
             unit=self._inspection(node,admitted)
-            if admitted.provider_ref!=operation.intent.steps[0].pinned_provider_ref:
+            if not _same(admitted.provider_ref,operation.intent.steps[0].pinned_provider_ref):
                 raise AdmissionRefusedError('original configuration owner no longer admitted')
             change=ConfigurationChangeRequest.from_dict(_plain(operation.intent.context_ref['change']))
             invocation=self._issuer.issue_query(request,operation.digest,'configuration-apply')

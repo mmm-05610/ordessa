@@ -351,3 +351,46 @@ def test_sqlite_fence_and_request_reservation_roll_back_together(setup):
  with pytest.raises(sqlite3.IntegrityError): apply(setup)
  assert store.read_operation(setup[5]) is None and store.list_domain('env',CONFIGURATION_ATTEMPTS)==()
  assert setup[7]['calls']==0
+
+
+@pytest.mark.parametrize('target',['unitRef','scopeRef'])
+@pytest.mark.parametrize('wrong',[True,1.0])
+def test_owner_applied_confirmation_cannot_change_reference_json_types(setup,target,wrong):
+ import json
+ from ordessa_environment_api.operations import safe_json
+ provider=setup[1].agent_runtime_contribution(setup[3]._nodes.read(setup[4])['binding']['harnessDefinitionRef']).provider
+ original=provider.apply_configuration
+ def mismatched(unit,change,context):
+  result=original(unit,change,context)
+  proof=json.loads(safe_json(result.item_results[0].confirmation))
+  assert type(proof[target]['ownerProviderRef']['generation']) is int
+  proof[target]['ownerProviderRef']['generation']=wrong
+  return ConfigurationChangeResult(result.operation_ref,(ConfigurationItemResult('model','applied',proof),))
+ provider.apply_configuration=mismatched
+ result=apply(setup)
+ assert setup[7]['calls']==1
+ assert result.status=='unknown'
+ assert setup[0].read_operation_step(setup[5],'configuration-apply').outcome=='unknown'
+ assert result.result is None
+
+
+@pytest.mark.parametrize('field',['unit_ref','provider_ref','configuration_target_ref'])
+@pytest.mark.parametrize('wrong',[True,1.0])
+def test_current_unit_owner_reference_types_checked_before_observation(setup,field,wrong):
+ import json
+ from ordessa_environment_api.operations import safe_json
+ from ordessa_environment_api import GuaranteeUnavailableError
+ provider=setup[1].agent_runtime_contribution(setup[3]._nodes.read(setup[4])['binding']['harnessDefinitionRef']).provider
+ current=provider.inspect_unit(setup[3]._nodes.read(setup[4])['binding']['harnessUnitRef'])
+ ref=json.loads(safe_json(getattr(current,field)))
+ if field=='provider_ref': ref['generation']=wrong
+ else: ref['ownerProviderRef']['generation']=wrong
+ changed=replace(current,**{field:ref})
+ provider.inspect_unit=lambda unit:changed
+ with pytest.raises(GuaranteeUnavailableError):
+  setup[3].inspect(setup[4])
+ with pytest.raises(GuaranteeUnavailableError):
+  apply(setup)
+ assert setup[0].read_operation(setup[5]) is None
+ assert setup[0].read_operation_step(setup[5],'configuration-apply') is None
+ assert setup[7]['calls']==0 and setup[7]['queryCalls']==0
