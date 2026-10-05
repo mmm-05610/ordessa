@@ -41,3 +41,5 @@ old application两个文件物理删除无shim；scope内source/测试/证据及
 可分发记录实现已具备，不代表生产owner factory/InvocationIssuer装配完成。必须原Environment OperationStore＋显式authority/current-state，同scope/epoch/native evidence/lease/receipt owner，再家族projection/provider；缺可信来源不以test Records/配置文件/路径存在代替。旧live_service每次创建journal仍待唯一owner注入，原legacy guard不能放宽。冷activation generation提案仍待裁定；原Core三红、旧ServerPi/C2债、worker/sidecar/native安装资源ABSENT保留，Core/全Server/旧C2本轮未全回归。
 
 M0、费用unknown，无第三方安装/更新/登录、用户DB/凭据/全局配置/用户服务/push/主树合并。整单AU003、其他AU production/lifecycle/tasks/results/Skill/A18仍PARTIAL。通用baseline/整个Server发行清单待整合，八own wheel绿不能关闭。显式检查点后继续真实owner/issuer接线，不标DONE。
+
+资料门补记：初cached diff发现新patch文件空白context，HEAD parent复核exit2；源码/测试未变。去掉空白context后git apply --check exit0（仅read-only校验，Profile目标不改），整slice parent diff --check exit0，修正另作检查点。初working diff仅tracked文件，不能替代新文件的cached验证。
