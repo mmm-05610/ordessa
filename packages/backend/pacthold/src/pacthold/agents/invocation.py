@@ -183,6 +183,28 @@ class InvocationIssuer:
         self._issued = {}
         self._lock = RLock()
         self._max_contexts, self._issuing = max_contexts, 0
+        self._closed = False
+
+    def close(self):
+        """Revoke this issuer's live tickets without changing durable claims.
+
+        This is not native stop or an IO barrier. Deployment must also fence
+        its original owner/transport before releasing the Environment store.
+        """
+        with self._lock:
+            self._closed = True
+            self._issued.clear()
+
+    def _check_open(self):
+        if self._closed:
+            raise InvocationAuthorityRefused("invocation issuer is closed")
+
+    def _record_verified(self, registered):
+        with self._lock:
+            self._check_open()
+            if self._issued.get(id(registered[0])) is not registered:
+                raise InvocationAuthorityRefused("invocation ticket is no longer live")
+            registered[4] = True
 
     def verifier(self):
         return InvocationVerifier(self.verify_and_consume, self.verify_continuation, self.verify_claimed_query)
@@ -208,7 +230,11 @@ class InvocationIssuer:
         return self.verify_continuation(context, "query", provider_ref, target_ref, input_digest)
 
     def _now(self):
+        with self._lock:
+            self._check_open()
         current = self._refused_call(self._clock)
+        with self._lock:
+            self._check_open()
         if type(current) not in (int, float) or not math.isfinite(current) or current < 0:
             raise InvocationAuthorityRefused("current authorization time is unavailable")
         return current
@@ -351,6 +377,7 @@ class InvocationIssuer:
                     or safe_json({"ref": latest_state.acquisition_evidence_ref}) != safe_json({"ref": state.acquisition_evidence_ref})):
                 raise InvocationAuthorityRefused("acquisition relationship changed during issuance")
             self._revalidate(grant, request, action, binding)
+            self._check_open()
             payload = safe_json({"issuerInstance": self._instance, "request": _request_fields(request),
                                  "operationDigest": digest, "operationIntentDigest": hashlib.sha256(operation.intent_json.encode()).hexdigest(),
                                  "operationRef": operation.intent.operation_ref, "stepId": step_id,
@@ -364,6 +391,9 @@ class InvocationIssuer:
                                  "grant": grant.to_dict()})
             context = object.__new__(InvocationContext)
             object.__setattr__(context, "_payload", payload)
+            # Trusted grant serialization may reenter close(); do not publish
+            # a replacement live ticket after revocation.
+            self._check_open()
             self._issued[id(context)] = [context, payload, grant, "issued", False]
             return context
 
@@ -371,6 +401,8 @@ class InvocationIssuer:
         return self._issue(request, operation_digest, step_id, action, target_ref, delegation_ref, cleanup, query=False)
 
     def issue_query(self, request, operation_digest, step_id):
+        with self._lock:
+            self._check_open()
         _, _, binding = self._operation_binding(request, operation_digest, step_id)
         return self._issue(request, operation_digest, step_id, "query", binding["targetRef"],
                            binding["delegationRef"], binding["cleanup"], query=True)
@@ -422,8 +454,7 @@ class InvocationIssuer:
         # core admission may issue another context while holding its own lock.
         try:
             verified = self._verify_registered(registered, facts, action, provider_ref, target_ref, input_digest)
-            with self._lock:
-                registered[4] = True
+            self._record_verified(registered)
             return verified
         finally:
             with self._lock:
@@ -445,8 +476,7 @@ class InvocationIssuer:
             facts = json.loads(registered[1])
         try:
             verified = self._verify_registered(registered, facts, action, provider_ref, target_ref, input_digest)
-            with self._lock:
-                registered[4] = True
+            self._record_verified(registered)
             return verified
         finally:
             with self._lock:

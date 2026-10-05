@@ -14,7 +14,11 @@ from .nodes import NodePublication, encode_node_ref, decode_node_ref
 from .management import AgentConfiguration
 from .providers import AgentProviders
 from .assembly import AgentAssembly, PreparationContext, PreparationObservation, PreparationContextPort, PreparationObservationPort
-from .invocation import InvocationContext, InvocationVerifier, InvocationAuthorityRefused
+from .invocation import (
+    InvocationContext, InvocationVerifier, InvocationAuthorityRefused,
+    InvocationIssuer, InvocationGrant, InvocationAuthorityPort,
+    InvocationCurrentState, InvocationCurrentStatePort,
+)
 
 
 @dataclass(frozen=True)
@@ -62,6 +66,8 @@ __all__ += ["DirectoryBindingRef"]
 __all__ += ["AgentConfiguration", "InvocationContext", "InvocationVerifier"]
 __all__ += ["NodePublication", "encode_node_ref", "decode_node_ref"]
 __all__ += ["InvocationAuthorityRefused"]
+__all__ += ["InvocationIssuer", "InvocationGrant", "InvocationAuthorityPort",
+            "InvocationCurrentState", "InvocationCurrentStatePort"]
 __all__ += ["AgentProviders"]
 __all__ += ["AgentAssembly", "PreparationContext", "PreparationObservation", "PreparationContextPort", "PreparationObservationPort"]
 from .runtime import AgentContributionSet, RuntimeProvider, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION

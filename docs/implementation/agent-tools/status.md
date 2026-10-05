@@ -710,3 +710,11 @@ Pi检查点66936bcedf后继续生产接线只读盘点（非停工/非DONE）：
 生产真实owner factory/原InvocationIssuer/authority-current-state/scope/epoch/native evidence/lease/receipt和独立projection仍待接；独立可分发不等于已装配/ready。旧live_service每次新journal待同owner注入，cold提案待裁定。Core/全Server/旧C2本轮未跑，继承红/consumer债/ABSENT保留；所有AU/lifecycle/tasks/results/Skill/A18继续PARTIAL。M0、费用unknown，无第三方安装更新/登录/用户数据/全局配置/用户服务/push/主树合并。新增文件/回执/依赖/consumer已核，显式stage检查点后继续。
 
 records检查点f6ba4662a5已提交。首次cached资料门发现新增patch中的空白context行（此前working diff未覆盖untracked），HEAD parent复核exit2；原journal源码/测试结果不受影响。现去掉patch空白context并保一行import变更，git apply --check仅校验不触Profile目标；补资料修正检查点，实际diff门以修正后为准，不能将初缓存门报绿。
+
+### 2026-10-05 AU001 公开 issuer／AU002 关闭票据（PARTIAL）
+
+前置61bf9e7f5e clean，live agents已完成且无另一写者；上一状态问答no progress，本轮补生产接线所需原公开类型和生命周期。主会话唯一共享源码/测试/Git/账本写者，Codex只读审。五现有issuer/grant/authority/state类公开同identity；原issuer.close撤销原票据、不改durable claim，不是native stop/IO屏障。生产owner尚未装配，不能称ready。
+
+详细命令、初红和限制见[evidence/agent-unit-model/public-issuer-lifecycle.md](evidence/agent-unit-model/public-issuer-lifecycle.md)。初公开81P exit0 .58s；关闭初86P .71s、state重入87P .70s各exit0。审阅发现最后grant序列化可重入close，实际反例6P1F exit1 .20s；在原锁登记前重核，最终同组88P exit0 .66s，新增14项不累计快照。真实原SQLite claim保留及effect/query慢state并发关闭反例，不冒native进程。最终product integration311P1F exit1 16.97s，仍原strict冷代次失败不改断言，初组17.23s保留。所有测试串行terminal，五单strict资料exit0不当产品验收。
+
+冷代次与scope外Profile import补丁待答复；production owner/authority/current-state/scope/native evidence/lease/receipt、旧consumer、生命周期/tasks/results/Skill/A18及资源ABSENT继续。Core/全Server/品牌发行本轮未跑，原红保留，M0/成本unknown。未做未经授权操作。核对本轮源码/新增证据后显式阶段提交，goal继续active。
