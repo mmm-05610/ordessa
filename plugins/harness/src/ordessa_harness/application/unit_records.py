@@ -88,6 +88,20 @@ class UnitReservation:
         value = json.loads(self.scope_json)
         return CanonicalConfigurationScopeRef(value['environmentNamespace'], value['scopeId'], value['revision'])
 
+    @property
+    def public_ref(self):
+        """Immutable source identity, never a native configuration version.
+
+        Callers must obtain this reservation through authorized owner reads.
+        Only references/digests leave the existing private journal record.
+        """
+        provider = self.facts['providerRef']
+        source = safe_json({'unitId': self.unit_ref, 'intentDigest': _digest(self.intent_json),
+                            'scopeDigest': _digest(self.scope_json)})
+        return sealed_mapping({'environmentNamespace': provider['environmentNamespace'],
+                               'unitId': self.unit_ref, 'ownerProviderRef': provider,
+                               'sourceRevision': 'sha256:' + _digest(source)})
+
 
 @dataclass(frozen=True)
 class NativeSessionBinding:
@@ -351,6 +365,17 @@ class UnitRecords:
             unit = self._unit(db, unit_ref)
             self._authorize(context, 'query', unit.facts['providerRef'], unit.facts['nodeRef'], input_digest, query=True)
             return unit
+
+    def resolve_unit_reference(self, unit_ref, context, *, input_digest):
+        """Authorized original-owner read, checking every public identity field."""
+        if (not isinstance(unit_ref, Mapping)
+                or set(unit_ref) != {'environmentNamespace', 'unitId', 'ownerProviderRef', 'sourceRevision'}
+                or not isinstance(unit_ref['unitId'], str) or not unit_ref['unitId']):
+            raise UnitRecordsRefused('complete owner-bound Unit reference required')
+        unit = self.read_unit(unit_ref['unitId'], context, input_digest=input_digest)
+        if safe_json(unit_ref) != safe_json(unit.public_ref):
+            raise UnitRecordsRefused('Unit reference differs from original owner source')
+        return unit
 
     def read_session(self, unit_ref, context, *, input_digest):
         self.read_unit(unit_ref, context, input_digest=input_digest)

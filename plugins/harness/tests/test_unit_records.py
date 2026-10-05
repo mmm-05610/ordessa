@@ -106,6 +106,45 @@ def read(parts_, unit):
     return service.read_session(unit.unit_ref, verifier.issue('query', 'query', 'query-input'), input_digest='query-input')
 
 
+def test_public_unit_ref_binds_original_record_without_private_roots(tmp_path):
+    p = parts(tmp_path)
+    unit, _ = reserve(p)
+    ref = unit.public_ref
+    assert set(ref) == {'environmentNamespace', 'unitId', 'ownerProviderRef', 'sourceRevision'}
+    assert ref['unitId'] == unit.unit_ref and ref['ownerProviderRef'] == PROVIDER
+    assert ref['sourceRevision'].startswith('sha256:')
+    assert ROOT['reservedChild'] not in json.dumps(dict(ref), default=dict)
+    with pytest.raises(TypeError): ref['sourceRevision'] = 'forged'
+    with pytest.raises(TypeError): ref['ownerProviderRef']['generation'] = 999
+    service, _, verifier, *_ = p
+    assert service.resolve_unit_reference(ref, verifier.issue('query', 'read', 'query-input'), input_digest='query-input') == unit
+    ticket = begin(p, unit)
+    service.record_session(ticket, expected_source_revision=2, state='confirmed', evidence='real-native-owner-evidence')
+    assert reserve(p)[0].public_ref == ref  # Native session observation is a separate version.
+    reopened = UnitRecords(OperationJournal(p[1].path), scope_authority=p[3], native_evidence=p[4], verifier=p[2], epoch_port=p[5])
+    assert reopened.resolve_unit_reference(ref, verifier.issue('query', 'cold-read', 'query-input'), input_digest='query-input').public_ref == ref
+
+
+@pytest.mark.parametrize('field', ['environmentNamespace', 'ownerProviderRef', 'sourceRevision'])
+def test_public_unit_ref_forgery_refused_even_for_same_unit_id(tmp_path, field):
+    p = parts(tmp_path)
+    unit, _ = reserve(p)
+    forged = json.loads(json.dumps(dict(unit.public_ref), default=dict))
+    if field == 'ownerProviderRef': forged[field]['generation'] += 1
+    else: forged[field] = 'forged'
+    with pytest.raises(UnitRecordsRefused, match='original owner source'):
+        p[0].resolve_unit_reference(forged, p[2].issue('query', 'read', 'query-input'), input_digest='query-input')
+
+
+def test_raw_unit_ref_and_missing_read_authority_do_not_resolve(tmp_path):
+    p = parts(tmp_path)
+    unit, _ = reserve(p)
+    with pytest.raises(UnitRecordsRefused, match='complete owner-bound'):
+        p[0].resolve_unit_reference({'environmentNamespace': 'env', 'unitId': unit.unit_ref}, object(), input_digest='query-input')
+    with pytest.raises(UnitRecordsRefused, match='unissued'):
+        p[0].resolve_unit_reference(unit.public_ref, object(), input_digest='query-input')
+
+
 def test_reservation_replay_restart_immutable_and_not_created(tmp_path):
     p = parts(tmp_path)
     unit, created = reserve(p)

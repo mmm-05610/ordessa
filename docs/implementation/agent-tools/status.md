@@ -287,3 +287,9 @@ Environment共享修改后核心全回归同命令 `-m pytest -c packages/backen
 核心回归 `-m pytest -c packages/backend/pacthold/pyproject.toml packages/backend/pacthold/tests -q` 269P/3F exit1、7.51s，仍同已登记test_kernel_tree_has_no_import_of_server_harness_or_product、test_tripwire_planted_server_import_turns_the_guard_red、test_tripwire_from_import_form_is_detected_too，既有测试导入具体SQLite触发方向扫描；没有删断言/skip/移动测试隐藏红。后续末端改动由346项覆盖，不把窄绿宣称核心全绿。diff-check exit0。P未运行，M0；没有第三方安装更新、用户数据库/凭据/全局配置写入、服务重启、push或主树合并。
 
 剩余：三家prepare返回raw两字段UnitRef，Node公共绑定要求同owner/sourceRevision的完整来源引用，AU003需所属owner统一身份与投影，不能在CLI里补造；生产Context/receipt ports、安装版本与目录/作用权限、原生writer fence、C1材料/SecretRef、三家真实进程/冷恢复和stop/release/access尚未贯通。新协调器是C_READY切片，不是生产接线完成，也不等于AU002_DONE；核心与CLI/Skill/发行边界、AU003–005全部门仍继续。
+
+### 2026-10-05 AU003 原 Unit 公开引用冻结
+
+前置48bf7b159f5eb031bee70a400407e1871ce019a0，clean；实时三家状态completed，原成果已提交保留。AU002共享准备协调检查点后串行进入AU003，主会话仍独占共享接口/journal/Git/账本及验证。UnitReservation.public_ref从原journal immutable来源生成严格owner/source引用，sourceRevision不是native配置/session计数；resolve_unit_reference沿原授权read核实四字段，拒绝raw两字段/伪owner/来源/环境与缺权限。没有新增库或迁移。家族冻结消费说明unit-reference-port.md。
+
+命令 `/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python -m pytest -c plugins/harness/pyproject.toml plugins/harness/tests/test_unit_records.py plugins/harness/tests/test_unit_configuration_records.py plugins/harness/tests/test_operation_journal.py -q`：66P exit0、0.73s（新增引用5、原Unit23、配置29、journal9）。覆盖冷读取来源不变、session观察与引用版本分离、嵌套不可变、原授权及伪引用反例。C真实SQLite＋受控authority；P/M未运行。接下来Pi/Codex/Claude各自包独占接入，主会话串行复跑；本冻结不标AU003_DONE。
