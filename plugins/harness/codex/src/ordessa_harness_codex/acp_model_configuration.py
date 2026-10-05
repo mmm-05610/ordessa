@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from ...configuration.model import common
+from . import acp_model_facts as common
 from ordessa_harness_api.model_compilation import (
     AdapterContext, Assessment, BindSecret, ChoiceRequest, CompileIntent,
     IntentSet, MountContent, Refusal, TargetHandle, Verdict,
@@ -65,6 +65,8 @@ class CodexAdapter:
         self, context: AdapterContext, before: Mapping[str, Any],
         desired: ChoiceRequest,
     ) -> IntentSet | Refusal:
+        if (context.target_handle.harness_id != "codex" or not common.identity_text(context.target_handle.identity)):
+            return Refusal("target-conflict", "Codex compiler requires its own explicit target identity")
         if context.target_handle.scope != "instance":
             # A project .codex/config.toml cannot override provider keys; this
             # is a scope conflict, not a silent no-op (official config rules).
@@ -77,14 +79,31 @@ class CodexAdapter:
         assessment = self.assess(context, desired)
         if assessment.verdict != "supported":
             return Refusal("capability-unsupported", assessment.reason or "not supported")
+        if not isinstance(desired.brand_fields, Mapping):
+            return Refusal("capability-unsupported", "brand facts must be an object")
         brand = dict(desired.brand_fields)
+        if any(name in brand and type(brand[name]) is not bool
+               for name in ("endpoint_changed", "credential_changed")):
+            return Refusal("capability-unsupported", "change facts must be booleans")
+        if not common.identity_text(desired.model_id) or not common.identity_text(desired.provider_name):
+            return Refusal("capability-unsupported", "model and provider identities must be explicit text")
+        if desired.credential_ref is not None and not common.identity_text(desired.credential_ref):
+            return Refusal("capability-unsupported", "secret reference must be explicit text")
+        if brand.get("credential_changed") and desired.credential_ref is None:
+            return Refusal("capability-unsupported", "credential change requires a secret reference")
         before_provider = brand.get("before_provider")
+        if before_provider is not None and not common.identity_text(before_provider):
+            return Refusal("capability-unsupported", "previous provider identity must be explicit text")
         provider_changed = before_provider is not None and before_provider != desired.provider_name
+        routing_changed = provider_changed or brand.get("endpoint_changed", False)
+        credential_changed = brand.get("credential_changed", False)
+        if routing_changed and not common.identity_text(desired.endpoint):
+            return Refusal("capability-unsupported", "routing change requires an explicit endpoint")
         session_field = CompileIntent(
             context.target_handle, ("model",), desired.model_id)
         params = desired.params
         effort_intent: list[Any] = []
-        escalated = provider_changed
+        escalated = routing_changed or credential_changed
         if params is not None and params.has_any():
             extra, refusal = _compile_params(context, desired, params)
             if refusal is not None:
@@ -93,7 +112,9 @@ class CodexAdapter:
             # a config.toml top-level write is read at launch: it can never
             # ride the session-local path alone
             escalated = True
-        if not provider_changed and not escalated:
+        if before_provider is None:
+            return Refusal("capability-unsupported", "previous provider observation unavailable")
+        if not escalated:
             return IntentSet(
                 facet_id="assets.model-provider", contributor_version=CONTRIBUTOR_VERSION,
                 intents=(session_field,),
@@ -104,7 +125,7 @@ class CodexAdapter:
         # SAME thread/session identity. A request-param intent escalates the
         # same way (config.toml is read at launch).
         intents: list[Any] = list(effort_intent)
-        if provider_changed:
+        if routing_changed:
             intents.extend([
                 MountContent(
                     context.target_handle,
@@ -127,18 +148,28 @@ class CodexAdapter:
         )
 
     def verify(self, context: AdapterContext, observed: Mapping[str, Any]) -> Verdict:
+        if (context.target_handle.harness_id != "codex" or context.target_handle.scope != "instance"
+                or not common.identity_text(context.target_handle.identity)):
+            return Verdict("unknown", "Codex instance target identity evidence unavailable")
         read_back = observed.get("readback")
         if not isinstance(read_back, Mapping):
             return Verdict("unknown", "no read-back sample; a written config.toml "
                                       "is a projection, not an applied fact")
         expected = observed.get("desired_model")
         provider = observed.get("desired_provider")
+        if not common.identity_text(expected) or not common.identity_text(read_back.get("model")):
+            return Verdict("unknown", "model identity evidence unavailable")
+        if provider is not None and (not common.identity_text(provider) or not common.identity_text(read_back.get("provider"))):
+            return Verdict("unknown", "provider identity evidence unavailable")
         if provider is not None and read_back.get("provider") != provider:
             return Verdict("mismatch", "session provider differs from the compiled intent",
                            evidence={"readback": dict(read_back)})
         if read_back.get("model") != expected:
             return Verdict("mismatch", "session model differs from the compiled intent",
                            evidence={"readback": dict(read_back)})
+        if (not common.identity_text(observed.get("native_session_id"))
+                or not common.identity_text(context.capabilities.get("native_session_id"))):
+            return Verdict("unknown", "native thread identity evidence unavailable")
         if observed.get("native_session_id") != context.capabilities.get("native_session_id"):
             return Verdict("mismatch", "native session identity changed across "
                                        "the reconfiguration")

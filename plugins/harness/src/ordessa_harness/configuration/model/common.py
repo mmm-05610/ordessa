@@ -9,11 +9,11 @@ refused - never guessed (the 093 rule this package inherits).
 """
 from __future__ import annotations
 
-import hashlib
-import json
 from typing import Any, Iterable, Mapping
 from ordessa_harness_api.model_compilation import parse_version
 from ordessa_harness_claude_code import acp_model_facts as claude_facts
+from ordessa_harness_codex import acp_model_facts as codex_facts
+from ordessa_harness_codex.acp_model_facts import codex_effort_values, digest_label, render_codex_provider_section
 
 #: The canonical protocol vocabulary (092's contract, four values).
 CANONICAL_PROTOCOLS = ("openai-chat", "openai-responses", "anthropic-messages", "gemini-generate")
@@ -22,15 +22,12 @@ CANONICAL_PROTOCOLS = ("openai-chat", "openai-responses", "anthropic-messages", 
 #: provenance: ordessa_harness/{brand}/native.py DIALECTS @ 96fef2db47.
 DIALECTS: dict[str, dict[str, tuple[str, str | None]]] = {
     "pi": {"openai-chat": ("api", "openai-completions")},
-    "codex": {
-        "openai-responses": ("wire_api", "responses"),
-        "openai-chat": ("wire_api", "chat"),
-    },
+    "codex": codex_facts.DIALECT,
     "claude-code": claude_facts.DIALECT,
 }
 
 #: Native target each brand writes inside its instance root (same provenance).
-NATIVE_TARGET = {"pi": "models.json", "codex": "config.toml", "claude-code": claude_facts.NATIVE_TARGET["claude-code"]}
+NATIVE_TARGET = {"pi": "models.json", "codex": codex_facts.NATIVE_TARGET["codex"], "claude-code": claude_facts.NATIVE_TARGET["claude-code"]}
 
 #: The pinned upstream adapter versions this package was assessed against
 #: (specs/011-z3-model-provider/t00-freeze.md §5). The tuple form drives
@@ -39,13 +36,13 @@ NATIVE_TARGET = {"pi": "models.json", "codex": "config.toml", "claude-code": cla
 SUPPORTED_VERSION_RANGES: dict[str, tuple[str, str]] = {
     # (min inclusive, max exclusive) on the native adapter package version
     "pi": ("0.5.0", "0.6"),
-    "codex": ("1.0", "2.0"),
+    "codex": codex_facts.VERSION_RANGE,
     "claude-code": claude_facts.VERSION_RANGE,
 }
 
 RANGE_STRINGS: dict[str, str] = {
     "pi": ">=0.5.0 <0.6",
-    "codex": ">=1.0 <2.0",
+    "codex": codex_facts.RANGE_STRINGS["codex"],
     "claude-code": claude_facts.RANGE_STRINGS["claude-code"],
 }
 
@@ -54,9 +51,9 @@ RANGE_STRINGS: dict[str, str] = {
 #: provenance: ordessa_harness/codex/remote.py (_EFFORTS + the
 #: `-c model_reasoning_effort="..."` request spelling and the config.toml
 #: form) @ this tree; deepseek provider subsets the vocabulary (validate_remote_configuration).
-CODEX_EFFORT_FIELD = "model_reasoning_effort"
-CODEX_EFFORT_VALUES = ("low", "medium", "high", "xhigh", "max")
-CODEX_DEEPSEEK_EFFORT_VALUES = ("low", "high", "max")
+CODEX_EFFORT_FIELD = codex_facts.CODEX_EFFORT_FIELD
+CODEX_EFFORT_VALUES = codex_facts.CODEX_EFFORT_VALUES
+CODEX_DEEPSEEK_EFFORT_VALUES = codex_facts.CODEX_DEEPSEEK_EFFORT_VALUES
 #: provenance: plugins/harness/deploy/pi/settings.json — the checked-in native
 #: settings template carries exactly this retry block (read by
 #: ordessa_harness.pi.production.settings_document).
@@ -78,11 +75,6 @@ class ParamUnsupported(Exception):
     """No first-hand pinned native key for this brand/param family."""
 
 
-def codex_effort_values(provider_family: str | None) -> tuple[str, ...]:
-    """The pinned effort vocabulary for one codex provider family."""
-    if provider_family == "deepseek":
-        return CODEX_DEEPSEEK_EFFORT_VALUES
-    return CODEX_EFFORT_VALUES
 
 
 class ProtocolUnsupported(Exception):
@@ -93,13 +85,6 @@ class RegistrationConflict(Exception):
     """Two contributions claim an overlapping (facet, harness, entry, range)."""
 
 
-def digest_label(request: Any) -> str:
-    """A stable short content digest for a MountContent reference (the content
-    itself stays with the harness; only the label identifies it)."""
-    payload = json.dumps([
-        request.provider_name, request.endpoint, request.protocol, request.model_id,
-    ], sort_keys=True)
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
 
 
 def translate_protocol(harness: str, protocol: str) -> tuple[str, str | None]:
@@ -129,21 +114,6 @@ def version_in_range(harness: str, version: str | None) -> str:
     return "supported"
 
 
-def render_codex_provider_section(*, provider: str, base_url: str, protocol: str) -> str:
-    """The ``[model_providers.<id>]`` TOML block, byte-stable (same input ->
-    same bytes). provenance: ``ordessa_harness.native_materialization
-    .render_codex_provider_section`` @ 96fef2db47; endpoint/protocol live
-    *inside* the provider table and the credential stays an env-name."""
-
-    field, dialect = translate_protocol("codex", protocol)
-    lines = [
-        f"[model_providers.{provider}]",
-        f"name = \"{provider}\"",
-        f"base_url = \"{base_url}\"",
-        f"{field} = \"{dialect}\"",
-        "env_key = \"CODEX_API_KEY\"",
-    ]
-    return "\n".join(lines) + "\n"
 
 
 def _version_key(parsed: tuple[int, ...]) -> tuple[int, int]:

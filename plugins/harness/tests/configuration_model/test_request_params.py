@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 from ordessa_harness.configuration.model import common
-from ordessa_harness.codex.configuration.model import CodexAdapter
+from ordessa_harness_codex.acp_model_configuration import CodexAdapter
 from ordessa_harness_claude_code.acp_model_configuration import ClaudeAdapter
 from ordessa_harness.pi.configuration.model import PiAdapter
 from ordessa_harness_api.model_compilation import (
@@ -29,10 +29,14 @@ def _context(brand: str, identity: str) -> AdapterContext:
 
 def _choice(brand: str, *, provider="openai", model="gpt-5.1", params=None,
             protocol="openai-responses", brand_fields=None):
+    facts = dict(brand_fields or {})
+    if brand == "codex":
+        # The controlled old-provider observation is independent of parameter changes.
+        facts = {"before_provider": provider, **facts}
     return ChoiceRequest(
         provider_config_id=provider, model_id=model, endpoint=None,
         protocol=protocol, credential_ref=None, provider_name=provider,
-        brand_fields=dict(brand_fields or {}), params=params)
+        brand_fields=facts, params=params)
 
 
 def _request_params(**kwargs) -> RequestParams:

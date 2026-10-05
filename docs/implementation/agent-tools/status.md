@@ -670,3 +670,13 @@ sidecar与旧C2批量注册仍有路径，独立生产模型/凭据/恢复owner�
 七own wheel初与final两次实际安装各13命令全部exit0，七摘要/temporaryEnvironmentRemoved=true/M0/productReady=false，final回执au003-claude-model-install-final-3c8381.json为末端源码，不覆盖先前回执。两审确认无第二核心/旧注册恢复，末端源码SHA/原SDK函数AST实核exit0。C＋自有安装进程，不冒nativeHarnessP/M；verify仅model/sameSession，完整endpoint/credential/restoration确认与production owner未接线，coldgeneration仍待裁定，其他三家/旧Model/sidecar/full lifecycle/tasks/results/Skill实用/A18均PARTIAL，ABSENT不算绿。
 
 无第三方安装更新/登录/用户DB/凭据/全局配置/用户服务操作/push/主树合并，成本unknown；全部句柄terminal。核对新增文件/strict/diff门后显式stage迁移切片继续goal，不标DONE。
+
+### 2026-10-05 AU003 Codex成熟纯模型配置迁移（PARTIAL）
+
+前置6af84df2a426d2bc39d3f91f7db80adfa33ed845，承接上一上下文未提交成果逐项保留并核对；live agents无共享写者。主会话唯一源码/测试/Git/账本写者，Codex/Claude只读双审，无测试写权。上一状态答复no progress，本轮修复、实际复跑、发行与记账progress。完整命令与反例见[evidence/agent-unit-model/codex-model-compilation.md](evidence/agent-unit-model/codex-model-compilation.md)，初AST/finalSHA分开收据codex-model-migration-source.json。
+
+旧compiler物理移出无shim，公共既有DTO复用；common/native/remote/materialization改消费独立facts，旧error表面/golden保留。保正向model/provider/endpoint/ref/effort/restart-resume；修same-provider变更漏项、缺previous观察、typed身份/ref/flags、TOML点/引号/控制字符。初新32为3P29F exit1，missing-before32P2F exit1；加强SecretRef正控消除原conditional skip，组合145P37subtests exit0。全Codex初env缺transport collection2E exit2，补实际source201P exit0。双审发现DEL，新反例34P2F exit1 .18s；修后末端全203P exit0 7.57s，最终旧pure/API/family/ownership147P37subtests exit0 .62s、0skip。新增36model/1发行/1ownership，不累计快照。
+
+七own wheel final安装13命令全exit0、七hash、pipcheck/cleaned/M0/productReady=false，回执au003-codex-model-install-final-6af84d.json不覆盖旧证据。全产品integration311P1F exit1 16.98s，仍strict冷代次目标、断言不改；Core/全Server/旧C2本轮未跑，继承红和旧consumer债继续。两只读终审无切片阻断，但verify仅thread/model/provider，非完整endpoint/credential/effort应用；None/True resume期望是未验证计划，无真实同thread恢复证据。ACP历史1.1.14不冒app-server0.157.1支持，provider methods不扩。
+
+生产授权/材料/凭据/owner/coldgeneration/lifecycle/tasks/results/A18和native P/M仍PARTIAL；资源ABSENT、费用unknown，无第三方安装更新/登录/用户DB/全局配置/用户服务操作/push/主树合并。下一Pi纯迁移只读盘点已识别漏model/retry覆盖问题，先补反例再迁。检查点后继续goal，不标DONE。

@@ -1,0 +1,22 @@
+{
+  "sourceHead": "6af84df2a426d2bc39d3f91f7db80adfa33ed845",
+  "initialCompilerClassFunctionASTEqual": true,
+  "compilerBeforeSha256": "c3fd7b919d6b2a97e6378c9405f26d69fadff759b9c6f332c366351655768530",
+  "initialCompilerAfterSha256": "61c5d29bcb8d8215a18e756befbb84f2fbeac78838e0c41bb4ef4fce7b0bb46f",
+  "initialPureRendererFunctionASTEqual": true,
+  "modelCalls": 0,
+  "productionWired": false,
+  "finalSourceSha256": {
+    "plugins/harness/codex/src/ordessa_harness_codex/acp_model_configuration.py": "e1c163bebd90e3db459b13132ea27962c094c43fa70ac328b89fa4e1806c277f",
+    "plugins/harness/codex/src/ordessa_harness_codex/acp_model_facts.py": "2fb5d60d29f130b497c48fc539bc833c73f706bde584728e94293bb670093630"
+  },
+  "finalCompilerASTUnchanged": false,
+  "repairs": [
+    "same-provider endpoint and credential changes retain their intents",
+    "typed target/model/provider/reference/change flags and previous-provider observation",
+    "readback requires typed model/provider/thread identities",
+    "literal TOML keys and escaped string values; reject C0 and DEL controls"
+  ],
+  "confirmationScope": "thread/model/provider controlled readback only; no endpoint/credential/effort applied proof",
+  "resumePlanIsNotRecoveryEvidence": true
+}

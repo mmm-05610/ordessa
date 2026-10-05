@@ -157,3 +157,7 @@ AgentUnit迁移切片在 `ServerProductComposition.native_runtime` 早拒 Pi/Cod
 ### AU003 Claude历史纯配置迁移不等于生产路由确认（2026-10-05，Open）
 
 旧pure model compiler已迁独立Claude，保正向model/endpoint/SecretRef意图与sameSession restart-resume，并修缺身份/丢credential-only/漏model与类型漏洞；全独立Claude194P只证明受控与own-wheel。`verify`的match仅session/model readback，未证明endpoint/credential/restoration完整生效，不能升级整份配置applied。历史ACP >=0.81<0.82不代表SDK0.2.163兼容；默认provider未因纯迁移扩大方法。旧claude/native.py/native_materialization及生产owner仍未完整迁移；旧C2消费者1F/27E与cold1F仍单列，未隐藏。详情 `docs/implementation/agent-tools/evidence/agent-unit-model/claude-model-compilation.md`。当前旧Harness pyproject新增显式own Claude dependency，通用历史baseline安装清单/全部Server发行闭包尚未复核，不报告通用Server安装可用；fresh独立发行闭包已实测。
+
+### AU003 Codex历史纯配置迁移不等于生产路由确认（2026-10-05，Open）
+
+旧pure compiler/facts已迁独立Codex，旧common/native/remote/materialization消费同一事实；203P仅受控和fresh own-wheel。verify成功只证thread/model/provider样本，不能证明endpoint/credential/effort已应用；resume None/True仅未验证计划、不能称同thread恢复。历史ACP1.1.14不代表app-server0.157.1兼容，默认provider methods未扩大。旧Harness新增own Codex依赖，历史baseline安装清单/完整Server发行闭包仍待复核；七own wheel13命令安装成功只证明独立闭包。cold1F/旧C2消费者债未隐藏，详见 `docs/implementation/agent-tools/evidence/agent-unit-model/codex-model-compilation.md`。

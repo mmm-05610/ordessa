@@ -9,10 +9,8 @@ from __future__ import annotations
 #: native field + dialect value per canonical protocol; first-hand source:
 #:   deploy/codex/config.toml [model_providers.deepseek] wire_api="responses";
 #:   wire/handlers.py accepts wireApi {chat_completions, responses}.
-DIALECTS: dict[str, tuple[str, str | None]] = {
-    "openai-responses": ("wire_api", "responses"),
-    "openai-chat": ("wire_api", "chat"),
-}
+from ordessa_harness_codex.acp_model_facts import DIALECT as DIALECTS
+from ordessa_harness_codex.acp_model_facts import NATIVE_TARGET as _TARGETS
 
 #: First-hand-pinned native config target path (relative to the guest home).
-NATIVE_TARGET = "config.toml"
+NATIVE_TARGET = _TARGETS["codex"]

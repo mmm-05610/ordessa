@@ -26,7 +26,8 @@ from .contracts import CodexContinuationV1
 MAX_PROMPT_BYTES = 4 * 1024
 MAX_EVENT_LINE_BYTES = 256 * 1024
 _MODEL = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
-_EFFORTS = frozenset({"low", "medium", "high", "xhigh", "max"})
+from ordessa_harness_codex.acp_model_facts import CODEX_EFFORT_VALUES
+_EFFORTS = frozenset(CODEX_EFFORT_VALUES)
 _SESSION_PATH = re.compile(r"^sessions(?:/[A-Za-z0-9._-]+)+\.jsonl$")
 _DEEPSEEK_API_KEY = re.compile(rb"^sk-[A-Za-z0-9_-]{8,248}$")
 _DEEPSEEK_MODELS = frozenset({"deepseek-flash"})

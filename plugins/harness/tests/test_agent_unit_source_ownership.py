@@ -96,3 +96,13 @@ def test_claude_model_compiler_and_compilation_contracts_have_one_owner():
         source = path.read_text()
         assert not legacy_harness_imports(source), path
         assert not product_imports(source), path
+
+
+def test_codex_model_compiler_and_facts_have_one_independent_owner():
+    source = ROOT / 'plugins/harness/codex/src/ordessa_harness_codex'
+    assert not (ROOT / 'plugins/harness/src/ordessa_harness/codex/configuration/model.py').exists()
+    for name in ('acp_model_configuration.py', 'acp_model_facts.py'):
+        path = source / name
+        assert path.is_file()
+        assert not legacy_harness_imports(path.read_text()), path
+        assert not product_imports(path.read_text()), path

@@ -23,6 +23,7 @@ channel injects (R-0012 - the one-time credential projection is the only path).
 from __future__ import annotations
 
 from typing import Mapping
+from ordessa_harness_codex.acp_model_facts import render_codex_provider_section as _codex_render
 
 # P-A② (approvals/PA2-dialect-release.md): each family's dialect facts live in
 # that family's own module; this file keeps exactly one brand touch point - the
@@ -109,25 +110,10 @@ def translate_protocol(harness: str, protocol: str) -> tuple[str, str | None]:
     return dialect
 
 
-def render_codex_provider_section(*, provider: str, base_url: str, protocol: str,
-                                  ) -> str:
-    """The `[model_providers.<id>]` TOML block codex reads an endpoint from.
-
-    Order-093 G1 point: the endpoint/protocol live *inside* the
-    `[model_providers.<id>]` table, never at the top level - a key moved up one
-    level is a different setting and must fail the family's gate. Idempotent: the
-    same input yields byte-identical output (stable key order).
-    """
-    field, dialect = translate_protocol("codex", protocol)  # refuses unsupported
-    lines = [
-        f"[model_providers.{provider}]",
-        f"name = \"{provider}\"",
-        f"base_url = \"{base_url}\"",
-        f"{field} = \"{dialect}\"",
-        # The credential is a name the environment supplies, never a value.
-        "env_key = \"CODEX_API_KEY\"",
-    ]
-    return "\n".join(lines) + "\n"
+def render_codex_provider_section(*, provider: str, base_url: str, protocol: str) -> str:
+    """Reuse the Codex owner renderer, preserving the historical error surface."""
+    translate_protocol("codex", protocol)
+    return _codex_render(provider=provider, base_url=base_url, protocol=protocol)
 
 
 def render_pi_provider(*, provider: str, base_url: str, protocol: str) -> dict:

@@ -36,7 +36,7 @@ from ordessa_harness_api import (
 
 from . import common
 from ordessa_harness_claude_code.acp_model_configuration import ClaudeAdapter
-from ...codex.configuration.model import CodexAdapter
+from ordessa_harness_codex.acp_model_configuration import CodexAdapter
 from ...pi.configuration.model import PiAdapter
 from ordessa_harness_api.model_compilation import AdapterContext as LocalAdapterContext
 from ordessa_harness_api.model_compilation import BindSecret as LocalBindSecret
