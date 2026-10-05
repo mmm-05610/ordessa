@@ -1,14 +1,16 @@
 # Agent Tools 0.1.0a2
 
 Independent CLI and three optional Skills for humans, Agents, scripts and tools.
-The implemented slice is discovery and the core-owned Profile catalog:
+The implemented slices include discovery, the core-owned Profile catalog,
+published Node list/inspect, and owner configuration describe/inspect/apply/query:
 list/read/create/edit/clone/rename/archive/restore, immutable history refs, and
 explicitly unresolved preview. It does not yet prepare Agent nodes, submit tasks,
-apply configuration, stop or recover nodes. Three Skill files do not make those
+stop or recover nodes. Three Skill files do not make those
 capabilities available. No real model calls were made for this slice.
 
 The client consumes `wire/1` and negotiates the generated `agent-assembly/1`
-schema. Existing `profiles.v2.*` or old Agent methods are not fallback paths.
+schema, or the explicit `agent-assembly/2` management schema when advertised.
+Existing `profiles.v2.*` or old Agent methods are not fallback paths.
 Doctor exit 0 establishes Profile catalog support; its result explicitly shows
 `nodes=false` and `managedInput=false`. It does not establish a runnable Agent.
 
@@ -236,7 +238,16 @@ outside the completed slice.
 ordessa-agent nodes configuration describe @node-ref.json --config service.json --service local --json
 ```
 
-此命令只消费公开 `agents.nodes.configuration.describe`，不读取实际配置值，不修改 Profile 或运行配置。输出 `configurationDescriptionObserved`，`runtimeVerified=false`、`configurationValuesObserved=false`。服务必须明确发布此方法并授予 Node 读取权限；`configurationManagement` 标志主要反映写入 issuer，不能代替逐方法与 owner 权限。缺 owner、权限或必要事实时拒绝，不回退或补默认值。节点 list/read 的网络绑定及节点生命周期与任务 CLI 仍待完成。
+此命令只消费公开 `agents.nodes.configuration.describe`，不读取实际配置值，不修改 Profile 或运行配置。输出 `configurationDescriptionObserved`，`runtimeVerified=false`、`configurationValuesObserved=false`。服务必须明确发布此方法并授予 Node 读取权限；`configurationManagement` 标志主要反映写入 issuer，不能代替逐方法与 owner 权限。缺 owner、权限或必要事实时拒绝，不回退或补默认值。节点生命周期与任务 CLI 仍待完成。
+
+## 已发布节点的只读查询
+
+```sh
+ordessa-agent nodes list --config service.json --service local --json
+ordessa-agent nodes inspect @node-ref.json --config service.json --service local --json
+```
+
+分别消费公开 `agents.nodes.list/read`，返回核心已有的不可变发布记录：NodeRef、原 Unit/Provider/配置目标绑定、配方与上下文 lineage、Usage 与管理/接入 surface 引用。输出 `nodePublicationObserved`、`runtimeVerified=false`，不启动 Harness、不读取实际配置、不推断当前进程状态。即使 provider 已退役或运行资源缺席，获授权的历史发布记录仍可查询；不能把它当成 ready 或执行许可。核心 read 缺席返回 `node:null`，CLI inspect 返回 4；无已发布记录时 list 可返回空数组。缺存储保证、读取权限或未宣告方法均拒绝，不能作为空列表成功。当前仅受控 Core/SQLite/HTTP 与隔离安装验证，真实 Harness 全生命周期未验收。
 
 实际配置观察使用同一个公开 owner 入口：
 

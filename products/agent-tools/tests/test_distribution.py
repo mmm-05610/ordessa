@@ -110,6 +110,17 @@ def test_wheel_isolated_install_and_actual_http_discovery(tmp_path, node_setup):
         path = config(tmp_path, endpoint)
         reference = tmp_path / "node-ref.json"
         reference.write_text(json.dumps({"environmentNamespace": "env", "instanceId": "node", "generation": 1}))
+        for action in ('list', 'inspect'):
+            command = [str(executable), 'nodes', action, '--config', str(path), '--service', 'local', '--json']
+            if action == 'inspect': command.append('@' + str(reference))
+            checked = subprocess.run(command, cwd=tmp_path, env=env, capture_output=True, text=True)
+            assert checked.returncode == 0, checked.stdout + checked.stderr
+            result = json.loads(checked.stdout)
+            node = result['data']['node'] if action == 'inspect' else result['data']['nodes'][0]
+            assert node['nodeRef'] == {'environmentNamespace': 'env', 'instanceId': 'node', 'generation': 1}
+            assert result['evidence'] == {'level': 'nodePublicationObserved', 'runtimeVerified': False}
+            assert SECRET not in checked.stdout + checked.stderr
+        assert len(calls) == 6
         for action in ("describe", "inspect"):
             checked = subprocess.run([str(executable), "nodes", "configuration", action, "@" + str(reference),
                 "--config", str(path), "--service", "local", "--json"], cwd=tmp_path, env=env, capture_output=True, text=True)
@@ -122,7 +133,7 @@ def test_wheel_isolated_install_and_actual_http_discovery(tmp_path, node_setup):
                 assert result["data"]["sourceRevision"] == "native-1"
             else: assert result["data"]["descriptions"][0]["configurationKind"] == "model"
             assert SECRET not in checked.stdout + checked.stderr
-        assert len(calls) == 6
+        assert len(calls) == 12
         assert node_setup[7]["calls"] == 0 and node_setup[7]["queryCalls"] == 0
 
         change = tmp_path / "change.json"
@@ -139,4 +150,4 @@ def test_wheel_isolated_install_and_actual_http_discovery(tmp_path, node_setup):
         assert queried.returncode == 0, queried.stdout + queried.stderr
         assert json.loads(queried.stdout)["data"] == result["data"]
         assert node_setup[7]["calls"] == 1 and node_setup[7]["queryCalls"] == 0
-        assert len(calls) == 12 and SECRET not in applied.stdout + applied.stderr + queried.stdout + queried.stderr
+        assert len(calls) == 18 and SECRET not in applied.stdout + applied.stderr + queried.stdout + queried.stderr

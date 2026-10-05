@@ -10,6 +10,7 @@ import uuid
 
 from .initialization import discover, save_report
 from .providers import definition_ref_valid, provider_result_valid
+from .nodes import node_result_valid
 from .configuration import node_ref_valid, description_result_valid, snapshot_result_valid, change_request_valid, operation_result_valid, operation_disposition
 from .client import ClientError, WireClient, load_service, parse_json, core_schema, profile_ref_valid, provider_schema, MAX_BYTES
 
@@ -43,6 +44,12 @@ def parser():
             child.add_argument("definition_ref", help="Complete DefinitionRef JSON or @file")
     nodes = commands.add_parser("nodes", help="Consume published Node management methods")
     node_actions = nodes.add_subparsers(dest="node_action", required=True, parser_class=Parser)
+    for action in ('list', 'inspect'):
+        child = node_actions.add_parser(action, help='Read durable Node publications; does not verify native runtime state')
+        child.set_defaults(action=action)
+        connection(child)
+        if action == 'inspect':
+            child.add_argument('node_ref', help='Complete NodeRef JSON or @file')
     configuration = node_actions.add_parser("configuration", help="Observe owner configuration capabilities")
     configuration_actions = configuration.add_subparsers(dest="action", required=True, parser_class=Parser)
     for action, help_text in (("describe", "Read owner capability descriptions; does not inspect or apply values"),
@@ -199,7 +206,15 @@ def main(argv=None):
                     raise ClientError("PARAMETER_INVALID", "Complete DefinitionRef required", 2)
                 params["definitionRef"] = definition
             prepared = ("agents.providers." + options.action, params)
-        if options.command == "nodes":
+        if options.command == 'nodes' and options.node_action != 'configuration':
+            params = {}
+            if options.node_action == 'inspect':
+                node = json_input(options.node_ref)
+                if not node_ref_valid(node):
+                    raise ClientError('PARAMETER_INVALID', 'Complete NodeRef required', 2)
+                params['nodeRef'] = node
+            prepared = ('agents.nodes.' + ('read' if options.node_action == 'inspect' else 'list'), params)
+        elif options.command == "nodes":
             node = json_input(options.node_ref)
             if not node_ref_valid(node):
                 raise ClientError("PARAMETER_INVALID", "Complete NodeRef required", 2)
@@ -253,6 +268,23 @@ def main(argv=None):
                 raise ClientError("CORE_RESPONSE_INVALID", "Provider registry result could not be safely validated", 4)
             data = result
             evidence = {"level": "providerRegistryObserved", "runtimeVerified": False}
+        elif options.command == 'nodes' and options.node_action != 'configuration':
+            method, params = prepared
+            if method not in core.get('supportedMethods', ()):
+                raise ClientError('NODE_OBSERVATION_UNAVAILABLE', 'Service did not publish the requested Node observation', 4)
+            if 'nodeRef' in params and not node_ref_valid(params['nodeRef'], core['environmentNamespace']):
+                raise ClientError('PARAMETER_INVALID', 'NodeRef belongs to another service environment', 2)
+            if service.token in json.dumps(params):
+                raise ClientError('PARAMETER_INVALID', 'Node request cannot contain authentication material', 2)
+            result = client.core_call(method, params, request_id)
+            if (not node_result_valid(options.action, result, core['environmentNamespace'],
+                    core_schema(client.schema_version)['schema'], params.get('nodeRef'))
+                    or service.token in json.dumps(result)):
+                raise ClientError('CORE_RESPONSE_INVALID', 'Node publication could not be safely validated', 4)
+            data = result
+            if options.action == 'inspect' and result['node'] is None:
+                raise ClientError('NODE_NOT_FOUND', 'No publication exists for the requested NodeRef', 4)
+            evidence = {'level': 'nodePublicationObserved', 'runtimeVerified': False}
         elif options.command == "nodes":
             method, params = prepared
             if method not in core.get("supportedMethods", ()):

@@ -63,6 +63,45 @@
           "ready",
           "error"
         ]
+      },
+      "nodesList": {
+        "required": [
+          "nodes"
+        ],
+        "additionalProperties": false
+      },
+      "nodeRead": {
+        "required": [
+          "node"
+        ],
+        "additionalProperties": false,
+        "missing": null
+      },
+      "nodeRecord": {
+        "required": [
+          "nodeRef",
+          "binding",
+          "lineage",
+          "publicationRevision",
+          "resourceUsageRefs",
+          "managementSurfaceRefs",
+          "accessSurfaceRefs"
+        ],
+        "additionalProperties": false
+      },
+      "nodeBinding": {
+        "required": [
+          "nodeRef",
+          "harnessProviderRef",
+          "harnessDefinitionRef",
+          "harnessUnitRef",
+          "profileSnapshotRef",
+          "preparationContextRef",
+          "configurationTargetRef",
+          "nativeSessionRefs",
+          "operationRef"
+        ],
+        "additionalProperties": false
       }
     },
     "methods": {
@@ -369,5 +408,5 @@
       ]
     }
   },
-  "schemaDigest": "sha256:581c4e31c27042549e190290fe7ca7c86912c9fb7cde78a7bdc22dd1231895b2"
+  "schemaDigest": "sha256:d229ca05419ebd9458befe211c31f1af5a8d75ab0fce0cf99f12b25e0cf4240e"
 }

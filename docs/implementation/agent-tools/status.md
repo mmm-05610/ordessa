@@ -552,3 +552,15 @@ Codex只读终审确认_none/类型身份/原操作未知与重放未旁路，ap
 本切片只完成直接factory退役，旧modelplugin/bridge/live_service、Server/native_runtime及server_acp仍需迁，独有品牌能力未删。无三家协议/Core/CLI源码变更，不冒本轮全回归。历史Core3红仍登记。生产权限/材料/证据owner/冷恢复/全生命周期、节点wire/unknown按request恢复、tasks/results/三Skill/全纵向发行仍PARTIAL；C不是原生P或模型M，M0，资源ABSENT。未第三方安装更新/登录/用户数据/凭据/全局配置/服务操作/push/主树合并，费用unknown。核对并显式stage本轮文件形成检查点后继续。
 
 Codex只读复核无宽拒/metadata丢失/测试绿化，但发现GenericExecutionProvider构造仍可绕factory传三家definition。主会话加同型构造拒绝＋3个builtin definition反例，未碰adapter/source协议；全树直接消费仅generic.factory。第一个定向组合末端再跑50P/0F exit0、0.67s，新增门16项。33项结果在此构造器补强前，不声称已重跑；model/Server旧路继续登记待迁。五工单strict与diff-check exit0仅资料门，所有句柄terminal。显式纳入切片检查点后继续。
+
+### 2026-10-05 AU004 Node发布记录 list/inspect（PARTIAL）
+
+前置b61d4dd8ce，clean；主会话唯一共享源码/Core/Server/CLI/Git/测试/账本作者，Codex只读终审，无另一写者。旧model/Server迁移仍需生产owner/独有能力承接，本轮推进不依赖它们的已有Node只读公开接缝。Server绑定并宣告原agents.nodes.list/read，原同Environment/Store/读权限，list逐Node核验。Core新增唯一wrapper/record required投影，read缺席None原样映射null；不是新状态机/registry/查询provider调用或operation写入。v2镜像生成，v1/provider镜像未变。
+
+CLI `nodes list`/`nodes inspect @NodeRef`，仅公开方法，精确完整身份/原lineage/owner/source/Usage/surface投影，拒bool/float/foreign/duplicate/私有/token/额外ready。missing inspect4，缺storage/权限拒，不把其当空列表；nodePreparation=false不挡只读。provider退役或冷无registry的历史发布可读，不声称native ready。evidence=nodePublicationObserved/runtimeVerified=false，无第二配置/会话事实。
+
+完整命令、映射、失败修正与发行证据：[node-observation-evidence.md](node-observation-evidence.md)。新wire14＋原publication25组合39P exit0、0.68s；新CLI25＋加强原发行2组合27P exit0、19.21s；CLI/契约/发行全组合184P exit0、85.32s。实现前wire3P/6F0.27s、safe_json根误用7P/2F0.28s、CLI错误码误猜24P/1F13.38s皆exit1已保留修正，未skip/删断言或复活compat。新增39项，不累加快照。实际fresh CLI安装对受控HTTP/Core/SQLite6命令18请求，唯一配置作用1，不把C当Uvicorn/nativeP/M。
+
+Codex只读终审未发现新安全阻断，确认只读权/缺席/冷观察/类型身份/私有拒，未测试/写入/Git。生产权限/材料/证据owner/冷恢复与全生命周期、tasks/results/三Skill/全纵向发行及旧model/Server迁移仍缺。整体PARTIAL，M0、资源ABSENT；历史Core3红仍须单列。无用户数据/凭据/全局配置/登录/用户服务操作/第三方更新安装/模型/push/主树合并，成本unknown。检查点后继续未完成工单，不标AU004_DONE。
+
+本轮全现存16个AU证据模块＋产品integration实际首586P/1F exit1、34.95s，旧uncomposed门仍期待list拒；保留同门，改为未实现stop并加无query/无原operation/不宣告stop断言。最终587P/0F exit0、34.32s，不skip/删门/恢复旧行为。全Core实际269P/3F exit1、7.62s、0skip，仍原kernel_direction三红，具体SQLite测试导入未移走；worker/sidecar/acpclosure/claude等ABSENT继续。末端新增真实隔离Uvicorn/Server Node权限负例：公开方法＋Bearer不授读，当前v2部署只有Profile/registry权，nodes list/inspect均拒3，不冒空成功；v2定向2P/2deselected exit0、2.20s。Server进程P不是nativeHarnessP，无生产Node正向/M。新1加入在587之后，不声称588全组合已跑；本切片新增40项，原发行2加强。五工单strict/schema/diff-check exit0仅资料门，测试句柄全部terminal。显式纳入13路径检查点后继续，整体仍PARTIAL。

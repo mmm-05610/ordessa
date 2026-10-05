@@ -1,11 +1,13 @@
 """Transport-only projection of the core-owned Agent public contract."""
 from __future__ import annotations
+import json
 
 from ordessa_environment_api import (
     AdmissionRefusedError, GuaranteeUnavailableError, IdentityMismatchError, ComparisonUnavailableError,
     UnknownResultError, RequestKey,
 )
 from ordessa_environment_api.domain import DomainRevisionConflict
+from ordessa_environment_api.operations import safe_json
 from pacthold.agents.public import (
     AGENT_CONTRACT_VERSION, ProfileNotFound, ProfileRef, ProfileRevisionConflict, ProfileValidationError,
     agent_services, wire_contract, wire_schema_digest,
@@ -21,6 +23,7 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
     schema=wire_contract(contract_version)
     configuration_actions={'describeConfiguration','inspectConfiguration','applyConfiguration','queryChange'}
     provider_actions={'providersList','providersDescribe'}
+    node_observation_actions={'nodesList','nodeRead'}
     profile_actions={item['action'] for item in wire_contract()['methods'].values()}
     def handler(action, definition):
         def invoke(params):
@@ -68,12 +71,18 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
                         result['supportedMethods']=[name for name,item in schema['methods'].items()
                             if item['action'] in profile_actions or item['action'] in configuration_actions
                             or item['action'] in provider_actions
+                            or item['action'] in node_observation_actions
                             or (item['action']=='prepare' and result['supports']['nodePreparation'])]
                     return result
                 if action=='providersList':
                     return {'providers':list(services.providers.list())}
                 if action=='providersDescribe':
                     return services.providers.describe(params['definitionRef'])
+                if action=='nodesList':
+                    return json.loads(safe_json({'nodes': services.nodes.list()}))
+                if action=='nodeRead':
+                    node = services.nodes.read(node_ref)
+                    return {'node': json.loads(safe_json({'node': node}))['node']}
                 if action=='prepare':
                     operation=services.assembly.prepare(catalog.request_key(params['requestId']),
                         refs['profileRef'],params['context'],params['options'])

@@ -65,6 +65,17 @@ def wire_contract(version=AGENT_CONTRACT_VERSION) -> dict:
                                  "optional": list(optional), "effectful": "requestId" in required}
                         for method, action, required, optional in _BINDINGS}}
     if version == AGENT_MANAGEMENT_CONTRACT_VERSION:
+        # Thin projections of NodePublication.list/read. Absence retains the
+        # core's None; publication is not a current native readiness claim.
+        value['results'].update({
+            'nodesList': {'required': ['nodes'], 'additionalProperties': False},
+            'nodeRead': {'required': ['node'], 'additionalProperties': False, 'missing': None},
+            'nodeRecord': {'required': ['nodeRef', 'binding', 'lineage', 'publicationRevision',
+                'resourceUsageRefs', 'managementSurfaceRefs', 'accessSurfaceRefs'], 'additionalProperties': False},
+            'nodeBinding': {'required': ['nodeRef', 'harnessProviderRef', 'harnessDefinitionRef',
+                'harnessUnitRef', 'profileSnapshotRef', 'preparationContextRef', 'configurationTargetRef',
+                'nativeSessionRefs', 'operationRef'], 'additionalProperties': False},
+        })
         value["methods"].update({method: {"action": action, "required": list(required),
             "optional": list(optional), "effectful": "requestId" in required or action in {"applyConfiguration", "acquireAccess"},
             "additionalProperties": False}

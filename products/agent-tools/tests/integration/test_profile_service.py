@@ -292,3 +292,23 @@ def test_real_http_v2_provider_discovery_has_no_native_readiness_or_execution(tm
         assert absent["error"]["code"] == "AUTHORIZATION_REFUSED"
     finally:
         service.stop()
+
+
+def test_real_http_v2_node_observation_requires_explicit_read_authority(tmp_path):
+    service = IsolatedService(tmp_path, version='agent-assembly/2')
+    try:
+        service.start()
+        core = service.cli(['capabilities'])['data']['coreAgent']
+        assert {'agents.nodes.list', 'agents.nodes.read'} <= set(core['supportedMethods'])
+        assert core['supports']['nodePreparation'] is False
+        # This deployment only grants Profile/registry reads. Publishing a
+        # method and possession of Bearer never become Node read authority.
+        for args in (['nodes', 'list'], ['nodes', 'inspect', json.dumps({
+                'environmentNamespace': service.identity, 'instanceId': 'absent', 'generation': 1})]):
+            denied = service.cli(args, expected=3)
+            assert denied['error']['code'] == 'AUTHORIZATION_REFUSED'
+            assert denied['error']['retryable'] is False
+            assert denied['status'] == 'refused'
+            assert denied['evidence']['level'] == 'coreCapabilitiesObserved'
+    finally:
+        service.stop()

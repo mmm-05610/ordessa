@@ -313,9 +313,16 @@ def test_public_wire_safe_version_authority_request_and_shape_errors(setup,wire,
 
 def test_uncomposed_node_operation_is_typed_unsupported(setup,wire):
  from server_plugin_api import WireError
- with pytest.raises(WireError) as error: wire['agents.nodes.list']({})
+ # list/read are now composed pure observations. Preserve the unsupported
+ # operation guard on stop, which must not dispatch or reserve anything.
+ with pytest.raises(WireError) as error:
+  wire['agents.nodes.stop']({'nodeRef':wire_params(setup)['nodeRef'],
+                            'preconditions':{},'requestId':'unsupported-stop'})
  assert error.value.family=='CAPABILITY_UNSUPPORTED'
  assert setup[7]['calls']==0
+ assert setup[7]['queryCalls']==0
+ assert setup[0].read_operation(RequestKey('env','principal','unsupported-stop')) is None
+ assert 'agents.nodes.stop' not in wire['agents.capabilities']({})['supportedMethods']
 
 
 def test_provider_retirement_before_dispatch_is_denied(setup,node_fixture):
