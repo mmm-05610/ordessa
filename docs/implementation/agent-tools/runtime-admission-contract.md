@@ -1,0 +1,11 @@
+# AT-009 RuntimeProvider 接纳实施合同 · 2026-10-05
+
+依据028 contracts §3/5/7、原AT-008/009/010/011，承接固定源码3086825a6177438c042431cdb94812ded576ee6c；不切换移动分支，不恢复旧ExecutionProvider/runtime-compat。
+
+RuntimeProvider通过专门的AgentContributionSet增量子类型进入Environment同一个CoreRegistry stage/commit/rollback/retire；原CoreContributionSet的C1三字段契约保持。它不在AgentServices建第二provider字典，不搜索Harness WeakSet。ownerActivation/generation始终取Environment提交事实；author descriptor不带owner/generation。描述在stage分离并冻结；同definition完整引用及providerId路由冲突拒绝；未commit、draining/retired或descriptor已变化不可供新作用使用。
+
+核心提供RuntimeProviderDescriptor(providerId,contractVersion,definitionRef,implementationDigest)及纯planPreparation/describeDefinition/describeAccess/inspectConfiguration、受InvocationContext约束的prepare/start/stop/release/recover、当前授权queryStep端口。公开definitionRef必须完整environmentNamespace/definitionId/revision；细节schema/协议/配置target仍Harness解释，核心不含品牌。暂未提供端口的方法不能伪报支持，也不使用legacy执行端口填空。
+
+此切片仅闭合可信贡献接纳，不发布nodes/managedInput=true。后续作用前需同操作claim、Directory重核、真实Unit与配置scope、使用关系及transport fence。生产provider缺席应providerUnavailable；合同/SQLite tests≠原生进程证据。
+
+写权：主会话独占core registration/environment/contracts与整合；三代理分别仅Codex/Pi/Claude消费者及各自测试，不并写共享transport/CLI/schema。协议修复使用各固定版真实官方结构，无安装更新/模型调用/用户服务操作。其余七家保留，不扩展。

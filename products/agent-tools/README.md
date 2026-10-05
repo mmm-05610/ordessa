@@ -41,7 +41,11 @@ machine's absolute PATH entries for command names published by Harness. It does
 not execute binaries, run version probes, install packages, start services or
 write global Agent configuration. Relative/empty PATH entries are ignored and
 reported. Multiple matching paths remain in search order; no binary is selected
-automatically. Use `--path` to explicitly choose a search PATH.
+automatically. Use `--path` to explicitly choose a search PATH. The reviewed catalog currently
+covers eight families, not every installed Agent. Local discovery is optional
+when using a remote service; exit 4 does not block remote Profile operations.
+If `scanCompleteForSearchedEntries` is false, inspect the retained scan issues
+even when candidates were found and the command returned exit 0.
 
 Each result separates executableFound from installedArtifact/providerAdmission
 notChecked and runtimeReady unknown. A local binary does not establish a remote

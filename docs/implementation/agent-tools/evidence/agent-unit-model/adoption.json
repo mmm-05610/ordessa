@@ -1,0 +1,24 @@
+{
+  "head": "3086825a6177438c042431cdb94812ded576ee6c",
+  "previousTurn": "progress: implementations and 575-test verification; interrupted before checkpoint commit",
+  "agents": {
+    "baseline_audit": "completed/read-only",
+    "orders_review": "completed",
+    "public_seams": "completed"
+  },
+  "adoptedContractFiles": {
+    "docs/implementation/work-orders/agent-unit-model/README.md": "586e3da835abc785a78bc577f6d00d5575edc5461afc8f327d4f5689e18b5421",
+    "docs/implementation/work-orders/agent-unit-model/acceptance.md": "72c6d7f75a42393290b13ac4c793132a6409ea12aafb45aaa726d3ceac7dcf5a",
+    "docs/implementation/work-orders/agent-unit-model/contracts.md": "6dc88d4c2033d3d8ddd0aa9d9469971be53fc8d615b24a1f9686672ce7b7c067",
+    "docs/implementation/work-orders/agent-unit-model/design.md": "06e47efe8eb424946e30da35dc3441afa362c7abdd8fd778d6ffbb6942c89b68",
+    "docs/implementation/work-orders/agent-unit-model/migration.md": "7d8c46bda811b993f38ea4d54f1de1d0358349265362f3dc4abd43a2d6363ba9",
+    "docs/implementation/work-orders/agent-unit-model/orders/AU001-contract-freeze.md": "9f1273e40e457a9dfd4eb13cfe2d120c68a6a08e6feaefd73c9ac28f9d3dc6ba",
+    "docs/implementation/work-orders/agent-unit-model/orders/AU002-core-management.md": "b079b05ad7d7d9c261265bfb148900c30edfc66e2b82dd6c465c97878a8af4dc",
+    "docs/implementation/work-orders/agent-unit-model/orders/AU003-three-providers.md": "01090b62c459e404875bda5e9b011c7f747c73c82b1b458ee1d73eb5c2787693",
+    "docs/implementation/work-orders/agent-unit-model/orders/AU004-thin-cli-skills.md": "5b28f2fe69b2efa333f1b5de8909a7d652b6d3e43ccf590749279aec8e3aebc8",
+    "docs/implementation/work-orders/agent-unit-model/orders/AU005-integration-acceptance.md": "946dcf2584770908a24d84e19335d8697d5e5cca6f367670b7434f64b4e18c9d",
+    "docs/implementation/work-orders/agent-unit-model/orders/queue.json": "4822569ce74471d56ef9c19b0b77a2d7b4e1b17a35ce413fa43581de6d646354"
+  },
+  "existingRepairs": "43 explicitly staged core/native/doc files retained; no rollback or reset",
+  "evidenceLimits": "575 controlled/product tests do not prove real Agent task chain; native clients in product are transitional until AU003/AU004"
+}

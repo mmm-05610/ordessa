@@ -133,3 +133,42 @@ Profile manifest显式标记catalog-only，引用deliberately-absent-catalog-che
 再执行 `python products/agent-tools/acceptance/install_use.py`：fresh client venv安装实际0.1.0a2 wheel，确认无后台包，实际已安装entrypoint在服务启动前执行init，然后完成既有Profile真实隔离服务用例。总脚本exit0、27条安装/命令/停止记录（含预期拒绝的非零CLI结果），临时runtime清除、真实模型调用0，见init-installed-use.txt及install-use-exercise.json。本机实测发现codex `/usr/lib/chatgpt/resources/codex` 与pi `/home/maoqh/.local/bin/pi`；它们均未执行，runtimeReady仍unknown。27条记录不是新增27个pytest，也不能算Agent任务成功。
 
 AT_013_DONE仅指Linux本机初始化门完成。Windows真实宿主/PATHEXT未验证；没有验证候选版本、认证、原生session或模型。整个Agent Tools仍PARTIAL：节点/任务/结果命令和生产Harness接纳/授权/共享scope/journal/fence缺口保持。此切片不改核心运行实现，未重复无关核心/Server全量；既有3个核心继承失败和11个Server固定基线同ID失败仍保留。无推送、主树合并、用户服务重启或全局配置修改。
+
+
+### 2026-10-05 三家优先目标恢复 · 源码核查
+
+当前HEAD3086825a6177438c042431cdb94812ded576ee6c，开工git status clean；已包含029收口0f786dfc34及030十家CODE_READY检查点，不把旧adce当现有实现快照。前一初始化轮为progress（CLI/Skill/source/evidence已落盘）；030终账并未证明节点/输入运行。当前核实核心AgentServices仍仅ProfileCatalog，AT008/009/010/011未完成。新增客户端存在，但真实协议关联/完成有缺陷：Codex嵌套turn形状未读、Pi0.86.1成功prompt无disposition，Claude控制stdio尚未消费。三个代理按家族不重叠消费者文件修复，主会话负责核心接纳/契约/整合。
+
+本次用户目标改为Pi、Codex、Claude Code优先，其余七家保留。继续原工单并采用incremental-work-order纪律；单元合同见runtime-admission-contract.md。未经另行授权不安装更新第三方、不读用户认证/运行DB、不执行真实模型或用户服务重启。所有测试分L1合同、SQLite、L2真实进程和L3/L4产品任务记录；当前未新增运行可用声明。
+
+### 2026-10-05 初始化入口复核与使用边界
+
+用户再次要求CLI/Skill初始化探查。当前源码已具备`ordessa-agent init --json`，三Skill均包含步骤。本次实际源码入口exit0，发现Codex `/usr/lib/chatgpt/resources/codex`、Pi `/home/maoqh/.local/bin/pi`（链接目标`/home/maoqh/.pi/agent/bin/pi`），Claude Code未找到。命令未执行候选、未探版本、未使用认证，runtimeReady仍unknown。
+
+定向命令：专属Python `-m pytest -c products/agent-tools/pyproject.toml products/agent-tools/tests/test_initialization.py -q`，20P/0F，exit0，0.06s。另fresh临时venv通过`pip install --no-index --no-deps`安装已有历史0.1.0a2-init wheel，实际已安装entrypoint `init --json` exit0；扫描完整，找到同两家。证据`evidence/init-recheck-20261005.json`，临时venv已自动清除。这不是当前未提交原生协议修改的新分发验收，也不代表Agent任务可运行。
+
+独立只读复查指出目录限8家、仅PATH、命中不证明引擎身份、部分扫描需看诊断、Windows未验收。README补充8家范围/部分扫描/远端使用边界；三Skill明确本机初始化可选，缺本机二进制不阻止远端Profile操作。未扩展其余七家、未自动安装二进制或修改全局配置。
+
+核心最新复跑：`-m pytest packages/backend/pacthold -q` 269P/3F，exit1，7.10s；三个同ID继承方向扫描失败仍指向测试目录旧SQLite import。原C1三字段及public facade新增失败已修复，未删断言。新RuntimeProvider接纳21P与原public合同34P定向55P已通过；节点发布20P、UnitRecords18P+原journal9P和managed运输31P是执行者定向证据，主会话整合复跑尚待完成。InputReservations当前正在审阅和加反例，尚不算已验收；CLI nodes/managedInput能力继续false。
+
+### 三家核心/消费者基础整合复跑（未接产品运行）
+
+主会话全products复跑570P/0F、exit0、68.36s，日志evidence/three-family-product-validation.txt。这是发布资源完整性修复前的源码快照；其后独立复查实际复现遗漏Usage仍可published，已在同publish transaction要求交接所有未released Usage、拒unknown，并在NodePublication要求真实unit use关系，保留失败反例。之后operation＋node＋input定向94P/0F exit0、1.98s（39＋25＋35，共享用例不能与570累计）。其后把028已定义connect(unitRef,authorizedLease)补入RuntimeProvider SPI，接纳＋node＋input再次复跑81项；整体仍不声明nodes可用。
+
+协议复跑：Codex＋Claude消费者52P exit0、8.00s；Pi三文件69P exit0、2.76s（固定0.86.1真实无disposition receipt、unknown便利prompt拒新id、UI confirm等native shape一次响应；通知不授回应资格）；Claude纯planner43P exit0、0.14s。Pi原14P历史fixture中的虚构approval/action/text更新为官方confirm/method/confirmed响应，same-id和native回应断言仍保留。N003“无官方SDK”错误已撤回并引用固定SHA官方SDK文档，仍选择单一原生RPC通道，无fallback。
+
+Harness共享scope/UnitRecords＋原OperationJournal32P exit0、0.36s；真实stdin managed transport31P exit0、0.42s。旧reserve_new同BEGIN IMMEDIATE接唯一owner scope guard；重启缺authority但有持久Unit拒，原request重放不作用；同scope旧跨channel互斥、scope_key损坏拒。此门不覆盖旧ProviderRestoration/Registration的owners.begin_restoration执行链，本产品不接该链。UnitRecords的scope释放、冷重启受限reconcile记录授权及生产原生证据端口仍未实现。
+
+当前新增基础只复用唯一registry/SQLite operation/Usage、既有Harness journal及实际运输。生产prepare层须读取并核验真实immutable Profile manifest；publication primitive只核ref/步骤/owner投影，测试故意使用受控owner不能代替完整装配。InputReservations只持久reservation与一次Invocation claim；生产writer必须消费同context固定captureDigest/正文/native correlation，不允许另给正文/id。真实capture store、生产RuntimeOwner、public node管理入口、CLI附着、配置apply/结果/恢复链尚未闭合。真实模型0、安装第三方0、用户服务重启0，整体仍PARTIAL。
+
+最终修复后主会话全products再次复跑 **575P/0F、exit0、68.53s**，日志evidence/three-family-product-final.txt；替代前570项源码快照，不累计成1145。最新节点25P、输入35P、runtime接纳21P定向组合81P/0F、exit0、1.60s。13份工单结构检查及git diff check均exit0，仅资料/格式证据。
+
+生成新鲜分发`products/agent-tools/dist/bundle-0.1.0a2-three-family-foundations`，build exit0；9项payload SHA256校验exit0，未覆盖历史包。三Skill包含本机发现可选/远端操作边界。后续Pi生产接线责任及资源缺席行为写pi-owner-integration.md。全量绿仅覆盖当前测试定义，未补的production RuntimeOwner、CLI nodes/tasks、授权生产部署及真实模型L3/L4保持未完成。
+
+新鲜wheel实际独立安装复验：fresh临时venv，pip --no-index --no-deps install exit0；实际entrypoint init --json exit0，发现同Codex/Pi、scanComplete=true、runtimeReady=unknown。证据evidence/init-current-wheel-20261005.json；临时venv清除，未执行候选或访问用户认证/服务。
+
+### AU-1增量包接纳 · 2026-10-05
+
+用户已确认AU001–AU005，按docs/implementation/work-orders/agent-unit-model的五份合同及五工单串行推进。本次HEAD仍3086825a6177438c042431cdb94812ded576ee6c；上一轮575P和三家/核心源码为实际progress，但未提交。现无运行子代理/共享写者，三位均completed。逐文件读取本包11个新增文件并记录SHA256到evidence/agent-unit-model/adoption.json，显式纳入接纳检查点，未改本包语义正文。
+
+保留全部已暂存三家修复及CoreRegistry/Node/Input/journal/transport基础；品牌实现仍在products属于待AU003/AU004迁移，575P不满足AU A15发行边界，不将旧绿等同新目标完成。AU001主会话唯一共享作者，不派家族执行；AU003接口冻结后才允许各家独立包写权。继承raw pytest日志仅去行尾空白以通过diff格式检查，失败诊断及计数保留。当前只接纳/冻结准备，不标任何AU_DONE。真实模型0、安装更新第三方0、用户服务操作0。

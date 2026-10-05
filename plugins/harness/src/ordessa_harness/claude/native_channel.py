@@ -16,7 +16,9 @@ COMMAND_CATALOG_ID = "claude-code"
 
 #: CLI/SDK release is not measured locally (no installed artifact in this
 #: environment) — recorded as such, never invented (G1).
-PINNED_RELEASE = "unpinned (docs 2026-10-04; no local artifact measured)"
+PINNED_RELEASE = "runtime unmeasured; no installed artifact verified"
+SDK_SOURCE_COMMIT = "9c69ce7aced5cdf2aa1ac86fe62e877b4962de8b"
+SDK_SOURCE_VERSION = "0.2.163"
 ARTIFACT_DIGEST = "unknown"
 
 COMPILE_SUPPORTED_KEYS = frozenset(
@@ -48,6 +50,13 @@ def channel_report() -> dict:
             "Client SDK (API client) and NOT Managed Agents (hosted)",
         },
         "release": {"version": PINNED_RELEASE, "volatile": True},
+        "sdk_source": {"repository": "https://github.com/anthropics/claude-agent-sdk-python",
+                       "commit": SDK_SOURCE_COMMIT, "version": SDK_SOURCE_VERSION,
+                       "license": "MIT", "installed": False, "observedRuntime": False},
+        "consumer": {"implemented": "limited synchronous stdlib stream-json consumer",
+                     "productionPreference": "reuse official Claude Agent SDK",
+                     "notImplemented": ["SDK hooks", "SDK MCP", "background run completion",
+                                        "production SDK integration", "durable input recovery"]},
         "artifact": {"path": "claude CLI / Agent SDK package", "sha256": ARTIFACT_DIGEST},
         "license_terms": {
             "commercial": "Anthropic Commercial Terms of Service (component LICENSE may override)",
@@ -56,18 +65,18 @@ def channel_report() -> dict:
             "(docs note). No subscription token is read or stored here (G12).",
         },
         "protocol": {
-            "schema_source": "headless docs: stdout --output-format stream-json message types",
+            "schema_source": "official SDK source at " + SDK_SOURCE_COMMIT + "; types.py/query.py/client.py/subprocess_cli.py",
             "framing": "JSONL on stdout; stderr diagnostics (G5)",
             "message_types": "system/init, system/api_retry, system/plugin_install, "
             "assistant, user, stream_event, permission_denied, result",
-            "stdin_side": "--input-format stream-json exists on the SDK surface only; "
-            "headless doc does not pin stdin shapes -> registered unknown, not fabricated",
+            "stdin_side": "official SDK defines native user/control_request/control_response/control_cancel_request JSONL; "
+            "thin consumer implements explicit initialize, interrupt and can_use_tool decisions; runtime compatibility unknown",
             "version_negotiation": "none; system/init carries a capabilities array "
             "(e.g. interrupt_receipt_v1) for feature detection",
         },
         "launch": {
-            "argv_shape": "claude -p --output-format stream-json [--verbose] "
-            "[--allowedTools ...] [--permission-mode ...] [--resume <id>]",
+            "argv_shape": "output-only: claude -p --output-format stream-json; explicit bidirectional: "
+            "claude -p --output-format stream-json --input-format stream-json --verbose --permission-prompt-tool stdio",
             "runtime_flags": {"print": "-p (non-interactive)", "output": "--output-format stream-json"},
         },
         "isolation": {
@@ -76,7 +85,7 @@ def channel_report() -> dict:
             "no_user_state": "user ~/.claude (OAuth creds, history) never read (G12)",
         },
         "network": {
-            "default": "model calls are the only outbound traffic",
+            "default": "not observed; no proof that model calls are the only outbound traffic",
             "upstream_retries": "system/api_retry events show upstream API-level retries "
             "(attempt/max_retries) — surfaced as facts; this stack adds NO retries (G11)",
         },
@@ -85,12 +94,14 @@ def channel_report() -> dict:
             "isolated_behavior": "no user credentials inherited; key only via explicit env",
         },
         "session": {
-            "create": "session_id reported on the terminal result record",
+            "create": "session_id observed from system/init and checked against terminal result; result ends one turn only",
             "resume": "--resume <session_id|jsonl path> / --continue (docs); observed: no",
         },
         "callbacks": {
-            "permission": "canUseTool (SDK) / --permission-mode CLI; NEVER auto-approve",
-            "cancel": "SIGINT ends the turn; SDK interrupt(); capabilities interrupt_receipt_v1",
+            "permission": "SDK can_use_tool control_request with explicit decision; no auto-response; "
+            "upstream settings/allow rules may shadow callbacks (production policy requires separate verification)",
+            "cancel": "output-only SIGINT signal is not completion proof; explicit bidirectional interrupt control request; "
+            "interrupt receipt is not a completed turn",
         },
         "unknown_boundary": {
             "extensions": "unknown message types/fields preserved verbatim (G4)",
@@ -105,10 +116,20 @@ def plan_launch(
     workspace: str | os.PathLike[str],
     prompt: str | None = None,
     extra_args: tuple[str, ...] = (),
+    bidirectional: bool = False,
 ) -> dict:
     """Pure plan for an isolated headless run. Executes nothing."""
+    if type(bidirectional) is not bool:
+        raise ConfigRefusal("bidirectional", "mode must be explicit boolean")
+    if not isinstance(extra_args, tuple) or any(not isinstance(value, str) or not value or "\x00" in value for value in extra_args):
+        raise ConfigRefusal("extra_args", "argv must be a tuple of nonempty strings")
+    if bidirectional and prompt is not None:
+        raise ConfigRefusal("prompt", "bidirectional input must follow control initialization on stdin")
+    _validate_launch_args(extra_args, bidirectional=bidirectional)
     home_path = Path(home)
     argv = ["claude", "-p", "--output-format", "stream-json"]
+    if bidirectional:
+        argv.extend(["--input-format", "stream-json", "--verbose", "--permission-prompt-tool", "stdio"])
     if prompt is not None:
         argv.append(prompt)
     argv.extend(extra_args)
@@ -127,7 +148,48 @@ def plan_launch(
     return {"argv": argv, "cwd": os.fspath(workspace), "env": env, "executable": "claude"}
 
 
-def compile_config(materials: Mapping[str, Any]) -> dict:
+def _validate_launch_args(args, *, bidirectional):
+    managed = {"--input-format", "--output-format", "--permission-prompt-tool", "--verbose", "--print", "-p"}
+    names = [value.split("=", 1)[0] for value in args]
+    if any(name in managed for name in names):
+        raise ConfigRefusal("extra_args", "transport flags belong to the selected launch mode")
+    if any(name in {"--resume", "-r"} for name in names) and ("--continue" in names or "-c" in names):
+        raise ConfigRefusal("resume", "resume and continue select different session policies")
+    bypass = {"--dangerously-skip-permissions", "--allow-dangerously-skip-permissions"}
+    if any(name in bypass for name in names):
+        raise ConfigRefusal("permission_mode", "permission bypass flags are refused")
+    for index, value in enumerate(args):
+        if names[index] == "--permission-mode":
+            mode = value.split("=", 1)[1] if "=" in value else (args[index + 1] if index + 1 < len(args) else "")
+            if not mode or "bypass" in mode.lower() or mode.lower() in {"auto", "acceptall", "yolo", "dangerouslyskip"}:
+                raise ConfigRefusal("permission_mode", "permission mode is absent or bypasses decisions")
+            if bidirectional and mode != "default":
+                raise ConfigRefusal("permission_mode", "bidirectional explicit approval requires default permission mode")
+    if bidirectional and any(name in {"--allowedTools", "--allowed-tools", "--settings", "--setting-sources"} for name in names):
+        raise ConfigRefusal("allowed_tools", "caller flags must not shadow explicit permission callbacks")
+    if bidirectional:
+        takes_value = {"--model", "--permission-mode", "--append-system-prompt", "--mcp-config", "--resume", "-r", "--session-id"}
+        standalone = {"--continue", "-c"}
+        index = 0
+        while index < len(args):
+            value = args[index]
+            name = value.split("=", 1)[0]
+            if name in standalone and "=" not in value:
+                index += 1
+            elif name in takes_value:
+                if "=" in value:
+                    if not value.split("=", 1)[1]:
+                        raise ConfigRefusal("extra_args", "native option requires a value")
+                    index += 1
+                else:
+                    if index + 1 >= len(args) or args[index + 1].startswith("-"):
+                        raise ConfigRefusal("extra_args", "native option requires a value")
+                    index += 2
+            else:
+                raise ConfigRefusal("extra_args", "bidirectional launch accepts only compiled configuration options, not positional prompts")
+
+
+def compile_config(materials: Mapping[str, Any], *, bidirectional: bool = False) -> dict:
     """Family-owned config compile (G3). ``subscriptionToken`` and other
     second-ownership keys are refused outright — no token reuse (G12)."""
     for key in materials:
@@ -138,6 +200,14 @@ def compile_config(materials: Mapping[str, Any]) -> dict:
                 else "not a recognized claude configuration key"
             )
             raise ConfigRefusal(key, reason)
+    if type(bidirectional) is not bool:
+        raise ConfigRefusal("bidirectional", "mode must be explicit boolean")
+    if "continue_" in materials and type(materials["continue_"]) is not bool:
+        raise ConfigRefusal("continue_", "continue must be an explicit boolean")
+    if materials.get("resume") is not None and (not isinstance(materials["resume"], str) or not materials["resume"]):
+        raise ConfigRefusal("resume", "resume requires an explicit nonempty native identity or transcript path")
+    if materials.get("resume") is not None and materials.get("continue_") is True:
+        raise ConfigRefusal("resume", "resume and continue are mutually exclusive")
     args: list[str] = []
     if materials.get("model") is not None:
         args.extend(["--model", str(materials["model"])])
@@ -160,6 +230,7 @@ def compile_config(materials: Mapping[str, Any]) -> dict:
         args.extend(["--resume", str(materials["resume"])])
     if materials.get("continue_") is True:
         args.append("--continue")
+    _validate_launch_args(tuple(args), bidirectional=bidirectional)
     return {"args": args}
 
 
@@ -167,14 +238,14 @@ def capability_matrix() -> dict[str, dict]:
     """declared/implemented/observed; nothing observed locally (G1 honesty)."""
     return {
         "prompt": {"declared": "yes", "implemented": "yes", "observed": "no"},
-        "cancel": {"declared": "yes", "implemented": "sigint", "observed": "no"},
+        "cancel": {"declared": "yes", "implemented": "output-only signal / opt-in native interrupt receipt", "observed": "no"},
         "resume": {"declared": "yes", "implemented": "plan-only", "observed": "no"},
-        "approvalCallback": {"declared": "yes", "implemented": "no-auto", "observed": "no"},
+        "approvalCallback": {"declared": "yes", "implemented": "opt-in explicit native decision / no auto-response", "observed": "no"},
         "steer": {"declared": "unknown", "implemented": "no", "observed": "no"},
         "modelConfig": {"declared": "yes", "implemented": "yes", "observed": "no"},
-        "sessionPersist": {"declared": "yes", "implemented": "result-session-id", "observed": "no"},
+        "sessionPersist": {"declared": "yes", "implemented": "init/result session identity / turn completion", "observed": "no"},
         "skillsPluginsMcp": {"declared": "yes", "implemented": "plan-only", "observed": "no"},
         "unknownExtensions": {"declared": "yes", "implemented": "yes", "observed": "no"},
         "transportFence": {"declared": "no", "implemented": "no", "observed": "no"},
-        "requestReconciliation": {"declared": "yes", "implemented": "yes", "observed": "no"},
+        "requestReconciliation": {"declared": "unknown", "implemented": "no; native receipt association only", "observed": "no"},
     }

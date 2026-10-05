@@ -14,6 +14,7 @@ import json
 from pathlib import Path
 import re
 import sqlite3
+from threading import RLock
 from uuid import uuid4
 
 from ordessa_harness_api import (
@@ -121,9 +122,35 @@ class OperationJournal:
 
     def __init__(self, path: Path):
         self.path = Path(path)
+        self._admission_guard = None
+        self._admission_guard_lock = RLock()
         if not self.path.parent.is_dir():
             raise JournalError("journal parent must be provisioned by the product")
         self._initialize()
+
+    def install_admission_guard(self, guard):
+        """Bind the existing owner's shared scope gate; never swap authority."""
+        if not callable(getattr(guard, "can_admit_legacy", None)) or getattr(guard, "scope_authority", None) is None:
+            raise JournalError("explicit owner scope admission guard required")
+        with self._admission_guard_lock:
+            previous = self._admission_guard
+            if previous is not None and previous.scope_authority is not guard.scope_authority:
+                raise JournalError("journal scope authority cannot be replaced")
+            if previous is None:
+                self._admission_guard = guard
+
+    def _legacy_admitted(self, db, target):
+        with self._admission_guard_lock:
+            guard = self._admission_guard
+        if guard is not None:
+            try:
+                return guard.can_admit_legacy(db, target) is True
+            except Exception:
+                return False
+        # A reopened journal must not bypass persisted Unit ownership merely
+        # because its process-local authority has not yet been composed.
+        table = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='harness_unit_reservations'").fetchone()
+        return table is None or db.execute("SELECT 1 FROM harness_unit_reservations LIMIT 1").fetchone() is None
 
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.path, timeout=5.0, isolation_level=None)
@@ -262,6 +289,8 @@ class OperationJournal:
                                         plan_data["secret_ref_revision"])
             if observed != expected or current >= _expiry(plan_data["expires_at_utc"]):
                 return Refused(ErrorCode.STALE_PLAN, ("plan fence or expiry changed",), True), False
+            if not self._legacy_admitted(db, target):
+                return Refused(ErrorCode.BUSY, ("owner configuration scope admission unavailable or occupied",), True), False
             # Legacy rows remain physically confirmed for data compatibility,
             # but a confirmation with no operation-bound evidence projects as
             # Unknown. It must retain the session fence for a different key.

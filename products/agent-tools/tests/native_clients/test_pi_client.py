@@ -126,7 +126,7 @@ PEER = textwrap.dedent(
     elif mode == "extension-ui":  # bidirectional extension UI record
         msg = read()
         send({"id": "ext-77", "type": "extension_ui_request",
-              "action": "approval", "prompt": "allow run?"})
+              "method": "confirm", "title": "permission", "message": "allow run?"})
         reply = read()  # the same-id extension_ui_response
         send({"type": "extension_ui_ack", "reply": reply})
         # echo the command receipt only after the UI round trip finished
@@ -254,7 +254,7 @@ def test_extension_ui_request_replied_with_same_id(tmp_path) -> None:
         if raw.get("type") == "extension_ui_request":
             seen.append(raw)
             client.reply_extension_ui(
-                raw["id"], {"action": "respond", "text": "pending"}
+                raw["id"], {"confirmed": False}
             )
 
     try:
@@ -264,10 +264,10 @@ def test_extension_ui_request_replied_with_same_id(tmp_path) -> None:
         receipt = client.send_prompt("x", timeout=5, on_event=on_event)
         assert receipt == {"disposition": "started"}  # UI reply made no receipt
         assert seen and seen[0]["id"] == "ext-77"
-        assert seen[0]["action"] == "approval"
+        assert seen[0]["method"] == "confirm"
         ack = [e for e in client.events() if e.get("type") == "extension_ui_ack"]
         assert ack and ack[0]["reply"]["id"] == "ext-77"  # same id echoed back
-        assert ack[0]["reply"]["text"] == "pending"
+        assert ack[0]["reply"]["confirmed"] is False
     finally:
         client.close()
 

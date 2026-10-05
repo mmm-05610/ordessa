@@ -47,14 +47,13 @@ def test_compile_config_maps_documented_flags() -> None:
             "system_prompt": "be brief",
             "mcp_config": "/tmp/mcp.json",
             "resume": "sess-1",
-            "continue_": True,
         }
     )
     args = compiled["args"]
     assert args[args.index("--model") + 1] == "claude-x"
     assert args[args.index("--permission-mode") + 1] == "acceptEdits"
     assert args[args.index("--resume") + 1] == "sess-1"
-    assert "--continue" in args
+    assert "--continue" in native_channel.compile_config({"continue_": True})["args"]
 
 
 @pytest.mark.parametrize("bad_key", ["subscriptionToken", "hotModelSwitch", "sandboxInstancePool", "mystery"])
@@ -91,3 +90,80 @@ def test_auto_approve_permission_modes_are_refused(bad_mode) -> None:
     # SAFETY counter-example: auto-approve/bypass modes are never compiled.
     with pytest.raises(native_channel.ConfigRefusal):
         native_channel.compile_config({"permission_mode": bad_mode})
+
+
+def test_bidirectional_is_explicit_with_native_control_flags(tmp_path):
+    plain = native_channel.plan_launch(home=tmp_path/'home', workspace=tmp_path/'work')
+    assert '--input-format' not in plain['argv']
+    assert '--permission-prompt-tool' not in plain['argv']
+    duplex = native_channel.plan_launch(home=tmp_path/'home', workspace=tmp_path/'work', bidirectional=True)
+    argv = duplex['argv']
+    assert argv[argv.index('--input-format') + 1] == 'stream-json'
+    assert argv[argv.index('--output-format') + 1] == 'stream-json'
+    assert argv[argv.index('--permission-prompt-tool') + 1] == 'stdio'
+    assert argv.count('--verbose') == 1
+    assert not (tmp_path/'home').exists() and not (tmp_path/'work').exists()
+
+
+def test_bidirectional_prompt_must_follow_control_initialize(tmp_path):
+    with pytest.raises(native_channel.ConfigRefusal):
+        native_channel.plan_launch(home=tmp_path/'home', workspace=tmp_path/'work', prompt='never dispatched', bidirectional=True)
+
+
+@pytest.mark.parametrize('args', [
+    ('--input-format', 'stream-json'), ('--output-format=json',),
+    ('--permission-prompt-tool', 'other'), ('--print',), ('--verbose',),
+    ('--dangerously-skip-permissions',), ('--allow-dangerously-skip-permissions',),
+    ('--permission-mode=bypassPermissions',), ('--resume=sess', '--continue'),
+])
+def test_extra_args_cannot_change_transport_or_bypass_permissions(tmp_path, args):
+    with pytest.raises(native_channel.ConfigRefusal):
+        native_channel.plan_launch(home=tmp_path/'home', workspace=tmp_path/'work', extra_args=args)
+
+
+@pytest.mark.parametrize('materials', [
+    {'permission_mode':'acceptEdits'}, {'permission_mode':'dontAsk'},
+    {'allowed_tools':'Bash'}, {'resume':'session-1','continue_':True},
+])
+def test_bidirectional_config_refuses_shadowed_approval_or_ambiguous_session(materials):
+    with pytest.raises(native_channel.ConfigRefusal):
+        native_channel.compile_config(materials, bidirectional=True)
+
+
+def test_resume_and_continue_are_distinct_explicit_plans(tmp_path):
+    for materials, expected in [({'resume':'session-1'},'--resume'),({'continue_':True},'--continue')]:
+        compiled = native_channel.compile_config(materials, bidirectional=True)
+        plan = native_channel.plan_launch(home=tmp_path/'home', workspace=tmp_path/'work',
+            bidirectional=True, extra_args=tuple(compiled['args']))
+        assert expected in plan['argv']
+    with pytest.raises(native_channel.ConfigRefusal):
+        native_channel.compile_config({'resume':'session-1', 'continue_':True})
+
+
+@pytest.mark.parametrize('args', [('--allowedTools=Read',), ('--permission-mode','acceptEdits'), ('--settings','/caller/file')])
+def test_bidirectional_launch_cannot_shadow_callback(args,tmp_path):
+    with pytest.raises(native_channel.ConfigRefusal):
+        native_channel.plan_launch(home=tmp_path/'home',workspace=tmp_path/'work',bidirectional=True,extra_args=args)
+
+
+def test_fixed_sdk_source_is_not_installed_runtime_evidence():
+    report = native_channel.channel_report()
+    assert report['sdk_source']['commit'] == '9c69ce7aced5cdf2aa1ac86fe62e877b4962de8b'
+    assert report['sdk_source']['version'] == '0.2.163'
+    assert report['sdk_source']['license'] == 'MIT'
+    assert report['sdk_source']['installed'] is False
+    assert report['artifact']['sha256'] == 'unknown'
+    assert 'official Claude Agent SDK' in report['consumer']['productionPreference']
+    assert 'not observed' in report['network']['default']
+
+
+@pytest.mark.parametrize('args',[('positional prompt',),('--', 'prompt'),('-r','session','-c'),('--resume',),('--resume=',)])
+def test_duplex_positional_input_and_ambiguous_aliases_refuse(tmp_path,args):
+    with pytest.raises(native_channel.ConfigRefusal):
+        native_channel.plan_launch(home=tmp_path/'home',workspace=tmp_path/'work',bidirectional=True,extra_args=args)
+
+
+@pytest.mark.parametrize('materials',[{'resume':''},{'resume':True},{'continue_':'true'}])
+def test_native_session_selection_has_explicit_types(materials):
+    with pytest.raises(native_channel.ConfigRefusal):
+        native_channel.compile_config(materials)

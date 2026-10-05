@@ -24,6 +24,8 @@ from __future__ import annotations
 
 import dataclasses
 from dataclasses import dataclass
+from functools import wraps
+from threading import RLock
 
 from .descriptors import ResourceProviderDescriptor, validate_component_id, validate_contract_id
 from .errors import (
@@ -37,6 +39,28 @@ from .errors import (
 
 _PROVIDER_METHODS = ("describe", "acquire", "release", "reconcile")
 _EXECUTION_METHODS = ("start", "observe", "stop")
+
+
+def _mutation(method):
+    @wraps(method)
+    def invoke(self, *args, **kwargs):
+        with self._lock:
+            if self._mutating:
+                raise CoreDTOError("registry mutation cannot reenter author callbacks")
+            self._mutating = True
+            try:
+                return method(self, *args, **kwargs)
+            finally:
+                self._mutating = False
+    return invoke
+
+
+def _query(method):
+    @wraps(method)
+    def invoke(self, *args, **kwargs):
+        with self._lock:
+            return method(self, *args, **kwargs)
+    return invoke
 
 
 @dataclass(frozen=True)
@@ -59,6 +83,7 @@ class CoreContributionSet:
             _validate_provider_shape(provider, _PROVIDER_METHODS, "resource")
         for provider in self.execution_providers:
             _validate_provider_shape(provider, _EXECUTION_METHODS, "execution")
+
 
 
 def _validate_contract(contract: object) -> None:
@@ -88,13 +113,14 @@ class CoreRegistrySnapshot:
     contract_ids: tuple[str, ...] = ()
     resource_provider_ids: tuple[str, ...] = ()
     execution_provider_ids: tuple[str, ...] = ()
+    agent_runtime_provider_ids: tuple[str, ...] = ()
 
 
 class _Batch:
     """Internal reservation record for one staged/committed contribution set."""
 
     __slots__ = ("owner", "contributions", "contract_ids", "resource_ids",
-                 "execution_ids", "state")
+                 "execution_ids", "agent_runtime_ids", "agent_runtime_descriptors", "state")
 
     def __init__(self, owner: str, contributions: CoreContributionSet) -> None:
         self.owner = owner
@@ -102,6 +128,8 @@ class _Batch:
         self.contract_ids: tuple[str, ...] = ()
         self.resource_ids: list[str] = []
         self.execution_ids: list[str] = []
+        self.agent_runtime_ids: list[str] = []
+        self.agent_runtime_descriptors: list[object] = []
         self.state = "staged"  # staged -> committed | rolled_back | unregistered
 
 
@@ -109,41 +137,55 @@ class CoreRegistry:
     """Instance-scoped contract/provider registry with staged-batch safety."""
 
     def __init__(self) -> None:
+        self._lock, self._mutating = RLock(), False
         self._contracts: dict[str, tuple[str, type]] = {}
         self._resource_providers: dict[str, tuple[str, object]] = {}
         self._execution_providers: dict[str, tuple[str, object]] = {}
+        self._agent_runtime_providers: dict[str, tuple[str, object, object]] = {}
         self._pending: list[_Batch] = []
-        self._active: dict[str, _Batch] = {}
+        self._active: dict[str, list[_Batch]] = {}
 
     # -- queries -----------------------------------------------------------
 
+    @_query
     def snapshot(self) -> CoreRegistrySnapshot:
         return CoreRegistrySnapshot(
             contract_ids=tuple(sorted(self._contracts)),
             resource_provider_ids=tuple(sorted(self._resource_providers)),
             execution_provider_ids=tuple(sorted(self._execution_providers)),
+            agent_runtime_provider_ids=tuple(sorted(self._agent_runtime_providers)),
         )
 
+    @_query
     def active_owners(self) -> frozenset[str]:
         return frozenset(self._active)
 
     # -- committed-lookup (used by the T008 dispatch surface) --------------
 
+    @_query
     def resource_provider(self, provider_id: str) -> tuple[str, object] | None:
         """``(owner, provider)`` of the committed resource provider, or None.
         Only *committed* registrations are visible (staged publishes nothing)."""
         return self._resource_providers.get(provider_id)
 
+    @_query
     def execution_provider(self, provider_id: str) -> tuple[str, object] | None:
         """``(owner, provider)`` of the committed execution provider, or None."""
         return self._execution_providers.get(provider_id)
 
+    @_query
     def has_contract(self, contract_id: str) -> bool:
         """True when the contract is registered in this instance's registry."""
         return contract_id in self._contracts
 
+    @_query
+    def agent_runtime_provider(self, provider_id: str):
+        """Committed host owner, payload and immutable admitted descriptor."""
+        return self._agent_runtime_providers.get(provider_id)
+
     # -- staging -----------------------------------------------------------
 
+    @_mutation
     def stage(self, owner: str, contributions: CoreContributionSet) -> _Batch:
         """Validate one batch against the current claims; reserve ids;
         publish nothing.  Any typed failure leaves the registry untouched."""
@@ -152,10 +194,16 @@ class CoreRegistry:
         claimed_contracts = set(self._contracts)
         claimed_resources = set(self._resource_providers)
         claimed_executions = set(self._execution_providers)
+        claimed_agent_runtime = set(self._agent_runtime_providers)
+        claimed_definitions = {tuple(item[2].definition_ref.items())
+                               for item in self._agent_runtime_providers.values()}
         for pending in self._pending:
             claimed_contracts.update(pending.contract_ids)
             claimed_resources.update(pending.resource_ids)
             claimed_executions.update(pending.execution_ids)
+            claimed_agent_runtime.update(pending.agent_runtime_ids)
+            claimed_definitions.update(tuple(item.definition_ref.items())
+                                       for item in pending.agent_runtime_descriptors)
 
         # 1. contract id validation + double-claim conflict
         contract_ids: list[str] = []
@@ -214,12 +262,32 @@ class CoreRegistry:
             batch.execution_ids.append(provider_id)
             _check_supported_contracts(provider, provider_id, available_contracts)
 
+        # Agent lifecycle providers use this same staged/publication authority.
+        # No side registry or legacy execution-provider fallback is consulted.
+        for provider in getattr(contributions, "agent_runtime_providers", ()):
+            from .lifecycle import RUNTIME_METHODS, RuntimeProviderDescriptor
+            if any(hasattr(provider, key) for key in ("owner", "owner_activation", "generation")):
+                raise CoreDTOError("RuntimeProvider may not supply host ownership")
+            _validate_provider_shape(provider, RUNTIME_METHODS, "Agent runtime")
+            descriptor = getattr(provider, "descriptor", None)
+            if type(descriptor) is not RuntimeProviderDescriptor:
+                raise CoreDTOError("RuntimeProvider descriptor changed before staging")
+            descriptor = descriptor.snapshot()
+            definition_key = tuple(descriptor.definition_ref.items())
+            if descriptor.provider_id in claimed_agent_runtime or definition_key in claimed_definitions:
+                raise RegistrationConflictError("Agent RuntimeProvider id or exact definition already claimed")
+            batch.agent_runtime_ids.append(descriptor.provider_id)
+            batch.agent_runtime_descriptors.append(descriptor)
+            claimed_agent_runtime.add(descriptor.provider_id)
+            claimed_definitions.add(definition_key)
+
         # All checks passed against local copies: reserve as pending.
         self._pending.append(batch)
         return batch
 
     # -- publication -------------------------------------------------------
 
+    @_mutation
     def commit(self, batch: _Batch) -> None:
         if batch.state == "committed":
             return  # the whole batch is already visible; re-commit is a no-op
@@ -227,16 +295,33 @@ class CoreRegistry:
             raise BatchAlreadyUsedError(
                 f"batch of owner {batch.owner!r} is {batch.state}; only a staged batch commits"
             )
+        # Validate all mutable author payloads before publishing any category.
+        for admitted_id, contract in zip(batch.contract_ids, batch.contributions.contracts):
+            _validate_contract(contract)
+            if contract.contract_id != admitted_id:
+                raise CoreDTOError("contract identity changed before publication")
+        for provider, descriptor in zip(getattr(batch.contributions, "agent_runtime_providers", ()),
+                                        batch.agent_runtime_descriptors):
+            if getattr(provider, "descriptor", None) != descriptor:
+                raise CoreDTOError("RuntimeProvider descriptor changed before publication")
+            from .lifecycle import RUNTIME_METHODS
+            _validate_provider_shape(provider, RUNTIME_METHODS, "Agent runtime")
+            if any(hasattr(provider, key) for key in ("owner", "owner_activation", "generation")):
+                raise CoreDTOError("RuntimeProvider may not supply host ownership")
         for contract_id, contract in zip(batch.contract_ids, batch.contributions.contracts):
             self._contracts[contract_id] = (batch.owner, contract)
         for provider_id, provider in zip(batch.resource_ids, batch.contributions.resource_providers):
             self._resource_providers[provider_id] = (batch.owner, provider)
         for provider_id, provider in zip(batch.execution_ids, batch.contributions.execution_providers):
             self._execution_providers[provider_id] = (batch.owner, provider)
+        for provider_id, provider, descriptor in zip(batch.agent_runtime_ids,
+                getattr(batch.contributions, "agent_runtime_providers", ()), batch.agent_runtime_descriptors):
+            self._agent_runtime_providers[provider_id] = (batch.owner, provider, descriptor)
         self._pending.remove(batch)
-        self._active[batch.owner] = batch
+        self._active.setdefault(batch.owner, []).append(batch)
         batch.state = "committed"
 
+    @_mutation
     def rollback(self, batch: _Batch) -> None:
         if batch.state == "rolled_back":
             return  # idempotent: undoing an already-undone unused batch is harmless
@@ -248,20 +333,32 @@ class CoreRegistry:
         self._pending.remove(batch)
         batch.state = "rolled_back"
 
-    def unregister(self, owner: str) -> _Batch:
-        batch = self._active.get(owner)
-        if batch is None:
+    @_mutation
+    def unregister(self, owner: str, *, batch: _Batch | None = None) -> _Batch:
+        batches = self._active.get(owner, [])
+        if not batches:
             raise OwnerNotRegisteredError(f"owner has no active batch: {owner!r}")
-        for key, (o, _v) in list(self._contracts.items()):
-            if o == owner:
+        if batch is None:
+            if len(batches) != 1:
+                raise CoreDTOError("retirement requires the exact activation batch")
+            batch = batches[0]
+        if not any(item is batch for item in batches):
+            raise OwnerNotRegisteredError("activation batch is not owned by this registry")
+        for key in batch.contract_ids:
+            if self._contracts.get(key, (None,))[0] == owner:
                 del self._contracts[key]
-        for key, (o, _v) in list(self._resource_providers.items()):
-            if o == owner:
+        for key in batch.resource_ids:
+            if self._resource_providers.get(key, (None,))[0] == owner:
                 del self._resource_providers[key]
-        for key, (o, _v) in list(self._execution_providers.items()):
-            if o == owner:
+        for key in batch.execution_ids:
+            if self._execution_providers.get(key, (None,))[0] == owner:
                 del self._execution_providers[key]
-        del self._active[owner]
+        for key in batch.agent_runtime_ids:
+            if self._agent_runtime_providers.get(key, (None,))[0] == owner:
+                del self._agent_runtime_providers[key]
+        batches.remove(batch)
+        if not batches:
+            del self._active[owner]
         batch.state = "unregistered"
         return batch
 

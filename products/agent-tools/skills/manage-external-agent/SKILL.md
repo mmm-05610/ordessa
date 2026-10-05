@@ -9,7 +9,8 @@ settings. `init --output harness-observation.json --json` saves a new observatio
 file and refuses overwrite. Found executables are local clues: runtimeReady is
 unknown and trusted provider admission is not checked. No candidates gives exit 4.
 The caller machine may differ from the service host; a local missing executable
-does not prove a remote service lacks that Harness. Use service `doctor` separately.
+does not prove a remote service lacks that Harness. Use service `doctor` separately. Local initialization is optional for remote
+service use; exit 4 from local discovery does not prevent remote Profile operations.
 
 Run `ordessa-agent capabilities --config services.json --service local --json`
 against the user's selected existing service. This release reports

@@ -208,7 +208,11 @@ class OperationRecordsMixin:
                     raise IdentityMismatchError("publication must transfer this operation's Usage to a node")
                 destination = node_holder(request.environment_namespace, mutation.holder_ref.get("instanceId"),
                                           mutation.holder_ref.get("generation"))
-                if mutation.holder_ref != destination or intent.node_ref != destination or mutation.state != "active":
+                participant = {key: value for key, value in destination.items() if key != "kind"}
+                # ParticipantInstanceRef is three fields; the Usage holder is
+                # its tagged view. Retain the older tagged intent codec too.
+                if (mutation.holder_ref != destination or intent.node_ref not in (destination, participant)
+                        or mutation.state != "active"):
                     raise IdentityMismatchError("publication node holder differs from fixed node identity")
             elif mutation.holder_ref != owner or (mutation.expected_holder_ref is not None and mutation.expected_holder_ref != owner):
                 raise IdentityMismatchError("step Usage must belong to this exact operation")
@@ -437,6 +441,15 @@ class OperationRecordsMixin:
                 step_row = self._step_row(request, step_id)
                 if step_row is None or self._step_record(request, step_row).outcome != "concluded":
                     raise UnknownResultError("publication lacks complete step evidence")
+            held = self._conn.execute(
+                "SELECT usage_id,state FROM env_usages WHERE environment=? AND holder_ref=?",
+                (request.environment_namespace, safe_json(operation_holder(request, operation.intent.operation_ref))),
+            ).fetchall()
+            required_usage_ids = {item["usage_id"] for item in held if item["state"] != "released"}
+            if {item[0].usage_id for item in usage_rows} != required_usage_ids:
+                raise IdentityMismatchError("publication must transfer every retained operation Usage")
+            if any(item["state"] == "unknown" for item in held):
+                raise UnknownResultError("publication cannot conclude an uncertain retained Usage")
             self._write_domains(request.environment_namespace, domains)
             self._write_usages(request, operation.intent, usage_rows, publication=True, concluded=True)
             self._set_operation(request, row, "published", step=operation.current_step,

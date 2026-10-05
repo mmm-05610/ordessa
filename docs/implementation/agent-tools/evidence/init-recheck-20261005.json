@@ -1,0 +1,20 @@
+{
+  "artifact": "historical 0.1.0a2-init wheel",
+  "installExit": 0,
+  "initExit": 0,
+  "foundFamilies": [
+    "codex",
+    "pi"
+  ],
+  "scanComplete": true,
+  "evidence": {
+    "level": "localExecutableDiscovery",
+    "executedBinaries": false,
+    "serverHostChecked": false,
+    "runtimeVerified": false
+  },
+  "runtimeReady": {
+    "codex": "unknown",
+    "pi": "unknown"
+  }
+}

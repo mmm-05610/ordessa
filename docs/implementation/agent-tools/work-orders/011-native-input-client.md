@@ -4,7 +4,7 @@ slug: "native-input-client"
 batch: "agent-tools-first-20261004"
 baseline: "adce734db21945181bf93da9720158d05e957654"
 baseline_status: "approved"
-state: "queued-on-dependencies"
+state: "native-contracts-input-reservation-in-progress"
 depends_on: [{"condition": "010与006授权接缝验收；不得豁免资源缺席", "order": "010"}]
 write_paths: ["products/agent-tools/**","plugins/harness/**","packages/backend/pacthold/src/pacthold/agents/**"]
 forbidden: ["其他工作树/**", "用户数据库/凭据/全局配置", "plugins/agent-tools/**"]
@@ -23,7 +23,7 @@ parallelism_reason: "先冻结本单合同及依赖，再按不交叉文件派�
 
 ## Current state
 
-当前未开执行；公开Profile数据切片可用不证明本单成立。具体缺口来自028 V2.1及固定源码，不能自创新协议。
+2026-10-05继续原单：三家真实原生结构消费者修复已落源码；managed transport写屏障执行者31P。核心inputs.py在同OperationStore预留draft fence与dispatch claim，正在加真实SQLite反例及独立审阅，未验收。三家客户端未接CLI，生产capture/native owner、结果投影和断连恢复链未完成，managedInput能力保持false。不是AT_011_DONE。
 
 ## Scope
 

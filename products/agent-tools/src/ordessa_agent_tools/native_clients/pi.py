@@ -19,11 +19,10 @@ Pinned facts (N003, official pi 0.86.1 MIT rpc docs, frozen 2026-10-04):
   bidirectional extension-UI records (``extension_ui_request`` is answered
   with a same-``id`` ``extension_ui_response`` and produces no regular
   response). Unknown types/fields surface verbatim, never dropped (G4).
-- Receipts are NOT completion: ``prompt`` answers ``data.disposition`` as
-  ``"started"`` or ``"handled"`` (``handled`` = no run started, no
-  ``agent_settled`` will follow); ``agent_end`` is merely one run ending —
-  retry/compaction/steer may follow. Only ``agent_settled`` means the agent
-  will not automatically continue.
+- Receipts are NOT completion: the pinned 0.86.1 source returns a successful
+  ``prompt`` response without data. Acceptance includes queued or immediately
+  handled input. ``agent_end`` is merely one run ending; only
+  ``agent_settled`` proves no automatic continuation remains.
 - There is NO ``initialize``/version negotiation in the documented protocol;
   the handshake here is a ``get_state`` command round trip that invents
   nothing. Resume/replay semantics are undocumented upstream — they remain
@@ -39,6 +38,7 @@ re-sends, and never touches anything beyond its own channel.
 from __future__ import annotations
 
 import time
+import threading
 from collections import deque
 from typing import Any, Callable, Mapping, Sequence
 
@@ -52,6 +52,8 @@ from ._transport import (
     ProcessChannel,
     RequestTimeout,
 )
+
+UPSTREAM_SOURCE_COMMIT = "13cbf77df2396303013a41646bcfa77b4271ae56"
 
 FAMILY_ID = "pi"
 PI_PROTOCOL_ID = "pi-rpc/1"
@@ -183,6 +185,10 @@ class PiRpcClient:
         self._pending: dict[str, str] = {}  # request_id -> command (G11 ledger)
         self._request_seq = 0
         self._run_state: str | None = None
+        self._run_settled_event: Mapping[str, Any] | None = None
+        self._ui_pending: dict[str, str] = {}
+        self._ui_seen: set[str] = set()
+        self._ui_lock = threading.RLock()
 
     @classmethod
     def launch(cls, spec: LaunchSpec, *, name: str = "pi-rpc") -> "PiRpcClient":
@@ -236,17 +242,21 @@ class PiRpcClient:
         """Send the documented ``prompt`` command record.
 
         **The returned receipt is NOT a completion notice.** It is the
-        response ``data`` verbatim — per the pinned protocol a dict carrying
-        ``data.disposition`` ``"started"`` or ``"handled"`` (``handled``
-        means no run was started and no ``agent_settled`` will follow).
+        response verbatim when it has no ``data``; additional ``data`` is
+        returned unchanged for existing consumers. The pinned 0.86.1
+        response has no disposition and proves only acceptance.
         Completion boundaries are observed via :meth:`wait_settled` /
         :meth:`events`, not from this receipt. ``on_event(raw_event)`` (if
         given) is fed every session event that arrives while this receipt is
         being waited for; it is never fed an auto-reply and never causes one
         (no auto-approve).
         """
+        if self._run_state == "unknown":
+            raise LostReceipt("prompt", None, "prior prompt outcome remains unknown; next prompt refused")
         args = dict(fields)
         args["message"] = message
+        # A historical settle event cannot conclude a subsequent prompt.
+        self._run_settled_event = None
         try:
             record = self._request("prompt", args, timeout=timeout, on_event=on_event)
         except (RequestTimeout, LostReceipt):
@@ -255,6 +265,9 @@ class PiRpcClient:
             self._run_state = "unknown"
             raise
         data = record.get("data")
+        if self._run_settled_event is not None:
+            self._run_state = "settled"
+            return record.get("data", record)
         if isinstance(data, dict):
             disposition = data.get("disposition")
             if disposition == "started":
@@ -262,10 +275,13 @@ class PiRpcClient:
             elif disposition == "handled":
                 self._run_state = "handled"
             else:
-                self._run_state = "unknown"  # undocumented disposition: unknown, not guessed
+                self._run_state = "accepted"
         else:
-            self._run_state = "unknown"
-        return data
+            self._run_state = "accepted"
+        # Preserve data extensions used by existing consumers; the actual
+        # pinned no-data response is returned verbatim, without a made-up
+        # disposition or completion state.
+        return record.get("data", record)
 
     def wait_settled(self, *, timeout: float) -> Mapping[str, Any]:
         """Collect session events until ``agent_settled`` or timeout.
@@ -280,6 +296,8 @@ class PiRpcClient:
         marker immediately instead of waiting — no run, no settle boundary,
         and no fabricated completion.
         """
+        if self._run_settled_event is not None:
+            return self._run_settled_event
         if self._run_state == "unknown":
             # The prompt outcome was never observed (lost receipt / unknown
             # disposition): a run MAY exist. Answering "no-run" would be a
@@ -294,24 +312,21 @@ class PiRpcClient:
                 "reason": f"no tracked run in progress (state={self._run_state!r})",
             }
         deadline = time.monotonic() + timeout
-        index = 0  # non-destructive scan: observed events stay in the stream
         while True:
-            if index < len(self._events):
-                raw = self._events[index]
-                index += 1
-            else:
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise RequestTimeout(SETTLED_EVENT, None, timeout)
-                try:
-                    message = self._channel.next_message(timeout=remaining)
-                except RequestTimeout:
-                    continue
-                self._handle_frame(message.raw, waiting_id=None)
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise RequestTimeout(SETTLED_EVENT, None, timeout)
+            try:
+                message = self._channel.next_message(timeout=remaining)
+            except RequestTimeout:
                 continue
-            if raw.get("type") == SETTLED_EVENT:
+            except (ChannelClosed, FramingError) as exc:
+                self._run_state = "unknown"
+                raise LostReceipt(SETTLED_EVENT, None, f"settle evidence unavailable: {exc}") from exc
+            self._handle_frame(message.raw, waiting_id=None)
+            if self._run_settled_event is not None:
                 self._run_state = "settled"
-                return raw
+                return self._run_settled_event
 
     # -- event stream -------------------------------------------------------
     def events(self) -> tuple[Mapping[str, Any], ...]:
@@ -374,12 +389,30 @@ class PiRpcClient:
     ) -> None:
         """Answer an ``extension_ui_request`` with the SAME id, as the
         documented bidirectional record ``extension_ui_response``. ``payload``
-        keys go out verbatim as same-level fields. This client never replies
-        on its own initiative (no auto-approve)."""
-        record: dict[str, Any] = {"id": request_id, "type": "extension_ui_response"}
-        if payload:
-            record.update(payload)
-        self._channel.send_raw(record)
+        must be the native ``value``/``confirmed`` or ``cancelled:true`` shape
+        for the observed dialog method. Notifications and unknown methods do
+        not grant reply authority. Every dialog can be answered once, even
+        if that write loses its outcome. No response is sent automatically."""
+        fields = dict(payload or {})
+        if {"id", "type"}.intersection(fields):
+            raise ValueError("extension UI payload cannot replace record identity")
+        with self._ui_lock:
+            if not isinstance(request_id, str) or request_id not in self._ui_pending:
+                raise ValueError("extension UI response requires an observed pending request")
+            method = self._ui_pending[request_id]
+            cancelled = set(fields) == {"cancelled"} and fields["cancelled"] is True
+            expected = "confirmed" if method == "confirm" else "value"
+            valid = (set(fields) == {expected} and (
+                type(fields[expected]) is bool if expected == "confirmed"
+                else isinstance(fields[expected], str)
+            ))
+            if not (cancelled or valid):
+                raise ValueError("extension UI response does not match the native method")
+            record = {"id": request_id, "type": "extension_ui_response", **fields}
+            # Consume before writing: partial write/disconnect must never enable
+            # the same reply to be re-sent. There is no native reply receipt.
+            del self._ui_pending[request_id]
+            self._channel.send_raw(record)
 
     def command(
         self, command_type: str, *, timeout: float = 10.0, **fields: Any
@@ -419,13 +452,54 @@ class PiRpcClient:
             and rid == waiting_id
             and rid in self._pending
         ):
+            if raw.get("command") != self._pending[rid] or type(raw.get("success")) is not bool:
+                raise LostReceipt(self._pending[rid], rid, "response identity or success field invalid")
             del self._pending[rid]
             return raw
-        if record_type == "response" and "success" in raw and addressed and rid in self._pending:
+        if (record_type == "response" and type(raw.get("success")) is bool
+                and addressed and rid in self._pending
+                and raw.get("command") == self._pending[rid]):
             del self._pending[rid]
             # fall through: the stale receipt still surfaces verbatim below
         self._events.append(raw)
+        if record_type == "extension_ui_request":
+            self._observe_extension_ui(raw)
+        if raw.get("type") == SETTLED_EVENT:
+            self._run_settled_event = raw
         return None
+
+    def _observe_extension_ui(self, raw: Mapping[str, Any]) -> None:
+        """Qualify only pinned Pi dialog methods, preserving every raw event.
+
+        rpc-types.ts:223-267 and rpc-mode.ts:126-250 at
+        UPSTREAM_SOURCE_COMMIT distinguish dialogs from fire-and-forget UI.
+        Unknown future methods stay visible without receiving reply authority.
+        """
+        method = raw.get("method")
+        if not isinstance(method, str) or method not in {"select", "confirm", "input", "editor"}:
+            return
+        rid = raw.get("id")
+        valid = isinstance(rid, str) and bool(rid) and isinstance(raw.get("title"), str)
+        if method == "select":
+            options = raw.get("options")
+            valid = valid and isinstance(options, list) and all(isinstance(v, str) for v in options)
+        if method == "confirm":
+            valid = valid and isinstance(raw.get("message"), str)
+        optional = "placeholder" if method == "input" else "prefill" if method == "editor" else None
+        if optional is not None and optional in raw:
+            valid = valid and isinstance(raw[optional], str)
+        if "timeout" in raw:
+            value = raw["timeout"]
+            valid = valid and type(value) in (int, float) and 0 <= value < float("inf")
+        if not valid:
+            raise FramingError("malformed Pi extension UI dialog")
+        with self._ui_lock:
+            if rid in self._ui_seen:
+                # Re-observation cannot resurrect a consumed callback or replace
+                # the method attached to a pending native id.
+                raise FramingError("duplicate Pi extension UI dialog id")
+            self._ui_seen.add(rid)
+            self._ui_pending[rid] = method
 
     def _request(
         self,
@@ -439,12 +513,19 @@ class PiRpcClient:
         failure. Never retries (G11); a write failure before send is
         ChannelClosed, a transport breach after send is LostReceipt
         (outcome unknown), a deadline is RequestTimeout."""
+        if {"id", "type"}.intersection(fields):
+            raise ValueError("command fields cannot replace record identity")
         self._request_seq += 1
         request_id = f"req-{self._request_seq}"
         payload: dict[str, Any] = {"id": request_id, "type": command}
         payload.update(fields)
-        self._channel.send_raw(payload)  # raises ChannelClosed when already closed
-        self._pending[request_id] = command  # written: a lost receipt stays unknown
+        self._pending[request_id] = command
+        try:
+            self._channel.send_raw(payload)
+        except ChannelClosed as exc:
+            # BrokenPipe can occur after a partial write. Do not invent proof
+            # that the peer never accepted the command.
+            raise LostReceipt(command, request_id, f"write outcome unknown: {exc}") from exc
         deadline = time.monotonic() + timeout
         while True:
             remaining = deadline - time.monotonic()
@@ -458,7 +539,10 @@ class PiRpcClient:
                 raise LostReceipt(
                     command, request_id, f"transport failure after send: {exc}"
                 ) from exc
-            matched = self._handle_frame(message.raw, waiting_id=request_id)
+            try:
+                matched = self._handle_frame(message.raw, waiting_id=request_id)
+            except FramingError as exc:
+                raise LostReceipt(command, request_id, f"invalid event after send: {exc}") from exc
             if matched is not None:
                 if matched.get("success") is False:
                     raise PiCommandError(

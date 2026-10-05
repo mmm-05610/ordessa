@@ -37,3 +37,5 @@ __all__ = ["AGENT_CONTRACT_VERSION", "AgentServices", "agent_services",
            "ProfileNotFound", "ProfileRevisionConflict", "ProfileValidationError"]
 __all__ += ["wire_contract", "wire_schema_digest"]
 __all__ += ["DirectoryBindingRef"]
+from .runtime import AgentContributionSet, RuntimeProvider, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
+__all__ += ["AgentContributionSet", "RuntimeProvider", "RuntimeProviderDescriptor", "RUNTIME_PROVIDER_VERSION"]

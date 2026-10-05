@@ -4,7 +4,7 @@ slug: "node-publication-management"
 batch: "agent-tools-first-20261004"
 baseline: "adce734db21945181bf93da9720158d05e957654"
 baseline_status: "approved"
-state: "queued-on-dependencies"
+state: "publication-foundation-in-progress"
 depends_on: [{"condition": "009与006授权接缝验收；不得豁免资源缺席", "order": "009"}]
 write_paths: ["packages/backend/pacthold/src/pacthold/agents/**","apps/server/**","products/agent-tools/src/**"]
 forbidden: ["其他工作树/**", "用户数据库/凭据/全局配置", "plugins/agent-tools/**"]
@@ -23,7 +23,7 @@ parallelism_reason: "先冻结本单合同及依赖，再按不交叉文件派�
 
 ## Current state
 
-当前未开执行；公开Profile数据切片可用不证明本单成立。具体缺口来自028 V2.1及固定源码，不能自创新协议。
+2026-10-05继续原单：NodePublication内部primitive复用ParticipantInstanceRef、既有OperationStore/Usage及同SQLite原子发布，执行者20P、主会话含接纳/Invocation组合94P exit0。完整Profile manifest核验、生产NodeEvidencePort、实际prepare/start/stop/recover与public wire尚缺，nodes能力保持false。不是AT_010_DONE。
 
 ## Scope
 

@@ -4,7 +4,7 @@ slug: "provider-admission"
 batch: "agent-tools-first-20261004"
 baseline: "adce734db21945181bf93da9720158d05e957654"
 baseline_status: "approved"
-state: "queued-on-dependencies"
+state: "runtime-admission-foundation-verified"
 depends_on: [{"condition": "008与006授权接缝验收；不得豁免资源缺席", "order": "008"}]
 write_paths: ["packages/backend/pacthold/src/pacthold/agents/**","plugins/harness/**","plugins/skills/**","plugins/model-provider/**"]
 forbidden: ["其他工作树/**", "用户数据库/凭据/全局配置", "plugins/agent-tools/**"]
@@ -23,7 +23,7 @@ parallelism_reason: "先冻结本单合同及依赖，再按不交叉文件派�
 
 ## Current state
 
-当前未开执行；公开Profile数据切片可用不证明本单成立。具体缺口来自028 V2.1及固定源码，不能自创新协议。
+2026-10-05按当前HEAD3086825a6177438c042431cdb94812ded576ee6c继续原单。RuntimeProvider通过AgentContributionSet增量子类型进入同CoreRegistry；原C1三字段保留。主会话定向21P及节点/Invocation组合94P exit0；这是可信贡献接纳基础，Skills/MCP/Prompt/Provider叶子真实交接和生产RuntimeOwner未验收，不标AT_009_DONE。详见runtime-admission-contract.md。
 
 ## Scope
 

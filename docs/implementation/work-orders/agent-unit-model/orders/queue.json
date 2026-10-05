@@ -1,0 +1,7 @@
+{
+  "single_executor": true,
+  "shared_paths": [
+    "docs/implementation/agent-tools/status.md",
+    "docs/implementation/agent-tools/evidence/agent-unit-model/**"
+  ]
+}

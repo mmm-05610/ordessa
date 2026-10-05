@@ -271,6 +271,7 @@ class _ActivationEntry:
     contributions: CoreContributionSet
     state: str = "active"  # active|draining|retired
     contribution_revision: int = 0
+    registration_batch: Any = None
 
 
 @dataclass
@@ -485,8 +486,11 @@ class Environment:
                 f"(installed={self.installed}, enabled={self.enabled})"
             )
         payload = contributions if contributions is not None else CoreContributionSet()
-        if any(str(getattr(contract, "contract_id", "")) == "pacthold.agents"
-               or str(getattr(contract, "contract_id", "")).startswith("pacthold.agents.")
+        for provider in getattr(payload, "agent_runtime_providers", ()):
+            if provider.descriptor.definition_ref["environmentNamespace"] != self.environment_id:
+                raise IdentityMismatchError("RuntimeProvider definition belongs to another Environment")
+        if any(str(getattr(contract, "contract_id", "")).partition("@")[0] == "pacthold.agents"
+               or str(getattr(contract, "contract_id", "")).partition("@")[0].startswith("pacthold.agents.")
                for contract in payload.contracts):
             raise RegistrationConflictError("Agent core surfaces cannot be owned by a plugin activation")
         batch = self._registry.stage(owner, payload)
@@ -495,36 +499,30 @@ class Environment:
     def _commit_activation_stage(
         self, plugin_id: str, payload: CoreContributionSet, batch: Any
     ) -> ActivationReceipt:
-        self._check_open()
-        self._registry.commit(batch)
-        generation = self._activation_generations.get(plugin_id, 0) + 1
-        self._activation_generations[plugin_id] = generation
-        ref = ActivationRef(environment=self.environment_id, plugin_id=plugin_id, generation=generation)
-        entry = _ActivationEntry(ref=ref, contributions=payload)
-        entry.contribution_revision += 1
-        self._activations[(plugin_id, generation)] = entry
-        self._published_revision += 1  # one revision per committed batch (T004-02)
-        # Capabilities contributed by this activation: static catalog ids from
-        # the payload's contracts (pure query surface — no ExecutionPlan needed,
-        # T003-03).
-        for contract in payload.contracts:
-            raw_id = str(getattr(contract, "contract_id"))
-            surface_id, _, version = raw_id.rpartition("@")
-            surface_id = surface_id.replace("@", ".")
-            self._capabilities[surface_id] = _CapabilityEntry(
-                surface=SurfaceRef(
-                    environment=self.environment_id,
-                    surface_id=surface_id,
-                    contract_version=version or "1",
-                    owner=ref,
-                ),
-                owner_activation=ref,
-                operation_kinds=("read",),
-            )
-        return ActivationReceipt(
-            activation=ref,
-            published_contribution_revision=f"cr-{entry.contribution_revision}",
-        )
+        with self._admission_lock:
+            self._check_open()
+            if plugin_id not in self._enabled:
+                raise AdmissionRefusedError("activation was disabled before publication")
+            generation = self._activation_generations.get(plugin_id, 0) + 1
+            ref = ActivationRef(environment=self.environment_id, plugin_id=plugin_id, generation=generation)
+            # Construct every fallible identity projection before publication;
+            # a bad surface may not leave a half-published RuntimeProvider.
+            capabilities = {}
+            for raw_id in batch.contract_ids:
+                surface_id, _, version = raw_id.rpartition("@")
+                surface_id = surface_id.replace("@", ".")
+                capabilities[surface_id] = _CapabilityEntry(
+                    surface=SurfaceRef(environment=self.environment_id, surface_id=surface_id,
+                                       contract_version=version or "1", owner=ref),
+                    owner_activation=ref, operation_kinds=("read",))
+            self._registry.commit(batch)
+            self._activation_generations[plugin_id] = generation
+            entry = _ActivationEntry(ref=ref, contributions=payload, contribution_revision=1,
+                                     registration_batch=batch)
+            self._activations[(plugin_id, generation)] = entry
+            self._published_revision += 1
+            self._capabilities.update(capabilities)
+            return ActivationReceipt(activation=ref, published_contribution_revision="cr-1")
 
     def _activation_entry(self, ref: ActivationRef) -> _ActivationEntry:
         self._check_environment(ref.environment)
@@ -532,6 +530,42 @@ class Environment:
         if entry is None or entry.ref != ref:
             raise IdentityMismatchError(f"unknown activation {ref!r}")
         return entry
+
+    def agent_runtime_contribution(self, definition_ref):
+        """Read a live, host-owned Agent RuntimeProvider from the sole registry.
+
+        This view grants no invocation permission. Effect dispatch still
+        requires a held Usage, a durable claim and InvocationContext recheck.
+        """
+        from .core.lifecycle import RUNTIME_METHODS, RuntimeProviderDescriptor, AdmittedRuntimeProvider
+        from ordessa_environment_api.operations import safe_json
+        with self._admission_lock:
+            self._check_open()
+            if self._policy is None or not self._policy.admit_object_access(
+                    self._principal_scope, f"{self.environment_id}:agents.runtime", "read"):
+                raise AdmissionRefusedError("RuntimeProvider discovery refused")
+            if definition_ref.get("environmentNamespace") != self.environment_id:
+                raise IdentityMismatchError("RuntimeProvider definition scope differs")
+            encoded = safe_json(definition_ref)
+            found = []
+            for provider_id in self._registry.snapshot().agent_runtime_provider_ids:
+                owner, provider, descriptor = self._registry.agent_runtime_provider(provider_id)
+                if safe_json(descriptor.definition_ref) != encoded:
+                    continue
+                live = [entry for entry in self._activations.values()
+                        if entry.ref.plugin_id == owner and entry.state == "active"
+                        and any(candidate is provider for candidate in getattr(entry.contributions, "agent_runtime_providers", ()))]
+                if len(live) != 1:
+                    raise AdmissionRefusedError("RuntimeProvider activation is unavailable or ambiguous")
+                actual = getattr(provider, "descriptor", None)
+                if (type(actual) is not RuntimeProviderDescriptor or actual != descriptor
+                        or any(not callable(getattr(provider, name, None)) for name in RUNTIME_METHODS)
+                        or any(hasattr(provider, name) for name in ("owner", "owner_activation", "generation"))):
+                    raise AdmissionRefusedError("RuntimeProvider changed after admission")
+                found.append(AdmittedRuntimeProvider(live[0].ref, descriptor.snapshot(), provider))
+            if len(found) != 1:
+                raise AdmissionRefusedError("RuntimeProvider unavailable for the exact definition")
+            return found[0]
 
     # -- instances & objects (E1 instantiate/use/release) --------------------
 
@@ -1151,7 +1185,8 @@ class Environment:
         # release the owner's registry claims so a NEW generation may
         # re-contribute the same contracts (the registry is owner-keyed)
         try:
-            self._registry.unregister(activation.plugin_id)
+            self._registry.unregister(activation.plugin_id,
+                                      batch=self._activation_entry(activation).registration_batch)
         except Exception:
             pass  # already unregistered — nothing to release
 

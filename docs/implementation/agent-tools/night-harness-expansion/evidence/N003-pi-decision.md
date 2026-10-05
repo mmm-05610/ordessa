@@ -4,10 +4,10 @@
 
 ## 通道决策（L0）
 
-- **选定通道**：pi 原生RPC（`pi --mode rpc`，严格JSONL）。官方SDK：未发现需比较的独立公开SDK（docs仅RPC/extension UI页）；ACP非主入口，不选。
+- **选定通道**：pi 原生RPC（`pi --mode rpc`，严格JSONL）。官方SDK存在并随主包提供`createAgentSession`；原“未发现SDK”结论撤回。固定SHA13cbf77df2396303013a41646bcfa77b4271ae56的[SDK文档](https://github.com/earendil-works/pi/blob/13cbf77df2396303013a41646bcfa77b4271ae56/packages/coding-agent/docs/sdk.md)已核对。当前选择原生RPC以复用已安装CLI及进程隔离边界，不另造SDK执行引擎；旧pi-acp资产版本不同，不作为本次运行fallback。
 - **钉版**：release 0.86.1（受管安装 `install/current-version`）；`@earendil-works/pi-coding-agent` 0.86.1，MIT；artifact `dist/bundle/cli.js`+chunks（cli.js sha256前40位 `e79626f2dd6f94aa45d30f3fa63cd84319a6eefc`，**全量bundle digest登记为未补**）；协议来源 `packages/coding-agent/docs/rpc.md`+`rpc-commands.md`（2026-10-04 WebFetch）。
 - **升级边界**：无版本协商（文档未写明），钉版本+升级重钉（G1）。resume/replay语义文档未写明→登记unknown，不臆造。
-- **假设攻击结论**：prompt回执≠完成（disposition started/handled；仅agent_settled稳定）——实现按此；steer/abort区分实现（cancel=abort+可选clear_queue）；extension UI双向id保留；真实版本0.86.1与旧pi-acp资产无关（不沿用旧桥结论）。
+- **假设攻击结论**：prompt回执≠完成；固定0.86.1真实成功回执没有data.disposition，原文及fixture对此有误，2026-10-05已修消费者。仅agent_settled作为该次稳定观察，agent_end不单独证明稳定；steer/abort区分实现（cancel=abort+可选clear_queue）；extension UI双向id保留；真实版本0.86.1与旧pi-acp资产无关（不沿用旧桥结论）。
 
 ## 实现（CODE_READY＋L2 partial）
 
@@ -32,3 +32,5 @@ python -m pytest plugins/harness/tests/pi -q -p no:cacheprovider                
 ## 事故记录（诚实登记）
 
 N003客户端切片子代理的**最终报告**出现幻觉内容（提及不存在的xrm/FakeXrmEasy路径与计数），但其**落盘文件**经主执行者全文审查与复跑验证为正确实现（grep无幻觉残留，14P真实通过）；驱动切片子代理中途失败（model request failed），产物截断于plan_launch，由主执行者补完+补测试。子代理报告一律不作为验收依据，只认复跑结果。
+
+2026-10-05更新：上述14P与27用例是历史快照。当前消费者另有真实形状及unknown反例，最终计数按本树status最新复跑记录，不累加旧快照。未新增Pi真实进程/模型证据。
