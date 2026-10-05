@@ -106,3 +106,26 @@ def test_invalid_or_foreign_input_not_sent(setup, tmp_path, monkeypatch, capsys,
     ref = encode_node_ref(setup[4]); ref.update(change)
     code, envelope, calls = invoke(setup, tmp_path, monkeypatch, capsys, ref=ref)
     assert code == 2 and envelope['error']['code'] == 'PARAMETER_INVALID' and len(calls) == count
+
+
+@pytest.mark.parametrize('command, expected', [('capabilities', 0), ('doctor', 4), ('node-inspect', 0)])
+def test_node_read_and_general_discovery_do_not_require_profile_write_fingerprint(setup, tmp_path, monkeypatch, capsys, command, expected):
+    # Actual core capability becomes false; no forged HTTP capability payload.
+    setup[1]._fingerprint_port = None
+    monkeypatch.setenv('TOOLS_TEST_TOKEN', SECRET)
+    with peer.observation_server(setup) as (endpoint, calls):
+        args = ['nodes', 'inspect', json.dumps(encode_node_ref(setup[4]))] if command == 'node-inspect' else [command]
+        code = main(args + ['--config', str(config(tmp_path, endpoint)), '--service', 'local', '--json'])
+        output = capsys.readouterr(); result = json.loads(output.out)
+        assert code == expected and SECRET not in output.out + output.err
+        if command == 'doctor':
+            assert result['error']['code'] == 'PROFILE_CATALOG_UNAVAILABLE'
+        elif command == 'capabilities':
+            assert result['status'] == 'confirmed'
+            assert result['data']['coreAgent']['supports']['profileCatalog'] is False
+            assert 'agents.nodes.read' in result['data']['coreAgent']['supportedMethods']
+        else:
+            assert result['data']['node']['nodeRef'] == encode_node_ref(setup[4])
+        assert len(calls) == (3 if command == 'node-inspect' else 2)
+        assert setup[7]['calls'] == setup[7]['queryCalls'] == 0
+        assert setup[0].read_operation(setup[5]) is None

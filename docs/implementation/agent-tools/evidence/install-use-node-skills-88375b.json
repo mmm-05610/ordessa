@@ -1,0 +1,459 @@
+{
+  "exit": 0,
+  "bundle": "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/bundle-0.1.0a2-node-skills-88375b",
+  "wheelSha256": "19b8359bbaedfdf6f784e8b3f8232c6077922845870442fdd5cd76831f9fea1e",
+  "installed_entrypoint": "fresh venv bin/ordessa-agent",
+  "records": [
+    {
+      "label": "create-fresh-client-venv",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python",
+        "-m",
+        "venv",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "install-local-wheel",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "--no-index",
+        "--no-deps",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/bundle-0.1.0a2-node-skills-88375b/cli/ordessa_agent_tools-0.1.0a2-py3-none-any.whl"
+      ],
+      "exit": 0,
+      "stdout": "Processing /home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/bundle-0.1.0a2-node-skills-88375b/cli/ordessa_agent_tools-0.1.0a2-py3-none-any.whl\nInstalling collected packages: ordessa-agent-tools\nSuccessfully installed ordessa-agent-tools-0.1.0a2\n",
+      "stderr": ""
+    },
+    {
+      "label": "backend-packages-absent",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/python",
+        "-c",
+        "import importlib.util; names=('pacthold','ordessa_server','ordessa_harness'); assert all(importlib.util.find_spec(n) is None for n in names); print('backend packages absent')"
+      ],
+      "exit": 0,
+      "stdout": "backend packages absent\n",
+      "stderr": ""
+    },
+    {
+      "label": "installed-help",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "--help"
+      ],
+      "exit": 0,
+      "stdout": "usage: ordessa-agent [-h]\n                     {init,doctor,capabilities,providers,nodes,profiles} ...\n\nIndependent Agent Tools initialization and service client\n\npositional arguments:\n  {init,doctor,capabilities,providers,nodes,profiles}\n    init                Observe local Harness executables without running them\n    providers           Observe the service's admitted Provider registry\n    nodes               Consume published Node management methods\n\noptions:\n  -h, --help            show this help message and exit\n",
+      "stderr": ""
+    },
+    {
+      "label": "installed-local-init",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "init",
+        "--json"
+      ],
+      "exit": 0,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"f7424c3e-4686-4144-979d-b9ce6dcf78d5\",\"serviceRef\":null,\"operationRef\":null,\"status\":\"confirmed\",\"data\":{\"scanScope\":\"clientMachine\",\"source\":\"PATH\",\"observedAt\":\"2026-10-05T09:44:38.831895+00:00\",\"catalogVersion\":\"harness-command-discovery/1\",\"catalogDigest\":\"sha256:1516c1dd195d154f5340e51680cf77838ce7718e68daebcc9c54c81d8639dd67\",\"ignoredRelativeOrEmptyPathEntries\":0,\"harnesses\":[{\"familyId\":\"claude-code\",\"status\":\"notFound\",\"commands\":[{\"command\":\"claude\",\"status\":\"notFound\",\"matches\":[],\"issues\":[]},{\"command\":\"claude-agent-acp\",\"status\":\"notFound\",\"matches\":[],\"issues\":[]},{\"command\":\"claude-agent-acp.cmd\",\"status\":\"notFound\",\"matches\":[],\"issues\":[]}],\"installedArtifact\":\"notChecked\",\"providerAdmission\":\"notChecked\",\"runtimeReady\":\"unknown\"},{\"familyId\":\"codex\",\"status\":\"executableFound\",\"commands\":[{\"command\":\"codex\",\"status\":\"executableFound\",\"matches\":[{\"path\":\"/usr/lib/chatgpt/resources/codex\",\"resolvedPath\":\"/usr/lib/chatgpt/resources/codex\",\"isSymlink\":false}],\"issues\":[]},{\"command\":\"codex-acp\",\"status\":\"notFound\",\"matches\":[],\"issues\":[]}],\"installedArtifact\":\"notChecked\",\"providerAdmission\":\"notChecked\",\"runtimeReady\":\"unknown\"},{\"familyId\":\"dsh\",\"status\":\"notFound\",\"commands\":[{\"command\":\"dsh\",\"status\":\"notFound\",\"matches\":[],\"issues\":[]},{\"command\":\"dsh.cmd\",\"status\":\"notFound\",\"matches\":[],\"issues\":[]}],\"installedArtifact\":\"notChecked\",\"providerAdmission\":\"notChecked\",\"runtimeReady\":\"unknown\"},{\"familyId\":\"hermes\",\"status\":\"notFound\",\"commands\":[{\"command\":\"hermes\",\"status\":\"notFound\",\"matches\":[],\"issues\":[]},{\"command\":\"hermes.exe\",\"status\":\"notFound\",\"matches\":[],\"issues\":[]}],\"installedArtifact\":\"notChecked\",\"providerAdmission\":\"notChecked\",\"runtimeReady\":\"unknown\"},{\"familyId\":\"kilo\",\"status\":\"notFound\",\"commands\":[{\"command\":\"kilo\",\"status\":\"notFound\",\"matches\":[],\"issues\":[]},{\"command\":\"kilo.exe\",\"status\":\"notFound\",\"matches\":[],\"issues\":[]}],\"installedArtifact\":\"notChecked\",\"providerAdmission\":\"notChecked\",\"runtimeReady\":\"unknown\"},{\"familyId\":\"opencode\",\"status\":\"notFound\",\"commands\":[{\"command\":\"opencode\",\"status\":\"notFound\",\"matches\":[],\"issues\":[]}],\"installedArtifact\":\"notChecked\",\"providerAdmission\":\"notChecked\",\"runtimeReady\":\"unknown\"},{\"familyId\":\"pi\",\"status\":\"executableFound\",\"commands\":[{\"command\":\"pi\",\"status\":\"executableFound\",\"matches\":[{\"path\":\"/home/maoqh/.local/bin/pi\",\"resolvedPath\":\"/home/maoqh/.pi/agent/bin/pi\",\"isSymlink\":true}],\"issues\":[]},{\"command\":\"pi-acp\",\"status\":\"notFound\",\"matches\":[],\"issues\":[]}],\"installedArtifact\":\"notChecked\",\"providerAdmission\":\"notChecked\",\"runtimeReady\":\"unknown\"},{\"familyId\":\"qwen\",\"status\":\"notFound\",\"commands\":[{\"command\":\"qwen\",\"status\":\"notFound\",\"matches\":[],\"issues\":[]},{\"command\":\"qwen.cmd\",\"status\":\"notFound\",\"matches\":[],\"issues\":[]}],\"installedArtifact\":\"notChecked\",\"providerAdmission\":\"notChecked\",\"runtimeReady\":\"unknown\"}],\"scanCompleteForSearchedEntries\":true,\"foundFamilies\":[\"codex\",\"pi\"],\"nextStep\":\"Connect to the selected service with doctor; server-host installation and trusted provider admission require separate verification\"},\"evidence\":{\"level\":\"localExecutableDiscovery\",\"executedBinaries\":false,\"serverHostChecked\":false,\"runtimeVerified\":false},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "label": "doctor-installed-wheel",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "doctor",
+        "--config",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/services.json",
+        "--service",
+        "check",
+        "--json"
+      ],
+      "exit": 0,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"a5daa68a-c517-44cc-91da-f0170b0ad697\",\"serviceRef\":\"check\",\"operationRef\":null,\"status\":\"confirmed\",\"data\":{\"discovery\":{\"status\":\"confirmed\",\"protocolVersion\":\"wire/1\"},\"coreAgent\":{\"contractVersion\":\"agent-assembly/1\",\"schemaDigest\":\"sha256:243863ecd93a893023f89af4c6f0aa032ece60d674301bd9391f7d4db84cdf91\",\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"supports\":{\"profileCatalog\":true,\"nodes\":false,\"managedInput\":false}}},\"evidence\":{\"level\":\"coreCapabilitiesObserved\"},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "label": "capabilities",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "capabilities",
+        "--config",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/services.json",
+        "--service",
+        "check",
+        "--json"
+      ],
+      "exit": 0,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"f0a01ca1-5c33-42e2-9f68-d6e03eef358e\",\"serviceRef\":\"check\",\"operationRef\":null,\"status\":\"confirmed\",\"data\":{\"discovery\":{\"status\":\"confirmed\",\"protocolVersion\":\"wire/1\"},\"coreAgent\":{\"contractVersion\":\"agent-assembly/1\",\"schemaDigest\":\"sha256:243863ecd93a893023f89af4c6f0aa032ece60d674301bd9391f7d4db84cdf91\",\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"supports\":{\"profileCatalog\":true,\"nodes\":false,\"managedInput\":false}},\"capabilities\":[{\"id\":\"server.hello\",\"supported\":true},{\"id\":\"agents.capabilities\",\"supported\":true},{\"id\":\"agents.profiles.list\",\"supported\":true},{\"id\":\"agents.profiles.read\",\"supported\":true},{\"id\":\"agents.profiles.readEntry\",\"supported\":true},{\"id\":\"agents.profiles.create\",\"supported\":true},{\"id\":\"agents.profiles.edit\",\"supported\":true},{\"id\":\"agents.profiles.clone\",\"supported\":true},{\"id\":\"agents.profiles.rename\",\"supported\":true},{\"id\":\"agents.profiles.archive\",\"supported\":true},{\"id\":\"agents.profiles.restore\",\"supported\":true},{\"id\":\"agents.profiles.preview\",\"supported\":true}]},\"evidence\":{\"level\":\"coreCapabilitiesObserved\"},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "label": "empty-catalog",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "profiles",
+        "list",
+        "--config",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/services.json",
+        "--service",
+        "check",
+        "--json"
+      ],
+      "exit": 0,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"d8a1be4e-d0c7-4f42-bfe2-50941f841096\",\"serviceRef\":\"check\",\"operationRef\":null,\"status\":\"confirmed\",\"data\":{\"entries\":[]},\"evidence\":{\"level\":\"profileCatalogObserved\"},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "label": "auth-refusal",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "profiles",
+        "list",
+        "--config",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/services.json",
+        "--service",
+        "check",
+        "--json"
+      ],
+      "exit": 3,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"fad4301d-667f-4b5a-a9f7-af4cad3b08dd\",\"serviceRef\":\"check\",\"operationRef\":null,\"status\":\"refused\",\"data\":null,\"evidence\":{\"level\":\"unobserved\"},\"error\":{\"code\":\"AUTHORIZATION_REFUSED\",\"message\":\"Service authentication or authorization was refused\",\"retryable\":false,\"recoveryAction\":\"inspectService\"}}\n",
+      "stderr": ""
+    },
+    {
+      "label": "create-catalog-only-profile",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "profiles",
+        "create",
+        "--profile-id",
+        "install-check",
+        "--name",
+        "Installed CLI check",
+        "--file",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/manifest.json",
+        "--request-id",
+        "install-create",
+        "--config",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/services.json",
+        "--service",
+        "check",
+        "--json"
+      ],
+      "exit": 0,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"install-create\",\"serviceRef\":\"check\",\"operationRef\":null,\"status\":\"confirmed\",\"data\":{\"profileId\":\"install-check\",\"catalogRevision\":1,\"displayName\":\"Installed CLI check\",\"archivedAt\":null,\"currentManifestRef\":{\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"profileId\":\"install-check\",\"manifestRevision\":1,\"contentDigest\":\"sha256:eddb7552606729ed9600ff0a40e1a82e92e384adb05c0e3ae84a69c7d3c3b660\"}},\"evidence\":{\"level\":\"profileCatalogObserved\"},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "label": "confirmed-request-replay",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "profiles",
+        "create",
+        "--profile-id",
+        "install-check",
+        "--name",
+        "Installed CLI check",
+        "--file",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/manifest.json",
+        "--request-id",
+        "install-create",
+        "--config",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/services.json",
+        "--service",
+        "check",
+        "--json"
+      ],
+      "exit": 0,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"install-create\",\"serviceRef\":\"check\",\"operationRef\":null,\"status\":\"confirmed\",\"data\":{\"profileId\":\"install-check\",\"catalogRevision\":1,\"displayName\":\"Installed CLI check\",\"archivedAt\":null,\"currentManifestRef\":{\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"profileId\":\"install-check\",\"manifestRevision\":1,\"contentDigest\":\"sha256:eddb7552606729ed9600ff0a40e1a82e92e384adb05c0e3ae84a69c7d3c3b660\"}},\"evidence\":{\"level\":\"profileCatalogObserved\"},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "label": "read-original",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "profiles",
+        "show",
+        "@/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/old-ref.json",
+        "--config",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/services.json",
+        "--service",
+        "check",
+        "--json"
+      ],
+      "exit": 0,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"bd273f96-79a4-4a2d-982d-754b1e68909d\",\"serviceRef\":\"check\",\"operationRef\":null,\"status\":\"confirmed\",\"data\":{\"ref\":{\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"profileId\":\"install-check\",\"manifestRevision\":1,\"contentDigest\":\"sha256:eddb7552606729ed9600ff0a40e1a82e92e384adb05c0e3ae84a69c7d3c3b660\"},\"content\":{\"declarations\":[],\"harnessDefinitionRef\":{\"definitionId\":\"deliberately-absent-catalog-check\",\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"revision\":\"1\"},\"metadata\":{\"purpose\":\"catalog-only; no runnable harness\"},\"schemaVersion\":\"1\"}},\"evidence\":{\"level\":\"profileCatalogObserved\"},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "label": "edit-double-cas",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "profiles",
+        "edit",
+        "install-check",
+        "--file",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/manifest.json",
+        "--expected-catalog-revision",
+        "1",
+        "--base-manifest",
+        "@/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/old-ref.json",
+        "--request-id",
+        "install-edit",
+        "--config",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/services.json",
+        "--service",
+        "check",
+        "--json"
+      ],
+      "exit": 0,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"install-edit\",\"serviceRef\":\"check\",\"operationRef\":null,\"status\":\"confirmed\",\"data\":{\"profileId\":\"install-check\",\"catalogRevision\":2,\"displayName\":\"Installed CLI check\",\"archivedAt\":null,\"currentManifestRef\":{\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"profileId\":\"install-check\",\"manifestRevision\":2,\"contentDigest\":\"sha256:0650e8702ce2b35d80bc20967e2819280aff31cf8b12f542ba93c2d72c533286\"}},\"evidence\":{\"level\":\"profileCatalogObserved\"},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "label": "stale-revision-refusal",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "profiles",
+        "edit",
+        "install-check",
+        "--file",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/manifest.json",
+        "--expected-catalog-revision",
+        "1",
+        "--base-manifest",
+        "@/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/old-ref.json",
+        "--request-id",
+        "install-stale",
+        "--config",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/services.json",
+        "--service",
+        "check",
+        "--json"
+      ],
+      "exit": 5,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"install-stale\",\"serviceRef\":\"check\",\"operationRef\":null,\"status\":\"refused\",\"data\":{\"discovery\":{\"status\":\"confirmed\",\"protocolVersion\":\"wire/1\"},\"coreAgent\":{\"contractVersion\":\"agent-assembly/1\",\"schemaDigest\":\"sha256:243863ecd93a893023f89af4c6f0aa032ece60d674301bd9391f7d4db84cdf91\",\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"supports\":{\"profileCatalog\":true,\"nodes\":false,\"managedInput\":false}}},\"evidence\":{\"level\":\"coreCapabilitiesObserved\"},\"error\":{\"code\":\"PRECONDITION_CONFLICT\",\"message\":\"Service refused conflicting revision, request, or target preconditions\",\"retryable\":false,\"recoveryAction\":\"inspectService\"}}\n",
+      "stderr": ""
+    },
+    {
+      "label": "historical-ref-after-edit",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "profiles",
+        "show",
+        "@/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/old-ref.json",
+        "--config",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/services.json",
+        "--service",
+        "check",
+        "--json"
+      ],
+      "exit": 0,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"d0faa317-14bd-4ca8-90a6-aaa4ffff9aee\",\"serviceRef\":\"check\",\"operationRef\":null,\"status\":\"confirmed\",\"data\":{\"ref\":{\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"profileId\":\"install-check\",\"manifestRevision\":1,\"contentDigest\":\"sha256:eddb7552606729ed9600ff0a40e1a82e92e384adb05c0e3ae84a69c7d3c3b660\"},\"content\":{\"declarations\":[],\"harnessDefinitionRef\":{\"definitionId\":\"deliberately-absent-catalog-check\",\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"revision\":\"1\"},\"metadata\":{\"purpose\":\"catalog-only; no runnable harness\"},\"schemaVersion\":\"1\"}},\"evidence\":{\"level\":\"profileCatalogObserved\"},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "label": "clone-historical-profile",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "profiles",
+        "clone",
+        "@/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/old-ref.json",
+        "--profile-id",
+        "cloned-check",
+        "--name",
+        "Historical clone",
+        "--request-id",
+        "install-clone",
+        "--config",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/services.json",
+        "--service",
+        "check",
+        "--json"
+      ],
+      "exit": 0,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"install-clone\",\"serviceRef\":\"check\",\"operationRef\":null,\"status\":\"confirmed\",\"data\":{\"profileId\":\"cloned-check\",\"catalogRevision\":1,\"displayName\":\"Historical clone\",\"archivedAt\":null,\"currentManifestRef\":{\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"profileId\":\"cloned-check\",\"manifestRevision\":1,\"contentDigest\":\"sha256:eddb7552606729ed9600ff0a40e1a82e92e384adb05c0e3ae84a69c7d3c3b660\"}},\"evidence\":{\"level\":\"profileCatalogObserved\"},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "label": "archive-profile",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "profiles",
+        "archive",
+        "install-check",
+        "--expected-catalog-revision",
+        "2",
+        "--request-id",
+        "install-archive",
+        "--config",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/services.json",
+        "--service",
+        "check",
+        "--json"
+      ],
+      "exit": 0,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"install-archive\",\"serviceRef\":\"check\",\"operationRef\":null,\"status\":\"confirmed\",\"data\":{\"profileId\":\"install-check\",\"catalogRevision\":3,\"displayName\":\"Installed CLI check\",\"archivedAt\":\"2026-10-05T09:44:40.534729+00:00\",\"currentManifestRef\":{\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"profileId\":\"install-check\",\"manifestRevision\":2,\"contentDigest\":\"sha256:0650e8702ce2b35d80bc20967e2819280aff31cf8b12f542ba93c2d72c533286\"}},\"evidence\":{\"level\":\"profileCatalogObserved\"},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "label": "restore-profile",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "profiles",
+        "restore",
+        "install-check",
+        "--expected-catalog-revision",
+        "3",
+        "--request-id",
+        "install-restore",
+        "--config",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/services.json",
+        "--service",
+        "check",
+        "--json"
+      ],
+      "exit": 0,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"install-restore\",\"serviceRef\":\"check\",\"operationRef\":null,\"status\":\"confirmed\",\"data\":{\"profileId\":\"install-check\",\"catalogRevision\":4,\"displayName\":\"Installed CLI check\",\"archivedAt\":null,\"currentManifestRef\":{\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"profileId\":\"install-check\",\"manifestRevision\":2,\"contentDigest\":\"sha256:0650e8702ce2b35d80bc20967e2819280aff31cf8b12f542ba93c2d72c533286\"}},\"evidence\":{\"level\":\"profileCatalogObserved\"},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "label": "missing-real-provider-preview",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "profiles",
+        "preview",
+        "@/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/current-ref.json",
+        "--config",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/services.json",
+        "--service",
+        "check",
+        "--json"
+      ],
+      "exit": 4,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"296b5777-8f69-4976-bf5b-2d1133cece79\",\"serviceRef\":\"check\",\"operationRef\":null,\"status\":\"refused\",\"data\":{\"profileRef\":{\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"profileId\":\"install-check\",\"manifestRevision\":2,\"contentDigest\":\"sha256:0650e8702ce2b35d80bc20967e2819280aff31cf8b12f542ba93c2d72c533286\"},\"status\":\"unresolved\",\"referenceCoverage\":\"unknown\",\"ready\":false,\"error\":{\"code\":\"providerUnavailable\",\"retryable\":false}},\"evidence\":{\"level\":\"profileCatalogObserved\"},\"error\":{\"code\":\"PROVIDER_UNAVAILABLE\",\"message\":\"Profile preview remains unresolved until trusted providers are available\",\"retryable\":false,\"recoveryAction\":\"inspectService\"}}\n",
+      "stderr": ""
+    },
+    {
+      "label": "node-observation-not-advertised-by-v1",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "nodes",
+        "list",
+        "--config",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/services.json",
+        "--service",
+        "check",
+        "--json"
+      ],
+      "exit": 4,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"8ed2c501-62da-4c90-bc50-95813b19def1\",\"serviceRef\":\"check\",\"operationRef\":null,\"status\":\"refused\",\"data\":{\"discovery\":{\"status\":\"confirmed\",\"protocolVersion\":\"wire/1\"},\"coreAgent\":{\"contractVersion\":\"agent-assembly/1\",\"schemaDigest\":\"sha256:243863ecd93a893023f89af4c6f0aa032ece60d674301bd9391f7d4db84cdf91\",\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"supports\":{\"profileCatalog\":true,\"nodes\":false,\"managedInput\":false}}},\"evidence\":{\"level\":\"coreCapabilitiesObserved\"},\"error\":{\"code\":\"NODE_OBSERVATION_UNAVAILABLE\",\"message\":\"Service did not publish the requested Node observation\",\"retryable\":false,\"recoveryAction\":\"inspectService\"}}\n",
+      "stderr": ""
+    },
+    {
+      "label": "task-command-not-implemented",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "run",
+        "hello"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "PARAMETER_INVALID: Invalid command arguments; consult --help\n"
+    },
+    {
+      "label": "owned-server-stop",
+      "exit": 0
+    },
+    {
+      "label": "offline-doctor",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "doctor",
+        "--config",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/services.json",
+        "--service",
+        "check",
+        "--json"
+      ],
+      "exit": 4,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"b4c637a4-5022-42d1-b017-063c5942ceca\",\"serviceRef\":\"check\",\"operationRef\":null,\"status\":\"refused\",\"data\":null,\"evidence\":{\"level\":\"unobserved\"},\"error\":{\"code\":\"SERVICE_UNAVAILABLE\",\"message\":\"Service response could not be observed\",\"retryable\":false,\"recoveryAction\":\"inspectService\"}}\n",
+      "stderr": ""
+    },
+    {
+      "label": "restart-historical-read",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "profiles",
+        "show",
+        "@/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/old-ref.json",
+        "--config",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/services.json",
+        "--service",
+        "check",
+        "--json"
+      ],
+      "exit": 0,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"08c4c124-ff07-4662-acad-6b5078bb7f71\",\"serviceRef\":\"check\",\"operationRef\":null,\"status\":\"confirmed\",\"data\":{\"ref\":{\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"profileId\":\"install-check\",\"manifestRevision\":1,\"contentDigest\":\"sha256:eddb7552606729ed9600ff0a40e1a82e92e384adb05c0e3ae84a69c7d3c3b660\"},\"content\":{\"declarations\":[],\"harnessDefinitionRef\":{\"definitionId\":\"deliberately-absent-catalog-check\",\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"revision\":\"1\"},\"metadata\":{\"purpose\":\"catalog-only; no runnable harness\"},\"schemaVersion\":\"1\"}},\"evidence\":{\"level\":\"profileCatalogObserved\"},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "label": "restart-original-edit-replay",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "profiles",
+        "edit",
+        "install-check",
+        "--file",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/manifest.json",
+        "--expected-catalog-revision",
+        "1",
+        "--base-manifest",
+        "@/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/old-ref.json",
+        "--request-id",
+        "install-edit",
+        "--config",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/services.json",
+        "--service",
+        "check",
+        "--json"
+      ],
+      "exit": 0,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"install-edit\",\"serviceRef\":\"check\",\"operationRef\":null,\"status\":\"confirmed\",\"data\":{\"profileId\":\"install-check\",\"catalogRevision\":2,\"displayName\":\"Installed CLI check\",\"archivedAt\":null,\"currentManifestRef\":{\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"profileId\":\"install-check\",\"manifestRevision\":2,\"contentDigest\":\"sha256:0650e8702ce2b35d80bc20967e2819280aff31cf8b12f542ba93c2d72c533286\"}},\"evidence\":{\"level\":\"profileCatalogObserved\"},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "label": "final-catalog",
+      "argv": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/ordessa-agent",
+        "profiles",
+        "list",
+        "--config",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/services.json",
+        "--service",
+        "check",
+        "--json"
+      ],
+      "exit": 0,
+      "stdout": "{\"apiVersion\":\"agent-tools/1\",\"requestId\":\"1fb97f28-656c-476e-b002-352be33f5542\",\"serviceRef\":\"check\",\"operationRef\":null,\"status\":\"confirmed\",\"data\":{\"entries\":[{\"profileId\":\"cloned-check\",\"catalogRevision\":1,\"displayName\":\"Historical clone\",\"archivedAt\":null,\"currentManifestRef\":{\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"profileId\":\"cloned-check\",\"manifestRevision\":1,\"contentDigest\":\"sha256:eddb7552606729ed9600ff0a40e1a82e92e384adb05c0e3ae84a69c7d3c3b660\"}},{\"profileId\":\"install-check\",\"catalogRevision\":4,\"displayName\":\"Installed CLI check\",\"archivedAt\":null,\"currentManifestRef\":{\"environmentNamespace\":\"environment-212fccdec3ae497ea93f9d46027580b4\",\"profileId\":\"install-check\",\"manifestRevision\":2,\"contentDigest\":\"sha256:0650e8702ce2b35d80bc20967e2819280aff31cf8b12f542ba93c2d72c533286\"}}]},\"evidence\":{\"level\":\"profileCatalogObserved\"},\"error\":null}\n",
+      "stderr": ""
+    },
+    {
+      "label": "owned-server-stop",
+      "exit": 0
+    }
+  ],
+  "temporary_runtime_removed": true,
+  "real_model_calls": 0,
+  "limitations": [
+    "Profile references deliberately absent: catalog-only check",
+    "v1 does not advertise Node observations; lifecycle/tasks unavailable",
+    "Skill files copied locally; no separate model-agent behavioral evaluation",
+    "no public per-request Profile outcome query"
+  ]
+}

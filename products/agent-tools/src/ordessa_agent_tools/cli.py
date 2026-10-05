@@ -250,7 +250,7 @@ def main(argv=None):
         core = client.negotiate(str(uuid.uuid4()))
         data["coreAgent"] = core
         evidence = {"level": "coreCapabilitiesObserved"}
-        if options.command not in {"providers", "nodes"} and core["supports"]["profileCatalog"] is not True:
+        if options.command in {"profiles", "doctor"} and core["supports"]["profileCatalog"] is not True:
             raise ClientError("PROFILE_CATALOG_UNAVAILABLE", "Profile catalog guarantees are unavailable", 4)
         if options.command == "providers":
             method, params = prepared

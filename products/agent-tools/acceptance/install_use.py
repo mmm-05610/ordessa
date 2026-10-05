@@ -4,6 +4,7 @@ No pytest helper imports, model calls or global Agent configuration changes.
 Runtime secrets and databases exist only in an ignored temporary directory.
 """
 import hashlib
+import argparse
 import json
 import os
 from pathlib import Path
@@ -15,8 +16,6 @@ import time
 
 ROOT = Path(__file__).resolve().parents[3]
 PRODUCT = ROOT / 'products/agent-tools'
-BUNDLE = PRODUCT / 'dist/bundle-0.1.0a2-init'
-EVIDENCE = ROOT / "docs/implementation/agent-tools/evidence"
 records = []
 SERVER_SCRIPT = r'''
 import json, socket, sys, threading
@@ -54,17 +53,25 @@ def command(label, argv, cwd, env=None, expected=0):
     return completed
 
 
-def exercise():
-    for line in (BUNDLE / 'SHA256SUMS').read_text().splitlines():
+def exercise(bundle, evidence):
+    if evidence.exists():
+        raise ValueError('Choose a new evidence file; existing records are never overwritten')
+    # Reuse the distribution's integrity gate rather than trusting only listed
+    # hashes (which would ignore missing required or unlisted files).
+    sys.path.insert(0, str(PRODUCT / 'packaging'))
+    from build_bundle import verify_checksums, verify_wheel
+    verify_checksums(bundle)
+    for line in (bundle / 'SHA256SUMS').read_text().splitlines():
         digest, name = line.split('  ', 1)
-        assert hashlib.sha256((BUNDLE / name).read_bytes()).hexdigest() == digest
+        assert hashlib.sha256((bundle / name).read_bytes()).hexdigest() == digest
     with tempfile.TemporaryDirectory(prefix='installed-cli-check-', dir=PRODUCT / 'dist') as tmp:
         workspace = Path(tmp)
         venv = workspace / 'client-venv'
         command('create-fresh-client-venv', [sys.executable, '-m', 'venv', venv], workspace)
         python = venv / 'bin/python'
         cli = venv / 'bin/ordessa-agent'
-        wheel = next((BUNDLE / 'cli').glob('*.whl'))
+        wheel = next((bundle / 'cli').glob('ordessa_agent_tools-*.whl'))
+        verify_wheel(wheel)
         command('install-local-wheel', [python, '-m', 'pip', 'install', '--no-index', '--no-deps', wheel], workspace)
         command('backend-packages-absent', [python, '-c',
             "import importlib.util; names=('pacthold','ordessa_server','ordessa_harness'); assert all(importlib.util.find_spec(n) is None for n in names); print('backend packages absent')"], workspace)
@@ -74,7 +81,7 @@ def exercise():
         assert observations['evidence']['executedBinaries'] is False
         assert all(x['runtimeReady'] == 'unknown' for x in observations['data']['harnesses'])
         caller_skills = workspace / 'caller-project/skills'
-        shutil.copytree(BUNDLE / 'skills', caller_skills)
+        shutil.copytree(bundle / 'skills', caller_skills)
         assert len(list(caller_skills.glob('*/SKILL.md'))) == 3
         config, ready = workspace / 'services.json', workspace / 'ready.json'
         server_root = workspace / 'isolated-server'
@@ -150,7 +157,8 @@ def exercise():
             current_ref = workspace / 'current-ref.json'; current_ref.write_text(json.dumps(second['currentManifestRef']))
             preview = run('missing-real-provider-preview', ['profiles', 'preview', '@' + str(current_ref)], 4)
             assert preview['data']['ready'] is False
-            command('node-command-not-implemented', [cli, 'nodes', 'list'], workspace, env, 2)
+            unavailable = run('node-observation-not-advertised-by-v1', ['nodes', 'list'], 4)
+            assert unavailable['error']['code'] == 'NODE_OBSERVATION_UNAVAILABLE'
             command('task-command-not-implemented', [cli, 'run', 'hello'], workspace, env, 2)
             stop()
             run('offline-doctor', ['doctor'], 4)
@@ -168,18 +176,27 @@ def exercise():
                     # Only the child spawned by this exercise; never a user service.
                     process.terminate()
                     process.wait(timeout=5)
-        result = {'exit': 0, 'bundle': str(BUNDLE), 'installed_entrypoint': 'fresh venv bin/ordessa-agent',
+        result = {'exit': 0, 'bundle': str(bundle), 'wheelSha256': hashlib.sha256(wheel.read_bytes()).hexdigest(),
+                  'installed_entrypoint': 'fresh venv bin/ordessa-agent',
                   'records': records, 'temporary_runtime_removed': True, 'real_model_calls': 0,
-                  'limitations': ['Profile references deliberately absent: catalog-only check', 'nodes/run unavailable',
+                  'limitations': ['Profile references deliberately absent: catalog-only check', 'v1 does not advertise Node observations; lifecycle/tasks unavailable',
                                   'Skill files copied locally; no separate model-agent behavioral evaluation',
                                   'no public per-request Profile outcome query']}
-    (EVIDENCE / 'install-use-exercise.json').write_text(json.dumps(result, indent=2) + '\n')
+    with evidence.open('x') as stream:
+        stream.write(json.dumps(result, indent=2) + '\n')
     print(json.dumps({'exit': 0, 'commands': len(records), 'real_model_calls': 0, 'runtime_cleaned': True}))
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Exercise an explicitly selected local bundle without global installation')
+    parser.add_argument('--bundle', required=True, type=Path)
+    parser.add_argument('--evidence', required=True, type=Path, help='New evidence JSON file; never overwrite existing records')
+    options = parser.parse_args()
     try:
-        exercise()
+        exercise(options.bundle.resolve(), options.evidence.resolve())
     except Exception as exc:
-        (EVIDENCE / 'install-use-exercise-failed.json').write_text(json.dumps({'errorType': type(exc).__name__, 'records': records}, indent=2) + '\n')
+        failed = options.evidence.with_name(options.evidence.stem + '-failed.json')
+        if not failed.exists():
+            with failed.open('x') as stream:
+                stream.write(json.dumps({'errorType': type(exc).__name__, 'records': records}, indent=2) + '\n')
         raise

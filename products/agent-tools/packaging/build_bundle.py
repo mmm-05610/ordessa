@@ -45,6 +45,8 @@ def verify_wheel(path):
             if name.startswith(("pacthold/", "ordessa_server/", "ordessa_harness/", "deployment/", "ordessa_agent/", "ordessa_agent_tools/native_clients/")):
                 raise ValueError("Wheel includes service implementation")
             if name.endswith(".py"):
+                if not name.startswith('ordessa_agent_tools/'):
+                    raise ValueError('Wheel includes non-client Python implementation')
                 for node in ast.walk(ast.parse(archive.read(name))):
                     modules = []
                     if isinstance(node, ast.Import):

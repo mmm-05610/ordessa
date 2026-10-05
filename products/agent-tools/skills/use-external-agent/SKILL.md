@@ -14,9 +14,12 @@ service use; exit 4 from local discovery does not prevent remote Profile operati
 
 Use the user's selected existing service and protected config with
 `ordessa-agent capabilities --config services.json --service local --json`.
-This release implements discovery and the Profile catalog only. It reports
-`supports.nodes=false` and `supports.managedInput=false`. Explain that task
-execution is unavailable and stop before attempting a prepare or send action.
+This release implements discovery, Profile data, published Node observation and
+owner configuration commands, but has no task submission/result CLI. Preserve
+the service's observed supports; the optional deployment currently has
+`supports.nodes=false` and `supports.managedInput=false`. Even if a different
+compatible service advertises task support, this installed CLI still has no task
+commands. Explain that limitation and stop before attempting a prepare or send action.
 Do not invent run/watch/result commands, use an older Agent endpoint as a
 substitute, silently open a native client, or start a daemon.
 
@@ -27,8 +30,10 @@ configuration or assume a particular Agent host.
 If the user also asks to inspect a Profile, `profiles list`, `profiles entry` and
 `profiles show` are available; use their `--help` for parameters. Return a full
 fixed ProfileRef and clearly distinguish stored recipe data from a prepared
-node, native session, accepted input, or completed task. A successful doctor
-only establishes the supported catalog surface. Preview remains unresolved.
+node, native session, accepted input, or completed task. `nodes list/inspect`
+can observe an already published Node when that public method and read authority
+are available; its `runtimeVerified=false` does not prove a live Agent. A successful
+doctor only establishes the reported supported surface. Preview remains unresolved.
 
 Preserve any existing request/operation identity supplied by the user. A lost
 connection is missing evidence, not proof of rejection or cancellation. Never

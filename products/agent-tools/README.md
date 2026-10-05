@@ -11,8 +11,12 @@ capabilities available. No real model calls were made for this slice.
 The client consumes `wire/1` and negotiates the generated `agent-assembly/1`
 schema, or the explicit `agent-assembly/2` management schema when advertised.
 Existing `profiles.v2.*` or old Agent methods are not fallback paths.
-Doctor exit 0 establishes Profile catalog support; its result explicitly shows
-`nodes=false` and `managedInput=false`. It does not establish a runnable Agent.
+Doctor exit 0 establishes Profile catalog support; report the observed supports
+without replacing them with defaults. The optional deployment currently shows
+`nodes=false` and `managedInput=false`; a successful doctor does not establish a runnable Agent.
+`capabilities` can report a matching core contract even when Profile guarantees
+are unavailable. Check each requested public method and its permission result;
+capability discovery itself does not grant access.
 
 ## Install the CLI
 

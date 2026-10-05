@@ -564,3 +564,15 @@ CLI `nodes list`/`nodes inspect @NodeRef`，仅公开方法，精确完整身份
 Codex只读终审未发现新安全阻断，确认只读权/缺席/冷观察/类型身份/私有拒，未测试/写入/Git。生产权限/材料/证据owner/冷恢复与全生命周期、tasks/results/三Skill/全纵向发行及旧model/Server迁移仍缺。整体PARTIAL，M0、资源ABSENT；历史Core3红仍须单列。无用户数据/凭据/全局配置/登录/用户服务操作/第三方更新安装/模型/push/主树合并，成本unknown。检查点后继续未完成工单，不标AU004_DONE。
 
 本轮全现存16个AU证据模块＋产品integration实际首586P/1F exit1、34.95s，旧uncomposed门仍期待list拒；保留同门，改为未实现stop并加无query/无原operation/不宣告stop断言。最终587P/0F exit0、34.32s，不skip/删门/恢复旧行为。全Core实际269P/3F exit1、7.62s、0skip，仍原kernel_direction三红，具体SQLite测试导入未移走；worker/sidecar/acpclosure/claude等ABSENT继续。末端新增真实隔离Uvicorn/Server Node权限负例：公开方法＋Bearer不授读，当前v2部署只有Profile/registry权，nodes list/inspect均拒3，不冒空成功；v2定向2P/2deselected exit0、2.20s。Server进程P不是nativeHarnessP，无生产Node正向/M。新1加入在587之后，不声称588全组合已跑；本切片新增40项，原发行2加强。五工单strict/schema/diff-check exit0仅资料门，测试句柄全部terminal。显式纳入13路径检查点后继续，整体仍PARTIAL。
+
+### 2026-10-05 AU004 三Skill同步／AU005 显式bundle安装使用（PARTIAL）
+
+前置88375b109d clean；主会话唯一源码/测试/Git/账本作者，开一只读Skill指令演练代理，不授权共享写入、测试或Git。采用skill-creator现有更新/结构校验与独立演练规则，三Skill同步Node/配置公开方法、完整身份/owner版本、unknown无operationRef恢复缺口、task/lifecycle未实现与init非运行保证。ACCEPTANCE清除过期Profile-only/当前240测说法，保留未验证与继承红事实。
+
+演练发现capabilities因Profile fingerprint缺席误挡其他领域发现，实际Core新3反例先2P/1F exit1、0.74s；改为仅doctor/profiles需要Profile保障。初Node/discovery/bundle55P exit0、23.02s。另三独立包stdlib-only wheel禁入新3反例旧gate0P/3F exit1、0.05s；加client-only Python门，最终相同组合58P/0F exit0、23.04s。新增6项，不skip/删断言，三次Skill quick_validate各exit0仅结构。完整命令/分层与只读演练见[skills-current-cli-evidence.md](skills-current-cli-evidence.md)。
+
+自有fresh bundle生成exit0；实际安装exercise改显式--bundle/--evidence、复用完整checksum/wheel门，不自动用旧包或覆盖记录。实际新bundle安装＋隔离既有Server＋独立CLI27条命令记录exit0/M0/runtimecleaned，正回执evidence/install-use-node-skills-88375b.json；真实临时client/server/skills workspace已不存在。相同证据再次调用预期exit1，原SHA不变/records空证明未安装或启服务；failed JSON是这项负例。wheel SHA19b8359bbaedfdf6f784e8b3f8232c6077922845870442fdd5cd76831f9fea1e，ignored dist不入Git；加强门末端复核实际bundle通过。
+
+是Server进程安装/目录/CAS/鉴权/离线/自有重启证据，不是生产Node/config/nativeHarnessP或M；三Skill打包/局部复制/只读解释不称真实Agent任务使用。Core/Server/三家源码未改，未冒本轮全回归；前轮Core3红与ABSENT继续。production权限/材料/证据owner/冷恢复/full lifecycle、旧model/Server迁移、prepare/tasks/results及全纵向仍PARTIAL。无用户DB/凭据/全局配置/登录/用户服务/第三方安装更新/模型/push/主树合并，成本unknown。测试句柄terminal，工单strict/diff-check仅结构；显式纳入本轮文件检查点后继续。
+
+只读终审无命令/覆盖/C-P-M阻断，建议observed supports不能硬写false及helper别误选非client wheel，已修README/use Skill/ACCEPTANCE与精确wheel glob；末端Skill结构exit0。随后全新final bundle生成exit0＋新回执install-use-node-skills-final-88375b.json实际完整安装27命令exit0/M0/cleaned；新wheel SHA6a8c08b9c9a6ed174b162f7d22a2792d4040051e45530e65492ec27a931dcc9e。末端真实JSON/已删除workspace/3Skill源字节/严格bundle门核验exit0，新旧27快照不累加，不覆盖旧资产；最终bundle路径dist/bundle-0.1.0a2-node-skills-final-88375b。上述全15路径显式纳入检查点后继续核心公开接缝/生命周期/旧装配，整体goal active。

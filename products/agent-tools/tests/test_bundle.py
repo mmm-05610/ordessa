@@ -93,3 +93,14 @@ def test_stdlib_native_client_rejected_in_wheel(tmp_path):
         archive.writestr("ordessa_agent_tools/native_clients/codex.py", "import json\n")
     with pytest.raises(ValueError, match="implementation"):
         bundle.verify_wheel(wheel)
+
+
+@pytest.mark.parametrize('package', ['ordessa_harness_codex', 'ordessa_harness_pi', 'ordessa_harness_claude_code'])
+def test_independent_provider_python_rejected_even_with_only_stdlib_imports(tmp_path, package):
+    wheel = tmp_path / 'provider.whl'
+    with zipfile.ZipFile(wheel, 'w') as archive:
+        for name in ('schema.json', 'schema-management.json', 'provider-schema.json'):
+            archive.writestr('ordessa_agent_tools/' + name, '{}')
+        archive.writestr(package + '/client.py', 'import json\n')
+    with pytest.raises(ValueError, match='implementation'):
+        bundle.verify_wheel(wheel)

@@ -18,8 +18,10 @@ Skill is optional. Do not install into global Agent settings or start a service.
 
 Run `ordessa-agent doctor --config services.json --service local --json` first.
 Require matching core schema and `data.coreAgent.supports.profileCatalog=true`.
-`nodes=false` and `managedInput=false` mean this release cannot prepare, run, apply,
-stop, or recover nodes. Profile catalog success does not imply those capabilities.
+Profile catalog success does not imply a runnable Agent. `nodes=false` and
+`managedInput=false` do not prevent separately advertised publication/configuration
+reads; check the requested method and its authority. This release still has no
+prepare, task input, apply-profile, stop, or recover CLI.
 
 Use `ordessa-agent profiles --help` and the action's `--help` for current syntax.
 List with `profiles list`; inspect metadata with `profiles entry PROFILE_ID`.
@@ -36,8 +38,10 @@ archive and restore have dedicated actions; consult their help rather than
 guessing argument names. Mutations must be within the user's authorized scope.
 
 Preserve exact opaque leaf references and schema-controlled values supplied by
-the caller. This release has no Harness/resource/configuration-kind discovery or
-trusted leaf validation. Do not invent model names, resource refs, or native
+the caller. If the service advertises `agents.providers.list/describe`, use
+`ordessa-agent providers list` and `providers describe @definition-ref.json` to
+observe admitted providers. This does not validate every resource/configuration
+declaration or prove runtime readiness. Do not invent model names, resource refs, or native
 configuration. Manifests never contain plaintext credentials; use an existing
 SecretRef. Tokens are supplied only by the configuration's tokenEnv reference.
 

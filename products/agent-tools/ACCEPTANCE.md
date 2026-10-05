@@ -1,7 +1,7 @@
-# Current acceptance: Profile and public foundations
+# Current acceptance: public CLI and owner configuration
 
 This is a partial implementation. Runnable Agent nodes, native tasks and task
-result queries have not been delivered. Installation or 240 passing tests must
+result queries have not been delivered. Installation or passing controlled tests must
 not be interpreted as full product acceptance.
 
 ## Install without global changes
@@ -31,27 +31,47 @@ python -m pytest -c products/agent-tools/pyproject.toml products/agent-tools/tes
 ```
 
 Record test counts and exit code by category, using the implementation evidence
-ledger rather than summing historical runs. The current frozen snapshot has:
-
-| Category | Tests | Evidence boundary |
-| --- | ---: | --- |
-| Client and isolated wheel | 49 | Client HTTP fixtures and installed entrypoint |
-| Bundle | 6 | Asset integrity, not Agent use |
-| Thin wire contract | 16 | Real temporary SQLite, no HTTP service |
-| Registry lifecycle | 17 | Controlled owner/registry doubles |
-| Profile core | 32 | Real isolated SQLite |
-| Directory binding | 20 | Temporary Workspace DB, filesystem facts and controlled authority |
-| Operation store | 34 | Real SQLite, concurrency and self-owned crash processes |
-| Invocation authority | 53 | Real durable claim, controlled authority/current-state ports |
-| Deployment boundary | 11 | Isolated existing Server composition and owned paths |
-| Server plus CLI | 2 | Real isolated HTTP service, subprocess CLI and TCP response loss |
+ledger rather than summing historical runs. Separate client/unit and public-wire
+contracts, real temporary SQLite/claim tests, controlled native peers, fresh
+wheel/venv installation, and real isolated Server processes. Server process
+evidence does not establish a real Harness or a model task. The exact dated
+receipts and known failures are in `docs/implementation/agent-tools/status.md`;
+the older 240-test catalog snapshot is historical, not current full acceptance.
 
 For the installed client, configure an explicit service alias and tokenEnv using
 [README](README.md). Exercise `doctor`, `profiles list`, create/edit with actual
 manifest references and CAS, and read an old returned full ProfileRef after edit.
 A conflicting revision must produce exit 5, authorization refusal exit 3, and
 unknown write outcome exit 6 without retries. Preview currently refuses readiness
-with exit 4; doctor must report nodes=false and managedInput=false.
+with exit 4. The optional deployment currently reports nodes=false and
+managedInput=false; for another service, preserve its observed flags without
+interpreting them as task commands available in this installed CLI.
+
+For an explicit `agent-assembly/2` service, exercise Provider list/describe and
+Node list/inspect using complete references returned by the selected service.
+Require advertised methods and read authority; method discovery or Bearer alone
+does not grant Node access. A published Node is a durable binding observation,
+not current native readiness. Missing Node inspect must exit 4; missing storage
+or permission must refuse, rather than falsely succeed with an empty catalog.
+General capabilities discovery may succeed with profileCatalog=false; doctor
+still diagnoses the Profile surface. Do not use that flag to gate Node reads.
+
+With an existing authorized Node owner, exercise configuration describe/inspect,
+apply a fixed complete change file and query the returned original operationRef.
+Use the owner's observed configuration revision, not a Profile revision. Verify
+same-key replay causes one effect, changed payload/revision conflict exits 5,
+unknown exits 6 with no resend, and partial retains per-item outcomes. ACK-only
+is not applied; restartRequired never restarts. If no operationRef was returned,
+this release has no public request-key lookup: a separate inspect cannot prove
+ownership or completion of the lost operation. Do not read private databases to
+fill that product gap.
+
+Fresh installed positive Node/configuration checks currently use real
+Core/SQLite with a controlled owner/HTTP peer. The real optional Server v2
+deployment has only Profile/registry read authority; its Node observations are
+verified refusals, not production positive Node acceptance. Skills remain optional
+instructions; source/frontmatter/bundle checks and readonly instruction reviews
+do not establish successful model-agent task use.
 
 The real-service scenarios own only temporary roots/processes. The TCP proxy
 scenario commits exactly one create then loses the reply. Reading catalog facts
@@ -60,14 +80,18 @@ no public Profile outcome query yet; retain that gap instead of resending.
 
 ## Remaining gates
 
-Production Directory/Invocation authority and provider admission, a real Harness
-unit reservation, owner-issued shared configuration scope, versioned Unit/Session
-journal migration, native correlation/query, configuration/material routing,
-actual lease/transport fencing, managed session/input reservation, node and task
-CLI commands, and real Agent Skill use remain unverified or unimplemented.
-The core regression retains 3 inherited direction failures; the targeted Server
-regression retains 11 identical fixed-baseline failures. Do not hide them or call
-the whole regression green. Python 3.9 and real model behavior were not tested.
+Production Directory/Invocation/material authority, actual native
+capture/receipt/effect/Session owners, full cold recovery, lifecycle and
+production installation/admission closure remain incomplete. Controlled Unit
+records, scope/journal/configuration management and native write fences exist,
+but their controlled evidence does not replace the missing production owners.
+Prepare/connect/apply-profile/recover/stop/release/task/result CLI, the old
+model/Server assembly migration and real Agent Skill use also remain incomplete.
+The current core regression retains 3 inherited direction failures. The ledger
+also contains an older targeted Server snapshot with 11 baseline failures;
+that suite was not rerun by the Node observation slice. Do not call unrun scope
+green. The installed client requires Python 3.10+; this source acceptance uses
+Python 3.12, and real model behavior has not been tested.
 
 Exact commands, logs, exit codes, versioned snapshots and known limits live in
 `docs/implementation/agent-tools/status.md` and its evidence directory. Real
@@ -76,10 +100,14 @@ models and user services still require separate scoped authorization.
 ## Reproduce an installed-client exercise from source
 
 ```sh
-/path/to/source-acceptance-venv/bin/python products/agent-tools/acceptance/install_use.py
+/path/to/source-acceptance-venv/bin/python products/agent-tools/acceptance/install_use.py \
+  --bundle /your/selected/bundle \
+  --evidence /your/selected/new-install-evidence.json
 ```
 
-This script installs the existing bundle wheel into a fresh temporary client
+Select a newly built bundle for the current source; do not silently reuse an old
+release under the same version. The script verifies required assets/checksums and
+never overwrites an existing evidence file. It installs the selected bundle wheel into a fresh temporary client
 venv, verifies that backend packages are absent, and invokes its actual executable
 against an owned temporary existing Server. It checks catalog actions, expected
 failures, restart and cleanup. The manifest is deliberately catalog-only with
