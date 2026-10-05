@@ -141,3 +141,7 @@ Agent Tools后续基础快照187P exit0：DirectoryBinding与同journal具名Ope
 Harness全量 `python -m pytest plugins/harness -q`：1031 passed / 3 skipped / **4 failed**，退出1。四个失败均为029遗留继承红、非030批次引入：`tests/install/test_acp_schema_drift_target.py` 2项（ACP schema drift）、`tests/install/test_packaging_boundaries.py::test_the_run_chain_declares_no_byte_ceiling_of_its_own`（native-artifact-policy.mjs 字节上限）、`tests/test_native_evidence_boundaries.py::test_api_dto_modules_stay_host_and_implementation_free`（029的command_discovery.py导入hashlib越界）。保留断言不skip不报绿。products/agent-tools 全量 402 passed / 0 failed（其后安全修复批次 native_clients 子集 146 passed）。
 
 030十家交付为 CODE_READY（适配实现/协议验证）＋pi一家L2 partial；真实模型0、第三方安装0。管理绑定（节点/原生session reservation/InputAttempt/transport fence）依赖阻塞（029 AT-009/010/011未交付），未另造core/ledger绕开；不发布runtimeReady。安全审查遗留已知限制3项（kimi replay围栏窗口、wait关联校验、启动pin声明残留）登记于 docs/implementation/agent-tools/night-harness-expansion/evidence/N012-safety-review.md。
+
+### AU003 旧 Server 原生装配预期尚未迁移（2026-10-05，Open）
+
+AgentUnit迁移切片在 `ServerProductComposition.native_runtime` 早拒 Pi/Codex/Claude Code（含claude别名、additional/profile/implicitPi），要求独立provider admission。原 `products/server/tests/test_native_profile_composition.py::test_native_product_owns_profile_management_without_claiming_application` 仍要求旧统一Pi正向装配，实际复跑1 failed、exit1、0.11s；保留原断言，不skip/删除或报告全Server绿。需将消费者迁到独立provider并保留其原Profile/Skills/配置验证。sidecar入口和旧C2三家model批量贡献仍未完全退役，独立生产模型/凭据/restart-resume owner尚未完整承接。详细范围与其他105P/297P证据见 `docs/implementation/agent-tools/evidence/agent-unit-model/retired-native-assembly.md`；窄门通过不能替代全产品验收。未调用模型或操作用户服务/数据。

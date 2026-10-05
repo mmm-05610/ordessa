@@ -381,6 +381,22 @@ class ServerProductComposition:
         additional_adapters: tuple = (),
         include_profile: bool = True,
     ) -> Any:
+        # AU003: the unified native assembly cannot activate migrated families.
+        # Keep historical model semantics available for explicit migration, but
+        # require independent CoreRegistry provider admission for new execution.
+        # Refuse before importing old assembly, registering migrations, creating
+        # stores/secrets or changing this composition's selected-channel state.
+        selected = [harness_id]
+        selected.extend(native_profile_harnesses)
+        selected.extend(binding.get("harnessId") for binding in additional_adapters
+                        if isinstance(binding, Mapping))
+        if pi_profile_bridge:
+            selected.append("pi")
+        if any(family in ("pi", "codex", "claude-code", "claude") for family in selected):
+            from ordessa_environment_api import GuaranteeUnavailableError
+            raise GuaranteeUnavailableError(
+                "Migrated Harness runtime requires explicit independent provider admission")
+
         from ordessa_server_compat.composition import build_runtime_from_native_adapter
         from server_plugin_api import ServerPluginSelection
         from ordessa_model_provider.plugin import ModelProviderPlugin

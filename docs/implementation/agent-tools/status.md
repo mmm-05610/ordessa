@@ -624,3 +624,11 @@ production授权/材料/SecretRef/capture/receipt/effect/Session owner、三家n
 仅C/自有安装进程，无native P/M，M0。旧model/Server装配、production owner与全生命周期/tasks/results/三家纵向仍PARTIAL，Core继承三红与ABSENT沿前账本、本轮未全回归。未授权操作无；成本unknown。新材料显式纳入检查点后继续，不标DONE。
 
 附件检查点 d7b99ac3c1 后继续只读核对旧Model/Server装配。源码证实products/server仍激活旧三家配置plugin/backend/live_service；Claude旧compiler保留endpoint/credential/restart-resume同Session语义，独立SDK owner未承接。Codex代理独立确认消费者及三家缺口；盘点写入[evidence/agent-unit-model/model-server-migration-inventory.md](evidence/agent-unit-model/model-server-migration-inventory.md)。这项依赖证据限制下一清理范围，不当生产测试/验收，不删除成熟旧语义或复活旧入口。整体goal继续active，所有本轮测试terminal。
+
+### 2026-10-05 AU003 旧native_runtime三家选择早拒（PARTIAL）
+
+前置f08a635c85 clean、agents completed；主会话唯一共享源码/测试/Git/账本写者，Codex只读攻击和终审无阻断。已核对新增文件与迁移合同；保留三家源码/旧模型语义/原测试，未并行共享写入。产品native_runtime对primary/profile/additional/implicitPi和claude别名在旧import/assembly/state/data前复用GuaranteeUnavailableError拒，不复活compat、不自动换原生通道。其他家族原入口可达但不称完整可用。
+
+完整命令与计数见[evidence/agent-unit-model/retired-native-assembly.md](evidence/agent-unit-model/retired-native-assembly.md)。实现前7P/10F exit1 0.35s；初36P exit0 0.38s；增强import门及原模型语义105P exit0 0.44s，新23项/旧82项。旧ServerPi正向原测试实跑0P/1F exit1 0.11s，因旧统一入口被拒，保留断言未skip/删/改绿；后续需独立消费迁移。产品integration297P exit0 12.21s，测试串行terminal。只读终审确认范围与无参数旁路，七家正控仅原assembly reach，不能冒运行成功。
+
+sidecar与旧C2批量注册仍有路径，独立生产模型/凭据/恢复owner、native全生命周期/tasks/results未完成；全Server/Core本轮未跑，继承三红/ABSENT保持。C-only/M0，无任何未授权操作，费用unknown。依本树AGENTS规则10，另在docs/known-issues.md窄幅登记本次明确旧Server预期冲突；这是必需失败登记，不扩张实现范围或修改工单合同。显式检查点后继续goal，不标AU003_DONE。
