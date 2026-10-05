@@ -22,10 +22,30 @@ _BINDINGS = (
     ("agents.profiles.preview", "preview", ("profileRef",), ()),
 )
 
+AGENT_MANAGEMENT_CONTRACT_VERSION = "agent-assembly/2"
+_MANAGEMENT_BINDINGS = (
+    ("agents.providers.list", "providersList", (), ()),
+    ("agents.providers.describe", "providersDescribe", ("definitionRef",), ()),
+    ("agents.nodes.prepare", "prepare", ("profileRef", "context", "options", "requestId"), ()),
+    ("agents.nodes.list", "nodesList", (), ()),
+    ("agents.nodes.read", "nodeRead", ("nodeRef",), ()),
+    ("agents.nodes.configuration.describe", "describeConfiguration", ("nodeRef",), ()),
+    ("agents.nodes.configuration.inspect", "inspectConfiguration", ("nodeRef",), ()),
+    ("agents.nodes.configuration.apply", "applyConfiguration", ("nodeRef", "change"), ()),
+    ("agents.nodes.configuration.query", "queryChange", ("nodeRef", "operationRef"), ()),
+    ("agents.nodes.applyProfile", "applyProfile", ("nodeRef", "profileRef", "expectedConfigurationRevision", "applicationPolicy", "requestId"), ()),
+    ("agents.nodes.acquireAccess", "acquireAccess", ("nodeRef", "purpose", "protocol"), ()),
+    ("agents.nodes.recover", "recover", ("nodeRef", "preconditions", "requestId"), ()),
+    ("agents.nodes.stop", "stop", ("nodeRef", "preconditions", "requestId"), ()),
+    ("agents.nodes.release", "release", ("nodeRef", "preconditions", "requestId"), ()),
+)
 
-def wire_contract() -> dict:
+
+def wire_contract(version=AGENT_CONTRACT_VERSION) -> dict:
     """Return an isolated JSON view; callers cannot mutate core authority."""
-    return {"contractVersion": AGENT_CONTRACT_VERSION, "transport": "wire/1",
+    if version not in (AGENT_CONTRACT_VERSION, AGENT_MANAGEMENT_CONTRACT_VERSION):
+        raise ValueError("unsupported Agent wire contract version")
+    value = {"contractVersion": version, "transport": "wire/1",
             "requestKeyScope": ["environmentNamespace", "principalScope", "requestId"],
             "profileRef": {"required": ["environmentNamespace", "profileId", "manifestRevision", "contentDigest"],
                            "additionalProperties": False,
@@ -44,8 +64,25 @@ def wire_contract() -> dict:
             "methods": {method: {"action": action, "required": list(required),
                                  "optional": list(optional), "effectful": "requestId" in required}
                         for method, action, required, optional in _BINDINGS}}
+    if version == AGENT_MANAGEMENT_CONTRACT_VERSION:
+        value["methods"].update({method: {"action": action, "required": list(required),
+            "optional": list(optional), "effectful": "requestId" in required or action in {"applyConfiguration", "acquireAccess"},
+            "additionalProperties": False}
+            for method, action, required, optional in _MANAGEMENT_BINDINGS})
+        value["configurationChange"] = {
+            "contractVersion": "agent-configuration/1", "additionalProperties": False,
+            "required": ["requestId", "expectedConfigurationRevision", "declarations", "applicationPolicy"],
+            "applicationPolicy": {"allowDeferred": False, "allowRestart": False},
+            "itemOutcomes": ["applied", "deferred", "restartRequired", "rejected", "conflict", "unknown"],
+            "overallOutcomes": ["applied", "deferred", "restartRequired", "rejected", "conflict", "unknown", "partial"],
+            "appliedRequires": ["operationRef", "unitRef", "scopeRef", "requestDigest", "evidenceRef"],
+            "providerContractVersion": "agent-runtime/2",
+        }
+        value["nodeRef"] = {"required": ["environmentNamespace", "instanceId", "generation"], "additionalProperties": False}
+        value["configurationSnapshot"] = {"required": ["unitRef", "scopeRef", "sourceRevision", "observedAt", "configuration", "unknownItems", "confirmationEvidence", "comparisonGuarantee"]}
+    return value
 
 
-def wire_schema_digest() -> str:
-    value = json.dumps(wire_contract(), sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+def wire_schema_digest(version=AGENT_CONTRACT_VERSION) -> str:
+    value = json.dumps(wire_contract(version), sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     return "sha256:" + hashlib.sha256(value.encode()).hexdigest()

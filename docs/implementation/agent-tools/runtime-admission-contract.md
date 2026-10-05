@@ -9,3 +9,5 @@ RuntimeProvider通过专门的AgentContributionSet增量子类型进入Environme
 此切片仅闭合可信贡献接纳，不发布nodes/managedInput=true。后续作用前需同操作claim、Directory重核、真实Unit与配置scope、使用关系及transport fence。生产provider缺席应providerUnavailable；合同/SQLite tests≠原生进程证据。
 
 写权：主会话独占core registration/environment/contracts与整合；三代理分别仅Codex/Pi/Claude消费者及各自测试，不并写共享transport/CLI/schema。协议修复使用各固定版真实官方结构，无安装更新/模型调用/用户服务操作。其余七家保留，不扩展。
+
+AU-1接续：RuntimeProvider已显式升级agent-runtime/2，新增inspect_unit、describe_configuration、apply_configuration、query_change并按supportedMethods声明支持。原/1历史引用不变，新接纳拒/1；详见evidence/agent-unit-model/interface-map.md及用户AU合同。本说明不宣称生产RuntimeOwner已接线。

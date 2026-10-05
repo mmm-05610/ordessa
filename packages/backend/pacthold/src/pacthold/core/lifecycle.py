@@ -13,11 +13,12 @@ from ordessa_environment_api import EnvironmentId
 from ordessa_environment_api.identity import ActivationRef
 from ordessa_environment_api.operations import sealed_mapping, safe_json
 
-RUNTIME_PROVIDER_VERSION = "agent-runtime/1"
+RUNTIME_PROVIDER_VERSION = "agent-runtime/2"
 RUNTIME_METHODS = (
     "describe_definition", "inspect_installation", "assess_configuration",
     "plan_preparation", "prepare", "start", "query_step", "describe_access",
-    "connect", "inspect_configuration", "stop", "release", "recover",
+    "connect", "inspect_unit", "describe_configuration", "inspect_configuration",
+    "apply_configuration", "query_change", "stop", "release", "recover",
 )
 
 
@@ -27,6 +28,7 @@ class RuntimeProviderDescriptor:
     contract_version: str
     definition_ref: Mapping
     implementation_digest: str
+    supported_methods: tuple[str, ...] = ()
 
     def __post_init__(self):
         if (not isinstance(self.provider_id, str)
@@ -45,17 +47,22 @@ class RuntimeProviderDescriptor:
         if (not isinstance(self.implementation_digest, str)
                 or not re.fullmatch(r"sha256:[0-9a-f]{64}", self.implementation_digest)):
             raise ValueError("implementation digest required")
+        if (not isinstance(self.supported_methods, tuple)
+                or len(set(self.supported_methods)) != len(self.supported_methods)
+                or any(name not in RUNTIME_METHODS for name in self.supported_methods)):
+            raise ValueError("explicit supported lifecycle methods required")
         object.__setattr__(self, "definition_ref", sealed_mapping(self.definition_ref))
 
     def snapshot(self):
         return RuntimeProviderDescriptor(self.provider_id, self.contract_version,
-                                         self.definition_ref, self.implementation_digest)
+                                         self.definition_ref, self.implementation_digest, self.supported_methods)
 
     def to_dict(self):
         import json
         return {"providerId": self.provider_id, "contractVersion": self.contract_version,
                 "definitionRef": json.loads(safe_json(self.definition_ref)),
-                "implementationDigest": self.implementation_digest}
+                "implementationDigest": self.implementation_digest,
+                "supportedMethods": list(self.supported_methods)}
 
 
 @runtime_checkable
@@ -72,7 +79,11 @@ class RuntimeProvider(Protocol):
     def query_step(self, correlation, authorized_read_context): ...
     def describe_access(self, unit_ref): ...
     def connect(self, unit_ref, authorized_lease): ...
+    def inspect_unit(self, unit_ref): ...
+    def describe_configuration(self, unit_ref): ...
     def inspect_configuration(self, unit_ref): ...
+    def apply_configuration(self, unit_ref, change_request, invocation_context): ...
+    def query_change(self, unit_ref, operation_ref, authorized_read_context): ...
     def stop(self, unit_ref, invocation_context): ...
     def release(self, unit_ref, invocation_context): ...
     def recover(self, native_binding, invocation_context): ...

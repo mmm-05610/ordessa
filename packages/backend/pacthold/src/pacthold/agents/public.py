@@ -8,7 +8,7 @@ from .contracts import (
     ProfileNotFound, ProfileRevisionConflict, ProfileValidationError,
 )
 from .profiles import ProfileCatalog
-from .schema import wire_contract, wire_schema_digest
+from .schema import wire_contract, wire_schema_digest, AGENT_MANAGEMENT_CONTRACT_VERSION
 from .directory import DirectoryBindingRef
 
 
@@ -36,6 +36,15 @@ __all__ = ["AGENT_CONTRACT_VERSION", "AgentServices", "agent_services",
            "ProfileCatalog", "ProfileCatalogEntry", "ProfileManifest", "ProfileRef",
            "ProfileNotFound", "ProfileRevisionConflict", "ProfileValidationError"]
 __all__ += ["wire_contract", "wire_schema_digest"]
+__all__ += ["AGENT_MANAGEMENT_CONTRACT_VERSION"]
 __all__ += ["DirectoryBindingRef"]
 from .runtime import AgentContributionSet, RuntimeProvider, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
 __all__ += ["AgentContributionSet", "RuntimeProvider", "RuntimeProviderDescriptor", "RUNTIME_PROVIDER_VERSION"]
+from .configuration import (
+    CONFIGURATION_CONTRACT_VERSION, ApplicationPolicy, ConfigurationChangeRequest,
+    ConfigurationDescription, ConfigurationSnapshot, ConfigurationItemResult,
+    ConfigurationChangeResult, ConfigurationContractError, ConfigurationUnsupported, UnitInspection,
+)
+__all__ += ["CONFIGURATION_CONTRACT_VERSION", "ApplicationPolicy", "ConfigurationChangeRequest",
+            "ConfigurationDescription", "ConfigurationSnapshot", "ConfigurationItemResult",
+            "ConfigurationChangeResult", "ConfigurationContractError", "ConfigurationUnsupported", "UnitInspection"]

@@ -172,3 +172,15 @@ Harness共享scope/UnitRecords＋原OperationJournal32P exit0、0.36s；真实st
 用户已确认AU001–AU005，按docs/implementation/work-orders/agent-unit-model的五份合同及五工单串行推进。本次HEAD仍3086825a6177438c042431cdb94812ded576ee6c；上一轮575P和三家/核心源码为实际progress，但未提交。现无运行子代理/共享写者，三位均completed。逐文件读取本包11个新增文件并记录SHA256到evidence/agent-unit-model/adoption.json，显式纳入接纳检查点，未改本包语义正文。
 
 保留全部已暂存三家修复及CoreRegistry/Node/Input/journal/transport基础；品牌实现仍在products属于待AU003/AU004迁移，575P不满足AU A15发行边界，不将旧绿等同新目标完成。AU001主会话唯一共享作者，不派家族执行；AU003接口冻结后才允许各家独立包写权。继承raw pytest日志仅去行尾空白以通过diff格式检查，失败诊断及计数保留。当前只接纳/冻结准备，不标任何AU_DONE。真实模型0、安装更新第三方0、用户服务操作0。
+
+### AU001 配置/Unit公开契约冻结切片
+
+接纳检查点30c4ef5ac0，无其他活跃写者。已有C1 resource describe/acquire/release/reconcile与supported_contracts、Harness配置adapter claims/intents已核查；实施映射和CAS范围表见evidence/agent-unit-model/interface-map.md。不新增kind/provider注册中心。新增pacthold.agents.configuration，复用Profile声明校验/SecretRef与现有scoped refs；不可变ChangeRequest/Policy/Description/Snapshot/ItemResult/ChangeResult，仅合同无副作用/状态库。
+
+RuntimeProvider增加describe_configuration/apply_configuration/query_change，显式升级agent-runtime/2；旧/1不作新管理接纳，历史引用不篡改。descriptor新增supportedMethods默认空，方法存在不代表能力。wire_contract保留默认Profile agent-assembly/1及digest，显式version=agent-assembly/2获得providers/nodes/配置/lifecycle冻结方法；当前Server/CLI尚不启用这些方法，AU004负责镜像/接线。
+
+C层结构测试先33P exit0(0.08s)，增加wire版本反例后与runtime/node/input115P exit0(1.10s)；增加supportedMethods反例后configuration35P＋runtime21P=56P exit0(0.17s)。发行/旧Profile镜像8P exit0(6.35s)。这些只证明不可变编码、默认不restart/defer、ACK缺依据不能applied、partial逐项保留、secret/未知实际字段/跨scope/旧Runtime版本拒绝，未验证生产配置应用。
+
+本包--strict结构5份通过。首次误提前加--batch完成门exit1，五单每单四stage未勾选；这是未完成门真实红，未删门/改合同或伪勾选。接纳commit前格式检查exit0，仅说明格式。AU001尚待核心回归与公开验证收口；下一AU002仍按串行依赖进入，不派三家执行。三家生产scope及CAS能力未核，M预算0，整体PARTIAL。
+
+AU001补强：UnitInspection为当前owner只读来源，DirectoryBinding/epoch/ownership不由core猜测；版本未知snapshot允许sourceRevision=null且comparisonGuarantee=unavailable，未知kind允许scope=null/actions空，不制造支持。配置结构最终38P，连runtime/node/input119P/0F、exit0、1.15s；核心全回归269P/3F、exit1、7.38s，仍同三个已登记方向扫描ID，日志au001-core-regression.txt。未改继承红断言，未恢复legacy。AU001契约切片CODE_READY、整体门PARTIAL，后续AU002按已冻结契约推进；AU003之前不派三家包写者。
