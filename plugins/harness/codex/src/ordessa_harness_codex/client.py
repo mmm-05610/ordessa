@@ -46,6 +46,7 @@ from ordessa_harness_transport import (
     PreparedFrame,
     PreparedFramePool,
     PreparedFrameRefused,
+    native_frame_bytes,
 )
 
 FAMILY_ID = "codex"
@@ -371,8 +372,9 @@ class CodexAppServerClient:
                      timeout: float = 10.0) -> Any:
         """Fix the actual RPC identity, persist it, then dispatch exactly once.
 
-        The hook sees a detached copy of the exact native request. Its failure
-        performs no write. A receipt timeout leaves this original ID pending;
+        The hook sees a detached copy of the exact frozen native request at
+        the actual write-lock/lease barrier. Its failure performs no write.
+        A receipt timeout leaves this original ID pending;
         recover_request observes that ID without another dispatch.
         """
         if not callable(before_send):
@@ -496,18 +498,61 @@ class CodexAppServerClient:
         object raises :class:`CodexRpcError` with its ``codexErrorInfo`` kept.
         """
         self._check_pending_method(method)
+        if before_send is not None:
+            return self._request_once_locked(method, params, timeout=timeout,
+                                             on_request=on_request, before_send=before_send)
         self._request_seq += 1
         request_id = f"req-{self._request_seq}"
         payload: dict[str, Any] = {"id": request_id, "method": method}
         if params:
             payload["params"] = dict(params)
-        if before_send is not None:
-            before_send(json.loads(json.dumps(payload)))
         self._pending[request_id] = method
         if method == "turn/start":
             self._turn_requests[request_id] = params["threadId"]
         self._channel.send_raw(payload)
         return self.recover_request(request_id, timeout=timeout, on_request=on_request)
+
+    def _request_once_locked(self, method, params, *, timeout, on_request, before_send):
+        self._prepared_method(method, params)
+        if self._prepared_unknown:
+            raise LostReceipt(method, None, "original guarded write unresolved; query without another write")
+        if type(timeout) not in (int, float) or not 0 < timeout < float("inf"):
+            raise ValueError("finite positive receipt timeout required")
+        if any(not callable(getattr(self._channel, name, None)) for name in
+               ("send_frame", "mark_input_unknown", "acknowledge_frame")):
+            raise PreparedFrameRefused("actual write barrier and unknown transport fence unavailable")
+        self._request_seq += 1
+        request_id = f"req-{self._request_seq}"
+        payload = {"id": request_id, "method": method}
+        if params:
+            payload["params"] = dict(params)
+        wire = native_frame_bytes(payload)
+        thread = self._prepared_method(method, json.loads(wire).get("params", {}))
+        admitted = False
+        def guard():
+            nonlocal admitted
+            # Original journal binding/revalidation cannot mutate the bytes
+            # written. It runs inside the transport's actual IO barrier.
+            before_send(json.loads(wire))
+            self._pending[request_id] = method
+            self._prepared_waiting.add(request_id)
+            if method == "turn/start":
+                self._turn_requests[request_id] = thread
+            admitted = True
+        try:
+            self._channel.send_frame(wire, before_write=guard)
+            return self.recover_request(request_id, timeout=timeout, on_request=on_request)
+        except CodexRpcError as error:
+            # A guard may throw the native class before pending exists. Known
+            # requires successful admission and actual original receipt ACK.
+            if (admitted and request_id not in self._pending and request_id not in self._prepared_waiting
+                    and error.request_id == request_id and error.method == method):
+                raise
+            self._cut_prepared_unknown()
+            raise
+        except BaseException:
+            self._cut_prepared_unknown()
+            raise
 
     def _check_pending_method(self, method):
         if method == "turn/start" and "turn/start" in self._pending.values():

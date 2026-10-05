@@ -292,3 +292,95 @@ def test_rpc_error_class_from_callback_is_not_native_receipt(source, identity):
     assert caught.value is error and channel.fences == 1 and channel.acks == []
     assert client._pending == {frame.request_id: 'turn/start'} and client._prepared_unknown
     assert len(channel.sent) == (source == 'callback')
+
+
+@pytest.mark.parametrize('missing', ['send_frame', 'mark_input_unknown', 'acknowledge_frame'])
+def test_command_once_missing_actual_barrier_refuses_before_identity_or_bind(missing):
+    channel = Channel([{'id': 'req-1', 'result': {}}])
+    setattr(channel, missing, None)
+    client = CodexAppServerClient(channel)
+    with pytest.raises(PreparedFrameRefused):
+        client.command_once('config/batchWrite', {'edits': []}, before_send=lambda payload: pytest.fail('no barrier'))
+    assert client._request_seq == 0 and client._pending == {} and channel.sent == []
+
+
+@pytest.mark.parametrize('identity', ['same', 'foreign'])
+def test_command_once_guard_error_class_without_pending_is_not_native_receipt(identity):
+    channel = Channel(); client = CodexAppServerClient(channel)
+    error = CodexRpcError('config/batchWrite', 'req-1' if identity == 'same' else 'foreign', {'code': -1})
+    def refuse(payload): raise error
+    with pytest.raises(CodexRpcError) as caught:
+        client.command_once('config/batchWrite', {'edits': []}, before_send=refuse)
+    assert caught.value is error and client._pending == {} and channel.sent == []
+    assert channel.acks == [] and channel.fences == 1 and client._prepared_unknown
+    with pytest.raises(LostReceipt):
+        client.command_once('config/batchWrite', {'edits': []}, before_send=lambda payload: None)
+
+
+def test_command_once_actual_native_rejection_acks_original_receipt_only():
+    channel = Channel([{'id': 'req-1', 'error': {'code': -1, 'message': 'native rejection'}},
+                       {'id': 'req-2', 'result': {'status': 'ok'}}])
+    client = CodexAppServerClient(channel); bindings = []
+    with pytest.raises(CodexRpcError):
+        client.command_once('config/batchWrite', {'edits': []}, before_send=bindings.append)
+    assert channel.acks == ['req-1'] and channel.fences == 0 and not client._prepared_unknown
+    assert client._pending == {} and len(channel.sent) == 1 and bindings[0]['id'] == 'req-1'
+    assert client.command_once('config/batchWrite', {'edits': []}, before_send=bindings.append) == {'status': 'ok'}
+    assert channel.acks == ['req-1', 'req-2'] and len(channel.sent) == 2
+
+
+def test_command_once_actual_guard_revokes_writer_without_native_write(tmp_path):
+    channel = peer(tmp_path, managed=True)
+    client = CodexAppServerClient(channel.bind_writer(channel.acquire_writer()))
+    seen = []
+    def guard(payload):
+        seen.append(payload)
+        channel.fence_all()
+    try:
+        with pytest.raises(WriterLeaseRefused):
+            client.command_once('config/batchWrite', {'edits': []}, before_send=guard)
+        assert len(seen) == 1 and seen[0]['id'] == 'req-1'
+        assert channel.poll_message(timeout=.02) is None
+        assert client._pending == {'req-1': 'config/batchWrite'} and channel._unresolved
+        with pytest.raises(WriterLeaseRefused): channel.acquire_writer()
+    finally:
+        client.close(); channel.close()
+
+
+def test_command_once_revoke_while_waiting_and_late_ack_cannot_handoff(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Event
+    channel = peer(tmp_path, managed=True)
+    view = channel.bind_writer(channel.acquire_writer())
+    client = CodexAppServerClient(view)
+    waiting, observe = Event(), Event()
+    next_message = view.next_message
+    def hold_receipt(*, timeout):
+        waiting.set()
+        assert observe.wait(2)
+        return next_message(timeout=timeout)
+    view.next_message = hold_receipt
+    try:
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(client.command_once, 'config/batchWrite', {'edits': []}, before_send=lambda payload: None)
+            assert waiting.wait(2)
+            channel.fence_all()
+            with pytest.raises(WriterLeaseRefused): channel.acquire_writer()
+            observe.set()
+            result = future.result(timeout=2)
+        received = bytes.fromhex(result['hex'])
+        assert json.loads(received)['id'] == 'req-1'
+        assert channel._prepared_inflight == {} and channel._unresolved
+        with pytest.raises(WriterLeaseRefused): channel.acquire_writer()
+    finally:
+        observe.set()
+        client.close(); channel.close()
+
+
+@pytest.mark.parametrize('params', [{}, {'threadId': None}, {'threadId': ''}, {'threadId': True}])
+def test_command_once_invalid_turn_target_refuses_before_binding_or_identity(params):
+    channel = Channel(); client = CodexAppServerClient(channel)
+    with pytest.raises(ValueError):
+        client.command_once('turn/start', params, before_send=lambda payload: pytest.fail('invalid target bound'))
+    assert client._request_seq == 0 and client._pending == {} and channel.sent == []
+    assert channel.acks == [] and channel.fences == 0
