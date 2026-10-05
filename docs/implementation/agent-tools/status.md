@@ -310,3 +310,17 @@ Pi/Codex消费原Unit.public_ref与configuration_target_ref，不自造摘要；
 C为受控owner/SDK以及真实临时SQLite/Python peer；三家真实上游进程P未验证，真实模型M0。核心继承3项方向扫描失败未在本窄测修复，不报全量绿。无安装更新/登录配置/用户服务/用户DB操作、push或主树合并。AU003仍PARTIAL：生产授权投影/原生writer fence与receipt端口、真实family→核心装配、Claude无session Unit确认、C1材料/SecretRef、生命周期与冷恢复、旧注册迁出、CLI/Skill薄化及发行验收继续。此检查点只冻结引用一致性，不能认定AU002或AU003收尾。
 
 检查点23643bb9c7后继续共享入口复查：UnitRecords._authorize仍用Python == 比较provider/target，使受控verifier返回generation=True可以冒充固定整数1。先加providerRef/targetRef两项真实临时SQLite反例，`<python> -m pytest -c plugins/harness/pyproject.toml plugins/harness/tests/test_unit_records.py -k verified_bool_generation -q`：0P/2F、28 deselected，exit1、0.17s，证明此前没有拒绝。改原入口为完整safe_json类型比较并检查Mapping，不另造权限链。最终同上三文件组合70P/0F exit0、0.69s；中间70P/0.60s不累加。拒绝后原reservation表仍空，断言保留。C层补强，不证明生产verifier缺陷或三家真实运行；P/M及其余缺口保持。
+
+### 2026-10-05 AU003 Codex 原 journal 与核心装配纵向 C 验证
+
+开工e157765da846b41720fe288df9837eda1058c625，clean；三家completed且已释放写权。主会话新建 test_codex_assembly.py/codex-assembly-evidence.md，使用真实独立CodexRuntimeProvider、原UnitRecords/OperationJournal及核心Profile/Registry/Issuer/Assembly/Node；原生客户端、authority与观察端口仍受控，不作为生产实现。Codex子代理仅只读复查，无共享写权。
+
+首跑新增文件2P/1F exit1、0.53s：fixture错误地把Core recoveryCorrelation当原UnitRecords的request/operation/step JSON correlation，实际确认拒绝并保持unknown。按原关联格式修fixture后2P/1F exit1、0.62s：正常路径已published，但断言误用Node的bindings字段，改为原公开binding。原确认门与断言均保留。与原assembly组合26P exit0、1.66s；补四类撤权后29P exit0、1.80s；再补request冲突/native readback不符后最终31P exit0、2.21s（新增8＋原23）。历史快照不累加。
+
+命令前缀为 `PYTHONPATH=plugins/harness/codex/src:packages/backend/harness-transport/src /home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python -m pytest -c products/agent-tools/pyproject.toml`；窄测尾部为 `docs/implementation/agent-tools/evidence/agent-unit-model/test_codex_assembly.py docs/implementation/agent-tools/evidence/agent-unit-model/test_assembly.py -q`。最终集成尾部为 `products/agent-tools/tests/integration docs/implementation/agent-tools/evidence/agent-unit-model/test_assembly.py docs/implementation/agent-tools/evidence/agent-unit-model/test_codex_assembly.py docs/implementation/agent-tools/evidence/agent-unit-model/test_provider_discovery.py docs/implementation/agent-tools/evidence/agent-unit-model/test_preparation_holds.py docs/implementation/agent-tools/evidence/agent-unit-model/test_management.py docs/implementation/agent-tools/evidence/agent-unit-model/test_invocation_continuation.py -q`：354P/0F exit0、12.90s。此前新增6项时352P/12.26s不累加。diff-check exit0。
+
+验证同原Unit/配置目标发布、原unknown占用及原query不重发，initialize之后authority/activation/directory/epoch变动均无thread/start。epoch旧ticket不能再写观察，保持opening，不释放fence。C真实SQLite＋真实家族Python实现，native/client仍fixture；P未验证，M0。没有运行实际Codex/SDK、安装更新/登录配置/用户服务/用户DB操作或push。生产writer授权与receipt冷恢复、Pi/Claude纵向接线、材料/SecretRef、生命周期/旧注册/薄客户端仍缺，不报AU003_DONE；已登记核心3个回归红仍未修复，集成绿不覆盖它们。
+
+只读Codex审阅指出两个真实覆盖缺口：fixture只查询start correlation，无法证明prepare持久预留后丢reply恢复；同key重放在核心短路，无法证明第二合法key被原scope拒。已补原prepare query确认同Unit且不start（显式prepare才继续）及同realm第二request实际进入reserve_unit、捕获configuration scope already reserved并保留旧unknown/no新Unit/no新launch。fixture query_creation按原facts.stepId选关联，不将旧创建者元数据当授权。最终新增10项＋原assembly23为33P/0F exit0、2.40s；最终同集成命令356P/0F exit0、13.23s。早期31/354为此前快照，不累加、不冒充最终。C/P/M边界不变。
+
+只读终审确认两项补强成立，未发现当前十项权限或unknown绕过；审阅无修改/pytest/Git。特别保留限制：fixture authenticated-request闭包不作通用生产查询owner；access surface为受控source且未装lease_port，connect不支持，published不能宣称完整可连接产品。显式纳入三个新/改文件形成阶段检查点，继续生产接缝与其余家族，不勾完成门。
