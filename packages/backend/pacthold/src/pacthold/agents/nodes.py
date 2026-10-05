@@ -1,7 +1,7 @@
 """Core node identity/publication primitives on the Environment's same store.
 
 Internal signatures (no wire or service readiness):
-  reserve(request, digest, OperationIntent) -> OperationRecord
+  reserve(request, digest, OperationIntent, *, usages=()) -> OperationRecord
   publish(request, digest, expected_revision, usages) -> NodeRecord projection
   read(ParticipantInstanceRef) / list() -> frozen NodeRecord projections
 NodeEvidencePort.inspect(operation, steps) -> NodePublicationEvidence is an
@@ -142,7 +142,13 @@ class NodePublication:
         if action and not env._policy.admit_invoke(env._principal_scope, f"pacthold.agents.nodes.{action}", "reliable"):
             raise AdmissionRefusedError("node invocation permission unavailable or refused")
 
-    def reserve(self, request: RequestKey, digest: str, intent: OperationIntent):
+    def reserve(self, request: RequestKey, digest: str, intent: OperationIntent,
+                *, usages: tuple[UsageMutation, ...] = ()):
+        """Reserve identity and pre-dispatch resource holds in one transaction.
+
+        Replays return the original reservation; they cannot acquire new holds.
+        The coordinator must include the fixed resource recipe in its digest.
+        """
         env = self._environment
         with env._admission_lock:
             if type(intent) is not OperationIntent:
@@ -171,7 +177,8 @@ class NodePublication:
             if ref.generation != 1:
                 raise IdentityMismatchError("a new core node identity starts at generation 1")
             return store.reserve_operation(request, digest, intent,
-                writes=(DomainWrite(IDENTITIES, ref.instance_id, 0, identity),))
+                writes=(DomainWrite(IDENTITIES, ref.instance_id, 0, identity),),
+                usages=usages)
 
     def _identity(self, operation):
         ref = decode_node_ref(operation.intent.node_ref)

@@ -260,3 +260,10 @@ AU003增量e08916abae冻结/提交后三家写权全部释放，主会话串行�
 最终核心全回归269P/3F exit1、7.02s，同三个继承ID，au002-continuation-core-final.txt。两份raw日志只去行尾空白，计数及诊断保留。未恢复legacy或删除失败断言。
 
 共享Issuer最后补强后，原配置journal贯通回归 `-m pytest -c plugins/harness/pyproject.toml plugins/harness/tests/test_unit_configuration_records.py plugins/harness/tests/test_unit_records.py plugins/harness/tests/test_operation_journal.py -q`：61P/0F exit0、0.67s。确认原core claim消费/原query及owner journal不受持续重核改动破坏。
+### 2026-10-05 AU002 准备前占用原子接缝
+
+开工HEAD5790b5374b24bbf754f1e8a5cc60b32b1ac9beb3，工作树clean；实时代理清单三家均completed，无活跃家族写者。共享工作仍由主会话串行执行。NodePublication.reserve新增显式usages参数，复用原Store.reserve_operation同事务写Node身份、原操作和准备前资源占用；重放只读原预留，不追加占用。没有新数据库、注册中心或原生状态副本。协调方必须将固定资源配方包含在原输入digest，本接缝不替代生产Provider接纳或材料取得。
+
+命令：`/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python -m pytest -c products/agent-tools/pyproject.toml docs/implementation/agent-tools/evidence/agent-unit-model/test_preparation_holds.py products/agent-tools/tests/integration/test_node_publication.py -q`。首跑29P/1F exit1、0.49s，冷启动fixture未关闭原writer，正确触发WriterLockHeldError；第二次30P/1 teardown error exit1、0.50s，fixture重复close；修正资源清理后30P/0F exit0、0.46s。新增5项真实SQLite验证：dispatch前持有、错误holder和跨环境target导致身份/操作/Usage整体回滚、重放不追加占用、unknown及冷启动保留原占用且不重复claim。既有Node25项同跑；未删除断言、放宽writer锁或用takeover绕过。
+
+C为真实SQLite受控协调证据；P/M均未运行，本次无第三方安装/更新、用户数据或配置操作、服务重启。生产prepare→Unit→Node、材料/SecretRef、完整使用与生命周期仍未完成，AU002_PARTIAL。此前核心全回归3个已登记失败仍保持，未用本次窄测宣称修复。下一步接固定Profile与当前Registry Provider的准备协调及实际owner证据。
