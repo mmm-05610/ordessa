@@ -68,6 +68,9 @@ def wire_contract(version=AGENT_CONTRACT_VERSION) -> dict:
         # Thin projections of NodePublication.list/read. Absence retains the
         # core's None; publication is not a current native readiness claim.
         value['results'].update({
+            'preparationOperation': {'required': ['operationRef', 'revision', 'status', 'node'],
+                'additionalProperties': False,
+                'statuses': ['reserved', 'running', 'unknown', 'published', 'refused', 'cancelled']},
             'nodesList': {'required': ['nodes'], 'additionalProperties': False},
             'nodeRead': {'required': ['node'], 'additionalProperties': False, 'missing': None},
             'nodeRecord': {'required': ['nodeRef', 'binding', 'lineage', 'publicationRevision',

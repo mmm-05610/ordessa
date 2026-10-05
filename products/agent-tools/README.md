@@ -2,10 +2,10 @@
 
 Independent CLI and three optional Skills for humans, Agents, scripts and tools.
 The implemented slices include discovery, the core-owned Profile catalog,
-published Node list/inspect, and owner configuration describe/inspect/apply/query:
+fixed-request Node preparation, published Node list/inspect, and owner configuration describe/inspect/apply/query:
 list/read/create/edit/clone/rename/archive/restore, immutable history refs, and
-explicitly unresolved preview. It does not yet prepare Agent nodes, submit tasks,
-stop or recover nodes. Three Skill files do not make those
+explicitly unresolved preview. Production native preparation has not been verified. Task submission, stop and recovery
+are not implemented. Three Skill files do not make those
 capabilities available. No real model calls were made for this slice.
 
 The client consumes `wire/1` and negotiates the generated `agent-assembly/1`
@@ -80,6 +80,37 @@ HTTP requires a loopback IP literal; other endpoints require HTTPS with normal
 certificate verification. Userinfo, paths, queries and fragments in the endpoint
 are refused. Redirects, ambient proxies and automatic retries are disabled. The
 service must already be running under its authorized owner.
+
+## Prepare a Node through the selected service
+
+```sh
+ordessa-agent nodes prepare --file preparation.json --config services.json --service local --json
+```
+
+The bounded file contains exactly `requestId`, a complete service-returned
+`profileRef`, and explicit `context` and `options` objects. Select public owner
+references according to the deployment's authorized context contract; do not
+supply host paths, commands, executable arguments or plaintext credentials.
+The CLI does not invent or resolve those references. Keep the file and requestId
+fixed. The requestId is also the wire request identity.
+
+The service must advertise `agents.nodes.prepare` and `nodePreparation=true`;
+these declarations do not grant execution permission or prove installed resources.
+The optional catalog deployment does not compose preparation authorities and
+refuses this command. Required authority, installation, material or owner evidence
+missing is a refusal or unknown, never a fallback.
+
+Only a validated `published` original operation reports `nodePublished=true`.
+This is durable publication evidence, with `runtimeVerified=false`, not a task
+success or permission to send native input. Save the returned full NodeRef and
+operationRef. `reserved`, `running`, `unknown`, disconnect and invalid receipts
+exit 6 without automatic resend. An unobserved receipt may leave operationRef
+unknown even if effects occurred. This release has no public preparation query
+or request-key lookup: retain the exact requestId and report that recovery gap;
+do not resend, generate a replacement key, or inspect the service database.
+
+Controlled Core/SQLite/HTTP and fresh installed CLI tests exercise this path;
+production native Harness preparation and real model tasks remain unverified.
 
 ## Observe registered Providers
 

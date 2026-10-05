@@ -21,7 +21,9 @@ Require matching core schema and `data.coreAgent.supports.profileCatalog=true`.
 Profile catalog success does not imply a runnable Agent. `nodes=false` and
 `managedInput=false` do not prevent separately advertised publication/configuration
 reads; check the requested method and its authority. This release still has no
-prepare, task input, apply-profile, stop, or recover CLI.
+task input, apply-profile, stop, or recover CLI. For an explicitly authorized
+prepare through the public service, follow manage-external-agent; catalog edits
+do not prepare or configure an existing Node.
 
 Use `ordessa-agent profiles --help` and the action's `--help` for current syntax.
 List with `profiles list`; inspect metadata with `profiles entry PROFILE_ID`.

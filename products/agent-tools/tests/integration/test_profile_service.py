@@ -312,3 +312,26 @@ def test_real_http_v2_node_observation_requires_explicit_read_authority(tmp_path
             assert denied['evidence']['level'] == 'coreCapabilitiesObserved'
     finally:
         service.stop()
+
+
+def test_real_http_v2_catalog_deployment_refuses_prepare_without_authorities(tmp_path):
+    service = IsolatedService(tmp_path, version='agent-assembly/2')
+    try:
+        service.start()
+        manifest = tmp_path / 'recipe.json'
+        manifest.write_text(json.dumps({'harnessDefinitionRef': {'environmentNamespace': service.identity,
+            'definitionId': 'absent', 'revision': '1'}, 'schemaVersion': '1', 'declarations': []}))
+        entry = service.cli(['profiles', 'create', '--file', str(manifest), '--profile-id', 'recipe',
+            '--name', 'Recipe', '--request-id', 'create-recipe'])['data']
+        request = tmp_path / 'preparation.json'
+        request.write_text(json.dumps({'requestId': 'prepare-recipe', 'profileRef': entry['currentManifestRef'],
+            'context': {}, 'options': {}}))
+        refused = service.cli(['nodes', 'prepare', '--file', str(request)], expected=4)
+        assert refused['error']['code'] == 'NODE_PREPARATION_UNAVAILABLE'
+        assert refused['error']['retryable'] is False and refused['operationRef'] is None
+        assert refused['status'] == 'refused' and refused['requestId'] == 'prepare-recipe'
+        assert refused['data']['coreAgent']['supports']['nodePreparation'] is False
+        assert 'agents.nodes.prepare' not in refused['data']['coreAgent']['supportedMethods']
+        assert service.cli(['profiles', 'entry', 'recipe'])['data'] == entry
+    finally:
+        service.stop()

@@ -64,6 +64,23 @@
           "error"
         ]
       },
+      "preparationOperation": {
+        "required": [
+          "operationRef",
+          "revision",
+          "status",
+          "node"
+        ],
+        "additionalProperties": false,
+        "statuses": [
+          "reserved",
+          "running",
+          "unknown",
+          "published",
+          "refused",
+          "cancelled"
+        ]
+      },
       "nodesList": {
         "required": [
           "nodes"
@@ -408,5 +425,5 @@
       ]
     }
   },
-  "schemaDigest": "sha256:d229ca05419ebd9458befe211c31f1af5a8d75ab0fce0cf99f12b25e0cf4240e"
+  "schemaDigest": "sha256:31cfa1573d9807306d3a63ff89b66e2dc7b487d37cb9143ffe083a67dccfba13"
 }

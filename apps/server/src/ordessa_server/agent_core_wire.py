@@ -86,7 +86,7 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
                 if action=='prepare':
                     operation=services.assembly.prepare(catalog.request_key(params['requestId']),
                         refs['profileRef'],params['context'],params['options'])
-                    return services.assembly.operation_view(operation)
+                    return json.loads(safe_json(services.assembly.operation_view(operation)))
                 if action in configuration_actions:
                     manager=services.configuration
                     if action=='describeConfiguration':

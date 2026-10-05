@@ -11,6 +11,7 @@ import uuid
 from .initialization import discover, save_report
 from .providers import definition_ref_valid, provider_result_valid
 from .nodes import node_result_valid
+from .preparation import request_valid as preparation_request_valid, result_valid as preparation_result_valid
 from .configuration import node_ref_valid, description_result_valid, snapshot_result_valid, change_request_valid, operation_result_valid, operation_disposition
 from .client import ClientError, WireClient, load_service, parse_json, core_schema, profile_ref_valid, provider_schema, MAX_BYTES
 
@@ -50,6 +51,10 @@ def parser():
         connection(child)
         if action == 'inspect':
             child.add_argument('node_ref', help='Complete NodeRef JSON or @file')
+    prepare = node_actions.add_parser('prepare', help='Prepare a Node from a fixed Profile request; unknown is never resent automatically')
+    prepare.set_defaults(action='prepare')
+    connection(prepare)
+    prepare.add_argument('--file', required=True, help='Fixed request JSON: requestId, profileRef, context, options')
     configuration = node_actions.add_parser("configuration", help="Observe owner configuration capabilities")
     configuration_actions = configuration.add_subparsers(dest="action", required=True, parser_class=Parser)
     for action, help_text in (("describe", "Read owner capability descriptions; does not inspect or apply values"),
@@ -206,7 +211,13 @@ def main(argv=None):
                     raise ClientError("PARAMETER_INVALID", "Complete DefinitionRef required", 2)
                 params["definitionRef"] = definition
             prepared = ("agents.providers." + options.action, params)
-        if options.command == 'nodes' and options.node_action != 'configuration':
+        if options.command == 'nodes' and options.node_action == 'prepare':
+            params = json_input(options.file, file_only=True)
+            if not preparation_request_valid(params):
+                raise ClientError('PARAMETER_INVALID', 'Complete public preparation request required', 2)
+            options.request_id = params['requestId']
+            prepared = ('agents.nodes.prepare', params)
+        elif options.command == 'nodes' and options.node_action != 'configuration':
             params = {}
             if options.node_action == 'inspect':
                 node = json_input(options.node_ref)
@@ -268,6 +279,25 @@ def main(argv=None):
                 raise ClientError("CORE_RESPONSE_INVALID", "Provider registry result could not be safely validated", 4)
             data = result
             evidence = {"level": "providerRegistryObserved", "runtimeVerified": False}
+        elif options.command == 'nodes' and options.node_action == 'prepare':
+            method, params = prepared
+            if method not in core.get('supportedMethods', ()) or core['supports'].get('nodePreparation') is not True:
+                raise ClientError('NODE_PREPARATION_UNAVAILABLE', 'Service did not publish preparation guarantees', 4)
+            if not preparation_request_valid(params, core['environmentNamespace']) or service.token in json.dumps(params):
+                raise ClientError('PARAMETER_INVALID', 'Preparation request contains invalid scope or authentication material', 2)
+            result = client.core_call(method, params, request_id)
+            if (not preparation_result_valid(result, params, core['environmentNamespace'], core_schema(client.schema_version)['schema'])
+                    or service.token in json.dumps(result)):
+                raise ClientError('OUTCOME_UNKNOWN', 'Preparation result could not be safely validated; do not resend', 6)
+            data = result
+            operation_ref = result['operationRef']
+            evidence = {'level': 'preparationOperationObserved', 'runtimeVerified': False,
+                        'nodePublished': result['status'] == 'published'}
+            if result['status'] != 'published':
+                result_status = 'refused' if result['status'] in {'refused', 'cancelled'} else 'unknown'
+                raise ClientError('PREPARATION_REFUSED' if result_status == 'refused' else 'OUTCOME_UNKNOWN',
+                                  'Original preparation is not published; inspect the original operation without resending',
+                                  4 if result_status == 'refused' else 6)
         elif options.command == 'nodes' and options.node_action != 'configuration':
             method, params = prepared
             if method not in core.get('supportedMethods', ()):

@@ -1,6 +1,6 @@
 ---
 name: manage-external-agent
-description: Inspect published Agent Nodes and read, change, or reconcile owner configuration through the standalone ordessa-agent CLI. Also assess unavailable lifecycle actions; Profile catalog editing is separate.
+description: Prepare Agent Nodes from fixed public requests, inspect published Agent Nodes and read, change, or reconcile owner configuration through the standalone ordessa-agent CLI. Also assess unavailable lifecycle actions; Profile catalog editing is separate.
 ---
 
 For first-time local setup, run `ordessa-agent init --json`. It scans absolute
@@ -24,6 +24,7 @@ Use `ordessa-agent nodes --help` for the installed command surface. Append the
 same `--config services.json --service local --json` to every invocation below:
 
 ```sh
+ordessa-agent nodes prepare --file preparation.json
 ordessa-agent nodes list
 ordessa-agent nodes inspect @node-ref.json
 ordessa-agent nodes configuration describe @node-ref.json
@@ -37,6 +38,21 @@ generation; preserve the complete identity returned by the selected service.
 Node inspect reads durable publication references, not current native state.
 Missing publication returns exit 4. `nodePublicationObserved` and a provider
 registry entry do not establish ready or execution permission.
+
+For an explicitly authorized prepare, use a bounded file with exactly requestId,
+profileRef, context and options. Use the selected service's complete ProfileRef
+and authorized public context references; never supply host paths, commands,
+private root facts or plaintext credentials. Do not invent leaf options. Require
+advertised agents.nodes.prepare and nodePreparation=true, then obey the actual
+authorization result. The default catalog service does not compose preparation.
+
+Only a validated published operation establishes nodePublished=true; save its
+full NodeRef and operationRef. runtimeVerified remains false. reserved/running/
+unknown, lost receipts and malformed responses exit 6 with no automatic retry.
+There is no public preparation query or request-key lookup in this release;
+retain the original requestId and report that gap even when operationRef exists.
+Do not substitute configuration query, direct database access or a new prepare.
+Publication does not establish native task execution or current readiness.
 
 Configuration describe reads supported kinds/actions/scope/modes. Configuration
 inspect returns the owner's actual snapshot, sourceRevision and explicit unknown
@@ -65,7 +81,7 @@ this release has no public lookup by request key: retain the original requestId
 and report the recovery gap. Do not read the service database or generate a new
 requestId to evade uncertainty.
 
-Prepare, connect, apply-profile, recover, stop, release and task/result CLI actions
+Connect, apply-profile, recover, stop, release and task/result CLI actions
 are still unavailable. Report the precise missing action without substituting
 older endpoints, private modules, direct native clients or a daemon.
 

@@ -9,6 +9,7 @@ import sys
 import zipfile
 
 from test_discovery import SECRET, config
+from test_preparation_cli import assembly, server as preparation_server, fixed as preparation_request
 from test_profile_cli import profile_server
 from test_provider_cli import provider_server
 from test_configuration_cli import setup as node_setup, node_fixture, explicit_capabilities, observation_server
@@ -36,7 +37,7 @@ def test_client_import_boundary_with_adversarial_imports():
         assert not imports_are_client_only(source)
 
 
-def test_wheel_isolated_install_and_actual_http_discovery(tmp_path, node_setup):
+def test_wheel_isolated_install_and_actual_http_discovery(tmp_path, node_setup, assembly):
     wheel_dir = tmp_path / "wheels"
     # Build fresh source in a temporary tree: old ignored build/lib files must
     # not silently enter the wheel after package exclusions change.
@@ -151,3 +152,22 @@ def test_wheel_isolated_install_and_actual_http_discovery(tmp_path, node_setup):
         assert json.loads(queried.stdout)["data"] == result["data"]
         assert node_setup[7]["calls"] == 1 and node_setup[7]["queryCalls"] == 0
         assert len(calls) == 18 and SECRET not in applied.stdout + applied.stderr + queried.stdout + queried.stderr
+
+    with preparation_server(assembly) as (endpoint, calls):
+        path = config(tmp_path, endpoint)
+        request = tmp_path / 'prepare-request.json'
+        request.write_text(json.dumps(preparation_request(assembly)))
+        command = [str(executable), 'nodes', 'prepare', '--file', str(request),
+            '--config', str(path), '--service', 'local', '--json']
+        original = None
+        for _ in range(2):
+            checked = subprocess.run(command, cwd=tmp_path, env=env, capture_output=True, text=True)
+            assert checked.returncode == 0, checked.stdout + checked.stderr
+            result = json.loads(checked.stdout)
+            assert result['requestId'] == assembly[1].request_id
+            assert result['evidence']['nodePublished'] is True and result['evidence']['runtimeVerified'] is False
+            assert result['data']['node']['lineage']['profileSnapshotRef'] == assembly[2].to_dict()
+            if original is None: original = result['data']
+            else: assert result['data'] == original
+            assert SECRET not in checked.stdout + checked.stderr
+        assert assembly[3].calls == ['prepare', 'start'] and len(calls) == 6

@@ -85,7 +85,7 @@ capture/receipt/effect/Session owners, full cold recovery, lifecycle and
 production installation/admission closure remain incomplete. Controlled Unit
 records, scope/journal/configuration management and native write fences exist,
 but their controlled evidence does not replace the missing production owners.
-Prepare/connect/apply-profile/recover/stop/release/task/result CLI, the old
+Production preparation, public preparation recovery, connect/apply-profile/recover/stop/release/task/result CLI, the old
 model/Server assembly migration and real Agent Skill use also remain incomplete.
 The current core regression retains 3 inherited direction failures. The ledger
 also contains an older targeted Server snapshot with 11 baseline failures;
@@ -124,3 +124,17 @@ command paths, missing/unavailable diagnostics and runtimeReady unknown. A scrip
 fixture that writes a marker must not run during scan. The output cannot establish
 a remote Server's availability. Linux filesystem and isolated-wheel tests cover
 this slice; Windows PATHEXT behavior has not been exercised on a Windows host.
+
+
+## Fixed preparation client slice
+
+Use `nodes prepare --file preparation.json` with exactly requestId/profileRef/
+context/options and the same explicit service flags. The ProfileRef and public
+context references must come from the selected authorized deployment. A default
+catalog service refuses preparation; do not count refusal as runnable acceptance.
+A composed controlled fixture must publish the original Node and replay the same
+request without a second provider prepare/start effect. Changed context/options
+must conflict; unauthorized or absent deployment ports must not spend the key.
+Disconnected or invalid post-effect receipts must return unknown/6, preserving
+the requestId and no automatic resend. There is no public preparation query or
+request-key recovery in this release. Production native resources remain unverified.

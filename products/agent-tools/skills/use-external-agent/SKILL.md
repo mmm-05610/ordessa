@@ -19,7 +19,9 @@ owner configuration commands, but has no task submission/result CLI. Preserve
 the service's observed supports; the optional deployment currently has
 `supports.nodes=false` and `supports.managedInput=false`. Even if a different
 compatible service advertises task support, this installed CLI still has no task
-commands. Explain that limitation and stop before attempting a prepare or send action.
+commands. Explain that limitation and stop before attempting task submission
+or native input. A separately authorized Node preparation can use
+manage-external-agent; it does not provide the missing task or result commands.
 Do not invent run/watch/result commands, use an older Agent endpoint as a
 substitute, silently open a native client, or start a daemon.
 

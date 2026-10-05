@@ -588,3 +588,15 @@ Codex只读终审未发现新安全阻断，确认只读权/缺席/冷观察/类
 Codex只读审阅未发现阻断，建议step receipt与Unit Usage target反例已经实补。此切片是Core/SQLite/受控owner C，真实native P与M缺席，M0。production授权/材料/capture/receipt/effect/Session owner、完整生命周期/冷恢复、旧Model/Server装配、prepare/tasks/results CLI及全纵向验收仍PARTIAL。没有第三方安装更新/登录/模型/用户DB/凭据/全局配置/用户服务操作/push/主树合并；费用unknown。显式纳入本轮两源码/测试、证据与账本检查点后继续，不终结goal。
 
 只读终审发现admitted_provider反例初稿同时改Node generation导致可能早拒；主会话限制只改provider引用、保Node/lineage并断言currently admitted provider确切拒绝来源。修正后publication＋wire66P exit0、1.12s；末端opaque定向9P/43deselected exit0、0.18s，源码未再变，296/99/Core结果在这次测试定位改进前，不冒新全跑。
+
+### 2026-10-05 AU004 固定请求 Node prepare CLI（PARTIAL）
+
+前置a6d93c926dcfa7549e27bd303eb2421c2d8741f7、clean；上一核心修复提交和实测属于progress。本轮live agents全completed，主会话唯一共享源码/Core schema/Server/CLI/测试/Git/账本写者；Codex只读核验与终审，无另一写者。完整工单目标保留，不把测试切片重新定义为完成。
+
+新增 `ordessa-agent nodes prepare --file preparation.json`，完整固定requestId/profileRef/context/options，原key同时wire ID，沿既有agents.nodes.prepare/AgentAssembly/Profile→Unit→Node/原store/authority/claim/Usage，不生成本地计划或品牌协议。core schema公布既有operation_view四字段与原status枚举，v2镜像生成；v1/provider镜像未变，旧v2digest不匹配拒绝无fallback。Server仅用safe_json投影原操作。CLI发前拒私有命令/路径/凭据、类型/shape/外环境，published复用Node观察且核Profile/原context/options/operation/revision；runtimeVerified=false。reserved/running/unknown或作用后坏/丢回执6不自动重发，不安全回执不推导operationRef。没有公开preparation query/request-key lookup，README/Skill明确缺口，不替换为配置query/DB旁路。
+
+完整命令与范围：[prepare-cli.md](evidence/agent-unit-model/prepare-cli.md)。初新CLI24P exit0、12.70s；补同键变context/options冲突、port缺席与fresh安装实际prepare/replay后组合57P exit0、36.62s；补实际reserved及四状态null DTO后CLI/契约/原assembly71P exit0、17.00s，新prepare32项。真实自有Uvicorn v2目录服务创建真实Profile后因authority ports缺席拒prepare4，Profile不变：v2组3P/2deselected exit0、3.09s，新1项。公共CLI/契约/发行全组合222P exit0、103.58s；全部产品integration297P exit0、11.84s。fresh wheel/venv仅本产品no-index/no-deps安装、独立CLI对原Core/SQLite/issuer受控HTTP发布＋原key重放，6请求、provider唯一prepare/start。受控owner是C，不当真实native Harness P/M。
+
+全Core269P/3F exit1、7.72s、0skip，仍既有kernel_direction三红/具体SQLite测试导入来源，未删断言/skip/移走失败。worker/sidecar/ACP closure/Claude资源ABSENT继续。三Skill结构、五工单strict、mirror、diff-check各exit0仅资料门；无pytest新失败，所有测试terminal。只读审阅无源码阻断，指出use Skill旧禁止prepare句，已限定缺任务输入并指向管理Skill。没有真实Agent指令行为评估。
+
+默认目录部署依然不提供production准备权限；production材料/SecretRef/capture/receipt/effect/Session owner、三家native装配、完整生命周期/冷恢复、旧Model/Server迁移、准备公开恢复、connect/applyProfile/stop/release/tasks/results及全纵向仍PARTIAL；M0，不报AU004_DONE。未第三方安装更新/登录/模型/用户DB/凭据/全局配置/用户服务操作/push/主树合并，成本unknown。显式纳入本轮新增及已核对源码/文档/证据检查点后继续。
