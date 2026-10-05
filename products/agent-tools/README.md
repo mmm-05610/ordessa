@@ -258,3 +258,5 @@ ordessa-agent nodes configuration query @node-ref.json ORIGINAL_OPERATION_REF --
 结果保留原 `operationRef`、操作 revision/status、完整逐项 `configurationResult` 与可缺席的确认快照。`evidence.allDeclarationsApplied=true` 仅表示所有声明均有核心验证的 applied 结论；partial 中具体已作用的项仍看 `itemResults`。`runtimeVerified=false` 不代替真实 Harness 验收。restartRequired 返回 pending，不重启；deferred 在当前核心中保持 unknown。partial／unknown 返回 6，禁止自动换键、重发或回滚。版本／同键异内容冲突返回 5。
 
 `query` 沿原操作核实并可能记录确认或完成原发布，不是无作用的日志读取；它不重新执行修改。断连或未确认回执时保留原 requestId，不推导 operationRef。若回执丢失且此前未取得 operationRef，公开按请求键查找操作的入口尚缺，不能声称恢复流程完整；测试从唯一 Core 记录取得原引用仅是受控验证方法，不是客户端后门。
+
+Codex、Pi、Claude Code 的协议源码与测试现由 `plugins/harness/codex`、`plugins/harness/pi`、`plugins/harness/claude-code` 独立拥有；产品不再保留三家协议副本或兼容导出。其余七家的旧客户端与公共运输暂存为未启用迁移材料，整个 `native_clients` 均不进入 CLI wheel。旧大 Harness 中三家的配置、附件和部署资源及直接工厂路线仍在单独迁移，不能把本次源码去重视为三家生产装配完成。

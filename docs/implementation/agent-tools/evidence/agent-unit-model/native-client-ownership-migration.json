@@ -1,0 +1,473 @@
+{
+  "baseline": "471cf57ec1e6d6b1f2e9938fcc6bfcb3f9a8eb84",
+  "classification": "source-ownership-only; controlled tests do not prove native readiness",
+  "removedSources": {
+    "products/agent-tools/src/ordessa_agent_tools/native_clients/codex.py": "feb1979606a49d407473d00c8400bbf5cffd71f083d939c8857ad8c34476793e",
+    "products/agent-tools/src/ordessa_agent_tools/native_clients/pi.py": "2a658e0879064c69dfde0b12ff96fecbccbc22ad3fa9ad589b80304494326492",
+    "products/agent-tools/src/ordessa_agent_tools/native_clients/claude_code.py": "675ca9eda17b6a522d8e4523fea87c1f0c4170eeb09133b49d91365b2846b2e2"
+  },
+  "testCoverage": {
+    "products/agent-tools/tests/native_clients/test_codex_client.py": {
+      "sourceSha256": "e2ee7cfe26a54313f7027e1c8da86106382e00f133d3822f8a23d6023dc6a80c",
+      "target": "plugins/harness/codex/tests/test_client.py",
+      "tests": [
+        {
+          "oldTest": "test_initialize_handshake_and_initialized_notification",
+          "newTest": "test_initialize_handshake_and_initialized_notification",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_create_thread_returns_real_session_identity",
+          "newTest": "test_create_thread_returns_real_session_identity",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_turn_receipt_is_not_completion_but_completes_later",
+          "newTest": "test_turn_receipt_is_not_completion_but_completes_later",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_unknown_events_are_preserved_verbatim",
+          "newTest": "test_unknown_events_are_preserved_verbatim",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_approval_callback_keeps_identity_and_caller_decides",
+          "newTest": "test_approval_callback_keeps_identity_and_caller_decides",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_remote_error_keeps_codex_error_info",
+          "newTest": "test_remote_error_keeps_codex_error_info",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_overload_is_not_auto_retried",
+          "newTest": "test_overload_is_not_auto_retried",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_failed_turn_raises_typed_with_raw_kept",
+          "newTest": "test_failed_turn_raises_typed_with_raw_kept",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_wait_timeout_is_unknown_and_never_resends",
+          "newTest": "test_wait_timeout_is_unknown_and_never_resends",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_invalid_approval_decision_rejected_locally",
+          "newTest": "test_invalid_approval_decision_rejected_locally",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_close_then_use_is_channel_closed",
+          "newTest": "test_close_then_use_is_channel_closed",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_declined_decision_is_never_upgraded_by_amendment",
+          "newTest": "test_declined_decision_is_never_upgraded_by_amendment",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_turn_failed_is_not_a_channel_closed_condition",
+          "newTest": "test_turn_failed_is_not_a_channel_closed_condition",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_wait_correlates_both_thread_and_turn_preserving_unrelated",
+          "newTest": "test_wait_correlates_both_thread_and_turn_preserving_unrelated",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_completion_buffered_during_rpc_is_available_to_wait",
+          "newTest": "test_completion_buffered_during_rpc_is_available_to_wait",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_invalid_completion_cannot_report_success",
+          "newTest": "test_invalid_completion_cannot_report_success",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_interrupt_ack_is_not_terminal_completion",
+          "newTest": "test_interrupt_ack_is_not_terminal_completion",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_permissions_cannot_receive_command_decision_and_duplicate_reply_refused",
+          "newTest": "test_permissions_cannot_receive_command_decision_and_duplicate_reply_refused",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_server_resolved_request_is_not_answered_again",
+          "newTest": "test_server_resolved_request_is_not_answered_again",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_execpolicy_reply_uses_native_decision_wrapper",
+          "newTest": "test_execpolicy_reply_uses_native_decision_wrapper",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_unknown_start_is_not_resent_and_late_receipt_recovery_only_reads",
+          "newTest": "test_unknown_start_is_not_resent_and_late_receipt_recovery_only_reads",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_malformed_response_keeps_pending_unknown",
+          "newTest": "test_malformed_response_keeps_pending_unknown",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_target_overrides_cannot_change_input_or_resume_thread",
+          "newTest": "test_target_overrides_cannot_change_input_or_resume_thread",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_wrong_thread_resolved_does_not_clear_pending_approval",
+          "newTest": "test_wrong_thread_resolved_does_not_clear_pending_approval",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_permissions_generic_reply_cannot_sneak_command_decision",
+          "newTest": "test_permissions_generic_reply_cannot_sneak_command_decision",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_malformed_start_receipt_remains_unknown",
+          "newTest": "test_malformed_start_receipt_remains_unknown",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_remote_error_data_preserved_without_reinterpreting_it",
+          "newTest": "test_remote_error_data_preserved_without_reinterpreting_it",
+          "status": "same-test-AST"
+        }
+      ]
+    },
+    "products/agent-tools/tests/native_clients/test_pi_client.py": {
+      "sourceSha256": "34fb5416c9694e670fff647b801dafe1e4c391e9a97828f8819264b1f34d77d6",
+      "target": "plugins/harness/pi/tests/test_client_process.py",
+      "tests": [
+        {
+          "oldTest": "test_describe_has_no_runtime_ready_claim",
+          "newTest": "test_describe_has_no_runtime_ready_claim",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_rpc_launch_argv_plan_matches_pinned_facts",
+          "newTest": "test_rpc_launch_argv_plan_matches_pinned_facts",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_initialize_is_get_state_round_trip",
+          "newTest": "test_initialize_is_get_state_round_trip",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_send_prompt_returns_started_receipt_verbatim",
+          "newTest": "test_send_prompt_returns_started_receipt_verbatim",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_unknown_event_type_preserved_verbatim",
+          "newTest": "test_unknown_event_type_preserved_verbatim",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_extension_ui_request_replied_with_same_id",
+          "newTest": "test_extension_ui_request_replied_with_same_id",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_create_session_returns_prepared_with_native_data",
+          "newTest": "test_create_session_returns_prepared_with_native_data",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_cancel_returns_raw_abort_response",
+          "newTest": "test_cancel_returns_raw_abort_response",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_success_false_raises_pi_command_error_with_verbatim_text",
+          "newTest": "test_success_false_raises_pi_command_error_with_verbatim_text",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_handled_disposition_does_not_wait_for_settled",
+          "newTest": "test_handled_disposition_does_not_wait_for_settled",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_prompt_timeout_is_typed_and_never_resent",
+          "newTest": "test_prompt_timeout_is_typed_and_never_resent",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_parse_error_record_without_id_stays_in_event_stream",
+          "newTest": "test_parse_error_record_without_id_stays_in_event_stream",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_two_clients_ids_and_streams_do_not_cross",
+          "newTest": "test_two_clients_ids_and_streams_do_not_cross",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_close_releases_only_owned_process",
+          "newTest": "test_close_releases_only_owned_process",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_l1_lost_receipt_marks_unknown_not_no_run",
+          "newTest": "test_l1_lost_receipt_marks_unknown_not_no_run",
+          "status": "same-test-AST"
+        }
+      ]
+    },
+    "products/agent-tools/tests/native_clients/test_pi_guard.py": {
+      "sourceSha256": "c7325f676c09099b8c3fa15893e4786d3a216d2c3299a855b7e2da4ee1c45870",
+      "target": "plugins/harness/pi/tests/test_client_guard.py",
+      "tests": [
+        {
+          "oldTest": "test_unknown_prompt_blocks_new_id_even_different_message_and_fields",
+          "newTest": "test_unknown_prompt_blocks_new_id_even_different_message_and_fields",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_late_receipt_clears_pending_but_does_not_clear_unknown",
+          "newTest": "test_late_receipt_clears_pending_but_does_not_clear_unknown",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_raw_command_keeps_explicit_native_semantics_when_convenience_unknown",
+          "newTest": "test_raw_read_keeps_native_semantics_but_cannot_bypass_unknown_input",
+          "status": "strengthened-existing-unknown-fence",
+          "reason": "A second raw prompt after lost receipt is forbidden; raw get_state and sent-count assertions retained."
+        },
+        {
+          "oldTest": "test_reply_only_observed_dialog_native_shape_once",
+          "newTest": "test_reply_only_observed_dialog_native_shape_once",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_notifications_unknown_and_missing_method_do_not_grant_reply",
+          "newTest": "test_notifications_unknown_and_missing_method_do_not_grant_reply",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_malformed_dialog_is_visible_but_not_replyable",
+          "newTest": "test_malformed_dialog_is_visible_but_not_replyable",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_malformed_method_specific_fields_do_not_grant_reply",
+          "newTest": "test_malformed_method_specific_fields_do_not_grant_reply",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_invalid_response_does_not_consume_pending_dialog",
+          "newTest": "test_invalid_response_does_not_consume_pending_dialog",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_duplicate_inbound_id_cannot_resurrect_consumed_response",
+          "newTest": "test_duplicate_inbound_id_cannot_resurrect_consumed_response",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_lost_response_write_cannot_be_retried",
+          "newTest": "test_lost_response_write_cannot_be_retried",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_parallel_reply_consumes_once",
+          "newTest": "test_parallel_reply_consumes_once",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_malformed_ui_after_prompt_write_marks_outcome_unknown",
+          "newTest": "test_malformed_ui_after_prompt_write_marks_outcome_unknown",
+          "status": "same-test-AST"
+        }
+      ]
+    },
+    "products/agent-tools/tests/native_clients/test_pi.py": {
+      "sourceSha256": "5e0823cf069608e7646086239aa1b162bfcd89d528f1e7dfb2d7f40ce95f4ffd",
+      "target": "plugins/harness/pi/tests/test_client.py",
+      "tests": [
+        {
+          "oldTest": "test_pinned_success_is_accepted_and_only_settle_concludes",
+          "newTest": "test_pinned_success_is_accepted_and_only_settle_concludes",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_agent_end_does_not_fake_completion",
+          "newTest": "test_agent_end_does_not_fake_completion",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_old_settle_cannot_conclude_second_prompt",
+          "newTest": "test_old_settle_cannot_conclude_second_prompt",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_settle_arriving_before_receipt_is_preserved",
+          "newTest": "test_settle_arriving_before_receipt_is_preserved",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_wrong_command_or_invalid_receipt_retains_unknown",
+          "newTest": "test_wrong_command_or_invalid_receipt_retains_unknown",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_generic_fields_cannot_replace_wire_identity",
+          "newTest": "test_generic_fields_cannot_replace_wire_identity",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_callback_fields_cannot_replace_wire_identity",
+          "newTest": "test_callback_fields_cannot_replace_wire_identity",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_partial_write_stays_unknown_without_resend",
+          "newTest": "test_partial_write_stays_unknown_without_resend",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_disconnect_after_acceptance_is_unknown",
+          "newTest": "test_disconnect_after_acceptance_is_unknown",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_rejection_is_not_settled_or_success",
+          "newTest": "test_rejection_is_not_settled_or_success",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_cancel_clear_queue_is_two_native_commands_not_task_success",
+          "newTest": "test_cancel_clear_queue_is_two_native_commands_not_task_success",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_unknown_event_survives_native_prompt_receipt",
+          "newTest": "test_unknown_event_survives_native_prompt_receipt",
+          "status": "same-test-AST"
+        }
+      ]
+    },
+    "products/agent-tools/tests/native_clients/test_claude_code_client.py": {
+      "sourceSha256": "60ce15fd4d2c207cc1638e78b8d8d2e397e7d796f1729983f41ff55c6345abd4",
+      "target": "plugins/harness/claude-code/tests/test_stream_json.py",
+      "tests": [
+        {
+          "oldTest": "test_l1_initialize_reads_system_init_and_capabilities",
+          "newTest": "test_l1_initialize_reads_system_init_and_capabilities",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_l1_result_is_terminal_and_keeps_session_id",
+          "newTest": "test_l1_result_is_terminal_and_keeps_session_id",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_l1_unknown_records_and_api_retry_are_surfaced_verbatim",
+          "newTest": "test_l1_unknown_records_and_api_retry_are_surfaced_verbatim",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_l1_timeout_is_unknown_and_never_resends",
+          "newTest": "test_l1_timeout_is_unknown_and_never_resends",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_l1_close_then_use_is_channel_closed",
+          "newTest": "test_l1_close_then_use_is_channel_closed",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_duplex_control_initialize_and_native_user_shape",
+          "newTest": "test_duplex_control_initialize_and_native_user_shape",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_explicit_approval_native_nested_response_once",
+          "newTest": "test_explicit_approval_native_nested_response_once",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_result_failure_identity_shape_and_disconnect",
+          "newTest": "test_result_failure_identity_shape_and_disconnect",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_background_result_does_not_complete_user_turn",
+          "newTest": "test_background_result_does_not_complete_user_turn",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_interrupt_receipt_does_not_complete_pending_turn",
+          "newTest": "test_interrupt_receipt_does_not_complete_pending_turn",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_unknown_initialize_cannot_be_resent",
+          "newTest": "test_unknown_initialize_cannot_be_resent",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_replayed_and_cancelled_permission_never_authorizes",
+          "newTest": "test_replayed_and_cancelled_permission_never_authorizes",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_output_only_cannot_write_and_invalid_deadline_does_not_send",
+          "newTest": "test_output_only_cannot_write_and_invalid_deadline_does_not_send",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_startup_native_error_not_flattened_into_timeout",
+          "newTest": "test_startup_native_error_not_flattened_into_timeout",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_partial_write_stays_unknown_and_is_not_resent",
+          "newTest": "test_partial_write_stays_unknown_and_is_not_resent",
+          "status": "same-test-AST"
+        },
+        {
+          "oldTest": "test_result_success_subtype_with_error_flag_is_failure",
+          "newTest": "test_result_success_subtype_with_error_flag_is_failure",
+          "status": "same-test-AST"
+        }
+      ]
+    }
+  },
+  "retainedFiles": {
+    "products/agent-tools/src/ordessa_agent_tools/native_clients/_acp.py": "e26ed876a6b0452e171ef53c83458e835ee8d93bae1018bd430769664f54d292",
+    "products/agent-tools/src/ordessa_agent_tools/native_clients/_http.py": "9f02aaa2cbc1c922e95a17050b83247615d9ad18d28d5613e4a7f008f81ba58a",
+    "products/agent-tools/src/ordessa_agent_tools/native_clients/_transport.py": "9909c215a164441a6ff566d37091778ac87bf65eb14d58633f905e315676eca5",
+    "products/agent-tools/src/ordessa_agent_tools/native_clients/copilot.py": "f645929ee47c6ce01525064156a63d9467f3020028cddac3d79eb2395faf7075",
+    "products/agent-tools/src/ordessa_agent_tools/native_clients/gemini_cli.py": "8a62bb2ff34299569cd3ae6c312af5537da044a95c0818a6fbd6303ec67dacc6",
+    "products/agent-tools/src/ordessa_agent_tools/native_clients/goose.py": "20f79d62ef1b98d2c7a25b811636703ae3221fc40fc1356a50e85a2b58b0e85b",
+    "products/agent-tools/src/ordessa_agent_tools/native_clients/kimi.py": "9bf15f3f59c05024a1581600cbac093ea3ab4e22dfffebd2f14897ea34a0c472",
+    "products/agent-tools/src/ordessa_agent_tools/native_clients/opencode.py": "0cde383644b35484cceb3718d097a5949135316cf289392da50751db73505c68",
+    "products/agent-tools/src/ordessa_agent_tools/native_clients/qwen.py": "d40e7b753af90261e24a02b234ee2a17d269f56a4f903db132faa0b5660f28aa",
+    "products/agent-tools/src/ordessa_agent_tools/native_clients/vibe.py": "3aa702b8f8d179d5f26d7b141139839821dc55486f2c059d8ffd50d2ec13d336",
+    "products/agent-tools/tests/native_clients/test_copilot_client.py": "f9f93034b9159ff83a89c25802707614137cc6eb3ed9be2058e9ac7309949373",
+    "products/agent-tools/tests/native_clients/test_gemini_cli_client.py": "69b365ab3c6ea43aa4c0c3ebcf6dc3627d403b286a4aeef6f2d3d72570506462",
+    "products/agent-tools/tests/native_clients/test_goose_client.py": "feed6a523fbb9c386cc350b24b859c8d74f2b1bc374330a35d416f8578ecde09",
+    "products/agent-tools/tests/native_clients/test_http_channel.py": "e61682aa9221b397c5a97d9e76f02766a242e705dc61e82e6d8f2b48d67bbd06",
+    "products/agent-tools/tests/native_clients/test_kimi_client.py": "438081cd62535e7e6c9860bbeb56e46ab9e691a9048e96d276e3317ecc9717e0",
+    "products/agent-tools/tests/native_clients/test_opencode_client.py": "5fdbbaca011982452a4cd8836d43f67f9cf820672feea502acae5a7dfe2719c1",
+    "products/agent-tools/tests/native_clients/test_qwen_client.py": "7a5748ff3f43d09b2191a4c46bd192cdab2b7b07505941e25a670be27e8bea4b",
+    "products/agent-tools/tests/native_clients/test_transport.py": "4e753bbce2ce533a8ef75c0cf8e7b744e006feb2aea329212225ab51e32a36f8",
+    "products/agent-tools/tests/native_clients/test_vibe_client.py": "33912ffcf7f7a8788db67d68ad89c06df359887db6bf89d5ef894c22770debe1"
+  }
+}

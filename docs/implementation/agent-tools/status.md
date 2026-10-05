@@ -532,3 +532,13 @@ Codex两轮只读审阅发现Python引用等价漏洞与deferred组合，CLI已�
 Codex只读终审确认_none/类型身份/原操作未知与重放未旁路，apply发前补实际反例已完成。本轮未改CLI/server/三家源码；生产权限/capture/receipt/effect/Session/writer、材料/SecretRef、冷恢复、节点wire/请求键恢复/完整生命周期、三Skill/旧装配迁移与全P/M仍缺，不报DONE。M0，无用户DB/凭据/全局配置/服务/登录/第三方更新/push/主树合并，费用unknown。检查点后继续。
 
 核心修改后的调用方实际回归：`PY -m pytest -c products/agent-tools/pyproject.toml products/agent-tools/tests/test_configuration_cli.py products/agent-tools/tests/test_distribution.py -q --tb=short`：71P/0F exit0、42.66s。fresh CLI安装/四管理命令回归保持原结果；仅受控owner而非真实Harness。五工单strict/diff-check exit0，所有测试terminal。显式纳入两核心文件、两真实反例文件、新证据与status形成检查点；不隐藏已登记三红，不终结总goal。
+
+### 2026-10-05 AU003 三家产品协议源去重（PARTIAL）
+
+前置471cf57ec1e6d6b1f2e9938fcc6bfcb3f9a8eb84、clean；上一源码/测试检查点真实progress，保留三家修复。主会话唯一共享作者/Git/测试/账本。并行Codex/Pi/Claude只读审阅无写权/测试/Git；本轮新开2个readonly审阅者，费用unknown，未开共享写者/外树。按migration核所有消费方与独有能力，产品生产源码无旧三客户端消费者；独立包保留并增强旧功能，旧大包生产/配置/附件资源不等同于协议副本，不整目录删除。
+
+删除产品codex/pi/claude_code三源码及五重复测试，不留shim；82旧测试函数81 AST原样承接，唯一Pi旧raw prompt-after-unknown已在此前独立guard加强为拒raw input而保get_state/sent数，未为绿删断言。修独立Codex测试Message仍导入product的残留；余七家+运输的19文件SHA全部不变，init说明只暂存未启用，wheel仍全排除。源码/test映射与SHA见evidence/agent-unit-model/native-client-ownership-migration.json；详情：[native-client-source-ownership.md](native-client-source-ownership.md)。新增7项源码所有权门含planted imports反例，先验证源/provider/剩余资源存在，缺席不算绿。
+
+主会话串行，PY=.venv-ordessa-py312/bin/python完整路径/命令见上述证据：Codex166P exit0、2.14s；Pi213P exit0、3.19s；Claude149P exit0、7.84s；ownership7P exit0、0.13s；其余七家+运输113P exit0、25.92s；发行/fresh wheel/fresh venv CLI9P exit0、7.87s。均C，实际Python peers/HTTP不冒原生P/M。无pytest失败，全部句柄terminal。五工单strict/diff-check/hash exit0仅结构；本轮无Core/server/三家协议实现变动，历史Core269P/3F仍红，不声称新全Core绿。
+
+审阅揭示旧entrypoints/genericfactory/plugin facade仍有三家直接runtime路线，model bridge/plugin/live_service与Server聚合也仍需迁移，自动entrypoint去掉不足以证明旧三家无法启用。下一串行切片封住直接旧factory，另保品牌纯配置/附件/部署能力再迁。生产owner/授权/材料/冷恢复/生命周期、节点wire/按request查找unknown操作、三Skill/全发行/真实P与M仍缺。整体AU002–005 PARTIAL，M0，缺资源ABSENT。未第三方安装更新/登录/用户数据/凭据/全局配置/服务操作/push/合并主树，费用unknown。显式纳入本轮源码删除、独立测试修正、两证据、README、边界门及status检查点后继续，不缩小goal。

@@ -1,14 +1,10 @@
-"""Consumer-side native protocol clients for harness families.
+"""Staged, unenabled clients for the seven remaining migration families.
 
-Family clients live as sibling modules and speak their family's documented
-native channel (JSON-RPC / JSONL / HTTP) through the frozen transport seam in
-``_transport``. They are consumers: they never import harness internals, never
-own instance or task state, and never publish runtime readiness
-(specs/030-native-harness-expansion/design.md §3).
-
-This package deliberately keeps no family registry: the authoritative family
-catalog is published by the Harness side
-(``ordessa_harness_api.command_discovery``) and mirrored at build time.
+Codex, Pi and Claude Code protocol implementations belong exclusively to
+plugins/harness/{codex,pi,claude-code}; no compatibility re-export is provided.
+This source-only staging package and its shared transports are excluded from
+the independent CLI wheel. They do not publish runtime readiness or a registry.
+The public executable-discovery catalog remains owned by Harness.
 """
 
 from ._transport import (
