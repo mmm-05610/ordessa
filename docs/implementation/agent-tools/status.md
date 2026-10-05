@@ -696,3 +696,5 @@ Codex迁移检查点8e49d0413e6119e8a05aad59aabbdd5f74f9244a clean后继续Pi前
 两审无切片阻断；verify仅model/sameSession，routing/credential/budget/retry真实applied与恢复仍缺owner/capture/receipt/授权/material，native P/M无。生产消费者/冷代次/lifecycle/tasks/results/Skill/A18与baseline全Server安装待整合；M0、费用unknown、ABSENT不算绿，无第三方安装更新/登录/用户DB/全局配置/用户服务/push/主树合并。检查点继续goal，不标DONE。
 
 为消除末端调用未先收集product句柄的串行证据不确定，最终明确先product终态再Pi：311P1F exit1 16.85s，随后262P exit0 8.48s，所有句柄terminal。最终采此串行组，旧运行记录不覆盖、不累计；源代码未再改。strict五工单/diff资料门exit0，仅资料验证。全部新增源码/测试/安装与反例收据已读核，显式stage本切片检查点。
+
+Pi检查点66936bcedf后继续生产接线只读盘点（非停工/非DONE）：主会话核对Server旧C4/sidecar与独立provider ports。关键依赖是实际UnitRecords仍在旧Harness application，要求原OperationJournal及显式scope/native evidence/verifier/epoch，生产deployment尚无构造；独立测试Records不是真实持久owner。下一先核并复用这条owner链，再作显式Codex新Server装配/现defaults管理与读回，不能复制journal或用pure compiler承诺完整applied。详细实核与下一步骤见[evidence/agent-unit-model/server-production-owner-inventory.md](evidence/agent-unit-model/server-production-owner-inventory.md)，其他资源/cold语义仍按原PARTIAL，未触用户数据/服务。
