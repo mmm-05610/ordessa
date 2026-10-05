@@ -224,8 +224,9 @@ class UnitRecords:
     def _authorize(self, context, action, provider, node, digest, *, query=False, epoch_target=None):
         facts = self.verifier.verify_and_consume(context, action, provider, node, digest)
         if (not isinstance(facts, Mapping) or facts.get('query') is not query
-                or facts.get('action') != action or facts.get('providerRef') != provider
-                or facts.get('targetRef') != node or facts.get('inputDigest') != digest
+                or not isinstance(facts.get('providerRef'), Mapping) or not isinstance(facts.get('targetRef'), Mapping)
+                or facts.get('action') != action or safe_json(facts.get('providerRef')) != safe_json(provider)
+                or safe_json(facts.get('targetRef')) != safe_json(node) or facts.get('inputDigest') != digest
                 or type(facts.get('managementEpoch')) is not int
                 or facts['managementEpoch'] < 0):
             raise UnitRecordsRefused("verified invocation facts differ")

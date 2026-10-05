@@ -308,3 +308,5 @@ Pi/Codex消费原Unit.public_ref与configuration_target_ref，不自造摘要；
 - `python3 /home/maoqh/.agents/skills/incremental-work-order/scripts/validate_order.py docs/implementation/work-orders/agent-unit-model/orders --strict`：五单结构exit0；`git diff --check` exit0。初次读取误用AU003.md不存在，exit1，已读取实际AU003-three-providers.md；不影响实现或测试。
 
 C为受控owner/SDK以及真实临时SQLite/Python peer；三家真实上游进程P未验证，真实模型M0。核心继承3项方向扫描失败未在本窄测修复，不报全量绿。无安装更新/登录配置/用户服务/用户DB操作、push或主树合并。AU003仍PARTIAL：生产授权投影/原生writer fence与receipt端口、真实family→核心装配、Claude无session Unit确认、C1材料/SecretRef、生命周期与冷恢复、旧注册迁出、CLI/Skill薄化及发行验收继续。此检查点只冻结引用一致性，不能认定AU002或AU003收尾。
+
+检查点23643bb9c7后继续共享入口复查：UnitRecords._authorize仍用Python == 比较provider/target，使受控verifier返回generation=True可以冒充固定整数1。先加providerRef/targetRef两项真实临时SQLite反例，`<python> -m pytest -c plugins/harness/pyproject.toml plugins/harness/tests/test_unit_records.py -k verified_bool_generation -q`：0P/2F、28 deselected，exit1、0.17s，证明此前没有拒绝。改原入口为完整safe_json类型比较并检查Mapping，不另造权限链。最终同上三文件组合70P/0F exit0、0.69s；中间70P/0.60s不累加。拒绝后原reservation表仍空，断言保留。C层补强，不证明生产verifier缺陷或三家真实运行；P/M及其余缺口保持。

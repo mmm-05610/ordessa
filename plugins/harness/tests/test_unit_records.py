@@ -106,6 +106,21 @@ def read(parts_, unit):
     return service.read_session(unit.unit_ref, verifier.issue('query', 'query', 'query-input'), input_digest='query-input')
 
 
+@pytest.mark.parametrize('field', ['providerRef', 'targetRef'])
+def test_verified_bool_generation_cannot_match_integer_reservation_target(tmp_path, field):
+    p = parts(tmp_path)
+    context = p[2].issue()
+    facts = p[2].issued[context]
+    original = facts[field]
+    facts[field] = {**original, 'generation': True}
+    assert facts[field] == original  # Ordinary Python equality loses JSON identity.
+    with pytest.raises(UnitRecordsRefused, match='verified invocation facts differ'):
+        p[0].reserve_unit(context, provider_ref=PROVIDER, node_ref=NODE,
+                          input_digest='input', private_root_facts=ROOT)
+    with p[1]._connect() as db:
+        assert db.execute('SELECT COUNT(*) FROM harness_unit_reservations').fetchone()[0] == 0
+
+
 def test_public_unit_ref_binds_original_record_without_private_roots(tmp_path):
     p = parts(tmp_path)
     unit, _ = reserve(p)
