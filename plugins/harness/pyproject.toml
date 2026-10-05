@@ -17,11 +17,12 @@ dependencies = ["pacthold==2.0.0a1", "ordessa-server==2.0.0a1", "ordessa-server-
 # brand-rename pin) shared with external plugins and the still-running
 # hd004b leg.
 harness-profile-store = "ordessa_harness.entrypoints:create_profile_store"
-codex = "ordessa_harness.entrypoints:create_codex"
-claude = "ordessa_harness.entrypoints:create_claude"
 opencode = "ordessa_harness.entrypoints:create_opencode"
 hermes = "ordessa_harness.entrypoints:create_hermes"
-pi = "ordessa_harness.entrypoints:create_pi"
+# AU003: migrated families are admitted by their independent providers through
+# the one CoreRegistry. Do not auto-discover their old execution factories.
+# Existing source/data identities remain for separately tracked migration;
+# removing an entry point does not migrate user data or enable a new runtime.
 [project.optional-dependencies]
 dev = ["pytest>=7"]
 

@@ -324,3 +324,13 @@ C为受控owner/SDK以及真实临时SQLite/Python peer；三家真实上游进�
 只读Codex审阅指出两个真实覆盖缺口：fixture只查询start correlation，无法证明prepare持久预留后丢reply恢复；同key重放在核心短路，无法证明第二合法key被原scope拒。已补原prepare query确认同Unit且不start（显式prepare才继续）及同realm第二request实际进入reserve_unit、捕获configuration scope already reserved并保留旧unknown/no新Unit/no新launch。fixture query_creation按原facts.stepId选关联，不将旧创建者元数据当授权。最终新增10项＋原assembly23为33P/0F exit0、2.40s；最终同集成命令356P/0F exit0、13.23s。早期31/354为此前快照，不累加、不冒充最终。C/P/M边界不变。
 
 只读终审确认两项补强成立，未发现当前十项权限或unknown绕过；审阅无修改/pytest/Git。特别保留限制：fixture authenticated-request闭包不作通用生产查询owner；access surface为受控source且未装lease_port，connect不支持，published不能宣称完整可连接产品。显式纳入三个新/改文件形成阶段检查点，继续生产接缝与其余家族，不勾完成门。
+
+### 2026-10-05 AU003 三家旧自动发现注册发行退役（PARTIAL）
+
+真实前置421c1e17f101962c79287c217b109ece1fd74021、clean。Pi/Claude completed；Codex只读审阅结束明确无写权，不另开共享写者。核查发现原ordessa-harness发行元数据仍自动发现codex/claude/pi。仅撤下这三项agent_box.plugins条目，保留其他条目、组名、七家原声明与所有原源码/持久ID；不偷偷装独立提供者或新增fallback。边界和退出条件见legacy-discovery-retirement.md。显式旧factory/bundle与Server旧配置/运输装配尚在，不能报运行时旁路已消除。
+
+命令 `/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python -m pytest -c products/agent-tools/pyproject.toml docs/implementation/agent-tools/evidence/agent-unit-model/test_retired_family_discovery.py -q`：首版2P exit0、1.02s只检查wheel；追加fresh venv离线安装本树wheel并读实际installed entry_points后最终2P/0F exit0、3.30s。两项为改名factory/换group反例与真实发行metadata；build/create-venv/install-own-wheel/isolated-metadata-probe四个子命令全部exit0（断言由测试逐项检查）。无index/第三方安装/依赖解析/旧插件激活/原生进程/模型；此fresh安装仅本树包metadata，不证明依赖闭包或P层。
+
+原源兼容/身份窄回归 `<python> -m pytest -c plugins/harness/pyproject.toml plugins/harness/tests/test_core_identity.py plugins/harness/tests/test_codex_plugin.py plugins/harness/tests/test_codex_wiring.py -q`：32P/0F exit0、0.63s。保留全部断言；这些旧factory正例绿恰说明显式旧入口仍在，不把它当AU003_DONE。diff-check exit0。初盘点误读不存在entrypoint.py/server_plugin.py/registration.py/bootstrap.py路径，rg exit2，随后核实实际entrypoints.py、generic/factory.py和Server composition；无实现/测试结论依赖缺文件。
+
+未更新现有用户安装，所以已安装旧包仍可带旧metadata；仅新构建发行已退役三项自动发现。C/本地发行证据新增，三家真实进程P未验证、模型M0，未改登录/用户数据/服务，未push或主树合并。生产owner/writer/receipt、显式旧注册消费者迁移、材料/SecretRef、完整生命周期、薄CLI/Skill与全发行验收继续；已登记核心3红未由本窄测修复。
