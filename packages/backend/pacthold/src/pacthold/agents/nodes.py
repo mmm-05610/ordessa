@@ -64,6 +64,12 @@ def _request_ref(request):
             "principalScope": request.principal_scope, "requestId": request.request_id}
 
 
+def _same_reference(left, right):
+    # References are JSON identities: bool/int/float must remain distinct.
+    # Wrapping supports absent owner evidence without inventing a reference.
+    return safe_json({"reference": left}) == safe_json({"reference": right})
+
+
 def _hash(value):
     return "sha256:" + hashlib.sha256(safe_json(value).encode()).hexdigest()
 
@@ -185,13 +191,13 @@ class NodePublication:
         row = self._store().read_domain(ref.environment, IDENTITIES, ref.instance_id)
         expected = {"nodeRef": encode_node_ref(ref), "operationRequest": _request_ref(operation.request),
                     "operationRef": operation.intent.operation_ref, "intentDigest": _hash(operation.intent.to_dict())}
-        if row is None or row["revision"] != 1 or row["value"] != expected:
+        if row is None or row["revision"] != 1 or not _same_reference(row["value"], expected):
             raise GuaranteeUnavailableError("node reservation source is inconsistent")
         return ref
 
     def _owner_ref(self, value, provider, *, label):
         if (not isinstance(value, Mapping) or value.get("environmentNamespace") != self._environment.environment_id
-                or value.get("ownerProviderRef") != provider or not isinstance(value.get("sourceRevision"), str)
+                or not _same_reference(value.get("ownerProviderRef"), provider) or not isinstance(value.get("sourceRevision"), str)
                 or not value["sourceRevision"] or len(value) < 4):
             raise GuaranteeUnavailableError(f"{label} lacks complete scoped owner provenance")
         _safe_projection(value)
@@ -204,16 +210,16 @@ class NodePublication:
         binding = evidence.binding
         if set(binding) != _BINDING_FIELDS:
             raise GuaranteeUnavailableError("incomplete actual AgentBinding")
-        if (binding["nodeRef"] != intent.node_ref or binding["operationRef"] != intent.operation_ref
-                or binding["profileSnapshotRef"] != intent.profile_snapshot_ref
-                or binding["preparationContextRef"] != intent.context_ref
-                or binding["harnessProviderRef"] != evidence.provider_ref):
+        if (not _same_reference(binding["nodeRef"], intent.node_ref) or binding["operationRef"] != intent.operation_ref
+                or not _same_reference(binding["profileSnapshotRef"], intent.profile_snapshot_ref)
+                or not _same_reference(binding["preparationContextRef"], intent.context_ref)
+                or not _same_reference(binding["harnessProviderRef"], evidence.provider_ref)):
             raise IdentityMismatchError("owner binding differs from fixed operation lineage")
         if (not isinstance(binding["harnessDefinitionRef"], Mapping)
                 or binding["harnessDefinitionRef"].get("environmentNamespace") != ref.environment):
             raise IdentityMismatchError("Harness definition is unscoped")
         admitted = self._environment.agent_runtime_contribution(binding["harnessDefinitionRef"])
-        if admitted.provider_ref != evidence.provider_ref:
+        if not _same_reference(admitted.provider_ref, evidence.provider_ref):
             raise IdentityMismatchError("owner provider activation differs from currently admitted provider")
         for value, label in ((binding["harnessUnitRef"], "unit"), (binding["configurationTargetRef"], "configuration target")):
             self._owner_ref(value, evidence.provider_ref, label=label)
@@ -227,11 +233,11 @@ class NodePublication:
         for step, source in zip(steps, evidence.step_sources):
             frozen = step.intent
             if (set(source) != _SOURCE_FIELDS or source["stepId"] != frozen.step_id
-                    or source["providerRef"] != frozen.pinned_provider_ref
-                    or source["providerRef"] != evidence.provider_ref
+                    or not _same_reference(source["providerRef"], frozen.pinned_provider_ref)
+                    or not _same_reference(source["providerRef"], evidence.provider_ref)
                     or source["inputDigest"] != frozen.input_digest
                     or source["recoveryCorrelation"] != frozen.recovery_correlation
-                    or step.outcome != "concluded" or step.evidence.get("evidenceRef") != source["evidenceRef"]):
+                    or step.outcome != "concluded" or not _same_reference(step.evidence.get("evidenceRef"), source["evidenceRef"])):
                 raise IdentityMismatchError("actual step evidence differs from fixed dispatch/source correlation")
             self._owner_ref(source["evidenceRef"], evidence.provider_ref, label="step evidence")
 
@@ -269,11 +275,11 @@ class NodePublication:
             if not isinstance(usages, tuple) or not usages:
                 raise GuaranteeUnavailableError("node publication requires held resource Usage transfer")
             for usage in usages:
-                if (usage.expected_holder_ref != operation_holder(request, operation.intent.operation_ref)
-                        or usage.holder_ref != node_holder(ref.environment, ref.instance_id, ref.generation)
+                if (not _same_reference(usage.expected_holder_ref, operation_holder(request, operation.intent.operation_ref))
+                        or not _same_reference(usage.holder_ref, node_holder(ref.environment, ref.instance_id, ref.generation))
                         or usage.state != "active" or usage.expected_revision < 1):
                     raise IdentityMismatchError("publication must transfer already held Usage to the fixed node")
-            if not any(usage.target_ref == evidence.binding["harnessUnitRef"] and "use" in usage.rights
+            if not any(_same_reference(usage.target_ref, evidence.binding["harnessUnitRef"]) and "use" in usage.rights
                        for usage in usages):
                 raise GuaranteeUnavailableError("node publication requires the actual Harness unit's use relationship")
             projection = {"nodeRef": encode_node_ref(ref), "binding": json.loads(safe_json(evidence.binding)),
@@ -303,7 +309,7 @@ class NodePublication:
             if operation is None or operation.status != "published": raise ValueError("source operation")
             self._identity(operation)
             record = value["record"]
-            if (record["nodeRef"] != encode_node_ref(ref) or record != operation.result
+            if (not _same_reference(record["nodeRef"], encode_node_ref(ref)) or not _same_reference(record, operation.result)
                     or _hash(record) != value["recordDigest"] or record["publicationRevision"] != operation.revision):
                 raise ValueError("publication provenance")
             for step, source in zip(operation.intent.steps, value["sourceSteps"]):
@@ -311,9 +317,9 @@ class NodePublication:
                 if (actual is None or actual.outcome != "concluded" or set(source) != _SOURCE_FIELDS
                         or source["stepId"] != step.step_id or source["inputDigest"] != step.input_digest
                         or source["recoveryCorrelation"] != step.recovery_correlation
-                        or source["providerRef"] != step.pinned_provider_ref
-                        or source["providerRef"] != record["binding"]["harnessProviderRef"]
-                        or actual.evidence.get("evidenceRef") != source["evidenceRef"]):
+                        or not _same_reference(source["providerRef"], step.pinned_provider_ref)
+                        or not _same_reference(source["providerRef"], record["binding"]["harnessProviderRef"])
+                        or not _same_reference(actual.evidence.get("evidenceRef"), source["evidenceRef"])):
                     raise ValueError("step provenance")
             if len(value["sourceSteps"]) != len(operation.intent.steps): raise ValueError("step count")
             _safe_projection(record)

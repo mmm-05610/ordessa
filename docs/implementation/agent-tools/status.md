@@ -576,3 +576,15 @@ Codex只读终审未发现新安全阻断，确认只读权/缺席/冷观察/类
 是Server进程安装/目录/CAS/鉴权/离线/自有重启证据，不是生产Node/config/nativeHarnessP或M；三Skill打包/局部复制/只读解释不称真实Agent任务使用。Core/Server/三家源码未改，未冒本轮全回归；前轮Core3红与ABSENT继续。production权限/材料/证据owner/冷恢复/full lifecycle、旧model/Server迁移、prepare/tasks/results及全纵向仍PARTIAL。无用户DB/凭据/全局配置/登录/用户服务/第三方安装更新/模型/push/主树合并，成本unknown。测试句柄terminal，工单strict/diff-check仅结构；显式纳入本轮文件检查点后继续。
 
 只读终审无命令/覆盖/C-P-M阻断，建议observed supports不能硬写false及helper别误选非client wheel，已修README/use Skill/ACCEPTANCE与精确wheel glob；末端Skill结构exit0。随后全新final bundle生成exit0＋新回执install-use-node-skills-final-88375b.json实际完整安装27命令exit0/M0/cleaned；新wheel SHA6a8c08b9c9a6ed174b162f7d22a2792d4040051e45530e65492ec27a931dcc9e。末端真实JSON/已删除workspace/3Skill源字节/严格bundle门核验exit0，新旧27快照不累加，不覆盖旧资产；最终bundle路径dist/bundle-0.1.0a2-node-skills-final-88375b。上述全15路径显式纳入检查点后继续核心公开接缝/生命周期/旧装配，整体goal active。
+
+### 2026-10-05 AU002 Node发布引用精确JSON身份（PARTIAL）
+
+前置962e290e36f34a487e5a621d5ca11f37c4eb8d14、clean；上一状态问答仅核查，无实现progress。本轮重新核对live agents全completed，主会话仍唯一共享源码/测试/Git/账本写者，Codex只读审阅。保留三家修复与现有新路径，未另开共享写者。
+
+18项真实SQLite反例先0P/18F exit1、0.45s，证实NodePublication Python mapping equality混认true/1/1.0，错owner/lineage可发布且reservation/source来源篡改可冷读。复用原safe_json精确比较固定引用，含当前admitted provider、owner、step receipt、Usage holder/target、原发布result与冷来源；没有新协议/核心/存储/原生状态。owner leaf仍opaque，整数身份正例保留。发前拒绝保持operation running/Usage revision1；冷拒保持published/Usage2，不重发或改结论。
+
+完整命令、失败与范围：[node-json-identity.md](evidence/agent-unit-model/node-json-identity.md)。初publication＋wire57P exit0、0.93s；补receipt/Unit target/holder/admitted bool/float与opaque正例后66P exit0、1.07s（新增27，不累加快照）。产品integration296P exit0、10.72s；Node/config CLI＋fresh发行99P exit0、57.48s；全Core269P/3F exit1、7.83s、0skip，仍既有kernel_direction三红/SQLite具体测试导入来源，未删断言/skip/移走失败。worker/sidecar/ACP closure/Claude资源ABSENT继续，不假绿。五工单strict/diff-check exit0仅结构。所有测试句柄terminal。
+
+Codex只读审阅未发现阻断，建议step receipt与Unit Usage target反例已经实补。此切片是Core/SQLite/受控owner C，真实native P与M缺席，M0。production授权/材料/capture/receipt/effect/Session owner、完整生命周期/冷恢复、旧Model/Server装配、prepare/tasks/results CLI及全纵向验收仍PARTIAL。没有第三方安装更新/登录/模型/用户DB/凭据/全局配置/用户服务操作/push/主树合并；费用unknown。显式纳入本轮两源码/测试、证据与账本检查点后继续，不终结goal。
+
+只读终审发现admitted_provider反例初稿同时改Node generation导致可能早拒；主会话限制只改provider引用、保Node/lineage并断言currently admitted provider确切拒绝来源。修正后publication＋wire66P exit0、1.12s；末端opaque定向9P/43deselected exit0、0.18s，源码未再变，296/99/Core结果在这次测试定位改进前，不冒新全跑。

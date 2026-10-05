@@ -67,13 +67,13 @@ def source(provider, identity):
     return {"environmentNamespace": "env", "ownerProviderRef": json.loads(safe_json(provider)), "sourceRevision": "native-1", "ref": identity}
 
 
-def conclude(setup, *, outcome="concluded"):
+def conclude(setup, *, outcome="concluded", unit_identity="actual-unit", evidence_identity="actual-preparation-receipt"):
     _, store, env, _, owner, pub, request, ref, intent, _ = setup
     pub.reserve(request, "digest", intent)
-    unit = source(intent.steps[0].pinned_provider_ref, "actual-unit")
+    unit = source(intent.steps[0].pinned_provider_ref, unit_identity)
     target = source(intent.steps[0].pinned_provider_ref, "actual-config-target")
     endpoint = source(intent.steps[0].pinned_provider_ref, "actual-access-descriptor")
-    evidence = source(intent.steps[0].pinned_provider_ref, "actual-preparation-receipt")
+    evidence = source(intent.steps[0].pinned_provider_ref, evidence_identity)
     step = intent.steps[0]
     acquisition = UsageMutation("resource", 0, None, operation_holder(request, intent.operation_ref), unit, ("use",), "active")
     assert store.claim_operation_step(request, "digest", step, (acquisition,)).claimed
@@ -379,3 +379,92 @@ def test_unrelated_usage_cannot_stand_in_for_actual_unit_occupation(setup, monke
     row = store._conn.execute("SELECT state,holder_ref,revision FROM env_usages WHERE usage_id='required-extra'").fetchone()
     assert row["state"] == "active" and row["revision"] == 1
     assert json.loads(row["holder_ref"]) == dict(operation_holder(request, intent.operation_ref))
+
+
+@pytest.mark.parametrize("number", [True, 1.0])
+@pytest.mark.parametrize("location", ["node", "profile", "context", "provider", "unit_owner", "step_provider", "access_owner"])
+def test_json_numeric_alias_cannot_publish_different_reference(setup, number, location):
+    _, store, _, _, owner, pub, request, ref, _, _ = setup
+    revision, usages = conclude(setup)
+    evidence = owner.evidence
+    binding = json.loads(safe_json(evidence.binding))
+    sources = [json.loads(safe_json(x)) for x in evidence.step_sources]
+    access = [json.loads(safe_json(x)) for x in evidence.access_surface_refs]
+    if location == "node": binding["nodeRef"]["generation"] = number
+    elif location == "profile": binding["profileSnapshotRef"]["manifestRevision"] = number
+    elif location == "context": binding["preparationContextRef"]["directoryBindingRef"]["revision"] = number
+    elif location == "provider": binding["harnessProviderRef"]["generation"] = number
+    elif location == "unit_owner": binding["harnessUnitRef"]["ownerProviderRef"]["generation"] = number
+    elif location == "step_provider": sources[0]["providerRef"]["generation"] = number
+    elif location == "access_owner": access[0]["ownerProviderRef"]["generation"] = number
+    owner.evidence = NodePublicationEvidence(evidence.provider_ref, binding, tuple(sources), tuple(access))
+    with pytest.raises((IdentityMismatchError, GuaranteeUnavailableError)):
+        pub.publish(request, "digest", revision, usages)
+    assert pub.read(ref) is None
+    assert store.read_operation(request).status == "running"
+    assert store._conn.execute("SELECT revision FROM env_usages").fetchone()[0] == 1
+
+
+@pytest.mark.parametrize("number", [True, 1.0])
+@pytest.mark.parametrize("location", ["reservation", "step_source"])
+def test_json_numeric_alias_corruption_refuses_cold_publication_read(setup, number, location):
+    _, store, env, _, _, pub, request, ref, _, _ = setup
+    revision, usages = conclude(setup)
+    pub.publish(request, "digest", revision, usages)
+    namespace = IDENTITIES if location == "reservation" else NODES
+    row = store.read_domain("env", namespace, "node" if location == "reservation" else "node:1")
+    value = row["value"]
+    if location == "reservation": value["nodeRef"]["generation"] = number
+    else: value["sourceSteps"][0]["providerRef"]["generation"] = number
+    store._conn.execute("UPDATE env_domain_records SET payload=? WHERE namespace=?", (safe_json(value), namespace))
+    cold = NodePublication(env)
+    with pytest.raises(GuaranteeUnavailableError): cold.read(ref)
+    with pytest.raises(GuaranteeUnavailableError): cold.list()
+    assert store.read_operation(request).status == "published"
+    assert store._conn.execute("SELECT revision FROM env_usages").fetchone()[0] == 2
+
+
+@pytest.mark.parametrize("number", [True, 1.0])
+@pytest.mark.parametrize("location", ["unit_target", "step_receipt", "node_holder", "admitted_provider"])
+def test_publication_keeps_opaque_owner_and_usage_json_identity(setup, number, location):
+    _, store, _, _, owner, pub, request, ref, _, _ = setup
+    revision, usages = conclude(setup, unit_identity=1, evidence_identity=1)
+    evidence = owner.evidence
+    provider = json.loads(safe_json(evidence.provider_ref))
+    binding = json.loads(safe_json(evidence.binding))
+    sources = [json.loads(safe_json(x)) for x in evidence.step_sources]
+    access = [json.loads(safe_json(x)) for x in evidence.access_surface_refs]
+    if location == "unit_target": binding["harnessUnitRef"]["ref"] = number
+    elif location == "step_receipt": sources[0]["evidenceRef"]["ref"] = number
+    elif location == "node_holder":
+        holder = json.loads(safe_json(usages[0].holder_ref))
+        holder["generation"] = number
+        usages = (replace(usages[0], holder_ref=holder),)
+    elif location == "admitted_provider":
+        # All owner projections agree with each other; the real admitted
+        # activation and original dispatch still carry the integer identity.
+        provider["generation"] = number
+        binding["harnessProviderRef"] = provider
+        for item in (binding["harnessUnitRef"], binding["configurationTargetRef"], *access):
+            item["ownerProviderRef"] = provider
+        for item in sources:
+            item["providerRef"] = provider
+            item["evidenceRef"]["ownerProviderRef"] = provider
+    owner.evidence = NodePublicationEvidence(provider, binding, tuple(sources), tuple(access))
+    with pytest.raises((IdentityMismatchError, GuaranteeUnavailableError)) as refused:
+        pub.publish(request, "digest", revision, usages)
+    if location == "admitted_provider":
+        assert "currently admitted provider" in str(refused.value)
+    assert pub.read(ref) is None
+    assert store.read_operation(request).status == "running"
+    assert store._conn.execute("SELECT revision FROM env_usages").fetchone()[0] == 1
+
+
+def test_opaque_numeric_owner_references_publish_and_replay_exactly(setup):
+    _, store, _, _, _, pub, request, ref, _, _ = setup
+    revision, usages = conclude(setup, unit_identity=1, evidence_identity=1)
+    result = pub.publish(request, "digest", revision, usages)
+    assert type(result["binding"]["harnessUnitRef"]["ref"]) is int
+    assert pub.read(ref) == result
+    assert pub.publish(request, "digest", revision, usages) == result
+    assert store._conn.execute("SELECT revision FROM env_usages").fetchone()[0] == 2
