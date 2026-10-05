@@ -1,5 +1,7 @@
 # 原始目标交付审计
 
+> 下文是104请求/232项时的历史审计。用户要求继续后，新增原业务图真实SDK贯穿、严格协议诊断与最终260项复验；当前结果以 [status](status.md) 及 [原图证据](evidence/rank-flow-20261005/README.md) 为准。旧结束措辞不代表后续工作未开展。
+
 审计原始 spec R01–R14、JD001–JD010 共40个子项、68个验收场景及用户写权/依赖/真实调用限制。实现与规定的评测报告均已交付；产品就绪等级仍为 PARTIAL，不能宣传七动作全部真实可用或真实质量门通过。
 
 [机器追踪矩阵](completion-audit.json)逐项列出原要求及原验收ID。主执行者重新核对实际src digest与最终离线回执一致，确认固定基线为HEAD祖先、232项完整套件及67项逐场景通过、57个定向核心ID一致。两个要求的示例命令再次执行均completed/ready（受控offline提供者，不是实际应用）：[默认流程](evidence/completion-offline-20261005/offline-example.json)、[替代流程](evidence/completion-offline-20261005/alternate-example.json)。完整用例和植入反例见[离线证据](evidence/completion-offline-20261005/README.md)，并非仅靠任务勾选判定完成。
