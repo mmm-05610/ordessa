@@ -75,3 +75,6 @@ __all__ += ["CONFIGURATION_CONTRACT_VERSION", "ApplicationPolicy", "Configuratio
             "ConfigurationDescription", "ConfigurationSnapshot", "ConfigurationItemResult",
             "ConfigurationChangeResult", "ConfigurationContractError", "ConfigurationUnsupported", "UnitInspection"]
 __all__ += ["ConfigurationRevisionConflict"]
+
+from .read_configuration import (PURE_READ_VERSION, OwnerReadContext, OwnerProposalInput, OwnerConfigurationOfferBatch, OwnerProposalAssessment)
+__all__ += ["PURE_READ_VERSION", "OwnerReadContext", "OwnerProposalInput", "OwnerConfigurationOfferBatch", "OwnerProposalAssessment"]

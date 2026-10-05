@@ -8,9 +8,8 @@ class DTO:
     def to_dict(self): return plain(self)
     @classmethod
     def from_dict(cls, value):
-        if not isinstance(value, Mapping): raise ContractError('dto_mapping')
-        try: return cls(**value)
-        except TypeError: raise ContractError('dto_fields') from None
+        from .schema import construct
+        return construct(cls,value)
 
 @dataclass(frozen=True)
 class ExternalRef(DTO):
@@ -144,6 +143,7 @@ class ConfigurationOffer(DTO):
     constraints: tuple = ()
     evidence_refs: tuple = ()
     def __post_init__(self):
+        if not isinstance(self.offer_ref,ExternalRef) or not isinstance(self.provider_ref,ExternalRef): raise ContractError('offer_refs')
         name(self.configuration_kind); name(self.schema_version); revision(self.descriptor_revision)
         if self.support_status not in ('supported','unsupported','unknown'): raise ContractError('support_status')
         for k in ('input_schema','supported_actions','application_modes','constraints','evidence_refs'): object.__setattr__(self,k,freeze(plain(getattr(self,k))))
@@ -199,6 +199,7 @@ class Precondition(DTO):
     checker_version: str
     description: str = ''
     def __post_init__(self):
+        if not isinstance(self.subject_ref,ExternalRef): raise ContractError('precondition_ref')
         for v in (self.condition_id,self.kind,self.checker_id,self.checker_version): name(v)
         revision(self.expected_version)
         if self.requirement not in ('must','advisory'): raise ContractError('requirement')
@@ -211,6 +212,7 @@ class ValidationObligation(DTO):
     validator_kind: str
     version_constraint: str
     def __post_init__(self):
+        if not isinstance(self.subject_ref,ExternalRef): raise ContractError('obligation_ref')
         for v in (self.obligation_id,self.validator_kind,self.version_constraint): name(v)
         if self.requirement not in ('must','advisory'): raise ContractError('requirement')
 
@@ -226,6 +228,8 @@ class ProposalDraft(DTO):
     def __post_init__(self):
         name(self.proposal_id); name(self.proposal_kind)
         for k in ('payload','basis_observation_ids','rationale_codes'): object.__setattr__(self,k,freeze(getattr(self,k)))
+        object.__setattr__(self,'preconditions',tuple(self.preconditions))
+        object.__setattr__(self,'required_validation_obligations',tuple(self.required_validation_obligations))
         if any(not isinstance(v,Precondition) for v in self.preconditions) or any(not isinstance(v,ValidationObligation) for v in self.required_validation_obligations): raise ContractError('proposal_types')
         if len({v.obligation_id for v in self.required_validation_obligations})!=len(self.required_validation_obligations): raise ContractError('duplicate_obligation')
         canonical(self)
@@ -258,6 +262,8 @@ class ValidationReceipt(DTO):
     validated_observation_versions: Mapping = field(default_factory=dict)
     issues: tuple = ()
     def __post_init__(self):
+        for value in (self.validator_id,self.validator_version,self.proposal_digest,self.checked_at,self.validation_scope): name(value)
+        object.__setattr__(self,'obligation_results',tuple(self.obligation_results))
         if self.status not in ('valid','invalid','unverifiable') or any(not isinstance(v,ObligationResult) for v in self.obligation_results): raise ContractError('receipt')
         if len({v.obligation_id for v in self.obligation_results})!=len(self.obligation_results): raise ContractError('duplicate_receipt_obligation')
         object.__setattr__(self,'validated_observation_versions',freeze(self.validated_observation_versions)); object.__setattr__(self,'issues',freeze(self.issues))
@@ -283,6 +289,7 @@ class CandidateOffer(DTO):
     compatibility_evidence: tuple = ()
     uncertainties: tuple = ()
     def __post_init__(self):
+        if not isinstance(self.candidate_ref,ExternalRef) or not isinstance(self.observation,VersionedObservation): raise ContractError('candidate_refs')
         name(self.candidate_kind)
         object.__setattr__(self,'capability_claims',freeze(self.capability_claims)); object.__setattr__(self,'compatibility_evidence',freeze(plain(self.compatibility_evidence))); object.__setattr__(self,'uncertainties',freeze(self.uncertainties))
 
@@ -295,6 +302,7 @@ class CandidateBatch(DTO):
     excluded: tuple = ()
     unsupported: tuple = ()
     def __post_init__(self):
+        object.__setattr__(self,'candidates',tuple(self.candidates))
         if type(self.complete) is not bool or any(not isinstance(v,CandidateOffer) for v in self.candidates): raise ContractError('candidate_batch')
         object.__setattr__(self,'excluded',freeze(self.excluded)); object.__setattr__(self,'unsupported',freeze(self.unsupported))
 
@@ -305,6 +313,7 @@ class ProposalCandidateBatch(DTO):
     cursor: str | None = None
     issues: tuple = ()
     def __post_init__(self):
+        object.__setattr__(self,'proposals',tuple(self.proposals))
         if type(self.complete) is not bool or any(not isinstance(v,ProposalDraft) for v in self.proposals): raise ContractError('proposal_batch')
         object.__setattr__(self,'issues',freeze(self.issues))
 
@@ -314,6 +323,7 @@ class CheckBatch(DTO):
     complete: bool
     unverified_ids: tuple = ()
     def __post_init__(self):
+        object.__setattr__(self,'condition_results',tuple(self.condition_results))
         if type(self.complete) is not bool: raise ContractError('check_complete')
         object.__setattr__(self,'unverified_ids',freeze(self.unverified_ids))
     def require(self, conditions):
@@ -331,6 +341,7 @@ class BusinessOutcome(DTO):
     receipts: tuple[ValidationReceipt,...] = ()
     issues: tuple = ()
     def __post_init__(self):
+        object.__setattr__(self,'proposals',tuple(self.proposals)); object.__setattr__(self,'receipts',tuple(self.receipts))
         if self.disposition not in ('ready','revise','clarify','blocked'): raise ContractError('disposition')
         if self.disposition!='ready' and (self.proposals or self.receipts): raise ContractError('business_drafts')
         if self.disposition=='ready' and (not self.proposals or len(self.proposals)!=len(self.receipts)): raise ContractError('ready_empty')
@@ -344,6 +355,9 @@ class RunManifest(DTO):
     effective_limits: RunLimits
     provider_binding_ref: str
     codec_version: str = 'decision-json/1'
+    def __post_init__(self):
+        object.__setattr__(self,'effective_policy_refs',tuple(self.effective_policy_refs))
+        if not isinstance(self.flow_ref,FlowRef) or not isinstance(self.effective_limits,RunLimits) or any(not isinstance(p,PolicyRef) for p in self.effective_policy_refs) or self.codec_version!='decision-json/1': raise ContractError('manifest_types')
     @property
     def manifest_digest(self): return digest('runmanifest',self)
 
@@ -364,6 +378,7 @@ class DecisionResult(DTO):
     consumed: Mapping = field(default_factory=dict)
     evidence_summary_ref: str | None = None
     def __post_init__(self):
+        object.__setattr__(self,'effective_policy_refs',tuple(self.effective_policy_refs))
         if self.status not in ('completed','failed','budget_exhausted','cancelled'): raise ContractError('terminal_status')
         if self.status=='completed':
             if not isinstance(self.outcome,BusinessOutcome) or self.error_code is not None or self.exhausted_dimension is not None: raise ContractError('terminal_union')

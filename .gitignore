@@ -39,3 +39,7 @@ packaging/.keys/
 # 031 decision isolated local verification
 /.venv-decision/
 /.decision-tmp/
+!/packages/backend/decision/src/ordessa_decision/runtime/
+!/packages/backend/decision/src/ordessa_decision/runtime/*.py
+!/packages/backend/decision/tests/runtime/
+!/packages/backend/decision/tests/runtime/*.py

@@ -56,3 +56,28 @@ Spend: real model/Harness requests 0; credential reads 0. Subagent calls 3;
 platform cost unavailable, no invented monetary totals. T60 NOT_RUN pending separate authorisation.
 Readiness: codeReady IN_PROGRESS; offlineVerified IN_PROGRESS; coreReadOnlyVerified NOT_RUN;
 liveJevValidated NOT_RUN; native effects OUT_OF_SCOPE.
+
+## P2–P4 checkpoint
+
+Main serial verification: runtime 23, evidence 17, provider 36, task/selection 44;
+public native seam initial 4, strengthened counterexamples 14; current vertical
+examples and actual graph+SDK/durable sink verification included in checkpoint-tests.txt.
+Subagent reports were not accepted as test evidence; main reran their suites.
+True three-round graph repair reaches dynamic 0.7; unchanged proposal/feedback stops;
+all seven actions are controlled offline proposals, no real family action usability claim.
+Temporary SQLite-backed Environment+public services+fake owner: offer→graph→owner validation
+verified, native effect calls 0. Profile preview unresolved, filtered list incomplete,
+provider installation/node availability unknown retained.
+
+Independent review found malformed receipt evidence, mutable DTO metadata/policy refs,
+refused/unsupported laundering and invented material policy targets. Fixed with tests.
+Material sources now reuse exact Profile/Node/definition public read checks; unknown
+reference schemes unsupported. Owner must bind input digest and descriptor/source versions.
+No new Environment, provider registry, effect operation/lease or dispatcher created.
+Old providers opt out; no real Pi/Codex/Claude support claimed.
+
+Fixed-baseline/current targeted Pacthold direction+public surface regression both 40 passed;
+per-ID JUnit comparison will be recorded at final acceptance. Initial baseline copy lacked
+runtime-compat guard resource and failed 2 tests; populated tracked baseline source and reran,
+not skip or assertion deletion. Full server/Harness inherited-red suites are not covered by
+this narrow regression; registered baseline failures remain inherited and unverified here.
