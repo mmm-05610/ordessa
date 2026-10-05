@@ -30,6 +30,8 @@ Pinned facts (N002, official app-server docs read 2026-10-04, npm
 from __future__ import annotations
 
 import time
+import threading
+import json
 from typing import Any, Callable, Mapping
 
 from ordessa_harness_transport import (
@@ -112,6 +114,7 @@ class CodexAppServerClient:
 
     def __init__(self, channel: ProcessChannel, *, name: str = "codex-app-server"):
         self._channel = channel
+        self._rpc_lock = threading.RLock()
         self._events: list[Mapping[str, Any]] = []
         self._pending: dict[Any, str] = {}
         self._turn_requests: dict[Any, str] = {}
@@ -356,6 +359,19 @@ class CodexAppServerClient:
         result is returned verbatim and unknown semantics are never invented."""
         return self._request(method, dict(params), timeout=timeout)
 
+    def command_once(self, method: str, params: Mapping[str, Any], *,
+                     before_send: Callable[[Mapping[str, Any]], None],
+                     timeout: float = 10.0) -> Any:
+        """Fix the actual RPC identity, persist it, then dispatch exactly once.
+
+        The hook sees a detached copy of the exact native request. Its failure
+        performs no write. A receipt timeout leaves this original ID pending;
+        recover_request observes that ID without another dispatch.
+        """
+        if not callable(before_send):
+            raise ValueError("explicit pre-send persistence hook required")
+        return self._request(method, params, timeout=timeout, before_send=before_send)
+
     def close(self) -> int:
         """Release this client's own channel/process only (G6/G8)."""
         return self._channel.close()
@@ -368,7 +384,12 @@ class CodexAppServerClient:
         *,
         timeout: float,
         on_request: Callable[[Message], None] | None = None,
+        before_send: Callable[[Mapping[str, Any]], None] | None = None,
     ) -> Any:
+        with self._rpc_lock:
+            return self._request_locked(method, params, timeout=timeout, on_request=on_request, before_send=before_send)
+
+    def _request_locked(self, method, params, *, timeout, on_request=None, before_send=None):
         """One request round trip: correlated by id, never re-sent (G11).
 
         A transport breach after send raises :class:`LostReceipt` (outcome
@@ -377,15 +398,20 @@ class CodexAppServerClient:
         """
         if method == "turn/start" and "turn/start" in self._pending.values():
             raise LostReceipt(method, None, "earlier turn/start receipt is unknown; recover without resending input")
+        if method in {"config/batchWrite", "config/value/write"} and any(
+                pending in {"config/batchWrite", "config/value/write"} for pending in self._pending.values()):
+            raise LostReceipt(method, None, "original configuration receipt unknown; query without another write")
         self._request_seq += 1
         request_id = f"req-{self._request_seq}"
         payload: dict[str, Any] = {"id": request_id, "method": method}
         if params:
             payload["params"] = dict(params)
-        self._channel.send_raw(payload)
+        if before_send is not None:
+            before_send(json.loads(json.dumps(payload)))
         self._pending[request_id] = method
         if method == "turn/start":
             self._turn_requests[request_id] = params["threadId"]
+        self._channel.send_raw(payload)
         return self.recover_request(request_id, timeout=timeout, on_request=on_request)
 
     def recover_request(self, request_id: Any, *, timeout: float = 10.0,

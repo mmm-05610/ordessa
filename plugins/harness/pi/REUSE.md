@@ -29,9 +29,9 @@ Reviewed source in this worktree (not Internet version claims):
   write-before-readback, scoped attempt confirmations and typed absence.
 
 Selected route: native Pi RPC 0.86.1. No implicit ACP fallback, startup,
-installation, model call or login access. Preparation/start/connect/stop/release/
-recover remain absent from supportedMethods until trusted Unit composition is
-implemented. Configuration effects require both a current Unit owner and an
+installation, model call or login access. Preparation/start/query/access/connect now use existing UnitRecords plus trusted
+projection/factory/lease ports; absence keeps each method out of supportedMethods.
+Stop/release/recover remain unsupported until trusted settlement is implemented. Configuration effects require both a current Unit owner and an
 existing-journal confirmation port. Native ACK without readback/receipt remains
 unknown. Owner ports must verify the actual installation/session, current
 activation/directory/epoch, and channel writer lease on every dispatch. Package
@@ -41,3 +41,13 @@ imports/registration do not start anything; package `pi` keeps provider/family I
 Evidence levels: migrated Python tests and new provider fixtures are C; existing
 fixture subprocess tests are C with real Python peers, not Pi P. No Pi P or M was
 run by this executor. Cost/model calls: 0.
+
+
+The lifecycle implementation follows the verified common UnitRecords structure
+reviewed in the Codex independent provider, rather than copying its thread
+protocol. Pi startup already produces an in-process native session; initialize
+and readback are Pi get_state, never Codex initialize/thread/start. Unit/root
+verification, reservation-before-launch, original-claim rechecks and unknown
+handle retention have the same core contract. New lifecycle fixtures test these
+cuts without running Pi. A trusted factory is still required for pinned/offline/
+isolated installation plus managed stdin; production composition is not claimed.

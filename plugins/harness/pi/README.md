@@ -30,13 +30,25 @@ an old unknown operation. The provider has no operation dictionary, configuratio
 cache, additional database or daemon. No production ConfirmationPort is included
 in this slice: the host must compose the existing journal; absence is refused.
 
-Preparation/start/connect/stop/release/recover are currently absent from
-supportedMethods. This slice does **not** satisfy the full AU003 Unit lifecycle.
-The existing UnitRecords has no public read-free prepared handle usable for start
-without another authorization context, nor stop/release settlement primitives;
-core preparation DTO/composition and deployment evidence are still required.
-Methods raise typed `PI_PROVIDER_UNAVAILABLE`; neither no-op success nor legacy
-fallback is provided. See REUSE.md for source-based route comparison.
+Preparation/start now directly call the injected existing UnitRecords. A trusted
+UnitProjectionPort verifies the fixed core plan/root/digest, revalidates the
+original consumed start context and supplies current journal/publication/native
+owner evidence. Preparation reserves only; start fixes opening before the
+channel factory opens the pinned isolated installation. Pi initializes by native
+get_state and re-reads the same sessionId before confirmation. Every native
+creation edge rechecks current authority. Unknown keeps the original live handle,
+records unknown and never launches a replacement, kills it or sends a prompt.
+
+query_step only reads the original creation through the projection after core
+query verification. describe_access requires a confirmed existing session and
+live handle. connect requires a trusted explicit lease port, which binds native
+payloads behind per-write revoke/expiry/drain/epoch cuts; no unrestricted client
+is returned. Absent ports leave these capabilities out of supportedMethods.
+Current configuration ports are still independently injected and remain required
+for configuration management. stop/release/recover remain unavailable until
+original journal settlement and cold native evidence are composed. Production
+plan/owner/factory/lease/confirmation composition and Pi P/M remain PARTIAL; no
+fixture port is a default production implementation.
 
 Tests are controlled C, including real Python fixture subprocesses for framing.
 Native Pi process P and authorized model task M are separate and not claimed by

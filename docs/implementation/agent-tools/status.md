@@ -238,3 +238,11 @@ Codex执行者恢复写权仅plugins/harness/codex/**，接expectedVersion＋白
 独立于init文件扫描，在新临时HOME/CODEX_HOME/XDG与显式清空环境下，仅运行绝对路径 `/usr/lib/chatgpt/resources/codex --version`：子命令exit0，stdout `codex-cli 0.159.0`，二进制SHA256 d2752c52353401f7f6efbfcea68796f4f7a3d3e4769f5d1da53fa49d4856b72f。stderr提示临时CODEX_HOME子目录不存在、未创建PATH aliases。临时环境清除；未继承用户登录环境、未安装更新或启动服务、模型0。未对进程任意文件读取实施OS sandbox，因此证据不声称沙箱级用户文件隔离。
 
 当前Codex实现依据固定0.157.1协议源码；观察到0.159.0不证明兼容，不自动更改pin或选该二进制运行Agent。证据codex-local-version-probe.json仅版本探测成功，compatibilityVerified=false/runtimeReady=unknown。此前init“不执行候选”仍指init自身，不能与此次独立版本探测混淆。原历史截断npm artifact仍是另一来源的已知缺口。
+
+### 2026-10-05 AU003 Pi Unit与Codex配置增量冻结
+
+HEAD9ef1dc2023上保持共享唯一作者。Codex与Pi执行者均完成切片并释放全部家族写权；Claude只读核对完成。Pi按原UnitRecords接prepare/start/query/access/connect，开进程前固定opening，实际原生两次get_state身份相符才确认；缺端口保持不支持。Codex默认配置batchWrite接expectedVersion、pre-send真实id、原receipt/readback；thread实际与defaults严格分离。仍缺生产端口、授权原生入口完整owner写cut、生命周期及核心纵向装配。
+
+串行专属Python复跑：首个Codex命令未显式设置源PYTHONPATH，collection 3 errors、exit2、0 executed；补 `PYTHONPATH=plugins/harness/codex/src:packages/backend/harness-transport/src` 后 `-m pytest -c plugins/harness/codex/pyproject.toml plugins/harness/codex/tests -q` 65P/0F exit0、1.63s。审阅发现okOverridden条目unknown但attempt误confirmed导致scope释放，主会话修为unknown保留原waiter/排他，并加强原反例查询不重发；同命令最终65P/0F exit0、1.64s。`PYTHONPATH=plugins/harness/pi/src:packages/backend/harness-transport/src` 同Pi包命令104P/0F exit0、2.93s。计数均为最终快照，不累计历史。git diff --check exit0。
+
+Claude发现记录claude-unit-session-findings.md：SDK无prompt connect可有控制握手但不保证session，core允许Unit存在且nativeSessionRefs为空。原record_session不放宽；需明确Unit确认接缝及同pipe真实process/initialize证据。只读来源核对不是P/M。三家此次测试为C（含Python peer），真实家族P未验证、M0；没有安装更新/登录配置/用户服务操作或push。AU003_PARTIAL检查点后串行返回AU002补原许可逐write重核，再回AU003实现生产投影/Unit接线。

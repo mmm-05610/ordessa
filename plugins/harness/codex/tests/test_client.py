@@ -361,3 +361,71 @@ def test_remote_error_data_preserved_without_reinterpreting_it():
     with pytest.raises(CodexRpcError) as error:
         client.command("future/method")
     assert error.value.remote_data == data
+
+
+def test_command_once_binds_actual_generated_identity_before_send(client):
+    sequence=[]
+    original_send=client._channel.send_raw
+    def send(payload):
+        sequence.append(("send",dict(payload)))
+        original_send(payload)
+    client._channel.send_raw=send
+    def persist(payload):
+        sequence.append(("bind",dict(payload)))
+        assert payload["id"] not in client._pending
+    result=client.command_once("thread/start",{"cwd":"/isolated"},before_send=persist,timeout=5)
+    assert result["thread"]["id"] == "th-1"
+    assert [entry[0] for entry in sequence] == ["bind","send"]
+    assert sequence[0][1] == sequence[1][1]
+    assert sequence[0][1]["id"] == "req-1"
+
+
+def test_command_once_hook_failure_performs_no_native_write(client):
+    sent=[]
+    original_send=client._channel.send_raw
+    client._channel.send_raw=lambda payload:(sent.append(payload),original_send(payload))[-1]
+    def refuse(payload): raise RuntimeError("journal refused bind")
+    with pytest.raises(RuntimeError,match="journal refused"):
+        client.command_once("thread/start",{"cwd":"/isolated"},before_send=refuse)
+    assert sent == [] and client._pending == {}
+
+
+def test_command_once_detached_hook_payload_cannot_change_native_dispatch(client):
+    captured=[]
+    original_send=client._channel.send_raw
+    def send(payload): captured.append(payload);original_send(payload)
+    client._channel.send_raw=send
+    def persist(payload): payload["params"]["cwd"]="/attacker"
+    client.command_once("thread/start",{"cwd":"/isolated"},before_send=persist,timeout=5)
+    assert captured[0]["params"]["cwd"] == "/isolated"
+
+
+def test_command_once_timeout_retains_original_id_and_query_does_not_send():
+    from ordessa_harness_transport import Message
+    class Channel:
+        def __init__(self): self.sent=[];self.response=None
+        def send_raw(self,payload): self.sent.append(dict(payload))
+        def next_message(self,*,timeout):
+            if self.response is None: raise RequestTimeout("config/batchWrite",None,timeout)
+            result=self.response;self.response=None;return Message(result)
+    channel=Channel();client=CodexAppServerClient(channel);bound=[]
+    with pytest.raises(RequestTimeout):
+        client.command_once("config/batchWrite",{"edits":[]},before_send=lambda payload:bound.append(payload),timeout=0.01)
+    native_id=bound[0]["id"]
+    assert client._pending == {native_id:"config/batchWrite"}
+    channel.response={"id":native_id,"result":{"status":"ok","version":"v2"}}
+    assert client.recover_request(native_id,timeout=0.01)["version"] == "v2"
+    assert len(channel.sent) == 1 and client._pending == {}
+
+
+def test_command_once_unknown_config_receipt_refuses_new_write_id():
+    class Channel:
+        def __init__(self):self.sent=[]
+        def send_raw(self,payload):self.sent.append(dict(payload))
+        def next_message(self,*,timeout):raise RequestTimeout("config/batchWrite",None,timeout)
+    channel=Channel();client=CodexAppServerClient(channel)
+    with pytest.raises(RequestTimeout):
+        client.command_once("config/batchWrite",{"edits":[]},before_send=lambda payload:None,timeout=0.01)
+    with pytest.raises(LostReceipt,match="configuration receipt unknown"):
+        client.command_once("config/value/write",{"keyPath":"model","value":"new"},before_send=lambda payload:None,timeout=0.01)
+    assert len(channel.sent) == 1

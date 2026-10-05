@@ -118,7 +118,9 @@ def test_receipt_loss_retains_unknown_and_new_start_never_dispatches():
 def test_config_inspection_is_fresh_secret_free_and_not_native_cas():
     provider,projection,records,client,context=fixture(); provider.start({"unitRef": UNIT},context)
     snapshot=provider.inspect_configuration(UNIT)
-    assert dict(snapshot.configuration) == {"model": "model-a"}
+    assert dict(snapshot.configuration["effectiveDefaults"]) == {"model": "model-a"}
+    assert dict(snapshot.configuration["thread"]) == {}
+    assert "thread.model" in snapshot.unknown_items
     assert snapshot.comparison_guarantee == "unavailable"
     assert "private" not in str(snapshot.to_dict())
     assert "providerCredentials" in snapshot.unknown_items

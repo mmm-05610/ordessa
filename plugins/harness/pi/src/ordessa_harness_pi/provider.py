@@ -17,6 +17,7 @@ from pacthold.agents.configuration import (
 )
 from pacthold.core.lifecycle import RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
 from pacthold.agents.invocation import InvocationVerifier
+from .lifecycle import PiUnitLifecycle, records_ready
 
 
 class PiProviderRefused(RuntimeError):
@@ -57,14 +58,15 @@ def _text(value):
     return isinstance(value, str) and 0 < len(value) <= 256 and value.strip() == value and not any(ord(c) < 32 for c in value)
 
 
-class PiRuntimeProvider:
+class PiRuntimeProvider(PiUnitLifecycle):
     """Versioned provider with only actually wired methods advertised.
 
-    Preparation/start/recovery currently require further trusted composition and
-    are deliberately unsupported. Configuration support requires explicit ports;
+    Preparation/start use the original UnitRecords and explicit trusted ports;
+    recovery/settlement remain unsupported. Configuration requires explicit ports;
     methods exist to satisfy the runtime protocol, never imply capability.
     """
-    def __init__(self, *, definition_ref, implementation_digest, owner=None, confirmations=None, verifier=None):
+    def __init__(self, *, definition_ref, implementation_digest, owner=None, confirmations=None, verifier=None,
+                 unit_records=None, projection=None, channel_factory=None, lease_port=None):
         owner_methods = ("inspect_unit", "channel", "verify_session", "serialize_configuration", "revalidate_write")
         if owner is not None and any(not callable(getattr(owner, name, None)) for name in owner_methods):
             raise PiProviderRefused("complete trusted Unit owner ports required")
@@ -73,13 +75,22 @@ class PiRuntimeProvider:
         if verifier is not None and not isinstance(verifier, InvocationVerifier):
             raise PiProviderRefused("existing core InvocationVerifier required")
         self._owner, self._confirmations, self._verifier = owner, confirmations, verifier
+        self._lifecycle_init(unit_records, projection, channel_factory, lease_port)
         supported = ["describe_definition", "describe_configuration"]
+        if records_ready(unit_records, projection, verifier):
+            supported += ["plan_preparation", "prepare", "inspect_unit"]
+            if callable(getattr(channel_factory, "open", None)):
+                supported += ["start", "describe_access"]
+                if callable(getattr(lease_port, "bind", None)):
+                    supported += ["connect"]
+            if callable(getattr(projection, "query_creation", None)):
+                supported += ["query_step"]
         if owner is not None:
             supported += ["inspect_unit", "inspect_configuration"]
             if confirmations is not None and verifier is not None:
                 supported += ["apply_configuration", "query_change"]
         self.descriptor = RuntimeProviderDescriptor("pi", RUNTIME_PROVIDER_VERSION,
-                            definition_ref, implementation_digest, tuple(supported))
+                            definition_ref, implementation_digest, tuple(dict.fromkeys(supported)))
 
     def describe_definition(self, definition_ref):
         if definition_ref != self.descriptor.definition_ref:
@@ -91,6 +102,8 @@ class PiRuntimeProvider:
 
     def inspect_unit(self, unit_ref):
         if self._owner is None:
+            if "inspect_unit" in self.descriptor.supported_methods:
+                return self._inspect_record(unit_ref)
             raise PiProviderRefused("trusted current Unit owner is absent")
         unit = self._owner.inspect_unit(unit_ref)
         if not isinstance(unit, UnitInspection) or unit.unit_ref != unit_ref or unit.provider_ref.get("providerId") != "pi":
@@ -225,6 +238,8 @@ class PiRuntimeProvider:
     def _unsupported(self, *args, **kwargs):
         raise PiProviderRefused("capability requires verified production Unit composition")
 
-    inspect_installation = assess_configuration = plan_preparation = _unsupported
-    prepare = start = query_step = describe_access = connect = _unsupported
+    def _unknown_creation(self):
+        raise PiProviderRefused("native creation outcome unknown; query original operation") from None
+
+    inspect_installation = assess_configuration = _unsupported
     stop = release = recover = _unsupported
