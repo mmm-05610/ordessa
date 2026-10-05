@@ -82,3 +82,12 @@ not resolve preparation correlation as a start or synthesize a new correlation.
 A same-journal authorized preparation lookup and separate result semantics are
 required before advertising preparation recovery. First input/session association
 is separate main-owned work and is not implemented by this slice.
+
+## ACP attachment ownership
+
+The dedicated `acp_attachments` module preserves pure historical ACP conversion
+and refusal policy. It is not connected to the preferred SDK, native owner or
+input dispatch fence. No attachment method is advertised by the provider as a
+result of this move. Existing prepared-material ownership and InvocationContext
+remain prerequisites for any future authorized native input integration; this
+helper cannot fetch URI bytes or issue those authorities.

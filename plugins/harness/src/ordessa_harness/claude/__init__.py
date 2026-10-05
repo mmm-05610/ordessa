@@ -1,19 +1,8 @@
-"""Official, isolated Claude Code Harness plugin."""
+"""Historical Claude metadata; runtime belongs to the independent provider.
 
-from .attachments import (
-    ClaudeAttachmentRefused,
-    ClaudePreparedAttachment,
-    assemble_attachment_blocks,
-    claude_attachment_capabilities,
-    verify_attachment,
-)
+Continuation identifiers remain stable. ACP attachment utilities now belong to
+ordessa_harness_claude_code.acp_attachments; no legacy import shim is supplied.
+"""
 from .contracts import ClaudeContinuationV1
 
-__all__ = [
-    "ClaudeContinuationV1",
-    "ClaudePreparedAttachment",
-    "ClaudeAttachmentRefused",
-    "assemble_attachment_blocks",
-    "claude_attachment_capabilities",
-    "verify_attachment",
-]
+__all__ = ["ClaudeContinuationV1"]

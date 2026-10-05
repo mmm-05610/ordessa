@@ -614,3 +614,11 @@ Codex只读审阅未发现阻断，建议step receipt与Unit Usage target反例�
 README/ACCEPTANCE/管理Skill同步原请求核实及不自动继续；配置未知无operationRef恢复缺口单列。fresh wheel/venv独立CLI真实Core/SQLite/issuer＋受控HTTP prepare/replay/query9请求、provider唯一prepare/start。新ignored bundle生成exit0，实际安装＋隔离既有Server exercise27记录exit0/M0/cleaned，回执evidence/install-use-preparation-query-deb39c.json；wheel SHA505dd96e8ea114961566cca60ab4094acedbe83be58145b1abac4070f5edf057。实际entrypoint缺席/回执hash/27条再核验exit0，不覆盖旧包/旧回执，不纳入binary。安装exercise仍Server/catalog范围，新query正例C来自发行测试，不冒native P/M。
 
 production授权/材料/SecretRef/capture/receipt/effect/Session owner、三家native装配、完整生命周期/原生冷恢复、旧Model/Server迁移、connect/applyProfile/stop/release/tasks/results与全纵向仍PARTIAL。M0，无第三方安装更新/登录/用户DB/凭据/全局配置/用户服务操作/push/主树合并，费用unknown。核对并显式纳入本轮全部改动/新材料检查点后继续，不终结goal。
+
+### 2026-10-05 AU003 Claude ACP附件能力单一所有权迁移（PARTIAL）
+
+前置b228c0774e；保留当前未提交成果，live agents皆completed、主会话唯一写者；Claude只读复审，无测试/Git写权。旧附件utility源码字节不变迁入独立包，原六测试＋独立旧catalogue断言全部保留，旧导出移除无shim，Continuation不动。纯ACP能力不挂SDK provider默认method，不声称生产附件接线。
+
+完整命令、反例及限制见[evidence/agent-unit-model/claude-acp-attachments.md](evidence/agent-unit-model/claude-acp-attachments.md)，字节/AST收据同目录json。新增六拒绝反例＋fresh四自有wheel安装闭包＋三个边界门；初迁移6P0.10s，扩充12P/1F4.65s（安装继承源码env缺包），旧metadata/边界/Coreidentity87P/1F1.47s（新门误纳原核心集成测试），皆exit1如实保留。安装清理env/cwd、门限定源码与迁移附件测试，既有生命周期集成未改/未skip。最终组合101P exit0、6.15s；独立Claude全包162P exit0、12.69s含原集成覆盖，无缺资源冒绿。新增快照不累加。
+
+仅C/自有安装进程，无native P/M，M0。旧model/Server装配、production owner与全生命周期/tasks/results/三家纵向仍PARTIAL，Core继承三红与ABSENT沿前账本、本轮未全回归。未授权操作无；成本unknown。新材料显式纳入检查点后继续，不标DONE。

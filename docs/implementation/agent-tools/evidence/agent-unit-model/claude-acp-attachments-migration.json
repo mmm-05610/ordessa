@@ -1,0 +1,44 @@
+{
+  "sourceBefore": "plugins/harness/src/ordessa_harness/claude/attachments.py",
+  "sourceAfter": "plugins/harness/claude-code/src/ordessa_harness_claude_code/acp_attachments.py",
+  "sourceSha256": "133f17a7e889ff69dc3206df1071f2d2d7a8f545b76ba66ca4d5d818057ae238",
+  "sourceBytesUnchanged": true,
+  "tests": [
+    {
+      "test": "test_the_claude_pathway_assembles_a_real_image_block_with_verifiable_content",
+      "beforeAstSha256": "c756691856edd3d1ca953d22739563d6bcc54b72e150d9f6d4abbd47352790a6",
+      "afterAstSha256": "c756691856edd3d1ca953d22739563d6bcc54b72e150d9f6d4abbd47352790a6",
+      "catalogueAssertionRelocated": false
+    },
+    {
+      "test": "test_the_claude_pathway_sends_non_image_files_as_resource_link_text_only",
+      "beforeAstSha256": "d7f8372195da76b20ba5106e05d528f283dbd814a8b49613358625c9bea5d25e",
+      "afterAstSha256": "d7f8372195da76b20ba5106e05d528f283dbd814a8b49613358625c9bea5d25e",
+      "catalogueAssertionRelocated": false
+    },
+    {
+      "test": "test_the_claude_pathway_refuses_audio_instead_of_the_adapters_silent_drop",
+      "beforeAstSha256": "aacf6ea0d5fc3657ddb5ca0be422244c79cea76b551c62c2e99c5b702b29e4b1",
+      "afterAstSha256": "aacf6ea0d5fc3657ddb5ca0be422244c79cea76b551c62c2e99c5b702b29e4b1",
+      "catalogueAssertionRelocated": false
+    },
+    {
+      "test": "test_the_claude_pathway_refuses_everything_when_attach_is_undeclared",
+      "beforeAstSha256": "4ca3d95107be1db8932d16f9df6780d207457377f4996f7fb6a6174ea2c19d7d",
+      "afterAstSha256": "a9e2af4530ff252c5cce33a3297c2764c5c3b9c1d4b2e5187dc274ad952af07f",
+      "catalogueAssertionRelocated": true
+    },
+    {
+      "test": "test_the_claude_pathway_refuses_over_limit_and_malformed_input",
+      "beforeAstSha256": "b0f2db6ae23daaaf13d53dfb6f920896e12f98350df6f721c9259a73d6cb4d4a",
+      "afterAstSha256": "b0f2db6ae23daaaf13d53dfb6f920896e12f98350df6f721c9259a73d6cb4d4a",
+      "catalogueAssertionRelocated": false
+    },
+    {
+      "test": "test_the_claude_attachment_capability_statement_does_not_overclaim",
+      "beforeAstSha256": "ec6e5e47126a0877edf4acf1e8ac69f62524c06b94a485c16f00a3ea9b746b11",
+      "afterAstSha256": "ec6e5e47126a0877edf4acf1e8ac69f62524c06b94a485c16f00a3ea9b746b11",
+      "catalogueAssertionRelocated": false
+    }
+  ]
+}

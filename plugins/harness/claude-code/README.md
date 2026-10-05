@@ -49,3 +49,25 @@ provider's stop/release helper.
 
 See [reuse-comparison.md](reuse-comparison.md) and
 [owner-ports.md](owner-ports.md) for exact evidence and remaining production gaps.
+
+## Preserved ACP attachment utility
+
+`ordessa_harness_claude_code.acp_attachments` now owns the previously reviewed
+pure conversion of prepared attachment references into ACP prompt content blocks.
+The original implementation bytes and six behavior tests are preserved; the
+legacy catalogue declaration is tested separately. The old
+`ordessa_harness.claude.attachments` module and its package exports are removed,
+with no import shim. Continuation identifiers remain unchanged.
+
+The evidence is historical ACP adapter `0.81.2`, not the preferred SDK channel.
+Images require held bytes matching byteLength and SHA256; only image/png has the
+historical end-to-end probe. Count/size limits are channel policy. Non-image files
+become URI link text, not uploaded bytes; audio is explicitly refused. The helper
+does not acquire material, authorize input, choose a channel, open a process or
+send a prompt. It does not add any default provider supported method.
+
+Current SDK/native owner attachment delivery is unimplemented. Calling this
+utility or preserving an old catalogue `attach=true` does not establish a usable
+product attachment entry. Historical reports retain their dated evidence and
+old source locations; current ownership and migration evidence are in
+`docs/implementation/agent-tools/evidence/agent-unit-model/claude-acp-attachments.md`.

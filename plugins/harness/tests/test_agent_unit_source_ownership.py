@@ -44,3 +44,41 @@ def test_remaining_staged_families_and_shared_transports_still_present():
     for name in ('copilot', 'gemini_cli', 'goose', 'kimi', 'opencode', 'qwen', 'vibe', '_transport', '_http', '_acp'):
         path = staged / (name + '.py')
         assert path.is_file() and path.stat().st_size > 0
+
+
+def legacy_harness_imports(source):
+    found = []
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Import): names = [item.name for item in node.names]
+        elif isinstance(node, ast.ImportFrom): names = [node.module or '']
+        else: continue
+        found.extend(name for name in names if name == 'ordessa_harness' or name.startswith('ordessa_harness.'))
+    return found
+
+
+def test_claude_acp_attachment_has_one_owner_and_no_legacy_exports():
+    independent = ROOT / 'plugins/harness/claude-code'
+    assert (independent / 'src/ordessa_harness_claude_code/acp_attachments.py').is_file()
+    assert (independent / 'tests/test_acp_attachments.py').is_file()
+    legacy = ROOT / 'plugins/harness/src/ordessa_harness/claude'
+    assert not (legacy / 'attachments.py').exists()
+    tree = ast.parse((legacy / '__init__.py').read_text())
+    exports = [node for node in tree.body if isinstance(node, ast.ImportFrom)]
+    assert len(exports) == 1 and exports[0].module == 'contracts'
+    assert [alias.name for alias in exports[0].names] == ['ClaudeContinuationV1']
+    # This gate owns source independence and the migrated pure attachment tests.
+    # Lifecycle integration tests deliberately exercise the original store/issuer.
+    files = tuple((independent / 'src').rglob('*.py')) + (
+        independent / 'tests/test_acp_attachments.py',
+        independent / 'tests/test_acp_attachments_distribution.py',
+    )
+    assert files
+    for path in files:
+        assert not legacy_harness_imports(path.read_text()), path
+        assert not product_imports(path.read_text()), path
+
+
+@pytest.mark.parametrize('source', ['import ordessa_harness',
+    'from ordessa_harness.claude.attachments import ClaudePreparedAttachment'])
+def test_planted_legacy_harness_dependency_is_detected(source):
+    assert legacy_harness_imports(source)
