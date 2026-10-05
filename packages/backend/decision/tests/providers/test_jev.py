@@ -302,3 +302,41 @@ async def test_T40_gateway_response_allowlist_is_bounded_snapshot():
     assert s.accepted_response_models==('jev-1.13-free',)
     for bad in ('any',('same','same'),tuple(str(i) for i in range(17))):
         with pytest.raises(JevProviderError):JevProviderSettings(accepted_response_models=bad)
+
+
+@pytest.mark.parametrize('mutation,diagnostic', [
+    ('probability_keys', 'probability_keys'), ('probability_sum', 'probability_sum'),
+    ('number_invalid', 'number_invalid'), ('choice_not_maximum', 'choice_not_maximum'),
+    ('model_identity', 'model_identity'), ('answer_set', 'answer_set'),
+    ('sdk_schema', 'sdk_response_schema'), ('score_expected', 'score_expected_value'),
+])
+async def test_T35_T36_safe_protocol_failure_diagnostics(mutation, diagnostic, caplog):
+    kind = 'score' if mutation == 'score_expected' else 'choice'
+    payload = body(kind); answer = payload['answers']['q']
+    marker = 'private-body-marker-must-not-escape'
+    if mutation == 'probability_keys': answer['probabilities'] = {'a': 0.8, marker: 0.2}
+    elif mutation == 'probability_sum': answer['probabilities'] = {'a': 0.8, 'b': 0.3}
+    elif mutation == 'number_invalid': answer['probabilities'] = {'a': 1.1, 'b': -0.1}
+    elif mutation == 'choice_not_maximum': answer['choice'] = 'b'
+    elif mutation == 'model_identity': payload['model'] = marker
+    elif mutation == 'answer_set': payload['answers']['extra-'+marker] = dict(answer)
+    elif mutation == 'sdk_schema': answer.pop('confidence')
+    else: answer['score'] = 1.6
+    calls = []
+    def handler(request): calls.append(request); return httpx2.Response(200, json=payload)
+    p = provider(handler); q = question(kind)
+    try:
+        with caplog.at_level(logging.DEBUG), pytest.raises(JevProviderError) as caught:
+            await p.decide(q, context(p, q))
+        assert caught.value.code == 'protocol_invalid'
+        assert caught.value.diagnostic == diagnostic
+        assert len(calls) == 1
+        assert marker not in str(caught.value) + repr(caught.value) + caplog.text
+        assert caught.value.__context__ is None
+    finally: await p.close()
+
+
+async def test_T40_untrusted_diagnostic_text_is_not_retained():
+    error = JevProviderError('protocol_invalid', diagnostic='Bearer private-error-token')
+    assert error.diagnostic == 'unspecified'
+    assert 'private-error-token' not in repr(error) + str(error)

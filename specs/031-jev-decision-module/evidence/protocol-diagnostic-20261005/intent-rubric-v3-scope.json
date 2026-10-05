@@ -1,0 +1,73 @@
+{
+  "scope_id": "jev-intent-rubric-v3-20261005",
+  "input_hash": "sha256:cbf2384ee87536e78b6da8d6420aa320cf5fdfd41be124b52ab87ea6b62afd61",
+  "limit": 8,
+  "cases": [
+    "conditional-en",
+    "conditional-zh",
+    "unconditional-en",
+    "unconditional-zh",
+    "negative-en",
+    "negative-zh",
+    "ambiguous-en",
+    "ambiguous-zh"
+  ],
+  "requests": [
+    {
+      "case_id": "conditional-en",
+      "attempt": 1,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.347
+    },
+    {
+      "case_id": "conditional-zh",
+      "attempt": 2,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 2.0283
+    },
+    {
+      "case_id": "unconditional-en",
+      "attempt": 3,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6594
+    },
+    {
+      "case_id": "unconditional-zh",
+      "attempt": 4,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6604
+    },
+    {
+      "case_id": "negative-en",
+      "attempt": 5,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6372
+    },
+    {
+      "case_id": "negative-zh",
+      "attempt": 6,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6419
+    },
+    {
+      "case_id": "ambiguous-en",
+      "attempt": 7,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6161
+    },
+    {
+      "case_id": "ambiguous-zh",
+      "attempt": 8,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6309
+    }
+  ]
+}

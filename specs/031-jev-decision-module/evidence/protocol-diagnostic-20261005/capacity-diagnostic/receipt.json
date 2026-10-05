@@ -1,0 +1,151 @@
+{
+  "status": "SCOPED_PASS",
+  "input_hash": "sha256:3b5eee6faf38a5d846d6fbc9e5e66f42833ee0ab02fd23026e5de1bf9953064c",
+  "scope_id": "jev-capacity-diagnostic-20261005",
+  "maximum_http_requests": 1,
+  "cases": [
+    {
+      "id": "capacity-64-plus-2",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:c77ad65fa98d1972f5a1dbdcad6d7add7164de23ce5426a87a4aec90c59155e2"
+      ]
+    }
+  ],
+  "credential_reads": 1,
+  "actual_http_requests": 1,
+  "rows": [
+    {
+      "id": "capacity-64-plus-2",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "candidate",
+          "kind": "choice",
+          "value": "candidate_00",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:c77ad65fa98d1972f5a1dbdcad6d7add7164de23ce5426a87a4aec90c59155e2",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "candidate_21": 0.0,
+              "candidate_38": 0.0,
+              "candidate_55": 0.0,
+              "candidate_05": 0.0,
+              "candidate_25": 0.0,
+              "candidate_49": 0.0,
+              "candidate_44": 0.0,
+              "candidate_12": 0.0,
+              "candidate_32": 0.0,
+              "candidate_02": 0.0,
+              "candidate_06": 0.0,
+              "candidate_27": 0.0,
+              "candidate_04": 0.0,
+              "candidate_00": 0.84,
+              "candidate_37": 0.0,
+              "candidate_63": 0.0,
+              "candidate_08": 0.0,
+              "candidate_30": 0.0,
+              "candidate_57": 0.0,
+              "candidate_60": 0.0,
+              "candidate_40": 0.0,
+              "candidate_16": 0.0,
+              "candidate_46": 0.0,
+              "candidate_13": 0.0,
+              "candidate_47": 0.0,
+              "candidate_43": 0.0,
+              "candidate_15": 0.0,
+              "candidate_61": 0.0,
+              "candidate_10": 0.0,
+              "candidate_29": 0.0,
+              "candidate_62": 0.0,
+              "candidate_36": 0.0,
+              "candidate_33": 0.0,
+              "candidate_24": 0.0,
+              "candidate_11": 0.0,
+              "candidate_18": 0.0,
+              "candidate_41": 0.0,
+              "candidate_34": 0.0,
+              "candidate_09": 0.0,
+              "candidate_39": 0.0,
+              "candidate_31": 0.0,
+              "candidate_45": 0.0,
+              "candidate_20": 0.0,
+              "candidate_42": 0.0,
+              "candidate_52": 0.0,
+              "candidate_35": 0.0,
+              "candidate_01": 0.02,
+              "candidate_17": 0.0,
+              "candidate_07": 0.0,
+              "candidate_51": 0.0,
+              "candidate_23": 0.0,
+              "insufficient_evidence": 0.11,
+              "candidate_14": 0.0,
+              "candidate_19": 0.0,
+              "candidate_28": 0.0,
+              "candidate_58": 0.0,
+              "candidate_50": 0.0,
+              "candidate_26": 0.0,
+              "candidate_03": 0.0,
+              "candidate_54": 0.0,
+              "candidate_53": 0.0,
+              "candidate_22": 0.0,
+              "candidate_56": 0.0,
+              "candidate_48": 0.0,
+              "none_suitable": 0.03,
+              "candidate_59": 0.0
+            },
+            "confidence": 0.83,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 2362,
+            "output_tokens": 683
+          }
+        }
+      ],
+      "run_id": "e6c3f2b5-08b9-4085-b5d5-c821a7123d2f",
+      "result_digest": "sha256:d179efe042cde13710cd2c4b579a308a6d6170226cb231750913129b36d31018",
+      "terminal_verified": true,
+      "actual": {
+        "candidate": "candidate_00"
+      },
+      "quality_source": "model"
+    }
+  ],
+  "retry": 0,
+  "native_effects": 0,
+  "cost": "UNKNOWN",
+  "evaluation_mode": "live_https",
+  "elapsed_seconds": 1.2668,
+  "http_audit": [
+    {
+      "case_id": "capacity-64-plus-2",
+      "attempt": 1,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.1883
+    }
+  ],
+  "transport_attempts": 1,
+  "real_model_requests": 1,
+  "usage": [
+    {
+      "status": "reported",
+      "input_tokens": 2362,
+      "output_tokens": 683
+    }
+  ],
+  "usage_unknown_requests": 0,
+  "model_quality_passes": 1,
+  "controlled_label_matches": 0,
+  "hard_rule_cases": 0,
+  "technical_counts": {
+    "completed": 1
+  }
+}

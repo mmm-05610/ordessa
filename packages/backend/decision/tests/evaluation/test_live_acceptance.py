@@ -117,3 +117,23 @@ def test_output_domain_and_profile_are_closed():
         elif mutate == 'model': data['settings']['accepted_response_models'] = ['paid-model']
         else: data['settings']['base_url'] = 'https://another.example'
         with pytest.raises(live.EvaluationError, match='plan_invalid'): live.prepare(data)
+
+
+@pytest.mark.asyncio
+async def test_protocol_diagnostic_survives_graph_failure_without_raw_body(tmp_path):
+    key = tmp_path / 'fake-key'; key.write_text('offline-test-only')
+    marker = 'private-error-body-marker'
+    def malformed(request):
+        value = response().json()
+        value['answers']['q']['probabilities'] = {'a': 0.8, marker: 0.2}
+        return httpx2.Response(200, json=value)
+    result = await live.run_plan(plan(), tmp_path / 'out', key, True,
+        ledger_path=tmp_path / 'ledger', transport=httpx2.MockTransport(malformed))
+    row = result['rows'][0]
+    assert row['technical_status'] == 'failed' and row['terminal_verified']
+    assert row['provider_error'] == 'protocol_invalid' and row['protocol_diagnostic'] == 'probability_keys'
+    assert row['answers'] == [] and not row['quality_pass']
+    assert result['actual_http_requests'] == result['model_quality_passes'] == 0
+    assert result['transport_attempts'] == 1
+    for path in (tmp_path / 'out').rglob('*'):
+        if path.is_file(): assert marker.encode() not in path.read_bytes()

@@ -1,0 +1,121 @@
+{
+  "scope_id": "jev-stability-diagnostic-20261005",
+  "input_hash": "sha256:ddf5bb7593add979a08062808bf44694c792f6230d7b8b0f1b11083bdca61cfd",
+  "limit": 14,
+  "cases": [
+    "capacity-64-plus-2-repeat-1",
+    "capacity-64-plus-2-repeat-2",
+    "capacity-64-plus-2-repeat-3",
+    "capacity-64-plus-2-repeat-4",
+    "capacity-64-plus-2-repeat-5",
+    "capacity-64-plus-2-repeat-6",
+    "capacity-64-plus-2-repeat-7",
+    "capacity-64-plus-2-repeat-8",
+    "churn-en-positive-repeat-1",
+    "churn-en-positive-repeat-2",
+    "churn-en-positive-repeat-3",
+    "churn-en-positive-repeat-4",
+    "churn-en-negative-repeat-1",
+    "churn-en-negative-repeat-2"
+  ],
+  "requests": [
+    {
+      "case_id": "capacity-64-plus-2-repeat-1",
+      "attempt": 1,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.392
+    },
+    {
+      "case_id": "capacity-64-plus-2-repeat-2",
+      "attempt": 2,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.7118
+    },
+    {
+      "case_id": "capacity-64-plus-2-repeat-3",
+      "attempt": 3,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6609
+    },
+    {
+      "case_id": "capacity-64-plus-2-repeat-4",
+      "attempt": 4,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6714
+    },
+    {
+      "case_id": "capacity-64-plus-2-repeat-5",
+      "attempt": 5,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6163
+    },
+    {
+      "case_id": "capacity-64-plus-2-repeat-6",
+      "attempt": 6,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.935
+    },
+    {
+      "case_id": "capacity-64-plus-2-repeat-7",
+      "attempt": 7,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.9745
+    },
+    {
+      "case_id": "capacity-64-plus-2-repeat-8",
+      "attempt": 8,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6672
+    },
+    {
+      "case_id": "churn-en-positive-repeat-1",
+      "attempt": 9,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.8175
+    },
+    {
+      "case_id": "churn-en-positive-repeat-2",
+      "attempt": 10,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6312
+    },
+    {
+      "case_id": "churn-en-positive-repeat-3",
+      "attempt": 11,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.8193
+    },
+    {
+      "case_id": "churn-en-positive-repeat-4",
+      "attempt": 12,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.637
+    },
+    {
+      "case_id": "churn-en-negative-repeat-1",
+      "attempt": 13,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6768
+    },
+    {
+      "case_id": "churn-en-negative-repeat-2",
+      "attempt": 14,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6254
+    }
+  ]
+}

@@ -1,0 +1,430 @@
+{
+  "status": "SCOPED_PASS",
+  "input_hash": "sha256:cbf2384ee87536e78b6da8d6420aa320cf5fdfd41be124b52ab87ea6b62afd61",
+  "scope_id": "jev-intent-rubric-v3-20261005",
+  "maximum_http_requests": 8,
+  "cases": [
+    {
+      "id": "conditional-en",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:5b577d3c681dc0524729cb9ff61ad1ad5b11a39936562f22f4c6cbf987dab003"
+      ]
+    },
+    {
+      "id": "conditional-zh",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:20a8326f356d4f6c970be18a24caeefdb85d0dfbab4030b64054ae748d5c562d"
+      ]
+    },
+    {
+      "id": "unconditional-en",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:0c50fd662fe2d619ebdd8e448646bd878e03830aa63498daf4ec967019454f93"
+      ]
+    },
+    {
+      "id": "unconditional-zh",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:8d95235b2c015ba34f0496256514012cf4f2ab70a1b3fdce6498e04f571ceea5"
+      ]
+    },
+    {
+      "id": "negative-en",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:c89613bf739eab835cfebb2983840b89d3d5e2686459483eeaf65db9e488f3b1"
+      ]
+    },
+    {
+      "id": "negative-zh",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:e14eec7e2f1566b364d28fb1bddaaafedb9e3e7e5d7da61aead61659bfee8f40"
+      ]
+    },
+    {
+      "id": "ambiguous-en",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:22598d243ea919306cf5570b6682abc816caf372b4bdb16cc65191b020c3e9e5"
+      ]
+    },
+    {
+      "id": "ambiguous-zh",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:0c7ede75c0ef18572d1b6390176c54ecbf8ae523ff8ce1e5f614f0b3a6bf959b"
+      ]
+    }
+  ],
+  "credential_reads": 1,
+  "actual_http_requests": 8,
+  "rows": [
+    {
+      "id": "conditional-en",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "churn",
+          "kind": "noul",
+          "value": 0.96,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:5b577d3c681dc0524729cb9ff61ad1ad5b11a39936562f22f4c6cbf987dab003",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b"
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 394,
+            "output_tokens": 21
+          }
+        }
+      ],
+      "run_id": "46791f92-3f0c-48e4-aa59-9325ce184a51",
+      "result_digest": "sha256:f390a704ddc5b1e72e3151bb0bb3f0f84b1ec7b45a9e6dd19c5b8dc813bf74b6",
+      "terminal_verified": true,
+      "actual": {
+        "churn": 0.96
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "conditional-zh",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "churn",
+          "kind": "noul",
+          "value": 0.96,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:20a8326f356d4f6c970be18a24caeefdb85d0dfbab4030b64054ae748d5c562d",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b"
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 398,
+            "output_tokens": 21
+          }
+        }
+      ],
+      "run_id": "93a5a91d-4881-43f2-8e79-e698cbd1b9ba",
+      "result_digest": "sha256:0430c1d5b04e0a94d01101f28251b5a13585e2faf243205620702294a5e4fdc3",
+      "terminal_verified": true,
+      "actual": {
+        "churn": 0.96
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "unconditional-en",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "churn",
+          "kind": "noul",
+          "value": 0.97,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:0c50fd662fe2d619ebdd8e448646bd878e03830aa63498daf4ec967019454f93",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b"
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 389,
+            "output_tokens": 21
+          }
+        }
+      ],
+      "run_id": "7a1a74e1-6f06-4d07-87d7-f7d3e6941c12",
+      "result_digest": "sha256:95b7990aab655bc9ed25e37fbc451022242da0727ec878016bf5882f124d7647",
+      "terminal_verified": true,
+      "actual": {
+        "churn": 0.97
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "unconditional-zh",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "churn",
+          "kind": "noul",
+          "value": 0.97,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:8d95235b2c015ba34f0496256514012cf4f2ab70a1b3fdce6498e04f571ceea5",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b"
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 391,
+            "output_tokens": 21
+          }
+        }
+      ],
+      "run_id": "6499b172-9788-4ec7-96ce-3f997ebc8b56",
+      "result_digest": "sha256:b823f96d4ad5a7b9786c04e5dc6ac68dc82825a021fca8e64fd6471155a6cd13",
+      "terminal_verified": true,
+      "actual": {
+        "churn": 0.97
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "negative-en",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "churn",
+          "kind": "noul",
+          "value": 0.01,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:c89613bf739eab835cfebb2983840b89d3d5e2686459483eeaf65db9e488f3b1",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b"
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 393,
+            "output_tokens": 21
+          }
+        }
+      ],
+      "run_id": "6be993a6-c399-4602-8d28-82abb58643f8",
+      "result_digest": "sha256:46d9fa4563c45f049bcd13e8ad2ac22bc9f752d4e2025ef046f11e0abb4aa621",
+      "terminal_verified": true,
+      "actual": {
+        "churn": 0.01
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "negative-zh",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "churn",
+          "kind": "noul",
+          "value": 0.01,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:e14eec7e2f1566b364d28fb1bddaaafedb9e3e7e5d7da61aead61659bfee8f40",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b"
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 394,
+            "output_tokens": 21
+          }
+        }
+      ],
+      "run_id": "19b258b2-59de-4775-be2d-e197de09589f",
+      "result_digest": "sha256:31d7f15dca4cd3d4f3f0275bad606459e29ca37dede78ff624eee48306c7225f",
+      "terminal_verified": true,
+      "actual": {
+        "churn": 0.01
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "ambiguous-en",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "churn",
+          "kind": "noul",
+          "value": 0.04,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:22598d243ea919306cf5570b6682abc816caf372b4bdb16cc65191b020c3e9e5",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b"
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 388,
+            "output_tokens": 21
+          }
+        }
+      ],
+      "run_id": "8151f7e0-795d-468e-b322-765980549729",
+      "result_digest": "sha256:cb7f0e01e1989ac21bb77a58205e837fdbc6c06cf6b37d215f5569258f6acc89",
+      "terminal_verified": true,
+      "actual": {
+        "churn": 0.04
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "ambiguous-zh",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "churn",
+          "kind": "noul",
+          "value": 0.03,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:0c7ede75c0ef18572d1b6390176c54ecbf8ae523ff8ce1e5f614f0b3a6bf959b",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b"
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 390,
+            "output_tokens": 21
+          }
+        }
+      ],
+      "run_id": "915cc979-d4cf-438a-82be-b79515619f29",
+      "result_digest": "sha256:2720d618a77492aec70e2232bd73704e105e569917257e688a5139933525536a",
+      "terminal_verified": true,
+      "actual": {
+        "churn": 0.03
+      },
+      "quality_source": "model"
+    }
+  ],
+  "retry": 0,
+  "native_effects": 0,
+  "cost": "UNKNOWN",
+  "evaluation_mode": "live_https",
+  "elapsed_seconds": 7.6093,
+  "http_audit": [
+    {
+      "case_id": "conditional-en",
+      "attempt": 1,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.347
+    },
+    {
+      "case_id": "conditional-zh",
+      "attempt": 2,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 2.0283
+    },
+    {
+      "case_id": "unconditional-en",
+      "attempt": 3,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6594
+    },
+    {
+      "case_id": "unconditional-zh",
+      "attempt": 4,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6604
+    },
+    {
+      "case_id": "negative-en",
+      "attempt": 5,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6372
+    },
+    {
+      "case_id": "negative-zh",
+      "attempt": 6,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6419
+    },
+    {
+      "case_id": "ambiguous-en",
+      "attempt": 7,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6161
+    },
+    {
+      "case_id": "ambiguous-zh",
+      "attempt": 8,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6309
+    }
+  ],
+  "transport_attempts": 8,
+  "real_model_requests": 8,
+  "usage": [
+    {
+      "status": "reported",
+      "input_tokens": 394,
+      "output_tokens": 21
+    },
+    {
+      "status": "reported",
+      "input_tokens": 398,
+      "output_tokens": 21
+    },
+    {
+      "status": "reported",
+      "input_tokens": 389,
+      "output_tokens": 21
+    },
+    {
+      "status": "reported",
+      "input_tokens": 391,
+      "output_tokens": 21
+    },
+    {
+      "status": "reported",
+      "input_tokens": 393,
+      "output_tokens": 21
+    },
+    {
+      "status": "reported",
+      "input_tokens": 394,
+      "output_tokens": 21
+    },
+    {
+      "status": "reported",
+      "input_tokens": 388,
+      "output_tokens": 21
+    },
+    {
+      "status": "reported",
+      "input_tokens": 390,
+      "output_tokens": 21
+    }
+  ],
+  "usage_unknown_requests": 0,
+  "model_quality_passes": 8,
+  "controlled_label_matches": 0,
+  "hard_rule_cases": 0,
+  "technical_counts": {
+    "completed": 8
+  }
+}

@@ -24,10 +24,17 @@ TOLERANCE = 1e-6
 _SDK_CALL = ContextVar('ordessa_jev_sdk_call', default=False)
 
 
+PROTOCOL_DIAGNOSTICS = frozenset({'unspecified', 'sdk_response_schema', 'response_decode',
+    'response_fields', 'model_identity', 'answer_set', 'answer_kind', 'number_invalid',
+    'probability_keys', 'probability_sum', 'choice_not_maximum', 'score_legend',
+    'score_expected_value', 'usage_invalid'})
+
+
 class JevProviderError(RuntimeError):
     """Only a bounded code crosses the provider boundary; never an SDK body."""
-    def __init__(self, code):
+    def __init__(self, code, *, diagnostic='unspecified'):
         self.code = code
+        self.diagnostic = diagnostic if isinstance(diagnostic, str) and diagnostic in PROTOCOL_DIAGNOSTICS else 'unspecified'
         super().__init__(code)
 
 
@@ -76,16 +83,16 @@ class JevProviderSettings:
 
 def _number(value, minimum=0, maximum=1):
     if type(value) not in (int, float) or not math.isfinite(value) or not minimum <= value <= maximum:
-        raise JevProviderError('protocol_invalid')
+        raise JevProviderError('protocol_invalid', diagnostic='number_invalid')
     return float(value)
 
 
 def _probabilities(raw, keys):
     if not isinstance(raw, Mapping) or set(raw) != set(keys):
-        raise JevProviderError('protocol_invalid')
+        raise JevProviderError('protocol_invalid', diagnostic='probability_keys')
     values = {k: _number(v) for k, v in raw.items()}
     if abs(math.fsum(values.values()) - 1) > TOLERANCE:
-        raise JevProviderError('protocol_invalid')
+        raise JevProviderError('protocol_invalid', diagnostic='probability_sum')
     return values
 
 
@@ -151,7 +158,7 @@ class JevDecisionProvider:
         if remaining <= 0:
             raise JevProviderError('call_refused')
         timeout = min(remaining, self._settings.timeout_seconds)
-        failure = None
+        failure = None; diagnostic = 'unspecified'
         try:
             model_context.claim(question, self.settings_digest)
         except Exception:
@@ -173,7 +180,7 @@ class JevDecisionProvider:
         except (TypeSafeAuthenticationError, TypeSafePermissionDeniedError):
             failure = 'authentication_failed'
         except TypeSafeAPIResponseValidationError:
-            failure = 'protocol_invalid'
+            failure = 'protocol_invalid'; diagnostic = 'sdk_response_schema'
         except asyncio.TimeoutError:
             failure = 'provider_timeout'
         except TypeSafeError:
@@ -184,12 +191,14 @@ class JevDecisionProvider:
             _SDK_CALL.reset(log_token)
         if failure:
             # Raised outside except: no sensitive SDK exception context escapes.
-            raise JevProviderError(failure)
+            raise JevProviderError(failure, diagnostic=diagnostic)
         try:
             return self._map_response(question, response)
+        except JevProviderError as error:
+            diagnostic = error.diagnostic
         except Exception:
-            failure = 'protocol_invalid'
-        raise JevProviderError(failure)
+            diagnostic = 'response_fields'
+        raise JevProviderError('protocol_invalid', diagnostic=diagnostic)
 
     @staticmethod
     def _map_question(question):
@@ -209,16 +218,22 @@ class JevDecisionProvider:
 
     def _map_response(self, question, response):
         # Public raw response preserves unknown kinds the SDK otherwise drops.
-        raw = decode(response.raw_http_response.content)
+        try:
+            raw = decode(response.raw_http_response.content)
+        except Exception:
+            raise JevProviderError('protocol_invalid', diagnostic='response_decode') from None
+        if not isinstance(raw, Mapping):
+            raise JevProviderError('protocol_invalid', diagnostic='response_fields')
         if (raw.get('model') not in self._settings.accepted_response_models
-                or response.model != raw.get('model')
-                or not isinstance(raw.get('answers'), Mapping)
+                or response.model != raw.get('model')):
+            raise JevProviderError('protocol_invalid', diagnostic='model_identity')
+        if (not isinstance(raw.get('answers'), Mapping)
                 or set(raw['answers']) != {question.question_id}
                 or set(response.answers) != {question.question_id}):
-            raise JevProviderError('protocol_invalid')
+            raise JevProviderError('protocol_invalid', diagnostic='answer_set')
         answer = raw['answers'][question.question_id]
         if not isinstance(answer, Mapping) or answer.get('type') != question.kind:
-            raise JevProviderError('protocol_invalid')
+            raise JevProviderError('protocol_invalid', diagnostic='answer_kind')
         receipt = {'resolved_model': response.model,
                    'requested_model': self._settings.model,
                    'protocol_validation_version': PROTOCOL_VERSION,
@@ -232,7 +247,7 @@ class JevDecisionProvider:
             best = max(probabilities.values())
             winners = sorted(k for k, v in probabilities.items() if v == best)
             if choice not in winners:
-                raise JevProviderError('protocol_invalid')
+                raise JevProviderError('protocol_invalid', diagnostic='choice_not_maximum')
             receipt.update(probabilities=probabilities, confidence=_number(answer['confidence']),
                            selection_status='unique' if len(winners) == 1 else 'tie',
                            tied_option_ids=winners if len(winners) > 1 else [])
@@ -242,19 +257,19 @@ class JevDecisionProvider:
             probabilities = _probabilities(answer['probabilities'], keys)
             legend = answer['legend']
             if not isinstance(legend, Mapping) or set(legend) != set(keys):
-                raise JevProviderError('protocol_invalid')
+                raise JevProviderError('protocol_invalid', diagnostic='score_legend')
             if canonical([legend[k] for k in keys]) != canonical(question.scale):
-                raise JevProviderError('protocol_invalid')
+                raise JevProviderError('protocol_invalid', diagnostic='score_legend')
             value = _number(answer['score'], 0, len(keys) - 1)
             expected = math.fsum(int(k) * p for k, p in probabilities.items())
             if abs(value - expected) > TOLERANCE:
-                raise JevProviderError('protocol_invalid')
+                raise JevProviderError('protocol_invalid', diagnostic='score_expected_value')
             receipt.update(probabilities=probabilities, confidence=_number(answer['confidence']))
         usage = {'status': 'unknown'}
         reported = {k: getattr(response.usage, k) for k in ('input_tokens', 'output_tokens')}
         if any(v is not None for v in reported.values()):
             if any(v is not None and (type(v) is not int or v < 0) for v in reported.values()):
-                raise JevProviderError('protocol_invalid')
+                raise JevProviderError('protocol_invalid', diagnostic='usage_invalid')
             usage = {'status': 'reported' if all(v is not None for v in reported.values()) else 'partial', **reported}
         return DecisionAnswer(question.question_id, question.kind, value, receipt, usage)
 

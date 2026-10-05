@@ -1,0 +1,17 @@
+{
+  "scope_id": "jev-capacity-diagnostic-20261005",
+  "input_hash": "sha256:3b5eee6faf38a5d846d6fbc9e5e66f42833ee0ab02fd23026e5de1bf9953064c",
+  "limit": 1,
+  "cases": [
+    "capacity-64-plus-2"
+  ],
+  "requests": [
+    {
+      "case_id": "capacity-64-plus-2",
+      "attempt": 1,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.1883
+    }
+  ]
+}

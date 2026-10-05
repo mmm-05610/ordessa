@@ -870,7 +870,7 @@
   "implementationRun": {
     "authorization": "user /goal current worktree only",
     "baseline": "e4714eba00a78ba04c5b53318830a0d409e76bbe",
-    "receipt": "evidence/completion-offline-20261005/receipt.json",
+    "receipt": "evidence/protocol-diagnostic-20261005/offline/receipt.json",
     "tasks": {
       "JD001": "OFFLINE_VERIFIED",
       "JD002": "OFFLINE_VERIFIED",
@@ -953,7 +953,7 @@
       "T67": "PASSED",
       "T68": "PASSED"
     },
-    "unique_tests_passed": 232,
+    "unique_tests_passed": 242,
     "all_work_complete": false,
     "additionalCoreRegression": {
       "matchedIds": 57,
@@ -1030,6 +1030,16 @@
       "implementationAndRequiredEvaluationDelivered": true,
       "productReadinessComplete": false,
       "remainingRequiredOfflineImplementationItems": 0
+    },
+    "continuedDiagnostics": {
+      "receipt": "evidence/protocol-diagnostic-20261005/summary.json",
+      "authorization": "User authorized no cumulative attempt limit for same free synthetic diagnostic scope; each run remains finite",
+      "status": "ONGOING",
+      "newHttpRequests": 23,
+      "cumulativeHttpRequests": 127,
+      "capacityFailureDiagnostic": "probability_sum",
+      "intentRubricV3Matches": 8,
+      "intentRubricV3Cases": 8
     }
   }
 }

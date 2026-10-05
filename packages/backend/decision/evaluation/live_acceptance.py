@@ -19,6 +19,7 @@ from ordessa_decision.contracts import (DecisionQuestion, DecisionAnswer, Policy
     TaskBrief, RunLimits, DecisionRequest, BusinessOutcome, DecisionServices,
     ReadContext, FlowRef, digest, plain)
 from ordessa_decision.providers.jev import JevDecisionProvider, JevProviderSettings
+from ordessa_decision.providers.jev.provider import PROTOCOL_DIAGNOSTICS
 from ordessa_decision.runtime import (TrustedFlow, RunContext, run_decision,
     reviewed_code_digest, flow_digest)
 from ordessa_decision.evidence import FileEvidenceSink
@@ -175,6 +176,9 @@ class RecordedProvider:
         except Exception as error:
             code = getattr(error, 'code', '')
             self.row['provider_error'] = code if code in {'policy_invalid', 'provider_timeout', 'provider_failed', 'protocol_invalid', 'authentication_failed', 'call_refused'} else 'provider_failed'
+            if code == 'protocol_invalid':
+                diagnostic = getattr(error, 'diagnostic', 'unspecified')
+                self.row['protocol_diagnostic'] = diagnostic if isinstance(diagnostic, str) and diagnostic in PROTOCOL_DIAGNOSTICS else 'unspecified'
             self.save(); raise
         self.row['answers'].append(plain(answer)); self.save()
         return answer
