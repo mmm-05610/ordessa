@@ -72,6 +72,20 @@ class NativeSessionEvidencePort(Protocol):
     def verify_binding(self, unit, creation_correlation, evidence) -> Mapping: ...
 
 
+UNIT_CONFIRMATION_VERSION = 'harness-unit-confirmation/1'
+
+
+class NativeUnitEvidencePort(Protocol):
+    """Original owned process + same-pipe initialize evidence, not an ACK.
+
+    The owner verifies fixed installation/root, process and transport identity,
+    original start correlation, successful initialization and current liveness.
+    It returns only versioned provenance refs; no PID, command, secret or session
+    selector is substituted for an independently verified native Unit.
+    """
+    def verify_unit_binding(self, unit, creation_correlation, evidence) -> Mapping: ...
+
+
 class NativeConfigurationEvidencePort(Protocol):
     """Original native receipt provenance, never a current-value equality test."""
     def verify_configuration(self, unit, identity, native_request_id,
@@ -129,6 +143,20 @@ class NativeSessionBinding:
         return None if self.native_json is None else sealed_mapping(json.loads(self.native_json))
 
 
+@dataclass(frozen=True)
+class NativeUnitBinding:
+    unit_ref: str
+    state: str
+    source_revision: int
+    creation_correlation: str | None
+    native_json: str | None
+    input_digest: str | None = None
+
+    @property
+    def native_facts(self):
+        return None if self.native_json is None else sealed_mapping(json.loads(self.native_json))
+
+
 class RecordTicket:
     __slots__ = ()
 
@@ -146,6 +174,10 @@ class RecordTicket:
 
 class ConfigurationRecordTicket(RecordTicket):
     """Original configuration dispatch capability; never reissued on replay."""
+
+
+class UnitRecordTicket(RecordTicket):
+    """Native Unit creation; separate from the strict session ticket."""
 
 
 @dataclass(frozen=True)
@@ -178,7 +210,7 @@ def _correlation(facts):
 
 class UnitRecords:
     def __init__(self, journal, *, scope_authority, native_evidence, verifier, epoch_port,
-                 configuration_evidence=None):
+                 configuration_evidence=None, native_unit_evidence=None):
         if (not isinstance(journal, OperationJournal) or any(p is None for p in
                 (scope_authority, native_evidence, verifier, epoch_port))):
             raise UnitRecordsRefused("existing journal and explicit authority ports required")
@@ -186,6 +218,7 @@ class UnitRecords:
         self.scope_authority, self.native_evidence = scope_authority, native_evidence
         self.verifier, self.epoch_port = verifier, epoch_port
         self.configuration_evidence = configuration_evidence
+        self.native_unit_evidence = native_unit_evidence
         self._tickets = {}
         self._configuration_tickets = {}
         authority = getattr(journal, '_unit_records_scope_authority', None)
@@ -202,6 +235,11 @@ class UnitRecords:
                     state TEXT NOT NULL, source_revision INTEGER NOT NULL,
                     creation_correlation TEXT UNIQUE, native_json TEXT,
                     native_digest TEXT);
+                CREATE TABLE IF NOT EXISTS harness_unit_confirmations (
+                    unit_ref TEXT PRIMARY KEY REFERENCES harness_unit_reservations(unit_ref),
+                    state TEXT NOT NULL, source_revision INTEGER NOT NULL,
+                    creation_correlation TEXT UNIQUE, native_json TEXT,
+                    native_digest TEXT, input_digest TEXT);
                 CREATE TABLE IF NOT EXISTS harness_unit_configuration_attempts (
                     attempt_ref TEXT PRIMARY KEY,
                     unit_ref TEXT NOT NULL REFERENCES harness_unit_reservations(unit_ref),
@@ -261,8 +299,13 @@ class UnitRecords:
             raise UnitRecordsRefused("session binding missing or damaged")
         if type(row['source_revision']) is not int or row['source_revision'] < 1:
             raise UnitRecordsRefused("binding revision damaged")
+        if ((row['state'] == 'notCreated' and row['source_revision'] != 1)
+                or (row['state'] == 'opening' and row['source_revision'] != 2)
+                or (row['state'] in ('unknown', 'confirmed') and row['source_revision'] < 3)):
+            raise UnitRecordsRefused('binding state and revision damaged')
         if ((row['state'] == 'notCreated') != (row['creation_correlation'] is None)
                 or (row['state'] == 'confirmed') != (row['native_json'] is not None)
+                or ((row['native_json'] is None) != (row['native_digest'] is None))
                 or (row['native_json'] is not None and row['native_digest'] != _digest(row['native_json']))):
             raise UnitRecordsRefused("binding identity or evidence damaged")
         if row['state'] == 'confirmed':
@@ -319,6 +362,8 @@ class UnitRecords:
                        (unit.unit_ref, _correlation(facts), intent, _digest(intent), unit.scope_json, key))
             db.execute('INSERT INTO harness_unit_sessions VALUES (?,?,?,?,?,?)',
                        (unit.unit_ref, 'notCreated', 1, None, None, None))
+            db.execute('INSERT INTO harness_unit_confirmations VALUES (?,?,?,?,?,?,?)',
+                       (unit.unit_ref, 'notCreated', 1, None, None, None, None))
             db.commit()
             return unit, True
 
@@ -326,12 +371,15 @@ class UnitRecords:
         with self.journal._connect() as db:
             db.execute('BEGIN IMMEDIATE')
             unit = self._unit(db, unit_ref)
-            facts = self._authorize(context, 'start', unit.facts['providerRef'], unit.facts['nodeRef'], input_digest)
-            if facts['managementEpoch'] != unit.facts['managementEpoch']:
-                raise UnitRecordsRefused("unit management epoch changed")
+            confirmation = db.execute('SELECT state FROM harness_unit_confirmations WHERE unit_ref=?', (unit_ref,)).fetchone()
+            if confirmation is not None and self._unit_confirmation(db, unit_ref).state != 'notCreated':
+                raise UnitRecordsRefused('original native Unit creation retains the start fence')
             binding = self._binding(db, unit_ref)
             if binding.state != 'notCreated':
                 raise UnitRecordsRefused("existing native creation cannot be dispatched again")
+            facts = self._authorize(context, 'start', unit.facts['providerRef'], unit.facts['nodeRef'], input_digest)
+            if facts['managementEpoch'] != unit.facts['managementEpoch']:
+                raise UnitRecordsRefused("unit management epoch changed")
             correlation = _correlation(facts)
             db.execute("UPDATE harness_unit_sessions SET state='opening',source_revision=2,creation_correlation=? WHERE unit_ref=?",
                        (correlation, unit_ref))
@@ -339,6 +387,136 @@ class UnitRecords:
         ticket = object.__new__(RecordTicket)
         self._tickets[id(ticket)] = (ticket, unit, correlation, input_digest, facts['managementEpoch'])
         return ticket
+
+    def _unit_proof(self, unit, correlation, evidence):
+        port = self.native_unit_evidence
+        if not callable(getattr(port, 'verify_unit_binding', None)):
+            raise UnitRecordsRefused('native Unit evidence owner is absent')
+        proof = port.verify_unit_binding(unit, correlation, evidence)
+        fields = {'contractVersion', 'unitRef', 'creationCorrelation', 'processRef',
+                  'transportRef', 'initializationRef', 'evidenceRef'}
+        if (not isinstance(proof, Mapping) or set(proof) != fields
+                or proof['contractVersion'] != UNIT_CONFIRMATION_VERSION
+                or not isinstance(proof['unitRef'], Mapping)
+                or safe_json(proof['unitRef']) != safe_json(unit.public_ref)
+                or proof['creationCorrelation'] != correlation):
+            raise UnitRecordsRefused('native Unit proof identity differs')
+        for name in ('processRef', 'transportRef', 'initializationRef', 'evidenceRef'):
+            ref = proof[name]
+            if (not isinstance(ref, Mapping)
+                    or set(ref) != {'environmentNamespace', 'ownerProviderRef', 'sourceRevision', 'ref'}
+                    or ref['environmentNamespace'] != unit.scope_ref.environment_namespace
+                    or not isinstance(ref['ownerProviderRef'], Mapping)
+                    or safe_json(ref['ownerProviderRef']) != safe_json(unit.facts['providerRef'])
+                    or any(not isinstance(ref[key], str) or not ref[key] or len(ref[key]) > 256
+                           or any(ord(c) < 32 for c in ref[key]) for key in ('sourceRevision', 'ref'))):
+                raise UnitRecordsRefused('native Unit proof provenance differs')
+        return safe_json(proof)
+
+    def _unit_confirmation(self, db, unit_ref):
+        row = db.execute('SELECT * FROM harness_unit_confirmations WHERE unit_ref=?', (unit_ref,)).fetchone()
+        if (row is None or row['state'] not in ('notCreated', 'opening', 'unknown', 'confirmed')
+                or type(row['source_revision']) is not int or row['source_revision'] < 1
+                or (row['state'] == 'notCreated' and row['source_revision'] != 1)
+                or (row['state'] == 'opening' and row['source_revision'] != 2)
+                or (row['state'] in ('unknown', 'confirmed') and row['source_revision'] < 3)
+                or ((row['state'] == 'notCreated') != (row['creation_correlation'] is None))
+                or ((row['state'] == 'notCreated') != (row['input_digest'] is None))
+                or (row['input_digest'] is not None and (not isinstance(row['input_digest'], str) or not row['input_digest']))
+                or ((row['state'] == 'confirmed') != (row['native_json'] is not None))
+                or ((row['native_json'] is None) != (row['native_digest'] is None))):
+            raise UnitRecordsRefused('native Unit confirmation missing or damaged')
+        if row['native_json'] is not None:
+            if row['native_digest'] != _digest(row['native_json']):
+                raise UnitRecordsRefused('native Unit confirmation digest differs')
+            proof = json.loads(row['native_json'])
+            if self._unit_proof(self._unit(db, unit_ref), row['creation_correlation'], proof['evidenceRef']) != row['native_json']:
+                raise UnitRecordsRefused('native Unit confirmation differs from owner evidence')
+        return NativeUnitBinding(unit_ref, row['state'], row['source_revision'],
+                                    row['creation_correlation'], row['native_json'], row['input_digest'])
+
+    def begin_unit(self, unit_ref, context, *, input_digest):
+        """Consume the original start once without creating a fake session."""
+        if not callable(getattr(self.native_unit_evidence, 'verify_unit_binding', None)):
+            raise UnitRecordsRefused('native Unit evidence owner is absent')
+        with self.journal._connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            unit = self._unit(db, unit_ref)
+            binding = self._unit_confirmation(db, unit_ref)
+            if binding.state != 'notCreated' or self._binding(db, unit_ref).state != 'notCreated':
+                raise UnitRecordsRefused('original native creation retains the start fence')
+            facts = self._authorize(context, 'start', unit.facts['providerRef'], unit.facts['nodeRef'], input_digest)
+            if facts['managementEpoch'] != unit.facts['managementEpoch']:
+                raise UnitRecordsRefused('unit management epoch changed')
+            correlation = _correlation(facts)
+            db.execute("UPDATE harness_unit_confirmations SET state='opening',source_revision=2,creation_correlation=?,input_digest=? WHERE unit_ref=?", (correlation, input_digest, unit_ref))
+            db.commit()
+        ticket = object.__new__(UnitRecordTicket)
+        self._tickets[id(ticket)] = (ticket, unit, correlation, input_digest, facts['managementEpoch'])
+        return ticket
+
+    def record_unit(self, ticket, *, expected_source_revision, state, evidence=None):
+        entry = self._tickets.get(id(ticket))
+        if type(ticket) is not UnitRecordTicket or entry is None or entry[0] is not ticket:
+            raise UnitRecordsRefused('native Unit ticket is not owned by this journal instance')
+        _, unit, correlation, input_digest, epoch = entry
+        if self._epoch(unit.facts['nodeRef']) != epoch:
+            raise UnitRecordsRefused('native Unit ticket epoch expired')
+        if state not in ('unknown', 'confirmed') or (state == 'unknown' and evidence is not None):
+            raise UnitRecordsRefused('native Unit ticket cannot restart or invent confirmation')
+        with self.journal._connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            if self._unit(db, unit.unit_ref) != unit:
+                raise UnitRecordsRefused('native Unit changed after ticket issuance')
+            binding = self._unit_confirmation(db, unit.unit_ref)
+            if (type(expected_source_revision) is not int or binding.source_revision != expected_source_revision
+                    or binding.creation_correlation != correlation or binding.state not in ('opening', 'unknown')):
+                raise UnitRecordsRefused('native Unit terminal, changed, or revision conflict')
+            if binding.input_digest != input_digest:
+                raise UnitRecordsRefused('native Unit original input digest differs')
+            native = self._unit_proof(unit, correlation, evidence) if state == 'confirmed' else None
+            db.execute('UPDATE harness_unit_confirmations SET state=?,source_revision=?,native_json=?,native_digest=? WHERE unit_ref=?',
+                       (state, binding.source_revision + 1, native, None if native is None else _digest(native), unit.unit_ref))
+            db.commit()
+            result = self._unit_confirmation(db, unit.unit_ref)
+        if state == 'confirmed':
+            del self._tickets[id(ticket)]
+        return result
+
+    def read_unit_confirmation(self, unit_ref, context, *, input_digest):
+        self.read_unit(unit_ref, context, input_digest=input_digest)
+        with self.journal._connect() as db:
+            return self._unit_confirmation(db, unit_ref)
+
+    def reconcile_unit_confirmation(self, unit_ref, context, *, input_digest,
+                                    expected_source_revision, evidence):
+        """Read original owner evidence under query authority; never restart.
+
+        Cold reconciliation updates only this journal's original observation,
+        issues no creation ticket and cannot substitute another start step.
+        """
+        with self.journal._connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            unit = self._unit(db, unit_ref)
+            facts = self._authorize(context, 'query', unit.facts['providerRef'],
+                                    unit.facts['nodeRef'], input_digest, query=True)
+            binding = self._unit_confirmation(db, unit_ref)
+            if binding.creation_correlation != _correlation(facts):
+                raise UnitRecordsRefused('query is not the original native Unit start')
+            if binding.input_digest != input_digest:
+                raise UnitRecordsRefused('query is not the original native Unit input')
+            if (type(expected_source_revision) is not int
+                    or binding.source_revision != expected_source_revision):
+                raise UnitRecordsRefused('native Unit observation revision conflict')
+            if binding.state == 'confirmed':
+                return binding  # Original proof already reverified; no replacement.
+            if binding.state not in ('opening', 'unknown'):
+                raise UnitRecordsRefused('native Unit start has not been claimed')
+            native = self._unit_proof(unit, binding.creation_correlation, evidence)
+            db.execute("UPDATE harness_unit_confirmations SET state='confirmed',source_revision=?,native_json=?,native_digest=? WHERE unit_ref=?",
+                       (binding.source_revision + 1, native, _digest(native), unit_ref))
+            db.commit()
+            return self._unit_confirmation(db, unit_ref)
 
     def record_session(self, ticket, *, expected_source_revision, state, evidence=None):
         entry = self._tickets.get(id(ticket))

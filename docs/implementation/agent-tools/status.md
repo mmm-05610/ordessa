@@ -334,3 +334,17 @@ C为受控owner/SDK以及真实临时SQLite/Python peer；三家真实上游进�
 原源兼容/身份窄回归 `<python> -m pytest -c plugins/harness/pyproject.toml plugins/harness/tests/test_core_identity.py plugins/harness/tests/test_codex_plugin.py plugins/harness/tests/test_codex_wiring.py -q`：32P/0F exit0、0.63s。保留全部断言；这些旧factory正例绿恰说明显式旧入口仍在，不把它当AU003_DONE。diff-check exit0。初盘点误读不存在entrypoint.py/server_plugin.py/registration.py/bootstrap.py路径，rg exit2，随后核实实际entrypoints.py、generic/factory.py和Server composition；无实现/测试结论依赖缺文件。
 
 未更新现有用户安装，所以已安装旧包仍可带旧metadata；仅新构建发行已退役三项自动发现。C/本地发行证据新增，三家真实进程P未验证、模型M0，未改登录/用户数据/服务，未push或主树合并。生产owner/writer/receipt、显式旧注册消费者迁移、材料/SecretRef、完整生命周期、薄CLI/Skill与全发行验收继续；已登记核心3红未由本窄测修复。
+
+### 2026-10-05 AU003 无 Session 原 Unit 确认接缝（PARTIAL）
+
+前置a80f8602882cf25fcafbeb68c0499efe47a1ec73。上轮中断保留UnitRecords及两份测试改动，本轮核对三家completed/无写权、进程清单无pytest（rg exit1无匹配），未凭中断重启旧句柄；已知上轮11011组合测试已terminal356P/13.30s，随后共享99P/0.90s亦terminal。主会话继续唯一共享作者。
+
+按Claude已有Unit/Session分离发现，在原OperationJournal加入harness_unit_confirmations，同原UnitId/scope/store/Issuer；NativeUnitBinding与NativeSessionBinding分开，版本harness-unit-confirmation/1是内部owner证据投影，不扩wire协议。新增显式可选NativeUnitEvidencePort，缺端口begin_unit发前拒；原start一次claim/ticket，opening/unknown保留占用。确认依赖原process/transport/initialize来源与同Unit owner，固定安装/根及当前存活由原owner实际核实。结构校验不能代替真实证据，未装生产端口不报ready。record_session仍严格原session，不造default或sessionId。
+
+冷reconcile只授query原request/op/step/input摘要、CAS原revision，不补ticket/launch。实际Issuer+SQLite反例核实原claim消费、cold查询不改Core unknown（核心须另消费观察）、撤权拒读。Unit/Session两条start同事务互斥。只读Claude审阅指出notCreated高revision损坏可重置与后续session关联缺口；前者已补严格state/revision及孤立digest拒绝，又补八项两表/两创建路径交叉反例。后者明确未实现：需原InputAttempt关联真实session的record-only入口，不再次start。完整冻结native-unit-confirmation-port.md。
+
+命令解释器为 `/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python`。共享尾部 `-m pytest -c plugins/harness/pyproject.toml plugins/harness/tests/test_native_unit_confirmation.py plugins/harness/tests/test_unit_records.py plugins/harness/tests/test_unit_configuration_records.py plugins/harness/tests/test_operation_journal.py -q`：初85P/0.92s，补冷确认90P/0.87s，原摘要91P/0.84s，损坏拒绝96P/0.78s，真实Issuer97P/0.93s，历史缺行与来源变动99P/0.90s；最终两路交叉107P/0F exit0、0.93s（新37＋原70）。均exit0，历史快照不累加。既有configuration helper仅新增start_native_session默认True，可用False核Unit单独start，原断言及默认行为保留。
+
+最终集成命令：`PYTHONPATH=plugins/harness/codex/src:packages/backend/harness-transport/src <python> -m pytest -c products/agent-tools/pyproject.toml products/agent-tools/tests/integration docs/implementation/agent-tools/evidence/agent-unit-model/test_assembly.py docs/implementation/agent-tools/evidence/agent-unit-model/test_codex_assembly.py docs/implementation/agent-tools/evidence/agent-unit-model/test_provider_discovery.py docs/implementation/agent-tools/evidence/agent-unit-model/test_preparation_holds.py docs/implementation/agent-tools/evidence/agent-unit-model/test_management.py docs/implementation/agent-tools/evidence/agent-unit-model/test_invocation_continuation.py -q`：356P/0F exit0、13.40s。diff-check exit0。核心既有3项方向扫描红未在此修复，不报核心全绿。
+
+只修改本树源码/临时测试journal，未读或迁移用户DB，历史Unit无确认行typed拒绝，不补造来源；已有session合同仍可读。C真实SQLite/Issuer＋受控owner，P未验证、M0。无实际SDK/Claude/模型启动、第三方安装更新、登录/服务操作、push或主树合并。继续Claude owner接线、首次Session association、三家生产writer/receipt/生命周期、材料/SecretRef与旧消费者/薄客户端迁出；本接缝不标AU003_DONE。

@@ -254,7 +254,7 @@ def test_damaged_native_request_binding_is_not_reported_as_original(tmp_path):
         query(p, unit)
 
 
-def real_core_parts(tmp_path):
+def real_core_parts(tmp_path, *, start_native_session=True):
     import sys
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'products/agent-tools/tests/integration'))
@@ -291,9 +291,10 @@ def real_core_parts(tmp_path):
     unit, _ = p[0].reserve_unit(issued('prepare'), provider_ref=PROVIDER,node_ref=NODE,
         input_digest='input',private_root_facts=__import__('test_unit_records').ROOT)
     store.record_operation_step(request,'flow-digest','prepare','input',1,'concluded',{'unitRef':unit.unit_ref})
-    session_ticket = p[0].begin_session(unit.unit_ref, issued('start'), input_digest='start-input')
-    p[0].record_session(session_ticket, expected_source_revision=2,state='confirmed',evidence='real-native-owner-evidence')
-    store.record_operation_step(request,'flow-digest','start','start-input',1,'concluded',{'evidenceRef':'real-native-owner-evidence'})
+    if start_native_session:
+        session_ticket = p[0].begin_session(unit.unit_ref, issued('start'), input_digest='start-input')
+        p[0].record_session(session_ticket, expected_source_revision=2,state='confirmed',evidence='real-native-owner-evidence')
+        store.record_operation_step(request,'flow-digest','start','start-input',1,'concluded',{'evidenceRef':'real-native-owner-evidence'})
     return p, unit, store, request, issuer, authority, current, issued
 
 
