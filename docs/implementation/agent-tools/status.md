@@ -222,3 +222,13 @@ C：同SQLite真实事务＋受控owner/authority，无真实Harness；P：本�
 执行 packages/backend/harness-transport/tests/acceptance_install.py：六个本树包构建、fresh venv离线安装、pip check及三家fresh独立Registry，共12条命令全exit0，临时环境已清除；证据au003-fresh-provider-install.json。无Server/旧Harness/CLI/Claude SDK安装，未导入其他家。工单结构五单exit0、git diff --check exit0，只证明材料/格式。
 
 C为受控契约及真实Python peer/SQLite；P为三家真实上游进程0（未验证），M为0（未授权）。Pi实际配置读写与原操作确认消费显式owner端口；Codex接prepare/start原UnitRecords但生产端口未接，配置写入待补；Claude选官方SDK显式适配，但SDK实物/真实Unit未装配。公共运输lease仅是stdin屏障，不授予执行权。生产原生回执持久保存、授权持续重核、scope释放/恢复、三家生命周期、核心prepare/Node纵向接线及产品品牌客户端迁出仍缺，AU003_PARTIAL，不勾完成门。没有第三方安装更新、用户认证/全局配置修改、服务重启、模型调用、push或主树合并。
+
+### 2026-10-05 AU003 原配置attempt与原生RPC关联
+
+独立包阶段检查点996463b39a后继续；主会话仅改原UnitRecords同OperationJournal，增加原配置attempt/ticket及native RPC pre-send绑定，不增加操作系统/配置缓存/数据库。完整接缝configuration-journal-port.md：prepare原Unit必须已confirmed；原applyConfiguration Context消费、规范scope/Node epoch重核；opening/unknown拒绝替代key，原correlation不给新ticket；配置实际native版本仍由提供者串行观察比较。只持久身份/版本/摘要/证据引用，ACK或当前相同值不能确认。
+
+专属Python `-m pytest -c plugins/harness/pyproject.toml plugins/harness/tests/test_unit_configuration_records.py plugins/harness/tests/test_unit_records.py -q` 首跑29P/15F exit1、0.63s，safe_json只接受映射而直接传了整数RPC id。改为requestId字段映射后44P/0F exit0、0.34s。追加并发/损坏/下一操作反例，并加原tests/test_operation_journal.py：最终56P/0F exit0、0.45s（配置24＋UnitRecords23＋journal9）。C为真实临时SQLite＋受控owner/verifier，尚未接Codex真实RPC，因此P/M未验证。未删断言或隐藏失败。
+
+Codex执行者恢复写权仅plugins/harness/codex/**，接expectedVersion＋白名单defaults/readback＋实际pre-send id与原receipt；不写共享、不运行pytest。主会话独占原journal、装配与账本。Pi/Claude尚无生产确认端口，三家生命周期/core prepare/Node及CLI迁出缺口保持；AU003整体PARTIAL。
+
+本接缝追加真实InvocationIssuer＋SqliteStorePort贯通5项：首跑56P/5F exit1、0.71s，受控流程漏掉prepare/start原步骤结论，核心正确拒绝后续claim。补真实owner结果后的原step concluded记录，保持全部门和断言；最终同三文件61P/0F exit0、0.66s（配置29＋UnitRecords23＋journal9）。issue之后撤销authority/activation/Directory/epoch均无新配置attempt，原possibly-dispatched claim保留；原配置query不重发。C层贯通，不升级为三家P/M。

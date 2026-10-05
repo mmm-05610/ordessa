@@ -63,6 +63,12 @@ class NativeSessionEvidencePort(Protocol):
     def verify_binding(self, unit, creation_correlation, evidence) -> Mapping: ...
 
 
+class NativeConfigurationEvidencePort(Protocol):
+    """Original native receipt provenance, never a current-value equality test."""
+    def verify_configuration(self, unit, identity, native_request_id,
+                             native_request_digest, evidence) -> Mapping: ...
+
+
 class ManagementEpochPort(Protocol):
     def current_epoch(self, node_ref) -> int: ...
 
@@ -111,6 +117,29 @@ class RecordTicket:
         raise TypeError("record tickets cannot be serialized")
 
 
+class ConfigurationRecordTicket(RecordTicket):
+    """Original configuration dispatch capability; never reissued on replay."""
+
+
+@dataclass(frozen=True)
+class NativeConfigurationAttempt:
+    attempt_ref: str
+    identity_json: str
+    state: str
+    source_revision: int
+    native_request_id: str | int | None
+    native_request_digest: str | None
+    confirmation_json: str | None
+
+    @property
+    def identity(self):
+        return sealed_mapping(json.loads(self.identity_json))
+
+    @property
+    def confirmation(self):
+        return None if self.confirmation_json is None else sealed_mapping(json.loads(self.confirmation_json))
+
+
 def _digest(value):
     return hashlib.sha256(value.encode()).hexdigest()
 
@@ -121,14 +150,17 @@ def _correlation(facts):
 
 
 class UnitRecords:
-    def __init__(self, journal, *, scope_authority, native_evidence, verifier, epoch_port):
+    def __init__(self, journal, *, scope_authority, native_evidence, verifier, epoch_port,
+                 configuration_evidence=None):
         if (not isinstance(journal, OperationJournal) or any(p is None for p in
                 (scope_authority, native_evidence, verifier, epoch_port))):
             raise UnitRecordsRefused("existing journal and explicit authority ports required")
         self.journal = journal
         self.scope_authority, self.native_evidence = scope_authority, native_evidence
         self.verifier, self.epoch_port = verifier, epoch_port
+        self.configuration_evidence = configuration_evidence
         self._tickets = {}
+        self._configuration_tickets = {}
         authority = getattr(journal, '_unit_records_scope_authority', None)
         if authority is not None and authority is not scope_authority:
             raise UnitRecordsRefused("journal already has a different scope authority")
@@ -143,6 +175,14 @@ class UnitRecords:
                     state TEXT NOT NULL, source_revision INTEGER NOT NULL,
                     creation_correlation TEXT UNIQUE, native_json TEXT,
                     native_digest TEXT);
+                CREATE TABLE IF NOT EXISTS harness_unit_configuration_attempts (
+                    attempt_ref TEXT PRIMARY KEY,
+                    unit_ref TEXT NOT NULL REFERENCES harness_unit_reservations(unit_ref),
+                    correlation TEXT NOT NULL UNIQUE,
+                    identity_json TEXT NOT NULL, identity_digest TEXT NOT NULL,
+                    state TEXT NOT NULL, source_revision INTEGER NOT NULL,
+                    native_request_json TEXT, native_request_digest TEXT,
+                    confirmation_json TEXT, confirmation_digest TEXT);
             ''')
         # Retain one owner and one bound gate per journal object. The journal
         # owns the actual transactional admission cut; importing UnitRecords
@@ -154,7 +194,7 @@ class UnitRecords:
         if callable(installer):
             installer(journal._unit_records_admission_guard)
 
-    def _authorize(self, context, action, provider, node, digest, *, query=False):
+    def _authorize(self, context, action, provider, node, digest, *, query=False, epoch_target=None):
         facts = self.verifier.verify_and_consume(context, action, provider, node, digest)
         if (not isinstance(facts, Mapping) or facts.get('query') is not query
                 or facts.get('action') != action or facts.get('providerRef') != provider
@@ -162,7 +202,7 @@ class UnitRecords:
                 or type(facts.get('managementEpoch')) is not int
                 or facts['managementEpoch'] < 0):
             raise UnitRecordsRefused("verified invocation facts differ")
-        if self._epoch(node) != facts['managementEpoch']:
+        if self._epoch(node if epoch_target is None else epoch_target) != facts['managementEpoch']:
             raise UnitRecordsRefused("management epoch changed")
         return facts
 
@@ -316,6 +356,169 @@ class UnitRecords:
         self.read_unit(unit_ref, context, input_digest=input_digest)
         with self.journal._connect() as db:
             return self._binding(db, unit_ref)
+
+    def _configuration_attempt(self, db, attempt_ref):
+        row = db.execute('SELECT * FROM harness_unit_configuration_attempts WHERE attempt_ref=?',
+                         (attempt_ref,)).fetchone()
+        if (row is None or row['identity_digest'] != _digest(row['identity_json'])
+                or row['state'] not in ('opening', 'unknown', 'confirmed')
+                or type(row['source_revision']) is not int or row['source_revision'] < 1):
+            raise UnitRecordsRefused('configuration attempt missing or damaged')
+        identity = json.loads(row['identity_json'])
+        if (row['unit_ref'] != identity['unitRef']['unitId'] or row['correlation'] != identity['correlation']
+                or (row['native_request_json'] is None) != (row['native_request_digest'] is None)
+                or (row['confirmation_json'] is not None) != (row['state'] == 'confirmed')):
+            raise UnitRecordsRefused('configuration attempt binding damaged')
+        unit = self._unit(db, row['unit_ref'])
+        if (identity['scopeRef'] != unit.scope_ref.to_dict()
+                or identity['providerRef'] != unit.facts['providerRef']):
+            raise UnitRecordsRefused('configuration scope or owner changed')
+        native_id = None
+        if row['native_request_json'] is not None:
+            captured = json.loads(row['native_request_json'])
+            native_id = captured.get('requestId') if isinstance(captured, dict) else None
+            native_digest = row['native_request_digest']
+            if (not isinstance(captured, dict) or set(captured) != {'requestId'}
+                    or type(native_id) not in (str, int)
+                    or isinstance(native_id, str) and (not native_id or len(native_id) > 256)
+                    or not isinstance(native_digest, str) or len(native_digest) != 71
+                    or not native_digest.startswith('sha256:')
+                    or any(c not in '0123456789abcdef' for c in native_digest[7:])):
+                raise UnitRecordsRefused('native configuration request binding damaged')
+        if row['state'] == 'confirmed':
+            if row['confirmation_digest'] != _digest(row['confirmation_json']):
+                raise UnitRecordsRefused('configuration confirmation damaged')
+            self._verify_configuration_confirmation(unit, identity, native_id,
+                row['native_request_digest'], json.loads(row['confirmation_json'])['evidenceRef'],
+                expected=row['confirmation_json'])
+        return NativeConfigurationAttempt(row['attempt_ref'], row['identity_json'], row['state'],
+            row['source_revision'], native_id, row['native_request_digest'], row['confirmation_json'])
+
+    def begin_configuration_change(self, unit_ref, context, *, input_digest, expected_revision):
+        """Persist original batch intent before any native write; no plaintext payload.
+
+        This does not compare the actual native revision: the provider must do
+        so under its canonical owner lock immediately before dispatch. One batch
+        has one native write ID; individual setters need distinct captured steps.
+        An existing attempt can only be queried, never receive a new ticket.
+        """
+        if not callable(getattr(self.configuration_evidence, 'verify_configuration', None)):
+            raise UnitRecordsRefused('native configuration evidence port unavailable')
+        if not isinstance(expected_revision, str) or not expected_revision or len(expected_revision) > 512:
+            raise UnitRecordsRefused('native expected revision required')
+        with self.journal._connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            unit = self._unit(db, unit_ref)
+            if self._binding(db, unit_ref).state != 'confirmed':
+                raise UnitRecordsRefused('confirmed native unit required')
+            facts = self._authorize(context, 'applyConfiguration', unit.facts['providerRef'],
+                unit.scope_ref.to_dict(), input_digest, epoch_target=unit.facts['nodeRef'])
+            if facts['managementEpoch'] != unit.facts['managementEpoch']:
+                raise UnitRecordsRefused('unit management epoch changed')
+            correlation = _correlation(facts)
+            if db.execute('SELECT 1 FROM harness_unit_configuration_attempts WHERE correlation=?',
+                          (correlation,)).fetchone():
+                raise UnitRecordsRefused('existing configuration attempt cannot dispatch again')
+            if db.execute("SELECT 1 FROM harness_unit_configuration_attempts WHERE unit_ref=? AND state IN ('opening','unknown')",
+                          (unit_ref,)).fetchone():
+                raise UnitRecordsRefused('unknown configuration attempt retains scope fence')
+            identity = safe_json({'unitRef': {'environmentNamespace': unit.scope_ref.environment_namespace,
+                'unitId': unit_ref}, 'scopeRef': unit.scope_ref.to_dict(), 'providerRef': unit.facts['providerRef'],
+                'correlation': correlation, 'operationRef': facts['operationRef'], 'requestDigest': input_digest,
+                'expectedRevision': expected_revision, 'managementEpoch': facts['managementEpoch']})
+            attempt_ref = 'configuration-' + uuid4().hex
+            db.execute('INSERT INTO harness_unit_configuration_attempts VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                (attempt_ref, unit_ref, correlation, identity, _digest(identity), 'opening', 1, None, None, None, None))
+            db.commit()
+        ticket = object.__new__(ConfigurationRecordTicket)
+        self._configuration_tickets[id(ticket)] = (ticket, unit, attempt_ref, facts['managementEpoch'])
+        return ticket
+
+    def _configuration_ticket(self, ticket):
+        entry = self._configuration_tickets.get(id(ticket))
+        if type(ticket) is not ConfigurationRecordTicket or entry is None or entry[0] is not ticket:
+            raise UnitRecordsRefused('configuration ticket is not owned by this journal instance')
+        if self._epoch(entry[1].facts['nodeRef']) != entry[3]:
+            raise UnitRecordsRefused('configuration ticket epoch expired')
+        return entry
+
+    def bind_configuration_dispatch(self, ticket, *, native_request_id, native_request_digest):
+        """Must finish in the transport pre-send hook, before its actual write.
+
+        No replacement binding even if the first write failed or timed out.
+        Current invocation authority still needs a separate per-write barrier.
+        """
+        _, unit, attempt_ref, _ = self._configuration_ticket(ticket)
+        if (type(native_request_id) not in (str, int) or isinstance(native_request_id, str)
+                and (not native_request_id or len(native_request_id) > 256)
+                or not isinstance(native_request_digest, str) or not native_request_digest.startswith('sha256:')
+                or len(native_request_digest) != 71
+                or any(c not in '0123456789abcdef' for c in native_request_digest[7:])):
+            raise UnitRecordsRefused('exact native request identity and digest required')
+        with self.journal._connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            attempt = self._configuration_attempt(db, attempt_ref)
+            if self._unit(db, unit.unit_ref) != unit or attempt.state != 'opening' or attempt.native_request_id is not None:
+                raise UnitRecordsRefused('native configuration dispatch already bound or terminal')
+            db.execute('UPDATE harness_unit_configuration_attempts SET native_request_json=?,native_request_digest=?,source_revision=source_revision+1 WHERE attempt_ref=?',
+                (safe_json({'requestId': native_request_id}), native_request_digest, attempt_ref))
+            db.commit()
+            return self._configuration_attempt(db, attempt_ref)
+
+    def _verify_configuration_confirmation(self, unit, identity, native_id, native_digest, evidence, *, expected=None):
+        verifier = getattr(self.configuration_evidence, 'verify_configuration', None)
+        if not callable(verifier) or native_id is None:
+            raise UnitRecordsRefused('original native configuration confirmation unavailable')
+        proof = verifier(unit, sealed_mapping(identity), native_id, native_digest, evidence)
+        required = {'operationRef', 'unitRef', 'scopeRef', 'requestDigest',
+                    'nativeRequestId', 'nativeRequestDigest', 'evidenceRef'}
+        if (not isinstance(proof, Mapping) or set(proof) != required
+                or any(proof[key] != identity[key] for key in ('operationRef','unitRef','scopeRef','requestDigest'))
+                or proof['nativeRequestId'] != native_id or type(proof['nativeRequestId']) is not type(native_id)
+                or proof['nativeRequestDigest'] != native_digest
+                or not isinstance(proof['evidenceRef'], str) or not proof['evidenceRef']):
+            raise UnitRecordsRefused('configuration confirmation identity differs')
+        encoded = safe_json(proof)
+        if expected is not None and expected != encoded:
+            raise UnitRecordsRefused('configuration native owner evidence changed')
+        return encoded
+
+    def record_configuration_change(self, ticket, *, expected_source_revision, state, evidence=None):
+        _, unit, attempt_ref, _ = self._configuration_ticket(ticket)
+        if state not in ('unknown', 'confirmed') or state == 'unknown' and evidence is not None:
+            raise UnitRecordsRefused('unknown cannot claim configuration confirmation')
+        with self.journal._connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            attempt = self._configuration_attempt(db, attempt_ref)
+            if (self._unit(db, unit.unit_ref) != unit or type(expected_source_revision) is not int
+                    or attempt.source_revision != expected_source_revision or attempt.state == 'confirmed'):
+                raise UnitRecordsRefused('configuration attempt terminal or revision conflict')
+            proof = None if state == 'unknown' else self._verify_configuration_confirmation(unit,
+                attempt.identity, attempt.native_request_id, attempt.native_request_digest, evidence)
+            db.execute('UPDATE harness_unit_configuration_attempts SET state=?,source_revision=source_revision+1,confirmation_json=?,confirmation_digest=? WHERE attempt_ref=?',
+                (state, proof, None if proof is None else _digest(proof), attempt_ref))
+            db.commit()
+            result = self._configuration_attempt(db, attempt_ref)
+        if state == 'confirmed':
+            del self._configuration_tickets[id(ticket)]
+        return result
+
+    def query_configuration_change(self, unit_ref, operation_ref, context, *, input_digest):
+        """Read the original attempt under query authority; never infer from current config."""
+        with self.journal._connect() as db:
+            unit = self._unit(db, unit_ref)
+            facts = self._authorize(context, 'query', unit.facts['providerRef'], unit.scope_ref.to_dict(),
+                input_digest, query=True, epoch_target=unit.facts['nodeRef'])
+            if facts['operationRef'] != operation_ref:
+                raise UnitRecordsRefused('query operation identity differs')
+            row = db.execute('SELECT attempt_ref FROM harness_unit_configuration_attempts WHERE correlation=? AND unit_ref=?',
+                (_correlation(facts), unit_ref)).fetchone()
+            if row is None:
+                raise UnitRecordsRefused('original configuration attempt unavailable')
+            attempt = self._configuration_attempt(db, row['attempt_ref'])
+            if attempt.identity['requestDigest'] != input_digest:
+                raise UnitRecordsRefused('query configuration digest differs')
+            return attempt
 
     def can_admit_legacy(self, db, legacy_target):
         """Pure gate for old reserve_new's existing BEGIN IMMEDIATE transaction.
