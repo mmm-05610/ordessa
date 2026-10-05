@@ -1,28 +1,27 @@
 from pacthold.extensions import PLUGIN_API_VERSION, PluginContext
+import pytest
+from ordessa_environment_api import GuaranteeUnavailableError
 from ordessa_harness.codex.contracts import CodexContinuationV1
 from ordessa_harness.plugin import create_plugin
 
 
-def test_registers_codex_app_server_execution_provider_without_discovery_writes(
+def test_retired_codex_metadata_has_no_runtime_or_discovery_writes(
     tmp_path,
 ):
     context = PluginContext("1.9.0", tmp_path, tmp_path / "plugins" / "codex")
 
     plugin = create_plugin()
     descriptor = plugin.descriptor()
-    registration = plugin.build(context)
-
     assert descriptor.id == "codex"
     assert descriptor.api_version == PLUGIN_API_VERSION
-    assert registration.contracts == ()
-    assert registration.resource_providers == ()
-    assert len(registration.execution_providers) == 1
-    assert [control.provider_id for control in registration.host_controls] == ["codex-execution"]
-    provider = registration.execution_providers[0]
-    assert provider.descriptor().id == "codex-execution"
-    assert provider.input_limits() == {"agent-box.skill@1": (0, 32)}
-    assert [selector.id for selector in registration.resource_selectors] == ["codex-profile-selector"]
+    # AU003 retires the whole compat registration, including its control and
+    # selector. The independent provider's positive route is tested through
+    # CoreRegistry in test_codex_assembly.py, not this historical facade.
+    with pytest.raises(GuaranteeUnavailableError, match="independent provider"):
+        plugin.build(context)
     assert not context.plugin_data_dir.exists()
+    assert not (context.agent_box_home / "profiles").exists()
+    assert list(tmp_path.iterdir()) == []
 
 
 def test_codex_continuation_contract_is_plugin_owned():

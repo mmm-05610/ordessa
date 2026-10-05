@@ -1,12 +1,18 @@
 from __future__ import annotations
 from dataclasses import dataclass
+from ordessa_environment_api import GuaranteeUnavailableError
 from pacthold.work_core import ExecutionStartReceipt, ExecutionStartRequest, ProviderDescriptor, Ref, RefType
 from pacthold_runtime_compat.runtime_composition import assemble_runtime_composition
 @dataclass
 class GenericHandle:
     request: object; runtime: object; command: object; submitted: bool=False
 class GenericExecutionProvider:
-    def __init__(self,definition,adapter): self.definition,self.adapter=definition,adapter; self.provider_id=f"{definition.harness_type}-execution"; self._handles={}
+    def __init__(self, definition, adapter):
+        if definition.harness_type in ('codex', 'pi', 'claude-code'):
+            raise GuaranteeUnavailableError('Migrated Harness runtime requires explicit independent provider admission')
+        self.definition, self.adapter = definition, adapter
+        self.provider_id = f"{definition.harness_type}-execution"
+        self._handles = {}
     def descriptor(self): return ProviderDescriptor(self.provider_id,self.definition.display_name+" execution",self.definition.identity.version)
     def capabilities(self): return {key:"supported" for key in self.definition.capabilities}
     def input_limits(self): return {x.contract_id:(x.minimum,x.maximum) for x in self.definition.inputs}

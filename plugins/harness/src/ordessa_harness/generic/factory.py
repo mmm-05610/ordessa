@@ -1,5 +1,6 @@
 from __future__ import annotations
 from pacthold.extensions import PluginDescriptor
+from ordessa_environment_api import GuaranteeUnavailableError
 from pacthold_runtime_compat.api import PluginRegistration, ProviderHostControl
 from pacthold_runtime_compat.profile_envelope import ProfileEnvelopeManager
 from pacthold_runtime_compat.resource_contracts import AgentBoxProfileV1
@@ -12,6 +13,8 @@ from .profile_manager import GenericProfileManager
 from .execution_provider import GenericExecutionProvider
 
 def build_registration(context, harness_type: str | None = None):
+    if harness_type in ('codex', 'pi', 'claude-code'):
+        raise GuaranteeUnavailableError('Migrated Harness runtime requires explicit independent provider admission')
     registry=load_builtin_registry(); definition=registry.get(harness_type) if harness_type else None
     # The shared provider is deliberately the only component which owns profile persistence.
     store=ProfileStore(context.agent_box_home/"profiles", validator=(lambda h,p: ADAPTERS[registry.get(h).driver].validate_native_payload(p)))

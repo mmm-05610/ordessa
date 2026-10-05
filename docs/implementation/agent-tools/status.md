@@ -542,3 +542,13 @@ Codex只读终审确认_none/类型身份/原操作未知与重放未旁路，ap
 主会话串行，PY=.venv-ordessa-py312/bin/python完整路径/命令见上述证据：Codex166P exit0、2.14s；Pi213P exit0、3.19s；Claude149P exit0、7.84s；ownership7P exit0、0.13s；其余七家+运输113P exit0、25.92s；发行/fresh wheel/fresh venv CLI9P exit0、7.87s。均C，实际Python peers/HTTP不冒原生P/M。无pytest失败，全部句柄terminal。五工单strict/diff-check/hash exit0仅结构；本轮无Core/server/三家协议实现变动，历史Core269P/3F仍红，不声称新全Core绿。
 
 审阅揭示旧entrypoints/genericfactory/plugin facade仍有三家直接runtime路线，model bridge/plugin/live_service与Server聚合也仍需迁移，自动entrypoint去掉不足以证明旧三家无法启用。下一串行切片封住直接旧factory，另保品牌纯配置/附件/部署能力再迁。生产owner/授权/材料/冷恢复/生命周期、节点wire/按request查找unknown操作、三Skill/全发行/真实P与M仍缺。整体AU002–005 PARTIAL，M0，缺资源ABSENT。未第三方安装更新/登录/用户数据/凭据/全局配置/服务操作/push/合并主树，费用unknown。显式纳入本轮源码删除、独立测试修正、两证据、README、边界门及status检查点后继续，不缩小goal。
+
+### 2026-10-05 AU003 旧直接工厂退役（PARTIAL）
+
+前置7f7332b288，保留主会话上一切片factory/plugin/新反例未提交成果；本轮live agents均completed，没有另一共享写者。前一状态问答为no progress，仅核查记录；本轮继续实际修改、复验和记账。主会话独占源码/Git/测试/账本，Codex只读审阅。旧genericfactory三家在registry/context/storage前typed拒，旧named/default entry同拒，HarnessesPlugin不再注册旧runtime/credential。metadata/continuation与持久ID不变，未迁四个genericfamily及ProfileStore构造正控保留，不混同暂存七家clients。
+
+完整命令、旧测试迁移依据、失败修正和证据边界：[retired-direct-factories.md](retired-direct-factories.md)。guard前新8门0P/8F exit1、0.20s；guard后旧注册期待38P/2F exit1、0.61s；迁移旧测试且补正控，误用definition.provider_id导致41P/4F exit1、0.76s，修为原稳定ID，源码不放宽。最终factory/identity/metadata/continuation/ProfileStore47P/0F exit0、0.70s；独立Codex原Core/SQLite/UnitRecords正反例＋wheel自动发现门＋runtime admission33P/0F exit0、5.09s。新增13项，不累加快照；所有句柄terminal。无skip/恢复compat；正提供者经新核心接入实际复跑。
+
+本切片只完成直接factory退役，旧modelplugin/bridge/live_service、Server/native_runtime及server_acp仍需迁，独有品牌能力未删。无三家协议/Core/CLI源码变更，不冒本轮全回归。历史Core3红仍登记。生产权限/材料/证据owner/冷恢复/全生命周期、节点wire/unknown按request恢复、tasks/results/三Skill/全纵向发行仍PARTIAL；C不是原生P或模型M，M0，资源ABSENT。未第三方安装更新/登录/用户数据/凭据/全局配置/服务操作/push/主树合并，费用unknown。核对并显式stage本轮文件形成检查点后继续。
+
+Codex只读复核无宽拒/metadata丢失/测试绿化，但发现GenericExecutionProvider构造仍可绕factory传三家definition。主会话加同型构造拒绝＋3个builtin definition反例，未碰adapter/source协议；全树直接消费仅generic.factory。第一个定向组合末端再跑50P/0F exit0、0.67s，新增门16项。33项结果在此构造器补强前，不声称已重跑；model/Server旧路继续登记待迁。五工单strict与diff-check exit0仅资料门，所有句柄terminal。显式纳入切片检查点后继续。
