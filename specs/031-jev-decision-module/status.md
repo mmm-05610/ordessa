@@ -123,3 +123,7 @@ JD007 没有要求旧家族必须新增能力：旧 provider unsupported 是验�
 [新源码离线复验](evidence/zen-offline-20261005/README.md)：211 passed，67 场景分别通过，固定基线/当前 57 个核心 ID 一致。首次完整测试 210P/1F 为旧 wheel，保留失败，经正常离线重建后 211P；不删断言/skip。所有先前回执保留为历史，以最新 source_digest 为本次实现证据。
 
 JD001–JD008 OFFLINE_VERIFIED；JD009 PARTIAL（真实配置家族 opt-out/unsupported），JD010 PARTIAL（真实质量与未验证项）；all_work_complete=false。完整 Server/Harness 继承失败未重跑、Python 3.10/断电/远程 FS/真实家族实际应用未验证。没有其他工作树写入、服务重启、DB 迁移、merge/push。
+
+## 正确逐维绑定补充（检查点后不停工）
+
+继续使用剩余额度，对 vague/single-result 各以原编译器逐问题 bounded_state 发 6 次请求；规则/任务/标签/阈值不变。vague clarify 符合标签，single-result 仍 clarify，问题 acceptance_unknown/delegation_unknown。原失败保留，T60 仍 PARTIAL。真实请求累计最终 62/64，reported usage 更新为 32611 input + 2540 output；1 个超时的 usage/服务端完成仍未知。正确状态输入、原脚本/配置快照和答案已保留在 Jev 证据 bound-state-controls。剩余 2 attempts 不足跑另一个六维场景；追加真实评测须另定预算。

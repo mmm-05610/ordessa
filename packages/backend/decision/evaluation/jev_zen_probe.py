@@ -77,7 +77,7 @@ async def main(args):
                 await ctx.deps.enter_node('EvaluateSyntheticCase')
                 for qid,wire in case['questions'].items():
                     kwargs={'options':wire['criteria']} if wire['type']=='choice' else {'scale':tuple(wire['criteria'])} if wire['type']=='score' else {}
-                    question=DecisionQuestion(qid,'1',wire['type'],case['state'],wire['instructions'],policy_ref=policy,**kwargs)
+                    question=DecisionQuestion(qid,'1',wire['type'],wire.get('state',case['state']),wire['instructions'],policy_ref=policy,**kwargs)
                     await ctx.deps.gateway.decide(question)
                 return BusinessOutcome('clarify',issues=({'code':'evaluation_only_no_proposal'},))
             builder.add(builder.edge_from(builder.start_node).to(evaluate),builder.edge_from(evaluate).to(builder.end_node))

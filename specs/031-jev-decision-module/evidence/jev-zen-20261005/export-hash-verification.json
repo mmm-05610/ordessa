@@ -1,196 +1,239 @@
 {
   "runs": [
     {
+      "run_id": "3dc8a62c-bb36-413f-8fd7-fc2c5d2d03b1",
+      "status": "completed",
+      "events": 14,
+      "digest": "sha256:e9b9c5a508433935e434498cfcc429b8f0e1a9ca6d75e5d79562d9ee5d4e974d",
+      "verified": true,
+      "snapshot_code_binding": true
+    },
+    {
+      "run_id": "5b218ad0-1d80-47bc-8353-fe9ceb141013",
+      "status": "completed",
+      "events": 14,
+      "digest": "sha256:beab22df58558792eb2bac0132b0a5fdbc73b0c1f4333b2a922aa0452ac6fde2",
+      "verified": true,
+      "snapshot_code_binding": true
+    },
+    {
       "run_id": "870f1e8d-56c7-4d73-9071-8f8db2971337",
       "status": "failed",
       "events": 3,
       "digest": "sha256:baa1c3fc915b26431fba99fd1adba897895dd2317a816dd7e4d092b9d56a85a5",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "09cf70e6-e8e8-4690-998d-2647646531c4",
       "status": "completed",
       "events": 4,
       "digest": "sha256:6e6876278734d1d8b06509efd153aa9eb00a73cd975b964685efafc4adc83cc3",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "0a1f8674-213f-40a3-9509-71f9536b5885",
       "status": "completed",
       "events": 14,
       "digest": "sha256:b6e697fc28296eb3007104634e4d744c02f65d4f4b2be3d62795672a0650d532",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "33d7544f-627a-49c1-bddc-03f3efe447a9",
       "status": "completed",
       "events": 4,
       "digest": "sha256:22a8ddc12474f9253b78038f5cebd2c6ce52d2d5667cda2b3046dcdf8a69924f",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "44b3c8a8-d953-476f-a40d-d6f88da751df",
       "status": "completed",
       "events": 4,
       "digest": "sha256:1ea98f57bafed4a52cd9f81ca6b2cb72c665c5e67620511b7a99bd915aa071f7",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "4ceb1443-0020-491d-96fb-e9af4b528f50",
       "status": "completed",
       "events": 4,
       "digest": "sha256:002aa120b7b2b7c75695c770c772a6f4c1fca98d2cc8822b81638a8b888183da",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "595fd6ca-49db-4f59-99a0-7d50d146896a",
       "status": "completed",
       "events": 14,
       "digest": "sha256:92c1e7805f335ba648e67d88c62dfe448f04645e307877881a9259f44418695d",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "66bbb17b-71da-467c-a0e6-e90e3f92df33",
       "status": "completed",
       "events": 4,
       "digest": "sha256:45331e6596a16d9723da5f25507d8b2996938a0cc1bf816b1996b614b455d18d",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "724b0e2a-a019-4194-a8b8-87f011741826",
       "status": "completed",
       "events": 4,
       "digest": "sha256:c008c631b1aea8233aa5b37967361402e2fd27fb34cc22b97d3f653eb2b683a7",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "7d5147c6-3c04-4e24-817c-2c9c9fa175e1",
       "status": "completed",
       "events": 14,
       "digest": "sha256:c627672476c1b59d5e6d7a023198d656ed7ba97aa0459eb59ba9e6885f726afa",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "7dd66e3c-852a-412b-9528-9343b901cc87",
       "status": "completed",
       "events": 4,
       "digest": "sha256:e553c8be32ac01a2be377404c27d71b60282f86c97a7c08eeec1370f08c5205a",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "82e3baef-d361-4c81-9f40-09013e668b8f",
       "status": "completed",
       "events": 4,
       "digest": "sha256:610a3cf17f9196087376d1290899c6a028ecb5ed18ee78ea587860421015a769",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "84da1f80-6776-4bae-913a-9780c9044536",
       "status": "failed",
       "events": 3,
       "digest": "sha256:ba7a99f3867838474114b33930a3d92c0738521bc5e58d2e04622e57dbab085a",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "a0e76eeb-0428-4b4e-861d-eec512f8f057",
       "status": "completed",
       "events": 4,
       "digest": "sha256:d0c3435666488e3be7900bfef61188eb60dfb473e05322f0f224b2789a6719d4",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "b7531ca9-0380-4c20-8026-9bbbed38950b",
       "status": "completed",
       "events": 2,
       "digest": "sha256:79620d270d210dc5c7388f87b3a970448fa78d6d7b8c693565676de48a57e9b3",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "ba380607-d2ec-4028-9c75-e70afd6c9820",
       "status": "completed",
       "events": 4,
       "digest": "sha256:51ee756c42922c916a58ca091c91ea476111c6bce0eea5f2131df388f314b16d",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "c153c3c8-6e29-45cf-bde5-9926298236fd",
       "status": "completed",
       "events": 4,
       "digest": "sha256:da389a0491bbaca1e1d64ff24d0303574dfd8077855bd8813406fdc5cbd06cea",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "c183d3bc-77bd-4908-933b-0d67d6a21d74",
       "status": "completed",
       "events": 4,
       "digest": "sha256:6ddc916a6d5bc783bbec085b70c829b7a7361834c6684f0750463476163b23e4",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "c8615450-a03f-4e38-a093-7045f074b62a",
       "status": "completed",
       "events": 8,
       "digest": "sha256:fb75f3d8a3a6c5527c1f3eeaf13aa5ccff17cc292c66d294486faf1ef4bc99f0",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "d1cbd37f-92be-46c1-aef5-b6bf61e75b26",
       "status": "completed",
       "events": 4,
       "digest": "sha256:613519d2140a6fe5f8e8a3bb9cd589f31ee3d9ccffa3e25eb910af862adfac8b",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "d6134f15-d6f1-4429-b35d-47ef63f98ad2",
       "status": "completed",
       "events": 8,
       "digest": "sha256:7d30a0198da80dbd3e270bbd8ebabab2b4b288bac728070f6b052c94b06d2d9b",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "dacd5a2e-b80c-4143-8f67-51c0340b1efc",
       "status": "completed",
       "events": 14,
       "digest": "sha256:fcbfd8987db8e976259d3935bc09516a2d4a7f337f2c3259a6b325709a1b3bb3",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "db102349-c158-4d23-ab3f-8a394f2c4b16",
       "status": "completed",
       "events": 4,
       "digest": "sha256:5a505af867781a70bcfda98f50d36db06773c0ebf30c689d0df0644ccd8ed694",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "df2166fe-6c05-41f8-84aa-c4dc2678025a",
       "status": "completed",
       "events": 4,
       "digest": "sha256:9a39ecb97a2c9d6f84b057fe950aa14f2eec5483a7177fbcadabc4d926f8be43",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "f0433c68-4afa-48d4-b18e-77e78c868078",
       "status": "completed",
       "events": 4,
       "digest": "sha256:e0b0e14c9ecf8982563ea4c51af427c631fb7b724825a31bc7584c43162a9156",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "f1304b09-b4b5-4019-8cea-0e369b1a737d",
       "status": "completed",
       "events": 4,
       "digest": "sha256:08251ac20e2fb9131d9a46aee84ce14af157b8a348516c98ff47a3565f3e92d9",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     },
     {
       "run_id": "f79d5a83-c7b8-4363-b8bc-1bd081547948",
       "status": "completed",
       "events": 4,
       "digest": "sha256:21599547dce37873b0b2f26939fe14c215aa1a28057c5971ce7be10c4f3c0235",
-      "verified": true
+      "verified": true,
+      "snapshot_code_binding": null
     }
   ],
-  "count": 27,
+  "count": 29,
   "result": "PASSED",
-  "scope": "hash chain and exact terminal/commit binding; not model quality"
+  "scope": "hash chain and exact terminal/commit binding; bound-state controls also verify exact source/config snapshot digest; not model quality"
 }

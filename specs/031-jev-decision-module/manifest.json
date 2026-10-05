@@ -962,11 +962,16 @@
     },
     "liveEvaluation": {
       "receipt": "evidence/jev-zen-20261005/summary.json",
-      "actualHttpRequests": 50,
+      "actualHttpRequests": 62,
       "retainedModelCaseLabelMatches": 22,
       "retainedModelCasesScored": 23,
       "status": "PARTIAL",
-      "nativeEffects": 0
+      "nativeEffects": 0,
+      "boundStateControls": {
+        "cases": 2,
+        "matched": 1,
+        "requests": 12
+      }
     },
     "localLayaEvaluation": {
       "receipt": "evidence/laya-local-20261005/summary.json",

@@ -2,7 +2,7 @@
 
 用户指定 opencode_zen 凭据、https://opencode.ai/zen/v1/systemone 与 jev-1.13-free，另授权将凭据移至私有目录。官方路由说明见 https://opencode.ai/docs/zen/#jev；无付费 fallback、重试或 Harness 调用。
 
-**T60 / JD010 PARTIAL，不宣布质量门通过。** 官方 typesafe-sdk 0.7.2 + 原 pydantic-graph 2.54.0 + 模块 gateway + 本地持久证据实际运行。实际请求 50 次（上限 64）：鉴权冒烟 1、首场景 3、其余场景 45、规定兜底 ID 的大候选补充 1。有时长回执的恢复评测 42.23 秒、容量补充 10.05 秒、鉴权 1.28 秒；首次三次请求未留存时长；每请求 10 秒上限、重试 0。账单费用 UNKNOWN，不能将官方标称免费写成已核算零费用。
+**T60 / JD010 PARTIAL，不宣布质量门通过。** 官方 typesafe-sdk 0.7.2 + 原 pydantic-graph 2.54.0 + 模块 gateway + 本地持久证据实际运行。实际请求最终 62 次（上限 64）：鉴权冒烟 1、首场景 3、其余场景 45、规定兜底 ID 的大候选补充 1、正确逐维绑定补充 12。有时长回执的恢复评测 42.23 秒、容量补充 10.05 秒、鉴权 1.28 秒；首次三次请求未留存时长；每请求 10 秒上限、重试 0。账单费用 UNKNOWN，不能将官方标称免费写成已核算零费用。
 
 有完整答案的 23 个模型场景中 22 个符合推理前固定标签；另一个零模型硬拒绝不能算模型成绩。明确任务六维单独对照均 pass；中文布尔正反例及英文正例、候选顺序、未知配置与注入小样本的答案见回执。单交付任务 gate-single-result 仍 clarify，问题为 acceptance_expression/delegation_unknown；未改标签或降低阈值。这不是总体质量百分比，也不能仅据这些样本判定生产成熟。
 
@@ -17,3 +17,9 @@
 凭据只在请求进程内读取，未写入证据/日志/Git。用户授权后迁移到 /home/maoqh/.codex/private-vault/opencode_zen，目录 0700、文件 0600；本树原文件已不存在。没有服务重启、其他工作树写入、用户 DB 迁移、merge/push。
 
 复验代码：packages/backend/decision/evaluation/jev_zen_probe.py。必须另明确实时授权、费用和累计尝试范围，传 --authorize-live 与 --credential-file；不是默认离线入口，不自动调用。current gateway profile 只允许本次已观测到的 jev-1.13-free 响应身份；正式默认 provider/业务规则未换成 Laya。
+
+## 正确逐维状态的后续复验
+
+检查点后继续推进剩余额度，使用 compile_task_gate 已生成的每个问题自己的 bounded_state，未改任务文本、rubric、标签或阈值。gate-vague 六个问题仍 clarify（符合标签）；gate-single-result 六个问题仍 clarify（不符合 pass 标签，acceptance_unknown/delegation_unknown）。这两组补充共 12 次 HTTP；与先前原状态测试是不同 question digest 的对照，不是超时重试。原报告保留，不用新对照替换/删除旧失败。最终跨进程累计 62 请求，2 次剩余额度不足运行另一个六维场景；不超上限继续调用。
+
+[逐维固定输入](bound-state-controls/input.json) · [答案和 usage](bound-state-controls/run/receipt.json) · [本次实际脚本快照](bound-state-controls/evaluated-runner.txt) · [实际配置快照](bound-state-controls/evaluated-settings.json)。该局部脚本里的 total_http_requests_including_prior_probe 仅为其局部计数，跨进程以 summary.json 四项旧账本及新增逐维项为准。

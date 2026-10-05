@@ -1,0 +1,89 @@
+{
+  "http_requests": [
+    {
+      "attempt": 1,
+      "method": "POST",
+      "endpoint": "https://opencode.ai/zen/v1/systemone",
+      "http_status": 200,
+      "seconds_to_headers": 1.6464
+    },
+    {
+      "attempt": 2,
+      "method": "POST",
+      "endpoint": "https://opencode.ai/zen/v1/systemone",
+      "http_status": 200,
+      "seconds_to_headers": 0.9849
+    },
+    {
+      "attempt": 3,
+      "method": "POST",
+      "endpoint": "https://opencode.ai/zen/v1/systemone",
+      "http_status": 200,
+      "seconds_to_headers": 0.6445
+    },
+    {
+      "attempt": 4,
+      "method": "POST",
+      "endpoint": "https://opencode.ai/zen/v1/systemone",
+      "http_status": 200,
+      "seconds_to_headers": 1.9283
+    },
+    {
+      "attempt": 5,
+      "method": "POST",
+      "endpoint": "https://opencode.ai/zen/v1/systemone",
+      "http_status": 200,
+      "seconds_to_headers": 0.6232
+    },
+    {
+      "attempt": 6,
+      "method": "POST",
+      "endpoint": "https://opencode.ai/zen/v1/systemone",
+      "http_status": 200,
+      "seconds_to_headers": 0.5765
+    },
+    {
+      "attempt": 7,
+      "method": "POST",
+      "endpoint": "https://opencode.ai/zen/v1/systemone",
+      "http_status": 200,
+      "seconds_to_headers": 0.6448
+    },
+    {
+      "attempt": 8,
+      "method": "POST",
+      "endpoint": "https://opencode.ai/zen/v1/systemone",
+      "http_status": 200,
+      "seconds_to_headers": 0.7024
+    },
+    {
+      "attempt": 9,
+      "method": "POST",
+      "endpoint": "https://opencode.ai/zen/v1/systemone",
+      "http_status": 200,
+      "seconds_to_headers": 0.7057
+    },
+    {
+      "attempt": 10,
+      "method": "POST",
+      "endpoint": "https://opencode.ai/zen/v1/systemone",
+      "http_status": 200,
+      "seconds_to_headers": 0.7001
+    },
+    {
+      "attempt": 11,
+      "method": "POST",
+      "endpoint": "https://opencode.ai/zen/v1/systemone",
+      "http_status": 200,
+      "seconds_to_headers": 0.6421
+    },
+    {
+      "attempt": 12,
+      "method": "POST",
+      "endpoint": "https://opencode.ai/zen/v1/systemone",
+      "http_status": 200,
+      "seconds_to_headers": 0.6116
+    }
+  ],
+  "no_retry": true
+}
