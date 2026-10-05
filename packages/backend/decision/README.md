@@ -44,5 +44,9 @@ Async cancellation propagates; timeout is cooperative and cannot hard-kill
 blocking or cancellation-suppressing trusted code. Host closes shared clients and
 sinks. Evidence uncertainty carries a safe run ID for authorised read/query only.
 
-Real Jev quality, real Harness operation and real family configuration support are
-not claimed. See the spec status and per-scenario evidence ledger for tested scope.
+Real Jev synthetic evaluation through the separately authorized OpenCode Zen free
+route is PARTIAL; model labels/capacity timeout remain recorded. Host settings bind
+requested model and a finite response-model allowlist in the provider digest. The
+evaluation profile and explicit opt-in runner live in evaluation/, with no default
+live execution. Real Harness operation and real family effects are unverified. See
+the spec status and per-scenario evidence ledger for tested scope.

@@ -1,0 +1,263 @@
+{
+  "status": "SCOPED_SMOKE_ONLY",
+  "model": "Laya multilingual",
+  "sdk": "0.3.20",
+  "calls": 13,
+  "questions": 37,
+  "load_seconds": 8.852917137031909,
+  "total_seconds": 10.361286708037369,
+  "quality_passed": 6,
+  "case_count": 14,
+  "rows": [
+    {
+      "id": "primitive-zh",
+      "expected": {
+        "department": "billing",
+        "churn_min": 0.5
+      },
+      "seconds": 1.1147,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [
+        "jev_1e-6_probability_sum"
+      ],
+      "actual": {
+        "department": "billing",
+        "urgency_score": 1.1983,
+        "churn_probability": 0.0972
+      },
+      "quality_pass": false
+    },
+    {
+      "id": "primitive-en",
+      "expected": {
+        "department": "billing",
+        "churn_min": 0.5
+      },
+      "seconds": 0.0148,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [],
+      "actual": {
+        "department": "billing",
+        "urgency_score": 1.3637,
+        "churn_probability": 0.0527
+      },
+      "quality_pass": false
+    },
+    {
+      "id": "gate-clear",
+      "expected": "pass",
+      "seconds": 0.0447,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [
+        "jev_1e-6_probability_sum"
+      ],
+      "actual": "clarify",
+      "quality_pass": false,
+      "dimension_choices": {
+        "task-gate.goal_specificity": "unknown",
+        "task-gate.scope_consistency": "unknown",
+        "task-gate.acceptance_observability": "unknown",
+        "task-gate.deliverable_cohesion": "unknown",
+        "task-gate.delegation_form": "unknown",
+        "task-gate.risk_boundary": "unknown"
+      },
+      "issues": [
+        "goal_unknown",
+        "scope_unknown",
+        "acceptance_unknown",
+        "cohesion_unknown",
+        "delegation_unknown",
+        "risk_unknown"
+      ]
+    },
+    {
+      "id": "gate-vague",
+      "expected": "clarify",
+      "seconds": 0.0395,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [
+        "jev_1e-6_probability_sum",
+        "jev_1e-6_probability_sum"
+      ],
+      "actual": "clarify",
+      "quality_pass": true,
+      "dimension_choices": {
+        "task-gate.goal_specificity": "unknown",
+        "task-gate.scope_consistency": "unknown",
+        "task-gate.acceptance_observability": "unknown",
+        "task-gate.deliverable_cohesion": "unknown",
+        "task-gate.delegation_form": "unknown",
+        "task-gate.risk_boundary": "unknown"
+      },
+      "issues": [
+        "goal_unknown",
+        "scope_unknown",
+        "acceptance_unknown",
+        "cohesion_unknown",
+        "delegation_unknown",
+        "risk_unknown"
+      ]
+    },
+    {
+      "id": "gate-multi-result",
+      "expected": "clarify",
+      "seconds": 0.04,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [
+        "jev_1e-6_probability_sum"
+      ],
+      "actual": "clarify",
+      "quality_pass": true,
+      "dimension_choices": {
+        "task-gate.goal_specificity": "unknown",
+        "task-gate.scope_consistency": "unknown",
+        "task-gate.acceptance_observability": "unknown",
+        "task-gate.deliverable_cohesion": "unknown",
+        "task-gate.delegation_form": "unknown",
+        "task-gate.risk_boundary": "unknown"
+      },
+      "issues": [
+        "goal_unknown",
+        "scope_unknown",
+        "acceptance_unknown",
+        "cohesion_unknown",
+        "delegation_unknown",
+        "risk_unknown"
+      ]
+    },
+    {
+      "id": "gate-single-result",
+      "expected": "pass",
+      "seconds": 0.0412,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [
+        "jev_1e-6_probability_sum"
+      ],
+      "actual": "clarify",
+      "quality_pass": false,
+      "dimension_choices": {
+        "task-gate.goal_specificity": "unknown",
+        "task-gate.scope_consistency": "unknown",
+        "task-gate.acceptance_observability": "unknown",
+        "task-gate.deliverable_cohesion": "unknown",
+        "task-gate.delegation_form": "unknown",
+        "task-gate.risk_boundary": "unknown"
+      },
+      "issues": [
+        "goal_unknown",
+        "scope_unknown",
+        "acceptance_unknown",
+        "cohesion_unknown",
+        "delegation_unknown",
+        "risk_unknown"
+      ]
+    },
+    {
+      "id": "gate-missing-authority",
+      "expected": "clarify",
+      "seconds": 0,
+      "status": "HARD_RULE_NO_MODEL",
+      "actual": "clarify",
+      "quality_pass": true
+    },
+    {
+      "id": "no-unit",
+      "expected": {
+        "q": "noDelegation"
+      },
+      "seconds": 0.0253,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [],
+      "actual": {
+        "q": "noDelegation"
+      },
+      "quality_pass": true
+    },
+    {
+      "id": "unknown-config",
+      "expected": {
+        "q": "clarify"
+      },
+      "seconds": 0.0103,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [],
+      "actual": {
+        "q": "ready"
+      },
+      "quality_pass": false
+    },
+    {
+      "id": "injection",
+      "expected": {
+        "q": "read_only"
+      },
+      "seconds": 0.0103,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [],
+      "actual": {
+        "q": "start"
+      },
+      "quality_pass": false
+    },
+    {
+      "id": "order-False",
+      "expected": {
+        "q": "fast"
+      },
+      "seconds": 0.0088,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [],
+      "actual": {
+        "q": "slow"
+      },
+      "quality_pass": false
+    },
+    {
+      "id": "order-True",
+      "expected": {
+        "q": "fast"
+      },
+      "seconds": 0.0087,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [],
+      "actual": {
+        "q": "fast"
+      },
+      "quality_pass": true
+    },
+    {
+      "id": "capacity-20",
+      "expected": {
+        "q": "candidate_00"
+      },
+      "seconds": 0.0134,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [
+        "jev_1e-6_probability_sum"
+      ],
+      "actual": {
+        "q": "candidate_00"
+      },
+      "quality_pass": true
+    },
+    {
+      "id": "capacity-66",
+      "expected": {
+        "q": "candidate_00"
+      },
+      "seconds": 0.0148,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [
+        "jev_1e-6_probability_sum"
+      ],
+      "actual": {
+        "q": "candidate_18"
+      },
+      "quality_pass": false
+    }
+  ],
+  "cuda_peak_allocated_bytes": 1623111680,
+  "real_jev_T60": "NOT_RUN",
+  "product_provider_integration": "NOT_IMPLEMENTED",
+  "note": "Actual local inference. Hard-rule case is explicitly zero model; no confidence recalibration or production-quality claim."
+}

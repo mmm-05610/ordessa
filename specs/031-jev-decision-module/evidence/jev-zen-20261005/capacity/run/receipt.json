@@ -1,0 +1,45 @@
+{
+  "status": "EVALUATED_QUALITY_NOT_YET_ACCEPTED",
+  "requested_model": "jev-1.13-free",
+  "elapsed_seconds": 10.049207514035515,
+  "http_requests": [
+    {
+      "attempt": 1,
+      "method": "POST",
+      "endpoint": "https://opencode.ai/zen/v1/systemone",
+      "seconds_to_headers": 10.013
+    }
+  ],
+  "rows": [
+    {
+      "source": "smoke",
+      "id": "capacity-64-plus-sentinels",
+      "expected": {
+        "q": "candidate_00"
+      },
+      "status": "failed",
+      "run_id": "870f1e8d-56c7-4d73-9071-8f8db2971337",
+      "seconds": 10.0484,
+      "http_requests": 1,
+      "answers": [],
+      "provider_errors": [
+        {
+          "question_id": "q",
+          "code": "provider_timeout"
+        }
+      ],
+      "result_digest": "sha256:baa1c3fc915b26431fba99fd1adba897895dd2317a816dd7e4d092b9d56a85a5",
+      "quality_pass": false
+    }
+  ],
+  "sdk": "typesafe-sdk 0.7.2",
+  "execution": "original pydantic-graph + runtime gateway + local durable evidence",
+  "retry": 0,
+  "native_effects": 0,
+  "credential_reference": "opencode_zen",
+  "total_http_requests_including_prior_probe": 2,
+  "model_case_count": 1,
+  "model_cases_matching_labels": 0,
+  "hard_rule_cases": 0,
+  "quality_scope": "same frozen local Laya smoke/control labels; tiny synthetic sample only; graph completed is technical result, not model quality success"
+}

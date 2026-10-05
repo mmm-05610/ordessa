@@ -1,0 +1,11 @@
+{
+  "http_requests": [
+    {
+      "attempt": 1,
+      "method": "POST",
+      "endpoint": "https://opencode.ai/zen/v1/systemone",
+      "seconds_to_headers": 10.013
+    }
+  ],
+  "no_retry": true
+}

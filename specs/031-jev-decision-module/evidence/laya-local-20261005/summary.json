@@ -1,0 +1,25 @@
+{
+  "status": "PARTIAL_QUALITY_NOT_SUITABLE_AS_DEFAULT",
+  "sdk": "laya 0.3.20",
+  "checkpoint_revision": "55cf4c4ebb4ebe31b2550e8bdf3bd21b99753851",
+  "subfolder": "multilingual",
+  "device": "cuda / RTX 3060 Laptop 6GiB",
+  "completed_real_inference_calls": 25,
+  "completed_question_count": 49,
+  "model_scored_cases": 25,
+  "matched_frozen_labels": 9,
+  "hard_rule_zero_model_cases": 1,
+  "cases_with_strict_jev_numeric_violations": 8,
+  "existing_checkpoint_files_hashes_unchanged": true,
+  "first_interrupted_attempt": "empty log, absent handle/process, no receipt; inferred-call count UNKNOWN, not included in completed counts; one fresh recovery only",
+  "real_jev_T60": "NOT_RUN",
+  "native_effects": 0,
+  "credential_reads": 0,
+  "network": "denied in inference process + HF offline isolated cache",
+  "limitations": [
+    "Tiny synthetic smoke set, not general model quality estimate",
+    "Original batched gate shared first dimension state; controls used distinct full bound state per dimension and still returned unknown",
+    "66 options fit structural response, but local build_sequence trims each option to ~4 tokens; candidate cost descriptions can be lost",
+    "No Laya product provider integrated, no probability or confidence normalization fabricated"
+  ]
+}

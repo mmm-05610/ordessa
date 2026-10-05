@@ -1,0 +1,25 @@
+{
+  "status": "RETURNED",
+  "answer": {
+    "question_id": "is_cancel",
+    "kind": "noul",
+    "value": 0.5,
+    "provider_receipt": {
+      "resolved_model": "jev-1.13-free",
+      "requested_model": "jev-1.13-free",
+      "protocol_validation_version": "jev-protocol/1",
+      "question_digest": "sha256:a3b36f30b140840caf43decf238c4beeb568bee6cc3ee53fe2dde4c5cf5759d6",
+      "provider_settings_digest": "sha256:f74491eea8c081af078946bb67c93c1960a128713e2575b004329f8e0f32e78b"
+    },
+    "usage_evidence": {
+      "status": "reported",
+      "input_tokens": 299,
+      "output_tokens": 21
+    }
+  },
+  "seconds": 1.2809603429632261,
+  "requests_authorized": 1,
+  "retry": 0,
+  "endpoint": "https://opencode.ai/zen/v1/systemone",
+  "model_requested": "jev-1.13-free"
+}

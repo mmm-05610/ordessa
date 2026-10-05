@@ -47,16 +47,24 @@ class JevProviderSettings:
     secret_ref: str = 'jev-api-key'
     base_url: str = 'https://api.typesafe.ai'
     model: str = 'jev-1.13.0'
+    accepted_response_models: tuple[str, ...] = ()
     timeout_seconds: float = 10.0
     protocol_validation_version: str = PROTOCOL_VERSION
 
     def __post_init__(self):
-        name(self.binding_ref); name(self.secret_ref)
+        name(self.binding_ref); name(self.secret_ref); name(self.model)
+        if not isinstance(self.accepted_response_models, (tuple,list)):
+            raise JevProviderError('settings_invalid')
+        accepted = tuple(self.accepted_response_models) or (self.model,)
+        for model_id in accepted: name(model_id)
+        if len(accepted)>16 or len(set(accepted))!=len(accepted):
+            raise JevProviderError('settings_invalid')
+        object.__setattr__(self,'accepted_response_models',accepted)
         url = urlsplit(self.base_url)
         if (url.scheme != 'https' or not url.hostname or url.username or url.password
                 or url.query or url.fragment):
             raise JevProviderError('settings_invalid')
-        if (self.model != 'jev-1.13.0' or self.protocol_validation_version != PROTOCOL_VERSION
+        if (self.protocol_validation_version != PROTOCOL_VERSION
                 or type(self.timeout_seconds) not in (int, float)
                 or not math.isfinite(self.timeout_seconds) or self.timeout_seconds <= 0):
             raise JevProviderError('settings_invalid')
@@ -202,7 +210,8 @@ class JevDecisionProvider:
     def _map_response(self, question, response):
         # Public raw response preserves unknown kinds the SDK otherwise drops.
         raw = decode(response.raw_http_response.content)
-        if (raw.get('model') != self._settings.model
+        if (raw.get('model') not in self._settings.accepted_response_models
+                or response.model != raw.get('model')
                 or not isinstance(raw.get('answers'), Mapping)
                 or set(raw['answers']) != {question.question_id}
                 or set(response.answers) != {question.question_id}):
@@ -211,6 +220,7 @@ class JevDecisionProvider:
         if not isinstance(answer, Mapping) or answer.get('type') != question.kind:
             raise JevProviderError('protocol_invalid')
         receipt = {'resolved_model': response.model,
+                   'requested_model': self._settings.model,
                    'protocol_validation_version': PROTOCOL_VERSION,
                    'question_digest': question.question_digest,
                    'provider_settings_digest': self.settings_digest}

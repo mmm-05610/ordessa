@@ -862,7 +862,7 @@
     "materials": "materialsValidated",
     "offline": "offlineVerified_SCOPED",
     "coreReadOnly": "coreReadOnlyVerified_TEMP_CORE_FAKE_OWNER",
-    "liveJev": "NOT_RUN",
+    "liveJev": "PARTIAL_REAL_QUALITY_AND_CAPACITY_TIMEOUT",
     "nativeEffects": "OUT_OF_SCOPE",
     "codeReady": "VERIFIED_CURRENT_SOURCE"
   },
@@ -870,7 +870,7 @@
   "implementationRun": {
     "authorization": "user /goal current worktree only",
     "baseline": "e4714eba00a78ba04c5b53318830a0d409e76bbe",
-    "receipt": "evidence/implementation-20261005/receipt.json",
+    "receipt": "evidence/zen-offline-20261005/receipt.json",
     "tasks": {
       "JD001": "OFFLINE_VERIFIED",
       "JD002": "OFFLINE_VERIFIED",
@@ -881,7 +881,7 @@
       "JD007": "OFFLINE_VERIFIED",
       "JD008": "OFFLINE_VERIFIED",
       "JD009": "PARTIAL_REAL_FAMILIES_UNSUPPORTED",
-      "JD010": "NOT_RUN_AUTHORIZATION_REQUIRED"
+      "JD010": "PARTIAL_REAL_QUALITY_AND_UNVERIFIED_CASE"
     },
     "acceptance": {
       "T01": "PASSED",
@@ -943,7 +943,7 @@
       "T57": "PASSED",
       "T58": "PASSED",
       "T59": "PASSED",
-      "T60": "NOT_RUN",
+      "T60": "PARTIAL",
       "T61": "PASSED",
       "T62": "PASSED",
       "T63": "PASSED",
@@ -953,12 +953,27 @@
       "T67": "PASSED",
       "T68": "PASSED"
     },
-    "unique_tests_passed": 209,
+    "unique_tests_passed": 211,
     "all_work_complete": false,
     "additionalCoreRegression": {
       "matchedIds": 57,
       "receipt": "evidence/implementation-20261005/additional-core-regression/id-comparison.json",
       "scope": "direction/public API/Environment lifecycle/store seams only"
+    },
+    "liveEvaluation": {
+      "receipt": "evidence/jev-zen-20261005/summary.json",
+      "actualHttpRequests": 50,
+      "retainedModelCaseLabelMatches": 22,
+      "retainedModelCasesScored": 23,
+      "status": "PARTIAL",
+      "nativeEffects": 0
+    },
+    "localLayaEvaluation": {
+      "receipt": "evidence/laya-local-20261005/summary.json",
+      "completedCalls": 25,
+      "matchedLabels": 9,
+      "modelScoredCases": 25,
+      "status": "PARTIAL_NOT_DEFAULTED"
     }
   }
 }

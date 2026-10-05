@@ -1,0 +1,183 @@
+{
+  "status": "SCOPED_SMOKE_ONLY",
+  "model": "Laya multilingual",
+  "sdk": "0.3.20",
+  "calls": 12,
+  "questions": 12,
+  "load_seconds": 8.250579980958719,
+  "total_seconds": 9.917082664964255,
+  "quality_passed": 4,
+  "case_count": 12,
+  "rows": [
+    {
+      "id": "control-task-gate.goal_specificity",
+      "expected": {
+        "q": "pass"
+      },
+      "seconds": 1.2754,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [],
+      "actual": {
+        "q": "unknown"
+      },
+      "quality_pass": false
+    },
+    {
+      "id": "control-task-gate.scope_consistency",
+      "expected": {
+        "q": "pass"
+      },
+      "seconds": 0.0135,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [
+        "jev_1e-6_probability_sum"
+      ],
+      "actual": {
+        "q": "unknown"
+      },
+      "quality_pass": false
+    },
+    {
+      "id": "control-task-gate.acceptance_observability",
+      "expected": {
+        "q": "pass"
+      },
+      "seconds": 0.0275,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [],
+      "actual": {
+        "q": "unknown"
+      },
+      "quality_pass": false
+    },
+    {
+      "id": "control-task-gate.deliverable_cohesion",
+      "expected": {
+        "q": "pass"
+      },
+      "seconds": 0.0255,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [],
+      "actual": {
+        "q": "unknown"
+      },
+      "quality_pass": false
+    },
+    {
+      "id": "control-task-gate.delegation_form",
+      "expected": {
+        "q": "pass"
+      },
+      "seconds": 0.0251,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [],
+      "actual": {
+        "q": "unknown"
+      },
+      "quality_pass": false
+    },
+    {
+      "id": "control-task-gate.risk_boundary",
+      "expected": {
+        "q": "pass"
+      },
+      "seconds": 0.0257,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [],
+      "actual": {
+        "q": "unknown"
+      },
+      "quality_pass": false
+    },
+    {
+      "id": "noul-False-True",
+      "expected": {
+        "q": {
+          "min": 0.5
+        }
+      },
+      "seconds": 0.0296,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [],
+      "actual": {
+        "q": 0.0442
+      },
+      "quality_pass": false
+    },
+    {
+      "id": "noul-False-False",
+      "expected": {
+        "q": {
+          "max": 0.5
+        }
+      },
+      "seconds": 0.0235,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [],
+      "actual": {
+        "q": 0.0042
+      },
+      "quality_pass": true
+    },
+    {
+      "id": "noul-True-True",
+      "expected": {
+        "q": {
+          "min": 0.5
+        }
+      },
+      "seconds": 0.0238,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [],
+      "actual": {
+        "q": 0.3794
+      },
+      "quality_pass": false
+    },
+    {
+      "id": "noul-True-False",
+      "expected": {
+        "q": {
+          "max": 0.5
+        }
+      },
+      "seconds": 0.0239,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [],
+      "actual": {
+        "q": 0.1798
+      },
+      "quality_pass": true
+    },
+    {
+      "id": "identity-False",
+      "expected": {
+        "q": "fast"
+      },
+      "seconds": 0.0233,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [],
+      "actual": {
+        "q": "fast"
+      },
+      "quality_pass": true
+    },
+    {
+      "id": "identity-True",
+      "expected": {
+        "q": "fast"
+      },
+      "seconds": 0.0235,
+      "status": "RETURNED",
+      "strict_jev_numeric_violations": [],
+      "actual": {
+        "q": "fast"
+      },
+      "quality_pass": true
+    }
+  ],
+  "cuda_peak_allocated_bytes": 1581270016,
+  "real_jev_T60": "NOT_RUN",
+  "product_provider_integration": "NOT_IMPLEMENTED",
+  "note": "Actual local inference. Hard-rule case is explicitly zero model; no confidence recalibration or production-quality claim."
+}

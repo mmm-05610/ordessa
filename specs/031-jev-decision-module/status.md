@@ -105,3 +105,21 @@ SDK fake HTTP、6 个真实子进程崩溃窗、ACK 未知/取消/预算/必须�
 [补充回归](evidence/implementation-20261005/additional-core-regression/README.md)。
 JD007 没有要求旧家族必须新增能力：旧 provider unsupported 是验收缺席行为，仍如实保留 JD009 PARTIAL。
 真实 JD010 尚未授权，模型/凭据/费用门未解除。已向用户提出具体授权范围问题；未读取任何凭据。
+
+## 本地 Laya 授权评测（2026-10-05）
+用户另授权“测试一下/继续”，限定本地 Laya 合成样本推理；原 Jev 云端授权门不改变。
+[真实 Laya 证据](evidence/laya-local-20261005/README.md)：25 次完成推理/49 个问题，25 个模型场景中 9 个标签匹配；另 1 个硬规则零模型拒绝。
+补充正确单维状态绑定后仍全部 unknown；候选排序/注入/未知配置/布尔正例有失败。不能把 Laya 调用写成 T60 通过，不能降低标签/阈值填绿；不接入默认 provider。
+首个中断进程无回执、调用数未知，核实进程缺席后恢复一次；仅完整回执计数。既有快照文件 hash 不变。
+
+## Zen 真实 Jev 与最终复验（取代上方旧 NOT_RUN 状态）
+
+用户指定私有 opencode_zen、确切 free endpoint/model，另授权移出源码树。官方 SDK 请求模型和实际响应均 jev-1.13-free；provider 模型改为 host 配置，显式响应身份白名单受 digest 绑定，业务节点不能更改。正式协议/概率/标签门未降低，无模型/账号 fallback。
+
+[真实 Jev 逐场景账本](evidence/jev-zen-20261005/README.md)：累计真实 HTTP 50 次，上限 64，重试 0、原生效果 0。保留答案的 23 个模型场景 22 匹配；单交付任务 clarify 与正例标签不符。首中文场景三次响应摘要已持久化，但收集器 KeyError 后答案未留存，未重发、质量未验证。原 66 选项命名不合规本地拒绝；正确 64+2 兜底 ID 的补充场景 10 秒超时，服务端完成/usage 未知。T60/JD010 PARTIAL，未将小样本成绩推广为质量成熟。原九样本 54 rubric 问题未全量运行；后续真实调用仍需独立预算/范围授权。
+
+已知 reported usage：25,439 input + 2,002 output tokens；1 个超时请求 usage 未知，费用 UNKNOWN，没有账单证据。凭据迁至 /home/maoqh/.codex/private-vault/opencode_zen，目录 0700/文件 0600，源码树已无原文件；无凭据内容入日志/Git。
+
+[新源码离线复验](evidence/zen-offline-20261005/README.md)：211 passed，67 场景分别通过，固定基线/当前 57 个核心 ID 一致。首次完整测试 210P/1F 为旧 wheel，保留失败，经正常离线重建后 211P；不删断言/skip。所有先前回执保留为历史，以最新 source_digest 为本次实现证据。
+
+JD001–JD008 OFFLINE_VERIFIED；JD009 PARTIAL（真实配置家族 opt-out/unsupported），JD010 PARTIAL（真实质量与未验证项）；all_work_complete=false。完整 Server/Harness 继承失败未重跑、Python 3.10/断电/远程 FS/真实家族实际应用未验证。没有其他工作树写入、服务重启、DB 迁移、merge/push。

@@ -1,0 +1,23 @@
+{
+  "status": "TRANSPORT_VERIFIED_DOMAIN_QUALITY_PARTIAL",
+  "settings": {
+    "binding_ref": "opencode-zen-jev/1",
+    "secret_ref": "opencode_zen",
+    "base_url": "https://opencode.ai/zen",
+    "model": "jev-1.13-free",
+    "accepted_response_models": [
+      "jev-1.13-free"
+    ],
+    "timeout_seconds": 10.0,
+    "protocol_validation_version": "jev-protocol/1"
+  },
+  "live_scope": {
+    "authorized_by": "user specified named credential, exact gateway endpoint and free Jev model",
+    "max_attempts": 64,
+    "wall_timeout_seconds": 300,
+    "paid_fallback": false,
+    "input_scope": "synthetic domain evaluation only; no Harness or user files",
+    "advertised_cost": "Free, verified from official Zen docs on 2026-10-05; no invoice guarantee",
+    "docs": "https://opencode.ai/docs/zen/#jev"
+  }
+}

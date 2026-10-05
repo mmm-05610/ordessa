@@ -270,3 +270,35 @@ async def test_T36_duplicate_answer_id_rejected():
         with pytest.raises(JevProviderError, match='protocol_invalid'):
             await p.decide(q, context(p, q))
     finally: await p.close()
+
+
+async def test_T33_T35_host_gateway_alias_exact_route_and_response_binding():
+    settings=JevProviderSettings(binding_ref='opencode-zen-jev/1',secret_ref='opencode_zen',
+        base_url='https://opencode.ai/zen',model='jev-1.13-free',accepted_response_models=('jev-1.13.0',))
+    calls=[]
+    def handler(request):
+        calls.append((str(request.url),json.loads(request.content)))
+        return httpx2.Response(200,json=body())
+    p=JevDecisionProvider(settings,secret_resolver=lambda ref:'offline-test-key',transport=httpx2.MockTransport(handler));q=question()
+    try:
+        answer=await p.decide(q,context(p,q))
+        assert calls[0][0]=='https://opencode.ai/zen/v1/systemone'
+        assert calls[0][1]['model']=='jev-1.13-free'
+        assert answer.provider_receipt['requested_model']=='jev-1.13-free'
+        assert answer.provider_receipt['resolved_model']=='jev-1.13.0'
+    finally:await p.close()
+    strict=dataclasses.replace(settings,accepted_response_models=())
+    assert strict.accepted_response_models==('jev-1.13-free',)
+    p=JevDecisionProvider(strict,secret_resolver=lambda ref:'offline-test-key',transport=httpx2.MockTransport(handler))
+    try:
+        with pytest.raises(JevProviderError,match='protocol_invalid'):await p.decide(q,context(p,q))
+    finally:await p.close()
+    assert settings.settings_digest!=strict.settings_digest
+
+
+async def test_T40_gateway_response_allowlist_is_bounded_snapshot():
+    models=['jev-1.13-free'];s=JevProviderSettings(model='jev-1.13-free',accepted_response_models=models)
+    models.append('untrusted')
+    assert s.accepted_response_models==('jev-1.13-free',)
+    for bad in ('any',('same','same'),tuple(str(i) for i in range(17))):
+        with pytest.raises(JevProviderError):JevProviderSettings(accepted_response_models=bad)
