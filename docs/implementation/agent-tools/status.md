@@ -640,3 +640,13 @@ sidecar与旧C2批量注册仍有路径，独立生产模型/凭据/恢复owner�
 完整命令/资源/边界见[evidence/agent-unit-model/independent-server-providers.md](evidence/agent-unit-model/independent-server-providers.md)。初3P/4F exit1 0.34s，修point/负例调用位置后6P/1F exit1 0.25s，补隔离/回滚12P/1F exit1 5.04s。真实冷重开generation复用1，保留失败，不改断言假绿。当前暂时在既有root store takeover前typed拒非空provider选择，不冒成功重开；corebinding/源码门26P/1F exit1 0.53s；全产品integration＋fresh无ServerAPI Claude wheel311P/1F exit1 16.87s、0skip，新14原297发行1不累计快照。原fullcold目标断言保留，known-issues登记。
 
 冷持久allocation/fresh seed无既有合同，已写activation-generation-proposal.md并向用户请求初始化边界裁定，未自创counter或修改用户DB。此临时guard只约束本部署，不修其他composition冷代问题。只读终审无新增源码阻断，首轮三家Registry发布是C原型而非可重启生产服务；native P/M、完整owner/lifecycle/旧model/sidecar/tasks仍PARTIAL，M0、资源ABSENT继续。无未授权操作、费用unknown；所有测试terminal，显式纳入新材料和改动检查点，goal继续，不标DONE。
+
+### 2026-10-05 AU003 六包隔离发行／AU005 已安装CLI真实发现（PARTIAL）
+
+前置36de74fd3277a7762644959173066ded2831f55d，保留已有未提交四文件/两回执；上一状态问答no progress，本轮实际修复、复跑、记账。live agents确认无另一写者，主会话唯一源码/测试/Git/账本写者，Skill reviewer只读终审，Codex只读下一旧Model入口。完整命令、失败修正与层级见[evidence/agent-unit-model/installed-provider-discovery.md](evidence/agent-unit-model/installed-provider-discovery.md)。
+
+新增fresh客户端wheel/venv独立entrypoint→实际自有Uvicorn/Server v2三家发现、describe、身份、坏Bearer、foreign和离线反例；原默认Profile helper保留。新安装调用timeout60，不引入品牌客户端。六自有wheel脚本显式新回执/currentHEAD/dirty/hashes，失败和timeout也写回执，未知exit不报0、已有证据拒绝不覆盖。正常包装复跑曾内嵌probe IndentationError：10命令第10exit1、外层exit1、failed/cleaned回执保留；修dedent后新verified回执12命令全exit0/六hash/cleaned。重复预期exit1，原SHA字节不变。broken fixture原只证坏TOML，现真换行且要求缺backend错误；故障门末端3P exit0 0.44s，HTTP末端6P exit0 12.81s。
+
+初CLI预期错误1F4.36s、组合5P1F12.87s，修后6P12.89s；跨包pytest同名模块collection exit2/3errors0.47s，不skip/删cache，串行独立包166P2.12s/213P3.18s/162P12.70s各exit0。全product integration311P1F exit1 16.98s，仍保留fullcold严格目标；Core/Server全套本轮未跑，继承红不抹去。新增四测试不累计快照。只读终审两个脚本问题修正后无切片阻断，审阅不当测试。
+
+证据是自有发行/controlled Registry C＋实际隔离Server/CLI进程；nativeHarnessP/M无，M0、productReady=false/coldRecoveryVerified=false。冷代次待裁定、production owner/lifecycle/旧Model/sidecar/tasks/results/full纵向及资源ABSENT继续。无第三方安装更新/登录/用户DB/凭据/全局配置/用户服务操作/push/主树合并，费用unknown。所有测试句柄terminal，核对资料门后显式纳入本轮检查点继续goal，不标DONE。

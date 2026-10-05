@@ -1,7 +1,8 @@
 """Actual loopback uvicorn + independent CLI processes, isolated data only.
 
 Unknown injection uses a marked stored-request fixture; it is not evidence of
-an actual response-loss crash. No native provider or model is selected.
+an actual response-loss crash. No native process or model is selected; the optional discovery scenario
+selects independent providers with their default unsupported effect methods.
 """
 import json
 import os
@@ -15,12 +16,33 @@ SERVER_SCRIPT = r'''
 import json, socket, sys, threading
 from pathlib import Path
 sys.path.insert(0, sys.argv[1])
-from deployment import AgentServiceConfiguration, build_agent_runtime, create_agent_app
+from deployment import AgentServiceConfiguration, AgentToolsDeployment, build_agent_runtime, create_agent_app
 from ordessa_persistence_sqlite import ProtectedFingerprintHmac
 import uvicorn
 root, ready = Path(sys.argv[2]), Path(sys.argv[3])
 port = ProtectedFingerprintHmac({"fixture": b"isolated-http-fixture"}, active_key_id="fixture")
-runtime = build_agent_runtime(AgentServiceConfiguration(root, agent_contract_version=sys.argv[4]), fingerprint_port=port)
+if len(sys.argv) > 5 and sys.argv[5] == "providers":
+    import importlib, subprocess
+    repo = Path(sys.argv[1]).parents[1]
+    for source in ("plugins/harness/codex/src", "plugins/harness/pi/src", "plugins/harness/claude-code/src",
+                   "packages/backend/harness-transport/src"):
+        sys.path.insert(0, str(repo / source))
+    def native_forbidden(*args, **kwargs):
+        raise AssertionError("discovery must not spawn native process")
+    subprocess.Popen = native_forbidden
+    plugins = []
+    for folder, package, prefix in (("codex", "ordessa_harness_codex", "Codex"),
+            ("pi", "ordessa_harness_pi", "Pi"), ("claude-code", "ordessa_harness_claude_code", "ClaudeCode")):
+        provider_class = getattr(importlib.import_module(package), prefix + "RuntimeProvider")
+        wrapper = getattr(importlib.import_module(package + ".server_plugin"), prefix + "ServerPlugin")
+        def factory(environment, cls=provider_class, definition=folder):
+            return cls(definition_ref={"environmentNamespace": environment.value, "definitionId": definition,
+                "revision": "1"}, implementation_digest="sha256:" + "b" * 64)
+        plugins.append(wrapper(factory))
+    runtime = AgentToolsDeployment(fingerprint_port=port, agent_contract_version=sys.argv[4],
+        provider_plugins=tuple(plugins)).build_runtime(AgentServiceConfiguration(root, agent_contract_version=sys.argv[4]))
+else:
+    runtime = build_agent_runtime(AgentServiceConfiguration(root, agent_contract_version=sys.argv[4]), fingerprint_port=port)
 sock = socket.socket()
 sock.bind(("127.0.0.1", 0))
 sock.listen(128)
@@ -38,8 +60,10 @@ server.run(sockets=[sock])
 
 
 class IsolatedService:
-    def __init__(self, tmp_path, *, version="agent-assembly/1"):
+    def __init__(self, tmp_path, *, version="agent-assembly/1", providers=False, cli_executable=None):
         self.version = version
+        self.providers = providers
+        self.cli_executable = cli_executable
         self.product = Path(__file__).resolve().parents[2]
         self.root = tmp_path / "server-root"
         self.ready = tmp_path / "ready.json"
@@ -51,7 +75,7 @@ class IsolatedService:
         self.ready.unlink(missing_ok=True)
         self.log_stream = self.log.open("ab")
         self.process = subprocess.Popen([sys.executable, "-c", SERVER_SCRIPT, str(self.product),
-                                         str(self.root), str(self.ready), self.version],
+                                         str(self.root), str(self.ready), self.version, "providers" if self.providers else "empty"],
                                         stdin=subprocess.PIPE, stdout=self.log_stream, stderr=self.log_stream)
         deadline = time.monotonic() + 15
         while not self.ready.exists():
@@ -83,8 +107,10 @@ class IsolatedService:
 
     def cli(self, args, expected=0, token=None):
         env = os.environ.copy()
+        if self.cli_executable:
+            env = {key: value for key, value in env.items() if key not in {"PYTHONPATH", "PYTHONHOME", "VIRTUAL_ENV"}}
         env["AGENT_TOOLS_TEST_TOKEN"] = self.token if token is None else token
-        command = [sys.executable, "-m", "ordessa_agent_tools", *args,
+        command = ([str(self.cli_executable)] if self.cli_executable else [sys.executable, "-m", "ordessa_agent_tools"]) + [*args,
                    "--config", str(self.config), "--service", "fixture", "--json"]
         result = subprocess.run(command, env=env, capture_output=True, text=True, timeout=15)
         assert result.returncode == expected, (result.returncode, result.stdout, result.stderr)
