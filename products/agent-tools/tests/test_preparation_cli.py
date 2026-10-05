@@ -38,7 +38,7 @@ def server(parts, mode='healthy'):
                         'auth': {'required': True, 'schemes': ['session_token']},
                         'capabilities': [{'id': name, 'supported': True} for name in handlers]}
                 else:
-                    if method == 'agents.nodes.prepare' and mode == 'forbidden': parts[10]._policy.allowed = False
+                    if method in {'agents.nodes.prepare', 'agents.nodes.queryPreparation'} and mode == 'forbidden': parts[10]._policy.allowed = False
                     if method == 'agents.nodes.prepare' and mode == 'reserved':
                         params = request['params']
                         op = services.assembly.reserve(services.profiles.request_key(params['requestId']),
@@ -47,7 +47,7 @@ def server(parts, mode='healthy'):
                     else:
                         result = handlers[method](request['params'])
                     if method == 'agents.capabilities' and mode == 'missing':
-                        result['supportedMethods'].remove('agents.nodes.prepare')
+                        result['supportedMethods'] = [name for name in result['supportedMethods'] if name not in {'agents.nodes.prepare', 'agents.nodes.queryPreparation'}]
                     if method == 'agents.nodes.prepare':
                         if mode == 'receipt-lost':
                             self.close_connection = True; self.connection.close(); return
@@ -59,6 +59,16 @@ def server(parts, mode='healthy'):
                         if mode == 'private': result['node']['binding']['harnessUnitRef']['stdout'] = 'must-not-emit'
                         if mode == 'token': result['operationRef'] = SECRET
                         if mode == 'malformed': result = []
+                    if method == 'agents.nodes.queryPreparation':
+                        if mode == 'receipt-lost':
+                            self.close_connection = True; self.connection.close(); return
+                        if mode == 'malformed': result = {'extra': True}
+                        if result.get('operation') is not None:
+                            op = result['operation']
+                            if mode == 'bool-revision': op['revision'] = True
+                            if mode == 'wrong-operation' and op['node'] is not None: op['operationRef'] = 'other-operation'
+                            if mode == 'ready' and op['node'] is not None: op['node']['ready'] = True
+                            if mode == 'token': op['operationRef'] = SECRET
                 body = {'jsonrpc': '2.0', 'id': request['id'], 'result': result}
             except WireError as error:
                 body = {'jsonrpc': '2.0', 'id': request['id'], 'error': {'code': error.family, 'message': SECRET}}
@@ -185,3 +195,140 @@ def test_original_nonpublished_dto_requires_null_node(assembly, status):
     assert result_valid(value, fixed(assembly), 'env', wire_contract(AGENT_MANAGEMENT_CONTRACT_VERSION))
     value['node'] = {'ready': True}
     assert not result_valid(value, fixed(assembly), 'env', wire_contract(AGENT_MANAGEMENT_CONTRACT_VERSION))
+
+
+
+def query(parts, tmp_path, monkeypatch, capsys, mode='healthy', request_id=None):
+    monkeypatch.setenv('TOOLS_TEST_TOKEN', SECRET)
+    with server(parts, mode) as (endpoint, calls):
+        code = main(['nodes', 'query-preparation', parts[1].request_id if request_id is None else request_id,
+            '--config', str(config(tmp_path, endpoint)), '--service', 'local', '--json'])
+        out = capsys.readouterr()
+        assert SECRET not in out.out + out.err
+        return code, json.loads(out.out), calls
+
+
+def test_lost_prepare_receipt_recovers_published_original_by_request_key(assembly, tmp_path, monkeypatch, capsys):
+    original, _ = invoke(assembly, tmp_path, monkeypatch, capsys, mode='receipt-lost')
+    assert original[0][0] == 6 and original[0][1]['operationRef'] is None
+    before = assembly[4]._conn.total_changes
+    code, item, calls = query(assembly, tmp_path, monkeypatch, capsys)
+    assert code == 0 and item['status'] == 'confirmed'
+    assert item['data']['operation']['status'] == 'published'
+    assert item['operationRef'] == assembly[4].read_operation(assembly[1]).intent.operation_ref
+    assert item['requestId'] == assembly[1].request_id
+    assert assembly[3].calls == ['prepare', 'start'] and assembly[4]._conn.total_changes == before
+    assert calls[-1]['params'] == {'requestId': assembly[1].request_id}
+    assert calls[-1]['method'] == 'agents.nodes.queryPreparation'
+
+
+@pytest.mark.parametrize('failed_step', ['prepare', 'start'])
+def test_query_confirms_original_claim_without_start_or_publication(assembly, tmp_path, monkeypatch, capsys, failed_step):
+    assembly[3].fail = failed_step
+    results, _ = invoke(assembly, tmp_path, monkeypatch, capsys)
+    assert results[0][0] == 6
+    assembly[3].fail = None
+    code, item, calls = query(assembly, tmp_path, monkeypatch, capsys)
+    assert code == 6 and item['status'] == 'unknown'
+    assert item['data']['operation']['status'] == 'running' and item['data']['operation']['node'] is None
+    assert assembly[4].read_operation_step(assembly[1], failed_step).outcome == 'concluded'
+    assert assembly[3].calls == (['prepare', 'query'] if failed_step == 'prepare' else ['prepare', 'start', 'query'])
+    if failed_step == 'prepare': assert assembly[4].read_operation_step(assembly[1], 'start') is None
+    assert assembly[5].list() == () and len(calls) == 3
+    before = list(assembly[3].calls)
+    again, _, _ = query(assembly, tmp_path, monkeypatch, capsys)
+    assert again == 6 and assembly[3].calls == before
+
+
+@pytest.mark.parametrize('scenario', ['absent', 'other-principal'])
+def test_query_absence_does_not_leak_other_principal_or_spend_key(assembly, tmp_path, monkeypatch, capsys, scenario):
+    if scenario == 'other-principal':
+        assert assembly[0].prepare(assembly[1], assembly[2], {}, {}).status == 'published'
+        assembly[10]._principal_scope = 'another'
+    before = assembly[4]._conn.total_changes; native_before = list(assembly[3].calls)
+    code, item, _ = query(assembly, tmp_path, monkeypatch, capsys)
+    assert code == 4 and item['error']['code'] == 'PREPARATION_NOT_FOUND'
+    assert item['data'] == {'operation': None} and item['operationRef'] is None
+    assert assembly[4]._conn.total_changes == before and assembly[3].calls == native_before
+
+
+@pytest.mark.parametrize('mode,expected,count', [('missing',4,2), ('absent-port',4,2), ('forbidden',3,3)])
+def test_query_unavailable_or_unauthorized_never_dispatches(assembly, tmp_path, monkeypatch, capsys, mode, expected, count):
+    code, item, calls = query(assembly, tmp_path, monkeypatch, capsys, mode=mode)
+    assert code == expected and item['error']['retryable'] is False and len(calls) == count
+    assert assembly[4].read_operation(assembly[1]) is None and assembly[3].calls == []
+
+
+@pytest.mark.parametrize('mode', ['receipt-lost', 'bool-revision', 'wrong-operation', 'ready', 'token', 'malformed'])
+def test_query_bad_or_lost_result_is_unknown_and_never_resends(assembly, tmp_path, monkeypatch, capsys, mode):
+    assert assembly[0].prepare(assembly[1], assembly[2], {}, {}).status == 'published'
+    before = assembly[4]._conn.total_changes
+    code, item, calls = query(assembly, tmp_path, monkeypatch, capsys, mode=mode)
+    assert code == 6 and item['status'] == 'unknown' and item['operationRef'] is None
+    assert item['error']['retryable'] is False and item['requestId'] == assembly[1].request_id
+    assert assembly[3].calls == ['prepare', 'start'] and assembly[4]._conn.total_changes == before and len(calls) == 3
+
+
+def test_original_query_authority_does_not_grant_prepare_write(assembly, tmp_path, monkeypatch, capsys):
+    assembly[3].fail = 'prepare'
+    assert assembly[0].prepare(assembly[1], assembly[2], {}, {}).status == 'unknown'
+    assembly[3].fail = None
+    class ReadPolicy:
+        def admit_object_access(self, principal, target, mode): return mode == 'read'
+        def admit_invoke(self, *args): return False
+    assembly[10]._policy = ReadPolicy()
+    code, item, _ = query(assembly, tmp_path, monkeypatch, capsys)
+    assert code == 6 and item['data']['operation']['status'] == 'running'
+    assert assembly[3].calls == ['prepare', 'query']
+    denied, _ = invoke(assembly, tmp_path, monkeypatch, capsys)
+    assert denied[0][0] == 3 and assembly[3].calls == ['prepare', 'query']
+
+
+def test_query_different_operation_kind_conflicts_without_dispatch(assembly, tmp_path, monkeypatch, capsys):
+    from dataclasses import replace
+    from ordessa_environment_api import RequestKey
+    original = assembly[0].reserve(assembly[1], assembly[2], {}, {})
+    other = RequestKey('env', 'principal', 'another-operation')
+    assembly[4].reserve_operation(other, 'other-digest', replace(original.intent, kind='configuration', operation_ref='other-operation'))
+    before = assembly[4]._conn.total_changes
+    code, item, calls = query(assembly, tmp_path, monkeypatch, capsys, request_id=other.request_id)
+    assert code == 5 and item['error']['code'] == 'PRECONDITION_CONFLICT'
+    assert assembly[4]._conn.total_changes == before and assembly[3].calls == [] and len(calls) == 3
+
+
+def test_query_revoked_invocation_authority_does_not_observe_or_confirm(assembly, tmp_path, monkeypatch, capsys):
+    assembly[3].fail = 'prepare'
+    assert assembly[0].prepare(assembly[1], assembly[2], {}, {}).status == 'unknown'
+    assembly[3].fail = None; assembly[6].allowed = False
+    before = assembly[4]._conn.total_changes
+    code, item, _ = query(assembly, tmp_path, monkeypatch, capsys)
+    assert code == 3 and item['error']['code'] == 'AUTHORIZATION_REFUSED'
+    assert assembly[4]._conn.total_changes == before and assembly[3].calls == ['prepare']
+    assert assembly[4].read_operation_step(assembly[1], 'prepare').outcome == 'unknown'
+
+
+@pytest.mark.parametrize('invalid', ['Invalid', 'wrong:realm'])
+def test_query_invalid_original_key_not_sent(assembly, tmp_path, monkeypatch, capsys, invalid):
+    code, item, calls = query(assembly, tmp_path, monkeypatch, capsys, request_id=invalid)
+    assert code == 2 and item['error']['code'] == 'PARAMETER_INVALID' and calls == []
+    assert assembly[4].read_operation(assembly[1]) is None and assembly[3].calls == []
+
+
+
+@pytest.mark.parametrize('injected', [{'principalScope': 'another'}, {'environmentNamespace': 'foreign'}])
+def test_query_wire_body_cannot_choose_authenticated_realm(assembly, injected):
+    handlers = {item.method_id: item.handler for item in agent_core_methods(lambda: assembly[10], contract_version=AGENT_MANAGEMENT_CONTRACT_VERSION)}
+    params = {'requestId': assembly[1].request_id, **injected}
+    before = assembly[4]._conn.total_changes
+    with pytest.raises(WireError) as refused: handlers['agents.nodes.queryPreparation'](params)
+    assert refused.value.family == 'INVALID_REQUEST'
+    assert assembly[4]._conn.total_changes == before and assembly[3].calls == []
+
+
+def test_query_schema_marks_original_reconciliation_effectful():
+    from pacthold.agents.public import wire_contract
+    schema = wire_contract(AGENT_MANAGEMENT_CONTRACT_VERSION)
+    method = schema['methods']['agents.nodes.queryPreparation']
+    assert method['required'] == ['requestId'] and method['optional'] == []
+    assert method['effectful'] is True and method['additionalProperties'] is False
+    assert schema['results']['preparationQuery'] == {'required': ['operation'], 'additionalProperties': False, 'missing': None}

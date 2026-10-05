@@ -81,6 +81,13 @@
           "cancelled"
         ]
       },
+      "preparationQuery": {
+        "required": [
+          "operation"
+        ],
+        "additionalProperties": false,
+        "missing": null
+      },
       "nodesList": {
         "required": [
           "nodes"
@@ -247,6 +254,15 @@
           "profileRef",
           "context",
           "options",
+          "requestId"
+        ],
+        "optional": [],
+        "effectful": true,
+        "additionalProperties": false
+      },
+      "agents.nodes.queryPreparation": {
+        "action": "queryPreparation",
+        "required": [
           "requestId"
         ],
         "optional": [],
@@ -425,5 +441,5 @@
       ]
     }
   },
-  "schemaDigest": "sha256:31cfa1573d9807306d3a63ff89b66e2dc7b487d37cb9143ffe083a67dccfba13"
+  "schemaDigest": "sha256:dda9ab85dd7887ea4344b047826d704c9235c981942e4eaa30730fbbe48e19f2"
 }

@@ -600,3 +600,17 @@ Codex只读审阅未发现阻断，建议step receipt与Unit Usage target反例�
 全Core269P/3F exit1、7.72s、0skip，仍既有kernel_direction三红/具体SQLite测试导入来源，未删断言/skip/移走失败。worker/sidecar/ACP closure/Claude资源ABSENT继续。三Skill结构、五工单strict、mirror、diff-check各exit0仅资料门；无pytest新失败，所有测试terminal。只读审阅无源码阻断，指出use Skill旧禁止prepare句，已限定缺任务输入并指向管理Skill。没有真实Agent指令行为评估。
 
 默认目录部署依然不提供production准备权限；production材料/SecretRef/capture/receipt/effect/Session owner、三家native装配、完整生命周期/冷恢复、旧Model/Server迁移、准备公开恢复、connect/applyProfile/stop/release/tasks/results及全纵向仍PARTIAL；M0，不报AU004_DONE。未第三方安装更新/登录/模型/用户DB/凭据/全局配置/用户服务操作/push/主树合并，成本unknown。显式纳入本轮新增及已核对源码/文档/证据检查点后继续。
+
+### 2026-10-05 AU002 精确装配引用／AU004 原准备请求核实／AU005 新包（PARTIAL）
+
+前置deb39c19751621d2dc705f807a394a6185d56a46、clean；上一源码/验证提交属于progress。本轮live agents全completed，主会话唯一共享Core/schema/Server/CLI/测试/Git/账本写者；Codex只读接口/安全审阅无源码阻断，保留三家成果、无另一写者。
+
+公开 `agents.nodes.queryPreparation(requestId)` 直接绑定原assembly.query，catalog.request_key限当前Environment/认证principal；body不能传realm。核心schema发布精确operation/None wrapper，effectful=true（可记原Step），v2镜像生成；v1/provider不变。CLI `nodes query-preparation ORIGINAL_REQUEST_ID` 原key同时wire ID；丢published回执可找回原operationRef/Node，无再次dispatch。原unknown claim核实可变running/concluded但不start缺step、不publish，不自动prepare；未published仍6。缺席4不证明此前无效果或授换键；配置request-key lookup仍缺，不能误用本入口替代。
+
+开放前SQLite新6反例先0P/6F exit1、0.65s，证实assembly provider observation/Usage target/query原Unit混认bool/float。复用nodes._same_reference/safe_json修所有原引用比较，保持唯一授权/claim/Usage/CAS/生命周期；作用后坏证据保unknown，不声称零效果。修复后assembly＋原prepare61P exit0、17.15s；query定向14P/33deselected exit0、10.61s（名称不含query的丢published回执另在完整组合）。完整定向首81P/1F exit1、36.88s仅错误码预期误猜，保留既有PRECONDITION_CONFLICT并补3realm/schema门后85P exit0、37.44s。新增22CLI/契约＋6assembly，原发行2加强，不累计快照。
+
+完整命令与证据：[preparation-query.md](evidence/agent-unit-model/preparation-query.md)。全产品＋所有AU证据首收集exit2/2errors0.57s，测试closure未含独立Codex源码，不算绿；显式本树三家＋运输PYTHONPATH、无安装/skip，实际999P exit0、177.80s。full Core269P/3F exit1、7.08s、0skip，仍既有kernel_direction三红/SQLite测试导入，未删除断言/移走失败；worker/sidecar/ACP closure/Claude资源ABSENT继续。管理Skill结构/五工单strict/mirror/diff-check仅资料门，测试全部terminal。
+
+README/ACCEPTANCE/管理Skill同步原请求核实及不自动继续；配置未知无operationRef恢复缺口单列。fresh wheel/venv独立CLI真实Core/SQLite/issuer＋受控HTTP prepare/replay/query9请求、provider唯一prepare/start。新ignored bundle生成exit0，实际安装＋隔离既有Server exercise27记录exit0/M0/cleaned，回执evidence/install-use-preparation-query-deb39c.json；wheel SHA505dd96e8ea114961566cca60ab4094acedbe83be58145b1abac4070f5edf057。实际entrypoint缺席/回执hash/27条再核验exit0，不覆盖旧包/旧回执，不纳入binary。安装exercise仍Server/catalog范围，新query正例C来自发行测试，不冒native P/M。
+
+production授权/材料/SecretRef/capture/receipt/effect/Session owner、三家native装配、完整生命周期/原生冷恢复、旧Model/Server迁移、connect/applyProfile/stop/release/tasks/results与全纵向仍PARTIAL。M0，无第三方安装更新/登录/用户DB/凭据/全局配置/用户服务操作/push/主树合并，费用unknown。核对并显式纳入本轮全部改动/新材料检查点后继续，不终结goal。

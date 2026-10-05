@@ -11,7 +11,7 @@ import uuid
 from .initialization import discover, save_report
 from .providers import definition_ref_valid, provider_result_valid
 from .nodes import node_result_valid
-from .preparation import request_valid as preparation_request_valid, result_valid as preparation_result_valid
+from .preparation import request_valid as preparation_request_valid, result_valid as preparation_result_valid, request_id_valid, query_result_valid
 from .configuration import node_ref_valid, description_result_valid, snapshot_result_valid, change_request_valid, operation_result_valid, operation_disposition
 from .client import ClientError, WireClient, load_service, parse_json, core_schema, profile_ref_valid, provider_schema, MAX_BYTES
 
@@ -55,6 +55,10 @@ def parser():
     prepare.set_defaults(action='prepare')
     connection(prepare)
     prepare.add_argument('--file', required=True, help='Fixed request JSON: requestId, profileRef, context, options')
+    preparation_query = node_actions.add_parser('query-preparation', help='Reconcile original claimed steps by request-id; never prepares or starts missing steps')
+    preparation_query.set_defaults(action='query-preparation')
+    connection(preparation_query)
+    preparation_query.add_argument('original_request_id', help='Original preparation requestId in the selected authenticated realm')
     configuration = node_actions.add_parser("configuration", help="Observe owner configuration capabilities")
     configuration_actions = configuration.add_subparsers(dest="action", required=True, parser_class=Parser)
     for action, help_text in (("describe", "Read owner capability descriptions; does not inspect or apply values"),
@@ -211,7 +215,12 @@ def main(argv=None):
                     raise ClientError("PARAMETER_INVALID", "Complete DefinitionRef required", 2)
                 params["definitionRef"] = definition
             prepared = ("agents.providers." + options.action, params)
-        if options.command == 'nodes' and options.node_action == 'prepare':
+        if options.command == 'nodes' and options.node_action == 'query-preparation':
+            if not request_id_valid(options.original_request_id):
+                raise ClientError('PARAMETER_INVALID', 'Original preparation requestId required', 2)
+            options.request_id = options.original_request_id
+            prepared = ('agents.nodes.queryPreparation', {'requestId': options.original_request_id})
+        elif options.command == 'nodes' and options.node_action == 'prepare':
             params = json_input(options.file, file_only=True)
             if not preparation_request_valid(params):
                 raise ClientError('PARAMETER_INVALID', 'Complete public preparation request required', 2)
@@ -279,6 +288,26 @@ def main(argv=None):
                 raise ClientError("CORE_RESPONSE_INVALID", "Provider registry result could not be safely validated", 4)
             data = result
             evidence = {"level": "providerRegistryObserved", "runtimeVerified": False}
+        elif options.command == 'nodes' and options.node_action == 'query-preparation':
+            method, params = prepared
+            if method not in core.get('supportedMethods', ()) or core['supports'].get('nodePreparation') is not True:
+                raise ClientError('PREPARATION_QUERY_UNAVAILABLE', 'Service did not publish original preparation reconciliation', 4)
+            result = client.core_call(method, params, request_id)
+            if (not query_result_valid(result, core['environmentNamespace'], core_schema(client.schema_version)['schema'])
+                    or service.token in json.dumps(result)):
+                raise ClientError('OUTCOME_UNKNOWN', 'Original preparation could not be safely reconciled', 6)
+            data = result
+            evidence = {'level': 'preparationOperationObserved', 'runtimeVerified': False,
+                        'nodePublished': result['operation'] is not None and result['operation']['status'] == 'published'}
+            if result['operation'] is None:
+                raise ClientError('PREPARATION_NOT_FOUND', 'No original preparation exists in this authenticated realm', 4)
+            operation = result['operation']
+            operation_ref = operation['operationRef']
+            if operation['status'] != 'published':
+                result_status = 'refused' if operation['status'] in {'refused', 'cancelled'} else 'unknown'
+                raise ClientError('PREPARATION_REFUSED' if result_status == 'refused' else 'OUTCOME_UNKNOWN',
+                                  'Reconciliation has not published a Node; no missing step was dispatched',
+                                  4 if result_status == 'refused' else 6)
         elif options.command == 'nodes' and options.node_action == 'prepare':
             method, params = prepared
             if method not in core.get('supportedMethods', ()) or core['supports'].get('nodePreparation') is not True:

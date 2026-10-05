@@ -2,9 +2,9 @@
 
 Independent CLI and three optional Skills for humans, Agents, scripts and tools.
 The implemented slices include discovery, the core-owned Profile catalog,
-fixed-request Node preparation, published Node list/inspect, and owner configuration describe/inspect/apply/query:
+fixed-request Node preparation and reconciliation, published Node list/inspect, and owner configuration describe/inspect/apply/query:
 list/read/create/edit/clone/rename/archive/restore, immutable history refs, and
-explicitly unresolved preview. Production native preparation has not been verified. Task submission, stop and recovery
+explicitly unresolved preview. Production native preparation has not been verified. Task submission, stop and native lifecycle recovery
 are not implemented. Three Skill files do not make those
 capabilities available. No real model calls were made for this slice.
 
@@ -85,6 +85,7 @@ service must already be running under its authorized owner.
 
 ```sh
 ordessa-agent nodes prepare --file preparation.json --config services.json --service local --json
+ordessa-agent nodes query-preparation ORIGINAL_REQUEST_ID --config services.json --service local --json
 ```
 
 The bounded file contains exactly `requestId`, a complete service-returned
@@ -105,9 +106,15 @@ This is durable publication evidence, with `runtimeVerified=false`, not a task
 success or permission to send native input. Save the returned full NodeRef and
 operationRef. `reserved`, `running`, `unknown`, disconnect and invalid receipts
 exit 6 without automatic resend. An unobserved receipt may leave operationRef
-unknown even if effects occurred. This release has no public preparation query
-or request-key lookup: retain the exact requestId and report that recovery gap;
-do not resend, generate a replacement key, or inspect the service database.
+unknown even if effects occurred. Use `nodes query-preparation ORIGINAL_REQUEST_ID`
+in the same selected service and authenticated realm. It only observes the
+original claimed steps and can record their evidence; it does not dispatch missing
+steps, publish a Node, or create a new operation. A published original can be
+recovered even when its operationRef was never received. Running/unknown remains
+exit 6; there is no automatic continuation. Missing operation exits 4 and does
+not authorize a replacement or establish that effects never occurred. Do not
+resend, change keys, or inspect the service database. Query cannot recover a
+configuration change by request-id; that separate lookup remains unavailable.
 
 Controlled Core/SQLite/HTTP and fresh installed CLI tests exercise this path;
 production native Harness preparation and real model tasks remain unverified.

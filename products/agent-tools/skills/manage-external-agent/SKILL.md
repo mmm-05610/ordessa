@@ -25,6 +25,7 @@ same `--config services.json --service local --json` to every invocation below:
 
 ```sh
 ordessa-agent nodes prepare --file preparation.json
+ordessa-agent nodes query-preparation ORIGINAL_REQUEST_ID
 ordessa-agent nodes list
 ordessa-agent nodes inspect @node-ref.json
 ordessa-agent nodes configuration describe @node-ref.json
@@ -49,9 +50,13 @@ authorization result. The default catalog service does not compose preparation.
 Only a validated published operation establishes nodePublished=true; save its
 full NodeRef and operationRef. runtimeVerified remains false. reserved/running/
 unknown, lost receipts and malformed responses exit 6 with no automatic retry.
-There is no public preparation query or request-key lookup in this release;
-retain the original requestId and report that gap even when operationRef exists.
-Do not substitute configuration query, direct database access or a new prepare.
+Use nodes query-preparation with the original requestId in the same selected
+service and authenticated realm. This observes only original claimed steps and
+may record their confirmation; it never dispatches missing steps or publishes a
+Node. It can recover a published original after a lost operationRef. Running or
+unknown remains exit 6; do not automatically continue prepare. Missing operation
+exits 4, does not prove no effects occurred, and does not authorize a new key.
+Do not substitute configuration query, direct database access or a replacement.
 Publication does not establish native task execution or current readiness.
 
 Configuration describe reads supported kinds/actions/scope/modes. Configuration
@@ -77,7 +82,7 @@ observation before reconsidering a separately authorized change.
 For an unknown change with an original operationRef, configuration query
 reconciles that same operation. It can record evidence or finish publication;
 it is not an inert log read and never sends a new change. Without operationRef,
-this release has no public lookup by request key: retain the original requestId
+this release has no public configuration lookup by request key: retain the original requestId
 and report the recovery gap. Do not read the service database or generate a new
 requestId to evade uncertainty.
 

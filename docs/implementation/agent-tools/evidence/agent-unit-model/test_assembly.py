@@ -301,3 +301,38 @@ def test_requested_directory_must_match_trusted_owner_binding(assembly):
     wrong = DirectoryBindingRef("env", "other-directory", 1, "sha256:" + "e" * 64)
     with pytest.raises(IdentityMismatchError): prepare(assembly, context={"directoryBindingRef": wrong.to_dict()})
     assert assembly[4].read_operation(assembly[1]) is None
+
+
+@pytest.mark.parametrize('number', [True, 1.0])
+@pytest.mark.parametrize('location', ['observation_provider', 'unit_usage', 'query_original_unit'])
+def test_numeric_reference_alias_cannot_confirm_original_preparation(assembly, number, location):
+    import json
+    original = assembly[9].observe
+    def observe(operation, step, reply):
+        value = original(operation, step, reply)
+        if location == 'observation_provider':
+            provider = json.loads(safe_json(value.provider_ref)); provider['generation'] = number
+            return replace(value, provider_ref=provider)
+        unit = json.loads(safe_json(value.prepared_unit))
+        unit['unitRef']['ref'] = number if location == 'query_original_unit' and assembly[3].calls[-1] == 'query' else 1
+        usages = tuple(replace(usage, target_ref=dict(unit['unitRef'])) for usage in value.usages)
+        if location == 'unit_usage':
+            target = json.loads(safe_json(usages[0].target_ref)); target['ref'] = number
+            usages = (replace(usages[0], target_ref=target),)
+        return replace(value, prepared_unit=unit, usages=usages)
+    assembly[9].observe = observe
+    if location == 'query_original_unit':
+        assembly[3].fail = 'start'
+        assert prepare(assembly).status == 'unknown'
+        assembly[3].fail = None
+        operation = assembly[0].query(assembly[1])
+        assert operation.status == 'unknown'
+        assert assembly[4].read_operation_step(assembly[1], 'start').outcome == 'unknown'
+        assert assembly[3].calls == ['prepare', 'start', 'query']
+    else:
+        operation = prepare(assembly)
+        assert operation.status == 'unknown'
+        assert assembly[4].read_operation_step(assembly[1], 'prepare').outcome == 'unknown'
+        assert assembly[4].read_operation_step(assembly[1], 'start') is None
+        assert assembly[3].calls == ['prepare']
+    assert assembly[5].list() == ()

@@ -72,7 +72,7 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
                             if item['action'] in profile_actions or item['action'] in configuration_actions
                             or item['action'] in provider_actions
                             or item['action'] in node_observation_actions
-                            or (item['action']=='prepare' and result['supports']['nodePreparation'])]
+                            or (item['action'] in {'prepare','queryPreparation'} and result['supports']['nodePreparation'])]
                     return result
                 if action=='providersList':
                     return {'providers':list(services.providers.list())}
@@ -83,6 +83,9 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
                 if action=='nodeRead':
                     node = services.nodes.read(node_ref)
                     return {'node': json.loads(safe_json({'node': node}))['node']}
+                if action=='queryPreparation':
+                    operation=services.assembly.query(catalog.request_key(params['requestId']))
+                    return json.loads(safe_json({'operation': None if operation is None else services.assembly.operation_view(operation)}))
                 if action=='prepare':
                     operation=services.assembly.prepare(catalog.request_key(params['requestId']),
                         refs['profileRef'],params['context'],params['options'])

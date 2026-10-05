@@ -62,7 +62,7 @@ Use the owner's observed configuration revision, not a Profile revision. Verify
 same-key replay causes one effect, changed payload/revision conflict exits 5,
 unknown exits 6 with no resend, and partial retains per-item outcomes. ACK-only
 is not applied; restartRequired never restarts. If no operationRef was returned,
-this release has no public request-key lookup: a separate inspect cannot prove
+this release has no public configuration request-key lookup: a separate inspect cannot prove
 ownership or completion of the lost operation. Do not read private databases to
 fill that product gap.
 
@@ -85,7 +85,7 @@ capture/receipt/effect/Session owners, full cold recovery, lifecycle and
 production installation/admission closure remain incomplete. Controlled Unit
 records, scope/journal/configuration management and native write fences exist,
 but their controlled evidence does not replace the missing production owners.
-Production preparation, public preparation recovery, connect/apply-profile/recover/stop/release/task/result CLI, the old
+Production preparation, native lifecycle recovery, connect/apply-profile/recover/stop/release/task/result CLI, the old
 model/Server assembly migration and real Agent Skill use also remain incomplete.
 The current core regression retains 3 inherited direction failures. The ledger
 also contains an older targeted Server snapshot with 11 baseline failures;
@@ -136,5 +136,10 @@ A composed controlled fixture must publish the original Node and replay the same
 request without a second provider prepare/start effect. Changed context/options
 must conflict; unauthorized or absent deployment ports must not spend the key.
 Disconnected or invalid post-effect receipts must return unknown/6, preserving
-the requestId and no automatic resend. There is no public preparation query or
-request-key recovery in this release. Production native resources remain unverified.
+the requestId and no automatic resend. Use nodes query-preparation with that
+original key in the same authenticated realm to reconcile claimed steps. A lost
+published receipt must be recoverable without another dispatch. Unknown remains
+unknown unless original evidence is confirmed; confirmation of a step alone must
+not dispatch missing steps or publish a Node. Missing and cross-principal lookup
+must not create an operation or leak the original. Production native resources
+and automatic continuation remain unverified/unavailable.

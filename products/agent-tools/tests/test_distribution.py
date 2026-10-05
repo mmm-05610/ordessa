@@ -171,3 +171,12 @@ def test_wheel_isolated_install_and_actual_http_discovery(tmp_path, node_setup, 
             else: assert result['data'] == original
             assert SECRET not in checked.stdout + checked.stderr
         assert assembly[3].calls == ['prepare', 'start'] and len(calls) == 6
+        checked = subprocess.run([str(executable), 'nodes', 'query-preparation', assembly[1].request_id,
+            '--config', str(path), '--service', 'local', '--json'], cwd=tmp_path, env=env, capture_output=True, text=True)
+        assert checked.returncode == 0, checked.stdout + checked.stderr
+        result = json.loads(checked.stdout)
+        assert result['data']['operation'] == original
+        assert result['requestId'] == assembly[1].request_id and result['operationRef'] == original['operationRef']
+        assert result['evidence']['nodePublished'] is True and result['evidence']['runtimeVerified'] is False
+        assert SECRET not in checked.stdout + checked.stderr
+        assert assembly[3].calls == ['prepare', 'start'] and len(calls) == 9

@@ -17,7 +17,7 @@ from ordessa_environment_api.operations import OperationIntent, StepIntent, Usag
 from .contracts import ProfileRef
 from .directory import DirectoryBindingRef
 from .invocation import InvocationIssuer
-from .nodes import decode_node_ref, _safe_projection
+from .nodes import decode_node_ref, _safe_projection, _same_reference
 
 
 def plain(value): return json.loads(safe_json(value))
@@ -139,9 +139,9 @@ class AgentAssembly:
             raise GuaranteeUnavailableError("authorized preparation context unavailable") from None
         if (type(resolved) is not PreparationContext
                 or resolved.directory_binding_ref.environment_namespace != request.environment_namespace
-                or resolved.private_context.get("nodeRef") != node):
+                or not _same_reference(resolved.private_context.get("nodeRef"), node)):
             raise IdentityMismatchError("trusted preparation context identity differs")
-        if "directoryBindingRef" in context and context["directoryBindingRef"] != resolved.directory_binding_ref.to_dict():
+        if "directoryBindingRef" in context and not _same_reference(context["directoryBindingRef"], resolved.directory_binding_ref.to_dict()):
             raise IdentityMismatchError("resolved DirectoryBinding differs from requested reference")
         return resolved
 
@@ -207,14 +207,14 @@ class AgentAssembly:
     def _current_plan(self, request, operation):
         manifest = self._profiles.read(ProfileRef.from_dict(plain(operation.intent.profile_snapshot_ref)))
         admitted = self._environment.agent_runtime_contribution(manifest.content["harnessDefinitionRef"])
-        if admitted.provider_ref != operation.intent.steps[0].pinned_provider_ref:
+        if not _same_reference(admitted.provider_ref, operation.intent.steps[0].pinned_provider_ref):
             raise AdmissionRefusedError("prepared provider activation changed")
         fixed = operation.intent.context_ref["preparationRequest"]
         resolved, plan, digest = self._plan(request, manifest, admitted, operation.intent.node_ref,
                                           fixed["context"], fixed["options"], operation.intent.operation_ref)
         original = operation.intent.context_ref
-        if (digest != original["planDigest"] or resolved.source_refs != original["contextSources"]
-                or resolved.directory_binding_ref.to_dict() != original["directoryBindingRef"]
+        if (digest != original["planDigest"] or not _same_reference(resolved.source_refs, original["contextSources"])
+                or not _same_reference(resolved.directory_binding_ref.to_dict(), original["directoryBindingRef"])
                 or resolved.management_epoch != operation.intent.management_epoch):
             raise AdmissionRefusedError("fixed preparation sources changed before dispatch")
         return admitted, plan
@@ -222,7 +222,7 @@ class AgentAssembly:
     def _observe(self, operation, step, reply):
         observation = self._observation_port.observe(operation, step, reply)
         if (type(observation) is not PreparationObservation or observation.step_id != step.step_id
-                or observation.provider_ref != step.pinned_provider_ref
+                or not _same_reference(observation.provider_ref, step.pinned_provider_ref)
                 or observation.input_digest != step.input_digest
                 or observation.recovery_correlation != step.recovery_correlation):
             raise IdentityMismatchError("original preparation receipt correlation differs")
@@ -231,12 +231,12 @@ class AgentAssembly:
             raise GuaranteeUnavailableError("original prepared Unit reference unavailable")
         unit_ref = observation.prepared_unit["unitRef"]
         self._nodes._owner_ref(unit_ref, step.pinned_provider_ref, label="prepared Unit")
-        if step.step_id == "prepare" and not any(usage.target_ref == unit_ref and "use" in usage.rights
+        if step.step_id == "prepare" and not any(_same_reference(usage.target_ref, unit_ref) and "use" in usage.rights
                                                  for usage in observation.usages):
             raise GuaranteeUnavailableError("prepared Unit must be held before native start")
         for usage in observation.usages:
             if (usage.expected_revision != 0 or usage.expected_holder_ref is not None or usage.state != "active"
-                    or usage.holder_ref != operation_holder(operation.request, operation.intent.operation_ref)):
+                    or not _same_reference(usage.holder_ref, operation_holder(operation.request, operation.intent.operation_ref))):
                 raise IdentityMismatchError("preparation observation must acquire original operation holds")
             _safe_projection(usage.target_ref)
         return observation
@@ -263,7 +263,7 @@ class AgentAssembly:
                 if not self._issuer.verified_consumption(invocation):
                     raise GuaranteeUnavailableError("provider did not consume the original invocation")
                 observed = self._observe(operation, frozen_step, reply)
-                if frozen_step.step_id == "start" and observed.prepared_unit != argument:
+                if frozen_step.step_id == "start" and not _same_reference(observed.prepared_unit, argument):
                     raise IdentityMismatchError("start receipt changed the original prepared Unit")
                 evidence = {"evidenceRef": plain(observed.evidence_ref), "preparedUnit": plain(observed.prepared_unit),
                             "acquiredUsages": [self._usage_source(item) for item in observed.usages]}
@@ -303,7 +303,7 @@ class AgentAssembly:
             if operation.status in {"published", "refused", "cancelled"}: return operation
             manifest = self._profiles.read(ProfileRef.from_dict(plain(operation.intent.profile_snapshot_ref)))
             admitted = env.agent_runtime_contribution(manifest.content["harnessDefinitionRef"])
-            if (admitted.provider_ref != operation.intent.steps[0].pinned_provider_ref
+            if (not _same_reference(admitted.provider_ref, operation.intent.steps[0].pinned_provider_ref)
                     or "query_step" not in admitted.descriptor.supported_methods):
                 raise GuaranteeUnavailableError("original owner query capability unavailable")
         for step in operation.intent.steps:
@@ -319,7 +319,7 @@ class AgentAssembly:
                 observed = self._observe(operation, step, reply)
                 if step.step_id == "start":
                     original = env._store.read_operation_step(request, "prepare").evidence["preparedUnit"]
-                    if observed.prepared_unit != original:
+                    if not _same_reference(observed.prepared_unit, original):
                         raise IdentityMismatchError("query receipt changed original Unit")
             except Exception:
                 return env._store.read_operation(request)
