@@ -133,13 +133,25 @@ class InvocationContext:
 
 class InvocationVerifier:
     """Provider-facing capability exposing verification alone."""
-    __slots__ = ("_verify",)
+    __slots__ = ("_verify", "_continue")
 
-    def __init__(self, verify):
+    def __init__(self, verify, continuation=None):
         self._verify = verify
+        self._continue = continuation
 
     def verify_and_consume(self, context, action, provider_ref, target_ref, input_digest):
         return self._verify(context, action, provider_ref, target_ref, input_digest)
+
+    def verify_continuation(self, context, action, provider_ref, target_ref, input_digest):
+        """Recheck an already verified original invocation, without a new claim.
+
+        This never performs IO or makes an unresolved native dispatch reusable.
+        The provider's original attempt/transport writer barrier still fixes
+        every actual write. A verifier lacking this explicit owner port refuses.
+        """
+        if not callable(self._continue):
+            raise InvocationAuthorityRefused('original invocation continuation unavailable')
+        return self._continue(context, action, provider_ref, target_ref, input_digest)
 
 
 class InvocationIssuer:
@@ -161,7 +173,7 @@ class InvocationIssuer:
         self._max_contexts, self._issuing = max_contexts, 0
 
     def verifier(self):
-        return InvocationVerifier(self.verify_and_consume)
+        return InvocationVerifier(self.verify_and_consume, self.verify_continuation)
 
     def _now(self):
         current = self._refused_call(self._clock)
@@ -173,7 +185,21 @@ class InvocationIssuer:
     def _capacity(self):
         now = self._now()
         for identity, entry in tuple(self._issued.items()):
-            if entry[3] == "consumed" or (entry[3] == "issued" and entry[2].expires_at <= now):
+            reclaim = entry[3] in {'issued', 'consumed'} and entry[2].expires_at <= now
+            if entry[3] == 'consumed':
+                # A verified original step remains live during multiple native
+                # edges. An unrelated issuance must not discard its proof.
+                reclaim = reclaim or entry[4] is not True
+                if not reclaim:
+                    facts = json.loads(entry[1])
+                    ref = facts['request']
+                    request = RequestKey(ref['environmentNamespace'], ref['principalScope'], ref['requestId'])
+                    claim = self._refused_call(lambda: self._store.read_operation_step(request, facts['stepId']))
+                    operation = self._refused_call(lambda: self._store.read_operation(request))
+                    reclaim = (claim is None or claim.outcome != 'possibly-dispatched'
+                        or claim.revision != facts['claimRevision'] or operation is None
+                        or operation.status != 'running')
+            if reclaim:
                 del self._issued[identity]
         if len(self._issued) + self._issuing >= self._max_contexts:
             raise InvocationAuthorityRefused("invocation ticket capacity is unavailable")
@@ -336,6 +362,39 @@ class InvocationIssuer:
                     and entry[3] == "issued" and entry[4] is True
                     and json.loads(entry[1])["query"] is True)
 
+    def verify_continuation(self, context, action, provider_ref, target_ref, input_digest):
+        """Current permission for the SAME active, successfully verified step.
+
+        Reuses the live issuer entry and original frozen grant, store recipe,
+        claim revision and current-state ports. No issuance, replacement claim
+        or native action occurs. Failure poisons effect continuation: restoring
+        an old authority value cannot reactivate a possibly dispatched input.
+        Query continuations retain read-only facts and cannot grant effects.
+        Revocation must additionally fence the actual native transport writer;
+        this method alone is not an IO barrier or a retry permission.
+        """
+        with self._lock:
+            registered = self._issued.get(id(context))
+            if (type(context) is not InvocationContext or registered is None
+                    or registered[0] is not context or registered[1] != context._payload):
+                raise InvocationAuthorityRefused('continuation was not issued by this live core instance')
+            facts = json.loads(registered[1])
+            original_state = 'issued' if facts['query'] else 'consumed'
+            if registered[3] != original_state or registered[4] is not True:
+                raise InvocationAuthorityRefused('original invocation has no successful verification')
+            registered[3] = 'revalidating'
+            registered[4] = False
+        # Never hold the issuer lock while consulting deployment current state:
+        # core admission may issue another context while holding its own lock.
+        try:
+            verified = self._verify_registered(registered, facts, action, provider_ref, target_ref, input_digest)
+            with self._lock:
+                registered[4] = True
+            return verified
+        finally:
+            with self._lock:
+                registered[3] = original_state
+
     def verify_and_consume(self, context, action, provider_ref, target_ref, input_digest):
         """Trusted provider checks immediately before use; no native call occurs here."""
         with self._lock:
@@ -350,11 +409,13 @@ class InvocationIssuer:
             registered[3] = "verifying"
             registered[4] = False
             facts = json.loads(registered[1])
-            try:
-                verified = self._verify_registered(registered, facts, action, provider_ref, target_ref, input_digest)
+        try:
+            verified = self._verify_registered(registered, facts, action, provider_ref, target_ref, input_digest)
+            with self._lock:
                 registered[4] = True
-                return verified
-            finally:
+            return verified
+        finally:
+            with self._lock:
                 registered[3] = "issued" if facts["query"] else "consumed"
 
     def _verify_registered(self, registered, facts, action, provider_ref, target_ref, input_digest):
@@ -377,6 +438,10 @@ class InvocationIssuer:
         if facts["cleanup"] and (state.acquired_target_ref != facts["acquiredTargetRef"]
                                   or state.acquisition_evidence_ref != facts["acquisitionEvidenceRef"]):
             raise InvocationAuthorityRefused("cleanup acquisition relationship changed")
+        # A state callback may take time or revoke a grant. Recheck after it,
+        # then read the durable claim last so a late recorded outcome cannot
+        # authorize another native edge. Actual IO still needs its owner fence.
+        self._revalidate(registered[2], request, action, binding)
         if not facts["query"]:
             operation = self._store.read_operation(request)
             claim = self._store.read_operation_step(request, facts["stepId"])

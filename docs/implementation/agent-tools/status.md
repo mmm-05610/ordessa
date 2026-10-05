@@ -246,3 +246,17 @@ HEAD9ef1dc2023上保持共享唯一作者。Codex与Pi执行者均完成切片�
 串行专属Python复跑：首个Codex命令未显式设置源PYTHONPATH，collection 3 errors、exit2、0 executed；补 `PYTHONPATH=plugins/harness/codex/src:packages/backend/harness-transport/src` 后 `-m pytest -c plugins/harness/codex/pyproject.toml plugins/harness/codex/tests -q` 65P/0F exit0、1.63s。审阅发现okOverridden条目unknown但attempt误confirmed导致scope释放，主会话修为unknown保留原waiter/排他，并加强原反例查询不重发；同命令最终65P/0F exit0、1.64s。`PYTHONPATH=plugins/harness/pi/src:packages/backend/harness-transport/src` 同Pi包命令104P/0F exit0、2.93s。计数均为最终快照，不累计历史。git diff --check exit0。
 
 Claude发现记录claude-unit-session-findings.md：SDK无prompt connect可有控制握手但不保证session，core允许Unit存在且nativeSessionRefs为空。原record_session不放宽；需明确Unit确认接缝及同pipe真实process/initialize证据。只读来源核对不是P/M。三家此次测试为C（含Python peer），真实家族P未验证、M0；没有安装更新/登录配置/用户服务操作或push。AU003_PARTIAL检查点后串行返回AU002补原许可逐write重核，再回AU003实现生产投影/Unit接线。
+
+### 2026-10-05 AU002 核心持续重核补强
+
+AU003增量e08916abae冻结/提交后三家写权全部释放，主会话串行返回AU002。新增公开Verifier/Issuer.verify_continuation复用原Context/claim/grant，不第二claim/新Context；原步骤结束、unknown、版本/epoch/目录/activation/authority变动即拒。缺continuation绑定不以初次verify代替。活跃effect证明保留到实际结论/失败/过期，容量满发前拒新claim；可信状态检查时释放Issuer锁，避免与部署admission锁互等，状态观察之后重核grant、最后核claim。详见invocation-continuation-port.md。
+
+原authority测试两个反例加强：缓存容量必须保留active effect（先拒新read且证明仍存，真实concluded后才回收）；当前状态之前/之后两次authority回调都拒重入。没有删除原安全断言。作为核心接口影响的验收联动，唯一主会话同步这一现有产品integration测试（无第二写者），其余测试集中在本单允许的evidence目录。
+
+执行专属Python `-m pytest -c products/agent-tools/pyproject.toml docs/implementation/agent-tools/evidence/agent-unit-model/test_invocation_continuation.py products/agent-tools/tests/integration/test_invocation_authority.py docs/implementation/agent-tools/evidence/agent-unit-model/test_management.py products/agent-tools/tests/integration/test_runtime_admission.py products/agent-tools/tests/integration/test_node_publication.py products/agent-tools/tests/integration/test_managed_input_reservations.py -q`：最终189P/0F exit0、4.59s。初次小组合100P/2F exit1、2.83s；并发版186P exit0、4.49s；状态后grant重核版188P/1F exit1、3.65s，修回调次数断言后189P。曾误用input反例单数路径exit4、0 tests，后改为真实复数路径。历史快照不累计。新continuation24项，均C层；不证明native writer屏障或三家真实任务。
+
+核心全回归中间快照 `-m pytest -c packages/backend/pacthold/pyproject.toml packages/backend/pacthold/tests -q`：269P/3F exit1、7.38s，仍同test_kernel_tree_has_no_import_of_server_harness_or_product、test_tripwire_planted_server_import_turns_the_guard_red、test_tripwire_from_import_form_is_detected_too；日志au002-continuation-core-regression.txt。最终共享改动后复跑日志au002-continuation-core-final.txt另记。AU002仍PARTIAL，准备/材料/Node/使用/生命周期生产协调未完成；本补强不等于核心收尾。P未启动，M0，无安装/登录/服务/用户数据库操作。
+
+最终核心全回归269P/3F exit1、7.02s，同三个继承ID，au002-continuation-core-final.txt。两份raw日志只去行尾空白，计数及诊断保留。未恢复legacy或删除失败断言。
+
+共享Issuer最后补强后，原配置journal贯通回归 `-m pytest -c plugins/harness/pyproject.toml plugins/harness/tests/test_unit_configuration_records.py plugins/harness/tests/test_unit_records.py plugins/harness/tests/test_operation_journal.py -q`：61P/0F exit0、0.67s。确认原core claim消费/原query及owner journal不受持续重核改动破坏。

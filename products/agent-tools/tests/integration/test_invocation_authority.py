@@ -372,7 +372,7 @@ def test_trusted_port_callback_reentry_cannot_consume_twice(tmp_path, port):
             return original(*args)
         setattr(owner, method, callback)
         assert verify(parts, context)["action"] == "apply"
-        assert seen == ["reentry refused"]
+        assert seen == ["reentry refused"] * (2 if port == "authority" else 1)
         with pytest.raises(UnknownResultError):
             verify(parts, context)
         assert store.read_operation_step(request, "work").outcome == "possibly-dispatched"
@@ -411,6 +411,13 @@ def test_bounded_ticket_cache_refuses_before_claim_and_reclaims_expired_reads(tm
         with pytest.raises(InvocationAuthorityRefused):
             verify(small_parts, read, action="query")
         verify(small_parts, effect)
+        with pytest.raises(InvocationAuthorityRefused):
+            issuer.issue_query(request, "digest", "work")
+        assert issuer.verified_consumption(effect) is True
+        # Active continuation is retained. Only the actual known step result
+        # makes its process-local proof reclaimable; no additional dispatch.
+        store.record_operation_step(request, "digest", "work", "fixed-input", 1,
+                                    "concluded", {"evidenceRef": "controlled-result"})
         replacement_read = issuer.issue_query(request, "digest", "work")
         assert len(issuer._issued) == 1
         with pytest.raises(InvocationAuthorityRefused):

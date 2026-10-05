@@ -1,0 +1,13 @@
+# AU002 原 InvocationContext 持续重核
+
+在AU003家族增量e08916abae纳入且全部写权释放后，主会话串行补核心。唯一核心Issuer/Verifier新增verify_continuation(context, action, provider_ref, target_ref, input_digest)。复用原_live issued_条目、冻结grant、原OperationIntent与原step claim，不新增授权、Registry、请求身份或持久状态。
+
+原effect必须成功verify_and_consume且还处于原possibly-dispatched/revision/running；query必须先完成原verify_and_consume(query)，返回的query事实仍true。每次续用复查action/provider/target/digest、同原authority revision/expiry、current activation/Directory/epoch及cleanup acquired target来源。失败使effect成功证明失效，恢复旧authority值不能重启原输入。核心结束或unknown步骤不许可后续effect；query可观察原unknown。
+
+新增可选Verifier continuation绑定保持旧受控构造用法；没有真实绑定则typed拒绝，不拿初次_verifier当continuation。新的production owner应调用这个公开面，不能只检查facts相等或verified_consumption=True来取得当前许可。
+
+活跃原effect证明不能因另一个请求签发而被缓存回收。仅失败、过期、原步骤已非possibly-dispatched或操作已非running可回收；容量满发前拒新claim。已存在的极小缓存反例加强为先拒替代read/证明仍存活，再记录真实已知concluded以允许回收；原assertions全部保留。验证期间状态标记排除重入，调用可信authority/current-state时不持Issuer锁，避免与核心admission锁互等。状态观察后再次重核grant，再最终读claim，防观测期间撤权/过期/迟到结论。
+
+此方法只检查许可，不执行native IO，不允许重发。实际writer必须以同运输fence跨write、撤销/退役，并保持原capture/RPC/unknown排他。该生产writer/lease接线仍是AU003缺口。没有当前trusted ports即拒绝，不由Bearer或OS路径访问补权。
+
+C证据：新continuation反例24项（真实临时SQLite＋受控authority/current state）；与原authority53、management31、runtime21、Node25、input35共189P/0F exit0、4.59s。首轮102项组合100P/2F exit1、2.83s，暴露原缓存清除活跃proof以及fixture concluded无证据；修缓存并补真实结论依据。增并发后186P/0F exit0、4.49s。补状态后grant重核首轮188P/1F exit1、3.65s，旧callback次数断言仅预期一次；加强为两次都拒重入，最终189项通过。曾写错单数test_managed_input_reservation.py，exit4、0 tests；改实际复数路径后执行。只记录快照，不累计测试数量。
