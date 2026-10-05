@@ -10,7 +10,7 @@ import uuid
 
 from .initialization import discover, save_report
 from .providers import definition_ref_valid, provider_result_valid
-from .configuration import node_ref_valid, description_result_valid
+from .configuration import node_ref_valid, description_result_valid, snapshot_result_valid
 from .client import ClientError, WireClient, load_service, parse_json, core_schema, profile_ref_valid, provider_schema, MAX_BYTES
 
 
@@ -45,9 +45,11 @@ def parser():
     node_actions = nodes.add_subparsers(dest="node_action", required=True, parser_class=Parser)
     configuration = node_actions.add_parser("configuration", help="Observe owner configuration capabilities")
     configuration_actions = configuration.add_subparsers(dest="action", required=True, parser_class=Parser)
-    child = configuration_actions.add_parser("describe", help="Read owner capability descriptions; does not inspect or apply values")
-    connection(child)
-    child.add_argument("node_ref", help="Complete NodeRef JSON or @file")
+    for action, help_text in (("describe", "Read owner capability descriptions; does not inspect or apply values"),
+                              ("inspect", "Observe owner actual configuration and explicit unknown fields")):
+        child = configuration_actions.add_parser(action, help=help_text)
+        connection(child)
+        child.add_argument("node_ref", help="Complete NodeRef JSON or @file")
     profile = commands.add_parser("profiles")
     actions = profile.add_subparsers(dest="action", required=True, parser_class=Parser)
     for action in ("list", "show", "entry", "preview", "create", "edit", "clone", "rename", "archive", "restore"):
@@ -191,7 +193,7 @@ def main(argv=None):
             node = json_input(options.node_ref)
             if not node_ref_valid(node):
                 raise ClientError("PARAMETER_INVALID", "Complete NodeRef required", 2)
-            prepared = ("agents.nodes.configuration.describe", {"nodeRef": node})
+            prepared = ("agents.nodes.configuration." + options.action, {"nodeRef": node})
         if not math.isfinite(options.timeout) or not 0 < options.timeout <= 120:
             raise ClientError("PARAMETER_INVALID", "Timeout must be greater than zero and at most 120 seconds", 2)
         service = load_service(options.config, options.service)
@@ -233,15 +235,17 @@ def main(argv=None):
         elif options.command == "nodes":
             method, params = prepared
             if method not in core.get("supportedMethods", ()):
-                raise ClientError("NODE_CONFIGURATION_UNAVAILABLE", "Service did not publish configuration description", 4)
+                raise ClientError("NODE_CONFIGURATION_UNAVAILABLE", "Service did not publish the requested configuration observation", 4)
             if not node_ref_valid(params["nodeRef"], core["environmentNamespace"]):
                 raise ClientError("PARAMETER_INVALID", "NodeRef belongs to another service environment", 2)
             result = client.core_call(method, params, request_id)
-            if not description_result_valid(result) or service.token in json.dumps(result):
-                raise ClientError("CORE_RESPONSE_INVALID", "Owner description could not be safely validated", 4)
+            valid = (description_result_valid(result) if options.action == "describe"
+                     else snapshot_result_valid(result, core["environmentNamespace"]))
+            if not valid or service.token in json.dumps(result):
+                raise ClientError("CORE_RESPONSE_INVALID", "Owner configuration observation could not be safely validated", 4)
             data = result
-            evidence = {"level": "configurationDescriptionObserved", "runtimeVerified": False,
-                        "configurationValuesObserved": False}
+            evidence = {"level": "configurationDescriptionObserved" if options.action == "describe" else "configurationSnapshotObserved",
+                        "runtimeVerified": False, "configurationValuesObserved": options.action == "inspect"}
         elif prepared is not None:
             method, params = prepared
             result = client.core_call(method, params, request_id)

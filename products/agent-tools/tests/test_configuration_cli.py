@@ -32,16 +32,20 @@ def observation_server(parts, mode='healthy'):
             calls.append(request)
             assert self.headers['Authorization'] == 'Bearer ' + SECRET
             method = request['method']
+            if method.endswith('.inspect') and mode == 'disconnect':
+                self.close_connection = True
+                self.connection.close()
+                return
             try:
                 if method == 'server.hello':
                     result = {'serverId': 'controlled-core', 'protocolVersion': 'wire/1',
                               'auth': {'required': True, 'schemes': ['session_token']},
                               'capabilities': [{'id': name, 'supported': True} for name in handlers]}
                 else:
-                    if mode == 'forbidden' and method.endswith('.describe'): parts[2].allowed = False
+                    if mode == 'forbidden' and method.startswith('agents.nodes.configuration.'): parts[2].allowed = False
                     result = handlers[method](request['params'])
                     if method == 'agents.capabilities' and mode == 'missing':
-                        result['supportedMethods'].remove('agents.nodes.configuration.describe')
+                        result['supportedMethods'] = [name for name in result['supportedMethods'] if not name.startswith('agents.nodes.configuration.')]
                     if method.endswith('.describe'):
                         item = result['descriptions'][0]
                         if mode == 'duplicate': result['descriptions'].append(dict(item))
@@ -57,6 +61,30 @@ def observation_server(parts, mode='healthy'):
                         if mode == 'scope-object': item['scope'] = {}
                         if mode == 'confirmation-list': item['confirmation'] = []
                         if mode == 'schema-list': item['inputSchema'] = []
+                    if method.endswith('.inspect'):
+                        if mode == 'unknown-outcome':
+                            raise WireError('OUTCOME_UNKNOWN', SECRET, {'retryable': False})
+                        if mode == 'foreign-unit': result['unitRef']['environmentNamespace'] = 'foreign'
+                        if mode == 'foreign-scope': result['scopeRef']['environmentNamespace'] = 'foreign'
+                        if mode == 'foreign-proof': result['confirmationEvidence']['environmentNamespace'] = 'foreign'
+                        if mode == 'absent-proof': result['confirmationEvidence'] = None
+                        if mode == 'unknown-revision': result['sourceRevision'] = None
+                        if mode == 'bool-revision': result['sourceRevision'] = True
+                        if mode == 'naive-time': result['observedAt'] = '2026-10-05T01:00:00'
+                        if mode == 'bool-time': result['observedAt'] = True
+                        if mode == 'overlap': result['unknownItems'] = ['model']
+                        if mode == 'duplicate-unknown': result['unknownItems'] = ['tools', 'tools']
+                        if mode == 'object-unknown': result['unknownItems'] = [{}]
+                        if mode == 'desired': result['configuration']['desired'] = {}
+                        if mode == 'plaintext': result['configuration']['nested'] = {'password': 'must-not-emit'}
+                        if mode == 'secret': result['configuration']['model'] = SECRET
+                        if mode == 'bad-secret-ref': result['configuration']['secretRef'] = {'ref': 'invented'}
+                        if mode == 'unknown-fields':
+                            result['sourceRevision'] = None
+                            result['comparisonGuarantee'] = 'unavailable'
+                            result['unknownItems'] = ['tools']
+                        if mode == 'secret-ref':
+                            result['configuration']['credentials'] = {'secretRef': {'ref': 'opaque-ref', 'revision': '1', 'owner_namespace': 'test.owner', 'access_purpose': 'test.read'}}
                 body = {'jsonrpc': '2.0', 'id': request['id'], 'result': result}
             except WireError as error:
                 body = {'jsonrpc': '2.0', 'id': request['id'], 'error': {'code': error.family, 'message': SECRET}}
@@ -68,11 +96,11 @@ def observation_server(parts, mode='healthy'):
     finally: httpd.shutdown(); httpd.server_close(); thread.join()
 
 
-def invoke(parts, tmp_path, monkeypatch, capsys, mode='healthy', ref=None):
+def invoke(parts, tmp_path, monkeypatch, capsys, mode='healthy', ref=None, action='describe'):
     monkeypatch.setenv('TOOLS_TEST_TOKEN', SECRET)
     with observation_server(parts, mode) as (endpoint, calls):
         node = encode_node_ref(parts[4]) if ref is None else ref
-        code = main(['nodes', 'configuration', 'describe', json.dumps(node), '--config', str(config(tmp_path, endpoint)), '--service', 'local', '--json'])
+        code = main(['nodes', 'configuration', action, json.dumps(node), '--config', str(config(tmp_path, endpoint)), '--service', 'local', '--json'])
         output = capsys.readouterr()
         assert SECRET not in output.out + output.err
         return code, json.loads(output.out), calls
@@ -124,4 +152,46 @@ def test_absent_published_node_or_retired_owner_refused(setup, tmp_path, monkeyp
     code, result, calls = invoke(setup, tmp_path, monkeypatch, capsys, ref=ref)
     assert code == (4 if resource == 'node' else 3)
     assert result['status'] == 'refused' and len(calls) == 3
+    assert setup[7]['calls'] == 0 and setup[7]['queryCalls'] == 0
+
+
+@pytest.mark.parametrize('mode', ['healthy', 'unknown-fields', 'secret-ref'])
+def test_inspect_preserves_owner_snapshot_without_effect(setup, tmp_path, monkeypatch, capsys, mode):
+    code, result, calls = invoke(setup, tmp_path, monkeypatch, capsys, mode, action='inspect')
+    assert code == 0 and result['status'] == 'confirmed'
+    assert result['data']['configuration']['model'] == 'old'
+    assert result['evidence'] == {'level': 'configurationSnapshotObserved', 'runtimeVerified': False, 'configurationValuesObserved': True}
+    assert result['data']['sourceRevision'] == (None if mode == 'unknown-fields' else 'native-1')
+    assert result['data']['unknownItems'] == (['tools'] if mode == 'unknown-fields' else [])
+    assert result['data']['comparisonGuarantee'] == ('unavailable' if mode == 'unknown-fields' else 'ownerSerialized')
+    assert calls[-1]['method'] == 'agents.nodes.configuration.inspect'
+    assert setup[7]['calls'] == 0 and setup[7]['queryCalls'] == 0
+    assert setup[0].read_operation(setup[5]) is None
+
+
+@pytest.mark.parametrize('mode', ['foreign-unit', 'foreign-scope', 'foreign-proof', 'absent-proof', 'unknown-revision',
+    'bool-revision', 'naive-time', 'bool-time', 'overlap', 'duplicate-unknown', 'object-unknown', 'desired', 'plaintext', 'secret', 'bad-secret-ref'])
+def test_inspect_rejects_false_facts_and_unsafe_snapshot(setup, tmp_path, monkeypatch, capsys, mode):
+    code, result, calls = invoke(setup, tmp_path, monkeypatch, capsys, mode, action='inspect')
+    assert code == 4 and result['error']['code'] == 'CORE_RESPONSE_INVALID' and len(calls) == 3
+    assert 'configuration' not in result['data'] and 'must-not-emit' not in json.dumps(result)
+    assert setup[7]['calls'] == 0 and setup[7]['queryCalls'] == 0
+
+
+@pytest.mark.parametrize('mode,expected,count', [('missing', 4, 2), ('forbidden', 3, 3)])
+def test_inspect_missing_method_or_permission_refused(setup, tmp_path, monkeypatch, capsys, mode, expected, count):
+    code, result, calls = invoke(setup, tmp_path, monkeypatch, capsys, mode, action='inspect')
+    assert code == expected and result['status'] == 'refused' and len(calls) == count
+    assert setup[7]['calls'] == 0
+
+
+@pytest.mark.parametrize('mode,expected,status,error', [('disconnect', 4, 'refused', 'SERVICE_UNAVAILABLE'),
+    ('unknown-outcome', 6, 'unknown', 'OUTCOME_UNKNOWN')])
+def test_inspect_disconnect_or_unknown_never_resends_or_invents_snapshot(setup, tmp_path, monkeypatch, capsys, mode, expected, status, error):
+    code, result, calls = invoke(setup, tmp_path, monkeypatch, capsys, mode, action='inspect')
+    assert code == expected and result['status'] == status and result['error']['code'] == error
+    assert result['error']['retryable'] is False
+    assert len(calls) == 3 and sum(call['method'].endswith('.inspect') for call in calls) == 1
+    assert 'configuration' not in result['data']
+    assert result['evidence']['level'] == 'coreCapabilitiesObserved'
     assert setup[7]['calls'] == 0 and setup[7]['queryCalls'] == 0

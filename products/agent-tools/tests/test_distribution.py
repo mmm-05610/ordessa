@@ -11,6 +11,7 @@ import zipfile
 from test_discovery import SECRET, config
 from test_profile_cli import profile_server
 from test_provider_cli import provider_server
+from test_configuration_cli import setup as node_setup, node_fixture, explicit_capabilities, observation_server
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -35,7 +36,7 @@ def test_client_import_boundary_with_adversarial_imports():
         assert not imports_are_client_only(source)
 
 
-def test_wheel_isolated_install_and_actual_http_discovery(tmp_path):
+def test_wheel_isolated_install_and_actual_http_discovery(tmp_path, node_setup):
     wheel_dir = tmp_path / "wheels"
     # Build fresh source in a temporary tree: old ignored build/lib files must
     # not silently enter the wheel after package exclusions change.
@@ -104,3 +105,22 @@ def test_wheel_isolated_install_and_actual_http_discovery(tmp_path):
         assert described.returncode == 0, described.stdout + described.stderr
         assert json.loads(described.stdout)["data"]["descriptor"]["definitionRef"] == dict(definition)
         assert SECRET not in described.stdout + described.stderr and len(calls) == 6
+
+    with observation_server(node_setup) as (endpoint, calls):
+        path = config(tmp_path, endpoint)
+        reference = tmp_path / "node-ref.json"
+        reference.write_text(json.dumps({"environmentNamespace": "env", "instanceId": "node", "generation": 1}))
+        for action in ("describe", "inspect"):
+            checked = subprocess.run([str(executable), "nodes", "configuration", action, "@" + str(reference),
+                "--config", str(path), "--service", "local", "--json"], cwd=tmp_path, env=env, capture_output=True, text=True)
+            assert checked.returncode == 0, checked.stdout + checked.stderr
+            result = json.loads(checked.stdout)
+            assert result["evidence"]["runtimeVerified"] is False
+            assert result["evidence"]["configurationValuesObserved"] is (action == "inspect")
+            if action == "inspect":
+                assert result["data"]["configuration"] == {"model": "old"}
+                assert result["data"]["sourceRevision"] == "native-1"
+            else: assert result["data"]["descriptions"][0]["configurationKind"] == "model"
+            assert SECRET not in checked.stdout + checked.stderr
+        assert len(calls) == 6
+        assert node_setup[7]["calls"] == 0 and node_setup[7]["queryCalls"] == 0

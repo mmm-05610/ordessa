@@ -236,4 +236,12 @@ outside the completed slice.
 ordessa-agent nodes configuration describe @node-ref.json --config service.json --service local --json
 ```
 
-此命令只消费公开 `agents.nodes.configuration.describe`，不读取实际配置值，不修改 Profile 或运行配置。输出 `configurationDescriptionObserved`，`runtimeVerified=false`、`configurationValuesObserved=false`。服务必须明确发布此方法并授予 Node 读取权限；`configurationManagement` 标志主要反映写入 issuer，不能代替逐方法与 owner 权限。缺 owner、权限或必要事实时拒绝，不回退或补默认值。节点 list/read 的网络绑定及配置 inspect/apply/query CLI 仍待完成。
+此命令只消费公开 `agents.nodes.configuration.describe`，不读取实际配置值，不修改 Profile 或运行配置。输出 `configurationDescriptionObserved`，`runtimeVerified=false`、`configurationValuesObserved=false`。服务必须明确发布此方法并授予 Node 读取权限；`configurationManagement` 标志主要反映写入 issuer，不能代替逐方法与 owner 权限。缺 owner、权限或必要事实时拒绝，不回退或补默认值。节点 list/read 的网络绑定及配置 apply/query CLI 仍待完成。
+
+实际配置观察使用同一个公开 owner 入口：
+
+```sh
+ordessa-agent nodes configuration inspect @node-ref.json --config service.json --service local --json
+```
+
+返回完整 `unitRef`、`scopeRef`、`sourceRevision`、带时区的 `observedAt`、`configuration`、`unknownItems`、`confirmationEvidence` 和 `comparisonGuarantee`。CLI 不补 Profile 值、不推算版本、不消除 unknown，也不缓存另一份配置真值。输出 `configurationSnapshotObserved`、`configurationValuesObserved=true` 表示这次服务观察，`runtimeVerified=false` 不代表真实模型验收。引用叶身份由 owner 与核心核验，客户端保留其原始结构；不能用快照代替执行授权。
