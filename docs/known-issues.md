@@ -153,3 +153,7 @@ AgentUnit迁移切片在 `ServerProductComposition.native_runtime` 早拒 Pi/Cod
 ### AU003 旧三家 C2 批量发布消费者待迁移（2026-10-05，Open）
 
 `ModelProviderAdaptersPlugin.build` 已在发布前typed拒绝Pi/Codex/Claude统一owner，要求独立provider admission，稳定descriptor/IDs及pure compiler保留。原 `plugins/harness/tests/test_brand_organization_gates.py::test_model_provider_adapter_plugin_publishes_all_three_on_the_neutral_point` 实跑1F；`plugins/harness/tests/configuration_model/test_pi_live_runtime.py` 两pure compiler2P、其余27参数化场景setup错误，均在激活旧batch时拒绝；组合exit1、2.01s。是本次退役引入的明确迁移债，不报继承或全绿，原断言/fixture未删改/skip。必须独立owner承接后复跑C4确认、SecretRef、scope/revision/unknown/readback与恢复断言；ModelProvider E2、Server受控C4/packaging消费者尚未本轮复跑。新拒绝/纯语义/原native入口定向110P exit0不足以关闭旧消费者。live_service/sidecar旁路及production配置能力仍未完成；详见 `docs/implementation/agent-tools/evidence/agent-unit-model/retired-model-batch.md`。
+
+### AU003 Claude历史纯配置迁移不等于生产路由确认（2026-10-05，Open）
+
+旧pure model compiler已迁独立Claude，保正向model/endpoint/SecretRef意图与sameSession restart-resume，并修缺身份/丢credential-only/漏model与类型漏洞；全独立Claude194P只证明受控与own-wheel。`verify`的match仅session/model readback，未证明endpoint/credential/restoration完整生效，不能升级整份配置applied。历史ACP >=0.81<0.82不代表SDK0.2.163兼容；默认provider未因纯迁移扩大方法。旧claude/native.py/native_materialization及生产owner仍未完整迁移；旧C2消费者1F/27E与cold1F仍单列，未隐藏。详情 `docs/implementation/agent-tools/evidence/agent-unit-model/claude-model-compilation.md`。当前旧Harness pyproject新增显式own Claude dependency，通用历史baseline安装清单/全部Server发行闭包尚未复核，不报告通用Server安装可用；fresh独立发行闭包已实测。

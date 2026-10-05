@@ -1,0 +1,23 @@
+{
+  "sourceHead": "3c83819e23ce36beda9c34be79d56b8c2e4bef88",
+  "compilerBeforeSha256": "94e9916036583a69596ecc040c5b78aee971611deeec9b2f439bd29b793ccaf4",
+  "nativeProcesses": 0,
+  "modelCalls": 0,
+  "productionWired": false,
+  "typesClassASTEqual": true,
+  "typesBeforeSha256": "1c26489945344c984bd2ab9179600a25c04a7d6fe4f7f59b5bd0ab43372b2d2d",
+  "typesAfterSha256": "44ed78bc1efa7f7c859cd61dc6d78231877b5500258d28325063626d3b04976a",
+  "genericParserRelocated": true,
+  "initialRelocationClassFunctionASTEqual": true,
+  "initialRelocationCompilerSha256": "dc8019dda05cd8ba6a241e19c10d059ae88c7895bd384ffe42f6ebfdeb3ff4d8",
+  "compilerFinalSha256": "a16a5580617fd170df1c835a7900e36e55feeab08bb700167db313f03281a34e",
+  "safetyRepairs": [
+    "credential-only intent preserved",
+    "endpoint change retains requested model",
+    "credential change missing reference refuses",
+    "missing/untyped model or native session is unknown",
+    "typed change flags/references/endpoint/target validation",
+    "reuse unchanged SDK native identity check; selectors are not native identity"
+  ],
+  "sdkNativeIdentityFunctionASTEqual": true
+}

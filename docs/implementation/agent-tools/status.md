@@ -658,3 +658,15 @@ sidecar与旧C2批量注册仍有路径，独立生产模型/凭据/恢复owner�
 完整命令与限制见[evidence/agent-unit-model/retired-model-batch.md](evidence/agent-unit-model/retired-model-batch.md)。新直接门guard前1F exit1 0.15s；初测试descriptor误属性2P1F exit1 0.09s，修已有id；组合86P1F exit1 0.85s原pure导入门缺公开environment-api拒绝类型，窄加该契约根且保留AST/IO/纯度全部断言，87P exit0 0.72s；加原native入口末端110P exit0 0.77s。新4项，不累计快照。实际原batch正例＋live_runtime全部exit1/2P1F27E 2.01s，原setup调用退役入口失败，未删除/skip/改绿；本树AGENTS规则10要求窄幅known-issues登记（不扩张实现域）。ModelProvider E2/Server C4/probes可见消费者本轮未跑，不报绿。全部句柄terminal。
 
 只读终审确认未宽拒七家、无IO或注册旁路；这只是旧batch入口封闭，pure adapter/live_service/sidecar仍可达，不称全旧路退役。sidecar原单次部署解析在server-compat域，不在AU003写域；产品重复解析有TOCTOU，记录共享接缝缺口，不复制parser或外部编排。生产权限/材料/凭据/owner/coldgeneration/全生命周期/tasks/results/A18、三家native P/M仍PARTIAL，M0，资源ABSENT与继承Core红继续。无未经授权操作，成本unknown；资料门后显式检查点，goal继续。
+
+### 2026-10-05 AU003 Claude成熟纯模型配置能力迁移（PARTIAL）
+
+前置3c83819e23ce36beda9c34be79d56b8c2e4bef88 clean，live agents无另一写者，主会话唯一共享源码/测试/Git/账本作者；Claude/Codex只读盘点/双审/终审，无测试写权。上一轮两检查点属于progress，本轮迁正向能力，不以封旧入口代替新能力。完整命令/来源/初红和修复见[evidence/agent-unit-model/claude-model-compilation.md](evidence/agent-unit-model/claude-model-compilation.md)，初AST/finalsha分开收据同目录claude-model-migration-source.json。
+
+旧Claude purecompiler→独立acp_model_configuration/facts，旧文件物理删除无shim，bridge/原测试消费独立owner。原全部DTO class AST原样迁已有harness-api.model_compilation，generic parser原体迁入；纯API仅stdlib/no authority/register/Store。shared model/common Claude pins导入独立facts，旧native.py/native_materialization事实迁移仍未完。ACP0.81.2范围不冒SDK0.2.163支持，默认provider methods未扩大。两侧pyproject明确own dependencies，fresh五包发行补API/pipcheck、无ServerAPI/SDK/大Harness/产品，实际正向编译并拒SDK版本轴。
+
+正向model-only、endpoint与model双intent、credential-only引用与同Session restart-resume保留；缺typed flags/ref/endpoint/target拒，缺model/session保持unknown。复用SDK原native_identity（AST相同）拒default/control/非法UTF8。初pure/API76P4F37subtests exit1 .30s门仍认旧owner/禁共享DTO；窄迁门后80P37 exit0 .35s；新13原漏洞11F2P exit1 .18s，修后93P37 exit0 .25s；source/brand/fresh组合20P1F exit1 6.54s仅原batch发布正例。中间Claude175P exit0 13.47s；扩29边界14F15P exit1 .23s，修后SDK/pure/API142P37 exit0 .40s。末端加target三门全Claude194P exit0 13.47s（原162＋新32），最终定向含ownership/故障159P37 exit0 .94s；新增ownership1，快照不累加。全product integration311P1F exit1 16.84s仍strict冷代次目标；Core/全Server/旧C4本轮未跑，继承红/27setup债保持。
+
+七own wheel初与final两次实际安装各13命令全部exit0，七摘要/temporaryEnvironmentRemoved=true/M0/productReady=false，final回执au003-claude-model-install-final-3c8381.json为末端源码，不覆盖先前回执。两审确认无第二核心/旧注册恢复，末端源码SHA/原SDK函数AST实核exit0。C＋自有安装进程，不冒nativeHarnessP/M；verify仅model/sameSession，完整endpoint/credential/restoration确认与production owner未接线，coldgeneration仍待裁定，其他三家/旧Model/sidecar/full lifecycle/tasks/results/Skill实用/A18均PARTIAL，ABSENT不算绿。
+
+无第三方安装更新/登录/用户DB/凭据/全局配置/用户服务操作/push/主树合并，成本unknown；全部句柄terminal。核对新增文件/strict/diff门后显式stage迁移切片继续goal，不标DONE。

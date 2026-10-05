@@ -35,16 +35,16 @@ from ordessa_harness_api import (
 )
 
 from . import common
-from ...claude.configuration.model import ClaudeAdapter
+from ordessa_harness_claude_code.acp_model_configuration import ClaudeAdapter
 from ...codex.configuration.model import CodexAdapter
 from ...pi.configuration.model import PiAdapter
-from .types import AdapterContext as LocalAdapterContext
-from .types import BindSecret as LocalBindSecret
-from .types import ChoiceRequest, CompileIntent, IntentSet as LocalIntentSet
-from .types import RequestParams
-from .types import MountContent as LocalMountContent
-from .types import Refusal as LocalRefusal
-from .types import TargetHandle as LocalTargetHandle
+from ordessa_harness_api.model_compilation import AdapterContext as LocalAdapterContext
+from ordessa_harness_api.model_compilation import BindSecret as LocalBindSecret
+from ordessa_harness_api.model_compilation import ChoiceRequest, CompileIntent, IntentSet as LocalIntentSet
+from ordessa_harness_api.model_compilation import RequestParams
+from ordessa_harness_api.model_compilation import MountContent as LocalMountContent
+from ordessa_harness_api.model_compilation import Refusal as LocalRefusal
+from ordessa_harness_api.model_compilation import TargetHandle as LocalTargetHandle
 
 BRANDS = ("pi", "codex", "claude-code")
 

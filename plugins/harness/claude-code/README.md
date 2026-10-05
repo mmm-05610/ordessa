@@ -89,3 +89,15 @@ select wrappers through `AgentToolsDeployment(..., agent_contract_version=
 Current deployment refuses provider publication on an existing root because
 durable cold activation generations are not yet composed. Native production
 ports, task readiness and successful cold recovery remain unverified.
+
+
+Historical ACP model compilation lives in `acp_model_configuration.py`; its
+`>=0.81 <0.82` assessment refers to the reviewed ACP adapter, not the SDK
+`0.2.163` pin. It preserves instance scope, model-only changes, endpoint and
+SecretRef intents, and explicit same-session restart/resume requirements.
+Compilation does not apply configuration or issue authority. Its verification
+covers model and native session readback only; full routing/credential
+confirmation and production restoration remain unimplemented. The default
+provider does not advertise these historical compiler facts as SDK support.
+Pure DTOs reuse the existing `ordessa-harness-api.model_compilation` module;
+there is no second configuration store, registry or governance kernel.

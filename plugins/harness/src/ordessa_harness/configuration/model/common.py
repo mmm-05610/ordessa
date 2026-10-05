@@ -12,6 +12,8 @@ from __future__ import annotations
 import hashlib
 import json
 from typing import Any, Iterable, Mapping
+from ordessa_harness_api.model_compilation import parse_version
+from ordessa_harness_claude_code import acp_model_facts as claude_facts
 
 #: The canonical protocol vocabulary (092's contract, four values).
 CANONICAL_PROTOCOLS = ("openai-chat", "openai-responses", "anthropic-messages", "gemini-generate")
@@ -24,11 +26,11 @@ DIALECTS: dict[str, dict[str, tuple[str, str | None]]] = {
         "openai-responses": ("wire_api", "responses"),
         "openai-chat": ("wire_api", "chat"),
     },
-    "claude-code": {"anthropic-messages": ("ANTHROPIC_BASE_URL", None)},
+    "claude-code": claude_facts.DIALECT,
 }
 
 #: Native target each brand writes inside its instance root (same provenance).
-NATIVE_TARGET = {"pi": "models.json", "codex": "config.toml", "claude-code": "settings.json"}
+NATIVE_TARGET = {"pi": "models.json", "codex": "config.toml", "claude-code": claude_facts.NATIVE_TARGET["claude-code"]}
 
 #: The pinned upstream adapter versions this package was assessed against
 #: (specs/011-z3-model-provider/t00-freeze.md §5). The tuple form drives
@@ -38,13 +40,13 @@ SUPPORTED_VERSION_RANGES: dict[str, tuple[str, str]] = {
     # (min inclusive, max exclusive) on the native adapter package version
     "pi": ("0.5.0", "0.6"),
     "codex": ("1.0", "2.0"),
-    "claude-code": ("0.81", "0.82"),
+    "claude-code": claude_facts.VERSION_RANGE,
 }
 
 RANGE_STRINGS: dict[str, str] = {
     "pi": ">=0.5.0 <0.6",
     "codex": ">=1.0 <2.0",
-    "claude-code": ">=0.81 <0.82",
+    "claude-code": claude_facts.RANGE_STRINGS["claude-code"],
 }
 
 
@@ -111,18 +113,6 @@ def translate_protocol(harness: str, protocol: str) -> tuple[str, str | None]:
     return dialect
 
 
-def parse_version(version: str | None) -> tuple[int, ...] | None:
-    """A tolerant ``(major, minor, ...)`` parse; ``None`` = unrecognized (and
-    unrecognized is *unknown*, never a guess)."""
-    if not version or not isinstance(version, str):
-        return None
-    parts = version.strip().split(".")
-    numbers: list[int] = []
-    for part in parts:
-        if not part.isdigit():
-            return None
-        numbers.append(int(part))
-    return tuple(numbers) if numbers else None
 
 
 def version_in_range(harness: str, version: str | None) -> str:

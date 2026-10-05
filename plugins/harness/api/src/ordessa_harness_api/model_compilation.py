@@ -1,10 +1,10 @@
-"""Typed surfaces for the model-provider brand configuration adapters.
+"""Pure public compilation contracts for the existing model-provider choice schema.
 
 Authored in this line against the C2/C3 target shapes
 (``docs/design/harness-v2/contracts.md``). The harness registry (C0) is the
-only component that calls these; the adapter modules are pure - no HOME, no
-network, no spawn, no file writes, no secret content (dispatch t02, boundary
-gates in ``tests/``).
+historical consumer of these shapes; independent pure compilers reuse them.
+These values issue no authority and contain no runtime effects. Compilers stay
+pure: no HOME, network, spawn, file writes or secret content.
 """
 from __future__ import annotations
 
@@ -193,3 +193,17 @@ class Verdict:
     verdict: str  # 'match' | 'mismatch' | 'unknown'
     reason: str | None = None
     evidence: Mapping[str, Any] = field(default_factory=dict)
+
+
+def parse_version(version: str | None) -> tuple[int, ...] | None:
+    """A tolerant ``(major, minor, ...)`` parse; ``None`` = unrecognized (and
+    unrecognized is *unknown*, never a guess)."""
+    if not version or not isinstance(version, str):
+        return None
+    parts = version.strip().split(".")
+    numbers: list[int] = []
+    for part in parts:
+        if not part.isdigit():
+            return None
+        numbers.append(int(part))
+    return tuple(numbers) if numbers else None

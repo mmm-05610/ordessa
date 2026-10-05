@@ -18,10 +18,10 @@ from ordessa_harness.contributions import HarnessContributionError, HarnessContr
 from server_plugin_api import Contribution, ContributionBatch, stage_contributions
 
 from ordessa_harness.configuration.model import bridge, common
-from ordessa_harness.claude.configuration.model import ClaudeAdapter
+from ordessa_harness_claude_code.acp_model_configuration import ClaudeAdapter
 from ordessa_harness.codex.configuration.model import CodexAdapter
 from ordessa_harness.pi.configuration.model import PiAdapter
-from ordessa_harness.configuration.model.types import (
+from ordessa_harness_api.model_compilation import (
     AdapterContext, ChoiceRequest, CompileIntent, Refusal, TargetHandle,
 )
 
@@ -432,8 +432,8 @@ _BRIDGE_ALLOWED_ROOTS = {"__future__", "json", "tomllib", "typing", "hashlib",
                          "ordessa_harness_api", "server_plugin_api", "ordessa_environment_api"}
 _BRIDGE_ALLOWED_NATIVE_MODULES = {
     f"ordessa_harness.{brand}.configuration.model"
-    for brand in ("pi", "codex", "claude")
-}
+    for brand in ("pi", "codex")
+} | {"ordessa_harness_claude_code.acp_model_configuration"}
 
 
 def _module_source(cls):
@@ -455,8 +455,10 @@ def test_brand_modules_do_not_import_the_bridge_or_harness(cls):
         stripped = module_line.strip()
         if stripped.startswith(("import ", "from ")):
             root = stripped.split()[1].split(".")[0]
-            assert root not in {"ordessa_harness_api", "ordessa_harness",
-                                "server_plugin_api"}, module_line
+            if root == "ordessa_harness_api":
+                assert stripped.startswith("from ordessa_harness_api.model_compilation import "), module_line
+            else:
+                assert root not in {"ordessa_harness", "server_plugin_api"}, module_line
 
 
 def test_bridge_and_plugin_import_only_contract_packages_and_stay_pure():

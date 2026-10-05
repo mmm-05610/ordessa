@@ -14,7 +14,7 @@ from __future__ import annotations
 from typing import Any, Mapping
 
 from ...configuration.model import common
-from ...configuration.model.types import (
+from ordessa_harness_api.model_compilation import (
     AdapterContext, Assessment, BindSecret, ChoiceRequest, CompileIntent,
     IntentSet, MountContent, Refusal, TargetHandle, Verdict,
 )

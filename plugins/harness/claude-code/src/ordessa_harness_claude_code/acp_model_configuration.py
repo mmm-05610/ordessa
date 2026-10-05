@@ -13,8 +13,9 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from ...configuration.model import common
-from ...configuration.model.types import (
+from . import acp_model_facts as common
+from .native_identity import _native_identity
+from ordessa_harness_api.model_compilation import (
     AdapterContext, Assessment, BindSecret, ChoiceRequest, CompileIntent,
     IntentSet, Refusal, Verdict,
 )
@@ -64,6 +65,8 @@ class ClaudeAdapter:
         self, context: AdapterContext, before: Mapping[str, Any],
         desired: ChoiceRequest,
     ) -> IntentSet | Refusal:
+        if context.target_handle.harness_id != "claude-code" or not _identity_text(context.target_handle.identity):
+            return Refusal("target-conflict", "Claude compiler requires its own family target")
         if context.target_handle.scope != "instance":
             return Refusal(
                 "target-conflict",
@@ -91,7 +94,18 @@ class ClaudeAdapter:
                     ("timeoutMs", params.timeout_ms),
                     ("retry", params.retry)) if value is not None]})
         brand = dict(desired.brand_fields)
-        if not brand.get("endpoint_changed"):
+        if any(name in brand and type(brand[name]) is not bool
+               for name in ("endpoint_changed", "credential_changed")):
+            return Refusal("capability-unsupported", "change facts must be booleans")
+        if not _identity_text(desired.model_id):
+            return Refusal("capability-unsupported", "model identity must be explicit text")
+        if desired.credential_ref is not None and not _identity_text(desired.credential_ref):
+            return Refusal("capability-unsupported", "secret reference must be explicit text")
+        if brand.get("endpoint_changed") and not _identity_text(desired.endpoint):
+            return Refusal("capability-unsupported", "routing endpoint must be explicit text")
+        if brand.get("credential_changed") and not desired.credential_ref:
+            return Refusal("capability-unsupported", "credential change requires a secret reference")
+        if not brand.get("endpoint_changed") and not brand.get("credential_changed"):
             # model-only: the per-native-session Query-level model config, one
             # session-local intent - the endpoint is NOT touched (the two are
             # different settings and stay independent).
@@ -105,11 +119,11 @@ class ClaudeAdapter:
         # endpoint/provider change: a new private generation with the env
         # routing key, then a controlled restart resuming the SAME native
         # session id. A credential change rides the same path.
-        intents: list[Any] = [
-            CompileIntent(
-                context.target_handle, ("env", "ANTHROPIC_BASE_URL"), desired.endpoint,
-            ),
-        ]
+        intents: list[Any] = [CompileIntent(
+            context.target_handle, ("session", "model"), desired.model_id)]
+        if brand.get("endpoint_changed"):
+            intents.append(CompileIntent(
+                context.target_handle, ("env", "ANTHROPIC_BASE_URL"), desired.endpoint))
         if desired.credential_ref:
             intents.append(BindSecret(
                 context.target_handle, "ANTHROPIC_AUTH_TOKEN", desired.credential_ref))
@@ -121,17 +135,34 @@ class ClaudeAdapter:
         )
 
     def verify(self, context: AdapterContext, observed: Mapping[str, Any]) -> Verdict:
+        if (context.target_handle.harness_id != "claude-code" or context.target_handle.scope != "instance"
+                or not _identity_text(context.target_handle.identity)):
+            return Verdict("unknown", "Claude instance target identity evidence unavailable")
         read_back = observed.get("readback")
         if not isinstance(read_back, Mapping):
             return Verdict("unknown", "no read-back sample; settings.json bytes "
                                       "are a projection, not an applied fact")
         expected = observed.get("desired_model")
+        if not _identity_text(expected) or not _identity_text(read_back.get("model")):
+            return Verdict("unknown", "model identity evidence unavailable")
         if read_back.get("model") != expected:
             return Verdict("mismatch", "session model differs from the desired choice",
                            evidence={"readback": dict(read_back)})
         session_now = observed.get("native_session_id")
         expected_session = context.capabilities.get("native_session_id")
+        if not _native_identity(session_now) or not _native_identity(expected_session):
+            return Verdict("unknown", "native session identity evidence unavailable")
         if session_now != expected_session:
             return Verdict("mismatch", "native session identity changed; a "
                                        "session/new must never impersonate resume")
         return Verdict("match", None, evidence={"applied_layer": "session-readback"})
+
+
+def _identity_text(value: Any) -> bool:
+    if not isinstance(value, str) or not value or value.strip() != value or any(ord(c) < 32 for c in value):
+        return False
+    try:
+        value.encode("utf-8", errors="strict")
+    except UnicodeError:
+        return False
+    return True

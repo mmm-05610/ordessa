@@ -12,21 +12,12 @@ import asyncio
 from importlib import metadata
 import json
 from typing import Mapping
+from .native_identity import _native_identity
 
 SDK_VERSION = "0.2.163"
 SDK_SOURCE_COMMIT = "9c69ce7aced5cdf2aa1ac86fe62e877b4962de8b"
 
 
-def _native_identity(value):
-    # 'default' is an SDK input selector, never observed native identity.
-    if (not isinstance(value, str) or not value or value.strip() != value
-            or value == "default" or any(ord(character) < 32 for character in value)):
-        return False
-    try:
-        value.encode("utf-8", errors="strict")
-    except UnicodeError:
-        return False
-    return True
 
 
 class SdkRuntimeUnavailable(RuntimeError):

@@ -1,0 +1,243 @@
+{
+  "sourceHead": "3c83819e23ce36beda9c34be79d56b8c2e4bef88",
+  "sourceDirtyPaths": [
+    " M packages/backend/harness-transport/tests/acceptance_install.py",
+    " M plugins/harness/claude-code/README.md",
+    " M plugins/harness/claude-code/pyproject.toml",
+    " M plugins/harness/claude-code/src/ordessa_harness_claude_code/sdk.py",
+    " M plugins/harness/claude-code/tests/test_acp_attachments_distribution.py",
+    " M plugins/harness/pyproject.toml",
+    " D plugins/harness/src/ordessa_harness/claude/configuration/model.py",
+    " M plugins/harness/src/ordessa_harness/codex/configuration/model.py",
+    " M plugins/harness/src/ordessa_harness/configuration/model/bridge.py",
+    " M plugins/harness/src/ordessa_harness/configuration/model/common.py",
+    " D plugins/harness/src/ordessa_harness/configuration/model/types.py",
+    " M plugins/harness/src/ordessa_harness/pi/configuration/model.py",
+    " M plugins/harness/tests/configuration_model/test_adapters_conformance.py",
+    " M plugins/harness/tests/configuration_model/test_request_params.py",
+    " M plugins/harness/tests/test_agent_unit_source_ownership.py",
+    " M plugins/harness/tests/test_brand_organization_gates.py",
+    "?? docs/implementation/agent-tools/evidence/agent-unit-model/au003-claude-model-install-3c8381.json",
+    "?? docs/implementation/agent-tools/evidence/agent-unit-model/claude-model-migration-source.json",
+    "?? plugins/harness/api/src/ordessa_harness_api/model_compilation.py",
+    "?? plugins/harness/claude-code/src/ordessa_harness_claude_code/acp_model_configuration.py",
+    "?? plugins/harness/claude-code/src/ordessa_harness_claude_code/acp_model_facts.py",
+    "?? plugins/harness/claude-code/src/ordessa_harness_claude_code/native_identity.py",
+    "?? plugins/harness/claude-code/tests/test_acp_model_configuration.py"
+  ],
+  "wheelSha256": {
+    "ordessa_environment_api-0.1.0-py3-none-any.whl": "ce3bd473c87d1de497d63e96dd770fcb46e77087f02c01c8bb42269b9ca5bb5e",
+    "ordessa_harness_api-1.0.0a1-py3-none-any.whl": "1fb481622156d76dfe35274afea2890681bdb876db86fe32b04490f5d3cae301",
+    "ordessa_harness_claude_code-0.1.0a1-py3-none-any.whl": "76f579029076ae3509f53e3781cacda67b13072955c722ed57d248b3d504d4ca",
+    "ordessa_harness_codex-0.1.0a1-py3-none-any.whl": "791866882040761315b121b698326a181677130ec90792569428a93220fe3c0e",
+    "ordessa_harness_pi-0.1.0a1-py3-none-any.whl": "109e287c379bfde91904c12ab458759fee05745c53b04bd0265ffe12406a44c6",
+    "ordessa_harness_transport-0.1.0a1-py3-none-any.whl": "f440eda9bcf4df37f215386be8a63fd30617a1d6baf6e5094eb72f42b903a8e8",
+    "pacthold-2.0.0a1-py3-none-any.whl": "51c33e89bff5b6ee78a9b7de177b13dbe19d16b2a5ceceddd7e5d72a734873ce"
+  },
+  "evidenceLevel": "localDistributionAndControlledRegistry",
+  "records": [
+    {
+      "label": "build packages/backend/environment-api",
+      "command": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python",
+        "-m",
+        "pip",
+        "wheel",
+        "--no-index",
+        "--no-build-isolation",
+        "--no-deps",
+        "--wheel-dir",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/wheels",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/source-0"
+      ],
+      "exitCode": 0,
+      "seconds": 0.808
+    },
+    {
+      "label": "build packages/backend/pacthold",
+      "command": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python",
+        "-m",
+        "pip",
+        "wheel",
+        "--no-index",
+        "--no-build-isolation",
+        "--no-deps",
+        "--wheel-dir",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/wheels",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/source-1"
+      ],
+      "exitCode": 0,
+      "seconds": 0.819
+    },
+    {
+      "label": "build packages/backend/harness-transport",
+      "command": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python",
+        "-m",
+        "pip",
+        "wheel",
+        "--no-index",
+        "--no-build-isolation",
+        "--no-deps",
+        "--wheel-dir",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/wheels",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/source-2"
+      ],
+      "exitCode": 0,
+      "seconds": 0.734
+    },
+    {
+      "label": "build plugins/harness/api",
+      "command": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python",
+        "-m",
+        "pip",
+        "wheel",
+        "--no-index",
+        "--no-build-isolation",
+        "--no-deps",
+        "--wheel-dir",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/wheels",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/source-3"
+      ],
+      "exitCode": 0,
+      "seconds": 0.702
+    },
+    {
+      "label": "build plugins/harness/pi",
+      "command": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python",
+        "-m",
+        "pip",
+        "wheel",
+        "--no-index",
+        "--no-build-isolation",
+        "--no-deps",
+        "--wheel-dir",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/wheels",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/source-4"
+      ],
+      "exitCode": 0,
+      "seconds": 0.773
+    },
+    {
+      "label": "build plugins/harness/codex",
+      "command": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python",
+        "-m",
+        "pip",
+        "wheel",
+        "--no-index",
+        "--no-build-isolation",
+        "--no-deps",
+        "--wheel-dir",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/wheels",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/source-5"
+      ],
+      "exitCode": 0,
+      "seconds": 0.766
+    },
+    {
+      "label": "build plugins/harness/claude-code",
+      "command": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python",
+        "-m",
+        "pip",
+        "wheel",
+        "--no-index",
+        "--no-build-isolation",
+        "--no-deps",
+        "--wheel-dir",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/wheels",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/source-6"
+      ],
+      "exitCode": 0,
+      "seconds": 0.775
+    },
+    {
+      "label": "create fresh venv",
+      "command": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python",
+        "-m",
+        "venv",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/venv"
+      ],
+      "exitCode": 0,
+      "seconds": 1.921
+    },
+    {
+      "label": "install local wheel closure",
+      "command": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/venv/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "--no-index",
+        "--no-deps",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/wheels/ordessa_environment_api-0.1.0-py3-none-any.whl",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/wheels/ordessa_harness_api-1.0.0a1-py3-none-any.whl",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/wheels/ordessa_harness_claude_code-0.1.0a1-py3-none-any.whl",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/wheels/ordessa_harness_codex-0.1.0a1-py3-none-any.whl",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/wheels/ordessa_harness_pi-0.1.0a1-py3-none-any.whl",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/wheels/ordessa_harness_transport-0.1.0a1-py3-none-any.whl",
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/wheels/pacthold-2.0.0a1-py3-none-any.whl"
+      ],
+      "exitCode": 0,
+      "seconds": 0.548
+    },
+    {
+      "label": "pip check",
+      "command": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/venv/bin/python",
+        "-m",
+        "pip",
+        "check"
+      ],
+      "exitCode": 0,
+      "seconds": 0.235
+    },
+    {
+      "label": "fresh isolated registry ordessa_harness_pi",
+      "command": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/venv/bin/python",
+        "-I",
+        "-c",
+        "\nimport importlib,importlib.util,sys\nfrom pacthold.public import Environment,InstallationRecord\nfrom pacthold.agents.public import AgentContributionSet\nclass Policy:\n def admit_object_access(self,*args): return True\n def admit_invoke(self,*args): return True\nprovider=getattr(importlib.import_module('ordessa_harness_pi'),'PiRuntimeProvider')(definition_ref={'environmentNamespace':'fresh','definitionId':'selected','revision':'1'},implementation_digest='sha256:'+'a'*64)\nenv=Environment('fresh',policy=Policy())\nenv.install(InstallationRecord('selected','a'*64));env.enable('selected')\nreceipt=env.activate('selected',AgentContributionSet(agent_runtime_providers=(provider,)))\nassert env.agent_runtime_contribution(provider.descriptor.definition_ref).owner_activation==receipt.activation\nassert 'start' not in provider.descriptor.supported_methods\nfor forbidden in ('ordessa_server','ordessa_harness','ordessa_agent_tools','claude_agent_sdk','server_plugin_api'):\n assert importlib.util.find_spec(forbidden) is None,forbidden+' unexpectedly installed'\nfor other in ('ordessa_harness_pi','ordessa_harness_codex','ordessa_harness_claude_code'):\n if other!='ordessa_harness_pi': assert other not in sys.modules,'unselected family imported'\n# Optional binding can be imported and constructed without its Server API.\nwrapper=getattr(importlib.import_module('ordessa_harness_pi'+'.server_plugin'),'PiRuntimeProvider'.replace('RuntimeProvider','ServerPlugin'))(lambda identity: provider)\ntry: wrapper.descriptor()\nexcept ModuleNotFoundError as error: assert error.name=='server_plugin_api'\nelse: raise AssertionError('missing optional Server API silently accepted')\nenv.close()\n"
+      ],
+      "exitCode": 0,
+      "seconds": 0.141
+    },
+    {
+      "label": "fresh isolated registry ordessa_harness_codex",
+      "command": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/venv/bin/python",
+        "-I",
+        "-c",
+        "\nimport importlib,importlib.util,sys\nfrom pacthold.public import Environment,InstallationRecord\nfrom pacthold.agents.public import AgentContributionSet\nclass Policy:\n def admit_object_access(self,*args): return True\n def admit_invoke(self,*args): return True\nprovider=getattr(importlib.import_module('ordessa_harness_codex'),'CodexRuntimeProvider')(definition_ref={'environmentNamespace':'fresh','definitionId':'selected','revision':'1'},implementation_digest='sha256:'+'a'*64)\nenv=Environment('fresh',policy=Policy())\nenv.install(InstallationRecord('selected','a'*64));env.enable('selected')\nreceipt=env.activate('selected',AgentContributionSet(agent_runtime_providers=(provider,)))\nassert env.agent_runtime_contribution(provider.descriptor.definition_ref).owner_activation==receipt.activation\nassert 'start' not in provider.descriptor.supported_methods\nfor forbidden in ('ordessa_server','ordessa_harness','ordessa_agent_tools','claude_agent_sdk','server_plugin_api'):\n assert importlib.util.find_spec(forbidden) is None,forbidden+' unexpectedly installed'\nfor other in ('ordessa_harness_pi','ordessa_harness_codex','ordessa_harness_claude_code'):\n if other!='ordessa_harness_codex': assert other not in sys.modules,'unselected family imported'\n# Optional binding can be imported and constructed without its Server API.\nwrapper=getattr(importlib.import_module('ordessa_harness_codex'+'.server_plugin'),'CodexRuntimeProvider'.replace('RuntimeProvider','ServerPlugin'))(lambda identity: provider)\ntry: wrapper.descriptor()\nexcept ModuleNotFoundError as error: assert error.name=='server_plugin_api'\nelse: raise AssertionError('missing optional Server API silently accepted')\nenv.close()\n"
+      ],
+      "exitCode": 0,
+      "seconds": 0.139
+    },
+    {
+      "label": "fresh isolated registry ordessa_harness_claude_code",
+      "command": [
+        "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/packages/backend/harness-transport/.acceptance-a32mw2nm/venv/bin/python",
+        "-I",
+        "-c",
+        "\nimport importlib,importlib.util,sys\nfrom pacthold.public import Environment,InstallationRecord\nfrom pacthold.agents.public import AgentContributionSet\nclass Policy:\n def admit_object_access(self,*args): return True\n def admit_invoke(self,*args): return True\nprovider=getattr(importlib.import_module('ordessa_harness_claude_code'),'ClaudeCodeRuntimeProvider')(definition_ref={'environmentNamespace':'fresh','definitionId':'selected','revision':'1'},implementation_digest='sha256:'+'a'*64)\nenv=Environment('fresh',policy=Policy())\nenv.install(InstallationRecord('selected','a'*64));env.enable('selected')\nreceipt=env.activate('selected',AgentContributionSet(agent_runtime_providers=(provider,)))\nassert env.agent_runtime_contribution(provider.descriptor.definition_ref).owner_activation==receipt.activation\nassert 'start' not in provider.descriptor.supported_methods\nfor forbidden in ('ordessa_server','ordessa_harness','ordessa_agent_tools','claude_agent_sdk','server_plugin_api'):\n assert importlib.util.find_spec(forbidden) is None,forbidden+' unexpectedly installed'\nfor other in ('ordessa_harness_pi','ordessa_harness_codex','ordessa_harness_claude_code'):\n if other!='ordessa_harness_claude_code': assert other not in sys.modules,'unselected family imported'\n# Optional binding can be imported and constructed without its Server API.\nwrapper=getattr(importlib.import_module('ordessa_harness_claude_code'+'.server_plugin'),'ClaudeCodeRuntimeProvider'.replace('RuntimeProvider','ServerPlugin'))(lambda identity: provider)\ntry: wrapper.descriptor()\nexcept ModuleNotFoundError as error: assert error.name=='server_plugin_api'\nelse: raise AssertionError('missing optional Server API silently accepted')\nenv.close()\n"
+      ],
+      "exitCode": 0,
+      "seconds": 0.16
+    }
+  ],
+  "nativeHarnessProcesses": 0,
+  "modelCalls": 0,
+  "thirdPartyInstalls": 0,
+  "temporaryEnvironmentRemoved": true,
+  "status": "passed",
+  "failureType": null,
+  "productReady": false,
+  "serverApiPresent": false,
+  "coldRecoveryVerified": false
+}

@@ -10,9 +10,9 @@ from __future__ import annotations
 import pytest
 from ordessa_harness.configuration.model import common
 from ordessa_harness.codex.configuration.model import CodexAdapter
-from ordessa_harness.claude.configuration.model import ClaudeAdapter
+from ordessa_harness_claude_code.acp_model_configuration import ClaudeAdapter
 from ordessa_harness.pi.configuration.model import PiAdapter
-from ordessa_harness.configuration.model.types import (
+from ordessa_harness_api.model_compilation import (
     AdapterContext, ChoiceRequest, IntentSet, Refusal, RequestParams,
     TargetHandle,
 )
@@ -293,7 +293,7 @@ def test_an_unissued_param_target_compiles_to_a_typed_refusal_not_a_lookalike():
     """The pi settings claim is inert until the host issues the target: the
     bridge refuses with CAPABILITY_UNSUPPORTED instead of writing anywhere."""
     from ordessa_harness.configuration.model import bridge
-    from ordessa_harness.configuration.model.types import (
+    from ordessa_harness_api.model_compilation import (
         AdapterContext as Local, TargetHandle as LocalHandle)
 
     from ordessa_harness_api import TargetHandle as HarnessTargetHandle

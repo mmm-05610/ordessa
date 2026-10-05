@@ -13,7 +13,7 @@ import textwrap
 
 ROOT=Path(__file__).resolve().parents[4]
 PROJECTS=('packages/backend/environment-api','packages/backend/pacthold',
- 'packages/backend/harness-transport','plugins/harness/pi','plugins/harness/codex','plugins/harness/claude-code')
+ 'packages/backend/harness-transport','plugins/harness/api','plugins/harness/pi','plugins/harness/codex','plugins/harness/claude-code')
 
 
 def exercise(output):
@@ -55,7 +55,7 @@ def exercise(output):
    paths=sorted(wheels.glob('*.whl'))
    assert len(paths)==len(PROJECTS),'local wheel closure incomplete'
    hashes={path.name:hashlib.sha256(path.read_bytes()).hexdigest() for path in paths}
-   run('install six local wheels',[python,'-m','pip','install','--no-index','--no-deps',*[str(path) for path in paths]])
+   run('install local wheel closure',[python,'-m','pip','install','--no-index','--no-deps',*[str(path) for path in paths]])
    run('pip check',[python,'-m','pip','check'])
    for module,class_name in (('ordessa_harness_pi','PiRuntimeProvider'),
       ('ordessa_harness_codex','CodexRuntimeProvider'),('ordessa_harness_claude_code','ClaudeCodeRuntimeProvider')):

@@ -82,3 +82,17 @@ def test_claude_acp_attachment_has_one_owner_and_no_legacy_exports():
     'from ordessa_harness.claude.attachments import ClaudePreparedAttachment'])
 def test_planted_legacy_harness_dependency_is_detected(source):
     assert legacy_harness_imports(source)
+
+
+def test_claude_model_compiler_and_compilation_contracts_have_one_owner():
+    independent = ROOT / 'plugins/harness/claude-code/src/ordessa_harness_claude_code'
+    assert (independent / 'acp_model_configuration.py').is_file()
+    assert (independent / 'acp_model_facts.py').is_file()
+    assert not (ROOT / 'plugins/harness/src/ordessa_harness/claude/configuration/model.py').exists()
+    assert not (ROOT / 'plugins/harness/src/ordessa_harness/configuration/model/types.py').exists()
+    contracts = ROOT / 'plugins/harness/api/src/ordessa_harness_api/model_compilation.py'
+    assert contracts.is_file()
+    for path in (independent / 'acp_model_configuration.py', independent / 'acp_model_facts.py', contracts):
+        source = path.read_text()
+        assert not legacy_harness_imports(source), path
+        assert not product_imports(source), path
