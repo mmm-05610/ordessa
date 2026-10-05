@@ -1050,6 +1050,29 @@
       "productReadinessComplete": false,
       "edgeFlowReceipt": "evidence/edge-flow-20261005/summary.json",
       "edgeGraphCasesPassed": 4
+    },
+    "latestVerifiedContinuation": {
+      "checkpoint": "d7c741137095658be9949314297a21e59bf4d217",
+      "offlineReceipt": "evidence/codex-effects-20261005/offline/receipt.json",
+      "scenarioEvidence": "evidence/codex-effects-20261005/README.md",
+      "machineAudit": "completion-audit.json#codex_effects_continuation",
+      "decisionTestsPassed": 359,
+      "codexFamilyTestsPassed": 147,
+      "offlineScenesPassed": 67,
+      "baselineCoreIdsPassed": 57,
+      "currentCoreIdsPassed": 57,
+      "realModelRequestsTotal": 220,
+      "reportedInputTokens": 176303,
+      "reportedOutputTokens": 14227,
+      "historicalUnknownUsageRequests": 3,
+      "cost": "UNKNOWN",
+      "codexPureRead": "original owner declaration compiler only; application unknown",
+      "otherFamilies": "unsupported",
+      "realHarness": "NOT_RUN_PENDING_SEPARATE_AUTHORIZATION",
+      "harnessPlan": "harness-smoke-next.md",
+      "productReadiness": "PARTIAL",
+      "all_work_complete": false,
+      "historicalRecords": "Prior implementationRun entries and design NOT_RUN rows are retained snapshots; use this entry for latest verified evidence."
     }
   }
 }

@@ -193,3 +193,7 @@ JD009 交付与离线行为已验证，真实家族 opt-out/unsupported 仍 PART
 补上实际owner三状态的文件／进程／网络直接监测与四项吞guard故障注入，计数独立于回执，fd写入反例也覆盖。SQLite只读查询变化仅限官方WAL-index读者标记；DB/WAL、目录项、其他文件和SHM其余字节严格相同。初版3F/15P及修订依据保留，不能声称OS级sandbox或任意未监测瞬时效果已证明不存在。
 
 [本批证据](evidence/codex-effects-20261005/README.md)：Decision359P、Codex147P、67场景、基线／当前各57P、独立wheel安装通过，T57/T62逐场景纳入新反例。真实Jev旧归档独立复验通过；本批无新模型调用，累计220与费用UNKNOWN不变。待答复原有限Harness烟测授权；目标active，all_work_complete=false。
+
+## 机器清单最终入口同步
+
+manifest.json的历史implementationRun截至208调用/269项，后续结果此前只在status/completion-audit中追加。本次补latestVerifiedContinuation，指向d7c741137095658be9949314297a21e59bf4d217与359P/147P/67场景证据，累计真实请求220和费用UNKNOWN；历史设计NOT_RUN与评测失败不改写。材料校验errors=[]、原校验反例测试1P，证据见evidence/codex-effects-20261005/latest-materials.json和latest-materials-test.txt。真实Harness未获单独批准，未运行；目标仍active/all_work_complete=false。
