@@ -425,10 +425,11 @@ _FORBIDDEN = re.compile(
 )
 
 #: 014 PB-2: the bridge/plugin modules may import the two public contract
-#: packages (direction adapters→harness-api) but stay pure otherwise; the
+#: packages plus the public Environment refusal type for retired assembly,
+#: but stay pure otherwise; the
 #: brand modules must not even name them.
 _BRIDGE_ALLOWED_ROOTS = {"__future__", "json", "tomllib", "typing", "hashlib",
-                         "ordessa_harness_api", "server_plugin_api"}
+                         "ordessa_harness_api", "server_plugin_api", "ordessa_environment_api"}
 _BRIDGE_ALLOWED_NATIVE_MODULES = {
     f"ordessa_harness.{brand}.configuration.model"
     for brand in ("pi", "codex", "claude")

@@ -650,3 +650,11 @@ sidecar与旧C2批量注册仍有路径，独立生产模型/凭据/恢复owner�
 初CLI预期错误1F4.36s、组合5P1F12.87s，修后6P12.89s；跨包pytest同名模块collection exit2/3errors0.47s，不skip/删cache，串行独立包166P2.12s/213P3.18s/162P12.70s各exit0。全product integration311P1F exit1 16.98s，仍保留fullcold严格目标；Core/Server全套本轮未跑，继承红不抹去。新增四测试不累计快照。只读终审两个脚本问题修正后无切片阻断，审阅不当测试。
 
 证据是自有发行/controlled Registry C＋实际隔离Server/CLI进程；nativeHarnessP/M无，M0、productReady=false/coldRecoveryVerified=false。冷代次待裁定、production owner/lifecycle/旧Model/sidecar/tasks/results/full纵向及资源ABSENT继续。无第三方安装更新/登录/用户DB/凭据/全局配置/用户服务操作/push/主树合并，费用unknown。所有测试句柄terminal，核对资料门后显式纳入本轮检查点继续goal，不标DONE。
+
+### 2026-10-05 AU003 旧三家C2批量发布入口退役（PARTIAL）
+
+前置b5f17678c9 clean，主会话唯一共享源码/测试/Git/账本写者，Codex只读盘点/终审。旧ModelProviderAdaptersPlugin仅三家batch，现build读取context/发布/IO前既有public GuaranteeUnavailableError拒，descriptor/稳定IDs不改，顶层三brand imports移除；pure bridge/brand compiler及原positive测试保留，不改独立新三家或用户数据。
+
+完整命令与限制见[evidence/agent-unit-model/retired-model-batch.md](evidence/agent-unit-model/retired-model-batch.md)。新直接门guard前1F exit1 0.15s；初测试descriptor误属性2P1F exit1 0.09s，修已有id；组合86P1F exit1 0.85s原pure导入门缺公开environment-api拒绝类型，窄加该契约根且保留AST/IO/纯度全部断言，87P exit0 0.72s；加原native入口末端110P exit0 0.77s。新4项，不累计快照。实际原batch正例＋live_runtime全部exit1/2P1F27E 2.01s，原setup调用退役入口失败，未删除/skip/改绿；本树AGENTS规则10要求窄幅known-issues登记（不扩张实现域）。ModelProvider E2/Server C4/probes可见消费者本轮未跑，不报绿。全部句柄terminal。
+
+只读终审确认未宽拒七家、无IO或注册旁路；这只是旧batch入口封闭，pure adapter/live_service/sidecar仍可达，不称全旧路退役。sidecar原单次部署解析在server-compat域，不在AU003写域；产品重复解析有TOCTOU，记录共享接缝缺口，不复制parser或外部编排。生产权限/材料/凭据/owner/coldgeneration/全生命周期/tasks/results/A18、三家native P/M仍PARTIAL，M0，资源ABSENT与继承Core红继续。无未经授权操作，成本unknown；资料门后显式检查点，goal继续。

@@ -149,3 +149,7 @@ AgentUnit迁移切片在 `ServerProductComposition.native_runtime` 早拒 Pi/Cod
 ### AU003 独立提供者冷代次未持久分配（2026-10-05，Open）
 
 新三家Server wrappers沿原CoreBinding进入唯一Registry，首轮受控装配可运行，但Environment激活代次仅在实例dict；冷重开同owner复用generation=1。原 `products/agent-tools/tests/integration/test_independent_server_providers.py::test_three_independent_server_owners_share_registry_and_restart_identity` 失败断言保持。当前AgentToolsDeployment对已有root的非空provider选择typed拒绝，避免在该部署继续复用旧代；其他Server composition仍未由此guard保护。全integration＋fresh发行为311P/1F、exit1、16.87s，不能报全绿/可重启服务。fresh初始化证明与历史缺高水位拒绝提案尚待裁定，见 `docs/implementation/agent-tools/evidence/agent-unit-model/activation-generation-proposal.md`；未自动seed或迁移用户数据。
+
+### AU003 旧三家 C2 批量发布消费者待迁移（2026-10-05，Open）
+
+`ModelProviderAdaptersPlugin.build` 已在发布前typed拒绝Pi/Codex/Claude统一owner，要求独立provider admission，稳定descriptor/IDs及pure compiler保留。原 `plugins/harness/tests/test_brand_organization_gates.py::test_model_provider_adapter_plugin_publishes_all_three_on_the_neutral_point` 实跑1F；`plugins/harness/tests/configuration_model/test_pi_live_runtime.py` 两pure compiler2P、其余27参数化场景setup错误，均在激活旧batch时拒绝；组合exit1、2.01s。是本次退役引入的明确迁移债，不报继承或全绿，原断言/fixture未删改/skip。必须独立owner承接后复跑C4确认、SecretRef、scope/revision/unknown/readback与恢复断言；ModelProvider E2、Server受控C4/packaging消费者尚未本轮复跑。新拒绝/纯语义/原native入口定向110P exit0不足以关闭旧消费者。live_service/sidecar旁路及production配置能力仍未完成；详见 `docs/implementation/agent-tools/evidence/agent-unit-model/retired-model-batch.md`。
