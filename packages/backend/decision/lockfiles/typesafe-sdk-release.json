@@ -1,0 +1,22 @@
+{
+  "version": "0.7.2",
+  "requires_python": ">=3.10",
+  "requires_dist": [
+    "httpx2>=2.0.0",
+    "pydantic>=2.12.0",
+    "pydantic-core>=2.41.1",
+    "tenacity>=9.0.0",
+    "typing-extensions>=4.13.0",
+    "httpx2[http2]>=2.0.0; extra == \"http2\""
+  ],
+  "files": [
+    {
+      "filename": "typesafe_sdk-0.7.2-py3-none-any.whl",
+      "sha256": "0a961148187d52e18276ed7f2d02617cfac48e3b97673cb631a8749397d43d1e"
+    },
+    {
+      "filename": "typesafe_sdk-0.7.2.tar.gz",
+      "sha256": "2434f4af5cdfc45d6ab5ff27048e8b257207f786b60456e69995e345b32e77e1"
+    }
+  ]
+}

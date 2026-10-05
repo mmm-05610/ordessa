@@ -1,0 +1,21 @@
+# 交付与验收入口
+
+## 现在可以检查什么
+本包文档结构与反例守卫：
+```bash
+node /home/maoqh/projects/ordessa/specs/031-jev-decision-module/checks/validate-materials.mjs
+node /home/maoqh/projects/ordessa/specs/031-jev-decision-module/checks/validate-materials.test.mjs
+```
+这两条不安装/执行pydantic-graph或Jev SDK、不调用模型、不操作Agent。
+材料检查只能确认结构/编号/链接/映射完整，不能验证业务或生命周期正确性。
+
+## 实施后应该能看到什么
+1. offline_assignment：输入清楚任务，显示选用已有单元/新配置方案的提案；所有原生操作0。
+2. 模糊任务：显示具名clarify/revise缺口，不启动任何单元。
+3. alternate_flow：调整可信判断顺序，运行器源码不变。
+4. 新配置kind含小数：不改引擎即可选择并由外部owner校验。
+5. 取消/日志故障：不显示ready，不重发潜在模型调用。
+6. 提案之后核心版本变化：实际消费前检查拒绝，原状态不被决策日志修改。
+
+目标示例与测试路径见tasks；目前未实现，不给用户伪装成可运行产品命令。
+

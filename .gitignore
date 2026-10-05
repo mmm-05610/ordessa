@@ -35,3 +35,7 @@ packaging/.staging/
 packaging/.out/
 packaging/.icon-stage/
 packaging/.keys/
+
+# 031 decision isolated local verification
+/.venv-decision/
+/.decision-tmp/

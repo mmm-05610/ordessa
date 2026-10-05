@@ -1,0 +1,868 @@
+{
+  "schemaVersion": "decision-spec-kit/1",
+  "status": "design-reviewed",
+  "date": "2026-10-05",
+  "authority": "README.md",
+  "implementationAuthorized": false,
+  "referenceBaselines": [
+    {
+      "tree": "/home/maoqh/projects/ordessa",
+      "sha": "b4bf7cd90951d0fa9bcf3a3de2e66b7db6a62aa0",
+      "role": "material-authoring"
+    },
+    {
+      "tree": "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa",
+      "sha": "9e1a6db19bd54df5d6508eaa71098ca96b59bcd9",
+      "role": "initial-read-only"
+    },
+    {
+      "tree": "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa",
+      "sha": "577014c450b275faaf35d1e9c4b6cdbf9b6183de",
+      "role": "later-pinned-read-only"
+    }
+  ],
+  "modules": [
+    {
+      "id": "M01",
+      "document": "modules/M01-contracts.md",
+      "designer": "/root/design_contracts"
+    },
+    {
+      "id": "M02",
+      "document": "modules/M02-runtime.md",
+      "designer": "/root/design_runtime"
+    },
+    {
+      "id": "M03",
+      "document": "modules/M03-jev-provider.md",
+      "designer": "/root/design_jev"
+    },
+    {
+      "id": "M04",
+      "document": "modules/M04-task-gate.md",
+      "designer": "/root/design_task_gate"
+    },
+    {
+      "id": "M05",
+      "document": "modules/M05-selection-proposals.md",
+      "designer": "/root/design_planner"
+    },
+    {
+      "id": "M06",
+      "document": "modules/M06-integration-evidence.md",
+      "designer": "/root/design_integration"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "JD001",
+      "title": "基线盘点与上游兼容验证",
+      "dependsOn": [],
+      "modules": [
+        "M01",
+        "M02",
+        "M03",
+        "M06"
+      ],
+      "acceptance": [
+        "T03",
+        "T30",
+        "T33",
+        "T37",
+        "T63",
+        "T64"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    },
+    {
+      "id": "JD002",
+      "title": "公共契约与摘要域冻结",
+      "dependsOn": [
+        "JD001"
+      ],
+      "modules": [
+        "M01"
+      ],
+      "acceptance": [
+        "T01",
+        "T02",
+        "T07",
+        "T08",
+        "T09",
+        "T10",
+        "T17",
+        "T18",
+        "T65",
+        "T66"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    },
+    {
+      "id": "JD003",
+      "title": "原版图薄运行器",
+      "dependsOn": [
+        "JD002"
+      ],
+      "modules": [
+        "M02"
+      ],
+      "acceptance": [
+        "T04",
+        "T05",
+        "T06",
+        "T11",
+        "T12",
+        "T13",
+        "T14",
+        "T15",
+        "T16",
+        "T19",
+        "T20",
+        "T23",
+        "T24",
+        "T25",
+        "T28",
+        "T29",
+        "T30"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    },
+    {
+      "id": "JD004",
+      "title": "官方Jev SDK接入",
+      "dependsOn": [
+        "JD002"
+      ],
+      "modules": [
+        "M03"
+      ],
+      "acceptance": [
+        "T33",
+        "T34",
+        "T35",
+        "T36",
+        "T37",
+        "T38",
+        "T39",
+        "T40",
+        "T41",
+        "T42",
+        "T68"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    },
+    {
+      "id": "JD005",
+      "title": "外部rubric任务准入",
+      "dependsOn": [
+        "JD003",
+        "JD004"
+      ],
+      "modules": [
+        "M04"
+      ],
+      "acceptance": [
+        "T43",
+        "T44",
+        "T45",
+        "T46",
+        "T47",
+        "T48"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    },
+    {
+      "id": "JD006",
+      "title": "工作单元选择与可替换组合器",
+      "dependsOn": [
+        "JD003",
+        "JD004"
+      ],
+      "modules": [
+        "M05"
+      ],
+      "acceptance": [
+        "T49",
+        "T50",
+        "T51",
+        "T52",
+        "T53",
+        "T54",
+        "T58",
+        "T67"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    },
+    {
+      "id": "JD007",
+      "title": "原Agent公共只读接缝补齐",
+      "dependsOn": [
+        "JD002"
+      ],
+      "modules": [
+        "M06"
+      ],
+      "acceptance": [
+        "T55",
+        "T56",
+        "T57",
+        "T61",
+        "T62",
+        "T65"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    },
+    {
+      "id": "JD008",
+      "title": "只读适配、持久证据与交接",
+      "dependsOn": [
+        "JD003",
+        "JD007"
+      ],
+      "modules": [
+        "M06"
+      ],
+      "acceptance": [
+        "T21",
+        "T22",
+        "T24",
+        "T25",
+        "T26",
+        "T27",
+        "T28",
+        "T31",
+        "T32",
+        "T55",
+        "T56",
+        "T58",
+        "T62"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    },
+    {
+      "id": "JD009",
+      "title": "整合、独立发行与产品级只读验收",
+      "dependsOn": [
+        "JD005",
+        "JD006",
+        "JD008"
+      ],
+      "modules": [
+        "M01",
+        "M02",
+        "M03",
+        "M04",
+        "M05",
+        "M06"
+      ],
+      "acceptance": [
+        "T01",
+        "T02",
+        "T03",
+        "T04",
+        "T05",
+        "T06",
+        "T07",
+        "T08",
+        "T09",
+        "T10",
+        "T11",
+        "T12",
+        "T13",
+        "T14",
+        "T15",
+        "T16",
+        "T17",
+        "T18",
+        "T19",
+        "T20",
+        "T21",
+        "T22",
+        "T23",
+        "T24",
+        "T25",
+        "T26",
+        "T27",
+        "T28",
+        "T29",
+        "T30",
+        "T31",
+        "T32",
+        "T33",
+        "T34",
+        "T35",
+        "T36",
+        "T37",
+        "T38",
+        "T39",
+        "T40",
+        "T41",
+        "T42",
+        "T43",
+        "T44",
+        "T45",
+        "T46",
+        "T47",
+        "T48",
+        "T49",
+        "T50",
+        "T51",
+        "T52",
+        "T53",
+        "T54",
+        "T55",
+        "T56",
+        "T57",
+        "T58",
+        "T59",
+        "T61",
+        "T62",
+        "T63",
+        "T64",
+        "T65",
+        "T66",
+        "T67",
+        "T68"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    },
+    {
+      "id": "JD010",
+      "title": "真实Jev领域评测（另行授权）",
+      "dependsOn": [
+        "JD009"
+      ],
+      "modules": [
+        "M03",
+        "M04",
+        "M05"
+      ],
+      "acceptance": [
+        "T60"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "T01",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T02",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T03",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T04",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T05",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T06",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T07",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T08",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T09",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T10",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T11",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T12",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T13",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T14",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T15",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T16",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T17",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T18",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T19",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T20",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T21",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T22",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T23",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T24",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T25",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T26",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T27",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T28",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T29",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T30",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T31",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T32",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T33",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T34",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T35",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T36",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T37",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T38",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T39",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T40",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T41",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T42",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T43",
+      "module": "M04",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T44",
+      "module": "M04",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T45",
+      "module": "M04",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T46",
+      "module": "M04",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T47",
+      "module": "M04",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T48",
+      "module": "M04",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T49",
+      "module": "M05",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T50",
+      "module": "M05",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T51",
+      "module": "M05",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T52",
+      "module": "M05",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T53",
+      "module": "M05",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T54",
+      "module": "M05",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T55",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T56",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T57",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T58",
+      "module": "M05",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T59",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T60",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T61",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T62",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T63",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T64",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T65",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T66",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T67",
+      "module": "M05",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T68",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    }
+  ],
+  "requirements": {
+    "R01": [
+      "T59",
+      "T63"
+    ],
+    "R02": [
+      "T04",
+      "T45"
+    ],
+    "R03": [
+      "T43",
+      "T44",
+      "T46"
+    ],
+    "R04": [
+      "T03",
+      "T48",
+      "T54"
+    ],
+    "R05": [
+      "T49",
+      "T51",
+      "T52"
+    ],
+    "R06": [
+      "T09",
+      "T53",
+      "T67"
+    ],
+    "R07": [
+      "T17",
+      "T58",
+      "T62"
+    ],
+    "R08": [
+      "T02",
+      "T55",
+      "T56"
+    ],
+    "R09": [
+      "T05",
+      "T06",
+      "T42",
+      "T68"
+    ],
+    "R10": [
+      "T07",
+      "T13",
+      "T14",
+      "T65"
+    ],
+    "R11": [
+      "T08",
+      "T18",
+      "T31",
+      "T40",
+      "T66"
+    ],
+    "R12": [
+      "T21",
+      "T22",
+      "T26",
+      "T27",
+      "T32"
+    ],
+    "R13": [
+      "T33",
+      "T59"
+    ],
+    "R14": [
+      "T55",
+      "T57",
+      "T61",
+      "T64"
+    ]
+  },
+  "requiredFiles": [
+    "README.md",
+    "spec.md",
+    "architecture.md",
+    "data-model.md",
+    "contracts/public-api.md",
+    "contracts/ordessa-read-seams.md",
+    "contracts/agent-assignment-flow.md",
+    "research.md",
+    "plan.md",
+    "tasks.md",
+    "acceptance.md",
+    "review.md",
+    "status.md",
+    "prompt.md",
+    "quickstart.md",
+    "checks/validate-materials.mjs",
+    "checks/validate-materials.test.mjs"
+  ],
+  "readiness": {
+    "materials": "materialsValidated",
+    "offline": "NOT_RUN",
+    "coreReadOnly": "NOT_RUN",
+    "liveJev": "NOT_RUN",
+    "nativeEffects": "OUT_OF_SCOPE"
+  }
+}
