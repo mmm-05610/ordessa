@@ -26,11 +26,26 @@ class ClaudeCodeServerPlugin:
         if binding is None:
             raise GuaranteeUnavailableError("existing Environment binding required")
         environment_id = EnvironmentId(binding.environment.environment_id)
-        provider = self._factory(environment_id)
+        # Explicitly assembled owner view when the deployment staged one; absent
+        # (legacy/discovery deployments) means the factory degrades to
+        # discovery-only capabilities and must never be asked to fake one. The
+        # view carries only the original UnitRecords and verifier, never an
+        # issuer.
+        owner = getattr(binding.environment, "owner_ports", None)
+        owner_view = getattr(owner, "provider_view", None) if owner is not None else None
+        provider = self._factory(environment_id, owner_view)
         if (not isinstance(provider, ClaudeCodeRuntimeProvider)
                 or provider.descriptor.provider_id != "claude"
                 or provider.descriptor.definition_ref["environmentNamespace"] != environment_id.value):
             raise GuaranteeUnavailableError("independent provider family or Environment differs")
+        if owner_view is not None:
+            # The provider must consume exactly the owner's original records and
+            # verifier (kept as ``_records``/``_verifier``): a second store or
+            # verifier can never be substituted here.
+            if (provider._records is not owner_view.records
+                    or provider._verifier is not owner_view.verifier):
+                raise GuaranteeUnavailableError(
+                    "provider does not consume the assembled owner records/verifier")
         return ServerPluginRegistration(contributions=ContributionBatch((Contribution(
             PACTHOLD_CONTRIBUTIONS_POINT_ID, PACTHOLD_CONTRIBUTIONS_API_VERSION,
             AgentContributionSet(agent_runtime_providers=(provider,)), required=True),)))

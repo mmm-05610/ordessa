@@ -341,7 +341,8 @@
         "required": [
           "nodeRef",
           "purpose",
-          "protocol"
+          "protocol",
+          "requestId"
         ],
         "optional": [],
         "effectful": true,
@@ -441,5 +442,5 @@
       ]
     }
   },
-  "schemaDigest": "sha256:dda9ab85dd7887ea4344b047826d704c9235c981942e4eaa30730fbbe48e19f2"
+  "schemaDigest": "sha256:863de886d7d55742153729164a56c54d908506e962602e075c4919cc440aa5c0"
 }

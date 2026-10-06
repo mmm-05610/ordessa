@@ -35,7 +35,7 @@ if len(sys.argv) > 5 and sys.argv[5] == "providers":
             ("pi", "ordessa_harness_pi", "Pi"), ("claude-code", "ordessa_harness_claude_code", "ClaudeCode")):
         provider_class = getattr(importlib.import_module(package), prefix + "RuntimeProvider")
         wrapper = getattr(importlib.import_module(package + ".server_plugin"), prefix + "ServerPlugin")
-        def factory(environment, cls=provider_class, definition=folder):
+        def factory(environment, owner_view=None, cls=provider_class, definition=folder):
             return cls(definition_ref={"environmentNamespace": environment.value, "definitionId": definition,
                 "revision": "1"}, implementation_digest="sha256:" + "b" * 64)
         plugins.append(wrapper(factory))

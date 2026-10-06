@@ -15,7 +15,7 @@ FAMILIES = [('codex', 'ordessa_harness_codex', 'Codex'),
 def plugin(family, module, prefix, calls, *, foreign=False):
     runtime_class = getattr(importlib.import_module(module + '.provider'), prefix + 'RuntimeProvider')
     plugin_class = getattr(importlib.import_module(module + '.server_plugin'), prefix + 'ServerPlugin')
-    def factory(environment):
+    def factory(environment, owner_view=None):
         calls.append(environment.value)
         return runtime_class(definition_ref={'environmentNamespace': 'foreign' if foreign else environment.value,
             'definitionId': family, 'revision': '1'}, implementation_digest='sha256:' + 'b' * 64)
@@ -93,7 +93,7 @@ def test_wrapper_rejects_another_family_before_contributing(family, module, pref
     wrong_module, wrong_prefix = ('ordessa_harness_pi', 'Pi') if family != 'pi' else ('ordessa_harness_codex', 'Codex')
     wrong = getattr(importlib.import_module(wrong_module + '.provider'), wrong_prefix + 'RuntimeProvider')
     wrapper = getattr(importlib.import_module(module + '.server_plugin'), prefix + 'ServerPlugin')
-    selected = wrapper(lambda env: wrong(definition_ref={'environmentNamespace': env.value,
+    selected = wrapper(lambda env, owner_view=None: wrong(definition_ref={'environmentNamespace': env.value,
         'definitionId': 'wrong', 'revision': '1'}, implementation_digest='sha256:' + 'b' * 64))
     with pytest.raises(GuaranteeUnavailableError):
         selected.build(SimpleNamespace(ports={'core.binding': SimpleNamespace(

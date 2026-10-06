@@ -263,3 +263,56 @@ def test_confirmed_scope_is_complete_original_target(setup):
     assert result.confirmed_snapshot.scope_ref==owner.read_unit(owner.ref).configuration_target_ref
     assert result.item_results[0].confirmation['scopeRef']==owner.target
     assert set(result.item_results[0].confirmation['scopeRef'])=={'environmentNamespace','scopeId','revision','ownerProviderRef','sourceRevision'}
+
+
+# --- production owner-view wiring: the records lifecycle path must stand alone ---
+
+def lifecycle_records(verifier):
+    return SimpleNamespace(verifier=verifier,reserve_unit=lambda *a,**k:None,
+        begin_session=lambda *a,**k:None,record_session=lambda *a,**k:None,
+        read_unit=lambda *a,**k:None,read_session=lambda *a,**k:None)
+
+
+def lifecycle_projection():
+    return SimpleNamespace(verify_preparation=lambda *a,**k:None,
+        revalidate_start=lambda *a,**k:None,read_unit=lambda *a,**k:None,
+        read_session=lambda *a,**k:None,publication_facts=lambda *a,**k:None,
+        publish_channel=lambda *a,**k:None)
+
+
+def test_records_lifecycle_declares_capabilities_without_legacy_composition():
+    verifier=InvocationVerifier(lambda context,*args:context.facts)
+    records=lifecycle_records(verifier)
+    provider=PiRuntimeProvider(definition_ref={'environmentNamespace':'pi-test','definitionId':'pi','revision':'1'},
+                    implementation_digest='sha256:'+'b'*64,unit_records=records,
+                    projection=lifecycle_projection(),verifier=verifier,
+                    channel_factory=SimpleNamespace(open=lambda *a,**k:None))
+    supported=provider.descriptor.supported_methods
+    # Capabilities come exclusively from the consumed owner records lifecycle.
+    assert {'prepare','start','inspect_unit','describe_access'} <= set(supported)
+    assert provider.records is records and provider._verifier is verifier
+    assert provider._owner is None and provider._confirmations is None
+    # The legacy configuration path never joins the declaration: the
+    # owner/confirmations composition is absent, so its capabilities stay out
+    # and the configuration surface remains explicitly unwired.
+    assert 'apply_configuration' not in supported
+    assert 'inspect_configuration' not in supported
+    assert all(description.support_status=='unknown' and not description.supported_actions
+               for description in provider.describe_configuration({'environmentNamespace':'pi-test','unitId':'unit-1'}))
+
+
+def test_mixed_records_lifecycle_with_legacy_owner_composition_refused():
+    verifier=InvocationVerifier(lambda context,*args:context.facts)
+    records=lifecycle_records(verifier)
+    projection=lifecycle_projection()
+    definition_ref={'environmentNamespace':'pi-test','definitionId':'pi','revision':'1'}
+    # Complete legacy doubles, so the refusal is the mixing rule itself and not
+    # an incomplete-ports check.
+    with pytest.raises(PiProviderRefused):
+        PiRuntimeProvider(definition_ref=definition_ref,implementation_digest='sha256:'+'b'*64,
+                          owner=Owner(),confirmations=Confirmations(),verifier=verifier,
+                          unit_records=records,projection=projection)
+    with pytest.raises(PiProviderRefused):
+        PiRuntimeProvider(definition_ref=definition_ref,implementation_digest='sha256:'+'b'*64,
+                          verifier=verifier,unit_records=records,projection=projection,
+                          confirmations=Confirmations())

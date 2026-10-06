@@ -73,6 +73,17 @@ class OwnerPorts:
 
 
 @dataclass(frozen=True)
+class OwnerProviderView:
+    """Provider-facing view of one assembled owner: verification only.
+
+    Never carries the invocation issuer: providers consume verified facts and
+    records, they can never issue grants or tickets.
+    """
+    records: Any
+    verifier: Any
+
+
+@dataclass(frozen=True)
 class AssembledOwner:
     """The single owner of one environment's issuer/verifier/journal/records."""
     issuer: Any
@@ -80,6 +91,10 @@ class AssembledOwner:
     journal: Any
     records: Any
     ports: OwnerPorts
+
+    @property
+    def provider_view(self) -> OwnerProviderView:
+        return OwnerProviderView(records=self.records, verifier=self.verifier)
 
     def revoke(self):
         """Revoke live permission, preserving any owner-callback failure.
@@ -174,5 +189,5 @@ def canonical_journal_path(core_store_path: Any) -> Path:
     return root / "plugins" / "profile" / "native-configuration.sqlite"
 
 
-__all__ = ["OwnerPorts", "AssembledOwner", "OwnerAssemblyRefused",
+__all__ = ["OwnerPorts", "OwnerProviderView", "AssembledOwner", "OwnerAssemblyRefused",
            "validate_owner_ports", "assemble_owner", "canonical_journal_path"]

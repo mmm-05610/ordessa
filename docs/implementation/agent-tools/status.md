@@ -730,3 +730,13 @@ records检查点f6ba4662a5已提交。首次cached资料门发现新增patch中�
 初跑失败账均测试侧：门面链AST（模块移core即恢复基线）、仓库根路径差两层、缺records PYTHONPATH、symlink子例误用异root、混用反例误用第二journal对象（改同对象pin＋重复接线拒，装配层顺带加already-assembled拒绝）、契约类缺frozen、bind误用带版本surface id；断言一律未放宽、无skip、无mock冒绿。
 
 架构评审累计1/3次；子代理：architecture-reviewer×1、test-author×1，费用精确值unknown。工单strict与diff-check随后核验；无第三方安装更新、无用户DB/凭据/全局配置/服务操作、无push/主树合并。显式stage本轮文件形成检查点后继续三家生产接线与后续工单，不标任何完成门。
+
+### 2026-10-06 属主→provider 管线合同冻结与三家家族接线（PARTIAL）
+
+前置3f40afad33。architecture-reviewer第2次咨询（管线合同/旧消费者迁移边界/生命周期归属/P-M分层，只读）；裁决：factory扩两参收**不含issuer的provider_view**（高优先：插件永不获签发权）、records补免调用属主读（高优先：解P级投影阻塞）、终止方法族先冻结再实现、acquireAccess补requestId。评审对旧消费者的反直觉裁定采纳：不整体迁移，endpoint/credential/restart-resume/附件四类语义由新owner承接、代码按家族typed退役，sidecar负退出条件"无第二解析者"import边界锁死。
+
+实现：owner_ports.py加OwnerProviderView＋provider_view；UnitRecords加owner_read_unit/owner_read_session/owner_read_unit_confirmation（免invocation，原授权读面不变）；schema.py给acquireAccess加requestId并effectful统一由requestId驱动；客户端镜像generate_schema.py --write再生成并复验（仅schema-management.json变化）。接口冻结后并行放行三个slice-worker家族切片（各写各包、均声明写权释放）：三家server_plugin传view＋同一性断言＋反例（codex210P/0F、pi271P/0F含构造期拒绝新旧双路混用、claude200P/0F含三参数化混用反例），原有断言零删除零放宽。详见[evidence/agent-unit-model/provider-owner-pipeline.md](evidence/agent-unit-model/provider-owner-pipeline.md)。
+
+集成复跑（主会话串行、句柄terminal）：产品integration **312P/0F exit0**；证据反例28P/0F（属主接线15＋代数13）；三家210/271/200P/0F逐包核实；核心269P/3F同三个已登记继承ID无新增；原journal组合107P/0F。集成初红均夹具侧：三处单参factory/lambda与一处cls默认参被owner_view顶位（两参化恢复）、客户端镜像过期致真实服务CLI拒schema（再生成后恢复）；断言未放宽、无skip。
+
+C为真实临时SQLite/journal＋家族Python实现与受控端口；P无原生进程、M0（授权已给，本轮未需要）。未验证：三家纵向端到端（下一切片codex C→P）、projection/channel_factory/lease_port生产装配、records终止方法族＋AgentLifecycle、acquireAccess wire绑定、逐家退役闸、真实进程/模型。家族申报两次只读git status越界（无树变更），如实入账。架构评审累计2/3次；子代理slice-worker×3；无第三方安装/用户数据/服务/push/主树合并，费用unknown。检查点后继续纵向切片与生命周期，不标完成门。

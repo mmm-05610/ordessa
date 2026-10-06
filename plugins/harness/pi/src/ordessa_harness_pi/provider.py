@@ -68,6 +68,15 @@ class PiRuntimeProvider(PiUnitLifecycle):
     """
     def __init__(self, *, definition_ref, implementation_digest, owner=None, confirmations=None, verifier=None,
                  unit_records=None, projection=None, channel_factory=None, lease_port=None):
+        # The assembled production owner view (frozen two-argument factory
+        # contract) carries only the original UnitRecords and verifier. A
+        # legacy owner/confirmations composition beside the records lifecycle
+        # is never a valid wiring: capability declaration unions both branches
+        # and the owner path would silently shadow the records path. Refuse
+        # the mix instead of letting the old path join the declaration.
+        if unit_records is not None and (owner is not None or confirmations is not None):
+            raise PiProviderRefused(
+                "records lifecycle and legacy owner/confirmations composition cannot both be wired")
         owner_methods = ("read_unit", "inspect_unit", "channel", "verify_session", "serialize_configuration", "revalidate_write")
         if owner is not None and any(not callable(getattr(owner, name, None)) for name in owner_methods):
             raise PiProviderRefused("complete trusted Unit owner ports required")

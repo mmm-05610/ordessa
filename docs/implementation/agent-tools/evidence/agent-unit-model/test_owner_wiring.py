@@ -504,3 +504,28 @@ def test_pending_observation_detach_keeps_writer_lock_and_is_retried(tmp_path):
     assert source.detaches == 2
     reopened = SqliteStorePort(core_path(tmp_path))
     reopened.close()
+
+
+def test_provider_view_and_owner_reads_never_issue_invocations(tmp_path):
+    deployment = deployment_module()
+    owner_mod = owner_ports_module(deployment)
+    env = _wired_env(tmp_path, owner_mod, deployment)
+    try:
+        owner = env.owner_ports
+        view = owner.provider_view
+        assert view.records is owner.records
+        assert view.verifier is owner.verifier
+        # The provider view never carries issuance capability.
+        assert not hasattr(view, "issuer")
+        assert getattr(view, "issuer", None) is None
+        # Owner projection reads require no invocation context at all.
+        from ordessa_harness_records import UnitRecordsRefused
+        with pytest.raises(UnitRecordsRefused):
+            owner.records.owner_read_unit("unit-that-does-not-exist")
+        with pytest.raises(UnitRecordsRefused):
+            owner.records.owner_read_session("unit-that-does-not-exist")
+        # The authorized read surface still demands its invocation context.
+        with pytest.raises(TypeError):
+            owner.records.read_unit("unit-that-does-not-exist")
+    finally:
+        env.close()

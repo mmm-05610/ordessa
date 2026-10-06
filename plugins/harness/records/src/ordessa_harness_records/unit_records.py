@@ -623,6 +623,28 @@ class UnitRecords:
         with self.journal._connect() as db:
             return self._binding(db, unit_ref)
 
+    def owner_read_unit(self, unit_ref):
+        """Owner-trusted unit projection; consumes no invocation.
+
+        The single records owner reads its own immutable journal facts for the
+        provider's trusted projection. This issues no claim, ticket or effect
+        permission and never substitutes for an authorized read.
+        """
+        with self.journal._connect() as db:
+            return self._unit(db, unit_ref)
+
+    def owner_read_session(self, unit_ref):
+        """Owner-trusted session projection; consumes no invocation."""
+        with self.journal._connect() as db:
+            self._unit(db, unit_ref)
+            return self._binding(db, unit_ref)
+
+    def owner_read_unit_confirmation(self, unit_ref):
+        """Owner-trusted Unit confirmation projection; consumes no invocation."""
+        with self.journal._connect() as db:
+            self._unit(db, unit_ref)
+            return self._unit_confirmation(db, unit_ref)
+
     def _check_association_identity(self, unit, identity):
         fields = {'request', 'operationRef', 'stepId', 'inputDigest', 'providerRef', 'unitRef',
                   'nodeRef', 'managementEpoch', 'nativeCorrelation', 'unitConfirmationRef', 'sessionAbsenceRef', 'capturedInputRef'}

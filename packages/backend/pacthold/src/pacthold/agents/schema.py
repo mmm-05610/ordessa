@@ -35,7 +35,7 @@ _MANAGEMENT_BINDINGS = (
     ("agents.nodes.configuration.apply", "applyConfiguration", ("nodeRef", "change"), ()),
     ("agents.nodes.configuration.query", "queryChange", ("nodeRef", "operationRef"), ()),
     ("agents.nodes.applyProfile", "applyProfile", ("nodeRef", "profileRef", "expectedConfigurationRevision", "applicationPolicy", "requestId"), ()),
-    ("agents.nodes.acquireAccess", "acquireAccess", ("nodeRef", "purpose", "protocol"), ()),
+    ("agents.nodes.acquireAccess", "acquireAccess", ("nodeRef", "purpose", "protocol", "requestId"), ()),
     ("agents.nodes.recover", "recover", ("nodeRef", "preconditions", "requestId"), ()),
     ("agents.nodes.stop", "stop", ("nodeRef", "preconditions", "requestId"), ()),
     ("agents.nodes.release", "release", ("nodeRef", "preconditions", "requestId"), ()),
@@ -82,7 +82,7 @@ def wire_contract(version=AGENT_CONTRACT_VERSION) -> dict:
                 'nativeSessionRefs', 'operationRef'], 'additionalProperties': False},
         })
         value["methods"].update({method: {"action": action, "required": list(required),
-            "optional": list(optional), "effectful": "requestId" in required or action in {"applyConfiguration", "acquireAccess"},
+            "optional": list(optional), "effectful": "requestId" in required or action == "applyConfiguration",
             "additionalProperties": False}
             for method, action, required, optional in _MANAGEMENT_BINDINGS})
         value["configurationChange"] = {
