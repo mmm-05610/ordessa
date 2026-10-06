@@ -164,6 +164,17 @@ def test_existing_root_refuses_provider_reactivation_before_factory(tmp_path):
     empty = deployment.AgentToolsDeployment(fingerprint_port=fingerprint(),
         agent_contract_version='agent-assembly/2').build_runtime(config)
     empty.start(); empty.stop()
+    # Simulate a historical root created before durable generation evidence
+    # existed. The refusal target is the missing trusted basis, not root age:
+    # roots born with the basis may reactivate providers across restarts.
+    import sqlite3 as _sqlite3
+    from pacthold.core.activation_generation import (
+        ACTIVATION_SEED_NAMESPACE as _NS, ACTIVATION_SEED_RECORD as _RID)
+    core = tmp_path / 'server' / 'state' / 'core.sqlite'
+    with _sqlite3.connect(core) as db:
+        db.execute("DELETE FROM env_domain_records WHERE environment IS NOT NULL "
+                   "AND namespace=? AND record_id=?", (_NS, _RID))
+        db.commit()
     calls = []
     with pytest.raises(GuaranteeUnavailableError, match='generation unavailable'):
         deployment.AgentToolsDeployment(fingerprint_port=fingerprint(), agent_contract_version='agent-assembly/2',

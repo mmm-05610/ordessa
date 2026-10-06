@@ -718,3 +718,15 @@ records检查点f6ba4662a5已提交。首次cached资料门发现新增patch中�
 详细命令、初红和限制见[evidence/agent-unit-model/public-issuer-lifecycle.md](evidence/agent-unit-model/public-issuer-lifecycle.md)。初公开81P exit0 .58s；关闭初86P .71s、state重入87P .70s各exit0。审阅发现最后grant序列化可重入close，实际反例6P1F exit1 .20s；在原锁登记前重核，最终同组88P exit0 .66s，新增14项不累计快照。真实原SQLite claim保留及effect/query慢state并发关闭反例，不冒native进程。最终product integration311P1F exit1 16.97s，仍原strict冷代次失败不改断言，初组17.23s保留。所有测试串行terminal，五单strict资料exit0不当产品验收。
 
 冷代次与scope外Profile import补丁待答复；production owner/authority/current-state/scope/native evidence/lease/receipt、旧consumer、生命周期/tasks/results/Skill/A18及资源ABSENT继续。Core/全Server/品牌发行本轮未跑，原红保留，M0/成本unknown。未做未经授权操作。核对本轮源码/新增证据后显式阶段提交，goal继续active。
+
+### 2026-10-06 用户裁定落地：持久激活代次＋显式生产属主接线（PARTIAL）
+
+前置344d58525431、开工clean（用户新增.env未跟踪且绝不入库）；上一状态问答属历史。用户已裁定：代数按activation-generation-proposal.md实现、Profile一行import补丁可改（已应用并复验6P）、真实模型/Harness调用授权（本轮M0未调用）。主会话唯一共享源码/测试/Git/账本写者；architecture-reviewer第1次架构评审（只读，多条修正采纳，确定性请求键一处保留分歧并记录），test-author仅写指定反例文件（13项，主会话复跑核实）。
+
+修改：新增pacthold/core/activation_generation.py（高水位CAS＋birth事务fresh依据＋journal归属证据；门面链AST规则只许core/environment故落core）；environment.py三处（durable模式参数、_commit_activation_stage单次原子CAS分配/失败耗代无残留、instantiate代次默认1旁路修复）；products/agent-tools/deployment/composition.py（成对policy_factory/owner_ports_factory仅v2、依据化冷重开守卫、birth写依据、durable恒开、close链修复：revoke→detach重试→成功才放写锁且错误保留、并发close store只关一次、回调重入close被阻）；deployment/owner_ports.py（唯一records导入点＋OwnerPorts/AssembledOwner单一装配点＋单verifier/原store身份断言＋canonical journal绑定证据＋符号链接守卫）；test_independent_server_providers.py旧"一律拒"正例改夹具为真正无依据历史根（断言原文保留）。新反例test_activation_generation.py 13项＋test_owner_wiring.py 14项。详见[evidence/agent-unit-model/activation-generation-owner-wiring.md](evidence/agent-unit-model/activation-generation-owner-wiring.md)。
+
+验证（专属Python串行、句柄terminal）：产品integration **312P/0F exit0、16.6s**（原311P/1F的唯一冷重开失败由持久代数真正修复，严格断言未删未改）；代数反例13P/0F exit0；属主接线反例14P/0F exit0；核心全量269P/3F exit1、7.7s仍同三个已登记kernel_direction继承ID无新增（中途环境模块导入触发门面链AST 4F，移core后恢复）；原journal组合107P/0F exit0；Profile六项6P/0F exit0。均C（真实临时SQLite/journal＋受控端口），三家provider消费生产owner的纵向接线、真实authority/目录/租约/回执、配置事实确认、生命周期/任务/结果仍缺；P无原生进程、M0（真实调用已授权但本轮未需要）。
+
+初跑失败账均测试侧：门面链AST（模块移core即恢复基线）、仓库根路径差两层、缺records PYTHONPATH、symlink子例误用异root、混用反例误用第二journal对象（改同对象pin＋重复接线拒，装配层顺带加already-assembled拒绝）、契约类缺frozen、bind误用带版本surface id；断言一律未放宽、无skip、无mock冒绿。
+
+架构评审累计1/3次；子代理：architecture-reviewer×1、test-author×1，费用精确值unknown。工单strict与diff-check随后核验；无第三方安装更新、无用户DB/凭据/全局配置/服务操作、无push/主树合并。显式stage本轮文件形成检查点后继续三家生产接线与后续工单，不标任何完成门。

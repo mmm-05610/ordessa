@@ -124,7 +124,7 @@ class Runtime:
 
     def activate_generation(self, operation_id, target, lease, manifest_digest):
         from pathlib import Path as _P
-        from ordessa_harness.application.operation_journal import NativeActivationReceipt
+        from ordessa_harness_records.operation_journal import NativeActivationReceipt
         self.activate_count += 1
         resource = ("private", "settings.json")
         self.bytes = lease.read_bytes(resource)

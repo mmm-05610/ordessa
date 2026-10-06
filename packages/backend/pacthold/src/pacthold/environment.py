@@ -68,6 +68,8 @@ from ordessa_environment_api.guarantee import GuaranteeLevel
 from ordessa_environment_api.identity import ActivationRef, ParticipantInstanceRef, SurfaceRef
 from ordessa_environment_api.targets import CanonicalFactTarget
 
+from .core.activation_generation import reserve_next_generation
+
 from .core.registration import (
     BatchAlreadyUsedError,
     CoreContributionSet,
@@ -357,12 +359,25 @@ class Environment:
         policy: PolicyPort | None = None,
         fingerprint_port: ProtectedFingerprintPort | None = None,
         principal_scope: str = "local",
+        activation_generation: str = "in-process",
     ) -> None:
         self._id = environment_id if isinstance(environment_id, EnvironmentId) else EnvironmentId(environment_id)
         self._store = store
         self._policy = policy
         self._fingerprint_port = fingerprint_port
         self._principal_scope = principal_scope
+        # Explicit allocation mode: "in-process" is the honest in-memory mode
+        # for non-persistent environments and claims no cold-recovery
+        # reliability. "durable" allocates generations through the store's
+        # domain CAS high-water and refuses to invent them without evidence.
+        if activation_generation not in ("in-process", "durable"):
+            raise ValueError("activation_generation must be 'in-process' or 'durable'")
+        if activation_generation == "durable" and (
+                store is None or not callable(getattr(store, "read_domain", None))
+                or not callable(getattr(store, "commit_domain_change", None))):
+            raise GuaranteeUnavailableError(
+                "durable activation generations require the store domain CAS face")
+        self._activation_generation_mode = activation_generation
         # Serialize in-memory request admission/claim with drain/retire cuts.
         # This lock is always released before user/native dispatch callbacks.
         self._admission_lock = RLock()
@@ -503,20 +518,47 @@ class Environment:
             self._check_open()
             if plugin_id not in self._enabled:
                 raise AdmissionRefusedError("activation was disabled before publication")
-            generation = self._activation_generations.get(plugin_id, 0) + 1
+            if self._activation_generation_mode == "durable":
+                # Reserve AND durably confirm the next generation before any
+                # publication: one atomic CAS, never a second activation
+                # account. A failed publication may consume a generation and
+                # the high-water never rolls back; an unknown reservation is
+                # never published or resent. Any failure rolls the staged
+                # batch back so no contribution residue remains.
+                try:
+                    generation = reserve_next_generation(
+                        self._store, self.environment_id, plugin_id,
+                        fingerprint_port=self._fingerprint_port)
+                except BaseException:
+                    self._registry.rollback(batch)
+                    raise
+                self._activation_generations[plugin_id] = generation
+            else:
+                generation = self._activation_generations.get(plugin_id, 0) + 1
             ref = ActivationRef(environment=self.environment_id, plugin_id=plugin_id, generation=generation)
             # Construct every fallible identity projection before publication;
             # a bad surface may not leave a half-published RuntimeProvider.
-            capabilities = {}
-            for raw_id in batch.contract_ids:
-                surface_id, _, version = raw_id.rpartition("@")
-                surface_id = surface_id.replace("@", ".")
-                capabilities[surface_id] = _CapabilityEntry(
-                    surface=SurfaceRef(environment=self.environment_id, surface_id=surface_id,
-                                       contract_version=version or "1", owner=ref),
-                    owner_activation=ref, operation_kinds=("read",))
-            self._registry.commit(batch)
-            self._activation_generations[plugin_id] = generation
+            try:
+                capabilities = {}
+                for raw_id in batch.contract_ids:
+                    surface_id, _, version = raw_id.rpartition("@")
+                    surface_id = surface_id.replace("@", ".")
+                    capabilities[surface_id] = _CapabilityEntry(
+                        surface=SurfaceRef(environment=self.environment_id, surface_id=surface_id,
+                                           contract_version=version or "1", owner=ref),
+                        owner_activation=ref, operation_kinds=("read",))
+            except BaseException:
+                if self._activation_generation_mode == "durable":
+                    self._registry.rollback(batch)
+                raise
+            try:
+                self._registry.commit(batch)
+            except BaseException:
+                if self._activation_generation_mode == "durable":
+                    self._registry.rollback(batch)
+                raise
+            if self._activation_generation_mode != "durable":
+                self._activation_generations[plugin_id] = generation
             entry = _ActivationEntry(ref=ref, contributions=payload, contribution_revision=1,
                                      registration_batch=batch)
             self._activations[(plugin_id, generation)] = entry
@@ -618,7 +660,14 @@ class Environment:
             raise IdentityMismatchError(
                 f"request key {key} already used with a different target (digest conflict)"
             )
-        generation = self._activation_generations.get(cap.owner_activation.plugin_id, 1)
+        generation = self._activation_generations.get(cap.owner_activation.plugin_id)
+        if generation is None:
+            # Never silently seed a generation for a durable environment: the
+            # allocation evidence, not a default of 1, assigns identity.
+            if self._activation_generation_mode == "durable":
+                raise GuaranteeUnavailableError(
+                    "instance generation requires a durable activation allocation")
+            generation = 1
         instance_ref = ParticipantInstanceRef(
             environment=self.environment_id, instance_id=instance_id, generation=generation
         )
