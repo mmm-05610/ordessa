@@ -76,6 +76,8 @@ class NativeSessionEvidencePort(Protocol):
 UNIT_CONFIRMATION_VERSION = 'harness-unit-confirmation/1'
 INPUT_SESSION_ASSOCIATION_VERSION = 'harness-input-session-association/1'
 SESSIONLESS_INPUT_VERSION = 'harness-sessionless-input/1'
+TERMINATION_VERSION = 'harness-unit-termination/1'
+TERMINATION_ACTIONS = ('stop', 'release')
 
 
 class NativeInputAssociationEvidencePort(Protocol):
@@ -108,6 +110,17 @@ class NativeConfigurationEvidencePort(Protocol):
 
 class ManagementEpochPort(Protocol):
     def current_epoch(self, node_ref) -> int: ...
+
+
+class NativeTerminationEvidencePort(Protocol):
+    """Original stop/release effect proof, never an ACK or a caller string.
+
+    The owner verifies the fixed installation/root, the original unit and
+    correlation, and the actual termination effect; it returns only
+    versioned provenance refs. Confirmed termination stores the owner's
+    returned refs — caller-supplied evidence is never stored as proof.
+    """
+    def verify_termination(self, unit, action, correlation, evidence) -> Mapping: ...
 
 
 @dataclass(frozen=True)
@@ -206,6 +219,10 @@ class UnitRecordTicket(RecordTicket):
     """Native Unit creation; separate from the strict session ticket."""
 
 
+class TerminationRecordTicket(RecordTicket):
+    """Original stop/release attempt; one live ticket per Unit and action."""
+
+
 @dataclass(frozen=True)
 class NativeConfigurationAttempt:
     attempt_ref: str
@@ -236,7 +253,8 @@ def _correlation(facts):
 
 class UnitRecords:
     def __init__(self, journal, *, scope_authority, native_evidence, verifier, epoch_port,
-                 configuration_evidence=None, native_unit_evidence=None, input_association_evidence=None):
+                 configuration_evidence=None, native_unit_evidence=None, input_association_evidence=None,
+                 termination_evidence=None):
         if (not isinstance(journal, OperationJournal) or any(p is None for p in
                 (scope_authority, native_evidence, verifier, epoch_port))):
             raise UnitRecordsRefused("existing journal and explicit authority ports required")
@@ -246,8 +264,10 @@ class UnitRecords:
         self.configuration_evidence = configuration_evidence
         self.native_unit_evidence = native_unit_evidence
         self.input_association_evidence = input_association_evidence
+        self.termination_evidence = termination_evidence
         self._tickets = {}
         self._configuration_tickets = {}
+        self._termination_tickets = {}
         authority = getattr(journal, '_unit_records_scope_authority', None)
         if authority is not None and authority is not scope_authority:
             raise UnitRecordsRefused("journal already has a different scope authority")
@@ -275,6 +295,14 @@ class UnitRecords:
                     state TEXT NOT NULL, source_revision INTEGER NOT NULL,
                     native_request_json TEXT, native_request_digest TEXT,
                     confirmation_json TEXT, confirmation_digest TEXT);
+                CREATE TABLE IF NOT EXISTS harness_unit_terminations (
+                    unit_ref TEXT NOT NULL REFERENCES harness_unit_reservations(unit_ref),
+                    action TEXT NOT NULL,
+                    correlation TEXT NOT NULL UNIQUE,
+                    identity_json TEXT NOT NULL, identity_digest TEXT NOT NULL,
+                    state TEXT NOT NULL, source_revision INTEGER NOT NULL,
+                    outcome_json TEXT, outcome_digest TEXT,
+                    PRIMARY KEY (unit_ref, action));
             ''')
         # Retain one owner and one bound gate per journal object. The journal
         # owns the actual transactional admission cut; importing UnitRecords
@@ -644,6 +672,226 @@ class UnitRecords:
         with self.journal._connect() as db:
             self._unit(db, unit_ref)
             return self._unit_confirmation(db, unit_ref)
+
+    def _termination_identity(self, unit, action, correlation, input_digest):
+        return safe_json({'action': action, 'correlation': correlation,
+                          'inputDigest': input_digest, 'unitRef': unit.public_ref})
+
+    def _termination_proof(self, unit, action, correlation, evidence):
+        if not callable(getattr(self.termination_evidence, 'verify_termination', None)):
+            raise UnitRecordsRefused('termination evidence owner is absent')
+        try:
+            refs = self.termination_evidence.verify_termination(unit, action, correlation, evidence)
+        except UnitRecordsRefused:
+            raise
+        except Exception:
+            raise UnitRecordsRefused('termination evidence missing or forged') from None
+        if (not isinstance(refs, Mapping) or not refs
+                or any(not isinstance(key, str) or not key or not isinstance(value, str) or not value
+                       for key, value in refs.items())):
+            raise UnitRecordsRefused('termination evidence owner must return provenance refs')
+        return safe_json(dict(refs))
+
+    def begin_termination(self, unit_ref, context, *, input_digest, action):
+        """Claim the one original stop/release attempt for this Unit.
+
+        The unified termination face for every family: one live ticket per
+        Unit and action, ever. Unknown outcomes keep the attempt and its
+        hold; nothing is released automatically and no family may grow a
+        second termination ledger.
+        """
+        if action not in TERMINATION_ACTIONS:
+            raise UnitRecordsRefused('termination action must be stop or release')
+        with self.journal._connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            unit = self._unit(db, unit_ref)
+            facts = self._authorize(context, action, unit.facts['providerRef'],
+                                    unit.facts['nodeRef'], input_digest)
+            if facts['managementEpoch'] != unit.facts['managementEpoch']:
+                raise UnitRecordsRefused('unit management epoch changed')
+            correlation = _correlation(facts)
+            identity = self._termination_identity(unit, action, correlation, input_digest)
+            existing = db.execute(
+                'SELECT * FROM harness_unit_terminations WHERE (unit_ref=? AND action=?) OR correlation=?',
+                (unit.unit_ref, action, correlation)).fetchall()
+            for row in existing:
+                if (row['identity_digest'] != _digest(row['identity_json'])
+                        or safe_json(json.loads(row['identity_json'])) != identity):
+                    raise UnitRecordsRefused('different termination attempt is already recorded')
+                raise UnitRecordsRefused('termination attempt already claimed')
+            try:
+                db.execute(
+                    'INSERT INTO harness_unit_terminations(unit_ref, action, correlation, '
+                    'identity_json, identity_digest, state, source_revision) VALUES(?,?,?,?,?,\'opening\',1)',
+                    (unit.unit_ref, action, correlation, identity, _digest(identity)))
+            except Exception:
+                raise UnitRecordsRefused('termination attempt collides with another record') from None
+            db.commit()
+        ticket = object.__new__(TerminationRecordTicket)
+        self._termination_tickets[id(ticket)] = (
+            ticket, unit, action, correlation, input_digest, facts['managementEpoch'])
+        return ticket
+
+    def record_termination(self, ticket, *, expected_source_revision, state, evidence=None):
+        """Record the original stop/release outcome: confirmed or unknown.
+
+        Confirmed stores the owner evidence port's returned provenance refs,
+        never caller-supplied strings. Unknown keeps the attempt, its hold
+        and its live ticket; nothing here releases Usages or kills
+        processes — the caller owns those effects and their proof.
+        """
+        entry = self._termination_tickets.get(id(ticket))
+        if type(ticket) is not TerminationRecordTicket or entry is None or entry[0] is not ticket:
+            raise UnitRecordsRefused('termination ticket is not owned by this journal instance')
+        _, unit, action, correlation, input_digest, epoch = entry
+        if state not in ('unknown', 'confirmed') or (state == 'unknown' and evidence is not None):
+            raise UnitRecordsRefused('termination ticket cannot invent or replace its outcome')
+        supplied = None if evidence is None else dict(evidence)
+        if state == 'confirmed' and (
+                not isinstance(evidence, Mapping) or not supplied
+                or any(not isinstance(key, str) or not key or not isinstance(value, str) or not value
+                       for key, value in supplied.items())):
+            raise UnitRecordsRefused('confirmed termination requires owner evidence refs')
+        with self.journal._connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            if self._epoch(unit.facts['nodeRef']) != epoch:
+                raise UnitRecordsRefused('termination ticket epoch expired')
+            if self._unit(db, unit.unit_ref) != unit:
+                raise UnitRecordsRefused('unit changed after termination ticket issuance')
+            row = db.execute(
+                'SELECT * FROM harness_unit_terminations WHERE unit_ref=? AND action=?',
+                (unit.unit_ref, action)).fetchone()
+            if (row is None or type(expected_source_revision) is not int
+                    or row['source_revision'] != expected_source_revision
+                    or row['correlation'] != correlation
+                    or row['state'] not in ('opening', 'unknown')):
+                raise UnitRecordsRefused('termination terminal, changed, or revision conflict')
+            # Re-bind the stored identity to these exact ticket facts and
+            # validate the row before any write, so a refused call can never
+            # leave an already-committed outcome behind.
+            expected_identity = self._termination_identity(unit, action, correlation, input_digest)
+            self._check_termination_row(db, unit, action, expected_identity, row)
+            outcome = (None if state == 'unknown'
+                       else self._termination_proof(unit, action, correlation, supplied))
+            db.execute(
+                'UPDATE harness_unit_terminations SET state=?, source_revision=?, outcome_json=?, '
+                'outcome_digest=? WHERE unit_ref=? AND action=?',
+                (state, row['source_revision'] + 1, outcome,
+                 None if outcome is None else _digest(outcome), unit.unit_ref, action))
+            db.commit()
+            result = self._termination_record(db, unit.unit_ref, action, expected_identity)
+        if state == 'confirmed':
+            del self._termination_tickets[id(ticket)]
+        return result
+
+    def reconcile_termination(self, unit_ref, context, *, input_digest, action,
+                              expected_source_revision, state, evidence=None):
+        """Cold recovery: authorized query reconciliation, never a new claim.
+
+        After a restart the original ticket is gone; this revalidates the
+        original correlation under query authority and may conclude the
+        retained attempt with owner evidence. It never re-arms a dispatch,
+        never fabricates an opening and never releases anything.
+        """
+        if action not in TERMINATION_ACTIONS:
+            raise UnitRecordsRefused('termination action must be stop or release')
+        if state not in ('unknown', 'confirmed') or (state == 'unknown' and evidence is not None):
+            raise UnitRecordsRefused('termination reconciliation cannot invent an outcome')
+        supplied = None if evidence is None else dict(evidence)
+        if state == 'confirmed' and (
+                not isinstance(evidence, Mapping) or not supplied
+                or any(not isinstance(key, str) or not key or not isinstance(value, str) or not value
+                       for key, value in supplied.items())):
+            raise UnitRecordsRefused('confirmed termination requires owner evidence refs')
+        with self.journal._connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            unit = self._unit(db, unit_ref)
+            facts = self._authorize(context, 'query', unit.facts['providerRef'],
+                                    unit.facts['nodeRef'], input_digest, query=True)
+            correlation = _correlation(facts)
+            row = db.execute(
+                'SELECT * FROM harness_unit_terminations WHERE unit_ref=? AND action=?',
+                (unit.unit_ref, action)).fetchone()
+            if row is None:
+                raise UnitRecordsRefused('termination attempt was never claimed')
+            if correlation != row['correlation']:
+                raise UnitRecordsRefused('query is not the original termination attempt')
+            expected_identity = self._termination_identity(unit, action, correlation, input_digest)
+            self._check_termination_row(db, unit, action, expected_identity, row)
+            if (type(expected_source_revision) is not int
+                    or row['source_revision'] != expected_source_revision
+                    or row['state'] not in ('opening', 'unknown')):
+                raise UnitRecordsRefused('termination terminal, changed, or revision conflict')
+            outcome = (None if state == 'unknown'
+                       else self._termination_proof(unit, action, correlation, supplied))
+            db.execute(
+                'UPDATE harness_unit_terminations SET state=?, source_revision=?, outcome_json=?, '
+                'outcome_digest=? WHERE unit_ref=? AND action=?',
+                (state, row['source_revision'] + 1, outcome,
+                 None if outcome is None else _digest(outcome), unit.unit_ref, action))
+            db.commit()
+            return self._termination_record(db, unit.unit_ref, action, expected_identity)
+
+    def owner_read_termination(self, unit_ref, action):
+        """Owner-trusted termination projection; consumes no invocation."""
+        if action not in TERMINATION_ACTIONS:
+            raise UnitRecordsRefused('termination action must be stop or release')
+        with self.journal._connect() as db:
+            unit = self._unit(db, unit_ref)
+            row = db.execute(
+                'SELECT * FROM harness_unit_terminations WHERE unit_ref=? AND action=?',
+                (unit.unit_ref, action)).fetchone()
+            if row is None:
+                return None
+            return self._termination_record(db, unit.unit_ref, action, row=row)
+
+    def _check_termination_row(self, db, unit, action, expected_identity, row):
+        try:
+            stored = json.loads(row['identity_json'])
+        except Exception:
+            raise UnitRecordsRefused('termination record is damaged') from None
+        if (row['identity_digest'] != _digest(row['identity_json'])
+                or row['state'] not in ('opening', 'unknown', 'confirmed')
+                or type(row['source_revision']) is not int or row['source_revision'] < 1
+                or type(row['action']) is not str or row['action'] != action
+                or not isinstance(stored, Mapping)
+                or stored.get('correlation') != row['correlation']
+                or stored.get('action') != row['action']
+                or safe_json(stored) != expected_identity):
+            raise UnitRecordsRefused('termination record is damaged')
+
+    def _termination_record(self, db, unit_ref, action, expected_identity=None, row=None):
+        if row is None:
+            row = db.execute(
+                'SELECT * FROM harness_unit_terminations WHERE unit_ref=? AND action=?',
+                (unit_ref, action)).fetchone()
+            if row is None:
+                return None
+        if expected_identity is None:
+            try:
+                expected_identity = safe_json(json.loads(row['identity_json']))
+            except Exception:
+                raise UnitRecordsRefused('termination record is damaged') from None
+        self._check_termination_row(db, None, row['action'], expected_identity, row)
+        if ((row['outcome_json'] is None) != (row['outcome_digest'] is None)
+                or (row['outcome_json'] is not None
+                    and row['outcome_digest'] != _digest(row['outcome_json']))):
+            raise UnitRecordsRefused('termination record is damaged')
+        outcome = None
+        if row['outcome_json'] is not None:
+            try:
+                outcome = json.loads(row['outcome_json'])
+            except Exception:
+                raise UnitRecordsRefused('termination record is damaged') from None
+            if (not isinstance(outcome, Mapping) or not outcome
+                    or any(not isinstance(key, str) or not key or not isinstance(value, str) or not value
+                           for key, value in outcome.items())):
+                raise UnitRecordsRefused('termination record is damaged')
+        return {'version': TERMINATION_VERSION, 'projection': 'owner-read',
+                'action': row['action'], 'state': row['state'],
+                'sourceRevision': row['source_revision'],
+                'identity': sealed_mapping(json.loads(row['identity_json'])),
+                'outcome': None if outcome is None else sealed_mapping(outcome)}
 
     def _check_association_identity(self, unit, identity):
         fields = {'request', 'operationRef', 'stepId', 'inputDigest', 'providerRef', 'unitRef',

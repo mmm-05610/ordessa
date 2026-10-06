@@ -15,6 +15,7 @@ from ordessa_harness_api import ApplicationTarget, Plan, Confirmed
 from ordessa_harness_records.operation_journal import OperationJournal, FenceObservation
 from ordessa_harness_records.unit_records import (
     UnitRecords, UnitRecordsRefused, CanonicalConfigurationScopeRef, RecordTicket,
+    TERMINATION_VERSION,
 )
 
 PROVIDER = {'environmentNamespace': 'env', 'providerId': 'pi', 'generation': 1}
@@ -81,12 +82,27 @@ class Epoch:
         return self.value
 
 
-def parts(tmp_path):
+def parts(tmp_path, *, termination=None):
     journal = OperationJournal(tmp_path / 'journal.sqlite')
     verifier, scope, native, epoch = Verifier(), Scope(), Native(), Epoch()
     service = UnitRecords(journal, scope_authority=scope, native_evidence=native,
-                          verifier=verifier, epoch_port=epoch)
+                          verifier=verifier, epoch_port=epoch,
+                          termination_evidence=termination)
     return service, journal, verifier, scope, native, epoch
+
+
+class TermEvidence:
+    def __init__(self, valid=True, refs=None):
+        self.valid = valid
+        self.refs = refs
+        self.calls = []
+
+    def verify_termination(self, unit, action, correlation, evidence):
+        self.calls.append((action, correlation, evidence))
+        if not self.valid:
+            raise UnitRecordsRefused('termination evidence missing or forged')
+        return self.refs if self.refs is not None else {
+            'terminationEvidenceRef': 'sha256:' + action + '-owner-proof'}
 
 
 def reserve(parts_, **changes):
@@ -494,3 +510,217 @@ def test_unit_and_legacy_reservation_race_has_one_durable_winner(tmp_path):
         units = db.execute('SELECT count(*) FROM harness_unit_reservations').fetchone()[0]
         legacy = db.execute('SELECT count(*) FROM operations').fetchone()[0]
         assert units + legacy == 1
+
+
+# -- unified termination face (stop/release): one ledger for every family -----
+
+def _terminable(tmp_path, *, termination=None, **changes):
+    p = parts(tmp_path, termination=termination)
+    unit, _ = reserve(p, **changes)
+    return p, unit
+
+
+def test_termination_confirmed_requires_refs_and_concludes(tmp_path):
+    term = TermEvidence()
+    p, unit = _terminable(tmp_path, termination=term)
+    service, _, verifier, *_ = p
+    ticket = service.begin_termination(
+        unit.unit_ref, verifier.issue('stop', 'native-stop', 'stop-input'),
+        input_digest='stop-input', action='stop')
+    with pytest.raises(UnitRecordsRefused):
+        service.record_termination(ticket, expected_source_revision=1, state='confirmed')
+    with pytest.raises(UnitRecordsRefused):
+        service.record_termination(ticket, expected_source_revision=1, state='confirmed', evidence={})
+    with pytest.raises(UnitRecordsRefused):
+        service.record_termination(ticket, expected_source_revision=1, state='confirmed',
+                                   evidence={'ref': 5})
+    result = service.record_termination(
+        ticket, expected_source_revision=1, state='confirmed',
+        evidence={'terminationEvidenceRef': 'sha256:stop-proof'})
+    assert result['version'] == TERMINATION_VERSION
+    assert result['projection'] == 'owner-read'
+    assert result['action'] == 'stop' and result['state'] == 'confirmed'
+    # The stored proof is the OWNER port's returned refs, never the caller's
+    # strings: a caller cannot fabricate its own "evidence reference".
+    assert dict(result['outcome']) == {'terminationEvidenceRef': 'sha256:stop-owner-proof'}
+    assert term.calls and term.calls[0][0] == 'stop'
+    # confirmed is terminal: the ticket is consumed and cannot be reused
+    with pytest.raises(UnitRecordsRefused):
+        service.record_termination(ticket, expected_source_revision=2, state='unknown')
+    assert service.owner_read_termination(unit.unit_ref, 'stop')['state'] == 'confirmed'
+
+
+def test_termination_unknown_retains_hold_and_ticket(tmp_path):
+    term = TermEvidence()
+    p, unit = _terminable(tmp_path, termination=term)
+    service, _, verifier, *_ = p
+    ticket = service.begin_termination(
+        unit.unit_ref, verifier.issue('stop', 'native-stop', 'stop-input'),
+        input_digest='stop-input', action='stop')
+    with pytest.raises(UnitRecordsRefused):
+        service.record_termination(ticket, expected_source_revision=1, state='unknown',
+                                   evidence={'nope': 'unknown-takes-no-evidence'})
+    result = service.record_termination(ticket, expected_source_revision=1, state='unknown')
+    assert result['state'] == 'unknown' and result['outcome'] is None
+    # unknown keeps the live ticket: late real evidence may still conclude it
+    result = service.record_termination(
+        ticket, expected_source_revision=2, state='confirmed',
+        evidence={'terminationEvidenceRef': 'sha256:late-proof'})
+    assert result['state'] == 'confirmed' and result['sourceRevision'] == 3
+    assert dict(result['outcome']) == {'terminationEvidenceRef': 'sha256:stop-owner-proof'}
+
+
+def test_one_termination_attempt_per_action_and_identity(tmp_path):
+    p, unit = _terminable(tmp_path)
+    service, _, verifier, *_ = p
+    context = verifier.issue('stop', 'native-stop', 'stop-input')
+    ticket = service.begin_termination(unit.unit_ref, context, input_digest='stop-input', action='stop')
+    assert ticket is not None
+    with pytest.raises(UnitRecordsRefused, match='already claimed'):
+        service.begin_termination(unit.unit_ref, verifier.issue('stop', 'native-stop', 'stop-input'),
+                                  input_digest='stop-input', action='stop')
+    with pytest.raises(UnitRecordsRefused, match='different termination attempt'):
+        service.begin_termination(unit.unit_ref, verifier.issue('stop', 'native-stop', 'other-input'),
+                                  input_digest='other-input', action='stop')
+    with pytest.raises(UnitRecordsRefused, match='stop or release'):
+        service.begin_termination(unit.unit_ref, verifier.issue('disconnect', 'x', 'd-input'),
+                                  input_digest='d-input', action='disconnect')
+    # stop and release are separate attempts on the same Unit
+    other = service.begin_termination(
+        unit.unit_ref, verifier.issue('release', 'native-release', 'release-input'),
+        input_digest='release-input', action='release')
+    assert other is not None
+    assert service.owner_read_termination(unit.unit_ref, 'release')['state'] == 'opening'
+
+
+def test_termination_ticket_forgery_revision_and_epoch_refused(tmp_path):
+    p, unit = _terminable(tmp_path)
+    service, journal, verifier, scope, native, epoch = p
+    ticket = service.begin_termination(
+        unit.unit_ref, verifier.issue('stop', 'native-stop', 'stop-input'),
+        input_digest='stop-input', action='stop')
+    with pytest.raises(UnitRecordsRefused):
+        service.record_termination(object(), expected_source_revision=1, state='unknown')
+    with pytest.raises(UnitRecordsRefused):
+        service.record_termination(object.__new__(type(ticket)), expected_source_revision=1, state='unknown')
+    with pytest.raises(UnitRecordsRefused):
+        service.record_termination(ticket, expected_source_revision=99, state='unknown')
+    with pytest.raises(UnitRecordsRefused):
+        service.record_termination(ticket, expected_source_revision='1', state='unknown')
+    epoch.value = 1
+    with pytest.raises(UnitRecordsRefused, match='epoch'):
+        service.record_termination(ticket, expected_source_revision=1, state='unknown')
+
+
+def test_owner_read_termination_is_invocation_free_and_strict(tmp_path):
+    term = TermEvidence()
+    p, unit = _terminable(tmp_path, termination=term)
+    service, journal, verifier, scope, native, epoch = p
+    assert service.owner_read_termination(unit.unit_ref, 'stop') is None
+    with pytest.raises(UnitRecordsRefused):
+        service.owner_read_termination(unit.unit_ref, 'disconnect')
+    ticket = service.begin_termination(
+        unit.unit_ref, verifier.issue('stop', 'native-stop', 'stop-input'),
+        input_digest='stop-input', action='stop')
+    service.record_termination(ticket, expected_source_revision=1, state='confirmed',
+                               evidence={'stopRef': 'sha256:one'})
+    import hashlib
+    import json as _json
+
+    def _rehashed(payload):
+        return _json.dumps(payload, sort_keys=True), hashlib.sha256(
+            _json.dumps(payload, sort_keys=True).encode()).hexdigest()
+
+    # damaged stored outcome is refused, never projected as valid
+    with journal._connect() as db:
+        db.execute("UPDATE harness_unit_terminations SET outcome_json='{\"stopRef\":\"sha256:two\"}' WHERE unit_ref=?", (unit.unit_ref,))
+        db.commit()
+    with pytest.raises(UnitRecordsRefused, match='damaged'):
+        service.owner_read_termination(unit.unit_ref, 'stop')
+    # a recomputed digest over a bool value is still refused on read
+    payload, digest = _rehashed({'stopRef': True})
+    with journal._connect() as db:
+        db.execute("UPDATE harness_unit_terminations SET outcome_json=?, outcome_digest=? WHERE unit_ref=?",
+                   (payload, digest, unit.unit_ref))
+        db.commit()
+    with pytest.raises(UnitRecordsRefused, match='damaged'):
+        service.owner_read_termination(unit.unit_ref, 'stop')
+    # invalid JSON is refused as damage, never leaked as ValueError
+    with journal._connect() as db:
+        db.execute("UPDATE harness_unit_terminations SET outcome_json='[]', outcome_digest=? WHERE unit_ref=?",
+                   (hashlib.sha256(b'[]').hexdigest(), unit.unit_ref))
+        db.commit()
+    with pytest.raises(UnitRecordsRefused, match='damaged'):
+        service.owner_read_termination(unit.unit_ref, 'stop')
+    # identity swapped to another action with a recomputed digest is refused
+    plain_unit = json.loads(json.dumps(dict(unit.public_ref), default=dict))
+    payload, digest = _rehashed({'action': 'release', 'correlation': 'c', 'inputDigest': 'stop-input',
+                                 'unitRef': plain_unit})
+    with journal._connect() as db:
+        db.execute("UPDATE harness_unit_terminations SET identity_json=?, identity_digest=? WHERE unit_ref=?",
+                   (payload, digest, unit.unit_ref))
+        db.commit()
+    with pytest.raises(UnitRecordsRefused, match='damaged'):
+        service.owner_read_termination(unit.unit_ref, 'stop')
+
+
+def test_termination_forged_owner_evidence_is_refused_and_keeps_hold(tmp_path):
+    forged = TermEvidence(valid=False)
+    p, unit = _terminable(tmp_path, termination=forged)
+    service, journal, verifier, scope, native, epoch = p
+    ticket = service.begin_termination(
+        unit.unit_ref, verifier.issue('stop', 'native-stop', 'stop-input'),
+        input_digest='stop-input', action='stop')
+    with pytest.raises(UnitRecordsRefused, match='forged'):
+        service.record_termination(ticket, expected_source_revision=1, state='confirmed',
+                                   evidence={'terminationEvidenceRef': 'sha256:made-up'})
+    # the refused call changed nothing: still opening, ticket still live
+    assert service.owner_read_termination(unit.unit_ref, 'stop')['state'] == 'opening'
+    result = service.record_termination(ticket, expected_source_revision=1, state='unknown')
+    assert result['state'] == 'unknown'
+
+
+def test_termination_port_must_return_provenance_refs(tmp_path):
+    bad = TermEvidence(refs={'stopRef': True})
+    p, unit = _terminable(tmp_path, termination=bad)
+    service, _, verifier, *_ = p
+    ticket = service.begin_termination(
+        unit.unit_ref, verifier.issue('stop', 'native-stop', 'stop-input'),
+        input_digest='stop-input', action='stop')
+    with pytest.raises(UnitRecordsRefused, match='provenance refs'):
+        service.record_termination(ticket, expected_source_revision=1, state='confirmed',
+                                   evidence={'stopRef': 'anything'})
+
+
+def test_reconcile_termination_recovers_after_restart(tmp_path):
+    term = TermEvidence()
+    p, unit = _terminable(tmp_path, termination=term)
+    service, journal, verifier, scope, native, epoch = p
+    ticket = service.begin_termination(
+        unit.unit_ref, verifier.issue('stop', 'native-stop', 'stop-input'),
+        input_digest='stop-input', action='stop')
+    service.record_termination(ticket, expected_source_revision=1, state='unknown')
+    # Restart: a fresh records instance on the same journal; the old ticket
+    # is process-local and unusable, the attempt stays retained.
+    restarted = UnitRecords(journal, scope_authority=scope, native_evidence=native,
+                            verifier=verifier, epoch_port=epoch, termination_evidence=term)
+    with pytest.raises(UnitRecordsRefused):
+        restarted.record_termination(ticket, expected_source_revision=2, state='unknown')
+    assert restarted.owner_read_termination(unit.unit_ref, 'stop')['state'] == 'unknown'
+    # a query over a different step is not the original attempt
+    with pytest.raises(UnitRecordsRefused, match='original termination attempt'):
+        restarted.reconcile_termination(
+            unit.unit_ref, verifier.issue('query', 'wrong-step', 'stop-input'),
+            input_digest='stop-input', action='stop', expected_source_revision=2,
+            state='confirmed', evidence={'stopRef': 'x'})
+    result = restarted.reconcile_termination(
+        unit.unit_ref, verifier.issue('query', 'native-stop', 'stop-input'),
+        input_digest='stop-input', action='stop', expected_source_revision=2,
+        state='confirmed', evidence={'stopRef': 'late-real-proof'})
+    assert result['state'] == 'confirmed' and result['sourceRevision'] == 3
+    assert dict(result['outcome']) == {'terminationEvidenceRef': 'sha256:stop-owner-proof'}
+    # reconcile never re-arms a dispatch: begin stays single-shot forever
+    with pytest.raises(UnitRecordsRefused):
+        restarted.begin_termination(
+            unit.unit_ref, verifier.issue('stop', 'native-stop', 'stop-input'),
+            input_digest='stop-input', action='stop')

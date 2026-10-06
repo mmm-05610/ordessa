@@ -42,13 +42,14 @@ _PORT_METHODS = {
     "configuration_evidence": ("verify_configuration",),
     "native_unit_evidence": ("verify_unit_binding",),
     "input_association_evidence": ("verify_association",),
+    "termination_evidence": ("verify_termination",),
 }
 _REQUIRED_PORTS = ("authority", "current_state", "scope_authority",
                    "native_session_evidence", "management_epoch",
                    "node_evidence_port", "preparation_context_port",
                    "preparation_observation_port")
 _OPTIONAL_PORTS = ("configuration_evidence", "native_unit_evidence",
-                   "input_association_evidence")
+                   "input_association_evidence", "termination_evidence")
 
 
 class OwnerAssemblyRefused(GuaranteeUnavailableError):
@@ -69,6 +70,7 @@ class OwnerPorts:
     configuration_evidence: Any = None
     native_unit_evidence: Any = None
     input_association_evidence: Any = None
+    termination_evidence: Any = None
     close: Callable[[], None] | None = None
 
 
@@ -176,6 +178,7 @@ def assemble_owner(environment: Any, ports: Any, journal: Any) -> AssembledOwner
         configuration_evidence=ports.configuration_evidence,
         native_unit_evidence=ports.native_unit_evidence,
         input_association_evidence=ports.input_association_evidence,
+        termination_evidence=ports.termination_evidence,
     )
     if records.verifier is not verifier or records.journal is not journal:
         raise OwnerAssemblyRefused("records owner must consume the single verifier and journal")

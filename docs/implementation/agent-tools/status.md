@@ -740,3 +740,13 @@ records检查点f6ba4662a5已提交。首次cached资料门发现新增patch中�
 集成复跑（主会话串行、句柄terminal）：产品integration **312P/0F exit0**；证据反例28P/0F（属主接线15＋代数13）；三家210/271/200P/0F逐包核实；核心269P/3F同三个已登记继承ID无新增；原journal组合107P/0F。集成初红均夹具侧：三处单参factory/lambda与一处cls默认参被owner_view顶位（两参化恢复）、客户端镜像过期致真实服务CLI拒schema（再生成后恢复）；断言未放宽、无skip。
 
 C为真实临时SQLite/journal＋家族Python实现与受控端口；P无原生进程、M0（授权已给，本轮未需要）。未验证：三家纵向端到端（下一切片codex C→P）、projection/channel_factory/lease_port生产装配、records终止方法族＋AgentLifecycle、acquireAccess wire绑定、逐家退役闸、真实进程/模型。家族申报两次只读git status越界（无树变更），如实入账。架构评审累计2/3次；子代理slice-worker×3；无第三方安装/用户数据/服务/push/主树合并，费用unknown。检查点后继续纵向切片与生命周期，不标完成门。
+
+### 2026-10-06 统一终止方法族冻结＋safety-reviewer 加固（PARTIAL）
+
+前置b1d2afbf59。主会话唯一共享写者；safety-reviewer（只读）审终止面与免调用属主读，两项"必须修"与四项"建议修"全落地；codex真实适配器切片并行进行中另记。records新增harness_unit_terminations单一终止账本（stop/release，begin/record一对＋TerminationRecordTicket＋unknown保占用与活票据）＋reconcile_termination冷恢复＋owner_read_termination投影（projection标记）。
+
+安全修复：confirmed证据改经NativeTerminationEvidencePort验证、入库端口返回provenance refs（调用者字符串永不作证明）；record事务内按票据回绑identity并写前校验（消除"拒后已落库"未知窗口与篡改面）；读侧补state/revision/identity/outcome/JSON异常全套复核；epoch检查入事务；evidence单拷贝；correlation撞车typed拒。反例：伪造证据拒且保opening、端口坏形状拒、跨重启冷恢复与异step拒、四类损坏拒、单发/身份/票据伪造保持。详见[evidence/agent-unit-model/termination-face-freeze.md](evidence/agent-unit-model/termination-face-freeze.md)。
+
+验证（串行、terminal）：test_unit_records.py **38P/0F exit0**（原30＋新8）；test_owner_wiring.py 15P/0F（补两坏形状例）；records导出import核验exit0。C真实临时SQLite＋受控端口，P/M无。登记设计边界：owner读与授权读同类型（provider即属主）；record_unit/record_session同型事务外epoch为既有模式未扩面。失败账一处测试侧mappingproxy序列化已修，断言未放宽、无skip。
+
+无用户数据/服务/push/主树合并；M0费用unknown。检查点后接codex集成与AgentLifecycle（第3次架构咨询），不标完成门。

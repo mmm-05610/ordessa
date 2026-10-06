@@ -226,6 +226,8 @@ def test_required_and_optional_ports_need_callable_methods(tmp_path):
         dict(configuration_evidence=type("BadConfig", (), {})()),
         dict(native_unit_evidence=type("BadUnit", (), {"verify_unit_binding": None})()),
         dict(input_association_evidence=type("BadInput", (), {})()),
+        dict(termination_evidence=type("BadTerm", (), {})()),
+        dict(termination_evidence=type("BadTermMethod", (), {"verify_termination": 5})()),
         dict(close=5),
     ]
     for overrides in cases:
