@@ -15,6 +15,11 @@ from .management import AgentConfiguration
 from .providers import AgentProviders
 from .assembly import AgentAssembly, PreparationContext, PreparationObservation, PreparationContextPort, PreparationObservationPort
 from .lifecycle import AgentLifecycle, LifecycleObservation, LifecycleObservationPort
+from .inputs import (
+    CapturedInputRef, CapturedInputEvidence, ControlledInputCapturePort,
+    NativeInputState, SessionlessNativeInputState, NativeInputStatePort,
+    FirstInputObservation, FirstInputObservationPort, ManagedInputReservations,
+)
 from .invocation import (
     InvocationContext, InvocationVerifier, InvocationAuthorityRefused,
     InvocationIssuer, InvocationGrant, InvocationAuthorityPort,
@@ -30,11 +35,13 @@ class AgentServices:
     providers: AgentProviders
     assembly: AgentAssembly
     lifecycle: AgentLifecycle
+    managed_inputs: ManagedInputReservations
 
 
 def agent_services(environment, *, invocation_issuer=None, node_evidence_port=None,
                    preparation_context_port=None, preparation_observation_port=None,
-                   lifecycle_observation_port=None) -> AgentServices:
+                   lifecycle_observation_port=None, input_capture_port=None,
+                   native_input_state_port=None, first_input_observation_port=None) -> AgentServices:
     """Bootstrap one core-owned catalog on the existing Environment.
 
     No plugin activation, native process or second Environment is created.
@@ -52,14 +59,23 @@ def agent_services(environment, *, invocation_issuer=None, node_evidence_port=No
                     invocation_issuer=invocation_issuer, context_port=preparation_context_port,
                     observation_port=preparation_observation_port),
                 AgentLifecycle(environment, nodes, invocation_issuer=invocation_issuer,
-                    observation_port=lifecycle_observation_port))
+                    observation_port=lifecycle_observation_port),
+                ManagedInputReservations(environment, nodes, capture_port=input_capture_port,
+                    native_state_port=native_input_state_port,
+                    first_input_observation_port=first_input_observation_port))
             environment._agent_services = services
         elif ((invocation_issuer is not None and services.configuration._issuer is not invocation_issuer)
                 or (node_evidence_port is not None and services.nodes._evidence_port is not node_evidence_port)
                 or (preparation_context_port is not None and services.assembly._context_port is not preparation_context_port)
                 or (preparation_observation_port is not None and services.assembly._observation_port is not preparation_observation_port)
                 or (lifecycle_observation_port is not None
-                    and services.lifecycle._observation_port is not lifecycle_observation_port)):
+                    and services.lifecycle._observation_port is not lifecycle_observation_port)
+                or (input_capture_port is not None
+                    and services.managed_inputs._capture is not input_capture_port)
+                or (native_input_state_port is not None
+                    and services.managed_inputs._native is not native_input_state_port)
+                or (first_input_observation_port is not None
+                    and services.managed_inputs._first_observation is not first_input_observation_port)):
             raise ValueError("Agent service authorities must be composed once before use")
         return services
 
@@ -78,6 +94,9 @@ __all__ += ["InvocationIssuer", "InvocationGrant", "InvocationAuthorityPort",
 __all__ += ["AgentProviders"]
 __all__ += ["AgentAssembly", "PreparationContext", "PreparationObservation", "PreparationContextPort", "PreparationObservationPort"]
 __all__ += ["AgentLifecycle", "LifecycleObservation", "LifecycleObservationPort"]
+__all__ += ["ManagedInputReservations", "CapturedInputRef", "CapturedInputEvidence",
+            "ControlledInputCapturePort", "NativeInputState", "SessionlessNativeInputState",
+            "NativeInputStatePort", "FirstInputObservation", "FirstInputObservationPort"]
 from .runtime import AgentContributionSet, RuntimeProvider, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
 __all__ += ["AgentContributionSet", "RuntimeProvider", "RuntimeProviderDescriptor", "RUNTIME_PROVIDER_VERSION"]
 from .configuration import (

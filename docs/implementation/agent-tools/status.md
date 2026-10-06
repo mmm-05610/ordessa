@@ -828,3 +828,13 @@ Luna只读核实：Agent模块未导入具体Harness品牌；但inline准备先s
 产品末端回归：首次 **786P/1F exit1、215.71s**（旧CLI测试假定健康wire未广告applyProfile，事实已变化）。wire Luna将原负例改为真实无issuer首次装配，保capability refused／不广告／零作用，并新增健康wire广告但CLI缺baseProfileRef在客户端schema发前PARAMETER_INVALID的反例；生产CLI未改，仍未可用。定向CLI **99P exit0、58.36s**，冻结后追加断言的两项单独再跑 **2P/97 deselected exit0、1.47s**（过程账见evidence）。最终冻结全套同前述完整命令（加`--tb=short`）**788P/0F exit0、217.70s**，句柄83852已terminal；不是与137项证据相加的独立计数。diff检查exit0；新竞态与CLI形状缺口已窄登记known-issues。全部测试无skip，不用fixture冒真实任务。
 
 待下一核心批的只读依赖盘点已收入本轮evidence：复用原ResourceProvider/SecretRef端口，但Agent受权材料路由／短借作用scope／unknown归还尚缺，不能另走CoreRuntime.submit第二账；ManagedInputReservations可按原一次性composition公开，生产capture/native state/single-submit writer/双来源receipt恢复由各domain owner提供，核心不解释品牌帧。managedInput继续false，不以挂载类冒生产可运行。主会话显式核对本轮源码／测试／文档后保存PARTIAL检查点，无push或主树合并。
+
+### 2026-10-06 托管输入的核心公共装配与缺席反例（PARTIAL）
+
+前置8900a56f2df6dfb960e74983f9fa824590b4e321，tracked clean，仅.env未跟踪且不读取。继续指导三名Luna：core_impl唯一生产写域public.py；core_review唯一新增测试文件；wire_impl独立只读复核。主会话只指导、读审、串行测试、账本和Git。公开重新导出原9项输入DTO/ports/class，在原AgentServices内用同Environment/NodePublication装配ManagedInputReservations；3个可选端口首次固定，后续不同实例及None后注入均拒。没有新核心、registry、持久账、品牌协议或原生writer，原显式issuer API不改，managedInput继续false。
+
+完整命令及反例见[evidence/agent-unit-model/public-input-composition-20261006.md](evidence/agent-unit-model/public-input-composition-20261006.md)。首轮五文件121P/0F exit0 9.74s；追加缺单端口及缺观察反例后13文件组合261P/0F exit0 18.13s（新增公开装配14项，其他247既有）；源码及测试冻结产品全套788P/0F exit0 218.25s；独立审阅后只调整普通Session正例为无first观察端口，新增文件定向14P/0F exit0 0.51s，所有原断言保留。均C级受控SQLite/port/issuer，新增P0/M0；不累计重复快照，不用产品绿代生产输入。没有skip，继承kernel_direction三红未复跑。
+
+边界：输入claim/reconcile仍按原API接收issuer，校验同Store，不新增唯一部署issuer对象绑定；未来宿主必须使用原装配issuer/verifier。本批不公开任意context/evidence到wire。生产capture/native state/writer/双来源回执未装配，不能对用户声称已发原生输入。两项待裁定提案（统一操作读取、派发前拒绝原子恢复）仍待回答，不把继续当选项裁定。
+
+下一缺口只读盘点：完整材料路由还缺资源选择、授权scope、原Operation步骤接缝，不能转调CoreDispatch另建执行账；公开access仅schema/Provider合同、未有Core服务或wire。另发现配置更新只拦resourceRefs而未拦递归secretRef，准备路径已拦；后续优先按原required拒绝/optional skipped规则补发前门，不擅自实现秘密解析。全程无模型调用、第三方安装、用户服务/数据/凭据/全局配置操作、push或主树合并；子代理费用unknown，token以平台账为准。整体未完成。
