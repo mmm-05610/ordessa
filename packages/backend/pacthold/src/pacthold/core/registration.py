@@ -41,6 +41,12 @@ _PROVIDER_METHODS = ("describe", "acquire", "release", "reconcile")
 _EXECUTION_METHODS = ("start", "observe", "stop")
 
 
+def _snapshot_resource_descriptor(descriptor: ResourceProviderDescriptor) -> ResourceProviderDescriptor:
+    """Copy even frozen/subclass descriptors so the provider retains no alias."""
+    return ResourceProviderDescriptor(
+        descriptor.id, descriptor.display_name, descriptor.version, descriptor.reconcile_support)
+
+
 def _mutation(method):
     @wraps(method)
     def invoke(self, *args, **kwargs):
@@ -120,6 +126,7 @@ class _Batch:
     """Internal reservation record for one staged/committed contribution set."""
 
     __slots__ = ("owner", "contributions", "contract_ids", "resource_ids",
+                 "resource_descriptors", "resource_supported_contract_ids",
                  "execution_ids", "agent_runtime_ids", "agent_runtime_descriptors", "state")
 
     def __init__(self, owner: str, contributions: CoreContributionSet) -> None:
@@ -127,6 +134,8 @@ class _Batch:
         self.contributions = contributions
         self.contract_ids: tuple[str, ...] = ()
         self.resource_ids: list[str] = []
+        self.resource_descriptors: list[ResourceProviderDescriptor] = []
+        self.resource_supported_contract_ids: list[tuple[str, ...] | None] = []
         self.execution_ids: list[str] = []
         self.agent_runtime_ids: list[str] = []
         self.agent_runtime_descriptors: list[object] = []
@@ -139,7 +148,9 @@ class CoreRegistry:
     def __init__(self) -> None:
         self._lock, self._mutating = RLock(), False
         self._contracts: dict[str, tuple[str, type]] = {}
-        self._resource_providers: dict[str, tuple[str, object]] = {}
+        self._resource_providers: dict[
+            str, tuple[str, object, ResourceProviderDescriptor, tuple[str, ...] | None]
+        ] = {}
         self._execution_providers: dict[str, tuple[str, object]] = {}
         self._agent_runtime_providers: dict[str, tuple[str, object, object]] = {}
         self._pending: list[_Batch] = []
@@ -166,6 +177,12 @@ class CoreRegistry:
     def resource_provider(self, provider_id: str) -> tuple[str, object] | None:
         """``(owner, provider)`` of the committed resource provider, or None.
         Only *committed* registrations are visible (staged publishes nothing)."""
+        entry = self._resource_providers.get(provider_id)
+        return None if entry is None else entry[:2]
+
+    @_query
+    def resource_provider_admission(self, provider_id: str):
+        """Original C1 admission record, internal to Environment's metadata gate."""
         return self._resource_providers.get(provider_id)
 
     @_query
@@ -234,7 +251,9 @@ class CoreRegistry:
                 )
             claimed_resources.add(descriptor.id)
             batch.resource_ids.append(descriptor.id)
-            _check_supported_contracts(provider, descriptor.id, available_contracts)
+            supported_contracts = _check_supported_contracts(provider, descriptor.id, available_contracts)
+            batch.resource_descriptors.append(_snapshot_resource_descriptor(descriptor))
+            batch.resource_supported_contract_ids.append(supported_contracts)
 
         # 3. execution providers: identity via descriptor()/provider_id,
         #    conflict, dependency integrity (same contract-reference rule)
@@ -300,6 +319,24 @@ class CoreRegistry:
             _validate_contract(contract)
             if contract.contract_id != admitted_id:
                 raise CoreDTOError("contract identity changed before publication")
+        available_contracts = set(self._contracts) | set(batch.contract_ids)
+        for provider_id, provider, admitted_descriptor, admitted_contracts in zip(
+                batch.resource_ids, batch.contributions.resource_providers,
+                batch.resource_descriptors, batch.resource_supported_contract_ids):
+            _validate_provider_shape(provider, _PROVIDER_METHODS, "resource")
+            try:
+                descriptor = provider.describe()
+            except Exception as exc:
+                raise CoreDTOError("resource provider descriptor unavailable before publication") from exc
+            if not isinstance(descriptor, ResourceProviderDescriptor):
+                raise CoreDTOError("resource provider descriptor changed before publication")
+            descriptor = _snapshot_resource_descriptor(descriptor)
+            if descriptor.id != provider_id or descriptor != admitted_descriptor:
+                raise CoreDTOError("resource provider descriptor changed before publication")
+            supported_contracts = _check_supported_contracts(
+                provider, provider_id, available_contracts)
+            if supported_contracts != admitted_contracts:
+                raise CoreDTOError("resource provider supported contracts changed before publication")
         for provider, descriptor in zip(getattr(batch.contributions, "agent_runtime_providers", ()),
                                         batch.agent_runtime_descriptors):
             if getattr(provider, "descriptor", None) != descriptor:
@@ -310,8 +347,11 @@ class CoreRegistry:
                 raise CoreDTOError("RuntimeProvider may not supply host ownership")
         for contract_id, contract in zip(batch.contract_ids, batch.contributions.contracts):
             self._contracts[contract_id] = (batch.owner, contract)
-        for provider_id, provider in zip(batch.resource_ids, batch.contributions.resource_providers):
-            self._resource_providers[provider_id] = (batch.owner, provider)
+        for provider_id, provider, descriptor, supported_contracts in zip(
+                batch.resource_ids, batch.contributions.resource_providers,
+                batch.resource_descriptors, batch.resource_supported_contract_ids):
+            self._resource_providers[provider_id] = (
+                batch.owner, provider, descriptor, supported_contracts)
         for provider_id, provider in zip(batch.execution_ids, batch.contributions.execution_providers):
             self._execution_providers[provider_id] = (batch.owner, provider)
         for provider_id, provider, descriptor in zip(batch.agent_runtime_ids,
@@ -363,7 +403,9 @@ class CoreRegistry:
         return batch
 
 
-def _check_supported_contracts(provider: object, provider_id: str, available: set[str]) -> None:
+def _check_supported_contracts(
+    provider: object, provider_id: str, available: set[str]
+) -> tuple[str, ...] | None:
     """Dependency-reference integrity: every contract a provider declares
     (duck-typed ``supported_contract_ids``, work_core.provider precedent) must
     be in this same batch or already active.  No implicit contract choice."""
@@ -374,12 +416,14 @@ def _check_supported_contracts(provider: object, provider_id: str, available: se
         raise CoreDTOError(
             f"provider {provider_id!r} supported_contract_ids must be a set of contract ids"
         )
-    missing = sorted(set(declared).difference(available))
+    normalized = tuple(sorted(set(declared)))
+    missing = sorted(set(normalized).difference(available))
     if missing:
         raise MissingContractReferenceError(
             f"provider {provider_id!r} declares contracts that are neither in "
             f"this batch nor active: {', '.join(missing)}"
         )
+    return normalized
 
 
 class CoreRegistration:

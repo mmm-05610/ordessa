@@ -77,6 +77,7 @@ from .core.registration import (
     CoreRegistrySnapshot,
     RegistrationConflictError,
 )
+from .core.errors import CoreError
 
 __all__ = [
     "Environment",
@@ -515,22 +516,41 @@ class Environment:
         self, plugin_id: str, payload: CoreContributionSet, batch: Any
     ) -> ActivationReceipt:
         with self._admission_lock:
-            self._check_open()
-            if plugin_id not in self._enabled:
-                raise AdmissionRefusedError("activation was disabled before publication")
+            def rollback_if_still_staged() -> None:
+                # The CoreRegistry validates the whole batch before writing
+                # any published index. Only a still-staged batch can be
+                # discarded; a concurrent successful commit remains owned.
+                if getattr(batch, "state", None) == "staged":
+                    try:
+                        self._registry.rollback(batch)
+                    except BatchAlreadyUsedError:
+                        # Another holder committed it after the state check.
+                        # Preserve the original activation failure and leave
+                        # the published batch for normal lifecycle cleanup.
+                        pass
+
+            try:
+                self._check_open()
+                if plugin_id not in self._enabled:
+                    raise AdmissionRefusedError("activation was disabled before publication")
+            except BaseException:
+                rollback_if_still_staged()
+                raise
+
             if self._activation_generation_mode == "durable":
                 # Reserve AND durably confirm the next generation before any
                 # publication: one atomic CAS, never a second activation
                 # account. A failed publication may consume a generation and
                 # the high-water never rolls back; an unknown reservation is
-                # never published or resent. Any failure rolls the staged
-                # batch back so no contribution residue remains.
+                # never published or resent. A failure before publication
+                # discards a still-staged batch, while unknown publication
+                # state is retained for lifecycle inspection.
                 try:
                     generation = reserve_next_generation(
                         self._store, self.environment_id, plugin_id,
                         fingerprint_port=self._fingerprint_port)
                 except BaseException:
-                    self._registry.rollback(batch)
+                    rollback_if_still_staged()
                     raise
                 self._activation_generations[plugin_id] = generation
             else:
@@ -548,14 +568,16 @@ class Environment:
                                            contract_version=version or "1", owner=ref),
                         owner_activation=ref, operation_kinds=("read",))
             except BaseException:
-                if self._activation_generation_mode == "durable":
-                    self._registry.rollback(batch)
+                rollback_if_still_staged()
                 raise
             try:
                 self._registry.commit(batch)
-            except BaseException:
-                if self._activation_generation_mode == "durable":
-                    self._registry.rollback(batch)
+            except BaseException as exc:
+                # Typed CoreRegistry refusals happen in its validation pass,
+                # before any category is published. Unexpected failures may
+                # have an unknown publication outcome and retain their batch.
+                if isinstance(exc, CoreError):
+                    rollback_if_still_staged()
                 raise
             if self._activation_generation_mode != "durable":
                 self._activation_generations[plugin_id] = generation
@@ -630,6 +652,92 @@ class Environment:
             if len(found) != 1:
                 raise AdmissionRefusedError("RuntimeProvider unavailable for the exact definition")
             return found[0]
+
+    def _resource_provider_metadata_locked(self, provider_id, *, omit_inactive):
+        """Build a metadata-only view from the original same-registry snapshot.
+
+        Caller holds ``_admission_lock`` and has passed the independent
+        ``agents.resources`` read check. No provider effect method is called.
+        """
+        from .core.resource_admission import AdmittedResourceProviderMetadata
+        from .core.descriptors import ResourceProviderDescriptor
+
+        if not isinstance(provider_id, str) or not provider_id:
+            raise AdmissionRefusedError("ResourceProvider identity is unavailable")
+        admitted = self._registry.resource_provider_admission(provider_id)
+        if admitted is None:
+            raise AdmissionRefusedError("ResourceProvider is not admitted in this Environment")
+        owner, provider, descriptor, supported_contract_ids = admitted
+        live = [entry for entry in self._activations.values()
+                if entry.ref.plugin_id == owner and entry.state == "active"
+                and any(candidate is provider
+                        for candidate in getattr(entry.contributions, "resource_providers", ()))]
+        if not live and omit_inactive:
+            return None
+        if len(live) != 1:
+            raise AdmissionRefusedError("ResourceProvider owner activation is unavailable or ambiguous")
+        if supported_contract_ids is None:
+            raise GuaranteeUnavailableError("ResourceProvider contract coverage is undeclared")
+
+        methods = ("describe", "acquire", "release", "reconcile")
+        if any(not callable(getattr(provider, name, None)) for name in methods):
+            raise AdmissionRefusedError("ResourceProvider methods changed after admission")
+        try:
+            current_descriptor = provider.describe()
+            current_contracts = getattr(provider, "supported_contract_ids", None)
+            if current_contracts is None or not isinstance(
+                    current_contracts, (frozenset, set, tuple, list)):
+                raise ValueError("supported contract coverage changed")
+            current_contracts = tuple(sorted(set(current_contracts)))
+        except Exception:
+            raise AdmissionRefusedError("ResourceProvider metadata is unavailable or changed") from None
+        if not isinstance(current_descriptor, ResourceProviderDescriptor):
+            raise AdmissionRefusedError("ResourceProvider metadata changed after admission")
+        try:
+            current_descriptor = ResourceProviderDescriptor(
+                current_descriptor.id, current_descriptor.display_name,
+                current_descriptor.version, current_descriptor.reconcile_support)
+        except Exception:
+            raise AdmissionRefusedError("ResourceProvider metadata changed after admission") from None
+        if (current_descriptor.id != provider_id or current_descriptor != descriptor
+                or current_contracts != supported_contract_ids):
+            raise AdmissionRefusedError("ResourceProvider metadata changed after admission")
+        available_contracts = set(self._registry.snapshot().contract_ids)
+        if not set(supported_contract_ids).issubset(available_contracts):
+            raise AdmissionRefusedError("ResourceProvider references an unavailable contract")
+        return AdmittedResourceProviderMetadata(
+            owner_activation=live[0].ref,
+            descriptor=descriptor,
+            supported_contract_ids=supported_contract_ids,
+        )
+
+    def _admit_resource_metadata_read(self):
+        if (self._policy is None or not self._policy.admit_object_access(
+                self._principal_scope, f"{self.environment_id}:agents.resources", "read")):
+            raise AdmissionRefusedError("ResourceProvider discovery refused")
+
+    def resource_provider_contribution(self, provider_id: str):
+        """Read one exact active ResourceProvider's immutable admitted metadata.
+
+        This grants no acquisition, resolution, release or invocation
+        authority; resource references remain unresolved by this view.
+        """
+        with self._admission_lock:
+            self._check_open()
+            self._admit_resource_metadata_read()
+            return self._resource_provider_metadata_locked(provider_id, omit_inactive=False)
+
+    def resource_provider_contributions(self):
+        """List active ResourceProvider metadata from the sole CoreRegistry."""
+        with self._admission_lock:
+            self._check_open()
+            self._admit_resource_metadata_read()
+            result = []
+            for provider_id in self._registry.snapshot().resource_provider_ids:
+                metadata = self._resource_provider_metadata_locked(provider_id, omit_inactive=True)
+                if metadata is not None:
+                    result.append(metadata)
+            return tuple(result)
 
     # -- instances & objects (E1 instantiate/use/release) --------------------
 
