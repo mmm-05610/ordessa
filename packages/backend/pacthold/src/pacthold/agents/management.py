@@ -11,7 +11,7 @@ from collections.abc import Mapping
 
 from ordessa_environment_api import (
  AdmissionRefusedError, GuaranteeUnavailableError, IdentityMismatchError,
- ParticipantInstanceRef, RequestKey, UnknownResultError,
+ ParticipantInstanceRef, PreDispatchRefusalStorePort, RequestKey, UnknownResultError,
 )
 from ordessa_environment_api.domain import DomainStorePort, DomainWrite
 from ordessa_environment_api.operations import OperationIntent, OperationStorePort, StepIntent, safe_json
@@ -21,11 +21,16 @@ from .configuration import (
  ConfigurationConversionRefused, ConfigurationItemResult, ConfigurationOmissionRefused,
  derive_change,
 )
-from .invocation import InvocationIssuer
+from .invocation import InvocationAuthorityRefused, InvocationIssuer
 from .nodes import encode_node_ref
 from .contracts import ProfileRef
 
 CONFIGURATION_ATTEMPTS = 'agents.configuration-attempts'
+
+
+class _KnownPreDispatchRefusal(Exception):
+    def __init__(self, phase, reason):
+        self.phase, self.reason = phase, reason
 
 
 def _plain(value): return json.loads(safe_json(value))
@@ -201,6 +206,8 @@ class AgentConfiguration:
             scope_id = 'scope-' + hashlib.sha256(safe_json(unit.configuration_target_ref).encode()).hexdigest()[:48]
             fence = env._store.read_domain(env.environment_id, CONFIGURATION_ATTEMPTS, scope_id)
             expected_profile, expected_operation = self._expected_source(node, fence)
+            prior_expected_profile = expected_profile
+            prior_expected_operation = expected_operation
             if base_profile_ref is not None and not _same(base_profile_ref.to_dict(), expected_profile):
                 raise ConfigurationRevisionConflict('base Profile snapshot differs from the scope expected source')
             operation_ref = 'configuration-' + hashlib.sha256(safe_json({'environmentNamespace':env.environment_id,
@@ -214,6 +221,14 @@ class AgentConfiguration:
                 'directoryBindingRef':unit.directory_binding_ref.to_dict(), 'unitSourceRevision':unit.source_revision,
                 'beforeConfigurationEvidence':_plain(snapshot.confirmation_evidence),
                 'comparisonGuarantee':snapshot.comparison_guarantee,
+                'preDispatchRollback':{
+                    'namespace':CONFIGURATION_ATTEMPTS,'recordId':scope_id,
+                    'preReservationFenceRevision':fence['revision'] if fence else 0,
+                    'priorExpectedProfileRef':prior_expected_profile,
+                    'priorExpectedProfileOperationRef':prior_expected_operation,
+                    'reservedExpectedProfileRef':expected_profile,
+                    'reservedExpectedProfileOperationRef':expected_operation,
+                },
                 'invocationBindings':{'configuration-apply':{'action':'applyConfiguration',
                     'targetRef':_plain(unit.configuration_target_ref),'delegationRef':None,'cleanup':False}}}
             step = StepIntent('configuration-apply', admitted.provider_ref, digest, operation_ref+'.apply',
@@ -510,26 +525,45 @@ class AgentConfiguration:
             step = env._store.read_operation_step(request,'configuration-apply')
             if step is not None or operation.status in {'published','refused','cancelled','unknown'}:
                 return self._finish_recorded(request, operation, step)
-            node = self._request(request,node_ref)
-            admitted = self._owner(node,'inspect_unit','inspect_configuration','apply_configuration')
-            unit = self._inspection(node,admitted)
-            context = operation.intent.context_ref
-            snapshot = self.inspect(node_ref)
-            if (unit.management_epoch != operation.intent.management_epoch
-                    or unit.source_revision != context['unitSourceRevision']
-                    or not _same(unit.directory_binding_ref.to_dict(),context['directoryBindingRef'])
-                    or snapshot.source_revision != change.expected_configuration_revision
-                    or snapshot.comparison_guarantee != context['comparisonGuarantee']):
-                raise AdmissionRefusedError('owner evidence changed before configuration dispatch')
-            effective = context['effectiveDeclarations']
-            if not effective:
-                from .configuration import ConfigurationItemResult
-                result = ConfigurationChangeResult(operation.intent.operation_ref,
-                    tuple(ConfigurationItemResult(item['declarationId'],'rejected') for item in change.declarations))
-                return env._store.record_operation_outcome(request,operation.digest,operation.revision,'refused',
-                    {'configurationResult':result.to_dict(),'reason':'no applicable declarations; no native dispatch'})
-            effective_change = replace_change(change,effective)
-            invocation = self._issuer.issue(request,operation.digest,'configuration-apply','applyConfiguration',unit.configuration_target_ref)
+            try:
+                node = self._request(request,node_ref)
+                admitted = self._owner(node,'inspect_unit','inspect_configuration','apply_configuration')
+                unit = self._inspection(node,admitted)
+                context = operation.intent.context_ref
+                snapshot = self.inspect(node_ref)
+                if (unit.management_epoch != operation.intent.management_epoch
+                        or unit.source_revision != context['unitSourceRevision']
+                        or not _same(unit.directory_binding_ref.to_dict(),context['directoryBindingRef'])
+                        or snapshot.comparison_guarantee != context['comparisonGuarantee']):
+                    raise _KnownPreDispatchRefusal('owner-recheck', 'owner-evidence-changed')
+                if snapshot.source_revision != change.expected_configuration_revision:
+                    raise _KnownPreDispatchRefusal('owner-recheck', 'configuration-revision-changed')
+                effective = context['effectiveDeclarations']
+                if not effective:
+                    result = ConfigurationChangeResult(operation.intent.operation_ref,
+                        tuple(ConfigurationItemResult(item['declarationId'],'rejected')
+                              for item in change.declarations))
+                    return env._store.record_operation_outcome(
+                        request,operation.digest,operation.revision,'refused',
+                        {'configurationResult':result.to_dict(),
+                         'reason':'no applicable declarations; no native dispatch'})
+                effective_change = replace_change(change,effective)
+                invocation = self._issuer.issue(request,operation.digest,'configuration-apply','applyConfiguration',unit.configuration_target_ref)
+            except _KnownPreDispatchRefusal as refusal:
+                self._refuse_unclaimed(request, operation, refusal.phase, refusal.reason)
+                raise AdmissionRefusedError('owner evidence changed before configuration dispatch') from None
+            except AdmissionRefusedError:
+                self._refuse_unclaimed(request, operation, 'owner-recheck', 'admission-refused')
+                raise
+            except ConfigurationRevisionConflict:
+                self._refuse_unclaimed(request, operation, 'owner-recheck', 'configuration-revision-changed')
+                raise
+            except ConfigurationUnsupported:
+                self._refuse_unclaimed(request, operation, 'owner-recheck', 'configuration-unsupported')
+                raise
+            except InvocationAuthorityRefused:
+                self._refuse_unclaimed(request, operation, 'invocation-issuance', 'invocation-authority-refused')
+                raise
         # External owner code executes outside the Environment admission lock.
         try:
             result = admitted.provider.apply_configuration(unit.unit_ref,effective_change,invocation)
@@ -540,6 +574,67 @@ class AgentConfiguration:
         except Exception:
             return self._record(request,operation,None,invocation.facts['claimRevision'])
         return self._record(request,operation,result,invocation.facts['claimRevision'])
+
+    def _refuse_unclaimed(self, request, operation, phase, reason):
+        """Conclude only an explicitly refused request with durable no-step proof."""
+        env = self._environment
+        refusal_method = getattr(env._store, 'refuse_unclaimed_operation', None)
+        if (not isinstance(env._store, PreDispatchRefusalStorePort)
+                or not callable(refusal_method)):
+            # Older stores keep their existing reserved/held state. No second
+            # write path can safely emulate the capability.
+            raise AdmissionRefusedError('atomic pre-dispatch refusal capability unavailable')
+        rollback = operation.intent.context_ref.get('preDispatchRollback')
+        expected_keys = {
+            'namespace', 'recordId', 'preReservationFenceRevision',
+            'priorExpectedProfileRef', 'priorExpectedProfileOperationRef',
+            'reservedExpectedProfileRef', 'reservedExpectedProfileOperationRef',
+        }
+        if not isinstance(rollback, Mapping) or set(rollback) != expected_keys:
+            raise AdmissionRefusedError('pre-dispatch rollback facts unavailable')
+        previous_revision = rollback.get('preReservationFenceRevision')
+        namespace, record_id = rollback.get('namespace'), rollback.get('recordId')
+        target_ref = operation.intent.context_ref.get('configurationTargetRef')
+        if not isinstance(target_ref, Mapping):
+            raise AdmissionRefusedError('pre-dispatch target identity unavailable')
+        expected_record_id = 'scope-' + hashlib.sha256(safe_json(target_ref).encode()).hexdigest()[:48]
+        if (type(previous_revision) is not int or previous_revision < 0
+                or namespace != CONFIGURATION_ATTEMPTS or record_id != expected_record_id):
+            raise AdmissionRefusedError('pre-dispatch rollback facts invalid')
+        prior_profile = rollback.get('priorExpectedProfileRef')
+        prior_operation = rollback.get('priorExpectedProfileOperationRef')
+        reserved_profile = rollback.get('reservedExpectedProfileRef')
+        reserved_operation = rollback.get('reservedExpectedProfileOperationRef')
+        try:
+            prior_ref = ProfileRef.from_dict(_plain(prior_profile))
+            reserved_ref = ProfileRef.from_dict(_plain(reserved_profile))
+        except (ValueError, TypeError, KeyError, AttributeError):
+            raise AdmissionRefusedError('pre-dispatch prior Profile source unavailable') from None
+        if (prior_ref.environment_namespace != env.environment_id
+                or reserved_ref.environment_namespace != env.environment_id
+                or (prior_operation is not None
+                    and (not isinstance(prior_operation, str) or not prior_operation))
+                or (reserved_operation is not None
+                    and (not isinstance(reserved_operation, str) or not reserved_operation))):
+            raise AdmissionRefusedError('pre-dispatch prior source identity invalid')
+        fence = env._store.read_domain(env.environment_id, namespace, record_id)
+        expected_reserved_revision = previous_revision + 1
+        if fence is None or fence.get('revision') != expected_reserved_revision:
+            raise AdmissionRefusedError('reserved configuration fence changed')
+        value = _plain(fence.get('value'))
+        context = operation.intent.context_ref
+        if (value.get('principalScope') != request.principal_scope
+                or value.get('requestId') != request.request_id
+                or value.get('operationRef') != operation.intent.operation_ref
+                or not _same(value.get('scopeRef'), target_ref)
+                or not _same(value.get('expectedProfileRef'), reserved_ref.to_dict())
+                or not _same(value.get('expectedProfileOperationRef'), reserved_operation)):
+            raise AdmissionRefusedError('reserved configuration fence identity changed')
+        value['expectedProfileRef'] = prior_ref.to_dict()
+        value['expectedProfileOperationRef'] = prior_operation
+        restore = DomainWrite(namespace, record_id, expected_reserved_revision, value)
+        return refusal_method(request, operation.digest, operation.revision,
+                              {'phase': phase, 'reason': reason}, (restore,))
 
     @staticmethod
     def _validate_result(operation,change,unit,result):

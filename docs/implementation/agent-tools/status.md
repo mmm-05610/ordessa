@@ -846,3 +846,19 @@ Luna只读核实：Agent模块未导入具体Harness品牌；但inline准备先s
 过程证据见[evidence/agent-unit-model/configuration-unresolved-secrets-20261006.md](evidence/agent-unit-model/configuration-unresolved-secrets-20261006.md)：首次五文件82P/1F exit1 6.17s，whole Profile夹具遗漏原model声明而先触发omission，失败保留；只修完整清单沿model id改payload，原异常类型/零副作用断言保留，复跑83P/0F exit0 6.28s（新增7，既有76）。冻结后产品全套788P/0F exit0 215.85s，句柄71668terminal；不与新增证据累计成场景数。独立终审合法SecretRef形状、optional owner只收正常声明、同id重放无重复作用。C级临时SQLite受控owner，P新增0/M0，无skip。继承kernel_direction三红未复验。
 
 用户已逐项答复采用：确定未发送的配置拒绝须原子记录并恢复上次配置基准，已claim/unknown继续占用不重发；统一读取仅本principal自己的状态/版本/目标/是否有结果，操作及目标双read ACL，不正文/恢复/重发。已写回两提案裁定段，下一批准备实施，当前尚未实现。access租约签发/续期/撤销/断开与unknown恢复合同仍缺，不能用InvocationContext或C1另一执行账租约冒充。完整资源选择/受权材料路由、生产输入及CLI/Skill仍未收口。无第三方安装、用户数据/服务/凭据/全局配置操作、push或主树合并；.env不读不入库，费用unknown。整体未完成。
+
+### 2026-10-06 已裁定拒绝／只读查询进入下一核心批（IMPLEMENTING）
+
+前置01fd4442d5，tracked clean/.env仅未跟踪且不读。两项用户逐项确认后，三名Luna再次获非重叠写域：core_impl同Store可选版本化未claim终结能力、SQLite原事务与management；core_review独立拒绝反例；wire_impl小只读operations_read服务、public组合与独立查询反例，不写wire/CLI/schema。写权及验收见[evidence/agent-unit-model/core-refusal-read-20261006.md](evidence/agent-unit-model/core-refusal-read-20261006.md)。保留原OperationStorePort冻结面，缺可选能力/旧回滚事实不猜、不双事务；issuer权限重核claim前后都可能失败，持久任何step存在即不得恢复base。读取只metadata且零owner，不用有作用的configuration.query或带正文operation_view。准备未发布节点的合法读权限接缝需独立核实，不把无Node记录自动当损坏或放宽其他目标。
+
+本段为开始实施记录，不是完成或测试通过；当前批尚无新测试证据。原生P新增0/M0，禁止用户服务/模型/数据/凭据/全局配置操作/push/主树合并继续有效。
+
+### 2026-10-06 已裁定核心拒绝恢复与metadata只读完成受控验证（PARTIAL）
+
+前置01fd4442d5，沿上段独占写权三名Luna完成全部实现/新测试，主会话仅指导、读审、串行执行、账本/Git。原OperationStorePort/oe-contract/1未变，新增同Store可选pre-dispatch-refusal/1；SQLite以无任意step、reserved/digest/revision及fence CAS原子终结拒绝与恢复预留前来源；首次仍抛原typed错误，原request后续只回放terminal receipt。issuer claim后失效优先保留未知占用。缺可选方法额外callable核验以防Protocol类型缓存假阳性，旧intent缺事实拒绝且保持占用，不双写模拟。原全optional分支完整具名rejected未改。
+
+原AgentServices加小只读AgentOperations，沿唯一core.operation-identities/OperationStore、可信principal与双read ACL，严格6字段metadata不正文/结果/evidence/steps；不读owner、不issuer、不恢复、不状态推进。未发布preparation只投影已固定计划目标且检查Node读权；published或其他本应有Node的操作缺记录拒绝；provider退役/Usage释放后合法历史仍读。未wire/CLI，不广告任务结果完成。
+
+实测完整命令/失败账见[evidence/agent-unit-model/core-refusal-read-20261006.md](evidence/agent-unit-model/core-refusal-read-20261006.md)：首六文件82P17F1E exit1 8.87s，含read_domain形状、非法canary夹具、失效反复注入/CAS时间/继承方法删除及原错误合同变化；二轮97P2F exit1 8.99s，未提交竞争事务与Protocol缓存缺方法typed漏洞；按唯一作者修复、原断言/原management测试未改无skip，三轮99P0F exit0 8.89s。全冻结产品788P0F exit0 216.51s。新增两个直接store反例后最终16文件组合293P0F exit0 23.19s（本批拒绝15＋读取10，另268回归），原environment-api contract及SQLite独立76P0F exit0 1.05s。不是多个套件相加的独立场景数；临时真实SQLite＋受控owner契约C，新增原生P0/M0；继承kernel_direction三红未复验。
+
+跨作者独立终审窄范围无具体阻断；完整材料/SecretRef授权路由、access租约签发撤权合同、生产输入writer/回执、完整结果投影和CLI/Skill/发行隔离仍缺。全optional未发但基础推进的旧分支另备[all-optional-refusal-proposal.md](all-optional-refusal-proposal.md)，已自然语言提问待答，本次不私改既有结果协议。known-issues已对应更新已修窄范围与剩余边界，不称所有拒单均修。无原生模型调用/第三方安装/用户服务、数据、凭据、全局配置操作/push/主树合并；.env不读不入库；费用unknown、tokens以平台为准。保存PARTIAL检查点，整体未完成。

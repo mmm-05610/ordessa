@@ -16,6 +16,7 @@ from .identity import RequestKey
 from .errors import IdentityMismatchError
 
 OPERATION_STORE_VERSION = "operation-records/1"
+PRE_DISPATCH_REFUSAL_STORE_VERSION = "pre-dispatch-refusal/1"
 
 
 class OperationRevisionConflict(IdentityMismatchError):
@@ -270,3 +271,17 @@ class OperationStorePort(Protocol):
                           usages: tuple[UsageMutation, ...], result: Mapping[str, Any]) -> OperationRecord: ...
     def record_operation_outcome(self, request: RequestKey, digest: str, expected_revision: int,
                                  outcome: str, evidence: Mapping[str, Any]) -> OperationRecord: ...
+
+
+@runtime_checkable
+class PreDispatchRefusalStorePort(Protocol):
+    """Optional same-store CAS for a positively unclaimed operation refusal.
+
+    This is an additive capability. Implementations must persist the refused
+    operation and all supplied DomainWrite CAS updates in one transaction;
+    an existing refusal is replayable only for the same evidence and writes.
+    """
+
+    def refuse_unclaimed_operation(self, request: RequestKey, digest: str,
+                                   expected_revision: int, evidence: Mapping[str, Any],
+                                   writes: tuple[DomainWrite, ...]) -> OperationRecord: ...

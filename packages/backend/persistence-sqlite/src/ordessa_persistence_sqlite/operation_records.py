@@ -533,3 +533,56 @@ class OperationRecordsMixin:
                     raise UnknownResultError("cancellation/refusal cannot conclude uncertain steps")
             self._set_operation(request, row, outcome, step=operation.current_step, evidence=json.loads(evidence_json))
             return self._operation_record(request, self._operation_row(request))
+
+    @_serialized
+    def refuse_unclaimed_operation(self, request, digest, expected_revision, evidence, writes):
+        """Atomically refuse a reserved operation and CAS its rollback writes.
+
+        The durable step table, rather than a caller assertion, is the source
+        of truth for proving that no dispatch claim exists.
+        """
+        if not isinstance(evidence, Mapping) or set(evidence) != {"phase", "reason"}:
+            raise ValueError("pre-dispatch refusal requires fixed phase and reason")
+        allowed = {
+            ("owner-recheck", "admission-refused"),
+            ("owner-recheck", "owner-evidence-changed"),
+            ("owner-recheck", "configuration-revision-changed"),
+            ("owner-recheck", "configuration-unsupported"),
+            ("invocation-issuance", "invocation-authority-refused"),
+        }
+        phase, reason = evidence.get("phase"), evidence.get("reason")
+        if not isinstance(phase, str) or not isinstance(reason, str) or (phase, reason) not in allowed:
+            raise ValueError("pre-dispatch refusal phase or reason is not recognized")
+        domains = _domain_encoding(writes)
+        # Bind idempotent replay to both the original evidence and the exact
+        # DomainWrite identities/payloads without putting native data in the
+        # operation receipt.
+        writes_digest = hashlib.sha256(safe_json({
+            "writes": [{"namespace": item.namespace, "recordId": item.record_id,
+                        "expectedRevision": item.expected_revision, "value": item.value}
+                       for item, _ in domains]
+        }).encode()).hexdigest()
+        stored_evidence = {"preDispatchRefusal": dict(evidence), "domainWritesDigest": writes_digest}
+        evidence_json = safe_json(stored_evidence)
+        with self._operation_transaction():
+            row, operation = self._check_operation(request, digest)
+            claims = self._conn.execute(
+                "SELECT 1 FROM env_request_steps WHERE environment=? AND principal=? AND request_id=? LIMIT 1",
+                _identity(request),
+            ).fetchone()
+            if claims is not None:
+                raise UnknownResultError("a durable step claim prevents pre-dispatch refusal")
+            if operation.status == "refused":
+                if (type(expected_revision) is not int
+                        or operation.revision != expected_revision + 1):
+                    raise OperationRevisionConflict("pre-dispatch refusal replay revision changed")
+                if operation.evidence_json != evidence_json:
+                    raise IdentityMismatchError("pre-dispatch refusal replay changed its evidence or writes")
+                return operation
+            if operation.status != "reserved":
+                raise UnknownResultError("only a reserved operation can be refused as unclaimed")
+            if type(expected_revision) is not int or operation.revision != expected_revision:
+                raise OperationRevisionConflict("pre-dispatch refusal operation revision changed")
+            self._write_domains(request.environment_namespace, domains)
+            self._set_operation(request, row, "refused", step=None, evidence=stored_evidence)
+            return self._operation_record(request, self._operation_row(request))

@@ -170,8 +170,8 @@ AgentUnit迁移切片在 `ServerProductComposition.native_runtime` 早拒 Pi/Cod
 
 原journal/UnitRecords按bytes迁独立public records，无shim，scope内消费者已迁。唯一active旧module import在 `plugins/profile/tests/test_harness_real_service.py:127`，原六测试实跑2P4F exit1 .89s：三SESSION_NEEDS_RECOVERY与lost-ack activate_count=0，effect前import断裂；这是本次引入的迁移债，不冒继承，未删改/skip断言。Profile测试不在AU003/其余单write_paths，已备一行patch并请求范围确认，未触目标。原owner/SQLite181P＋input/发行76P＋八wheel14命令成功不关闭此债或production owner/issuer/native确认。详见 `docs/implementation/agent-tools/evidence/agent-unit-model/records-owner-migration.md`；生产factory、唯一journal注入与冷代次未完成，旧Service/C2/Sidecar和fullServer发行缺口继续。
 
-### Agent Tools 配置派发前拒绝及旧 CLI 形状（2026-10-06，Open）
+### Agent Tools 配置派发前拒绝部分收口及旧 CLI 形状（2026-10-06，Open）
 
-当前核心配置路径的只读调查发现：操作／scope fence 已预留后、dispatch claim 之前 owner 版本／管理代次／目录授权重核失败，操作可能留在 reserved，阻挡后续同 scope 请求。仅标 refused 还不能收口，因为 fence 已推进到未发送 Profile；需要裁定未派发拒绝后基础来源及原子终结接缝，不能事后分两事务修正或清除 unknown。提案见 `docs/implementation/agent-tools/pre-dispatch-refusal-proposal.md`；尚未实现、尚无此竞态的真实实跑验收，不能算绿。
+最初调查发现操作／scope fence 预留后、dispatch claim 之前 owner 版本／管理代次／目录授权失效会留下 reserved 及未发送 Profile 基础。用户已裁定该窄范围：同Store可选版本化能力以持久无step证明、操作revision、fence CAS同事务拒绝并恢复原基础；首次仍抛原typed错误，已claim/unknown不恢复。真实临时SQLite受控反例已通过，含CAS/trigger回滚、同key/异写重放及concluded禁止；证据见 `docs/implementation/agent-tools/evidence/agent-unit-model/core-refusal-read-20261006.md`。这是C级证明，不是原生端到端验收。旧intent缺回滚事实、旧Store缺能力或其它不可核实异常仍保留占用。全可选声明都被跳过的旧分支保留逐项rejected，但其基础恢复另待裁定，见 `docs/implementation/agent-tools/all-optional-refusal-proposal.md`；不能将本批窄修称全部拒单均已收口。
 
-公开 wire 的 /3 applyProfile 薄绑定已实现、核心与 wire 定向反例通过，但 CLI 仍使用旧 application 形状，缺 baseProfileRef，在客户端 schema 检查以 PARAMETER_INVALID／exit2 发前拒绝，HTTP 更新调用为零。原产品套件第一次复跑786P1F是旧测试仍断言健康 wire 未广告；修订保留真实未装配负例并新增健康广告／CLI旧形状拒绝反例，没有修好 CLI。末端验证及当前状态见 `docs/implementation/agent-tools/status.md` 和 `evidence/agent-unit-model/luna-core-dispatch-20261006.md`。统一历史读、托管输入及结果回写、材料装配／连接等继续 PARTIAL；材料或接口定向绿不代表产品已可运行。
+公开 wire 的 /3 applyProfile 薄绑定已实现、核心与 wire 定向反例通过，但 CLI 仍使用旧 application 形状，缺 baseProfileRef，在客户端 schema 检查以 PARAMETER_INVALID／exit2 发前拒绝，HTTP 更新调用为零。原产品套件第一次复跑786P1F是旧测试仍断言健康 wire 未广告；修订保留真实未装配负例并新增健康广告／CLI旧形状拒绝反例，没有修好 CLI。末端验证及当前状态见 `docs/implementation/agent-tools/status.md` 和 `evidence/agent-unit-model/luna-core-dispatch-20261006.md`。核心统一历史metadata只读已按用户裁定实现并受控验证，但尚未wire/CLI；托管输入公开装配仍无生产writer及结果回写，材料装配／连接仍PARTIAL。材料或接口定向绿不代表产品已可运行。

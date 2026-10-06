@@ -84,6 +84,12 @@ from .ports import (
     SecretPort,
     StorePort,
 )
+from .operations import (
+    OPERATION_STORE_VERSION,
+    PRE_DISPATCH_REFUSAL_STORE_VERSION,
+    OperationStorePort,
+    PreDispatchRefusalStorePort,
+)
 
 CONTRACT_VERSION = "oe-contract/1"
 
@@ -107,4 +113,6 @@ __all__ = [
     "UnknownResultError",
     "DataAreaPort", "PolicyPort", "ProtectedFingerprintPort",
     "RelationshipPort", "SecretPort", "StorePort",
+    "OPERATION_STORE_VERSION", "PRE_DISPATCH_REFUSAL_STORE_VERSION",
+    "OperationStorePort", "PreDispatchRefusalStorePort",
 ]

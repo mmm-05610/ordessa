@@ -1,0 +1,9 @@
+# 所有可选声明均被跳过：待裁定
+
+2026-10-06。独立审阅发现一个不属于已批准“权限／版本失效”窄范围的无作用分支。当前配置更新在effectiveDeclarations为空时直接记录refused，保留原ConfigurationChangeResult逐项rejected，不claim／不调用owner；scope fence已在reserve时推进至candidate Profile，未恢复旧来源。
+
+建议：保留该分支首次返回原refused操作及完整逐项rejected结果，同时沿同Store未claim证明与DomainWrite CAS原子恢复预留前expected Profile及来源operation。不能为了复用phase-only接口丢掉逐项结果，不能终态／fence两个事务。无原回滚事实或能力时保守拒绝并保持占用；任何step存在不能走此路径。新请求条件具备后沿旧基础重新授权与产生差异，原请求只回放原拒绝，绝不重发。
+
+实施需在可选同Store窄能力中复用既有安全结构化拒绝结果存储（纯声明ID/outcome为rejected，无payload/native/evidence正文），并绑定其内容与原写集合的幂等身份；不另起账或改变已有公开逐项结果协议。具体API shape在用户采纳后由Luna对照原合同设计，未批准前不改代码。
+
+反例：全optional unsupported／未解析材料零dispatch、完整具名rejected＋旧基础恢复；同key回放零写；新key且支持条件具备可实际作用；CAS/故障全回滚；已有step不可拒绝；旧facts/port缺失不冒绿。现提问为业务语义裁定，不代表已经完成此分支。

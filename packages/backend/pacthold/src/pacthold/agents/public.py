@@ -11,6 +11,7 @@ from .profiles import ProfileCatalog
 from .schema import wire_contract, wire_schema_digest, AGENT_MANAGEMENT_CONTRACT_VERSION
 from .directory import DirectoryBindingRef
 from .nodes import NodePublication, encode_node_ref, decode_node_ref
+from .operations_read import AgentOperations, OperationNotFound
 from .management import AgentConfiguration
 from .providers import AgentProviders
 from .assembly import AgentAssembly, PreparationContext, PreparationObservation, PreparationContextPort, PreparationObservationPort
@@ -36,6 +37,7 @@ class AgentServices:
     assembly: AgentAssembly
     lifecycle: AgentLifecycle
     managed_inputs: ManagedInputReservations
+    operations: AgentOperations
 
 
 def agent_services(environment, *, invocation_issuer=None, node_evidence_port=None,
@@ -62,7 +64,8 @@ def agent_services(environment, *, invocation_issuer=None, node_evidence_port=No
                     observation_port=lifecycle_observation_port),
                 ManagedInputReservations(environment, nodes, capture_port=input_capture_port,
                     native_state_port=native_input_state_port,
-                    first_input_observation_port=first_input_observation_port))
+                    first_input_observation_port=first_input_observation_port),
+                AgentOperations(environment, nodes))
             environment._agent_services = services
         elif ((invocation_issuer is not None and services.configuration._issuer is not invocation_issuer)
                 or (node_evidence_port is not None and services.nodes._evidence_port is not node_evidence_port)
@@ -81,6 +84,7 @@ def agent_services(environment, *, invocation_issuer=None, node_evidence_port=No
 
 
 __all__ = ["AGENT_CONTRACT_VERSION", "AgentServices", "agent_services",
+           "AgentOperations", "OperationNotFound",
            "ProfileCatalog", "ProfileCatalogEntry", "ProfileManifest", "ProfileRef",
            "ProfileNotFound", "ProfileRevisionConflict", "ProfileValidationError"]
 __all__ += ["wire_contract", "wire_schema_digest"]
