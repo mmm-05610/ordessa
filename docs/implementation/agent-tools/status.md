@@ -888,3 +888,11 @@ ManagedInputReservations初次绑定原部署issuer，同Store不同authority或
 014保存52607c1e80后不停工。十五单strict全体exit0，015正式派给原三名Luna：core_impl唯一materials/public/core纯Capability DTO；wire_impl唯一test_material_contract；core_review只读攻查，主会话唯一合同/账本/串行验证/Git。阶段1只纯合同及optional provider Protocol/缺席helper，不接Assembly，不建Usage、不调材料。MaterialCapability放core层以避免后续Registry反向importagents；resource身份稳定，host activation pin分开；消费目标首片精确planned Node但不代权，目录/epoch/purpose参与固定摘要。review指出release query缺口，主会话将query参数/返回改为获取与释放两种明确typed联合，分别原correlation核实，不自动执行或重发；未发明新权限真值或第二账。首次编码暂无测试结果，不能算材料获取已闭环。旧C1签名及014三字段metadata保持；M0/用户服务0，.env不读不入库。两后续phase持续待实现，整体PARTIAL。
 
 015纯合同收口：三Luna完成源码/独立测试/终审，主会话仅指导与串行验证。获取receipt摘要自证、释放新operation及独立有证据receipt、坏属性声明不得降缺席等反例已补。首8P6F exit1（schema合法版本误拒＋新夹具错误），复13P1F exit1（新fixture把合法跨operation receipt当非法），窄修保留断言意义后14P0F exit0 0.20s；核心/C1/API307P0F exit0 8.22s；旧资源准入/secret拒绝/配置/装配106P0F exit0 5.32s。详见[material-contract-20261006.md](evidence/agent-unit-model/material-contract-20261006.md)，无skip，缺worker/sidecar/ACP资产仍ABSENT。无材料获取/Usage/Assembly接入，不据DTO或引用冒实际消费。M0/用户服务0，整体PARTIAL；保存本地检查点后继续016同Registry可选能力固定，不停在合同绿。全optional分支另待答，未实施。
+
+### 2026-10-06 016同Registry材料能力进入实施（IMPLEMENTING）
+
+十五纯合同已保存215c503060，不停工。继续三名gpt-6-luna：core_impl独占五个原源文件，wire_impl独占新准入反例，core_review只读攻查及下一作用接缝对028原设计核实；root只指导/文档/串行验证/Git。十六单初strict exit1缺可运行命令块，补真实命令后再核验。沿原Registry entry固定可选Capability，旧二元/四元getter保持，原ACL/active Host/对象/descriptor/support及能力在read重核，纯副本不返回callable；不是作用授权。实际材料获取、lost receipt查询、原step与Usage及owner消费仍未实现，暂不启任何生命周期产品保证。M0/用户服务0，.env不读不入库，无新索引/authorizer/ledger，整体PARTIAL。
+
+用户明确采用同一操作记录分阶段处理，已记[staged-operation-proposal.md](staged-operation-proposal.md)。原步骤不可修改、unknown不能越关、追加原子且旧授权失效、旧reserve语义不放宽；016测试冻结期间只做只读准备，尚未实现分阶段能力。
+
+016收口：[material-admission-20261006.md](evidence/agent-unit-model/material-admission-20261006.md)。三Luna代码/测试/独立攻查，root统一串行实测：新20+旧合同14+准入21＝55P0F exit0 0.27s；核心/C1/API307P0F exit0 7.80s；产品全套788P0F exit0 217.57s（session69317 terminal），无skip。ACL先于lookup/provider，原Registry entry固定能力、原二/四元getter及C1签名不变；坏getter/None后增声明/原地篡改拒，按字段复制能力不执行被覆写to_dict，明确发表前拒绝可以同ID纠正重试。未验先缺声明→unregister/新activation的重发现流程，不用commit失败retry冒该证据，更不替旧operation pin。新能力发现≠作用授权，无材料resolve/Usage/消费。保存本地检查点后继续已裁定分阶段原Store，多Luna待新写域；M0/用户服务0/.env不读，整体PARTIAL。

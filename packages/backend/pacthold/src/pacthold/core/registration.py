@@ -36,6 +36,7 @@ from .errors import (
     OwnerNotRegisteredError,
     RegistrationConflictError,
 )
+from .resource_admission import MaterialContractError, MaterialCapability, snapshot_material_capability
 
 _PROVIDER_METHODS = ("describe", "acquire", "release", "reconcile")
 _EXECUTION_METHODS = ("start", "observe", "stop")
@@ -127,6 +128,7 @@ class _Batch:
 
     __slots__ = ("owner", "contributions", "contract_ids", "resource_ids",
                  "resource_descriptors", "resource_supported_contract_ids",
+                 "resource_material_capabilities",
                  "execution_ids", "agent_runtime_ids", "agent_runtime_descriptors", "state")
 
     def __init__(self, owner: str, contributions: CoreContributionSet) -> None:
@@ -136,6 +138,7 @@ class _Batch:
         self.resource_ids: list[str] = []
         self.resource_descriptors: list[ResourceProviderDescriptor] = []
         self.resource_supported_contract_ids: list[tuple[str, ...] | None] = []
+        self.resource_material_capabilities: list[MaterialCapability | None] = []
         self.execution_ids: list[str] = []
         self.agent_runtime_ids: list[str] = []
         self.agent_runtime_descriptors: list[object] = []
@@ -149,7 +152,8 @@ class CoreRegistry:
         self._lock, self._mutating = RLock(), False
         self._contracts: dict[str, tuple[str, type]] = {}
         self._resource_providers: dict[
-            str, tuple[str, object, ResourceProviderDescriptor, tuple[str, ...] | None]
+            str, tuple[str, object, ResourceProviderDescriptor, tuple[str, ...] | None,
+                       MaterialCapability | None]
         ] = {}
         self._execution_providers: dict[str, tuple[str, object]] = {}
         self._agent_runtime_providers: dict[str, tuple[str, object, object]] = {}
@@ -183,6 +187,12 @@ class CoreRegistry:
     @_query
     def resource_provider_admission(self, provider_id: str):
         """Original C1 admission record, internal to Environment's metadata gate."""
+        entry = self._resource_providers.get(provider_id)
+        return None if entry is None else entry[:4]
+
+    @_query
+    def resource_provider_material_admission(self, provider_id: str):
+        """Same-entry material admission snapshot; never a second index."""
         return self._resource_providers.get(provider_id)
 
     @_query
@@ -252,8 +262,13 @@ class CoreRegistry:
             claimed_resources.add(descriptor.id)
             batch.resource_ids.append(descriptor.id)
             supported_contracts = _check_supported_contracts(provider, descriptor.id, available_contracts)
+            try:
+                material_capability = snapshot_material_capability(provider)
+            except MaterialContractError:
+                raise CoreDTOError("resource provider material capability is invalid") from None
             batch.resource_descriptors.append(_snapshot_resource_descriptor(descriptor))
             batch.resource_supported_contract_ids.append(supported_contracts)
+            batch.resource_material_capabilities.append(material_capability)
 
         # 3. execution providers: identity via descriptor()/provider_id,
         #    conflict, dependency integrity (same contract-reference rule)
@@ -320,9 +335,10 @@ class CoreRegistry:
             if contract.contract_id != admitted_id:
                 raise CoreDTOError("contract identity changed before publication")
         available_contracts = set(self._contracts) | set(batch.contract_ids)
-        for provider_id, provider, admitted_descriptor, admitted_contracts in zip(
+        for provider_id, provider, admitted_descriptor, admitted_contracts, admitted_material in zip(
                 batch.resource_ids, batch.contributions.resource_providers,
-                batch.resource_descriptors, batch.resource_supported_contract_ids):
+                batch.resource_descriptors, batch.resource_supported_contract_ids,
+                batch.resource_material_capabilities):
             _validate_provider_shape(provider, _PROVIDER_METHODS, "resource")
             try:
                 descriptor = provider.describe()
@@ -337,6 +353,12 @@ class CoreRegistry:
                 provider, provider_id, available_contracts)
             if supported_contracts != admitted_contracts:
                 raise CoreDTOError("resource provider supported contracts changed before publication")
+            try:
+                material_capability = snapshot_material_capability(provider)
+            except MaterialContractError:
+                raise CoreDTOError("resource provider material capability changed before publication") from None
+            if material_capability != admitted_material:
+                raise CoreDTOError("resource provider material capability changed before publication")
         for provider, descriptor in zip(getattr(batch.contributions, "agent_runtime_providers", ()),
                                         batch.agent_runtime_descriptors):
             if getattr(provider, "descriptor", None) != descriptor:
@@ -347,11 +369,12 @@ class CoreRegistry:
                 raise CoreDTOError("RuntimeProvider may not supply host ownership")
         for contract_id, contract in zip(batch.contract_ids, batch.contributions.contracts):
             self._contracts[contract_id] = (batch.owner, contract)
-        for provider_id, provider, descriptor, supported_contracts in zip(
+        for provider_id, provider, descriptor, supported_contracts, material_capability in zip(
                 batch.resource_ids, batch.contributions.resource_providers,
-                batch.resource_descriptors, batch.resource_supported_contract_ids):
+                batch.resource_descriptors, batch.resource_supported_contract_ids,
+                batch.resource_material_capabilities):
             self._resource_providers[provider_id] = (
-                batch.owner, provider, descriptor, supported_contracts)
+                batch.owner, provider, descriptor, supported_contracts, material_capability)
         for provider_id, provider in zip(batch.execution_ids, batch.contributions.execution_providers):
             self._execution_providers[provider_id] = (batch.owner, provider)
         for provider_id, provider, descriptor in zip(batch.agent_runtime_ids,

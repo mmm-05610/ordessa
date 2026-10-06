@@ -14,7 +14,9 @@ from .nodes import NodePublication, encode_node_ref, decode_node_ref
 from .operations_read import AgentOperations, OperationNotFound
 from .management import AgentConfiguration
 from .providers import AgentProviders
-from ..core.resource_admission import AdmittedResourceProviderMetadata
+from ..core.resource_admission import (
+    AdmittedResourceProviderMetadata, AdmittedMaterialProviderMetadata,
+)
 from .assembly import AgentAssembly, PreparationContext, PreparationObservation, PreparationContextPort, PreparationObservationPort
 from .lifecycle import AgentLifecycle, LifecycleObservation, LifecycleObservationPort
 from .inputs import (
@@ -101,6 +103,7 @@ __all__ += ["InvocationIssuer", "InvocationGrant", "InvocationAuthorityPort",
             "InvocationCurrentState", "InvocationCurrentStatePort"]
 __all__ += ["AgentProviders"]
 __all__ += ["AdmittedResourceProviderMetadata"]
+__all__ += ["AdmittedMaterialProviderMetadata"]
 __all__ += ["AgentAssembly", "PreparationContext", "PreparationObservation", "PreparationContextPort", "PreparationObservationPort"]
 __all__ += ["AgentLifecycle", "LifecycleObservation", "LifecycleObservationPort"]
 __all__ += ["ManagedInputReservations", "CapturedInputRef", "CapturedInputEvidence",

@@ -9,7 +9,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 import hashlib
-import inspect
 import re
 from typing import Protocol, runtime_checkable
 
@@ -22,6 +21,7 @@ from ..core.resource_admission import (
     AGENT_MATERIAL_CONTRACT_VERSION,
     MaterialCapability,
     MaterialContractError,
+    snapshot_material_capability,
 )
 from .directory import DirectoryBindingRef
 from .invocation import InvocationContext
@@ -69,9 +69,6 @@ _HEX_64 = re.compile(r"^[0-9a-f]{64}$")
 _SHA256 = re.compile(r"^sha256:[0-9a-f]{64}$")
 _ERROR_CODE = re.compile(r"^[A-Z0-9_]{1,64}$")
 _MAX_TEXT = 256
-_MISSING = object()
-
-
 def _invalid() -> None:
     raise MaterialContractError()
 
@@ -771,30 +768,10 @@ def read_material_capability(provider: object) -> MaterialCapability:
     provider object. Absence of the optional property remains distinguishable
     from a malformed claimed capability.
     """
-    try:
-        declared = inspect.getattr_static(provider, "material_capability", _MISSING)
-    except Exception:
-        raise MaterialContractError() from None
-    if declared is _MISSING:
+    capability = snapshot_material_capability(provider)
+    if capability is None:
         raise MaterialUnavailable()
-    try:
-        capability = getattr(provider, "material_capability")
-    except Exception:
-        raise MaterialContractError() from None
-    if type(capability) is not MaterialCapability:
-        raise MaterialContractError()
-    for name in ("describe", "acquire", "release", "reconcile",
-                 "describe_material", "resolve_material", "query_material", "release_material"):
-        try:
-            method = getattr(provider, name, None)
-        except Exception:
-            raise MaterialContractError() from None
-        if not callable(method):
-            raise MaterialContractError()
-    try:
-        return MaterialCapability.from_dict(capability.to_dict())
-    except Exception:
-        raise MaterialContractError() from None
+    return capability
 
 
 __all__ = [

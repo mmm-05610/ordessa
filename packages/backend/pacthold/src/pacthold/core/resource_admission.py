@@ -6,6 +6,7 @@ does not imply that any resource reference has been routed or acquired.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import inspect
 
 from ordessa_environment_api.identity import ActivationRef
 
@@ -23,6 +24,46 @@ class MaterialContractError(ValueError):
         super().__init__("material contract is invalid")
 
 
+_MISSING = object()
+
+
+def snapshot_material_capability(provider: object) -> "MaterialCapability | None":
+    """Copy and validate an explicitly declared capability without effects.
+
+    Static absence is the legacy C1 case. A declared property that cannot be
+    read, or any malformed claim, is an invalid material contract.
+    """
+    try:
+        declaration = inspect.getattr_static(provider, "material_capability", _MISSING)
+    except Exception:
+        raise MaterialContractError() from None
+    if declaration is _MISSING:
+        return None
+    try:
+        capability = getattr(provider, "material_capability")
+    except Exception:
+        raise MaterialContractError() from None
+    if type(capability) is not MaterialCapability:
+        raise MaterialContractError()
+    for name in ("describe", "acquire", "release", "reconcile",
+                 "describe_material", "resolve_material", "query_material", "release_material"):
+        try:
+            method = getattr(provider, name, None)
+        except Exception:
+            raise MaterialContractError() from None
+        if not callable(method):
+            raise MaterialContractError()
+    try:
+        return MaterialCapability(
+            capability.contract_version,
+            capability.lifetimes,
+            capability.query_acquire,
+            capability.release_recovery,
+        )
+    except Exception:
+        raise MaterialContractError() from None
+
+
 @dataclass(frozen=True)
 class MaterialCapability:
     """Pure versioned declaration, kept in core for same-registry reuse."""
@@ -35,7 +76,7 @@ class MaterialCapability:
     def __post_init__(self) -> None:
         if (type(self.contract_version) is not str
                 or self.contract_version != AGENT_MATERIAL_CONTRACT_VERSION
-                or not isinstance(self.lifetimes, tuple)
+                or type(self.lifetimes) is not tuple
                 or not self.lifetimes
                 or any(type(item) is not str
                        or item not in {"copyComplete", "runtimeRequired", "dynamic"}
@@ -89,3 +130,28 @@ class AdmittedResourceProviderMetadata:
                 or any(not isinstance(item, str) or not item for item in self.supported_contract_ids)
                 or self.supported_contract_ids != tuple(sorted(set(self.supported_contract_ids)))):
             raise ValueError("complete sorted supported contract ids are required")
+
+
+@dataclass(frozen=True)
+class AdmittedMaterialProviderMetadata:
+    resource_provider: AdmittedResourceProviderMetadata
+    capability: MaterialCapability
+
+    def __post_init__(self) -> None:
+        if type(self.resource_provider) is not AdmittedResourceProviderMetadata:
+            raise ValueError("admitted ResourceProvider metadata is required")
+        if type(self.capability) is not MaterialCapability:
+            raise MaterialContractError()
+        resource_provider = AdmittedResourceProviderMetadata(
+            self.resource_provider.owner_activation,
+            self.resource_provider.descriptor,
+            self.resource_provider.supported_contract_ids,
+        )
+        capability = MaterialCapability(
+            self.capability.contract_version,
+            self.capability.lifetimes,
+            self.capability.query_acquire,
+            self.capability.release_recovery,
+        )
+        object.__setattr__(self, "resource_provider", resource_provider)
+        object.__setattr__(self, "capability", capability)

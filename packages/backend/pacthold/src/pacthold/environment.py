@@ -739,6 +739,70 @@ class Environment:
                     result.append(metadata)
             return tuple(result)
 
+    def _material_provider_metadata_locked(self, provider_id, *, omit_missing_capability):
+        from .core.resource_admission import (
+            AdmittedMaterialProviderMetadata, MaterialContractError,
+            snapshot_material_capability,
+        )
+
+        if not isinstance(provider_id, str) or not provider_id.strip():
+            raise AdmissionRefusedError("material provider identity is unavailable")
+        admitted = self._registry.resource_provider_material_admission(provider_id)
+        if admitted is None:
+            raise AdmissionRefusedError("material provider is not admitted in this Environment")
+        owner, provider, _, _, pinned_capability = admitted
+        if pinned_capability is None:
+            live = [entry for entry in self._activations.values()
+                    if entry.ref.plugin_id == owner and entry.state == "active"
+                    and any(candidate is provider
+                            for candidate in getattr(entry.contributions, "resource_providers", ()))]
+            if not live and omit_missing_capability:
+                return None
+            if len(live) != 1:
+                raise AdmissionRefusedError("material provider owner activation is unavailable or ambiguous")
+            try:
+                current_capability = snapshot_material_capability(provider)
+            except MaterialContractError:
+                raise AdmissionRefusedError("material provider capability changed after admission") from None
+            if current_capability is not None:
+                raise AdmissionRefusedError("material provider capability changed after admission")
+            if omit_missing_capability:
+                return None
+            raise GuaranteeUnavailableError("authorized material capability is unavailable")
+
+        resource_metadata = self._resource_provider_metadata_locked(
+            provider_id, omit_inactive=omit_missing_capability)
+        if resource_metadata is None:
+            return None
+        try:
+            current_capability = snapshot_material_capability(provider)
+        except MaterialContractError:
+            raise AdmissionRefusedError("material provider capability changed after admission") from None
+        if current_capability is None or current_capability != pinned_capability:
+            raise AdmissionRefusedError("material provider capability changed after admission")
+        return AdmittedMaterialProviderMetadata(resource_metadata, pinned_capability)
+
+    def material_provider_contribution(self, provider_id: str):
+        """Read one exact active provider's fixed, metadata-only capability view."""
+        with self._admission_lock:
+            self._check_open()
+            self._admit_resource_metadata_read()
+            return self._material_provider_metadata_locked(
+                provider_id, omit_missing_capability=False)
+
+    def material_provider_contributions(self):
+        """List active providers that pinned an explicit material capability."""
+        with self._admission_lock:
+            self._check_open()
+            self._admit_resource_metadata_read()
+            result = []
+            for provider_id in self._registry.snapshot().resource_provider_ids:
+                metadata = self._material_provider_metadata_locked(
+                    provider_id, omit_missing_capability=True)
+                if metadata is not None:
+                    result.append(metadata)
+            return tuple(result)
+
     # -- instances & objects (E1 instantiate/use/release) --------------------
 
     def instantiate(
