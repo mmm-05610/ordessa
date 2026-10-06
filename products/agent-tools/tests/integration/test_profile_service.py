@@ -307,7 +307,8 @@ def test_real_http_v2_provider_discovery_has_no_native_readiness_or_execution(tm
         capabilities = service.cli(["capabilities"])["data"]["coreAgent"]
         assert capabilities["contractVersion"] == "agent-assembly/2"
         assert capabilities["supports"] == {"profileCatalog": True, "nodes": False, "managedInput": False,
-                                            "configurationManagement": False, "nodePreparation": False}
+                                            "configurationManagement": False, "nodePreparation": False,
+                                            "nodeLifecycle": False}
         listed = service.cli(["providers", "list"])
         assert listed["data"] == {"providers": []}
         assert listed["evidence"] == {"level": "providerRegistryObserved", "runtimeVerified": False}

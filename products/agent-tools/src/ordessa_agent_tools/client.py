@@ -229,7 +229,7 @@ class WireClient:
         supports = result["supports"]
         support_keys = {"profileCatalog", "nodes", "managedInput"}
         if management:
-            support_keys.update(("configurationManagement", "nodePreparation"))
+            support_keys.update(("configurationManagement", "nodePreparation", "nodeLifecycle"))
         if (not isinstance(supports, dict) or set(supports) != support_keys
                 or any(type(value) is not bool for value in supports.values())
                 or not management and (supports["nodes"] is not False or supports["managedInput"] is not False)

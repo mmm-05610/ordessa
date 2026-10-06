@@ -768,3 +768,11 @@ C/P分账如实：P仅codex一家真实进程（零模型）；pi/claude真实�
 反例test_lifecycle.py 8项（复用test_assembly真实装配＋受控端口）：结论带属主证明＋重放不重派、效果失败unknown不重发、错correlation/unit→unknown、终止unknown→unknown、release精确集/幂等/已释放新请求拒、recover伪造sessionRefs拒、preconditions形状、未装配capabilities=false+typed拒。实现修正：context_ref补environmentNamespace/directoryBindingRef、重放先短路释放预检；断言未放宽无skip。详见[evidence/agent-unit-model/lifecycle-coordinator.md](evidence/agent-unit-model/lifecycle-coordinator.md)。
 
 验证（串行、terminal）：test_lifecycle.py **8P/0F exit0**；产品integration **312P/0F**；核心269P/3F同三个已登记继承ID。剩余按评审3清单：wire生命周期绑定＋schema lifecycleOperation形状＋镜像再生成＋test_management守卫改写（保留未装配拒绝语义）；apply_profile派生＋CLI；三家消费终止族与效果证据。C受控，P/M无新增；无用户数据/服务/push/主树合并，M0费用unknown。检查点后并行推进wire与apply_profile，不标完成门。
+
+### 2026-10-06 wire 生命周期绑定＋apply_profile 检查点（PARTIAL）
+
+前置efb2b18dcf。wire切片由品牌无关slice-worker完成（写权释放）：agent_core_wire.py三处理器（lifecycleOperation直投影）＋preconditions形状校验补漏＋supportedMethods按nodeLifecycle门控零新错误映射；schema.py管理块增lifecycleOperation形状；镜像生成器再生成两次核验；test_management原守卫**改写不删**（未装配仍CAPABILITY_UNSUPPORTED/不广告/零reserve＋nodeLifecycle False断言），test_wire_lifecycle.py 8新反例。主会话并行落apply_profile（声明永取核心Profile快照、A11零回写、同请求异内容拒）＋test_apply_profile.py 6反例；连带修复客户端negotiate键集补nodeLifecycle（契约合法扩展后138项单根因连带红）＋两处测试键集跟随契约。详见[evidence/agent-unit-model/wire-lifecycle-and-apply-profile.md](evidence/agent-unit-model/wire-lifecycle-and-apply-profile.md)。
+
+验证（串行、terminal）：全产品 `products/agent-tools/tests` **689P/0F exit0**（含CLI/契约/发行/真实HTTP）；证据组合（management+wire+lifecycle+apply_profile）**65P/0F**；核心269P/3F同三继承ID无新增；records组合115P/0F。失败账：wire二次投影2项、客户端键集138项连带、两处夹具键集；断言未放宽无skip。
+
+剩余：CLI生命周期命令与三Skill同步、三家消费终止族与效果证据、任务/结果闭环、发行验收、真实M（pi+deepseek）、七家扩展。C受控；P/M无新增，M0；无用户数据/服务/push/主树合并，费用unknown。检查点后继续，不标完成门。

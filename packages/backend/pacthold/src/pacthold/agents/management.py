@@ -177,6 +177,26 @@ class AgentConfiguration:
                 scope_id,fence['revision'] if fence else 0,{'scopeRef':_plain(unit.configuration_target_ref),
                     'principalScope':request.principal_scope,'requestId':request.request_id,'operationRef':operation_ref}),))
 
+    def apply_profile(self, request, node_ref, profile_ref, expected_configuration_revision,
+                      application_policy):
+        """Derive one fixed Profile's declarations in core and apply them.
+
+        The declarations always come from the core-held Profile snapshot; the
+        request body can never carry or alter them. Applying a Profile never
+        writes the catalog back and a Profile update never applies itself.
+        """
+        from .configuration import ConfigurationChangeRequest
+        from .contracts import ProfileRef
+        from .profiles import ProfileCatalog
+        if type(profile_ref) is not ProfileRef:
+            raise IdentityMismatchError('fixed Profile reference required')
+        manifest = ProfileCatalog(self._environment).read(profile_ref)
+        declarations = tuple(json.loads(safe_json(item))
+                             for item in manifest.content.get('declarations', ()))
+        change = ConfigurationChangeRequest(request.request_id, expected_configuration_revision,
+                                            declarations, application_policy)
+        return self.apply(request, node_ref, change)
+
     def apply(self, request, node_ref, change):
         operation = self.reserve(request,node_ref,change)
         env = self._environment

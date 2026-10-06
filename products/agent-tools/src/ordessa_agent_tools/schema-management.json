@@ -81,6 +81,23 @@
           "cancelled"
         ]
       },
+      "lifecycleOperation": {
+        "required": [
+          "operationRef",
+          "revision",
+          "status",
+          "action"
+        ],
+        "additionalProperties": false,
+        "statuses": [
+          "reserved",
+          "running",
+          "unknown",
+          "published",
+          "refused",
+          "cancelled"
+        ]
+      },
       "preparationQuery": {
         "required": [
           "operation"
@@ -442,5 +459,5 @@
       ]
     }
   },
-  "schemaDigest": "sha256:863de886d7d55742153729164a56c54d908506e962602e075c4919cc440aa5c0"
+  "schemaDigest": "sha256:71113ddb93f72dc69b8283012fe689416fcd17a7ab6629c0cb6265527c9a7e97"
 }

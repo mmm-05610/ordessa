@@ -24,6 +24,7 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
     configuration_actions={'describeConfiguration','inspectConfiguration','applyConfiguration','queryChange'}
     provider_actions={'providersList','providersDescribe'}
     node_observation_actions={'nodesList','nodeRead'}
+    lifecycle_actions={'stop','release','recover'}
     profile_actions={item['action'] for item in wire_contract()['methods'].values()}
     def handler(action, definition):
         def invoke(params):
@@ -41,7 +42,7 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
                     raise ValueError("positive revision required")
                 if type(params.get("includeArchived", False)) is not bool:
                     raise ValueError("boolean required")
-                if any(name in params and not isinstance(params[name],dict) for name in ('context','options')):
+                if any(name in params and not isinstance(params[name],dict) for name in ('context','options','preconditions')):
                     raise ValueError('structured preparation parameters required')
                 refs = {name: ProfileRef.from_dict(params[name])
                         for name in ("profileRef", "baseManifestRef") if name in params}
@@ -68,11 +69,13 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
                     if contract_version==AGENT_MANAGEMENT_CONTRACT_VERSION:
                         result['supports'].update(services.configuration.capabilities())
                         result['supports'].update(services.assembly.capabilities())
+                        result['supports'].update(services.lifecycle.capabilities())
                         result['supportedMethods']=[name for name,item in schema['methods'].items()
                             if item['action'] in profile_actions or item['action'] in configuration_actions
                             or item['action'] in provider_actions
                             or item['action'] in node_observation_actions
-                            or (item['action'] in {'prepare','queryPreparation'} and result['supports']['nodePreparation'])]
+                            or (item['action'] in {'prepare','queryPreparation'} and result['supports']['nodePreparation'])
+                            or (item['action'] in {'stop','release','recover'} and result['supports'].get('nodeLifecycle') is True)]
                     return result
                 if action=='providersList':
                     return {'providers':list(services.providers.list())}
@@ -90,6 +93,9 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
                     operation=services.assembly.prepare(catalog.request_key(params['requestId']),
                         refs['profileRef'],params['context'],params['options'])
                     return json.loads(safe_json(services.assembly.operation_view(operation)))
+                if action in lifecycle_actions:
+                    return json.loads(safe_json(getattr(services.lifecycle, action)(
+                        catalog.request_key(params['requestId']), node_ref, params['preconditions'])))
                 if action in configuration_actions:
                     manager=services.configuration
                     if action=='describeConfiguration':

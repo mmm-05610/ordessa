@@ -311,18 +311,25 @@ def test_public_wire_safe_version_authority_request_and_shape_errors(setup,wire,
  assert error.value.family==family
 
 
-def test_uncomposed_node_operation_is_typed_unsupported(setup,wire):
+@pytest.mark.parametrize('method', ['agents.nodes.stop','agents.nodes.release','agents.nodes.recover'])
+def test_unwired_lifecycle_port_is_typed_unsupported(setup,wire,method):
  from server_plugin_api import WireError
- # list/read are now composed pure observations. Preserve the unsupported
- # operation guard on stop, which must not dispatch or reserve anything.
+ # stop/release/recover are now wired to the composed core coordinator, but
+ # this fixture still assembles no lifecycle observation port. Preserve the
+ # unwired guard semantics: every lifecycle port without its original
+ # observation authority stays typed unsupported, is never advertised, and
+ # dispatches or reserves nothing.
+ identity=method.rsplit('.',1)[1]
  with pytest.raises(WireError) as error:
-  wire['agents.nodes.stop']({'nodeRef':wire_params(setup)['nodeRef'],
-                            'preconditions':{},'requestId':'unsupported-stop'})
+  wire[method]({'nodeRef':wire_params(setup)['nodeRef'],
+                'preconditions':{},'requestId':identity+'-unwired'})
  assert error.value.family=='CAPABILITY_UNSUPPORTED'
  assert setup[7]['calls']==0
  assert setup[7]['queryCalls']==0
- assert setup[0].read_operation(RequestKey('env','principal','unsupported-stop')) is None
- assert 'agents.nodes.stop' not in wire['agents.capabilities']({})['supportedMethods']
+ assert setup[0].read_operation(RequestKey('env','principal',identity+'-unwired')) is None
+ capabilities=wire['agents.capabilities']({})
+ assert capabilities['supports']['nodeLifecycle'] is False
+ assert method not in capabilities['supportedMethods']
 
 
 def test_provider_retirement_before_dispatch_is_denied(setup,node_fixture):

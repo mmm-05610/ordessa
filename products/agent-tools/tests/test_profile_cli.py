@@ -36,7 +36,8 @@ def profile_server(mode="healthy", version="agent-assembly/1"):
                           "schema": contract["schema"], "environmentNamespace": "fixture-env",
                           "supports": {"profileCatalog": mode != "missing", "nodes": False, "managedInput": False}}
                 if version == "agent-assembly/2":
-                    result["supports"].update(configurationManagement=False, nodePreparation=False)
+                    result["supports"].update(configurationManagement=False, nodePreparation=False,
+                                              nodeLifecycle=False)
                     result["supportedMethods"] = [name for name in contract["schema"]["methods"] if name.startswith("agents.profiles.") or name == "agents.capabilities"]
                 if mode == "digest":
                     result["schemaDigest"] = "sha256:" + "0" * 64
