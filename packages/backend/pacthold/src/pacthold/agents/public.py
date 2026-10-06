@@ -29,6 +29,11 @@ from .invocation import (
     InvocationIssuer, InvocationGrant, InvocationAuthorityPort,
     InvocationCurrentState, InvocationCurrentStatePort,
 )
+from .material_operations import (
+    AGENT_MATERIAL_OPERATION_CONTRACT_VERSION, MaterialOperations,
+    material_provider_ref, material_invocation_target,
+    material_operation_facts, material_reservation_usages,
+)
 
 
 @dataclass(frozen=True)
@@ -41,6 +46,7 @@ class AgentServices:
     lifecycle: AgentLifecycle
     managed_inputs: ManagedInputReservations
     operations: AgentOperations
+    material_operations: MaterialOperations
 
 
 def agent_services(environment, *, invocation_issuer=None, node_evidence_port=None,
@@ -69,7 +75,8 @@ def agent_services(environment, *, invocation_issuer=None, node_evidence_port=No
                     native_state_port=native_input_state_port,
                     first_input_observation_port=first_input_observation_port,
                     invocation_issuer=invocation_issuer),
-                AgentOperations(environment, nodes))
+                AgentOperations(environment, nodes),
+                MaterialOperations(environment, invocation_issuer=invocation_issuer))
             environment._agent_services = services
         elif ((invocation_issuer is not None and services.configuration._issuer is not invocation_issuer)
                 or (node_evidence_port is not None and services.nodes._evidence_port is not node_evidence_port)
@@ -84,7 +91,9 @@ def agent_services(environment, *, invocation_issuer=None, node_evidence_port=No
                 or (first_input_observation_port is not None
                     and services.managed_inputs._first_observation is not first_input_observation_port)
                 or (invocation_issuer is not None
-                    and services.managed_inputs._issuer is not invocation_issuer)):
+                    and services.managed_inputs._issuer is not invocation_issuer)
+                or (invocation_issuer is not None
+                    and services.material_operations._issuer is not invocation_issuer)):
             raise ValueError("Agent service authorities must be composed once before use")
         return services
 
@@ -140,3 +149,6 @@ __all__ += [
     "MaterialReleaseRequest", "MaterialReleaseReceipt", "MaterialReleaseResult", "AuthorizedMaterialProvider",
     "read_material_capability",
 ]
+__all__ += ["AGENT_MATERIAL_OPERATION_CONTRACT_VERSION", "MaterialOperations",
+            "material_provider_ref", "material_invocation_target",
+            "material_operation_facts", "material_reservation_usages"]

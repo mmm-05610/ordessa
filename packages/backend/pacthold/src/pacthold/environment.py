@@ -803,6 +803,37 @@ class Environment:
                     result.append(metadata)
             return tuple(result)
 
+    def _material_provider_for_operation(self, provider_id, contract_id,
+                                         provider_version, owner_activation):
+        """Return the admitted provider internally for one fixed material step.
+
+        The caller must already have passed the independent resources-read
+        policy gate. This method repeats that gate while it resolves the same
+        Registry entry and active Host owner; the raw provider never leaves the
+        core coordination path.
+        """
+        with self._admission_lock:
+            self._check_open()
+            self._admit_resource_metadata_read()
+            if (type(provider_id) is not str or not provider_id.strip()
+                    or type(contract_id) is not str or not contract_id.strip()
+                    or type(provider_version) is not str or not provider_version.strip()
+                    or type(owner_activation) is not ActivationRef):
+                raise AdmissionRefusedError("fixed material provider identity is unavailable")
+            metadata = self._material_provider_metadata_locked(
+                provider_id, omit_missing_capability=False)
+            admitted = self._registry.resource_provider_material_admission(provider_id)
+            if admitted is None:
+                raise AdmissionRefusedError("material provider is not admitted in this Environment")
+            owner, provider, descriptor, supported_contract_ids, capability = admitted
+            if (metadata is None or capability is None
+                    or contract_id not in supported_contract_ids
+                    or descriptor.version != provider_version
+                    or metadata.resource_provider.owner_activation != owner_activation
+                    or metadata.resource_provider.descriptor.version != provider_version):
+                raise AdmissionRefusedError("material provider pin or contract changed")
+            return metadata, provider
+
     # -- instances & objects (E1 instantiate/use/release) --------------------
 
     def instantiate(

@@ -183,3 +183,7 @@ AgentUnit迁移切片在 `ServerProductComposition.native_runtime` 早拒 Pi/Cod
 Agent Tools分阶段Store读审发现：原非staged OperationRecord验证current_step属于recipe，但未要求该step持久行仍存在。若记录处于running且最新已claim步骤的行丢失，旧claim路径可能把缺行当未占用；主会话与独立Luna从代码确认，尚未做普通路径的动态损坏实测。本片017只对新增staged记录补current_step存在及完整StepRecord校验（并验unsealed/sealed两读），不宣称旧记录缺口已修。SQLite正常事务保证不意味着可把部分损坏数据库当正常首次派发；后续原Store窄修应保持旧API冻结/幂等语义并加损坏反例。没有打开用户数据库、没有重新派发任何真实输入或模型调用。
 
 018补充：普通current缺行及current为空孤立行读取拒绝，missing过去/current目标claim在Usage/INSERT前拒绝；完整当前tail的查询保留。新5项临时SQLite动态反例与旧拒绝恢复/读取/staged组合150P、SQLite43P、core/API307P、产品826P均exit0。证据见docs/implementation/agent-tools/evidence/agent-unit-model/operation-claim-integrity-20261006.md。此为原Store窄修，不恢复损坏数据库、不证明真实服务自动恢复；用户数据库未打开。
+
+### Agent材料作用接线与冷owner恢复缺口（2026-10-06，PARTIAL）
+
+019在原Registry/Operation/Step/Usage/服务器固定Issuer上实现已固定非秘密MaterialRequest的获取与原查询。定向146P和核心307P为受控临时SQLite/提供者合同，不是实际资源消费或生产服务证据；产品全冻结852P/0F exit0 222.66s，见agent-tools/status.md与material-operations证据；受控绿不填真实服务/冷query缺口。原Environment活动Host/ActivationRef目前仅内存，无公开rehydrate；同Environment固定Issuer不能换，因此原Host恢复＋新issuer冷query未验证/接缝缺席。只验证SQLite重开原facts/step/holds与新generation旧pin拒绝，不允许同shape重新激活冒恢复。ConfigurationProvider完整引用提取/材料交接、Assembly材料先于计划、三寿命消费/释放及真实服务仍未收口，不宣称产品可用。用户数据库与服务未操作。

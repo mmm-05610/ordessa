@@ -910,3 +910,19 @@ ManagedInputReservations初次绑定原部署issuer，同Store不同authority或
 018定向首150P0F exit0 6.09s；root与独立审查均发现空usages的零行断言证据偏弱，唯一测试作者补当前/下一/过去缺行claim携有效待写Usage并核零step/Usage/revision；复150P0F exit0 5.93s。SQLite43P0F exit0 0.96s，core/API307P0F exit0 7.54s；原资产ABSENT仍明示。产品全冻结回归session32626进行中，预计826，不将未终结runner报绿。所有修改本树临时DB，M0。
 
 018收口：[operation-claim-integrity-20261006.md](evidence/agent-unit-model/operation-claim-integrity-20261006.md)。独立终审通过，最终全产品826P0F exit0 223.17s（session32626 terminal），全部冻结。新5项临时SQLiteC，原拒绝恢复与读取已回归；unknown/缺行不重建、不重派。017/018共享文件联合保存检查点，严格工单目录18单exit0（此前根目标误用exit1有账）。M0/.env不读，整体PARTIAL，继续019材料原账作用接线依赖核实。
+
+017/018联合本地检查点a94d54639a，提交14文件；tracked clean仅.env未跟踪不读取。继续019三Luna先只读审精确material-operation-contract-v1.md：只已有原MaterialRequest/Operation/两Usage，原Registry/服务器固定Issuer获取与无lease查询，不解Profile不接Assembly、不释放或宣称消费。原record_operation_step已提供同事务Usage结果更新，复用而非新增账。合同尚草案，未编码/未测，M0/用户服务0。
+
+019合同审查补门：已有结果回放仍含材料引用，不能只凭resources-read绕过用户已采用的目标查询权限；撤回先前retired也直接回完整结果的草案（尚未编码）。回放沿原issue_query/verify_claimed_query当前授权、无provider方法，无当前pin或权限typed拒，已有统一metadata查询保持独立最小范围。原authority/Store均不改宽，准备编码冻结。
+
+019已正式开三Luna源码/测试/只读审查，工单19单strict exit0。root保守冻结历史结果也用原query授权，不新增历史authorizer或改Issuer active/epoch限制；上游reserve前能力preflight是后续Assembly责任，019纯helper不授权，本片claim前重核、不合格已有holds保留。code尚未完成/未测，整体PARTIAL。
+
+019编码前夹具核实资源缺口：原Host activation仅内存无rehydrate、同Environment固定Issuer不可换，字面冷query无法经正式组合构造；标NOT_RUN/PARTIAL，不伪造同shape generation或test-only替换Store/Issuer。仍测SQLite重开只读原facts/hold持久、活跃同Issuer原query恢复；后续真实owner恢复接缝未实现，源码编码继续不为此放宽原机制。
+
+019首轮实码攻击（尚未测试）：root发现acquire外异常捕获可能将结论持久故障转为第二unknown写、核心事后自验query票可能冒提供者已验、query取callback后最新revision可能覆盖旧观察；唯一源作者修正，唯一测试作者补对应反例，另加issue后同Registry核验及固定provenance比对。独立Luna继续攻查，未冻结前不跑测试；不把落盘当完成。
+
+019首组合121P25F exit1 2.63s，固定Node序列化错误与test holder NameError由原作者窄修；新增实际收集26项（17函数），作者先报27已更正。复组合136P10F exit1 2.96s：历史query新票遗漏既有Verifier初次核验后才claimed-continuation时序；原source/test各补正确原API调用，不改Issuer。其余test把纯describe当有作用、把明确unknown返回当必抛与冻结合同不符，窄修为纯describe1/作用0及明确unknown保hold断言，不删除失败意义。当前仍未绿，全部失败留过程账，M0。
+
+019定向最终146P0F exit0 3.31s（新26+旧120）、core/API307P0F exit0 8.40s；产品全冻结session82522进行中，预计852，未终結不绿。过程121P25F→136P10F→145P1F均如实记录在material-operations证据；错计18/27已更正17/26，保身份/权限/零作用断言，不改Issuer/Store。三Luna下一配置domain仅只读盘点，所有源test冻结，P新增0/M0/冷queryNOT_RUN，整体PARTIAL。
+
+019受控收口：[material-operations-20261006.md](evidence/agent-unit-model/material-operations-20261006.md)。产品全冻结852P0F exit0 222.66s、session82522 terminal；原source/新test始终冻结，Luna终审query时序/Registry/holds/故障CAS无阻断。AT_019_PARTIAL：core一次获取＋当前原query已有C证据，实际材料内容消费/三寿命/释放及正式cold原activation恢复未验/接缝缺席。26新项属于临时SQLite/受控provider，不冒真实Harness服务。继续020配置provider DTO/引用覆盖盘点，两Luna已核CoreRegistry没有配置贡献，Harness私有适配器不可导入core，材料opaque引用到消费的交接另需冻结。M0/.env不读，无push/主树合并/用户服务操作。

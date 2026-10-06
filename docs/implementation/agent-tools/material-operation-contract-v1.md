@@ -1,0 +1,51 @@
+# 019 非秘密材料原步骤协调合同（编码冻结）
+
+承接已批准受权材料扩展；此片消费已固定、已预留的MaterialRequest，不解析Profile，不接Assembly，不释放/转Node/声明实际消费。仅原Environment/Registry/Operation/Step/Usage/InvocationIssuer。不给CLI/wire原provider、授权票或材料正文。
+
+## 固定事实与唯一装配
+
+新增agents/material_operations.py，MaterialOperations由AgentServices一次组合固定同原issuer，缺issuer/不同Store拒；调用仅acquire(request,operation_digest,step_id)和reconcile(request,operation_digest,step_id)，不接外来provider/issuer/原生路径。
+
+原Operation.context_ref新增具名materialRequests映射：stepId→闭合{contractVersion:agent-material-operation/1,request:MaterialRequest.to_dict(),descriptor:ResourceMaterialDescriptor.to_dict()}。已固定完整事实足够冷恢复；协调器不新reserve，不建表/DomainWrite/缓存阶段真值。精确MaterialRequest与descriptor一致，operationRef/stepId/recovery/inputDigest匹配原Step，Node/Directory/epoch匹配原Operation，step.managementEpoch也一致。
+
+纯helper给调用方构建原recipe的事实（不执行、不预留）：material_provider_ref(pin)={environmentNamespace:pin.ownerActivation.environmentNamespace,providerId,providerVersion,ownerActivation:原完整可信activation,generation:activation.generation}；正generation。material_invocation_target(request)={environmentNamespace:resourceRef.environmentNamespace,resourceRef,providerPin,target,descriptorDigest}（即input_facts加顶层env）。material_operation_facts(request,descriptor)构造上面闭合事实。动作固定acquire、cleanup=false、delegation=null；查询沿原query。不是新协议翻译层，只同原授权target和DTO的精确编码。
+
+原预留必须同时持有两项原Usage（纯helper material_reservation_usages(requestKey, materialRequest)生成，不写）：usageId=operationRef+'.material.'+stepId+'.provider'及'.resource'，holder=原operation_holder，target分别上述provider_ref和exactResourceRef，rights唯一use，state active。协调器在调用前检查精确原holder/target/rights/version/state（首派必须active；仅已有claim恢复允许active/unknown），缺失/释放/损坏拒。未知保留同holds，不以lease建立第二份所有权。
+
+## 同一提供者与权限
+
+Environment私有helper在原admission锁内重核已有material metadata/active唯一Host、能力固定、同Registry provider对象，并返回内部元数据+原对象；不新增公开raw查询。ResourceRef.contractId必须在原supportedContractIds，pin来自descriptor.version/可信Host activation。先校可信principal、环境、独立agents.resources read及原operation读取，先已有claim判断再作用；没有claim才允许获取。describe_material是纯有界描述，在元数据读取授权后调用，重核完整descriptor等于固定事实，schema/digest/lifetime/用途不能偷换。描述不能替代作用授权。
+
+获取只服务器固定issuer.issue(...,'acquire',完整target)；issuer在claim前后重核，provider必须用原Verifier.verify_and_consume核同票、providerRef、target、request.input_digest，核心随后verified_consumption核实。query只服务器issuer.issue_query同step，provider必须verify_claimed_query(...operation_kind=原intent.kind)，核心verified_observation核实；没有claim不查询提供者，不以未找到证明零作用。首派若queryAcquire=false即typed能力缺席拒绝，不claim、不resolve；已有claim若缺query覆盖仅返回原未决StepRecord，含义仍未知/hold保留，不虚构提供者查询结果、不写新结论，不调用resolve/release。
+
+提供者调用不持有原admission锁；发票及返回分别重核原pin。权限/activation重核不是并发IO fence，不宣传检查后至实际调用之间绝无竞态，实际writer fence仍领域owner责任。
+
+## 原步骤结果与故障
+
+已有claim的acquire只在当前原query权限重核后返回该原StepRecord（不provider.query、不resolve）。没有claim才issue；claim后失败/提供者异常/坏结果/未验证票均记录原step unknown，保hold，永不另claim。核心持久失败抛安全GuaranteeUnavailable，claim与旧holds仍在，原query才可恢复，不再次resolve。
+
+结果必须精确MaterialResult、correlation、receipt与固定request/descriptor内容逐字段一致。success证据闭合{materialResult:完整安全结果.to_dict()}写原Step concluded；refused写原Step refused且有完整安全结果证据；unknown写原Step unknown（可含合法安全结果，非法结果不给正文或异常原值）。结果不是owner实际消费证据。
+
+两项原Usage与原step evidence在record_operation_step同事务更新：unknown→两hold unknown；success→两hold active（原concluded证据允许unknown恢复）；refused仍保hold不释放（后续受权清理另片）。CAS原step.revision及Usage.revision；冷查从原facts/claims/Usage恢复，不从内存receipt推断。并发已有终结事实或CAS冲突读取原最新记录，不覆盖更高revision；若仍可能已作用却无法持久则typed unavailable并保旧claim/hold。不能将failure转换为绿。
+
+本片不终结整个Operation、不seal、不publish；017后续装配检查所有材料rootsteps后才追加完整正式计划。只有同原request的一次获取和查询证据，不启copyComplete/runtimeRequired/dynamic消费释放保证，不接SecretRef或真实模型。
+
+## 验收
+
+真实Environment/Registry/自有tmpSQLite/原Issuer＋受控provider合同场景：成功exact对象一次作用、read不足/无issuer/错pin/版本/用途/目录/epoch/相关性零作用、旧C1缺能力拒、重复不resolve、claim前后授权变化、descriptor漂移、坏receipt/未consume票、lostreceipt无lease查询唯一原结果、queryunsupported保unknown、提供者成功后SQLite事务故障无部分写、coldreopen只query、unknownholds不释放。单元/合同/C级分账；无生产材料消费者或真实服务不报该层绿。
+
+首轮Luna可行性补门：无claim的两预留hold必须active，不能借unknown hold启动；query/acquire均校上下文材料Node/目录/epoch与原intent/step逐字段一致，不仅校request自摘要。三DTO规范helper只字段复制/类级安全序列化，不调用被实例覆写的回调。
+
+冷恢复验证首片只自有SQLite关闭重开＋新issuer、原可信owner同activation；不同generation必须拒/保hold，不以新Host同名替旧pin。此不是生产服务/原生进程重启恢复证明。
+
+回放顺序：可信principal/环境/resources-read及原operation digest/step身份核后，已有claim的acquire和terminal reconcile仍须原issuer.issue_query并由核心原verifier.verify_claimed_query核原claim/当前权限，再返回原StepRecord；不调用provider方法。缺issuer/当前权限/active pin时typed拒，原事实与hold不改。StepRecord含材料引用，不能用聚合resources-read代替目标权限。较弱的统一历史metadata查询继续走已有双read ACL，不能借其权限返回完整材料结果。未决reconcile与无claim首派进入完整fixed/provider/hold核验。
+
+权限审查修订：原“retired提供者也直接回完整结果”方案撤回，未编码；安全材料引用回放须原query authority，不为可读性创建第二授权来源。原Issuer强制active，若不可核只能typed拒，不偷偷放宽。
+
+原预留入口责任：本片不reserve，纯Usage/facts helper也不是准入或权限。未来调用方（Assembly接线）必须在原reserve前校同准入pin/能力与queryAcquire覆盖，再同事务固定事实/holds；019只核已有原记录并在claim前再查，发现既有不合格预留typed拒且不释放。不得凭helpers宣称所有预留入口已具备材料保证。query返回refused只可代表原获取已核实零作用，查询未授权/未找到/无唯一证据必须unknown，不把“查询被拒绝”当“获取零作用”。
+
+编码期间核实的资源缺席（不能冒绿）：当前Environment/Registry活动Host仅内存，没有原ActivationRef公开rehydrate；同Environment的AgentServices禁止更换Issuer。字面“原Host同activation＋SQLite重开＋新Issuer经正式组合执行query”目前不可构造，列NOT_RUN/依赖缺口，不用重新激活字段同shape或测试环境私换Store/Issuer填补。此片仅可验证数据库重开只读原fixed facts/claim/Usage仍在，以及同活跃Environment/Issuer内原query恢复。真实冷恢复端口另片核实，不放宽guard，不发布冷恢复保证。
+
+回放资源完整性门：本片无释放或Node转移，已claimed/terminal完整材料结果回放也核两原holds完整（active或unknown）；缺行、坏holder/target/rights或released拒绝披露完整结果，原metadata查询另行保持。issue后、实际resolve/query前再重核同Registry元数据及同对象，返回后也重核；这些仍非原生IO fence。
+
+既有Verifier时序（复用原API不改）：issue_query的新票须先verify_and_consume(... action=query ...)作首次当前读核验，再verify_claimed_query核已验证的原claim continuation；后者不代替首次验票。完整历史回放由核心执行两步，无provider方法；实际query提供者须执行两步，核心先见其验证痕迹再复核claim。纯describe_material在resources-read许可下可发生于作用授权之前，拒绝作用仍须resolve/query/release/C1作用零调用；claim后拒绝以原step unknown＋holds保留体现，不冒成功。
