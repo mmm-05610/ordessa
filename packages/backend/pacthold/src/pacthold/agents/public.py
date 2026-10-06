@@ -64,7 +64,8 @@ def agent_services(environment, *, invocation_issuer=None, node_evidence_port=No
                     observation_port=lifecycle_observation_port),
                 ManagedInputReservations(environment, nodes, capture_port=input_capture_port,
                     native_state_port=native_input_state_port,
-                    first_input_observation_port=first_input_observation_port),
+                    first_input_observation_port=first_input_observation_port,
+                    invocation_issuer=invocation_issuer),
                 AgentOperations(environment, nodes))
             environment._agent_services = services
         elif ((invocation_issuer is not None and services.configuration._issuer is not invocation_issuer)
@@ -78,7 +79,9 @@ def agent_services(environment, *, invocation_issuer=None, node_evidence_port=No
                 or (native_input_state_port is not None
                     and services.managed_inputs._native is not native_input_state_port)
                 or (first_input_observation_port is not None
-                    and services.managed_inputs._first_observation is not first_input_observation_port)):
+                    and services.managed_inputs._first_observation is not first_input_observation_port)
+                or (invocation_issuer is not None
+                    and services.managed_inputs._issuer is not invocation_issuer)):
             raise ValueError("Agent service authorities must be composed once before use")
         return services
 

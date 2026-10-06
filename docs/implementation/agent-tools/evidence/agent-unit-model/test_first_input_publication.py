@@ -52,7 +52,8 @@ def publication(first_input):
     p[8].verifier().verify_and_consume(invocation, 'submitInput', p[4].state.provider_ref, p[4].state.unit_ref, operation.digest)
     p[0].record_operation_step(operation.request, operation.digest, 'native-input', operation.digest, 1, 'unknown', {})
     owner = Owner(p[8], operation)
-    inputs = ManagedInputReservations(p[1], p[5]._nodes, p[3], p[4], owner)
+    inputs = ManagedInputReservations(p[1], p[5]._nodes, p[3], p[4], owner,
+                                     invocation_issuer=p[8])
     return p, operation, owner, inputs
 
 
@@ -104,7 +105,8 @@ def test_concluded_crash_retains_hold_and_cold_read_publishes_without_claim(publ
     assert step.outcome == 'concluded' and marker(p)['value']['state'] == 'held'
     with pytest.raises(UnknownResultError): reserve(p, key='later', draft='later')
     monkeypatch.setattr(p[0], 'publish_operation', publish)
-    cold = ManagedInputReservations(p[1], p[5]._nodes, None, None, owner)
+    cold = ManagedInputReservations(p[1], p[5]._nodes, None, None, owner,
+                                    invocation_issuer=p[8])
     assert cold.reconcile_first_input(op.request, p[8]).status == 'published'
     assert p[0].read_operation_step(op.request, 'native-input') == step
     assert p[4].dispatch_calls == 0

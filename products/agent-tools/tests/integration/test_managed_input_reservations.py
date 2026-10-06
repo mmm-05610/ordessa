@@ -59,10 +59,10 @@ def managed(node_fixture):
     state = NativeInputState(published["nodeRef"], provider, published["binding"]["harnessUnitRef"],
         source(provider, "confirmed-native-session"), 1, 0, directory, source(provider, "before-configuration-readback"))
     native = Native(state)
-    reservations = ManagedInputReservations(env, nodes, capture, native)
     authority = Authority()
     current = CurrentState(provider, directory, state.session_ref)
     issuer = InvocationIssuer(store, authority, current, clock=lambda: 50)
+    reservations = ManagedInputReservations(env, nodes, capture, native, invocation_issuer=issuer)
     request = RequestKey("env", "principal", "input-request")
     correlation = {"environmentNamespace": "env", "protocol": "codex-app-server/1", "requestId": "native-1"}
     return store, env, policy, nodes, node, capture_ref, capture, native, reservations, request, correlation, authority, current, issuer, published
@@ -348,13 +348,16 @@ def test_cold_restart_read_replay_does_not_restore_dispatch_authority(managed, t
     try:
         cold_env = Environment("env", store=reopened, policy=policy,
             fingerprint_port=env._fingerprint_port, principal_scope="principal")
-        cold = ManagedInputReservations(cold_env, NodePublication(cold_env), capture, native)
+        cold_issuer = InvocationIssuer(reopened, authority, current, clock=lambda: 50)
+        cold = ManagedInputReservations(cold_env, NodePublication(cold_env), capture, native,
+                                        invocation_issuer=cold_issuer)
         assert cold.reserve(request, node, captured, correlation) == first
-        issuer = InvocationIssuer(reopened, authority, current, clock=lambda: 50)
-        with pytest.raises(AdmissionRefusedError): cold.claim_dispatch(request, issuer)
+        with pytest.raises(AdmissionRefusedError): cold.claim_dispatch(request, cold_issuer)
         assert reopened.read_operation_step(request, "native-input") is None
         with pytest.raises(UnknownResultError):
             cold.reserve(RequestKey("env", "principal", "cold-new-key"), node, captured, correlation)
         assert reopened.read_operation(RequestKey("env", "principal", "cold-new-key")) is None
         assert native.dispatch_calls == 0
-    finally: reopened.close()
+    finally:
+        if "cold_issuer" in locals(): cold_issuer.close()
+        reopened.close()

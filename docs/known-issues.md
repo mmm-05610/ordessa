@@ -130,6 +130,8 @@ adapter 把部分原生非重试错误发成 Agent 正文且 ACP end_turn，不�
 
 固定消费adce734db21945181bf93da9720158d05e957654。首次环境/持久化/Pacthold全量命令 `python -m pytest packages/backend/pacthold packages/backend/persistence-sqlite packages/backend/environment-api -q`：327 passed / 3 failed，退出1。三个失败均为platform/test_n4r1_kernel_direction.py的test_kernel_tree_has_no_import_of_server_harness_or_product、test_tripwire_planted_server_import_turns_the_guard_red、test_tripwire_from_import_form_is_detected_too；既有tests/environment/test_closeout_environment_dispatch.py导入ordessa_persistence_sqlite触发测试树扫描。保留断言，不skip，不把全量报绿。新真实SQLite核心测试放products/agent-tools，未在Pacthold引入具体存储依赖。
 
+2026-10-06 本实施树窄修复：原 SQLite 跨组件 closeout 测试移至 `tests/integration/environment`（原11用例/46断言及主体保留，仅子进程源码路径调整），CI增加独立集成步骤；原方向扫描及tripwire断言不改。核心＋迁移集成＋2定位反例实跑274P/0F exit0、7.46s，无skip，消除上述三方向失败。首次新增定位守卫跨Python摘要误报273P/1F已记过程账并修复；不改写历史327P/3F记录，不把缺失worker/sidecar/ACP资产算可用。证据：`docs/implementation/agent-tools/evidence/agent-unit-model/input-issuer-kernel-boundary-20261006.md`。
+
 Agent Tools目前Profile纯数据切片已实现，provider/DirectoryBinding/节点/原生输入闭环缺席；preview明确unresolved/providerUnavailable，nodes与managedInput为false。CLI和Skill包可安装不代表独立产品全部验收通过。真实模型、用户服务、用户DB/凭据和全局配置均未碰。
 
 受影响Server/Plugin API联跑11F/162P退出1，与隔离固定adce源码的11个失败ID完全相同；原始日志在本树docs/implementation/agent-tools/evidence/server-seams-{regression,fixed-baseline}.txt。没有把新核心薄绑定导致的失败藏进继承项。全core新增一项scanner探针路径漂移：退休storage/object_store.py的fallback取到新agents/contracts.py，其合法environment-api导入被探针“无ordessa字符串”假设误判；将探针指向实际core/dtos.py，保留全部断言/扫描范围/植入私有import反例。原三个方向失败仍红。

@@ -66,9 +66,9 @@ def first_input(node_fixture):
         source(provider, "confirmed-unit"), source(provider, "session-absent"), 0,
         directory, source(provider, "before-config"))
     capture, native = Captures(), Native(state)
-    inputs = ManagedInputReservations(env, nodes, capture, native)
     authority, current = Authority(), CurrentState(provider, directory, unit)
     issuer = InvocationIssuer(store, authority, current, clock=lambda: 50)
+    inputs = ManagedInputReservations(env, nodes, capture, native, invocation_issuer=issuer)
     return store, env, node, capture, native, inputs, authority, current, issuer
 
 
@@ -229,8 +229,10 @@ def test_same_owner_independent_environments_and_connections_compete_on_domain_c
         cold_env.enable("fixture.plugin")
         cold_env.activate("fixture.plugin", AgentContributionSet(agent_runtime_providers=(Provider(),)))
         cold_env._fingerprint_port = p[1]._fingerprint_port
-        cold_inputs = ManagedInputReservations(cold_env, NodePublication(cold_env), p[3], p[4])
-        cold = (cold_store, cold_env, p[2], p[3], p[4], cold_inputs, *p[6:])
+        cold_issuer = InvocationIssuer(cold_store, p[6], p[7], clock=lambda: 50)
+        cold_inputs = ManagedInputReservations(cold_env, NodePublication(cold_env), p[3], p[4],
+                                               invocation_issuer=cold_issuer)
+        cold = (cold_store, cold_env, p[2], p[3], p[4], cold_inputs, p[6], p[7], cold_issuer)
         barrier = Barrier(2)
         for inputs in (p[5], cold_inputs):
             original = inputs._first_fence
@@ -255,4 +257,5 @@ def test_same_owner_independent_environments_and_connections_compete_on_domain_c
         assert p[0].read_operation(loser) is None
         assert p[4].dispatch_calls == 0
     finally:
+        if "cold_issuer" in locals(): cold_issuer.close()
         cold_store.close()

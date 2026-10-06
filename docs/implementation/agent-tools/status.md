@@ -862,3 +862,13 @@ Luna只读核实：Agent模块未导入具体Harness品牌；但inline准备先s
 实测完整命令/失败账见[evidence/agent-unit-model/core-refusal-read-20261006.md](evidence/agent-unit-model/core-refusal-read-20261006.md)：首六文件82P17F1E exit1 8.87s，含read_domain形状、非法canary夹具、失效反复注入/CAS时间/继承方法删除及原错误合同变化；二轮97P2F exit1 8.99s，未提交竞争事务与Protocol缓存缺方法typed漏洞；按唯一作者修复、原断言/原management测试未改无skip，三轮99P0F exit0 8.89s。全冻结产品788P0F exit0 216.51s。新增两个直接store反例后最终16文件组合293P0F exit0 23.19s（本批拒绝15＋读取10，另268回归），原environment-api contract及SQLite独立76P0F exit0 1.05s。不是多个套件相加的独立场景数；临时真实SQLite＋受控owner契约C，新增原生P0/M0；继承kernel_direction三红未复验。
 
 跨作者独立终审窄范围无具体阻断；完整材料/SecretRef授权路由、access租约签发撤权合同、生产输入writer/回执、完整结果投影和CLI/Skill/发行隔离仍缺。全optional未发但基础推进的旧分支另备[all-optional-refusal-proposal.md](all-optional-refusal-proposal.md)，已自然语言提问待答，本次不私改既有结果协议。known-issues已对应更新已修窄范围与剩余边界，不称所有拒单均修。无原生模型调用/第三方安装/用户服务、数据、凭据、全局配置操作/push/主树合并；.env不读不入库；费用unknown、tokens以平台为准。保存PARTIAL检查点，整体未完成。
+
+### 2026-10-06 输入统一部署权限来源与核心依赖方向复验（PARTIAL）
+
+前置a5524f05a74d0e3ee26a58ce11c08da3c5958afb，tracked clean、.env仅未跟踪不读。用户对自然语言解释明确答“采用，统一使用服务器配置”，裁定写入[input-issuer-binding-proposal.md](input-issuer-binding-proposal.md)。继续三名gpt-6-luna：core_impl独占inputs/public源；wire_impl新增9项输入反例、四原fixture只调构造绑定；core_review独占跨组件测试迁移/静态保留守卫/CI。主会话只指导、读审、串行实跑、文档/Git，全部生产编码及新测试由Luna完成。
+
+ManagedInputReservations初次绑定原部署issuer，同Store不同authority或不同issuer对象在claim/query前拒绝；未绑定仍能reserve，但不能通过方法实参晚注入，公共重组不能换issuer。保留原context/verifier/持久step与unknown机制，不新增核心、权限真值、品牌协议或原生writer。独立审查发现原claim在请求级鉴权前读操作，沿原Environment/principal/reserve invoke许可前移，Node write仍由原intent目标核验，新增三种拒权零读取反例。
+
+完整命令、退出码和失败账见[evidence/agent-unit-model/input-issuer-kernel-boundary-20261006.md](evidence/agent-unit-model/input-issuer-kernel-boundary-20261006.md)。输入六文件：首收集1E exit2（新测试错误import），再132P1F exit1（新capture fixture key错误），仅原作者修引用/夹具，原断言不删；最终133P0F exit0、10.04s，新9＋原124。核心/迁移集成首273P1F exit1（新AST守卫Python3.14/3.12摘要差异）；以只读HEAD原测试重算跨版本规范化保留摘要后274P0F exit0、7.46s：核心261＋原迁移11＋定位反例2。原11测试46assert及主体保留，仅SIGKILL子进程源码路径改，CI增加独立集成步骤；原核心方向scanner/自反例未改，继承三方向红实测已消除。无skip；不把迁移计数减少算删测，也不把runner报告GREEN_NO_SKIPS时仍ABSENT的worker/sidecar/ACP资产算产品可用。产品本轮全冻结全套788P0F exit0、217.32s，句柄4875terminal，不与133项组合累计独立场景数。
+
+输入新证据为真实临时SQLite＋受控owner/权限的C；原迁移包含自有Python/SQLite SIGKILL恢复已通过，非原生Harness P/M，本轮新增原生P0/M0。严格五工单校验exit0只是材料检查。完整受权材料/SecretRef路由、access签发撤权及真实writer fence、生产输入发送/双来源回执、结果投影与CLI/Skill/隔离发行仍未收口；全optional拒单恢复提案待答未私改。无安装/用户服务/数据/凭据/全局配置/模型调用/push或主树合并。费用unknown，子代理tokens以平台账为准。

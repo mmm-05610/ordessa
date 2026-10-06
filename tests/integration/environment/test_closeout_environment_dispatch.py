@@ -363,11 +363,11 @@ _SIGKILL_ENVIRONMENT_SCRIPT = textwrap.dedent("""
 
 def test_sigkill_after_durable_claim_recovers_unknown_without_redispatch(tmp_path):
     test_file = Path(__file__).resolve()
-    package_root = test_file.parents[4]
+    repo_root = test_file.parents[3]
     sources = [
-        str(test_file.parents[2] / "src"),
-        str(package_root / "backend" / "environment-api" / "src"),
-        str(package_root / "backend" / "persistence-sqlite" / "src"),
+        str(repo_root / "packages" / "backend" / "pacthold" / "src"),
+        str(repo_root / "packages" / "backend" / "environment-api" / "src"),
+        str(repo_root / "packages" / "backend" / "persistence-sqlite" / "src"),
     ]
     path = tmp_path / "environment.sqlite3"
     child = subprocess.Popen(

@@ -105,7 +105,7 @@ def vertical(node_fixture, tmp_path):
     state = SessionlessNativeInputState(published['nodeRef'], provider, unit.public_ref, unit_source,
                                       source(provider, 'session-absence'), 0, directory, source(provider, 'before-config'))
     captures, native = Captures(), Native(state)
-    inputs = ManagedInputReservations(env, nodes, captures, native)
+    inputs = ManagedInputReservations(env, nodes, captures, native, invocation_issuer=issuer)
     p = store, env, node, captures, native, inputs, authority, current, issuer
     op = reserve(p)
     identity = ManagedInputReservations._first_identity(op)
@@ -128,7 +128,8 @@ def cold_owner(vertical):
     observation.records = UnitRecords(OperationJournal(jp[1].path), scope_authority=jp[3], native_evidence=jp[4],
         verifier=p[8].verifier(), epoch_port=jp[5], native_unit_evidence=records.native_unit_evidence,
         input_association_evidence=records.input_association_evidence)
-    return ManagedInputReservations(p[1], p[5]._nodes, None, None, observation)
+    return ManagedInputReservations(p[1], p[5]._nodes, None, None, observation,
+                                   invocation_issuer=p[8])
 
 
 def test_actual_original_journal_association_and_separate_effect_publish(vertical):

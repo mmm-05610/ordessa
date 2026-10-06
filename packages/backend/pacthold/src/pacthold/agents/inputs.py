@@ -23,7 +23,7 @@ from ordessa_environment_api.operations import (
 )
 
 from .directory import DirectoryBindingRef
-from .invocation import InvocationIssuer
+from .invocation import InvocationAuthorityRefused, InvocationIssuer
 
 DRAFT_ATTEMPTS = "agents.draft-attempts"
 FIRST_SESSION_ATTEMPTS = "agents.first-session-attempts"
@@ -197,10 +197,26 @@ class FirstInputObservationPort(Protocol):
 
 class ManagedInputReservations:
     def __init__(self, environment, nodes, capture_port=None, native_state_port=None,
-                 first_input_observation_port=None):
+                 first_input_observation_port=None, invocation_issuer=None):
         self._environment, self._nodes = environment, nodes
         self._capture, self._native = capture_port, native_state_port
         self._first_observation = first_input_observation_port
+        # The deployment issuer is fixed when the Agent services are composed.
+        # Per-call issuer arguments below are retained for compatibility, but
+        # can never be used to late-bind an authority after reservation.
+        self._issuer = invocation_issuer
+
+    def _require_issuer(self, supplied):
+        env = self._environment
+        configured = self._issuer
+        if (not isinstance(configured, InvocationIssuer) or configured._store is not env._store
+                or not isinstance(supplied, InvocationIssuer)):
+            raise GuaranteeUnavailableError("managed input requires its configured core invocation issuer")
+        if supplied._store is not env._store:
+            raise GuaranteeUnavailableError("invocation issuer must use this Environment's durable store")
+        if supplied is not configured:
+            raise InvocationAuthorityRefused("managed input issuer differs from its deployment binding")
+        return configured
 
     @staticmethod
     def _first_identity(operation):
@@ -387,8 +403,8 @@ class ManagedInputReservations:
             if (env._policy is None or not env._policy.admit_invoke(
                     env._principal_scope, "pacthold.agents.inputs.query", "reliable")):
                 raise AdmissionRefusedError("original input observation admission refused")
-            if (not isinstance(issuer, InvocationIssuer) or issuer._store is not env._store
-                    or not isinstance(env._store, OperationStorePort) or not isinstance(env._store, DomainStorePort)
+            issuer = self._require_issuer(issuer)
+            if (not isinstance(env._store, OperationStorePort) or not isinstance(env._store, DomainStorePort)
                     or not isinstance(self._first_observation, FirstInputObservationPort)):
                 raise GuaranteeUnavailableError("original input observation requires explicit owner and core issuer")
             operation = env._store.read_operation(request)
@@ -443,16 +459,20 @@ class ManagedInputReservations:
             return env._store.publish_operation(request, operation.digest, current.revision,
                 ("native-input",), (write,), transfers, result)
 
-    def _admit(self, request, node_ref):
+    def _admit_request(self, request):
         env = self._environment
         env._check_open()
         env._check_environment(request.environment_namespace)
         if request.principal_scope != env._principal_scope:
             raise AdmissionRefusedError("input principal differs from the authenticated realm")
         if (env._policy is None or not env._policy.admit_invoke(
-                env._principal_scope, "pacthold.agents.inputs.reserve", "reliable")
-                or not env._policy.admit_object_access(env._principal_scope,
-                    f"{env.environment_id}:agents.node:{node_ref.instance_id}", "write")):
+                env._principal_scope, "pacthold.agents.inputs.reserve", "reliable")):
+            raise AdmissionRefusedError("managed input admission refused")
+
+    def _admit_node(self, request, node_ref):
+        env = self._environment
+        if (not env._policy.admit_object_access(env._principal_scope,
+                f"{env.environment_id}:agents.node:{node_ref.instance_id}", "write")):
             raise AdmissionRefusedError("managed input admission refused")
         if (not isinstance(env._store, OperationStorePort) or not isinstance(env._store, DomainStorePort)
                 or env._fingerprint_port is None or not isinstance(self._capture, ControlledInputCapturePort)
@@ -463,6 +483,10 @@ class ManagedInputReservations:
         if node is None:
             raise GuaranteeUnavailableError("managed input requires an already published node")
         return node
+
+    def _admit(self, request, node_ref):
+        self._admit_request(request)
+        return self._admit_node(request, node_ref)
 
     def reserve(self, request: RequestKey, node_ref: ParticipantInstanceRef,
                 captured_ref: CapturedInputRef, native_correlation: Mapping):
@@ -560,18 +584,16 @@ class ManagedInputReservations:
 
     def claim_dispatch(self, request: RequestKey, issuer: InvocationIssuer):
         """Issue the existing one-shot InvocationContext, never submit input."""
-        if not isinstance(issuer, InvocationIssuer):
-            raise GuaranteeUnavailableError("existing core invocation issuer required")
         env = self._environment
         with env._admission_lock:
             env._check_open()
-            if issuer._store is not env._store:
-                raise GuaranteeUnavailableError("invocation issuer must use this Environment's durable store")
+            self._admit_request(request)
+            issuer = self._require_issuer(issuer)
             operation = env._store.read_operation(request)
             if operation is None or operation.intent.kind != "managed-input":
                 raise GuaranteeUnavailableError("captured input attempt not reserved")
             ref = _node(operation.intent.node_ref)
-            node = self._admit(request, ref)
+            node = self._admit_node(request, ref)
             context = operation.intent.context_ref
             state = self._inspect(self._native, ref, request.principal_scope)
             first_input = "sessionlessInputBinding" in context

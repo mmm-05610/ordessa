@@ -46,6 +46,8 @@ jobs:
           pip install -e products/server
       - name: Kernel
         run: pytest -q packages/backend/pacthold/tests
+      - name: Environment and SQLite integration
+        run: pytest -q tests/integration/environment
       - name: server-compat
         run: pytest -q plugins/server-compat/tests
       - name: model-provider

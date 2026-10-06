@@ -1,0 +1,11 @@
+# 托管输入固定签发来源：已裁定，待实现
+
+2026-10-06 用户在自然语言解释后明确答复“采用，统一使用服务器配置”：发送只能使用部署时指定的权限检查，不能由调用方临时替换。实现须在原持久claim/query前核固定来源；裁定不等于验证完成。
+
+2026-10-06。独立Luna只读复核确认：既有契约要求部署可信签发／验证与同OperationStore，没有明确冻结每个Environment只允许唯一Issuer对象；前批刻意保留方法的显式issuer参数，因此本提案不是声称原合同已经要求该策略。
+
+现状：public AgentServices固定一个issuer用于配置、准备、生命周期，却不绑定ManagedInputReservations。claim/reconcile只校验同Store。另一个同Store但不同authority的issuer可先claim；原Owner verifier不会接受它的Context，正确issuer又不得重复claim。这是占用／可用性风险，不是已证实原生效果越权；当前仅源码盘点，未实跑该反例。
+
+建议：公共服务创建时将原部署issuer固定给ManagedInputReservations；保留方法原参数，但不同对象在持久claim/query之前typed拒绝。公共服务首次未提供issuer则仍允许无作用的reserve/read，claim/reconcile必须明确缺能力，不接受方法参数晚注入。直接构造入口的兼容口径需保持明确：用现有构造参数显式绑定可信issuer，并更新受控fixture，不建立另一个签发器或授权真值。
+
+最小写域inputs.py/public.py，临时SQLite独立反例同Store异authority/异对象零step、未绑定无法晚注入、正确绑定原机制可用，foreignStore/repeated unknown/first-input association均回归。没有新权威、数据库或原生协议；不调用模型或用户服务。用户已裁定，进入实现及验证阶段。

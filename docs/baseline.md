@@ -68,6 +68,20 @@ scope-reds, per-item rulings in `docs/known-issues.md`).
 `tests/acp_orchestration` reds are the worker-entry retirement ruling — do
 not revive compat chains to green them.
 
+Agent Tools implementation-tree supplement (2026-10-06): cross-component
+Environment/SQLite closeout tests now live outside the Pacthold kernel tree.
+Run both gates; the historical baseline counts above are unchanged:
+
+```bash
+python -m pytest -q packages/backend/pacthold/tests
+python -m pytest -q tests/integration/environment
+```
+
+In this implementation tree, the combined run measured 274 passed (261 kernel,
+11 moved integration cases and 2 placement checks), with no skips. This does
+not verify absent worker/sidecar/ACP artifacts or native Harness/model use.
+See `docs/implementation/agent-tools/evidence/agent-unit-model/input-issuer-kernel-boundary-20261006.md`.
+
 The commands above include the post-010 public Server and Harness API packages
 and the default product. The counts beside individual `pytest` commands are
 the frozen switch baseline, not current C0 acceptance. C0's measured four-suite
