@@ -760,3 +760,11 @@ architecture-reviewer第3次咨询（累计3/3达标）裁定release走新增受
 验证（串行、terminal）：codex 227P/0F（210 C＋17 P真实进程）；environment-api+persistence **76P/0F**（原70＋6）；产品integration **312P/0F**；records组合115P/0F；核心269P/3F同三个已登记继承ID。失败账均夹具侧（revision硬编码、UsageMutation payload Mapping、operation_ref撞身份、导入位置），断言未放宽无skip。
 
 C/P分账如实：P仅codex一家真实进程（零模型）；pi/claude真实进程、AgentLifecycle、wire生命周期绑定、三家消费终止族、旧消费者退役、任务/结果、发行与七家扩展继续。M0（授权已有未调用）；无凭据/全局配置/服务/push/主树合并，费用unknown。检查点后按评审3裁定实现AgentLifecycle，不标完成门。
+
+### 2026-10-06 AgentLifecycle 核心协调器（stop/release/recover）检查点（PARTIAL）
+
+前置eb354763d0。主会话按architecture-reviewer第3次裁定实现pacthold/agents/lifecycle.py：agent-stop/agent-release/agent-recovery三kind各一单步；stop/release为cleanup调用（targetRef=nodeRef、directoryBindingRef取Node持久绑定）、recover普通调用；同请求重放只读、claimed永不重发；capabilities按issuer同store钉法；public.py的AgentServices增lifecycle字段＋compose-once守卫（lifecycle_observation_port一次性注入）。核验栈：issue→provider→verified_consumption→LifecycleObservation四元组＋owner出处→终止投影（version/action/confirmed/identity.unitRef+inputDigest）或recover的A13字段比对（unit/nativeSessionRefs集合/configurationTarget/provider）→同事务concluded（release附受控释放变更）；任一失败unknown零释放。release预检恰为Node active publication Usages，不符派发前拒。
+
+反例test_lifecycle.py 8项（复用test_assembly真实装配＋受控端口）：结论带属主证明＋重放不重派、效果失败unknown不重发、错correlation/unit→unknown、终止unknown→unknown、release精确集/幂等/已释放新请求拒、recover伪造sessionRefs拒、preconditions形状、未装配capabilities=false+typed拒。实现修正：context_ref补environmentNamespace/directoryBindingRef、重放先短路释放预检；断言未放宽无skip。详见[evidence/agent-unit-model/lifecycle-coordinator.md](evidence/agent-unit-model/lifecycle-coordinator.md)。
+
+验证（串行、terminal）：test_lifecycle.py **8P/0F exit0**；产品integration **312P/0F**；核心269P/3F同三个已登记继承ID。剩余按评审3清单：wire生命周期绑定＋schema lifecycleOperation形状＋镜像再生成＋test_management守卫改写（保留未装配拒绝语义）；apply_profile派生＋CLI；三家消费终止族与效果证据。C受控，P/M无新增；无用户数据/服务/push/主树合并，M0费用unknown。检查点后并行推进wire与apply_profile，不标完成门。

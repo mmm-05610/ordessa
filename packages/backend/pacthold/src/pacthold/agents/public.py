@@ -14,6 +14,7 @@ from .nodes import NodePublication, encode_node_ref, decode_node_ref
 from .management import AgentConfiguration
 from .providers import AgentProviders
 from .assembly import AgentAssembly, PreparationContext, PreparationObservation, PreparationContextPort, PreparationObservationPort
+from .lifecycle import AgentLifecycle, LifecycleObservation, LifecycleObservationPort
 from .invocation import (
     InvocationContext, InvocationVerifier, InvocationAuthorityRefused,
     InvocationIssuer, InvocationGrant, InvocationAuthorityPort,
@@ -28,10 +29,12 @@ class AgentServices:
     configuration: AgentConfiguration
     providers: AgentProviders
     assembly: AgentAssembly
+    lifecycle: AgentLifecycle
 
 
 def agent_services(environment, *, invocation_issuer=None, node_evidence_port=None,
-                   preparation_context_port=None, preparation_observation_port=None) -> AgentServices:
+                   preparation_context_port=None, preparation_observation_port=None,
+                   lifecycle_observation_port=None) -> AgentServices:
     """Bootstrap one core-owned catalog on the existing Environment.
 
     No plugin activation, native process or second Environment is created.
@@ -47,12 +50,16 @@ def agent_services(environment, *, invocation_issuer=None, node_evidence_port=No
                 AgentConfiguration(environment, nodes, invocation_issuer=invocation_issuer),
                 AgentProviders(environment), AgentAssembly(environment, profiles, nodes,
                     invocation_issuer=invocation_issuer, context_port=preparation_context_port,
-                    observation_port=preparation_observation_port))
+                    observation_port=preparation_observation_port),
+                AgentLifecycle(environment, nodes, invocation_issuer=invocation_issuer,
+                    observation_port=lifecycle_observation_port))
             environment._agent_services = services
         elif ((invocation_issuer is not None and services.configuration._issuer is not invocation_issuer)
                 or (node_evidence_port is not None and services.nodes._evidence_port is not node_evidence_port)
                 or (preparation_context_port is not None and services.assembly._context_port is not preparation_context_port)
-                or (preparation_observation_port is not None and services.assembly._observation_port is not preparation_observation_port)):
+                or (preparation_observation_port is not None and services.assembly._observation_port is not preparation_observation_port)
+                or (lifecycle_observation_port is not None
+                    and services.lifecycle._observation_port is not lifecycle_observation_port)):
             raise ValueError("Agent service authorities must be composed once before use")
         return services
 
@@ -70,6 +77,7 @@ __all__ += ["InvocationIssuer", "InvocationGrant", "InvocationAuthorityPort",
             "InvocationCurrentState", "InvocationCurrentStatePort"]
 __all__ += ["AgentProviders"]
 __all__ += ["AgentAssembly", "PreparationContext", "PreparationObservation", "PreparationContextPort", "PreparationObservationPort"]
+__all__ += ["AgentLifecycle", "LifecycleObservation", "LifecycleObservationPort"]
 from .runtime import AgentContributionSet, RuntimeProvider, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
 __all__ += ["AgentContributionSet", "RuntimeProvider", "RuntimeProviderDescriptor", "RUNTIME_PROVIDER_VERSION"]
 from .configuration import (
