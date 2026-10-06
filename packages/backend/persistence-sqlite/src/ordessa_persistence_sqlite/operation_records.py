@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from functools import wraps
 import hashlib
 import json
+import re
 from typing import Mapping
 
 from ordessa_environment_api.domain import DomainRevisionConflict, DomainWrite
@@ -15,6 +16,10 @@ from ordessa_environment_api.operations import (
     OperationIntent, OperationRecord, OperationRevisionConflict, StepIntent,
     StepRecord, StepClaimResult, UsageMutation, operation_holder, node_holder,
     safe_json,
+)
+from ordessa_environment_api.staged_operations import (
+    STAGED_OPERATION_STORE_VERSION, OperationRecipePhase, StagedOperationRecord,
+    _combine as _combine_root_phase, _intent_dict, _phase_dict,
 )
 
 _IDENTITIES = "core.operation-identities"
@@ -101,10 +106,63 @@ class OperationRecordsMixin:
             _identity(request),
         ).fetchone()
 
+    def _staged_metadata(self, operation, staged_json):
+        if staged_json is None:
+            raise GuaranteeUnavailableError("operation is not a staged record")
+        try:
+            value = _load(staged_json)
+            if (type(value) is not dict or set(value) != {"contractVersion", "rootIntent", "phase"}
+                    or value["contractVersion"] != STAGED_OPERATION_STORE_VERSION
+                    or type(value["rootIntent"]) is not dict
+                    or (value["phase"] is not None and type(value["phase"]) is not dict)
+                    or safe_json(value) != staged_json):
+                raise ValueError("staged operation metadata is invalid")
+            root_json = safe_json(value["rootIntent"])
+            phase_json = None if value["phase"] is None else safe_json(value["phase"])
+            staged = StagedOperationRecord(operation, root_json, phase_json)
+            recipe_ids = {step.step_id for step in operation.intent.steps}
+            step_rows = self._conn.execute(
+                "SELECT step_id FROM env_request_steps WHERE environment=? AND principal=? AND request_id=?",
+                _identity(operation.request),
+            ).fetchall()
+            stored_step_ids = {item["step_id"] for item in step_rows}
+            if not stored_step_ids <= recipe_ids:
+                raise ValueError("stored step is outside the staged recipe")
+            if operation.current_step is None:
+                if stored_step_ids:
+                    raise ValueError("staged operation has claims without a current step")
+            else:
+                intent_steps = operation.intent.steps
+                current_index = next((i for i, step in enumerate(intent_steps)
+                                      if step.step_id == operation.current_step), None)
+                if current_index is None:
+                    raise ValueError("staged current step is outside the recipe")
+                for index, step in enumerate(intent_steps):
+                    row = self._step_row(operation.request, step.step_id)
+                    if index > current_index:
+                        if row is not None:
+                            raise ValueError("staged recipe has a claim after its current step")
+                        continue
+                    if row is None:
+                        raise ValueError("staged operation lost a durable step claim")
+                    record = self._step_record(operation.request, row, operation)
+                    if index < current_index and record.outcome != "concluded":
+                        raise ValueError("staged operation advanced past an unresolved step")
+            if staged.sealed:
+                for root_step in staged.root_intent.steps:
+                    row = self._step_row(operation.request, root_step.step_id)
+                    if row is None or self._step_record(operation.request, row, operation).outcome != "concluded":
+                        raise ValueError("sealed recipe lost a concluded root step")
+            return staged
+        except (TypeError, ValueError, KeyError, AttributeError, RecursionError):
+            raise GuaranteeUnavailableError("stored staged operation is inconsistent") from None
+
     def _operation_record(self, request, row):
         if row is None:
             raise GuaranteeUnavailableError("operation is not reserved")
         if row["operation_json"] is None:
+            if row["staged_operation_json"] is not None:
+                raise GuaranteeUnavailableError("staged operation metadata has no operation intent")
             raise UnknownResultError("spent legacy or non-operation request is not a new operation")
         try:
             stored_intent = _load(row["operation_json"])
@@ -154,6 +212,23 @@ class OperationRecordsMixin:
                                    row["operation_json"], receipt.get("current_step"),
                                    safe_json(receipt["operation_result"]) if "operation_result" in receipt else None,
                                    safe_json(receipt.get("operation_evidence", {})))
+            if row["staged_operation_json"] is not None:
+                staged = self._staged_metadata(operation, row["staged_operation_json"])
+                if not staged.sealed and status == "published":
+                    raise ValueError("unsealed staged operation is published")
+            else:
+                step_rows = self._conn.execute(
+                    "SELECT step_id FROM env_request_steps WHERE environment=? AND principal=? AND request_id=? LIMIT 1",
+                    _identity(request),
+                ).fetchone()
+                if operation.current_step is None:
+                    if step_rows is not None:
+                        raise ValueError("ordinary operation has step claims without a current step")
+                else:
+                    current_row = self._step_row(request, operation.current_step)
+                    if current_row is None:
+                        raise ValueError("ordinary operation current step claim is missing")
+                    self._step_record(request, current_row, operation)
             if status == "published":
                 for step in intent.steps:
                     step_row = self._step_row(request, step.step_id)
@@ -343,6 +418,9 @@ class OperationRecordsMixin:
 
     @_serialized
     def reserve_operation(self, request, digest, intent, writes=(), usages=()):
+        prior = self._operation_row(request)
+        if prior is not None and prior["staged_operation_json"] is not None:
+            raise IdentityMismatchError("staged operation cannot use the original reservation API")
         if not isinstance(intent, OperationIntent) or not isinstance(digest, str) or not digest:
             raise ValueError("operation requires fixed intent and digest")
         intent_json = safe_json(intent.to_dict())
@@ -351,6 +429,8 @@ class OperationRecordsMixin:
         with self._operation_transaction():
             existing = self._operation_row(request)
             if existing is not None:
+                if existing["staged_operation_json"] is not None:
+                    raise IdentityMismatchError("staged operation cannot use the original reservation API")
                 operation = self._check_operation(request, digest)[1]
                 if operation.intent_json != intent_json:
                     raise IdentityMismatchError("reservation replay changed its fixed intent")
@@ -372,6 +452,140 @@ class OperationRecordsMixin:
             return self._operation_record(request, self._operation_row(request))
 
     @_serialized
+    def reserve_staged_operation(self, request, digest, root_intent, writes=(), usages=()):
+        if type(root_intent) is not OperationIntent or not isinstance(digest, str) or not digest:
+            raise ValueError("staged operation requires a fixed root intent and digest")
+        root_intent_json = safe_json(_intent_dict(root_intent))
+        canonical_root = json.loads(root_intent_json)
+        root_intent = OperationIntent.from_dict(canonical_root)
+        self._check_refs(request, root_intent)
+        domains, usage_rows = _domain_encoding(writes), _usage_encoding(usages)
+        stage_json = safe_json({"contractVersion": STAGED_OPERATION_STORE_VERSION,
+                                "rootIntent": canonical_root, "phase": None})
+        with self._operation_transaction():
+            existing = self._operation_row(request)
+            if existing is not None:
+                if existing["digest"] != digest:
+                    raise IdentityMismatchError("staged request input changed")
+                if existing["operation_json"] is None or existing["staged_operation_json"] is None:
+                    raise IdentityMismatchError("existing request is not a staged operation")
+                operation = self._operation_record(request, existing)
+                staged = self._staged_metadata(operation, existing["staged_operation_json"])
+                if staged.root_intent_json != root_intent_json:
+                    raise IdentityMismatchError("staged root intent changed")
+                return staged
+
+            holder = operation_holder(request, root_intent.operation_ref)
+            identity_write = DomainWrite(_IDENTITIES, root_intent.operation_ref, 0, {"holder": dict(holder)})
+            self._write_domains(request.environment_namespace,
+                                [(identity_write, safe_json(identity_write.value)), *domains])
+            self._write_usages(request, root_intent, usage_rows)
+            receipt = {"delivery": "acknowledged", "issued_revision": "rev-1",
+                       "operation_status": "reserved", "current_step": None,
+                       "operation_evidence": {},
+                       "operation_evidence_digest": hashlib.sha256(safe_json({}).encode()).hexdigest()}
+            current = {"outcome": "unknown", "revision": 1, "conflicts": [], "obligations": []}
+            self._conn.execute(
+                "INSERT INTO env_requests(environment,principal,request_id,digest,spent,receipt,current,dispatch_state,"
+                "operation_json,operation_revision,operation_intent_digest,staged_operation_json) "
+                "VALUES(?,?,?,?,1,?,?,'operation-reserved',?,1,?,?)",
+                (*_identity(request), digest, safe_json(receipt), safe_json(current), root_intent_json,
+                 hashlib.sha256(root_intent_json.encode()).hexdigest(), stage_json),
+            )
+            row = self._operation_row(request)
+            operation = self._operation_record(request, row)
+            return self._staged_metadata(operation, row["staged_operation_json"])
+
+    @_serialized
+    def read_staged_operation(self, request):
+        row = self._operation_row(request)
+        if row is None:
+            return None
+        if row["staged_operation_json"] is None:
+            raise GuaranteeUnavailableError("request is not a staged operation")
+        operation = self._operation_record(request, row)
+        return self._staged_metadata(operation, row["staged_operation_json"])
+
+    @_serialized
+    def append_staged_operation_phase(self, request, digest, expected_revision,
+                                      expected_intent_digest, phase):
+        if type(phase) is not OperationRecipePhase:
+            raise ValueError("a complete OperationRecipePhase is required")
+        if type(digest) is not str or not digest:
+            raise ValueError("staged request digest is required")
+        if type(expected_revision) is not int or expected_revision < 1:
+            raise ValueError("expected operation revision must be a positive integer")
+        phase_json = safe_json(_phase_dict(phase))
+        phase_value = json.loads(phase_json)
+        # Reparse canonical values so no caller-owned DTO/mapping alias or
+        # instance method override reaches the operation constructor.
+        phase_copy = OperationRecipePhase.from_dict(phase_value)
+        if (type(expected_intent_digest) is not str
+                or not re.fullmatch(r"[0-9a-f]{64}", expected_intent_digest)):
+            raise ValueError("expected operation intent digest must be lowercase SHA-256")
+
+        with self._operation_transaction():
+            row = self._operation_row(request)
+            if row is None:
+                raise GuaranteeUnavailableError("staged operation is not reserved")
+            if row["digest"] != digest:
+                raise IdentityMismatchError("staged request input changed")
+            if row["operation_json"] is None or row["staged_operation_json"] is None:
+                raise IdentityMismatchError("request is not a staged operation")
+            operation = self._operation_record(request, row)
+            staged = self._staged_metadata(operation, row["staged_operation_json"])
+            if staged.sealed:
+                existing_phase = staged.phase
+                if existing_phase.phase_id == phase_copy.phase_id:
+                    if staged.phase_json != phase_json:
+                        raise IdentityMismatchError("sealed phase replay changed its recipe")
+                    return staged
+                raise UnknownResultError("staged operation is already sealed")
+            if (operation.revision != expected_revision
+                    or row["operation_intent_digest"] != expected_intent_digest):
+                raise OperationRevisionConflict("staged operation revision or intent digest changed")
+            if operation.status != "running":
+                raise UnknownResultError("root operation is not conclusively running")
+
+            root = staged.root_intent
+            root_step_ids = {step.step_id for step in root.steps}
+            step_rows = self._conn.execute(
+                "SELECT step_id FROM env_request_steps WHERE environment=? AND principal=? AND request_id=?",
+                _identity(request),
+            ).fetchall()
+            if {item["step_id"] for item in step_rows} != root_step_ids:
+                raise UnknownResultError("root operation step evidence is incomplete or inconsistent")
+            for step in root.steps:
+                step_row = self._step_row(request, step.step_id)
+                if step_row is None:
+                    raise UnknownResultError("root operation step has no durable conclusion")
+                record = self._step_record(request, step_row, operation)
+                if record.outcome != "concluded":
+                    raise UnknownResultError("root operation contains an unresolved step")
+
+            try:
+                combined = _combine_root_phase(root, phase_copy, request.environment_namespace)
+                self._check_refs(request, combined)
+            except (TypeError, ValueError, IdentityMismatchError):
+                raise IdentityMismatchError("recipe phase changes fixed operation identity") from None
+            intent_json = safe_json(_intent_dict(combined))
+            new_intent_digest = hashlib.sha256(intent_json.encode()).hexdigest()
+            stage_json = safe_json({"contractVersion": STAGED_OPERATION_STORE_VERSION,
+                                    "rootIntent": json.loads(staged.root_intent_json),
+                                    "phase": json.loads(phase_json)})
+
+            # One appended phase is immediately sealed. Preserve the original
+            # operation receipt/evidence/current step while advancing its CAS.
+            self._set_operation(request, row, "running", step=operation.current_step)
+            self._conn.execute(
+                "UPDATE env_requests SET operation_json=?,operation_intent_digest=?,staged_operation_json=? "
+                "WHERE environment=? AND principal=? AND request_id=?",
+                (intent_json, new_intent_digest, stage_json, *_identity(request)),
+            )
+            updated = self._operation_record(request, self._operation_row(request))
+            return self._staged_metadata(updated, stage_json)
+
+    @_serialized
     def read_operation(self, request):
         row = self._operation_row(request)
         return self._operation_record(request, row) if row is not None else None
@@ -391,6 +605,13 @@ class OperationRecordsMixin:
             existing = self._step_row(request, step_intent.step_id)
             if existing is not None:
                 return StepClaimResult(False, self._step_record(request, existing))
+            target_index = next(index for index, item in enumerate(intent.steps)
+                                if item.step_id == step_intent.step_id)
+            if operation.current_step is not None:
+                current_index = next(index for index, item in enumerate(intent.steps)
+                                     if item.step_id == operation.current_step)
+                if target_index <= current_index:
+                    raise GuaranteeUnavailableError("an earlier operation step claim is missing")
             if operation.status in {"published", "refused", "cancelled", "unknown"}:
                 raise UnknownResultError("operation does not permit a new step")
             for previous in intent.steps:
@@ -479,6 +700,9 @@ class OperationRecordsMixin:
         publication_digest = _change_digest("published", result, domains, usage_rows)
         with self._operation_transaction():
             row, operation = self._check_operation(request, digest)
+            if (row["staged_operation_json"] is not None
+                    and not self._staged_metadata(operation, row["staged_operation_json"]).sealed):
+                raise UnknownResultError("staged operation must be sealed before publication")
             if required_steps != tuple(step.step_id for step in operation.intent.steps):
                 raise IdentityMismatchError("publication must cover every fixed step")
             if operation.status == "published":

@@ -1,0 +1,34 @@
+# 017 分阶段原操作记录冻结（两阶段首片）
+
+基线e4dc70aa5c，用户采用staged-operation-proposal。只扩原Environment API/SQLite同一操作行，不接AgentAssembly/material作用。为避免未seal尾部step可提前claim，首版只有root材料阶段→一次原子追加完整后续recipe并seal；不做任意DAG/多阶段编辑。root阶段已有至少一个StepIntent，未seal可claim原root步骤，后续新步骤只有追加封存成功后才存在。全部旧step必须concluded，其他outcome一律拒绝越关，不裁optional拒绝恢复。
+
+## 唯一API
+
+新environment-api/staged_operations.py，原OperationStorePort不增required方法；__init__再导出。`STAGED_OPERATION_STORE_VERSION='staged-operation/1'`。
+
+`OperationRecipePhase(phase_id:str, steps:tuple[StepIntent,...], invocation_bindings:Mapping, context_facts:Mapping)` frozen；strict closed camelCase编码phaseId/steps/invocationBindings/contextFacts。新steps非空有界，phase id按原_name规则；bindings key精确覆盖新step IDs，每个binding四字段action/targetRef/delegationRef/cleanup；action非空，cleanup bool（release/stop必须cleanup；cleanup动作仅release/stop/query）；references仅safe_json mapping，scoped env验证在合并时核同request；context_facts只新顶层键，禁止environmentNamespace/invocationBindings以及和root重复任何键（即使值相同）；原目录/来源等不修改。reject bytes/callable等非safe_json，不声称能看出合法字符串内秘密语义。规范phase.digest为sha256 safe_json(to_dict) plain64hex。steps依序不可变，原StepIntent验证适用，最终组合OperationIntent检查全量唯一step/correlation/prerequisite/epoch。
+
+`StagedOperationRecord(operation:OperationRecord, root_intent_json:str, phase_json:str|None)` frozen安全组合包装。root与phase JSON须精确canonical safe_json，root_intent/property解析原OperationIntent、root_intent_digest为内部计算64hex；phase/property解析上述DTO或None，sealed属性等于phase非空，contract_version为本版。构造/读取验证operation.intent等于root或root+phase按下述合并；root基本身份不变，current recipe唯一，元数据不是旁路执行真值。包装不带InvocationContext/原生句柄，不能作为权限。
+
+`StagedOperationStorePort` runtime Protocol含property staged_operation_contract_version；方法：
+- reserve_staged_operation(request,digest,root_intent,writes=(),usages=())->StagedOperationRecord
+- read_staged_operation(request)->StagedOperationRecord|None
+- append_staged_operation_phase(request,digest,expected_revision,expected_intent_digest,phase:OperationRecipePhase)->StagedOperationRecord
+
+Root digest由Store计算，caller不提供自报摘要；同request+原digest+root全形重放返回当前扩展包装，异root或异输入IdentityMismatch。新reserve不能认领old record，旧reserve遇staged行也拒，旧API原intent完全相等重放不放宽。wrapper读取老非staged记录typed GuaranteeUnavailable而非当不存在，真正无记录返回None。
+
+## 存储、CAS及封存
+
+在同env_requests新增nullable staged_operation_json（原ensure_operation_columns additive迁移），包含精确三字段contractVersion/rootIntent/phase，其中rootIntent与phase采用dict或null规范编码；root完整形保留，phase完整追加事实保留，读取按wrapper还原验证root+phase=current intent与原operation hash。NULL严格走旧路径。现read_operation/_operation_record必须校验非NULL的版本/元数据/组合，坏数据typed GuaranteeUnavailable，不仅新API验证。没有新表/索引/DomainWrite阶段真值、daemon或Registry。
+
+reserve_staged_operation在一个BEGIN IMMEDIATE内同时写原operation/domain/Usage与stage元数据，不能先旧reserve提交再单独写stage；失败所有变化rollback。原identity/digest不改。
+
+append在同事务下验证original digest、latest revision（严格int非bool）、当前intent hash64hex。初次append须非terminal且root阶段全部step已claim并concluded（不要把operation.current.outcome默认unknown当未决，因为正常running该投影亦unknown，判断明确status及所有step）；不得有unknown/possibly-dispatched/refused/未记录或坏step证据。原所有字段/steps/bindings/事实保持，只append phase.steps、merge新bindings与context facts，合并后用原_check_refs及OperationIntent验证同environment/epoch/唯一/prerequisites；更新operation_json/hash、stage元数据与revision封存，同一事务，无claim/Usage/派发。原operation_result/evidence与current step保持，封存仅改recipe不捏造准备/消费成功。
+
+已sealed后exact同phase重放可读回当前wrapper（即使第一次expected revision/hash已过期），不同phase任何追加拒；必须在重放前核request digest及phase完整body，不忽略caller冲突。旧reserve无此豁免。未sealed时publish_operation（即使旧调用）在任何写/Usage转移前拒；sealed后原完整steps/concluded/CAS发布规则适用。所有读取核元数据组合，侵入式损坏不降成legacy。
+
+追加后现InvocationContext的operationIntentDigest失效，新issue_query可核原旧step+claim而不重发；测试明确两面。这里只Store能力：legacy Store缺optional版port可检测/拒，但不新增另一个dispatcher或把缺席自动变有能力。生产组合接入后才验证缺席发前拒材料效果，当前不冒该证据。
+
+## 验证与迁移边界
+
+root replay/coldrestart、旧/staged混用拒、CAS并发/重复phase、身份与bindings不能修改、unknown越关拒、unsealed发布拒、sealed继续原发布、故障同事务rollback、元数据版本/组合损坏拒、旧Context失效与new query同claim。旧记录nullable迁移仅自有tmp数据库验证；docs/migration记录新字段格式，用户数据库不打开。root序列化参考类级实现/纯字段，不因instance覆写to_dict执行额外code；能力不是Python恶意代码沙箱。整体PARTIAL，后续材料协调/真实消费仍未实现。

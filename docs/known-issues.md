@@ -177,3 +177,9 @@ AgentUnit迁移切片在 `ServerProductComposition.native_runtime` 早拒 Pi/Cod
 最初调查发现操作／scope fence 预留后、dispatch claim 之前 owner 版本／管理代次／目录授权失效会留下 reserved 及未发送 Profile 基础。用户已裁定该窄范围：同Store可选版本化能力以持久无step证明、操作revision、fence CAS同事务拒绝并恢复原基础；首次仍抛原typed错误，已claim/unknown不恢复。真实临时SQLite受控反例已通过，含CAS/trigger回滚、同key/异写重放及concluded禁止；证据见 `docs/implementation/agent-tools/evidence/agent-unit-model/core-refusal-read-20261006.md`。这是C级证明，不是原生端到端验收。旧intent缺回滚事实、旧Store缺能力或其它不可核实异常仍保留占用。全可选声明都被跳过的旧分支保留逐项rejected，但其基础恢复另待裁定，见 `docs/implementation/agent-tools/all-optional-refusal-proposal.md`；不能将本批窄修称全部拒单均已收口。
 
 公开 wire 的 /3 applyProfile 薄绑定已实现、核心与 wire 定向反例通过，但 CLI 仍使用旧 application 形状，缺 baseProfileRef，在客户端 schema 检查以 PARAMETER_INVALID／exit2 发前拒绝，HTTP 更新调用为零。原产品套件第一次复跑786P1F是旧测试仍断言健康 wire 未广告；修订保留真实未装配负例并新增健康广告／CLI旧形状拒绝反例，没有修好 CLI。末端验证及当前状态见 `docs/implementation/agent-tools/status.md` 和 `evidence/agent-unit-model/luna-core-dispatch-20261006.md`。核心统一历史metadata只读已按用户裁定实现并受控验证，但尚未wire/CLI；托管输入公开装配仍无生产writer及结果回写，材料装配／连接仍PARTIAL。材料或接口定向绿不代表产品已可运行。
+
+### 普通冻结操作的current-step缺行一致性缺口（2026-10-06，Store受控修复）
+
+Agent Tools分阶段Store读审发现：原非staged OperationRecord验证current_step属于recipe，但未要求该step持久行仍存在。若记录处于running且最新已claim步骤的行丢失，旧claim路径可能把缺行当未占用；主会话与独立Luna从代码确认，尚未做普通路径的动态损坏实测。本片017只对新增staged记录补current_step存在及完整StepRecord校验（并验unsealed/sealed两读），不宣称旧记录缺口已修。SQLite正常事务保证不意味着可把部分损坏数据库当正常首次派发；后续原Store窄修应保持旧API冻结/幂等语义并加损坏反例。没有打开用户数据库、没有重新派发任何真实输入或模型调用。
+
+018补充：普通current缺行及current为空孤立行读取拒绝，missing过去/current目标claim在Usage/INSERT前拒绝；完整当前tail的查询保留。新5项临时SQLite动态反例与旧拒绝恢复/读取/staged组合150P、SQLite43P、core/API307P、产品826P均exit0。证据见docs/implementation/agent-tools/evidence/agent-unit-model/operation-claim-integrity-20261006.md。此为原Store窄修，不恢复损坏数据库、不证明真实服务自动恢复；用户数据库未打开。

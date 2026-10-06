@@ -90,6 +90,10 @@ from .operations import (
     OperationStorePort,
     PreDispatchRefusalStorePort,
 )
+from .staged_operations import (
+    STAGED_OPERATION_STORE_VERSION, OperationRecipePhase,
+    StagedOperationRecord, StagedOperationStorePort,
+)
 
 CONTRACT_VERSION = "oe-contract/1"
 
@@ -115,4 +119,6 @@ __all__ = [
     "RelationshipPort", "SecretPort", "StorePort",
     "OPERATION_STORE_VERSION", "PRE_DISPATCH_REFUSAL_STORE_VERSION",
     "OperationStorePort", "PreDispatchRefusalStorePort",
+    "STAGED_OPERATION_STORE_VERSION", "OperationRecipePhase",
+    "StagedOperationRecord", "StagedOperationStorePort",
 ]

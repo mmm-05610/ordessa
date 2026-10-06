@@ -31,6 +31,7 @@ from ordessa_environment_api import IdentityMismatchError
 from ordessa_environment_api.identity import RequestKey
 from ordessa_environment_api.domain import DomainWrite, DomainRevisionConflict
 from ordessa_environment_api.errors import GuaranteeUnavailableError, UnknownResultError
+from ordessa_environment_api.staged_operations import STAGED_OPERATION_STORE_VERSION
 from .operation_records import OperationRecordsMixin
 
 SCHEMA_VERSION = 1
@@ -244,12 +245,16 @@ class SqliteStorePort(OperationRecordsMixin):
         self._ensure_operation_columns()
         self._acquire_writer_lock(allow_takeover=allow_takeover)
 
+    @property
+    def staged_operation_contract_version(self) -> str:
+        return STAGED_OPERATION_STORE_VERSION
+
     @_serialized
     def _ensure_operation_columns(self) -> None:
         """Add named-step storage without changing old request/Usage identity."""
         additions = {
             "env_requests": {"operation_json": "TEXT", "operation_revision": "INTEGER NOT NULL DEFAULT 0",
-                             "operation_intent_digest": "TEXT"},
+                             "operation_intent_digest": "TEXT", "staged_operation_json": "TEXT"},
             "env_usages": {"holder_ref": "TEXT", "target_ref": "TEXT",
                            "revision": "INTEGER NOT NULL DEFAULT 0", "payload": "TEXT"},
             "env_request_steps": {"evidence_digest": "TEXT"},

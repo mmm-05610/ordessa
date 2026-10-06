@@ -896,3 +896,17 @@ ManagedInputReservations初次绑定原部署issuer，同Store不同authority或
 用户明确采用同一操作记录分阶段处理，已记[staged-operation-proposal.md](staged-operation-proposal.md)。原步骤不可修改、unknown不能越关、追加原子且旧授权失效、旧reserve语义不放宽；016测试冻结期间只做只读准备，尚未实现分阶段能力。
 
 016收口：[material-admission-20261006.md](evidence/agent-unit-model/material-admission-20261006.md)。三Luna代码/测试/独立攻查，root统一串行实测：新20+旧合同14+准入21＝55P0F exit0 0.27s；核心/C1/API307P0F exit0 7.80s；产品全套788P0F exit0 217.57s（session69317 terminal），无skip。ACL先于lookup/provider，原Registry entry固定能力、原二/四元getter及C1签名不变；坏getter/None后增声明/原地篡改拒，按字段复制能力不执行被覆写to_dict，明确发表前拒绝可以同ID纠正重试。未验先缺声明→unregister/新activation的重发现流程，不用commit失败retry冒该证据，更不替旧operation pin。新能力发现≠作用授权，无材料resolve/Usage/消费。保存本地检查点后继续已裁定分阶段原Store，多Luna待新写域；M0/用户服务0/.env不读，整体PARTIAL。
+
+### 2026-10-06 017原操作两阶段能力进入编码（IMPLEMENTING）
+
+十六保存e4dc70aa5c后继续，多Luna非重叠写权：core_impl四个EnvironmentAPI/SQLite源文件，wire_impl唯一test_staged_operations.py，core_review只读攻击；root合同/工单/迁移说明/串行验证/Git。十七单strict全17 exit0，只资料门。用户明确采用分阶段原记录，精确[staged-operation-contract-v1.md](staged-operation-contract-v1.md)冻结两阶段唯一append+seal，避免未封存新步骤提前claim。根完整意图与phase元数据同env_requests，旧reserve/旧Port签名不改、不混认staged；unsealed不publish，所有rootstepconcluded才封存，unknown不越关。此批只Store接缝，不调用材料/provider/Assembly，不以两阶段类型或元数据冒消费。尚无新测试结果；M0/用户服务0/.env不读，整体PARTIAL。
+
+017新持久化集成测试依产品目录约束放products/agent-tools/tests/integration/test_staged_operations.py，Luna唯一作者移除尚未提交的docs测试副本，root同步工单/命令；旧核心证据文件本轮不改。
+
+017受控验证收口：[staged-operation-20261006.md](evidence/agent-unit-model/staged-operation-20261006.md)。三Luna完成源码/独立测试/只读攻查，root串行验收。先收集exit2、继而91P29F、定向32P1F，均新夹具问题且保留生产校验/断言；修正后组合120P0F exit0 2.05s（新33+旧87），core/API307P0F exit0 8.42s，SQLite43P0F exit0 0.92s，冻结产品821P0F exit0 219.19s、session84288终结。原记录两阶段原子rootreserve与append+seal、坏记录failclosed、旧context失效已测；仅临时SQLite合同/集成，不是材料消费或真实服务绿。旧缺列数据库升级未单独验。普通操作缺行可能重领已登记known-issues，018按最窄current读门＋过去步骤缺行claim拒绝修复，多Luna继续分写源码/新测试/只读审查。M0/用户服务0/.env不读，整体PARTIAL。
+
+018开始：core_impl已按唯一写域补普通current读取门与missing过去claim的顺序门；wire_impl编写唯一新产品测试，core_review只读攻查。017测试快照在018改动前冻结完成；源码共享文件已进入018，故不拆改或回滚源码，验证后联合保存本地检查点。018尚未实测，不报修复完成。
+
+018定向首150P0F exit0 6.09s；root与独立审查均发现空usages的零行断言证据偏弱，唯一测试作者补当前/下一/过去缺行claim携有效待写Usage并核零step/Usage/revision；复150P0F exit0 5.93s。SQLite43P0F exit0 0.96s，core/API307P0F exit0 7.54s；原资产ABSENT仍明示。产品全冻结回归session32626进行中，预计826，不将未终结runner报绿。所有修改本树临时DB，M0。
+
+018收口：[operation-claim-integrity-20261006.md](evidence/agent-unit-model/operation-claim-integrity-20261006.md)。独立终审通过，最终全产品826P0F exit0 223.17s（session32626 terminal），全部冻结。新5项临时SQLiteC，原拒绝恢复与读取已回归；unknown/缺行不重建、不重派。017/018共享文件联合保存检查点，严格工单目录18单exit0（此前根目标误用exit1有账）。M0/.env不读，整体PARTIAL，继续019材料原账作用接线依赖核实。
