@@ -926,3 +926,12 @@ ManagedInputReservations初次绑定原部署issuer，同Store不同authority或
 019定向最终146P0F exit0 3.31s（新26+旧120）、core/API307P0F exit0 8.40s；产品全冻结session82522进行中，预计852，未终結不绿。过程121P25F→136P10F→145P1F均如实记录在material-operations证据；错计18/27已更正17/26，保身份/权限/零作用断言，不改Issuer/Store。三Luna下一配置domain仅只读盘点，所有源test冻结，P新增0/M0/冷queryNOT_RUN，整体PARTIAL。
 
 019受控收口：[material-operations-20261006.md](evidence/agent-unit-model/material-operations-20261006.md)。产品全冻结852P0F exit0 222.66s、session82522 terminal；原source/新test始终冻结，Luna终审query时序/Registry/holds/故障CAS无阻断。AT_019_PARTIAL：core一次获取＋当前原query已有C证据，实际材料内容消费/三寿命/释放及正式cold原activation恢复未验/接缝缺席。26新项属于临时SQLite/受控provider，不冒真实Harness服务。继续020配置provider DTO/引用覆盖盘点，两Luna已核CoreRegistry没有配置贡献，Harness私有适配器不可导入core，材料opaque引用到消费的交接另需冻结。M0/.env不读，无push/主树合并/用户服务操作。
+
+
+### 2026-10-06 020配置纯合同与Agent控制边界（IMPLEMENTING）
+
+019已本地保存4107c32678；tracked无源码脏改，.env未跟踪不读。用户明确批准材料指定消费方受权读取；编译准备引用交付澄清后补充“Agent模块掌握实际控制，Harness暴露控制能力”，未将原交付提案当已批准。三Luna只读核028及当前management/assembly，核心已持required/optional、版本/目标/claim/调用与记录控制；root补声明摘要/expected pin比对，Runtime认可端口关联留同Registry后续准入，不以DTO自洽冒可信。合同configuration-reference-contract-v1.md与020工单冻结；全部20单strict exit0仅资料。core_impl唯一三个源文件，wire_impl唯一新产品测试，core_review只读审查，root唯一合同/文档/串行实跑/Git。源码和测试尚未完成/未验，纯合同非实际提取/编译/消费，M0。
+
+020定向首47P1F exit1 .21s，空purpose构造位于raises外，原作者只调整异常断言范围保语义；组合最终108P0F exit0 1.53s（新48+旧60），core/API307P0F exit0 8.19s。源test冻结，产品session29408进行中不报绿。用户要求本阶段落地后列具体职责目录，root已备domain-ownership-plan.md，细分11领域，不移动源码或立即跨域开工；Agent控制边界及当前Assembly仅hash计划缺口明记，非全部核心已完成。M0，实际材料消费/准入与准备交付仍未实现。
+
+020受控收口：[configuration-provider-contract-20261006.md](evidence/agent-unit-model/configuration-provider-contract-20261006.md)。最终产品900P0F exit0 220.65s，session29408terminal，源test冻结，无skip；纯DTO新48/旧材料组合108与core307均exit0，不累计重复快照为独立场景。三Luna源码/独立测试/只读终审；root唯一文档、串行实测和Git。AT_020_PARTIAL：合同切片完成，实际配置贡献准入/提取/内容读取/编译交付未接，不冒产品可用。用户要求这阶段后分域，准备11领域实际目录与写权边界，products/server组合遗漏经独立审查修正；没有目录迁移或立即并行写后续。原生P新增0/M0，.env不读，无用户服务/数据/凭据操作或push/主树合并。

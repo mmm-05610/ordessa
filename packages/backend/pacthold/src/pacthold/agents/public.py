@@ -17,6 +17,11 @@ from .providers import AgentProviders
 from ..core.resource_admission import (
     AdmittedResourceProviderMetadata, AdmittedMaterialProviderMetadata,
 )
+from ..core.configuration_admission import (
+    CONFIGURATION_PROVIDER_VERSION, CONFIGURATION_METHODS, ConfigurationRoute,
+    ConfigurationProviderDescriptor, ConfigurationProviderPin,
+    ConfigurationContractError as ConfigurationProviderContractError,
+)
 from .assembly import AgentAssembly, PreparationContext, PreparationObservation, PreparationContextPort, PreparationObservationPort
 from .lifecycle import AgentLifecycle, LifecycleObservation, LifecycleObservationPort
 from .inputs import (
@@ -113,6 +118,9 @@ __all__ += ["InvocationIssuer", "InvocationGrant", "InvocationAuthorityPort",
 __all__ += ["AgentProviders"]
 __all__ += ["AdmittedResourceProviderMetadata"]
 __all__ += ["AdmittedMaterialProviderMetadata"]
+__all__ += ["CONFIGURATION_PROVIDER_VERSION", "CONFIGURATION_METHODS",
+            "ConfigurationRoute", "ConfigurationProviderDescriptor",
+            "ConfigurationProviderPin", "ConfigurationProviderContractError"]
 __all__ += ["AgentAssembly", "PreparationContext", "PreparationObservation", "PreparationContextPort", "PreparationObservationPort"]
 __all__ += ["AgentLifecycle", "LifecycleObservation", "LifecycleObservationPort"]
 __all__ += ["ManagedInputReservations", "CapturedInputRef", "CapturedInputEvidence",
@@ -149,6 +157,12 @@ __all__ += [
     "MaterialReleaseRequest", "MaterialReleaseReceipt", "MaterialReleaseResult", "AuthorizedMaterialProvider",
     "read_material_capability",
 ]
+from .configuration_references import (
+    ConfigurationReference, ConfigurationReferenceExtraction,
+    validate_reference_extraction,
+)
+__all__ += ["ConfigurationReference", "ConfigurationReferenceExtraction",
+            "validate_reference_extraction"]
 __all__ += ["AGENT_MATERIAL_OPERATION_CONTRACT_VERSION", "MaterialOperations",
             "material_provider_ref", "material_invocation_target",
             "material_operation_facts", "material_reservation_usages"]
