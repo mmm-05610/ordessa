@@ -43,9 +43,30 @@ class ClaudeCodeRuntimeProvider:
 
     def __init__(self, *, definition_ref, implementation_digest, verifier=None,
                  unit_records=None, unit_port=None, preparation_authority=None,
-                 unit_projection=None, native_unit_effects=None, native_unit_observations=None):
+                 unit_projection=None, native_unit_effects=None, native_unit_observations=None,
+                 termination=None, configuration_face=None):
         self._verifier, self._records, self._units = verifier, unit_records, unit_port
         self._preparation_authority = preparation_authority
+        self._termination_face = None
+        self._configuration_face = None
+        if termination is not None:
+            self._bind_coordinator(termination, "records", "verifier", unit_records, verifier)
+            if unit_port is not None and getattr(unit_port, "supported_methods", ()) and any(
+                    method in getattr(unit_port, "supported_methods", ())
+                    for method in ("stop", "release")):
+                raise ClaudeProviderUnavailable(
+                    "stop/release cannot be routed both through the original unit owner "
+                    "and the coordinated termination face")
+        if configuration_face is not None:
+            self._bind_coordinator(configuration_face, "records", "verifier", unit_records, verifier)
+            if unit_port is not None and getattr(unit_port, "supported_methods", ()) and any(
+                    method in getattr(unit_port, "supported_methods", ())
+                    for method in ("apply_configuration", "query_change",
+                                   "describe_configuration", "inspect_configuration")):
+                raise ClaudeProviderUnavailable(
+                    "configuration surfaces cannot exist twice in one contribution")
+        self._termination_face = termination
+        self._configuration_face = configuration_face
         supported = list(self._PURE)
         if unit_records is not None:
             if not callable(getattr(unit_records, "reserve_unit", None)):
@@ -78,9 +99,25 @@ class ClaudeCodeRuntimeProvider:
             supported.append("start")
         if self._unit_coordinator.query_ready:
             supported.append("query_step")
+        # A destructive or management surface is advertised only when its exact
+        # coordinated ports are composed; a present-but-unusable object never
+        # widens the descriptor.
+        if self._termination_face is not None and getattr(self._termination_face, "ready", None) is True:
+            supported.extend(("stop", "release"))
+        if (self._configuration_face is not None
+                and getattr(self._configuration_face, "ready", None) is True):
+            supported.extend(("describe_configuration", "inspect_configuration",
+                              "apply_configuration", "query_change"))
         self.descriptor = RuntimeProviderDescriptor(FAMILY_ID, RUNTIME_PROVIDER_VERSION,
             definition_ref, implementation_digest, tuple(supported))
         self._unit_coordinator.descriptor = self.descriptor
+
+    def _bind_coordinator(self, coordinator, records_label, verifier_label, records, verifier):
+        """Same original records/verifier identity or typed refusal, never silent."""
+        if getattr(coordinator, records_label, None) is not records:
+            raise ClaudeProviderUnavailable("coordinated face must use the same original records")
+        if getattr(coordinator, verifier_label, None) is not verifier:
+            raise ClaudeProviderUnavailable("coordinated face must use the same original verifier")
 
     def contributions(self):
         return AgentContributionSet(agent_runtime_providers=(self,))
@@ -228,45 +265,66 @@ class ClaudeCodeRuntimeProvider:
         return result
 
     def describe_configuration(self, unit_ref):
-        result = self._read("describe_configuration", unit_ref)
+        if self._configuration_face is not None:
+            self._required("describe_configuration")
+            result = self._configuration_face.describe(unit_ref)
+        else:
+            result = self._read("describe_configuration", unit_ref)
         if not isinstance(result, tuple) or any(not isinstance(item, ConfigurationDescription) for item in result):
             raise ClaudeProviderUnavailable("typed native configuration descriptions required")
         return result
 
     def inspect_configuration(self, unit_ref):
-        result = self._read("inspect_configuration", unit_ref)
+        if self._configuration_face is not None:
+            self._required("inspect_configuration")
+            result = self._configuration_face.inspect(unit_ref)
+        else:
+            result = self._read("inspect_configuration", unit_ref)
         if not isinstance(result, ConfigurationSnapshot) or result.unit_ref != unit_ref:
             raise ClaudeProviderUnavailable("actual native snapshot unavailable")
         return result
 
     def apply_configuration(self, unit_ref, change_request, invocation_context):
-        snapshot = self.inspect_configuration(unit_ref)
-        if snapshot.source_revision is None or snapshot.comparison_guarantee == "unavailable":
-            raise ClaudeProviderUnavailable("configuration revision comparison unavailable")
-        if snapshot.source_revision != change_request.expected_configuration_revision:
-            raise ConfigurationRevisionConflict("configuration revision differs from native owner")
-        # Owner must serialize/recheck again at the actual SDK dispatch cut.
-        result = self._effect("apply_configuration", "applyConfiguration", unit_ref,
-                              invocation_context, change_request)
+        if self._configuration_face is not None:
+            self._required("apply_configuration")
+            result = self._configuration_face.apply(unit_ref, change_request, invocation_context)
+        else:
+            snapshot = self.inspect_configuration(unit_ref)
+            if snapshot.source_revision is None or snapshot.comparison_guarantee == "unavailable":
+                raise ClaudeProviderUnavailable("configuration revision comparison unavailable")
+            if snapshot.source_revision != change_request.expected_configuration_revision:
+                raise ConfigurationRevisionConflict("configuration revision differs from native owner")
+            # Owner must serialize/recheck again at the actual SDK dispatch cut.
+            result = self._effect("apply_configuration", "applyConfiguration", unit_ref,
+                                  invocation_context, change_request)
         if not isinstance(result, ConfigurationChangeResult):
             raise ClaudeProviderUnavailable("native ACK cannot replace typed operation confirmation")
         return result
 
     def query_change(self, unit_ref, operation_ref, authorized_read_context):
         self._required("query_change")
-        inspection = self.inspect_unit(unit_ref)
-        if authorized_read_context.facts["operationRef"] != operation_ref:
-            raise ClaudeProviderUnavailable("read authority belongs to another operation")
-        self._verify_read(authorized_read_context, inspection)
-        result = self._read("query_change", unit_ref, operation_ref, authorized_read_context)
+        if self._configuration_face is not None:
+            result = self._configuration_face.query(unit_ref, operation_ref, authorized_read_context)
+        else:
+            inspection = self.inspect_unit(unit_ref)
+            if authorized_read_context.facts["operationRef"] != operation_ref:
+                raise ClaudeProviderUnavailable("read authority belongs to another operation")
+            self._verify_read(authorized_read_context, inspection)
+            result = self._read("query_change", unit_ref, operation_ref, authorized_read_context)
         if not isinstance(result, ConfigurationChangeResult) or result.operation_ref != operation_ref:
             raise ClaudeProviderUnavailable("original operation native evidence unavailable")
         return result
 
     def stop(self, unit_ref, invocation_context):
+        if self._termination_face is not None:
+            self._required("stop")
+            return self._termination_face.stop(unit_ref, invocation_context)
         return self._effect("stop", "stop", unit_ref, invocation_context)
 
     def release(self, unit_ref, invocation_context):
+        if self._termination_face is not None:
+            self._required("release")
+            return self._termination_face.release(unit_ref, invocation_context)
         return self._effect("release", "release", unit_ref, invocation_context)
 
     def recover(self, native_binding, invocation_context):

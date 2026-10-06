@@ -29,7 +29,7 @@ packages/backend/                        026的目标包组
       resolution.py                      组织材料与版本取得
       assembly.py                        有界准备流程及节点发布
       nodes.py                           节点查询与使用/管理门面
-      configuration.py                   Profile应用协调，不是配置owner
+      configuration.py                   配置DTO；整份Profile更新由原管理协调器处理，不是配置owner
       recovery.py                        同节点恢复与历史接纳
       persistence.py                     同一持久机制的领域记录
   platform-services/                     安装/数据区/秘密引用
@@ -139,9 +139,9 @@ CLI不依赖`pacthold`运行时、`ordessa_server`内部或Harness私有模块�
 | --- | --- | --- |
 | configure-agent-profile | 列Harness/schema/资源、读/创建/编辑/clone/preview Profile | 编辑产生版本，不prepare、不自动apply、不写凭据 |
 | use-external-agent | 选择Profile、项目绑定、prepare、run/watch/result | 不自动改模板，不把prepare完成当输入接受 |
-| manage-external-agent | inspect、apply-profile、局部configure、stop/recover/reconcile | 写操作显式授权；disconnect不等于stop；unknown不重发 |
+| manage-external-agent | inspect、提交整份Profile更新、stop/recover/reconcile | 配置JSON不包含生命周期命令；写操作显式授权；unknown不重发 |
 
-Skill自动发现描述应分别对应真实任务，避免三个都触发全部工作。一个任务可以先配置再使用，但必须先得到明确manifestRevision，再准备节点。Skill没有自己的Agent模板缓存或模型真值；命令查询的权威状态说了算。
+Skill自动发现描述应分别对应真实任务，避免三个都触发全部工作。使用时可直接提交临时Profile JSON；冻结内容与生成精确快照引用由系统完成，不要求调用方先创建命名目录条目。Skill没有自己的Agent模板缓存或模型真值；命令查询的权威状态说了算。
 
 支持文档只有需要时读取，SKILL.md保持短且可执行，不依赖某个Agent专属工具名称或指令语法。工具包安装不擅自更改任何调用者的全局配置；Skill安装需明确选择宿主及项目级/用户级作用范围。MCP注册也不是随wheel自动修改用户账号设置。
 
@@ -149,9 +149,19 @@ Skill自动发现描述应分别对应真实任务，避免三个都触发全部
 
 配置链路：发现实际Harness和配置kind→取得资源列表→读取Profile双revision→创建/编辑清单→preview→返回固定ProfileRef。核心验证结构，叶子解释字段，Harness判断原生适用性；unknown预览不显示已应用。
 
-使用链路：选择服务/项目→授权DirectoryBinding→prepare固定Profile→query取得node→取得使用lease和真实nativeSession绑定→持久捕获任务→原生客户端提交→查询证据/结果→按授权管理节点。
+使用链路：选择服务/项目→授权DirectoryBinding→提交Profile JSON或精确预存引用→核心冻结同一快照并prepare→query取得node→取得使用lease和真实nativeSession绑定→持久捕获任务→原生客户端提交→查询证据/结果→按授权管理节点。
 
-同节点重新apply-profile走core解析协调、同Harnessowner及材料Usage换代。模型控件/CLI局部配置都不能直接写文件或另算currentModel。跨Harness家族必须新节点。
+配置更新链路：读取节点当前期望Profile及owner实际配置观察→修改清单→提交新JSON与基础版本→原管理协调器验证变化→同owner处理支持的配置→逐项返回生效/延后/需重启/拒绝/冲突/未知。删除既有声明不能隐式当reset，规则见interfaces.md。跨Harness家族必须另建节点。
+
+## 6.1 状态所有权与临时清单
+
+- 配方内容及版本：仍归原Profile存储机制。直接提交的临时清单保留必要可恢复快照，但不自动进入用户命名预设列表；不用内存临时对象绕开持久准备操作。
+- 节点期望配置：在原Node/Operation记录里引用冻结快照与更新操作，不复制正文维护第二套desired数据库。新快照只是请求；pending/partial/unknown不冒称已生效。
+- 实际配置：仍由实例owner观察。模型控件、CLI、MCP均只消费公开投影，不把Profile正文用于actual填空。
+- 差异与执行：原核心协调器比较声明，插件解释配置种类、作用scope及原生应用方式。客户端不计算品牌差异、不操作私有配置文件。
+- 控制动作：独立管理/使用接口沿原授权、操作账和lease执行。JSON只提供配置值；需要重启时先返回restartRequired，不凭配置变化推断重启授权。
+
+临时JSON和预存ProfileRef最终进入同一快照、准备、管理链。不能增加临时启动专用provider注册表、执行器、数据库或自动轮询收敛服务；本版更新是明确的一次有界操作。
 
 ## 7. 分发与产品边界
 

@@ -524,7 +524,12 @@ class PiRpcClient:
             raise LostReceipt(command, None, "prior input outcome remains unknown; next input refused")
 
     def _unknown_request(self, command):
-        self._run_state = "unknown"
+        # Only run-bearing inputs latch the run state: a refused read or config
+        # command never implies a sentinel run or unknown input (G6/G11 apply to
+        # input receipting, not to every record type). No re-send happens either
+        # way; the original refusal still surfaces from its caller.
+        if command in {"prompt", "steer", "follow_up"}:
+            self._run_state = "unknown"
         cut = getattr(self._channel, "mark_input_unknown", None)
         if callable(cut):
             try:

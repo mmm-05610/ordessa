@@ -10,12 +10,20 @@ from __future__ import annotations
 
 import asyncio
 from importlib import metadata
+import hashlib
 import json
 from typing import Mapping
 from .native_identity import _native_identity
 
 SDK_VERSION = "0.2.163"
 SDK_SOURCE_COMMIT = "9c69ce7aced5cdf2aa1ac86fe62e877b4962de8b"
+
+
+def _frame_digest(payload) -> str:
+    """Canonical digest of one native frame for durable dispatch binding."""
+    encoded = json.dumps(payload, sort_keys=True, ensure_ascii=False,
+                         allow_nan=False, separators=(",", ":")).encode("utf-8")
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
 
 
 
@@ -35,15 +43,23 @@ class FencedSdkTransport:
     ``authority.dispatch_guard(raw_frame)`` is an async context manager which
     rechecks lease, epoch, activation and full native effects and holds the
     write fence through the actual write. A boolean or caller token is no port.
-    Native close must close this connection's owned transport only; completion
-    of close is never a stop/release result.
+    ``dispatch_listener(payload, digest)`` is the optional records pre-send
+    hook: it runs inside the write barrier BEFORE the actual native write, so
+    an original dispatch can be durably bound first; a raising listener
+    prevents the native write entirely. Native close must close this
+    connection's owned transport only; completion of close is never a
+    stop/release result.
     """
-    def __init__(self, native, authority):
+
+    def __init__(self, native, authority, *, dispatch_listener=None):
         if (native is None or authority is None or not callable(getattr(authority, "dispatch_guard", None))
                 or any(not callable(getattr(native, name, None)) for name in
                        ("connect", "write", "read_messages", "close", "is_ready", "end_input"))):
             raise SdkRuntimeUnavailable("explicit isolated native transport and dispatch authority required")
+        if dispatch_listener is not None and not callable(dispatch_listener):
+            raise SdkRuntimeUnavailable("dispatch pre-send listener must be callable")
         self.__native, self.__authority = native, authority
+        self.__listener = dispatch_listener
 
     async def connect(self):
         # Creation is separately admitted by the durable prepare/start claim.
@@ -70,6 +86,10 @@ class FencedSdkTransport:
         if not isinstance(payload, dict):
             raise ValueError("native SDK frame must be an object")
         async with self.__authority.dispatch_guard(payload):
+            if self.__listener is not None:
+                # The durable binding hook runs strictly before the native
+                # write; a refusal here means the frame is never dispatched.
+                self.__listener(payload, _frame_digest(payload))
             await self.__native.write(data)
 
     def read_messages(self):

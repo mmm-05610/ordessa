@@ -784,3 +784,15 @@ C/P分账如实：P仅codex一家真实进程（零模型）；pi/claude真实�
 验证：全产品 `products/agent-tools/tests` **689P/0F exit0**（修复前后同基线，无回归）。**CLI生命周期反例测试尚未编写**（形状/能力门控/幂等/丢回执/token不回显/A17），下一切片必须补齐后才算本项收口；命令行为未经独立反例验证，不声明完成。三家终止族消费切片零进展（全部代理失败未落盘）。
 
 交接状态：7检查点已提交（3f40afad33→e8ed406be9）＋本CLI接线为第8检查点；工作树仅剩本文件与cli.py/lifecycle.py/test_profile测试相关改动待提交。剩余队列不变：三家终止族→任务/结果→三Skill同步→发行验收→真实M→七家扩展。M0、费用unknown（子代理失败轮次的token消耗记平台账）。
+
+### 2026-10-06 第一批并行切片整合＋Spec Kit 配置语义修订纳入（PARTIAL）
+
+前置86126f94d4。开工核验clean（仅.env未跟踪，绝不入库）；活服务ordessa_server属另一worktree，未触碰。用户mid-turn裁定：specs/029四文档为直接修订原Spec Kit（非新增工单），配置统一Profile JSON/临时清单可直接提交/运行中整单更新由核心算差异交owner/生命周期与任务独立于Profile/restartRequired默认不隐式重启/复用原Profile快照+Assembly+管理协调器+授权+Operation链/期望与actual严格分开/遗漏旧声明须明确reset或disabled不得猜成重置/unknown不重发部分应用逐项报告；按核心契约→实现→wire/schema→CLI→Skill顺序纳入，验收矩阵PJ01–PJ13（plan.md）。回执：已完整读取四文档修订diff（+107/−22）并纳入本账，PJ项均未实现，随本检查点显式提交四文档。
+
+第一批并行子代理（安全边界已全部释放写权，成果保留未回退）：test-author产出products/agent-tools/tests/test_lifecycle_cli.py（25函数97参数化用例：形状/白名单/能力门控/幂等/丢回执exit6/A17哨兵token/跨环境拒/投影形状）；pi slice-worker产出runtime_channel/projection/lease/termination四适配器＋配置journal＋终止族消费（318P=271+47，其中20项真实pi进程0.86.1零模型P级：/proc核证HOME/XDG/PI_CODING_AGENT_DIR/PI_OFFLINE隔离、凭据形键不存在、ACK-clamp readback失配unknown、真实stop退出码+/proc零残留）；claude slice-worker产出owner_projection/assembly/termination/configuration_face/native_evidence/ownership（242P=200+42，全C受控：受控sleep子进程实证终止效果、伪造证据拒；P级当时二进制缺席标ABSENT）；repo-scout两份盘点落盘legacy-consumer-remaining-map.md（15类活消费者+退出条件）与tasks-results-gap-map.md（ManagedInputReservations已实现零装配、supports.managedInput硬编码False、三家完成事件解释器已在提供者侧缺回写桥、cancel无语义）。
+
+主会话串行整合复跑（专属Python，句柄terminal）：`PYTHONPATH=plugins/harness/codex/src:plugins/harness/pi/src:plugins/harness/claude-code/src:packages/backend/harness-transport/src:plugins/harness/records/src <python> -m pytest -c products/agent-tools/pyproject.toml products/agent-tools/tests -q` **786P/0F exit0、216.57s**（原689＋新97）；`PYTHONPATH=plugins/harness/pi/src:packages/backend/harness-transport/src:plugins/harness/records/src <python> -m pytest -c plugins/harness/pi/pyproject.toml plugins/harness/pi/tests -q` **318P/0F、18.62s**；claude同型 **242P/0F、17.43s**。失败账：首次全量缺PYTHONPATH致14F（ModuleNotFoundError: ordessa_harness_*，环境问题非代码回归，test_independent_server_providers.py导入三家）；补显式三家+运输+records路径后全绿。断言未放宽、无skip、无mock冒P。
+
+平台事件：上一会话四个并行slice-worker曾因opencode账号额度秒败（会话启动时快照子代理模型绑定）；本会话新绑定生效后全部正常。用户mid-turn修复Claude Code二进制（/home/maoqh/.local/bin/claude，2.1.291实测），claude P级切片解锁待派。发现两项待修缺口：agent_core_wire.py:73-78/111-112未广告不派发applyProfile（apply-profile端到端不可达，核心apply_profile已在management.py:180）；lifecycle.py:152-163对expectedPublicationRevision只白名单不比较（PJ04基础版本核对缺口）。均属主执行者共享域，随配置语义修订一并落。
+
+C/P/M：C新增139（97 CLI反例+42 claude）；P新增20（仅pi真实进程零模型）；M0（真实模型/真实Harness授权已有，claude修复后待用）。未验证：三家纵向端到端、PJ01–PJ13全矩阵、applyProfile派发、任务/结果、发行验收、真实M。成本：子代理4个（test-author×1、slice-worker×2、repo-scout×1），token精确值以平台账为准（subagent_tokens合计约1.3亿含上下文重读），真实外部模型调用0。无第三方安装/用户DB/凭据/全局配置/服务操作/push/主树合并。显式stage本轮34文件（四Spec文档+pi/claude切片+CLI反例+两侦察图+本账），.env不入库；检查点后按Spec修订顺序落核心契约，不标完成门。

@@ -108,10 +108,23 @@ class ClaudeUnitCoordinator:
                 or verified.get("inputDigest") != facts["inputDigest"]):
             raise ClaudeUnitCoordinationRefused("original invocation continuation differs")
 
-    def _reply(self, unit, binding=None):
+    def _reply(self, unit, binding=None, context=None):
         reply = {"unitRef": unit.public_ref, "state": "unknown"}
         if binding is not None:
             reply["state"] = binding.state
+            if binding.state in {"confirmed", "opening", "unknown"}:
+                # The owner projection keeps the OBSERVED original start
+                # correlation (durable and recovery forms) for later
+                # original-creation queries only.
+                registrar = getattr(self.projection, "register_original_start", None)
+                if callable(registrar):
+                    correlation = getattr(binding, "creation_correlation", None)
+                    if correlation:
+                        registrar(unit, correlation)
+                    if context is not None:
+                        recovery = getattr(context, "facts", {}).get("recoveryCorrelation")
+                        if recovery and recovery != correlation:
+                            registrar(unit, recovery)
             if binding.state == "confirmed":
                 reply["evidenceRef"] = binding.native_facts["evidenceRef"]
         return reply
@@ -140,7 +153,7 @@ class ClaudeUnitCoordinator:
             # actual process/pipe/installation/root/original initialize/liveness.
             binding = self.records.record_unit(ticket, expected_source_revision=2,
                 state="confirmed", evidence=evidence)
-            return self._reply(unit, binding)
+            return self._reply(unit, binding, context)
         except BaseException as exc:
             try:
                 self.records.record_unit(ticket, expected_source_revision=2, state="unknown")
