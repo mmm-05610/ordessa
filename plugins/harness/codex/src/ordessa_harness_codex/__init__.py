@@ -6,18 +6,21 @@ Assembly remains explicit: the deployment composes
 :class:`CodexConnectionLeasePort`). Only an authorized, effect-verified start
 opens a native process; reads never consume an invocation.
 """
-from .provider import CodexRuntimeProvider, CodexProviderRefused, CodexCapabilityUnsupported
+from .provider import (CodexRuntimeProvider, CodexProviderRefused, CodexCapabilityUnsupported,
+                       termination_ready)
 from .projection import CodexUnitProjection, CodexProjectionRefused
 from .runtime_channel import (
-    CodexAppServerChannelFactory, CodexChannelRefused, app_server_argv,
+    CodexAppServerChannelFactory, CodexChannelRefused, ChannelRecord, app_server_argv,
     verified_private_roots, PRIVATE_ROOT_FIELDS,
 )
+from .termination import CodexTerminationEvidencePort, CodexTerminationRefused
 from .lease import CodexConnectionLeasePort, CodexLeaseRefused, CodexGrant, LeasedConnection
 
 __all__ = [
     "CodexRuntimeProvider", "CodexProviderRefused", "CodexCapabilityUnsupported",
     "CodexUnitProjection", "CodexProjectionRefused",
-    "CodexAppServerChannelFactory", "CodexChannelRefused", "app_server_argv",
+    "CodexAppServerChannelFactory", "CodexChannelRefused", "ChannelRecord", "app_server_argv",
     "verified_private_roots", "PRIVATE_ROOT_FIELDS",
+    "CodexTerminationEvidencePort", "CodexTerminationRefused", "termination_ready",
     "CodexConnectionLeasePort", "CodexLeaseRefused", "CodexGrant", "LeasedConnection",
 ]

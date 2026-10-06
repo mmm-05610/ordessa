@@ -10,6 +10,10 @@ from .native_evidence import (
 )
 from .ownership import ClaudeChannelRefused, ClaudeOwnedChannels
 from .owner_projection import ClaudeOwnerUnitProjection, ClaudeProjectionRefused
+from .runtime_channel import (
+    ClaudeRuntimeRefused, ClaudeStreamChannelFactory, RealProcessHandle,
+    PRIVATE_ROOT_FIELDS, version_facts, stream_json_argv, verified_private_roots,
+)
 from .termination import (
     ClaudeTerminationCoordinator, ClaudeTerminationEffects, ClaudeTerminationRefused,
 )
@@ -24,4 +28,6 @@ __all__ = [
     "ClaudeChannelRefused", "ClaudeOwnedChannels",
     "ClaudeOwnerUnitProjection", "ClaudeProjectionRefused",
     "ClaudeTerminationCoordinator", "ClaudeTerminationEffects", "ClaudeTerminationRefused",
+    "ClaudeRuntimeRefused", "ClaudeStreamChannelFactory", "RealProcessHandle",
+    "PRIVATE_ROOT_FIELDS", "version_facts", "stream_json_argv", "verified_private_roots",
 ]

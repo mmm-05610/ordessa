@@ -91,10 +91,12 @@ def _plain(value):
 
 class CodexRuntimeProvider:
     def __init__(self, *, definition_ref, implementation_digest, unit_records=None,
-                 projection=None, verifier=None, channel_factory=None, lease_port=None, configuration_evidence=None):
+                 projection=None, verifier=None, channel_factory=None, lease_port=None, configuration_evidence=None,
+                 termination_evidence=None):
         self.records, self.projection, self.verifier = unit_records, projection, verifier
         self.channel_factory, self.lease_port = channel_factory, lease_port
         self.configuration_evidence = configuration_evidence
+        self.termination_evidence = termination_evidence
         self._configuration_waiters = {}  # live original tickets/receipts only; no cold truth or replay authority
         self._channels = {}  # live process handles; never used as persistent recovery proof
         self._lock = threading.RLock()
@@ -103,6 +105,9 @@ class CodexRuntimeProvider:
             methods += ["prepare", "inspect_unit", "describe_configuration"]
             if callable(getattr(channel_factory, "open", None)):
                 methods += ["start", "inspect_configuration", "describe_access"]
+                if (callable(getattr(channel_factory, "record", None))
+                        and termination_ready(unit_records, termination_evidence)):
+                    methods += ["stop", "release"]
                 if configuration_ready(unit_records, projection, configuration_evidence):
                     methods += ["apply_configuration", "query_change"]
                 if callable(getattr(lease_port, "bind", None)):
@@ -228,6 +233,12 @@ class CodexRuntimeProvider:
         try:
             verified = self._current_start(unit, invocation_context)
             client = self.channel_factory.open(unit.facts["privateRootFacts"], verified)
+            # The opened owned channel record is bound for later termination
+            # evidence verification (fixed installation/root/process identity).
+            termination = self.termination_evidence
+            if (callable(getattr(termination, "bind_unit_channel", None))
+                    and callable(getattr(self.channel_factory, "record", None))):
+                termination.bind_unit_channel(unit.unit_ref, self.channel_factory.record(client))
             self._current_start(unit, invocation_context)
             client.initialize()
             cwd = unit.facts["privateRootFacts"].get("cwd")
@@ -568,11 +579,92 @@ class CodexRuntimeProvider:
             except Exception:
                 return self._unknown_change(facts, declarations)
 
+    # -- unified termination face (records path) ------------------------------
+    def _owned_record(self, unit):
+        """Resolve the factory record of this unit's live owned channel, or None."""
+        with self._lock:
+            client = self._channels.get(unit.unit_ref)
+        if client is None:
+            return None
+        return self.channel_factory.record(client)
+
+    def _termination_correlation(self, unit, action):
+        """Read the just-opened attempt's correlation from the owner projection."""
+        row = self.records.owner_read_termination(unit.unit_ref, action)
+        if not isinstance(row, Mapping) or not isinstance(row.get("identity"), Mapping):
+            raise CodexProviderRefused("original termination attempt projection unavailable")
+        correlation = row["identity"].get("correlation")
+        if not isinstance(correlation, str) or not correlation:
+            raise CodexProviderRefused("original termination correlation unavailable")
+        return correlation
+
+    def _conclude_termination(self, unit, ticket, action, error):
+        """Record the unknown outcome and refuse; the attempt keeps its hold."""
+        try:
+            self.records.record_termination(ticket, expected_source_revision=1, state="unknown")
+        except Exception:
+            pass  # never downgrade a concurrently confirmed original attempt
+        raise CodexProviderRefused(
+            f"{action} outcome unknown; the original attempt retains its hold") from error
+
     def stop(self, unit_ref, invocation_context):
-        raise CodexCapabilityUnsupported("verified native stop and ownership cut not integrated")
+        self._supported("stop")
+        unit = self._unit(unit_ref)
+        facts = invocation_context.facts
+        # The one original stop attempt for this Unit; consumed before effect.
+        ticket = self.records.begin_termination(unit.unit_ref, invocation_context,
+                                                input_digest=facts["inputDigest"], action="stop")
+        try:
+            observed = {"action": "stop", "observedAt": _now()}
+            record = self._owned_record(unit)
+            if record is None:
+                observed["ownedProcess"] = "none"  # nothing owned was ever running
+            else:
+                code = self.channel_factory.close(record.entry)
+                observed["pid"] = str(record.channel._process.pid)
+                observed["exitCode"] = str(int(code))
+            observed["correlation"] = self._termination_correlation(unit, "stop")
+            outcome = self.records.record_termination(ticket, expected_source_revision=1,
+                                                      state="confirmed", evidence=observed)
+            return {"unitRef": _plain(unit_ref), "action": "stop", "state": outcome["state"],
+                    "outcome": _plain(outcome["outcome"])}
+        except Exception as error:
+            self._conclude_termination(unit, ticket, "stop", error)
 
     def release(self, unit_ref, invocation_context):
-        raise CodexCapabilityUnsupported("journal scope release and unknown ownership reconciliation unavailable")
+        self._supported("release")
+        unit = self._unit(unit_ref)
+        record = self._owned_record(unit)
+        if record is not None and record.channel._process.poll() is None:
+            # A live owned unit is stopped first; release never kills (A14),
+            # never claims the destructive effect outside the stop ledger and
+            # never consumes authority for an impossible release.
+            raise CodexProviderRefused("live owned unit requires stop before release")
+        facts = invocation_context.facts
+        ticket = self.records.begin_termination(unit.unit_ref, invocation_context,
+                                                input_digest=facts["inputDigest"], action="release")
+        try:
+            observed = {"action": "release", "observedAt": _now()}
+            if record is None:
+                with self._lock:
+                    self._channels.pop(unit.unit_ref, None)
+                observed["ownedProcess"] = "none"
+            else:
+                released = self.channel_factory.release(record.entry)
+                with self._lock:
+                    self._channels.pop(unit.unit_ref, None)
+                observed["pid"] = str(released["pid"])
+                observed["exitCode"] = str(int(released["exitCode"]))
+            revoke = getattr(self.lease_port, "revoke", None)
+            if callable(revoke):
+                revoke(unit_ref)  # this side's usage ends: borrowed views lose writes
+            observed["correlation"] = self._termination_correlation(unit, "release")
+            outcome = self.records.record_termination(ticket, expected_source_revision=1,
+                                                      state="confirmed", evidence=observed)
+            return {"unitRef": _plain(unit_ref), "action": "release", "state": outcome["state"],
+                    "outcome": _plain(outcome["outcome"])}
+        except Exception as error:
+            self._conclude_termination(unit, ticket, "release", error)
 
     def recover(self, native_binding, invocation_context):
         raise CodexCapabilityUnsupported("cold native recovery requires original durable installation/thread proof")
@@ -595,6 +687,22 @@ def configuration_ready(records, projection, evidence):
                 "bind_configuration_dispatch", "record_configuration_change", "query_configuration_change"))
             and all(callable(getattr(evidence, name, None)) for name in
                 ("verify_configuration", "capture_configuration", "read_configuration_result")))
+
+
+def termination_ready(records, evidence):
+    """The unified termination face is ready only with the production evidence port.
+
+    The port must be the SAME instance UnitRecords was built with (the one
+    owner both consume); absent ports keep stop/release typed-refused.
+    """
+    return (evidence is not None
+            and getattr(records, "termination_evidence", None) is evidence
+            and callable(getattr(evidence, "verify_termination", None))
+            and callable(getattr(evidence, "bind_unit_channel", None))
+            and callable(getattr(evidence, "observe_termination", None))
+            and all(callable(getattr(records, name, None)) for name in
+                ("begin_termination", "record_termination", "owner_read_termination",
+                 "reconcile_termination")))
 
 
 def _safe_defaults(config):

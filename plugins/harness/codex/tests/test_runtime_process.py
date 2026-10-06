@@ -26,6 +26,19 @@ the authority/activation/epoch ports are this fixture's controlled issuer
 the records owner reads (owner_read_*), consume no invocation and issue no
 ticket; those boundaries are asserted explicitly.
 
+The unified termination face is exercised on the real process too: stop
+terminates the owned app-server through the factory's real reap and stores
+the ``CodexTerminationEvidencePort``-verified exit evidence in the records
+``harness_unit_terminations`` ledger; release refuses a live owned unit,
+never kills, and frees this side's owned records only.
+
+Observed binary behaviour (registered, not faked): on startup the 0.159.0
+app-server spawns its OWN short-lived ``git`` children (plugins ls-remote/
+fetch against github.com) under the isolated CODEX_HOME; they inherit the
+isolated environment and outlive a stop by at most a few seconds. The
+private-root liveness scan therefore awaits a clean scan within a bounded
+deadline instead of assuming it is instantaneous.
+
 Cleanup contract: every opened channel is closed explicitly through the
 factory in teardown, waiting for process exit; no skip is used anywhere.
 """
@@ -33,6 +46,7 @@ from __future__ import annotations
 
 import copy
 import os
+import time
 
 import pytest
 
@@ -47,6 +61,7 @@ from ordessa_harness_codex import (
     CodexProjectionRefused,
     CodexProviderRefused,
     CodexRuntimeProvider,
+    CodexTerminationEvidencePort,
     CodexUnitProjection,
     LeasedConnection,
     app_server_argv,
@@ -73,6 +88,47 @@ SCOPE = CanonicalConfigurationScopeRef(ENVIRONMENT, "codex-p-physical", "1")
 ISOLATED_ENV_KEYS = {"HOME", "XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME",
                      "XDG_CACHE_HOME", "TMPDIR", "LANG", "LC_ALL", "TERM", "NO_COLOR",
                      "PATH", "CODEX_HOME"}
+
+
+def child_processes_of(codex_home: str, home: str) -> list[int]:
+    """Every live process whose consumed environment points at THIS private root."""
+    found = []
+    for name in os.listdir("/proc"):
+        if not name.isdigit():
+            continue
+        try:
+            with open(f"/proc/{name}/environ", "rb") as handle:
+                entries = {}
+                for raw in handle.read().split(b"\x00"):
+                    if b"=" in raw:
+                        key, value = raw.split(b"=", 1)
+                        entries[key.decode()] = value.decode()
+        except (OSError, UnicodeDecodeError, ValueError):
+            continue
+        if entries.get("CODEX_HOME") == codex_home or entries.get("HOME") == home:
+            pid = int(name)
+            if pid != os.getpid():
+                found.append(pid)
+    return found
+
+
+def wait_private_root_clean(flow, *, timeout: float = 60.0) -> None:
+    """Await a fully clean private-root process scan within a bounded deadline.
+
+    The pinned app-server itself is reaped by identity at close. The observed
+    0.159.0 binary additionally spawns its OWN short-lived ``git`` children
+    under the isolated CODEX_HOME during startup (registered in
+    runtime-process-evidence.md), so a clean scan may lag the close by a few
+    seconds. The wait never masks a residue: past the deadline this fails.
+    """
+    deadline = time.monotonic() + timeout
+    while True:
+        residual = flow.private_child_pids()
+        if not residual:
+            return
+        if time.monotonic() > deadline:
+            pytest.fail(f"residual processes remain under the unit private root: {residual}")
+        time.sleep(0.5)
 
 
 class ControlledContext:
@@ -205,16 +261,20 @@ class Flow:
         # Composition order: projection first (owner attach after records),
         # the projection itself is the records' native evidence port.
         self.projection = CodexUnitProjection(None, start_authority=self.issuer.verify_start_continuation)
+        self.factory = CodexAppServerChannelFactory(EXECUTABLE, timeouts=timeouts)
+        # The termination evidence owner binds every opened channel; the SAME
+        # instance is the records journal's NativeTerminationEvidencePort.
+        self.port = CodexTerminationEvidencePort(self.factory)
         self.records = UnitRecords(self.journal, scope_authority=self.scope,
                                    native_evidence=self.projection, verifier=self.issuer,
-                                   epoch_port=self.epoch)
+                                   epoch_port=self.epoch, termination_evidence=self.port)
         self.projection.attach_owner(self.records)
-        self.factory = CodexAppServerChannelFactory(EXECUTABLE, timeouts=timeouts)
         self.lease_port = CodexConnectionLeasePort()
         self.provider = CodexRuntimeProvider(
             definition_ref={"environmentNamespace": ENVIRONMENT, "definitionId": "codex", "revision": "1"},
             implementation_digest=DIGEST, unit_records=self.records, projection=self.projection,
-            verifier=self.issuer, channel_factory=self.factory, lease_port=self.lease_port)
+            verifier=self.issuer, channel_factory=self.factory, lease_port=self.lease_port,
+            termination_evidence=self.port)
         self.unit = None
 
     def prepare(self, *, digest="input"):
@@ -239,6 +299,9 @@ class Flow:
         records = list(self.factory._records.values())
         assert len(records) == 1
         return records[0]
+
+    def private_child_pids(self):
+        return child_processes_of(self.roots["codexHome"], self.roots["home"])
 
     def close(self):
         return self.factory.close_all()
@@ -558,3 +621,105 @@ def test_projection_query_refuses_foreign_correlations(flow):
     with pytest.raises(UnitRecordsRefused, match="current directory permission revoked"):
         flow.provider.query_step(flow.binding().creation_correlation, flow.query_context())
     assert flow.channel_record().client._request_seq == 3  # queries never wrote RPCs
+
+
+# -- P: real unified termination face on the real process ------------------------
+
+
+def test_real_stop_terminates_the_process_with_exit_evidence(flow):
+    flow.prepare()
+    assert flow.start()["state"] == "confirmed"
+    record = flow.channel_record()
+    process = record.channel._process
+    assert process.poll() is None
+    # zero-model boundary on the real process before the stop effect
+    assert record.client._turn_requests == {} and record.client._last_turn is None
+    assert [event["method"] for event in record.client.events()
+            if (event.get("method") or "").startswith("turn/")] == []
+    result = flow.provider.stop(flow.unit.public_ref, flow.issuer.issue("stop", "stop", "stop-input"))
+    assert result["state"] == "confirmed" and result["action"] == "stop"
+    termination = flow.records.owner_read_termination(flow.unit.unit_ref, "stop")
+    assert termination["state"] == "confirmed" and termination["projection"] == "owner-read"
+    outcome = termination["outcome"]
+    assert outcome["nativeRealm"] == PROTOCOL and outcome["action"] == "stop"
+    assert outcome["processRef"] == "codex-process/" + str(process.pid)
+    # the exit evidence is the real subprocess's own exit code, reaped by identity
+    assert outcome["exitRef"] == "exit/" + str(int(process.returncode))
+    assert process.poll() is not None
+    assert not os.path.exists(f"/proc/{process.pid}")
+    wait_private_root_clean(flow)  # no residual process anywhere under the private root
+    assert flow.private_child_pids() == []
+    assert flow.binding().state == "confirmed"  # stop never rewrites the original session truth
+
+
+def test_real_release_after_stop_frees_owned_records_and_revokes_grants(flow):
+    flow.prepare()
+    assert flow.start()["state"] == "confirmed"
+    unit_ref = flow.unit.public_ref
+    grant = flow.lease_port.grant(unit_ref)
+    process = flow.channel_record().channel._process
+    assert flow.provider.stop(unit_ref, flow.issuer.issue("stop", "stop", "stop-input"))["state"] == "confirmed"
+    result = flow.provider.release(unit_ref, flow.issuer.issue("release", "release", "release-input"))
+    assert result["state"] == "confirmed" and result["action"] == "release"
+    termination = flow.records.owner_read_termination(flow.unit.unit_ref, "release")
+    assert termination["state"] == "confirmed"
+    assert termination["outcome"]["processRef"] == "codex-process/" + str(process.pid)
+    assert termination["outcome"]["exitRef"] == "exit/" + str(int(process.returncode))
+    assert flow.provider._channels == {}  # owned live handles are gone
+    wait_private_root_clean(flow)  # no residual process under the private root
+    assert flow.private_child_pids() == []
+    with pytest.raises(CodexProviderRefused):
+        flow.provider.describe_access(unit_ref)  # released owner grants no access
+    with pytest.raises(CodexLeaseRefused):
+        flow.provider.lease_port.bind(unit_ref, grant, object())  # revoked grant can never rebind
+    with pytest.raises(UnitRecordsRefused, match="already"):
+        flow.provider.release(unit_ref, flow.issuer.issue("release", "release-2", "x"))
+
+
+def test_real_release_refuses_live_owned_unit_and_never_kills(flow):
+    flow.prepare()
+    assert flow.start()["state"] == "confirmed"
+    process = flow.channel_record().channel._process
+    release = flow.issuer.issue("release", "release", "release-input")
+    with pytest.raises(CodexProviderRefused, match="requires stop before release"):
+        flow.provider.release(flow.unit.public_ref, release)
+    assert flow.provider._channels != {}          # nothing was taken away
+    assert process.poll() is None                 # the owned unit was not killed
+    assert process.pid in flow.private_child_pids()  # it still lives under the private root
+    assert flow.records.owner_read_termination(flow.unit.unit_ref, "release") is None
+    assert flow.issuer.issued[release]["state"] == "issued"  # authority never consumed
+
+
+def test_real_second_stop_is_refused_single_attempt_holds(flow):
+    flow.prepare()
+    assert flow.start()["state"] == "confirmed"
+    result = flow.provider.stop(flow.unit.public_ref, flow.issuer.issue("stop", "stop", "stop-input"))
+    assert result["state"] == "confirmed"
+    replay = flow.issuer.issue("stop", "stop-2", "other")
+    with pytest.raises(UnitRecordsRefused, match="already"):
+        flow.provider.stop(flow.unit.public_ref, replay)
+    assert flow.issuer.issued[replay]["state"] == "consumed"  # journal-consumed inside its admission cut
+    rows = [action for action in ("stop", "release")
+            if flow.records.owner_read_termination(flow.unit.unit_ref, action) is not None]
+    assert rows == ["stop"]
+
+
+def test_real_stop_expires_when_activation_epoch_moves_mid_effect(tmp_path):
+    flow = Flow(tmp_path)
+    try:
+        flow.prepare()
+        assert flow.start()["state"] == "confirmed"
+        original_close = flow.factory.close
+
+        def bumping_close(entry, timeout=15.0):
+            flow.epoch.value = 1  # activation epoch moves while the effect runs
+            return original_close(entry, timeout=timeout)
+
+        flow.factory.close = bumping_close
+        with pytest.raises(CodexProviderRefused, match="unknown"):
+            flow.provider.stop(flow.unit.public_ref, flow.issuer.issue("stop", "stop", "stop-input"))
+        termination = flow.records.owner_read_termination(flow.unit.unit_ref, "stop")
+        assert termination["state"] == "opening" and termination["outcome"] is None  # the hold stays
+        flow.factory.close = original_close
+    finally:
+        flow.close()

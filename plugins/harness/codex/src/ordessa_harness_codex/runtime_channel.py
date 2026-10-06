@@ -20,7 +20,9 @@ This module owns the native process launch for one AgentUnit:
   (by provider edges and by consumer leases) is validated inside the actual
   write barrier. Revocation denies all subsequent writes.
 - Lifecycle: an opened channel is closed only through this owner's explicit
-  :meth:`close` / :meth:`close_all` (identity-based subprocess reap; G6/G8).
+  :meth:`close` (identity-based subprocess reap; used by the stop effect;
+  G6/G8) or :meth:`release` (records release of an already-exited channel;
+  never kills), plus :meth:`close_all` for teardown.
 """
 from __future__ import annotations
 
@@ -211,11 +213,14 @@ class CodexAppServerChannelFactory:
         return record
 
     def close(self, entry, *, timeout: float = 15.0) -> int:
-        """Explicit owner shutdown of exactly this opened channel (G6/G8).
+        """Reap exactly this owned channel's process by identity (G6/G8).
 
-        The consumer view close releases live entry state only (disconnect);
-        the owned subprocess is reaped through this factory's REAL channel:
-        stdin close, then terminate, then kill, each awaited by identity.
+        This is the real stop effect's tool: the consumer view close releases
+        live entry state only (disconnect); the owned subprocess is reaped
+        through this factory's REAL channel — stdin close, then terminate,
+        then kill, each awaited by identity. The record itself is KEPT so the
+        termination evidence can still be verified against the actual exited
+        handle; :meth:`release` performs the record release afterwards.
         """
         record = self.record(entry)
         try:
@@ -229,11 +234,33 @@ class CodexAppServerChannelFactory:
                     code = record.channel._process.wait(timeout=timeout)
             return code if isinstance(code, int) else -1
         finally:
-            with self._lock:
-                self._records.pop(id(entry), None)
+            record.channel.fence_all()
+
+    def release(self, entry) -> Mapping[str, int]:
+        """Release the owned channel record of an already-exited process.
+
+        Refuses while the native process is still running: killing is the
+        stop effect only — release never terminates (A14) and never fakes a
+        stop. Returns the observed process facts for termination evidence.
+        """
+        record = self.record(entry)
+        process = record.channel._process
+        code = process.poll()
+        if code is None:
+            raise CodexChannelRefused("owned native process is still running; stop the unit first")
+        with self._lock:
+            self._records.pop(id(entry), None)
+        return {"pid": process.pid, "exitCode": int(code)}
 
     def close_all(self, *, timeout: float = 15.0) -> int:
         """Explicit owner shutdown of every channel this factory opened."""
         with self._lock:
             entries = [record.entry for record in list(self._records.values())]
-        return sum(self.close(entry, timeout=timeout) for entry in entries)
+        total = 0
+        for entry in entries:
+            try:
+                total += self.close(entry, timeout=timeout)
+            finally:
+                with self._lock:
+                    self._records.pop(id(entry), None)
+        return total
