@@ -6,6 +6,8 @@
 
 模块agents/materials.py，版本常量AGENT_MATERIAL_CONTRACT_VERSION=`agent-material/1`，公开经agents.public再导出。MaterialContractError/MaterialUnavailable只给稳定安全原因，不拼接拒绝的原值。所有DTO frozen，严格from_dict/to_dict camelCase闭合字段；嵌套值深复制成冻结类型，不与调用者/宿主事实共享对象。所有namespace相等校验、非空/有界文本、整数禁止bool、版本精确非空、不允许latest/通配、digest使用原step的64位小写hex；内容摘要使用sha256:加64位hex。只接受下述字段，没有payload/正文/path/command/SecretRef/bytes/callable扩展口。
 
+MaterialCapability为纯准入元数据，唯一定义放core/resource_admission.py、agents/materials及public再导出。后续同Registry冻结该能力时不得从core反向import agents；014的AdmittedResourceProviderMetadata三个字段保持不变。作用请求/目录/目标DTO仍在agents/materials。
+
 ## 引用、固定来源和使用目标
 
 - ResourceRef(environment_namespace, provider_id, contract_id, resource_id, revision)：稳定资源身份，contract_id使用原C1版本合同规则。不把易变activation放入Profile资产身份；不从任意payload猜路由。
@@ -18,22 +20,23 @@
 ## 能力、描述及请求
 
 - MaterialCapability(contract_version, lifetimes, query_acquire: bool, release_recovery)：contract_version必须本版本；lifetimes是非空无重复规范tuple，仅copyComplete/runtimeRequired/dynamic；query_acquire必须显式bool（不能缺省支持）；release_recovery仅queryable/idempotent/both/unsupported。query_acquire=true承诺即使获取回执丢失、无lease/handle，也按原request精确ref与step correlation覆盖查询；只有唯一核实receipt才success，无法证明原请求零作用时统一unknown，不把未找到当refused。这些是能力声明，phase1不据此宣称真实消费/恢复已证实。
-- ResourceMaterialDescriptor(resource_ref, material_type, schema_version, content_digest, lifetime, access_mode, provenance_ref: MaterialEvidenceRef, evidence_ref: MaterialEvidenceRef)：只非秘密；lifetime取上表，access_mode只readOnly/effectful。descriptor_digest属性由上述安全to_dict规范哈希得64hex，不允许caller声称摘要替代内容。证据引用同环境；描述是纯描述，不创造材料。
+- ResourceMaterialDescriptor(resource_ref, material_type, schema_version, content_digest, lifetime, access_mode, provenance_ref: MaterialEvidenceRef, evidence_ref: MaterialEvidenceRef)：只非秘密；lifetime取上表，access_mode只readOnly/effectful。descriptor_digest属性由上述安全to_dict规范哈希得64hex，不允许caller声称摘要替代内容。证据引用同环境；描述是纯描述，不创造材料。schema_version允许有界精确schema标识（例如schema/1的名称/精确版本标识），不接受绝对路径、路径遍历、latest或通配；Resource revision及provider version不因schema规则放宽。
 - MaterialRequest(resource_ref, provider_pin, target, descriptor_digest, correlation)：resolve和原请求查询共用，query不要求lease/handle。input_facts()仅包含resourceRef/providerPin/target/descriptorDigest，input_digest属性为其safe_json规范SHA256；correlation.input_digest须等于该计算值。operation/step/recovery关联仍独立钉住，由原issuer与Store验证，不能用DTO自证已claim。
 
 ## 回执、租约及闭合结果
 
 - MaterialLeaseRef(lease_id, resource_ref, provider_pin, target, acquisition_correlation)：固定原获取关系，全环境/identity交叉校验，不是权限。只携带安全opaque lease ID。
-- MaterialReceipt(resource_ref, provider_pin, target, correlation, descriptor_digest, immutable_material_ref: MaterialObjectRef, content_digest, material_type, schema_version, lease_ref: MaterialLeaseRef, provenance_ref: MaterialEvidenceRef, evidence_ref: MaterialEvidenceRef)：全部来源/获取关联/lease关系一致，同环境，content_digest有效。receipt只证明provider报告了固定材料关系；实际消费独立，不能据receipt自动release。
+- MaterialReceipt(resource_ref, provider_pin, target, correlation, descriptor_digest, immutable_material_ref: MaterialObjectRef, content_digest, material_type, schema_version, lease_ref: MaterialLeaseRef, provenance_ref: MaterialEvidenceRef, evidence_ref: MaterialEvidenceRef)：全部来源/获取关联/lease关系一致，同环境，content_digest有效；必须重用MaterialRequest规范校验，correlation.input_digest与本receipt资源/pin/target/descriptorDigest重新计算一致。receipt只证明provider报告了固定材料关系；实际消费独立，不能据receipt自动release。
 - MaterialResult(outcome, correlation, receipt=None, error_code=None)：success必须receipt且correlation一致，无error；refused只有稳定安全error_code且无receipt，承诺零作用；unknown两者皆无，不造租约/空材料。error_code为最多64字符的大写字母/数字/下划线稳定码。不默认unknown为success。
-- MaterialReleaseRequest(lease_ref, correlation)：释放是新的具名step关联；lease仍保存原获取关联。input_facts()精确返回{'leaseRef': lease_ref.to_dict()}，不含新release correlation，input_digest属性为safe_json(input_facts())规范SHA256的64hex，correlation.input_digest须精确匹配；权限使用原action=release、cleanup上下文，不能复用获取票据。本阶段不签发该上下文。
-- MaterialReleaseResult(outcome, correlation, error_code=None)：success/unknown无error，refused仅稳定安全code；该result不修改Usage，不宣称资源已释放。
+- MaterialReleaseRequest(lease_ref, correlation)：释放是新的具名step关联，允许未来停止或替换操作使用新的operation；拒绝复用原获取的完整(operation_ref, step_id, recovery_correlation)身份，不要求各单独字段都不同；lease仍保存原获取关联。input_facts()精确返回{'leaseRef': lease_ref.to_dict()}，不含新release correlation，input_digest属性为safe_json(input_facts())规范SHA256的64hex，correlation.input_digest须精确匹配；权限使用原action=release、cleanup上下文，不能复用获取票据。本阶段不签发该上下文。
+- MaterialReleaseReceipt(lease_ref, correlation, evidence_ref: MaterialEvidenceRef)：原lease、新释放关联和同环境核实证据；必须重用MaterialReleaseRequest校验其digest及新身份。
+- MaterialReleaseResult(outcome, correlation, receipt=None, error_code=None)：success必须同correlation的MaterialReleaseReceipt且无error；unknown无receipt/error；refused无receipt且仅稳定安全code。receipt只是provider的释放核实报告，phase2须核对原请求与当前owner后才能处理Usage；DTO本身不修改Usage。
 
 ## 唯一可选端口
 
-AuthorizedMaterialProvider是同一原C1 ResourceProvider对象的结构可选能力，无新注册中心。property material_capability返回上述MaterialCapability。方法：describe_material(resource_ref, principal)->ResourceMaterialDescriptor；resolve_material(MaterialRequest, InvocationContext)->MaterialResult；query_material(MaterialRequest, InvocationContext)->MaterialResult；release_material(MaterialReleaseRequest, InvocationContext)->MaterialReleaseResult。采用原InvocationContext类型，provider作用前必须用原Verifier验证；phase1只声明签名，不实现任何假成功body。
+AuthorizedMaterialProvider是同一原C1 ResourceProvider对象的结构可选能力，无新注册中心。property material_capability只返回纯不可变声明，不得产生作用。方法：describe_material(resource_ref, principal)->ResourceMaterialDescriptor；resolve_material(MaterialRequest, InvocationContext)->MaterialResult；query_material(MaterialRequest | MaterialReleaseRequest, InvocationContext)->MaterialResult | MaterialReleaseResult；release_material(MaterialReleaseRequest, InvocationContext)->MaterialReleaseResult。query以原获取请求查询时只返回MaterialResult，允许未知lease/handle；以原释放请求查询时只返回MaterialReleaseResult，原获取lease及新的release correlation分别固定。release_recovery=queryable/both承诺后者有原release结果覆盖，不用获取query冒释放query；任何query不执行resolve/release。采用原InvocationContext类型，provider作用前必须用原Verifier验证；phase1只声明签名，不实现任何假成功body。
 
-read_material_capability(provider)仅读取声明并检查版本/四方法callable，缺声明typed MaterialUnavailable，声称能力但形状错typed MaterialContractError，不能fallback旧C1 acquire。复制能力DTO避免别名，不返回provider对象。它不是注册准入事实；phase2将声明加入014同Registry原stage snapshot、commit/read重验，不以此helper绕过Host身份或授权。缺query_acquire或release恢复不足由后续保证门拒绝所请求保证，不在纯DTO层偷偷升级声明。
+read_material_capability(provider)仅读取声明并检查版本、四个material方法及原C1 describe/acquire/release/reconcile均callable，以静态属性检查区分缺声明（typed MaterialUnavailable）与显式声明但getter抛异常或形状错（typed MaterialContractError）；不把property内部AttributeError当缺席，不采动态__getattr__假声明，不能fallback旧C1 acquire。复制能力DTO避免别名，不返回provider对象。它不是注册准入事实；phase2将声明加入014同Registry原stage snapshot、commit/read重验，不以此helper绕过Host身份或授权。缺query_acquire或release恢复不足由后续保证门拒绝所请求保证，不在纯DTO层偷偷升级声明。
 
 ## 反例、分级和下一阶段
 

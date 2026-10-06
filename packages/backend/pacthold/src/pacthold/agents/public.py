@@ -119,3 +119,21 @@ __all__ += ["CONFIGURATION_CONTRACT_VERSION", "ApplicationPolicy", "Configuratio
             "ConfigurationChangeResult", "ConfigurationContractError", "ConfigurationUnsupported", "UnitInspection",
             "ConfigurationOmissionRefused", "ConfigurationConversionRefused"]
 __all__ += ["ConfigurationRevisionConflict"]
+from .materials import (
+    AGENT_MATERIAL_CONTRACT_VERSION, MaterialContractError, MaterialUnavailable,
+    MaterialCapability, MaterialLifetime, MaterialAccessMode, MaterialReleaseRecovery,
+    MaterialOutcome, ResourceRef, MaterialProviderPin, MaterialUseTarget, MaterialCorrelation,
+    MaterialObjectRef, MaterialEvidenceRef, ResourceMaterialDescriptor, MaterialRequest,
+    MaterialLeaseRef, MaterialReceipt, MaterialResult, MaterialReleaseRequest,
+    MaterialReleaseReceipt, MaterialReleaseResult, AuthorizedMaterialProvider,
+    read_material_capability,
+)
+__all__ += [
+    "AGENT_MATERIAL_CONTRACT_VERSION", "MaterialContractError", "MaterialUnavailable",
+    "MaterialCapability", "MaterialLifetime", "MaterialAccessMode", "MaterialReleaseRecovery",
+    "MaterialOutcome", "ResourceRef", "MaterialProviderPin", "MaterialUseTarget",
+    "MaterialCorrelation", "MaterialObjectRef", "MaterialEvidenceRef", "ResourceMaterialDescriptor",
+    "MaterialRequest", "MaterialLeaseRef", "MaterialReceipt", "MaterialResult",
+    "MaterialReleaseRequest", "MaterialReleaseReceipt", "MaterialReleaseResult", "AuthorizedMaterialProvider",
+    "read_material_capability",
+]
