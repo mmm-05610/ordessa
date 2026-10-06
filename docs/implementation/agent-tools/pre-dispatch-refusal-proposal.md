@@ -1,0 +1,11 @@
+# 配置更新在派发前被拒绝：待裁定与原子接缝缺口
+
+2026-10-06，Luna 只读调查，尚未实现。当前管理协调器先在原事务预留操作与 scope fence，再重新核对 owner 版本、管理代次及目录许可。若重新核对失败且尚未签发 dispatch claim，当前直接抛拒绝，原操作却留在 reserved。后续同 scope 的新请求会被未决旧操作阻挡。
+
+原 OperationStore 可记录 refused/concluded，但单独终结操作不足：预留时 fence 已把期望配置来源推进至本次 Profile。若本次完全未发出，后续仍以该 Profile 为基础计算差异，可能漏掉实际从未发出的变更。不得用两个独立写事务分别修 fence 和终态。
+
+建议：仅在原持久步骤完全不存在、原 operation 仍为 reserved 且 revision 精确匹配时，原子记录明确“未派发拒绝”，并把 fence 的期望 Profile 及其来源操作恢复到预留前的固定值。保留该请求已占用的事实和原拒绝收据；同请求重放只查证，不重新派发。新请求必须重新授权、核对当前 owner 版本。需要给原 OperationStore 的终结事务窄幅增加 DomainWrite CAS 接缝，不新增另一数据库、请求账或 dispatcher。
+
+已有 claim、possibly-dispatched、unknown、已确认作用等情况均不能使用此路径；继续保持占用并沿原操作核实，不自动补偿、不释放未知作用。拒绝记录只保存安全 phase/reason 枚举，不写异常消息或 native 正文。
+
+必须反例：预留后改变 owner 版本／管理代次／目录许可，验证零派发、原操作拒绝且旧基础保持；原请求重复不得执行；新请求可沿原基础重新授权；已持久 claim 的未知请求不得终结为未派发；终结与 fence CAS 事务失败必须全部回滚。此为后续核心切片，当前修复没有触碰该路径。

@@ -84,8 +84,10 @@ from .configuration import (
     CONFIGURATION_CONTRACT_VERSION, ApplicationPolicy, ConfigurationChangeRequest,
     ConfigurationDescription, ConfigurationSnapshot, ConfigurationItemResult,
     ConfigurationChangeResult, ConfigurationContractError, ConfigurationUnsupported, ConfigurationRevisionConflict, UnitInspection,
+    ConfigurationOmissionRefused, ConfigurationConversionRefused,
 )
 __all__ += ["CONFIGURATION_CONTRACT_VERSION", "ApplicationPolicy", "ConfigurationChangeRequest",
             "ConfigurationDescription", "ConfigurationSnapshot", "ConfigurationItemResult",
-            "ConfigurationChangeResult", "ConfigurationContractError", "ConfigurationUnsupported", "UnitInspection"]
+            "ConfigurationChangeResult", "ConfigurationContractError", "ConfigurationUnsupported", "UnitInspection",
+            "ConfigurationOmissionRefused", "ConfigurationConversionRefused"]
 __all__ += ["ConfigurationRevisionConflict"]

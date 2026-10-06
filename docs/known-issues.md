@@ -169,3 +169,9 @@ AgentUnit迁移切片在 `ServerProductComposition.native_runtime` 早拒 Pi/Cod
 ### AU003 records迁移的Profile测试消费者尚待跨域确认（2026-10-05，Open）
 
 原journal/UnitRecords按bytes迁独立public records，无shim，scope内消费者已迁。唯一active旧module import在 `plugins/profile/tests/test_harness_real_service.py:127`，原六测试实跑2P4F exit1 .89s：三SESSION_NEEDS_RECOVERY与lost-ack activate_count=0，effect前import断裂；这是本次引入的迁移债，不冒继承，未删改/skip断言。Profile测试不在AU003/其余单write_paths，已备一行patch并请求范围确认，未触目标。原owner/SQLite181P＋input/发行76P＋八wheel14命令成功不关闭此债或production owner/issuer/native确认。详见 `docs/implementation/agent-tools/evidence/agent-unit-model/records-owner-migration.md`；生产factory、唯一journal注入与冷代次未完成，旧Service/C2/Sidecar和fullServer发行缺口继续。
+
+### Agent Tools 配置派发前拒绝及旧 CLI 形状（2026-10-06，Open）
+
+当前核心配置路径的只读调查发现：操作／scope fence 已预留后、dispatch claim 之前 owner 版本／管理代次／目录授权重核失败，操作可能留在 reserved，阻挡后续同 scope 请求。仅标 refused 还不能收口，因为 fence 已推进到未发送 Profile；需要裁定未派发拒绝后基础来源及原子终结接缝，不能事后分两事务修正或清除 unknown。提案见 `docs/implementation/agent-tools/pre-dispatch-refusal-proposal.md`；尚未实现、尚无此竞态的真实实跑验收，不能算绿。
+
+公开 wire 的 /3 applyProfile 薄绑定已实现、核心与 wire 定向反例通过，但 CLI 仍使用旧 application 形状，缺 baseProfileRef，在客户端 schema 检查以 PARAMETER_INVALID／exit2 发前拒绝，HTTP 更新调用为零。原产品套件第一次复跑786P1F是旧测试仍断言健康 wire 未广告；修订保留真实未装配负例并新增健康广告／CLI旧形状拒绝反例，没有修好 CLI。末端验证及当前状态见 `docs/implementation/agent-tools/status.md` 和 `evidence/agent-unit-model/luna-core-dispatch-20261006.md`。统一历史读、托管输入及结果回写、材料装配／连接等继续 PARTIAL；材料或接口定向绿不代表产品已可运行。

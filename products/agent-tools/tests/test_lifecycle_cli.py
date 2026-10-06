@@ -86,9 +86,16 @@ RECEIPT_MUTATIONS = {
 def server(parts, mode='healthy', *, wired=True, action='stop'):
     token = os.environ['TOOLS_TEST_TOKEN']
     parts.provider.fail_lifecycle = action if mode == 'native-fail' else None
-    kwargs = {'invocation_issuer': parts.issuer}
-    if wired:
-        kwargs['lifecycle_observation_port'] = parts.owner
+    if mode == 'configuration-unassembled':
+        # This fixture starts from AgentLifecycle only; do not replace an
+        # already-composed authority. Configuration is composed once with the
+        # environment's absent issuer, matching an unassembled deployment.
+        assert getattr(parts.env, '_agent_services', None) is None
+        kwargs = {}
+    else:
+        kwargs = {'invocation_issuer': parts.issuer}
+        if wired:
+            kwargs['lifecycle_observation_port'] = parts.owner
     agent_services(parts.env, **kwargs)
     handlers = {item.method_id: item.handler for item in agent_core_methods(
         lambda: parts.env, contract_version=AGENT_MANAGEMENT_CONTRACT_VERSION)}
@@ -654,21 +661,39 @@ def test_apply_profile_body_declarations_are_refused_before_discovery(parts, tmp
     assert parts.store.read_operation(key(parts, 'request-apply-profile')) is None
 
 
-def test_apply_profile_dispatch_is_not_advertised_by_the_wire_and_never_takes_effect(parts, tmp_path, monkeypatch, capsys):
-    # Current wire composition does not publish agents.nodes.applyProfile
-    # (apps/server/src/ordessa_server/agent_core_wire.py supportedMethods gate and
-    # handler dispatch both omit it). The core apply_profile capability itself is
-    # proven by evidence/agent-unit-model/test_apply_profile.py; the CLI command
-    # therefore stays typed-refused end to end until that binding lands.
+def test_configuration_unassembled_does_not_advertise_apply_profile_or_reserve(parts, tmp_path, monkeypatch, capsys):
+    # The fixture composes AgentServices for the first time without an issuer.
+    # This is a real missing-configuration counterexample, not a healthy
+    # deployment with its advertised methods artificially removed.
     monkeypatch.setenv('TOOLS_TEST_TOKEN', SECRET)
     path = write(tmp_path / 'application.json', application_file())
-    with server(parts, 'healthy') as (endpoint, calls, seen):
+    with server(parts, 'configuration-unassembled') as (endpoint, calls, seen):
         code, item = command(cli_args(tmp_path, endpoint, 'apply-profile', path, node=parts.node_ref), capsys)
     assert code == 4 and item['status'] == 'refused' and item['error']['code'] == 'CAPABILITY_UNSUPPORTED'
     assert item['error']['retryable'] is False and discovery_only(item)
     assert [call['method'] for call in calls] == ['server.hello', 'agents.capabilities']
-    assert seen['capabilities']['supports']['configurationManagement'] is True
+    assert seen['capabilities']['supports']['configurationManagement'] is False
     assert 'agents.nodes.applyProfile' not in seen['capabilities']['supportedMethods']
+    assert parts.provider.lifecycle_calls == []
+    assert native_calls(parts) == []
+    assert parts.store.read_operation(key(parts, 'request-apply-profile')) is None
+
+
+def test_healthy_wire_advertises_apply_profile_but_cli_old_shape_fails_client_schema(parts, tmp_path, monkeypatch, capsys):
+    # The live wire schema requires baseProfileRef; the CLI's existing
+    # application request shape does not carry it. Keep this as a real CLI
+    # counterexample: the client rejects locally before sending an applyProfile
+    # HTTP request or reserving an operation.
+    monkeypatch.setenv('TOOLS_TEST_TOKEN', SECRET)
+    path = write(tmp_path / 'application.json', application_file())
+    with server(parts, 'healthy') as (endpoint, calls, seen):
+        code, item = command(cli_args(tmp_path, endpoint, 'apply-profile', path, node=parts.node_ref), capsys)
+    assert code == 2 and item['status'] == 'refused' and item['error']['code'] == 'PARAMETER_INVALID'
+    assert item['error']['retryable'] is False and discovery_only(item)
+    assert seen['capabilities']['supports']['configurationManagement'] is True
+    assert 'agents.nodes.applyProfile' in seen['capabilities']['supportedMethods']
+    assert [call['method'] for call in calls] == ['server.hello', 'agents.capabilities']
+    assert parts.provider.lifecycle_calls == []
     assert native_calls(parts) == []
     assert parts.store.read_operation(key(parts, 'request-apply-profile')) is None
 

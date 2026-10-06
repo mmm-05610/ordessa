@@ -15,7 +15,7 @@ from ordessa_environment_api import (
 from ordessa_environment_api.domain import DomainStorePort, DomainWrite
 from ordessa_environment_api.operations import OperationIntent, OperationStorePort, StepIntent, safe_json
 from .configuration import (
- ConfigurationChangeRequest, ConfigurationChangeResult, ConfigurationContractError,
+ ApplicationPolicy, ConfigurationChangeRequest, ConfigurationChangeResult, ConfigurationContractError,
  ConfigurationSnapshot, ConfigurationUnsupported, ConfigurationRevisionConflict, UnitInspection,
  ConfigurationConversionRefused, ConfigurationItemResult, ConfigurationOmissionRefused,
  derive_change,
@@ -140,11 +140,27 @@ class AgentConfiguration:
             if mode is not None:
                 fixed['mode'] = mode
             digest = env._fingerprint_port.fingerprint(request, 'pacthold.agents.configuration.apply', _hash(fixed))
-            prior = env._store.read_operation(request)
+            unknown_operation = None
+            try:
+                prior = env._store.read_operation(request)
+            except UnknownResultError as error:
+                # Domain-only receipts spend the request key without an
+                # Operation. Resolve them only by the exact digest below.
+                unknown_operation = error
+                prior = None
             if prior is not None:
                 if prior.digest != digest or prior.intent.kind != 'configuration-change':
                     raise IdentityMismatchError('spent configuration request differs')
                 return prior
+            # Domain-only refusals (including omission receipts) also spend
+            # this Environment request key. Detect them before any Unit-owner
+            # inspection so a corrected body under the old id cannot reach a
+            # provider callback before the store reports the key conflict.
+            prior_domain_result = env._store.read_domain_result(request, digest)
+            if prior_domain_result is None and unknown_operation is not None:
+                raise unknown_operation
+            if prior_domain_result is not None:
+                raise IdentityMismatchError('spent configuration request has a domain-only result')
             required = ('inspect_unit', 'inspect_configuration') if mode is not None else (
                 'inspect_unit', 'inspect_configuration', 'describe_configuration', 'apply_configuration')
             admitted = self._owner(node, *required)
@@ -159,7 +175,7 @@ class AgentConfiguration:
             for declaration in change.declarations:
                 item = descriptions.get((declaration['configurationKind'],declaration['schemaVersion']))
                 supported = item is not None and item.support_status == 'supported' and declaration['action'] in item.supported_actions
-                if not supported and declaration['requirement'] == 'required':
+                if mode is None and not supported and declaration['requirement'] == 'required':
                     raise ConfigurationUnsupported('required declaration unsupported before dispatch')
                 for ref in declaration.get('resourceRefs', ()):
                     if ref.get('environmentNamespace') != env.environment_id:
@@ -167,7 +183,7 @@ class AgentConfiguration:
                 # C1 material acquisition is not yet composed here. Never
                 # let an opaque reference masquerade as an acquired resource.
                 unresolved = bool(declaration.get('resourceRefs'))
-                if unresolved and declaration['requirement'] == 'required':
+                if mode is None and unresolved and declaration['requirement'] == 'required':
                     raise ConfigurationUnsupported('required material acquisition unavailable before dispatch')
                 if mode is None and (not supported or unresolved):
                     skipped.append(declaration['declarationId'])
@@ -270,7 +286,8 @@ class AgentConfiguration:
             new_content = catalog.read(profile_ref).content
         diff = derive_change(base_manifest.content, new_content)
         if diff.omitted:
-            raise ConfigurationOmissionRefused(diff.omitted)
+            self._refuse_omissions(request, node_ref, profile_ref, base_profile_ref,
+                                   expected_configuration_revision, application_policy, diff.omitted)
         if diff.kind_conflicts:
             raise ConfigurationConversionRefused(diff.kind_conflicts)
         declarations = tuple(json.loads(safe_json(item))
@@ -285,6 +302,66 @@ class AgentConfiguration:
         return self.apply(request, node_ref, change, profile_ref=profile_ref,
                           base_profile_ref=base_profile_ref, snapshot_write=snapshot_write)
 
+    def _refuse_omissions(self, request, node_ref, profile_ref, base_profile_ref,
+                          expected_configuration_revision, application_policy, omitted):
+        """Spend an omission refusal through the existing Environment domain receipt.
+
+        Only normalized identities, policy, revision and omitted declaration
+        ids enter the request fingerprint/receipt. An inline snapshot is not
+        persisted because no configuration operation is reserved.
+        """
+        if (not isinstance(expected_configuration_revision, str)
+                or not expected_configuration_revision
+                or type(application_policy) is not ApplicationPolicy):
+            raise ConfigurationContractError('fixed configuration revision and policy required')
+        env = self._environment
+        with env._admission_lock:
+            self._request(request, node_ref)
+            fixed = {
+                'nodeRef': encode_node_ref(node_ref),
+                'profileRef': profile_ref.to_dict(),
+                'baseProfileRef': base_profile_ref.to_dict(),
+                'expectedConfigurationRevision': expected_configuration_revision,
+                'applicationPolicy': application_policy.to_dict(),
+            }
+            digest = env._fingerprint_port.fingerprint(
+                request, 'pacthold.agents.configuration.apply-profile-refusal', _hash(fixed))
+
+            unknown_operation = None
+            try:
+                prior = env._store.read_operation(request)
+            except UnknownResultError as error:
+                # The exact-digest domain read below distinguishes a complete
+                # historical receipt from an incomplete/unknown spent key.
+                unknown_operation = error
+                prior = None
+            if prior is not None:
+                raise IdentityMismatchError('spent configuration request differs')
+
+            receipt = env._store.read_domain_result(request, digest)
+            expected_omitted = tuple(omitted)
+            if receipt is None and unknown_operation is not None:
+                raise unknown_operation
+            if receipt is not None:
+                if (not isinstance(receipt, dict)
+                        or receipt.get('status') != 'refused'
+                        or receipt.get('code') != ConfigurationOmissionRefused.code
+                        or not isinstance(receipt.get('omitted'), list)
+                        or tuple(receipt['omitted']) != expected_omitted):
+                    raise UnknownResultError('stored configuration refusal cannot be verified; do not resend')
+                raise ConfigurationOmissionRefused(expected_omitted)
+
+            result = {'status': 'refused', 'code': ConfigurationOmissionRefused.code,
+                      'omitted': list(expected_omitted)}
+            committed = env._store.commit_domain_change(request, digest, (), result)
+            if (not isinstance(committed, dict)
+                    or committed.get('status') != 'refused'
+                    or committed.get('code') != ConfigurationOmissionRefused.code
+                    or not isinstance(committed.get('omitted'), list)
+                    or tuple(committed['omitted']) != expected_omitted):
+                raise UnknownResultError('configuration refusal receipt could not be verified; do not resend')
+            raise ConfigurationOmissionRefused(expected_omitted)
+
     def _no_change(self, request, node_ref, change, profile_ref, base_profile_ref, snapshot_write=None):
         """Unchanged manifest: dispatch nothing and report standing facts only.
 
@@ -298,6 +375,38 @@ class AgentConfiguration:
         env = self._environment
         with env._admission_lock:
             node = self._request(request, node_ref)
+            fixed = {'nodeRef': encode_node_ref(node_ref), 'change': change.to_dict(),
+                     'profileRef': profile_ref.to_dict(), 'baseProfileRef': base_profile_ref.to_dict(),
+                     'mode': 'no-change-verification'}
+            digest = env._fingerprint_port.fingerprint(request, 'pacthold.agents.configuration.apply', _hash(fixed))
+
+            # Replays are historical observations of the original request.
+            # Resolve their existing receipt before consulting mutable owner
+            # state so a later native revision cannot turn a replay into a
+            # fresh attempt or a new conflict.
+            unknown_operation = None
+            try:
+                prior = env._store.read_operation(request)
+            except UnknownResultError as error:
+                # A data-only result has no Operation projection. Do not treat
+                # it as unused; read_domain_result must prove the exact receipt.
+                unknown_operation = error
+                prior = None
+            if prior is not None:
+                if prior.digest != digest or prior.intent.kind != 'configuration-change':
+                    raise IdentityMismatchError('spent configuration request differs')
+                return prior
+            receipt = env._store.read_domain_result(request, digest)
+            if receipt is None and unknown_operation is not None:
+                raise unknown_operation
+            if receipt is not None:
+                if (not isinstance(receipt, dict)
+                        or receipt.get('verified') != 'standing-operation'
+                        or not isinstance(receipt.get('noChangeOf'), str)
+                        or receipt.get('profileRef') != profile_ref.to_dict()):
+                    raise UnknownResultError('stored no-change result cannot be verified; do not resend')
+                return self.query(node_ref, receipt['noChangeOf'])
+
             admitted = self._owner(node, 'inspect_unit', 'inspect_configuration')
             unit = self._inspection(node, admitted)
             snapshot = self.inspect(node_ref)
@@ -310,19 +419,15 @@ class AgentConfiguration:
             expected_profile, standing_ref = self._expected_source(node, fence)
             if not _same(base_profile_ref.to_dict(), expected_profile):
                 raise ConfigurationRevisionConflict('base Profile snapshot differs from the scope expected source')
-            fixed = {'nodeRef': encode_node_ref(node_ref), 'change': change.to_dict(),
-                     'profileRef': profile_ref.to_dict(), 'baseProfileRef': base_profile_ref.to_dict(),
-                     'mode': 'no-change-verification'}
-            digest = env._fingerprint_port.fingerprint(request, 'pacthold.agents.configuration.apply', _hash(fixed))
-            # Spend this request key so a later different body under the same
-            # id conflicts instead of silently dispatching (PJ05).
-            receipt = env._store.read_domain_result(request, digest)
             ids = {item['declarationId'] for item in change.declarations}
-            if self._standing_covers(standing_ref, ids):
-                if receipt is None:
-                    env._store.commit_domain_change(request, digest, (),
-                        {'noChangeOf': standing_ref, 'verified': 'standing-operation'})
-                return self.query(node_ref, standing_ref)
+            standing = None if standing_ref is None else self.query(node_ref, standing_ref)
+            if standing is not None and self._standing_covers(
+                    standing, standing_ref, ids, profile_ref, expected_profile, unit, snapshot):
+                writes = () if snapshot_write is None else (snapshot_write,)
+                env._store.commit_domain_change(request, digest, writes,
+                    {'noChangeOf': standing_ref, 'verified': 'standing-operation',
+                     'profileRef': profile_ref.to_dict()})
+                return standing
             operation = self.reserve(request, node_ref, change, profile_ref=profile_ref,
                                      base_profile_ref=base_profile_ref,
                                      snapshot_write=snapshot_write, mode='no-change-verification')
@@ -341,29 +446,49 @@ class AgentConfiguration:
             return env._store.record_operation_outcome(request, operation.digest, current.revision,
                                                        'refused', evidence)
 
-    def _standing_covers(self, standing_ref, ids):
-        if standing_ref is None:
-            return False
-        env = self._environment
-        identity = env._store.read_domain(env.environment_id, 'core.operation-identities', standing_ref)
-        if identity is None:
-            return False
-        holder = identity['value']['holder']
-        if holder.get('operationId') != standing_ref:
-            return False
-        try:
-            operation = env._store.read_operation(
-                RequestKey(env.environment_id, holder['principalScope'], holder['requestId']))
-        except UnknownResultError:
-            return False
+    def _standing_covers(self, operation, standing_ref, ids, profile_ref, expected_profile, unit, snapshot):
+        """Check generic owner evidence for the exact current whole manifest.
+
+        Declaration payloads remain opaque to core. A standing result can
+        satisfy a new no-change request only when its fixed Profile digest,
+        complete item confirmations, and owner-confirmed snapshot all match
+        the current observation's scope and revision.
+        """
         if (operation is None or operation.intent.kind != 'configuration-change'
-                or operation.intent.operation_ref != standing_ref):
+                or operation.intent.operation_ref != standing_ref
+                or operation.status != 'published'):
             return False
-        try:
-            change = ConfigurationChangeRequest.from_dict(_plain(operation.intent.context_ref['change']))
-        except (ValueError, TypeError, KeyError, ConfigurationContractError):
+        context = operation.intent.context_ref
+        if (not _same(context.get('profileRef'), expected_profile)
+                or ProfileRef.from_dict(dict(expected_profile)).content_digest != profile_ref.content_digest):
             return False
-        return {item['declarationId'] for item in change.declarations} == ids
+        raw = self.operation_view(operation).get('configurationResult')
+        if (not isinstance(raw, dict) or raw.get('operationRef') != standing_ref
+                or raw.get('overallOutcome') != 'applied'
+                or not isinstance(raw.get('itemResults'), list)
+                or {item.get('declarationId') for item in raw['itemResults'] if isinstance(item, dict)} != ids
+                or len(raw['itemResults']) != len(ids)):
+            return False
+        confirmed = raw.get('confirmedSnapshot')
+        if (not isinstance(confirmed, dict)
+                or confirmed.get('sourceRevision') != snapshot.source_revision
+                or confirmed.get('comparisonGuarantee') != snapshot.comparison_guarantee
+                or not _same(confirmed.get('unitRef'), unit.unit_ref)
+                or not _same(confirmed.get('scopeRef'), unit.configuration_target_ref)
+                or not _same(confirmed.get('configuration'), snapshot.configuration)
+                or not _same(confirmed.get('unknownItems'), list(snapshot.unknown_items))
+                or not _same(snapshot.scope_ref, unit.configuration_target_ref)):
+            return False
+        for item in raw['itemResults']:
+            confirmation = item.get('confirmation') if isinstance(item, dict) else None
+            if (not isinstance(item, dict) or item.get('outcome') != 'applied'
+                    or not isinstance(confirmation, dict)
+                    or confirmation.get('operationRef') != standing_ref
+                    or confirmation.get('requestDigest') != operation.digest
+                    or not _same(confirmation.get('unitRef'), unit.unit_ref)
+                    or not _same(confirmation.get('scopeRef'), unit.configuration_target_ref)):
+                return False
+        return True
 
     def apply(self, request, node_ref, change, *, profile_ref=None, base_profile_ref=None,
               snapshot_write=None):

@@ -11,9 +11,10 @@ from ordessa_environment_api.operations import safe_json
 from pacthold.agents.public import (
     AGENT_CONTRACT_VERSION, ProfileNotFound, ProfileRef, ProfileRevisionConflict, ProfileValidationError,
     agent_services, wire_contract, wire_schema_digest,
-    AGENT_MANAGEMENT_CONTRACT_VERSION, ConfigurationChangeRequest,
+    AGENT_MANAGEMENT_CONTRACT_VERSION, ApplicationPolicy, ConfigurationChangeRequest,
     ConfigurationContractError, ConfigurationUnsupported, decode_node_ref,
     InvocationAuthorityRefused, ConfigurationRevisionConflict,
+    ConfigurationOmissionRefused,
 )
 from server_plugin_api import ServerMethodDescriptor, WireError
 
@@ -22,6 +23,7 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
     """Bind to the current host lifecycle, never create an Environment here."""
     schema=wire_contract(contract_version)
     configuration_actions={'describeConfiguration','inspectConfiguration','applyConfiguration','queryChange'}
+    profile_application_action='applyProfile'
     provider_actions={'providersList','providersDescribe'}
     node_observation_actions={'nodesList','nodeRead'}
     lifecycle_actions={'stop','release','recover'}
@@ -44,10 +46,26 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
                     raise ValueError("boolean required")
                 if any(name in params and not isinstance(params[name],dict) for name in ('context','options','preconditions')):
                     raise ValueError('structured preparation parameters required')
+                if action in {'prepare', profile_application_action}:
+                    has_profile_ref = 'profileRef' in params
+                    has_manifest = 'profileManifest' in params
+                    if has_profile_ref == has_manifest:
+                        raise ValueError('exactly one Profile source required')
+                    if has_manifest and not isinstance(params['profileManifest'], dict):
+                        raise ValueError('Profile manifest must be an object')
                 refs = {name: ProfileRef.from_dict(params[name])
-                        for name in ("profileRef", "baseManifestRef") if name in params}
+                        for name in ("profileRef", "baseManifestRef", "baseProfileRef") if name in params}
                 node_ref=decode_node_ref(params['nodeRef']) if 'nodeRef' in params else None
                 change=ConfigurationChangeRequest.from_dict(params['change']) if 'change' in params else None
+                application_policy = None
+                if action == profile_application_action:
+                    policy = params['applicationPolicy']
+                    if not isinstance(policy, dict) or set(policy) != {'allowDeferred', 'allowRestart'}:
+                        raise ValueError('application policy shape mismatch')
+                    application_policy = ApplicationPolicy(policy['allowDeferred'], policy['allowRestart'])
+                    if (not isinstance(params['expectedConfigurationRevision'], str)
+                            or not params['expectedConfigurationRevision']):
+                        raise ValueError('expected configuration revision required')
                 if 'definitionRef' in params:
                     ref=params['definitionRef']
                     if (not isinstance(ref,dict)
@@ -74,6 +92,8 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
                             if item['action'] in profile_actions or item['action'] in configuration_actions
                             or item['action'] in provider_actions
                             or item['action'] in node_observation_actions
+                            or (item['action'] == profile_application_action
+                                and result['supports'].get('configurationManagement') is True)
                             or (item['action'] in {'prepare','queryPreparation'} and result['supports']['nodePreparation'])
                             or (item['action'] in {'stop','release','recover'} and result['supports'].get('nodeLifecycle') is True)]
                     return result
@@ -91,13 +111,23 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
                     return json.loads(safe_json({'operation': None if operation is None else services.assembly.operation_view(operation)}))
                 if action=='prepare':
                     operation=services.assembly.prepare(catalog.request_key(params['requestId']),
-                        refs['profileRef'],params['context'],params['options'])
+                        refs.get('profileRef'),params['context'],params['options'],
+                        profile_manifest=params.get('profileManifest'))
                     return json.loads(safe_json(services.assembly.operation_view(operation)))
                 if action in lifecycle_actions:
                     return json.loads(safe_json(getattr(services.lifecycle, action)(
                         catalog.request_key(params['requestId']), node_ref, params['preconditions'])))
-                if action in configuration_actions:
+                if action in configuration_actions or action == profile_application_action:
                     manager=services.configuration
+                    if action == profile_application_action:
+                        if manager.capabilities().get('configurationManagement') is not True:
+                            raise ConfigurationUnsupported('Agent configuration management is not composed')
+                        operation=manager.apply_profile(
+                            catalog.request_key(params['requestId']), node_ref,
+                            refs.get('profileRef'), params['expectedConfigurationRevision'],
+                            application_policy, base_profile_ref=refs['baseProfileRef'],
+                            profile_manifest=params.get('profileManifest'))
+                        return manager.operation_view(operation)
                     if action=='describeConfiguration':
                         return {'descriptions':[item.to_dict() for item in manager.describe(node_ref)]}
                     if action=='inspectConfiguration':
@@ -140,6 +170,11 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
                         kwargs["display_name"] = params["displayName"]
                     result = getattr(catalog, action)(params["profileId"], **kwargs)
                 return result.to_dict()
+            except ConfigurationOmissionRefused as exc:
+                raise WireError('INVALID_REQUEST',
+                    'Profile omits declarations that require explicit reset or disabled actions',
+                    {'retryable':False, 'internalCode':exc.code,
+                     'omittedDeclarationIds':list(exc.omitted)}) from None
             except ConfigurationUnsupported:
                 raise WireError('CAPABILITY_UNSUPPORTED','Required Agent capability unavailable',{'retryable':False}) from None
             except ConfigurationContractError:

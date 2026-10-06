@@ -14,7 +14,7 @@ from typing import Protocol
 
 from ordessa_environment_api import AdmissionRefusedError, GuaranteeUnavailableError, IdentityMismatchError, RequestKey
 from ordessa_environment_api.operations import OperationIntent, StepIntent, UsageMutation, OperationRevisionConflict, operation_holder, node_holder, safe_json, sealed_mapping
-from .contracts import ProfileRef, ProfileValidationError
+from .contracts import ProfileManifest, ProfileRef, ProfileValidationError, manifest_content
 from .directory import DirectoryBindingRef
 from .invocation import InvocationIssuer
 from .nodes import decode_node_ref, _safe_projection, _same_reference
@@ -181,8 +181,15 @@ class AgentAssembly:
                 if not isinstance(profile_manifest, Mapping):
                     raise ProfileValidationError("complete profile manifest body required")
                 profile_ref, snapshot_write = self._profiles.stage_snapshot(profile_manifest)
+                # The immutable snapshot write is intentionally deferred to the
+                # atomic operation reservation below. Planning consumes the
+                # canonical in-memory value and never performs an early write.
+                manifest = ProfileManifest(profile_ref,
+                    manifest_content(profile_manifest, env.environment_id))
             elif type(profile_ref) is not ProfileRef:
                 raise IdentityMismatchError("fixed Profile and explicit preparation parameters required")
+            else:
+                manifest = self._profiles.read(profile_ref)
             fixed = {"profileRef": profile_ref.to_dict(), "context": public_parameters(context),
                      "options": public_parameters(options)}
             digest = env._fingerprint_port.fingerprint(request, "pacthold.agents.nodes.prepare", hashed(fixed))
@@ -191,7 +198,6 @@ class AgentAssembly:
                 if prior.digest != digest or prior.intent.kind != "agent-preparation":
                     raise IdentityMismatchError("spent preparation request differs")
                 return prior
-            manifest = self._profiles.read(profile_ref)
             def unresolved(value):
                 if isinstance(value, Mapping):
                     return ("secretRef" in value or bool(value.get("resourceRefs"))

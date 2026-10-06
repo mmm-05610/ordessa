@@ -814,3 +814,17 @@ C/P/M：C新增19（codex终止）；P新增18（claude 13＋codex 5，真实进
 实际命令 `PYTHONPATH=plugins/harness/codex/src:plugins/harness/pi/src:plugins/harness/claude-code/src:packages/backend/harness-transport/src:plugins/harness/records/src /home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python -m pytest -c products/agent-tools/pyproject.toml products/agent-tools/tests -q`：787P/0F，exit0，218.57s，句柄46323已terminal。此前786P属旧快照，不累计；此次未跑evidence独立组合或全Core/品牌包，不将产品绿当PJ全验收。strict五单校验exit0，仅资料结构。
 
 Luna只读核实：Agent模块未导入具体Harness品牌；但inline准备先stage未提交snapshot又read，必失败；snapshot namespace/权限类偏离最近裁定；wire没有临时清单及applyProfile转发、omission安全具名投影；无变化重放/迟到事实/拒单请求键/未dispatch竞态待反例。各项不能因787绿忽略。保留并显式纳入继承23文件及本轮账/派工记录作为PARTIAL检查点，再分别开放核心与wire非重叠写权，主会话不自行大部分编码。模型M0，无新原生模型调用/第三方安装/用户数据/登录/全局配置/用户服务/push/主树合并；费用unknown，token以平台账为准。
+
+### 2026-10-06 核心配置原子性、拒单／无变化回放与多提供者独立验证（PARTIAL）
+
+前置检查点3072100ec8f7d6c3f01a55261c1b9cf242bda583保存继承切片。三名gpt-6-luna在原树按唯一文件写权完成全部本轮生产代码／新测试：core_impl写profiles/assembly/management及公开错误同一性导出；wire_impl只做公开DTO解码、核心委托和错误投影；review写单Environment/Registry的双协议受控提供者验证并独立读审。主会话负责接口指导、读审、串行执行、状态及Git，没有自行承担生产代码或测试实现。各写者均冻结后才实跑；修复再释放再冻结，无并行测试。
+
+实际修复：inline清单准备不再读取尚未提交快照，原快照和Operation reserve仍同事务；独立agents.profile-snapshots及对象read/write权限预检，拒权零占用；遗漏拒单在原env_requests存安全ID收据、未提交清单正文/快照/配置scope，旧ID修正请求冲突；原OperationStore拒读data-only收据时仅用exact-digest域结果正向核实，域结果缺席重抛Unknown，绝不空回退；no-change原请求先查原收据，无重派；新请求须核对完整owner确认与当前revision/unit/scope/actual/unknownItems，否则原unknown/refused，不把历史applied当当前事实。公开wire沿既有/3互斥来源、applyProfile能力门控、ApplicationPolicy公开DTO及具名遗漏错误，不加入品牌解释或另一调用链。低层applyConfiguration保留。
+
+实跑命令／完整失败账／限制见[evidence/agent-unit-model/luna-core-dispatch-20261006.md](evidence/agent-unit-model/luna-core-dispatch-20261006.md)。八文件末端组合 **137P/0F、exit0、10.12s**：新增核心16、wire16、独立双提供者／导入反例11，共43；其余为原assembly/apply_profile/management/lifecycle/wire-lifecycle，不累计快照。中间126P7F与136P1F均保留失败原因，修正夹具使用公开JSON/ActivationRef/零占用与已用请求区别，未改原断言/Store契约或skip。新增证据均C（真实临时SQLite＋受控owner），两不同协议格式完整prepare→apply→inspect及一家退役另一家继续可用；不当三家原生P/M。Luna终审无本切片新阻断：Unknown域缺席重抛、完整实际事实比较均闭合。schema镜像核验exit0、strict五工单校验exit0，仅材料检查。
+
+当前剩余未收口：required材料装配、公开访问/连接、托管输入公共接入及真实writer/结果回写、CLI/Skill、完整PJ矩阵与发行隔离仍PARTIAL。另发现派发前重核拒绝会留reserved并推进基础快照，不能单独终结操作而把未发送清单当后续基础；[pre-dispatch-refusal-proposal.md](pre-dispatch-refusal-proposal.md)已准备原子修复提案。统一只读查询范围见[operation-read-proposal.md](operation-read-proposal.md)，两项均已用自然语言问用户，未获裁定前不实施依赖语义。核心全套继承kernel_direction三红本轮未复跑，不当已修。M0；无第三方安装、用户数据/凭据/全局配置/用户服务操作、push或主树合并；费用unknown，子代理token以平台账为准。.env不读不入库。整体未完成。
+
+产品末端回归：首次 **786P/1F exit1、215.71s**（旧CLI测试假定健康wire未广告applyProfile，事实已变化）。wire Luna将原负例改为真实无issuer首次装配，保capability refused／不广告／零作用，并新增健康wire广告但CLI缺baseProfileRef在客户端schema发前PARAMETER_INVALID的反例；生产CLI未改，仍未可用。定向CLI **99P exit0、58.36s**，冻结后追加断言的两项单独再跑 **2P/97 deselected exit0、1.47s**（过程账见evidence）。最终冻结全套同前述完整命令（加`--tb=short`）**788P/0F exit0、217.70s**，句柄83852已terminal；不是与137项证据相加的独立计数。diff检查exit0；新竞态与CLI形状缺口已窄登记known-issues。全部测试无skip，不用fixture冒真实任务。
+
+待下一核心批的只读依赖盘点已收入本轮evidence：复用原ResourceProvider/SecretRef端口，但Agent受权材料路由／短借作用scope／unknown归还尚缺，不能另走CoreRuntime.submit第二账；ManagedInputReservations可按原一次性composition公开，生产capture/native state/single-submit writer/双来源receipt恢复由各domain owner提供，核心不解释品牌帧。managedInput继续false，不以挂载类冒生产可运行。主会话显式核对本轮源码／测试／文档后保存PARTIAL检查点，无push或主树合并。

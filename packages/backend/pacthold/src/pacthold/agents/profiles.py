@@ -23,9 +23,9 @@ from .contracts import (
 
 CATALOG = "agents.profile-catalog"
 MANIFESTS = "agents.profile-manifests"
-# Content-addressed ad-hoc manifests live in the same immutable manifest
-# namespace under a reserved id prefix: they are operation-bound evidence,
-# never catalog entries, so the named preset list cannot grow from them.
+# Content-addressed ad-hoc manifests are isolated from named Profile records.
+# They remain operation-bound evidence and never become catalog entries.
+SNAPSHOTS = "agents.profile-snapshots"
 SNAPSHOT_PREFIX = "snap-"
 
 
@@ -62,6 +62,18 @@ class ProfileCatalog:
             env._principal_scope, f"{env.environment_id}:agents.profile:{profile_id}", "read"
         ):
             raise AdmissionRefusedError("Profile read permission unavailable or refused")
+
+    def _snapshot_permission(self, snapshot_id: str, mode: str) -> None:
+        env = self._environment
+        env._check_open()
+        if mode not in {"read", "write"}:
+            raise ValueError("snapshot permission mode is invalid")
+        if env._policy is None or not env._policy.admit_object_access(
+            env._principal_scope,
+            f"{env.environment_id}:agents.profile-snapshot:{snapshot_id}",
+            mode,
+        ):
+            raise AdmissionRefusedError("Profile snapshot access unavailable or refused")
 
     @contextmanager
     def _change(self, kind: str, request: RequestKey, parameters: Mapping[str, Any]):
@@ -161,7 +173,8 @@ class ProfileCatalog:
 
     def _manifest(self, ref: ProfileRef) -> ProfileManifest:
         self._environment._check_environment(ref.environment_namespace)
-        row = self._store().read_domain(self.environment_namespace, MANIFESTS,
+        namespace = SNAPSHOTS if ref.profile_id.startswith(SNAPSHOT_PREFIX) else MANIFESTS
+        row = self._store().read_domain(self.environment_namespace, namespace,
                                        f"{ref.profile_id}@{ref.manifest_revision}")
         if row is None:
             raise ProfileNotFound("Profile manifest revision does not exist")
@@ -183,7 +196,12 @@ class ProfileCatalog:
 
     def read(self, ref: ProfileRef) -> ProfileManifest:
         with self._environment._admission_lock:
-            self._read_permission(ref.profile_id)
+            if type(ref) is not ProfileRef:
+                raise ProfileValidationError("fixed Profile reference required")
+            if ref.profile_id.startswith(SNAPSHOT_PREFIX):
+                self._snapshot_permission(ref.profile_id, "read")
+            else:
+                self._read_permission(ref.profile_id)
             return self._manifest(ref)
 
     def stage_snapshot(self, manifest: Mapping[str, Any]) -> tuple[ProfileRef, DomainWrite | None]:
@@ -199,20 +217,28 @@ class ProfileCatalog:
         entry, so an orphan snapshot can never present itself as a created or
         updated instance.
         """
-        content = manifest_content(manifest, self.environment_namespace)
-        digest = content_digest(content)
-        ref = ProfileRef(self.environment_namespace, SNAPSHOT_PREFIX + digest[7:55], 1, digest)
-        record_id = f"{ref.profile_id}@{ref.manifest_revision}"
-        row = self._store().read_domain(self.environment_namespace, MANIFESTS, record_id)
-        if row is not None:
-            try:
-                self._manifest(ref)
-            except (ProfileRevisionConflict, ProfileNotFound, GuaranteeUnavailableError, ValueError, TypeError):
-                raise GuaranteeUnavailableError("immutable snapshot record collision") from None
-            return ref, None
-        import json
-        return ref, DomainWrite(MANIFESTS, record_id, 0,
-                                {"ref": ref.to_dict(), "content": json.loads(content)})
+        env = self._environment
+        with env._admission_lock:
+            env._check_open()
+            content = manifest_content(manifest, self.environment_namespace)
+            digest = content_digest(content)
+            ref = ProfileRef(self.environment_namespace, SNAPSHOT_PREFIX + digest[7:55], 1, digest)
+            self._snapshot_permission(ref.profile_id, "write")
+            # Preparation immediately rereads the frozen snapshot while
+            # executing/recovering its reserved operation. Check both object
+            # rights now, before the caller can reserve that operation.
+            self._snapshot_permission(ref.profile_id, "read")
+            record_id = f"{ref.profile_id}@{ref.manifest_revision}"
+            row = self._store().read_domain(self.environment_namespace, SNAPSHOTS, record_id)
+            if row is not None:
+                try:
+                    self._manifest(ref)
+                except (ProfileRevisionConflict, ProfileNotFound, GuaranteeUnavailableError, ValueError, TypeError):
+                    raise GuaranteeUnavailableError("immutable snapshot record collision") from None
+                return ref, None
+            import json
+            return ref, DomainWrite(SNAPSHOTS, record_id, 0,
+                                    {"ref": ref.to_dict(), "content": json.loads(content)})
 
     @staticmethod
     def _mint(profile_id: str) -> None:
