@@ -838,3 +838,11 @@ Luna只读核实：Agent模块未导入具体Harness品牌；但inline准备先s
 边界：输入claim/reconcile仍按原API接收issuer，校验同Store，不新增唯一部署issuer对象绑定；未来宿主必须使用原装配issuer/verifier。本批不公开任意context/evidence到wire。生产capture/native state/writer/双来源回执未装配，不能对用户声称已发原生输入。两项待裁定提案（统一操作读取、派发前拒绝原子恢复）仍待回答，不把继续当选项裁定。
 
 下一缺口只读盘点：完整材料路由还缺资源选择、授权scope、原Operation步骤接缝，不能转调CoreDispatch另建执行账；公开access仅schema/Provider合同、未有Core服务或wire。另发现配置更新只拦resourceRefs而未拦递归secretRef，准备路径已拦；后续优先按原required拒绝/optional skipped规则补发前门，不擅自实现秘密解析。全程无模型调用、第三方安装、用户服务/数据/凭据/全局配置操作、push或主树合并；子代理费用unknown，token以平台账为准。整体未完成。
+
+### 2026-10-06 配置未解析SecretRef发前门与后续语义裁定（PARTIAL）
+
+前置7ff3021d7b。三名Luna继续按原树唯一写权：core_impl仅management.py；core_review新增test_configuration_unresolved_secrets.py；wire_impl独立只读。主会话指导/读审/串行测试/账本/Git，没有自行写实现或测试。按既有未装配材料规则，把递归secretRef与resourceRefs同列unresolved：required在reserve/claim/apply作用前ConfigurationUnsupported，optional从effectiveDeclarations剔除、逐项rejected，opaque引用仍保留原请求身份。没有秘密解析、借用、新注册中心或执行账。mode=no-change-verification及Profile metadata restore保留原行为；含秘密引用的这两特定场景只做源码审阅，未新增实测，不冒绿。
+
+过程证据见[evidence/agent-unit-model/configuration-unresolved-secrets-20261006.md](evidence/agent-unit-model/configuration-unresolved-secrets-20261006.md)：首次五文件82P/1F exit1 6.17s，whole Profile夹具遗漏原model声明而先触发omission，失败保留；只修完整清单沿model id改payload，原异常类型/零副作用断言保留，复跑83P/0F exit0 6.28s（新增7，既有76）。冻结后产品全套788P/0F exit0 215.85s，句柄71668terminal；不与新增证据累计成场景数。独立终审合法SecretRef形状、optional owner只收正常声明、同id重放无重复作用。C级临时SQLite受控owner，P新增0/M0，无skip。继承kernel_direction三红未复验。
+
+用户已逐项答复采用：确定未发送的配置拒绝须原子记录并恢复上次配置基准，已claim/unknown继续占用不重发；统一读取仅本principal自己的状态/版本/目标/是否有结果，操作及目标双read ACL，不正文/恢复/重发。已写回两提案裁定段，下一批准备实施，当前尚未实现。access租约签发/续期/撤销/断开与unknown恢复合同仍缺，不能用InvocationContext或C1另一执行账租约冒充。完整资源选择/受权材料路由、生产输入及CLI/Skill仍未收口。无第三方安装、用户数据/服务/凭据/全局配置操作、push或主树合并；.env不读不入库，费用unknown。整体未完成。

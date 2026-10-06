@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping
 
 from ordessa_environment_api import (
  AdmissionRefusedError, GuaranteeUnavailableError, IdentityMismatchError,
@@ -30,6 +31,14 @@ CONFIGURATION_ATTEMPTS = 'agents.configuration-attempts'
 def _plain(value): return json.loads(safe_json(value))
 def _hash(value): return 'sha256:' + hashlib.sha256(safe_json(value).encode()).hexdigest()
 def _same(left,right): return safe_json({'value':left}) == safe_json({'value':right})
+
+
+def _contains_secret_ref(value):
+    if isinstance(value, Mapping):
+        return 'secretRef' in value or any(_contains_secret_ref(item) for item in value.values())
+    if isinstance(value, (list, tuple)):
+        return any(_contains_secret_ref(item) for item in value)
+    return False
 
 
 class AgentConfiguration:
@@ -180,9 +189,11 @@ class AgentConfiguration:
                 for ref in declaration.get('resourceRefs', ()):
                     if ref.get('environmentNamespace') != env.environment_id:
                         raise IdentityMismatchError('configuration material environment differs')
-                # C1 material acquisition is not yet composed here. Never
-                # let an opaque reference masquerade as an acquired resource.
-                unresolved = bool(declaration.get('resourceRefs'))
+                # C1 material acquisition and authorized SecretRef resolution
+                # are not composed here. Keep opaque references in request
+                # identity, but never pass them to an owner as acquired material.
+                unresolved = (bool(declaration.get('resourceRefs'))
+                              or _contains_secret_ref(declaration))
                 if mode is None and unresolved and declaration['requirement'] == 'required':
                     raise ConfigurationUnsupported('required material acquisition unavailable before dispatch')
                 if mode is None and (not supported or unresolved):
