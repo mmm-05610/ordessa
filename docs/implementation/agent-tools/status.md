@@ -935,3 +935,7 @@ ManagedInputReservations初次绑定原部署issuer，同Store不同authority或
 020定向首47P1F exit1 .21s，空purpose构造位于raises外，原作者只调整异常断言范围保语义；组合最终108P0F exit0 1.53s（新48+旧60），core/API307P0F exit0 8.19s。源test冻结，产品session29408进行中不报绿。用户要求本阶段落地后列具体职责目录，root已备domain-ownership-plan.md，细分11领域，不移动源码或立即跨域开工；Agent控制边界及当前Assembly仅hash计划缺口明记，非全部核心已完成。M0，实际材料消费/准入与准备交付仍未实现。
 
 020受控收口：[configuration-provider-contract-20261006.md](evidence/agent-unit-model/configuration-provider-contract-20261006.md)。最终产品900P0F exit0 220.65s，session29408terminal，源test冻结，无skip；纯DTO新48/旧材料组合108与core307均exit0，不累计重复快照为独立场景。三Luna源码/独立测试/只读终审；root唯一文档、串行实测和Git。AT_020_PARTIAL：合同切片完成，实际配置贡献准入/提取/内容读取/编译交付未接，不冒产品可用。用户要求这阶段后分域，准备11领域实际目录与写权边界，products/server组合遗漏经独立审查修正；没有目录迁移或立即并行写后续。原生P新增0/M0，.env不读，无用户服务/数据/凭据操作或push/主树合并。
+
+### 2026-10-06 用户澄清夜间剩余工作派工（PLAN_ONLY）
+
+020检查点77068e16b2475e50ceef4a51b814cff93ed221c4，源码tracked clean/.env不读。用户实际需求为本次剩余工作夜间执行方案，原11领域只是仓库所有权图不足以派工。root继续三个Luna只读盘点，准备night-dispatch-plan-20261006.md：A核心精确控制与分阶段装配、B原Registry配置准入、C受权材料消费、D已裁定最小operations read薄wire/CLI、E独立隔离安装验收。明确每路文件、独占公共导出/合同、依赖、反例与资源缺席；D不能将未发布新DTO当可调用wire，E不能资源缺席冒绿。A/C作用合同、B Runtime认可关联、D网络binding须先由总协调者冻结，不把prepared任务冒全部ready。暂无新编码/runner/建树/后台任务/模型调用/用户服务操作；文档不增加测试数，仍以020实测900P为基线。
