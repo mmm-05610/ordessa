@@ -13,6 +13,8 @@ from .providers import definition_ref_valid, provider_result_valid
 from .nodes import node_result_valid
 from .preparation import request_valid as preparation_request_valid, result_valid as preparation_result_valid, request_id_valid, query_result_valid
 from .configuration import node_ref_valid, description_result_valid, snapshot_result_valid, change_request_valid, operation_result_valid, operation_disposition
+from .lifecycle import (application_request_valid, disposition as lifecycle_disposition,
+                        request_valid as lifecycle_request_valid, view_valid as lifecycle_view_valid)
 from .client import ClientError, WireClient, load_service, parse_json, core_schema, profile_ref_valid, provider_schema, MAX_BYTES
 
 
@@ -59,6 +61,19 @@ def parser():
     preparation_query.set_defaults(action='query-preparation')
     connection(preparation_query)
     preparation_query.add_argument('original_request_id', help='Original preparation requestId in the selected authenticated realm')
+    for action, help_text in (
+            ('stop', "Stop a published Node from a fixed lifecycle request; unknown is never resent automatically"),
+            ('release', "Release a published Node's publication usages from a fixed lifecycle request; unknown is never resent automatically"),
+            ('recover', "Recover a published Node's original binding from a fixed lifecycle request; unknown is never resent automatically")):
+        child = node_actions.add_parser(action, help=help_text)
+        child.set_defaults(action=action)
+        connection(child)
+        child.add_argument('--file', required=True, help='Fixed request JSON: requestId, nodeRef, preconditions')
+    apply_profile = node_actions.add_parser('apply-profile', help='Apply a fixed Profile to a published Node; declarations are derived by the core, never carried in the request')
+    apply_profile.set_defaults(action='apply-profile')
+    connection(apply_profile)
+    apply_profile.add_argument('node_ref', help='Complete NodeRef JSON or @file')
+    apply_profile.add_argument('--file', required=True, help='Fixed application JSON: requestId, profileRef, expectedConfigurationRevision, applicationPolicy')
     configuration = node_actions.add_parser("configuration", help="Observe owner configuration capabilities")
     configuration_actions = configuration.add_subparsers(dest="action", required=True, parser_class=Parser)
     for action, help_text in (("describe", "Read owner capability descriptions; does not inspect or apply values"),
@@ -226,7 +241,22 @@ def main(argv=None):
                 raise ClientError('PARAMETER_INVALID', 'Complete public preparation request required', 2)
             options.request_id = params['requestId']
             prepared = ('agents.nodes.prepare', params)
-        elif options.command == 'nodes' and options.node_action != 'configuration':
+        elif options.command == 'nodes' and options.node_action in ('stop', 'release', 'recover'):
+            params = json_input(options.file, file_only=True)
+            if not lifecycle_request_valid(params):
+                raise ClientError('PARAMETER_INVALID', 'Complete fixed lifecycle request required', 2)
+            options.request_id = params['requestId']
+            prepared = ('agents.nodes.' + options.node_action, params)
+        elif options.command == 'nodes' and options.node_action == 'apply-profile':
+            node = json_input(options.node_ref)
+            if not node_ref_valid(node):
+                raise ClientError('PARAMETER_INVALID', 'Complete NodeRef required', 2)
+            application = json_input(options.file, file_only=True)
+            if not application_request_valid(application):
+                raise ClientError('PARAMETER_INVALID', 'Complete fixed profile application request required', 2)
+            options.request_id = application['requestId']
+            prepared = ('agents.nodes.applyProfile', {'nodeRef': node, **application})
+        elif options.command == 'nodes' and options.node_action in ('list', 'inspect'):
             params = {}
             if options.node_action == 'inspect':
                 node = json_input(options.node_ref)
@@ -327,7 +357,45 @@ def main(argv=None):
                 raise ClientError('PREPARATION_REFUSED' if result_status == 'refused' else 'OUTCOME_UNKNOWN',
                                   'Original preparation is not published; inspect the original operation without resending',
                                   4 if result_status == 'refused' else 6)
-        elif options.command == 'nodes' and options.node_action != 'configuration':
+        elif options.command == 'nodes' and options.node_action in ('stop', 'release', 'recover'):
+            method, params = prepared
+            if method not in core.get('supportedMethods', ()) or core['supports'].get('nodeLifecycle') is not True:
+                raise ClientError('CAPABILITY_UNSUPPORTED', 'Service did not publish the requested Node lifecycle operation', 4)
+            if not lifecycle_request_valid(params, core['environmentNamespace']) or service.token in json.dumps(params):
+                raise ClientError('PARAMETER_INVALID', 'Lifecycle request belongs to another environment or contains authentication material', 2)
+            result = client.core_call(method, params, request_id)
+            if (not lifecycle_view_valid(result, options.node_action, core_schema(client.schema_version)['schema'])
+                    or service.token in json.dumps(result)):
+                raise ClientError('OUTCOME_UNKNOWN', 'Lifecycle receipt could not be safely validated; do not resend', 6)
+            data = result
+            operation_ref = result['operationRef']
+            result_status, exit_code, code = lifecycle_disposition(result)
+            evidence = {'level': 'lifecycleOperationObserved', 'runtimeVerified': False,
+                        'operationStatus': result['status']}
+            if exit_code:
+                raise ClientError(code, 'Lifecycle outcome requires inspection of the original operation; do not resend', exit_code)
+        elif options.command == 'nodes' and options.node_action == 'apply-profile':
+            method, params = prepared
+            if method not in core.get('supportedMethods', ()) or core['supports'].get('configurationManagement') is not True:
+                raise ClientError('CAPABILITY_UNSUPPORTED', 'Service did not publish the requested Profile application', 4)
+            if (not application_request_valid(
+                    {key: params[key] for key in ('requestId', 'profileRef', 'expectedConfigurationRevision', 'applicationPolicy')},
+                    core['environmentNamespace'])
+                    or not node_ref_valid(params['nodeRef'], core['environmentNamespace'])
+                    or service.token in json.dumps(params)):
+                raise ClientError('PARAMETER_INVALID', 'Profile application belongs to another environment or contains authentication material', 2)
+            result = client.core_call(method, params, request_id)
+            if (not operation_result_valid(result, core['environmentNamespace'])
+                    or service.token in json.dumps(result)):
+                raise ClientError('OUTCOME_UNKNOWN', 'Profile application result could not be safely validated; do not resend', 6)
+            data = result
+            operation_ref = result['operationRef']
+            result_status, exit_code, code = operation_disposition(result)
+            evidence = {'level': 'profileApplicationObserved', 'runtimeVerified': False,
+                        'allDeclarationsApplied': result['status'] == 'published' and result['configurationResult']['overallOutcome'] == 'applied'}
+            if exit_code:
+                raise ClientError(code, 'Profile application outcome requires inspection of the original operation; do not resend', exit_code)
+        elif options.command == 'nodes' and options.node_action in ('list', 'inspect'):
             method, params = prepared
             if method not in core.get('supportedMethods', ()):
                 raise ClientError('NODE_OBSERVATION_UNAVAILABLE', 'Service did not publish the requested Node observation', 4)

@@ -776,3 +776,11 @@ C/P分账如实：P仅codex一家真实进程（零模型）；pi/claude真实�
 验证（串行、terminal）：全产品 `products/agent-tools/tests` **689P/0F exit0**（含CLI/契约/发行/真实HTTP）；证据组合（management+wire+lifecycle+apply_profile）**65P/0F**；核心269P/3F同三继承ID无新增；records组合115P/0F。失败账：wire二次投影2项、客户端键集138项连带、两处夹具键集；断言未放宽无skip。
 
 剩余：CLI生命周期命令与三Skill同步、三家消费终止族与效果证据、任务/结果闭环、发行验收、真实M（pi+deepseek）、七家扩展。C受控；P/M无新增，M0；无用户数据/服务/push/主树合并，费用unknown。检查点后继续，不标完成门。
+
+### 2026-10-06 CLI 生命周期命令接线（测试待补）＋子代理通道故障记录（PARTIAL）
+
+前置e8ed406be9。平台事件如实入账：四个并行slice-worker（CLI命令、三家终止族）连续遭遇"Model request failed"（用户确认为opencode账号额度耗尽；换账号后本会话仍秒失败——**会话启动时快照子代理模型绑定，运行中不热加载，须开新会话生效**）。CLI切片代理中断前留下半成品：lifecycle.py（请求/投影校验＋disposition，语义完整）＋cli.py接线（nodes stop/release/recover/apply-profile）。主会话修复两处破损后全绿：list/inspect分派分支缺`method, params = prepared`（UnboundLocalError 24F→1F）、恢复NODE_OBSERVATION_UNAVAILABLE发前门（→0F）。
+
+验证：全产品 `products/agent-tools/tests` **689P/0F exit0**（修复前后同基线，无回归）。**CLI生命周期反例测试尚未编写**（形状/能力门控/幂等/丢回执/token不回显/A17），下一切片必须补齐后才算本项收口；命令行为未经独立反例验证，不声明完成。三家终止族消费切片零进展（全部代理失败未落盘）。
+
+交接状态：7检查点已提交（3f40afad33→e8ed406be9）＋本CLI接线为第8检查点；工作树仅剩本文件与cli.py/lifecycle.py/test_profile测试相关改动待提交。剩余队列不变：三家终止族→任务/结果→三Skill同步→发行验收→真实M→七家扩展。M0、费用unknown（子代理失败轮次的token消耗记平台账）。
