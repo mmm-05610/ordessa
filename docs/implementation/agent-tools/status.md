@@ -750,3 +750,13 @@ C为真实临时SQLite/journal＋家族Python实现与受控端口；P无原生�
 验证（串行、terminal）：test_unit_records.py **38P/0F exit0**（原30＋新8）；test_owner_wiring.py 15P/0F（补两坏形状例）；records导出import核验exit0。C真实临时SQLite＋受控端口，P/M无。登记设计边界：owner读与授权读同类型（provider即属主）；record_unit/record_session同型事务外epoch为既有模式未扩面。失败账一处测试侧mappingproxy序列化已修，断言未放宽、无skip。
 
 无用户数据/服务/push/主树合并；M0费用unknown。检查点后接codex集成与AgentLifecycle（第3次架构咨询），不标完成门。
+
+### 2026-10-06 codex 真实进程 P 级＋store 受控释放接缝（PARTIAL）
+
+前置344ba9efab。codex slice-worker持家族写权完成真实三适配器（runtime_channel：绝对路径codex app-server stdio、私根布局realpath校验、HOME/XDG/凭据形键隔离＋/proc核证、managed stdin写屏障、显式收回；projection：只经owner_read_*免调用读；lease：opaque grant＋bind绑原writer lease＋revoke fence）与17项P级真实进程测试（零模型显式断言），全包227P/0F主会话复核；写权已释放。真实证据：0.159.0实证兼容initialize/thread往返/错误保真/丢回执只读恢复（unknown保占、不重发、recover只读回收迟到回执）；thread/list省略params帧差异如实登记；turn/config/stop边缘未测不声明；close后ps无残留。详见[evidence/agent-unit-model/codex-p-process-and-release-seam.md](evidence/agent-unit-model/codex-p-process-and-release-seam.md)。
+
+architecture-reviewer第3次咨询（累计3/3达标）裁定release走新增受控释放接缝并关闭unknown→released潜伏缺口、新增窄观察端口、apply_profile签名与wire门控清单。主会话落地store接缝：record_operation_step(release_holder=...)＋_write_usages释放分支（仅active可释放、holder精确匹配、unknown结果下释放拒、终态幂等、历史不可改写）＋read_usages读接缝；test_usage_release.py 6反例（含缺口回归钉）。
+
+验证（串行、terminal）：codex 227P/0F（210 C＋17 P真实进程）；environment-api+persistence **76P/0F**（原70＋6）；产品integration **312P/0F**；records组合115P/0F；核心269P/3F同三个已登记继承ID。失败账均夹具侧（revision硬编码、UsageMutation payload Mapping、operation_ref撞身份、导入位置），断言未放宽无skip。
+
+C/P分账如实：P仅codex一家真实进程（零模型）；pi/claude真实进程、AgentLifecycle、wire生命周期绑定、三家消费终止族、旧消费者退役、任务/结果、发行与七家扩展继续。M0（授权已有未调用）；无凭据/全局配置/服务/push/主树合并，费用unknown。检查点后按评审3裁定实现AgentLifecycle，不标完成门。

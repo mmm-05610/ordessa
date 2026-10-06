@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from functools import wraps
 import hashlib
 import json
+from typing import Mapping
 
 from ordessa_environment_api.domain import DomainRevisionConflict, DomainWrite
 from ordessa_environment_api.errors import GuaranteeUnavailableError, IdentityMismatchError, UnknownResultError
@@ -195,7 +196,8 @@ class OperationRecordsMixin:
                     (revision + 1, payload, environment, write.namespace, write.record_id),
                 )
 
-    def _write_usages(self, request, intent, encoded, *, publication=False, uncertain=False, concluded=False):
+    def _write_usages(self, request, intent, encoded, *, publication=False, uncertain=False, concluded=False,
+                      release_holder=None):
         owner = operation_holder(request, intent.operation_ref)
         for mutation, expected, holder, target, rights, payload in encoded:
             for ref in (mutation.expected_holder_ref, mutation.holder_ref, mutation.target_ref):
@@ -214,6 +216,13 @@ class OperationRecordsMixin:
                 if (mutation.holder_ref != destination or intent.node_ref not in (destination, participant)
                         or mutation.state != "active"):
                     raise IdentityMismatchError("publication node holder differs from fixed node identity")
+            elif release_holder is not None:
+                # Controlled release seam: the step may only release Usages
+                # held exactly by this holder (typically the node holder).
+                if mutation.state != "released":
+                    raise IdentityMismatchError("release step can only release Usages")
+                if mutation.holder_ref != release_holder or mutation.expected_holder_ref != release_holder:
+                    raise IdentityMismatchError("release Usage must belong to the exact release holder")
             elif mutation.holder_ref != owner or (mutation.expected_holder_ref is not None and mutation.expected_holder_ref != owner):
                 raise IdentityMismatchError("step Usage must belong to this exact operation")
             row = self._conn.execute("SELECT * FROM env_usages WHERE usage_id=?", (mutation.usage_id,)).fetchone()
@@ -236,6 +245,10 @@ class OperationRecordsMixin:
                     raise IdentityMismatchError("released Usage is terminal; new occupation requires a new Usage id")
                 if row["state"] == "unknown" and mutation.state == "active" and not concluded:
                     raise UnknownResultError("unknown Usage requires concluded evidence before becoming active")
+                # Only an active Usage can be released; unknown and other
+                # non-active rows keep their hold (A14: never release unknown).
+                if mutation.state == "released" and row["state"] not in ("active", "released"):
+                    raise UnknownResultError("only an active Usage can be released")
                 if row["target_ref"] != target:
                     raise IdentityMismatchError("Usage cannot silently change its fixed target")
                 try:
@@ -253,6 +266,29 @@ class OperationRecordsMixin:
                     (mutation.state, rights, holder, row["revision"] + 1, payload,
                      mutation.usage_id, request.environment_namespace),
                 )
+
+    def read_usages(self, environment, holder_ref):
+        """Read one holder's Usage rows for controlled release CAS construction."""
+        if not isinstance(holder_ref, Mapping):
+            raise ValueError("usage holder reference is required")
+        rows = self._conn.execute(
+            "SELECT usage_id,state,rights,holder_ref,target_ref,revision,payload FROM env_usages "
+            "WHERE environment=? AND holder_ref=? ORDER BY usage_id",
+            (environment, safe_json(holder_ref)),
+        ).fetchall()
+        result = []
+        for row in rows:
+            try:
+                rights = json.loads(row["rights"])
+                holder = json.loads(row["holder_ref"])
+                target = json.loads(row["target_ref"])
+                payload = json.loads(row["payload"]) if row["payload"] is not None else None
+            except (TypeError, ValueError):
+                raise GuaranteeUnavailableError("stored Usage row is unreadable") from None
+            result.append({"usageId": row["usage_id"], "state": row["state"], "rights": rights,
+                           "holderRef": holder, "targetRef": target, "revision": row["revision"],
+                           "payload": payload})
+        return tuple(result)
 
     def _set_operation(self, request, row, status, *, step=None, evidence=None, result=None, publication_digest=None):
         revision = row["operation_revision"] + 1
@@ -384,11 +420,13 @@ class OperationRecordsMixin:
     @_serialized
     def record_operation_step(self, request, operation_digest, step_id, step_digest,
                               expected_revision, outcome, evidence, writes=(), usages=(),
-                              *, require_complete_usages=False):
+                              *, require_complete_usages=False, release_holder=None):
         if outcome not in {"concluded", "refused", "unknown"}:
             raise ValueError("invalid step result outcome")
         if type(require_complete_usages) is not bool or require_complete_usages and outcome != "concluded":
             raise ValueError("complete retained Usage check requires a concluded step")
+        if release_holder is not None and (not isinstance(release_holder, Mapping) or outcome != "concluded"):
+            raise ValueError("Usage release requires a concluded step and an explicit release holder")
         evidence_json = safe_json(evidence)
         if outcome != "unknown" and not evidence:
             raise ValueError("a known result requires explicit evidence references")
@@ -397,6 +435,9 @@ class OperationRecordsMixin:
         if require_complete_usages:
             change_digest = hashlib.sha256(safe_json({"changeDigest": change_digest,
                                                      "requireCompleteUsages": True}).encode()).hexdigest()
+        if release_holder is not None:
+            change_digest = hashlib.sha256(safe_json({"changeDigest": change_digest,
+                                                     "releaseHolder": release_holder}).encode()).hexdigest()
         with self._operation_transaction():
             op_row, operation = self._check_operation(request, operation_digest)
             row = self._step_row(request, step_id)
@@ -421,7 +462,7 @@ class OperationRecordsMixin:
                     raise IdentityMismatchError("step conclusion must account for every retained operation Usage")
             self._write_domains(request.environment_namespace, domains)
             self._write_usages(request, operation.intent, usage_rows, uncertain=(outcome == "unknown"),
-                               concluded=(outcome == "concluded"))
+                               concluded=(outcome == "concluded"), release_holder=release_holder)
             self._conn.execute(
                 "UPDATE env_request_steps SET revision=?,outcome=?,evidence_json=?,result_digest=?,evidence_digest=? "
                 "WHERE environment=? AND principal=? AND request_id=? AND step_id=?",

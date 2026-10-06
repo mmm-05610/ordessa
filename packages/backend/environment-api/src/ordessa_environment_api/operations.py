@@ -247,14 +247,23 @@ class OperationStorePort(Protocol):
     def record_operation_step(self, request: RequestKey, operation_digest: str, step_id: str,
                               step_digest: str, expected_revision: int, outcome: str, evidence: Mapping[str, Any],
                               writes: tuple[DomainWrite, ...] = (), usages: tuple[UsageMutation, ...] = (),
-                              *, require_complete_usages: bool = False) -> StepRecord:
+                              *, require_complete_usages: bool = False,
+                              release_holder: Mapping | None = None) -> StepRecord:
         """Optionally conclude every retained operation Usage in this same CAS.
 
         The opt-in is valid only for concluded steps. All retained Usages must
         be represented by active original-operation mutations; newly acquired
         Usages may also be included. Failure must leave the step unmodified.
         Older callers retain their original per-step behavior.
+
+        ``release_holder`` opens the controlled release seam: every Usage
+        mutation of such a step must be a release whose expected and actual
+        holder are exactly this holder (typically the node holder). Only
+        active Usage rows can be released; unknown rows keep their hold.
         """
+        ...
+    def read_usages(self, environment: str, holder_ref: Mapping[str, Any]) -> tuple[Mapping[str, Any], ...]:
+        """Read one holder's Usage rows for controlled release CAS construction."""
         ...
     def publish_operation(self, request: RequestKey, digest: str, expected_revision: int,
                           required_steps: tuple[str, ...], writes: tuple[DomainWrite, ...],
