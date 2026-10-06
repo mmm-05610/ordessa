@@ -23,7 +23,7 @@ def observation_server(parts, mode='healthy', managing=False):
     # Use the same actual published Node and admitted controlled owner. No issuer
     # is installed here: describing capabilities requires only read admission.
     assert services.configuration.capabilities()['configurationManagement'] is managing
-    handlers = {method.method_id: method.handler for method in agent_core_methods(lambda: parts[1], contract_version='agent-assembly/2')}
+    handlers = {method.method_id: method.handler for method in agent_core_methods(lambda: parts[1], contract_version='agent-assembly/3')}
     calls = []
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args): pass

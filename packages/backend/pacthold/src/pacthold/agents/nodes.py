@@ -149,11 +149,15 @@ class NodePublication:
             raise AdmissionRefusedError("node invocation permission unavailable or refused")
 
     def reserve(self, request: RequestKey, digest: str, intent: OperationIntent,
-                *, usages: tuple[UsageMutation, ...] = ()):
+                *, usages: tuple[UsageMutation, ...] = (),
+                writes: tuple[DomainWrite, ...] = ()):
         """Reserve identity and pre-dispatch resource holds in one transaction.
 
         Replays return the original reservation; they cannot acquire new holds.
         The coordinator must include the fixed resource recipe in its digest.
+        Extra ``writes`` (e.g. an operation-bound immutable snapshot) commit in
+        the same transaction: either the identity, the holds, the writes and
+        the operation all persist, or none of them do.
         """
         env = self._environment
         with env._admission_lock:
@@ -183,7 +187,7 @@ class NodePublication:
             if ref.generation != 1:
                 raise IdentityMismatchError("a new core node identity starts at generation 1")
             return store.reserve_operation(request, digest, intent,
-                writes=(DomainWrite(IDENTITIES, ref.instance_id, 0, identity),),
+                writes=(DomainWrite(IDENTITIES, ref.instance_id, 0, identity),) + tuple(writes),
                 usages=usages)
 
     def _identity(self, operation):

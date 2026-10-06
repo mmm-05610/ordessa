@@ -1,6 +1,6 @@
 {
   "schema": {
-    "contractVersion": "agent-assembly/2",
+    "contractVersion": "agent-assembly/3",
     "transport": "wire/1",
     "requestKeyScope": [
       "environmentNamespace",
@@ -268,12 +268,14 @@
       "agents.nodes.prepare": {
         "action": "prepare",
         "required": [
-          "profileRef",
           "context",
           "options",
           "requestId"
         ],
-        "optional": [],
+        "optional": [
+          "profileRef",
+          "profileManifest"
+        ],
         "effectful": true,
         "additionalProperties": false
       },
@@ -344,12 +346,15 @@
         "action": "applyProfile",
         "required": [
           "nodeRef",
-          "profileRef",
+          "baseProfileRef",
           "expectedConfigurationRevision",
           "applicationPolicy",
           "requestId"
         ],
-        "optional": [],
+        "optional": [
+          "profileRef",
+          "profileManifest"
+        ],
         "effectful": true,
         "additionalProperties": false
       },
@@ -457,7 +462,31 @@
         "confirmationEvidence",
         "comparisonGuarantee"
       ]
+    },
+    "profileSource": {
+      "exactlyOneOf": [
+        "profileRef",
+        "profileManifest"
+      ],
+      "manifest": {
+        "required": [
+          "harnessDefinitionRef",
+          "schemaVersion",
+          "declarations"
+        ],
+        "optional": [
+          "metadata"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "omissionError": {
+      "code": "CONFIGURATION_DECLARATIONS_OMITTED",
+      "details": [
+        "omittedDeclarationIds"
+      ],
+      "requiresResubmit": "explicit reset or disabled declarations"
     }
   },
-  "schemaDigest": "sha256:71113ddb93f72dc69b8283012fe689416fcd17a7ab6629c0cb6265527c9a7e97"
+  "schemaDigest": "sha256:bf06f75902b4e628d9043e477aa9283c799d7a31a496e4a71161bd650fa8d090"
 }

@@ -394,7 +394,7 @@ def test_lifecycle_operation_view_and_disposition_follow_the_shipped_management_
     assert shipped == {'required': ['operationRef', 'revision', 'status', 'action'],
                        'additionalProperties': False,
                        'statuses': ['reserved', 'running', 'unknown', 'published', 'refused', 'cancelled']}
-    schema = core_schema('agent-assembly/2')['schema']
+    schema = core_schema('agent-assembly/3')['schema']
     assert schema['results']['lifecycleOperation'] == shipped
     base = {'operationRef': 'lifecycle-stop-abcd', 'revision': 2, 'status': 'running', 'action': 'stop', 'node': None}
     assert view_valid(base, 'stop', schema)
@@ -469,10 +469,13 @@ def test_same_request_replays_the_original_receipt_without_second_dispatch(parts
     assert parts.store.read_operation_step(key(parts, request['requestId']), action).outcome == 'concluded'
 
 
-@pytest.mark.parametrize('first,second', [({}, {'expectedPublicationRevision': 1}),
-                                          ({'expectedPublicationRevision': 1}, {'expectedPublicationRevision': 2})])
-def test_spent_request_with_changed_preconditions_conflicts_without_effect(parts, tmp_path, monkeypatch, capsys, first, second):
+@pytest.mark.parametrize('flip', [False, True])
+def test_spent_request_with_changed_preconditions_conflicts_without_effect(parts, tmp_path, monkeypatch, capsys, flip):
     monkeypatch.setenv('TOOLS_TEST_TOKEN', SECRET)
+    # The precondition CAS only admits the Node's actual publication revision;
+    # omission and the exact value stay individually valid in both orders.
+    exact = {'expectedPublicationRevision': parts.node['publicationRevision']}
+    first, second = ({}, dict(exact)) if not flip else (dict(exact), {})
     path = write(tmp_path / 'stop.json', lifecycle_file(parts, 'stop', preconditions=dict(first)))
     with server(parts, 'healthy') as (endpoint, calls, seen):
         accepted = command(cli_args(tmp_path, endpoint, 'stop', path), capsys)
@@ -490,6 +493,19 @@ def test_spent_request_with_changed_preconditions_conflicts_without_effect(parts
     assert accepted_again[1]['data']['operationRef'] != accepted[1]['operationRef']
     assert native_calls(parts) == ['stop', 'stop']
     assert sum(call['method'] == 'agents.nodes.stop' for call in calls) == 3
+
+
+def test_stale_expected_publication_revision_conflicts_without_effect(parts, tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv('TOOLS_TEST_TOKEN', SECRET)
+    stale = {'expectedPublicationRevision': parts.node['publicationRevision'] + 1}
+    path = write(tmp_path / 'stale.json', lifecycle_file(parts, 'stop', preconditions=stale))
+    with server(parts, 'healthy') as (endpoint, calls, seen):
+        conflict = command(cli_args(tmp_path, endpoint, 'stop', path), capsys)
+    assert conflict[0] == 5 and conflict[1]['error']['code'] == 'PRECONDITION_CONFLICT'
+    assert conflict[1]['error']['retryable'] is False
+    assert discovery_only(conflict[1])
+    assert native_calls(parts) == []
+    assert sum(call['method'] == 'agents.nodes.stop' for call in calls) == 1
 
 
 # ---------------------------------------------------------------------------

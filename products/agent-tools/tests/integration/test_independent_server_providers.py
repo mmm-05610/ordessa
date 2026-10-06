@@ -27,9 +27,9 @@ def test_three_independent_server_owners_share_registry_and_restart_identity(tmp
     deployment = deployment_module()
     calls = []
     selected = tuple(plugin(*family, calls) for family in FAMILIES)
-    config = deployment.AgentServiceConfiguration(tmp_path / 'server', agent_contract_version='agent-assembly/2')
+    config = deployment.AgentServiceConfiguration(tmp_path / 'server', agent_contract_version='agent-assembly/3')
     runtime = deployment.AgentToolsDeployment(fingerprint_port=fingerprint(),
-        agent_contract_version='agent-assembly/2', provider_plugins=selected).build_runtime(config)
+        agent_contract_version='agent-assembly/3', provider_plugins=selected).build_runtime(config)
     identities = []
     refs = []
     try:
@@ -73,14 +73,14 @@ def test_foreign_provider_rolls_back_host_enablement_and_closes_root(tmp_path, f
     deployment = deployment_module()
     calls = []
     selected = (plugin(family, module, prefix, calls, foreign=True),)
-    config = deployment.AgentServiceConfiguration(tmp_path / 'server', agent_contract_version='agent-assembly/2')
+    config = deployment.AgentServiceConfiguration(tmp_path / 'server', agent_contract_version='agent-assembly/3')
     with pytest.raises(GuaranteeUnavailableError):
         deployment.AgentToolsDeployment(fingerprint_port=fingerprint(),
-            agent_contract_version='agent-assembly/2', provider_plugins=selected).build_runtime(config)
+            agent_contract_version='agent-assembly/3', provider_plugins=selected).build_runtime(config)
     assert len(calls) == 1
     # A failure must release the same owned root, not leak a competing store.
     replacement = deployment.AgentToolsDeployment(fingerprint_port=fingerprint(),
-        agent_contract_version='agent-assembly/2').build_runtime(config)
+        agent_contract_version='agent-assembly/3').build_runtime(config)
     try:
         replacement.start()
         assert replacement.core_binding.environment.registry_snapshot.agent_runtime_provider_ids == ()
@@ -107,7 +107,7 @@ def test_provider_selection_requires_v2_and_explicit_tuple(tmp_path):
     with pytest.raises(GuaranteeUnavailableError):
         deployment.AgentToolsDeployment(fingerprint_port=fingerprint(), provider_plugins=(selected,))
     with pytest.raises(TypeError):
-        deployment.AgentToolsDeployment(fingerprint_port=fingerprint(), agent_contract_version='agent-assembly/2',
+        deployment.AgentToolsDeployment(fingerprint_port=fingerprint(), agent_contract_version='agent-assembly/3',
             provider_plugins=[selected])
     assert calls == [] and list(tmp_path.iterdir()) == []
 
@@ -122,13 +122,13 @@ def test_duplicate_core_provider_rolls_back_all_selected_owners(tmp_path):
         def descriptor(self):
             return ServerPluginDescriptor('controlled-other', 'Counterexample duplicate provider', '0.1.0a1')
     second = OtherOwner(first._factory)
-    config = deployment.AgentServiceConfiguration(tmp_path / 'server', agent_contract_version='agent-assembly/2')
+    config = deployment.AgentServiceConfiguration(tmp_path / 'server', agent_contract_version='agent-assembly/3')
     with pytest.raises(RegistrationConflictError):
-        deployment.AgentToolsDeployment(fingerprint_port=fingerprint(), agent_contract_version='agent-assembly/2',
+        deployment.AgentToolsDeployment(fingerprint_port=fingerprint(), agent_contract_version='agent-assembly/3',
             provider_plugins=(first, second)).build_runtime(config)
     assert len(calls) == 2 and calls[0] == calls[1]
     clean = deployment.AgentToolsDeployment(fingerprint_port=fingerprint(),
-        agent_contract_version='agent-assembly/2').build_runtime(config)
+        agent_contract_version='agent-assembly/3').build_runtime(config)
     try:
         clean.start()
         assert clean.core_binding.environment.registry_snapshot.agent_runtime_provider_ids == ()
@@ -140,9 +140,9 @@ def test_first_round_has_three_owners_and_no_native_authority(tmp_path, monkeypa
     deployment = deployment_module()
     calls = []
     selected = tuple(plugin(*family, calls) for family in FAMILIES)
-    config = deployment.AgentServiceConfiguration(tmp_path / 'server', agent_contract_version='agent-assembly/2')
+    config = deployment.AgentServiceConfiguration(tmp_path / 'server', agent_contract_version='agent-assembly/3')
     runtime = deployment.AgentToolsDeployment(fingerprint_port=fingerprint(),
-        agent_contract_version='agent-assembly/2', provider_plugins=selected).build_runtime(config)
+        agent_contract_version='agent-assembly/3', provider_plugins=selected).build_runtime(config)
     try:
         runtime.start()
         env = runtime.core_binding.environment
@@ -160,9 +160,9 @@ def test_first_round_has_three_owners_and_no_native_authority(tmp_path, monkeypa
 
 def test_existing_root_refuses_provider_reactivation_before_factory(tmp_path):
     deployment = deployment_module()
-    config = deployment.AgentServiceConfiguration(tmp_path / 'server', agent_contract_version='agent-assembly/2')
+    config = deployment.AgentServiceConfiguration(tmp_path / 'server', agent_contract_version='agent-assembly/3')
     empty = deployment.AgentToolsDeployment(fingerprint_port=fingerprint(),
-        agent_contract_version='agent-assembly/2').build_runtime(config)
+        agent_contract_version='agent-assembly/3').build_runtime(config)
     empty.start(); empty.stop()
     # Simulate a historical root created before durable generation evidence
     # existed. The refusal target is the missing trusted basis, not root age:
@@ -177,6 +177,6 @@ def test_existing_root_refuses_provider_reactivation_before_factory(tmp_path):
         db.commit()
     calls = []
     with pytest.raises(GuaranteeUnavailableError, match='generation unavailable'):
-        deployment.AgentToolsDeployment(fingerprint_port=fingerprint(), agent_contract_version='agent-assembly/2',
+        deployment.AgentToolsDeployment(fingerprint_port=fingerprint(), agent_contract_version='agent-assembly/3',
             provider_plugins=(plugin(*FAMILIES[0], calls),)).build_runtime(config)
     assert calls == []

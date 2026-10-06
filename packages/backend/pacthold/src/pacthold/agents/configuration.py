@@ -29,6 +29,33 @@ class ConfigurationRevisionConflict(IdentityMismatchError):
     code = "CONFIGURATION_REVISION_CONFLICT"
 
 
+class ConfigurationOmissionRefused(ConfigurationContractError):
+    """Submitted manifest omits base declarations; reset/disabled must be explicit.
+
+    An omission is never guessed as a reset or a default and never reaches a
+    native dispatch. ``omitted`` carries the exact declaration ids back so the
+    caller can resubmit them with explicit reset or disabled actions.
+    """
+    code = "CONFIGURATION_DECLARATIONS_OMITTED"
+
+    def __init__(self, omitted):
+        self.omitted = tuple(omitted)
+        super().__init__("omitted base declarations require explicit reset or disabled")
+
+
+class ConfigurationConversionRefused(ConfigurationContractError):
+    """A declarationId changed configurationKind/schemaVersion in place.
+
+    No conversion semantics exist in this contract version; the request is
+    refused before any dispatch instead of being reinterpreted as delete+add.
+    """
+    code = "CONFIGURATION_CONVERSION_UNSUPPORTED"
+
+    def __init__(self, conflicts):
+        self.conflicts = tuple(conflicts)
+        super().__init__("declaration kind/schema changes cannot be converted")
+
+
 def _name(value):
     if not isinstance(value, str) or not value or value.strip() != value or len(value) > 256 or any(ord(c) < 32 for c in value):
         raise ConfigurationContractError("bounded nonempty identity required")
@@ -239,6 +266,64 @@ class ConfigurationChangeResult:
         return {"operationRef": self.operation_ref, "overallOutcome": self.overall_outcome,
                 "itemResults": [item.to_dict() for item in self.item_results],
                 "confirmedSnapshot": None if self.confirmed_snapshot is None else self.confirmed_snapshot.to_dict()}
+
+
+@dataclass(frozen=True)
+class ConfigurationDiff:
+    """Pure whole-manifest declaration diff; carries no dispatch authority."""
+    effective: tuple[Mapping, ...]
+    omitted: tuple[str, ...]
+    kind_conflicts: tuple[str, ...]
+
+    @property
+    def unchanged(self) -> bool:
+        return not self.effective and not self.omitted and not self.kind_conflicts
+
+
+def _declaration_index(manifest):
+    if not isinstance(manifest, Mapping) or not isinstance(manifest.get("declarations"), (list, tuple)):
+        raise ConfigurationContractError("manifest declarations required")
+    items = {}
+    for raw in manifest["declarations"]:
+        plain = json.loads(safe_json(raw))
+        if (not isinstance(plain, dict) or not isinstance(plain.get("declarationId"), str)
+                or not plain["declarationId"] or "configurationKind" not in plain or "schemaVersion" not in plain):
+            raise ConfigurationContractError("declaration identity required")
+        name = plain["declarationId"]
+        if name in items:
+            raise ConfigurationContractError("duplicate declaration id")
+        items[name] = plain
+    return items
+
+
+def _declaration_same(left, right):
+    return safe_json({"value": left}) == safe_json({"value": right})
+
+
+def derive_change(base_manifest, new_manifest):
+    """Compare two whole manifests by declarationId (interfaces.md 3.2).
+
+    Returns a ConfigurationDiff whose ``effective`` holds only the new
+    declarations that actually change something (added ids and changed
+    content); unchanged declarations never produce a native dispatch.
+    ``omitted`` lists base ids absent from the new manifest — they are never
+    inferred as reset or default and never dispatched. ``kind_conflicts``
+    lists ids whose configurationKind/schemaVersion changed in place, which
+    no provider conversion exists for in this contract version.
+    """
+    base_definition = base_manifest.get("harnessDefinitionRef") if isinstance(base_manifest, Mapping) else None
+    new_definition = new_manifest.get("harnessDefinitionRef") if isinstance(new_manifest, Mapping) else None
+    if base_definition is None or new_definition is None or not _declaration_same(base_definition, new_definition):
+        raise ConfigurationContractError("a Node's harness definition cannot change; prepare a new Node instead")
+    base = _declaration_index(base_manifest)
+    new = _declaration_index(new_manifest)
+    omitted = tuple(name for name in base if name not in new)
+    kind_conflicts = tuple(name for name, item in new.items() if name in base and (
+        not _declaration_same(item["configurationKind"], base[name]["configurationKind"])
+        or not _declaration_same(item["schemaVersion"], base[name]["schemaVersion"])))
+    effective = tuple(item for name, item in new.items()
+                      if name not in base or not _declaration_same(item, base[name]))
+    return ConfigurationDiff(effective, omitted, kind_conflicts)
 
 
 @dataclass(frozen=True)

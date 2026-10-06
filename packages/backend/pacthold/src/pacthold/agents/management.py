@@ -17,9 +17,12 @@ from ordessa_environment_api.operations import OperationIntent, OperationStorePo
 from .configuration import (
  ConfigurationChangeRequest, ConfigurationChangeResult, ConfigurationContractError,
  ConfigurationSnapshot, ConfigurationUnsupported, ConfigurationRevisionConflict, UnitInspection,
+ ConfigurationConversionRefused, ConfigurationItemResult, ConfigurationOmissionRefused,
+ derive_change,
 )
 from .invocation import InvocationIssuer
 from .nodes import encode_node_ref
+from .contracts import ProfileRef
 
 CONFIGURATION_ATTEMPTS = 'agents.configuration-attempts'
 
@@ -108,27 +111,50 @@ class AgentConfiguration:
             raise GuaranteeUnavailableError('explicit invocation issuer on the same Environment store required')
         return node
 
-    def reserve(self, request, node_ref, change):
+    def reserve(self, request, node_ref, change, *, profile_ref=None, base_profile_ref=None,
+                snapshot_write=None, mode=None):
+        """Reserve one configuration change on the existing operation ledger.
+
+        Manifest-sourced requests carry the frozen ``profile_ref`` (the new
+        desired snapshot), the caller's ``base_profile_ref`` and optionally the
+        ``snapshot_write`` that must commit in this same transaction. The
+        scope fence records the current expected profile source so a later
+        update can bind its base (interfaces.md 3.2); ``mode='no-change-verification'``
+        reserves a data-only receipt that never dispatches and never advances
+        the expected source.
+        """
         if not isinstance(change, ConfigurationChangeRequest) or not isinstance(request, RequestKey) or request.request_id != change.request_id:
             raise IdentityMismatchError('configuration request identity differs')
+        if profile_ref is not None and type(profile_ref) is not ProfileRef:
+            raise IdentityMismatchError('fixed new Profile reference required')
+        if base_profile_ref is not None and type(base_profile_ref) is not ProfileRef:
+            raise IdentityMismatchError('fixed base Profile reference required')
         env = self._environment
         with env._admission_lock:
             node = self._request(request, node_ref)
             fixed = {'nodeRef':encode_node_ref(node_ref), 'change':change.to_dict()}
+            if profile_ref is not None:
+                fixed['profileRef'] = profile_ref.to_dict()
+            if base_profile_ref is not None:
+                fixed['baseProfileRef'] = base_profile_ref.to_dict()
+            if mode is not None:
+                fixed['mode'] = mode
             digest = env._fingerprint_port.fingerprint(request, 'pacthold.agents.configuration.apply', _hash(fixed))
             prior = env._store.read_operation(request)
             if prior is not None:
                 if prior.digest != digest or prior.intent.kind != 'configuration-change':
                     raise IdentityMismatchError('spent configuration request differs')
                 return prior
-            admitted = self._owner(node, 'inspect_unit', 'inspect_configuration', 'describe_configuration', 'apply_configuration')
+            required = ('inspect_unit', 'inspect_configuration') if mode is not None else (
+                'inspect_unit', 'inspect_configuration', 'describe_configuration', 'apply_configuration')
+            admitted = self._owner(node, *required)
             unit = self._inspection(node, admitted)
             snapshot = self.inspect(node_ref)
             if snapshot.source_revision is None or snapshot.comparison_guarantee == 'unavailable':
                 raise ConfigurationUnsupported('owner revision comparison unavailable')
             if snapshot.source_revision != change.expected_configuration_revision:
                 raise ConfigurationRevisionConflict('expected owner configuration revision differs')
-            descriptions = {(item.configuration_kind,item.schema_version):item for item in self.describe(node_ref)}
+            descriptions = {(item.configuration_kind,item.schema_version):item for item in self.describe(node_ref)} if mode is None else {}
             skipped = []
             for declaration in change.declarations:
                 item = descriptions.get((declaration['configurationKind'],declaration['schemaVersion']))
@@ -143,23 +169,17 @@ class AgentConfiguration:
                 unresolved = bool(declaration.get('resourceRefs'))
                 if unresolved and declaration['requirement'] == 'required':
                     raise ConfigurationUnsupported('required material acquisition unavailable before dispatch')
-                if not supported or unresolved:
+                if mode is None and (not supported or unresolved):
                     skipped.append(declaration['declarationId'])
             scope_id = 'scope-' + hashlib.sha256(safe_json(unit.configuration_target_ref).encode()).hexdigest()[:48]
             fence = env._store.read_domain(env.environment_id, CONFIGURATION_ATTEMPTS, scope_id)
-            if fence is not None:
-                source = fence['value']
-                old_key = RequestKey(env.environment_id, source['principalScope'], source['requestId'])
-                old = env._store.read_operation(old_key)
-                if (not _same(source.get('scopeRef'),unit.configuration_target_ref) or old is None
-                        or old.intent.kind != 'configuration-change'
-                        or old.intent.operation_ref != source.get('operationRef')
-                        or not _same(old.intent.context_ref.get('configurationTargetRef'),unit.configuration_target_ref)):
-                    raise GuaranteeUnavailableError('configuration scope source identity damaged')
-                if old.status not in {'published','refused','cancelled'}:
-                    raise UnknownResultError('scope has an unresolved configuration operation')
+            expected_profile, expected_operation = self._expected_source(node, fence)
+            if base_profile_ref is not None and not _same(base_profile_ref.to_dict(), expected_profile):
+                raise ConfigurationRevisionConflict('base Profile snapshot differs from the scope expected source')
             operation_ref = 'configuration-' + hashlib.sha256(safe_json({'environmentNamespace':env.environment_id,
                 'principalScope':request.principal_scope,'requestId':request.request_id}).encode()).hexdigest()[:48]
+            if mode is None and profile_ref is not None:
+                expected_profile, expected_operation = profile_ref.to_dict(), operation_ref
             context = {'environmentNamespace':env.environment_id, **fixed,
                 'skippedOptional':skipped,
                 'effectiveDeclarations':[_plain(item) for item in change.declarations if item['declarationId'] not in skipped],
@@ -173,32 +193,182 @@ class AgentConfiguration:
                               management_epoch=unit.management_epoch)
             intent = OperationIntent(operation_ref, 'configuration-change', node['lineage']['profileSnapshotRef'],
                                      context, (step,), encode_node_ref(node_ref), unit.management_epoch)
-            return env._store.reserve_operation(request,digest,intent,writes=(DomainWrite(CONFIGURATION_ATTEMPTS,
-                scope_id,fence['revision'] if fence else 0,{'scopeRef':_plain(unit.configuration_target_ref),
-                    'principalScope':request.principal_scope,'requestId':request.request_id,'operationRef':operation_ref}),))
+            fence_value = {'scopeRef':_plain(unit.configuration_target_ref),
+                'principalScope':request.principal_scope,'requestId':request.request_id,
+                'operationRef':operation_ref,
+                'expectedProfileRef':expected_profile,
+                'expectedProfileOperationRef':expected_operation}
+            writes = [DomainWrite(CONFIGURATION_ATTEMPTS, scope_id,
+                                  fence['revision'] if fence else 0, fence_value)]
+            if snapshot_write is not None:
+                writes.append(snapshot_write)
+            return env._store.reserve_operation(request, digest, intent, writes=tuple(writes))
+
+    def _expected_source(self, node, fence):
+        """Current expected profile source for this scope, never guessed.
+
+        Without a scope fence the expected source is the frozen preparation
+        snapshot. A fence must pass the original source identity checks and
+        carry an explicit expected profile reference; older shapeless records
+        are refused instead of reinterpreted.
+        """
+        env = self._environment
+        if fence is None:
+            return node['lineage']['profileSnapshotRef'], None
+        source = fence['value']
+        old_key = RequestKey(env.environment_id, source['principalScope'], source['requestId'])
+        old = env._store.read_operation(old_key)
+        target = node['binding']['configurationTargetRef']
+        if (not _same(source.get('scopeRef'), target) or old is None
+                or old.intent.kind != 'configuration-change'
+                or old.intent.operation_ref != source.get('operationRef')
+                or not _same(old.intent.context_ref.get('configurationTargetRef'), target)):
+            raise GuaranteeUnavailableError('configuration scope source identity damaged')
+        if old.status not in {'published', 'refused', 'cancelled'}:
+            raise UnknownResultError('scope has an unresolved configuration operation')
+        expected = source.get('expectedProfileRef')
+        expected_operation = source.get('expectedProfileOperationRef')
+        try:
+            if expected is None:
+                raise ValueError()
+            ProfileRef.from_dict(json.loads(safe_json(expected)))
+        except (ValueError, TypeError, KeyError):
+            raise GuaranteeUnavailableError('configuration scope expected source unavailable') from None
+        if expected_operation is not None and (not isinstance(expected_operation, str) or not expected_operation):
+            raise GuaranteeUnavailableError('configuration scope source identity damaged')
+        return expected, expected_operation
 
     def apply_profile(self, request, node_ref, profile_ref, expected_configuration_revision,
-                      application_policy):
-        """Derive one fixed Profile's declarations in core and apply them.
+                      application_policy, *, base_profile_ref, profile_manifest=None):
+        """Update a running unit from one complete manifest (interfaces.md 3.2).
 
-        The declarations always come from the core-held Profile snapshot; the
-        request body can never carry or alter them. Applying a Profile never
+        Exactly one configuration source: an exact ProfileRef or a complete
+        manifest body frozen into an immutable snapshot in the same
+        transaction as the reservation. The caller binds the base expected
+        snapshot and the owner-observed revision. Omitted base declarations
+        are never guessed as resets and in-place kind/schema changes are
+        refused before dispatch. An unchanged manifest dispatches nothing:
+        it reports the standing operation's owner-recorded result when that
+        result covers the manifest, otherwise an explicit unverified receipt —
+        never a fabricated all-applied outcome. Applying a Profile never
         writes the catalog back and a Profile update never applies itself.
         """
-        from .configuration import ConfigurationChangeRequest
-        from .contracts import ProfileRef
         from .profiles import ProfileCatalog
-        if type(profile_ref) is not ProfileRef:
+        if (profile_ref is None) == (profile_manifest is None):
+            raise ConfigurationContractError('exactly one configuration source required')
+        if type(base_profile_ref) is not ProfileRef:
+            raise IdentityMismatchError('fixed base Profile reference required')
+        if profile_ref is not None and type(profile_ref) is not ProfileRef:
             raise IdentityMismatchError('fixed Profile reference required')
-        manifest = ProfileCatalog(self._environment).read(profile_ref)
+        catalog = ProfileCatalog(self._environment)
+        base_manifest = catalog.read(base_profile_ref)
+        snapshot_write = None
+        if profile_ref is None:
+            profile_ref, snapshot_write = catalog.stage_snapshot(profile_manifest)
+            new_content = profile_manifest
+        else:
+            new_content = catalog.read(profile_ref).content
+        diff = derive_change(base_manifest.content, new_content)
+        if diff.omitted:
+            raise ConfigurationOmissionRefused(diff.omitted)
+        if diff.kind_conflicts:
+            raise ConfigurationConversionRefused(diff.kind_conflicts)
         declarations = tuple(json.loads(safe_json(item))
-                             for item in manifest.content.get('declarations', ()))
+                             for item in new_content.get('declarations', ()))
+        if not diff.effective:
+            change = ConfigurationChangeRequest(request.request_id, expected_configuration_revision,
+                                                declarations, application_policy)
+            return self._no_change(request, node_ref, change, profile_ref, base_profile_ref,
+                                   snapshot_write)
         change = ConfigurationChangeRequest(request.request_id, expected_configuration_revision,
-                                            declarations, application_policy)
-        return self.apply(request, node_ref, change)
+                                            diff.effective, application_policy)
+        return self.apply(request, node_ref, change, profile_ref=profile_ref,
+                          base_profile_ref=base_profile_ref, snapshot_write=snapshot_write)
 
-    def apply(self, request, node_ref, change):
-        operation = self.reserve(request,node_ref,change)
+    def _no_change(self, request, node_ref, change, profile_ref, base_profile_ref, snapshot_write=None):
+        """Unchanged manifest: dispatch nothing and report standing facts only.
+
+        When the scope's standing configuration operation was itself derived
+        from exactly this manifest, its recorded owner-verified result is the
+        authoritative no-change answer (interfaces.md PJ05). Otherwise the
+        request is spent on an explicit unverified receipt whose items are
+        reported unknown: no owner confirmation exists for this request, so
+        nothing may be reported applied (PJ08).
+        """
+        env = self._environment
+        with env._admission_lock:
+            node = self._request(request, node_ref)
+            admitted = self._owner(node, 'inspect_unit', 'inspect_configuration')
+            unit = self._inspection(node, admitted)
+            snapshot = self.inspect(node_ref)
+            if snapshot.source_revision is None or snapshot.comparison_guarantee == 'unavailable':
+                raise ConfigurationUnsupported('owner revision comparison unavailable')
+            if snapshot.source_revision != change.expected_configuration_revision:
+                raise ConfigurationRevisionConflict('expected owner configuration revision differs')
+            scope_id = 'scope-' + hashlib.sha256(safe_json(unit.configuration_target_ref).encode()).hexdigest()[:48]
+            fence = env._store.read_domain(env.environment_id, CONFIGURATION_ATTEMPTS, scope_id)
+            expected_profile, standing_ref = self._expected_source(node, fence)
+            if not _same(base_profile_ref.to_dict(), expected_profile):
+                raise ConfigurationRevisionConflict('base Profile snapshot differs from the scope expected source')
+            fixed = {'nodeRef': encode_node_ref(node_ref), 'change': change.to_dict(),
+                     'profileRef': profile_ref.to_dict(), 'baseProfileRef': base_profile_ref.to_dict(),
+                     'mode': 'no-change-verification'}
+            digest = env._fingerprint_port.fingerprint(request, 'pacthold.agents.configuration.apply', _hash(fixed))
+            # Spend this request key so a later different body under the same
+            # id conflicts instead of silently dispatching (PJ05).
+            receipt = env._store.read_domain_result(request, digest)
+            ids = {item['declarationId'] for item in change.declarations}
+            if self._standing_covers(standing_ref, ids):
+                if receipt is None:
+                    env._store.commit_domain_change(request, digest, (),
+                        {'noChangeOf': standing_ref, 'verified': 'standing-operation'})
+                return self.query(node_ref, standing_ref)
+            operation = self.reserve(request, node_ref, change, profile_ref=profile_ref,
+                                     base_profile_ref=base_profile_ref,
+                                     snapshot_write=snapshot_write, mode='no-change-verification')
+            current = env._store.read_operation(request)
+            if current.status in {'published', 'refused', 'cancelled'}:
+                return current
+            result = ConfigurationChangeResult(
+                operation.intent.operation_ref,
+                tuple(ConfigurationItemResult(item['declarationId'], 'unknown')
+                      for item in change.declarations))
+            evidence = {'configurationResult': result.to_dict(),
+                        'reason': 'no change requested; no standing configuration result covers this manifest',
+                        'ownerObservation': snapshot.to_dict()}
+            if standing_ref is not None:
+                evidence['standingOperationRef'] = standing_ref
+            return env._store.record_operation_outcome(request, operation.digest, current.revision,
+                                                       'refused', evidence)
+
+    def _standing_covers(self, standing_ref, ids):
+        if standing_ref is None:
+            return False
+        env = self._environment
+        identity = env._store.read_domain(env.environment_id, 'core.operation-identities', standing_ref)
+        if identity is None:
+            return False
+        holder = identity['value']['holder']
+        if holder.get('operationId') != standing_ref:
+            return False
+        try:
+            operation = env._store.read_operation(
+                RequestKey(env.environment_id, holder['principalScope'], holder['requestId']))
+        except UnknownResultError:
+            return False
+        if (operation is None or operation.intent.kind != 'configuration-change'
+                or operation.intent.operation_ref != standing_ref):
+            return False
+        try:
+            change = ConfigurationChangeRequest.from_dict(_plain(operation.intent.context_ref['change']))
+        except (ValueError, TypeError, KeyError, ConfigurationContractError):
+            return False
+        return {item['declarationId'] for item in change.declarations} == ids
+
+    def apply(self, request, node_ref, change, *, profile_ref=None, base_profile_ref=None,
+              snapshot_write=None):
+        operation = self.reserve(request, node_ref, change, profile_ref=profile_ref,
+                                 base_profile_ref=base_profile_ref, snapshot_write=snapshot_write)
         env = self._environment
         with env._admission_lock:
             step = env._store.read_operation_step(request,'configuration-apply')

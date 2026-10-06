@@ -806,3 +806,11 @@ Claude slice-worker产出runtime_channel.py（真实进程通道：SHA pin、私
 主会话串行核实（句柄terminal）：`PYTHONPATH=plugins/harness/codex/src:packages/backend/harness-transport/src:plugins/harness/records/src <python> -m pytest -c plugins/harness/codex/pyproject.toml plugins/harness/codex/tests -q` **251P/0F exit0、22.70s**（229C＋22P）；claude同型 **255P/0F exit0、22.17s**（242C＋13P）。断言未放宽、无skip、无mock冒P。
 
 C/P/M：C新增19（codex终止）；P新增18（claude 13＋codex 5，真实进程零模型）；M0。三家P级现全有真实进程证据（pi 20＋codex 22＋claude 13）。未验证：登录态模型面（claude需登录、pi/codex离线）、PJ01–PJ13、applyProfile派发、任务/结果、发行验收、真实M。成本：子代理3个（architecture-reviewer×1约54万token、slice-worker×2），真实外部模型调用0。无第三方安装/用户凭据/全局配置/服务操作/push/主树合并。显式stage本轮11文件，检查点后按裁定顺序落核心契约（步骤1–3主执行者独占），不标完成门。
+
+### 2026-10-06 核心优先／Luna 指导派工与继承配置切片复验（PARTIAL）
+
+用户要求先完成不认识具体 Harness 的核心，主会话全程指导多个 Luna 承担编码和验证。已核实前置26491dd180744d38dec4edb392fa59795ae476fe、23tracked dirty +513/-113 为前执行者配置语义成果，另.env未跟踪（不读不提交）。上轮状态/目录问答no progress，本轮实际补上中断全套验证并审出明确缺陷。三个 gpt-6-luna 子代理仅阶段A只读，主会话唯一测试/Git/账本作者；具体后续单文件写权见[evidence/agent-unit-model/luna-core-dispatch-20261006.md](evidence/agent-unit-model/luna-core-dispatch-20261006.md)。这是用户新分工授权，不改原合同语义，不开新树/第二共享写者。
+
+实际命令 `PYTHONPATH=plugins/harness/codex/src:plugins/harness/pi/src:plugins/harness/claude-code/src:packages/backend/harness-transport/src:plugins/harness/records/src /home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python -m pytest -c products/agent-tools/pyproject.toml products/agent-tools/tests -q`：787P/0F，exit0，218.57s，句柄46323已terminal。此前786P属旧快照，不累计；此次未跑evidence独立组合或全Core/品牌包，不将产品绿当PJ全验收。strict五单校验exit0，仅资料结构。
+
+Luna只读核实：Agent模块未导入具体Harness品牌；但inline准备先stage未提交snapshot又read，必失败；snapshot namespace/权限类偏离最近裁定；wire没有临时清单及applyProfile转发、omission安全具名投影；无变化重放/迟到事实/拒单请求键/未dispatch竞态待反例。各项不能因787绿忽略。保留并显式纳入继承23文件及本轮账/派工记录作为PARTIAL检查点，再分别开放核心与wire非重叠写权，主会话不自行大部分编码。模型M0，无新原生模型调用/第三方安装/用户数据/登录/全局配置/用户服务/push/主树合并；费用unknown，token以平台账为准。

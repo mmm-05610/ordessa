@@ -189,7 +189,7 @@ def test_unknown_contract_refuses_before_creating_root(deployment, tmp_path):
 
 
 def test_v2_policy_grants_registry_read_only(deployment, tmp_path):
-    configuration = deployment.AgentServiceConfiguration(tmp_path / "v2-root", agent_contract_version="agent-assembly/2")
+    configuration = deployment.AgentServiceConfiguration(tmp_path / "v2-root", agent_contract_version="agent-assembly/3")
     runtime = deployment.build_agent_runtime(configuration, fingerprint_port=fingerprint())
     try:
         runtime.start()
@@ -210,5 +210,5 @@ def test_composition_contract_mismatch_refuses_before_creating_root(deployment, 
     root = tmp_path / "mismatched-contract"
     selected = deployment.AgentToolsDeployment(fingerprint_port=fingerprint())
     with pytest.raises(GuaranteeUnavailableError):
-        selected.build_runtime(deployment.AgentServiceConfiguration(root, agent_contract_version="agent-assembly/2"))
+        selected.build_runtime(deployment.AgentServiceConfiguration(root, agent_contract_version="agent-assembly/3"))
     assert not root.exists()

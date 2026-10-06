@@ -28,9 +28,20 @@ def explicit_capabilities(monkeypatch):
 @pytest.fixture
 def setup(node_fixture):
  _,store,env,policy,_,nodes,_,node,_,_=node_fixture
- revision,usages=conclude(node_fixture)
- published=nodes.publish(node_fixture[6],'digest',revision,usages)
  env._fingerprint_port=ProtectedFingerprintHmac({'fixture':b'au-unit-hmac'},active_key_id='fixture')
+ # The Node lineage must reference a real frozen manifest: whole-manifest
+ # updates bind their base to it and read its declarations for the diff.
+ from pacthold.agents.profiles import ProfileCatalog
+ base_entry=ProfileCatalog(env).create(profile_id='profile-base',display_name='Base Profile',
+  manifest={'harnessDefinitionRef':{'environmentNamespace':'env','definitionId':'fixture','revision':'1'},
+            'schemaVersion':'1','declarations':[{'declarationId':'model','configurationKind':'model',
+              'schemaVersion':'1','action':'value','requirement':'required','payload':{'modelId':'old'}}]},
+  request=RequestKey('env','principal','create-profile-base'))
+ from dataclasses import replace as _replace
+ intent=_replace(node_fixture[8],profile_snapshot_ref=base_entry.current_manifest_ref.to_dict())
+ fixture=node_fixture[:8]+(intent,)+node_fixture[9:]
+ revision,usages=conclude(fixture)
+ published=nodes.publish(fixture[6],'digest',revision,usages)
  binding=published['binding']; provider=env.agent_runtime_contribution(binding['harnessDefinitionRef']).provider
  directory=DirectoryBindingRef('env','directory',1,'sha256:'+'d'*64)
  inspection=UnitInspection(binding['harnessUnitRef'],binding['harnessProviderRef'],binding['configurationTargetRef'],directory,0,'owned','unit-1','2026-10-05T01:00:00Z',source(binding['harnessProviderRef'],'unit-read'))
@@ -282,7 +293,7 @@ def wire_params(setup,change=None):
 
 def test_public_wire_configuration_apply_inspect_query_do_not_publish_nodes_capability(setup,wire):
  caps=wire['agents.capabilities']({})
- assert caps['contractVersion']=='agent-assembly/2'
+ assert caps['contractVersion']=='agent-assembly/3'
  assert caps['supports']['configurationManagement'] is True and caps['supports']['nodes'] is False
  assert 'agents.nodes.prepare' not in caps['supportedMethods']
  assert wire['agents.nodes.configuration.describe']({'nodeRef':wire_params(setup)['nodeRef']})['descriptions'][0]['configurationKind']=='model'

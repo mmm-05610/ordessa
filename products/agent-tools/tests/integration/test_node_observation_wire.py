@@ -12,7 +12,7 @@ from server_plugin_api import WireError
 
 def methods(parts):
     return {item.method_id: item.handler for item in agent_core_methods(
-        lambda: parts[2], contract_version='agent-assembly/2')}
+        lambda: parts[2], contract_version='agent-assembly/3')}
 
 
 def publish(parts):
@@ -68,7 +68,7 @@ def test_invalid_or_foreign_node_identity_refused(setup, change, family):
 
 
 def test_core_owns_read_result_wrappers_and_missing_semantics():
-    results = wire_contract('agent-assembly/2')['results']
+    results = wire_contract('agent-assembly/3')['results']
     assert results['nodesList'] == {'required': ['nodes'], 'additionalProperties': False}
     assert results['nodeRead'] == {'required': ['node'], 'additionalProperties': False, 'missing': None}
 
@@ -103,7 +103,7 @@ def test_new_environment_reads_durable_publication_without_runtime_registry(setu
     expected = json.loads(safe_json(publish(setup)))
     cold = Environment('env', store=setup[1], policy=setup[3], principal_scope='principal')
     handlers = {item.method_id: item.handler for item in agent_core_methods(
-        lambda: cold, contract_version='agent-assembly/2')}
+        lambda: cold, contract_version='agent-assembly/3')}
     before = tuple(setup[1]._conn.iterdump())
     assert handlers['agents.nodes.list']({}) == {'nodes': [expected]}
     assert handlers['agents.nodes.read']({'nodeRef': encode_node_ref(setup[7])}) == {'node': expected}

@@ -7,7 +7,7 @@ without the durable activation-generation evidence this composition writes when
 it creates a brand-new persistent Environment on its own exclusive root.
 
 Explicit production owner wiring (``policy_factory`` + ``owner_ports_factory``,
-paired, agent-assembly/2 only) assembles the one invocation issuer on the
+paired, agent-assembly/3 only) assembles the one invocation issuer on the
 environment's original store, one verifier consumed by the original records
 owner and providers, and the original canonical journal — before the wire can
 first obtain agent services. The default Profile/discovery deployment neither
@@ -69,19 +69,19 @@ class AgentToolsDeployment:
     """Service composition whose key capability must be explicitly supplied."""
     def __init__(self, *, fingerprint_port, agent_contract_version="agent-assembly/1",
                  provider_plugins=(), policy_factory=None, owner_ports_factory=None):
-        if agent_contract_version not in ("agent-assembly/1", "agent-assembly/2"):
+        if agent_contract_version not in ("agent-assembly/1", "agent-assembly/3"):
             raise GuaranteeUnavailableError("unsupported Agent public contract")
         if not isinstance(provider_plugins, tuple):
             raise TypeError("explicit provider plugin tuple required")
-        if provider_plugins and agent_contract_version != "agent-assembly/2":
-            raise GuaranteeUnavailableError("provider selection requires agent-assembly/2")
+        if provider_plugins and agent_contract_version != "agent-assembly/3":
+            raise GuaranteeUnavailableError("provider selection requires agent-assembly/3")
         if (policy_factory is None) != (owner_ports_factory is None):
             raise GuaranteeUnavailableError(
                 "policy and owner ports factories must be supplied together")
         if policy_factory is not None:
-            if agent_contract_version != "agent-assembly/2":
+            if agent_contract_version != "agent-assembly/3":
                 raise GuaranteeUnavailableError(
-                    "explicit owner wiring requires agent-assembly/2")
+                    "explicit owner wiring requires agent-assembly/3")
             if not callable(policy_factory) or not callable(owner_ports_factory):
                 raise TypeError("policy and owner ports factories must be callable")
         self.provider_plugins = provider_plugins
@@ -108,7 +108,7 @@ class AgentToolsDeployment:
                 raise GuaranteeUnavailableError(
                     "policy is bound to a foreign environment or realm")
             return policy
-        policy = _ProfilePolicy(provider_discovery=self.agent_contract_version == "agent-assembly/2")
+        policy = _ProfilePolicy(provider_discovery=self.agent_contract_version == "agent-assembly/3")
         policy.environment_id = identity
         return policy
 

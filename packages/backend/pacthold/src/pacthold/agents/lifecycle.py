@@ -152,6 +152,13 @@ class AgentLifecycle:
         if (not isinstance(preconditions, Mapping)
                 or any(key not in _PRECONDITION_KEYS for key in preconditions)):
             raise IdentityMismatchError("fixed lifecycle preconditions required")
+        if "expectedPublicationRevision" in preconditions:
+            # PJ04: the stated base publication revision must match the Node's
+            # current one; a stale precondition is a conflict, never an override.
+            from .configuration import ConfigurationRevisionConflict
+            if (type(node.get("publicationRevision")) is not int
+                    or preconditions["expectedPublicationRevision"] != node["publicationRevision"]):
+                raise ConfigurationRevisionConflict("expected Node publication revision differs")
         unit_ref = node["binding"]["harnessUnitRef"]
         fixed = {"action": action, "nodeRef": encode_node_ref(ref), "preconditions": dict(preconditions),
                  "pinnedProviderRef": _plain(admitted.provider_ref), "unitRef": _plain(unit_ref)}

@@ -14,7 +14,7 @@ from typing import Protocol
 
 from ordessa_environment_api import AdmissionRefusedError, GuaranteeUnavailableError, IdentityMismatchError, RequestKey
 from ordessa_environment_api.operations import OperationIntent, StepIntent, UsageMutation, OperationRevisionConflict, operation_holder, node_holder, safe_json, sealed_mapping
-from .contracts import ProfileRef
+from .contracts import ProfileRef, ProfileValidationError
 from .directory import DirectoryBindingRef
 from .invocation import InvocationIssuer
 from .nodes import decode_node_ref, _safe_projection, _same_reference
@@ -158,11 +158,30 @@ class AgentAssembly:
             raise GuaranteeUnavailableError("fixed provider preparation plan unavailable") from None
         return resolved, plan, digest
 
-    def reserve(self, request, profile_ref, context, options):
+    def reserve(self, request, profile_ref, context, options, profile_manifest=None):
+        """Reserve one fixed preparation under exactly one configuration source.
+
+        A complete profile manifest body and an exact ProfileRef are mutually
+        exclusive (interfaces.md 3.1): both together, neither, or a bare name
+        are refused before any provider call. A body is frozen into a
+        deterministic immutable snapshot in the same transaction as this
+        reservation and never enters the named catalog. The request digest is
+        computed from the normalized snapshot reference, so the same body and
+        its equivalent reference stay one idempotent request.
+        """
         env = self._environment
         with env._admission_lock:
             self._permission(request)
-            if type(profile_ref) is not ProfileRef or not isinstance(context, Mapping) or not isinstance(options, Mapping):
+            if (profile_ref is None) == (profile_manifest is None):
+                raise ProfileValidationError("exactly one configuration source required")
+            if not isinstance(context, Mapping) or not isinstance(options, Mapping):
+                raise IdentityMismatchError("explicit preparation parameters required")
+            snapshot_write = None
+            if profile_ref is None:
+                if not isinstance(profile_manifest, Mapping):
+                    raise ProfileValidationError("complete profile manifest body required")
+                profile_ref, snapshot_write = self._profiles.stage_snapshot(profile_manifest)
+            elif type(profile_ref) is not ProfileRef:
                 raise IdentityMismatchError("fixed Profile and explicit preparation parameters required")
             fixed = {"profileRef": profile_ref.to_dict(), "context": public_parameters(context),
                      "options": public_parameters(options)}
@@ -202,7 +221,8 @@ class AgentAssembly:
                                      steps, node, resolved.management_epoch)
             hold = UsageMutation(operation_ref + ".provider", 0, None, operation_holder(request, operation_ref),
                                  admitted.provider_ref, ("use",), "active")
-            return self._nodes.reserve(request, digest, intent, usages=(hold,))
+            return self._nodes.reserve(request, digest, intent, usages=(hold,),
+                                       writes=() if snapshot_write is None else (snapshot_write,))
 
     def _current_plan(self, request, operation):
         manifest = self._profiles.read(ProfileRef.from_dict(plain(operation.intent.profile_snapshot_ref)))
@@ -241,8 +261,8 @@ class AgentAssembly:
             _safe_projection(usage.target_ref)
         return observation
 
-    def prepare(self, request, profile_ref, context, options):
-        operation = self.reserve(request, profile_ref, context, options)
+    def prepare(self, request, profile_ref, context, options, profile_manifest=None):
+        operation = self.reserve(request, profile_ref, context, options, profile_manifest)
         env = self._environment
         for frozen_step in operation.intent.steps:
             with env._admission_lock:

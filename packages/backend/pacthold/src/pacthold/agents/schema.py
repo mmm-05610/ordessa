@@ -22,11 +22,11 @@ _BINDINGS = (
     ("agents.profiles.preview", "preview", ("profileRef",), ()),
 )
 
-AGENT_MANAGEMENT_CONTRACT_VERSION = "agent-assembly/2"
+AGENT_MANAGEMENT_CONTRACT_VERSION = "agent-assembly/3"
 _MANAGEMENT_BINDINGS = (
     ("agents.providers.list", "providersList", (), ()),
     ("agents.providers.describe", "providersDescribe", ("definitionRef",), ()),
-    ("agents.nodes.prepare", "prepare", ("profileRef", "context", "options", "requestId"), ()),
+    ("agents.nodes.prepare", "prepare", ("context", "options", "requestId"), ("profileRef", "profileManifest")),
     ("agents.nodes.queryPreparation", "queryPreparation", ("requestId",), ()),
     ("agents.nodes.list", "nodesList", (), ()),
     ("agents.nodes.read", "nodeRead", ("nodeRef",), ()),
@@ -34,7 +34,7 @@ _MANAGEMENT_BINDINGS = (
     ("agents.nodes.configuration.inspect", "inspectConfiguration", ("nodeRef",), ()),
     ("agents.nodes.configuration.apply", "applyConfiguration", ("nodeRef", "change"), ()),
     ("agents.nodes.configuration.query", "queryChange", ("nodeRef", "operationRef"), ()),
-    ("agents.nodes.applyProfile", "applyProfile", ("nodeRef", "profileRef", "expectedConfigurationRevision", "applicationPolicy", "requestId"), ()),
+    ("agents.nodes.applyProfile", "applyProfile", ("nodeRef", "baseProfileRef", "expectedConfigurationRevision", "applicationPolicy", "requestId"), ("profileRef", "profileManifest")),
     ("agents.nodes.acquireAccess", "acquireAccess", ("nodeRef", "purpose", "protocol", "requestId"), ()),
     ("agents.nodes.recover", "recover", ("nodeRef", "preconditions", "requestId"), ()),
     ("agents.nodes.stop", "stop", ("nodeRef", "preconditions", "requestId"), ()),
@@ -99,6 +99,15 @@ def wire_contract(version=AGENT_CONTRACT_VERSION) -> dict:
         }
         value["nodeRef"] = {"required": ["environmentNamespace", "instanceId", "generation"], "additionalProperties": False}
         value["configurationSnapshot"] = {"required": ["unitRef", "scopeRef", "sourceRevision", "observedAt", "configuration", "unknownItems", "confirmationEvidence", "comparisonGuarantee"]}
+        # Exactly one configuration source per preparation/update request
+        # (interfaces.md 3.1): an exact ProfileRef or a full profile manifest
+        # body. Both together, neither, or a bare name are refused before any
+        # native effect; the core alone normalizes and digests the body.
+        value["profileSource"] = {"exactlyOneOf": ["profileRef", "profileManifest"],
+            "manifest": {"required": ["harnessDefinitionRef", "schemaVersion", "declarations"],
+                         "optional": ["metadata"], "additionalProperties": False}}
+        value["omissionError"] = {"code": "CONFIGURATION_DECLARATIONS_OMITTED",
+            "details": ["omittedDeclarationIds"], "requiresResubmit": "explicit reset or disabled declarations"}
     return value
 
 

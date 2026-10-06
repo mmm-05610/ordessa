@@ -98,14 +98,15 @@ def test_wire_version_upgrade_is_explicit_and_profile_v1_unchanged():
  assert old['contractVersion']=='agent-assembly/1'
  assert 'agents.nodes.configuration.apply' not in old['methods']
  new=wire_contract(AGENT_MANAGEMENT_CONTRACT_VERSION)
- assert new['contractVersion']=='agent-assembly/2'
+ assert new['contractVersion']=='agent-assembly/3'
  assert new['methods']['agents.nodes.configuration.apply']['required']==['nodeRef','change']
  assert new['methods']['agents.nodes.configuration.apply']['effectful'] is True
  assert new['configurationChange']['providerContractVersion']=='agent-runtime/2'
  assert wire_schema_digest()!=wire_schema_digest(AGENT_MANAGEMENT_CONTRACT_VERSION)
  new['methods'].clear()
  assert 'agents.nodes.configuration.apply' in wire_contract(AGENT_MANAGEMENT_CONTRACT_VERSION)['methods']
- with pytest.raises(ValueError): wire_contract('agent-assembly/3')
+ with pytest.raises(ValueError): wire_contract('agent-assembly/2')
+ with pytest.raises(ValueError): wire_contract('agent-assembly/999')
 
 
 def test_method_presence_does_not_enable_capability():

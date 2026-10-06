@@ -301,11 +301,11 @@ def test_real_committed_create_receipt_lost_on_tcp_never_resubmits(tmp_path):
 
 
 def test_real_http_v2_provider_discovery_has_no_native_readiness_or_execution(tmp_path):
-    service = IsolatedService(tmp_path, version="agent-assembly/2")
+    service = IsolatedService(tmp_path, version="agent-assembly/3")
     try:
         service.start()
         capabilities = service.cli(["capabilities"])["data"]["coreAgent"]
-        assert capabilities["contractVersion"] == "agent-assembly/2"
+        assert capabilities["contractVersion"] == "agent-assembly/3"
         assert capabilities["supports"] == {"profileCatalog": True, "nodes": False, "managedInput": False,
                                             "configurationManagement": False, "nodePreparation": False,
                                             "nodeLifecycle": False}
@@ -322,7 +322,7 @@ def test_real_http_v2_provider_discovery_has_no_native_readiness_or_execution(tm
 
 
 def test_real_http_v2_node_observation_requires_explicit_read_authority(tmp_path):
-    service = IsolatedService(tmp_path, version='agent-assembly/2')
+    service = IsolatedService(tmp_path, version='agent-assembly/3')
     try:
         service.start()
         core = service.cli(['capabilities'])['data']['coreAgent']
@@ -342,7 +342,7 @@ def test_real_http_v2_node_observation_requires_explicit_read_authority(tmp_path
 
 
 def test_real_http_v2_catalog_deployment_refuses_prepare_without_authorities(tmp_path):
-    service = IsolatedService(tmp_path, version='agent-assembly/2')
+    service = IsolatedService(tmp_path, version='agent-assembly/3')
     try:
         service.start()
         manifest = tmp_path / 'recipe.json'

@@ -33,7 +33,7 @@ assert all(importlib.util.find_spec(name) is None for name in (
     'ordessa_harness_pi', 'ordessa_harness_claude_code', 'server_plugin_api', 'claude_agent_sdk'))'''],
         cwd=tmp_path, env=env, capture_output=True, text=True, timeout=60)
     assert missing.returncode == 0, missing.stdout + missing.stderr
-    service = IsolatedService(tmp_path, version='agent-assembly/2', providers=True,
+    service = IsolatedService(tmp_path, version='agent-assembly/3', providers=True,
         cli_executable=isolated / 'bin/ordessa-agent')
     try:
         service.start()

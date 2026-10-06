@@ -135,7 +135,7 @@ def make_deployment(deployment, owner_mod, tmp_path, *, ports_factory=True, **po
         kwargs["policy_factory"] = lambda env_id: Policy(env_id.value)
         kwargs["owner_ports_factory"] = owner_factory
     return deployment.AgentToolsDeployment(
-        fingerprint_port=fingerprint(), agent_contract_version="agent-assembly/2",
+        fingerprint_port=fingerprint(), agent_contract_version="agent-assembly/3",
         **kwargs)
 
 
@@ -153,21 +153,21 @@ def test_factories_must_be_paired_callable_and_v2(tmp_path):
     assert path.parent.is_dir()  # refusals below create no deployment
     with pytest.raises(GuaranteeUnavailableError, match="supplied together"):
         deployment.AgentToolsDeployment(
-            fingerprint_port=fingerprint(), agent_contract_version="agent-assembly/2",
+            fingerprint_port=fingerprint(), agent_contract_version="agent-assembly/3",
             policy_factory=lambda env_id: Policy(env_id.value))
     with pytest.raises(GuaranteeUnavailableError, match="supplied together"):
         deployment.AgentToolsDeployment(
-            fingerprint_port=fingerprint(), agent_contract_version="agent-assembly/2",
+            fingerprint_port=fingerprint(), agent_contract_version="agent-assembly/3",
             owner_ports_factory=lambda environment: owner_ports(owner_mod))
     with pytest.raises(TypeError):
         deployment.AgentToolsDeployment(
-            fingerprint_port=fingerprint(), agent_contract_version="agent-assembly/2",
+            fingerprint_port=fingerprint(), agent_contract_version="agent-assembly/3",
             policy_factory=5, owner_ports_factory=lambda environment: owner_ports(owner_mod))
     with pytest.raises(TypeError):
         deployment.AgentToolsDeployment(
-            fingerprint_port=fingerprint(), agent_contract_version="agent-assembly/2",
+            fingerprint_port=fingerprint(), agent_contract_version="agent-assembly/3",
             policy_factory=lambda env_id: Policy(env_id.value), owner_ports_factory=5)
-    with pytest.raises(GuaranteeUnavailableError, match="agent-assembly/2"):
+    with pytest.raises(GuaranteeUnavailableError, match="agent-assembly/3"):
         deployment.AgentToolsDeployment(
             fingerprint_port=fingerprint(), agent_contract_version="agent-assembly/1",
             policy_factory=lambda env_id: Policy(env_id.value),
@@ -203,7 +203,7 @@ def test_foreign_bound_policy_is_refused(tmp_path):
         return owner_ports(owner_mod)
 
     wired = deployment.AgentToolsDeployment(
-        fingerprint_port=fingerprint(), agent_contract_version="agent-assembly/2",
+        fingerprint_port=fingerprint(), agent_contract_version="agent-assembly/3",
         policy_factory=lambda env_id: Policy("foreign-environment"),
         owner_ports_factory=owner_factory)
     with pytest.raises(GuaranteeUnavailableError, match="foreign"):
@@ -245,7 +245,7 @@ def test_owner_factory_must_not_pre_cache_agent_services(tmp_path):
         return owner_ports(owner_mod)
 
     wired = deployment.AgentToolsDeployment(
-        fingerprint_port=fingerprint(), agent_contract_version="agent-assembly/2",
+        fingerprint_port=fingerprint(), agent_contract_version="agent-assembly/3",
         policy_factory=lambda env_id: Policy(env_id.value),
         owner_ports_factory=owner_factory)
     with pytest.raises(GuaranteeUnavailableError, match="cached agent services"):
@@ -381,7 +381,7 @@ def test_owner_callback_reentering_close_is_contained_and_error_preserved(tmp_pa
         return owner_ports(owner_mod, close=lambda: holder["env"].close())
 
     wired = deployment.AgentToolsDeployment(
-        fingerprint_port=fingerprint(), agent_contract_version="agent-assembly/2",
+        fingerprint_port=fingerprint(), agent_contract_version="agent-assembly/3",
         policy_factory=lambda env_id: Policy(env_id.value),
         owner_ports_factory=owner_factory)
     env = wired.owned_environment_factory(core_path(tmp_path), lambda: True)
@@ -438,7 +438,7 @@ def test_cleanup_failure_still_revokes_permission_and_preserves_error(tmp_path):
         return owner_ports(owner_mod, close=failing_close)
 
     wired = deployment.AgentToolsDeployment(
-        fingerprint_port=fingerprint(), agent_contract_version="agent-assembly/2",
+        fingerprint_port=fingerprint(), agent_contract_version="agent-assembly/3",
         policy_factory=lambda env_id: Policy(env_id.value),
         owner_ports_factory=owner_factory)
     env = wired.owned_environment_factory(core_path(tmp_path), lambda: True)

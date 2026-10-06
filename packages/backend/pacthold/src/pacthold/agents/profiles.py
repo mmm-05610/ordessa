@@ -23,6 +23,10 @@ from .contracts import (
 
 CATALOG = "agents.profile-catalog"
 MANIFESTS = "agents.profile-manifests"
+# Content-addressed ad-hoc manifests live in the same immutable manifest
+# namespace under a reserved id prefix: they are operation-bound evidence,
+# never catalog entries, so the named preset list cannot grow from them.
+SNAPSHOT_PREFIX = "snap-"
 
 
 class ProfileCatalog:
@@ -182,6 +186,39 @@ class ProfileCatalog:
             self._read_permission(ref.profile_id)
             return self._manifest(ref)
 
+    def stage_snapshot(self, manifest: Mapping[str, Any]) -> tuple[ProfileRef, DomainWrite | None]:
+        """Freeze an ad-hoc manifest into an immutable content-addressed snapshot.
+
+        The derived identity is deterministic in the canonical manifest
+        content, so the same body always yields the same snapshot reference
+        and the consuming request stays idempotent. The returned write must
+        commit in the same transaction as the consuming operation's reserve:
+        either both persist or neither does. An existing record with the same
+        content needs no write; a differing record at the same identity is a
+        collision and is never rewritten. The snapshot carries no catalog
+        entry, so an orphan snapshot can never present itself as a created or
+        updated instance.
+        """
+        content = manifest_content(manifest, self.environment_namespace)
+        digest = content_digest(content)
+        ref = ProfileRef(self.environment_namespace, SNAPSHOT_PREFIX + digest[7:55], 1, digest)
+        record_id = f"{ref.profile_id}@{ref.manifest_revision}"
+        row = self._store().read_domain(self.environment_namespace, MANIFESTS, record_id)
+        if row is not None:
+            try:
+                self._manifest(ref)
+            except (ProfileRevisionConflict, ProfileNotFound, GuaranteeUnavailableError, ValueError, TypeError):
+                raise GuaranteeUnavailableError("immutable snapshot record collision") from None
+            return ref, None
+        import json
+        return ref, DomainWrite(MANIFESTS, record_id, 0,
+                                {"ref": ref.to_dict(), "content": json.loads(content)})
+
+    @staticmethod
+    def _mint(profile_id: str) -> None:
+        if not isinstance(profile_id, str) or not profile_id or profile_id.startswith(SNAPSHOT_PREFIX):
+            raise ProfileValidationError("profile id must avoid the reserved snapshot prefix")
+
     @staticmethod
     def _name(name: str) -> str:
         if not isinstance(name, str) or not name.strip() or len(name) > 256:
@@ -200,7 +237,8 @@ class ProfileCatalog:
         return tuple(writes)
 
     def create(self, *, profile_id: str, display_name: str,
-               manifest: Mapping[str, Any], request: RequestKey) -> ProfileCatalogEntry:
+                manifest: Mapping[str, Any], request: RequestKey) -> ProfileCatalogEntry:
+        self._mint(profile_id)
         content = manifest_content(manifest, self.environment_namespace)
         ref = ProfileRef(self.environment_namespace, profile_id, 1, content_digest(content))
         entry = ProfileCatalogEntry(profile_id, 1, self._name(display_name), None, ref)
@@ -279,6 +317,7 @@ class ProfileCatalog:
 
     def clone(self, source_ref: ProfileRef, *, profile_id: str, display_name: str,
               request: RequestKey) -> ProfileCatalogEntry:
+        self._mint(profile_id)
         parameters = {"sourceRef": source_ref.to_dict(), "profileId": profile_id,
                       "displayName": self._name(display_name)}
         with self._change("clone", request, parameters) as (store, digest, replay):

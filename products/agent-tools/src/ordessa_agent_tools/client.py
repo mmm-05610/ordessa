@@ -19,7 +19,7 @@ from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_ope
 MAX_BYTES = 1024 * 1024
 
 
-SCHEMA_FILES = {"agent-assembly/1": "schema.json", "agent-assembly/2": "schema-management.json"}
+SCHEMA_FILES = {"agent-assembly/1": "schema.json", "agent-assembly/3": "schema-management.json"}
 
 
 def core_schema(version="agent-assembly/1"):
@@ -219,7 +219,7 @@ class WireClient:
             raise ClientError("CORE_RESPONSE_INVALID", "Agent core capability schema is invalid", 4)
         version = result.get("contractVersion")
         expected = core_schema(version)
-        management = version == "agent-assembly/2"
+        management = version == "agent-assembly/3"
         fields = {"contractVersion", "schemaDigest", "schema", "environmentNamespace", "supports"}
         if management:
             fields.add("supportedMethods")
