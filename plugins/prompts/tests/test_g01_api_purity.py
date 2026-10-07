@@ -33,10 +33,14 @@ CONTRACTS_DIR = PACKAGE_ROOT.parent.parent / "contracts"
 #: products / other plugins). server_plugin_api and the Python stdlib are
 #: the whole external vocabulary the package may use.
 FORBIDDEN_IMPORT_PREFIXES = (
-    "ordessa_server", "ordessa_server_compat", "ordessa_harness",
+    "ordessa_server", "ordessa_server_compat", "ordessa_server_product",
+    "pacthold.harness_kit",
     "ordessa_profile", "ordessa_workspace", "ordessa_skills",
     "ordessa_command_templates", "pacthold", "fastapi", "starlette",
 )
+#: 032: the kernel-resident harness contract edge is the published adapter
+#: vocabulary; the bare `pacthold` root stays forbidden.
+ALLOWED_IMPORT_MODULES = ("pacthold.harness_contracts",)
 
 
 def _imported_names_of(source: str) -> "list[str]":
@@ -58,7 +62,10 @@ def _all_package_files():
 
 
 def _boundary_offenders(names: "list[str]") -> "list[str]":
-    return [name for name in names for forbidden in FORBIDDEN_IMPORT_PREFIXES
+    licensed = {name for name in names
+                if any(name == g or name.startswith(g + ".") for g in ALLOWED_IMPORT_MODULES)}
+    return [name for name in names if name not in licensed
+            for forbidden in FORBIDDEN_IMPORT_PREFIXES
             if name == forbidden or name.startswith(forbidden + ".")]
 
 
@@ -71,10 +78,12 @@ def test_every_module_parses_and_lives_under_the_package():
                          ids=lambda p: str(p.relative_to(PACKAGE_ROOT)))
 def test_no_module_imports_a_forbidden_domain(path: Path):
     for name in _module_imports(path):
+        if any(name == g or name.startswith(g + ".") for g in ALLOWED_IMPORT_MODULES):
+            continue  # 032: the kernel harness contract edge is published vocabulary
         for forbidden in FORBIDDEN_IMPORT_PREFIXES:
             assert not (name == forbidden or name.startswith(forbidden + ".")), (
                 f"{path.relative_to(PACKAGE_ROOT)} imports {name!r}; the "
-                "Prompts domain may consume only server_plugin_api and its "
+                "Prompts domain may consume only server_pLugin_api and its "
                 "own package (G01 boundary)")
 
 
@@ -186,7 +195,7 @@ API_ALLOWED_IMPORTS = {"__future__", "base64", "dataclasses", "hashlib", "re",
 #: was removed; the boundary scan's exact-prefix rule (the SAME
 #: predicate `_boundary_offenders` applies to every real package file —
 #: see test_boundary_scan_covers_the_new_harness_adapters_files)
-#: continues to refuse `ordessa_harness.` internals while the published
+#: continues to refuse `pacthold.harness_kit.` internals while the published
 #: `pacthold.harness_contracts` vocabulary stays admissible — both sides proven
 #: by test_published_harness_api_admissible_but_internals_refused.
 #: The amendment is documented in PX-report.md.
@@ -245,12 +254,12 @@ def test_published_harness_api_admissible_but_internals_refused():
     """The exact-prefix boundary rule, proven on BOTH sides for the new
     harness_adapters face (EXT-02 review round 1): the PUBLISHED
     `pacthold.harness_contracts` vocabulary passes, the harness PLUGIN
-    internals (`ordessa_harness.`) are refused."""
+    internals (`pacthold.harness_kit.`) are refused."""
     assert _boundary_offenders(["pacthold.harness_contracts"]) == []
     assert _boundary_offenders(["pacthold.harness_contracts.contracts"]) == []
-    offenders = _boundary_offenders(["ordessa_harness.registry",
-                                     "ordessa_harness"])
-    assert set(offenders) == {"ordessa_harness.registry", "ordessa_harness"}
+    offenders = _boundary_offenders(["ordessa_server_product.harness_adapters.registry",
+                                     "pacthold.harness_kit"])
+    assert set(offenders) == {"ordessa_server_product.harness_adapters.registry", "pacthold.harness_kit"}
 
 
 def test_the_profile_authorisation_port_is_structurally_satisfiable():
@@ -306,7 +315,7 @@ def test_the_boundary_scan_itself_refuses_a_cross_domain_import():
     hostile = {
         "server internals": "from ordessa_server.transport import dispatch\n",
         "profile implementation": "import ordessa_profile.records\n",
-        "harness implementation": "from ordessa_harness.acp import connect\n",
+        "harness implementation": "from pacthold.harness_kit.acp import connect\n",
         "sibling asset plugin": "from ordessa_command_templates.library import store\n",
         "governance kernel": "import pacthold\n",
         "host transport": "from starlette.applications import Starlette\n",

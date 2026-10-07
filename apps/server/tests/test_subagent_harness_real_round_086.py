@@ -327,7 +327,7 @@ def test_a_real_claude_parent_round_calls_run_subagent_itself(tmp_path):
     from ordessa_server.credentials import CredentialRecords
     from ordessa_server.transport.http import create_app
     from pacthold.storage import MemorySecretStore
-    from ordessa_harness.claude import production
+    from ordessa_harness_claude_code import production
     import uvicorn
 
     report: dict = {"result": "SUBAGENT_REAL_ROUND_FAILED", "order": "086 stage 2"}

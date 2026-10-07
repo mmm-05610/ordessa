@@ -14,7 +14,7 @@ What is real here
   host-supplied `ApplicationTarget` + `TargetHandle`. It calls
   ``service.plan`` then ``service.apply`` (the same two calls C0's controlled
   service exposes at
-  `plugins/harness/src/ordessa_harness/application/configuration_service.py:202,239`)
+  `packages/backend/pacthold/src/pacthold/harness_kit/application/configuration_service.py:202,239`)
   and maps each returned DTO — `Confirmed` / `Refused` / `Unknown`
   (`application.py:130-181`) — onto the send-gate. It never writes a file,
   spawns a process, opens a network endpoint or speaks ACP itself (FR08); the

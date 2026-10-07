@@ -51,7 +51,7 @@ def test_default_composition_keeps_existing_adapter_selection(tmp_path):
 
 @pytest.mark.parametrize("controlled", [False, True])
 def test_only_explicit_opt_in_forwards_fixed_test_mode(tmp_path, monkeypatch, controlled):
-    from ordessa_harness.server_acp import plugin as acp_plugin
+    from ordessa_server_product.acp_channel import plugin as acp_plugin
 
     captured = {}
     original = acp_plugin.AcpChannelServerPlugin

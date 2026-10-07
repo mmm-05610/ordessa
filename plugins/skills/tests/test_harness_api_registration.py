@@ -4,7 +4,7 @@ Proves, against the merged harness-api (publication `d3f026904e`) and the
 harness's own contribution handler:
 
 1. the point identity we contribute to equals the published constants
-   (`ordessa_harness.contributions`), and the default product declares
+   (`ordessa_server_product.harness_adapters.contributions`), and the default product declares
    that point (cite);
 2. the adapters ride the host's C2 transaction into the harness handler
    in a live composed runtime (fixture binds the real handler; the plugin
@@ -31,7 +31,7 @@ from pacthold.harness_contracts import (
 # TEST-side imports of the harness internals are allowed (the src-side
 # direction is pinned by test_dependency_direction.py): these are exactly
 # the published point constants and the handler the default product binds.
-from ordessa_harness.contributions import (
+from ordessa_server_product.harness_adapters.contributions import (
     CONFIGURATION_POINT as PUBLISHED_CONFIGURATION_POINT,
     HarnessContributionError,
     HarnessContributionRegistry,
@@ -166,7 +166,7 @@ def test_the_real_host_publishes_the_rows_through_the_harness_handler():
     `build_runtime` create in the default product: stage/commit run, the
     owner is host-injected, and the harness registry publishes our three
     descriptors."""
-    from ordessa_harness.contributions import HarnessContributionRegistry
+    from ordessa_server_product.harness_adapters.contributions import HarnessContributionRegistry
     from ordessa_server.plugin_host import ServerPluginHost
     from server_plugin_api import (
         Contribution, ContributionBatch, ServerPluginDescriptor,

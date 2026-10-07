@@ -1,7 +1,7 @@
 """Harness-owned PATH command candidates; presence grants no runtime guarantee.
 
 Sources, checked by the product's build-time generator:
-* src/ordessa_harness/harnesses.toml: identity.harness_type,
+* src/pacthold.harness_kit/harnesses.toml: identity.harness_type,
   executable.identity and launch_modes.argv[0] (native CLI definitions).
 * third_party/harness_remote/bridge/src/harness-profiles.js:
   codex/pi/claude.adapterCommand (installed ACP adapter executable names).

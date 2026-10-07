@@ -20,7 +20,7 @@ import re
 import time
 from typing import Any, Mapping
 
-from ordessa_harness.server_acp import AccessEntryTransport
+from ordessa_server_product.acp_channel import AccessEntryTransport
 from ordessa_server.bootstrap import ServerRuntime, build_runtime
 from server_plugin_api import ServerError
 from pacthold_runtime_compat import capability
@@ -182,7 +182,7 @@ def _registry_profile_spec(harness_type: str):
     never from the deployment, which describes a room, not a family.
     """
     try:
-        from ordessa_harness.registry import load_builtin_registry
+        from ordessa_server_product.harness_adapters.registry import load_builtin_registry
     except ImportError:
         return None
     try:
@@ -200,7 +200,7 @@ def _registry_native_homes() -> dict[str, str]:
     registry does not know has none (refused at dispatch, not guessed here).
     """
     try:
-        from ordessa_harness.registry import load_builtin_registry
+        from ordessa_server_product.harness_adapters.registry import load_builtin_registry
     except ImportError:
         return {}
     try:
@@ -447,7 +447,7 @@ def build_runtime_from_native_adapter(
     The plugin entry verifies its bundled bridge provenance at launch.
     """
     import shutil
-    from ordessa_harness.server_acp.plugin import AcpChannelServerPlugin
+    from ordessa_server_product.acp_channel.plugin import AcpChannelServerPlugin
     from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
     from ordessa_server_compat.execution.sidecar import (
         NativeHarnessPort, NativeProcessLauncher,
@@ -658,11 +658,11 @@ def build_runtime_from_native_adapter(
             environment["AGENTBOX_ACCESS_TEST_MODE"] = "controlled-peer-v1"
         instance_options = {}
         if pi_profile_bridge and harness_id == "pi":
-            from ordessa_harness.server_acp.instance_directory import allocate_instance_directory
+            from ordessa_server_product.acp_channel.instance_directory import allocate_instance_directory
             instance_options = {"pi_profile_bridge": True,
                                 "instance_directory": retained_instance_directory or str(allocate_instance_directory(root))}
         elif harness_id in native_profile_harnesses:
-            from ordessa_harness.server_acp.instance_directory import allocate_instance_directory
+            from ordessa_server_product.acp_channel.instance_directory import allocate_instance_directory
             instance_options = {"native_profile_bridge": True,
                                 "instance_directory": retained_instance_directory or str(allocate_instance_directory(root))}
         elif retained_instance_directory is not None:
@@ -1532,7 +1532,7 @@ def build_runtime_from_sidecar_deployment(
     # `build_runtime`'s business-kwarg copy of the product's compat funnel;
     # the funnel now has exactly one home (this call site and
     # `products/server`'s `default_plugins`), and the host carries none.
-    from ordessa_harness.server_acp.plugin import AcpChannelServerPlugin
+    from ordessa_server_product.acp_channel.plugin import AcpChannelServerPlugin
     from ordessa_server_compat.plugin import ServerCompatPlugin
     from ordessa_workspace.plugin import WorkspaceServerPlugin
 

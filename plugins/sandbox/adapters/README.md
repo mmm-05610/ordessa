@@ -39,11 +39,11 @@ contribution, no invented second registry.
 payload=HarnessSandboxConfigurationAdapter(...))` records. Each callable
 payload exposes a public `ConfigurationAdapterDescriptor` and the C2
 `assess / compile / verify` methods (point literals pinned
-symbol-equal to `ordessa_harness.contributions` in
+symbol-equal to `pacthold.harness_kit.contributions` in
 `tests/test_real_point_binding.py`; third-party closure mirrors the platform's
 own contributor fixture — `ordessa-harness-api` + `ordessa-server-plugin-api`,
 **no** harness package code: `harnesses.toml` is located via
-`importlib.util.find_spec` + `tomllib`, never by importing `ordessa_harness`):
+`importlib.util.find_spec` + `tomllib`, never by importing `pacthold.harness_kit`):
 
 * `facet_id="sandbox.native-configuration"`, `facet_schema_version="1"`;
 * `harness_id`/`native_versions` measured from the real `harnesses.toml`

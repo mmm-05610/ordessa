@@ -14,7 +14,7 @@ SRC_ROOT = pathlib.Path(__file__).resolve().parents[1] / "src" / "ordessa_permis
 TESTS_ROOT = pathlib.Path(__file__).resolve().parents[0]
 
 FORBIDDEN_ROOTS = {
-    "ordessa_server", "ordessa_server_compat", "ordessa_server_plugin_api", "ordessa_harness",
+    "ordessa_server", "ordessa_server_compat", "ordessa_server_plugin_api", "pacthold.harness_kit",
     "pacthold", "ordessa_workspace", "fastapi", "pydantic", "httpx", "sqlite3", "subprocess",
     "socket", "urllib", "requests", "numpy",
 }

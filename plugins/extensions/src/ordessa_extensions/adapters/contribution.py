@@ -2,7 +2,7 @@
 
 One adapter per implemented brand, registered through the published
 `harness.configuration-adapters` point (v1, multi-owner) — the same
-constants `ordessa_harness.contributions` validates against (pinned in
+constants `ordessa_server_product.harness_adapters.contributions` validates against (pinned in
 tests; the strings are duplicated here because this package must not
 import the harness plugin — AGENTS.md rule 3).
 
@@ -51,7 +51,7 @@ from ..capabilities import (SUPPORTED, UNKNOWN, UNSUPPORTED, statement_for)
 from ..definitions import KNOWN_EVENTS
 
 #: The published point identity (must equal the harness handler's —
-#: pinned against `ordessa_harness.contributions` in the tests).
+#: pinned against `ordessa_server_product.harness_adapters.contributions` in the tests).
 CONFIGURATION_POINT = "harness.configuration-adapters"
 POINT_API_VERSION = "v1"
 
@@ -60,7 +60,7 @@ ENTRY = "acp"
 
 #: The registry/runtime gap, one shared citation.
 RUNTIME_GAP_EVIDENCE = (
-    "plugins/harness/src/ordessa_harness/registry/schema.py:90-104"
+    "packages/backend/pacthold/src/pacthold/harness_kit/registry/schema.py:90-104"
     " (hooks_target/hooks_key parsed) — zero consumers elsewhere in"
     " plugins/harness/src; runtime supplies no hooks targets (AR-3)")
 
@@ -99,7 +99,7 @@ PINS: Mapping[str, BrandPin] = {
         harness_id="codex",
         native_version=(0, 147, 0),
         adapter_version=(1, 1, 14),
-        native_evidence=("plugins/harness/src/ordessa_harness/codex/"
+        native_evidence=("plugins/harness/codex/src/ordessa_harness_codex"
                          "production.py:88"),
         adapter_evidence=("plugins/harness/packaging/codex/package.json:9"),
         slot="file-whole"),
@@ -110,10 +110,10 @@ PINS: Mapping[str, BrandPin] = {
         # value, so assess fail-closes on anything else.
         native_version=(2, 1, 274),
         adapter_version=(0, 81, 2),
-        native_evidence=("plugins/harness/src/ordessa_harness/"
+        native_evidence=("packages/backend/pacthold/src/pacthold/harness_kit/"
                          "harnesses.toml:111 (comment-grade observation; "
                          "not a proven pin)"),
-        adapter_evidence=("plugins/harness/src/ordessa_harness/claude/"
+        adapter_evidence=("plugins/harness/claude-code/src/ordessa_harness_claude_code"
                           "production.py:67"),
         slot="keyed", native_grade="comment"),
 }

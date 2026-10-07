@@ -74,7 +74,7 @@ def exercise(bundle, evidence):
         verify_wheel(wheel)
         command('install-local-wheel', [python, '-m', 'pip', 'install', '--no-index', '--no-deps', wheel], workspace)
         command('backend-packages-absent', [python, '-c',
-            "import importlib.util; names=('pacthold','ordessa_server','ordessa_harness'); assert all(importlib.util.find_spec(n) is None for n in names); print('backend packages absent')"], workspace)
+            "import importlib.util; names=('pacthold','ordessa_server','pacthold.harness_kit'); assert all(importlib.util.find_spec(n) is None for n in names); print('backend packages absent')"], workspace)
         command('installed-help', [cli, '--help'], workspace)
         initialized = command('installed-local-init', [cli, 'init', '--json'], workspace)
         observations = json.loads(initialized.stdout)

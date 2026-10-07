@@ -118,7 +118,7 @@ class PiAdapter:
         # provider add/remove or an auth change needs a new private generation
         # and a controlled restart that resumes the SAME native session. The
         # provider enters as ONE golden object (provenance:
-        # ordessa_harness.native_materialization.render_pi_provider) — the C4
+        # ordessa_server_product.native_materialization.render_pi_provider) — the C4
         # merge authority owns a declared array subtree as a unit, so the
         # whole provider object is a single typed field write.
         _, dialect = common.translate_protocol("pi", desired.protocol)

@@ -35,7 +35,7 @@ NO_EVIDENCE = "no in-repo evidence"
 
 _CITATION = re.compile(r"[\w./+-]+:\d+")
 
-TOML = "plugins/harness/src/ordessa_harness/harnesses.toml"
+TOML = "packages/backend/pacthold/src/pacthold/harness_kit/harnesses.toml"
 HM = "docs/design/harness-configuration/harnesses.md"
 
 AXES = (
@@ -115,7 +115,7 @@ def _statement(harness_id: str,
 # NOTHING else under plugins/harness/src (EXT 016 verification; the
 # registry-runtime seam is registered as AR-3).
 _RUNTIME_GAP = (f"{TOML}:38-40,117-120 (registry declares the targets); "
-                "plugins/harness/src/ordessa_harness/registry/schema.py:90-104"
+                "packages/backend/pacthold/src/pacthold/harness_kit/registry/schema.py:90-104"
                 " (parsed); zero consumers elsewhere in"
                 " plugins/harness/src — runtime supplies no hooks targets"
                 " (AR-3)")
@@ -135,7 +135,7 @@ BRAND_STATEMENTS: Mapping[str, HookSupportStatement] = MappingProxyType({
                            "classification.md:52 (§四.4: hook 失败不阻断;"
                            " observational only, enforcement inexpressible)"),
         HookCapabilityFact("load_evidence", UNKNOWN,
-                           "plugins/harness/src/ordessa_harness/codex/"
+                           "plugins/harness/codex/src/ordessa_harness_codex"
                            "hooks.py:16 (a session-start recording helper"
                            " exists in the pinned closure, but no managed-"
                            "hook load observation exists; cell stays"

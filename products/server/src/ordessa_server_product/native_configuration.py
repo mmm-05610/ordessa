@@ -9,9 +9,9 @@ from threading import RLock
 from uuid import uuid4
 
 from server_plugin_api import ServerPluginDescriptor, ServerPluginRegistration
-from ordessa_harness.configuration.model.backend import NativeModelServices
-from ordessa_harness.server_acp.profile_owner import ProfileSessionOwner
-from ordessa_harness.server_acp.registry import NativeConfigurationUnavailable
+from ordessa_server_product.harness_adapters.configuration.model.backend import NativeModelServices
+from ordessa_server_product.acp_channel.profile_owner import ProfileSessionOwner
+from ordessa_server_product.acp_channel.registry import NativeConfigurationUnavailable
 
 PLUGIN_ID = 'ordessa.product.native-configuration'
 PORT = 'native.configuration'

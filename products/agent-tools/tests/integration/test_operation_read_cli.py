@@ -375,7 +375,7 @@ SCENARIOS = {
 
 
 def test_cli_and_client_import_no_core_or_host_packages():
-    forbidden = ('ordessa_server', 'ordessa_harness', 'pacthold', 'server_plugin_api',
+    forbidden = ('ordessa_server', 'pacthold.harness_kit', 'pacthold', 'server_plugin_api',
                  'ordessa_environment_api', 'ordessa_persistence_sqlite')
     for name in ('cli.py', 'client.py'):
         source = files('ordessa_agent_tools').joinpath(name).read_text(encoding='utf-8')
@@ -402,7 +402,7 @@ def test_cli_runtime_import_boundary_holds_in_a_fresh_interpreter():
         "import sys\n"
         "import ordessa_agent_tools.cli, ordessa_agent_tools.client\n"
         "bad = sorted(m for m in sys.modules if m.split('.')[0] in "
-        "{'ordessa_server', 'ordessa_harness', 'pacthold', 'server_plugin_api', "
+        "{'ordessa_server', 'pacthold.harness_kit', 'pacthold', 'server_plugin_api', "
         "'ordessa_environment_api', 'ordessa_persistence_sqlite'})\n"
         "sys.stdout.write(','.join(bad))\n"
         "raise SystemExit(1 if bad else 0)\n")

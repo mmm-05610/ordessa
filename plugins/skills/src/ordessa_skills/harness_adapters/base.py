@@ -5,7 +5,7 @@ pure functions — `assess(target)`, `compile(resolved_set, target)`,
 `verify(observation_result)` — with the brand's frozen facts injected from
 `capabilities.py`. Nothing here:
 
-* imports `ordessa_harness` or any host/harness internal (AGENTS.md rule 3;
+* imports `pacthold.harness_kit` or any host/harness internal (AGENTS.md rule 3;
   the evidence strings merely *cite* harness files by path:line) — it does
   consume the published standalone contract `pacthold.harness_contracts`;
 * writes to a filesystem, spawns a process or sends anything anywhere —

@@ -12,7 +12,7 @@ Three locks, in the MB-S2 boundary-pin discipline:
    the plugins consume, never the reverse.
 3. Each plugin's own imports stay inside its declared surface: the host's
    generic vocabulary, its own package, its declared dependencies
-   (`ordessa_workspace`, `ordessa_harness`) and `pacthold` — never the host's
+   (`ordessa_workspace`, `pacthold.harness_kit`) and `pacthold` — never the host's
    business modules (`bootstrap` business, the moved domain aliases).
 """
 from __future__ import annotations
@@ -76,7 +76,7 @@ S2C_PUBLISHED_WIRE_EDGES = frozenset((
 def _plugin_host_edges() -> "list[tuple[Path, str]]":
     offenders: "list[tuple[Path, str]]" = []
     for root in (COMPAT_DIR, WORKSPACE_DIR,
-                 REPO_ROOT / "plugins" / "harness" / "src" / "ordessa_harness"):
+                 REPO_ROOT / "plugins" / "harness" / "src" / "pacthold.harness_kit"):
         for path, imports in _walk_sources(root):
             for name in imports:
                 if name.startswith("ordessa_server.") or name == "ordessa_server":
@@ -154,7 +154,7 @@ def test_the_host_core_imports_no_plugin_no_product():
     """bootstrap, transport, wire and plugin_host import none of the moved
     domains, none of the plugin packages and none of the product package."""
     forbidden_prefixes = (
-        "ordessa_server_compat", "ordessa_workspace", "ordessa_harness",
+        "ordessa_server_compat", "ordessa_workspace", "pacthold.harness_kit",
         "ordessa_server_product", "ordessa_server.profiles", "ordessa_server.accounts",
         "ordessa_server.assets", "ordessa_server.hooks",
         "ordessa_server.execution", "ordessa_server.approvals",

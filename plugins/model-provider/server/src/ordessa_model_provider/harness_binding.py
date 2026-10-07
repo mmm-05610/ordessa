@@ -23,7 +23,7 @@ controlled-level full chain runs with :class:`ControlledPermit`-shaped
 mint/verify pairs in the tests; the production-level statement stays
 "refused/unknown until S-06" and is asserted, not faked.
 
-This module consumes harness-api/ordessa_harness read-only; it never imports
+This module consumes harness-api/pacthold.harness_kit read-only; it never imports
 Server host internals beyond the port vocabulary it implements.
 
 TEST DOUBLE ONLY - PRODUCTION MUST NOT INJECT THIS PORT

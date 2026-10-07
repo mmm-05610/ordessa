@@ -17,11 +17,11 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_harness.application import (
+from ordessa_server_product.harness_adapters.application import (
     ConfigurationApplicationService, NativeActivationReceipt, NativeReadback,
     OperationJournal, RuntimeSnapshot,
 )
-from ordessa_harness.materialization import MergeAuthority, TargetAuthority
+from pacthold.harness_kit.materialization import MergeAuthority, TargetAuthority
 from pacthold.harness_contracts import (
     AdapterContext, ApplicationTarget, Installation, Match, TargetDescriptor,
     TargetHandle,

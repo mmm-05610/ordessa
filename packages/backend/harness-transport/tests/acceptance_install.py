@@ -13,7 +13,7 @@ import textwrap
 
 ROOT=Path(__file__).resolve().parents[4]
 PROJECTS=('packages/backend/environment-api','packages/backend/pacthold',
- 'packages/backend/harness-transport','plugins/harness/api','plugins/harness/records','plugins/harness/pi','plugins/harness/codex','plugins/harness/claude-code')
+ 'packages/backend/harness-transport','packages/backend/pacthold','packages/backend/environment-api','plugins/harness/records','plugins/harness/pi','plugins/harness/codex','plugins/harness/claude-code')
 
 
 def exercise(output):
@@ -72,7 +72,7 @@ def exercise(output):
  receipt=env.activate('selected',AgentContributionSet(agent_runtime_providers=(provider,)))
  assert env.agent_runtime_contribution(provider.descriptor.definition_ref).owner_activation==receipt.activation
  assert 'start' not in provider.descriptor.supported_methods
- for forbidden in ('ordessa_server','ordessa_harness','ordessa_agent_tools','claude_agent_sdk','server_plugin_api'):
+ for forbidden in ('ordessa_server','pacthold.harness_kit','ordessa_agent_tools','claude_agent_sdk','server_plugin_api'):
   assert importlib.util.find_spec(forbidden) is None,forbidden+' unexpectedly installed'
  for other in ('ordessa_harness_pi','ordessa_harness_codex','ordessa_harness_claude_code'):
   if other!={module!r}: assert other not in sys.modules,'unselected family imported'

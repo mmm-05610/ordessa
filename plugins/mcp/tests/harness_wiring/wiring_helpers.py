@@ -1,7 +1,7 @@
 """T013 wiring fixtures: real API DTOs around the brand binding + the C4 chain.
 
 Everything runs in-process: the "harness instance" of the controlled chain
-is the REAL ``ordessa_harness.application.ConfigurationApplicationService``
+is the REAL ``ordessa_server_product.harness_adapters.application.ConfigurationApplicationService``
 over the REAL contribution carrier host and the REAL merge/materialization
 authorities, with the same in-memory controlled-runtime pattern the
 harness's own controlled test uses (fixtures/test_configuration_service_

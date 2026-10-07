@@ -1,7 +1,7 @@
 """The Q1 producer of the ``agent-box.skill@1`` delivery set (T14/G19).
 
 Closes the producer gap: the harness *consumption* leg exists
-(`plugins/harness/src/ordessa_harness/adapters/generic_cli.py:20-38` reads
+(`packages/backend/pacthold/src/pacthold/harness_kit/adapters/generic_cli.py:20-38` reads
 resolved inputs of contract ``agent-box.skill@1`` and mounts each skill tree
 read-only at the registry-declared ``skill_target``), and the contract type
 itself is the published one

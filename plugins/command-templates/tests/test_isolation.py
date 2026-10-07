@@ -30,7 +30,7 @@ MODULES = [
 
 #: Host/product modules the pure domain may never depend on (plan.md, contracts.md).
 FORBIDDEN_IMPORTS = {
-    "ordessa_server", "ordessa_server_compat", "pacthold", "ordessa_harness",
+    "ordessa_server", "ordessa_server_compat", "pacthold", "pacthold.harness_kit",
     "ordessa_workspace", "ordessa_profile", "fastapi", "httpx",
 }
 
@@ -126,4 +126,4 @@ def test_service_runs_without_profile_chat_harness(service):
     assert template.latest_revision == 1
     # A full CRUD round never dragged a host product package into the process.
     assert "ordessa_server" not in sys.modules
-    assert "ordessa_harness" not in sys.modules
+    assert "pacthold.harness_kit" not in sys.modules

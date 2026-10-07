@@ -61,7 +61,7 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live
                 stderr=stderr, text=True)
             channel = None
             if owner_rpc:
-                from ordessa_harness.server_acp.registry import _Channel, _ObservedTransport
+                from ordessa_server_product.acp_channel.registry import _Channel, _ObservedTransport
                 channel = _Channel(connection_id='probe-channel', harness_id='pi',
                     workspace_id='probe-project', profile_id='probe-profile', cwd=str(project))
                 # Ledger fixture only: this probe is NOT a full Server composition.
@@ -116,7 +116,7 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live
                 if channel is None:
                     request('_ordessa/session/configuration', {'sessionId': native}, fails=True)
                 else:
-                    from ordessa_harness.server_acp.registry import NativeConfigurationUnavailable
+                    from ordessa_server_product.acp_channel.registry import NativeConfigurationUnavailable
                     try:
                         channel.query_native_configuration(native)
                     except NativeConfigurationUnavailable:
@@ -135,10 +135,10 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live
                 different = next(o["value"] for o in thinking["options"] if o["value"] != thinking["currentValue"])
                 if owner_operations:
                     from pacthold.harness_contracts import ApplicationTarget, InvokeAction, IntentSource
-                    from ordessa_harness.application.action_execution import ActionBatch, ActionInvocation
-                    from ordessa_harness.server_acp.profile_owner import ProfileSessionOwner
-                    from ordessa_harness.server_acp.registry import AcpChannelRegistry
-                    from ordessa_harness.server_acp.pi_action_executor import PiSessionActionExecutor
+                    from ordessa_server_product.harness_adapters.application.action_execution import ActionBatch, ActionInvocation
+                    from ordessa_server_product.acp_channel.profile_owner import ProfileSessionOwner
+                    from ordessa_server_product.acp_channel.registry import AcpChannelRegistry
+                    from ordessa_server_product.acp_channel.pi_action_executor import PiSessionActionExecutor
                     registry = AcpChannelRegistry(session_records=None, profile_records=None,
                         launch=lambda **kwargs: (_ for _ in ()).throw(AssertionError('probe cannot launch twice')))
                     registry._by_id[channel.connection_id] = channel
@@ -174,11 +174,11 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live
                     assert retained == operation
                     if owner_live_model:
                         from pacthold.harness_contracts import DesiredFragment, Installation
-                        from ordessa_harness.configuration.model.plugin import ModelProviderAdaptersPlugin
-                        from ordessa_harness.pi.configuration.runtime import PiLiveModelRuntime
-                        from ordessa_harness.application.configuration_service import ConfigurationApplicationService
+                        from ordessa_server_product.harness_adapters.configuration.model.plugin import ModelProviderAdaptersPlugin
+                        from ordessa_harness_pi.configuration.runtime import PiLiveModelRuntime
+                        from ordessa_server_product.harness_adapters.application.configuration_service import ConfigurationApplicationService
                         from ordessa_harness_records.operation_journal import OperationJournal
-                        from ordessa_harness.application.action_execution import ActionGrant
+                        from ordessa_server_product.harness_adapters.application.action_execution import ActionGrant
                         from ordessa_server.bootstrap import build_runtime
                         carrier_runtime = build_runtime(home / "controlled-carrier")
                         try:
@@ -211,7 +211,7 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live
                             model = next(item for item in configuration(native)['configOptions'] if item['id'] == 'model')
                             assert model['currentValue'] == 'ordessa-fixture/second'
                             if owner_registration:
-                                from ordessa_harness.configuration.model.provider_registration import PiProviderRegistrationService
+                                from ordessa_server_product.harness_adapters.configuration.model.provider_registration import PiProviderRegistrationService
                                 original_model_file = (instance / 'models.json').read_bytes()
                                 registration = PiProviderRegistrationService(registry, owners,
                                     verify=lambda _: 'DEVELOPMENT-pinned-provider-probe')
@@ -256,7 +256,7 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live
                 if channel is None:
                     request("_ordessa/session/configuration", {"sessionId": native, "desired": different}, fails=True)
                 else:
-                    from ordessa_harness.server_acp.registry import NativeConfigurationUnavailable
+                    from ordessa_server_product.acp_channel.registry import NativeConfigurationUnavailable
                     try:
                         channel.transport.send_line(json.dumps({'jsonrpc': '2.0', 'id': 'client-config',
                             'method': '_ordessa/session/configuration', 'params': {'sessionId': native}}))
@@ -267,7 +267,7 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live
                 request("session/close", {"sessionId": native})
                 refused_configuration(native)
                 if channel is not None:
-                    from ordessa_harness.server_acp.registry import NativeConfigurationUnavailable
+                    from ordessa_server_product.acp_channel.registry import NativeConfigurationUnavailable
                     try:
                         channel.query_native_configuration(native)
                     except NativeConfigurationUnavailable:

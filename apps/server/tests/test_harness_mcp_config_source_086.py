@@ -231,14 +231,14 @@ def test_the_registry_slot_for_claude_code_is_a_file_the_cli_reads():
     the user's own MCP servers land where nobody looks and a granted parent
     advertises nothing - which is the bug this order found.
     """
-    from ordessa_harness.registry import load_builtin_registry
+    from ordessa_server_product.harness_adapters.registry import load_builtin_registry
 
     profile = load_builtin_registry().get("claude-code").profile
     assert profile.mcp_target == "/runtime/home/.claude/.claude.json"
     assert profile.mcp_key == "mcpServers"
     # The slot is inside the config home the production template pins, so the
     # CLI finds it, and it is not the read-only provider projection.
-    from ordessa_harness.claude import production
+    from ordessa_harness_claude_code import production
 
     assert profile.mcp_target.startswith(production.CONFIG_HOME + "/")
     assert profile.mcp_target not in {

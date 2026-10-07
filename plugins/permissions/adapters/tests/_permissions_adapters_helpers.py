@@ -26,7 +26,7 @@ from ordessa_permissions_api import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
-HARNESSES_TOML = REPO_ROOT / "plugins" / "harness" / "src" / "ordessa_harness" / "harnesses.toml"
+HARNESSES_TOML = REPO_ROOT / "plugins" / "harness" / "src" / "pacthold.harness_kit" / "harnesses.toml"
 
 #: harness_type used by the adapters for each pinned driver id.
 DRIVER_TO_HARNESS_ID = {"codex": "codex", "claude": "claude-code", "pi": "pi"}

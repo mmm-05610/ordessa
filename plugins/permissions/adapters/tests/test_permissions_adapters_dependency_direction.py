@@ -6,7 +6,7 @@ the public plugin surface `server_plugin_api`, the Harness *public contract
 package* `pacthold.harness_contracts` (the same dependency set the platform's own
 external-adapter exemplar declares) and themselves - nothing else. In
 particular no `ordessa_server`, no harness implementation internals
-(`ordessa_harness` proper, as distinct from the `_api` contract), no compat
+(`pacthold.harness_kit` proper, as distinct from the `_api` contract), no compat
 engine and no sandbox-domain name crosses this line, and the runtime
 authorization gate (G1) is not pretended to exist here.
 """
@@ -18,7 +18,7 @@ import re
 import sys
 
 SRC_ROOT = pathlib.Path(__file__).resolve().parents[1] / "src" / "ordessa_permissions_adapters"
-#: bare module names that must never appear in src text; `ordessa_harness`
+#: bare module names that must never appear in src text; `pacthold.harness_kit`
 #: is checked separately so the public `pacthold.harness_contracts` contract import
 #: is not caught by substring matching.
 FORBIDDEN_TEXT = (
@@ -28,7 +28,7 @@ FORBIDDEN_TEXT = (
     "ordessa_server", "ordessa_server_compat",
     "sandboxv1", "SandboxV1", "ordessa_sandbox",
 )
-HARNESS_INTERNALS = re.compile(r"ordessa_harness(?!_api)\b")
+HARNESS_INTERNALS = re.compile(r"pacthold.harness_kit(?!_api)\b")
 STDLIB_OK = set(sys.stdlib_module_names)
 KERNEL_CONTRACT_EDGE = "pacthold.harness_contracts"
 ALLOWED = STDLIB_OK | {"__future__", "ordessa_permissions_api", "server_plugin_api",

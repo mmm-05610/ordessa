@@ -4,6 +4,6 @@
     "runtime",
     "harnesses",
     "third_party/harness_remote",
-    "src/ordessa_harness/launch-descriptors.json"
+    "src/pacthold.harness_kit/launch-descriptors.json"
   ]
 }

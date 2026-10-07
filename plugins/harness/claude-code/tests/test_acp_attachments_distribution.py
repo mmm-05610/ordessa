@@ -64,7 +64,7 @@ def test_independent_attachment_wheel_without_monolith_product_server_or_sdk(tmp
     with zipfile.ZipFile(claude[0]) as archive:
         assert 'ordessa_harness_claude_code/acp_attachments.py' in archive.namelist()
         assert 'ordessa_harness_claude_code/acp_model_configuration.py' in archive.namelist()
-        assert not any(name.startswith(('ordessa_harness/', 'ordessa_agent_tools/', 'ordessa_server/')) for name in archive.namelist())
+        assert not any(name.startswith(('pacthold.harness_kit/', 'ordessa_agent_tools/', 'ordessa_server/')) for name in archive.namelist())
     environment = tmp_path / 'isolated'
     created = subprocess.run([sys.executable, '-m', 'venv', str(environment)], capture_output=True, text=True, timeout=60)
     assert created.returncode == 0, created.stderr

@@ -6,8 +6,8 @@ from threading import RLock
 
 from pacthold.agents.configuration.profile_errors import ProfileError
 from ordessa_server.errors import ServerError
-from ordessa_harness.configuration.model.initial import initial_channel
-from ordessa_harness.configuration.model.backend import (
+from ordessa_server_product.harness_adapters.configuration.model.initial import initial_channel
+from ordessa_server_product.harness_adapters.configuration.model.backend import (
     NativeModelLaunchRefused, launch_options, preparation_params, requires_model_catalog,
 )
 

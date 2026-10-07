@@ -42,7 +42,7 @@ def verify_wheel(path):
         if any("ordessa_agent_tools/" + name not in names for name in ("schema.json", "schema-management.json", "provider-schema.json")):
             raise ValueError("Wheel is missing its core schema")
         for name in names:
-            if name.startswith(("pacthold/", "ordessa_server/", "ordessa_harness/", "deployment/", "ordessa_agent/", "ordessa_agent_tools/native_clients/")):
+            if name.startswith(("pacthold/", "ordessa_server/", "pacthold.harness_kit/", "deployment/", "ordessa_agent/", "ordessa_agent_tools/native_clients/")):
                 raise ValueError("Wheel includes service implementation")
             if name.endswith(".py"):
                 if not name.startswith('ordessa_agent_tools/'):

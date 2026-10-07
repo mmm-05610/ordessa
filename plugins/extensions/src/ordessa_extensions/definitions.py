@@ -8,7 +8,7 @@ touches a process, a path or a network.
 
 Event vocabulary honesty: only event names evidenced IN-REPO are admitted.
 `SessionStart` is named first-hand in the pinned Codex closure
-(`plugins/harness/src/ordessa_harness/codex/hooks.py:16` requires exactly
+(`plugins/harness/codex/src/ordessa_harness_codexhooks.py:16` requires exactly
 `hook_event_name == "SessionStart"`) and in the registry comment
 (`harnesses.toml:38-40`, "SessionStart…SubagentStop"); `PreToolUse` is the
 only other event the registry comment names with an observation count
@@ -42,14 +42,14 @@ MAX_TIMEOUT_SECONDS = 600
 #: "unknown" would silently widen the projection surface.
 KNOWN_EVENTS: Mapping[str, str] = {
     "SessionStart": (
-        "plugins/harness/src/ordessa_harness/codex/hooks.py:16 (first-hand,"
-        " pinned closure); plugins/harness/src/ordessa_harness/"
+        "plugins/harness/codex/src/ordessa_harness_codexhooks.py:16 (first-hand,"
+        " pinned closure); packages/backend/pacthold/src/pacthold/harness_kit/"
         "harnesses.toml:38-40 (Order 59 stage A comment)"),
     "PreToolUse": (
-        "plugins/harness/src/ordessa_harness/harnesses.toml:117-119"
+        "packages/backend/pacthold/src/pacthold/harness_kit/harnesses.toml:117-119"
         " (Order 59 stage A comment, claude settings.json, 108 refs)"),
     "SubagentStop": (
-        "plugins/harness/src/ordessa_harness/harnesses.toml:38-40"
+        "packages/backend/pacthold/src/pacthold/harness_kit/harnesses.toml:38-40"
         " (Order 59 stage A comment, range end; comment-grade)"),
 }
 

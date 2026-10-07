@@ -62,7 +62,7 @@ def digest_label(request: Any) -> str:
 
 def render_codex_provider_section(*, provider: str, base_url: str, protocol: str) -> str:
     """The ``[model_providers.<id>]`` TOML block, byte-stable (same input ->
-    same bytes). provenance: ``ordessa_harness.native_materialization
+    same bytes). provenance: ``ordessa_server_product.native_materialization
     .render_codex_provider_section`` @ 96fef2db47; endpoint/protocol live
     *inside* the provider table and the credential stays an env-name."""
 

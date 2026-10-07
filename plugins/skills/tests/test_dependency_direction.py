@@ -5,7 +5,7 @@ imports needed:
 
 1. No module under `src/ordessa_skills/**` may import the host
    (`ordessa_server`, `ordessa_server_compat`), a sibling plugin package
-   (`ordessa_harness`, `ordessa_workspace`, the legacy `ordessa_assets`,
+   (`pacthold.harness_kit`, `ordessa_workspace`, the legacy `ordessa_assets`,
    and anything else discovered under `plugins/*/src`), or repo path roots
    (`apps`, `products`).
 2. The only non-stdlib absolute imports allowed are the declared
@@ -42,7 +42,7 @@ copies — the lead review asks for exactly this list):
   the PUBLISHED producer contract the Q1 delivery producer must bind to
   verbatim; redeclaring it in-domain is exactly what the "do NOT redeclare
   the contract" rule forbids. The consumer side
-  (`plugins/harness/src/ordessa_harness/adapters/generic_cli.py:20-38`)
+  (`packages/backend/pacthold/src/pacthold/harness_kit/adapters/generic_cli.py:20-38`)
   matches this contract id, and the symbol is reachable ONLY through this
   assembly (import probe on the kernel copy raises ModuleNotFoundError).
 * `pacthold_runtime_compat.runtime_composition` — the published Root
@@ -88,7 +88,7 @@ PKG_DIR = REPO_ROOT / "plugins" / "assets" / "skills" / "src" / "ordessa_skills"
 #: Hard-forbidden import roots (AGENTS.md rule 3: plugins never touch host
 #: internals or each other; the legacy domain must not be re-imported).
 FORBIDDEN_ROOTS = frozenset((
-    "ordessa_server", "ordessa_server_compat", "ordessa_harness",
+    "ordessa_server", "ordessa_server_compat", "pacthold.harness_kit",
     "ordessa_workspace", "ordessa_assets", "apps", "products",
 ))
 
@@ -97,7 +97,7 @@ FORBIDDEN_ROOTS = frozenset((
 #: (publication `d3f026904e`): it is the standalone, `py.typed`,
 #: dependency-free PUBLIC CONTRACT package of the Harness — the DTO surface
 #: the skills configuration adapters implement — NOT the harness plugin's
-#: internals (`ordessa_harness` stays hard-forbidden above; the sibling-root
+#: internals (`pacthold.harness_kit` stays hard-forbidden above; the sibling-root
 #: sweep only discovers packages under `plugins/*/src`, and
 #: `plugins/harness/api/src/pacthold.harness_contracts` imports nothing from the
 #: harness runtime — its own wheel proof has no Requires-Dist).

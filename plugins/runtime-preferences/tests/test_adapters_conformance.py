@@ -4,7 +4,7 @@ Gate shapes follow the pinned form of
 ``plugins/model-provider/adapters/tests/test_adapters_conformance.py``
 (lines 80-103 there: real-C2-registry overlap refusal and disjoint-range
 acceptance), re-driven against the production registry
-(``ordessa_harness.contributions``) — refusal semantics are the production
+(``ordessa_server_product.harness_adapters.contributions``) — refusal semantics are the production
 ones (adapter_id / facet-entry-range / claim conflicts at stage time, never
 order-resolved).
 
@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 from pacthold.harness_contracts import ConfigurationAdapterDescriptor, VersionRange
-from ordessa_harness.contributions import HarnessContributionError, HarnessContributionRegistry
+from ordessa_server_product.harness_adapters.contributions import HarnessContributionError, HarnessContributionRegistry
 from server_plugin_api import Contribution, ContributionBatch, stage_contributions
 
 from ordessa_runtime_preferences import bridge, common, keys

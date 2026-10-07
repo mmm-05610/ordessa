@@ -24,7 +24,7 @@ for name in {FAMILIES!r}:
  if name!={family!r}:
   assert not any(module==name or module.startswith(name+'.') for module in sys.modules),'forbidden family imported: '+name
 assert not any(module.startswith('ordessa_agent_tools.native_clients') for module in sys.modules),'product brand client imported'
-assert not any(module.startswith(('ordessa_harness.pi','ordessa_harness.codex','ordessa_harness.claude','ordessa_harness.adapters')) for module in sys.modules),'legacy family imported'
+assert not any(module.startswith(('ordessa_harness_pi','ordessa_harness_codex','ordessa_harness_claude_code','pacthold.harness_kit.adapters')) for module in sys.modules),'legacy family imported'
 '''
  env=dict(os.environ)
  env['PYTHONPATH']=os.pathsep.join(str(path) for path in SEARCH)

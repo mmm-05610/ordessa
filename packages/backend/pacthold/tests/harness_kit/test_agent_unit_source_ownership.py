@@ -1,0 +1,142 @@
+"""Architecture gate: migrated native protocols have one independent owner."""
+import ast
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[5]
+FAMILIES = {'codex': ('ordessa_harness_codex', 'client.py'),
+            'pi': ('ordessa_harness_pi', 'client.py'),
+            'claude-code': ('ordessa_harness_claude_code', 'stream_json.py')}
+
+
+def product_imports(source):
+    found = []
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Import): names = [item.name for item in node.names]
+        elif isinstance(node, ast.ImportFrom): names = [node.module or '']
+        else: continue
+        found.extend(name for name in names if name == 'ordessa_agent_tools' or name.startswith('ordessa_agent_tools.'))
+    return found
+
+
+@pytest.mark.parametrize('family', FAMILIES)
+def test_independent_family_has_protocol_and_provider_without_product_dependency(family):
+    package, protocol = FAMILIES[family]
+    source = ROOT / 'plugins/harness' / family / 'src' / package
+    assert (source / protocol).is_file() and (source / 'provider.py').is_file()
+    files = tuple(source.rglob('*.py')) + tuple((ROOT / 'plugins/harness' / family / 'tests').rglob('*.py'))
+    assert files
+    for path in files:
+        assert not product_imports(path.read_text()), path
+    old = ROOT / 'products/agent-tools/src/ordessa_agent_tools/native_clients' / (family.replace('-', '_') + '.py')
+    assert not old.exists(), 'Migrated native protocol must not remain in the CLI product'
+
+
+@pytest.mark.parametrize('source', ['import ordessa_agent_tools', 'from ordessa_agent_tools.native_clients._transport import Message',
+    'import ordessa_agent_tools.native_clients.codex as codex'])
+def test_planted_product_dependency_is_detected(source):
+    assert product_imports(source)
+
+
+def test_remaining_staged_families_and_shared_transports_still_present():
+    staged = ROOT / 'products/agent-tools/src/ordessa_agent_tools/native_clients'
+    for name in ('copilot', 'gemini_cli', 'goose', 'kimi', 'opencode', 'qwen', 'vibe', '_transport', '_http', '_acp'):
+        path = staged / (name + '.py')
+        assert path.is_file() and path.stat().st_size > 0
+
+
+#: 032: brand packages may not import the kernel internals, and the retired
+#: root super-package name may not come back under any spelling.
+FORBIDDEN_IMPORT_ROOTS = ('pacthold.harness_kit', 'ordessa_harness', 'ordessa_harness_api')
+#: Retired module spellings inside the surviving brand packages (the real
+#: module is ``acp_attachments``; the short name is the planted legacy import).
+LEGACY_MODULE_SPELLINGS = ('ordessa_harness_claude_code.attachments',)
+
+
+def legacy_harness_imports(source):
+    found = []
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Import): names = [item.name for item in node.names]
+        elif isinstance(node, ast.ImportFrom): names = [node.module or '']
+        else: continue
+        found.extend(name for name in names
+                     if any(name == root or name.startswith(root + '.')
+                            for root in FORBIDDEN_IMPORT_ROOTS + LEGACY_MODULE_SPELLINGS))
+    return found
+
+
+def test_claude_acp_attachment_has_one_owner_and_no_legacy_exports():
+    independent = ROOT / 'plugins/harness/claude-code'
+    assert (independent / 'src/ordessa_harness_claude_code/acp_attachments.py').is_file()
+    assert (independent / 'tests/test_acp_attachments.py').is_file()
+    # 032: the legacy claude dir merged into the claude-code package; the
+    # continuation id stays its only legacy export and no attachments copy exists.
+    legacy = ROOT / 'plugins/harness/src/ordessa_harness'
+    assert not legacy.exists(), 'the retired root super-package tree must stay absent'
+    assert not (independent / 'attachments.py').exists()
+    tree = ast.parse((independent / 'src/ordessa_harness_claude_code/__init__.py').read_text())
+    export_names = [alias.name for node in tree.body if isinstance(node, ast.ImportFrom)
+                    for alias in node.names]
+    assert 'ClaudeContinuationV1' in export_names
+    assert 'ClaudePreparedAttachment' not in export_names
+    # This gate owns source independence and the migrated pure attachment tests.
+    # Lifecycle integration tests deliberately exercise the original store/issuer.
+    files = tuple((independent / 'src').rglob('*.py')) + (
+        independent / 'tests/test_acp_attachments.py',
+        independent / 'tests/test_acp_attachments_distribution.py',
+    )
+    assert files
+    for path in files:
+        assert not legacy_harness_imports(path.read_text()), path
+        assert not product_imports(path.read_text()), path
+
+
+@pytest.mark.parametrize('source', ['import pacthold.harness_kit',
+    'from ordessa_harness_claude_code.attachments import ClaudePreparedAttachment'])
+def test_planted_legacy_harness_dependency_is_detected(source):
+    assert legacy_harness_imports(source)
+
+
+def test_claude_model_compiler_and_compilation_contracts_have_one_owner():
+    independent = ROOT / 'plugins/harness/claude-code/src/ordessa_harness_claude_code'
+    assert (independent / 'acp_model_configuration.py').is_file()
+    assert (independent / 'acp_model_facts.py').is_file()
+    assert not (ROOT / 'packages/backend/pacthold/src/pacthold/BRANDDIR_claude/configuration/model.py').exists()
+    assert not (ROOT / 'packages/backend/pacthold/src/pacthold/harness_kit/configuration/model/types.py').exists()
+    contracts = ROOT / 'packages/backend/pacthold/src/pacthold/harness_contracts/model_compilation.py'
+    assert contracts.is_file()
+    for path in (independent / 'acp_model_configuration.py', independent / 'acp_model_facts.py', contracts):
+        source = path.read_text()
+        assert not legacy_harness_imports(source), path
+        assert not product_imports(source), path
+
+
+def test_codex_model_compiler_and_facts_have_one_independent_owner():
+    source = ROOT / 'plugins/harness/codex/src/ordessa_harness_codex'
+    assert not (ROOT / 'plugins/harness/src/ordessa_harness').exists()
+    for name in ('acp_model_configuration.py', 'acp_model_facts.py'):
+        path = source / name
+        assert path.is_file()
+        assert not legacy_harness_imports(path.read_text()), path
+        assert not product_imports(path.read_text()), path
+
+
+def test_pi_model_compiler_and_facts_have_one_independent_owner():
+    source = ROOT / 'plugins/harness/pi/src/ordessa_harness_pi'
+    assert not (ROOT / 'plugins/harness/src/ordessa_harness').exists()
+    for name in ('acp_model_configuration.py', 'acp_model_facts.py'):
+        path = source / name
+        assert path.is_file()
+        assert not legacy_harness_imports(path.read_text()), path
+        assert not product_imports(path.read_text()), path
+
+
+def test_deployment_records_have_one_independent_source_owner():
+    source = ROOT / 'plugins/harness/records/src/ordessa_harness_records'
+    for name in ('operation_journal.py', 'unit_records.py'):
+        assert not (ROOT / 'packages/backend/pacthold/src/pacthold/harness_kit/application' / name).exists()
+        path = source / name
+        assert path.is_file()
+        assert not legacy_harness_imports(path.read_text()), path
+        assert not product_imports(path.read_text()), path

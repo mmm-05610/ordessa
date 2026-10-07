@@ -74,9 +74,9 @@ def _semver_tuple(text: str) -> tuple[int, int, int]:
 
 def _repo_harnesses_toml() -> Path | None:
     # points.py: plugins/lsp/adapters/src/ordessa_lsp_adapters/
-    #   -> parents[4] = plugins/ -> + harness/src/ordessa_harness/
-    candidate = (Path(__file__).resolve().parents[4]
-                 / "harness/src/ordessa_harness/harnesses.toml")
+    #   -> parents[5] = repo root -> + kernel harness_kit (032 home)
+    candidate = (Path(__file__).resolve().parents[5]
+                 / "packages/backend/pacthold/src/pacthold/harness_kit/harnesses.toml")
     return candidate if candidate.is_file() else None
 
 
@@ -85,7 +85,7 @@ def pinned_harness_versions() -> dict[str, str]:
     toml_path = _repo_harnesses_toml()
     if toml_path is None:
         try:
-            spec = importlib.util.find_spec("ordessa_harness")
+            spec = importlib.util.find_spec("pacthold.harness_kit")
         except (ImportError, ValueError):
             spec = None
         if spec is None or not spec.submodule_search_locations:
@@ -97,7 +97,7 @@ def pinned_harness_versions() -> dict[str, str]:
                      / "harnesses.toml")
         if not toml_path.is_file():
             raise HarnessRegistryUnavailable(
-                f"ordessa_harness found at {toml_path.parent} but "
+                f"pacthold.harness_kit found at {toml_path.parent} but "
                 "harnesses.toml is missing")
     import tomllib
     document = tomllib.loads(toml_path.read_text(encoding="utf-8"))

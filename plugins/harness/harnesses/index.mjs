@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs"
 import { resolveAcpLaunch, harnessProfile } from "../third_party/harness_remote/bridge/src/harness-profiles.js"
 import { AGENTBOX_HARNESS_PROFILES } from "../runtime/profile_extensions.mjs"
 
-const DESCRIPTOR_URL = new URL("../src/ordessa_harness/launch-descriptors.json", import.meta.url)
+const DESCRIPTOR_URL = new URL("../../../packages/backend/pacthold/src/pacthold/harness_kit/launch-descriptors.json", import.meta.url)
 
 function routeIsValid(route, required = false) {
   if (route === null && !required) return true

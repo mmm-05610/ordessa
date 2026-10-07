@@ -13,3 +13,6 @@ server = ["ordessa-server-plugin-api>=0.1.0,<1"]
 where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.setuptools.package-data]
+ordessa_harness_codex = ["*.json", "*.toml"]

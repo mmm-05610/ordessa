@@ -5,7 +5,7 @@ plugin surface and — since the foundation checkpoint — the Harness C2
 *descriptive* vocabulary (`pacthold.harness_contracts.contracts/.schema`), exactly the
 closure the platform's own third-party contributor fixture declares
 (`plugins/harness/tests/fixtures/external_adapter`). Harness package CODE
-(`ordessa_harness`), the Server host, pacthold and Permissions stay forbidden
+(`pacthold.harness_kit`), the Server host, pacthold and Permissions stay forbidden
 in src (verification.md extra-gate 2): `harnesses.toml` is located with
 `importlib.util.find_spec`, which never executes harness code.
 """
@@ -21,7 +21,7 @@ PKG_DIR = Path(__file__).resolve().parents[1] / "src" / "ordessa_sandbox_adapter
 
 FORBIDDEN_ROOTS = {
     "ordessa_server", "ordessa_server_compat", "ordessa_server_plugin_api",
-    "ordessa_harness", "pacthold",
+    "pacthold.harness_kit", "pacthold",
     "ordessa_permissions", "ordessa_permissions_api", "ordessa_permissions_backend",
     "ordessa_permissions_adapters",
 }
@@ -82,7 +82,7 @@ class _Blocker:
     def find_spec(self, name, path=None, target=None):
         head = name.split(".")[0]
         # exact-root match: the dotted kernel contract grant stays importable,
-        # ordessa_harness (harness CODE), permissions and the rest are not
+        # pacthold.harness_kit (harness CODE), permissions and the rest are not
         # a grant licenses its own dotted path and the parent chain needed to
         # import it; everything else under the blocked root stays blocked
         if any(name == g or name.startswith(g + ".") or g.startswith(name + ".")
@@ -106,7 +106,7 @@ from server_plugin_api import ServerPluginContext
 
 # harnesses.toml read WITHOUT harness code: the caller supplies the measured
 # pins (the file is located relative to this package checkout).
-toml = Path({str(PKG_DIR.parents[3] / 'harness' / 'src' / 'ordessa_harness' / 'harnesses.toml')!r})
+toml = Path({str(PKG_DIR.parents[4] / 'packages' / 'backend' / 'pacthold' / 'src' / 'pacthold' / 'harness_kit' / 'harnesses.toml')!r})
 pins = {{h["identity"]["harness_type"]: h["identity"]["version"]
           for h in tomllib.loads(toml.read_text(encoding="utf-8"))["harness"]}}
 adapters = (CodexSandboxAdapter(), ClaudeSandboxAdapter(), PiSandboxAdapter())

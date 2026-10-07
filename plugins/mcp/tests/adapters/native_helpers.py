@@ -29,7 +29,7 @@ CANARY = "PLAINTEXT-SECRET-CANARY-8f31b0"
 @dataclass(frozen=True)
 class FakeProfileSpec:
     """Duck-typed stand-in for the host ``ProfileSpec`` fields the adapters
-    read (plugins/harness/src/ordessa_harness/registry/schema.py:31): we do
+    read (packages/backend/pacthold/src/pacthold/harness_kit/registry/schema.py:31): we do
     not import host internals; the thin C2 adapter maps the real type."""
 
     mcp_target: Optional[str]

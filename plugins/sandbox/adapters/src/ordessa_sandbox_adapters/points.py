@@ -17,8 +17,8 @@ imported from the public contract dist ``pacthold.harness_contracts`` (the very
 classes the point's handler isinstance-checks, module identity asserted in
 tests), and the point id / api version are spelled as the constants below —
 ``tests/test_real_point_binding.py`` pins them equal to
-``ordessa_harness.contributions.CONFIGURATION_POINT/POINT_API_VERSION``.
-Harness package CODE (``ordessa_harness``) is never imported: ``harnesses.toml``
+``ordessa_server_product.harness_adapters.contributions.CONFIGURATION_POINT/POINT_API_VERSION``.
+Harness package CODE (``pacthold.harness_kit``) is never imported: ``harnesses.toml``
 is *located* with ``importlib.util.find_spec`` (which does not execute the
 package) and parsed with ``tomllib``, so `native_versions` are measured pins,
 not folklore.
@@ -57,7 +57,7 @@ __all__ = [
 ]
 
 #: the real point (spelled as the foundation publishes it; symbol-level
-#: equality with `ordessa_harness.contributions` is pinned in the tests)
+#: equality with `ordessa_server_product.harness_adapters.contributions` is pinned in the tests)
 SANDBOX_CONFIGURATION_POINT_ID = "harness.configuration-adapters"
 SANDBOX_POINT_API_VERSION = "v1"
 
@@ -94,18 +94,18 @@ def pinned_harness_versions() -> dict[str, str]:
     """The identity version of record per harness_type, read from the real
     `harnesses.toml` shipped by the installed ``ordessa-harness`` dist."""
     try:
-        spec = importlib.util.find_spec("ordessa_harness")
+        spec = importlib.util.find_spec("pacthold.harness_kit")
     except (ImportError, ValueError):
         spec = None
     if spec is None or not spec.submodule_search_locations:
         raise HarnessRegistryUnavailable(
-            "cannot locate ordessa_harness/harnesses.toml to measure "
+            "cannot locate pacthold.harness_kit/harnesses.toml to measure "
             "native_versions; install ordessa-harness or pass pins= "
             "explicitly — no pin is ever invented here")
     toml_path = Path(next(iter(spec.submodule_search_locations))) / "harnesses.toml"
     if not toml_path.is_file():
         raise HarnessRegistryUnavailable(
-            f"ordessa_harness found at {toml_path.parent} but harnesses.toml "
+            f"pacthold.harness_kit found at {toml_path.parent} but harnesses.toml "
             "is missing; native_versions stay unmeasurable")
     import tomllib
     document = tomllib.loads(toml_path.read_text(encoding="utf-8"))

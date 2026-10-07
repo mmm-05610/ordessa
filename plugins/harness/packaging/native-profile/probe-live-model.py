@@ -28,10 +28,10 @@ def flatten(options):
 
 def probe(assets, brand, *, restore_provider=False, candidate_entry=None, initial_model_override=None,
           external_endpoint=None, credential=None):
-    from ordessa_harness.server_acp.registry import _Channel, _ObservedTransport, AcpChannelRegistry
-    from ordessa_harness.server_acp.profile_owner import ProfileSessionOwner
-    from ordessa_harness.configuration.model.live_service import create_model_service
-    from ordessa_harness.configuration.model.plugin import ModelProviderAdaptersPlugin
+    from ordessa_server_product.acp_channel.registry import _Channel, _ObservedTransport, AcpChannelRegistry
+    from ordessa_server_product.acp_channel.profile_owner import ProfileSessionOwner
+    from ordessa_server_product.harness_adapters.configuration.model.live_service import create_model_service
+    from ordessa_server_product.harness_adapters.configuration.model.plugin import ModelProviderAdaptersPlugin
     from pacthold.harness_contracts import DesiredFragment, Installation
     from ordessa_server.bootstrap import build_runtime
     pins = {'codex': ('codex-runtime', 'codex-acp', (1, 1, 14), 'gpt-5.5',
@@ -183,7 +183,7 @@ def probe(assets, brand, *, restore_provider=False, candidate_entry=None, initia
                                                                                    if item['value'] == initial_model))
                               )
                     from pacthold_runtime_compat.storage import Database
-                    from ordessa_harness.contributions import CONFIGURATION_POINT, HarnessContributionRegistry
+                    from ordessa_server_product.harness_adapters.contributions import CONFIGURATION_POINT, HarnessContributionRegistry
                     carrier = build_runtime(home / 'controlled-carrier', server_plugins=(), database_factory=Database)
                     contribution_registry = HarnessContributionRegistry()
                     carrier.plugin_host.register_contribution_point(CONFIGURATION_POINT, 'v1',
@@ -225,7 +225,7 @@ def probe(assets, brand, *, restore_provider=False, candidate_entry=None, initia
                     assert not runtime.private_root.exists()
                     restoration_report = None
                     if restore_provider:
-                        from ordessa_harness.configuration.model.restoration import ProviderRestorationService
+                        from ordessa_server_product.harness_adapters.configuration.model.restoration import ProviderRestorationService
                         restoration = ProviderRestorationService(registry, owners,
                             verify=lambda _: 'DEVELOPMENT-pinned:' + brand)
                         destination = dict(provider='synthetic-destination', model=chosen['value'],

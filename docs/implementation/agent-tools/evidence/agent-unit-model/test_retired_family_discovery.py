@@ -26,9 +26,9 @@ def retired_discovery_is_absent(metadata):
 
 
 def test_registration_guard_detects_name_and_factory_alias_bypasses():
-    assert retired_discovery_is_absent('[agent_box.plugins]\nopencode = ordessa_harness.entrypoints:create_opencode\n')
+    assert retired_discovery_is_absent('[agent_box.plugins]\nopencode = pacthold.harness_kit.entrypoints:create_opencode\n')
     for factory in FACTORIES:
-        assert not retired_discovery_is_absent('[agent_box.plugins]\nrenamed = ordessa_harness.entrypoints:' + factory + '\n')
+        assert not retired_discovery_is_absent('[agent_box.plugins]\nrenamed = pacthold.harness_kit.entrypoints:' + factory + '\n')
     assert not retired_discovery_is_absent('[alternate.discovery]\ncodex = renamed.module:other_factory\n')
 
 
@@ -48,7 +48,7 @@ def test_actual_legacy_wheel_retires_only_three_auto_discovery_entries(tmp_path)
         '--no-build-isolation', '--no-deps', '--wheel-dir', str(wheels), str(project)],
         cwd=tmp_path, env=environment, capture_output=True, text=True, timeout=90)
     assert built.returncode == 0, built.stdout + built.stderr
-    files = list(wheels.glob('ordessa_harness-*.whl'))
+    files = list(wheels.glob('pacthold.harness_kit-*.whl'))
     assert len(files) == 1
     with zipfile.ZipFile(files[0]) as wheel:
         entry_files = [name for name in wheel.namelist() if name.endswith('.dist-info/entry_points.txt')]
@@ -58,14 +58,14 @@ def test_actual_legacy_wheel_retires_only_three_auto_discovery_entries(tmp_path)
         parser = configparser.ConfigParser(interpolation=None)
         parser.read_string(metadata)
         assert dict(parser['agent_box.plugins']) == {
-            'harness-profile-store': 'ordessa_harness.entrypoints:create_profile_store',
-            'opencode': 'ordessa_harness.entrypoints:create_opencode',
-            'hermes': 'ordessa_harness.entrypoints:create_hermes',
+            'harness-profile-store': 'pacthold.harness_kit.entrypoints:create_profile_store',
+            'opencode': 'pacthold.harness_kit.entrypoints:create_opencode',
+            'hermes': 'pacthold.harness_kit.entrypoints:create_hermes',
         }
         # Declaration resources and historical source are retained, rather than
         # physically deleting unreviewed implementations or persisted IDs.
         for name in ('harnesses.toml', 'launch-descriptors.json'):
-            assert 'ordessa_harness/' + name in wheel.namelist()
+            assert 'pacthold.harness_kit/' + name in wheel.namelist()
     created = subprocess.run([sys.executable, '-m', 'venv', str(tmp_path / 'venv')],
         cwd=tmp_path, env=environment, capture_output=True, text=True, timeout=90)
     assert created.returncode == 0, created.stdout + created.stderr

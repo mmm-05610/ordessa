@@ -74,7 +74,7 @@ def render_json_object(value: Mapping[str, Any]) -> str:
 def render_codex_compaction_lines(*, token_limit: int) -> str:
     """The codex ``config.toml`` lines for one compiled compaction parameter,
     byte-stable (same input -> same bytes). provenance:
-    ``ordessa_harness.native_materialization.render_codex_provider_section``
+    ``ordessa_server_product.native_materialization.render_codex_provider_section``
     shape (model-provider adapters @ codex/014-b-model-provider), applied to
     this domain's documented key; the value travels inside the typed intent
     as the parsed table, never as this text."""

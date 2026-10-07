@@ -12,8 +12,8 @@ from pathlib import Path
 import sqlite3
 from types import SimpleNamespace
 
-from ordessa_harness.server_acp.history import NativeSessionHistory
-from ordessa_harness.server_acp.instance_directory import _private
+from ordessa_server_product.acp_channel.history import NativeSessionHistory
+from ordessa_server_product.acp_channel.instance_directory import _private
 from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server.bootstrap.runtime import DataRootOwner
 from ordessa_server_compat.sessions import SessionRecords

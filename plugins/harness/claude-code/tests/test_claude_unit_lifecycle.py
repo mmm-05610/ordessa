@@ -9,7 +9,7 @@ import sys
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "packages/backend/pacthold/tests/harness_kit"))
 import test_unit_configuration_records as shared_fixture
 from test_native_unit_confirmation import UnitEvidence
 from ordessa_harness_records.operation_journal import OperationJournal

@@ -1,16 +1,45 @@
 """Fresh records wheels and original SQLite fences; no native/model process."""
+import importlib.metadata
 import os
 from pathlib import Path
 import shutil
 import subprocess
 import sys
+import zipfile
 
 ROOT=Path(__file__).resolve().parents[4]
+
+KERNEL_DEP_DIST_TO_PACKAGE = {
+    'pydantic-graph': 'pydantic_graph', 'pydantic': 'pydantic', 'pydantic-core': 'pydantic_core',
+    'annotated-types': 'annotated_types', 'typing-inspection': 'typing_inspection',
+    'typing-extensions': 'typing_extensions', 'anyio': 'anyio', 'idna': 'idna',
+    'logfire-api': 'logfire_api',
+}
+
+
+def _repack_kernel_wheels(wheel_dir: Path) -> set:
+    """Repack the pinned kernel dependency chain so the offline closure resolves."""
+    wheel_dir.mkdir(parents=True, exist_ok=True)
+    generated = set()
+    for dist_name, package in KERNEL_DEP_DIST_TO_PACKAGE.items():
+        dist = importlib.metadata.distribution(dist_name)
+        package_dir = Path(dist.locate_file(package))
+        wheel_path = wheel_dir / f'{package}-{dist.version}-py3-none-any.whl'
+        generated.add(wheel_path.name)
+        with zipfile.ZipFile(wheel_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for path in sorted(package_dir.rglob('*')):
+                if path.is_file() and '__pycache__' not in path.parts:
+                    zf.write(path, path.relative_to(package_dir.parent))
+            dist_info = Path(dist._path)
+            for path in sorted(dist_info.rglob('*')):
+                if path.is_file():
+                    zf.write(path, path.relative_to(package_dir.parent))
+    return generated
 
 
 def test_records_wheel_preserves_one_journal_owner_without_monolith(tmp_path):
     sources=[]
-    packages=('packages/backend/environment-api','plugins/harness/api','plugins/harness/records')
+    packages=('packages/backend/environment-api','packages/backend/pacthold','plugins/harness/records')
     for index,relative in enumerate(packages):
         source=ROOT/relative;clean=tmp_path/('source-'+str(index));clean.mkdir()
         shutil.copy2(source/'pyproject.toml',clean/'pyproject.toml')
@@ -25,11 +54,14 @@ def test_records_wheel_preserves_one_journal_owner_without_monolith(tmp_path):
         assert result.returncode==0,result.stdout+result.stderr
         return result
     wheels=tmp_path/'wheels'
+    kernel_wheels=_repack_kernel_wheels(wheels)
     run([sys.executable,'-m','pip','wheel','--no-index','--no-build-isolation','--no-deps','--wheel-dir',str(wheels),*sources])
-    artifacts=sorted(wheels.glob('*.whl'));assert len(artifacts)==len(packages)
+    artifacts=sorted(wheels.glob('*.whl'))
+    own=[p for p in artifacts if p.name not in kernel_wheels]
+    assert len(own)==len(packages) and len(artifacts)==len(packages)+len(KERNEL_DEP_DIST_TO_PACKAGE)
     isolated=tmp_path/'venv';run([sys.executable,'-m','venv',str(isolated)])
     python=str(isolated/'bin/python')
-    run([python,'-m','pip','install','--no-index','--no-deps',*map(str,artifacts)])
+    run([python,'-m','pip','install','--no-index','--find-links',str(wheels),*map(str,artifacts)])
     run([python,'-m','pip','check'])
     program='''
 import importlib.util,sqlite3
@@ -43,7 +75,7 @@ from ordessa_harness_records.unit_records import OperationJournal as UnitJournal
 assert UnitJournal is OperationJournal
 sqlite3.connect=old_connect
 assert all(importlib.util.find_spec(name) is None for name in ('ordessa_harness','ordessa_server',
-    'ordessa_agent_tools','server_plugin_api','pacthold','ordessa_harness_pi','ordessa_harness_codex','ordessa_harness_claude_code'))
+    'ordessa_agent_tools','server_plugin_api','ordessa_harness_pi','ordessa_harness_codex','ordessa_harness_claude_code'))
 from pacthold.harness_contracts import ApplicationTarget,Plan,Refused,ErrorCode
 now=datetime.now(timezone.utc)
 target=ApplicationTarget('fixture-server','fixture-session','fixture-channel',7)

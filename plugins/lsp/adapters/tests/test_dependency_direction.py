@@ -1,6 +1,6 @@
 """016 红线 — 写入面与依赖方向的静态边界。
 
-adapters 只仿形制不 import：不得 import ``ordessa_harness`` 包码（合同词汇
+adapters 只仿形制不 import：不得 import ``pacthold.harness_kit`` 包码（合同词汇
 只从 ``pacthold.harness_contracts``）、不得 import model-provider / permissions /
 sandbox 域、不得 import server/pacthold 实现。
 """
@@ -11,10 +11,10 @@ from pathlib import Path
 SRC = Path(__file__).resolve().parents[1] / "src" / "ordessa_lsp_adapters"
 
 FORBIDDEN_IMPORTS = (
-    "import ordessa_harness\n",
-    "import ordessa_harness.",
-    "from ordessa_harness ",       # 但 pacthold.harness_contracts 合法
-    "from ordessa_harness.",
+    "import pacthold.harness_kit\n",
+    "import pacthold.harness_kit.",
+    "from pacthold.harness_kit ",       # 但 pacthold.harness_contracts 合法
+    "from pacthold.harness_kit.",
     "import ordessa_model_provider",
     "from ordessa_model_provider",
     "import ordessa_permissions",

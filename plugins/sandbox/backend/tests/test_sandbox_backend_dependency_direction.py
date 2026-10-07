@@ -4,7 +4,7 @@ verification.md extra-gate 2: installing Sandbox must not require installing
 Permissions. Proven two ways: statically (the source imports nothing outside
 the allowed set) and at runtime (importing and driving the package inside a
 subprocess whose meta-path blocks `ordessa_permissions*`, `ordessa_server*`,
-`ordessa_harness*`, `pacthold` succeeds).
+`pacthold.harness_kit*`, `pacthold` succeeds).
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ PKG_DIR = Path(__file__).resolve().parents[1] / "src" / "ordessa_sandbox_backend
 
 FORBIDDEN_ROOTS = {
     "ordessa_server", "ordessa_server_compat",
-    "ordessa_harness", "pacthold",
+    "pacthold.harness_kit", "pacthold",
     "ordessa_permissions", "ordessa_permissions_api",
 }
 ALLOWED_EXTERNAL = {"ordessa_sandbox_api", "server_plugin_api"}

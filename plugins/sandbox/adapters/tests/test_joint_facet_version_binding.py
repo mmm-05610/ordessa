@@ -9,14 +9,14 @@ WHY THIS EXISTS (measurement, recorded before any code change; full evidence:
   dataclass at ``contracts.py:56-68``).
 * The C4 admission consults it exactly once per fragment:
   ``descriptor.adapter_versions.contains(installation.adapter_version)``
-  (``plugins/harness/src/ordessa_harness/application/configuration_service.py:153``),
+  (``packages/backend/pacthold/src/pacthold/harness_kit/application/configuration_service.py:153``),
   with a harness-identity check on the line above it (``:151``).
 * This tree ships **no production** ``describe_installation`` implementer:
   the only Installation ever observed in-tree is the controlled fixture
   ``Installation("test-external", (1, 0, 0), (1, 0, 0), "fixture:installed")``
   (``plugins/harness/tests/fixtures/external_adapter/src/ordessa_test_external_adapter/__init__.py:67-69``),
   whose harness id matches none of the codex/claude/pi descriptors. The
-  ``harnesses.toml`` identity versions (``plugins/harness/src/ordessa_harness/harnesses.toml``,
+  ``harnesses.toml`` identity versions (``packages/backend/pacthold/src/pacthold/harness_kit/harnesses.toml``,
   e.g. codex ``version = "2.0"``) are *native* pins; none is an observed
   runtime-adapter version.
 * The Sandbox facet declared exactly ``(0, 1, 0)`` — its own release fact
@@ -43,10 +43,10 @@ import re
 import tomllib
 from contextlib import contextmanager
 from pathlib import Path
-from ordessa_harness.application import (
+from ordessa_server_product.harness_adapters.application import (
     ConfigurationApplicationService, OperationJournal, RuntimeSnapshot,
 )
-from ordessa_harness.materialization import MergeAuthority, TargetAuthority
+from pacthold.harness_kit.materialization import MergeAuthority, TargetAuthority
 from pacthold.harness_contracts import (
     AdapterContext, AdapterRefusal, ApplicationTarget, Assessment,
     ConfigurationAdapterDescriptor, DesiredFragment, ErrorCode, Installation,

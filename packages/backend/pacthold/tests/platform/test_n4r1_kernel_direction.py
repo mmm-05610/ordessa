@@ -10,7 +10,7 @@ The sibling `test_t009_direction_guard.py` guards the kernel against the
 compatibility assembly (`pacthold_runtime_compat`) only; this guard covers the
 wider surface the inventory found: `apps/server` (`ordessa_server*`),
 `apps/server`'s product composition (`ordessa_server_product`), the harness
-plugin (`ordessa_harness`) and every domain plugin package
+plugin (`pacthold.harness_kit`) and every domain plugin package
 (`ordessa_profile`, `ordessa_model_provider`, …).
 
 It is AST-based, not comment-based, so a docstring that *names* the Server
@@ -148,13 +148,13 @@ def test_tripwire_planted_server_import_turns_the_guard_red() -> None:
 def test_tripwire_from_import_form_is_detected_too() -> None:
     probe = PACKAGE_ROOT / "tests" / "platform" / "_n4r1_direction_tripwire2.py"
     probe.write_text(
-        "from ordessa_harness.launch import ClaudeLaunchAdapter  # planted tripwire\n",
+        "from pacthold.harness_kit.launch import ClaudeLaunchAdapter  # planted tripwire\n",
         encoding="utf-8",
     )
     try:
         hits = find_product_imports()
         assert hits, "the from-import form of a reverse import must be detected"
-        assert any(module == "ordessa_harness.launch" for _, module in hits), hits
+        assert any(module == "pacthold.harness_kit.launch" for _, module in hits), hits
     finally:
         probe.unlink(missing_ok=True)
     assert find_product_imports() == []

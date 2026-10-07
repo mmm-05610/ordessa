@@ -31,3 +31,6 @@ __all__ = [
     "ClaudeRuntimeRefused", "ClaudeStreamChannelFactory", "RealProcessHandle",
     "PRIVATE_ROOT_FIELDS", "version_facts", "stream_json_argv", "verified_private_roots",
 ]
+
+#: The legacy Claude continuation identifier stays importable by module
+#: (``ordessa_harness_claude_code.contracts``); it is not re-exported here.

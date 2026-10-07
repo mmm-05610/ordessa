@@ -3,7 +3,7 @@
 Two real subprocess interpreters check it: one audits `sys.modules` and
 installs a meta-path sentinel that fires if any forbidden top-level
 module even reaches the import system; the other plants stub packages
-named `pacthold`, `ordessa_server` and `ordessa_harness` first on
+named `pacthold`, `ordessa_server` and `pacthold.harness_kit` first on
 `sys.path` — each stub records its own import to a marker file — and
 asserts no marker appears after importing `server_plugin_api`. The
 second test also proves the recording mechanism itself works, so a
@@ -17,7 +17,7 @@ import subprocess
 import sys
 import textwrap
 
-FORBIDDEN_ROOTS = ("pacthold", "ordessa_server", "ordessa_harness")
+FORBIDDEN_ROOTS = ("pacthold", "ordessa_server", "pacthold.harness_kit")
 
 
 def test_importing_the_package_pulls_in_no_product_modules():

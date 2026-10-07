@@ -74,9 +74,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ordessa_harness.configuration.model.bridge import ADAPTER_IDS
-from ordessa_harness.server_acp.native_action_executor import configuration_digest
-from ordessa_harness.server_acp.registry import (
+from ordessa_server_product.harness_adapters.configuration.model.bridge import ADAPTER_IDS
+from ordessa_server_product.acp_channel.native_action_executor import configuration_digest
+from ordessa_server_product.acp_channel.registry import (
     NativeConfigurationObservation, NativeSessionObservation,
 )
 from pacthold.harness_contracts import Installation
@@ -99,7 +99,7 @@ BRAND_ASSET_ROOTS = {
 #: publishes it. These are NOT one template: pi encodes the option value as
 #: ``provider/model`` and allows a partial choice, while codex and claude-code
 #: expose the bare model id and demand an exact observed native route
-#: (plugins/harness/src/ordessa_harness/configuration/model/live_model.py).
+#: (packages/backend/pacthold/src/pacthold/harness_kit/configuration/model/live_model.py).
 BRANDS = {
     "pi": {
         "protocol": "openai-chat",
@@ -243,7 +243,7 @@ def controlled_native(monkeypatch, runtime, brand, *, models=("m1", "m2")):
     authority = runtime.plugin_host.provided_port("native.configuration")
     # the controlled channel carries no real run record; the release path has
     # nothing honest to settle for it
-    import ordessa_harness.server_acp.registry as acp_registry
+    import ordessa_server_product.acp_channel.registry as acp_registry
     monkeypatch.setattr(acp_registry, "end_run_released", lambda *args, **kwargs: None)
     return SimpleNamespace(state=state, channel=channel, registry=registry,
                            authority=authority)

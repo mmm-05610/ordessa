@@ -42,7 +42,7 @@ packages/
   workbench/            Workbench public API + implementation (contract C4),
                         extension id `ordessa.workbench` kept across the move
 plugins/
-  harness/        ordessa_harness: harness lifecycle & ACP adaptation.
+  harness/        pacthold.harness_kit: harness lifecycle & ACP adaptation.
     adapters/acp-adapter/   Go ACP bridge source + tests (upstream-derived;
                             module path preserved). Harness-internal.
     packaging/     bridge build & dependency prep
@@ -84,7 +84,7 @@ product (products/desktop) ── enables plugins by id; never imports internals
 ```
 
 - `pacthold` is the bottom of the backend stack: it defines the plugin
-  contract that `ordessa_harness` implements and `ordessa_server` composes.
+  contract that `pacthold.harness_kit` implements and `ordessa_server` composes.
   `apps/server` → `pacthold` is **normal use, not an ownership breach**
   (`core_binding.py` imports `pacthold.public`; `bootstrap/runtime.py` imports
   `pacthold.storage`); the load-bearing rule is the reverse direction.

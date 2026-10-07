@@ -37,7 +37,7 @@ from typing import Any
 from fastapi.testclient import TestClient
 import pytest
 
-from ordessa_harness.server_acp.plugin import PLUGIN_ID as ACP_PLUGIN_ID
+from ordessa_server_product.acp_channel.plugin import PLUGIN_ID as ACP_PLUGIN_ID
 from ordessa_server.bootstrap import build_runtime
 from ordessa_server.transport.http import create_app
 from ordessa_server.wire import discovery as discovery_module
@@ -62,7 +62,7 @@ from server_plugin_api import (
 
 HELLO = {"clientVersions": ["wire/1"], "clientPresentationSupports": []}
 HARNESS_ROOT = Path(__file__).resolve().parents[3] / "plugins" / "harness"
-ACP_PLUGIN_SOURCE = HARNESS_ROOT / "src" / "ordessa_harness" / "server_acp" / "plugin.py"
+ACP_PLUGIN_SOURCE = HARNESS_ROOT / "src" / "pacthold.harness_kit" / "server_acp" / "plugin.py"
 
 #: wire/1's frozen member order for the default product's hello answer. A facet
 #: may add members; it may not reorder the ones the contract already has.

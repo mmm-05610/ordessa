@@ -343,7 +343,7 @@ def test_no_src_module_redefines_the_platform_vocabulary():
                 roots = {node.module.split(".")[0]}
             else:
                 continue
-            assert "ordessa_harness" not in roots, \
+            assert "pacthold.harness_kit" not in roots, \
                 f"{path.name} imports harness CODE: {sorted(roots)}"
         for imported in _harness_api_imports(path):
             assert imported.startswith("pacthold.harness_contracts"), imported

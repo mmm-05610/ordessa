@@ -134,7 +134,7 @@ send({ id: 3, op: "close" })
 共享描述符和 profile 表决定，调用方的具体启动参数仍在 `launch` 中；入口本身
 不含任何品牌名。
 
-`src/ordessa_harness/launch-descriptors.json` 是 Python registry loader 与 JS access
+`src/pacthold.harness_kit/launch-descriptors.json` 是 Python registry loader 与 JS access
 index 共用的 canonical/alias 路由清单。`registry_identity_version_matches()` /
 `registryIdentityVersionMatches()` 只比较 TOML 声明的 identity version；返回
 `true` 不证明已安装的 native/adapter 版本或运行能力。别名版本没有这份声明的证明，

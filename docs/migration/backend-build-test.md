@@ -26,8 +26,8 @@ re-validated here — carried lockfile noted in MIGRATION-TABLE.md).
 uv venv --python 3.12 .venv
 uv pip install -e tree/packages/pacthold -e tree/plugins/harness -e tree/apps/server \
                 pytest httpx pyyaml jsonschema
-.venv/bin/python -c "import pacthold, ordessa_server, ordessa_harness"
-#  → imports OK: 2.0.0a1 ordessa_server ordessa_harness
+.venv/bin/python -c "import pacthold, ordessa_server, pacthold.harness_kit"
+#  → imports OK: 2.0.0a1 ordessa_server pacthold.harness_kit
 .venv/bin/python -c "from importlib.metadata import version; print(version('pacthold'), version('ordessa-server'), version('ordessa-harness'))"
 #  → 2.0.0a1 2.0.0a1 2.0.0a1
 .venv/bin/pacthold --help   # console script works (display name updated)

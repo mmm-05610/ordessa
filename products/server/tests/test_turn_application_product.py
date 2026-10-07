@@ -24,7 +24,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ordessa_harness.server_acp.registry import (
+from ordessa_server_product.acp_channel.registry import (
     NativeConfigurationObservation, NativeSessionObservation,
 )
 from pacthold.harness_contracts import (

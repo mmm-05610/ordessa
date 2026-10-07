@@ -16,7 +16,7 @@ nothing here imports, names, or stands in for `SandboxV1`/`runtime_composition`.
 - `SandboxOptionCatalogue` — per `(harnessId, nativeVersionRange)` the
   available native options with their source, platform limits, coverage and
   `lockedByAdministrator` flags. Pins are registered from the real repo
-  registry (`plugins/harness/src/ordessa_harness/harnesses.toml`, parsed with
+  registry (`plugins/packages/backend/pacthold/src/pacthold/harness_kit/harnesses.toml`, parsed with
   `tomllib`; no harness import) intersected with the API's brand matrix;
   only `codex`, `claude-code`, `pi` have closed vocabularies. A lookup for an
   unregistered pin or a family without a closed schema (opencode, hermes,
@@ -61,7 +61,7 @@ nothing here imports, names, or stands in for `SandboxV1`/`runtime_composition`.
   `descriptor.requires` is empty: Sandbox installs without Permissions
   (enforced by `tests/test_sandbox_backend_dependency_direction.py`, which imports and drives
   the package in a subprocess whose meta-path blocks `ordessa_permissions*`,
-  `ordessa_server*`, `ordessa_harness*`, `pacthold`).
+  `ordessa_server*`, `pacthold.harness_kit*`, `pacthold`).
 
 ## UNBOUND: the native-effect observation seam
 

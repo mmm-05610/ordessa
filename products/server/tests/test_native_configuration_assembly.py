@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ordessa_harness.server_acp.registry import NativeConfigurationObservation, NativeSessionObservation
+from ordessa_server_product.acp_channel.registry import NativeConfigurationObservation, NativeSessionObservation
 from ordessa_server_product.composition import create_composition
 
 
@@ -33,7 +33,7 @@ def observed_owner(monkeypatch, authority):
 
 def create_controlled_service(monkeypatch, authority, target):
     from pacthold.harness_contracts import Installation
-    from ordessa_harness.pi.configuration.runtime import PiLiveModelRuntime
+    from ordessa_harness_pi.configuration.runtime import PiLiveModelRuntime
 
     monkeypatch.setattr(authority.services, 'verify', lambda brand:
         Installation(brand, PiLiveModelRuntime.native_version, (1, 0, 0), 'controlled:publication'))
@@ -138,7 +138,7 @@ def test_neutral_registration_refuses_owner_replacement_and_generation_drift(tmp
 
 
 def test_profile_unload_keeps_same_c4_unknown_session_fence(tmp_path, monkeypatch):
-    from ordessa_harness.application import FenceObservation, OperationJournal
+    from ordessa_server_product.harness_adapters.application import FenceObservation, OperationJournal
     from pacthold.harness_contracts import ErrorCode, Plan, Refused
 
     runtime = runtime_at(tmp_path)

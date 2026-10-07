@@ -22,7 +22,7 @@ from ordessa_sandbox_api import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
-HARNESSES_TOML = REPO_ROOT / "plugins/harness/src/ordessa_harness/harnesses.toml"
+HARNESSES_TOML = REPO_ROOT / "packages/backend/pacthold/src/pacthold/harness_kit/harnesses.toml"
 
 
 def repo_toml_text() -> str:

@@ -247,7 +247,7 @@ def test_clone_plans_what_travels_and_never_pretends_about_sessions():
     sessions never travel.
     """
     from ordessa_server_compat.profiles.clone import CloneError, plan_migration
-    from ordessa_harness.registry.loader import load_builtin_registry
+    from ordessa_server_product.harness_adapters.registry.loader import load_builtin_registry
 
     registry = load_builtin_registry()
 

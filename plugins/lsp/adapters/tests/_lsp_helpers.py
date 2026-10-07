@@ -12,8 +12,8 @@ from typing import Mapping
 from ordessa_lsp_api import FormatterDefinition, LspServerDefinition
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
-HARNESSES_TOML = (REPO_ROOT / "plugins" / "harness" / "src" /
-                  "ordessa_harness" / "harnesses.toml")
+HARNESSES_TOML = (REPO_ROOT / "packages" / "backend" / "pacthold" / "src" /
+                  "pacthold" / "harness_kit" / "harnesses.toml")
 
 
 def toml_pin(harness_type: str) -> str:

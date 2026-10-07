@@ -6,7 +6,7 @@ Agent Tools does not import or distribute it.
 
 AU003 reuses the reviewed ProcessChannel and managed NDJSONTransport. The former
 came from products/agent-tools native_clients/_transport.py at 77a1d8a92c; the
-latter from ordessa_harness/server_acp/transport.py at the same checkpoint.
+latter from pacthold.harness_kit/server_acp/transport.py at the same checkpoint.
 Existing consumer tests are retained. Product copies are transitional sources
 until AU004 removes/excludes them; no new runtime registration uses both routes.
 

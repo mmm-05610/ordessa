@@ -22,7 +22,7 @@ assignment, lease, catalog). The managed clients are the real limited-
 substitute stdio/HTTP clients; the permission authority is the REAL
 ``ordessa_permissions_backend`` over a seeded throwaway database
 (t06-wiring usage); the C4 service is the REAL
-``ordessa_harness.application.ConfigurationApplicationService`` over the
+``ordessa_server_product.harness_adapters.application.ConfigurationApplicationService`` over the
 real contribution carrier and sqlite ``OperationJournal``
 (tests/harness_wiring precedent).
 
@@ -68,14 +68,14 @@ if not hasattr(pacthold.storage, "Database"):
 
 import support                                             # noqa: E402 (real Q5 DB helpers)
 
-from ordessa_harness.application import (                  # noqa: E402
+from ordessa_server_product.harness_adapters.application import (                  # noqa: E402
     ConfigurationApplicationService, NativeReadback, OperationJournal,
     RuntimeSnapshot,
 )
-from ordessa_harness.contributions import (                # noqa: E402
+from ordessa_server_product.harness_adapters.contributions import (                # noqa: E402
     CONFIGURATION_POINT, POINT_API_VERSION, HarnessContributionRegistry,
 )
-from ordessa_harness.materialization import (               # noqa: E402
+from pacthold.harness_kit.materialization import (               # noqa: E402
     MergeAuthority, TargetAuthority,
 )
 from pacthold.harness_contracts import (                          # noqa: E402

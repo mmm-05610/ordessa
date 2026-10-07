@@ -42,7 +42,7 @@ from ordessa_permissions_adapters import (
     PolicyObservation,
     configuration_descriptor,
 )
-from ordessa_harness.contributions import (
+from ordessa_server_product.harness_adapters.contributions import (
     CONFIGURATION_POINT, HarnessContributionError, HarnessContributionRegistry,
     POINT_API_VERSION)
 from server_plugin_api import Contribution, ContributionBatch, stage_contributions

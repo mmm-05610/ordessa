@@ -623,7 +623,7 @@ def test_the_authority_module_imports_no_host_internals() -> None:
 # -- 9. the ACP owner accepts this lane's port by its version marker -----------
 
 def test_harness_acp_owner_admits_this_lanes_port_and_refuses_pre_effect(tmp_path):
-    from ordessa_harness.server_acp.plugin import (
+    from ordessa_server_product.acp_channel.plugin import (
         AcpChannelServerPlugin, PLUGIN_ID as ACP_OWNER_ID)
 
     class Ledger:

@@ -13,7 +13,7 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "packages/backend/pacthold/tests/harness_kit"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "products/agent-tools/tests/integration"))
 
 from test_invocation_authority import Authority, CurrentState  # noqa: E402

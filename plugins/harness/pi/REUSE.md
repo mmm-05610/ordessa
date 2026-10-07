@@ -14,11 +14,11 @@ Reviewed source in this worktree (not Internet version claims):
   between ACK, observed readback and retained original attempt; do not copy its
   separate in-memory operation map into a second Python journal. Deployment must
   supply original confirmation receipts in the existing owner journal.
-* `src/ordessa_harness/pi/configuration/live_model.py` compiles verified ACP
+* `src/pacthold.harness_kit/pi/configuration/live_model.py` compiles verified ACP
   catalog selections. Its credential/endpoint checks are useful; this package
   deliberately offers only native provider/model selection, not provider secret
   installation or endpoint rewriting. No Profile fills missing actual state.
-* `src/ordessa_harness/pi/provider.py` depends on `pacthold_runtime_compat` and
+* `src/pacthold.harness_kit/pi/provider.py` depends on `pacthold_runtime_compat` and
   reports terminal success from process status. Do not revive this route.
 * Former product `native_clients/pi.py` already preserves 0.86.1 raw JSONL,
   unknown records, receipt versus settled, unknown-send fencing and exact UI

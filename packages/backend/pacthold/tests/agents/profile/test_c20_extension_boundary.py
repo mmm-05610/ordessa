@@ -61,7 +61,7 @@ ALLOWED_ROOTS = {
 #: published capability contract. Brand differences and native configuration
 #: live behind these and Profile may not name them (C20/C21).
 FORBIDDEN_PREFIXES = (
-    "ordessa_harness.",
+    "pacthold.harness_kit.",
     "ordessa_harness_configuration",
     "ordessa_model_provider",
 )
@@ -96,11 +96,21 @@ def imported_modules(source: str) -> set[str]:
     return found
 
 
+#: 032: the profile authority lives inside the kernel; the licensed kernel
+#: surface is the published contract edge, its own domain tree, and the plugin
+#: SDK entry points. The kernel's other internals stay out.
+KERNEL_LICENSED = ("pacthold.harness_contracts", "pacthold.agents", "pacthold.core",
+                   "pacthold.public", "pacthold.work_core")
+
+
 def import_violations(source: str) -> list[str]:
-    return sorted(
-        module for module in imported_modules(source)
-        if module.split(".")[0] not in ALLOWED_ROOTS
-    )
+    violations = []
+    for module in imported_modules(source):
+        if any(module == g or module.startswith(g + ".") for g in KERNEL_LICENSED):
+            continue
+        if module.split(".")[0] == "pacthold" or module.split(".")[0] not in ALLOWED_ROOTS:
+            violations.append(module)
+    return sorted(set(violations))
 
 
 def brand_branch_violations(source: str) -> list[str]:
@@ -202,11 +212,11 @@ def test_c20_publication_surface_is_the_public_facet_contract():
 def test_c20_import_analyser_flags_a_resource_plugin_private_import():
     offender = (
         "from ordessa_model_provider_profile.facet import ModelFacet\n"
-        "import ordessa_harness.configuration.model.backend as backend\n"
+        "import ordessa_server_product.harness_adapters.configuration.model.backend as backend\n"
     )
     assert import_violations(offender) == [
-        "ordessa_harness.configuration.model.backend",
         "ordessa_model_provider_profile.facet",
+        "ordessa_server_product.harness_adapters.configuration.model.backend",
     ]
 
 
@@ -219,7 +229,7 @@ def test_c20_published_harness_contract_is_the_only_harness_surface_reachable():
     for prefix in FORBIDDEN_PREFIXES:
         offender = f"import {prefix.rstrip('.')}.internal as x\n"
         assert import_violations(offender) == [offender.split()[1].removesuffix(
-            " as x")]
+            " as x")], prefix
 
 
 def test_c20_import_analyser_accepts_the_public_contribution_route():

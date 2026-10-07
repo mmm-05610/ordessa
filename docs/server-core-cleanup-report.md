@@ -73,7 +73,7 @@ business domains directly.
 After:
 
 - host → plugin: **zero** (gate-pinned). The host never imports
-  `ordessa_server_compat` / `ordessa_workspace` / `ordessa_harness.server_acp`
+  `ordessa_server_compat` / `ordessa_workspace` / `pacthold.harness_kit.server_acp`
   / the product package.
 - plugin → host: only the generic vocabulary (`errors`, `records`, `ids`,
   `idempotency` as port objects, `credentials` as a port object, `wire.errors`,

@@ -31,10 +31,10 @@ What stays (deliberately stricter than the contract, per
 * the owner question (§C3 「注册 owner 由宿主授予」) is structural, not
   conventional: `IntentSource` has no owner field at all
   (`pacthold.harness_contracts/intents.py:17-25`), the owner is stamped by the
-  carrier (`ordessa_harness/application/configuration_service.py:198`
+  carrier (`pacthold.harness_kit/application/configuration_service.py:198`
   `AuthorizedIntents(view.owner, …)`) and the merge authority *rejects* any
   intent whose source facet/item/version differs from the host-authorized
-  submission (`ordessa_harness/materialization/intent_merge.py:166-173`).
+  submission (`pacthold.harness_kit/materialization/intent_merge.py:166-173`).
   :func:`compile_all` therefore accepts a host-injected ``IntentSource`` and
   never constructs one: it validates the injected source's type exactly,
   refuses foreign facets, and stamps that same object on every intent.
@@ -280,7 +280,7 @@ def build_mount(source: IntentSource, target: TargetHandle, *, native_name: str,
     `ContentRef` is content-addressed EXTERNAL storage in C0's model: the
     service resolves `reference` against the runtime's `content` map and
     verifies size + sha256 before publishing bytes
-    (`ordessa_harness/materialization/private_generation.py:268-277`,
+    (`pacthold.harness_kit/materialization/private_generation.py:268-277`,
     `data = content.get(ref)`). The adapter never carries document bytes in
     the intent — the reference is the hex digest itself, so the same content
     is the same address.

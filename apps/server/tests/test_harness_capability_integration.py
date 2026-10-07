@@ -21,12 +21,12 @@ import subprocess
 import pytest
 
 from pacthold_runtime_compat.resource_contracts import harness_capabilities as caps
-from ordessa_harness.registry.loader import load_builtin_registry
+from ordessa_server_product.harness_adapters.registry.loader import load_builtin_registry
 
 
 REPO = Path(__file__).resolve().parents[3]
 PLUGIN = REPO / "plugins"  / "harness"
-DEFINITIONS = PLUGIN / "src" / "ordessa_harness" / "harnesses.toml"
+DEFINITIONS = PLUGIN / "src" / "pacthold.harness_kit" / "harnesses.toml"
 JS_PROJECTION = PLUGIN / "runtime" / "capability_declarations.json"
 #: Files on the capability path of the Server: none of them may name a Harness.
 #: T022b re-point (lane A relocation, specs/010): the canonical capability

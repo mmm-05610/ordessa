@@ -262,7 +262,7 @@ def test_whitelisted_condition_code_surfaces_through_the_seam_unknown(transition
     """The Harness service's nominal condition code becomes the journaled
     unknown reason; no digest, session id or credential value travels with it
     (N1 diagnosis whitelist)."""
-    from ordessa_harness.configuration.model.restoration import ProviderRestorationOutcome
+    from ordessa_server_product.harness_adapters.configuration.model.restoration import ProviderRestorationOutcome
     f = transition_rig
     plan = f.port.plan(f.ref, (f.intent,), 'coded-unknown')
     f.restoration.execute.side_effect = lambda *a, **kw: ProviderRestorationOutcome(
@@ -279,7 +279,7 @@ def test_proven_native_refusal_is_a_terminal_rejection_not_a_sticky_unknown(tran
     """A typed pre-effect refusal maps to the existing rejected-unchanged
     vocabulary: zero prompt permission, intent kept, and the operation is
     finished instead of wedging the session as pending-unknown."""
-    from ordessa_harness.configuration.model.restoration import ProviderRestorationOutcome
+    from ordessa_server_product.harness_adapters.configuration.model.restoration import ProviderRestorationOutcome
     f = transition_rig
     plan = f.port.plan(f.ref, (f.intent,), 'refused-by-native')
     f.restoration.execute.side_effect = lambda *a, **kw: ProviderRestorationOutcome(

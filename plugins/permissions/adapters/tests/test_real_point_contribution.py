@@ -5,7 +5,7 @@ Every `permissions.policy-adapters` brand ships as a
 `Contribution(point_id="harness.configuration-adapters", api_version="v1",
 payload=<ConfigurationAdapterDescriptor>)` on the plugin registration, and
 admission (shape, duplicate/overlap refusal, field-claim conflict, owner
-injection) belongs to `ordessa_harness.contributions` + the Server host
+injection) belongs to `ordessa_server_product.harness_adapters.contributions` + the Server host
 (`server_plugin_api` staging protocol). This file pins the DECLARE side;
 `test_real_admission_lifecycle.py` pins the ADMIT side against the real
 registry and host.
@@ -76,7 +76,7 @@ def test_batch_without_open_points_is_refused_by_the_platform() -> None:
 def test_descriptor_constants_match_the_public_harness_module() -> None:
     # drift guard against the platform's public contribution seam (the same
     # module the product composition binds; test-only import, never src).
-    from ordessa_harness.contributions import (
+    from ordessa_server_product.harness_adapters.contributions import (
         CONFIGURATION_POINT, POINT_API_VERSION, RUNTIME_POINT)
     assert adapters.CONFIGURATION_POINT == CONFIGURATION_POINT
     assert adapters.POINT_API_VERSION == POINT_API_VERSION

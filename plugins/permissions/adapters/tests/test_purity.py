@@ -31,7 +31,7 @@ FORBIDDEN_IMPORTS = {
     "ftplib", "telnetlib", "asyncio", "tempfile",
 }
 FORBIDDEN_PRODUCT_ROOTS = {
-    "ordessa_server", "ordessa_server_compat", "ordessa_harness", "pacthold",
+    "ordessa_server", "ordessa_server_compat", "pacthold.harness_kit", "pacthold",
     "ordessa_workspace", "fastapi", "pydantic", "httpx", "uvicorn",
 }
 #: 032: the harness contract edge is a dotted grant under the kernel root.

@@ -48,7 +48,7 @@ def probe(artifact: Path, drift: str = None) -> dict:
             process = subprocess.Popen(["/usr/bin/node", str(entry)], cwd=project,
                 env=environment, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                 stderr=stderr, text=True)
-            from ordessa_harness.server_acp.registry import _Channel, _ObservedTransport
+            from ordessa_server_product.acp_channel.registry import _Channel, _ObservedTransport
             channel = _Channel(connection_id='probe-channel', harness_id='pi',
                 workspace_id='probe-project', profile_id='probe-profile', cwd=str(project),
                 session_scope_id='probe-scope')
@@ -99,15 +99,15 @@ def probe(artifact: Path, drift: str = None) -> dict:
                     "clientInfo": {"name": "ordessa-reverse-probe", "version": "1"}})
                 assert initialized["_meta"]["ordessaConfiguration"]["supported"] is True
                 from pacthold.harness_contracts import ApplicationTarget, DesiredFragment, Installation, IntentSource
-                from ordessa_harness.server_acp.registry import AcpChannelRegistry
-                from ordessa_harness.server_acp.profile_owner import ProfileSessionOwner
-                from ordessa_harness.configuration.model.backend import preparation_params
-                from ordessa_harness.configuration.model.provider_registration import PiProviderRegistrationService
-                from ordessa_harness.configuration.model.plugin import ModelProviderAdaptersPlugin
-                from ordessa_harness.pi.configuration.runtime import PiLiveModelRuntime
-                from ordessa_harness.application.configuration_service import ConfigurationApplicationService
+                from ordessa_server_product.acp_channel.registry import AcpChannelRegistry
+                from ordessa_server_product.acp_channel.profile_owner import ProfileSessionOwner
+                from ordessa_server_product.harness_adapters.configuration.model.backend import preparation_params
+                from ordessa_server_product.harness_adapters.configuration.model.provider_registration import PiProviderRegistrationService
+                from ordessa_server_product.harness_adapters.configuration.model.plugin import ModelProviderAdaptersPlugin
+                from ordessa_harness_pi.configuration.runtime import PiLiveModelRuntime
+                from ordessa_server_product.harness_adapters.application.configuration_service import ConfigurationApplicationService
                 from ordessa_harness_records.operation_journal import OperationJournal
-                from ordessa_harness.application.action_execution import ActionGrant
+                from ordessa_server_product.harness_adapters.application.action_execution import ActionGrant
                 from ordessa_server.bootstrap import build_runtime
 
                 registry = AcpChannelRegistry(session_records=None, profile_records=None,

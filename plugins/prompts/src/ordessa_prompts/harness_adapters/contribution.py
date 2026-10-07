@@ -3,7 +3,7 @@
 One adapter per implemented brand (pi / codex / claude — user ruling
 2026-09-28), registered through the published
 `harness.configuration-adapters` point — the constants are pinned
-against `ordessa_harness.contributions` in the tests; the strings are
+against `ordessa_server_product.harness_adapters.contributions` in the tests; the strings are
 duplicated here because this package must not import the harness plugin
 (AGENTS.md rule 3; the G01 boundary scan enforces it).
 
@@ -55,7 +55,7 @@ ENTRY = "acp"
 
 #: The registry/runtime seam, one shared citation.
 REGISTRY_GAP = (
-    "plugins/harness/src/ordessa_harness/registry/schema.py:64 (slots"
+    "packages/backend/pacthold/src/pacthold/harness_kit/registry/schema.py:64 (slots"
     " parsed; no instruction_target/instruction_key field exists);"
     " harnesses.toml greps: zero instruction target declarations"
     " (AR-6)")
@@ -83,17 +83,17 @@ PINS: Mapping[str, BrandPin] = {
         harness_id="codex",
         native_version=(0, 147, 0),
         adapter_version=(1, 1, 14),
-        native_evidence=("plugins/harness/src/ordessa_harness/codex/"
+        native_evidence=("plugins/harness/codex/src/ordessa_harness_codex"
                          "production.py:88"),
         adapter_evidence="plugins/harness/packaging/codex/package.json:9"),
     "claude": BrandPin(
         harness_id="claude",
         native_version=(2, 1, 274),
         adapter_version=(0, 81, 2),
-        native_evidence=("plugins/harness/src/ordessa_harness/"
+        native_evidence=("packages/backend/pacthold/src/pacthold/harness_kit/"
                          "harnesses.toml:111 (comment-grade observation; "
                          "not a proven pin)"),
-        adapter_evidence=("plugins/harness/src/ordessa_harness/claude/"
+        adapter_evidence=("plugins/harness/claude-code/src/ordessa_harness_claude_code"
                           "production.py:67"),
         native_grade="comment"),
 }

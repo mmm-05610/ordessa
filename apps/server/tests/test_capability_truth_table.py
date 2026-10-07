@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 
 from pacthold_runtime_compat.resource_contracts import harness_capabilities as caps
-from ordessa_harness.registry.loader import load_builtin_registry
+from ordessa_server_product.harness_adapters.registry.loader import load_builtin_registry
 from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 
 
@@ -130,7 +130,7 @@ def test_codex_registry_view_still_reports_no_support_before_a_run():
     # The plugin now has a production deployment whose gate observed five
     # abilities; the *static* view must still refuse to claim any of them, and
     # the two abilities that never happened stay unobserved too.
-    from ordessa_harness.codex import production
+    from ordessa_harness_codex import production
 
     assert production.HAS_PRODUCTION_DEPLOYMENT is True
     assert production.observed_capabilities() == frozenset(

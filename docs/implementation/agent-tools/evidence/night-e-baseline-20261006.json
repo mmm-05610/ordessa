@@ -49,7 +49,7 @@
       "restartIdentity": "同临时 root 重启后 environment id 与初启一致"
     },
     "assertedFacts": {
-      "backendPackagesAbsent": "pacthold/ordessa_server/ordessa_harness find_spec 全 None（backend-packages-absent exit0）",
+      "backendPackagesAbsent": "pacthold/ordessa_server/pacthold.harness_kit find_spec 全 None（backend-packages-absent exit0）",
       "initExecutedBinaries": false,
       "initHarnessFamiliesObserved": 8,
       "initRuntimeReadyValues": ["unknown"],

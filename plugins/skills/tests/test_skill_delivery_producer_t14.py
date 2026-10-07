@@ -27,7 +27,7 @@ Covers, in order:
 The missing L3 seam (recorded for C0): no PUBLISHED harness symbol accepts
 these resources — ``pacthold.harness_contracts`` exports no skill contract and
 the only consumer is the harness-internal
-``ordessa_harness.adapters.generic_cli`` plus the execution providers'
+``ordessa_server_product.harness_adapters.adapters.generic_cli`` plus the execution providers'
 ``request.resolved_inputs`` handoff (core dispatch, api-requests.md §G2);
 nothing here imports them.
 """
@@ -41,7 +41,7 @@ from types import SimpleNamespace
 import pytest
 
 from assignments_support import make_database, make_skill
-from ordessa_harness.registry.loader import load_builtin_registry
+from ordessa_server_product.harness_adapters.registry.loader import load_builtin_registry
 from pacthold_runtime_compat.runtime_composition import (
     FakeHost, FakeSandbox, FakeTerminal, HarnessCommandSpec, RuntimeHostRef,
     RuntimeHostV1, SandboxRef, SandboxV1, TerminalSessionRef,

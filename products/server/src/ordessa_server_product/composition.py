@@ -240,7 +240,7 @@ class ServerProductComposition:
         host remains responsible for point admission, publication, owner
         injection and busy retirement; this method does not reach into it.
         """
-        from ordessa_harness.contributions import (
+        from ordessa_server_product.harness_adapters.contributions import (
             CONFIGURATION_POINT, POINT_API_VERSION, RUNTIME_POINT,
             HarnessContributionRegistry,
         )
@@ -267,7 +267,7 @@ class ServerProductComposition:
         product always adds the Q5 plugins through ``default_plugins``.
         """
         self._assemble_legacy_chain()
-        from ordessa_harness.server_acp.plugin import AcpChannelServerPlugin
+        from ordessa_server_product.acp_channel.plugin import AcpChannelServerPlugin
         from ordessa_server_compat.plugin import ServerCompatPlugin
         from ordessa_workspace.plugin import WorkspaceServerPlugin
 
@@ -329,7 +329,7 @@ class ServerProductComposition:
         ``ContributionPointUnboundError`` (the point is declared but nobody
         holds the handler — the composition must wire it).
         """
-        from ordessa_harness.contributions import (
+        from ordessa_server_product.harness_adapters.contributions import (
             CONFIGURATION_POINT, HarnessContributionRegistry,
         )
         registry = HarnessContributionRegistry()
@@ -401,8 +401,8 @@ class ServerProductComposition:
         from server_plugin_api import ServerPluginSelection
         from ordessa_model_provider.plugin import ModelProviderPlugin
         from .native_configuration import NativeConfigurationPlugin, PLUGIN_ID as NATIVE_CONFIGURATION_ID
-        from ordessa_harness.configuration.model.plugin import ModelProviderAdaptersPlugin
-        from ordessa_harness.configuration.model.catalog import ModelConfigurationCatalog
+        from ordessa_server_product.harness_adapters.configuration.model.plugin import ModelProviderAdaptersPlugin
+        from ordessa_server_product.harness_adapters.configuration.model.catalog import ModelConfigurationCatalog
 
         if type(include_profile) is not bool:
             raise ValueError('include_profile must be boolean')

@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_harness.native_materialization import (
+from ordessa_server_product.native_materialization import (
     NativeMaterializationError, materialize_family,
 )
 

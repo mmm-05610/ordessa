@@ -179,7 +179,7 @@ BRAND_STATEMENTS: Mapping[str, CapabilityStatement] = MappingProxyType({
         _fact("reset", UNKNOWN, NO_EVIDENCE),
         _fact("resume", SUPPORTED,
               f"{BM}:40 (plugins/harness/tests/test_capability_declarations.py:134-137;"
-              " plugins/harness/src/ordessa_harness/pi/projection.py:29-33)"),
+              " plugins/harness/pi/src/ordessa_harness_pi/command_projection.py:29-33)"),
         _fact("explicit_invocation", UNKNOWN,
               f"{BM}:40 — /skill:name is vendor-doc; the pi-acp 0.5.0 bundle"
               " was never observed serving it"),
@@ -190,7 +190,7 @@ BRAND_STATEMENTS: Mapping[str, CapabilityStatement] = MappingProxyType({
     )),
     "codex": _statement("codex", (
         _fact("native_version", SUPPORTED,
-              f"{BM}:20,46 (plugins/harness/src/ordessa_harness/codex/production.py:88)"),
+              f"{BM}:20,46 (plugins/harness/codex/src/ordessa_harness_codex/production.py:88)"),
         _fact("adapter_version", SUPPORTED,
               f"{BM}:21,46 (plugins/harness/packaging/codex/package.json:13)"),
         _fact("discovery_mechanism", UNKNOWN,
@@ -219,7 +219,7 @@ BRAND_STATEMENTS: Mapping[str, CapabilityStatement] = MappingProxyType({
               " observation, not a machine pin; §6 does not list it as proven"),
         _fact("adapter_version", SUPPORTED,
               f"{BM}:22,52 (plugins/harness/packaging/claude/package.json:14;"
-              " plugins/harness/src/ordessa_harness/claude/production.py:66-67)"),
+              " plugins/harness/claude-code/src/ordessa_harness_claude_codeproduction.py:66-67)"),
         _fact("discovery_mechanism", UNKNOWN,
               f"{BM}:52 — every skill cell (roots actually scanned, reload,"
               " loaded) is unknown; profile.py writer is orphaned"),
@@ -294,7 +294,7 @@ BRAND_PINS: Mapping[str, VersionPin] = MappingProxyType({
         harness_id="codex",
         native_version="0.147.0",
         adapter_version="1.1.14",
-        native_evidence=f"{BM}:20 (plugins/harness/src/ordessa_harness/codex/production.py:88)",
+        native_evidence=f"{BM}:20 (plugins/harness/codex/src/ordessa_harness_codex/production.py:88)",
         adapter_evidence=f"{BM}:21 (plugins/harness/packaging/codex/package.json:13)",
         native_pin_is_machine_enforced=True,
     ),
@@ -302,7 +302,7 @@ BRAND_PINS: Mapping[str, VersionPin] = MappingProxyType({
         harness_id="claude-code",
         native_version="2.1.274",
         adapter_version="0.81.2",
-        native_evidence=f"{BM}:24,52 (plugins/harness/src/ordessa_harness/harnesses.toml:119)",
+        native_evidence=f"{BM}:24,52 (packages/backend/pacthold/src/pacthold/harness_kit/harnesses.toml:119)",
         adapter_evidence=f"{BM}:22 (plugins/harness/packaging/claude/package.json:14)",
         native_pin_is_machine_enforced=False,
     ),

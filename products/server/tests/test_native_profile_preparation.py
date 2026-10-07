@@ -239,12 +239,12 @@ def test_controlled_product_wire_preparation_registration_and_authenticated_c4(t
     from ordessa_model_provider.testing import FakeHarnesses, harness_descriptor, wire_body
     from ordessa_model_provider_profile.profile_glue import ModelProviderFacetProvider
     from pacthold.harness_contracts import Installation
-    from ordessa_harness.configuration.model.bridge import choice_payload_schema
-    from ordessa_harness.configuration.model.live_service import create_model_service
-    from ordessa_harness.configuration.model.plugin import ModelProviderAdaptersPlugin
-    from ordessa_harness.server_acp.registry import AcpChannelRegistry, _Channel, _ObservedTransport
-    from ordessa_harness.server_acp.profile_owner import ProfileSessionOwner
-    from ordessa_harness.server_acp.native_action_executor import configuration_digest
+    from ordessa_server_product.harness_adapters.configuration.model.bridge import choice_payload_schema
+    from ordessa_server_product.harness_adapters.configuration.model.live_service import create_model_service
+    from ordessa_server_product.harness_adapters.configuration.model.plugin import ModelProviderAdaptersPlugin
+    from ordessa_server_product.acp_channel.registry import AcpChannelRegistry, _Channel, _ObservedTransport
+    from ordessa_server_product.acp_channel.profile_owner import ProfileSessionOwner
+    from ordessa_server_product.acp_channel.native_action_executor import configuration_digest
     from ordessa_server_product.profile_sessions import ProfileNativeSessions
     from ordessa_server_product.native_configuration import NativeConfigurationAuthority
     from ordessa_server_product.profile_configuration import NativeProfileConfigPort

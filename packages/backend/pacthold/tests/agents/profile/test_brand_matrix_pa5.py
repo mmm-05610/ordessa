@@ -1,7 +1,7 @@
 """PA-5 controlled brand matrix: pi / codex / claude-code.
 
 Four matrix cells per brand, driven through the REAL harness brand faces
-(read-only consumption of ``ordessa_harness`` renderers) on top of the
+(read-only consumption of ``pacthold.harness_kit`` renderers) on top of the
 profile-api public surface — never directly against the profile store:
 
 - 字段投影 golden: each brand's own renderer consumes controlled profile
@@ -60,8 +60,8 @@ EXTRA_VALUE = "override"
 
 
 def _pi_face(root: Path, *, value: str, extra: bool) -> dict:
-    from ordessa_harness.pi.config import PiProfile
-    from ordessa_harness.pi.projection import PiProjection
+    from ordessa_harness_pi.profile import PiProfile
+    from ordessa_harness_pi.command_projection import PiProjection
     from pacthold_runtime_compat.resource_contracts import (
         PromptFragmentV1, WorkspaceV1)
 
@@ -109,7 +109,7 @@ def _pi_face(root: Path, *, value: str, extra: bool) -> dict:
 
 
 def _codex_face(root: Path, *, value: str, extra: bool) -> dict:
-    from ordessa_harness.codex import production
+    from ordessa_harness_codex import production
     declaration = production.harness_deployment(
         artifact_token="matrix-token-0001",
         tree_digest="sha256:" + "0" * 64,
@@ -122,7 +122,7 @@ def _codex_face(root: Path, *, value: str, extra: bool) -> dict:
 
 
 def _claude_face(root: Path, *, value: str, extra: bool) -> dict:
-    from ordessa_harness.claude.profile import ClaudeProfileRef, ClaudeProjection
+    from ordessa_harness_claude_code.profile import ClaudeProfileRef, ClaudeProjection
 
     settings: dict = {"model": value}
     if extra:

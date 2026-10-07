@@ -1,5 +1,5 @@
 {
-  "sourceBefore": "plugins/harness/src/ordessa_harness/claude/attachments.py",
+  "sourceBefore": "plugins/harness/src/pacthold.harness_kit/claude/attachments.py",
   "sourceAfter": "plugins/harness/claude-code/src/ordessa_harness_claude_code/acp_attachments.py",
   "sourceSha256": "133f17a7e889ff69dc3206df1071f2d2d7a8f545b76ba66ca4d5d818057ae238",
   "sourceBytesUnchanged": true,

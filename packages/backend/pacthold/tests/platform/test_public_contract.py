@@ -778,7 +778,7 @@ def test_facade_chain_ast_forbids_business_modules():
                 continue  # the frozen contract package (stdlib-only, 002 freeze)
             else:
                 assert parts == [] or parts[0] not in (
-                    "ordessa_server", "ordessa_harness", "ordessa_server_compat",
+                    "ordessa_server", "pacthold.harness_kit", "ordessa_server_compat",
                     "pacthold_runtime_compat",
                 ), f"{source.name} imports {name!r}: product/plugin dependency in the public chain"
 

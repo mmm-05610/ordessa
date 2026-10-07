@@ -35,7 +35,7 @@ from __future__ import annotations
 from typing import Any, Callable, Mapping
 
 from pacthold.harness_contracts import Confirmed, DesiredFragment, Plan, Refused, Unknown
-from ordessa_harness.server_acp.registry import NativeConfigurationUnavailable
+from ordessa_server_product.acp_channel.registry import NativeConfigurationUnavailable
 from ordessa_model_provider.turn_application import (
     SUBMIT_READY, SUBMIT_REFUSED, SUBMIT_UNKNOWN, SubmitResult,
     TurnIntentHandoverError,
@@ -175,7 +175,7 @@ class ProductTurnApplication:
         boundary (the C4 plan/apply below) re-validates the catalogue and
         credential revisions again before any effect (M10 semantics reuse).
         """
-        from ordessa_harness.configuration.model.bridge import choice_payload_schema
+        from ordessa_server_product.harness_adapters.configuration.model.bridge import choice_payload_schema
         from ordessa_model_provider.profile_resolution import ProfileModelChoiceResolver
 
         catalog = self._catalog_of()
@@ -279,7 +279,7 @@ class NativeModelEligibilityPort:
             # Structural facts first: a verified installation route and the
             # one published model adapter for this harness.
             installation = authority.services.verify(harness_id)
-            from ordessa_harness.configuration.model.bridge import ADAPTER_IDS
+            from ordessa_server_product.harness_adapters.configuration.model.bridge import ADAPTER_IDS
             adapter_id = ADAPTER_IDS.get(harness_id)
             views = [view for view in authority.services.carrier.contributions(
                 "harness.configuration-adapters")

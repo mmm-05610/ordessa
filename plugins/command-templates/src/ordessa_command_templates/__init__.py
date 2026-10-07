@@ -13,7 +13,7 @@ Import discipline (gate G01/G20, ``tests/test_isolation.py``):
   service is constructed explicitly with an injected private data-root path or
   an injected connection;
 * the pure domain (``api``, ``library``, ``expansion``, ``assignments``) has
-  **no** import of ``ordessa_server``, ``pacthold``, ``ordessa_harness``,
+  **no** import of ``ordessa_server``, ``pacthold``, ``pacthold.harness_kit``,
   ``ordessa_profile`` or any Chat/Workbench host module. Dependency direction is
   one way: the product composes this domain, never the reverse;
 * the optional Server seam (``plugin``) is the only module that may import

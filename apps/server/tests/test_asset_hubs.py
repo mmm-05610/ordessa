@@ -163,7 +163,7 @@ def test_the_mcp_store_publishes_one_revision_and_verifies_it(tmp_path):
 def test_the_two_observed_spellings_render_and_unsupported_families_refuse():
     from ordessa_server_compat.assets.mcp import canonical_definition
     from ordessa_server_compat.assets.rendering import McpRenderError, render_for_family
-    from ordessa_harness.registry.loader import load_builtin_registry
+    from ordessa_server_product.harness_adapters.registry.loader import load_builtin_registry
 
     registry = load_builtin_registry()
 

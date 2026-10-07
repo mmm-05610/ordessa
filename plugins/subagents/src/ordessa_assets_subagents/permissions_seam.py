@@ -8,7 +8,7 @@ domain's permission ceiling, so admission is answered by the authority that owns
 identity and digests instead of by a local look-alike value object.
 
 What is consumed — public exports only, no `ordessa_permissions_*` private
-module, no `ordessa_server_*`, no `ordessa_harness`:
+module, no `ordessa_server_*`, no `pacthold.harness_kit`:
 
 * identity and digests stay *theirs*: `ToolIdentity`, `ArgumentDigest`,
   `build_operation_request` (which derives the ceiling/intent revision pins

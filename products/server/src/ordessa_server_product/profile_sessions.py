@@ -49,7 +49,7 @@ def bind_native_profile_sessions(core, runtime, *, profile_roots=None):
         for harness in profile_roots if harness in native_services.roots}
     if roots:
         from .profile_configuration import NativeProfileConfigPort
-        from ordessa_harness.configuration.model.bridge import choice_payload_schema
+        from ordessa_server_product.harness_adapters.configuration.model.bridge import choice_payload_schema
         from ordessa_model_provider.profile_resolution import ProfileModelChoiceResolver
         def service_factory(target):
             return configuration.create_service(target,
@@ -81,7 +81,7 @@ def bind_native_profile_sessions(core, runtime, *, profile_roots=None):
         return catalog
     def preparation_resolver():
         from ordessa_model_provider.profile_resolution import ProfileModelChoiceResolver
-        from ordessa_harness.configuration.model.bridge import choice_payload_schema
+        from ordessa_server_product.harness_adapters.configuration.model.bridge import choice_payload_schema
         return ProfileModelChoiceResolver(preparation_catalog(), payload_schema=choice_payload_schema())
     sessions.preparation = NativeProfilePreparation(core, channels, roots=roots,
         verify=native_services.verify,
@@ -243,7 +243,7 @@ class ProfileNativeSessions:
 
     @staticmethod
     def _observe(callback):
-        from ordessa_harness.server_acp.registry import NativeConfigurationUnavailable
+        from ordessa_server_product.acp_channel.registry import NativeConfigurationUnavailable
 
         try:
             return callback()

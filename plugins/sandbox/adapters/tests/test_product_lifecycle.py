@@ -18,9 +18,9 @@ owner identity, publication visibility and busy retirement. Proven here:
 from __future__ import annotations
 
 import pytest
-from ordessa_harness.contributions import CONFIGURATION_POINT, HarnessContributionError
-from ordessa_harness.application import ConfigurationApplicationService, OperationJournal, RuntimeSnapshot
-from ordessa_harness.materialization import MergeAuthority
+from ordessa_server_product.harness_adapters.contributions import CONFIGURATION_POINT, HarnessContributionError
+from ordessa_server_product.harness_adapters.application import ConfigurationApplicationService, OperationJournal, RuntimeSnapshot
+from pacthold.harness_kit.materialization import MergeAuthority
 from pacthold.harness_contracts import (
     AdapterContext, AdapterRefusal, ApplicationTarget, Assessment, ErrorCode, Installation,
     TargetDescriptor, TargetHandle, VerificationUnknown,

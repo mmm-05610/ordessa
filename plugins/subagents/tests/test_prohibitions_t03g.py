@@ -1655,7 +1655,7 @@ def test_fr11_missing_profile_or_chat_imports_cannot_break_the_domain():
                 if _harness_contract_edge(name):
                     continue  # 032: the kernel carries the contract checkpoint
                 if name.split(".")[0] in {
-                    "ordessa_server", "ordessa_server_compat", "ordessa_harness",
+                    "ordessa_server", "ordessa_server_compat", "pacthold.harness_kit",
                     "ordessa_server_product", "pacthold",
                 }:
                     findings.append(f"{path.name}: imports {name}")

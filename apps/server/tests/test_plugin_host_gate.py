@@ -68,7 +68,7 @@ MODEL_PROVIDER_IMPORT_METHODS = frozenset({
 #: plugins/model-provider/server/src/ordessa_model_provider/plugin.py）。
 MODEL_PROVIDER_TURN_APPLICATION = frozenset({"modelProvider.beginTurnApplication"})
 #: 021 原生历史面（docs/migration/native-session-history-v1.md），声明于
-#: plugins/harness/src/ordessa_harness/server_acp/plugin.py。
+#: packages/backend/pacthold/src/pacthold/harness_kit/server_acp/plugin.py。
 ACP_SESSION_HISTORY_METHOD = "acp.sessions.list"
 ACP_ADMISSION_METHODS = frozenset({
     "acp.submission.authorize", "acp.permission.authorize",

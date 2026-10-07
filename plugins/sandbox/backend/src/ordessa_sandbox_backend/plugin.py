@@ -9,7 +9,7 @@ Contributes the two §C2 ports and exactly one read-only wire method:
   parameter shape.
 
 The plugin imports neither `ordessa_server` nor `ordessa_server_compat` nor
-`pacthold` nor `ordessa_harness` nor any `ordessa_permissions_*`: it declares
+`pacthold` nor `pacthold.harness_kit` nor any `ordessa_permissions_*`: it declares
 `requires=()`, so the Sandbox domain installs and answers without Permissions
 (verification.md extra-gate 2). There is no apps/server branching and no
 second registry.

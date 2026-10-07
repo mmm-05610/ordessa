@@ -24,3 +24,9 @@ __all__ = [
     "CodexTerminationEvidencePort", "CodexTerminationRefused", "termination_ready",
     "CodexConnectionLeasePort", "CodexLeaseRefused", "CodexGrant", "LeasedConnection",
 ]
+
+
+#: Legacy brand knowledge merged with the 032 move stays importable by module
+#: (``ordessa_harness_codex.contracts`` / ``.remote``) but is deliberately not
+#: re-exported here: the legacy remote provider pulls the retired compat chain
+#: and the independent provider is the only runtime entry.

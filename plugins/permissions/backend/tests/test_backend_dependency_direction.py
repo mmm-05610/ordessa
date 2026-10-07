@@ -13,7 +13,7 @@ import sys
 
 SRC_ROOT = pathlib.Path(__file__).resolve().parents[1] / "src" / "ordessa_permissions_backend"
 FORBIDDEN_ROOTS = {
-    "ordessa_server", "ordessa_server_compat", "ordessa_harness", "pacthold",
+    "ordessa_server", "ordessa_server_compat", "pacthold.harness_kit", "pacthold",
     "ordessa_workspace", "ordessa_sandbox_backend", "fastapi", "pydantic", "httpx",
     "sqlite3", "subprocess", "socket", "urllib", "requests",
 }

@@ -101,7 +101,7 @@ pip install -q -r apps/server/lockfiles/server-linux-py312.txt >/dev/null 2>&1 &
 # editable step with "No matching distribution found" and every suite gate below
 # then reports from a venv that cannot import the tree at all. That is exactly what
 # this script did: it carried a 5-package list from before the post-010 package
-# split, so `ordessa_harness` failed to import on `pacthold_runtime_compat` and the
+# split, so `pacthold.harness_kit` failed to import on `pacthold_runtime_compat` and the
 # gate never reached its own suite steps. The API packages must be installed before
 # the backends that depend on them. Verified end-to-end in a clean clone.
 pip install -q \
@@ -127,7 +127,7 @@ pip install -q \
   -e 'plugins/harness[dev]' \
   -e products/server \
   >/dev/null 2>&1 && ok "editable installs (all 21 in-tree packages)" || bad "editable installs"
-python -c "import pacthold, server_plugin_api, ordessa_environment_api, ordessa_persistence_sqlite, ordessa_platform_services, ordessa_harness_api, ordessa_server, ordessa_harness, ordessa_server_product" 2>/dev/null && ok "imports" || bad "imports"
+python -c "import pacthold, server_plugin_api, ordessa_environment_api, ordessa_persistence_sqlite, ordessa_platform_services, ordessa_harness_api, ordessa_server, pacthold.harness_kit, ordessa_server_product" 2>/dev/null && ok "imports" || bad "imports"
 star=$(python -c "import starlette; print(starlette.__version__)")
 echo "  starlette resolved: $star"
 [ "$star" = "1.7.0" ] && ok "starlette pinned at verified 1.7.0" || bad "starlette drifted to $star"

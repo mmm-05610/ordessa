@@ -56,7 +56,7 @@ See [reuse-comparison.md](reuse-comparison.md) and
 pure conversion of prepared attachment references into ACP prompt content blocks.
 The original implementation bytes and six behavior tests are preserved; the
 legacy catalogue declaration is tested separately. The old
-`ordessa_harness.claude.attachments` module and its package exports are removed,
+`ordessa_harness_claude_code.attachments` module and its package exports are removed,
 with no import shim. Continuation identifiers remain unchanged.
 
 The evidence is historical ACP adapter `0.81.2`, not the preferred SDK channel.

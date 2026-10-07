@@ -17,7 +17,7 @@ batch's red ledger and wire-compatibility claims.
 
 Environment: fresh `worktrees/server-plugin-host/.venv` (Python 3.12.14), installed from
 `apps/server/lockfiles/server-linux-py312.txt` + editable `pacthold`, `ordessa_server`,
-`ordessa_harness` (+ dev extras). All runs from the worktree root.
+`pacthold.harness_kit` (+ dev extras). All runs from the worktree root.
 
 | Suite | Command | Baseline result | Exit |
 | --- | --- | --- | --- |

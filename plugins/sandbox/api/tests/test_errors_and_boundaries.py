@@ -56,7 +56,7 @@ def test_neutral_sandboxv1_names_are_not_used():
 
 
 def test_src_imports_are_stdlib_or_local_only():
-    forbidden_roots = {"pacthold", "ordessa_server", "ordessa_harness",
+    forbidden_roots = {"pacthold", "ordessa_server", "pacthold.harness_kit",
                        "ordessa_server_compat", "ordessa_sandbox", "requests",
                        "httpx"}
     stdlib = set(sys.stdlib_module_names)

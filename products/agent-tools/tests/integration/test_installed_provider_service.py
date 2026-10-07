@@ -29,7 +29,7 @@ def test_installed_cli_observes_three_independent_server_providers(tmp_path):
     assert install.returncode == 0, install.stdout + install.stderr
     missing = subprocess.run([str(python), '-I', '-c', '''import importlib.util
 assert all(importlib.util.find_spec(name) is None for name in (
-    'pacthold', 'ordessa_server', 'ordessa_harness', 'ordessa_harness_codex',
+    'pacthold', 'ordessa_server', 'pacthold.harness_kit', 'ordessa_harness_codex',
     'ordessa_harness_pi', 'ordessa_harness_claude_code', 'server_plugin_api', 'claude_agent_sdk'))'''],
         cwd=tmp_path, env=env, capture_output=True, text=True, timeout=60)
     assert missing.returncode == 0, missing.stdout + missing.stderr

@@ -202,7 +202,7 @@ def test_the_default_product_composition_stops_the_channel_owner_before_the_ledg
     assertion goes red — the guarantee goes with it, which is the honest way
     for a teardown order to depend on a declared edge.
     """
-    from ordessa_harness.server_acp.plugin import AcpChannelServerPlugin
+    from ordessa_server_product.acp_channel.plugin import AcpChannelServerPlugin
     from ordessa_server_compat.plugin import ServerCompatPlugin
 
     runtime = build_runtime(tmp_path / "data")

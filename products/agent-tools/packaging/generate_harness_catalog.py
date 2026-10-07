@@ -51,7 +51,7 @@ def _js_names(block, fields):
 def source_candidates(root):
     """Bounded literal extraction: an unsupported source shape fails closed."""
     harness = root / "plugins/harness"
-    toml = (harness / "src/ordessa_harness/harnesses.toml").read_text(encoding="utf-8")
+    toml = (harness / "src/pacthold.harness_kit/harnesses.toml").read_text(encoding="utf-8")
     names = {}
     for block in re.split(r"(?m)^\[\[harness\]\]\s*$", toml)[1:]:
         family = re.findall(r'(?m)^harness_type = "([^"]+)"$', block)
@@ -86,7 +86,7 @@ def main(argv=None):
     options = parser.parse_args(argv)
     root = Path(__file__).resolve().parents[3]
     # Public, dependency-free API loaded only at build time, never by the CLI.
-    api_source = str(root / "plugins/harness/api/src")
+    api_source = str(root / "packages/backend/pacthold/src")
     sys.path.insert(0, api_source)
     try:
         from pacthold.harness_contracts.command_discovery import command_catalog_document

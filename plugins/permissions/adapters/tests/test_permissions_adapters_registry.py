@@ -4,7 +4,7 @@
 unique, with **overlap refused at composition time, never last-wins**
 (contracts.md §C1). Since the foundation checkpoint the refusal authority is
 the platform's: the point's conflict registry inside
-`ordessa_harness.contributions` (driven through the public
+`ordessa_server_product.harness_adapters.contributions` (driven through the public
 `server_plugin_api.stage_contributions`). The package only *declares*;
 every refusal below is asserted to be raised by the platform, and the
 package's former private registry - which re-implemented these refusals as
@@ -17,7 +17,7 @@ semantics at the handler/registry seam.
 from __future__ import annotations
 
 import pytest
-from ordessa_harness.contributions import (
+from ordessa_server_product.harness_adapters.contributions import (
     CONFIGURATION_POINT, HarnessContributionError, HarnessContributionRegistry,
     POINT_API_VERSION)
 from pacthold.harness_contracts import (

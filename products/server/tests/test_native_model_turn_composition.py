@@ -39,8 +39,8 @@ from types import SimpleNamespace
 import pytest
 from server_plugin_api import WireError
 
-from ordessa_harness.server_acp.native_action_executor import configuration_digest
-from ordessa_harness.server_acp.registry import (
+from ordessa_server_product.acp_channel.native_action_executor import configuration_digest
+from ordessa_server_product.acp_channel.registry import (
     NativeConfigurationObservation, NativeSessionObservation,
 )
 from pacthold.harness_contracts import Installation
@@ -164,7 +164,7 @@ def controlled_native(monkeypatch, runtime, *, models=("m1", "m2"),
     monkeypatch.setattr(authority.services, "verify", verify)
     # the controlled channel carries no real run record; the release path has
     # nothing honest to settle for it
-    import ordessa_harness.server_acp.registry as acp_registry
+    import ordessa_server_product.acp_channel.registry as acp_registry
     monkeypatch.setattr(acp_registry, "end_run_released", lambda *args, **kwargs: None)
     return SimpleNamespace(state=state, channel=channel, registry=registry,
                            authority=authority)

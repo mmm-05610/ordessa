@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 from pacthold.harness_contracts import VersionRange
-from ordessa_harness.contributions import HarnessContributionError, HarnessContributionRegistry
+from ordessa_server_product.harness_adapters.contributions import HarnessContributionError, HarnessContributionRegistry
 from server_plugin_api import Contribution, ContributionBatch, stage_contributions
 
 from ordessa_memory import bridge, common, facet
@@ -224,10 +224,13 @@ def test_pure_modules_never_import_sibling_plugins_or_host(module):
     for line in _source(module).splitlines():
         stripped = line.strip()
         if stripped.startswith(("import ", "from ")):
-            root = stripped.split()[1].split(".")[0]
+            imported = stripped.split()[1]
+            if imported == "pacthold.harness_contracts" or imported.startswith("pacthold.harness_contracts."):
+                continue  # 032: the kernel contract edge is the published vocabulary
+            root = imported.split(".")[0]
             assert root not in {
                 "ordessa_model_provider", "ordessa_server", "ordessa_server_compat",
-                "ordessa_prompts", "ordessa_harness", "pacthold"}, line
+                "ordessa_prompts", "pacthold.harness_kit", "pacthold"}, line
 
 
 def test_package_never_imports_the_model_provider_modules():

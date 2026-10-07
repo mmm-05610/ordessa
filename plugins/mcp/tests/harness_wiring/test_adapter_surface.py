@@ -43,7 +43,7 @@ def codex_adapter():
 
 
 def test_adapters_are_real_descriptors_admitted_by_the_harness_registry():
-    from ordessa_harness.contributions import (
+    from ordessa_server_product.harness_adapters.contributions import (
         CONFIGURATION_POINT, POINT_API_VERSION, HarnessContributionRegistry,
     )
     from server_plugin_api import Contribution

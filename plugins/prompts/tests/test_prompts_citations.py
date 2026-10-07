@@ -11,8 +11,8 @@ from __future__ import annotations
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-TOML = REPO / "plugins/harness/src/ordessa_harness/harnesses.toml"
-SCHEMA = REPO / "plugins/harness/src/ordessa_harness/registry/schema.py"
+TOML = REPO / "packages/backend/pacthold/src/pacthold/harness_kit/harnesses.toml"
+SCHEMA = REPO / "products/server/src/ordessa_server_product/harness_adapters/registry/schema.py"
 HM = REPO / "docs/design/prompts/harness-adapters.md"
 
 

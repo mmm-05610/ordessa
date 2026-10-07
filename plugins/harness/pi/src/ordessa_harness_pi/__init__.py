@@ -16,3 +16,8 @@ __all__ = [
     "PiTerminationEvidencePort", "PiTerminationRefused",
     "configuration_ready", "termination_ready",
 ]
+
+#: Legacy Pi knowledge (profile/continuation/command projection/session scan)
+#: stays importable by module (``ordessa_harness_pi.profile`` etc.) but is not
+#: re-exported here: the second execution provider retired with the 032 move
+#: and only the independent provider stays as a runtime entry.

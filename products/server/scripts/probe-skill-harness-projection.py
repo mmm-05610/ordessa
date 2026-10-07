@@ -14,7 +14,7 @@ question on the real product chain, with no test double and no simulation:
   ``profiles.v2.beginTurnApplication``;
 * then the REAL native state is inspected: the private per-channel instance
   directories the product itself allocates
-  (``plugins/harness/src/ordessa_harness/server_acp/instance_directory.py``),
+  (``packages/backend/pacthold/src/pacthold/harness_kit/server_acp/instance_directory.py``),
   the ``CODEX_HOME`` / ``CLAUDE_CONFIG_DIR`` / ``HOME`` the probe pointed into
   its own tempdir, and the installed artifact roots the running bridge was
   given. Absence of a materialized skill is reported AS OBSERVED — never

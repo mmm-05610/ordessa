@@ -5,7 +5,7 @@ Measurement (full evidence: `specs/011-q5-safety/evidence/t020-red-*.txt`):
 `RuntimeAdapter.describe_installation()`
 (`packages/backend/pacthold/src/pacthold/harness_contracts/contracts.py:385-388`); the C4
 admission consults `descriptor.adapter_versions.contains(installation.adapter_version)`
-(`plugins/harness/src/ordessa_harness/application/configuration_service.py:153`).
+(`packages/backend/pacthold/src/pacthold/harness_kit/application/configuration_service.py:153`).
 This tree ships NO production `describe_installation` implementer: the only
 Installation ever observed in-tree is the controlled fixture
 (`plugins/harness/tests/fixtures/external_adapter/src/ordessa_test_external_adapter/__init__.py:69`,

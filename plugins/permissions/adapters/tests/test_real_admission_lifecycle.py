@@ -1,6 +1,6 @@
 """T03b: admission proofs against the REAL platform, not a private registry.
 
-Every refusal here is raised by `ordessa_harness.contributions` (the
+Every refusal here is raised by `ordessa_server_product.harness_adapters.contributions` (the
 Harness plugin's public contributions seam - the conflict authority the
 product composition binds to `harness.configuration-adapters`) or by the
 Server plugin host driving `server_plugin_api.stage_contributions`.
@@ -17,7 +17,7 @@ test_external_adapter_product.py (the platform's own exemplars).
 from __future__ import annotations
 
 import pytest
-from ordessa_harness.contributions import (
+from ordessa_server_product.harness_adapters.contributions import (
     CONFIGURATION_POINT, HarnessContributionError, HarnessContributionRegistry,
     POINT_API_VERSION, RUNTIME_POINT)
 from pacthold.harness_contracts import (ConfigurationAdapterDescriptor, FieldClaim,

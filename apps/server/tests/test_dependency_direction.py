@@ -30,11 +30,11 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 PRODUCT_PACKAGES = (
-    "ordessa_server", "ordessa_harness", "ordessa_workspace",
+    "ordessa_server", "pacthold.harness_kit", "ordessa_workspace",
     "ordessa_server_compat", "ordessa_server_product",
 )
 PLUGIN_PACKAGES = (
-    "ordessa_harness", "ordessa_workspace", "ordessa_server_compat",
+    "pacthold.harness_kit", "ordessa_workspace", "ordessa_server_compat",
     "ordessa_server_product",
 )
 HOST_NEUTRAL = ("errors", "records", "ids", "idempotency", "credentials",

@@ -1172,7 +1172,7 @@ class CoreWireHandlers:
         in this Server translates them, and a run that has not ended is
         reported as exactly that.
         """
-        from ordessa_harness.server_acp import channel_run_view
+        from ordessa_server_product.acp_channel import channel_run_view
 
         _require(params, "requestId", "executionId")
         row = self.sessions.records.get_turn_context(

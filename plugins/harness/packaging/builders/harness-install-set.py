@@ -94,7 +94,7 @@ def sha256(value: bytes) -> str:
 
 
 def load_production(family: str):
-    module = importlib.import_module(f"ordessa_harness.{MODULE_NAMES[family]}.production")
+    module = importlib.import_module(f"pacthold.harness_kit.{MODULE_NAMES[family]}.production")
     return module
 
 

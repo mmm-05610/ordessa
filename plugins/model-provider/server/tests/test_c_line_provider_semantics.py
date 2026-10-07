@@ -394,9 +394,11 @@ def test_c21_configuration_application_goes_only_through_the_harness_capability(
     """C21: the one route to native configuration is the published Harness
     application contract. A private Harness module would be a second,
     uncoordinated route."""
+    #: 032: the published capability contract is pacthold.harness_contracts; the
+    #: kernel's harness_kit internals and the product assembly stay private.
     importers = {}
     for path in sorted(SRC.glob("*.py")):
-        modules = {m for m in _imports_of(path) if m.startswith("ordessa_harness")}
+        modules = {m for m in _imports_of(path) if m.split(".")[0] == "pacthold"}
         if modules:
             importers[path.name] = modules
     assert importers, "the binding must consume the Harness capability"
@@ -411,12 +413,13 @@ def test_c21_the_import_analyser_discriminates_a_private_harness_import(tmp_path
     """Counterexample proof: the rule above can see a violation."""
     offender = tmp_path / "bad.py"
     offender.write_text(
-        "from ordessa_harness.configuration.model.backend import X\n",
+        "from pacthold.harness_kit.registry.loader import load_builtin_registry as X\n",
         encoding="utf-8")
     modules = _imports_of(offender)
-    assert modules == {"ordessa_harness.configuration.model.backend"}
-    assert any(m.startswith("ordessa_harness.")
-               and not m.startswith("pacthold.harness_contracts.") for m in modules)
+    assert modules == {"pacthold.harness_kit.registry.loader"}
+    assert any(m.split(".")[0] == "pacthold"
+               and not (m == "pacthold.harness_contracts"
+                        or m.startswith("pacthold.harness_contracts.")) for m in modules)
 
 
 def test_c21_model_provider_owns_no_process_or_session_coordination_surface():

@@ -36,7 +36,7 @@ only declares. The split:
   only (`sandbox_mode` belongs to the Sandbox facet); pi claims nothing
   (extension-backed).
 - **The platform (admits)**: the point's conflict registry
-  (`ordessa_harness.contributions`, bound by the product composition via the
+  (`pacthold.harness_kit.contributions`, bound by the product composition via the
   public `server_plugin_api` staging protocol) refuses duplicate adapter ids,
   overlapping `(harnessId, nativeVersionRange)` for one facet/entries set,
   and cross-facet field-claim conflicts - at composition, never last-wins.

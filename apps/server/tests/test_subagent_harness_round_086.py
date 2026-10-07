@@ -25,7 +25,7 @@ LOOPBACK_BASE_URL = "http://127.0.0.1:1"
 
 
 def _profile_spec(harness: str):
-    from ordessa_harness.registry import load_builtin_registry
+    from ordessa_server_product.harness_adapters.registry import load_builtin_registry
 
     definition = load_builtin_registry().get(harness)
     return getattr(definition, "profile", None)
@@ -50,7 +50,7 @@ def _claude_deployment(*, projected: bool) -> dict:
     ("Harness model is not available") exactly as the hermes note documents for
     an adapter without a model control. Stage 2 runs the control for real.
     """
-    from ordessa_harness.claude import production
+    from ordessa_harness_claude_code import production
 
     entry = production.harness_deployment(
         artifact_token=production.ARTIFACT_NAME, tree_digest="sha256:" + ("0" * 64),
@@ -78,7 +78,7 @@ def granted_parent(tmp_path, monkeypatch):
 
     import ordessa_server_compat.composition as runtime_module
 
-    from ordessa_harness.claude import production
+    from ordessa_harness_claude_code import production
 
     original_file = runtime_module._sidecar_deployment_file
 
@@ -226,13 +226,13 @@ def test_codex_still_collides_and_is_excluded_from_this_round():
     `ASSET_SLOT_CONFLICT`. 65's end-to-end test never met this because its
     fixture deployment declared no projections at all.
     """
-    from ordessa_harness.codex import production as codex_production
+    from ordessa_harness_codex import production as codex_production
 
     spec = _profile_spec("codex")
     assert spec.mcp_target in {item["target"] for item in codex_production.projection_files()}
     # claude, by contrast, no longer collides - that is the fix this round runs on.
     claude_spec = _profile_spec("claude-code")
-    from ordessa_harness.claude import production as claude_production
+    from ordessa_harness_claude_code import production as claude_production
 
     assert claude_spec.mcp_target not in {
         item["target"] for item in claude_production.projection_files()}
@@ -245,7 +245,7 @@ def test_the_other_registered_families_declare_no_mcp_target_at_all():
     so it structurally cannot carry the bridge. The exclusion list is derived
     from the registry so a family that gains a target is noticed.
     """
-    from ordessa_harness.registry import load_builtin_registry
+    from ordessa_server_product.harness_adapters.registry import load_builtin_registry
 
     with_target, without_target = {}, {}
     for definition in load_builtin_registry().all():

@@ -80,7 +80,7 @@ def test_the_retired_legacy_capabilities_module_is_not_resurrected():
 
 
 def test_no_adapter_module_imports_harness_or_host_internals():
-    forbidden = {"ordessa_harness", "ordessa_server", "ordessa_server_compat",
+    forbidden = {"pacthold.harness_kit", "ordessa_server", "ordessa_server_compat",
                  "ordessa_workspace", "ordessa_assets"}
     for path in _area_files():
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))

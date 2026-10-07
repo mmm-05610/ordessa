@@ -62,7 +62,7 @@ def _validate_format(config_format: str) -> str:
 
 def _validate_instance_path(path: str) -> str:
     """Same canonical bound the host registry puts on ``mcp_target``
-    (plugins/harness/src/ordessa_harness/registry/schema.py:80-87), re-derived
+    (packages/backend/pacthold/src/pacthold/harness_kit/registry/schema.py:80-87), re-derived
     here so the MCP plugin stays free of host-internal imports."""
     if not isinstance(path, str) or not path or len(path) > 256:
         raise ValueError("target_path must be a short string")

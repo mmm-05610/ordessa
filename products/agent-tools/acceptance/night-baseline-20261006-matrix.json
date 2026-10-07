@@ -9,7 +9,7 @@
   },
   "matrix": [
     {"criterion": "客户端新 venv 仅装本地 wheel", "status": "VERIFIED", "evidenceType": "真实进程", "facts": "create-fresh-client-venv exit0；install-local-wheel --no-index --no-deps exit0（本地 wheel 唯一来源）"},
-    {"criterion": "客户端无 backend imports", "status": "VERIFIED", "evidenceType": "纯DTO契约+真实进程", "facts": "verify_wheel AST 门（build 内 exit0：无 pacthold/ordessa_server/ordessa_harness/native_clients、无非客户端运行时依赖）；backend-packages-absent exit0（三包 find_spec 全 None）"},
+    {"criterion": "客户端无 backend imports", "status": "VERIFIED", "evidenceType": "纯DTO契约+真实进程", "facts": "verify_wheel AST 门（build 内 exit0：无 pacthold/ordessa_server/pacthold.harness_kit/native_clients、无非客户端运行时依赖）；backend-packages-absent exit0（三包 find_spec 全 None）"},
     {"criterion": "init 不执行发现的二进制", "status": "VERIFIED", "evidenceType": "真实进程", "facts": "installed-local-init exit0；evidence.executedBinaries=False；观察到 8 个 family，全部 runtimeReady=unknown；scanScope=clientMachine source=PATH，仅只读观察"},
     {"criterion": "三个 Skill 命令存在", "status": "VERIFIED", "evidenceType": "纯DTO契约", "facts": "bundle skills/ 三份 SKILL.md：configure-agent-profile、manage-external-agent、use-external-agent；install_use 断言 len==3；仅复制到调用方本地目录，无全局安装"},
     {"criterion": "自有隔离服务重启可查原操作", "status": "VERIFIED", "evidenceType": "隔离服务+真实进程", "facts": "临时 root/随机端口/随机 fingerprint key(os.urandom32)/临时 Bearer 全部记录；restart-historical-read exit0 且内容与重启前原操作相等；environment id 跨重启稳定"},

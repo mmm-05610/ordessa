@@ -250,7 +250,7 @@ def test_posture_write_codex_refuses_a_base_value_outside_the_pinned_vocabulary(
 # ------------------------------------------------------- refusals both families
 
 def _registered_families():
-    from ordessa_harness.registry.loader import load_builtin_registry
+    from ordessa_server_product.harness_adapters.registry.loader import load_builtin_registry
     return {d.harness_type: tuple(d.capabilities)
             for d in load_builtin_registry().all()}
 

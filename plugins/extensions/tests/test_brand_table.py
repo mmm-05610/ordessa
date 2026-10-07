@@ -9,7 +9,7 @@ from ordessa_extensions.capabilities import (
     statement_for,
 )
 
-TOML = "plugins/harness/src/ordessa_harness/harnesses.toml"
+TOML = "packages/backend/pacthold/src/pacthold/harness_kit/harnesses.toml"
 
 
 def test_every_brand_is_accounted_for():

@@ -128,4 +128,4 @@ the only dispatch table remains the plugin host's method registry.
 - database schema + migration numbering unchanged (`server_workspaces`, `server_bootstrap`, `server_*` tables, object store layout)
 - deployment JSON `schemaVersion: 1` and all field names
 - wire method ids, `{id, supported, reason?}` shape, error families, `X-Wire-Version: wire/1`
-- module distribution names (`ordessa_server`, `ordessa_harness`, `pacthold`, `ordessa-server-plugin-api`) keep their identifiers; new packages (`ordessa-workspace`, `ordessa-server-compat`, product) are additions, not renames
+- module distribution names (`ordessa_server`, `pacthold.harness_kit`, `pacthold`, `ordessa-server-plugin-api`) keep their identifiers; new packages (`ordessa-workspace`, `ordessa-server-compat`, product) are additions, not renames

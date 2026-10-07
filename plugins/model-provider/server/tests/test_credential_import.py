@@ -229,7 +229,7 @@ def test_malformed_store_shape_has_no_inferred_locator_cleanup(rig):
 
 def test_wire_saved_protocol_endpoint_credential_choice_resolves_and_omission_preserves(rig):
     from ordessa_model_provider.profile_resolution import ProfileModelChoiceResolver
-    from ordessa_harness.configuration.model.bridge import choice_payload_schema
+    from ordessa_server_product.harness_adapters.configuration.model.bridge import choice_payload_schema
     imported = import_key(rig)
     body = dict(requestId='request-save-01', **wire_body(harness='codex', credentialId=imported['credentialId'], configuration=[],
         protocols=['openai-responses'], endpoints={'openai-responses': 'http://127.0.0.1:9/v1'}))
@@ -250,7 +250,7 @@ def test_wire_saved_protocol_endpoint_credential_choice_resolves_and_omission_pr
 
 def test_actual_native_product_model_catalog_declares_api_key_for_import(tmp_path):
     from ordessa_server_product.composition import create_composition
-    from ordessa_harness.configuration.model.catalog import ModelConfigurationCatalog
+    from ordessa_server_product.harness_adapters.configuration.model.catalog import ModelConfigurationCatalog
     root = Path(__file__).resolve().parents[4]
     runtime = create_composition().native_runtime(tmp_path / 'native', plugin_root=root / 'plugins/harness',
         harness_id='codex', adapter_command='/usr/bin/node')

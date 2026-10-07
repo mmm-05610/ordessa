@@ -5,7 +5,7 @@ public intent shape; everything leaving `compile_all` is
 `pacthold.harness_contracts`. It also records the answers to the three open SR-1b
 mapping questions, each verified from the real code (file:line evidence
 below is inside this worktree at review time; nothing here imports
-`ordessa_harness` internals — only the published API — per the import
+`pacthold.harness_kit` internals — only the published API — per the import
 boundary):
 
 (a) HOW IS A COMPLETE MANAGED SET MOUNTED?
@@ -14,7 +14,7 @@ boundary):
     (`pacthold.harness_contracts/intents.py:108-119`) IS content-addressed external
     storage: the intent carries no bytes; the service resolves the reference
     against the runtime's content map and re-verifies digest+size at
-    materialization (`plugins/harness/src/ordessa_harness/materialization/`
+    materialization (`packages/backend/pacthold/src/pacthold/harness_kit/materialization/`
     `private_generation.py:268-277`: `data = content.get(ref)`, digest
     mismatch refuses). The 「一次性编译完整目标集合，不逐项拼补丁」 property
     is guaranteed *host-side*: every apply rebuilds and publishes one whole
@@ -67,7 +67,7 @@ Owner-forgery (design: 注册 owner 由宿主授予): structurally impossible
 because the shape has no owner slot — `IntentSource` fields are exactly
 {facet_id, item_id, contribution_version} (`intents.py:17-25`), payloads
 declaring an owner are refused at staging
-(`plugins/harness/src/ordessa_harness/contributions.py:97-98`), and the
+(`packages/backend/pacthold/src/pacthold/harness_kit/contributions.py:97-98`), and the
 merge authority re-checks every intent's source against the authorized
 submission (`intent_merge.py:166-173`). The mirror of that last check is
 re-implemented below from the published API only, and our output must pass

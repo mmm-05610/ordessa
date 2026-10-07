@@ -25,7 +25,7 @@ __all__ = ["ADAPTER_CAPABILITY_CELLS", "MATRIX_FIELDS", "UNKNOWN_FIELD",
 #: the twelve fields each cell must state (same tuple the domain API defines)
 MATRIX_FIELDS: Final[tuple[str, ...]] = tuple(MATRIX_CELL_FIELDS)
 
-_TOML = "plugins/harness/src/ordessa_harness/harnesses.toml"
+_TOML = "packages/backend/pacthold/src/pacthold/harness_kit/harnesses.toml"
 _POSTURE = "plugins/server-compat/.../profiles/posture_config.py"
 _SCHEMA = "plugins/harness/adapters/acp-adapter/internal/codex/schema"
 

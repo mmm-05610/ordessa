@@ -44,7 +44,7 @@ def desired_set(**overrides):
 def test_point_constants_match_the_harness_handler():
     # duplicated-string discipline: the TEST imports the harness plugin
     # dist (verification venv, docs/baseline.md); the package never does
-    from ordessa_harness import contributions
+    from ordessa_server_product.harness_adapters import contributions
     assert CONFIGURATION_POINT == contributions.CONFIGURATION_POINT
     assert POINT_API_VERSION == contributions.POINT_API_VERSION
 

@@ -249,21 +249,21 @@ def test_a_citation_to_the_wrong_line_of_a_real_file_is_refused():
     # wrong citation, not evidence.
     with pytest.raises(AssertionError):
         _assert_citations_resolve(
-            "plugins/harness/src/ordessa_harness/codex/production.py:1",
+            "plugins/harness/codex/src/ordessa_harness_codex/production.py:1",
             where="wrong-line", tokens=("0.147.0",))
     # the same claim pointed at its actual line passes...
     _assert_citations_resolve(
-        "plugins/harness/src/ordessa_harness/codex/production.py:88",
+        "plugins/harness/codex/src/ordessa_harness_codex/production.py:88",
         where="right-line", tokens=("0.147.0",))
     # ...and a `:a-b` range citation covers the whole span, not just its
     # first line: claude/production.py:66 alone names the package, only
     # line 67 carries 0.81.2.
     with pytest.raises(AssertionError):
         _assert_citations_resolve(
-            "plugins/harness/src/ordessa_harness/claude/production.py:66",
+            "plugins/harness/claude-code/src/ordessa_harness_claude_code/production.py:66",
             where="first-line-of-range-only", tokens=("0.81.2",))
     _assert_citations_resolve(
-        "plugins/harness/src/ordessa_harness/claude/production.py:66-67",
+        "plugins/harness/claude-code/src/ordessa_harness_claude_code/production.py:66-67",
         where="full-range", tokens=("0.81.2",))
 
 

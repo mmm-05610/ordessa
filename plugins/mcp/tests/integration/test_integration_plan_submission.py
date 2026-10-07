@@ -2,7 +2,7 @@
 
 The submission leg of the chain: the composed service's
 ``harness.configuration_service`` port IS the real
-``ordessa_harness.application.ConfigurationApplicationService`` over the
+``ordessa_server_product.harness_adapters.application.ConfigurationApplicationService`` over the
 real ``HarnessContributionRegistry`` carrier (the brand adapter contributed
 the way the product composition does) and the real sqlite
 ``OperationJournal``; the runtime is the labelled in-memory controlled

@@ -11,7 +11,7 @@ point (C2).
 Hard boundaries (all pinned in tests):
 
 * pure domain — no process spawn, no HOME write, no network, no import of
-  `ordessa_server`, `ordessa_harness` internals or any desktop host
+  `ordessa_server`, `pacthold.harness_kit` internals or any desktop host
   (AGENTS.md rule 3; only the published `pacthold.harness_contracts` and
   `server_plugin_api` vocabularies are consumed — the domain uses no
   pacthold surface at all);

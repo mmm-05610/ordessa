@@ -32,7 +32,7 @@ FORBIDDEN_IMPORTS = {"subprocess", "socket", "shutil", "http", "urllib",
                      "requests", "sqlite3", "ftplib", "telnetlib", "asyncio",
                      "tempfile", "os"}
 FORBIDDEN_PRODUCT_ROOTS = {"ordessa_server", "ordessa_server_compat",
-                           "ordessa_harness", "pacthold", "ordessa_workspace",
+                           "pacthold.harness_kit", "pacthold", "ordessa_workspace",
                            "fastapi", "pydantic", "httpx", "uvicorn"}
 ALLOWED_NON_STDLIB = {"ordessa_sandbox_api", "ordessa_sandbox_backend",
                       "server_plugin_api", "ordessa_sandbox_adapters",

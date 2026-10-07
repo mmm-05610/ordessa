@@ -190,7 +190,7 @@ def test_package_imports_stdlib_only() -> None:
     code = (
         "import sys, ordessa_environment_api as m; "
         "bad = [n for n in sys.modules "
-        "if n.split('.')[0] in {'pacthold','ordessa_server','ordessa_harness',"
+        "if n.split('.')[0] in {'pacthold','ordessa_server','pacthold.harness_kit',"
         "'ordessa_server_compat','pacthold_runtime_compat','ordessa_server_product'}]; "
         "print('BAD:' + ','.join(bad) if bad else 'CLEAN')"
     )

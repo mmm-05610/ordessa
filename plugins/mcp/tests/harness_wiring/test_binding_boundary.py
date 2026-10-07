@@ -4,7 +4,7 @@ native_binding.py is the Q4-domain <-> harness-api conversion point and
 must itself obey the import boundaries it converts across:
 
 * it may import ``pacthold.harness_contracts`` (the published contract) and the
-  MCP domain — never ``ordessa_harness`` (the harness implementation),
+  MCP domain — never ``pacthold.harness_kit`` (the harness implementation),
   never ``ordessa_server``/host internals, never ``adapters`` (outside the
   installed backend package);
 * it stays pure: no filesystem / process / network / HOME primitives — the
@@ -37,7 +37,7 @@ if str(ADAPTER_ROOT) not in __import__("sys").path:
 ADAPTER_FILES = ["adapters/codex.py", "adapters/claude.py"]
 
 FORBIDDEN_IMPORT_ROOTS = {
-    "ordessa_harness",  # NOT pacthold.harness_contracts (the published contract)
+    "pacthold.harness_kit",  # NOT pacthold.harness_contracts (the published contract)
     "ordessa_server", "ordessa_server_product", "ordessa_server_compat",
     "pacthold", "pacthold_runtime_compat", "adapters", "server_plugin_api",
     "os", "pathlib", "socket", "subprocess", "tempfile", "io", "shutil",

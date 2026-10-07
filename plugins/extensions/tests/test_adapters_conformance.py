@@ -41,11 +41,11 @@ def definitions_hook(**overrides):
 def test_point_constants_match_the_harness_handler():
     """Duplicated-string discipline: pinned against the real constants
     WITHOUT importing them into the package (AGENTS.md rule 3) — the
-    TEST imports `ordessa_harness` (the harness plugin dist, installed
+    TEST imports `pacthold.harness_kit` (the harness plugin dist, installed
     editable in the verification venv per docs/baseline.md, same
     test-only reliance as the Skills registration tests); the PACKAGE
     never does, which test_dependency_direction enforces on src/."""
-    from ordessa_harness import contributions
+    from ordessa_server_product.harness_adapters import contributions
     assert CONFIGURATION_POINT == contributions.CONFIGURATION_POINT
     assert POINT_API_VERSION == contributions.POINT_API_VERSION
 

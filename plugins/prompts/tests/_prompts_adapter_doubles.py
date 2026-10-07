@@ -12,12 +12,12 @@ PI_INSTALLATION = Installation(
 CODEX_INSTALLATION = Installation(
     harness_id="codex", native_version=(0, 147, 0),
     adapter_version=(1, 1, 14),
-    evidence_ref="plugins/harness/src/ordessa_harness/codex/production.py:88")
+    evidence_ref="plugins/harness/codex/src/ordessa_harness_codex/production.py:88")
 
 CLAUDE_INSTALLATION = Installation(
     harness_id="claude", native_version=(2, 1, 274),
     adapter_version=(0, 81, 2),
-    evidence_ref="plugins/harness/src/ordessa_harness/claude/production.py:67")
+    evidence_ref="plugins/harness/claude-code/src/ordessa_harness_claude_codeproduction.py:67")
 
 
 def context_for(installation: Installation, *targets: TargetDescriptor,

@@ -50,7 +50,7 @@ pip install -e 'packages/backend/pacthold[dev]' -e packages/backend/server-plugi
   -e plugins/skills -e plugins/profile -e plugins/runtime-compat \
   -e plugins/server-compat -e plugins/workspace -e 'apps/server[dev]' -e 'plugins/harness[dev]' \
   -e products/server
-python -c "import pacthold, server_plugin_api, ordessa_harness_api, ordessa_server, ordessa_harness, ordessa_server_product"
+python -c "import pacthold, server_plugin_api, ordessa_harness_api, ordessa_server, pacthold.harness_kit, ordessa_server_product"
 python -m pytest packages/backend/pacthold      # 246 passed (measured 2026-01-04; 238 was the frozen switch baseline)
 python -m pytest plugins/harness                # 308 passed / 3 skipped / 2 failed (inherited)
 python -m pytest apps/server                    # inherited-red ledger: docs/migration/backend-build-test.md

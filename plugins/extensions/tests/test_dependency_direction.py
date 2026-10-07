@@ -23,7 +23,7 @@ ALLOWED_TOP_LEVEL = {
 ALLOWED_MODULES = {"pacthold.harness_contracts"}
 
 FORBIDDEN_PREFIXES = (
-    "ordessa_server", "ordessa_harness.", "ordessa_skills",
+    "ordessa_server", "pacthold.harness_kit.", "ordessa_skills",
     "ordessa_prompts", "ordessa_subagents", "pacthold",
     "ordessa_profile", "ordessa_permissions",
 )
@@ -73,10 +73,10 @@ def test_the_sweep_actually_detects_a_forbidden_import():
     # internal is flagged (guards the guard, review round 4)
     import textwrap
     bad = ast.parse(textwrap.dedent("""
-        import ordessa_harness.registry
+        import ordessa_server_product.harness_adapters.registry
         from ordessa_server import something
     """))
     caught = [m for m in _imports(bad)
               if m.startswith(FORBIDDEN_PREFIXES)
               or m.split(".")[0] not in ALLOWED_TOP_LEVEL]
-    assert set(caught) == {"ordessa_harness.registry", "ordessa_server"}
+    assert set(caught) == {"ordessa_server_product.harness_adapters.registry", "ordessa_server"}

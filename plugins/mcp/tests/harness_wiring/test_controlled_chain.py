@@ -2,7 +2,7 @@
 through the REAL Harness C4 machinery.
 
 What exists to be run harmlessly: the harness publishes
-``ordessa_harness.application.ConfigurationApplicationService`` (C4 slice)
+``ordessa_server_product.harness_adapters.application.ConfigurationApplicationService`` (C4 slice)
 plus ``HarnessContributionRegistry`` (the very handlers the product
 composition binds), and its own controlled test pattern
 (plugins/harness/tests/test_configuration_service_controlled.py) — an
@@ -29,14 +29,14 @@ import json
 from dataclasses import replace
 
 import pytest
-from ordessa_harness.application import (
+from ordessa_server_product.harness_adapters.application import (
     ConfigurationApplicationService, NativeActivationReceipt, NativeReadback,
     OperationJournal, RuntimeSnapshot,
 )
-from ordessa_harness.contributions import (
+from ordessa_server_product.harness_adapters.contributions import (
     CONFIGURATION_POINT, POINT_API_VERSION, HarnessContributionRegistry,
 )
-from ordessa_harness.materialization import MergeAuthority, TargetAuthority
+from pacthold.harness_kit.materialization import MergeAuthority, TargetAuthority
 from pacthold.harness_contracts import (
     AdapterContext, ApplicationTarget, Assessment, Installation,
     TargetDescriptor, TargetHandle,

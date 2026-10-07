@@ -15,12 +15,12 @@ import tomllib
 
 import pytest
 from _sandbox_adapters_helpers import HARNESSES_TOML
-from ordessa_harness.contributions import (
+from ordessa_server_product.harness_adapters.contributions import (
     CONFIGURATION_POINT as REAL_CONFIGURATION_POINT,
     POINT_API_VERSION as REAL_POINT_API_VERSION,
 )
-from ordessa_harness.contributions import ConfigurationAdapterDescriptor as RealDescriptor
-from ordessa_harness.contributions import FieldClaim as RealFieldClaim
+from ordessa_server_product.harness_adapters.contributions import ConfigurationAdapterDescriptor as RealDescriptor
+from ordessa_server_product.harness_adapters.contributions import FieldClaim as RealFieldClaim
 from pacthold.harness_contracts import ContractError, ValueSchema
 from server_plugin_api import Contribution, ContributionBatch
 
@@ -57,7 +57,7 @@ def test_point_id_and_api_version_are_the_foundation_ones():
 
 def test_descriptors_use_the_foundation_class_not_a_private_copy():
     descriptor = build_configuration_descriptor(CodexSandboxAdapter())
-    # `ordessa_harness.contributions` re-exports the point's payload contract;
+    # `ordessa_server_product.harness_adapters.contributions` re-exports the point's payload contract;
     # building with it must yield the very object the host's handler isinstance-
     # checks against (module identity, same class object).
     assert isinstance(descriptor, RealDescriptor)

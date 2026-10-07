@@ -16,7 +16,7 @@ MEASURED FACTS this file relies on (all re-verified in-tree, 011-q5-safety):
   ``:29-40`` (ApplicationTarget), ``:42-61`` (DesiredFragment), ``:129-181``
   (Plan/Refused/Confirmed/Unknown + aliases), ``:184-199`` (OperationRecord).
 * the REAL implementation this file drives (never a re-implementation):
-  ``plugins/harness/src/ordessa_harness/application/configuration_service.py``
+  ``packages/backend/pacthold/src/pacthold/harness_kit/application/configuration_service.py``
   — plan ``:202``, apply ``:239``, query ``:330``, reconcile ``:333``;
   the joint admission gate (entry + harness id + native + ADAPTER version of
   the OBSERVED installation) at ``:150-153``; the unobserved-native refusal
@@ -68,11 +68,11 @@ import traceback
 from contextlib import contextmanager
 from pathlib import Path
 
-from ordessa_harness.application import (
+from ordessa_server_product.harness_adapters.application import (
     ConfigurationApplicationService, NativeActivationReceipt, NativeReadback, OperationJournal,
     RuntimeSnapshot,
 )
-from ordessa_harness.materialization import MergeAuthority, TargetAuthority
+from pacthold.harness_kit.materialization import MergeAuthority, TargetAuthority
 from pacthold.harness_contracts import (
     AdapterContext, ApplicationTarget, Assessment, ConfigurationCapabilities,
     ConfigurationAdapterDescriptor, Confirmed, DesiredFragment, ErrorCode,

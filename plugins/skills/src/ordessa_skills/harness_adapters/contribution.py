@@ -6,7 +6,7 @@ and registers through the published contribution point:
 
 * point `harness.configuration-adapters`, api version `v1`, multi-owner —
   the same constants the harness handler validates against
-  (`plugins/harness/src/ordessa_harness/contributions.py`, the point the
+  (`packages/backend/pacthold/src/pacthold/harness_kit/contributions.py`, the point the
   default product declares with that handler bound
   `plugins/server/src/ordessa_server/../..`/`products/server` composition;
   the string ids are duplicated here only because the Skills package must
@@ -58,7 +58,7 @@ from .intent import (
 )
 
 #: The published point identity (must equal the harness handler's — pinned
-#: against `ordessa_harness.contributions` in the registration tests).
+#: against `ordessa_server_product.harness_adapters.contributions` in the registration tests).
 CONFIGURATION_POINT = "harness.configuration-adapters"
 POINT_API_VERSION = "v1"
 

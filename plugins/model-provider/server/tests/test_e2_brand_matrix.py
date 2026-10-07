@@ -46,7 +46,7 @@ from server_plugin_api import (  # noqa: E402
     Contribution, ContributionBatch, ServerPluginDescriptor,
     ServerPluginRegistration,
 )
-from ordessa_harness.configuration.model.plugin import (  # noqa: E402
+from ordessa_server_product.harness_adapters.configuration.model.plugin import (  # noqa: E402
     ModelProviderAdaptersPlugin,
 )
 
@@ -284,7 +284,7 @@ def test_mp10_secret_sentinel_zero_hits_across_the_chain(brand, tmp_path):
 
 @pytest.mark.parametrize("brand", BRANDS)
 def test_mp11_second_client_claiming_the_brand_is_refused_by_the_host(brand, tmp_path):
-    from ordessa_harness.configuration.model.bridge import BridgeConfigurationAdapter
+    from ordessa_server_product.harness_adapters.configuration.model.bridge import BridgeConfigurationAdapter
 
     comp = ControlledComposition(brand, tmp_path)
     try:

@@ -36,8 +36,8 @@ _CITATION = re.compile(r"[\w./+-]+:\d+")
 SEMANTICS = ("instruction", "persona", "systemReplacement")
 
 HM = "docs/design/prompts/harness-adapters.md"
-TOML = "plugins/harness/src/ordessa_harness/harnesses.toml"
-GAP = ("plugins/harness/src/ordessa_harness/registry/schema.py:64"
+TOML = "packages/backend/pacthold/src/pacthold/harness_kit/harnesses.toml"
+GAP = ("packages/backend/pacthold/src/pacthold/harness_kit/registry/schema.py:64"
        " (slots parsed; no instruction_target/instruction_key field"
        " exists in the registry schema — grep: zero instruction target"
        " declarations in harnesses.toml, zero consumers in"

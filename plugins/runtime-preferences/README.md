@@ -3,7 +3,7 @@
 P-A of specs/015-runtime-preferences-memory。四组运行级参数（compaction / memory /
 shell / retry）做成纯配置域：一个 facet 四 item，八家品牌 adapter（assess/compile/
 verify + `registration_manifest()`），注册进 main 已有的 C2 贡献点
-`harness.configuration-adapters`（`ordessa_harness.contributions`），应用链走 C4
+`harness.configuration-adapters`（`pacthold.harness_kit.contributions`），应用链走 C4
 `ConfigurationApplicationService.apply`。形制仿 `model-provider` 的 adapter 骨架，
 只仿形制、不 import 其代码。
 

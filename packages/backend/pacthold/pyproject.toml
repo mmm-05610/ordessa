@@ -45,4 +45,4 @@ asyncio_mode = "auto"
 where = ["src"]
 
 [tool.setuptools.package-data]
-pacthold = ["migrations/*.sql", "decision/flows/agent_assignment/*.json", "decision/contracts/*.json"]
+pacthold = ["migrations/*.sql", "decision/flows/agent_assignment/*.json", "decision/contracts/*.json", "harness_kit/_deployment/*.mjs"]

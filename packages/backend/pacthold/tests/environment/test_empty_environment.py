@@ -216,7 +216,7 @@ def test_import_chain_has_no_product_and_boots_read_only():
         "from pacthold.environment import Environment;"
         "env = Environment('iso-env');"
         "bad = [m for m in sys.modules if m.split('.')[0] in ("
-        "'ordessa_server','ordessa_harness','ordessa_profile','ordessa_server_compat',"
+        "'ordessa_server','pacthold.harness_kit','ordessa_profile','ordessa_server_compat',"
         "'pacthold_runtime_compat','ordessa_server_product')];"
         "assert not bad, bad;"
         "assert env.enabled == () and env.installed == ();"

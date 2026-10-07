@@ -186,7 +186,7 @@ def test_the_server_core_package_declares_no_business_dependency():
 def test_the_host_source_imports_no_harness_package():
     """The harness package is a plugin dependency, not a host dependency: no
     file under apps/server — including the legacy alias shims — may IMPORT
-    ordessa_harness. Prose and comments may mention it; only real imports
+    pacthold.harness_kit. Prose and comments may mention it; only real imports
     count, so this parses the AST instead of scanning strings. (The
     acp_channel alias's ownership moves with the domain; a bare-host install
     without the harness package must import cleanly.)
@@ -203,13 +203,13 @@ def test_the_host_source_imports_no_harness_package():
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 for alias in node.names:
-                    assert alias.name != "ordessa_harness"
-                    assert not alias.name.startswith("ordessa_harness."), (
+                    assert alias.name != "pacthold.harness_kit"
+                    assert not alias.name.startswith("pacthold.harness_kit."), (
                         f"{path.name} imports {alias.name}")
             elif isinstance(node, ast.ImportFrom):
                 module = node.module or ""
                 if node.level:  # relative import — inside the host package
                     continue
-                assert module != "ordessa_harness"
-                assert not module.startswith("ordessa_harness."), (
+                assert module != "pacthold.harness_kit"
+                assert not module.startswith("pacthold.harness_kit."), (
                     f"{path.name} imports {module}")

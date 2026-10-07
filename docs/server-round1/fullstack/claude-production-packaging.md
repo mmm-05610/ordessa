@@ -175,5 +175,5 @@ harness:            Claude Code（经官方 ACP 适配器 @agentclientprotocol/
   （sha256 `45101ea76ac99cb73ea064bfdddf15072ec676c961bcefbe631a5537f01ba106`）；
   报告 `specs/014-plugin-release/reports/P-D-report.md`。
 - **边界**：受控假端点级证据（L2），不是 Ordessa Server/桌面产品链的 L3 验收；通道
-  组装面的类型化拒绝与哈希校验由 `ordessa_harness/claude/attachments.py` 承担，测试在
+  组装面的类型化拒绝与哈希校验由 `pacthold.harness_kit/claude/attachments.py` 承担，测试在
   `tests/test_capability_declarations.py` §8。

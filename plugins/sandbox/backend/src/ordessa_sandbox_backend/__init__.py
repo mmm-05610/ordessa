@@ -9,7 +9,7 @@ FR-06), the composition-time field-claim conflict gate and §C4 lifecycle
 
 This package consumes the sandbox API and the server plugin contract only. It
 does **not** import `ordessa_server`, `ordessa_server_compat`, `pacthold`,
-`ordessa_harness`, or any `ordessa_permissions_*` — so the Sandbox domain
+`pacthold.harness_kit`, or any `ordessa_permissions_*` — so the Sandbox domain
 installs and serves WITHOUT Permissions. Native-effect observation is a
 read-only, UNBOUND seam (`probe.py`): the closed Harness C3 intent vocabulary
 (`SetField`/`ResetField`/`InvokeAction`/`TargetHandle`/`FieldClaim`) is NOT

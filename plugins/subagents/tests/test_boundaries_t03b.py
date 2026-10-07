@@ -13,7 +13,7 @@ here needs the harness runtime, the server or a model.
 Six locks:
 
 1. No module under this package imports a forbidden host / product / compat
-   prefix (AST scan, exact list below) — `ordessa_harness` *internals* stay on
+   prefix (AST scan, exact list below) — `pacthold.harness_kit` *internals* stay on
    that list while the published `pacthold.harness_contracts` does not.
 2. Every runtime import is stdlib, this package, or a **published contract
    package from the explicit allow-list** (the replacement for the old
@@ -77,7 +77,7 @@ if str(SRC_DIR) not in sys.path:  # this file owns no conftest.py
 #: against `apps/server/tests/test_server_compat_boundary.py:140`.
 FORBIDDEN_IMPORT_PREFIXES: tuple[str, ...] = (
     "ordessa_server_compat",
-    "ordessa_harness",
+    "pacthold.harness_kit",
     "ordessa_server_product",
     "ordessa_server.bootstrap",
     "ordessa_server.plugin_host",
@@ -182,7 +182,7 @@ ALLOWED_NON_STDLIB_TOP_LEVEL: frozenset[str] = PRODUCTION_ALLOWED_TOP_LEVEL
 #: this list: the test scope's licence for it is carried by the entry below, not
 #: by removing it here.
 ALWAYS_FORBIDDEN_TOP_LEVEL: frozenset[str] = frozenset({
-    "ordessa_harness",          # the harness package itself, not its api
+    "pacthold.harness_kit",          # the harness package itself, not its api
     "ordessa_server", "ordessa_server_compat", "ordessa_server_product",
     "pacthold", "ordessa_workspace", "ordessa_profile",
     "ordessa_profile_api", "ordessa_chat_api", "ordessa_sandbox_api",
@@ -378,7 +378,7 @@ def _forbidden_root_hits(source: str, *,
         {name for name in names - licensed
          if name.split(".")[0] in forbidden}
         | {name for name in names
-           if name == "ordessa_harness" or name.startswith("ordessa_harness.")})
+           if name == "pacthold.harness_kit" or name.startswith("pacthold.harness_kit.")})
 
 
 def _scope_view(scope: Mapping[str, object]) -> tuple[
@@ -630,7 +630,7 @@ def test_the_forbidden_prefix_scan_reports_every_listed_prefix():
     # the distinction the SR-13 change turns on: the *published* harness API is
     # allowed, the harness package's own modules are not
     assert _forbidden_import_hits("from pacthold.harness_contracts import IntentSet\n") == []
-    assert _forbidden_import_hits("from ordessa_harness import registry\n"), (
+    assert _forbidden_import_hits("from pacthold.harness_kit import registry\n"), (
         "harness internals would read as the published API")
 
 
@@ -701,7 +701,7 @@ def test_the_runtime_import_allow_list_is_exactly_what_the_code_uses():
         "the code — a stale allowance is how a boundary erodes.")
 
     # capability: each of the four predicates does report a defect
-    assert _forbidden_root_hits("import ordessa_harness.contributions\n")
+    assert _forbidden_root_hits("import ordessa_server_product.harness_adapters.contributions\n")
     assert _forbidden_root_hits("from pacthold.storage import database\n")
     assert _forbidden_root_hits("from pacthold.harness_contracts import IntentSet\n",
                                 allowed_exact=GRANTED_MODULES) == []
@@ -829,8 +829,8 @@ def test_the_stdlib_allow_list_scan_is_capable():
         "from pacthold.storage import database\n",
         "import numpy as np\n",
         "import ordessa_server.errors\n",
-        "import ordessa_harness\n",
-        "from ordessa_harness.application import configuration_service\n",
+        "import pacthold.harness_kit\n",
+        "from ordessa_server_product.harness_adapters.application import configuration_service\n",
         "import ordessa_workspace\n",
         "from ordessa_profile import plugin\n",
     ):
@@ -990,11 +990,11 @@ def test_every_domain_module_imports_under_the_published_contract_blocker():
         assert _ImportBlocker.MARKER in str(info.value)
         assert probe.hits == [PACKAGE_NAME], probe.hits
     # and it fires on the harness package specifically, not on its api twin
-    with _isolation(("ordessa_harness",)) as harness_probe:
+    with _isolation(("pacthold.harness_kit",)) as harness_probe:
         with pytest.raises(ImportError) as harness_info:
-            importlib.import_module("ordessa_harness")
+            importlib.import_module("pacthold.harness_kit")
         assert _ImportBlocker.MARKER in str(harness_info.value)
-        assert harness_probe.hits == ["ordessa_harness"], harness_probe.hits
+        assert harness_probe.hits == ["pacthold.harness_kit"], harness_probe.hits
     # while the published contract remains importable inside this isolation
     with _isolation(forbidden, keep=("pacthold.harness_contracts",),
                     grants=GRANTED_MODULES):

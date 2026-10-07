@@ -21,7 +21,7 @@ OWNED_MODULES = (
     "decoder.py", "store.py", "service.py",
 )
 FORBIDDEN_ROOTS = {
-    "ordessa_server", "ordessa_server_compat", "ordessa_harness", "pacthold",
+    "ordessa_server", "ordessa_server_compat", "pacthold.harness_kit", "pacthold",
     "ordessa_server_plugin_api", "ordessa_platform_contracts",
     "requests", "httpx", "urllib3", "aiohttp", "socket", "subprocess", "urllib",
     "shutil", "asyncio", "threading", "multiprocessing",

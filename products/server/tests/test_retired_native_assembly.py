@@ -60,7 +60,7 @@ def test_retirement_precedes_old_model_and_runtime_imports(tmp_path, monkeypatch
     original_import = builtins.__import__
     imports = []
     def guarded(name, *args, **kwargs):
-        if name.startswith(('ordessa_server_compat', 'ordessa_harness.configuration.model', 'ordessa_model_provider')):
+        if name.startswith(('ordessa_server_compat', 'ordessa_server_product.harness_adapters.configuration.model', 'ordessa_model_provider')):
             imports.append(name)
             pytest.fail('retired selection imported old runtime: ' + name)
         return original_import(name, *args, **kwargs)

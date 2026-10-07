@@ -23,8 +23,8 @@ from profile_harness_doubles import ScriptedProvider, ScriptedV2Provider, make_c
 from pacthold.agents.configuration.profile_errors import ProfileError
 from pacthold.agents.configuration.harness_port_adapter import HarnessApiConfigPort
 
-FIXTURE = Path(__file__).resolve().parents[6] / "plugins" / "harness" / "tests" / \
-    "fixtures" / "external_adapter" / "src" / "ordessa_test_external_adapter" / "__init__.py"
+FIXTURE = (Path(__file__).resolve().parents[2] / "harness_kit" / "fixtures"
+           / "external_adapter" / "src" / "ordessa_test_external_adapter" / "__init__.py")
 
 # The carrier fixture adapter declares facet_id="model", facet_schema_version="v1",
 # payload {"model": <string>}, and authorizes item "fixture-selection"
@@ -106,8 +106,8 @@ class Runtime:
 
     def capture(self, target):
         from pacthold.harness_contracts import AdapterContext, Installation
-        from ordessa_harness.application.configuration_service import RuntimeSnapshot
-        from ordessa_harness.materialization import MergeAuthority, TargetAuthority
+        from ordessa_server_product.harness_adapters.application.configuration_service import RuntimeSnapshot
+        from pacthold.harness_kit.materialization import MergeAuthority, TargetAuthority
         from pacthold.harness_contracts import TargetDescriptor, TargetHandle as _TH
         descriptor = TargetDescriptor(
             __import__("pacthold.harness_contracts", fromlist=["_"]).TargetHandle("external-config", 7),
@@ -136,7 +136,7 @@ class Runtime:
         return self.receipt
 
     def observe(self, target):
-        from ordessa_harness.application.configuration_service import NativeReadback
+        from ordessa_server_product.harness_adapters.application.configuration_service import NativeReadback
         assert self.bytes is not None
         data = b'{"model":"other"}' if self.corrupt_readback else self.bytes
         return NativeReadback(
@@ -160,7 +160,7 @@ class Permit:
 def make_world(tmp_path, *, permit_allowed=True, owner_application=False):
     """Product carrier + real ConfigurationApplicationService + Profile core."""
     from ordessa_server.bootstrap import build_runtime
-    from ordessa_harness.application import (
+    from ordessa_server_product.harness_adapters.application import (
         ConfigurationApplicationService, OperationJournal,
     )
     from pacthold.harness_contracts import ApplicationTarget

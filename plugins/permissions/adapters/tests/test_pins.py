@@ -2,7 +2,7 @@
 
 The pinned families, their identity versions, capability lists, profile slots
 and the dsh `request_permission` note are parsed straight from
-`plugins/harness/src/ordessa_harness/harnesses.toml` with `tomllib` - no
+`packages/backend/pacthold/src/pacthold/harness_kit/harnesses.toml` with `tomllib` - no
 version string is hardcoded here, so a pin bump moves these assertions with
 the registry instead of silently drifting.
 

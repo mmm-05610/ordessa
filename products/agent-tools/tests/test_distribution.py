@@ -33,7 +33,7 @@ def imports_are_client_only(source):
 def test_client_import_boundary_with_adversarial_imports():
     for source in (ROOT / "src").rglob("*.py"):
         assert imports_are_client_only(source.read_text()), source
-    for source in ("import pacthold", "from ordessa_server.bootstrap import runtime", "import ordessa_harness", "from ordessa_agent import submission_service"):
+    for source in ("import pacthold", "from ordessa_server.bootstrap import runtime", "import pacthold.harness_kit", "from ordessa_agent import submission_service"):
         assert not imports_are_client_only(source)
 
 
@@ -54,7 +54,7 @@ def test_wheel_isolated_install_and_actual_http_discovery(tmp_path, node_setup, 
         assert "ordessa_agent_tools/schema-management.json" in archive.namelist()
         assert not any(name.startswith("ordessa_agent_tools/native_clients/") for name in archive.namelist())
         commands = json.loads(archive.read("ordessa_agent_tools/harness_commands.json"))["catalog"]["candidates"]
-        assert all(not name.startswith(("pacthold/", "ordessa_server/", "ordessa_harness/", "ordessa_agent/")) for name in archive.namelist())
+        assert all(not name.startswith(("pacthold/", "ordessa_server/", "pacthold.harness_kit/", "ordessa_agent/")) for name in archive.namelist())
     environment = tmp_path / "isolated"
     created = subprocess.run([sys.executable, "-m", "venv", str(environment)], capture_output=True, text=True)
     assert created.returncode == 0, created.stderr
@@ -63,7 +63,7 @@ def test_wheel_isolated_install_and_actual_http_discovery(tmp_path, node_setup, 
     assert install.returncode == 0, install.stderr
     env = {key: value for key, value in os.environ.items() if key not in {"PYTHONPATH", "PYTHONHOME", "VIRTUAL_ENV"}}
     env["TOOLS_TEST_TOKEN"] = SECRET
-    absence = subprocess.run([str(python), "-I", "-c", "import importlib.util; assert all(importlib.util.find_spec(n) is None for n in ('pacthold','ordessa_server','ordessa_harness','ordessa_agent','ordessa_agent_tools.native_clients'))"], cwd=tmp_path, env=env, capture_output=True, text=True)
+    absence = subprocess.run([str(python), "-I", "-c", "import importlib.util; assert all(importlib.util.find_spec(n) is None for n in ('pacthold','ordessa_server','pacthold.harness_kit','ordessa_agent','ordessa_agent_tools.native_clients'))"], cwd=tmp_path, env=env, capture_output=True, text=True)
     assert absence.returncode == 0, absence.stderr
     executable = environment / "bin/ordessa-agent"
     help_result = subprocess.run([str(executable), "--help"], cwd=tmp_path, env=env, capture_output=True, text=True)

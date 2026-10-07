@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import pytest
 from _sandbox_adapters_helpers import pinned_versions
-from ordessa_harness.contributions import (
+from ordessa_server_product.harness_adapters.contributions import (
     CONFIGURATION_POINT, HarnessContributionError, HarnessContributionRegistry,
 )
 from pacthold.harness_contracts import ConfigurationAdapterDescriptor, FieldClaim, ValueSchema, VersionRange

@@ -21,7 +21,7 @@ Declared edges (pinned by `test_server_compat_boundary.py`):
 - `ordessa_workspace` — the declared `requires` dependency: workspace
   resolution arrives as the `workspace.service` port, and the execution
   domain's native leg reuses the workspace domain's local-path provider;
-- `ordessa_harness` — the harness registry lookups the deployment
+- `pacthold.harness_kit` — the harness registry lookups the deployment
   compositions already performed at this layer.
 """
 from __future__ import annotations

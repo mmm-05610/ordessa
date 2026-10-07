@@ -36,7 +36,7 @@
       "argv": [
         "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa/products/agent-tools/dist/installed-cli-check-l6lsk_bz/client-venv/bin/python",
         "-c",
-        "import importlib.util; names=('pacthold','ordessa_server','ordessa_harness'); assert all(importlib.util.find_spec(n) is None for n in names); print('backend packages absent')"
+        "import importlib.util; names=('pacthold','ordessa_server','pacthold.harness_kit'); assert all(importlib.util.find_spec(n) is None for n in names); print('backend packages absent')"
       ],
       "exit": 0,
       "stdout": "backend packages absent\n",

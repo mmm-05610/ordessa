@@ -66,7 +66,7 @@ _EVIDENCE_ARTIFACT = (
     "capability-matrix.md §Claude C-1…C-7 (L2-static over the version-matched "
     "0.81.2 artifact, evidence root /home/maoqh/ordessa-evidence/q3/claude-pkg)",
     "api-requests.md SR-3b items 1–4: the Ordessa-side pass-through is "
-    "grep-verified absent in plugins/harness/src/ordessa_harness/claude/*.py and "
+    "grep-verified absent in plugins/harness/claude-code/src/ordessa_harness_claude_code*.py and "
     "plugins/harness/adapters/acp-adapter/internal/",
 )
 

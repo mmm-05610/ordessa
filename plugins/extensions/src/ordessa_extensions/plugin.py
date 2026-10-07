@@ -59,7 +59,7 @@ class ExtensionsServerPlugin:
         #: the rows are contributed with the point named in
         #: `open_points`; the stage-time refusal when a composition
         #: selects the plugin WITHOUT binding the point is the HOST's
-        #: published behavior (ordessa_harness.contributions + contracts
+        #: published behavior (ordessa_server_product.harness_adapters.contributions + contracts
         #: .md §C2 — "a contribution to an unbound point refuses
         #: activation"), relied on here and exercised by the host's own
         #: tests, not re-implemented in this package. The wire

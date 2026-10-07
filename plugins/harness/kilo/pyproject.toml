@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-harness-kilo"
+version = "0.1.0a1"
+description = "Independent kilo brand provider facts for the Ordessa harness group"
+requires-python = ">=3.10"
+dependencies = ["pacthold", "ordessa-harness-transport"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

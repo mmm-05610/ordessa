@@ -30,7 +30,7 @@ for _module, _src in (("pacthold_runtime_compat",
 from assignments_support import (  # noqa: E402
     FakeWorkspaceLookup, make_database, make_skill,
 )
-from ordessa_harness.registry.loader import load_builtin_registry  # noqa: E402
+from ordessa_server_product.harness_adapters.registry.loader import load_builtin_registry  # noqa: E402
 
 from ordessa_skills.assignments.model import (  # noqa: E402
     DECISION_DISABLE, DECISION_ENABLE, SCOPE_PROJECT, SCOPE_USER_GLOBAL,
