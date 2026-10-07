@@ -16,7 +16,7 @@
     "plugins/profile-ui/api",
     "plugins/profile-ui/frontend",
     "plugins/profile-ui/integrations/chat",
-    "plugins/model-provider/desktop",
+    "plugins/assets/model-provider/desktop",
     "packages/frontend/workbench/interactions",
     "plugins/harness/contracts"
   ],

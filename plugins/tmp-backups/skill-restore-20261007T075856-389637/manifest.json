@@ -1,0 +1,70 @@
+{
+ "createdAt": "2026-10-07T07:58:56.391419+00:00",
+ "dataRoot": "/tmp/pytest-of-maoqh/pytest-0/test_snapshot_refuses_backups_0/data",
+ "database": [
+  {
+   "path": "state/agentbox.sqlite",
+   "sha256": "sha256:d842594aff732edb0e3458bcad32dcaf500f76b6f92d81cebf9777f5db0950c1",
+   "size": 184320
+  }
+ ],
+ "foreignFiles": [
+  {
+   "path": "assets/approvals/skill-alpha.json",
+   "sha256": "sha256:fc0a7f7482022c177d1a3495152901325c81c42475195fbc4087f0c3d7f736fc",
+   "size": 698
+  },
+  {
+   "path": "assets/approvals/skill-beta.json",
+   "sha256": "sha256:a67cf0ea3a426f1cf5d3d658fa2cd1c9e7545a0b7775140c6ac0b9bfc9f7233e",
+   "size": 371
+  },
+  {
+   "path": "assets/catalogs/cat-1/index.json",
+   "sha256": "sha256:fc4e9625bba449db7dc8f82c4fe7e27b0228cb2deb3646b54fc244500f96a9b6",
+   "size": 31
+  },
+  {
+   "path": "assets/mcp/mcp-demo/config.json",
+   "sha256": "sha256:8a80a71c4b92f93f206bde74751664cf7d28add978f8399f9813550ef11204a7",
+   "size": 33
+  },
+  {
+   "path": "assets/plugin/plugin-demo/manifest.json",
+   "sha256": "sha256:9ccd5648f57e161b686e45f3e5452ec3776e4906f2970c543c3f9d0774ef8393",
+   "size": 39
+  }
+ ],
+ "manifestVersion": "ordessa-skills-restore-v1",
+ "skillFiles": [
+  {
+   "path": "assets/skill/skill-alpha/1/SKILL.md",
+   "sha256": "sha256:78c1087682ae61a959dd8435ccbf9871fc8c47a51733c3cc30bc8661607e13d9",
+   "size": 75
+  },
+  {
+   "path": "assets/skill/skill-alpha/2/SKILL.md",
+   "sha256": "sha256:f3ded098831efe02d6e5e789d219dce8a11254db9f2dfa19746d87c947e36fd5",
+   "size": 75
+  },
+  {
+   "path": "assets/skill/skill-beta/1/SKILL.md",
+   "sha256": "sha256:2534f5f96ae893894b1865800afd6c665d3c052c22208e76997ad0758bfbd5fd",
+   "size": 73
+  }
+ ],
+ "skillTrees": [
+  {
+   "digest": "sha256:17cd043c94f2e4711a3aff00e0f09399d7fdf210baf0a7cb5611cd901aae00c2",
+   "path": "assets/skill/skill-alpha/1"
+  },
+  {
+   "digest": "sha256:fc2c34c8535d1ae44e581735302d3df2889815436dcda0ec4af4b413168c05d2",
+   "path": "assets/skill/skill-alpha/2"
+  },
+  {
+   "digest": "sha256:c6b1240a2edb56b728ee0643688da8f4480e78086812259a139f308865e8f9f0",
+   "path": "assets/skill/skill-beta/1"
+  }
+ ]
+}

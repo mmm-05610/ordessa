@@ -78,8 +78,13 @@ def test_claude_acp_attachment_has_one_owner_and_no_legacy_exports():
     tree = ast.parse((independent / 'src/ordessa_harness_claude_code/__init__.py').read_text())
     export_names = [alias.name for node in tree.body if isinstance(node, ast.ImportFrom)
                     for alias in node.names]
-    assert 'ClaudeContinuationV1' in export_names
+    # 032: the continuation id moved to a module-level import (importing the
+    # package must not drag the retired compat chain).
+    assert 'ClaudeContinuationV1' not in export_names
     assert 'ClaudePreparedAttachment' not in export_names
+    contracts = ast.parse((independent / 'src/ordessa_harness_claude_code/contracts.py').read_text())
+    assert any(isinstance(node, ast.ClassDef) and node.name == 'ClaudeContinuationV1'
+               for node in contracts.body)
     # This gate owns source independence and the migrated pure attachment tests.
     # Lifecycle integration tests deliberately exercise the original store/issuer.
     files = tuple((independent / 'src').rglob('*.py')) + (

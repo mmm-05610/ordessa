@@ -19,11 +19,11 @@ Positive facts pinned against this tree (source-inspected, not aspirational):
   the wire host.
 
 DRIFT registered (production untouched; current policy pinned, not judged):
-* ``plugins/sandbox/api/src/ordessa_sandbox_api/platform.py:59`` holds
+* ``plugins/assets/sandbox/api/src/ordessa_sandbox_api/platform.py:59`` holds
   ``if brand == "claude-code":`` — a brand business branch inside a
   top-level domain ``src`` (the documented Claude platform matrix). It is the
   only brand comparison branch found in the scanned domains.
-* ``plugins/skills/desktop/src/view.tsx:439-441`` hardcodes the three brand
+* ``plugins/assets/skills/desktop/src/view.tsx:439-441`` hardcodes the three brand
   options in a domain frontend select. It is recorded in the literal
   whitelist as current policy.
 """
@@ -78,42 +78,48 @@ _EXCLUDED_PATH_PARTS = (
 _BRAND_LITERAL_CATEGORIES = {
     # brand adapter registration / per-brand adapter submodules
     "plugins/extensions/src/ordessa_extensions/adapters/contribution.py": "domain-brand-adapter",
-    "plugins/prompts/src/ordessa_prompts/harness_adapters/contribution.py": "domain-brand-adapter",
-    "plugins/prompts/src/ordessa_prompts/harness_adapters/capabilities.py": "support-matrix",
-    "plugins/sandbox/adapters/src/ordessa_sandbox_adapters/claude_code.py": "domain-brand-adapter",
-    "plugins/sandbox/adapters/src/ordessa_sandbox_adapters/codex.py": "domain-brand-adapter",
-    "plugins/sandbox/adapters/src/ordessa_sandbox_adapters/matrix.py": "support-matrix",
-    "plugins/sandbox/adapters/src/ordessa_sandbox_adapters/pi.py": "domain-brand-adapter",
-    "plugins/skills/src/ordessa_skills/harness_adapters/__init__.py": "domain-brand-adapter-surface",
-    "plugins/skills/src/ordessa_skills/harness_adapters/capabilities.py": "support-matrix",
-    "plugins/skills/src/ordessa_skills/harness_adapters/claude.py": "domain-brand-adapter",
-    "plugins/skills/src/ordessa_skills/harness_adapters/codex.py": "domain-brand-adapter",
-    "plugins/skills/src/ordessa_skills/harness_adapters/conflict.py": "domain-brand-adapter",
-    "plugins/skills/src/ordessa_skills/harness_adapters/pi.py": "domain-brand-adapter",
+    "plugins/assets/prompts/src/ordessa_prompts/harness_adapters/contribution.py": "domain-brand-adapter",
+    "plugins/assets/prompts/src/ordessa_prompts/harness_adapters/capabilities.py": "support-matrix",
+    "plugins/assets/sandbox/adapters/src/ordessa_sandbox_adapters/claude_code.py": "domain-brand-adapter",
+    "plugins/assets/sandbox/adapters/src/ordessa_sandbox_adapters/codex.py": "domain-brand-adapter",
+    "plugins/assets/sandbox/adapters/src/ordessa_sandbox_adapters/matrix.py": "support-matrix",
+    "plugins/assets/sandbox/adapters/src/ordessa_sandbox_adapters/pi.py": "domain-brand-adapter",
+    "plugins/assets/skills/src/ordessa_skills/harness_adapters/__init__.py": "domain-brand-adapter-surface",
+    "plugins/assets/skills/src/ordessa_skills/harness_adapters/capabilities.py": "support-matrix",
+    "plugins/assets/skills/src/ordessa_skills/harness_adapters/claude.py": "domain-brand-adapter",
+    "plugins/assets/skills/src/ordessa_skills/harness_adapters/codex.py": "domain-brand-adapter",
+    "plugins/assets/skills/src/ordessa_skills/harness_adapters/conflict.py": "domain-brand-adapter",
+    "plugins/assets/skills/src/ordessa_skills/harness_adapters/pi.py": "domain-brand-adapter",
     # neutral inventory/declaration tables
     "plugins/extensions/src/ordessa_extensions/capabilities.py": "support-matrix",
     "plugins/memory/src/ordessa_memory/common.py": "support-matrix",
-    "plugins/model-provider/profile-contribution/src/ordessa_model_provider_profile/profile_glue.py": "support-declaration",
-    "plugins/model-provider/server/src/ordessa_model_provider/protocols.py": "protocol-dialect-table",
-    "plugins/model-provider/server/src/ordessa_model_provider/testing.py": "test-wire-fixture",
-    "plugins/sandbox/api/src/ordessa_sandbox_api/intent.py": "brand-keyed-schema-vocabulary",
-    "plugins/sandbox/api/src/ordessa_sandbox_api/matrix.py": "support-matrix",
+    "plugins/assets/model-provider/profile-contribution/src/ordessa_model_provider_profile/profile_glue.py": "support-declaration",
+    "plugins/assets/model-provider/server/src/ordessa_model_provider/protocols.py": "protocol-dialect-table",
+    "plugins/assets/model-provider/server/src/ordessa_model_provider/testing.py": "test-wire-fixture",
+    "plugins/assets/sandbox/api/src/ordessa_sandbox_api/intent.py": "brand-keyed-schema-vocabulary",
+    "plugins/assets/sandbox/api/src/ordessa_sandbox_api/matrix.py": "support-matrix",
     # DRIFT: registered current-policy hits, not fixed by this pin
-    "plugins/sandbox/api/src/ordessa_sandbox_api/platform.py": "DRIFT-platform-branch",
-    "plugins/model-provider/desktop/src/settings.tsx": "frontend-default-draft",
-    "plugins/skills/desktop/src/view.tsx": "DRIFT-frontend-static-options",
+    "plugins/assets/sandbox/api/src/ordessa_sandbox_api/platform.py": "DRIFT-platform-branch",
+    "plugins/assets/model-provider/desktop/src/settings.tsx": "frontend-default-draft",
+    "plugins/assets/skills/desktop/src/view.tsx": "DRIFT-frontend-static-options",
 }
 
 #: The exact brand comparison branches (any comparison operator, including
 #: membership) found in the scanned domains' ``src``, keyed by repo-relative
 #: path with the unparsed expression. One known DRIFT exception.
 _REGISTERED_BRAND_BRANCHES = {
-    "plugins/sandbox/api/src/ordessa_sandbox_api/platform.py": ("brand == 'claude-code'",),
+    "plugins/assets/sandbox/api/src/ordessa_sandbox_api/platform.py": ("brand == 'claude-code'",),
 }
 
 
+def _domain_root(domain: str) -> Path:
+    """032: resource domains moved under plugins/assets; the rest stay put."""
+    assets = _PLUGINS_ROOT / "assets" / domain
+    return assets if assets.is_dir() else _PLUGINS_ROOT / domain
+
+
 def _iter_domain_src(domain: str):
-    for path in sorted((_PLUGINS_ROOT / domain).rglob("*")):
+    for path in sorted(_domain_root(domain).rglob("*")):
         if not path.is_file() or path.suffix not in _SOURCE_SUFFIXES:
             continue
         posix = path.as_posix()

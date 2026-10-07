@@ -22,7 +22,7 @@ test('built provider and Chat consumer share one token and register through scop
   const outputRoot = await mkdtemp(path.join(os.tmpdir(), 'ordessa-model-selector-'))
   try {
     for (const dir of ['packages/frontend/contracts/foundation', 'plugins/agent-ui/contracts', 'plugins/chat/api', 'plugins/profile-ui/api',
-      'plugins/model-provider/desktop', 'plugins/model-provider/chat-contribution']) {
+      'plugins/assets/model-provider/desktop', 'plugins/assets/model-provider/chat-contribution']) {
       execFileSync(process.execPath, [path.join(repoRoot, dir, 'build.mjs')], {
         cwd: repoRoot, env: { ...process.env, ORDESSA_PRODUCT_OUTPUT_ROOT: outputRoot }, stdio: 'pipe',
       })
