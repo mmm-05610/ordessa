@@ -81,6 +81,18 @@ Phase 5c（续二）：`credentials.py`（SecretMount/PreparedSecretMount/Resolv
 
 **仍待完成（Phase 5 剩余）**：`legacy_migrations`+SQL 离线化（消费：apps/server bootstrap 预检与装配、products/server sealed_migrations、3 个 apps 测试、docs/migration 说明）；`capability/`（消费：server-compat、apps 测试）；`api.py`/`profile_envelope.py`/`catalog.py`/`cli/`/`bootstrap.py`（消费：产品 legacy `harness_adapters/generic`、server-compat）；`runtime_composition`（protocol/sandbox_port → environment-api；assembler/coordinator/fake 删除）；server-compat 18.5k 行的逐域再归属与删除。
 
+## Phase 5 现状（2026-10-07 收束）
+
+`pacthold_runtime_compat`：**7.5k → 471 行**（提交 `2e434f79`、`dfab0c8c`、`8d7e8f23`、`f972b151`、`43df0e79`、`144f5a42`、`855a0eed`）。已迁出：产品 SQLite facade（persistence-sqlite）、resource_contracts（skills/内核契约边/server-compat）、capability 匹配（server-compat）、legacy 插件 SDK api/profile_envelope（产品 legacy 层）、catalog/bootstrap/CLI（server-compat）、runtime_composition/protocol（environment-api）、credentials（内核契约边 secret_mounts）、sandbox shim 删除。剩余 471 行 = `legacy_migrations.py` + `migrations/`（9 个 SQL）与 `runtime_composition/{assembler,coordinator,fake}`。
+
+**精确剩余与依赖**：
+
+| 剩余 | 阻塞/依赖 |
+| --- | --- |
+| `legacy_migrations`+SQL 离线化 | **与 5d 强耦合**：`LegacyCoreBinding`/`sealed_migrations`/apps/server 拓扑测试（S1c/T015/T023、stage_a_server）共同定义"运行时可连历史库"；须与 server-compat/新 DB 归属一起切换为"仅离线转换 + 历史根显式拒绝"，单独改会破坏产品 |
+| `runtime_composition/{assembler,coordinator,fake}` 删除 | 消费者为产品 legacy `harness_adapters/generic`、各品牌包 legacy composition 模块与对应内核测试；须与品牌 legacy 运行时退役（约 2–3k 行 + 测试语料改写）一起做，属 5d 范围 |
+| server-compat 18.5k 行 | 59 个 wire 方法逐域再归属（core/workspace/资源插件/platform-services/harness-transport/品牌/产品）后删除；其自身已承接 capability/catalog/bootstrap/CLI |
+
 ## 结论
 
-旧链退役为**部分完成**：Decision、agent、profile、harness API、harness 根包、前端转发壳已完成退役并有守卫与实测；runtime-compat/server-compat/Go 桥/命令适配器/遗留品牌运行时仍未退役。因此只可声明 **PHASE2–4 CLEAN**，不得声明 `STRUCTURE_CLEAN` 或 `PRODUCT_READY`。
+旧链退役为**部分完成**：Decision、agent、profile、harness API、harness 根包、前端转发壳、Assets 归位已完成退役并有守卫与实测；runtime-compat 已拆解至 471 行（剩余两块依赖 5d）；server-compat、Go 桥、命令适配器、遗留品牌运行时仍未退役。因此只可声明 **PHASE 2–4 CLEAN + PHASE 5 进行中**，不得声明 `STRUCTURE_CLEAN` 或 `PRODUCT_READY`。
