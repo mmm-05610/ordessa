@@ -264,7 +264,7 @@ Codex原owner已opt-in公开只读offer/assessment，仅证明既有声明编译
 
 | 事项 | 状态 | 说明 |
 | --- | --- | --- |
-| `runtime-compat`（pacthold-runtime-compat）与 `server-compat`（ordessa-server-compat）仍活跃 | **Open（本轮未退役）** | plan §5 的目标；仍被产品装配、apps/server 多数测试与插件引用；逐方法/逐域退役表见 `specs/032-architecture-cleanup/migration-map.md` §4/§5 |
+| `runtime-compat`（pacthold-runtime-compat）与 `server-compat`（ordessa-server-compat）仍活跃 | **Open，已拆解第一步（2026-10-07 续，提交 2e434f79/dfab0c8c）** | runtime-compat 7.5k→3.3k：产品 SQLite facade → `ordessa_persistence_sqlite.product_database`（75 消费切换）；resource_contracts 拆至 skills/内核契约边/server-compat；sandbox shim 与 CONTRACT_TYPES 聚合删除。剩余：legacy_migrations 离线化、capability、api/profile_envelope/catalog/cli/bootstrap、runtime_composition、server-compat 逐域再归属 |
 | Go ACP 桥仍为 `--adapter codex\|pi` 超级入口，未按品牌拆分 | **Open** | retirement-map 的三拆（acp-common/codex/pi）未做 |
 | server_acp 落在产品 `acp_channel/`，中性 transport 抽取到 harness-transport 未做 | **Open（3b 记录）** | `specs/032-architecture-cleanup/evidence/harness-split.md` |
 | 核心 `agents/configuration/{policy,profile_service,resolution}`、`profile_services`、`sessions_overlay` 直接 import `ordessa_persistence_sqlite` | **Open，显式例外** | 持久化边界“接线”尚未改为端口注入；N4-R1 内核方向守卫以具名 ALLOWED_MODULES 例外放行并在此登记，须随持久化 seam 工作收回 |

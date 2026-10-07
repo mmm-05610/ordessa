@@ -61,6 +61,18 @@
 5. 继承红：harness_kit 6、pi_live_runtime 27 errors、products/server 84、apps/server 98、model-provider 36、skills/subagents 各 1、permissions backend 14+21、prompts citation 1、apps/server 沙箱 provider 类。
 6. 未调用真实模型、未安装品牌二进制、未迁移真实数据、未重启用户服务、未 push。
 
+## Phase 5a 进展（2026-10-07 续，runtime-compat 拆解第一步）
+
+`pacthold_runtime_compat` 由 7.5k 行缩至 3.3k 行（提交 `2e434f79`、`dfab0c8c`）：
+
+- `storage.Database`（产品 schema v21 facade）→ `ordessa_persistence_sqlite.product_database`，75 个消费文件切换；混同内核原语的导入拆为两条诚实导入。
+- `resource_contracts` 整包拆解：`AgentSkillV1` → skills 插件；`PromptFragmentV1`/`WorkspaceV1`/`CredentialRefV1`/`AgentBoxProfileV1`（保留但新链拒绝）→ 内核公开契约边 `pacthold.harness_contracts.*`；`harness_capabilities`、`runtime_artifacts` → 同一契约边（`RuntimeArtifactRejected` 去掉 compat 基类，消费方本就直接捕获具体类）；`home_projection` → 其唯一消费者 server-compat；旧聚合包（`CONTRACT_TYPES`/`contract_type`，无活消费者）删除；契约身份测试随主体迁移（内核 + skills 套件）。
+- `credentials.py` 改读内核契约；`sandbox/` 兼容 shim（0 消费者）删除。
+
+全仓验证：pacthold 2093 过（6 失败 ⊆ 基线）、品牌 278/318/255、products/server 85（与基线集合逐位一致）、apps/server 1202 过/98 失败（同基线）、skills/mcp/permissions/subagents/records/runtime-compat 均与基线一致。
+
+**仍待完成（Phase 5 剩余）**：`legacy_migrations`+SQL 离线化（消费：apps/server bootstrap 预检与装配、products/server sealed_migrations、3 个 apps 测试、docs/migration 说明）；`capability/`（消费：server-compat、apps 测试）；`api.py`/`profile_envelope.py`/`catalog.py`/`cli/`/`bootstrap.py`（消费：产品 legacy `harness_adapters/generic`、server-compat）；`runtime_composition`（protocol/sandbox_port → environment-api；assembler/coordinator/fake 删除）；server-compat 18.5k 行的逐域再归属与删除。
+
 ## 结论
 
 旧链退役为**部分完成**：Decision、agent、profile、harness API、harness 根包、前端转发壳已完成退役并有守卫与实测；runtime-compat/server-compat/Go 桥/命令适配器/遗留品牌运行时仍未退役。因此只可声明 **PHASE2–4 CLEAN**，不得声明 `STRUCTURE_CLEAN` 或 `PRODUCT_READY`。
