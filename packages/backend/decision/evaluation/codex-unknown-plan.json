@@ -594,7 +594,7 @@
             "contractVersion": "agent-runtime/2",
             "environmentNamespace": "spec031-codex-pure",
             "generation": 1,
-            "implementationDigest": "sha256:efc79c0ce56c4849d3bddce262b6cc7192068fad364c7ba376df6959631579c7",
+            "implementationDigest": "sha256:7f72485fd7a024ecd40ceb872b54144b99a9fd937f3bb0ac64aa500649fc3b7a",
             "ownerActivationRef": {
               "environmentNamespace": "spec031-codex-pure",
               "generation": 1,
@@ -605,7 +605,7 @@
         }
       },
       "descriptor_revision": "1",
-      "descriptor_digest": "sha256:efc79c0ce56c4849d3bddce262b6cc7192068fad364c7ba376df6959631579c7",
+      "descriptor_digest": "sha256:7f72485fd7a024ecd40ceb872b54144b99a9fd937f3bb0ac64aa500649fc3b7a",
       "configuration_kind": "codex.defaults",
       "schema_version": "0.157.1",
       "input_schema": {
@@ -645,7 +645,7 @@
       ],
       "evidence_refs": [
         {
-          "descriptorDigest": "sha256:efc79c0ce56c4849d3bddce262b6cc7192068fad364c7ba376df6959631579c7",
+          "descriptorDigest": "sha256:7f72485fd7a024ecd40ceb872b54144b99a9fd937f3bb0ac64aa500649fc3b7a",
           "durability": "computed_nonpersistent",
           "environmentNamespace": "spec031-codex-pure",
           "evidenceId": "codex.defaults.schema:0.157.1"
