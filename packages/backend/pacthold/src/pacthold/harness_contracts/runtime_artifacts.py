@@ -47,7 +47,6 @@ import re
 import stat
 from typing import Iterator
 
-from pacthold_runtime_compat.runtime_composition import ProjectionRejected
 
 RUNTIME_ARTIFACT_DOMAIN = b"agentbox-runtime-artifact-tree-v1\n"
 
@@ -72,11 +71,12 @@ RUNTIME_ARTIFACT_TARGET = re.compile(
 _TARGET_PREFIX = "/runtime/artifacts/"
 
 
-class RuntimeArtifactRejected(ProjectionRejected):
+class RuntimeArtifactRejected(RuntimeError):
     """A typed refusal of one runtime artifact declaration or directory.
 
-    It is a `ProjectionRejected`, so a caller that already refuses rejected
-    projections refuses this too, while `code` still names the exact rule.
+    032: this moved with the kernel contract edge; the compat
+    ``ProjectionRejected`` base used only this subclass, and consumers catch
+    this concrete class. ``code`` names the exact rule.
     """
 
     def __init__(self, code: str, message: str) -> None:

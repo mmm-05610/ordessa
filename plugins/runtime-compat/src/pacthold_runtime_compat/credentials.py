@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
-from .resource_contracts import CredentialRefV1
+from pacthold.harness_contracts.credential_v1 import CredentialRefV1
 
 CONTRACT_ID = CredentialRefV1.contract_id
 

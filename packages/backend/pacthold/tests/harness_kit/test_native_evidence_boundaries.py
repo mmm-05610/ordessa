@@ -42,8 +42,9 @@ def test_plugin_sources_never_import_the_permissions_implementation():
 
 
 def test_api_dto_modules_stay_host_and_implementation_free():
-    allowed = {"__future__", "dataclasses", "enum", "json", "math", "re", "hashlib",
-               "typing", "pacthold.harness_contracts"}
+    allowed = {"__future__", "collections", "dataclasses", "enum", "json", "math",
+               "os", "pathlib", "re", "stat", "hashlib", "typing",
+               "pacthold.harness_contracts"}
     for file in sorted((Path(__file__).resolve().parents[2] / "src" / "pacthold"
                         / "harness_contracts").glob("*.py")):
         roots = _import_roots(file)

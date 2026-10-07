@@ -32,7 +32,7 @@ from pathlib import Path
 
 import pytest
 
-from pacthold_runtime_compat.resource_contracts import harness_capabilities as caps
+from pacthold.harness_contracts import harness_capabilities as caps
 from ordessa_harness_codex import production as codex_production
 from ordessa_harness_claude_code import production as claude_code_production
 from ordessa_harness_kilo import production as kilo_production

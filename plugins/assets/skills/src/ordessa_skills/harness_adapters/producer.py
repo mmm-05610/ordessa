@@ -5,7 +5,7 @@ Closes the producer gap: the harness *consumption* leg exists
 resolved inputs of contract ``agent-box.skill@1`` and mounts each skill tree
 read-only at the registry-declared ``skill_target``), and the contract type
 itself is the published one
-(`plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/agent_skill_v1.py`)
+(`ordessa_skills/resource_contracts.py`)
 — but nothing in the tree yielded it, so skills could be stored, bound,
 resolved and refused, yet never delivered. Producing the reference is
 Skills' own domain responsibility (docs/design/skills-v2/contracts.md
@@ -69,7 +69,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-from pacthold_runtime_compat.resource_contracts.agent_skill_v1 import AgentSkillV1
+from ordessa_skills.resource_contracts import AgentSkillV1
 from pacthold_runtime_compat.runtime_composition import declare_source
 
 from ..api.errors import AssetDomainError

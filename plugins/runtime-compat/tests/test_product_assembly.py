@@ -23,7 +23,8 @@ from pacthold_runtime_compat.catalog import (
     TRANSPORT_OPERATION,
     ProductExtensionCatalog,
 )
-from pacthold_runtime_compat.resource_contracts import CONTRACT_TYPES, CredentialRefV1
+from pacthold.harness_contracts.credential_v1 import CredentialRefV1
+from pacthold_runtime_compat.bootstrap import CONTRACT_TYPES
 from pacthold_runtime_compat.runtime_composition.protocol import (
     TransportOperationContribution,
     TransportOperationDescriptor,

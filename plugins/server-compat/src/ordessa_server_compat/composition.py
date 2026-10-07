@@ -36,7 +36,7 @@ def _home_projection_target(target: Any, *, kind: str) -> str:
     deployment is therefore accepted here if and only if the compiler can mount
     it.
     """
-    from pacthold_runtime_compat.resource_contracts.home_projection import (
+    from ordessa_server_compat.harness_home_projection import (
         HomeProjectionRejected, home_projection_target,
     )
 
@@ -50,7 +50,7 @@ def _protected_state_paths(
     projection_targets: tuple[str, ...], state_target: str | None,
 ) -> tuple[str, ...]:
     """Derive the read-only paths inside the writable state subtree."""
-    from pacthold_runtime_compat.resource_contracts.home_projection import (
+    from ordessa_server_compat.harness_home_projection import (
         HomeProjectionRejected, protected_state_paths,
     )
 
@@ -97,7 +97,7 @@ def _runtime_artifact_declarations(
     distribution that will read the tree; the Server refuses a declaration that
     could not be verified at all and carries the exact digests across unchanged.
     """
-    from pacthold_runtime_compat.resource_contracts.runtime_artifacts import (
+    from pacthold.harness_contracts.runtime_artifacts import (
         MAX_RUNTIME_ARTIFACT_TREES, RuntimeArtifactRejected,
         validate_runtime_artifact_target,
     )
@@ -810,7 +810,7 @@ def build_runtime_from_sidecar_deployment(
     from ordessa_server_compat.execution.sidecar import (
         SidecarHarnessPort, WorkerSidecarLauncher, sidecar_bundle_files,
     )
-    from pacthold_runtime_compat.resource_contracts.harness_capabilities import (
+    from pacthold.harness_contracts.harness_capabilities import (
         CapabilityDeclarationError, validate_claims,
     )
 

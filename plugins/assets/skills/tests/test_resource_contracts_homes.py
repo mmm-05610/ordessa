@@ -3,10 +3,19 @@ import ast
 
 import pacthold
 import pytest
-from pacthold_runtime_compat.resource_contracts import CONTRACT_TYPES
-from pacthold_runtime_compat.resource_contracts.agent_box_profile_v1 import AgentBoxProfileV1
-from pacthold_runtime_compat.resource_contracts.prompt_fragment_v1 import PromptFragmentV1
-from pacthold_runtime_compat.resource_contracts.workspace_v1 import WorkspaceV1
+from ordessa_skills.resource_contracts import AgentSkillV1
+from pacthold.harness_contracts.agent_box_profile_v1 import AgentBoxProfileV1
+from pacthold.harness_contracts.credential_v1 import CredentialRefV1
+from pacthold.harness_contracts.prompt_fragment_v1 import PromptFragmentV1
+from pacthold.harness_contracts.workspace_v1 import WorkspaceV1
+
+CONTRACT_TYPES = {
+    WorkspaceV1.contract_id: WorkspaceV1,
+    PromptFragmentV1.contract_id: PromptFragmentV1,
+    AgentBoxProfileV1.contract_id: AgentBoxProfileV1,
+    CredentialRefV1.contract_id: CredentialRefV1,
+    AgentSkillV1.contract_id: AgentSkillV1,
+}
 
 
 def test_initial_contract_registry_is_versioned_and_immutable():
@@ -43,10 +52,16 @@ def test_contract_package_has_no_core_or_provider_dependency():
     # package's own modules; contract values remain provider-neutral.
     # specs/010 T009: the package lives in the compatibility assembly now;
     # the scan follows the installed package location instead of cwd.
-    import pacthold_runtime_compat.resource_contracts as contract_package
-    root = Path(contract_package.__file__).resolve().parent
-    for path in root.glob("*.py"):
-        text = path.read_text(encoding="utf-8")
+    # 032: the contracts live at their owning homes; the scan follows each
+    # module's installed location.
+    import ordessa_skills.resource_contracts as skill_contract
+    import pacthold.harness_contracts.agent_box_profile_v1 as profile_contract
+    import pacthold.harness_contracts.credential_v1 as credential_contract
+    import pacthold.harness_contracts.prompt_fragment_v1 as prompt_contract
+    import pacthold.harness_contracts.workspace_v1 as workspace_contract
+    for module in (skill_contract, profile_contract, credential_contract,
+                   prompt_contract, workspace_contract):
+        text = Path(module.__file__).read_text(encoding="utf-8")
         assert "pacthold.work_core" not in text
         assert "pacthold.work" not in text
         assert "providers" not in text

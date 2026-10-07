@@ -17,7 +17,21 @@ from pacthold.work_core.registry import ExtensionRegistry
 
 from .catalog import ProductExtensionCatalogBuilder
 from .legacy_migrations import register_legacy_migrations
-from .resource_contracts import CONTRACT_TYPES
+from ordessa_skills.resource_contracts import AgentSkillV1
+from pacthold.harness_contracts.agent_box_profile_v1 import AgentBoxProfileV1
+from pacthold.harness_contracts.credential_v1 import CredentialRefV1
+from pacthold.harness_contracts.prompt_fragment_v1 import PromptFragmentV1
+from pacthold.harness_contracts.workspace_v1 import WorkspaceV1
+
+#: 032: the resource contract types moved to their owning homes; this seed
+#: mapping keeps the assembly's registry bootstrapping in one place.
+CONTRACT_TYPES = {
+    WorkspaceV1.contract_id: WorkspaceV1,
+    PromptFragmentV1.contract_id: PromptFragmentV1,
+    AgentBoxProfileV1.contract_id: AgentBoxProfileV1,
+    CredentialRefV1.contract_id: CredentialRefV1,
+    AgentSkillV1.contract_id: AgentSkillV1,
+}
 from .runtime_composition.protocol import (
     RUNTIME_HOST_CONTRACT_ID,
     SANDBOX_CONTRACT_ID,

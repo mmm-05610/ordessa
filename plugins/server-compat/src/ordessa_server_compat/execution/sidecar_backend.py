@@ -20,7 +20,9 @@ from pacthold.execution.first_run_lock import first_run_gate
 from pacthold.execution.lifecycle import NeutralRun, NeutralRunTracker
 from pacthold_runtime_compat import capability
 from pacthold_runtime_compat.runtime_composition.sandbox_port import SandboxPortUnavailable
-from pacthold_runtime_compat.resource_contracts import AgentBoxProfileV1, PromptFragmentV1, WorkspaceV1
+from pacthold.harness_contracts.agent_box_profile_v1 import AgentBoxProfileV1
+from pacthold.harness_contracts.prompt_fragment_v1 import PromptFragmentV1
+from pacthold.harness_contracts.workspace_v1 import WorkspaceV1
 from server_plugin_api import ServerError
 from ordessa_server_compat.execution.placement import PlacementUnsupported
 from ordessa_server_compat.execution.sidecar import (

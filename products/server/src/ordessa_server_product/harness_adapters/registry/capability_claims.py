@@ -8,7 +8,7 @@
 """
 from __future__ import annotations
 
-from pacthold_runtime_compat.resource_contracts.harness_capabilities import CANONICAL_CAPABILITY_IDS
+from pacthold.harness_contracts.harness_capabilities import CANONICAL_CAPABILITY_IDS
 
 
 def capability_claims(harness_type: str) -> dict[str, bool]:

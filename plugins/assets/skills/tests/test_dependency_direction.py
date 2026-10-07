@@ -29,7 +29,7 @@ copies — the lead review asks for exactly this list):
   `plugins/server-compat/src/ordessa_server_compat/persistence.py` (and 14
   sibling sites). Used for the injected `database` type annotation and the
   `data_root` storage fact in the migration guard.
-* `pacthold_runtime_compat.resource_contracts.runtime_artifacts` — the
+* `pacthold.harness_contracts.runtime_artifacts` — the
   kernel's `pacthold.resource_contracts` module tree is gone (only the
   runtime-compat copy remains; probe: `pacthold.resource_contracts`
   resolves to an empty namespace). Pattern copied from
@@ -37,7 +37,7 @@ copies — the lead review asks for exactly this list):
   `runtime_artifact_tree_digest` must be the ONE legacy implementation
   because our on-disk digests are byte-compatible with that store
   (AGENTS.md rule 5) — a private reimplementation is the drift this guards.
-* `pacthold_runtime_compat.resource_contracts.agent_skill_v1` — same
+* `ordessa_skills.resource_contracts` — same
   gone-kernel situation: `AgentSkillV1` (contract `agent-box.skill@1`) is
   the PUBLISHED producer contract the Q1 delivery producer must bind to
   verbatim; redeclaring it in-domain is exactly what the "do NOT redeclare
@@ -111,8 +111,8 @@ ALLOWED_ROOTS = frozenset((
 #: imported dotted module equals a grant — not merely lives under it.
 PLATFORM_MODULE_GRANTS = frozenset((
     "ordessa_persistence_sqlite.product_database",
-    "pacthold_runtime_compat.resource_contracts.runtime_artifacts",
-    "pacthold_runtime_compat.resource_contracts.agent_skill_v1",
+    "pacthold.harness_contracts.runtime_artifacts",
+    "ordessa_skills.resource_contracts",
     "pacthold_runtime_compat.runtime_composition",
     "pacthold.agents.configuration.profile_contracts",
     "ordessa_permissions_api",

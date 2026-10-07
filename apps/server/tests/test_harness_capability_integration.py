@@ -20,7 +20,7 @@ import subprocess
 
 import pytest
 
-from pacthold_runtime_compat.resource_contracts import harness_capabilities as caps
+from pacthold.harness_contracts import harness_capabilities as caps
 from ordessa_server_product.harness_adapters.registry.loader import load_builtin_registry
 
 
@@ -31,11 +31,11 @@ JS_PROJECTION = PLUGIN / "runtime" / "capability_declarations.json"
 #: Files on the capability path of the Server: none of them may name a Harness.
 #: T022b re-point (lane A relocation, specs/010): the canonical capability
 #: module moved from `pacthold/resource_contracts` into the compat assembly
-#: at `pacthold_runtime_compat/resource_contracts` — the SAME file content
+#: at `pacthold/harness_contracts` — the SAME file content
 #: at its new location, and this gate still asserts the same property (it
 #: exists and names no Harness brand) there.
 NEUTRAL_FILES = (
-    "plugins/runtime-compat/src/pacthold_runtime_compat/resource_contracts/harness_capabilities.py",
+    "packages/backend/pacthold/src/pacthold/harness_contracts/harness_capabilities.py",
     "plugins/server-compat/src/ordessa_server_compat/execution/__init__.py",
     "plugins/server-compat/src/ordessa_server_compat/execution/sidecar.py",
     "plugins/server-compat/src/ordessa_server_compat/execution/sidecar_backend.py",

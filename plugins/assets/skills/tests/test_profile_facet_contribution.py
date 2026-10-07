@@ -15,7 +15,7 @@ merge of foundation, `import ordessa_profile` fails in this tree because
 `plugins/profile/src/ordessa_profile/plugin.py:17` still imports
 `AgentBoxProfileV1` from `pacthold.resource_contracts`, and the foundation
 checkpoint emptied that module tree (the symbol now lives at
-`pacthold_runtime_compat.resource_contracts.agent_box_profile_v1`). The
+`pacthold.harness_contracts.agent_box_profile_v1`). The
 profile package is upstream code this workstream may not edit, so the
 integration tests below are RED with exactly that upstream cause; the pure
 mapping tests (which need no upstream import) stay green. Nothing here is

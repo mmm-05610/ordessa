@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Callable
 from pacthold_runtime_compat.api import ProfileEnvelope
 from pacthold.work_core import Ref, RefType, ProviderDescriptor, ResourceResolutionContext
-from pacthold_runtime_compat.resource_contracts import AgentBoxProfileV1
+from pacthold.harness_contracts.agent_box_profile_v1 import AgentBoxProfileV1
 
 PROVIDER_ID = "harness-profile"
 _ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$")

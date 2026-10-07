@@ -3,7 +3,7 @@ from pacthold.extensions import PluginDescriptor
 from ordessa_environment_api import GuaranteeUnavailableError
 from pacthold_runtime_compat.api import PluginRegistration, ProviderHostControl
 from pacthold_runtime_compat.profile_envelope import ProfileEnvelopeManager
-from pacthold_runtime_compat.resource_contracts import AgentBoxProfileV1
+from pacthold.harness_contracts.agent_box_profile_v1 import AgentBoxProfileV1
 from ..registry import load_builtin_registry
 # One adapter map, owned inside this distribution.
 from ordessa_server_product.harness_adapters.adapters import ADAPTERS

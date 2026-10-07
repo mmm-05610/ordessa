@@ -399,7 +399,7 @@ def test_a_clone_rebinds_exactly_the_migrated_assets_and_setpermissions_writes(t
     skill_dir.mkdir()
     (skill_dir / "SKILL.md").write_text(
         "---\nname: my-skill\ndescription: does a thing\n---\nBody.\n", encoding="utf-8")
-    from pacthold_runtime_compat.resource_contracts.runtime_artifacts import runtime_artifact_tree_digest
+    from pacthold.harness_contracts.runtime_artifacts import runtime_artifact_tree_digest
 
     skill_assets.install(skill_dir, asset_id="my-skill", revision=1)
     asset_records.publish(

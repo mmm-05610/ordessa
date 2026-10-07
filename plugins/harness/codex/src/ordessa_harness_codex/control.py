@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Any
-from pacthold_runtime_compat.resource_contracts import AgentBoxProfileV1, WorkspaceV1
+from pacthold.harness_contracts.agent_box_profile_v1 import AgentBoxProfileV1
+from pacthold.harness_contracts.workspace_v1 import WorkspaceV1
 
 class CodexAppServerHostControl:
     provider_id="codex-app-server"

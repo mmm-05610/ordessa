@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from pacthold_runtime_compat.resource_contracts import harness_capabilities as caps
+from pacthold.harness_contracts import harness_capabilities as caps
 from ordessa_server_product.harness_adapters.registry.loader import load_builtin_registry
 from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 

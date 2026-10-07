@@ -15,7 +15,7 @@ import shutil
 
 import pytest
 
-from pacthold_runtime_compat.resource_contracts import harness_capabilities as caps
+from pacthold.harness_contracts import harness_capabilities as caps
 from ordessa_server.bootstrap import build_runtime
 from ordessa_server_compat.composition import build_runtime_from_sidecar_deployment
 from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
@@ -647,7 +647,7 @@ def test_backend_reads_attachment_support_from_the_port_view_not_a_snapshot():
 
 def test_backend_refuses_attachment_dispatch_and_leaves_no_orphan_native_session():
     """后端在派发前读有效 attach；拒绝时关闭刚打开的原生会话。"""
-    from pacthold_runtime_compat.resource_contracts import PromptFragmentV1
+    from pacthold.harness_contracts.prompt_fragment_v1 import PromptFragmentV1
     from ordessa_server_compat.execution.sidecar_backend import SidecarExecutionBackend
 
     class Objects:

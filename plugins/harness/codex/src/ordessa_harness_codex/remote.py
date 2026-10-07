@@ -8,12 +8,10 @@ import re
 from pathlib import Path
 from typing import Any, Callable, Mapping, Protocol
 
-from pacthold_runtime_compat.resource_contracts import (
-    AgentBoxProfileV1,
-    CredentialRefV1,
-    PromptFragmentV1,
-    WorkspaceV1,
-)
+from pacthold.harness_contracts.agent_box_profile_v1 import AgentBoxProfileV1
+from pacthold.harness_contracts.credential_v1 import CredentialRefV1
+from pacthold.harness_contracts.prompt_fragment_v1 import PromptFragmentV1
+from pacthold.harness_contracts.workspace_v1 import WorkspaceV1
 from pacthold.work_core import (
     ExecutionStartReceipt,
     ExecutionStartRequest,

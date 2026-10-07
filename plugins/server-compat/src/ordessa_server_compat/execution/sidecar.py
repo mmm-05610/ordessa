@@ -24,7 +24,7 @@ from uuid import uuid4
 
 from .state_capture import StateCaptureError, audit_snapshot
 
-from pacthold_runtime_compat.resource_contracts.harness_capabilities import (
+from pacthold.harness_contracts.harness_capabilities import (
     CapabilityDeclaration, capability_view, merge_capabilities, validate_claims,
 )
 

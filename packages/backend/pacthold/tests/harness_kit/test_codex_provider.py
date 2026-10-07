@@ -1,11 +1,9 @@
 from pathlib import Path
 
 from types import SimpleNamespace
-from pacthold_runtime_compat.resource_contracts import (
-    AgentBoxProfileV1,
-    PromptFragmentV1,
-    WorkspaceV1,
-)
+from pacthold.harness_contracts.agent_box_profile_v1 import AgentBoxProfileV1
+from pacthold.harness_contracts.prompt_fragment_v1 import PromptFragmentV1
+from pacthold.harness_contracts.workspace_v1 import WorkspaceV1
 from pacthold.work_core import ExecutionStartRequest, Ref, RefType, ResolvedExecutionInput
 from pacthold.work_core.projection import Outcome, Phase
 from pacthold_runtime_compat.runtime_composition import RuntimeBinding, RuntimeHostRef, SandboxRef, TerminalRunHandle, TerminalSessionRef

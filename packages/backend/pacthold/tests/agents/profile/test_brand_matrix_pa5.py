@@ -62,8 +62,8 @@ EXTRA_VALUE = "override"
 def _pi_face(root: Path, *, value: str, extra: bool) -> dict:
     from ordessa_harness_pi.profile import PiProfile
     from ordessa_harness_pi.command_projection import PiProjection
-    from pacthold_runtime_compat.resource_contracts import (
-        PromptFragmentV1, WorkspaceV1)
+    from pacthold.harness_contracts.prompt_fragment_v1 import PromptFragmentV1
+    from pacthold.harness_contracts.workspace_v1 import WorkspaceV1
 
     # each face invocation gets its own tree: a shared pi-home would let a
     # previous call's instructions.md leak into the directory-tree digest

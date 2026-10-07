@@ -18,7 +18,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from pacthold_runtime_compat.resource_contracts.runtime_artifacts import (
+from pacthold.harness_contracts.runtime_artifacts import (
     runtime_artifact_tree_digest,
 )
 

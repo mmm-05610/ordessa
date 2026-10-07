@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pytest
 
-from pacthold_runtime_compat.resource_contracts.runtime_artifacts import (
+from pacthold.harness_contracts.runtime_artifacts import (
     runtime_artifact_tree_digest,
 )
 
@@ -76,7 +76,7 @@ def test_a_failed_install_leaves_no_staging_and_the_previous_revision_intact(tmp
 
 
 def _digest(store, asset_id, revision):
-    from pacthold_runtime_compat.resource_contracts.runtime_artifacts import (
+    from pacthold.harness_contracts.runtime_artifacts import (
         runtime_artifact_tree_digest as digest_of)
     return digest_of(store.revision_dir(asset_id, revision))
 

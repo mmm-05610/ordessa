@@ -25,7 +25,7 @@ from pacthold.work_core.services import ExecutionService, WorkService
 # local test fixtures with the same wire shapes and the same historical
 # contract ids as the relocated product contracts — protocol, not display
 # names — so dispatch semantics stay pinned unchanged.  (The canonical types
-# now live in ``pacthold_runtime_compat.resource_contracts``.)
+# now live in ``pacthold.harness_contracts``.)
 @dataclass(frozen=True)
 class WorkspaceV1:
     contract_id: ClassVar[str] = "agent-box.workspace@1"

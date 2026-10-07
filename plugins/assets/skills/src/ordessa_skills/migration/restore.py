@@ -21,7 +21,7 @@ Copied (restorable):
   ``skill/<assetId>/<revision>`` trees — copied into the backup, each with
   its per-file sha256, plus the ``sha256:`` tree digest of every revision
   directory (re-derived through
-  :func:`pacthold_runtime_compat.resource_contracts.runtime_artifacts.runtime_artifact_tree_digest`,
+  :func:`pacthold.harness_contracts.runtime_artifacts.runtime_artifact_tree_digest`,
   the same spelling the revision store installs with; G01: 拼写不静默改变).
 
 Recorded-and-verified only (NOT copied, NOT restored): every other byte
@@ -81,7 +81,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterator
 
-from pacthold_runtime_compat.resource_contracts.runtime_artifacts import (
+from pacthold.harness_contracts.runtime_artifacts import (
     runtime_artifact_tree_digest,
 )
 

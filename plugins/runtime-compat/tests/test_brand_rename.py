@@ -9,12 +9,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pacthold_runtime_compat.resource_contracts as _contracts_pkg
+import ordessa_skills.resource_contracts as _skill_contracts
+import pacthold.harness_contracts.harness_capabilities as _capabilities
 
 
 def test_the_contract_ids_keep_their_historical_spelling():
     # The contract ids are protocol, not display names.
     skills_contract = (
-        Path(_contracts_pkg.__file__).resolve().parent / "agent_skill_v1.py"
+        Path(_skill_contracts.__file__).resolve()
     ).read_text(encoding="utf-8")
     assert "agent-box.skill@1" in skills_contract
