@@ -15,6 +15,7 @@ from .preparation import request_valid as preparation_request_valid, result_vali
 from .configuration import node_ref_valid, description_result_valid, snapshot_result_valid, change_request_valid, operation_result_valid, operation_disposition
 from .lifecycle import (application_request_valid, disposition as lifecycle_disposition,
                         request_valid as lifecycle_request_valid, view_valid as lifecycle_view_valid)
+from .operations import operation_read_result_valid
 from .client import ClientError, WireClient, load_service, parse_json, core_schema, profile_ref_valid, provider_schema, MAX_BYTES
 
 
@@ -112,6 +113,13 @@ def parser():
             child.add_argument("--request-id", required=True)
         if action == "list":
             child.add_argument("--include-archived", action="store_true")
+    operations = commands.add_parser("operations", help="Consume durable operation metadata observations")
+    operation_actions = operations.add_subparsers(dest="operation_action", required=True, parser_class=Parser)
+    operation_read = operation_actions.add_parser(
+        "read", help="Read the sealed six-field metadata projection of one operation; never advances, recovers or resends it")
+    operation_read.set_defaults(operation_action='read')
+    connection(operation_read)
+    operation_read.add_argument("operation_ref", help="Operation identity as a plain string")
     return root
 
 
@@ -230,6 +238,14 @@ def main(argv=None):
                     raise ClientError("PARAMETER_INVALID", "Complete DefinitionRef required", 2)
                 params["definitionRef"] = definition
             prepared = ("agents.providers." + options.action, params)
+        if options.command == "operations":
+            # Same shape as the core read (operations_read.py): refuse locally,
+            # before any HTTP attempt, and never invent a second identity form.
+            ref = options.operation_ref
+            if (not isinstance(ref, str) or not ref or ref.strip() != ref
+                    or len(ref) > 256 or any(ord(char) < 32 for char in ref)):
+                raise ClientError("PARAMETER_INVALID", "Complete operation identity required", 2)
+            prepared = ("agents.operations.read", {"operationRef": ref})
         if options.command == 'nodes' and options.node_action == 'query-preparation':
             if not request_id_valid(options.original_request_id):
                 raise ClientError('PARAMETER_INVALID', 'Original preparation requestId required', 2)
@@ -441,6 +457,21 @@ def main(argv=None):
             else:
                 evidence = {"level": "configurationDescriptionObserved" if options.action == "describe" else "configurationSnapshotObserved",
                             "runtimeVerified": False, "configurationValuesObserved": options.action == "inspect"}
+        elif options.command == 'operations':
+            method, params = prepared
+            if method not in core.get('supportedMethods', ()):
+                raise ClientError('OPERATION_READ_UNAVAILABLE', 'Service did not publish operation metadata reads', 4)
+            if service.token in json.dumps(params):
+                raise ClientError('PARAMETER_INVALID', 'Operation request cannot contain authentication material', 2)
+            result = client.core_call(method, params, request_id)
+            if (not operation_read_result_valid(result, core['environmentNamespace'], params['operationRef'])
+                    or service.token in json.dumps(result)):
+                raise ClientError('CORE_RESPONSE_INVALID', 'Operation metadata could not be safely validated', 4)
+            data = result
+            operation_ref = result['operationRef']
+            # A read receipt is metadata only; it never claims task completion.
+            evidence = {'level': 'operationMetadataObserved', 'runtimeVerified': False,
+                        'hasResult': result['hasResult']}
         elif prepared is not None:
             method, params = prepared
             result = client.core_call(method, params, request_id)

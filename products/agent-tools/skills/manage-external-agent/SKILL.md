@@ -107,3 +107,12 @@ node, or claim the node is stopped because a client disconnected. Cancellation,
 confirmed stop, recovered native history, and successful Profile application
 each require their own authoritative evidence. Publication/configuration evidence
 does not prove these unimplemented lifecycle or task outcomes.
+
+
+## Reading operation metadata
+
+When the caller needs the durable metadata of an existing operation, use:
+
+`ordessa-agent operations read <operationRef> --config … --service … --json`
+
+只读六字段元数据，不返回正文，不推进/恢复/重发；`hasResult` 不等于任务完成.

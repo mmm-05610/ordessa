@@ -39,6 +39,7 @@ _MANAGEMENT_BINDINGS = (
     ("agents.nodes.recover", "recover", ("nodeRef", "preconditions", "requestId"), ()),
     ("agents.nodes.stop", "stop", ("nodeRef", "preconditions", "requestId"), ()),
     ("agents.nodes.release", "release", ("nodeRef", "preconditions", "requestId"), ()),
+    ("agents.operations.read", "operationRead", ("operationRef",), ()),
 )
 
 
@@ -73,6 +74,10 @@ def wire_contract(version=AGENT_CONTRACT_VERSION) -> dict:
                 'additionalProperties': False,
                 'statuses': ['reserved', 'running', 'unknown', 'published', 'refused', 'cancelled']},
             'lifecycleOperation': {'required': ['operationRef', 'revision', 'status', 'action'],
+                'additionalProperties': False,
+                'statuses': ['reserved', 'running', 'unknown', 'published', 'refused', 'cancelled']},
+            # Sealed six-field operation metadata; no body, evidence or step.
+            'operationMetadata': {'required': ['operationRef', 'kind', 'revision', 'status', 'nodeRef', 'hasResult'],
                 'additionalProperties': False,
                 'statuses': ['reserved', 'running', 'unknown', 'published', 'refused', 'cancelled']},
             'preparationQuery': {'required': ['operation'], 'additionalProperties': False, 'missing': None},

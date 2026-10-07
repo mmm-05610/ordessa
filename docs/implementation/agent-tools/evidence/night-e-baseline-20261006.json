@@ -1,0 +1,145 @@
+{
+  "lane": "E",
+  "title": "独立安装、隔离与反例验收 · 基线复验（night-baseline）",
+  "date": "2026-10-06",
+  "status": "PARTIAL",
+  "baseline": {
+    "gitHead": "c47696b74b11863a9ee2fd1542033e72ce9b513b",
+    "branch": "codex/agent-tools-product",
+    "trackedClean": true,
+    "envFileUntrackedNotRead": true,
+    "python": "/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python (Python 3.12.14)",
+    "planDoc": "docs/implementation/agent-tools/night-dispatch-plan-20261006.md §E路",
+    "exitCodeContract": "specs/029-agent-tools-product/interfaces.md §5 (0成功/2参数schema/3认证授权/4版本能力或服务不可用/5 revision冲突/6 partial-unknown需核实/7观察超时)",
+    "priorLedgerRef": "status.md 尾部 020 实测：产品全套 900P0F exit0 220.65s（session29408）——仅作对照；下述全部数字为本轮本人实跑，未引用旧账冒充"
+  },
+  "deliverables": {
+    "modifiedFiles": [
+      "products/agent-tools/acceptance/night-baseline-20261006-install-use.json（install_use.py 原始回执，脚本 x-mode 新建，未覆盖任何既有证据）",
+      "products/agent-tools/acceptance/night-baseline-20261006-matrix.json（验收矩阵与缺口清单）",
+      "docs/implementation/agent-tools/evidence/night-e-baseline-20261006.json（本文件，E路总账）"
+    ],
+    "newTestsWritten": 0,
+    "testNightCoreAcceptanceCreated": false,
+    "packagingModified": false,
+    "packagingNote": "packaging/build_bundle.py、generate_schema.py、generate_harness_catalog.py 只读检查未改；wheel AST 门与 schema 镜像门在 build 内通过",
+    "interfaceDeliverables": "无新接口。固定起点已安装 CLI 表面仅为 init/doctor/capabilities/providers/nodes/profiles（--help 实测）；无 operations 查询子命令（D路待总协调者集成检查点）"
+  },
+  "build": {
+    "command": "/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python products/agent-tools/packaging/build_bundle.py --output products/agent-tools/dist/night-baseline-20261006",
+    "exit": 0,
+    "bundle": "products/agent-tools/dist/night-baseline-20261006（本树 ignored dist 内专属临时产物）",
+    "payloadFiles": 11,
+    "payloadList": [".gitignore", "ACCEPTANCE.md", "README.md", "cli/ordessa_agent_tools-0.1.0a2-py3-none-any.whl", "harness_commands.json", "provider-schema.json", "schema.json", "schema-management.json", "skills/configure-agent-profile/SKILL.md", "skills/manage-external-agent/SKILL.md", "skills/use-external-agent/SKILL.md"],
+    "checksumVerify": "build 内 verify_checksums exit0；本人独立复核 cd bundle && sha256sum --check SHA256SUMS → 11/11 OK exit0（首次在错误 cwd 复核报 FAILED 系操作员 cwd 错误，非产品故障，重跑即绿）",
+    "wheelName": "ordessa_agent_tools-0.1.0a2-py3-none-any.whl",
+    "wheelSha256": "eb57654375e09b153eac86e70371bfaa81d7f261cccadc2c1615f657e38b0686"
+  },
+  "installUse": {
+    "command": "/home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python products/agent-tools/acceptance/install_use.py --bundle products/agent-tools/dist/night-baseline-20261006 --evidence products/agent-tools/acceptance/night-baseline-20261006-install-use.json",
+    "exit": 0,
+    "commandsRecorded": 27,
+    "summary": {"exit": 0, "commands": 27, "real_model_calls": 0, "runtime_cleaned": true},
+    "evidenceFile": "products/agent-tools/acceptance/night-baseline-20261006-install-use.json",
+    "isolatedServiceFacts": {
+      "tempRoot": "dist/installed-cli-check-sk1wm0e4/isolated-server（TemporaryDirectory，跑完已自清，dist 内无残留）",
+      "randomPort": "socket.bind(('127.0.0.1', 0)) 随机端口",
+      "randomFingerprintKey": "os.urandom(32)，key-id 'owned-check'，ProtectedFingerprintHmac",
+      "tempBearer": "server_root/secrets/http-token → 环境变量 AT_INSTALL_USE_TOKEN；逐命令断言 token 不出现在 stdout+stderr",
+      "restartIdentity": "同临时 root 重启后 environment id 与初启一致"
+    },
+    "assertedFacts": {
+      "backendPackagesAbsent": "pacthold/ordessa_server/ordessa_harness find_spec 全 None（backend-packages-absent exit0）",
+      "initExecutedBinaries": false,
+      "initHarnessFamiliesObserved": 8,
+      "initRuntimeReadyValues": ["unknown"],
+      "skillFilesInBundle": 3,
+      "skillNames": ["configure-agent-profile", "manage-external-agent", "use-external-agent"],
+      "doctorSupports": {"nodes": false, "managedInput": false},
+      "tokenNeverLeaked": true
+    },
+    "scenarioExitCodes": {
+      "create-fresh-client-venv": 0,
+      "install-local-wheel (--no-index --no-deps)": 0,
+      "backend-packages-absent": 0,
+      "installed-help": 0,
+      "installed-local-init": 0,
+      "doctor-installed-wheel": 0,
+      "capabilities": 0,
+      "empty-catalog": 0,
+      "auth-refusal（读拒绝，坏 Bearer）": 3,
+      "create-catalog-only-profile": 0,
+      "confirmed-request-replay（重复 request-id，同结果断言）": 0,
+      "read-original": 0,
+      "edit-double-cas": 0,
+      "stale-revision-refusal（revision 冲突）": 5,
+      "historical-ref-after-edit": 0,
+      "clone-historical-profile": 0,
+      "archive-profile": 0,
+      "restore-profile": 0,
+      "missing-real-provider-preview": 4,
+      "node-observation-not-advertised-by-v1": 4,
+      "task-command-not-implemented（run hello）": 2,
+      "owned-server-stop": 0,
+      "offline-doctor（断连/服务不可用）": 4,
+      "restart-historical-read（重启后查原操作，内容相等断言）": 0,
+      "restart-original-edit-replay（重启后重放原 edit，同结果断言＝不重派）": 0,
+      "final-catalog": 0
+    }
+  },
+  "targetedScenarioTests": {
+    "note": "控制夹具证据（非安装 CLI 进程证据）；四个独立运行，不与 900 累计",
+    "runs": [
+      {"file": "products/agent-tools/tests/test_profile_cli.py", "command": "pytest -c products/agent-tools/pyproject.toml 该文件 -q --basetemp dist/night-pytest-tmp", "passed": 28, "failed": 0, "exit": 0, "seconds": 12.94, "covers": "conflict→5、forbidden→3、disconnect→6、empty→6 参数化（line135）"},
+      {"file": "products/agent-tools/tests/test_preparation_cli.py", "passed": 54, "failed": 0, "exit": 0, "seconds": 30.25, "covers": "native unknown 保原 request key、不自动重派 → exit6（line114-130/182/232/267）"},
+      {"file": "products/agent-tools/tests/test_lifecycle_cli.py", "passed": 99, "failed": 0, "exit": 0, "seconds": 66.15, "covers": "lost/不 readable receipt → exit6、never resent、never derived（line15/519/541）"},
+      {"file": "products/agent-tools/tests/integration/test_profile_service.py", "passed": 5, "failed": 0, "exit": 0, "seconds": 9.13, "covers": "uncertain→6（line193/195）、lost-receipt-create→6（line273）"}
+    ],
+    "subtotalIndependent": {"passed": 186, "failed": 0, "exit": 0}
+  },
+  "fullProductSuite": {
+    "command": "PYTHONPATH=plugins/harness/codex/src:plugins/harness/pi/src:plugins/harness/claude-code/src:packages/backend/harness-transport/src:plugins/harness/records/src /home/maoqh/.codex/worktrees/agent-tools-product/.venv-ordessa-py312/bin/python -m pytest -c products/agent-tools/pyproject.toml products/agent-tools/tests -q --basetemp products/agent-tools/dist/night-pytest-tmp/full-suite-pypath",
+    "firstRun": {
+      "withoutPYTHONPATH": {"collected": 900, "passed": 886, "failed": 14, "seconds": 252.28, "pytestExit": 1, "exitNote": "首跑管道 tail 掩码 exit；单独重跑该文件确认 exit1"},
+      "firstFailure": "tests/integration/test_independent_server_providers.py 全文件 14F，单独跑 0.49s exit1：ModuleNotFoundError: No module named 'ordessa_harness_codex'",
+      "cause": "专属 venv 未以 editable 安装三家族适配包（site-packages 无 ordessa_harness_codex/pi/claude_code、records、transport 的 pth 条目，实测核对）；该测试直接 import 家族模块",
+      "fix": "按 020 账本（evidence/agent-unit-model/configuration-provider-contract-20261006.md line21）同一 venv 的 PYTHONPATH 命令重跑；属环境准备差异，非源码/测试修改：0 删断言、0 skip、0 改测试"
+    },
+    "rerunWithLedgerPYTHONPATH": {"passed": 900, "failed": 0, "exit": 0, "seconds": 250.14, "skips": 0}
+  },
+  "evidenceClassification": {
+    "纯DTO契约": "build 时 generate_schema.py 镜像校验 exit0；verify_wheel AST 门（无 backend import、无非客户端运行时依赖）；产品套件中纯单元/合同部分",
+    "隔离服务": "install_use 自有服务：临时 SQLite data-root、随机端口、随机 fingerprint key、临时 Bearer；重启身份与重放不重派断言",
+    "真实进程": "自有 uvicorn 子进程 start/stop/restart 全程；新 venv 内 CLI 进程实调；非真实 Harness 原生进程、非模型进程",
+    "NOT真实Harness/模型": "runner GREEN 与 install_use exit0 均不构成真实 Harness 或模型任务证据（ACCEPTANCE.md 既有声明，本轮复验一致）"
+  },
+  "unknownOccupancy": {
+    "controlledFixtures": "本轮复跑既有断言全绿：unknown 保原 request key、不自动重派、operationRef 保留、hold 语义按原断言保持（test_preparation_cli / test_lifecycle_cli / test_profile_service）",
+    "installedCliUnknownWritePath": "NOT_RUN：install_use.py 在固定起点不含对自有隔离服务的断连写/unknown/6 场景；该层占用是否保留本轮无证据，不宣称",
+    "conclusion": "当前 unknown 是否保占用：控制夹具层已复验保持（既有断言绿）；安装 CLI 写路径层 NOT_RUN，列为缺口"
+  },
+  "notRunAndGaps": [
+    "安装 CLI 对自有隔离服务的断连写→unknown/6 占用场景：acceptance/install_use.py 在本 SHA 无此夹具，NOT_RUN，不加 skip 不造绿",
+    "每请求 Profile 结局公开查询：按 ACCEPTANCE.md 为明确产品缺口（无公开 outcome query），丢失回执的所有权核实不可公开完成，缺口保留",
+    "operations read CLI 查询（D路产物）：本 SHA 客户端无该表面，ABSENT，待总协调者集成检查点后 E 复验",
+    "Node inspect/prepare/lifecycle/tasks 对真实服务正向验收：v1 部署不广告（nodes list exit4 NODE_OBSERVATION_UNAVAILABLE 为既有拒绝面），非正向验收",
+    "Windows PATHEXT init 行为：仅 Linux 实测，NOT_RUN",
+    "真实 Harness 原生进程、真实模型任务、Skill 模型代理行为使用：NOT_RUN，本轮真实模型调用 0",
+    "冷 owner 恢复/Secret 路由/三寿命：非本路范围，仍按 status.md 保持 open"
+  ],
+  "noModelNoUserService": {
+    "realModelCalls": 0,
+    "envFileRead": false,
+    "globalSkillInstall": false,
+    "globalAgentConfigChanged": false,
+    "userServiceTouched": false,
+    "userServiceNote": "仅自有随机 loopback 端口子进程服务；未重启/未触碰任何用户面服务（AGENTS.md §8）",
+    "pushOrMerge": false,
+    "writesOutsideWriteDomain": false,
+    "tempCleanup": "install_use 临时 workspace（venv/DB/token/日志）脚本自清且本人复核 dist 无残留；pytest basetemp 与全套日志收在本树 ignored dist 并已删除；bundle 保留在 ignored dist 作安装资产引用"
+  },
+  "limitations": [
+    "900 = 886 + 14 同源计数，定向 186 为独立运行，不与 900 相加为独立场景数",
+    "install_use limitations 原文保留：catalog-only 参考、v1 无 Node 观察、Skill 仅本地复制无模型行为评估、无公开 per-request Profile 结局查询"
+  ]
+}

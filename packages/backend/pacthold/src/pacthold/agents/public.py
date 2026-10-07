@@ -20,6 +20,7 @@ from ..core.resource_admission import (
 from ..core.configuration_admission import (
     CONFIGURATION_PROVIDER_VERSION, CONFIGURATION_METHODS, ConfigurationRoute,
     ConfigurationProviderDescriptor, ConfigurationProviderPin,
+    AdmittedConfigurationProviderMetadata,
     ConfigurationContractError as ConfigurationProviderContractError,
 )
 from .assembly import AgentAssembly, PreparationContext, PreparationObservation, PreparationContextPort, PreparationObservationPort
@@ -121,6 +122,7 @@ __all__ += ["AdmittedMaterialProviderMetadata"]
 __all__ += ["CONFIGURATION_PROVIDER_VERSION", "CONFIGURATION_METHODS",
             "ConfigurationRoute", "ConfigurationProviderDescriptor",
             "ConfigurationProviderPin", "ConfigurationProviderContractError"]
+__all__ += ["AdmittedConfigurationProviderMetadata"]
 __all__ += ["AgentAssembly", "PreparationContext", "PreparationObservation", "PreparationContextPort", "PreparationObservationPort"]
 __all__ += ["AgentLifecycle", "LifecycleObservation", "LifecycleObservationPort"]
 __all__ += ["ManagedInputReservations", "CapturedInputRef", "CapturedInputEvidence",

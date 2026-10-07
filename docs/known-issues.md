@@ -187,3 +187,20 @@ Agent Tools分阶段Store读审发现：原非staged OperationRecord验证curren
 ### Agent材料作用接线与冷owner恢复缺口（2026-10-06，PARTIAL）
 
 019在原Registry/Operation/Step/Usage/服务器固定Issuer上实现已固定非秘密MaterialRequest的获取与原查询。定向146P和核心307P为受控临时SQLite/提供者合同，不是实际资源消费或生产服务证据；产品全冻结852P/0F exit0 222.66s，见agent-tools/status.md与material-operations证据；受控绿不填真实服务/冷query缺口。原Environment活动Host/ActivationRef目前仅内存，无公开rehydrate；同Environment固定Issuer不能换，因此原Host恢复＋新issuer冷query未验证/接缝缺席。只验证SQLite重开原facts/step/holds与新generation旧pin拒绝，不允许同shape重新激活冒恢复。ConfigurationProvider完整引用提取/材料交接、Assembly材料先于计划、三寿命消费/释放及真实服务仍未收口，不宣称产品可用。用户数据库与服务未操作。
+
+### Harness资产去重与UNVERIFIED台账（2026-10-07，Open）
+
+资产盘点（只读，未搬运）结论登记：
+1. `plugins/harness/src/ordessa_harness/codex/deepseek-models.json` 与
+   `plugins/harness/deploy/codex/models.json` 经cmp证实字节相同——同一资产两处存放，
+   漂移隐患已由模板测试42-D钉版锁住一致。唯一真值裁决待定（建议留deploy侧为资产、
+   remote.py改读资产路径），裁决后按数据兼容规则登记docs/migration。
+2. `plugins/harness/{codex,pi,claude-code}/build/` 构建残留（ignored未跟踪）已物理删除，
+   无git影响。
+3. UNVERIFIED（不得标可用）：api/command_discovery直接单测缺失；hermes/opencode/kilo/
+   qwen/dsh五家packaging真实构建未执行；工件网关推理；acp-adapter真实e2e
+   （KI-0009/0015/0016）；harnesses observed能力；部分deploy守卫运行时效果。
+4. Kilo重钉7.8.3（2026-10-07，5处文本，13P过）：packaging/kilo lock重生成
+   （需网络＋写盘）与observed全链门回填（需安装kilo二进制＋假端点＋门报告）待另行授权。
+5. dsh独立包`plugins/harness/dsh/` 23件建成、231P/0F，门回填前生产装配不出现该provider；
+   Grok Build P1与Qoder P2待派。

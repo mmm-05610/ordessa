@@ -98,6 +98,25 @@
           "cancelled"
         ]
       },
+      "operationMetadata": {
+        "required": [
+          "operationRef",
+          "kind",
+          "revision",
+          "status",
+          "nodeRef",
+          "hasResult"
+        ],
+        "additionalProperties": false,
+        "statuses": [
+          "reserved",
+          "running",
+          "unknown",
+          "published",
+          "refused",
+          "cancelled"
+        ]
+      },
       "preparationQuery": {
         "required": [
           "operation"
@@ -402,6 +421,15 @@
         "optional": [],
         "effectful": true,
         "additionalProperties": false
+      },
+      "agents.operations.read": {
+        "action": "operationRead",
+        "required": [
+          "operationRef"
+        ],
+        "optional": [],
+        "effectful": false,
+        "additionalProperties": false
       }
     },
     "configurationChange": {
@@ -488,5 +516,5 @@
       "requiresResubmit": "explicit reset or disabled declarations"
     }
   },
-  "schemaDigest": "sha256:bf06f75902b4e628d9043e477aa9283c799d7a31a496e4a71161bd650fa8d090"
+  "schemaDigest": "sha256:d076ae3ed88ea3bedbcaa3c99ce4ae3e64c84b3315a90ad687586d397c4aa719"
 }

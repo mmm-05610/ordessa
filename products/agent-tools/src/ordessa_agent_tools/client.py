@@ -202,6 +202,12 @@ class WireClient:
                 raise ClientError("PARAMETER_INVALID", "Service refused request parameters", 2)
             if effectful and not authorization and error["code"] not in {"CAPABILITY_UNSUPPORTED", "NOT_FOUND", "APPROVAL_INVALID"}:
                 raise ClientError("OUTCOME_UNKNOWN", "Service could not confirm the write outcome; query existing evidence", 6)
+            # Frozen §2 observation mappings: a missing reference or an
+            # unproven observation are typed refusals, never a green answer.
+            if error["code"] == "NOT_FOUND":
+                raise ClientError("OPERATION_NOT_FOUND", "Service did not find the requested operation reference", 4)
+            if error["code"] == "UNAVAILABLE":
+                raise ClientError("SERVICE_UNAVAILABLE", "Core observation could not be completed", 4)
             raise ClientError("AUTHORIZATION_REFUSED" if authorization else "WIRE_REFUSED", "Service refused the wire request", 3 if authorization else 4)
         return result["result"]
 

@@ -14,7 +14,7 @@ from pacthold.agents.public import (
     AGENT_MANAGEMENT_CONTRACT_VERSION, ApplicationPolicy, ConfigurationChangeRequest,
     ConfigurationContractError, ConfigurationUnsupported, decode_node_ref,
     InvocationAuthorityRefused, ConfigurationRevisionConflict,
-    ConfigurationOmissionRefused,
+    ConfigurationOmissionRefused, OperationNotFound,
 )
 from server_plugin_api import ServerMethodDescriptor, WireError
 
@@ -27,6 +27,9 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
     provider_actions={'providersList','providersDescribe'}
     node_observation_actions={'nodesList','nodeRead'}
     lifecycle_actions={'stop','release','recover'}
+    # Operation metadata reads are a /3 constant: read-only, no capability
+    # key; the read ACL is still checked by the core on every call.
+    operation_read_actions={'operationRead'}
     profile_actions={item['action'] for item in wire_contract()['methods'].values()}
     def handler(action, definition):
         def invoke(params):
@@ -92,11 +95,14 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
                             if item['action'] in profile_actions or item['action'] in configuration_actions
                             or item['action'] in provider_actions
                             or item['action'] in node_observation_actions
+                            or item['action'] in operation_read_actions
                             or (item['action'] == profile_application_action
                                 and result['supports'].get('configurationManagement') is True)
                             or (item['action'] in {'prepare','queryPreparation'} and result['supports']['nodePreparation'])
                             or (item['action'] in {'stop','release','recover'} and result['supports'].get('nodeLifecycle') is True)]
                     return result
+                if action=='operationRead':
+                    return json.loads(safe_json(services.operations.read(params['operationRef'])))
                 if action=='providersList':
                     return {'providers':list(services.providers.list())}
                 if action=='providersDescribe':
@@ -191,6 +197,9 @@ def agent_core_methods(environment_resolver, *, contract_version=AGENT_CONTRACT_
                 raise WireError("OUTCOME_UNKNOWN", "Request outcome is unknown; do not resend", {"retryable": False}) from None
             except ProfileNotFound:
                 raise WireError("NOT_FOUND", "Profile reference not found", {"retryable": False}) from None
+            except OperationNotFound:
+                # Includes the cross-principal same-shape and dual-ACL hides.
+                raise WireError("NOT_FOUND", "Operation reference not found", {"retryable": False}) from None
             except ProfileValidationError:
                 raise WireError("INVALID_REQUEST", "Profile parameters are invalid", {"retryable": False}) from None
             except Exception:

@@ -131,6 +131,13 @@ def _provider_id(value: object) -> str:
         _invalid()
 
 
+def _consumer_id(value: object) -> str:
+    try:
+        return validate_component_id(value, kind="consumer")
+    except (TypeError, ValueError):
+        _invalid()
+
+
 def _contract_id(value: object) -> str:
     try:
         return validate_contract_id(value)
@@ -744,6 +751,168 @@ class MaterialReleaseResult:
             _invalid()
 
 
+@dataclass(frozen=True)
+class MaterialConsumerPin:
+    """Admission-side copy of the designated consuming host identity.
+
+    The pin must be copied from trusted admission-side host evidence
+    (``AdmittedResourceProviderMetadata.owner_activation`` semantics); a
+    requestor never supplies it as self-asserted fact. Cross-environment or
+    cross-generation mismatches are refused by the binding DTOs and by the
+    consumption coordination layer.
+    """
+
+    consumer_id: str
+    consumer_version: str
+    owner_activation: ActivationRef
+
+    def __post_init__(self) -> None:
+        try:
+            _consumer_id(self.consumer_id)
+        except (TypeError, ValueError):
+            _invalid()
+        _version(self.consumer_version)
+        object.__setattr__(self, "owner_activation", _copy_activation(self.owner_activation))
+
+    def to_dict(self) -> dict:
+        return {"consumerId": self.consumer_id, "consumerVersion": self.consumer_version,
+                "ownerActivation": {"environmentNamespace": self.owner_activation.environment,
+                                    "pluginId": self.owner_activation.plugin_id,
+                                    "generation": self.owner_activation.generation}}
+
+    @classmethod
+    def from_dict(cls, value: object) -> MaterialConsumerPin:
+        value = _closed_dict(value, {"consumerId", "consumerVersion", "ownerActivation"})
+        owner = _closed_dict(value["ownerActivation"], {"environmentNamespace", "pluginId", "generation"})
+        try:
+            return cls(value["consumerId"], value["consumerVersion"],
+                       ActivationRef(owner["environmentNamespace"], owner["pluginId"], owner["generation"]))
+        except (TypeError, ValueError):
+            _invalid()
+
+
+@dataclass(frozen=True)
+class MaterialReadResult:
+    """Pointer-only authorized-read outcome; never carries a lease or body.
+
+    Success must share the request correlation and its pointer fields must be
+    pinned to the original acquisition receipt by the consumption
+    coordination layer (``_check_result`` pattern); the DTO itself enforces
+    the tri-state shape and the immutable/evidence environment gate.
+    """
+
+    outcome: MaterialOutcome
+    correlation: MaterialCorrelation
+    immutable_material_ref: MaterialObjectRef | None
+    content_digest: str | None
+    evidence_ref: MaterialEvidenceRef | None
+    error_code: str | None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "outcome", _enum_value(MaterialOutcome, self.outcome))
+        if type(self.correlation) is not MaterialCorrelation:
+            _invalid()
+        object.__setattr__(self, "correlation", MaterialCorrelation.from_dict(self.correlation.to_dict()))
+        if self.outcome is MaterialOutcome.SUCCESS:
+            if (type(self.immutable_material_ref) is not MaterialObjectRef
+                    or type(self.evidence_ref) is not MaterialEvidenceRef
+                    or self.error_code is not None):
+                _invalid()
+            object.__setattr__(self, "immutable_material_ref",
+                               MaterialObjectRef.from_dict(self.immutable_material_ref.to_dict()))
+            object.__setattr__(self, "evidence_ref",
+                               MaterialEvidenceRef.from_dict(self.evidence_ref.to_dict()))
+            _content_digest(self.content_digest)
+            _environment_equal(self.immutable_material_ref.environment_namespace,
+                               self.evidence_ref.environment_namespace)
+        elif self.outcome is MaterialOutcome.REFUSED:
+            if (self.immutable_material_ref is not None or self.content_digest is not None
+                    or self.evidence_ref is not None):
+                _invalid()
+            _error_code(self.error_code)
+        elif self.immutable_material_ref is not None or self.content_digest is not None or self.evidence_ref is not None or self.error_code is not None:
+            _invalid()
+
+    def to_dict(self) -> dict:
+        return {"outcome": self.outcome.value, "correlation": self.correlation.to_dict(),
+                "immutableMaterialRef": None if self.immutable_material_ref is None else self.immutable_material_ref.to_dict(),
+                "contentDigest": self.content_digest,
+                "evidenceRef": None if self.evidence_ref is None else self.evidence_ref.to_dict(),
+                "errorCode": self.error_code}
+
+    @classmethod
+    def from_dict(cls, value: object) -> MaterialReadResult:
+        value = _closed_dict(value, {"outcome", "correlation", "immutableMaterialRef",
+                                     "contentDigest", "evidenceRef", "errorCode"})
+        try:
+            return cls(value["outcome"], MaterialCorrelation.from_dict(value["correlation"]),
+                       None if value["immutableMaterialRef"] is None else MaterialObjectRef.from_dict(value["immutableMaterialRef"]),
+                       value["contentDigest"],
+                       None if value["evidenceRef"] is None else MaterialEvidenceRef.from_dict(value["evidenceRef"]),
+                       value["errorCode"])
+        except (TypeError, ValueError):
+            _invalid()
+
+
+@dataclass(frozen=True)
+class MaterialConsumptionEvidence:
+    """Owner-verified consumption binding for the copyComplete release gate.
+
+    Consumption holds only when this evidence is verified against the owner's
+    ticket (provider-side ``verified_consumption`` style), never by caller
+    assertion. The core checks shape and association only; consumption truth
+    belongs to the Runtime owner. The DTO enforces the cross-identity
+    environment gate: consumer pin environment == immutable material
+    environment == target environments == evidence environment.
+    """
+
+    immutable_material_ref: MaterialObjectRef
+    consumer_pin: MaterialConsumerPin
+    target: MaterialUseTarget
+    correlation: MaterialCorrelation
+    evidence_ref: MaterialEvidenceRef
+
+    def __post_init__(self) -> None:
+        if (type(self.immutable_material_ref) is not MaterialObjectRef
+                or type(self.consumer_pin) is not MaterialConsumerPin
+                or type(self.target) is not MaterialUseTarget
+                or type(self.correlation) is not MaterialCorrelation
+                or type(self.evidence_ref) is not MaterialEvidenceRef):
+            _invalid()
+        for name, value, decoder in (
+            ("immutable_material_ref", self.immutable_material_ref, MaterialObjectRef.from_dict),
+            ("consumer_pin", self.consumer_pin, MaterialConsumerPin.from_dict),
+            ("target", self.target, MaterialUseTarget.from_dict),
+            ("correlation", self.correlation, MaterialCorrelation.from_dict),
+            ("evidence_ref", self.evidence_ref, MaterialEvidenceRef.from_dict),
+        ):
+            object.__setattr__(self, name, decoder(value.to_dict()))
+        _environment_equal(self.consumer_pin.owner_activation.environment,
+                           self.immutable_material_ref.environment_namespace,
+                           self.target.node_ref.environment,
+                           self.target.directory_binding_ref.environment_namespace,
+                           self.evidence_ref.environment_namespace)
+
+    def to_dict(self) -> dict:
+        return {"immutableMaterialRef": self.immutable_material_ref.to_dict(),
+                "consumerPin": self.consumer_pin.to_dict(), "target": self.target.to_dict(),
+                "correlation": self.correlation.to_dict(),
+                "evidenceRef": self.evidence_ref.to_dict()}
+
+    @classmethod
+    def from_dict(cls, value: object) -> MaterialConsumptionEvidence:
+        value = _closed_dict(value, {"immutableMaterialRef", "consumerPin", "target",
+                                     "correlation", "evidenceRef"})
+        try:
+            return cls(MaterialObjectRef.from_dict(value["immutableMaterialRef"]),
+                       MaterialConsumerPin.from_dict(value["consumerPin"]),
+                       MaterialUseTarget.from_dict(value["target"]),
+                       MaterialCorrelation.from_dict(value["correlation"]),
+                       MaterialEvidenceRef.from_dict(value["evidenceRef"]))
+        except (TypeError, ValueError):
+            _invalid()
+
+
 @runtime_checkable
 class AuthorizedMaterialProvider(Protocol):
     @property
@@ -782,4 +951,5 @@ __all__ = [
     "MaterialRequest", "MaterialLeaseRef", "MaterialReceipt", "MaterialResult",
     "MaterialReleaseRequest", "MaterialReleaseResult", "AuthorizedMaterialProvider",
     "MaterialReleaseReceipt", "read_material_capability",
+    "MaterialConsumerPin", "MaterialReadResult", "MaterialConsumptionEvidence",
 ]

@@ -939,3 +939,310 @@ ManagedInputReservations初次绑定原部署issuer，同Store不同authority或
 ### 2026-10-06 用户澄清夜间剩余工作派工（PLAN_ONLY）
 
 020检查点77068e16b2475e50ceef4a51b814cff93ed221c4，源码tracked clean/.env不读。用户实际需求为本次剩余工作夜间执行方案，原11领域只是仓库所有权图不足以派工。root继续三个Luna只读盘点，准备night-dispatch-plan-20261006.md：A核心精确控制与分阶段装配、B原Registry配置准入、C受权材料消费、D已裁定最小operations read薄wire/CLI、E独立隔离安装验收。明确每路文件、独占公共导出/合同、依赖、反例与资源缺席；D不能将未发布新DTO当可调用wire，E不能资源缺席冒绿。A/C作用合同、B Runtime认可关联、D网络binding须先由总协调者冻结，不把prepared任务冒全部ready。暂无新编码/runner/建树/后台任务/模型调用/用户服务操作；文档不增加测试数，仍以020实测900P为基线。
+
+### 2026-10-07 夜间五路执行 · 总协调者账本（IMPLEMENTING→部分DONE）
+
+前置 c47696b74b11863a9ee2fd1542033e72ce9b513b。用户指令：每批至多3子智能体、
+常态2后台＋总协调者同步推进；阻塞自决不终止。全部冻结文档由总协调者亲手编写，
+编码/验证/独立审查由子智能体承担（worker优先）。
+
+#### E路基线复验（DONE·PARTIAL报告）
+
+执行者worker亲跑固定起点：`build_bundle.py --output dist/night-baseline-20261006`
+exit0，payload 11文件、`sha256sum --check` 11/11；`install_use.py` exit0、
+27条命令记录、`real_model_calls=0`、`runtime_cleaned=true`（临时root/随机端口/
+随机fingerprint key/临时Bearer逐命令断言不泄漏）。场景退出码：读拒绝3、重复0、
+stale revision 5、preview 4、nodes list 4、run hello 2、断连4、重启查原操作0。
+定向186P（28+54+99+5）exit0；产品全套900P/0F exit0 250.14s（首跑缺PYTHONPATH致
+14F系环境准备差异，按020账本PYTHONPATH重跑即绿，0改测试）。缺口：安装CLI写路径
+unknown场景NOT_RUN、per-request结局查询缺失、operations read ABSENT（待D集成）、
+Windows/PATHEXT/真实Harness/模型NOT_RUN。总账
+`evidence/night-e-baseline-20261006.json`＋`acceptance/night-baseline-20261006-*.json`。
+M0/.env不读/无用户服务操作/无push合并。
+
+#### D路：最小operation read（DONE·已串行验收）
+
+总协调者亲手冻结 `operation-read-wire-binding-v1.md`（方法`agents.operations.read`/
+action `operationRead`、仅/3加法、六字段`operationMetadata` sealed、能力仅
+supportedMethods常开、错误族映射表、CLI `operations read`命令与包络映射、写权特批）。
+执行者worker编码：schema.py两处、agent_core_wire.py三处（operationRead分支＋
+OperationNotFound→NOT_FOUND＋supportedMethods常开）、新建operations.py校验器、
+cli.py子命令＋分支、client.py两条映射（support_keys未动）、generate_schema --write
+再生镜像、三Skill固定模板行、三测试absence→presence翻转＋§6断言。首跑126P/1F
+（自写gate断言误期协商后信封data，窄修断言保拒绝语义）后127P/0F。D回报广域
+14红系venv缺三家族包（与D改动无因果）。总协调者补装本树transport＋三家族包
+（editable，仅专属venv），亲自串行复验：D三文件127P/0F exit0 31.98s；随后产品
+全套 **1027P/0F exit0 255.05s**（900＋127），14红消除。core 261P不受影响。
+M0/.env不读/无用户服务/无push合并。
+
+#### B路：配置贡献准入（DONE·已串行验收）
+
+总协调者亲手冻结 `configuration-provider-admission-freeze-v1.md`（搭载既有
+Agent贡献通道、三套冲突键、Runtime definition精确相等双点核验、
+assess_configuration门、AdmittedConfigurationProviderMetadata只读DTO、
+三端口方法边界、写权特批）。
+执行者worker编码：registration.py通道检查＋冲突键＋准入definition命中检查、
+configuration_admission.py新DTO、environment.py两个新方法（锁/ACL沿既有用例）、
+runtime.py属性检查、providers.py薄投影、public.py仅导出、新测试29项。
+过程1源码缺陷（空挂载与None误比）＋4夹具错均窄修保断言。实跑：core 261P、
+定向95P、新29P、产品全套1056P/0F、平台11P、callable扫描CLEAN。
+总协调者亲自串行复验新29P/0F。冻结解释性决定4项（descriptor由核心构造、
+关联失败语义、查询键语义、仅两新方法）已收待复核：均在冻结允许范围内，
+未发明新协议。M0/无用户服务/无push合并。
+
+#### C路：受权材料交接（编码进行中）
+
+C只读盘点（worker）结论已收：首片非秘密/lost-receipt查询/释放三件套EXISTS；
+consumer pin DTO、read动作名、读结果/消费证据DTO、释放门条件MISSING；
+复用项与需新冻结项逐条分类。总协调者亲手冻结
+`material-authorized-handoff-freeze-v1.md`（MaterialConsumerPin准入侧复制信任源、
+"read"新动作与query隔离、MaterialReadResult/MaterialConsumptionEvidence、
+三寿命门条件与职责划分、写权特批）。C编码worker后台进行中（public.py由总协调者
+复核改以避B并行冲突）。
+
+#### A路：效果计划装配（编码进行中）
+
+总协调者亲手冻结 `preparation-effects-freeze-v1.md`（PreparationEffectPlan/
+EffectStep/FixedEffectScope、五项核实表、staged接合流程、B/C/D依赖切面、
+写权特批）。A编码worker后台进行中（B已回席位；C并行）。
+
+#### 检查点与剩余
+
+D/B两路DONE已验收；C/A编码中；随后总协调者串行集成→全量回归→安装复验→
+本账本收口。整体仍PARTIAL（C/A未收、纵向接合未验、真实Harness/模型未行）。
+无推送、无主树合并、无用户服务/数据/凭据操作；真实模型调用0（.env key未动用，
+后续真实Harness验证如需模型调用按已授权范围执行）。
+
+#### A路：精确效果计划与分阶段接合（DONE·已串行验收，纵向PARTIAL）
+
+总协调者亲手冻结 `preparation-effects-freeze-v1.md`（PreparationEffectPlan/
+EffectStep/FixedEffectScope、五项核实表、staged接合流程、B/C/D依赖切面）。
+执行者worker编码：新建preparation_effects.py（两DTO＋verify_preparation_effect）、
+staged_assembly.py（StagedAgentAssembly reserve→run_root→seal→publish，不复制Store
+逻辑）、assembly.py仅＋10行委托入口（_plan/reserve/prepare一字未动）、
+management.py未动、新两测试46项。过程5失败（括号/解包/导入/fixture inspect/
+元组形态断言）均窄修保断言。实跑：新46P、staged既有33P、assembly证据29P、
+management43P、apply_profile6P、deployment14P、core261P全exit0。总协调者亲自串行
+复验新46P/0F exit0。门6纵向PARTIAL（受控fixture材料，无真实受权入口）。
+总协调者裁定：已封存staged recipe经nodes.publish必拒（节点身份行钉root digest，
+_identity按合并形重算）为fail-closed正确行为，测试已钉死该拒绝；发布完整recipe
+需另立接缝，不在本夜范围。M0/无用户服务/无push合并。
+
+#### C路：受权材料交接（DONE·已串行验收，释放受理路径PARTIAL）
+
+总协调者亲手冻结 `material-authorized-handoff-freeze-v1.md`（MaterialConsumerPin
+准入侧复制信任源、"read"新动作与query隔离、MaterialReadResult/
+MaterialConsumptionEvidence、三寿命门条件与职责划分）。
+执行者worker编码：materials.py三新DTO＋_consumer_id（170行，旧DTO未动）、
+新建material_consumption.py（read/release/AdmittedConsumerEvidence，1065行）、
+resource_admission.py仅注释、新测试19项。过程4失败（fixture verifier/密封context
+归一化/request_id大小写/replay断言诚实化）均窄修。实跑：新19P、材料既有26P、
+定向3P、D触面127P、core261P全exit0。总协调者亲自串行复验新19P/0F；亲手裁定
+consumer_version门为`_version`单段形状（执行者误用_schema_version，已改，
+45P复验过）；release/read拓扑（release在原操作、read在交接操作）符合“不另建
+执行账”，确认保留。剩余：runtimeRequired受理路径（缺A lifecycle证据源）、
+dynamic恒hold、B真接口接入、provider侧read派发面，均NOT_RUN。M0/无用户服务/
+无push合并。
+
+#### 四路收口：联合回归＋安装复验（DONE）
+
+总协调者亲自串行执行（专属venv，C/A编码均已回，无并行写者）：
+- 四路新七文件联合：`221P/0F exit0 34.46s`（127+29+19+46）。
+- 产品全套：**1121P/0F exit0 256.06s**（1027＋29＋19＋46），无skip。
+- core全套：**261P/0F exit0**，VERDICT=GREEN_NO_SKIPS（历史3方向红已消除，
+  系input-issuer-boundary修复所致，如实记录）。
+- 新鲜bundle `dist/night-four-lane-20261007`：build exit0、SHA256SUMS全OK；
+  `install_use.py --bundle/--evidence` exit0、27条、M0、runtime_cleaned=true；
+  隔离安装wheel实测 `operations read --help` 可用（位置参数纯字符串命令面真实存在）。
+  临时安装产物已清除。
+
+#### 五路总账（本夜）
+
+冻结4份（总协调者亲笔：D网络binding、B准入、C交接、A效果计划）；编码4路
+（worker执行：D127/B29/C19/A46，全部总协调者串行复验）；E基线（900P/27条/
+install矩阵）；联合221P、产品1121P、core261P、安装27条。新文件：4冻结＋
+3源码＋1校验器＋1交接协调＋7测试＋4证据/验收；修改：schema/wire/CLI/client/
+镜像/3Skill/Registry/Environment/DTO/装配。无删断言、无skip、无复活旧链、
+无推送、无主树合并、无用户服务/数据/凭据操作；真实模型调用0。
+整体仍PARTIAL：纵向接合（B/C/A真实接口互联）、sealed-recipe发布接缝、
+runtimeRequired/dynamic释放受理、真实Harness/模型任务、PJ矩阵/发行隔离。
+下一阶段：独立Harness接入研究（DeepSeek/Qoder/Grok Build/Kilo）与assets整理。
+
+### 2026-10-07 独立Harness研究 · DeepSeek核查（EXISTS）＋资产盘点
+
+#### DeepSeek Harness真实接口核查（worker只读，未改文件/未安装）
+
+结论**EXISTS**：DeepSeek官方开源agent harness `dsh`（developer preview），
+与模型API是两个事物。证据：api-docs.deepseek.com“Agent Integrations”外链、
+github.com/deepseek-ai/deepseek-harness（MIT）、docs站quickstart、
+apps/cli/README四profile（`--profile acp`为Automation-only ACP stdio server、
+`--profile sdk`/`sdk-minimal` JSON-RPC stdio、`headless`、`web`）、packages/acp
+（create/list/resume/close会话、MCP挂载、prompt、permission、cancel；明确不支持
+session/load，续接走resume不重放历史）、python/sdk（`deepseek-harness-sdk`、
+newline-delimited JSON-RPC over stdio，须显式dsh_home）。
+版本（registry实测2026-10-07）：npm `@deepseek-ai/dsh` latest=0.2.0-rc.2
+（2026-09-29，30版本，bin dsh）；PyPI `deepseek-harness-sdk`=0.1.5rc1
+（附runtime-bin平台wheel自带dsh，无需系统Node；SDK 0.1.x与CLI 0.2.x版本轨不同）。
+认证：Harness本地stdio无网络认证；内部模型凭证走DEEPSEEK_API_KEY或
+$DSH_HOME/.credentials.yaml（write-only），须与Ordessa侧凭证注入分离。
+受控探测（已授权最小只读，key尾4位0cb1、未落盘/未贴全文）：
+`GET api.deepseek.com/models` HTTP 200，catalog 2模型（deepseek-flash、
+deepseek-v4-pro）——仅证模型API可用，未探测dsh进程（安装写文件超出只读授权）。
+本仓现状：harnesses.toml:251-293已有dsh静态登记（0.1.5-rc.1，已过期；
+observed留空；attach/permissions刻意不声明），profile_extensions.mjs已有dsh
+profile与deepseek-flash映射，command_discovery已有dsh候选；缺的是
+`plugins/harness/dsh/`独立provider包（三家codex/pi/claude-code结构一致可作先例）。
+RUNTIME_METHODS缺口初判：start/connect走ACP stdio（与sidecar路径一致）；
+apply仅model路由有文档（其余unsupported）；recover唯一走resume；
+inspect/apply unit级证据链未建；rc版本+预告breaking changes须逐版重验。
+下一步需冻结：版本pin、协议面选择（建议ACP stdio主＋SDK面可选extras）、
+session/turn映射与load=REFUSED、capability上限、配置面边界、凭证隔离、
+独立包布局。真实进程门（安装+握手+观测）需另行授权。
+
+#### 已有Harness资产盘点（worker只读，未搬运）
+
+范围plugins/harness/全树。核心禁搬：api合同包（5外部域消费）、server_acp/
+application/contributions/configuration/model/materialization（控制/证据内核）、
+registry loader（唯一读取方）、records（Operation/fence账）、runtime执行链＋
+third_party桥（harness-internal）、Go桥源码+schema（哈希钉版）、三家品牌包
+（codec本体）。领域可搬候选：deploy/<brand>/生产配置（A1-A3低风险，
+production.py路径常量同改）、deepseek-sidecar-config.toml（A6）、
+codex-generic-prompt.md连LICENSE/NOTICE（A7 prompt资产）、
+launch-descriptors/access-entry-files（A11）、桥docs（A18仅文档引用）、
+根部历史文档（A20归docs/reference）。暂不搬：model-catalog编译器（A8）、
+pi-profile桥资产（A9）、harnesses.toml源（A10留位、只做投影；行号证据散布
+prompts/permissions两域）、capability_declarations（A12派生产物）、
+launch.mjs/profile_extensions（A13/A14 sidecar耦合）、command_discovery代码
+（A15留api）、三家acp_model适配（A16品牌codec本体）。重复：deepseek-models.json
+与deploy/codex/models.json字节相同（A4/A5，需唯一真值裁决）；products skills与
+plugins/skills非重复；`*/build/lib/`为构建残留建议清理。UNVERIFIED清单：
+command_discovery直接单测缺失、hermes等五家真实构建未执行、工件网关推理、
+acp-adapter真实e2e（KI-0009/0015/0016）、observed能力、部分deploy守卫效果。
+分阶段建议：0登记去重零搬运→1 model-provider落位plugins/assets→2 discovery投影化
+不搬源→3协议帧留桥→4不动项复核；每阶段边界测试须过，缺证据项保持
+UNVERIFIED/NOT_RUN。Qoder/Grok Build/Kilo核查后台进行中；dsh独立包待冻结后派工。
+整体仍PARTIAL；M0（模型API只读探测除外，已授权最小调用）/无用户服务/无push合并。
+
+#### Qoder/Grok Build/Kilo三候选核查（worker只读，均EXISTS）
+
+- **Qoder EXISTS**：阿里系官方CLI（npm `@qoder-ai/qodercli` v1.1.65，bin qoder/qodercli；CN变体@qodercn-ai双轨）＋双语言Agent SDK（npm 1.0.50/PyPI 1.0.15）＋ACP面（`qoder --acp` stdio server）。Headless（-p/--print、--session-id/--continue/--resume、--permission-mode）、SDK子进程stdio JSONL、一进程一会话。鉴权PAT/浏览器登录。缺口：ACP方法集未公布需探针；CN/INTL双包口径；SDK为服务条款许可（再分发前过许可审查）。本仓未登记。建议P2。
+- **Grok Build EXISTS**（非误传）：xAI官方编码agent（docs.x.ai/build，开源github.com/xai-org/grok-build，Rust，Apache-2.0，不收外部贡献）。CLI v1.0.46（2026-09-30）；`grok agent stdio`官方ACP（initialize/authenticate非标准扩展/session/new/session/prompt，session/update块）；headless（-p/--single、命名会话-s/-r/-c、--worktree）；会话~/.grok/sessions；MCP/skills/plugins/hooks；鉴权浏览器/XAI_API_KEY。无npm包（仅安装脚本/源码，需打包脚本路线）。三候选协议面最完整。建议P1，新族`plugins/harness/grok-build/`。
+- **Kilo EXISTS（已登记）**：Kilo Code（Kilo-Org，MIT），VSCode扩展＋CLI（npm `@kilocode/cli` v7.8.3，2026-10-01，bin kilo/kilocode；官方明言built on OpenCode，证实toml“OpenCode fork”说）。`kilo acp`官方ACP server（与toml argv一致）；`kilo run [--auto]`（退出码0/124/1）；`kilo serve/mcp/auth/models/upgrade`；会话~/.config/kilo。缺口：npm许可字段一次Apache-2.0一次MIT（需钉死）；v7.7.9–v7.8.3官方记录未见ACP条目（observed留空至门回填）。本仓已登记kilo 7.7.2（落后两minor）。建议**P0**：重钉7.8.3→假端点全链门回填observed→钉许可，即可生产化。
+- 优先级：P0 Kilo（已登记路径最短）＞P1 Grok Build（协议最完整）＞P2 Qoder（先探针＋双包/许可决策）＞dsh独立包（DeepSeek报告 §7冻结项）。Qoder/Grok均未在harnesses.toml登记。
+整体仍PARTIAL；M0/无用户服务/无push合并。
+
+#### Kilo P0收尾 · 重钉7.8.3（DONE·静态登记，门回填待授权）
+
+只读核查（worker）：harnesses.toml kilo条目快照（7.7.2/argv kilo acp/observed全
+NOT_OBSERVED）；npm registry `@kilocode/cli` latest=7.8.3（2026-10-01，rc=7.8.2）
+license=MIT；仓库LICENSE头双源一致MIT——历史“Apache-2.0/MIT歧义”钉死为MIT
+（证据日期2026-10-07）。总协调者亲手执行5处纯文本重钉：harnesses.toml注释＋
+version、kilo/production.py ADAPTER_VERSION、launch-descriptors.json
+registry_version、test_kilo_production_template断言、test_capability_declarations
+版本字样（observed结论未动，仍全NOT_OBSERVED）。
+`test_kilo_production_template.py` 13P/0F exit0。剩余：packaging/kilo的
+package.json＋lock重生成（需网络＋写盘，暂缓；lock当前resolved指npmmirror）；
+observed全链门回填（需安装kilo二进制＋假端点＋门报告文档，待另行授权）；
+门测试草案大纲已收（A-E五步）。历史文档7.7.2字样按惯例保留。
+无真实进程/模型调用、无用户服务/无push合并。
+
+#### dsh独立包（DONE·已串行验收，门回填/生产装配NOT_RUN）
+
+总协调者亲手冻结 `dsh-package-freeze-v1.md`（codex先例23件、ACP stdio通道、
+digest零伪造、load三机制拒绝、钉0.1.5-rc.1、升级重验六件套）。
+执行者worker编码：`plugins/harness/dsh/` 23件（pyproject四依赖全钉死＋server
+extra无sdk extra、10模块、9测试＋runtime-process-evidence.md）。
+过程11F→1F→0（rc版本unknown诚实化、scope冲突落capability-unsupported、
+_load子串改名、替身notify/timeout/match/参数/stub），均未削弱断言。
+实跑：自有231P/0F；五轮wheel闭环fresh venv pip check exit0；主venv pip check
+exit0；transport 103P＋fence 31P＋acceptance_install 14records全exit0。
+总协调者亲自串行复验231P/0F（首次漏加records路径致收集错，补PYTHONPATH即绿，
+属复验操作员差异）。NOT_RUN：真实dsh进程、fingerprint门回填前生产装配、
+harnesses登记轮/模板同步/三元组入列。M0/无用户服务/无push合并。
+
+#### Grok P1静态登记草案＋Qoder ACP文档核查（worker只读，均已入账）
+
+- **Grok draft**（唯一新文件`grok-build-registration-draft.md`，其余零改动）：LICENSE双源
+  Apache-2.0成立；changelog最新CLI v1.0.46（2026-09-30）；headless-scripting ACP面
+  有据五项（initialize/authenticate/session/new/session/prompt/session/update），
+  kill_task/get_task_output与load/resume均无文档证据（诚实差额已登记）。
+  草案：driver/harness_type="grok-build"、version 1.0.46、argv三元
+  [grok,agent,stdio]、profile（.grok/toml/codec grok-build/slots provider+
+  instruction）、continuation（native_session＋agent-box.grok-continuation@1）、
+  静态五项observed留空；provider_id建议"grok-build"（五面对齐，grok与模型族名过载）；
+  独立包按dsh 23件镜像预告。NOT_RUN：真实进程/门回填/authenticate实测/
+  kill_task/打包路线。
+- **Qoder ACP文档核查**：acp.md全文只有能力表/两运行模式/4斜杠命令/Zed集成/
+  鉴权说明，协议细节整体外链规范页——**ACP方法集文档缺席（G1），不得推测方法名**，
+  唯一合法路径为受控探针（P0-P10草案待授权：安装许可解除→隔离启动→鉴权二选一
+  默认无登录态→initialize→new→prompt→权限→resume→中断→能力矩阵→附件→终止）。
+  SDK stdio协议文档较实（JSONL/request_id配对/initialize/interrupt/权限/hooks/
+  进程内MCP五类control面、鉴权payload与流分离）；许可为服务条款型专有许可
+  （npm/PyPI同文本，classifier Other/Proprietary，明文禁逆向——探针须黑盒定位）；
+  registry：npm latest 1.0.50（2026-09-25）、PyPI 1.0.15（不同步，G11）。
+  G2-G11未知点清单已登记。
+整体仍PARTIAL；M0/无用户服务/无push合并。
+
+#### Grok Build P1静态登记落盘（DONE·静态，门回填/独立包NOT_RUN）
+
+总协调者亲手落盘四处（据grok-build-registration-draft.md三源核实）：
+harnesses.toml追加[[harness]] grok-build（v1.0.46/argv三元/profile .grok-toml/
+continuation静态/observed留空/authenticate非标准扩展警告）；launch-descriptors.json
+追加行；capability_declarations.json追加五项段；profile_extensions.mjs追加profile
+（models:false/deny/重开无证据）。test_launch_descriptors静态计数7→8（登记新增的
+合法后果）。实跑：launch_descriptors＋kilo模板16P/0F，capability门50P/0F。
+NOT_RUN：真实进程/门回填/authenticate实测/独立包`plugins/harness/grok-build/`。
+M0/无用户服务/无push合并。
+
+#### Grok独立包（DONE·已串行验收，门回填/生产装配NOT_RUN）
+
+执行者worker按draft §6＋dsh先例建成`plugins/harness/grok-build/` 23件
+（3顶＋10模块＋9测试＋证据md）。provider_id="grok-build"；REFUSED码
+GROKBUILD_PROVIDER_REFUSED；authenticate扩展未实现前typed-refused零推断；
+kill_task/get_task_output/session重开缺席登记；digest必需无默认；版本pin 1.0.46。
+过程1F（替身缺reply_error，实现零改动）后全绿。实跑：自有233P/0F；
+pip check exit0（主＋隔离）；transport 103P＋fence 31P＋acceptance_install
+14records全exit0。总协调者亲自串行复验233P/0F。NOT_RUN：真实进程/门回填/
+authenticate实测/生产装配/打包路线；不进三元组。M0/无用户服务/无push合并。
+
+#### 全树最终联合回归（DONE·互无损伤确认）
+
+总协调者亲自串行执行：core 261P/0F（GREEN_NO_SKIPS）；harness登记门
+97P/0F（launch 16＋kilo模板13＋capability 50＋fence 31，含Grok登记后计数8）；
+dsh 231P/0F；grok-build 233P/0F；产品全套1121P/0F（Grok登记后复跑仍绿）。
+五路＋dsh＋grok＋kilo/Grok登记互无损伤。整体仍PARTIAL：纵向接合（B/C/A真实
+接口互联）、sealed-recipe发布接缝、runtimeRequired/dynamic释放受理、真实
+Harness进程门/生产装配/模型任务、Qoder探针（待授权）、PJ矩阵/发行隔离。
+无推送、无主树合并、无用户服务/数据/凭据操作；真实模型调用0（DeepSeek模型API
+只读探测为已授权最小调用除外）。
+
+#### Qoder P2零登录态探针（DONE·方法矩阵实测，登录态后NOT_RUN）
+
+执行者worker在隔离HOME（env -i，真实~/.qoder快照前后diff空）跑`qoder --acp`
+（1.1.64）：P0静默存活（stdout/stderr 0字节，未登录不阻断，rc=124 timeout杀）；
+P1 initialize成功（protocolVersion必须number的线形分歧；authMethods仅
+qodercli-login；agentCapabilities：loadSession/6项sessionCaps/image+embeddedContext/
+mcp http+sse/promptQueueing扩展位）；P3 session/new合法参数→-32000止（未登录
+未PAT，sessionId UNKNOWN）；P8矩阵32 RPC全应答：支持10（initialize/authenticate/
+new/load/prompt/close/delete/fork/list/resume）、不支持16（含cancel/terminate缺席、
+additionalDirectories有能力无方法、方向性缺席）；终止面为session/close，
+EOF exit 0。G1部分关闭（矩阵实测确认）；鉴权/会话/终止/MCP/prompt广告层关闭；
+G11/双包/许可仍挂起。剩余：登录态后成功路径/通知流/权限面/附件/resume语义/
+出网行为/版本偏移。M0/零登录/零凭据/无用户服务/无push合并。证据报告
+`qoder-acp-probe-20261007.md`；原始JSONL仅隔离tmp未入库。
+
+#### B/C/A纵向集成贯通（DONE·已串行验收，真实Harness/释放腿NOT_RUN）
+
+执行者worker新建`test_bca_longitudinal.py`（1函数，1099行）：Registry准入配置贡献
+（跨provider精确相等关联）→B发现（owner_activation/深快照/recognized/runtime_ref）
+→020 validate_reference_extraction（身份取自B发现，reference钉住C同一ResourceRef；
+篡改pin/definition typed拒）→C acquire＋consumer pin（直接取B metadata的
+owner_activation，准入侧复制）→C read concluded（四项钉回原receipt、无lease/
+无正文、计数1/重放不重派；自报pin发前拒）→C证据回读verified_materials→A reserve/
+run_root/verify五项/seal（pin==B已认可ref、C集合成员资格、declaration==020摘要；
+品牌键零命中）。过程3失败（ClassVar import/缺release_material/摘要前缀形）均只改
+测试。实跑：新1P、B29P、C19P、A46P、D127P、core261P全exit0。
+总协调者亲自串行复验新1P/0F；裁定3登记项：①摘要形状——A源码`_digest`已是裸hex64
+（与020一致），“不对称”系A旧测试曾用前缀形，无需改码；②consumer id/version保持
+受控声明（冻结内边界）；③C→A投影适配器列后续绑定。unknown链上保占用实证；
+释放腿copyComplete保持hold。M0/无用户服务/无push合并。

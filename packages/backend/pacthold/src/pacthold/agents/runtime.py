@@ -4,7 +4,9 @@ C1 CoreContributionSet keeps its frozen three fields; this dedicated payload
 is an additive subtype, exported only through pacthold.agents.public.
 """
 from dataclasses import dataclass
-from ..core.registration import CoreContributionSet, _validate_provider_shape
+from ..core.registration import (
+    CoreContributionSet, _snapshot_configuration_routes, _validate_provider_shape,
+)
 from ..core.errors import CoreDTOError
 from ..core.lifecycle import (
     RuntimeProviderDescriptor, RuntimeProvider, AdmittedRuntimeProvider,
@@ -28,3 +30,7 @@ class AgentContributionSet(CoreContributionSet):
             if type(getattr(provider, "descriptor", None)) is not RuntimeProviderDescriptor:
                 raise CoreDTOError("RuntimeProvider requires its versioned descriptor")
             _validate_provider_shape(provider, RUNTIME_METHODS, "Agent runtime")
+            # Additive configuration-contribution check (freeze §1): absent
+            # mount means no contribution — never guessed or filled; a present
+            # mount must be a tuple of frozen ConfigurationRoute declarations.
+            _snapshot_configuration_routes(provider)

@@ -117,6 +117,16 @@ class AgentAssembly:
         return {"operationRef": operation.intent.operation_ref, "revision": operation.revision,
                 "status": operation.status, "node": operation.result}
 
+    def staged_assembly(self):
+        """Delegation entry for staged effect assembly (freeze §5).
+
+        The staged coordinator reuses this assembly's permissions, planning,
+        observation and publication authorities. The original _plan, reserve
+        and prepare semantics are unchanged.
+        """
+        from .staged_assembly import StagedAgentAssembly
+        return StagedAgentAssembly(self)
+
     def _permission(self, request, *, query=False):
         env = self._environment
         env._check_open()

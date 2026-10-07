@@ -113,6 +113,47 @@ def _validate_provider_shape(provider: object, methods: tuple[str, ...], kind: s
         )
 
 
+_CONFIGURATION_ROUTES_MISSING = object()
+
+
+def _snapshot_configuration_routes(provider: object):
+    """Validate the optional ``configuration_routes`` mount (freeze §1).
+
+    Absence means no configuration contribution — never guessed or filled.
+    A present mount must be exactly ``tuple[ConfigurationRoute, ...]``; each
+    item is reconstructed so the frozen ``ConfigurationRoute`` contract
+    re-runs and the registry retains no alias into author state. Anything
+    else — unreadable attribute, wrong container, wrong item type, invalid
+    route — is a typed ``CoreDTOError``.
+    """
+    from .configuration_admission import ConfigurationRoute
+    try:
+        declared = getattr(provider, "configuration_routes", _CONFIGURATION_ROUTES_MISSING)
+    except Exception:
+        raise CoreDTOError("RuntimeProvider configuration_routes is unreadable") from None
+    if declared is _CONFIGURATION_ROUTES_MISSING:
+        return None
+    if type(declared) is not tuple:
+        raise CoreDTOError(
+            "RuntimeProvider configuration_routes must be a tuple of ConfigurationRoute"
+        )
+    routes = []
+    for item in declared:
+        if type(item) is not ConfigurationRoute:
+            raise CoreDTOError(
+                "RuntimeProvider configuration_routes must be a tuple of ConfigurationRoute"
+            )
+        try:
+            routes.append(ConfigurationRoute(item.configuration_kind, item.schema_version,
+                                             item.definition_refs, item.actions,
+                                             item.field_claims))
+        except (TypeError, ValueError):
+            raise CoreDTOError(
+                "RuntimeProvider configuration_routes contains an invalid route"
+            ) from None
+    return tuple(routes)
+
+
 @dataclass(frozen=True)
 class CoreRegistrySnapshot:
     """Read-only view of the *active* (committed) registration state."""
@@ -129,7 +170,8 @@ class _Batch:
     __slots__ = ("owner", "contributions", "contract_ids", "resource_ids",
                  "resource_descriptors", "resource_supported_contract_ids",
                  "resource_material_capabilities",
-                 "execution_ids", "agent_runtime_ids", "agent_runtime_descriptors", "state")
+                 "execution_ids", "agent_runtime_ids", "agent_runtime_descriptors",
+                 "configuration_provider_ids", "configuration_routes", "state")
 
     def __init__(self, owner: str, contributions: CoreContributionSet) -> None:
         self.owner = owner
@@ -142,6 +184,8 @@ class _Batch:
         self.execution_ids: list[str] = []
         self.agent_runtime_ids: list[str] = []
         self.agent_runtime_descriptors: list[object] = []
+        self.configuration_provider_ids: list[str] = []
+        self.configuration_routes: list[tuple] = []
         self.state = "staged"  # staged -> committed | rolled_back | unregistered
 
 
@@ -157,6 +201,7 @@ class CoreRegistry:
         ] = {}
         self._execution_providers: dict[str, tuple[str, object]] = {}
         self._agent_runtime_providers: dict[str, tuple[str, object, object]] = {}
+        self._agent_runtime_configuration_routes: dict[str, tuple] = {}
         self._pending: list[_Batch] = []
         self._active: dict[str, list[_Batch]] = {}
 
@@ -209,6 +254,16 @@ class CoreRegistry:
     def agent_runtime_provider(self, provider_id: str):
         """Committed host owner, payload and immutable admitted descriptor."""
         return self._agent_runtime_providers.get(provider_id)
+
+    @_query
+    def agent_runtime_configuration_routes(self, provider_id: str):
+        """Committed configuration route declarations mounted on a runtime provider.
+
+        Same registry entry family, same batch authority — never a second
+        index. Providers without a ``configuration_routes`` mount have no
+        entry (no contribution is ever guessed or filled).
+        """
+        return self._agent_runtime_configuration_routes.get(provider_id)
 
     # -- staging -----------------------------------------------------------
 
@@ -315,6 +370,77 @@ class CoreRegistry:
             claimed_agent_runtime.add(descriptor.provider_id)
             claimed_definitions.add(definition_key)
 
+        # Configuration contributions ride this same staged batch (freeze §1/§2):
+        # mounted route declarations are validated, keyed and reserved here.
+        # Second pass so a route may acknowledge a Runtime definition staged
+        # later in the same batch.
+        configuration = [
+            (provider_id, _snapshot_configuration_routes(provider))
+            for provider_id, provider in zip(
+                batch.agent_runtime_ids,
+                getattr(contributions, "agent_runtime_providers", ()))
+        ]
+        configuration = [(provider_id, routes)
+                         for provider_id, routes in configuration if routes]
+        if configuration:
+            runtime_definition_keys = {
+                tuple(item[2].definition_ref.items())
+                for item in self._agent_runtime_providers.values()}
+            runtime_definition_keys.update(
+                tuple(item.definition_ref.items())
+                for item in batch.agent_runtime_descriptors)
+            descriptors = dict(zip(batch.agent_runtime_ids, batch.agent_runtime_descriptors))
+            claimed_configuration_keys = set()
+            claimed_configuration_owners: dict[tuple, str] = {}
+            for provider_id, routes in self._agent_runtime_configuration_routes.items():
+                for route in routes:
+                    claimed_configuration_keys.add(
+                        (route.configuration_kind, route.schema_version))
+                    for item in route.definition_refs:
+                        claimed_configuration_owners[tuple(item.items())] = provider_id
+            for pending in self._pending:
+                for provider_id, routes in zip(pending.configuration_provider_ids,
+                                               pending.configuration_routes):
+                    for route in routes:
+                        claimed_configuration_keys.add(
+                            (route.configuration_kind, route.schema_version))
+                        for item in route.definition_refs:
+                            claimed_configuration_owners[tuple(item.items())] = provider_id
+            staged_provider_ids: list[str] = []
+            staged_routes: list[tuple] = []
+            for provider_id, routes in configuration:
+                environment = descriptors[provider_id].definition_ref["environmentNamespace"]
+                seen_keys = set()
+                for route in routes:
+                    if route.environment_namespace != environment:
+                        raise CoreDTOError(
+                            "configuration route belongs to another Environment")
+                    key = (route.configuration_kind, route.schema_version)
+                    if key in seen_keys:
+                        raise RegistrationConflictError(
+                            "one provider declares the same configuration kind/schema twice")
+                    if key in claimed_configuration_keys:
+                        raise RegistrationConflictError(
+                            "configuration kind/schema is already claimed in this Registry")
+                    seen_keys.add(key)
+                    claimed_configuration_keys.add(key)
+                    for item in route.definition_refs:
+                        definition_key = tuple(item.items())
+                        if definition_key not in runtime_definition_keys:
+                            raise RegistrationConflictError(
+                                "configuration route declares a definition that no "
+                                "RuntimeProvider in this Registry acknowledges")
+                        holder = claimed_configuration_owners.get(definition_key)
+                        if holder is not None and holder != provider_id:
+                            raise RegistrationConflictError(
+                                "one configuration definition is declared by routes "
+                                "of two different providers")
+                        claimed_configuration_owners[definition_key] = provider_id
+                staged_provider_ids.append(provider_id)
+                staged_routes.append(tuple(routes))
+            batch.configuration_provider_ids = staged_provider_ids
+            batch.configuration_routes = staged_routes
+
         # All checks passed against local copies: reserve as pending.
         self._pending.append(batch)
         return batch
@@ -367,6 +493,14 @@ class CoreRegistry:
             _validate_provider_shape(provider, RUNTIME_METHODS, "Agent runtime")
             if any(hasattr(provider, key) for key in ("owner", "owner_activation", "generation")):
                 raise CoreDTOError("RuntimeProvider may not supply host ownership")
+        admitted_configuration = dict(zip(batch.configuration_provider_ids,
+                                         batch.configuration_routes))
+        for provider_id, provider in zip(batch.agent_runtime_ids,
+                                         getattr(batch.contributions, "agent_runtime_providers", ())):
+            current_routes = _snapshot_configuration_routes(provider) or None
+            if current_routes != admitted_configuration.get(provider_id):
+                raise CoreDTOError(
+                    "RuntimeProvider configuration routes changed before publication")
         for contract_id, contract in zip(batch.contract_ids, batch.contributions.contracts):
             self._contracts[contract_id] = (batch.owner, contract)
         for provider_id, provider, descriptor, supported_contracts, material_capability in zip(
@@ -380,6 +514,9 @@ class CoreRegistry:
         for provider_id, provider, descriptor in zip(batch.agent_runtime_ids,
                 getattr(batch.contributions, "agent_runtime_providers", ()), batch.agent_runtime_descriptors):
             self._agent_runtime_providers[provider_id] = (batch.owner, provider, descriptor)
+        for provider_id, routes in zip(batch.configuration_provider_ids,
+                                       batch.configuration_routes):
+            self._agent_runtime_configuration_routes[provider_id] = routes
         self._pending.remove(batch)
         self._active.setdefault(batch.owner, []).append(batch)
         batch.state = "committed"
@@ -419,6 +556,7 @@ class CoreRegistry:
         for key in batch.agent_runtime_ids:
             if self._agent_runtime_providers.get(key, (None,))[0] == owner:
                 del self._agent_runtime_providers[key]
+                self._agent_runtime_configuration_routes.pop(key, None)
         batches.remove(batch)
         if not batches:
             del self._active[owner]

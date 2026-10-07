@@ -653,6 +653,98 @@ class Environment:
                 raise AdmissionRefusedError("RuntimeProvider unavailable for the exact definition")
             return found[0]
 
+    def agent_configuration_contributions(self):
+        """Observe active configuration contributions from the sole registry.
+
+        Same lock and ``agents.runtime`` read ACL as
+        ``agent_runtime_contributions``. Staged and draining activations are
+        excluded; a mutated active contribution is refused rather than
+        advertised as usable. The returned metadata is a read-only copy with
+        no callable and no provider instance.
+        """
+        with self._admission_lock:
+            self._check_open()
+            if self._policy is None or not self._policy.admit_object_access(
+                    self._principal_scope, f"{self.environment_id}:agents.runtime", "read"):
+                raise AdmissionRefusedError("ConfigurationProvider discovery refused")
+            result = []
+            for provider_id in self._registry.snapshot().agent_runtime_provider_ids:
+                routes = self._registry.agent_runtime_configuration_routes(provider_id)
+                if not routes:
+                    continue
+                owner, provider, _descriptor = self._registry.agent_runtime_provider(provider_id)
+                if not any(entry.ref.plugin_id == owner and entry.state == "active"
+                           and any(candidate is provider for candidate in
+                                   getattr(entry.contributions, "agent_runtime_providers", ()))
+                           for entry in self._activations.values()):
+                    continue
+                result.append(self.agent_configuration_contribution(
+                    routes[0].definition_refs[0]))
+            return tuple(result)
+
+    def agent_configuration_contribution(self, definition_ref):
+        """Read one configuration contribution by an acknowledged definition.
+
+        The definition must be declared by exactly one admitted configuration
+        route. The owning RuntimeProvider is re-verified through the existing
+        ``agent_runtime_contribution`` four admission gates (active unique
+        activation, un-tampered descriptor, callable methods, no self-reported
+        owner); any failure is refused, never degraded to self-asserted trust.
+        Retired or draining generations are not resolved (freeze §2).
+        """
+        from ordessa_environment_api.operations import safe_json
+        with self._admission_lock:
+            self._check_open()
+            if self._policy is None or not self._policy.admit_object_access(
+                    self._principal_scope, f"{self.environment_id}:agents.runtime", "read"):
+                raise AdmissionRefusedError("ConfigurationProvider discovery refused")
+            if definition_ref.get("environmentNamespace") != self.environment_id:
+                raise IdentityMismatchError("ConfigurationProvider definition scope differs")
+            encoded = safe_json(definition_ref)
+            found = []
+            for provider_id in self._registry.snapshot().agent_runtime_provider_ids:
+                routes = self._registry.agent_runtime_configuration_routes(provider_id)
+                if not routes:
+                    continue
+                if any(encoded == safe_json(item)
+                       for route in routes for item in route.definition_refs):
+                    found.append(provider_id)
+            if len(found) != 1:
+                raise AdmissionRefusedError(
+                    "ConfigurationProvider unavailable for the exact definition")
+            _owner, _provider, descriptor = self._registry.agent_runtime_provider(found[0])
+            routes = self._registry.agent_runtime_configuration_routes(found[0])
+            # §2 read-time recheck: four gates on the owning RuntimeProvider.
+            admitted_runtime = self.agent_runtime_contribution(descriptor.definition_ref)
+            recognized = []
+            if "assess_configuration" in admitted_runtime.descriptor.supported_methods:
+                for route in routes:
+                    for item in route.definition_refs:
+                        # Association recheck: the definition must resolve to an
+                        # admitted RuntimeProvider or the query is refused.
+                        self.agent_runtime_contribution(item)
+                        recognized.append(item)
+            unique = {}
+            for item in recognized:
+                unique[(item["environmentNamespace"], item["definitionId"],
+                        item["revision"])] = item
+            from .core.configuration_admission import (
+                CONFIGURATION_PROVIDER_VERSION, AdmittedConfigurationProviderMetadata,
+                ConfigurationProviderDescriptor,
+            )
+            return AdmittedConfigurationProviderMetadata(
+                owner_activation=admitted_runtime.owner_activation,
+                descriptor=ConfigurationProviderDescriptor(
+                    admitted_runtime.descriptor.provider_id,
+                    CONFIGURATION_PROVIDER_VERSION,
+                    admitted_runtime.descriptor.implementation_digest,
+                    tuple(routes),
+                    ("describe", "validate", "extract_references"),
+                ),
+                recognized_definitions=tuple(unique[key] for key in sorted(unique)),
+                runtime_provider_ref=admitted_runtime.provider_ref,
+            )
+
     def _resource_provider_metadata_locked(self, provider_id, *, omit_inactive):
         """Build a metadata-only view from the original same-registry snapshot.
 

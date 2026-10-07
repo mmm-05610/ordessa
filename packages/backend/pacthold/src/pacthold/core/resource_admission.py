@@ -109,6 +109,16 @@ class MaterialCapability:
 
 @dataclass(frozen=True)
 class AdmittedResourceProviderMetadata:
+    """Read-only admission metadata for one registered ResourceProvider.
+
+    ``owner_activation`` semantics also anchor the consumer-pin trust source
+    (material-authorized-handoff-freeze §1): a ``MaterialConsumerPin`` must be
+    copied from admission-side trusted host evidence of this shape (or from
+    the configuration-admission side's ``owner_activation``), never from a
+    requestor's self-report. Field-wise comparison is the enforcement;
+    different generation is refused (cold recovery gap: same generation only).
+    """
+
     owner_activation: ActivationRef
     descriptor: ResourceProviderDescriptor
     supported_contract_ids: tuple[str, ...]

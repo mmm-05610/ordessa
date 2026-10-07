@@ -42,3 +42,12 @@ connection is missing evidence, not proof of rejection or cancellation. Never
 resend an unknown input or generate a new request-id to evade its uncertainty.
 Exit 7 is an observation timeout; it does not mean the remote task stopped.
 No model invocation is authorized merely by reading this Skill or discovery.
+
+
+## Reading operation metadata
+
+When the caller needs the durable metadata of an existing operation, use:
+
+`ordessa-agent operations read <operationRef> --config … --service … --json`
+
+只读六字段元数据，不返回正文，不推进/恢复/重发；`hasResult` 不等于任务完成.

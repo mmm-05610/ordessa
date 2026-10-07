@@ -340,3 +340,99 @@ class ConfigurationProviderPin:
                 or value["generation"] != pin.owner_activation.generation):
             _invalid()
         return pin
+
+
+@dataclass(frozen=True)
+class AdmittedConfigurationProviderMetadata:
+    """Read-only admitted discovery view of one configuration contribution.
+
+    Pure metadata only: no callable, no provider instance object and no
+    payload parser. ``owner_activation`` follows the
+    ``AdmittedResourceProviderMetadata`` copy pattern; ``descriptor`` is a
+    deep snapshot (routes reconstructed, never aliased); ``recognized_definitions``
+    is the §2-verified subset as sealed definition refs in fixed sorted order;
+    ``runtime_provider_ref`` is the sealed projection of the acknowledged
+    RuntimeProvider identity — never the admitted instance itself.
+    """
+
+    owner_activation: ActivationRef
+    descriptor: ConfigurationProviderDescriptor
+    recognized_definitions: tuple[Mapping[str, str], ...]
+    runtime_provider_ref: Mapping[str, object]
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.owner_activation, ActivationRef):
+            raise ValueError("host owner activation is required")
+        object.__setattr__(self, "owner_activation", ActivationRef(
+            self.owner_activation.environment,
+            self.owner_activation.plugin_id,
+            self.owner_activation.generation,
+        ))
+        if type(self.descriptor) is not ConfigurationProviderDescriptor:
+            raise ValueError("admitted configuration descriptor is required")
+        object.__setattr__(self, "descriptor", ConfigurationProviderDescriptor(
+            self.descriptor.provider_id,
+            self.descriptor.contract_version,
+            self.descriptor.implementation_digest,
+            self.descriptor.routes,
+            self.descriptor.supported_methods,
+        ))
+        if type(self.recognized_definitions) is not tuple:
+            raise ValueError("recognized definitions must be a fixed tuple")
+        recognized = tuple(_definition_ref(item) for item in self.recognized_definitions)
+        keys = [(item["environmentNamespace"], item["definitionId"], item["revision"])
+                for item in recognized]
+        if len(set(keys)) != len(keys) or keys != sorted(keys):
+            raise ValueError("recognized definitions must be a unique sorted tuple")
+        object.__setattr__(self, "recognized_definitions", recognized)
+        ref = self.runtime_provider_ref
+        if type(ref) is dict:
+            source = ref
+        elif type(ref) is MappingProxyType:
+            source = ref
+        else:
+            raise ValueError("runtime provider reference is required")
+        if set(source) != _PROVIDER_REF_KEYS:
+            raise ValueError("runtime provider reference must be closed")
+        owner = source["ownerActivationRef"]
+        if type(owner) is dict:
+            owner_source = owner
+        elif type(owner) is MappingProxyType:
+            owner_source = owner
+        else:
+            raise ValueError("runtime provider reference must carry its owner activation")
+        if set(owner_source) != {"environmentNamespace", "pluginId", "generation"}:
+            raise ValueError("runtime provider reference must carry its owner activation")
+        try:
+            activation = ActivationRef(owner_source["environmentNamespace"],
+                                       owner_source["pluginId"], owner_source["generation"])
+        except (TypeError, ValueError):
+            raise ValueError("runtime provider reference owner activation is invalid") from None
+        if (source["environmentNamespace"] != activation.environment
+                or source["generation"] != activation.generation
+                or activation.environment != self.owner_activation.environment
+                or activation.generation != self.owner_activation.generation):
+            raise ValueError("runtime provider reference must match the owner activation")
+        try:
+            provider_id = _provider_id(source["providerId"])
+        except ConfigurationContractError:
+            raise ValueError("runtime provider reference is invalid") from None
+        if provider_id != self.descriptor.provider_id:
+            raise ValueError("runtime provider reference must match the admitted descriptor")
+        contract_version = source["contractVersion"]
+        implementation_digest = source["implementationDigest"]
+        if (type(contract_version) is not str or not contract_version
+                or type(implementation_digest) is not str or not implementation_digest):
+            raise ValueError("runtime provider reference is invalid")
+        object.__setattr__(self, "runtime_provider_ref", sealed_mapping({
+            "environmentNamespace": activation.environment,
+            "providerId": provider_id,
+            "ownerActivationRef": {
+                "environmentNamespace": activation.environment,
+                "pluginId": activation.plugin_id,
+                "generation": activation.generation,
+            },
+            "generation": activation.generation,
+            "contractVersion": contract_version,
+            "implementationDigest": implementation_digest,
+        }))

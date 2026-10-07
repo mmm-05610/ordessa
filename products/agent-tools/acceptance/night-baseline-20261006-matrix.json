@@ -1,0 +1,47 @@
+{
+  "title": "E路验收矩阵 · 基线复验 night-baseline-20261006",
+  "gitHead": "c47696b74b11863a9ee2fd1542033e72ce9b513b",
+  "exitCodeContract": "specs/029-agent-tools-product/interfaces.md §5",
+  "evidenceRefs": {
+    "rawInstallUse": "products/agent-tools/acceptance/night-baseline-20261006-install-use.json",
+    "eLaneLedger": "docs/implementation/agent-tools/evidence/night-e-baseline-20261006.json",
+    "bundle": "products/agent-tools/dist/night-baseline-20261006（ignored dist，wheel sha256 eb57654375e09b153eac86e70371bfaa81d7f261cccadc2c1615f657e38b0686）"
+  },
+  "matrix": [
+    {"criterion": "客户端新 venv 仅装本地 wheel", "status": "VERIFIED", "evidenceType": "真实进程", "facts": "create-fresh-client-venv exit0；install-local-wheel --no-index --no-deps exit0（本地 wheel 唯一来源）"},
+    {"criterion": "客户端无 backend imports", "status": "VERIFIED", "evidenceType": "纯DTO契约+真实进程", "facts": "verify_wheel AST 门（build 内 exit0：无 pacthold/ordessa_server/ordessa_harness/native_clients、无非客户端运行时依赖）；backend-packages-absent exit0（三包 find_spec 全 None）"},
+    {"criterion": "init 不执行发现的二进制", "status": "VERIFIED", "evidenceType": "真实进程", "facts": "installed-local-init exit0；evidence.executedBinaries=False；观察到 8 个 family，全部 runtimeReady=unknown；scanScope=clientMachine source=PATH，仅只读观察"},
+    {"criterion": "三个 Skill 命令存在", "status": "VERIFIED", "evidenceType": "纯DTO契约", "facts": "bundle skills/ 三份 SKILL.md：configure-agent-profile、manage-external-agent、use-external-agent；install_use 断言 len==3；仅复制到调用方本地目录，无全局安装"},
+    {"criterion": "自有隔离服务重启可查原操作", "status": "VERIFIED", "evidenceType": "隔离服务+真实进程", "facts": "临时 root/随机端口/随机 fingerprint key(os.urandom32)/临时 Bearer 全部记录；restart-historical-read exit0 且内容与重启前原操作相等；environment id 跨重启稳定"},
+    {"criterion": "重启不重派", "status": "VERIFIED", "evidenceType": "隔离服务+真实进程", "facts": "restart-original-edit-replay exit0 且结果与重启前 edit 相等（同一 request-id 重放无二次作用）"},
+    {"criterion": "断连场景退出码", "status": "PARTIAL", "evidenceType": "真实进程（查询）/控制夹具（写）", "facts": "查询断连：offline-doctor exit4（服务不可用）已实测；写路径断连→unknown/6 仅控制夹具（test_profile_cli disconnect 参数化 exit6）绿；安装 CLI 写路径断连场景本 SHA 无夹具，NOT_RUN"},
+    {"criterion": "重复场景退出码", "status": "VERIFIED", "evidenceType": "隔离服务", "facts": "confirmed-request-replay exit0 同数据断言；restart-original-edit-replay exit0 同结果断言"},
+    {"criterion": "unknown 场景退出码", "status": "PARTIAL", "evidenceType": "控制夹具", "facts": "test_preparation_cli/test_lifecycle_cli/test_profile_service 共绿（unknown 保原 key、不重派、exit6，独立 158P）；安装 CLI 对自有服务的 unknown/6 本轮 NOT_RUN，不宣称占用"},
+    {"criterion": "读拒绝场景退出码", "status": "VERIFIED", "evidenceType": "隔离服务", "facts": "auth-refusal exit3（坏 Bearer 读 profiles list）"},
+    {"criterion": "其他反例退出码记账", "status": "VERIFIED", "evidenceType": "隔离服务", "facts": "stale-revision-refusal exit5；missing-real-provider-preview exit4；node-observation-not-advertised exit4 NODE_OBSERVATION_UNAVAILABLE；run hello exit2；全部与 interfaces.md §5 对应"},
+    {"criterion": "产品全套基线（本轮回执）", "status": "VERIFIED", "evidenceType": "纯DTO契约+隔离服务混合（既有套件）", "facts": "PYTHONPATH=…（020 账本命令）900P0F exit0 250.14s，无 skip；首跑缺 PYTHONPATH 886P14F exit1（ModuleNotFoundError ordessa_harness_codex）→环境准备修复，0 删断言 0 skip"},
+    {"criterion": "不安装全局 Skill/不改全局 Agent 配置", "status": "VERIFIED", "evidenceType": "真实进程", "facts": "Skill 仅复制到临时 workspace caller-project/skills；CLI --config 指向临时 services.json；init 无 --output 不落文件"},
+    {"criterion": "真实模型调用 0", "status": "VERIFIED", "evidenceType": "账务", "facts": "install_use summary real_model_calls=0；本轮无任何模型调用；.env 未读"},
+    {"criterion": "不重启/不碰用户服务", "status": "VERIFIED", "evidenceType": "账务", "facts": "唯一服务为自有随机 loopback 端口子进程（temp root）；无用户面服务操作（AGENTS.md §8）"},
+    {"criterion": "安装 CLI unknown 写路径占用", "status": "NOT_RUN", "evidenceType": "缺口", "facts": "acceptance/install_use.py 本 SHA 无断连写/unknown/6 夹具；控制夹具层已复验保持，此层无证据"},
+    {"criterion": "已安装 CLI operations 查询（D路）", "status": "ABSENT", "evidenceType": "缺口", "facts": "--help 实测表面：init/doctor/capabilities/providers/nodes/profiles；无 operations 子命令；待总协调者集成检查点后 E 复验"},
+    {"criterion": "真实 Harness 原生/模型任务/Skill 行为使用", "status": "NOT_RUN", "evidenceType": "缺口", "facts": "无真实 Harness 进程与模型任务；Skill 仅源/存在性检查；Windows PATHEXT init 未验"}
+  ],
+  "gapList": [
+    "安装 CLI 对自有隔离服务的写路径 unknown/占用场景缺夹具（PARTIAL→待补，不得 skip 成绿）",
+    "每请求 Profile 结局公开查询缺失（产品既有缺口，丢失回执不可公开核实，保留）",
+    "operations read CLI 表面本 SHA ABSENT（D路待集成）",
+    "Node 正向验收/生命周期/任务 CLI：v1 不广告（既有拒绝面，非正向证据）",
+    "Windows PATHEXT init、真实 Harness 原生进程、模型任务、Skill 行为使用：NOT_RUN",
+    "冷 owner 恢复/Secret/三寿命：非本路范围，status.md 保持 open"
+  ],
+  "roundAccount": {
+    "modelCalls": 0,
+    "userServicesTouched": 0,
+    "pushOrMerge": 0,
+    "newTestsWritten": 0,
+    "assertionsRemoved": 0,
+    "skipsAdded": 0,
+    "packagingChanges": 0
+  }
+}
