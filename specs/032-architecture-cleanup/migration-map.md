@@ -4,6 +4,19 @@
 
 图例：`→迁` = 移动/合并到目标；`→删` = 删除（消费者切走）；`→拒` = 新链显式不可用；`历史` = 冻结证据不动。
 
+## 0bis. Decision 整包迁入 Pacthold（2026-10-07 用户修订，替代此前"Jev 移插件、业务流程移产品"）
+
+| 旧 | 处置 |
+| --- | --- |
+| `packages/backend/decision/src/ordessa_decision/`（contracts/runtime/providers/jev/flows/integrations/evidence/offline/public） | →整包迁 `packages/backend/pacthold/src/pacthold/decision/`；内部组织与行为不变，不拆分 Jev 提供者、决策流程或证据模块 |
+| `packages/backend/decision/tests/`（359 项） | →`packages/backend/pacthold/tests/decision/`（Pacthold 发行内 Decision 模块隔离测试）；保留无 Jev 依赖时的通用离线流程、纯读、预算、取消及拒绝路径保障，不删断言换绿 |
+| `checks/`、`evaluation/`、`examples/`、`lockfiles/` | →`packages/backend/pacthold/decision-tooling/` 同名子目录（离线验收与评估工具随包维护） |
+| `ordessa-decision` 发行包 + pyproject | →删；pydantic-graph==2.54.0 并入 pacthold 主依赖，typesafe-sdk==0.7.2 作为 pacthold `jev` extra |
+| 命名空间 `ordessa_decision` | →`pacthold.decision`，同步全部 src/tests/tooling import；无外部 Python 消费者（已核实） |
+| 默认导入隔离 | pacthold `__init__`/public 不 import decision；守卫断言 `import pacthold` 与 agents 路径不加载 pydantic_graph/typesafe_sdk/pacthold.decision |
+| `integrations/ordessa/facade.py`（读适配） | 仍只读；随 agents 目录重组切新 import，不新增权威/执行器/apply |
+| specs/031 冻结证据、032 evidence | 历史，不改写；当前文档以新路径为准 |
+
 ## 1. plugins/agent/backend（ordessa-agent 0.1.0，无 entry-point）
 
 | 旧 | 职责 | 处置 | 消费者 |

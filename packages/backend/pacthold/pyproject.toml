@@ -23,7 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Testing",
 ]
-dependencies = ["ordessa-environment-api"]
+dependencies = ["ordessa-environment-api", "pydantic-graph==2.54.0"]
 
 [project.urls]
 # Upstream project URLs keep the historical repository identity on purpose.
@@ -31,16 +31,18 @@ Homepage = "https://github.com/mmm-05610/agent-box"
 Repository = "https://github.com/mmm-05610/agent-box"
 
 [project.optional-dependencies]
-dev = ["pytest>=7"]
+dev = ["pytest>=7", "pytest-asyncio"]
+jev = ["typesafe-sdk==0.7.2"]
 
 [project.scripts]
 pacthold = "pacthold.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+asyncio_mode = "auto"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-pacthold = ["migrations/*.sql"]
+pacthold = ["migrations/*.sql", "decision/flows/agent_assignment/*.json", "decision/contracts/*.json"]

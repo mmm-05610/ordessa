@@ -55,7 +55,7 @@ Agent/Profile 的公共类型、wire 投影移至 frontend/contracts 的领域�
 
 Server 产品删除 `ordessa-agent`、`ordessa-profile`、`ordessa-harness` 依赖和旧注册。Agent Tools 只保留服务客户端与 Skill，清查 pyproject、部署脚本中暗藏的本地品牌运行器/后端；新增节点准备能力不能塞进 CLI。
 
-决策模块保留，纯读接缝对齐核心，不增加 apply/执行后门。现有第三方安装管理等公共模块按实际基线保留，不用该轮重做它们。
+决策模块按 2026-10-07 用户修订整包迁入 Pacthold（`pacthold.decision`，与 agents 同级）：不拆分 Jev 提供者、现有决策流程或证据模块；现有 Ordessa 读取适配改用核心内部公开入口，仍然只读，不新增 Agent/Profile 状态权威、执行器或 apply 路径；统一 Python 命名空间为 `pacthold.decision`，删除 `packages/backend/decision`、`ordessa-decision` 发行包及旧入口，不保留转发壳或兼容链；pydantic-graph 固定版本由 Pacthold 清单声明，typesafe-sdk 保持 Jev 可选依赖，Pacthold 默认导入不加载决策框架或 Jev SDK；原独立发行测试改为 Pacthold 发行内的 Decision 模块隔离测试，保留无 Jev 依赖时的通用离线流程、纯读、预算、取消及拒绝路径保障，不删断言换绿。现有第三方安装管理等公共模块按实际基线保留，不用该轮重做它们。
 
 删除旧包全部活跃源码、package manifests、注册、转发、fallback、editable-install 路径和启动脚本。历史文档可保留，但当前文档必须以目标为准并给出可验证的依赖。离线数据迁移脚本放 `scripts/migrations/`，不由运行时自动加载；真实数据迁移另获授权。
 

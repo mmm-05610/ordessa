@@ -25,7 +25,7 @@ ordessa/
 │   │   ├── platform-services/   数据区、密钥引用等系统机制
 │   │   ├── harness-transport/   不含品牌规则的通道工具
 │   │   ├── server-plugin-api/   后端宿主接入契约
-│   │   └── decision/           已有决策模块，读事实、返回提案
+│   │   └── pacthold/           治理内核（agents 见上；2026-10-07 修订：decision 整包迁入为 pacthold.decision，与 agents 同级，读事实、返回提案）
 │   └── frontend/
 │       ├── contracts/
 │       ├── extension-api/
@@ -83,7 +83,7 @@ ordessa/
 └── scripts/
 ```
 
-`decision/` 是独立工作树已有成果的保留位置，不是本轮新增核心执行者。它只能通过公开读端口观察并返回提案，不能维护另一套节点/Profile 权威。
+`decision/` 是 Pacthold 内与 `agents/` 同级的模块（2026-10-07 用户修订：整包迁入，替代此前"Jev 移插件、业务流程移产品"的要求）。它保留现有 contracts、runtime、providers/jev、flows、integrations、evidence 的内部组织和行为，只能通过公开读端口观察并返回提案，不能维护另一套节点/Profile 权威、执行器或 apply 路径。pydantic-graph 以固定版本由 Pacthold 清单声明；typesafe-sdk 保持 Jev 可选依赖；Pacthold 默认导入和不使用 Decision 的路径不得自动加载决策框架或 Jev SDK。
 
 ## 依赖边界
 

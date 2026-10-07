@@ -43,11 +43,23 @@ ALLOWED_MODULES = frozenset({"ordessa_environment_api"})
 
 def _scanned_files() -> list[Path]:
     """Every kernel source and kernel test file (source and tests are both
-    scoped: a kernel test may not need the product tree either)."""
+    scoped: a kernel test may not need the product tree either).
+
+    Exception (032 revision): the decision module's own tests moved into
+    ``tests/decision/`` from the retired ``ordessa-decision`` distribution and
+    legitimately integrate against above-the-kernel packages (the Codex
+    pure-read extension, persistence-sqlite) — they are consumers of the
+    kernel direction, not kernel surface. Kernel source, including
+    ``src/pacthold/decision/`` itself, stays fully scanned.
+    """
     files: list[Path] = []
     for base in (PACKAGE_ROOT / "src", PACKAGE_ROOT / "tests"):
         files.extend(sorted(base.rglob("*.py")))
-    return [path for path in files if "egg-info" not in path.parts]
+    return [
+        path for path in files
+        if "egg-info" not in path.parts
+        and not path.is_relative_to(PACKAGE_ROOT / "tests" / "decision")
+    ]
 
 
 def _imported_modules(path: Path) -> set[str]:
