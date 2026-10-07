@@ -3,12 +3,12 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_agent import (
+from pacthold.agents.submissions import (
     AgentOwnerRegistry,
     AuthorityConflictError,
     SubmissionOwner,
 )
-from ordessa_agent.owners import AgentOwnerError
+from pacthold.agents.submissions.owners import AgentOwnerError
 
 
 def test_one_writer_per_canonical_target():

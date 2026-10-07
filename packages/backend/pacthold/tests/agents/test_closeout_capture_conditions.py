@@ -5,11 +5,11 @@ from dataclasses import replace
 
 import pytest
 
-from ordessa_agent.submission_journal import (
+from pacthold.agents.submissions.journal import (
     JournalConflictError,
     ReliableSubmissionUnsupported,
 )
-from ordessa_agent.submission_service import (
+from pacthold.agents.submissions.service import (
     NativeSubmitBinding,
     NativeSubmitDeclaration,
 )

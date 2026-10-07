@@ -17,9 +17,9 @@ from typing import Any, Literal, Mapping, Protocol
 from ordessa_environment_api import RequestKey
 from ordessa_environment_api.guarantee import GuaranteeLevel
 
-from .capture import CaptureTransaction
-from .owners import AgentOwnerRegistry
-from .submission_journal import (
+from pacthold.agents.submissions.capture import CaptureTransaction
+from pacthold.agents.submissions.owners import AgentOwnerRegistry
+from pacthold.agents.submissions.journal import (
     JournalConflictError,
     ReliableCapabilities,
     ReliableSubmissionUnsupported,

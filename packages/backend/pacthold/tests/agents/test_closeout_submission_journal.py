@@ -42,7 +42,7 @@ def _capture(text: str = "captured text"):
 
 
 def _capabilities():
-    from ordessa_agent.submission_journal import ReliableCapabilities
+    from pacthold.agents.submissions.journal import ReliableCapabilities
 
     return ReliableCapabilities(
         backend_durable=True,
@@ -60,7 +60,7 @@ def _fingerprint():
 
 
 def test_capture_freezes_attachment_bytes_and_same_key_digest(tmp_path):
-    from ordessa_agent.submission_journal import SubmissionJournal
+    from pacthold.agents.submissions.journal import SubmissionJournal
     from ordessa_persistence_sqlite import SqliteStorePort
 
     attachment = bytearray(b"original attachment")
@@ -92,7 +92,7 @@ def test_capture_freezes_attachment_bytes_and_same_key_digest(tmp_path):
 
 
 def test_same_request_with_different_frozen_content_is_a_conflict(tmp_path):
-    from ordessa_agent.submission_journal import JournalConflictError, SubmissionJournal
+    from pacthold.agents.submissions.journal import JournalConflictError, SubmissionJournal
     from ordessa_persistence_sqlite import SqliteStorePort
 
     store = SqliteStorePort(tmp_path / "domain.sqlite", writer_token="domain-test")
@@ -111,7 +111,7 @@ def test_same_request_with_different_frozen_content_is_a_conflict(tmp_path):
 
 
 def test_missing_reliable_capability_is_typed_unsupported(tmp_path):
-    from ordessa_agent.submission_journal import (
+    from pacthold.agents.submissions.journal import (
         ReliableCapabilities,
         ReliableSubmissionUnsupported,
         SubmissionJournal,
@@ -157,7 +157,7 @@ def test_sigkill_windows_recover_by_query_without_redispatch(
 import sqlite3, sys, time
 from dataclasses import dataclass
 from pathlib import Path
-from ordessa_agent.submission_journal import ReliableCapabilities, SubmissionJournal
+from pacthold.agents.submissions.journal import ReliableCapabilities, SubmissionJournal
 from ordessa_environment_api import RequestKey
 from ordessa_environment_api.guarantee import GuaranteeLevel
 from ordessa_persistence_sqlite import ProtectedFingerprintHmac, SqliteStorePort
@@ -227,7 +227,7 @@ pause("domain_result")
     os.kill(child.pid, signal.SIGKILL)
     assert child.wait(timeout=10) == -signal.SIGKILL
 
-    from ordessa_agent.submission_journal import SubmissionJournal
+    from pacthold.agents.submissions.journal import SubmissionJournal
     from ordessa_persistence_sqlite import SqliteStorePort
 
     domain = SqliteStorePort(domain_db, writer_token="domain-parent", allow_takeover=True)

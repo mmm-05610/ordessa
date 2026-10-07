@@ -45,20 +45,22 @@ def _scanned_files() -> list[Path]:
     """Every kernel source and kernel test file (source and tests are both
     scoped: a kernel test may not need the product tree either).
 
-    Exception (032 revision): the decision module's own tests moved into
-    ``tests/decision/`` from the retired ``ordessa-decision`` distribution and
-    legitimately integrate against above-the-kernel packages (the Codex
-    pure-read extension, persistence-sqlite) — they are consumers of the
-    kernel direction, not kernel surface. Kernel source, including
-    ``src/pacthold/decision/`` itself, stays fully scanned.
+    Exception (032 revision): module tests that moved into ``tests/decision/``
+    and ``tests/agents/`` from retired distributions/plugins legitimately
+    integrate against above-the-kernel packages (the Codex pure-read extension,
+    the persistence-sqlite implementations they exercise through their ports) —
+    they are consumers of the kernel direction, not kernel surface. Kernel
+    source, including ``src/pacthold/decision/`` and ``src/pacthold/agents/``,
+    stays fully scanned.
     """
     files: list[Path] = []
     for base in (PACKAGE_ROOT / "src", PACKAGE_ROOT / "tests"):
         files.extend(sorted(base.rglob("*.py")))
+    moved_tests = (PACKAGE_ROOT / "tests" / "decision", PACKAGE_ROOT / "tests" / "agents")
     return [
         path for path in files
         if "egg-info" not in path.parts
-        and not path.is_relative_to(PACKAGE_ROOT / "tests" / "decision")
+        and not any(path.is_relative_to(base) for base in moved_tests)
     ]
 
 

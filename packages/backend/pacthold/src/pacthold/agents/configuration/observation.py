@@ -1,6 +1,6 @@
 """Agent full-snapshot source; subscription authority belongs to Environment."""
 from dataclasses import fields, is_dataclass
-from .owners import wire_value
+from pacthold.agents.submissions.owners import wire_value
 
 
 def snapshot_wire(snapshot):

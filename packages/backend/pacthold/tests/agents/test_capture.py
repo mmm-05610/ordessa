@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_agent.capture import CaptureError, CaptureTransaction
+from pacthold.agents.submissions.capture import CaptureError, CaptureTransaction
 from ordessa_environment_api.guarantee import GuaranteeLevel
 
 
