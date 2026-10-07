@@ -1,8 +1,9 @@
 """Real profile-api consumption pins for the `assets.skills` facet.
 
 The profile-api checkpoint (specs/011-plugin-rollout/checkpoints/
-profile-api.json) publishes `ordessa_profile.contracts` and
-`ordessa_profile.plugin.ProfilePluginServices.register_v2_facet /
+profile facet contracts (032) publish
+`pacthold.agents.configuration.profile_contracts` and
+`pacthold.agents.profile_services.ProfilePluginServices.register_v2_facet /
 describe_facets / resolve_preview`; the intended usage is the proof chain
 in `plugins/profile/tests/test_v2_extension.py`. These tests run OUR facet
 through that same public surface — registration happens through the
@@ -37,9 +38,8 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-for _module, _src in (("ordessa_profile", REPO_ROOT / "plugins" / "profile" / "src"),
-                      ("pacthold_runtime_compat",
-                       REPO_ROOT / "plugins" / "runtime-compat" / "src")):
+for _module, _src in (("pacthold_runtime_compat",
+                       REPO_ROOT / "plugins" / "runtime-compat" / "src"),):
     if (importlib.util.find_spec(_module) is None
             and _src.is_dir() and str(_src) not in sys.path):
         sys.path.append(str(_src))
@@ -93,16 +93,13 @@ def profile_services(tmp_path):
     checkpoint's own facade construction — same as the proof test), or an
     honest failure naming the upstream symbol that blocks it."""
     try:
-        from ordessa_profile.core import ProfileCore, StaticHarnessCatalog
-        from ordessa_profile.plugin import ProfilePluginServices
+        from pacthold.agents.profile_services import ProfileCore, StaticHarnessCatalog
+        from pacthold.agents.profile_services import ProfilePluginServices
     except Exception as exc:  # noqa: BLE001 - RED by upstream, see docstring
         pytest.fail(
             "profile-api is not importable in this tree — upstream gap: "
-            "plugins/profile/src/ordessa_profile/plugin.py imports "
-            "'AgentBoxProfileV1' from 'pacthold.resource_contracts' (module "
-            "emptied by the foundation checkpoint; the symbol now lives at "
-            "pacthold_runtime_compat.resource_contracts."
-            "agent_box_profile_v1). Q1 may not edit plugins/profile. "
+            "pacthold.agents.profile_services (032 kernel-owned composition) "
+            "unavailable. "
             f"underlying error: {exc!r}")
     core = ProfileCore(
         str(tmp_path / "profile-store.sqlite"),
@@ -145,7 +142,7 @@ def test_registration_uses_the_published_facet_api_only(profile_services):
     assert {e["facet_id"]: e for e in unknown}[FACET_ID]["applicability"] \
         == "unknown"
     # duplicate id under another owner is THEIR refusal, not our shadow:
-    from ordessa_profile import ProfileError
+    from pacthold.agents.configuration.profile_errors import ProfileError
     with pytest.raises(ProfileError) as info:
         services.register_v2_facet(provider, owner_plugin_id="someone.else")
     assert info.value.code == "FACET_ID_CONFLICT"
@@ -158,7 +155,7 @@ def test_provider_compile_declares_zero_config_intents(profile_services):
     Profile's journal claim `port-confirmed` for content nothing applied
     (evidence.py: no rung above its own proof). Asserted against the REAL
     contract type from the published checkpoint surface."""
-    from ordessa_profile.contracts import CompileResult
+    from pacthold.agents.configuration.profile_contracts import CompileResult
 
     provider = SkillsFacetProvider(asset_ids=lambda: ["demo-skill"])
     result = provider.compile({"demo-skill": decision_value(1)},
@@ -281,7 +278,7 @@ def test_harness_port_absence_keeps_their_typed_block(profile_services):
     core.sessions.open_session("ks", session_id="S", harness_id="pi",
                                profile_id=pid_a)
     core.sessions.select_profile("sel", session_id="S", profile_id=pid_b)
-    from ordessa_profile import ProfileError
+    from pacthold.agents.configuration.profile_errors import ProfileError
     with pytest.raises(ProfileError) as info:
         core.sessions.begin_turn("t1", session_id="S")
     assert info.value.code == "APPLICATION_PORT_ABSENT"

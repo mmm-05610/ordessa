@@ -7,7 +7,7 @@ Consumption SHA: profile-api r2 ``implementationSha =
 e6f720d347d3258bfb795c12ee703676c24ca24f`` (branch ``codex/014-a-profile``,
 merged into this tree at the PB-6 merge commit; ancestry recorded in the P-B
 report). The provider below speaks the published ``FacetProviderV2``
-protocol (``ordessa_profile.facets.FacetRegistry.register(..., v2=True)``):
+protocol (``pacthold.agents.facets.FacetRegistry.register(..., v2=True)``):
 
 - one atomic item ``choice`` (provider+model never split, MP-01), bound to
   the profile's harness — the binding rule lives in
@@ -23,13 +23,13 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from ordessa_profile.contracts import (
+from pacthold.agents.configuration.profile_contracts import (
     Applicability, CompileResult, ConfigIntent, FacetDescriptor,
     FacetProviderV2, ItemDescriptor, MigratedItems, MigrationUnsupported,
     UNSET, Violation,
 )
-from ordessa_profile.errors import ProfileError
-from ordessa_profile.facets import FacetRegistry
+from pacthold.agents.configuration.profile_errors import ProfileError
+from pacthold.agents.facets import FacetRegistry
 
 from .facet_registration import (
     API_MAJOR, CHOICE_ITEM_ID, FACET_ID, SCHEMA_VERSION,

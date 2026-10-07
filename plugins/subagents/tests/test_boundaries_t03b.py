@@ -140,8 +140,13 @@ TEST_ONLY_SIBLING_PACKAGES: dict[str, str] = {
 #: which is that lane's own contract consumption — registered here in words
 #: rather than tolerated silently, and reported to the T10 owner.
 TEST_ONLY_FOREIGN_PACKAGES: dict[str, str] = {
-    "ordessa_profile": "ordessa-profile (T10 facet test binds the real core, "
-                       "including its declared .plugin surface)",
+    # 032: the profile authority moved into the kernel; the T10 lane binds the
+    # same real core at its new public location (profile services + facet
+    # contracts). `pacthold` itself stays on the never-allowed list for src.
+    "pacthold.agents.profile_services": (
+        "pacthold.agents.profile_services (T10 facet test binds the real core)"),
+    "pacthold.agents.configuration": (
+        "pacthold.agents.configuration (T10 facet contracts)"),
 }
 
 #: Test-scope roots that are neither this package nor a sibling plugin: the
@@ -161,7 +166,10 @@ PRODUCTION_ALLOWED_TOP_LEVEL: frozenset[str] = frozenset(
 TEST_ALLOWED_TOP_LEVEL: frozenset[str] = frozenset(
     PRODUCTION_ALLOWED_TOP_LEVEL
     | set(TEST_ONLY_SIBLING_PACKAGES)
-    | set(TEST_ONLY_FOREIGN_PACKAGES)
+    # 032: foreign licences may name a dotted subpath under a root that stays
+    # forbidden as a whole (the kernel-resident profile authority); the scan
+    # consumes the top-level root for listing and the dotted path for exactness.
+    | {key.split(".")[0] for key in TEST_ONLY_FOREIGN_PACKAGES}
     | TEST_HARNESS_TOP_LEVEL
 )
 #: Back-compat name for the predicates below that keep a single default scope:
@@ -328,13 +336,27 @@ def _non_stdlib_top_levels(source: str, *,
 
 
 def _forbidden_root_hits(source: str, *,
-                         forbidden: frozenset[str] = ALWAYS_FORBIDDEN_TOP_LEVEL
+                         forbidden: frozenset[str] = ALWAYS_FORBIDDEN_TOP_LEVEL,
+                         allowed_exact: frozenset[str] = frozenset(),
                          ) -> list[str]:
     """A never-allowed root, allow-list or not (the harness package, compat,
-    the product, the kernel, another plugin's own namespace)."""
+    the product, the kernel, another plugin's own namespace).
+
+    `allowed_exact` names whole dotted modules whose top-level root is on the
+    forbidden list but whose precise subpath a scope's written licence covers
+    (032: the T10 lane binds the kernel-resident profile authority). A
+    subpath allowance matches exactly or as a dotted prefix — never the bare
+    kernel root — so `import pacthold` stays red while the licensed module
+    path stays green."""
     names = _absolute_imports(source)
+    licensed = {
+        name for name in names
+        if any(name == path or name.startswith(path + ".")
+               for path in allowed_exact)
+    }
     return sorted(
-        {name for name in names if name.split(".")[0] in forbidden}
+        {name for name in names - licensed
+         if name.split(".")[0] in forbidden}
         | {name for name in names
            if name == "ordessa_harness" or name.startswith("ordessa_harness.")})
 
@@ -691,7 +713,10 @@ def test_each_import_scope_is_scanned_by_the_same_predicates():
         for path in files:
             source = path.read_text(encoding="utf-8")
             where = str(path.relative_to(REPO_ROOT))
-            for hit in _forbidden_root_hits(source, forbidden=forbidden):
+            scope_exact = (frozenset(TEST_ONLY_FOREIGN_PACKAGES)
+                           if name == "tests" else frozenset())
+            for hit in _forbidden_root_hits(source, forbidden=forbidden,
+                                            allowed_exact=scope_exact):
                 forbidden_hits.append(f"{where}: {hit}")
             for top in sorted(_non_stdlib_top_levels(source, allowed=allowed,
                                                      local_roots=local)):
@@ -857,8 +882,9 @@ def test_the_package_declares_exactly_the_published_contract_dependencies():
     # A tolerated test root this package does NOT declare is out-of-band (it
     # arrives from another lane's checkpoint); said out loud, because a licence
     # with no declaration anywhere is how a suite starts passing by accident.
-    out_of_band = sorted(set(TEST_ONLY_FOREIGN_PACKAGES) & test_roots)
-    assert out_of_band == ["ordessa_profile"], out_of_band
+    foreign_roots = {k.split(".")[0] for k in TEST_ONLY_FOREIGN_PACKAGES}
+    out_of_band = sorted(foreign_roots & test_roots)
+    assert out_of_band == ["pacthold"], out_of_band
     assert "ordessa-profile" not in declared_dev and "ordessa-profile" not in declared
 
     # capability: the same predicate names an undeclared dep and a dead one

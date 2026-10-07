@@ -4,12 +4,12 @@ Since the profile-api checkpoint (specs/011-plugin-rollout/checkpoints/
 profile-api.json) the Z1 package publishes the consumption surface this
 slice had requested as §G3:
 
-* `ordessa_profile.contracts` — `FacetDescriptor` / `ItemDescriptor`, the
+* `pacthold.agents.configuration.profile_contracts` — `FacetDescriptor` / `ItemDescriptor`, the
   PF04 four-value states (`UNSET` / explicit / `ValueDisabled` /
   provider-absent), `Applicability`, `Violation` / `CompileResult` /
   `ConfigIntent`, `SessionRef` and the `HarnessConfigPort` consumer
   protocol;
-* `ordessa_profile.plugin.ProfilePluginServices` — `register_v2_facet
+* `pacthold.agents.profile_services.ProfilePluginServices` — `register_v2_facet
   (provider, owner_plugin_id)` (owner host-injected, never self-declared),
   `describe_facets`, `resolve_preview`.
 
@@ -32,7 +32,7 @@ composition decision stays honest:
   legacy-binding migration engine still writes only the domain's own
   assignment tables; nothing here moves it into the facet.
 
-Imports of `ordessa_profile` are deliberately lazy (inside the functions
+Imports of `pacthold.agents` are deliberately lazy (inside the functions
 that speak to the API): this package must stay importable in compositions
 without Profile installed — the same optional-registration rule the facet
 itself obeys. What the facet does NOT do: it never writes Profile storage

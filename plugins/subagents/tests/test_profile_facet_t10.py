@@ -1,6 +1,6 @@
 """T10 — Profile facet/editor + next-submission effective set (G16).
 
-Every test binds the *real* Profile v2 surface (``ordessa_profile`` — the
+Every test binds the *real* Profile v2 surface (``pacthold.agents`` — the
 published Z1 seam) against this domain's ``profile_facet`` module; nothing
 here imitates Z1's types (constitution IV: controlled fixtures are labelled
 as such and never claim a real brand).
@@ -26,9 +26,10 @@ import json
 
 import pytest
 
-from ordessa_profile import ProfileCore, ProfileError, StaticHarnessCatalog
-from ordessa_profile import contracts as z1
-from ordessa_profile.plugin import ProfilePluginServices
+from pacthold.agents.configuration.profile_errors import ProfileError
+from pacthold.agents.profile_services import ProfileCore, StaticHarnessCatalog
+from pacthold.agents.configuration import profile_contracts as z1
+from pacthold.agents.profile_services import ProfilePluginServices
 
 from ordessa_assets_subagents import ceiling as ceiling_mod
 from ordessa_assets_subagents import dto, errors, profile_facet, resolution

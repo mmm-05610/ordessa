@@ -27,9 +27,7 @@ REPO_ROOT = PLUGIN_ROOT.parents[1]
 for _module, _root in (("ordessa_skills", PLUGIN_ROOT / "src"),
                        ("pacthold_runtime_compat",
                         REPO_ROOT / "plugins" / "runtime-compat" / "src"),
-                       ("ordessa_profile",
-                        REPO_ROOT / "plugins" / "profile" / "src"),
-                       # the permissions-api checkpoint (`bcd4387bec`):
+                                              # the permissions-api checkpoint (`bcd4387bec`):
                        # `ordessa_skills.mandatory_policy` binds to the
                        # published PUBLIC API package, and the tests drive it
                        # through the published backend store (PolicyRepository

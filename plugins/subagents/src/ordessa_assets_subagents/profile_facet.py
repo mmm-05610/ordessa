@@ -17,7 +17,7 @@ Design locks, each proven in ``tests/test_profile_facet_t10.py``:
   `Violation`, `CompileResult`, `ConfigIntent`, `MigratedItems`,
   `MigrationUnsupported`, `SessionRef`, `AppliedReceipt`, `JournalEntry`,
   ``UNSET``) is *injected* through :class:`ProfileV2Api` by the composition
-  root that already imports ``ordessa_profile.contracts``.  A missing seam
+  root that already imports ``pacthold.agents.configuration.profile_contracts``.  A missing seam
   is a typed refusal (:data:`errors.ADAPTER_MISSING`), never a fallback copy
   of Z1's types.
 * **Ownership is host-injected** (design §C1/§C3, "注册 owner 由宿主授予"):

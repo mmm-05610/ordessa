@@ -54,13 +54,13 @@ copies — the lead review asks for exactly this list):
   (`from pacthold_runtime_compat.runtime_composition import
   HarnessCommandSpec, declare_source`), so the grant is the published
   entry point, not a harness internal.
-* `ordessa_profile.contracts` — the profile-api checkpoint's published
+* `pacthold.agents.configuration.profile_contracts` — the profile facet
   contract surface (`FacetDescriptor`/`ItemDescriptor`/`Applicability`/
   `Violation`/`CompileResult`/`UNSET`/`ValueDisabled`). It is the facet-
   provider vocabulary our `profile_contribution` must speak to register a
   v2 facet at all; it is imported lazily inside the provider only (the
   package stays importable without Profile — contracts.md 可选注册不能反转
-  依赖). No other `ordessa_profile` module is granted: the services object
+  契约（032 迁入核心后随包）。No other profile module is granted: the services object
   arrives by host injection and is consumed duck-typed through its
   documented methods.
 * `ordessa_permissions_api` — the permissions-api checkpoint's PUBLIC
@@ -114,7 +114,7 @@ PLATFORM_MODULE_GRANTS = frozenset((
     "pacthold_runtime_compat.resource_contracts.runtime_artifacts",
     "pacthold_runtime_compat.resource_contracts.agent_skill_v1",
     "pacthold_runtime_compat.runtime_composition",
-    "ordessa_profile.contracts",
+    "pacthold.agents.configuration.profile_contracts",
     "ordessa_permissions_api",
 ))
 

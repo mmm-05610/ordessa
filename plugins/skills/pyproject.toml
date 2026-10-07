@@ -27,7 +27,6 @@ dev = ["pytest>=7"]
 # The assets.skills facet registration is an optional composition edge
 # (contracts.md §Profile: 可选注册不能反转依赖) — the package imports
 # `ordessa_profile.contracts` lazily and runs without it.
-profile = ["ordessa-profile>=2.0.0a1,<3"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

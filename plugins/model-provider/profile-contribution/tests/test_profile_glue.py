@@ -1,7 +1,7 @@
 """PB-6: the model-provider facet GLUED to the real profile-api v2 surface
 (REQ-Z3-3; consumed r2 = e6f720d347 via the PB-6 merge commit).
 
-Every gate drives the REAL ``ordessa_profile`` objects — the published
+Every gate drives the REAL kernel profile authority objects (032) — the published
 ``FacetRegistry``, the protocol check ``FacetProviderV2``, the descriptor
 validators — never a local re-statement of the profile side. The
 EffectiveChoiceResolver and the archive-time reference view keep their
@@ -11,9 +11,9 @@ real resolution inputs.
 from __future__ import annotations
 
 import pytest
-from ordessa_profile.contracts import Applicability, MigratedItems, MigrationUnsupported
-from ordessa_profile.errors import ProfileError
-from ordessa_profile.facets import FacetRegistry
+from pacthold.agents.configuration.profile_contracts import Applicability, MigratedItems, MigrationUnsupported
+from pacthold.agents.configuration.profile_errors import ProfileError
+from pacthold.agents.facets import FacetRegistry
 
 from ordessa_model_provider_profile.facet import EffectiveChoiceResolver, SessionOverrides
 from ordessa_model_provider_profile.profile_glue import (

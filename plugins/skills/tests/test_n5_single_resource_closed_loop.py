@@ -21,9 +21,8 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-for _module, _src in (("ordessa_profile", REPO_ROOT / "plugins" / "profile" / "src"),
-                      ("pacthold_runtime_compat",
-                       REPO_ROOT / "plugins" / "runtime-compat" / "src")):
+for _module, _src in (("pacthold_runtime_compat",
+                       REPO_ROOT / "plugins" / "runtime-compat" / "src"),):
     if (importlib.util.find_spec(_module) is None
             and _src.is_dir() and str(_src) not in sys.path):
         sys.path.append(str(_src))
@@ -48,8 +47,8 @@ from ordessa_skills.service import SkillsService  # noqa: E402
 
 
 def _profile_services(tmp_path):
-    from ordessa_profile.core import ProfileCore, StaticHarnessCatalog
-    from ordessa_profile.plugin import ProfilePluginServices
+    from pacthold.agents.profile_services import ProfileCore, StaticHarnessCatalog
+    from pacthold.agents.profile_services import ProfilePluginServices
     core = ProfileCore(
         str(tmp_path / "profile-store.sqlite"),
         harnesses=StaticHarnessCatalog({"pi": frozenset(), "codex": frozenset()}))

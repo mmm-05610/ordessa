@@ -100,7 +100,7 @@ class SkillsFacetProvider:
     # -- FacetProviderV2 ------------------------------------------------------
 
     def descriptor(self):
-        from ordessa_profile.contracts import FacetDescriptor, ItemDescriptor
+        from pacthold.agents.configuration.profile_contracts import FacetDescriptor, ItemDescriptor
 
         items = tuple(
             ItemDescriptor(
@@ -138,7 +138,7 @@ class SkillsFacetProvider:
         )
 
     def applicability(self, capability_facts: Mapping[str, Any]):
-        from ordessa_profile.contracts import Applicability
+        from pacthold.agents.configuration.profile_contracts import Applicability
 
         harness_id = capability_facts.get("harness_id")
         if harness_id is None:
@@ -155,7 +155,7 @@ class SkillsFacetProvider:
 
     def validate(self, items: Mapping[str, Any],
                  reference_facts: Mapping[str, Any]):
-        from ordessa_profile.contracts import Violation
+        from pacthold.agents.configuration.profile_contracts import Violation
 
         violations = []
         known = set(self._asset_ids())
@@ -183,7 +183,7 @@ class SkillsFacetProvider:
         return tuple(violations)
 
     def migrate(self, old_schema_version: str, stored_items: Mapping[str, Any]):
-        from ordessa_profile.contracts import MigratedItems, MigrationUnsupported
+        from pacthold.agents.configuration.profile_contracts import MigratedItems, MigrationUnsupported
 
         if old_schema_version == FACET_SCHEMA_VERSION:
             return MigratedItems(
@@ -217,7 +217,7 @@ class SkillsFacetProvider:
         (`APPLICATION_PORT_ABSENT`), which this facet consumes rather than
         re-implements.
         """
-        from ordessa_profile.contracts import CompileResult
+        from pacthold.agents.configuration.profile_contracts import CompileResult
 
         del resolved_items, target_facts
         return CompileResult(intents=(), violations=())

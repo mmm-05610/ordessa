@@ -136,7 +136,7 @@ class ProfileApiLayerPort:
         """Map the Profile service's own refusal onto the domain's typed code.
 
         Duck-typed on `.code` (ProfileError's frozen spelling) rather than
-        importing `ordessa_profile.errors`: the profile package is a sibling
+        importing `pacthold.agents.configuration.profile_errors`: the profile package is a sibling
         plugin and this domain's import surface stays pinned by
         tests/test_dependency_direction.py to the published contract modules
         only.

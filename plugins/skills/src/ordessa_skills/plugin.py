@@ -113,7 +113,7 @@ class SkillsServerPlugin:
         #: argument into the default product is C0's assembly job (§G1,
         #: `plugin_host.provided_port("permissions.authorizer@1")`).
         self._permissions = permissions
-        #: the host-composed `ordessa_profile.plugin.ProfilePluginServices`
+        #: the host-composed `pacthold.agents.profile_services.ProfilePluginServices`
         #: (profile-api checkpoint). When present, `build` registers the
         #: `assets.skills` facet through that published API (owner
         #: `ordessa.skills`, host-injected through the facade call) and the
