@@ -11,7 +11,7 @@ import { type ModelProviderService, type ProviderConfigView } from '@extensions/
 import type { ProfileServiceClient } from '@extensions/ordessa.profile-api/contract.js'
 import { createUiComponentsService } from '../../../../packages/frontend/ui-components/src/index'
 import createModelPlugin, { COMPONENT_PROVIDER_ID, MODEL_SELECTOR_ID, ModelSelectorKey } from '../src/entry'
-import createProfilePlugin, { ProfilePickerKey } from '../../../profile/integrations/chat/src/entry'
+import createProfilePlugin, { ProfilePickerKey } from '../../../profile-ui/integrations/chat/src/entry'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 const disposers: Array<() => void | Promise<void>> = []

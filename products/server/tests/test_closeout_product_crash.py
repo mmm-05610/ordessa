@@ -85,7 +85,7 @@ root, effects, checkpoint, boundary = map(Path, sys.argv[1:5])
 boundary = str(boundary)
 sys.path.insert(0, str(root / "scripts" / "packaging"))
 from controlled_native_fixture import ControlledNativeFixture, controlled_product_composition, test_protected_fingerprint
-from ordessa_agent.submission_journal import SubmissionJournal
+from pacthold.agents.submissions.journal import SubmissionJournal
 
 def pause_here():
     checkpoint.write_text(boundary, encoding="ascii")

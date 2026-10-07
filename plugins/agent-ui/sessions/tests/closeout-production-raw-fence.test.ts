@@ -2,8 +2,8 @@ import { afterEach, expect, it } from 'vitest'
 import { OwnedResources, type PluginContext } from '@ordessa/extension-api'
 import { createConnections } from '../../../../packages/frontend/connections/src/index'
 import type { Commands, Workbench } from '../../../../packages/frontend/contracts/foundation/src/contract'
-import { createAgentConnections } from '../../../../plugins/agent/connections/src/entry'
-import type { AgentClient, AgentSnapshot } from '../../../../plugins/agent/contracts/src/contract'
+import { createAgentConnections } from '../../../agent-ui/connections/src/entry'
+import type { AgentClient, AgentSnapshot } from '../../../agent-ui/contracts/src/contract'
 import createSessionsPlugin from '../src/entry'
 
 const capabilities = { history: 'supported', reasoning: 'unknown', tools: 'unknown', stop: 'supported',

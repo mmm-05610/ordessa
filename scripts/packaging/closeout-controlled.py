@@ -47,10 +47,8 @@ REQUIRED_DISTRIBUTIONS = (
     "ordessa-server-compat",
     "ordessa-model-provider",
     "ordessa-model-provider-profile",
-    "ordessa-profile",
     "ordessa-skills",
     "ordessa-server-product",
-    "ordessa-agent",
     "ordessa-persistence-sqlite",
 )
 
@@ -72,10 +70,8 @@ REQUIRED_IMPORTS = (
     "ordessa_server",
     "ordessa_server_compat",
     "ordessa_model_provider",
-    "ordessa_profile",
     "ordessa_skills",
     "ordessa_server_product",
-    "ordessa_agent",
     "ordessa_persistence_sqlite",
 )
 

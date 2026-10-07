@@ -172,9 +172,7 @@ const PRODUCT_PACKAGES = [
   'plugins/server-compat',
   'plugins/model-provider/server',
   'plugins/model-provider/profile-contribution',
-  'plugins/profile',
   'plugins/skills',
-  'plugins/agent/backend',
   'products/server',
 ]
 

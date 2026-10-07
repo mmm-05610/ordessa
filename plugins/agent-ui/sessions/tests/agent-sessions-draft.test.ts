@@ -1,9 +1,9 @@
 import { afterEach, expect, it } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
 import { createConnections } from '../../../../packages/frontend/connections/src/index'
-import { createAgentConnections } from '../../../../plugins/agent/connections/src/entry'
-import { createAgentSessions } from '../../../../plugins/agent/sessions/src/model'
-import type { AgentClient, AgentSnapshot } from '../../../../plugins/agent/contracts/src/contract'
+import { createAgentConnections } from '../../../agent-ui/connections/src/entry'
+import { createAgentSessions } from '../../../agent-ui/sessions/src/model'
+import type { AgentClient, AgentSnapshot } from '../../../agent-ui/contracts/src/contract'
 
 const capabilities = { history: 'supported', reasoning: 'unknown', tools: 'unknown', stop: 'supported',
   interactions: 'unknown', models: 'unknown', modes: 'unknown', workspaces: 'supported' } as const

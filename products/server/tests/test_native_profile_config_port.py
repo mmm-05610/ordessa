@@ -2,9 +2,9 @@
 from types import SimpleNamespace
 from dataclasses import replace
 import pytest
-from ordessa_profile.contracts import (ConfigIntent, PlanResult, SessionRef, UNSET,
+from pacthold.agents.configuration.profile_contracts import (ConfigIntent, PlanResult, SessionRef, UNSET,
     PlannedItem, ApplyUnknown, ApplyRejected, ReconcileOutcome)
-from ordessa_profile.errors import ProfileError
+from pacthold.agents.configuration.profile_errors import ProfileError
 from ordessa_harness_api import ApplicationTarget
 from ordessa_server_product.profile_configuration import NativeProfileConfigPort
 
@@ -374,7 +374,7 @@ def test_late_restore_proof_does_not_claim_the_unapplied_profile_or_repeat_effec
 
 
 def test_complete_application_proof_can_be_reconciled_without_reexecuting(transition_rig):
-    from ordessa_profile.contracts import ApplyConfirmed
+    from pacthold.agents.configuration.profile_contracts import ApplyConfirmed
     f = transition_rig
     plan = f.port.plan(f.ref, (f.intent,), 'confirmed-proof')
     f.port.apply(plan, (f.intent,))

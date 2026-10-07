@@ -14,7 +14,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any, Mapping
 
-from ordessa_agent.submission_service import (
+from pacthold.agents.submissions.service import (
     NativeSubmitBinding,
     NativeSubmitDeclaration,
     NativeSubmitResult,

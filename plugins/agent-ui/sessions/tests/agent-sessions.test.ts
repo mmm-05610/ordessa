@@ -1,10 +1,10 @@
 import { expect, it } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
 import { createConnections } from '../../../../packages/frontend/connections/src/index'
-import { createAgentConnections } from '../../../../plugins/agent/connections/src/entry'
-import { createAgentSessions } from '../../../../plugins/agent/sessions/src/model'
-import { projectSessionGroups, sessionActivity, workspaceLabel } from '../../../../plugins/agent/sessions/src/projection'
-import type { AgentClient, AgentSnapshot } from '../../../../plugins/agent/contracts/src/contract'
+import { createAgentConnections } from '../../../agent-ui/connections/src/entry'
+import { createAgentSessions } from '../../../agent-ui/sessions/src/model'
+import { projectSessionGroups, sessionActivity, workspaceLabel } from '../../../agent-ui/sessions/src/projection'
+import type { AgentClient, AgentSnapshot } from '../../../agent-ui/contracts/src/contract'
 
 function client(id: string) {
   let snapshot: AgentSnapshot = { connection: { id, title: id, status: 'connected', capabilities: {

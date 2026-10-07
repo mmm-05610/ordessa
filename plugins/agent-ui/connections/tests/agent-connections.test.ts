@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
 import { createConnections } from '../../../../packages/frontend/connections/src/index'
-import { createAgentConnections } from '../../../../plugins/agent/connections/src/entry'
+import { createAgentConnections } from '../../../agent-ui/connections/src/entry'
 
 // Since T028 the Agent facade is a consumer of the @ordessa/connections platform: in the product
 // the platform service arrives through ConnectionsToken, so a direct factory call has to supply
@@ -29,9 +29,9 @@ it('lets independent adapters register and releases each with its own scope', as
   expect(() => service.forScope(b).add({ id: 'late', title: 'Late', connect: async () => { throw Error() } })).toThrow('closed')
 })
 
-import { hasAwaitingInteraction, hasOpenRun } from '../../../../plugins/agent/contracts/src/connections'
-import { createAgentSessions } from '../../../../plugins/agent/sessions/src/model'
-import type { AgentClient, AgentReleaseState, AgentSnapshot } from '../../../../plugins/agent/contracts/src/contract'
+import { hasAwaitingInteraction, hasOpenRun } from '../../../agent-ui/contracts/src/connections'
+import { createAgentSessions } from '../../../agent-ui/sessions/src/model'
+import type { AgentClient, AgentReleaseState, AgentSnapshot } from '../../../agent-ui/contracts/src/contract'
 
 function snapshotWith(overrides: Partial<AgentSnapshot>): AgentSnapshot {
   return { connection: { id: 'A', title: 'A', status: 'connected', capabilities: {

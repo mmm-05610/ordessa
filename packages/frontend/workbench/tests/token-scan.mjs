@@ -142,7 +142,7 @@ export const TOKEN_SOURCE_DISCOVERY_ROOTS = [
   'packages/frontend/workbench/api',
   'packages/frontend/connections/api',
   'packages/frontend/ui-components/api',
-  'plugins/agent/contracts/src',
+  'plugins/agent-ui/contracts/src',
 ]
 
 // Every ConnectionKind literal currently constructed in the product sources
@@ -165,7 +165,7 @@ export const WATCHED_KIND_LITERALS = KIND_WATCHLIST.map(entry => entry.literal)
 // (the Agent domain kind lives in the src directory of the domain carrier
 // package plugins/agent/contracts, the ordessa.agent-contracts package).
 export const KIND_SOURCE_DISCOVERY_ROOTS = [
-  'plugins/agent/contracts/src',
+  'plugins/agent-ui/contracts/src',
 ]
 
 // A source-level construction site, e.g.

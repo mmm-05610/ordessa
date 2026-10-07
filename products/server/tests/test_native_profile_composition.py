@@ -128,7 +128,7 @@ def test_native_registration_refuses_unobserved_owner_and_client_uid(tmp_path):
 
 
 def test_native_model_choice_profile_value_survives_restart_without_applying(tmp_path):
-    from ordessa_profile.errors import ProfileError
+    from pacthold.agents.configuration.profile_errors import ProfileError
 
     root = Path(__file__).resolve().parents[3]
     runtime = create_composition().native_runtime(

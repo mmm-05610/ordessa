@@ -5,7 +5,7 @@ export default defineConfig({
     '@ordessa/ui-components/react': fileURLToPath(new URL('../../../packages/frontend/ui-components/react/index.ts', import.meta.url)),
     '@extensions/ordessa.chat-api/contract.js': fileURLToPath(new URL('../api/src/contract.ts', import.meta.url)),
     '@extensions/ordessa.contracts/contract.js': fileURLToPath(new URL('../../../packages/frontend/contracts/foundation/src/contract.ts', import.meta.url)),
-    '@extensions/ordessa.agent-contracts/contract.js': fileURLToPath(new URL('../../../plugins/agent/contracts/src/contract.ts', import.meta.url)),
+    '@extensions/ordessa.agent-contracts/contract.js': fileURLToPath(new URL('../../agent-ui/contracts/src/contract.ts', import.meta.url)),
     '@ordessa/extension-api': fileURLToPath(new URL('../../../packages/frontend/extension-api/src/index.ts', import.meta.url)),
     '@ordessa/ui-components/api': fileURLToPath(new URL('../../../packages/frontend/ui-components/api/ui-components.ts', import.meta.url)),
   } },

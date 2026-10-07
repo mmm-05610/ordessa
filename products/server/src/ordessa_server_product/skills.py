@@ -2,7 +2,7 @@
 from dataclasses import replace
 
 from ordessa_skills.plugin import SkillsServerPlugin
-from ordessa_profile.plugin import ProfilePluginServices
+from pacthold.agents.profile_services import ProfilePluginServices
 
 
 class ProductSkillsPlugin(SkillsServerPlugin):

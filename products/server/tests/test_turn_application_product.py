@@ -474,7 +474,7 @@ def test_eligibility_verdicts_and_read_only_observation(stack, harnesses, creden
 
 def _bound_rig(stack, harnesses, credentials, tmp_path):
     from ordessa_model_provider_profile.profile_glue import ModelProviderFacetProvider
-    from ordessa_profile.core import ProfileCore
+    from pacthold.agents.profile_services import ProfileCore
     from ordessa_server_product.profile_sessions import ProfileNativeSessions
 
     class CatalogExists:

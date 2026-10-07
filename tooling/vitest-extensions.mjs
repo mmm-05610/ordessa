@@ -13,7 +13,7 @@ const repoRoot = path.resolve(import.meta.dirname, '..')
 export const CONTRACT_SOURCES = {
   'ordessa.contracts': 'packages/frontend/contracts/foundation/src/contract.ts',
   'ordessa.harness-contracts': 'plugins/harness/contracts/src/contract.ts',
-  'ordessa.agent-contracts': 'plugins/agent/contracts/src/contract.ts',
+  'ordessa.agent-contracts': 'plugins/agent-ui/contracts/src/contract.ts',
 }
 
 /** Vite `resolve.alias` entries for every contract carrier. */

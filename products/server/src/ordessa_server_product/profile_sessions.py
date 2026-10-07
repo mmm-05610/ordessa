@@ -6,8 +6,8 @@ Resuming a historical conversation is a separate, explicit binding operation.
 from dataclasses import dataclass
 from threading import RLock
 
-from ordessa_profile.contracts import SessionRef
-from ordessa_profile.errors import ProfileError
+from pacthold.agents.configuration.profile_contracts import SessionRef
+from pacthold.agents.configuration.profile_errors import ProfileError
 
 
 def bind_native_profile_sessions(core, runtime, *, profile_roots=None):
@@ -223,7 +223,7 @@ class ProfileNativeSessions:
             if snapshot.owner is not owner:
                 raise ProfileError("SWITCH_BLOCKED", "Native owner changed during registration", status=409)
             ref = SessionRef(self.realm, channel.harness_id, native_session_id, uid)
-            from ordessa_profile import repository
+            from ordessa_persistence_sqlite import profile_repository as repository
             with self.core.db.read() as conn:
                 stored = repository.get_session_by_uid(conn, uid)
             if stored is None:

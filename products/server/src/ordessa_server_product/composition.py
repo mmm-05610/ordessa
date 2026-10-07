@@ -159,7 +159,7 @@ class ServerProductComposition:
                 return principal == 'local'
 
         self_native_channels = self._native_channels_selected
-        from ordessa_agent.contributions import configuration_contributions
+        from .agent_wire_plugin import configuration_contributions
         from pacthold.environment import InstallationRecord
         environment = ProductEnvironment(identity, store=store,
             policy=self._submission_policy or LocalProductPolicy(),
@@ -197,8 +197,8 @@ class ServerProductComposition:
     def _submission_service_factory(self, context, owners):
         from pathlib import Path
         from ordessa_persistence_sqlite import SqliteStorePort
-        from ordessa_agent.submission_journal import SubmissionJournal, ReliableSubmissionUnsupported
-        from ordessa_agent.submission_service import AgentSubmissionService
+        from pacthold.agents.submissions.journal import SubmissionJournal, ReliableSubmissionUnsupported
+        from pacthold.agents.submissions.service import AgentSubmissionService
         # Read-only reconciliation retains domain/kernel facts even when a
         # native adapter or protected comparison key is currently absent.
         # AgentSubmissionService rejects effect admission without its valid
@@ -294,12 +294,12 @@ class ServerProductComposition:
         the compat writer retired in W-1 (same batch), so no double-write.
         """
         from ordessa_model_provider.plugin import ModelProviderPlugin
-        from ordessa_profile.server_plugin import ProfileServerPlugin
+        from .profile_wire_plugin import ProfileWirePlugin
         from ordessa_permissions_adapters import PolicyAdaptersPlugin
         from ordessa_permissions_backend.plugin import PermissionsBackendPlugin
         from ordessa_sandbox_adapters import SandboxAdaptersServerPlugin
         from ordessa_sandbox_backend import build_sandbox_plugin
-        from ordessa_agent.plugin import AgentDomainPlugin
+        from .agent_wire_plugin import AgentDomainWirePlugin
 
         model_provider_kwargs = {
             name: composition_kwargs[name]
@@ -309,7 +309,7 @@ class ServerProductComposition:
         return (
             *self.compatibility_plugins(**composition_kwargs),
             ModelProviderPlugin(**model_provider_kwargs),
-            ProfileServerPlugin(),
+            ProfileWirePlugin(),
             build_sandbox_plugin(),
             SandboxAdaptersServerPlugin(),
             PermissionsBackendPlugin(),
@@ -317,7 +317,7 @@ class ServerProductComposition:
             # T010-01 (A1): the Agent domain owner serves the 010 consumer
             # migration; one owner set per canonical target, wire projections
             # only — it never becomes a second writer.
-            AgentDomainPlugin(submission_service_factory=self._submission_service_factory,
+            AgentDomainWirePlugin(submission_service_factory=self._submission_service_factory,
                               submission_capabilities=self._submission_capabilities),
         )
 
@@ -419,7 +419,7 @@ class ServerProductComposition:
             # Resolve the current activation round; never retain a stopped port.
             sessions = runtime.plugin_host.provided_port('profile.native-sessions')
             if sessions is None:
-                from ordessa_profile.errors import ProfileError
+                from pacthold.agents.configuration.profile_errors import ProfileError
                 raise ProfileError('APPLICATION_PORT_ABSENT', 'Profile launch service unavailable', status=409)
             return sessions.resolve_launch_selection(profile_id=profile_id, harness_id=harness_id)
         runtime = build_runtime_from_native_adapter(
@@ -473,12 +473,12 @@ class ServerProductComposition:
             profile_plugins = ()
             if include_profile:
                 from dataclasses import replace
-                from ordessa_profile.server_plugin import ProfileServerPlugin
+                from .profile_wire_plugin import ProfileWirePlugin
                 from ordessa_model_provider_profile.profile_glue import ModelProviderFacetProvider
                 from .skills import ProductSkillsPlugin
                 from .profile_sessions import bind_native_profile_sessions
 
-                class NativeProfilePlugin(ProfileServerPlugin):
+                class NativeProfilePlugin(ProfileWirePlugin):
                     def descriptor(self):
                         original = super().descriptor()
                         return replace(original, requires=(*original.requires, NATIVE_CONFIGURATION_ID))
@@ -515,7 +515,7 @@ class ServerProductComposition:
                 intent_sink = ProfileTurnIntentSink(
                     core_of=lambda: provided_port("profile.core"),
                     sessions_of=lambda: provided_port("profile.native-sessions"))
-            from ordessa_agent.plugin import AgentDomainPlugin
+            from .agent_wire_plugin import AgentDomainWirePlugin
             agent_bindings = {}
             def resolve_agent_session(location, native_owner):
                 from server_plugin_api import WireError
@@ -562,7 +562,7 @@ class ServerProductComposition:
                 except Exception:
                     return None
 
-            extras = (AgentDomainPlugin(target_resolver=validate_agent_target,
+            extras = (AgentDomainWirePlugin(target_resolver=validate_agent_target,
                                         session_resolver=resolve_agent_session,
                                         submission_service_factory=self._submission_service_factory,
                               submission_capabilities=self._submission_capabilities),

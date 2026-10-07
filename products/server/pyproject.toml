@@ -15,7 +15,6 @@ dependencies = [
     "ordessa-server-compat==2.0.0a1",
     "ordessa-workspace==2.0.0a1",
     "ordessa-harness==2.0.0a1",
-    "ordessa-profile==2.0.0a1",
     "ordessa-skills==2.0.0a1",
     "ordessa-model-provider==2.0.0a1",
     "ordessa-model-provider-profile==2.0.0a1",
@@ -25,7 +24,6 @@ dependencies = [
     "ordessa-permissions-adapters==0.1.0",
     "ordessa-permissions-backend==0.1.0",
     "pacthold-runtime-compat==0.1.0",
-    "ordessa-agent==0.1.0",
     "ordessa-persistence-sqlite==0.1.0",
 ]
 

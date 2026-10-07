@@ -4,12 +4,12 @@ import { createRoot } from 'react-dom/client'
 import { afterEach, expect, it } from 'vitest'
 import { OwnedResources, type PluginContext } from '@ordessa/extension-api'
 import { createConnections } from '../../../../packages/frontend/connections/src/index'
-import { createAgentConnections } from '../../../../plugins/agent/connections/src/entry'
-import { createAgentSessions } from '../../../../plugins/agent/sessions/src/model'
-import { SessionBrowser } from '../../../../plugins/agent/sessions/src/view'
-import createSessionsPlugin from '../../../../plugins/agent/sessions/src/entry'
+import { createAgentConnections } from '../../../agent-ui/connections/src/entry'
+import { createAgentSessions } from '../../../agent-ui/sessions/src/model'
+import { SessionBrowser } from '../../../agent-ui/sessions/src/view'
+import createSessionsPlugin from '../../../agent-ui/sessions/src/entry'
 import type { Commands, Workbench } from '../../../../packages/frontend/contracts/foundation/src/contract'
-import type { AgentClient, AgentSnapshot } from '../../../../plugins/agent/contracts/src/contract'
+import type { AgentClient, AgentSnapshot } from '../../../agent-ui/contracts/src/contract'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 const cleanup: (() => Promise<void>)[] = []

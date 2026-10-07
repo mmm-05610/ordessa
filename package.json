@@ -13,9 +13,9 @@
     "products/*",
     "plugins/chat/api",
     "plugins/chat/frontend",
-    "plugins/profile/api",
-    "plugins/profile/frontend",
-    "plugins/profile/integrations/chat",
+    "plugins/profile-ui/api",
+    "plugins/profile-ui/frontend",
+    "plugins/profile-ui/integrations/chat",
     "plugins/model-provider/desktop",
     "packages/frontend/workbench/interactions",
     "plugins/harness/contracts"

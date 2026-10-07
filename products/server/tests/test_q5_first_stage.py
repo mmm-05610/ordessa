@@ -40,8 +40,11 @@ def test_product_dist_declares_the_three_selected_q5_dependencies():
     dependencies = set(project["project"]["dependencies"])
     assert {"ordessa-sandbox-backend==0.1.0", "ordessa-sandbox-adapters==0.1.0",
             "ordessa-permissions-adapters==0.1.0"} <= dependencies
-    assert {"ordessa-permissions-backend==0.1.0", "ordessa-model-provider==2.0.0a1",
-            "ordessa-profile==2.0.0a1"} <= dependencies
+    assert {"ordessa-permissions-backend==0.1.0", "ordessa-model-provider==2.0.0a1"} <= dependencies
+    # 032: the retired agent/profile plugin distributions must not come back;
+    # the product binds their kernel-owned services directly instead.
+    assert not any(dep.startswith(("ordessa-agent==", "ordessa-profile=="))
+                   for dep in dependencies)
 
 
 def test_default_product_selects_current_domains_and_q5_plugins():

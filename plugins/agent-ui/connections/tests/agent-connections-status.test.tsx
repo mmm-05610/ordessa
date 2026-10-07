@@ -4,9 +4,9 @@ import { createRoot } from 'react-dom/client'
 import { afterEach, expect, it } from 'vitest'
 import { OwnedResources } from '@ordessa/extension-api'
 import { createConnections } from '../../../../packages/frontend/connections/src/index'
-import { createAgentConnections } from '../../../../plugins/agent/connections/src/entry'
-import { ConnectionStatus } from '../../../../plugins/agent/connections/src/status'
-import type { AgentClient, AgentReleaseState, AgentSnapshot } from '../../../../plugins/agent/contracts/src/contract'
+import { createAgentConnections } from '../../../agent-ui/connections/src/entry'
+import { ConnectionStatus } from '../../../agent-ui/connections/src/status'
+import type { AgentClient, AgentReleaseState, AgentSnapshot } from '../../../agent-ui/contracts/src/contract'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 const cleanup: (() => Promise<void>)[] = []

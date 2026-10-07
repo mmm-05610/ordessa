@@ -103,8 +103,8 @@ jobs:
             packages/frontend/native-bridge \
             packages/frontend/ui \
             packages/frontend/ui-components \
-            plugins/agent/connections \
-            plugins/agent/sessions \
+            plugins/agent-ui/connections \
+            plugins/agent-ui/sessions \
             plugins/model-provider/chat-contribution \
             plugins/model-provider/desktop \
             plugins/sandbox/frontend \
@@ -115,8 +115,8 @@ jobs:
             plugins/connectors/acp \
             plugins/connectors/ordessa \
             plugins/permissions/frontend \
-            plugins/profile/api \
-            plugins/profile/frontend \
-            plugins/profile/integrations/chat ; do
+            plugins/profile-ui/api \
+            plugins/profile-ui/frontend \
+            plugins/profile-ui/integrations/chat ; do
             echo "== $ws"; npm test --workspace "$ws"
           done

@@ -120,7 +120,6 @@ pip install -q \
   -e plugins/model-provider/profile-contribution \
   -e plugins/model-provider/server \
   -e plugins/skills \
-  -e plugins/profile \
   -e plugins/runtime-compat \
   -e plugins/server-compat \
   -e plugins/workspace \

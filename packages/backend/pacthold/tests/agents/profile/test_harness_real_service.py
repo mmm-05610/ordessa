@@ -23,7 +23,7 @@ from profile_harness_doubles import ScriptedProvider, ScriptedV2Provider, make_c
 from pacthold.agents.configuration.profile_errors import ProfileError
 from pacthold.agents.configuration.harness_port_adapter import HarnessApiConfigPort
 
-FIXTURE = Path(__file__).resolve().parents[3] / "plugins" / "harness" / "tests" / \
+FIXTURE = Path(__file__).resolve().parents[6] / "plugins" / "harness" / "tests" / \
     "fixtures" / "external_adapter" / "src" / "ordessa_test_external_adapter" / "__init__.py"
 
 # The carrier fixture adapter declares facet_id="model", facet_schema_version="v1",

@@ -4,7 +4,7 @@ import json
 from copy import deepcopy
 from threading import RLock
 
-from ordessa_profile.errors import ProfileError
+from pacthold.agents.configuration.profile_errors import ProfileError
 from ordessa_server.errors import ServerError
 from ordessa_harness.configuration.model.initial import initial_channel
 from ordessa_harness.configuration.model.backend import (

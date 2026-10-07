@@ -7,9 +7,9 @@ uses a backend-registered SessionRef and a current, independently read owner.
 from dataclasses import replace
 from threading import RLock
 
-from ordessa_profile.errors import ProfileError
-from ordessa_profile.harness_port_adapter import HarnessApiConfigPort
-from ordessa_profile.contracts import ApplyConfirmed, ApplyRejected, ApplyUnknown, PlanResult, PlannedItem, ReconcileOutcome
+from pacthold.agents.configuration.profile_errors import ProfileError
+from pacthold.agents.configuration.harness_port_adapter import HarnessApiConfigPort
+from pacthold.agents.configuration.profile_contracts import (ApplyConfirmed, ApplyRejected, ApplyUnknown, PlanResult, PlannedItem, ReconcileOutcome)
 from ordessa_harness_api import ErrorCode
 
 

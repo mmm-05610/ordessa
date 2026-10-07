@@ -2,9 +2,9 @@
 from types import SimpleNamespace
 from unittest.mock import Mock
 import pytest
-from ordessa_profile.core import ProfileCore, StaticHarnessCatalog
-from ordessa_profile.errors import ProfileError
-from ordessa_profile.contracts import SessionRef
+from pacthold.agents.profile_services import ProfileCore, StaticHarnessCatalog
+from pacthold.agents.configuration.profile_errors import ProfileError
+from pacthold.agents.configuration.profile_contracts import SessionRef
 from ordessa_server_product.profile_sessions import ProfileNativeSessions
 from ordessa_server_product.native_configuration import NativeConfigurationAuthority
 

@@ -118,7 +118,7 @@ describe('N4-R1: the Workbench reaches nothing above or beside its own package',
   it('counterexample: reaching into a domain plugin, a host module or an app IS a violation', () => {
     const entry = path.join(packageRoot, 'src', 'entry.tsx')
     const planted = [
-      ["import { Workbench } from '../../../../plugins/agent/contracts/src/contract'", '../../../../plugins/agent/contracts/src/contract'],
+      ["import { Workbench } from '../../../agent-ui/contracts/src/contract'", '../../../agent-ui/contracts/src/contract'],
       ["import { runtime } from '@ordessa/extension-host'", '@ordessa/extension-host'],
       ["import { buildHostServices } from '../../../../apps/desktop/renderer/host-services'", '../../../../apps/desktop/renderer/host-services'],
       ["import { AgentSessionsToken } from '@extensions/ordessa.agent-contracts/contract.js'", '@extensions/ordessa.agent-contracts/contract.js'],

@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from ordessa_profile.errors import ProfileError
+from pacthold.agents.configuration.profile_errors import ProfileError
 from ordessa_server_product.profile_preparation import NativeProfilePreparation, _digest
 
 
@@ -231,8 +231,8 @@ def test_controlled_product_wire_preparation_registration_and_authenticated_c4(t
     from ordessa_server.bootstrap import build_runtime
     from ordessa_server.credentials import CredentialRecords
     from ordessa_server.idempotency import IdempotentRecords
-    from ordessa_profile.core import StaticHarnessCatalog
-    from ordessa_profile.server_plugin import ProfileServerPlugin
+    from pacthold.agents.profile_services import StaticHarnessCatalog
+    from ordessa_server_product.profile_wire_plugin import ProfileWirePlugin as ProfileServerPlugin
     from ordessa_model_provider.catalog import ModelCatalogService
     from ordessa_model_provider.records import ProviderModelRecords
     from ordessa_model_provider.profile_resolution import ProfileModelChoiceResolver
@@ -365,7 +365,7 @@ def test_controlled_product_wire_preparation_registration_and_authenticated_c4(t
         assert observed_owner is not None
         registered = call('registerNativeSession', connectionId='c', nativeSessionId='native-c', profileId=pid)
         ref = registered['sessionRef']
-        from ordessa_profile.contracts import SessionRef
+        from pacthold.agents.configuration.profile_contracts import SessionRef
         binding = sessions_holder['sessions'].require_registered(SessionRef(ref['realm'], ref['harnessId'], ref['nativeSessionKey'], ref['sessionUid']))
         assert binding.snapshot.owner is observed_owner
         initial = call('beginTurnApplication', operationKey='first-c4', sessionRef=ref)
