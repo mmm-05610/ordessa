@@ -7,7 +7,7 @@
  * caller/lease/activation/target/commit and to RE-CHECK revocation after an
  * await. That implementation does not exist in this package — or anywhere the
  * bridge's public seam reaches (extension-host is a thin shell over
- * extension-runtime/host) — as of this file: `WirePort.call` encodes only
+ * extension-host) — as of this file: `WirePort.call` encodes only
  * (method, params) and there is no lease/target/activation to revoke. The last
  * describe records that absence explicitly
  * (UNKNOWN-on-T009-03-implementation) instead of asserting a guarantee the
@@ -233,7 +233,7 @@ describe('T009-03 await-recheck — UNKNOWN on implementation', () => {
     // IPC call to authorize caller/lease/activation/target/commit and to
     // re-check revocation after an await. No such implementation exists in
     // server-bridge (or in extension-host, a thin shell over
-    // extension-runtime/host): WirePort encodes (method, params) only, so
+    // extension-host): WirePort encodes (method, params) only, so
     // "await -> revoke -> refuse" cannot be exercised without inventing a
     // private channel. This pin records the absence; T009-03 must replace it
     // with structure assertions when the authorization implementation lands.

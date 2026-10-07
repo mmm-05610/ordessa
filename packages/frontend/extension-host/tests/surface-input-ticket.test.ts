@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest'
 
 import * as surfaceApi from '@ordessa/extension-api/surface'
-import { createSurfaceRegistry } from '@ordessa/extension-runtime/host/services/surface'
+import { createSurfaceRegistry } from '../src/services/surface'
 
 describe('F1 SurfaceAPI structure (T009-01)', () => {
   it('the contract surface exports the frozen operations and ticket types', () => {

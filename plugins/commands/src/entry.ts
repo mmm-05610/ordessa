@@ -8,7 +8,7 @@
  */
 import type { PluginContext, ResourceScope } from '@ordessa/extension-api'
 import { CommandsToken, CommandSourceToken, type C07 } from '@extensions/ordessa.contracts/contract.js'
-import { createCommands, ordered, registry, createLegacyCommandsAdapter } from '@ordessa/extension-runtime/host/services/command-registry'
+import { createCommands, ordered, registry, createLegacyCommandsAdapter } from '@ordessa/extension-host/services/command-registry'
 
 export { createCommands, ordered, registry }
 

@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Thin compatibility shell (T008-01): the loader lives in @ordessa/extension-runtime/loader. Exit condition: 012 review may retire this shell once all consumers move.",
+  "description": "Independent extension loader leaf (032): discovery, manifest validation and dynamic import.",
   "exports": {
     ".": "./src/index.ts",
     "./manifest": "./src/manifest.ts"
   },
   "dependencies": {
-    "@ordessa/extension-runtime": "0.1.0"
+    "@ordessa/extension-api": "0.1.0"
   }
 }

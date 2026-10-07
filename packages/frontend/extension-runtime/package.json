@@ -3,16 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Merged extension runtime: loader + host (T008-01). The historical @ordessa/extension-loader and @ordessa/extension-host remain as thin re-export shells; Lumino dependency management has exactly ONE home here.",
+  "description": "Extension runtime state store, task scope and UI storage. The loader and host are independent leaves (@ordessa/extension-loader / @ordessa/extension-host) since 032.",
   "exports": {
-    "./loader": "./loader/src/index.ts",
-    "./loader/manifest": "./loader/src/manifest.ts",
-    "./host": "./host/src/index.ts",
-    "./host/main": "./host/src/main/index.ts",
-    "./host/platform": "./host/src/platform.ts",
-    "./host/services": "./host/src/services/index.ts",
-    "./host/services/command-registry": "./host/src/services/command-registry.ts",
-    "./host/services/surface": "./host/src/services/surface.ts",
     "./state": "./src/state/stateStore.ts",
     "./tasks": "./src/state/tasks.ts",
     "./ui-storage": "./src/state/uiStorage.ts"
