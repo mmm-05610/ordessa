@@ -5,7 +5,7 @@ from collections.abc import Mapping
 import inspect
 from typing import Any
 
-from .api import ProfileEnvelope
+from .legacy_api import ProfileEnvelope
 
 _SECRET_KEYS = ("secret", "token", "api_key", "apikey", "password", "private_key", "authorization", "cookie")
 

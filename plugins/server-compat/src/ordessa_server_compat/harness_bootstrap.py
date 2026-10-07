@@ -15,8 +15,8 @@ from pacthold.extensions.bootstrap import (
 )
 from pacthold.work_core.registry import ExtensionRegistry
 
-from .catalog import ProductExtensionCatalogBuilder
-from .legacy_migrations import register_legacy_migrations
+from .harness_catalog import ProductExtensionCatalogBuilder
+from pacthold_runtime_compat.legacy_migrations import register_legacy_migrations
 from ordessa_skills.resource_contracts import AgentSkillV1
 from pacthold.harness_contracts.agent_box_profile_v1 import AgentBoxProfileV1
 from pacthold.harness_contracts.credential_v1 import CredentialRefV1
@@ -32,7 +32,7 @@ CONTRACT_TYPES = {
     CredentialRefV1.contract_id: CredentialRefV1,
     AgentSkillV1.contract_id: AgentSkillV1,
 }
-from .runtime_composition.protocol import (
+from pacthold_runtime_compat.runtime_composition.protocol import (
     RUNTIME_HOST_CONTRACT_ID,
     SANDBOX_CONTRACT_ID,
     TERMINAL_SESSION_CONTRACT_ID,

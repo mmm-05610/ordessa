@@ -6,7 +6,7 @@ contribution kinds (resource selectors, finalization contributors, host
 controls).  Business kinds — harness managers, continuation routes,
 credential materializers, transport operations — are contributed by the
 compatibility assembly through ``ContributionKindSpec`` injection
-(``pacthold_runtime_compat.catalog``); this module never imports them.
+(``ordessa_server_compat.harness_catalog``); this module never imports them.
 
 The catalog is not a Work Core entity, never enters a database, and never
 holds transport handlers.  Every contribution carries its plugin

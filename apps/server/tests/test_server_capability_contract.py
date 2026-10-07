@@ -674,7 +674,7 @@ def test_backend_refuses_attachment_dispatch_and_leaves_no_orphan_native_session
     # 阶段 D 起：实际启动前的能力强制门要求装配边界已注入绑定与候选声明；
     # 本用例的面为空（无 launcher），注入一份无声明的最小候选即可过门，
     # 以继续验证附件拒绝语义本身。
-    from pacthold_runtime_compat import capability as capability_api
+    from ordessa_server_compat import capability as capability_api
 
     port.capability_binding = "fixture|binding"
     port.capability_authorized_providers = ("fixture",)

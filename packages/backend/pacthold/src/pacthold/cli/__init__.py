@@ -3,7 +3,7 @@
 specs/010 T009: the kernel CLI carries only mechanism subcommands (plugin
 inspection and a provider-neutral readiness doctor).  The Web Workbench
 launcher subcommands and the Web-aware doctor live in the compatibility
-assembly's CLI (``pacthold_runtime_compat.cli``).
+assembly's CLI (``ordessa_server_compat.cli``).
 """
 from __future__ import annotations
 

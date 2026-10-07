@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib, json, os, re
 from pathlib import Path
 from typing import Any, Callable
-from pacthold_runtime_compat.api import ProfileEnvelope
+from ordessa_server_product.harness_adapters.generic.legacy_api import ProfileEnvelope
 from pacthold.work_core import Ref, RefType, ProviderDescriptor, ResourceResolutionContext
 from pacthold.harness_contracts.agent_box_profile_v1 import AgentBoxProfileV1
 

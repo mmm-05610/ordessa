@@ -71,6 +71,10 @@
 
 全仓验证：pacthold 2093 过（6 失败 ⊆ 基线）、品牌 278/318/255、products/server 85（与基线集合逐位一致）、apps/server 1202 过/98 失败（同基线）、skills/mcp/permissions/subagents/records/runtime-compat 均与基线一致。
 
+Phase 5c（提交续）：`capability/` → server-compat（其唯一活消费者）；`api.py`/`profile_envelope.py` → 产品 `harness_adapters/generic/`（legacy 插件 SDK 面，随 legacy 清理）；`catalog.py`/`bootstrap.py`/`cli/` → server-compat（同向依赖：产品→server-compat 保留）；runtime-compat 现为 2.1k 行（`credentials`、`legacy_migrations`+SQL、`runtime_composition`）。
+
+**Phase 5b 依赖说明（精确阻塞）**：`legacy_migrations` 离线化不能独立于 5d 完成——`LegacyCoreBinding` 是当前产品数据库文件的初始化/链应用路径，`sealed_migrations` 与 apps/server 拓扑测试（S1c/T015/T023、stage_a_server）共同编码了"运行时可连历史库"这一现状；只有与 server-compat/新 DB 归属一起切换为"仅离线转换 + 历史根显式拒绝"才不破坏产品。已登记，不恢复旧链绕行。
+
 **仍待完成（Phase 5 剩余）**：`legacy_migrations`+SQL 离线化（消费：apps/server bootstrap 预检与装配、products/server sealed_migrations、3 个 apps 测试、docs/migration 说明）；`capability/`（消费：server-compat、apps 测试）；`api.py`/`profile_envelope.py`/`catalog.py`/`cli/`/`bootstrap.py`（消费：产品 legacy `harness_adapters/generic`、server-compat）；`runtime_composition`（protocol/sandbox_port → environment-api；assembler/coordinator/fake 删除）；server-compat 18.5k 行的逐域再归属与删除。
 
 ## 结论

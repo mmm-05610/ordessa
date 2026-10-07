@@ -30,7 +30,7 @@ from ordessa_server_compat.execution.sidecar_backend import SidecarExecutionBack
 from ordessa_server_compat.plugin import ServerCompatPlugin
 from ordessa_workspace.plugin import WorkspaceServerPlugin
 from pacthold.work_core import db as core_db
-from pacthold_runtime_compat.bootstrap import build_product_registry
+from ordessa_server_compat.harness_bootstrap import build_product_registry
 
 #: No native turn runs in these gates: the port factory must never be called.
 def _idle_port_factory(context, on_event):

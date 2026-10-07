@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import pytest
 
-from pacthold_runtime_compat.bootstrap import build_product_registry
+from ordessa_server_compat.harness_bootstrap import build_product_registry
 from pacthold.harness_contracts.prompt_fragment_v1 import PromptFragmentV1
 from ordessa_server_compat.execution.sidecar_backend import _safe_code
 from ordessa_server_compat.wire_projection import _event_body

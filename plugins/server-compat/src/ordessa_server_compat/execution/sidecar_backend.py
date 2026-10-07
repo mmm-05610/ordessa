@@ -18,7 +18,7 @@ from pacthold.execution.contracts import (
 )
 from pacthold.execution.first_run_lock import first_run_gate
 from pacthold.execution.lifecycle import NeutralRun, NeutralRunTracker
-from pacthold_runtime_compat import capability
+from ordessa_server_compat import capability
 from ordessa_environment_api.sandbox_port import SandboxPortUnavailable
 from pacthold.harness_contracts.agent_box_profile_v1 import AgentBoxProfileV1
 from pacthold.harness_contracts.prompt_fragment_v1 import PromptFragmentV1
@@ -34,7 +34,7 @@ from pacthold.work_core import (
 )
 from pacthold.work_core import db as _work_core_db
 from pacthold.work_core.errors import DispatchAmbiguous, ExecutionStartRejected
-from pacthold_runtime_compat.bootstrap import build_product_registry
+from ordessa_server_compat.harness_bootstrap import build_product_registry
 from pacthold.work_core.repository import CoreRepository
 from pacthold.work_core.services import ExecutionService, WorkService
 
