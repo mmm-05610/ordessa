@@ -4,11 +4,11 @@ C1 CoreContributionSet keeps its frozen three fields; this dedicated payload
 is an additive subtype, exported only through pacthold.agents.public.
 """
 from dataclasses import dataclass
-from ..core.registration import (
+from pacthold.core.registration import (
     CoreContributionSet, _snapshot_configuration_routes, _validate_provider_shape,
 )
-from ..core.errors import CoreDTOError
-from ..core.lifecycle import (
+from pacthold.core.errors import CoreDTOError
+from pacthold.core.lifecycle import (
     RuntimeProviderDescriptor, RuntimeProvider, AdmittedRuntimeProvider,
     RUNTIME_PROVIDER_VERSION, RUNTIME_METHODS, PURE_READ_METHODS,
 )

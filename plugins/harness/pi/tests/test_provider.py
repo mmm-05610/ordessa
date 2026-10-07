@@ -5,9 +5,9 @@ from copy import deepcopy
 from datetime import datetime, timezone
 import pytest
 
-from pacthold.agents.configuration import ConfigurationChangeRequest, ConfigurationItemResult, ConfigurationChangeResult, UnitInspection
-from pacthold.agents.directory import DirectoryBindingRef
-from pacthold.agents.invocation import InvocationVerifier
+from pacthold.agents.configuration.change import ConfigurationChangeRequest, ConfigurationItemResult, ConfigurationChangeResult, UnitInspection
+from pacthold.agents.nodes.directory import DirectoryBindingRef
+from pacthold.agents.access.invocation import InvocationVerifier
 from ordessa_harness_pi import PiRuntimeProvider, PiProviderRefused
 
 

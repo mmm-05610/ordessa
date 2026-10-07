@@ -36,10 +36,10 @@ from ordessa_environment_api.operations import (
 )
 from ordessa_environment_api.staged_operations import OperationRecipePhase, StagedOperationRecord
 
-from .assembly import hashed, plain, public_parameters
-from .contracts import ProfileManifest, ProfileRef, ProfileValidationError, manifest_content
-from .nodes import IDENTITIES, _hash, _request_ref, _same_reference, decode_node_ref, encode_node_ref
-from .preparation_effects import FixedEffectScope, PreparationEffectPlan, verify_preparation_effect
+from pacthold.agents.assembly.agent import hashed, plain, public_parameters
+from pacthold.agents.contracts import ProfileManifest, ProfileRef, ProfileValidationError, manifest_content
+from pacthold.agents.nodes.publication import IDENTITIES, _hash, _request_ref, _same_reference, decode_node_ref, encode_node_ref
+from pacthold.agents.assembly.preparation_effects import FixedEffectScope, PreparationEffectPlan, verify_preparation_effect
 
 
 def _plain_or_none(value):

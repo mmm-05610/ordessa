@@ -12,7 +12,7 @@ import pytest
 from test_sessionless_input import first_input, node_fixture, reserve
 from ordessa_environment_api import RequestKey, UnknownResultError
 from pacthold.agents.inputs import CapturedInputRef, CapturedInputEvidence, FIRST_SESSION_ATTEMPTS
-from pacthold.agents.invocation import InvocationAuthorityRefused, InvocationIssuer
+from pacthold.agents.access.invocation import InvocationAuthorityRefused, InvocationIssuer
 from ordessa_harness_transport import LaunchSpec, ProcessChannel, RequestTimeout, WriterLeaseRefused, LostReceipt
 
 

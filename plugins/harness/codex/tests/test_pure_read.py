@@ -8,7 +8,7 @@ from ordessa_harness_codex.provider import DEFAULTS_SCHEMA, DEFAULT_FIELDS
 from pacthold.agents.public import (
     OwnerReadContext, OwnerProposalInput, PURE_READ_VERSION, RUNTIME_PROVIDER_VERSION,
 )
-from pacthold.agents.read_configuration import require_assessment
+from pacthold.agents.configuration.read import require_assessment
 
 DEF = {'environmentNamespace': 'pure-codex', 'definitionId': 'codex', 'revision': '1'}
 DIGEST = 'sha256:' + 'a' * 64

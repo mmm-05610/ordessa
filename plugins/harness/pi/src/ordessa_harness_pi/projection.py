@@ -25,7 +25,7 @@ import json
 from typing import Any, Callable, Mapping
 
 from ordessa_environment_api.operations import safe_json, sealed_mapping
-from pacthold.agents.directory import DirectoryBindingRef
+from pacthold.agents.nodes.directory import DirectoryBindingRef
 from ordessa_harness_pi.client import PI_PROTOCOL_ID
 from ordessa_harness_pi.runtime_channel import verified_private_roots
 

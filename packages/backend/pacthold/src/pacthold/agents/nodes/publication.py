@@ -164,7 +164,7 @@ class NodePublication:
             if type(intent) is not OperationIntent:
                 raise IdentityMismatchError("node reservation requires a frozen operation intent")
             ref = decode_node_ref(intent.node_ref)
-            from .contracts import ProfileRef
+            from pacthold.agents.contracts import ProfileRef
             try:
                 profile = ProfileRef.from_dict(json.loads(safe_json(intent.profile_snapshot_ref)))
             except (ValueError, TypeError):

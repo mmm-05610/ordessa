@@ -15,7 +15,7 @@ import json
 import threading
 from typing import Mapping, Protocol
 from ordessa_environment_api.operations import safe_json, sealed_mapping
-from pacthold.agents.configuration import UnitInspection
+from pacthold.agents.configuration.change import UnitInspection
 from pacthold.core.lifecycle import RUNTIME_PROVIDER_VERSION
 
 

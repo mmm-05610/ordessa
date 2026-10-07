@@ -55,8 +55,8 @@ class AgentProviders:
             self._environment.agent_configuration_contribution(definition_ref))
 
     def _pure_read_owner(self, definition_ref, method):
-        from .read_configuration import PURE_READ_VERSION, OwnerReadContext
-        from .configuration import ConfigurationUnsupported
+        from pacthold.agents.configuration.read import PURE_READ_VERSION, OwnerReadContext
+        from pacthold.agents.configuration.change import ConfigurationUnsupported
         from ordessa_environment_api import AdmissionRefusedError
         # Public lookup rechecks same Environment, current read policy and admission.
         self.describe(definition_ref)
@@ -78,7 +78,7 @@ class AgentProviders:
             raise AdmissionRefusedError('pure-read owner changed during observation')
 
     def describe_configuration_offers(self, definition_ref):
-        from .read_configuration import OwnerConfigurationOfferBatch
+        from pacthold.agents.configuration.read import OwnerConfigurationOfferBatch
         from ordessa_environment_api import GuaranteeUnavailableError
         env = self._environment
         with env._admission_lock:
@@ -86,7 +86,7 @@ class AgentProviders:
         try:
             result = admitted.provider.describe_configuration_offers(definition_ref, context)
         except Exception as exc:
-            from .configuration import ConfigurationUnsupported
+            from pacthold.agents.configuration.change import ConfigurationUnsupported
             from ordessa_environment_api import AdmissionRefusedError
             if isinstance(exc,ConfigurationUnsupported): raise ConfigurationUnsupported('owner pure-read unsupported') from None
             if isinstance(exc,AdmissionRefusedError): raise AdmissionRefusedError('owner pure-read refused') from None
@@ -102,15 +102,15 @@ class AgentProviders:
 
     def _proposal_source_snapshot(self, source):
         """Recheck the existing public read authority; no secondary registry."""
-        from .configuration import ConfigurationUnsupported
+        from pacthold.agents.configuration.change import ConfigurationUnsupported
         from ordessa_environment_api import GuaranteeUnavailableError
         if set(source) == {'environmentNamespace','profileId','manifestRevision','contentDigest'}:
-            from .contracts import ProfileRef
-            from .profiles import ProfileCatalog
+            from pacthold.agents.contracts import ProfileRef
+            from pacthold.agents.profiles.catalog import ProfileCatalog
             value = ProfileCatalog(self._environment).read(ProfileRef.from_dict(json.loads(safe_json(source))))
             return safe_json({'ref': value.ref.to_dict(), 'content': value.content})
         if set(source) == {'environmentNamespace','instanceId','generation'}:
-            from .nodes import decode_node_ref, NodePublication
+            from pacthold.agents.nodes.publication import decode_node_ref, NodePublication
             value = NodePublication(self._environment).read(decode_node_ref(source))
             if value is None: raise GuaranteeUnavailableError('proposal source Node absent')
             return safe_json(value)
@@ -119,9 +119,9 @@ class AgentProviders:
         raise ConfigurationUnsupported('proposal source read scheme unsupported')
 
     def assess_configuration_proposal(self, proposal):
-        from .read_configuration import OwnerProposalInput, require_assessment
+        from pacthold.agents.configuration.read import OwnerProposalInput, require_assessment
         from ordessa_environment_api import GuaranteeUnavailableError, IdentityMismatchError
-        from .configuration import ConfigurationRevisionConflict
+        from pacthold.agents.configuration.change import ConfigurationRevisionConflict
         if not isinstance(proposal, OwnerProposalInput):
             raise IdentityMismatchError('typed owner proposal required')
         env = self._environment
@@ -136,7 +136,7 @@ class AgentProviders:
             result = admitted.provider.assess_configuration_proposal(proposal, context)
             require_assessment(proposal, result)
         except Exception as exc:
-            from .configuration import ConfigurationUnsupported
+            from pacthold.agents.configuration.change import ConfigurationUnsupported
             from ordessa_environment_api import AdmissionRefusedError
             if isinstance(exc,ConfigurationUnsupported): raise ConfigurationUnsupported('owner pure-read unsupported') from None
             if isinstance(exc,AdmissionRefusedError): raise AdmissionRefusedError('owner pure-read refused') from None

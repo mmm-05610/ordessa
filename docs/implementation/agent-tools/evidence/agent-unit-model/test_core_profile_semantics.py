@@ -19,7 +19,7 @@ from ordessa_environment_api import (
     RequestKey,
     UnknownResultError,
 )
-from pacthold.agents.configuration import (
+from pacthold.agents.configuration.change import (
     ApplicationPolicy,
     ConfigurationConversionRefused,
     ConfigurationOmissionRefused,
@@ -27,9 +27,9 @@ from pacthold.agents.configuration import (
     ConfigurationUnsupported,
 )
 from pacthold.agents.contracts import ProfileRef
-from pacthold.agents.management import CONFIGURATION_ATTEMPTS
-from pacthold.agents.nodes import decode_node_ref
-from pacthold.agents.profiles import ProfileCatalog
+from pacthold.agents.configuration.management import CONFIGURATION_ATTEMPTS
+from pacthold.agents.nodes.publication import decode_node_ref
+from pacthold.agents.profiles.catalog import ProfileCatalog
 from pacthold.public import EnvironmentClosedError
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[5] / "products/agent-tools/tests/integration"))
@@ -384,7 +384,7 @@ def test_correcting_omission_under_spent_request_id_conflicts_before_native_effe
 
 def test_typed_manifest_diff_errors_are_reexported_by_identity():
     from pacthold.agents import public
-    from pacthold.agents.configuration import (
+    from pacthold.agents.configuration.change import (
         ConfigurationConversionRefused as CoreConversionRefused,
         ConfigurationOmissionRefused as CoreOmissionRefused,
     )

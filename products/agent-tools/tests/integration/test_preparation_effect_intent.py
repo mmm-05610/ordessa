@@ -16,8 +16,8 @@ import pytest
 
 from ordessa_environment_api.errors import IdentityMismatchError, UnknownResultError
 from ordessa_environment_api.operations import safe_json
-from pacthold.agents.directory import DirectoryBindingRef
-from pacthold.agents.preparation_effects import (
+from pacthold.agents.nodes.directory import DirectoryBindingRef
+from pacthold.agents.assembly.preparation_effects import (
     EffectStep, FixedEffectScope, PreparationEffectPlan, verify_preparation_effect,
 )
 

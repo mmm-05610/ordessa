@@ -20,7 +20,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from pacthold.agents.invocation import InvocationVerifier
+from pacthold.agents.access.invocation import InvocationVerifier
 from ordessa_environment_api.operations import safe_json
 from ordessa_harness_codex import (
     ChannelRecord, CodexConnectionLeasePort, CodexLeaseRefused, CodexProviderRefused,

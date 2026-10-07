@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Mapping
 
-from pacthold.agents.directory import DirectoryBindingRef
+from pacthold.agents.nodes.directory import DirectoryBindingRef
 from pacthold.agents.public import UnitInspection
 
 from .configuration_face import ClaudeConfigurationFace

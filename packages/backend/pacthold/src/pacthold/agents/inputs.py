@@ -22,8 +22,8 @@ from ordessa_environment_api.operations import (
     node_holder, operation_holder, safe_json, sealed_mapping,
 )
 
-from .directory import DirectoryBindingRef
-from .invocation import InvocationAuthorityRefused, InvocationIssuer
+from pacthold.agents.nodes.directory import DirectoryBindingRef
+from pacthold.agents.access.invocation import InvocationAuthorityRefused, InvocationIssuer
 
 DRAFT_ATTEMPTS = "agents.draft-attempts"
 FIRST_SESSION_ATTEMPTS = "agents.first-session-attempts"

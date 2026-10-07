@@ -27,7 +27,7 @@ from typing import Any, Mapping
 from ordessa_environment_api.errors import IdentityMismatchError, UnknownResultError
 from ordessa_environment_api.operations import safe_json, sealed_mapping
 
-from .directory import DirectoryBindingRef
+from pacthold.agents.nodes.directory import DirectoryBindingRef
 
 _DIGEST = re.compile(r"^[0-9a-f]{64}$")
 _MAX_STEPS = 64

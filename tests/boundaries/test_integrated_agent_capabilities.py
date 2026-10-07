@@ -2,7 +2,9 @@
 
 import pytest
 
-from pacthold.agents import invocation, public, read_configuration
+from pacthold.agents import public
+from pacthold.agents.access import invocation
+from pacthold.agents.configuration import read as read_configuration
 from pacthold.core.errors import CoreDTOError
 from pacthold.core.lifecycle import PURE_READ_METHODS, RUNTIME_METHODS
 from pacthold.public import Environment, InstallationRecord

@@ -12,8 +12,8 @@ from ordessa_environment_api import RequestKey
 from ordessa_environment_api.errors import UnknownResultError
 from ordessa_environment_api.operations import OperationIntent, StepIntent, safe_json
 from ordessa_persistence_sqlite import SqliteStorePort
-from pacthold.agents.directory import DirectoryBindingRef
-from pacthold.agents.invocation import (
+from pacthold.agents.nodes.directory import DirectoryBindingRef
+from pacthold.agents.access.invocation import (
     InvocationGrant, InvocationCurrentState, InvocationIssuer,
     InvocationAuthorityRefused, InvocationContext,
 )

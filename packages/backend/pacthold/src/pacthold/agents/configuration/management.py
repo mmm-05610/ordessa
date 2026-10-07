@@ -15,15 +15,15 @@ from ordessa_environment_api import (
 )
 from ordessa_environment_api.domain import DomainStorePort, DomainWrite
 from ordessa_environment_api.operations import OperationIntent, OperationStorePort, StepIntent, safe_json
-from .configuration import (
+from pacthold.agents.configuration.change import (
  ApplicationPolicy, ConfigurationChangeRequest, ConfigurationChangeResult, ConfigurationContractError,
  ConfigurationSnapshot, ConfigurationUnsupported, ConfigurationRevisionConflict, UnitInspection,
  ConfigurationConversionRefused, ConfigurationItemResult, ConfigurationOmissionRefused,
  derive_change,
 )
-from .invocation import InvocationAuthorityRefused, InvocationIssuer
-from .nodes import encode_node_ref
-from .contracts import ProfileRef
+from pacthold.agents.access.invocation import InvocationAuthorityRefused, InvocationIssuer
+from pacthold.agents.nodes.publication import encode_node_ref
+from pacthold.agents.contracts import ProfileRef
 
 CONFIGURATION_ATTEMPTS = 'agents.configuration-attempts'
 
@@ -95,7 +95,7 @@ class AgentConfiguration:
     def describe(self, node_ref):
         node = self._admit(node_ref, 'read')
         admitted = self._owner(node, 'describe_configuration')
-        from .configuration import ConfigurationDescription
+        from pacthold.agents.configuration.change import ConfigurationDescription
         result = self._call(admitted.provider.describe_configuration, node['binding']['harnessUnitRef'])
         if (not isinstance(result, tuple) or any(not isinstance(item, ConfigurationDescription) for item in result)
                 or len({(item.configuration_kind,item.schema_version) for item in result}) != len(result)):
@@ -295,7 +295,7 @@ class AgentConfiguration:
         never a fabricated all-applied outcome. Applying a Profile never
         writes the catalog back and a Profile update never applies itself.
         """
-        from .profiles import ProfileCatalog
+        from pacthold.agents.profiles.catalog import ProfileCatalog
         if (profile_ref is None) == (profile_manifest is None):
             raise ConfigurationContractError('exactly one configuration source required')
         if type(base_profile_ref) is not ProfileRef:
@@ -761,7 +761,7 @@ def replace_change(change,declarations):
 
 
 def merge_skipped(operation,effective_change,result):
-    from .configuration import ConfigurationItemResult
+    from pacthold.agents.configuration.change import ConfigurationItemResult
     if not isinstance(result,ConfigurationChangeResult) or {item.declaration_id for item in result.item_results}!={item['declarationId'] for item in effective_change.declarations}:
         raise ConfigurationContractError('owner result must cover exactly the effective declarations')
     skipped=tuple(ConfigurationItemResult(name,'rejected') for name in operation.intent.context_ref['skippedOptional'])

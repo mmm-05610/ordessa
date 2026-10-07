@@ -358,7 +358,7 @@ def test_low_level_configuration_apply_keeps_its_existing_wire_contract(
 ):
     handlers, _services = management_wire
     parts = management_setup
-    from pacthold.agents.configuration import ConfigurationChangeRequest
+    from pacthold.agents.configuration.change import ConfigurationChangeRequest
 
     node_ref = encode_node_ref(parts[4])
     params = {"nodeRef": node_ref, "change": parts[6].to_dict()}

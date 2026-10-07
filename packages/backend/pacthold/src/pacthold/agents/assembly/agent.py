@@ -14,10 +14,10 @@ from typing import Protocol
 
 from ordessa_environment_api import AdmissionRefusedError, GuaranteeUnavailableError, IdentityMismatchError, RequestKey
 from ordessa_environment_api.operations import OperationIntent, StepIntent, UsageMutation, OperationRevisionConflict, operation_holder, node_holder, safe_json, sealed_mapping
-from .contracts import ProfileManifest, ProfileRef, ProfileValidationError, manifest_content
-from .directory import DirectoryBindingRef
-from .invocation import InvocationIssuer
-from .nodes import decode_node_ref, _safe_projection, _same_reference
+from pacthold.agents.contracts import ProfileManifest, ProfileRef, ProfileValidationError, manifest_content
+from pacthold.agents.nodes.directory import DirectoryBindingRef
+from pacthold.agents.access.invocation import InvocationIssuer
+from pacthold.agents.nodes.publication import decode_node_ref, _safe_projection, _same_reference
 
 
 def plain(value): return json.loads(safe_json(value))
@@ -124,7 +124,7 @@ class AgentAssembly:
         observation and publication authorities. The original _plan, reserve
         and prepare semantics are unchanged.
         """
-        from .staged_assembly import StagedAgentAssembly
+        from pacthold.agents.assembly.staged_assembly import StagedAgentAssembly
         return StagedAgentAssembly(self)
 
     def _permission(self, request, *, query=False):

@@ -3,39 +3,39 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .contracts import (
+from pacthold.agents.contracts import (
     AGENT_CONTRACT_VERSION, ProfileCatalogEntry, ProfileManifest, ProfileRef,
     ProfileNotFound, ProfileRevisionConflict, ProfileValidationError,
 )
-from .profiles import ProfileCatalog
-from .schema import wire_contract, wire_schema_digest, AGENT_MANAGEMENT_CONTRACT_VERSION
-from .directory import DirectoryBindingRef
-from .nodes import NodePublication, encode_node_ref, decode_node_ref
-from .operations_read import AgentOperations, OperationNotFound
-from .management import AgentConfiguration
-from .providers import AgentProviders
-from ..core.resource_admission import (
+from pacthold.agents.profiles.catalog import ProfileCatalog
+from pacthold.agents.schema import wire_contract, wire_schema_digest, AGENT_MANAGEMENT_CONTRACT_VERSION
+from pacthold.agents.nodes.directory import DirectoryBindingRef
+from pacthold.agents.nodes.publication import NodePublication, encode_node_ref, decode_node_ref
+from pacthold.agents.operations_read import AgentOperations, OperationNotFound
+from pacthold.agents.configuration.management import AgentConfiguration
+from pacthold.agents.providers import AgentProviders
+from pacthold.core.resource_admission import (
     AdmittedResourceProviderMetadata, AdmittedMaterialProviderMetadata,
 )
-from ..core.configuration_admission import (
+from pacthold.core.configuration_admission import (
     CONFIGURATION_PROVIDER_VERSION, CONFIGURATION_METHODS, ConfigurationRoute,
     ConfigurationProviderDescriptor, ConfigurationProviderPin,
     AdmittedConfigurationProviderMetadata,
     ConfigurationContractError as ConfigurationProviderContractError,
 )
-from .assembly import AgentAssembly, PreparationContext, PreparationObservation, PreparationContextPort, PreparationObservationPort
-from .lifecycle import AgentLifecycle, LifecycleObservation, LifecycleObservationPort
-from .inputs import (
+from pacthold.agents.assembly.agent import AgentAssembly, PreparationContext, PreparationObservation, PreparationContextPort, PreparationObservationPort
+from pacthold.agents.lifecycle.lifecycle import AgentLifecycle, LifecycleObservation, LifecycleObservationPort
+from pacthold.agents.inputs import (
     CapturedInputRef, CapturedInputEvidence, ControlledInputCapturePort,
     NativeInputState, SessionlessNativeInputState, NativeInputStatePort,
     FirstInputObservation, FirstInputObservationPort, ManagedInputReservations,
 )
-from .invocation import (
+from pacthold.agents.access.invocation import (
     InvocationContext, InvocationVerifier, InvocationAuthorityRefused,
     InvocationIssuer, InvocationGrant, InvocationAuthorityPort,
     InvocationCurrentState, InvocationCurrentStatePort,
 )
-from .material_operations import (
+from pacthold.agents.assembly.material_operations import (
     AGENT_MATERIAL_OPERATION_CONTRACT_VERSION, MaterialOperations,
     material_provider_ref, material_invocation_target,
     material_operation_facts, material_reservation_usages,
@@ -128,9 +128,9 @@ __all__ += ["AgentLifecycle", "LifecycleObservation", "LifecycleObservationPort"
 __all__ += ["ManagedInputReservations", "CapturedInputRef", "CapturedInputEvidence",
             "ControlledInputCapturePort", "NativeInputState", "SessionlessNativeInputState",
             "NativeInputStatePort", "FirstInputObservation", "FirstInputObservationPort"]
-from .runtime import AgentContributionSet, RuntimeProvider, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
+from pacthold.agents.runtime import AgentContributionSet, RuntimeProvider, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
 __all__ += ["AgentContributionSet", "RuntimeProvider", "RuntimeProviderDescriptor", "RUNTIME_PROVIDER_VERSION"]
-from .configuration import (
+from pacthold.agents.configuration.change import (
     CONFIGURATION_CONTRACT_VERSION, ApplicationPolicy, ConfigurationChangeRequest,
     ConfigurationDescription, ConfigurationSnapshot, ConfigurationItemResult,
     ConfigurationChangeResult, ConfigurationContractError, ConfigurationUnsupported, ConfigurationRevisionConflict, UnitInspection,
@@ -141,7 +141,7 @@ __all__ += ["CONFIGURATION_CONTRACT_VERSION", "ApplicationPolicy", "Configuratio
             "ConfigurationChangeResult", "ConfigurationContractError", "ConfigurationUnsupported", "UnitInspection",
             "ConfigurationOmissionRefused", "ConfigurationConversionRefused"]
 __all__ += ["ConfigurationRevisionConflict"]
-from .materials import (
+from pacthold.agents.assembly.materials import (
     AGENT_MATERIAL_CONTRACT_VERSION, MaterialContractError, MaterialUnavailable,
     MaterialCapability, MaterialLifetime, MaterialAccessMode, MaterialReleaseRecovery,
     MaterialOutcome, ResourceRef, MaterialProviderPin, MaterialUseTarget, MaterialCorrelation,
@@ -159,7 +159,7 @@ __all__ += [
     "MaterialReleaseRequest", "MaterialReleaseReceipt", "MaterialReleaseResult", "AuthorizedMaterialProvider",
     "read_material_capability",
 ]
-from .configuration_references import (
+from pacthold.agents.configuration.references import (
     ConfigurationReference, ConfigurationReferenceExtraction,
     validate_reference_extraction,
 )
@@ -169,5 +169,5 @@ __all__ += ["AGENT_MATERIAL_OPERATION_CONTRACT_VERSION", "MaterialOperations",
             "material_provider_ref", "material_invocation_target",
             "material_operation_facts", "material_reservation_usages"]
 
-from .read_configuration import (PURE_READ_VERSION, OwnerReadContext, OwnerProposalInput, OwnerConfigurationOfferBatch, OwnerProposalAssessment)
+from pacthold.agents.configuration.read import (PURE_READ_VERSION, OwnerReadContext, OwnerProposalInput, OwnerConfigurationOfferBatch, OwnerProposalAssessment)
 __all__ += ["PURE_READ_VERSION", "OwnerReadContext", "OwnerProposalInput", "OwnerConfigurationOfferBatch", "OwnerProposalAssessment"]

@@ -26,9 +26,9 @@ from ordessa_environment_api.operations import (
     OperationIntent, StepIntent, UsageMutation, node_holder,
 )
 
-from .configuration import ConfigurationUnsupported
-from .invocation import InvocationIssuer
-from .nodes import decode_node_ref, encode_node_ref
+from pacthold.agents.configuration.change import ConfigurationUnsupported
+from pacthold.agents.access.invocation import InvocationIssuer
+from pacthold.agents.nodes.publication import decode_node_ref, encode_node_ref
 
 _TERMINATION_VERSION = "harness-unit-termination/1"
 _PRECONDITION_KEYS = frozenset({"expectedPublicationRevision"})
@@ -155,7 +155,7 @@ class AgentLifecycle:
         if "expectedPublicationRevision" in preconditions:
             # PJ04: the stated base publication revision must match the Node's
             # current one; a stale precondition is a conflict, never an override.
-            from .configuration import ConfigurationRevisionConflict
+            from pacthold.agents.configuration.change import ConfigurationRevisionConflict
             if (type(node.get("publicationRevision")) is not int
                     or preconditions["expectedPublicationRevision"] != node["publicationRevision"]):
                 raise ConfigurationRevisionConflict("expected Node publication revision differs")

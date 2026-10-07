@@ -12,7 +12,7 @@ from ordessa_environment_api import (
 from ordessa_environment_api.domain import DomainStorePort
 from ordessa_environment_api.operations import OperationStorePort, sealed_mapping
 
-from .nodes import decode_node_ref
+from pacthold.agents.nodes.publication import decode_node_ref
 
 
 OPERATION_IDENTITIES = "core.operation-identities"

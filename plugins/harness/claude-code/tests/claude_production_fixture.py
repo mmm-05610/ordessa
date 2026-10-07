@@ -22,8 +22,8 @@ from test_unit_records import ROOT, parts  # noqa: E402
 from ordessa_environment_api import RequestKey  # noqa: E402
 from ordessa_environment_api.operations import OperationIntent, StepIntent, safe_json  # noqa: E402
 from ordessa_persistence_sqlite import SqliteStorePort  # noqa: E402
-from pacthold.agents.directory import DirectoryBindingRef  # noqa: E402
-from pacthold.agents.invocation import InvocationIssuer  # noqa: E402
+from pacthold.agents.nodes.directory import DirectoryBindingRef  # noqa: E402
+from pacthold.agents.access.invocation import InvocationIssuer  # noqa: E402
 
 from ordessa_harness_claude_code.native_evidence import (  # noqa: E402
     ClaudeConfigurationEvidence, ClaudeNativeUnitEvidence, ClaudeTerminationEvidence,

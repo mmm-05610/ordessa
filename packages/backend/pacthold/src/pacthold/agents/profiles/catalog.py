@@ -15,7 +15,7 @@ from ordessa_environment_api import (
 )
 from ordessa_environment_api.domain import DomainStorePort, DomainWrite
 
-from .contracts import (
+from pacthold.agents.contracts import (
     ProfileCatalogEntry, ProfileManifest, ProfileNotFound, ProfileRef,
     ProfileRevisionConflict, ProfileValidationError, canonical, content_digest,
     manifest_content,

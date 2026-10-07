@@ -13,13 +13,13 @@ from typing import Mapping
 from ordessa_environment_api.identity import EnvironmentId
 from ordessa_environment_api.operations import sealed_mapping
 
-from ..core.configuration_admission import (
+from pacthold.core.configuration_admission import (
     ConfigurationContractError,
     ConfigurationProviderDescriptor,
     ConfigurationProviderPin,
     ConfigurationRoute,
 )
-from .materials import ResourceRef
+from pacthold.agents.assembly.materials import ResourceRef
 
 
 _OPAQUE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,191}$")

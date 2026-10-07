@@ -8,7 +8,7 @@ import sys
 import pytest
 sys.path.insert(0,str(Path(__file__).resolve().parents[5]/'products/agent-tools/tests/integration'))
 from test_invocation_authority import setup, issue, verify
-from pacthold.agents.invocation import InvocationIssuer, InvocationAuthorityRefused, InvocationVerifier
+from pacthold.agents.access.invocation import InvocationIssuer, InvocationAuthorityRefused, InvocationVerifier
 from ordessa_environment_api.errors import UnknownResultError
 
 

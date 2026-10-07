@@ -27,12 +27,12 @@ from ordessa_environment_api.operations import (
     UsageMutation, node_holder, operation_holder, safe_json,
 )
 from ordessa_persistence_sqlite import ProtectedFingerprintHmac, SqliteStorePort
-from pacthold.agents.assembly import AgentAssembly, PreparationContext, PreparationObservation
-from pacthold.agents.directory import DirectoryBindingRef
-from pacthold.agents.invocation import InvocationAuthorityRefused, InvocationIssuer
-from pacthold.agents.nodes import NodePublication, NodePublicationEvidence
-from pacthold.agents.preparation_effects import EffectStep, PreparationEffectPlan
-from pacthold.agents.profiles import ProfileCatalog
+from pacthold.agents.assembly.agent import AgentAssembly, PreparationContext, PreparationObservation
+from pacthold.agents.nodes.directory import DirectoryBindingRef
+from pacthold.agents.access.invocation import InvocationAuthorityRefused, InvocationIssuer
+from pacthold.agents.nodes.publication import NodePublication, NodePublicationEvidence
+from pacthold.agents.assembly.preparation_effects import EffectStep, PreparationEffectPlan
+from pacthold.agents.profiles.catalog import ProfileCatalog
 from pacthold.agents.runtime import (
     AgentContributionSet, RUNTIME_METHODS, RUNTIME_PROVIDER_VERSION, RuntimeProviderDescriptor,
 )

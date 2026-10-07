@@ -12,12 +12,12 @@ import pytest
 from ordessa_environment_api import AdmissionRefusedError, GuaranteeUnavailableError, IdentityMismatchError, RequestKey, UnknownResultError
 from ordessa_environment_api.operations import safe_json
 from ordessa_persistence_sqlite import ProtectedFingerprintHmac, SqliteStorePort
-from pacthold.agents.directory import DirectoryBindingRef
+from pacthold.agents.nodes.directory import DirectoryBindingRef
 from pacthold.agents.inputs import (
     CapturedInputRef, CapturedInputEvidence, NativeInputState,
     ManagedInputReservations, DRAFT_ATTEMPTS,
 )
-from pacthold.agents.invocation import InvocationIssuer, InvocationAuthorityRefused
+from pacthold.agents.access.invocation import InvocationIssuer, InvocationAuthorityRefused
 
 from test_node_publication import setup as node_fixture, conclude as conclude_node, source
 from test_invocation_authority import Authority, CurrentState
@@ -338,7 +338,7 @@ def test_concluded_and_published_attempt_allows_only_new_draft_revision(managed)
 
 def test_cold_restart_read_replay_does_not_restore_dispatch_authority(managed, tmp_path):
     from pacthold.public import Environment
-    from pacthold.agents.nodes import NodePublication
+    from pacthold.agents.nodes.publication import NodePublication
     store, env, policy, _, node, captured, capture, native, _, request, correlation, authority, current, _, _ = managed
     first = reserve(managed)
     path = store._path

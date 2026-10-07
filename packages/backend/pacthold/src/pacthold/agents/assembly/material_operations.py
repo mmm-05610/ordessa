@@ -28,10 +28,10 @@ from ordessa_environment_api.operations import (
     safe_json,
 )
 
-from ..core.resource_admission import MaterialContractError
-from .directory import DirectoryBindingRef
-from .invocation import InvocationAuthorityRefused, InvocationIssuer
-from .materials import (
+from pacthold.core.resource_admission import MaterialContractError
+from pacthold.agents.nodes.directory import DirectoryBindingRef
+from pacthold.agents.access.invocation import InvocationAuthorityRefused, InvocationIssuer
+from pacthold.agents.assembly.materials import (
     MaterialAccessMode,
     MaterialCorrelation,
     MaterialEvidenceRef,

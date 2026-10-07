@@ -30,10 +30,10 @@ from ordessa_environment_api import (
 )
 from ordessa_environment_api.domain import DomainRevisionConflict, DomainWrite
 from ordessa_environment_api.operations import safe_json
-from pacthold.agents.configuration import ApplicationPolicy
-from pacthold.agents.directory import DirectoryBindingRef
-from pacthold.agents.invocation import InvocationAuthorityRefused
-from pacthold.agents.management import CONFIGURATION_ATTEMPTS
+from pacthold.agents.configuration.change import ApplicationPolicy
+from pacthold.agents.nodes.directory import DirectoryBindingRef
+from pacthold.agents.access.invocation import InvocationAuthorityRefused
+from pacthold.agents.configuration.management import CONFIGURATION_ATTEMPTS
 from ordessa_persistence_sqlite.operation_records import OperationRecordsMixin
 
 

@@ -62,35 +62,35 @@ from ordessa_environment_api.operations import (
     sealed_mapping,
 )
 from ordessa_persistence_sqlite import ProtectedFingerprintHmac, SqliteStorePort
-from pacthold.agents.assembly import (
+from pacthold.agents.assembly.agent import (
     AgentAssembly,
     PreparationContext,
     PreparationObservation,
 )
-from pacthold.agents.configuration_references import (
+from pacthold.agents.configuration.references import (
     ConfigurationReference,
     ConfigurationReferenceExtraction,
     validate_reference_extraction,
 )
-from pacthold.agents.directory import DirectoryBindingRef
-from pacthold.agents.invocation import (
+from pacthold.agents.nodes.directory import DirectoryBindingRef
+from pacthold.agents.access.invocation import (
     InvocationCurrentState,
     InvocationGrant,
     InvocationIssuer,
 )
-from pacthold.agents.material_consumption import (
+from pacthold.agents.assembly.material_consumption import (
     AGENT_MATERIAL_CONSUMPTION_CONTRACT_VERSION,
     READ_ACTION,
     MaterialConsumption,
 )
-from pacthold.agents.material_operations import (
+from pacthold.agents.assembly.material_operations import (
     MaterialOperations,
     material_invocation_target,
     material_operation_facts,
     material_provider_ref,
     material_reservation_usages,
 )
-from pacthold.agents.materials import (
+from pacthold.agents.assembly.materials import (
     AGENT_MATERIAL_CONTRACT_VERSION,
     MaterialAccessMode,
     MaterialCapability,
@@ -110,13 +110,13 @@ from pacthold.agents.materials import (
     ResourceMaterialDescriptor,
     ResourceRef,
 )
-from pacthold.agents.nodes import NodePublication, NodePublicationEvidence
-from pacthold.agents.preparation_effects import (
+from pacthold.agents.nodes.publication import NodePublication, NodePublicationEvidence
+from pacthold.agents.assembly.preparation_effects import (
     EffectStep,
     PreparationEffectPlan,
     verify_preparation_effect,
 )
-from pacthold.agents.profiles import ProfileCatalog
+from pacthold.agents.profiles.catalog import ProfileCatalog
 from pacthold.agents.public import (
     AdmittedConfigurationProviderMetadata,
     agent_services,

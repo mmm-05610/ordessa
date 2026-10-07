@@ -48,7 +48,7 @@ import os
 import pytest
 
 from ordessa_environment_api.operations import safe_json
-from pacthold.agents.directory import DirectoryBindingRef
+from pacthold.agents.nodes.directory import DirectoryBindingRef
 from ordessa_harness_records.operation_journal import OperationJournal
 from ordessa_harness_records.unit_records import (
     UnitRecords, UnitRecordsRefused,

@@ -31,27 +31,27 @@ from ordessa_environment_api.operations import (
 )
 from ordessa_environment_api.identity import ActivationRef, ParticipantInstanceRef
 from ordessa_persistence_sqlite import SqliteStorePort
-from pacthold.agents.directory import DirectoryBindingRef
-from pacthold.agents.invocation import (
+from pacthold.agents.nodes.directory import DirectoryBindingRef
+from pacthold.agents.access.invocation import (
     InvocationAuthorityRefused,
     InvocationCurrentState,
     InvocationGrant,
     InvocationIssuer,
 )
-from pacthold.agents.material_consumption import (
+from pacthold.agents.assembly.material_consumption import (
     AGENT_MATERIAL_CONSUMPTION_CONTRACT_VERSION,
     MaterialConsumption,
     MaterialReleaseGateDecision,
     READ_ACTION,
 )
-from pacthold.agents.material_operations import (
+from pacthold.agents.assembly.material_operations import (
     MaterialOperations,
     material_invocation_target,
     material_operation_facts,
     material_provider_ref,
     material_reservation_usages,
 )
-from pacthold.agents.materials import (
+from pacthold.agents.assembly.materials import (
     AGENT_MATERIAL_CONTRACT_VERSION,
     MaterialAccessMode,
     MaterialCapability,

@@ -10,7 +10,7 @@ from pacthold.agents.public import (
     ConfigurationContractError, ConfigurationUnsupported, agent_services,
 )
 from pacthold.agents.runtime import RUNTIME_METHODS
-from pacthold.agents.read_configuration import require_assessment
+from pacthold.agents.configuration.read import require_assessment
 from ordessa_environment_api import AdmissionRefusedError
 from pacthold.decision.contracts.models import (
     FlowRef, PolicyRef, RunLimits, RunManifest, Precondition,

@@ -12,11 +12,11 @@ from test_invocation_authority import Authority, CurrentState
 from test_node_publication import Policy, source
 
 from pacthold.public import Environment, InstallationRecord
-from pacthold.agents.assembly import AgentAssembly, PreparationContext, PreparationObservation
-from pacthold.agents.directory import DirectoryBindingRef
-from pacthold.agents.invocation import InvocationIssuer
-from pacthold.agents.nodes import NodePublication, NodePublicationEvidence, decode_node_ref
-from pacthold.agents.profiles import ProfileCatalog
+from pacthold.agents.assembly.agent import AgentAssembly, PreparationContext, PreparationObservation
+from pacthold.agents.nodes.directory import DirectoryBindingRef
+from pacthold.agents.access.invocation import InvocationIssuer
+from pacthold.agents.nodes.publication import NodePublication, NodePublicationEvidence, decode_node_ref
+from pacthold.agents.profiles.catalog import ProfileCatalog
 from pacthold.agents.runtime import AgentContributionSet, RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION, RUNTIME_METHODS
 from ordessa_environment_api import RequestKey, IdentityMismatchError, AdmissionRefusedError, GuaranteeUnavailableError
 from ordessa_environment_api.operations import UsageMutation, operation_holder, safe_json

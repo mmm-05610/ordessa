@@ -26,7 +26,7 @@ from ordessa_environment_api.operations import (
     operation_holder,
     safe_json,
 )
-from pacthold.agents.nodes import encode_node_ref
+from pacthold.agents.nodes.publication import encode_node_ref
 from pacthold.agents.public import OperationNotFound, agent_services
 
 

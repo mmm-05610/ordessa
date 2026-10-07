@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import hashlib
 import json
 from ordessa_environment_api.operations import safe_json, sealed_mapping
-from .configuration import ConfigurationDescription, ConfigurationContractError, _name, _reference, _snapshot
+from pacthold.agents.configuration.change import ConfigurationDescription, ConfigurationContractError, _name, _reference, _snapshot
 
 PURE_READ_VERSION = 'agent-configuration-read/1'
 

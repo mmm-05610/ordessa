@@ -26,8 +26,8 @@ from ordessa_environment_api.operations import (
 )
 from ordessa_environment_api.identity import ParticipantInstanceRef
 from ordessa_persistence_sqlite import SqliteStorePort
-from pacthold.agents.directory import DirectoryBindingRef
-from pacthold.agents.invocation import (
+from pacthold.agents.nodes.directory import DirectoryBindingRef
+from pacthold.agents.access.invocation import (
     InvocationAuthorityRefused,
     InvocationCurrentState,
     InvocationGrant,

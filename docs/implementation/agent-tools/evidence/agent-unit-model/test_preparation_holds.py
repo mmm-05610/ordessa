@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from pacthold.agents.nodes import NodePublication, IDENTITIES
+from pacthold.agents.nodes.publication import NodePublication, IDENTITIES
 from pacthold.public import Environment
 from ordessa_environment_api import RequestKey, IdentityMismatchError
 from ordessa_environment_api.operations import OperationIntent, StepIntent, UsageMutation, operation_holder

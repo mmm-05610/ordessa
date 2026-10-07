@@ -52,7 +52,7 @@ class Authority:
     expiry = 100
 
     def authorize(self, request, actions, target_ref, delegation_ref):
-        from pacthold.agents.invocation import InvocationGrant
+        from pacthold.agents.access.invocation import InvocationGrant
         return InvocationGrant(principal_scope=request.principal_scope, actions=actions,
                                target_ref=target_ref, delegation_ref=delegation_ref,
                                authority_revision=self.revision, expires_at=self.expiry,

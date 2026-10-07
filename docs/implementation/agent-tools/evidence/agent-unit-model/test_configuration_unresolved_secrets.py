@@ -22,11 +22,11 @@ from test_apply_profile import _base_ref, _profile
 
 from ordessa_environment_api import RequestKey
 from ordessa_environment_api.operations import node_holder, safe_json
-from pacthold.agents.configuration import (
+from pacthold.agents.configuration.change import (
     ApplicationPolicy,
     ConfigurationUnsupported,
 )
-from pacthold.agents.management import CONFIGURATION_ATTEMPTS
+from pacthold.agents.configuration.management import CONFIGURATION_ATTEMPTS
 
 
 def _secret_ref():

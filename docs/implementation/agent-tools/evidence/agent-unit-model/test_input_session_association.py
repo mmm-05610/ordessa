@@ -23,7 +23,7 @@ from ordessa_harness_records.unit_records import (
     UnitRecords, UnitRecordsRefused, INPUT_SESSION_ASSOCIATION_VERSION,
 )
 from pacthold.agents.inputs import SessionlessNativeInputState, CapturedInputRef, FIRST_SESSION_ATTEMPTS, ManagedInputReservations
-from pacthold.agents.invocation import InvocationAuthorityRefused, InvocationVerifier
+from pacthold.agents.access.invocation import InvocationAuthorityRefused, InvocationVerifier
 
 
 PROVIDER = {'environmentNamespace': 'env', 'providerId': 'controlled.native', 'generation': 1,

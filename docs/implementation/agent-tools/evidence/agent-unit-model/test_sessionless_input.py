@@ -23,13 +23,13 @@ from ordessa_persistence_sqlite import ProtectedFingerprintHmac, SqliteStorePort
 from ordessa_persistence_sqlite.store import WriterLockHeldError
 from pacthold.public import Environment, InstallationRecord
 from pacthold.agents.runtime import AgentContributionSet
-from pacthold.agents.nodes import NodePublicationEvidence
-from pacthold.agents.directory import DirectoryBindingRef
+from pacthold.agents.nodes.publication import NodePublicationEvidence
+from pacthold.agents.nodes.directory import DirectoryBindingRef
 from pacthold.agents.inputs import (
     CapturedInputRef, CapturedInputEvidence, NativeInputState, SessionlessNativeInputState,
     ManagedInputReservations, DRAFT_ATTEMPTS, FIRST_SESSION_ATTEMPTS, SESSIONLESS_INPUT_VERSION,
 )
-from pacthold.agents.invocation import InvocationIssuer, InvocationAuthorityRefused
+from pacthold.agents.access.invocation import InvocationIssuer, InvocationAuthorityRefused
 
 
 class Captures:

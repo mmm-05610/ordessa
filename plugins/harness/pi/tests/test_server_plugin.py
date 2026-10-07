@@ -5,7 +5,7 @@ Controlled doubles only: no real owner, records, journal or native process.
 from types import SimpleNamespace
 import pytest
 from ordessa_environment_api import GuaranteeUnavailableError
-from pacthold.agents.invocation import InvocationVerifier
+from pacthold.agents.access.invocation import InvocationVerifier
 from ordessa_harness_pi.server_plugin import PiServerPlugin
 from ordessa_harness_pi import PiRuntimeProvider
 from server_plugin_api import (ServerPluginContext,

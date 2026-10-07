@@ -18,7 +18,7 @@ from ordessa_environment_api.domain import DomainRevisionConflict
 from ordessa_environment_api.operations import UsageMutation, OperationRevisionConflict, operation_holder, node_holder, safe_json
 from pacthold.agents.inputs import (ManagedInputReservations, FirstInputObservation, NativeInputState,
                                   FIRST_SESSION_ATTEMPTS, FIRST_INPUT_RESULT_VERSION)
-from pacthold.agents.invocation import InvocationAuthorityRefused
+from pacthold.agents.access.invocation import InvocationAuthorityRefused
 
 
 class Owner:
@@ -155,7 +155,7 @@ def test_missing_explicit_ports_refuse_without_observing(publication, resource, 
     elif resource == 'issuer': issuer = None
     else:
         from ordessa_persistence_sqlite import SqliteStorePort
-        from pacthold.agents.invocation import InvocationIssuer
+        from pacthold.agents.access.invocation import InvocationIssuer
         other = SqliteStorePort(tmp_path / 'different.sqlite')
         issuer = InvocationIssuer(other, p[6], p[7], clock=lambda: 50)
     try:

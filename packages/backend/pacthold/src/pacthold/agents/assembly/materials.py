@@ -16,15 +16,15 @@ from ordessa_environment_api.errors import GuaranteeUnavailableError
 from ordessa_environment_api.identity import ActivationRef, EnvironmentId, ParticipantInstanceRef
 from ordessa_environment_api.operations import safe_json
 
-from ..core.descriptors import validate_component_id, validate_contract_id
-from ..core.resource_admission import (
+from pacthold.core.descriptors import validate_component_id, validate_contract_id
+from pacthold.core.resource_admission import (
     AGENT_MATERIAL_CONTRACT_VERSION,
     MaterialCapability,
     MaterialContractError,
     snapshot_material_capability,
 )
-from .directory import DirectoryBindingRef
-from .invocation import InvocationContext
+from pacthold.agents.nodes.directory import DirectoryBindingRef
+from pacthold.agents.access.invocation import InvocationContext
 
 
 class MaterialUnavailable(GuaranteeUnavailableError):

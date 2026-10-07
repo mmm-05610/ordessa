@@ -11,7 +11,7 @@ from typing import Mapping
 
 from ordessa_environment_api import IdentityMismatchError
 from ordessa_environment_api.operations import safe_json, sealed_mapping
-from .contracts import manifest_content, _safe_tree
+from pacthold.agents.contracts import manifest_content, _safe_tree
 
 CONFIGURATION_CONTRACT_VERSION = "agent-configuration/1"
 ITEM_OUTCOMES = frozenset({"applied", "deferred", "restartRequired", "rejected", "conflict", "unknown"})
@@ -340,7 +340,7 @@ class UnitInspection:
     evidence_ref: Mapping
 
     def __post_init__(self):
-        from .directory import DirectoryBindingRef
+        from pacthold.agents.nodes.directory import DirectoryBindingRef
         unit = _reference(self.unit_ref)
         environment = unit['environmentNamespace']
         object.__setattr__(self, 'unit_ref', unit)

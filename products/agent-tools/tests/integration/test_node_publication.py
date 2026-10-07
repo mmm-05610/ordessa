@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from pacthold.agents.nodes import (
+from pacthold.agents.nodes.publication import (
     AgentNodeRef, NodePublication, NodePublicationEvidence, encode_node_ref,
     decode_node_ref, IDENTITIES, NODES,
 )

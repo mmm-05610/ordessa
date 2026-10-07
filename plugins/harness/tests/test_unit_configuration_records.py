@@ -262,8 +262,8 @@ def real_core_parts(tmp_path, *, start_native_session=True):
     from ordessa_environment_api import RequestKey
     from ordessa_environment_api.operations import OperationIntent, StepIntent
     from ordessa_persistence_sqlite import SqliteStorePort
-    from pacthold.agents.directory import DirectoryBindingRef
-    from pacthold.agents.invocation import InvocationIssuer
+    from pacthold.agents.nodes.directory import DirectoryBindingRef
+    from pacthold.agents.access.invocation import InvocationIssuer
     p = parts(tmp_path)
     target = p[3].scope.owner_ref(PROVIDER)
     request = RequestKey('env', 'controlled-principal', 'unit-flow')
@@ -320,7 +320,7 @@ def test_configuration_journal_consumes_real_core_claim_and_queries_same_origina
 
 @pytest.mark.parametrize('revoke', ['authority','activation','directory','epoch'])
 def test_configuration_journal_rejects_real_revoked_core_context_before_reservation(tmp_path, revoke):
-    from pacthold.agents.invocation import InvocationAuthorityRefused
+    from pacthold.agents.access.invocation import InvocationAuthorityRefused
     p, unit, store, request, issuer, authority, current, issued = real_core_parts(tmp_path)
     try:
         invocation = issued('configuration')

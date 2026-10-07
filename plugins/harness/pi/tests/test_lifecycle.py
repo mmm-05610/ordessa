@@ -1,7 +1,7 @@
 """C: existing journal/projection-shaped fixtures; no actual Pi/model launch."""
 from types import SimpleNamespace
 import pytest
-from pacthold.agents.invocation import InvocationVerifier
+from pacthold.agents.access.invocation import InvocationVerifier
 from ordessa_harness_pi import PiRuntimeProvider, PiProviderRefused
 
 DIGEST='sha256:'+'a'*64
@@ -214,7 +214,7 @@ def test_prepare_returns_exact_original_reservation_source_ref():
 
 @pytest.mark.parametrize('wrong',['unit','target','epoch'])
 def test_publication_projection_cannot_change_original_unit_target_or_epoch(wrong):
-    from pacthold.agents.directory import DirectoryBindingRef
+    from pacthold.agents.nodes.directory import DirectoryBindingRef
     provider,projection,records,client,context,opens=fixture()
     value={'unitRef':UNIT,'configurationTargetRef':projection.unit.configuration_target_ref,
         'managementEpoch':1,'directoryBindingRef':DirectoryBindingRef('test','directory',1,'sha256:'+'a'*64),
@@ -240,7 +240,7 @@ def test_boolean_owner_generation_cannot_bypass_full_unit_comparison():
 
 
 def test_publication_uses_complete_original_configuration_target():
-    from pacthold.agents.directory import DirectoryBindingRef
+    from pacthold.agents.nodes.directory import DirectoryBindingRef
     provider,projection,records,client,context,opens=fixture()
     projection.publication_facts=lambda ref:{'unitRef':UNIT,'configurationTargetRef':TARGET,
         'managementEpoch':1,'directoryBindingRef':DirectoryBindingRef('test','directory',1,'sha256:'+'a'*64),

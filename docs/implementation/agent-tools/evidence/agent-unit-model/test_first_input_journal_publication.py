@@ -23,9 +23,9 @@ from ordessa_environment_api.operations import OperationIntent, StepIntent, Usag
 from ordessa_persistence_sqlite import ProtectedFingerprintHmac
 from ordessa_harness_records.operation_journal import OperationJournal
 from ordessa_harness_records.unit_records import UnitRecords
-from pacthold.agents.directory import DirectoryBindingRef
-from pacthold.agents.nodes import NodePublicationEvidence
-from pacthold.agents.invocation import InvocationIssuer
+from pacthold.agents.nodes.directory import DirectoryBindingRef
+from pacthold.agents.nodes.publication import NodePublicationEvidence
+from pacthold.agents.access.invocation import InvocationIssuer
 from pacthold.agents.inputs import (ManagedInputReservations, SessionlessNativeInputState, NativeInputState,
                                   FirstInputObservation, FIRST_SESSION_ATTEMPTS)
 

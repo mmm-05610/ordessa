@@ -15,8 +15,8 @@ from ordessa_environment_api.operations import (
     safe_json,
 )
 from ordessa_persistence_sqlite import SqliteStorePort
-from pacthold.agents.directory import DirectoryBindingRef
-from pacthold.agents.invocation import (
+from pacthold.agents.nodes.directory import DirectoryBindingRef
+from pacthold.agents.access.invocation import (
     InvocationCurrentState,
     InvocationGrant,
     InvocationIssuer,

@@ -16,11 +16,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from pacthold.agents.configuration import (
+from pacthold.agents.configuration.change import (
     ConfigurationChangeRequest, ConfigurationChangeResult, ConfigurationItemResult,
     ConfigurationSnapshot,
 )
-from pacthold.agents.invocation import InvocationVerifier
+from pacthold.agents.access.invocation import InvocationVerifier
 from ordessa_environment_api.operations import safe_json
 from ordessa_harness_transport import RequestTimeout
 from ordessa_harness_pi import PiConnectionLeasePort, PiProviderRefused, PiRuntimeProvider

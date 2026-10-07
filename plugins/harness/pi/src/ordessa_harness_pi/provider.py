@@ -19,12 +19,12 @@ import json
 from typing import Mapping, Protocol
 
 from ordessa_environment_api.operations import safe_json
-from pacthold.agents.configuration import (
+from pacthold.agents.configuration.change import (
     ConfigurationChangeRequest, ConfigurationChangeResult, ConfigurationDescription,
     ConfigurationItemResult, ConfigurationRevisionConflict, ConfigurationSnapshot, UnitInspection,
 )
 from pacthold.core.lifecycle import RuntimeProviderDescriptor, RUNTIME_PROVIDER_VERSION
-from pacthold.agents.invocation import InvocationVerifier
+from pacthold.agents.access.invocation import InvocationVerifier
 from .lifecycle import PiLifecycleRefused, PiUnitLifecycle, plain, records_ready, same_reference
 
 

@@ -20,7 +20,7 @@ from ordessa_environment_api import RequestKey
 from ordessa_environment_api.errors import GuaranteeUnavailableError, IdentityMismatchError, UnknownResultError
 from ordessa_environment_api.operations import OperationStorePort, safe_json, sealed_mapping
 
-from .directory import DirectoryBindingRef
+from pacthold.agents.nodes.directory import DirectoryBindingRef
 
 
 class InvocationAuthorityRefused(GuaranteeUnavailableError):

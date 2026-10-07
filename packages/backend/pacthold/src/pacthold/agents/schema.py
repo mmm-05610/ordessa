@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import json
 import hashlib
-from .contracts import AGENT_CONTRACT_VERSION, _LOCAL_ID, _DIGEST
+from pacthold.agents.contracts import AGENT_CONTRACT_VERSION, _LOCAL_ID, _DIGEST
 
 _BINDINGS = (
     ("agents.capabilities", "capabilities", (), ()),

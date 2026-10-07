@@ -10,14 +10,14 @@ from test_node_publication import setup as node_fixture, conclude, source, Provi
 from test_invocation_authority import Authority, CurrentState
 from ordessa_persistence_sqlite import ProtectedFingerprintHmac
 from ordessa_environment_api import RequestKey, IdentityMismatchError, UnknownResultError, AdmissionRefusedError
-from pacthold.agents.directory import DirectoryBindingRef
-from pacthold.agents.invocation import InvocationIssuer, InvocationAuthorityRefused
+from pacthold.agents.nodes.directory import DirectoryBindingRef
+from pacthold.agents.access.invocation import InvocationIssuer, InvocationAuthorityRefused
 from pacthold.agents.runtime import RUNTIME_METHODS
-from pacthold.agents.configuration import (
+from pacthold.agents.configuration.change import (
  ApplicationPolicy, ConfigurationChangeRequest, ConfigurationDescription, ConfigurationSnapshot,
  ConfigurationItemResult, ConfigurationChangeResult, UnitInspection, ConfigurationUnsupported,
 )
-from pacthold.agents.management import AgentConfiguration
+from pacthold.agents.configuration.management import AgentConfiguration
 
 
 @pytest.fixture(autouse=True)
@@ -31,7 +31,7 @@ def setup(node_fixture):
  env._fingerprint_port=ProtectedFingerprintHmac({'fixture':b'au-unit-hmac'},active_key_id='fixture')
  # The Node lineage must reference a real frozen manifest: whole-manifest
  # updates bind their base to it and read its declarations for the diff.
- from pacthold.agents.profiles import ProfileCatalog
+ from pacthold.agents.profiles.catalog import ProfileCatalog
  base_entry=ProfileCatalog(env).create(profile_id='profile-base',display_name='Base Profile',
   manifest={'harnessDefinitionRef':{'environmentNamespace':'env','definitionId':'fixture','revision':'1'},
             'schemaVersion':'1','declarations':[{'declarationId':'model','configurationKind':'model',
@@ -353,7 +353,7 @@ def test_provider_retirement_before_dispatch_is_denied(setup,node_fixture):
 def test_cold_reserved_or_unknown_replay_does_not_query_or_dispatch(setup,node_fixture):
  from ordessa_persistence_sqlite import SqliteStorePort
  from pacthold.public import Environment
- from pacthold.agents.nodes import NodePublication
+ from pacthold.agents.nodes.publication import NodePublication
  setup[7]['outcome']='unknown'; first=apply(setup)
  setup[0].close(); setup[1]._fixture_store_closed=True
  reopened=SqliteStorePort(node_fixture[0])
@@ -369,7 +369,7 @@ def test_cold_reserved_or_unknown_replay_does_not_query_or_dispatch(setup,node_f
 
 def test_sqlite_fence_and_request_reservation_roll_back_together(setup):
  import sqlite3
- from pacthold.agents.management import CONFIGURATION_ATTEMPTS
+ from pacthold.agents.configuration.management import CONFIGURATION_ATTEMPTS
  store=setup[0]
  store._conn.execute("CREATE TRIGGER block_configuration_request BEFORE INSERT ON env_requests WHEN NEW.request_id='configuration-request' BEGIN SELECT RAISE(ABORT,'controlled rollback'); END")
  store._conn.commit()

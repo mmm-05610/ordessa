@@ -58,16 +58,16 @@ from ordessa_environment_api.operations import (
     safe_json,
 )
 
-from ..core.resource_admission import MaterialContractError
-from .invocation import InvocationAuthorityRefused, InvocationIssuer
-from .material_operations import (
+from pacthold.core.resource_admission import MaterialContractError
+from pacthold.agents.access.invocation import InvocationAuthorityRefused, InvocationIssuer
+from pacthold.agents.assembly.material_operations import (
     AGENT_MATERIAL_OPERATION_CONTRACT_VERSION,
     MaterialOperations,
     env_principal,
     material_invocation_target,
     material_provider_ref,
 )
-from .materials import (
+from pacthold.agents.assembly.materials import (
     MaterialCorrelation,
     MaterialConsumerPin,
     MaterialConsumptionEvidence,

@@ -24,8 +24,8 @@ from ordessa_environment_api import (
 from pacthold.agents.inputs import (
     CapturedInputEvidence, CapturedInputRef, ManagedInputReservations,
 )
-from pacthold.agents.invocation import InvocationAuthorityRefused, InvocationIssuer
-from pacthold.agents.nodes import NodePublication
+from pacthold.agents.access.invocation import InvocationAuthorityRefused, InvocationIssuer
+from pacthold.agents.nodes.publication import NodePublication
 from pacthold.agents.public import agent_services
 
 

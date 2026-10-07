@@ -20,7 +20,7 @@ from test_assembly import (
     UsageMutation, operation_holder, decode_node_ref, Provider, ContextOwner, Owner,
 )
 from pacthold.core.lifecycle import RUNTIME_METHODS, RUNTIME_PROVIDER_VERSION, RuntimeProviderDescriptor
-from pacthold.agents.lifecycle import AgentLifecycle, LifecycleObservation
+from pacthold.agents.lifecycle.lifecycle import AgentLifecycle, LifecycleObservation
 
 
 class LifecycleProvider(Provider):

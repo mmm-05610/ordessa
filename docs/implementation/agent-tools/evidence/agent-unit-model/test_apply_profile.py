@@ -12,12 +12,12 @@ from dataclasses import replace
 import pytest
 
 from ordessa_environment_api import IdentityMismatchError, RequestKey
-from pacthold.agents.configuration import (
+from pacthold.agents.configuration.change import (
     ApplicationPolicy, ConfigurationChangeRequest, ConfigurationContractError,
     ConfigurationRevisionConflict,
 )
 from pacthold.agents.contracts import ProfileRef
-from pacthold.agents.profiles import ProfileCatalog
+from pacthold.agents.profiles.catalog import ProfileCatalog
 from pacthold.agents.runtime import RUNTIME_METHODS
 
 from test_management import setup  # noqa: F401 - pytest fixture (already marked)

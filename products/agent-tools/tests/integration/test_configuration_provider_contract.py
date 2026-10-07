@@ -20,7 +20,7 @@ from pacthold.agents.public import (
     ResourceRef,
     validate_reference_extraction,
 )
-from pacthold.agents.configuration import ConfigurationContractError as LegacyConfigurationContractError
+from pacthold.agents.configuration.change import ConfigurationContractError as LegacyConfigurationContractError
 from pacthold.agents.public import ConfigurationContractError as LegacyPublicConfigurationContractError
 
 

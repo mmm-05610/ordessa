@@ -24,7 +24,7 @@ from ordessa_environment_api.operations import node_holder
 from ordessa_persistence_sqlite import SqliteStorePort
 from pacthold.agents import inputs as input_contracts
 from pacthold.agents import public as agent_public
-from pacthold.agents.invocation import InvocationIssuer
+from pacthold.agents.access.invocation import InvocationIssuer
 from pacthold.agents.inputs import (
     CapturedInputEvidence,
     CapturedInputRef,
@@ -36,7 +36,7 @@ from pacthold.agents.inputs import (
     SessionlessNativeInputState,
     ControlledInputCapturePort,
 )
-from pacthold.agents.nodes import encode_node_ref
+from pacthold.agents.nodes.publication import encode_node_ref
 
 
 class _FirstObserver:
