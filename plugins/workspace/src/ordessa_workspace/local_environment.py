@@ -246,7 +246,7 @@ def _host_sandbox_probe() -> Mapping[str, Any]:
     The provider is resolved by name (never imported here); an unresolvable
     provider reports unavailable rather than guessing another sandbox.
     """
-    from pacthold_runtime_compat.runtime_composition.sandbox_port import (
+    from ordessa_environment_api.sandbox_port import (
         SandboxPortError, resolve_sandbox_port,
     )
     try:

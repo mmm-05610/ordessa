@@ -398,7 +398,7 @@ class WorkerSidecarLauncher:
         self.usage_probe = dict(usage_probe) if usage_probe else None
 
     def launch(self, environment: Mapping[str, str]):
-        from pacthold_runtime_compat.runtime_composition.sandbox_port import (
+        from ordessa_environment_api.sandbox_port import (
             SandboxPortUnavailable, SidecarRoomRequest,
         )
 

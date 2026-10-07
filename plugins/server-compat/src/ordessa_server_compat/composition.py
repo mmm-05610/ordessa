@@ -24,7 +24,7 @@ from ordessa_server_product.acp_channel import AccessEntryTransport
 from ordessa_server.bootstrap import ServerRuntime, build_runtime
 from server_plugin_api import ServerError
 from pacthold_runtime_compat import capability
-from pacthold_runtime_compat.runtime_composition.sandbox_port import resolve_sandbox_port
+from ordessa_environment_api.sandbox_port import resolve_sandbox_port
 from pacthold.storage import SecretStore
 
 def _home_projection_target(target: Any, *, kind: str) -> str:
