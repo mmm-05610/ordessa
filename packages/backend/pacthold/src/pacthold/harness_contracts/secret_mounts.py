@@ -1,4 +1,4 @@
-"""Provider-neutral execution-scoped SecretMount protocol.
+"""Provider-neutral execution-scoped SecretMount protocol (032: moved to the kernel contract edge).
 
 The public objects intentionally contain no source path, secret bytes, digest,
 or environment material.  Source handles remain private to the materializer

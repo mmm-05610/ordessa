@@ -77,6 +77,8 @@ Phase 5c（提交续）：`capability/` → server-compat（其唯一活消费�
 
 Phase 5c（续）：`runtime_composition/protocol.py`（605 行中立运行时组合契约：RuntimeHostV1/SandboxV1/TerminalSessionV1、组合错误族、摘要工具）→ environment-api（stdlib-only，冻结契约包守卫通过；`PreparedSecretMount` 降为 TYPE_CHECKING 注解，具体值仍随 compat credentials）；compat 组合包从新家再导出同对象；capability 测试随主体迁入 server-compat，协议测试迁入 environment-api。runtime-compat 现为 520 行（`credentials`、`legacy_migrations`+SQL、`runtime_composition/{assembler,coordinator,fake}`）。
 
+Phase 5c（续二）：`credentials.py`（SecretMount/PreparedSecretMount/ResolvedCredential 中立契约）→ 内核契约边 `pacthold.harness_contracts.secret_mounts`（品牌唯一可导入的边；env-api 仅 TYPE_CHECKING 类型引用，运行时不加载）。runtime-compat 现为 471 行（`legacy_migrations`+SQL、`runtime_composition/{assembler,coordinator,fake}`）。
+
 **仍待完成（Phase 5 剩余）**：`legacy_migrations`+SQL 离线化（消费：apps/server bootstrap 预检与装配、products/server sealed_migrations、3 个 apps 测试、docs/migration 说明）；`capability/`（消费：server-compat、apps 测试）；`api.py`/`profile_envelope.py`/`catalog.py`/`cli/`/`bootstrap.py`（消费：产品 legacy `harness_adapters/generic`、server-compat）；`runtime_composition`（protocol/sandbox_port → environment-api；assembler/coordinator/fake 删除）；server-compat 18.5k 行的逐域再归属与删除。
 
 ## 结论

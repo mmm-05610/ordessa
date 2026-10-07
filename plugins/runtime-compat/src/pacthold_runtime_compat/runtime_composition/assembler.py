@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Sequence
-from ..credentials import PreparedSecretMount
+from pacthold.harness_contracts.secret_mounts import PreparedSecretMount
 
 from .coordinator import ResolvedComposition, RuntimeCompositionCoordinator
 from ordessa_environment_api.runtime_composition import (

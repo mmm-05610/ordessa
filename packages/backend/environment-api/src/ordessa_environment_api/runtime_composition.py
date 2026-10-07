@@ -14,8 +14,8 @@ import re
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, Mapping, Protocol, Sequence, runtime_checkable
 
-if TYPE_CHECKING:  # the concrete mount value stays with the compat assembly
-    from pacthold_runtime_compat.credentials import PreparedSecretMount
+if TYPE_CHECKING:  # type-only: the concrete mount value lives on the kernel contract edge
+    from pacthold.harness_contracts.secret_mounts import PreparedSecretMount
 
 CONTRACT_ID = "agent-box.runtime-composition@1"
 RUNTIME_HOST_CONTRACT_ID = "agent-box.runtime-host@1"
