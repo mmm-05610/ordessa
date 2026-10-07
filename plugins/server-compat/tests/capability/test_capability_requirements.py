@@ -1,7 +1,7 @@
 """需求/授权生成层：per-target demand 形状、去重保序、静态出处、grant 同形与 digest 稳定。"""
 from __future__ import annotations
 
-from pacthold_runtime_compat.capability import (
+from ordessa_server_compat.capability import (
     EvidenceRef,
     MatchContext,
     RequirementParameterSet,
@@ -9,8 +9,8 @@ from pacthold_runtime_compat.capability import (
     SandboxDeclarationDocument,
     requirement_set_digest,
 )
-from pacthold_runtime_compat.capability.match import match_requirements
-from pacthold_runtime_compat.capability.requirements import sidecar_grants, sidecar_requirements
+from ordessa_server_compat.capability.match import match_requirements
+from ordessa_server_compat.capability.requirements import sidecar_grants, sidecar_requirements
 
 BINDING = "distro-x/conn-1/opt/hermes"
 NOW = 10_000

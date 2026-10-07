@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from .protocol import (
+from ordessa_environment_api.runtime_composition import (
     CapabilitySet, CompositionAttemptRecord, CompositionPreflightReceipt,
     IsolatedProcessSpec, MountPlan, RuntimeBinding, RuntimeBundle, RuntimeHost,
     RuntimeHostRef, Sandbox, SandboxRef, TerminalAllocation, TerminalRunHandle,

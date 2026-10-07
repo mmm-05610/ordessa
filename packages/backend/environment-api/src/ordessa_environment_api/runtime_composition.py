@@ -12,8 +12,10 @@ import hashlib
 import json
 import re
 from pathlib import Path, PurePosixPath
-from typing import Mapping, Protocol, Sequence, runtime_checkable
-from ..credentials import PreparedSecretMount
+from typing import TYPE_CHECKING, Mapping, Protocol, Sequence, runtime_checkable
+
+if TYPE_CHECKING:  # the concrete mount value stays with the compat assembly
+    from pacthold_runtime_compat.credentials import PreparedSecretMount
 
 CONTRACT_ID = "agent-box.runtime-composition@1"
 RUNTIME_HOST_CONTRACT_ID = "agent-box.runtime-host@1"

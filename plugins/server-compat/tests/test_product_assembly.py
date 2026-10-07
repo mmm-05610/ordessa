@@ -14,9 +14,9 @@ import pytest
 
 from pacthold.extensions.api import PluginDescriptor
 from pacthold.work_core.db import _reset_connection_for_tests, registered_migration_sources
-from pacthold_runtime_compat import bootstrap as product_bootstrap
-from pacthold_runtime_compat.api import PluginRegistration as ProductPluginRegistration
-from pacthold_runtime_compat.catalog import (
+from ordessa_server_compat import harness_bootstrap as product_bootstrap
+from ordessa_server_product.harness_adapters.generic.legacy_api import PluginRegistration as ProductPluginRegistration
+from ordessa_server_compat.harness_catalog import (
     CREDENTIAL_MATERIALIZER,
     HARNESS_MANAGER,
     PRODUCT_CONTRIBUTION_KINDS,
@@ -24,8 +24,8 @@ from pacthold_runtime_compat.catalog import (
     ProductExtensionCatalog,
 )
 from pacthold.harness_contracts.credential_v1 import CredentialRefV1
-from pacthold_runtime_compat.bootstrap import CONTRACT_TYPES
-from pacthold_runtime_compat.runtime_composition.protocol import (
+from ordessa_server_compat.harness_bootstrap import CONTRACT_TYPES
+from ordessa_environment_api.runtime_composition import (
     TransportOperationContribution,
     TransportOperationDescriptor,
 )

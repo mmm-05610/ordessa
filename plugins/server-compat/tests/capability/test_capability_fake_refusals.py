@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pacthold_runtime_compat.capability import (
+from ordessa_server_compat.capability import (
     Condition,
     EnvironmentFact,
     EvidenceRef,
@@ -20,13 +20,13 @@ from pacthold_runtime_compat.capability import (
     SandboxGrant,
     SandboxRequirement,
 )
-from pacthold_runtime_compat.capability.errors import (
+from ordessa_server_compat.capability.errors import (
     REFUSAL_CONDITION_UNSATISFIED,
     REFUSAL_DECLARATION_MISSING,
     REFUSAL_ENVIRONMENT_MISMATCH,
     REFUSAL_EVIDENCE_STALE,
 )
-from pacthold_runtime_compat.capability.match import match_requirements
+from ordessa_server_compat.capability.match import match_requirements
 
 BINDING = "distro-x/conn-1/opt/hermes"
 OTHER_BINDING = "distro-x/conn-2/opt/other"
@@ -377,8 +377,8 @@ def test_environment_observations_never_rewrite_demand_nor_relax_grants() -> Non
 # B+C 复审硬化反例（CAP01-BC-002/003）：运行时非法值 fail-closed、空证据不构成证明
 # ---------------------------------------------------------------------------
 
-from pacthold_runtime_compat import capability as capability_api  # noqa: E402
-from pacthold_runtime_compat.capability.errors import (  # noqa: E402
+from ordessa_server_compat import capability as capability_api  # noqa: E402
+from ordessa_server_compat.capability.errors import (  # noqa: E402
     REFUSAL_AUTHORIZATION_MISSING,
     REFUSAL_EVIDENCE_ABSENT,
 )

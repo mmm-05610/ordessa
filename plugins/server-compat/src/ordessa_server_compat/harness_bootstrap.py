@@ -32,7 +32,7 @@ CONTRACT_TYPES = {
     CredentialRefV1.contract_id: CredentialRefV1,
     AgentSkillV1.contract_id: AgentSkillV1,
 }
-from pacthold_runtime_compat.runtime_composition.protocol import (
+from ordessa_environment_api.runtime_composition import (
     RUNTIME_HOST_CONTRACT_ID,
     SANDBOX_CONTRACT_ID,
     TERMINAL_SESSION_CONTRACT_ID,

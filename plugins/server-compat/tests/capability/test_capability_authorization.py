@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pacthold_runtime_compat.capability import (
+from ordessa_server_compat.capability import (
     EvidenceRef,
     MatchContext,
     RequirementParameterSet,
@@ -12,15 +12,15 @@ from pacthold_runtime_compat.capability import (
     SandboxGrant,
     SandboxRequirement,
 )
-from pacthold_runtime_compat.capability.errors import (
+from ordessa_server_compat.capability.errors import (
     REFUSAL_AUTHORIZATION_EXCEEDED,
     REFUSAL_AUTHORIZATION_MISSING,
     REFUSAL_ENVIRONMENT_MISMATCH,
     REFUSAL_EVIDENCE_STALE,
     REFUSAL_PROVIDER_NOT_AUTHORIZED,
 )
-from pacthold_runtime_compat.capability.match import match_requirements
-from pacthold_runtime_compat.capability.selection import select_declaration
+from ordessa_server_compat.capability.match import match_requirements
+from ordessa_server_compat.capability.selection import select_declaration
 
 BINDING = "distro-x/conn-1/opt/hermes"
 OTHER_BINDING = "distro-x/conn-2/opt/other"

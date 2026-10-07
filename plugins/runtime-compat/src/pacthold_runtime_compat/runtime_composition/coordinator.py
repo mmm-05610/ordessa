@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Mapping
 
-from .protocol import (
+from ordessa_environment_api.runtime_composition import (
     AttachDescriptor, CapabilityStatus, CompositionAttemptRecord,
     CompositionErrorCode, CompositionPreflightReceipt, CompositionRejected,
     HarnessCommandSpec, RuntimeBinding, RuntimeBundle, StartAmbiguous,

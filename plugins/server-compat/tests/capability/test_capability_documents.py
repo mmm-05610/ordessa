@@ -7,7 +7,7 @@ from typing import Any, get_args
 
 import pytest
 
-from pacthold_runtime_compat.capability import (
+from ordessa_server_compat.capability import (
     Condition,
     EnvironmentFact,
     EvidenceRef,
@@ -22,7 +22,7 @@ from pacthold_runtime_compat.capability import (
     canonical_json,
     requirement_set_digest,
 )
-from pacthold_runtime_compat.capability import CapabilityContractError, EvidenceInvalid
+from ordessa_server_compat.capability import CapabilityContractError, EvidenceInvalid
 
 
 def _evidence(**overrides: Any) -> EvidenceRef:

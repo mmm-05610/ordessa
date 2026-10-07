@@ -1,5 +1,5 @@
 """Public Root Extension SDK runtime composition contract."""
-from .protocol import *
+from ordessa_environment_api.runtime_composition import *
 from ordessa_environment_api.sandbox_port import *
 from .fake import FakeCompositionCoordinator, FakeHost, FakeSandbox, FakeTerminal, TargetCreationSentinel
 from .coordinator import ResolvedComposition, RuntimeCompositionCoordinator

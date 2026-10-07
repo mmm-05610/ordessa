@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import pytest
 
-import pacthold_runtime_compat.capability as capability
-from pacthold_runtime_compat.capability import (
+import ordessa_server_compat.capability as capability
+from ordessa_server_compat.capability import (
     AuthorizationExceeded,
     AuthorizationMissing,
     CapabilityContractError,

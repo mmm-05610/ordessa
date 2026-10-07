@@ -24,7 +24,7 @@ from pacthold.extensions.catalog import (
     build_catalog_from_report,
 )
 
-from pacthold_runtime_compat.runtime_composition.protocol import TransportOperationHandler
+from ordessa_environment_api.runtime_composition import TransportOperationHandler
 
 # Business contribution kind constants (historical spellings unchanged).
 HARNESS_MANAGER = "harness_manager"

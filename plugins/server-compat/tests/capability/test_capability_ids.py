@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from pacthold_runtime_compat.capability import (
+from ordessa_server_compat.capability import (
     CAPABILITY_ID_PATTERN,
     CapabilityContractError,
     CapabilityIdInvalid,

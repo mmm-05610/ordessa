@@ -15,7 +15,7 @@ from typing import Any, Sequence
 from ..credentials import PreparedSecretMount
 
 from .coordinator import ResolvedComposition, RuntimeCompositionCoordinator
-from .protocol import (
+from ordessa_environment_api.runtime_composition import (
     HarnessCommandSpec, MountPlan, PreparedMountSource, RuntimeBinding,
     RuntimeBundle, RuntimeHostV1, SandboxV1, TerminalSessionV1, content_digest,
     digest, guest_path,

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pacthold_runtime_compat.capability import (
+from ordessa_server_compat.capability import (
     EvidenceRef,
     MatchContext,
     RequirementParameterSet,
@@ -13,13 +13,13 @@ from pacthold_runtime_compat.capability import (
     SandboxRequirement,
     requirement_set_digest,
 )
-from pacthold_runtime_compat.capability.errors import (
+from ordessa_server_compat.capability.errors import (
     REFUSAL_DECLARATION_CONFLICT,
     REFUSAL_DECLARATION_MISSING,
     REFUSAL_PIN_NOT_MATCHED,
     REFUSAL_PROVIDER_NOT_AUTHORIZED,
 )
-from pacthold_runtime_compat.capability.selection import (
+from ordessa_server_compat.capability.selection import (
     REASON_INCUMBENT_NOT_MATCHED,
     REASON_SUPERSEDED,
     select_declaration,
