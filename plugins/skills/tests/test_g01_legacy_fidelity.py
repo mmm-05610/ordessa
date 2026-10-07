@@ -171,7 +171,7 @@ def test_ports_surface_matches_the_legacy_methods():
     # and observed for load evidence — now lives on the PUBLISHED types,
     # checked here so the legacy semantics did not silently vanish:
     import inspect
-    from ordessa_harness_api import (
+    from pacthold.harness_contracts import (
         ConfigurationAdapter, ConfigurationCapabilities, ConfigurationService,
     )
     adapter_methods = {name for name, _

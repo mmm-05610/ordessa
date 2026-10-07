@@ -42,7 +42,7 @@ def _repack_kernel_wheels(wheel_dir: Path) -> set:
 
 def test_independent_attachment_wheel_without_monolith_product_server_or_sdk(tmp_path):
     packages = ('packages/backend/environment-api', 'packages/backend/pacthold',
-                'packages/backend/harness-transport', 'plugins/harness/api', 'plugins/harness/claude-code')
+                'packages/backend/harness-transport', 'plugins/harness/claude-code')
     wheels = tmp_path / 'wheels'
     kernel_wheels = _repack_kernel_wheels(wheels)
     clean_sources = []
@@ -58,7 +58,7 @@ def test_independent_attachment_wheel_without_monolith_product_server_or_sdk(tmp
     assert build.returncode == 0, build.stdout + build.stderr
     own = [p for p in wheels.glob('*.whl') if p.name not in kernel_wheels]
     assert [p.name.split('-')[0] for p in sorted(own)] == ['ordessa_environment_api',
-        'ordessa_harness_api', 'ordessa_harness_claude_code', 'ordessa_harness_transport', 'pacthold']
+        'ordessa_harness_claude_code', 'ordessa_harness_transport', 'pacthold']
     artifacts = sorted(wheels.glob('*.whl')); assert len(artifacts) == len(packages) + len(KERNEL_DEP_DIST_TO_PACKAGE)
     claude = list(wheels.glob('ordessa_harness_claude_code-*.whl')); assert len(claude) == 1
     with zipfile.ZipFile(claude[0]) as archive:
@@ -81,7 +81,7 @@ assert all(importlib.util.find_spec(name) is None for name in
     ('ordessa_harness', 'ordessa_agent_tools', 'ordessa_server', 'claude_agent_sdk', 'server_plugin_api'))
 import ordessa_harness_claude_code.server_plugin
 from ordessa_harness_claude_code.acp_model_configuration import ClaudeAdapter
-from ordessa_harness_api.model_compilation import AdapterContext, ChoiceRequest, TargetHandle
+from pacthold.harness_contracts.model_compilation import AdapterContext, ChoiceRequest, TargetHandle
 context = AdapterContext(TargetHandle("claude-code", "instance", "fixture"), "0.81.2", {"native_session_id": "fixture-session"})
 choice = ChoiceRequest("fixture-provider", "fixture-model", "https://fixture.test", "anthropic-messages", None, "fixture")
 compiled = ClaudeAdapter().compile(context, {}, choice)

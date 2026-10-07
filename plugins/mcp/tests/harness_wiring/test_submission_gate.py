@@ -19,7 +19,7 @@ from wiring_helpers import (
     StubConfigurationService, make_plan, real_target, refused,
     submission_unknown,
 )
-from ordessa_harness_api import ErrorCode
+from pacthold.harness_contracts import ErrorCode
 
 from backend import native_binding as nb
 from backend.plugin import McpAssetServerPlugin

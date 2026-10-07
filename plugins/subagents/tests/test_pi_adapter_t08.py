@@ -17,7 +17,7 @@ import os
 import subprocess
 
 import pytest
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, Assessment, Installation, IntentSource, Mismatch,
     VerificationUnknown,
 )

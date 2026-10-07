@@ -25,12 +25,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Mapping
 
-from ordessa_harness_api.contracts import (
+from pacthold.harness_contracts.contracts import (
     AdapterContext, AdapterRefusal, Assessment, ConfigurationAdapterDescriptor,
     VerificationUnknown,
 )
-from ordessa_harness_api.errors import ContractError, ErrorCode
-from ordessa_harness_api.schema import ValueSchema
+from pacthold.harness_contracts.errors import ContractError, ErrorCode
+from pacthold.harness_contracts.schema import ValueSchema
 from server_plugin_api import Contribution, ContributionBatch
 
 from .evidence import BRAND_EVIDENCE
@@ -177,7 +177,7 @@ def build_configuration_descriptor(
             f"harnesses.toml records no harness {harness_id!r}; the "
             "descriptor stays unbuildable rather than inventing a pin")
     pin = _semver_tuple(resolved[harness_id])
-    from ordessa_harness_api.contracts import VersionRange
+    from pacthold.harness_contracts.contracts import VersionRange
     # entries 非空是平台合同（contracts.py 校验）；本域每品牌公开的能力面
     # 只有一个：该品牌的诚实投影决策面——由 HarnessLspConfigurationAdapter
     # 的 assess/compile/verify 与 project.project_selection 实现（决策记录

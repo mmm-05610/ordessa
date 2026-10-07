@@ -80,7 +80,7 @@ def verify(intent_set: NativeIntentSet, observation: NativeObservation) -> Verif
 # The conversion itself lives in ``backend/native_binding.py`` — the single
 # Q4-domain <-> harness-api boundary; this module only pins the brand facts
 # into it. The returned object implements the published
-# ``ordessa_harness_api.ConfigurationAdapter`` Protocol (descriptor +
+# ``pacthold.harness_contracts.ConfigurationAdapter`` Protocol (descriptor +
 # assess/compile/verify over the real DTOs). Registration is the product
 # assembly's move: ``Contribution("harness.configuration-adapters", "v1",
 # configuration_adapter())`` under the declared point (the point's payload

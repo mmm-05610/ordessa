@@ -21,7 +21,7 @@ from ordessa_harness.contributions import (
 )
 from ordessa_harness.contributions import ConfigurationAdapterDescriptor as RealDescriptor
 from ordessa_harness.contributions import FieldClaim as RealFieldClaim
-from ordessa_harness_api import ContractError, ValueSchema
+from pacthold.harness_contracts import ContractError, ValueSchema
 from server_plugin_api import Contribution, ContributionBatch
 
 from ordessa_sandbox_adapters import (

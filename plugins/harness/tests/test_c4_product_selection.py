@@ -6,7 +6,7 @@ import pytest
 
 from ordessa_harness.application import ConfigurationApplicationService, OperationJournal, RuntimeSnapshot
 from ordessa_harness.materialization import MergeAuthority
-from ordessa_harness_api import AdapterContext, ApplicationTarget, DesiredFragment, Installation
+from pacthold.harness_contracts import AdapterContext, ApplicationTarget, DesiredFragment, Installation
 from ordessa_server.bootstrap import build_runtime
 
 

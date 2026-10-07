@@ -47,7 +47,7 @@ from __future__ import annotations
 import re
 from typing import Callable
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, AdapterRefusal, Assessment, ConfigurationAdapterDescriptor,
     ErrorCode, FieldClaim, FieldPath, IntentSet, IntentSource, SetField,
     ValueSchema, VerificationUnknown, VersionRange,

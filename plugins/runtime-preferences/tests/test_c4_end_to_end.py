@@ -22,7 +22,7 @@ from ordessa_harness.application import (
     OperationJournal, RuntimeSnapshot,
 )
 from ordessa_harness.materialization import MergeAuthority, TargetAuthority
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, ApplicationTarget, Installation, Match, TargetDescriptor,
     TargetHandle,
 )
@@ -125,7 +125,7 @@ class Permit:
 
 
 def _fragment(brand: str, value: dict, item_id: str = "compaction"):
-    from ordessa_harness_api import DesiredFragment
+    from pacthold.harness_contracts import DesiredFragment
     return DesiredFragment("assets.runtime-preferences", item_id, "1",
                            f"business:{brand}-prefs", "source-1", "set", value)
 

@@ -89,7 +89,7 @@ def main(argv=None):
     api_source = str(root / "plugins/harness/api/src")
     sys.path.insert(0, api_source)
     try:
-        from ordessa_harness_api.command_discovery import command_catalog_document
+        from pacthold.harness_contracts.command_discovery import command_catalog_document
         document = command_catalog_document()
     finally:
         sys.path.remove(api_source)

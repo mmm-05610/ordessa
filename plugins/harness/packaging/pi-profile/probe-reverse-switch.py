@@ -98,7 +98,7 @@ def probe(artifact: Path, drift: str = None) -> dict:
                 initialized = request("initialize", {"protocolVersion": 1, "clientCapabilities": {},
                     "clientInfo": {"name": "ordessa-reverse-probe", "version": "1"}})
                 assert initialized["_meta"]["ordessaConfiguration"]["supported"] is True
-                from ordessa_harness_api import ApplicationTarget, DesiredFragment, Installation, IntentSource
+                from pacthold.harness_contracts import ApplicationTarget, DesiredFragment, Installation, IntentSource
                 from ordessa_harness.server_acp.registry import AcpChannelRegistry
                 from ordessa_harness.server_acp.profile_owner import ProfileSessionOwner
                 from ordessa_harness.configuration.model.backend import preparation_params

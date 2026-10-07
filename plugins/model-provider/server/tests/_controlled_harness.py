@@ -30,7 +30,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from uuid import uuid4
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, ApplicationTarget, Installation, TargetDescriptor,
     TargetHandle, VersionRange,
 )

@@ -1,6 +1,6 @@
 """Adapter: Profile's ``HarnessConfigPort`` → the harness-api carrier.
 
-Maps the C0 harness-api carrier package (``ordessa_harness_api``, the C4
+Maps the C0 harness-api carrier package (``pacthold.harness_contracts``, the C4
 application port: inspect/plan/apply/query/reconcile) onto the port
 semantics Profile's session flow consumes (docs/design/profile-v2/
 application.md §2).  Prepared against the carrier as delivered via
@@ -43,8 +43,8 @@ from pacthold.agents.configuration.profile_contracts import (
 from pacthold.agents.configuration.profile_errors import ProfileError
 
 try:  # the carrier package is optional until the host composes it
-    import ordessa_harness_api as _carrier
-    from ordessa_harness_api import (
+    import pacthold.harness_contracts as _carrier
+    from pacthold.harness_contracts import (
         ApplicationTarget,
         ApplicationResult,
         Confirmed,
@@ -91,7 +91,7 @@ class HarnessApiConfigPort(HarnessConfigPort):
         if not _CARRIER_IMPORT_OK:
             raise ProfileError(
                 "APPLICATION_PORT_ABSENT",
-                "the ordessa_harness_api carrier package is not installed",
+                "the pacthold.harness_contracts carrier package is not installed",
                 status=409,
             )
         if type(owner_application) is not bool or (owner_application and permit_provider is not None):

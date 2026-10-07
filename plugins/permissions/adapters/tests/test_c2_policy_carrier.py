@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from _permissions_adapters_helpers import make_ceiling, make_intent, unverified_ceiling
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, AdapterRefusal, Assessment, Installation, IntentSet,
     TargetDescriptor, TargetHandle, VerificationUnknown,
 )

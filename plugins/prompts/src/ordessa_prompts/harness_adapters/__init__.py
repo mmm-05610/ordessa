@@ -2,7 +2,7 @@
 
 Same registration seam as Skills/Extensions: point
 `harness.configuration-adapters` (v1, multi-owner), published
-`ordessa_harness_api` vocabulary only, no harness-plugin import
+`pacthold.harness_contracts` vocabulary only, no harness-plugin import
 (AGENTS.md rule 3). The honest state of instruction projection tonight
 is recorded in `contribution.py` and graded in `capabilities.py`:
 three semantics × eight brands, three implemented brands, four families

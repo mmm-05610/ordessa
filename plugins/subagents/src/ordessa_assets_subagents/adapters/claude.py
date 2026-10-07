@@ -28,7 +28,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Sequence
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ConfigurationAdapterDescriptor, FieldClaim, IntentSet, ValueSchema,
     VersionRange,
 )

@@ -3,7 +3,7 @@
 Provenance: the former Harness model/common.py at 3c83819e23 and the
 reviewed Claude ACP 0.81.2 controlled packaging probes. No native call.
 """
-from ordessa_harness_api.model_compilation import parse_version
+from pacthold.harness_contracts.model_compilation import parse_version
 
 CANONICAL_PROTOCOLS = ("openai-chat", "openai-responses", "anthropic-messages", "gemini-generate")
 DIALECT = {"anthropic-messages": ("ANTHROPIC_BASE_URL", None)}

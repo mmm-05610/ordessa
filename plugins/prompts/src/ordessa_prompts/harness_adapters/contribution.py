@@ -32,7 +32,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Mapping
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, AdapterRefusal, Assessment, ConfigurationAdapterDescriptor,
     ConfigurationCapabilities, ConfigurationCapability, ContractError,
     ErrorCode, Verification, VerificationUnknown, VersionRange, Match,
@@ -106,7 +106,7 @@ def _refusal(code: ErrorCode, message: str) -> AdapterRefusal:
 def build_payload_schema():
     """The managed-selection schema for the day projection lands: the
     fixed synthesis order is part of the payload's identity (HM §3)."""
-    from ordessa_harness_api import ValueSchema
+    from pacthold.harness_contracts import ValueSchema
     item = ValueSchema(
         "object",
         properties=(
@@ -307,7 +307,7 @@ class PromptsConfigurationAdapter:
     # -- published capability rows -------------------------------------------
 
     def configuration_capabilities(self, target: Any) -> ConfigurationCapabilities:
-        from ordessa_harness_api import ApplicationTarget
+        from pacthold.harness_contracts import ApplicationTarget
         if not isinstance(target, ApplicationTarget):
             raise ValueError("needs the published ApplicationTarget")
 

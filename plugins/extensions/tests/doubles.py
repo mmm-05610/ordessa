@@ -1,12 +1,12 @@
 """Shared doubles for the EXT tests: a published-vocabulary AdapterContext.
 
-The doubles use ONLY published `ordessa_harness_api` shapes — no harness
+The doubles use ONLY published `pacthold.harness_contracts` shapes — no harness
 internals — so the adapter is proven against the same surface the real
 runtime hands it.
 """
 from __future__ import annotations
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, Installation, TargetDescriptor, TargetHandle,
 )
 

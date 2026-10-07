@@ -90,7 +90,7 @@ def test_claude_model_compiler_and_compilation_contracts_have_one_owner():
     assert (independent / 'acp_model_facts.py').is_file()
     assert not (ROOT / 'plugins/harness/src/ordessa_harness/claude/configuration/model.py').exists()
     assert not (ROOT / 'plugins/harness/src/ordessa_harness/configuration/model/types.py').exists()
-    contracts = ROOT / 'plugins/harness/api/src/ordessa_harness_api/model_compilation.py'
+    contracts = ROOT / 'plugins/harness/api/src/pacthold.harness_contracts/model_compilation.py'
     assert contracts.is_file()
     for path in (independent / 'acp_model_configuration.py', independent / 'acp_model_facts.py', contracts):
         source = path.read_text()

@@ -1,7 +1,7 @@
 """T05 — verify(observation): a read-only judgement in the PLATFORM vocabulary.
 
 `verify` consumes a read-only ``EffectObservation`` (the backend probe seam) and
-answers with ``ordessa_harness_api.contracts.Verification`` — ``Match`` /
+answers with ``pacthold.harness_contracts.contracts.Verification`` — ``Match`` /
 ``Mismatch`` / ``VerificationUnknown``. The former local ``VerifyResult``/
 ``VerifyOutcome`` mirror is deleted: one verdict vocabulary, the platform's.
 
@@ -20,7 +20,7 @@ Two things the §C4 rules still require and this file keeps proving:
 """
 from _sandbox_adapters_helpers import effect_observation
 
-from ordessa_harness_api.contracts import Match, Mismatch, VerificationUnknown
+from pacthold.harness_contracts.contracts import Match, Mismatch, VerificationUnknown
 from ordessa_sandbox_api import SandboxErrorCode, ToolCategory
 from ordessa_sandbox_api.wire_family import wire_family_for
 from ordessa_sandbox_adapters import CodexSandboxAdapter, sandbox_code_of

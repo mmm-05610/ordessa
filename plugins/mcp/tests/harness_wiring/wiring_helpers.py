@@ -13,7 +13,7 @@ from dataclasses import dataclass, replace
 from typing import Mapping, Optional
 
 import native_helpers as nh
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, ApplicationTarget, Assessment, Installation, Plan,
     TargetDescriptor, TargetHandle,
 )
@@ -94,7 +94,7 @@ def api_context(brand, scope="instance", generation=7, harness_id=None,
 # -- stub C4 port (the service-level refusals; NOT the real service) -------------
 
 class StubConfigurationService:
-    """Duck-typed ``ordessa_harness_api.ConfigurationService``: records the
+    """Duck-typed ``pacthold.harness_contracts.ConfigurationService``: records the
     exact call args and answers with the next queued result."""
 
     def __init__(self, target=None, results=()):
@@ -128,12 +128,12 @@ def make_plan(target, plan_id="plan-proof-1"):
 
 
 def refused(code, message="stub refusal"):
-    from ordessa_harness_api import Refused
+    from pacthold.harness_contracts import Refused
     return Refused(code, (message,), True)
 
 
 def submission_unknown():
-    from ordessa_harness_api import Unknown
+    from pacthold.harness_contracts import Unknown
     return Unknown("op-1", "verifying", ("effect-1",),
                    ("readback pending",), "reconcile")
 

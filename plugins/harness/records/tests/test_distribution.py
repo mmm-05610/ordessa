@@ -44,7 +44,7 @@ assert UnitJournal is OperationJournal
 sqlite3.connect=old_connect
 assert all(importlib.util.find_spec(name) is None for name in ('ordessa_harness','ordessa_server',
     'ordessa_agent_tools','server_plugin_api','pacthold','ordessa_harness_pi','ordessa_harness_codex','ordessa_harness_claude_code'))
-from ordessa_harness_api import ApplicationTarget,Plan,Refused,ErrorCode
+from pacthold.harness_contracts import ApplicationTarget,Plan,Refused,ErrorCode
 now=datetime.now(timezone.utc)
 target=ApplicationTarget('fixture-server','fixture-session','fixture-channel',7)
 plan=Plan('fixture-plan',target,'a'*64,'before-1','native-1',3,'auth-1','ref-revision-1',(now+timedelta(minutes=5)).isoformat())

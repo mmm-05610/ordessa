@@ -7,7 +7,7 @@ import stat
 
 import pytest
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ContentRef, FieldPath, IntentSet, IntentSource, MountContent,
     RemoveOwnedContent, ResetField, SetField, TargetDescriptor, TargetHandle,
 )

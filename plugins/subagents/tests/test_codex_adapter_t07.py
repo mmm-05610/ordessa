@@ -15,7 +15,7 @@ from __future__ import annotations
 import tomllib
 
 import pytest
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, Installation, IntentSource, Mismatch, TargetDescriptor,
     TargetHandle, VerificationUnknown,
 )

@@ -5,7 +5,7 @@ one fixed dialect ID; exact protocol/endpoint matching establishes routing.
 Credential changes and provider restoration are not model-only actions.
 """
 from collections.abc import Mapping
-from ordessa_harness_api import AdapterRefusal, ErrorCode, InvokeAction
+from pacthold.harness_contracts import AdapterRefusal, ErrorCode, InvokeAction
 
 
 def compile_native_model(snapshot, desired, source, brand, *, credential_binding=None):

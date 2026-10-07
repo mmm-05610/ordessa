@@ -25,7 +25,7 @@ Covers, in order:
   paths appear ONLY in the fake's records, never on the host filesystem.
 
 The missing L3 seam (recorded for C0): no PUBLISHED harness symbol accepts
-these resources — ``ordessa_harness_api`` exports no skill contract and
+these resources — ``pacthold.harness_contracts`` exports no skill contract and
 the only consumer is the harness-internal
 ``ordessa_harness.adapters.generic_cli`` plus the execution providers'
 ``request.resolved_inputs`` handoff (core dispatch, api-requests.md §G2);

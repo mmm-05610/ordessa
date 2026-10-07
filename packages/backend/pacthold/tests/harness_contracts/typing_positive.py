@@ -1,6 +1,6 @@
 from typing import assert_never
 
-from ordessa_harness_api import ApplicationResult, Intent, SetField
+from pacthold.harness_contracts import ApplicationResult, Intent, SetField
 
 
 def intent_name(intent: Intent) -> str:

@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import subprocess
 
-from ordessa_harness_api import Installation
+from pacthold.harness_contracts import Installation
 from ...application.action_execution import ActionGrant
 from ...application.configuration_service import ConfigurationApplicationService
 from ordessa_harness_records.operation_journal import OperationJournal

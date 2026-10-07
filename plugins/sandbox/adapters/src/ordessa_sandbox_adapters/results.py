@@ -4,7 +4,7 @@ A refusal that this package *authors* is a value, never an exception, so the
 caller can surface it before anything has an effect (contracts.md §C4, FR-09).
 The assess and verify verdicts are NOT re-declared here any more: after the
 ``harness-api`` checkpoint this facet speaks the platform's own closed
-vocabularies — ``ordessa_harness_api.contracts.Assessment``
+vocabularies — ``pacthold.harness_contracts.contracts.Assessment``
 (``supported``/``unsupported``/``unknown``) and ``Verification``
 (``Match``/``Mismatch``/``VerificationUnknown``). The former local mirrors
 (``AssessOutcome``/``AssessReport``/``VerifyOutcome``/``VerifyResult``) are
@@ -29,9 +29,9 @@ import re
 from dataclasses import dataclass
 from typing import Any, Mapping, Union
 
-from ordessa_harness_api.contracts import Assessment, Match, Mismatch, \
+from pacthold.harness_contracts.contracts import Assessment, Match, Mismatch, \
     Verification, VerificationUnknown
-from ordessa_harness_api.intents import IntentSet
+from pacthold.harness_contracts.intents import IntentSet
 from ordessa_sandbox_api import SandboxErrorCode
 
 from .seam import CompiledFieldIntent
@@ -154,7 +154,7 @@ class CompiledIntent:
         """The real Harness C3 ``IntentSet`` for this compiled facet item.
 
         The platform DTOs validate their own shape, so an un-boundable field
-        raises ``ordessa_harness_api.errors.ContractError`` here rather than
+        raises ``pacthold.harness_contracts.errors.ContractError`` here rather than
         producing a partial set.
         """
         return IntentSet(tuple(f.to_harness_c3() for f in self.intents))

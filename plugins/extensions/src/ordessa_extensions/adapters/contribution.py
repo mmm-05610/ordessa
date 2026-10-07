@@ -37,7 +37,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, AdapterRefusal, Assessment, ConfigurationAdapterDescriptor,
     ConfigurationCapability, ConfigurationCapabilities, ContentRef, ContractError,
     ErrorCode, FieldClaim, IntentSet, IntentSource, Match, Mismatch,
@@ -130,7 +130,7 @@ def build_payload_schema():
     """The managed-set schema — OUR canonical hook payload (not the
     brands' native shapes; the native mapping is exactly what is NOT
     evidenced yet)."""
-    from ordessa_harness_api import ValueSchema
+    from pacthold.harness_contracts import ValueSchema
     hook = ValueSchema(
         "object",
         properties=(
@@ -211,7 +211,7 @@ def build_codex_intents(source: IntentSource, target: TargetDescriptor,
 def build_claude_intents(source: IntentSource, target: TargetDescriptor,
                          desired: Mapping[str, Any]) -> IntentSet:
     """Keyed slot: one SetField of the `hooks` key (full replacement)."""
-    from ordessa_harness_api import FieldPath
+    from pacthold.harness_contracts import FieldPath
     hooks_value = [dict(hook) for hook in desired["hooks"]]
     return IntentSet(intents=(
         SetField(source=source, target=target.handle,
@@ -222,7 +222,7 @@ def build_claude_intents(source: IntentSource, target: TargetDescriptor,
 class HooksConfigurationAdapter:
     """One brand's `ConfigurationAdapter` for the `assets.hooks` facet.
 
-    Satisfies the published `ordessa_harness_api.ConfigurationAdapter`
+    Satisfies the published `pacthold.harness_contracts.ConfigurationAdapter`
     Protocol (descriptor / assess / compile / verify). Never carries an
     `owner` attribute (the harness handler refuses author-declared
     owners) and never touches HOME/network/spawn.
@@ -293,7 +293,7 @@ class HooksConfigurationAdapter:
                         f"{self._pin.native_evidence} — fail-closed either"
                         " way, never supported"))
         # note: adapter_version is NON-optional in the published
-        # Installation contract (ordessa_harness_api), so the native-side
+        # Installation contract (pacthold.harness_contracts), so the native-side
         # "not inspected -> unknown" case has no adapter-side twin; any
         # MISMATCH still fail-closes below (round 12)
         if installation.adapter_version != self._pin.adapter_version:
@@ -455,7 +455,7 @@ class HooksConfigurationAdapter:
 
     def configuration_capabilities(
             self, target: Any) -> ConfigurationCapabilities:
-        from ordessa_harness_api import ApplicationTarget
+        from pacthold.harness_contracts import ApplicationTarget
         if not isinstance(target, ApplicationTarget):
             raise ValueError("needs the published ApplicationTarget")
         statement = self._statement

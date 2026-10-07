@@ -5,7 +5,7 @@ the registry declares no instruction target anywhere."""
 from __future__ import annotations
 
 import pytest
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ErrorCode, Installation, Match, Mismatch, VerificationUnknown,
 )
 
@@ -187,7 +187,7 @@ def test_verify_foreign_identity_is_unknown():
 
 
 def test_capability_rows_grade_from_the_table():
-    from ordessa_harness_api import ApplicationTarget
+    from pacthold.harness_contracts import ApplicationTarget
     adapter = prompts_adapters()[0]
     rows = adapter.configuration_capabilities(
         ApplicationTarget("srv", "sess", "chan", 7))
@@ -222,6 +222,6 @@ def test_plugin_contributes_three_rows_conditionally():
 def test_payload_schema_documented_for_the_landing_day():
     schema = build_payload_schema()
     assert schema is not None  # and the fixed synthesis order is an enum
-    from ordessa_harness_api import ContractError
+    from pacthold.harness_contracts import ContractError
     with pytest.raises(ContractError):
         schema.validate(desired_set(synthesis="anything-goes"))

@@ -33,7 +33,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from _controlled_harness import (  # noqa: E402
     RESOURCE, ControlledComposition,
 )
-from ordessa_harness_api import DesiredFragment  # noqa: E402
+from pacthold.harness_contracts import DesiredFragment  # noqa: E402
 
 from ordessa_model_provider.harness_binding import (  # noqa: E402
     ConfigurationServiceHarnessPort,

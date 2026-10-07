@@ -24,7 +24,7 @@ from pacthold.agents.public import (
     ConfigurationChangeResult, ConfigurationDescription, ConfigurationItemResult,
     ConfigurationRevisionConflict, ConfigurationSnapshot, ConfigurationUnsupported,
 )
-from ordessa_harness_api.model_compilation import AdapterContext, TargetHandle
+from pacthold.harness_contracts.model_compilation import AdapterContext, TargetHandle
 from .acp_model_configuration import ClaudeAdapter
 
 CONFIGURATION_KIND = "claude.model"

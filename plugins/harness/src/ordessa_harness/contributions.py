@@ -11,7 +11,7 @@ from threading import RLock
 from typing import Any
 from weakref import WeakSet
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ConfigurationAdapterDescriptor, FieldClaim, RuntimeAdapterDescriptor,
     ValueSchema, VersionRange,
 )

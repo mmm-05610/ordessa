@@ -5,7 +5,7 @@ from _permissions_adapters_helpers import make_ceiling, make_intent
 from ordessa_harness.application import ConfigurationApplicationService, OperationJournal, RuntimeSnapshot
 from ordessa_harness.contributions import CONFIGURATION_POINT, HarnessContributionRegistry, POINT_API_VERSION
 from ordessa_harness.materialization import MergeAuthority, TargetAuthority
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, AdapterRefusal, ApplicationTarget, DesiredFragment, Installation, Plan,
     TargetDescriptor, TargetHandle, VerificationUnknown,
 )

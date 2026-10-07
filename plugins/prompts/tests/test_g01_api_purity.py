@@ -187,7 +187,7 @@ API_ALLOWED_IMPORTS = {"__future__", "base64", "dataclasses", "hashlib", "re",
 #: predicate `_boundary_offenders` applies to every real package file —
 #: see test_boundary_scan_covers_the_new_harness_adapters_files)
 #: continues to refuse `ordessa_harness.` internals while the published
-#: `ordessa_harness_api` vocabulary stays admissible — both sides proven
+#: `pacthold.harness_contracts` vocabulary stays admissible — both sides proven
 #: by test_published_harness_api_admissible_but_internals_refused.
 #: The amendment is documented in PX-report.md.
 PLUGIN_ALLOWED_IMPORTS = {"__future__", "base64", "pathlib", "typing",
@@ -244,10 +244,10 @@ def test_boundary_scan_covers_the_new_harness_adapters_files():
 def test_published_harness_api_admissible_but_internals_refused():
     """The exact-prefix boundary rule, proven on BOTH sides for the new
     harness_adapters face (EXT-02 review round 1): the PUBLISHED
-    `ordessa_harness_api` vocabulary passes, the harness PLUGIN
+    `pacthold.harness_contracts` vocabulary passes, the harness PLUGIN
     internals (`ordessa_harness.`) are refused."""
-    assert _boundary_offenders(["ordessa_harness_api"]) == []
-    assert _boundary_offenders(["ordessa_harness_api.contracts"]) == []
+    assert _boundary_offenders(["pacthold.harness_contracts"]) == []
+    assert _boundary_offenders(["pacthold.harness_contracts.contracts"]) == []
     offenders = _boundary_offenders(["ordessa_harness.registry",
                                      "ordessa_harness"])
     assert set(offenders) == {"ordessa_harness.registry", "ordessa_harness"}

@@ -93,17 +93,17 @@ FORBIDDEN_ROOTS = frozenset((
 ))
 
 #: Declared dependencies (pyproject `[project].dependencies`) + own package.
-#: `ordessa_harness_api` joined the list with the harness-api checkpoint
+#: `pacthold.harness_contracts` joined the list with the harness-api checkpoint
 #: (publication `d3f026904e`): it is the standalone, `py.typed`,
 #: dependency-free PUBLIC CONTRACT package of the Harness — the DTO surface
 #: the skills configuration adapters implement — NOT the harness plugin's
 #: internals (`ordessa_harness` stays hard-forbidden above; the sibling-root
 #: sweep only discovers packages under `plugins/*/src`, and
-#: `plugins/harness/api/src/ordessa_harness_api` imports nothing from the
+#: `plugins/harness/api/src/pacthold.harness_contracts` imports nothing from the
 #: harness runtime — its own wheel proof has no Requires-Dist).
 ALLOWED_ROOTS = frozenset((
     "ordessa_skills", "pacthold", "server_plugin_api", "yaml", "_yaml",
-    "ordessa_harness_api",
+    "pacthold.harness_contracts",
 ))
 
 #: Module-EXACT grants for symbols the foundation moved out of the kernel

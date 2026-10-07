@@ -7,7 +7,7 @@ pure functions — `assess(target)`, `compile(resolved_set, target)`,
 
 * imports `ordessa_harness` or any host/harness internal (AGENTS.md rule 3;
   the evidence strings merely *cite* harness files by path:line) — it does
-  consume the published standalone contract `ordessa_harness_api`;
+  consume the published standalone contract `pacthold.harness_contracts`;
 * writes to a filesystem, spawns a process or sends anything anywhere —
   `compile` only produces the published `IntentSet` dataclass values; the
   physical mount, HOME write and restart are Harness-owned operations on
@@ -24,7 +24,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Sequence
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ContentRef as PublishedContentRef,
     IntentSet as PublishedIntentSet,
     IntentSource as PublishedIntentSource,
@@ -334,7 +334,7 @@ class SkillProjection:
     """One complete, one-shot preview of the resolved collection.
 
     Replaces the interim `intent.IntentSet`: `intents` is the PUBLISHED
-    `ordessa_harness_api.IntentSet` (MountContent/RemoveOwnedContent —
+    `pacthold.harness_contracts.IntentSet` (MountContent/RemoveOwnedContent —
     skills contribute content, never per-skill incremental field edits);
     the frozen generation face and the declared load control ride
     alongside it, mapped onto published types by `decide_reconfiguration`.

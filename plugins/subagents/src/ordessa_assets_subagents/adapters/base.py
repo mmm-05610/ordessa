@@ -1,22 +1,22 @@
 """The assess/compile/verify triad, re-based onto the published C0 contract.
 
 Since `harness-api` was published (checkpoint `codex/011-harness-api-ready`,
-SR-1b), this module is a *producer* layer over `ordessa_harness_api`, not a
+SR-1b), this module is a *producer* layer over `pacthold.harness_contracts`, not a
 parallel vocabulary:
 
 * `assess(context, request)` returns the real
-  :class:`ordessa_harness_api.Assessment`; the per-pin, per-cell honesty
+  :class:`pacthold.harness_contracts.Assessment`; the per-pin, per-cell honesty
   record (capability-matrix.md) survives as the INTERNAL
   :class:`Assessment`/`CellVerdict` shape behind :meth:`assess_detail`, so
   `supported` can never be claimed without proof even though the contract
   itself would allow an evidence-less `supported` (gap reported);
 * `compile(context, collection, source)` returns the real
-  :class:`ordessa_harness_api.IntentSet` built by
+  :class:`pacthold.harness_contracts.IntentSet` built by
   :func:`~.intents.compile_all` — the target is the server-issued
   `TargetHandle` inside the injected `AdapterContext`, the ownership is the
   host-injected `IntentSource`; there is no `TargetSlot` any more;
 * `verify(context, observed)` returns the real
-  :class:`ordessa_harness_api.Verification` (`Match` / `Mismatch` /
+  :class:`pacthold.harness_contracts.Verification` (`Match` / `Mismatch` /
   `VerificationUnknown`). The observation state machine — a materialised
   file can never yield `loaded` (G11/G12) — still decides: `Match` requires
   a loader-class observation, so the ladder is preserved and the protocol
@@ -38,7 +38,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, ClassVar, Mapping, Sequence, Union
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, AdapterRefusal, Assessment as RealAssessment,
     ConfigurationAdapterDescriptor, ErrorCode, FieldClaim, IntentSet,
     IntentSource, Match, Mismatch, TargetDescriptor as RealTargetDescriptor,
@@ -165,7 +165,7 @@ class Assessment:
     """The internal, per-pin detail record; `to_real` yields the contract DTO.
 
     The contract would let `Assessment("supported")` stand with no evidence
-    at all (`ordessa_harness_api/contracts.py:191-206` only requires a
+    at all (`pacthold.harness_contracts/contracts.py:191-206` only requires a
     *reason* for the negative states) — Q3 keeps its stricter constructor
     rule so `supported` can never be claimed without proof (SR-1b(c) answer
     plus a reported gap asking C0 to make evidence mandatory).
@@ -621,7 +621,7 @@ class ConfigurationAdapter:
         if not isinstance(intent_set, IntentSet):
             raise errors.DomainError(
                 errors.DEFINITION_INVALID,
-                detail="verify needs the real ordessa_harness_api IntentSet it observes",
+                detail="verify needs the real pacthold.harness_contracts IntentSet it observes",
             )
         for intent in intent_set.intents:
             if intent.source.facet_id != intents.FACET_ID:

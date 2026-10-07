@@ -12,11 +12,15 @@ ALLOWED_TOP_LEVEL = {
     # stdlib
     "dataclasses", "typing", "hashlib", "json", "re", "types", "__future__",
     # published contracts (AGENTS.md rule 3: plugins import platform
-    # contracts, never host internals)
-    "server_plugin_api", "ordessa_harness_api",
+    # contracts, never host internals); 032: the harness contract edge is a
+    # dotted grant under the kernel root
+    "server_plugin_api", "pacthold.harness_contracts",
     # own package
     "ordessa_extensions",
 }
+
+#: Dotted modules that stay allowed although their top-level root is forbidden.
+ALLOWED_MODULES = {"pacthold.harness_contracts"}
 
 FORBIDDEN_PREFIXES = (
     "ordessa_server", "ordessa_harness.", "ordessa_skills",
@@ -40,6 +44,10 @@ def test_no_module_imports_a_forbidden_root():
     for path in sorted(SRC.rglob("*.py")):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for module in _imports(tree):
+            granted = any(module == g or module.startswith(g + ".") or g.startswith(module + ".")
+                          for g in ALLOWED_MODULES)
+            if granted:
+                continue
             root = module.split(".")[0]
             if root not in ALLOWED_TOP_LEVEL:
                 offenders.append(f"{path.name}: {module}")

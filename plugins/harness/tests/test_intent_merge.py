@@ -4,7 +4,7 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ActionDescriptor, BindSecret, ContentRef, FieldPath, IntentSet,
     IntentSource, InvokeAction, MountContent, RemoveOwnedContent, ResetField,
     SetField, TargetDescriptor, TargetHandle, ValueSchema,

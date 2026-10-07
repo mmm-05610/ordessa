@@ -5,7 +5,7 @@ import copy
 import json
 
 import pytest
-from ordessa_harness_api import ApplicationTarget, InvokeAction, IntentSource
+from pacthold.harness_contracts import ApplicationTarget, InvokeAction, IntentSource
 from ordessa_harness.application.action_execution import ActionBatch, ActionInvocation
 from ordessa_harness.server_acp.pi_action_executor import ACTION_ID, PiSessionActionExecutor, configuration_digest
 from ordessa_harness.server_acp.registry import NativeSessionObservation, NativeConfigurationUnavailable

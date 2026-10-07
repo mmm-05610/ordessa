@@ -19,7 +19,7 @@ import re
 import tomllib
 
 import pytest
-from ordessa_harness_api import (ConfigurationAdapterDescriptor, ContractError,
+from pacthold.harness_contracts import (ConfigurationAdapterDescriptor, ContractError,
                                  FieldClaim, ValueSchema, VersionRange)
 from server_plugin_api import Contribution, ContributionBatch
 

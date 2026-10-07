@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ordessa_harness_api import ApplicationTarget
+from pacthold.harness_contracts import ApplicationTarget
 from ordessa_harness.server_acp.profile_owner import ProfileSessionOwner, ProfileOwnerUnavailable
 from ordessa_harness.server_acp.registry import (
     AcpChannelRegistry, _Channel, _ObservedTransport,

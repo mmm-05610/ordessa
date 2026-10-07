@@ -22,7 +22,7 @@ from _sandbox_adapters_helpers import pinned_versions
 from ordessa_harness.contributions import (
     CONFIGURATION_POINT, HarnessContributionError, HarnessContributionRegistry,
 )
-from ordessa_harness_api import ConfigurationAdapterDescriptor, FieldClaim, ValueSchema, VersionRange
+from pacthold.harness_contracts import ConfigurationAdapterDescriptor, FieldClaim, ValueSchema, VersionRange
 from server_plugin_api import AbsentContribution, Contribution, ContributionBatch, stage_contributions
 
 import ordessa_sandbox_adapters

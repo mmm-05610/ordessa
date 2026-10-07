@@ -2,7 +2,7 @@
 
 The Sandbox adapters import the consumed Sandbox contracts, the public Server
 plugin surface and — since the foundation checkpoint — the Harness C2
-*descriptive* vocabulary (`ordessa_harness_api.contracts/.schema`), exactly the
+*descriptive* vocabulary (`pacthold.harness_contracts.contracts/.schema`), exactly the
 closure the platform's own third-party contributor fixture declares
 (`plugins/harness/tests/fixtures/external_adapter`). Harness package CODE
 (`ordessa_harness`), the Server host, pacthold and Permissions stay forbidden
@@ -26,10 +26,14 @@ FORBIDDEN_ROOTS = {
     "ordessa_permissions_adapters",
 }
 ALLOWED_EXTERNAL = {"ordessa_sandbox_api", "ordessa_sandbox_backend",
-                    "server_plugin_api", "ordessa_harness_api"}
+                    "server_plugin_api", "pacthold.harness_contracts"}
+
+
+KERNEL_GRANTS = {"pacthold.harness_contracts"}
 
 
 def _imported_roots() -> set[str]:
+    """Top-level roots plus the exact dotted modules under a forbidden root."""
     roots: set[str] = set()
     files = sorted(PKG_DIR.rglob("*.py"))
     assert files, f"no source files under {PKG_DIR}"
@@ -38,22 +42,33 @@ def _imported_roots() -> set[str]:
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 for alias in node.names:
-                    roots.add(alias.name.split(".")[0])
+                    roots.add(alias.name)
             elif isinstance(node, ast.ImportFrom):
                 if node.level:
                     continue
                 if node.module:
-                    roots.add(node.module.split(".")[0])
+                    roots.add(node.module)
     return roots
 
 
+def _licensed(module: str) -> bool:
+    return any(module == g or module.startswith(g + ".") for g in KERNEL_GRANTS)
+
+
 def test_source_imports_only_the_declared_contracts():
-    roots = _imported_roots()
-    external = {r for r in roots if "." not in r} - {"ordessa_sandbox_adapters"}
+    modules = _imported_roots()
+    tops = {m.split(".")[0] for m in modules}
+    external = {r for r in tops if r != "ordessa_sandbox_adapters"}
     unknown = {r for r in external - FORBIDDEN_ROOTS
                if r not in ALLOWED_EXTERNAL and r not in sys.stdlib_module_names}
     assert not unknown, f"undeclared external imports: {sorted(unknown)}"
-    assert not (roots & FORBIDDEN_ROOTS), sorted(roots & FORBIDDEN_ROOTS)
+    forbidden_tops = tops & FORBIDDEN_ROOTS
+    # a forbidden root is tolerated only when every concrete import under it
+    # carries an exact dotted grant (the kernel contract edge)
+    if forbidden_tops:
+        unlicensed = [m for m in modules
+                      if m.split(".")[0] in forbidden_tops and not _licensed(m)]
+        assert not unlicensed, f"imports under a forbidden root without a grant: {unlicensed}"
 
 
 def test_works_end_to_end_without_permissions_or_harness_code_importable():
@@ -63,10 +78,16 @@ from pathlib import Path
 
 class _Blocker:
     BLOCK = {sorted(FORBIDDEN_ROOTS)!r}
+    GRANTS = {sorted(KERNEL_GRANTS)!r}
     def find_spec(self, name, path=None, target=None):
         head = name.split(".")[0]
-        # exact-root match: ordessa_harness_api is the allowed C2 edge,
-        # ordessa_harness (harness CODE) and its submodules are not
+        # exact-root match: the dotted kernel contract grant stays importable,
+        # ordessa_harness (harness CODE), permissions and the rest are not
+        # a grant licenses its own dotted path and the parent chain needed to
+        # import it; everything else under the blocked root stays blocked
+        if any(name == g or name.startswith(g + ".") or g.startswith(name + ".")
+               for g in self.GRANTS):
+            return None
         if any(head == b or head.startswith(b + ".") for b in self.BLOCK):
             raise ImportError("simulated absence: %s" % name)
         return None
@@ -97,7 +118,11 @@ assert len(batch.contributions) == 3
 plugin = SandboxAdaptersServerPlugin(pins=pins)
 registration = plugin.build(ServerPluginContext(plugin_id="x", data_root=object()))
 assert {{c.point_id for c in registration.contributions.contributions}} == {{SANDBOX_CONFIGURATION_POINT_ID}}
-blocked = [m for m in sys.modules if m.split(".")[0] in {sorted(FORBIDDEN_ROOTS)!r}]
+granted = {tuple(sorted(KERNEL_GRANTS))!r}
+blocked = [m for m in sys.modules
+           if m.split(".")[0] in {sorted(FORBIDDEN_ROOTS)!r}
+           and not any(m == g or m.startswith(g + ".") or g.startswith(m + ".")
+                       for g in granted)]
 print("CLEAN", blocked)
 """
     proc = subprocess.run([sys.executable, "-c", script],

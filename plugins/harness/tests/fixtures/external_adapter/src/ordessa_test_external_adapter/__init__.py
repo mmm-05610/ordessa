@@ -1,7 +1,7 @@
 """Controlled third-party fixture: only public contract imports, no Harness internals."""
 from __future__ import annotations
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     Assessment, ConfigurationAdapterDescriptor, FieldClaim, FieldPath,
     Installation, IntentSet, IntentSource, LaunchPlan, Match, Mismatch,
     ReconfigurationDecision, ResumeRequest, RuntimeAdapterDescriptor,

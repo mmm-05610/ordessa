@@ -29,7 +29,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ConfigurationAdapterDescriptor, IntentSet, ValueSchema, VersionRange,
 )
 

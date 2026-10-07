@@ -3,7 +3,7 @@
 Measurement (full evidence: `specs/011-q5-safety/evidence/t020-red-*.txt`):
 `Installation.adapter_version` is supplied by
 `RuntimeAdapter.describe_installation()`
-(`plugins/harness/api/src/ordessa_harness_api/contracts.py:385-388`); the C4
+(`packages/backend/pacthold/src/pacthold/harness_contracts/contracts.py:385-388`); the C4
 admission consults `descriptor.adapter_versions.contains(installation.adapter_version)`
 (`plugins/harness/src/ordessa_harness/application/configuration_service.py:153`).
 This tree ships NO production `describe_installation` implementer: the only
@@ -26,7 +26,7 @@ from __future__ import annotations
 import tomllib
 from pathlib import Path
 
-from ordessa_harness_api import VersionRange
+from pacthold.harness_contracts import VersionRange
 
 from ordessa_permissions_adapters.contribution import (
     _ADAPTER_VERSION,

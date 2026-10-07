@@ -10,7 +10,7 @@ with owner/generation left for the host to assign (§C4) — the author never
 declares an owner and the package keeps no private admission copy.
 
 Since the `harness-api` checkpoint the verdict types are the platform's too:
-`assess` answers an `ordessa_harness_api.Assessment` and `verify` a
+`assess` answers an `pacthold.harness_contracts.Assessment` and `verify` a
 `Verification`, and the host-callable shape is the published
 `ConfigurationAdapter` contract (`surface.py`) — the package keeps no local
 mirror of either.
@@ -29,7 +29,7 @@ from _sandbox_adapters_helpers import (
     platform_facts,
     target_handle,
 )
-from ordessa_harness_api.contracts import (
+from pacthold.harness_contracts.contracts import (
     AdapterContext,
     Assessment,
     ConfigurationAdapter,

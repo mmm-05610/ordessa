@@ -1,7 +1,7 @@
 """Shared doubles for the prompts adapter tests (published shapes only)."""
 from __future__ import annotations
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, Installation, TargetDescriptor, TargetHandle,
 )
 

@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, AdapterRefusal, Assessment, ConfigurationAdapter,
     ConfigurationCapabilities, ContractError, ErrorCode, FieldClaim,
     Installation, IntentSet, Match, Mismatch, MountContent, TargetDescriptor,
@@ -418,7 +418,7 @@ def test_load_or_invocation_events_stay_unknown_for_every_brand():
 
 
 def test_inspected_capabilities_never_offer_an_unknown_cell():
-    from ordessa_harness_api import ApplicationTarget
+    from pacthold.harness_contracts import ApplicationTarget
     target = ApplicationTarget(server_id="s", session_id="sess",
                                channel_id="ch", runtime_generation=1)
     for adapter in ADAPTERS:

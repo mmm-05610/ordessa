@@ -3,7 +3,7 @@
 `pacthold`/host boundary rules (AGENTS.md): the adapters may import the
 standard library, the consumed domain contract `ordessa_permissions_api`,
 the public plugin surface `server_plugin_api`, the Harness *public contract
-package* `ordessa_harness_api` (the same dependency set the platform's own
+package* `pacthold.harness_contracts` (the same dependency set the platform's own
 external-adapter exemplar declares) and themselves - nothing else. In
 particular no `ordessa_server`, no harness implementation internals
 (`ordessa_harness` proper, as distinct from the `_api` contract), no compat
@@ -19,16 +19,20 @@ import sys
 
 SRC_ROOT = pathlib.Path(__file__).resolve().parents[1] / "src" / "ordessa_permissions_adapters"
 #: bare module names that must never appear in src text; `ordessa_harness`
-#: is checked separately so the public `ordessa_harness_api` contract import
+#: is checked separately so the public `pacthold.harness_contracts` contract import
 #: is not caught by substring matching.
 FORBIDDEN_TEXT = (
-    "ordessa_server", "ordessa_server_compat", "pacthold",
+    # 032: bare `pacthold` is checked as an import root below; as TEXT the
+    # licensed kernel contract edge (pacthold.harness_contracts) legitimately
+    # appears, so the substring form would false-positive.
+    "ordessa_server", "ordessa_server_compat",
     "sandboxv1", "SandboxV1", "ordessa_sandbox",
 )
 HARNESS_INTERNALS = re.compile(r"ordessa_harness(?!_api)\b")
 STDLIB_OK = set(sys.stdlib_module_names)
+KERNEL_CONTRACT_EDGE = "pacthold.harness_contracts"
 ALLOWED = STDLIB_OK | {"__future__", "ordessa_permissions_api", "server_plugin_api",
-                       "ordessa_harness_api", "ordessa_permissions_adapters"}
+                       KERNEL_CONTRACT_EDGE, "ordessa_permissions_adapters"}
 
 
 def _sources() -> list[pathlib.Path]:
@@ -39,10 +43,17 @@ def _roots(tree: ast.AST) -> set[str]:
     found: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
-            found |= {a.name.split(".")[0] for a in node.names}
+            for a in node.names:
+                found.add(KERNEL_CONTRACT_EDGE
+                          if a.name == KERNEL_CONTRACT_EDGE
+                          or a.name.startswith(KERNEL_CONTRACT_EDGE + ".")
+                          else a.name.split(".")[0])
         elif isinstance(node, ast.ImportFrom):
             if node.level == 0 and node.module:
-                found.add(node.module.split(".")[0])
+                found.add(KERNEL_CONTRACT_EDGE
+                          if node.module == KERNEL_CONTRACT_EDGE
+                          or node.module.startswith(KERNEL_CONTRACT_EDGE + ".")
+                          else node.module.split(".")[0])
     return found
 
 
@@ -62,7 +73,7 @@ def test_no_host_or_sandbox_domain_name_appears_in_source() -> None:
         for forbidden in FORBIDDEN_TEXT:
             assert forbidden not in text, f"{path.name} mentions {forbidden!r}"
         # the harness *implementation* package may not be named; the public
-        # `ordessa_harness_api` contract is allowed and must not trip this.
+        # `pacthold.harness_contracts` contract is allowed and must not trip this.
         assert HARNESS_INTERNALS.search(text) is None, path.name
 
 

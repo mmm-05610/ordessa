@@ -19,7 +19,6 @@ dependencies = [
     # The published Harness v2 contract (specs/011-plugin-rollout/checkpoints/
     # harness-api.json): the DTO surface the skills configuration adapters
     # implement and register against.
-    "ordessa-harness-api>=1.0.0a1,<2",
 ]
 
 [project.optional-dependencies]

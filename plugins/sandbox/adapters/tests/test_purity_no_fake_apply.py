@@ -8,7 +8,7 @@ poisons the side-effect entry points and then drives assess/compile/verify.
 Allowed imports: the standard library (minus the forbidden set), the consumed
 contracts (``ordessa_sandbox_api``, ``ordessa_sandbox_backend``,
 ``server_plugin_api`` and — since the foundation checkpoint, for the C2
-descriptive edge only — ``ordessa_harness_api``) and this package. No host,
+descriptive edge only — ``pacthold.harness_contracts``) and this package. No host,
 no harness CODE, no compat, no Permissions, no storage. There is NO apply
 path anywhere: a refusal is a value and a compile writes no file.
 
@@ -36,7 +36,7 @@ FORBIDDEN_PRODUCT_ROOTS = {"ordessa_server", "ordessa_server_compat",
                            "fastapi", "pydantic", "httpx", "uvicorn"}
 ALLOWED_NON_STDLIB = {"ordessa_sandbox_api", "ordessa_sandbox_backend",
                       "server_plugin_api", "ordessa_sandbox_adapters",
-                      "ordessa_harness_api", "__future__"}
+                      "pacthold.harness_contracts", "__future__"}
 FORBIDDEN_ATTR_CALLS = {"expanduser", "system", "popen", "execv", "execve",
                         "spawn", "spawnl", "spawnv",
                         "urlopen", "startfile", "kill", "mkdir", "rmdir",
@@ -68,14 +68,26 @@ def test_every_module_exists_and_is_valid_python():
         ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
 
 
+KERNEL_CONTRACT_EDGE = "pacthold.harness_contracts"
+
+
 def test_no_forbidden_import():
     for path in _sources():
-        roots = _roots(ast.parse(path.read_text(encoding="utf-8"), filename=str(path)))
-        for root in roots:
-            assert root not in FORBIDDEN_IMPORTS, f"{path.name} imports {root!r}"
-            assert root not in FORBIDDEN_PRODUCT_ROOTS, f"{path.name} imports {root!r}"
-            assert root in STDLIB_OK or root in ALLOWED_NON_STDLIB, \
-                f"{path.name} imports unexpected root {root!r}"
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            modules = []
+            if isinstance(node, ast.Import):
+                modules = [a.name for a in node.names]
+            elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                modules = [node.module]
+            for module in modules:
+                if module == KERNEL_CONTRACT_EDGE or module.startswith(KERNEL_CONTRACT_EDGE + "."):
+                    continue  # the licensed descriptive edge only
+                root = module.split(".")[0]
+                assert root not in FORBIDDEN_IMPORTS, f"{path.name} imports {root!r}"
+                assert root not in FORBIDDEN_PRODUCT_ROOTS, f"{path.name} imports {root!r}"
+                assert root in STDLIB_OK or root in ALLOWED_NON_STDLIB, \
+                    f"{path.name} imports unexpected root {root!r}"
 
 
 def test_no_side_effect_call_sites():

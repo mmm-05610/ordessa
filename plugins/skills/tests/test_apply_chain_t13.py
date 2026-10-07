@@ -1,6 +1,6 @@
 """T13 — the Q1 half of "下一次用户提交时先应用再发送" on published types.
 
-Driven exclusively through the `ordessa_harness_api` DTOs and a controlled
+Driven exclusively through the `pacthold.harness_contracts` DTOs and a controlled
 fake implementing the published `ConfigurationService`/runtime `resume`
 protocol (no real model, no spawn, no filesystem):
 
@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ApplicationTarget, Confirmed, ContractError, DesiredFragment, ErrorCode,
     NotFound, Plan, ReconfigurationDecision, Refused, ResumeRequest,
     RuntimeConfirmed, RuntimeRefused, RuntimeUnknown, Unknown,

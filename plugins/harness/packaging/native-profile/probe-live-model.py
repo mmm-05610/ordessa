@@ -32,7 +32,7 @@ def probe(assets, brand, *, restore_provider=False, candidate_entry=None, initia
     from ordessa_harness.server_acp.profile_owner import ProfileSessionOwner
     from ordessa_harness.configuration.model.live_service import create_model_service
     from ordessa_harness.configuration.model.plugin import ModelProviderAdaptersPlugin
-    from ordessa_harness_api import DesiredFragment, Installation
+    from pacthold.harness_contracts import DesiredFragment, Installation
     from ordessa_server.bootstrap import build_runtime
     pins = {'codex': ('codex-runtime', 'codex-acp', (1, 1, 14), 'gpt-5.5',
                       'custom-gateway', 'openai', 'responses', 'openai-responses'),

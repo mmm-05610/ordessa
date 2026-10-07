@@ -6,7 +6,7 @@ import hashlib
 import json
 
 import pytest
-from ordessa_harness_api import ApplicationTarget, DesiredFragment, Installation
+from pacthold.harness_contracts import ApplicationTarget, DesiredFragment, Installation
 from ordessa_harness.application.configuration_service import ConfigurationApplicationService
 from ordessa_harness_records.operation_journal import OperationJournal
 from ordessa_harness.application.action_execution import ActionGrant
@@ -20,7 +20,7 @@ from ordessa_harness.pi.configuration.runtime import PiLiveModelRuntime
 ])
 def test_native_compiler_accepts_bounded_nested_groups_but_not_malformed_catalog(brand, protocol, provider, api):
     from ordessa_harness.configuration.model.live_model import compile_native_model
-    from ordessa_harness_api import AdapterRefusal, InvokeAction, IntentSource
+    from pacthold.harness_contracts import AdapterRefusal, InvokeAction, IntentSource
     option = {'value': 'new', '_meta': {'ordessaModel': {
         'provider': provider, 'api': api, 'baseUrl': 'https://fixture.test/v1', 'model': 'new'}}}
     snapshot = SimpleNamespace(busy=False, native_generation='g', config_options=[{
@@ -162,7 +162,7 @@ def test_wrong_independent_model_readback_is_unknown_never_confirmed(rig):
 
 def test_preflight_does_not_refresh_away_a_change_since_c4_capture(rig):
     from ordessa_harness.application.action_execution import ActionBatch, ActionInvocation
-    from ordessa_harness_api import IntentSource, InvokeAction
+    from pacthold.harness_contracts import IntentSource, InvokeAction
     service, runtime, target, _, _, calls, options, _ = rig
     runtime.capture(target)
     grant = service.action_grants[0]

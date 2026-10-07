@@ -14,7 +14,7 @@ from __future__ import annotations
 from typing import Any, Mapping
 
 from . import acp_model_facts as common
-from ordessa_harness_api.model_compilation import (
+from pacthold.harness_contracts.model_compilation import (
     AdapterContext, Assessment, BindSecret, ChoiceRequest, CompileIntent,
     IntentSet, MountContent, Refusal, TargetHandle, Verdict,
 )

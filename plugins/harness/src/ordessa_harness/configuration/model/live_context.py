@@ -1,6 +1,6 @@
 """Harness-owned live facts, never populated by a resource plugin request."""
 from dataclasses import dataclass
-from ordessa_harness_api import AdapterContext
+from pacthold.harness_contracts import AdapterContext
 from ...server_acp.profile_owner import ProfileConfigurationSnapshot
 
 

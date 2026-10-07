@@ -12,7 +12,7 @@
 2. The adapters never import the harness or the host (AGENTS.md rule 3) —
    pinned here again for this area, in addition to the package-wide
    `test_dependency_direction.py`. The published standalone contract
-   package `ordessa_harness_api` is the allowed Harness-facing import.
+   package `pacthold.harness_contracts` is the allowed Harness-facing import.
 3. Registration rides the published `harness.configuration-adapters`
    contribution point through `ContributionBatch` — it is proven in
    `test_harness_api_registration.py` against the real harness handler;
@@ -95,7 +95,7 @@ def test_no_adapter_module_imports_harness_or_host_internals():
 
 
 def test_the_area_imports_the_published_contract_not_a_private_copy():
-    """`ordessa_harness_api` may be imported; nothing in the area may
+    """`pacthold.harness_contracts` may be imported; nothing in the area may
     re-declare the published intent classes (the deleted interim
     vocabulary must not come back as a shadow)."""
     for path in _area_files():

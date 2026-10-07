@@ -28,7 +28,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ContractError,
     ParticipantEvidence,
     from_settlement_notes,

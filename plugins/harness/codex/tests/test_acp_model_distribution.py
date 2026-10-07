@@ -46,7 +46,7 @@ def _repack_kernel_wheels(wheel_dir: Path) -> set:
 
 def test_independent_codex_model_wheel_without_server_monolith_product(tmp_path):
     packages = ('packages/backend/environment-api', 'packages/backend/pacthold',
-                'packages/backend/harness-transport', 'plugins/harness/api', 'plugins/harness/codex')
+                'packages/backend/harness-transport', 'plugins/harness/codex')
     sources = []
     for index, relative in enumerate(packages):
         source = ROOT / relative; clean = tmp_path / ('source-' + str(index)); clean.mkdir()
@@ -66,7 +66,7 @@ def test_independent_codex_model_wheel_without_server_monolith_product(tmp_path)
     run([sys.executable, '-m', 'pip', 'wheel', '--no-index', '--no-build-isolation', '--no-deps',
          '--wheel-dir', str(wheels), *sources])
     own = sorted(p for p in wheels.glob('*.whl') if p.name not in kernel_wheels)
-    assert [p.name.split('-')[0] for p in own] == ['ordessa_environment_api', 'ordessa_harness_api',
+    assert [p.name.split('-')[0] for p in own] == ['ordessa_environment_api',
         'ordessa_harness_codex', 'ordessa_harness_transport', 'pacthold']
     assert len(list(wheels.glob('*.whl'))) == len(packages) + len(KERNEL_DEP_DIST_TO_PACKAGE)
     isolated = tmp_path / 'isolated'; run([sys.executable, '-m', 'venv', str(isolated)])
@@ -77,7 +77,7 @@ def test_independent_codex_model_wheel_without_server_monolith_product(tmp_path)
 import importlib.util,tomllib
 assert all(importlib.util.find_spec(name) is None for name in ('ordessa_harness', 'ordessa_server',
     'ordessa_agent_tools', 'server_plugin_api', 'ordessa_harness_pi', 'ordessa_harness_claude_code'))
-from ordessa_harness_api.model_compilation import AdapterContext,ChoiceRequest,TargetHandle,BindSecret,MountContent
+from pacthold.harness_contracts.model_compilation import AdapterContext,ChoiceRequest,TargetHandle,BindSecret,MountContent
 from ordessa_harness_codex.acp_model_configuration import CodexAdapter
 from ordessa_harness_codex.acp_model_facts import render_codex_provider_section
 from ordessa_harness_codex import CodexRuntimeProvider,CodexCapabilityUnsupported

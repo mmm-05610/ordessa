@@ -8,7 +8,7 @@ import sqlite3
 
 import pytest
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ApplicationTarget, Confirmed, ErrorCode, NotFound, Plan, Refused, Unknown,
 )
 from ordessa_harness.application import FenceObservation, JournalError, NativeActivationReceipt, OperationJournal

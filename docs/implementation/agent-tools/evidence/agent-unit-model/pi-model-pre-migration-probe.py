@@ -1,7 +1,7 @@
 """Readonly old Pi pure compiler counterexamples; no native/model effect."""
 import json
 from ordessa_harness_pi.acp_model_configuration import PiAdapter
-from ordessa_harness_api.model_compilation import AdapterContext, TargetHandle, ChoiceRequest, RequestParams, CompileIntent
+from pacthold.harness_contracts.model_compilation import AdapterContext, TargetHandle, ChoiceRequest, RequestParams, CompileIntent
 adapter = PiAdapter()
 context = AdapterContext(TargetHandle("pi", "instance", "fixture"), "0.5.1", {"native_session_id": "original-session"})
 retry = RequestParams.from_record({"retry": {"enabled": True, "maxRetries": 3,

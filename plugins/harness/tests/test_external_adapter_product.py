@@ -10,7 +10,7 @@ from zipfile import ZipFile
 
 import pytest
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, ErrorCode, Installation, IntentSet, LaunchPlan, LaunchRequest,
     ResumeRequest, RuntimeConfirmed, RuntimeRefused, RuntimeUnknown,
     TargetDescriptor, TargetHandle,

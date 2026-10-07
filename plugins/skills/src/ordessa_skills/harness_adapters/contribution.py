@@ -1,6 +1,6 @@
 """The Skills facet adapters as REAL published `ConfigurationAdapter`s.
 
-Consumes the harness-api checkpoint (`ordessa_harness_api`, publication
+Consumes the harness-api checkpoint (`pacthold.harness_contracts`, publication
 `d3f026904e`, record `specs/011-plugin-rollout/checkpoints/harness-api.json`)
 and registers through the published contribution point:
 
@@ -38,7 +38,7 @@ from __future__ import annotations
 import re
 from typing import Any, Mapping, Sequence
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, AdapterRefusal, Assessment, ConfigurationAdapterDescriptor,
     ConfigurationCapability, ConfigurationCapabilities, ContractError,
     ErrorCode, FieldClaim, IntentSet, Match, Mismatch, TargetDescriptor,
@@ -84,7 +84,7 @@ def version_tuple(text: str) -> tuple[int, int, int]:
 #: the two call sites — descriptor registration and assess validation —
 #: on the same bytes).
 def build_payload_schema():
-    from ordessa_harness_api import ValueSchema
+    from pacthold.harness_contracts import ValueSchema
     asset = ValueSchema(
         "object",
         properties=(
@@ -148,7 +148,7 @@ def _bounds_from_payload(desired: Mapping[str, Any]):
 class SkillsConfigurationAdapter:
     """One brand's `ConfigurationAdapter` for the `assets.skills` facet.
 
-    Satisfies the published `ordessa_harness_api.ConfigurationAdapter`
+    Satisfies the published `pacthold.harness_contracts.ConfigurationAdapter`
     Protocol (descriptor / assess / compile / verify) — a conformance test
     proves `isinstance` against the Protocol and the exact method shapes.
     Never carries an `owner` attribute (the harness handler refuses
@@ -375,7 +375,7 @@ class SkillsConfigurationAdapter:
         edits at all (its claims carry only the owned content directory) —
         that absence is the adapter's own contract, not brand evidence.
         """
-        from ordessa_harness_api import ApplicationTarget
+        from pacthold.harness_contracts import ApplicationTarget
         if not isinstance(target, ApplicationTarget):
             raise HarnessAdapterError("HARNESS_TARGET_INVALID",
                                       "needs the published ApplicationTarget")

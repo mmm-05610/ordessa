@@ -13,7 +13,7 @@ import tomllib
 import pytest
 
 from ordessa_harness.contributions import CONFIGURATION_POINT, HarnessContributionError
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, AdapterRefusal, Assessment, ConfigurationAdapterDescriptor,
     ErrorCode, FieldClaim, Installation, ValueSchema, VerificationUnknown,
     VersionRange,

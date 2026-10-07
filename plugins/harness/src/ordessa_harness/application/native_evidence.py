@@ -20,8 +20,8 @@ from datetime import datetime, timezone
 import hashlib
 import json
 
-from ordessa_harness_api import ApplicationTarget, Confirmed, Plan, Refused
-from ordessa_harness_api.native_evidence import (
+from pacthold.harness_contracts import ApplicationTarget, Confirmed, Plan, Refused
+from pacthold.harness_contracts.native_evidence import (
     LaunchProvenanceFacts, NativeEvidence, NativeOwnerReceiptFacts,
     NativeReadbackVerificationFacts, NativeSessionIdentityFacts,
 )

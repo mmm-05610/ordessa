@@ -13,7 +13,7 @@ see README).
 
 Third-party shape follows the platform's own controlled contributor
 (`plugins/harness/tests/fixtures/external_adapter`): the C2 vocabulary is
-imported from the public contract dist ``ordessa_harness_api`` (the very
+imported from the public contract dist ``pacthold.harness_contracts`` (the very
 classes the point's handler isinstance-checks, module identity asserted in
 tests), and the point id / api version are spelled as the constants below —
 ``tests/test_real_point_binding.py`` pins them equal to
@@ -34,14 +34,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Mapping
 
-from ordessa_harness_api.contracts import (
+from pacthold.harness_contracts.contracts import (
     AdapterContext, AdapterRefusal, Assessment, ConfigurationAdapterDescriptor,
     FieldClaim,
     VersionRange,
     VerificationUnknown,
 )
-from ordessa_harness_api.errors import ContractError, ErrorCode
-from ordessa_harness_api.schema import ValueSchema
+from pacthold.harness_contracts.errors import ContractError, ErrorCode
+from pacthold.harness_contracts.schema import ValueSchema
 from server_plugin_api import Contribution, ContributionBatch
 
 __all__ = [

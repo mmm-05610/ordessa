@@ -1,7 +1,7 @@
 """Skills-side brand adapters (FR11; pure domain modules + published-API
 registration, see base.py header).
 
-The three brand adapters are genuine `ordessa_harness_api.ConfigurationAdapter`
+The three brand adapters are genuine `pacthold.harness_contracts.ConfigurationAdapter`
 implementations; registration rides the published
 `harness.configuration-adapters` contribution point through the plugin's
 `ContributionBatch` (`plugin.py`) — the interim "no registration exists"

@@ -5,7 +5,7 @@ STATUS (after the harness-api checkpoint, publication `d3f026904e`): the
 interim intent vocabulary this module used to carry — the Skills-side
 `IntentSet`/`MountRevision`/`RemoveOwnedContent`/`ReloadSession`/
 `RestartAndResume`/`LoadControl` dataclasses — is DELETED. The published
-`ordessa_harness_api` vocabulary (MountContent, RemoveOwnedContent,
+`pacthold.harness_contracts` vocabulary (MountContent, RemoveOwnedContent,
 SetField, ResetField, BindSecret, InvokeAction, IntentSource, ContentRef,
 TargetHandle, IntentSet) is the only intent vocabulary in this domain;
 `contribution.py` builds those real types from the inputs defined here.

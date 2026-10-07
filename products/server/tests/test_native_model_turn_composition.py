@@ -43,7 +43,7 @@ from ordessa_harness.server_acp.native_action_executor import configuration_dige
 from ordessa_harness.server_acp.registry import (
     NativeConfigurationObservation, NativeSessionObservation,
 )
-from ordessa_harness_api import Installation
+from pacthold.harness_contracts import Installation
 
 from ordessa_server_product.composition import create_composition
 

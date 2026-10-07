@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_harness_api import VersionRange
+from pacthold.harness_contracts import VersionRange
 from ordessa_harness.contributions import HarnessContributionError, HarnessContributionRegistry
 from server_plugin_api import Contribution, ContributionBatch, stage_contributions
 

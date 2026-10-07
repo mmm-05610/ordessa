@@ -3,7 +3,7 @@ C2 point (``harness.configuration-adapters``) as typed
 ``ConfigurationAdapter``s (PB-2 of 014).
 
 Direction discipline (dispatch PB-2): this module may import the public
-``ordessa_harness_api`` contract; the reverse import never exists. The pure
+``pacthold.harness_contracts`` contract; the reverse import never exists. The pure
 brand modules (``pi``/``codex``/``claude``) stay untouched — their dialect
 facts and semantics are conformance-pinned — so this layer only *translates*
 types:
@@ -27,7 +27,7 @@ import hashlib
 import json
 from typing import Any, Mapping
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterRefusal, Assessment, ConfigurationAdapterDescriptor, ErrorCode,
     FieldClaim, FieldPath, IntentSet as HarnessIntentSet, IntentSource, Match,
     Mismatch, SetField, BindSecret as HarnessBindSecret, TargetHandle as HarnessTargetHandle,
@@ -38,13 +38,13 @@ from . import common
 from ordessa_harness_claude_code.acp_model_configuration import ClaudeAdapter
 from ordessa_harness_codex.acp_model_configuration import CodexAdapter
 from ordessa_harness_pi.acp_model_configuration import PiAdapter
-from ordessa_harness_api.model_compilation import AdapterContext as LocalAdapterContext
-from ordessa_harness_api.model_compilation import BindSecret as LocalBindSecret
-from ordessa_harness_api.model_compilation import ChoiceRequest, CompileIntent, IntentSet as LocalIntentSet
-from ordessa_harness_api.model_compilation import RequestParams
-from ordessa_harness_api.model_compilation import MountContent as LocalMountContent
-from ordessa_harness_api.model_compilation import Refusal as LocalRefusal
-from ordessa_harness_api.model_compilation import TargetHandle as LocalTargetHandle
+from pacthold.harness_contracts.model_compilation import AdapterContext as LocalAdapterContext
+from pacthold.harness_contracts.model_compilation import BindSecret as LocalBindSecret
+from pacthold.harness_contracts.model_compilation import ChoiceRequest, CompileIntent, IntentSet as LocalIntentSet
+from pacthold.harness_contracts.model_compilation import RequestParams
+from pacthold.harness_contracts.model_compilation import MountContent as LocalMountContent
+from pacthold.harness_contracts.model_compilation import Refusal as LocalRefusal
+from pacthold.harness_contracts.model_compilation import TargetHandle as LocalTargetHandle
 
 BRANDS = ("pi", "codex", "claude-code")
 

@@ -10,7 +10,7 @@ refused - never guessed (the 093 rule this package inherits).
 from __future__ import annotations
 
 from typing import Any, Iterable, Mapping
-from ordessa_harness_api.model_compilation import parse_version
+from pacthold.harness_contracts.model_compilation import parse_version
 from ordessa_harness_claude_code import acp_model_facts as claude_facts
 from ordessa_harness_codex import acp_model_facts as codex_facts
 from ordessa_harness_pi import acp_model_facts as pi_facts

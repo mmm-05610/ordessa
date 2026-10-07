@@ -41,7 +41,7 @@ from __future__ import annotations
 import re
 from typing import Any, Mapping, Protocol, Sequence, runtime_checkable
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ConfigurationAdapterDescriptor, IntentSet, ValueSchema, VersionRange,
 )
 

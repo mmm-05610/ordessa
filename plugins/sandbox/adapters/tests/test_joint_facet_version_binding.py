@@ -5,7 +5,7 @@ WHY THIS EXISTS (measurement, recorded before any code change; full evidence:
 
 * ``Installation.adapter_version`` is an *observed* fact supplied by
   ``RuntimeAdapter.describe_installation()``
-  (``plugins/harness/api/src/ordessa_harness_api/contracts.py:385-388``,
+  (``plugins/harness/api/src/pacthold.harness_contracts/contracts.py:385-388``,
   dataclass at ``contracts.py:56-68``).
 * The C4 admission consults it exactly once per fragment:
   ``descriptor.adapter_versions.contains(installation.adapter_version)``
@@ -47,7 +47,7 @@ from ordessa_harness.application import (
     ConfigurationApplicationService, OperationJournal, RuntimeSnapshot,
 )
 from ordessa_harness.materialization import MergeAuthority, TargetAuthority
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, AdapterRefusal, ApplicationTarget, Assessment,
     ConfigurationAdapterDescriptor, DesiredFragment, ErrorCode, Installation,
     Refused, TargetDescriptor, TargetHandle, ValueSchema, VersionRange,
@@ -107,7 +107,7 @@ def _permissions_codex_descriptor() -> ConfigurationAdapterDescriptor:
             ("approval_policy", ValueSchema("string", enum=("untrusted", "on-request"))),
         ),
         required=())
-    from ordessa_harness_api import FieldClaim
+    from pacthold.harness_contracts import FieldClaim
     return ConfigurationAdapterDescriptor(
         "permissions.policy-adapter.codex", "v1", "permissions.policy-adapters",
         "v1", "codex", VersionRange((2, 0, 0), (2, 0, 0)),
@@ -281,7 +281,7 @@ class _PermissionsShapedStubPlugin:
         return ServerPluginDescriptor(self.PLUGIN_ID, "t020 permissions mirror", "0.1.0")
 
     def build(self, context):
-        from ordessa_harness_api import FieldClaim
+        from pacthold.harness_contracts import FieldClaim
         perm_range = _permissions_declared_adapter_versions()
         claude = ConfigurationAdapterDescriptor(
             "permissions.policy-adapter.claude-code", "v1", "permissions.policy-adapters",

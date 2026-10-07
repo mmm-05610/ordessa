@@ -22,7 +22,7 @@ license = {text = "MIT"}
 # test-scope allowance, guarded by tests/test_boundaries_t03b.py, and it goes
 # away when SR-15 re-exports the conflict types from the published API.
 dependencies = [
-    "ordessa-harness-api",
+    "pacthold",
     "ordessa-permissions-api",
     "ordessa-server-plugin-api",
 ]

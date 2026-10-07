@@ -12,7 +12,7 @@ import json
 import threading
 from uuid import uuid4
 
-from ordessa_harness_api import ApplicationTarget
+from pacthold.harness_contracts import ApplicationTarget
 from .registry import (
     AcpChannelRegistry, NativeConfigurationObservation,
     NativeConfigurationUnavailable, NativeSessionObservation,

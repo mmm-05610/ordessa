@@ -45,7 +45,7 @@ from __future__ import annotations
 import hashlib
 from typing import Any, Callable, Mapping
 
-from ordessa_harness_api import Confirmed, DesiredFragment, Refused, Unknown
+from pacthold.harness_contracts import Confirmed, DesiredFragment, Refused, Unknown
 
 from ordessa_model_provider.ports import (
     ELIGIBILITY_READY, ELIGIBILITY_UNKNOWN, ELIGIBILITY_UNSUPPORTED,

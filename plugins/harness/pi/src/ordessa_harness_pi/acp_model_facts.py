@@ -6,7 +6,7 @@ ACP 0.5 adapter range and current native RPC source pin are distinct axes.
 from __future__ import annotations
 import re
 from typing import Any
-from ordessa_harness_api.model_compilation import parse_version
+from pacthold.harness_contracts.model_compilation import parse_version
 
 CANONICAL_PROTOCOLS = ("openai-chat", "openai-responses", "anthropic-messages", "gemini-generate")
 DIALECT = {"openai-chat": ("api", "openai-completions")}

@@ -1,7 +1,7 @@
 """Native Pi model mapping uses observed options, never labels or guessed IDs."""
 from types import SimpleNamespace
 import pytest
-from ordessa_harness_api import ApplicationTarget, AdapterRefusal, IntentSource, InvokeAction
+from pacthold.harness_contracts import ApplicationTarget, AdapterRefusal, IntentSource, InvokeAction
 
 
 def compile_choice(snapshot, desired):

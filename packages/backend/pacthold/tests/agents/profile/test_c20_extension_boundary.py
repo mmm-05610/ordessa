@@ -43,7 +43,7 @@ PROFILE_FILES = sorted(
 )
 
 #: Import roots the profile authority is allowed to name. ``pacthold*`` is the
-#: governance kernel (its own home now), ``ordessa_harness_api`` is Harness's
+#: governance kernel (its own home now), ``pacthold.harness_contracts`` is Harness's
 #: published application capability contract -- the only Harness surface it
 #: consumes, and only for the port DTOs (inspect/plan/apply/query/reconcile) --
 #: and ``ordessa_persistence_sqlite`` is the wired persistence boundary. The
@@ -54,7 +54,7 @@ ALLOWED_ROOTS = {
     "json", "pathlib", "re", "sqlite3", "threading", "typing", "unicodedata",
     "uuid", "os", "collections", "itertools", "functools", "hashlib",
     "pacthold", "ordessa_environment_api",
-    "ordessa_harness_api", "ordessa_persistence_sqlite",
+    "pacthold.harness_contracts", "ordessa_persistence_sqlite",
 }
 
 #: Harness surface Profile must never reach: everything that is not the
@@ -192,7 +192,7 @@ def test_c20_publication_surface_is_the_public_facet_contract():
     assert {m.split(".")[0] for m in external} <= {
         "ordessa_environment_api",
         "ordessa_persistence_sqlite",
-        "ordessa_harness_api",
+        "pacthold.harness_contracts",
     }
 
 
@@ -211,10 +211,10 @@ def test_c20_import_analyser_flags_a_resource_plugin_private_import():
 
 
 def test_c20_published_harness_contract_is_the_only_harness_surface_reachable():
-    """``ordessa_harness_api`` is allowed because it is the published
+    """``pacthold.harness_contracts`` is allowed because it is the published
     capability contract; the implementation package behind it is not. Proved
     by discrimination, so the allow-list entry cannot quietly widen."""
-    allowed = "from ordessa_harness_api import Confirmed, DesiredFragment\n"
+    allowed = "from pacthold.harness_contracts import Confirmed, DesiredFragment\n"
     assert import_violations(allowed) == []
     for prefix in FORBIDDEN_PREFIXES:
         offender = f"import {prefix.rstrip('.')}.internal as x\n"

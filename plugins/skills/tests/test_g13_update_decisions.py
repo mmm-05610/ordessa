@@ -5,7 +5,7 @@ is executed by the Harness behind `ConfigurationService`/`RuntimeAdapter`;
 what is delivered here is the deterministic Skills-side decision of WHICH
 strategy a change declares, per brand, from the evidenced capability
 statement — now returned as the published
-`ordessa_harness_api.ReconfigurationDecision`, and applied through the
+`pacthold.harness_contracts.ReconfigurationDecision`, and applied through the
 `apply_chain` (T13) transaction.
 
 Rules encoded (harness-adapters.md 映射步骤 5): 支持安全 reload 用 reload;
@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_harness_api import MountContent, ReconfigurationDecision
+from pacthold.harness_contracts import MountContent, ReconfigurationDecision
 from ordessa_skills.harness_adapters import base
 from ordessa_skills.harness_adapters.capabilities import statement_for
 from ordessa_skills.harness_adapters.intent import (

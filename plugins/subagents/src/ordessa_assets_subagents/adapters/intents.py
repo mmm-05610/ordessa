@@ -5,7 +5,7 @@ vocabulary (``TargetSlot`` / Q3 ``MountContent`` / ``SetRebuildClassOption`` /
 ``InvokeSubagent`` / Q3 ``IntentSet``). `harness-api` is published now
 (checkpoint ``codex/011-harness-api-ready``), so two vocabularies cannot both
 survive integration: the old types are **deleted**, and every artefact this
-package produces is an ``ordessa_harness_api`` DTO. Nothing here is a public
+package produces is an ``pacthold.harness_contracts`` DTO. Nothing here is a public
 cross-tree shape — the public shape is the API package's.
 
 What stays (deliberately stricter than the contract, per
@@ -30,7 +30,7 @@ What stays (deliberately stricter than the contract, per
   invented;
 * the owner question (§C3 「注册 owner 由宿主授予」) is structural, not
   conventional: `IntentSource` has no owner field at all
-  (`ordessa_harness_api/intents.py:17-25`), the owner is stamped by the
+  (`pacthold.harness_contracts/intents.py:17-25`), the owner is stamped by the
   carrier (`ordessa_harness/application/configuration_service.py:198`
   `AuthorizedIntents(view.owner, …)`) and the merge authority *rejects* any
   intent whose source facet/item/version differs from the host-authorized
@@ -53,11 +53,11 @@ import re
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping, Sequence
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, BindSecret, ContentRef, FieldPath, IntentSet, IntentSource,
     InvokeAction, MountContent, RemoveOwnedContent, TargetHandle,
 )
-from ordessa_harness_api.schema import looks_secret_name
+from pacthold.harness_contracts.schema import looks_secret_name
 
 from .. import decoder, digest, errors, limits
 
@@ -122,7 +122,7 @@ def safe_field_path(segments: Sequence[str]) -> FieldPath:
     """A `FieldPath` no segment of which is path-, `~`- or shell-shaped.
 
     The real `FieldPath` already refuses `""`, `"."`, `".."`, `/` and `\\`
-    (`ordessa_harness_api/intents.py:41-50`); this wrapper adds Q3's stricter
+    (`pacthold.harness_contracts/intents.py:41-50`); this wrapper adds Q3's stricter
     per-segment grammar so nothing like `"~/.claude"` can ride through as a
     single dot-containing segment.
     """
@@ -350,7 +350,7 @@ def build_invoke_action(source: IntentSource, *, native_name: str,
     """A real `InvokeAction`, constructible only WITH invokable-fact evidence.
 
     `expected_observation` (the contract's "what must be seen to confirm"
-    field, `ordessa_harness_api/intents.py:169-193`) carries the joined
+    field, `pacthold.harness_contracts/intents.py:169-193`) carries the joined
     evidence references; an empty or non-tuple evidence is a refusal, because
     G17 forbids an invocation action without a proven control entry. The host
     merge additionally demands an explicit action grant
@@ -392,7 +392,7 @@ def build_rebuild_class_option(option_key: Any, value: Any = None) -> Any:
     them forces a Query rebuild), so an in-place option intent must not exist.
     The real vocabulary's only option-shaped intent is `SetField` — which
     targets a structured FILE and is applied by regenerating it, with no
-    rebuild-class semantics anywhere in `ordessa_harness_api` — so mapping
+    rebuild-class semantics anywhere in `pacthold.harness_contracts` — so mapping
     `agents` onto it would silently claim a hot-applyable file field and
     exceed Q3's directory-only claims. Per the task's gap rule this stays a
     refusal with a named gap (SR-3b-2 asks C0 for either a typed rebuild-class
@@ -415,7 +415,7 @@ def scan_credential_bearing_fields(item: "ManagedItem") -> None:
     This keeps the existing refusal (a mere declaration is not a host grant —
     never auto-converted into `BindSecret`) and names the credential key,
     reusing the published contract's own classifier
-    (`ordessa_harness_api.schema.looks_secret_name`) on top of Q3's
+    (`pacthold.harness_contracts.schema.looks_secret_name`) on top of Q3's
     decoder-side credential grammar.
     """
     revision = item.revision
@@ -461,7 +461,7 @@ class ManagedItem:
 def discovery_diagnostics(native_names: frozenset[str] | None) -> tuple[str, ...]:
     """Compile-time diagnostics, kept OUT of the intent set on purpose.
 
-    The real `IntentSet` carries no diagnostics field (`ordessa_harness_api`
+    The real `IntentSet` carries no diagnostics field (`pacthold.harness_contracts`
     `intents.py:199-208`), so Q3's 「native discovery unknown」 note is exposed
     through this pure helper for the caller's own record, and the absence of
     a diagnostics channel is registered as a seam observation (SR gap list).
@@ -490,7 +490,7 @@ def compile_all(
     """Compile the *complete* managed collection into a REAL `IntentSet`.
 
     Targets and ownership are injected, never invented: `context` is the
-    host-granted :class:`ordessa_harness_api.AdapterContext` (the mount
+    host-granted :class:`pacthold.harness_contracts.AdapterContext` (the mount
     targets are the server-issued `TargetHandle`s inside it) and `source` is
     the host-injected :class:`IntentSource` stamped unchanged on every
     intent. Every shared guard — context/source admission, caps, name

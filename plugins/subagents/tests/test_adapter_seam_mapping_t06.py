@@ -2,7 +2,7 @@
 
 This file is the boundary test demanded by SR-1b: Q3 keeps NO parallel
 public intent shape; everything leaving `compile_all` is
-`ordessa_harness_api`. It also records the answers to the three open SR-1b
+`pacthold.harness_contracts`. It also records the answers to the three open SR-1b
 mapping questions, each verified from the real code (file:line evidence
 below is inside this worktree at review time; nothing here imports
 `ordessa_harness` internals — only the published API — per the import
@@ -11,7 +11,7 @@ boundary):
 (a) HOW IS A COMPLETE MANAGED SET MOUNTED?
     One `MountContent` per item — there is no set-level intent and none is
     needed. `ContentRef(reference, sha256, size)`
-    (`ordessa_harness_api/intents.py:108-119`) IS content-addressed external
+    (`pacthold.harness_contracts/intents.py:108-119`) IS content-addressed external
     storage: the intent carries no bytes; the service resolves the reference
     against the runtime's content map and re-verifies digest+size at
     materialization (`plugins/harness/src/ordessa_harness/materialization/`
@@ -78,14 +78,14 @@ from __future__ import annotations
 import dataclasses
 
 import pytest
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, Assessment, BindSecret, ConfigurationAdapterDescriptor,
     ContractError, FieldClaim, Installation, Intent, IntentSet, IntentSource,
     Match, MountContent, RemoveOwnedContent, ResetField, SetField,
     TargetDescriptor, TargetHandle, ValueSchema, VersionRange, closed_object,
     validate_json,
 )
-from ordessa_harness_api.schema import looks_secret_name
+from pacthold.harness_contracts.schema import looks_secret_name
 
 from ordessa_assets_subagents import dto, errors
 from ordessa_assets_subagents.adapters import claude, intents
@@ -234,7 +234,7 @@ def test_sealed_json_validators_are_the_real_gate():
     with pytest.raises(ContractError):
         validate_json({"api_key": "x"})
     with pytest.raises(ContractError):
-        SetField(SOURCE, HANDLE, __import__("ordessa_harness_api").FieldPath(("token",)),
+        SetField(SOURCE, HANDLE, __import__("pacthold.harness_contracts", fromlist=["_"]).FieldPath(("token",)),
                  "abc")
     closed = closed_object(model=ValueSchema("string"))
     with pytest.raises(ContractError):

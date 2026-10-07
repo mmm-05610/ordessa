@@ -4,7 +4,7 @@ one-shot sets only, ONE vocabulary.
 contracts.md §Harness 配置贡献: the payload references managed content
 coordinates + the frozen generation bounds, and "由 Harness 从自身私有内容
 装载目标操作,不信适配器给任意绝对路径". Since the harness-api checkpoint
-these tests run against the PUBLISHED `ordessa_harness_api` intent types:
+these tests run against the PUBLISHED `pacthold.harness_contracts` intent types:
 the interim Skills-side vocabulary this file used to pin is deleted, and
 what remains provable is (a) the adapter-side sweep refuses host-path
 smuggling BEFORE a DTO exists, (b) the published DTOs' own checks refuse
@@ -17,7 +17,7 @@ import json
 
 import pytest
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ContentRef, ContractError, IntentSet, MountContent, RemoveOwnedContent,
 )
 from ordessa_skills.harness_adapters import pi
@@ -91,7 +91,7 @@ def test_the_published_dto_checks_reject_the_shapes_they_check():
     with pytest.raises(ContractError):
         mount = mount_content_for(_ref(), _handle(), slot="skills")
         # tamper is impossible on a frozen DTO — construct the bad shape:
-        from ordessa_harness_api import IntentSource, TargetHandle
+        from pacthold.harness_contracts import IntentSource, TargetHandle
         MountContent(source=IntentSource(SKILLS_FACET_ID, "x", "r1"),
                      target=TargetHandle("h", 0), relative_name="../escape",
                      immutable_content_ref=mount.immutable_content_ref,
@@ -104,7 +104,7 @@ def test_traversal_and_empty_slots_never_yield_a_mount():
     # The published DTO rejects traversal/leading-slash shapes; the sweep
     # catches the absolute-looking ones first. Either way NO mount object
     # is ever constructed for these slot labels.
-    from ordessa_harness_api import IntentSource, TargetHandle
+    from pacthold.harness_contracts import IntentSource, TargetHandle
     for bad in ("skills/../../etc", "", "//", "skills//x"):
         with pytest.raises((SkillIntentError, ContractError)):
             intent = mount_content_for(_ref(), _handle(), slot=bad)
@@ -121,7 +121,7 @@ def test_traversal_and_empty_slots_never_yield_a_mount():
 def _skip():
     # placeholder to keep the parametrised shape honest: an empty relative
     # name is refused by the published `_id` check.
-    from ordessa_harness_api import IntentSource, TargetHandle
+    from pacthold.harness_contracts import IntentSource, TargetHandle
     MountContent(source=IntentSource(SKILLS_FACET_ID, "x", "r1"),
                  target=TargetHandle("h", 0), relative_name="",
                  immutable_content_ref=content_ref_for(_ref()),

@@ -238,7 +238,7 @@ def test_controlled_product_wire_preparation_registration_and_authenticated_c4(t
     from ordessa_model_provider.profile_resolution import ProfileModelChoiceResolver
     from ordessa_model_provider.testing import FakeHarnesses, harness_descriptor, wire_body
     from ordessa_model_provider_profile.profile_glue import ModelProviderFacetProvider
-    from ordessa_harness_api import Installation
+    from pacthold.harness_contracts import Installation
     from ordessa_harness.configuration.model.bridge import choice_payload_schema
     from ordessa_harness.configuration.model.live_service import create_model_service
     from ordessa_harness.configuration.model.plugin import ModelProviderAdaptersPlugin

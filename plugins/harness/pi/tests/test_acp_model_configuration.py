@@ -1,7 +1,7 @@
 """Pure historical ACP plans do not establish native routing application."""
 from dataclasses import replace
 import pytest
-from ordessa_harness_api.model_compilation import AdapterContext, TargetHandle, ChoiceRequest, RequestParams, CompileIntent, BindSecret, Refusal
+from pacthold.harness_contracts.model_compilation import AdapterContext, TargetHandle, ChoiceRequest, RequestParams, CompileIntent, BindSecret, Refusal
 from ordessa_harness_pi.acp_model_configuration import PiAdapter
 
 

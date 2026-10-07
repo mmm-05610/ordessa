@@ -10,7 +10,7 @@ from dataclasses import dataclass
 import json
 from typing import Any, Mapping
 
-from ordessa_harness_api import ContractError, ValueSchema, validate_json
+from pacthold.harness_contracts import ContractError, ValueSchema, validate_json
 from ordessa_server.errors import ServerError
 from ordessa_model_provider.choices import (
     CREDENTIAL_UNRESOLVED, MODEL_NOT_FOUND, PROVIDER_ARCHIVED,

@@ -3,7 +3,7 @@
 Status after the `harness-api` checkpoint (record
 ``specs/011-plugin-rollout/checkpoints/harness-api.json``, implementation
 ``61966e3118``, ref ``refs/heads/codex/011-harness-api-ready``, merged into this
-lane as ``d3f026904e``): ``plugins/harness/api`` (``ordessa_harness_api``,
+lane as ``d3f026904e``): ``plugins/harness/api`` (``pacthold.harness_contracts``,
 py.typed, standalone wheel) IS a published ``publicExports`` entry of that
 READY record, and ``publicExports.harnessApiExports`` names every C3 apply
 symbol this seam binds — ``SetField``, ``ResetField``, ``InvokeAction``,
@@ -16,7 +16,7 @@ checkpoint-backed, not merely importable.
 What the binding does:
 
 * ``CompiledFieldIntent.to_harness_c3()`` returns the platform's own intent
-  object — a real ``ordessa_harness_api.intents.SetField`` / ``ResetField`` /
+  object — a real ``pacthold.harness_contracts.intents.SetField`` / ``ResetField`` /
   ``InvokeAction`` — attributed with a real ``IntentSource(facet_id, item_id,
   contribution_version)`` over the ``TargetHandle`` the host issued, and
   ``CompiledIntent.to_harness_c3()`` assembles them into a real ``IntentSet``.
@@ -37,7 +37,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Optional, Union
 
-from ordessa_harness_api.intents import (
+from pacthold.harness_contracts.intents import (
     FieldPath,
     IntentSet,
     IntentSource,
@@ -163,7 +163,7 @@ class CompiledFieldIntent:
                             sandbox_contribution_version())
 
     def to_harness_c3(self) -> Union[SetField, ResetField, InvokeAction]:
-        """Build the real ``ordessa_harness_api`` intent for this field.
+        """Build the real ``pacthold.harness_contracts`` intent for this field.
 
         Malformed shape against the platform contract — a path-flavoured
         segment, a secret-bearing field name, a missing or unknown baseline

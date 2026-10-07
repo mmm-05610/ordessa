@@ -14,7 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Event
 import pytest
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, ApplicationTarget, Assessment, ConfigurationAdapterDescriptor,
     DesiredFragment, FieldClaim, FieldPath, Installation, IntentSet, IntentSource,
     SetField, TargetDescriptor, TargetHandle, ValueSchema, VerificationUnknown,

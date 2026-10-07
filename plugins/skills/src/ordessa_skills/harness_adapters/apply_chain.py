@@ -1,6 +1,6 @@
 """T13 — Q1's half of "下一次用户提交时先应用再发送", on published types.
 
-The published seam (harness-api `ordessa_harness_api`): the Skills side
+The published seam (harness-api `pacthold.harness_contracts`): the Skills side
 freezes the resolved snapshot into `DesiredFragment`s, asks the Harness's
 `ConfigurationService` for a `Plan` bound to the expected revision, and —
 only on a `Plan` — applies it with the caller-supplied submission permit
@@ -49,7 +49,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Sequence
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ApplicationResult, ApplicationTarget, Confirmed, DesiredFragment,
     ErrorCode, NotFound, Plan, PlanResult, Refused, ReconfigurationDecision,
     ResumeRequest, RuntimeConfirmed, RuntimeRefused, Unknown,

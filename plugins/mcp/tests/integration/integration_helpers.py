@@ -78,7 +78,7 @@ from ordessa_harness.contributions import (                # noqa: E402
 from ordessa_harness.materialization import (               # noqa: E402
     MergeAuthority, TargetAuthority,
 )
-from ordessa_harness_api import (                          # noqa: E402
+from pacthold.harness_contracts import (                          # noqa: E402
     AdapterContext, ApplicationTarget, Assessment, Installation,
     TargetDescriptor, TargetHandle,
 )

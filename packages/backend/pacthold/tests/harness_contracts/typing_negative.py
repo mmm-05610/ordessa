@@ -1,6 +1,6 @@
 """Expected mypy failures: closed union and non-optional permit/target types."""
 
-from ordessa_harness_api import ApplicationResult, ConfigurationService, Intent, ResumeRequest, RuntimeAdapter, SetField
+from pacthold.harness_contracts import ApplicationResult, ConfigurationService, Intent, ResumeRequest, RuntimeAdapter, SetField
 
 
 def wrong_result(result: ApplicationResult) -> str:

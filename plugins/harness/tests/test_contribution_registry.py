@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ConfigurationAdapterDescriptor, FieldClaim, RuntimeAdapterDescriptor,
     ValueSchema, VersionRange,
 )
@@ -111,7 +111,7 @@ def test_conflicting_second_entry_undoes_first_staged_entry():
 
 def test_actual_host_injects_owner_and_guards_busy_unload():
     # Test-only import of the actual host. Production registry imports only
-    # server_plugin_api and ordessa_harness_api.
+    # server_plugin_api and pacthold.harness_contracts.
     from ordessa_server.plugin_host import MethodRegistry, ServerPluginHost, StreamRouteRegistry
     from server_plugin_api import (
         ContributionOwnerBusyError, ServerPluginDescriptor,

@@ -36,8 +36,8 @@ def test_plugin_sources_never_import_the_permissions_implementation():
 
 def test_api_dto_modules_stay_host_and_implementation_free():
     allowed = {"__future__", "dataclasses", "enum", "json", "math", "re", "hashlib",
-               "typing", "ordessa_harness_api"}
-    for file in sorted((PLUGIN_ROOT / "api" / "src" / "ordessa_harness_api").glob("*.py")):
+               "typing", "pacthold.harness_contracts"}
+    for file in sorted((PLUGIN_ROOT / "api" / "src" / "pacthold.harness_contracts").glob("*.py")):
         roots = _import_roots(file)
         assert "ordessa_harness" not in roots, file
         assert roots <= allowed, (file, sorted(roots - allowed))
@@ -46,10 +46,10 @@ def test_api_dto_modules_stay_host_and_implementation_free():
 def test_native_evidence_modules_import_only_within_the_harness_boundary():
     files = [
         PLUGIN_ROOT / "src" / "ordessa_harness" / "application" / "native_evidence.py",
-        PLUGIN_ROOT / "api" / "src" / "ordessa_harness_api" / "native_evidence.py",
+        PLUGIN_ROOT / "api" / "src" / "pacthold.harness_contracts" / "native_evidence.py",
     ]
     allowed = {"__future__", "dataclasses", "datetime", "hashlib", "json", "re",
-               "typing", "ordessa_harness", "ordessa_harness_api", "ordessa_harness_records"}
+               "typing", "ordessa_harness", "pacthold.harness_contracts", "ordessa_harness_records"}
     for file in files:
         roots = _import_roots(file)
         assert roots <= allowed, (file, sorted(roots - allowed))

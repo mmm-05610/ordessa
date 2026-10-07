@@ -41,7 +41,7 @@ def _repack_kernel_wheels(wheel_dir: Path) -> set:
 
 def test_independent_pi_model_wheel_without_server_monolith_product(tmp_path):
     packages = ('packages/backend/environment-api', 'packages/backend/pacthold',
-                'packages/backend/harness-transport', 'plugins/harness/api', 'plugins/harness/pi')
+                'packages/backend/harness-transport', 'plugins/harness/pi')
     sources = []
     for index, relative in enumerate(packages):
         source = ROOT / relative; clean = tmp_path / ('source-' + str(index)); clean.mkdir()
@@ -63,7 +63,7 @@ def test_independent_pi_model_wheel_without_server_monolith_product(tmp_path):
     own = sorted(wheels.glob('*.whl'))
     own = [p for p in own if p.name not in kernel_wheels]
     assert [p.name.split('-')[0] for p in own] == ['ordessa_environment_api',
-        'ordessa_harness_api', 'ordessa_harness_pi', 'ordessa_harness_transport', 'pacthold']
+        'ordessa_harness_pi', 'ordessa_harness_transport', 'pacthold']
     artifacts = sorted(wheels.glob('*.whl')); assert len(artifacts) == len(packages) + len(KERNEL_DEP_DIST_TO_PACKAGE)
     isolated = tmp_path / 'isolated'; run([sys.executable, '-m', 'venv', str(isolated)])
     python = str(isolated / 'bin/python')
@@ -74,7 +74,7 @@ import importlib.util
 assert all(importlib.util.find_spec(name) is None for name in ('ordessa_harness', 'ordessa_server',
     'ordessa_agent_tools', 'server_plugin_api', 'ordessa_harness_codex', 'ordessa_harness_claude_code'))
 from dataclasses import replace
-from ordessa_harness_api.model_compilation import AdapterContext,ChoiceRequest,TargetHandle,BindSecret,CompileIntent,RequestParams
+from pacthold.harness_contracts.model_compilation import AdapterContext,ChoiceRequest,TargetHandle,BindSecret,CompileIntent,RequestParams
 from ordessa_harness_pi.acp_model_configuration import PiAdapter
 from ordessa_harness_pi import PiRuntimeProvider,PiProviderRefused
 context = AdapterContext(TargetHandle('pi','instance','fixture'),'0.5.1',{'native_session_id':'original-session'})

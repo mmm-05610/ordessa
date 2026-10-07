@@ -10,7 +10,7 @@ from threading import RLock
 from pacthold.agents.configuration.profile_errors import ProfileError
 from pacthold.agents.configuration.harness_port_adapter import HarnessApiConfigPort
 from pacthold.agents.configuration.profile_contracts import (ApplyConfirmed, ApplyRejected, ApplyUnknown, PlanResult, PlannedItem, ReconcileOutcome)
-from ordessa_harness_api import ErrorCode
+from pacthold.harness_contracts import ErrorCode
 
 
 class NativeProfileConfigPort:

@@ -30,7 +30,7 @@ Port contract:
   with the real port → ``APPLICATION_PORT_ABSENT`` — registered but
   availability-limited rows, never fake successes) and, since T013,
   ``harness.configuration_service`` — the REAL published
-  ``ordessa_harness_api.ConfigurationService`` port (contracts §3 C4 face).
+  ``pacthold.harness_contracts.ConfigurationService`` port (contracts §3 C4 face).
   With it composed, ``mcp.planForSubmission`` additionally requires the
   params ``submissionPermit`` (absent → ``SUBMISSION_PERMIT_REQUIRED``, and
   nothing is reconfigured or launched either way) and ``expectedRevision``

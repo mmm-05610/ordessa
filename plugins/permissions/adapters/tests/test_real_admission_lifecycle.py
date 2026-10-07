@@ -20,7 +20,7 @@ import pytest
 from ordessa_harness.contributions import (
     CONFIGURATION_POINT, HarnessContributionError, HarnessContributionRegistry,
     POINT_API_VERSION, RUNTIME_POINT)
-from ordessa_harness_api import (ConfigurationAdapterDescriptor, FieldClaim,
+from pacthold.harness_contracts import (ConfigurationAdapterDescriptor, FieldClaim,
                                  ValueSchema, VersionRange)
 from ordessa_server.plugin_host import (MethodRegistry, ServerPluginHost,
                                         StreamRouteRegistry)

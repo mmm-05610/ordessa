@@ -18,12 +18,12 @@ from threading import RLock
 from typing import Callable, Mapping, Protocol
 from uuid import uuid4
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, AdapterRefusal, ApplicationTarget, Assessment, ConfigurationCapabilities,
     ConfigurationCapability, Confirmed, DesiredFragment, ErrorCode, Match,
     NotFound, OperationRecord, Plan, Refused, Unknown,
 )
-from ordessa_harness_api.intents import (
+from pacthold.harness_contracts.intents import (
     BindSecret, IntentSet, IntentSource, InvokeAction, MountContent, RemoveOwnedContent,
     ResetField, SetField,
 )

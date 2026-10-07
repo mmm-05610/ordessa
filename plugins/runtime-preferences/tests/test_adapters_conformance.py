@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_harness_api import ConfigurationAdapterDescriptor, VersionRange
+from pacthold.harness_contracts import ConfigurationAdapterDescriptor, VersionRange
 from ordessa_harness.contributions import HarnessContributionError, HarnessContributionRegistry
 from server_plugin_api import Contribution, ContributionBatch, stage_contributions
 
@@ -236,8 +236,8 @@ def test_unverified_dominates_and_never_claims_hot_reload():
 def _harness_ctx(brand: str, version: str = SUPPORTED_PIN):
     """A harness-shaped adapter context (Installation + file targets), as C4
     hands the bridge."""
-    from ordessa_harness_api import AdapterContext as HarnessAdapterContext
-    from ordessa_harness_api import Installation, TargetDescriptor, TargetHandle
+    from pacthold.harness_contracts import AdapterContext as HarnessAdapterContext
+    from pacthold.harness_contracts import Installation, TargetDescriptor, TargetHandle
 
     handle = keys.BRAND_TARGETS[brand][0] or f"{brand}.fixture.json"
     targets = (TargetDescriptor(TargetHandle(handle, 7), "file", "json", "instance"),)
@@ -250,7 +250,7 @@ def _harness_ctx(brand: str, version: str = SUPPORTED_PIN):
 def test_codex_request_level_retry_family_is_refused_at_the_boundary():
     adapter = bridge.BridgeConfigurationAdapter("codex")
     refusal = adapter.compile(_harness_ctx("codex"), {}, {"retry": {"maxRetries": 3}})
-    from ordessa_harness_api import AdapterRefusal
+    from pacthold.harness_contracts import AdapterRefusal
     assert isinstance(refusal, AdapterRefusal)
     assert refusal.code.name == "CAPABILITY_UNSUPPORTED"
     assert "model-provider" in refusal.reason

@@ -3,7 +3,7 @@
 The `harness-api` checkpoint (record
 ``specs/011-plugin-rollout/checkpoints/harness-api.json``, status READY,
 implementation ``61966e3118``, published ``d3f026904e`` and merged into this
-lane as ``953fb915eb``) makes ``ordessa_harness_api`` a published, consumable
+lane as ``953fb915eb``) makes ``pacthold.harness_contracts`` a published, consumable
 contract, so the seam that the foundation lane left explicitly UNBOUND is bound
 here for real:
 
@@ -42,7 +42,7 @@ from _sandbox_adapters_helpers import (
     pi_intent,
     target_handle,
 )
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ConfigurationAdapter,
     ConfigurationAdapterDescriptor,
     FieldPath,
@@ -118,17 +118,30 @@ def test_harness_api_checkpoint_ref_matches_the_bound_api_tree():
     assert sha.returncode == 0, (
         f"{CHECKPOINT_REF} is absent — the C3 binding would be unbacked")
     assert sha.stdout.strip() == CHECKPOINT_PUBLICATION_SHA
-    # Consolidation replayed the checkpoint's files onto a new branch ancestry.
-    # Compare the exact API subtree rather than requiring the old commit to be
-    # an ancestor; a changed contract must still fail this guard.
-    trees = []
-    for candidate in (CHECKPOINT_IMPLEMENTATION_SHA, "HEAD"):
-        tree = subprocess.run(
-            ["git", "rev-parse", f"{candidate}:plugins/harness/api"],
+    # Consolidation replayed the checkpoint's files onto a new branch ancestry,
+    # and 032 moved the bound API subtree into the kernel
+    # (packages/backend/pacthold/src/pacthold/harness_contracts). Byte-identity
+    # between the READY checkpoint tree and the new home is the binding guard:
+    # a changed contract must still fail this guard.
+    retired = subprocess.run(
+        ["git", "rev-parse", f"{CHECKPOINT_IMPLEMENTATION_SHA}:plugins/harness/api/src/ordessa_harness_api"],
+        cwd=REPO_ROOT, capture_output=True, text=True)
+    assert retired.returncode == 0, retired.stderr
+    listing = subprocess.run(
+        ["git", "ls-tree", "--name-only", retired.stdout.strip()],
+        cwd=REPO_ROOT, capture_output=True, text=True)
+    assert listing.returncode == 0, listing.stderr
+    new_home = REPO_ROOT / "packages/backend/pacthold/src/pacthold/harness_contracts"
+    for name in listing.stdout.split():
+        assert name.endswith((".py", ".typed")), f"unexpected checkpoint member {name}"
+        blob = subprocess.run(
+            ["git", "show", f"{CHECKPOINT_IMPLEMENTATION_SHA}:plugins/harness/api/src/ordessa_harness_api/{name}"],
             cwd=REPO_ROOT, capture_output=True, text=True)
-        assert tree.returncode == 0, tree.stderr
-        trees.append(tree.stdout.strip())
-    assert trees[0] == trees[1], "the bound Harness API tree changed since the READY checkpoint"
+        assert blob.returncode == 0, blob.stderr
+        target = new_home / name
+        assert target.is_file(), f"checkpoint module {name} missing at the kernel home"
+        assert target.read_text(encoding="utf-8") == blob.stdout, \
+            f"{name} drifted from the READY checkpoint after the 032 move"
 
 
 def test_every_bound_c3_symbol_is_a_recorded_public_export():
@@ -139,14 +152,14 @@ def test_every_bound_c3_symbol_is_a_recorded_public_export():
 
 def test_bound_symbols_are_the_published_module_objects():
     """Module identity, not a same-named copy: the classes the seam constructs
-    are the ones ``ordessa_harness_api`` exports."""
-    import ordessa_harness_api
+    are the ones ``pacthold.harness_contracts`` exports."""
+    import pacthold.harness_contracts
     for name in BOUND_C3_SYMBOLS | BOUND_CONTRACT_SYMBOLS:
-        assert hasattr(ordessa_harness_api, name), name
+        assert hasattr(pacthold.harness_contracts, name), name
     from ordessa_sandbox_adapters import seam
-    assert seam.SetField is ordessa_harness_api.SetField
-    assert seam.TargetHandle is ordessa_harness_api.TargetHandle
-    assert seam.IntentSet is ordessa_harness_api.IntentSet
+    assert seam.SetField is pacthold.harness_contracts.SetField
+    assert seam.TargetHandle is pacthold.harness_contracts.TargetHandle
+    assert seam.IntentSet is pacthold.harness_contracts.IntentSet
 
 
 # --------------------------------------------------------------- the binding
@@ -333,7 +346,7 @@ def test_no_src_module_redefines_the_platform_vocabulary():
             assert "ordessa_harness" not in roots, \
                 f"{path.name} imports harness CODE: {sorted(roots)}"
         for imported in _harness_api_imports(path):
-            assert imported.split(".")[0] == "ordessa_harness_api", imported
+            assert imported.startswith("pacthold.harness_contracts"), imported
             symbol = imported.split(".")[-1]
             assert symbol in names or symbol in {"looks_secret_name", "validate_json",
                                                  "closed_object", "JsonValue",
@@ -355,8 +368,8 @@ def _harness_api_imports(path: Path) -> set[str]:
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             found |= {a.name for a in node.names
-                      if a.name.startswith("ordessa_harness_api")}
+                      if a.name.startswith("pacthold.harness_contracts")}
         elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module \
-                and node.module.startswith("ordessa_harness_api"):
+                and node.module.startswith("pacthold.harness_contracts"):
             found |= {f"{node.module}.{a.name}" for a in node.names}
     return found

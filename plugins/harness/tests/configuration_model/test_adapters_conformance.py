@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_harness_api import ConfigurationAdapterDescriptor, VersionRange
+from pacthold.harness_contracts import ConfigurationAdapterDescriptor, VersionRange
 from ordessa_harness.contributions import HarnessContributionError, HarnessContributionRegistry
 from server_plugin_api import Contribution, ContributionBatch, stage_contributions
 
@@ -21,7 +21,7 @@ from ordessa_harness.configuration.model import bridge, common
 from ordessa_harness_claude_code.acp_model_configuration import ClaudeAdapter
 from ordessa_harness_codex.acp_model_configuration import CodexAdapter
 from ordessa_harness_pi.acp_model_configuration import PiAdapter
-from ordessa_harness_api.model_compilation import (
+from pacthold.harness_contracts.model_compilation import (
     AdapterContext, ChoiceRequest, CompileIntent, Refusal, TargetHandle,
 )
 
@@ -431,7 +431,7 @@ _FORBIDDEN = re.compile(
 #: but stay pure otherwise; the
 #: brand modules must not even name them.
 _BRIDGE_ALLOWED_ROOTS = {"__future__", "json", "tomllib", "typing", "hashlib",
-                         "ordessa_harness_api", "server_plugin_api", "ordessa_environment_api"}
+                         "pacthold.harness_contracts", "server_plugin_api", "ordessa_environment_api"}
 _BRIDGE_ALLOWED_NATIVE_MODULES = {
     "ordessa_harness_pi.acp_model_configuration",
     "ordessa_harness_claude_code.acp_model_configuration",
@@ -458,8 +458,8 @@ def test_brand_modules_do_not_import_the_bridge_or_harness(cls):
         stripped = module_line.strip()
         if stripped.startswith(("import ", "from ")):
             root = stripped.split()[1].split(".")[0]
-            if root == "ordessa_harness_api":
-                assert stripped.startswith("from ordessa_harness_api.model_compilation import "), module_line
+            if root == "pacthold.harness_contracts":
+                assert stripped.startswith("from pacthold.harness_contracts.model_compilation import "), module_line
             else:
                 assert root not in {"ordessa_harness", "server_plugin_api"}, module_line
 

@@ -1,7 +1,7 @@
 """G09-G12 chain through the real harness-api carrier DTOs.
 
 These tests drive the same switch flow as the controlled-fixture port, but
-across ``HarnessApiConfigPort`` — i.e. through ``ordessa_harness_api``
+across ``HarnessApiConfigPort`` — i.e. through ``pacthold.harness_contracts``
 `ConfigurationService` carrier DTOs (DesiredFragment/Plan/Confirmed/Refused/
 Unknown) as delivered via chat-api-r3.  The *service behind the carrier* is
 still a controlled double: a real native adapter needs the published
@@ -25,11 +25,11 @@ MODEL = ScriptedProvider(
 
 
 class CarrierServiceDouble:
-    """``ordessa_harness_api.ConfigurationService`` double: validates real
+    """``pacthold.harness_contracts.ConfigurationService`` double: validates real
     carrier DTOs on every call and scripts the verdict."""
 
     def __init__(self, *, apply_outcome="confirmed", reconcile_outcome="confirmed"):
-        from ordessa_harness_api import ApplicationTarget
+        from pacthold.harness_contracts import ApplicationTarget
         self.target = ApplicationTarget("fixture-server", "S", "fixture-channel", 7)
         self.apply_outcome = apply_outcome
         self.reconcile_outcome = reconcile_outcome
@@ -38,12 +38,12 @@ class CarrierServiceDouble:
         self._n = 0
 
     def inspect(self, target):
-        from ordessa_harness_api import ConfigurationCapabilities
+        from pacthold.harness_contracts import ConfigurationCapabilities
         self.calls.append(("inspect", target.runtime_generation))
         return ConfigurationCapabilities(target=target, capabilities=())
 
     def plan(self, target, desired_fragments, expected_revision):
-        from ordessa_harness_api import Plan
+        from pacthold.harness_contracts import Plan
         self.calls.append(("plan", target.runtime_generation))
         assert desired_fragments, "plan without fragments is meaningless"
         for fragment in desired_fragments:
@@ -61,7 +61,7 @@ class CarrierServiceDouble:
         )
 
     def apply(self, plan_id, operation_key, submission_permit):
-        from ordessa_harness_api import (
+        from pacthold.harness_contracts import (
             Confirmed, Refused, Unknown, ErrorCode,
         )
         self.calls.append(("apply", self._plans.get(plan_id, -1)))
@@ -86,7 +86,7 @@ class CarrierServiceDouble:
         raise NotImplementedError
 
     def reconcile(self, operation_key):
-        from ordessa_harness_api import (
+        from pacthold.harness_contracts import (
             Confirmed, Refused, Unknown, ErrorCode,
         )
         self.calls.append(("reconcile", 0))
@@ -231,7 +231,7 @@ def test_missing_host_permit_is_retriable_refusal_not_unknown(tmp_path):
 @pytest.mark.parametrize("operation", ["inspect", "plan", "apply", "reconcile"])
 @pytest.mark.parametrize("resolution", ["absent", "wrong-type", "wrong-session"])
 def test_owner_resolution_refuses_before_any_service_call(operation, resolution):
-    from ordessa_harness_api import ApplicationTarget
+    from pacthold.harness_contracts import ApplicationTarget
     from pacthold.agents.configuration.profile_contracts import PlanResult, SessionRef
     service = CarrierServiceDouble()
     ref = SessionRef("profile-realm", "pi", "native-session", "S")
@@ -255,7 +255,7 @@ def test_owner_resolution_refuses_before_any_service_call(operation, resolution)
 
 
 def test_inspect_preserves_owner_channel_server_and_nonzero_generation():
-    from ordessa_harness_api import ApplicationTarget, ConfigurationCapabilities
+    from pacthold.harness_contracts import ApplicationTarget, ConfigurationCapabilities
     from pacthold.agents.configuration.profile_contracts import SessionRef
     ref = SessionRef("profile-realm", "pi", "native-session", "canonical-uid")
     target = ApplicationTarget("server-instance", ref.session_uid, "canonical-channel", 23)
@@ -276,7 +276,7 @@ def test_inspect_preserves_owner_channel_server_and_nonzero_generation():
 
 
 def test_inspect_reads_updated_owner_generation_without_confirmation_cache():
-    from ordessa_harness_api import ApplicationTarget
+    from pacthold.harness_contracts import ApplicationTarget
     from pacthold.agents.configuration.profile_contracts import SessionRef
     ref = SessionRef("realm", "pi", "native", "S")
     service = CarrierServiceDouble()
@@ -290,7 +290,7 @@ def test_inspect_reads_updated_owner_generation_without_confirmation_cache():
 @pytest.mark.parametrize("changed", ["server", "channel", "generation"])
 def test_apply_refuses_changed_owner_target_before_permit_or_effect(changed):
     from types import SimpleNamespace
-    from ordessa_harness_api import ApplicationTarget
+    from pacthold.harness_contracts import ApplicationTarget
     from pacthold.agents.configuration.profile_contracts import SessionRef
     service = CarrierServiceDouble()
     permits = []

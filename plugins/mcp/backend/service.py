@@ -29,7 +29,7 @@ Fail-closed ports (contracts §1 "provider 缺席类型化拒绝", FR-09):
   ``plan_for_submission`` refuses ``APPLICATION_PORT_ABSENT``; there is no
   second gate this domain may substitute and no fake success. T013 adds the
   real port: when ``harness.configuration_service`` (the published
-  ``ordessa_harness_api.ConfigurationService``) is composed it IS that gate
+  ``pacthold.harness_contracts.ConfigurationService``) is composed it IS that gate
   — the plan needs a presented permit and an expected revision, drift and
   refusals come back typed through ``backend.native_binding`` and never
   re-drive the gate; the placeholder and the real port together are a
@@ -256,7 +256,7 @@ class McpDomainService:
             client_factory=client_factory)
         self.probe_authority = probe_authority
         self.submission_gate = submission_gate
-        #: T013: the REAL Harness C4 port (``ordessa_harness_api.
+        #: T013: the REAL Harness C4 port (``pacthold.harness_contracts.
         #: ConfigurationService`` — the service's plan/apply/query/reconcile
         #: face over the composed configuration adapter). When composed it
         #: IS the submission gate; the placeholder ``submission_gate`` above

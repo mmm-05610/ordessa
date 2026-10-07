@@ -15,7 +15,7 @@ from typing import Any, Mapping
 
 from . import acp_model_facts as common
 from .native_identity import _native_identity
-from ordessa_harness_api.model_compilation import (
+from pacthold.harness_contracts.model_compilation import (
     AdapterContext, Assessment, BindSecret, ChoiceRequest, CompileIntent,
     IntentSet, Refusal, Verdict,
 )

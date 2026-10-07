@@ -163,7 +163,7 @@ def _supported() -> "tuple[bool, str | None]":
 
 
 def _native_unknown() -> "tuple[bool, str | None]":
-    #: Re-evaluated against the merged harness-api (`ordessa_harness_api`,
+    #: Re-evaluated against the merged harness-api (`pacthold.harness_contracts`,
     #: publication `d3f026904e`): the API publishes the APPLY side
     #: (adapter compile/verify, ConfigurationService, target handles handed
     #: to the adapter at apply time) but NO plugin-queryable read handle or

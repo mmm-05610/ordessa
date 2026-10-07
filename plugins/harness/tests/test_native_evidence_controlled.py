@@ -15,8 +15,8 @@ import sqlite3
 
 import pytest
 
-from ordessa_harness_api import ApplicationTarget, Confirmed, ContractError, Plan
-from ordessa_harness_api.native_evidence import (
+from pacthold.harness_contracts import ApplicationTarget, Confirmed, ContractError, Plan
+from pacthold.harness_contracts.native_evidence import (
     LaunchProvenanceFacts, NativeEvidence, NativeOwnerReceiptFacts,
     NativeSessionIdentityFacts,
 )

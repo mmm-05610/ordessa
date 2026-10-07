@@ -1,5 +1,5 @@
 """T06 negative+positive tests for the intent builders — now asserted over the
-REAL `ordessa_harness_api` vocabulary (SR-1b refactor of the same guards).
+REAL `pacthold.harness_contracts` vocabulary (SR-1b refactor of the same guards).
 
 Every guard this file owned before is kept with its original intent: no path,
 `~` string, shell string or cwd is expressible; digests are bound to content;
@@ -16,7 +16,7 @@ from __future__ import annotations
 import dataclasses
 
 import pytest
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, BindSecret, ContractError, ContentRef, FieldPath,
     Installation, IntentSet, IntentSource, InvokeAction, MountContent,
     RemoveOwnedContent, SetField, TargetDescriptor, TargetHandle,

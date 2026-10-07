@@ -33,7 +33,7 @@ import pytest
 
 from ordessa_environment_api import AdmissionRefusedError, RequestKey
 from ordessa_environment_api.identity import ActivationRef
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ContractError,
     ParticipantEvidence,
     from_settlement_notes,

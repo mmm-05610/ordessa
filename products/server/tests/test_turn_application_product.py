@@ -27,7 +27,7 @@ import pytest
 from ordessa_harness.server_acp.registry import (
     NativeConfigurationObservation, NativeSessionObservation,
 )
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ApplicationTarget, Confirmed, ErrorCode, Installation, Plan, Refused, Unknown,
 )
 from ordessa_server.wire.errors import WireError

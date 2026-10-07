@@ -12,7 +12,7 @@ MEASURED FACTS this file relies on (all re-verified in-tree, 011-q5-safety):
   ``ApplicationTarget``/``ApplicationResult``, ``Confirmed``/``Refused``/
   ``Unknown``, ``OperationRecord``, ``DesiredFragment``,
   ``ConfigurationCapabilit*`` —
-  ``plugins/harness/api/src/ordessa_harness_api/application.py:211`` (protocol),
+  ``plugins/harness/api/src/pacthold.harness_contracts/application.py:211`` (protocol),
   ``:29-40`` (ApplicationTarget), ``:42-61`` (DesiredFragment), ``:129-181``
   (Plan/Refused/Confirmed/Unknown + aliases), ``:184-199`` (OperationRecord).
 * the REAL implementation this file drives (never a re-implementation):
@@ -73,7 +73,7 @@ from ordessa_harness.application import (
     RuntimeSnapshot,
 )
 from ordessa_harness.materialization import MergeAuthority, TargetAuthority
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, ApplicationTarget, Assessment, ConfigurationCapabilities,
     ConfigurationAdapterDescriptor, Confirmed, DesiredFragment, ErrorCode,
     FieldClaim, FieldPath, Installation, IntentSet, IntentSource, NotFound,

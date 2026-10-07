@@ -8,7 +8,7 @@ import json
 import sqlite3
 
 import pytest
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ActionDescriptor, AdapterContext, ApplicationTarget, Assessment, ConfigurationAdapterDescriptor,
     DesiredFragment, FieldClaim, FieldPath, Installation, IntentSet, IntentSource, InvokeAction,
     Match, SetField, TargetDescriptor, TargetHandle, ValueSchema, VerificationUnknown, VersionRange,

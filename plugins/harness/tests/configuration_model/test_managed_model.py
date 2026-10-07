@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 
 import pytest
-from ordessa_harness_api import AdapterRefusal, InvokeAction, IntentSource
+from pacthold.harness_contracts import AdapterRefusal, InvokeAction, IntentSource
 from ordessa_harness.configuration.model.initial import initial_model_params
 from ordessa_harness.configuration.model.live_model import compile_native_model
 

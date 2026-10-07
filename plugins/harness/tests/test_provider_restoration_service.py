@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from ordessa_harness_api import ApplicationTarget
+from pacthold.harness_contracts import ApplicationTarget
 from ordessa_harness.configuration.model.restoration import ProviderRestorationService
 from ordessa_harness.server_acp.native_action_executor import configuration_digest
 

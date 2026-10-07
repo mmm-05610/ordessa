@@ -155,11 +155,11 @@ def pi_intent(**overrides) -> NativeSandboxIntent:
 def target_handle(handle_id: str = "codex-config-toml", generation: int = 1):
     """The server-issued C3 target a compile is asked to bind against.
 
-    `ordessa_harness_api.TargetHandle` is the only spelling of a config target
+    `pacthold.harness_contracts.TargetHandle` is the only spelling of a config target
     after the harness-api checkpoint: this package never turns a path or a bare
     string into a handle and never invents a generation.
     """
-    from ordessa_harness_api import TargetHandle
+    from pacthold.harness_contracts import TargetHandle
     return TargetHandle(handle_id, generation)
 
 

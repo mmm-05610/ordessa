@@ -3,7 +3,7 @@
 native_binding.py is the Q4-domain <-> harness-api conversion point and
 must itself obey the import boundaries it converts across:
 
-* it may import ``ordessa_harness_api`` (the published contract) and the
+* it may import ``pacthold.harness_contracts`` (the published contract) and the
   MCP domain — never ``ordessa_harness`` (the harness implementation),
   never ``ordessa_server``/host internals, never ``adapters`` (outside the
   installed backend package);
@@ -37,7 +37,7 @@ if str(ADAPTER_ROOT) not in __import__("sys").path:
 ADAPTER_FILES = ["adapters/codex.py", "adapters/claude.py"]
 
 FORBIDDEN_IMPORT_ROOTS = {
-    "ordessa_harness",  # NOT ordessa_harness_api (the published contract)
+    "ordessa_harness",  # NOT pacthold.harness_contracts (the published contract)
     "ordessa_server", "ordessa_server_product", "ordessa_server_compat",
     "pacthold", "pacthold_runtime_compat", "adapters", "server_plugin_api",
     "os", "pathlib", "socket", "subprocess", "tempfile", "io", "shutil",
@@ -49,7 +49,7 @@ FORBIDDEN_CALLS = {"open", "exec", "eval", "spawn", "system"}
 
 
 def _bad_module(module: str) -> bool:
-    if module == "ordessa_harness_api" or module.startswith("ordessa_harness_api."):
+    if module == "pacthold.harness_contracts" or module.startswith("pacthold.harness_contracts."):
         return False
     head = module.split(".")[0]
     return head in FORBIDDEN_IMPORT_ROOTS
@@ -101,7 +101,7 @@ def test_full_chain_runs_under_primitive_seals(monkeypatch):
     returns a real API object under the seal)."""
     from adapters import claude as claude_mod, codex as codex_mod
     from backend.native_intents import NativeObservation, ObservedServer
-    from ordessa_harness_api import Match
+    from pacthold.harness_contracts import Match
 
     class Blocked(RuntimeError):
         pass

@@ -134,7 +134,7 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live
                 thinking = next(o for o in initial["configOptions"] if o["id"] == "thinkingLevel")
                 different = next(o["value"] for o in thinking["options"] if o["value"] != thinking["currentValue"])
                 if owner_operations:
-                    from ordessa_harness_api import ApplicationTarget, InvokeAction, IntentSource
+                    from pacthold.harness_contracts import ApplicationTarget, InvokeAction, IntentSource
                     from ordessa_harness.application.action_execution import ActionBatch, ActionInvocation
                     from ordessa_harness.server_acp.profile_owner import ProfileSessionOwner
                     from ordessa_harness.server_acp.registry import AcpChannelRegistry
@@ -173,7 +173,7 @@ def probe(artifact: Path, *, owner_rpc=False, owner_operations=False, owner_live
                         {'sessionId': native, 'operationId': payload['operationId']})
                     assert retained == operation
                     if owner_live_model:
-                        from ordessa_harness_api import DesiredFragment, Installation
+                        from pacthold.harness_contracts import DesiredFragment, Installation
                         from ordessa_harness.configuration.model.plugin import ModelProviderAdaptersPlugin
                         from ordessa_harness.pi.configuration.runtime import PiLiveModelRuntime
                         from ordessa_harness.application.configuration_service import ConfigurationApplicationService

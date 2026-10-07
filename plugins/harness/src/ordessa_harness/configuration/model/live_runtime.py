@@ -8,7 +8,7 @@ from pathlib import Path
 from copy import deepcopy
 from uuid import uuid4
 
-from ordessa_harness_api import ActionDescriptor, Installation, ValueSchema
+from pacthold.harness_contracts import ActionDescriptor, Installation, ValueSchema
 from ...application.configuration_service import NativeReadback, RuntimeSnapshot
 from ...materialization import MergeAuthority
 from ...server_acp.native_action_executor import NativeSessionActionExecutor, configuration_digest

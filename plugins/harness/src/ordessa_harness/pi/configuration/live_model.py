@@ -8,7 +8,7 @@ credentials and other provider changes require their own observed/apply path.
 """
 from collections.abc import Mapping
 
-from ordessa_harness_api import AdapterRefusal, ApplicationTarget, ErrorCode, IntentSource, InvokeAction
+from pacthold.harness_contracts import AdapterRefusal, ApplicationTarget, ErrorCode, IntentSource, InvokeAction
 
 
 def compile_live_model(snapshot, target: ApplicationTarget, desired, source: IntentSource, *, credential_binding=None):

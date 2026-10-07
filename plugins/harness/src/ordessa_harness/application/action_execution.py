@@ -4,7 +4,7 @@ import hashlib
 import json
 from typing import Protocol
 
-from ordessa_harness_api import ApplicationTarget, InvokeAction
+from pacthold.harness_contracts import ApplicationTarget, InvokeAction
 from ordessa_harness_records.operation_journal import NativeActivationReceipt
 
 

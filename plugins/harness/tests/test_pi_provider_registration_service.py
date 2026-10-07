@@ -3,7 +3,7 @@ from dataclasses import asdict
 from types import SimpleNamespace
 from unittest.mock import Mock
 import pytest
-from ordessa_harness_api import ApplicationTarget
+from pacthold.harness_contracts import ApplicationTarget
 from ordessa_harness.configuration.model.provider_registration import PiProviderRegistrationService
 
 

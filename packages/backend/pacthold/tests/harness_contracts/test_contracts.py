@@ -3,7 +3,7 @@ import json
 import copy
 from dataclasses import asdict
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ApplicationTarget, Assessment, BindSecret, ConfigurationCapability,
     ContractError, DesiredFragment, ErrorCode, FieldPath, IntentSet,
     IntentSource, ResetField, SetField, TargetHandle, ValueSchema,

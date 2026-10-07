@@ -32,7 +32,7 @@ def observed_owner(monkeypatch, authority):
 
 
 def create_controlled_service(monkeypatch, authority, target):
-    from ordessa_harness_api import Installation
+    from pacthold.harness_contracts import Installation
     from ordessa_harness.pi.configuration.runtime import PiLiveModelRuntime
 
     monkeypatch.setattr(authority.services, 'verify', lambda brand:
@@ -139,7 +139,7 @@ def test_neutral_registration_refuses_owner_replacement_and_generation_drift(tmp
 
 def test_profile_unload_keeps_same_c4_unknown_session_fence(tmp_path, monkeypatch):
     from ordessa_harness.application import FenceObservation, OperationJournal
-    from ordessa_harness_api import ErrorCode, Plan, Refused
+    from pacthold.harness_contracts import ErrorCode, Plan, Refused
 
     runtime = runtime_at(tmp_path)
     try:

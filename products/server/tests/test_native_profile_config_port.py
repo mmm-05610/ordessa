@@ -5,7 +5,7 @@ import pytest
 from pacthold.agents.configuration.profile_contracts import (ConfigIntent, PlanResult, SessionRef, UNSET,
     PlannedItem, ApplyUnknown, ApplyRejected, ReconcileOutcome)
 from pacthold.agents.configuration.profile_errors import ProfileError
-from ordessa_harness_api import ApplicationTarget
+from pacthold.harness_contracts import ApplicationTarget
 from ordessa_server_product.profile_configuration import NativeProfileConfigPort
 
 

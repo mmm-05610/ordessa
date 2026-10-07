@@ -17,7 +17,7 @@ Contract change this file now reflects (SR-1b, `api-requests.md` §"SR-1b FINAL
 answers"): the Q3-local intent vocabulary (`TargetSlot`, a local `MountContent`,
 `SetRebuildClassOption`, `InvokeSubagent`, a local `IntentSet`) was **deleted**
 once `harness-api` was published and consumed, so every prohibition below is
-re-expressed against the real `ordessa_harness_api` types — same prohibition,
+re-expressed against the real `pacthold.harness_contracts` types — same prohibition,
 new symbol. Nothing was dropped to make a row pass: where the published
 constructor is *laxer* than the deleted local enum (a `TargetHandle.handle_id`
 or a `FieldPath` segment only police separators and traversal, so `"~/.claude"`
@@ -68,7 +68,7 @@ if str(SRC_DIR) not in sys.path:  # this file owns no conftest.py
 
 #: The published contract vocabulary every FR09 guard below is driven through
 #: (SR-1b: this package emits C0's intents and nothing else).
-from ordessa_harness_api import (  # noqa: E402  (path set just above)
+from pacthold.harness_contracts import (  # noqa: E402  (path set just above)
     AdapterContext, BindSecret, ContentRef, ContractError, FieldClaim,
     FieldPath, Installation, IntentSet, IntentSource, InvokeAction,
     MountContent, RemoveOwnedContent, ResetField, SetField, TargetDescriptor,
@@ -650,6 +650,15 @@ def _module_binding_map(tree: ast.Module) -> dict[int, str]:
     return owners
 
 
+HARNESS_CONTRACT_EDGE = "pacthold.harness_contracts"
+
+
+def _harness_contract_edge(module: str) -> bool:
+    """032: the kernel carries the harness contract checkpoint; importing that
+    contract edge is not a store takeover, the bare kernel root still is."""
+    return module == HARNESS_CONTRACT_EDGE or module.startswith(HARNESS_CONTRACT_EDGE + ".")
+
+
 def _store_takeover_findings(files: list[Path]) -> list[str]:
     """Anything that would make this domain the owner of the old grant table.
 
@@ -666,10 +675,12 @@ def _store_takeover_findings(files: list[Path]) -> list[str]:
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 for alias in node.names:
-                    if alias.name.split(".")[0] in {"sqlite3", "pacthold"}:
+                    if (alias.name.split(".")[0] in {"sqlite3", "pacthold"}
+                            and not _harness_contract_edge(alias.name)):
                         findings.append(f"{path.name}: imports {alias.name}")
             elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
-                if node.module.split(".")[0] in {"sqlite3", "pacthold"}:
+                if (node.module.split(".")[0] in {"sqlite3", "pacthold"}
+                        and not _harness_contract_edge(node.module)):
                     findings.append(f"{path.name}: imports {node.module}")
             elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
                 for token in ("grant_subagent", "revoke_subagent"):
@@ -1641,6 +1652,8 @@ def test_fr11_missing_profile_or_chat_imports_cannot_break_the_domain():
             elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
                 names = [node.module]
             for name in names:
+                if _harness_contract_edge(name):
+                    continue  # 032: the kernel carries the contract checkpoint
                 if name.split(".")[0] in {
                     "ordessa_server", "ordessa_server_compat", "ordessa_harness",
                     "ordessa_server_product", "pacthold",

@@ -14,7 +14,7 @@ Six locks:
 
 1. No module under this package imports a forbidden host / product / compat
    prefix (AST scan, exact list below) — `ordessa_harness` *internals* stay on
-   that list while the published `ordessa_harness_api` does not.
+   that list while the published `pacthold.harness_contracts` does not.
 2. Every runtime import is stdlib, this package, or a **published contract
    package from the explicit allow-list** (the replacement for the old
    "stdlib only" machine check). The allow-list is deliberately narrow and each
@@ -93,8 +93,9 @@ FORBIDDEN_IMPORT_PREFIXES: tuple[str, ...] = (
 #: matching distribution to be declared, and the dead-entry guard requires the
 #: root to be *really imported* — so the list stays exactly as wide as the code.
 PUBLISHED_CONTRACT_PACKAGES: dict[str, str] = {
-    #: C0's `harness-api` checkpoint: the intent vocabulary this facet emits.
-    "ordessa_harness_api": "ordessa-harness-api",
+    #: 032: the harness contract checkpoint moved into the kernel; the
+    #: distribution that carries it is pacthold itself.
+    "pacthold.harness_contracts": "pacthold",
     #: Q5's `permissions-api` checkpoint: the ceiling adjudication DTOs.
     "ordessa_permissions_api": "ordessa-permissions-api",
     #: Foundation's server plugin API: the descriptor `plugin.py`/`wire.py`
@@ -186,7 +187,7 @@ ALWAYS_FORBIDDEN_TOP_LEVEL: frozenset[str] = frozenset({
     "pacthold", "ordessa_workspace", "ordessa_profile",
     "ordessa_profile_api", "ordessa_chat_api", "ordessa_sandbox_api",
     "ordessa_sandbox_backend", "ordessa_permissions", "ordessa_permissions_adapters",
-    "ordessa_permissions_backend", "ordessa_harness_api_contrib",
+    "ordessa_permissions_backend", "pacthold.harness_contracts_contrib",
     "sqlite3", "fastapi", "pydantic", "httpx", "uvicorn",
 })
 #: A stdlib root the **test scope** is allowed to name even though it sits on
@@ -319,6 +320,16 @@ def _forbidden_import_hits(source: str) -> list[str]:
     return hits
 
 
+GRANTED_MODULES = frozenset(k for k in PUBLISHED_CONTRACT_PACKAGES if "." in k)
+
+
+def _granted(name: str) -> bool:
+    """A dotted allowance licenses exactly itself and its submodules — never
+    the bare forbidden root (the import-time blocker licenses the parent chain
+    separately, because reaching a submodule needs its parent package)."""
+    return any(name == g or name.startswith(g + ".") for g in GRANTED_MODULES)
+
+
 def _non_stdlib_top_levels(source: str, *,
                            allowed: frozenset[str] = ALLOWED_NON_STDLIB_TOP_LEVEL,
                            local_roots: frozenset[str] = frozenset()
@@ -327,11 +338,20 @@ def _non_stdlib_top_levels(source: str, *,
 
     `allowed` is the scope's own list (see `IMPORT_SCOPES`); `local_roots` names
     roots the scope treats as itself (the test modules importing each other).
+    A dotted allowance under a forbidden root is handled by the caller through
+    `_granted`; here the returned name keeps its dotted form so callers can
+    tell a licensed module from the bare root.
     """
+    names = _absolute_imports(source)
+    symbol_names = {name for name in names
+                    if "." in name and name.rsplit(".", 1)[0] in names}
     return {
-        top for top in (_name.split(".")[0] for _name in _absolute_imports(source))
-        if top not in sys.stdlib_module_names and top not in allowed
-        and top not in local_roots
+        name for name in names
+        if not _granted(name)
+        and name not in symbol_names  # module-level granularity, not symbols
+        and name.split(".")[0] not in sys.stdlib_module_names
+        and name.split(".")[0] not in allowed
+        and name.split(".")[0] not in local_roots
     }
 
 
@@ -506,15 +526,28 @@ def _artifact_findings(root: Path, *, ignore_gitignored: bool = True
 
 
 class _ImportBlocker:
-    """Refuses every (transitive) import of a forbidden top-level package."""
+    """Refuses every (transitive) import of a forbidden top-level package.
+
+    `grants` licenses exact dotted modules under a forbidden root (032: the
+    harness contract edge lives under the kernel root) together with the
+    parent chain needed to import them.
+    """
 
     MARKER = "T03B_IMPORT_BOUNDARY"
 
-    def __init__(self, forbidden: tuple[str, ...]) -> None:
+    def __init__(self, forbidden: tuple[str, ...], *,
+                 grants: frozenset[str] = frozenset()) -> None:
         self.forbidden = forbidden
+        self.grants = grants
         self.hits: list[str] = []
 
+    def _granted(self, fullname: str) -> bool:
+        return any(fullname == g or fullname.startswith(g + ".") or g.startswith(fullname + ".")
+                   for g in self.grants)
+
     def _wanted(self, fullname: str) -> bool:
+        if self._granted(fullname):
+            return False
         return any(
             fullname == prefix or fullname.startswith(prefix + ".")
             for prefix in self.forbidden
@@ -531,18 +564,23 @@ class _ImportBlocker:
 class _isolation:
     """Install a blocker, evict cached modules, restore everything after."""
 
-    def __init__(self, forbidden: tuple[str, ...], *, keep: tuple[str, ...] = ()) -> None:
+    def __init__(self, forbidden: tuple[str, ...], *, keep: tuple[str, ...] = (),
+                 grants: frozenset[str] = frozenset()) -> None:
         self.forbidden = forbidden
         self.keep = keep
+        self.grants = grants
         self.blocker: _ImportBlocker | None = None
         self._snapshot: dict[str, object] = {}
 
     def __enter__(self) -> _ImportBlocker:
-        self.blocker = _ImportBlocker(self.forbidden)
+        self.blocker = _ImportBlocker(self.forbidden, grants=self.grants)
         self._snapshot = dict(sys.modules)
         prefixes = tuple(self.forbidden) + tuple(self.keep)
         for name in list(sys.modules):
             if any(name == p or name.startswith(p + ".") for p in prefixes):
+                if any(name == g or name.startswith(g + ".") or g.startswith(name + ".")
+                       for g in self.grants):
+                    continue  # licensed subtree keeps its cached modules
                 sys.modules.pop(name, None)
         sys.meta_path.insert(0, self.blocker)
         return self.blocker
@@ -591,7 +629,7 @@ def test_the_forbidden_prefix_scan_reports_every_listed_prefix():
         "the host's documented generic vocabulary is not forbidden")
     # the distinction the SR-13 change turns on: the *published* harness API is
     # allowed, the harness package's own modules are not
-    assert _forbidden_import_hits("from ordessa_harness_api import IntentSet\n") == []
+    assert _forbidden_import_hits("from pacthold.harness_contracts import IntentSet\n") == []
     assert _forbidden_import_hits("from ordessa_harness import registry\n"), (
         "harness internals would read as the published API")
 
@@ -630,7 +668,7 @@ def test_the_runtime_import_allow_list_is_exactly_what_the_code_uses():
     for path in files:
         source = path.read_text(encoding="utf-8")
         where = str(path.relative_to(REPO_ROOT))
-        for name in _forbidden_root_hits(source):
+        for name in _forbidden_root_hits(source, allowed_exact=GRANTED_MODULES):
             root_hits.append(f"{where}: {name}")
         for name in _sibling_privacy_hits(source):
             depth_hits.append(f"{where}: {name}")
@@ -638,8 +676,11 @@ def test_the_runtime_import_allow_list_is_exactly_what_the_code_uses():
             private_hits.append(f"{where}: {name}")
         for name in _absolute_imports(source):
             top = name.split(".")[0]
-            if (top not in sys.stdlib_module_names and top != PACKAGE_NAME):
-                imported_roots.setdefault(top, []).append(where)
+            if top in sys.stdlib_module_names or top == PACKAGE_NAME:
+                continue
+            key = next((g for g in PUBLISHED_CONTRACT_PACKAGES
+                        if name == g or name.startswith(g + ".")), top)
+            imported_roots.setdefault(key, []).append(where)
 
     assert root_hits == [], (
         "AGENTS.md rule 3 / contracts.md §C1: these imports are never allowed "
@@ -662,9 +703,12 @@ def test_the_runtime_import_allow_list_is_exactly_what_the_code_uses():
     # capability: each of the four predicates does report a defect
     assert _forbidden_root_hits("import ordessa_harness.contributions\n")
     assert _forbidden_root_hits("from pacthold.storage import database\n")
+    assert _forbidden_root_hits("from pacthold.harness_contracts import IntentSet\n",
+                                allowed_exact=GRANTED_MODULES) == []
     assert _forbidden_root_hits("import ordessa_profile\n")
     assert _non_stdlib_top_levels("import requests\n") == {"requests"}
-    assert _non_stdlib_top_levels("from ordessa_harness_api import IntentSet\n") == set()
+    assert _non_stdlib_top_levels("from pacthold.harness_contracts import IntentSet\n") == set()
+    assert _non_stdlib_top_levels("import pacthold\n") == {"pacthold"}
     # the depth rule is real even while the sibling allow-list is empty: point
     # it at the root it exists for and it reports a below-top-level import
     assert _sibling_privacy_hits(
@@ -675,8 +719,8 @@ def test_the_runtime_import_allow_list_is_exactly_what_the_code_uses():
         sibling_roots=frozenset({"ordessa_permissions_backend"})) == []
     # ... and today the backend is simply forbidden, which is the stricter rule
     assert _forbidden_root_hits("from ordessa_permissions_backend import AUTHORIZER_PORT\n")
-    assert _private_name_hits("from ordessa_harness_api._internals import x\n")
-    assert _private_name_hits("from ordessa_harness_api import _hidden\n")
+    assert _private_name_hits("from pacthold.harness_contracts._internals import x\n")
+    assert _private_name_hits("from pacthold.harness_contracts import _hidden\n")
     assert _private_name_hits(
         "from __future__ import annotations\nfrom . import _local\n") == []
 
@@ -713,8 +757,8 @@ def test_each_import_scope_is_scanned_by_the_same_predicates():
         for path in files:
             source = path.read_text(encoding="utf-8")
             where = str(path.relative_to(REPO_ROOT))
-            scope_exact = (frozenset(TEST_ONLY_FOREIGN_PACKAGES)
-                           if name == "tests" else frozenset())
+            scope_exact = (GRANTED_MODULES | frozenset(TEST_ONLY_FOREIGN_PACKAGES)
+                           if name == "tests" else GRANTED_MODULES)
             for hit in _forbidden_root_hits(source, forbidden=forbidden,
                                             allowed_exact=scope_exact):
                 forbidden_hits.append(f"{where}: {hit}")
@@ -725,8 +769,11 @@ def test_each_import_scope_is_scanned_by_the_same_predicates():
                 depth_hits.append(f"{where}: {hit}")
             for hit in _private_name_hits(source):
                 private_hits.append(f"{where}: {hit}")
+            grants_all = {r for r in (allowed | tolerances) if "." in r}
             for imp in _absolute_imports(source):
-                imported.add(imp.split(".")[0])
+                imported.add(next((g for g in grants_all
+                                   if imp == g or imp.startswith(g + ".")),
+                                  imp.split(".")[0]))
 
         assert forbidden_hits == [], (
             f"{name}: a root that is never allowed, allow-list or not "
@@ -792,21 +839,29 @@ def test_the_stdlib_allow_list_scan_is_capable():
                                  "from . import limits\n") == set()
     # the published contracts are the *only* third-party roots allowed, and
     # naming them is not a licence for anything else from the same producer
-    assert _non_stdlib_top_levels("from ordessa_harness_api.schema import x\n") == set()
-    assert _non_stdlib_top_levels("from ordessa_harness_api_contrib import x\n") == {
-        "ordessa_harness_api_contrib"}
+    assert _non_stdlib_top_levels("from pacthold.harness_contracts.schema import x\n") == set()
+    assert _non_stdlib_top_levels("from pacthold.harness_contracts_contrib import x\n") == {
+        "pacthold.harness_contracts_contrib"}
 
 
 def _scope_imported_roots(root: Path, *, local: frozenset[str] = frozenset()) -> set[str]:
-    """Every non-stdlib, non-local import root a scope actually uses."""
+    """Every non-stdlib, non-local import root a scope actually uses.
+
+    032: an import under a dotted sanctioned module is keyed by that module, so
+    the kernel-resident harness contract edge stays distinguishable from the
+    bare kernel root."""
     files = _source_files(root)
     assert files, f"no source found under {root} — the guard would be blind"
+    dotted = {k for k in (PUBLISHED_CONTRACT_PACKAGES | PUBLISHED_PLUGIN_PACKAGES
+                          | TEST_ONLY_SIBLING_PACKAGES | TEST_ONLY_FOREIGN_PACKAGES)
+              if "." in k}
     roots: set[str] = set()
     for path in files:
         for name in _absolute_imports(path.read_text(encoding="utf-8")):
             top = name.split(".")[0]
-            if top not in sys.stdlib_module_names and top != PACKAGE_NAME:
-                roots.add(top)
+            if top in sys.stdlib_module_names or top == PACKAGE_NAME:
+                continue
+            roots.add(next((g for g in dotted if name == g or name.startswith(g + ".")), top))
     return roots - {PACKAGE_NAME} - local
 
 
@@ -882,9 +937,8 @@ def test_the_package_declares_exactly_the_published_contract_dependencies():
     # A tolerated test root this package does NOT declare is out-of-band (it
     # arrives from another lane's checkpoint); said out loud, because a licence
     # with no declaration anywhere is how a suite starts passing by accident.
-    foreign_roots = {k.split(".")[0] for k in TEST_ONLY_FOREIGN_PACKAGES}
-    out_of_band = sorted(foreign_roots & test_roots)
-    assert out_of_band == ["pacthold"], out_of_band
+    out_of_band = sorted(set(TEST_ONLY_FOREIGN_PACKAGES) & test_roots)
+    assert out_of_band == sorted(TEST_ONLY_FOREIGN_PACKAGES), out_of_band
     assert "ordessa-profile" not in declared_dev and "ordessa-profile" not in declared
 
     # capability: the same predicate names an undeclared dep and a dead one
@@ -911,7 +965,7 @@ def test_every_domain_module_imports_under_the_published_contract_blocker():
     ]
     direction_failures: list[str] = []
     other_failures: list[str] = []
-    with _isolation(forbidden, keep=(PACKAGE_NAME,)) as blocker:
+    with _isolation(forbidden, keep=(PACKAGE_NAME,), grants=GRANTED_MODULES) as blocker:
         for name in module_names:
             try:
                 importlib.import_module(name)
@@ -942,15 +996,22 @@ def test_every_domain_module_imports_under_the_published_contract_blocker():
         assert _ImportBlocker.MARKER in str(harness_info.value)
         assert harness_probe.hits == ["ordessa_harness"], harness_probe.hits
     # while the published contract remains importable inside this isolation
-    with _isolation(forbidden, keep=("ordessa_harness_api",)):
-        importlib.import_module("ordessa_harness_api")
+    with _isolation(forbidden, keep=("pacthold.harness_contracts",),
+                    grants=GRANTED_MODULES):
+        importlib.import_module("pacthold.harness_contracts")
 
 
 def _non_stdlib_top_levels_of_tree() -> set[str]:
-    """Every third-party root the source imports, allow-listed or not."""
+    """Every third-party root the source imports, allow-listed or not.
+
+    032: modules under a dotted grant (the harness contract edge) and the
+    licensed parent chain do not enter the forbidden set — the blocker's own
+    `grants` re-licenses them at import time."""
     roots: set[str] = set()
     for path in _source_files(PKG_DIR):
         for name in _absolute_imports(path.read_text(encoding="utf-8")):
+            if _granted(name):
+                continue
             top = name.split(".")[0]
             if top not in sys.stdlib_module_names and top != PACKAGE_NAME:
                 roots.add(top)

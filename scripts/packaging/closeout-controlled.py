@@ -53,7 +53,7 @@ REQUIRED_DISTRIBUTIONS = (
 )
 
 REQUIRED_IMPORTS = (
-    "ordessa_harness_api",
+    "pacthold.harness_contracts",
     "ordessa_model_provider_profile",
     "ordessa_environment_api",
     "pacthold",

@@ -105,12 +105,12 @@ class Runtime:
         self.receipt = None
 
     def capture(self, target):
-        from ordessa_harness_api import AdapterContext, Installation
+        from pacthold.harness_contracts import AdapterContext, Installation
         from ordessa_harness.application.configuration_service import RuntimeSnapshot
         from ordessa_harness.materialization import MergeAuthority, TargetAuthority
-        from ordessa_harness_api import TargetDescriptor, TargetHandle as _TH
+        from pacthold.harness_contracts import TargetDescriptor, TargetHandle as _TH
         descriptor = TargetDescriptor(
-            __import__("ordessa_harness_api").TargetHandle("external-config", 7),
+            __import__("pacthold.harness_contracts", fromlist=["_"]).TargetHandle("external-config", 7),
             "file", "json", "instance", (("model",),))
         context = AdapterContext(
             (descriptor,),
@@ -163,7 +163,7 @@ def make_world(tmp_path, *, permit_allowed=True, owner_application=False):
     from ordessa_harness.application import (
         ConfigurationApplicationService, OperationJournal,
     )
-    from ordessa_harness_api import ApplicationTarget
+    from pacthold.harness_contracts import ApplicationTarget
 
     product = build_runtime(tmp_path / "product")
     host = product.plugin_host

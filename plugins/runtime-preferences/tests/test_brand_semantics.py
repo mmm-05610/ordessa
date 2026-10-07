@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from ordessa_harness_api import AdapterRefusal
+from pacthold.harness_contracts import AdapterRefusal
 
 from ordessa_runtime_preferences import bridge, common, engine, keys
 from ordessa_runtime_preferences.types import (
@@ -296,7 +296,7 @@ def test_session_identity_change_is_mismatch():
 def test_bridge_verify_maps_to_harness_outcomes():
     expected = _compiled_expected("kilo", "compaction", enabled=True)
     adapter = bridge.BridgeConfigurationAdapter("kilo")
-    from ordessa_harness_api import Match, Mismatch, VerificationUnknown
+    from pacthold.harness_contracts import Match, Mismatch, VerificationUnknown
     assert isinstance(adapter.verify(_harness_ctx("kilo"),
                                      {"expected": expected, "readback": dict(expected)}), Match)
     assert isinstance(adapter.verify(_harness_ctx("kilo"),
@@ -337,7 +337,7 @@ def test_payload_schema_validates_closed_groups():
     schema = bridge.payload_schema()
     ok = {"compaction": {"enabled": True}, "memory": None, "shell": None, "retry": None}
     schema.validate(ok)
-    from ordessa_harness_api.errors import ContractError
+    from pacthold.harness_contracts.errors import ContractError
     with pytest.raises(ContractError):
         schema.validate({"teleportation": {}})
     with pytest.raises(ContractError):

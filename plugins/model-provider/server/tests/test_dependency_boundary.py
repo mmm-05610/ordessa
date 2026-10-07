@@ -34,7 +34,7 @@ ALLOWED_ROOTS = {
     # these are standard-library utilities, not additional product dependencies.
     "contextlib", "pathlib", "re", "sqlite3", "unicodedata",
     "pacthold", "server_plugin_api", "ordessa_server", "ordessa_server_compat",
-    "ordessa_harness_api",
+    "pacthold.harness_contracts",
 }
 ALLOWED_ORDENSSA_SERVER_LEAVES = {
     "errors", "records", "ids", "idempotency", "storage_port",

@@ -21,7 +21,7 @@ import pytest
 from ordessa_harness.contributions import CONFIGURATION_POINT, HarnessContributionError
 from ordessa_harness.application import ConfigurationApplicationService, OperationJournal, RuntimeSnapshot
 from ordessa_harness.materialization import MergeAuthority
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, AdapterRefusal, ApplicationTarget, Assessment, ErrorCode, Installation,
     TargetDescriptor, TargetHandle, VerificationUnknown,
 )
@@ -187,7 +187,7 @@ def test_callable_c2_accepts_shape_but_refuses_effect_without_sandbox_facts():
 def test_failed_round_publishes_nothing(tmp_path):
     """Two sandbox descriptors whose claims collide stage in one batch: the
     platform refuses the pair and the real host publishes NOTHING."""
-    from ordessa_harness_api import FieldClaim, ValueSchema, VersionRange
+    from pacthold.harness_contracts import FieldClaim, ValueSchema, VersionRange
     twin = CODEX_DESCRIPTOR.__class__(
         "sandbox.codex.twin", "v1", "sandbox.native-configuration", "1", "codex",
         CODEX_DESCRIPTOR.native_versions, CODEX_DESCRIPTOR.adapter_versions,

@@ -402,8 +402,8 @@ def test_c21_configuration_application_goes_only_through_the_harness_capability(
     assert importers, "the binding must consume the Harness capability"
     for name, modules in importers.items():
         private = {m for m in modules
-                   if not (m == "ordessa_harness_api"
-                           or m.startswith("ordessa_harness_api."))}
+                   if not (m == "pacthold.harness_contracts"
+                           or m.startswith("pacthold.harness_contracts."))}
         assert private == set(), f"{name} reaches a private Harness module: {private}"
 
 
@@ -416,7 +416,7 @@ def test_c21_the_import_analyser_discriminates_a_private_harness_import(tmp_path
     modules = _imports_of(offender)
     assert modules == {"ordessa_harness.configuration.model.backend"}
     assert any(m.startswith("ordessa_harness.")
-               and not m.startswith("ordessa_harness_api.") for m in modules)
+               and not m.startswith("pacthold.harness_contracts.") for m in modules)
 
 
 def test_c21_model_provider_owns_no_process_or_session_coordination_surface():

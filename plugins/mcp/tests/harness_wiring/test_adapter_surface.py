@@ -10,7 +10,7 @@ authorises; verify can only ever reach ``Match`` through an attesting
 observer, never through content bytes.
 """
 import pytest
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext, AdapterRefusal, Assessment, BindSecret, Installation,
     IntentSet, Match, Mismatch, SetField, TargetDescriptor, TargetHandle,
     VerificationUnknown,

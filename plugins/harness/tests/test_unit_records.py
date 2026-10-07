@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from ordessa_harness_api import ApplicationTarget, Plan, Confirmed
+from pacthold.harness_contracts import ApplicationTarget, Plan, Confirmed
 from ordessa_harness_records.operation_journal import OperationJournal, FenceObservation
 from ordessa_harness_records.unit_records import (
     UnitRecords, UnitRecordsRefused, CanonicalConfigurationScopeRef, RecordTicket,
@@ -411,7 +411,7 @@ def test_bool_epoch_cannot_satisfy_integer_evidence(tmp_path):
 
 
 def test_legacy_channels_share_authoritative_scope_under_actual_reserve(tmp_path):
-    from ordessa_harness_api import Refused, ErrorCode
+    from pacthold.harness_contracts import Refused, ErrorCode
     p = parts(tmp_path)
     p[3].legacy = p[3].scope
     old_operation(p[1])
@@ -426,7 +426,7 @@ def test_legacy_channels_share_authoritative_scope_under_actual_reserve(tmp_path
 
 
 def test_unit_scope_corruption_blocks_legacy_admission(tmp_path):
-    from ordessa_harness_api import Refused, ErrorCode
+    from pacthold.harness_contracts import Refused, ErrorCode
     p = parts(tmp_path)
     unit, _ = reserve(p)
     p[3].legacy = p[3].scope
@@ -451,7 +451,7 @@ def test_single_guard_authority_cannot_be_replaced(tmp_path):
 
 
 def test_cold_journal_without_guard_refuses_new_legacy_but_replays_old(tmp_path):
-    from ordessa_harness_api import Refused, ErrorCode
+    from pacthold.harness_contracts import Refused, ErrorCode
     p = parts(tmp_path)
     # A proven isolated old scope may coexist; the existing row is still safe
     # to replay without granting a new dispatch after a cold reopen.
@@ -478,7 +478,7 @@ def test_cold_journal_without_guard_refuses_new_legacy_but_replays_old(tmp_path)
 
 def test_unit_and_legacy_reservation_race_has_one_durable_winner(tmp_path):
     from threading import Barrier
-    from ordessa_harness_api import Refused
+    from pacthold.harness_contracts import Refused
     p = parts(tmp_path)
     p[3].legacy = p[3].scope
     now = datetime.now(timezone.utc)

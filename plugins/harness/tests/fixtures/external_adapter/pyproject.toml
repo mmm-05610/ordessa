@@ -7,7 +7,7 @@ name = "ordessa-test-external-adapter"
 version = "0.1.0"
 description = "Controlled external Harness adapter test fixture"
 requires-python = ">=3.11"
-dependencies = ["ordessa-harness-api==1.0.0a1", "ordessa-server-plugin-api==0.1.0"]
+dependencies = ["ordessa-server-plugin-api==0.1.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

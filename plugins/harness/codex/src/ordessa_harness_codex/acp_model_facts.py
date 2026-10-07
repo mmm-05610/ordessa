@@ -8,7 +8,7 @@ import hashlib
 import json
 import re
 from typing import Any
-from ordessa_harness_api.model_compilation import parse_version
+from pacthold.harness_contracts.model_compilation import parse_version
 
 CANONICAL_PROTOCOLS = ("openai-chat", "openai-responses", "anthropic-messages", "gemini-generate")
 DIALECT = {"openai-responses": ("wire_api", "responses"), "openai-chat": ("wire_api", "chat")}

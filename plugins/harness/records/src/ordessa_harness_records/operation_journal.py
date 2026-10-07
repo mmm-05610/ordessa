@@ -17,7 +17,7 @@ import sqlite3
 from threading import RLock
 from uuid import uuid4
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ApplicationTarget, Confirmed, ErrorCode, NotFound, OperationRecord, Plan,
     Refused, Unknown,
 )

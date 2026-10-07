@@ -25,7 +25,7 @@ from _sandbox_adapters_helpers import (
     target_handle,
 )
 
-from ordessa_harness_api import Assessment, Match, Mismatch, VerificationUnknown
+from pacthold.harness_contracts import Assessment, Match, Mismatch, VerificationUnknown
 from ordessa_sandbox_api import NetworkMode, SandboxApplyScope, SandboxErrorCode, \
     ToolCategory
 from ordessa_sandbox_adapters import (

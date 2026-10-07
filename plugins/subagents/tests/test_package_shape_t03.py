@@ -42,6 +42,18 @@ def imported_roots(module: Path) -> set[str]:
     return roots
 
 
+def absolute_import_names(module: Path) -> set[str]:
+    """Absolute dotted module names (not symbols), for dotted-grant matching."""
+    tree = ast.parse(module.read_text(encoding="utf-8"))
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            names.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+            names.add(node.module)
+    return names
+
+
 def standard_library_roots() -> set[str]:
     import sysconfig
     import sys
@@ -73,12 +85,13 @@ def test_no_stdlib_import_reaches_the_network_or_a_subprocess() -> None:
 #: (`api-requests.md` §SR-13b: exactly these three, and their import roots are
 #: the only non-stdlib ones `src/**` may name).
 RUNTIME_CONTRACT_DISTRIBUTIONS = frozenset({
-    "ordessa-harness-api", "ordessa-permissions-api", "ordessa-server-plugin-api",
+    "pacthold", "ordessa-permissions-api", "ordessa-server-plugin-api",
 })
 #: Import root -> declared distribution, so the comparison below reads the code
 #: rather than a hand-typed list.
 CONTRACT_ROOT_BY_DISTRIBUTION = {
-    "ordessa_harness_api": "ordessa-harness-api",
+    # 032: the harness contract checkpoint moved into the kernel distribution.
+    "pacthold.harness_contracts": "pacthold",
     "ordessa_permissions_api": "ordessa-permissions-api",
     "server_plugin_api": "ordessa-server-plugin-api",
 }
@@ -98,13 +111,17 @@ def _distribution(entry: str) -> str:
 def src_runtime_import_roots() -> set[str]:
     """Every non-stdlib, non-local root any file under `src/**` imports."""
     stdlib = standard_library_roots()
+    grants = tuple(k for k in CONTRACT_ROOT_BY_DISTRIBUTION if "." in k)
     roots: set[str] = set()
     for module in sorted(PACKAGE_DIR.rglob("*.py")):
         if "__pycache__" in module.parts:
             continue
-        for root in imported_roots(module):
-            if root not in stdlib and root != "ordessa_assets_subagents":
-                roots.add(root)
+        for name in absolute_import_names(module):
+            root = name.split(".")[0]
+            if root in stdlib or root == "ordessa_assets_subagents":
+                continue
+            roots.add(next((g for g in grants if name == g or name.startswith(g + ".")),
+                           root))
     assert roots, f"no third-party import found under {PACKAGE_DIR} — probe is blind"
     return roots
 
@@ -153,7 +170,7 @@ def test_the_manifest_declares_exactly_the_published_contract_runtime_deps() -> 
     # comparing raw strings that can never match
     assert _distribution('ordessa-harness-api>=1.0,<2;python_version>="3.11"') == (
         "ordessa-harness-api")
-    assert _distribution("ordessa_harness_api") == "ordessa-harness-api"
+    assert _distribution(CONTRACT_ROOT_BY_DISTRIBUTION["pacthold.harness_contracts"]) == "pacthold"
 
 
 def test_the_package_directory_ships_only_python_source() -> None:

@@ -33,7 +33,7 @@ from pathlib import Path
 
 import pytest
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterContext,
     ApplicationTarget,
     Assessment,
@@ -56,7 +56,7 @@ from ordessa_harness_api import (
     ValueSchema,
     VersionRange,
 )
-from ordessa_harness_api.contracts import RuntimeConfirmed, RuntimeUnknown
+from pacthold.harness_contracts.contracts import RuntimeConfirmed, RuntimeUnknown
 from ordessa_harness.application import (
     ConfigurationApplicationService,
     OperationJournal,

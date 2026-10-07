@@ -34,8 +34,10 @@ FORBIDDEN_PRODUCT_ROOTS = {
     "ordessa_server", "ordessa_server_compat", "ordessa_harness", "pacthold",
     "ordessa_workspace", "fastapi", "pydantic", "httpx", "uvicorn",
 }
+#: 032: the harness contract edge is a dotted grant under the kernel root.
+KERNEL_CONTRACT_EDGE = "pacthold.harness_contracts"
 ALLOWED_NON_STDLIB = {"ordessa_permissions_api", "server_plugin_api",
-                      "ordessa_harness_api",
+                      KERNEL_CONTRACT_EDGE,
                       "ordessa_permissions_adapters", "__future__"}
 #: Call attribute names that would mean the compile path touches the filesystem,
 #: a user directory or a process.
@@ -51,14 +53,23 @@ def _sources() -> list[pathlib.Path]:
     return sorted(SRC_ROOT.glob("**/*.py"), key=str)
 
 
+def _granted_edge(name: str) -> bool:
+    return name == KERNEL_CONTRACT_EDGE or name.startswith(KERNEL_CONTRACT_EDGE + ".")
+
+
 def _imported_roots(tree: ast.AST) -> set[str]:
+    """Top-level roots plus the dotted kernel contract edge (which callers can
+    tell apart from the forbidden bare root)."""
     found: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
-            found |= {alias.name.split(".")[0] for alias in node.names}
+            for alias in node.names:
+                found.add(KERNEL_CONTRACT_EDGE if _granted_edge(alias.name)
+                          else alias.name.split(".")[0])
         elif isinstance(node, ast.ImportFrom):
             if node.level == 0 and node.module:
-                found.add(node.module.split(".")[0])
+                found.add(KERNEL_CONTRACT_EDGE if _granted_edge(node.module)
+                          else node.module.split(".")[0])
     return found
 
 

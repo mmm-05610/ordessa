@@ -1,7 +1,7 @@
 """T12 — drive the complete managed set through one submit permit, then send once.
 
 This module is an **orchestrator** over C0's published `ConfigurationService`
-port (`ordessa_harness_api.application`), not a second implementation of it.
+port (`pacthold.harness_contracts.application`), not a second implementation of it.
 It freezes the ordering the design requires (`contracts.md` §C4, §C5 and
 `verification.md` gates G18/G19/G20) and is deliberately honest about which
 half can actually run in this tree today.
@@ -10,7 +10,7 @@ What is real here
 -----------------
 * :class:`ApplyCoordinator` accepts a host-injected, `ConfigurationService`
   **Protocol**-shaped collaborator (`inspect/plan/apply/query/reconcile`,
-  `plugins/harness/api/src/ordessa_harness_api/application.py:211-217`) and the
+  `plugins/harness/api/src/pacthold.harness_contracts/application.py:211-217`) and the
   host-supplied `ApplicationTarget` + `TargetHandle`. It calls
   ``service.plan`` then ``service.apply`` (the same two calls C0's controlled
   service exposes at
@@ -65,7 +65,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Mapping, Sequence
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ApplicationResult,
     ApplicationTarget,
     ConfigurationService,

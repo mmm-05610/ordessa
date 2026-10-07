@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ActionDescriptor, BindSecret, ContractError, IntentSet, InvokeAction, MountContent,
     RemoveOwnedContent, ResetField, SetField, TargetDescriptor, TargetHandle,
 )

@@ -12,7 +12,7 @@ import tempfile
 import argparse
 
 from ordessa_server_product.composition import create_composition
-from ordessa_harness_api import ApplicationTarget
+from pacthold.harness_contracts import ApplicationTarget
 
 
 def probe(artifact_root="/opt/ordessa/harnesses/artifacts", *, apply_profile=False):

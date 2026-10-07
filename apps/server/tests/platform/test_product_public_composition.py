@@ -6,7 +6,7 @@ import pytest
 from ordessa_server.bootstrap import build_runtime
 from ordessa_server.bootstrap.runtime import StorageProviderMissingError
 from ordessa_server.plugin_host import ResolvedContribution
-from ordessa_harness_api import RuntimeAdapterDescriptor, VersionRange
+from pacthold.harness_contracts import RuntimeAdapterDescriptor, VersionRange
 from server_plugin_api import (
     Contribution, ContributionBatch, ContributionDeclarationError,
     ContributionOwnerBusyError, ContributionPointSpec,

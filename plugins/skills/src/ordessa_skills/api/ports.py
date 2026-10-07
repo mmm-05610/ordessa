@@ -6,7 +6,7 @@ registration surfaces satisfy them in the integration wave.
 
 STATUS (harness-api checkpoint): the interim `HarnessCapability` /
 `HarnessDeliveryPort` Protocols are DELETED — the published
-`ordessa_harness_api` vocabulary (`ConfigurationAdapter`,
+`pacthold.harness_contracts` vocabulary (`ConfigurationAdapter`,
 `ConfigurationCapabilities`, `ConfigurationService`, `ApplicationTarget`)
 is the only Harness-facing surface this domain speaks (the bool-shaped
 `session_reload`/`skill_mechanism` cell was a second capability vocabulary

@@ -16,11 +16,11 @@ import ast
 from pathlib import Path
 
 import pytest
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ApplicationTarget, Confirmed, DesiredFragment, NotFound, OperationRecord,
     Plan, Refused, TargetHandle, Unknown,
 )
-from ordessa_harness_api.errors import ErrorCode
+from pacthold.harness_contracts.errors import ErrorCode
 
 from ordessa_assets_subagents import apply as apply_mod, errors
 from ordessa_assets_subagents.apply import (

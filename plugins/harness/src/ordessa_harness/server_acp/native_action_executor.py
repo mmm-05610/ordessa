@@ -7,7 +7,7 @@ from dataclasses import asdict
 import hashlib
 import json
 
-from ordessa_harness_api import ApplicationTarget
+from pacthold.harness_contracts import ApplicationTarget
 from ordessa_harness.application.action_execution import ActionBatch
 from ordessa_harness_records.operation_journal import NativeActivationReceipt
 from .profile_owner import ProfileSessionOwner

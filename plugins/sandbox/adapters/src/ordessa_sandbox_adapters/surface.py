@@ -32,7 +32,7 @@ from __future__ import annotations
 import dataclasses
 from typing import Any, Mapping, Optional, Sequence, Tuple
 
-from ordessa_harness_api.contracts import (
+from pacthold.harness_contracts.contracts import (
     AdapterContext,
     AdapterRefusal,
     Assessment,
@@ -43,8 +43,8 @@ from ordessa_harness_api.contracts import (
     Verification,
     VerificationUnknown,
 )
-from ordessa_harness_api.errors import ErrorCode
-from ordessa_harness_api.intents import IntentSet
+from pacthold.harness_contracts.errors import ErrorCode
+from pacthold.harness_contracts.intents import IntentSet
 from ordessa_sandbox_api import NativeSandboxIntent, PlatformFacts, SandboxErrorCode
 
 from .base import BaseSandboxAdapter

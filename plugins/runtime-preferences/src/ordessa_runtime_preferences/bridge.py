@@ -3,7 +3,7 @@ the real C2 point (``harness.configuration-adapters``) as typed
 ``ConfigurationAdapter``s.
 
 Direction discipline (model-provider form, not its imports): this module may
-import the public ``ordessa_harness_api`` contract; the reverse import never
+import the public ``pacthold.harness_contracts`` contract; the reverse import never
 exists. The pure brand modules and the catalog stay untouched — their
 three-state verdicts and citations are conformance-pinned — so this layer
 only *translates*:
@@ -25,7 +25,7 @@ from __future__ import annotations
 import json
 from typing import Any, Mapping
 
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     AdapterRefusal, Assessment, ConfigurationAdapterDescriptor, ErrorCode,
     FieldClaim, FieldPath, IntentSet as HarnessIntentSet, IntentSource,
     Match, Mismatch, SetField, TargetHandle as HarnessTargetHandle,

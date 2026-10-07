@@ -24,7 +24,7 @@ import pytest
 from ordessa_permissions_api import RuleAction
 
 from _permissions_adapters_helpers import make_ceiling, make_intent
-from ordessa_harness_api import (
+from pacthold.harness_contracts import (
     ConfigurationAdapterDescriptor, ValueSchema, VersionRange)
 from ordessa_permissions_adapters import (
     AdapterCode,

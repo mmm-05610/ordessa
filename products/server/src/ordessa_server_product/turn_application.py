@@ -34,7 +34,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Mapping
 
-from ordessa_harness_api import Confirmed, DesiredFragment, Plan, Refused, Unknown
+from pacthold.harness_contracts import Confirmed, DesiredFragment, Plan, Refused, Unknown
 from ordessa_harness.server_acp.registry import NativeConfigurationUnavailable
 from ordessa_model_provider.turn_application import (
     SUBMIT_READY, SUBMIT_REFUSED, SUBMIT_UNKNOWN, SubmitResult,

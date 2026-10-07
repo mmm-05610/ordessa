@@ -29,7 +29,7 @@ from typing import Mapping, Protocol
 from uuid import uuid4
 
 from ordessa_environment_api.operations import safe_json, sealed_mapping
-from ordessa_harness_api import ApplicationTarget, Unknown
+from pacthold.harness_contracts import ApplicationTarget, Unknown
 from .operation_journal import OperationJournal, JournalError
 
 
