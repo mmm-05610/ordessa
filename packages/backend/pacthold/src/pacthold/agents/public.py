@@ -168,3 +168,6 @@ __all__ += ["ConfigurationReference", "ConfigurationReferenceExtraction",
 __all__ += ["AGENT_MATERIAL_OPERATION_CONTRACT_VERSION", "MaterialOperations",
             "material_provider_ref", "material_invocation_target",
             "material_operation_facts", "material_reservation_usages"]
+
+from .read_configuration import (PURE_READ_VERSION, OwnerReadContext, OwnerProposalInput, OwnerConfigurationOfferBatch, OwnerProposalAssessment)
+__all__ += ["PURE_READ_VERSION", "OwnerReadContext", "OwnerProposalInput", "OwnerConfigurationOfferBatch", "OwnerProposalAssessment"]

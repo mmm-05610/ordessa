@@ -1,0 +1,36 @@
+........FF.................                                              [100%]
+=================================== FAILURES ===================================
+_ test_internal_compiler_fault_propagates_instead_of_business_invalid[AssertionError] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7bb38655d850>
+error = <class 'AssertionError'>
+
+    @pytest.mark.parametrize('error', [AssertionError, RuntimeError])
+    def test_internal_compiler_fault_propagates_instead_of_business_invalid(monkeypatch, error):
+        provider, context = fixture()
+        def fault(change): raise error('internal compiler fault')
+        monkeypatch.setattr(provider, '_compile_change', fault)
+>       with pytest.raises(error, match='internal compiler fault'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE AssertionError
+
+plugins/harness/codex/tests/test_pure_read.py:118: Failed
+_ test_internal_compiler_fault_propagates_instead_of_business_invalid[RuntimeError] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7bb38655e3c0>
+error = <class 'RuntimeError'>
+
+    @pytest.mark.parametrize('error', [AssertionError, RuntimeError])
+    def test_internal_compiler_fault_propagates_instead_of_business_invalid(monkeypatch, error):
+        provider, context = fixture()
+        def fault(change): raise error('internal compiler fault')
+        monkeypatch.setattr(provider, '_compile_change', fault)
+>       with pytest.raises(error, match='internal compiler fault'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE RuntimeError
+
+plugins/harness/codex/tests/test_pure_read.py:118: Failed
+=========================== short test summary info ============================
+FAILED plugins/harness/codex/tests/test_pure_read.py::test_internal_compiler_fault_propagates_instead_of_business_invalid[AssertionError]
+FAILED plugins/harness/codex/tests/test_pure_read.py::test_internal_compiler_fault_propagates_instead_of_business_invalid[RuntimeError]
+2 failed, 25 passed in 0.19s

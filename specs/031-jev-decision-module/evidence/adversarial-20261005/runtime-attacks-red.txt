@@ -1,0 +1,97 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+__ test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[intent] ___
+
+stage = 'intent'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('stage', ['intent', 'finish'])
+    async def test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes(stage):
+        class Replay(DurableMemory):
+            async def append_durable(self, event):
+                if stage == 'intent' and event['type'] == 'call.intent': return self.started_ack
+                return await super().append_durable(event)
+            async def finish(self, value):
+                if stage == 'finish': return self.started_ack
+                return await super().finish(value)
+        sink = Replay(read_context=READ); provider = Provider(); flow = build_flow()
+        req, svc = compose(flow, sink=sink, provider=provider)
+>       with pytest.raises(RuntimeFailure): await run_decision(req, flow=flow, services=svc)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE RuntimeFailure
+
+packages/backend/decision/tests/runtime/test_adversarial_runtime.py:34: Failed
+__ test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[finish] ___
+
+stage = 'finish'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('stage', ['intent', 'finish'])
+    async def test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes(stage):
+        class Replay(DurableMemory):
+            async def append_durable(self, event):
+                if stage == 'intent' and event['type'] == 'call.intent': return self.started_ack
+                return await super().append_durable(event)
+            async def finish(self, value):
+                if stage == 'finish': return self.started_ack
+                return await super().finish(value)
+        sink = Replay(read_context=READ); provider = Provider(); flow = build_flow()
+        req, svc = compose(flow, sink=sink, provider=provider)
+>       with pytest.raises(RuntimeFailure): await run_decision(req, flow=flow, services=svc)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE RuntimeFailure
+
+packages/backend/decision/tests/runtime/test_adversarial_runtime.py:34: Failed
+_______ test_T13_T37_unknown_remote_failure_cannot_be_caught_and_retried _______
+
+    @pytest.mark.asyncio
+    async def test_T13_T37_unknown_remote_failure_cannot_be_caught_and_retried():
+        class UnknownProvider(Provider):
+            async def decide(self, q, context):
+                context.claim(q, self.settings_digest); self.calls.append(context)
+                raise OSError('unknown_after_dispatch')
+        async def catches(ctx):
+            for _ in range(2):
+                try: await ctx.deps.gateway.decide(question())
+                except RuntimeFailure: pass
+            return None
+        provider = UnknownProvider(); flow = build_flow(action=catches)
+        sink = DurableMemory(read_context=READ); req, svc = compose(flow, sink=sink, provider=provider)
+        result = await run_decision(req, flow=flow, services=svc)
+>       assert result.status == 'failed' and result.error_code == 'provider_failed'
+E       AssertionError: assert ('completed' == 'failed'
+E         
+E         - failed
+E         + completed)
+
+packages/backend/decision/tests/runtime/test_adversarial_runtime.py:52: AssertionError
+______ test_T17_T46_host_policy_alias_cannot_remove_confirmation_boundary ______
+
+    @pytest.mark.asyncio
+    async def test_T17_T46_host_policy_alias_cannot_remove_confirmation_boundary():
+        from ordessa_decision.offline import offline_case
+        from ordessa_decision.flows.agent_assignment.build import build_assignment_flow
+        req, _, svc = offline_case(action='reuse')
+        policy = plain(svc.policy)
+        policy['task_gate_facts'].update(requires_confirmation=True, confirmation_status='unknown')
+        class MutatingRead:
+            async def observe(self, *args):
+                policy['task_gate_facts']['requires_confirmation'] = False
+                return ObservationBatch('controlled', (), True, 'controlled only')
+        flow = build_assignment_flow(policy, alternate=True, read_query={'kind':'controlled'})
+        req = replace(req, flow_ref=flow.ref)
+        svc = replace(svc, policy=policy, policy_refs=flow.policy_refs, read=MutatingRead())
+        result = await run_decision(req, flow=flow, services=svc)
+>       assert result.status == 'completed' and result.outcome.disposition == 'clarify'
+E       AssertionError: assert ('failed' == 'completed'
+E         
+E         - completed
+E         + failed)
+
+packages/backend/decision/tests/runtime/test_adversarial_runtime.py:72: AssertionError
+=========================== short test summary info ============================
+FAILED packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[intent]
+FAILED packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[finish]
+FAILED packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T13_T37_unknown_remote_failure_cannot_be_caught_and_retried
+FAILED packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T17_T46_host_policy_alias_cannot_remove_confirmation_boundary
+4 failed in 0.13s

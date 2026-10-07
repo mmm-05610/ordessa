@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="0.131" timestamp="2026-10-05T19:26:07.538680+08:00" hostname="maoqh-g15"><testcase classname="tests.integration.test_core_read_seam" name="test_T55_T56_profile_and_filtered_scope" time="0.032" /></testsuite></testsuites>

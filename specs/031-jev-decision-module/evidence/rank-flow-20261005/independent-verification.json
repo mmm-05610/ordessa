@@ -1,0 +1,23 @@
+{
+  "verified_runs": 3,
+  "rows": [
+    {
+      "batch": "preferred-first",
+      "run_id": "1b137283-cee8-41bd-85a4-2fc35bd09deb",
+      "rank_value": "proposal_0",
+      "verified": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_FLOW_EXPECTED"
+    },
+    {
+      "batch": "preferred-second",
+      "run_id": "6d5b80ae-63e6-4ce6-b667-1c6dab17b657",
+      "rank_value": "proposal_1",
+      "verified": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_FLOW_EXPECTED"
+    },
+    {
+      "batch": "insufficient",
+      "run_id": "0073f848-9f9a-4be2-9a60-106281511281",
+      "rank_value": "insufficient_evidence",
+      "verified": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_FLOW_EXPECTED"
+    }
+  ]
+}

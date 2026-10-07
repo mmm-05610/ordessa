@@ -1,0 +1,13 @@
+{
+  "new_http_requests": 36,
+  "cumulative_http_requests": 163,
+  "new_reported_input": 29616,
+  "new_reported_output": 1614,
+  "new_unknown_usage_requests": 0,
+  "cost": "UNKNOWN",
+  "native_effects": 0,
+  "retry": 0,
+  "cumulative_reported_input": 115871,
+  "cumulative_reported_output": 11619,
+  "cumulative_unknown_usage_requests": 3
+}

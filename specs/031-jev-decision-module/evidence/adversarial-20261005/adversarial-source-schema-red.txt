@@ -1,0 +1,326 @@
+FF.FFFFFFF.F...........FFFF                                              [100%]
+=================================== FAILURES ===================================
+___________ test_explicit_wrong_task_or_source_digest_is_rejected[0] ___________
+
+index = 0
+
+    @pytest.mark.parametrize('index', [0, 1])
+    def test_explicit_wrong_task_or_source_digest_is_rejected(index):
+        task, candidate, proposal = basis()
+        conditions = list(proposal.preconditions)
+        conditions[index] = replace(conditions[index], expected_digest=digest('descriptor', {'wrong': 'content'}))
+>       with pytest.raises(ContractError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ContractError
+
+packages/backend/decision/tests/flows/test_basis_schema_attacks.py:35: Failed
+___________ test_explicit_wrong_task_or_source_digest_is_rejected[1] ___________
+
+index = 1
+
+    @pytest.mark.parametrize('index', [0, 1])
+    def test_explicit_wrong_task_or_source_digest_is_rejected(index):
+        task, candidate, proposal = basis()
+        conditions = list(proposal.preconditions)
+        conditions[index] = replace(conditions[index], expected_digest=digest('descriptor', {'wrong': 'content'}))
+>       with pytest.raises(ContractError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ContractError
+
+packages/backend/decision/tests/flows/test_basis_schema_attacks.py:35: Failed
+______ test_hard_check_explicit_source_digest_must_match[content_digest] _______
+
+digest_field = 'content_digest'
+
+    @pytest.mark.parametrize('digest_field', ['content_digest', 'expected_digest'])
+    def test_hard_check_explicit_source_digest_must_match(digest_field):
+        task, candidate, proposal = basis()
+        subject = ExternalRef('permissions', {'id': 'read-scope'})
+        check_digest = digest('descriptor', {'permission': 'read_only'})
+        check = {'status': 'passed', 'subject_ref': plain(subject), 'source_version': '3',
+            'checker_id': 'owner.permission', 'checker_version': '1', 'evidence_refs': ['permission-source'],
+            digest_field: check_digest}
+        candidate = replace(candidate, capability_claims={'action': 'reuse', 'hard_checks': {'permission': check}})
+        condition = Precondition('permission', 'permission', subject, '3', check_digest, 'must', 'owner.permission', '1')
+        proposal = replace(proposal, preconditions=proposal.preconditions + (condition,))
+        check_proposal_basis(proposal, candidate, task, ('permission',))
+        bad = replace(proposal, preconditions=proposal.preconditions[:-1] + (replace(condition, expected_digest=digest('descriptor', {'permission': 'write'})),))
+>       with pytest.raises(ContractError): check_proposal_basis(bad, candidate, task, ('permission',))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ContractError
+
+packages/backend/decision/tests/flows/test_basis_schema_attacks.py:58: Failed
+______ test_hard_check_explicit_source_digest_must_match[expected_digest] ______
+
+digest_field = 'expected_digest'
+
+    @pytest.mark.parametrize('digest_field', ['content_digest', 'expected_digest'])
+    def test_hard_check_explicit_source_digest_must_match(digest_field):
+        task, candidate, proposal = basis()
+        subject = ExternalRef('permissions', {'id': 'read-scope'})
+        check_digest = digest('descriptor', {'permission': 'read_only'})
+        check = {'status': 'passed', 'subject_ref': plain(subject), 'source_version': '3',
+            'checker_id': 'owner.permission', 'checker_version': '1', 'evidence_refs': ['permission-source'],
+            digest_field: check_digest}
+        candidate = replace(candidate, capability_claims={'action': 'reuse', 'hard_checks': {'permission': check}})
+        condition = Precondition('permission', 'permission', subject, '3', check_digest, 'must', 'owner.permission', '1')
+        proposal = replace(proposal, preconditions=proposal.preconditions + (condition,))
+        check_proposal_basis(proposal, candidate, task, ('permission',))
+        bad = replace(proposal, preconditions=proposal.preconditions[:-1] + (replace(condition, expected_digest=digest('descriptor', {'permission': 'write'})),))
+>       with pytest.raises(ContractError): check_proposal_basis(bad, candidate, task, ('permission',))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ContractError
+
+packages/backend/decision/tests/flows/test_basis_schema_attacks.py:58: Failed
+_ test_absent_or_empty_schema_branches_cannot_hide_unsupported_declarations[value0-schema0] _
+
+value = {}
+schema = {'type': 'object', 'properties': {'absent': {'type': 'string', 'pattern': '^x$'}}}
+
+    @pytest.mark.parametrize('value,schema', [
+        ({}, {'type': 'object', 'properties': {'absent': {'type': 'string', 'pattern': '^x$'}}}),
+        ([], {'type': 'array', 'items': {'type': 'number', 'multipleOf': 0.1}}),
+        ({}, {'type': 'object', 'properties': {'absent': {'$schema': 'unknown', 'type': 'string'}}}),
+        ([], {'type': 'array', 'items': {'type': 'unknown'}}),
+        ({}, {'type': 'object', 'properties': {'absent': 7}}),
+        ({}, {'type': 'object', 'required': 'absent'}),
+    ])
+    def test_absent_or_empty_schema_branches_cannot_hide_unsupported_declarations(value, schema):
+>       assert check_schema(value, schema) == 'unverifiable'
+E       AssertionError: assert 'valid' == 'unverifiable'
+E         
+E         - unverifiable
+E         + valid
+
+packages/backend/decision/tests/flows/test_basis_schema_attacks.py:70: AssertionError
+_ test_absent_or_empty_schema_branches_cannot_hide_unsupported_declarations[value1-schema1] _
+
+value = []
+schema = {'type': 'array', 'items': {'type': 'number', 'multipleOf': 0.1}}
+
+    @pytest.mark.parametrize('value,schema', [
+        ({}, {'type': 'object', 'properties': {'absent': {'type': 'string', 'pattern': '^x$'}}}),
+        ([], {'type': 'array', 'items': {'type': 'number', 'multipleOf': 0.1}}),
+        ({}, {'type': 'object', 'properties': {'absent': {'$schema': 'unknown', 'type': 'string'}}}),
+        ([], {'type': 'array', 'items': {'type': 'unknown'}}),
+        ({}, {'type': 'object', 'properties': {'absent': 7}}),
+        ({}, {'type': 'object', 'required': 'absent'}),
+    ])
+    def test_absent_or_empty_schema_branches_cannot_hide_unsupported_declarations(value, schema):
+>       assert check_schema(value, schema) == 'unverifiable'
+E       AssertionError: assert 'valid' == 'unverifiable'
+E         
+E         - unverifiable
+E         + valid
+
+packages/backend/decision/tests/flows/test_basis_schema_attacks.py:70: AssertionError
+_ test_absent_or_empty_schema_branches_cannot_hide_unsupported_declarations[value2-schema2] _
+
+value = {}
+schema = {'type': 'object', 'properties': {'absent': {'$schema': 'unknown', 'type': 'string'}}}
+
+    @pytest.mark.parametrize('value,schema', [
+        ({}, {'type': 'object', 'properties': {'absent': {'type': 'string', 'pattern': '^x$'}}}),
+        ([], {'type': 'array', 'items': {'type': 'number', 'multipleOf': 0.1}}),
+        ({}, {'type': 'object', 'properties': {'absent': {'$schema': 'unknown', 'type': 'string'}}}),
+        ([], {'type': 'array', 'items': {'type': 'unknown'}}),
+        ({}, {'type': 'object', 'properties': {'absent': 7}}),
+        ({}, {'type': 'object', 'required': 'absent'}),
+    ])
+    def test_absent_or_empty_schema_branches_cannot_hide_unsupported_declarations(value, schema):
+>       assert check_schema(value, schema) == 'unverifiable'
+E       AssertionError: assert 'valid' == 'unverifiable'
+E         
+E         - unverifiable
+E         + valid
+
+packages/backend/decision/tests/flows/test_basis_schema_attacks.py:70: AssertionError
+_ test_absent_or_empty_schema_branches_cannot_hide_unsupported_declarations[value3-schema3] _
+
+value = [], schema = {'type': 'array', 'items': {'type': 'unknown'}}
+
+    @pytest.mark.parametrize('value,schema', [
+        ({}, {'type': 'object', 'properties': {'absent': {'type': 'string', 'pattern': '^x$'}}}),
+        ([], {'type': 'array', 'items': {'type': 'number', 'multipleOf': 0.1}}),
+        ({}, {'type': 'object', 'properties': {'absent': {'$schema': 'unknown', 'type': 'string'}}}),
+        ([], {'type': 'array', 'items': {'type': 'unknown'}}),
+        ({}, {'type': 'object', 'properties': {'absent': 7}}),
+        ({}, {'type': 'object', 'required': 'absent'}),
+    ])
+    def test_absent_or_empty_schema_branches_cannot_hide_unsupported_declarations(value, schema):
+>       assert check_schema(value, schema) == 'unverifiable'
+E       AssertionError: assert 'valid' == 'unverifiable'
+E         
+E         - unverifiable
+E         + valid
+
+packages/backend/decision/tests/flows/test_basis_schema_attacks.py:70: AssertionError
+_ test_absent_or_empty_schema_branches_cannot_hide_unsupported_declarations[value4-schema4] _
+
+value = {}, schema = {'type': 'object', 'properties': {'absent': 7}}
+
+    @pytest.mark.parametrize('value,schema', [
+        ({}, {'type': 'object', 'properties': {'absent': {'type': 'string', 'pattern': '^x$'}}}),
+        ([], {'type': 'array', 'items': {'type': 'number', 'multipleOf': 0.1}}),
+        ({}, {'type': 'object', 'properties': {'absent': {'$schema': 'unknown', 'type': 'string'}}}),
+        ([], {'type': 'array', 'items': {'type': 'unknown'}}),
+        ({}, {'type': 'object', 'properties': {'absent': 7}}),
+        ({}, {'type': 'object', 'required': 'absent'}),
+    ])
+    def test_absent_or_empty_schema_branches_cannot_hide_unsupported_declarations(value, schema):
+>       assert check_schema(value, schema) == 'unverifiable'
+E       AssertionError: assert 'valid' == 'unverifiable'
+E         
+E         - unverifiable
+E         + valid
+
+packages/backend/decision/tests/flows/test_basis_schema_attacks.py:70: AssertionError
+___________ test_schema_cycles_and_excessive_depth_are_unverifiable ____________
+
+    def test_schema_cycles_and_excessive_depth_are_unverifiable():
+        cycle = {'type': 'array'}; cycle['items'] = cycle
+>       assert check_schema([], cycle) == 'unverifiable'
+E       AssertionError: assert 'valid' == 'unverifiable'
+E         
+E         - unverifiable
+E         + valid
+
+packages/backend/decision/tests/flows/test_basis_schema_attacks.py:75: AssertionError
+_____________ test_T57_profile_read_revoked_during_owner_callback ______________
+
+setup = (<pacthold.environment.Environment object at 0x7e380ba47b90>, <test_core_read_seam.Policy object at 0x7e380ba46ba0>, <....AgentProviders object at 0x7e380ba46270>, assembly=<pacthold.agents.assembly.AgentAssembly object at 0x7e380ba46210>))
+
+    def test_T57_profile_read_revoked_during_owner_callback(setup):
+        env, policy, owner, api = setup
+        profile = api.profiles.create(profile_id='revoked-source', display_name='Source',
+            manifest={'harnessDefinitionRef': DEF, 'schemaVersion': 'profile/1', 'declarations': []},
+            request=api.profiles.request_key('setup-revoked-profile'))
+        source = profile.current_manifest_ref.to_dict()
+        value = replace(input_for(api), source_refs=(source,))
+        revoked = set()
+        policy.admit_object_access = lambda principal, target, access: target not in revoked
+        owner.after = lambda: revoked.add('test:agents.profile:revoked-source')
+        _assessment_with_source_versions(owner)
+>       with pytest.raises(AdmissionRefusedError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE AdmissionRefusedError
+
+packages/backend/decision/tests/integration/test_core_read_seam.py:236: Failed
+_____ test_T57_separate_provider_source_changes_during_assessment[retire] ______
+
+setup = (<pacthold.environment.Environment object at 0x7e380ba798b0>, <test_core_read_seam.Policy object at 0x7e380ba79b50>, <....AgentProviders object at 0x7e380ba91370>, assembly=<pacthold.agents.assembly.AgentAssembly object at 0x7e380ba92ab0>))
+change = 'retire'
+
+    @pytest.mark.parametrize('change', ['retire', 'replace', 'descriptor'])
+    def test_T57_separate_provider_source_changes_during_assessment(setup, change):
+        env, policy, owner, api = setup
+        source_def = dict(DEF, definitionId='source-provider')
+        source_owner = Owner()
+        source_owner.descriptor = replace(source_owner.descriptor, provider_id='source-owner', definition_ref=source_def)
+        env.install(InstallationRecord('source.plugin','b'*64)); env.enable('source.plugin')
+        env.activate('source.plugin', AgentContributionSet(agent_runtime_providers=(source_owner,)))
+        old = api.providers.describe(source_def)
+        value = replace(input_for(api), source_refs=(source_def,))
+        def change_source():
+            if change == 'descriptor':
+                source_owner.descriptor = replace(source_owner.descriptor, implementation_digest='sha256:'+'c'*64)
+                return
+            activation = env.agent_runtime_contribution(source_def).owner_activation
+            env.drain(activation); assert env.retire(activation)[0] == 'retired'
+            if change == 'replace':
+                replacement = Owner()
+                replacement.descriptor = replace(source_owner.descriptor)
+                env.enable('source.plugin')
+                env.activate('source.plugin', AgentContributionSet(agent_runtime_providers=(replacement,)))
+                assert api.providers.describe(source_def)['providerRef'] != old['providerRef']
+        owner.after = change_source
+        _assessment_with_source_versions(owner)
+>       with pytest.raises((AdmissionRefusedError, GuaranteeUnavailableError)):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE any of (AdmissionRefusedError, GuaranteeUnavailableError)
+
+packages/backend/decision/tests/integration/test_core_read_seam.py:265: Failed
+_____ test_T57_separate_provider_source_changes_during_assessment[replace] _____
+
+setup = (<pacthold.environment.Environment object at 0x7e380ba89880>, <test_core_read_seam.Policy object at 0x7e380ba89700>, <....AgentProviders object at 0x7e380ba892b0>, assembly=<pacthold.agents.assembly.AgentAssembly object at 0x7e380ba89100>))
+change = 'replace'
+
+    @pytest.mark.parametrize('change', ['retire', 'replace', 'descriptor'])
+    def test_T57_separate_provider_source_changes_during_assessment(setup, change):
+        env, policy, owner, api = setup
+        source_def = dict(DEF, definitionId='source-provider')
+        source_owner = Owner()
+        source_owner.descriptor = replace(source_owner.descriptor, provider_id='source-owner', definition_ref=source_def)
+        env.install(InstallationRecord('source.plugin','b'*64)); env.enable('source.plugin')
+        env.activate('source.plugin', AgentContributionSet(agent_runtime_providers=(source_owner,)))
+        old = api.providers.describe(source_def)
+        value = replace(input_for(api), source_refs=(source_def,))
+        def change_source():
+            if change == 'descriptor':
+                source_owner.descriptor = replace(source_owner.descriptor, implementation_digest='sha256:'+'c'*64)
+                return
+            activation = env.agent_runtime_contribution(source_def).owner_activation
+            env.drain(activation); assert env.retire(activation)[0] == 'retired'
+            if change == 'replace':
+                replacement = Owner()
+                replacement.descriptor = replace(source_owner.descriptor)
+                env.enable('source.plugin')
+                env.activate('source.plugin', AgentContributionSet(agent_runtime_providers=(replacement,)))
+                assert api.providers.describe(source_def)['providerRef'] != old['providerRef']
+        owner.after = change_source
+        _assessment_with_source_versions(owner)
+>       with pytest.raises((AdmissionRefusedError, GuaranteeUnavailableError)):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE any of (AdmissionRefusedError, GuaranteeUnavailableError)
+
+packages/backend/decision/tests/integration/test_core_read_seam.py:265: Failed
+___ test_T57_separate_provider_source_changes_during_assessment[descriptor] ____
+
+setup = (<pacthold.environment.Environment object at 0x7e380ba9a840>, <test_core_read_seam.Policy object at 0x7e380ba99dc0>, <....AgentProviders object at 0x7e380ba985c0>, assembly=<pacthold.agents.assembly.AgentAssembly object at 0x7e380ba99340>))
+change = 'descriptor'
+
+    @pytest.mark.parametrize('change', ['retire', 'replace', 'descriptor'])
+    def test_T57_separate_provider_source_changes_during_assessment(setup, change):
+        env, policy, owner, api = setup
+        source_def = dict(DEF, definitionId='source-provider')
+        source_owner = Owner()
+        source_owner.descriptor = replace(source_owner.descriptor, provider_id='source-owner', definition_ref=source_def)
+        env.install(InstallationRecord('source.plugin','b'*64)); env.enable('source.plugin')
+        env.activate('source.plugin', AgentContributionSet(agent_runtime_providers=(source_owner,)))
+        old = api.providers.describe(source_def)
+        value = replace(input_for(api), source_refs=(source_def,))
+        def change_source():
+            if change == 'descriptor':
+                source_owner.descriptor = replace(source_owner.descriptor, implementation_digest='sha256:'+'c'*64)
+                return
+            activation = env.agent_runtime_contribution(source_def).owner_activation
+            env.drain(activation); assert env.retire(activation)[0] == 'retired'
+            if change == 'replace':
+                replacement = Owner()
+                replacement.descriptor = replace(source_owner.descriptor)
+                env.enable('source.plugin')
+                env.activate('source.plugin', AgentContributionSet(agent_runtime_providers=(replacement,)))
+                assert api.providers.describe(source_def)['providerRef'] != old['providerRef']
+        owner.after = change_source
+        _assessment_with_source_versions(owner)
+>       with pytest.raises((AdmissionRefusedError, GuaranteeUnavailableError)):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE any of (AdmissionRefusedError, GuaranteeUnavailableError)
+
+packages/backend/decision/tests/integration/test_core_read_seam.py:265: Failed
+=========================== short test summary info ============================
+FAILED packages/backend/decision/tests/flows/test_basis_schema_attacks.py::test_explicit_wrong_task_or_source_digest_is_rejected[0]
+FAILED packages/backend/decision/tests/flows/test_basis_schema_attacks.py::test_explicit_wrong_task_or_source_digest_is_rejected[1]
+FAILED packages/backend/decision/tests/flows/test_basis_schema_attacks.py::test_hard_check_explicit_source_digest_must_match[content_digest]
+FAILED packages/backend/decision/tests/flows/test_basis_schema_attacks.py::test_hard_check_explicit_source_digest_must_match[expected_digest]
+FAILED packages/backend/decision/tests/flows/test_basis_schema_attacks.py::test_absent_or_empty_schema_branches_cannot_hide_unsupported_declarations[value0-schema0]
+FAILED packages/backend/decision/tests/flows/test_basis_schema_attacks.py::test_absent_or_empty_schema_branches_cannot_hide_unsupported_declarations[value1-schema1]
+FAILED packages/backend/decision/tests/flows/test_basis_schema_attacks.py::test_absent_or_empty_schema_branches_cannot_hide_unsupported_declarations[value2-schema2]
+FAILED packages/backend/decision/tests/flows/test_basis_schema_attacks.py::test_absent_or_empty_schema_branches_cannot_hide_unsupported_declarations[value3-schema3]
+FAILED packages/backend/decision/tests/flows/test_basis_schema_attacks.py::test_absent_or_empty_schema_branches_cannot_hide_unsupported_declarations[value4-schema4]
+FAILED packages/backend/decision/tests/flows/test_basis_schema_attacks.py::test_schema_cycles_and_excessive_depth_are_unverifiable
+FAILED packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_profile_read_revoked_during_owner_callback
+FAILED packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_separate_provider_source_changes_during_assessment[retire]
+FAILED packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_separate_provider_source_changes_during_assessment[replace]
+FAILED packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_separate_provider_source_changes_during_assessment[descriptor]
+14 failed, 13 passed in 0.34s

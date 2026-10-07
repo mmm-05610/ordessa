@@ -1,0 +1,1203 @@
+{
+  "status": "PARTIAL",
+  "input_hash": "sha256:ddf5bb7593add979a08062808bf44694c792f6230d7b8b0f1b11083bdca61cfd",
+  "scope_id": "jev-stability-diagnostic-20261005",
+  "maximum_http_requests": 14,
+  "cases": [
+    {
+      "id": "capacity-64-plus-2-repeat-1",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:c77ad65fa98d1972f5a1dbdcad6d7add7164de23ce5426a87a4aec90c59155e2"
+      ]
+    },
+    {
+      "id": "capacity-64-plus-2-repeat-2",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:c77ad65fa98d1972f5a1dbdcad6d7add7164de23ce5426a87a4aec90c59155e2"
+      ]
+    },
+    {
+      "id": "capacity-64-plus-2-repeat-3",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:c77ad65fa98d1972f5a1dbdcad6d7add7164de23ce5426a87a4aec90c59155e2"
+      ]
+    },
+    {
+      "id": "capacity-64-plus-2-repeat-4",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:c77ad65fa98d1972f5a1dbdcad6d7add7164de23ce5426a87a4aec90c59155e2"
+      ]
+    },
+    {
+      "id": "capacity-64-plus-2-repeat-5",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:c77ad65fa98d1972f5a1dbdcad6d7add7164de23ce5426a87a4aec90c59155e2"
+      ]
+    },
+    {
+      "id": "capacity-64-plus-2-repeat-6",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:c77ad65fa98d1972f5a1dbdcad6d7add7164de23ce5426a87a4aec90c59155e2"
+      ]
+    },
+    {
+      "id": "capacity-64-plus-2-repeat-7",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:c77ad65fa98d1972f5a1dbdcad6d7add7164de23ce5426a87a4aec90c59155e2"
+      ]
+    },
+    {
+      "id": "capacity-64-plus-2-repeat-8",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:c77ad65fa98d1972f5a1dbdcad6d7add7164de23ce5426a87a4aec90c59155e2"
+      ]
+    },
+    {
+      "id": "churn-en-positive-repeat-1",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:5ca4b522c4671c311010a8c85d515ad2dcfb9280e67fd785ed04d49107cf40e4"
+      ]
+    },
+    {
+      "id": "churn-en-positive-repeat-2",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:5ca4b522c4671c311010a8c85d515ad2dcfb9280e67fd785ed04d49107cf40e4"
+      ]
+    },
+    {
+      "id": "churn-en-positive-repeat-3",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:5ca4b522c4671c311010a8c85d515ad2dcfb9280e67fd785ed04d49107cf40e4"
+      ]
+    },
+    {
+      "id": "churn-en-positive-repeat-4",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:5ca4b522c4671c311010a8c85d515ad2dcfb9280e67fd785ed04d49107cf40e4"
+      ]
+    },
+    {
+      "id": "churn-en-negative-repeat-1",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:9277478a12b17a5a516a13d32fc3a803524788ab3b962e7f7399728ec9a49f2a"
+      ]
+    },
+    {
+      "id": "churn-en-negative-repeat-2",
+      "status": "NOT_RUN",
+      "question_digests": [
+        "sha256:9277478a12b17a5a516a13d32fc3a803524788ab3b962e7f7399728ec9a49f2a"
+      ]
+    }
+  ],
+  "credential_reads": 1,
+  "actual_http_requests": 14,
+  "rows": [
+    {
+      "id": "capacity-64-plus-2-repeat-1",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "candidate",
+          "kind": "choice",
+          "value": "candidate_00",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:c77ad65fa98d1972f5a1dbdcad6d7add7164de23ce5426a87a4aec90c59155e2",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "candidate_06": 0.0,
+              "candidate_02": 0.0,
+              "candidate_57": 0.0,
+              "candidate_21": 0.0,
+              "candidate_29": 0.0,
+              "candidate_45": 0.0,
+              "candidate_59": 0.0,
+              "candidate_46": 0.0,
+              "candidate_13": 0.0,
+              "candidate_40": 0.0,
+              "none_suitable": 0.03,
+              "candidate_52": 0.0,
+              "candidate_51": 0.0,
+              "candidate_14": 0.0,
+              "candidate_03": 0.0,
+              "candidate_37": 0.0,
+              "candidate_38": 0.0,
+              "candidate_15": 0.0,
+              "candidate_50": 0.0,
+              "candidate_20": 0.0,
+              "candidate_48": 0.0,
+              "candidate_47": 0.0,
+              "candidate_56": 0.0,
+              "candidate_00": 0.84,
+              "candidate_60": 0.0,
+              "candidate_33": 0.0,
+              "candidate_05": 0.0,
+              "candidate_22": 0.0,
+              "candidate_54": 0.0,
+              "candidate_12": 0.0,
+              "candidate_63": 0.0,
+              "candidate_36": 0.0,
+              "candidate_17": 0.0,
+              "candidate_01": 0.04,
+              "candidate_11": 0.0,
+              "candidate_41": 0.0,
+              "candidate_42": 0.0,
+              "candidate_08": 0.0,
+              "candidate_53": 0.0,
+              "candidate_24": 0.0,
+              "candidate_35": 0.0,
+              "candidate_39": 0.0,
+              "candidate_61": 0.0,
+              "candidate_23": 0.0,
+              "candidate_19": 0.0,
+              "candidate_34": 0.0,
+              "candidate_10": 0.0,
+              "candidate_30": 0.0,
+              "candidate_49": 0.0,
+              "candidate_32": 0.0,
+              "candidate_58": 0.0,
+              "candidate_16": 0.0,
+              "candidate_18": 0.0,
+              "candidate_55": 0.0,
+              "insufficient_evidence": 0.09,
+              "candidate_09": 0.0,
+              "candidate_62": 0.0,
+              "candidate_28": 0.0,
+              "candidate_31": 0.0,
+              "candidate_44": 0.0,
+              "candidate_07": 0.0,
+              "candidate_25": 0.0,
+              "candidate_04": 0.0,
+              "candidate_43": 0.0,
+              "candidate_27": 0.0,
+              "candidate_26": 0.0
+            },
+            "confidence": 0.83,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 2362,
+            "output_tokens": 683
+          }
+        }
+      ],
+      "run_id": "d2921cf4-3bf5-4f2a-9b03-997f06ee8302",
+      "result_digest": "sha256:f31fba5617e231f21a7b733169fcc966a87829cd4783b8729516203588d7c806",
+      "terminal_verified": true,
+      "actual": {
+        "candidate": "candidate_00"
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "capacity-64-plus-2-repeat-2",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "candidate",
+          "kind": "choice",
+          "value": "candidate_00",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:c77ad65fa98d1972f5a1dbdcad6d7add7164de23ce5426a87a4aec90c59155e2",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "candidate_19": 0.0,
+              "candidate_00": 0.86,
+              "candidate_28": 0.0,
+              "candidate_35": 0.0,
+              "candidate_39": 0.0,
+              "candidate_01": 0.03,
+              "none_suitable": 0.02,
+              "candidate_53": 0.0,
+              "candidate_33": 0.0,
+              "candidate_22": 0.0,
+              "candidate_12": 0.0,
+              "candidate_13": 0.0,
+              "candidate_62": 0.0,
+              "candidate_30": 0.0,
+              "candidate_58": 0.0,
+              "candidate_46": 0.0,
+              "candidate_14": 0.0,
+              "candidate_05": 0.0,
+              "candidate_18": 0.0,
+              "candidate_57": 0.0,
+              "candidate_56": 0.0,
+              "candidate_09": 0.0,
+              "candidate_59": 0.0,
+              "candidate_40": 0.0,
+              "candidate_29": 0.0,
+              "candidate_47": 0.0,
+              "candidate_45": 0.0,
+              "candidate_20": 0.0,
+              "candidate_02": 0.0,
+              "candidate_44": 0.0,
+              "candidate_08": 0.0,
+              "candidate_38": 0.0,
+              "candidate_03": 0.0,
+              "candidate_49": 0.0,
+              "candidate_37": 0.0,
+              "candidate_63": 0.0,
+              "insufficient_evidence": 0.09,
+              "candidate_11": 0.0,
+              "candidate_54": 0.0,
+              "candidate_55": 0.0,
+              "candidate_26": 0.0,
+              "candidate_60": 0.0,
+              "candidate_36": 0.0,
+              "candidate_31": 0.0,
+              "candidate_15": 0.0,
+              "candidate_48": 0.0,
+              "candidate_17": 0.0,
+              "candidate_32": 0.0,
+              "candidate_27": 0.0,
+              "candidate_52": 0.0,
+              "candidate_51": 0.0,
+              "candidate_43": 0.0,
+              "candidate_07": 0.0,
+              "candidate_16": 0.0,
+              "candidate_10": 0.0,
+              "candidate_06": 0.0,
+              "candidate_61": 0.0,
+              "candidate_21": 0.0,
+              "candidate_04": 0.0,
+              "candidate_42": 0.0,
+              "candidate_25": 0.0,
+              "candidate_41": 0.0,
+              "candidate_34": 0.0,
+              "candidate_24": 0.0,
+              "candidate_23": 0.0,
+              "candidate_50": 0.0
+            },
+            "confidence": 0.85,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 2362,
+            "output_tokens": 683
+          }
+        }
+      ],
+      "run_id": "02a6b4e9-0692-4767-9aac-9b5559fc6f14",
+      "result_digest": "sha256:5786b478c6a6891dfa0f6082b647d370863156deb06713c9b6d3f5d72b8f8ebe",
+      "terminal_verified": true,
+      "actual": {
+        "candidate": "candidate_00"
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "capacity-64-plus-2-repeat-3",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "candidate",
+          "kind": "choice",
+          "value": "candidate_00",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:c77ad65fa98d1972f5a1dbdcad6d7add7164de23ce5426a87a4aec90c59155e2",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "candidate_00": 0.84,
+              "candidate_21": 0.0,
+              "candidate_18": 0.0,
+              "candidate_05": 0.0,
+              "candidate_47": 0.0,
+              "insufficient_evidence": 0.09999999999999999,
+              "candidate_26": 0.0,
+              "candidate_57": 0.0,
+              "candidate_46": 0.0,
+              "candidate_37": 0.0,
+              "candidate_14": 0.0,
+              "candidate_16": 0.0,
+              "candidate_44": 0.0,
+              "candidate_29": 0.0,
+              "candidate_51": 0.0,
+              "candidate_43": 0.0,
+              "candidate_33": 0.0,
+              "candidate_09": 0.0,
+              "candidate_22": 0.0,
+              "candidate_27": 0.0,
+              "candidate_45": 0.0,
+              "candidate_59": 0.0,
+              "candidate_30": 0.0,
+              "candidate_07": 0.0,
+              "candidate_11": 0.0,
+              "candidate_15": 0.0,
+              "candidate_34": 0.0,
+              "candidate_03": 0.0,
+              "candidate_01": 0.03,
+              "candidate_35": 0.0,
+              "candidate_10": 0.0,
+              "candidate_50": 0.0,
+              "candidate_39": 0.0,
+              "candidate_55": 0.0,
+              "candidate_61": 0.0,
+              "candidate_49": 0.0,
+              "candidate_41": 0.0,
+              "candidate_28": 0.0,
+              "candidate_06": 0.0,
+              "candidate_08": 0.0,
+              "candidate_62": 0.0,
+              "candidate_20": 0.0,
+              "candidate_13": 0.0,
+              "none_suitable": 0.03,
+              "candidate_48": 0.0,
+              "candidate_54": 0.0,
+              "candidate_42": 0.0,
+              "candidate_38": 0.0,
+              "candidate_02": 0.0,
+              "candidate_53": 0.0,
+              "candidate_12": 0.0,
+              "candidate_32": 0.0,
+              "candidate_24": 0.0,
+              "candidate_60": 0.0,
+              "candidate_31": 0.0,
+              "candidate_52": 0.0,
+              "candidate_25": 0.0,
+              "candidate_40": 0.0,
+              "candidate_36": 0.0,
+              "candidate_63": 0.0,
+              "candidate_56": 0.0,
+              "candidate_58": 0.0,
+              "candidate_04": 0.0,
+              "candidate_17": 0.0,
+              "candidate_19": 0.0,
+              "candidate_23": 0.0
+            },
+            "confidence": 0.83,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 2362,
+            "output_tokens": 683
+          }
+        }
+      ],
+      "run_id": "229e6732-4e61-46ea-881a-6c9d68cc56db",
+      "result_digest": "sha256:9f4adfa30c1ec050463b5ace45cfb1403d6e66fc123af1bc89ad079d206792f1",
+      "terminal_verified": true,
+      "actual": {
+        "candidate": "candidate_00"
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "capacity-64-plus-2-repeat-4",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "candidate",
+          "kind": "choice",
+          "value": "candidate_00",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:c77ad65fa98d1972f5a1dbdcad6d7add7164de23ce5426a87a4aec90c59155e2",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "candidate_56": 0.0,
+              "candidate_18": 0.0,
+              "candidate_08": 0.0,
+              "candidate_01": 0.03,
+              "candidate_05": 0.0,
+              "none_suitable": 0.03,
+              "candidate_36": 0.0,
+              "candidate_60": 0.0,
+              "candidate_33": 0.0,
+              "candidate_06": 0.0,
+              "candidate_19": 0.0,
+              "candidate_30": 0.0,
+              "candidate_43": 0.0,
+              "candidate_27": 0.0,
+              "candidate_49": 0.0,
+              "candidate_51": 0.0,
+              "candidate_21": 0.0,
+              "candidate_04": 0.0,
+              "candidate_00": 0.85,
+              "candidate_40": 0.0,
+              "candidate_02": 0.0,
+              "candidate_28": 0.0,
+              "candidate_59": 0.0,
+              "candidate_20": 0.0,
+              "candidate_45": 0.0,
+              "candidate_13": 0.0,
+              "candidate_39": 0.0,
+              "candidate_07": 0.0,
+              "candidate_23": 0.0,
+              "candidate_42": 0.0,
+              "candidate_48": 0.0,
+              "candidate_25": 0.0,
+              "candidate_61": 0.0,
+              "candidate_26": 0.0,
+              "candidate_50": 0.0,
+              "candidate_31": 0.0,
+              "insufficient_evidence": 0.09,
+              "candidate_24": 0.0,
+              "candidate_34": 0.0,
+              "candidate_29": 0.0,
+              "candidate_53": 0.0,
+              "candidate_57": 0.0,
+              "candidate_41": 0.0,
+              "candidate_15": 0.0,
+              "candidate_46": 0.0,
+              "candidate_09": 0.0,
+              "candidate_63": 0.0,
+              "candidate_52": 0.0,
+              "candidate_62": 0.0,
+              "candidate_44": 0.0,
+              "candidate_37": 0.0,
+              "candidate_12": 0.0,
+              "candidate_54": 0.0,
+              "candidate_10": 0.0,
+              "candidate_35": 0.0,
+              "candidate_22": 0.0,
+              "candidate_17": 0.0,
+              "candidate_03": 0.0,
+              "candidate_16": 0.0,
+              "candidate_55": 0.0,
+              "candidate_38": 0.0,
+              "candidate_47": 0.0,
+              "candidate_58": 0.0,
+              "candidate_14": 0.0,
+              "candidate_32": 0.0,
+              "candidate_11": 0.0
+            },
+            "confidence": 0.84,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 2362,
+            "output_tokens": 683
+          }
+        }
+      ],
+      "run_id": "787df430-2a81-4ac4-ac57-1435951b803d",
+      "result_digest": "sha256:06ff527d189b7578ce71c2eb80b4310a887731fef7de34dd28e4844576854a8f",
+      "terminal_verified": true,
+      "actual": {
+        "candidate": "candidate_00"
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "capacity-64-plus-2-repeat-5",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "candidate",
+          "kind": "choice",
+          "value": "candidate_00",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:c77ad65fa98d1972f5a1dbdcad6d7add7164de23ce5426a87a4aec90c59155e2",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "candidate_58": 0.0,
+              "candidate_41": 0.0,
+              "candidate_37": 0.0,
+              "candidate_49": 0.0,
+              "candidate_40": 0.0,
+              "candidate_53": 0.0,
+              "candidate_25": 0.0,
+              "candidate_16": 0.0,
+              "candidate_61": 0.0,
+              "candidate_39": 0.0,
+              "candidate_18": 0.0,
+              "candidate_34": 0.0,
+              "candidate_01": 0.04,
+              "candidate_08": 0.0,
+              "candidate_27": 0.0,
+              "candidate_21": 0.0,
+              "candidate_24": 0.0,
+              "candidate_28": 0.0,
+              "candidate_11": 0.0,
+              "candidate_59": 0.0,
+              "candidate_04": 0.0,
+              "candidate_22": 0.0,
+              "candidate_12": 0.0,
+              "candidate_44": 0.0,
+              "candidate_50": 0.0,
+              "candidate_43": 0.0,
+              "candidate_60": 0.0,
+              "candidate_62": 0.0,
+              "candidate_47": 0.0,
+              "candidate_14": 0.0,
+              "candidate_45": 0.0,
+              "none_suitable": 0.03,
+              "candidate_51": 0.0,
+              "candidate_35": 0.0,
+              "candidate_48": 0.0,
+              "candidate_23": 0.0,
+              "candidate_46": 0.0,
+              "candidate_33": 0.0,
+              "candidate_56": 0.0,
+              "candidate_26": 0.0,
+              "candidate_15": 0.0,
+              "candidate_20": 0.0,
+              "candidate_32": 0.0,
+              "insufficient_evidence": 0.09,
+              "candidate_13": 0.0,
+              "candidate_17": 0.0,
+              "candidate_63": 0.0,
+              "candidate_55": 0.0,
+              "candidate_05": 0.0,
+              "candidate_02": 0.0,
+              "candidate_57": 0.0,
+              "candidate_03": 0.0,
+              "candidate_19": 0.0,
+              "candidate_06": 0.0,
+              "candidate_54": 0.0,
+              "candidate_30": 0.0,
+              "candidate_10": 0.0,
+              "candidate_00": 0.84,
+              "candidate_38": 0.0,
+              "candidate_07": 0.0,
+              "candidate_36": 0.0,
+              "candidate_52": 0.0,
+              "candidate_09": 0.0,
+              "candidate_31": 0.0,
+              "candidate_42": 0.0,
+              "candidate_29": 0.0
+            },
+            "confidence": 0.82,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 2362,
+            "output_tokens": 683
+          }
+        }
+      ],
+      "run_id": "1f2e8348-1e2f-4f46-bba6-147af7329fe5",
+      "result_digest": "sha256:9d60e009ada5918fee6fb1793f5a9eb53ea5cd016eab531c0b9906d1a59cb4e6",
+      "terminal_verified": true,
+      "actual": {
+        "candidate": "candidate_00"
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "capacity-64-plus-2-repeat-6",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "candidate",
+          "kind": "choice",
+          "value": "candidate_00",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:c77ad65fa98d1972f5a1dbdcad6d7add7164de23ce5426a87a4aec90c59155e2",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "candidate_51": 0.0,
+              "candidate_12": 0.0,
+              "none_suitable": 0.03,
+              "candidate_29": 0.0,
+              "candidate_15": 0.0,
+              "candidate_54": 0.0,
+              "candidate_50": 0.0,
+              "candidate_13": 0.0,
+              "candidate_17": 0.0,
+              "candidate_10": 0.0,
+              "candidate_49": 0.0,
+              "candidate_37": 0.0,
+              "candidate_41": 0.0,
+              "candidate_31": 0.0,
+              "candidate_26": 0.0,
+              "candidate_25": 0.0,
+              "candidate_60": 0.0,
+              "candidate_30": 0.0,
+              "candidate_05": 0.0,
+              "candidate_62": 0.0,
+              "candidate_22": 0.0,
+              "candidate_53": 0.0,
+              "candidate_19": 0.0,
+              "candidate_38": 0.0,
+              "candidate_56": 0.0,
+              "candidate_52": 0.0,
+              "candidate_32": 0.0,
+              "candidate_36": 0.0,
+              "candidate_47": 0.0,
+              "candidate_59": 0.0,
+              "candidate_16": 0.0,
+              "candidate_55": 0.0,
+              "candidate_11": 0.0,
+              "candidate_34": 0.0,
+              "candidate_27": 0.0,
+              "candidate_00": 0.84,
+              "candidate_09": 0.0,
+              "candidate_57": 0.0,
+              "candidate_61": 0.0,
+              "candidate_21": 0.0,
+              "candidate_42": 0.0,
+              "candidate_06": 0.0,
+              "candidate_20": 0.0,
+              "insufficient_evidence": 0.09999999999999999,
+              "candidate_44": 0.0,
+              "candidate_07": 0.0,
+              "candidate_45": 0.0,
+              "candidate_08": 0.0,
+              "candidate_33": 0.0,
+              "candidate_28": 0.0,
+              "candidate_18": 0.0,
+              "candidate_14": 0.0,
+              "candidate_39": 0.0,
+              "candidate_58": 0.0,
+              "candidate_24": 0.0,
+              "candidate_48": 0.0,
+              "candidate_02": 0.0,
+              "candidate_23": 0.0,
+              "candidate_40": 0.0,
+              "candidate_03": 0.0,
+              "candidate_63": 0.0,
+              "candidate_01": 0.03,
+              "candidate_43": 0.0,
+              "candidate_04": 0.0,
+              "candidate_46": 0.0,
+              "candidate_35": 0.0
+            },
+            "confidence": 0.83,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 2362,
+            "output_tokens": 683
+          }
+        }
+      ],
+      "run_id": "f3035e3e-5bf2-4cc8-99e9-47f2aa5c6c6a",
+      "result_digest": "sha256:39c04c804fbfcd361814df1827d59688a856e781731652e50cf18cbc9fcc518a",
+      "terminal_verified": true,
+      "actual": {
+        "candidate": "candidate_00"
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "capacity-64-plus-2-repeat-7",
+      "technical_status": "failed",
+      "quality_pass": false,
+      "answers": [],
+      "provider_error": "protocol_invalid",
+      "protocol_diagnostic": "probability_sum",
+      "run_id": "22b3f2bc-8e25-4ebf-a06b-218d14c9c7b0",
+      "result_digest": "sha256:43ba58818dcbf5098306e28e95040269378d7a15e4c01b4aa540a73344c403ac",
+      "terminal_verified": true
+    },
+    {
+      "id": "capacity-64-plus-2-repeat-8",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "candidate",
+          "kind": "choice",
+          "value": "candidate_00",
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:c77ad65fa98d1972f5a1dbdcad6d7add7164de23ce5426a87a4aec90c59155e2",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b",
+            "probabilities": {
+              "candidate_15": 0.0,
+              "candidate_39": 0.0,
+              "candidate_24": 0.0,
+              "candidate_23": 0.0,
+              "candidate_11": 0.0,
+              "candidate_26": 0.0,
+              "candidate_60": 0.0,
+              "candidate_38": 0.0,
+              "candidate_62": 0.0,
+              "candidate_49": 0.0,
+              "candidate_48": 0.0,
+              "candidate_32": 0.0,
+              "candidate_12": 0.0,
+              "candidate_25": 0.0,
+              "candidate_51": 0.0,
+              "insufficient_evidence": 0.09999999999999999,
+              "candidate_31": 0.0,
+              "candidate_00": 0.83,
+              "candidate_10": 0.0,
+              "candidate_07": 0.0,
+              "candidate_41": 0.0,
+              "candidate_50": 0.0,
+              "candidate_21": 0.0,
+              "candidate_14": 0.0,
+              "candidate_27": 0.0,
+              "candidate_36": 0.0,
+              "candidate_17": 0.0,
+              "none_suitable": 0.03,
+              "candidate_06": 0.0,
+              "candidate_44": 0.0,
+              "candidate_29": 0.0,
+              "candidate_04": 0.0,
+              "candidate_54": 0.0,
+              "candidate_56": 0.0,
+              "candidate_09": 0.0,
+              "candidate_18": 0.0,
+              "candidate_19": 0.0,
+              "candidate_03": 0.0,
+              "candidate_34": 0.0,
+              "candidate_28": 0.0,
+              "candidate_46": 0.0,
+              "candidate_52": 0.0,
+              "candidate_33": 0.0,
+              "candidate_08": 0.0,
+              "candidate_13": 0.0,
+              "candidate_40": 0.0,
+              "candidate_37": 0.0,
+              "candidate_05": 0.0,
+              "candidate_59": 0.0,
+              "candidate_02": 0.0,
+              "candidate_53": 0.0,
+              "candidate_63": 0.01,
+              "candidate_42": 0.0,
+              "candidate_20": 0.0,
+              "candidate_35": 0.0,
+              "candidate_57": 0.0,
+              "candidate_16": 0.0,
+              "candidate_01": 0.03,
+              "candidate_22": 0.0,
+              "candidate_45": 0.0,
+              "candidate_43": 0.0,
+              "candidate_47": 0.0,
+              "candidate_61": 0.0,
+              "candidate_30": 0.0,
+              "candidate_58": 0.0,
+              "candidate_55": 0.0
+            },
+            "confidence": 0.82,
+            "selection_status": "unique",
+            "tied_option_ids": []
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 2362,
+            "output_tokens": 683
+          }
+        }
+      ],
+      "run_id": "ca497041-b178-46a9-9dfb-fb297df42dc3",
+      "result_digest": "sha256:a8f0f5bece367ccc7d8fc712f30e5d9c849a6065439be20449eb4f201e8352f8",
+      "terminal_verified": true,
+      "actual": {
+        "candidate": "candidate_00"
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "churn-en-positive-repeat-1",
+      "technical_status": "completed",
+      "quality_pass": false,
+      "answers": [
+        {
+          "question_id": "churn",
+          "kind": "noul",
+          "value": 0.44,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:5ca4b522c4671c311010a8c85d515ad2dcfb9280e67fd785ed04d49107cf40e4",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b"
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 298,
+            "output_tokens": 21
+          }
+        }
+      ],
+      "run_id": "cd7e0136-c936-419a-9a6d-cb804b9cc6c7",
+      "result_digest": "sha256:67bd42df0ce528fa267f87b3d4e4ae21081933882c91e9a787b3b349d4dc04b7",
+      "terminal_verified": true,
+      "actual": {
+        "churn": 0.44
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "churn-en-positive-repeat-2",
+      "technical_status": "completed",
+      "quality_pass": false,
+      "answers": [
+        {
+          "question_id": "churn",
+          "kind": "noul",
+          "value": 0.39,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:5ca4b522c4671c311010a8c85d515ad2dcfb9280e67fd785ed04d49107cf40e4",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b"
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 298,
+            "output_tokens": 21
+          }
+        }
+      ],
+      "run_id": "f5382b55-f4b1-4ac3-bfc0-e11d2e2146a8",
+      "result_digest": "sha256:dca2a3beb640a518e090876a83db18324f3b826b9d7d5671fabc6bc2a9088962",
+      "terminal_verified": true,
+      "actual": {
+        "churn": 0.39
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "churn-en-positive-repeat-3",
+      "technical_status": "completed",
+      "quality_pass": false,
+      "answers": [
+        {
+          "question_id": "churn",
+          "kind": "noul",
+          "value": 0.43,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:5ca4b522c4671c311010a8c85d515ad2dcfb9280e67fd785ed04d49107cf40e4",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b"
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 298,
+            "output_tokens": 21
+          }
+        }
+      ],
+      "run_id": "d0cd973b-9451-437d-a769-28f61cbfd6b9",
+      "result_digest": "sha256:b40fc44adcf99597be662635854927d115541a08d01e00700f1e5bab3fd1bf03",
+      "terminal_verified": true,
+      "actual": {
+        "churn": 0.43
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "churn-en-positive-repeat-4",
+      "technical_status": "completed",
+      "quality_pass": false,
+      "answers": [
+        {
+          "question_id": "churn",
+          "kind": "noul",
+          "value": 0.42,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:5ca4b522c4671c311010a8c85d515ad2dcfb9280e67fd785ed04d49107cf40e4",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b"
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 298,
+            "output_tokens": 21
+          }
+        }
+      ],
+      "run_id": "ec2fb6d4-e2ec-4361-b667-927be8bc975a",
+      "result_digest": "sha256:c3c111f1ffedc8c788df7dbe3b002964cffe99bfcc9e2533e248a5f3f2e0a61e",
+      "terminal_verified": true,
+      "actual": {
+        "churn": 0.42
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "churn-en-negative-repeat-1",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "churn",
+          "kind": "noul",
+          "value": 0.03,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:9277478a12b17a5a516a13d32fc3a803524788ab3b962e7f7399728ec9a49f2a",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b"
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 300,
+            "output_tokens": 21
+          }
+        }
+      ],
+      "run_id": "ab8f246b-3fba-422d-b7d4-9c05fb5deb63",
+      "result_digest": "sha256:7a2d466cfa86b66b3d2d46ff5da13f57d66d2102990a7fe16349b46cea4b9371",
+      "terminal_verified": true,
+      "actual": {
+        "churn": 0.03
+      },
+      "quality_source": "model"
+    },
+    {
+      "id": "churn-en-negative-repeat-2",
+      "technical_status": "completed",
+      "quality_pass": true,
+      "answers": [
+        {
+          "question_id": "churn",
+          "kind": "noul",
+          "value": 0.02,
+          "provider_receipt": {
+            "resolved_model": "jev-1.13-free",
+            "requested_model": "jev-1.13-free",
+            "protocol_validation_version": "jev-protocol/1",
+            "question_digest": "sha256:9277478a12b17a5a516a13d32fc3a803524788ab3b962e7f7399728ec9a49f2a",
+            "provider_settings_digest": "sha256:a94516030677f3a2fa79a1dca6eaff3f6d31bda1f21b0baeb2485c821122ef7b"
+          },
+          "usage_evidence": {
+            "status": "reported",
+            "input_tokens": 300,
+            "output_tokens": 21
+          }
+        }
+      ],
+      "run_id": "ea550323-b15e-4228-b54e-ad84b059bf95",
+      "result_digest": "sha256:d7219ec89aac82d3b76661ece3f638b36b3020a1bcee9a55c60a2ab74c2db388",
+      "terminal_verified": true,
+      "actual": {
+        "churn": 0.02
+      },
+      "quality_source": "model"
+    }
+  ],
+  "retry": 0,
+  "native_effects": 0,
+  "cost": "UNKNOWN",
+  "evaluation_mode": "live_https",
+  "elapsed_seconds": 11.5082,
+  "http_audit": [
+    {
+      "case_id": "capacity-64-plus-2-repeat-1",
+      "attempt": 1,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.392
+    },
+    {
+      "case_id": "capacity-64-plus-2-repeat-2",
+      "attempt": 2,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.7118
+    },
+    {
+      "case_id": "capacity-64-plus-2-repeat-3",
+      "attempt": 3,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6609
+    },
+    {
+      "case_id": "capacity-64-plus-2-repeat-4",
+      "attempt": 4,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6714
+    },
+    {
+      "case_id": "capacity-64-plus-2-repeat-5",
+      "attempt": 5,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6163
+    },
+    {
+      "case_id": "capacity-64-plus-2-repeat-6",
+      "attempt": 6,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.935
+    },
+    {
+      "case_id": "capacity-64-plus-2-repeat-7",
+      "attempt": 7,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.9745
+    },
+    {
+      "case_id": "capacity-64-plus-2-repeat-8",
+      "attempt": 8,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6672
+    },
+    {
+      "case_id": "churn-en-positive-repeat-1",
+      "attempt": 9,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.8175
+    },
+    {
+      "case_id": "churn-en-positive-repeat-2",
+      "attempt": 10,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6312
+    },
+    {
+      "case_id": "churn-en-positive-repeat-3",
+      "attempt": 11,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.8193
+    },
+    {
+      "case_id": "churn-en-positive-repeat-4",
+      "attempt": 12,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.637
+    },
+    {
+      "case_id": "churn-en-negative-repeat-1",
+      "attempt": 13,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6768
+    },
+    {
+      "case_id": "churn-en-negative-repeat-2",
+      "attempt": 14,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6254
+    }
+  ],
+  "transport_attempts": 14,
+  "real_model_requests": 14,
+  "usage": [
+    {
+      "status": "reported",
+      "input_tokens": 2362,
+      "output_tokens": 683
+    },
+    {
+      "status": "reported",
+      "input_tokens": 2362,
+      "output_tokens": 683
+    },
+    {
+      "status": "reported",
+      "input_tokens": 2362,
+      "output_tokens": 683
+    },
+    {
+      "status": "reported",
+      "input_tokens": 2362,
+      "output_tokens": 683
+    },
+    {
+      "status": "reported",
+      "input_tokens": 2362,
+      "output_tokens": 683
+    },
+    {
+      "status": "reported",
+      "input_tokens": 2362,
+      "output_tokens": 683
+    },
+    {
+      "status": "reported",
+      "input_tokens": 2362,
+      "output_tokens": 683
+    },
+    {
+      "status": "reported",
+      "input_tokens": 298,
+      "output_tokens": 21
+    },
+    {
+      "status": "reported",
+      "input_tokens": 298,
+      "output_tokens": 21
+    },
+    {
+      "status": "reported",
+      "input_tokens": 298,
+      "output_tokens": 21
+    },
+    {
+      "status": "reported",
+      "input_tokens": 298,
+      "output_tokens": 21
+    },
+    {
+      "status": "reported",
+      "input_tokens": 300,
+      "output_tokens": 21
+    },
+    {
+      "status": "reported",
+      "input_tokens": 300,
+      "output_tokens": 21
+    }
+  ],
+  "usage_unknown_requests": 1,
+  "model_quality_passes": 9,
+  "controlled_label_matches": 0,
+  "hard_rule_cases": 0,
+  "technical_counts": {
+    "completed": 13,
+    "failed": 1
+  }
+}

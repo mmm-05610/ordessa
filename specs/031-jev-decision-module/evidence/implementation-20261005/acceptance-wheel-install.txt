@@ -1,0 +1,53 @@
+Looking in links: /home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.decision-tmp/wheels
+Processing ./.decision-tmp/dist/ordessa_decision-0.1.0-py3-none-any.whl
+Processing ./.decision-tmp/wheels/pydantic_graph-2.54.0-py3-none-any.whl (from ordessa-decision==0.1.0)
+Processing ./.decision-tmp/wheels/anyio-4.15.1-py3-none-any.whl (from pydantic-graph==2.54.0->ordessa-decision==0.1.0)
+Processing ./.decision-tmp/wheels/logfire_api-5.1.1-py3-none-any.whl (from pydantic-graph==2.54.0->ordessa-decision==0.1.0)
+Processing ./.decision-tmp/wheels/pydantic-2.13.5-py3-none-any.whl (from pydantic-graph==2.54.0->ordessa-decision==0.1.0)
+Processing ./.decision-tmp/wheels/typing_inspection-0.4.4-py3-none-any.whl (from pydantic-graph==2.54.0->ordessa-decision==0.1.0)
+Processing ./.decision-tmp/wheels/idna-3.20-py3-none-any.whl (from anyio>=4.7.0->pydantic-graph==2.54.0->ordessa-decision==0.1.0)
+Processing ./.decision-tmp/wheels/typing_extensions-4.16.0-py3-none-any.whl (from anyio>=4.7.0->pydantic-graph==2.54.0->ordessa-decision==0.1.0)
+Processing ./.decision-tmp/wheels/annotated_types-0.8.0-py3-none-any.whl (from pydantic>=2.12->pydantic-graph==2.54.0->ordessa-decision==0.1.0)
+Processing ./.decision-tmp/wheels/pydantic_core-2.46.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (from pydantic>=2.12->pydantic-graph==2.54.0->ordessa-decision==0.1.0)
+Installing collected packages: typing_extensions, logfire-api, idna, annotated-types, typing-inspection, pydantic-core, anyio, pydantic, pydantic-graph, ordessa-decision
+  Attempting uninstall: typing_extensions
+    Found existing installation: typing_extensions 4.16.0
+    Uninstalling typing_extensions-4.16.0:
+      Successfully uninstalled typing_extensions-4.16.0
+  Attempting uninstall: logfire-api
+    Found existing installation: logfire-api 5.1.1
+    Uninstalling logfire-api-5.1.1:
+      Successfully uninstalled logfire-api-5.1.1
+  Attempting uninstall: idna
+    Found existing installation: idna 3.20
+    Uninstalling idna-3.20:
+      Successfully uninstalled idna-3.20
+  Attempting uninstall: annotated-types
+    Found existing installation: annotated-types 0.8.0
+    Uninstalling annotated-types-0.8.0:
+      Successfully uninstalled annotated-types-0.8.0
+  Attempting uninstall: typing-inspection
+    Found existing installation: typing-inspection 0.4.4
+    Uninstalling typing-inspection-0.4.4:
+      Successfully uninstalled typing-inspection-0.4.4
+  Attempting uninstall: pydantic-core
+    Found existing installation: pydantic_core 2.46.5
+    Uninstalling pydantic_core-2.46.5:
+      Successfully uninstalled pydantic_core-2.46.5
+  Attempting uninstall: anyio
+    Found existing installation: anyio 4.15.1
+    Uninstalling anyio-4.15.1:
+      Successfully uninstalled anyio-4.15.1
+  Attempting uninstall: pydantic
+    Found existing installation: pydantic 2.13.5
+    Uninstalling pydantic-2.13.5:
+      Successfully uninstalled pydantic-2.13.5
+  Attempting uninstall: pydantic-graph
+    Found existing installation: pydantic-graph 2.54.0
+    Uninstalling pydantic-graph-2.54.0:
+      Successfully uninstalled pydantic-graph-2.54.0
+  Attempting uninstall: ordessa-decision
+    Found existing installation: ordessa-decision 0.1.0
+    Uninstalling ordessa-decision-0.1.0:
+      Successfully uninstalled ordessa-decision-0.1.0
+Successfully installed annotated-types-0.8.0 anyio-4.15.1 idna-3.20 logfire-api-5.1.1 ordessa-decision-0.1.0 pydantic-2.13.5 pydantic-core-2.46.5 pydantic-graph-2.54.0 typing-inspection-0.4.4 typing_extensions-4.16.0

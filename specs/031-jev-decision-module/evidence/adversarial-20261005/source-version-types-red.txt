@@ -1,0 +1,96 @@
+..................FFFF                                                   [100%]
+=================================== FAILURES ===================================
+_______ test_T65_source_versions_preserve_json_scalar_type[overall-True] _______
+
+bad_version = True, stage = 'overall'
+
+    @pytest.mark.parametrize('bad_version', [True, 1.0])
+    @pytest.mark.parametrize('stage', ['overall','obligation'])
+    def test_T65_source_versions_preserve_json_scalar_type(bad_version, stage):
+        from ordessa_environment_api.operations import safe_json
+        ref={'environmentNamespace':'counterexample','profileId':'p','manifestRevision':1,
+            'contentDigest':'sha256:'+'a'*64}
+        value=replace(proposal(),source_refs=(ref,))
+        key=safe_json(ref)
+        overall={'descriptor':'1',key:bad_version if stage=='overall' else 1}
+        row={'obligationId':'configuration','status':'passed','checkerId':'owner','checkerVersion':'1',
+            'sourceVersions':{key:bad_version},'evidenceRefs':[EVIDENCE]}
+        assessment=OwnerProposalAssessment(value.input_digest,overall,'valid',(),(row,),
+            'owner pure read only',(EVIDENCE,),PURE_READ_VERSION)
+>       with pytest.raises(ConfigurationContractError): require_assessment(value,assessment)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ConfigurationContractError
+
+packages/backend/decision/tests/integration/test_core_read_counterexamples.py:156: Failed
+_______ test_T65_source_versions_preserve_json_scalar_type[overall-1.0] ________
+
+bad_version = 1.0, stage = 'overall'
+
+    @pytest.mark.parametrize('bad_version', [True, 1.0])
+    @pytest.mark.parametrize('stage', ['overall','obligation'])
+    def test_T65_source_versions_preserve_json_scalar_type(bad_version, stage):
+        from ordessa_environment_api.operations import safe_json
+        ref={'environmentNamespace':'counterexample','profileId':'p','manifestRevision':1,
+            'contentDigest':'sha256:'+'a'*64}
+        value=replace(proposal(),source_refs=(ref,))
+        key=safe_json(ref)
+        overall={'descriptor':'1',key:bad_version if stage=='overall' else 1}
+        row={'obligationId':'configuration','status':'passed','checkerId':'owner','checkerVersion':'1',
+            'sourceVersions':{key:bad_version},'evidenceRefs':[EVIDENCE]}
+        assessment=OwnerProposalAssessment(value.input_digest,overall,'valid',(),(row,),
+            'owner pure read only',(EVIDENCE,),PURE_READ_VERSION)
+>       with pytest.raises(ConfigurationContractError): require_assessment(value,assessment)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ConfigurationContractError
+
+packages/backend/decision/tests/integration/test_core_read_counterexamples.py:156: Failed
+_____ test_T65_source_versions_preserve_json_scalar_type[obligation-True] ______
+
+bad_version = True, stage = 'obligation'
+
+    @pytest.mark.parametrize('bad_version', [True, 1.0])
+    @pytest.mark.parametrize('stage', ['overall','obligation'])
+    def test_T65_source_versions_preserve_json_scalar_type(bad_version, stage):
+        from ordessa_environment_api.operations import safe_json
+        ref={'environmentNamespace':'counterexample','profileId':'p','manifestRevision':1,
+            'contentDigest':'sha256:'+'a'*64}
+        value=replace(proposal(),source_refs=(ref,))
+        key=safe_json(ref)
+        overall={'descriptor':'1',key:bad_version if stage=='overall' else 1}
+        row={'obligationId':'configuration','status':'passed','checkerId':'owner','checkerVersion':'1',
+            'sourceVersions':{key:bad_version},'evidenceRefs':[EVIDENCE]}
+        assessment=OwnerProposalAssessment(value.input_digest,overall,'valid',(),(row,),
+            'owner pure read only',(EVIDENCE,),PURE_READ_VERSION)
+>       with pytest.raises(ConfigurationContractError): require_assessment(value,assessment)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ConfigurationContractError
+
+packages/backend/decision/tests/integration/test_core_read_counterexamples.py:156: Failed
+______ test_T65_source_versions_preserve_json_scalar_type[obligation-1.0] ______
+
+bad_version = 1.0, stage = 'obligation'
+
+    @pytest.mark.parametrize('bad_version', [True, 1.0])
+    @pytest.mark.parametrize('stage', ['overall','obligation'])
+    def test_T65_source_versions_preserve_json_scalar_type(bad_version, stage):
+        from ordessa_environment_api.operations import safe_json
+        ref={'environmentNamespace':'counterexample','profileId':'p','manifestRevision':1,
+            'contentDigest':'sha256:'+'a'*64}
+        value=replace(proposal(),source_refs=(ref,))
+        key=safe_json(ref)
+        overall={'descriptor':'1',key:bad_version if stage=='overall' else 1}
+        row={'obligationId':'configuration','status':'passed','checkerId':'owner','checkerVersion':'1',
+            'sourceVersions':{key:bad_version},'evidenceRefs':[EVIDENCE]}
+        assessment=OwnerProposalAssessment(value.input_digest,overall,'valid',(),(row,),
+            'owner pure read only',(EVIDENCE,),PURE_READ_VERSION)
+>       with pytest.raises(ConfigurationContractError): require_assessment(value,assessment)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ConfigurationContractError
+
+packages/backend/decision/tests/integration/test_core_read_counterexamples.py:156: Failed
+=========================== short test summary info ============================
+FAILED packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_source_versions_preserve_json_scalar_type[overall-True]
+FAILED packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_source_versions_preserve_json_scalar_type[overall-1.0]
+FAILED packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_source_versions_preserve_json_scalar_type[obligation-True]
+FAILED packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_source_versions_preserve_json_scalar_type[obligation-1.0]
+4 failed, 18 passed in 0.17s

@@ -1,0 +1,626 @@
+{
+  "audit_head": "f0d75f93a43779dd92478a9f96b6370a19bb176f",
+  "fixed_baseline": "e4714eba00a78ba04c5b53318830a0d409e76bbe",
+  "tested_source_digest": "sha256:a05c6b60bc70f24bfa2455698d84a3ce777be7bd8336783da7334d04e89a9867",
+  "original_requirements_preserved": true,
+  "requirements": [
+    {
+      "id": "R01",
+      "scenarios": [
+        "T59",
+        "T63"
+      ],
+      "evidence_scope": "offline actual graph/SDK or temporary native core as defined by acceptance.md",
+      "status": "VERIFIED_SCOPED"
+    },
+    {
+      "id": "R02",
+      "scenarios": [
+        "T04",
+        "T45"
+      ],
+      "evidence_scope": "offline actual graph/SDK or temporary native core as defined by acceptance.md",
+      "status": "VERIFIED_SCOPED"
+    },
+    {
+      "id": "R03",
+      "scenarios": [
+        "T43",
+        "T44",
+        "T46"
+      ],
+      "evidence_scope": "offline actual graph/SDK or temporary native core as defined by acceptance.md",
+      "status": "VERIFIED_SCOPED"
+    },
+    {
+      "id": "R04",
+      "scenarios": [
+        "T03",
+        "T48",
+        "T54"
+      ],
+      "evidence_scope": "offline actual graph/SDK or temporary native core as defined by acceptance.md",
+      "status": "VERIFIED_SCOPED"
+    },
+    {
+      "id": "R05",
+      "scenarios": [
+        "T49",
+        "T51",
+        "T52"
+      ],
+      "evidence_scope": "offline actual graph/SDK or temporary native core as defined by acceptance.md",
+      "status": "VERIFIED_SCOPED"
+    },
+    {
+      "id": "R06",
+      "scenarios": [
+        "T09",
+        "T53",
+        "T67"
+      ],
+      "evidence_scope": "offline actual graph/SDK or temporary native core as defined by acceptance.md",
+      "status": "VERIFIED_SCOPED"
+    },
+    {
+      "id": "R07",
+      "scenarios": [
+        "T17",
+        "T58",
+        "T62"
+      ],
+      "evidence_scope": "offline actual graph/SDK or temporary native core as defined by acceptance.md",
+      "status": "VERIFIED_SCOPED"
+    },
+    {
+      "id": "R08",
+      "scenarios": [
+        "T02",
+        "T55",
+        "T56"
+      ],
+      "evidence_scope": "offline actual graph/SDK or temporary native core as defined by acceptance.md",
+      "status": "VERIFIED_SCOPED"
+    },
+    {
+      "id": "R09",
+      "scenarios": [
+        "T05",
+        "T06",
+        "T42",
+        "T68"
+      ],
+      "evidence_scope": "offline actual graph/SDK or temporary native core as defined by acceptance.md",
+      "status": "VERIFIED_SCOPED"
+    },
+    {
+      "id": "R10",
+      "scenarios": [
+        "T07",
+        "T13",
+        "T14",
+        "T65"
+      ],
+      "evidence_scope": "offline actual graph/SDK or temporary native core as defined by acceptance.md",
+      "status": "VERIFIED_SCOPED"
+    },
+    {
+      "id": "R11",
+      "scenarios": [
+        "T08",
+        "T18",
+        "T31",
+        "T40",
+        "T66"
+      ],
+      "evidence_scope": "offline actual graph/SDK or temporary native core as defined by acceptance.md",
+      "status": "VERIFIED_SCOPED"
+    },
+    {
+      "id": "R12",
+      "scenarios": [
+        "T21",
+        "T22",
+        "T26",
+        "T27",
+        "T32"
+      ],
+      "evidence_scope": "offline actual graph/SDK or temporary native core as defined by acceptance.md",
+      "status": "VERIFIED_SCOPED"
+    },
+    {
+      "id": "R13",
+      "scenarios": [
+        "T33",
+        "T59"
+      ],
+      "evidence_scope": "offline actual graph/SDK or temporary native core as defined by acceptance.md",
+      "status": "VERIFIED_SCOPED"
+    },
+    {
+      "id": "R14",
+      "scenarios": [
+        "T55",
+        "T57",
+        "T61",
+        "T64"
+      ],
+      "evidence_scope": "offline actual graph/SDK or temporary native core as defined by acceptance.md",
+      "status": "VERIFIED_SCOPED"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "JD001",
+      "implemented_items": [
+        {
+          "id": "JD001-01",
+          "requirement": "确认用户授权的实施树/精确SHA/安装范围，保存status与写者清单，复核AGENTS/基线/known issues。"
+        },
+        {
+          "id": "JD001-02",
+          "requirement": "核实真实pydantic-graph发布包和SDK0.7.2与研究SHA的API/依赖对应，锁wheel哈希和闭包；未匹配则具名阻塞。"
+        },
+        {
+          "id": "JD001-03",
+          "requirement": "在授权临时环境用真实库跑极小回环/取消/未知路由；真实SDK配fake transport核每次HTTP数。"
+        },
+        {
+          "id": "JD001-04",
+          "requirement": "冻结Python>=3.10/目标3.12、模型ID候选、数值协议容差和依赖升级门；不发真实网络模型请求。"
+        }
+      ],
+      "scenarios": [
+        "T03",
+        "T30",
+        "T33",
+        "T37",
+        "T63",
+        "T64"
+      ],
+      "delivery": "IMPLEMENTED_AND_VERIFIED",
+      "readiness_limit": null
+    },
+    {
+      "id": "JD002",
+      "implemented_items": [
+        {
+          "id": "JD002-01",
+          "requirement": "实现不可变DTO/finite JSON/大小/重复键/规范编码，支持空目标任务审查与动态小数。"
+        },
+        {
+          "id": "JD002-02",
+          "requirement": "固定request/proposal/result/descriptor/runmanifest摘要域、PolicyRef集合、术语和null规则，生成正反向编码向量。"
+        },
+        {
+          "id": "JD002-03",
+          "requirement": "冻结ports、单次ModelCallContext与许可、ValidationObligations/CheckBatch、技术/业务联合终态。"
+        },
+        {
+          "id": "JD002-04",
+          "requirement": "冻结JD007原核心inputDigest与decision映射、版本协商、只读保证及源码导出映射；对外合同变更交主会话审阅，不让各模块自行发明。"
+        }
+      ],
+      "scenarios": [
+        "T01",
+        "T02",
+        "T07",
+        "T08",
+        "T09",
+        "T10",
+        "T17",
+        "T18",
+        "T65",
+        "T66"
+      ],
+      "delivery": "IMPLEMENTED_AND_VERIFIED",
+      "readiness_limit": null
+    },
+    {
+      "id": "JD003",
+      "implemented_items": [
+        {
+          "id": "JD003-01",
+          "requirement": "公开async入口/new_state/显式flow绑定与可信图接纳；保留上游结构校验，不引入while执行器。"
+        },
+        {
+          "id": "JD003-02",
+          "requirement": "实现节点入口预算、统一模型gateway、并发slot、单次run+摘要绑定许可；SDK不暴露给节点。"
+        },
+        {
+          "id": "JD003-03",
+          "requirement": "绑定durable evidence端口、完成取消顺序点与有界shield；真实Evidence实现等JD008，先fake故障端口。"
+        },
+        {
+          "id": "JD003-04",
+          "requirement": "验证两个run隔离、只读并行汇合、异常/超时/未知不报成功；清理不关闭共享provider。"
+        }
+      ],
+      "scenarios": [
+        "T04",
+        "T05",
+        "T06",
+        "T11",
+        "T12",
+        "T13",
+        "T14",
+        "T15",
+        "T16",
+        "T19",
+        "T20",
+        "T23",
+        "T24",
+        "T25",
+        "T28",
+        "T29",
+        "T30"
+      ],
+      "delivery": "IMPLEMENTED_AND_VERIFIED",
+      "readiness_limit": null
+    },
+    {
+      "id": "JD004",
+      "implemented_items": [
+        {
+          "id": "JD004-01",
+          "requirement": "独立provider拥有官方async client，固定端点/模型settings，retries=0，任务不能覆写请求体/URL。"
+        },
+        {
+          "id": "JD004-02",
+          "requirement": "Choice/Score/Noul映射与精确回答集合/数值/模型校验；未知SDK类型丢失仍失败。"
+        },
+        {
+          "id": "JD004-03",
+          "requirement": "许可/deadline发前验证、每次网络尝试统计，费用缺失unknown，取消向上传播。"
+        },
+        {
+          "id": "JD004-04",
+          "requirement": "落实secret resolver、body日志禁用、安全异常，66选项含拒绝槽；锁依赖升级测试。"
+        }
+      ],
+      "scenarios": [
+        "T33",
+        "T34",
+        "T35",
+        "T36",
+        "T37",
+        "T38",
+        "T39",
+        "T40",
+        "T41",
+        "T42",
+        "T68"
+      ],
+      "delivery": "IMPLEMENTED_AND_VERIFIED",
+      "readiness_limit": null
+    },
+    {
+      "id": "JD005",
+      "implemented_items": [
+        {
+          "id": "JD005-01",
+          "requirement": "实现纯规则缺字段/风险边界检查，合法不足任务零模型可输出澄清。"
+        },
+        {
+          "id": "JD005-02",
+          "requirement": "外部六维rubric编译有限Choice/Score问题及代码/证据模板，不自由生成解释。"
+        },
+        {
+          "id": "JD005-03",
+          "requirement": "确定性聚合技术故障/fatalBusinessBlock/clarify/revise/pass；无授权事实不得通过。"
+        },
+        {
+          "id": "JD005-04",
+          "requirement": "实现run内/可信旧证据的无新增相关信息检测，不建全局缓存，不自动拆分派工。"
+        }
+      ],
+      "scenarios": [
+        "T43",
+        "T44",
+        "T45",
+        "T46",
+        "T47",
+        "T48"
+      ],
+      "delivery": "IMPLEMENTED_AND_VERIFIED",
+      "readiness_limit": null
+    },
+    {
+      "id": "JD006",
+      "implemented_items": [
+        {
+          "id": "JD006-01",
+          "requirement": "实现七动作数据要求、硬约束过滤和可版本化默认排序，模型只选合法ID。"
+        },
+        {
+          "id": "JD006-02",
+          "requirement": "定义并接入ProposalSource；参考确定性组合器依据外部模板/处理器/有限选项，有界剪枝，不猜字段语义。"
+        },
+        {
+          "id": "JD006-03",
+          "requirement": "保留目录分页/完整性与拒绝槽，限制64业务候选/66总选项及修正轮次。"
+        },
+        {
+          "id": "JD006-04",
+          "requirement": "实现义务覆盖的外部校验与新反馈回环；未知/过期/无进展停止，ready非已应用。"
+        }
+      ],
+      "scenarios": [
+        "T49",
+        "T50",
+        "T51",
+        "T52",
+        "T53",
+        "T54",
+        "T58",
+        "T67"
+      ],
+      "delivery": "IMPLEMENTED_AND_VERIFIED",
+      "readiness_limit": null
+    },
+    {
+      "id": "JD007",
+      "implemented_items": [
+        {
+          "id": "JD007-01",
+          "requirement": "按固定当前SHA核查describe offers/assessment是否已存在；已存在就映射和验证，不重复造。"
+        },
+        {
+          "id": "JD007-02",
+          "requirement": "新增版本化可选纯读能力和公开DTO，只路由已有registry/owner，旧provider unsupported。"
+        },
+        {
+          "id": "JD007-03",
+          "requirement": "pure-read assessment覆盖schema/动作/版本/材料/组合义务；有作用才能核实项unverifiable。"
+        },
+        {
+          "id": "JD007-04",
+          "requirement": "fake owner证明授权/换代/退役/版本拒绝及mutation/file/process零调用；真实家族支持逐家登记。"
+        }
+      ],
+      "scenarios": [
+        "T55",
+        "T56",
+        "T57",
+        "T61",
+        "T62",
+        "T65"
+      ],
+      "delivery": "IMPLEMENTED_AND_VERIFIED",
+      "readiness_limit": null
+    },
+    {
+      "id": "JD008",
+      "implemented_items": [
+        {
+          "id": "JD008-01",
+          "requirement": "只读facade映射公开Profile/Node/Provider/配置观察，完整性/sourceVersion/unknown保持，图看不到写面。"
+        },
+        {
+          "id": "JD008-02",
+          "requirement": "实现独立文件证据writer锁、append_durable ACK、fsync、终态原子幂等与ACK未知查询。"
+        },
+        {
+          "id": "JD008-03",
+          "requirement": "实现call.intent五个crash窗和started无terminal宿主/锁核实；unknown/interrupted只查询不续跑。"
+        },
+        {
+          "id": "JD008-04",
+          "requirement": "实现安全日志/路径/权限/取消shield与提案交接，原生mutation次数0；原RequestKey不被runId替换。"
+        }
+      ],
+      "scenarios": [
+        "T21",
+        "T22",
+        "T24",
+        "T25",
+        "T26",
+        "T27",
+        "T28",
+        "T31",
+        "T32",
+        "T55",
+        "T56",
+        "T58",
+        "T62"
+      ],
+      "delivery": "IMPLEMENTED_AND_VERIFIED",
+      "readiness_limit": null
+    },
+    {
+      "id": "JD009",
+      "implemented_items": [
+        {
+          "id": "JD009-01",
+          "requirement": "主执行者整合可信flow及完整服务注入，flowDigest绑定实际代码/policy；无rawSDK/完整AgentServices流入节点。"
+        },
+        {
+          "id": "JD009-02",
+          "requirement": "独立wheel/可选extra，offline_assignment+alternate_flow，可选propose CLI默认offline无apply/任意module。"
+        },
+        {
+          "id": "JD009-03",
+          "requirement": "真实临时核心+真实库+fake模型纵向验证，所有效果计数0，缺家族能力诚实PARTIAL。"
+        },
+        {
+          "id": "JD009-04",
+          "requirement": "串行逐场景复跑T01–T59/T61–T68，按ID比对回归继承红，记录counts/exits/证据/清理与可试入口；更新readiness账。"
+        }
+      ],
+      "scenarios": [
+        "T01",
+        "T02",
+        "T03",
+        "T04",
+        "T05",
+        "T06",
+        "T07",
+        "T08",
+        "T09",
+        "T10",
+        "T11",
+        "T12",
+        "T13",
+        "T14",
+        "T15",
+        "T16",
+        "T17",
+        "T18",
+        "T19",
+        "T20",
+        "T21",
+        "T22",
+        "T23",
+        "T24",
+        "T25",
+        "T26",
+        "T27",
+        "T28",
+        "T29",
+        "T30",
+        "T31",
+        "T32",
+        "T33",
+        "T34",
+        "T35",
+        "T36",
+        "T37",
+        "T38",
+        "T39",
+        "T40",
+        "T41",
+        "T42",
+        "T43",
+        "T44",
+        "T45",
+        "T46",
+        "T47",
+        "T48",
+        "T49",
+        "T50",
+        "T51",
+        "T52",
+        "T53",
+        "T54",
+        "T55",
+        "T56",
+        "T57",
+        "T58",
+        "T59",
+        "T61",
+        "T62",
+        "T63",
+        "T64",
+        "T65",
+        "T66",
+        "T67",
+        "T68"
+      ],
+      "delivery": "DELIVERED_WITH_REQUIRED_PARTIAL_REPORT",
+      "readiness_limit": "Native families remain unsupported, explicitly permitted by JD009-03."
+    },
+    {
+      "id": "JD010",
+      "implemented_items": [
+        {
+          "id": "JD010-01",
+          "requirement": "固定脱敏标签样本、模型ID/rubric/阈值与输入规模，向用户取得maxattempt/成本/隐私范围授权。"
+        },
+        {
+          "id": "JD010-02",
+          "requirement": "运行中文任务边界/颗粒度、候选顺序、未知配置与攻击文本评测，记录真实usage/unknown费用。"
+        },
+        {
+          "id": "JD010-03",
+          "requirement": "区分协议机制成功与判断质量不足；未达标准不自动改阈值或宣称成熟。"
+        },
+        {
+          "id": "JD010-04",
+          "requirement": "输出liveJevValidated或PARTIAL/NOT_RUN及失败样本、费用、清理，不自动推广为产品默认或实际应用。"
+        }
+      ],
+      "scenarios": [
+        "T60"
+      ],
+      "delivery": "DELIVERED_WITH_REQUIRED_PARTIAL_REPORT",
+      "readiness_limit": "Live report remains PARTIAL, explicitly required by JD010-03/04 when standards are unmet."
+    }
+  ],
+  "official_installed_libraries": {
+    "pydantic-graph": "2.54.0",
+    "typesafe-sdk": "0.7.2"
+  },
+  "real_evaluation": "evidence/jev-domain-v2-20261005/README.md",
+  "offline_evidence": "evidence/completion-offline-20261005/README.md",
+  "known_failure_registry": "../../docs/known-issues.md#decision-module-spec-031",
+  "remaining_required_implementation_items": [],
+  "product_readiness": "PARTIAL",
+  "delivery_complete": true,
+  "limitations": [
+    "Existing native families unsupported; all Harness support and actual application explicitly excluded by spec.md/acceptance.md.",
+    "English churn-positive below frozen threshold; live 66-choice response invalid; raw field cause unknown.",
+    "Historical lost answers/timeout remain unverified; costs and two request usages unknown.",
+    "Whole Server/Harness inherited reds, Python3.10, power loss and remote FS not reverified."
+  ],
+  "completion_basis": "The original JD009/JD010 requirements mandate honest PARTIAL output for absent capability or unmet model labels. This audit completes implementation and required evaluation/reporting; it does not promote product readiness or erase failures.",
+  "latest_continuation": {
+    "tested_head_before_checkpoint": "f864f95682beb1b8676fa6b348148fd16a848e2f",
+    "tested_source_digest": "sha256:98ff570f2039de2c5e13e75f95484e42a6c29ca91735b3a96e4f042f1ae3fc7d",
+    "full_suite": "320 passed",
+    "offline_scenarios_passed": 67,
+    "baseline_core_ids_passed": 57,
+    "current_core_ids_passed": 57,
+    "live_jev_requests_total": 214,
+    "reported_input_tokens": 170771,
+    "reported_output_tokens": 13958,
+    "historical_usage_unknown_requests": 3,
+    "cost": "UNKNOWN",
+    "evidence": "evidence/adversarial-20261005/README.md",
+    "native_effects": 0,
+    "real_harness": "NOT_RUN",
+    "family_capability": "UNSUPPORTED_PER_FREEZE",
+    "all_work_complete": false,
+    "goal_status": "active",
+    "next_scope_plan": "downstream-next.md",
+    "authorization": "pending family scope extension"
+  },
+  "codex_authorized_extension": {
+    "authorization": "user explicitly approved Codex pure read extension",
+    "tested_head_before_checkpoint": "606c6c73fcc27e76edbd0008518622e653549662",
+    "tested_source_digest": "sha256:d3bf63ed8e629da341d32699416d3176afae78ebd0be3956295048372ffbc44d",
+    "decision_suite_passed": 352,
+    "codex_family_passed": 147,
+    "offline_scenes_passed": 67,
+    "baseline_core_passed": 57,
+    "current_core_passed": 57,
+    "codex_capability": "declaration compiler pure read only",
+    "codex_offer_support": "unknown",
+    "other_families": "unsupported",
+    "real_native_harness": "NOT_RUN",
+    "live_jev_requests_total": 220,
+    "reported_input_tokens": 176303,
+    "reported_output_tokens": 14227,
+    "historical_usage_unknown_requests": 3,
+    "cost": "UNKNOWN",
+    "native_effects": 0,
+    "all_work_complete": false,
+    "goal_status": "active",
+    "evidence": "evidence/codex-pure-read-20261005/README.md",
+    "next_scope_plan": "harness-smoke-next.md"
+  },
+  "codex_effects_continuation": {
+    "tested_head_before_checkpoint": "44c7bbf29c24c907550106a6b24014c6735cd098",
+    "tested_source_digest": "sha256:d3bf63ed8e629da341d32699416d3176afae78ebd0be3956295048372ffbc44d",
+    "decision_suite_passed": 359,
+    "codex_family_passed": 147,
+    "offline_scenes_passed": 67,
+    "baseline_core_passed": 57,
+    "current_core_passed": 57,
+    "additional_live_requests": 0,
+    "real_native_harness": "NOT_RUN",
+    "evidence": "evidence/codex-effects-20261005/README.md",
+    "all_work_complete": false,
+    "goal_status": "active",
+    "pending_authorization": "existing finite native Harness smoke question"
+  }
+}

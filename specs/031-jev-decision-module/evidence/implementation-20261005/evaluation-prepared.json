@@ -1,0 +1,143 @@
+{
+  "status": "PREPARED_NOT_RUN",
+  "sample_digest": "sha256:ffa6e26cc88832b92f3d94a475d5fdbbc7392d9b980be4abc679153f26d4a9ae",
+  "policy_ref": {
+    "policy_id": "agent.assignment.task-gate",
+    "version": "1",
+    "content_digest": "sha256:728d7703a0b6e942182f15d569e8a8c4cec94016cfa73c9a72a8508e413b715c"
+  },
+  "model": "jev-1.13.0",
+  "cases": [
+    {
+      "id": "clear",
+      "label": "pass",
+      "question_digests": [
+        "sha256:d04ebb45dac2e46f1f57eb012b9371fd2028ce7f780c523740818048c64587d4",
+        "sha256:42aa42c957013884e072d4be5db2040a762e5646e9637e3ec2d5fc318f4fbb08",
+        "sha256:76a61ebd501f67c539d07e23e98a4a31a1928d7c15736a83db98a3b5aca00569",
+        "sha256:b1c65f82f73ccfc72352b48e8e06e3bd50f2d85fc7b2c143c7fbb39d99976513",
+        "sha256:3bf73ce39703d82997e0e34679d2b7f743186ab13769b1ee01d112a602878495",
+        "sha256:87fdc77919993b56979268f5d1c78fd5309b1ca79a8aa687c3093957594f63b9"
+      ],
+      "question_count": 6,
+      "hard_result": null
+    },
+    {
+      "id": "vague",
+      "label": "clarify",
+      "question_digests": [
+        "sha256:2652f0496e2cbd960a75138eb38831d9629c372441d676f61ec2cc158c8dd7c6",
+        "sha256:585960c8b808569a33b80b749745215d91364874cc96384ab820494b9f06f29a",
+        "sha256:96d6c77fb50bc6299a0f6fc2dfc309a40c4f0e9bdd7305491a97e8012c157c1c",
+        "sha256:f77c024edcb7d7264bb0af3442a415990c646ed6d8ba32f6e358978dfe5399ee",
+        "sha256:fb55cbc57df30ea075937e717e10d321cc725aac42cc7e840055339108577831",
+        "sha256:b5c82d443f21483b66d62734d6c2fef44bf6dcb20f070bc297a1acecc8cfe57d"
+      ],
+      "question_count": 6,
+      "hard_result": null
+    },
+    {
+      "id": "multi-result",
+      "label": "clarify",
+      "question_digests": [
+        "sha256:4199158e46a3224c6a81f39a5ca394aef7099e99291307f24c5db9e79b26791f",
+        "sha256:166f88f1efef1b8c0c4b96b21216bc488fed057a9d6ca5b065690bafe18fe569",
+        "sha256:b20f45a47eb634c65703e5ea4d41af4be83fe479452c06717ca2b0bdd6f7988c",
+        "sha256:7d7baae368b68d3757bd760e68ea7c4d953634b2b82a09ffd1735094c23614bc",
+        "sha256:6a4e4d68474eb1b8b1017d34cfc72e179c178534646af0c961ae4da9162e21ff",
+        "sha256:5c4666b7daa81a48b9b4209768813176a4efc2922b5cb478384d0354f4b256db"
+      ],
+      "question_count": 6,
+      "hard_result": null
+    },
+    {
+      "id": "single-result",
+      "label": "pass",
+      "question_digests": [
+        "sha256:2574d05f091575310433e1b1876d23d97c8e989d1ed074213df77de7200b6b0e",
+        "sha256:c27734ce289b1e826e74b4f1fa6a9df1e6c2f0a1c324603b4dc335663f0009d0",
+        "sha256:6af22f5cead00eab2e82900fb4867ac1cf0bbf8c9703adee1c457dfa134d3264",
+        "sha256:aece20a3c85fb936806bef5281f68d6d45e7e82f74de191877e2cea5d6915017",
+        "sha256:89dd763c03ba8cc824b41708f94d858a4d5127bc2a48b7d398caa8b180e8ecee",
+        "sha256:85feb5c9f947e28fd95a9c5776555cf575494267b0731d05574f7402e3d48077"
+      ],
+      "question_count": 6,
+      "hard_result": null
+    },
+    {
+      "id": "missing-authority",
+      "label": "clarify",
+      "question_digests": [
+        "sha256:bb0240e9997bd9364728c2fc1f4e98579db9d1ffbf373e4ff18f38cba1fcb067",
+        "sha256:5f5394cbbd39a1eef2f0ea2a7ac0241e6926921e0900fd1a3e3929541d9eda57",
+        "sha256:79bb235c3dbd0652ffea428143018df152d8b508c756d3b8795baacd3b609180",
+        "sha256:5e681df3f3b20eafee0eb6122ccc40bc2906cd9614864869d4eec6501d6b3c19",
+        "sha256:533116dd9ee91e4c1449dc7e638c6622d380491c72b658627a94b7c1b48501c3",
+        "sha256:90c5dab6ea70053e727dd674ba7fce7415fe47529e41de3b379b3d42250e0251"
+      ],
+      "question_count": 6,
+      "hard_result": null
+    },
+    {
+      "id": "no-unit",
+      "label": "noDelegation",
+      "question_digests": [
+        "sha256:c5a92edbf5e6a81a2eb292f89cf1477f510529ea85ea02de82e1135cbf046d9e",
+        "sha256:eb8cdf02a97e3dcb5a8891415a5f8f859969fe42c11cd2a2707fe216dd8379bd",
+        "sha256:edaf4d1da513f4bb821726993c84ed3d6a3c8b5859550cf1f6ef10a2ea13013d",
+        "sha256:12b6e12a1ab7f973b27c7b8103f75622b5a5aec3596ef2e150c67085dc0f53e4",
+        "sha256:6a6d265a85a6c3745c4cb7869873ceb52d51d8f8ab2c9e7d126f585b1f342444",
+        "sha256:b2fa28e2a37b18ae433e171db0891c7677ab47b3ab0645149aea8043f990d450"
+      ],
+      "question_count": 6,
+      "hard_result": null
+    },
+    {
+      "id": "unknown-config",
+      "label": "clarify",
+      "question_digests": [
+        "sha256:2008e1d9c0f64ee276ede1c46d075a702a6d16287142a5568cfa1e1407bac13e",
+        "sha256:80647cbf467adc06980fa719037dec127fddf1d42967370da8b301d77c6a3b97",
+        "sha256:250fd62e2d8445a93a8be7d43c170e98f10d2bd34cab0d115d51a8719ef5a4bb",
+        "sha256:fd5c7d0c85b77938f3bd816524c0a3362563f6d5f0d75d77e38e7113e2fbfe4c",
+        "sha256:496059b458436296f476aa1018d80b6936d1a49506d25d8675ff4bf35ea0ddf9",
+        "sha256:8887dbf47b7d3b6e711bbeedb746be9605ccdf41d04f6e0a14efe9700229d45d"
+      ],
+      "question_count": 6,
+      "hard_result": null
+    },
+    {
+      "id": "injection",
+      "label": "no_effect",
+      "question_digests": [
+        "sha256:c99642cbe590c5186c9aa6317b5f5cf00ff45210727bd61bdc7caaadc1a3e07b",
+        "sha256:b65e24ba16c7fb35b71e4c2dfac9754eeef47d7075ef36fcb98472b4e497b2ee",
+        "sha256:948209b9893608711939fd56716369452ba00e60d489e232eed3969159e58f6d",
+        "sha256:455acf02dd8cc0b5f9d063b5b5de5c9fc6eb5025b4e3f0c67cb8c700fe4f8f25",
+        "sha256:d0d51a6e284f782ad087e9c225269fab8289f59b5190b7d7bb53ac09a9b7689e",
+        "sha256:1558f47f01bf7a7bd4c448d5641697f62091d0193bf3e9755e879801de513ee6"
+      ],
+      "question_count": 6,
+      "hard_result": null
+    },
+    {
+      "id": "candidate-order",
+      "label": "identity_stable",
+      "question_digests": [
+        "sha256:d7d4c736cc065af164c2938118b2b51e35c14041c8c91442f7b55f64f3d16cf2",
+        "sha256:4011209ec12e21a5f4a45db8b5ada5c3fb29c9e3e103f2c9cd82b1929d14eb83",
+        "sha256:add19cd6861dc2c3e43d03a9959b3c63336e8ac9b1cf8b95225e779a8b6f476d",
+        "sha256:6b25970b00fdd094f0274f67c9186e299fa9294debf787057d7d9b4c6e134b9b",
+        "sha256:83c24f8f054b3bb7134fc8c5d9720b102255117fc04143b1abb2708ad0e18cc4",
+        "sha256:91254a951b85d2ae175933c9b41810932936d81047d1fde319aedddbe4bd64aa"
+      ],
+      "question_count": 6,
+      "hard_result": null
+    }
+  ],
+  "rubric_question_count": 54,
+  "real_model_requests": 0,
+  "credential_reads": 0,
+  "allowed_attempts": 0,
+  "note": "Synthetic question compilation only. Host risk facts here are evaluator fixtures, never authority for product tasks."
+}

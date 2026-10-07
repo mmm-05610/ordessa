@@ -1,0 +1,1918 @@
+{
+  "baseline": "e4714eba00a78ba04c5b53318830a0d409e76bbe",
+  "head": "f864f95682beb1b8676fa6b348148fd16a848e2f",
+  "source_digest": "sha256:98ff570f2039de2c5e13e75f95484e42a6c29ca91735b3a96e4f042f1ae3fc7d",
+  "python": "3.12.14 (main, Sep  1 2026, 14:16:52) [Clang 22.1.3 ]",
+  "mode": "offline",
+  "model_http": "fake_transport_only",
+  "real_model_requests": 0,
+  "credential_reads": 0,
+  "scope": "local POSIX + temporary real core/fake owner; no live services",
+  "inherited_scope": "57 targeted Pacthold baseline IDs; full server/Harness registered reds not rerun",
+  "scenarios": [
+    {
+      "id": "T01",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T01_T02_contract_roundtrip_vectors",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T01_finite_json_and_freeze",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t01_nested_subject_ref_is_typed_and_immutable[precondition]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t01_nested_subject_ref_is_typed_and_immutable[obligation]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t01_t66_manifest_freezes_effective_policies",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t01_receipt_scalar_metadata_cannot_hide_mutable_values",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T01.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.569,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T01_T02_contract_roundtrip_vectors",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T01_finite_json_and_freeze",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t01_nested_subject_ref_is_typed_and_immutable[precondition]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t01_nested_subject_ref_is_typed_and_immutable[obligation]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t01_t66_manifest_freezes_effective_policies",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t01_receipt_scalar_metadata_cannot_hide_mutable_values"
+      ],
+      "summary": "6 passed in 0.30s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T01.txt"
+    },
+    {
+      "id": "T02",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T01_T02_contract_roundtrip_vectors",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T02_T66_vectors_and_domains",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T02.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.483,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T01_T02_contract_roundtrip_vectors",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T02_T66_vectors_and_domains"
+      ],
+      "summary": "2 passed in 0.22s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T02.txt"
+    },
+    {
+      "id": "T03",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T03_T54_true_graph_three_round_repair",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T03_T30_T20_real_graph",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T03_T04_T20_real_graph_multiround_and_alternate",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T03_actual_feedback_graph_loop",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T03.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.533,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T03_T54_true_graph_three_round_repair",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T03_T30_T20_real_graph",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T03_T04_T20_real_graph_multiround_and_alternate",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T03_actual_feedback_graph_loop"
+      ],
+      "summary": "4 passed in 0.27s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T03.txt"
+    },
+    {
+      "id": "T04",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T04_T59_alternate_graph_and_unclear_zero_calls",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T03_T04_T20_real_graph_multiround_and_alternate",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T04.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.54,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T04_T59_alternate_graph_and_unclear_zero_calls",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T03_T04_T20_real_graph_multiround_and_alternate"
+      ],
+      "summary": "2 passed in 0.28s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T04.txt"
+    },
+    {
+      "id": "T05",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T05_T14_business_repair_limit_zero_is_effective",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T05_T14_budget_technical_terminal[max_node_entries-1-1]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T05_T14_budget_technical_terminal[max_model_attempts-1-1]",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T05.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.511,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T05_T14_business_repair_limit_zero_is_effective",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T05_T14_budget_technical_terminal[max_node_entries-1-1]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T05_T14_budget_technical_terminal[max_model_attempts-1-1]"
+      ],
+      "summary": "3 passed in 0.25s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T05.txt"
+    },
+    {
+      "id": "T06",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T06_concurrent_one_attempt",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T06_cancelled_slot_waiter_zero_dispatch",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T06_expired_slot_waiter_zero_dispatch",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T06.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.366,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T06_concurrent_one_attempt",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T06_cancelled_slot_waiter_zero_dispatch",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T06_expired_slot_waiter_zero_dispatch"
+      ],
+      "summary": "3 passed in 0.13s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T06.txt"
+    },
+    {
+      "id": "T07",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T07_terminal_union",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T07.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.269,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T07_terminal_union"
+      ],
+      "summary": "1 passed in 0.04s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T07.txt"
+    },
+    {
+      "id": "T08",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T08_T65_receipt_coverage",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T08.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.271,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T08_T65_receipt_coverage"
+      ],
+      "summary": "1 passed in 0.04s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T08.txt"
+    },
+    {
+      "id": "T09",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T09_T10_T17_T18_unknown",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T09.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.27,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T09_T10_T17_T18_unknown"
+      ],
+      "summary": "1 passed in 0.04s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T09.txt"
+    },
+    {
+      "id": "T10",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T10_T55_mandatory_read_gap_prevents_ready",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T09_T10_T17_T18_unknown",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T10.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.495,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T10_T55_mandatory_read_gap_prevents_ready",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T09_T10_T17_T18_unknown"
+      ],
+      "summary": "2 passed in 0.23s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T10.txt"
+    },
+    {
+      "id": "T11",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T11_external_cancel_propagates_and_shared_provider_survives",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T11.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.311,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T11_external_cancel_propagates_and_shared_provider_survives"
+      ],
+      "summary": "1 passed in 0.07s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T11.txt"
+    },
+    {
+      "id": "T12",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T12_timeout",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T12.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.323,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T12_timeout"
+      ],
+      "summary": "1 passed in 0.08s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T12.txt"
+    },
+    {
+      "id": "T13",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T13_T37_unknown_remote_failure_cannot_be_caught_and_retried",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T13_invalid_answer_and_node_failure",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T13.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.321,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T13_T37_unknown_remote_failure_cannot_be_caught_and_retried",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T13_invalid_answer_and_node_failure"
+      ],
+      "summary": "2 passed in 0.08s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T13.txt"
+    },
+    {
+      "id": "T14",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T14_actual_assignment_budget_no_draft",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T05_T14_business_repair_limit_zero_is_effective",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T05_T14_budget_technical_terminal[max_node_entries-1-1]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T05_T14_budget_technical_terminal[max_model_attempts-1-1]",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T14.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.531,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T14_actual_assignment_budget_no_draft",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T05_T14_business_repair_limit_zero_is_effective",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T05_T14_budget_technical_terminal[max_node_entries-1-1]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T05_T14_budget_technical_terminal[max_model_attempts-1-1]"
+      ],
+      "summary": "4 passed in 0.26s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T14.txt"
+    },
+    {
+      "id": "T15",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T15_runs_isolated",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T15.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.319,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T15_runs_isolated"
+      ],
+      "summary": "1 passed in 0.08s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T15.txt"
+    },
+    {
+      "id": "T16",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T16_T66_mutable_query_snapshotted_before_digest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T16_T29_untrusted_flow_rejected[review_ref-]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T16_T29_untrusted_flow_rejected[reviewed_code_digest-name-only]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T16_T29_untrusted_flow_rejected[parallel_state_writes-True]",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T16.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.508,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T16_T66_mutable_query_snapshotted_before_digest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T16_T29_untrusted_flow_rejected[review_ref-]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T16_T29_untrusted_flow_rejected[reviewed_code_digest-name-only]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T16_T29_untrusted_flow_rejected[parallel_state_writes-True]"
+      ],
+      "summary": "4 passed in 0.25s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T16.txt"
+    },
+    {
+      "id": "T17",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T09_T10_T17_T18_unknown",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T17_T46_host_policy_alias_cannot_remove_confirmation_boundary",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T17_caught_question_policy_failure_cannot_become_completed",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T17.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.338,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T09_T10_T17_T18_unknown",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T17_T46_host_policy_alias_cannot_remove_confirmation_boundary",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T17_caught_question_policy_failure_cannot_become_completed"
+      ],
+      "summary": "3 passed in 0.10s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T17.txt"
+    },
+    {
+      "id": "T18",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T09_T10_T17_T18_unknown",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T18.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.271,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T09_T10_T17_T18_unknown"
+      ],
+      "summary": "1 passed in 0.04s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T18.txt"
+    },
+    {
+      "id": "T19",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T19_T55_boundary_scanner_positive_and_injected_private",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T19_no_private_graph_api",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T19.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.49,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T19_T55_boundary_scanner_positive_and_injected_private",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T19_no_private_graph_api"
+      ],
+      "summary": "2 passed in 0.22s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T19.txt"
+    },
+    {
+      "id": "T20",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T03_T30_T20_real_graph",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T03_T04_T20_real_graph_multiround_and_alternate",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T20.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.485,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T03_T30_T20_real_graph",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T03_T04_T20_real_graph_multiround_and_alternate"
+      ],
+      "summary": "2 passed in 0.22s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T20.txt"
+    },
+    {
+      "id": "T21",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T33_T21_T22_real_sdk_graph_durable_evidence",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t21_memory_ack_never_claims_durability",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t21_started_persisted_and_permissions",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t21_started_io_failure_returns_no_ack",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[response]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[finish]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[start]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[call.intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[call.response]",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T21.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.552,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T33_T21_T22_real_sdk_graph_durable_evidence",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t21_memory_ack_never_claims_durability",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t21_started_persisted_and_permissions",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t21_started_io_failure_returns_no_ack",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[response]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[finish]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[start]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[call.intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[call.response]"
+      ],
+      "summary": "10 passed in 0.29s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T21.txt"
+    },
+    {
+      "id": "T22",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T33_T21_T22_real_sdk_graph_durable_evidence",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[started]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[response]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[terminal_staged]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[terminal_renamed]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[terminal_committed]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[response]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[finish]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[start]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[call.intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[call.response]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T22_T26_caught_uncertainty_sticky_refuses_completion_and_future_dispatch[call.intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T22_T26_caught_uncertainty_sticky_refuses_completion_and_future_dispatch[call.response]",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T22.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 1.062,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T33_T21_T22_real_sdk_graph_durable_evidence",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[started]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[response]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[terminal_staged]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[terminal_renamed]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[terminal_committed]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[response]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[finish]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[start]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[call.intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[call.response]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T22_T26_caught_uncertainty_sticky_refuses_completion_and_future_dispatch[call.intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T22_T26_caught_uncertainty_sticky_refuses_completion_and_future_dispatch[call.response]"
+      ],
+      "summary": "15 passed in 0.79s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T22.txt"
+    },
+    {
+      "id": "T23",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T23_permit_replay_cross_run_digest_expiry",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T23.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.284,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T23_permit_replay_cross_run_digest_expiry"
+      ],
+      "summary": "1 passed in 0.06s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T23.txt"
+    },
+    {
+      "id": "T24",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[started]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[response]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[terminal_staged]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[terminal_renamed]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[terminal_committed]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence_attacks.py::test_T24_T25_committed_archive_copy_retains_terminal_proof",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T24_cancel_during_finish_never_opposes_terminal[False]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T24_cancel_during_finish_never_opposes_terminal[True]",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T24.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.838,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[started]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[response]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[terminal_staged]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[terminal_renamed]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[terminal_committed]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence_attacks.py::test_T24_T25_committed_archive_copy_retains_terminal_proof",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T24_cancel_during_finish_never_opposes_terminal[False]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T24_cancel_during_finish_never_opposes_terminal[True]"
+      ],
+      "summary": "9 passed in 0.60s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T24.txt"
+    },
+    {
+      "id": "T25",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t25_terminal_idempotence_conflict_and_lost_ack",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t25_terminal_directory_fsync_failure_remains_unknown",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t25_ack_lost_after_successful_fsync_and_release_preserves_committed",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t25_completion_receipt_fsync_failure_live_writer_unknown",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t25_reserved_completion_receipt_cannot_be_supplied_by_caller",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t25_completion_receipt_has_reserved_capacity",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence_attacks.py::test_T24_T25_committed_archive_copy_retains_terminal_proof",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[response]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[finish]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T25_correctly_shaped_finish_ack_without_terminal_is_unknown",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T25_lost_finish_ack_query",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[unknown]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[refused]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[unavailable]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[run_id]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[status]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[result]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[digest]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[conflicting_digest]",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T25.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.401,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t25_terminal_idempotence_conflict_and_lost_ack",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t25_terminal_directory_fsync_failure_remains_unknown",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t25_ack_lost_after_successful_fsync_and_release_preserves_committed",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t25_completion_receipt_fsync_failure_live_writer_unknown",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t25_reserved_completion_receipt_cannot_be_supplied_by_caller",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t25_completion_receipt_has_reserved_capacity",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence_attacks.py::test_T24_T25_committed_archive_copy_retains_terminal_proof",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[response]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T21_T22_T25_replayed_start_ack_never_dispatches_or_completes[finish]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T25_correctly_shaped_finish_ack_without_terminal_is_unknown",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T25_lost_finish_ack_query",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[unknown]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[refused]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[unavailable]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[run_id]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[status]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[result]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[digest]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[conflicting_digest]"
+      ],
+      "summary": "20 passed in 0.16s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T25.txt"
+    },
+    {
+      "id": "T26",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t26_append_io_failure_poisoned_no_ready",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[start]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[call.intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[call.response]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T22_T26_caught_uncertainty_sticky_refuses_completion_and_future_dispatch[call.intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T22_T26_caught_uncertainty_sticky_refuses_completion_and_future_dispatch[call.response]",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T26.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.312,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t26_append_io_failure_poisoned_no_ready",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[start]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[call.intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[call.response]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T22_T26_caught_uncertainty_sticky_refuses_completion_and_future_dispatch[call.intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T22_T26_caught_uncertainty_sticky_refuses_completion_and_future_dispatch[call.response]"
+      ],
+      "summary": "6 passed in 0.09s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T26.txt"
+    },
+    {
+      "id": "T27",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[started]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[response]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[terminal_staged]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[terminal_renamed]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[terminal_committed]",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T27.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.789,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[started]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[intent]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[response]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[terminal_staged]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[terminal_renamed]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t22_t24_t27_actual_process_kill_commit_windows[terminal_committed]"
+      ],
+      "summary": "6 passed in 0.55s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T27.txt"
+    },
+    {
+      "id": "T28",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T28_hung_cancel_cleanup_bounded",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T28_cancellation_resistant_cleanup_bound_and_secondary_error",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T28_run_cancel_resistant_sink_preserves_original_cancel",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T28.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.385,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T28_hung_cancel_cleanup_bounded",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T28_cancellation_resistant_cleanup_bound_and_secondary_error",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T28_run_cancel_resistant_sink_preserves_original_cancel"
+      ],
+      "summary": "3 passed in 0.14s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T28.txt"
+    },
+    {
+      "id": "T29",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T16_T29_untrusted_flow_rejected[review_ref-]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T16_T29_untrusted_flow_rejected[reviewed_code_digest-name-only]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T16_T29_untrusted_flow_rejected[parallel_state_writes-True]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T29_immutable_parallel_join",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T29.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.316,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T16_T29_untrusted_flow_rejected[review_ref-]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T16_T29_untrusted_flow_rejected[reviewed_code_digest-name-only]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T16_T29_untrusted_flow_rejected[parallel_state_writes-True]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T29_immutable_parallel_join"
+      ],
+      "summary": "4 passed in 0.08s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T29.txt"
+    },
+    {
+      "id": "T30",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T03_T30_T20_real_graph",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T30_cancel_real_graph",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T30_graph_structure_and_explicit_name",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T30.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.476,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T03_T30_T20_real_graph",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T30_cancel_real_graph",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_runtime.py::test_T30_graph_structure_and_explicit_name"
+      ],
+      "summary": "3 passed in 0.22s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T30.txt"
+    },
+    {
+      "id": "T31",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change0-task_input_sensitive]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change1-task_input_sensitive]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change2-task_input_sensitive]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change3-task_input_ref_unsupported]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change4-task_input_trust_unknown]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change5-task_input_size]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change6-task_input_requirements]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_safe_summary_and_context_identity",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_terminal_exact_digest_free_text_and_sensitive_rejection",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_reject_traversal_symlink_and_preexisting_run",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_normalized_plaintext_credentials_never_recorded[apiKey]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_normalized_plaintext_credentials_never_recorded[api-key]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_normalized_plaintext_credentials_never_recorded[password]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_normalized_plaintext_credentials_never_recorded[token]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_normalized_plaintext_credentials_never_recorded[client_secret]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_normalized_plaintext_credentials_never_recorded[privateKey]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_credential_secret_reference_is_preserved_exactly",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T31.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.375,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change0-task_input_sensitive]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change1-task_input_sensitive]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change2-task_input_sensitive]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change3-task_input_ref_unsupported]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change4-task_input_trust_unknown]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change5-task_input_size]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change6-task_input_requirements]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_safe_summary_and_context_identity",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_terminal_exact_digest_free_text_and_sensitive_rejection",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_reject_traversal_symlink_and_preexisting_run",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_normalized_plaintext_credentials_never_recorded[apiKey]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_normalized_plaintext_credentials_never_recorded[api-key]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_normalized_plaintext_credentials_never_recorded[password]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_normalized_plaintext_credentials_never_recorded[token]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_normalized_plaintext_credentials_never_recorded[client_secret]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_normalized_plaintext_credentials_never_recorded[privateKey]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t31_credential_secret_reference_is_preserved_exactly"
+      ],
+      "summary": "17 passed in 0.13s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T31.txt"
+    },
+    {
+      "id": "T32",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t32_corruption_never_success[truncate]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t32_corruption_never_success[sequence]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t32_corruption_never_success[terminal]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t32_corruption_never_success[symlink]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t32_torn_completion_receipt_never_recovers_success",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T32.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.296,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t32_corruption_never_success[truncate]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t32_corruption_never_success[sequence]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t32_corruption_never_success[terminal]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t32_corruption_never_success[symlink]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_evidence.py::test_t32_torn_completion_receipt_never_recovers_success"
+      ],
+      "summary": "5 passed in 0.06s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T32.txt"
+    },
+    {
+      "id": "T33",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T33_T21_T22_real_sdk_graph_durable_evidence",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T33_T37_sdk_http_count[200]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T33_T37_sdk_http_count[429]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T33_T37_sdk_http_count[500]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T33_T34_real_sdk_three_mappings[choice]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T33_T34_real_sdk_three_mappings[score]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T33_T34_real_sdk_three_mappings[noul]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T33_T35_host_gateway_alias_exact_route_and_response_binding",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T33.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.534,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T33_T21_T22_real_sdk_graph_durable_evidence",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T33_T37_sdk_http_count[200]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T33_T37_sdk_http_count[429]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T33_T37_sdk_http_count[500]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T33_T34_real_sdk_three_mappings[choice]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T33_T34_real_sdk_three_mappings[score]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T33_T34_real_sdk_three_mappings[noul]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T33_T35_host_gateway_alias_exact_route_and_response_binding"
+      ],
+      "summary": "8 passed in 0.27s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T33.txt"
+    },
+    {
+      "id": "T34",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T33_T34_real_sdk_three_mappings[choice]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T33_T34_real_sdk_three_mappings[score]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T33_T34_real_sdk_three_mappings[noul]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T34_usage_missing_is_unknown_not_zero[usage0-expected0]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T34_usage_missing_is_unknown_not_zero[usage1-expected1]",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T34.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.403,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T33_T34_real_sdk_three_mappings[choice]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T33_T34_real_sdk_three_mappings[score]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T33_T34_real_sdk_three_mappings[noul]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T34_usage_missing_is_unknown_not_zero[usage0-expected0]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T34_usage_missing_is_unknown_not_zero[usage1-expected1]"
+      ],
+      "summary": "5 passed in 0.16s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T34.txt"
+    },
+    {
+      "id": "T35",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[missing]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[extra]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[unknown]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[kind]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[closed_id]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[prob_keys]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[sum]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[nan]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[negative]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[wrong_model]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[not_max]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T33_T35_host_gateway_alias_exact_route_and_response_binding",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[probability_keys-probability_keys]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[probability_sum-probability_sum]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[number_invalid-number_invalid]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[choice_not_maximum-choice_not_maximum]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[model_identity-model_identity]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[answer_set-answer_set]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[sdk_schema-sdk_response_schema]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[score_expected-score_expected_value]",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T35.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.492,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[missing]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[extra]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[unknown]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[kind]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[closed_id]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[prob_keys]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[sum]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[nan]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[negative]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[wrong_model]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[not_max]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T33_T35_host_gateway_alias_exact_route_and_response_binding",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[probability_keys-probability_keys]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[probability_sum-probability_sum]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[number_invalid-number_invalid]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[choice_not_maximum-choice_not_maximum]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[model_identity-model_identity]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[answer_set-answer_set]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[sdk_schema-sdk_response_schema]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[score_expected-score_expected_value]"
+      ],
+      "summary": "20 passed in 0.23s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T35.txt"
+    },
+    {
+      "id": "T36",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[missing]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[extra]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[unknown]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[kind]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[closed_id]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[prob_keys]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[sum]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[nan]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[negative]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[wrong_model]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[not_max]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T36_score_protocol[expected]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T36_score_protocol[legend]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T36_score_protocol[keys]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T36_score_protocol[alias_key]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T36_choice_tie_is_explicit_not_first",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T36_duplicate_answer_id_rejected",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[probability_keys-probability_keys]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[probability_sum-probability_sum]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[number_invalid-number_invalid]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[choice_not_maximum-choice_not_maximum]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[model_identity-model_identity]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[answer_set-answer_set]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[sdk_schema-sdk_response_schema]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[score_expected-score_expected_value]",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T36.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.496,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[missing]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[extra]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[unknown]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[kind]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[closed_id]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[prob_keys]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[sum]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[nan]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[negative]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[wrong_model]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_protocol_rejections[not_max]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T36_score_protocol[expected]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T36_score_protocol[legend]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T36_score_protocol[keys]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T36_score_protocol[alias_key]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T36_choice_tie_is_explicit_not_first",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T36_duplicate_answer_id_rejected",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[probability_keys-probability_keys]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[probability_sum-probability_sum]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[number_invalid-number_invalid]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[choice_not_maximum-choice_not_maximum]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[model_identity-model_identity]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[answer_set-answer_set]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[sdk_schema-sdk_response_schema]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T35_T36_safe_protocol_failure_diagnostics[score_expected-score_expected_value]"
+      ],
+      "summary": "25 passed in 0.24s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T36.txt"
+    },
+    {
+      "id": "T37",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T33_T37_sdk_http_count[200]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T33_T37_sdk_http_count[429]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T33_T37_sdk_http_count[500]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T37_one_http_no_hidden_retry[429]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T37_one_http_no_hidden_retry[500]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T37_one_http_no_hidden_retry[503]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T37_one_http_no_hidden_retry[401]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T37_one_http_no_hidden_retry[403]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T37_one_http_no_hidden_retry[connection]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T13_T37_unknown_remote_failure_cannot_be_caught_and_retried",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T37.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.504,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T33_T37_sdk_http_count[200]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T33_T37_sdk_http_count[429]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/compatibility/test_upstream.py::test_T33_T37_sdk_http_count[500]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T37_one_http_no_hidden_retry[429]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T37_one_http_no_hidden_retry[500]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T37_one_http_no_hidden_retry[503]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T37_one_http_no_hidden_retry[401]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T37_one_http_no_hidden_retry[403]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T37_one_http_no_hidden_retry[connection]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T13_T37_unknown_remote_failure_cannot_be_caught_and_retried"
+      ],
+      "summary": "10 passed in 0.24s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T37.txt"
+    },
+    {
+      "id": "T38",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T38_deadline_and_permit_mismatch_zero_http",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T38_T39_inflight_cancel_keeps_shared_provider",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T38_deadline_stops_inflight_without_retry",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T38.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.488,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T38_deadline_and_permit_mismatch_zero_http",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T38_T39_inflight_cancel_keeps_shared_provider",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T38_deadline_stops_inflight_without_retry"
+      ],
+      "summary": "3 passed in 0.23s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T38.txt"
+    },
+    {
+      "id": "T39",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T38_T39_inflight_cancel_keeps_shared_provider",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T39_owned_transport_closes_once",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T39.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.431,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T38_T39_inflight_cancel_keeps_shared_provider",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T39_owned_transport_closes_once"
+      ],
+      "summary": "2 passed in 0.17s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T39.txt"
+    },
+    {
+      "id": "T40",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T40_secret_endpoint_logging_and_missing_resolver",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T40_gateway_response_allowlist_is_bounded_snapshot",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T40_untrusted_diagnostic_text_is_not_retained",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T40.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.429,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T40_secret_endpoint_logging_and_missing_resolver",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T40_gateway_response_allowlist_is_bounded_snapshot",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T40_untrusted_diagnostic_text_is_not_retained"
+      ],
+      "summary": "3 passed in 0.17s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T40.txt"
+    },
+    {
+      "id": "T41",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T41_external_injection_stays_data",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T41.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.427,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T41_external_injection_stays_data"
+      ],
+      "summary": "1 passed in 0.17s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T41.txt"
+    },
+    {
+      "id": "T42",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T42_sizes_and_T68_reserved_capacity",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T42.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.432,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T42_sizes_and_T68_reserved_capacity"
+      ],
+      "summary": "1 passed in 0.17s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T42.txt"
+    },
+    {
+      "id": "T43",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T43_missing_fields_zero_calls[goal--missing_goal]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T43_missing_fields_zero_calls[boundaries-value1-missing_boundaries]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T43_missing_fields_zero_calls[acceptance_criteria-value2-missing_acceptance]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T43_known_user_goal_omitted_revise",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T43_T48_related_summary_and_reference_versions_reach_questions",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change0-task_input_sensitive]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change1-task_input_sensitive]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change2-task_input_sensitive]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change3-task_input_ref_unsupported]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change4-task_input_trust_unknown]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change5-task_input_size]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change6-task_input_requirements]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T43_explicit_evidence_and_context_reference_cannot_disappear",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T43.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.381,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T43_missing_fields_zero_calls[goal--missing_goal]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T43_missing_fields_zero_calls[boundaries-value1-missing_boundaries]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T43_missing_fields_zero_calls[acceptance_criteria-value2-missing_acceptance]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T43_known_user_goal_omitted_revise",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T43_T48_related_summary_and_reference_versions_reach_questions",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change0-task_input_sensitive]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change1-task_input_sensitive]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change2-task_input_sensitive]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change3-task_input_ref_unsupported]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change4-task_input_trust_unknown]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change5-task_input_size]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T31_T43_input_projection_refuses_sensitive_unknown_or_unbounded[change6-task_input_requirements]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T43_explicit_evidence_and_context_reference_cannot_disappear"
+      ],
+      "summary": "13 passed in 0.14s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T43.txt"
+    },
+    {
+      "id": "T44",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T44_shared_delivery_pass_independent_delivery_revise",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T44.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.322,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T44_shared_delivery_pass_independent_delivery_revise"
+      ],
+      "summary": "1 passed in 0.08s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T44.txt"
+    },
+    {
+      "id": "T45",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T45_external_policy_changes_aggregation_and_digest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T45_invalid_policy_is_technical[change0]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T45_invalid_policy_is_technical[change1]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T45_invalid_policy_is_technical[change2]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T45_invalid_policy_is_technical[change3]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T45_T47_projection_policy_and_concrete_blocking_templates",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T45.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.343,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T45_external_policy_changes_aggregation_and_digest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T45_invalid_policy_is_technical[change0]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T45_invalid_policy_is_technical[change1]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T45_invalid_policy_is_technical[change2]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T45_invalid_policy_is_technical[change3]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T45_T47_projection_policy_and_concrete_blocking_templates"
+      ],
+      "summary": "6 passed in 0.10s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T45.txt"
+    },
+    {
+      "id": "T46",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T46_model_and_text_never_grant_confirmation[unknown]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T46_model_and_text_never_grant_confirmation[refused]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T46_absent_risk_facts_cannot_be_model_pass",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T46_related_third_party_summary_never_grants_authority",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T17_T46_host_policy_alias_cannot_remove_confirmation_boundary",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T46.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.352,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T46_model_and_text_never_grant_confirmation[unknown]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T46_model_and_text_never_grant_confirmation[refused]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T46_absent_risk_facts_cannot_be_model_pass",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T46_related_third_party_summary_never_grants_authority",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/runtime/test_adversarial_runtime.py::test_T17_T46_host_policy_alias_cannot_remove_confirmation_boundary"
+      ],
+      "summary": "5 passed in 0.11s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T46.txt"
+    },
+    {
+      "id": "T47",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T47_safe_template_excludes_task_body_and_protocol_is_technical",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T45_T47_projection_policy_and_concrete_blocking_templates",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T47.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.336,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T47_safe_template_excludes_task_body_and_protocol_is_technical",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T45_T47_projection_policy_and_concrete_blocking_templates"
+      ],
+      "summary": "2 passed in 0.10s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T47.txt"
+    },
+    {
+      "id": "T48",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T48_same_signature_reused_irrelevant_inputs_ignored_new_version_reviewed",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T48_related_source_version_changes_allow_new_review",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T43_T48_related_summary_and_reference_versions_reach_questions",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T48.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.351,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T48_same_signature_reused_irrelevant_inputs_ignored_new_version_reviewed",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T48_related_source_version_changes_allow_new_review",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_task_gate.py::test_T43_T48_related_summary_and_reference_versions_reach_questions"
+      ],
+      "summary": "3 passed in 0.11s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T48.txt"
+    },
+    {
+      "id": "T49",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[continue]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[reuse]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[restore]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[wait]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[reconfigure]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[create]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[noDelegation]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T49_six_evidenced_proposal_paths[continue]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T49_six_evidenced_proposal_paths[reuse]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T49_six_evidenced_proposal_paths[restore]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T49_six_evidenced_proposal_paths[wait]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T49_six_evidenced_proposal_paths[reconfigure]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T49_six_evidenced_proposal_paths[create]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T49_noDelegation_only_explicit_policy_boundary_zero_ports",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T49.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.689,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[continue]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[reuse]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[restore]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[wait]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[reconfigure]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[create]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[noDelegation]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T49_six_evidenced_proposal_paths[continue]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T49_six_evidenced_proposal_paths[reuse]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T49_six_evidenced_proposal_paths[restore]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T49_six_evidenced_proposal_paths[wait]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T49_six_evidenced_proposal_paths[reconfigure]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T49_six_evidenced_proposal_paths[create]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T49_noDelegation_only_explicit_policy_boundary_zero_ports"
+      ],
+      "summary": "14 passed in 0.43s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T49.txt"
+    },
+    {
+      "id": "T50",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[failed]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[unknown]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[missing]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[cost]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[stale]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[context]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_expired_current_observation_rejected_before_model",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_expiry_rechecked_after_composition_and_owner_validation",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T50.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.34,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[failed]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[unknown]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[missing]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[cost]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[stale]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[context]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_expired_current_observation_rejected_before_model",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_expiry_rechecked_after_composition_and_owner_validation"
+      ],
+      "summary": "8 passed in 0.10s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T50.txt"
+    },
+    {
+      "id": "T51",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[failed]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[unknown]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[missing]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[cost]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[stale]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[context]",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T51.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.332,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[failed]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[unknown]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[missing]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[cost]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[stale]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T50_T51_hard_checks_prevent_selection[context]"
+      ],
+      "summary": "6 passed in 0.09s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T51.txt"
+    },
+    {
+      "id": "T52",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T52_busy_shared_reconfigure_and_wait_deadline_unknown",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T52.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.318,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T52_busy_shared_reconfigure_and_wait_deadline_unknown"
+      ],
+      "summary": "1 passed in 0.08s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T52.txt"
+    },
+    {
+      "id": "T53",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T53_empty_incomplete_and_create_incomplete_refused",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T53_external_order_changes_selected_action",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T53_pagination_preserves_incomplete_and_duplicate_cursor_refused",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T53_page_and_combination_bounds_are_intersection",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T53.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.334,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T53_empty_incomplete_and_create_incomplete_refused",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T53_external_order_changes_selected_action",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T53_pagination_preserves_incomplete_and_duplicate_cursor_refused",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T53_page_and_combination_bounds_are_intersection"
+      ],
+      "summary": "4 passed in 0.09s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T53.txt"
+    },
+    {
+      "id": "T54",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T03_T54_true_graph_three_round_repair",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T54_no_new_proposal_or_feedback_stops",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T54_T68_rejection_and_tie_never_payload[tie]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T54_T68_rejection_and_tie_never_payload[none_suitable]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T54_T68_rejection_and_tie_never_payload[insufficient_evidence]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T54_repair_feedback_and_same_progress_do_not_repeat_model",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T54.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.589,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T03_T54_true_graph_three_round_repair",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T54_no_new_proposal_or_feedback_stops",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T54_T68_rejection_and_tie_never_payload[tie]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T54_T68_rejection_and_tie_never_payload[none_suitable]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T54_T68_rejection_and_tie_never_payload[insufficient_evidence]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T54_repair_feedback_and_same_progress_do_not_repeat_model"
+      ],
+      "summary": "6 passed in 0.32s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T54.txt"
+    },
+    {
+      "id": "T55",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T19_T55_boundary_scanner_positive_and_injected_private",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T10_T55_mandatory_read_gap_prevents_ready",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T55_T57_T61_T62_real_public_forward",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T55_T56_profile_and_filtered_scope",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T55.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.607,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T19_T55_boundary_scanner_positive_and_injected_private",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T10_T55_mandatory_read_gap_prevents_ready",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T55_T57_T61_T62_real_public_forward",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T55_T56_profile_and_filtered_scope"
+      ],
+      "summary": "4 passed in 0.33s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T55.txt"
+    },
+    {
+      "id": "T56",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T55_T56_profile_and_filtered_scope",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T56.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.373,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T55_T56_profile_and_filtered_scope"
+      ],
+      "summary": "1 passed in 0.13s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T56.txt"
+    },
+    {
+      "id": "T57",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t57_owner_refused_unsupported_not_laundered_to_unavailable[describe_configuration_offers-AdmissionRefusedError]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t57_owner_refused_unsupported_not_laundered_to_unavailable[describe_configuration_offers-ConfigurationUnsupported]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t57_owner_refused_unsupported_not_laundered_to_unavailable[assess_configuration_proposal-AdmissionRefusedError]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t57_owner_refused_unsupported_not_laundered_to_unavailable[assess_configuration_proposal-ConfigurationUnsupported]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t57_source_permission_uses_existing_native_profile_target",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T55_T57_T61_T62_real_public_forward",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_permission_version_and_bad_receipt",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_owner_retired_in_callback",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_owner_generation_replaced_during_pure_read[offers]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_owner_generation_replaced_during_pure_read[assessment]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_T62_file_guard_catches_existing_file_write[offers]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_T62_file_guard_catches_existing_file_write[assessment]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_profile_read_revoked_during_owner_callback",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_separate_provider_source_changes_during_assessment[retire]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_separate_provider_source_changes_during_assessment[replace]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_separate_provider_source_changes_during_assessment[descriptor]",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T57.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.437,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t57_owner_refused_unsupported_not_laundered_to_unavailable[describe_configuration_offers-AdmissionRefusedError]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t57_owner_refused_unsupported_not_laundered_to_unavailable[describe_configuration_offers-ConfigurationUnsupported]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t57_owner_refused_unsupported_not_laundered_to_unavailable[assess_configuration_proposal-AdmissionRefusedError]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t57_owner_refused_unsupported_not_laundered_to_unavailable[assess_configuration_proposal-ConfigurationUnsupported]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t57_source_permission_uses_existing_native_profile_target",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T55_T57_T61_T62_real_public_forward",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_permission_version_and_bad_receipt",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_owner_retired_in_callback",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_owner_generation_replaced_during_pure_read[offers]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_owner_generation_replaced_during_pure_read[assessment]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_T62_file_guard_catches_existing_file_write[offers]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_T62_file_guard_catches_existing_file_write[assessment]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_profile_read_revoked_during_owner_callback",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_separate_provider_source_changes_during_assessment[retire]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_separate_provider_source_changes_during_assessment[replace]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_separate_provider_source_changes_during_assessment[descriptor]"
+      ],
+      "summary": "16 passed in 0.19s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T57.txt"
+    },
+    {
+      "id": "T58",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T58_consumption_rechecks_every_must",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_exact_digest_and_obligations_and_all_preconditions",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_required_semantics_cannot_be_downgraded[advisory]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_required_semantics_cannot_be_downgraded[missing]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_required_semantics_cannot_be_downgraded[wrong_subject]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_required_semantics_cannot_be_downgraded[wrong_checker]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_check_identity_and_duplicate_conditions[subject]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_check_identity_and_duplicate_conditions[checker_id]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_check_identity_and_duplicate_conditions[checker_version]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_check_identity_and_duplicate_conditions[duplicate]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_read_observations_bound_into_source_progress_and_validator",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T58.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.556,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T58_consumption_rechecks_every_must",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_exact_digest_and_obligations_and_all_preconditions",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_required_semantics_cannot_be_downgraded[advisory]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_required_semantics_cannot_be_downgraded[missing]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_required_semantics_cannot_be_downgraded[wrong_subject]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_required_semantics_cannot_be_downgraded[wrong_checker]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_check_identity_and_duplicate_conditions[subject]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_check_identity_and_duplicate_conditions[checker_id]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_check_identity_and_duplicate_conditions[checker_version]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_check_identity_and_duplicate_conditions[duplicate]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T58_read_observations_bound_into_source_progress_and_validator"
+      ],
+      "summary": "11 passed in 0.29s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T58.txt"
+    },
+    {
+      "id": "T59",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[continue]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[reuse]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[restore]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[wait]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[reconfigure]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[create]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[noDelegation]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T04_T59_alternate_graph_and_unclear_zero_calls",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T59.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.656,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[continue]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[reuse]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[restore]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[wait]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[reconfigure]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[create]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T49_T59_seven_paths_real_graph[noDelegation]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T04_T59_alternate_graph_and_unclear_zero_calls"
+      ],
+      "summary": "8 passed in 0.41s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T59.txt"
+    },
+    {
+      "id": "T60",
+      "status": "NOT_RUN",
+      "reason": "separate live authorization, credential and cost scope required"
+    },
+    {
+      "id": "T61",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T55_T57_T61_T62_real_public_forward",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T61_T62_T67_core_adapter_graph_owner_validation",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_owner_mapping_attacks.py::test_T61_builder_without_reviewed_mapping_cannot_return_ready",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_owner_mapping_attacks.py::test_T61_T62_builder_wrong_field_rejected_before_owner[0.1]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_owner_mapping_attacks.py::test_T61_T62_builder_wrong_field_rejected_before_owner[0.9]",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T61.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.527,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T55_T57_T61_T62_real_public_forward",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T61_T62_T67_core_adapter_graph_owner_validation",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_owner_mapping_attacks.py::test_T61_builder_without_reviewed_mapping_cannot_return_ready",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_owner_mapping_attacks.py::test_T61_T62_builder_wrong_field_rejected_before_owner[0.1]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_owner_mapping_attacks.py::test_T61_T62_builder_wrong_field_rejected_before_owner[0.9]"
+      ],
+      "summary": "5 passed in 0.28s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T61.txt"
+    },
+    {
+      "id": "T62",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_basis_schema_attacks.py::test_T62_huge_number_in_absent_schema_branch_is_unverifiable",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T55_T57_T61_T62_real_public_forward",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_T62_file_guard_catches_existing_file_write[offers]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_T62_file_guard_catches_existing_file_write[assessment]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T61_T62_T67_core_adapter_graph_owner_validation",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_owner_mapping_attacks.py::test_T61_T62_builder_wrong_field_rejected_before_owner[0.1]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_owner_mapping_attacks.py::test_T61_T62_builder_wrong_field_rejected_before_owner[0.9]",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T62.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.517,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_basis_schema_attacks.py::test_T62_huge_number_in_absent_schema_branch_is_unverifiable",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T55_T57_T61_T62_real_public_forward",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_T62_file_guard_catches_existing_file_write[offers]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T57_T62_file_guard_catches_existing_file_write[assessment]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T61_T62_T67_core_adapter_graph_owner_validation",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_owner_mapping_attacks.py::test_T61_T62_builder_wrong_field_rejected_before_owner[0.1]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_owner_mapping_attacks.py::test_T61_T62_builder_wrong_field_rejected_before_owner[0.9]"
+      ],
+      "summary": "7 passed in 0.27s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T62.txt"
+    },
+    {
+      "id": "T63",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_release.py::test_T63_independent_wheel_optional_boundaries",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T63.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.453,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_release.py::test_T63_independent_wheel_optional_boundaries"
+      ],
+      "summary": "1 passed in 0.22s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T63.txt"
+    },
+    {
+      "id": "T64",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_release.py::test_T64_fixed_baseline_regression_id_comparison",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T64.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.247,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_release.py::test_T64_fixed_baseline_regression_id_comparison"
+      ],
+      "summary": "1 passed in 0.01s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T64.txt"
+    },
+    {
+      "id": "T65",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T08_T65_receipt_coverage",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t65_must_obligation_cannot_use_fabricated_evidence_container[invented]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t65_must_obligation_cannot_use_fabricated_evidence_container[bad_refs1]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t65_must_obligation_cannot_use_fabricated_evidence_container[bad_refs2]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t65_obligation_source_versions_requires_mapping[not-a-version-map]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t65_obligation_source_versions_requires_mapping[bad_versions1]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_obligation_versions_cannot_disagree_with_assessment[versions0]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_obligation_versions_cannot_disagree_with_assessment[versions1]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_obligation_versions_cannot_disagree_with_assessment[versions2]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_owner_cannot_invent_shared_overall_and_obligation_source",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_source_versions_preserve_json_scalar_type[overall-True]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_source_versions_preserve_json_scalar_type[overall-1.0]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_source_versions_preserve_json_scalar_type[obligation-True]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_source_versions_preserve_json_scalar_type[obligation-1.0]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T65_old_provider_unsupported",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T65.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.397,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T08_T65_receipt_coverage",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t65_must_obligation_cannot_use_fabricated_evidence_container[invented]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t65_must_obligation_cannot_use_fabricated_evidence_container[bad_refs1]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t65_must_obligation_cannot_use_fabricated_evidence_container[bad_refs2]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t65_obligation_source_versions_requires_mapping[not-a-version-map]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t65_obligation_source_versions_requires_mapping[bad_versions1]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_obligation_versions_cannot_disagree_with_assessment[versions0]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_obligation_versions_cannot_disagree_with_assessment[versions1]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_obligation_versions_cannot_disagree_with_assessment[versions2]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_owner_cannot_invent_shared_overall_and_obligation_source",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_source_versions_preserve_json_scalar_type[overall-True]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_source_versions_preserve_json_scalar_type[overall-1.0]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_source_versions_preserve_json_scalar_type[obligation-True]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_source_versions_preserve_json_scalar_type[obligation-1.0]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T65_old_provider_unsupported"
+      ],
+      "summary": "15 passed in 0.15s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T65.txt"
+    },
+    {
+      "id": "T66",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T16_T66_mutable_query_snapshotted_before_digest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T02_T66_vectors_and_domains",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_basis_schema_attacks.py::test_T66_task_reference_revision_cannot_conflict_with_expected_version",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t01_t66_manifest_freezes_effective_policies",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T66.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.608,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/acceptance/test_vertical.py::test_T16_T66_mutable_query_snapshotted_before_digest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/contracts/test_contracts.py::test_T02_T66_vectors_and_domains",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_basis_schema_attacks.py::test_T66_task_reference_revision_cannot_conflict_with_expected_version",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_t01_t66_manifest_freezes_effective_policies"
+      ],
+      "summary": "4 passed in 0.33s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T66.txt"
+    },
+    {
+      "id": "T67",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T67_dynamic_decimal_kind_through_registered_handler_and_owner",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T67_schema_enum_distinguishes_boolean_and_number",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T61_T62_T67_core_adapter_graph_owner_validation",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T67.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.458,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T67_dynamic_decimal_kind_through_registered_handler_and_owner",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T67_schema_enum_distinguishes_boolean_and_number",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/integration/test_core_read_seam.py::test_T61_T62_T67_core_adapter_graph_owner_validation"
+      ],
+      "summary": "3 passed in 0.21s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T67.txt"
+    },
+    {
+      "id": "T68",
+      "status": "PASSED",
+      "command": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+        "-m",
+        "pytest",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T54_T68_rejection_and_tie_never_payload[tie]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T54_T68_rejection_and_tie_never_payload[none_suitable]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T54_T68_rejection_and_tie_never_payload[insufficient_evidence]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T42_sizes_and_T68_reserved_capacity",
+        "-q",
+        "--junitxml=.decision-tmp/adversarial-release-acceptance/T68.xml"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.504,
+      "test_ids": [
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T54_T68_rejection_and_tie_never_payload[tie]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T54_T68_rejection_and_tie_never_payload[none_suitable]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/flows/test_selection.py::test_T54_T68_rejection_and_tie_never_payload[insufficient_evidence]",
+        "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests/providers/test_jev.py::test_T42_sizes_and_T68_reserved_capacity"
+      ],
+      "summary": "4 passed in 0.25s",
+      "evidence": ".decision-tmp/adversarial-release-acceptance/T68.txt"
+    }
+  ],
+  "full_suite": {
+    "status": "PASSED",
+    "command": [
+      "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/.venv-decision/bin/python",
+      "-m",
+      "pytest",
+      "/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/tests",
+      "-q",
+      "--junitxml=.decision-tmp/adversarial-release-acceptance/full-suite.xml"
+    ],
+    "exit_code": 0,
+    "summary": "320 passed in 5.55s",
+    "evidence": ".decision-tmp/adversarial-release-acceptance/full-suite.txt"
+  },
+  "offline_result": "PASSED",
+  "live_jev": "NOT_RUN"
+}

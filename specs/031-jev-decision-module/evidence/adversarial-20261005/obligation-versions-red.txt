@@ -1,0 +1,55 @@
+..............FFF                                                        [100%]
+=================================== FAILURES ===================================
+___ test_T65_obligation_versions_cannot_disagree_with_assessment[versions0] ____
+
+versions = {}
+
+    @pytest.mark.parametrize('versions', [{}, {'descriptor':'wrong'}, {'descriptor':'1','foreign':'3'}])
+    def test_T65_obligation_versions_cannot_disagree_with_assessment(versions):
+        value = proposal()
+        row = {'obligationId':'configuration','status':'passed','checkerId':'owner','checkerVersion':'1',
+               'sourceVersions':versions,'evidenceRefs':[EVIDENCE]}
+        assessment = OwnerProposalAssessment(value.input_digest,{'descriptor':'1'},'valid',(),
+            (row,),'owner pure read only',(EVIDENCE,),PURE_READ_VERSION)
+>       with pytest.raises(ConfigurationContractError): require_assessment(value, assessment)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ConfigurationContractError
+
+packages/backend/decision/tests/integration/test_core_read_counterexamples.py:131: Failed
+___ test_T65_obligation_versions_cannot_disagree_with_assessment[versions1] ____
+
+versions = {'descriptor': 'wrong'}
+
+    @pytest.mark.parametrize('versions', [{}, {'descriptor':'wrong'}, {'descriptor':'1','foreign':'3'}])
+    def test_T65_obligation_versions_cannot_disagree_with_assessment(versions):
+        value = proposal()
+        row = {'obligationId':'configuration','status':'passed','checkerId':'owner','checkerVersion':'1',
+               'sourceVersions':versions,'evidenceRefs':[EVIDENCE]}
+        assessment = OwnerProposalAssessment(value.input_digest,{'descriptor':'1'},'valid',(),
+            (row,),'owner pure read only',(EVIDENCE,),PURE_READ_VERSION)
+>       with pytest.raises(ConfigurationContractError): require_assessment(value, assessment)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ConfigurationContractError
+
+packages/backend/decision/tests/integration/test_core_read_counterexamples.py:131: Failed
+___ test_T65_obligation_versions_cannot_disagree_with_assessment[versions2] ____
+
+versions = {'descriptor': '1', 'foreign': '3'}
+
+    @pytest.mark.parametrize('versions', [{}, {'descriptor':'wrong'}, {'descriptor':'1','foreign':'3'}])
+    def test_T65_obligation_versions_cannot_disagree_with_assessment(versions):
+        value = proposal()
+        row = {'obligationId':'configuration','status':'passed','checkerId':'owner','checkerVersion':'1',
+               'sourceVersions':versions,'evidenceRefs':[EVIDENCE]}
+        assessment = OwnerProposalAssessment(value.input_digest,{'descriptor':'1'},'valid',(),
+            (row,),'owner pure read only',(EVIDENCE,),PURE_READ_VERSION)
+>       with pytest.raises(ConfigurationContractError): require_assessment(value, assessment)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ConfigurationContractError
+
+packages/backend/decision/tests/integration/test_core_read_counterexamples.py:131: Failed
+=========================== short test summary info ============================
+FAILED packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_obligation_versions_cannot_disagree_with_assessment[versions0]
+FAILED packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_obligation_versions_cannot_disagree_with_assessment[versions1]
+FAILED packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_obligation_versions_cannot_disagree_with_assessment[versions2]
+3 failed, 14 passed in 0.17s

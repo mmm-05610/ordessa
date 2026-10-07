@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="0.073" timestamp="2026-10-05T17:43:59.055410+08:00" hostname="maoqh-g15"><testcase classname="tests.runtime.test_runtime" name="test_T11_external_cancel_propagates_and_shared_provider_survives" time="0.004" /></testsuite></testsuites>

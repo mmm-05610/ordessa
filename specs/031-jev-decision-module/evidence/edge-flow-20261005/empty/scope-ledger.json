@@ -1,0 +1,52 @@
+{
+  "scope_id": "jev-edge-empty-20261005",
+  "input_hash": "sha256:e61d0ed35dc59c329ffb0ca0ebfcd00db0f791f9d3737f01d00a2cd7e3b8a048",
+  "limit": 6,
+  "cases": [
+    "edge"
+  ],
+  "requests": [
+    {
+      "case_id": "edge",
+      "attempt": 1,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.4526
+    },
+    {
+      "case_id": "edge",
+      "attempt": 2,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.0042
+    },
+    {
+      "case_id": "edge",
+      "attempt": 3,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.6637
+    },
+    {
+      "case_id": "edge",
+      "attempt": 4,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6467
+    },
+    {
+      "case_id": "edge",
+      "attempt": 5,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.6702
+    },
+    {
+      "case_id": "edge",
+      "attempt": 6,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.835
+    }
+  ]
+}

@@ -21,6 +21,8 @@ RUNTIME_METHODS = (
     "apply_configuration", "query_change", "stop", "release", "recover",
 )
 
+PURE_READ_METHODS = ("describe_configuration_offers", "assess_configuration_proposal")
+PURE_READ_VERSION = "agent-configuration-read/1"
 
 @dataclass(frozen=True)
 class RuntimeProviderDescriptor:
@@ -29,6 +31,7 @@ class RuntimeProviderDescriptor:
     definition_ref: Mapping
     implementation_digest: str
     supported_methods: tuple[str, ...] = ()
+    pure_read_contract_version: str | None = None
 
     def __post_init__(self):
         if (not isinstance(self.provider_id, str)
@@ -49,20 +52,25 @@ class RuntimeProviderDescriptor:
             raise ValueError("implementation digest required")
         if (not isinstance(self.supported_methods, tuple)
                 or len(set(self.supported_methods)) != len(self.supported_methods)
-                or any(name not in RUNTIME_METHODS for name in self.supported_methods)):
+                or any(name not in RUNTIME_METHODS + PURE_READ_METHODS for name in self.supported_methods)):
             raise ValueError("explicit supported lifecycle methods required")
+        if self.pure_read_contract_version not in (None, PURE_READ_VERSION):
+            raise ValueError("unsupported pure-read contract")
+        if any(v in PURE_READ_METHODS for v in self.supported_methods) and self.pure_read_contract_version != PURE_READ_VERSION:
+            raise ValueError("pure-read methods require explicit version guarantee")
         object.__setattr__(self, "definition_ref", sealed_mapping(self.definition_ref))
 
     def snapshot(self):
         return RuntimeProviderDescriptor(self.provider_id, self.contract_version,
-                                         self.definition_ref, self.implementation_digest, self.supported_methods)
+                                         self.definition_ref, self.implementation_digest, self.supported_methods, self.pure_read_contract_version)
 
     def to_dict(self):
         import json
         return {"providerId": self.provider_id, "contractVersion": self.contract_version,
                 "definitionRef": json.loads(safe_json(self.definition_ref)),
                 "implementationDigest": self.implementation_digest,
-                "supportedMethods": list(self.supported_methods)}
+                "supportedMethods": list(self.supported_methods),
+                **({"pureReadContractVersion": self.pure_read_contract_version} if self.pure_read_contract_version is not None else {})}
 
 
 @runtime_checkable

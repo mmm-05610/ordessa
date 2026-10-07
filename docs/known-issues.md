@@ -204,3 +204,56 @@ Agent Tools分阶段Store读审发现：原非staged OperationRecord验证curren
    （需网络＋写盘）与observed全链门回填（需安装kilo二进制＋假端点＋门报告）待另行授权。
 5. dsh独立包`plugins/harness/dsh/` 23件建成、231P/0F，门回填前生产装配不出现该provider；
    Grok Build P1与Qoder P2待派。
+
+## Optional decision module (031, 2026-10-05)
+
+- Scoped offline acceptance: 67 scenarios and 209 tests passed; T60 real Jev quality NOT_RUN pending separate model/cost/credential authorization. Fake HTTP is protocol evidence only.
+- Public Agent pure-read seam is additive and opt-in. Existing Pi/Codex/Claude families remain unsupported for these new configuration reads; temporary real-core tests use a fake owner and perform zero effects. JD009 remains PARTIAL for family capability.
+- Targeted 57 baseline/current core IDs match (40 direction/public API plus 17 Environment lifecycle/store seam IDs). Full inherited Server/Harness red suites were not rerun or removed; original entries above remain authoritative.
+- Python runtime uses >=3.10-compatible cooperative cancellation, tested on 3.12.14 only; blocking or cancellation-resistant host code cannot be hard-killed. File durability is verified on local POSIX with subprocess crash windows, not power loss or remote filesystems.
+- Full scene receipts and limitations: specs/031-jev-decision-module/evidence/implementation-20261005/README.md.
+
+- 031 local Laya smoke (user separately authorized): installed SDK 0.3.20 + multilingual snapshot 55cf4c4e... runs on local CUDA, but 9/25 completed model cases match frozen labels (plus one zero-model hard refusal). Task rubric positive cases, bool positives, injection and choice-order examples fail. Four-decimal probability rounding violates current Jev 1e-6 checks; large option prompts can be truncated. Not integrated/defaulted; real Jev T60 remains NOT_RUN. Full receipts: specs/031-jev-decision-module/evidence/laya-local-20261005/README.md.
+
+- 031 Zen real Jev (separate user authorization): official SDK + original graph/gateway completed 50 HTTP attempts total, retries 0; 22/23 retained model cases match frozen labels. Single-deliverable gate still clarify; initial Chinese case answers lost after collector KeyError but three durable response summaries preserved, not resent; correct 64+2 sentinel capacity timed out once with unknown server completion/usage. T60/JD010 now PARTIAL, replacing earlier NOT_RUN for this execution. Known usage 25439 input/2002 output; cost and timeout usage UNKNOWN. Credential moved out of source with explicit user permission. Evidence: specs/031-jev-decision-module/evidence/jev-zen-20261005/README.md.
+- New gateway settings source offline verified: 211 tests, 67 separate scenes, 57 matched baseline/core IDs; first suite failed stale-wheel integrity guard (210P/1F), normal offline rebuild fixed packaging before 211P. Full Server/Harness inherited failures and real family effects remain unverified. Evidence: specs/031-jev-decision-module/evidence/zen-offline-20261005/README.md.
+
+- 031 proper-bound-state follow-up: unchanged frozen single-deliverable label still misses (clarify), vague correctly clarify, 12 additional HTTP requests. Final cumulative 62/64; known usage 32611/2540, one timeout usage unknown. Original misses remain; T60 PARTIAL. Same Jev evidence summary is authoritative over earlier 50-call snapshot.
+
+
+## Decision module (spec 031)
+
+These entries apply to the optional read-only module in this implementation tree;
+they do not change default product composition or the existing service registry.
+
+| Issue | Status | Evidence and practical limit |
+| --- | --- | --- |
+| DEC031-01: Jev synthetic model labels are not all met | Open, real-model quality limit, 2026-10-05 | The frozen v2 batch used 42 authorized requests. Of 22 model cases, 21 retained valid typed answers and 20 matched labels. `churn-en-positive` returned 0.40 against the predeclared [0.50, 1.00] interval. No threshold reduction or production-readiness claim. [Frozen inputs and answers](../specs/031-jev-decision-module/evidence/jev-domain-v2-20261005/README.md). |
+| DEC031-02: live 64 business choices + 2 refusal slots have intermittent protocol failure | Open, protocol/capacity limit, 2026-10-05 | An earlier 10-second call timed out; the separately authorized v2 call returned HTTP 200 then `protocol_invalid`. The old offending response fields remain unknown because raw responses were not retained. A subsequent predeclared eight-repeat batch now isolates one `probability_sum` failure; seven repetitions and a separate diagnostic call pass strict validation. This does not retroactively diagnose the old call or prove universal capacity stability. Offline mapping preserves all 66 IDs but does not prove a valid live response. Do not lower protocol validation or silently truncate candidates. The user subsequently authorized no cumulative attempt ceiling within the same free synthetic diagnostic scope; each run remains finitely budgeted. Prior 62 and additional 42 requests remain recorded in their original ledgers. [Historical timeout](../specs/031-jev-decision-module/evidence/jev-zen-20261005/README.md), [current failure](../specs/031-jev-decision-module/evidence/jev-domain-v2-20261005/README.md). |
+| DEC031-03: shipped Agent families do not opt in to pure read configuration offers/assessment | Registered unsupported capability, 2026-10-05 | JD007 adds only optional public routing within the native Agent authority. Existing providers return unsupported/unverifiable; temporary-core tests use a controlled owner. JD009 explicitly retains PARTIAL for absent family capability. No new owner, execution authority, or real Harness apply support is claimed. [Core/offline scope](../specs/031-jev-decision-module/evidence/completion-offline-20261005/README.md). |
+| DEC031-04: evaluation collector evidence defects | Fixed prospectively; historical receipts retained, 2026-10-05 | The first collector lost three typed answers after an incorrect terminal digest key. The v2 collector preserves answers before terminal verification and keeps durable cross-process reservations. Its initial `credential_reads` counter stayed at the preparation default despite one authorized file read; the raw receipt is retained and the independent summary corrects this value to 1. Future counting is fixed and covered by the 232-test suite. These fixes do not retroactively verify lost answers. [History](../specs/031-jev-decision-module/evidence/jev-zen-20261005/README.md), [v2 audited counter](../specs/031-jev-decision-module/evidence/jev-domain-v2-20261005/summary.json). |
+
+Python 3.10, real power loss, remote-filesystem durability, real family effects and
+the complete Server/Harness inherited-red suites were not verified in spec 031.
+The fixed baseline and current tree matched 57 targeted core test IDs; this is not
+a whole-product green claim. Known inherited rows above remain open.
+
+Spec 031 continuation evidence: [safe protocol diagnostics and fixed repeats](../specs/031-jev-decision-module/evidence/protocol-diagnostic-20261005/README.md). A separately frozen, explicit intent rubric v3 matches 8/8 bilingual controls; it does not relabel original v2 failures or lower thresholds.
+
+Spec031 continuation (2026-10-05): the original assignment graph now has 9 independently verified live synthetic runs: ready/repair/clarify/revise and multi-proposal rank/order reversal/insufficient evidence. These reuse the original graph and official SDK; controlled ports do not supply real family capability. Latest offline suite: 260 tests + 67 scenarios + 57 baseline/current core IDs. Totals: 184 live HTTP requests, 3 historical unknown usage entries, cost UNKNOWN. [Reference flow](../specs/031-jev-decision-module/evidence/reference-flow-20261005/README.md), [Rank flow](../specs/031-jev-decision-module/evidence/rank-flow-20261005/README.md). Registered historical model/protocol failures remain open.
+
+Spec031 edge continuation: four more original-graph synthetic runs cover complete-empty candidates, explicit main-Agent noDelegation, structurally valid ConfigurationOffer with mandatory owner semantics unknown, and third-party injection through controlled composition/validation. Latest suite269 +67 scenarios +57 baseline/current IDs. Cumulative208 HTTP, usage164315 input/13689 output plus3 historical unknown entries; cost UNKNOWN. These do not supply real family capability or erase historical failures. [Edge evidence](../specs/031-jev-decision-module/evidence/edge-flow-20261005/README.md).
+
+### Spec 031 防御边界修复复验（2026-10-05续）
+
+[两轮反例证据](../specs/031-jev-decision-module/evidence/adversarial-20261005/README.md)记录来源撤权／换代、义务虚构版本及标量类型、owner错映射、隐藏schema分支、策略别名、未知重发、ACK／终态和写者锁攻击；修复后320项与67离线场景、57基线／当前核心ID通过。可信映射verifier仍需业务审阅，不证明任意映射正确；旧非终态缺写者身份返回unknown、不迁移原日志。
+
+新增6真实免费Jev合成原图请求通过；累计214请求，已报告170771输入／13958输出，历史3次usage未知，费用UNKNOWN。DEC031-01/02历史模型标签和协议风险、DEC031-03家族unsupported及实际Harness未验证不因此关闭。后续Codex原owner纯只读接入是待批准范围扩展，尚未实施。
+
+### Spec 031 用户批准 Codex 纯读扩展（2026-10-05）
+
+Codex原owner已opt-in公开只读offer/assessment，仅证明既有声明编译语义；offer/application/runtimeReady仍unknown，其他Pi/Claude仍unsupported。DEC031-03的“全家族未opt-in”是此前状态，不把新增纯读能力写成实际Harness或应用支持。[证据](../specs/031-jev-decision-module/evidence/codex-pure-read-20261005/README.md)：352项Decision、147项Codex家族、67场景及57基线／当前ID通过；新6真实Jev调用给compile passed＋应用义务unknown，原图正确clarify。
+
+新增发现的Codex客户端夹具退役Message import在固定基线复现16失败；夹具改接现有公开transport类型，未复活兼容链、未改变断言，当前家族147通过。脚本peer不证明真实原生二进制协议；本机入口只盘点到/usr/lib/chatgpt/resources/codex，未执行或确认版本。全部Server/Harness继承红仍未整体复验，真实断电/远程FS/Python3.10仍未验证。
+
+累计220真实免费Jev请求、已报告176303输入／14227输出，历史3usage未知、费用UNKNOWN。模型历史标签和概率协议风险DEC031-01/02保持开放；真实Harness及native apply须另批，尚未执行。

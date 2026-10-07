@@ -1,0 +1,143 @@
+{
+  "verified_runs": 23,
+  "rows": [
+    {
+      "batch": "capacity-diagnostic",
+      "case": "capacity-64-plus-2",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "e6c3f2b5-08b9-4085-b5d5-c821a7123d2f"
+    },
+    {
+      "batch": "stability-diagnostic",
+      "case": "capacity-64-plus-2-repeat-1",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "d2921cf4-3bf5-4f2a-9b03-997f06ee8302"
+    },
+    {
+      "batch": "stability-diagnostic",
+      "case": "capacity-64-plus-2-repeat-2",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "02a6b4e9-0692-4767-9aac-9b5559fc6f14"
+    },
+    {
+      "batch": "stability-diagnostic",
+      "case": "capacity-64-plus-2-repeat-3",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "229e6732-4e61-46ea-881a-6c9d68cc56db"
+    },
+    {
+      "batch": "stability-diagnostic",
+      "case": "capacity-64-plus-2-repeat-4",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "787df430-2a81-4ac4-ac57-1435951b803d"
+    },
+    {
+      "batch": "stability-diagnostic",
+      "case": "capacity-64-plus-2-repeat-5",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "1f2e8348-1e2f-4f46-bba6-147af7329fe5"
+    },
+    {
+      "batch": "stability-diagnostic",
+      "case": "capacity-64-plus-2-repeat-6",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "f3035e3e-5bf2-4cc8-99e9-47f2aa5c6c6a"
+    },
+    {
+      "batch": "stability-diagnostic",
+      "case": "capacity-64-plus-2-repeat-7",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "22b3f2bc-8e25-4ebf-a06b-218d14c9c7b0"
+    },
+    {
+      "batch": "stability-diagnostic",
+      "case": "capacity-64-plus-2-repeat-8",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "ca497041-b178-46a9-9dfb-fb297df42dc3"
+    },
+    {
+      "batch": "stability-diagnostic",
+      "case": "churn-en-positive-repeat-1",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "cd7e0136-c936-419a-9a6d-cb804b9cc6c7"
+    },
+    {
+      "batch": "stability-diagnostic",
+      "case": "churn-en-positive-repeat-2",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "f5382b55-f4b1-4ac3-bfc0-e11d2e2146a8"
+    },
+    {
+      "batch": "stability-diagnostic",
+      "case": "churn-en-positive-repeat-3",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "d0cd973b-9451-437d-a769-28f61cbfd6b9"
+    },
+    {
+      "batch": "stability-diagnostic",
+      "case": "churn-en-positive-repeat-4",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "ec2fb6d4-e2ec-4361-b667-927be8bc975a"
+    },
+    {
+      "batch": "stability-diagnostic",
+      "case": "churn-en-negative-repeat-1",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "ab8f246b-3fba-422d-b7d4-9c05fb5deb63"
+    },
+    {
+      "batch": "stability-diagnostic",
+      "case": "churn-en-negative-repeat-2",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "ea550323-b15e-4228-b54e-ad84b059bf95"
+    },
+    {
+      "batch": "intent-rubric-v3",
+      "case": "conditional-en",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "46791f92-3f0c-48e4-aa59-9325ce184a51"
+    },
+    {
+      "batch": "intent-rubric-v3",
+      "case": "conditional-zh",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "93a5a91d-4881-43f2-8e79-e698cbd1b9ba"
+    },
+    {
+      "batch": "intent-rubric-v3",
+      "case": "unconditional-en",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "7a1a74e1-6f06-4d07-87d7-f7d3e6941c12"
+    },
+    {
+      "batch": "intent-rubric-v3",
+      "case": "unconditional-zh",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "6499b172-9788-4ec7-96ce-3f997ebc8b56"
+    },
+    {
+      "batch": "intent-rubric-v3",
+      "case": "negative-en",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "6be993a6-c399-4602-8d28-82abb58643f8"
+    },
+    {
+      "batch": "intent-rubric-v3",
+      "case": "negative-zh",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "19b258b2-59de-4775-be2d-e197de09589f"
+    },
+    {
+      "batch": "intent-rubric-v3",
+      "case": "ambiguous-en",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "8151f7e0-795d-468e-b322-765980549729"
+    },
+    {
+      "batch": "intent-rubric-v3",
+      "case": "ambiguous-zh",
+      "status": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_VERIFIED",
+      "run_id": "915cc979-d4cf-438a-82be-b79515619f29"
+    }
+  ]
+}

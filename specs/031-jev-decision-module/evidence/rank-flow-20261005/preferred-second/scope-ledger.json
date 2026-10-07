@@ -1,0 +1,59 @@
+{
+  "scope_id": "jev-rank-preferred-second-20261005",
+  "input_hash": "sha256:7bbf5eb68e4de322f14094bd78ea8d1f33891c68f51da4d2395dffb801ae2808",
+  "limit": 7,
+  "cases": [
+    "rank"
+  ],
+  "requests": [
+    {
+      "case_id": "rank",
+      "attempt": 1,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.4174
+    },
+    {
+      "case_id": "rank",
+      "attempt": 2,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.9971
+    },
+    {
+      "case_id": "rank",
+      "attempt": 3,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.1794
+    },
+    {
+      "case_id": "rank",
+      "attempt": 4,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.0069
+    },
+    {
+      "case_id": "rank",
+      "attempt": 5,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 2.2386
+    },
+    {
+      "case_id": "rank",
+      "attempt": 6,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 0.9997
+    },
+    {
+      "case_id": "rank",
+      "attempt": 7,
+      "status": "HEADERS_RETURNED",
+      "http_status": 200,
+      "seconds_to_headers": 1.4563
+    }
+  ]
+}

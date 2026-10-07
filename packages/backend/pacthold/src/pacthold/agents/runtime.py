@@ -10,7 +10,7 @@ from ..core.registration import (
 from ..core.errors import CoreDTOError
 from ..core.lifecycle import (
     RuntimeProviderDescriptor, RuntimeProvider, AdmittedRuntimeProvider,
-    RUNTIME_PROVIDER_VERSION, RUNTIME_METHODS,
+    RUNTIME_PROVIDER_VERSION, RUNTIME_METHODS, PURE_READ_METHODS,
 )
 
 
@@ -29,7 +29,12 @@ class AgentContributionSet(CoreContributionSet):
                 raise CoreDTOError("RuntimeProvider may not declare trusted owner identity")
             if type(getattr(provider, "descriptor", None)) is not RuntimeProviderDescriptor:
                 raise CoreDTOError("RuntimeProvider requires its versioned descriptor")
-            _validate_provider_shape(provider, RUNTIME_METHODS, "Agent runtime")
+            _validate_provider_shape(
+                provider,
+                RUNTIME_METHODS + tuple(method for method in PURE_READ_METHODS
+                                        if method in provider.descriptor.supported_methods),
+                "Agent runtime",
+            )
             # Additive configuration-contribution check (freeze §1): absent
             # mount means no contribution — never guessed or filled; a present
             # mount must be a tuple of frozen ConfigurationRoute declarations.

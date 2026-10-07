@@ -1,0 +1,18 @@
+.................F                                                       [100%]
+=================================== FAILURES ===================================
+______ test_T65_owner_cannot_invent_shared_overall_and_obligation_source _______
+
+    def test_T65_owner_cannot_invent_shared_overall_and_obligation_source():
+        value = proposal()
+        row = {'obligationId':'configuration','status':'passed','checkerId':'owner','checkerVersion':'1',
+            'sourceVersions':{'invented':'7'},'evidenceRefs':[EVIDENCE]}
+        assessment = OwnerProposalAssessment(value.input_digest,{'descriptor':'1','invented':'7'},
+            'valid',(),(row,),'owner pure read only',(EVIDENCE,),PURE_READ_VERSION)
+>       with pytest.raises(ConfigurationContractError): require_assessment(value, assessment)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ConfigurationContractError
+
+packages/backend/decision/tests/integration/test_core_read_counterexamples.py:140: Failed
+=========================== short test summary info ============================
+FAILED packages/backend/decision/tests/integration/test_core_read_counterexamples.py::test_T65_owner_cannot_invent_shared_overall_and_obligation_source
+1 failed, 17 passed in 0.16s

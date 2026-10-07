@@ -1,0 +1,47 @@
+{
+  "verified_runs": 6,
+  "rows": [
+    {
+      "batch": "flow",
+      "case": "reference-ready",
+      "run_id": "3bcf2964-3e38-4ffd-9030-cfc72d5635b4",
+      "disposition": "ready",
+      "verified": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_FLOW"
+    },
+    {
+      "batch": "flow",
+      "case": "reference-repair",
+      "run_id": "7ce0e7d3-a347-4daf-b960-b81fcd800082",
+      "disposition": "ready",
+      "verified": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_FLOW"
+    },
+    {
+      "batch": "vague",
+      "case": "reference-ready",
+      "run_id": "cb5602d4-00e3-4589-ba21-48b2a0fe3489",
+      "disposition": "clarify",
+      "verified": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_FLOW"
+    },
+    {
+      "batch": "vague",
+      "case": "reference-repair",
+      "run_id": "5e67ea36-9818-45b7-9845-ed62a9d36302",
+      "disposition": "clarify",
+      "verified": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_FLOW"
+    },
+    {
+      "batch": "multi",
+      "case": "reference-ready",
+      "run_id": "838f3a98-3ae9-4870-8bab-7cfa7f6db6de",
+      "disposition": "revise",
+      "verified": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_FLOW"
+    },
+    {
+      "batch": "multi",
+      "case": "reference-repair",
+      "run_id": "297fb797-98ee-434c-8bcf-e46066babe0c",
+      "disposition": "revise",
+      "verified": "HASH_CHAIN_TERMINAL_SOURCE_PLAN_FLOW"
+    }
+  ]
+}

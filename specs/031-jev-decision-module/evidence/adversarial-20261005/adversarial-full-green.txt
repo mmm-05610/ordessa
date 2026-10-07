@@ -1,0 +1,29 @@
+F....................................................................... [ 22%]
+........................................................................ [ 45%]
+........................................................................ [ 68%]
+........................................................................ [ 91%]
+...........................                                              [100%]
+=================================== FAILURES ===================================
+________________ test_T63_independent_wheel_optional_boundaries ________________
+
+    def test_T63_independent_wheel_optional_boundaries():
+        wheel=ROOT/'.decision-tmp/dist/ordessa_decision-0.1.0-py3-none-any.whl'
+        assert wheel.exists(),'offline entry must build wheel first'
+        with zipfile.ZipFile(wheel) as z:
+            names=z.namelist()
+            assert not any(n.endswith(('.pyc','.so')) for n in names)
+            for n in names:
+                if n.startswith('ordessa_decision/') and n.endswith(('.py','.json')):
+                    source=ROOT/'packages/backend/decision/src'/n
+>                   assert source.exists() and z.read(n)==source.read_bytes(),f'stale wheel member {n}'
+E                   AssertionError: stale wheel member ordessa_decision/contracts/ports.py
+E                   assert (True and b'"""Ports ar...services\')\n' == b'"""Ports ar...icy_refs\')\n'
+E                    +  where True = exists()
+E                    +    where exists = PosixPath('/home/maoqh/projects/ordessa/worktree/031-jev-decision-module/packages/backend/decision/src/ordessa_decision/contracts/ports.py').exists
+E                     
+E                     Use -v to get more diff)
+
+packages/backend/decision/tests/acceptance/test_release.py:19: AssertionError
+=========================== short test summary info ============================
+FAILED packages/backend/decision/tests/acceptance/test_release.py::test_T63_independent_wheel_optional_boundaries
+1 failed, 314 passed in 5.32s

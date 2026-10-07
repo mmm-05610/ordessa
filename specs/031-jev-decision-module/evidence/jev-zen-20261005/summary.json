@@ -1,0 +1,57 @@
+{
+  "status": "PARTIAL",
+  "T60": "PARTIAL",
+  "requested_model": "jev-1.13-free",
+  "resolved_models": [
+    "jev-1.13-free"
+  ],
+  "sdk": "typesafe-sdk 0.7.2",
+  "graph": "pydantic-graph 2.54.0",
+  "attempt_limit": 64,
+  "actual_http_requests": 62,
+  "accounting": {
+    "minimal": 1,
+    "first_case_before_collector_failure": 3,
+    "remaining_cases": 45,
+    "correct_sentinel_capacity": 1,
+    "proper_bound_state_controls": 12
+  },
+  "retained_model_case_labels": {
+    "matched": 22,
+    "scored": 23
+  },
+  "initial_completed_case_quality": "NOT_VERIFIED_ANSWERS_NOT_RETAINED",
+  "initial_run_id": "d6134f15-d6f1-4429-b35d-47ef63f98ad2",
+  "initial_durable_responses": 3,
+  "original_capacity_case": "REFUSED_BEFORE_HTTP: 64 candidate IDs + two unrecognised sentinel names counted as 66 business IDs",
+  "correct_capacity_case": "TIMEOUT_AFTER_ONE_HTTP: 64 candidates + none_suitable/insufficient_evidence; response and usage unknown; no retry",
+  "hard_rule_zero_model_cases": 1,
+  "known_reported_usage": {
+    "input_tokens": 32611,
+    "output_tokens": 2540
+  },
+  "usage_missing_for_requests": 1,
+  "cost": "UNKNOWN: advertised free route; no billing receipt; timeout accounting unknown",
+  "retry": 0,
+  "native_effects": 0,
+  "credential_cleanup": "user authorized move to private vault, directory 0700/file 0600; source absent",
+  "limitations": [
+    "Tiny frozen synthetic labels, not overall quality estimate",
+    "Original smoke gate shared first dimension state; six clear-task independent controls all passed; properly bound single-result remained clarify, vague remained clarify",
+    "One delivery task remained clarify; labels/threshold not lowered",
+    "Nine-sample original 54-question prepared set not fully evaluated; this authorized smoke/control set is separate",
+    "Technical graph completion is not model quality pass",
+    "No real Harness or real family effects",
+    "Initial evaluation collector KeyError after three completed durable responses; skipped case without resend"
+  ],
+  "bound_state_controls": {
+    "model_cases": 2,
+    "matched_labels": 1,
+    "http_requests": 12,
+    "outcomes": {
+      "gate-vague": "clarify",
+      "gate-single-result": "clarify"
+    },
+    "rule": "same labels, rules and thresholds; use original compiled per-question bounded state"
+  }
+}

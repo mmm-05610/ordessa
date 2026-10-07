@@ -1,0 +1,320 @@
+....................FFF....FFFFFFFF......                                [100%]
+=================================== FAILURES ===================================
+_________________ test_T21_T22_T26_persistence_failure[start] __________________
+
+failure = 'start'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('failure', ['start','call.intent','call.response'])
+    async def test_T21_T22_T26_persistence_failure(failure):
+        flow = build_flow()
+        req, svc = compose(flow,sink=Sink(failure))
+        with pytest.raises(EvidenceUnknown) as raised: await run_decision(req,flow=flow,services=svc)
+        assert str(uuid.UUID(raised.value.run_id))==raised.value.run_id
+        assert 'sensitive' not in str(raised.value)
+>       assert (await read_result(raised.value.run_id,services=svc))['status']=='unknown'
+E       AssertionError: assert 'running' == 'unknown'
+E         
+E         - unknown
+E         + running
+
+packages/backend/decision/tests/runtime/test_runtime.py:306: AssertionError
+______________ test_T21_T22_T26_persistence_failure[call.intent] _______________
+
+failure = 'call.intent'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('failure', ['start','call.intent','call.response'])
+    async def test_T21_T22_T26_persistence_failure(failure):
+        flow = build_flow()
+        req, svc = compose(flow,sink=Sink(failure))
+        with pytest.raises(EvidenceUnknown) as raised: await run_decision(req,flow=flow,services=svc)
+        assert str(uuid.UUID(raised.value.run_id))==raised.value.run_id
+        assert 'sensitive' not in str(raised.value)
+>       assert (await read_result(raised.value.run_id,services=svc))['status']=='unknown'
+E       AssertionError: assert 'running' == 'unknown'
+E         
+E         - unknown
+E         + running
+
+packages/backend/decision/tests/runtime/test_runtime.py:306: AssertionError
+_____________ test_T21_T22_T26_persistence_failure[call.response] ______________
+
+failure = 'call.response'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('failure', ['start','call.intent','call.response'])
+    async def test_T21_T22_T26_persistence_failure(failure):
+        flow = build_flow()
+        req, svc = compose(flow,sink=Sink(failure))
+        with pytest.raises(EvidenceUnknown) as raised: await run_decision(req,flow=flow,services=svc)
+        assert str(uuid.UUID(raised.value.run_id))==raised.value.run_id
+        assert 'sensitive' not in str(raised.value)
+>       assert (await read_result(raised.value.run_id,services=svc))['status']=='unknown'
+E       AssertionError: assert 'running' == 'unknown'
+E         
+E         - unknown
+E         + running
+
+packages/backend/decision/tests/runtime/test_runtime.py:306: AssertionError
+__________ test_T25_uncertain_or_mismatched_read_never_ready[unknown] __________
+
+mutation = 'unknown'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('mutation',['unknown','refused','unavailable','run_id','status','result','digest','conflicting_digest'])
+    async def test_T25_uncertain_or_mismatched_read_never_ready(mutation):
+        class BadReadSink(Sink):
+            async def read(self,run_id,read_context):
+                response=await super().read(run_id,read_context)
+                response=plain(response)
+                if mutation in ('unknown','refused','unavailable'):
+                    response['status']=mutation
+                elif mutation=='run_id': response['terminal']['run_id']=str(uuid.uuid4())
+                elif mutation=='status': response['terminal']['status']='cancelled'
+                elif mutation=='result': response['terminal']['result']['request_id']='another-request'
+                elif mutation=='digest': response['terminal']['terminal_digest']='sha256:other'
+                elif mutation=='conflicting_digest': response['terminal']['result_digest']='sha256:other'
+                return response
+        flow=build_flow()
+        req,svc=compose(flow,sink=BadReadSink('lost_ack'))
+        with pytest.raises(EvidenceUnknown) as raised:
+            await run_decision(req,flow=flow,services=svc)
+>       assert raised.value.run_id in svc.evidence.terminals
+E       AssertionError: assert '44c9dffc-9aa6-4e24-bf9e-f1439709d33f' in {}
+E        +  where '44c9dffc-9aa6-4e24-bf9e-f1439709d33f' = EvidenceUnknown('evidence_unknown').run_id
+E        +    where EvidenceUnknown('evidence_unknown') = <ExceptionInfo EvidenceUnknown('evidence_unknown') tblen=2>.value
+E        +  and   {} = <test_runtime.test_T25_uncertain_or_mismatched_read_never_ready.<locals>.BadReadSink object at 0x7352d5da5f70>.terminals
+E        +    where <test_runtime.test_T25_uncertain_or_mismatched_read_never_ready.<locals>.BadReadSink object at 0x7352d5da5f70> = DecisionServices(read=None, candidate_source=None, proposal_source=None, validator=None, decision_provider=<test_runti...ntext>, policy_refs=(PolicyRef(policy_id='test-policy', version='1', content_digest='sha256:policy'),), mode='offline').evidence
+
+packages/backend/decision/tests/runtime/test_runtime.py:369: AssertionError
+__________ test_T25_uncertain_or_mismatched_read_never_ready[refused] __________
+
+mutation = 'refused'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('mutation',['unknown','refused','unavailable','run_id','status','result','digest','conflicting_digest'])
+    async def test_T25_uncertain_or_mismatched_read_never_ready(mutation):
+        class BadReadSink(Sink):
+            async def read(self,run_id,read_context):
+                response=await super().read(run_id,read_context)
+                response=plain(response)
+                if mutation in ('unknown','refused','unavailable'):
+                    response['status']=mutation
+                elif mutation=='run_id': response['terminal']['run_id']=str(uuid.uuid4())
+                elif mutation=='status': response['terminal']['status']='cancelled'
+                elif mutation=='result': response['terminal']['result']['request_id']='another-request'
+                elif mutation=='digest': response['terminal']['terminal_digest']='sha256:other'
+                elif mutation=='conflicting_digest': response['terminal']['result_digest']='sha256:other'
+                return response
+        flow=build_flow()
+        req,svc=compose(flow,sink=BadReadSink('lost_ack'))
+        with pytest.raises(EvidenceUnknown) as raised:
+            await run_decision(req,flow=flow,services=svc)
+>       assert raised.value.run_id in svc.evidence.terminals
+E       AssertionError: assert 'eeca02b8-a450-42bc-8bb9-1be2effda738' in {}
+E        +  where 'eeca02b8-a450-42bc-8bb9-1be2effda738' = EvidenceUnknown('evidence_unknown').run_id
+E        +    where EvidenceUnknown('evidence_unknown') = <ExceptionInfo EvidenceUnknown('evidence_unknown') tblen=2>.value
+E        +  and   {} = <test_runtime.test_T25_uncertain_or_mismatched_read_never_ready.<locals>.BadReadSink object at 0x7352d5c5b4d0>.terminals
+E        +    where <test_runtime.test_T25_uncertain_or_mismatched_read_never_ready.<locals>.BadReadSink object at 0x7352d5c5b4d0> = DecisionServices(read=None, candidate_source=None, proposal_source=None, validator=None, decision_provider=<test_runti...ntext>, policy_refs=(PolicyRef(policy_id='test-policy', version='1', content_digest='sha256:policy'),), mode='offline').evidence
+
+packages/backend/decision/tests/runtime/test_runtime.py:369: AssertionError
+________ test_T25_uncertain_or_mismatched_read_never_ready[unavailable] ________
+
+mutation = 'unavailable'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('mutation',['unknown','refused','unavailable','run_id','status','result','digest','conflicting_digest'])
+    async def test_T25_uncertain_or_mismatched_read_never_ready(mutation):
+        class BadReadSink(Sink):
+            async def read(self,run_id,read_context):
+                response=await super().read(run_id,read_context)
+                response=plain(response)
+                if mutation in ('unknown','refused','unavailable'):
+                    response['status']=mutation
+                elif mutation=='run_id': response['terminal']['run_id']=str(uuid.uuid4())
+                elif mutation=='status': response['terminal']['status']='cancelled'
+                elif mutation=='result': response['terminal']['result']['request_id']='another-request'
+                elif mutation=='digest': response['terminal']['terminal_digest']='sha256:other'
+                elif mutation=='conflicting_digest': response['terminal']['result_digest']='sha256:other'
+                return response
+        flow=build_flow()
+        req,svc=compose(flow,sink=BadReadSink('lost_ack'))
+        with pytest.raises(EvidenceUnknown) as raised:
+            await run_decision(req,flow=flow,services=svc)
+>       assert raised.value.run_id in svc.evidence.terminals
+E       AssertionError: assert 'd886387f-28eb-4136-aa7d-32785daa841f' in {}
+E        +  where 'd886387f-28eb-4136-aa7d-32785daa841f' = EvidenceUnknown('evidence_unknown').run_id
+E        +    where EvidenceUnknown('evidence_unknown') = <ExceptionInfo EvidenceUnknown('evidence_unknown') tblen=2>.value
+E        +  and   {} = <test_runtime.test_T25_uncertain_or_mismatched_read_never_ready.<locals>.BadReadSink object at 0x7352d5c58b30>.terminals
+E        +    where <test_runtime.test_T25_uncertain_or_mismatched_read_never_ready.<locals>.BadReadSink object at 0x7352d5c58b30> = DecisionServices(read=None, candidate_source=None, proposal_source=None, validator=None, decision_provider=<test_runti...ntext>, policy_refs=(PolicyRef(policy_id='test-policy', version='1', content_digest='sha256:policy'),), mode='offline').evidence
+
+packages/backend/decision/tests/runtime/test_runtime.py:369: AssertionError
+__________ test_T25_uncertain_or_mismatched_read_never_ready[run_id] ___________
+
+mutation = 'run_id'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('mutation',['unknown','refused','unavailable','run_id','status','result','digest','conflicting_digest'])
+    async def test_T25_uncertain_or_mismatched_read_never_ready(mutation):
+        class BadReadSink(Sink):
+            async def read(self,run_id,read_context):
+                response=await super().read(run_id,read_context)
+                response=plain(response)
+                if mutation in ('unknown','refused','unavailable'):
+                    response['status']=mutation
+                elif mutation=='run_id': response['terminal']['run_id']=str(uuid.uuid4())
+                elif mutation=='status': response['terminal']['status']='cancelled'
+                elif mutation=='result': response['terminal']['result']['request_id']='another-request'
+                elif mutation=='digest': response['terminal']['terminal_digest']='sha256:other'
+                elif mutation=='conflicting_digest': response['terminal']['result_digest']='sha256:other'
+                return response
+        flow=build_flow()
+        req,svc=compose(flow,sink=BadReadSink('lost_ack'))
+        with pytest.raises(EvidenceUnknown) as raised:
+            await run_decision(req,flow=flow,services=svc)
+>       assert raised.value.run_id in svc.evidence.terminals
+E       AssertionError: assert 'e31e3f38-d48c-478f-9c33-5e0cec8dfd84' in {}
+E        +  where 'e31e3f38-d48c-478f-9c33-5e0cec8dfd84' = EvidenceUnknown('evidence_unknown').run_id
+E        +    where EvidenceUnknown('evidence_unknown') = <ExceptionInfo EvidenceUnknown('evidence_unknown') tblen=2>.value
+E        +  and   {} = <test_runtime.test_T25_uncertain_or_mismatched_read_never_ready.<locals>.BadReadSink object at 0x7352d5f96930>.terminals
+E        +    where <test_runtime.test_T25_uncertain_or_mismatched_read_never_ready.<locals>.BadReadSink object at 0x7352d5f96930> = DecisionServices(read=None, candidate_source=None, proposal_source=None, validator=None, decision_provider=<test_runti...ntext>, policy_refs=(PolicyRef(policy_id='test-policy', version='1', content_digest='sha256:policy'),), mode='offline').evidence
+
+packages/backend/decision/tests/runtime/test_runtime.py:369: AssertionError
+__________ test_T25_uncertain_or_mismatched_read_never_ready[status] ___________
+
+mutation = 'status'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('mutation',['unknown','refused','unavailable','run_id','status','result','digest','conflicting_digest'])
+    async def test_T25_uncertain_or_mismatched_read_never_ready(mutation):
+        class BadReadSink(Sink):
+            async def read(self,run_id,read_context):
+                response=await super().read(run_id,read_context)
+                response=plain(response)
+                if mutation in ('unknown','refused','unavailable'):
+                    response['status']=mutation
+                elif mutation=='run_id': response['terminal']['run_id']=str(uuid.uuid4())
+                elif mutation=='status': response['terminal']['status']='cancelled'
+                elif mutation=='result': response['terminal']['result']['request_id']='another-request'
+                elif mutation=='digest': response['terminal']['terminal_digest']='sha256:other'
+                elif mutation=='conflicting_digest': response['terminal']['result_digest']='sha256:other'
+                return response
+        flow=build_flow()
+        req,svc=compose(flow,sink=BadReadSink('lost_ack'))
+        with pytest.raises(EvidenceUnknown) as raised:
+            await run_decision(req,flow=flow,services=svc)
+>       assert raised.value.run_id in svc.evidence.terminals
+E       AssertionError: assert 'a18b6967-f47a-475a-b3ce-5a947d1e5765' in {}
+E        +  where 'a18b6967-f47a-475a-b3ce-5a947d1e5765' = EvidenceUnknown('evidence_unknown').run_id
+E        +    where EvidenceUnknown('evidence_unknown') = <ExceptionInfo EvidenceUnknown('evidence_unknown') tblen=2>.value
+E        +  and   {} = <test_runtime.test_T25_uncertain_or_mismatched_read_never_ready.<locals>.BadReadSink object at 0x7352d5f96e40>.terminals
+E        +    where <test_runtime.test_T25_uncertain_or_mismatched_read_never_ready.<locals>.BadReadSink object at 0x7352d5f96e40> = DecisionServices(read=None, candidate_source=None, proposal_source=None, validator=None, decision_provider=<test_runti...ntext>, policy_refs=(PolicyRef(policy_id='test-policy', version='1', content_digest='sha256:policy'),), mode='offline').evidence
+
+packages/backend/decision/tests/runtime/test_runtime.py:369: AssertionError
+__________ test_T25_uncertain_or_mismatched_read_never_ready[result] ___________
+
+mutation = 'result'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('mutation',['unknown','refused','unavailable','run_id','status','result','digest','conflicting_digest'])
+    async def test_T25_uncertain_or_mismatched_read_never_ready(mutation):
+        class BadReadSink(Sink):
+            async def read(self,run_id,read_context):
+                response=await super().read(run_id,read_context)
+                response=plain(response)
+                if mutation in ('unknown','refused','unavailable'):
+                    response['status']=mutation
+                elif mutation=='run_id': response['terminal']['run_id']=str(uuid.uuid4())
+                elif mutation=='status': response['terminal']['status']='cancelled'
+                elif mutation=='result': response['terminal']['result']['request_id']='another-request'
+                elif mutation=='digest': response['terminal']['terminal_digest']='sha256:other'
+                elif mutation=='conflicting_digest': response['terminal']['result_digest']='sha256:other'
+                return response
+        flow=build_flow()
+        req,svc=compose(flow,sink=BadReadSink('lost_ack'))
+        with pytest.raises(EvidenceUnknown) as raised:
+            await run_decision(req,flow=flow,services=svc)
+>       assert raised.value.run_id in svc.evidence.terminals
+E       AssertionError: assert '2ea8f53b-843f-48da-92e4-39c74daa1cba' in {}
+E        +  where '2ea8f53b-843f-48da-92e4-39c74daa1cba' = EvidenceUnknown('evidence_unknown').run_id
+E        +    where EvidenceUnknown('evidence_unknown') = <ExceptionInfo EvidenceUnknown('evidence_unknown') tblen=2>.value
+E        +  and   {} = <test_runtime.test_T25_uncertain_or_mismatched_read_never_ready.<locals>.BadReadSink object at 0x7352d5f4a4b0>.terminals
+E        +    where <test_runtime.test_T25_uncertain_or_mismatched_read_never_ready.<locals>.BadReadSink object at 0x7352d5f4a4b0> = DecisionServices(read=None, candidate_source=None, proposal_source=None, validator=None, decision_provider=<test_runti...ntext>, policy_refs=(PolicyRef(policy_id='test-policy', version='1', content_digest='sha256:policy'),), mode='offline').evidence
+
+packages/backend/decision/tests/runtime/test_runtime.py:369: AssertionError
+__________ test_T25_uncertain_or_mismatched_read_never_ready[digest] ___________
+
+mutation = 'digest'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('mutation',['unknown','refused','unavailable','run_id','status','result','digest','conflicting_digest'])
+    async def test_T25_uncertain_or_mismatched_read_never_ready(mutation):
+        class BadReadSink(Sink):
+            async def read(self,run_id,read_context):
+                response=await super().read(run_id,read_context)
+                response=plain(response)
+                if mutation in ('unknown','refused','unavailable'):
+                    response['status']=mutation
+                elif mutation=='run_id': response['terminal']['run_id']=str(uuid.uuid4())
+                elif mutation=='status': response['terminal']['status']='cancelled'
+                elif mutation=='result': response['terminal']['result']['request_id']='another-request'
+                elif mutation=='digest': response['terminal']['terminal_digest']='sha256:other'
+                elif mutation=='conflicting_digest': response['terminal']['result_digest']='sha256:other'
+                return response
+        flow=build_flow()
+        req,svc=compose(flow,sink=BadReadSink('lost_ack'))
+        with pytest.raises(EvidenceUnknown) as raised:
+            await run_decision(req,flow=flow,services=svc)
+>       assert raised.value.run_id in svc.evidence.terminals
+E       AssertionError: assert '052a4400-e24b-4b79-91c1-1ceda1c81b53' in {}
+E        +  where '052a4400-e24b-4b79-91c1-1ceda1c81b53' = EvidenceUnknown('evidence_unknown').run_id
+E        +    where EvidenceUnknown('evidence_unknown') = <ExceptionInfo EvidenceUnknown('evidence_unknown') tblen=2>.value
+E        +  and   {} = <test_runtime.test_T25_uncertain_or_mismatched_read_never_ready.<locals>.BadReadSink object at 0x7352d5f1eae0>.terminals
+E        +    where <test_runtime.test_T25_uncertain_or_mismatched_read_never_ready.<locals>.BadReadSink object at 0x7352d5f1eae0> = DecisionServices(read=None, candidate_source=None, proposal_source=None, validator=None, decision_provider=<test_runti...ntext>, policy_refs=(PolicyRef(policy_id='test-policy', version='1', content_digest='sha256:policy'),), mode='offline').evidence
+
+packages/backend/decision/tests/runtime/test_runtime.py:369: AssertionError
+____ test_T25_uncertain_or_mismatched_read_never_ready[conflicting_digest] _____
+
+mutation = 'conflicting_digest'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('mutation',['unknown','refused','unavailable','run_id','status','result','digest','conflicting_digest'])
+    async def test_T25_uncertain_or_mismatched_read_never_ready(mutation):
+        class BadReadSink(Sink):
+            async def read(self,run_id,read_context):
+                response=await super().read(run_id,read_context)
+                response=plain(response)
+                if mutation in ('unknown','refused','unavailable'):
+                    response['status']=mutation
+                elif mutation=='run_id': response['terminal']['run_id']=str(uuid.uuid4())
+                elif mutation=='status': response['terminal']['status']='cancelled'
+                elif mutation=='result': response['terminal']['result']['request_id']='another-request'
+                elif mutation=='digest': response['terminal']['terminal_digest']='sha256:other'
+                elif mutation=='conflicting_digest': response['terminal']['result_digest']='sha256:other'
+                return response
+        flow=build_flow()
+        req,svc=compose(flow,sink=BadReadSink('lost_ack'))
+        with pytest.raises(EvidenceUnknown) as raised:
+            await run_decision(req,flow=flow,services=svc)
+>       assert raised.value.run_id in svc.evidence.terminals
+E       AssertionError: assert '16e388cb-c4c2-407d-9bd0-dac90bcee948' in {}
+E        +  where '16e388cb-c4c2-407d-9bd0-dac90bcee948' = EvidenceUnknown('evidence_unknown').run_id
+E        +    where EvidenceUnknown('evidence_unknown') = <ExceptionInfo EvidenceUnknown('evidence_unknown') tblen=2>.value
+E        +  and   {} = <test_runtime.test_T25_uncertain_or_mismatched_read_never_ready.<locals>.BadReadSink object at 0x7352d5f46390>.terminals
+E        +    where <test_runtime.test_T25_uncertain_or_mismatched_read_never_ready.<locals>.BadReadSink object at 0x7352d5f46390> = DecisionServices(read=None, candidate_source=None, proposal_source=None, validator=None, decision_provider=<test_runti...ntext>, policy_refs=(PolicyRef(policy_id='test-policy', version='1', content_digest='sha256:policy'),), mode='offline').evidence
+
+packages/backend/decision/tests/runtime/test_runtime.py:369: AssertionError
+=========================== short test summary info ============================
+FAILED packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[start]
+FAILED packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[call.intent]
+FAILED packages/backend/decision/tests/runtime/test_runtime.py::test_T21_T22_T26_persistence_failure[call.response]
+FAILED packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[unknown]
+FAILED packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[refused]
+FAILED packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[unavailable]
+FAILED packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[run_id]
+FAILED packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[status]
+FAILED packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[result]
+FAILED packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[digest]
+FAILED packages/backend/decision/tests/runtime/test_runtime.py::test_T25_uncertain_or_mismatched_read_never_ready[conflicting_digest]
+11 failed, 30 passed in 0.51s

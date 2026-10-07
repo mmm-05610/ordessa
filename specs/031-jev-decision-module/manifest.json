@@ -1,0 +1,1078 @@
+{
+  "schemaVersion": "decision-spec-kit/1",
+  "status": "design-reviewed",
+  "date": "2026-10-05",
+  "authority": "README.md",
+  "implementationAuthorized": false,
+  "referenceBaselines": [
+    {
+      "tree": "/home/maoqh/projects/ordessa",
+      "sha": "b4bf7cd90951d0fa9bcf3a3de2e66b7db6a62aa0",
+      "role": "material-authoring"
+    },
+    {
+      "tree": "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa",
+      "sha": "9e1a6db19bd54df5d6508eaa71098ca96b59bcd9",
+      "role": "initial-read-only"
+    },
+    {
+      "tree": "/home/maoqh/.codex/worktrees/agent-tools-product/ordessa",
+      "sha": "577014c450b275faaf35d1e9c4b6cdbf9b6183de",
+      "role": "later-pinned-read-only"
+    }
+  ],
+  "modules": [
+    {
+      "id": "M01",
+      "document": "modules/M01-contracts.md",
+      "designer": "/root/design_contracts"
+    },
+    {
+      "id": "M02",
+      "document": "modules/M02-runtime.md",
+      "designer": "/root/design_runtime"
+    },
+    {
+      "id": "M03",
+      "document": "modules/M03-jev-provider.md",
+      "designer": "/root/design_jev"
+    },
+    {
+      "id": "M04",
+      "document": "modules/M04-task-gate.md",
+      "designer": "/root/design_task_gate"
+    },
+    {
+      "id": "M05",
+      "document": "modules/M05-selection-proposals.md",
+      "designer": "/root/design_planner"
+    },
+    {
+      "id": "M06",
+      "document": "modules/M06-integration-evidence.md",
+      "designer": "/root/design_integration"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "JD001",
+      "title": "基线盘点与上游兼容验证",
+      "dependsOn": [],
+      "modules": [
+        "M01",
+        "M02",
+        "M03",
+        "M06"
+      ],
+      "acceptance": [
+        "T03",
+        "T30",
+        "T33",
+        "T37",
+        "T63",
+        "T64"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    },
+    {
+      "id": "JD002",
+      "title": "公共契约与摘要域冻结",
+      "dependsOn": [
+        "JD001"
+      ],
+      "modules": [
+        "M01"
+      ],
+      "acceptance": [
+        "T01",
+        "T02",
+        "T07",
+        "T08",
+        "T09",
+        "T10",
+        "T17",
+        "T18",
+        "T65",
+        "T66"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    },
+    {
+      "id": "JD003",
+      "title": "原版图薄运行器",
+      "dependsOn": [
+        "JD002"
+      ],
+      "modules": [
+        "M02"
+      ],
+      "acceptance": [
+        "T04",
+        "T05",
+        "T06",
+        "T11",
+        "T12",
+        "T13",
+        "T14",
+        "T15",
+        "T16",
+        "T19",
+        "T20",
+        "T23",
+        "T24",
+        "T25",
+        "T28",
+        "T29",
+        "T30"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    },
+    {
+      "id": "JD004",
+      "title": "官方Jev SDK接入",
+      "dependsOn": [
+        "JD002"
+      ],
+      "modules": [
+        "M03"
+      ],
+      "acceptance": [
+        "T33",
+        "T34",
+        "T35",
+        "T36",
+        "T37",
+        "T38",
+        "T39",
+        "T40",
+        "T41",
+        "T42",
+        "T68"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    },
+    {
+      "id": "JD005",
+      "title": "外部rubric任务准入",
+      "dependsOn": [
+        "JD003",
+        "JD004"
+      ],
+      "modules": [
+        "M04"
+      ],
+      "acceptance": [
+        "T43",
+        "T44",
+        "T45",
+        "T46",
+        "T47",
+        "T48"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    },
+    {
+      "id": "JD006",
+      "title": "工作单元选择与可替换组合器",
+      "dependsOn": [
+        "JD003",
+        "JD004"
+      ],
+      "modules": [
+        "M05"
+      ],
+      "acceptance": [
+        "T49",
+        "T50",
+        "T51",
+        "T52",
+        "T53",
+        "T54",
+        "T58",
+        "T67"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    },
+    {
+      "id": "JD007",
+      "title": "原Agent公共只读接缝补齐",
+      "dependsOn": [
+        "JD002"
+      ],
+      "modules": [
+        "M06"
+      ],
+      "acceptance": [
+        "T55",
+        "T56",
+        "T57",
+        "T61",
+        "T62",
+        "T65"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    },
+    {
+      "id": "JD008",
+      "title": "只读适配、持久证据与交接",
+      "dependsOn": [
+        "JD003",
+        "JD007"
+      ],
+      "modules": [
+        "M06"
+      ],
+      "acceptance": [
+        "T21",
+        "T22",
+        "T24",
+        "T25",
+        "T26",
+        "T27",
+        "T28",
+        "T31",
+        "T32",
+        "T55",
+        "T56",
+        "T58",
+        "T62"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    },
+    {
+      "id": "JD009",
+      "title": "整合、独立发行与产品级只读验收",
+      "dependsOn": [
+        "JD005",
+        "JD006",
+        "JD008"
+      ],
+      "modules": [
+        "M01",
+        "M02",
+        "M03",
+        "M04",
+        "M05",
+        "M06"
+      ],
+      "acceptance": [
+        "T01",
+        "T02",
+        "T03",
+        "T04",
+        "T05",
+        "T06",
+        "T07",
+        "T08",
+        "T09",
+        "T10",
+        "T11",
+        "T12",
+        "T13",
+        "T14",
+        "T15",
+        "T16",
+        "T17",
+        "T18",
+        "T19",
+        "T20",
+        "T21",
+        "T22",
+        "T23",
+        "T24",
+        "T25",
+        "T26",
+        "T27",
+        "T28",
+        "T29",
+        "T30",
+        "T31",
+        "T32",
+        "T33",
+        "T34",
+        "T35",
+        "T36",
+        "T37",
+        "T38",
+        "T39",
+        "T40",
+        "T41",
+        "T42",
+        "T43",
+        "T44",
+        "T45",
+        "T46",
+        "T47",
+        "T48",
+        "T49",
+        "T50",
+        "T51",
+        "T52",
+        "T53",
+        "T54",
+        "T55",
+        "T56",
+        "T57",
+        "T58",
+        "T59",
+        "T61",
+        "T62",
+        "T63",
+        "T64",
+        "T65",
+        "T66",
+        "T67",
+        "T68"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    },
+    {
+      "id": "JD010",
+      "title": "真实Jev领域评测（另行授权）",
+      "dependsOn": [
+        "JD009"
+      ],
+      "modules": [
+        "M03",
+        "M04",
+        "M05"
+      ],
+      "acceptance": [
+        "T60"
+      ],
+      "state": "NOT_RUN",
+      "document": "tasks.md"
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "T01",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T02",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T03",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T04",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T05",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T06",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T07",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T08",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T09",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T10",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T11",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T12",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T13",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T14",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T15",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T16",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T17",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T18",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T19",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T20",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T21",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T22",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T23",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T24",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T25",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T26",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T27",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T28",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T29",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T30",
+      "module": "M02",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T31",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T32",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T33",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T34",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T35",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T36",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T37",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T38",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T39",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T40",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T41",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T42",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T43",
+      "module": "M04",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T44",
+      "module": "M04",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T45",
+      "module": "M04",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T46",
+      "module": "M04",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T47",
+      "module": "M04",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T48",
+      "module": "M04",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T49",
+      "module": "M05",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T50",
+      "module": "M05",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T51",
+      "module": "M05",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T52",
+      "module": "M05",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T53",
+      "module": "M05",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T54",
+      "module": "M05",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T55",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T56",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T57",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T58",
+      "module": "M05",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T59",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T60",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T61",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T62",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T63",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T64",
+      "module": "M06",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T65",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T66",
+      "module": "M01",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T67",
+      "module": "M05",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    },
+    {
+      "id": "T68",
+      "module": "M03",
+      "state": "NOT_RUN",
+      "document": "acceptance.md"
+    }
+  ],
+  "requirements": {
+    "R01": [
+      "T59",
+      "T63"
+    ],
+    "R02": [
+      "T04",
+      "T45"
+    ],
+    "R03": [
+      "T43",
+      "T44",
+      "T46"
+    ],
+    "R04": [
+      "T03",
+      "T48",
+      "T54"
+    ],
+    "R05": [
+      "T49",
+      "T51",
+      "T52"
+    ],
+    "R06": [
+      "T09",
+      "T53",
+      "T67"
+    ],
+    "R07": [
+      "T17",
+      "T58",
+      "T62"
+    ],
+    "R08": [
+      "T02",
+      "T55",
+      "T56"
+    ],
+    "R09": [
+      "T05",
+      "T06",
+      "T42",
+      "T68"
+    ],
+    "R10": [
+      "T07",
+      "T13",
+      "T14",
+      "T65"
+    ],
+    "R11": [
+      "T08",
+      "T18",
+      "T31",
+      "T40",
+      "T66"
+    ],
+    "R12": [
+      "T21",
+      "T22",
+      "T26",
+      "T27",
+      "T32"
+    ],
+    "R13": [
+      "T33",
+      "T59"
+    ],
+    "R14": [
+      "T55",
+      "T57",
+      "T61",
+      "T64"
+    ]
+  },
+  "requiredFiles": [
+    "README.md",
+    "spec.md",
+    "architecture.md",
+    "data-model.md",
+    "contracts/public-api.md",
+    "contracts/ordessa-read-seams.md",
+    "contracts/agent-assignment-flow.md",
+    "research.md",
+    "plan.md",
+    "tasks.md",
+    "acceptance.md",
+    "review.md",
+    "status.md",
+    "prompt.md",
+    "quickstart.md",
+    "checks/validate-materials.mjs",
+    "checks/validate-materials.test.mjs"
+  ],
+  "readiness": {
+    "materials": "materialsValidated",
+    "offline": "offlineVerified_SCOPED",
+    "coreReadOnly": "coreReadOnlyVerified_TEMP_CORE_FAKE_OWNER",
+    "liveJev": "PARTIAL_REAL_LABEL_AND_CAPACITY_PROTOCOL_FAILURE",
+    "nativeEffects": "OUT_OF_SCOPE",
+    "codeReady": "VERIFIED_CURRENT_SOURCE"
+  },
+  "stateScope": "Original design snapshot: task/acceptance state and implementationAuthorized fields above remain historical. Current authorized execution is exclusively in implementationRun.",
+  "implementationRun": {
+    "authorization": "user /goal current worktree only",
+    "baseline": "e4714eba00a78ba04c5b53318830a0d409e76bbe",
+    "receipt": "evidence/edge-flow-20261005/offline/receipt.json",
+    "tasks": {
+      "JD001": "OFFLINE_VERIFIED",
+      "JD002": "OFFLINE_VERIFIED",
+      "JD003": "OFFLINE_VERIFIED",
+      "JD004": "OFFLINE_VERIFIED",
+      "JD005": "OFFLINE_VERIFIED",
+      "JD006": "OFFLINE_VERIFIED",
+      "JD007": "OFFLINE_VERIFIED",
+      "JD008": "OFFLINE_VERIFIED",
+      "JD009": "PARTIAL_REAL_FAMILIES_UNSUPPORTED",
+      "JD010": "PARTIAL_REAL_QUALITY_AND_UNVERIFIED_CASE"
+    },
+    "acceptance": {
+      "T01": "PASSED",
+      "T02": "PASSED",
+      "T03": "PASSED",
+      "T04": "PASSED",
+      "T05": "PASSED",
+      "T06": "PASSED",
+      "T07": "PASSED",
+      "T08": "PASSED",
+      "T09": "PASSED",
+      "T10": "PASSED",
+      "T11": "PASSED",
+      "T12": "PASSED",
+      "T13": "PASSED",
+      "T14": "PASSED",
+      "T15": "PASSED",
+      "T16": "PASSED",
+      "T17": "PASSED",
+      "T18": "PASSED",
+      "T19": "PASSED",
+      "T20": "PASSED",
+      "T21": "PASSED",
+      "T22": "PASSED",
+      "T23": "PASSED",
+      "T24": "PASSED",
+      "T25": "PASSED",
+      "T26": "PASSED",
+      "T27": "PASSED",
+      "T28": "PASSED",
+      "T29": "PASSED",
+      "T30": "PASSED",
+      "T31": "PASSED",
+      "T32": "PASSED",
+      "T33": "PASSED",
+      "T34": "PASSED",
+      "T35": "PASSED",
+      "T36": "PASSED",
+      "T37": "PASSED",
+      "T38": "PASSED",
+      "T39": "PASSED",
+      "T40": "PASSED",
+      "T41": "PASSED",
+      "T42": "PASSED",
+      "T43": "PASSED",
+      "T44": "PASSED",
+      "T45": "PASSED",
+      "T46": "PASSED",
+      "T47": "PASSED",
+      "T48": "PASSED",
+      "T49": "PASSED",
+      "T50": "PASSED",
+      "T51": "PASSED",
+      "T52": "PASSED",
+      "T53": "PASSED",
+      "T54": "PASSED",
+      "T55": "PASSED",
+      "T56": "PASSED",
+      "T57": "PASSED",
+      "T58": "PASSED",
+      "T59": "PASSED",
+      "T60": "PARTIAL",
+      "T61": "PASSED",
+      "T62": "PASSED",
+      "T63": "PASSED",
+      "T64": "PASSED",
+      "T65": "PASSED",
+      "T66": "PASSED",
+      "T67": "PASSED",
+      "T68": "PASSED"
+    },
+    "unique_tests_passed": 269,
+    "all_work_complete": false,
+    "additionalCoreRegression": {
+      "matchedIds": 57,
+      "receipt": "evidence/implementation-20261005/additional-core-regression/id-comparison.json",
+      "scope": "direction/public API/Environment lifecycle/store seams only"
+    },
+    "liveEvaluation": {
+      "receipt": "evidence/jev-zen-20261005/summary.json",
+      "actualHttpRequests": 62,
+      "retainedModelCaseLabelMatches": 22,
+      "retainedModelCasesScored": 23,
+      "status": "PARTIAL",
+      "nativeEffects": 0,
+      "boundStateControls": {
+        "cases": 2,
+        "matched": 1,
+        "requests": 12
+      }
+    },
+    "localLayaEvaluation": {
+      "receipt": "evidence/laya-local-20261005/summary.json",
+      "completedCalls": 25,
+      "matchedLabels": 9,
+      "modelScoredCases": 25,
+      "status": "PARTIAL_NOT_DEFAULTED"
+    },
+    "completionFollowup": {
+      "offline": "PASSED",
+      "evaluationPrepared": "evidence/completion-offline-20261005/evaluation-prepared.json",
+      "scopeId": "jev-domain-v2-20261005",
+      "maximumAdditionalRequests": 42,
+      "liveAuthorization": "AUTHORIZED_AND_EXHAUSTED_42",
+      "sourceAuthority": "native core and owner unchanged",
+      "JD009Delivery": "OFFLINE_VERIFIED; real family capability remains PARTIAL",
+      "liveReceipt": "evidence/jev-domain-v2-20261005/summary.json",
+      "realModelRequests": 42,
+      "liveStatus": "PARTIAL_LABEL_AND_PROTOCOL_FAILURE",
+      "offlineDefaultEntry": "FULL_SUITE_AND_67_SCENARIOS_PASSED"
+    },
+    "liveEvaluationFollowup": {
+      "status": "PARTIAL",
+      "plan_hash": "sha256:f10594450f29ff5f4dccbc8363915d192976007c963965943827a1bef2036e01",
+      "new_requests": 42,
+      "previous_requests": 62,
+      "cumulative_requests": 104,
+      "elapsed_seconds": 38.8973,
+      "technical_completed": 22,
+      "technical_failed": 1,
+      "model_cases": 22,
+      "model_cases_with_typed_answers": 21,
+      "model_label_matches": 20,
+      "hard_rule_zero_model_cases": 1,
+      "verified_durable_runs": 23,
+      "reported_usage_new": {
+        "input_tokens": 29819,
+        "output_tokens": 1707
+      },
+      "reported_usage_cumulative": {
+        "input_tokens": 62430,
+        "output_tokens": 4247
+      },
+      "usage_unknown_requests_new": 1,
+      "usage_unknown_requests_cumulative": 2,
+      "cost": "UNKNOWN",
+      "credential_read_attempts_audited": 1,
+      "raw_receipt_counter_error": "credential_reads remained preparation default 0; actual run reads the specifically authorized private file once. Fixed prospectively and raw receipt retained.",
+      "native_effects": 0,
+      "retry": 0,
+      "all_work_complete": false
+    },
+    "deliveryAudit": {
+      "document": "completion-audit.md",
+      "machine": "completion-audit.json",
+      "implementationAndRequiredEvaluationDelivered": true,
+      "productReadinessComplete": false,
+      "remainingRequiredOfflineImplementationItems": 0
+    },
+    "continuedDiagnostics": {
+      "receipt": "evidence/protocol-diagnostic-20261005/summary.json",
+      "authorization": "User authorized no cumulative attempt limit for same free synthetic diagnostic scope; each run remains finite",
+      "status": "AUTHORIZED_SYNTHETIC_SCOPE_DELIVERED_PRODUCT_PARTIAL",
+      "newHttpRequests": 23,
+      "cumulativeHttpRequests": 208,
+      "capacityFailureDiagnostic": "probability_sum",
+      "intentRubricV3Matches": 8,
+      "intentRubricV3Cases": 8,
+      "referenceFlowReceipt": "evidence/reference-flow-20261005/summary.json",
+      "rankFlowReceipt": "evidence/rank-flow-20261005/summary.json",
+      "referenceGraphCasesPassed": 6,
+      "rankGraphCasesPassed": 3,
+      "reportedInputTokens": 164315,
+      "reportedOutputTokens": 13689,
+      "unknownUsageRequests": 3,
+      "productReadinessComplete": false,
+      "edgeFlowReceipt": "evidence/edge-flow-20261005/summary.json",
+      "edgeGraphCasesPassed": 4
+    },
+    "latestVerifiedContinuation": {
+      "checkpoint": "d7c741137095658be9949314297a21e59bf4d217",
+      "offlineReceipt": "evidence/codex-effects-20261005/offline/receipt.json",
+      "scenarioEvidence": "evidence/codex-effects-20261005/README.md",
+      "machineAudit": "completion-audit.json#codex_effects_continuation",
+      "decisionTestsPassed": 359,
+      "codexFamilyTestsPassed": 147,
+      "offlineScenesPassed": 67,
+      "baselineCoreIdsPassed": 57,
+      "currentCoreIdsPassed": 57,
+      "realModelRequestsTotal": 220,
+      "reportedInputTokens": 176303,
+      "reportedOutputTokens": 14227,
+      "historicalUnknownUsageRequests": 3,
+      "cost": "UNKNOWN",
+      "codexPureRead": "original owner declaration compiler only; application unknown",
+      "otherFamilies": "unsupported",
+      "realHarness": "NOT_RUN_PENDING_SEPARATE_AUTHORIZATION",
+      "harnessPlan": "harness-smoke-next.md",
+      "productReadiness": "PARTIAL",
+      "all_work_complete": false,
+      "historicalRecords": "Prior implementationRun entries and design NOT_RUN rows are retained snapshots; use this entry for latest verified evidence."
+    }
+  }
+}

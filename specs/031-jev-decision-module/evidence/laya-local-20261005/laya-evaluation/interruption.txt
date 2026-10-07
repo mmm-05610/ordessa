@@ -1,0 +1,1 @@
+First tool process handle missing after turn interruption; no model process remains, empty log and no raw receipt. Completion and inference count unknown. One fresh local recovery authorized by user continuation.

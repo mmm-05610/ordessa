@@ -1,0 +1,30 @@
+.............F                                                           [100%]
+=================================== FAILURES ===================================
+__________ test_T24_T25_committed_archive_copy_retains_terminal_proof __________
+
+store = (PosixPath('/tmp/pytest-of-maoqh/pytest-1555/test_T24_T25_committed_archive0'), <ReadContext>, <ordessa_decision.evidence.filesystem.FileEvidenceSink object at 0x7c95d80400e0>)
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-1555/test_T24_T25_committed_archive0')
+
+    def test_T24_T25_committed_archive_copy_retains_terminal_proof(store,tmp_path):
+        import shutil
+        root,context,sink=store
+        run_id=str(uuid.uuid4())
+        run(sink.start(meta(run_id)))
+        value=terminal(run_id)
+        run(sink.finish(value))
+        archive=tmp_path/'archive';archive.mkdir(mode=0o700)
+        shutil.copytree(root/run_id,archive/run_id)
+        original=os.stat(root/run_id/'writer.lock')
+        copied=os.stat(archive/run_id/'writer.lock')
+        assert copied.st_ino!=original.st_ino
+        observation=read_again(archive,context,run_id)
+>       assert observation['status']=='completed'
+E       AssertionError: assert 'unknown' == 'completed'
+E         
+E         - completed
+E         + unknown
+
+packages/backend/decision/tests/integration/test_evidence_attacks.py:220: AssertionError
+=========================== short test summary info ============================
+FAILED packages/backend/decision/tests/integration/test_evidence_attacks.py::test_T24_T25_committed_archive_copy_retains_terminal_proof
+1 failed, 13 passed in 0.11s

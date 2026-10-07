@@ -1,0 +1,100 @@
+............FFF...                                                       [100%]
+=================================== FAILURES ===================================
+____ test_actual_codex_public_reads_leave_sqlite_and_files_unchanged[valid] ____
+
+setup = (<pacthold.environment.Environment object at 0x7b54262f7500>, <test_codex_owner_attacks.Policy object at 0x7b54262f756...ld.agents.assembly.AgentAssembly object at 0x7b54262f7ec0>), <function setup.<locals>.owner_factory at 0x7b5426120f40>)
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-1628/test_actual_codex_public_reads0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b54262f7200>
+status = 'valid'
+
+    @pytest.mark.parametrize('status',['valid','invalid','unverifiable'])
+    def test_actual_codex_public_reads_leave_sqlite_and_files_unchanged(setup,tmp_path,monkeypatch,status):
+        _,_,owner,api,_=setup
+        value=proposal(api,sources=(make_profile(api),))
+        if status=='invalid':
+            data={'declarations':[dict(value.proposal_data['declarations'][0],payload={'unknown':'field'})]}
+            value=replace(value,proposal_data=data)
+        elif status=='unverifiable':
+            value=replace(value,required_obligations=())
+        before=tree_bytes(tmp_path)
+        with observe_effect_attempts(monkeypatch) as attempts:
+            offers=api.providers.describe_configuration_offers(DEF)
+            result=api.providers.assess_configuration_proposal(value)
+        assert offers.complete is False and result.status==status
+        assert attempts==[]
+>       assert tree_bytes(tmp_path)==before
+E       AssertionError: assert {'core.sqlite...\x00\x00\x00'} == {'core.sqlite...\x00\x00\x00'}
+E         
+E         Omitting 2 identical items, use -vv to show
+E         Differing items:
+E         {'core.sqlite-shm': b'\x18\xe2-\x00\x00\x00\x00\x00\x15\x00\x00\x00\x01\x00\x00\x10-\x00\x00\x00\x16\x00\x00\x00\x06r\...0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'} != {'core.sqlite-shm': b'\x18\xe2-\x00\x00\x00\x00\x00\x15\x00\x00\x00\x01\x00\x00\x10-\x00\x00\x00\x16\x00\x00\x00\x06r\...0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'}
+E         Use -v to get more diff
+
+packages/backend/decision/tests/integration/test_codex_owner_attacks.py:298: AssertionError
+___ test_actual_codex_public_reads_leave_sqlite_and_files_unchanged[invalid] ___
+
+setup = (<pacthold.environment.Environment object at 0x7b54262f5070>, <test_codex_owner_attacks.Policy object at 0x7b54262f6e4...ld.agents.assembly.AgentAssembly object at 0x7b5425e584a0>), <function setup.<locals>.owner_factory at 0x7b54261218a0>)
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-1628/test_actual_codex_public_reads1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b54262f6ed0>
+status = 'invalid'
+
+    @pytest.mark.parametrize('status',['valid','invalid','unverifiable'])
+    def test_actual_codex_public_reads_leave_sqlite_and_files_unchanged(setup,tmp_path,monkeypatch,status):
+        _,_,owner,api,_=setup
+        value=proposal(api,sources=(make_profile(api),))
+        if status=='invalid':
+            data={'declarations':[dict(value.proposal_data['declarations'][0],payload={'unknown':'field'})]}
+            value=replace(value,proposal_data=data)
+        elif status=='unverifiable':
+            value=replace(value,required_obligations=())
+        before=tree_bytes(tmp_path)
+        with observe_effect_attempts(monkeypatch) as attempts:
+            offers=api.providers.describe_configuration_offers(DEF)
+            result=api.providers.assess_configuration_proposal(value)
+        assert offers.complete is False and result.status==status
+        assert attempts==[]
+>       assert tree_bytes(tmp_path)==before
+E       AssertionError: assert {'core.sqlite...\x00\x00\x00'} == {'core.sqlite...\x00\x00\x00'}
+E         
+E         Omitting 2 identical items, use -vv to show
+E         Differing items:
+E         {'core.sqlite-shm': b'\x18\xe2-\x00\x00\x00\x00\x00\x15\x00\x00\x00\x01\x00\x00\x10-\x00\x00\x00\x16\x00\x00\x00\xd2^\...0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'} != {'core.sqlite-shm': b'\x18\xe2-\x00\x00\x00\x00\x00\x15\x00\x00\x00\x01\x00\x00\x10-\x00\x00\x00\x16\x00\x00\x00\xd2^\...0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'}
+E         Use -v to get more diff
+
+packages/backend/decision/tests/integration/test_codex_owner_attacks.py:298: AssertionError
+_ test_actual_codex_public_reads_leave_sqlite_and_files_unchanged[unverifiable] _
+
+setup = (<pacthold.environment.Environment object at 0x7b5425e59070>, <test_codex_owner_attacks.Policy object at 0x7b5425e59bb...ld.agents.assembly.AgentAssembly object at 0x7b5425e5a000>), <function setup.<locals>.owner_factory at 0x7b5426121a80>)
+tmp_path = PosixPath('/tmp/pytest-of-maoqh/pytest-1628/test_actual_codex_public_reads2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b5425e5b890>
+status = 'unverifiable'
+
+    @pytest.mark.parametrize('status',['valid','invalid','unverifiable'])
+    def test_actual_codex_public_reads_leave_sqlite_and_files_unchanged(setup,tmp_path,monkeypatch,status):
+        _,_,owner,api,_=setup
+        value=proposal(api,sources=(make_profile(api),))
+        if status=='invalid':
+            data={'declarations':[dict(value.proposal_data['declarations'][0],payload={'unknown':'field'})]}
+            value=replace(value,proposal_data=data)
+        elif status=='unverifiable':
+            value=replace(value,required_obligations=())
+        before=tree_bytes(tmp_path)
+        with observe_effect_attempts(monkeypatch) as attempts:
+            offers=api.providers.describe_configuration_offers(DEF)
+            result=api.providers.assess_configuration_proposal(value)
+        assert offers.complete is False and result.status==status
+        assert attempts==[]
+>       assert tree_bytes(tmp_path)==before
+E       AssertionError: assert {'core.sqlite...\x00\x00\x00'} == {'core.sqlite...\x00\x00\x00'}
+E         
+E         Omitting 2 identical items, use -vv to show
+E         Differing items:
+E         {'core.sqlite-shm': b'\x18\xe2-\x00\x00\x00\x00\x00\x15\x00\x00\x00\x01\x00\x00\x10-\x00\x00\x00\x16\x00\x00\x00I\xad\...0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'} != {'core.sqlite-shm': b'\x18\xe2-\x00\x00\x00\x00\x00\x15\x00\x00\x00\x01\x00\x00\x10-\x00\x00\x00\x16\x00\x00\x00I\xad\...0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'}
+E         Use -v to get more diff
+
+packages/backend/decision/tests/integration/test_codex_owner_attacks.py:298: AssertionError
+=========================== short test summary info ============================
+FAILED packages/backend/decision/tests/integration/test_codex_owner_attacks.py::test_actual_codex_public_reads_leave_sqlite_and_files_unchanged[valid]
+FAILED packages/backend/decision/tests/integration/test_codex_owner_attacks.py::test_actual_codex_public_reads_leave_sqlite_and_files_unchanged[invalid]
+FAILED packages/backend/decision/tests/integration/test_codex_owner_attacks.py::test_actual_codex_public_reads_leave_sqlite_and_files_unchanged[unverifiable]
+3 failed, 15 passed in 0.29s

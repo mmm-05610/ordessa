@@ -1,0 +1,131 @@
+{
+  "version": "selection/1",
+  "priorities": [
+    "continue",
+    "reuse",
+    "restore",
+    "wait",
+    "reconfigure",
+    "create"
+  ],
+  "required_checks": {
+    "continue": [
+      "identity",
+      "version",
+      "permission",
+      "scope",
+      "same_native_context",
+      "availability"
+    ],
+    "reuse": [
+      "identity",
+      "version",
+      "permission",
+      "scope",
+      "context_compatible",
+      "availability"
+    ],
+    "restore": [
+      "identity",
+      "version",
+      "permission",
+      "scope",
+      "native_binding",
+      "public_restore_support",
+      "restore_preconditions"
+    ],
+    "wait": [
+      "identity",
+      "version",
+      "permission",
+      "scope",
+      "context_compatible",
+      "temporarily_busy",
+      "wait_condition",
+      "wait_deadline",
+      "latency_compatible"
+    ],
+    "reconfigure": [
+      "identity",
+      "version",
+      "permission",
+      "scope",
+      "owner_configuration_version",
+      "configuration_compatible",
+      "application_mode",
+      "occupancy_compatible"
+    ],
+    "create": [
+      "identity",
+      "version",
+      "permission",
+      "scope",
+      "fixed_profile",
+      "fixed_harness",
+      "directory",
+      "resources",
+      "installation",
+      "public_read_assessment"
+    ]
+  },
+  "limits": {
+    "max_business_candidates": 64,
+    "max_candidate_pages": 4,
+    "candidate_page_size": 32,
+    "max_combinations": 64,
+    "max_proposals_per_round": 8,
+    "max_repair_rounds": 2
+  },
+  "create_requires_complete": true,
+  "allow_unknown_cost": false,
+  "rank_instructions": "Choose the best evidenced task fit while preserving suitable native context and minimizing evidenced cost and disturbance. Unknown cost is not zero. Choose none_suitable when none fits; choose insufficient_evidence when evidence is insufficient.",
+  "rejection_options": {
+    "none_suitable": "No listed proposal fits the task.",
+    "insufficient_evidence": "The available evidence does not justify selecting a proposal."
+  },
+  "tie_disposition": "clarify",
+  "none_suitable_disposition": "clarify",
+  "insufficient_evidence_disposition": "clarify",
+  "no_delegation": {
+    "enabled": false,
+    "boundary": "mainAgentHandlingAllowed"
+  },
+  "required_validation": {
+    "continue": [
+      {
+        "validator_kind": "owner.read",
+        "version_constraint": "1"
+      }
+    ],
+    "reuse": [
+      {
+        "validator_kind": "owner.read",
+        "version_constraint": "1"
+      }
+    ],
+    "restore": [
+      {
+        "validator_kind": "owner.read",
+        "version_constraint": "1"
+      }
+    ],
+    "wait": [
+      {
+        "validator_kind": "owner.read",
+        "version_constraint": "1"
+      }
+    ],
+    "reconfigure": [
+      {
+        "validator_kind": "owner.read",
+        "version_constraint": "1"
+      }
+    ],
+    "create": [
+      {
+        "validator_kind": "owner.read",
+        "version_constraint": "1"
+      }
+    ]
+  }
+}

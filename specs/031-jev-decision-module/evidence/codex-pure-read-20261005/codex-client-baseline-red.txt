@@ -1,0 +1,453 @@
+.............FFFFFFFFFFF.FFFFF.......................................... [ 60%]
+................................................                         [100%]
+=================================== FAILURES ===================================
+________ test_wait_correlates_both_thread_and_turn_preserving_unrelated ________
+
+    def test_wait_correlates_both_thread_and_turn_preserving_unrelated():
+        wrong_thread, wrong_turn, right = completion(thread="other"), completion(turn="other"), completion()
+        channel = ScriptedChannel([wrong_thread, wrong_turn, right])
+        client = CodexAppServerClient(channel)
+>       assert client.wait_turn_completed(thread_id="th-1", turn_id="turn-1") == right
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:227: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:251: in wait_turn_completed
+    message = self._channel.next_message(timeout=remaining)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_client.ScriptedChannel object at 0x7ffa16bbe570>
+timeout = 29.99999956699321
+
+    def next_message(self, *, timeout):
+>       from ordessa_agent_tools.native_clients._transport import Message
+E       ModuleNotFoundError: No module named 'ordessa_agent_tools'
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:209: ModuleNotFoundError
+___________ test_completion_buffered_during_rpc_is_available_to_wait ___________
+
+    def test_completion_buffered_during_rpc_is_available_to_wait():
+        done = completion()
+        channel = ScriptedChannel([done, {"id": "req-1", "result": {"turn": {"id": "turn-1", "items": [], "status": "inProgress"}}}])
+        client = CodexAppServerClient(channel)
+>       client.start_turn(thread_id="th-1", text="once")
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:236: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:205: in start_turn
+    result = self._request("turn/start", params, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:390: in _request
+    return self._request_locked(method, params, timeout=timeout, on_request=on_request, before_send=before_send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:415: in _request_locked
+    return self.recover_request(request_id, timeout=timeout, on_request=on_request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:437: in recover_request
+    message: Message = self._channel.next_message(timeout=remaining)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_client.ScriptedChannel object at 0x7ffa16bbe5d0>
+timeout = 9.999999538005795
+
+    def next_message(self, *, timeout):
+>       from ordessa_agent_tools.native_clients._transport import Message
+E       ModuleNotFoundError: No module named 'ordessa_agent_tools'
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:209: ModuleNotFoundError
+_____________ test_invalid_completion_cannot_report_success[raw0] ______________
+
+raw = {'method': 'turn/completed', 'params': {'threadId': 'th-1', 'turn': {'id': 'turn-1', 'items': [], 'status': 'inProgress', 'error': None}}}
+
+    @pytest.mark.parametrize("raw", [completion(status="inProgress"), completion(status="future"),
+        {"method": "turn/completed", "params": {"status": "completed", "turnId": "turn-1"}}])
+    def test_invalid_completion_cannot_report_success(raw):
+        client = CodexAppServerClient(ScriptedChannel([raw]))
+        with pytest.raises(LostReceipt):
+>           client.wait_turn_completed(thread_id="th-1", turn_id="turn-1")
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:246: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:251: in wait_turn_completed
+    message = self._channel.next_message(timeout=remaining)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_client.ScriptedChannel object at 0x7ffa16bbfd10>
+timeout = 29.999999642022885
+
+    def next_message(self, *, timeout):
+>       from ordessa_agent_tools.native_clients._transport import Message
+E       ModuleNotFoundError: No module named 'ordessa_agent_tools'
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:209: ModuleNotFoundError
+_____________ test_invalid_completion_cannot_report_success[raw1] ______________
+
+raw = {'method': 'turn/completed', 'params': {'threadId': 'th-1', 'turn': {'id': 'turn-1', 'items': [], 'status': 'future', 'error': None}}}
+
+    @pytest.mark.parametrize("raw", [completion(status="inProgress"), completion(status="future"),
+        {"method": "turn/completed", "params": {"status": "completed", "turnId": "turn-1"}}])
+    def test_invalid_completion_cannot_report_success(raw):
+        client = CodexAppServerClient(ScriptedChannel([raw]))
+        with pytest.raises(LostReceipt):
+>           client.wait_turn_completed(thread_id="th-1", turn_id="turn-1")
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:246: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:251: in wait_turn_completed
+    message = self._channel.next_message(timeout=remaining)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_client.ScriptedChannel object at 0x7ffa16dd8650>
+timeout = 29.99999962502625
+
+    def next_message(self, *, timeout):
+>       from ordessa_agent_tools.native_clients._transport import Message
+E       ModuleNotFoundError: No module named 'ordessa_agent_tools'
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:209: ModuleNotFoundError
+_____________ test_invalid_completion_cannot_report_success[raw2] ______________
+
+raw = {'method': 'turn/completed', 'params': {'status': 'completed', 'turnId': 'turn-1'}}
+
+    @pytest.mark.parametrize("raw", [completion(status="inProgress"), completion(status="future"),
+        {"method": "turn/completed", "params": {"status": "completed", "turnId": "turn-1"}}])
+    def test_invalid_completion_cannot_report_success(raw):
+        client = CodexAppServerClient(ScriptedChannel([raw]))
+        with pytest.raises(LostReceipt):
+>           client.wait_turn_completed(thread_id="th-1", turn_id="turn-1")
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:246: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:251: in wait_turn_completed
+    message = self._channel.next_message(timeout=remaining)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_client.ScriptedChannel object at 0x7ffa16dd9220>
+timeout = 29.999999607971404
+
+    def next_message(self, *, timeout):
+>       from ordessa_agent_tools.native_clients._transport import Message
+E       ModuleNotFoundError: No module named 'ordessa_agent_tools'
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:209: ModuleNotFoundError
+________________ test_interrupt_ack_is_not_terminal_completion _________________
+
+    def test_interrupt_ack_is_not_terminal_completion():
+        channel = ScriptedChannel([{"id": "req-1", "result": {}}, completion(status="interrupted")])
+        client = CodexAppServerClient(channel)
+>       assert client.cancel(thread_id="th-1", turn_id="turn-1") == {}
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:252: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:355: in cancel
+    return self._request("turn/interrupt", {"threadId": thread_id, "turnId": turn_id}, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:390: in _request
+    return self._request_locked(method, params, timeout=timeout, on_request=on_request, before_send=before_send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:415: in _request_locked
+    return self.recover_request(request_id, timeout=timeout, on_request=on_request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:437: in recover_request
+    message: Message = self._channel.next_message(timeout=remaining)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_client.ScriptedChannel object at 0x7ffa16dd82f0>
+timeout = 9.999999655003194
+
+    def next_message(self, *, timeout):
+>       from ordessa_agent_tools.native_clients._transport import Message
+E       ModuleNotFoundError: No module named 'ordessa_agent_tools'
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:209: ModuleNotFoundError
+_ test_permissions_cannot_receive_command_decision_and_duplicate_reply_refused _
+
+    def test_permissions_cannot_receive_command_decision_and_duplicate_reply_refused():
+        channel = ScriptedChannel([reverse("item/permissions/requestApproval")])
+        client = CodexAppServerClient(channel)
+>       client.next_event()
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:266: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:260: in next_event
+    raw = self._channel.next_message(timeout=timeout).raw
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_client.ScriptedChannel object at 0x7ffa16ddb860>, timeout = 10.0
+
+    def next_message(self, *, timeout):
+>       from ordessa_agent_tools.native_clients._transport import Message
+E       ModuleNotFoundError: No module named 'ordessa_agent_tools'
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:209: ModuleNotFoundError
+______________ test_server_resolved_request_is_not_answered_again ______________
+
+    def test_server_resolved_request_is_not_answered_again():
+        channel = ScriptedChannel([reverse(), {"method": "serverRequest/resolved", "params": {"threadId": "th-1", "requestId": 42}}])
+        client = CodexAppServerClient(channel)
+>       client.next_event()
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:278: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:260: in next_event
+    raw = self._channel.next_message(timeout=timeout).raw
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_client.ScriptedChannel object at 0x7ffa16dd9a30>, timeout = 10.0
+
+    def next_message(self, *, timeout):
+>       from ordessa_agent_tools.native_clients._transport import Message
+E       ModuleNotFoundError: No module named 'ordessa_agent_tools'
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:209: ModuleNotFoundError
+______________ test_execpolicy_reply_uses_native_decision_wrapper ______________
+
+    def test_execpolicy_reply_uses_native_decision_wrapper():
+        channel = ScriptedChannel([reverse()])
+        client = CodexAppServerClient(channel)
+>       client.next_event()
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:288: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:260: in next_event
+    raw = self._channel.next_message(timeout=timeout).raw
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_client.ScriptedChannel object at 0x7ffa16bbfbc0>, timeout = 10.0
+
+    def next_message(self, *, timeout):
+>       from ordessa_agent_tools.native_clients._transport import Message
+E       ModuleNotFoundError: No module named 'ordessa_agent_tools'
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:209: ModuleNotFoundError
+____ test_unknown_start_is_not_resent_and_late_receipt_recovery_only_reads _____
+
+    def test_unknown_start_is_not_resent_and_late_receipt_recovery_only_reads():
+        channel = ScriptedChannel()
+        client = CodexAppServerClient(channel)
+        with pytest.raises(RequestTimeout) as error:
+            client.start_turn(thread_id="th-1", text="once", timeout=0)
+        with pytest.raises(LostReceipt):
+            client.start_turn(thread_id="th-1", text="once")
+        channel.messages.append({"id": error.value.request_id, "result": {"turn": {"id": "late", "items": [], "status": "inProgress"}}})
+>       client.next_event()  # Late receipt may be buffered by another event consumer.
+        ^^^^^^^^^^^^^^^^^^^
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:302: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:260: in next_event
+    raw = self._channel.next_message(timeout=timeout).raw
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_client.ScriptedChannel object at 0x7ffa16dd9040>, timeout = 10.0
+
+    def next_message(self, *, timeout):
+>       from ordessa_agent_tools.native_clients._transport import Message
+E       ModuleNotFoundError: No module named 'ordessa_agent_tools'
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:209: ModuleNotFoundError
+________________ test_malformed_response_keeps_pending_unknown _________________
+
+    def test_malformed_response_keeps_pending_unknown():
+        channel = ScriptedChannel([{"id": "req-1", "result": {}, "error": {"message": "bad"}}])
+        client = CodexAppServerClient(channel)
+        with pytest.raises(LostReceipt):
+>           client.command("future/method")
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:314: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:360: in command
+    return self._request(method, dict(params), timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:390: in _request
+    return self._request_locked(method, params, timeout=timeout, on_request=on_request, before_send=before_send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:415: in _request_locked
+    return self.recover_request(request_id, timeout=timeout, on_request=on_request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:437: in recover_request
+    message: Message = self._channel.next_message(timeout=remaining)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_client.ScriptedChannel object at 0x7ffa16ddb440>
+timeout = 9.999999499996193
+
+    def next_message(self, *, timeout):
+>       from ordessa_agent_tools.native_clients._transport import Message
+E       ModuleNotFoundError: No module named 'ordessa_agent_tools'
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:209: ModuleNotFoundError
+__________ test_wrong_thread_resolved_does_not_clear_pending_approval __________
+
+    def test_wrong_thread_resolved_does_not_clear_pending_approval():
+        channel = ScriptedChannel([reverse(), {"method": "serverRequest/resolved", "params": {"threadId": "other", "requestId": 42}}])
+        client = CodexAppServerClient(channel)
+>       client.next_event()
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:330: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:260: in next_event
+    raw = self._channel.next_message(timeout=timeout).raw
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_client.ScriptedChannel object at 0x7ffa16dd9a00>, timeout = 10.0
+
+    def next_message(self, *, timeout):
+>       from ordessa_agent_tools.native_clients._transport import Message
+E       ModuleNotFoundError: No module named 'ordessa_agent_tools'
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:209: ModuleNotFoundError
+_________ test_permissions_generic_reply_cannot_sneak_command_decision _________
+
+    def test_permissions_generic_reply_cannot_sneak_command_decision():
+        channel = ScriptedChannel([reverse("item/permissions/requestApproval")])
+        client = CodexAppServerClient(channel)
+>       client.next_event()
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:339: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:260: in next_event
+    raw = self._channel.next_message(timeout=timeout).raw
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_client.ScriptedChannel object at 0x7ffa16b4e750>, timeout = 10.0
+
+    def next_message(self, *, timeout):
+>       from ordessa_agent_tools.native_clients._transport import Message
+E       ModuleNotFoundError: No module named 'ordessa_agent_tools'
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:209: ModuleNotFoundError
+_____________ test_malformed_start_receipt_remains_unknown[turn0] ______________
+
+turn = {'id': 'turn-1'}
+
+    @pytest.mark.parametrize("turn", [{"id": "turn-1"}, {"id": "turn-1", "items": [], "status": "future"}])
+    def test_malformed_start_receipt_remains_unknown(turn):
+        channel = ScriptedChannel([{"id": "req-1", "result": {"turn": turn}}])
+        client = CodexAppServerClient(channel)
+        with pytest.raises(LostReceipt):
+>           client.start_turn(thread_id="th-1", text="once")
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:351: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:205: in start_turn
+    result = self._request("turn/start", params, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:390: in _request
+    return self._request_locked(method, params, timeout=timeout, on_request=on_request, before_send=before_send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:415: in _request_locked
+    return self.recover_request(request_id, timeout=timeout, on_request=on_request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:437: in recover_request
+    message: Message = self._channel.next_message(timeout=remaining)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_client.ScriptedChannel object at 0x7ffa16b4f800>
+timeout = 9.999999646970537
+
+    def next_message(self, *, timeout):
+>       from ordessa_agent_tools.native_clients._transport import Message
+E       ModuleNotFoundError: No module named 'ordessa_agent_tools'
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:209: ModuleNotFoundError
+_____________ test_malformed_start_receipt_remains_unknown[turn1] ______________
+
+turn = {'id': 'turn-1', 'items': [], 'status': 'future'}
+
+    @pytest.mark.parametrize("turn", [{"id": "turn-1"}, {"id": "turn-1", "items": [], "status": "future"}])
+    def test_malformed_start_receipt_remains_unknown(turn):
+        channel = ScriptedChannel([{"id": "req-1", "result": {"turn": turn}}])
+        client = CodexAppServerClient(channel)
+        with pytest.raises(LostReceipt):
+>           client.start_turn(thread_id="th-1", text="once")
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:351: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:205: in start_turn
+    result = self._request("turn/start", params, timeout=timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:390: in _request
+    return self._request_locked(method, params, timeout=timeout, on_request=on_request, before_send=before_send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:415: in _request_locked
+    return self.recover_request(request_id, timeout=timeout, on_request=on_request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:437: in recover_request
+    message: Message = self._channel.next_message(timeout=remaining)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_client.ScriptedChannel object at 0x7ffa16dda000>
+timeout = 9.99999962002039
+
+    def next_message(self, *, timeout):
+>       from ordessa_agent_tools.native_clients._transport import Message
+E       ModuleNotFoundError: No module named 'ordessa_agent_tools'
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:209: ModuleNotFoundError
+__________ test_remote_error_data_preserved_without_reinterpreting_it __________
+
+    def test_remote_error_data_preserved_without_reinterpreting_it():
+        data = {"codexErrorInfo": "serverOverloaded", "future": {"value": 1}}
+        client = CodexAppServerClient(ScriptedChannel([{"id": "req-1", "error": {"code": -32001, "message": "overloaded", "data": data}}]))
+        with pytest.raises(CodexRpcError) as error:
+>           client.command("future/method")
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:362: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:360: in command
+    return self._request(method, dict(params), timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:390: in _request
+    return self._request_locked(method, params, timeout=timeout, on_request=on_request, before_send=before_send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:415: in _request_locked
+    return self.recover_request(request_id, timeout=timeout, on_request=on_request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.decision-tmp/codex-baseline/plugins/harness/codex/src/ordessa_harness_codex/client.py:437: in recover_request
+    message: Message = self._channel.next_message(timeout=remaining)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_client.ScriptedChannel object at 0x7ffa16dda030>
+timeout = 9.999999786028638
+
+    def next_message(self, *, timeout):
+>       from ordessa_agent_tools.native_clients._transport import Message
+E       ModuleNotFoundError: No module named 'ordessa_agent_tools'
+
+.decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py:209: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED .decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py::test_wait_correlates_both_thread_and_turn_preserving_unrelated
+FAILED .decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py::test_completion_buffered_during_rpc_is_available_to_wait
+FAILED .decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py::test_invalid_completion_cannot_report_success[raw0]
+FAILED .decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py::test_invalid_completion_cannot_report_success[raw1]
+FAILED .decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py::test_invalid_completion_cannot_report_success[raw2]
+FAILED .decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py::test_interrupt_ack_is_not_terminal_completion
+FAILED .decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py::test_permissions_cannot_receive_command_decision_and_duplicate_reply_refused
+FAILED .decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py::test_server_resolved_request_is_not_answered_again
+FAILED .decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py::test_execpolicy_reply_uses_native_decision_wrapper
+FAILED .decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py::test_unknown_start_is_not_resent_and_late_receipt_recovery_only_reads
+FAILED .decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py::test_malformed_response_keeps_pending_unknown
+FAILED .decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py::test_wrong_thread_resolved_does_not_clear_pending_approval
+FAILED .decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py::test_permissions_generic_reply_cannot_sneak_command_decision
+FAILED .decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py::test_malformed_start_receipt_remains_unknown[turn0]
+FAILED .decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py::test_malformed_start_receipt_remains_unknown[turn1]
+FAILED .decision-tmp/codex-baseline/plugins/harness/codex/tests/test_client.py::test_remote_error_data_preserved_without_reinterpreting_it
+16 failed, 104 passed in 1.99s
