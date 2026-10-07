@@ -6,12 +6,13 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .venv/
+/.venv-cleanup/
 
 # --- environment exceptions (switch table docs/migration/source-destination.md §1) ---
 # In-place workspace containers and run data that remain inside the root after
 # the switch. They are NOT source and must never enter git; see
 # docs/known-issues.md §services and docs/reference-index.md.
-worktrees/
+worktree/
 .c1-001-runtime/
 .c1-001-secrets/
 .mimocode/

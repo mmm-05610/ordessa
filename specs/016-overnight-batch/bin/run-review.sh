@@ -5,7 +5,7 @@ REPO=/home/maoqh/projects/ordessa
 LOGDIR=$REPO/specs/016-overnight-batch/reports
 SON=${1:?用法: run-review.sh <son相对路径>}
 case "$SON" in
-  worktrees/overnight-*/son-*) ;; *) echo "REFUSED: 儿子路径必须在 worktrees/overnight-*/son-* 下" >&2; exit 64;;
+  worktree/overnight-*/son-*) ;; *) echo "REFUSED: 儿子路径必须在 worktree/overnight-*/son-* 下" >&2; exit 64;;
 esac
 WT=$REPO/$SON; BR=$(git -C "$WT" branch --show-current)
 TS=$(date +%Y%m%d-%H%M%S)

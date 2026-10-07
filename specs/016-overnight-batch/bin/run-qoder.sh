@@ -7,7 +7,7 @@ SON=${1:?用法: run-qoder.sh <son相对路径> <dispatch绝对路径> [超时�
 DOC=${2:?缺 dispatch 文档绝对路径}
 TMO=${3:-5400}
 case "$SON" in
-  worktrees/overnight-*/son-*) ;; *) echo "REFUSED: 儿子路径必须在 worktrees/overnight-*/son-* 下，收到: $SON" >&2; exit 64;;
+  worktree/overnight-*/son-*) ;; *) echo "REFUSED: 儿子路径必须在 worktree/overnight-*/son-* 下，收到: $SON" >&2; exit 64;;
 esac
 [ -f "$DOC" ] || { echo "REFUSED: dispatch 文档不存在: $DOC" >&2; exit 64; }
 WT=$REPO/$SON
