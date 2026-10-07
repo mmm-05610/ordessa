@@ -74,7 +74,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from pacthold_runtime_compat.storage import Database
+from ordessa_persistence_sqlite.product_database import Database
 
 from ..api.errors import AssetDomainError
 from ..assignments.model import (

@@ -214,7 +214,7 @@ def test_the_two_observed_spellings_render_and_unsupported_families_refuse():
 def test_assets_are_catalogued_bound_and_never_carry_content(tmp_path):
     from ordessa_server_compat.assets.records import AssetRecords, asset_view
     from ordessa_server.idempotency import IdempotentRecords
-    from pacthold_runtime_compat.storage import Database
+    from ordessa_persistence_sqlite.product_database import Database
 
     database = Database(tmp_path / "data")
     database.initialize()
@@ -608,7 +608,7 @@ def test_the_catalog_snapshots_and_installs_with_pinned_provenance(tmp_path):
     from ordessa_server_compat.assets.records import AssetRecords
     from ordessa_server_compat.assets.skills import SkillAssetStore
     from ordessa_server.idempotency import IdempotentRecords
-    from pacthold_runtime_compat.storage import Database
+    from ordessa_persistence_sqlite.product_database import Database
 
     database = Database(tmp_path / "data")
     database.initialize()

@@ -1,4 +1,4 @@
-"""Short-lived SQLite units of work for the local AgentBox data root."""
+"""Short-lived SQLite units of work for the local Ordessa data root (032: moved from the retired runtime-compat assembly)."""
 from __future__ import annotations
 
 from contextlib import contextmanager

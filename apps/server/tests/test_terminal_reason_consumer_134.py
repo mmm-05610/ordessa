@@ -18,7 +18,7 @@ from ordessa_server_compat.execution.sidecar_backend import _terminal_reason_fro
 from ordessa_server_compat.wire_projection import execution_state
 from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server_compat.sessions import SessionRecords
-from pacthold_runtime_compat.storage import Database
+from ordessa_persistence_sqlite.product_database import Database
 
 
 # ---------------------------------------------------------------- extraction (pure)

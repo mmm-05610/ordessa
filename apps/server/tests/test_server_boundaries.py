@@ -22,7 +22,8 @@ from ordessa_server_compat.persistence import ProductRepositoryView
 from ordessa_server_compat.profiles import ProfileRecords
 from ordessa_server_compat.sessions import SessionRecords, SessionService
 from ordessa_server.transport.http import create_app
-from pacthold_runtime_compat.storage import Database, ObjectStore
+from ordessa_persistence_sqlite.product_database import Database
+from pacthold.storage import ObjectStore
 from ordessa_workspace import WorkspaceRecords
 
 

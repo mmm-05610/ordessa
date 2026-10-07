@@ -34,7 +34,8 @@ from ordessa_server_compat.persistence import ProductRepositoryView
 from ordessa_server_compat.profiles import ProfileRecords
 from ordessa_server_compat.profiles.permissions import resolve_all
 from ordessa_server_compat.sessions import SessionRecords, SessionService
-from pacthold_runtime_compat.storage import Database, ObjectStore
+from ordessa_persistence_sqlite.product_database import Database
+from pacthold.storage import ObjectStore
 from ordessa_workspace import WorkspaceRecords
 
 CONFIG_BEFORE = {"schema_version": 1, "harness_type": "alpha",

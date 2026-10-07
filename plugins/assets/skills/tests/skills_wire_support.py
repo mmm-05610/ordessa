@@ -79,7 +79,7 @@ def runtime(tmp_path):
     (`SERVER_PRODUCT_MISSING`) unless an installed product answers. This
     test composition injects the very class the default product hands the
     host (`products/server` `ServerProductComposition.database_type()` →
-    `pacthold_runtime_compat.storage.Database`), so the wire chain runs
+    `ordessa_persistence_sqlite.product_database.Database`), so the wire chain runs
     against the real storage assembly without depending on the entry
     point.
 
@@ -93,7 +93,7 @@ def runtime(tmp_path):
     path is proven end-to-end in `test_harness_api_registration.py`
     against the published handler and a live `ServerPluginHost` round.
     """
-    from pacthold_runtime_compat.storage import Database
+    from ordessa_persistence_sqlite.product_database import Database
 
     rt = build_runtime(
         tmp_path / "data-root",

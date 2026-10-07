@@ -457,7 +457,7 @@ def test_c17_a_deleted_key_fails_future_preparation_and_never_fakes_anonymous(tm
         RecordingSecretStore, harness_descriptor,
     )
     from pacthold.storage import ObjectStore
-    from pacthold_runtime_compat.storage import Database
+    from ordessa_persistence_sqlite.product_database import Database
     from ordessa_server.idempotency import IdempotentRecords
 
     root = tmp_path / "data"

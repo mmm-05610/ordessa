@@ -20,7 +20,7 @@ from ordessa_workspace.local_environment import (
 )
 from ordessa_workspace.records import WorkspaceRecords
 from ordessa_workspace.service import WorkspaceService
-from pacthold_runtime_compat.storage import Database
+from ordessa_persistence_sqlite.product_database import Database
 
 UNAVAILABLE = {"status": "unavailable", "code": "sandbox_provider_unresolved"}
 LOCAL_ENVIRONMENT = {"kind": "local", "host": None, "user": None}

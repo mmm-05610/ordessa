@@ -33,14 +33,14 @@ import ordessa_permissions_api as q5                      # noqa: E402
 import ordessa_permissions_backend as q5_backend          # noqa: E402
 
 # T009 relocation: the product ``Database`` facade now ships in
-# ``pacthold_runtime_compat.storage`` (``pacthold.storage`` keeps only the
+# ``ordessa_persistence_sqlite.product_database`` (``pacthold.storage`` keeps only the
 # neutral object/secret primitives). Q5's lane support still imports it from
 # the old spelling, so bind the shipped class onto the old path BEFORE
 # ``import support``. This is an import-path adaptation to the current tree -
 # the class, schema and semantics are the real ones; nothing is mocked.
 import pacthold.storage                                   # noqa: E402
 if not hasattr(pacthold.storage, "Database"):
-    from pacthold_runtime_compat.storage import Database as _ProductDatabase
+    from ordessa_persistence_sqlite.product_database import Database as _ProductDatabase
     pacthold.storage.Database = _ProductDatabase
 
 import support                                            # noqa: E402 (real DB helpers)

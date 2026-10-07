@@ -14,7 +14,7 @@ import json
 
 import pytest
 
-from pacthold_runtime_compat.storage import Database
+from ordessa_persistence_sqlite.product_database import Database
 
 from ordessa_skills.api.errors import SkillAssetError
 from ordessa_skills.api.evidence import LOADED, PROJECTED, STORED, USED

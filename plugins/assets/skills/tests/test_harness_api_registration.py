@@ -129,7 +129,7 @@ def _plugin_rows(tmp_path):
     """The registration OUR plugin builds when the composition binds the
     point (`contribute_harness_adapters=True`, the default): three adapter
     rows on the open point plus the error-family row."""
-    from pacthold_runtime_compat.storage import Database
+    from ordessa_persistence_sqlite.product_database import Database
     from server_plugin_api import ServerPluginContext
 
     from ordessa_skills.plugin import SkillsServerPlugin

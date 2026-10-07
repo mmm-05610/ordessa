@@ -26,7 +26,8 @@ from ordessa_server_compat.execution.sidecar_backend import (
 from ordessa_server_compat.profiles import ProfileRecords, ProfileService
 from ordessa_server.credentials import CredentialRecords
 from ordessa_server.idempotency import IdempotentRecords
-from pacthold_runtime_compat.storage import Database, ObjectStore
+from ordessa_persistence_sqlite.product_database import Database
+from pacthold.storage import ObjectStore
 
 
 REPO = Path(__file__).resolve().parents[3]

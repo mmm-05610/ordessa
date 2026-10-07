@@ -229,7 +229,7 @@ class ServerProductComposition:
     def database_type(self) -> type:
         """The selected product's storage provider, before any DB is opened."""
         self._assemble_legacy_chain()
-        from pacthold_runtime_compat.storage import Database
+        from ordessa_persistence_sqlite.product_database import Database
 
         return Database
 

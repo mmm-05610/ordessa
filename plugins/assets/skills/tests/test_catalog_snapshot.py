@@ -28,7 +28,7 @@ def _make_source(root, origin="git:example.test/skills@main"):
 
 
 def _make_store(tmp_path):
-    from pacthold_runtime_compat.storage import Database
+    from ordessa_persistence_sqlite.product_database import Database
 
     from ordessa_skills.library.records import AssetRecords
     database = Database(tmp_path / "data")
@@ -80,7 +80,7 @@ def test_install_entry_pins_provenance_and_touches_no_binding(tmp_path):
     _make_source(tmp_path / "source")
     snapshot = store.sync(source_id="main", source_path=tmp_path / "source")
 
-    from pacthold_runtime_compat.storage import Database as DB
+    from ordessa_persistence_sqlite.product_database import Database as DB
     database = DB(tmp_path / "data")
     records.publish(kind="skill", name="demo-skill", revision=1,
                     digest="sha256:" + "1" * 64, asset_id="demo-skill")

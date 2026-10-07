@@ -182,7 +182,7 @@ def probe(assets, brand, *, restore_provider=False, candidate_entry=None, initia
                               else preferred or (alternatives[0] if alternatives else next(item for item in selectable
                                                                                    if item['value'] == initial_model))
                               )
-                    from pacthold_runtime_compat.storage import Database
+                    from ordessa_persistence_sqlite.product_database import Database
                     from ordessa_server_product.harness_adapters.contributions import CONFIGURATION_POINT, HarnessContributionRegistry
                     carrier = build_runtime(home / 'controlled-carrier', server_plugins=(), database_factory=Database)
                     contribution_registry = HarnessContributionRegistry()

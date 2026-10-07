@@ -27,7 +27,7 @@ from ordessa_server_compat.accounts.assets import (
 )
 from ordessa_server_compat.accounts.records import AccountRecords, account_view
 from ordessa_server.idempotency import IdempotentRecords
-from pacthold_runtime_compat.storage import Database
+from ordessa_persistence_sqlite.product_database import Database
 from pacthold.storage.secrets import MemorySecretStore
 
 DECLARED = [".codex/auth.json"]

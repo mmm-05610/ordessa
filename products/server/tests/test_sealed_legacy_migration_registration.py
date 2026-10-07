@@ -117,7 +117,7 @@ def test_registered_sealed_chain_matches_the_nine_sql_digests(isolated_runner_st
 def test_default_product_composition_registers_the_sealed_chain(
     isolated_runner_state,
 ):
-    from pacthold_runtime_compat.storage import Database
+    from ordessa_persistence_sqlite.product_database import Database
 
     product = create_composition()
     # the DB-provider entry runs at composition time, before any connection

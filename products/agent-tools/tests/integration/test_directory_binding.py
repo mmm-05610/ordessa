@@ -17,7 +17,7 @@ from ordessa_workspace.records import WorkspaceRecords
 from ordessa_workspace.public import DirectoryBindingService, DirectoryGrant, LocalDirectoryRealm, ProjectRef
 from pacthold.agents.public import DirectoryBindingRef
 from pacthold.public import Environment
-from pacthold_runtime_compat.storage import Database
+from ordessa_persistence_sqlite.product_database import Database
 
 
 class Authority:

@@ -19,7 +19,7 @@ from ordessa_server_compat.hooks.model import (
 )
 from ordessa_server_compat.hooks.records import HookRecords
 from ordessa_server.idempotency import IdempotentRecords
-from pacthold_runtime_compat.storage import Database
+from ordessa_persistence_sqlite.product_database import Database
 
 
 def _model(**overrides):

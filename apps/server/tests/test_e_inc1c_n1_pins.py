@@ -31,7 +31,8 @@ from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server_compat.profiles import ProfileRecords
 from ordessa_server_compat.sessions import SessionRecords, SessionService
 from ordessa_workspace import WorkspaceRecords
-from pacthold_runtime_compat.storage import Database, ObjectStore
+from ordessa_persistence_sqlite.product_database import Database
+from pacthold.storage import ObjectStore
 
 
 class _WindowExecution:

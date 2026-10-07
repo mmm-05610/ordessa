@@ -25,7 +25,8 @@ from ordessa_server_compat.profiles.permissions import resolve_all
 from ordessa_server_compat.sessions import SessionRecords, SessionService
 from ordessa_server_compat.sessions.queue import QueueRecords
 from ordessa_workspace import WorkspaceRecords
-from pacthold_runtime_compat.storage import Database, ObjectStore
+from ordessa_persistence_sqlite.product_database import Database
+from pacthold.storage import ObjectStore
 
 CONFIG = {"schema_version": 1, "harness_type": "alpha", "configuration": {"model": "one"}}
 EDITED = {"schema_version": 1, "harness_type": "alpha", "configuration": {"model": "two"}}

@@ -127,7 +127,7 @@ def test_build_runtime_hands_the_instance_store_to_the_execution_chain(
         backends.append(backend)
         return backend
 
-    from pacthold_runtime_compat.storage import Database
+    from ordessa_persistence_sqlite.product_database import Database
 
     runtime = build_runtime(
         tmp_path / "server",

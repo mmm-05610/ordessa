@@ -103,7 +103,7 @@ def test_the_posture_is_stored_validated_and_frozen_into_the_next_turn(tmp_path)
     from ordessa_server.idempotency import IdempotentRecords
     from ordessa_server_compat.profiles import ProfileRecords
     from ordessa_server_compat.sessions import SessionRecords
-    from pacthold_runtime_compat.storage import Database
+    from ordessa_persistence_sqlite.product_database import Database
 
     database = Database(tmp_path / "data")
     database.initialize()
@@ -308,7 +308,7 @@ def test_clone_plans_what_travels_and_never_pretends_about_sessions():
 def test_a_clone_row_records_its_origin_and_carries_only_what_the_plan_allows(tmp_path):
     from ordessa_server.idempotency import IdempotentRecords
     from ordessa_server_compat.profiles import ProfileRecords
-    from pacthold_runtime_compat.storage import Database
+    from ordessa_persistence_sqlite.product_database import Database
 
     database = Database(tmp_path / "data")
     database.initialize()

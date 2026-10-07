@@ -9,7 +9,7 @@ import pytest
 
 from ordessa_skills.api.errors import BindingError
 from ordessa_skills.library.records import AssetRecords
-from pacthold_runtime_compat.storage import Database
+from ordessa_persistence_sqlite.product_database import Database
 
 
 @pytest.fixture()

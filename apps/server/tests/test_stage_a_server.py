@@ -15,8 +15,9 @@ from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
 from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server_compat.profiles import ProfileRecords, ProfileService
 from ordessa_server.transport.http import create_app
-from pacthold_runtime_compat.storage import Database, FutureSchemaError, ObjectStore
-from pacthold_runtime_compat.storage import database as product_db
+from ordessa_persistence_sqlite.product_database import Database, FutureSchemaError
+from pacthold.storage import ObjectStore
+from ordessa_persistence_sqlite import product_database as product_db
 from pacthold_runtime_compat.legacy_migrations import db as core_db
 
 

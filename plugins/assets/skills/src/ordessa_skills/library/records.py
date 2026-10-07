@@ -50,7 +50,7 @@ from datetime import datetime, timezone
 from typing import Any, Mapping, Protocol, runtime_checkable
 from uuid import uuid4
 
-from pacthold_runtime_compat.storage import Database
+from ordessa_persistence_sqlite.product_database import Database
 
 from ..api.errors import AssetDomainError, BindingError
 from ..api.identity import ASSET_KINDS

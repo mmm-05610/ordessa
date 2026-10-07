@@ -95,7 +95,8 @@ def test_freeze_to_native_bytes_end_to_end_via_the_real_service(tmp_path):
     from ordessa_server_compat.model_configs.repository import ProviderModelRecords
     from ordessa_server_compat.model_configs.service import ProviderModelService
     from ordessa_server_compat.execution import HarnessDescriptor, HarnessRegistry
-    from pacthold_runtime_compat.storage import Database, ObjectStore
+    from ordessa_persistence_sqlite.product_database import Database
+    from pacthold.storage import ObjectStore
 
     root = tmp_path / "data"
     root.mkdir()

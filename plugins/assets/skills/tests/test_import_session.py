@@ -133,7 +133,7 @@ def test_content_drift_between_preview_and_commit_is_refused(tmp_path):
 def test_failure_keeps_the_old_revision_binding_and_snapshot(tmp_path):
     from ordessa_skills.library.import_transfer import ImportService
     from ordessa_skills.library.records import AssetRecords
-    from pacthold_runtime_compat.storage import Database
+    from ordessa_persistence_sqlite.product_database import Database
 
     database = Database(tmp_path / "data")
     database.initialize()

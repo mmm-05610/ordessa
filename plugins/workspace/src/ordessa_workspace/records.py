@@ -6,7 +6,7 @@ from typing import Any
 from server_plugin_api import ServerError
 from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server.ids import now, opaque_id
-from pacthold_runtime_compat.storage import Database
+from ordessa_persistence_sqlite.product_database import Database
 
 
 class WorkspaceRecords:

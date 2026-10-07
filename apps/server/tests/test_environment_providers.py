@@ -26,7 +26,7 @@ from ordessa_server.transport.http import create_app
 from ordessa_workspace.local_environment import LocalEnvironmentProvider
 from ordessa_workspace.records import WorkspaceRecords
 from ordessa_server.idempotency import IdempotentRecords
-from pacthold_runtime_compat.storage import Database
+from ordessa_persistence_sqlite.product_database import Database
 
 from fastapi.testclient import TestClient
 

@@ -37,7 +37,8 @@ from ordessa_server_compat.execution import HarnessDescriptor, HarnessDescriptor
 from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server_compat.model_configs.repository import ProviderModelRecords
 from ordessa_server_compat.model_configs.service import ProviderModelService
-from pacthold_runtime_compat.storage import Database, ObjectStore
+from ordessa_persistence_sqlite.product_database import Database
+from pacthold.storage import ObjectStore
 
 
 def _descriptor(harness, *, wire=None, model_control="model", credential=None):

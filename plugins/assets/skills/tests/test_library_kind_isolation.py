@@ -20,7 +20,7 @@ import hashlib
 
 import pytest
 
-from pacthold_runtime_compat.storage import Database
+from ordessa_persistence_sqlite.product_database import Database
 
 from ordessa_skills.api.errors import AssetDomainError, BindingError
 from ordessa_skills.library.catalog import CatalogStore

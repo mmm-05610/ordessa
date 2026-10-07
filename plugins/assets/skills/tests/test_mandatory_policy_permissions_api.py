@@ -8,7 +8,7 @@ Every rule here is produced by the published surface and nothing else:
   ceiling exists at all (untrusted provenance raises);
 * the store is the published backend `PolicyRepository`
   (`plugins/permissions/backend/src/ordessa_permissions_backend/policies.py:91`)
-  over the product `pacthold_runtime_compat.storage.Database`, whose
+  over the product `ordessa_persistence_sqlite.product_database.Database`, whose
   `read()`/`transaction()` pair satisfies the backend's `ApprovalDatabase`
   protocol (`_store.py:27-32`) — the same object the skills tests already use
   for their own tables, so one database holds both authorities and neither is

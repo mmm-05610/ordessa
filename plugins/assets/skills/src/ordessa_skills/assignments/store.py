@@ -45,7 +45,7 @@ import sqlite3
 from datetime import datetime, timezone
 from typing import Any, Mapping
 
-from pacthold_runtime_compat.storage import Database
+from ordessa_persistence_sqlite.product_database import Database
 
 from ..api.identity import ASSET_ID
 from ..library.records import SKILL_KIND

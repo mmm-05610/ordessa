@@ -20,7 +20,7 @@ from typing import Any
 from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server_compat.assets import mcp as legacy_mcp
 from ordessa_server_compat.assets.records import AssetRecords
-from pacthold_runtime_compat.storage import Database
+from ordessa_persistence_sqlite.product_database import Database
 
 # -- the three transport shapes, one sample each --------------------------------
 
@@ -54,7 +54,7 @@ PROFILES = ("p-alpha", "p-beta")
 def settle() -> None:
     """Force the legacy ``Database`` bookkeeping to quiesce.
 
-    ``pacthold_runtime_compat.storage.Database.initialize()`` keeps its
+    ``ordessa_persistence_sqlite.product_database.Database.initialize()`` keeps its
     connection in a ``with sqlite3.connect(...) as conn`` scope that never
     closes it explicitly; whenever the garbage collector eventually reclaims
     it, SQLite runs its final WAL checkpoint - rewriting the main database

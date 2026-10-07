@@ -12,7 +12,7 @@ import pytest
 # foundation@8844c475bc adaptation: the product Database facade relocated to
 # plugins/runtime-compat (010 FR-011); pacthold.storage keeps ObjectStore only.
 from pacthold.storage import ObjectStore
-from pacthold_runtime_compat.storage import Database
+from ordessa_persistence_sqlite.product_database import Database
 from ordessa_server.idempotency import IdempotentRecords
 
 from ordessa_model_provider.catalog import ModelCatalogService

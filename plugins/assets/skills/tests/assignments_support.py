@@ -11,7 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-from pacthold_runtime_compat.storage import Database
+from ordessa_persistence_sqlite.product_database import Database
 
 from ordessa_skills.assignments.authorization import AssetAuthorization
 from ordessa_skills.assignments.store import AssignmentScope, AssignmentStore

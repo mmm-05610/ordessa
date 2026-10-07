@@ -33,7 +33,8 @@ from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server_compat.profiles import ProfileRecords
 from ordessa_server_compat.sessions import SessionRecords
 from ordessa_workspace import WorkspaceRecords
-from pacthold_runtime_compat.storage import Database, ObjectStore
+from ordessa_persistence_sqlite.product_database import Database
+from pacthold.storage import ObjectStore
 
 PLUGIN = pathlib.Path(__file__).resolve().parents[3] / "plugins"  / "harness"
 WORKER = PLUGIN / "runtime" / "native-driver.mjs"  # worker-entry.mjs 随退役旧链移除

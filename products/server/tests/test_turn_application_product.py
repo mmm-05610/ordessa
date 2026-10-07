@@ -175,7 +175,7 @@ class ControlledHarness:
 @pytest.fixture()
 def stack(tmp_path):
     from pacthold.storage import ObjectStore
-    from pacthold_runtime_compat.storage import Database
+    from ordessa_persistence_sqlite.product_database import Database
     from ordessa_server.idempotency import IdempotentRecords
 
     root = tmp_path / "data"

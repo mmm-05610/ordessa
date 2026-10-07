@@ -19,7 +19,7 @@ from typing import Any, Mapping
 
 from server_plugin_api import ServerError
 from ordessa_server.ids import now, opaque_id
-from pacthold_runtime_compat.storage import Database
+from ordessa_persistence_sqlite.product_database import Database
 
 MAX_SUMMARY_CHARS = 512
 #: The families' blocking exit code (Claude Code documents `exit 2` as the

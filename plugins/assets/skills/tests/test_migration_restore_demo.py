@@ -47,7 +47,7 @@ from ordessa_skills.library.store import SkillRevisionStore  # noqa: E402
 from ordessa_skills.migration import profile_bindings as mig  # noqa: E402
 from ordessa_skills.migration import restore as rst  # noqa: E402
 
-from pacthold_runtime_compat.storage import Database  # noqa: E402
+from ordessa_persistence_sqlite.product_database import Database  # noqa: E402
 
 T0 = "2026-01-01T00:00:00+00:00"
 FOREIGN_KINDS = ("mcp", "command", "plugin")

@@ -506,7 +506,7 @@ def test_pick_during_in_flight_application_only_queues(tmp_path, monkeypatch):
 
 def test_missing_turn_port_refused_adapter_missing_zero_prompt(tmp_path):
     from pacthold.storage import ObjectStore
-    from pacthold_runtime_compat.storage import Database
+    from ordessa_persistence_sqlite.product_database import Database
     from ordessa_model_provider.plugin import ModelProviderPlugin
     from ordessa_model_provider.testing import (
         FakeCredentials, FakeHarnesses, harness_descriptor, wire_body,

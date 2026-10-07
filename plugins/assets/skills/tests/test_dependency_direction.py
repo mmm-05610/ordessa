@@ -22,7 +22,7 @@ imports needed:
 Grant ledger (why each module is unavoidable, and whose in-tree pattern it
 copies — the lead review asks for exactly this list):
 
-* `pacthold_runtime_compat.storage` — specs/010 T009 moved the product
+* `ordessa_persistence_sqlite.product_database` — specs/010 T009/032 moved the product
   storage facade (`Database`, `PRODUCT_SCHEMA_VERSION`) out of
   `pacthold.storage` into this assembly (its `storage/__init__.py` docstring
   states the relocation). Pattern copied verbatim from
@@ -110,7 +110,7 @@ ALLOWED_ROOTS = frozenset((
 #: (see the ledger in the module docstring). A name qualifies only when the
 #: imported dotted module equals a grant — not merely lives under it.
 PLATFORM_MODULE_GRANTS = frozenset((
-    "pacthold_runtime_compat.storage",
+    "ordessa_persistence_sqlite.product_database",
     "pacthold_runtime_compat.resource_contracts.runtime_artifacts",
     "pacthold_runtime_compat.resource_contracts.agent_skill_v1",
     "pacthold_runtime_compat.runtime_composition",

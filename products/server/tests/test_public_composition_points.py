@@ -27,7 +27,7 @@ def test_separate_product_compositions_have_separate_registry_instances():
 
 
 def test_product_exposes_legacy_database_provider_without_opening_data():
-    from pacthold_runtime_compat.storage import Database
+    from ordessa_persistence_sqlite.product_database import Database
 
     product = create_composition()
     assert product.database_type() is Database

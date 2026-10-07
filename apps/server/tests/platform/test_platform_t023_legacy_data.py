@@ -43,7 +43,7 @@ from pacthold_runtime_compat.legacy_migrations import (
     MIGRATIONS_DIR,
     register_legacy_migrations,
 )
-from pacthold_runtime_compat.storage import FutureSchemaError, PRODUCT_SCHEMA_VERSION
+from ordessa_persistence_sqlite.product_database import FutureSchemaError, PRODUCT_SCHEMA_VERSION
 from pacthold.work_core import db as core_db
 
 OWNER_MARKER_NAME = ".agentbox-server-root"

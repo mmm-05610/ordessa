@@ -53,7 +53,7 @@ def _stack_host():
     from pathlib import Path
 
     from pacthold.storage import ObjectStore
-    from pacthold_runtime_compat.storage import Database
+    from ordessa_persistence_sqlite.product_database import Database
 
     root = Path(tempfile.mkdtemp())
     database = Database(root / "db.sqlite")

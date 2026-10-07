@@ -17,7 +17,7 @@ from ordessa_server_product.acp_channel.instance_directory import _private
 from ordessa_server.idempotency import IdempotentRecords
 from ordessa_server.bootstrap.runtime import DataRootOwner
 from ordessa_server_compat.sessions import SessionRecords
-from pacthold_runtime_compat.storage import Database
+from ordessa_persistence_sqlite.product_database import Database
 
 
 def readonly(path):
