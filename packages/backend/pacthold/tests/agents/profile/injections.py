@@ -11,6 +11,19 @@ from __future__ import annotations
 import os
 
 
+def _load_legacy_migration():
+    import importlib.util as _ilu
+    import sys as _sys
+    from pathlib import Path as _Path
+    spec = _ilu.spec_from_file_location(
+        'import_legacy_server_profiles',
+        _Path(__file__).resolve().parents[6] / 'scripts' / 'migrations' / 'import_legacy_server_profiles.py')
+    module = _ilu.module_from_spec(spec)
+    _sys.modules.setdefault('import_legacy_server_profiles', module)
+    spec.loader.exec_module(module)
+    return module
+
+
 def apply_counterexample() -> None:
     name = os.environ.get("PROFILE_COUNTEREXAMPLE")
     if not name:
@@ -166,9 +179,7 @@ def apply_counterexample() -> None:
                 return orig_import(source_db_path, target=target)
             finally:
                 repo.insert_revision = orig_insert
-        import importlib.util as _ilu, sys as _sys, pathlib as _pl
-    _spec = _ilu.spec_from_file_location('import_legacy_server_profiles', _pl.Path(__file__).resolve().parents[4] / 'scripts' / 'migrations' / 'import_legacy_server_profiles.py')
-    migration = _ilu.module_from_spec(_spec); _sys.modules.setdefault('import_legacy_server_profiles', migration); _spec.loader.exec_module(migration)
+        migration = _load_legacy_migration()
         migration.import_legacy = lossy
 
     else:  # pragma: no cover

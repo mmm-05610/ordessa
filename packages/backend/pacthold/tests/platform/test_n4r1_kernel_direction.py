@@ -38,7 +38,15 @@ REPO_ROOT = PACKAGE_ROOT.parents[2]  # repository root
 # consuming it is the intended direction (one wire vocabulary, no second copy
 # of the DTOs); every other `ordessa_*` prefix stays forbidden.
 FORBIDDEN_PREFIXES = ("ordessa_", "plugins")
-ALLOWED_MODULES = frozenset({"ordessa_environment_api"})
+ALLOWED_MODULES = frozenset({
+    "ordessa_environment_api",
+    # specs/032 plan §2: the profile store's SQLite implementation is wired
+    # through the persistence boundary package while the kernel-side port
+    # injection is pending — registered in docs/known-issues.md and revisited
+    # with the persistence seam work. No other backend implementation package
+    # is importable from the kernel.
+    "ordessa_persistence_sqlite",
+})
 
 
 def _scanned_files() -> list[Path]:
@@ -56,7 +64,8 @@ def _scanned_files() -> list[Path]:
     files: list[Path] = []
     for base in (PACKAGE_ROOT / "src", PACKAGE_ROOT / "tests"):
         files.extend(sorted(base.rglob("*.py")))
-    moved_tests = (PACKAGE_ROOT / "tests" / "decision", PACKAGE_ROOT / "tests" / "agents")
+    moved_tests = (PACKAGE_ROOT / "tests" / "decision", PACKAGE_ROOT / "tests" / "agents",
+                   PACKAGE_ROOT / "tests" / "harness_kit")
     return [
         path for path in files
         if "egg-info" not in path.parts
@@ -148,13 +157,13 @@ def test_tripwire_planted_server_import_turns_the_guard_red() -> None:
 def test_tripwire_from_import_form_is_detected_too() -> None:
     probe = PACKAGE_ROOT / "tests" / "platform" / "_n4r1_direction_tripwire2.py"
     probe.write_text(
-        "from pacthold.harness_kit.launch import ClaudeLaunchAdapter  # planted tripwire\n",
+        "from ordessa_harness_codex.launch import CodexLaunchAdapter  # planted tripwire\n",
         encoding="utf-8",
     )
     try:
         hits = find_product_imports()
         assert hits, "the from-import form of a reverse import must be detected"
-        assert any(module == "pacthold.harness_kit.launch" for _, module in hits), hits
+        assert any(module == "ordessa_harness_codex.launch" for _, module in hits), hits
     finally:
         probe.unlink(missing_ok=True)
     assert find_product_imports() == []
@@ -186,7 +195,8 @@ def test_allowed_direction_is_actually_present_server_and_harness_import_pacthol
     unimportable. This pins the direction instead of pinning absence."""
     consumers = {
         "apps/server": REPO_ROOT / "apps" / "server" / "src",
-        "plugins/harness": REPO_ROOT / "plugins" / "harness" / "src",
+        "brand-packages": REPO_ROOT / "plugins" / "harness" / "codex" / "src",
+        "harness-group": REPO_ROOT / "plugins" / "harness" / "pi" / "src",
     }
     for label, root in consumers.items():
         files = sorted(root.rglob("*.py"))

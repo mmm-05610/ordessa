@@ -20,10 +20,20 @@ COMPAT_PACKAGE = "pacthold_runtime_compat"
 
 
 def _scanned_files() -> list[Path]:
+    """Kernel source and kernel tests, minus the moved module tests.
+
+    032: tests moved in from retired distributions/plugins (agents, decision,
+    harness_kit) exercise the compatibility assembly they integrate with;
+    they are consumers of the kernel direction, not kernel surface. Kernel
+    source, including the moved modules themselves, stays fully scanned.
+    """
     files: list[Path] = []
     for base in (PACKAGE_ROOT / "src", PACKAGE_ROOT / "tests"):
         files.extend(sorted(base.rglob("*.py")))
-    return files
+    moved_tests = (PACKAGE_ROOT / "tests" / "decision", PACKAGE_ROOT / "tests" / "agents",
+                   PACKAGE_ROOT / "tests" / "harness_kit")
+    return [path for path in files
+            if not any(path.is_relative_to(base) for base in moved_tests)]
 
 
 def _imported_names(path: Path) -> set[str]:

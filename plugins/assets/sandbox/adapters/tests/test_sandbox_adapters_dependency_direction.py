@@ -106,7 +106,7 @@ from server_plugin_api import ServerPluginContext
 
 # harnesses.toml read WITHOUT harness code: the caller supplies the measured
 # pins (the file is located relative to this package checkout).
-toml = Path({str(PKG_DIR.parents[4] / 'packages' / 'backend' / 'pacthold' / 'src' / 'pacthold' / 'harness_kit' / 'harnesses.toml')!r})
+toml = Path({str(PKG_DIR.parents[5] / 'packages' / 'backend' / 'pacthold' / 'src' / 'pacthold' / 'harness_kit' / 'harnesses.toml')!r})
 pins = {{h["identity"]["harness_type"]: h["identity"]["version"]
           for h in tomllib.loads(toml.read_text(encoding="utf-8"))["harness"]}}
 adapters = (CodexSandboxAdapter(), ClaudeSandboxAdapter(), PiSandboxAdapter())

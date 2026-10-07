@@ -257,3 +257,19 @@ Codex原owner已opt-in公开只读offer/assessment，仅证明既有声明编译
 新增发现的Codex客户端夹具退役Message import在固定基线复现16失败；夹具改接现有公开transport类型，未复活兼容链、未改变断言，当前家族147通过。脚本peer不证明真实原生二进制协议；本机入口只盘点到/usr/lib/chatgpt/resources/codex，未执行或确认版本。全部Server/Harness继承红仍未整体复验，真实断电/远程FS/Python3.10仍未验证。
 
 累计220真实免费Jev请求、已报告176303输入／14227输出，历史3usage未知、费用UNKNOWN。模型历史标签和概率协议风险DEC031-01/02保持开放；真实Harness及native apply须另批，尚未执行。
+
+## Spec 032 结构清理（2026-10-07，进行中）
+
+本轮完成：Decision 整包并入 `pacthold.decision`；agents 目录重组；Agent/Profile 权威迁入核心（submissions/observation/facets/policy/resolution/journal/profile services/profile store），`ordessa-agent`、`ordessa-profile` 退役；产品改绑核心公开服务（AgentDomainWirePlugin/ProfileWirePlugin 保留原插件 id）；前端 agent-ui/profile-ui 归位；harness API 并入 `pacthold.harness_contracts`；根 `ordessa_harness` 超级包退役（通用机制 → `pacthold.harness_kit`，品牌/宿主持有面 → 产品 `harness_adapters`/`acp_channel`，品牌知识 → 各自独立包）；资源插件归位 `plugins/assets/`；extension-loader/extension-host 恢复独立叶子。未完成前不得报告 `STRUCTURE_CLEAN`。
+
+| 事项 | 状态 | 说明 |
+| --- | --- | --- |
+| `runtime-compat`（pacthold-runtime-compat）与 `server-compat`（ordessa-server-compat）仍活跃 | **Open（本轮未退役）** | plan §5 的目标；仍被产品装配、apps/server 多数测试与插件引用；逐方法/逐域退役表见 `specs/032-architecture-cleanup/migration-map.md` §4/§5 |
+| Go ACP 桥仍为 `--adapter codex\|pi` 超级入口，未按品牌拆分 | **Open** | retirement-map 的三拆（acp-common/codex/pi）未做 |
+| server_acp 落在产品 `acp_channel/`，中性 transport 抽取到 harness-transport 未做 | **Open（3b 记录）** | `specs/032-architecture-cleanup/evidence/harness-split.md` |
+| 核心 `agents/configuration/{policy,profile_service,resolution}`、`profile_services`、`sessions_overlay` 直接 import `ordessa_persistence_sqlite` | **Open，显式例外** | 持久化边界“接线”尚未改为端口注入；N4-R1 内核方向守卫以具名 ALLOWED_MODULES 例外放行并在此登记，须随持久化 seam 工作收回 |
+| 品牌包内遗留 legacy 运行时模块（codex app_server/remote/credentials/managed_account 等）无产品消费者 | **Open** | AU003 准入拒绝使其不可达；逐项删除与替代测试说明待做 |
+| `plugins/harness/{deploy,harnesses,packaging,runtime,third_party,tools}` 未逐品牌拆入品牌包 | **Open** | 资产仍在组级目录 |
+| `legacy-commands-adapter` 及转发出口未删 | **Open** | 消费者待迁 C07：`plugins/commands/src/entry.ts`、`plugins/commands/shared/registry.ts`、`connectors/acp`、`agent-ui/sessions` |
+| 继承红（本轮未新增，全部与基线一致或减少） | Inherited | harness_kit 6 项（byte-ceiling、acp schema drift ×2、brand_org ×2、adapters_conformance bridge purity）、`pi_live_runtime` 27 errors、products/server 84、apps/server 98（基线为 13 收集错误，本轮已可运行）、model-provider 36、skills/subagents 各 1、permissions backend 14+21（缺表环境） |
+| `.tmp` 磁盘：pytest 临时目录曾占满 `/tmp` tmpfs 造成假红 | Resolved（清理） | 运行套件前后清理 `/tmp/pytest-of-maoqh`；清理了 3-5 天前的本工程 deb 构建临时目录 |
