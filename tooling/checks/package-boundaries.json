@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "standard": "docs/standards/engineering-standard.md",
+  "denied_edges": [
+    {"rule": "infrastructure_must_not_import_business", "from": ["packages/infrastructure/**"], "to": ["packages/engineering/**", "packages/execution/**", "packages/interfaces/**"]},
+    {"rule": "execution_must_not_import_engineering_or_interfaces", "from": ["packages/execution/**"], "to": ["packages/engineering/**", "packages/interfaces/**"]},
+    {"rule": "decision_is_independent_of_other_execution_owners", "from": ["packages/execution/decision/**"], "to": ["packages/execution/agents/**", "packages/execution/units/**", "packages/execution/environments/**"]},
+    {"rule": "execution_owners_must_not_import_decision", "from": ["packages/execution/agents/**", "packages/execution/units/**", "packages/execution/environments/**"], "to": ["packages/execution/decision/**"]},
+    {"rule": "domain_must_not_import_methods", "from": ["packages/engineering/**/domain/**"], "to": ["packages/engineering/**/methods/**"]},
+    {"rule": "methods_must_not_import_domain", "from": ["packages/engineering/**/methods/**"], "to": ["packages/engineering/**/domain/**"]},
+    {"rule": "engineering_foundations_must_not_import_upper_owners", "from": ["packages/engineering/**/domain/**", "packages/engineering/**/methods/**"], "to": ["packages/engineering/**/application/**", "packages/engineering/**/adapters/**", "packages/execution/**", "packages/interfaces/**"]},
+    {"rule": "application_uses_injected_ports", "from": ["packages/engineering/**/application/**"], "to": ["packages/engineering/**/adapters/**", "packages/execution/**", "packages/interfaces/**"]},
+    {"rule": "channels_use_public_system_contracts", "from": ["packages/interfaces/channels/**", "packages/interfaces/**/channels/**"], "to": ["packages/engineering/**", "packages/execution/**"]},
+    {"rule": "transport_uses_injected_system_access", "from": ["packages/interfaces/transport/**", "packages/interfaces/**/transport/**"], "to": ["packages/engineering/**", "packages/execution/**", "packages/interfaces/system-access/**", "packages/interfaces/**/system_access/**"]}
+  ],
+  "retired_paths": ["packages/execution/kernel", "packages/interfaces/execution/c1-api"],
+  "retired_python_modules": ["pacthold", "ordessa_execution_api"],
+  "retired_distributions": ["pacthold", "ordessa-execution-api"]
+}

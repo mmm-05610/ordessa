@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-infrastructure"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ordessa_infrastructure = ["encoding/canonical_json.mjs"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
