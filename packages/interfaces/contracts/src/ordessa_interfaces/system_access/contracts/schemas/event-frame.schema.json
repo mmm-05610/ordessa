@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ordessa.invalid/interfaces/v1/event-frame.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "event_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "stream_epoch": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "origin": {
+      "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Origin"
+    },
+    "sequence": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "cursor": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "scope": {
+      "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$"
+    },
+    "event_type": {
+      "enum": [
+        "system.operation.changed",
+        "system.projection.invalidated"
+      ]
+    },
+    "aggregate": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "causation": {
+      "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Causation"
+    },
+    "payload": {}
+  },
+  "required": [
+    "schema_version",
+    "event_id",
+    "stream_epoch",
+    "origin",
+    "sequence",
+    "cursor",
+    "scope",
+    "occurred_at",
+    "event_type",
+    "aggregate",
+    "causation",
+    "payload"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "system.operation.changed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "properties": {
+              "operation_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "source_record_ref": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/SourceRecordRef"
+              }
+            },
+            "required": [
+              "operation_id",
+              "source_record_ref"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "system.projection.invalidated"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "properties": {
+              "projection_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "reason": {
+                "enum": [
+                  "source_epoch_changed",
+                  "authorization_changed",
+                  "projection_rebuilt"
+                ]
+              }
+            },
+            "required": [
+              "projection_id",
+              "reason"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    }
+  ]
+}

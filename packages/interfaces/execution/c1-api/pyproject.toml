@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-execution-api"
+version = "0.1.0"
+description = "Host-independent execution and Agent provider contracts"
+requires-python = ">=3.12"
+dependencies = ["ordessa-infrastructure==0.1.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ordessa_execution_api = ["py.typed"]

@@ -82,6 +82,14 @@ class _Approvals:
         assert decisions == ('synthetic-gate-decision',)
 
 
+class _Selection:
+    """Explicit test peer; this fixture isolates original dispatch CAS cuts."""
+    @contextmanager
+    def guard_selection(self, context, package, unit_ref):
+        assert unit_ref == UNIT
+        yield None
+
+
 class _Execution:
     def __init__(self, *, send_error=False):
         self.send_error = send_error
@@ -93,6 +101,14 @@ class _Execution:
 
     def query_digest(self, unit_ref, operation_ref, prompt_digest):
         return 'synthetic-query-digest'
+
+    @contextmanager
+    def guard_effect_handoff(self, context, binding, *, access, timeout=60):
+        # Explicit transaction-only peer. Actual authority/thread handoff is
+        # qualified in test_dispatch_effect_handoff83, not in this fixture.
+        assert binding.scope == context.scope
+        assert access is not None
+        yield
 
     def send(self, binding, *, timeout):
         self.send_calls.append(binding)
@@ -123,7 +139,7 @@ def _setup(tmp_path, monkeypatch, *, send_error=False, guard_mode='allow'):
 
     execution = _Execution(send_error=send_error)
     service = ImplementationDispatch(factory, _CommandAccess(), approval_usecases=_Approvals(factory),
-                                     execution=execution, blobs=blobs)
+                                     execution=execution, blobs=blobs, selection=_Selection())
     calls = {'guards': 0}
 
     @contextmanager

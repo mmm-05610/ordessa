@@ -20,8 +20,8 @@ def resolve_implementation_intent(uow, intent):
         raise ApplicationError('ACTION_NOT_AUTHORIZED')
     uow.authorization.require_implementation_authorization_schema()
     budget = uow.proposals.validated_budget()
-    proposals = tuple(uow.proposals.get_proposal(ref, budget) for ref in intent.change_set.proposal_refs)
-    controls = tuple(uow.proposals.get_control(p.ref, budget) for p in proposals)
+    proposals = tuple(uow.proposals.get_proposal(ref, budget=budget) for ref in intent.change_set.proposal_refs)
+    controls = tuple(uow.proposals.get_control(p.ref, budget=budget) for p in proposals)
     if (ChangeSet(tuple(p.ref for p in proposals)) != intent.change_set
             or any(c.disposition != 'available' for c in controls)
             or any(p.method_ref != intent.method_ref or p.implementation_intent != intent.implementation_spec
@@ -75,7 +75,7 @@ class ImplementationIntentAdmission:
                         raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
                     for phase in phases:
                         self.bridge.require_workflow_phase(snapshot, phase)
-                    proposal = uow.proposals.get_proposal(ref, budget)
+                    proposal = uow.proposals.get_proposal(ref, budget=budget)
                     roots = tuple(m.proposed_ref for m in proposal.mutations)
                     roots += tuple(m.base_ref for m in proposal.mutations if m.base_ref is not None)
                     roots += tuple(c.owner_revision_ref for c in proposal.claim_refs)

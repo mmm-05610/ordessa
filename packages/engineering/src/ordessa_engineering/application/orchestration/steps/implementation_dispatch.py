@@ -55,11 +55,25 @@ class ImplementationDispatch:
         self.access.require(context,operation)
 
     @contextmanager
+    def _guard_selection(self,context,package,unit_ref):
+        guard=getattr(self.selection,'guard_selection',None)
+        if not callable(guard):raise ApplicationError('DISPATCH_SELECTION_AUTHORITY_UNAVAILABLE')
+        selected=guard(context,package,unit_ref)
+        if not callable(getattr(selected,'__enter__',None)) or not callable(getattr(selected,'__exit__',None)):
+            raise ApplicationError('DISPATCH_SELECTION_AUTHORITY_UNAVAILABLE')
+        with selected as evidence:
+            yield evidence
+
+    @contextmanager
     def _guards(self,context,package,unit=None):
         if self.approvals is None:raise ApplicationError('IMPLEMENTATION_GRANT_AUTHORITY_UNAVAILABLE')
         with self.factory.begin(context.scope,'read') as uow:
             grant=uow.authorization.get_grant(package.payload.authorization_refs[0])
         with ExitStack() as stack:
+            if unit is not None:
+                # The selected package/Unit remains guarded across each
+                # original COMMIT cut and the caller's native-write scope.
+                stack.enter_context(self._guard_selection(context,package,unit))
             admission=self.approvals._admission()
             stack.enter_context(admission.guard_intent(context,grant.intent))
             stack.enter_context(admission.guard_evidence(context,grant.intent,grant.evidence))
@@ -107,6 +121,8 @@ class ImplementationDispatch:
     def dispatch(self,run_id,step_id,attempt,unit_ref,params,actions,context,*,timeout=60):
         self._access(context,_SEND)
         if self.execution is None or self.blobs is None:raise ApplicationError('DISPATCH_EXECUTION_AUTHORITY_UNAVAILABLE')
+        if not callable(getattr(self.selection,'guard_selection',None)):
+            raise ApplicationError('DISPATCH_SELECTION_AUTHORITY_UNAVAILABLE')
         for value in (run_id,step_id):validate_id(value)
         if type(attempt) is not int or not 1<=attempt<=4096 or type(actions) is not tuple or not actions or len(set(actions))!=len(actions):raise ApplicationError('INVALID_ARGUMENT')
         raw,prompt_digest=self.execution.freeze_input(unit_ref,params)
@@ -158,22 +174,43 @@ class ImplementationDispatch:
         # Two business COMMITs do not grant continued send permission. The
         # trusted Unit factory must enter acquire_effect_write around its
         # actual bounded byte write, before its own writer/epoch lock.
-        try:self.execution.send(binding,timeout=timeout)
+        try:
+            handoff=getattr(self.execution,'guard_effect_handoff',None)
+            if not callable(handoff):raise ApplicationError('DISPATCH_EFFECT_HANDOFF_AUTHORITY_UNAVAILABLE')
+            with handoff(context,binding,access=self.access,timeout=timeout):
+                self.execution.send(binding,timeout=timeout)
         except Exception:
+            # The handoff manager must first resume this exact admission. If
+            # it was revoked while the native call waited, refuse to write an
+            # UNKNOWN receipt under a stale caller lease; the durable
+            # possibly_written phase remains conservative.
+            self._access(context,_SEND)
             with self.factory.begin(context.scope) as uow:
                 row=uow.dispatch.transition(run_id,step_id,attempt,context.scope,expected_version=row['dispatch_version'],fence=1,phase='unknown')
                 uow.commit()
             return self._view(row,'NATIVE_SEND_OUTCOME_UNCONFIRMED')
-        return self.reconcile(run_id,step_id,attempt,context)
+        self._access(context,_SEND)
+        return self._reconcile_receipt(run_id,step_id,attempt,context)
 
     @asynccontextmanager
-    async def acquire_effect_write(self, context, binding, identity, deadline):
+    async def acquire_effect_write(self, context, binding, identity, deadline, *, handoff):
         """Original approval/control synchronization, on the actual SDK thread.
 
         No UoW/repository is transferred between threads. The fail-fast same
         connection transaction blocks legitimate revocation COMMITs while this
         manager surrounds only the bounded native write, never its response.
         """
+        if type(binding) is not DispatchBinding or handoff is None or self.access is None:
+            raise ApplicationError('DISPATCH_EFFECT_HANDOFF_UNAVAILABLE')
+        consume=getattr(self.access,'consume_effect_write',None)
+        if not callable(consume):raise ApplicationError('DISPATCH_EFFECT_HANDOFF_UNAVAILABLE')
+        with consume(handoff,context,invocation_key=bytes.fromhex(binding.digest.hex),
+                action_instances=binding.action_instances):
+            async with self._acquire_effect_write_cut(context,binding,identity,deadline):
+                yield
+
+    @asynccontextmanager
+    async def _acquire_effect_write_cut(self, context, binding, identity, deadline):
         from ...usecases.support.clock import utc_now
         self._access(context, _SEND)
         if (type(binding) is not DispatchBinding or binding.scope!=context.scope
@@ -194,7 +231,7 @@ class ImplementationDispatch:
             raise ApplicationError('DISPATCH_EFFECT_DEADLINE_INVALID')
         with self.factory.begin(context.scope,'read') as read:
             package=self._work_package(read,binding.run_id,step_id=binding.step_id,live=True,attempt=binding.attempt)
-        with self._guards(context,package) as (grant,decisions):
+        with self._guards(context,package,decode_json(binding.unit_ref_bytes)) as (grant,decisions):
             while True:
                 if loop.time()>=deadline:raise ApplicationError('DISPATCH_EFFECT_TIMEOUT')
                 uow=begin(context.scope)
@@ -236,6 +273,9 @@ class ImplementationDispatch:
 
     def reconcile(self,run_id,step_id,attempt,context):
         self._access(context,_RECONCILE)
+        return self._reconcile_receipt(run_id,step_id,attempt,context)
+
+    def _reconcile_receipt(self,run_id,step_id,attempt,context):
         if self.execution is None or self.blobs is None:raise ApplicationError('DISPATCH_EXECUTION_AUTHORITY_UNAVAILABLE')
         with self.factory.begin(context.scope,'read') as uow:
             package=self._work_package(uow,run_id,step_id=step_id);row=uow.dispatch.get(run_id,step_id,attempt,context.scope)

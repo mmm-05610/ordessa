@@ -1,6 +1,6 @@
 """Original SQLite revoke/debit + original async writer; package/source admissions are explicit fixtures."""
 import asyncio
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict
 import hashlib
@@ -46,6 +46,8 @@ def prepared(tmp_path,monkeypatch):
 
 
 def native(binding,params,service,ctx,write):
+    # This lower mechanism fixture has synthetic access. Source83's public
+    # admission/thread path is exercised by test_dispatch_effect_handoff83.
     process=MagicMock(spec=ProcessHandle)
     process.observe.return_value=SimpleNamespace(state='running')
     process.read_stderr=AsyncMock(return_value=b'')
@@ -56,7 +58,7 @@ def native(binding,params,service,ctx,write):
     view=channel.bind_writer(channel.acquire_writer())
     frame=(json.dumps({'jsonrpc':'2.0','id':1,'method':'session/prompt','params':params})+'\n').encode()
     guard=EffectWriteGuard(UNIT,binding.execution_operation_ref,'sha256:'+binding.prompt_input_digest.hex,params,
-        lambda identity,deadline:service.acquire_effect_write(ctx,binding,identity,deadline),timeout=.3)
+        lambda identity,deadline:service._acquire_effect_write_cut(ctx,binding,identity,deadline),timeout=.3)
     return channel,view,frame,guard
 
 
@@ -179,18 +181,30 @@ def test_actual_unit_sdk_factory_and_original_approval_control_cut(tmp_path,monk
     from agent_tools_fixtures.manager_joint import build_joint_owner
     holder={}
     def configured_factory(*args):return holder['factory'](*args)
+    configured_factory.guard_effect_handoff=lambda *args,**kwargs: holder['factory'].guard_effect_handoff(*args,**kwargs)
     with build_joint_owner(tmp_path/'native',acp_turn_opt_in=True,effect_write_guard_factory=configured_factory) as j:
         original=j.services.assembly.prepare(RequestKey('env','principal','prepare'),j.profile,{},{});
         assert original.status=='published'
         ref=json.loads(json.dumps({'value':j.services.nodes.read(decode_node_ref(original.intent.node_ref))['binding']['harnessUnitRef']},default=dict))['value']
         unit=j.manager.find(ref);lease=unit.lease_port.grant(ref);unit.connect(ref,lease)
         lib,factory,service,_,_,grant,package,_=_setup(tmp_path/'engineering',monkeypatch)
+        admission=ExitStack()
         try:
             monkeypatch.setattr('ordessa_engineering.application.usecases.support.clock.utc_now',lambda:NOW)
             package=replace(package,payload=replace(package.payload,execution_profile_ref=EnvironmentRef(
                 j.profile.environment_namespace,j.profile.profile_id,Digest('sha256',j.profile.digest[7:]))))
             service._work_package=lambda *_,**kwargs:package
-            ctx=_context(package.scope,package.created_by)
+            from ordessa_interfaces.system_access.access_control.authentication import InstanceAccessAuthority, AccessGrant
+            from ordessa_interfaces.system_access.contracts.refs import Scope as AccessScope
+            from ordessa_system_access_bindings.engineering import EngineeringCommandAccess
+            native_scope=AccessScope(package.scope.realm_id,package.scope.project_id)
+            token='controlled-sdk-cut-fixture-token'
+            authority=InstanceAccessAuthority(lambda:token,principal_id='controlled-sdk-cut-agent',
+                legacy_principal=None,grants=(AccessGrant(native_scope,('engineering.executions.dispatch',)),))
+            service.access=EngineeringCommandAccess(authority)
+            caller=authority.authenticate('Bearer '+token)
+            ctx=admission.enter_context(service.access.admit(caller,native_scope,'engineering.executions.dispatch',
+                request_id='controlled-sdk-cut',trace_id='controlled-sdk-cut'))
             holder['factory']=engineering_effect_write_guard_factory(service,ctx,unit.records,service.blobs)
             port=RecordedDispatchExecution(unit.records,unit,lease,service.blobs,
                 effect_write_guard_factory=configured_factory)
@@ -224,10 +238,12 @@ def test_actual_unit_sdk_factory_and_original_approval_control_cut(tmp_path,monk
             record.process.write_stdin=observed
             if revoked:revoke(factory,grant,'sdk-before-cut')
             if revoked:
-                with pytest.raises(ApplicationError,match='APPROVAL_CONTROL_CHANGED'):port.send(binding,timeout=3)
+                with port.guard_effect_handoff(ctx,binding,access=service.access,timeout=3):
+                    with pytest.raises(ApplicationError,match='APPROVAL_CONTROL_CHANGED'):port.send(binding,timeout=3)
                 assert writes==[]
             else:
-                receipt=port.send(binding,timeout=3)
+                with port.guard_effect_handoff(ctx,binding,access=service.access,timeout=3):
+                    receipt=port.send(binding,timeout=3)
                 assert receipt['state']=='completed' and len(writes)==1
                 assert b'session/prompt' in writes[0]
             assert not lib._connection.in_transaction
@@ -239,7 +255,7 @@ def test_actual_unit_sdk_factory_and_original_approval_control_cut(tmp_path,monk
                 assert read['contract']=='unit-selection-read-cut/1' and read['currentThroughCommit'] is False
             assert lib._connection.execute('SELECT count(*) FROM eng_action_consumptions').fetchone()[0]==1
             assert j.events.count('spawn')==1
-        finally:lib.close()
+        finally:admission.close();lib.close()
 
 
 def test_effect_cut_rechecks_actual_time_instead_of_original_command_time(tmp_path,monkeypatch):
@@ -263,7 +279,7 @@ def test_wrong_original_effect_operation_identity_cannot_acquire_tx(tmp_path,mon
             identity={'unitRef':UNIT,'operationRef':'other-operation','inputDigest':'sha256:'+binding.prompt_input_digest.hex,
                 'requestId':1,'frameDigest':'sha256:'+'b'*64}
             with pytest.raises(ApplicationError,match='DISPATCH_EFFECT_BINDING_MISMATCH'):
-                async with service.acquire_effect_write(ctx,binding,identity,asyncio.get_running_loop().time()+.1):
+                async with service._acquire_effect_write_cut(ctx,binding,identity,asyncio.get_running_loop().time()+.1):
                     raise AssertionError('other operation must not enter')
             assert not lib._connection.in_transaction
         asyncio.run(exercise())

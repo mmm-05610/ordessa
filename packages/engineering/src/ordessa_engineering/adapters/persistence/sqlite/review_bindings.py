@@ -117,6 +117,25 @@ class SQLiteReviewBindings:
             raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
         return matches
 
+    def resolve_acceptance_submission(self, context, intent):
+        """Select the one explicit configured acceptance subject, never latest."""
+        if context.scope!=self.scope or intent.scope!=self.scope:
+            raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
+        selected={phase.submission_ref for phase in self.phases
+                  if phase.submission_ref is not None and phase.review_purpose=='acceptance'}
+        if len(selected)!=1:
+            raise ApplicationError('METHOD_TARGET_BINDINGS_UNAVAILABLE')
+        ref=next(iter(selected))
+        self.resolve_submission_bindings(context,intent.method_ref,ref)
+        with self.factory.begin(context.scope,'read') as uow:
+            submission=uow.submissions.resolve(ref)
+            package=uow.implementation.resolve_package(submission.package_ref)
+            if (package.payload.method_ref!=intent.method_ref
+                    or set(intent.targets)!=set(submission.output_refs)
+                    or len(intent.targets)!=len(submission.output_refs)):
+                raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
+        return ref
+
     def material_inputs(self, context, method_ref, phase_key):
         """Exact named immutable inputs; no slot label is treated as a value."""
         self.resolve_bindings(context, method_ref, phase_key)

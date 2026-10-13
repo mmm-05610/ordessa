@@ -1,0 +1,162 @@
+{
+  "catalog_version": 1,
+  "status": "runtime_contract_candidates",
+  "transport": "wire/1 JSON-RPC 2.0",
+  "methods": [
+    {
+      "operation": "engineering.artifacts.create",
+      "input_schema_ref": "urn:ordessa:engineering:operations:engineering.artifacts.create:input:1",
+      "output_schema_ref": "urn:ordessa:engineering:operations:engineering.artifacts.create:output:1",
+      "owner": "engineering",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "engineering.artifacts.append_revision",
+      "input_schema_ref": "urn:ordessa:engineering:operations:engineering.artifacts.append_revision:input:1",
+      "output_schema_ref": "urn:ordessa:engineering:operations:engineering.artifacts.append_revision:output:1",
+      "owner": "engineering",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "engineering.proposals.create",
+      "input_schema_ref": "urn:ordessa:engineering:operations:engineering.proposals.create:input:1",
+      "output_schema_ref": "urn:ordessa:engineering:operations:engineering.proposals.create:output:1",
+      "owner": "engineering",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "engineering.changes.apply",
+      "input_schema_ref": "urn:ordessa:engineering:operations:engineering.changes.apply:input:1",
+      "output_schema_ref": "urn:ordessa:engineering:operations:engineering.changes.apply:output:1",
+      "owner": "engineering",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "engineering.reviews.request",
+      "input_schema_ref": "urn:ordessa:engineering:operations:engineering.reviews.request:input:1",
+      "output_schema_ref": "urn:ordessa:engineering:operations:engineering.reviews.request:output:1",
+      "owner": "engineering",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "engineering.reviews.record",
+      "input_schema_ref": "urn:ordessa:engineering:operations:engineering.reviews.record:input:1",
+      "output_schema_ref": "urn:ordessa:engineering:operations:engineering.reviews.record:output:1",
+      "owner": "engineering",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "engineering.reviews.replace",
+      "input_schema_ref": "urn:ordessa:engineering:operations:engineering.reviews.replace:input:1",
+      "output_schema_ref": "urn:ordessa:engineering:operations:engineering.reviews.replace:output:1",
+      "owner": "engineering",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "engineering.reviews.void",
+      "input_schema_ref": "urn:ordessa:engineering:operations:engineering.reviews.void:input:1",
+      "output_schema_ref": "urn:ordessa:engineering:operations:engineering.reviews.void:output:1",
+      "owner": "engineering",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "engineering.approvals.prepare_intent",
+      "input_schema_ref": "urn:ordessa:engineering:operations:engineering.approvals.prepare_intent:input:1",
+      "output_schema_ref": "urn:ordessa:engineering:operations:engineering.approvals.prepare_intent:output:1",
+      "owner": "engineering",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "engineering.approvals.request",
+      "input_schema_ref": "urn:ordessa:engineering:operations:engineering.approvals.request:input:1",
+      "output_schema_ref": "urn:ordessa:engineering:operations:engineering.approvals.request:output:1",
+      "owner": "engineering",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "engineering.approvals.revoke",
+      "input_schema_ref": "urn:ordessa:engineering:operations:engineering.approvals.revoke:input:1",
+      "output_schema_ref": "urn:ordessa:engineering:operations:engineering.approvals.revoke:output:1",
+      "owner": "engineering",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "engineering.packages.derive",
+      "input_schema_ref": "urn:ordessa:engineering:operations:engineering.packages.derive:input:1",
+      "output_schema_ref": "urn:ordessa:engineering:operations:engineering.packages.derive:output:1",
+      "owner": "engineering",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "engineering.proposals.withdraw",
+      "input_schema_ref": "urn:ordessa:engineering:operations:engineering.proposals.withdraw:input:1",
+      "output_schema_ref": "urn:ordessa:engineering:operations:engineering.proposals.withdraw:output:1",
+      "owner": "engineering",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "engineering.proposals.supersede",
+      "input_schema_ref": "urn:ordessa:engineering:operations:engineering.proposals.supersede:input:1",
+      "output_schema_ref": "urn:ordessa:engineering:operations:engineering.proposals.supersede:output:1",
+      "owner": "engineering",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "engineering.executions.dispatch",
+      "input_schema_ref": "urn:ordessa:engineering:operations:engineering.executions.dispatch:input:1",
+      "output_schema_ref": "urn:ordessa:engineering:operations:engineering.executions.dispatch:output:1",
+      "owner": "engineering",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "engineering.executions.cancel",
+      "input_schema_ref": "urn:ordessa:engineering:operations:engineering.executions.cancel:input:1",
+      "output_schema_ref": "urn:ordessa:engineering:operations:engineering.executions.cancel:output:1",
+      "owner": "engineering",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "engineering.submissions.record",
+      "input_schema_ref": "urn:ordessa:engineering:operations:engineering.submissions.record:input:1",
+      "output_schema_ref": "urn:ordessa:engineering:operations:engineering.submissions.record:output:1",
+      "owner": "engineering",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "engineering.acceptance.request",
+      "input_schema_ref": "urn:ordessa:engineering:operations:engineering.acceptance.request:input:1",
+      "output_schema_ref": "urn:ordessa:engineering:operations:engineering.acceptance.request:output:1",
+      "owner": "engineering",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "engineering.acceptance.adopt",
+      "input_schema_ref": "urn:ordessa:engineering:operations:engineering.acceptance.adopt:input:1",
+      "output_schema_ref": "urn:ordessa:engineering:operations:engineering.acceptance.adopt:output:1",
+      "owner": "engineering",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "execution.agents.units.submit",
+      "input_schema_ref": "urn:ordessa:execution-agents:operations:execution.agents.units.submit:input:1",
+      "output_schema_ref": "urn:ordessa:execution-agents:operations:execution.agents.units.submit:output:1",
+      "owner": "execution.agents",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "execution.agents.units.manage",
+      "input_schema_ref": "urn:ordessa:execution-agents:operations:execution.agents.units.manage:input:1",
+      "output_schema_ref": "urn:ordessa:execution-agents:operations:execution.agents.units.manage:output:1",
+      "owner": "execution.agents",
+      "trusted_confirmation_callback": false
+    },
+    {
+      "operation": "execution.agents.units.cancel",
+      "input_schema_ref": "urn:ordessa:execution-agents:operations:execution.agents.units.cancel:input:1",
+      "output_schema_ref": "urn:ordessa:execution-agents:operations:execution.agents.units.cancel:output:1",
+      "owner": "execution.agents",
+      "trusted_confirmation_callback": false
+    }
+  ],
+  "authority_resolution": "server_registered_operation_binding_to_stable_journal"
+}

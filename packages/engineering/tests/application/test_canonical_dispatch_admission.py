@@ -60,22 +60,22 @@ def test_canonical_dispatch_gate_rejects_other_operation_identity():
 
 
 def test_canonical_dispatch_effect_guard_uses_same_operation_lease():
-    """Effect admission passes the operation gate, then rejects malformed binding."""
+    """A public native cut cannot run without the exact opaque handoff."""
     _authority, caller, access = _access((CANONICAL,))
     owner = ImplementationDispatch(object(), access)
     with access.admit(caller, SCOPE, CANONICAL, request_id="dispatch-effect", trace_id="dispatch-effect") as context:
         async def enter_effect_guard():
             async with owner.acquire_effect_write(
-                context, None, {}, asyncio.get_running_loop().time() + 1
+                context, None, {}, asyncio.get_running_loop().time() + 1, handoff=None
             ):
                 pytest.fail("malformed effect binding must never enter the write cut")
 
-        with pytest.raises(ApplicationError, match="DISPATCH_EFFECT_BINDING_MISMATCH"):
+        with pytest.raises(ApplicationError, match="DISPATCH_EFFECT_HANDOFF_UNAVAILABLE"):
             asyncio.run(enter_effect_guard())
 
 
-def test_effect_factory_checks_canonical_lease_before_reading_original_binding():
-    """The native effect factory uses canonical admission and reaches no write."""
+def test_effect_factory_without_handoff_never_reads_original_binding():
+    """Direct factory calls cannot use an old same-thread authorization route."""
     from ordessa_engineering.adapters.native_records.recorded_dispatch import (
         engineering_effect_write_guard_factory,
     )
@@ -97,9 +97,9 @@ def test_effect_factory_checks_canonical_lease_before_reading_original_binding()
     with access.admit(caller, SCOPE, CANONICAL, request_id="dispatch-effect-factory",
                       trace_id="dispatch-effect-factory") as context:
         effect_factory = engineering_effect_write_guard_factory(owner, context, object(), blobs)
-        # Its real first step is owner._access(context, EXECUTION_DISPATCH).
-        # The fixture stops at the original binding read before any guard/write.
-        with pytest.raises(ReachedReadback):
+        # No handoff was prepared: even valid canonical admission is insufficient.
+        # The original SQLite read sentinel must remain unreachable.
+        with pytest.raises(ApplicationError, match="DISPATCH_EFFECT_HANDOFF_UNAVAILABLE"):
             effect_factory({}, "execution-op-fixture", "sha256:" + "0" * 64, {})
 
 

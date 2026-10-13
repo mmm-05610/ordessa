@@ -92,6 +92,16 @@ class CommandAccessPort(Protocol):
     """Trusted composition supplies this port; a client ActorRef is not proof."""
     def require(self, context: CommandContext, operation: str) -> None: ...
 
+    def handoff_effect_write(self, context: CommandContext, *, invocation_key: bytes,
+                             action_instances, target_thread, expires_at: float):
+        """One opaque token for the original dispatch byte cut, with no new grant."""
+        ...
+
+    def consume_effect_write(self, handoff, context: CommandContext, *,
+                             invocation_key: bytes, action_instances):
+        """Revalidate the original admission on its exact selected SDK Thread."""
+        ...
+
 
 class ProposalReadPort(Protocol):
     """Application-owned reads the proposal closure needs; implemented by the adapter."""

@@ -31,7 +31,7 @@ class SQLiteUnitReviewerAuthority:
 
     def __init__(self, factory, *, expected_access, expected_scope, assignments,
                  method_control, unit_records, unit_query_factory,
-                 author_unit_resolver=None):
+                 author_unit_resolver=None, authorship_source=None):
         same_assignment_owner = (
             getattr(assignments, "factory", None) is factory
             and getattr(assignments, "access", None) is expected_access
@@ -39,6 +39,7 @@ class SQLiteUnitReviewerAuthority:
             and getattr(assignments, "records", None) is unit_records
             and getattr(assignments, "unit_query_factory", None) is unit_query_factory
             and getattr(assignments, "author_unit_resolver", None) is author_unit_resolver
+            and getattr(assignments, "authorship_source", None) is authorship_source
             and getattr(assignments, "expected_scope", None) is expected_scope)
         if (factory is None or getattr(method_control, "factory", None) is not factory
                 or not same_assignment_owner
@@ -60,6 +61,12 @@ class SQLiteUnitReviewerAuthority:
         self.assignments, self.methods = assignments, method_control
         self.records, self.unit_query_factory = unit_records, unit_query_factory
         self.author_unit_resolver = author_unit_resolver
+        if authorship_source is not None and (
+                getattr(authorship_source,'factory',None) is not factory
+                or getattr(authorship_source,'methods',None) is not method_control
+                or not callable(getattr(authorship_source,'resolve_authorship',None))):
+            raise ApplicationError('REVIEW_AUTHOR_SOURCE_UNAVAILABLE')
+        self.authorship_source=authorship_source
 
     @staticmethod
     def _declared_identity_constraint(plan, snapshot):
@@ -73,9 +80,8 @@ class SQLiteUnitReviewerAuthority:
         strategy = config.get("unit_submission_review_strategy", {})
         roles = strategy.get("roles", {}) if type(strategy) is dict else {}
         constraint = roles.get("identity_constraint") if type(roles) is dict else None
-        if constraint not in (None, _IDENTITY_CONSTRAINT):
-            raise ApplicationError("UNIT_REVIEW_IDENTITY_CONSTRAINT_UNSUPPORTED")
-        return constraint
+        from ..application.contracts.review_authorship import validate_authorship_policy
+        return validate_authorship_policy(constraint)
 
     @staticmethod
     def _unit_bytes(ref):
@@ -116,13 +122,17 @@ class SQLiteUnitReviewerAuthority:
                 or type(observation_digest) is not Digest):
             raise ApplicationError("REVIEW_REQUEST_CHANGED")
         constraints = binding.reviewer_identity_constraints
+        from ..application.contracts.review_authorship import SOURCE_BOUND_POLICY, validate_authorship_policy, resolve_plan_authorship, authorship_mode
+        source_bound = type(constraints) is dict and constraints.get('identity_constraint')==SOURCE_BOUND_POLICY
         if (type(constraints) is not dict
-                or set(constraints) != {"identity_constraint", "authorUnitRef", "reviewerUnitRef"}
-                or constraints["reviewerUnitRef"] != binding.unit_ref
-                or constraints["identity_constraint"] not in (None, _IDENTITY_CONSTRAINT)
-            or ((constraints["identity_constraint"] == _IDENTITY_CONSTRAINT)
-                    != (constraints["authorUnitRef"] is not None))):
+                or set(constraints) != ({"identity_constraint", "authorUnitRef", "reviewerUnitRef", "authorship"} if source_bound
+                    else {"identity_constraint", "authorUnitRef", "reviewerUnitRef"})
+                or constraints["reviewerUnitRef"] != binding.unit_ref):
             raise ApplicationError("UNIT_REVIEW_IDENTITY_CONSTRAINT_UNAVAILABLE")
+        validate_authorship_policy(constraints['identity_constraint'])
+        if not source_bound and ((constraints['identity_constraint']==_IDENTITY_CONSTRAINT)
+                != (constraints['authorUnitRef'] is not None)):
+            raise ApplicationError('UNIT_REVIEW_IDENTITY_CONSTRAINT_UNAVAILABLE')
         reviewer_bytes = self._unit_bytes(binding.unit_ref)
         author_bytes = (None if constraints["authorUnitRef"] is None
                         else self._unit_bytes(constraints["authorUnitRef"]))
@@ -143,10 +153,17 @@ class SQLiteUnitReviewerAuthority:
             declared_constraint = self._declared_identity_constraint(plan, snapshot)
             if declared_constraint != constraints["identity_constraint"]:
                 raise ApplicationError("UNIT_REVIEW_IDENTITY_CONSTRAINT_UNAVAILABLE")
-            if declared_constraint is not None:
-                if self.author_unit_resolver is None:
+            origin = (resolve_plan_authorship(self.authorship_source,context,plan,binding.delivery_refs)
+                      if source_bound else None)
+            if origin is not None and (asdict(origin)!=constraints['authorship']
+                    or origin.author_unit_ref!=constraints['authorUnitRef']):
+                raise ApplicationError('REVIEW_AUTHOR_SOURCE_INVALID')
+            needs_native_author = declared_constraint is not None and (
+                origin is None or authorship_mode(declared_constraint,origin)=='different_original_unit')
+            if needs_native_author:
+                if origin is None and self.author_unit_resolver is None:
                     raise ApplicationError("UNIT_REVIEW_AUTHOR_BINDING_UNAVAILABLE")
-                selected_author = self.author_unit_resolver(context, plan)
+                selected_author = origin.author_unit_ref if origin is not None else self.author_unit_resolver(context, plan)
                 if self._unit_bytes(selected_author) != canonical_bytes(constraints["authorUnitRef"]):
                     raise ApplicationError("UNIT_REVIEW_AUTHOR_BINDING_UNAVAILABLE")
             with self.factory.begin(context.scope, "read") as uow:
@@ -175,18 +192,21 @@ class SQLiteUnitReviewerAuthority:
             actor = ActorRef(record_digest("unit-reviewer-actor", {
                 "unit_ref": assignment.reviewer_unit_ref,
                 "assignment": asdict(assignment.ref)}).hex, "agent", "ordessa-unit-records")
-            evidence = VerifiedReviewerEvidence(
-                context.scope, actor, assignment.roles,
-                "ordessa.unit-reviewer-assignment", "1", control.version,
-                plan.request_digest, raw_response_ref.digest, observation_digest,
-                record_digest("unit-reviewer-capability", {
+            capability_inputs = {
                     "assignment_ref": asdict(assignment.ref), "control_version": control.version,
                     "issuer_principal_id": principal_id,
                     "issuer_credential_epoch": credential_epoch,
                     "method_ref": asdict(assignment.method_ref),
                     "reviewer_unit_ref": assignment.reviewer_unit_ref,
                     "author_unit_ref": assignment.author_unit_ref,
-                }))
+                }
+            if origin is not None:
+                capability_inputs['authorship']=asdict(origin)
+            evidence = VerifiedReviewerEvidence(
+                context.scope, actor, assignment.roles,
+                "ordessa.unit-reviewer-assignment", "1", control.version,
+                plan.request_digest, raw_response_ref.digest, observation_digest,
+                record_digest("unit-reviewer-capability", capability_inputs))
             if expected is not None and evidence != expected:
                 raise ApplicationError("UNTRUSTED_REVIEWER")
             yield evidence

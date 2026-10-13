@@ -30,7 +30,7 @@ class SubmissionAcceptanceClosure:
     templates: tuple
 
 
-def resolve_submission_acceptance(uow, submission_ref):
+def resolve_submission_acceptance(uow, submission_ref, *, method_runs=None):
     """Resolve the full exact acceptance subject set on one active UoW.
 
     The package reference comes only from the immutable Submission. Proposal,
@@ -76,7 +76,7 @@ def resolve_submission_acceptance(uow, submission_ref):
     # resolve exactly, while current grant control is intentionally not used to
     # decide whether already captured output facts exist.
     from ...orchestration.steps.implementation_dispatch import resolve_dispatch_submission_binding
-    resolve_dispatch_submission_binding(uow, submission)
+    resolve_dispatch_submission_binding(uow, submission, method_runs=method_runs)
     proposals_by_ref = {}
     proposal_templates = {}
     budget = uow.proposals.validated_budget()

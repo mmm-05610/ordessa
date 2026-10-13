@@ -120,7 +120,11 @@ class UnitServices:
 
     def guard_unit_selection(self, unit_ref, *, expected_profile_revision,
                              query_invocation, query_input_digest, require_live):
-        """Explicit read-time provenance; unsupported live COMMIT fencing refuses."""
+        """Guard a fixed Profile/query against original Unit lifecycle replacement.
+
+        ``require_live=False`` remains a historical read-time receipt. The live
+        context retains a process-local Unit fence through the caller's scope.
+        """
         from .bindings.dispatch_selection import guard_unit_selection
         return guard_unit_selection(self, unit_ref, expected_profile_revision=expected_profile_revision,
             query_invocation=query_invocation, query_input_digest=query_input_digest, require_live=require_live)

@@ -100,7 +100,7 @@ class ReviewerAssignmentUseCases:
 
     def __init__(self, factory, method_control, records,
                  *, expected_access, expected_scope, unit_query_factory,
-                 author_unit_resolver=None):
+                 author_unit_resolver=None, authorship_source=None):
         if (expected_scope is None
                 or type(getattr(expected_scope, "realm_id", None)) is not str
                 or not expected_scope.realm_id
@@ -122,6 +122,12 @@ class ReviewerAssignmentUseCases:
         self.factory, self.access, self.methods = factory, expected_access, method_control
         self.records, self.unit_query_factory = records, unit_query_factory
         self.author_unit_resolver = author_unit_resolver
+        if authorship_source is not None and (
+                getattr(authorship_source,'factory',None) is not factory
+                or getattr(authorship_source,'methods',None) is not method_control
+                or not callable(getattr(authorship_source,'resolve_authorship',None))):
+            raise ApplicationError('REVIEW_AUTHOR_SOURCE_UNAVAILABLE')
+        self.authorship_source=authorship_source
         self.expected_scope = expected_scope
 
     def _authorize(self, context, capability):
@@ -188,9 +194,8 @@ class ReviewerAssignmentUseCases:
         strategy = config.get("unit_submission_review_strategy", {})
         roles = strategy.get("roles", {}) if type(strategy) is dict else {}
         constraint = roles.get("identity_constraint") if type(roles) is dict else None
-        if constraint is not None and constraint != "original_author_unit_identity_must_differ_from_original_reviewer_unit_identity":
-            raise ApplicationError("UNIT_REVIEW_IDENTITY_CONSTRAINT_UNSUPPORTED")
-        return constraint
+        from ...contracts.review_authorship import validate_authorship_policy
+        return validate_authorship_policy(constraint)
 
     def _run(self, context, operation, parameters, mutate):
         request_hash = self._request_hash(operation, context, parameters)
@@ -257,10 +262,15 @@ class ReviewerAssignmentUseCases:
             snapshot = guards.enter_context(self.methods.guard_method(context, plan.requirement.method_ref))
             constraint = self._identity_constraint(plan, snapshot)
             resolved_author = None
-            if constraint is not None:
-                if self.author_unit_resolver is None:
+            from ...contracts.review_authorship import SOURCE_BOUND_POLICY, resolve_plan_authorship, authorship_mode
+            origin = (resolve_plan_authorship(self.authorship_source,context,plan)
+                      if constraint==SOURCE_BOUND_POLICY else None)
+            needs_native_author = constraint is not None and (
+                origin is None or authorship_mode(constraint,origin)=='different_original_unit')
+            if needs_native_author:
+                if origin is None and self.author_unit_resolver is None:
                     raise ApplicationError("UNIT_REVIEW_AUTHOR_BINDING_UNAVAILABLE")
-                selected_author = self.author_unit_resolver(context, plan)
+                selected_author = origin.author_unit_ref if origin is not None else self.author_unit_resolver(context, plan)
                 if author_unit_ref is not None and canonical_bytes(author_unit_ref) != canonical_bytes(selected_author):
                     raise ApplicationError("UNIT_REVIEW_AUTHOR_BINDING_UNAVAILABLE")
                 resolved_author = self._resolve_unit(context, selected_author, plan, request, "author")

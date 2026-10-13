@@ -31,23 +31,32 @@ def prompt_recorded(unit, unit_ref, lease, *, operation_ref, timeout, params):
             fields['_effect_write_owner'] = unit._effect_write_owner
         acp_turns.reserve(unit.records, unit_ref, operation_ref, params)
         record = unit.channel_factory.owned_record
+
+    # The active native-operation counter and selection fence retain the exact
+    # Unit while the SDK loop waits. Holding the lifecycle lock here deadlocks
+    # the SDK-thread effect guard, which must acquire the same original source
+    # lock at the bounded write seam.
+    def before_write(raw):
+        unit._validate_selection_fences()
+        acp_turns.dispatch(unit.records, operation_ref, raw)
+
+    try:
+        connection.command('session/prompt', timeout=timeout, **params,
+            **fields,
+            on_request=unit.callbacks.handle,
+            before_write=before_write,
+            on_observation=lambda raw:acp_turns.observe(unit.records, operation_ref, raw))
+    except AcpRemoteError as error:
         try:
-            connection.command('session/prompt', timeout=timeout, **params,
-                **fields,
-                on_request=unit.callbacks.handle,
-                before_write=lambda raw:acp_turns.dispatch(unit.records, operation_ref, raw),
-                on_observation=lambda raw:acp_turns.observe(unit.records, operation_ref, raw))
-        except AcpRemoteError as error:
-            try:
-                return acp_turns.finish(unit.records, operation_ref, 'failed', record.entry._last_response)
-            except Exception:
-                acp_turns.finish(unit.records, operation_ref, 'unknown')
-                raise
+            return acp_turns.finish(unit.records, operation_ref, 'failed', record.entry._last_response)
         except Exception:
             acp_turns.finish(unit.records, operation_ref, 'unknown')
             raise
-        try:
-            return acp_turns.finish(unit.records, operation_ref, 'completed', record.entry._last_response)
-        except Exception:
-            acp_turns.finish(unit.records, operation_ref, 'unknown')
-            raise
+    except Exception:
+        acp_turns.finish(unit.records, operation_ref, 'unknown')
+        raise
+    try:
+        return acp_turns.finish(unit.records, operation_ref, 'completed', record.entry._last_response)
+    except Exception:
+        acp_turns.finish(unit.records, operation_ref, 'unknown')
+        raise

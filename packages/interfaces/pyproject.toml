@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-interfaces"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = ["jsonschema==4.19.2", "referencing==0.36.2", "ordessa-infrastructure==0.1.0", "ordessa-server-plugin-api>=0.1.0,<1", "fastapi>=0.115,<1"]
+
+[tool.setuptools]
+# These are the real published Python packages. Explicit source mapping keeps
+# namespace-container directories from replacing the package's own __init__.
+packages = ["ordessa_interfaces", "ordessa_interfaces.http", "ordessa_interfaces.system_access",
+    "ordessa_interfaces.system_access.contracts", "ordessa_interfaces.system_access.access_control",
+    "ordessa_interfaces.system_access.services", "ordessa_interfaces.system_access.subscriptions"]
+
+[tool.setuptools.package-dir]
+"ordessa_interfaces" = "src/ordessa_interfaces"
+"ordessa_interfaces.http" = "transport/server/src/ordessa_interfaces/http"
+"ordessa_interfaces.system_access" = "system-access/src/ordessa_interfaces/system_access"
+"ordessa_interfaces.system_access.contracts" = "contracts/src/ordessa_interfaces/system_access/contracts"
+
+[tool.setuptools.package-data]
+"ordessa_interfaces" = ["system_access/contracts/schemas/command-envelope.schema.json", "system_access/contracts/schemas/command-receipt.schema.json", "system_access/contracts/schemas/event-frame.schema.json", "system_access/contracts/schemas/jsonrpc-envelope.schema.json", "system_access/contracts/schemas/operation-catalog.json", "system_access/contracts/schemas/public-types.schema.json", "system_access/contracts/schemas/request-context.schema.json"]
+"ordessa_interfaces.system_access.contracts" = ["schemas/*.json"]

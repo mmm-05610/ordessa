@@ -6,7 +6,7 @@ import pytest
 from acp.exceptions import RequestError
 from ordessa_execution_agents.harness.transport import WriterLeaseRefused
 
-from ordessa_units.sessions.sdk_client import SdkAcpClient
+from ordessa_units.sessions.sdk_client import SdkAcpClient, _ManagedTransport
 
 
 class _UnusedChannel:
@@ -239,6 +239,8 @@ def test_reverse_callback_is_counted_for_its_effect_span_and_refused_after_quies
     client = _client()
     callback_entered = threading.Event()
     release_callback = threading.Event()
+    response_started = threading.Event()
+    release_response = threading.Event()
     callback_called = []
     task_result = []
     params = {'sessionId': 'fixed', 'path': '/controlled/file'}
@@ -253,6 +255,15 @@ def test_reverse_callback_is_counted_for_its_effect_span_and_refused_after_quies
         client.reply_request(message.raw['id'], {})
 
     client._active_callback = blocking_callback
+
+    class HeldResponseChannel:
+        async def send_raw_async(self, payload):
+            assert payload == {'jsonrpc': '2.0', 'id': 7, 'result': {}}
+            response_started.set()
+            assert release_response.wait(timeout=2)
+
+    client._channel = HeldResponseChannel()
+    client.transport = _ManagedTransport(client)
 
     def dispatch_callback():
         try:
@@ -270,6 +281,17 @@ def test_reverse_callback_is_counted_for_its_effect_span_and_refused_after_quies
         assert not callback_thread.is_alive()
         assert callback_called == [7]
         assert task_result == [{}]
+        # The callback effect has completed, but official ACP still needs to
+        # write its response. That native response span remains admitted.
+        assert client._active_native_operations == 1
+        response_thread = threading.Thread(target=lambda: asyncio.run(client.transport.send(
+            {'jsonrpc': '2.0', 'id': 7, 'result': {}})))
+        response_thread.start()
+        assert response_started.wait(timeout=2)
+        assert client.try_quiesce() is False
+        release_response.set()
+        response_thread.join(timeout=2)
+        assert not response_thread.is_alive()
         assert client._active_native_operations == 0
         assert client.try_quiesce() is True
 
@@ -281,5 +303,108 @@ def test_reverse_callback_is_counted_for_its_effect_span_and_refused_after_quies
         assert callback_called == [7]
     finally:
         release_callback.set()
+        release_response.set()
         callback_thread.join(timeout=2)
+        client.detach()
+
+
+def test_callback_response_write_failure_releases_exact_admission():
+    client = _client()
+    params = {'sessionId': 'fixed', 'path': '/controlled/file'}
+    raw = {'jsonrpc': '2.0', 'id': 17, 'method': 'fs/write_text_file', 'params': params}
+    client._reverse[client._key(raw['method'], params)].append(raw)
+    client._active_callback = lambda message: client.reply_request(message.raw['id'], {})
+
+    class FailedResponseChannel:
+        async def send_raw_async(self, _payload):
+            raise OSError('controlled response write failure')
+
+    client._channel = FailedResponseChannel()
+    client.transport = _ManagedTransport(client)
+    try:
+        assert asyncio.run(client._handle(raw['method'], params, False)) == {}
+        assert client._active_native_operations == 1
+        with pytest.raises(OSError, match='controlled response write failure'):
+            asyncio.run(client.transport.send({'jsonrpc': '2.0', 'id': 17, 'result': {}}))
+        assert client._active_native_operations == 0
+        assert client._callback_response_admissions == {}
+        assert client.try_quiesce() is True
+    finally:
+        client.detach()
+
+
+def test_callback_error_reply_keeps_admission_until_sdk_error_response():
+    client = _client()
+    params = {'sessionId': 'fixed', 'path': '/controlled/file'}
+    raw = {'jsonrpc': '2.0', 'id': 19, 'method': 'fs/write_text_file', 'params': params}
+    client._reverse[client._key(raw['method'], params)].append(raw)
+
+    def denied_callback(_message):
+        raise RequestError(-32000, 'controlled refusal')
+
+    client._active_callback = denied_callback
+    response_started = threading.Event()
+    release_response = threading.Event()
+
+    class HeldErrorResponseChannel:
+        async def send_raw_async(self, payload):
+            assert payload == {
+                'jsonrpc': '2.0', 'id': 19,
+                'error': {'code': -32000, 'message': 'controlled refusal'},
+            }
+            response_started.set()
+            assert release_response.wait(timeout=2)
+
+    client._channel = HeldErrorResponseChannel()
+    client.transport = _ManagedTransport(client)
+    try:
+        with pytest.raises(RequestError):
+            asyncio.run(client._handle(raw['method'], params, False))
+        assert client._active_native_operations == 1
+        response_thread = threading.Thread(target=lambda: asyncio.run(client.transport.send({
+            'jsonrpc': '2.0', 'id': 19,
+            'error': {'code': -32000, 'message': 'controlled refusal'},
+        })))
+        response_thread.start()
+        assert response_started.wait(timeout=2)
+        assert client.try_quiesce() is False
+        release_response.set()
+        response_thread.join(timeout=2)
+        assert not response_thread.is_alive()
+        assert client._active_native_operations == 0
+        assert client.try_quiesce() is True
+    finally:
+        release_response.set()
+        client.detach()
+
+
+def test_malformed_callback_id_error_response_does_not_leak_admission():
+    client = _client()
+    params = {'sessionId': 'fixed'}
+    raw = {'jsonrpc': '2.0', 'id': None, 'method': 'fs/read_text_file', 'params': params}
+    client._reverse[client._key(raw['method'], params)].append(raw)
+    client._active_callback = lambda _message: pytest.fail('invalid ID must refuse before callback')
+
+    class ResponseChannel:
+        async def send_raw_async(self, payload):
+            assert payload == {
+                'jsonrpc': '2.0', 'id': None,
+                'error': {'code': -32600, 'message': 'ACP reverse request has no id'},
+            }
+
+    client._channel = ResponseChannel()
+    client.transport = _ManagedTransport(client)
+    try:
+        with pytest.raises(RequestError) as refused:
+            asyncio.run(client._handle(raw['method'], params, False))
+        assert refused.value.code == -32600
+        assert client._active_native_operations == 1
+        asyncio.run(client.transport.send({
+            'jsonrpc': '2.0', 'id': None,
+            'error': {'code': -32600, 'message': 'ACP reverse request has no id'},
+        }))
+        assert client._active_native_operations == 0
+        assert client._callback_response_admissions == {}
+        assert client.try_quiesce() is True
+    finally:
         client.detach()

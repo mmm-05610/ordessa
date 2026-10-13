@@ -46,6 +46,9 @@ class UnitInstance(UnitLifecycle):
             effect_write_guard_required=effect_write_guard_factory is not None,
             effect_write_owner=self._effect_write_owner)
         self._lifecycle_init(records, projection, factory, lease_port)
+        # Live selection is a process-local source fence over this exact
+        # retained Unit. It grants no permission and stores no durable state.
+        self._selection_fences = {}
         if callback_approval is not None and not callable(getattr(callback_approval, 'authorize', None)):
             raise UnitLifecycleRefused('Explicit callback approval owner must provide authorize')
         self.callbacks = UnitCallbacks(self, callback_approval)
@@ -81,6 +84,8 @@ class UnitInstance(UnitLifecycle):
         # neither mistake an in-progress placeholder for an idle process nor
         # race the final retained-handle registration.
         with self._lifecycle_lock:
+            if self._selection_fences:
+                raise UnitLifecycleRefused('live Unit selection is fenced')
             try:
                 if self._process_binding is not None:
                     self._process_binding.fix_start(prepared_unit, invocation_context)
@@ -169,6 +174,62 @@ class UnitInstance(UnitLifecycle):
         finally:
             self._lifecycle_lock.release()
 
+    @property
+    def effect_write_thread(self):
+        """Expose the original SDK target through this retained Unit owner.
+
+        This read-only seam supplies Engineering’s handoff with the real
+        ``threading.Thread`` object. It never exposes the SDK private field,
+        creates a Thread/token/permission, or holds Unit locks beyond lookup.
+        """
+        from ordessa_units.sessions.acp_factory import AcpChannelRecord
+        from ordessa_units.sessions.sdk_client import SdkAcpClient
+        from ordessa_execution_agents.harness.transport import EffectWriteRefused
+
+        if not self._lifecycle_lock.acquire(blocking=False):
+            raise UnitLifecycleRefused('Original Unit lifecycle owner is busy')
+        try:
+            factory = self.channel_factory
+            record = factory.owned_record
+            if (self._fixed_effect_write_guard_factory is None
+                    or self._effect_write_guard_factory is not self._fixed_effect_write_guard_factory
+                    or not factory.effect_write_guard_required
+                    or factory._effect_write_owner is not self._effect_write_owner
+                    or type(record) is not AcpChannelRecord
+                    or type(record.entry) is not SdkAcpClient
+                    or record.prepared_agent is not self.prepared_agent
+                    or factory.record(record.entry) is not record
+                    or self._callback_unit_id is None
+                    or self._channels.get(self._callback_unit_id) is not record.entry):
+                raise UnitLifecycleRefused('Exact guarded original ACP target is unavailable')
+            self.require_effect_write_guard(self._fixed_effect_write_guard_factory)
+            source_unit = self.records.owner_read_unit(self._callback_unit_id)
+            if source_unit is None:
+                raise UnitLifecycleRefused('Original ACP Unit record is unavailable')
+            unit = self._unit_record(source_unit.public_ref)
+            session = self.projection.read_session(unit.public_ref)
+            stop = self.records.owner_read_termination(unit.unit_ref, 'stop')
+            release = self.records.owner_read_termination(unit.unit_ref, 'release')
+            use = factory.environment
+            if (session is None or session.state != 'confirmed'
+                    or session.native_facts.get('sessionId') != record.entry.session_id
+                    or stop is not None or release is not None
+                    or record.process.observe().state != 'running'
+                    or use is None or record.environment_identity != use.environment_id
+                    or record.environment_use_identity != use.identity
+                    or factory.instance.identity != use.environment_id):
+                raise UnitLifecycleRefused('Original ACP Unit target is not live and confirmed')
+            check = getattr(use, 'check', None)
+            if not callable(check):
+                raise UnitLifecycleRefused('Original Environment Use check unavailable')
+            check(use.environment_id, use.generation, allow_unknown=False)
+            try:
+                return record.entry.effect_write_thread
+            except EffectWriteRefused as error:
+                raise UnitLifecycleRefused('Original SDK effect-write target unavailable') from error
+        finally:
+            self._lifecycle_lock.release()
+
     def prompt(self, unit_ref, authorized_lease, **params):
         # A consumer still passes through the original lease port. Native
         # side-effect permissions/fs/terminal callbacks are explicit inputs.
@@ -200,20 +261,40 @@ class UnitInstance(UnitLifecycle):
         # The durable reservation starts before the wire write, and finishing
         # the original receipt may continue after the native response arrives.
         # Keep the original SDK admission open for that entire transaction.
+        record = self.channel_factory.owned_record
+        if record is None:
+            raise UnitLifecycleRefused('Original retained ACP client required for recorded prompt')
+        from ordessa_units.sessions.sdk_client import SdkAcpClient
+        client = record.entry
+        if type(client) is not SdkAcpClient:
+            raise UnitLifecycleRefused('Original ACP client ownership required for recorded prompt')
+        admitted = getattr(client, 'admitted_operation', None)
+        if not callable(admitted):
+            raise UnitLifecycleRefused('Original ACP native admission gate unavailable')
+        # The original SDK owner tracks the full request/receipt span. Do not
+        # hold the Unit lifecycle lock while the SDK loop waits for a peer.
+        with admitted():
+            return prompt_recorded(self, unit_ref, authorized_lease,
+                operation_ref=operation_ref, timeout=timeout, params=params)
+
+    def _acquire_selection_fence(self, validator):
+        if not callable(validator):
+            raise UnitLifecycleRefused('Original live selection validator required')
         with self._lifecycle_lock:
-            record = self.channel_factory.owned_record
-            if record is None:
-                raise UnitLifecycleRefused('Original retained ACP client required for recorded prompt')
-            from ordessa_units.sessions.sdk_client import SdkAcpClient
-            client = record.entry
-            if type(client) is not SdkAcpClient:
-                raise UnitLifecycleRefused('Original ACP client ownership required for recorded prompt')
-            admitted = getattr(client, 'admitted_operation', None)
-            if not callable(admitted):
-                raise UnitLifecycleRefused('Original ACP native admission gate unavailable')
-            with admitted():
-                return prompt_recorded(self, unit_ref, authorized_lease,
-                    operation_ref=operation_ref, timeout=timeout, params=params)
+            token = object()
+            self._selection_fences[token] = validator
+            return token
+
+    def _release_selection_fence(self, token):
+        with self._lifecycle_lock:
+            if self._selection_fences.pop(token, None) is None:
+                raise UnitLifecycleRefused('Original live selection fence was lost')
+
+    def _validate_selection_fences(self):
+        with self._lifecycle_lock:
+            validators = tuple(self._selection_fences.values())
+        for validate in validators:
+            validate()
 
     def try_quiesce(self):
         """Close native request admission only when this original Unit is idle.
@@ -225,6 +306,8 @@ class UnitInstance(UnitLifecycle):
         if not self._lifecycle_lock.acquire(blocking=False):
             return False
         try:
+            if self._selection_fences:
+                return False
             record = self.channel_factory.owned_record
             if record is None:
                 return True
@@ -340,8 +423,11 @@ class UnitInstance(UnitLifecycle):
 
     def set_config_option(self, unit_ref, authorized_lease, *, config_id, value, expected_revision, invocation_context):
         from ordessa_units.configuration.acp_options import set_option
-        return set_option(self,unit_ref,authorized_lease,config_id=config_id,value=value,
-                          expected_revision=expected_revision,invocation_context=invocation_context)
+        with self._lifecycle_lock:
+            if self._selection_fences:
+                raise UnitLifecycleRefused('live Unit selection fences configuration writes')
+            return set_option(self,unit_ref,authorized_lease,config_id=config_id,value=value,
+                              expected_revision=expected_revision,invocation_context=invocation_context)
 
     def query_config_change(self, unit_ref, invocation_context):
         # Only the original persisted attempt is read; no observation/retry.

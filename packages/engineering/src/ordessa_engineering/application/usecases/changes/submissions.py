@@ -53,11 +53,7 @@ class SubmissionUseCases:
             raise ApplicationError('SUBMISSION_ATTRIBUTION_MISMATCH')
         if self.report_source is None:
             raise ApplicationError('SUBMISSION_REPORT_SOURCE_UNAVAILABLE')
-        if (record.method_content is None or record.resulting_snapshots or record.file_changes
-                or record.commit_refs or record.test_evidence or record.effect_observations
-                or not record.output_refs
-                or any(type(ref) is not ArtifactRevisionRef for ref in record.output_refs)):
-            raise ApplicationError('SUBMISSION_REPORT_FACT_SHAPE_INVALID')
+        self._validate_report_fact_shape(record)
         raw=encode_submission(record)
         schema=report_input_schema()
         digest=request_digest(operation,context,{'record':decode_json(raw)},read_set_projection(ReadSet(context.scope,())),
@@ -92,6 +88,16 @@ class SubmissionUseCases:
                 return self._commit_report(record,context,digest,decisions=decisions)
         except ReferenceError as exc:
             raise ApplicationError(exc.code) from exc
+
+    @staticmethod
+    def _validate_report_fact_shape(record):
+        """Report-only writes/admission cannot carry asserted host execution facts."""
+        if (type(record) is not Submission or record.method_content is None
+                or record.resulting_snapshots or record.file_changes
+                or record.commit_refs or record.test_evidence or record.effect_observations
+                or not record.output_refs
+                or any(type(ref) is not ArtifactRevisionRef for ref in record.output_refs)):
+            raise ApplicationError('SUBMISSION_REPORT_FACT_SHAPE_INVALID')
 
     @staticmethod
     def _validate_report_admission(record,package,captured,admission):

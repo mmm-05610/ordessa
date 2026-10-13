@@ -6,6 +6,9 @@ No Execution service, role issuer, app, or method publication is selected here.
 from .persistence.sqlite.review_bindings import ConfiguredReviewPhase, SQLiteReviewBindings
 from .persistence.sqlite.unit_review_bindings import SQLiteUnitReviewBindings
 from .unit_reviewer_authority import SQLiteUnitReviewerAuthority
+from .persistence.sqlite.review_authorship import ConfiguredMaterialSubmission, SQLiteReviewAuthorshipSource
+from .persistence.sqlite.method_report_bindings import SQLiteMethodUnitReportBindings
 
 __all__ = ['ConfiguredReviewPhase','SQLiteReviewBindings','SQLiteUnitReviewBindings',
-           'SQLiteUnitReviewerAuthority']
+           'SQLiteUnitReviewerAuthority','ConfiguredMaterialSubmission','SQLiteReviewAuthorshipSource',
+           'SQLiteMethodUnitReportBindings']

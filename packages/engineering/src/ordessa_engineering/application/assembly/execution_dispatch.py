@@ -76,7 +76,9 @@ def bind_execution_dispatch(
             or not callable(query_factory)):
         raise ApplicationError("DISPATCH_OWNER_BINDING_MISMATCH")
 
-    _require_methods(execution, ("freeze_input", "query_digest", "send", "capture"),
+    _require_methods(access, ("handoff_effect_write", "consume_effect_write"),
+                     "DISPATCH_EFFECT_AUTHORITY_UNAVAILABLE")
+    _require_methods(execution, ("freeze_input", "query_digest", "guard_effect_handoff", "send", "capture"),
                      "DISPATCH_EXECUTION_UNAVAILABLE")
     if (getattr(execution, "records", None) is not records
             or getattr(execution, "query_factory", None) is not query_factory):

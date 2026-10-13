@@ -7,6 +7,8 @@ from collections.abc import Mapping
 from contextlib import contextmanager
 import json
 import math
+from threading import current_thread
+import time
 
 from ordessa_infrastructure.encoding import canonical_bytes, decode_json
 from ordessa_infrastructure.encoding.canonical_json import LIBRARY_JSON_PROFILE
@@ -230,6 +232,23 @@ class RecordedDispatchExecution:
             # semantics. Never retry or create a parallel attempt here.
             raise
 
+    @contextmanager
+    def guard_effect_handoff(self, context, binding, *, access, timeout=60):
+        """Suspend the caller admission only across the original SDK send wait."""
+        if self.unit_instance is None or self.authorized_lease is None:
+            raise ApplicationError('RECORDED_DISPATCH_ORIGINAL_WRITER_REQUIRED')
+        self._require_effect_owner()
+        factory=self.effect_write_guard_factory
+        guard=getattr(factory,'guard_effect_handoff',None)
+        if not callable(guard):
+            raise ApplicationError('DISPATCH_EFFECT_HANDOFF_AUTHORITY_UNAVAILABLE')
+        try:
+            target=self.unit_instance.effect_write_thread
+        except Exception as exc:
+            raise ApplicationError('DISPATCH_EFFECT_HANDOFF_TARGET_UNAVAILABLE') from exc
+        with guard(context,binding,access=access,timeout=timeout,target_thread=target):
+            yield
+
     def capture(self, binding):
         """Cold-read through original UnitRecords authorization and capture its full receipt."""
         if self.query_factory is None:
@@ -244,35 +263,101 @@ class RecordedDispatchExecution:
             expected_prompt_digest=expected_prompt, query_invocation=invocation)
 
 
+class _EngineeringEffectWriteGuardFactory:
+    """Fixed per-request bridge for one exact handoff token and Unit binding."""
+
+    def __init__(self, dispatch_owner, context, records, blobs):
+        from threading import Lock
+        if (getattr(dispatch_owner,'blobs',None) is not blobs
+                or getattr(dispatch_owner,'factory',None) is None
+                or getattr(blobs,'authority_id',None)!=dispatch_owner.factory.authority_id
+                or not callable(getattr(dispatch_owner,'acquire_effect_write',None))
+                or getattr(dispatch_owner,'access',None) is None):
+            raise ApplicationError('RECORDED_DISPATCH_EFFECT_AUTHORITY_REQUIRED')
+        self.dispatch_owner=dispatch_owner
+        # Keep the constructor shape for trusted composition compatibility,
+        # but never retain this one request's context. The live call context
+        # is supplied and authenticated for each handoff below.
+        self.records=records
+        self.blobs=blobs
+        self._send_lock=Lock()
+        self._slot_lock=Lock()
+        self._slot=None
+
+    @contextmanager
+    def guard_effect_handoff(self, context, binding, *, access, timeout, target_thread):
+        from threading import Thread
+        from ...application.contracts.commands import CommandContext
+        from ...domain.changes.dispatch_codec import encode_dispatch
+        if (type(context) is not CommandContext or access is not self.dispatch_owner.access
+                or type(binding) is not DispatchBinding or binding.scope!=context.scope
+                or not isinstance(target_thread,Thread)
+                or type(timeout) not in (int,float) or not math.isfinite(timeout)
+                or timeout <= 0):
+            raise ApplicationError('DISPATCH_EFFECT_HANDOFF_BINDING_INVALID')
+        if not self._send_lock.acquire(blocking=False):
+            raise ApplicationError('DISPATCH_EFFECT_HANDOFF_BUSY')
+        try:
+            # Prepare and verify the immutable original dispatch before
+            # suspending the caller's authority. Nothing below the handoff
+            # factory callback opens a second Engineering transaction.
+            self.dispatch_owner._access(context,EXECUTION_DISPATCH)
+            with self.dispatch_owner.factory.begin(context.scope,'read') as uow:
+                row=uow.dispatch.get(binding.run_id,binding.step_id,binding.attempt,binding.scope)
+                if (row['binding_bytes']!=encode_dispatch(binding)
+                        or row['dispatch_phase']!='possibly_written'
+                        or row['dispatch_fence']!=binding.fence):
+                    raise ApplicationError('DISPATCH_EFFECT_BINDING_MISMATCH')
+            deadline=time.monotonic()+min(float(timeout),60.0)
+            with access.handoff_effect_write(context,
+                    invocation_key=bytes.fromhex(binding.digest.hex),
+                    action_instances=binding.action_instances,
+                    target_thread=target_thread,expires_at=deadline) as handoff:
+                slot=(context,binding,handoff,current_thread())
+                with self._slot_lock:
+                    if self._slot is not None:
+                        raise ApplicationError('DISPATCH_EFFECT_HANDOFF_BUSY')
+                    self._slot=slot
+                try:
+                    yield
+                finally:
+                    with self._slot_lock:
+                        if self._slot is slot:
+                            self._slot=None
+        finally:
+            self._send_lock.release()
+
+    def __call__(self, unit_ref, operation_ref, input_digest, params):
+        """Validate the fixed binding during the original caller-side prep callback."""
+        from ordessa_units.public import EffectWriteGuard
+        with self._slot_lock:
+            slot=self._slot
+        if slot is None:
+            raise ApplicationError('DISPATCH_EFFECT_HANDOFF_UNAVAILABLE')
+        context,binding,handoff,caller_thread=slot
+        if current_thread() is not caller_thread:
+            raise ApplicationError('DISPATCH_EFFECT_HANDOFF_CALLER_MISMATCH')
+        unit=_plain(unit_ref);fixed=_plain(params)
+        if (binding.unit_ref_bytes!=canonical_bytes(unit,profile=LIBRARY_JSON_PROFILE)
+                or operation_ref!=binding.execution_operation_ref
+                or input_digest!='sha256:'+binding.prompt_input_digest.hex
+                or self.records.acp_prompt_input_digest(unit,fixed)!=input_digest
+                or binding.prompt_ref.media_type!='application/json'
+                or self.blobs.read_verified(binding.prompt_ref)!=canonical_bytes(fixed,profile=LIBRARY_JSON_PROFILE)):
+            raise ApplicationError('DISPATCH_EFFECT_BINDING_MISMATCH')
+        def acquire(identity,deadline):
+            return self.dispatch_owner.acquire_effect_write(
+                context,binding,identity,deadline,handoff=handoff)
+        return EffectWriteGuard(unit,operation_ref,input_digest,fixed,acquire)
+
+
 def engineering_effect_write_guard_factory(dispatch_owner, context, records, blobs):
     """Trusted Unit composition hook; wire cannot choose an operation or guard.
 
     This resolves only an existing original Engineering step binding. No Grant,
     action consumption, Unit journal, callback or retry authority is created.
     """
-    if (getattr(dispatch_owner,'blobs',None) is not blobs
-            or getattr(dispatch_owner,'factory',None) is None
-            or getattr(blobs,'authority_id',None)!=dispatch_owner.factory.authority_id
-            or not callable(getattr(dispatch_owner,'acquire_effect_write',None))):
-        raise ApplicationError('RECORDED_DISPATCH_EFFECT_AUTHORITY_REQUIRED')
-    from ordessa_units.public import EffectWriteGuard
-    def factory(unit_ref, operation_ref, input_digest, params):
-        dispatch_owner._access(context, EXECUTION_DISPATCH)
-        with dispatch_owner.factory.begin(context.scope,'read') as uow:
-            row=uow.dispatch.by_operation(operation_ref,context.scope)
-            from ...domain.changes.dispatch_codec import decode_dispatch
-            binding=decode_dispatch(row['binding_bytes'])
-        unit=_plain(unit_ref);fixed=_plain(params)
-        if (row['dispatch_phase']!='possibly_written'
-                or binding.unit_ref_bytes!=canonical_bytes(unit,profile=LIBRARY_JSON_PROFILE)
-                or input_digest!='sha256:'+binding.prompt_input_digest.hex
-                or records.acp_prompt_input_digest(unit,fixed)!=input_digest
-                or blobs.read_verified(binding.prompt_ref)!=canonical_bytes(fixed,profile=LIBRARY_JSON_PROFILE)):
-            raise ApplicationError('DISPATCH_EFFECT_BINDING_MISMATCH')
-        def acquire(identity,deadline):
-            return dispatch_owner.acquire_effect_write(context,binding,identity,deadline)
-        return EffectWriteGuard(unit,operation_ref,input_digest,fixed,acquire)
-    return factory
+    return _EngineeringEffectWriteGuardFactory(dispatch_owner,context,records,blobs)
 
 
 class NativeDispatchSources:

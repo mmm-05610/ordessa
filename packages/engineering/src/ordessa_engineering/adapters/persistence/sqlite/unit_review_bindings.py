@@ -23,7 +23,7 @@ from ....methods.definitions.models.compiled import thaw_value
 
 class SQLiteUnitReviewBindings:
     def __init__(self, factory, method_control, records, *, review_bindings,
-                 invocation_resolver, author_unit_resolver=None):
+                 invocation_resolver, author_unit_resolver=None, authorship_source=None):
         if (getattr(method_control,'factory',None) is not factory
                 or getattr(review_bindings,'factory',None) is not factory
                 or not callable(getattr(review_bindings,'material_inputs',None))
@@ -34,6 +34,12 @@ class SQLiteUnitReviewBindings:
         self.factory,self.methods,self.records=factory,method_control,records
         self.bindings=review_bindings
         self.invocations,self.authors=invocation_resolver,author_unit_resolver
+        if authorship_source is not None and (
+                getattr(authorship_source,'factory',None) is not factory
+                or getattr(authorship_source,'methods',None) is not method_control
+                or not callable(getattr(authorship_source,'resolve_authorship',None))):
+            raise ApplicationError('REVIEW_AUTHOR_SOURCE_UNAVAILABLE')
+        self.authorship_source=authorship_source
 
     def _request(self, context, plan, request):
         if context.scope != plan.scope or request.scope != plan.scope or request.review_id != plan.review_id:
@@ -97,11 +103,21 @@ class SQLiteUnitReviewBindings:
                 raise ApplicationError('DECISION_INPUT_BINDING_UNAVAILABLE')
             strategy = config.get('unit_submission_review_strategy',{})
             constraint = strategy.get('roles',{}).get('identity_constraint')
-            author = self.authors(context,plan) if self.authors is not None else None
+            from ....application.contracts.review_authorship import (
+                SOURCE_BOUND_POLICY, validate_authorship_policy, resolve_plan_authorship)
+            validate_authorship_policy(constraint)
+            origin = (resolve_plan_authorship(self.authorship_source,context,plan,
+                tuple(r.ref for r in deliveries)) if constraint==SOURCE_BOUND_POLICY else None)
+            author = (origin.author_unit_ref if origin is not None else
+                self.authors(context,plan) if self.authors is not None else None)
             if (constraint is not None and (type(author) is not dict or set(author) !=
-                    {'environmentNamespace','unitId','ownerProviderRef','sourceRevision'})):
+                    {'environmentNamespace','unitId','ownerProviderRef','sourceRevision'})
+                    and not (origin is not None and origin.source_kind=='authenticated_material_submitter'
+                             and author is None)):
                 raise ApplicationError('UNIT_REVIEW_AUTHOR_BINDING_UNAVAILABLE')
             constraints = {'identity_constraint':constraint,'authorUnitRef':author}
+            if origin is not None:
+                constraints['authorship']=asdict(origin)
             block = {'ordessa.method-unit-review':{
                 'plan':asdict(plan),'request_version':request.version,'fence':request.fence,
                 'delivery_refs':[asdict(r.ref) for r in deliveries],

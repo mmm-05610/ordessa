@@ -37,6 +37,9 @@ class _Execution:
     def query_digest(self, *args):
         raise AssertionError('binding does not dispatch')
 
+    def guard_effect_handoff(self, *args, **kwargs):
+        raise AssertionError('binding does not suspend an admission')
+
     def send(self, *args, **kwargs):
         raise AssertionError('binding does not dispatch')
 
@@ -56,6 +59,14 @@ class _WorkSource:
 
     def guard_step_completion(self, *args):
         raise AssertionError('binding does not advance a Work step')
+
+
+class _Access(SyntheticAccess):
+    def handoff_effect_write(self, *args, **kwargs):
+        raise AssertionError('binding does not suspend an admission')
+
+    def consume_effect_write(self, *args, **kwargs):
+        raise AssertionError('binding does not consume an admission')
 
 
 class _Selection:
@@ -80,7 +91,7 @@ def _fixture(source):
         work_condition_source=_WorkSource(source.factory), registry_loader=lambda: object())
     service = EngineeringService(
         source.factory,
-        SyntheticAccess(),
+        _Access(),
         blobs=source.blobs,
         current_wait_bindings=bindings,
         execution_records=records,
@@ -177,3 +188,14 @@ def test_non_service_dto_cannot_be_bound(invariant_source):
     service, dependencies, *_ = _fixture(source)
     with pytest.raises(ApplicationError, match='DISPATCH_AUTHORITY_MISMATCH'):
         bind_execution_dispatch(SimpleNamespace(**service.__dict__), **dependencies)
+
+
+@pytest.mark.parametrize('missing', ['handoff_effect_write', 'consume_effect_write', 'guard_effect_handoff'])
+def test_missing_native_handoff_port_refuses_before_binding(invariant_source, missing):
+    source, *_ = invariant_source
+    service, dependencies, *_ = _fixture(source)
+    target = dependencies['execution'] if missing == 'guard_effect_handoff' else service._access
+    setattr(target, missing, None)
+    with pytest.raises(ApplicationError):
+        bind_execution_dispatch(service, **dependencies)
+    assert service._execution_dispatch is None

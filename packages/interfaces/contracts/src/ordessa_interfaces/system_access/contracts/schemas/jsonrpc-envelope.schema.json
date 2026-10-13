@@ -1,0 +1,1166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ordessa.invalid/interfaces/v1/jsonrpc-envelope.schema.json",
+  "type": "object",
+  "properties": {
+    "jsonrpc": {
+      "const": "2.0"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "method": {
+      "enum": [
+        "engineering.artifacts.create",
+        "engineering.artifacts.append_revision",
+        "engineering.proposals.create",
+        "engineering.changes.apply",
+        "engineering.reviews.request",
+        "engineering.reviews.record",
+        "engineering.reviews.replace",
+        "engineering.reviews.void",
+        "engineering.approvals.prepare_intent",
+        "engineering.approvals.request",
+        "engineering.approvals.revoke",
+        "engineering.packages.derive",
+        "engineering.proposals.withdraw",
+        "engineering.proposals.supersede",
+        "engineering.executions.dispatch",
+        "engineering.executions.cancel",
+        "engineering.submissions.record",
+        "engineering.acceptance.request",
+        "engineering.acceptance.adopt",
+        "execution.agents.units.submit",
+        "execution.agents.units.manage",
+        "execution.agents.units.cancel",
+        "system.operations.get"
+      ]
+    },
+    "params": {}
+  },
+  "required": [
+    "jsonrpc",
+    "id",
+    "method",
+    "params"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "system.operations.get"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.query/1"
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "parameters": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/OperationRef"
+              }
+            },
+            "required": [
+              "contract",
+              "scope",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "engineering.artifacts.create"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:engineering:operations:engineering.artifacts.create:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "engineering.artifacts.append_revision"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:engineering:operations:engineering.artifacts.append_revision:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "engineering.proposals.create"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:engineering:operations:engineering.proposals.create:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "engineering.changes.apply"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:engineering:operations:engineering.changes.apply:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "engineering.reviews.request"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:engineering:operations:engineering.reviews.request:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "engineering.reviews.record"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:engineering:operations:engineering.reviews.record:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "engineering.reviews.replace"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:engineering:operations:engineering.reviews.replace:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "engineering.reviews.void"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:engineering:operations:engineering.reviews.void:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "engineering.approvals.prepare_intent"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:engineering:operations:engineering.approvals.prepare_intent:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "engineering.approvals.request"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:engineering:operations:engineering.approvals.request:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "engineering.approvals.revoke"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:engineering:operations:engineering.approvals.revoke:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "engineering.packages.derive"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:engineering:operations:engineering.packages.derive:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "engineering.proposals.withdraw"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:engineering:operations:engineering.proposals.withdraw:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "engineering.proposals.supersede"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:engineering:operations:engineering.proposals.supersede:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "engineering.executions.dispatch"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:engineering:operations:engineering.executions.dispatch:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "engineering.executions.cancel"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:engineering:operations:engineering.executions.cancel:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "engineering.submissions.record"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:engineering:operations:engineering.submissions.record:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "engineering.acceptance.request"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:engineering:operations:engineering.acceptance.request:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "engineering.acceptance.adopt"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:engineering:operations:engineering.acceptance.adopt:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "execution.agents.units.submit"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:execution-agents:operations:execution.agents.units.submit:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "execution.agents.units.manage"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:execution-agents:operations:execution.agents.units.manage:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "execution.agents.units.cancel"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "ordessa.command/1"
+              },
+              "requestId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "scope": {
+                "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+                }
+              },
+              "parameters": {
+                "$ref": "urn:ordessa:execution-agents:operations:execution.agents.units.cancel:input:1"
+              }
+            },
+            "required": [
+              "contract",
+              "requestId",
+              "scope",
+              "preconditions",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    }
+  ]
+}

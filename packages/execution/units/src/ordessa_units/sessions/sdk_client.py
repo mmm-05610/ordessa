@@ -33,28 +33,33 @@ class _ManagedTransport:
         self.detached = False
 
     async def send(self, payload):
-        self.client._check_write_authority()
-        active = _dispatch.get()
-        if active is not None and payload.get('method') == active['method'] and 'id' in payload:
-            active['id'] = payload['id']
-            self.client._outgoing[payload['id']] = active
-            guard = active['guard']
-        else:
-            guard = None
-        if active is None or payload.get('method') != active['method'] or 'id' not in payload:
-            await self.client._channel.send_raw_async(payload)
-        else:
-            frame = (json.dumps(payload, ensure_ascii=False, separators=(',', ':'), allow_nan=False)+'\n').encode('utf-8')
-            # Every original SDK request has a receipt obligation, including
-            # prompt/initialize without a configuration effect guard.
-            def before_native_write():
-                self.client._check_write_authority()
-                if guard is not None:
-                    guard(payload)
-            fields = {'before_write': before_native_write}
-            if active['effect_write_guard'] is not None:
-                fields['effect_write_guard'] = active['effect_write_guard']
-            await self.client._channel.send_frame_async(frame, **fields)
+        callback_admission = self.client._claim_callback_response(payload)
+        try:
+            self.client._check_write_authority()
+            active = _dispatch.get()
+            if active is not None and payload.get('method') == active['method'] and 'id' in payload:
+                active['id'] = payload['id']
+                self.client._outgoing[payload['id']] = active
+                guard = active['guard']
+            else:
+                guard = None
+            if active is None or payload.get('method') != active['method'] or 'id' not in payload:
+                await self.client._channel.send_raw_async(payload)
+            else:
+                frame = (json.dumps(payload, ensure_ascii=False, separators=(',', ':'), allow_nan=False)+'\n').encode('utf-8')
+                # Every original SDK request has a receipt obligation, including
+                # prompt/initialize without a configuration effect guard.
+                def before_native_write():
+                    self.client._check_write_authority()
+                    if guard is not None:
+                        guard(payload)
+                fields = {'before_write': before_native_write}
+                if active['effect_write_guard'] is not None:
+                    fields['effect_write_guard'] = active['effect_write_guard']
+                await self.client._channel.send_frame_async(frame, **fields)
+        finally:
+            if callback_admission is not None:
+                self.client._finish_admission()
 
     async def receive(self):
         while not self.detached:
@@ -95,6 +100,7 @@ class SdkAcpClient:
         self._operation_lock = threading.RLock()
         self._native_admission_open = True
         self._active_native_operations = 0
+        self._callback_response_admissions = defaultdict(deque)
         if type(connect) is not bool:
             raise TypeError('explicit SDK connection mode required')
         self._loop = asyncio.new_event_loop()
@@ -168,6 +174,61 @@ class SdkAcpClient:
                 if self._active_native_operations < 0:
                     self._active_native_operations = 0
                     raise RuntimeError('SDK native operation count underflow')
+
+    def _retain_callback_response(self, request_id):
+        """Keep an incoming callback admitted until its SDK reply write ends."""
+        key = self._callback_response_key(request_id)
+        if key is None:
+            raise WriterLeaseRefused('Original ACP callback response identity is unavailable')
+        with self._operation_lock:
+            if not self._native_admission_open or self._active_native_operations <= 0:
+                raise WriterLeaseRefused('Original ACP callback admission is unavailable')
+            self._active_native_operations += 1
+            self._callback_response_admissions[key].append(object())
+
+    def _claim_callback_response(self, payload):
+        """Take the exact original callback admission for one SDK response."""
+        if not isinstance(payload, dict) or 'method' in payload or 'id' not in payload:
+            return None
+        key = self._callback_response_key(payload['id'])
+        if key is None:
+            return None
+        with self._operation_lock:
+            pending = self._callback_response_admissions.get(key)
+            if not pending:
+                return None
+            token = pending.popleft()
+            if not pending:
+                self._callback_response_admissions.pop(key, None)
+            return token
+
+    @staticmethod
+    def _callback_response_key(request_id):
+        # Preserve the JSON-RPC ID's exact JSON type. This also lets malformed
+        # but parseable IDs reach an error response without leaking admission.
+        try:
+            encoded = json.dumps(request_id, sort_keys=True, ensure_ascii=False,
+                                 allow_nan=False, separators=(',', ':'))
+        except (TypeError, ValueError, OverflowError, RecursionError):
+            return None
+        return type(request_id), encoded
+
+    def _finish_admission(self):
+        with self._operation_lock:
+            self._active_native_operations -= 1
+            if self._active_native_operations < 0:
+                self._active_native_operations = 0
+                raise RuntimeError('SDK native operation count underflow')
+
+    def _release_orphaned_callback_responses(self):
+        """Release only replies whose SDK request tasks finished during close."""
+        with self._operation_lock:
+            count = sum(len(items) for items in self._callback_response_admissions.values())
+            self._callback_response_admissions.clear()
+            self._active_native_operations -= count
+            if self._active_native_operations < 0:
+                self._active_native_operations = 0
+                raise RuntimeError('SDK native operation count underflow')
 
     def try_quiesce(self) -> bool:
         """Close new native admission only when this owner is already idle.
@@ -314,7 +375,16 @@ class SdkAcpClient:
                 raw = self._reverse[self._key(method, params)].popleft()
                 # SDK dispatch lacks the request id; the observer retained its
                 # original frame so the callback can reply exactly once.
-                return invoke_bound_callback(raw, self._active_callback)
+                try:
+                    result = invoke_bound_callback(raw, self._active_callback)
+                except Exception:
+                    # ACP catches handler errors and writes a JSON-RPC error
+                    # response after this coroutine returns. Keep admission
+                    # through that same response attempt.
+                    self._retain_callback_response(raw['id'])
+                    raise
+                self._retain_callback_response(raw['id'])
+                return result
         except WriterLeaseRefused as error:
             # A late reverse request after local quiescence is explicitly
             # refused before the Unit callback can perform an effect.
@@ -408,6 +478,28 @@ class SdkAcpClient:
     def session_id(self):
         return self._session_id
 
+    @property
+    def effect_write_thread(self):
+        """Return this guarded client’s actual live SDK-loop Thread.
+
+        Engineering’s access handoff binds to the real execution target rather
+        than a copied thread id. The caller receives the Thread object through
+        this explicit owner API; `_thread` remains private. This is a read-only
+        target lookup, not permission or a native-operation lease.
+        """
+        if not self._require_effect_write_guard or self._effect_write_owner is None:
+            raise EffectWriteRefused('Fixed operation write guard is not configured')
+        with self._operation_lock:
+            if not self._native_admission_open or self._active_native_operations:
+                raise EffectWriteRefused('Original SDK native admission is unavailable or busy')
+            thread = self._thread
+        transport = getattr(self, 'transport', None)
+        if (thread is threading.current_thread() or thread.ident is None or not thread.is_alive()
+                or self._loop.is_closed() or not self._loop.is_running()
+                or transport is None or transport.detached or self._wakeup_closed):
+            raise EffectWriteRefused('Original SDK execution target is not live')
+        return thread
+
     def prompt(self, *, timeout=60, on_request=None, **params):
         return self.command('session/prompt', timeout=timeout, on_request=on_request, **params)
 
@@ -447,6 +539,10 @@ class SdkAcpClient:
                 connection = getattr(self, 'sdk_connection', None)
                 if connection is not None:
                     await connection.close()
+                # The official SDK has now shut down its request tasks. Any
+                # callback admission not consumed by a response send belongs
+                # to a cancelled/aborted task and can be released safely.
+                self._release_orphaned_callback_responses()
                 transport = getattr(self, 'transport', None)
                 if transport is not None:
                     await transport.close()
