@@ -352,12 +352,52 @@ class _EngineeringEffectWriteGuardFactory:
 
 
 def engineering_effect_write_guard_factory(dispatch_owner, context, records, blobs):
-    """Trusted Unit composition hook; wire cannot choose an operation or guard.
+    """Build the Unit hook from the canonical owner or its original dispatcher.
 
-    This resolves only an existing original Engineering step binding. No Grant,
-    action consumption, Unit journal, callback or retry authority is created.
+    With the canonical ``EngineeringOwnerOperations`` return, this adapter
+    validates and unwraps its original dispatcher so composition callers need
+    not reach through ``owner_operations.dispatch``. Existing callers that
+    already hold the exact ``ImplementationDispatch`` remain on that same
+    original mechanism. A malformed canonical owner is always rejected; it is
+    never retried as a raw dispatcher. No authority, grant, action consumption,
+    journal, callback, or retry path is created.
     """
-    return _EngineeringEffectWriteGuardFactory(dispatch_owner,context,records,blobs)
+    from ...application.orchestration.steps.implementation_dispatch import ImplementationDispatch
+    from ...application.usecases.owner_operations import EngineeringOwnerOperations
+
+    if type(dispatch_owner) is EngineeringOwnerOperations:
+        dispatch = getattr(dispatch_owner, 'dispatch', None)
+        execution = getattr(dispatch, 'execution', None)
+        factory = getattr(dispatch_owner, 'factory', None)
+        access = getattr(dispatch_owner, 'access', None)
+        if (type(dispatch) is not ImplementationDispatch
+                or factory is None or getattr(dispatch, 'factory', None) is not factory
+                or access is None or getattr(dispatch, 'access', None) is not access
+                or getattr(dispatch_owner, 'records', None) is not records
+                or getattr(execution, 'records', None) is not records
+                or getattr(dispatch_owner, 'blobs', None) is not blobs
+                or getattr(dispatch, 'blobs', None) is not blobs
+                or getattr(blobs, 'authority_id', None) != getattr(factory, 'authority_id', None)
+                or not callable(getattr(dispatch, '_access', None))
+                or not callable(getattr(dispatch, 'acquire_effect_write', None))
+                or not callable(getattr(access, 'handoff_effect_write', None))
+                or not callable(getattr(access, 'consume_effect_write', None))):
+            raise ApplicationError('RECORDED_DISPATCH_EFFECT_AUTHORITY_REQUIRED')
+    elif type(dispatch_owner) is ImplementationDispatch:
+        # Exact original-owner route retained for established callers. This is
+        # not fallback for a failed canonical owner association check above.
+        dispatch = dispatch_owner
+    else:
+        raise ApplicationError('RECORDED_DISPATCH_EFFECT_AUTHORITY_REQUIRED')
+    factory = getattr(dispatch, 'factory', None)
+    access = getattr(dispatch, 'access', None)
+    if (factory is None or access is None
+            or getattr(dispatch, 'blobs', None) is not blobs
+            or getattr(blobs, 'authority_id', None) != getattr(factory, 'authority_id', None)
+            or not callable(getattr(dispatch, '_access', None))
+            or not callable(getattr(dispatch, 'acquire_effect_write', None))):
+        raise ApplicationError('RECORDED_DISPATCH_EFFECT_AUTHORITY_REQUIRED')
+    return _EngineeringEffectWriteGuardFactory(dispatch, context, records, blobs)
 
 
 class NativeDispatchSources:

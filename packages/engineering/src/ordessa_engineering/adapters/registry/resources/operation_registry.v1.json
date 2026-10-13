@@ -34,8 +34,8 @@
       "adapters/filesystem/package_writer.py": "sha256:9636bb5da1213788d13088e0ad26bcdf13fcec28939b96887463ebcaf277a9dc",
       "adapters/filesystem/resource_reader.py": "sha256:5b217800ea3889c0366e2074b53088f591146e955b58e96b2543965e5a699654",
       "adapters/method_work.py": "sha256:77c5f09a62908981374408644d3a62a07943e12b6503c192ee622e9ca6576a76",
-      "adapters/native_records/__init__.py": "sha256:edb5044ad6f3f588486baad2f2acacef3d8eebed85f0ac59e185345d5d66721c",
-      "adapters/native_records/recorded_dispatch.py": "sha256:2a70e82768f61aeb41dbe35311eb18fe31ae87fc95af563b2037b65410095122",
+      "adapters/native_records/__init__.py": "sha256:c939f6c66da6691c7b0fcc9da7a2066baa1fa2e38c09aee7ba04368155f71575",
+      "adapters/native_records/recorded_dispatch.py": "sha256:42e5a1bf01412c00ce82cdb7d1ba7ca08039328838cb881e1908b64e771c6845",
       "adapters/persistence/__init__.py": "sha256:9dd668c167f939d8be25685915baaadf981855e80de5641618bec0c3f76a856e",
       "adapters/persistence/sqlite/__init__.py": "sha256:9dd668c167f939d8be25685915baaadf981855e80de5641618bec0c3f76a856e",
       "adapters/persistence/sqlite/acceptance_repository.py": "sha256:6c262b26844b3d7e60ad3ea4be96027ff53dcff51a67f98651e18a3027339b04",
@@ -306,7 +306,7 @@
     "pydantic_graph_version": "2.54.0",
     "referencing_version": "0.36.2"
   },
-  "implementation_digest": "sha256:b18f877668b37dd98de81d6cbff792efc237e0cfb2fa1593f5e9ee0d2348c84c",
+  "implementation_digest": "sha256:ce8a05090ddc503c524b865ae4f28ebaecdfb42004c034fc6844b44ffd3a01b0",
   "operations": {
     "engineering.acceptance.adopt": {
       "inputs": {
@@ -4460,8 +4460,8 @@
       "version": "1"
     }
   },
-  "registry_digest": "sha256:781474a34112becb8a8b871cfb5c9e54c1c758d8a6acaccfa6f76b6d3c9fd26f",
+  "registry_digest": "sha256:3fb94d410e633dd40c8bce55ad9dcb4c9a7d67f2af54a43fa8c192f19259b723",
   "registry_id": "ordessa-engineering.operations",
-  "revision": 84,
+  "revision": 85,
   "schema_version": "engineering-operation-registry/1"
 }
