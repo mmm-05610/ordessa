@@ -24,6 +24,7 @@ from ordessa_units.admission.run_permission import UnitRunPermission, LocalUnitI
 from ordessa_units.admission.local_state import FixedUnitCurrentState
 from ordessa_units.definitions import UnitSpec
 from ordessa_units.api.unit import Unit
+from ordessa_units.management.manager import UnitManagementRefused
 from ordessa_units.sessions.evidence import AcpUnitEvidence
 from .fresh_factory import build_fresh_acp_unit_factory
 from .service import build_unit_manager
@@ -38,7 +39,8 @@ class LocalUnitOwner:
     def __init__(self, *, admission_context, permission, environment_instance,
                  preparation, materializer, environment_sharing, timeout,
                  callback_approval, process_binding_factory,
-                 clock, effect_write_guard_factory=None, acp_turn_opt_in=False):
+                 clock, effect_write_guard_factory=None, acp_turn_opt_in=False,
+                 defer_effect_write_guard_factory=False):
         if (not isinstance(admission_context, UnitAdmissionContext)
                 or type(permission) is not UnitRunPermission
                 or permission.profile_revision.environment_namespace != admission_context.environment_namespace
@@ -47,6 +49,10 @@ class LocalUnitOwner:
             raise AgentOwnerUnavailable('Original admission, authenticated permission and Environment must agree')
         if type(acp_turn_opt_in) is not bool:
             raise AgentOwnerUnavailable('Explicit boolean ACP durable opt-in required')
+        if type(defer_effect_write_guard_factory) is not bool:
+            raise AgentOwnerUnavailable('Explicit boolean effect-write factory deferral required')
+        if defer_effect_write_guard_factory and (not acp_turn_opt_in or effect_write_guard_factory is not None):
+            raise AgentOwnerUnavailable('Deferred effect-write factory requires opted-in ACP and an unbound initial factory')
         self.admission = admission_context
         self.permission, self.environment = permission, environment_instance
         if effect_write_guard_factory is not None and not callable(effect_write_guard_factory):
@@ -54,7 +60,9 @@ class LocalUnitOwner:
         if effect_write_guard_factory is not None and not acp_turn_opt_in:
             raise AgentOwnerUnavailable('Guarded recorded dispatch requires explicit original ACP schema opt-in')
         self.acp_turn_opt_in = acp_turn_opt_in
-        self.effect_write_guard_factory = effect_write_guard_factory
+        self._effect_write_guard_factory = effect_write_guard_factory
+        self._defer_effect_write_guard_factory = defer_effect_write_guard_factory
+        self._effect_write_guard_factory_pending = defer_effect_write_guard_factory
         self.profile_service = ProfileService(admission_context)
         with permission.guard('prepare', clock=clock):
             resolution = resolve_unit_profile(self.profile_service, permission.profile_revision,
@@ -86,6 +94,8 @@ class LocalUnitOwner:
             evidence=self.evidence, lease_port=self.lease, timeout=timeout,
             callback_approval=callback_approval,
             effect_write_guard_factory=effect_write_guard_factory,
+            defer_effect_write_guard_factory=defer_effect_write_guard_factory,
+            acp_turn_opt_in=acp_turn_opt_in,
             process_binding_factory=process_binding_factory)
         self.owner_inputs = AgentOwnerInputs(authority=self.authority, current_state=self.state,
             scope_authority=self.state, native_session_evidence=self.evidence, management_epoch=self.state,
@@ -103,6 +113,61 @@ class LocalUnitOwner:
     def spec(self):
         return UnitSpec(self.permission.agent_id, self.permission.profile_revision,
                         {'environmentId': self.environment.identity})
+
+    @property
+    def effect_write_guard_factory(self):
+        return self._effect_write_guard_factory
+
+    def ensure_unit_creation_ready(self):
+        """Purely refuse lifecycle work until any deferred owner finalization."""
+        if self._effect_write_guard_factory_pending:
+            raise AgentOwnerUnavailable('Original effect-write factory finalization is required before Unit creation')
+        return True
+
+    def bind_effect_write_guard_factory(self, factory):
+        """Finalize this opted-in original owner once before any Unit creation."""
+        if (not self._defer_effect_write_guard_factory
+                or not self._effect_write_guard_factory_pending
+                or self._effect_write_guard_factory is not None
+                or not callable(factory)):
+            raise AgentOwnerUnavailable('Deferred effect-write factory can be bound exactly once')
+        ports = self._bound()
+        original_manager = ports.unit_manager
+        if original_manager is None:
+            raise AgentOwnerUnavailable('Original Unit Manager must be bound before effect-write finalization')
+
+        def finalize_on_original_graph():
+            # This callback runs while the original Manager lock is held.
+            # Recheck before taking the authority guard so a concurrent second
+            # finalizer cannot invert the manager/authority lock order.
+            if (self._effect_write_guard_factory_pending is not True
+                    or self._effect_write_guard_factory is not None):
+                raise AgentOwnerUnavailable('Deferred effect-write factory can be bound exactly once')
+            with self.authority.guard('prepare', self.authorization()):
+                self._bound()
+                if (self._effect_write_guard_factory_pending is not True
+                        or self._effect_write_guard_factory is not None
+                        or self.acp_turn_opt_in is not True
+                        or ports.unit_manager is not original_manager):
+                    raise AgentOwnerUnavailable('Original local owner is not pending on its bound graph')
+                resolve_unit_profile(self.profile_service, self.permission.profile_revision,
+                                     self.admission.harness_catalog)
+                if self.environment.snapshot.identity != self.permission.environment_identity:
+                    raise AgentOwnerUnavailable('Original Environment changed before owner finalization')
+                finalizer = self.owner_inputs.fresh_unit_factory.finalize_effect_write_guard_factory
+                if not callable(finalizer):
+                    raise AgentOwnerUnavailable('Original fresh factory cannot finalize its write guard')
+                finalizer(factory)
+                self._effect_write_guard_factory = factory
+                self._effect_write_guard_factory_pending = False
+
+        # The original Manager owns the lock. Its helper checks draining and
+        # every live/attempt state before this callback acquires the authority.
+        try:
+            original_manager._finalize_effect_write_guard_factory(finalize_on_original_graph)
+        except UnitManagementRefused as error:
+            raise AgentOwnerUnavailable('Original Unit Manager is unavailable for effect-write finalization') from error
+        return True
 
     def authorization(self):
         return self.authority.authorization()
@@ -138,6 +203,7 @@ class LocalUnitOwner:
         return self._ports
 
     def resolve_plan(self, spec, authorization):
+        self.ensure_unit_creation_ready()
         with self.authority.guard('prepare', authorization):
             self._bound()
             if spec != self.spec:
@@ -185,6 +251,7 @@ class LocalUnitOwner:
         the original instance. Possession of a copied facade, identity mapping,
         or stale permission does not expose the instance or create a lease.
         """
+        self.ensure_unit_creation_ready()
         with self.authority.guard('interaction', authorization):
             self._bound()
             if type(unit) is not Unit or self.manager is None:
@@ -201,6 +268,7 @@ class LocalUnitOwner:
             return instance
 
     def authorize(self, action, subject, authorization):
+        self.ensure_unit_creation_ready()
         with self.authority.guard(action, authorization):
             ports = self._bound()
             if action == 'prepare':
@@ -269,6 +337,7 @@ class LocalUnitOwner:
                 or len(expected_prompt_input_digest) != 71
                 or any(char not in '0123456789abcdef' for char in expected_prompt_input_digest[7:])):
             raise InvocationAuthorityRefused('Exact original Unit receipt query inputs required')
+        self.ensure_unit_creation_ready()
         with self.authority.guard('interaction', authorization):
             ports = self._bound()
             records = ports.provider_view.records
@@ -327,6 +396,7 @@ class LocalUnitOwner:
         return True
 
     def _preparation(self, plan, facts):
+        self.ensure_unit_creation_ready()
         with self.authority.guard('prepare', self.authorization()):
             context = facts['contextRef']
             if (safe_json(plan['context']) != safe_json({key: value for key, value in context.items()
@@ -381,7 +451,8 @@ class LocalUnitOwner:
 def build_local_unit_owner(*, admission_context, permission, environment_instance,
                            preparation, materializer, environment_sharing, timeout=10,
                            callback_approval=None, process_binding_factory=None,
-                           effect_write_guard_factory=None, acp_turn_opt_in=False, clock=time.time):
+                           effect_write_guard_factory=None, acp_turn_opt_in=False,
+                           defer_effect_write_guard_factory=False, clock=time.time):
     """Select one concrete owner; then pass ``owner_inputs`` to host assembly.
 
     After the host assembles its existing issuer/records, ``bind(owner.ports)``
@@ -394,7 +465,9 @@ def build_local_unit_owner(*, admission_context, permission, environment_instanc
         environment_sharing=environment_sharing, timeout=timeout, callback_approval=callback_approval,
         process_binding_factory=process_binding_factory,
         effect_write_guard_factory=effect_write_guard_factory,
-        acp_turn_opt_in=acp_turn_opt_in, clock=clock)
+        acp_turn_opt_in=acp_turn_opt_in,
+        defer_effect_write_guard_factory=defer_effect_write_guard_factory,
+        clock=clock)
 
 
 __all__ = ['build_local_unit_owner', 'LocalUnitOwner', 'UnitRunPermission']

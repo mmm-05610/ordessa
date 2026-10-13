@@ -15,7 +15,9 @@ def build_fresh_acp_unit_factory(*, agent_id, profile_revision, descriptor,
                                 environment_sharing, preparation, materializer,
                                 evidence, lease_port, timeout=10,
                                 callback_approval=None, effect_write_guard_factory=None,
-                                process_binding_factory=None):
+                                process_binding_factory=None,
+                                defer_effect_write_guard_factory=False,
+                                acp_turn_opt_in=False):
     """Return the existing FreshUnitFactory for one explicit fixed selection.
 
     ``evidence`` is the deployment's original session/termination evidence;
@@ -34,8 +36,16 @@ def build_fresh_acp_unit_factory(*, agent_id, profile_revision, descriptor,
     if (type(environment_sharing) is not bool or not callable(materializer)
             or not callable(getattr(environment_instance, 'acquire', None))
             or not callable(getattr(lease_port, 'bind', None))
-            or process_binding_factory is not None and not callable(process_binding_factory)):
+            or process_binding_factory is not None and not callable(process_binding_factory)
+            or type(defer_effect_write_guard_factory) is not bool
+            or type(acp_turn_opt_in) is not bool):
         raise AgentOwnerUnavailable('Explicit fixed ACP environment and provider ports required')
+    if defer_effect_write_guard_factory and (effect_write_guard_factory is not None or not acp_turn_opt_in):
+        raise AgentOwnerUnavailable('Deferred effect-write factory requires opted-in ACP and an unbound initial factory')
+    guard_factory_state = {
+        'factory': effect_write_guard_factory,
+        'finalized': not defer_effect_write_guard_factory,
+    }
     if (selection.environment_reference is None
             or selection.environment_reference.get('environmentId') != getattr(environment_instance, 'identity', None)
             or not isinstance(getattr(environment_instance, 'identity', None), str)):
@@ -44,6 +54,8 @@ def build_fresh_acp_unit_factory(*, agent_id, profile_revision, descriptor,
         raise AgentOwnerUnavailable('Harness definition namespace is invalid')
 
     def create(environment_id, plan, provider_view):
+        if not guard_factory_state['finalized']:
+            raise AgentOwnerUnavailable('Effect-write factory must be finalized before Unit construction')
         snapshot = plan.get('profileSnapshot', {})
         revision = decode_revision_ref(dict(snapshot.get('ref', {})))
         definition_ref = snapshot.get('manifest', {}).get('harnessDefinitionRef')
@@ -75,13 +87,25 @@ def build_fresh_acp_unit_factory(*, agent_id, profile_revision, descriptor,
             records=records, projection=evidence, verifier=verifier,
             lease_port=lease_port, termination_evidence=evidence, timeout=timeout,
             callback_approval=callback_approval,
-            effect_write_guard_factory=effect_write_guard_factory,
+            effect_write_guard_factory=guard_factory_state['factory'],
             process_binding=binding)
         if binding is not None:
             binding.attach(unit)
         return unit
 
-    return FreshUnitFactory(create)
+    def finalize_effect_write_guard_factory(factory):
+        if (not defer_effect_write_guard_factory or guard_factory_state['finalized']
+                or guard_factory_state['factory'] is not None or not callable(factory)):
+            raise AgentOwnerUnavailable('Deferred effect-write factory can be finalized exactly once')
+        guard_factory_state['factory'] = factory
+        guard_factory_state['finalized'] = True
+
+    return FreshUnitFactory(
+        create,
+        finalize_effect_write_guard_factory=(
+            finalize_effect_write_guard_factory if defer_effect_write_guard_factory else None
+        ),
+    )
 
 
 __all__ = ['build_fresh_acp_unit_factory']

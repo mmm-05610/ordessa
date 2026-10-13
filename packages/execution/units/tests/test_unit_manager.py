@@ -142,6 +142,7 @@ def test_partial_prepare_retains_original_handle_and_original_failure(managed):
         m.manager.create(m.plan('a'),context)
     assert len(m.calls)==1 and m.events.count('spawn')==0
     a=m.units[0]
+    assert a.stop(a.prepared_unit['unitRef'],m.issue('a','stop'))['state']=='confirmed'
     assert m.manager.release(a.prepared_unit['unitRef'],m.issue('a','release'))['state']=='confirmed'
     assert m.manager.list()==()
 

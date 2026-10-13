@@ -24,10 +24,14 @@ class FreshUnitFactory:
     on the view's records/verifier; Manager retains its original one-shot gate.
     """
     create_instance: Callable
+    finalize_effect_write_guard_factory: Callable | None = None
 
     def __post_init__(self):
         if not callable(self.create_instance):
             raise AgentOwnerUnavailable("explicit fresh Unit factory is required")
+        if (self.finalize_effect_write_guard_factory is not None
+                and not callable(self.finalize_effect_write_guard_factory)):
+            raise AgentOwnerUnavailable("effect-write factory finalizer must be callable")
 
 
 @dataclass(frozen=True)
@@ -178,8 +182,16 @@ def bind_unit_manager(inputs: AgentOwnerInputs, *, environment_id, provider_view
     with records.journal._admission_guard_lock:
         if getattr(records.journal, '_fresh_unit_manager_binding', None) is not None:
             raise AgentOwnerUnavailable("original journal already has a fresh Unit Manager binding")
+        creation_preflight = getattr(inputs.preparation_context_port,
+                                     "ensure_unit_creation_ready", None)
+        has_finalizer = inputs.fresh_unit_factory.finalize_effect_write_guard_factory is not None
+        if has_finalizer and not callable(creation_preflight):
+            raise AgentOwnerUnavailable("Deferred fresh Unit factory requires original creation preflight")
+        if creation_preflight is not None and not callable(creation_preflight):
+            raise AgentOwnerUnavailable("Original creation preflight must be callable")
         manager = UnitManager(create_instance=create,
-                              records=records, verifier=provider_view.verifier)
+                              records=records, verifier=provider_view.verifier,
+                              creation_preflight=creation_preflight if callable(creation_preflight) else None)
         # Live ownership only. A cold journal cannot reconstruct handles.
         records.journal._fresh_unit_manager_binding = manager
         return manager

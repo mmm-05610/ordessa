@@ -29,10 +29,13 @@ class ManagerReleaseReceipt:
 
 
 class UnitManager:
-    def __init__(self, *, create_instance, records, verifier):
+    def __init__(self, *, create_instance, records, verifier, creation_preflight=None):
         if not callable(create_instance) or records.verifier is not verifier:
             raise UnitManagementRefused('Explicit factory and original records/verifier required')
+        if creation_preflight is not None and not callable(creation_preflight):
+            raise UnitManagementRefused('Creation preflight must be callable')
         self._factory, self.records, self.verifier = create_instance, records, verifier
+        self._creation_preflight = creation_preflight
         self._lock = RLock()
         self._draining = False
         self._attempts = {}  # Live ownership retention, never a durable outcome ledger.
@@ -92,6 +95,9 @@ class UnitManager:
                 raise UnitManagementRefused('original Unit Manager is draining')
             if key in self._attempts:
                 raise UnitManagementRefused('Original creation retained; never replay factory or prepare')
+            if (self._creation_preflight is not None
+                    and self._creation_preflight() is not True):
+                raise UnitManagementRefused('Original Unit creation preflight refused')
             self._attempts[key] = None
             unit = self._factory(plan)
             if (type(unit) is not UnitInstance or unit.records is not self.records
@@ -126,6 +132,15 @@ class UnitManager:
                 raise
             self._remember(unit)
             return unit
+
+    def _finalize_effect_write_guard_factory(self, finalize):
+        """Run one owner finalizer before this original manager admits creation."""
+        if not callable(finalize):
+            raise UnitManagementRefused('Original owner finalizer must be callable')
+        with self._lock:
+            if (self._draining or self._attempts or self._units or self._deferred_by_unit):
+                raise UnitManagementRefused('Original Unit Manager is not empty and ready for finalization')
+            finalize()
 
     def find(self, unit_ref):
         with self._lock:

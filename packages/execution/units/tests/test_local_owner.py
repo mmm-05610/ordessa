@@ -183,6 +183,7 @@ def live_owner(tmp_path, request):
         fixture_options = {}
     acp_turn_opt_in = fixture_options.get('acp_turn_opt_in', False)
     effect_write_guard_factory = fixture_options.get('effect_write_guard_factory')
+    defer_effect_write_guard_factory = fixture_options.get('defer_effect_write_guard_factory', False)
     callback_approval = fixture_options.get('callback_approval')
     preparation_peer = fixture_options.get('preparation_peer')
     now = [10.0]
@@ -275,6 +276,7 @@ def live_owner(tmp_path, request):
         environment_sharing=True,
         timeout=5,
         effect_write_guard_factory=effect_write_guard_factory,
+        defer_effect_write_guard_factory=defer_effect_write_guard_factory,
         acp_turn_opt_in=acp_turn_opt_in,
         callback_approval=callback_approval,
         clock=lambda: now[0],
@@ -324,6 +326,7 @@ def live_owner(tmp_path, request):
         scope=SCOPE,
         now=now,
         owner=owner,
+        defer_effect_write_guard_factory=defer_effect_write_guard_factory,
         permission=permission,
         public_manager=public_manager,
         original_manager=original_manager,
@@ -332,6 +335,8 @@ def live_owner(tmp_path, request):
         records=records,
         journal=journal,
         store=store,
+        preparation=preparation,
+        materializer=_materializer,
         admission=admission,
         catalog=catalog,
         materials=materials,
