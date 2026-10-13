@@ -1,0 +1,25 @@
+schema_version: 1
+contract_version: ordessa.human-review-policy/1
+policy_id: ordessa.product.v1.chat-attested-human-review
+revision: 1
+selection_authority: product_composition_and_configured_engineering_admission
+authorized_attestor_role: registered_main_agent
+accepted_source_trust_level: agent-attested
+review_path: human_semantic_review
+whole_plan_answer: explicit_complete_checklist
+missing_answer: pending
+ambiguous_answer: pending
+mechanical_integrity: required
+review_is_implementation_grant: false
+status_dispositions:
+  satisfied: pass
+  violated: block
+  insufficient: block
+  unknown: manual
+provenance:
+  approval_source_thread_id: 01a118bc-dd26-7553-b5b6-cf5137c070d6
+  contract_owner_thread_id: 01a1292f-d25b-7765-b7bb-1537beda50b7
+  locator: delegated parent approval and original Engineering contract received in methods task
+  original_message_ref: null
+  limitations: original platform message reference not supplied; no user review answer is recorded here
+  status: independent_candidate_policy_declaration_not_actual_review_or_product_selection

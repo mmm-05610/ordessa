@@ -1,0 +1,44 @@
+schema_version: 1
+standard_id: summary-review
+revision: 2.0.0
+purpose: quality
+criteria:
+- criterion_id: summary_fidelity
+  statement: 摘要应忠实覆盖精确提案的重要新增/修改/删除承诺、保持项、取舍、风险、未决项和下一动作；隐去重要后果属于缺口。
+  applies_to:
+  - did-change
+  - session-summary
+  required_inputs:
+  - proposal_ref
+  - baseline_ref
+  - summary_ref
+  - source_captures
+  checks:
+  - capability_id: ordessa.decision.evaluate
+    interface_version: 1.0.0
+    bindings:
+      question_set:
+        resource: decision.summary_fidelity
+      question_ids:
+      - summary_fidelity
+  policy:
+    satisfied: manual
+    violated: block
+    insufficient: block
+    unknown: manual
+  answer_vocabulary:
+    kind: choice
+    options:
+    - option_id: supported
+      description: 完整满足冻结问题；意见仍交受信审阅者复核，不产生权限。自动判定准入另需已接受评测。
+    - option_id: contradicted
+      description: 与有效约束或目标冲突。
+    - option_id: insufficient
+      description: 有缺口或上下文不足，不能确定。
+reduction:
+  required_criteria: all_applicable
+  empty_applicable_set: error
+  priority:
+  - block
+  - manual
+  - pass

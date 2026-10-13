@@ -1,0 +1,1106 @@
+schema_version: 1
+workflow_id: change-cycle
+semantics: ordessa.change-cycle/v1
+entry: await_proposal
+context_slots:
+- acceptance_intent
+- acceptance_review_plan
+- acceptance_review_ref
+- acceptance_record_plan_digest
+- acceptance_record_request_version
+- acceptance_record_fence
+- acceptance_review_id
+- acceptance_request_version
+- acceptance_review_fence
+- acceptance_raw_response_utf8
+- correction_plan_ref
+- correction_plan_content
+- rework_review_plan
+- rework_review_id
+- rework_request_version
+- rework_review_fence
+- rework_raw_response_utf8
+- adoption_approval_ref
+- adoption_control_version
+- adoption_targets
+- adoption_ref
+- applied_did_ref
+- apply_receipt_ref
+- baseline_ref
+- decisions_ref
+- dispatch_input
+- document_approval_ref
+- feedback_ref
+- intent_digest
+- intent_id
+- method_ref
+- notice
+- package_draft_ref
+- package_record
+- package_ref
+- package_review_plan
+- proposal_ref
+- quality_review_plan
+- source_review_plan
+- standard_profile_ref
+- submission_record
+- submission_ref
+- summary_ref
+resume_contract: ordessa.engineering.current-work/1
+steps:
+- id: await_proposal
+  kind: wait
+  event: engineering.work.current_condition
+  bind:
+    proposal_ref: event.proposal_ref
+    summary_ref: event.summary_ref
+    baseline_ref: event.baseline_ref
+    source_review_plan: event.source_review_plan
+    method_ref: event.method_ref
+    decisions_ref: event.decisions_ref
+    standard_profile_ref: event.standard_profile_ref
+  next: source_review
+- id: source_review
+  kind: operation
+  operation: engineering.reviews.request
+  inputs:
+    plan: source_review_plan
+  outcomes:
+    completed:
+      next: await_source_gate
+    rejected:
+      stop: revision_required
+  config:
+    standards:
+    - resource: standard.source_review
+    purpose: provenance_support
+    completion: requested_not_passed
+    unit_submission_review_strategy:
+      schema_version: 1
+      policy_id: ordessa.incremental-engineering.unit-submission-review
+      policy_revision: 1
+      declaration_kind: method_strategy_not_host_capability_or_authorization
+      consumer_status: unsupported_until_original_owner_binding
+      fixed_delivery:
+        author_result_schema: document.submission.schema
+        author_result_schema_version: 2
+        submission_ref_owner: original Engineering submission owner
+        target_ref_types:
+        - pinned commit locator
+        - original RepositorySnapshotRef
+        - original ArtifactRevisionRef
+        - original SubmissionRef after submission
+        resolution: exact_revision_and_digest_never_latest
+        pending_review_is_not_pass: true
+        unit_result_is_declaration_not_source_proof: true
+        capture_all_files_tests_effects_before_submit: false
+        host_obligation: preserve fixed reference/source/Unit-result correlation;
+          no universal host truth verification
+        independent_truth_check_owner: selected independent review Unit under this
+          method
+      roles:
+        author: selected_executor_unit
+        reviewer: independent_review_unit
+        selection_authority: original host generic identity matching/constraint mechanism,
+          driven by this method policy
+        identity_constraint: original_author_unit_identity_must_differ_from_original_reviewer_unit_identity
+        self_declared_role_is_not_authentication: true
+        semantic_judge: real JEV through original provider, original quality admission
+          required
+        mechanical_checks: original reference/source integrity as applicable; no requirement
+          that host produce all verified test/output/effect facts
+        independence_scope: this method only, not hardcoded for all methods
+      review_requirements:
+        owner_expansion: original MethodBridge with trusted phase/targets
+        set: all_applicable_required_criteria_and_all_declared_claims
+        key: original CheckKey(target,criterion_id,claim_id)
+        reviewer_cannot_select_subset: true
+        empty_applicable_set: error
+        no_claim_kind_or_missing_evidence_exemption: true
+        acceptance_criteria:
+        - submission_shape
+        - submission_binding
+        - output_scope
+        - test_evidence
+        status_dispositions:
+          satisfied: pass
+          violated: block
+          insufficient: block
+          unknown: manual
+        new_na_or_quality_override_rules: false
+      rework:
+        new_delivery: new exact ArtifactRevisionRef and original SubmissionRef, retain
+          old source/submission/review facts
+        old_review_reuse: forbidden_for_changed_target_or_requirement
+        important_design_gap: return_to_DID_proposal
+        ordinary_fix: within_existing_exact_valid_scope; original owner reconciles
+          new attempt
+        unknown_external_effect: reconcile_before_retry
+      acceptance:
+        gate: all required current trusted exact-target reviews and mechanical evidence
+          satisfied
+        reported_complete_not_gate: true
+        independent_unit_identity_required: true
+        real_tests_output_scope_submission_binding_required: true
+        adoption: original exact current action authority and target CAS; review is
+          not Grant
+        missing_binding: unsupported_do_not_advance
+        truth_check_owner: independent review Unit; system records source and asserted/verified
+          status accurately
+      workflow_nodes:
+      - source_review
+      - quality_review
+      - package_review
+      - await_execution_capture
+      - record_submission
+      - await_submission
+      - acceptance_review
+      - await_acceptance_response
+      - record_acceptance_review
+      - await_acceptance_gate
+      - await_adoption_permission
+      - adopt
+      fact_provenance:
+        executor_report: asserted
+        independent_review: record what was checked, against which fixed version,
+          by which Unit, with which evidence; only actually independently checked
+          facts can be marked verified
+        unverified_test_fact: retain asserted, do not require host to manufacture
+          verified observations
+        review_result_and_verified_fact_are_distinct: true
+        references_or_role_labels_do_not_upgrade_truth: true
+      applies_when: Unit-authored delivery at an original Work step requiring the
+        declared method review; standards/requirements selected by its exact phase,
+        not universal acceptance criteria on all deliveries
+      review_output:
+        document_type: unit-review-result
+        schema_version: 1
+        schema_resource: document.unit_review_result.schema
+        codec_contract: ordessa.incremental-engineering.unit-review-result/1
+        consumer_owner: original Engineering orchestration/unit_review; Product binds
+          original recorded source
+        answer_type: original CriterionAnswer
+        complete_keys: each exact Plan CheckKey once; missing/duplicate/extra/wrong
+          keys reject
+        plan_digest: exact original Plan digest, mismatch reject
+        unknown: retain unknown through original admission, never coerce to satisfied
+        identity_and_quality: from original source/current guards and existing method
+          quality policies, never body fields
+    review_output_document:
+      schema:
+        resource: document.unit_review_result.schema
+      template:
+        resource: document.unit_review_result.template
+- id: await_source_gate
+  kind: wait
+  event: engineering.work.current_condition
+  bind:
+    quality_review_plan: event.quality_review_plan
+  next: quality_review
+  match:
+    plan: source_review_plan
+    proposal: proposal_ref
+    method: method_ref
+- id: quality_review
+  kind: operation
+  operation: engineering.reviews.request
+  inputs:
+    plan: quality_review_plan
+  outcomes:
+    completed:
+      next: await_quality_gate
+    rejected:
+      stop: revision_required
+  config:
+    standards:
+    - resource: standard.quality_review
+    - resource: standard.engineering_content
+    - resource: standard.summary_review
+    purpose: quality
+    completion: requested_not_passed
+    unit_submission_review_strategy:
+      schema_version: 1
+      policy_id: ordessa.incremental-engineering.unit-submission-review
+      policy_revision: 1
+      declaration_kind: method_strategy_not_host_capability_or_authorization
+      consumer_status: unsupported_until_original_owner_binding
+      fixed_delivery:
+        author_result_schema: document.submission.schema
+        author_result_schema_version: 2
+        submission_ref_owner: original Engineering submission owner
+        target_ref_types:
+        - pinned commit locator
+        - original RepositorySnapshotRef
+        - original ArtifactRevisionRef
+        - original SubmissionRef after submission
+        resolution: exact_revision_and_digest_never_latest
+        pending_review_is_not_pass: true
+        unit_result_is_declaration_not_source_proof: true
+        capture_all_files_tests_effects_before_submit: false
+        host_obligation: preserve fixed reference/source/Unit-result correlation;
+          no universal host truth verification
+        independent_truth_check_owner: selected independent review Unit under this
+          method
+      roles:
+        author: selected_executor_unit
+        reviewer: independent_review_unit
+        selection_authority: original host generic identity matching/constraint mechanism,
+          driven by this method policy
+        identity_constraint: original_author_unit_identity_must_differ_from_original_reviewer_unit_identity
+        self_declared_role_is_not_authentication: true
+        semantic_judge: real JEV through original provider, original quality admission
+          required
+        mechanical_checks: original reference/source integrity as applicable; no requirement
+          that host produce all verified test/output/effect facts
+        independence_scope: this method only, not hardcoded for all methods
+      review_requirements:
+        owner_expansion: original MethodBridge with trusted phase/targets
+        set: all_applicable_required_criteria_and_all_declared_claims
+        key: original CheckKey(target,criterion_id,claim_id)
+        reviewer_cannot_select_subset: true
+        empty_applicable_set: error
+        no_claim_kind_or_missing_evidence_exemption: true
+        acceptance_criteria:
+        - submission_shape
+        - submission_binding
+        - output_scope
+        - test_evidence
+        status_dispositions:
+          satisfied: pass
+          violated: block
+          insufficient: block
+          unknown: manual
+        new_na_or_quality_override_rules: false
+      rework:
+        new_delivery: new exact ArtifactRevisionRef and original SubmissionRef, retain
+          old source/submission/review facts
+        old_review_reuse: forbidden_for_changed_target_or_requirement
+        important_design_gap: return_to_DID_proposal
+        ordinary_fix: within_existing_exact_valid_scope; original owner reconciles
+          new attempt
+        unknown_external_effect: reconcile_before_retry
+      acceptance:
+        gate: all required current trusted exact-target reviews and mechanical evidence
+          satisfied
+        reported_complete_not_gate: true
+        independent_unit_identity_required: true
+        real_tests_output_scope_submission_binding_required: true
+        adoption: original exact current action authority and target CAS; review is
+          not Grant
+        missing_binding: unsupported_do_not_advance
+        truth_check_owner: independent review Unit; system records source and asserted/verified
+          status accurately
+      workflow_nodes:
+      - source_review
+      - quality_review
+      - package_review
+      - await_execution_capture
+      - record_submission
+      - await_submission
+      - acceptance_review
+      - await_acceptance_gate
+      - await_adoption_permission
+      - adopt
+      fact_provenance:
+        executor_report: asserted
+        independent_review: record what was checked, against which fixed version,
+          by which Unit, with which evidence; only actually independently checked
+          facts can be marked verified
+        unverified_test_fact: retain asserted, do not require host to manufacture
+          verified observations
+        review_result_and_verified_fact_are_distinct: true
+        references_or_role_labels_do_not_upgrade_truth: true
+      applies_when: Unit-authored delivery at an original Work step requiring the
+        declared method review; standards/requirements selected by its exact phase,
+        not universal acceptance criteria on all deliveries
+      review_output:
+        document_type: unit-review-result
+        schema_version: 1
+        schema_resource: document.unit_review_result.schema
+        codec_contract: ordessa.incremental-engineering.unit-review-result/1
+        consumer_owner: original Engineering orchestration/unit_review; Product binds
+          original recorded source
+        answer_type: original CriterionAnswer
+        complete_keys: each exact Plan CheckKey once; missing/duplicate/extra/wrong
+          keys reject
+        plan_digest: exact original Plan digest, mismatch reject
+        unknown: retain unknown through original admission, never coerce to satisfied
+        identity_and_quality: from original source/current guards and existing method
+          quality policies, never body fields
+    review_output_document:
+      schema:
+        resource: document.unit_review_result.schema
+      template:
+        resource: document.unit_review_result.template
+- id: await_quality_gate
+  kind: wait
+  event: engineering.work.current_condition
+  bind:
+    notice: event.notice
+  next: publish_notice
+  match:
+    plan: quality_review_plan
+    proposal: proposal_ref
+    summary: summary_ref
+    method: method_ref
+- id: publish_notice
+  kind: operation
+  operation: engineering.notices.publish
+  inputs:
+    notice: notice
+  outcomes:
+    completed:
+      next: await_acceptance_intent
+    rejected:
+      stop: revision_required
+  config: {}
+- id: await_acceptance_intent
+  kind: wait
+  event: engineering.work.current_condition
+  bind:
+    acceptance_intent: event.acceptance_intent
+  next: prepare_intent
+- id: prepare_intent
+  kind: operation
+  operation: engineering.approvals.prepare_intent
+  inputs:
+    intent: acceptance_intent
+  outcomes:
+    completed:
+      next: await_intent_ref
+    rejected:
+      stop: revision_required
+  config: {}
+- id: await_intent_ref
+  kind: wait
+  event: engineering.work.current_condition
+  bind:
+    intent_id: event.intent_id
+    intent_digest: event.intent_digest
+  next: request_approval
+- id: request_approval
+  kind: operation
+  operation: engineering.approvals.request
+  inputs:
+    intent_id: intent_id
+    intent_digest: intent_digest
+  outcomes:
+    completed:
+      next: await_document_acceptance
+    rejected:
+      stop: revision_required
+  config:
+    completion: pending_challenge_not_grant
+- id: await_document_acceptance
+  kind: wait
+  event: engineering.work.current_condition
+  bind:
+    document_approval_ref: event.document_approval_ref
+  next: apply_did
+  match:
+    intent_id: intent_id
+    intent_digest: intent_digest
+    proposal: proposal_ref
+    baseline: baseline_ref
+    method: method_ref
+- id: apply_did
+  kind: operation
+  operation: engineering.changes.apply
+  inputs:
+    approval_ref: document_approval_ref
+  outcomes:
+    completed:
+      next: await_applied_did
+    rejected:
+      stop: revision_required
+  config: {}
+- id: await_applied_did
+  kind: wait
+  event: engineering.work.current_condition
+  bind:
+    applied_did_ref: event.applied_did_ref
+    apply_receipt_ref: event.apply_receipt_ref
+  next: await_package_draft
+  match:
+    approval: document_approval_ref
+    proposal: proposal_ref
+    baseline: baseline_ref
+    method: method_ref
+- id: await_package_draft
+  kind: wait
+  event: engineering.work.current_condition
+  bind:
+    package_draft_ref: event.package_draft_ref
+  next: await_generate_package_permission
+  match:
+    did: applied_did_ref
+    receipt: apply_receipt_ref
+    method: method_ref
+- id: await_generate_package_permission
+  kind: wait
+  event: engineering.work.current_condition
+  bind:
+    package_record: event.package_record
+  next: freeze_package
+  match:
+    draft: package_draft_ref
+    method: method_ref
+- id: freeze_package
+  kind: operation
+  operation: engineering.packages.freeze
+  inputs:
+    record: package_record
+  outcomes:
+    completed:
+      next: await_frozen_package
+    rejected:
+      stop: revision_required
+- id: await_frozen_package
+  kind: wait
+  event: engineering.work.current_condition
+  bind:
+    package_ref: event.package_ref
+    package_review_plan: event.package_review_plan
+  next: package_review
+- id: package_review
+  kind: operation
+  operation: engineering.reviews.request
+  inputs:
+    plan: package_review_plan
+  outcomes:
+    completed:
+      next: await_package_gate
+    rejected:
+      stop: revision_required
+  config:
+    standards:
+    - resource: standard.quality_review
+    - resource: standard.engineering_content
+    purpose: quality
+    completion: requested_not_passed
+    unit_submission_review_strategy:
+      schema_version: 1
+      policy_id: ordessa.incremental-engineering.unit-submission-review
+      policy_revision: 1
+      declaration_kind: method_strategy_not_host_capability_or_authorization
+      consumer_status: unsupported_until_original_owner_binding
+      fixed_delivery:
+        author_result_schema: document.submission.schema
+        author_result_schema_version: 2
+        submission_ref_owner: original Engineering submission owner
+        target_ref_types:
+        - pinned commit locator
+        - original RepositorySnapshotRef
+        - original ArtifactRevisionRef
+        - original SubmissionRef after submission
+        resolution: exact_revision_and_digest_never_latest
+        pending_review_is_not_pass: true
+        unit_result_is_declaration_not_source_proof: true
+        capture_all_files_tests_effects_before_submit: false
+        host_obligation: preserve fixed reference/source/Unit-result correlation;
+          no universal host truth verification
+        independent_truth_check_owner: selected independent review Unit under this
+          method
+      roles:
+        author: selected_executor_unit
+        reviewer: independent_review_unit
+        selection_authority: original host generic identity matching/constraint mechanism,
+          driven by this method policy
+        identity_constraint: original_author_unit_identity_must_differ_from_original_reviewer_unit_identity
+        self_declared_role_is_not_authentication: true
+        semantic_judge: real JEV through original provider, original quality admission
+          required
+        mechanical_checks: original reference/source integrity as applicable; no requirement
+          that host produce all verified test/output/effect facts
+        independence_scope: this method only, not hardcoded for all methods
+      review_requirements:
+        owner_expansion: original MethodBridge with trusted phase/targets
+        set: all_applicable_required_criteria_and_all_declared_claims
+        key: original CheckKey(target,criterion_id,claim_id)
+        reviewer_cannot_select_subset: true
+        empty_applicable_set: error
+        no_claim_kind_or_missing_evidence_exemption: true
+        acceptance_criteria:
+        - submission_shape
+        - submission_binding
+        - output_scope
+        - test_evidence
+        status_dispositions:
+          satisfied: pass
+          violated: block
+          insufficient: block
+          unknown: manual
+        new_na_or_quality_override_rules: false
+      rework:
+        new_delivery: new exact ArtifactRevisionRef and original SubmissionRef, retain
+          old source/submission/review facts
+        old_review_reuse: forbidden_for_changed_target_or_requirement
+        important_design_gap: return_to_DID_proposal
+        ordinary_fix: within_existing_exact_valid_scope; original owner reconciles
+          new attempt
+        unknown_external_effect: reconcile_before_retry
+      acceptance:
+        gate: all required current trusted exact-target reviews and mechanical evidence
+          satisfied
+        reported_complete_not_gate: true
+        independent_unit_identity_required: true
+        real_tests_output_scope_submission_binding_required: true
+        adoption: original exact current action authority and target CAS; review is
+          not Grant
+        missing_binding: unsupported_do_not_advance
+        truth_check_owner: independent review Unit; system records source and asserted/verified
+          status accurately
+      workflow_nodes:
+      - source_review
+      - quality_review
+      - package_review
+      - await_execution_capture
+      - record_submission
+      - await_submission
+      - acceptance_review
+      - await_acceptance_gate
+      - await_adoption_permission
+      - adopt
+      fact_provenance:
+        executor_report: asserted
+        independent_review: record what was checked, against which fixed version,
+          by which Unit, with which evidence; only actually independently checked
+          facts can be marked verified
+        unverified_test_fact: retain asserted, do not require host to manufacture
+          verified observations
+        review_result_and_verified_fact_are_distinct: true
+        references_or_role_labels_do_not_upgrade_truth: true
+      applies_when: Unit-authored delivery at an original Work step requiring the
+        declared method review; standards/requirements selected by its exact phase,
+        not universal acceptance criteria on all deliveries
+      review_output:
+        document_type: unit-review-result
+        schema_version: 1
+        schema_resource: document.unit_review_result.schema
+        codec_contract: ordessa.incremental-engineering.unit-review-result/1
+        consumer_owner: original Engineering orchestration/unit_review; Product binds
+          original recorded source
+        answer_type: original CriterionAnswer
+        complete_keys: each exact Plan CheckKey once; missing/duplicate/extra/wrong
+          keys reject
+        plan_digest: exact original Plan digest, mismatch reject
+        unknown: retain unknown through original admission, never coerce to satisfied
+        identity_and_quality: from original source/current guards and existing method
+          quality policies, never body fields
+    review_output_document:
+      schema:
+        resource: document.unit_review_result.schema
+      template:
+        resource: document.unit_review_result.template
+- id: await_package_gate
+  kind: wait
+  event: engineering.work.current_condition
+  bind: {}
+  next: await_implementation_permission
+  match:
+    plan: package_review_plan
+    package: package_ref
+    method: method_ref
+- id: await_implementation_permission
+  kind: wait
+  event: engineering.work.current_condition
+  bind:
+    dispatch_input: event.dispatch_input
+  next: dispatch
+  match:
+    package: package_ref
+    method: method_ref
+- id: dispatch
+  kind: operation
+  operation: engineering.executions.dispatch
+  inputs:
+    dispatch: dispatch_input
+  outcomes:
+    completed:
+      next: await_execution_capture
+    failed:
+      next: await_execution_capture
+    unknown:
+      stop: unknown
+  config:
+    package_slot: package_ref
+- id: await_execution_capture
+  kind: wait
+  event: engineering.work.current_condition
+  bind:
+    submission_record: event.submission_record
+  next: record_submission
+  match:
+    package: package_ref
+    method: method_ref
+- id: record_submission
+  kind: operation
+  operation: engineering.submissions.record_report
+  inputs:
+    record: submission_record
+  outcomes:
+    completed:
+      next: await_submission
+    rejected:
+      stop: revision_required
+  config:
+    report_mode_boundary:
+      method_content_schema: document.submission.schema
+      method_content_required: true
+      output_refs:
+        allowed_kind: artifact_revision
+        required: true
+      empty_fields:
+      - resulting_snapshots
+      - file_changes
+      - commit_refs
+      - test_evidence
+      - effect_observations
+      - baseline_snapshots
+      - source_refs
+      coverage:
+        purpose: map_report_claims_to_output_artifact_refs_only
+        file_change_ids: []
+        evidence_refs: []
+      completed_semantics:
+        workflow_state: submitted
+        review_status: pending_review
+        accepted: false
+    unit_submission_review_strategy:
+      schema_version: 1
+      policy_id: ordessa.incremental-engineering.unit-submission-review
+      policy_revision: 1
+      declaration_kind: method_strategy_not_host_capability_or_authorization
+      consumer_status: unsupported_until_original_owner_binding
+      fixed_delivery:
+        author_result_schema: document.submission.schema
+        author_result_schema_version: 2
+        submission_ref_owner: original Engineering submission owner
+        target_ref_types:
+        - pinned commit locator
+        - original RepositorySnapshotRef
+        - original ArtifactRevisionRef
+        - original SubmissionRef after submission
+        resolution: exact_revision_and_digest_never_latest
+        pending_review_is_not_pass: true
+        unit_result_is_declaration_not_source_proof: true
+        capture_all_files_tests_effects_before_submit: false
+        host_obligation: preserve fixed reference/source/Unit-result correlation;
+          no universal host truth verification
+        independent_truth_check_owner: selected independent review Unit under this
+          method
+      roles:
+        author: selected_executor_unit
+        reviewer: independent_review_unit
+        selection_authority: original host generic identity matching/constraint mechanism,
+          driven by this method policy
+        identity_constraint: original_author_unit_identity_must_differ_from_original_reviewer_unit_identity
+        self_declared_role_is_not_authentication: true
+        semantic_judge: real JEV through original provider, original quality admission
+          required
+        mechanical_checks: original reference/source integrity as applicable; no requirement
+          that host produce all verified test/output/effect facts
+        independence_scope: this method only, not hardcoded for all methods
+      review_requirements:
+        owner_expansion: original MethodBridge with trusted phase/targets
+        set: all_applicable_required_criteria_and_all_declared_claims
+        key: original CheckKey(target,criterion_id,claim_id)
+        reviewer_cannot_select_subset: true
+        empty_applicable_set: error
+        no_claim_kind_or_missing_evidence_exemption: true
+        acceptance_criteria:
+        - submission_shape
+        - submission_binding
+        - output_scope
+        - test_evidence
+        status_dispositions:
+          satisfied: pass
+          violated: block
+          insufficient: block
+          unknown: manual
+        new_na_or_quality_override_rules: false
+      rework:
+        new_delivery: new exact ArtifactRevisionRef and original SubmissionRef, retain
+          old source/submission/review facts
+        old_review_reuse: forbidden_for_changed_target_or_requirement
+        important_design_gap: return_to_DID_proposal
+        ordinary_fix: within_existing_exact_valid_scope; original owner reconciles
+          new attempt
+        unknown_external_effect: reconcile_before_retry
+      acceptance:
+        gate: all required current trusted exact-target reviews and mechanical evidence
+          satisfied
+        reported_complete_not_gate: true
+        independent_unit_identity_required: true
+        real_tests_output_scope_submission_binding_required: true
+        adoption: original exact current action authority and target CAS; review is
+          not Grant
+        missing_binding: unsupported_do_not_advance
+        truth_check_owner: independent review Unit; system records source and asserted/verified
+          status accurately
+      workflow_nodes:
+      - source_review
+      - quality_review
+      - package_review
+      - await_execution_capture
+      - record_submission
+      - await_submission
+      - acceptance_review
+      - await_acceptance_gate
+      - await_adoption_permission
+      - adopt
+      fact_provenance:
+        executor_report: asserted
+        independent_review: record what was checked, against which fixed version,
+          by which Unit, with which evidence; only actually independently checked
+          facts can be marked verified
+        unverified_test_fact: retain asserted, do not require host to manufacture
+          verified observations
+        review_result_and_verified_fact_are_distinct: true
+        references_or_role_labels_do_not_upgrade_truth: true
+      applies_when: Unit-authored delivery at an original Work step requiring the
+        declared method review; standards/requirements selected by its exact phase,
+        not universal acceptance criteria on all deliveries
+      review_output:
+        document_type: unit-review-result
+        schema_version: 1
+        schema_resource: document.unit_review_result.schema
+        codec_contract: ordessa.incremental-engineering.unit-review-result/1
+        consumer_owner: original Engineering orchestration/unit_review; Product binds
+          original recorded source
+        answer_type: original CriterionAnswer
+        complete_keys: each exact Plan CheckKey once; missing/duplicate/extra/wrong
+          keys reject
+        plan_digest: exact original Plan digest, mismatch reject
+        unknown: retain unknown through original admission, never coerce to satisfied
+        identity_and_quality: from original source/current guards and existing method
+          quality policies, never body fields
+    submission_ingress: generic_unit_result_pending_review_contract_pending_not_heavy_implementation_capture_admission
+    review_output_document:
+      schema:
+        resource: document.unit_review_result.schema
+      template:
+        resource: document.unit_review_result.template
+- id: await_submission
+  kind: wait
+  event: engineering.work.current_condition
+  bind:
+    submission_ref: event.submission_ref
+    acceptance_review_plan: event.acceptance_review_plan
+  next: acceptance_review
+- id: acceptance_review
+  kind: operation
+  operation: engineering.reviews.request
+  inputs:
+    plan: acceptance_review_plan
+  outcomes:
+    completed:
+      next: await_acceptance_response
+    rejected:
+      stop: revision_required
+  config:
+    standards:
+    - resource: standard.acceptance
+    purpose: acceptance
+    completion: requested_not_passed
+    unit_submission_review_strategy:
+      schema_version: 1
+      policy_id: ordessa.incremental-engineering.unit-submission-review
+      policy_revision: 1
+      declaration_kind: method_strategy_not_host_capability_or_authorization
+      consumer_status: unsupported_until_original_owner_binding
+      fixed_delivery:
+        author_result_schema: document.submission.schema
+        author_result_schema_version: 2
+        submission_ref_owner: original Engineering submission owner
+        target_ref_types:
+        - pinned commit locator
+        - original RepositorySnapshotRef
+        - original ArtifactRevisionRef
+        - original SubmissionRef after submission
+        resolution: exact_revision_and_digest_never_latest
+        pending_review_is_not_pass: true
+        unit_result_is_declaration_not_source_proof: true
+        capture_all_files_tests_effects_before_submit: false
+        host_obligation: preserve fixed reference/source/Unit-result correlation;
+          no universal host truth verification
+        independent_truth_check_owner: selected independent review Unit under this
+          method
+      roles:
+        author: selected_executor_unit
+        reviewer: independent_review_unit
+        selection_authority: original host generic identity matching/constraint mechanism,
+          driven by this method policy
+        identity_constraint: original_author_unit_identity_must_differ_from_original_reviewer_unit_identity
+        self_declared_role_is_not_authentication: true
+        semantic_judge: real JEV through original provider, original quality admission
+          required
+        mechanical_checks: original reference/source integrity as applicable; no requirement
+          that host produce all verified test/output/effect facts
+        independence_scope: this method only, not hardcoded for all methods
+      review_requirements:
+        owner_expansion: original MethodBridge with trusted phase/targets
+        set: all_applicable_required_criteria_and_all_declared_claims
+        key: original CheckKey(target,criterion_id,claim_id)
+        reviewer_cannot_select_subset: true
+        empty_applicable_set: error
+        no_claim_kind_or_missing_evidence_exemption: true
+        acceptance_criteria:
+        - submission_shape
+        - submission_binding
+        - output_scope
+        - test_evidence
+        status_dispositions:
+          satisfied: pass
+          violated: block
+          insufficient: block
+          unknown: manual
+        new_na_or_quality_override_rules: false
+      rework:
+        new_delivery: new exact ArtifactRevisionRef and original SubmissionRef, retain
+          old source/submission/review facts
+        old_review_reuse: forbidden_for_changed_target_or_requirement
+        important_design_gap: return_to_DID_proposal
+        ordinary_fix: within_existing_exact_valid_scope; original owner reconciles
+          new attempt
+        unknown_external_effect: reconcile_before_retry
+      acceptance:
+        gate: all required current trusted exact-target reviews and mechanical evidence
+          satisfied
+        reported_complete_not_gate: true
+        independent_unit_identity_required: true
+        real_tests_output_scope_submission_binding_required: true
+        adoption: original exact current action authority and target CAS; review is
+          not Grant
+        missing_binding: unsupported_do_not_advance
+        truth_check_owner: independent review Unit; system records source and asserted/verified
+          status accurately
+      workflow_nodes:
+      - source_review
+      - quality_review
+      - package_review
+      - await_execution_capture
+      - record_submission
+      - await_submission
+      - acceptance_review
+      - await_acceptance_gate
+      - await_adoption_permission
+      - adopt
+      fact_provenance:
+        executor_report: asserted
+        independent_review: record what was checked, against which fixed version,
+          by which Unit, with which evidence; only actually independently checked
+          facts can be marked verified
+        unverified_test_fact: retain asserted, do not require host to manufacture
+          verified observations
+        review_result_and_verified_fact_are_distinct: true
+        references_or_role_labels_do_not_upgrade_truth: true
+      applies_when: Unit-authored delivery at an original Work step requiring the
+        declared method review; standards/requirements selected by its exact phase,
+        not universal acceptance criteria on all deliveries
+      review_output:
+        document_type: unit-review-result
+        schema_version: 1
+        schema_resource: document.unit_review_result.schema
+        codec_contract: ordessa.incremental-engineering.unit-review-result/1
+        consumer_owner: original Engineering orchestration/unit_review; Product binds
+          original recorded source
+        answer_type: original CriterionAnswer
+        complete_keys: each exact Plan CheckKey once; missing/duplicate/extra/wrong
+          keys reject
+        plan_digest: exact original Plan digest, mismatch reject
+        unknown: retain unknown through original admission, never coerce to satisfied
+        identity_and_quality: from original source/current guards and existing method
+          quality policies, never body fields
+    review_output_document:
+      schema:
+        resource: document.unit_review_result.schema
+      template:
+        resource: document.unit_review_result.template
+- id: await_acceptance_response
+  kind: wait
+  event: engineering.work.current_condition
+  bind:
+    acceptance_review_id: event.review_id
+    acceptance_request_version: event.request_version
+    acceptance_review_fence: event.fence
+    acceptance_raw_response_utf8: event.raw_response_utf8
+  next: record_acceptance_review
+  match:
+    plan: acceptance_review_plan
+    submission: submission_ref
+    method: method_ref
+- id: record_acceptance_review
+  kind: operation
+  operation: engineering.reviews.record
+  inputs:
+    review_id: acceptance_review_id
+    request_version: acceptance_request_version
+    fence: acceptance_review_fence
+    raw_response_utf8: acceptance_raw_response_utf8
+  outcomes:
+    completed:
+      next: await_acceptance_gate
+    rejected:
+      stop: revision_required
+  result_routing:
+    path: /verdict
+    outcomes:
+      pass:
+        next: await_acceptance_gate
+      fail:
+        next: await_rework_review_plan
+      indeterminate:
+        stop: unknown
+- id: await_acceptance_gate
+  kind: wait
+  event: engineering.work.current_condition
+  bind: {}
+  next: await_adoption_permission
+  match:
+    plan: acceptance_review_plan
+    submission: submission_ref
+    method: method_ref
+- id: await_rework_review_plan
+  kind: wait
+  event: engineering.work.current_condition
+  bind:
+    acceptance_review_ref: event.review_ref
+    acceptance_record_plan_digest: event.plan_digest
+    acceptance_record_request_version: event.request_version
+    acceptance_record_fence: event.fence
+    correction_plan_ref: event.correction_plan_ref
+    correction_plan_content: event.correction_plan_content
+    rework_review_plan: event.review_plan
+  next: rework_review
+  match:
+    submission: submission_ref
+    acceptance_request_id: acceptance_review_id
+    acceptance_review: acceptance_review_ref
+    acceptance_plan_digest: acceptance_record_plan_digest
+    acceptance_request_version: acceptance_record_request_version
+    acceptance_fence: acceptance_record_fence
+    correction_plan: correction_plan_ref
+    did: applied_did_ref
+    package: package_ref
+    method: method_ref
+- id: rework_review
+  kind: operation
+  operation: engineering.reviews.request
+  inputs:
+    plan: rework_review_plan
+  outcomes:
+    completed:
+      next: await_rework_review_response
+    rejected:
+      stop: revision_required
+  config:
+    standards:
+    - resource: standard.rework_scope
+    purpose: quality
+    completion: requested_not_passed
+- id: await_rework_review_response
+  kind: wait
+  event: engineering.work.current_condition
+  bind:
+    rework_review_id: event.review_id
+    rework_request_version: event.request_version
+    rework_review_fence: event.fence
+    rework_raw_response_utf8: event.raw_response_utf8
+  next: record_rework_review
+  match:
+    plan: rework_review_plan
+    correction_plan: correction_plan_ref
+    submission: submission_ref
+    acceptance_review: acceptance_review_ref
+    method: method_ref
+- id: record_rework_review
+  kind: operation
+  operation: engineering.reviews.record
+  inputs:
+    review_id: rework_review_id
+    request_version: rework_request_version
+    fence: rework_review_fence
+    raw_response_utf8: rework_raw_response_utf8
+  outcomes:
+    completed:
+      next: await_implementation_permission
+    rejected:
+      stop: revision_required
+  result_routing:
+    path: /verdict
+    outcomes:
+      pass:
+        next: await_implementation_permission
+      fail:
+        stop: revision_required
+      indeterminate:
+        stop: unknown
+- id: await_adoption_permission
+  kind: wait
+  event: engineering.work.current_condition
+  bind:
+    adoption_approval_ref: event.approval_ref
+    adoption_control_version: event.expected_control_version
+    adoption_targets: event.targets
+  next: adopt
+  match:
+    submission: submission_ref
+    method: method_ref
+- id: adopt
+  kind: operation
+  operation: engineering.acceptance.adopt
+  inputs:
+    submission_ref: submission_ref
+    approval_ref: adoption_approval_ref
+    expected_control_version: adoption_control_version
+    targets: adoption_targets
+  outcomes:
+    completed:
+      next: await_adoption_receipt
+    rejected:
+      stop: revision_required
+  config:
+    availability: unsupported_contract_not_bound
+    provisional_inputs_outcomes: true
+- id: await_adoption_receipt
+  kind: wait
+  event: engineering.work.current_condition
+  bind:
+    adoption_ref: event.acceptance_receipt_ref
+  next: await_feedback
+  match:
+    submission: submission_ref
+    method: method_ref
+- id: await_feedback
+  kind: wait
+  event: engineering.work.current_condition
+  bind:
+    feedback_ref: event.feedback_ref
+  next: accepted
+  match:
+    adoption: adoption_ref
+    submission: submission_ref
+- id: accepted
+  kind: stop
+  outcome: accepted
+stop_outcomes:
+- accepted
+- revision_required
+- rejected
+- unknown
+- cancelled
+outputs:
+  submission_ref: submission_ref
+  adoption_ref: adoption_ref
+loops:
+- loop_id: implementation-rework
+  from_step: record_rework_review
+  to_step: await_implementation_permission
+  max_rounds: 2
+  on_exhausted: revision_required
+wait_kinds:
+- owner_reconciliation
+cancellation: authenticated_request_then_reconcile_external_effects
+revision_restart: explicit_new_epoch_with_exact_new_proposal
+automatic_side_effect_retry: forbidden_when_outcome_unknown

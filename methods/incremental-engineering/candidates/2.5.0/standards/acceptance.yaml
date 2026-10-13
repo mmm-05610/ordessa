@@ -1,0 +1,142 @@
+schema_version: 1
+standard_id: acceptance
+revision: 2.5.0
+purpose: acceptance
+criteria:
+- criterion_id: submission_shape
+  statement: 提交的说明应结构完整。
+  applies_to:
+  - submission
+  required_inputs:
+  - method_content
+  checks:
+  - capability_id: ordessa.schema.validate
+    interface_version: 1.0.0
+    bindings:
+      schema:
+        resource: document.submission.schema
+  policy:
+    satisfied: pass
+    violated: block
+    insufficient: block
+    unknown: manual
+- criterion_id: submission_binding
+  statement: 提交绑定固定交付引用、包/动作范围和原Unit执行attempt；报告是声明，原来源与独立审核结果准确留档。
+  applies_to:
+  - submission
+  required_inputs:
+  - submission_ref
+  - resolved_submission_graph
+  checks:
+  - capability_id: ordessa.submission.binding
+    interface_version: 1.0.0
+    bindings: {}
+  policy:
+    satisfied: pass
+    violated: block
+    insufficient: block
+    unknown: manual
+- criterion_id: output_scope
+  statement: 独立审核Unit按固定交付引用和报告检查输出范围及正确基线；系统记录来源与已核实/自报边界。
+  applies_to:
+  - submission
+  required_inputs:
+  - submission_ref
+  - fixed_delivery_refs
+  - executor_report
+  - independent_review_observations
+  checks:
+  - capability_id: ordessa.decision.evaluate
+    interface_version: 1.0.0
+    bindings:
+      question_set:
+        resource: decision.output_scope
+      question_ids:
+      - output_scope
+      nominal_answer_conversion:
+        contract_version: ordessa.nominal-choice-status/1
+        answer_kind: choice
+        option_statuses:
+          supported: satisfied
+          contradicted: violated
+          insufficient: insufficient
+        tie: unknown
+        missing_answer: unknown
+        incomplete_answer: unknown
+        truncated_input: unknown
+        unmapped_option: unknown
+      quality_admission:
+        contract_version: ordessa.review-quality-admission/1
+        activation: matching_validated_evaluation_required
+        missing_evaluation: manual
+        unresolved_model: manual
+  answer_vocabulary:
+    kind: choice
+    options:
+    - option_id: supported
+      description: 独立审核观察支持固定交付与基线符合已批准输出范围。
+    - option_id: contradicted
+      description: 独立审核观察与固定范围或基线冲突。
+    - option_id: insufficient
+      description: 冻结材料不足以确定输出范围符合。
+  policy:
+    satisfied: pass
+    violated: block
+    insufficient: block
+    unknown: manual
+- criterion_id: test_evidence
+  statement: 独立审核Unit检查全部要求的测试是否针对固定交付版本实际执行并成功；未核实事实保留执行者自报，未知/缺失不能冒充已核实或成功。
+  applies_to:
+  - submission
+  required_inputs:
+  - submission_ref
+  - fixed_delivery_refs
+  - executor_report
+  - independent_review_observations
+  - acceptance_mapping
+  checks:
+  - capability_id: ordessa.decision.evaluate
+    interface_version: 1.0.0
+    bindings:
+      question_set:
+        resource: decision.test_evidence
+      question_ids:
+      - test_evidence
+      nominal_answer_conversion:
+        contract_version: ordessa.nominal-choice-status/1
+        answer_kind: choice
+        option_statuses:
+          supported: satisfied
+          contradicted: violated
+          insufficient: insufficient
+        tie: unknown
+        missing_answer: unknown
+        incomplete_answer: unknown
+        truncated_input: unknown
+        unmapped_option: unknown
+      quality_admission:
+        contract_version: ordessa.review-quality-admission/1
+        activation: matching_validated_evaluation_required
+        missing_evaluation: manual
+        unresolved_model: manual
+  answer_vocabulary:
+    kind: choice
+    options:
+    - option_id: supported
+      description: 独立核验材料证明要求的测试针对固定交付版本实际执行并成功。
+    - option_id: contradicted
+      description: 可靠的固定版本证据表明要求的测试未通过或未执行。
+    - option_id: insufficient
+      description: 不能从冻结材料核实测试针对固定交付版本实际执行并成功。
+  policy:
+    satisfied: pass
+    violated: block
+    insufficient: block
+    unknown: manual
+reduction:
+  required_criteria: all_applicable
+  empty_applicable_set: error
+  priority:
+  - block
+  - manual
+  - pass

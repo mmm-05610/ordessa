@@ -1,0 +1,309 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ordessa:method:incremental-engineering:unit-review-result:1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "document_type": {
+      "const": "unit-review-result"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "plan_digest": {
+      "$ref": "#/$defs/digest"
+    },
+    "answers": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/answer"
+      }
+    }
+  },
+  "required": [
+    "document_type",
+    "schema_version",
+    "plan_digest",
+    "answers"
+  ],
+  "$defs": {
+    "digest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {
+          "const": "sha256"
+        },
+        "hex": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "algorithm",
+        "hex"
+      ]
+    },
+    "artifact_revision_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "artifact_revision"
+        },
+        "realm_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifact_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "required": [
+        "kind",
+        "realm_id",
+        "project_id",
+        "artifact_id",
+        "revision_id",
+        "digest"
+      ]
+    },
+    "proposal_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "proposal"
+        },
+        "realm_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "change_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "proposal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "required": [
+        "kind",
+        "realm_id",
+        "project_id",
+        "change_id",
+        "proposal_id",
+        "digest"
+      ]
+    },
+    "submission_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "submission"
+        },
+        "realm_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "submission_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "required": [
+        "kind",
+        "realm_id",
+        "project_id",
+        "submission_id",
+        "digest"
+      ]
+    },
+    "repository_snapshot_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "repository_snapshot"
+        },
+        "realm_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repository_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "vcs": {
+          "enum": [
+            "git",
+            "none"
+          ]
+        },
+        "commit_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tree_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "dirty_overlay_digest": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "realm_id",
+        "project_id",
+        "repository_id",
+        "vcs",
+        "commit_id",
+        "tree_digest",
+        "dirty_overlay_digest"
+      ]
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "enum": [
+            "primary",
+            "base",
+            "proposed",
+            "output",
+            "support"
+          ]
+        },
+        "ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/artifact_revision_ref"
+            },
+            {
+              "$ref": "#/$defs/proposal_ref"
+            },
+            {
+              "$ref": "#/$defs/submission_ref"
+            },
+            {
+              "$ref": "#/$defs/repository_snapshot_ref"
+            }
+          ]
+        }
+      },
+      "required": [
+        "role",
+        "ref"
+      ]
+    },
+    "check_key": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "$ref": "#/$defs/target"
+        },
+        "criterion_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "claim_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        }
+      },
+      "required": [
+        "target",
+        "criterion_id",
+        "claim_id"
+      ]
+    },
+    "answer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "check_key": {
+          "$ref": "#/$defs/check_key"
+        },
+        "status": {
+          "enum": [
+            "satisfied",
+            "violated",
+            "insufficient",
+            "unknown"
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/artifact_revision_ref"
+          }
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "check_key",
+        "status",
+        "evidence_refs",
+        "rationale"
+      ]
+    }
+  },
+  "description": "Method Unit output, not host identity/Grant/ReviewRecord/evaluation DTO. Schema cannot prove complete CheckKey set or truthful evidence; original decoder/admission checks exact Plan and source."
+}

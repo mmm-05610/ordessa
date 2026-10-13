@@ -1,0 +1,28 @@
+schema_version: 1
+question_set_id: test-evidence
+question_set_version: 1.0.0
+input_mapping_version: 1.0.0
+input_contract: SubmissionTestEvidenceInput.v1
+required_input_slots:
+- submission_ref
+- fixed_delivery_refs
+- executor_report
+- independent_review_observations
+- acceptance_mapping
+iteration: once
+questions:
+- question_id: test_evidence
+  question_revision: 1.0.0
+  kind: choice
+  criterion_refs:
+  - resource: standard.acceptance
+    criterion_id: test_evidence
+  instructions: 独立判断每项要求的测试是否针对固定交付版本实际执行并成功。执行者的测试声明不等于经核实的结果；未知、缺失、版本不匹配或不足以核验的材料不能回答supported。
+  answer_definition:
+    from_criterion:
+      resource: standard.acceptance
+      criterion_id: test_evidence
+    field: answer_vocabulary
+result_contract: DecisionResult.v1
+truncation_policy: reject
+missing_required_evidence: do_not_invoke

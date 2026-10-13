@@ -1,0 +1,1 @@
+    {"id": "claude-code", "registry_version": "0.81.2", "launch": {"source": "agentbox", "profile_id": "claude-code"}, "aliases": [{"id": "claude", "launch": {"source": "upstream", "profile_id": "claude"}}]}

@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-execution-agents"
+version = "0.1.0"
+description = "Sole Agent/Profile mechanism with specific catalog and owner ports"
+requires-python = ">=3.10"
+dependencies = ["ordessa-execution-api==0.1.0", "ordessa-infrastructure==0.1.0", "ordessa-environments==0.1.0", "agent-client-protocol==0.12.1"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "pytest-asyncio"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.setuptools.package-data]
+ordessa_execution_agents = ["harness/definitions/ACP.md", "harness/py.typed", "harness/providers/resolution/_deployment/*.mjs", "harness/providers/resolution/_deployment/native-artifact-policy.mjs", "harness/protocols/acp.mjs", "harness/transport/executable_lookup.mjs", "harness/transport/launch_descriptor.mjs", "harness/transport/launch_resolution.mjs", "harness/transport/profile_claims.mjs", "harness/transport/profile_vocabulary.mjs", "harness/transport/vendor/harness_remote/LICENSE", "harness/transport/vendor/harness_remote/PATCHES.md", "harness/transport/vendor/harness_remote/SOURCE.json", "harness/transport/vendor/harness_remote/bridge/src/acp-client.js", "harness/transport/vendor/harness_remote/bridge/src/backward-line-scan.js", "harness/configuration/acp/bridge.mjs", "harness/configuration/acp/digest.mjs", "harness/configuration/acp/endpoint.mjs", "harness/configuration/acp/operation.mjs", "harness/configuration/acp/private_scope.mjs", "harness/configuration/acp/reader.mjs", "harness/configuration/acp/restoration.mjs", "profiles/README.md", "profiles/definitions/README.md", "profiles/management/README.md"]

@@ -1,0 +1,49 @@
+# Codex production configuration for the managed sidecar chain (non-secret).
+#
+# Provenance: the official DeepSeek `codex-deepseek-setup.sh` 1.3.0 writes this
+# shape (model/model_provider/preferred_auth_method/forced_login_method/
+# model_reasoning_effort/web_search/model_catalog_json and the one
+# `[model_providers.deepseek]` table).  The file is projected read-only into the
+# isolated guest home, so every path below names the guest location.
+#
+# Two fields are AgentBox's own, each with first-hand evidence recorded in the
+# Codex packaging report (scripts/server-round1/codex-production-chain-gate.py
+# reproduces both):
+#   * `env_key` names the environment variable the credential is injected as.
+#     It must be the same name the ACP adapter's `api-key` authentication reads
+#     (`codex-acp` 1.1.14 reads CODEX_API_KEY/OPENAI_API_KEY only), because the
+#     reviewed upstream bridge always performs that authentication step.
+#   * `cli_auth_credentials_store = "ephemeral"` kept that authentication from
+#     persisting the credential into `$CODEX_HOME/auth.json` in the verified
+#     runs: the credential is read from the environment for this process only.
+#     This proves only that auth.json is absent; other native-state paths are
+#     not yet proven safe and have an observed counterexample (a gate run whose
+#     credential scan hit a fake token inside the native state - fail-closed).
+model = "deepseek-flash"
+model_provider = "deepseek"
+preferred_auth_method = "apikey"
+forced_login_method = "api"
+model_reasoning_effort = "high"
+web_search = "disabled"
+model_catalog_json = "/runtime/home/.codex/models.json"
+cli_auth_credentials_store = "ephemeral"
+
+# AgentBox additions beyond the official shape (evidence: state-error-boundary
+# report). The two flags are the official Codex feature family
+# (`features.code_mode`, `features.multi_agent`, ...); both default to on and are
+# what made this deployment's state churn unobservable:
+#   * `plugins` materializes the bundled plugin/skill corpus into
+#     `$CODEX_HOME/.tmp/plugins/` (measured peak 5,529 files; deterministic
+#     `VIEW_FILE_LIMIT` when it overlapped a capture).
+#   * `shell_snapshot` writes `$CODEX_HOME/shell_snapshots/*.sh` - the file the
+#     injected credential environment variable was first-hand found in.
+# Turning both off removes the churn and the credential path at the source; the
+# attempt-ephemeral tmpfs shadow in the deployment stays as defense in depth.
+[features]
+plugins = false
+shell_snapshot = false
+[model_providers.deepseek]
+name = "deepseek"
+base_url = "https://api.deepseek.com/"
+wire_api = "responses"
+env_key = "CODEX_API_KEY"

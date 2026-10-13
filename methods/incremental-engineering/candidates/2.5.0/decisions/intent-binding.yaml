@@ -1,0 +1,26 @@
+schema_version: 1
+question_set_id: intent-binding
+question_set_version: 1.0.0
+input_mapping_version: 1.0.0
+input_contract: ProposalIntentBindingInput.v1
+required_input_slots:
+- proposal_ref
+- implementation_intent
+- method_content
+iteration: once
+questions:
+- question_id: intent_binding
+  question_revision: 1.0.0
+  kind: choice
+  criterion_refs:
+  - resource: standard.quality_review
+    criterion_id: intent_binding
+  instructions: 独立判断冻结文档是否在语义上符合精确Proposal/ImplementationIntentSpec的范围与验收映射。精确引用相等或局部结构有效不是语义一致的充分依据；上下文缺失、版本不明或证据不足时不能回答supported。
+  answer_definition:
+    from_criterion:
+      resource: standard.quality_review
+      criterion_id: intent_binding
+    field: answer_vocabulary
+result_contract: DecisionResult.v1
+truncation_policy: reject
+missing_required_evidence: do_not_invoke

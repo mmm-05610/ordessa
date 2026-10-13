@@ -1,0 +1,58 @@
+"""Bounded initial model validation; provider supplies every native dialect fact."""
+from collections.abc import Mapping
+from urllib.parse import urlsplit
+
+def build_initial_model_params(payload, operation_id, *, protocol, provider_id, api, catalogue=False, managed_account=False, managed_provider=None, capabilities=False, api_key_header=None, credential=None, models=None):
+    """Never retain this secret-bearing return value as evidence."""
+    declared_provider = payload.get("provider")
+    provider = declared_provider if catalogue else provider_id
+    if (not isinstance(payload, Mapping) or payload.get('protocol') != protocol
+            or payload.get('brandFields') not in (None, {}) or payload.get('requestParams') not in (None, {})):
+        raise ValueError('Unsupported initial model dialect')
+    if payload.get('authentication') == 'managed-account':
+        model = payload.get('model')
+        if (not managed_account or payload.get('provider') != managed_provider
+                or payload.get('credentialRef') is not None or credential is not None
+                or payload.get('endpoint') is not None or type(model) is not str or not model
+                or model.strip() != model or len(model) > 4096 or any(ord(c) < 32 or ord(c) == 127 for c in model)):
+            raise ValueError('Unsupported managed account initial model')
+        return {'operationId': operation_id, 'model': model, 'provider': {
+            'providerId': managed_provider, 'authentication': 'managed-account'}}
+    if payload.get('authentication') is not None:
+        raise ValueError('Unsupported initial authentication mode')
+    for key in ('model', 'provider', 'endpoint'):
+        value = payload.get(key)
+        if (type(value) is not str or not value or value.strip() != value or len(value) > 4096
+                or any(ord(c) < 32 or ord(c) == 127 for c in value)):
+            raise ValueError('Invalid bounded initial model')
+    endpoint = urlsplit(payload['endpoint'])
+    if endpoint.scheme not in ('https', 'http') or not endpoint.hostname or endpoint.username or endpoint.password or endpoint.query or endpoint.fragment:
+        raise ValueError('Unsafe initial endpoint')
+    if (payload.get('credentialRef') is None) != (credential is None):
+        raise ValueError('Initial credential binding unavailable')
+    native = {'providerId': provider, 'apiType': api, 'baseUrl': payload['endpoint']}
+    if catalogue:
+        if ('/' in provider or not isinstance(models, list) or not 1 <= len(models) <= 256
+                or any(type(m) is not str or not m or m != m.strip() or len(m) > 4096
+                       or any(ord(c) < 32 or ord(c) == 127 for c in m) for m in models)
+                or len(set(models)) != len(models) or payload['model'] not in models):
+            raise ValueError('Invalid bounded Pi model catalogue')
+    if credential is not None:
+        if type(credential) is not str or not credential or len(credential) > 8000 or any(ord(c) < 32 or ord(c) == 127 for c in credential):
+            raise ValueError('Invalid initial credential')
+        if catalogue:
+            native['apiKey'] = credential
+        else:
+            native['headers'] = {'authorization': 'Bearer ' + credential}
+            if api_key_header is not None:
+                # Anthropic's standard API-key header is required by some
+                # compatible endpoints. Keep bearer compatibility too; both
+                # are private launch facts and never configuration evidence.
+                native['headers'][api_key_header] = credential
+    if catalogue:
+        return {'operationId': operation_id, 'model': payload['model'], 'provider': native, 'models': list(models)}
+    result = {'operationId': operation_id, 'model': payload['model'], 'provider': native}
+    if capabilities and 'modelCapabilities' in payload:
+        from ordessa_execution_agents.harness.configuration.compilation.model_choice import choice_payload_schema
+        result['modelCapabilities'] = choice_payload_schema().validate(dict(payload))['modelCapabilities']
+    return result

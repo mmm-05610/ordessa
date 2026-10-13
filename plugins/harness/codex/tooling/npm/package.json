@@ -1,0 +1,18 @@
+{
+  "name": "agent-box-harness-runtime-codex",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline-locked codex ACP adapter npm root for the AgentBox Harness plugin (packaging chain only; the run chain never reads this directory). Direct pins are unchanged from the reviewed shared lock this root was split out of.",
+  "license": "MIT",
+  "overrides": {
+    "@agentclientprotocol/codex-acp": "1.1.14",
+    "@agentclientprotocol/sdk": "1.3.0"
+  },
+  "dependencies": {
+    "@agentclientprotocol/codex-acp": "1.1.14"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

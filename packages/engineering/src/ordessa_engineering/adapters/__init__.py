@@ -1,0 +1,1 @@
+"""Engineering-owned persistence adapters."""

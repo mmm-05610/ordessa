@@ -1,0 +1,430 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ordessa:method:incremental-engineering:work-inputs:1",
+  "title": "Incremental Engineering Work Inputs",
+  "description": "Append-only method input values for one exact Work run and selected Proposal. Fields are evidence/data, never readiness, acceptance, permission, or verification facts; the original Engineering WorkConditionSource resolves selected references and checks them against same-library owners before advancing.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "document_type": {
+      "const": "work-inputs"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "proposal_ref": {
+      "$ref": "#/$defs/proposal_ref"
+    },
+    "events": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "await_proposal": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "proposal_ref": {
+              "$ref": "#/$defs/event_value"
+            },
+            "summary_ref": {
+              "$ref": "#/$defs/event_value"
+            },
+            "baseline_ref": {
+              "$ref": "#/$defs/event_value"
+            },
+            "source_review_plan": {
+              "$ref": "#/$defs/event_value"
+            },
+            "method_ref": {
+              "$ref": "#/$defs/event_value"
+            },
+            "decisions_ref": {
+              "$ref": "#/$defs/event_value"
+            },
+            "standard_profile_ref": {
+              "$ref": "#/$defs/event_value"
+            }
+          }
+        },
+        "await_source_gate": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "quality_review_plan": {
+              "$ref": "#/$defs/event_value"
+            }
+          }
+        },
+        "await_quality_gate": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "notice": {
+              "$ref": "#/$defs/event_value"
+            }
+          }
+        },
+        "await_acceptance_intent": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "acceptance_intent": {
+              "$ref": "#/$defs/event_value"
+            }
+          }
+        },
+        "await_intent_ref": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "intent_id": {
+              "$ref": "#/$defs/event_value"
+            },
+            "intent_digest": {
+              "$ref": "#/$defs/event_value"
+            }
+          }
+        },
+        "await_document_acceptance": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "document_approval_ref": {
+              "$ref": "#/$defs/event_value"
+            }
+          }
+        },
+        "await_applied_did": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "applied_did_ref": {
+              "$ref": "#/$defs/event_value"
+            },
+            "apply_receipt_ref": {
+              "$ref": "#/$defs/event_value"
+            }
+          }
+        },
+        "await_package_draft": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "package_draft_ref": {
+              "$ref": "#/$defs/event_value"
+            }
+          }
+        },
+        "await_generate_package_permission": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "package_record": {
+              "$ref": "#/$defs/event_value"
+            },
+            "package_intent_id": {
+              "$ref": "#/$defs/event_value"
+            },
+            "package_approval_ref": {
+              "$ref": "#/$defs/event_value"
+            }
+          }
+        },
+        "await_frozen_package": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "package_ref": {
+              "$ref": "#/$defs/event_value"
+            },
+            "package_review_plan": {
+              "$ref": "#/$defs/event_value"
+            }
+          }
+        },
+        "await_package_gate": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {}
+        },
+        "await_implementation_permission": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "dispatch_input": {
+              "$ref": "#/$defs/event_value"
+            }
+          }
+        },
+        "await_execution_capture": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "submission_record": {
+              "$ref": "#/$defs/event_value"
+            }
+          }
+        },
+        "await_submission": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "submission_ref": {
+              "$ref": "#/$defs/event_value"
+            },
+            "acceptance_review_plan": {
+              "$ref": "#/$defs/event_value"
+            }
+          }
+        },
+        "await_acceptance_response": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "review_id": {
+              "$ref": "#/$defs/event_value"
+            },
+            "request_version": {
+              "$ref": "#/$defs/event_value"
+            },
+            "fence": {
+              "$ref": "#/$defs/event_value"
+            },
+            "raw_response_ref": {
+              "$ref": "#/$defs/blob_ref"
+            }
+          }
+        },
+        "await_acceptance_gate": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {}
+        },
+        "await_rework_review_plan": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "review_ref": {
+              "$ref": "#/$defs/event_value"
+            },
+            "plan_digest": {
+              "$ref": "#/$defs/event_value"
+            },
+            "request_version": {
+              "$ref": "#/$defs/event_value"
+            },
+            "fence": {
+              "$ref": "#/$defs/event_value"
+            },
+            "correction_plan_ref": {
+              "$ref": "#/$defs/event_value"
+            },
+            "correction_plan_content": {
+              "$ref": "#/$defs/event_value"
+            },
+            "review_plan": {
+              "$ref": "#/$defs/event_value"
+            }
+          }
+        },
+        "await_rework_review_response": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "review_id": {
+              "$ref": "#/$defs/event_value"
+            },
+            "request_version": {
+              "$ref": "#/$defs/event_value"
+            },
+            "fence": {
+              "$ref": "#/$defs/event_value"
+            },
+            "raw_response_ref": {
+              "$ref": "#/$defs/blob_ref"
+            }
+          }
+        },
+        "await_adoption_permission": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "approval_ref": {
+              "$ref": "#/$defs/event_value"
+            },
+            "expected_control_version": {
+              "$ref": "#/$defs/event_value"
+            },
+            "intent_id": {
+              "$ref": "#/$defs/event_value"
+            },
+            "targets": {
+              "$ref": "#/$defs/event_value"
+            }
+          }
+        },
+        "await_adoption_receipt": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "acceptance_receipt_ref": {
+              "$ref": "#/$defs/event_value"
+            }
+          }
+        },
+        "await_feedback": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "feedback_ref": {
+              "$ref": "#/$defs/event_value"
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "document_type",
+    "schema_version",
+    "run_id",
+    "proposal_ref",
+    "events"
+  ],
+  "$defs": {
+    "event_value": {
+      "oneOf": [
+        {
+          "type": "object",
+          "propertyNames": {
+            "not": {
+              "enum": [
+                "ready",
+                "accepted",
+                "permitted",
+                "verified",
+                "is_ready",
+                "is_accepted",
+                "is_permitted",
+                "is_verified",
+                "approved",
+                "is_approved",
+                "authorized",
+                "is_authorized",
+                "permission_granted",
+                "approval_granted"
+              ]
+            }
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/event_value"
+          }
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/event_value"
+          }
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "digest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {
+          "const": "sha256"
+        },
+        "hex": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "algorithm",
+        "hex"
+      ]
+    },
+    "proposal_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "proposal"
+        },
+        "realm_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "change_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "proposal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "required": [
+        "kind",
+        "realm_id",
+        "project_id",
+        "change_id",
+        "proposal_id",
+        "digest"
+      ]
+    },
+    "blob_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "byte_length": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16777216
+        },
+        "media_type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "storage_object_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "digest",
+        "byte_length",
+        "media_type",
+        "storage_object_id"
+      ]
+    }
+  }
+}

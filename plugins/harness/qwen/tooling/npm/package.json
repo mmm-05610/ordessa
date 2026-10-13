@@ -1,0 +1,17 @@
+{
+  "name": "agent-box-harness-runtime-qwen",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline-locked runtime closure for the Qwen Code ACP entry (Work Order 43). Separate root per the family convention; qwen-code is fully bundled (zero runtime dependencies).",
+  "license": "Apache-2.0",
+  "overrides": {
+    "@qwen-code/qwen-code": "0.23.4"
+  },
+  "dependencies": {
+    "@qwen-code/qwen-code": "0.23.4"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "source": "https://github.com/giuliastro/harness-remote.git",
+  "ref": "v3.0.2",
+  "commit": "21ce6db49af708c4c7c3f96ef6a50f62dced8dab",
+  "license": "Apache-2.0",
+  "license_file": "LICENSE",
+  "selection": "Work Order 38 conditional leader; adopted by Work Order 40-A",
+  "files": [
+    {
+      "path": "codex-session-history.js",
+      "origin": "upstream",
+      "upstream_sha256": "5625a252d689d7e518320ac2080a6e390cbee9d941ef15ed3ad48c8da7259a2c",
+      "current_sha256": "5625a252d689d7e518320ac2080a6e390cbee9d941ef15ed3ad48c8da7259a2c",
+      "patched_sha256": "a8a2b9e2931d0bf35fdd55ccabdbdd1bfebb7386045caebfefd6bfc11e2e5059",
+      "patch": "; import single neutral scanner from Agents transport"
+    }
+  ]
+}

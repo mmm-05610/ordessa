@@ -1,0 +1,379 @@
+schema_version: 1
+status: unsupported_pending_owner_contracts
+publication_allowed: false
+execution_allowed: false
+catalog_created: false
+wait_event_names_are_placeholders: false
+wait_event: engineering.work.current_condition
+wait_resume_contract: ordessa.engineering.current-work/1
+wait_source_status: candidate declares all 21 exact waits and input fields; original source binding and runtime qualification pending
+requires_is_incomplete_until_all_owner_bindings_are_registered_and_qualified: true
+work_input_document: documents/work-inputs/schema.json
+work_input_binding: explicit engineering.work.bind_inputs CAS on immutable ArtifactRevisionRef; no implicit accepted-head lookup
+work_input_truth_boundary: values are method data only; original same-library source must independently resolve exact refs/plans/grants/results; dispatch_input does not mean permission granted
+review_response_boundary: exact same-authority BlobRef is decoded through original BlobStore; arbitrary inline raw response text is rejected
+requires_include_exact_detached_descriptors_not_production_registration: true
+available_detached_operation_descriptors:
+- capability_id: engineering.packages.freeze
+  source: EngineeringService.operation_capabilities
+  interface_version: '1'
+  contract_digest: 4b4b09d58c55facfb770a6974590bea8a1212d21e3419ce471d712f3ff222d9b
+- capability_id: engineering.executions.dispatch
+  source: conditional owner_capabilities descriptor; requires execution-dispatch composition
+  interface_version: '1'
+  contract_digest: ddf76600cd07aaab2051d180b441405438abf8d78a6aa2c650fdc5a3c1ed92d7
+- capability_id: engineering.submissions.record_report
+  source: EngineeringService.operation_capabilities
+  interface_version: '1'
+  contract_digest: 208580b13ec6d100f16d1f3b6f8cdf2cec03800140d904908747242e821b3df0
+operation_source_gaps:
+- operation: engineering.packages.freeze
+  wait_step: await_generate_package_permission
+  required_source: exact closed ImplementationPackage record plus current draft/method binding
+- operation: engineering.executions.dispatch
+  wait_step: await_implementation_permission
+  required_source:
+  - dispatch.run_id
+  - dispatch.step_id
+  - dispatch.attempt
+  - dispatch.unit_ref
+  - dispatch.params
+  - dispatch.actions
+  - dispatch.timeout
+  unresolved: method declares dispatch_input in the versioned work-input document; production source selection and original dispatch schema/current Grant qualification remain pending
+  package_slot: package_ref
+  package_slot_source_wait: await_frozen_package
+- operation: engineering.submissions.record_report
+  wait_step: await_execution_capture
+  required_source: method-bound MethodContent and fixed ArtifactRevisionRef outputs from actual Unit response
+  boundary: all file/tree/test/effect fact fields empty; report remains authored and pending independent review
+  source_binding: metadata.work_source.waits.await_execution_capture.native_report_slot names the exact event field; the selected original source must resolve the Submission to a same-owner Execution record/query producer and verify Unit, operation, prompt, query, blob, and completed state
+  missing_or_unknown: remain waiting or refuse; never accept the work-input report field as proof of execution completion
+intent_readback:
+  wait_step: await_intent_ref
+  source: original same-library authorization repository get_intent(intent_id)
+  event_fields: {id: intent_id, digest: intent_digest}
+  required_match: exact method reference and intent digest from the resolved original intent
+  missing_or_mismatch: remain waiting or refuse; work-input values alone are not authorization evidence
+result_mapping_gaps:
+- operation: engineering.executions.dispatch
+  owner_outcomes: [completed, failed, unknown]
+  result_consumer: engineering.work.record_dispatch_step
+  source: packages/engineering/src/ordessa_engineering/application/orchestration/native_step.py::record_dispatch_step
+  implemented_mapping: reads and verifies the original terminal dispatch row/result; completed/failed are routed from the canonical original dispatch result and appended with the method step log/cursor update in the same UoW/CAS path
+  unknown_behavior: rejected with WORK_OPERATION_OUTCOME_UNKNOWN before routing or step advancement; never coerced to the candidate's terminal unknown stop outcome
+  unresolved_runtime: no production native catalog registration for engineering.executions.dispatch; opaque event.dispatch_input still lacks an authoritative source binding; candidate unknown branch cannot be reached through record_dispatch_step
+available_detached_check_descriptors:
+- capability_id: ordessa.decision.evaluate
+  interface_version: '1.0.0'
+  contract_digest: 73034144196330fe4dcc0f28359b0a2d64b90c58d0f36160cb132a8991eb71bf
+  candidate_usage_count: 11
+  source: packages/engineering/src/ordessa_engineering/application/orchestration/decision_checks.py::generic_decision_check_capability
+  status: generic_route_and_descriptor_implemented_production_source_registration_pending
+  gap_class: production_registration_and_native_review_source_qualification
+  candidate_consumers:
+  - standards/source-review.yaml: claim_support
+  - standards/quality-review.yaml: semantic_consistency, semantic_drift, intent_binding
+  - standards/engineering-content.yaml: selected_standard_content, change_impact_completeness, package_bidirectional_trace, package_dispatchability
+  - standards/summary-review.yaml: summary_fidelity
+  - standards/acceptance.yaml: output_scope, test_evidence
+  current_owner_evidence: generic Unit/JEV evidence route and descriptor exist; exact question binding, original response proof and current reviewer guard are represented, but no production source registration or qualified native reviewer is claimed
+  minimum_closure: register the actual source through the parent-owned production composition and qualify native request/result admission; preserve exact method-selected question set, evidence/version bindings, full ReviewPlan correlation, complete CheckKey selection, and status admission
+  no_specialized_checkers: true
+- capability_id: ordessa.schema.validate
+  interface_version: '1.0.0'
+  contract_digest: b120bf7b0ddac3c63792233edf5aaee32195f6307300a2f95446f6094c76df03
+  candidate_usage_count: 2
+  source: packages/engineering/src/ordessa_engineering/application/orchestration/check_capabilities.py::invariant_review_check_capabilities
+  status: deterministic_mechanism_and_descriptor_implemented_production_source_registration_pending
+  gap_class: production_registration_and_positive_submission_qualification
+  candidate_consumers:
+  - standards/acceptance.yaml: submission_shape
+  - standards/quality-review.yaml: document_shape
+  current_owner_evidence: descriptor routes the existing deterministic content validator against method-frozen schema and exact submitted content; positive end-to-end Submission source qualification remains pending
+  minimum_closure: parent-owned production source registration and positive Submission/schema-validation qualification; do not create per-document checkers
+- capability_id: ordessa.submission.binding
+  interface_version: '1.0.0'
+  contract_digest: 57a385824dd93162fbad5356fadd8419f14b56230f17036b9e4e731b9fd512fd
+  candidate_usage_count: 1
+  source: packages/engineering/src/ordessa_engineering/application/orchestration/check_capabilities.py::invariant_review_check_capabilities
+  status: source_route_and_descriptor_implemented_positive_submission_qualification_pending
+  gap_class: production_registration_and_positive_submission_qualification
+  candidate_consumers:
+  - standards/acceptance.yaml: submission_binding
+  current_owner_evidence: descriptor maps to original graph validator and exact same-UoW source correlation; complete positive Submission case has not been qualified
+  minimum_closure: production registration and positive Submission source qualification; preserve original graph invariants and correlation to full review request/CheckKey. Do not remove or weaken the criterion.
+semantic_decision_mappings:
+  capability_id: ordessa.decision.evaluate
+  interface_version: '1.0.0'
+  result_contract: DecisionResult.v1
+  candidate_question_sets:
+  - criterion_id: output_scope
+    resource: decision.output_scope
+    input_slots: [submission_ref, fixed_delivery_refs, executor_report, independent_review_observations]
+  - criterion_id: test_evidence
+    resource: decision.test_evidence
+    input_slots: [submission_ref, fixed_delivery_refs, executor_report, independent_review_observations, acceptance_mapping]
+  - criterion_id: intent_binding
+    resource: decision.intent_binding
+    input_slots: [proposal_ref, implementation_intent, method_content]
+  - criterion_id: semantic_consistency
+    resource: decision.change_consistency
+    question_id: coverage
+    input_slots: [proposal_ref, method_content, source_captures]
+    question_set_version: 2.0.0
+    answer_kind: choice
+    nominal_answer_contract: ordessa.nominal-choice-status/1
+    option_statuses: {conflicting: violated, partial: insufficient, complete: satisfied}
+  - criterion_id: semantic_drift
+    resource: decision.change_consistency
+    question_id: drift
+    input_slots: [proposal_ref, method_content, source_captures]
+    question_set_version: 2.0.0
+    answer_kind: choice
+    nominal_answer_contract: ordessa.nominal-choice-status/1
+    option_statuses: {drift_detected: violated, no_drift_detected: satisfied}
+  result_rules:
+    supported: satisfied
+    contradicted: violated
+    insufficient: insufficient
+    tie_missing_incomplete_truncated_or_unmapped: unknown
+    semantic_consistency_options: {conflicting: violated, partial: insufficient, complete: satisfied}
+    semantic_drift_options: {drift_detected: violated, no_drift_detected: satisfied}
+    status_mapping: apply_exact_selected_method_criterion_disposition_after_current_source_and_evidence_guards
+    missing_evidence: do_not_invoke
+    unknown_is_never_pass: true
+  calibration: no score/Noul numeric conversion or thresholds; semantic policy uses explicit finite Choice options under the existing v1 contract; production source/reviewer qualification remains pending
+  implementation_boundary: Engineering preserves/correlates exact request, frozen method/material refs and source records; Decision evaluates method-selected semantic questions; standards remain external policy
+waits:
+- step_id: await_proposal
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_proposal
+  status: unsupported
+  required_contract: original authenticated Work resume/CAS, exact request/grant/source
+    readback, complete requirements, current guards through COMMIT; notification alone
+    never advances
+- step_id: await_source_gate
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_source_gate
+  status: unsupported
+  required_contract: original authenticated Work resume/CAS, exact request/grant/source
+    readback, complete requirements, current guards through COMMIT; notification alone
+    never advances
+- step_id: await_quality_gate
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_quality_gate
+  status: unsupported
+  required_contract: original authenticated Work resume/CAS, exact request/grant/source
+    readback, complete requirements, current guards through COMMIT; notification alone
+    never advances
+- step_id: await_acceptance_intent
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_acceptance_intent
+  status: unsupported
+  required_contract: original authenticated Work resume/CAS, exact request/grant/source
+    readback, complete requirements, current guards through COMMIT; notification alone
+    never advances
+- step_id: await_intent_ref
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_intent_ref
+  status: unsupported
+  required_contract: original authenticated Work resume/CAS, exact request/grant/source
+    readback, complete requirements, current guards through COMMIT; notification alone
+    never advances
+- step_id: await_document_acceptance
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_document_acceptance
+  status: unsupported
+  required_contract: original authenticated Work resume/CAS, exact request/grant/source
+    readback, complete requirements, current guards through COMMIT; notification alone
+    never advances
+- step_id: await_applied_did
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_applied_did
+  status: unsupported
+  required_contract: original authenticated Work resume/CAS, exact request/grant/source
+    readback, complete requirements, current guards through COMMIT; notification alone
+    never advances
+- step_id: await_package_draft
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_package_draft
+  status: unsupported
+  required_contract: original authenticated Work resume/CAS, exact request/grant/source
+    readback, complete requirements, current guards through COMMIT; notification alone
+    never advances
+- step_id: await_generate_package_permission
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_generate_package_permission
+  status: unsupported
+  required_contract: original authenticated Work resume/CAS, exact request/grant/source
+    readback, complete requirements, current guards through COMMIT; notification alone
+    never advances
+- step_id: await_frozen_package
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_frozen_package
+  status: unsupported
+  required_contract: original authenticated Work resume/CAS, exact request/grant/source
+    readback, complete requirements, current guards through COMMIT; notification alone
+    never advances
+- step_id: await_package_gate
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_package_gate
+  status: unsupported
+  required_contract: original authenticated Work resume/CAS, exact request/grant/source
+    readback, complete requirements, current guards through COMMIT; notification alone
+    never advances
+- step_id: await_implementation_permission
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_implementation_permission
+  status: unsupported
+  required_contract: original authenticated Work resume/CAS, exact request/grant/source
+    readback, complete requirements, current guards through COMMIT; notification alone
+    never advances
+- step_id: await_execution_capture
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_execution_capture
+  status: unsupported
+  required_contract: original authenticated Work resume/CAS, exact request/grant/source
+    readback, complete requirements, current guards through COMMIT; notification alone
+    never advances
+- step_id: await_submission
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_submission
+  status: unsupported
+  required_contract: original authenticated Work resume/CAS, exact request/grant/source
+    readback, complete requirements, current guards through COMMIT; notification alone
+    never advances
+- step_id: await_acceptance_gate
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_acceptance_gate
+  status: unsupported
+  required_contract: original authenticated Work resume/CAS, exact request/grant/source
+    readback, complete requirements, current guards through COMMIT; notification alone
+    never advances
+- step_id: await_adoption_permission
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_adoption_permission
+  status: unsupported
+  required_contract: original authenticated Work resume/CAS, exact request/grant/source
+    readback, complete requirements, current guards through COMMIT; notification alone
+    never advances
+- step_id: await_adoption_receipt
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_adoption_receipt
+  status: unsupported
+  required_contract: original authenticated Work resume/CAS, exact request/grant/source
+    readback, complete requirements, current guards through COMMIT; notification alone
+    never advances
+- step_id: await_acceptance_response
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_acceptance_response
+  status: unsupported
+  required_contract: original current requested acceptance response; exact review_id, request_version, fence and raw_response_utf8; original plan/submission binding and response admission guards through COMMIT
+- step_id: await_rework_review_plan
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_rework_review_plan
+  status: unsupported
+  required_contract: original current source resolves exact approved DID/package/failed SubmissionRef/failed ReviewRef, verifies correction-plan content and its ArtifactRevisionRef, correlates failed ReviewRef to the completed command result/plan digest/request version/fence, then constructs the full quality ReviewPlan; retain full plan and current-source guards
+- step_id: await_rework_review_response
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_rework_review_response
+  status: unsupported
+  required_contract: original current requested rework Review response; exact review_id, request_version, fence and raw_response_utf8; original plan/source/trust guards through COMMIT
+- step_id: await_feedback
+  wait_event: engineering.work.current_condition
+  wait_step_id: await_feedback
+  status: unsupported
+  required_contract: original authenticated Work resume/CAS, exact request/grant/source
+    readback, complete requirements, current guards through COMMIT; notification alone
+    never advances
+action_permissions:
+  generate_package: exact generate_package Grant required by original freeze, not
+    implied by DID acceptance
+  implement: exact real dispatch/checkout/write/test actions and scope under current
+    original Grant
+  adopt: exact target CAS adoption authority, review pass is not permission
+no_unnecessary_confirmation: Reuse already valid exact action permission when original
+  owner verifies target/scope/current controls. Missing action permission uses genuine
+  existing confirmation; no vague consent.
+unit_submission_review_contract:
+  status: unsupported
+  original_types_to_reuse:
+  - SubmissionRef
+  - ArtifactRevisionRef
+  - ReviewRequirement
+  - CheckKey
+  - ReviewPlan
+  pending_fields:
+  - generic structured Unit submit input/result/version/digest
+  - original Unit/work/step/attempt and source correlation
+  - immutable accepted delivery and pending-review readback
+  - original reviewer Unit role/independence guard
+  - complete requirements/check-key/response admission
+  - original Work current gate/CAS rework/resume
+  fixture_always_pass: not_production_review
+  fixed_reference_types:
+  - commit
+  - snapshot
+  - artifact
+  host_capture_all_files_tests_effects_required: false
+  host_verified_test_fact_production_required: false
+method76_bindings:
+  policy_status: candidate_declaration_only_production_sources_unqualified
+  ordinary_rework:
+    maximum_rounds: 2
+    choice: first_method_explicit_bound_original_attempt_plus_one_admitted_correction
+    not_historical_authorization_or_core_default: true
+    exhaustion: revision_required
+    important_design_change: return_to_DID_proposal_under_existing_policy
+    unknown_external_effect: reconcile_before_retry_never_loop
+    truth_check_owner: independent review Unit under original admission
+    author_reviewer_independence: method policy through the generic host identity constraints
+    source_semantics: asserted executor report vs actually independently verified facts
+    source_and_guard_requirements:
+    - exact approved DID ref and fixed content/version
+    - exact frozen package ref and fixed content/version
+    - original SubmissionRef and authored report
+    - original acceptance ReviewRecord and complete request/plan correlation
+    - immutable correction-plan ArtifactRevisionRef and exact schema-valid content
+    - correction-plan embedded failed SubmissionRef/ReviewRef equal original records
+    - original failed ReviewRecord cross-checked to completed command result, exact plan digest, request version and fence
+    - each correction row's failed CheckKey and target exactly belongs to the complete original ReviewPlan and its recorded observations; this identifies the failed item and does not narrow or substitute the correction-eligibility criterion
+    - independent generic Decision result under the original full ReviewPlan and current source guards through COMMIT
+    - current original implementation permission before each new execution
+    - current action Grant and remaining budget for the same exact frozen package; never reuse spent budget or replace its authorization refs
+    - if that package cannot authorize another attempt, refuse advancement until a separately authorized newly frozen package is available; no automatic package renewal in this loop
+    - new exact report/SubmissionRef and fresh independent review for every correction
+    semantic_gate:
+      capability_id: ordessa.decision.evaluate
+      question_set: decision.rework_scope
+      subject_document_type: correction-plan
+      subject_ref_kind: artifact_revision
+      review_purpose: quality
+      actual_generic_route: available_but_production_reviewer_source_unqualified
+      nominal_answer_contract: ordessa.nominal-choice-status/1
+      unknown_answer_policy: manual_or_reject_under_original_owner_contract
+      no_threshold_or_confidence_policy_added: true
+      answers_are_not_grants: true
+  new_waits:
+  - step_id: await_acceptance_response
+    required_source: original current requested acceptance review response envelope; exact review_id, request_version, fence and raw_response_utf8; correlate to acceptance_review_plan and submission_ref
+    status: unsupported
+  - step_id: await_rework_review_plan
+    required_source: original current work source reads an immutable schema-valid correction-plan ArtifactRevisionRef, verifies its embedded approved DID/package/failed SubmissionRef/failed ReviewRef against current records, and correlates that ReviewRecord to its completed command result, exact plan digest, request version and fence before constructing the full quality ReviewPlan
+    status: unsupported
+  - step_id: await_rework_review_response
+    required_source: original current requested rework-scope response envelope; exact review_id, request_version, fence and raw_response_utf8; correlate to rework_review_plan, exact correction_plan_ref, failed ReviewRecord and source submission
+    status: unsupported
+adoption_input_bindings:
+  wait_step: await_adoption_permission
+  source_fields:
+    submission_ref: existing exact context slot, matched to current acceptance closure
+    approval_ref: event.approval_ref, current original action authority; not supplied by a review
+    expected_control_version: event.expected_control_version, from current original authority source
+    targets: event.targets, exact target_ref and expected artifact/version/head CAS values from the current original source
+  result_binding:
+    operation_result_field: acceptance_receipt_ref
+    wait_projection_field: event.acceptance_receipt_ref
+    status: original owner readback/correlation still required
+  outputs_are_projection_only: true

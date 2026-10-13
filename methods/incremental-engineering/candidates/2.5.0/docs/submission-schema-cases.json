@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "results": [
+    {
+      "case": "fixed_commit_and_asserted_report_can_be_submitted_for_review",
+      "schema_valid": true,
+      "scope": "method_content_shape_only_not_truth_or_runtime_admission"
+    },
+    {
+      "case": "fixed_artifact_report",
+      "schema_valid": true,
+      "scope": "method_content_shape_only_not_truth_or_runtime_admission"
+    },
+    {
+      "case": "fixed_snapshot_report",
+      "schema_valid": true,
+      "scope": "method_content_shape_only_not_truth_or_runtime_admission"
+    },
+    {
+      "case": "author_cannot_upgrade_fact_to_verified",
+      "schema_valid": false,
+      "scope": "method_content_shape_only_not_truth_or_runtime_admission"
+    },
+    {
+      "case": "mutable_commit_locator",
+      "schema_valid": false,
+      "scope": "method_content_shape_only_not_truth_or_runtime_admission"
+    },
+    {
+      "case": "missing_fixed_delivery",
+      "schema_valid": false,
+      "scope": "method_content_shape_only_not_truth_or_runtime_admission"
+    },
+    {
+      "case": "duplicate_fixed_ref",
+      "schema_valid": false,
+      "scope": "method_content_shape_only_not_truth_or_runtime_admission"
+    },
+    {
+      "case": "empty_requirement_report",
+      "schema_valid": false,
+      "scope": "method_content_shape_only_not_truth_or_runtime_admission"
+    },
+    {
+      "case": "cross_reference_requires_original_semantic_check_not_schema",
+      "schema_valid": true,
+      "scope": "method_content_shape_only_not_truth_or_runtime_admission"
+    }
+  ],
+  "no_source_truth_validation": true,
+  "no_runtime_or_model_calls": true,
+  "cross_reference_check_owner": "original generic submission/independent review semantic validation pending"
+}

@@ -1,0 +1,22 @@
+{
+  "id": "hermes",
+  "origin": "agentbox",
+  "managed": null,
+  "legacy": null,
+  "variants": {},
+  "allowsPythonPath": true,
+  "pythonRoute": {
+    "site": "/runtime/artifacts/hermes-runtime/site-packages",
+    "moduleFile": "hermes_cli/main.py",
+    "command": "/usr/bin/python3",
+    "args": [
+      "-m",
+      "hermes_cli.main",
+      "acp"
+    ]
+  },
+  "nativeRoute": false,
+  "nativeExtension": null,
+  "profileExtension": null,
+  "modelAliases": {}
+}

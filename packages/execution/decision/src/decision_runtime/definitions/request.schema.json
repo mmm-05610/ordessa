@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$ref": "#/$defs/DecisionRequest",
+  "$defs": {
+    "DecisionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "request_id": {
+          "type": "string"
+        },
+        "task": {
+          "$ref": "#/$defs/TaskBrief"
+        },
+        "flow_ref": {
+          "$ref": "#/$defs/FlowRef"
+        },
+        "limits": {
+          "$ref": "#/$defs/RunLimits"
+        },
+        "prior_outcome_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExternalRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "type": "object"
+        },
+        "contract_version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "task",
+        "flow_ref"
+      ]
+    },
+    "TaskBrief": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "task_id": {
+          "type": "string"
+        },
+        "task_revision": {
+          "type": "string"
+        },
+        "goal": {
+          "type": "string"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {}
+        },
+        "boundaries": {
+          "type": "array",
+          "items": {}
+        },
+        "acceptance_criteria": {
+          "type": "array",
+          "items": {}
+        },
+        "context_refs": {
+          "type": "array",
+          "items": {}
+        },
+        "continuation_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExternalRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "task_id",
+        "task_revision",
+        "goal"
+      ]
+    },
+    "ExternalRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source_namespace": {
+          "type": "string"
+        },
+        "identity": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "source_namespace",
+        "identity"
+      ]
+    },
+    "FlowRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "flow_id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "content_digest": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "flow_id",
+        "version",
+        "content_digest"
+      ]
+    },
+    "RunLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_model_attempts": {
+          "type": "integer"
+        },
+        "max_node_entries": {
+          "type": "integer"
+        },
+        "max_repair_rounds": {
+          "type": "integer"
+        },
+        "max_inflight_model_calls": {
+          "type": "integer"
+        },
+        "wall_timeout_seconds": {
+          "type": "number"
+        },
+        "cleanup_timeout_seconds": {
+          "type": "number"
+        },
+        "max_business_candidates": {
+          "type": "integer"
+        },
+        "max_choice_options": {
+          "type": "integer"
+        },
+        "max_candidate_pages": {
+          "type": "integer"
+        },
+        "candidate_page_size": {
+          "type": "integer"
+        },
+        "max_combinations": {
+          "type": "integer"
+        },
+        "max_proposals_per_round": {
+          "type": "integer"
+        }
+      },
+      "required": []
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "status": "bounded_schema_checkpoint_pending_unified_resume",
+  "priority_change": "kernel retirement first, no broader bind/compile/publish/live chain work",
+  "schema_resource": "document.unit_review_result.schema",
+  "schema_sha256": "ba2c1fac6b4b79300ba2f2718d143b69c1debb846254d538886d51f259cf6232",
+  "codec": "ordessa.incremental-engineering.unit-review-result/1",
+  "product_shape_confirmed": true,
+  "generic_codec_owner": "original Engineering orchestration/unit_review",
+  "schema_cases": 12,
+  "old_2_4_files_preserved": 62,
+  "public_contracts59_path": "docs/implementation/nightly/evidence/engineering-convergence-20261011/pending-review-20261012/PUBLIC-CONTRACTS59.json",
+  "public_contracts59_raw_sha256": "0807c07dead18b762ddc4a0766b99e9a11fa5e685212622cfc0f64d83340a6e0",
+  "frozen_record_report_requirement": {
+    "capability_id": "engineering.submissions.record_report",
+    "kind": "operation",
+    "interface_version": "1",
+    "contract_digest": "208580b13ec6d100f16d1f3b6f8cdf2cec03800140d904908747242e821b3df0"
+  },
+  "record_report_source_completion": "submitted/pending_review/accepted=false",
+  "capability_binding_applied": false,
+  "remaining_bindings": [
+    "original generic strict decoder and actual selected schema/resource binding",
+    "exact full Plan keys/digest/ref/scope checks",
+    "recorded Unit/source/current identity constraints and existing quality admission",
+    "record_report and Work/resume/adopt exact owner contract integration",
+    "unsupported freeze/dispatch/check capabilities remain unavailable until qualified"
+  ],
+  "compiler_executed": false,
+  "publication_attempted": false,
+  "database_used": false,
+  "model_calls": 0
+}

@@ -1,0 +1,55 @@
+"""Pure Harness domain contracts, independent of retired Work Core."""
+from .native_refs import NativeProfileRef, NativeContinuationRef, NativeCredentialRef, NativeRefInvalid
+from .providers import ProviderDescriptor
+
+__all__ = ["NativeProfileRef", "NativeContinuationRef", "NativeCredentialRef", "NativeRefInvalid", "ProviderDescriptor"]
+
+"""Standalone, typed public contract for Harness v2."""
+
+from .application import (
+    ApplicationResult, ApplicationTarget, ConfigurationCapabilities,
+    ConfigurationCapability, ConfigurationService, Confirmed, DesiredFragment,
+    NotFound, OperationRecord, Plan, PlanResult, Refused, Unknown,
+)
+from .contracts import (
+    ActionDescriptor, AdapterContext, AdapterRefusal, Assessment,
+    ConfigurationAdapter, ConfigurationAdapterDescriptor, FieldClaim,
+    Installation, LaunchPlan, LaunchRequest, Match, Mismatch,
+    ReconfigurationDecision, ResumeRequest, RuntimeAdapter,
+    RuntimeAdapterDescriptor, RuntimeConfirmed, RuntimeRefused,
+    RuntimeResult, RuntimeUnknown, TargetDescriptor, Verification,
+    VerificationUnknown, VersionRange,
+)
+from .errors import ContractError, ErrorCode
+from .native_evidence import (
+    LaunchProvenanceFacts, NativeEvidence, NativeOwnerReceiptFacts,
+    NativeReadbackVerificationFacts, NativeSessionIdentityFacts,
+)
+from .participant import ParticipantEvidence, from_settlement_notes, to_settlement_notes
+from .intents import (
+    BindSecret, ContentRef, FieldPath, Intent, IntentSet, IntentSource,
+    InvokeAction, MountContent, RemoveOwnedContent, ResetField, SetField,
+    TargetHandle,
+)
+from .schema import JsonValue, ValueSchema, closed_object, validate_json
+
+_ADOPTED_EXPORTS = [
+    "ActionDescriptor", "AdapterContext", "AdapterRefusal", "ApplicationResult",
+    "ApplicationTarget", "Assessment", "BindSecret", "ConfigurationAdapter",
+    "ConfigurationAdapterDescriptor", "ConfigurationCapabilities",
+    "ConfigurationCapability", "ConfigurationService", "Confirmed", "ContentRef",
+    "ContractError", "DesiredFragment", "ErrorCode", "FieldClaim", "FieldPath",
+    "Installation", "Intent", "IntentSet", "IntentSource", "InvokeAction",
+    "JsonValue", "LaunchPlan", "LaunchProvenanceFacts", "LaunchRequest", "Match", "Mismatch",
+    "MountContent", "NativeEvidence", "NativeOwnerReceiptFacts",
+    "NativeReadbackVerificationFacts", "NativeSessionIdentityFacts",
+    "NotFound", "OperationRecord", "ParticipantEvidence", "Plan", "PlanResult",
+    "ReconfigurationDecision", "Refused", "RemoveOwnedContent", "ResetField",
+    "ResumeRequest", "RuntimeAdapter", "RuntimeAdapterDescriptor",
+    "RuntimeConfirmed", "RuntimeRefused", "RuntimeResult", "RuntimeUnknown",
+    "SetField", "TargetDescriptor", "TargetHandle", "Unknown", "ValueSchema",
+    "Verification", "VerificationUnknown", "VersionRange", "closed_object",
+    "from_settlement_notes", "to_settlement_notes", "validate_json",
+]
+
+__all__ += _ADOPTED_EXPORTS

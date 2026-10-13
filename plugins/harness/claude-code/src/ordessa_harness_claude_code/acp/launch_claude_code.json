@@ -1,0 +1,32 @@
+{
+  "id": "claude-code",
+  "origin": "agentbox",
+  "managed": {
+    "artifact": "claude-runtime",
+    "package": "@agentclientprotocol/claude-agent-acp",
+    "binary": "claude-agent-acp",
+    "pinMode": "direct",
+    "version": "0.81.2"
+  },
+  "legacy": null,
+  "variants": {
+    "default": {
+      "entry": "dist/index.js"
+    },
+    "native-profile": {
+      "entry": "dist/ordessa-profile.mjs"
+    }
+  },
+  "allowsPythonPath": false,
+  "pythonRoute": null,
+  "nativeRoute": false,
+  "nativeExtension": {
+    "packageName": "@agentclientprotocol/claude-agent-acp",
+    "version": "0.81.2",
+    "id": "claude-code-profile",
+    "source": "36a33a984624541ea013c085f5bd1d982294cfe70beb42826752f62bdc538d64",
+    "managedAccountScope": false
+  },
+  "profileExtension": null,
+  "modelAliases": {}
+}

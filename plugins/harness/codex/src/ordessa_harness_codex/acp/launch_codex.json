@@ -1,0 +1,31 @@
+{
+  "id": "codex",
+  "origin": "upstream",
+  "managed": {
+    "artifact": "codex-runtime",
+    "package": "@agentclientprotocol/codex-acp",
+    "binary": "codex-acp",
+    "pinMode": "upstream"
+  },
+  "legacy": null,
+  "variants": {
+    "default": {
+      "entry": "dist/index.js"
+    },
+    "native-profile": {
+      "entry": "dist/ordessa-profile.mjs"
+    }
+  },
+  "allowsPythonPath": false,
+  "pythonRoute": null,
+  "nativeRoute": false,
+  "nativeExtension": {
+    "packageName": "@agentclientprotocol/codex-acp",
+    "version": "1.1.14",
+    "id": "codex-profile",
+    "source": "9634b5457e44d55471d0969bcc5a2a1d4cbb83ba637eaf023d34d2e975fd7db8",
+    "managedAccountScope": true
+  },
+  "profileExtension": null,
+  "modelAliases": {}
+}

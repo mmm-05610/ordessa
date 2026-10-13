@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "owner_id": "codex",
+  "package_name": "@agentclientprotocol/codex-acp",
+  "package_lock": "npm/package-lock.json",
+  "output_directory": "dist",
+  "edges": [
+    {
+      "source": "../src/ordessa_harness_codex/acp/profile/entry.mjs",
+      "emitted_module": "dist/ordessa-profile.mjs",
+      "specifier": "./index.js",
+      "upstream_member": "dist/index.js",
+      "sha256_from": {
+        "file": "../src/ordessa_harness_codex/acp/launch_codex.json",
+        "pointer": "/nativeExtension/source"
+      }
+    }
+  ]
+}

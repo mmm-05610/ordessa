@@ -1,0 +1,12 @@
+{
+  "profileExtension": {
+    "artifact": "pi-profile-runtime",
+    "packageName": "@automatalabs/pi-acp",
+    "id": "pi-profile",
+    "version": 1,
+    "configurationQuery": "_ordessa/session/configuration",
+    "instanceDirectoryRequired": true,
+    "adapterVersion": "0.5.0",
+    "kindStem": "pi-runtime"
+  }
+}

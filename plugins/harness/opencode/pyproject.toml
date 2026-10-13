@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-harness-opencode"
+version = "0.1.0a1"
+description = "Independent opencode brand provider facts for the Ordessa harness group"
+requires-python = ">=3.10"
+dependencies = ["ordessa-execution-agents==0.1.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ordessa_harness_opencode = ["deployment/*", "_registration_declarations/*.toml", "_registration_declarations/*.json", "acp/launch_omp.json", "acp/launch_omp.mjs", "acp/native_host.mjs", "acp/opencode_native.mjs", "acp/profile_declarations.mjs", "acp/vendor/LICENSE", "acp/vendor/PATCHES.md", "acp/vendor/SOURCE.json", "acp/vendor/extension-actions.js", "acp/vendor/omp-extension-action-state.js", "acp/vendor/omp-session-history.js", "acp/vendor/opencode-host.js"]

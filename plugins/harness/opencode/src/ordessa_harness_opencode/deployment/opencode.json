@@ -1,0 +1,28 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "deepseek": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "DeepSeek official",
+      "options": {
+        "baseURL": "https://api.deepseek.com",
+        "apiKey": "{env:DEEPSEEK_API_KEY}"
+      },
+      "models": {
+        "deepseek-flash": {
+          "name": "DeepSeek Flash (bounded acceptance)",
+          "reasoning": false,
+          "options": {
+            "thinking": {
+              "type": "disabled"
+            }
+          },
+          "limit": {
+            "context": 1000000,
+            "output": 64
+          }
+        }
+      }
+    }
+  }
+}

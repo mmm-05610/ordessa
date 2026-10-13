@@ -1,0 +1,209 @@
+{
+  "schema": "agentbox-offline-lock/1",
+  "created": "2026-09-24",
+  "source_lock": "package-lock.json",
+  "lockfile_version": 3,
+  "note": "Every production package pinned by this root's package-lock.json sha512 integrity. Pruned unchanged from the reviewed shared Codex/Pi lock of 2026-09-14 (same versions, same integrities); the vendored adapter tarball in vendor/ is this family's user-level adapter package. The full closure is reproducible via 'npm ci --ignore-scripts' against any mirror serving the recorded integrities.",
+  "packages": [
+    {
+      "path": "node_modules/@agentclientprotocol/codex-acp",
+      "name": "@agentclientprotocol/codex-acp",
+      "version": "1.1.14",
+      "integrity": "sha512-6JKLbGYH0/Gcz788U6KnljwSdNvUnXOyjJDOgsWsbwmXbxn/BXH+urF5AciACdgq13+KgAP9O96Kp6h33BgyKg==",
+      "resolved": "https://registry.npmmirror.com/@agentclientprotocol/codex-acp/-/codex-acp-1.1.14.tgz",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "node_modules/@agentclientprotocol/codex-acp/node_modules/@agentclientprotocol/sdk",
+      "name": "@agentclientprotocol/sdk",
+      "version": "1.3.0",
+      "integrity": "sha512-i3h/efaeuMUFAO1HSfo97QZQnnvMd7wWBYtBsdL6UMZg3a78sk3Ffya5Xu7C7tYsXomXoDXJBAzQF2PcFKAhIQ==",
+      "resolved": "https://registry.npmmirror.com/@agentclientprotocol/sdk/-/sdk-1.3.0.tgz",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "node_modules/@openai/codex",
+      "name": "@openai/codex",
+      "version": "0.147.0",
+      "integrity": "sha512-EQLEXecAG2ptxI7UpBMo2TR/ga5596/c/OsYF/0LoUDh5JANZ7IoGqlzBEWbuEVQ76JePIbtTW/ihCkp1a7Z3w==",
+      "resolved": "https://registry.npmmirror.com/@openai/codex/-/codex-0.147.0.tgz",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "node_modules/@openai/codex-darwin-arm64",
+      "name": "@openai/codex",
+      "version": "0.147.0-darwin-arm64",
+      "integrity": "sha512-BEUVkiOW7kLcRyrMLfAr/h9wF8sRVJyZDy6OHtVn6QGDXiv3BvAZVTY1Pu9xF7KdIdkYXbp4uayN0aDQQaAUJw==",
+      "resolved": "https://registry.npmmirror.com/@openai/codex/-/codex-0.147.0-darwin-arm64.tgz",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "node_modules/@openai/codex-darwin-x64",
+      "name": "@openai/codex",
+      "version": "0.147.0-darwin-x64",
+      "integrity": "sha512-Tb8McE5SvJIH0Vs5R6sq7u+quiC931yan2KOOl6km1OdZ82+Wi7eF5XrSFPs5CF7xCgoIK4Vs+byMbT5hN+ZUw==",
+      "resolved": "https://registry.npmmirror.com/@openai/codex/-/codex-0.147.0-darwin-x64.tgz",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "node_modules/@openai/codex-linux-arm64",
+      "name": "@openai/codex",
+      "version": "0.147.0-linux-arm64",
+      "integrity": "sha512-SLC1JXw2TYfr/c3HhrJubyyLelq7vTOLWVmiThFA+z0+WgzCPmaseJ/kzDD3Gge/TO7fCnnj7UcPmC0d2c8XAg==",
+      "resolved": "https://registry.npmmirror.com/@openai/codex/-/codex-0.147.0-linux-arm64.tgz",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "node_modules/@openai/codex-linux-x64",
+      "name": "@openai/codex",
+      "version": "0.147.0-linux-x64",
+      "integrity": "sha512-0W9MBxPpWW0cSkNqrTDN2jR7rzzT7oNMhQY5446lT2Lw5cz5yhDTck4Va9rjkQEm+HlFzP/dmEMSZbXfJsINmw==",
+      "resolved": "https://registry.npmmirror.com/@openai/codex/-/codex-0.147.0-linux-x64.tgz",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "node_modules/@openai/codex-win32-arm64",
+      "name": "@openai/codex",
+      "version": "0.147.0-win32-arm64",
+      "integrity": "sha512-e2ZstJ8zT8Rm1nvR7CUVO+Gr3cTChE41+VfOzGhynzDXEoW0wfbjUQbc2bWbh1arG94LMm4y3dqBtUIbSrfeGA==",
+      "resolved": "https://registry.npmmirror.com/@openai/codex/-/codex-0.147.0-win32-arm64.tgz",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "node_modules/@openai/codex-win32-x64",
+      "name": "@openai/codex",
+      "version": "0.147.0-win32-x64",
+      "integrity": "sha512-oT7Ss5fAPf2fiWE9QNURqZcQGAAawSVxmIUdgPzckq4KFZAM+pRz9JbM4Rr498CjtbNgTOjWvDJ+DXvIBSfOPA==",
+      "resolved": "https://registry.npmmirror.com/@openai/codex/-/codex-0.147.0-win32-x64.tgz",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "node_modules/bundle-name",
+      "name": "bundle-name",
+      "version": "4.1.0",
+      "integrity": "sha512-tjwM5exMg6BGRI+kNmTntNsvdZS1X8BFYS6tnJ2hdH0kVxM6/eVZ2xy+FqStSWvYmtfFMDLIxurorHwDKfDz5Q==",
+      "resolved": "https://registry.npmmirror.com/bundle-name/-/bundle-name-4.1.0.tgz",
+      "license": "MIT"
+    },
+    {
+      "path": "node_modules/default-browser",
+      "name": "default-browser",
+      "version": "5.5.1",
+      "integrity": "sha512-m1pAzaJgZ/gssEqlOhJkPJp8Xly7QyW6xcrkUa2KKcDeDSEMP7X8xipU3snUcfisTQx0w1AGae+9UtJSfVnXGw==",
+      "resolved": "https://registry.npmmirror.com/default-browser/-/default-browser-5.5.1.tgz",
+      "license": "MIT"
+    },
+    {
+      "path": "node_modules/default-browser-id",
+      "name": "default-browser-id",
+      "version": "5.0.1",
+      "integrity": "sha512-x1VCxdX4t+8wVfd1so/9w+vQ4vx7lKd2Qp5tDRutErwmR85OgmfX7RlLRMWafRMY7hbEiXIbudNrjOAPa/hL8Q==",
+      "resolved": "https://registry.npmmirror.com/default-browser-id/-/default-browser-id-5.0.1.tgz",
+      "license": "MIT"
+    },
+    {
+      "path": "node_modules/define-lazy-prop",
+      "name": "define-lazy-prop",
+      "version": "3.0.0",
+      "integrity": "sha512-N+MeXYoqr3pOgn8xfyRPREN7gHakLYjhsHhWGT3fWAiL4IkAt0iDw14QiiEm2bE30c5XX5q0FtAA3CK5f9/BUg==",
+      "resolved": "https://registry.npmmirror.com/define-lazy-prop/-/define-lazy-prop-3.0.0.tgz",
+      "license": "MIT"
+    },
+    {
+      "path": "node_modules/diff",
+      "name": "diff",
+      "version": "9.0.0",
+      "integrity": "sha512-svtcdpS8CgJyqAjEQIXdb3OjhFVVYjzGAPO8WGCmRbrml64SPw/jJD4GoE98aR7r25A0XcgrK3F02yw9R/vhQw==",
+      "resolved": "https://registry.npmmirror.com/diff/-/diff-9.0.0.tgz",
+      "license": "BSD-3-Clause"
+    },
+    {
+      "path": "node_modules/is-docker",
+      "name": "is-docker",
+      "version": "3.0.0",
+      "integrity": "sha512-eljcgEDlEns/7AXFosB5K/2nCM4P7FQPkGc/DWLy5rmFEWvZayGrik1d9/QIY5nJ4f9YsVvBkA6kJpHn9rISdQ==",
+      "resolved": "https://registry.npmmirror.com/is-docker/-/is-docker-3.0.0.tgz",
+      "license": "MIT"
+    },
+    {
+      "path": "node_modules/is-in-ssh",
+      "name": "is-in-ssh",
+      "version": "1.0.0",
+      "integrity": "sha512-jYa6Q9rH90kR1vKB6NM7qqd1mge3Fx4Dhw5TVlK1MUBqhEOuCagrEHMevNuCcbECmXZ0ThXkRm+Ymr51HwEPAw==",
+      "resolved": "https://registry.npmmirror.com/is-in-ssh/-/is-in-ssh-1.0.0.tgz",
+      "license": "MIT"
+    },
+    {
+      "path": "node_modules/is-inside-container",
+      "name": "is-inside-container",
+      "version": "1.0.0",
+      "integrity": "sha512-KIYLCCJghfHZxqjYBE7rEy0OBuTd5xCHS7tHVgvCLkx7StIoaxwNW3hCALgEUjFfeRk+MG/Qxmp/vtETEF3tRA==",
+      "resolved": "https://registry.npmmirror.com/is-inside-container/-/is-inside-container-1.0.0.tgz",
+      "license": "MIT"
+    },
+    {
+      "path": "node_modules/is-wsl",
+      "name": "is-wsl",
+      "version": "3.1.1",
+      "integrity": "sha512-e6rvdUCiQCAuumZslxRJWR/Doq4VpPR82kqclvcS0efgt430SlGIk05vdCN58+VrzgtIcfNODjozVielycD4Sw==",
+      "resolved": "https://registry.npmmirror.com/is-wsl/-/is-wsl-3.1.1.tgz",
+      "license": "MIT"
+    },
+    {
+      "path": "node_modules/open",
+      "name": "open",
+      "version": "11.0.3",
+      "integrity": "sha512-b3souUgU0VaAvMmzA4+9cRgrOgMdE0vc9H9VhQ0FYnjjcyZ8R/f9DiwMU9V8rl+vjf05On9UJhbgb06fsTs87Q==",
+      "resolved": "https://registry.npmmirror.com/open/-/open-11.0.3.tgz",
+      "license": "MIT"
+    },
+    {
+      "path": "node_modules/powershell-utils",
+      "name": "powershell-utils",
+      "version": "0.2.1",
+      "integrity": "sha512-C+y9x90UElAddDZmV4qOx9W53B61PO7cIqWz2dQsWlwswuq4mr8NEwytdGKboYbQlGZ3awrkTeNvcZiZNHnQ8A==",
+      "resolved": "https://registry.npmmirror.com/powershell-utils/-/powershell-utils-0.2.1.tgz",
+      "license": "MIT"
+    },
+    {
+      "path": "node_modules/run-applescript",
+      "name": "run-applescript",
+      "version": "7.1.0",
+      "integrity": "sha512-DPe5pVFaAsinSaV6QjQ6gdiedWDcRCbUuiQfQa2wmWV7+xC9bGulGI8+TdRmoFkAPaBXk8CrAbnlY2ISniJ47Q==",
+      "resolved": "https://registry.npmmirror.com/run-applescript/-/run-applescript-7.1.0.tgz",
+      "license": "MIT"
+    },
+    {
+      "path": "node_modules/vscode-jsonrpc",
+      "name": "vscode-jsonrpc",
+      "version": "9.0.2",
+      "integrity": "sha512-SbQSV9yRemARxeXw6LU5sS6Zq0e9/DgCCX5yelH263ZQWukbTk8EF8fjTrr1dziasf4GwlJbvTwFnTrnQFWZXQ==",
+      "resolved": "https://registry.npmmirror.com/vscode-jsonrpc/-/vscode-jsonrpc-9.0.2.tgz",
+      "license": "MIT"
+    },
+    {
+      "path": "node_modules/wsl-utils",
+      "name": "wsl-utils",
+      "version": "1.0.0",
+      "integrity": "sha512-Hl0ZOAs672vg+06kfujwRhoS6/jehvULrlFkuF2dRu6pHgA8U06h3xqNIqNNU1LTXPcedxByAR4GS6pwQK0mgA==",
+      "resolved": "https://registry.npmmirror.com/wsl-utils/-/wsl-utils-1.0.0.tgz",
+      "license": "MIT"
+    },
+    {
+      "path": "node_modules/wsl-utils/node_modules/powershell-utils",
+      "name": "powershell-utils",
+      "version": "0.1.0",
+      "integrity": "sha512-dM0jVuXJPsDN6DvRpea484tCUaMiXWjuCn++HGTqUWzGDjv5tZkEZldAJ/UMlqRYGFrD/etByo4/xOuC/snX2A==",
+      "resolved": "https://registry.npmmirror.com/powershell-utils/-/powershell-utils-0.1.0.tgz",
+      "license": "MIT"
+    },
+    {
+      "path": "node_modules/zod",
+      "name": "zod",
+      "version": "4.6.4",
+      "integrity": "sha512-AXSD6hvGdvRjajG/l1cC+d6IrhH+sjmPKtYeQdJIK8MFJl3LyClzS+o/YsVC+zQZPupAaeH5skwwm8YqYH7BqA==",
+      "resolved": "https://registry.npmmirror.com/zod/-/zod-4.6.4.tgz",
+      "license": "MIT"
+    }
+  ]
+}

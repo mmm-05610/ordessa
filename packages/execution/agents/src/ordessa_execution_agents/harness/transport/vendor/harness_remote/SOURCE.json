@@ -1,0 +1,23 @@
+{
+  "source": "https://github.com/giuliastro/harness-remote.git",
+  "ref": "v3.0.2",
+  "commit": "21ce6db49af708c4c7c3f96ef6a50f62dced8dab",
+  "license": "Apache-2.0",
+  "license_file": "LICENSE",
+  "selection": "Work Order 38 conditional leader; adopted by Work Order 40-A",
+  "files": [
+    {
+      "path": "bridge/src/acp-client.js",
+      "origin": "upstream",
+      "upstream_sha256": "d7546376cf48035b2b04170769331b9acb94de3371b5aa9ad093d132dfdbb87d",
+      "current_sha256": "80c5315f64df9ee505885bb73d49cabf00abc48ada143e8b54549918eaa8d30e",
+      "patch": "async permission resolver; per-process stdout line buffer; adapter data.error cause preservation; transport-only mode with caller-owned writes and a caller-named cwd (see PATCHES.md \u00a71, \u00a75, \u00a77 and \u00a78)"
+    },
+    {
+      "path": "bridge/src/backward-line-scan.js",
+      "origin": "upstream",
+      "upstream_sha256": "9a9edfec9de38e0939e9b08f52bd7294362609035402eb9d0c0729a642250199",
+      "current_sha256": "9a9edfec9de38e0939e9b08f52bd7294362609035402eb9d0c0729a642250199"
+    }
+  ]
+}

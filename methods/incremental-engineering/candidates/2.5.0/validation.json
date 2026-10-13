@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "status": "asset_validation_only_unsupported_candidate",
+  "actual_source_loader_success": true,
+  "method_schema_cases": 9,
+  "policy_checks": {
+    "host_capture_all_facts_not_prerequisite": true,
+    "independence_is_method_scoped": true,
+    "acceptance_four_criteria_preserved": true,
+    "status_dispositions_not_relaxed": true,
+    "asserted_not_verified": true
+  },
+  "historical_2_4": {
+    "files_verified": 62,
+    "index_exact": true
+  },
+  "compiler_attempted": false,
+  "publication_attempted": false,
+  "runtime_attempted": false,
+  "host_catalog_created": false,
+  "snapshot_created": false,
+  "model_calls": 0,
+  "pending": "generic Unit submit/reviewer identity constraints/full Plan provenance/Work bridge frozen contracts",
+  "previous_validation": "docs/validation.before-unit-policy.json",
+  "unit_review_output_checkpoint": {
+    "schema_cases": 12,
+    "source_loader_pass": true,
+    "original_value_types_compatible": true,
+    "full_runtime_codec_verified": false,
+    "compiler_executed": false,
+    "path": "docs/reviewer-output-checkpoint-rev59.json"
+  }
+}

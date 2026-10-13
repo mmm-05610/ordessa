@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-harness-goose"
+version = "0.1.0a1"
+description = "Independent goose brand provider facts for the Ordessa harness group"
+requires-python = ">=3.10"
+dependencies = ["ordessa-execution-agents==0.1.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

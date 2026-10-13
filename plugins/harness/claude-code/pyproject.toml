@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61,<77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-harness-claude-code"
+version = "0.1.0a1"
+description = "Independent Claude Code AgentUnit provider and explicit native SDK adapter"
+requires-python = ">=3.10"
+
+dependencies = ["ordessa-units==0.1.0", "ordessa-infrastructure==0.1.0", "ordessa-execution-agents==0.1.0", "ordessa-execution-api==0.1.0"]
+
+[project.optional-dependencies]
+server = ["ordessa-server-plugin-api>=0.1.0,<1"]
+sdk = ["claude-agent-sdk==0.2.163"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.package-data]
+ordessa_harness_claude_code = ["deployment/*", "_registration_declarations/*.toml", "_registration_declarations/*.json", "acp/launch_claude.json", "acp/launch_claude.mjs", "acp/launch_claude_code.json", "acp/launch_claude_code.mjs", "acp/profile/bridge.mjs", "acp/profile/claude-auth.mjs", "acp/profile/claude-provider-model.mjs", "acp/profile/configuration-query.mjs", "acp/profile/entry.mjs", "acp/profile/routing.mjs", "acp/profile/strategy.mjs"]

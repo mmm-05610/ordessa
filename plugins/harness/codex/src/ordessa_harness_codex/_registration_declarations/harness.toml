@@ -1,0 +1,78 @@
+[[harness]]
+schema_version = 1
+driver = "codex"
+# 静态候选（产品层声明上限），**不是**观测结论：Codex 生产封装已在树（
+# `codex/production.py`＋`codex-production-chain-gate.py` 全链门，离线与真实模型
+# 预检均已通过，见 docs/server-round1/fullstack/codex-production-packaging.md 与
+# live-model-preflight.md §6 Codex）；本段 observed 仍逐项留空——门证据尚未被吸收
+# 为 workbench 逐项声明。
+# 逐项证据见 plugins/agent-box-harnesses/tests/test_capability_declarations.py 的
+# FAMILY_MATRIX。
+capabilities = ["start", "observe", "finish", "attach", "stream", "permissions", "native_continuation"]
+[harness.identity]
+harness_type = "codex"
+display_name = "Codex"
+description = "OpenAI Codex Harness"
+version = "2.0"
+[harness.executable]
+identity = "codex"
+resolver_kind = "PATH_OR_BUNDLE"
+bundle_members = ["codex", "codex-app-server"]
+version_probe = ["--version"]
+[harness.profile]
+native_home = ".codex"
+guest_home = "/runtime/home"
+config_format = "json-or-toml"
+payload_schema = "codex-profile-v1"
+codec = "codex"
+overlay_policy = "execution-local"
+slots = ["provider", "permission", "instruction", "mcp", "skill", "hooks"]
+skill_target = "/runtime/home/skills/{skill_id}"
+skill_env = "CODEX_HOME"
+# Order 58 stage A (first-hand): the pinned codex binary declares `mcp_servers`
+# in $CODEX_HOME/config.toml (34 occurrences of the key in 0.147.0).
+mcp_target = "/runtime/home/.codex/config.toml"
+mcp_key = "mcp_servers"
+# Order 59 stage A (first-hand): codex reads `hooks/hooks.json` with the
+# same event names as claude (SessionStart…SubagentStop, hook_event_name).
+hooks_target = "/runtime/home/.codex/hooks/hooks.json"
+# Order 63 stage A (first-hand): the pinned binary names
+# `memories/MEMORY.md` and `memories/memory_summary.md`, i.e. under
+# $CODEX_HOME/memories/.
+memory_paths = [".codex/memories/MEMORY.md", ".codex/memories/memory_summary.md"]
+[[harness.inputs]]
+contract_id = "agent-box.skill@1"
+minimum = 0
+maximum = 32
+required = false
+selectors = ["agent-skill"]
+target = "skill-tree"
+transformer = "agent-skills"
+[[harness.launch_modes]]
+name = "interactive"
+argv = ["codex"]
+io = "pty"
+[[harness.launch_modes]]
+name = "exec"
+argv = ["codex", "exec"]
+io = "stdio"
+[[harness.launch_modes]]
+name = "app-server"
+argv = ["codex", "app-server"]
+io = "stdio"
+[harness.runtime]
+io = "stdio"
+host_capabilities = ["runtime-composition"]
+sandbox_capabilities = ["projection"]
+network = "required"
+terminal = "stdio-or-pty"
+[harness.continuation]
+kind = "native_session"
+contract_id = "agent-box.codex-continuation@1"
+target_provider = "codex-continuation"
+[harness.credential]
+contract = "agent-box.credential@1"
+locator_provider = "codex-login"
+guest_target_class = "secret-mount"
+materializer = "codex-login"
+

@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61,<77"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "ordessa-harness-dsh"
+version = "0.1.0a1"
+description = "Independently activated DeepSeek dsh AgentUnit provider"
+requires-python = ">=3.10"
+dependencies = ["ordessa-units==0.1.0", "PyYAML==6.0.3", "ordessa-execution-agents==0.1.0", "ordessa-execution-api==0.1.0"]
+[project.optional-dependencies]
+server = ["ordessa-server-plugin-api>=0.1.0,<1"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.package-data]
+ordessa_harness_dsh = ["deployment/*", "_registration_declarations/*.toml", "_registration_declarations/*.json", "acp/launch_dsh.json", "acp/launch_dsh.mjs"]

@@ -1,0 +1,17 @@
+{
+  "name": "agent-box-harness-runtime-kilo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline-locked runtime closure for the Kilo CLI ACP entry (Work Order 43 follow-up). Separate root per the family convention; the launcher package's postinstall (binary download) is never run - the platform package ships the binary.",
+  "license": "MIT",
+  "overrides": {
+    "@kilocode/cli": "7.7.2"
+  },
+  "dependencies": {
+    "@kilocode/cli": "7.7.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

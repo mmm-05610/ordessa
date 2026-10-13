@@ -1,0 +1,59 @@
+[[harness]]
+schema_version = 1
+driver = "grok-build"
+# 静态候选（产品层声明上限，本条 capabilities 不因门升降）+ 2026-10-07 门观测注记：
+# Grok Build v1.0.46（x.ai/cli 安装脚本实测 stable=1.0.46，`grok 1.0.46 (2765805b9442)`，
+# 隔离 prefix 安装）是 xAI 官方编码 harness（Rust，仓库 github.com/xai-org/grok-build，
+# LICENSE 双源 Apache-2.0）。本仓假端点全链门 + 零凭据方法矩阵（六轮 ACP 进程，门报告
+# docs/archive/server-round1/fullstack/grok-build-production-packaging.md）实测：ACP 面
+# initialize/authenticate/session/new/session/prompt/session/close/session/list 存在；
+# authenticate 为**客户端发起扩展** `{methodId, _meta:{headless:true}}`，methodId 词表
+# xai.api_key|cached_token|grok.com（bogus → -32602 unsupported auth method），零凭据
+# xai.api_key → -32000 data "Set XAI_API_KEY or add api_key/env_key to config.toml"，
+# cached_token 零凭据 NO_RESPONSE；authMethods 播发随凭据可用性动态增播 xai.api_key。
+# observed 回填见 test_capability_declarations.py FAMILY_MATRIX（start/observe 已观测，
+# finish/stream/native_continuation 未达成判据）。`attach`/`permissions` 刻意**不**声明：
+# promptCapabilities 实测 image=false/audio=false/embeddedContext=true；无运行时权限裁决
+# （session/set_mode 存在且 modeId 必填，但无裁决流；requestPermission/permission_response
+# 缺席 -32601）。`kill_task`/`get_task_output` 实测**缺席**（-32601，三种参数形状一致；
+# changelog v0.2.117 背景条目在 1.0.46 stdio 面无对应方法）。
+# 无 npm 包（仅安装脚本/源码）；打包路线缺口已登记（证据文档 §8：无构建脚本/无工具链
+# 钉版/无摘要入 baseline），闭合前不进托管交付面（docs/reference/baseline.md 规则 4）。
+capabilities = ["start", "observe", "finish", "stream", "native_continuation"]
+[harness.identity]
+harness_type = "grok-build"
+display_name = "Grok Build"
+description = "xAI Grok Build CLI (Rust), official ACP stdio surface (`grok agent stdio`)"
+version = "1.0.46"
+[harness.executable]
+identity = "grok"
+resolver_kind = "PATH_OR_BUNDLE"
+bundle_members = ["grok"]
+version_probe = ["--version"]
+[harness.profile]
+native_home = ".grok"
+guest_home = "/runtime/home"
+config_format = "toml"
+payload_schema = "grok-build-profile-v1"
+codec = "grok-build"
+overlay_policy = "execution-local"
+slots = ["provider", "instruction"]
+[[harness.launch_modes]]
+name = "acp"
+argv = ["grok", "agent", "stdio"]
+io = "stdio"
+[harness.runtime]
+io = "stdio"
+network = "required"
+terminal = "stdio"
+[harness.continuation]
+# 2026-10-07 门实测更正原静态注释：session/load 与 session/resume 在 `grok agent stdio`
+# 面**存在**（超 headless-scripting 页文档证据；伪造 id → -32603 FS_NOT_FOUND，零凭据
+# 不走鉴权门；字段面 sessionId+cwd 必填 string）。真实 native id 下两者均成功，但重开为
+# **重放**（存储事件以 isReplay:true 回投）——与原注释预期的零重放相反；第二轮 provider
+# 上下文承接未观测（轮次 stopReason=cancelled）。observed 判据未达成
+# （FAMILY_MATRIX native_continuation=not-observed）；kind/contract 仍为产品层静态声明，
+# 升格前须按证据文档 §7 判据重验（claude 先例：contract 短词干 + target_provider 全词干）。
+kind = "native_session"
+contract_id = "agent-box.grok-continuation@1"
+target_provider = "grok-build-continuation"
