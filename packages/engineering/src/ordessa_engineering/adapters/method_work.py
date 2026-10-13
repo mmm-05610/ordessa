@@ -259,24 +259,151 @@ class SQLitePersistedMethodWorkSource:
             raise ApplicationError("WORK_READ_SET_GUARD_UNAVAILABLE")
         return guard(reads)
 
-    def _review_requirements(self, context, snapshot, proposal, revisions, artifacts):
+    def _review_requirements(self, context, snapshot, proposal, revisions, artifacts, *, phase_key=None):
         if not proposal.review_requirement_templates:
             return ()
         if self.review_bindings is not None:
-            if getattr(self.review_bindings, "proposal_ref", None) != proposal.ref:
-                raise ApplicationError("WORK_REVIEW_BINDING_MISMATCH")
             phase_bindings = self.review_bindings.resolve_intent_bindings(
                 context, _method_ref(snapshot), proposal.ref)
-            return MethodBridge().proposal_review_requirements(
-                snapshot, phase_bindings, proposal=proposal,
-                artifacts=artifacts, revisions=revisions)
-        if not self.phase_bindings:
+        elif self.phase_bindings:
+            # An explicitly supplied exact phase tuple remains useful for
+            # isolated mechanism tests. Product composition uses the original
+            # SQLiteWorkReviewBindings reader above.
+            phase_bindings = tuple(binding for binding in self.phase_bindings
+                                   if binding.scope == proposal.scope)
+        else:
             raise ApplicationError("WORK_REVIEW_BINDING_UNAVAILABLE")
-        if any(binding.scope != proposal.scope for binding in self.phase_bindings):
+        if phase_key is not None:
+            phase_bindings = tuple(binding for binding in phase_bindings
+                                   if binding.phase_key == phase_key)
+            if len(phase_bindings) != 1:
+                raise ApplicationError("WORK_REVIEW_BINDING_UNAVAILABLE")
+        if any(binding.scope != proposal.scope for binding in phase_bindings):
             raise ApplicationError("WORK_REVIEW_BINDING_MISMATCH")
         return MethodBridge().proposal_review_requirements(
-            snapshot, self.phase_bindings, proposal=proposal,
-            artifacts=artifacts, revisions=revisions)
+                snapshot, phase_bindings, proposal=proposal,
+                artifacts=artifacts, revisions=revisions)
+
+    def _work_review_requirements(self, context, snapshot, node, view, spec,
+                                  plan, proposal, revisions, artifacts,
+                                  input_ref, reads):
+        """Prove a persisted plan came from this exact original Work attempt."""
+        if self.review_bindings is None:
+            raise ApplicationError("WORK_REVIEW_BINDING_UNAVAILABLE")
+        from ordessa_engineering.application.contracts.method_work import (
+            decode_work_review_selector, work_review_selector_projection,
+        )
+        from ordessa_engineering.domain.artifacts.method_binding import MethodRef
+        from ordessa_engineering.domain.reviews.models import ReviewPlan
+        from ordessa_engineering.application.contracts.snapshots import EngineeringTargetBindings
+        import json
+        try:
+            entry = self.review_bindings.read_request_correlation(context, plan)
+            if (entry is None or entry.operation != "engineering.reviews.request"
+                    or entry.state != "completed" or type(entry.result_bytes) is not bytes):
+                raise ApplicationError("WORK_REVIEW_CORRELATION_UNAVAILABLE")
+            result = json.loads(entry.result_bytes.decode("utf-8"))
+            proof = result["work_review"]
+            selector = decode_work_review_selector(proof["selector"])
+            if (type(plan) is not ReviewPlan
+                    or proof["review_id"] != plan.review_id
+                    or proof["plan_digest"] != asdict(plan.plan_digest)
+                    or proof["command"] != {"key": asdict(entry.key),
+                                           "operation_id": entry.operation_id}
+                    or selector.scope != context.scope
+                    or selector.run_id != view.get("run_id")
+                    or selector.method_ref != _method_ref(snapshot)
+                    or selector.phase_key != spec.get("phase_key")
+                    or plan.requirement.phase_key != selector.phase_key
+                    or selector.input_ref != input_ref):
+                raise ApplicationError("WORK_REVIEW_CORRELATION_MISMATCH")
+            expected_cursor = view.get("row", {}).get("cursor")
+            program = snapshot.program
+            if (type(expected_cursor) is not int or not 0 <= expected_cursor < len(program.workflow.steps)
+                    or program.workflow.steps[expected_cursor] is not node):
+                raise ApplicationError("WORK_REVIEW_CORRELATION_MISMATCH")
+            receipt_candidates = []
+            for item in view.get("step_receipts", ()):
+                body = item.get("body") if type(item) is dict else None
+                if type(body) is dict and body.get("node_id") == selector.phase_key:
+                    receipt_candidates.append((item.get("step"), body))
+            if not receipt_candidates:
+                raise ApplicationError("WORK_REVIEW_CORRELATION_UNAVAILABLE")
+            step_row, body = max(receipt_candidates, key=lambda item: item[0]["ordinal"])
+            if (body.get("work_review") != proof
+                    or body.get("run_id") != selector.run_id
+                    or body.get("method_ref") != asdict(selector.method_ref)
+                    or body.get("input_ref") != asdict(selector.input_ref)
+                    or body.get("node_id") != selector.phase_key
+                    or body.get("attempt") != selector.attempt
+                    or body.get("expected_row_digest") != asdict(selector.expected_row_digest)
+                    or body.get("expected_next_step_ordinal") != selector.expected_next_step_ordinal
+                    or step_row.get("ordinal") != body.get("ordinal")
+                    or view.get("next_step_ordinal") != body.get("ordinal") + 1):
+                raise ApplicationError("WORK_REVIEW_CORRELATION_MISMATCH")
+
+            binding = self.review_bindings.resolve_plan_bindings(context, plan)
+            if (type(binding) is not EngineeringTargetBindings
+                    or binding.scope != context.scope or binding.phase_key != selector.phase_key):
+                raise ApplicationError("WORK_REVIEW_BINDING_MISMATCH")
+            from ordessa_engineering.domain.reviews.refs import SubmissionRef
+            from ordessa_engineering.domain.artifacts.refs import ArtifactRevisionRef
+            phase_key = selector.phase_key
+            if type(selector.subject_ref) is ProposalRef:
+                if selector.subject_ref != proposal.ref:
+                    raise ApplicationError("WORK_REVIEW_SUBJECT_MISMATCH")
+                proposal_phases = self.review_bindings.resolve_intent_bindings(
+                    context, _method_ref(snapshot), proposal.ref)
+                if (type(proposal_phases) is not tuple or not proposal_phases
+                        or binding not in proposal_phases
+                        or any(type(item) is not EngineeringTargetBindings
+                               for item in proposal_phases)):
+                    raise ApplicationError("WORK_REVIEW_BINDING_MISMATCH")
+                requirements = MethodBridge().proposal_review_requirements(
+                    snapshot, proposal_phases, proposal=proposal,
+                    artifacts=artifacts, revisions=revisions)
+            elif type(selector.subject_ref) is SubmissionRef:
+                selected = self.review_bindings.resolve_review_submission_for_plan(context, plan)
+                if selected != selector.subject_ref:
+                    raise ApplicationError("WORK_REVIEW_SUBJECT_MISMATCH")
+                phase_bindings = self.review_bindings.resolve_submission_bindings_for_plan(context, plan)
+                if (type(phase_bindings) is not tuple or not phase_bindings
+                        or binding not in phase_bindings
+                        or any(type(item) is not EngineeringTargetBindings for item in phase_bindings)):
+                    raise ApplicationError("WORK_REVIEW_BINDING_MISMATCH")
+                from ordessa_engineering.application.usecases.changes.acceptance_closure import resolve_submission_acceptance
+                with self.factory.begin(context.scope, "read") as uow:
+                    closure = resolve_submission_acceptance(uow, selected)
+                    closure_proposals = {item.ref: item for item in closure.proposals}
+                    if (proposal.ref not in closure_proposals
+                            or closure_proposals[proposal.ref] != proposal
+                            or closure.package.payload.method_ref != _method_ref(snapshot)
+                            or closure.submission.ref != selected):
+                        raise ApplicationError("WORK_REVIEW_BINDING_MISMATCH")
+                    requirements = MethodBridge().submission_review_requirements(
+                        snapshot, phase_bindings, requirements=closure.requirements,
+                        revisions=closure.artifact_revisions)
+                    versions = {(item.kind, item.identifier): item.version for item in reads.versions}
+                    for revision in closure.artifact_revisions:
+                        artifact = uow.engineering.get_artifact(revision.ref.artifact_id)
+                        if artifact.scope != context.scope:
+                            raise ApplicationError("SCOPE_MISMATCH")
+                        versions[("artifact", artifact.artifact_id)] = artifact.version
+                    reads = ReadSet(context.scope, tuple(
+                        ReadVersion(kind, identifier, version)
+                        for (kind, identifier), version in sorted(versions.items())))
+            elif type(selector.subject_ref) is ArtifactRevisionRef:
+                raise ApplicationError("WORK_REVIEW_SUBJECT_OWNER_UNAVAILABLE")
+            else:
+                raise ApplicationError("WORK_REVIEW_SUBJECT_OWNER_UNAVAILABLE")
+            expected = tuple(item for item in requirements if item.phase_key == phase_key)
+            if not expected or plan.requirement not in expected:
+                raise ApplicationError("METHOD_REQUIREMENTS_CHANGED")
+            return expected, reads
+        except ApplicationError:
+            raise
+        except Exception:
+            raise ApplicationError("WORK_REVIEW_CORRELATION_UNAVAILABLE") from None
 
     @contextmanager
     def guard_start(self, context, snapshot, *, run_id, selection):
@@ -349,7 +476,6 @@ class SQLitePersistedMethodWorkSource:
                 if getattr(resolved, "ref", None) != ref:
                     raise ApplicationError("WORK_SOURCE_MATERIAL_UNAVAILABLE")
             reads = self._proposal_reads(context.scope, proposal_ref, control, change, artifacts)
-        self._review_requirements(context, snapshot, proposal, revisions, artifacts)
         entry = next((node for node in program.workflow.steps
                       if node.id == program.workflow.entry), None)
         if type(entry) is not WaitNode:
@@ -405,32 +531,6 @@ class SQLitePersistedMethodWorkSource:
         action = None
         expected_control_version = None
         native_execution = None
-        submission_selection = None
-        if family == "review_gate" and self.review_bindings is not None:
-            # A configured review phase may bind either a Proposal review or
-            # the exact acceptance review for a persisted Submission. Resolve
-            # that choice through the same trusted owner before opening this
-            # source's UoW; never infer a Submission from caller event data.
-            try:
-                method_ref = _method_ref(snapshot)
-                selected_submission = self.review_bindings.resolve_review_submission(
-                    context, method_ref, spec.get("phase_key"))
-                if selected_submission is not None:
-                    from ordessa_engineering.domain.reviews.refs import SubmissionRef
-                    resolve_bindings = getattr(self.review_bindings,
-                                               "resolve_submission_bindings", None)
-                    if (type(selected_submission) is not SubmissionRef
-                            or not callable(resolve_bindings)):
-                        raise ApplicationError("WORK_REVIEW_BINDING_UNAVAILABLE")
-                    phase_bindings = resolve_bindings(
-                        context, method_ref, selected_submission)
-                    if type(phase_bindings) is not tuple or not phase_bindings:
-                        raise ApplicationError("WORK_REVIEW_BINDING_UNAVAILABLE")
-                    submission_selection = (selected_submission, phase_bindings)
-            except ApplicationError:
-                raise
-            except Exception:
-                raise ApplicationError("WORK_REVIEW_BINDING_UNAVAILABLE") from None
         for event_name in event_slots:
             try:
                 validate_id(event_name)
@@ -633,47 +733,11 @@ class SQLitePersistedMethodWorkSource:
                     raise ApplicationError("WORK_CONDITION_INPUT_INVALID")
                 if proposal_ref != input_proposal_ref:
                     raise ApplicationError("WORK_INPUT_DOCUMENT_MISMATCH")
-                if submission_selection is None:
-                    # Resolve the trusted full Proposal phase set after this
-                    # SQLite read UoW closes; SQLiteReviewBindings owns its own
-                    # original UoW.
-                    review_selection = ("proposal", proposal, revisions, artifacts,
-                                        phase_key, plan)
-                else:
-                    from ordessa_engineering.application.usecases.changes.acceptance_closure import (
-                        resolve_submission_acceptance,
-                    )
-                    submission_ref, phase_bindings = submission_selection
-                    try:
-                        closure = resolve_submission_acceptance(uow, submission_ref)
-                    except ApplicationError:
-                        raise
-                    except Exception:
-                        raise ApplicationError("WORK_REVIEW_BINDING_UNAVAILABLE") from None
-                    closure_proposals = {item.ref: item for item in closure.proposals}
-                    if (proposal_ref not in closure_proposals
-                            or closure_proposals[proposal_ref] != proposal
-                            or closure.package.payload.method_ref != _method_ref(snapshot)
-                            or closure.submission.package_ref != closure.package.ref):
-                        raise ApplicationError("WORK_REVIEW_BINDING_MISMATCH")
-                    requirements = MethodBridge().submission_review_requirements(
-                        snapshot, phase_bindings,
-                        requirements=closure.requirements,
-                        revisions=closure.artifact_revisions)
-                    # Keep the exact submission output artifacts in the same
-                    # source ReadSet as the selected Proposal material so the
-                    # downstream guarded resume cannot accept a changed owner
-                    # version between selection and commit.
-                    versions = {(v.kind, v.identifier): v.version for v in reads.versions}
-                    for revision in closure.artifact_revisions:
-                        artifact = uow.engineering.get_artifact(revision.ref.artifact_id)
-                        if artifact.scope != context.scope:
-                            raise ApplicationError("SCOPE_MISMATCH")
-                        versions[("artifact", artifact.artifact_id)] = artifact.version
-                    reads = ReadSet(context.scope, tuple(
-                        ReadVersion(kind, identifier, version)
-                        for (kind, identifier), version in sorted(versions.items())))
-                    review_selection = ("submission", requirements, phase_key, plan)
+                review_plan = plan
+                review_proposal = proposal
+                review_revisions = revisions
+                review_artifacts = artifacts
+                review_input_ref = input_ref
             else:
                 intent_slot = spec.get("intent_slot")
                 if type(intent_slot) is not str:
@@ -729,15 +793,9 @@ class SQLitePersistedMethodWorkSource:
                     or captured.authority_id != self.factory.library.library_id):
                 raise ApplicationError("WORK_NATIVE_RESULT_UNAVAILABLE")
         if family == "review_gate":
-            if review_selection[0] == "submission":
-                _, requirements, phase_key, plan = review_selection
-            else:
-                _, proposal, revisions, artifacts, phase_key, plan = review_selection
-                requirements = self._review_requirements(
-                    context, snapshot, proposal, revisions, artifacts)
-            expected = tuple(req for req in requirements if req.phase_key == phase_key)
-            if not expected or plan.requirement not in expected:
-                raise ApplicationError("METHOD_REQUIREMENTS_CHANGED")
+            expected, reads = self._work_review_requirements(
+                context, snapshot, node, view, spec, review_plan, review_proposal,
+                review_revisions, review_artifacts, review_input_ref, reads)
             from ordessa_engineering.application.contracts.method_work import ReviewWaitRequirements
             intent = ReviewWaitRequirements(context.scope, expected)
         condition = BoundRunWait(
@@ -790,6 +848,26 @@ class SQLitePersistedMethodWorkSource:
             reads = self._proposal_reads(context.scope, proposal_ref, control, change, artifacts)
         with self._guard_read_set(reads):
             yield WorkSeed({slot: asdict(ref)}, reads)
+
+    def step_input_ref(self, context, snapshot, view):
+        """Return the exact declared input-document revision for a Work step.
+
+        This is only an identity projection from persisted slots. The guarded
+        completion path resolves and versions the document in the original UoW.
+        Methods without an input document return None; request steps require a
+        concrete ref before they can be correlated.
+        """
+        if type(view) is not dict or type(view.get("row")) is not dict:
+            raise ApplicationError("WORK_STEP_CORRELATION_UNAVAILABLE")
+        policy = self._manifest_policy(snapshot)
+        slots = self._slots(view["row"].get("inputs", {}).get("slots"))
+        raw = slots.get(policy["input_document_slot"])
+        if raw is None:
+            return None
+        ref = _exact_ref(raw)
+        if type(ref) is not ArtifactRevisionRef:
+            raise ApplicationError("WORK_STEP_CORRELATION_UNAVAILABLE")
+        return ref
 
     @contextmanager
     def guard_step_completion(self, context, snapshot, node, view):

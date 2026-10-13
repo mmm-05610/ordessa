@@ -78,17 +78,45 @@ class EngineeringReviewAdmission:
         self.factory,self.methods,self.bindings,self.source=factory,method_control,bindings,reviewer_source
         self.bridge=MethodBridge()
 
-    def _expected(self, context, plan, snapshot):
+    def _expected(self, context, plan, snapshot, *, work_selector=None):
         if self.bindings is None:
             raise ApplicationError('METHOD_TARGET_BINDINGS_UNAVAILABLE')
-        binding=self.bindings.resolve_bindings(context,plan.requirement.method_ref,plan.requirement.phase_key)
+        plan_aware=callable(getattr(self.bindings,'resolve_plan_bindings',None))
+        if work_selector is not None:
+            resolver=getattr(self.bindings,'resolve_bindings',None)
+            if not callable(resolver):
+                raise ApplicationError('WORK_REVIEW_BINDING_UNAVAILABLE')
+            binding=resolver(context,plan,work_selector=work_selector)
+        elif plan_aware:
+            binding=self.bindings.resolve_plan_bindings(context,plan)
+        else:
+            binding=self.bindings.resolve_bindings(context,plan.requirement.method_ref,plan.requirement.phase_key)
         if binding.scope != context.scope or binding.phase_key != plan.requirement.phase_key:
             raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
         self.bridge.require_workflow_phase(snapshot, binding)
         proposals={t.ref for t in binding.targets.targets if type(t.ref) is ProposalRef}
-        selector = getattr(self.bindings, 'resolve_review_proposal', None)
+        work_mode=work_selector is not None or plan_aware
+        if work_mode:
+            phase_reader=getattr(self.bindings,
+                'resolve_phase_bindings_for_work' if work_selector is not None else 'resolve_phase_bindings_for_plan',None)
+            proposal_reader=getattr(self.bindings,
+                'resolve_proposal_for_work' if work_selector is not None else 'resolve_proposal_for_plan',None)
+            if not callable(phase_reader) or not callable(proposal_reader):
+                raise ApplicationError('WORK_REVIEW_BINDING_UNAVAILABLE')
+            selected_phases=(phase_reader(context,plan,work_selector) if work_selector is not None
+                             else phase_reader(context,plan))
+            selected_proposal=(proposal_reader(context,plan,work_selector) if work_selector is not None
+                               else proposal_reader(context,plan))
+            if type(selected_phases) is not tuple or not selected_phases:
+                raise ApplicationError('WORK_REVIEW_BINDING_UNAVAILABLE')
+            if selected_proposal is not None:
+                if type(selected_proposal) is not ProposalRef:
+                    raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
+                proposals={selected_proposal}
+        selector = getattr(self.bindings, 'resolve_review_proposal', None) if not work_mode else None
         if callable(selector):
-            selected = selector(context, plan.requirement.method_ref, plan.requirement.phase_key)
+            selected = (selector(context, plan) if work_selector is not None else
+                        selector(context, plan.requirement.method_ref, plan.requirement.phase_key))
             if selected is not None:
                 if (type(selected) is not ProposalRef
                         or (selected.realm_id, selected.project_id) != (context.scope.realm_id, context.scope.project_id)
@@ -97,18 +125,29 @@ class EngineeringReviewAdmission:
                 proposals = {selected}
             elif proposals:
                 raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
-        submission_selector = getattr(self.bindings, 'resolve_review_submission', None)
-        submission_ref = (submission_selector(context, plan.requirement.method_ref, plan.requirement.phase_key)
-                          if callable(submission_selector) else None)
+        submission_selector = getattr(self.bindings, 'resolve_review_submission', None) if not work_mode else None
+        if callable(submission_selector):
+            submission_ref = submission_selector(
+                context, plan.requirement.method_ref, plan.requirement.phase_key)
+        elif work_mode and work_selector is not None:
+            submission_ref = (work_selector.subject_ref
+                              if type(work_selector.subject_ref) is SubmissionRef else None)
+        elif work_mode:
+            submission_ref = self.bindings.resolve_review_submission_for_plan(context, plan)
+        else:
+            submission_ref = None
         if submission_ref is not None:
             if (type(submission_ref) is not SubmissionRef
                     or (submission_ref.realm_id, submission_ref.project_id) !=
                        (context.scope.realm_id, context.scope.project_id)):
                 raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
-            resolver = getattr(self.bindings, 'resolve_submission_bindings', None)
-            if not callable(resolver):
+            resolver = getattr(self.bindings, 'resolve_submission_bindings', None) if not work_mode else None
+            if work_mode:
+                phase_bindings=selected_phases
+            elif not callable(resolver):
                 raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
-            phase_bindings = resolver(context, plan.requirement.method_ref, submission_ref)
+            else:
+                phase_bindings = resolver(context, plan.requirement.method_ref, submission_ref)
             if (type(phase_bindings) is not tuple or not phase_bindings or binding not in phase_bindings
                     or len({b.phase_key for b in phase_bindings}) != len(phase_bindings)):
                 raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
@@ -159,9 +198,14 @@ class EngineeringReviewAdmission:
                 owners=tuple(uow.engineering.get_artifact(m.artifact_id) for m in proposal.mutations)
                 owners=tuple(replace(o,head_revision_id=None) if m.operation=='create' else o for o,m in zip(owners,proposal.mutations))
             arguments=dict(proposal=proposal,artifacts=owners,revisions=revisions)
-            resolver = getattr(self.bindings, 'resolve_intent_bindings', None)
-            if callable(resolver):
+            resolver = getattr(self.bindings, 'resolve_intent_bindings', None) if not work_mode else None
+            if work_mode:
+                phases=selected_phases
+            elif callable(resolver):
                 phases = resolver(context, plan.requirement.method_ref, proposal.ref)
+            else:
+                phases=()
+            if phases:
                 if type(phases) is not tuple or binding not in phases:
                     raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
                 for phase in phases:
@@ -176,12 +220,27 @@ class EngineeringReviewAdmission:
         return standards[0]
 
     @contextmanager
-    def guard_plan(self, context, plan):
+    def guard_plan(self, context, plan, *, work_selector=None):
         if type(plan) is not ReviewPlan or plan.scope != context.scope:
             raise ApplicationError('INVALID_INPUT')
+        if (work_selector is None
+                and callable(getattr(self.bindings,'resolve_plan_bindings',None))):
+            raise ApplicationError('WORK_REVIEW_SELECTOR_REQUIRED')
         with self.methods.guard_method(context,plan.requirement.method_ref) as snapshot:
-            self._expected(context,plan,snapshot)
+            self._expected(context,plan,snapshot,work_selector=work_selector)
             yield
+
+    def check_work_review_current(self, uow, context, plan, work_selector):
+        check=getattr(self.bindings,'check_work_review_current',None)
+        if not callable(check):
+            raise ApplicationError('WORK_REVIEW_BINDING_UNAVAILABLE')
+        return check(uow,context,plan,work_selector)
+
+    def work_review_result(self, context, plan, work_selector, entry, *, request, work_facts):
+        build=getattr(self.bindings,'work_review_result',None)
+        if not callable(build):
+            raise ApplicationError('WORK_REVIEW_BINDING_UNAVAILABLE')
+        return build(context,plan,work_selector,entry,request=request,work_facts=work_facts)
 
     def verify_response(self, context, plan, request, raw_response_ref):
         if self.source is None:

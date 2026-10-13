@@ -6,6 +6,9 @@ they do not choose source, reviewer, persistence or execution implementations.
 """
 from .service import EngineeringService, SUPPORTED_COMMANDS, SUPPORTED_QUERIES
 from ..contracts.commands import CommandContext, CommandResult, ReadSet
+from ..contracts.method_work import (
+    WorkReviewSelector, decode_work_review_selector, work_review_selector_projection,
+)
 from ..contracts.execution_dispatch import EXECUTION_DISPATCH
 from ..contracts.errors import ApplicationError
 from ..contracts.mixed_reviews import MixedReviewerAuthorityPort
@@ -20,7 +23,8 @@ from ...domain.reviews.assignments import ReviewerAssignmentRef
 from ..usecases.reviews.assignments import ASSIGN_REVIEWER, REVOKE_REVIEWER
 
 __all__ = ["EngineeringService", "SUPPORTED_COMMANDS", "SUPPORTED_QUERIES", "CommandContext",
-           "CommandResult", "ReadSet", "EXECUTION_DISPATCH", "DispatchBinding", "BlobRef",
+           "CommandResult", "ReadSet", "WorkReviewSelector", "decode_work_review_selector",
+           "work_review_selector_projection", "EXECUTION_DISPATCH", "DispatchBinding", "BlobRef",
            "ApplicationError", "bound_review_check_capabilities",
            "OwnerOperationResult", "UnitReviewBinding", "UnitReviewBindingResolver",
            "UnitReviewerAuthority", "NativeReviewInvocation", "MixedReviewerAuthorityPort",

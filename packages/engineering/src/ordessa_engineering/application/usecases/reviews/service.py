@@ -6,6 +6,7 @@ network, model, file IO or waiting inside the business transaction. Production
 composition is deliberately unavailable until those original owners are bound.
 """
 from ordessa_engineering.application.contracts.commands import read_set_projection
+from ordessa_engineering.application.contracts.method_work import work_review_selector_projection
 from dataclasses import asdict, replace
 from contextlib import ExitStack
 import hashlib
@@ -76,7 +77,8 @@ _SCHEMA_BYTES = {op: canonical_bytes({'$schema': 'https://json-schema.org/draft/
 _REFUSALS = frozenset({'NOT_FOUND', 'SCOPE_MISMATCH', 'READ_SET_CHANGED', 'REVIEW_SET_CHANGED',
     'REVIEW_CONTROL_CHANGED', 'REVIEW_REQUEST_CHANGED', 'REVIEW_STALE', 'REQUIREMENT_CONFLICT',
     'REVIEW_IDENTITY_CONFLICT', 'VERSION_EXHAUSTED', 'UNSUPPORTED_REFERENCE_KIND',
-    'UNSUPPORTED_CLAIM', 'REVIEW_SCHEMA_REQUIRED', 'REVIEW_RAW_RESPONSE_INVALID', 'MATERIAL_LIMIT'})
+    'UNSUPPORTED_CLAIM', 'REVIEW_SCHEMA_REQUIRED', 'REVIEW_RAW_RESPONSE_INVALID', 'MATERIAL_LIMIT',
+    'WORK_REVIEW_PLAN_ALREADY_BOUND', 'WORK_REVIEW_SELECTOR_STALE'})
 
 
 def input_schema(operation):
@@ -148,14 +150,20 @@ class ReviewUseCases:
         return result
 
     @staticmethod
-    def _digest(operation, context, parameters, reads):
+    def _digest(operation, context, parameters, reads, *, work_selector=None):
         schema = canonical_value(_SCHEMA_BYTES[operation])
-        return request_digest(operation, context, parameters, read_set_projection(reads),
+        preconditions = read_set_projection(reads)
+        if work_selector is not None:
+            if operation != 'engineering.reviews.request':
+                raise ApplicationError('WORK_REVIEW_SELECTOR_INVALID')
+            preconditions = {'read_set': preconditions,
+                             'work_review_selector': work_review_selector_projection(work_selector)}
+        return request_digest(operation, context, parameters, preconditions,
             input_schema_id=schema['$id'], input_schema_digest=Digest('sha256',
             hashlib.sha256(_SCHEMA_BYTES[operation]).hexdigest()), interface_version='1')
 
-    def _replay(self, operation, parameters, context, reads):
-        digest = self._digest(operation, context, parameters, reads)
+    def _replay(self, operation, parameters, context, reads, *, work_selector=None):
+        digest = self._digest(operation, context, parameters, reads, work_selector=work_selector)
         with self.factory.begin(context.scope, 'read') as uow:
             entry = uow.commands.get(context.key)
             if entry is None:
@@ -165,8 +173,9 @@ class ReviewUseCases:
                 raise ApplicationError('REQUEST_IDENTITY_CONFLICT')
             return CommandResult(uow.authority_id, entry.operation_id, entry.state, entry.result_bytes)
 
-    def _run(self, operation, parameters, context, reads, mutate):
-        digest = self._digest(operation, context, parameters, reads)
+    def _run(self, operation, parameters, context, reads, mutate, *, work_selector=None,
+             before_mutation=None, enrich_result=None):
+        digest = self._digest(operation, context, parameters, reads, work_selector=work_selector)
         with self.factory.begin(context.scope) as uow:
             reservation = uow.commands.reserve(context.key, project_id=context.scope.project_id,
                 operation=operation, operation_id=str(uuid4()), request_digest=digest)
@@ -177,7 +186,11 @@ class ReviewUseCases:
             try:
                 with uow.isolate():
                     uow.engineering.check_read_set(reads)
+                    if before_mutation is not None:
+                        before_mutation(uow)
                     result = mutate(uow)
+                    if enrich_result is not None:
+                        result = enrich_result(uow, entry, result)
             except ReferenceError:
                 state, result = 'rejected', {'code': 'INVALID_INPUT'}
             except ApplicationError as exc:
@@ -193,7 +206,7 @@ class ReviewUseCases:
     def plan(self, plan: ReviewPlan, context: CommandContext, *, read_set=None):
         return self._plan('engineering.reviews.plan', plan, context, read_set=read_set)
 
-    def request(self, parameters, context: CommandContext, *, read_set=None):
+    def request(self, parameters, context: CommandContext, *, read_set=None, work_selector=None):
         self._authorize(context, 'engineering.reviews.request')
         from ....domain.reviews.codec import decode_plan
         try:
@@ -203,9 +216,10 @@ class ReviewUseCases:
             plan = decode_plan(canonical_bytes(parameters['plan']))
         except (ReferenceError, TypeError, ValueError):
             raise ApplicationError('INVALID_INPUT') from None
-        return self._plan('engineering.reviews.request', plan, context, read_set=read_set)
+        return self._plan('engineering.reviews.request', plan, context, read_set=read_set,
+                          work_selector=work_selector)
 
-    def _plan(self, operation, plan, context, *, read_set=None):
+    def _plan(self, operation, plan, context, *, read_set=None, work_selector=None):
         self._authorize(context, operation)
         if type(plan) is not ReviewPlan or plan.scope != context.scope:
             raise ApplicationError('INVALID_INPUT')
@@ -214,12 +228,42 @@ class ReviewUseCases:
         plan = decode_plan(encode_plan(plan))
         reads = self._reads(context, read_set)
         parameters = _input({'plan': asdict(plan)})
-        replay = self._replay(operation, parameters, context, reads)
+        replay = self._replay(operation, parameters, context, reads, work_selector=work_selector)
         if replay is not None:
             return replay
-        with self._admission().guard_plan(context, plan):
-            return self._run(operation, parameters, context, reads,
-                lambda uow: {'request': asdict(uow.reviews.create_plan(plan))})
+        admission = self._admission()
+        if work_selector is None:
+            with admission.guard_plan(context, plan):
+                return self._run(operation, parameters, context, reads,
+                    lambda uow: {'request': asdict(uow.reviews.create_plan(plan))})
+        if operation != 'engineering.reviews.request':
+            raise ApplicationError('WORK_REVIEW_SELECTOR_INVALID')
+        with admission.guard_plan(context, plan, work_selector=work_selector):
+            check = getattr(admission, 'check_work_review_current', None)
+            correlation = getattr(admission, 'work_review_result', None)
+            if not callable(check) or not callable(correlation):
+                raise ApplicationError('WORK_REVIEW_BINDING_UNAVAILABLE')
+            work_facts = {}
+            def mutate(uow):
+                state = uow.reviews.create_plan(plan)
+                return {'request': asdict(state)}
+            def enrich(uow, entry, result):
+                request = result.get('request') if type(result) is dict else None
+                if type(request) is not dict or request.get('state') != 'requested':
+                    raise ApplicationError('WORK_REVIEW_REQUEST_UNAVAILABLE')
+                correlation_result=correlation(context, plan, work_selector, entry,
+                                               request=request, work_facts=work_facts)
+                if (type(correlation_result) is not dict
+                        or set(correlation_result) != {'work_review','work_bindings'}):
+                    raise ApplicationError('WORK_REVIEW_CORRELATION_UNAVAILABLE')
+                result.update(correlation_result)
+                return result
+            def check_current(uow):
+                work_facts.update(check(uow, context, plan, work_selector))
+            return self._run(operation, parameters, context, reads, mutate,
+                work_selector=work_selector,
+                before_mutation=check_current,
+                enrich_result=enrich)
 
     @staticmethod
     def _request_arguments(review_id, expected_version, fence):

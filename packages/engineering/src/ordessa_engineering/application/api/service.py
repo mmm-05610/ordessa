@@ -452,8 +452,10 @@ class EngineeringService:
         return self._packages.freeze_package(record,context)
 
     @staticmethod
-    def command_request_digest(operation, parameters, context, reads):
+    def command_request_digest(operation, parameters, context, reads, *, work_selector=None):
         """Exact original owner identity used to correlate a declared run step."""
+        if work_selector is not None and operation != 'engineering.reviews.request':
+            raise ApplicationError('WORK_REVIEW_SELECTOR_UNSUPPORTED')
         if operation=='engineering.packages.freeze':
             if reads != ReadSet(context.scope,()):
                 raise ApplicationError('PACKAGE_READ_SET_UNSUPPORTED')
@@ -464,6 +466,10 @@ class EngineeringService:
         from ...domain.common.models.values import Digest
         schema=EngineeringService.input_schema(operation)
         projection=artifact_read_set_projection(reads) if operation.startswith('engineering.artifacts.') else read_set_projection(reads)
+        if work_selector is not None:
+            from ..contracts.method_work import work_review_selector_projection
+            projection = {'read_set': projection,
+                          'work_review_selector': work_review_selector_projection(work_selector)}
         return request_digest(operation,context,parameters,projection,
             input_schema_id=schema['$id'],input_schema_digest=Digest('sha256',hashlib.sha256(canonical_bytes(schema)).hexdigest()),
             interface_version=schema['$id'].rsplit(':',1)[1])
@@ -493,11 +499,17 @@ class EngineeringService:
         return self._submission_reports.record_report(record, context,
             records=self._execution_records, blobs=self._blobs, query_invocation=invocation)
 
-    async def execute(self, operation, parameters, context, *, read_set=None):
+    async def execute(self, operation, parameters, context, *, read_set=None, work_selector=None):
         if type(context) is not CommandContext:
             raise ApplicationError("INVALID_CONTEXT")
         if type(operation) is not str:
             raise ApplicationError("INVALID_ARGUMENT")
+        if work_selector is not None:
+            from ..contracts.method_work import WorkReviewSelector
+            if operation != 'engineering.reviews.request':
+                raise ApplicationError('WORK_REVIEW_SELECTOR_UNSUPPORTED')
+            if type(work_selector) is not WorkReviewSelector or work_selector.scope != context.scope:
+                raise ApplicationError('WORK_REVIEW_SELECTOR_INVALID')
         if operation==EXECUTION_DISPATCH:
             if self._access is None:
                 raise ApplicationError('ACCESS_AUTHORITY_UNAVAILABLE')
@@ -522,6 +534,8 @@ class EngineeringService:
                 raise ApplicationError("ACCESS_AUTHORITY_UNAVAILABLE")
             self._access.require(context, operation)
             raise ApplicationError("OPERATION_UNAVAILABLE")
+        if work_selector is not None:
+            return handler(parameters, context, read_set=read_set, work_selector=work_selector)
         return handler(parameters, context, read_set=read_set)
 
     async def query(self, query, parameters, context):

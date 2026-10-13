@@ -26,7 +26,8 @@ class SQLiteUnitReviewBindings:
                  invocation_resolver, author_unit_resolver=None, authorship_source=None):
         if (getattr(method_control,'factory',None) is not factory
                 or getattr(review_bindings,'factory',None) is not factory
-                or not callable(getattr(review_bindings,'material_inputs',None))
+                or not (callable(getattr(review_bindings,'material_inputs',None))
+                        or callable(getattr(review_bindings,'material_inputs_for_plan',None)))
                 or not callable(getattr(records,'acp_prompt_input_digest',None))
                 or not callable(invocation_resolver)
                 or (author_unit_resolver is not None and not callable(author_unit_resolver))):
@@ -56,6 +57,11 @@ class SQLiteUnitReviewBindings:
     def fixed_delivery(self, context, plan, request, *, standard):
         """Return the exact normal-prompt block required of the selected Unit."""
         self._request(context,plan,request)
+        if request.state != 'requested':
+            raise ApplicationError('REVIEW_REQUEST_CHANGED')
+        current_guard=getattr(self.bindings,'guard_current_request',None)
+        if callable(current_guard):
+            current_guard(context,plan,request)
         with self.methods.guard_method(context,plan.requirement.method_ref) as snapshot:
             standards = tuple(s for s in snapshot.program.standard_definitions
                 if s.standard_id == plan.requirement.criterion_set_ref.criterion_set_id
@@ -82,10 +88,14 @@ class SQLiteUnitReviewBindings:
             schema = self.methods.snapshots.read_blob(resource.blob_ref)
             if hashlib.sha256(schema).hexdigest() != document.schema_resource.sha256:
                 raise ApplicationError('UNIT_REVIEW_SCHEMA_MISMATCH')
-            selected = self.bindings.resolve_bindings(context,plan.requirement.method_ref,plan.requirement.phase_key)
+            resolve_plan=getattr(self.bindings,'resolve_plan_bindings',None)
+            selected = (resolve_plan(context,plan) if callable(resolve_plan) else
+                        self.bindings.resolve_bindings(context,plan.requirement.method_ref,plan.requirement.phase_key))
             with self.factory.begin(context.scope,'read') as uow:
                 deliveries = tuple(uow.engineering.resolve_revision(t.ref) for t in selected.targets.targets)
-            named = self.bindings.material_inputs(context,plan.requirement.method_ref,plan.requirement.phase_key)
+            plan_materials=getattr(self.bindings,'material_inputs_for_plan',None)
+            named = (plan_materials(context,plan) if callable(plan_materials) else
+                     self.bindings.material_inputs(context,plan.requirement.method_ref,plan.requirement.phase_key))
             inputs = {}
             for name, revision in named:
                 if type(revision.payload) is MethodPayload:

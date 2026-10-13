@@ -84,6 +84,46 @@ class SQLiteCommandJournal:
             _fail("SCOPE_MISMATCH")
         return entry
 
+    def find_completed_review_request(self, scope, *, review_id: str,
+                                      plan_digest: Digest) -> JournalEntry | None:
+        """Find the unique terminal request carrying this exact Work review proof.
+
+        This is a bounded lookup over the original journal, never a latest-row
+        selector. The returned entry is re-read through the ordinary strict
+        decoder before it leaves the adapter.
+        """
+        self._require_scope_for(scope)
+        self._validate_id(review_id)
+        if type(plan_digest) is not Digest or plan_digest.algorithm != "sha256":
+            _fail("INVALID_COMMAND")
+        rows = self.access.execute(
+            "SELECT realm_id, principal_id, request_id FROM eng_commands "
+            "WHERE realm_id=? AND project_id=? AND operation='engineering.reviews.request' "
+            "AND state='completed' AND result_bytes IS NOT NULL "
+            "AND json_extract(result_bytes, '$.work_review.review_id')=? "
+            "AND json_extract(result_bytes, '$.work_review.plan_digest.hex')=? "
+            "ORDER BY principal_id, request_id LIMIT 2",
+            (scope.realm_id, scope.project_id, review_id, plan_digest.hex),
+        ).fetchall()
+        if len(rows) > 1:
+            _fail("REVIEW_WORK_PROOF_AMBIGUOUS")
+        if not rows:
+            return None
+        try:
+            key = CommandKey(*rows[0])
+        except (TypeError, ValueError, ReferenceError):
+            _fail("JOURNAL_CORRUPT")
+        entry = self._select(key)
+        if (entry is None or entry.project_id != scope.project_id
+                or entry.operation != "engineering.reviews.request" or entry.state != "completed"):
+            _fail("JOURNAL_CORRUPT")
+        return entry
+
+    def _require_scope_for(self, scope):
+        if (type(scope) is not Scope or type(self.access.scope) is not Scope
+                or scope != self.access.scope):
+            _fail("SCOPE_MISMATCH")
+
     def complete(
         self,
         key: CommandKey,

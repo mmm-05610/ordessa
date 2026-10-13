@@ -80,7 +80,11 @@ class SQLiteReviewAuthorshipSource:
             raise ApplicationError("REVIEW_AUTHOR_SOURCE_INVALID")
         method_ref = plan.requirement.method_ref
         phase_key = plan.requirement.phase_key
-        selected = self.review_bindings.resolve_review_submission(context, method_ref, phase_key)
+        plan_resolver = getattr(self.review_bindings, "resolve_review_submission_for_plan", None)
+        if callable(plan_resolver):
+            selected = plan_resolver(context, plan)
+        else:
+            selected = self.review_bindings.resolve_review_submission(context, method_ref, phase_key)
         if selected is not None:
             return self._native_authorship(context, plan, delivery_refs, selected)
         return self._material_authorship(context, plan, delivery_refs)
