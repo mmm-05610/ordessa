@@ -4,13 +4,16 @@ Selection is a normal method/work input. No latest-subject scan, identity
 authority, workflow state or client-supplied ReviewPlan is introduced here.
 """
 from dataclasses import dataclass
+import threading
 
 from ....application.contracts.errors import ApplicationError
+from ....application.contracts.commands import CommandContext
 from ....application.contracts.snapshots import EngineeringTargetBindings
 from ....application.orchestration.method_content import document_type_for_payload
 from ....application.usecases.proposal_closure import resolve_record
 from ....domain.artifacts.refs import ArtifactRevisionRef
 from ....domain.changes.refs import ProposalRef
+from ....domain.common.models.identity import Scope
 from ....domain.reviews.refs import SubmissionRef
 from ....domain.reviews.targets import Target, TargetSet
 
@@ -28,18 +31,84 @@ class ConfiguredReviewPhase:
 
 class SQLiteReviewBindings:
     def __init__(self, factory, method_control, *, scope, proposal_ref, phases):
+        unbound = proposal_ref is None and phases is None
         if (getattr(method_control, 'factory', None) is not factory
-                or type(proposal_ref) is not ProposalRef
-                or (proposal_ref.realm_id, proposal_ref.project_id) != (scope.realm_id, scope.project_id)
-                or type(phases) is not tuple or not phases
-                or any(type(p) is not ConfiguredReviewPhase for p in phases)
-                or len({p.phase_key for p in phases}) != len(phases)):
+                or type(scope) is not Scope
+                or not (unbound or self._valid_selection(proposal_ref, phases, scope))):
             raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
+        self._selection_lock = threading.RLock()
         self.factory, self.methods = factory, method_control
-        self.scope, self.proposal_ref, self.phases = scope, proposal_ref, phases
+        self.scope = scope
+        self._selection_value = None if unbound else (proposal_ref, phases)
+
+    @property
+    def proposal_ref(self):
+        with self._selection_lock:
+            selection = self._selection_value
+            return None if selection is None else selection[0]
+
+    @property
+    def phases(self):
+        with self._selection_lock:
+            selection = self._selection_value
+            return None if selection is None else selection[1]
+
+    @staticmethod
+    def _valid_selection(proposal_ref, phases, scope):
+        return (type(proposal_ref) is ProposalRef
+                and (proposal_ref.realm_id, proposal_ref.project_id) == (scope.realm_id, scope.project_id)
+                and type(phases) is tuple and bool(phases)
+                and all(type(p) is ConfiguredReviewPhase for p in phases)
+                and all(type(p.phase_key) is str and p.phase_key for p in phases)
+                and len({p.phase_key for p in phases}) == len(phases))
+
+    def _selection(self):
+        with self._selection_lock:
+            selection = self._selection_value
+            if selection is None:
+                raise ApplicationError('METHOD_TARGET_BINDINGS_UNAVAILABLE')
+            return selection
+
+    def bind_selection(self, context, *, proposal_ref, phases):
+        """Bind one explicit selection after validating it against original owners.
+
+        The instance remains unbound on every failure. This performs reads only;
+        it does not grant access, persist a selection, or infer a latest proposal.
+        """
+        if (type(context) is not CommandContext or context.scope != self.scope
+                or not self._valid_selection(proposal_ref, phases, self.scope)):
+            raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
+        with self._selection_lock:
+            if self._selection_value is not None:
+                raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
+        # Never hold the selection mutex while acquiring the library or method
+        # guard: review admission can hold an original owner guard while reading
+        # this selection. Validate outside, then publish with a short CAS below.
+        with self.factory.begin(context.scope, 'read') as uow:
+            budget = uow.proposals.validated_budget()
+            proposal = uow.proposals.get_proposal(proposal_ref, budget=budget)
+            method_ref = proposal.method_ref
+        self._resolve_selection(context, method_ref, proposal_ref, phases)
+        with self._selection_lock:
+            if self._selection_value is not None:
+                raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
+            self._selection_value = (proposal_ref, phases)
+
+    def _resolve_selection(self, context, method_ref, proposal_ref, phases):
+        if type(context) is not CommandContext or context.scope != self.scope:
+            raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
+        with self.methods.guard_method(context, method_ref) as snapshot:
+            with self.factory.begin(context.scope, 'read') as uow:
+                budget = uow.proposals.validated_budget()
+                proposal = uow.proposals.get_proposal(proposal_ref, budget=budget)
+                if proposal.method_ref != method_ref:
+                    raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
+                resolve_record(proposal, uow.proposals, budget)
+                return tuple(self._bind(context, snapshot, proposal, phase, uow) for phase in phases)
 
     def _phase(self, phase_key):
-        matches = tuple(p for p in self.phases if p.phase_key == phase_key)
+        _, phases = self._selection()
+        matches = tuple(p for p in phases if p.phase_key == phase_key)
         if len(matches) != 1:
             raise ApplicationError('METHOD_TARGET_BINDINGS_UNAVAILABLE')
         return matches[0]
@@ -81,19 +150,12 @@ class SQLiteReviewBindings:
             workflow_node_id=phase.workflow_node_id, review_purpose=phase.review_purpose)
 
     def _resolve(self, context, method_ref):
-        if context.scope != self.scope:
-            raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
-        with self.methods.guard_method(context, method_ref) as snapshot:
-            with self.factory.begin(context.scope, 'read') as uow:
-                budget = uow.proposals.validated_budget()
-                proposal = uow.proposals.get_proposal(self.proposal_ref, budget=budget)
-                if proposal.method_ref != method_ref:
-                    raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
-                resolve_record(proposal, uow.proposals, budget)
-                return tuple(self._bind(context, snapshot, proposal, phase, uow) for phase in self.phases)
+        proposal_ref, phases = self._selection()
+        return self._resolve_selection(context, method_ref, proposal_ref, phases)
 
     def resolve_intent_bindings(self, context, method_ref, proposal_ref):
-        if proposal_ref != self.proposal_ref:
+        selected, _ = self._selection()
+        if proposal_ref != selected:
             raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
         return tuple(b for b in self._resolve(context, method_ref)
                      if self._phase(b.phase_key).submission_ref is None)
@@ -104,7 +166,8 @@ class SQLiteReviewBindings:
 
     def resolve_review_proposal(self, context, method_ref, phase_key):
         self.resolve_bindings(context, method_ref, phase_key)
-        return None if self._phase(phase_key).submission_ref is not None else self.proposal_ref
+        proposal_ref, _ = self._selection()
+        return None if self._phase(phase_key).submission_ref is not None else proposal_ref
 
     def resolve_review_submission(self, context, method_ref, phase_key):
         self.resolve_bindings(context, method_ref, phase_key)
@@ -119,9 +182,10 @@ class SQLiteReviewBindings:
 
     def resolve_acceptance_submission(self, context, intent):
         """Select the one explicit configured acceptance subject, never latest."""
+        proposal_ref, phases = self._selection()
         if context.scope!=self.scope or intent.scope!=self.scope:
             raise ApplicationError('METHOD_SUBJECT_BINDING_MISMATCH')
-        selected={phase.submission_ref for phase in self.phases
+        selected={phase.submission_ref for phase in phases
                   if phase.submission_ref is not None and phase.review_purpose=='acceptance'}
         if len(selected)!=1:
             raise ApplicationError('METHOD_TARGET_BINDINGS_UNAVAILABLE')

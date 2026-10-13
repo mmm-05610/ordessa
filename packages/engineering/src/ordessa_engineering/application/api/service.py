@@ -137,6 +137,8 @@ class EngineeringService:
                 and type(admission) is EngineeringReviewAdmission
                 and admission.factory is factory
                 and getattr(getattr(admission, "methods", None), "factory", None) is factory
+                and getattr(getattr(admission, "bindings", None), "factory", None) is factory
+                and callable(getattr(getattr(admission, "bindings", None), "resolve_bindings", None))
                 and callable(getattr(admission, "guard_plan", None))
                 and callable(getattr(admission, "verify_response", None))
                 and callable(getattr(admission, "guard_trust", None)))
@@ -147,6 +149,7 @@ class EngineeringService:
             review = getattr(owner, "review_admission", None)
             _, required_review, valid_review = review_source()
             return (valid_review and review is required_review
+                and callable_guards(getattr(review, "source", None), "verify_response", "guard_trust")
                 and callable_guards(conversation, "guard_intent", "guard_evidence")
                 and callable(getattr(review, "guard_plan", None))
                 and callable(getattr(review, "guard_trust", None)))
@@ -185,11 +188,12 @@ class EngineeringService:
 
         # Review request uses the original exact review admission; record also
         # reads raw response bytes through the same-authority BlobStore.
-        review_owner, _, has_review = review_source()
+        review_owner, review_admission, has_review = review_source()
         if has_review:
             add("engineering.reviews.request")
             blobs = getattr(review_owner, "blobs", None)
-            if (blobs is self._blobs and getattr(blobs, "authority_id", None)
+            if (callable_guards(getattr(review_admission, "source", None), "verify_response", "guard_trust")
+                    and blobs is self._blobs and getattr(blobs, "authority_id", None)
                     == getattr(factory, "authority_id", None)):
                 add("engineering.reviews.record")
 

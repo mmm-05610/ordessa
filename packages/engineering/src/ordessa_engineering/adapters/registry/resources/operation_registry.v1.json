@@ -64,7 +64,7 @@
       "adapters/persistence/sqlite/proposal_repository.py": "sha256:4491a4213eb32f01433063177f12cea0f092fc2f401538f9b75ba6f23f3149a4",
       "adapters/persistence/sqlite/proposal_schema.py": "sha256:7ab3d32f3d472482e4b4990719d0459eb81252dfc615639fdfd7356ab9c422d6",
       "adapters/persistence/sqlite/review_authorship.py": "sha256:d7b3ba7f4025bb9048e6db8baeacdddb652e5adb85bed34f80a5429a273c29a9",
-      "adapters/persistence/sqlite/review_bindings.py": "sha256:b061095e119e61b3323e8639787b711cada4d76943f7568eeeb7abb0350e17b0",
+      "adapters/persistence/sqlite/review_bindings.py": "sha256:a2b4cd08bd2df67f46eb361998828406a70a8ca8fd6190beac7dd2ab94be823c",
       "adapters/persistence/sqlite/review_repository.py": "sha256:d47c9b6d83a142aa37671cfed85246e6b1312771ac47b07c9f405c1e0bf13cff",
       "adapters/persistence/sqlite/review_schema.py": "sha256:6a56ccdaaa2a9d99ff4e97a42c5dcddbddd4c4e92670c1328df5a050b926e446",
       "adapters/persistence/sqlite/reviewer_assignment_repository.py": "sha256:d6c23fd3f8fb2c945319a725835e8e9593c02471e734f5ec54a6bcabd58c34d7",
@@ -87,7 +87,7 @@
       "adapters/unit_reviewer_authority.py": "sha256:6d14b2a81191bc3e1853f0722f3f0173a69479ed0db0944af589559a43c470d4",
       "application/__init__.py": "sha256:802111fb3c7258e5a0bf74121f4fa831124d1d27af60cc9dc6bd869880a120c8",
       "application/api/__init__.py": "sha256:74e08249da87bc69d7abdafbd5676e05cddec48de32f355a5aaabc4887015e1a",
-      "application/api/service.py": "sha256:7ee43f9f4f42c676ad62929486be73ae481d9e08a2bffdcb137ee2940b343de8",
+      "application/api/service.py": "sha256:f7e25f90fdb5c56d24a81c4428dd22b3cf8579c2047cbd4a926db07fabcf6f56",
       "application/assembly/__init__.py": "sha256:eb8cce74185492699fb792d54850a54e344be58420c6d0ed17900a17c936b48b",
       "application/assembly/execution_dispatch.py": "sha256:6730bf77dc6373c4ed4cf7e78061a5c749d380043e4cf7bdf3bdcc4a60d75e11",
       "application/assembly/intent_admission.py": "sha256:dddb20c4c90aa4c404997f8b5c68fe6b1b23e28f72af5372928bf7d8c3ad508e",
@@ -306,7 +306,7 @@
     "pydantic_graph_version": "2.54.0",
     "referencing_version": "0.36.2"
   },
-  "implementation_digest": "sha256:a7b2ffa8e4417c99ac65dd542c3e6dd2eb21aa73dc24095d65cad9c8bb999fa6",
+  "implementation_digest": "sha256:b18f877668b37dd98de81d6cbff792efc237e0cfb2fa1593f5e9ee0d2348c84c",
   "operations": {
     "engineering.acceptance.adopt": {
       "inputs": {
@@ -4460,8 +4460,8 @@
       "version": "1"
     }
   },
-  "registry_digest": "sha256:5611a731511392d9ada9c44813f467cd6ac67d6e77c8279283c5564eefc1b176",
+  "registry_digest": "sha256:781474a34112becb8a8b871cfb5c9e54c1c758d8a6acaccfa6f76b6d3c9fd26f",
   "registry_id": "ordessa-engineering.operations",
-  "revision": 83,
+  "revision": 84,
   "schema_version": "engineering-operation-registry/1"
 }
