@@ -1,0 +1,17 @@
+{
+  "name": "agent-box-harness-runtime-dsh",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline-locked runtime closure for the DeepSeek dsh ACP adapter (Work Order 43). Deliberately separate from runtime/ because dsh needs @agentclientprotocol/sdk 1.4.x while the shared root pins 1.3.0 for the four existing families.",
+  "license": "MIT",
+  "overrides": {
+    "@deepseek-ai/dsh": "0.1.5-rc.1"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh": "0.1.5-rc.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

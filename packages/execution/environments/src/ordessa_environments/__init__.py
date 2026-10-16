@@ -1,0 +1,66 @@
+"""Execution environment contracts.
+
+``ordessa_environments`` owns the stable, extensible execution-space contract.
+It has no concrete execution mechanics and no dependencies beyond the standard
+library; providers implement it under ``plugins/environments/<kind>``.
+"""
+from .definitions import (
+    BackendNotFound,
+    EnvironmentOperationUnknown,
+    ProcessWaitTimeout,
+    ProcessObservation,
+    ProcessCancellation,
+    BackendObservation,
+    EnvironmentSnapshot,
+    EnvironmentOperationReceipt,
+    ProviderDescriptor,
+    BackendUse,
+    EnvironmentResourceProvider,
+    BYTE_CHANNEL_CAPABILITY,
+    FILE_AREA_CAPABILITY,
+    KNOWN_CAPABILITIES,
+    PROCESS_CAPABILITY,
+    STREAMING_STDERR_CAPABILITY,
+    TERMINAL_CAPABILITY,
+    Capabilities,
+    EnvironmentFailure,
+    EnvironmentGuaranteeUnmet,
+    EnvironmentHandle,
+    EnvironmentProvider,
+    EnvironmentRefused,
+    ExecutionSpace,
+    FileArea,
+    ProcessHandle,
+    ProcessHandleStale,
+    ProcessRequest,
+    ProcessStartFailed,
+    require_guarantees,
+)
+from .management import EnvironmentInstance, EnvironmentManager, EnvironmentUse, SQLiteEnvironmentStore
+
+__all__ = [
+    "BYTE_CHANNEL_CAPABILITY",
+    "FILE_AREA_CAPABILITY",
+    "KNOWN_CAPABILITIES",
+    "PROCESS_CAPABILITY",
+    "STREAMING_STDERR_CAPABILITY",
+    "TERMINAL_CAPABILITY",
+    "Capabilities",
+    "EnvironmentFailure",
+    "EnvironmentGuaranteeUnmet",
+    "EnvironmentHandle",
+    "EnvironmentProvider",
+    "EnvironmentRefused",
+    "ExecutionSpace",
+    "FileArea",
+    "ProcessHandle",
+    "ProcessHandleStale",
+    "ProcessRequest",
+    "ProcessStartFailed",
+    "require_guarantees",
+    "BackendNotFound", "EnvironmentOperationUnknown", "ProcessWaitTimeout",
+    "ProcessObservation", "ProcessCancellation",
+    "BackendObservation", "EnvironmentSnapshot", "EnvironmentOperationReceipt",
+    "ProviderDescriptor", "BackendUse", "EnvironmentResourceProvider",
+    "EnvironmentInstance", "EnvironmentManager", "EnvironmentUse", "SQLiteEnvironmentStore",
+]

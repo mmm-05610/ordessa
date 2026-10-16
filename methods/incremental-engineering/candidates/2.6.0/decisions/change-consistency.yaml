@@ -1,0 +1,40 @@
+schema_version: 1
+question_set_id: change-consistency
+question_set_version: 2.0.0
+input_mapping_version: 2.0.0
+input_contract: ProposalConsistencyInput
+required_input_slots:
+- proposal
+- did
+- captured_sources
+- resolved_criteria
+iteration: once
+questions:
+- question_id: coverage
+  question_revision: 2.0.0
+  kind: choice
+  criterion_refs:
+  - resource: standard.quality_review
+    criterion_id: semantic_consistency
+  instructions: 根据冻结要求与方案，从引用标准定义的有限选项中判断覆盖程度；不得输出数字分数或自行插值。
+  answer_definition:
+    from_criterion:
+      resource: standard.quality_review
+      criterion_id: semantic_consistency
+    field: answer_vocabulary
+- question_id: drift
+  question_revision: 2.0.0
+  kind: choice
+  criterion_refs:
+  - resource: standard.quality_review
+    criterion_id: semantic_drift
+  instructions: 只从引用标准定义的有限选项中判断是否发现偏离。该回答不证明批准，不替代范围校验。
+  answer_definition:
+    from_criterion:
+      resource: standard.quality_review
+      criterion_id: semantic_drift
+    field: answer_vocabulary
+result_contract: DecisionResult.v1
+truncation_policy: reject
+evidence_order: source_id_then_selector
+missing_required_evidence: do_not_invoke

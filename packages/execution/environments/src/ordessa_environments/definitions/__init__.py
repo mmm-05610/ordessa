@@ -1,0 +1,55 @@
+"""The environment contract surface (pure; no concrete execution mechanics)."""
+from .contracts import (
+    BYTE_CHANNEL_CAPABILITY,
+    FILE_AREA_CAPABILITY,
+    KNOWN_CAPABILITIES,
+    PROCESS_CAPABILITY,
+    STREAMING_STDERR_CAPABILITY,
+    TERMINAL_CAPABILITY,
+    Capabilities,
+    EnvironmentHandle,
+    EnvironmentProvider,
+    ExecutionSpace,
+    FileArea,
+    ProcessHandle,
+    ProcessRequest,
+    require_guarantees,
+)
+from .errors import (
+    BackendNotFound,
+    EnvironmentOperationUnknown,
+    ProcessWaitTimeout,
+    EnvironmentFailure,
+    EnvironmentGuaranteeUnmet,
+    EnvironmentRefused,
+    ProcessHandleStale,
+    ProcessStartFailed,
+)
+from .models import BackendObservation, EnvironmentSnapshot, EnvironmentOperationReceipt, ProviderDescriptor, ProcessObservation, ProcessCancellation
+from .ports import BackendUse, EnvironmentResourceProvider
+
+__all__ = [
+    "BYTE_CHANNEL_CAPABILITY",
+    "FILE_AREA_CAPABILITY",
+    "KNOWN_CAPABILITIES",
+    "PROCESS_CAPABILITY",
+    "STREAMING_STDERR_CAPABILITY",
+    "TERMINAL_CAPABILITY",
+    "Capabilities",
+    "EnvironmentFailure",
+    "EnvironmentGuaranteeUnmet",
+    "EnvironmentHandle",
+    "EnvironmentProvider",
+    "EnvironmentRefused",
+    "ExecutionSpace",
+    "FileArea",
+    "ProcessHandle",
+    "ProcessHandleStale",
+    "ProcessRequest",
+    "ProcessStartFailed",
+    "require_guarantees",
+    "BackendNotFound", "EnvironmentOperationUnknown", "ProcessWaitTimeout",
+    "ProcessObservation", "ProcessCancellation",
+    "BackendObservation", "EnvironmentSnapshot", "EnvironmentOperationReceipt",
+    "ProviderDescriptor", "BackendUse", "EnvironmentResourceProvider",
+]

@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "decision-runtime"
+version = "0.1.0"
+description = "Host-neutral decision contracts, bounded runtime and evidence"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["pydantic-graph==2.54.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "pytest-asyncio"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+decision_runtime = ["definitions/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+asyncio_mode = "auto"

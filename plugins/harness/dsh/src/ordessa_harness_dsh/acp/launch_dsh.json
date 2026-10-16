@@ -1,0 +1,23 @@
+{
+  "id": "dsh",
+  "origin": "agentbox",
+  "managed": null,
+  "legacy": {
+    "command": "/usr/bin/node",
+    "root": "/runtime/artifacts/dsh-runtime",
+    "args": [
+      "/runtime/artifacts/dsh-runtime/node_modules/@deepseek-ai/dsh/lib/bin.js",
+      "--profile",
+      "acp"
+    ]
+  },
+  "variants": {},
+  "allowsPythonPath": false,
+  "pythonRoute": null,
+  "nativeRoute": false,
+  "nativeExtension": null,
+  "profileExtension": null,
+  "modelAliases": {
+    "deepseek-flash": "[\"deepseek-official\",\"deepseek-flash\"]"
+  }
+}

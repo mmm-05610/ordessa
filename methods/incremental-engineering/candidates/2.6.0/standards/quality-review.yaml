@@ -1,0 +1,167 @@
+schema_version: 1
+standard_id: quality-review
+revision: 2.6.0
+purpose: quality
+criteria:
+- criterion_id: document_shape
+  statement: 方法正文应符合与文档类型绑定的结构。
+  applies_to:
+  - did
+  - implementation-package
+  - did-change
+  - spec-kit-package
+  required_inputs:
+  - method_content
+  checks:
+  - capability_id: ordessa.schema.validate
+    interface_version: 1.0.0
+    bindings:
+      schema_by_document_type:
+        did:
+          resource: document.did.schema
+        implementation-package:
+          resource: document.implementation_package.schema
+        did-change:
+          resource: document.did_change.schema
+        spec-kit-package:
+          resource: document.spec_kit_package.schema
+  policy:
+    satisfied: pass
+    violated: block
+    insufficient: block
+    unknown: manual
+- criterion_id: intent_binding
+  statement: 文档计划和 Proposal/ImplementationIntentSpec 或已推导 package 的精确范围及验收映射应一致。
+  applies_to:
+  - did
+  - implementation-package
+  - did-change
+  - spec-kit-package
+  required_inputs:
+  - proposal_ref
+  - implementation_intent
+  - method_content
+  checks:
+  - capability_id: ordessa.decision.evaluate
+    interface_version: 1.0.0
+    bindings:
+      question_set:
+        resource: decision.intent_binding
+      question_ids:
+      - intent_binding
+      nominal_answer_conversion:
+        contract_version: ordessa.nominal-choice-status/1
+        answer_kind: choice
+        option_statuses:
+          supported: satisfied
+          contradicted: violated
+          insufficient: insufficient
+        tie: unknown
+        missing_answer: unknown
+        incomplete_answer: unknown
+        truncated_input: unknown
+        unmapped_option: unknown
+  answer_vocabulary:
+    kind: choice
+    options:
+    - option_id: supported
+      description: 冻结文档在语义上符合精确Proposal/ImplementationIntentSpec的范围和验收映射。
+    - option_id: contradicted
+      description: 冻结文档与精确Proposal/ImplementationIntentSpec范围或验收映射冲突。
+    - option_id: insufficient
+      description: 冻结材料不足以判断Proposal/Intent与文档语义一致。
+  policy:
+    satisfied: pass
+    violated: block
+    insufficient: block
+    unknown: manual
+- criterion_id: semantic_consistency
+  statement: 方案应覆盖要求并解释影响，不能遗漏必要条件。
+  applies_to:
+  - did
+  - did-change
+  required_inputs:
+  - proposal_ref
+  - method_content
+  - source_captures
+  checks:
+  - capability_id: ordessa.decision.evaluate
+    interface_version: 1.0.0
+    bindings:
+      question_set:
+        resource: decision.change_consistency
+      question_ids:
+      - coverage
+      nominal_answer_conversion:
+        contract_version: ordessa.nominal-choice-status/1
+        answer_kind: choice
+        option_statuses:
+          conflicting: violated
+          partial: insufficient
+          complete: satisfied
+        tie: unknown
+        missing_answer: unknown
+        incomplete_answer: unknown
+        truncated_input: unknown
+        unmapped_option: unknown
+  policy:
+    satisfied: pass
+    violated: block
+    insufficient: block
+    unknown: manual
+  answer_vocabulary:
+    kind: choice
+    options:
+    - option_id: conflicting
+      description: 方案与明确要求矛盾或缺少关键内容。
+    - option_id: partial
+      description: 方案大体相关但仍有未处理条件。
+    - option_id: complete
+      description: 方案完整覆盖要求及必要影响。
+- criterion_id: semantic_drift
+  statement: 需识别是否含未解释且偏离当前意图的实质改动；法律上的 scope 校验仍由 domain 独立强制执行。
+  applies_to:
+  - did
+  - did-change
+  required_inputs:
+  - proposal_ref
+  - method_content
+  - source_captures
+  checks:
+  - capability_id: ordessa.decision.evaluate
+    interface_version: 1.0.0
+    bindings:
+      question_set:
+        resource: decision.change_consistency
+      question_ids:
+      - drift
+      nominal_answer_conversion:
+        contract_version: ordessa.nominal-choice-status/1
+        answer_kind: choice
+        option_statuses:
+          drift_detected: violated
+          no_drift_detected: satisfied
+        tie: unknown
+        missing_answer: unknown
+        incomplete_answer: unknown
+        truncated_input: unknown
+        unmapped_option: unknown
+  policy:
+    satisfied: pass
+    violated: block
+    insufficient: block
+    unknown: manual
+  answer_vocabulary:
+    kind: choice
+    options:
+    - option_id: drift_detected
+      description: 发现未解释且偏离已陈述意图的实质改动。
+    - option_id: no_drift_detected
+      description: 未发现这种实质改动。
+reduction:
+  required_criteria: all_applicable
+  empty_applicable_set: error
+  priority:
+  - block
+  - manual
+  - pass

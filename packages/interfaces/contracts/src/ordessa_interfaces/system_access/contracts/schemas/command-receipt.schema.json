@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ordessa.invalid/interfaces/v1/command-receipt.schema.json",
+  "type": "object",
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "operation_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "operation": {
+      "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/CommandName"
+    },
+    "scope": {
+      "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+    },
+    "admitted_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$"
+    },
+    "request_digest": {
+      "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Digest"
+    },
+    "commit_token": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "status_query": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "const": "system.operations.get"
+        },
+        "operation_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "authority_id": {
+          "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Id"
+        }
+      },
+      "required": [
+        "method",
+        "operation_id",
+        "authority_id"
+      ],
+      "additionalProperties": false
+    },
+    "authority_id": {
+      "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Id"
+    }
+  },
+  "required": [
+    "request_id",
+    "operation_id",
+    "operation",
+    "scope",
+    "admitted_at",
+    "request_digest",
+    "commit_token",
+    "status_query",
+    "authority_id"
+  ],
+  "additionalProperties": false
+}

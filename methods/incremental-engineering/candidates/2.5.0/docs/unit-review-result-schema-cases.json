@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "scope": "method schema and original value types only, not source truth or production review",
+  "cases": [
+    {
+      "case": "unknown_and_empty_evidence_preserved",
+      "schema_valid": true,
+      "semantic_requirement": null,
+      "runtime_executed": false
+    },
+    {
+      "case": "reject_body_unit_identity",
+      "schema_valid": false,
+      "semantic_requirement": null,
+      "runtime_executed": false
+    },
+    {
+      "case": "reject_body_Grant",
+      "schema_valid": false,
+      "semantic_requirement": null,
+      "runtime_executed": false
+    },
+    {
+      "case": "reject_body_evaluated",
+      "schema_valid": false,
+      "semantic_requirement": null,
+      "runtime_executed": false
+    },
+    {
+      "case": "reject_body_pass",
+      "schema_valid": false,
+      "semantic_requirement": null,
+      "runtime_executed": false
+    },
+    {
+      "case": "reject_nonsemantic_status",
+      "schema_valid": false,
+      "semantic_requirement": null,
+      "runtime_executed": false
+    },
+    {
+      "case": "require_explicit_nullable_claim_id",
+      "schema_valid": false,
+      "semantic_requirement": null,
+      "runtime_executed": false
+    },
+    {
+      "case": "reject_empty_answers",
+      "schema_valid": false,
+      "semantic_requirement": null,
+      "runtime_executed": false
+    },
+    {
+      "case": "reject_identical_duplicate_rows",
+      "schema_valid": false,
+      "semantic_requirement": null,
+      "runtime_executed": false
+    },
+    {
+      "case": "same_key_different_answer_not_proven_by_schema",
+      "schema_valid": true,
+      "semantic_requirement": "original decoder must reject duplicate CheckKey",
+      "runtime_executed": false
+    },
+    {
+      "case": "changed_plan_digest_not_proven_by_schema",
+      "schema_valid": true,
+      "semantic_requirement": "original decoder must match exact Plan digest",
+      "runtime_executed": false
+    },
+    {
+      "case": "wrong_key_not_proven_by_schema",
+      "schema_valid": true,
+      "semantic_requirement": "original decoder must reject extra/missing/wrong keys",
+      "runtime_executed": false
+    }
+  ],
+  "original_CheckKey_CriterionAnswer_shape_constructed": true,
+  "source_loader_pass": true,
+  "compiler_executed": false,
+  "model_calls": 0
+}

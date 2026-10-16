@@ -1,0 +1,22 @@
+{
+  "source": "https://github.com/giuliastro/harness-remote.git",
+  "ref": "v3.0.2",
+  "commit": "21ce6db49af708c4c7c3f96ef6a50f62dced8dab",
+  "license": "Apache-2.0",
+  "license_file": "LICENSE",
+  "selection": "Work Order 38 conditional leader; adopted by Work Order 40-A",
+  "files": [
+    {
+      "path": "pi-session-history.js",
+      "origin": "upstream",
+      "upstream_sha256": "96052092a40f8f295b026d4274cfaed7e8b70d7463cfa4e3613d1ff9617d77a3",
+      "current_sha256": "96052092a40f8f295b026d4274cfaed7e8b70d7463cfa4e3613d1ff9617d77a3"
+    },
+    {
+      "path": "backward-line-scan.js",
+      "origin": "upstream",
+      "upstream_sha256": "9a9edfec9de38e0939e9b08f52bd7294362609035402eb9d0c0729a642250199",
+      "current_sha256": "9a9edfec9de38e0939e9b08f52bd7294362609035402eb9d0c0729a642250199"
+    }
+  ]
+}

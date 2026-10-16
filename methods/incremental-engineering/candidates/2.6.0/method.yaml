@@ -1,0 +1,944 @@
+schema_version: 1
+method_id: ordessa.incremental-engineering
+release_version: 2.6.0
+display_name: 渐进工程方法
+compiler_contract: ordessa.methods/v1
+entry:
+  resource: workflow.change_cycle
+documents:
+- document_type: did
+  schema:
+    resource: document.did.schema
+  template:
+    resource: document.did.template
+  validation_target: method_content
+- document_type: implementation-package
+  schema:
+    resource: document.implementation_package.schema
+  template:
+    resource: document.implementation_package.template
+  validation_target: method_content
+- document_type: submission
+  schema:
+    resource: document.submission.schema
+  template:
+    resource: document.submission.template
+  validation_target: method_content
+- document_type: decision-context
+  schema:
+    resource: document.decision_context.schema
+  template:
+    resource: document.decision_context.template
+  validation_target: method_content
+- document_type: did-change
+  schema:
+    resource: document.did_change.schema
+  template:
+    resource: document.did_change.template
+  validation_target: method_content
+- document_type: session-summary
+  schema:
+    resource: document.session_summary.schema
+  template:
+    resource: document.session_summary.template
+  validation_target: method_content
+- document_type: did-application
+  schema:
+    resource: document.did_application.schema
+  template:
+    resource: document.did_application.template
+  validation_target: method_content
+- document_type: spec-kit-package
+  schema:
+    resource: document.spec_kit_package.schema
+  template:
+    resource: document.spec_kit_package.template
+  validation_target: method_content
+- document_type: method-feedback
+  schema:
+    resource: document.method_feedback.schema
+  template:
+    resource: document.method_feedback.template
+  validation_target: method_content
+- document_type: standard-profile
+  schema:
+    resource: document.standard_profile.schema
+  template:
+    resource: document.standard_profile.template
+  validation_target: method_content
+- document_type: confirmation-evidence
+  schema:
+    resource: document.confirmation_evidence.schema
+  template:
+    resource: document.confirmation_evidence.template
+  validation_target: method_content
+- document_type: unit-review-result
+  schema:
+    resource: document.unit_review_result.schema
+  template:
+    resource: document.unit_review_result.template
+  validation_target: method_content
+- document_type: correction-plan
+  schema:
+    resource: document.correction_plan.schema
+  template:
+    resource: document.correction_plan.template
+  validation_target: method_content
+- document_type: work-inputs
+  schema:
+    resource: document.work_inputs.schema
+  template:
+    resource: document.work_inputs.template
+  validation_target: method_content
+skills:
+  main_agent:
+    resource: skill.main_agent
+  executor:
+    resource: skill.executor
+  decision_record:
+    resource: skill.decision_record
+  did_author:
+    resource: skill.did_author
+  did_review:
+    resource: skill.did_review
+  did_apply:
+    resource: skill.did_apply
+  spec_converter:
+    resource: skill.spec_converter
+  package_review:
+    resource: skill.package_review
+  submission_reviewer:
+    resource: skill.submission_reviewer
+resources:
+- id: decision.change_consistency
+  kind: question_set
+  path: decisions/change-consistency.yaml
+  media_type: application/yaml
+  sha256: 20dc1815ba2bb41531c63c656ddfb261b2d1a725b23fce4396a314cbf606942a
+- id: decision.intent_binding
+  kind: question_set
+  path: decisions/intent-binding.yaml
+  media_type: application/yaml
+  sha256: aec3c8c21452f797a4213ae4e9b3501e223367c205261ec2ab67b257521d9c9c
+- id: decision.output_scope
+  kind: question_set
+  path: decisions/output-scope.yaml
+  media_type: application/yaml
+  sha256: 1817552afbcddf119839a8990b73c6b78f0d69e4979a4300b88716c3c6540efc
+- id: decision.test_evidence
+  kind: question_set
+  path: decisions/test-evidence.yaml
+  media_type: application/yaml
+  sha256: 61ba82234e87b44bf1059724021b163aa612e73c2d6f3a672830f9b72e635484
+- id: decision.source_support
+  kind: question_set
+  path: decisions/source-support.yaml
+  media_type: application/yaml
+  sha256: 9d570b1a8da4dbd7afae39d3b69061c692eb4bbbe7c681f3e535e3bba7a0cb4c
+- id: document.did.schema
+  kind: document_schema
+  path: documents/did/schema.json
+  media_type: application/schema+json
+  sha256: e8dd0cf80d418dd9d6aaf4585bdf39075af64d625138939456087c1618da7e62
+- id: document.did.template
+  kind: document_template
+  path: documents/did/template.md
+  media_type: text/markdown
+  sha256: a6e3289b3eb978ea940ed608f1dc712764d8e5a6ceddc6833c8b3b31d3a389f7
+- id: document.implementation_package.schema
+  kind: document_schema
+  path: documents/implementation-package/schema.json
+  media_type: application/schema+json
+  sha256: 3096671b65964b8df6d720e4494517b3a03c8fc77454575516cac1164d8bc354
+- id: document.implementation_package.template
+  kind: document_template
+  path: documents/implementation-package/template.md
+  media_type: text/markdown
+  sha256: 26d73a943cbde0a7c28d48b0a37665fc61cae4a15fe56a47bc88ab593681a1fd
+- id: document.submission.schema
+  kind: document_schema
+  path: documents/submission/schema.json
+  media_type: application/schema+json
+  sha256: 488fb54f9d820c529b2c8460f9b972bea1ae13384c355a5d123db62f14b7f471
+- id: document.submission.template
+  kind: document_template
+  path: documents/submission/template.md
+  media_type: text/markdown
+  sha256: 207bdd6a1336880ced9535b2b4be2a996533be389cd7edbaf353672e666acc78
+- id: skill.executor
+  kind: skill
+  path: skills/executor/SKILL.md
+  media_type: text/markdown
+  sha256: 381c723794dbec784142ad54cc6cc2d989f9edccf2197f8cef96e64546b7e641
+- id: skill.main_agent
+  kind: skill
+  path: skills/main-agent/SKILL.md
+  media_type: text/markdown
+  sha256: 64ae2cd6eedd24895a0f6a5484f95aee16f3b038a5d367a2ed9221a39c08c7a7
+- id: standard.acceptance
+  kind: standard
+  path: standards/acceptance.yaml
+  media_type: application/yaml
+  sha256: e703bda2c2fa4e26a00d1814be83eae96cffee5b893ec214b4b16b872e329e8d
+- id: standard.quality_review
+  kind: standard
+  path: standards/quality-review.yaml
+  media_type: application/yaml
+  sha256: 7bf9fb329a6c3bd219979b7abc97f8fa208c18f65538b4e62318de4320851f79
+- id: standard.source_review
+  kind: standard
+  path: standards/source-review.yaml
+  media_type: application/yaml
+  sha256: 4f68ce8d6ac71a0af7b8b8af2ad901cc80eed5ae531430ab4948d1bf8bd368be
+- id: workflow.change_cycle
+  kind: workflow
+  path: workflows/change-cycle.yaml
+  media_type: application/yaml
+  sha256: f9210a449b28c225700f9cfb31088771b6af9dd56350b734d4dc8680f5582310
+- id: document.decision_context.schema
+  kind: document_schema
+  path: documents/decision-context/schema.json
+  media_type: application/schema+json
+  sha256: 5dee4bc40e0688342631e3636b3016f9a3bf47c2e9a39901371a491b1bda979c
+- id: document.decision_context.template
+  kind: document_template
+  path: documents/decision-context/template.md
+  media_type: text/markdown
+  sha256: b049a88cb0abfaffc5a24626a1554a98410686b9747ba38299057577272b6801
+- id: document.did_change.schema
+  kind: document_schema
+  path: documents/did-change/schema.json
+  media_type: application/schema+json
+  sha256: 52c1f3706553305a4d82f11eb5762937a56d8e2357ea5b242a6a13eba78050d4
+- id: document.did_change.template
+  kind: document_template
+  path: documents/did-change/template.md
+  media_type: text/markdown
+  sha256: 1ccf69c565121cd92a94162d3a4d4c08eae42a92512be6c5716e685907fb2d42
+- id: document.session_summary.schema
+  kind: document_schema
+  path: documents/session-summary/schema.json
+  media_type: application/schema+json
+  sha256: 095e77ceb8e95c479a1f402934d35c251e18e3ea65a78e51658462fc03f8a8df
+- id: document.session_summary.template
+  kind: document_template
+  path: documents/session-summary/template.md
+  media_type: text/markdown
+  sha256: 0991a2cbb58665037b21f9c61ea2b0cd274d441817f6cc94601ade7c039e092b
+- id: document.did_application.schema
+  kind: document_schema
+  path: documents/did-application/schema.json
+  media_type: application/schema+json
+  sha256: 7cc71fc394c13a115865c6121bd9dd7f136b119cc1eabf4b70527aee88e38ecb
+- id: document.did_application.template
+  kind: document_template
+  path: documents/did-application/template.md
+  media_type: text/markdown
+  sha256: 2aa36839220bcd2adaf8405fde9df6d1afcc6caf417f0a040c38d730860b99a4
+- id: document.spec_kit_package.schema
+  kind: document_schema
+  path: documents/spec-kit-package/schema.json
+  media_type: application/schema+json
+  sha256: 3f60726fbe25e793bec476b17bd907427ecadb283ad7b20e6d9c75db3d1fa7ae
+- id: document.spec_kit_package.template
+  kind: document_template
+  path: documents/spec-kit-package/template.md
+  media_type: text/markdown
+  sha256: 84088e80aeb928f5e456c14219f849b6eda6a4e8e549016c95857b90364d4553
+- id: document.method_feedback.schema
+  kind: document_schema
+  path: documents/method-feedback/schema.json
+  media_type: application/schema+json
+  sha256: 1202946df063e55615f4100a690b1da222716987c37f11e1d1142f9ddbd2ecde
+- id: document.method_feedback.template
+  kind: document_template
+  path: documents/method-feedback/template.md
+  media_type: text/markdown
+  sha256: 197a52fd1ff4c5637785dc6f11e4a980fe479c6eb2b91de59d24e09757542214
+- id: document.standard_profile.schema
+  kind: document_schema
+  path: documents/standard-profile/schema.json
+  media_type: application/schema+json
+  sha256: ad3b61adfca83c252b3d8a8ea8f3316546006bcbdb7bdcf01f0577aca5b4e72d
+- id: document.standard_profile.template
+  kind: document_template
+  path: documents/standard-profile/template.md
+  media_type: text/markdown
+  sha256: b3b19f1f13651b9180cb410bb1475a4d9214633f451f830ec360c1a81bd4c966
+- id: skill.decision_record
+  kind: skill
+  path: skills/decision-record/SKILL.md
+  media_type: text/markdown
+  sha256: 3ffcd304ea02358b594baa5b6976d21220641030a771c58dfbe5a78006d6d811
+- id: skill.did_author
+  kind: skill
+  path: skills/did-author/SKILL.md
+  media_type: text/markdown
+  sha256: 5bb613e404a4d445126476987e136da3068bfca89ad9864320b32e4902f7740b
+- id: skill.did_review
+  kind: skill
+  path: skills/did-review/SKILL.md
+  media_type: text/markdown
+  sha256: f8484a90fd8d5da49fef2fe267c19e0c8095869752c298487da0cec447e17b16
+- id: skill.did_apply
+  kind: skill
+  path: skills/did-apply/SKILL.md
+  media_type: text/markdown
+  sha256: 397a601da5e968747f3cd0af79fff179ecc9b7ea994946fd5df5a6db6c24b713
+- id: skill.spec_converter
+  kind: skill
+  path: skills/spec-converter/SKILL.md
+  media_type: text/markdown
+  sha256: 19fd4159aa4638922929403ae9871aebe5b55c1a018985ee429805f95fbe16e7
+- id: skill.package_review
+  kind: skill
+  path: skills/package-review/SKILL.md
+  media_type: text/markdown
+  sha256: 0f70dbcaf30e669e1f6eb8c152f926453c69fa9c78a0a684dbf033eb2699e8a0
+- id: standard.summary_review
+  kind: standard
+  path: standards/summary-review.yaml
+  media_type: application/yaml
+  sha256: b95d3deb8e0e43718d3e7fda165cff546d49e24af6e712d0bbab76d85f8de767
+- id: decision.summary_fidelity
+  kind: question_set
+  path: decisions/summary-review.yaml
+  media_type: application/yaml
+  sha256: 3124c21aad0e18c928707445cb58cf7825efaa2b2c0a6b152672cb073ea72548
+- id: standard.engineering_content
+  kind: standard
+  path: standards/engineering-content.yaml
+  media_type: application/yaml
+  sha256: e9cebf755973bf8325b78de89bb60ab37ae0f006930e74f014f5279e49900ede
+- id: decision.engineering_content
+  kind: question_set
+  path: decisions/engineering-content.yaml
+  media_type: application/yaml
+  sha256: 182e9b15f56ef00a8e0375baae1ec40210280a6c99253b2af335b4ba27ebc6b7
+- id: template.spec_kit.README
+  kind: document_template
+  path: templates/spec-kit/README.md
+  media_type: text/markdown
+  sha256: 4b7e8c2f817e4f2e1a5d39142575e403ac672a5abd1a7a6ed29f16237e1540be
+- id: template.spec_kit.acceptance
+  kind: document_template
+  path: templates/spec-kit/acceptance.md
+  media_type: text/markdown
+  sha256: 18df46c08465b2c19a99bdbff5adeeb649955ba668958de6aac62cddf3117194
+- id: template.spec_kit.baseline
+  kind: document_template
+  path: templates/spec-kit/baseline.md
+  media_type: text/markdown
+  sha256: 49c3f5c1045346e7234499de4b98d57a7475fe58d0452d2cd3e20933d3d1eea7
+- id: template.spec_kit.change_map
+  kind: document_template
+  path: templates/spec-kit/change-map.md
+  media_type: text/markdown
+  sha256: da43c327ff71c3e4e4f9672fcc7b00028cc34e65d65c26e9a6de0c7cb0a20042
+- id: template.spec_kit.plan
+  kind: document_template
+  path: templates/spec-kit/plan.md
+  media_type: text/markdown
+  sha256: 3ddb25b1f961c3fec62bf521a9daff4cb1b92f305d46514ba192c9c9ad78f306
+- id: template.spec_kit.spec
+  kind: document_template
+  path: templates/spec-kit/spec.md
+  media_type: text/markdown
+  sha256: 660ee849a1bb9931e191e294b9427a06d334f81c7ed9d31fe3b7d155968dbc51
+- id: template.spec_kit.tasks
+  kind: document_template
+  path: templates/spec-kit/tasks.md
+  media_type: text/markdown
+  sha256: cbb11ca678c46685b07e1367aa3f3a909c1b9fab7c9edcb104f6a0d2c341187b
+- id: document.confirmation_evidence.schema
+  kind: document_schema
+  path: documents/confirmation-evidence/schema.json
+  media_type: application/schema+json
+  sha256: 00c221017f86a42fd6bc68c263149e05615662d1b14d3caace4a3c899ec78092
+- id: document.confirmation_evidence.template
+  kind: document_template
+  path: documents/confirmation-evidence/template.md
+  media_type: text/markdown
+  sha256: e9bd545d9d2001cf919fcd43a2e418339047838ffa10c09a2a2ac960463f79d2
+- id: skill.submission_reviewer
+  kind: skill
+  path: skills/submission-reviewer/SKILL.md
+  media_type: text/markdown
+  sha256: 5a17327bcf036b3f4edd879517c0544cac5b6693d0dee3089e941a906cd7e807
+- id: document.unit_review_result.schema
+  kind: document_schema
+  path: documents/unit-review-result/schema.json
+  media_type: application/schema+json
+  sha256: ba2c1fac6b4b79300ba2f2718d143b69c1debb846254d538886d51f259cf6232
+- id: document.unit_review_result.template
+  kind: document_template
+  path: documents/unit-review-result/template.md
+  media_type: text/markdown
+  sha256: 8161909f5b533a481ea47869fff8918cf562b0999ee018c4e89f085d04e045dc
+- id: decision.rework_scope
+  kind: question_set
+  path: decisions/rework-scope.yaml
+  media_type: application/yaml
+  sha256: 67ca8ca1c1bda571485c787491feef9133663d393941b7391803c095be01c05d
+- id: standard.rework_scope
+  kind: standard
+  path: standards/rework-scope.yaml
+  media_type: application/yaml
+  sha256: ae63641239ba0e28c98263d8c960dee6c5de4c50a881544cb7599de170ebcbb2
+- id: document.correction_plan.schema
+  kind: document_schema
+  path: documents/correction-plan/schema.json
+  media_type: application/schema+json
+  sha256: 77b199595fa8f906d7b85c137182cc3d4d15722b516d686c60b99b0d9c44f3db
+- id: document.correction_plan.template
+  kind: document_template
+  path: documents/correction-plan/template.md
+  media_type: text/markdown
+  sha256: 2362d444f3087321da4f74c82f91d501235f3d83be0cf45dc45b314bc6dcfc53
+- id: document.work_inputs.schema
+  kind: document_schema
+  path: documents/work-inputs/schema.json
+  media_type: application/schema+json
+  sha256: 6615d057301395d2254ec138706f274cac8b3958d0d6ea4ae43b679ab73ead87
+- id: document.work_inputs.template
+  kind: document_template
+  path: documents/work-inputs/template.md
+  media_type: text/markdown
+  sha256: 682a7cd1b387cc77c16ac91becef7e4e716bd7255537032b5cabf9e180a4fe30
+requires:
+- capability_id: engineering.artifacts.create
+  kind: operation
+  interface_version: '2'
+  contract_digest: 0bc02e9e5a17ada14fc47a3da92abd6c360247768ab0ab1debfc6ec444b213f4
+- capability_id: engineering.artifacts.append_revision
+  kind: operation
+  interface_version: '2'
+  contract_digest: 9124b5ae338d56a7ac12b6ec39141125b1664d2e4cdd5649f096954c87edaf7b
+- capability_id: engineering.proposals.create
+  kind: operation
+  interface_version: '1'
+  contract_digest: 10c0bdbb3e27e13b91f53a8438d375b6201ceb85e43fe1c1253da586458afe69
+- capability_id: engineering.reviews.request
+  kind: operation
+  interface_version: '1'
+  contract_digest: a7395f23914f088ae9a578f3c4d8430752c8ac16dfe4a32ef8aa21c85ba97e61
+- capability_id: engineering.reviews.record
+  kind: operation
+  interface_version: '1'
+  contract_digest: 8454e7ae9d924e2e0db10f9d53542cf6817d19f629e24789576b0c0c9a74f7df
+- capability_id: engineering.notices.publish
+  kind: operation
+  interface_version: '1'
+  contract_digest: fc2cce034db4c0cb84101e7bdb20e7fa48f4656372c0ca51e88b7c6d113dd98a
+- capability_id: engineering.approvals.prepare_intent
+  kind: operation
+  interface_version: '1'
+  contract_digest: 5c0f2ac525b0933c058b542aa9ca53d7a3d76cbad559a0574e21279791dc3cfd
+- capability_id: engineering.approvals.request
+  kind: operation
+  interface_version: '1'
+  contract_digest: 5be056bb81dc4d35e79844f1ddece613d4f1ca6189a0d880b0a83bdaac4754f0
+- capability_id: engineering.approvals.record_conversation
+  kind: operation
+  interface_version: '1'
+  contract_digest: c03f66ce42ce4a34166975a74464a377005b47226b7d7d032ae1ed10281b2492
+- capability_id: engineering.changes.apply
+  kind: operation
+  interface_version: '1'
+  contract_digest: d0381d1637969b710abefdffe3395e035c4de670640f5573428472bafcbf024b
+- capability_id: engineering.acceptance.adopt
+  kind: operation
+  interface_version: '1'
+  contract_digest: 4f61a62fae5aafd6096f01793b902a37ff481696a8b64ae6fbd9e0f00ef0d97c
+- capability_id: engineering.packages.freeze
+  kind: operation
+  interface_version: '1'
+  contract_digest: 4b4b09d58c55facfb770a6974590bea8a1212d21e3419ce471d712f3ff222d9b
+- capability_id: engineering.executions.dispatch
+  kind: operation
+  interface_version: '1'
+  contract_digest: ddf76600cd07aaab2051d180b441405438abf8d78a6aa2c650fdc5a3c1ed92d7
+- capability_id: engineering.submissions.record_report
+  kind: operation
+  interface_version: '1'
+  contract_digest: 208580b13ec6d100f16d1f3b6f8cdf2cec03800140d904908747242e821b3df0
+- capability_id: ordessa.claims.coverage
+  kind: check
+  interface_version: 1.0.0
+  contract_digest: 5e16a304e5fcd714501efe6701129b83353e5b7d9496f54662c70ad5f12222aa
+- capability_id: ordessa.sources.integrity
+  kind: check
+  interface_version: 1.0.0
+  contract_digest: 4b7fff2a8bccfd721f681fd80f5539baf4c3ab2e5c50c742d9cf802a9cdc1354
+- capability_id: ordessa.schema.validate
+  kind: check
+  interface_version: 1.0.0
+  contract_digest: b120bf7b0ddac3c63792233edf5aaee32195f6307300a2f95446f6094c76df03
+- capability_id: ordessa.submission.binding
+  kind: check
+  interface_version: 1.0.0
+  contract_digest: 57a385824dd93162fbad5356fadd8419f14b56230f17036b9e4e731b9fd512fd
+- capability_id: ordessa.decision.evaluate
+  kind: check
+  interface_version: 1.0.0
+  contract_digest: 73034144196330fe4dcc0f28359b0a2d64b90c58d0f36160cb132a8991eb71bf
+metadata:
+  status: unsupported-owner-binding-candidate
+  production_activation: forbidden_until_all_pending_owner_contracts_bound_and_qualified
+  templates_are_advisory: true
+  judgment_quality: not_validated
+  threshold_status: historical_demo_policies_are_not_approved_production_rules
+  pending_owner_events: []
+  pending_proposal_event_bindings:
+  - decisions_ref
+  - baseline_ref
+  - summary_ref
+  - standard_profile_ref
+  owner_events_must_be_verified: authenticated_resume_not_user_supplied_receipts
+  logical_roles:
+    main_agent: discussion_and_coordination
+    executor:
+      required_provider: pi
+      real_native_input_and_records: true
+    semantic_judge:
+      required_provider: jev
+      real_response_and_usage: true
+      judgment_quality: not_validated
+    trusted_human: configured_product_confirmation_policy_with_authorized_main_agent_chat_attestation; optional_stronger_provider
+    submission_reviewer:
+      logical_role: independent_review_unit
+      original_unit_identity_distinct_from_author: true
+      availability: unsupported_pending_host_role_and_source_binding
+      independence_scope: this_method_only_host_generic_identity_constraints
+  product_confirmation_policy:
+    policy_id: ordessa.product.v1.chat-attested-confirmation
+    revision: 1
+    sha256: 102d4a74144348ac83ced83200a26ab2b5b99660984ebc3572e21e6f5910df2b
+    selection: product_configuration_only_not_arbitrary_method_trust_elevation
+  candidate_binding_status:
+    requires_complete: false
+    pending_bindings_path: pending-bindings.yaml
+    wait_events: method_declared_persisted_work_source_and_explicit_inputs_not_qualified
+    publication_allowed: false
+    execution_allowed: false
+    unit_submission_review: unsupported_pending_generic_submission_and_original_review_unit_work_bridge_contract
+  work_source:
+    contract_version: ordessa.persisted-work-source/1
+    input_document_slot: work_inputs
+    input_document_type: work-inputs
+    waits:
+      await_proposal:
+        family: object_exists
+        refs:
+        - proposal_ref
+        event_slots:
+          proposal_ref:
+            source: work_input
+            field: proposal_ref
+          summary_ref:
+            source: work_input
+            field: summary_ref
+          baseline_ref:
+            source: work_input
+            field: baseline_ref
+          source_review_plan:
+            source: work_input
+            field: source_review_plan
+          method_ref:
+            source: work_input
+            field: method_ref
+          decisions_ref:
+            source: work_input
+            field: decisions_ref
+          standard_profile_ref:
+            source: work_input
+            field: standard_profile_ref
+      await_source_gate:
+        family: review_gate
+        plan_slot: source_review_plan
+        phase_key: source_review
+        event_slots:
+          plan:
+            source: slot
+            slot: source_review_plan
+          proposal:
+            source: slot
+            slot: proposal_ref
+          method:
+            source: slot
+            slot: method_ref
+          quality_review_plan:
+            source: work_input
+            field: quality_review_plan
+      await_quality_gate:
+        family: review_gate
+        plan_slot: quality_review_plan
+        phase_key: quality_review
+        event_slots:
+          plan:
+            source: slot
+            slot: quality_review_plan
+          proposal:
+            source: slot
+            slot: proposal_ref
+          summary:
+            source: slot
+            slot: summary_ref
+          method:
+            source: slot
+            slot: method_ref
+          notice:
+            source: work_input
+            field: notice
+      await_acceptance_intent:
+        family: object_exists
+        refs:
+        - proposal_ref
+        event_slots:
+          acceptance_intent:
+            source: work_input
+            field: acceptance_intent
+      await_intent_ref:
+        family: object_exists
+        refs:
+        - proposal_ref
+        intent_result_slots:
+          id: intent_id
+          digest: intent_digest
+        event_slots:
+          intent_id:
+            source: work_input
+            field: intent_id
+          intent_digest:
+            source: work_input
+            field: intent_digest
+      await_document_acceptance:
+        family: action_authorization
+        intent_slot: intent_id
+        approval_slot: document_approval_ref
+        action: apply_change
+        event_slots:
+          intent_id:
+            source: slot
+            slot: intent_id
+          intent_digest:
+            source: slot
+            slot: intent_digest
+          proposal:
+            source: slot
+            slot: proposal_ref
+          baseline:
+            source: slot
+            slot: baseline_ref
+          method:
+            source: slot
+            slot: method_ref
+          document_approval_ref:
+            source: work_input
+            field: document_approval_ref
+      await_applied_did:
+        family: object_exists
+        refs:
+        - applied_did_ref
+        event_slots:
+          approval:
+            source: slot
+            slot: document_approval_ref
+          proposal:
+            source: slot
+            slot: proposal_ref
+          baseline:
+            source: slot
+            slot: baseline_ref
+          method:
+            source: slot
+            slot: method_ref
+          applied_did_ref:
+            source: work_input
+            field: applied_did_ref
+          apply_receipt_ref:
+            source: work_input
+            field: apply_receipt_ref
+      await_package_draft:
+        family: object_exists
+        refs:
+        - package_draft_ref
+        event_slots:
+          did:
+            source: slot
+            slot: applied_did_ref
+          receipt:
+            source: slot
+            slot: apply_receipt_ref
+          method:
+            source: slot
+            slot: method_ref
+          package_draft_ref:
+            source: work_input
+            field: package_draft_ref
+      await_generate_package_permission:
+        family: action_authorization
+        intent_slot: package_intent_id
+        approval_slot: package_approval_ref
+        action: generate_package
+        event_slots:
+          draft:
+            source: slot
+            slot: package_draft_ref
+          method:
+            source: slot
+            slot: method_ref
+          package_record:
+            source: work_input
+            field: package_record
+          package_intent_id:
+            source: work_input
+            field: package_intent_id
+          package_approval_ref:
+            source: work_input
+            field: package_approval_ref
+      await_frozen_package:
+        family: object_exists
+        refs:
+        - package_ref
+        event_slots:
+          package_ref:
+            source: work_input
+            field: package_ref
+          package_review_plan:
+            source: work_input
+            field: package_review_plan
+      await_package_gate:
+        family: review_gate
+        plan_slot: package_review_plan
+        phase_key: package_review
+        event_slots:
+          plan:
+            source: slot
+            slot: package_review_plan
+          package:
+            source: slot
+            slot: package_ref
+          method:
+            source: slot
+            slot: method_ref
+      await_implementation_permission:
+        family: object_exists
+        refs:
+        - package_ref
+        event_slots:
+          package:
+            source: slot
+            slot: package_ref
+          method:
+            source: slot
+            slot: method_ref
+          dispatch_input:
+            source: work_input
+            field: dispatch_input
+      await_execution_capture:
+        family: object_exists
+        refs:
+        - package_ref
+        native_report_slot: submission_record
+        event_slots:
+          package:
+            source: slot
+            slot: package_ref
+          method:
+            source: slot
+            slot: method_ref
+          submission_record:
+            source: work_input
+            field: submission_record
+      await_submission:
+        family: result_exists
+        refs:
+        - submission_ref
+        event_slots:
+          submission_ref:
+            source: work_input
+            field: submission_ref
+          acceptance_review_plan:
+            source: work_input
+            field: acceptance_review_plan
+      await_acceptance_response:
+        family: object_exists
+        refs:
+        - submission_ref
+        event_slots:
+          plan:
+            source: slot
+            slot: acceptance_review_plan
+          submission:
+            source: slot
+            slot: submission_ref
+          method:
+            source: slot
+            slot: method_ref
+          review_id:
+            source: work_input
+            field: review_id
+          request_version:
+            source: work_input
+            field: request_version
+          fence:
+            source: work_input
+            field: fence
+          raw_response_utf8:
+            source: blob_utf8
+            field: raw_response_ref
+      await_acceptance_gate:
+        family: review_gate
+        plan_slot: acceptance_review_plan
+        phase_key: acceptance_review
+        event_slots:
+          plan:
+            source: slot
+            slot: acceptance_review_plan
+          submission:
+            source: slot
+            slot: submission_ref
+          method:
+            source: slot
+            slot: method_ref
+      await_rework_review_plan:
+        family: review_gate
+        plan_slot: rework_review_plan
+        phase_key: rework_review
+        event_slots:
+          submission:
+            source: slot
+            slot: submission_ref
+          acceptance_request_id:
+            source: slot
+            slot: acceptance_review_id
+          acceptance_review:
+            source: slot
+            slot: acceptance_review_ref
+          acceptance_plan_digest:
+            source: slot
+            slot: acceptance_record_plan_digest
+          acceptance_request_version:
+            source: slot
+            slot: acceptance_record_request_version
+          acceptance_fence:
+            source: slot
+            slot: acceptance_record_fence
+          correction_plan:
+            source: slot
+            slot: correction_plan_ref
+          did:
+            source: slot
+            slot: applied_did_ref
+          package:
+            source: slot
+            slot: package_ref
+          method:
+            source: slot
+            slot: method_ref
+          review_ref:
+            source: work_input
+            field: review_ref
+          plan_digest:
+            source: work_input
+            field: plan_digest
+          request_version:
+            source: work_input
+            field: request_version
+          fence:
+            source: work_input
+            field: fence
+          correction_plan_ref:
+            source: work_input
+            field: correction_plan_ref
+          correction_plan_content:
+            source: work_input
+            field: correction_plan_content
+          review_plan:
+            source: work_input
+            field: review_plan
+      await_rework_review_response:
+        family: review_gate
+        plan_slot: rework_review_plan
+        phase_key: rework_review
+        event_slots:
+          plan:
+            source: slot
+            slot: rework_review_plan
+          correction_plan:
+            source: slot
+            slot: correction_plan_ref
+          submission:
+            source: slot
+            slot: submission_ref
+          acceptance_review:
+            source: slot
+            slot: acceptance_review_ref
+          method:
+            source: slot
+            slot: method_ref
+          review_id:
+            source: work_input
+            field: review_id
+          request_version:
+            source: work_input
+            field: request_version
+          fence:
+            source: work_input
+            field: fence
+          raw_response_utf8:
+            source: blob_utf8
+            field: raw_response_ref
+      await_adoption_permission:
+        family: action_authorization
+        intent_slot: adoption_intent_id
+        approval_slot: adoption_approval_ref
+        action: accept_artifact
+        event_slots:
+          submission:
+            source: slot
+            slot: submission_ref
+          method:
+            source: slot
+            slot: method_ref
+          approval_ref:
+            source: work_input
+            field: approval_ref
+          expected_control_version:
+            source: work_input
+            field: expected_control_version
+          intent_id:
+            source: work_input
+            field: intent_id
+          targets:
+            source: work_input
+            field: targets
+      await_adoption_receipt:
+        family: result_exists
+        refs:
+        - adoption_ref
+        event_slots:
+          submission:
+            source: slot
+            slot: submission_ref
+          method:
+            source: slot
+            slot: method_ref
+          acceptance_receipt_ref:
+            source: work_input
+            field: acceptance_receipt_ref
+      await_feedback:
+        family: object_exists
+        refs:
+        - adoption_ref
+        event_slots:
+          adoption:
+            source: slot
+            slot: adoption_ref
+          submission:
+            source: slot
+            slot: submission_ref
+          feedback_ref:
+            source: work_input
+            field: feedback_ref

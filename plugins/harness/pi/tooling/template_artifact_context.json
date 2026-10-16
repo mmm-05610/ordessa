@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "owner_id": "pi",
+  "package_name": "@automatalabs/pi-acp",
+  "package_lock": "npm/package-lock.json",
+  "output_directory": "dist",
+  "edges": [
+    {
+      "source": "../src/ordessa_harness_pi/acp/profile/server.mjs",
+      "emitted_module": "dist/ordessa-profile-server.mjs",
+      "specifier": "./agent.js",
+      "upstream_member": "dist/agent.js",
+      "sha256": "93eeaf889a5a65bfcc19ccff036c953e5bae5df892f61720cec20e39547275a7"
+    },
+    {
+      "source": "../src/ordessa_harness_pi/acp/profile/server.mjs",
+      "emitted_module": "dist/ordessa-profile-server.mjs",
+      "specifier": "./deps.js",
+      "upstream_member": "dist/deps.js",
+      "sha256": "7dc511ec43c445f8c466a83e8ddf2edfffe79811cf178e6cfd9312c8d7494eae"
+    },
+    {
+      "source": "../src/ordessa_harness_pi/acp/profile/server.mjs",
+      "emitted_module": "dist/ordessa-profile-server.mjs",
+      "specifier": "./steering.js",
+      "upstream_member": "dist/steering.js",
+      "sha256": "d002584de8a29258dd642a1a6d83a18ee2ed44c57bdb755d261e1d50aba86258"
+    },
+    {
+      "source": "../src/ordessa_harness_pi/acp/profile/server.mjs",
+      "emitted_module": "dist/ordessa-profile-server.mjs",
+      "specifier": "./loaded-turn.js",
+      "upstream_member": "dist/loaded-turn.js",
+      "sha256": "85bda0d593324a0d544e782e9bfe0f6e1650d5a0872b31f70aee1df33572259a"
+    }
+  ]
+}

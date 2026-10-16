@@ -7,6 +7,7 @@
 node 探针测试。
 """
 from __future__ import annotations
+import os
 
 import json
 from pathlib import Path
@@ -15,7 +16,7 @@ import sys
 
 import pytest
 
-from ordessa_harness.opencode import production
+from ordessa_harness_opencode import production
 
 
 REPO = Path(__file__).resolve().parents[3]
@@ -24,6 +25,21 @@ DRIVER = production.DRIVER_TEMPLATE
 #: Server/Core 在 deployment 环境变量名上执行的拒绝规则（与 runtime.py 一致）。
 FORBIDDEN_ENVIRONMENT = ("TOKEN", "SECRET", "KEY", "PASSWORD", "CREDENTIAL", "AUTH")
 
+
+from functools import partial
+from ordessa_server.composition.harness_catalog import capture_harness_catalog
+from ordessa_server.composition.selected_harness_catalog import capture_selected_harness_catalog
+from ordessa_execution_agents.harness.providers.declarations.capability_claims import capability_claims
+
+from ordessa_harness_opencode.registration_declarations import registration_declarations
+
+# This brand's own test catalog is established explicitly here: the declarations
+# are read through this brand's public port and composed by the neutral capture
+# helper. Nothing is taken from the implicit global selection or another brand.
+_brand_declarations = registration_declarations()
+_captured_harness_catalog = capture_harness_catalog(
+    (_brand_declarations,), launch_declarations=(_brand_declarations,))
+registry_capabilities = partial(capability_claims, _captured_harness_catalog.registry)
 
 def as_json(value):
     """JSON 归一化比较：键序与格式不是身份。"""
@@ -41,9 +57,9 @@ def test_native_configuration_is_the_prepared_42d_configuration(tmp_path):
     token.write_bytes(b"opencode-template-test-token")
     token.chmod(0o600)
     result = subprocess.run(
-        ["node", str(Path(__file__).resolve().parents[1] / "packaging" / "builders" / "model-validation-42d.mjs"),
+        ["node", str(Path(__file__).resolve().parents[3] / "tooling/checks/harness/model_validation_42d.mjs"),
          "--family", "opencode", "--secret-file", str(token), "--dry-run"],
-        capture_output=True, text=True, timeout=180, cwd=str(REPO),
+        capture_output=True, env={**os.environ, "ORDESSA_TEST_PYTHON": sys.executable}, text=True, timeout=180, cwd=str(REPO),
     )
     assert result.returncode == 0, result.stdout + result.stderr
     prepared = json.loads(result.stdout.strip().splitlines()[-1])
@@ -103,7 +119,7 @@ def test_deployment_document_declares_the_managed_chain():
     document = production.deployment_document(
         binary_token="binary",
         binary_digest="sha256:" + "a" * 64,
-    )
+     capabilities_for=registry_capabilities)
     assert document["schemaVersion"] == 1
     # The document names no host path at all: the plugin root and every mount
     # token are the loader's business, not the file's.
@@ -152,7 +168,8 @@ def test_deployment_document_declares_the_managed_chain():
     for key in adapter["environment"]:
         assert not any(word in key.upper() for word in FORBIDDEN_ENVIRONMENT), key
     # 驱动模块只由 deployment 声明携带，Server 会把它的字节放进评审过的 bundle。
-    assert Path(production.PLUGIN_ROOT / production.DRIVER_SOURCE).is_file()
+    assert production.DRIVER_TEMPLATE.is_file()
+    assert not (Path(production.__file__).resolve().parents[3] / production.DRIVER_SOURCE).exists()
 
 
 def test_deployment_document_refuses_invalid_binary_declarations():
@@ -166,19 +183,19 @@ def test_deployment_document_refuses_invalid_binary_declarations():
                           ("artifact", "sha256:short"),
                           ("artifact", "md5:" + "a" * 32)):
         with pytest.raises(production.OpenCodeProductionTemplateError):
-            production.deployment_document(binary_token=token, binary_digest=digest)
+            production.deployment_document(binary_token=token, binary_digest=digest, capabilities_for=registry_capabilities)
 
 
 def test_projection_sources_exist_next_to_the_deployment_template():
     for projection in production.projection_files():
-        assert (production.PLUGIN_ROOT / projection["source"]).is_file()
+        assert (production.DEPLOY_DIRECTORY / projection["source"].rsplit("/", 1)[-1]).is_file()
         assert projection["target"].startswith(f"{production.GUEST_HOME}/")
         assert projection["target"] == production.CONFIG_TARGET
     assert production.DRIVER_TEMPLATE.is_file()
     # 离线守卫是门资产，不是生产配置。
     assert production.EGRESS_GUARD.is_file()
     assert "egress-guard" not in json.dumps(production.deployment_document(
-        binary_token="binary", binary_digest="sha256:" + "a" * 64))
+        binary_token="binary", binary_digest="sha256:" + "a" * 64, capabilities_for=registry_capabilities))
 
 
 def test_product_model_translates_to_the_native_catalogue_value():
@@ -187,17 +204,23 @@ def test_product_model_translates_to_the_native_catalogue_value():
     assert production.native_model(None) is None
 
 
+def test_the_official_default_selection_stays_pi_only():
+    """Establishing this brand's catalog above must not change the product default."""
+    default_selection = capture_selected_harness_catalog()
+    assert [definition.harness_type for definition in default_selection.registry.all()] == ["pi"]
+
+
 def test_the_sidecar_glue_owns_the_same_model_mapping():
     """别名只能有一处定义，且两处不得分歧（Python 模板 vs Node 扩展层）。"""
     script = (
-        "import('" + (RUNTIME / "profile_extensions.mjs").as_uri() + "').then((module) =>"
+        "import('" + (Path(__file__).resolve().parents[3] / 'apps/server/tests/support/profile_claims.mjs').as_uri() + "').then((module) =>"
         " process.stdout.write(JSON.stringify({"
         " aliases: module.AGENTBOX_MODEL_ALIASES,"
         " translated: module.resolveNativeModel('opencode', 'deepseek-flash'),"
         " passthrough: module.resolveNativeModel('opencode', 'deepseek-unknown'),"
         " empty: module.resolveNativeModel('opencode', undefined) ?? null })))"
     )
-    result = subprocess.run(["node", "-e", script], capture_output=True, text=True,
+    result = subprocess.run(["node", "-e", script], capture_output=True, env={**os.environ, "ORDESSA_TEST_PYTHON": sys.executable}, text=True,
                             timeout=60, cwd=str(REPO))
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
@@ -286,7 +309,7 @@ def test_the_driver_module_keeps_the_generic_contract(tmp_path):
         "process.stdout.write(JSON.stringify(report))\n",
         encoding="utf-8",
     )
-    result = subprocess.run(["node", str(probe)], capture_output=True, text=True, timeout=120,
+    result = subprocess.run(["node", str(probe)], capture_output=True, env={**os.environ, "ORDESSA_TEST_PYTHON": sys.executable}, text=True, timeout=120,
                             cwd=str(tmp_path))
     assert result.returncode == 0, result.stderr
     report = json.loads(result.stdout)

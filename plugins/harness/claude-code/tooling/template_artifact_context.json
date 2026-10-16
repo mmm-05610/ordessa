@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "owner_id": "claude-code",
+  "package_name": "@agentclientprotocol/claude-agent-acp",
+  "package_lock": "npm/package-lock.json",
+  "output_directory": "dist",
+  "edges": [
+    {
+      "source": "../src/ordessa_harness_claude_code/acp/profile/entry.mjs",
+      "emitted_module": "dist/ordessa-profile.mjs",
+      "specifier": "./index.js",
+      "upstream_member": "dist/index.js",
+      "sha256": "ecfa6ff948a4241090934979179a5ba035bb0a7c3ef543752f4a304d44a267fb"
+    }
+  ]
+}

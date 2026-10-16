@@ -1,0 +1,7 @@
+# 独立Unit审核结果 v1
+
+只输出一个严格JSON对象：document_type=unit-review-result、schema_version=1、原prompt提供的plan_digest，以及answers数组。每项字段严格为check_key（原target/criterion_id/claim_id）、status（satisfied/violated/insufficient/unknown）、evidence_refs（原ArtifactRevisionRefs）、非空rationale。
+
+逐个原完整Plan required CheckKey各答一次，原target/ref/claim_id不得重写、遗漏、重复或增加；没有claim时显式null。保持同一固定交付版本。未知如实unknown，材料不足insufficient，不填pass或假证据。不输出Unit身份/角色/Grant/evaluated字段。evidence_refs只引用实际可追溯材料，引用存在不等于支持；rationale说明具体已检查内容和未核实的asserted事实。verified事实只来自实际独立核实，不能用status=satisfied冒充真实性等级。
+
+宿主按原方法资源验证schema、核对exact plan_digest、原decode_target/decode_artifact_ref、精确完整keys与范围后构造原CriterionAnswer，再完整review_observations。四status只是名义回答，质量门/原来源身份/current guard独立生效；无匹配evaluation仍沿manual，不从正文接受批准或晋级。

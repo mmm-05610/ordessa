@@ -1,0 +1,457 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ordessa.invalid/interfaces/v1/command-envelope.schema.json",
+  "type": "object",
+  "properties": {
+    "api_version": {
+      "const": "1"
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "operation": {
+      "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/CommandName"
+    },
+    "scope": {
+      "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/Scope"
+    },
+    "preconditions": {
+      "type": "array",
+      "items": {
+        "$ref": "https://ordessa.invalid/interfaces/v1/public-types.schema.json#/$defs/VersionPrecondition"
+      }
+    },
+    "parameters": {}
+  },
+  "required": [
+    "api_version",
+    "request_id",
+    "operation",
+    "scope",
+    "preconditions",
+    "parameters"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "engineering.artifacts.create"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:engineering:operations:engineering.artifacts.create:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "engineering.artifacts.append_revision"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:engineering:operations:engineering.artifacts.append_revision:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "engineering.proposals.create"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:engineering:operations:engineering.proposals.create:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "engineering.changes.apply"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:engineering:operations:engineering.changes.apply:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "engineering.reviews.request"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:engineering:operations:engineering.reviews.request:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "engineering.reviews.record"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:engineering:operations:engineering.reviews.record:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "engineering.reviews.replace"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:engineering:operations:engineering.reviews.replace:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "engineering.reviews.void"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:engineering:operations:engineering.reviews.void:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "engineering.approvals.prepare_intent"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:engineering:operations:engineering.approvals.prepare_intent:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "engineering.approvals.request"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:engineering:operations:engineering.approvals.request:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "engineering.approvals.revoke"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:engineering:operations:engineering.approvals.revoke:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "engineering.packages.derive"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:engineering:operations:engineering.packages.derive:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "engineering.proposals.withdraw"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:engineering:operations:engineering.proposals.withdraw:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "engineering.proposals.supersede"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:engineering:operations:engineering.proposals.supersede:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "engineering.executions.dispatch"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:engineering:operations:engineering.executions.dispatch:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "engineering.executions.cancel"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:engineering:operations:engineering.executions.cancel:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "engineering.submissions.record"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:engineering:operations:engineering.submissions.record:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "engineering.acceptance.request"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:engineering:operations:engineering.acceptance.request:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "engineering.acceptance.adopt"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:engineering:operations:engineering.acceptance.adopt:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "execution.agents.units.submit"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:execution-agents:operations:execution.agents.units.submit:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "execution.agents.units.manage"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:execution-agents:operations:execution.agents.units.manage:input:1"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "execution.agents.units.cancel"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "$ref": "urn:ordessa:execution-agents:operations:execution.agents.units.cancel:input:1"
+          }
+        }
+      }
+    }
+  ]
+}

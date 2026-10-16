@@ -1,0 +1,53 @@
+[[harness]]
+schema_version = 1
+driver = "hermes"
+# 逐项证据见 plugins/agent-box-harnesses/tests/test_capability_declarations.py 的
+# FAMILY_MATRIX：真实 Hermes 0.19.0 + 假端点全链门直接观测到同 native id 的
+# ACP `new_session → resume_session`、`state.db` 回投与第二轮上下文，因此
+# `native_continuation` 是已观测项。`permissions` 刻意不声明（未观测到任何运行时
+# 权限裁决），`attach` 同样不声明（门的两轮 message.attachments 均为空）。
+capabilities = ["start", "observe", "finish", "stream", "native_continuation"]
+[harness.identity]
+harness_type = "hermes"
+display_name = "Hermes"
+description = "Hermes Harness"
+version = "2.0"
+[harness.executable]
+identity = "hermes"
+resolver_kind = "PATH"
+version_probe = ["--version"]
+[harness.profile]
+native_home = ".hermes"
+guest_home = "/runtime/home"
+config_format = "json"
+payload_schema = "hermes-profile-v1"
+codec = "hermes"
+overlay_policy = "execution-local"
+slots = ["instruction", "mcp", "skill"]
+skill_target = "/runtime/home/skills/{skill_id}"
+skill_env = "HERMES_HOME"
+[[harness.inputs]]
+contract_id = "agent-box.skill@1"
+minimum = 0
+maximum = 32
+required = false
+selectors = ["agent-skill"]
+target = "skill-tree"
+transformer = "agent-skills"
+[[harness.launch_modes]]
+name = "exec"
+argv = ["hermes", "--print"]
+io = "stdio"
+[harness.runtime]
+io = "stdio"
+network = "required"
+terminal = "stdio"
+[harness.continuation]
+# 生产链走的是 generic sidecar 的 ACP 路径，门直接观测到 Hermes 用 `session/resume`
+# 重开同一个 native session（无重放）。`transcript_handoff` 是**另一个**代码路径
+# （legacy `HermesExecutionProvider`，它把 transcript 前缀塞进 prompt）的说法，
+# 与本注册表描述的生产路径无关；消费方核对结论见回报与能力合同的测试。
+kind = "native_session"
+contract_id = "agent-box.hermes-continuation@1"
+target_provider = "hermes-continuation"
+

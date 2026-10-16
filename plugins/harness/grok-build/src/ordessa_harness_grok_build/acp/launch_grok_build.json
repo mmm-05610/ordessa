@@ -1,0 +1,13 @@
+{
+  "id": "grok-build",
+  "origin": "agentbox",
+  "managed": null,
+  "legacy": null,
+  "variants": {},
+  "allowsPythonPath": false,
+  "pythonRoute": null,
+  "nativeRoute": false,
+  "nativeExtension": null,
+  "profileExtension": null,
+  "modelAliases": {}
+}

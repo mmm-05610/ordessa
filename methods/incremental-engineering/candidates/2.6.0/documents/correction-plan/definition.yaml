@@ -1,0 +1,19 @@
+schema_version: 1
+document_type: correction-plan
+schema:
+  resource: document.correction_plan.schema
+template:
+  resource: document.correction_plan.template
+validation_target: method_content
+subject_kind: artifact_revision
+review_purpose: quality
+description: >-
+  Immutable, method-owned pre-execution plan for an ordinary correction. Its
+  references and claims remain subject to exact original-source resolution and
+  independent review; this document grants no permission and asserts no verified
+  execution result.
+declaration_note: >-
+  The compiler-authoritative document definition is the correction-plan entry
+  in method.yaml. V1 has no separate document_definition resource kind; this
+  file is an indexed descriptive companion, not a loader resource or alternate
+  runtime authority.

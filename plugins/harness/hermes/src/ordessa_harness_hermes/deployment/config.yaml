@@ -1,0 +1,19 @@
+model:
+  provider: custom
+  default: deepseek-flash
+  max_tokens: 8192
+  base_url: https://api.deepseek.com
+providers:
+  custom:
+    name: DeepSeek official
+    api: https://api.deepseek.com
+    key_env: DEEPSEEK_API_KEY
+    transport: chat_completions
+    default_model: deepseek-flash
+    models:
+      deepseek-flash: {}
+    extra_body:
+      thinking:
+        type: disabled
+agent:
+  api_max_retries: 1

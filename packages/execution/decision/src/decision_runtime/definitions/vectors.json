@@ -1,0 +1,27 @@
+[
+  {
+    "name": "request",
+    "canonical": "{\"contract_version\":\"decision/1\",\"extensions\":{},\"flow_ref\":{\"content_digest\":\"d\",\"flow_id\":\"f\",\"version\":\"1\"},\"limits\":{\"candidate_page_size\":32,\"cleanup_timeout_seconds\":1,\"max_business_candidates\":64,\"max_candidate_pages\":4,\"max_choice_options\":66,\"max_combinations\":64,\"max_inflight_model_calls\":1,\"max_model_attempts\":12,\"max_node_entries\":40,\"max_proposals_per_round\":8,\"max_repair_rounds\":2,\"wall_timeout_seconds\":60},\"prior_outcome_ref\":null,\"request_id\":\"req\",\"task\":{\"acceptance_criteria\":[],\"boundaries\":[],\"context_refs\":[],\"continuation_ref\":null,\"goal\":\"\",\"inputs\":[{\"x\":0.7}],\"task_id\":\"t\",\"task_revision\":\"1\"}}",
+    "digest": "sha256:95acec4b0129d16f2d2822498f19283264aac2d441a5ff942fcf5713d71862e8"
+  },
+  {
+    "name": "proposal",
+    "canonical": "{\"new.kind\":0.7}",
+    "digest": "sha256:9865413fdc18874acd0332858c88fdb3d3312bc121e17a129153bc3e2582e54e"
+  },
+  {
+    "name": "descriptor",
+    "canonical": "{\"revision\":null}",
+    "digest": "sha256:6677dd5950e60e0bdc0db81b0306795e64bd85e3464030bc64c3c7aaba20c017"
+  },
+  {
+    "name": "runmanifest",
+    "canonical": "{\"policy\":\"1\"}",
+    "digest": "sha256:ac10dfc30732cc15670d3cd1974c2959fd227750d8b200c2604144013370cfd3"
+  },
+  {
+    "name": "result",
+    "canonical": "{\"status\":\"failed\"}",
+    "digest": "sha256:0051af259fd196a1284f42ff12878be9078f89643c391853e579fb10b3b67532"
+  }
+]

@@ -1,0 +1,42 @@
+[[harness]]
+schema_version = 1
+driver = "kilo"
+# Work Order 43 后续。静态候选（产品层声明上限），**不是**观测结论：kilo 7.8.3
+# （OpenCode fork，npm latest 2026-10-01，仓库LICENSE与registry双源MIT 2026-10-07）
+# 的官方 ACP 面（`kilo acp`）在第一手探测里播发了完整会话面
+# （含 session/load+resume），但 observed 只能由本仓的假端点全链门回填。
+# `attach`/`permissions` 刻意不声明（无运行时证据）。
+capabilities = ["start", "observe", "finish", "stream", "native_continuation"]
+[harness.identity]
+harness_type = "kilo"
+display_name = "Kilo"
+description = "Kilo CLI (OpenCode fork), official ACP mode"
+version = "7.8.3"
+[harness.executable]
+identity = "kilo"
+resolver_kind = "PATH_OR_BUNDLE"
+bundle_members = ["kilo"]
+version_probe = ["--version"]
+[harness.profile]
+native_home = ".config/kilo"
+guest_home = "/runtime/home"
+config_format = "json"
+payload_schema = "kilo-profile-v1"
+codec = "kilo"
+overlay_policy = "execution-local"
+slots = ["provider", "instruction"]
+[[harness.launch_modes]]
+name = "acp"
+argv = ["kilo", "acp"]
+io = "stdio"
+[harness.runtime]
+io = "stdio"
+network = "required"
+terminal = "stdio"
+[harness.continuation]
+# 探测实证：session/load（重放）与 session/resume 都可用；桥按播发的
+# capabilities 选择路径，门按实测方法记录。当前为静态声明。
+kind = "native_session"
+contract_id = "agent-box.kilo-continuation@1"
+target_provider = "kilo-continuation"
+

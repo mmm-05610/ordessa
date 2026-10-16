@@ -1,0 +1,24 @@
+# DeepSeek dsh production settings (non-secret), Work Order 43.
+#
+# The document is the native `llm-deepseek` user-settings section of the
+# settings document dsh reads from the harness home (`$DSH_HOME/settings.yaml`;
+# the settings-file provider's documented default filename). One provider, the
+# user-confirmed product model `deepseek-flash`, the official DeepSeek root, a
+# permissive default output ceiling (order 108; a no-model gate projects its own
+# bounded ceiling), and thinking disabled - the same production shape the
+# Pi template checks in. The loopback endpoint a no-model gate uses is produced
+# by replacing `llm-deepseek.baseURL` alone; a test asserts that equality, so
+# the template cannot drift into a second implementation.
+#
+# Nothing here carries a credential: the API key is an environment reference
+# (`DEEPSEEK_API_KEY`) resolved by dsh inside the sandbox, where the Worker
+# materialized it. The retry policy is deliberately left at the provider
+# default (declared "normal", up to 5 retries); the no-model gate's exact
+# request budget is what observes retry behavior instead of trusting it.
+llm-deepseek:
+  baseURL: https://api.deepseek.com
+  maxTokens: 8192
+  thinking: "disabled"
+  # Quoted on purpose: YAML 1.1 would parse a bare `off` as boolean false, and
+  # dsh's settings validation demands the string.
+  reasoningEffort: "off"

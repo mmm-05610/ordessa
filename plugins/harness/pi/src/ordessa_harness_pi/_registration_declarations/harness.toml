@@ -1,0 +1,55 @@
+[[harness]]
+schema_version = 1
+driver = "pi"
+# 逐项证据见 plugins/agent-box-harnesses/tests/test_capability_declarations.py 的
+# FAMILY_MATRIX：真实 `@automatalabs/pi-acp@0.5.0` 假端点全链门观测到
+# start/observe/finish/stream 与同 native id 的重开（第二轮上下文来自 Pi 自己的
+# journal）。`attach` 保留为**静态候选**但 observed 只能是 not-observed：真实握手
+# 确实播发了 `promptCapabilities {image}`（条件一成立），投递链路
+# （`SidecarHarnessPort._start_run` → `port.prompt(..., attachments)` →
+# `worker-entry.mjs` → `AcpService.prompt`）也在代码上成立，但没有任何一次运行真的
+# 送过非空附件——门的每一轮 `message.attachments` 都是 `[]`。按"不得静默升级"，
+# 它没有运行时证据，就不算观测。
+# 2026-09-24 补充：上面那条投递链路属于**已退役的信封分发**旧链（移除清单与恢复
+# 位置见 plugins/agent-box-harness/REMOVALS.md）；新的 transport-only 接入入口只逐字
+# 转发客户端自己写的 ACP 帧，不构造附件，因此 `attach` 的结论不变（not-observed）。
+capabilities = ["start", "observe", "finish", "attach", "stream", "native_continuation"]
+[harness.identity]
+harness_type = "pi"
+display_name = "Pi"
+description = "Pi Harness"
+version = "2.0"
+[harness.executable]
+identity = "pi"
+resolver_kind = "PATH"
+version_probe = ["--version"]
+[harness.profile]
+native_home = ".pi"
+guest_home = "/runtime/home"
+config_format = "json"
+payload_schema = "pi-profile-v1"
+codec = "pi"
+overlay_policy = "execution-local"
+slots = ["instruction", "mcp", "skill"]
+skill_target = "/runtime/home/skills/{skill_id}"
+[[harness.inputs]]
+contract_id = "agent-box.skill@1"
+minimum = 0
+maximum = 32
+required = false
+selectors = ["agent-skill"]
+target = "skill-tree"
+transformer = "agent-skills"
+[[harness.launch_modes]]
+name = "exec"
+argv = ["pi", "--agent-dir", "/runtime/home", "--print"]
+io = "stdio"
+[harness.runtime]
+io = "stdio"
+network = "required"
+terminal = "stdio-or-pty"
+[harness.continuation]
+kind = "native_session"
+contract_id = "agent-box-pi.continuation@1"
+target_provider = "pi-session"
+

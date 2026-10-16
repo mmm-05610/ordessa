@@ -1,0 +1,53 @@
+[[harness]]
+schema_version = 1
+driver = "opencode"
+# 逐项证据见 plugins/agent-box-harnesses/tests/test_capability_declarations.py 的
+# FAMILY_MATRIX：真实单文件二进制全链门的重开相位 `createsInsideReopenPhase=[]`、
+# `hostStarts>=2`、同一 native session id，且第二轮上下文来自 OpenCode 自己的 SQLite
+# 存储，因此 `native_continuation` 是已观测项。`attach` 刻意不声明：驱动在发包前以
+# `OPENCODE_ATTACHMENTS_UNSUPPORTED` 显式拒绝附件，native `promptCapabilities.image`
+# 也是 false；`permissions` 无任何运行时证据。
+capabilities = ["start", "observe", "finish", "stream", "native_continuation"]
+[harness.identity]
+harness_type = "opencode"
+display_name = "OpenCode"
+description = "OpenCode Harness"
+version = "2.0"
+[harness.executable]
+identity = "opencode"
+resolver_kind = "PATH"
+version_probe = ["--version"]
+[harness.profile]
+native_home = ".config/opencode"
+guest_home = "/runtime/home"
+config_format = "json"
+payload_schema = "opencode-profile-v1"
+codec = "opencode"
+overlay_policy = "execution-local"
+slots = ["provider", "instruction", "mcp", "skill"]
+skill_target = "/runtime/home/skills/{skill_id}"
+skill_env = "OPENCODE_CONFIG_DIR"
+[[harness.inputs]]
+contract_id = "agent-box.skill@1"
+minimum = 0
+maximum = 32
+required = false
+selectors = ["agent-skill"]
+target = "skill-tree"
+transformer = "agent-skills"
+[[harness.launch_modes]]
+name = "exec"
+argv = ["opencode", "run"]
+io = "stdio"
+[harness.runtime]
+io = "stdio"
+network = "required"
+terminal = "stdio"
+[harness.continuation]
+# 生产链的重开由驱动以 `GET /session/<id>` 完成：门观测到 `created:false`、
+# `storedMessages=2`、`createsInsideReopenPhase=[]`，即同一 native session 被重开，
+# 不是 Server 端重放 transcript。
+kind = "native_session"
+contract_id = "agent-box.opencode-continuation@1"
+target_provider = "opencode-continuation"
+

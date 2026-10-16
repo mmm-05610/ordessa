@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Candidate external result assembled by the adapter from caller-supplied materials and original native decision records. Digests and references identify records; they do not themselves prove evidence truth or support. No generated rationale or findings are part of this contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["scope", "baseline", "candidate", "checks", "aggregate"],
+  "properties": {
+    "scope": {"$ref": "scope.schema.json"},
+    "baseline": {"$ref": "source-ref.schema.json"},
+    "candidate": {"$ref": "source-ref.schema.json"},
+    "checks": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["check_id", "claim", "evidence", "native_run_ref", "question_digest", "answer_digest", "choice"],
+        "properties": {
+          "check_id": {
+            "enum": [
+              "source-version-preservation",
+              "scoped-read-boundary",
+              "evidence-support",
+              "unique-record-authority",
+              "public-call-chain",
+              "changed-source-refusal",
+              "acceptance-coverage",
+              "declared-limitations"
+            ]
+          },
+          "claim": {"type": "string", "minLength": 1},
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["source_ref", "excerpt"],
+              "properties": {
+                "source_ref": {"$ref": "source-ref.schema.json"},
+                "excerpt": {"type": "string", "minLength": 1}
+              }
+            }
+          },
+          "native_run_ref": {"type": "string", "minLength": 1},
+          "question_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+          "answer_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+          "choice": {"enum": ["passed", "not_passed", "unknown"]}
+        }
+      }
+    },
+    "aggregate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy", "conclusion"],
+      "properties": {
+        "policy": {"const": "all_required"},
+        "conclusion": {"enum": ["passed", "not_passed", "unknown"]}
+      }
+    }
+  }
+}

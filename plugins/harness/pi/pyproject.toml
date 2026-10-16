@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordessa-harness-pi"
+version = "0.1.0a1"
+description = "Pi ACP launch declarations and configuration adapters"
+requires-python = ">=3.12"
+
+dependencies = ["ordessa-units==0.1.0", "ordessa-infrastructure==0.1.0", "ordessa-environments==0.1.0", "ordessa-execution-agents==0.1.0", "ordessa-execution-api==0.1.0"]
+
+[project.optional-dependencies]
+server = ["ordessa-server-plugin-api>=0.1.0,<1"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.setuptools.package-data]
+ordessa_harness_pi = ["deployment/*", "_registration_declarations/*.toml", "_registration_declarations/*.json", "acp/vendor/LICENSE", "acp/vendor/PATCHES.md", "acp/vendor/SOURCE.json", "acp/vendor/backward-line-scan.js", "acp/vendor/pi-session-history.js", "acp/profile/configuration-query.mjs", "acp/profile/creation.mjs", "acp/profile/entry.mjs", "acp/profile/provider-registration.mjs", "acp/profile/server.mjs"]

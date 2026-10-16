@@ -1,0 +1,13 @@
+{
+  "id": "omp",
+  "origin": "upstream",
+  "managed": null,
+  "legacy": null,
+  "variants": {},
+  "allowsPythonPath": false,
+  "pythonRoute": null,
+  "nativeRoute": true,
+  "nativeExtension": null,
+  "profileExtension": null,
+  "modelAliases": {}
+}

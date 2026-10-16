@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "loader_success": true,
+  "compatibility_valid": false,
+  "compiler_success": false,
+  "compiler_version": "ordessa.methods/v2",
+  "compiler_error": "UNKNOWN_CAPABILITY",
+  "diagnostics": [
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "standard.acceptance",
+      "pointer": "/criteria/0/checks/0/capability_id",
+      "message": "standard check capability unavailable: ordessa.schema.validate"
+    },
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "standard.acceptance",
+      "pointer": "/criteria/1/checks/0/capability_id",
+      "message": "standard check capability unavailable: ordessa.submission.binding"
+    },
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "standard.acceptance",
+      "pointer": "/criteria/2/checks/0/capability_id",
+      "message": "standard check capability unavailable: ordessa.outputs.scope"
+    },
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "standard.acceptance",
+      "pointer": "/criteria/3/checks/0/capability_id",
+      "message": "standard check capability unavailable: ordessa.tests.evidence"
+    },
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "standard.engineering_content",
+      "pointer": "/criteria/0/checks/0/capability_id",
+      "message": "standard check capability unavailable: ordessa.decision.evaluate"
+    },
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "standard.engineering_content",
+      "pointer": "/criteria/1/checks/0/capability_id",
+      "message": "standard check capability unavailable: ordessa.decision.evaluate"
+    },
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "standard.engineering_content",
+      "pointer": "/criteria/2/checks/0/capability_id",
+      "message": "standard check capability unavailable: ordessa.decision.evaluate"
+    },
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "standard.engineering_content",
+      "pointer": "/criteria/3/checks/0/capability_id",
+      "message": "standard check capability unavailable: ordessa.decision.evaluate"
+    },
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "standard.quality_review",
+      "pointer": "/criteria/0/checks/0/capability_id",
+      "message": "standard check capability unavailable: ordessa.schema.validate"
+    },
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "standard.quality_review",
+      "pointer": "/criteria/1/checks/0/capability_id",
+      "message": "standard check capability unavailable: ordessa.proposal.consistency"
+    },
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "standard.quality_review",
+      "pointer": "/criteria/2/checks/0/capability_id",
+      "message": "standard check capability unavailable: ordessa.decision.evaluate"
+    },
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "standard.quality_review",
+      "pointer": "/criteria/3/checks/0/capability_id",
+      "message": "standard check capability unavailable: ordessa.decision.evaluate"
+    },
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "standard.source_review",
+      "pointer": "/criteria/0/checks/0/capability_id",
+      "message": "standard check capability unavailable: ordessa.sources.integrity"
+    },
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "standard.source_review",
+      "pointer": "/criteria/1/checks/0/capability_id",
+      "message": "standard check capability unavailable: ordessa.claims.coverage"
+    },
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "standard.source_review",
+      "pointer": "/criteria/2/checks/0/capability_id",
+      "message": "standard check capability unavailable: ordessa.decision.evaluate"
+    },
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "standard.summary_review",
+      "pointer": "/criteria/0/checks/0/capability_id",
+      "message": "standard check capability unavailable: ordessa.decision.evaluate"
+    },
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "workflow.change_cycle",
+      "pointer": "/steps/freeze_package/operation",
+      "message": "operation capability unavailable: engineering.packages.freeze"
+    },
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "workflow.change_cycle",
+      "pointer": "/steps/dispatch/operation",
+      "message": "operation capability unavailable: engineering.executions.dispatch"
+    },
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "workflow.change_cycle",
+      "pointer": "/steps/record_submission/operation",
+      "message": "operation capability unavailable: engineering.submissions.record"
+    },
+    {
+      "code": "UNKNOWN_CAPABILITY",
+      "severity": "error",
+      "resource_id": "workflow.change_cycle",
+      "pointer": "/steps/adopt/operation",
+      "message": "operation capability unavailable: engineering.acceptance.adopt"
+    }
+  ],
+  "static_checks": {
+    "actual_owner_contracts_exact": 10,
+    "request_completed_targets_wait": true,
+    "request_input_schemas_exact": true,
+    "derive_and_acceptance_request_atomic_operations_removed": true,
+    "all_standards_checks_preserved": true,
+    "unchanged_nonworkflow_resources": 46,
+    "old_2_4_files_preserved": 62,
+    "old_2_4_index_exact": true
+  },
+  "publication_attempted": false,
+  "snapshot_created": false,
+  "runtime_attempted": false,
+  "model_calls": 0,
+  "catalog": "original finite command descriptors only, not production catalog composition"
+}

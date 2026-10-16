@@ -1,0 +1,5883 @@
+package acp
+
+import (
+	"context"
+	"encoding/base64"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"log/slog"
+	"net/url"
+	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
+
+	"github.com/beyond5959/acp-adapter/internal/bridge"
+	"github.com/beyond5959/acp-adapter/internal/codex"
+)
+
+const (
+	methodInitialize               = "initialize"
+	methodAuthenticate             = "authenticate"
+	methodSessionLoad              = "session/load"
+	methodSessionList              = "session/list"
+	methodSessionNew               = "session/new"
+	methodSessionSetConfigOption   = "session/set_config_option"
+	methodSessionConfigurationRead = "_ordessa/session/configuration"
+	methodSessionPrompt            = "session/prompt"
+	methodSessionCancel            = "session/cancel"
+	methodSessionUpdate            = "session/update"
+	methodSessionRequestPermission = "session/request_permission"
+	methodFSWriteTextFile          = "fs/write_text_file"
+	methodFSReadTextFile           = "fs/read_text_file"
+
+	defaultPermissionTimeout = 2 * time.Hour
+	defaultFSWriteTimeout    = 10 * time.Second
+	defaultImageSizeLimit    = 4 * 1024 * 1024
+	defaultMentionTextLimit  = 64 * 1024
+	defaultToolCallTextLimit = 64 * 1024
+
+	rpcErrMethodNotFound = -32601
+	rpcErrInvalidParams  = -32602
+	rpcErrInternal       = -32000
+)
+
+const (
+	configIDModel        = "model"
+	configIDThoughtLevel = "thought_level"
+)
+
+var (
+	todoChecklistPattern   = regexp.MustCompile(`(?m)^\s*(?:[-*]|\d+\.)\s+\[([ xX])\]\s+(.+?)\s*$`)
+	unifiedDiffHunkPattern = regexp.MustCompile(`^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@`)
+	allowedImageMimeType   = map[string]struct{}{
+		"image/png":  {},
+		"image/jpeg": {},
+		"image/webp": {},
+		"image/gif":  {},
+	}
+)
+
+type turnPhase string
+
+const (
+	turnPhaseStarted   turnPhase = "started"
+	turnPhaseStreaming turnPhase = "streaming"
+	turnPhaseCompleted turnPhase = "completed"
+	turnPhaseCancelled turnPhase = "cancelled"
+	turnPhaseError     turnPhase = "error"
+)
+
+type permissionOutcome string
+
+const (
+	permissionOutcomeApproved           permissionOutcome = "approved"
+	permissionOutcomeApprovedForSession permissionOutcome = "approved_for_session"
+	permissionOutcomeDeclined           permissionOutcome = "declined"
+	permissionOutcomeCancelled          permissionOutcome = "cancelled"
+)
+
+type patchApplyMode string
+
+const (
+	patchApplyModeAppServer patchApplyMode = "appserver"
+	patchApplyModeACPFS     patchApplyMode = "acp_fs"
+)
+
+type sessionListCursor struct {
+	Archived bool   `json:"archived"`
+	Cursor   string `json:"cursor,omitempty"`
+}
+
+type fsWriteTextFileResult struct {
+	OK       bool   `json:"ok,omitempty"`
+	Conflict bool   `json:"conflict,omitempty"`
+	Message  string `json:"message,omitempty"`
+}
+
+type fsReadTextFileResult struct {
+	Text    string `json:"text,omitempty"`
+	Content string `json:"content,omitempty"`
+	Message string `json:"message,omitempty"`
+}
+
+type adapterCapabilities struct {
+	canReadTextFile bool
+	sessionNotices  bool
+}
+
+type turnLifecycle struct {
+	sessionID             string
+	turnID                string
+	phase                 turnPhase
+	lastUsage             *promptUsageSnapshot
+	lastFailure           string
+	messageBuffer         strings.Builder
+	toolCallStatus        map[string]string
+	commandToolCalls      map[string]*codex.CommandExecution
+	diffToolCallID        string
+	diffToolCallContent   []ToolCallContentItem
+	hasAuthoritativePlan  bool
+	fallbackPlanItemOrder []string
+	fallbackPlanItemText  map[string]string
+}
+
+type unifiedDiffFilePatch struct {
+	Path         string
+	OldPath      string
+	NewPath      string
+	Raw          string
+	IsNewFile    bool
+	IsDeleteFile bool
+	Hunks        []unifiedDiffHunk
+}
+
+type unifiedDiffHunk struct {
+	OldStart int
+	OldCount int
+	NewStart int
+	NewCount int
+	Lines    []unifiedDiffHunkLine
+}
+
+type unifiedDiffHunkLine struct {
+	Op        byte
+	Text      string
+	NoNewline bool
+}
+
+type runtimeOptions struct {
+	Profile            string
+	Model              string
+	ThoughtLevel       string
+	ApprovalPolicy     string
+	Sandbox            string
+	Personality        string
+	SystemInstructions string
+}
+
+type promptUsageSnapshot struct {
+	Used *int64
+	Size *int64
+	Cost *SessionUsageCost
+}
+
+type slashCommandKind string
+
+const (
+	slashCommandNone         slashCommandKind = ""
+	slashCommandReview       slashCommandKind = "review"
+	slashCommandReviewBranch slashCommandKind = "review_branch"
+	slashCommandReviewCommit slashCommandKind = "review_commit"
+	slashCommandInit         slashCommandKind = "init"
+	slashCommandCompact      slashCommandKind = "compact"
+	slashCommandLogout       slashCommandKind = "logout"
+	slashCommandMCPList      slashCommandKind = "mcp_list"
+	slashCommandMCPCall      slashCommandKind = "mcp_call"
+	slashCommandMCPOAuth     slashCommandKind = "mcp_oauth"
+)
+
+type slashCommand struct {
+	kind               slashCommandKind
+	argOne             string
+	argTwo             string
+	argTail            string
+	turnInput          string
+	reviewInstructions string
+}
+
+type appClient interface {
+	ThreadStart(ctx context.Context, cwd string, options codex.RunOptions) (string, error)
+	TurnStart(
+		ctx context.Context,
+		threadID string,
+		input []codex.UserInput,
+		options codex.RunOptions,
+	) (string, <-chan codex.TurnEvent, error)
+	ReviewStart(
+		ctx context.Context,
+		threadID string,
+		instructions string,
+		options codex.RunOptions,
+	) (string, <-chan codex.TurnEvent, error)
+	CompactStart(ctx context.Context, threadID string) (string, <-chan codex.TurnEvent, error)
+	TurnInterrupt(ctx context.Context, threadID, turnID string) error
+	ModelsList(ctx context.Context) ([]codex.ModelOption, error)
+	ApprovalRespond(ctx context.Context, approvalID string, decision codex.ApprovalDecision) error
+	MCPServersList(ctx context.Context) ([]codex.MCPServer, error)
+	MCPToolCall(ctx context.Context, params codex.MCPToolCallParams) (codex.MCPToolCallResult, error)
+	MCPOAuthLogin(ctx context.Context, server string) (codex.MCPOAuthLoginResult, error)
+	Logout(ctx context.Context) error
+}
+
+// appSessionConfiguration is an immediate, downstream-observed capability.
+// Backends without this port retain their existing deferred runtime options.
+type appSessionConfiguration interface {
+	SessionConfiguration(context.Context, string) (codex.RunOptions, error)
+	SetSessionConfigOption(context.Context, string, string, string) (codex.RunOptions, error)
+}
+
+type appAuthenticator interface {
+	Authenticate(ctx context.Context, methodID string) error
+}
+
+type appSessionLister interface {
+	ThreadList(ctx context.Context, params codex.ThreadListParams) (codex.ThreadListResult, error)
+}
+
+type appSessionLoader interface {
+	ThreadResume(
+		ctx context.Context,
+		threadID string,
+		cwd string,
+		options codex.RunOptions,
+	) (codex.ThreadResumeResult, error)
+}
+
+type appSessionExternalLoader interface {
+	LoadSession(
+		ctx context.Context,
+		sessionID string,
+		cwd string,
+		options codex.RunOptions,
+	) (string, codex.ThreadResumeResult, error)
+}
+
+// ServerOptions configures optional ACP server behaviors.
+type ServerOptions struct {
+	PatchApplyMode    string
+	RetryTurnOnCrash  bool
+	Profiles          map[string]ProfileConfig
+	DefaultProfile    string
+	InitialAuthMode   string
+	AuthMethods       []AuthMethod
+	AvailableCommands []AvailableCommand
+}
+
+// Server handles ACP JSON-RPC requests over one Transport.
+type Server struct {
+	codec    Transport
+	app      appClient
+	sessions *bridge.Store
+	logger   *slog.Logger
+	options  ServerOptions
+
+	pendingMu     sync.Mutex
+	pendingClient map[string]chan RPCMessage
+	nextClientID  uint64
+	nextInlineID  uint64
+
+	sessionConfigMu sync.Mutex
+	sessionConfigs  map[string]runtimeOptions
+
+	sessionConfigOptionsMu sync.Mutex
+	sessionConfigOptions   map[string][]SessionConfig
+
+	sessionCWDMu sync.Mutex
+	sessionCWD   map[string]string
+
+	capabilitiesMu sync.RWMutex
+	capabilities   adapterCapabilities
+
+	sessionTodosMu sync.Mutex
+	sessionTodos   map[string][]TodoItem
+
+	authMu       sync.Mutex
+	authMode     string
+	lastAuthMode string
+	authLoggedIn bool
+}
+
+// NewServer creates an ACP request router.
+func NewServer(
+	codec Transport,
+	app appClient,
+	sessions *bridge.Store,
+	logger *slog.Logger,
+	options ServerOptions,
+) *Server {
+	if normalizePatchApplyMode(options.PatchApplyMode) == "" {
+		options.PatchApplyMode = string(patchApplyModeAppServer)
+	}
+	options.DefaultProfile = strings.TrimSpace(options.DefaultProfile)
+	if len(options.AvailableCommands) == 0 {
+		options.AvailableCommands = DefaultAvailableCommands()
+	} else {
+		options.AvailableCommands = cloneAvailableCommands(options.AvailableCommands)
+	}
+	if len(options.AuthMethods) > 0 {
+		options.AuthMethods = cloneAuthMethods(options.AuthMethods)
+	}
+
+	return &Server{
+		codec:                codec,
+		app:                  app,
+		sessions:             sessions,
+		logger:               logger,
+		options:              options,
+		pendingClient:        make(map[string]chan RPCMessage),
+		nextClientID:         0,
+		sessionConfigs:       make(map[string]runtimeOptions),
+		sessionConfigOptions: make(map[string][]SessionConfig),
+		sessionCWD:           make(map[string]string),
+		sessionTodos:         make(map[string][]TodoItem),
+		authMode:             strings.TrimSpace(options.InitialAuthMode),
+		lastAuthMode:         strings.TrimSpace(options.InitialAuthMode),
+		authLoggedIn:         strings.TrimSpace(options.InitialAuthMode) != "",
+	}
+}
+
+// DefaultAvailableCommands returns the slash commands supported by every adapter backend.
+func DefaultAvailableCommands() []AvailableCommand {
+	return []AvailableCommand{
+		availableCommand("review", "Review the current workspace changes.", "optional review instructions"),
+		availableCommand("review-branch", "Review changes against another branch.", "<branch>"),
+		availableCommand("review-commit", "Review a specific commit.", "<sha>"),
+		availableCommand("init", "Generate project initialization guidance and scaffold suggestions.", "optional initialization instructions"),
+		availableCommand("compact", "Compact the current conversation history.", ""),
+		availableCommand("logout", "Clear the current adapter authentication state.", ""),
+	}
+}
+
+// CodexAvailableCommands returns the slash commands published for the Codex-backed adapter.
+func CodexAvailableCommands() []AvailableCommand {
+	commands := DefaultAvailableCommands()
+	commands = append(commands, availableCommand(
+		"mcp",
+		"Inspect or invoke configured MCP servers.",
+		"list | call <server> <tool> [arguments] | oauth <server>",
+	))
+	return commands
+}
+
+// PiAvailableCommands returns the slash commands published for the Pi-backed adapter.
+func PiAvailableCommands() []AvailableCommand {
+	return DefaultAvailableCommands()
+}
+
+func availableCommand(name string, description string, hint string) AvailableCommand {
+	command := AvailableCommand{
+		Name:        name,
+		Description: description,
+	}
+	if strings.TrimSpace(hint) != "" {
+		command.Input = &AvailableCommandInput{Hint: hint}
+	}
+	return command
+}
+
+// Serve reads ACP requests and writes responses/notifications.
+func (s *Server) Serve(ctx context.Context) error {
+	for {
+		msg, err := s.codec.ReadMessage()
+		if err != nil {
+			s.failPendingClientRequests(err)
+			if errors.Is(err, io.EOF) {
+				return nil
+			}
+			return err
+		}
+
+		switch {
+		case msg.Method != "" && msg.ID != nil:
+			go s.handleRequest(ctx, msg)
+		case msg.Method == methodSessionCancel:
+			// Standard ACP cancellation is a notification. Share the same
+			// retirement/interrupt path without writing a JSON-RPC response.
+			go s.handleSessionCancel(ctx, nil, msg.Params)
+		case msg.Method == "" && msg.ID != nil:
+			s.handleClientResponse(msg)
+		default:
+			continue
+		}
+	}
+}
+
+func (s *Server) handleClientResponse(msg RPCMessage) {
+	if msg.ID == nil {
+		return
+	}
+	id := normalizeMessageID(*msg.ID)
+
+	s.pendingMu.Lock()
+	ch, ok := s.pendingClient[id]
+	if ok {
+		delete(s.pendingClient, id)
+	}
+	s.pendingMu.Unlock()
+	if !ok {
+		return
+	}
+
+	ch <- msg
+	close(ch)
+}
+
+func (s *Server) handleRequest(ctx context.Context, msg RPCMessage) {
+	rawID := *msg.ID
+
+	switch msg.Method {
+	case methodInitialize:
+		s.handleInitialize(rawID, msg.Params)
+	case methodAuthenticate:
+		s.handleAuthenticate(ctx, rawID, msg.Params)
+	case methodSessionLoad:
+		s.handleSessionLoad(ctx, rawID, msg.Params)
+	case methodSessionList:
+		s.handleSessionList(ctx, rawID, msg.Params)
+	case methodSessionNew:
+		s.handleSessionNew(ctx, rawID, msg.Params)
+	case methodSessionSetConfigOption:
+		s.handleSessionSetConfigOption(ctx, rawID, msg.Params)
+	case methodSessionConfigurationRead:
+		s.handleSessionConfigurationRead(ctx, rawID, msg.Params)
+	case methodSessionPrompt:
+		s.handleSessionPrompt(ctx, rawID, msg.Params)
+	case methodSessionCancel:
+		s.handleSessionCancel(ctx, rawID, msg.Params)
+	default:
+		s.writeError(rawID, rpcErrMethodNotFound, "method not found", map[string]any{
+			"method": msg.Method,
+		})
+	}
+}
+
+func (s *Server) handleInitialize(id json.RawMessage, paramsRaw json.RawMessage) {
+	s.captureClientCapabilities(paramsRaw)
+
+	sessionCapabilities := SessionCapabilities{}
+	if _, ok := s.app.(appSessionLister); ok {
+		sessionCapabilities.List = map[string]any{}
+	}
+	loadSessionSupported := false
+	if _, ok := s.app.(appSessionLoader); ok {
+		loadSessionSupported = true
+	} else if _, ok := s.app.(appSessionExternalLoader); ok {
+		loadSessionSupported = true
+	}
+
+	authMethods := []AuthMethod{
+		{
+			ID:          "codex_api_key",
+			Name:        "CODEX_API_KEY",
+			Description: "Authenticate with CODEX_API_KEY from environment.",
+			Type:        "codex_api_key",
+			Label:       "CODEX_API_KEY",
+		},
+		{
+			ID:          "openai_api_key",
+			Name:        "OPENAI_API_KEY",
+			Description: "Authenticate with OPENAI_API_KEY from environment.",
+			Type:        "openai_api_key",
+			Label:       "OPENAI_API_KEY",
+		},
+		{
+			ID:          "chatgpt_subscription",
+			Name:        "ChatGPT subscription",
+			Description: "Authenticate with existing Codex CLI subscription login state.",
+			Type:        "chatgpt_subscription",
+			Label:       "ChatGPT subscription",
+		},
+	}
+	if len(s.options.AuthMethods) > 0 {
+		authMethods = cloneAuthMethods(s.options.AuthMethods)
+	}
+
+	result := InitializeResult{
+		ProtocolVersion: 1,
+		AgentCapabilities: AgentCapabilities{
+			LoadSession: loadSessionSupported,
+			PromptCapabilities: PromptCapabilities{
+				Image:           true,
+				Audio:           false,
+				EmbeddedContext: true,
+			},
+			MCPCapabilities: MCPCapabilities{
+				HTTP: false,
+				SSE:  false,
+			},
+			SessionCapabilities: sessionCapabilities,
+
+			// Legacy capability fields for older ACP clients.
+			Sessions:      true,
+			Images:        true,
+			ToolCalls:     true,
+			SlashCommands: true,
+			Permissions:   true,
+		},
+		AgentInfo: &ImplementationInfo{
+			Name:    "acp-adapter",
+			Version: "dev",
+			Title:   "ACP Adapter",
+		},
+		AuthMethods:      authMethods,
+		ActiveAuthMethod: s.currentAuthMode(),
+	}
+	_ = s.codec.WriteResult(id, result)
+}
+
+func (s *Server) handleAuthenticate(ctx context.Context, id json.RawMessage, paramsRaw json.RawMessage) {
+	var params AuthenticateParams
+	if err := decodeParams(paramsRaw, &params); err != nil {
+		s.writeInvalidParams(id, map[string]any{"error": err.Error()})
+		return
+	}
+
+	methodID := strings.TrimSpace(params.MethodID)
+	if methodID == "" {
+		methodID = strings.TrimSpace(params.Type)
+	}
+	allowed := []string{"codex_api_key", "openai_api_key", "chatgpt_subscription"}
+	if len(s.options.AuthMethods) > 0 {
+		allowed = allowedAuthMethodIDs(s.options.AuthMethods)
+	}
+	if !containsString(allowed, methodID) {
+		s.writeInvalidParams(id, map[string]any{
+			"methodId": "unsupported auth method",
+			"allowed":  allowed,
+		})
+		return
+	}
+
+	if authenticator, ok := s.app.(appAuthenticator); ok {
+		if err := authenticator.Authenticate(ctx, methodID); err != nil {
+			s.writeInternalError(id, "authenticate failed", map[string]any{
+				"error":    err.Error(),
+				"methodId": methodID,
+			})
+			return
+		}
+	}
+
+	s.authMu.Lock()
+	s.authMode = methodID
+	s.lastAuthMode = methodID
+	s.authLoggedIn = true
+	s.authMu.Unlock()
+
+	_ = s.codec.WriteResult(id, AuthenticateResult{
+		Authenticated:    true,
+		ActiveAuthMethod: methodID,
+	})
+	s.emitAvailableCommandUpdates(s.sessions.SessionIDs())
+}
+
+func (s *Server) handleSessionLoad(ctx context.Context, id json.RawMessage, paramsRaw json.RawMessage) {
+	var params SessionLoadParams
+	if err := decodeParams(paramsRaw, &params); err != nil {
+		s.writeInvalidParams(id, map[string]any{"error": err.Error()})
+		return
+	}
+	params.SessionID = strings.TrimSpace(params.SessionID)
+	params.CWD = strings.TrimSpace(params.CWD)
+	if params.SessionID == "" {
+		s.writeInvalidParams(id, map[string]any{"sessionId": "required"})
+		return
+	}
+	if params.CWD == "" {
+		s.writeInvalidParams(id, map[string]any{"cwd": "required"})
+		return
+	}
+	if !s.requireAuth(id, methodSessionLoad) {
+		return
+	}
+
+	loader, hasLoader := s.app.(appSessionLoader)
+	externalLoader, hasExternalLoader := s.app.(appSessionExternalLoader)
+	if !hasLoader && !hasExternalLoader {
+		s.writeError(id, rpcErrMethodNotFound, "method not found", map[string]any{
+			"method": methodSessionLoad,
+		})
+		return
+	}
+
+	options := toRunOptions(s.getSessionConfig(params.SessionID))
+	threadID, err := s.sessions.ThreadID(params.SessionID)
+	var resumed codex.ThreadResumeResult
+	switch {
+	case err == nil:
+		if !hasLoader {
+			s.writeInternalError(id, "session/load failed", map[string]any{
+				"error":     "loader does not support resuming bound sessions",
+				"sessionId": params.SessionID,
+			})
+			return
+		}
+		resumed, err = loader.ThreadResume(ctx, threadID, params.CWD, options)
+	case hasExternalLoader:
+		threadID, resumed, err = externalLoader.LoadSession(ctx, params.SessionID, params.CWD, options)
+		if err == nil {
+			if bindErr := s.sessions.Bind(params.SessionID, threadID); bindErr != nil {
+				s.writeInternalError(id, "bind loaded session failed", map[string]any{
+					"error":     bindErr.Error(),
+					"sessionId": params.SessionID,
+					"threadId":  threadID,
+				})
+				return
+			}
+		}
+	default:
+		s.writeInternalError(id, "unknown session", map[string]any{
+			"error":     err.Error(),
+			"sessionId": params.SessionID,
+		})
+		return
+	}
+	if err != nil {
+		s.writeInternalError(id, "thread/resume failed", map[string]any{
+			"error":     err.Error(),
+			"sessionId": params.SessionID,
+			"threadId":  threadID,
+		})
+		return
+	}
+
+	loadedOptions := runtimeOptions{
+		Model:          strings.TrimSpace(resumed.Model),
+		ThoughtLevel:   strings.TrimSpace(resumed.ReasoningEffort),
+		ApprovalPolicy: stringFromAny(resumed.ApprovalPolicy),
+		Sandbox:        stringFromAny(resumed.Sandbox),
+	}
+	if native, ok := s.app.(appSessionConfiguration); ok {
+		observed, err := native.SessionConfiguration(ctx, threadID)
+		if err != nil {
+			s.writeInternalError(id, "native resumed configuration unavailable", map[string]any{"error": err.Error()})
+			return
+		}
+		loadedOptions.Model = observed.Model
+		loadedOptions.ThoughtLevel = observed.Effort
+	}
+	s.setSessionConfig(params.SessionID, loadedOptions)
+	configOptions := s.buildSessionConfigOptions(ctx, loadedOptions)
+	if _, native := s.app.(appSessionConfiguration); native && len(configOptions) == 0 {
+		s.writeInternalError(id, "native resumed configuration capabilities unavailable", map[string]any{"sessionId": params.SessionID})
+		return
+	}
+	s.setSessionConfigOptions(params.SessionID, configOptions)
+	s.setSessionCWD(params.SessionID, params.CWD)
+
+	s.sessionTodosMu.Lock()
+	s.sessionTodos[params.SessionID] = nil
+	s.sessionTodosMu.Unlock()
+
+	s.emitUpdates(historyUpdatesFromThread(params.SessionID, resumed.Thread))
+	_ = s.codec.WriteResult(id, SessionLoadResult{
+		ConfigOptions: configOptions,
+	})
+	s.emitAvailableCommandUpdate(params.SessionID)
+}
+
+func (s *Server) handleSessionList(ctx context.Context, id json.RawMessage, paramsRaw json.RawMessage) {
+	var params SessionListParams
+	if err := decodeParams(paramsRaw, &params); err != nil {
+		s.writeInvalidParams(id, map[string]any{"error": err.Error()})
+		return
+	}
+
+	lister, ok := s.app.(appSessionLister)
+	if !ok {
+		s.writeError(id, rpcErrMethodNotFound, "method not found", map[string]any{
+			"method": methodSessionList,
+		})
+		return
+	}
+
+	cursor, err := decodeSessionListCursor(params.Cursor)
+	if err != nil {
+		s.writeInvalidParams(id, map[string]any{"cursor": err.Error()})
+		return
+	}
+
+	result, err := s.listSessionsPage(ctx, lister, strings.TrimSpace(params.CWD), cursor)
+	if err != nil {
+		s.writeInternalError(id, "session/list failed", map[string]any{"error": err.Error()})
+		return
+	}
+	_ = s.codec.WriteResult(id, result)
+}
+
+func (s *Server) handleSessionNew(ctx context.Context, id json.RawMessage, paramsRaw json.RawMessage) {
+	var params SessionNewParams
+	if err := decodeParams(paramsRaw, &params); err != nil {
+		s.writeInvalidParams(id, map[string]any{"error": err.Error()})
+		return
+	}
+	if !s.requireAuth(id, "session/new") {
+		return
+	}
+
+	options, err := s.resolveRuntimeOptions(runtimeOptions{
+		Profile:            params.Profile,
+		Model:              params.Model,
+		ThoughtLevel:       params.ThoughtLevel,
+		ApprovalPolicy:     params.ApprovalPolicy,
+		Sandbox:            params.Sandbox,
+		Personality:        params.Personality,
+		SystemInstructions: params.SystemInstructions,
+	}, runtimeOptions{})
+	if err != nil {
+		s.writeInvalidParams(id, map[string]any{"error": err.Error()})
+		return
+	}
+
+	threadID, err := s.app.ThreadStart(ctx, params.CWD, toRunOptions(options))
+	if err != nil {
+		s.writeInternalError(id, "thread/start failed", map[string]any{"error": err.Error()})
+		return
+	}
+
+	if native, ok := s.app.(appSessionConfiguration); ok {
+		observed, err := native.SessionConfiguration(ctx, threadID)
+		if err != nil {
+			s.writeInternalError(id, "native startup configuration unavailable", map[string]any{"error": err.Error()})
+			return
+		}
+		options.Model = observed.Model
+		options.ThoughtLevel = observed.Effort
+	}
+	sessionID := s.sessions.Create(threadID)
+	s.setSessionConfig(sessionID, options)
+	configOptions := s.buildSessionConfigOptions(ctx, options)
+	if _, native := s.app.(appSessionConfiguration); native && len(configOptions) == 0 {
+		s.writeInternalError(id, "native startup configuration capabilities unavailable", map[string]any{"sessionId": sessionID})
+		return
+	}
+	s.setSessionConfigOptions(sessionID, configOptions)
+	s.setSessionCWD(sessionID, params.CWD)
+	s.sessionTodosMu.Lock()
+	s.sessionTodos[sessionID] = nil
+	s.sessionTodosMu.Unlock()
+	_ = s.codec.WriteResult(id, SessionNewResult{
+		SessionID:     sessionID,
+		ConfigOptions: configOptions,
+	})
+	s.emitAvailableCommandUpdate(sessionID)
+}
+
+// handleSessionConfigurationRead never creates sessions or enumerates models.
+// Immediate backends observe native state; other backends retain their snapshot.
+func (s *Server) handleSessionConfigurationRead(ctx context.Context, id json.RawMessage, paramsRaw json.RawMessage) {
+	var params struct {
+		SessionID string `json:"sessionId"`
+	}
+	if err := decodeParams(paramsRaw, &params); err != nil {
+		s.writeInvalidParams(id, map[string]any{"error": err.Error()})
+		return
+	}
+	params.SessionID = strings.TrimSpace(params.SessionID)
+	if params.SessionID == "" {
+		s.writeInvalidParams(id, map[string]any{"sessionId": "required"})
+		return
+	}
+	if _, err := s.sessions.ThreadID(params.SessionID); err != nil {
+		s.writeInternalError(id, "unknown session", map[string]any{
+			"error": err.Error(), "sessionId": params.SessionID,
+		})
+		return
+	}
+	s.sessionConfigOptionsMu.Lock()
+	options, exists := s.sessionConfigOptions[params.SessionID]
+	options = cloneSessionConfigs(options)
+	s.sessionConfigOptionsMu.Unlock()
+	if !exists {
+		s.writeInternalError(id, "session configuration unavailable", map[string]any{"sessionId": params.SessionID})
+		return
+	}
+	source := "adapter-runtime-options"
+	if native, ok := s.app.(appSessionConfiguration); ok {
+		threadID, _ := s.sessions.ThreadID(params.SessionID)
+		observed, err := native.SessionConfiguration(ctx, threadID)
+		if err != nil {
+			s.writeInternalError(id, "native session configuration unavailable", map[string]any{"sessionId": params.SessionID, "error": err.Error()})
+			return
+		}
+		options = s.publishObservedConfiguration(params.SessionID, options, observed)
+		source = "pi-native-get_state"
+	}
+	if options == nil {
+		options = []SessionConfig{}
+	}
+	_ = s.codec.WriteResult(id, map[string]any{"sessionId": params.SessionID, "configOptions": options, "observationSource": source})
+}
+
+// publishObservedConfiguration projects the native observation, including external
+// changes, into the existing option snapshot and the next turn's runtime options.
+func (s *Server) publishObservedConfiguration(sessionID string, options []SessionConfig, observed codex.RunOptions) []SessionConfig {
+	for i := range options {
+		switch options[i].ID {
+		case configIDModel:
+			options[i].CurrentValue = observed.Model
+		case configIDThoughtLevel:
+			options[i].CurrentValue = observed.Effort
+		}
+	}
+	current := s.getSessionConfig(sessionID)
+	current.Model = observed.Model
+	current.ThoughtLevel = observed.Effort
+	s.setSessionConfig(sessionID, current)
+	s.setSessionConfigOptions(sessionID, options)
+	return options
+}
+
+func (s *Server) handleSessionSetConfigOption(ctx context.Context, id json.RawMessage, paramsRaw json.RawMessage) {
+	var params SessionSetConfigOptionParams
+	if err := decodeParams(paramsRaw, &params); err != nil {
+		s.writeInvalidParams(id, map[string]any{"error": err.Error()})
+		return
+	}
+	params.SessionID = strings.TrimSpace(params.SessionID)
+	params.ConfigID = strings.TrimSpace(params.ConfigID)
+	params.Value = strings.TrimSpace(params.Value)
+	if params.SessionID == "" {
+		s.writeInvalidParams(id, map[string]any{"sessionId": "required"})
+		return
+	}
+	if params.ConfigID == "" {
+		s.writeInvalidParams(id, map[string]any{"configId": "required"})
+		return
+	}
+	if params.Value == "" {
+		s.writeInvalidParams(id, map[string]any{"value": "required"})
+		return
+	}
+
+	if _, err := s.sessions.ThreadID(params.SessionID); err != nil {
+		s.writeInternalError(id, "unknown session", map[string]any{
+			"error":     err.Error(),
+			"sessionId": params.SessionID,
+		})
+		return
+	}
+
+	options := s.getSessionConfig(params.SessionID)
+	configOptions := s.buildSessionConfigOptions(ctx, options)
+
+	switch params.ConfigID {
+	case configIDModel:
+		applied := false
+		configOptions, applied = applyConfigOptionValue(configOptions, configIDModel, params.Value)
+		if !applied {
+			s.writeInvalidParams(id, map[string]any{
+				"value": "must be one of model options",
+			})
+			return
+		}
+		options.Model = params.Value
+		configOptions = s.buildSessionConfigOptions(ctx, options)
+		options.ThoughtLevel = configOptionCurrentValue(configOptions, configIDThoughtLevel)
+	case configIDThoughtLevel:
+		applied := false
+		configOptions, applied = applyConfigOptionValue(configOptions, configIDThoughtLevel, params.Value)
+		if !applied {
+			s.writeInvalidParams(id, map[string]any{
+				"value": "must be one of thought_level options",
+			})
+			return
+		}
+		options.ThoughtLevel = params.Value
+	default:
+		s.writeInvalidParams(id, map[string]any{
+			"configId": "unsupported config option",
+			"allowed":  []string{configIDModel, configIDThoughtLevel},
+		})
+		return
+	}
+
+	if native, ok := s.app.(appSessionConfiguration); ok {
+		threadID, _ := s.sessions.ThreadID(params.SessionID)
+		observed, err := native.SetSessionConfigOption(ctx, threadID, params.ConfigID, params.Value)
+		if err != nil {
+			// Native effects may have happened. Do not publish an ACK or replay.
+			s.writeInternalError(id, "native session configuration unconfirmed", map[string]any{"sessionId": params.SessionID, "error": err.Error()})
+			return
+		}
+		configOptions = s.publishObservedConfiguration(params.SessionID, configOptions, observed)
+	} else {
+		s.setSessionConfig(params.SessionID, options)
+		s.setSessionConfigOptions(params.SessionID, configOptions)
+	}
+
+	s.emitUpdates([]SessionUpdateParams{
+		{
+			SessionID:     params.SessionID,
+			Type:          sessionUpdateTypeConfigOptions,
+			ConfigOptions: configOptions,
+		},
+	})
+
+	_ = s.codec.WriteResult(id, SessionSetConfigOptionResult{
+		ConfigOptions: configOptions,
+	})
+}
+
+func (s *Server) handleSessionPrompt(ctx context.Context, id json.RawMessage, paramsRaw json.RawMessage) {
+	params, err := decodeSessionPromptParams(paramsRaw)
+	if err != nil {
+		s.writeInvalidParams(id, map[string]any{"error": err.Error()})
+		return
+	}
+	if params.SessionID == "" {
+		s.writeInvalidParams(id, map[string]any{"sessionId": "required"})
+		return
+	}
+
+	threadID, err := s.sessions.ThreadID(params.SessionID)
+	if err != nil {
+		s.writeInternalError(id, "unknown session", map[string]any{
+			"error":     err.Error(),
+			"sessionId": params.SessionID,
+		})
+		return
+	}
+
+	preparedInput, prepWarnings, promptText, err := s.prepareTurnInput(ctx, params.SessionID, params, paramsRaw)
+	if err != nil {
+		s.writeInvalidParams(id, map[string]any{"error": err.Error()})
+		return
+	}
+
+	command, err := parseSlashCommand(promptText)
+	if err != nil {
+		s.writeInvalidParams(id, map[string]any{"error": err.Error()})
+		return
+	}
+	if command.kind != slashCommandLogout && !s.requireAuth(id, "session/prompt") {
+		return
+	}
+
+	sessionOptions := s.getSessionConfig(params.SessionID)
+	resolvedOptions, err := s.resolveRuntimeOptions(runtimeOptions{
+		Profile:            params.Profile,
+		Model:              params.Model,
+		ThoughtLevel:       params.ThoughtLevel,
+		ApprovalPolicy:     params.ApprovalPolicy,
+		Sandbox:            params.Sandbox,
+		Personality:        params.Personality,
+		SystemInstructions: params.SystemInstructions,
+	}, sessionOptions)
+	if err != nil {
+		s.writeInvalidParams(id, map[string]any{"error": err.Error()})
+		return
+	}
+
+	switch command.kind {
+	case slashCommandLogout:
+		s.handleLogoutSlash(ctx, id, params.SessionID)
+		return
+	case slashCommandMCPList:
+		s.handleMCPListSlash(ctx, id, params.SessionID)
+		return
+	case slashCommandMCPCall:
+		s.handleMCPCallSlash(ctx, id, params.SessionID, command)
+		return
+	case slashCommandMCPOAuth:
+		s.handleMCPOAuthSlash(ctx, id, params.SessionID, command)
+		return
+	default:
+	}
+
+	turnCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	method, turnID, events, err := s.startPromptTurn(turnCtx, threadID, command, preparedInput, resolvedOptions)
+	if err != nil {
+		s.writeInternalError(id, method+" failed", map[string]any{
+			"error":     err.Error(),
+			"sessionId": params.SessionID,
+			"threadId":  threadID,
+		})
+		return
+	}
+
+	if _, err := s.sessions.BeginTurn(params.SessionID, turnID, cancel); err != nil {
+		_ = s.app.TurnInterrupt(ctx, threadID, turnID)
+		s.writeInternalError(id, "begin turn failed", map[string]any{
+			"error":     err.Error(),
+			"sessionId": params.SessionID,
+			"threadId":  threadID,
+			"turnId":    turnID,
+		})
+		return
+	}
+
+	activeTurnID := turnID
+	defer func() {
+		s.sessions.EndTurn(params.SessionID, activeTurnID)
+	}()
+
+	lifecycle := newTurnLifecycle(params.SessionID, turnID)
+
+	// Releasing the session's turn slot belongs to writing the terminal state, not to unwinding the
+	// handler: a reply that leaves while the slot is still held is answered by "begin turn failed" for as
+	// long as the goroutine has not returned. What the reply says about the session being reusable is a
+	// separate question — this only frees the bridge's own slot, and a backend that is still tearing the
+	// turn down (an unconfirmed cancellation, say) keeps refusing the next message on its own terms. The
+	// defer above stays as the backstop for every path that ends without a terminal reply.
+	replyTerminal := func(stopReason string) {
+		s.sessions.EndTurn(params.SessionID, activeTurnID)
+		s.writePromptTerminal(id, stopReason, lifecycle.lastUsage, lifecycle.lastFailure, params.SessionID, activeTurnID)
+	}
+
+	s.emitUpdates(lifecycle.startedUpdate())
+	s.emitUpdates(warningUpdates(params.SessionID, lifecycle.turnID, prepWarnings))
+
+	retried := false
+	retrySafe := true
+
+	for {
+		select {
+		case <-turnCtx.Done():
+			s.finishCancelledTurn(id, params.SessionID, threadID, activeTurnID, lifecycle, events)
+			return
+		case event, ok := <-events:
+			// The cancellation and this frame can be ready at the same instant, and the select then
+			// picks either. Ask the context, not the lifecycle: the cancellation path is what retires
+			// the turn, and a frame taken here — an approval request or a closed stream included — must
+			// not talk its way past that wait.
+			if turnCtx.Err() != nil {
+				if ok {
+					s.finishCancelledTurn(id, params.SessionID, threadID, activeTurnID, lifecycle, events, event)
+				} else {
+					s.finishCancelledTurn(id, params.SessionID, threadID, activeTurnID, lifecycle, events)
+				}
+				return
+			}
+			if !ok {
+				replyTerminal(lifecycle.fallbackStopReason())
+				return
+			}
+			if event.Type == codex.TurnEventTypeError {
+				if s.options.RetryTurnOnCrash && !retried && retrySafe && isRetryableTurnError(event.Message) {
+					retried = true
+					lifecycle.resetForRetry()
+					s.emitUpdates([]SessionUpdateParams{
+						{
+							SessionID: lifecycle.sessionID,
+							TurnID:    lifecycle.turnID,
+							Type:      "status",
+							Phase:     string(turnPhaseStreaming),
+							Status:    "backend_restarted_retrying",
+							Message:   "codex app-server exited mid-turn; backend restarted, retrying once",
+						},
+					})
+
+					_, retryTurnID, retryEvents, retryErr := s.startPromptTurn(
+						turnCtx,
+						threadID,
+						command,
+						preparedInput,
+						resolvedOptions,
+					)
+					if retryErr != nil && shouldRetryAfterSupervisorRestart(retryErr) {
+						_, retryTurnID, retryEvents, retryErr = s.startPromptTurn(
+							turnCtx,
+							threadID,
+							command,
+							preparedInput,
+							resolvedOptions,
+						)
+					}
+					if retryErr != nil {
+						lifecycle.phase = turnPhaseError
+						lifecycle.lastFailure = fmt.Sprintf("backend restarted but internal retry failed: %v; please retry this prompt once", retryErr)
+						s.emitUpdates([]SessionUpdateParams{
+							{
+								SessionID: lifecycle.sessionID,
+								TurnID:    lifecycle.turnID,
+								Type:      "status",
+								Phase:     string(turnPhaseError),
+								Status:    "turn_error",
+								Message:   lifecycle.lastFailure,
+							},
+						})
+						s.clearTurnTodosOnFailure(params.SessionID, "error")
+						replyTerminal("error")
+						return
+					}
+					if _, replaceErr := s.sessions.ReplaceTurn(params.SessionID, activeTurnID, retryTurnID, cancel); replaceErr != nil {
+						_ = s.app.TurnInterrupt(turnCtx, threadID, retryTurnID)
+						lifecycle.phase = turnPhaseError
+						lifecycle.lastFailure = fmt.Sprintf("backend retry started but session state update failed: %v; please retry this prompt once", replaceErr)
+						s.emitUpdates([]SessionUpdateParams{
+							{
+								SessionID: lifecycle.sessionID,
+								TurnID:    lifecycle.turnID,
+								Type:      "status",
+								Phase:     string(turnPhaseError),
+								Status:    "turn_error",
+								Message:   lifecycle.lastFailure,
+							},
+						})
+						s.clearTurnTodosOnFailure(params.SessionID, "error")
+						replyTerminal("error")
+						return
+					}
+
+					activeTurnID = retryTurnID
+					events = retryEvents
+					continue
+				}
+				if retried && isRetryableTurnError(event.Message) {
+					lifecycle.phase = turnPhaseError
+					lifecycle.lastFailure = "backend restarted but crashed again during retry; please retry this prompt once"
+					s.emitUpdates([]SessionUpdateParams{
+						{
+							SessionID: lifecycle.sessionID,
+							TurnID:    lifecycle.turnID,
+							Type:      "status",
+							Phase:     string(turnPhaseError),
+							Status:    "turn_error",
+							Message:   lifecycle.lastFailure,
+						},
+					})
+					s.clearTurnTodosOnFailure(params.SessionID, "error")
+					replyTerminal("error")
+					return
+				}
+			}
+			if event.Type == codex.TurnEventTypeApprovalRequired {
+				retrySafe = false
+				updates, done, stopReason := s.handleApprovalEvent(turnCtx, lifecycle, event)
+				s.emitUpdates(updates)
+				if done {
+					replyTerminal(stopReason)
+					return
+				}
+				continue
+			}
+			if event.Type == codex.TurnEventTypeDiffUpdated {
+				retrySafe = false
+				s.emitUpdates(s.handleDiffEvent(turnCtx, lifecycle, event))
+				continue
+			}
+			if event.Type != codex.TurnEventTypeStarted {
+				retrySafe = false
+			}
+
+			updates, done, stopReason := lifecycle.apply(event)
+			s.emitUpdates(updates)
+			if done {
+				s.clearTurnTodosOnFailure(params.SessionID, stopReason)
+				replyTerminal(stopReason)
+				return
+			}
+		}
+	}
+}
+
+func (s *Server) startPromptTurn(
+	ctx context.Context,
+	threadID string,
+	command slashCommand,
+	preparedInput []codex.UserInput,
+	options runtimeOptions,
+) (string, string, <-chan codex.TurnEvent, error) {
+	method := "turn/start"
+	switch command.kind {
+	case slashCommandReview:
+		turnID, events, err := s.app.ReviewStart(
+			ctx,
+			threadID,
+			command.reviewInstructions,
+			toRunOptions(options),
+		)
+		return "review/start", turnID, events, err
+	case slashCommandReviewBranch:
+		turnID, events, err := s.app.ReviewStart(
+			ctx,
+			threadID,
+			fmt.Sprintf("review branch %s", command.argOne),
+			toRunOptions(options),
+		)
+		return "review/start", turnID, events, err
+	case slashCommandReviewCommit:
+		turnID, events, err := s.app.ReviewStart(
+			ctx,
+			threadID,
+			fmt.Sprintf("review commit %s", command.argOne),
+			toRunOptions(options),
+		)
+		return "review/start", turnID, events, err
+	case slashCommandInit:
+		turnID, events, err := s.app.TurnStart(
+			ctx,
+			threadID,
+			textTurnInput(command.turnInput),
+			toRunOptions(options),
+		)
+		return method, turnID, events, err
+	case slashCommandCompact:
+		turnID, events, err := s.app.CompactStart(ctx, threadID)
+		return "thread/compact/start", turnID, events, err
+	default:
+		turnID, events, err := s.app.TurnStart(
+			ctx,
+			threadID,
+			preparedInput,
+			toRunOptions(options),
+		)
+		return method, turnID, events, err
+	}
+}
+
+// cancelTerminalWaitBudget bounds how long a cancelled turn waits for the backend to retire its run
+// before the cancellation is given up on. Retiring closes the event stream, so a healthy turn returns
+// from the wait as soon as it is really over.
+const cancelTerminalWaitBudget = 2 * time.Second
+
+// cancelTerminal is the evidence a cancelled turn's teardown produced. The bridge may confirm a
+// cancellation only on that evidence, so the backend's own terminal reason travels with the retirement,
+// together with every frame that arrived before it.
+type cancelTerminal struct {
+	retired    bool
+	seen       bool
+	stopReason string
+	failed     bool
+	failure    string
+	pending    []codex.TurnEvent
+}
+
+// waitForCancelTerminal collects the backend's teardown evidence. Events before the terminal one are
+// kept so the caller can still project the text and tool frames that arrived after the cancellation;
+// early holds a frame the caller already took off the stream.
+func waitForCancelTerminal(events <-chan codex.TurnEvent, early ...codex.TurnEvent) cancelTerminal {
+	deadline := time.NewTimer(cancelTerminalWaitBudget)
+	defer deadline.Stop()
+	terminal := cancelTerminal{}
+	record := func(event codex.TurnEvent) {
+		switch event.Type {
+		case codex.TurnEventTypeCompleted:
+			terminal.seen = true
+			reason := normalizeStopReason(event.StopReason)
+			if terminal.failed {
+				// The backend already said the turn failed, and how it then chose to close that turn —
+				// A backend may report a failed turn followed by a cancelled completion; that is not a terminal state the
+				// bridge may hand out in place of the error. Only a message is taken from the completion,
+				// and only to describe an error that arrived without one.
+				if terminal.failure == "" {
+					terminal.failure = strings.TrimSpace(event.Message)
+				}
+				break
+			}
+			terminal.stopReason = reason
+			terminal.failed = reason == "error"
+			terminal.failure = strings.TrimSpace(event.Message)
+		case codex.TurnEventTypeError:
+			// An error is an error even when the backend sent no text with it.
+			terminal.seen = true
+			terminal.stopReason = "error"
+			terminal.failed = true
+			if message := strings.TrimSpace(event.Message); message != "" {
+				terminal.failure = message
+			}
+		default:
+			terminal.pending = append(terminal.pending, event)
+		}
+	}
+	for _, event := range early {
+		record(event)
+	}
+	for {
+		select {
+		case event, ok := <-events:
+			if !ok {
+				terminal.retired = true
+				return terminal
+			}
+			record(event)
+		case <-deadline.C:
+			return terminal
+		}
+	}
+}
+
+// cancelTerminalResult decides what a cancelled turn may report. The empty failure means a stopReason
+// was earned: either the backend's own cancellation, or a terminal state it reached first.
+func cancelTerminalResult(terminal cancelTerminal) (reason string, failure string) {
+	switch {
+	case !terminal.retired:
+		return "", fmt.Sprintf("backend did not stop the turn within %s", cancelTerminalWaitBudget)
+	case terminal.failed:
+		if strings.TrimSpace(terminal.failure) == "" {
+			return "", "backend ended the turn with an error that carried no message"
+		}
+		return "", terminal.failure
+	case !terminal.seen:
+		return "", "backend closed the turn without reporting how it ended"
+	default:
+		return terminal.stopReason, ""
+	}
+}
+
+// finishCancelledTurn is the only way a cancelled prompt turn ends. It waits for the backend to retire
+// the run, delivers every frame that arrived while it was tearing down, and may claim only the terminal
+// state the backend itself reported. early is a frame the caller took off the stream before noticing the
+// cancellation.
+func (s *Server) finishCancelledTurn(
+	id json.RawMessage,
+	sessionID string,
+	threadID string,
+	turnID string,
+	lifecycle *turnLifecycle,
+	events <-chan codex.TurnEvent,
+	early ...codex.TurnEvent,
+) {
+	terminal := waitForCancelTerminal(events, early...)
+
+	// Late content still belongs to this turn, so it is projected before the reply. Approval and diff
+	// frames are deliberately not replayed here: a cancelled turn must not ask the client again, and
+	// diff content resolution needs a context that is no longer live.
+	s.emitUpdates(cancelTerminalUpdates(lifecycle, terminal.pending))
+
+	reason, failure := cancelTerminalResult(terminal)
+	// The prompt goroutine is about to answer, so the bridge's own slot goes with the reply rather than
+	// with the unwinding handler. That says nothing about the backend: in the failure arm the run may well
+	// still be live, and the next message is refused by the backend for that reason, not by this slot.
+	s.sessions.EndTurn(sessionID, turnID)
+	switch {
+	case failure != "":
+		s.writeInternalError(id, "turn cancellation not confirmed", map[string]any{
+			"sessionId": sessionID,
+			"threadId":  threadID,
+			"turnId":    turnID,
+			"error":     failure,
+		})
+	case reason == "cancelled":
+		s.emitUpdates(lifecycle.cancelledUpdate())
+		s.writePromptResultWithUsage(id, "cancelled", lifecycle.lastUsage)
+	default:
+		// The backend ended the turn some other way, so that is the terminal state to report — and the
+		// client still gets the same closing status frame the uncancelled path would have sent.
+		s.emitUpdates(lifecycle.earnedTerminalUpdate())
+		s.writePromptResultWithUsage(id, reason, lifecycle.lastUsage)
+	}
+}
+
+// cancelTerminalUpdates projects the frames a cancellation wait consumed before the terminal one. The
+// turn start is excluded: it was already announced when the turn began.
+func cancelTerminalUpdates(lifecycle *turnLifecycle, pending []codex.TurnEvent) []SessionUpdateParams {
+	var updates []SessionUpdateParams
+	for _, event := range pending {
+		if event.Type == codex.TurnEventTypeStarted {
+			continue
+		}
+		eventUpdates, _, _ := lifecycle.apply(event)
+		updates = append(updates, eventUpdates...)
+	}
+	return updates
+}
+
+func (s *Server) handleSessionCancel(ctx context.Context, id json.RawMessage, paramsRaw json.RawMessage) {
+	fail := func(code int, message string, data map[string]any) {
+		if id != nil {
+			s.writeError(id, code, message, data)
+		} else if s.logger != nil {
+			s.logger.Warn("ACP cancellation notification refused", "reason", message, "sessionId", data["sessionId"])
+		}
+	}
+	reply := func(cancelled bool) {
+		if id != nil {
+			_ = s.codec.WriteResult(id, SessionCancelResult{Cancelled: cancelled})
+		}
+	}
+	var params SessionCancelParams
+	if err := decodeParams(paramsRaw, &params); err != nil {
+		fail(rpcErrInvalidParams, "invalid params", map[string]any{"error": err.Error()})
+		return
+	}
+	if params.SessionID == "" {
+		fail(rpcErrInvalidParams, "invalid params", map[string]any{"sessionId": "required"})
+		return
+	}
+
+	threadID, turnID, cancelTurn, active, err := s.sessions.Cancel(params.SessionID)
+	if err != nil {
+		fail(rpcErrInternal, "unknown session", map[string]any{
+			"error":     err.Error(),
+			"sessionId": params.SessionID,
+		})
+		return
+	}
+	if !active {
+		reply(false)
+		return
+	}
+
+	cancelTurn()
+
+	interruptCtx, interruptCancel := context.WithTimeout(ctx, 2*time.Second)
+	defer interruptCancel()
+	if err := s.app.TurnInterrupt(interruptCtx, threadID, turnID); err != nil {
+		fail(rpcErrInternal, "turn/interrupt did not complete", map[string]any{
+			"error":     err.Error(),
+			"sessionId": params.SessionID,
+			"threadId":  threadID,
+			"turnId":    turnID,
+		})
+		return
+	}
+
+	reply(true)
+}
+
+func (s *Server) listSessionsPage(
+	ctx context.Context,
+	lister appSessionLister,
+	cwd string,
+	cursor sessionListCursor,
+) (SessionListResult, error) {
+	page, err := s.fetchThreadListPage(ctx, lister, cwd, cursor.Archived, cursor.Cursor, nil)
+	if err != nil {
+		return SessionListResult{}, err
+	}
+	liveSessions := []SessionInfo(nil)
+	if !cursor.Archived && strings.TrimSpace(cursor.Cursor) == "" {
+		liveSessions = s.liveSessionInfos(cwd)
+	}
+
+	if cursor.Archived {
+		nextCursor := ""
+		if strings.TrimSpace(page.NextCursor) != "" {
+			nextCursor = encodeSessionListCursor(sessionListCursor{Archived: true, Cursor: page.NextCursor})
+		}
+		return SessionListResult{
+			Sessions:   s.mergeSessionInfos(nil, s.sessionInfosFromThreads(page.Data, true)),
+			NextCursor: nextCursor,
+		}, nil
+	}
+
+	activeSessions := s.mergeSessionInfos(liveSessions, s.sessionInfosFromThreads(page.Data, false))
+	if len(activeSessions) == 0 && page.NextCursor == "" {
+		archivedPage, archivedErr := s.fetchThreadListPage(ctx, lister, cwd, true, "", nil)
+		if archivedErr != nil {
+			return SessionListResult{}, archivedErr
+		}
+		nextCursor := ""
+		if strings.TrimSpace(archivedPage.NextCursor) != "" {
+			nextCursor = encodeSessionListCursor(sessionListCursor{Archived: true, Cursor: archivedPage.NextCursor})
+		}
+		return SessionListResult{
+			Sessions:   s.mergeSessionInfos(nil, s.sessionInfosFromThreads(archivedPage.Data, true)),
+			NextCursor: nextCursor,
+		}, nil
+	}
+
+	nextCursor := encodeSessionListCursor(sessionListCursor{Archived: false, Cursor: page.NextCursor})
+	if nextCursor == "" {
+		limit := uint32(1)
+		archivedProbe, archivedErr := s.fetchThreadListPage(ctx, lister, cwd, true, "", &limit)
+		if archivedErr != nil {
+			return SessionListResult{}, archivedErr
+		}
+		if len(archivedProbe.Data) > 0 {
+			nextCursor = encodeSessionListCursor(sessionListCursor{Archived: true})
+		}
+	}
+
+	return SessionListResult{
+		Sessions:   activeSessions,
+		NextCursor: nextCursor,
+	}, nil
+}
+
+func (s *Server) fetchThreadListPage(
+	ctx context.Context,
+	lister appSessionLister,
+	cwd string,
+	archived bool,
+	cursor string,
+	limit *uint32,
+) (codex.ThreadListResult, error) {
+	return lister.ThreadList(ctx, codex.ThreadListParams{
+		Archived: &archived,
+		Cursor:   cursor,
+		CWD:      cwd,
+		Limit:    limit,
+	})
+}
+
+func (s *Server) sessionInfosFromThreads(threads []codex.Thread, archived bool) []SessionInfo {
+	if len(threads) == 0 {
+		return nil
+	}
+
+	out := make([]SessionInfo, 0, len(threads))
+	for _, thread := range threads {
+		threadID := strings.TrimSpace(thread.ID)
+		if threadID == "" {
+			continue
+		}
+
+		meta := map[string]any{
+			"threadId": threadID,
+			"archived": archived,
+		}
+		if createdAt := formatUnixTimestamp(thread.CreatedAt); createdAt != "" {
+			meta["createdAt"] = createdAt
+		}
+		if modelProvider := strings.TrimSpace(thread.ModelProvider); modelProvider != "" {
+			meta["modelProvider"] = modelProvider
+		}
+		// Thread.Name only ever carries a name the backend itself assigned; the field is absent for
+		// unnamed sessions so a client never has to guess whether Title is native or preview-derived.
+		if nativeName := strings.TrimSpace(thread.Name); nativeName != "" {
+			meta["sessionName"] = nativeName
+		}
+		if preview := strings.TrimSpace(thread.Preview); preview != "" {
+			meta["preview"] = preview
+		}
+		if path := strings.TrimSpace(thread.Path); path != "" {
+			meta["path"] = path
+		}
+		if thread.Source != nil {
+			meta["source"] = thread.Source
+		}
+		if thread.Status != nil {
+			meta["status"] = thread.Status
+		}
+
+		out = append(out, SessionInfo{
+			SessionID: s.sessions.Create(threadID),
+			CWD:       strings.TrimSpace(thread.CWD),
+			Title:     sessionTitle(thread),
+			UpdatedAt: formatUnixTimestamp(thread.UpdatedAt),
+			Meta:      meta,
+		})
+	}
+	return out
+}
+
+func (s *Server) liveSessionInfos(cwd string) []SessionInfo {
+	cwd = strings.TrimSpace(cwd)
+	sessionIDs := s.sessions.SessionIDs()
+	if len(sessionIDs) == 0 {
+		return nil
+	}
+
+	out := make([]SessionInfo, 0, len(sessionIDs))
+	for _, sessionID := range sessionIDs {
+		sessionID = strings.TrimSpace(sessionID)
+		if sessionID == "" {
+			continue
+		}
+		sessionCWD := strings.TrimSpace(s.getSessionCWD(sessionID))
+		if sessionCWD == "" {
+			continue
+		}
+		if cwd != "" && sessionCWD != cwd {
+			continue
+		}
+		threadID, err := s.sessions.ThreadID(sessionID)
+		if err != nil {
+			continue
+		}
+		threadID = strings.TrimSpace(threadID)
+		if threadID == "" {
+			continue
+		}
+		out = append(out, SessionInfo{
+			SessionID: sessionID,
+			CWD:       sessionCWD,
+			Meta: map[string]any{
+				"threadId": threadID,
+				"archived": false,
+			},
+		})
+	}
+	return out
+}
+
+func mergeSessionInfo(current, incoming SessionInfo) SessionInfo {
+	if strings.TrimSpace(incoming.SessionID) != "" {
+		current.SessionID = strings.TrimSpace(incoming.SessionID)
+	}
+	if strings.TrimSpace(incoming.CWD) != "" {
+		current.CWD = strings.TrimSpace(incoming.CWD)
+	}
+	if strings.TrimSpace(incoming.Title) != "" {
+		current.Title = strings.TrimSpace(incoming.Title)
+	}
+	if strings.TrimSpace(incoming.UpdatedAt) != "" {
+		current.UpdatedAt = strings.TrimSpace(incoming.UpdatedAt)
+	}
+	if len(incoming.Meta) > 0 {
+		if current.Meta == nil {
+			current.Meta = map[string]any{}
+		}
+		for key, value := range incoming.Meta {
+			key = strings.TrimSpace(key)
+			if key == "" {
+				continue
+			}
+			current.Meta[key] = value
+		}
+	}
+	return current
+}
+
+func cloneSessionInfo(session SessionInfo) SessionInfo {
+	cloned := SessionInfo{
+		SessionID: strings.TrimSpace(session.SessionID),
+		CWD:       strings.TrimSpace(session.CWD),
+		Title:     strings.TrimSpace(session.Title),
+		UpdatedAt: strings.TrimSpace(session.UpdatedAt),
+	}
+	if len(session.Meta) == 0 {
+		return cloned
+	}
+	cloned.Meta = make(map[string]any, len(session.Meta))
+	for key, value := range session.Meta {
+		key = strings.TrimSpace(key)
+		if key == "" {
+			continue
+		}
+		cloned.Meta[key] = value
+	}
+	if len(cloned.Meta) == 0 {
+		cloned.Meta = nil
+	}
+	return cloned
+}
+
+func (s *Server) mergeSessionInfos(primary []SessionInfo, secondary []SessionInfo) []SessionInfo {
+	if len(primary) == 0 && len(secondary) == 0 {
+		return nil
+	}
+
+	out := make([]SessionInfo, 0, len(primary)+len(secondary))
+	indexes := make(map[string]int, len(primary)+len(secondary))
+	for _, group := range [][]SessionInfo{primary, secondary} {
+		for _, session := range group {
+			item := cloneSessionInfo(session)
+			if item.SessionID == "" {
+				continue
+			}
+			if index, ok := indexes[item.SessionID]; ok {
+				out[index] = mergeSessionInfo(out[index], item)
+				continue
+			}
+			indexes[item.SessionID] = len(out)
+			out = append(out, item)
+		}
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
+func historyUpdatesFromThread(sessionID string, thread codex.Thread) []SessionUpdateParams {
+	if sessionID == "" || len(thread.Turns) == 0 {
+		return nil
+	}
+
+	updates := make([]SessionUpdateParams, 0, len(thread.Turns)*2)
+	for _, turn := range thread.Turns {
+		turnID := strings.TrimSpace(turn.ID)
+		for _, item := range turn.Items {
+			switch strings.TrimSpace(item.Type) {
+			case "userMessage":
+				text := historyUserMessageText(item.Content)
+				if strings.TrimSpace(text) == "" {
+					continue
+				}
+				updates = append(updates, SessionUpdateParams{
+					SessionID: sessionID,
+					TurnID:    turnID,
+					Type:      sessionUpdateTypeMessage,
+					Role:      "user",
+					ItemID:    strings.TrimSpace(item.ID),
+					ItemType:  item.Type,
+					Delta:     text,
+				})
+			case "agentMessage":
+				if strings.TrimSpace(item.Text) == "" {
+					continue
+				}
+				update := SessionUpdateParams{
+					SessionID: sessionID,
+					TurnID:    turnID,
+					Type:      sessionUpdateTypeMessage,
+					Role:      "assistant",
+					ItemID:    strings.TrimSpace(item.ID),
+					ItemType:  item.Type,
+					Delta:     item.Text,
+				}
+				if todos := parseMarkdownTodoItems(item.Text); len(todos) > 0 {
+					update.Todo = todos
+				}
+				updates = append(updates, update)
+			}
+		}
+	}
+	return updates
+}
+
+func historyUserMessageText(items []codex.UserInput) string {
+	if len(items) == 0 {
+		return ""
+	}
+
+	parts := make([]string, 0, len(items))
+	for _, item := range items {
+		switch strings.ToLower(strings.TrimSpace(item.Type)) {
+		case "text":
+			if text := strings.TrimSpace(item.Text); text != "" {
+				parts = append(parts, text)
+			}
+		case "image":
+			text := strings.TrimSpace(item.URL)
+			if text == "" {
+				text = "[Image]"
+			} else {
+				text = "[Image: " + text + "]"
+			}
+			parts = append(parts, text)
+		case "localimage":
+			text := strings.TrimSpace(item.Path)
+			if text == "" {
+				text = "[Local image]"
+			} else {
+				text = "[Local image: " + text + "]"
+			}
+			parts = append(parts, text)
+		case "mention":
+			text := strings.TrimSpace(item.Text)
+			switch {
+			case text != "" && strings.TrimSpace(item.Path) != "":
+				parts = append(parts, "[Mention: "+strings.TrimSpace(item.Path)+"]\n"+text)
+			case text != "":
+				parts = append(parts, text)
+			case strings.TrimSpace(item.Path) != "":
+				parts = append(parts, "[Mention: "+strings.TrimSpace(item.Path)+"]")
+			case strings.TrimSpace(item.Name) != "":
+				parts = append(parts, "[Mention: "+strings.TrimSpace(item.Name)+"]")
+			}
+		default:
+			if text := strings.TrimSpace(item.Text); text != "" {
+				parts = append(parts, text)
+				continue
+			}
+			if path := strings.TrimSpace(item.Path); path != "" {
+				parts = append(parts, path)
+			}
+		}
+	}
+
+	return strings.Join(parts, "\n")
+}
+
+func sessionTitle(thread codex.Thread) string {
+	title := strings.TrimSpace(thread.Name)
+	if title == "" {
+		title = strings.TrimSpace(thread.Preview)
+	}
+	title = strings.Join(strings.Fields(title), " ")
+	if title == "" {
+		return strings.TrimSpace(thread.ID)
+	}
+	return title
+}
+
+func formatUnixTimestamp(value int64) string {
+	if value <= 0 {
+		return ""
+	}
+	return time.Unix(value, 0).UTC().Format(time.RFC3339)
+}
+
+func stringFromAny(value any) string {
+	switch typed := value.(type) {
+	case string:
+		return strings.TrimSpace(typed)
+	default:
+		return ""
+	}
+}
+
+func decodeSessionListCursor(raw string) (sessionListCursor, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return sessionListCursor{}, nil
+	}
+
+	data, err := base64.RawURLEncoding.DecodeString(raw)
+	if err != nil {
+		return sessionListCursor{}, fmt.Errorf("invalid cursor encoding")
+	}
+
+	var cursor sessionListCursor
+	if err := json.Unmarshal(data, &cursor); err != nil {
+		return sessionListCursor{}, fmt.Errorf("invalid cursor payload")
+	}
+	return cursor, nil
+}
+
+func encodeSessionListCursor(cursor sessionListCursor) string {
+	if strings.TrimSpace(cursor.Cursor) == "" && !cursor.Archived {
+		return ""
+	}
+	payload, err := json.Marshal(cursor)
+	if err != nil {
+		return ""
+	}
+	return base64.RawURLEncoding.EncodeToString(payload)
+}
+
+func isRetryableTurnError(message string) bool {
+	lower := strings.ToLower(strings.TrimSpace(message))
+	if lower == "" {
+		return false
+	}
+	tokens := []string{
+		"app-server read loop",
+		"broken pipe",
+		"connection reset",
+		"eof",
+		"client is closed",
+		"codex app-server unavailable",
+	}
+	for _, token := range tokens {
+		if strings.Contains(lower, token) {
+			return true
+		}
+	}
+	return false
+}
+
+func shouldRetryAfterSupervisorRestart(err error) bool {
+	if err == nil {
+		return false
+	}
+	lower := strings.ToLower(err.Error())
+	if strings.Contains(lower, "app-server restarted, retry request") {
+		return true
+	}
+	restartWindowTokens := []string{
+		"file already closed",
+		"broken pipe",
+		"connection reset",
+		"eof",
+	}
+	for _, token := range restartWindowTokens {
+		if strings.Contains(lower, token) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Server) handleApprovalEvent(
+	ctx context.Context,
+	lifecycle *turnLifecycle,
+	event codex.TurnEvent,
+) ([]SessionUpdateParams, bool, string) {
+	if event.Approval.ApprovalID == "" {
+		return []SessionUpdateParams{
+			{
+				SessionID: lifecycle.sessionID,
+				TurnID:    lifecycle.turnID,
+				Type:      "status",
+				Phase:     string(turnPhaseError),
+				Status:    "turn_error",
+				Message:   "approval event missing approvalId",
+			},
+		}, true, "error"
+	}
+
+	updates := lifecycle.toolCallInProgressUpdates(event)
+	decision, err := s.requestPermission(ctx, lifecycle.sessionID, lifecycle.turnID, event.Approval)
+	if err != nil {
+		s.logger.Warn(
+			"session/request_permission failed; default deny",
+			slog.String("sessionId", lifecycle.sessionID),
+			slog.String("turnId", lifecycle.turnID),
+			slog.String("approvalId", event.Approval.ApprovalID),
+			slog.String("error", err.Error()),
+		)
+		decision = permissionOutcomeCancelled
+	}
+
+	toolStatus := "failed"
+	toolMessage := permissionOutcomeMessage(decision)
+	respondDecision := mapDecisionToAppServer(decision)
+	if permissionOutcomeAllowsExecution(decision) {
+		toolStatus = "completed"
+	}
+
+	mode := normalizePatchApplyMode(s.options.PatchApplyMode)
+	if mode == patchApplyModeACPFS && event.Approval.Kind == codex.ApprovalKindFile && permissionOutcomeAllowsExecution(decision) {
+		if err := s.applyPatchViaACPFS(ctx, lifecycle.sessionID, lifecycle.turnID, event.Approval); err != nil {
+			toolStatus = "failed"
+			toolMessage = fmt.Sprintf("permission approved but ACP fs apply failed: %v", err)
+			respondDecision = codex.ApprovalDecisionDeclined
+			updates = append(updates, SessionUpdateParams{
+				SessionID: lifecycle.sessionID,
+				TurnID:    lifecycle.turnID,
+				Type:      "status",
+				Phase:     string(turnPhaseStreaming),
+				Status:    "review_apply_failed",
+				Message:   toolMessage,
+			})
+		} else {
+			updates = append(updates, SessionUpdateParams{
+				SessionID: lifecycle.sessionID,
+				TurnID:    lifecycle.turnID,
+				Type:      "status",
+				Phase:     string(turnPhaseStreaming),
+				Status:    "review_apply_applied",
+				Message:   "patch applied via ACP fs",
+			})
+		}
+	}
+
+	updates = append(
+		updates,
+		lifecycle.toolCallOutcomeUpdate(
+			event,
+			decision,
+			toolStatus,
+			toolMessage,
+			nil,
+		),
+	)
+
+	respondCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	if respondErr := s.app.ApprovalRespond(respondCtx, event.Approval.ApprovalID, respondDecision); respondErr != nil {
+		updates = append(updates, SessionUpdateParams{
+			SessionID: lifecycle.sessionID,
+			TurnID:    lifecycle.turnID,
+			Type:      "status",
+			Phase:     string(turnPhaseError),
+			Status:    "turn_error",
+			Message:   fmt.Sprintf("approval respond failed: %v", respondErr),
+		})
+		return updates, true, "error"
+	}
+
+	return updates, false, ""
+}
+
+func (s *Server) handleDiffEvent(
+	ctx context.Context,
+	lifecycle *turnLifecycle,
+	event codex.TurnEvent,
+) []SessionUpdateParams {
+	content := s.resolveTurnDiffToolCallContent(ctx, lifecycle.sessionID, event.Diff)
+	if len(content) == 0 {
+		return nil
+	}
+	return []SessionUpdateParams{lifecycle.diffInProgressUpdate(content)}
+}
+
+func (s *Server) writePromptResult(id json.RawMessage, stopReason string) {
+	s.writePromptResultWithUsage(id, stopReason, nil)
+}
+
+func (s *Server) writePromptResultWithUsage(id json.RawMessage, stopReason string, usage *promptUsageSnapshot) {
+	s.writePromptTerminal(id, stopReason, usage, "", "", "")
+}
+
+func (s *Server) writePromptTerminal(id json.RawMessage, stopReason string, usage *promptUsageSnapshot, failure, sessionID, turnID string) {
+	if normalizeStopReason(stopReason) == "error" {
+		s.writeError(id, -32603, "backend prompt failed", map[string]any{
+			"source": "backend", "error": failure, "sessionId": sessionID, "turnId": turnID, "usage": usage,
+		})
+		return
+	}
+	result := SessionPromptResult{
+		StopReason: normalizeStopReason(stopReason),
+	}
+	if usage != nil {
+		result.Used = cloneOptionalInt64(usage.Used)
+		result.Size = cloneOptionalInt64(usage.Size)
+		result.Cost = cloneSessionUsageCost(usage.Cost)
+	}
+	_ = s.codec.WriteResult(id, result)
+}
+
+func (s *Server) writeInvalidParams(id json.RawMessage, data map[string]any) {
+	s.writeError(id, rpcErrInvalidParams, "invalid params", data)
+}
+
+func (s *Server) writeInternalError(id json.RawMessage, message string, data map[string]any) {
+	s.writeError(id, rpcErrInternal, message, data)
+}
+
+func (s *Server) writeError(id json.RawMessage, code int, message string, data map[string]any) {
+	_ = s.codec.WriteError(id, code, message, data)
+}
+
+func (s *Server) emitUpdates(updates []SessionUpdateParams) {
+	notices := s.clientAdvertisesNotices()
+	for _, update := range updates {
+		// ACP session-notices negotiation: clients that did not advertise
+		// clientCapabilities.session.notices must not receive notices at all, and plain
+		// lifecycle markers must not be disguised as thought text — they are simply not
+		// sent. Error diagnostics still travel to a visible channel (thought fallback).
+		if shouldSuppressLifecycleStatus(update, notices) {
+			continue
+		}
+		update = s.attachSessionTodos(update)
+		payload := buildSessionUpdatePayload(update, notices)
+		if err := s.codec.WriteNotification(methodSessionUpdate, payload); err != nil {
+			s.logger.Warn("failed to write session/update", slog.String("error", err.Error()))
+			return
+		}
+	}
+}
+
+// shouldSuppressLifecycleStatus is the emission gate for status updates under notices
+// negotiation: benign lifecycle markers drop for non-advertising clients, while error
+// diagnostics (turn_error, review_apply_failed) keep flowing through the visible fallback.
+func shouldSuppressLifecycleStatus(update SessionUpdateParams, notices bool) bool {
+	return update.Type == sessionUpdateTypeStatus && !notices && !isDiagnosticStatus(update.Status)
+}
+
+// isDiagnosticStatus guards the second half of "never lose turn error detail": these
+// statuses carry real failure messages, so they are never silently dropped — even for
+// clients that did not advertise notices they travel through the visible fallback.
+func isDiagnosticStatus(status string) bool {
+	switch status {
+	case "turn_error", "review_apply_failed", "backend_error", "backend_error_retrying", "backend_restarted_retrying":
+		return true
+	default:
+		return false
+	}
+}
+
+func buildSessionUpdatePayload(update SessionUpdateParams, notices bool) map[string]any {
+	payload := map[string]any{
+		"sessionId": update.SessionID,
+	}
+	if update.TurnID != "" {
+		payload["turnId"] = update.TurnID
+	}
+	if update.Type != "" {
+		payload["type"] = update.Type
+	}
+	if update.Role != "" {
+		payload["role"] = update.Role
+	}
+	if update.Phase != "" {
+		payload["phase"] = update.Phase
+	}
+	if update.ItemID != "" {
+		payload["itemId"] = update.ItemID
+	}
+	if update.ItemType != "" {
+		payload["itemType"] = update.ItemType
+	}
+	if update.Delta != "" {
+		payload["delta"] = update.Delta
+	}
+	if update.Status != "" {
+		payload["status"] = update.Status
+	}
+	if update.Message != "" {
+		payload["message"] = update.Message
+	}
+	if update.ToolCallID != "" {
+		payload["toolCallId"] = update.ToolCallID
+	}
+	if update.Approval != "" {
+		payload["approval"] = update.Approval
+	}
+	if update.PermissionDecision != "" {
+		payload["permissionDecision"] = update.PermissionDecision
+	}
+	if update.Content != nil {
+		payload["content"] = clonePromptContentBlock(update.Content)
+	}
+	if len(update.ToolCallContent) > 0 {
+		payload["toolCallContent"] = cloneToolCallContentOrEmpty(update.ToolCallContent)
+	}
+	if len(update.Todo) > 0 {
+		payload["todo"] = update.Todo
+	}
+	if update.Type == sessionUpdateTypePlan || len(update.Plan) > 0 {
+		payload["plan"] = clonePlanEntriesOrEmpty(update.Plan)
+	}
+	if len(update.ConfigOptions) > 0 {
+		payload["configOptions"] = update.ConfigOptions
+	}
+	if update.Type == sessionUpdateTypeAvailableCommands || len(update.AvailableCommands) > 0 {
+		payload["availableCommands"] = cloneAvailableCommandsOrEmpty(update.AvailableCommands)
+	}
+	if update.Type == sessionUpdateTypeUsage || update.Used != nil || update.Size != nil || update.Cost != nil {
+		payload["used"] = optionalInt64Value(update.Used)
+		payload["size"] = optionalInt64Value(update.Size)
+		if update.Cost != nil {
+			payload["cost"] = cloneSessionUsageCost(update.Cost)
+		}
+	}
+
+	if mapped := mapACPUpdateForClient(update, notices); mapped != nil {
+		payload["update"] = mapped
+	}
+
+	return payload
+}
+
+func mapACPUpdateForClient(update SessionUpdateParams, notices bool) map[string]any {
+	switch update.Type {
+	case sessionUpdateTypeMessage:
+		sessionUpdate := sessionUpdateChunkAgentMessage
+		if strings.EqualFold(strings.TrimSpace(update.Role), "user") {
+			sessionUpdate = sessionUpdateChunkUserMessage
+		}
+		content := update.Content
+		if content == nil {
+			content = textPromptContentBlock(update.Delta)
+		}
+		if content == nil {
+			return nil
+		}
+		return map[string]any{
+			"sessionUpdate": sessionUpdate,
+			"content":       clonePromptContentBlock(content),
+		}
+	case sessionUpdateTypeToolCall:
+		mapped := map[string]any{
+			"sessionUpdate": sessionUpdateTypeToolCall,
+		}
+		if update.ToolCallID != "" {
+			mapped["toolCallId"] = update.ToolCallID
+		}
+		if update.Status != "" {
+			mapped["status"] = update.Status
+		}
+		if update.Message != "" {
+			mapped["title"] = update.Message
+		}
+		content := cloneToolCallContentOrEmpty(update.ToolCallContent)
+		if len(content) == 0 {
+			content = textToolCallContent(update.Delta)
+		}
+		if len(content) > 0 {
+			mapped["content"] = content
+		}
+		return mapped
+	case sessionUpdateTypeConfigOptions:
+		mapped := map[string]any{
+			"sessionUpdate": sessionUpdateTypeConfigOptions,
+		}
+		if len(update.ConfigOptions) > 0 {
+			mapped["configOptions"] = update.ConfigOptions
+		}
+		return mapped
+	case sessionUpdateTypePlan:
+		return map[string]any{
+			"sessionUpdate": sessionUpdateTypePlan,
+			"entries":       clonePlanEntriesOrEmpty(update.Plan),
+		}
+	case sessionUpdateTypeReasoning:
+		return map[string]any{
+			"sessionUpdate": sessionUpdateChunkAgentThought,
+			"content": map[string]any{
+				"type": "text",
+				"text": update.Delta,
+			},
+		}
+	case sessionUpdateTypeAvailableCommands:
+		return map[string]any{
+			"sessionUpdate":     sessionUpdateTypeAvailableCommands,
+			"availableCommands": cloneAvailableCommandsOrEmpty(update.AvailableCommands),
+		}
+	case sessionUpdateTypeUsage:
+		mapped := map[string]any{
+			"sessionUpdate": sessionUpdateTypeUsage,
+			"used":          optionalInt64Value(update.Used),
+			"size":          optionalInt64Value(update.Size),
+		}
+		if update.Cost != nil {
+			mapped["cost"] = cloneSessionUsageCost(update.Cost)
+		}
+		return mapped
+	case sessionUpdateTypeStatus:
+		// `notice` is only negotiable: the pinned SDK marks it UNSTABLE and requires the
+		// client to have advertised clientCapabilities.session.notices before an agent may
+		// send one. Non-advertising clients never see notices; benign lifecycle markers are
+		// dropped upstream in emitUpdates. A diagnostic that still travels (only error
+		// statuses pass that gate) rides the existing thought fallback so the real failure
+		// message stays visible (docs/DECISIONS.md: never lose turn error detail).
+		if !notices {
+			return agentThoughtTextFallback(update)
+		}
+		title := strings.TrimSpace(update.Status)
+		if title == "" {
+			title = sessionUpdateTypeStatus
+		}
+		severity := "info"
+		switch update.Status {
+		case "turn_error", "review_apply_failed", "backend_error":
+			severity = "error"
+		case "backend_error_retrying", "backend_restarted_retrying":
+			severity = "warning"
+		}
+		mapped := map[string]any{
+			"sessionUpdate": sessionUpdateNotice,
+			"severity":      severity,
+			"title":         title,
+		}
+		if message := strings.TrimSpace(update.Message); message != "" {
+			mapped["description"] = message
+		}
+		return mapped
+	default:
+		return agentThoughtTextFallback(update)
+	}
+}
+
+func agentThoughtTextFallback(update SessionUpdateParams) map[string]any {
+	text := strings.TrimSpace(update.Delta)
+	if text == "" {
+		text = strings.TrimSpace(update.Message)
+	}
+	if text == "" {
+		text = strings.TrimSpace(update.Status)
+	}
+	if text == "" {
+		text = strings.TrimSpace(update.Type)
+	}
+	if text == "" {
+		text = "status"
+	}
+	return map[string]any{
+		"sessionUpdate": sessionUpdateChunkAgentThought,
+		"content": map[string]any{
+			"type": "text",
+			"text": text,
+		},
+	}
+}
+
+func (s *Server) requestPermission(
+	ctx context.Context,
+	sessionID string,
+	turnID string,
+	approval codex.ApprovalRequest,
+) (permissionOutcome, error) {
+	callCtx, cancel := context.WithTimeout(ctx, defaultPermissionTimeout)
+	defer cancel()
+
+	params := SessionRequestPermissionParams{
+		Options:    permissionRequestOptions(approval),
+		SessionID:  sessionID,
+		TurnID:     turnID,
+		ToolCall:   permissionRequestToolCall(approval),
+		Approval:   string(approval.Kind),
+		ToolCallID: approval.ToolCallID,
+		Command:    approval.Command,
+		Files:      approval.Files,
+		Host:       approval.Host,
+		Protocol:   approval.Protocol,
+		Port:       approval.Port,
+		MCPServer:  approval.MCPServer,
+		MCPTool:    approval.MCPTool,
+		Message:    approval.Message,
+	}
+
+	var result SessionRequestPermissionResult
+	if err := s.callClient(callCtx, methodSessionRequestPermission, params, &result); err != nil {
+		return permissionOutcomeCancelled, err
+	}
+	return normalizePermissionOutcome(result), nil
+}
+
+func (s *Server) applyPatchViaACPFS(
+	ctx context.Context,
+	sessionID string,
+	turnID string,
+	approval codex.ApprovalRequest,
+) error {
+	path := approval.WritePath
+	if path == "" && len(approval.Files) > 0 {
+		path = approval.Files[0]
+	}
+	if path == "" {
+		return fmt.Errorf("missing file path for ACP fs apply")
+	}
+	if strings.TrimSpace(approval.WriteText) == "" {
+		return fmt.Errorf("missing write text for ACP fs apply")
+	}
+
+	callCtx, cancel := context.WithTimeout(ctx, defaultFSWriteTimeout)
+	defer cancel()
+
+	params := map[string]any{
+		"sessionId": sessionID,
+		"turnId":    turnID,
+		"path":      path,
+		"text":      approval.WriteText,
+		"patch":     approval.Patch,
+	}
+
+	var result fsWriteTextFileResult
+	if err := s.callClient(callCtx, methodFSWriteTextFile, params, &result); err != nil {
+		return err
+	}
+	if result.Conflict {
+		if result.Message != "" {
+			return fmt.Errorf("patch conflict: %s", result.Message)
+		}
+		return fmt.Errorf("patch conflict")
+	}
+	if result.OK {
+		return nil
+	}
+	if result.Message != "" {
+		return fmt.Errorf("fs write rejected: %s", result.Message)
+	}
+	return nil
+}
+
+func (s *Server) callClient(ctx context.Context, method string, params any, out any) error {
+	id := strconv.FormatUint(atomic.AddUint64(&s.nextClientID, 1), 10)
+	rawID := json.RawMessage(strconv.Quote("server-" + id))
+
+	msg, err := buildClientRequest(rawID, method, params)
+	if err != nil {
+		return err
+	}
+
+	respCh := make(chan RPCMessage, 1)
+	s.pendingMu.Lock()
+	s.pendingClient["server-"+id] = respCh
+	s.pendingMu.Unlock()
+
+	if err := s.codec.WriteMessage(msg); err != nil {
+		s.removePendingClientRequest("server-" + id)
+		return fmt.Errorf("%s write request: %w", method, err)
+	}
+
+	var resp RPCMessage
+	select {
+	case <-ctx.Done():
+		s.removePendingClientRequest("server-" + id)
+		return fmt.Errorf("%s wait response: %w", method, ctx.Err())
+	case resp = <-respCh:
+	}
+
+	if resp.Error != nil {
+		return fmt.Errorf("%s rpc error code=%d message=%s", method, resp.Error.Code, resp.Error.Message)
+	}
+	if out != nil && len(resp.Result) > 0 {
+		if err := json.Unmarshal(resp.Result, out); err != nil {
+			return fmt.Errorf("%s decode result: %w", method, err)
+		}
+	}
+	return nil
+}
+
+func (s *Server) removePendingClientRequest(id string) {
+	s.pendingMu.Lock()
+	delete(s.pendingClient, id)
+	s.pendingMu.Unlock()
+}
+
+func (s *Server) failPendingClientRequests(err error) {
+	s.pendingMu.Lock()
+	pending := s.pendingClient
+	s.pendingClient = make(map[string]chan RPCMessage)
+	s.pendingMu.Unlock()
+
+	for _, ch := range pending {
+		ch <- RPCMessage{
+			Error: &RPCError{
+				Code:    rpcErrInternal,
+				Message: err.Error(),
+			},
+		}
+		close(ch)
+	}
+}
+
+func decodeParams(raw json.RawMessage, out any) error {
+	if len(raw) == 0 {
+		return nil
+	}
+	if err := json.Unmarshal(raw, out); err != nil {
+		return fmt.Errorf("decode params: %w", err)
+	}
+	return nil
+}
+
+func decodeSessionPromptParams(raw json.RawMessage) (SessionPromptParams, error) {
+	type promptWire struct {
+		SessionID string               `json:"sessionId"`
+		Prompt    json.RawMessage      `json:"prompt,omitempty"`
+		Content   []PromptContentBlock `json:"content,omitempty"`
+		Resources []PromptResource     `json:"resources,omitempty"`
+		PromptConfig
+	}
+
+	var wire promptWire
+	if err := decodeParams(raw, &wire); err != nil {
+		return SessionPromptParams{}, err
+	}
+
+	params := SessionPromptParams{
+		SessionID:    wire.SessionID,
+		Content:      wire.Content,
+		Resources:    wire.Resources,
+		PromptConfig: wire.PromptConfig,
+	}
+
+	promptRaw := strings.TrimSpace(string(wire.Prompt))
+	if promptRaw == "" || promptRaw == "null" {
+		return params, nil
+	}
+
+	var promptText string
+	if err := json.Unmarshal(wire.Prompt, &promptText); err == nil {
+		params.Prompt = promptText
+		return params, nil
+	}
+
+	var promptBlocks []PromptContentBlock
+	if err := json.Unmarshal(wire.Prompt, &promptBlocks); err == nil {
+		if len(params.Content) == 0 {
+			params.Content = promptBlocks
+		} else {
+			params.Content = append(promptBlocks, params.Content...)
+		}
+		return params, nil
+	}
+
+	var singleBlock PromptContentBlock
+	if err := json.Unmarshal(wire.Prompt, &singleBlock); err == nil {
+		params.Content = append([]PromptContentBlock{singleBlock}, params.Content...)
+		return params, nil
+	}
+
+	return SessionPromptParams{}, fmt.Errorf("decode params: prompt must be string or content block(s)")
+}
+
+func fallbackPrompt(raw json.RawMessage) string {
+	if len(raw) == 0 {
+		return ""
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal(raw, &payload); err != nil {
+		return ""
+	}
+
+	for _, key := range []string{"prompt", "input", "text"} {
+		if value, ok := payload[key].(string); ok {
+			return value
+		}
+	}
+	return ""
+}
+
+func warningUpdates(sessionID string, turnID string, warnings []string) []SessionUpdateParams {
+	if len(warnings) == 0 {
+		return nil
+	}
+	updates := make([]SessionUpdateParams, 0, len(warnings))
+	for _, warning := range warnings {
+		warning = strings.TrimSpace(warning)
+		if warning == "" {
+			continue
+		}
+		updates = append(updates, SessionUpdateParams{
+			SessionID: sessionID,
+			TurnID:    turnID,
+			Type:      sessionUpdateTypeMessage,
+			Phase:     string(turnPhaseStreaming),
+			Delta:     "[adapter warning] " + warning,
+		})
+	}
+	return updates
+}
+
+func (s *Server) prepareTurnInput(
+	ctx context.Context,
+	sessionID string,
+	params SessionPromptParams,
+	paramsRaw json.RawMessage,
+) ([]codex.UserInput, []string, string, error) {
+	promptText := strings.TrimSpace(params.Prompt)
+	if promptText == "" {
+		promptText = strings.TrimSpace(extractTextPrompt(params.Content))
+	}
+	if promptText == "" {
+		promptText = strings.TrimSpace(fallbackPrompt(paramsRaw))
+	}
+
+	input := make([]codex.UserInput, 0, len(params.Content)+len(params.Resources)+1)
+	warnings := make([]string, 0, 4)
+	hasPromptTextBlock := false
+
+	for _, block := range params.Content {
+		blockType := strings.ToLower(strings.TrimSpace(block.Type))
+		switch blockType {
+		case "", "text":
+			text := strings.TrimSpace(block.Text)
+			if text == "" {
+				continue
+			}
+			hasPromptTextBlock = true
+			input = append(input, codex.UserInput{Type: "text", Text: text})
+		case "image":
+			imageInput, err := buildImageInput(block)
+			if err != nil {
+				return nil, nil, "", err
+			}
+			input = append(input, imageInput)
+		case "resource_link":
+			// Handle image resource links first; other resource_link kinds keep
+			// their current behavior until non-image resource support is wired.
+			if !isImageResourceLink(block) {
+				continue
+			}
+			imageInput, err := buildImageInput(block)
+			if err != nil {
+				return nil, nil, "", err
+			}
+			input = append(input, imageInput)
+		case "resource", "mention":
+			resource := resourceFromBlock(block)
+			resourceInput, resourceWarnings := s.resourceToInputs(ctx, sessionID, resource)
+			input = append(input, resourceInput...)
+			warnings = append(warnings, resourceWarnings...)
+		default:
+			// Unknown block types degrade to text when text payload exists.
+			if text := strings.TrimSpace(block.Text); text != "" {
+				hasPromptTextBlock = true
+				input = append(input, codex.UserInput{Type: "text", Text: text})
+			}
+		}
+	}
+
+	for _, resource := range params.Resources {
+		resourceInput, resourceWarnings := s.resourceToInputs(ctx, sessionID, resource)
+		input = append(input, resourceInput...)
+		warnings = append(warnings, resourceWarnings...)
+	}
+
+	if strings.TrimSpace(promptText) != "" && !hasPromptTextBlock {
+		input = append([]codex.UserInput{{Type: "text", Text: promptText}}, input...)
+	}
+
+	if len(input) == 0 {
+		if strings.TrimSpace(promptText) != "" {
+			return textTurnInput(promptText), warnings, promptText, nil
+		}
+		return nil, nil, "", fmt.Errorf("prompt or content is required")
+	}
+
+	if strings.TrimSpace(promptText) == "" {
+		promptText = strings.TrimSpace(extractTextFromInput(input))
+	}
+	return input, warnings, promptText, nil
+}
+
+func extractTextPrompt(content []PromptContentBlock) string {
+	parts := make([]string, 0, len(content))
+	for _, block := range content {
+		if strings.ToLower(strings.TrimSpace(block.Type)) != "text" {
+			continue
+		}
+		if text := strings.TrimSpace(block.Text); text != "" {
+			parts = append(parts, text)
+		}
+	}
+	return strings.Join(parts, "\n")
+}
+
+func extractTextFromInput(input []codex.UserInput) string {
+	parts := make([]string, 0, len(input))
+	for _, item := range input {
+		if strings.ToLower(strings.TrimSpace(item.Type)) != "text" {
+			continue
+		}
+		if text := strings.TrimSpace(item.Text); text != "" {
+			parts = append(parts, text)
+		}
+	}
+	return strings.Join(parts, "\n")
+}
+
+func resourceFromBlock(block PromptContentBlock) PromptResource {
+	resource := PromptResource{
+		Name:     block.Name,
+		URI:      block.URI,
+		Path:     block.Path,
+		MimeType: block.MimeType,
+		Text:     block.Text,
+		Data:     block.Data,
+		Range:    block.Range,
+	}
+	if block.Resource != nil {
+		resource = *block.Resource
+		if resource.Name == "" {
+			resource.Name = block.Name
+		}
+		if resource.URI == "" {
+			resource.URI = block.URI
+		}
+		if resource.Path == "" {
+			resource.Path = block.Path
+		}
+		if resource.MimeType == "" {
+			resource.MimeType = block.MimeType
+		}
+		if resource.Text == "" && strings.ToLower(strings.TrimSpace(block.Type)) == "resource" {
+			resource.Text = block.Text
+		}
+		if resource.Data == "" {
+			resource.Data = block.Data
+		}
+		if resource.Range == nil {
+			resource.Range = block.Range
+		}
+	}
+	return resource
+}
+
+func (s *Server) resourceToInputs(
+	ctx context.Context,
+	sessionID string,
+	resource PromptResource,
+) ([]codex.UserInput, []string) {
+	var warnings []string
+	path := strings.TrimSpace(resource.Path)
+	if path == "" {
+		path = pathFromURI(resource.URI)
+	}
+	name := strings.TrimSpace(resource.Name)
+	if name == "" {
+		switch {
+		case path != "":
+			name = filepath.Base(path)
+		case strings.TrimSpace(resource.URI) != "":
+			name = strings.TrimSpace(resource.URI)
+		default:
+			name = "resource"
+		}
+	}
+
+	input := make([]codex.UserInput, 0, 2)
+	if path != "" || strings.TrimSpace(resource.URI) != "" {
+		mentionPath := path
+		if mentionPath == "" {
+			mentionPath = strings.TrimSpace(resource.URI)
+		}
+		input = append(input, codex.UserInput{
+			Type: "mention",
+			Name: name,
+			Path: mentionPath,
+		})
+	}
+
+	text := strings.TrimSpace(resource.Text)
+	if text == "" && strings.TrimSpace(resource.Data) != "" {
+		if decoded, err := decodeBase64Payload(resource.Data); err == nil {
+			text = string(decoded)
+		} else {
+			text = strings.TrimSpace(resource.Data)
+		}
+	}
+	if text == "" && path != "" {
+		if !s.canReadTextFile() {
+			warnings = append(
+				warnings,
+				fmt.Sprintf("missing mention context for %s: client has no fs/read_text_file capability", name),
+			)
+		} else if readText, err := s.readTextFile(ctx, sessionID, path); err != nil {
+			warnings = append(
+				warnings,
+				fmt.Sprintf("failed to read mention context for %s via fs/read_text_file: %v", name, err),
+			)
+		} else {
+			text = readText
+		}
+	}
+
+	if text != "" {
+		truncatedText, truncated := truncateTextBytes(text, defaultMentionTextLimit)
+		if truncated {
+			warnings = append(
+				warnings,
+				fmt.Sprintf("mention %s text exceeded %d bytes and was truncated", name, defaultMentionTextLimit),
+			)
+		}
+		input = append(input, codex.UserInput{
+			Type: "text",
+			Text: formatMentionContext(resource, name, path, truncatedText, truncated),
+		})
+	} else if len(input) == 0 {
+		warnings = append(warnings, "resource block had no usable uri/path/text")
+	}
+
+	return input, warnings
+}
+
+func formatMentionContext(
+	resource PromptResource,
+	name string,
+	path string,
+	text string,
+	truncated bool,
+) string {
+	var builder strings.Builder
+	builder.WriteString("[mention context]\n")
+	builder.WriteString("name: " + name + "\n")
+	if path != "" {
+		builder.WriteString("path: " + path + "\n")
+	}
+	if uri := strings.TrimSpace(resource.URI); uri != "" {
+		builder.WriteString("uri: " + uri + "\n")
+	}
+	if mime := strings.TrimSpace(resource.MimeType); mime != "" {
+		builder.WriteString("mimeType: " + mime + "\n")
+	}
+	if resource.Range != nil {
+		builder.WriteString(fmt.Sprintf("range: %d-%d\n", resource.Range.Start, resource.Range.End))
+	}
+	if truncated {
+		builder.WriteString("truncated: true\n")
+	}
+	builder.WriteString("content:\n")
+	builder.WriteString(text)
+	return builder.String()
+}
+
+func buildImageInput(block PromptContentBlock) (codex.UserInput, error) {
+	if path := strings.TrimSpace(block.Path); path != "" {
+		return codex.UserInput{Type: "localImage", Path: path}, nil
+	}
+
+	if data := strings.TrimSpace(block.Data); data != "" {
+		mime := normalizeImageMimeType(block.MimeType)
+		if mime == "" {
+			return codex.UserInput{}, fmt.Errorf("image block requires mimeType")
+		}
+		if !isAllowedImageMimeType(mime) {
+			return codex.UserInput{}, fmt.Errorf("unsupported image mimeType: %s", mime)
+		}
+		decoded, err := decodeBase64Payload(data)
+		if err != nil {
+			return codex.UserInput{}, fmt.Errorf("invalid image base64 payload: %w", err)
+		}
+		if len(decoded) > defaultImageSizeLimit {
+			return codex.UserInput{}, fmt.Errorf(
+				"image payload exceeds %d bytes limit",
+				defaultImageSizeLimit,
+			)
+		}
+		return codex.UserInput{
+			Type: "image",
+			URL:  fmt.Sprintf("data:%s;base64,%s", mime, sanitizeBase64(data)),
+		}, nil
+	}
+
+	uri := strings.TrimSpace(block.URI)
+	if uri == "" {
+		return codex.UserInput{}, fmt.Errorf("image block requires data, uri, or path")
+	}
+	if strings.HasPrefix(strings.ToLower(uri), "data:") {
+		mime, payload, err := splitDataImageURI(uri)
+		if err != nil {
+			return codex.UserInput{}, err
+		}
+		if !isAllowedImageMimeType(mime) {
+			return codex.UserInput{}, fmt.Errorf("unsupported image mimeType: %s", mime)
+		}
+		decoded, err := decodeBase64Payload(payload)
+		if err != nil {
+			return codex.UserInput{}, fmt.Errorf("invalid image data URI payload: %w", err)
+		}
+		if len(decoded) > defaultImageSizeLimit {
+			return codex.UserInput{}, fmt.Errorf(
+				"image payload exceeds %d bytes limit",
+				defaultImageSizeLimit,
+			)
+		}
+		return codex.UserInput{
+			Type: "image",
+			URL:  uri,
+		}, nil
+	}
+	if strings.HasPrefix(strings.ToLower(uri), "http://") || strings.HasPrefix(strings.ToLower(uri), "https://") {
+		return codex.UserInput{
+			Type: "image",
+			URL:  uri,
+		}, nil
+	}
+	if path := pathFromURI(uri); path != "" {
+		return codex.UserInput{
+			Type: "localImage",
+			Path: path,
+		}, nil
+	}
+	return codex.UserInput{
+		Type: "localImage",
+		Path: uri,
+	}, nil
+}
+
+func isImageResourceLink(block PromptContentBlock) bool {
+	if strings.ToLower(strings.TrimSpace(block.Type)) != "resource_link" {
+		return false
+	}
+	return strings.HasPrefix(normalizeImageMimeType(block.MimeType), "image/")
+}
+
+func normalizeImageMimeType(mime string) string {
+	mime = strings.TrimSpace(strings.ToLower(mime))
+	if idx := strings.Index(mime, ";"); idx >= 0 {
+		mime = strings.TrimSpace(mime[:idx])
+	}
+	return mime
+}
+
+func isAllowedImageMimeType(mime string) bool {
+	_, ok := allowedImageMimeType[normalizeImageMimeType(mime)]
+	return ok
+}
+
+func splitDataImageURI(uri string) (string, string, error) {
+	parts := strings.SplitN(uri, ",", 2)
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("invalid image data URI")
+	}
+	header := strings.TrimPrefix(strings.ToLower(parts[0]), "data:")
+	if !strings.Contains(header, ";base64") {
+		return "", "", fmt.Errorf("image data URI must be base64 encoded")
+	}
+	mime := strings.TrimSpace(strings.TrimSuffix(header, ";base64"))
+	if mime == "" {
+		return "", "", fmt.Errorf("image data URI missing mimeType")
+	}
+	return mime, parts[1], nil
+}
+
+func sanitizeBase64(payload string) string {
+	payload = strings.TrimSpace(payload)
+	return strings.TrimRight(payload, "\n\r\t ")
+}
+
+func decodeBase64Payload(payload string) ([]byte, error) {
+	clean := sanitizeBase64(payload)
+	decoded, err := base64.StdEncoding.DecodeString(clean)
+	if err == nil {
+		return decoded, nil
+	}
+	return base64.RawStdEncoding.DecodeString(clean)
+}
+
+func truncateTextBytes(input string, maxBytes int) (string, bool) {
+	if maxBytes <= 0 || len(input) <= maxBytes {
+		return input, false
+	}
+
+	cut := maxBytes
+	for cut > 0 && (input[cut]&0xC0) == 0x80 {
+		cut--
+	}
+	if cut <= 0 {
+		cut = maxBytes
+	}
+	return input[:cut], true
+}
+
+func pathFromURI(uriRaw string) string {
+	uriRaw = strings.TrimSpace(uriRaw)
+	if uriRaw == "" {
+		return ""
+	}
+	parsed, err := url.Parse(uriRaw)
+	if err != nil {
+		return ""
+	}
+	if strings.ToLower(parsed.Scheme) != "file" {
+		return ""
+	}
+	if parsed.Path == "" {
+		return ""
+	}
+	return parsed.Path
+}
+
+func (s *Server) canReadTextFile() bool {
+	s.capabilitiesMu.RLock()
+	defer s.capabilitiesMu.RUnlock()
+	return s.capabilities.canReadTextFile
+}
+
+func (s *Server) clientAdvertisesNotices() bool {
+	s.capabilitiesMu.RLock()
+	defer s.capabilitiesMu.RUnlock()
+	return s.capabilities.sessionNotices
+}
+
+func (s *Server) readTextFile(ctx context.Context, sessionID string, path string) (string, error) {
+	callCtx, cancel := context.WithTimeout(ctx, defaultFSWriteTimeout)
+	defer cancel()
+
+	var raw map[string]any
+	if err := s.callClient(callCtx, methodFSReadTextFile, map[string]any{
+		"sessionId": sessionID,
+		"path":      path,
+	}, &raw); err != nil {
+		return "", err
+	}
+
+	for _, key := range []string{"text", "content"} {
+		text := valueAsString(raw[key])
+		if strings.TrimSpace(text) != "" {
+			return text, nil
+		}
+	}
+	if nested, ok := raw["result"].(map[string]any); ok {
+		for _, key := range []string{"text", "content"} {
+			text := valueAsString(nested[key])
+			if strings.TrimSpace(text) != "" {
+				return text, nil
+			}
+		}
+	}
+	return "", fmt.Errorf("empty fs/read_text_file result")
+}
+
+func (s *Server) resolveTurnDiffToolCallContent(
+	ctx context.Context,
+	sessionID string,
+	unifiedDiff string,
+) []ToolCallContentItem {
+	unifiedDiff = strings.TrimSpace(unifiedDiff)
+	if unifiedDiff == "" {
+		return nil
+	}
+
+	patches, err := parseUnifiedDiffFiles(unifiedDiff)
+	if err != nil || len(patches) == 0 {
+		return textToolCallContent(fencedUnifiedDiff(unifiedDiff))
+	}
+
+	cwd := s.getSessionCWD(sessionID)
+	content := make([]ToolCallContentItem, 0, len(patches))
+	warnings := make([]string, 0)
+	for _, patch := range patches {
+		diffItem, diffErr := s.toolCallDiffFromUnifiedPatch(ctx, sessionID, cwd, patch)
+		if diffErr != nil {
+			displayPath := strings.TrimSpace(patch.Path)
+			if displayPath == "" {
+				displayPath = "unknown file"
+			}
+			warnings = append(warnings, fmt.Sprintf("failed to reconstruct diff for %s: %v", displayPath, diffErr))
+			continue
+		}
+		content = append(content, diffItem)
+	}
+
+	if len(content) == 0 {
+		return textToolCallContent(fencedUnifiedDiff(unifiedDiff))
+	}
+	if len(warnings) > 0 {
+		content = append(content, ToolCallContentItem{
+			Type:    "content",
+			Content: textPromptContentBlock(strings.Join(warnings, "\n")),
+		})
+	}
+	return content
+}
+
+func (s *Server) toolCallDiffFromUnifiedPatch(
+	ctx context.Context,
+	sessionID string,
+	cwd string,
+	patch unifiedDiffFilePatch,
+) (ToolCallContentItem, error) {
+	resolvedPath := resolveDiffPath(cwd, patch.Path)
+	if resolvedPath == "" {
+		return ToolCallContentItem{}, fmt.Errorf("diff patch missing path")
+	}
+
+	oldText := ""
+	if !patch.IsNewFile {
+		if !s.canReadTextFile() {
+			return ToolCallContentItem{}, fmt.Errorf("client has no fs/read_text_file capability")
+		}
+		readText, err := s.readTextFile(ctx, sessionID, resolvedPath)
+		if err != nil {
+			return ToolCallContentItem{}, err
+		}
+		oldText = readText
+	}
+
+	newText, err := applyUnifiedDiffPatch(oldText, patch)
+	if err != nil {
+		return ToolCallContentItem{}, err
+	}
+
+	return ToolCallContentItem{
+		Type:    "diff",
+		Path:    resolvedPath,
+		OldText: oldText,
+		NewText: newText,
+	}, nil
+}
+
+func resolveDiffPath(cwd string, path string) string {
+	path = strings.TrimSpace(path)
+	if path == "" {
+		return ""
+	}
+	if filepath.IsAbs(path) {
+		return filepath.Clean(path)
+	}
+	cwd = strings.TrimSpace(cwd)
+	if cwd == "" {
+		return filepath.Clean(path)
+	}
+	return filepath.Clean(filepath.Join(cwd, path))
+}
+
+func parseUnifiedDiffFiles(unifiedDiff string) ([]unifiedDiffFilePatch, error) {
+	lines := splitPreservingNewlines(unifiedDiff)
+	if len(lines) == 0 {
+		return nil, fmt.Errorf("empty diff")
+	}
+
+	var patches []unifiedDiffFilePatch
+	for i := 0; i < len(lines); {
+		if !strings.HasPrefix(lines[i], "diff --git ") {
+			i++
+			continue
+		}
+		start := i
+		i++
+		for i < len(lines) && !strings.HasPrefix(lines[i], "diff --git ") {
+			i++
+		}
+		patch, err := parseUnifiedDiffFile(lines[start:i])
+		if err != nil {
+			return nil, err
+		}
+		patches = append(patches, patch)
+	}
+
+	if len(patches) > 0 {
+		return patches, nil
+	}
+
+	patch, err := parseUnifiedDiffFile(lines)
+	if err != nil {
+		return nil, err
+	}
+	return []unifiedDiffFilePatch{patch}, nil
+}
+
+func parseUnifiedDiffFile(lines []string) (unifiedDiffFilePatch, error) {
+	patch := unifiedDiffFilePatch{
+		Raw: strings.Join(lines, ""),
+	}
+	var previousLine *unifiedDiffHunkLine
+	for i := 0; i < len(lines); i++ {
+		line := trimOneTrailingNewline(lines[i])
+		switch {
+		case strings.HasPrefix(line, "--- "):
+			patch.OldPath = normalizeUnifiedDiffPath(strings.TrimSpace(strings.TrimPrefix(line, "--- ")))
+		case strings.HasPrefix(line, "+++ "):
+			patch.NewPath = normalizeUnifiedDiffPath(strings.TrimSpace(strings.TrimPrefix(line, "+++ ")))
+		case strings.HasPrefix(line, "@@ "):
+			hunk, next, err := parseUnifiedDiffHunk(lines, i)
+			if err != nil {
+				return unifiedDiffFilePatch{}, err
+			}
+			patch.Hunks = append(patch.Hunks, hunk)
+			if len(patch.Hunks[len(patch.Hunks)-1].Lines) > 0 {
+				previousLine = &patch.Hunks[len(patch.Hunks)-1].Lines[len(patch.Hunks[len(patch.Hunks)-1].Lines)-1]
+			}
+			i = next - 1
+		case strings.HasPrefix(line, `\ No newline at end of file`):
+			if previousLine != nil {
+				previousLine.NoNewline = true
+			}
+		}
+	}
+
+	if patch.NewPath != "" {
+		patch.Path = patch.NewPath
+	} else {
+		patch.Path = patch.OldPath
+	}
+	patch.IsNewFile = patch.OldPath == ""
+	patch.IsDeleteFile = patch.NewPath == ""
+	if len(patch.Hunks) == 0 {
+		return unifiedDiffFilePatch{}, fmt.Errorf("diff patch contains no hunks")
+	}
+	return patch, nil
+}
+
+func parseUnifiedDiffHunk(lines []string, start int) (unifiedDiffHunk, int, error) {
+	header := trimOneTrailingNewline(lines[start])
+	matches := unifiedDiffHunkPattern.FindStringSubmatch(header)
+	if len(matches) != 5 {
+		return unifiedDiffHunk{}, 0, fmt.Errorf("invalid hunk header: %s", header)
+	}
+
+	hunk := unifiedDiffHunk{
+		OldStart: mustAtoi(matches[1]),
+		OldCount: defaultUnifiedDiffCount(matches[2]),
+		NewStart: mustAtoi(matches[3]),
+		NewCount: defaultUnifiedDiffCount(matches[4]),
+	}
+	if hunk.OldStart < 0 {
+		hunk.OldStart = 0
+	}
+	if hunk.NewStart < 0 {
+		hunk.NewStart = 0
+	}
+
+	i := start + 1
+	for i < len(lines) {
+		line := trimOneTrailingNewline(lines[i])
+		if strings.HasPrefix(line, "diff --git ") || strings.HasPrefix(line, "@@ ") {
+			break
+		}
+		if strings.HasPrefix(line, `\ No newline at end of file`) {
+			if len(hunk.Lines) > 0 {
+				hunk.Lines[len(hunk.Lines)-1].NoNewline = true
+			}
+			i++
+			continue
+		}
+		if line == "" {
+			return unifiedDiffHunk{}, 0, fmt.Errorf("malformed empty diff line")
+		}
+		op := line[0]
+		if op != ' ' && op != '+' && op != '-' {
+			i++
+			continue
+		}
+		hunk.Lines = append(hunk.Lines, unifiedDiffHunkLine{
+			Op:   op,
+			Text: line[1:],
+		})
+		i++
+	}
+	return hunk, i, nil
+}
+
+func applyUnifiedDiffPatch(oldText string, patch unifiedDiffFilePatch) (string, error) {
+	oldLines := splitTextLines(oldText)
+	out := make([]string, 0, len(oldLines))
+	oldIndex := 0
+
+	for _, hunk := range patch.Hunks {
+		target := hunk.OldStart - 1
+		if target < 0 {
+			target = 0
+		}
+		if target > len(oldLines) {
+			return "", fmt.Errorf("hunk start %d beyond file length %d", target, len(oldLines))
+		}
+		if target < oldIndex {
+			return "", fmt.Errorf("overlapping diff hunk")
+		}
+
+		out = append(out, oldLines[oldIndex:target]...)
+		oldIndex = target
+
+		for _, line := range hunk.Lines {
+			switch line.Op {
+			case ' ':
+				if oldIndex >= len(oldLines) || oldLines[oldIndex] != renderedUnifiedDiffLine(line) {
+					return "", fmt.Errorf("diff context mismatch at %s", patch.Path)
+				}
+				out = append(out, oldLines[oldIndex])
+				oldIndex++
+			case '-':
+				if oldIndex >= len(oldLines) || oldLines[oldIndex] != renderedUnifiedDiffLine(line) {
+					return "", fmt.Errorf("diff delete mismatch at %s", patch.Path)
+				}
+				oldIndex++
+			case '+':
+				out = append(out, renderedUnifiedDiffLine(line))
+			}
+		}
+	}
+
+	out = append(out, oldLines[oldIndex:]...)
+	return strings.Join(out, ""), nil
+}
+
+func renderedUnifiedDiffLine(line unifiedDiffHunkLine) string {
+	if line.NoNewline {
+		return line.Text
+	}
+	return line.Text + "\n"
+}
+
+func splitPreservingNewlines(text string) []string {
+	if text == "" {
+		return nil
+	}
+	lines := strings.SplitAfter(text, "\n")
+	if len(lines) > 0 && lines[len(lines)-1] == "" {
+		lines = lines[:len(lines)-1]
+	}
+	return lines
+}
+
+func splitTextLines(text string) []string {
+	return splitPreservingNewlines(text)
+}
+
+func trimOneTrailingNewline(line string) string {
+	return strings.TrimSuffix(line, "\n")
+}
+
+func normalizeUnifiedDiffPath(path string) string {
+	path = strings.TrimSpace(path)
+	if path == "/dev/null" {
+		return ""
+	}
+	if strings.HasPrefix(path, "a/") || strings.HasPrefix(path, "b/") {
+		return path[2:]
+	}
+	return path
+}
+
+func defaultUnifiedDiffCount(raw string) int {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return 1
+	}
+	return mustAtoi(raw)
+}
+
+func mustAtoi(raw string) int {
+	value, _ := strconv.Atoi(strings.TrimSpace(raw))
+	return value
+}
+
+func fencedUnifiedDiff(unifiedDiff string) string {
+	if strings.TrimSpace(unifiedDiff) == "" {
+		return ""
+	}
+	return "```diff\n" + strings.TrimRight(unifiedDiff, "\n") + "\n```"
+}
+
+func valueAsString(value any) string {
+	switch typed := value.(type) {
+	case string:
+		return typed
+	default:
+		return ""
+	}
+}
+
+func (s *Server) captureClientCapabilities(paramsRaw json.RawMessage) {
+	var payload map[string]any
+	if err := decodeParams(paramsRaw, &payload); err != nil {
+		return
+	}
+	enabled := detectReadTextCapability(payload)
+	s.capabilitiesMu.Lock()
+	s.capabilities.canReadTextFile = enabled
+	s.capabilities.sessionNotices = detectSessionNoticesCapability(payload)
+	s.capabilitiesMu.Unlock()
+}
+
+// detectSessionNoticesCapability reports whether the client advertised
+// clientCapabilities.session.notices. The capability value is an open record, so presence
+// (non-null `notices` key) is the advertisement.
+func detectSessionNoticesCapability(payload map[string]any) bool {
+	if payload == nil {
+		return false
+	}
+	caps, ok := payload["clientCapabilities"].(map[string]any)
+	if !ok {
+		return false
+	}
+	session, ok := caps["session"].(map[string]any)
+	if !ok {
+		return false
+	}
+	notices, ok := session["notices"]
+	return ok && notices != nil
+}
+
+func detectReadTextCapability(payload map[string]any) bool {
+	if payload == nil {
+		return false
+	}
+	return detectReadTextCapabilityAny(payload)
+}
+
+func detectReadTextCapabilityAny(value any) bool {
+	switch typed := value.(type) {
+	case map[string]any:
+		for key, child := range typed {
+			normalized := strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(key, "-", "_"), ".", "_"))
+			if strings.Contains(normalized, "read_text_file") || strings.Contains(normalized, "fs/read_text_file") {
+				if boolish(child) {
+					return true
+				}
+			}
+			if detectReadTextCapabilityAny(child) {
+				return true
+			}
+		}
+	case []any:
+		for _, child := range typed {
+			if detectReadTextCapabilityAny(child) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func boolish(value any) bool {
+	switch typed := value.(type) {
+	case bool:
+		return typed
+	case string:
+		switch strings.ToLower(strings.TrimSpace(typed)) {
+		case "1", "true", "yes", "on", "enabled":
+			return true
+		}
+	case float64:
+		return typed != 0
+	case map[string]any:
+		for _, key := range []string{"enabled", "available", "supported"} {
+			if boolish(typed[key]) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func parseMarkdownTodoItems(content string) []TodoItem {
+	matches := todoChecklistPattern.FindAllStringSubmatch(content, -1)
+	if len(matches) == 0 {
+		return nil
+	}
+	items := make([]TodoItem, 0, len(matches))
+	for _, match := range matches {
+		if len(match) < 3 {
+			continue
+		}
+		doneMark := strings.TrimSpace(match[1])
+		text := strings.TrimSpace(match[2])
+		if text == "" {
+			continue
+		}
+		items = append(items, TodoItem{
+			Text: text,
+			Done: strings.EqualFold(doneMark, "x"),
+		})
+	}
+	return items
+}
+
+func cloneTodoItems(items []TodoItem) []TodoItem {
+	if len(items) == 0 {
+		return nil
+	}
+	cp := make([]TodoItem, len(items))
+	copy(cp, items)
+	return cp
+}
+
+func clonePlanEntries(entries []PlanEntry) []PlanEntry {
+	if len(entries) == 0 {
+		return nil
+	}
+	cp := make([]PlanEntry, len(entries))
+	copy(cp, entries)
+	return cp
+}
+
+func clonePlanEntriesOrEmpty(entries []PlanEntry) []PlanEntry {
+	if len(entries) == 0 {
+		return []PlanEntry{}
+	}
+	return clonePlanEntries(entries)
+}
+
+func clonePromptContentBlock(block *PromptContentBlock) *PromptContentBlock {
+	if block == nil {
+		return nil
+	}
+	cloned := *block
+	if block.Range != nil {
+		rng := *block.Range
+		cloned.Range = &rng
+	}
+	if block.Resource != nil {
+		resource := *block.Resource
+		if block.Resource.Range != nil {
+			rng := *block.Resource.Range
+			resource.Range = &rng
+		}
+		cloned.Resource = &resource
+	}
+	return &cloned
+}
+
+func cloneToolCallContentOrEmpty(content []ToolCallContentItem) []ToolCallContentItem {
+	if len(content) == 0 {
+		return []ToolCallContentItem{}
+	}
+	cloned := make([]ToolCallContentItem, 0, len(content))
+	for _, item := range content {
+		cloned = append(cloned, ToolCallContentItem{
+			Type:    item.Type,
+			Content: clonePromptContentBlock(item.Content),
+			Path:    item.Path,
+			OldText: item.OldText,
+			NewText: item.NewText,
+		})
+	}
+	return cloned
+}
+
+func textPromptContentBlock(text string) *PromptContentBlock {
+	if text == "" {
+		return nil
+	}
+	return &PromptContentBlock{
+		Type: "text",
+		Text: text,
+	}
+}
+
+func textToolCallContent(text string) []ToolCallContentItem {
+	block := textPromptContentBlock(text)
+	if block == nil {
+		return nil
+	}
+	return []ToolCallContentItem{{
+		Type:    "content",
+		Content: block,
+	}}
+}
+
+func cloneAvailableCommands(commands []AvailableCommand) []AvailableCommand {
+	if len(commands) == 0 {
+		return nil
+	}
+	cp := make([]AvailableCommand, 0, len(commands))
+	for _, command := range commands {
+		copied := AvailableCommand{
+			Name:        command.Name,
+			Description: command.Description,
+		}
+		if command.Input != nil {
+			input := *command.Input
+			copied.Input = &input
+		}
+		cp = append(cp, copied)
+	}
+	return cp
+}
+
+func cloneAvailableCommandsOrEmpty(commands []AvailableCommand) []AvailableCommand {
+	if len(commands) == 0 {
+		return []AvailableCommand{}
+	}
+	return cloneAvailableCommands(commands)
+}
+
+func cloneAuthMethods(methods []AuthMethod) []AuthMethod {
+	if len(methods) == 0 {
+		return nil
+	}
+	out := make([]AuthMethod, len(methods))
+	copy(out, methods)
+	return out
+}
+
+func allowedAuthMethodIDs(methods []AuthMethod) []string {
+	out := make([]string, 0, len(methods))
+	for _, method := range methods {
+		id := strings.TrimSpace(method.ID)
+		if id == "" {
+			id = strings.TrimSpace(method.Type)
+		}
+		if id == "" {
+			continue
+		}
+		out = append(out, id)
+	}
+	return out
+}
+
+func containsString(values []string, target string) bool {
+	target = strings.TrimSpace(target)
+	for _, value := range values {
+		if strings.TrimSpace(value) == target {
+			return true
+		}
+	}
+	return false
+}
+
+func planEntriesFromTurnPlan(steps []codex.TurnPlanStep) []PlanEntry {
+	entries := make([]PlanEntry, 0, len(steps))
+	for _, step := range steps {
+		content := strings.TrimSpace(step.Step)
+		if content == "" {
+			continue
+		}
+		entries = append(entries, PlanEntry{
+			Content:  content,
+			Priority: "medium",
+			Status:   normalizeACPPlanStatus(step.Status),
+		})
+	}
+	if len(entries) == 0 {
+		return []PlanEntry{}
+	}
+	return entries
+}
+
+func normalizeACPPlanStatus(status string) string {
+	switch strings.TrimSpace(status) {
+	case "completed":
+		return "completed"
+	case "inProgress", "in_progress":
+		return "in_progress"
+	default:
+		return "pending"
+	}
+}
+
+func isPlanItemType(itemType string) bool {
+	return strings.EqualFold(strings.TrimSpace(itemType), sessionItemTypePlan)
+}
+
+func (t *turnLifecycle) rememberFallbackPlanItem(itemID string) {
+	itemID = strings.TrimSpace(itemID)
+	if itemID == "" {
+		return
+	}
+	if t.fallbackPlanItemText == nil {
+		t.fallbackPlanItemText = make(map[string]string)
+	}
+	if _, ok := t.fallbackPlanItemText[itemID]; ok {
+		return
+	}
+	t.fallbackPlanItemText[itemID] = ""
+	t.fallbackPlanItemOrder = append(t.fallbackPlanItemOrder, itemID)
+}
+
+func (t *turnLifecycle) appendFallbackPlanDelta(itemID string, delta string) {
+	itemID = strings.TrimSpace(itemID)
+	if itemID == "" || delta == "" {
+		return
+	}
+	t.rememberFallbackPlanItem(itemID)
+	t.fallbackPlanItemText[itemID] += delta
+}
+
+func (t *turnLifecycle) setFallbackPlanText(itemID string, text string) {
+	itemID = strings.TrimSpace(itemID)
+	if itemID == "" {
+		return
+	}
+	t.rememberFallbackPlanItem(itemID)
+	t.fallbackPlanItemText[itemID] = text
+}
+
+func (t *turnLifecycle) fallbackPlanEntries() []PlanEntry {
+	if len(t.fallbackPlanItemOrder) == 0 {
+		return nil
+	}
+	entries := make([]PlanEntry, 0, len(t.fallbackPlanItemOrder))
+	for _, itemID := range t.fallbackPlanItemOrder {
+		content := strings.TrimSpace(t.fallbackPlanItemText[itemID])
+		if content == "" {
+			continue
+		}
+		entries = append(entries, PlanEntry{
+			Content:  content,
+			Priority: "medium",
+			Status:   "pending",
+		})
+	}
+	if len(entries) == 0 {
+		return nil
+	}
+	return entries
+}
+
+func (s *Server) attachSessionTodos(update SessionUpdateParams) SessionUpdateParams {
+	if update.SessionID == "" {
+		return update
+	}
+	if len(update.Todo) > 0 {
+		s.sessionTodosMu.Lock()
+		s.sessionTodos[update.SessionID] = cloneTodoItems(update.Todo)
+		s.sessionTodosMu.Unlock()
+		return update
+	}
+	return update
+}
+
+func (s *Server) clearTurnTodosOnFailure(sessionID string, stopReason string) {
+	if sessionID == "" {
+		return
+	}
+	if stopReason == "end_turn" {
+		return
+	}
+	s.sessionTodosMu.Lock()
+	delete(s.sessionTodos, sessionID)
+	s.sessionTodosMu.Unlock()
+}
+
+func (s *Server) currentAuthMode() string {
+	s.authMu.Lock()
+	defer s.authMu.Unlock()
+	if !s.authLoggedIn {
+		return ""
+	}
+	return s.authMode
+}
+
+func (s *Server) sessionAvailableCommands() []AvailableCommand {
+	s.authMu.Lock()
+	authenticated := s.authLoggedIn
+	s.authMu.Unlock()
+
+	commands := cloneAvailableCommands(s.options.AvailableCommands)
+	if authenticated {
+		return commands
+	}
+	return filterAvailableCommands(commands, "logout")
+}
+
+func (s *Server) emitAvailableCommandUpdate(sessionID string) {
+	sessionID = strings.TrimSpace(sessionID)
+	if sessionID == "" {
+		return
+	}
+	s.emitUpdates([]SessionUpdateParams{
+		{
+			SessionID:         sessionID,
+			Type:              sessionUpdateTypeAvailableCommands,
+			AvailableCommands: s.sessionAvailableCommands(),
+		},
+	})
+}
+
+func (s *Server) emitAvailableCommandUpdates(sessionIDs []string) {
+	if len(sessionIDs) == 0 {
+		return
+	}
+	commands := s.sessionAvailableCommands()
+	seen := make(map[string]struct{}, len(sessionIDs))
+	updates := make([]SessionUpdateParams, 0, len(sessionIDs))
+	for _, rawSessionID := range sessionIDs {
+		sessionID := strings.TrimSpace(rawSessionID)
+		if sessionID == "" {
+			continue
+		}
+		if _, ok := seen[sessionID]; ok {
+			continue
+		}
+		seen[sessionID] = struct{}{}
+		updates = append(updates, SessionUpdateParams{
+			SessionID:         sessionID,
+			Type:              sessionUpdateTypeAvailableCommands,
+			AvailableCommands: commands,
+		})
+	}
+	s.emitUpdates(updates)
+}
+
+func filterAvailableCommands(commands []AvailableCommand, names ...string) []AvailableCommand {
+	if len(commands) == 0 || len(names) == 0 {
+		return nil
+	}
+	allowed := make(map[string]struct{}, len(names))
+	for _, name := range names {
+		trimmed := strings.TrimSpace(name)
+		if trimmed == "" {
+			continue
+		}
+		allowed[trimmed] = struct{}{}
+	}
+	filtered := make([]AvailableCommand, 0, len(commands))
+	for _, command := range commands {
+		if _, ok := allowed[command.Name]; !ok {
+			continue
+		}
+		filtered = append(filtered, command)
+	}
+	return filtered
+}
+
+func (s *Server) requireAuth(id json.RawMessage, method string) bool {
+	s.authMu.Lock()
+	authenticated := s.authLoggedIn
+	mode := s.authMode
+	if mode == "" {
+		mode = s.lastAuthMode
+	}
+	s.authMu.Unlock()
+	if authenticated {
+		return true
+	}
+
+	hint, command := authRecoveryHint(mode)
+	s.writeInternalError(id, method+" requires authentication", map[string]any{
+		"hint":            hint,
+		"mode":            mode,
+		"nextStepCommand": command,
+	})
+	return false
+}
+
+func (s *Server) markLoggedOut() string {
+	s.authMu.Lock()
+	previousMode := s.authMode
+	if previousMode == "" {
+		previousMode = s.lastAuthMode
+	}
+	if previousMode != "" {
+		s.lastAuthMode = previousMode
+	}
+	s.authLoggedIn = false
+	s.authMode = ""
+	s.authMu.Unlock()
+	return previousMode
+}
+
+func authRecoveryHint(mode string) (string, string) {
+	switch strings.TrimSpace(strings.ToLower(mode)) {
+	case "codex_api_key":
+		return "set CODEX_API_KEY then restart the ACP agent process", `export CODEX_API_KEY="YOUR_CODEX_API_KEY" && unset OPENAI_API_KEY`
+	case "openai_api_key":
+		return "set OPENAI_API_KEY then restart the ACP agent process", `export OPENAI_API_KEY="YOUR_OPENAI_API_KEY" && unset CODEX_API_KEY`
+	case "chatgpt_subscription":
+		return "run codex login then restart the ACP agent process", "codex login"
+	case "pi":
+		return "configure Pi provider credentials or login state, then restart the ACP agent process", "pi --help"
+	default:
+		return "set CODEX_API_KEY or OPENAI_API_KEY, or run codex login; then restart the ACP agent process", `export CODEX_API_KEY="YOUR_CODEX_API_KEY"`
+	}
+}
+
+func logoutRecoveryInstructions(mode string) string {
+	switch strings.TrimSpace(strings.ToLower(mode)) {
+	case "codex_api_key":
+		return strings.Join([]string{
+			"logout completed; re-authentication required.",
+			"Next step (copy/paste):",
+			`export CODEX_API_KEY="YOUR_CODEX_API_KEY" && unset OPENAI_API_KEY`,
+			"Then restart the ACP agent process (or reopen the editor external agent session).",
+		}, "\n")
+	case "openai_api_key":
+		return strings.Join([]string{
+			"logout completed; re-authentication required.",
+			"Next step (copy/paste):",
+			`export OPENAI_API_KEY="YOUR_OPENAI_API_KEY" && unset CODEX_API_KEY`,
+			"Then restart the ACP agent process (or reopen the editor external agent session).",
+		}, "\n")
+	case "chatgpt_subscription":
+		return strings.Join([]string{
+			"logout completed; re-authentication required.",
+			"Next step (copy/paste):",
+			"codex login",
+			"Complete the browser login/local callback flow, then restart the ACP agent process.",
+		}, "\n")
+	case "pi":
+		return strings.Join([]string{
+			"logout completed; re-authentication required.",
+			"Next step:",
+			"Restore Pi provider credentials or login state, then restart the ACP agent process.",
+		}, "\n")
+	default:
+		return strings.Join([]string{
+			"logout completed; re-authentication required.",
+			"Choose one recovery path:",
+			`1) export CODEX_API_KEY="YOUR_CODEX_API_KEY" && unset OPENAI_API_KEY`,
+			`2) export OPENAI_API_KEY="YOUR_OPENAI_API_KEY" && unset CODEX_API_KEY`,
+			"3) codex login",
+			"After that, restart the ACP agent process.",
+		}, "\n")
+	}
+}
+
+func (s *Server) setSessionConfig(sessionID string, options runtimeOptions) {
+	s.sessionConfigMu.Lock()
+	s.sessionConfigs[sessionID] = options
+	s.sessionConfigMu.Unlock()
+}
+
+func (s *Server) getSessionConfig(sessionID string) runtimeOptions {
+	s.sessionConfigMu.Lock()
+	defer s.sessionConfigMu.Unlock()
+	return s.sessionConfigs[sessionID]
+}
+
+func (s *Server) setSessionConfigOptions(sessionID string, options []SessionConfig) {
+	s.sessionConfigOptionsMu.Lock()
+	s.sessionConfigOptions[sessionID] = cloneSessionConfigs(options)
+	s.sessionConfigOptionsMu.Unlock()
+}
+
+func (s *Server) getSessionConfigOptions(sessionID string) []SessionConfig {
+	s.sessionConfigOptionsMu.Lock()
+	defer s.sessionConfigOptionsMu.Unlock()
+	return cloneSessionConfigs(s.sessionConfigOptions[sessionID])
+}
+
+func (s *Server) setSessionCWD(sessionID string, cwd string) {
+	s.sessionCWDMu.Lock()
+	s.sessionCWD[sessionID] = strings.TrimSpace(cwd)
+	s.sessionCWDMu.Unlock()
+}
+
+func (s *Server) getSessionCWD(sessionID string) string {
+	s.sessionCWDMu.Lock()
+	defer s.sessionCWDMu.Unlock()
+	return s.sessionCWD[sessionID]
+}
+
+func cloneSessionConfigs(options []SessionConfig) []SessionConfig {
+	if len(options) == 0 {
+		return nil
+	}
+	out := make([]SessionConfig, len(options))
+	for i, option := range options {
+		out[i] = option
+		out[i].Options = cloneSessionConfigValues(option.Options)
+	}
+	return out
+}
+
+func cloneSessionConfigValues(values []SessionConfigValue) []SessionConfigValue {
+	if len(values) == 0 {
+		return nil
+	}
+	out := make([]SessionConfigValue, len(values))
+	copy(out, values)
+	return out
+}
+
+func (s *Server) buildSessionConfigOptions(ctx context.Context, current runtimeOptions) []SessionConfig {
+	type candidate struct {
+		value       string
+		name        string
+		description string
+		isDefault   bool
+	}
+
+	effortOptionsByModel := make(map[string][]SessionConfigValue)
+	defaultEffortByModel := make(map[string]string)
+	values := make([]candidate, 0, 16)
+	seen := make(map[string]struct{})
+	add := func(value string, name string, description string, isDefault bool) {
+		value = strings.TrimSpace(value)
+		if value == "" {
+			return
+		}
+		if _, ok := seen[value]; ok {
+			if isDefault {
+				for i := range values {
+					if values[i].value == value {
+						values[i].isDefault = true
+						break
+					}
+				}
+			}
+			return
+		}
+		seen[value] = struct{}{}
+		if strings.TrimSpace(name) == "" {
+			name = value
+		}
+		values = append(values, candidate{
+			value:       value,
+			name:        strings.TrimSpace(name),
+			description: strings.TrimSpace(description),
+			isDefault:   isDefault,
+		})
+	}
+
+	if models, err := s.app.ModelsList(ctx); err != nil {
+		s.logger.Warn("failed to load model list", slog.String("error", err.Error()))
+		if _, native := s.app.(appSessionConfiguration); native {
+			// Native capabilities are unavailable; never advertise a generic
+			// reasoning template as downstream-supported configuration.
+			return nil
+		}
+	} else {
+		for _, model := range models {
+			if model.Hidden {
+				continue
+			}
+			add(model.ID, model.Name, model.Description, model.IsDefault)
+
+			efforts := make([]SessionConfigValue, 0, len(model.SupportedReasoningEfforts))
+			effortSeen := make(map[string]struct{})
+			for _, effort := range model.SupportedReasoningEfforts {
+				value := strings.TrimSpace(effort.Value)
+				if value == "" {
+					continue
+				}
+				if _, ok := effortSeen[value]; ok {
+					continue
+				}
+				effortSeen[value] = struct{}{}
+				efforts = append(efforts, SessionConfigValue{
+					Value:       value,
+					Name:        thoughtLevelDisplayName(value),
+					Description: strings.TrimSpace(effort.Description),
+				})
+			}
+			if len(efforts) > 0 {
+				effortOptionsByModel[model.ID] = efforts
+			}
+			if value := strings.TrimSpace(model.DefaultReasoningEffort); value != "" {
+				defaultEffortByModel[model.ID] = value
+			}
+		}
+	}
+
+	for _, profile := range s.options.Profiles {
+		add(profile.Model, profile.Model, "from adapter profile", false)
+	}
+
+	selected := strings.TrimSpace(current.Model)
+	if selected == "" {
+		for _, value := range values {
+			if value.isDefault {
+				selected = value.value
+				break
+			}
+		}
+	}
+	if selected == "" && len(values) > 0 {
+		selected = values[0].value
+	}
+	if selected == "" {
+		return nil
+	}
+	add(selected, selected, "", false)
+
+	modelOptions := make([]SessionConfigValue, 0, len(values))
+	for _, value := range values {
+		modelOptions = append(modelOptions, SessionConfigValue{
+			Value:       value.value,
+			Name:        value.name,
+			Description: value.description,
+		})
+	}
+
+	configOptions := []SessionConfig{{
+		ID:           configIDModel,
+		Category:     "model",
+		Name:         "Model",
+		Description:  "Model used for this session",
+		Type:         "select",
+		CurrentValue: selected,
+		Options:      modelOptions,
+	}}
+
+	if _, native := s.app.(appSessionConfiguration); native && len(effortOptionsByModel[selected]) == 0 {
+		// Missing native metadata grants no alternate reasoning capability.
+		// Preserve only the value already observed on this native session.
+		observedEffort := strings.TrimSpace(current.ThoughtLevel)
+		if observedEffort == "" {
+			return nil
+		}
+		effortOptionsByModel[selected] = []SessionConfigValue{{Value: observedEffort, Name: thoughtLevelDisplayName(observedEffort), Description: "Observed native current value"}}
+		defaultEffortByModel[selected] = observedEffort
+	}
+	thoughtOption := buildThoughtLevelSessionConfig(
+		strings.TrimSpace(current.ThoughtLevel),
+		selected,
+		effortOptionsByModel,
+		defaultEffortByModel,
+	)
+	if thoughtOption.ID != "" {
+		configOptions = append(configOptions, thoughtOption)
+	}
+	return configOptions
+}
+
+func buildThoughtLevelSessionConfig(
+	currentThoughtLevel string,
+	selectedModel string,
+	effortOptionsByModel map[string][]SessionConfigValue,
+	defaultEffortByModel map[string]string,
+) SessionConfig {
+	options := cloneSessionConfigValues(effortOptionsByModel[selectedModel])
+	if len(options) == 0 {
+		options = defaultThoughtLevelOptions()
+	}
+
+	defaultEffort := strings.TrimSpace(defaultEffortByModel[selectedModel])
+	if defaultEffort != "" {
+		options = appendThoughtLevelIfMissing(options, defaultEffort, "model default reasoning effort")
+	}
+
+	selected := strings.TrimSpace(currentThoughtLevel)
+	if selected != "" && !sessionConfigValueExists(options, selected) {
+		selected = ""
+	}
+	if selected == "" {
+		selected = defaultEffort
+	}
+	if selected == "" && len(options) > 0 {
+		selected = strings.TrimSpace(options[0].Value)
+	}
+	if selected == "" {
+		return SessionConfig{}
+	}
+
+	return SessionConfig{
+		ID:           configIDThoughtLevel,
+		Category:     sessionConfigCategoryReasoning,
+		Name:         "Thought level",
+		Description:  "Reasoning effort used for this session",
+		Type:         "select",
+		CurrentValue: selected,
+		Options:      options,
+	}
+}
+
+func defaultThoughtLevelOptions() []SessionConfigValue {
+	values := []string{"none", "minimal", "low", "medium", "high", "xhigh"}
+	options := make([]SessionConfigValue, 0, len(values))
+	for _, value := range values {
+		options = append(options, SessionConfigValue{
+			Value: value,
+			Name:  thoughtLevelDisplayName(value),
+		})
+	}
+	return options
+}
+
+func appendThoughtLevelIfMissing(options []SessionConfigValue, value string, description string) []SessionConfigValue {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return options
+	}
+	for _, option := range options {
+		if strings.TrimSpace(option.Value) == value {
+			return options
+		}
+	}
+	return append(options, SessionConfigValue{
+		Value:       value,
+		Name:        thoughtLevelDisplayName(value),
+		Description: strings.TrimSpace(description),
+	})
+}
+
+func sessionConfigValueExists(options []SessionConfigValue, value string) bool {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return false
+	}
+	for _, option := range options {
+		if strings.TrimSpace(option.Value) == value {
+			return true
+		}
+	}
+	return false
+}
+
+func thoughtLevelDisplayName(value string) string {
+	switch strings.TrimSpace(value) {
+	case "none":
+		return "None"
+	case "minimal":
+		return "Minimal"
+	case "low":
+		return "Low"
+	case "medium":
+		return "Medium"
+	case "high":
+		return "High"
+	case "xhigh":
+		return "Extra High"
+	default:
+		return strings.TrimSpace(value)
+	}
+}
+
+func applyConfigOptionValue(options []SessionConfig, configID string, value string) ([]SessionConfig, bool) {
+	configs := cloneSessionConfigs(options)
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return configs, false
+	}
+
+	index := -1
+	for i := range configs {
+		if strings.TrimSpace(configs[i].ID) == configID {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		return configs, false
+	}
+
+	hasValue := false
+	for _, option := range configs[index].Options {
+		if strings.TrimSpace(option.Value) == value {
+			hasValue = true
+			break
+		}
+	}
+	if !hasValue {
+		return configs, false
+	}
+
+	configs[index].CurrentValue = value
+	return configs, true
+}
+
+func configOptionCurrentValue(options []SessionConfig, configID string) string {
+	for _, option := range options {
+		if strings.TrimSpace(option.ID) == configID {
+			return strings.TrimSpace(option.CurrentValue)
+		}
+	}
+	return ""
+}
+
+func (s *Server) resolveRuntimeOptions(requested runtimeOptions, base runtimeOptions) (runtimeOptions, error) {
+	resolved := base
+	if isRuntimeOptionsEmpty(resolved) && strings.TrimSpace(s.options.DefaultProfile) != "" {
+		profile, ok := s.options.Profiles[s.options.DefaultProfile]
+		if !ok {
+			return runtimeOptions{}, fmt.Errorf("default profile not found: %s", s.options.DefaultProfile)
+		}
+		resolved = runtimeOptions{
+			Profile:            s.options.DefaultProfile,
+			Model:              profile.Model,
+			ThoughtLevel:       profile.ThoughtLevel,
+			ApprovalPolicy:     profile.ApprovalPolicy,
+			Sandbox:            profile.Sandbox,
+			Personality:        profile.Personality,
+			SystemInstructions: profile.SystemInstructions,
+		}
+	}
+
+	if profileName := strings.TrimSpace(requested.Profile); profileName != "" {
+		profile, ok := s.options.Profiles[profileName]
+		if !ok {
+			return runtimeOptions{}, fmt.Errorf("profile not found: %s", profileName)
+		}
+		resolved = runtimeOptions{
+			Profile:            profileName,
+			Model:              profile.Model,
+			ThoughtLevel:       profile.ThoughtLevel,
+			ApprovalPolicy:     profile.ApprovalPolicy,
+			Sandbox:            profile.Sandbox,
+			Personality:        profile.Personality,
+			SystemInstructions: profile.SystemInstructions,
+		}
+	}
+
+	if value := strings.TrimSpace(requested.Model); value != "" {
+		resolved.Model = value
+	}
+	if value := strings.TrimSpace(requested.ThoughtLevel); value != "" {
+		resolved.ThoughtLevel = value
+	}
+	if value := strings.TrimSpace(requested.ApprovalPolicy); value != "" {
+		resolved.ApprovalPolicy = value
+	}
+	if value := strings.TrimSpace(requested.Sandbox); value != "" {
+		resolved.Sandbox = value
+	}
+	if value := strings.TrimSpace(requested.Personality); value != "" {
+		resolved.Personality = value
+	}
+	if value := strings.TrimSpace(requested.SystemInstructions); value != "" {
+		resolved.SystemInstructions = value
+	}
+	return resolved, nil
+}
+
+func isRuntimeOptionsEmpty(options runtimeOptions) bool {
+	return strings.TrimSpace(options.Profile) == "" &&
+		strings.TrimSpace(options.Model) == "" &&
+		strings.TrimSpace(options.ThoughtLevel) == "" &&
+		strings.TrimSpace(options.ApprovalPolicy) == "" &&
+		strings.TrimSpace(options.Sandbox) == "" &&
+		strings.TrimSpace(options.Personality) == "" &&
+		strings.TrimSpace(options.SystemInstructions) == ""
+}
+
+func toRunOptions(options runtimeOptions) codex.RunOptions {
+	return codex.RunOptions{
+		Model:              options.Model,
+		Effort:             options.ThoughtLevel,
+		ApprovalPolicy:     options.ApprovalPolicy,
+		Sandbox:            options.Sandbox,
+		Personality:        options.Personality,
+		SystemInstructions: options.SystemInstructions,
+	}
+}
+
+func parseSlashCommand(prompt string) (slashCommand, error) {
+	trimmed := strings.TrimSpace(prompt)
+	if trimmed == "" || !strings.HasPrefix(trimmed, "/") {
+		return slashCommand{kind: slashCommandNone}, nil
+	}
+
+	switch {
+	case trimmed == "/review" || strings.HasPrefix(trimmed, "/review "):
+		instructions := strings.TrimSpace(strings.TrimPrefix(trimmed, "/review"))
+		if instructions == "" {
+			instructions = "review workspace changes"
+		}
+		return slashCommand{
+			kind:               slashCommandReview,
+			reviewInstructions: instructions,
+		}, nil
+	case strings.HasPrefix(trimmed, "/review-branch"):
+		fields := strings.Fields(trimmed)
+		if len(fields) < 2 {
+			return slashCommand{}, fmt.Errorf("/review-branch requires <branch>")
+		}
+		return slashCommand{
+			kind:   slashCommandReviewBranch,
+			argOne: fields[1],
+		}, nil
+	case strings.HasPrefix(trimmed, "/review-commit"):
+		fields := strings.Fields(trimmed)
+		if len(fields) < 2 {
+			return slashCommand{}, fmt.Errorf("/review-commit requires <sha>")
+		}
+		return slashCommand{
+			kind:   slashCommandReviewCommit,
+			argOne: fields[1],
+		}, nil
+	case strings.HasPrefix(trimmed, "/init"):
+		tail := strings.TrimSpace(strings.TrimPrefix(trimmed, "/init"))
+		input := "approval file initialize workspace scaffold"
+		if tail != "" {
+			input = "approval file initialize workspace scaffold: " + tail
+		}
+		return slashCommand{
+			kind:      slashCommandInit,
+			turnInput: input,
+		}, nil
+	case trimmed == "/compact":
+		return slashCommand{kind: slashCommandCompact}, nil
+	case trimmed == "/logout":
+		return slashCommand{kind: slashCommandLogout}, nil
+	case strings.HasPrefix(trimmed, "/mcp"):
+		fields := strings.Fields(trimmed)
+		if len(fields) < 2 {
+			return slashCommand{}, fmt.Errorf("/mcp requires subcommand: list|call|oauth")
+		}
+		switch fields[1] {
+		case "list":
+			return slashCommand{kind: slashCommandMCPList}, nil
+		case "call":
+			if len(fields) < 4 {
+				return slashCommand{}, fmt.Errorf("/mcp call requires <server> <tool> [arguments]")
+			}
+			command := slashCommand{
+				kind:   slashCommandMCPCall,
+				argOne: fields[2],
+				argTwo: fields[3],
+			}
+			if len(fields) > 4 {
+				command.argTail = strings.Join(fields[4:], " ")
+			}
+			return command, nil
+		case "oauth", "login":
+			if len(fields) < 3 {
+				return slashCommand{}, fmt.Errorf("/mcp oauth requires <server>")
+			}
+			return slashCommand{
+				kind:   slashCommandMCPOAuth,
+				argOne: fields[2],
+			}, nil
+		default:
+			return slashCommand{}, fmt.Errorf("unsupported /mcp subcommand: %s", fields[1])
+		}
+	default:
+		// Unknown slash command is treated as normal prompt text.
+		return slashCommand{kind: slashCommandNone}, nil
+	}
+}
+
+func (s *Server) runInlineCommand(
+	ctx context.Context,
+	id json.RawMessage,
+	sessionID string,
+	turnPrefix string,
+	fn func(context.Context, *turnLifecycle) (string, error),
+) {
+	turnID := fmt.Sprintf("%s-%d", turnPrefix, atomic.AddUint64(&s.nextInlineID, 1))
+	turnCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	if _, err := s.sessions.BeginTurn(sessionID, turnID, cancel); err != nil {
+		s.writeInternalError(id, "begin turn failed", map[string]any{
+			"error":     err.Error(),
+			"sessionId": sessionID,
+			"turnId":    turnID,
+		})
+		return
+	}
+	defer s.sessions.EndTurn(sessionID, turnID)
+
+	lifecycle := newTurnLifecycle(sessionID, turnID)
+	s.emitUpdates(lifecycle.startedUpdate())
+
+	stopReason, err := fn(turnCtx, lifecycle)
+	if err != nil {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			lifecycle.phase = turnPhaseCancelled
+			s.emitUpdates(lifecycle.cancelledUpdate())
+			s.writePromptResult(id, "cancelled")
+			return
+		}
+		lifecycle.phase = turnPhaseError
+		s.emitUpdates([]SessionUpdateParams{
+			{
+				SessionID: sessionID,
+				TurnID:    turnID,
+				Type:      "status",
+				Phase:     string(lifecycle.phase),
+				Status:    "turn_error",
+				Message:   err.Error(),
+			},
+		})
+		s.writePromptResult(id, "error")
+		return
+	}
+
+	normalized := normalizeStopReason(stopReason)
+	switch normalized {
+	case "cancelled":
+		lifecycle.phase = turnPhaseCancelled
+		s.emitUpdates([]SessionUpdateParams{
+			{
+				SessionID: sessionID,
+				TurnID:    turnID,
+				Type:      "status",
+				Phase:     string(lifecycle.phase),
+				Status:    "turn_cancelled",
+			},
+		})
+	case "error":
+		lifecycle.phase = turnPhaseError
+		s.emitUpdates([]SessionUpdateParams{
+			{
+				SessionID: sessionID,
+				TurnID:    turnID,
+				Type:      "status",
+				Phase:     string(lifecycle.phase),
+				Status:    "turn_error",
+			},
+		})
+	default:
+		lifecycle.phase = turnPhaseCompleted
+		s.emitUpdates([]SessionUpdateParams{
+			{
+				SessionID: sessionID,
+				TurnID:    turnID,
+				Type:      "status",
+				Phase:     string(lifecycle.phase),
+				Status:    "turn_completed",
+			},
+		})
+	}
+	s.writePromptResult(id, normalized)
+}
+
+func (s *Server) handleLogoutSlash(ctx context.Context, id json.RawMessage, sessionID string) {
+	s.runInlineCommand(ctx, id, sessionID, "logout", func(turnCtx context.Context, lifecycle *turnLifecycle) (string, error) {
+		modeBeforeLogout := s.markLoggedOut()
+
+		logoutCtx, cancel := context.WithTimeout(turnCtx, 2*time.Second)
+		defer cancel()
+		if err := s.app.Logout(logoutCtx); err != nil {
+			s.logger.Warn("app-server logout failed; local auth still cleared", slog.String("error", err.Error()))
+		}
+		recovery := logoutRecoveryInstructions(modeBeforeLogout)
+
+		lifecycle.phase = turnPhaseStreaming
+		s.emitUpdates([]SessionUpdateParams{
+			{
+				SessionID: sessionID,
+				TurnID:    lifecycle.turnID,
+				Type:      "status",
+				Phase:     string(lifecycle.phase),
+				Status:    "auth_logged_out",
+				Message:   "logout completed; re-authentication required",
+			},
+			{
+				SessionID: sessionID,
+				TurnID:    lifecycle.turnID,
+				Type:      sessionUpdateTypeMessage,
+				Phase:     string(lifecycle.phase),
+				Delta:     recovery,
+			},
+		})
+		s.emitAvailableCommandUpdates(s.sessions.SessionIDs())
+		return "end_turn", nil
+	})
+}
+
+func (s *Server) handleMCPListSlash(ctx context.Context, id json.RawMessage, sessionID string) {
+	s.runInlineCommand(ctx, id, sessionID, "mcp-list", func(turnCtx context.Context, lifecycle *turnLifecycle) (string, error) {
+		servers, err := s.app.MCPServersList(turnCtx)
+		if err != nil {
+			return "error", fmt.Errorf("mcpServer/list failed: %w", err)
+		}
+
+		message := "no MCP servers reported"
+		if len(servers) > 0 {
+			parts := make([]string, 0, len(servers))
+			for _, server := range servers {
+				parts = append(parts, fmt.Sprintf("%s(oauth=%t tools=%s)", server.Name, server.OAuthRequired, strings.Join(server.Tools, ",")))
+			}
+			message = "mcp servers: " + strings.Join(parts, "; ")
+		}
+
+		lifecycle.phase = turnPhaseStreaming
+		s.emitUpdates([]SessionUpdateParams{
+			{
+				SessionID: sessionID,
+				TurnID:    lifecycle.turnID,
+				Type:      sessionUpdateTypeMessage,
+				Phase:     string(lifecycle.phase),
+				Delta:     message,
+			},
+		})
+		return "end_turn", nil
+	})
+}
+
+func (s *Server) handleMCPOAuthSlash(
+	ctx context.Context,
+	id json.RawMessage,
+	sessionID string,
+	command slashCommand,
+) {
+	s.runInlineCommand(ctx, id, sessionID, "mcp-oauth", func(turnCtx context.Context, lifecycle *turnLifecycle) (string, error) {
+		result, err := s.app.MCPOAuthLogin(turnCtx, command.argOne)
+		if err != nil {
+			return "error", fmt.Errorf("mcpServer/oauth/login failed: %w", err)
+		}
+
+		message := fmt.Sprintf(
+			"mcp oauth server=%s status=%s url=%s %s",
+			command.argOne,
+			result.Status,
+			result.URL,
+			result.Message,
+		)
+
+		lifecycle.phase = turnPhaseStreaming
+		s.emitUpdates([]SessionUpdateParams{
+			{
+				SessionID: sessionID,
+				TurnID:    lifecycle.turnID,
+				Type:      sessionUpdateTypeMessage,
+				Phase:     string(lifecycle.phase),
+				Delta:     strings.TrimSpace(message),
+			},
+		})
+		return "end_turn", nil
+	})
+}
+
+func (s *Server) handleMCPCallSlash(
+	ctx context.Context,
+	id json.RawMessage,
+	sessionID string,
+	command slashCommand,
+) {
+	s.runInlineCommand(ctx, id, sessionID, "mcp-call", func(turnCtx context.Context, lifecycle *turnLifecycle) (string, error) {
+		toolCallID := fmt.Sprintf("mcp-tool-%d", atomic.AddUint64(&s.nextInlineID, 1))
+		approval := codex.ApprovalRequest{
+			TurnID:     lifecycle.turnID,
+			ToolCallID: toolCallID,
+			Kind:       codex.ApprovalKindMCP,
+			MCPServer:  command.argOne,
+			MCPTool:    command.argTwo,
+			Message:    "permission required before MCP side effect call",
+		}
+		event := codex.TurnEvent{Approval: approval}
+		s.emitUpdates(lifecycle.toolCallInProgressUpdates(event))
+
+		decision, err := s.requestPermission(turnCtx, sessionID, lifecycle.turnID, approval)
+		if err != nil {
+			s.logger.Warn(
+				"session/request_permission failed for mcp call; default deny",
+				slog.String("sessionId", sessionID),
+				slog.String("turnId", lifecycle.turnID),
+				slog.String("error", err.Error()),
+			)
+			decision = permissionOutcomeCancelled
+		}
+
+		toolStatus := "failed"
+		toolMessage := permissionOutcomeMessage(decision)
+		if permissionOutcomeAllowsExecution(decision) {
+			result, callErr := s.app.MCPToolCall(turnCtx, codex.MCPToolCallParams{
+				Server:    command.argOne,
+				Tool:      command.argTwo,
+				Arguments: command.argTail,
+			})
+			if callErr != nil {
+				toolMessage = fmt.Sprintf("mcp call failed: %v", callErr)
+			} else {
+				content := toolCallContentFromBlocks(mcpResultContentBlocks(result))
+				toolStatus = "completed"
+				toolMessage = "mcp call completed"
+				lifecycle.phase = turnPhaseStreaming
+				if text := mcpResultMessageText(result); text != "" {
+					s.emitUpdates([]SessionUpdateParams{
+						{
+							SessionID: sessionID,
+							TurnID:    lifecycle.turnID,
+							Type:      sessionUpdateTypeMessage,
+							Phase:     string(lifecycle.phase),
+							Delta:     text,
+							Content:   textPromptContentBlock(text),
+						},
+					})
+				}
+				s.emitUpdates([]SessionUpdateParams{
+					lifecycle.toolCallOutcomeUpdate(
+						event,
+						decision,
+						toolStatus,
+						toolMessage,
+						content,
+					),
+				})
+				return "end_turn", nil
+			}
+		}
+
+		s.emitUpdates([]SessionUpdateParams{
+			lifecycle.toolCallOutcomeUpdate(
+				event,
+				decision,
+				toolStatus,
+				toolMessage,
+				nil,
+			),
+		})
+		return "end_turn", nil
+	})
+}
+
+func normalizeStopReason(reason string) string {
+	switch reason {
+	case "cancelled":
+		return "cancelled"
+	case "error":
+		return "error"
+	default:
+		return "end_turn"
+	}
+}
+
+func normalizePatchApplyMode(raw string) patchApplyMode {
+	switch strings.TrimSpace(strings.ToLower(raw)) {
+	case string(patchApplyModeACPFS):
+		return patchApplyModeACPFS
+	case string(patchApplyModeAppServer):
+		return patchApplyModeAppServer
+	default:
+		return ""
+	}
+}
+
+func newTurnLifecycle(sessionID, turnID string) *turnLifecycle {
+	return &turnLifecycle{
+		sessionID: sessionID,
+		turnID:    turnID,
+		phase:     turnPhaseStarted,
+	}
+}
+
+func (t *turnLifecycle) resetForRetry() {
+	t.phase = turnPhaseStarted
+	t.lastUsage = nil
+	t.lastFailure = ""
+	t.messageBuffer.Reset()
+	t.toolCallStatus = nil
+	t.commandToolCalls = nil
+	t.diffToolCallID = ""
+	t.diffToolCallContent = nil
+}
+
+func (t *turnLifecycle) startedUpdate() []SessionUpdateParams {
+	return []SessionUpdateParams{
+		{
+			SessionID: t.sessionID,
+			TurnID:    t.turnID,
+			Type:      "status",
+			Phase:     string(t.phase),
+			Status:    "turn_started",
+		},
+	}
+}
+
+func (t *turnLifecycle) cancelledUpdate() []SessionUpdateParams {
+	t.phase = turnPhaseCancelled
+	return []SessionUpdateParams{
+		{
+			SessionID: t.sessionID,
+			TurnID:    t.turnID,
+			Type:      "status",
+			Phase:     string(t.phase),
+			Status:    "turn_cancelled",
+		},
+	}
+}
+
+// earnedTerminalUpdate closes a turn whose cancellation lost to the state the backend really reached.
+func (t *turnLifecycle) earnedTerminalUpdate() []SessionUpdateParams {
+	t.phase = turnPhaseCompleted
+	return []SessionUpdateParams{
+		{
+			SessionID: t.sessionID,
+			TurnID:    t.turnID,
+			Type:      "status",
+			Phase:     string(t.phase),
+			Status:    "turn_completed",
+		},
+	}
+}
+
+func (t *turnLifecycle) toolCallInProgressUpdates(event codex.TurnEvent) []SessionUpdateParams {
+	t.rememberToolCallStatus(event.Approval.ToolCallID, "in_progress")
+	t.phase = turnPhaseStreaming
+	return []SessionUpdateParams{
+		{
+			SessionID:  t.sessionID,
+			TurnID:     t.turnID,
+			Type:       sessionUpdateTypeToolCall,
+			Phase:      string(t.phase),
+			Status:     "in_progress",
+			ToolCallID: event.Approval.ToolCallID,
+			Approval:   string(event.Approval.Kind),
+			Message:    event.Approval.Message,
+		},
+	}
+}
+
+func (t *turnLifecycle) toolCallOutcomeUpdate(
+	event codex.TurnEvent,
+	outcome permissionOutcome,
+	status string,
+	message string,
+	content []ToolCallContentItem,
+) SessionUpdateParams {
+	t.rememberToolCallStatus(event.Approval.ToolCallID, status)
+	return SessionUpdateParams{
+		SessionID:          t.sessionID,
+		TurnID:             t.turnID,
+		Type:               sessionUpdateTypeToolCall,
+		Phase:              string(t.phase),
+		Status:             status,
+		ToolCallID:         event.Approval.ToolCallID,
+		Approval:           string(event.Approval.Kind),
+		PermissionDecision: string(outcome),
+		Message:            message,
+		Delta:              textFromToolCallContent(content),
+		ToolCallContent:    cloneToolCallContentOrEmpty(content),
+	}
+}
+
+func (t *turnLifecycle) diffToolCallIdentifier() string {
+	if t.diffToolCallID == "" {
+		t.diffToolCallID = "turn-diff-" + strings.TrimSpace(t.turnID)
+	}
+	return t.diffToolCallID
+}
+
+func (t *turnLifecycle) diffInProgressUpdate(content []ToolCallContentItem) SessionUpdateParams {
+	t.phase = turnPhaseStreaming
+	t.rememberToolCallStatus(t.diffToolCallIdentifier(), "in_progress")
+	t.diffToolCallContent = cloneToolCallContentOrEmpty(content)
+	return SessionUpdateParams{
+		SessionID:       t.sessionID,
+		TurnID:          t.turnID,
+		Type:            sessionUpdateTypeToolCall,
+		Phase:           string(t.phase),
+		ItemType:        "turn_diff",
+		Status:          "in_progress",
+		ToolCallID:      t.diffToolCallIdentifier(),
+		Approval:        string(codex.ApprovalKindFile),
+		Delta:           textFromToolCallContent(content),
+		Message:         "turn diff",
+		ToolCallContent: cloneToolCallContentOrEmpty(content),
+	}
+}
+
+func (t *turnLifecycle) diffTerminalUpdate(status string, message string) (SessionUpdateParams, bool) {
+	if len(t.diffToolCallContent) == 0 {
+		return SessionUpdateParams{}, false
+	}
+	t.rememberToolCallStatus(t.diffToolCallIdentifier(), status)
+	return SessionUpdateParams{
+		SessionID:       t.sessionID,
+		TurnID:          t.turnID,
+		Type:            sessionUpdateTypeToolCall,
+		Phase:           string(t.phase),
+		ItemType:        "turn_diff",
+		Status:          status,
+		ToolCallID:      t.diffToolCallIdentifier(),
+		Approval:        string(codex.ApprovalKindFile),
+		Delta:           textFromToolCallContent(t.diffToolCallContent),
+		Message:         message,
+		ToolCallContent: cloneToolCallContentOrEmpty(t.diffToolCallContent),
+	}, true
+}
+
+func (t *turnLifecycle) apply(event codex.TurnEvent) ([]SessionUpdateParams, bool, string) {
+	switch event.Type {
+	case codex.TurnEventTypeStarted:
+		t.phase = turnPhaseStarted
+		return []SessionUpdateParams{
+			{
+				SessionID: t.sessionID,
+				TurnID:    t.turnID,
+				Type:      "status",
+				Phase:     string(t.phase),
+				Status:    "turn_started",
+			},
+		}, false, ""
+	case codex.TurnEventTypeUpdate, codex.TurnEventTypeAgentMessageDelta:
+		t.phase = turnPhaseStreaming
+		t.messageBuffer.WriteString(event.Delta)
+		update := SessionUpdateParams{
+			SessionID: t.sessionID,
+			TurnID:    t.turnID,
+			Type:      sessionUpdateTypeMessage,
+			Phase:     string(t.phase),
+			ItemID:    event.ItemID,
+			Delta:     event.Delta,
+		}
+		if todos := parseMarkdownTodoItems(t.messageBuffer.String()); len(todos) > 0 {
+			update.Todo = todos
+		}
+		return []SessionUpdateParams{update}, false, ""
+	case codex.TurnEventTypePlanUpdated:
+		t.phase = turnPhaseStreaming
+		t.hasAuthoritativePlan = true
+		return []SessionUpdateParams{
+			{
+				SessionID: t.sessionID,
+				TurnID:    t.turnID,
+				Type:      sessionUpdateTypePlan,
+				Phase:     string(t.phase),
+				Message:   event.Message,
+				Plan:      planEntriesFromTurnPlan(event.Plan),
+			},
+		}, false, ""
+	case codex.TurnEventTypeTokenUsageUpdated:
+		t.phase = turnPhaseStreaming
+		if event.TokenUsage == nil {
+			return nil, false, ""
+		}
+		t.lastUsage = promptUsageFromTokenUsage(event.TokenUsage)
+		return []SessionUpdateParams{
+			{
+				SessionID: t.sessionID,
+				TurnID:    t.turnID,
+				Type:      sessionUpdateTypeUsage,
+				Phase:     string(t.phase),
+				Used:      usageUpdateUsedTokens(event.TokenUsage),
+				Size:      cloneOptionalInt64(event.TokenUsage.ModelContextWindow),
+			},
+		}, false, ""
+	case codex.TurnEventTypeReasoningDelta:
+		t.phase = turnPhaseStreaming
+		return []SessionUpdateParams{
+			{
+				SessionID: t.sessionID,
+				TurnID:    t.turnID,
+				Type:      sessionUpdateTypeReasoning,
+				Phase:     string(t.phase),
+				ItemID:    event.ItemID,
+				ItemType:  event.ItemType,
+				Delta:     event.Delta,
+			},
+		}, false, ""
+	case codex.TurnEventTypePlanDelta:
+		t.phase = turnPhaseStreaming
+		t.appendFallbackPlanDelta(event.ItemID, event.Delta)
+		if t.hasAuthoritativePlan {
+			return nil, false, ""
+		}
+		entries := t.fallbackPlanEntries()
+		if len(entries) == 0 {
+			return nil, false, ""
+		}
+		return []SessionUpdateParams{
+			{
+				SessionID: t.sessionID,
+				TurnID:    t.turnID,
+				Type:      sessionUpdateTypePlan,
+				Phase:     string(t.phase),
+				ItemID:    event.ItemID,
+				Plan:      entries,
+			},
+		}, false, ""
+	case codex.TurnEventTypeCommandExecutionDelta:
+		t.phase = turnPhaseStreaming
+		if update, ok := t.commandExecutionDeltaToolCallUpdate(event); ok {
+			return []SessionUpdateParams{update}, false, ""
+		}
+		return nil, false, ""
+	case codex.TurnEventTypeItemStarted:
+		t.phase = turnPhaseStreaming
+		if update, ok := t.runtimeToolCallUpdate(event); ok {
+			return []SessionUpdateParams{update}, false, ""
+		}
+		if isPlanItemType(event.ItemType) {
+			t.rememberFallbackPlanItem(event.ItemID)
+			if !t.hasAuthoritativePlan && strings.TrimSpace(event.ItemText) != "" {
+				t.setFallbackPlanText(event.ItemID, strings.TrimSpace(event.ItemText))
+				if entries := t.fallbackPlanEntries(); len(entries) > 0 {
+					return []SessionUpdateParams{
+						{
+							SessionID: t.sessionID,
+							TurnID:    t.turnID,
+							Type:      sessionUpdateTypePlan,
+							Phase:     string(t.phase),
+							ItemID:    event.ItemID,
+							Plan:      entries,
+						},
+						{
+							SessionID: t.sessionID,
+							TurnID:    t.turnID,
+							Type:      "status",
+							Phase:     string(t.phase),
+							ItemID:    event.ItemID,
+							ItemType:  event.ItemType,
+							Status:    "item_started",
+						},
+					}, false, ""
+				}
+			}
+		}
+		return []SessionUpdateParams{
+			{
+				SessionID: t.sessionID,
+				TurnID:    t.turnID,
+				Type:      "status",
+				Phase:     string(t.phase),
+				ItemID:    event.ItemID,
+				ItemType:  event.ItemType,
+				Status:    "item_started",
+			},
+		}, false, ""
+	case codex.TurnEventTypeItemCompleted:
+		t.phase = turnPhaseStreaming
+		if update, ok := t.runtimeToolCallUpdate(event); ok {
+			return []SessionUpdateParams{update}, false, ""
+		}
+		statusUpdate := SessionUpdateParams{
+			SessionID: t.sessionID,
+			TurnID:    t.turnID,
+			Type:      "status",
+			Phase:     string(t.phase),
+			ItemID:    event.ItemID,
+			ItemType:  event.ItemType,
+			Status:    "item_completed",
+		}
+		if isPlanItemType(event.ItemType) {
+			text := strings.TrimSpace(event.ItemText)
+			if text != "" {
+				t.setFallbackPlanText(event.ItemID, text)
+			}
+			if !t.hasAuthoritativePlan {
+				if entries := t.fallbackPlanEntries(); len(entries) > 0 {
+					return []SessionUpdateParams{
+						{
+							SessionID: t.sessionID,
+							TurnID:    t.turnID,
+							Type:      sessionUpdateTypePlan,
+							Phase:     string(t.phase),
+							ItemID:    event.ItemID,
+							Plan:      entries,
+						},
+						statusUpdate,
+					}, false, ""
+				}
+			}
+		}
+		return []SessionUpdateParams{
+			statusUpdate,
+		}, false, ""
+	case codex.TurnEventTypeReviewModeEntered:
+		t.phase = turnPhaseStreaming
+		return []SessionUpdateParams{
+			{
+				SessionID: t.sessionID,
+				TurnID:    t.turnID,
+				Type:      "status",
+				Phase:     string(t.phase),
+				Status:    "review_mode_entered",
+			},
+		}, false, ""
+	case codex.TurnEventTypeReviewModeExited:
+		t.phase = turnPhaseStreaming
+		return []SessionUpdateParams{
+			{
+				SessionID: t.sessionID,
+				TurnID:    t.turnID,
+				Type:      "status",
+				Phase:     string(t.phase),
+				Status:    "review_mode_exited",
+			},
+		}, false, ""
+	case codex.TurnEventTypeBackendError:
+		t.phase = turnPhaseStreaming
+		status := "backend_error"
+		if event.WillRetry {
+			status = "backend_error_retrying"
+		}
+		return []SessionUpdateParams{
+			{
+				SessionID: t.sessionID,
+				TurnID:    t.turnID,
+				Type:      "status",
+				Phase:     string(t.phase),
+				Status:    status,
+				Message:   event.Message,
+			},
+		}, false, ""
+	case codex.TurnEventTypeCompleted:
+		// The backend's own reason is what a completed turn reports, even for a turn the client asked
+		// to cancel: a cancelled turn ends through the cancellation path, which decides its reply from
+		// the terminal evidence instead of overwriting it here.
+		stopReason := normalizeStopReason(event.StopReason)
+		switch stopReason {
+		case "cancelled":
+			t.phase = turnPhaseCancelled
+		case "error":
+			t.phase = turnPhaseError
+			t.lastFailure = event.Message
+		default:
+			t.phase = turnPhaseCompleted
+		}
+		updates := make([]SessionUpdateParams, 0, 2)
+		diffStatus := "completed"
+		diffMessage := "turn diff"
+		if stopReason != "end_turn" {
+			diffStatus = "failed"
+			diffMessage = "turn diff incomplete"
+		}
+		if diffUpdate, ok := t.diffTerminalUpdate(diffStatus, diffMessage); ok {
+			updates = append(updates, diffUpdate)
+		}
+		status := "turn_completed"
+		message := ""
+		if stopReason == "error" {
+			status = "turn_error"
+			message = event.Message
+		}
+		updates = append(updates, SessionUpdateParams{
+			SessionID: t.sessionID,
+			TurnID:    t.turnID,
+			Type:      "status",
+			Phase:     string(t.phase),
+			Status:    status,
+			Message:   message,
+		})
+		return updates, true, stopReason
+	case codex.TurnEventTypeError:
+		t.phase = turnPhaseError
+		t.lastFailure = event.Message
+		return []SessionUpdateParams{
+			{
+				SessionID: t.sessionID,
+				TurnID:    t.turnID,
+				Type:      "status",
+				Phase:     string(t.phase),
+				Status:    "turn_error",
+				Message:   event.Message,
+			},
+		}, true, "error"
+	default:
+		return nil, false, ""
+	}
+}
+
+func (t *turnLifecycle) runtimeToolCallUpdate(event codex.TurnEvent) (SessionUpdateParams, bool) {
+	if update, ok := t.commandExecutionToolCallUpdate(event); ok {
+		return update, true
+	}
+	if update, ok := t.toolExecutionToolCallUpdate(event); ok {
+		return update, true
+	}
+	return SessionUpdateParams{}, false
+}
+
+func (t *turnLifecycle) commandExecutionToolCallUpdate(event codex.TurnEvent) (SessionUpdateParams, bool) {
+	if !strings.EqualFold(strings.TrimSpace(event.ItemType), "commandExecution") || event.Command == nil {
+		return SessionUpdateParams{}, false
+	}
+
+	toolCallID := strings.TrimSpace(event.ItemID)
+	if toolCallID == "" {
+		toolCallID = strings.TrimSpace(event.Command.ID)
+	}
+	if toolCallID == "" {
+		return SessionUpdateParams{}, false
+	}
+	t.rememberCommandToolCall(toolCallID, event.Command)
+
+	status := commandExecutionACPStatus(event)
+	if status == "" || !t.shouldEmitRuntimeToolCallStatus(toolCallID, status) {
+		return SessionUpdateParams{}, false
+	}
+
+	return SessionUpdateParams{
+		SessionID:  t.sessionID,
+		TurnID:     t.turnID,
+		Type:       sessionUpdateTypeToolCall,
+		Phase:      string(t.phase),
+		ItemID:     event.ItemID,
+		ItemType:   event.ItemType,
+		Status:     status,
+		ToolCallID: toolCallID,
+		Approval:   string(codex.ApprovalKindCommand),
+		Delta:      commandExecutionContent(event.Command, status),
+		Message:    commandExecutionTitle(event.Command, status),
+	}, true
+}
+
+func (t *turnLifecycle) toolExecutionToolCallUpdate(event codex.TurnEvent) (SessionUpdateParams, bool) {
+	if event.Tool == nil {
+		return SessionUpdateParams{}, false
+	}
+
+	toolCallID := strings.TrimSpace(event.ItemID)
+	if toolCallID == "" {
+		toolCallID = strings.TrimSpace(event.Tool.ID)
+	}
+	if toolCallID == "" {
+		return SessionUpdateParams{}, false
+	}
+
+	status := toolExecutionACPStatus(event)
+	if status == "" || !t.shouldEmitRuntimeToolCallStatus(toolCallID, status) {
+		return SessionUpdateParams{}, false
+	}
+
+	blocks := toolExecutionContentBlocks(event.Tool)
+	return SessionUpdateParams{
+		SessionID:       t.sessionID,
+		TurnID:          t.turnID,
+		Type:            sessionUpdateTypeToolCall,
+		Phase:           string(t.phase),
+		ItemID:          event.ItemID,
+		ItemType:        event.ItemType,
+		Status:          status,
+		ToolCallID:      toolCallID,
+		Delta:           textFromContentBlocks(blocks),
+		Message:         toolExecutionTitle(event.Tool, status),
+		ToolCallContent: toolCallContentFromBlocks(blocks),
+	}, true
+}
+
+func (t *turnLifecycle) commandExecutionDeltaToolCallUpdate(event codex.TurnEvent) (SessionUpdateParams, bool) {
+	if !strings.EqualFold(strings.TrimSpace(event.ItemType), "commandExecution") {
+		return SessionUpdateParams{}, false
+	}
+	toolCallID := strings.TrimSpace(event.ItemID)
+	if toolCallID == "" || t.isTerminalToolCall(toolCallID) {
+		return SessionUpdateParams{}, false
+	}
+	content := toolCallContentText(event.Delta)
+	if content == "" {
+		return SessionUpdateParams{}, false
+	}
+
+	command := t.commandToolCall(toolCallID)
+	message := "command"
+	if command != nil {
+		message = commandExecutionTitle(command, "in_progress")
+	}
+
+	return SessionUpdateParams{
+		SessionID:  t.sessionID,
+		TurnID:     t.turnID,
+		Type:       sessionUpdateTypeToolCall,
+		Phase:      string(t.phase),
+		ItemID:     event.ItemID,
+		ItemType:   event.ItemType,
+		Status:     "in_progress",
+		ToolCallID: toolCallID,
+		Approval:   string(codex.ApprovalKindCommand),
+		Delta:      content,
+		Message:    message,
+	}, true
+}
+
+func (t *turnLifecycle) rememberToolCallStatus(toolCallID string, status string) {
+	toolCallID = strings.TrimSpace(toolCallID)
+	status = strings.TrimSpace(status)
+	if toolCallID == "" || status == "" {
+		return
+	}
+	if t.toolCallStatus == nil {
+		t.toolCallStatus = make(map[string]string)
+	}
+	t.toolCallStatus[toolCallID] = status
+}
+
+func (t *turnLifecycle) shouldEmitRuntimeToolCallStatus(toolCallID string, status string) bool {
+	toolCallID = strings.TrimSpace(toolCallID)
+	status = strings.TrimSpace(status)
+	if toolCallID == "" || status == "" {
+		return false
+	}
+	if t.toolCallStatus == nil {
+		t.toolCallStatus = make(map[string]string)
+	}
+	prev := strings.TrimSpace(t.toolCallStatus[toolCallID])
+	switch {
+	case prev == "":
+		t.toolCallStatus[toolCallID] = status
+		return true
+	case prev == status:
+		return false
+	case prev == "completed", prev == "failed":
+		return false
+	default:
+		t.toolCallStatus[toolCallID] = status
+		return true
+	}
+}
+
+func int64Ptr(value int64) *int64 {
+	cloned := value
+	return &cloned
+}
+
+func cloneOptionalInt64(value *int64) *int64 {
+	if value == nil {
+		return nil
+	}
+	cloned := *value
+	return &cloned
+}
+
+func usageUpdateUsedTokens(value *codex.ThreadTokenUsage) *int64 {
+	if value == nil {
+		return nil
+	}
+	// Codex reports `total` as thread-lifetime token usage. ACP `usage_update.used`
+	// is intended to approximate current context-window occupancy, so the latest
+	// request's input token count is the closest downstream signal we have today.
+	return int64Ptr(value.Last.InputTokens)
+}
+
+func promptUsageFromTokenUsage(value *codex.ThreadTokenUsage) *promptUsageSnapshot {
+	if value == nil {
+		return nil
+	}
+	return &promptUsageSnapshot{
+		Used: usageUpdateUsedTokens(value),
+		Size: cloneOptionalInt64(value.ModelContextWindow),
+	}
+}
+
+func optionalInt64Value(value *int64) any {
+	if value == nil {
+		return nil
+	}
+	return *value
+}
+
+func cloneSessionUsageCost(cost *SessionUsageCost) *SessionUsageCost {
+	if cost == nil {
+		return nil
+	}
+	cloned := *cost
+	return &cloned
+}
+
+func (t *turnLifecycle) isTerminalToolCall(toolCallID string) bool {
+	toolCallID = strings.TrimSpace(toolCallID)
+	if toolCallID == "" || t.toolCallStatus == nil {
+		return false
+	}
+	switch strings.TrimSpace(t.toolCallStatus[toolCallID]) {
+	case "completed", "failed":
+		return true
+	default:
+		return false
+	}
+}
+
+func (t *turnLifecycle) rememberCommandToolCall(toolCallID string, command *codex.CommandExecution) {
+	toolCallID = strings.TrimSpace(toolCallID)
+	if toolCallID == "" || command == nil {
+		return
+	}
+	commandCopy := *command
+	commandCopy.CommandActions = append([]codex.CommandAction(nil), command.CommandActions...)
+	if t.commandToolCalls == nil {
+		t.commandToolCalls = make(map[string]*codex.CommandExecution)
+	}
+	t.commandToolCalls[toolCallID] = &commandCopy
+}
+
+func (t *turnLifecycle) commandToolCall(toolCallID string) *codex.CommandExecution {
+	toolCallID = strings.TrimSpace(toolCallID)
+	if toolCallID == "" || t.commandToolCalls == nil {
+		return nil
+	}
+	return t.commandToolCalls[toolCallID]
+}
+
+func commandExecutionACPStatus(event codex.TurnEvent) string {
+	if event.Command != nil {
+		switch strings.ToLower(strings.TrimSpace(event.Command.Status)) {
+		case "inprogress":
+			return "in_progress"
+		case "completed":
+			if event.Command.ExitCode != nil && *event.Command.ExitCode != 0 {
+				return "failed"
+			}
+			return "completed"
+		case "failed", "declined":
+			return "failed"
+		}
+	}
+
+	switch event.Type {
+	case codex.TurnEventTypeItemStarted:
+		return "in_progress"
+	case codex.TurnEventTypeItemCompleted:
+		if event.Command != nil && event.Command.ExitCode != nil && *event.Command.ExitCode != 0 {
+			return "failed"
+		}
+		return "completed"
+	default:
+		return ""
+	}
+}
+
+func toolExecutionACPStatus(event codex.TurnEvent) string {
+	if event.Tool != nil {
+		switch strings.ToLower(strings.TrimSpace(event.Tool.Status)) {
+		case "inprogress":
+			return "in_progress"
+		case "completed":
+			if event.Tool.Success != nil && !*event.Tool.Success {
+				return "failed"
+			}
+			return "completed"
+		case "failed", "declined":
+			return "failed"
+		}
+	}
+
+	switch event.Type {
+	case codex.TurnEventTypeItemStarted:
+		return "in_progress"
+	case codex.TurnEventTypeItemCompleted:
+		if event.Tool != nil && event.Tool.Success != nil && !*event.Tool.Success {
+			return "failed"
+		}
+		return "completed"
+	default:
+		return ""
+	}
+}
+
+func toolExecutionTitle(tool *codex.ToolExecution, status string) string {
+	if tool == nil {
+		return "tool"
+	}
+	title := strings.TrimSpace(tool.Tool)
+	if title == "" {
+		title = strings.TrimSpace(tool.Kind)
+	}
+	if title == "" {
+		title = "tool"
+	}
+	if server := strings.TrimSpace(tool.Server); server != "" {
+		title = server + "/" + title
+	}
+	if status == "failed" {
+		return title + " (failed)"
+	}
+	return title
+}
+
+func commandExecutionTitle(command *codex.CommandExecution, status string) string {
+	if command == nil {
+		return "command"
+	}
+	title := strings.TrimSpace(command.Command)
+	if title == "" {
+		title = "command"
+	}
+	if status == "failed" && command.ExitCode != nil {
+		return fmt.Sprintf("%s (exit %d)", title, *command.ExitCode)
+	}
+	if status == "failed" {
+		if rawStatus := strings.TrimSpace(command.Status); rawStatus != "" {
+			return fmt.Sprintf("%s (%s)", title, rawStatus)
+		}
+	}
+	return title
+}
+
+func commandExecutionContent(command *codex.CommandExecution, status string) string {
+	if command == nil {
+		return ""
+	}
+
+	switch status {
+	case "completed", "failed":
+		if text := toolCallContentText(command.AggregatedOutput); text != "" {
+			return text
+		}
+	}
+
+	if text := toolCallContentText(command.Command); text != "" {
+		return text
+	}
+
+	return toolCallContentText(commandExecutionTitle(command, status))
+}
+
+func toolExecutionContentBlocks(tool *codex.ToolExecution) []PromptContentBlock {
+	if tool == nil || len(tool.ContentItems) == 0 {
+		return nil
+	}
+
+	blocks := make([]PromptContentBlock, 0, len(tool.ContentItems))
+	for _, item := range tool.ContentItems {
+		block, ok := promptContentBlockFromToolOutput(item)
+		if !ok {
+			continue
+		}
+		blocks = append(blocks, block)
+	}
+	if len(blocks) == 0 {
+		return nil
+	}
+	return blocks
+}
+
+func promptContentBlockFromToolOutput(item codex.ToolOutputContentItem) (PromptContentBlock, bool) {
+	switch strings.ToLower(strings.TrimSpace(item.Type)) {
+	case "text":
+		text := toolCallContentText(strings.TrimSpace(item.Text))
+		if text == "" {
+			return PromptContentBlock{}, false
+		}
+		return PromptContentBlock{
+			Type: "text",
+			Text: text,
+		}, true
+	case "image":
+		return imagePromptContentBlock(item.Data, item.MimeType, item.URI)
+	case "image_url":
+		return imagePromptContentBlock("", "", item.URI)
+	default:
+		return PromptContentBlock{}, false
+	}
+}
+
+func imagePromptContentBlock(data string, mimeType string, uri string) (PromptContentBlock, bool) {
+	data = sanitizeBase64(data)
+	mimeType = normalizeImageMimeType(mimeType)
+	uri = strings.TrimSpace(uri)
+
+	if data != "" && mimeType != "" && isAllowedImageMimeType(mimeType) {
+		return PromptContentBlock{
+			Type:     "image",
+			Data:     data,
+			MimeType: mimeType,
+			URI:      nonDataURI(uri),
+		}, true
+	}
+
+	if uri != "" {
+		if strings.HasPrefix(strings.ToLower(uri), "data:") {
+			mimeType, data, err := splitDataImageURI(uri)
+			if err == nil && isAllowedImageMimeType(mimeType) {
+				return PromptContentBlock{
+					Type:     "image",
+					Data:     sanitizeBase64(data),
+					MimeType: mimeType,
+				}, true
+			}
+		}
+		text := toolCallContentText("image available at " + uri)
+		if text != "" {
+			return PromptContentBlock{
+				Type: "text",
+				Text: text,
+			}, true
+		}
+	}
+
+	return PromptContentBlock{}, false
+}
+
+func mcpResultContentBlocks(result codex.MCPToolCallResult) []PromptContentBlock {
+	if len(result.Content) == 0 {
+		if text := toolCallContentText(strings.TrimSpace(result.Output)); text != "" {
+			return []PromptContentBlock{{
+				Type: "text",
+				Text: text,
+			}}
+		}
+		return nil
+	}
+
+	blocks := make([]PromptContentBlock, 0, len(result.Content))
+	for _, raw := range result.Content {
+		block, ok := promptContentBlockFromMCPRaw(raw)
+		if !ok {
+			continue
+		}
+		blocks = append(blocks, block)
+	}
+	if len(blocks) == 0 {
+		return nil
+	}
+	return blocks
+}
+
+func promptContentBlockFromMCPRaw(raw json.RawMessage) (PromptContentBlock, bool) {
+	var payload map[string]any
+	if err := json.Unmarshal(raw, &payload); err != nil {
+		return PromptContentBlock{}, false
+	}
+
+	switch strings.ToLower(strings.TrimSpace(valueAsString(payload["type"]))) {
+	case "text":
+		text := toolCallContentText(strings.TrimSpace(valueAsString(payload["text"])))
+		if text == "" {
+			return PromptContentBlock{}, false
+		}
+		return PromptContentBlock{
+			Type: "text",
+			Text: text,
+		}, true
+	case "image":
+		return imagePromptContentBlock(
+			valueAsString(payload["data"]),
+			valueAsString(payload["mimeType"]),
+			valueAsString(payload["uri"]),
+		)
+	default:
+		return PromptContentBlock{}, false
+	}
+}
+
+func mcpResultMessageText(result codex.MCPToolCallResult) string {
+	return textFromContentBlocks(mcpResultContentBlocks(result))
+}
+
+func nonDataURI(uri string) string {
+	trimmed := strings.TrimSpace(uri)
+	if strings.HasPrefix(strings.ToLower(trimmed), "data:") {
+		return ""
+	}
+	return trimmed
+}
+
+func toolCallContentFromBlocks(blocks []PromptContentBlock) []ToolCallContentItem {
+	if len(blocks) == 0 {
+		return nil
+	}
+	content := make([]ToolCallContentItem, 0, len(blocks))
+	for _, block := range blocks {
+		blockCopy := block
+		content = append(content, ToolCallContentItem{
+			Type:    "content",
+			Content: &blockCopy,
+		})
+	}
+	return content
+}
+
+func textFromToolCallContent(content []ToolCallContentItem) string {
+	if len(content) == 0 {
+		return ""
+	}
+
+	blocks := make([]PromptContentBlock, 0, len(content))
+	for _, item := range content {
+		if item.Content == nil {
+			continue
+		}
+		blocks = append(blocks, *item.Content)
+	}
+	return textFromContentBlocks(blocks)
+}
+
+func textFromContentBlocks(blocks []PromptContentBlock) string {
+	if len(blocks) == 0 {
+		return ""
+	}
+
+	parts := make([]string, 0, len(blocks))
+	for _, block := range blocks {
+		if strings.EqualFold(strings.TrimSpace(block.Type), "text") {
+			text := strings.TrimSpace(block.Text)
+			if text != "" {
+				parts = append(parts, text)
+			}
+		}
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return strings.Join(parts, "\n\n")
+}
+
+func toolCallContentText(text string) string {
+	if text == "" {
+		return ""
+	}
+	truncated, wasTruncated := truncateTextBytes(text, defaultToolCallTextLimit)
+	if !wasTruncated {
+		return truncated
+	}
+	if !strings.HasSuffix(truncated, "\n") {
+		truncated += "\n"
+	}
+	return truncated + "\n[truncated]"
+}
+
+// fallbackStopReason closes a turn whose stream ended without a terminal event on the uncancelled path.
+// A cancelled turn never reaches this: its ending is decided from the cancellation evidence.
+func (t *turnLifecycle) fallbackStopReason() string {
+	switch t.phase {
+	case turnPhaseCompleted:
+		return "end_turn"
+	case turnPhaseCancelled:
+		return "cancelled"
+	case turnPhaseError:
+		return "error"
+	default:
+		return "error"
+	}
+}
+
+func normalizePermissionOutcome(result SessionRequestPermissionResult) permissionOutcome {
+	if outcome := permissionOutcomeFromOptionID(result.SelectedOptionID); outcome != "" {
+		return outcome
+	}
+
+	outcome := strings.TrimSpace(strings.ToLower(result.Outcome))
+	if outcome == "" {
+		outcome = strings.TrimSpace(strings.ToLower(result.Decision))
+	}
+
+	switch outcome {
+	case "approve", "approved", "allow", "allowed":
+		return permissionOutcomeApproved
+	case "acceptforsession", "approveforsession", "approved_for_session", "allow_always":
+		return permissionOutcomeApprovedForSession
+	case "decline", "declined", "deny", "denied":
+		return permissionOutcomeDeclined
+	case "cancel", "cancelled", "canceled":
+		return permissionOutcomeCancelled
+	}
+
+	if result.Approved != nil {
+		if *result.Approved {
+			return permissionOutcomeApproved
+		}
+		return permissionOutcomeDeclined
+	}
+	return permissionOutcomeCancelled
+}
+
+func mapDecisionToAppServer(outcome permissionOutcome) codex.ApprovalDecision {
+	switch outcome {
+	case permissionOutcomeApproved:
+		return codex.ApprovalDecisionApproved
+	case permissionOutcomeApprovedForSession:
+		return codex.ApprovalDecisionApprovedForSession
+	case permissionOutcomeDeclined:
+		return codex.ApprovalDecisionDeclined
+	default:
+		return codex.ApprovalDecisionCancelled
+	}
+}
+
+func permissionOutcomeFromOptionID(optionID string) permissionOutcome {
+	switch normalizePermissionOptionID(optionID) {
+	case "accept", "approve", "allowonce":
+		return permissionOutcomeApproved
+	case "acceptforsession", "approveforsession", "approvedforsession", "allowalways":
+		return permissionOutcomeApprovedForSession
+	case "decline", "declined", "deny", "denied", "rejectonce", "rejectalways":
+		return permissionOutcomeDeclined
+	case "cancel", "cancelled", "canceled":
+		return permissionOutcomeCancelled
+	default:
+		return ""
+	}
+}
+
+func normalizePermissionOptionID(optionID string) string {
+	optionID = strings.TrimSpace(strings.ToLower(optionID))
+	optionID = strings.ReplaceAll(optionID, "-", "")
+	optionID = strings.ReplaceAll(optionID, "_", "")
+	return optionID
+}
+
+func permissionOutcomeAllowsExecution(outcome permissionOutcome) bool {
+	return outcome == permissionOutcomeApproved || outcome == permissionOutcomeApprovedForSession
+}
+
+func permissionOutcomeMessage(outcome permissionOutcome) string {
+	switch outcome {
+	case permissionOutcomeApproved:
+		return "permission approved"
+	case permissionOutcomeApprovedForSession:
+		return "permission approved for session"
+	case permissionOutcomeDeclined:
+		return "permission declined"
+	default:
+		return "permission cancelled"
+	}
+}
+
+func permissionRequestOptions(approval codex.ApprovalRequest) []PermissionOption {
+	options := []PermissionOption{
+		{
+			OptionID: "accept",
+			Name:     "Allow once",
+			Kind:     "allow_once",
+		},
+	}
+
+	switch approval.Kind {
+	case codex.ApprovalKindCommand, codex.ApprovalKindFile, codex.ApprovalKindNetwork:
+		options = append(options, PermissionOption{
+			OptionID: "acceptForSession",
+			Name:     "Allow for session",
+			Kind:     "allow_always",
+		})
+	}
+
+	options = append(options, PermissionOption{
+		OptionID: "decline",
+		Name:     "Reject",
+		Kind:     "reject_once",
+	})
+	return options
+}
+
+func permissionRequestToolCall(approval codex.ApprovalRequest) *PermissionToolCall {
+	toolCallID := strings.TrimSpace(approval.ToolCallID)
+	if toolCallID == "" {
+		toolCallID = strings.TrimSpace(approval.ApprovalID)
+	}
+	if toolCallID == "" {
+		return nil
+	}
+
+	toolCall := &PermissionToolCall{
+		ToolCallID: toolCallID,
+		Title:      permissionToolCallTitle(approval),
+		Kind:       permissionToolCallKind(approval),
+		Status:     "pending",
+		Locations:  permissionToolCallLocations(approval),
+		RawInput:   permissionToolCallRawInput(approval),
+	}
+	if toolCall.Title == "" {
+		toolCall.Title = "Permission required"
+	}
+	if len(toolCall.Locations) == 0 {
+		toolCall.Locations = nil
+	}
+	if len(toolCall.RawInput) == 0 {
+		toolCall.RawInput = nil
+	}
+	return toolCall
+}
+
+func permissionToolCallTitle(approval codex.ApprovalRequest) string {
+	switch approval.Kind {
+	case codex.ApprovalKindNetwork:
+		target := strings.TrimSpace(approval.Host)
+		protocol := strings.TrimSpace(approval.Protocol)
+		if target != "" {
+			if protocol != "" {
+				target = protocol + "://" + target
+			}
+			if approval.Port > 0 {
+				target = fmt.Sprintf("%s:%d", target, approval.Port)
+			}
+			return "Access " + target
+		}
+		if strings.TrimSpace(approval.Command) != "" {
+			return approval.Command
+		}
+	case codex.ApprovalKindCommand:
+		if strings.TrimSpace(approval.Command) != "" {
+			return approval.Command
+		}
+	case codex.ApprovalKindFile:
+		if len(approval.Files) == 1 {
+			return "Modify " + approval.Files[0]
+		}
+		if len(approval.Files) > 1 {
+			return fmt.Sprintf("Modify %d files", len(approval.Files))
+		}
+		return "Modify files"
+	case codex.ApprovalKindMCP:
+		if approval.MCPServer != "" && approval.MCPTool != "" {
+			return fmt.Sprintf("Call %s/%s", approval.MCPServer, approval.MCPTool)
+		}
+		if approval.MCPTool != "" {
+			return "Call " + approval.MCPTool
+		}
+	}
+	return strings.TrimSpace(approval.Message)
+}
+
+func permissionToolCallKind(approval codex.ApprovalRequest) string {
+	switch approval.Kind {
+	case codex.ApprovalKindCommand:
+		return "execute"
+	case codex.ApprovalKindFile:
+		return "edit"
+	case codex.ApprovalKindNetwork:
+		return "fetch"
+	default:
+		return "other"
+	}
+}
+
+func permissionToolCallLocations(approval codex.ApprovalRequest) []PermissionLocation {
+	if len(approval.Files) == 0 {
+		return nil
+	}
+	out := make([]PermissionLocation, 0, len(approval.Files))
+	for _, path := range approval.Files {
+		path = strings.TrimSpace(path)
+		if path == "" {
+			continue
+		}
+		out = append(out, PermissionLocation{Path: path})
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
+func permissionToolCallRawInput(approval codex.ApprovalRequest) map[string]any {
+	raw := map[string]any{}
+	if approval.Command != "" {
+		raw["command"] = approval.Command
+	}
+	if len(approval.CommandActions) > 0 {
+		raw["commandActions"] = approval.CommandActions
+	}
+	if approval.CWD != "" {
+		raw["cwd"] = approval.CWD
+	}
+	if len(approval.Files) > 0 {
+		raw["files"] = approval.Files
+	}
+	if approval.Host != "" {
+		raw["host"] = approval.Host
+	}
+	if approval.Protocol != "" {
+		raw["protocol"] = approval.Protocol
+	}
+	if approval.Port > 0 {
+		raw["port"] = approval.Port
+	}
+	if approval.MCPServer != "" {
+		raw["mcpServer"] = approval.MCPServer
+	}
+	if approval.MCPTool != "" {
+		raw["mcpTool"] = approval.MCPTool
+	}
+	if approval.Message != "" {
+		raw["message"] = approval.Message
+	}
+	if len(approval.ProposedExecpolicyAmendment) > 0 {
+		raw["proposedExecpolicyAmendment"] = approval.ProposedExecpolicyAmendment
+	}
+	if len(approval.ProposedNetworkPolicyAmendments) > 0 {
+		raw["proposedNetworkPolicyAmendments"] = approval.ProposedNetworkPolicyAmendments
+	}
+	return raw
+}
+
+func textTurnInput(text string) []codex.UserInput {
+	if strings.TrimSpace(text) == "" {
+		return nil
+	}
+	return []codex.UserInput{
+		{
+			Type: "text",
+			Text: text,
+		},
+	}
+}
+
+func buildClientRequest(rawID json.RawMessage, method string, params any) (RPCMessage, error) {
+	msg := RPCMessage{
+		JSONRPC: "2.0",
+		Method:  method,
+		ID:      cloneRawMessage(rawID),
+	}
+	if params == nil {
+		return msg, nil
+	}
+
+	rawParams, err := json.Marshal(params)
+	if err != nil {
+		return RPCMessage{}, fmt.Errorf("%s encode params: %w", method, err)
+	}
+	msg.Params = rawParams
+	return msg, nil
+}
+
+func normalizeMessageID(raw json.RawMessage) string {
+	var idString string
+	if err := json.Unmarshal(raw, &idString); err == nil {
+		return idString
+	}
+
+	var idNumber int64
+	if err := json.Unmarshal(raw, &idNumber); err == nil {
+		return strconv.FormatInt(idNumber, 10)
+	}
+	return string(raw)
+}

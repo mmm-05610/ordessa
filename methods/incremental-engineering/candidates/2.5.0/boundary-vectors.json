@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "kind": "pending_runtime_vectors_not_executed",
+  "model_calls": 0,
+  "vectors": [
+    {
+      "case": "request_without_review_record",
+      "expected": "wait",
+      "status": "pending_original_owner_contract_and_runtime_verification"
+    },
+    {
+      "case": "request_without_conversation_grant",
+      "expected": "wait",
+      "status": "pending_original_owner_contract_and_runtime_verification"
+    },
+    {
+      "case": "forged_wait_event",
+      "expected": "reject",
+      "status": "pending_original_owner_contract_and_runtime_verification"
+    },
+    {
+      "case": "missing_requirement_in_full_plan",
+      "expected": "reject",
+      "status": "pending_original_owner_contract_and_runtime_verification"
+    },
+    {
+      "case": "old_request_or_changed_target_confirmation",
+      "expected": "reject",
+      "status": "pending_original_owner_contract_and_runtime_verification"
+    },
+    {
+      "case": "revoked_expired_or_inactive_method_grant",
+      "expected": "reject",
+      "status": "pending_original_owner_contract_and_runtime_verification"
+    },
+    {
+      "case": "freeze_without_generate_package_permission",
+      "expected": "reject",
+      "status": "pending_original_owner_contract_and_runtime_verification"
+    },
+    {
+      "case": "freeze_success_without_package_review_or_execute_scope",
+      "expected": "no_dispatch",
+      "status": "pending_original_owner_contract_and_runtime_verification"
+    },
+    {
+      "case": "vague_continue_for_new_action",
+      "expected": "pending",
+      "status": "pending_original_owner_contract_and_runtime_verification"
+    },
+    {
+      "case": "missing_required_test_or_failed_exit_code",
+      "expected": "block",
+      "status": "pending_original_owner_contract_and_runtime_verification"
+    },
+    {
+      "case": "output_out_of_scope_or_wrong_submission_binding",
+      "expected": "block",
+      "status": "pending_original_owner_contract_and_runtime_verification"
+    },
+    {
+      "case": "adoption_without_exact_permission_or_stale_head",
+      "expected": "reject",
+      "status": "pending_original_owner_contract_and_runtime_verification"
+    },
+    {
+      "case": "unknown_external_send_result",
+      "expected": "reconcile_no_retry",
+      "status": "pending_original_owner_contract_and_runtime_verification"
+    },
+    {
+      "case": "automatic_nominal_supported_without_evaluation",
+      "expected": "manual",
+      "status": "pending_original_owner_contract_and_runtime_verification"
+    }
+  ]
+}

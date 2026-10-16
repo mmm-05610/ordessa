@@ -1,0 +1,22 @@
+{
+  "id": "qwen",
+  "origin": "agentbox",
+  "managed": null,
+  "legacy": {
+    "command": "/usr/bin/node",
+    "root": "/runtime/artifacts/qwen-runtime",
+    "args": [
+      "/runtime/artifacts/qwen-runtime/node_modules/@qwen-code/qwen-code/cli-entry.js",
+      "--acp"
+    ]
+  },
+  "variants": {},
+  "allowsPythonPath": false,
+  "pythonRoute": null,
+  "nativeRoute": false,
+  "nativeExtension": null,
+  "profileExtension": null,
+  "modelAliases": {
+    "deepseek-flash": "$runtime|openai|deepseek-flash(openai)"
+  }
+}

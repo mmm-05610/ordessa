@@ -1,0 +1,18 @@
+{
+  "id": "claude",
+  "origin": "upstream",
+  "managed": {
+    "artifact": "claude-legacy-runtime",
+    "package": "@agentclientprotocol/claude-agent-acp",
+    "binary": "claude-agent-acp",
+    "pinMode": "upstream"
+  },
+  "legacy": null,
+  "variants": {},
+  "allowsPythonPath": false,
+  "pythonRoute": null,
+  "nativeRoute": false,
+  "nativeExtension": null,
+  "profileExtension": null,
+  "modelAliases": {}
+}

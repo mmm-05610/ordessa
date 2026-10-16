@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "action_id": "incremental.review-change",
+  "inputs": [
+    {
+      "name": "baseline",
+      "value_kind": "source_ref"
+    },
+    {
+      "name": "candidate",
+      "value_kind": "source_ref"
+    },
+    {
+      "name": "scope",
+      "value_kind": "json_object"
+    },
+    {
+      "name": "method",
+      "value_kind": "method_ref"
+    },
+    {
+      "name": "caller_review_input",
+      "value_kind": "json_object"
+    }
+  ],
+  "steps": [
+    {
+      "step_id": "compare",
+      "kind": "invoke",
+      "name": "jev-review-explicit-change",
+      "inputs": [
+        {
+          "name": "baseline",
+          "source_kind": "action_input",
+          "source_name": "baseline"
+        },
+        {
+          "name": "candidate",
+          "source_kind": "action_input",
+          "source_name": "candidate"
+        },
+        {
+          "name": "scope",
+          "source_kind": "action_input",
+          "source_name": "scope"
+        },
+        {
+          "name": "method",
+          "source_kind": "action_input",
+          "source_name": "method"
+        },
+        {
+          "name": "criteria",
+          "source_kind": "resource",
+          "source_name": "change-review-criteria"
+        },
+        {
+          "name": "review-binding",
+          "source_kind": "resource",
+          "source_name": "source-review-binding"
+        },
+        {
+          "name": "prompt",
+          "source_kind": "resource",
+          "source_name": "change-review-prompt"
+        },
+        {
+          "name": "source-ref-schema",
+          "source_kind": "resource",
+          "source_name": "source-ref-schema"
+        },
+        {
+          "name": "scope-schema",
+          "source_kind": "resource",
+          "source_name": "scope-schema"
+        },
+        {
+          "name": "method_schema",
+          "source_kind": "resource",
+          "source_name": "method-ref-schema"
+        },
+        {
+          "name": "caller_review_input",
+          "source_kind": "action_input",
+          "source_name": "caller_review_input"
+        },
+        {
+          "name": "caller-review-input-schema",
+          "source_kind": "resource",
+          "source_name": "caller-review-input-schema"
+        }
+      ],
+      "outputs": [
+        "review_contract"
+      ]
+    },
+    {
+      "step_id": "record",
+      "kind": "record",
+      "name": "record-explicit-review-result",
+      "inputs": [
+        {
+          "name": "review",
+          "source_kind": "step_output",
+          "source_name": "review_contract",
+          "step_id": "compare"
+        }
+      ],
+      "outputs": [
+        "review_record"
+      ]
+    },
+    {
+      "step_id": "register",
+      "kind": "emit",
+      "name": "emit-explicitly-registered-change",
+      "inputs": [
+        {
+          "name": "review",
+          "source_kind": "step_output",
+          "source_name": "review_record",
+          "step_id": "record"
+        },
+        {
+          "name": "baseline",
+          "source_kind": "action_input",
+          "source_name": "baseline"
+        },
+        {
+          "name": "candidate",
+          "source_kind": "action_input",
+          "source_name": "candidate"
+        },
+        {
+          "name": "scope",
+          "source_kind": "action_input",
+          "source_name": "scope"
+        },
+        {
+          "name": "method",
+          "source_kind": "action_input",
+          "source_name": "method"
+        }
+      ],
+      "outputs": [
+        "registered_change"
+      ],
+      "admission": [
+        {
+          "kind": "review_complete",
+          "inputs": [
+            "review"
+          ]
+        },
+        {
+          "kind": "review_passed",
+          "inputs": [
+            "review"
+          ]
+        },
+        {
+          "kind": "exact_inputs",
+          "inputs": [
+            "baseline",
+            "candidate",
+            "review"
+          ]
+        },
+        {
+          "kind": "same_scope",
+          "inputs": [
+            "baseline",
+            "candidate",
+            "scope",
+            "review"
+          ]
+        },
+        {
+          "kind": "method_pin",
+          "inputs": [
+            "method",
+            "review"
+          ]
+        },
+        {
+          "kind": "baseline_available",
+          "inputs": [
+            "baseline"
+          ]
+        }
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "review",
+      "value_kind": "review_contract",
+      "step_id": "record",
+      "output": "review_record"
+    },
+    {
+      "name": "registered_change",
+      "value_kind": "registered_change",
+      "step_id": "register",
+      "output": "registered_change"
+    }
+  ],
+  "admission": [],
+  "resources": [
+    "change-review-criteria",
+    "source-review-binding",
+    "change-review-prompt",
+    "review-result-schema",
+    "method-ref-schema",
+    "source-ref-schema",
+    "scope-schema",
+    "caller-review-input-schema"
+  ]
+}

@@ -20,7 +20,7 @@ import { fileURLToPath } from "node:url"
 import test from "node:test"
 
 const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
-const DRIVER = new URL(`file://${path.join(pluginRoot, "runtime", "drivers", "opencode-native.mjs")}`)
+const DRIVER = new URL("../opencode/src/ordessa_harness_opencode/acp/opencode_native.mjs", import.meta.url)
 const { tailVerdict, tailSuffix, createDriver, auditPathFor } = await import(DRIVER.href)
 
 test("① a stream that is not a prefix of the record is called a mismatch, and nothing is guessed", () => {

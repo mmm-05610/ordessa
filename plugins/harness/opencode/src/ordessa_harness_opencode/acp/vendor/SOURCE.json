@@ -1,0 +1,34 @@
+{
+  "source": "https://github.com/giuliastro/harness-remote.git",
+  "ref": "v3.0.2",
+  "commit": "21ce6db49af708c4c7c3f96ef6a50f62dced8dab",
+  "license": "Apache-2.0",
+  "license_file": "LICENSE",
+  "selection": "Work Order 38 conditional leader; adopted by Work Order 40-A",
+  "files": [
+    {
+      "path": "extension-actions.js",
+      "origin": "upstream",
+      "upstream_sha256": "b953a3bf3bd072f70f1b8849dd26625ae8149a578d2d3612afd3011eb6958375",
+      "current_sha256": "b953a3bf3bd072f70f1b8849dd26625ae8149a578d2d3612afd3011eb6958375"
+    },
+    {
+      "path": "omp-extension-action-state.js",
+      "origin": "upstream",
+      "upstream_sha256": "643c5f9e224c60f8bf9a652f4ee12f51b7cbd42e3fd6246a47900068ce1ac428",
+      "current_sha256": "643c5f9e224c60f8bf9a652f4ee12f51b7cbd42e3fd6246a47900068ce1ac428"
+    },
+    {
+      "path": "omp-session-history.js",
+      "origin": "upstream",
+      "upstream_sha256": "6fd920bde8235b2e6ecf0bb6190c8579c2986474e1e467d6494df5eb9128b647",
+      "current_sha256": "6fd920bde8235b2e6ecf0bb6190c8579c2986474e1e467d6494df5eb9128b647"
+    },
+    {
+      "path": "opencode-host.js",
+      "origin": "upstream",
+      "upstream_sha256": "acbb05082311e21f8fefced2cbfbe853ed0a6f47e106ea0490b56e7218c452e2",
+      "current_sha256": "acbb05082311e21f8fefced2cbfbe853ed0a6f47e106ea0490b56e7218c452e2"
+    }
+  ]
+}

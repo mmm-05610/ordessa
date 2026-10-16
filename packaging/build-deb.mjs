@@ -123,7 +123,7 @@ function stageProductPackages(python) {
   const pythonBin = path.join(python.dest, 'bin/python3.12')
   const packages = [
     'packages/pacthold',
-    'packages/server-plugin-api',
+    'packages/interfaces/transport/server/plugin-api',
     'apps/server',
   ]
   if (flag('skip-pip')) return { installed: [], skipped: true }

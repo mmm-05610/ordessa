@@ -1,0 +1,364 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "document_type": {
+      "const": "submission"
+    },
+    "schema_version": {
+      "const": 2
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "change_notes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "evidence_index": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "evidence_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "patch",
+              "test_log",
+              "native_record"
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "evidence_id",
+          "kind",
+          "summary"
+        ]
+      },
+      "minItems": 1
+    },
+    "remaining_issues": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "reported_outcome": {
+      "type": "string",
+      "enum": [
+        "complete",
+        "partial",
+        "failed",
+        "cancelled",
+        "unknown"
+      ]
+    },
+    "fixed_delivery_refs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "uniqueItems": true,
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/artifact_revision_ref"
+          },
+          {
+            "$ref": "#/$defs/commit_locator"
+          },
+          {
+            "$ref": "#/$defs/snapshot_ref"
+          }
+        ]
+      },
+      "description": "Pinned commit/snapshot/artifact declarations, plus structured executor report. Host preserves correlation/provenance; independent review Unit checks truth. No prerequisite host capture of all files/tests/effects."
+    },
+    "requirement_results": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "requirement_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reported_state": {
+            "enum": [
+              "complete",
+              "partial",
+              "failed",
+              "unknown"
+            ]
+          },
+          "delivery_indexes": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "evidence_ids": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "explanation": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "requirement_id",
+          "reported_state",
+          "delivery_indexes",
+          "evidence_ids",
+          "explanation"
+        ]
+      },
+      "description": "Author traceability, not CheckKey verdict. Owner checks complete set and actual references."
+    },
+    "reported_facts": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "fact_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "test",
+              "output",
+              "effect",
+              "other"
+            ]
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_ids": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "verification_status": {
+            "const": "asserted"
+          }
+        },
+        "required": [
+          "fact_id",
+          "kind",
+          "statement",
+          "evidence_ids",
+          "verification_status"
+        ]
+      },
+      "description": "Executor assertions remain asserted. Independently checked facts and review results are recorded separately by original owner with reviewer Unit/source evidence."
+    }
+  },
+  "required": [
+    "document_type",
+    "schema_version",
+    "summary",
+    "change_notes",
+    "evidence_index",
+    "remaining_issues",
+    "reported_outcome",
+    "fixed_delivery_refs",
+    "requirement_results",
+    "reported_facts"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ordessa:method:incremental-engineering:submission:2",
+  "$defs": {
+    "artifact_revision_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "artifact_revision"
+        },
+        "realm_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifact_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "algorithm": {
+              "const": "sha256"
+            },
+            "hex": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "required": [
+            "algorithm",
+            "hex"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "realm_id",
+        "project_id",
+        "artifact_id",
+        "revision_id",
+        "digest"
+      ],
+      "description": "Original ArtifactRevisionRef shape only; original host codec/source resolution authenticates, not this method body."
+    },
+    "commit_locator": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "commit"
+        },
+        "repository_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commit_id": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        }
+      },
+      "required": [
+        "kind",
+        "repository_id",
+        "commit_id"
+      ],
+      "description": "Method-level pinned commit locator, not a new host CommitRef or verified checkout DTO. Original host source contract binds scope and actual identity."
+    },
+    "snapshot_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "repository_snapshot"
+        },
+        "realm_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repository_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "vcs": {
+          "enum": [
+            "git",
+            "none"
+          ]
+        },
+        "commit_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tree_digest": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "algorithm": {
+              "const": "sha256"
+            },
+            "hex": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "required": [
+            "algorithm",
+            "hex"
+          ]
+        },
+        "dirty_overlay_digest": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "algorithm": {
+                  "const": "sha256"
+                },
+                "hex": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              },
+              "required": [
+                "algorithm",
+                "hex"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "realm_id",
+        "project_id",
+        "repository_id",
+        "vcs",
+        "commit_id",
+        "tree_digest",
+        "dirty_overlay_digest"
+      ],
+      "description": "Original RepositorySnapshotRef field shape; validity/provenance from original codec/source, not method JSON."
+    }
+  }
+}

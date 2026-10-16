@@ -1,0 +1,11 @@
+{
+  "name": "ordessa-harness-runtime-claude-legacy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Locked legacy upstream Claude ACP 0.75.1 alias closure; separate from canonical Claude Code 0.81.2.",
+  "license": "Apache-2.0",
+  "overrides": { "@agentclientprotocol/claude-agent-acp": "0.75.1" },
+  "dependencies": { "@agentclientprotocol/claude-agent-acp": "0.75.1" },
+  "engines": { "node": ">=22" }
+}

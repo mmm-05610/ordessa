@@ -1,0 +1,44 @@
+[[harness]]
+schema_version = 1
+driver = "dsh"
+# Work Order 43。静态候选（产品层声明上限），**不是**观测结论：dsh 0.1.5-rc.1 是
+# developer preview，官方 ACP stdio 面（`dsh --profile acp`）文档声明了
+# new/list/resume/close/prompt/cancel/set_config_option/request_permission，但在本仓
+# 的假端点全链门跑出证据之前，observed 一律留空。`attach`/`permissions` 刻意**不**
+# 声明：没有任何运行时证据（四家里的诚实先例）。逐项证据见
+# plugins/agent-box-harnesses/tests/test_capability_declarations.py 的 FAMILY_MATRIX。
+capabilities = ["start", "observe", "finish", "stream", "native_continuation"]
+[harness.identity]
+harness_type = "dsh"
+display_name = "DeepSeek dsh"
+description = "DeepSeek official Harness launcher (dsh), ACP stdio surface"
+version = "0.1.5-rc.1"
+[harness.executable]
+identity = "dsh"
+resolver_kind = "PATH_OR_BUNDLE"
+bundle_members = ["dsh"]
+version_probe = ["--version"]
+[harness.profile]
+native_home = ".dsh"
+guest_home = "/runtime/home"
+config_format = "yaml"
+payload_schema = "dsh-profile-v1"
+codec = "dsh"
+overlay_policy = "execution-local"
+slots = ["provider", "instruction"]
+[[harness.launch_modes]]
+name = "acp"
+argv = ["dsh", "--profile", "acp"]
+io = "stdio"
+[harness.runtime]
+io = "stdio"
+network = "required"
+terminal = "stdio"
+[harness.continuation]
+# 生产链的重开走桥的 session/resume（dsh 明确不支持 session/load；resume 不重放
+# 历史）。门观测到同 native id + 重开相位零重放后，这里才是观测结论；当前是
+# 官方文档声明 + 机制到位的静态声明。
+kind = "native_session"
+contract_id = "agent-box.dsh-continuation@1"
+target_provider = "dsh-continuation"
+

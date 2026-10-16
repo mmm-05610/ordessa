@@ -1,0 +1,20 @@
+{
+  "version": "2.54.0",
+  "requires_python": ">=3.10",
+  "requires_dist": [
+    "anyio>=4.7.0",
+    "logfire-api>=3.14.1",
+    "pydantic>=2.12",
+    "typing-inspection>=0.4.0"
+  ],
+  "files": [
+    {
+      "filename": "pydantic_graph-2.54.0-py3-none-any.whl",
+      "sha256": "465b87d5507af1341ba31b949af8619009c5010068159e52cf9b9806eb674fa4"
+    },
+    {
+      "filename": "pydantic_graph-2.54.0.tar.gz",
+      "sha256": "948ff7249c28643ff028b47fab22b8a5b36912c59bb947c2a9b9bc18de1d5fa5"
+    }
+  ]
+}
