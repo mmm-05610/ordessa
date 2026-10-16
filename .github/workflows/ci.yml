@@ -83,9 +83,16 @@ jobs:
       #    developer venv (registered in known-issues as a CI-env follow-up).
       - name: harness (green set; subprocess-install suites excluded, see ledger)
         run: |
-          pytest -q plugins/harness \
-            --ignore=plugins/harness/tests/install \
-            --ignore=plugins/harness/tests/test_external_adapter_product.py
+          # Independent distributions have intentionally repeated test module names.
+          # Run every suite in its own interpreter; preserve every test and failure.
+          status=0
+          for suite in plugins/harness/tests plugins/harness/*/tests; do
+            [ -d "$suite" ] || continue
+            pytest -q "$suite" \
+              --ignore=plugins/harness/tests/install \
+              --ignore=plugins/harness/tests/test_external_adapter_product.py || status=1
+          done
+          exit "$status"
       - name: "Ledger — registered known-red suites stay visible (non-gating)"
         continue-on-error: true
         run: |
