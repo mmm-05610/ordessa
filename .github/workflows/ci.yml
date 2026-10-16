@@ -82,6 +82,35 @@ jobs:
             --dest "$ORDESSA_ACP_WHEELHOUSE" \
             'agent-client-protocol==0.12.1' 'PyYAML==6.0.3' 'tomli-w>=1.2.0,<2'
           python -c 'import hashlib,os,pathlib; p=pathlib.Path(os.environ["ORDESSA_ACP_WHEELHOUSE"])/"agent_client_protocol-0.12.1-py3-none-any.whl"; assert hashlib.sha256(p.read_bytes()).hexdigest()=="aaf3cc301ed87d9e2c4ccb91adfe1cd58784355f6ce7e513f50e7ca2391862ef", "official ACP wheel hash mismatch"'
+      - name: Prepare pinned zero-model Codex executable
+        run: |
+          python - <<'PYCODEX'
+          import base64, hashlib, os, pathlib, shutil, tarfile, urllib.request
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]).resolve() / "ordessa-codex-0.159.0"
+          root.mkdir(exist_ok=True)
+          archive = root / "codex-0.159.0-linux-x64.tgz"
+          if not archive.exists():
+              urllib.request.urlretrieve(
+                  "https://registry.npmjs.org/@openai/codex/-/codex-0.159.0-linux-x64.tgz", archive)
+          with archive.open("rb") as source:
+              integrity = base64.b64encode(hashlib.file_digest(source, "sha512").digest()).decode()
+          if integrity != "7ks+EeQjX33wfJXbggseyF0CJRFVgzDHA6BzC7mJjFsJKmdAuOFWMFeMeZe8vL/G6xEpL29wOdwR85sK49F0iA==":
+              raise RuntimeError("official Codex archive integrity mismatch")
+          executable = root / "codex"
+          with tarfile.open(archive, "r:gz") as package:
+              member = package.getmember("package/vendor/x86_64-unknown-linux-musl/bin/codex")
+              if not member.isfile():
+                  raise RuntimeError("official Codex executable is not a regular file")
+              with package.extractfile(member) as source, executable.open("wb") as target:
+                  shutil.copyfileobj(source, target)
+          executable.chmod(0o755)
+          with executable.open("rb") as source:
+              digest = hashlib.file_digest(source, "sha256").hexdigest()
+          if digest != "d2752c52353401f7f6efbfcea68796f4f7a3d3e4769f5d1da53fa49d4856b72f":
+              raise RuntimeError("official Codex executable digest mismatch")
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as target:
+              target.write(f"ORDESSA_TEST_CODEX_EXECUTABLE={executable}\n")
+          PYCODEX
       - name: Server plugin public API
         run: pytest -q packages/interfaces/transport/server/plugin-api/tests
       - name: Kernel
