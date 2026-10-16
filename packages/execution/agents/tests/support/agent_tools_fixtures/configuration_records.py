@@ -27,7 +27,7 @@ def real_core_parts(tmp_path, *, start_native_session=True):
     from agent_tools_fixtures.invocation_authority import Authority, CurrentState
     from ordessa_infrastructure.identifiers import RequestKey
     from ordessa_execution_api.environment.operations import OperationIntent, StepIntent
-    from pacthold.adapters.sqlite.environment.store import SqliteStorePort
+    from ordessa_units.public import SqliteUnitStore
     from ordessa_units.bindings.contracts import DirectoryBindingRef
     from ordessa_units.admission.invocation import InvocationIssuer
     p = parts(tmp_path)
@@ -39,7 +39,7 @@ def real_core_parts(tmp_path, *, start_native_session=True):
         'start': {'action':'start','targetRef':NODE,'delegationRef':None,'cleanup':False},
         'configuration': {'action':'applyConfiguration','targetRef':target,'delegationRef':None,'cleanup':False},
     }
-    store = SqliteStorePort(tmp_path / 'core.sqlite')
+    store = SqliteUnitStore(tmp_path / 'core.sqlite')
     intent = OperationIntent('flow-operation','controlled-unit-flow',None,
         {'environmentNamespace':'env','directoryBindingRef':directory.to_dict(),'invocationBindings':bindings},
         (StepIntent('prepare',PROVIDER,'input','prepare-correlation'),
